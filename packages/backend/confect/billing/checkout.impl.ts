@@ -2,11 +2,10 @@ import { FunctionImpl, GroupImpl } from "@confect/server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import {
   DatabaseReader,
-  QueryCtx,
+  DocumentIds,
 } from "@repo/backend/confect/_generated/services";
 import { captureProductEvent } from "@repo/backend/confect/analytics/capture";
 import { isAccountDeletionPending } from "@repo/backend/confect/auth/deletion/state";
-import { authReader } from "@repo/backend/confect/auth/reader";
 import {
   ensureAccount,
   recordProviderCustomer,
@@ -18,8 +17,9 @@ import { proHoldingOf } from "@repo/backend/confect/billing/holding";
 import { UNKNOWN_COUNTRY } from "@repo/backend/confect/billing/route";
 import { checkoutSessionIoError } from "@repo/backend/confect/billing/spec";
 import { currencyOfCountry } from "@repo/backend/confect/country/registry";
+import { isLoginAddress } from "@repo/backend/confect/identity/address";
 import atomic from "@repo/backend/confect/middleware/atomic.impl";
-import { Clock, Effect, flow, Layer } from "effect";
+import { Clock, Effect, flow, Layer, Option } from "effect";
 
 const openAccount = FunctionImpl.make(
   databaseSchema,
@@ -51,7 +51,6 @@ const openAccount = FunctionImpl.make(
     return {
       kind: "open" as const,
       accountId,
-      authId: user.authId,
       email: user.email,
       name: user.name,
       providerCustomerId: account.providerCustomerId,
@@ -110,10 +109,12 @@ const admitCheckout = FunctionImpl.make(
 
 /**
  * Whether a user may take over the Polar customer that already holds their email address,
- * named by its external ID. A customer under the user's own ID is theirs. Any other one only a
- * verified address may claim, and only when no Nakafa user holds it: one Polar has no external ID
- * for, or one left by an account that no longer exists. Polar's portal opens a customer to whoever
- * reads its mailbox, so the verified owner of that mailbox gains nothing Polar would not show them.
+ * named by its external ID, which is the user's id. A customer under the user's own ID is
+ * theirs. Any other one only an account with a mailbox may claim, and only when no Nakafa user
+ * holds it: one Polar has no external ID for, or one left by an account that no longer exists.
+ * Every Nakafa address with a mailbox is one Google verified (`auth/account`), and Polar's
+ * portal opens a customer to whoever reads its mailbox, so the owner of that mailbox gains
+ * nothing Polar would not show them.
  */
 const mayAdoptCustomer = FunctionImpl.make(
   databaseSchema,
@@ -131,27 +132,27 @@ const mayAdoptCustomer = FunctionImpl.make(
     if (user === null || isAccountDeletionPending(user)) {
       return false;
     }
-    if (args.externalId === user.authId) {
+    if (args.externalId === user._id) {
       return true;
     }
-    const ctx = yield* QueryCtx;
-    const authUser = yield* Effect.promise(() =>
-      authReader.getAnyUserById(ctx, user.authId)
-    );
-    if (authUser?.emailVerified !== true) {
+    if (isLoginAddress(user.email)) {
       return false;
     }
     if (args.externalId === null) {
       return true;
     }
+    const holderId = yield* (yield* DocumentIds).parse(
+      "users",
+      args.externalId
+    );
+    if (Option.isNone(holderId)) {
+      return true;
+    }
     const holder = yield* reader
       .table("users")
-      .get("by_authId", args.externalId)
-      .pipe(
-        Effect.catchTag("GetByIndexFailure", () => Effect.succeed(null)),
-        Effect.orDie
-      );
-    return holder === null;
+      .get(holderId.value)
+      .pipe(Effect.option);
+    return Option.isNone(holder);
   })
 );
 

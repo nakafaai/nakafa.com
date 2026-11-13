@@ -6,7 +6,7 @@ import { XenditRequestFailed } from "@repo/backend/confect/billing/xendit/client
 import { ensureCustomer } from "@repo/backend/confect/billing/xendit/customers";
 import { createSession } from "@repo/backend/confect/billing/xendit/sessions";
 import {
-  createConvexTestWithBetterAuth,
+  createConvexTestWithAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
 import { api } from "@repo/backend/convex/_generated/api";
@@ -61,22 +61,19 @@ function openedSession(overrides: Record<string, unknown> = {}) {
 }
 
 const setup = Effect.fn("billing.xendit.checkout.test.setup")(function* () {
-  const t = createConvexTestWithBetterAuth();
+  const t = createConvexTestWithAuth();
   yield* TestClock.setTime(NOW);
   const user = yield* Effect.promise(() =>
     t.mutation((ctx) =>
       seedAuthenticatedUser(ctx, { now: NOW, suffix: "xendit" })
     )
   );
-  const authed = t.withIdentity({
-    sessionId: user.sessionId,
-    subject: user.authUserId,
-  });
+  const authed = t.withIdentity({ subject: user.sessionId });
   return { authed, t, user };
 });
 
 /** The rows a checkout leaves: the learner's accounts, checkouts and subscriptions. */
-function readRows(t: ReturnType<typeof createConvexTestWithBetterAuth>) {
+function readRows(t: ReturnType<typeof createConvexTestWithAuth>) {
   return Effect.promise(() =>
     t.run(async (ctx) => ({
       accounts: await ctx.db.query("billingAccounts").collect(),

@@ -9,7 +9,7 @@ import { afterEach, expect, it } from "@effect/vitest";
 import "@repo/backend/components/betterAuth/adapter";
 import "@repo/backend/convex/auth/deletion/workflow";
 import { components } from "@repo/backend/confect/_generated/components";
-import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
+import { createConvexTestWithAuth } from "@repo/backend/confect/test.helpers";
 import { internal } from "@repo/backend/convex/_generated/api";
 import { insertProSubscription } from "@repo/backend/test/billing";
 import { registerWorkflow } from "@repo/backend/test/workflow";
@@ -63,7 +63,7 @@ it("drains all four deletion workflows and their delayed reconciliation before r
       return Response.json({ detail: "Not found" }, { status: 404 });
     })
   );
-  const t = createConvexTestWithBetterAuth();
+  const t = createConvexTestWithAuth();
   await registerWorkflow(t);
   const authId = "removed-auth-user";
   const userId = await t.mutation(async (ctx) => {

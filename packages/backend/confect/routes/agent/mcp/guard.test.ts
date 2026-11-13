@@ -2,7 +2,7 @@
 
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import { NAKAFA_MCP_EDGE_CONTRACT } from "@repo/backend/agent/edge";
-import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
+import { createConvexTestWithAuth } from "@repo/backend/confect/test.helpers";
 import { Array as Arr, Effect } from "effect";
 
 const MCP_SECRET = "technical-mcp-edge-secret";
@@ -11,7 +11,7 @@ const ORIGINS_ENVIRONMENT = "NAKAFA_MCP_ALLOWED_ORIGINS";
 function fetchMcp(path: string, init: RequestInit = {}) {
   const headers = new Headers(init.headers);
   headers.set(NAKAFA_MCP_EDGE_CONTRACT.secretHeader, MCP_SECRET);
-  const test = createConvexTestWithBetterAuth();
+  const test = createConvexTestWithAuth();
   return Effect.promise(() =>
     test.fetch(`${NAKAFA_MCP_EDGE_CONTRACT.originPath}${path}`, {
       ...init,
@@ -64,7 +64,7 @@ describe("Nakafa MCP origin guard", () => {
   );
   it.effect("rejects direct origin access before transport dispatch", () =>
     Effect.gen(function* () {
-      const test = createConvexTestWithBetterAuth();
+      const test = createConvexTestWithAuth();
       const response = yield* Effect.promise(() =>
         test.fetch(NAKAFA_MCP_EDGE_CONTRACT.originPath, { method: "POST" })
       );

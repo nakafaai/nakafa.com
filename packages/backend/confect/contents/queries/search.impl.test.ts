@@ -1,7 +1,7 @@
 import { RegisteredConvexFunction } from "@confect/server";
 import { describe, expect, it } from "@effect/vitest";
 import confectSchema from "@repo/backend/confect/_generated/schema";
-import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
+import { createConvexTestWithAuth } from "@repo/backend/confect/test.helpers";
 import { api } from "@repo/backend/convex/_generated/api";
 import { makeMaterialProjection } from "@repo/backend/test/content/material";
 import {
@@ -28,7 +28,7 @@ async function activateArticleSearch(
   count: number,
   textAt: (index: number) => string
 ) {
-  const t = createConvexTestWithBetterAuth();
+  const t = createConvexTestWithAuth();
   await t.mutation(async (ctx) => {
     await insertRuntimeArticles(ctx, count);
     for (let index = 0; index < count; index += 1) {
@@ -44,7 +44,7 @@ async function activateArticleSearch(
 /** Activates the shared try-out fixture, whose English country page is described as "Try-out Indonesia". */
 const activateTryoutSearch = Effect.fn("test.contents.tryoutSearch")(
   function* () {
-    const t = createConvexTestWithBetterAuth();
+    const t = createConvexTestWithAuth();
     yield* Effect.promise(() =>
       t.mutation((ctx) => activateAssessmentTestSnapshot(ctx))
     );
@@ -86,7 +86,7 @@ describe("contents/queries/search:search", () => {
   ])(
     "rejects unbounded search input: $code ($limit, $offset)",
     async ({ code, ...input }) => {
-      const t = createConvexTestWithBetterAuth();
+      const t = createConvexTestWithAuth();
       const result = t.query(api.contents.queries.search.search, {
         ...input,
         locale: "en",
@@ -163,7 +163,7 @@ describe("contents/queries/search:search", () => {
     ]);
   });
   it("resolves an exact current material route", async () => {
-    const t = createConvexTestWithBetterAuth();
+    const t = createConvexTestWithAuth();
     const projection = makeMaterialProjection("en", 1);
     await t.mutation((ctx) =>
       Effect.runPromise(
@@ -224,7 +224,7 @@ describe("contents/queries/search:search", () => {
     ]);
   });
   it("returns signed Quran rows through the unified query", async () => {
-    const t = createConvexTestWithBetterAuth();
+    const t = createConvexTestWithAuth();
     await t.mutation((ctx) =>
       activateQuranSnapshot(ctx, [
         makeQuranSearch("en", 1, "signed mercy guidance"),
@@ -299,7 +299,7 @@ describe("contents/queries/search:search", () => {
       })
   );
   it("caps the shared signed search window", async () => {
-    const t = createConvexTestWithBetterAuth();
+    const t = createConvexTestWithAuth();
     await t.mutation((ctx) =>
       activateQuranSnapshot(
         ctx,

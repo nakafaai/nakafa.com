@@ -1,4 +1,4 @@
-import type { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
+import type { createConvexTestWithAuth } from "@repo/backend/confect/test.helpers";
 import type {
   ActionCtx,
   MutationCtx,
@@ -6,7 +6,7 @@ import type {
 import { getFunctionAddress } from "convex/server";
 import { Array as Arr } from "effect";
 
-type MeasuredTest = ReturnType<typeof createConvexTestWithBetterAuth>;
+type MeasuredTest = ReturnType<typeof createConvexTestWithAuth>;
 
 /** What an action can run in a transaction of its own: a query or a mutation. */
 type Runnable =

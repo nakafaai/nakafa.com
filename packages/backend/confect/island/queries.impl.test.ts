@@ -3,7 +3,7 @@ import island from "@repo/backend/confect/_generated/refs/island";
 import { Layout } from "@repo/backend/confect/island/layout";
 import { STARTER_LAYOUT } from "@repo/backend/confect/island/starter";
 import {
-  createConvexTestWithBetterAuth,
+  createConvexTestWithAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
 import { client } from "@repo/backend/test/client";
@@ -18,7 +18,7 @@ const DAY = 24 * 60 * 60 * 1000;
 /** An owner with the username `nabil` and a stranger, both signed in. */
 const islandWorld = Effect.fn("test.island.world")(function* () {
   vi.useFakeTimers({ now: NOW });
-  const t = createConvexTestWithBetterAuth();
+  const t = createConvexTestWithAuth();
   const { owner, stranger } = yield* Effect.promise(() =>
     t.mutation(async (ctx) => {
       const owner = await seedAuthenticatedUser(ctx, {
@@ -36,7 +36,7 @@ const islandWorld = Effect.fn("test.island.world")(function* () {
   );
   const as = (user: typeof owner) =>
     client(
-      t.withIdentity({ sessionId: user.sessionId, subject: user.authUserId })
+      t.withIdentity({ subject: user.sessionId })
     );
   return { owner: as(owner), ownerId: owner.userId, stranger: as(stranger), t };
 });

@@ -8,13 +8,10 @@ export function createDeletedUserTombstone(
 ) {
   const anonymousId = String(userId);
   return {
-    authVerificationCleanupCursor: undefined,
-    authId: `deleted:${anonymousId}`,
     bio: undefined,
     credits: 0,
     creditsResetAt: 0,
     deletedAt,
-    deletionPreparedAt: undefined,
     email: `deleted-${anonymousId}@account.nakafa.invalid`,
     image: undefined,
     name: "Deleted user",

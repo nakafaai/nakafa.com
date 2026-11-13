@@ -38,8 +38,9 @@ const Seeded = Schema.Struct({
 
 /**
  * Seats `count` accounts of one kind, in calls of `SEATS_PER_CALL`. Each seat gets a key of
- * its own for its placeholder address, a numbered name, and a new session token, which the
- * runner keeps out of its errors. The rooms go round in turn, as the students' scripts fill them.
+ * its own, a numbered name, and a new token that is its password, which the runner keeps out of
+ * its errors, and the seed answers each seat's account id. The rooms go round in turn, as the
+ * students' scripts fill them.
  */
 const seatAll = Effect.fn("load.seed.seats")(function* <E, R>(
   run: RunConvex<E, R>,
@@ -64,7 +65,7 @@ const seatAll = Effect.fn("load.seed.seats")(function* <E, R>(
       };
     })
   );
-  yield* Effect.forEach(
+  const accounts = yield* Effect.forEach(
     Arr.chunksOf(seats, SEATS_PER_CALL),
     (batch) =>
       // Each attempt calls the runner again, so a retry sends the seats again.
@@ -85,10 +86,17 @@ const seatAll = Effect.fn("load.seed.seats")(function* <E, R>(
           },
           Arr.map(batch, (seat) => seat.token)
         )
-      ).pipe(Effect.retry({ times: SEED_RETRIES })),
-    { concurrency: SEED_CONCURRENCY, discard: true }
+      ).pipe(
+        Effect.retry({ times: SEED_RETRIES }),
+        Effect.flatMap(Schema.decodeUnknownEffect(Schema.Array(Schema.String)))
+      ),
+    { concurrency: SEED_CONCURRENCY }
   );
-  return Arr.map(seats, ({ room, token }) => ({ room, token }));
+  return Arr.zipWith(seats, Arr.flatten(accounts), ({ room, token }, userId) => ({
+    room,
+    token,
+    userId,
+  }));
 });
 
 /**

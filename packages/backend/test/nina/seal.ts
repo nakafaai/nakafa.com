@@ -12,7 +12,7 @@ import {
   sealMessage,
 } from "@repo/backend/confect/nina/sealed";
 import { savePrompt } from "@repo/backend/confect/nina/sealed/save";
-import type { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
+import type { createConvexTestWithAuth } from "@repo/backend/confect/test.helpers";
 import { ensureLearnerKeys } from "@repo/backend/confect/vault/keys";
 import { parse } from "convex-helpers/validators";
 import {
@@ -226,7 +226,7 @@ const sealThreadRows = Effect.fn("test.nina.seal.thread")(function* (
  * returns the replaced rows (`sealThreadRows`).
  */
 export function sealThreadIn(
-  t: ReturnType<typeof createConvexTestWithBetterAuth>,
+  t: ReturnType<typeof createConvexTestWithAuth>,
   threadId: string,
   owner: LearnerId
 ) {
@@ -246,7 +246,7 @@ export function sealThreadIn(
  * replaced rows (`rewriteThreadRows`).
  */
 export function writtenThreadIn(
-  t: ReturnType<typeof createConvexTestWithBetterAuth>,
+  t: ReturnType<typeof createConvexTestWithAuth>,
   threadId: string,
   owner: LearnerId
 ) {
@@ -265,7 +265,7 @@ export function writtenThreadIn(
  * (`rewriteThreadRows`).
  */
 export function plainThreadIn(
-  t: ReturnType<typeof createConvexTestWithBetterAuth>,
+  t: ReturnType<typeof createConvexTestWithAuth>,
   threadId: string,
   owner: LearnerId
 ) {
@@ -284,7 +284,7 @@ export function plainThreadIn(
  * fixture wrote them until a test seals them.
  */
 export async function earlierTurnIn(
-  t: ReturnType<typeof createConvexTestWithBetterAuth>
+  t: ReturnType<typeof createConvexTestWithAuth>
 ) {
   const turns = await t.query((ctx) => ctx.db.query("ninaTurns").collect());
   return Effect.runPromise(

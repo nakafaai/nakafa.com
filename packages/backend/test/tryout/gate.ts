@@ -201,10 +201,7 @@ export const seedTryoutGate = Effect.gen(function* () {
   const clients = {
     learner: world.learner,
     other: client(
-      world.t.withIdentity({
-        sessionId: seeded.other.sessionId,
-        subject: seeded.other.authUserId,
-      })
+      world.t.withIdentity({ subject: seeded.other.sessionId })
     ),
   };
   const placements = {

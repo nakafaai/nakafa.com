@@ -6,7 +6,7 @@ import { Effect } from "effect";
 import { describe, expect, it } from "@effect/vitest";
 import { NAKAFA_API_EDGE_CONTRACT } from "@repo/backend/agent/edge";
 import { deriveMaterialTopicReference } from "@repo/backend/confect/contentRelease/material/topic";
-import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
+import { createConvexTestWithAuth } from "@repo/backend/confect/test.helpers";
 import {
   API_SECRET,
   expectProblem,
@@ -29,7 +29,7 @@ describe("public agent API routes", () => {
   it("fails closed with service unavailable when the origin secret is unconfigured", async () => {
     vi.stubEnv(NAKAFA_API_EDGE_CONTRACT.secretEnvironment, "");
     const response = await fetchApi(
-      createConvexTestWithBetterAuth(),
+      createConvexTestWithAuth(),
       "/health"
     );
     await expectProblem(response, {
@@ -40,7 +40,7 @@ describe("public agent API routes", () => {
   it.each(["/", "/health", "/taxonomy", "/content", "/quran/1"])(
     "allows a browser preflight for %s",
     async (path) => {
-      const response = await fetchApi(createConvexTestWithBetterAuth(), path, {
+      const response = await fetchApi(createConvexTestWithAuth(), path, {
         method: "OPTIONS",
       });
       expect(response.status).toBe(204);
@@ -48,14 +48,14 @@ describe("public agent API routes", () => {
     }
   );
   it("preflights the published OpenAPI document", async () => {
-    const response = await fetchOpenApi(createConvexTestWithBetterAuth(), {
+    const response = await fetchOpenApi(createConvexTestWithAuth(), {
       method: "OPTIONS",
     });
     expect(response.status).toBe(204);
   });
   it("returns method guidance for a non-read request to an unknown API path", async () => {
     const response = await fetchApi(
-      createConvexTestWithBetterAuth(),
+      createConvexTestWithAuth(),
       "/unknown",
       {
         method: "POST",
@@ -67,7 +67,7 @@ describe("public agent API routes", () => {
     });
   });
   it("answers HEAD on the index and the OpenAPI document with the method guard", async () => {
-    const test = createConvexTestWithBetterAuth();
+    const test = createConvexTestWithAuth();
     const [index, document] = await Promise.all([
       fetchApi(test, "/", { method: "HEAD" }),
       fetchOpenApi(test, { method: "HEAD" }),
@@ -81,7 +81,7 @@ describe("public agent API routes", () => {
     }
   });
   it("serves the API index, health response, and CORS preflight", async () => {
-    const test = createConvexTestWithBetterAuth();
+    const test = createConvexTestWithAuth();
     const [index, health, options] = await Promise.all([
       fetchApi(test, "/"),
       fetchApi(test, "/health"),
@@ -113,7 +113,7 @@ describe("public agent API routes", () => {
     );
   });
   it("protects and serves the cacheable OpenAPI contract", async () => {
-    const test = createConvexTestWithBetterAuth();
+    const test = createConvexTestWithAuth();
     const denied = await test.fetch(
       `${NAKAFA_API_EDGE_CONTRACT.originPath}${NAKAFA_API_EDGE_CONTRACT.documentPath}`
     );
@@ -155,7 +155,7 @@ describe("public agent API routes", () => {
   it.each(["/", "/health", "/quran/1?locale=en"])(
     "rejects direct origin access to %s before dispatching a route",
     async (path) => {
-      const response = await createConvexTestWithBetterAuth().fetch(
+      const response = await createConvexTestWithAuth().fetch(
         `${NAKAFA_API_EDGE_CONTRACT.originPath}${NAKAFA_API_EDGE_CONTRACT.runtimePath}${path}`
       );
       await expectProblem(response, {
@@ -165,7 +165,7 @@ describe("public agent API routes", () => {
     }
   );
   it("does not expose the protected origin at the site root", async () => {
-    const response = await createConvexTestWithBetterAuth().fetch("/");
+    const response = await createConvexTestWithAuth().fetch("/");
     expect(response.status).toBe(404);
   });
   it.each([
@@ -180,7 +180,7 @@ describe("public agent API routes", () => {
         [NAKAFA_API_EDGE_CONTRACT.secretHeader]: API_SECRET,
         "x-forwarded-for": "203.0.113.4",
       });
-      const response = await createConvexTestWithBetterAuth().fetch(
+      const response = await createConvexTestWithAuth().fetch(
         `${NAKAFA_API_EDGE_CONTRACT.originPath}${path}`,
         {
           headers,
@@ -192,7 +192,7 @@ describe("public agent API routes", () => {
   it.each(["/v1", "/v1/content", "/v1/openapi.json", "/v2", "/v2/search"])(
     "does not nest version namespaces inside the protected runtime at %s",
     async (path) => {
-      const response = await fetchApi(createConvexTestWithBetterAuth(), path);
+      const response = await fetchApi(createConvexTestWithAuth(), path);
       await expectProblem(response, {
         code: "ENDPOINT_NOT_FOUND",
         status: 404,
@@ -242,7 +242,7 @@ describe("public agent API routes", () => {
     "returns a structured problem for %s",
     async (path, init, code, status) => {
       const response = await fetchApi(
-        createConvexTestWithBetterAuth(),
+        createConvexTestWithAuth(),
         path,
         init
       );
@@ -254,7 +254,7 @@ describe("public agent API routes", () => {
   );
   it("returns stable empty search pagination from an empty deployment", async () => {
     const response = await fetchApi(
-      createConvexTestWithBetterAuth(),
+      createConvexTestWithAuth(),
       "/search?query=algebra&locale=en&limit=10&offset=0"
     );
     expect(response.status).toBe(200);
@@ -268,7 +268,7 @@ describe("public agent API routes", () => {
     });
   });
   it("searches one authenticated current article", async () => {
-    const test = createConvexTestWithBetterAuth();
+    const test = createConvexTestWithAuth();
     const article = testArticleProjection(0);
     await test.mutation(async (ctx) => {
       await insertRuntimeArticles(ctx, 1);
@@ -297,7 +297,7 @@ describe("public agent API routes", () => {
     });
   });
   it("reads authenticated article markdown through its canonical URL", async () => {
-    const test = createConvexTestWithBetterAuth();
+    const test = createConvexTestWithAuth();
     const article = testArticleProjection(0);
     await test.mutation((ctx) => insertRuntimeArticles(ctx, 1));
     const reference = encodeURIComponent(
@@ -316,7 +316,7 @@ describe("public agent API routes", () => {
     });
   });
   it("reads authenticated material markdown through its content ID", async () => {
-    const test = createConvexTestWithBetterAuth();
+    const test = createConvexTestWithAuth();
     const material = makeMaterialProjection("en", 1);
     await test.mutation((ctx) =>
       Effect.runPromise(
@@ -345,7 +345,7 @@ describe("public agent API routes", () => {
   it.effect("keeps material topics citation-only without a runtime read", () =>
     Effect.gen(function* () {
       const runtimeServices = yield* Effect.context<never>();
-      const test = createConvexTestWithBetterAuth();
+      const test = createConvexTestWithAuth();
       const material = makeMaterialProjection("en", 1);
       const topic = yield* deriveMaterialTopicReference(material);
       yield* Effect.promise(() =>
@@ -374,7 +374,7 @@ describe("public agent API routes", () => {
     })
   );
   it("fails closed when an article catalog identity is corrupted", async () => {
-    const test = createConvexTestWithBetterAuth();
+    const test = createConvexTestWithAuth();
     const article = testArticleProjection(0);
     await test.mutation(async (ctx) => {
       await insertRuntimeArticles(ctx, 1);
@@ -396,7 +396,7 @@ describe("public agent API routes", () => {
     });
   });
   it("fails closed when the signed taxonomy publication is unavailable", async () => {
-    const test = createConvexTestWithBetterAuth();
+    const test = createConvexTestWithAuth();
     const response = await fetchApi(test, "/taxonomy?locale=en");
     await expectProblem(response, {
       code: "SERVICE_UNAVAILABLE",
@@ -404,7 +404,7 @@ describe("public agent API routes", () => {
     });
   });
   it("fails closed when the trusted quota identity is unavailable", async () => {
-    const test = createConvexTestWithBetterAuth();
+    const test = createConvexTestWithAuth();
     const headers = new Headers({
       [NAKAFA_API_EDGE_CONTRACT.secretHeader]: API_SECRET,
     });
@@ -425,7 +425,7 @@ describe("public agent API routes", () => {
     });
     const now = Date.UTC(2026, 8, 6, 12);
     vi.setSystemTime(now);
-    const test = createConvexTestWithBetterAuth();
+    const test = createConvexTestWithAuth();
     for (let index = 0; index < 30; index += 1) {
       const read = await fetchApi(test, "/search");
       const health = await fetchApi(test, "/health");

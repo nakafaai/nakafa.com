@@ -4,7 +4,7 @@ import type { resolveNinaContext } from "@repo/backend/confect/nina/context";
 import { openNinaLearningSession } from "@repo/backend/confect/nina/contract/pack";
 import type { NinaInput } from "@repo/backend/confect/nina/turns.spec";
 import {
-  createConvexTestWithBetterAuth,
+  createConvexTestWithAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
 import { Effect } from "effect";
@@ -32,14 +32,11 @@ export const args = {
 
 /** A signed-in learner with credits, and nothing asked yet. */
 export async function fixture(credits = 10) {
-  const t = createConvexTestWithBetterAuth();
+  const t = createConvexTestWithAuth();
   const identity = await t.mutation((ctx) =>
     seedAuthenticatedUser(ctx, { now: NOW, credits })
   );
-  const owner = t.withIdentity({
-    subject: identity.authUserId,
-    sessionId: identity.sessionId,
-  });
+  const owner = t.withIdentity({ subject: identity.sessionId });
   return { t, identity, owner };
 }
 

@@ -10,7 +10,7 @@ import {
 import refs from "@repo/backend/confect/_generated/refs";
 import { AuthFailure, SessionRequired } from "@repo/backend/confect/auth/spec";
 import {
-  createConvexTestWithBetterAuth,
+  createConvexTestWithAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
 import { Option, Schema } from "effect";
@@ -38,14 +38,11 @@ afterEach(() => vi.restoreAllMocks());
 
 describe("token-verified reads and session-validated writes", () => {
   it("resolves the same active account through registered reads and writes", async () => {
-    const t = createConvexTestWithBetterAuth();
+    const t = createConvexTestWithAuth();
     const identity = await t.mutation((ctx) =>
       seedAuthenticatedUser(ctx, { now: NOW, suffix: "active-auth" })
     );
-    const authenticated = t.withIdentity({
-      sessionId: identity.sessionId,
-      subject: identity.authUserId,
-    });
+    const authenticated = t.withIdentity({ subject: identity.sessionId });
     expect(await authenticated.query(currentUser, {})).toMatchObject({
       appUser: { _id: identity.userId },
     });
@@ -60,7 +57,7 @@ describe("token-verified reads and session-validated writes", () => {
   });
 
   it("refuses anonymous callers on every function type", async () => {
-    const t = createConvexTestWithBetterAuth();
+    const t = createConvexTestWithAuth();
     expect(await t.query(currentUser, {})).toBeNull();
     expect(await t.mutation(admitOnboarding, {})).toMatchObject({
       isAuthenticated: false,
@@ -89,7 +86,7 @@ describe("token-verified reads and session-validated writes", () => {
   });
 
   it("reads from the verified token alone and confirms the live session before writes", async () => {
-    const t = createConvexTestWithBetterAuth();
+    const t = createConvexTestWithAuth();
     const identity = await t.mutation((ctx) =>
       seedAuthenticatedUser(ctx, {
         now: NOW,
@@ -97,10 +94,7 @@ describe("token-verified reads and session-validated writes", () => {
         sessionDurationMs: 0,
       })
     );
-    const expired = t.withIdentity({
-      sessionId: identity.sessionId,
-      subject: identity.authUserId,
-    });
+    const expired = t.withIdentity({ subject: identity.sessionId });
     // Revocation follows the token's short lifetime for reads: an expired
     // session still reads, so a read asks Better Auth nothing.
     expect(await expired.query(currentUser, {})).toMatchObject({
@@ -123,7 +117,7 @@ describe("token-verified reads and session-validated writes", () => {
   });
 
   it("refuses a write whose token names another user's session", async () => {
-    const t = createConvexTestWithBetterAuth();
+    const t = createConvexTestWithAuth();
     const [owner, other] = await t.mutation(async (ctx) => [
       await seedAuthenticatedUser(ctx, { now: NOW, suffix: "session-owner" }),
       await seedAuthenticatedUser(ctx, { now: NOW, suffix: "session-other" }),
@@ -141,7 +135,7 @@ describe("token-verified reads and session-validated writes", () => {
   });
 
   it("fails a write whose token does not name its session, also where a caller without a session may write", async () => {
-    const t = createConvexTestWithBetterAuth();
+    const t = createConvexTestWithAuth();
     const identity = await t.mutation((ctx) =>
       seedAuthenticatedUser(ctx, { now: NOW, suffix: "no-session" })
     );
@@ -167,14 +161,11 @@ describe("token-verified reads and session-validated writes", () => {
   });
 
   it("rejects removed accounts instead of allowing them to write anonymously", async () => {
-    const t = createConvexTestWithBetterAuth();
+    const t = createConvexTestWithAuth();
     const identity = await t.mutation((ctx) =>
       seedAuthenticatedUser(ctx, { now: NOW, suffix: "removed-auth" })
     );
-    const authenticated = t.withIdentity({
-      sessionId: identity.sessionId,
-      subject: identity.authUserId,
-    });
+    const authenticated = t.withIdentity({ subject: identity.sessionId });
     await t.mutation((ctx) =>
       ctx.db.patch("users", identity.userId, { deletedAt: NOW })
     );
@@ -209,17 +200,14 @@ describe("token-verified reads and session-validated writes", () => {
   });
 
   it("keeps prepared users readable while rejecting authenticated operations", async () => {
-    const t = createConvexTestWithBetterAuth();
+    const t = createConvexTestWithAuth();
     const identity = await t.mutation((ctx) =>
       seedAuthenticatedUser(ctx, { now: NOW, suffix: "prepared-auth" })
     );
     await t.mutation((ctx) =>
       ctx.db.patch("users", identity.userId, { deletionPreparedAt: NOW })
     );
-    const authenticated = t.withIdentity({
-      sessionId: identity.sessionId,
-      subject: identity.authUserId,
-    });
+    const authenticated = t.withIdentity({ subject: identity.sessionId });
     expect(await authenticated.query(currentUser, {})).toMatchObject({
       appUser: { _id: identity.userId },
     });

@@ -8,7 +8,7 @@ import {
 } from "@repo/backend/confect/nina/credits/ledger";
 import type { NinaCreditHold } from "@repo/backend/confect/nina/credits/schema";
 import {
-  createConvexTestWithBetterAuth,
+  createConvexTestWithAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
 import { runInMutation } from "@repo/backend/test/billing";
@@ -26,7 +26,7 @@ const decodeUser = Schema.decodeUnknownSync(usersTable.Doc);
  * theirs the way an Agent turn does.
  */
 export async function creditFixture(credits = 5, creditsResetAt = CREDITS_NOW) {
-  const t = createConvexTestWithBetterAuth();
+  const t = createConvexTestWithAuth();
   const identity = await t.mutation((ctx) =>
     seedAuthenticatedUser(ctx, { now: CREDITS_NOW, credits, creditsResetAt })
   );

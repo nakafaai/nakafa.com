@@ -3,7 +3,7 @@ import type { Docs } from "@repo/backend/confect/_generated/docs";
 import refs from "@repo/backend/confect/_generated/refs";
 import type { NinaInput } from "@repo/backend/confect/nina/turns.spec";
 import {
-  createConvexTestWithBetterAuth,
+  createConvexTestWithAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
 
@@ -16,7 +16,7 @@ const start = Ref.getFunctionReference(refs.public.nina.turns.start);
  * returns its receipt.
  */
 export async function createLearnerTest() {
-  const t = createConvexTestWithBetterAuth();
+  const t = createConvexTestWithAuth();
   const identity = await t.mutation((ctx) =>
     seedAuthenticatedUser(ctx, {
       now: Date.UTC(2026, 9, 11),
@@ -24,10 +24,7 @@ export async function createLearnerTest() {
       plan: "pro",
     })
   );
-  const owner = t.withIdentity({
-    subject: identity.authUserId,
-    sessionId: identity.sessionId,
-  });
+  const owner = t.withIdentity({ subject: identity.sessionId });
   let requests = 0;
   /** Admits one turn as the browser does, generates its answer, and returns its receipt. */
   async function converse(

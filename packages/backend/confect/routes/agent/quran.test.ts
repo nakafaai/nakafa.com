@@ -1,7 +1,7 @@
 // @vitest-environment node
 
 import { describe, expect, it } from "@effect/vitest";
-import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
+import { createConvexTestWithAuth } from "@repo/backend/confect/test.helpers";
 import {
   expectProblem,
   expectPublicJson,
@@ -27,14 +27,14 @@ describe("public Quran API routes", () => {
     "rejects invalid passage bounds before reading publication: %s",
     async (path) => {
       await expectProblem(
-        await fetchApi(createConvexTestWithBetterAuth(), path),
+        await fetchApi(createConvexTestWithAuth(), path),
         { code: "UNPROCESSABLE_REQUEST", status: 422 }
       );
     }
   );
 
   it("rejects a verse beyond the signed surah length", async () => {
-    const test = createConvexTestWithBetterAuth();
+    const test = createConvexTestWithAuth();
     await test.mutation((ctx) =>
       activateQuranSnapshot(ctx, [
         makeQuranAttribution(),
@@ -49,13 +49,13 @@ describe("public Quran API routes", () => {
 
   it("fails closed when no signed Quran catalog is available", async () => {
     await expectProblem(
-      await fetchApi(createConvexTestWithBetterAuth(), "/quran/1"),
+      await fetchApi(createConvexTestWithAuth(), "/quran/1"),
       { code: "SERVICE_UNAVAILABLE", status: 503 }
     );
   });
 
   it("rejects a signed search graph without a public asset identity", async () => {
-    const test = createConvexTestWithBetterAuth();
+    const test = createConvexTestWithAuth();
     const search = makeQuranSearch("en", 1);
     await test.mutation((ctx) =>
       activateQuranSnapshot(ctx, [
@@ -79,7 +79,7 @@ describe("public Quran API routes", () => {
   it.each(["/v2/quran/1", "/v2/quran/1?locale=en"])(
     "rejects the unsupported public namespace %s",
     async (path) => {
-      const response = await fetchApi(createConvexTestWithBetterAuth(), path);
+      const response = await fetchApi(createConvexTestWithAuth(), path);
 
       expect(response.status).toBe(404);
     }
@@ -87,7 +87,7 @@ describe("public Quran API routes", () => {
 
   it("rejects an out-of-range canonical surah", async () => {
     const response = await fetchApi(
-      createConvexTestWithBetterAuth(),
+      createConvexTestWithAuth(),
       "/quran/115"
     );
 
@@ -98,7 +98,7 @@ describe("public Quran API routes", () => {
   });
 
   it("reads Quran markdown through one transactionally pinned source", async () => {
-    const test = createConvexTestWithBetterAuth();
+    const test = createConvexTestWithAuth();
     await test.mutation((ctx) =>
       activateQuranSnapshot(ctx, [
         makeQuranAttribution(),
@@ -149,7 +149,7 @@ describe("public Quran API routes", () => {
   });
 
   it("returns one bounded authenticated Quran reference", async () => {
-    const test = createConvexTestWithBetterAuth();
+    const test = createConvexTestWithAuth();
     await test.mutation((ctx) =>
       activateQuranSnapshot(ctx, [
         makeQuranAttribution(),
@@ -224,7 +224,7 @@ describe("public Quran API routes", () => {
   });
 
   it("returns English references with signed external tafsir access", async () => {
-    const test = createConvexTestWithBetterAuth();
+    const test = createConvexTestWithAuth();
     await test.mutation((ctx) =>
       activateQuranSnapshot(ctx, [
         makeQuranAttribution(),

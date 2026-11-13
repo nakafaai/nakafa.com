@@ -8,6 +8,9 @@ process.env.POSTHOG_HOST = "http://127.0.0.1:9";
 process.env.POSTHOG_ERASURE_API_KEY = "phx_test";
 process.env.POSTHOG_PROJECT_ID = "114144";
 process.env.POSTHOG_PROJECT_TOKEN = "phc_test";
+// convex-test signs Convex Auth's access tokens with this issuer, and the session
+// middleware tells an agent's token apart by it.
+process.env.CONVEX_CLOUD_URL = "https://some-deployment.convex.cloud";
 process.env.CONVEX_SITE_URL = "https://example.convex.site";
 process.env.SITE_URL = "http://localhost:3000";
 process.env.GOOGLE_AUTH_CLIENT_ID = "test-google-client";

@@ -10,7 +10,7 @@ import "@repo/backend/convex/notifications/personal";
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
 import {
-  createConvexTestWithBetterAuth,
+  createConvexTestWithAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
 import { api } from "@repo/backend/convex/_generated/api";
@@ -36,7 +36,7 @@ const set = Ref.getFunctionReference(refs.public.notifications.personal.set);
 
 /** A learner who comments and one who replies, each with the client that acts as them. */
 async function createLearners() {
-  const t = createConvexTestWithBetterAuth();
+  const t = createConvexTestWithAuth();
   const [author, reader] = await t.mutation(async (ctx) =>
     Promise.all([
       seedAuthenticatedUser(ctx, { now: NOON, suffix: "reply-author" }),
@@ -44,10 +44,7 @@ async function createLearners() {
     ])
   );
   const as = (learner: typeof author) =>
-    t.withIdentity({
-      subject: learner.authUserId,
-      sessionId: learner.sessionId,
-    });
+    t.withIdentity({ subject: learner.sessionId });
   return {
     author: { client: as(author), userId: author.userId },
     reader: { client: as(reader), userId: reader.userId },

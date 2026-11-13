@@ -3,7 +3,7 @@ import { assert, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
 import { AuthFailure } from "@repo/backend/confect/auth/spec";
 import {
-  createConvexTestWithBetterAuth,
+  createConvexTestWithAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
 import { Option, Schema } from "effect";
@@ -54,16 +54,13 @@ it.each(["malformed", "unavailable"])(
     }
     const now = Date.UTC(2026, 6, 28, 11);
     vi.setSystemTime(now);
-    const test = createConvexTestWithBetterAuth();
+    const test = createConvexTestWithAuth();
     const identity = await test.mutation((ctx) =>
       seedAuthenticatedUser(ctx, { now })
     );
     await expect(
       test
-        .withIdentity({
-          sessionId: identity.sessionId,
-          subject: identity.authUserId,
-        })
+        .withIdentity({ subject: identity.sessionId })
         .action(
           Ref.getFunctionReference(
             refs.public.billing.sessions.generateCustomerPortalUrl
@@ -103,14 +100,11 @@ it.each([
     });
     const now = Date.UTC(2026, 6, 28, 11);
     vi.setSystemTime(now);
-    const test = createConvexTestWithBetterAuth();
+    const test = createConvexTestWithAuth();
     const identity = await test.mutation((ctx) =>
       seedAuthenticatedUser(ctx, { now, suffix: `failed-read-${kind}` })
     );
-    const signedIn = test.withIdentity({
-      sessionId: identity.sessionId,
-      subject: identity.authUserId,
-    });
+    const signedIn = test.withIdentity({ subject: identity.sessionId });
     const failure = await (kind === "mutation"
       ? signedIn.mutation(reference, args)
       : signedIn.action(reference, args)
@@ -131,14 +125,11 @@ it.each([
 it("asks Better Auth once for a write, with the session and the user its token names, and never for a read", async () => {
   const now = Date.UTC(2026, 6, 28, 11);
   vi.setSystemTime(now);
-  const test = createConvexTestWithBetterAuth();
+  const test = createConvexTestWithAuth();
   const identity = await test.mutation((ctx) =>
     seedAuthenticatedUser(ctx, { now, suffix: "one-read" })
   );
-  const signedIn = test.withIdentity({
-    sessionId: identity.sessionId,
-    subject: identity.authUserId,
-  });
+  const signedIn = test.withIdentity({ subject: identity.sessionId });
   await signedIn.query(
     Ref.getFunctionReference(refs.public.auth.queries.getCurrentUser),
     {}
@@ -154,7 +145,7 @@ it("asks Better Auth once for a write, with the session and the user its token n
 });
 
 it("asks Better Auth nothing for a write without a token", async () => {
-  const test = createConvexTestWithBetterAuth();
+  const test = createConvexTestWithAuth();
   await expect(
     test.mutation(
       Ref.getFunctionReference(refs.public.users.mutations.updateUserName),

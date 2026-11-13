@@ -395,7 +395,7 @@ describe("native Nina admission", () => {
       seedAuthenticatedUser(ctx, { now: NOW, credits: 10, suffix: "other" })
     );
     await t
-      .withIdentity({ subject: other.authUserId, sessionId: other.sessionId })
+      .withIdentity({ subject: other.sessionId })
       .mutation(start, { ...args, requestId: "other" });
     expect(
       (await t.query((ctx) => ctx.db.query("ninaTurns").collect())).length
@@ -462,7 +462,7 @@ describe("native Nina admission", () => {
     );
     await expect(
       t
-        .withIdentity({ subject: other.authUserId, sessionId: other.sessionId })
+        .withIdentity({ subject: other.sessionId })
         .mutation(start, { ...args, chatId: first.chatId })
     ).rejects.toMatchObject({ data: { code: "FORBIDDEN" } });
     await owner.mutation(cancel, { chatId: first.chatId });

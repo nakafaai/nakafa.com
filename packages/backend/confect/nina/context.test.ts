@@ -8,7 +8,7 @@ import {
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
 import { resolveNinaContext } from "@repo/backend/confect/nina/context";
-import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
+import { createConvexTestWithAuth } from "@repo/backend/confect/test.helpers";
 import { Confect, confectLayer } from "@repo/backend/confect/test.setup";
 import { makeMaterialProjection } from "@repo/backend/test/content/material";
 import { MASCOT } from "@repo/backend/test/mascot";
@@ -290,7 +290,7 @@ describe("Nina signed learning context", () => {
   );
 
   it("keeps a signed try-out route out of current-page fetch", async () => {
-    const t = createConvexTestWithBetterAuth();
+    const t = createConvexTestWithAuth();
     await t.mutation(async (ctx) => {
       await activateAssessmentTestSnapshot(ctx);
       const context = await Effect.runPromise(

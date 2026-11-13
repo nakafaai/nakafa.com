@@ -5,7 +5,7 @@ import {
 } from "@nakafa/aksara-contracts/release/snapshot/data";
 import tryouts from "@repo/backend/confect/_generated/refs/tryouts";
 import { assessmentRowFacts } from "@repo/backend/confect/contentRelease/assessment/facts";
-import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
+import { createConvexTestWithAuth } from "@repo/backend/confect/test.helpers";
 import type {
   ListArgs,
   trackSetPageValidator,
@@ -175,7 +175,7 @@ describe("tryouts/queries/sets", () => {
   it.effect("requires an active release", () =>
     Effect.gen(function* () {
       expect(
-        yield* client(createConvexTestWithBetterAuth())
+        yield* client(createConvexTestWithAuth())
           .query(list, listArgs())
           .pipe(Effect.flip)
       ).toMatchObject({

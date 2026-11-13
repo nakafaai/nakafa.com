@@ -1,7 +1,7 @@
 import { describe, expect, it } from "@effect/vitest";
 import tryouts from "@repo/backend/confect/_generated/refs/tryouts";
 import {
-  createConvexTestWithBetterAuth,
+  createConvexTestWithAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
 import { catalogNodeIdentity } from "@repo/backend/confect/tryouts/catalog/rows";
@@ -397,17 +397,14 @@ describe("tryouts/mutations/attempts", () => {
     () =>
       Effect.gen(function* () {
         vi.setSystemTime(TRYOUT_NOW);
-        const t = createConvexTestWithBetterAuth();
+        const t = createConvexTestWithAuth();
         const learner = yield* Effect.promise(() =>
           t.mutation((ctx) =>
             seedAuthenticatedUser(ctx, { now: TRYOUT_NOW, suffix: "early" })
           )
         );
         const refused = yield* client(
-          t.withIdentity({
-            sessionId: learner.sessionId,
-            subject: learner.authUserId,
-          })
+          t.withIdentity({ subject: learner.sessionId })
         )
           .mutation(tryouts.mutations.attempts.startAttempt, startArgs())
           .pipe(Effect.flip);

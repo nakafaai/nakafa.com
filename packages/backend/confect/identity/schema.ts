@@ -66,27 +66,12 @@ export const RedeemRequest = Schema.Struct({
 export const RedeemRefusal = Schema.Literals([
   "expired",
   "invalid",
+  "passwordRejected",
   "passwordTooLong",
   "passwordTooShort",
   "rateLimited",
   "used",
 ]);
-
-/**
- * The Better Auth username that a school login signs in with on its school's
- * host, or none. `missing` covers an unknown name, a Person who is removed or has
- * no account yet, and a login name that the school cannot hold, so the answer
- * never tells a visitor which of them held.
- */
-export const LoginUsername = Schema.Union([
-  Schema.Struct({
-    outcome: Schema.Literal("found"),
-    username: Schema.String,
-  }),
-  Schema.Struct({
-    outcome: Schema.Literal("missing"),
-  }),
-]).pipe(Schema.toTaggedUnion("outcome"));
 
 /**
  * What redeeming a card answers. A refusal is a value, not an error, so that

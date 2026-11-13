@@ -13,7 +13,7 @@ import tryouts from "@repo/backend/confect/_generated/refs/tryouts";
 import type databaseSchema from "@repo/backend/confect/_generated/schema";
 import type { ExamResponse } from "@repo/backend/confect/assessment/response";
 import {
-  createConvexTestWithBetterAuth,
+  createConvexTestWithAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
 import { startTryoutAttempt } from "@repo/backend/confect/tryouts/start/impl";
@@ -100,7 +100,7 @@ export const tryoutWorld = Effect.fn("test.tryout.world")(function* (
   options: FixtureOptions & { readonly suffix?: string } = {}
 ) {
   vi.setSystemTime(TRYOUT_NOW - SEED_LEAD_MILLISECONDS);
-  const t = createConvexTestWithBetterAuth();
+  const t = createConvexTestWithAuth();
   const { suffix = "learner", ...fixture } = options;
   const seeded = yield* Effect.promise(() =>
     t.mutation(async (ctx) => {
@@ -113,10 +113,7 @@ export const tryoutWorld = Effect.fn("test.tryout.world")(function* (
     })
   );
   vi.setSystemTime(TRYOUT_NOW);
-  const signedIn = t.withIdentity({
-    sessionId: seeded.learner.sessionId,
-    subject: seeded.learner.authUserId,
-  });
+  const signedIn = t.withIdentity({ subject: seeded.learner.sessionId });
   const learner = client(signedIn);
   return {
     /** Calls internal functions as the platform does. */

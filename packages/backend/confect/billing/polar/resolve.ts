@@ -24,7 +24,7 @@ export const resolvePolarCustomer = Effect.fn("billing.polar.resolveCustomer")(
     const outcome = yield* runMutation(
       billingInternal.accounts.linkPolarCustomer,
       {
-        authId: customer.externalId,
+        externalId: customer.externalId,
         // Polar holds no billing address for this customer, so its country is unknown, as the checkout account's is.
         country: customer.billingCountry ?? UNKNOWN_COUNTRY,
         providerCustomerId: customer.id,

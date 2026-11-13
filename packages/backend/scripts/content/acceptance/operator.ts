@@ -1,18 +1,13 @@
-import { createLearnerAccount } from "@repo/backend/scripts/content/acceptance/account";
+import { openLearnerAccount } from "@repo/backend/scripts/content/acceptance/account";
 import {
   LocalConvex,
   localConvexLayer,
 } from "@repo/backend/scripts/content/acceptance/convex";
 import { retryFunctionTimeout } from "@repo/backend/scripts/content/acceptance/error";
 import {
-  SessionCookie,
+  SessionCookies,
   writeFixture,
 } from "@repo/backend/scripts/content/acceptance/fixture";
-import {
-  SESSION_LIFETIME,
-  sessionCookieOf,
-} from "@repo/backend/scripts/content/acceptance/learner";
-import { appUserOf } from "@repo/backend/scripts/content/acceptance/member";
 import {
   type AcceptanceMode,
   decodeModeArguments,
@@ -21,21 +16,18 @@ import { Effect, Schema } from "effect";
 
 /**
  * Signs one synthetic operator into the running local acceptance backend and
- * answers its session cookie: a new learner, granted operator access as Nakafa
+ * answers its session cookies: a new learner, granted operator access as Nakafa
  * staff grant it, with the deployment's key.
  */
 export const seedOperator = Effect.fn("contentAcceptance.seedOperator")(
   function* () {
     const { run } = yield* LocalConvex;
-    const { token, userId } = yield* retryFunctionTimeout(
-      createLearnerAccount(run, SESSION_LIFETIME)
-    );
-    const appUser = yield* appUserOf(run, userId);
+    const account = yield* retryFunctionTimeout(openLearnerAccount(run));
     yield* run("operator grant", {
-      args: { userId: appUser },
+      args: { userId: account.userId },
       path: "operators/staff:grant",
     });
-    return yield* sessionCookieOf(token);
+    return account.cookies;
   }
 );
 
@@ -58,6 +50,6 @@ export const operatorMode = {
     const cookie = yield* seedOperator().pipe(
       Effect.provide(localConvexLayer(root))
     );
-    yield* writeFixture(output, SessionCookie, cookie);
+    yield* writeFixture(output, SessionCookies, cookie);
   }),
 } satisfies AcceptanceMode;

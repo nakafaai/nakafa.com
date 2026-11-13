@@ -1,6 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
-import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
+import { createConvexTestWithAuth } from "@repo/backend/confect/test.helpers";
 import { client } from "@repo/backend/test/client";
 import { tryoutWorld } from "@repo/backend/test/tryout/world";
 import { Effect } from "effect";
@@ -53,7 +53,7 @@ describe("contentRelease/tryout", () => {
 
   it.effect("refuses reads before any release activates a snapshot", () =>
     Effect.gen(function* () {
-      const visitor = client(createConvexTestWithBetterAuth());
+      const visitor = client(createConvexTestWithAuth());
       expect(
         yield* visitor
           .query(tryout.sitemapCount, { appLocale: "id" })

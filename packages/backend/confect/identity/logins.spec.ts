@@ -9,7 +9,6 @@ import {
 } from "@repo/backend/confect/identity/errors";
 import {
   LoginName,
-  LoginUsername,
 } from "@repo/backend/confect/identity/schema";
 import RequireMember from "@repo/backend/confect/middleware/member.spec";
 import Session from "@repo/backend/confect/middleware/session.spec";
@@ -31,8 +30,7 @@ const LoginView = Schema.Struct({
 
 /**
  * The school logins of one school, read by its Admin, who renames one through the
- * person's card right, and the username that a school login signs in with on the school's host. `usernameOf` is internal: the host's sign-in
- * calls it with no session, because its visitor is signed out (ADR 0009).
+ * person's card right (ADR 0009).
  */
 export default GroupSpec.make()
   .addFunction(
@@ -69,11 +67,4 @@ export default GroupSpec.make()
       .middleware(Session)
       .middleware(RequireMember)
       .middleware(PersonAccess, { action: "card.issue", arg: "personId" })
-  )
-  .addFunction(
-    FunctionSpec.internalQuery({
-      name: "usernameOf",
-      args: () => ({ loginName: Schema.String, slug: TenantSlug }),
-      returns: () => LoginUsername,
-    })
   );

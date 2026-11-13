@@ -2,12 +2,12 @@ import { RegisteredFunction } from "@confect/server";
 import { expect, it } from "@effect/vitest";
 import { searchNakafaContent } from "@repo/backend/agent/search";
 import schema from "@repo/backend/confect/_generated/schema";
-import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
+import { createConvexTestWithAuth } from "@repo/backend/confect/test.helpers";
 import { NAKAFA_AGENT_MAX_QUERY_LENGTH } from "@repo/contents/agent/search";
 import { Effect } from "effect";
 
 it("rejects a malformed search response instead of presenting unverified results", async () => {
-  await createConvexTestWithBetterAuth().action(async (ctx) => {
+  await createConvexTestWithAuth().action(async (ctx) => {
     vi.spyOn(ctx, "runQuery").mockResolvedValueOnce(false);
     const error = await Effect.runPromise(
       searchNakafaContent({ queries: ["algebra"], locale: "en" }).pipe(
@@ -23,7 +23,7 @@ it("rejects a malformed search response instead of presenting unverified results
 });
 
 it("refuses a query of one character more than the limit, before the read model", async () => {
-  await createConvexTestWithBetterAuth().action(async (ctx) => {
+  await createConvexTestWithAuth().action(async (ctx) => {
     const runQuery = vi.spyOn(ctx, "runQuery").mockResolvedValue(false);
     const search = (length: number) =>
       searchNakafaContent({

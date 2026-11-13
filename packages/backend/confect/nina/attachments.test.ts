@@ -7,7 +7,7 @@ import {
   consumeAttachments,
   requireStoredDocumentLimit,
 } from "@repo/backend/confect/nina/attachments";
-import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
+import { createConvexTestWithAuth } from "@repo/backend/confect/test.helpers";
 import { readLearnerKeys } from "@repo/backend/confect/vault/keys";
 import { stubBucket } from "@repo/backend/test/bucket";
 import {
@@ -34,7 +34,7 @@ const StoredFile = Schema.Struct({
   size: Schema.Finite,
 });
 type StoredFile = typeof StoredFile.Type;
-type TestTransaction = ReturnType<typeof createConvexTestWithBetterAuth>;
+type TestTransaction = ReturnType<typeof createConvexTestWithAuth>;
 type UploadId = Docs["ninaUploads"]["_id"];
 type UploadOwner = Docs["users"]["_id"];
 
@@ -127,7 +127,7 @@ beforeEach(() => {
 
 describe("Nina attachment document limit", () => {
   it("accepts documents that total exactly the limit and consumes every grant", async () => {
-    const t = createConvexTestWithBetterAuth();
+    const t = createConvexTestWithAuth();
     const { userId, uploadIds } = await seedUploads(t, [
       { mediaType: "application/pdf", size: NINA_DOCUMENT_SIZE - 2 * MiB },
       { mediaType: "text/plain", size: 2 * MiB },
@@ -147,7 +147,7 @@ describe("Nina attachment document limit", () => {
   });
 
   it("rejects documents that total 10.1 MiB and keeps every grant", async () => {
-    const t = createConvexTestWithBetterAuth();
+    const t = createConvexTestWithAuth();
     const { userId, uploadIds } = await seedUploads(t, [
       { mediaType: "application/pdf", size: NINA_DOCUMENT_SIZE - 2 * MiB },
       { mediaType: "text/plain", size: 2 * MiB + TENTH_MIB },
@@ -174,7 +174,7 @@ describe("Nina attachment document limit", () => {
   });
 
   it("ignores images of any size when the documents fit", async () => {
-    const t = createConvexTestWithBetterAuth();
+    const t = createConvexTestWithAuth();
     const { userId, uploadIds } = await seedUploads(t, [
       { mediaType: "image/png", size: 12 * MiB },
       { mediaType: "application/pdf", size: MiB },
@@ -196,7 +196,7 @@ describe("Nina attachment document limit", () => {
   });
 
   it("refuses a message that costs more than one turn carries, and keeps every grant", async () => {
-    const t = createConvexTestWithBetterAuth();
+    const t = createConvexTestWithAuth();
     const { userId, uploadIds } = await seedUploads(t, [
       { mediaType: "application/pdf", size: MiB },
     ]);
@@ -221,7 +221,7 @@ describe("Nina attachment document limit", () => {
   });
 
   it("refuses a stored message whose documents total 10.1 MiB before a retry sends it", async () => {
-    const t = createConvexTestWithBetterAuth();
+    const t = createConvexTestWithAuth();
     const { uploadIds } = await seedUploads(t, [
       { mediaType: "application/pdf", size: NINA_DOCUMENT_SIZE - 2 * MiB },
       { mediaType: "text/plain", size: 2 * MiB + TENTH_MIB },
@@ -233,7 +233,7 @@ describe("Nina attachment document limit", () => {
   });
 
   it("accepts a stored message whose documents fit, whatever its images weigh", async () => {
-    const t = createConvexTestWithBetterAuth();
+    const t = createConvexTestWithAuth();
     const { uploadIds } = await seedUploads(t, [
       { mediaType: "image/png", size: 12 * MiB },
       { mediaType: "application/pdf", size: NINA_DOCUMENT_SIZE },
@@ -275,7 +275,7 @@ function sendIn(
 
 describe("Nina attachment names", () => {
   it("sends the sealed names of a message with one read of the learner's keys", async () => {
-    const t = createConvexTestWithBetterAuth();
+    const t = createConvexTestWithAuth();
     const owner = await learnerWithKeyIn(t, "owner");
     let uploadIds: readonly UploadId[] = [];
     for (const name of ["Soal-1.pdf", "Soal-2.pdf", "Soal-3.pdf"]) {

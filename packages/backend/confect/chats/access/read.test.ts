@@ -3,7 +3,7 @@ import { assert, describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
 import { ChatAccessError } from "@repo/backend/confect/chats/access/spec";
 import {
-  createConvexTestWithBetterAuth,
+  createConvexTestWithAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
 import { api } from "@repo/backend/convex/_generated/api";
@@ -35,7 +35,7 @@ async function refusal(read: Promise<unknown>) {
 
 /** One owner with a private chat, a shared chat and a deleted one, and a stranger. */
 async function fixture() {
-  const t = createConvexTestWithBetterAuth();
+  const t = createConvexTestWithAuth();
   const { owner, stranger, chatIds } = await t.mutation(async (ctx) => {
     const owner = await seedAuthenticatedUser(ctx, {
       now,
@@ -61,14 +61,8 @@ async function fixture() {
       chatIds: { gone, private: await insert(), shared: await insert() },
     };
   });
-  const asOwner = t.withIdentity({
-    subject: owner.authUserId,
-    sessionId: owner.sessionId,
-  });
-  const asStranger = t.withIdentity({
-    subject: stranger.authUserId,
-    sessionId: stranger.sessionId,
-  });
+  const asOwner = t.withIdentity({ subject: owner.sessionId });
+  const asStranger = t.withIdentity({ subject: stranger.sessionId });
   const share = (visibility: "private" | "public") =>
     asOwner.mutation(api.chats.mutations.updateChatVisibility, {
       chatId: chatIds.shared,

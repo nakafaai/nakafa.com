@@ -9,7 +9,7 @@ import {
 } from "@effect/vitest";
 import schema from "@repo/backend/confect/_generated/schema";
 import { searchSections } from "@repo/backend/confect/contents/sections/search";
-import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
+import { createConvexTestWithAuth } from "@repo/backend/confect/test.helpers";
 import type {
   ActionCtx,
   MutationCtx,
@@ -35,14 +35,14 @@ type Input = Parameters<typeof searchSections>[0];
  */
 async function indexed() {
   const model = embedWithKnowledge();
-  const t = createConvexTestWithBetterAuth();
+  const t = createConvexTestWithAuth();
   await t.mutation(seedKnowledge);
   await knowledgeBuild(t).build();
   model.doEmbedCalls.length = 0;
   return { model, ...setup(t) };
 }
 
-function setup(t: ReturnType<typeof createConvexTestWithBetterAuth>) {
+function setup(t: ReturnType<typeof createConvexTestWithAuth>) {
   const layer = (ctx: ActionCtx) =>
     Layer.mergeAll(
       GatewayIsolated,
@@ -137,7 +137,7 @@ describe("section search", () => {
 
   it("says the index is empty, and does not embed the question, when it holds no section", async () => {
     const model = embedWithKnowledge();
-    const t = createConvexTestWithBetterAuth();
+    const t = createConvexTestWithAuth();
     await t.mutation(seedKnowledge);
     expect(
       await setup(t).search({ locale: "id", query: "determinan" })
@@ -147,7 +147,7 @@ describe("section search", () => {
 
   it("says the index is empty, and does not embed the question, while the build of the active release has not finished", async () => {
     const model = embedWithKnowledge();
-    const t = createConvexTestWithBetterAuth();
+    const t = createConvexTestWithAuth();
     await t.mutation(seedKnowledge);
     // One step stores the German and English lessons, but the build ends with
     // the steps that follow.

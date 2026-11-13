@@ -9,12 +9,10 @@ import databaseSchema from "@repo/backend/confect/_generated/schema";
 import {
   DatabaseReader,
   DatabaseWriter,
-  MutationCtx,
   Scheduler,
 } from "@repo/backend/confect/_generated/services";
 import { isAccountDeletionPending } from "@repo/backend/confect/auth/deletion/state";
-import { authReader } from "@repo/backend/confect/auth/reader";
-import { googleHostedDomains } from "@repo/backend/confect/auth/tokens";
+import { isLoginAddress } from "@repo/backend/confect/identity/address";
 import { systemActor } from "@repo/backend/confect/tenancy/actor";
 import { personAuthority } from "@repo/backend/confect/tenancy/authority";
 import {
@@ -23,42 +21,28 @@ import {
 } from "@repo/backend/confect/tenancy/claim";
 import { CLAIM_PAGE_SIZE } from "@repo/backend/confect/tenancy/claims";
 import spec from "@repo/backend/confect/tenancy/claims.spec";
-import {
-  admitsAddress,
-  admitsHostedDomains,
-} from "@repo/backend/confect/tenancy/policy";
+import { admitsAddress } from "@repo/backend/confect/tenancy/policy";
 import type { InviteState } from "@repo/backend/confect/tenancy/schema";
 import { Clock, Duration, Effect, Layer, Option, Struct } from "effect";
 
 /**
- * The address Better Auth has verified for an account. Better Auth lowercases
- * every address it saves, which is the form invites store, and the account row
- * here only mirrors it, so the answer comes from Better Auth itself.
+ * The verified address of an account. Every address with a mailbox is one
+ * Google verified, lowercase, which is the form invites store (`auth/account`);
+ * a school account's placeholder address has no mailbox to verify.
  */
-const verifiedEmail = Effect.fn("tenancy.claims.email")(function* (
-  user: UsersDoc
-) {
-  const ctx = yield* MutationCtx;
-  const authUser = yield* Effect.promise(() =>
-    authReader.getAnyUserById(ctx, user.authId)
-  );
-  return authUser?.emailVerified === true
-    ? Option.some(authUser.email)
-    : Option.none();
-});
+const verifiedEmail = (user: UsersDoc) =>
+  isLoginAddress(user.email) ? Option.none() : Option.some(user.email);
 
 /**
  * Binds the invited Person to the account and accepts the invite, unless the
  * Person is not waiting any more, the account already holds a Person in the
  * tenant, the tenant is suspended, which refuses every write, the invite has
- * reached its expiry, or the tenant's email domains do not admit the address or
- * the hosted domains of the account's Google sign-ins: then the invite stays as
- * it is for the school to resolve, or for a Google Workspace sign-in to claim.
+ * reached its expiry, or the tenant's email domains do not admit the address:
+ * then the invite stays as it is for the school to resolve.
  */
 const claim = Effect.fn("tenancy.claims.claim")(function* (
   invite: TenantInvitesDoc,
-  userId: GenericId.GenericId<"users">,
-  hostedDomains: readonly (string | null)[]
+  userId: GenericId.GenericId<"users">
 ) {
   const reader = yield* DatabaseReader;
   const writer = yield* DatabaseWriter;
@@ -85,8 +69,7 @@ const claim = Effect.fn("tenancy.claims.claim")(function* (
     person.account.state !== "unclaimed" ||
     Option.isSome(held) ||
     invite.expiresAt <= at ||
-    !admitsAddress(tenant.policies, invite.channel.email) ||
-    !admitsHostedDomains(tenant.policies, hostedDomains)
+    !admitsAddress(tenant.policies, invite.channel.email)
   ) {
     return;
   }
@@ -134,7 +117,7 @@ const run = FunctionImpl.make(
     if (Option.isNone(user) || isAccountDeletionPending(user.value)) {
       return null;
     }
-    const email = yield* verifiedEmail(user.value);
+    const email = verifiedEmail(user.value);
     if (Option.isNone(email)) {
       return null;
     }
@@ -145,10 +128,9 @@ const run = FunctionImpl.make(
       )
       .paginate({ cursor, numItems: CLAIM_PAGE_SIZE })
       .pipe(Effect.orDie);
-    const hostedDomains = yield* googleHostedDomains(user.value.authId);
     yield* Effect.forEach(
       page.page,
-      (invite) => claim(invite, userId, hostedDomains),
+      (invite) => claim(invite, userId),
       { discard: true }
     );
     if (!page.isDone) {

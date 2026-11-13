@@ -11,7 +11,7 @@ import {
   upsertPreferredTryoutCountry,
 } from "@repo/backend/confect/learningPreferences/impl";
 import {
-  createConvexTestWithBetterAuth,
+  createConvexTestWithAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
 import { activateAssessmentTestSnapshot } from "@repo/backend/test/snapshot/assessment";
@@ -20,7 +20,7 @@ import { Effect } from "effect";
 
 describe("learningPreferences/impl", () => {
   it("clears absent curriculum preferences without creating a row", async () => {
-    const test = createConvexTestWithBetterAuth();
+    const test = createConvexTestWithAuth();
     await test.mutation(async (ctx) => {
       const { userId } = await seedAuthenticatedUser(ctx, {
         now: 1,
@@ -50,7 +50,7 @@ describe("learningPreferences/impl", () => {
     });
   });
   it("preserves independent preferences and timestamps across repeated updates", async () => {
-    const test = createConvexTestWithBetterAuth();
+    const test = createConvexTestWithAuth();
     await test.mutation(async (ctx) => {
       const { userId } = await seedAuthenticatedUser(ctx, {
         now: 1,
@@ -187,7 +187,7 @@ describe("learningPreferences/impl", () => {
     });
   });
   it("returns no current country for absent and retired saved preferences", async () => {
-    const test = createConvexTestWithBetterAuth();
+    const test = createConvexTestWithAuth();
     const userId = await test.mutation(async (ctx) => {
       const user = await seedAuthenticatedUser(ctx, {
         now: 1,
@@ -236,7 +236,7 @@ describe("learningPreferences/impl", () => {
   it.each(["create", "update-country", "update-curriculum"])(
     "redacts a %s failure while preserving preferences",
     async (operation) => {
-      const test = createConvexTestWithBetterAuth();
+      const test = createConvexTestWithAuth();
       await test.mutation(async (ctx) => {
         const { userId } = await seedAuthenticatedUser(ctx, {
           now: 1,

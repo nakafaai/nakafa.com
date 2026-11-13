@@ -2,7 +2,7 @@
 
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { ACTIVE_APP_LOCALE_CODES } from "@nakafa/aksara-contracts/locale";
-import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
+import { createConvexTestWithAuth } from "@repo/backend/confect/test.helpers";
 import { fixtureSetPath } from "@repo/backend/test/assessment/snapshot";
 import { client } from "@repo/backend/test/client";
 import { tryoutWorld } from "@repo/backend/test/tryout/world";
@@ -98,7 +98,7 @@ describe("published try-out sitemap", () => {
   it.effect("fails closed when no release is active", () =>
     Effect.gen(function* () {
       runtimeQueryMock.mockImplementation(
-        client(createConvexTestWithBetterAuth()).query
+        client(createConvexTestWithAuth()).query
       );
       expect(
         yield* readPublishedTryoutSitemapCount("id").pipe(Effect.flip)

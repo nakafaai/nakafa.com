@@ -13,21 +13,18 @@ import { workflow } from "@repo/backend/confect/workflow";
 import { internal } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { Clock, Effect, flow } from "effect";
-export type StartCleanupWorkflow = (identity: {
-  readonly authId: string;
-  readonly userId: Id<"users">;
-}) => Effect.Effect<unknown, UserCleanupError, MutationCtxService>;
+export type StartCleanupWorkflow = (
+  userId: Id<"users">
+) => Effect.Effect<unknown, UserCleanupError, MutationCtxService>;
 const startAnalytics: StartCleanupWorkflow = Effect.fn(
   "auth.deletion.startAnalytics"
-)(function* (identity: Parameters<StartCleanupWorkflow>[0]) {
+)(function* (userId: Parameters<StartCleanupWorkflow>[0]) {
   const ctx = yield* MutationCtxService;
   return yield* tryUserCleanup(() =>
     workflow.start(
       ctx,
       internal.auth.deletion.cleanup.cleanupDeletedUserAnalytics,
-      {
-        userId: identity.userId,
-      },
+      { userId },
       {
         context: {
           source: cleanupSource.accountDeletion,
@@ -37,33 +34,15 @@ const startAnalytics: StartCleanupWorkflow = Effect.fn(
     )
   );
 });
-const startAuth: StartCleanupWorkflow = Effect.fn("auth.deletion.startAuth")(
-  function* (identity: Parameters<StartCleanupWorkflow>[0]) {
-    const ctx = yield* MutationCtxService;
-    return yield* tryUserCleanup(() =>
-      workflow.start(
-        ctx,
-        internal.auth.deletion.cleanup.cleanupDeletedUserAuth,
-        identity,
-        {
-          context: {
-            source: cleanupSource.accountDeletion,
-          },
-          onComplete: internal.privacy.recovery.handleCleanupComplete,
-        }
-      )
-    );
-  }
-);
 const startBilling: StartCleanupWorkflow = Effect.fn(
   "auth.deletion.startBilling"
-)(function* (identity: Parameters<StartCleanupWorkflow>[0]) {
+)(function* (userId: Parameters<StartCleanupWorkflow>[0]) {
   const ctx = yield* MutationCtxService;
   return yield* tryUserCleanup(() =>
     workflow.start(
       ctx,
       internal.auth.deletion.cleanup.cleanupDeletedUserBilling,
-      { authId: identity.authId, userId: identity.userId },
+      { userId },
       {
         context: {
           source: cleanupSource.accountDeletion,
@@ -74,15 +53,13 @@ const startBilling: StartCleanupWorkflow = Effect.fn(
   );
 });
 const startData: StartCleanupWorkflow = Effect.fn("auth.deletion.startData")(
-  function* (identity: Parameters<StartCleanupWorkflow>[0]) {
+  function* (userId: Parameters<StartCleanupWorkflow>[0]) {
     const ctx = yield* MutationCtxService;
     return yield* tryUserCleanup(() =>
       workflow.start(
         ctx,
         internal.auth.deletion.cleanup.cleanupDeletedUserData,
-        {
-          userId: identity.userId,
-        },
+        { userId },
         {
           context: {
             source: cleanupSource.accountDeletion,
@@ -95,18 +72,16 @@ const startData: StartCleanupWorkflow = Effect.fn("auth.deletion.startData")(
 );
 const cleanupWorkflowStarters = {
   startAnalytics,
-  startAuth,
   startBilling,
   startData,
 };
 type CleanupWorkflowStarters = typeof cleanupWorkflowStarters;
 
-/** Atomically admits independent auth, analytics, customer, and data workflows. */
+/** Atomically admits independent analytics, customer, and data workflows. */
 export const launchDeletedUserCleanupProgram = Effect.fn(
   "auth.deletion.launchDeletedUserCleanup"
 )(
   function* (
-    authId: string,
     userId: Id<"users">,
     starters: CleanupWorkflowStarters = cleanupWorkflowStarters
   ) {
@@ -127,14 +102,9 @@ export const launchDeletedUserCleanupProgram = Effect.fn(
       return;
     }
     const cleanupStartedAt = yield* Clock.currentTimeMillis;
-    const identity = {
-      authId,
-      userId: user._id,
-    };
-    yield* starters.startAnalytics(identity);
-    yield* starters.startAuth(identity);
-    yield* starters.startBilling(identity);
-    yield* starters.startData(identity);
+    yield* starters.startAnalytics(user._id);
+    yield* starters.startBilling(user._id);
+    yield* starters.startData(user._id);
     yield* writer
       .table("users")
       .patch(user._id, {

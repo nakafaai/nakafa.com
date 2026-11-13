@@ -13,7 +13,6 @@ import {
 import { assignRole } from "@repo/backend/confect/access/grant";
 import { activeGrants } from "@repo/backend/confect/access/policy";
 import { requireAuth } from "@repo/backend/confect/auth/session";
-import { googleHostedDomains } from "@repo/backend/confect/auth/tokens";
 import { ensureAccountSeat } from "@repo/backend/confect/billing/seats";
 import {
   sittingAuthority,
@@ -50,10 +49,7 @@ import {
   createPerson,
 } from "@repo/backend/confect/tenancy/create";
 import { graduationOf } from "@repo/backend/confect/tenancy/graduate";
-import {
-  admitsAddress,
-  admitsHostedDomains,
-} from "@repo/backend/confect/tenancy/policy";
+import { admitsAddress } from "@repo/backend/confect/tenancy/policy";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { readTenantKeys } from "@repo/backend/confect/vault/keys";
 import { matchesSecret } from "@repo/utilities/digest";
@@ -118,21 +114,10 @@ const roomOf = Effect.fn("exams.sittings.join.room")(function* (
 /**
  * Whether the school admits the account by its email domains (ADR 0009), as an invite's claim
  * decides it: every account while the school lists none, and otherwise only an account whose
- * address and Google sign-ins are of a listed domain.
+ * address, which Google verified (`auth/account`), is of a listed domain.
  */
-const admitsAccount = Effect.fn("exams.sittings.join.admits")(function* (
-  tenant: TenantsDoc,
-  user: UsersDoc,
-  authId: string
-) {
-  if (Arr.isReadonlyArrayEmpty(tenant.policies.emailDomains)) {
-    return true;
-  }
-  return (
-    admitsAddress(tenant.policies, user.email) &&
-    admitsHostedDomains(tenant.policies, yield* googleHostedDomains(authId))
-  );
-});
+const admitsAccount = (tenant: TenantsDoc, user: UsersDoc) =>
+  admitsAddress(tenant.policies, user.email);
 
 /** Whether the school's plan still pays for one more account. */
 const seatLeft = (tenantId: TenantsDoc["_id"]) =>
@@ -274,10 +259,10 @@ const joinAsMember = Effect.fn("exams.sittings.join.member")(function* (
  */
 const joinAsNewcomer = Effect.fn("exams.sittings.join.newcomer")(function* (
   tenant: TenantsDoc,
-  account: { readonly appUser: UsersDoc; readonly authId: string },
+  account: { readonly appUser: UsersDoc },
   sitting: ExamSittingsDoc
 ) {
-  if (!(yield* admitsAccount(tenant, account.appUser, account.authId))) {
+  if (!admitsAccount(tenant, account.appUser)) {
     return refused("NotAdmitted");
   }
   if (!(yield* seatLeft(tenant._id))) {

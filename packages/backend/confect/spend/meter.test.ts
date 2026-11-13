@@ -2,7 +2,7 @@ import { RegisteredFunction } from "@confect/server";
 import { describe, expect, it } from "@effect/vitest";
 import confectSchema from "@repo/backend/confect/_generated/schema";
 import { metered, meterOf } from "@repo/backend/confect/spend/meter";
-import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
+import { createConvexTestWithAuth } from "@repo/backend/confect/test.helpers";
 import { MASCOT_CODE } from "@repo/backend/test/mascot";
 import { recordingMeter } from "@repo/backend/test/spend";
 import { Array as Arr, Effect, Fiber, Layer } from "effect";
@@ -50,7 +50,7 @@ describe("spend/meter", () => {
   );
 
   it("holds and settles through the escrow mutations of the claim", async () => {
-    const t = createConvexTestWithBetterAuth();
+    const t = createConvexTestWithAuth();
     const userId = await t.run((ctx) =>
       ctx.db.insert("users", {
         authId: "auth-meter",

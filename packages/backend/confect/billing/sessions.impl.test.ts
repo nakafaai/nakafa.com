@@ -9,7 +9,7 @@ import {
   polarDuplicateEmailCode,
 } from "@repo/backend/confect/billing/polar/spec";
 import {
-  createConvexTestWithBetterAuth,
+  createConvexTestWithAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
 import { api } from "@repo/backend/convex/_generated/api";
@@ -40,7 +40,7 @@ const request = {
 const setup = Effect.fn("billing.sessions.test.setup")(function* (
   emailVerified = true
 ) {
-  const t = createConvexTestWithBetterAuth();
+  const t = createConvexTestWithAuth();
   yield* TestClock.setTime(NOW);
   const now = yield* Clock.currentTimeMillis;
   const user = yield* Effect.promise(() =>
@@ -63,10 +63,7 @@ const setup = Effect.fn("billing.sessions.test.setup")(function* (
   );
   polarGateway.createCustomer.mockReturnValue(Effect.succeed(customer));
   polarGateway.updateCustomer.mockReturnValue(Effect.succeed(customer));
-  const authed = t.withIdentity({
-    sessionId: user.sessionId,
-    subject: user.authUserId,
-  });
+  const authed = t.withIdentity({ subject: user.sessionId });
   return { authed, t, user };
 });
 

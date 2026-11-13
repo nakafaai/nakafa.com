@@ -7,7 +7,7 @@ import usersTable from "@repo/backend/confect/_generated/tables/users";
 import { openNinaLearningSession } from "@repo/backend/confect/nina/contract/pack";
 import { reserveCredits } from "@repo/backend/confect/nina/credits/ledger";
 import {
-  createConvexTestWithBetterAuth,
+  createConvexTestWithAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
@@ -111,7 +111,7 @@ export async function createNinaTest({
   prompt?: string;
   needsFetch?: boolean;
 } = {}) {
-  const t = createConvexTestWithBetterAuth();
+  const t = createConvexTestWithAuth();
   const { identity, ...saved } = await t.mutation(async (ctx) => {
     const identity = await seedAuthenticatedUser(ctx, { now, credits: 10 });
     const threadId = await createThread(ctx, components.nina, {
@@ -144,10 +144,7 @@ export async function createNinaTest({
     });
     return { ...turn, threadId, chatId, identity };
   });
-  const owner = t.withIdentity({
-    subject: identity.authUserId,
-    sessionId: identity.sessionId,
-  });
+  const owner = t.withIdentity({ subject: identity.sessionId });
   const inspect = () =>
     t.query(async (ctx) => ({
       user: await ctx.db.get("users", identity.userId),

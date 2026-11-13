@@ -115,7 +115,7 @@ export const ensureProviderCustomer = Effect.fn(
   }
   const customer = yield* linkPolarCustomer(userId, {
     email: opened.email,
-    externalId: opened.authId,
+    externalId: userId,
     name: opened.name,
   });
   yield* runMutation(billingInternal.checkout.recordCustomer, {

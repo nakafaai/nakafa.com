@@ -13,33 +13,6 @@ const DELETED_USER_CLEANUP_RETRY = {
   maxAttempts: 10,
 };
 
-/** Erases auth verification state and reconciles any already-running request. */
-export const cleanupDeletedUserAuth = workflow.define({
-  args: {
-    authId: v.string(),
-    userId: v.id("users"),
-  },
-  returns: v.null(),
-  handler: async (step, args) => {
-    await step.runAction(
-      internal.auth.deletion.verification.drainDeletedUserVerifications,
-      args,
-      { retry: DELETED_USER_CLEANUP_RETRY }
-    );
-    await step.runAction(
-      internal.auth.deletion.verification.drainDeletedUserVerifications,
-      args,
-      {
-        name: "reconcile late auth verification writes",
-        retry: DELETED_USER_CLEANUP_RETRY,
-        runAfter: ACCOUNT_DELETION_RECONCILIATION_DELAY_MS,
-      }
-    );
-
-    return null;
-  },
-});
-
 /** Erases analytics independently from every local and external data drain. */
 export const cleanupDeletedUserAnalytics = workflow.define({
   args: {
@@ -69,19 +42,18 @@ export const cleanupDeletedUserAnalytics = workflow.define({
 /** Erases the billing accounts and the Polar customers of a deleted user without gating Nakafa data cleanup. */
 export const cleanupDeletedUserBilling = workflow.define({
   args: {
-    authId: v.string(),
     userId: v.id("users"),
   },
   returns: v.null(),
   handler: async (step, args) => {
     await step.runAction(
       internal.billing.deletion.cleanupDeletedUserBilling,
-      { authId: args.authId, userId: args.userId },
+      { userId: args.userId },
       { retry: DELETED_USER_CLEANUP_RETRY }
     );
     await step.runAction(
       internal.billing.deletion.cleanupDeletedUserBilling,
-      { authId: args.authId, userId: args.userId },
+      { userId: args.userId },
       {
         name: "reconcile late billing writes",
         retry: DELETED_USER_CLEANUP_RETRY,

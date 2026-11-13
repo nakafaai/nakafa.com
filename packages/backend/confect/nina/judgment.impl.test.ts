@@ -3,7 +3,7 @@ import { afterEach, describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
 import { GatewayConfigurationError } from "@repo/backend/confect/gateway/failure";
 import { judgments } from "@repo/backend/confect/nina/judgment/catalog";
-import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
+import { createConvexTestWithAuth } from "@repo/backend/confect/test.helpers";
 import { decides, deployment, provider } from "@repo/backend/test/gateway";
 import { Effect } from "effect";
 
@@ -20,7 +20,7 @@ afterEach(() => {
 
 describe("the measuring of the judgments", () => {
   it("measures the texts it is given with the judgments it is given, and names the entry of the catalog the deployment holds for each of those", async () => {
-    const t = createConvexTestWithBetterAuth();
+    const t = createConvexTestWithAuth();
     decides((judgment) => (judgment === "private" ? 0.77 : 0.23));
     expect(
       await t.action(measure, {
@@ -47,7 +47,7 @@ describe("the measuring of the judgments", () => {
   });
 
   it("answers with the failure and asks nothing when the deployment cannot use the gateway", async () => {
-    const t = createConvexTestWithBetterAuth();
+    const t = createConvexTestWithAuth();
     deployment.mockReturnValueOnce(
       Effect.fail(
         new GatewayConfigurationError({

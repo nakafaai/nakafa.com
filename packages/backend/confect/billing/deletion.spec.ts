@@ -69,7 +69,6 @@ export default GroupSpec.make()
     FunctionSpec.internalAction({
       name: "cleanupDeletedUserBilling",
       args: () => ({
-        authId: Schema.String,
         userId: IdSchema("users"),
       }),
       returns: () => Schema.Null,

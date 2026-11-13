@@ -14,7 +14,7 @@ import {
   embeddingDimensions,
   embeddingModelId,
 } from "@repo/backend/confect/gateway/model";
-import type { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
+import type { createConvexTestWithAuth } from "@repo/backend/confect/test.helpers";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type {
   ActionCtx,
@@ -360,7 +360,7 @@ export function embedWithKnowledgeRefusing(poison: string) {
 }
 
 type KnowledgeInput = Parameters<typeof runStep>[0];
-type KnowledgeTest = ReturnType<typeof createConvexTestWithBetterAuth>;
+type KnowledgeTest = ReturnType<typeof createConvexTestWithAuth>;
 
 /**
  * Embeds like a gateway that is slow enough for another release to become the

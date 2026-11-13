@@ -12,7 +12,6 @@ import { Schema } from "effect";
 /** The Xendit account a learner's checkout pays through, with the hosted page of a session for the same offer that is still open. */
 const preparedCheckoutValidator = Schema.Struct({
   accountId: IdSchema("billingAccounts"),
-  authId: Schema.String,
   email: Schema.String,
   name: Schema.String,
   providerCustomerId: Schema.NullOr(Schema.String),

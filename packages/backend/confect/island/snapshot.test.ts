@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import island from "@repo/backend/confect/_generated/refs/island";
 import { SNAPSHOT_BYTE_LIMIT } from "@repo/backend/confect/island/snapshot";
 import {
-  createConvexTestWithBetterAuth,
+  createConvexTestWithAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
 import { internal } from "@repo/backend/convex/_generated/api";
@@ -29,7 +29,7 @@ const SNAPSHOT_KEY = /^islands\/[^/]+\/[0-9a-f-]{36}$/u;
 /** An owner with the username `nabil`, whose island anyone with the link may visit, and a stranger. */
 const snapshotWorld = Effect.fn("test.island.snapshot.world")(function* () {
   vi.useFakeTimers({ now: NOW });
-  const t = createConvexTestWithBetterAuth();
+  const t = createConvexTestWithAuth();
   const users = yield* Effect.promise(() =>
     t.mutation(async (ctx) => {
       const owner = await seedAuthenticatedUser(ctx, {
@@ -47,7 +47,7 @@ const snapshotWorld = Effect.fn("test.island.snapshot.world")(function* () {
   );
   const as = (user: typeof users.owner) =>
     client(
-      t.withIdentity({ sessionId: user.sessionId, subject: user.authUserId })
+      t.withIdentity({ subject: user.sessionId })
     );
   const owner = as(users.owner);
   yield* owner.mutation(island.mutations.share, { visibility: "link" });

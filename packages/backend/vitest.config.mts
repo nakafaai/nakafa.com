@@ -12,7 +12,6 @@ const coverageExcludes = [
   "confect/**/schema.ts",
   "confect/tables/**",
   "confect/**/*.spec.ts",
-  "components/betterAuth/schema.ts",
   "confect/crons.ts",
   "confect/http.ts",
   "confect/test.*.ts",

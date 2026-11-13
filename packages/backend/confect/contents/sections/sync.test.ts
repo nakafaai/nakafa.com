@@ -8,7 +8,7 @@ import {
 } from "@repo/backend/confect/contents/sections/schema";
 import { syncDocuments } from "@repo/backend/confect/contents/sections/sync";
 import { embeddingDimensions } from "@repo/backend/confect/gateway/model";
-import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
+import { createConvexTestWithAuth } from "@repo/backend/confect/test.helpers";
 import type { ActionCtx } from "@repo/backend/convex/_generated/server";
 import { GatewayIsolated, provider } from "@repo/backend/test/gateway";
 import {
@@ -98,7 +98,7 @@ function lessonOf(
 
 /** A deployment whose active release is the one of the knowledge fixture. */
 async function setup() {
-  const t = createConvexTestWithBetterAuth();
+  const t = createConvexTestWithAuth();
   await t.mutation(seedKnowledge);
   const layer = (ctx: ActionCtx) =>
     Layer.mergeAll(

@@ -87,10 +87,7 @@ describe("Nina conversation turns", () => {
     const stranger = await f.t.mutation((ctx) =>
       seedAuthenticatedUser(ctx, { now: NOW, suffix: "stranger" })
     );
-    const asStranger = f.t.withIdentity({
-      sessionId: stranger.sessionId,
-      subject: stranger.authUserId,
-    });
+    const asStranger = f.t.withIdentity({ subject: stranger.sessionId });
     const where = {
       order: queued.order,
       promptMessageId: f.promptMessageId,

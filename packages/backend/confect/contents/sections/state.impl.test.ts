@@ -1,7 +1,7 @@
 import { Ref } from "@confect/core";
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
-import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
+import { createConvexTestWithAuth } from "@repo/backend/confect/test.helpers";
 import { provider } from "@repo/backend/test/gateway";
 import {
   embedWithKnowledge,
@@ -19,7 +19,7 @@ afterEach(() => provider.embeddingModel.mockReset());
 describe("section index state function", () => {
   it("says the index may answer once the build of the active release has finished, and not before", async () => {
     embedWithKnowledge();
-    const t = createConvexTestWithBetterAuth();
+    const t = createConvexTestWithAuth();
     await t.mutation(seedKnowledge);
     expect(await t.query(ready, {})).toBe(false);
     await knowledgeBuild(t).build();

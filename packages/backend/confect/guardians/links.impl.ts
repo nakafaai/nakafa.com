@@ -17,6 +17,7 @@ import {
   LinkClosed,
   LinkRefused,
 } from "@repo/backend/confect/guardians/errors";
+import { claimForAddress } from "@repo/backend/confect/guardians/claim";
 import {
   endLink,
   grantConsent,
@@ -153,6 +154,7 @@ const start = FunctionImpl.make(
       student: student._id,
       type: "guardian.started",
     });
+    yield* claimForAddress(email);
     return yield* linkViewOf(link, now);
   })
 );

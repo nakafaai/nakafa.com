@@ -212,8 +212,8 @@ const deleteRows = FunctionImpl.make(
 
 /**
  * Erases the Polar customer of the user, then turns off the Xendit plans in each batch
- * before the batch's rows are deleted. A customer is looked up by the user's auth ID
- * when no account links one, so a customer Nakafa never stored is erased too.
+ * before the batch's rows are deleted. A customer is looked up by the user's id, its
+ * external ID, when no account links one, so a customer Nakafa never stored is erased too.
  */
 const cleanupDeletedUserBilling = FunctionImpl.make(
   databaseSchema,
@@ -234,7 +234,9 @@ const cleanupDeletedUserBilling = FunctionImpl.make(
         : []
     );
     if (linkedCustomerIds.length === 0) {
-      const customer = yield* polarGateway.getCustomerByExternalId(args.authId);
+      const customer = yield* polarGateway.getCustomerByExternalId(
+        args.userId
+      );
       if (customer !== null) {
         yield* polarGateway.deleteCustomer(customer.id);
       }

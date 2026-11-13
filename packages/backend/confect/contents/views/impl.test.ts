@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import {
-  createConvexTestWithBetterAuth,
+  createConvexTestWithAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
 import { convexModules } from "@repo/backend/confect/test.setup";
@@ -32,7 +32,7 @@ describe("contents/views/impl", () => {
   });
 
   it("records a first anonymous material view and schedules analytics", async () => {
-    const t = createConvexTestWithBetterAuth();
+    const t = createConvexTestWithAuth();
     const material = await t.mutation((ctx) => insertMaterial(ctx));
     await expect(
       t.mutation(api.contents.mutations.views.recordContentView, {
@@ -103,7 +103,7 @@ describe("contents/views/impl", () => {
   });
 
   it("records an article view without any popularity work", async () => {
-    const t = createConvexTestWithBetterAuth();
+    const t = createConvexTestWithAuth();
     const article = await t.mutation((ctx) => insertArticle(ctx));
 
     const result = await t.mutation(
@@ -132,7 +132,7 @@ describe("contents/views/impl", () => {
   });
 
   it("updates an existing device view without queuing duplicate analytics", async () => {
-    const t = createConvexTestWithBetterAuth();
+    const t = createConvexTestWithAuth();
     await t.mutation((ctx) => insertMaterial(ctx));
     await t.mutation(
       api.contents.mutations.views.recordContentView,
@@ -164,7 +164,7 @@ describe("contents/views/impl", () => {
   });
 
   it("records nothing for a signed-out view without a device identifier", async () => {
-    const t = createConvexTestWithBetterAuth();
+    const t = createConvexTestWithAuth();
     await t.mutation((ctx) => insertMaterial(ctx));
 
     const result = await t.mutation(
@@ -185,7 +185,7 @@ describe("contents/views/impl", () => {
   });
 
   it("does not treat a prepared signed-in viewer as anonymous", async () => {
-    const t = createConvexTestWithBetterAuth();
+    const t = createConvexTestWithAuth();
     const identity = await t.mutation(async (ctx) => {
       const material = await insertMaterial(ctx);
       const user = await seedAuthenticatedUser(ctx, {
@@ -201,10 +201,7 @@ describe("contents/views/impl", () => {
 
     await expect(
       t
-        .withIdentity({
-          sessionId: identity.sessionId,
-          subject: identity.authUserId,
-        })
+        .withIdentity({ subject: identity.sessionId })
         .mutation(
           api.contents.mutations.views.recordContentView,
           makeMaterialViewArgs("prepared-device")

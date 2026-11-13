@@ -67,7 +67,7 @@ const children = FunctionImpl.make(
 /**
  * The guardian's second check: the child's NISN, compared with the roster through
  * its blind under the school key, so no plain NISN is read (ADR 0034). A match
- * grants consent with the method `code_nisn`. A mismatch, a roster without a NISN,
+ * grants consent with the method `address_nisn`. A mismatch, a roster without a NISN,
  * a closed link, and a link past its checks all read as `refused`, the words of a
  * wrong code, and only a mismatch is counted for staff to see.
  */
@@ -107,7 +107,7 @@ const confirm = FunctionImpl.make(
       yield* countMismatch(link);
       return "refused";
     }
-    yield* grantConsent(link, "code_nisn", guardian, personActor(guardian));
+    yield* grantConsent(link, "address_nisn", guardian, personActor(guardian));
     return "verified";
   })
 );

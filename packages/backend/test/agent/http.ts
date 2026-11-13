@@ -1,12 +1,12 @@
 import { afterEach, beforeEach, expect } from "@effect/vitest";
 import { NAKAFA_API_EDGE_CONTRACT } from "@repo/backend/agent/edge";
-import type { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
+import type { createConvexTestWithAuth } from "@repo/backend/confect/test.helpers";
 
 export const API_SECRET = "technical-api-edge-secret";
 
 const PROBLEM_TYPE_PATTERN = /^https:\/\/nakafa\.com\/problems\//u;
 
-type BackendTest = ReturnType<typeof createConvexTestWithBetterAuth>;
+type BackendTest = ReturnType<typeof createConvexTestWithAuth>;
 
 /** Sends one request through the real Convex router and edge guard. */
 export function fetchApi(

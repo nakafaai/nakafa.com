@@ -2,7 +2,7 @@ import { assert, expect } from "@effect/vitest";
 import type { Doc } from "@repo/backend/components/betterAuth/_generated/dataModel";
 import { components } from "@repo/backend/confect/_generated/components";
 import { ACCOUNT_DELETION_ATTEMPT_HEADER } from "@repo/backend/confect/auth/deletion/constants";
-import type { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
+import type { createConvexTestWithAuth } from "@repo/backend/confect/test.helpers";
 import { encodeJsonText } from "@repo/utilities/json";
 import type { User } from "better-auth";
 import type { FunctionReturnType } from "convex/server";
@@ -138,7 +138,7 @@ export function cookieHeader(response: Response) {
  * afterwards.
  */
 export async function signInWithGoogle(
-  test: ReturnType<typeof createConvexTestWithBetterAuth>,
+  test: ReturnType<typeof createConvexTestWithAuth>,
   suffix: string,
   now: number,
   claims: object = {}
@@ -191,7 +191,7 @@ export async function signInWithGoogle(
 
 /** Every `account` row that the Better Auth component holds, oldest first. */
 export async function storedAccounts(
-  test: ReturnType<typeof createConvexTestWithBetterAuth>
+  test: ReturnType<typeof createConvexTestWithAuth>
 ) {
   let accounts: readonly Doc<"account">[] = [];
   let cursor: string | null = null;

@@ -8,7 +8,7 @@ import {
 } from "@effect/vitest";
 import type { runStep } from "@repo/backend/confect/contents/sections/build";
 import { embeddingDimensions } from "@repo/backend/confect/gateway/model";
-import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
+import { createConvexTestWithAuth } from "@repo/backend/confect/test.helpers";
 import { provider } from "@repo/backend/test/gateway";
 import {
   determinantOf,
@@ -42,7 +42,7 @@ afterEach(() => provider.embeddingModel.mockReset());
 type Input = Parameters<typeof runStep>[0];
 
 function setup() {
-  const t = createConvexTestWithBetterAuth();
+  const t = createConvexTestWithAuth();
   const rows = () =>
     t.query((ctx) => ctx.db.query("contentSections").collect());
   const sources = () =>

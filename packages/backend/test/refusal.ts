@@ -1,7 +1,7 @@
 import { RegisteredFunction } from "@confect/server";
 import confectSchema from "@repo/backend/confect/_generated/schema";
 import { runStep } from "@repo/backend/confect/contents/sections/build";
-import type { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
+import type { createConvexTestWithAuth } from "@repo/backend/confect/test.helpers";
 import { GatewayIsolated } from "@repo/backend/test/gateway";
 import {
   Array as Arr,
@@ -25,7 +25,7 @@ const loggedLineValidator = Schema.Struct({
  * annotations.
  */
 export async function failedStepLogs(
-  t: ReturnType<typeof createConvexTestWithBetterAuth>,
+  t: ReturnType<typeof createConvexTestWithAuth>,
   input: Parameters<typeof runStep>[0] = {}
 ) {
   const logged = MutableRef.make<readonly (typeof loggedLineValidator.Type)[]>(

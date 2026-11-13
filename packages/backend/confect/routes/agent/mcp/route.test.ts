@@ -1,7 +1,7 @@
 // @vitest-environment node
 
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
-import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
+import { createConvexTestWithAuth } from "@repo/backend/confect/test.helpers";
 import { CONTENT_CALL_CASES } from "@repo/backend/test/mcp/calls/content";
 import { QURAN_CALL_CASES } from "@repo/backend/test/mcp/calls/quran";
 import { SEARCH_CALL_CASES } from "@repo/backend/test/mcp/calls/search";
@@ -29,7 +29,7 @@ import { RESOURCE_CASES } from "@repo/backend/test/mcp/resources";
 import { NAKAFA_MCP_PROTOCOL_VERSION } from "@repo/contents/agent/constants";
 import { Effect } from "effect";
 
-type BackendTest = ReturnType<typeof createConvexTestWithBetterAuth>;
+type BackendTest = ReturnType<typeof createConvexTestWithAuth>;
 const json = (response: Response) => Effect.promise(() => response.json());
 const text = (response: Response) => Effect.promise(() => response.text());
 function send(test: BackendTest, request: McpRequest) {
@@ -89,7 +89,7 @@ describe("Nakafa MCP transport", () => {
     () =>
       Effect.gen(function* () {
         const response = yield* send(
-          createConvexTestWithBetterAuth(),
+          createConvexTestWithAuth(),
           modernPost(76, "server/discover")
         );
         expect(response.status).toBe(200);
@@ -108,7 +108,7 @@ describe("Nakafa MCP transport", () => {
     () =>
       Effect.gen(function* () {
         const response = yield* send(
-          createConvexTestWithBetterAuth(),
+          createConvexTestWithAuth(),
           withHeaders(modernPost(78, "server/discover"), {
             "mcp-protocol-version": "2099-01-01",
           })
@@ -124,7 +124,7 @@ describe("Nakafa MCP transport", () => {
     () =>
       Effect.gen(function* () {
         const response = yield* send(
-          createConvexTestWithBetterAuth(),
+          createConvexTestWithAuth(),
           withHeaders(modernPost(79, "initialize"), {
             "mcp-protocol-version": null,
           })
@@ -141,7 +141,7 @@ describe("Nakafa MCP transport", () => {
   it.effect("answers a modern POST that sends no Accept header", () =>
     Effect.gen(function* () {
       const response = yield* send(
-        createConvexTestWithBetterAuth(),
+        createConvexTestWithAuth(),
         withHeaders(modernPost(72, "tools/list"), { accept: null })
       );
       expect(response.status).toBe(200);
@@ -158,7 +158,7 @@ describe("Nakafa MCP transport", () => {
   it.effect("answers an allowed browser origin with that origin", () =>
     Effect.gen(function* () {
       const response = yield* send(
-        createConvexTestWithBetterAuth(),
+        createConvexTestWithAuth(),
         withHeaders(modernPost(73, "tools/list"), {
           origin: "https://nakafa.com",
         })
@@ -171,7 +171,7 @@ describe("Nakafa MCP transport", () => {
   );
   it.effect("rejects mismatched body framing before the protocol engine", () =>
     Effect.gen(function* () {
-      const response = yield* send(createConvexTestWithBetterAuth(), {
+      const response = yield* send(createConvexTestWithAuth(), {
         body: "{}",
         headers: { "content-length": "1", "content-type": "application/json" },
         method: "POST",

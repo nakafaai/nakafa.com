@@ -11,7 +11,7 @@ import { drainDeletedUserDataProgram } from "@repo/backend/confect/auth/cleanup"
 import { cleanupDeletedUserProgram } from "@repo/backend/confect/auth/cleanup/impl";
 import { createDeletedUserTombstone } from "@repo/backend/confect/auth/deletion/tombstone";
 import {
-  createConvexTestWithBetterAuth,
+  createConvexTestWithAuth,
   seedAnalyticsConsent,
 } from "@repo/backend/confect/test.helpers";
 import { internal } from "@repo/backend/convex/_generated/api";
@@ -37,7 +37,7 @@ describe("auth/cleanup", () => {
   );
   it.effect("stops after the first cleanup batch that makes progress", () =>
     Effect.gen(function* () {
-      const t = createConvexTestWithBetterAuth();
+      const t = createConvexTestWithAuth();
       const state = yield* Effect.promise(() =>
         t.mutation(async (ctx) => {
           const userId = await ctx.db.insert("users", {
@@ -112,7 +112,7 @@ describe("auth/cleanup", () => {
     () =>
       Effect.gen(function* () {
         const runtimeServices = yield* Effect.context<never>();
-        const t = createConvexTestWithBetterAuth();
+        const t = createConvexTestWithAuth();
         const result = yield* Effect.promise(() =>
           t.mutation(async (ctx) => {
             const userId = await ctx.db.insert("users", {
@@ -254,7 +254,7 @@ describe("auth/cleanup", () => {
       })
   );
   it("deletes a deleted learner's personal connections, their sealed tokens, and their journal entries, and keeps another learner's", async () => {
-    const t = createConvexTestWithBetterAuth();
+    const t = createConvexTestWithAuth();
     const seeded = await t.mutation(async (ctx) => {
       const seedUser = (name: string) =>
         ctx.db.insert("users", {

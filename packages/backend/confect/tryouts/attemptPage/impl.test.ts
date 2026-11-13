@@ -304,10 +304,7 @@ describe("tryouts/attemptPage", () => {
           )
         );
         const otherLearner = client(
-          world.t.withIdentity({
-            sessionId: other.sessionId,
-            subject: other.authUserId,
-          })
+          world.t.withIdentity({ subject: other.sessionId })
         );
         for (const request of [
           retained(attemptId, SET_PATH),

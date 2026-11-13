@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import { createAuthOptions } from "@repo/backend/confect/auth/runtime";
-import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
+import { createConvexTestWithAuth } from "@repo/backend/confect/test.helpers";
 import { generateSigningPublicKey } from "@repo/backend/test/auth";
 import { encodeJsonText, JsonTextSchema } from "@repo/utilities/json";
 import { Array as Arr, Schema } from "effect";
@@ -48,7 +48,7 @@ describe("auth", () => {
       ],
     });
     expect(encodeJsonText(keys)).not.toContain("private-material");
-    const t = createConvexTestWithBetterAuth();
+    const t = createConvexTestWithAuth();
     const ids = await t.action(async (ctx) =>
       Arr.map(createAuthOptions(ctx).plugins, (plugin) => plugin.id)
     );

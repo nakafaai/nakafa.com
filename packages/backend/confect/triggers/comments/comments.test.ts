@@ -5,7 +5,7 @@ import { afterEach, describe, expect, it } from "@effect/vitest";
 import "@repo/backend/components/betterAuth/session";
 import "@repo/backend/convex/comments/mutations";
 import {
-  createConvexTestWithBetterAuth,
+  createConvexTestWithAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
 import { COMMENT_REPLY_CLEANUP_BATCH_SIZE } from "@repo/backend/confect/triggers/comments/cleanup";
@@ -23,14 +23,11 @@ describe("triggers/comments/comments", () => {
   it("drains full reply batches after a parent is deleted", async () => {
     vi.useFakeTimers();
     vi.setSystemTime(NOW);
-    const t = createConvexTestWithBetterAuth();
+    const t = createConvexTestWithAuth();
     const author = await t.mutation((ctx) =>
       seedAuthenticatedUser(ctx, { now: NOW })
     );
-    const client = t.withIdentity({
-      subject: author.authUserId,
-      sessionId: author.sessionId,
-    });
+    const client = t.withIdentity({ subject: author.sessionId });
     const slug = "en/articles/politics/cleanup";
     const parentId = await client.mutation(api.comments.mutations.addComment, {
       uploads: [],
@@ -81,7 +78,7 @@ describe("triggers/comments/comments", () => {
     vi.useFakeTimers();
     vi.setSystemTime(NOW);
 
-    const t = createConvexTestWithBetterAuth();
+    const t = createConvexTestWithAuth();
     const users = await t.mutation(async (ctx) => ({
       author: await seedAuthenticatedUser(ctx, {
         now: NOW,
@@ -93,14 +90,8 @@ describe("triggers/comments/comments", () => {
         suffix: "thread-replier",
       }),
     }));
-    const author = t.withIdentity({
-      sessionId: users.author.sessionId,
-      subject: users.author.authUserId,
-    });
-    const replier = t.withIdentity({
-      sessionId: users.replier.sessionId,
-      subject: users.replier.authUserId,
-    });
+    const author = t.withIdentity({ subject: users.author.sessionId });
+    const replier = t.withIdentity({ subject: users.replier.sessionId });
 
     const slug = "/en/articles/politics/thread";
     const rootId = await author.mutation(api.comments.mutations.addComment, {
@@ -144,14 +135,11 @@ describe("triggers/comments/comments", () => {
   it("deletes a whole thread and the likes and reports on its comments, a batch at a time", async () => {
     vi.useFakeTimers();
     vi.setSystemTime(NOW);
-    const t = createConvexTestWithBetterAuth();
+    const t = createConvexTestWithAuth();
     const author = await t.mutation((ctx) =>
       seedAuthenticatedUser(ctx, { now: NOW, suffix: "thread-batches" })
     );
-    const client = t.withIdentity({
-      subject: author.authUserId,
-      sessionId: author.sessionId,
-    });
+    const client = t.withIdentity({ subject: author.sessionId });
     const slug = "en/articles/politics/thread-batches";
     const rootId = await client.mutation(api.comments.mutations.addComment, {
       uploads: [],
@@ -199,7 +187,7 @@ describe("triggers/comments/comments", () => {
     vi.useFakeTimers();
     vi.setSystemTime(NOW);
 
-    const t = createConvexTestWithBetterAuth();
+    const t = createConvexTestWithAuth();
     const users = await t.mutation(async (ctx) => ({
       author: await seedAuthenticatedUser(ctx, {
         now: NOW,
@@ -211,14 +199,8 @@ describe("triggers/comments/comments", () => {
         suffix: "deleted-parent-replier",
       }),
     }));
-    const author = t.withIdentity({
-      sessionId: users.author.sessionId,
-      subject: users.author.authUserId,
-    });
-    const replier = t.withIdentity({
-      sessionId: users.replier.sessionId,
-      subject: users.replier.authUserId,
-    });
+    const author = t.withIdentity({ subject: users.author.sessionId });
+    const replier = t.withIdentity({ subject: users.replier.sessionId });
 
     const parentId = await author.mutation(api.comments.mutations.addComment, {
       uploads: [],

@@ -23,7 +23,7 @@ import {
 } from "@repo/backend/confect/tenancy/schema";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import {
-  createConvexTestWithBetterAuth,
+  createConvexTestWithAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
 import { client, inMutation, internalClient } from "@repo/backend/test/client";
@@ -204,7 +204,7 @@ export const scheduledJobs = Effect.gen(function* () {
  * the delivery of its invitation email.
  */
 export const tenancyFixture = Effect.gen(function* () {
-  const t = createConvexTestWithBetterAuth();
+  const t = createConvexTestWithAuth();
   resendTest.register(t);
   workflowTest.register(t);
   const seeded = yield* Effect.promise(() =>
@@ -234,10 +234,7 @@ export const tenancyFixture = Effect.gen(function* () {
         );
         return Struct.assign(account, {
           client: client(
-            t.withIdentity({
-              sessionId: account.sessionId,
-              subject: account.authUserId,
-            })
+            t.withIdentity({ subject: account.sessionId })
           ),
         });
       }),
@@ -251,10 +248,7 @@ export const tenancyFixture = Effect.gen(function* () {
       init?: RequestInit
     ) =>
       t
-        .withIdentity({
-          sessionId: seeded.users[account].sessionId,
-          subject: seeded.users[account].authUserId,
-        })
+        .withIdentity({ subject: seeded.users[account].sessionId })
         .fetch(path, init),
     /** Runs the scheduled functions whose time has come. */
     finishScheduled: () =>
@@ -275,10 +269,7 @@ export const tenancyFixture = Effect.gen(function* () {
     }) => client(t.withIdentity(identity)),
     as: (account: keyof typeof seeded.users) =>
       client(
-        t.withIdentity({
-          sessionId: seeded.users[account].sessionId,
-          subject: seeded.users[account].authUserId,
-        })
+        t.withIdentity({ subject: seeded.users[account].sessionId })
       ),
     /** Calls internal functions the way the platform and `convex run` do, with no identity. */
     internal: internalClient(t),
