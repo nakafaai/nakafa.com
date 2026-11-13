@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Option } from "effect";
 import type { ReactElement } from "react";
 import { ClassShell } from "@/components/tenant/classes/shell";
+import { SchoolPageNotFound } from "@/components/tenant/notfound";
 import { guardSchoolPage } from "@/lib/tenant/guard";
 import { readClassAddress } from "@/lib/tenant/params";
 
@@ -9,10 +10,11 @@ import { readClassAddress } from "@/lib/tenant/params";
 export const Route = createFileRoute(
   "/school/$slug/classes/$classSlug/library/"
 )({
-  ...guardSchoolPage({
+  beforeLoad: guardSchoolPage({
     reads: (params: { readonly classSlug: string }) =>
       Option.all({ classAddress: readClassAddress(params.classSlug) }),
   }),
+  notFoundComponent: SchoolPageNotFound,
   component: SchoolClassLibraryPage,
 });
 

@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { SchoolPageNotFound } from "@/components/tenant/notfound";
 import { guardSchoolPage } from "@/lib/tenant/guard";
 
 /**
@@ -7,5 +8,6 @@ import { guardSchoolPage } from "@/lib/tenant/guard";
  * entry surface, so the page answers not found inside the shell.
  */
 export const Route = createFileRoute("/school/$slug/$")({
-  ...guardSchoolPage({ opens: () => false }),
+  beforeLoad: guardSchoolPage({ opens: () => false }),
+  notFoundComponent: SchoolPageNotFound,
 });

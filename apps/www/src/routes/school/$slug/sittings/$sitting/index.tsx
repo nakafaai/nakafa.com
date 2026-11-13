@@ -8,6 +8,7 @@ import {
   readBrowserPlayerMode,
   readPlayerModeParam,
 } from "@/components/player/mode";
+import { SchoolPageNotFound } from "@/components/tenant/notfound";
 import { guardSchoolPage } from "@/lib/tenant/guard";
 import { readSittingId } from "@/lib/tenant/params";
 
@@ -23,10 +24,11 @@ const StudentSittingSearch = Schema.Struct({
 export const Route = createFileRoute("/school/$slug/sittings/$sitting/")({
   validateSearch: Schema.toStandardSchemaV1(StudentSittingSearch),
   loaderDeps: ({ search }) => search,
-  ...guardSchoolPage({
+  beforeLoad: guardSchoolPage({
     reads: (params: { readonly sitting: string }) =>
       Option.all({ sittingId: readSittingId(params.sitting) }),
   }),
+  notFoundComponent: SchoolPageNotFound,
   // The view comes from the address, then the view the learner saved; the sitting reads live.
   loader: ({ deps }) => readBrowserPlayerMode(readPlayerModeParam(deps)),
   component: StudentSittingPage,

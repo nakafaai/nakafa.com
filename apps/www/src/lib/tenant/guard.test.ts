@@ -8,7 +8,6 @@ import {
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { isNotFound } from "@tanstack/react-router";
 import { Option, Result, Schema } from "effect";
-import { SchoolPageNotFound } from "@/components/tenant/notfound";
 import type { SchoolViewer } from "@/lib/tenant/frame";
 import { guardSchoolPage } from "@/lib/tenant/guard";
 
@@ -83,15 +82,9 @@ const readsExam = (params: { readonly exam: string }) =>
   });
 
 describe("guardSchoolPage", () => {
-  it("answers the school's not-found page", () => {
-    expect(guardSchoolPage({ opens: () => true }).notFoundComponent).toBe(
-      SchoolPageNotFound
-    );
-  });
-
   it("sends a member whom the capability does not let in to not found, with the school and path it stands at", () => {
     const opens = vi.fn(() => false);
-    const { beforeLoad } = guardSchoolPage({ opens });
+    const beforeLoad = guardSchoolPage({ opens });
 
     const answer = run(() => beforeLoad(pageOf(MEMBER, {})));
 
@@ -103,7 +96,7 @@ describe("guardSchoolPage", () => {
   });
 
   it("opens the page to a member whom the capability lets in", () => {
-    const { beforeLoad } = guardSchoolPage({ opens: () => true });
+    const beforeLoad = guardSchoolPage({ opens: () => true });
 
     expect(run(() => beforeLoad(pageOf(MEMBER, {})))).toEqual(
       Result.succeed(undefined)
@@ -114,7 +107,7 @@ describe("guardSchoolPage", () => {
     "lets a $_tag through, whose page the layout draws",
     (school) => {
       const opens = vi.fn(() => false);
-      const { beforeLoad } = guardSchoolPage({ opens });
+      const beforeLoad = guardSchoolPage({ opens });
 
       expect(run(() => beforeLoad(pageOf(school, {})))).toEqual(
         Result.succeed(undefined)
@@ -126,7 +119,7 @@ describe("guardSchoolPage", () => {
   it.each([MEMBER, VISITOR, OUTSIDER])(
     "sends a $_tag to not found for an address that names no row",
     (school) => {
-      const { beforeLoad } = guardSchoolPage({ reads: readsExam });
+      const beforeLoad = guardSchoolPage({ reads: readsExam });
 
       const answer = run(() => beforeLoad(pageOf(school, { exam: "draft" })));
 
@@ -135,14 +128,14 @@ describe("guardSchoolPage", () => {
   );
 
   it("hands the page the rows its address names", () => {
-    const { beforeLoad } = guardSchoolPage({ reads: readsExam });
+    const beforeLoad = guardSchoolPage({ reads: readsExam });
 
     expect(beforeLoad(pageOf(MEMBER, { exam: "12" }))).toEqual({ examId: 12 });
   });
 
   it("lets a visitor in at an address that names a row, and keeps out a member the capability refuses there", () => {
     const opens = vi.fn(() => false);
-    const { beforeLoad } = guardSchoolPage({ opens, reads: readsExam });
+    const beforeLoad = guardSchoolPage({ opens, reads: readsExam });
 
     expect(run(() => beforeLoad(pageOf(VISITOR, { exam: "12" })))).toEqual(
       Result.succeed({ examId: 12 })
