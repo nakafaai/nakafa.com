@@ -57,6 +57,7 @@ import {
 } from "@/components/tenant/exams/created";
 import type { HomeAccess } from "@/components/tenant/home/access";
 import { SchoolMark } from "@/components/tenant/mark";
+import { DrawnClasses } from "@/components/tenant/classes/nav";
 import { TenantNavigation } from "@/components/tenant/navigation";
 import {
   TenantSearchMenu,
@@ -279,23 +280,25 @@ function TenantFrame({ children }: { children: ReactNode }) {
             <TenantSearchPalette />
             {/* Hidden rather than unmounted, so the learner's open or closed choice returns with it. */}
             <div className="contents group-data-locked/sidebar-wrapper:hidden">
-              <Sidebar
-                collapsible="icon"
-                label={tCommon("sidebar")}
-                side={side}
-              >
-                <SidebarHeader className="border-b">
-                  <SidebarMenu>
-                    <TenantSwitcher />
-                  </SidebarMenu>
-                  <TenantSearchMenu />
-                </SidebarHeader>
-                <SidebarContent>
-                  <TenantNavigation />
-                </SidebarContent>
-                <SidebarToggle />
-                <TenantAccount />
-              </Sidebar>
+              <DrawnClasses>
+                <Sidebar
+                  collapsible="icon"
+                  label={tCommon("sidebar")}
+                  side={side}
+                >
+                  <SidebarHeader className="border-b">
+                    <SidebarMenu>
+                      <TenantSwitcher />
+                    </SidebarMenu>
+                    <TenantSearchMenu />
+                  </SidebarHeader>
+                  <SidebarContent>
+                    <TenantNavigation />
+                  </SidebarContent>
+                  <SidebarToggle />
+                  <TenantAccount />
+                </Sidebar>
+              </DrawnClasses>
             </div>
             <SidebarInset className="[--app-header-top:0rem]">
               {children}

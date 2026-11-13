@@ -14,7 +14,10 @@ const markVariants = cva("", {
  * The mark of a school: its logo in the frame of the Nakafa mark, or else its animal in
  * a round frame, drawn the way a person's animal is. It sits small beside the school's
  * name in the sidebar, and large above the title of the school's sign-in page. The logo
- * is decorative, because the school's name is always beside it or under it.
+ * is decorative, because the school's name is always beside it or under it. It is small and
+ * stands beside a name, so it loads with the page and paints with its row, as a person's
+ * picture does: a phone's sidebar draws it in a sheet that mounts as it opens, and the
+ * copy beside the page, hidden on a phone, has already fetched it.
  */
 export function SchoolMark({
   logo,
@@ -33,7 +36,9 @@ export function SchoolMark({
       <Image
         alt=""
         className="rounded-sm border object-contain"
+        decoding="sync"
         fill
+        loading="eager"
         sizes={size === "lg" ? "96px" : "32px"}
         src={logo}
       />
