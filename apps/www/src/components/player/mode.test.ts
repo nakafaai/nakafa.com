@@ -44,34 +44,73 @@ describe("resolvePlayerMode", () => {
       resolvePlayerMode({
         cookie: saved,
         param: { kind: "valid", mode: "list" },
+        phone: true,
       })
     ).toBe("list");
   });
 
   it("uses the saved view when the address names none", () => {
     expect(
-      resolvePlayerMode({ cookie: saved, param: { kind: "absent" } })
+      resolvePlayerMode({
+        cookie: Option.some("list"),
+        param: { kind: "absent" },
+        phone: true,
+      })
+    ).toBe("list");
+    expect(
+      resolvePlayerMode({
+        cookie: saved,
+        param: { kind: "absent" },
+        phone: false,
+      })
     ).toBe("single");
   });
 
-  it("starts with the list when nothing names a view", () => {
+  it("starts a phone one question at a time and anything wider with the list when nothing names a view", () => {
     expect(
-      resolvePlayerMode({ cookie: Option.none(), param: { kind: "absent" } })
+      resolvePlayerMode({
+        cookie: Option.none(),
+        param: { kind: "absent" },
+        phone: true,
+      })
+    ).toBe("single");
+    expect(
+      resolvePlayerMode({
+        cookie: Option.none(),
+        param: { kind: "absent" },
+        phone: false,
+      })
     ).toBe("list");
   });
 });
 
 describe("readBrowserPlayerMode", () => {
+  /** A browser as wide as a phone or wider, by the query `matchMedia` answers. */
+  const widthOf = (phone: boolean) =>
+    vi.stubGlobal("window", {
+      matchMedia: (query: string) => ({ matches: phone, media: query }),
+    });
+
   afterEach(() => {
     vi.unstubAllGlobals();
   });
 
+  it("opens a phone one question at a time and a wider browser with the list when nothing names a view", () => {
+    vi.stubGlobal("document", { cookie: "theme=dark" });
+    widthOf(true);
+    expect(readBrowserPlayerMode({ kind: "absent" })).toBe("single");
+    widthOf(false);
+    expect(readBrowserPlayerMode({ kind: "absent" })).toBe("list");
+  });
+
   it("reads the view the learner saved in this browser when the address names none", () => {
+    widthOf(false);
     vi.stubGlobal("document", { cookie: "theme=dark; player_view=single" });
     expect(readBrowserPlayerMode({ kind: "absent" })).toBe("single");
   });
 
-  it("prefers the address, and reads the list for a saved view it does not know", () => {
+  it("prefers the address, and reads the device's view for a saved view it does not know", () => {
+    widthOf(false);
     vi.stubGlobal("document", { cookie: "player_view=single" });
     expect(readBrowserPlayerMode({ kind: "valid", mode: "list" })).toBe("list");
     vi.stubGlobal("document", { cookie: "player_view=grid" });

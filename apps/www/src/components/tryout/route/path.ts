@@ -118,13 +118,12 @@ export function getTryoutPublicPathTarget(
 }
 
 /**
- * The typed target of a set or a section of try-out, carrying the attempt that
- * binds navigation to one owned attempt. Only those two routes accept the
- * attempt capability as a search param, so any other path has no target.
+ * The typed target of a set or a section of try-out with one search value: only those two routes accept a
+ * search beyond the catalog's, so any other path has no target.
  */
-function getTryoutAttemptTarget(
+function setOrSectionTarget(
   publicPath: string,
-  attemptId: string
+  search: Readonly<Record<string, string>>
 ): Option.Option<LinkTarget> {
   const [root, country, exam, group, track, set, section, ...rest] =
     publicPath.split("/");
@@ -143,16 +142,29 @@ function getTryoutAttemptTarget(
     return Option.some({
       from: LOCALE_ROUTE,
       params: { country, exam, group, set, track },
-      search: { [ATTEMPT_ID_PARAM]: attemptId },
+      search,
       to: "/$locale/try-out/$country/$exam/$group/$track/$set",
     } satisfies LinkTarget);
   }
   return Option.some({
     from: LOCALE_ROUTE,
     params: { country, exam, group, section, set, track },
-    search: { [ATTEMPT_ID_PARAM]: attemptId },
+    search,
     to: "/$locale/try-out/$country/$exam/$group/$track/$set/$section",
   } satisfies LinkTarget);
+}
+
+/** The target of a set or a section of try-out bound to one owned attempt. */
+function getTryoutAttemptTarget(publicPath: string, attemptId: string) {
+  return setOrSectionTarget(publicPath, { [ATTEMPT_ID_PARAM]: attemptId });
+}
+
+/** The search value that opens a set's or a section's practice in place of its try-out (ADR 0044). */
+export const PRACTICE_SEARCH = { mode: "practice" } as const;
+
+/** The target of the practice of a set or a section of try-out. */
+export function getTryoutPracticeTarget(publicPath: string) {
+  return setOrSectionTarget(publicPath, PRACTICE_SEARCH);
 }
 
 /**
@@ -226,6 +238,12 @@ export function getTryoutAttemptAuthHref(
   view: Option.Option<string> = Option.none()
 ) {
   const redirectHref = `/${locale}${getTryoutAttemptHref(publicPath, attemptId, view)}`;
+  return `/${locale}/auth?redirect=${encodeURIComponent(redirectHref)}`;
+}
+
+/** The sign-in address that comes back to the practice of a set or a section. */
+export function getTryoutPracticeAuthHref(locale: string, publicPath: string) {
+  const redirectHref = `/${locale}${getTryoutPublicPathHref(publicPath)}?${new URLSearchParams(PRACTICE_SEARCH).toString()}`;
   return `/${locale}/auth?redirect=${encodeURIComponent(redirectHref)}`;
 }
 

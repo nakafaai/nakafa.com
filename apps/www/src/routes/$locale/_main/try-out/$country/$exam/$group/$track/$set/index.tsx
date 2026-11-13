@@ -5,6 +5,11 @@ import { ClockProvider } from "@/components/player/now";
 import { ConvexIsland } from "@/components/providers/island";
 import { ShellLockCarry, usePrepaintRelease } from "@/components/sidebar/lock";
 import { AppNotFound } from "@/components/state/app";
+import { useTryoutPracticing } from "@/components/tryout/practice/link";
+import {
+  TryoutPractice,
+  TryoutPracticeSession,
+} from "@/components/tryout/practice/page";
 import { TryoutAttemptReview } from "@/components/tryout/review/deferred";
 import { readTryoutSetFn } from "@/components/tryout/route/attempt.functions";
 import { createTryoutHead } from "@/components/tryout/route/head";
@@ -16,6 +21,7 @@ import {
 import { TryoutAttemptSearch } from "@/components/tryout/route/search";
 import { TryoutPressProvider } from "@/components/tryout/runtime/start";
 import { TryoutSetPageClient } from "@/components/tryout/set/client";
+import { TryoutPage } from "@/components/tryout/shell/header";
 import { readStaticData } from "@/lib/static/data";
 
 /**
@@ -59,6 +65,7 @@ export const Route = createFileRoute(
           indexable:
             loaderData.head.indexable &&
             match.search.attemptId === undefined &&
+            match.search.mode === undefined &&
             match.search.question === undefined &&
             match.search.view === undefined,
           jsonLd: makeBreadcrumbNodes(loaderData.head.breadcrumbs),
@@ -114,6 +121,7 @@ function TryoutSetView({
   readonly learner: ReturnType<typeof useLearnerSet>;
 }) {
   const route = Route.useLoaderData();
+  const practicing = useTryoutPracticing();
   // A read that answered decides the shell's lock, so the first frame's lock can go.
   usePrepaintRelease(
     learner.kind === "attempt" ||
@@ -122,6 +130,34 @@ function TryoutSetView({
   );
   if (learner.kind === "notFound") {
     return <AppNotFound locale={route.route.locale} />;
+  }
+  const entry = route.page.entrySection;
+  // A set entered through one section practises that section, for a learner whose read answered.
+  if (
+    practicing &&
+    entry !== null &&
+    (learner.kind === "attempt" || learner.kind === "none")
+  ) {
+    const { set } = route.page;
+    const target = {
+      countryKey: set.countryKey,
+      examKey: set.examKey,
+      locale: route.route.locale,
+      sectionKey: entry.sectionKey,
+      setKey: set.setKey,
+      trackKey: set.trackKey,
+    };
+    return (
+      <TryoutPage>
+        <TryoutPractice target={target} title={set.title}>
+          <TryoutPracticeSession
+            returnAddress={{ publicPath: set.publicPath }}
+            target={target}
+            title={set.title}
+          />
+        </TryoutPractice>
+      </TryoutPage>
+    );
   }
   const view =
     learner.kind === "attempt"
