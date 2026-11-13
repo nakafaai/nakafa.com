@@ -98,12 +98,14 @@ export interface ScaleRig {
  */
 export function Scale({
   children,
+  reading,
   ref,
   unitLabel,
 }: {
   readonly children?: ReactNode;
+  readonly reading?: ReactNode;
   readonly ref?: Ref<ScaleRig>;
-  readonly unitLabel: string;
+  readonly unitLabel?: string;
 }) {
   const display = useRef<HTMLSpanElement>(null);
 
@@ -162,8 +164,12 @@ export function Scale({
           outlineWidth={0.003}
           position={[-0.02, 0.006, 0]}
         >
-          <span className="font-mono tabular-nums" ref={display} />{" "}
-          <span className="font-mono">{unitLabel}</span>
+          {reading ?? (
+            <>
+              <span className="font-mono tabular-nums" ref={display} />{" "}
+              <span className="font-mono">{unitLabel}</span>
+            </>
+          )}
         </ThreeLabel>
       </group>
       <mesh castShadow position={[0, 0.095, BALANCE.pan]}>
