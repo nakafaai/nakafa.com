@@ -15,7 +15,7 @@ export const DoorSchema = Schema.Struct({
   mass: Schema.Finite.pipe(Schema.check(Schema.isGreaterThan(0))),
   width: Schema.Finite.pipe(Schema.check(Schema.isGreaterThan(0))),
 });
-export type Door = typeof DoorSchema.Type;
+type Door = typeof DoorSchema.Type;
 
 /** The push at `arm` metres from the hinge and `angle` degrees from the door: the part square to the door, the torque, and the angular acceleration. */
 export function doorTorque(door: Door, arm: number, angle: number) {

@@ -15,7 +15,7 @@ export const CrosswindSchema = Schema.Struct({
   toward: Schema.Finite,
   wind: Schema.Finite.pipe(Schema.check(Schema.isGreaterThanOrEqualTo(0))),
 });
-export type Crosswind = typeof CrosswindSchema.Type;
+type Crosswind = typeof CrosswindSchema.Type;
 
 /** A bearing in degrees as a vector east and north of the given size. */
 export function bearingVector(size: number, bearing: number) {

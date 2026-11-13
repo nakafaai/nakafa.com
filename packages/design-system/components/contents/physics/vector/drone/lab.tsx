@@ -73,7 +73,7 @@ export function DroneDisplacementLab({
   return (
     <VisualCard>
       <VisualCardHeader description={description} title={title} />
-      {Arr.isArrayNonEmpty(factors) ? (
+      {Arr.isReadonlyArrayNonEmpty(factors) ? (
         <VisualCardToolbar>
           <ToggleGroup
             aria-label={labels.chooseFactor}

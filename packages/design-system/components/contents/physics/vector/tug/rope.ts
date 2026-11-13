@@ -18,7 +18,7 @@ export const TeamsSchema = Schema.Struct({
     Schema.check(Schema.isBetween({ maximum: 8, minimum: 0 }))
   ),
 });
-export type Teams = typeof TeamsSchema.Type;
+type Teams = typeof TeamsSchema.Type;
 
 /** The two teams' forces along the rope, right positive, and their sum, in newtons. */
 export function ropeForces(teams: Teams) {

@@ -13,7 +13,7 @@ export const BreezeSchema = Schema.Struct({
   angle: Schema.Finite,
   speed: Schema.Finite.pipe(Schema.check(Schema.isGreaterThanOrEqualTo(0))),
 });
-export type Breeze = typeof BreezeSchema.Type;
+type Breeze = typeof BreezeSchema.Type;
 
 /** The wind's components east and north, in m/s, and the quadrant it blows into (0 on an axis). */
 export function breezeParts(breeze: Breeze) {

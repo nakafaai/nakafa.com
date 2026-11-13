@@ -2,17 +2,14 @@ import {
   fade,
   gradientRect,
   mix,
-  type PointSchema,
   withShadow,
 } from "@repo/design-system/components/contents/physics/canvas/paint";
+import type { Spot } from "@repo/design-system/components/contents/physics/vector/spot";
 import { hashUnit } from "@repo/design-system/components/contents/simulation/grain";
 import { getColor } from "@repo/design-system/lib/color";
 import { MATERIAL } from "@repo/design-system/lib/material";
 import { Array as Arr } from "effect";
 import type p5 from "p5";
-
-/** A point on the canvas, in pixels. */
-type Spot = typeof PointSchema.Type;
 
 /** The distance from a point to a segment, in pixels. */
 function segmentGap(point: Spot, from: Spot, to: Spot) {

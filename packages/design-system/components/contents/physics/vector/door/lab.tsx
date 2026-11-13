@@ -5,7 +5,6 @@ import {
   fade,
   gradientRect,
   mix,
-  type PointSchema,
   vignette,
   withShadow,
 } from "@repo/design-system/components/contents/physics/canvas/paint";
@@ -15,6 +14,7 @@ import {
   doorTorque,
   swingAngle,
 } from "@repo/design-system/components/contents/physics/vector/door/swing";
+import type { Spot } from "@repo/design-system/components/contents/physics/vector/spot";
 import { useQuantity } from "@repo/design-system/components/contents/simulation/quantity";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import {
@@ -47,7 +47,7 @@ type DoorFrame = typeof DoorFrameSchema.Type;
 const REST = 1.2;
 
 /** The floorboards and the wall with its doorway, seen from the ceiling. */
-function paintRoom(layer: p5, hinge: typeof PointSchema.Type, width: number) {
+function paintRoom(layer: p5, hinge: Spot, width: number) {
   gradientRect(
     layer,
     { height: layer.height, width: layer.width, x: 0, y: 0 },

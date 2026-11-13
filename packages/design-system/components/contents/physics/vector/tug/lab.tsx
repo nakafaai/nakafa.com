@@ -4,11 +4,11 @@ import {
   fade,
   gradientRect,
   mix,
-  type PointSchema,
   spotlight,
   vignette,
 } from "@repo/design-system/components/contents/physics/canvas/paint";
 import { LabSlider } from "@repo/design-system/components/contents/physics/canvas/slider";
+import type { Spot } from "@repo/design-system/components/contents/physics/vector/spot";
 import {
   ropeForces,
   TeamsSchema,
@@ -86,12 +86,7 @@ function paintSunset(layer: p5) {
 }
 
 /** One puller in silhouette against the sunset: braced legs with bent knees, a body leaning away from the rope's middle, both hands on the rope. */
-function paintPuller(
-  sketch: p5,
-  at: typeof PointSchema.Type,
-  size: number,
-  side: -1 | 1
-) {
+function paintPuller(sketch: p5, at: Spot, size: number, side: -1 | 1) {
   const ink = getColor("ZINC", 950);
   const hip = { x: at.x + side * size * 0.06, y: at.y - size * 0.46 };
   const shoulder = { x: hip.x + side * size * 0.3, y: hip.y - size * 0.36 };
