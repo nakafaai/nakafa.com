@@ -94,7 +94,7 @@ export const getLlmsMarkdownText = Effect.fn("www.llms.markdown.cached")(
   }
 );
 /** Resolves one public route to its active signed markdown owner. */
-const getPublishedMarkdownSource = Effect.fn("www.llms.markdown.source")(
+export const getPublishedMarkdownSource = Effect.fn("www.llms.markdown.source")(
   function* ({ cleanSlug, locale }: { cleanSlug: string; locale: Locale }) {
     const appLocale = AppLocaleSchema.make(locale);
     const publishedFamily = readPublishedFamily(cleanSlug);
