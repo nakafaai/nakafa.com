@@ -32,6 +32,7 @@ import {
   ParabolicMovementAnalysisLab,
   ParabolicMovementLab,
 } from "@/lib/content/renderer/client/physics/parabolic";
+import { RiverBoatCrossingLab } from "@/lib/content/renderer/client/physics/river";
 import { StreetOriginPositionLab } from "@/lib/content/renderer/client/physics/street";
 import { StrobePhotoMotionLab } from "@/lib/content/renderer/client/physics/strobe";
 import { TickerTapeMotionLab } from "@/lib/content/renderer/client/physics/ticker";
@@ -45,6 +46,7 @@ import {
   VelocitySpeedLab,
 } from "@/lib/content/renderer/client/physics/velocity";
 import { CityWalkDisplacementLab } from "@/lib/content/renderer/client/physics/walk";
+import { BicycleWheelSpeedLab } from "@/lib/content/renderer/client/physics/wheel";
 import type { RendererImplementation } from "@/lib/content/renderer/selection";
 
 /** Every physics visual, which any lesson in any domain may use. */
@@ -168,5 +170,13 @@ export const physicsRenderers = [
   {
     name: physicsComponentNames.runningTrackDisplacementLab,
     component: RunningTrackDisplacementLab,
+  },
+  {
+    name: physicsComponentNames.bicycleWheelSpeedLab,
+    component: BicycleWheelSpeedLab,
+  },
+  {
+    name: physicsComponentNames.riverBoatCrossingLab,
+    component: RiverBoatCrossingLab,
   },
 ] satisfies readonly RendererImplementation[];
