@@ -1,0 +1,104 @@
+import { Array as Arr, Schema } from "effect";
+
+/**
+ * Car trips along a straight road, each a chain of stretches of constant
+ * acceleration, in metres and seconds. A trip gives the position and the
+ * velocity at every moment, and the average velocity over any interval is
+ * the slope of the secant between its two points on the position-time graph.
+ */
+
+/** The trips a lesson can show. */
+export const TripSchema = Schema.Literals(["commute", "cruise", "return"]);
+export type Trip = typeof TripSchema.Type;
+
+type Stretch = { readonly acceleration: number; readonly duration: number };
+
+/**
+ * commute: speeds up, cruises, brakes to a red light, waits, and drives on,
+ * 110 m in 20 s. cruise: a steady 8 m/s for 10 s. return: thrown out at
+ * 6 m/s and braked at 1.2 m/s² until it rolls back to the start at 10 s.
+ */
+const TRIPS = {
+  commute: {
+    intervals: [
+      [0, 4],
+      [4, 10],
+      [10, 16],
+      [0, 20],
+    ],
+    start: 0,
+    stretches: [
+      { acceleration: 2.5, duration: 4 },
+      { acceleration: 0, duration: 6 },
+      { acceleration: -5, duration: 2 },
+      { acceleration: 0, duration: 4 },
+      { acceleration: 2.5, duration: 4 },
+    ],
+  },
+  cruise: {
+    intervals: [
+      [0, 2],
+      [2, 6],
+      [4, 10],
+      [0, 10],
+    ],
+    start: 8,
+    stretches: [{ acceleration: 0, duration: 10 }],
+  },
+  return: {
+    intervals: [
+      [0, 5],
+      [5, 10],
+      [2, 8],
+      [0, 10],
+    ],
+    start: 6,
+    stretches: [{ acceleration: -1.2, duration: 10 }],
+  },
+} as const satisfies Record<
+  Trip,
+  {
+    intervals: readonly (readonly [number, number])[];
+    start: number;
+    stretches: readonly Stretch[];
+  }
+>;
+
+/** The position and velocity of a trip at `time`, held at the trip's end after it. */
+export function tripState(trip: Trip, time: number) {
+  let position = 0;
+  let velocity: number = TRIPS[trip].start;
+  let left = Math.max(time, 0);
+  for (const stretch of TRIPS[trip].stretches) {
+    const used = Math.min(left, stretch.duration);
+    position += velocity * used + 0.5 * stretch.acceleration * used * used;
+    velocity += stretch.acceleration * used;
+    left -= used;
+  }
+  return { position, velocity };
+}
+
+/** How long a trip lasts, in seconds. */
+export function tripDuration(trip: Trip) {
+  return Arr.reduce(TRIPS[trip].stretches, 0, (sum, stretch) => sum + stretch.duration);
+}
+
+/** The intervals a learner can choose, as start and end times in seconds. */
+export function tripIntervals(trip: Trip) {
+  return TRIPS[trip].intervals;
+}
+
+/** The change of position, the time, and the average velocity over one interval. */
+export function averageOver(trip: Trip, [start, end]: readonly [number, number]) {
+  const displacement = tripState(trip, end).position - tripState(trip, start).position;
+  const elapsed = end - start;
+  return { displacement, elapsed, velocity: displacement / elapsed };
+}
+
+/** The lowest and highest positions a trip reaches, for the graph's range. */
+export function tripReach(trip: Trip) {
+  const samples = Arr.makeBy(201, (index) =>
+    tripState(trip, (tripDuration(trip) * index) / 200).position
+  );
+  return { highest: Math.max(...samples), lowest: Math.min(...samples) };
+}
