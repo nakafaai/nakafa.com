@@ -69,9 +69,10 @@ const PLAY_RATE = 0.6;
 const HOLD_SECONDS = 1.5;
 
 /** What the sketch reads on every frame: the gap between the two gates. */
-interface TrapFrame {
-  readonly gap: TrapGap;
-}
+const TrapFrameSchema = Schema.Struct({
+  gap: TrapGapSchema,
+});
+type TrapFrame = typeof TrapFrameSchema.Type;
 
 /** The road band above and the graph below, for one canvas size. */
 function layout(sketch: p5) {

@@ -19,7 +19,7 @@ export const LANDMARKS = {
 } as const satisfies Record<Landmark, number>;
 
 /** The ride: start, the far point, and the end, in metres east of the store; each leg lasts 6 s. */
-export const RIDE = { end: 35, far: 50, leg: 6, start: 20 } as const;
+const RIDE = { end: 35, far: 50, leg: 6, start: 20 } as const;
 
 /** How long the ride lasts, in seconds. */
 export const RIDE_DURATION = 2 * RIDE.leg;

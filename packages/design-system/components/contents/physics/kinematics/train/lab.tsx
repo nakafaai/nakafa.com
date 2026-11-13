@@ -55,10 +55,11 @@ const SPAN = 32;
 const PLAY_RATE = 0.25;
 
 /** What the sketch reads on every frame. */
-interface TrainFrame {
-  readonly observer: Observer;
-  readonly way: WalkWay;
-}
+const TrainFrameSchema = Schema.Struct({
+  observer: ObserverSchema,
+  way: WalkWaySchema,
+});
+type TrainFrame = typeof TrainFrameSchema.Type;
 
 /** The platform's pillars, every 8 m, scrolling past when seen from the train. */
 function paintPlatform(sketch: p5, road: Road, shift: number) {

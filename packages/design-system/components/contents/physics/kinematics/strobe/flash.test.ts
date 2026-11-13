@@ -5,6 +5,7 @@ import {
   strobeFacts,
   strobeFlashes,
 } from "@repo/design-system/components/contents/physics/kinematics/strobe/flash";
+import { Array as Arr, Option } from "effect";
 
 describe("strobe shots", () => {
   it("lands every falling ball on the floor at the end of its shot", () => {
@@ -32,7 +33,9 @@ describe("strobeFlashes", () => {
   it("flashes at equal intervals from release to the end", () => {
     expect(strobeFlashes("drop")).toHaveLength(7);
     expect(strobeFlashes("launch")).toHaveLength(11);
-    expect(strobeFlashes("components").at(-1)).toBeCloseTo(1.6);
+    expect(
+      Option.getOrThrow(Arr.last(strobeFlashes("components")))
+    ).toBeCloseTo(1.6);
   });
 });
 

@@ -17,6 +17,13 @@ const StretchSchema = Schema.Struct({
 });
 type Stretch = typeof StretchSchema.Type;
 
+/** One trip: where it starts, its stretches of steady acceleration, and the intervals a learner can pick. */
+const TripPlanSchema = Schema.Struct({
+  intervals: Schema.Array(Schema.Tuple([Schema.Finite, Schema.Finite])),
+  start: Schema.Finite,
+  stretches: Schema.Array(StretchSchema),
+});
+
 /**
  * commute: speeds up, cruises, brakes to a red light, waits, and drives on,
  * 110 m in 20 s. cruise: a steady 8 m/s for 10 s. return: thrown out at
@@ -59,14 +66,7 @@ const TRIPS = {
     start: 6,
     stretches: [{ acceleration: -1.2, duration: 10 }],
   },
-} as const satisfies Record<
-  Trip,
-  {
-    intervals: readonly (readonly [number, number])[];
-    start: number;
-    stretches: readonly Stretch[];
-  }
->;
+} as const satisfies Record<Trip, typeof TripPlanSchema.Type>;
 
 /** The position and velocity of a trip at `time`, held at the trip's end after it. */
 export function tripState(trip: Trip, time: number) {

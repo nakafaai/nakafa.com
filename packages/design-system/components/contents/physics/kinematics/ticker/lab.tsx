@@ -3,6 +3,7 @@ import {
   shownTime,
 } from "@repo/design-system/components/contents/physics/canvas/clock";
 import {
+  createBackdrop,
   fade,
   gradientRect,
   mix,
@@ -41,7 +42,7 @@ import { VisualCardSceneActions } from "@repo/design-system/components/visual/sc
 import { P5Sketch } from "@repo/design-system/components/visual/sketch";
 import { getColor } from "@repo/design-system/lib/color";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
-import { Array as Arr, Schema } from "effect";
+import { Array as Arr, Option, Schema } from "effect";
 import type p5 from "p5";
 import { type ReactNode, useState } from "react";
 
@@ -55,9 +56,10 @@ const HOLD_SECONDS = 1.6;
 const BENCH_METRES = 0.62;
 
 /** What the sketch reads on every frame: the motion the trolley makes. */
-interface TickerFrame {
-  readonly motion: TapeMotion;
-}
+const TickerFrameSchema = Schema.Struct({
+  motion: TapeMotionSchema,
+});
+type TickerFrame = typeof TickerFrameSchema.Type;
 
 /** Positions of the bench scene and the strip chart for one canvas size. */
 function layout(sketch: p5) {
@@ -317,6 +319,7 @@ function paintChart(
 function tickerProgram(sketch: p5, read: () => TickerFrame) {
   let time = 0;
   let shown: TapeMotion | undefined;
+  const backdrop = createBackdrop();
   sketch.setup = () => {
     sketch.createCanvas(1, 1);
     sketch.noStroke();
@@ -337,7 +340,7 @@ function tickerProgram(sketch: p5, read: () => TickerFrame) {
     }
     const now = shownTime(time, duration);
     const place = layout(sketch);
-    paintBench(sketch, place);
+    backdrop(sketch, "bench", (layer) => paintBench(layer, place));
     paintTimer(sketch, place, now, sketch.isLooping() && now < duration);
     const rear = paintTape(sketch, place, motion, now);
     paintTrolley(sketch, place, rear);
@@ -425,7 +428,11 @@ export function TickerTapeMotionLab({
             label={labels.firstStrip}
             value={
               <InlineMath
-                math={measure((strips.at(0) ?? 0) * 100, "\\text{ cm}", 1)}
+                math={measure(
+                  Option.getOrElse(Arr.head(strips), () => 0) * 100,
+                  "\\text{ cm}",
+                  1
+                )}
               />
             }
           />
@@ -433,7 +440,11 @@ export function TickerTapeMotionLab({
             label={labels.lastStrip}
             value={
               <InlineMath
-                math={measure((strips.at(-1) ?? 0) * 100, "\\text{ cm}", 1)}
+                math={measure(
+                  Option.getOrElse(Arr.last(strips), () => 0) * 100,
+                  "\\text{ cm}",
+                  1
+                )}
               />
             }
           />
