@@ -385,6 +385,24 @@ with its count, tests included, and a module that a tool generated is not
 judged. The limit is on physical lines, so a long comment counts: a module
 that needs that much explanation holds more than one capability.
 
+### Empty states show Nina
+
+The owner's rule of 13 November 2026: every empty state is the one `EmptyState`
+with a mascot fit for its place, never text alone. `scripts/check/empty.ts`
+judges three constructions in application code outside
+`apps/www/src/components/state/`, the folder that owns the state:
+
+- An `EmptyState` element takes a `scene` that draws `EmptyNina`,
+  `DeferredEmptyNina`, which loads her apart and keeps her place, or
+  `DeferredFigure`, a whole page's figure that loads apart. A scene written as a
+  value, such as a prop, is its owner's to judge.
+- No module imports `@repo/design-system/components/ui/empty`, whose parts only
+  the state folder composes.
+- A component named as an empty state, such as `FeedEmpty`, draws
+  `EmptyState`. The name is the construction a syntax rule can see: a bespoke
+  sentence under another name is review's to find.
+
+
 ### Modules named index
 
 A module named `index`, after its role suffixes, names no capability, and a

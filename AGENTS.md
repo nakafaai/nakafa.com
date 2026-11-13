@@ -97,6 +97,7 @@ This guide is a map. It states each Nakafa decision once and names the file, com
 - Keep `experimental.instantInsights.validationLevel` at `"warning"`. Add no redundant `instant = true` exports; use `instant = false` only for a route deliberately allowed to block navigation.
 - The shared App Shell is the default prefetch. Use `<Link prefetch={true}>` only when URL-dependent cached content justifies one server invocation per link; grids and long lists prefetch on user intent.
 - Keep truthful stable UI outside `Suspense`; when no truthful fallback exists use `fallback={null}`, never invented skeletons or fake content.
+- Every empty list, failed read and missing page is the one `EmptyState` (`apps/www/src/components/state/empty.tsx`), with Nina in its `scene` doing what fits the place (`EmptyNina`, or `DeferredEmptyNina` where her code loads apart), or a whole page's `DeferredFigure`, never text alone. `scripts/check/empty.ts` refuses an `EmptyState` without her, the design system's empty parts outside the state folder, and a component named `*Empty` that draws a state of its own.
 - Keep the real root layout in `src/routes/$locale`, read the locale on the server from the route params (`getLocaleOrThrow`), and do not thread it through components that do not use it.
 
 ## Convex

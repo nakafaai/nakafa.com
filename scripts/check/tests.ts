@@ -20,6 +20,7 @@ import { inspectNativeControls } from "#scripts/check/controls";
 import { inspectDialogSource } from "#scripts/check/dialogs";
 import { inspectDictionaries } from "#scripts/check/dictionary";
 import { inspectDrillingSource } from "#scripts/check/drilling";
+import { inspectEmptySource } from "#scripts/check/empty";
 import {
   effectFindings,
   effectTestViolations,
@@ -121,6 +122,7 @@ const inspectSources = Effect.fn("RepositoryPolicy.inspectSources")(function* (
         inspectDialogSource(file, sourceFile),
         inspectIconSource(file, sourceFile),
         inspectPickerSource(file, sourceFile),
+        inspectEmptySource(file, sourceFile),
         inspectNativeControls(file, sourceFile),
         inspectStateSource(file, sourceFile),
         inspectRefsSource(file, sourceFile),
