@@ -2,7 +2,7 @@ import { Array as Arr } from "effect";
 import type { Coat, Species } from "@/lib/island/models/coat";
 import { eyesOf } from "@/lib/island/models/features";
 import { type Face, mirrored, type Vec } from "@/lib/island/models/parts";
-import { ball, rod, slab, tube } from "@/lib/island/models/solids";
+import { ball, type Ring, rod, slab, tube } from "@/lib/island/models/solids";
 
 /** How much longer than a gecko's a lizard's snout is: a crocodile's and a monitor's run long. */
 const SNOUTS: Partial<Record<Species["key"], number>> = {
@@ -40,14 +40,14 @@ function splayed(at: Vec, thick: number, coat: Coat) {
  */
 export function lizard(species: Species, coat: Coat): readonly Face[] {
   const snout = SNOUTS[species.key] ?? 1;
-  const tail = Arr.makeBy(5, (index) => {
+  const tail = Arr.makeBy(5, (index): Ring => {
     const along = (index + 1) / 5;
     return {
       at: [
         Math.sin(along * 2.4) * 0.05,
         0.045 * (1 - along) + 0.006,
         -0.1 - along * 0.38,
-      ] as Vec,
+      ],
       high: index === 4 ? 0 : 0.04 * (1 - along * 0.8),
       wide: index === 4 ? 0 : 0.05 * (1 - along * 0.8),
     };
