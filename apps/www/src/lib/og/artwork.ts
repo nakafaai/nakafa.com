@@ -21,13 +21,16 @@ const artworkSources = {
   "app/school": ENGLISH_ARTWORK,
   "curriculum/cambridge-international": ENGLISH_ARTWORK,
   "curriculum/index": ALL_ARTWORK_LOCALES,
+  "curriculum/kssm": ENGLISH_ARTWORK,
   "curriculum/merdeka": ALL_ARTWORK_LOCALES,
   "curriculum/singapore-moe": ENGLISH_ARTWORK,
   "curriculum/united-states": ENGLISH_ARTWORK,
-  "grade/9": ALL_ARTWORK_LOCALES,
-  "grade/10": ALL_ARTWORK_LOCALES,
-  "grade/11": ALL_ARTWORK_LOCALES,
-  "grade/12": ALL_ARTWORK_LOCALES,
+  "grade/class-9": ALL_ARTWORK_LOCALES,
+  "grade/class-10": ALL_ARTWORK_LOCALES,
+  "grade/class-11": ALL_ARTWORK_LOCALES,
+  "grade/class-12": ALL_ARTWORK_LOCALES,
+  "grade/form-4": ["en", "id"],
+  "grade/form-5": ["en", "id"],
   "grade/high-school": ["en", "id"],
   "grade/secondary": ["en", "de"],
   "grade/upper-secondary": ["en", "de"],
@@ -54,6 +57,24 @@ const artworkSources = {
 
 export type ArtworkIdentity = keyof typeof artworkSources;
 
+/** The inventory read by any name, so a name that a route makes up finds its artwork or none. */
+const artworkInventory: Readonly<Record<string, readonly ["en", ...Locale[]]>> =
+  artworkSources;
+
+/** The file of one identity in the locale, or in English when the locale has none. */
+function pickArtworkPath(
+  identity: string,
+  locales: readonly ["en", ...Locale[]],
+  locale: Locale
+) {
+  const artworkLocale = Option.getOrElse(
+    Arr.findFirst(locales, (candidate) => candidate === locale),
+    () => locales[0]
+  );
+
+  return getStaticArtworkPath(identity, artworkLocale);
+}
+
 /** Resolves exact locale artwork, then the reviewed English default. */
 export function resolveStaticArtwork(
   identity: ArtworkIdentity | undefined,
@@ -63,13 +84,18 @@ export function resolveStaticArtwork(
     return;
   }
 
-  const locales = artworkSources[identity];
-  const artworkLocale = Option.getOrElse(
-    Arr.findFirst(locales, (candidate) => candidate === locale),
-    () => locales[0]
-  );
+  return pickArtworkPath(identity, artworkSources[identity], locale);
+}
 
-  return getStaticArtworkPath(identity, artworkLocale);
+/**
+ * Resolves the artwork that a name made from what a page is, such as
+ * `subject/chemistry`, finds in the inventory, or nothing when no design names
+ * it yet.
+ */
+export function resolveNamedArtwork(identity: string, locale: Locale) {
+  return Option.map(Rec.get(artworkInventory, identity), (locales) =>
+    pickArtworkPath(identity, locales, locale)
+  );
 }
 
 /** Resolves static artwork or the localized generated social fallback. */
