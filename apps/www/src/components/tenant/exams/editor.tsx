@@ -159,37 +159,46 @@ function ExamEditorFrame() {
 }
 
 /**
- * The editor's shell, the screen's full width: the header, the toolbar row under it, then two screens side by
- * side on a wide screen, the canvas of the questions and the teacher's panel of the chosen one, which the teacher
- * resizes by the handle between them, and the footer. A phone shows the canvas alone and opens the
- * teacher's panel in a sheet from the footer. The panel has no default size of the canvas, so the
- * server draws the canvas as wide as the room the panel leaves, and the layout keeps that width once
- * the page loads. The zoom lives in the provider's store, which the canvas reads and the footer changes.
- * The footer's grid button shows every question as a tile in place of the canvas and the panel.
+ * The editor's shell, the screen's full width and height, as the page's main landmark around its desk.
  */
 function ExamWorkspace() {
+  return (
+    <main className="bg-background flex h-svh flex-col">
+      <ExamDesk />
+    </main>
+  );
+}
+
+/**
+ * The editor's desk: the header, the toolbar row under it, then two screens side by side on a wide screen, the
+ * canvas of the questions and the teacher's panel of the chosen one, which the teacher resizes by the handle between
+ * them, and the footer. A phone shows the canvas alone and opens the teacher's panel in a sheet from the footer. The
+ * panel has no default size of the canvas, so the server draws the canvas as wide as the room the panel leaves, and
+ * the layout keeps that width once the page loads. The zoom lives in the provider's store, which the canvas reads and
+ * the footer changes. The footer's grid button shows every question as a tile in place of the canvas and the panel.
+ * It fills the flex column its caller draws: the workspace's screen, or the frame the School landing shows it in.
+ */
+export function ExamDesk() {
   const canvas = useRef<HTMLDivElement>(null);
   const setZoom = useExamZoom((zoom) => zoom.set);
   const grid = useEditorView((view) => view.mode === "grid");
 
   return (
     <PanesProvider wideFrom="lg">
-      <main className="bg-background flex h-svh flex-col">
-        <ExamHeader />
-        <ExamToolbar />
-        <ExamLockedNote />
-        {grid ? (
-          <ExamGrid />
-        ) : (
-          <Panes fill="parent" id="editor" inRow>
-            <PanesList wide>
-              <ExamCanvas canvas={canvas} />
-            </PanesList>
-            <ExamPanel />
-          </Panes>
-        )}
-        <ExamFooter canvas={canvas} onZoom={setZoom} />
-      </main>
+      <ExamHeader />
+      <ExamToolbar />
+      <ExamLockedNote />
+      {grid ? (
+        <ExamGrid />
+      ) : (
+        <Panes fill="parent" id="editor" inRow>
+          <PanesList wide>
+            <ExamCanvas canvas={canvas} />
+          </PanesList>
+          <ExamPanel />
+        </Panes>
+      )}
+      <ExamFooter canvas={canvas} onZoom={setZoom} />
     </PanesProvider>
   );
 }
