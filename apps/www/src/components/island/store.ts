@@ -138,11 +138,11 @@ export function createGameStore(setup: GameSetup) {
         if (edits.length === 0) {
           return;
         }
-        write(edits);
-        // The world settles at once (D14), and what settles belongs to the same step undo takes back.
-        const settled = settleOf(get().cells, edits);
-        write(settled);
-        const step = Arr.appendAll(edits, settled);
+        // The world settles at once (D14): what settles joins the change as one step, written once, which undo takes back whole.
+        const { cells } = get();
+        applyEdits(cells, edits);
+        const step = Arr.appendAll(edits, settleOf(cells, edits));
+        write(step);
         set((state) => ({
           future: [],
           past: Arr.takeRight(Arr.append(state.past, step), HISTORY),
