@@ -41,20 +41,20 @@ describe("load seed", () => {
           (_operation, call, sensitive = []) => {
             MutableList.append(calls, { call, sensitive });
             // A seats call answers the account id of each seat, in the order of the seats.
-            return Effect.succeed(
-              call.path === "exams/seed:load"
-                ? {
-                    examId: "e1",
-                    sittings: [
-                      { id: "s1", room: "Ruang 01", token: "AAAAAA" },
-                      { id: "s2", room: "Ruang 02", token: "BBBBBB" },
-                    ],
-                  }
-                : Arr.map(
-                    Schema.decodeUnknownSync(SeatsArgs)(call.args).seats,
-                    (seat) => `user-${seat.key}`
-                  )
-            );
+            return call.path === "exams/seed:load"
+              ? Effect.succeed({
+                  examId: "e1",
+                  sittings: [
+                    { id: "s1", room: "Ruang 01", token: "AAAAAA" },
+                    { id: "s2", room: "Ruang 02", token: "BBBBBB" },
+                  ],
+                })
+              : Schema.decodeUnknownEffect(SeatsArgs)(call.args).pipe(
+                  Effect.map(({ seats }) =>
+                    Arr.map(seats, (seat) => `user-${seat.key}`)
+                  ),
+                  Effect.orDie
+                );
           },
           plan,
           "sekolah"
