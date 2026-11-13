@@ -6,15 +6,15 @@ import { AiMenuItem } from "@/components/ai/sheet/menu";
 import { OpenContent } from "@/components/shared/content/actions";
 import { PaginationContent } from "@/components/shared/content/pagination";
 import { FragmentLanding } from "@/components/shared/fragment";
-import {
-  SidebarRightFooter,
-  SidebarRightHeader,
-  SidebarRightPanel,
-  SidebarRightProvider,
-} from "@/components/shared/outline/panel";
 import { SidebarTree } from "@/components/shared/outline/tree";
 import { PageStack } from "@/components/shared/page/body";
 import { Page } from "@/components/shared/page/frame";
+import {
+  PageOutline,
+  PageOutlineFooter,
+  PageOutlineHeader,
+  PageOutlineProvider,
+} from "@/components/shared/page/outline";
 import { QuranBismillah } from "@/components/shared/quran/bismillah";
 import { QuranSurahFind } from "@/components/shared/quran/find";
 import { QuranSurahHeader } from "@/components/shared/quran/header";
@@ -107,7 +107,7 @@ function QuranSurahPage() {
   }
 
   return (
-    <SidebarRightProvider>
+    <PageOutlineProvider>
       <Page>
         <QuranSurahsContext value={page.surahs}>
           <QuranSurahHeader
@@ -164,16 +164,16 @@ function QuranSurahPage() {
         <PaginationContent pagination={page.pagination} />
         <SheetEntry key={`assistant:${page.surah}`} />
       </Page>
-      <SidebarRightPanel
+      <PageOutline
         footer={
-          <SidebarRightFooter>
+          <PageOutlineFooter>
             <ReferenceButton references={page.references} />
             <ReportButton />
             <ShareButton />
-          </SidebarRightFooter>
+          </PageOutlineFooter>
         }
         header={
-          <SidebarRightHeader
+          <PageOutlineHeader
             description={page.meaning.text}
             descriptionLanguage={page.meaning.appLocale}
             publicPath={`quran/${page.surah}`}
@@ -182,7 +182,7 @@ function QuranSurahPage() {
         }
       >
         <SidebarTree data={page.headings} title={labels.verse} />
-      </SidebarRightPanel>
-    </SidebarRightProvider>
+      </PageOutline>
+    </PageOutlineProvider>
   );
 }

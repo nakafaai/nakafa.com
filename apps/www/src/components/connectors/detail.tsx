@@ -22,8 +22,8 @@ import {
 } from "@/components/connectors/directory";
 import { DisconnectDialog } from "@/components/connectors/disconnect";
 import { ServiceContext, useService } from "@/components/connectors/service";
-import { PaneHeader } from "@/components/shared/pane";
-import { usePanes } from "@/components/shared/panes";
+import { PaneHeader } from "@/components/shared/page/pane";
+import { usePanes } from "@/components/shared/page/panes";
 import { type StatusLook, TableStatus } from "@/components/shared/table/status";
 import { EmptyState } from "@/components/state/empty";
 import { EmptyNina } from "@/components/state/nina";

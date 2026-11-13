@@ -35,13 +35,13 @@ import {
 } from "@/components/connectors/optimistic";
 import { connectedService } from "@/components/connectors/outcome";
 import { Page } from "@/components/shared/page/frame";
-import { PaneFill, PaneFooter } from "@/components/shared/pane";
+import { PaneFill, PaneFooter } from "@/components/shared/page/pane";
 import {
+  PagePane,
   Panes,
-  PanesDetail,
   PanesList,
   PanesProvider,
-} from "@/components/shared/panes";
+} from "@/components/shared/page/panes";
 import { reloadPage } from "@/components/shared/reload";
 import { TableFiltersProvider } from "@/components/shared/table/toolbar";
 import { LoadFailure } from "@/components/state/failure";
@@ -184,7 +184,7 @@ function SchoolDirectory() {
         <PanesList>
           <ServiceList entries={entries} />
         </PanesList>
-        <PanesDetail label={t("detail")}>
+        <PagePane label={t("detail")}>
           <ServiceDetail entries={entries}>
             <ServiceHeader />
             <CoursesProvider>
@@ -201,7 +201,7 @@ function SchoolDirectory() {
               </PaneFooter>
             </CoursesProvider>
           </ServiceDetail>
-        </PanesDetail>
+        </PagePane>
       </Panes>
     </ConnectorActionsContext>
   );

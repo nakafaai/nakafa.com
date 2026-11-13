@@ -30,7 +30,7 @@ import { useTranslations } from "use-intl";
 import { useConnectorActions } from "@/components/connectors/actions";
 import { type DirectoryEntry, LOST } from "@/components/connectors/directory";
 import { ServiceContext, useService } from "@/components/connectors/service";
-import { usePanes } from "@/components/shared/panes";
+import { usePanes } from "@/components/shared/page/panes";
 import type { StatusLook } from "@/components/shared/table/status";
 
 /** The states a card shows by a mark in its corner, as nothing in them starts from the card. */

@@ -37,8 +37,12 @@ import {
   seenOffline,
 } from "@/components/exams/sitting/seat";
 import { useNow } from "@/components/player/now";
-import { PaneBody, PaneFooter, PaneHeader } from "@/components/shared/pane";
-import { PanesDetail } from "@/components/shared/panes";
+import {
+  PaneBody,
+  PaneFooter,
+  PaneHeader,
+} from "@/components/shared/page/pane";
+import { PagePane } from "@/components/shared/page/panes";
 import { reloadPage } from "@/components/shared/reload";
 import { EmptyState } from "@/components/state/empty";
 import { DataFailure } from "@/components/state/failure";
@@ -144,7 +148,7 @@ function SelectedPanel() {
   );
 
   return (
-    <PanesDetail
+    <PagePane
       label={t("panel-label")}
       onClose={() =>
         navigate({ replace: true, resetScroll: false, search: {} })
@@ -152,7 +156,7 @@ function SelectedPanel() {
       open={current !== undefined}
     >
       {current === undefined ? null : <StudentPanel attempt={current} />}
-    </PanesDetail>
+    </PagePane>
   );
 }
 

@@ -23,15 +23,15 @@ import {
   MaterialPagination,
   MaterialPlacementProvider,
 } from "@/components/shared/material/placement";
-import {
-  SidebarRightFooter,
-  SidebarRightPanel,
-  SidebarRightProvider,
-} from "@/components/shared/outline/panel";
 import { SidebarTree } from "@/components/shared/outline/tree";
 import { PageBody } from "@/components/shared/page/body";
 import { PageFooter } from "@/components/shared/page/footer";
 import { Page } from "@/components/shared/page/frame";
+import {
+  PageOutline,
+  PageOutlineFooter,
+  PageOutlineProvider,
+} from "@/components/shared/page/outline";
 import { ComingSoon } from "@/components/shared/upcoming";
 import { CommentsButton } from "@/components/sidebar/actions/comments";
 import { GithubButton } from "@/components/sidebar/actions/github";
@@ -268,7 +268,7 @@ function MaterialPage() {
         publicPath={route.publicPath}
         section="material"
       />
-      <SidebarRightProvider>
+      <PageOutlineProvider>
         <Page>
           <ContentHeader breadcrumb={<MaterialBreadcrumb />}>
             <OpenContent
@@ -303,16 +303,16 @@ function MaterialPage() {
           </PageFooter>
           <SheetEntry contextTitle={metadata.title} />
         </Page>
-        <SidebarRightPanel
+        <PageOutline
           footer={
-            <SidebarRightFooter>
+            <PageOutlineFooter>
               <CommentsButton />
               <ReportButton />
               {page.sourceUrl ? (
                 <GithubButton githubUrl={page.sourceUrl} />
               ) : null}
               <ShareButton />
-            </SidebarRightFooter>
+            </PageOutlineFooter>
           }
           header={
             <MaterialHeading
@@ -322,8 +322,8 @@ function MaterialPage() {
           }
         >
           <SidebarTree data={headings} title={labels.onThisPage} />
-        </SidebarRightPanel>
-      </SidebarRightProvider>
+        </PageOutline>
+      </PageOutlineProvider>
     </MaterialPlacementProvider>
   );
 }
