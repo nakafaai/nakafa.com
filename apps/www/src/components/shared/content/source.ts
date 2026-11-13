@@ -5,7 +5,7 @@ import {
 import { FetchClient } from "@repo/utilities/http/client";
 import { Effect } from "effect";
 import { HttpClient, HttpClientResponse } from "effect/http";
-import { OpenContentCopyError } from "@/components/shared/content/copy";
+import { OpenContentCopyError } from "@/components/shared/content/error";
 
 /**
  * Sends one source request, checks its status, and reads its body. The retry

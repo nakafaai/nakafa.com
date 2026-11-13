@@ -1,10 +1,10 @@
-import { Search01Icon } from "@hugeicons/core-free-icons";
-import { Button } from "@repo/design-system/components/ui/button";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { lazy } from "@repo/design-system/lib/lazy";
 import { Effect } from "effect";
-import { type ComponentProps, Suspense, useState, useTransition } from "react";
-import { useTranslations } from "use-intl";
+import { Suspense, useState, useTransition } from "react";
+import {
+  QuranSurahSearchField,
+  QuranSurahSearchIcon,
+} from "@/components/shared/quran/search";
 
 const loadJump = () => import("@/components/shared/quran/jump");
 
@@ -16,36 +16,6 @@ const QuranSurahPicker = lazy(() =>
 /** Starts the load on intent. A load that fails here is the press's to meet, through the lazy picker. */
 const warmJump = () =>
   Effect.runPromise(Effect.ignore(Effect.tryPromise(loadJump)));
-
-/** The search of a wide header: a button drawn as the search field it opens, with its icon and its words. */
-export function QuranSurahSearchField(props: ComponentProps<"button">) {
-  const t = useTranslations("Holy");
-  return (
-    <Button
-      {...props}
-      className="text-muted-foreground w-56 justify-start font-normal xl:w-64"
-      variant="outline"
-    >
-      <HugeIcons icon={Search01Icon} />
-      {t("search-surah")}
-    </Button>
-  );
-}
-
-/** The search of a phone's header: its icon alone, which its tooltip names. */
-export function QuranSurahSearchIcon(props: ComponentProps<"button">) {
-  const t = useTranslations("Holy");
-  return (
-    <Button
-      {...props}
-      size="icon"
-      tooltip={t("search-surah")}
-      variant="outline"
-    >
-      <HugeIcons icon={Search01Icon} />
-    </Button>
-  );
-}
 
 /**
  * The search of a surah page's header, beside its actions: a field on a wide

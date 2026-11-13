@@ -12,12 +12,11 @@ import {
   PROMPT_DESCRIPTION,
   seedAnalyticsConsent,
   seedRawStorage,
-  stopAppCode,
 } from "@/e2e/support/consent";
 import { withBrowserContext } from "@/e2e/support/context";
 import { pinnedRoutes } from "@/e2e/support/corpus";
 import { signInLearner } from "@/e2e/support/learner";
-import { APP_CHUNK_PATH } from "@/e2e/support/route";
+import { APP_CHUNK_PATH, stopAppCode } from "@/e2e/support/route";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { EXPECTED_SESSION, KNOWN_SESSION_KEY } from "@/lib/auth/keys";
 

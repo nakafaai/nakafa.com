@@ -301,6 +301,11 @@
   ],
   "linter": {
     "rules": {
+      "complexity": {
+        // Ultracite 8.2 turns this off for a deliberately floating promise.
+        // Nakafa starts every effect through Effect and floats none.
+        "noVoid": "error"
+      },
       "correctness": {
         // Proven false positives, 101 in all on 30 October 2026: the rule reads any
         // capitalized key holding a function inside a function as a component. Each
@@ -320,9 +325,18 @@
         "noUnnecessaryConditions": "off"
       },
       "performance": {
-        "noAwaitInLoops": "off"
+        "noAwaitInLoops": "off",
+        // Ultracite 8.2 turns these two off for package entry points and for
+        // libraries that document `import * as`. Nakafa imports the owning file
+        // directly and every member by name (AGENTS.md, docs/adr/0021-rules.md).
+        "noBarrelFile": "error",
+        "noNamespaceImport": "error"
       },
       "style": {
+        // Ultracite 8.2 allows one class per file. An Effect-native module
+        // declares the Schema.TaggedError classes of its capability beside it,
+        // so several classes in one module are the rule here, not a smell.
+        "noExcessiveClassesPerFile": "off",
         "useDestructuring": "off"
       }
     }
