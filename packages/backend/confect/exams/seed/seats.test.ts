@@ -27,7 +27,7 @@ const { dashboard, enter, mine } = refs.public.exams.sittings;
 const seat = (number: number) => ({
   key: `load-test-${number}`,
   name: `Siswa ${number}`,
-  token: `token-${number}`,
+  token: `seat-token-${number}`,
 });
 
 describe("exams seed seats", () => {
@@ -161,7 +161,7 @@ describe("exams seed seats", () => {
               );
             })
           );
-        const student = yield* signedIn(students[1], "token-2");
+        const student = yield* signedIn(students[1], seat(2).token);
         const listed = yield* student.query(mine, { slug: nf });
         expect(Arr.map(listed, (row) => row.id)).toEqual([room.id]);
         const entered = yield* student.mutation(enter, {
@@ -171,7 +171,7 @@ describe("exams seed seats", () => {
           token: room.token,
         });
         expect(entered).toMatchObject({ outcome: "admitted" });
-        const proctor = yield* signedIn(proctors[0], "token-3");
+        const proctor = yield* signedIn(proctors[0], seat(3).token);
         const page = yield* proctor.query(dashboard, {
           paginationOpts: { cursor: null, numItems: 100 },
           sittingId: room.id,

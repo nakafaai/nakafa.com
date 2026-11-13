@@ -58,10 +58,10 @@ describe("auth/grant/sweep", () => {
       codes: await ctx.db.query("agentCodes").collect(),
       grants: await ctx.db.query("agentGrants").collect(),
     }));
-    const ids = (table: readonly { readonly _id: string }[]) =>
-      Arr.map(table, (row) => row._id);
-    expect(ids(rows.codes)).toEqual([seeded.freshCode]);
-    expect(ids(rows.grants)).toEqual([seeded.freshGrant]);
-    expect(ids(rows.clients)).toEqual([seeded.held]);
+    expect(Arr.map(rows.codes, (row) => row._id)).toEqual([seeded.freshCode]);
+    expect(Arr.map(rows.grants, (row) => row._id)).toEqual([
+      seeded.freshGrant,
+    ]);
+    expect(Arr.map(rows.clients, (row) => row._id)).toEqual([seeded.held]);
   });
 });

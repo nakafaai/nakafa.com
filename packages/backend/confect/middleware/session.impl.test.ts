@@ -40,23 +40,21 @@ it.each(["malformed", "unavailable"])(
     const identity = await test.mutation((ctx) =>
       seedAuthenticatedUser(ctx, { now })
     );
-    const failed = await test
-      .withIdentity({ subject: identity.sessionId })
-      .action(
-        Ref.getFunctionReference(
-          refs.public.billing.sessions.generateCustomerPortalUrl
-        ),
-        {}
-      )
-      .catch((error: unknown) => error);
-    expect(failed).toMatchObject({
-      data: {
-        _tag: "AuthReadError",
-        code: "AUTH_READ_FAILED",
-        message: "Unable to read authentication state.",
-      },
+    // The error carries exactly the typed refusal, so no private cause leaks.
+    await expect(
+      test
+        .withIdentity({ subject: identity.sessionId })
+        .action(
+          Ref.getFunctionReference(
+            refs.public.billing.sessions.generateCustomerPortalUrl
+          ),
+          {}
+        )
+    ).rejects.toHaveProperty("data", {
+      _tag: "AuthReadError",
+      code: "AUTH_READ_FAILED",
+      message: "Unable to read authentication state.",
     });
-    expect(JSON.stringify(failed)).not.toContain("private app identity");
   }
 );
 
