@@ -59,9 +59,14 @@ const verifySchoolLanding = Effect.fn("NakafaE2E.verifySchoolLanding")(
         page.locator("#hero").getByRole("link", { name: "Start free trial" })
       ).toHaveAttribute("href", "/en/school/new")
     );
+    // Each feature has one title; the exam editor's own pages, which name their questions, stand under it.
     for (const feature of FEATURE_SECTIONS) {
       yield* Effect.promise(() =>
-        expect(page.locator(`section#${feature} h2`)).toHaveCount(1)
+        expect(
+          page.locator(
+            `section#${feature} h2:not([data-slot="editor-demo"] h2)`
+          )
+        ).toHaveCount(1)
       );
     }
     // The exam answers itself with the momentum of a 2 kg ball at 3 m/s.

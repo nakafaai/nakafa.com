@@ -12,7 +12,6 @@ import {
   PineTreeIcon,
   Plant02Icon,
   Quiz01Icon,
-  Search01Icon,
   SquareLock02Icon,
   StarIcon,
 } from "@hugeicons/core-free-icons";
@@ -25,6 +24,7 @@ import {
 import { PLANT_KEYS } from "@repo/backend/confect/island/flora";
 import { AWARD_RULES } from "@repo/backend/confect/island/schema";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { SearchField } from "@repo/design-system/components/ui/search";
 import { cva } from "class-variance-authority";
 import { Array as Arr } from "effect";
 import { useTranslations } from "use-intl";
@@ -52,6 +52,9 @@ const SHELF_ICONS = {
 } as const;
 
 /** One entry of a shelf: open and pressable, locked and dimmed, or a picture in the field guide. */
+/** The grid every shelf lays its entries in: three across on a phone, four on a wider screen. */
+const shelfVariants = cva("grid grid-cols-3 gap-2 sm:grid-cols-4");
+
 const entryVariants = cva(
   "flex w-full flex-col items-center gap-1 border-2 p-1.5 text-center outline-none focus-visible:border-[#fff3c4]",
   {
@@ -180,10 +183,9 @@ function ShelfGrid() {
   const t = useTranslations("Island");
   const shelf = useGame((state) => state.shelf);
   const query = useGame((state) => state.query);
-  const grid = "grid grid-cols-3 gap-2 sm:grid-cols-4";
   if (shelf === "items") {
     return (
-      <ul className={grid}>
+      <ul className={shelfVariants()}>
         {Arr.map(
           Arr.filter(ITEM_KEYS, (item) => matches(t(`item-${item}`), query)),
           (item) => (
@@ -195,7 +197,7 @@ function ShelfGrid() {
   }
   if (shelf === "animals") {
     return (
-      <ul className={grid}>
+      <ul className={shelfVariants()}>
         {Arr.map(
           Arr.filter(
             Arr.makeBy(SPECIES.length, (index) => index),
@@ -213,7 +215,7 @@ function ShelfGrid() {
       ? PLANT_KEYS
       : Arr.filter(BLOCK_KEYS, (block) => !isPlant(block));
   return (
-    <ul className={grid}>
+    <ul className={shelfVariants()}>
       {Arr.map(
         Arr.filter(blocks, (block) => matches(t(`block-${block}`), query)),
         (block) => (
@@ -290,20 +292,12 @@ function Search() {
   const query = useGame((state) => state.query);
   const setQuery = useGame((state) => state.setQuery);
   return (
-    <label className="flex items-center gap-2 border-2 border-[#a9865a] bg-[#fbf1da] px-2 focus-within:border-[#4a2c17]">
-      <HugeIcons
-        className="size-4 shrink-0 text-[#7a4a26]"
-        icon={Search01Icon}
-      />
-      <span className="sr-only">{t("search")}</span>
-      <input
-        className="h-9 min-w-0 flex-1 bg-transparent text-base outline-none placeholder:text-[#9a7a52]"
-        onChange={(event) => setQuery(event.target.value)}
-        placeholder={t("search")}
-        type="search"
-        value={query}
-      />
-    </label>
+    <SearchField
+      className="border-[#a9865a] bg-[#fbf1da] text-[#3b2414]"
+      onValueChange={setQuery}
+      placeholder={t("search")}
+      value={query}
+    />
   );
 }
 
@@ -312,28 +306,41 @@ function Search() {
  * phone and from the right on a wide screen, over the world. Tabs open its
  * shelves (ready-made items, plants, blocks, and the field guide of animals), a
  * search filters the open shelf, and only the shelf scrolls, so the header and
- * the tabs stay in reach. A press outside it or Escape (read by the stage) closes it.
+ * the tabs stay in reach. It is a modal dialog of the page: focus stays inside,
+ * and a press on the dimmed world or Escape closes it.
  */
 export function IslandBook() {
   const t = useTranslations("Island");
   const setBook = useGame((state) => state.setBook);
   return (
-    <div className="pointer-events-auto absolute inset-0 flex items-end justify-center sm:items-stretch sm:justify-end">
-      <button
-        aria-label={t("close")}
-        className="absolute inset-0 cursor-default bg-[#1b100a]/40"
-        onClick={() => setBook(false)}
-        tabIndex={-1}
-        type="button"
-      />
-      <section
-        aria-label={t("book")}
-        aria-modal="true"
+    <dialog
+      aria-label={t("book")}
+      className="pointer-events-auto m-0 mt-auto h-auto max-h-[88dvh] w-full max-w-none border-0 bg-transparent p-0 backdrop:bg-[#1b100a]/40 sm:mt-0 sm:ml-auto sm:h-full sm:max-h-none sm:w-104"
+      onCancel={(event) => {
+        // Escape closes the book through the store, so the game and the page agree it is closed.
+        event.preventDefault();
+        setBook(false);
+      }}
+      onClick={(event) => {
+        if (event.target === event.currentTarget) {
+          setBook(false);
+        }
+      }}
+      onKeyDown={(event) => {
+        if (event.key === "Escape") {
+          setBook(false);
+        }
+      }}
+      ref={(dialog) => {
+        dialog?.showModal();
+        return () => dialog?.close();
+      }}
+    >
+      <div
         className={panelVariants({
           className:
-            "relative flex max-h-[88dvh] w-full flex-col gap-3 overflow-hidden p-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:max-h-full sm:w-[26rem]",
+            "flex h-full max-h-[88dvh] flex-col gap-3 overflow-hidden p-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:max-h-none",
         })}
-        role="dialog"
       >
         <header className="flex items-start justify-between gap-3">
           <div className="flex flex-col gap-2">
@@ -359,7 +366,7 @@ export function IslandBook() {
         >
           <ShelfGrid />
         </div>
-      </section>
-    </div>
+      </div>
+    </dialog>
   );
 }
