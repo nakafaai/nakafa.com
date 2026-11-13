@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import {
   MermaidRenderError,
+  parseMermaid,
   renderMermaid,
 } from "@repo/design-system/lib/mermaid/render";
 import { Effect } from "effect";
@@ -9,6 +10,7 @@ import type { MermaidConfig } from "mermaid";
 type MermaidRenderer = typeof import("mermaid")["default"];
 const initialize = vi.fn<MermaidRenderer["initialize"]>();
 const render = vi.fn<MermaidRenderer["render"]>();
+const parse = vi.fn<MermaidRenderer["parse"]>();
 let defaultConfig: MermaidConfig = {};
 const SVG = { svg: '<svg id="diagram"/>', diagramType: "flowchart" };
 
@@ -33,9 +35,10 @@ beforeEach(() => {
   vi.resetModules();
   initialize.mockReset();
   render.mockReset().mockResolvedValue(SVG);
+  parse.mockReset().mockResolvedValue({ config: {}, diagramType: "flowchart" });
   defaultConfig.secure = ["secure", "securityLevel", "maxTextSize", "maxEdges"];
   vi.doMock("mermaid", () => ({
-    default: { initialize, render, mermaidAPI: { defaultConfig } },
+    default: { initialize, parse, render, mermaidAPI: { defaultConfig } },
   }));
 });
 
@@ -176,6 +179,28 @@ describe("strict Mermaid rendering", () => {
       expect(failure.operation).toBe("initialize");
       expect(failure.cause).toBeInstanceOf(Error);
       expect(initialize).not.toHaveBeenCalled();
+    })
+  );
+
+  it.effect("parses a chart with the settings that draw it", () =>
+    Effect.gen(function* () {
+      yield* parseMermaid("graph TD; A-->B");
+      expect(parse).toHaveBeenCalledWith("graph TD; A-->B");
+      expect(initialize).toHaveBeenCalledWith(
+        expect.objectContaining({ layout: "dagre", securityLevel: "strict" })
+      );
+    })
+  );
+
+  it.effect("reports a chart Mermaid cannot parse as a parse failure", () =>
+    Effect.gen(function* () {
+      const cause = new Error("Parse error on line 2");
+      parse.mockRejectedValue(cause);
+      const failure = yield* Effect.flip(parseMermaid('graph TD\nA["E("C")"]'));
+      expect(failure).toBeInstanceOf(MermaidRenderError);
+      expect(failure.operation).toBe("parse");
+      expect(failure.cause).toBe(cause);
+      expect(render).not.toHaveBeenCalled();
     })
   );
 });

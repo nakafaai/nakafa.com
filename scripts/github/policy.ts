@@ -52,9 +52,9 @@ export const GITHUB_ACTION_REVIEWS = Schema.decodeSync(
     action: "actions/checkout",
     approvedSha: "3d3c42e5aac5ba805825da76410c181273ba90b1",
     expectedTag: "v7.0.1",
-    expectedUsages: 4,
+    expectedUsages: 5,
     reason:
-      "Checkout is pinned to the latest reviewed stable release. The CLI publication and the deploy workflow each check out the commit, and the proof workflow checks out the proven head without credentials in its build and spec jobs.",
+      "Checkout is pinned to the latest reviewed stable release. The CLI publication and the deploy workflow each check out the commit, the proof workflow checks out the proven head without credentials in its build and spec jobs, and the gate workflow checks out the gated head without credentials on each part's machine.",
   },
   {
     action: "oven-sh/setup-bun",
@@ -73,9 +73,9 @@ export const GITHUB_ACTION_REVIEWS = Schema.decodeSync(
       version: "0.13.6",
     },
     expectedTag: "v10.3.3",
-    expectedUsages: 1,
+    expectedUsages: 2,
     reason:
-      "The CAS engine's Python dependencies are vendored with uv for the Pyodide runtime, so the deploy job installs the pinned uv release before the stack deploys. Its cache key reads only the CAS lockfile, because the default glob walks every folder, node_modules included, for 3.5 minutes.",
+      "The CAS engine's Python dependencies are vendored with uv for the Pyodide runtime, so the deploy job installs the pinned uv release before the stack deploys, and the gate workflow installs it for the engine's typecheck, lint and tests. Its cache key reads only the CAS lockfile, because the default glob walks every folder, node_modules included, for 3.5 minutes.",
   },
   {
     action: "actions/cache/restore",
@@ -123,9 +123,9 @@ export const GITHUB_ACTION_REVIEWS = Schema.decodeSync(
     action: "actions/upload-artifact",
     approvedSha: "cf430e030ddbb5b0abf93d22962f4752f3646cd9",
     expectedTag: "v7.0.2",
-    expectedUsages: 5,
+    expectedUsages: 7,
     reason:
-      "Separated CLI artifacts use the reviewed release, and the proof workflow hands its build to the spec machines and keeps each shard's result and failure traces.",
+      "Separated CLI artifacts use the reviewed release, and the proof workflow hands its build to the spec machines and keeps each engine's shard result and the failure traces.",
   },
   {
     action: "actions/download-artifact",
