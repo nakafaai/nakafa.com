@@ -1,7 +1,16 @@
 {
-  "slowdown": 4,
-  "runs": 3,
-  "builds": [{ "label": "main", "run": 43387502291 }],
+  "slowdown": "scaled",
+  "runs": 5,
+  "builds": [
+    {
+      "label": "main",
+      "run": 43387502291
+    },
+    {
+      "label": "fix",
+      "run": 43390303984
+    }
+  ],
   "pages": [
     "/en",
     "/en/school",

@@ -12,30 +12,34 @@ const servers = config.builds.map((build, index) => {
   return { ...build, port, child };
 });
 execFileSync("sleep", ["2"]);
+// The slowdown that matches ADR 0039 D1 (12x on a machine of benchmark index 3,500), from this VM's own index.
+function lighthouseArgs(url, slowdown, out) {
+  return [
+    url,
+    "--only-categories=performance,accessibility,best-practices,seo",
+    "--form-factor=mobile",
+    "--screenEmulation.mobile=true",
+    "--screenEmulation.width=390",
+    "--screenEmulation.height=844",
+    "--screenEmulation.deviceScaleFactor=3",
+    `--throttling.cpuSlowdownMultiplier=${slowdown}`,
+    "--chrome-flags=--headless=new --no-first-run --ignore-certificate-errors --no-sandbox",
+    "--output=json",
+    `--output-path=${out}`,
+    "--quiet",
+  ];
+}
+execFileSync("lighthouse", lighthouseArgs(`https://localhost:${servers[0].port}${page}`, 1, "reports/calibration.json"), { stdio: "inherit" });
+const bench = JSON.parse(readFileSync("reports/calibration.json", "utf8")).environment.benchmarkIndex;
+const slowdown = config.slowdown === "scaled" ? Math.max(4, Math.round((12 * bench) / 3500)) : config.slowdown;
+console.log(`benchmark index ${Math.round(bench)}, slowdown ${slowdown}`);
 const slug = page.replace(/[^a-z0-9]+/giu, "_").replace(/^_|_$/gu, "") || "root";
 const rows = [];
 for (let run = 1; run <= config.runs; run += 1) {
   for (const server of run % 2 ? servers : [...servers].reverse()) {
     const out = `reports/${slug}.${server.label}.${run}.json`;
     try {
-      execFileSync(
-        "lighthouse",
-        [
-          `https://localhost:${server.port}${page}`,
-          "--only-categories=performance,accessibility,best-practices,seo",
-          "--form-factor=mobile",
-          "--screenEmulation.mobile=true",
-          "--screenEmulation.width=390",
-          "--screenEmulation.height=844",
-          "--screenEmulation.deviceScaleFactor=3",
-          `--throttling.cpuSlowdownMultiplier=${config.slowdown}`,
-          "--chrome-flags=--headless=new --no-first-run --ignore-certificate-errors --no-sandbox",
-          "--output=json",
-          `--output-path=${out}`,
-          "--quiet",
-        ],
-        { stdio: "inherit" }
-      );
+      execFileSync("lighthouse", lighthouseArgs(`https://localhost:${server.port}${page}`, slowdown, out), { stdio: "inherit" });
       const r = JSON.parse(readFileSync(out, "utf8"));
       const a = r.audits;
       const scripts = (a["resource-summary"]?.details?.items ?? []).find((i) => i.resourceType === "script") ?? {};
@@ -63,6 +67,6 @@ for (let run = 1; run <= config.runs; run += 1) {
     }
   }
 }
-writeFileSync(`reports/${slug}.summary.json`, JSON.stringify({ page, slowdown: config.slowdown, rows }, null, 2));
+writeFileSync(`reports/${slug}.summary.json`, JSON.stringify({ page, slowdown, bench: Math.round(bench), rows }, null, 2));
 console.table(rows);
 for (const server of servers) server.child.kill();
