@@ -65,39 +65,46 @@ const mutate = Effect.fn("load.token.mutate")(
   Effect.provide(FetchClient)
 );
 
+/** One ask of a seat's token: a sign-in on the first ask, and a refresh of that session on every later one. */
+const askToken = Effect.fn("load.token.ask")(function* (
+  address: string,
+  seat: { readonly token: string; readonly userId: string },
+  refresh: Ref.Ref<Option.Option<string>>
+) {
+  const held = yield* Ref.get(refresh);
+  if (Option.isNone(held)) {
+    const signed = yield* mutate(
+      address,
+      "auth/core:signInWithUsernamePassword",
+      { password: seat.token, username: seat.userId },
+      SignedIn
+    );
+    yield* Ref.set(refresh, Option.some(signed.value.tokens.refreshToken));
+    return signed.value.tokens.accessToken;
+  }
+  const refreshed = yield* mutate(
+    address,
+    "auth/core:refreshSession",
+    { refreshToken: held.value },
+    Refreshed
+  );
+  if (refreshed.value.kind === "noSession") {
+    return null;
+  }
+  yield* Ref.set(refresh, Option.some(refreshed.value.tokens.refreshToken));
+  return refreshed.value.tokens.accessToken;
+});
+
 /**
  * The access-token source of one seat's browser: the first ask signs the seat
  * in with Convex Auth's password method, its account id and its token, and
  * every later ask refreshes that session, as a signed-in tab does. A session
  * that is gone answers no token.
  */
-export const seatTokens = Effect.fn("load.token.seat")(function* (
+export const seatTokens = (
   address: string,
   seat: { readonly token: string; readonly userId: string }
-) {
-  const refresh = yield* Ref.make(Option.none<string>());
-  return Effect.gen(function* () {
-    const held = yield* Ref.get(refresh);
-    if (Option.isNone(held)) {
-      const signed = yield* mutate(
-        address,
-        "auth/core:signInWithUsernamePassword",
-        { password: seat.token, username: seat.userId },
-        SignedIn
-      );
-      yield* Ref.set(refresh, Option.some(signed.value.tokens.refreshToken));
-      return signed.value.tokens.accessToken;
-    }
-    const refreshed = yield* mutate(
-      address,
-      "auth/core:refreshSession",
-      { refreshToken: held.value },
-      Refreshed
-    );
-    if (refreshed.value.kind === "noSession") {
-      return null;
-    }
-    yield* Ref.set(refresh, Option.some(refreshed.value.tokens.refreshToken));
-    return refreshed.value.tokens.accessToken;
-  });
-});
+) =>
+  Ref.make(Option.none<string>()).pipe(
+    Effect.map((refresh) => askToken(address, seat, refresh))
+  );

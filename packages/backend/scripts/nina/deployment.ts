@@ -1,24 +1,18 @@
 import { NinaReceipt } from "@repo/backend/client/nina/receipt";
 import type { NinaInput } from "@repo/backend/confect/nina/turns.spec";
 import { api, internal } from "@repo/backend/convex/_generated/api";
-import { createLearnerAccount } from "@repo/backend/scripts/content/acceptance/account";
+import { openLearnerAccount } from "@repo/backend/scripts/content/acceptance/account";
 import type { RunConvex } from "@repo/backend/scripts/content/acceptance/convex";
 import { sanitizeAcceptanceCommandError } from "@repo/backend/scripts/content/acceptance/error";
 import { gateError, NinaGateError } from "@repo/backend/scripts/nina/error";
 import { GateTurn, StoredMessage } from "@repo/backend/scripts/nina/verdict";
 import { randomUuid } from "@repo/utilities/uuid";
 import { getFunctionName } from "convex/server";
-import { Context, Duration, Effect, Schema } from "effect";
+import { Context, Effect, Schema } from "effect";
 import { SecureRandom } from "effect/crypto";
 
-/** Outlasts the longest turn and its follow-up and nothing more: the learner is removed after. */
-const SESSION_LIFETIME = Duration.minutes(30);
-
-/** A synthetic learner that is signed in: the Better Auth user and the session it acts under. */
-const Learner = Schema.Struct({
-  authId: Schema.String,
-  sessionId: Schema.String,
-});
+/** A synthetic learner that is signed in: the Convex Auth session it acts under. */
+const Learner = Schema.Struct({ sessionId: Schema.String });
 type Learner = typeof Learner.Type;
 
 /** What `nina/conversation:get` returns that the gate reads: the newest turn of the chat, if it has one. */
@@ -98,7 +92,7 @@ const readAnswer = Effect.fn("ninaGate.readAnswer")(function* <A, I>(
  * double. The functions are named through the generated API, so a rename breaks
  * the compiler and not the gate. A learner acts through an identity that the
  * runner signs with the caller's own admin rights. The session middleware
- * accepts it because the Better Auth user and session exist.
+ * accepts it because its subject is a Convex Auth session that exists.
  */
 export function makeDeployment(
   run: RunConvex<NinaGateError, never>,
@@ -112,14 +106,14 @@ export function makeDeployment(
   ) =>
     run(step, {
       args,
-      identity: { sessionId: learner.sessionId, subject: learner.authId },
+      identity: { subject: learner.sessionId },
       path: functionName,
     });
 
   return Deployment.of({
-    signIn: createLearnerAccount(run, SESSION_LIFETIME).pipe(
+    signIn: openLearnerAccount(run).pipe(
       Effect.provideService(SecureRandom.SecureRandom, random),
-      Effect.map(({ sessionId, userId }) => ({ authId: userId, sessionId })),
+      Effect.map(({ sessionId }) => ({ sessionId })),
       Effect.mapError((error) => asGateError("Learner account", error))
     ),
     ask: Effect.fn("ninaGate.ask")(function* (
@@ -175,25 +169,17 @@ export function makeDeployment(
         { chatId }
       );
     }),
-    // The claim is the call that Better Auth's before-delete hook makes, with a
-    // fresh UUID as the attempt id the hook requires. It skips the hook's check
-    // that PostHog erasure is configured, which an admin call cannot run. The account
-    // recovery sweep then deletes the learner and every row the app keeps.
+    // The learner deletes its own account, as the settings page does: its
+    // sessions end at once, and the scheduled finalize erases every row the
+    // app keeps for it.
     retire: Effect.fn("ninaGate.retire")(function* (learner: Learner) {
-      const answered = yield* run("Learner removal", {
-        args: { attemptId: yield* randomUuid, authId: learner.authId },
-        path: getFunctionName(internal.auth.deletion.claimAccountDeletion),
-      });
-      const outcome = yield* readAnswer(
+      const answered = yield* callAs(
+        learner,
         "Learner removal",
-        Schema.String,
-        answered
+        getFunctionName(api.auth.deletion.deleteAccount),
+        {}
       );
-      if (outcome !== "ready") {
-        return yield* gateError(
-          `Learner removal answered ${outcome} instead of ready.`
-        );
-      }
+      yield* readAnswer("Learner removal", Schema.Null, answered);
     }),
   });
 }

@@ -22,8 +22,7 @@ const authReadFailure = () =>
  * Resolves the caller once for each function: the user that the caller's live
  * Convex Auth session or agent grant names, and that user's row. Every function
  * type reads the session row, so a signed-out session or a revoked grant stops
- * at once, and the session row changes only when it starts or ends, so a token
- * refresh never reruns a query.
+ * at once.
  * https://docs.convex.dev/auth/convex-auth/best-practices
  */
 export default MiddlewareImpl.makeByFunctionType(schema, SessionMiddleware, {

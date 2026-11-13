@@ -18,7 +18,8 @@ const IDLE_CLIENT_LIFETIME = Duration.days(30);
  * Deletes what an agent left behind: codes past their lifetime, grants unused
  * for `GRANT_LIFETIME`, and registrations that no grant holds after
  * `IDLE_CLIENT_LIFETIME`. Each kind takes at most one page per run, and the
- * hourly schedule takes the rest.
+ * hourly schedule takes the rest. A failed read or write is a defect, which
+ * the next run takes again.
  */
 export const sweepAgents = Effect.fn("auth.grant.sweep")(function* () {
   const reader = yield* DatabaseReader;
@@ -27,11 +28,10 @@ export const sweepAgents = Effect.fn("auth.grant.sweep")(function* () {
   const codes = yield* reader
     .table("agentCodes")
     .index("by_expiresAt", (query) => query.lt("expiresAt", now))
-    .take(SWEEP_LIMIT)
-    .pipe(Effect.orDie);
+    .take(SWEEP_LIMIT);
   yield* Effect.forEach(
     codes,
-    (code) => writer.table("agentCodes").delete(code._id).pipe(Effect.orDie),
+    (code) => writer.table("agentCodes").delete(code._id),
     { discard: true }
   );
   const grants = yield* reader
@@ -39,12 +39,11 @@ export const sweepAgents = Effect.fn("auth.grant.sweep")(function* () {
     .index("by_refreshedAt", (query) =>
       query.lt("refreshedAt", now - Duration.toMillis(GRANT_LIFETIME))
     )
-    .take(SWEEP_LIMIT)
-    .pipe(Effect.orDie);
+    .take(SWEEP_LIMIT);
   yield* Effect.forEach(
     grants,
     (grant) =>
-      writer.table("agentGrants").delete(grant._id).pipe(Effect.orDie),
+      writer.table("agentGrants").delete(grant._id),
     { discard: true }
   );
   const clients = yield* reader
@@ -52,8 +51,7 @@ export const sweepAgents = Effect.fn("auth.grant.sweep")(function* () {
     .index("by_creation_time", (query) =>
       query.lt("_creationTime", now - Duration.toMillis(IDLE_CLIENT_LIFETIME))
     )
-    .take(SWEEP_LIMIT)
-    .pipe(Effect.orDie);
+    .take(SWEEP_LIMIT);
   yield* Effect.forEach(
     clients,
     (client) =>
@@ -61,16 +59,14 @@ export const sweepAgents = Effect.fn("auth.grant.sweep")(function* () {
         const held = yield* reader
           .table("agentGrants")
           .index("by_clientId", (query) => query.eq("clientId", client._id))
-          .first()
-          .pipe(Effect.orDie);
+          .first();
         if (Option.isNone(held)) {
           yield* writer
             .table("agentClients")
-            .delete(client._id)
-            .pipe(Effect.orDie);
+            .delete(client._id);
         }
       }),
     { discard: true }
   );
   return null;
-});
+}, Effect.orDie);
