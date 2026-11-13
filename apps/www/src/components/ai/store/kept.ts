@@ -7,7 +7,7 @@ import { keptStorage } from "@/components/player/storage";
 /** What the browser keeps of Nina's store: the chat her sheet has open, with the version of that shape. */
 const KeptChat = Schema.Struct({
   state: Schema.Struct({ activeChatId: Schema.NullOr(Id("chats")) }),
-  version: Schema.optionalKey(Schema.Number),
+  version: Schema.optionalKey(Schema.Int),
 });
 
 const KeptChatJson = Schema.fromJsonString(KeptChat);
