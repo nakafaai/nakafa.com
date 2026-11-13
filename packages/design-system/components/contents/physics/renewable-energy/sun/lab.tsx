@@ -1,7 +1,6 @@
 import {
   fade,
   mix,
-  type PointSchema,
   vignette,
   withShadow,
 } from "@repo/design-system/components/contents/physics/canvas/paint";
@@ -52,6 +51,7 @@ const SunFrameSchema = Schema.Struct({
 type SunFrame = typeof SunFrameSchema.Type;
 
 /** A point on the canvas, in pixels. */
+const PointSchema = Schema.Struct({ x: Schema.Finite, y: Schema.Finite });
 type Point = typeof PointSchema.Type;
 
 /**
