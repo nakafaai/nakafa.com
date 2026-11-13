@@ -26,8 +26,14 @@ const ANSWER = Arr.join(
   "\n"
 );
 
-/** What a lesson draws at its 16px base, scaled to the chat's 15px: every size and room at 15/16. */
-const AT_CHAT_SIZE = (lesson: number) => `${(lesson * 15) / 16}px`;
+/**
+ * What a lesson draws at its 16px base, scaled to the chat's 15px: every size and room at 15/16. Firefox rounds a
+ * size to a sixtieth of a pixel, so a size is compared to two decimals.
+ */
+const atChatSize = (lesson: number) => (lesson * 15) / 16;
+
+/** A computed CSS length in pixels, as a number. */
+const pixels = (length: string) => Number.parseFloat(length);
 
 /**
  * Nina's answer reads as a lesson reads, one size smaller: the lesson's headings, paragraphs and lists, their weight,
@@ -74,9 +80,9 @@ test("draws an answer with the lesson's prose, scaled from a 15px base", async (
   const list = await read('[data-nakafa="unordered-list"]');
 
   // Headings: the lesson's 30, 24 and 20 pixels, its medium weight, and the rule under the top two levels.
-  expect(h1.fontSize).toBe(AT_CHAT_SIZE(30));
-  expect(h2.fontSize).toBe(AT_CHAT_SIZE(24));
-  expect(h3.fontSize).toBe(AT_CHAT_SIZE(20));
+  expect(pixels(h1.fontSize)).toBeCloseTo(atChatSize(30), 1);
+  expect(pixels(h2.fontSize)).toBeCloseTo(atChatSize(24), 1);
+  expect(pixels(h3.fontSize)).toBeCloseTo(atChatSize(20), 1);
   expect([h1.fontWeight, h2.fontWeight, h3.fontWeight]).toEqual([
     "500",
     "500",
@@ -86,10 +92,10 @@ test("draws an answer with the lesson's prose, scaled from a 15px base", async (
   expect(h2.underline).toContain("underline");
   expect(h3.underline).not.toContain("underline");
   // A heading keeps the lesson's room under it, 24 pixels at 16.
-  expect(h2.marginBottom).toBe(AT_CHAT_SIZE(24));
+  expect(pixels(h2.marginBottom)).toBeCloseTo(atChatSize(24), 1);
 
   // Paragraphs and lists: 15px words on the lesson's relaxed lines, and the lesson's 16px room at 15/16.
-  expect(paragraph.fontSize).toBe("15px");
-  expect(paragraph.lineHeight).toBe(`${15 * 1.625}px`);
-  expect(list.marginTop).toBe(AT_CHAT_SIZE(16));
+  expect(pixels(paragraph.fontSize)).toBeCloseTo(15, 1);
+  expect(pixels(paragraph.lineHeight)).toBeCloseTo(15 * 1.625, 1);
+  expect(pixels(list.marginTop)).toBeCloseTo(atChatSize(16), 1);
 });
