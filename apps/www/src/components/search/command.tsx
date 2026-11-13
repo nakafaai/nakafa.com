@@ -13,7 +13,6 @@ import {
   CommandPanel,
 } from "@repo/design-system/components/ui/command";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { useNavigate } from "@tanstack/react-router";
 import { Effect, Option, Result } from "effect";
 import {
@@ -48,7 +47,9 @@ import { createRecentStore } from "@/lib/search/recent";
  * The global command palette: every page Nakafa publishes in the reader's
  * language, searched in the browser from one static index that the build wrote.
  * The palette mounts when the reader shows intent, so the index is read once,
- * before the press that opens it, and nothing is read per keystroke.
+ * before the press that opens it, and nothing is read per keystroke. The palette
+ * draws only once the index has settled, with its code, so its first frame is
+ * its final one: a press that comes first opens it as soon as both are here.
  */
 export function SearchCommand() {
   const locale = useLocale();
@@ -69,7 +70,8 @@ type IndexAnswer = Result.Result<
 const SearchIndexContext = createContext<Promise<IndexAnswer> | null>(null);
 
 /**
- * Starts reading the index of one locale, once. It sits above the dialog, so a
+ * Starts reading the index of one locale, once, and holds the palette back until
+ * it settles. It sits above the dialog and commits before the palette waits, so a
  * phone's drawer, whose body leaves when it closes, never reads the index again.
  */
 function SearchIndex({ children }: { children: ReactNode }) {
@@ -77,11 +79,25 @@ function SearchIndex({ children }: { children: ReactNode }) {
   const [answer] = useState(() =>
     Effect.runPromise(Effect.result(readSearchIndex(locale)))
   );
-  return <SearchIndexContext value={answer}>{children}</SearchIndexContext>;
+  return (
+    <SearchIndexContext value={answer}>
+      <Suspense fallback={null}>{children}</Suspense>
+    </SearchIndexContext>
+  );
 }
 
-/** The dialog, or the phone's drawer, that holds the palette. */
+/** What reading the index settled with; it suspends the caller until then. */
+function useIndexAnswer() {
+  const answer = use(SearchIndexContext);
+  if (answer === null) {
+    throw new Error("useIndexAnswer must be used within SearchIndex");
+  }
+  return use(answer);
+}
+
+/** The dialog, or the phone's drawer, that holds the palette, drawn once the index has settled. */
 function SearchDialog() {
+  useIndexAnswer();
   const t = useTranslations("Utils");
   const tCommon = useTranslations("Common");
   const { open, setOpen } = useSearch((state) => ({
@@ -104,25 +120,15 @@ function SearchDialog() {
         portalProps={{ keepMounted: true }}
         title={tCommon("search")}
       >
-        <Suspense fallback={<SearchPalette answer={Option.none()} />}>
-          <SearchSettled />
-        </Suspense>
+        <SearchPalette />
       </CommandDialogPopup>
     </CommandDialog>
   );
 }
 
-/** The palette once the index has settled. */
-function SearchSettled() {
-  const answer = use(SearchIndexContext);
-  if (answer === null) {
-    throw new Error("SearchSettled must be used within SearchIndex");
-  }
-  return <SearchPalette answer={Option.some(use(answer))} />;
-}
-
 /** The search box, its groups of rows, and the keys at its foot. */
-function SearchPalette({ answer }: { answer: Option.Option<IndexAnswer> }) {
+function SearchPalette() {
+  const answer = useIndexAnswer();
   const t = useTranslations("Utils");
   const tCommon = useTranslations("Common");
   const query = useSearch((state) => state.query);
@@ -164,7 +170,7 @@ function SearchPalette({ answer }: { answer: Option.Option<IndexAnswer> }) {
         placeholder={t("search-placeholder")}
       />
       <CommandPanel>
-        <SearchState answer={answer} />
+        <SearchState />
         <CommandList>
           {(group: PaletteGroup) => (
             <CommandGroup items={group.items} key={group.key}>
@@ -191,29 +197,20 @@ function SearchPalette({ answer }: { answer: Option.Option<IndexAnswer> }) {
 }
 
 /**
- * What the panel says over its rows: that the index is on its way, or that it
- * could not be read. A query always keeps its last row, the full search, so a
- * query that matches no page still leads somewhere.
+ * What the panel says when the index could not be read. A query always keeps its
+ * last row, the full search, so even then a query still leads somewhere.
  */
-function SearchState({ answer }: { answer: Option.Option<IndexAnswer> }) {
+function SearchState() {
+  const answer = useIndexAnswer();
   const t = useTranslations("Utils");
   return (
     <CommandEmpty className="text-muted-foreground text-center text-sm not-empty:flex not-empty:flex-col not-empty:items-center not-empty:justify-center not-empty:gap-2 not-empty:p-7.5">
-      {Option.match(answer, {
-        onNone: () => (
-          <>
-            <Spinner className="size-4" />
-            <p>{t("search-loading")}</p>
-          </>
-        ),
-        onSome: (settled) =>
-          Result.isFailure(settled) && (
-            <>
-              <HugeIcons className="size-4" icon={InformationCircleIcon} />
-              <p>{t("search-unavailable")}</p>
-            </>
-          ),
-      })}
+      {Result.isFailure(answer) && (
+        <>
+          <HugeIcons className="size-4" icon={InformationCircleIcon} />
+          <p>{t("search-unavailable")}</p>
+        </>
+      )}
     </CommandEmpty>
   );
 }

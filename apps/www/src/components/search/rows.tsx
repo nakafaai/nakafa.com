@@ -176,12 +176,10 @@ const PaletteGroup = Schema.Struct({
 });
 export type PaletteGroup = typeof PaletteGroup.Type;
 
-/** What reading the index settled with, while it is still on its way. */
-type IndexAnswer = Option.Option<
-  Result.Result<
-    Effect.Success<ReturnType<typeof readSearchIndex>>,
-    SearchIndexUnavailable
-  >
+/** What reading the index of the locale settled with. */
+type IndexAnswer = Result.Result<
+  Effect.Success<ReturnType<typeof readSearchIndex>>,
+  SearchIndexUnavailable
 >;
 
 /** The rows of one group, each with an icon that no other row of the group holds. */
@@ -241,7 +239,7 @@ export function usePaletteGroups({
   const here = useLocation({
     select: (location) => new URL(location.publicHref, SITE_ORIGIN).pathname,
   });
-  const loaded = Option.flatMap(answer, Result.getSuccess);
+  const loaded = Result.getSuccess(answer);
   const ownRecent = Arr.filter(recent, ({ path }) =>
     path.startsWith(`/${locale}/`)
   );
