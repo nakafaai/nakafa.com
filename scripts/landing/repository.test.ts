@@ -1,6 +1,6 @@
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
-import { Array as Arr, Effect, FileSystem, MutableRef, Option } from "effect";
+import { Array as Arr, Effect, FileSystem, Option } from "effect";
 import {
   git,
   origins,
@@ -294,72 +294,5 @@ describe("train repository", () => {
         "gh workflow run deploy.yml --repo nakafaai/nakafa.com --ref main -f stage=prod",
       ]);
     }).pipe(Effect.provide(NodeServices.layer))
-  );
-
-  it.effect(
-    "gates a combination on the free runners and reads its verdict, and fails for a head GitHub does not know",
-    () =>
-      Effect.gen(function* () {
-        const sha = "f".repeat(40);
-        /** What `gh api graphql --include` prints for a head with these statuses, or for no commit. */
-        const look = (contexts: readonly unknown[] | null) => ({
-          stdout: Arr.join(
-            [
-              "HTTP/2.0 200 OK",
-              "Date: Fri, 13 Nov 2026 10:00:00 GMT",
-              "",
-              toJson({
-                data: {
-                  repository: {
-                    object: contexts === null ? null : { status: { contexts } },
-                  },
-                },
-              }),
-            ],
-            "\r\n"
-          ),
-        });
-        const verdict = (state: string) =>
-          look([
-            {
-              context: "gate",
-              state,
-              description: null,
-              targetUrl: "https://example.test/runs/3",
-              createdAt: "2026-11-13T10:20:00Z",
-            },
-          ]);
-        const gated = (answer: { readonly stdout: string }) => {
-          const looks = MutableRef.make(0);
-          return withRepository(
-            "/root",
-            (args) => {
-              if (args[0] === "workflow") {
-                return {};
-              }
-              return MutableRef.getAndIncrement(looks) === 0
-                ? look([])
-                : answer;
-            },
-            Effect.flatMap(Repository, (repository) => repository.gate(sha))
-          );
-        };
-        const passed = yield* gated(verdict("SUCCESS"));
-        expect(passed.value).toBe(true);
-        expect(
-          Arr.filter(passed.calls, (call) => call.startsWith("gh workflow"))
-        ).toEqual([
-          `gh workflow run gate.yml --repo nakafaai/nakafa.com --ref main -f sha=${sha}`,
-        ]);
-        expect((yield* gated(verdict("FAILURE"))).value).toBe(false);
-        const unknown = yield* withRepository(
-          "/root",
-          () => look(null),
-          Effect.flatMap(Repository, (repository) => repository.gate(sha))
-        ).pipe(Effect.flip);
-        expect(unknown.message).toBe(
-          `GitHub has no commit ${sha}: push it first.`
-        );
-      }).pipe(Effect.provide(NodeServices.layer))
   );
 });

@@ -11,11 +11,7 @@ import {
   String as Str,
 } from "effect";
 import { ChildProcessSpawner } from "effect/process";
-import {
-  awaitVerdict,
-  GATE_CONTEXT,
-  startingMoment,
-} from "#scripts/gate/github";
+import { GATE_CONTEXT } from "#scripts/gate/github";
 import { attempt, decoded, gh, run } from "#scripts/landing/command";
 import { landPull } from "#scripts/landing/merge";
 import {
@@ -248,28 +244,6 @@ export const githubRepository = (root: string) =>
                   ),
                   candidateOf
                 )
-              )
-            )
-          ),
-        gate: (sha) =>
-          provide(
-            Effect.gen(function* () {
-              const since = yield* startingMoment(sha);
-              yield* gh([
-                "workflow",
-                "run",
-                "gate.yml",
-                "--repo",
-                REPOSITORY,
-                "--ref",
-                "main",
-                "-f",
-                `sha=${sha}`,
-              ]);
-              return (yield* awaitVerdict(sha, since)).passed;
-            }).pipe(
-              Effect.mapError(
-                (error) => new TrainError({ message: error.message })
               )
             )
           ),
