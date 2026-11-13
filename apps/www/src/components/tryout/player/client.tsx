@@ -1,24 +1,11 @@
-import { ArrowLeft01Icon } from "@hugeicons/core-free-icons";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@repo/design-system/components/ui/tooltip";
-import { buttonVariants } from "@repo/design-system/lib/button";
 import { Array as Arr } from "effect";
-import { type ReactNode, Suspense, use } from "react";
+import { Suspense, use } from "react";
 import { useTranslations } from "use-intl";
 import { PlayerFinish } from "@/components/player/finish";
 import { PlayerFlag } from "@/components/player/flag";
 import { PlayerFooter, PlayerOpener } from "@/components/player/footer";
 import { PlayerMain } from "@/components/player/frame";
-import {
-  PlayerHeader,
-  PlayerHeaderEnd,
-  PlayerHeaderStart,
-  PlayerTitle,
-} from "@/components/player/header";
+import { PlayerHeaderEnd } from "@/components/player/header";
 import { PlayerKeys } from "@/components/player/keys";
 import type { PlayerMode } from "@/components/player/mode";
 import { PlayerGrid } from "@/components/player/navigator/grid";
@@ -36,8 +23,12 @@ import { TryoutArticles } from "@/components/tryout/player/articles";
 import type { TryoutFinish } from "@/components/tryout/player/finish";
 import { useTryoutFlag } from "@/components/tryout/player/flag";
 import { projectTryoutQuestions } from "@/components/tryout/player/model";
-import { TryoutPlayerTimer } from "@/components/tryout/player/timer";
-import { TryoutPageLink } from "@/components/tryout/route/link";
+import { TryoutPlayerHeader } from "@/components/tryout/player/paper";
+import { TryoutPlayerParts } from "@/components/tryout/player/parts";
+import {
+  TryoutPlayerTimer,
+  TryoutPlayerTimerCard,
+} from "@/components/tryout/player/timer";
 import { useResendKeptPicks } from "@/components/tryout/runtime/response/kept";
 import { useTryoutResponseSubmit } from "@/components/tryout/runtime/response/submit";
 import { readServerClockOffset } from "@/components/tryout/runtime/server";
@@ -45,9 +36,10 @@ import type { TryoutRuntimeState } from "@/components/tryout/runtime/state";
 import type { TryoutSectionRuntime } from "@/components/tryout/runtime/types";
 
 /**
- * Runs one try-out section in the shared player: the header with back, the
- * title, the timer, and Finish; the questions beside the navigator; and the
- * footer with previous, the flag, the navigator opener below the large
+ * Runs one try-out section in the shared player: the header with the section's
+ * path, the timer below the large breakpoint, and Finish; the questions beside
+ * the pane, which holds the set's sections, the time left and the numbers; and
+ * the footer with previous, the flag, the pane's sheet opener below the large
  * breakpoint, and next. The address names the current question, so a reload
  * opens it again. The header, the navigator, and the footer render from
  * the live runtime at once; only the question bodies wait for their document
@@ -57,7 +49,6 @@ export function TryoutPlayer({
   finish,
   mode,
   state,
-  title,
 }: {
   finish: TryoutFinish;
   /** The view the server resolved. */
@@ -67,12 +58,10 @@ export function TryoutPlayer({
     TryoutRuntimeState<TryoutSectionRuntime>,
     { kind: "active" | "pending" }
   >;
-  title: ReactNode;
 }) {
   const { runtime } = state;
   // Answers and finishing are closed because time ran out.
   const locked = state.kind === "pending";
-  const tCommon = useTranslations("Common");
   const tTryouts = useTranslations("Tryouts");
   const answer = useTryoutResponseSubmit();
   const flag = useTryoutFlag();
@@ -94,30 +83,10 @@ export function TryoutPlayer({
       mode={mode}
     >
       <PlayerKeys locked={locked} questions={questions} />
-      <PlayerHeader>
-        <PlayerHeaderStart>
-          <Tooltip>
-            <TooltipTrigger
-              render={
-                <TryoutPageLink
-                  aria-label={tCommon("back")}
-                  className={buttonVariants({
-                    size: "icon",
-                    variant: "outline",
-                  })}
-                  {...finish.returnAddress}
-                >
-                  <HugeIcons icon={ArrowLeft01Icon} />
-                </TryoutPageLink>
-              }
-            />
-            <TooltipContent>{tCommon("back")}</TooltipContent>
-          </Tooltip>
-          <PlayerTitle>{title}</PlayerTitle>
-          <OfflineNote />
-        </PlayerHeaderStart>
+      <TryoutPlayerHeader>
         <TryoutPlayerTimer expiresAt={runtime.expiresAt} />
         <PlayerHeaderEnd>
+          <OfflineNote />
           <PlayerFinish
             description={tTryouts("complete-part-description")}
             label={tTryouts("complete-part-cta")}
@@ -133,12 +102,14 @@ export function TryoutPlayer({
             title={tTryouts("complete-part-title")}
           />
         </PlayerHeaderEnd>
-      </PlayerHeader>
+      </TryoutPlayerHeader>
       <PlayerMain
         navigator={
           <PlayerSidebar
             header={<PlayerNavigatorHeader questions={questions} />}
           >
+            <TryoutPlayerParts />
+            <TryoutPlayerTimerCard expiresAt={runtime.expiresAt} />
             <PlayerGrid questions={questions} />
             <PlayerLegend />
           </PlayerSidebar>
@@ -153,6 +124,7 @@ export function TryoutPlayer({
         <PlayerOpener />
       </PlayerFooter>
       <PlayerSheet>
+        <TryoutPlayerParts />
         <PlayerGrid questions={questions} />
         <PlayerLegend />
       </PlayerSheet>

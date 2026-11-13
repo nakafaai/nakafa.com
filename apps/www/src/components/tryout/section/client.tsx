@@ -1,34 +1,24 @@
 import { QueryResult, useQuery } from "@confect/react";
 import tryouts from "@repo/backend/confect/_generated/refs/tryouts";
 import type { TryoutScoreResult } from "@repo/backend/confect/tryouts/score";
-import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { useRequired } from "@repo/design-system/hooks/required";
 import { Option } from "effect";
-import { createContext, type ReactNode, use, useState } from "react";
+import { type ComponentProps, type ReactNode, useState } from "react";
 import { useLocale } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
-import type { PlayerMode } from "@/components/player/mode";
 import { useNow } from "@/components/player/now";
-import { PlayerTimer } from "@/components/player/timer";
-import { ShellLock } from "@/components/sidebar/lock";
 import type { TryoutBody } from "@/components/tryout/content/body";
 import { TryoutContentContext } from "@/components/tryout/content/context";
 import {
   type TryoutFinish,
   useTryoutFinish,
 } from "@/components/tryout/player/finish";
-import {
-  TryoutPlayerOpening,
-  TryoutRunningPlayer,
-} from "@/components/tryout/player/opening";
+import { TryoutRunningPlayer } from "@/components/tryout/player/opening";
 import {
   TryoutFinishedPlace,
   TryoutReviewFrame,
-  TryoutReviewView,
 } from "@/components/tryout/review/frame";
 import { useTryoutLeave } from "@/components/tryout/route/leave";
 import {
-  getTryoutAttemptLock,
   getTryoutPublicPath,
   getTryoutPublicPathHref,
   type TryoutPageAddress,
@@ -54,9 +44,18 @@ import { getTryoutFinishedSectionStatus } from "@/components/tryout/section/fini
 import { TryoutSectionPageHeader } from "@/components/tryout/section/header";
 import type {
   TryoutSectionInitialState,
-  TryoutSectionPage,
   TryoutSectionRoute,
 } from "@/components/tryout/section/model";
+import {
+  TryoutSectionPageProvider,
+  useTryoutSectionPage,
+} from "@/components/tryout/section/page";
+import {
+  TryoutSectionBodies,
+  TryoutSectionLock,
+  TryoutSectionOpening,
+  TryoutSectionPaper,
+} from "@/components/tryout/section/paper";
 import { TryoutSectionSummary } from "@/components/tryout/section/summary";
 import { tryoutActionNameOf } from "@/components/tryout/set/kept";
 import { useKeepActionName } from "@/components/tryout/set/name";
@@ -65,33 +64,10 @@ import { useLastValue } from "@/lib/data/kept";
 
 type SectionState = TryoutSectionInitialState | null;
 
-interface TryoutSectionPageClientProps {
-  binding: {
-    attemptId: Id<"tryoutAttempts">;
-    initialState: TryoutSectionInitialState;
-    /** The player view resolved in the browser from the address and the saved view. */
-    mode: PlayerMode;
-    startPath: string | null;
-  } | null;
-  children: ReactNode;
+interface TryoutSectionPageClientProps
+  extends ComponentProps<typeof TryoutSectionPageProvider> {
   /** The decoded question bodies of the attempt: the running section's, or a finished one's for its review. */
   content: readonly TryoutBody[] | null;
-  page: TryoutSectionPage;
-  /** The learner's attempt is still being read, so the action waits for it and takes no press. */
-  pending: boolean;
-  route: TryoutSectionRoute;
-  setPath: string;
-}
-
-/** The page the section client draws: its section page, whether the learner read is pending, its route, and the path of its set. */
-const TryoutSectionPageContext = createContext<Pick<
-  TryoutSectionPageClientProps,
-  "page" | "pending" | "route" | "setPath"
-> | null>(null);
-
-/** Reads the page of the surrounding section client. */
-function useTryoutSectionPage() {
-  return useRequired(TryoutSectionPageContext, "useTryoutSectionPage");
 }
 
 /** Renders one stable page with an active-only mutable subscription. */
@@ -100,32 +76,42 @@ export function TryoutSectionPageClient({
   children,
   content,
   page,
+  parts,
   pending,
   route,
   setPath,
 }: TryoutSectionPageClientProps) {
   return (
     <TryoutContentContext value={{ bodies: content }}>
-      <TryoutSectionPageContext value={{ page, pending, route, setPath }}>
+      <TryoutSectionPageProvider
+        binding={binding}
+        page={page}
+        parts={parts}
+        pending={pending}
+        route={route}
+        setPath={setPath}
+      >
         <TryoutStartProvider>
-          {binding === null ? (
-            <ResolvedTryoutSectionPage
-              binding={null}
-              finish={null}
-              state={null}
-            >
-              {children}
-            </ResolvedTryoutSectionPage>
-          ) : (
-            <LiveTryoutSectionPage
-              binding={binding}
-              key={`${binding.attemptId}:${page.section.sectionKey}`}
-            >
-              {children}
-            </LiveTryoutSectionPage>
-          )}
+          <TryoutSectionPaper>
+            {binding === null ? (
+              <ResolvedTryoutSectionPage
+                binding={null}
+                finish={null}
+                state={null}
+              >
+                {children}
+              </ResolvedTryoutSectionPage>
+            ) : (
+              <LiveTryoutSectionPage
+                binding={binding}
+                key={`${binding.attemptId}:${page.section.sectionKey}`}
+              >
+                {children}
+              </LiveTryoutSectionPage>
+            )}
+          </TryoutSectionPaper>
         </TryoutStartProvider>
-      </TryoutSectionPageContext>
+      </TryoutSectionPageProvider>
     </TryoutContentContext>
   );
 }
@@ -256,20 +242,19 @@ function ResolvedTryoutSectionPage({
   const runtimeState = getTryoutRuntimeState({ activeAttempt, now, runtime });
   const hasActiveSection = currentAttempt?.section?.status === "in-progress";
   if (hasActiveSection && runtimeState.kind === "none") {
-    return <SectionLock binding={binding} />;
+    return <TryoutSectionLock />;
   }
 
   const sectionStatus = getTryoutFinishedSectionStatus(sectionAttempt);
   if (finish && binding && isTryoutRuntimeRunning(runtimeState)) {
     return (
       <TryoutPage>
-        <SectionLock binding={binding} />
+        <TryoutSectionLock />
         <TryoutSectionBodies>
           <TryoutRunningPlayer
             finish={finish}
             mode={binding.mode}
             state={runtimeState}
-            title={page.section.title}
           />
         </TryoutSectionBodies>
       </TryoutPage>
@@ -278,7 +263,7 @@ function ResolvedTryoutSectionPage({
   if (opening) {
     return (
       <TryoutPage>
-        <SectionLock binding={binding} />
+        <TryoutSectionLock />
         <TryoutSectionOpening />
       </TryoutPage>
     );
@@ -286,7 +271,7 @@ function ResolvedTryoutSectionPage({
 
   return (
     <TryoutPage>
-      <SectionLock binding={binding} />
+      <TryoutSectionLock />
       <TryoutSectionBody
         binding={binding}
         header={
@@ -295,9 +280,7 @@ function ResolvedTryoutSectionPage({
             activeAttempt={activeAttempt}
             binding={binding}
             sectionStatus={sectionStatus}
-          >
-            <TryoutReviewView />
-          </TryoutSectionHeader>
+          />
         }
         pending={actionAttempt === undefined}
         runtimeState={runtimeState}
@@ -354,50 +337,6 @@ function TryoutSectionBody({
       </TryoutPageBody>
     </>
   );
-}
-
-/**
- * Holds the player until the page's read has brought the section's bodies. The live state
- * can say a section runs a commit before the read does, which lands before the browser
- * paints, so the player waits in its frame instead of reading a section with no questions.
- */
-function TryoutSectionBodies({ children }: { children: ReactNode }) {
-  const bodies = use(TryoutContentContext)?.bodies ?? null;
-  return bodies === null ? <TryoutSectionOpening /> : children;
-}
-
-/** The player's frame, while a section the learner's press opens gets ready. */
-function TryoutSectionOpening() {
-  const { page } = useTryoutSectionPage();
-  return (
-    <TryoutPlayerOpening
-      questionCount={page.section.questionCount}
-      title={page.section.title}
-    >
-      <PlayerTimer seconds={page.section.timeLimitSeconds} />
-    </TryoutPlayerOpening>
-  );
-}
-
-/**
- * Locks the app shell while the attempt this page is bound to runs, or while the learner's press opens
- * a section here, so the page takes the whole screen from the press on.
- */
-function SectionLock({
-  binding,
-}: Pick<TryoutSectionPageClientProps, "binding">) {
-  const opening = useTryoutStartPhase() === "opening";
-  if (binding?.initialState.attempt.status === "in-progress") {
-    return (
-      <ShellLock
-        remember={getTryoutAttemptLock(
-          binding.attemptId,
-          binding.initialState.attempt.expiresAt
-        )}
-      />
-    );
-  }
-  return opening ? <ShellLock /> : null;
 }
 
 /** Renders the section heading with what the page adds, such as the view of a review's questions, and its start or return action. */

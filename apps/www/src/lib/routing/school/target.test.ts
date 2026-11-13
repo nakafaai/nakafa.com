@@ -15,6 +15,7 @@ import {
   schoolExamsTarget,
   schoolExamTarget,
   schoolHomeTarget,
+  schoolSittingsTarget,
   schoolSittingTarget,
 } from "@/lib/routing/school/target";
 
@@ -50,6 +51,12 @@ describe("school targets", () => {
       expect.objectContaining({
         params: { exam: "e1", sitting: "s1", slug },
         to: "/school/$slug/exams/$exam/sittings/$sitting",
+      })
+    );
+    expect(schoolSittingsTarget(slug)).toEqual(
+      expect.objectContaining({
+        params: { slug },
+        to: "/school/$slug/sittings",
       })
     );
     expect(schoolSittingTarget(slug, "s1")).toEqual(

@@ -1,15 +1,19 @@
 import type { Locale } from "@repo/internationalization/src/locale";
 import { readServerTranslator } from "@repo/internationalization/src/translator";
-import { Clock, Effect, Option } from "effect";
-import { readTryoutSectionPage } from "@/components/tryout/catalog/source.server";
+import { Array as Arr, Clock, Effect, Option } from "effect";
+import {
+  readTryoutSectionPage,
+  readTryoutSetPage,
+} from "@/components/tryout/catalog/source.server";
 import { readTryoutRouteHead } from "@/components/tryout/route/metadata.server";
 import { getTryoutPublicPath } from "@/components/tryout/route/path";
 import { serverHandler } from "@/lib/server/fn";
 import { getTryoutSectionArtwork } from "@/lib/tryout/artwork";
 
 /**
- * Resolves one section URL: the catalog view every visitor sees, with the set page it returns to,
- * which the build prerenders and keeps as the page's static answer. A learner's own attempt through
+ * Resolves one section URL: the catalog view every visitor sees, with the set page it returns to and the set's
+ * sections, which the player's pane offers as the paper's parts, which the build prerenders and keeps as the page's
+ * static answer. A learner's own attempt through
  * the section is read in the browser (`useLearnerSection`), so the Worker renders nothing personal.
  */
 export const readTryoutSectionRoute = Effect.fn("www.tryout.route.readSection")(
@@ -32,9 +36,17 @@ export const readTryoutSectionRoute = Effect.fn("www.tryout.route.readSection")(
       track: input.track,
     };
     const sectionPath = getTryoutPublicPath(route);
-    const [page, head, tTryouts] = yield* Effect.all(
+    const setPath = getTryoutPublicPath({
+      country: input.country,
+      exam: input.exam,
+      group: input.group,
+      set: input.set,
+      track: input.track,
+    });
+    const [page, setPage, head, tTryouts] = yield* Effect.all(
       [
         readTryoutSectionPage(input.locale, sectionPath),
+        readTryoutSetPage(input.locale, setPath),
         readTryoutRouteHead({
           kind: "section",
           locale: input.locale,
@@ -75,15 +87,22 @@ export const readTryoutSectionRoute = Effect.fn("www.tryout.route.readSection")(
       kind: "catalog" as const,
       now: yield* Clock.currentTimeMillis,
       page,
+      // The set's sections that have a page of their own, as the player's pane picks between them.
+      parts: Arr.getSomes(
+        Arr.map(setPage?.sections ?? [], (section) =>
+          Option.map(
+            Option.fromUndefinedOr(section.publicPath),
+            (publicPath) => ({
+              key: section.sectionKey,
+              label: section.title,
+              publicPath,
+            })
+          )
+        )
+      ),
       route,
       sectionPath,
-      setPath: getTryoutPublicPath({
-        country: input.country,
-        exam: input.exam,
-        group: input.group,
-        set: input.set,
-        track: input.track,
-      }),
+      setPath,
     };
   }
 );
