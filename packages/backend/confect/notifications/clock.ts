@@ -23,6 +23,9 @@ export const LocalClock = Schema.Struct({
 const QUIET_START: typeof ClockTime.Type = { hour: 21, minute: 0 };
 /** Quiet hours end at 06:00, and that minute is outside them. */
 const QUIET_END: typeof ClockTime.Type = { hour: 6, minute: 0 };
+
+/** A learner's try-out reminders keep quiet until 07:00 (decision D4 of the consumer program). */
+export const REMINDER_QUIET_END: typeof ClockTime.Type = { hour: 7, minute: 0 };
 /** The daily digest runs at 17:00 (ADR 0027, a proposal the owner sets). */
 const DIGEST_AT: typeof ClockTime.Type = { hour: 17, minute: 0 };
 
@@ -38,7 +41,6 @@ const minuteOfDay = (zoned: DateTime.Zoned): number =>
   });
 
 const QUIET_START_MINUTE = minuteOf(QUIET_START);
-const QUIET_END_MINUTE = minuteOf(QUIET_END);
 const DIGEST_MINUTE = minuteOf(DIGEST_AT);
 
 /**
@@ -60,24 +62,22 @@ export const atLocalClock = (
 
 /**
  * When quiet hours end, if `instant` falls inside them on the clock of `zone`.
- * Quiet hours run from 21:00 to 06:00 the next morning, so an instant after
- * 21:00 ends the following day, and an instant before 06:00 ends that morning.
- * The instant of 06:00 itself is outside quiet hours and gives `None`.
+ * Quiet hours run from 21:00 to `end` the next morning, 06:00 for a school's
+ * notices and 07:00 for a try-out's reminders, so an instant after 21:00 ends the
+ * following day, and an instant before `end` ends that morning. The instant of
+ * `end` itself is outside quiet hours and gives `None`.
  */
 export const quietHoursEnd = (
   instant: DateTime.DateTime,
-  zone: DateTime.TimeZone.Named
+  zone: DateTime.TimeZone.Named,
+  end: typeof ClockTime.Type = QUIET_END
 ): Option.Option<DateTime.Utc> => {
   const minute = minuteOfDay(DateTime.setZone(instant, zone));
   if (minute >= QUIET_START_MINUTE) {
-    return Option.some(
-      atLocalClock(instant, zone, { dayOffset: 1, ...QUIET_END })
-    );
+    return Option.some(atLocalClock(instant, zone, { dayOffset: 1, ...end }));
   }
-  if (minute < QUIET_END_MINUTE) {
-    return Option.some(
-      atLocalClock(instant, zone, { dayOffset: 0, ...QUIET_END })
-    );
+  if (minute < minuteOf(end)) {
+    return Option.some(atLocalClock(instant, zone, { dayOffset: 0, ...end }));
   }
   return Option.none();
 };
