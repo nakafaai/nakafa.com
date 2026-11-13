@@ -8,8 +8,11 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { cn } from "cn";
 import { Array as Arr } from "effect";
 import { useTranslations } from "use-intl";
+import { navigationOf } from "@/components/notifications/press";
+import { usePanes } from "@/components/shared/panes";
 import { tableColumns } from "@/components/shared/table/columns";
 import { RowItems, RowOpen } from "@/components/shared/table/menu";
+import { isUnstartedSet } from "@/components/tryout/catalog/table/started";
 import type {
   TryoutSetRow,
   TryoutSetStatusFilter,
@@ -112,11 +115,24 @@ function TryoutSetMenu() {
   );
 }
 
-/** A set's name, the link the row presses, after the mark that its latest attempt is complete. */
+/**
+ * A set's name, the link the row presses, after the mark that its latest attempt is complete. A set the learner has
+ * not started opens its pane beside the table on a plain press, as its row does; the link stays for a new tab and for
+ * crawlers.
+ */
 function TryoutSetName({ row }: { row: TryoutSetRow }) {
+  const show = usePanes((state) => state.show);
+  const opens = isUnstartedSet(row);
+
   return (
     <TryoutPageLink
       className="flex min-w-0 items-center gap-2 underline-offset-4 hover:underline"
+      onClick={(event) => {
+        if (opens && navigationOf(event) === "same-tab") {
+          event.preventDefault();
+          show(row.publicPath);
+        }
+      }}
       preload="intent"
       {...setAddress(row)}
     >

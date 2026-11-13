@@ -4,6 +4,7 @@ import {
 } from "@nakafa/aksara-contracts/assessment/catalog";
 import tryoutSetProgress from "@repo/backend/confect/_generated/tables/tryoutSetProgress";
 import { hashText } from "@repo/backend/confect/contentRelease/digest";
+import { publicTryoutSectionValidator } from "@repo/backend/confect/tryouts/queries/model";
 import { tryoutSetIdentityOf } from "@repo/backend/confect/tryouts/route";
 import { TRACK_SET_PAGE_LIMIT } from "@repo/backend/confect/tryouts/sets/query";
 import type { ListArgs } from "@repo/backend/confect/tryouts/sets/spec";
@@ -21,11 +22,13 @@ const SIGNED_CURSOR_PREFIX = "signed:";
 
 const publishedSetRowSchema = Schema.Struct({
   durationSeconds: Schema.Finite,
+  entrySection: publicTryoutSectionValidator,
   facts: SetFacts,
   progress: Schema.NullOr(tryoutSetProgress.Doc),
   runningAttempt: Schema.NullOr(runningAttemptValidator),
   sections: Schema.Array(CatalogSectionSchema),
   set: CatalogSetSchema,
+  visibleSections: Schema.Array(publicTryoutSectionValidator),
 });
 /** One authored set with its facts and sections, joined with the current user's optional progress. */
 export type PublishedSetRow = typeof publishedSetRowSchema.Type;
@@ -76,18 +79,22 @@ const identifyRows = Effect.fn("tryouts.sets.identifyPublishedPage")(
 /** Projects one set plus optional user progress into the public row. */
 function projectPublishedSet({
   durationSeconds,
+  entrySection,
   facts,
   progress,
   runningAttempt,
   sections,
   set,
+  visibleSections,
 }: PublishedSetRow) {
   return {
     ...toPublicPublishedSet(set, facts, sections),
     attemptStatus: progress?.status ?? null,
     durationSeconds,
+    entrySection,
     publishedScore: progress?.publishedScore ?? null,
     runningAttempt,
+    sections: visibleSections,
   };
 }
 /** Encodes an offset under its immutable catalog and mutable row revision. */

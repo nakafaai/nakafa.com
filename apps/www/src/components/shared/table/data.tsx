@@ -63,6 +63,7 @@ export function DataTable<TData extends RowData>({
   data,
   empty,
   loading = false,
+  opens,
   pageSize,
   plain = false,
   rowId,
@@ -77,6 +78,11 @@ export function DataTable<TData extends RowData>({
   empty?: ReactNode;
   /** Whether more rows may still arrive, so a table with no row waits for them before it says it found none. */
   loading?: boolean;
+  /**
+   * Which rows open beside the list on a page with panes, every row unless it names some; any other row presses
+   * the link of its first column, as on a page without panes.
+   */
+  opens?: (row: TData) => boolean;
   /** How many rows to draw at a time for a list held whole in memory, more as the end comes near. */
   pageSize?: number;
   /** Whether a row stays a plain row on a page with panes, as a table inside an open pane's rows do. */
@@ -139,7 +145,11 @@ export function DataTable<TData extends RowData>({
           (waiting && !chooses) ||
           showsEmpty ? (
             Arr.map(shown, (row) => (
-              <DataTableRow key={row.id} opens={hasPanes && !plain} row={row}>
+              <DataTableRow
+                key={row.id}
+                opens={hasPanes && !plain && (opens?.(row.original) ?? true)}
+                row={row}
+              >
                 {Arr.map(row.getAllCells(), (cell, index) => (
                   <DataTableCell cell={cell} index={index} key={cell.id}>
                     <table.FlexRender cell={cell} />

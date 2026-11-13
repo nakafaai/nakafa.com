@@ -186,7 +186,7 @@ describe("tryouts/queries/sets", () => {
   );
 
   it.effect(
-    "lists a track's sets in authored order with their facts, for a visitor without progress",
+    "lists a track's sets in authored order with their facts and the sections a start enters and a visitor sees, for a visitor without progress",
     () =>
       Effect.gen(function* () {
         const world = yield* tryoutWorld({ sets: 2 });
@@ -197,10 +197,26 @@ describe("tryouts/queries/sets", () => {
             {
               attemptStatus: null,
               durationSeconds: 900,
+              entrySection: {
+                sectionKey: "section-a",
+                visibility: "visible",
+              },
               publishedScore: null,
               questionCount: 3,
               runningAttempt: null,
               sectionCount: 2,
+              sections: [
+                {
+                  questionCount: 2,
+                  sectionKey: "section-a",
+                  timeLimitSeconds: 600,
+                },
+                {
+                  questionCount: 1,
+                  sectionKey: "section-b",
+                  timeLimitSeconds: 300,
+                },
+              ],
               setKey: "set-1",
               visibleSectionCount: 2,
             },
