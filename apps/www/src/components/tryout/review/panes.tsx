@@ -1,5 +1,6 @@
 import type { TryoutScoreResult } from "@repo/backend/confect/tryouts/score";
 import { Button } from "@repo/design-system/components/ui/button";
+import { ResizeEdge } from "@repo/design-system/components/ui/resizable";
 import { cn } from "cn";
 import { Array as Arr, Result } from "effect";
 import { type ComponentProps, type ReactNode, use } from "react";
@@ -14,7 +15,6 @@ import {
   PanesProvider,
   usePanes,
 } from "@/components/shared/page/panes";
-import { PaneEdge } from "@/components/shared/page/panes/edge";
 import { paneSideVariants } from "@/components/shared/page/panes/side";
 import {
   pageRhythmVariants,
@@ -121,7 +121,7 @@ export function TryoutFinishedPlace({ pending }: { pending: boolean }) {
       data-pane-side={finished ? "lg" : undefined}
       inert
     >
-      <PaneEdge resizer={STILL_EDGE} />
+      <ResizeEdge resizer={STILL_EDGE} />
       <PaneHeader title={t("finished-panel")} />
       <script
         // biome-ignore lint/security/noDangerouslySetInnerHtml: the script text is built from constants only
@@ -133,7 +133,7 @@ export function TryoutFinishedPlace({ pending }: { pending: boolean }) {
 }
 
 /** The edge a place draws, which no press moves: the pane that replaces it carries the live one. */
-const STILL_EDGE: ComponentProps<typeof PaneEdge>["resizer"] = {
+const STILL_EDGE: ComponentProps<typeof ResizeEdge>["resizer"] = {
   "aria-orientation": "vertical",
   "aria-valuemax": 768,
   "aria-valuemin": 320,

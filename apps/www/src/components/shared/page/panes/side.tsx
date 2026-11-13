@@ -1,30 +1,16 @@
-import { useResizable } from "@repo/design-system/hooks/resizable";
+import { ResizeEdge } from "@repo/design-system/components/ui/resizable";
+import {
+  useResizable,
+  useWindowRoom,
+} from "@repo/design-system/hooks/resizable";
 import { cva } from "class-variance-authority";
-import { type ReactNode, useLayoutEffect, useSyncExternalStore } from "react";
-import { PaneEdge } from "@/components/shared/page/panes/edge";
+import { type ReactNode, useLayoutEffect } from "react";
 
 /** How wide a pane starts and how far a drag of its edge takes it, in pixels. */
 const PANE_WIDTH = { initialWidth: 420, maxWidth: 768, minWidth: 320 };
 
 /** What a window keeps beside a pane, in pixels: the sidebar's 16rem and 23rem of page. */
 const PAGE_ROOM = 624;
-
-/** Tells when the window changes its width. */
-function subscribeToWindow(notify: () => void) {
-  window.addEventListener("resize", notify);
-
-  return () => window.removeEventListener("resize", notify);
-}
-
-/** The widest a pane can be now, in pixels. */
-function readRoom() {
-  return window.innerWidth - PAGE_ROOM;
-}
-
-/** Before the browser can measure the window, the pane has all the room it asks for. */
-function readNoRoom() {
-  return Number.POSITIVE_INFINITY;
-}
 
 /** The pane at the screen's right, which steps aside below the width its page gives it. */
 export const paneSideVariants = cva(
@@ -63,7 +49,7 @@ export function PaneSide({
   /** Whether a row stands open in it, which Escape closes first. */
   row: boolean;
 }) {
-  const room = useSyncExternalStore(subscribeToWindow, readRoom, readNoRoom);
+  const room = useWindowRoom(PAGE_ROOM);
   const { width, resizerProps } = useResizable({
     initialWidth: PANE_WIDTH.initialWidth,
     // Never narrower than the smallest pane, whatever the room says.
@@ -93,7 +79,7 @@ export function PaneSide({
       data-pane-row={row ? "" : undefined}
       data-pane-side={from}
     >
-      <PaneEdge resizer={resizerProps} />
+      <ResizeEdge resizer={resizerProps} />
       {children}
     </aside>
   );
