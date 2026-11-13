@@ -196,6 +196,22 @@ export const releaseLocalRuntime = Effect.fn(
   yield* fs.remove(runtime.directory, { recursive: true });
 });
 
+/**
+ * Links the checkout's backend package into a runtime's backend folder, so the
+ * Convex CLI run there resolves the same `convex` package and dependencies.
+ */
+export const linkBackendPackage = Effect.fn(
+  "contentAcceptance.linkBackendPackage"
+)(function* (root: string, backend: string) {
+  const fs = yield* FileSystem.FileSystem;
+  for (const entry of ["node_modules", "package.json"]) {
+    yield* fs.symlink(
+      `${root}/packages/backend/${entry}`,
+      `${backend}/${entry}`
+    );
+  }
+});
+
 /** Initializes one anonymous deployment and records the exact state owned by this acceptance run. */
 export const initializeLocalRuntime = Effect.fn(
   "contentAcceptance.initializeLocalRuntime"
@@ -225,12 +241,7 @@ export const initializeLocalRuntime = Effect.fn(
       functions: path.relative(backend, `${root}/packages/backend/convex`),
     })
   );
-  for (const entry of ["node_modules", "package.json"]) {
-    yield* fs.symlink(
-      `${root}/packages/backend/${entry}`,
-      `${backend}/${entry}`
-    );
-  }
+  yield* linkBackendPackage(root, backend);
   const command = Effect.fn("contentAcceptance.configureLocal")(function* (
     args: readonly string[],
     stdin?: string
