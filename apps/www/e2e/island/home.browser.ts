@@ -30,7 +30,8 @@ for (const viewport of [desktopViewport, touchViewport]) {
       withObservedPageErrors(
         page,
         Effect.promise(async () => {
-          await page.goto("/en");
+          // The signed-in home lives at its own path; /en is the landing every visitor sees.
+          await page.goto("/en/home");
           // The body: the streak and the lessons to pick up again; the tile grids are gone.
           await expect(page.getByText("Start a run today")).toBeVisible();
           await expect(
