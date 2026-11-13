@@ -5,6 +5,7 @@ import { components } from "@repo/backend/confect/_generated/components";
 import refs from "@repo/backend/confect/_generated/refs";
 import {
   DatabaseReader,
+  DatabaseWriter,
   MutationCtx,
 } from "@repo/backend/confect/_generated/services";
 import { EMAIL_FROM, resend } from "@repo/backend/confect/emails/client";
@@ -50,6 +51,32 @@ afterEach(() => {
 });
 
 describe("emails/invite/internal", () => {
+  it.effect(
+    "sends nothing to an address that unsubscribed, however its sender wrote it",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const { inviteId } = yield* fixture.run(
+          invitePerson(fixture.tenants.nf, address)
+        );
+        yield* fixture.run(
+          Effect.flatMap(DatabaseWriter, (writer) =>
+            writer.table("emailSuppressions").insert({
+              address: "kepala@harapan.example.test",
+              createdAt: TENANCY_NOW,
+            })
+          )
+        );
+        const send = vi.spyOn(resend, "sendEmail");
+        yield* fixture.internal.mutation(enqueueRendered, {
+          inviteId,
+          requestedAt,
+          ...message,
+        });
+        expect(send).not.toHaveBeenCalled();
+      })
+  );
+
   it.effect(
     "hands one message to the address of the invite, however often it is asked",
     () =>

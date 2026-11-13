@@ -12,6 +12,7 @@ export const AccountReadyEmailInputSchema = Schema.Struct({
   locale: ActiveAppLocaleCodeSchema,
   privacyPolicyUrl: EmailUrlSchema,
   termsOfServiceUrl: EmailUrlSchema,
+  unsubscribeUrl: EmailUrlSchema,
 });
 export type AccountReadyEmailInput = typeof AccountReadyEmailInputSchema.Type;
 const AccountReadyEmailCopySchema = Schema.Struct({

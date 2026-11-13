@@ -4384,6 +4384,15 @@
     "approved": "Diluluskan pada",
     "issued": "Dikeluarkan pada"
   },
+  "Unsubscribe": {
+    "ask-title": "Berhenti terima e-mel daripada Nakafa",
+    "ask-description": "Kamu tidak akan terima e-mel pemberitahuan lagi. Kod log masuk dan notis tentang bayaran kamu tetap sampai.",
+    "confirm": "Berhenti langgan",
+    "done-title": "Kamu sudah berhenti melanggan",
+    "done-description": "Kamu boleh hidupkan semula e-mel dalam tetapan pemberitahuan kamu.",
+    "invalid-title": "Pautan ini tidak berfungsi",
+    "invalid-description": "Buka pautan berhenti langgan dalam e-mel terbaru daripada Nakafa."
+  },
   "SchoolInsight": {
     "title": "Wawasan",
     "class": "Kelas",

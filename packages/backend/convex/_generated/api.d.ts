@@ -4710,6 +4710,18 @@ export declare const api: {
       >;
     };
   };
+  emails: {
+    unsubscribe: {
+      requests: {
+        confirm: FunctionReference<
+          "mutation",
+          "public",
+          { token: string },
+          null
+        >;
+      };
+    };
+  };
   exams: {
     assets: {
       canAdd: FunctionReference<
@@ -16871,6 +16883,7 @@ export declare const internal: {
             locale: "en" | "id" | "de";
             privacyPolicyUrl: string;
             termsOfServiceUrl: string;
+            unsubscribeUrl: string;
           } | null
         >;
       };
@@ -19368,6 +19381,7 @@ export declare const internal: {
             locale: "en" | "id" | "de";
             privacyPolicyUrl: string;
             termsOfServiceUrl: string;
+            unsubscribeUrl: string;
           },
           { html: string; subject: string; text: string }
         >;
@@ -19395,8 +19409,17 @@ export declare const internal: {
               locale: "en" | "id" | "de";
               privacyPolicyUrl: string;
               termsOfServiceUrl: string;
+              unsubscribeUrl: string;
             };
             key: string;
+            recipient:
+              | { _tag: "Account"; userId: Id<"users"> }
+              | {
+                  _tag: "Person";
+                  personId: Id<"tenantPeople">;
+                  tenantId: Id<"tenants">;
+                }
+              | { _tag: "Address"; address: string };
           }>
         >;
         enqueue: FunctionReference<
@@ -19407,6 +19430,14 @@ export declare const internal: {
               address: string;
               html: string;
               key: string;
+              recipient:
+                | { _tag: "Account"; userId: Id<"users"> }
+                | {
+                    _tag: "Person";
+                    personId: Id<"tenantPeople">;
+                    tenantId: Id<"tenants">;
+                  }
+                | { _tag: "Address"; address: string };
               subject: string;
               text: string;
             }>;
@@ -19427,6 +19458,7 @@ export declare const internal: {
             privacyPolicyUrl: string;
             signInUrl: string;
             termsOfServiceUrl: string;
+            unsubscribeUrl: string;
           },
           { html: string; subject: string; text: string }
         >;
@@ -19454,6 +19486,7 @@ export declare const internal: {
             privacyPolicyUrl: string;
             signInUrl: string;
             termsOfServiceUrl: string;
+            unsubscribeUrl: string;
           } | null
         >;
       };
@@ -19504,12 +19537,15 @@ export declare const internal: {
           "action",
           "internal",
           {
-            classUrl: string;
-            locale: "en" | "id" | "de";
-            privacyPolicyUrl: string;
-            termsOfServiceUrl: string;
+            inputs: Array<{
+              classUrl: string;
+              locale: "en" | "id" | "de";
+              privacyPolicyUrl: string;
+              termsOfServiceUrl: string;
+              unsubscribeUrl: string;
+            }>;
           },
-          { html: string; subject: string; text: string }
+          Array<{ html: string; subject: string; text: string }>
         >;
       };
       internal: {
@@ -19517,11 +19553,15 @@ export declare const internal: {
           "mutation",
           "internal",
           {
-            addresses: Array<{ email: string; personId: Id<"tenantPeople"> }>;
-            html: string;
+            messages: Array<{
+              email: string;
+              html: string;
+              personId: Id<"tenantPeople">;
+              subject: string;
+              text: string;
+            }>;
             postId: Id<"classroomPosts">;
-            subject: string;
-            text: string;
+            tenantId: Id<"tenants">;
           },
           null
         >;
@@ -19533,13 +19573,18 @@ export declare const internal: {
             recipients: Array<Id<"tenantPeople">>;
           },
           {
-            addresses: Array<{ email: string; personId: Id<"tenantPeople"> }>;
-            input: {
-              classUrl: string;
-              locale: "en" | "id" | "de";
-              privacyPolicyUrl: string;
-              termsOfServiceUrl: string;
-            };
+            addresses: Array<{
+              email: string;
+              input: {
+                classUrl: string;
+                locale: "en" | "id" | "de";
+                privacyPolicyUrl: string;
+                termsOfServiceUrl: string;
+                unsubscribeUrl: string;
+              };
+              personId: Id<"tenantPeople">;
+            }>;
+            tenantId: Id<"tenants">;
           } | null
         >;
         send: FunctionReference<
@@ -19591,6 +19636,7 @@ export declare const internal: {
             locale: "en" | "id" | "de";
             privacyPolicyUrl: string;
             termsOfServiceUrl: string;
+            unsubscribeUrl: string;
           }
         >;
       };
