@@ -1,4 +1,8 @@
-import { Maximize02Icon } from "@hugeicons/core-free-icons";
+import {
+  Maximize02Icon,
+  ZoomInAreaIcon,
+  ZoomOutAreaIcon,
+} from "@hugeicons/core-free-icons";
 import {
   CodeBlockCopyButton,
   CodeBlockDownloadButton,
@@ -7,10 +11,11 @@ import {
 import { Mermaid } from "@repo/design-system/components/ai/mermaid";
 import { DiagramFrame } from "@repo/design-system/components/markdown/diagram";
 import { Button } from "@repo/design-system/components/ui/button";
+import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
-import { normalizeMermaidChart } from "@repo/design-system/lib/markdown/mermaid";
 import type { MermaidRenderConfig } from "@repo/design-system/lib/mermaid/render";
+import { Array as Arr, Option } from "effect";
 import { createContext, use, useMemo, useState } from "react";
 import { useTranslations } from "use-intl";
 
@@ -76,25 +81,62 @@ function DiagramCard() {
   );
 }
 
-/** The diagram at its natural size, in the dialog that opens it. */
+/** The multiples of its natural size a reader zooms a diagram to, after the fit it opens at. */
+const ZOOM_STEPS = [1, 1.5, 2];
+
+/**
+ * The diagram in the dialog that opens it, filling the dialog's body. It opens
+ * fitted to the body, and a reader zooms it through its natural size up to
+ * twice that. The body does not scroll, so the diagram's box is the one place a
+ * larger diagram does.
+ */
 function DialogDiagram() {
+  const t = useTranslations("Ai");
   const { chart, config, title } = useMermaidFigure();
+  // -1 is the fit the dialog opens at; each step after it is one of ZOOM_STEPS.
+  const [step, setStep] = useState(-1);
 
   return (
-    <Mermaid
-      chart={chart}
-      className="bg-muted/40 h-[60dvh] rounded-lg p-4 text-base"
-      config={config}
-      fit="natural"
-      label={title}
-    />
+    <>
+      <ButtonGroup aria-label={t("diagram-zoom")} className="self-end">
+        <Button
+          disabled={step < 0}
+          onClick={() => setStep((current) => Math.max(current - 1, -1))}
+          size="icon-sm"
+          title={t("zoom-out")}
+          tooltip={t("zoom-out")}
+        >
+          <HugeIcons icon={ZoomOutAreaIcon} />
+        </Button>
+        <Button
+          disabled={step >= ZOOM_STEPS.length - 1}
+          onClick={() =>
+            setStep((current) => Math.min(current + 1, ZOOM_STEPS.length - 1))
+          }
+          size="icon-sm"
+          title={t("zoom-in")}
+          tooltip={t("zoom-in")}
+        >
+          <HugeIcons icon={ZoomInAreaIcon} />
+        </Button>
+      </ButtonGroup>
+      <Mermaid
+        chart={chart}
+        className="bg-muted/40 min-h-0 flex-1 basis-[60dvh] rounded-lg p-4 text-base"
+        config={config}
+        label={title}
+        zoom={Option.getOrUndefined(Arr.get(ZOOM_STEPS, step))}
+      />
+    </>
   );
 }
 
 /**
- * Shows a diagram in a frame whose size never depends on the diagram: the
- * preview scales the diagram to fit, and the dialog shows it at its natural
- * size, so its labels keep the size the diagram gives them.
+ * Shows a diagram in a frame whose size never depends on the diagram, and in
+ * a dialog that gives it the whole screen. Both fit the diagram at a legible
+ * scale. The chart is drawn as written: authored content reaches here only
+ * after Aksara parsed it with the same Mermaid, and a model's chart is made
+ * safe by the markdown renderer before it arrives.
  */
 export function MermaidMdx({
   chart,
@@ -103,17 +145,16 @@ export function MermaidMdx({
   description,
   title,
 }: Props) {
-  const renderableChart = normalizeMermaidChart(chart);
   const [open, setOpen] = useState(false);
   const figure = useMemo(
     () => ({
-      chart: renderableChart,
+      chart,
       className,
       config,
       openDialog: () => setOpen(true),
       title,
     }),
-    [className, config, renderableChart, title]
+    [chart, className, config, title]
   );
 
   return (
