@@ -32,8 +32,8 @@ const TITLED = answerTurn({ markdown: ANSWER.diagram, order: 3 });
  * Indonesian writes `Diagram` as English does, so there only the description
  * tells the page's words from the English ones.
  */
-const wordsOf = (ai: typeof de.Ai) => ({
-  copy: ai["copy-code"],
+const wordsOf = ({ Ai: ai, Common: common }: typeof de) => ({
+  copy: common["copy-code"],
   description: ai["diagram-description"],
   download: ai["download-file"],
   error: ai["diagram-error"],
@@ -45,8 +45,8 @@ const wordsOf = (ai: typeof de.Ai) => ({
 });
 
 const LANGUAGES = [
-  { ...wordsOf(de.Ai), locale: "de" },
-  { ...wordsOf(id.Ai), locale: "id" },
+  { ...wordsOf(de), locale: "de" },
+  { ...wordsOf(id), locale: "id" },
 ];
 
 /** Mermaid writes its labels at 16 pixels; a diagram is never drawn below three quarters of that. */
