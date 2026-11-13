@@ -76,10 +76,7 @@ function ContentDate({
         <time className="tabular-nums" dateTime={date}>
           {formatter.dateTime(
             DateTime.toDateUtc(DateTime.makeUnsafe(`${date}T00:00:00.000Z`)),
-            {
-              dateStyle: "medium",
-              timeZone: "UTC",
-            }
+            "calendar"
           )}
         </time>
       </dd>

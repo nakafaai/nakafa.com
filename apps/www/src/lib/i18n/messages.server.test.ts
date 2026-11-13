@@ -10,16 +10,16 @@ import { Record as Rec } from "effect";
 import { routeMessagesHandler } from "@/lib/i18n/messages.server";
 
 describe("route messages on the server", () => {
-  it("returns only the namespaces that the route declares", () => {
-    const messages = routeMessagesHandler({
+  it("returns only the namespaces that the route declares", async () => {
+    const messages = await routeMessagesHandler({
       data: { locale: "en", namespaces: ["Common", "Pricing"] },
     });
     expect(Rec.keys(messages)).toStrictEqual(["Common", "Pricing"]);
     expect(messages.Common).toStrictEqual(en.Common);
   });
 
-  it("returns the messages of the requested locale", () => {
-    const messages = routeMessagesHandler({
+  it("returns the messages of the requested locale", async () => {
+    const messages = await routeMessagesHandler({
       data: { locale: "de", namespaces: ["Common"] },
     });
     expect(messages.Common).toStrictEqual(de.Common);

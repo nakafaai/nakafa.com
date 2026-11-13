@@ -55,11 +55,7 @@ export function GraduationLineDetail({
     return null;
   }
   const found = line.value;
-  const twoDecimals = (value: number) =>
-    format.number(value, {
-      maximumFractionDigits: 2,
-      minimumFractionDigits: 2,
-    });
+  const twoDecimals = (value: number) => format.number(value, "score");
 
   return (
     <>

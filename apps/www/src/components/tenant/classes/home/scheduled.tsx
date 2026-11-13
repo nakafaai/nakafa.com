@@ -31,7 +31,7 @@ import {
 } from "@repo/design-system/components/ui/item";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { Textarea } from "@repo/design-system/components/ui/textarea";
-import { Array as Arr, DateTime, Option, Schema, String as Str } from "effect";
+import { Array as Arr, Option, Schema, String as Str } from "effect";
 import { useId, useState } from "react";
 import { useFormatter, useTranslations } from "use-intl";
 import { useDialogs } from "@/components/shared/dialogs";
@@ -75,10 +75,7 @@ function WaitingRow({ post }: { post: WaitingPost }) {
   const t = useTranslations("Classroom");
   const format = useFormatter();
   const timeZone = useClockZone();
-  const when = format.dateTime(
-    DateTime.toDateUtc(DateTime.makeUnsafe(post.publishAt)),
-    { dateStyle: "medium", timeStyle: "short", timeZone }
-  );
+  const when = format.dateTime(post.publishAt, "dateTime", { timeZone });
 
   return (
     <Item data-slot="post" render={<li />} variant="outline">

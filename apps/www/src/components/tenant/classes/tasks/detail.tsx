@@ -172,10 +172,7 @@ function TaskHeader() {
 
   return (
     <PaneHeader
-      description={format.dateTime(
-        DateTime.toDateUtc(DateTime.makeUnsafe(task.deadline)),
-        { dateStyle: "medium", timeStyle: "short", timeZone }
-      )}
+      description={format.dateTime(task.deadline, "dateTime", { timeZone })}
       icon={<HugeIcons className="size-5 shrink-0" icon={TaskEdit01Icon} />}
       title={task.title}
     />
@@ -196,10 +193,7 @@ function TaskInfo() {
       </p>
       <PaneFacts>
         <PaneFact label={t("task-deadline")}>
-          {format.dateTime(
-            DateTime.toDateUtc(DateTime.makeUnsafe(task.deadline)),
-            { dateStyle: "full", timeStyle: "short", timeZone }
-          )}
+          {format.dateTime(task.deadline, "full", { timeZone })}
         </PaneFact>
         <PaneFact label={t("task-points")}>{task.points}</PaneFact>
         <PaneFact label={t("task-late")}>

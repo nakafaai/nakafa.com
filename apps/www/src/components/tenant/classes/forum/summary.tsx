@@ -8,7 +8,7 @@ import {
   ItemMedia,
   ItemTitle,
 } from "@repo/design-system/components/ui/item";
-import { Array as Arr, DateTime } from "effect";
+import { Array as Arr } from "effect";
 import { useFormatter, useTranslations } from "use-intl";
 import { ChannelUnread } from "@/components/tenant/classes/channels";
 import { ForumFace } from "@/components/tenant/classes/forum/face";
@@ -116,17 +116,7 @@ export function ThreadSummary({
           {discussion.lastReplyAt === null ? null : (
             <span className="text-muted-foreground text-xs font-normal">
               {t("thread-last", {
-                time: format.dateTime(
-                  DateTime.toDateUtc(
-                    DateTime.makeUnsafe(discussion.lastReplyAt)
-                  ),
-                  {
-                    day: "numeric",
-                    hour: "2-digit",
-                    minute: "2-digit",
-                    month: "short",
-                  }
-                ),
+                time: format.dateTime(discussion.lastReplyAt, "dayTime"),
               })}
             </span>
           )}

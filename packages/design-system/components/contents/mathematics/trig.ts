@@ -3,13 +3,6 @@ import { Array as Arr, Option } from "effect";
 /** The angle the unit circle opens on, which its lab and its static card both draw. */
 export const UNIT_CIRCLE_DEFAULT_ANGLE = 45;
 
-/** How the unit circle writes its numbers: two places and no grouping. */
-export const TRIG_NUMBER_OPTIONS = {
-  maximumFractionDigits: 2,
-  minimumFractionDigits: 2,
-  useGrouping: false,
-} satisfies Intl.NumberFormatOptions;
-
 /** The common values of the unit circle, written as the fraction or root a reader expects. */
 const COMMON_RATIOS = [
   { value: 0.5, display: "\\frac{1}{2}" },

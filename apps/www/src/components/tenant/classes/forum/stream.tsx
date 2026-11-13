@@ -20,7 +20,7 @@ import {
   useMessageScrollerVisibility,
 } from "@shadcn/react/message-scroller";
 import { cn } from "cn";
-import { Array as Arr, DateTime, Option } from "effect";
+import { Array as Arr, Option } from "effect";
 import { useEffect, useRef, useState } from "react";
 import { useFormatter, useTranslations } from "use-intl";
 import {
@@ -79,10 +79,7 @@ export function MessageStream({
   // The message the address asks this place to bring into view, if any.
   const { jump } = useChannelScope();
   // The reader's day of a time, which the divider above each day's first message shows.
-  const dayOf = (time: number) =>
-    format.dateTime(DateTime.toDateUtc(DateTime.makeUnsafe(time)), {
-      dateStyle: "long",
-    });
+  const dayOf = (time: number) => format.dateTime(time, "long");
   // The first unread message when the reader opened the place: the place opens there, and the
   // divider stays there while the reader reads. A message that arrives later is never the anchor,
   // so it never moves a reader who is not at the newest edge.

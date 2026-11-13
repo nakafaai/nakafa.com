@@ -27,6 +27,7 @@ import ms from "@repo/internationalization/dictionaries/standalone/ms.json" with
 import {
   getRouteMessages,
   loadLocaleMessages,
+  readStandaloneMessages,
 } from "@repo/internationalization/src/messages";
 import { Array as Arr, Predicate, Record as Rec } from "effect";
 
@@ -77,12 +78,28 @@ describe("loadLocaleMessages", () => {
   );
 });
 
+describe("readStandaloneMessages", () => {
+  it.each(APP_LOCALE_CODES)(
+    "reads the standalone dictionary of %s at once, without the app's",
+    (locale) => {
+      expect(readStandaloneMessages(locale)).toStrictEqual(standalone[locale]);
+    }
+  );
+});
+
 describe("getRouteMessages", () => {
   it("returns only the namespaces that a route names", async () => {
     const messages = await getRouteMessages("en", ["Common"]);
 
     expect(Rec.keys(messages)).toEqual(["Common"]);
     expect(messages.Common).toEqual(appEn.Common);
+  });
+
+  it("picks the namespaces of the locale asked for, standalone ones included", async () => {
+    const messages = await getRouteMessages("de", ["Common", "NotFound"]);
+
+    expect(messages.Common).toStrictEqual(appDe.Common);
+    expect(messages.NotFound).toStrictEqual(de.NotFound);
   });
 });
 

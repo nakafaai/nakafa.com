@@ -1,9 +1,9 @@
 import type { Locale } from "@repo/internationalization/src/locale";
+import { readStandaloneMessages } from "@repo/internationalization/src/messages";
 import { EmptyState } from "@/components/state/empty";
 import { DeferredFigure } from "@/components/state/mascot";
 import { ActionNavigation } from "@/components/state/navigation";
 import { Stage } from "@/components/state/stage";
-import { readStandaloneMessages } from "@/lib/i18n/standalone";
 import { LANDING_TARGET, SEARCH_TARGET } from "@/lib/routing/target";
 
 /**

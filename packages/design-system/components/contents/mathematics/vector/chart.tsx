@@ -1,7 +1,4 @@
-import {
-  MATH_NUMBER_OPTIONS,
-  mathNumber,
-} from "@repo/design-system/components/contents/mathematics/number";
+import { mathNumber } from "@repo/design-system/components/contents/mathematics/number";
 import {
   resolveVectorGeometry,
   type VectorGeometrySchema,
@@ -72,7 +69,7 @@ function VectorFacts({
 }: Pick<Props, "vectors"> & { geometries: readonly VectorGeometry[] }) {
   const format = useFormatter();
   const formatNumber = (value: number) =>
-    mathNumber(format.number(value, MATH_NUMBER_OPTIONS));
+    mathNumber(format.number(value, "math"));
 
   return (
     <VisualCardFacts>

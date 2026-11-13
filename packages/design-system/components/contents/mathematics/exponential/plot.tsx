@@ -30,8 +30,7 @@ export function ExponentialPlot(
   plot: Effect.Success<ReturnType<typeof resolveExponential>>
 ) {
   const formatter = useFormatter();
-  const formatNumber = (value: number) =>
-    formatter.number(value, { maximumSignificantDigits: 10 });
+  const formatNumber = (value: number) => formatter.number(value, "precise");
   return (
     <EvilComposedChart
       animationType="none"

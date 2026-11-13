@@ -1,15 +1,18 @@
-import { useLocale, useTranslations } from "use-intl";
-import { formatAge } from "@/components/user/age";
+import { formatAge } from "@repo/internationalization/src/formats";
+import { useFormatter, useLocale, useTranslations } from "use-intl";
 import type { Memory } from "@/components/user/settings/memory/list";
 import { useMemoryNow } from "@/components/user/settings/memory/provider";
-import { formatEnds } from "@/components/user/settings/memory/time";
 
-/** Says on which day a situation ends: "Ends October 20, 2026". */
+/**
+ * Says on which day a situation ends: "Ends October 20, 2026". The server
+ * stores the end of the day the learner named in UTC, so the day is read as a
+ * calendar day: in any other zone it could land on the day before or after.
+ */
 export function MemoryEnds({ validUntil }: { validUntil: number }) {
   const t = useTranslations("Memory");
-  const locale = useLocale();
+  const format = useFormatter();
 
-  return t("ends", { date: formatEnds(validUntil, locale) });
+  return t("ends", { date: format.dateTime(validUntil, "calendarLong") });
 }
 
 /**

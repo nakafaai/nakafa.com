@@ -4,9 +4,12 @@ import {
   type ActiveAppLocaleCode,
 } from "@nakafa/aksara-contracts/locale";
 import {
+  formatAge,
+  formatBytes,
   formatSchoolTime,
+  formatterOf,
   type SchoolTimeFormat,
-} from "@repo/internationalization/src/school/time";
+} from "@repo/internationalization/src/formats";
 import { DateTime, Effect, Record as Rec } from "effect";
 
 /** An instant read from its ISO text in UTC. */
@@ -203,4 +206,98 @@ describe("formatSchoolTime", () => {
         });
       })
   );
+});
+
+const NOW = Date.UTC(2026, 9, 17, 12);
+const DAY = 86_400_000;
+
+describe("formatAge", () => {
+  it.each([
+    [0, "now"],
+    [59_999, "now"],
+    [60_000, "1 minute ago"],
+    [2 * 3_600_000, "2 hours ago"],
+    [DAY, "1 day ago"],
+    [1.5 * DAY, "1 day ago"],
+    [3 * DAY, "3 days ago"],
+    [45 * DAY, "1 month ago"],
+    [92 * DAY, "3 months ago"],
+    [800 * DAY, "2 years ago"],
+  ])("writes a post %i milliseconds old as %j", (elapsed, text) => {
+    expect(formatAge(NOW - elapsed, NOW, "en")).toBe(text);
+  });
+
+  it("says now for a post written after the clock of this device", () => {
+    expect(formatAge(NOW + 5000, NOW, "en")).toBe("now");
+  });
+
+  it.each([
+    [30_000, "sekarang"],
+    [6 * 3_600_000, "6 jam yang lalu"],
+    [DAY, "1 hari yang lalu"],
+    [2 * DAY, "2 hari yang lalu"],
+    [6 * DAY, "6 hari yang lalu"],
+    [400 * DAY, "1 tahun yang lalu"],
+  ])(
+    "spells an Indonesian age %i milliseconds old in full words, never h, thn or selumbari: %j",
+    (elapsed, text) => {
+      expect(formatAge(NOW - elapsed, NOW, "id")).toBe(text);
+    }
+  );
+
+  it("spells a German age in full words", () => {
+    expect(formatAge(NOW - 2 * DAY, NOW, "de")).toBe("vor 2 Tagen");
+  });
+});
+
+describe("formatBytes", () => {
+  it.each([
+    [500_000, "en", "500\u00a0kB"],
+    [250_000_000, "en", "250\u00a0MB"],
+    [10_200_000_000, "en", "10.2\u00a0GB"],
+    [10_200_000_000, "de", "10,2\u00a0GB"],
+    [1_000_000_000_000, "id", "1\u00a0TB"],
+  ] as const)(
+    "writes %i bytes in %s as %j, its number and unit held together",
+    (bytes, locale, text) => {
+      expect(formatBytes(bytes, locale)).toBe(text);
+    }
+  );
+});
+
+/** `EVENING` in milliseconds, as a list row passes a moment. */
+const EVENING_MILLIS = DateTime.toEpochMillis(EVENING);
+
+describe("formatterOf", () => {
+  // 1 October 2026 at UTC midnight: the evening of 30 September west of UTC and in no zone a day later.
+  const FIRST = Date.UTC(2026, 9, 1);
+
+  it("writes a calendar day kept as UTC midnight on its own day in every locale zone", () => {
+    expect(formatterOf("en").dateTime(FIRST, "calendar")).toBe("Oct 1, 2026");
+    expect(formatterOf("de").dateTime(FIRST, "calendarLong")).toBe(
+      "1. Oktober 2026"
+    );
+    expect(formatterOf("id").dateTime(FIRST, "calendar")).toBe("1 Okt 2026");
+  });
+
+  it("writes a moment in the locale's own zone unless the call names one", () => {
+    expect(formatterOf("id").dateTime(EVENING_MILLIS, "time")).toBe("22.30");
+    expect(
+      formatterOf("en").dateTime(EVENING_MILLIS, "time", {
+        timeZone: "Europe/Berlin",
+      })
+    ).toBe("5:30 PM");
+  });
+
+  it("writes a billing day in Jakarta for every reader", () => {
+    expect(
+      formatterOf("de").dateTime(Date.UTC(2026, 9, 31, 17), "billing")
+    ).toBe("1. November 2026");
+  });
+
+  it("writes numbers and lists in the locale's own words", () => {
+    expect(formatterOf("de").number(1234.567, "math")).toBe("1234,57");
+    expect(formatterOf("en").number(0.5, "trig")).toBe("0.50");
+    expect(formatterOf("id").list(["a", "b", "c"], "or")).toBe("a, b, atau c");
+  });
 });

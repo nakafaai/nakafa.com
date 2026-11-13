@@ -17,7 +17,7 @@ import { rowLineVariants } from "@repo/design-system/lib/row";
 import { useLocation, useNavigate } from "@tanstack/react-router";
 import { Array as Arr, Option } from "effect";
 import { type ReactNode, useState } from "react";
-import { useTranslations } from "use-intl";
+import { useFormatter, useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { HeaderLabel } from "@/components/shared/breadcrumb/frame";
 import { getTryoutAttemptHref } from "@/components/tryout/route/path";
@@ -28,7 +28,6 @@ import {
   useKeepAttemptLabel,
   useKeptPageAttempt,
 } from "@/components/tryout/set/name";
-import { formatMoment } from "@/lib/i18n/date";
 
 type HistoryQuery = typeof tryouts.queries.history.bySet;
 type HistoryIdentity = Omit<Ref.Args<HistoryQuery>, "paginationOpts">;
@@ -38,16 +37,15 @@ type ScoredHistoryRow = TryoutAttemptHistoryProps["value"]["attempts"][number];
 /** One attempt of the picker, named by its number, with the moment it started under it. */
 function TryoutAttemptOption({
   attempt,
-  locale,
   onChoose,
   selected,
 }: {
   attempt: ScoredHistoryRow;
-  locale: HistoryIdentity["locale"];
   onChoose: () => void;
   selected: boolean;
 }) {
   const t = useTranslations("Tryouts");
+  const format = useFormatter();
 
   return (
     <PickerItem
@@ -61,7 +59,7 @@ function TryoutAttemptOption({
           {t("attempt-select-label", { number: attempt.attemptNumber })}
         </span>
         <span className={rowLineVariants({ line: "fact" })}>
-          {formatMoment(attempt.startedAt, locale)}
+          {format.dateTime(attempt.startedAt, "dateTime")}
         </span>
       </span>
     </PickerItem>
@@ -74,7 +72,6 @@ interface TryoutAttemptHistoryProps {
     attempts: readonly (HistoryRow & {
       score: NonNullable<HistoryRow["score"]>;
     })[];
-    locale: HistoryIdentity["locale"];
     onLoadMore: (() => void) | undefined;
     onChoose: (attemptId: HistoryRow["attemptId"]) => void;
     /** The page's path and search, which a kept label is read by. */
@@ -132,6 +129,7 @@ function TryoutAttemptPlace() {
 /** The picker of a set's scored attempts, newest first, which loads older attempts as its end comes into view. */
 function TryoutAttemptHistory({ value }: TryoutAttemptHistoryProps) {
   const tTryouts = useTranslations("Tryouts");
+  const format = useFormatter();
   const labelOf = (attempt: ScoredHistoryRow) =>
     tTryouts("attempt-select-label", { number: attempt.attemptNumber });
   const latest = Option.map(Arr.head(value.attempts), labelOf);
@@ -174,7 +172,7 @@ function TryoutAttemptHistory({ value }: TryoutAttemptHistoryProps) {
         empty={tTryouts("attempt-menu-empty")}
         items={value.attempts}
         itemToStringValue={(attempt) =>
-          `${labelOf(attempt)} ${formatMoment(attempt.startedAt, value.locale)}`
+          `${labelOf(attempt)} ${format.dateTime(attempt.startedAt, "dateTime")}`
         }
         label={tTryouts("menu-history")}
         onEnd={value.onLoadMore}
@@ -184,7 +182,6 @@ function TryoutAttemptHistory({ value }: TryoutAttemptHistoryProps) {
           <TryoutAttemptOption
             attempt={attempt}
             key={attempt.attemptId}
-            locale={value.locale}
             onChoose={() => value.onChoose(attempt.attemptId)}
             selected={attempt.attemptId === value.selectedAttemptId}
           />
@@ -264,7 +261,6 @@ function TryoutAttemptChoice({
     <TryoutAttemptHistory
       value={{
         attempts,
-        locale: identity.locale,
         onLoadMore: PaginatedQueryResult.isCanLoadMore(history)
           ? () => history.loadMore(25)
           : undefined,

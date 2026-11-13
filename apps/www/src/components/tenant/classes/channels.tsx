@@ -166,8 +166,7 @@ function ChannelItem({ channel }: { channel: typeof ChannelView.Type }) {
 function ChatTime({ at }: { at: number }) {
   const format = useFormatter();
   const written = DateTime.toDateUtc(DateTime.makeUnsafe(at));
-  const dayOf = (moment: Date) =>
-    format.dateTime(moment, { dateStyle: "short" });
+  const dayOf = (moment: Date) => format.dateTime(moment, "date");
   const today =
     dayOf(written) === dayOf(DateTime.toDateUtc(DateTime.nowUnsafe()));
 
@@ -176,10 +175,7 @@ function ChatTime({ at }: { at: number }) {
       className="text-muted-foreground shrink-0 text-xs font-normal"
       dateTime={written.toISOString()}
     >
-      {format.dateTime(
-        written,
-        today ? { timeStyle: "short" } : { day: "numeric", month: "short" }
-      )}
+      {format.dateTime(written, today ? "time" : "day")}
     </time>
   );
 }

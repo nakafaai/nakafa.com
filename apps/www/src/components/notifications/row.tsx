@@ -1,4 +1,5 @@
 import { photoOf } from "@repo/backend/confect/users/picture";
+import { formatAge } from "@repo/internationalization/src/formats";
 import { cn } from "cn";
 import type { MouseEvent, ReactNode } from "react";
 import { useLocale, useTranslations } from "use-intl";
@@ -11,7 +12,6 @@ import type {
   SchoolNotification,
 } from "@/components/notifications/state";
 import { SchoolMark } from "@/components/tenant/mark";
-import { formatAge } from "@/components/user/age";
 import {
   FeedAge,
   FeedAvatar,

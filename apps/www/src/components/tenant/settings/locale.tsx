@@ -12,6 +12,7 @@ import {
   FieldGroup,
   FieldLabel,
 } from "@repo/design-system/components/ui/field";
+import { currencySymbol } from "@repo/internationalization/src/money";
 import { Array as Arr, Option, Schema } from "effect";
 import { startTransition, useId, useMemo, useState } from "react";
 import { useLocale, useTranslations } from "use-intl";
@@ -24,24 +25,6 @@ import { countryChoices } from "@/components/tenant/settings/choices";
 import { setLocaleChange } from "@/components/tenant/settings/edits";
 import { RegionPicker } from "@/components/tenant/settings/picker";
 import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
-
-/** The symbol a currency writes in one locale, such as Rp for the rupiah or € for the euro. */
-function currencySymbol(code: string, locale: string) {
-  return Arr.join(
-    Arr.map(
-      Arr.filter(
-        new Intl.NumberFormat(locale, {
-          currency: code,
-          currencyDisplay: "narrowSymbol",
-          style: "currency",
-        }).formatToParts(0),
-        (part) => part.type === "currency"
-      ),
-      (part) => part.value
-    ),
-    ""
-  );
-}
 
 /** Every currency the platform knows, with its name and the symbol it writes in the viewer's language, by code. */
 function currencyChoices(locale: string) {

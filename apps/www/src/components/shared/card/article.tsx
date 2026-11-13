@@ -6,9 +6,9 @@ import {
   CardTitle,
 } from "@repo/design-system/components/ui/card";
 import { toAnchorSlug } from "@repo/utilities/slug";
-import { useTranslations } from "use-intl";
+import { DateTime } from "effect";
+import { useFormatter, useTranslations } from "use-intl";
 import type { PublishedArticleSummary } from "@/lib/content/article/catalog";
-import { formatPublished } from "@/lib/i18n/date";
 import { PublicPathLink } from "@/lib/routing/public/link";
 
 interface Props {
@@ -20,6 +20,7 @@ interface Props {
 
 export function CardArticle({ article }: Props) {
   const t = useTranslations("Articles");
+  const format = useFormatter();
 
   const id = toAnchorSlug(article.title);
 
@@ -43,7 +44,12 @@ export function CardArticle({ article }: Props) {
             className="text-muted-foreground text-sm"
             dateTime={article.datePublished}
           >
-            {formatPublished(article.datePublished)}
+            {format.dateTime(
+              DateTime.toEpochMillis(
+                DateTime.makeUnsafe(article.datePublished)
+              ),
+              "calendar"
+            )}
           </time>
           {article.official ? null : (
             <Badge variant="secondary">{t("contributor")}</Badge>

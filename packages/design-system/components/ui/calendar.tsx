@@ -130,7 +130,7 @@ function CalendarCaption({
   const { months, years } = captionChoices(year, start, end);
   const monthItems = Arr.map(months, (month) => ({
     disabled: month.disabled,
-    label: format.dateTime(month.date, { month: "long" }),
+    label: format.dateTime(month.date, "month"),
     value: String(month.month),
   }));
   const yearItems = Arr.map(years, (each) => ({

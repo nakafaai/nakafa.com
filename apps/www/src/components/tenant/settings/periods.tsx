@@ -163,11 +163,7 @@ function SchoolPeriodTable({ unitId }: { unitId: UnitId }) {
     { initialNumItems: PAGE_SIZE }
   );
 
-  const printDay = (moment: number) =>
-    format.dateTime(DateTime.toDateUtc(DateTime.makeUnsafe(moment)), {
-      dateStyle: "medium",
-      timeZone: "UTC",
-    });
+  const printDay = (moment: number) => format.dateTime(moment, "calendar");
 
   const columns = [
     periodColumns.text((period) => period.name, {

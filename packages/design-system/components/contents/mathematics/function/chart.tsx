@@ -46,13 +46,10 @@ export function FunctionChart({
   description,
 }: Exponential & { title: ReactNode; description: ReactNode }) {
   const formatter = useFormatter();
-  const formatNumber = (value: number) =>
-    formatter.number(value, {
-      maximumSignificantDigits: 10,
-    });
+  const formatNumber = (value: number) => formatter.number(value, "precise");
   const coefficientMath = (value: number) =>
     formatter
-      .number(value, { maximumSignificantDigits: 21, useGrouping: false })
+      .number(value, "coefficient")
       .replace(DECIMAL_OR_GROUP_SEPARATOR, "{$&}");
   const plot = Effect.runSync(resolveExponential({ a, p, n, mode }));
   const formula = `f(x)=${coefficientMath(p)}\\cdot(${coefficientMath(a)})^x`;

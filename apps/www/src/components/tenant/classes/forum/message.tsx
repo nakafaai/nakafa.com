@@ -111,12 +111,9 @@ function MessageHead({ message }: { message: ForumMessage }) {
       <time
         className="font-normal tabular-nums"
         dateTime={written.toISOString()}
-        title={format.dateTime(written, {
-          dateStyle: "full",
-          timeStyle: "short",
-        })}
+        title={format.dateTime(written, "full")}
       >
-        {format.dateTime(written, { timeStyle: "short" })}
+        {format.dateTime(written, "time")}
       </time>
     </MessageHeader>
   );

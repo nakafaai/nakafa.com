@@ -161,7 +161,7 @@ function Worksheet() {
       <AttachmentContent>
         <AttachmentTitle>{t("demo-library-worksheet")}</AttachmentTitle>
         <AttachmentDescription>
-          {format.number(240, { style: "unit", unit: "kilobyte" })}
+          {format.number(240, "kilobyte")}
         </AttachmentDescription>
       </AttachmentContent>
     </Attachment>

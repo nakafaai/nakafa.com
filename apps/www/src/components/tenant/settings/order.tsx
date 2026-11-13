@@ -38,15 +38,11 @@ import {
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { Array as Arr, DateTime, Option, Schema } from "effect";
 import { useId, useState, useTransition } from "react";
-import { useLocale, useTranslations } from "use-intl";
+import { useFormatter, useTranslations } from "use-intl";
 import { useTenant } from "@/components/tenant/context";
 import { SelectField } from "@/components/tenant/settings/select";
 import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
-import {
-  formatBillingDate,
-  formatCount,
-  formatMinorAmount,
-} from "@/lib/billing/plan";
+import { formatMinorAmount } from "@/lib/billing/plan";
 import {
   orderQuote,
   type SchoolBilling,
@@ -74,7 +70,7 @@ export function SchoolOrderDialog({
 }) {
   const t = useTranslations("SchoolSettings");
   const common = useTranslations("Common");
-  const locale = useLocale();
+  const format = useFormatter();
   const id = useId();
   const { slug } = useTenant();
   const current = overview.plan.kind === "max" ? "max" : "pro";
@@ -199,7 +195,7 @@ export function SchoolOrderDialog({
                   }
                   type="button"
                 >
-                  {`+${formatCount(preset, locale)}`}
+                  {`+${format.number(preset)}`}
                 </Button>
               ))}
             </ButtonGroup>
@@ -230,7 +226,7 @@ function SchoolPlanOption({
   plan: SchoolPaidTierKey;
 }) {
   const t = useTranslations("SchoolSettings");
-  const locale = useLocale();
+  const format = useFormatter();
 
   return (
     <label className="has-data-checked:border-primary flex cursor-pointer items-start gap-3 rounded-lg border p-4">
@@ -249,8 +245,8 @@ function SchoolPlanOption({
         </span>
         <span className="text-muted-foreground text-sm text-pretty">
           {t("billing-plan-holds", {
-            accounts: formatCount(schoolTiers[plan].accounts, locale),
-            credits: formatCount(schoolTiers[plan].credits, locale),
+            accounts: format.number(schoolTiers[plan].accounts),
+            credits: format.number(schoolTiers[plan].credits),
             drive: schoolTiers[plan].storageMegabytes / 1000,
           })}
         </span>
@@ -281,7 +277,7 @@ function SchoolOrderSummary({
   quote: Option.Option.Value<ReturnType<typeof orderQuote>>["quote"];
 }) {
   const t = useTranslations("SchoolSettings");
-  const locale = useLocale();
+  const format = useFormatter();
   const { days } = remainingShare(period, period.start);
 
   return (
@@ -295,7 +291,7 @@ function SchoolOrderSummary({
               ? "billing-line-prorata"
               : LINE_LABELS[line.description],
             {
-              accounts: formatCount(line.quantity, locale),
+              accounts: format.number(line.quantity),
               days,
               months: period.months,
             }
@@ -308,8 +304,8 @@ function SchoolOrderSummary({
       </dd>
       <dd className="text-muted-foreground col-span-2 text-pretty">
         {t(kind === "accounts" ? "billing-runs-more" : "billing-runs", {
-          end: formatBillingDate(period.end - 1, locale),
-          start: formatBillingDate(period.start, locale),
+          end: format.dateTime(period.end - 1, "billing"),
+          start: format.dateTime(period.start, "billing"),
         })}
       </dd>
     </dl>

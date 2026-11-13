@@ -2,6 +2,7 @@ import { TailwindIndicator } from "@repo/design-system/components/ui/tailwind-in
 import { ToasterHost } from "@repo/design-system/components/ui/toaster";
 import { DesignSystemProvider } from "@repo/design-system/providers/system";
 import { textDirection } from "@repo/internationalization/src/direction";
+import { FORMATS } from "@repo/internationalization/src/formats";
 import {
   DEFAULT_LOCALE,
   decodeLocale,
@@ -91,6 +92,7 @@ function LocaleRoot() {
   const { messages, now } = Route.useLoaderData();
   return (
     <IntlProvider
+      formats={FORMATS}
       locale={locale}
       messages={messages}
       now={now}

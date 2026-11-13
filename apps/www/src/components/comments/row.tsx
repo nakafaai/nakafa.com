@@ -9,6 +9,7 @@ import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { elementById } from "@repo/design-system/lib/element";
 import { lazy } from "@repo/design-system/lib/lazy";
+import { formatAge } from "@repo/internationalization/src/formats";
 import { ClientOnly } from "@tanstack/react-router";
 import { HashSet, String as Str } from "effect";
 import type { MouseEvent, ReactNode } from "react";
@@ -32,7 +33,6 @@ import type {
   CommentRow as CommentItem,
   RowComment,
 } from "@/components/comments/state";
-import { formatAge } from "@/components/user/age";
 import {
   FeedActions,
   FeedAge,
