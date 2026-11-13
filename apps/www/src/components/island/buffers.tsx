@@ -73,17 +73,8 @@ export function programOf(
     : Option.none();
 }
 
-/** Uploads one draw list to the GPU, its vertices laid out as the chunk program reads them. */
-export function uploadList(
-  gl: WebGL2RenderingContext,
-  list: { readonly vertices: Float32Array; readonly indices: Uint32Array }
-) {
-  const vao = gl.createVertexArray();
-  const vertexBuffer = gl.createBuffer();
-  const indexBuffer = gl.createBuffer();
-  gl.bindVertexArray(vao);
-  gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
-  gl.bufferData(gl.ARRAY_BUFFER, list.vertices, gl.STATIC_DRAW);
+/** Lays out the bound vertex buffer as the chunk program reads it: position, atlas coordinate, shade, sky light, lamp light. */
+function describeVertices(gl: WebGL2RenderingContext) {
   const bytes = STRIDE * 4;
   for (const [location, size, offset] of [
     [0, 3, 0],
@@ -95,6 +86,20 @@ export function uploadList(
     gl.enableVertexAttribArray(location);
     gl.vertexAttribPointer(location, size, gl.FLOAT, false, bytes, offset * 4);
   }
+}
+
+/** Uploads one draw list to the GPU, its vertices laid out as the chunk program reads them. */
+export function uploadList(
+  gl: WebGL2RenderingContext,
+  list: { readonly vertices: Float32Array; readonly indices: Uint32Array }
+) {
+  const vao = gl.createVertexArray();
+  const vertexBuffer = gl.createBuffer();
+  const indexBuffer = gl.createBuffer();
+  gl.bindVertexArray(vao);
+  gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
+  gl.bufferData(gl.ARRAY_BUFFER, list.vertices, gl.STATIC_DRAW);
+  describeVertices(gl);
   gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
   gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, list.indices, gl.STATIC_DRAW);
   gl.bindVertexArray(null);
@@ -145,5 +150,102 @@ export function uploadWeather(gl: WebGL2RenderingContext) {
       gl.deleteBuffer(buffer);
     },
     vao,
+  };
+}
+
+/** The twelve edges of a unit cube as line pairs, uploaded once for the outline. */
+export function uploadOutline(gl: WebGL2RenderingContext) {
+  const corners = [
+    [0, 0, 0],
+    [1, 0, 0],
+    [1, 0, 0],
+    [1, 0, 1],
+    [1, 0, 1],
+    [0, 0, 1],
+    [0, 0, 1],
+    [0, 0, 0],
+    [0, 1, 0],
+    [1, 1, 0],
+    [1, 1, 0],
+    [1, 1, 1],
+    [1, 1, 1],
+    [0, 1, 1],
+    [0, 1, 1],
+    [0, 1, 0],
+    [0, 0, 0],
+    [0, 1, 0],
+    [1, 0, 0],
+    [1, 1, 0],
+    [1, 0, 1],
+    [1, 1, 1],
+    [0, 0, 1],
+    [0, 1, 1],
+  ] as const;
+  const vertices = new Float32Array(
+    Arr.flatten(Arr.map(corners, (corner) => [...corner]))
+  );
+  const vao = gl.createVertexArray();
+  const buffer = gl.createBuffer();
+  gl.bindVertexArray(vao);
+  gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+  gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
+  gl.enableVertexAttribArray(0);
+  gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 12, 0);
+  gl.bindVertexArray(null);
+  return {
+    count: corners.length,
+    release: () => {
+      gl.deleteVertexArray(vao);
+      gl.deleteBuffer(buffer);
+    },
+    vao,
+  };
+}
+
+/**
+ * A draw list the painter rewrites every frame, for things that move such as
+ * the herd: its buffers are made once, `capacity` quads large, and refilled.
+ */
+export function uploadMoving(gl: WebGL2RenderingContext, capacity: number) {
+  const vao = gl.createVertexArray();
+  const vertexBuffer = gl.createBuffer();
+  const indexBuffer = gl.createBuffer();
+  gl.bindVertexArray(vao);
+  gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
+  gl.bufferData(gl.ARRAY_BUFFER, capacity * 4 * STRIDE * 4, gl.DYNAMIC_DRAW);
+  describeVertices(gl);
+  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
+  gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, capacity * 6 * 4, gl.DYNAMIC_DRAW);
+  gl.bindVertexArray(null);
+  let count = 0;
+  return {
+    count: () => count,
+    release: () => {
+      gl.deleteVertexArray(vao);
+      gl.deleteBuffer(vertexBuffer);
+      gl.deleteBuffer(indexBuffer);
+    },
+    vao,
+    /** Replaces the quads the list draws, up to its capacity. */
+    write(next: {
+      readonly vertices: Float32Array;
+      readonly indices: Uint32Array;
+    }) {
+      const quads = Math.min(capacity, next.indices.length / 6);
+      gl.bindVertexArray(vao);
+      gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
+      gl.bufferSubData(
+        gl.ARRAY_BUFFER,
+        0,
+        next.vertices.subarray(0, quads * 4 * STRIDE)
+      );
+      gl.bufferSubData(
+        gl.ELEMENT_ARRAY_BUFFER,
+        0,
+        next.indices.subarray(0, quads * 6)
+      );
+      gl.bindVertexArray(null);
+      count = quads * 6;
+    },
   };
 }

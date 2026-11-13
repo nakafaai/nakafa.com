@@ -4651,6 +4651,7 @@
     "notice-stale": "Your island changed somewhere else, so it's loading again.",
     "next": "{stars} more Stars to level {level}",
     "top": "Every block is open",
-    "play": "Play"
+    "play": "Play",
+    "mute": "Mute sound"
   }
 }

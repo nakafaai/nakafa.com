@@ -6,6 +6,8 @@ import {
   PickaxeIcon,
   Redo02Icon,
   Undo02Icon,
+  VolumeHighIcon,
+  VolumeOffIcon,
 } from "@hugeicons/core-free-icons";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { cva } from "class-variance-authority";
@@ -16,6 +18,7 @@ import { IslandBook } from "@/components/island/book";
 import { BlockIcon } from "@/components/island/icon";
 import { panelVariants } from "@/components/island/panel";
 import { useGame } from "@/components/island/store";
+import { writeMuted } from "@/lib/island/settings";
 
 /** One square of the hotbar or the HUD's buttons, lit when it is held. */
 const slotVariants = cva(
@@ -90,9 +93,6 @@ function Hotbar() {
             screen={number < 6 ? "every" : "wide"}
           >
             <BlockIcon block={hotbar[number]} />
-            <span className="absolute top-0 left-0.5 font-mono text-[10px] leading-none text-[#7a4a26]">
-              {number + 1}
-            </span>
           </HudButton>
         )
       )}
@@ -110,11 +110,13 @@ function Hotbar() {
   );
 }
 
-/** Undo and redo, which walk the learner's own steps. */
+/** Undo and redo, which walk the learner's own steps, and the sound switch. */
 function History() {
   const t = useTranslations("Island");
   const undo = useGame((state) => state.undo);
   const redo = useGame((state) => state.redo);
+  const muted = useGame((state) => state.muted);
+  const setMuted = useGame((state) => state.setMuted);
   return (
     <div
       className={panelVariants({
@@ -126,6 +128,19 @@ function History() {
       </HudButton>
       <HudButton label={t("redo")} onPress={redo}>
         <HugeIcons className="size-5" icon={Redo02Icon} />
+      </HudButton>
+      <HudButton
+        held={muted}
+        label={t("mute")}
+        onPress={() => {
+          setMuted(!muted);
+          writeMuted(!muted);
+        }}
+      >
+        <HugeIcons
+          className="size-5"
+          icon={muted ? VolumeOffIcon : VolumeHighIcon}
+        />
       </HudButton>
     </div>
   );
@@ -144,7 +159,7 @@ function Progress() {
     <div className="flex min-w-32 flex-col gap-1 pr-1">
       <h1 className="flex items-baseline justify-between gap-2 text-sm font-semibold">
         {t("title")}
-        <span className="text-xs text-[#7a4a26]">{t("level", { level })}</span>
+        <span className="text-sm text-[#7a4a26]">{t("level", { level })}</span>
       </h1>
       <div className="h-2 border border-[#4a2c17] bg-[#e9c992]">
         <div
@@ -154,7 +169,7 @@ function Progress() {
           }}
         />
       </div>
-      <p className="text-[10px] leading-tight text-[#6b4426]">
+      <p className="text-sm leading-tight text-balance text-[#6b4426]">
         {next === undefined
           ? t("top")
           : t("next", { level: level + 1, stars: next - lifetime })}

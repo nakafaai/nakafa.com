@@ -48,6 +48,8 @@ interface GameStore {
   leave: () => void;
   /** The island's level, which opens blocks for building (D7). */
   level: number;
+  /** Whether the learner turned the island's sound off. */
+  muted: boolean;
   /** What the game tells the learner, none most of the time. */
   notice: Notice | null;
   past: readonly (readonly Edit[])[];
@@ -62,7 +64,10 @@ interface GameStore {
    * it holds again, after it refused a batch. Undo then starts afresh.
    */
   rollback: () => void;
+  /** The seed the island's terrain and life grow from. */
+  seed: number;
   setBook: (book: boolean) => void;
+  setMuted: (muted: boolean) => void;
   setNotice: (notice: Notice | null) => void;
   setTool: (tool: Tool) => void;
   /** Records that the server took the first `count` pending edits, now at `version`. */
@@ -82,7 +87,14 @@ interface GameStore {
 /** What a game opens with: its world, hotbar, level, progress, the version of its edits, and the way out. */
 type GameSetup = Pick<
   GameStore,
-  "cells" | "hotbar" | "leave" | "level" | "progress" | "version"
+  | "cells"
+  | "hotbar"
+  | "leave"
+  | "level"
+  | "muted"
+  | "progress"
+  | "seed"
+  | "version"
 >;
 
 /** Creates the store of one game, which lives and ends with its provider. */
@@ -137,6 +149,7 @@ export function createGameStore(setup: GameSetup) {
       },
       revision: 0,
       setBook: (book) => set({ book }),
+      setMuted: (muted) => set({ muted }),
       setNotice: (notice) => set({ notice }),
       setWeather: (weather) => set({ weather }),
       setTool: (tool) => set({ tool }),

@@ -12,7 +12,7 @@ import { useCurrentLocale } from "@/lib/routing/link";
 
 /** One day of the week as a round mark: learned, today, still to come, or missed. */
 const dayVariants = cva(
-  "grid size-9 place-items-center rounded-full text-xs font-medium tabular-nums",
+  "grid size-9 place-items-center rounded-full text-sm font-medium tabular-nums",
   {
     variants: {
       state: {
@@ -49,7 +49,7 @@ function WeekDay({ day, today }: { day: Week["days"][number]; today: string }) {
           <HugeIcons className="size-4" icon={StarIcon} />
         ) : null}
       </span>
-      <span className="text-muted-foreground text-xs">
+      <span className="text-muted-foreground text-sm">
         {DateTime.formatUtc(DateTime.makeUnsafe(`${day.day}T00:00:00Z`), {
           locale,
           weekday: "narrow",
