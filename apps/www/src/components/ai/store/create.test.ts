@@ -423,11 +423,8 @@ describe("ai/store/create", () => {
       open: true,
       text: "Half typed",
     });
-    // A reload does not open the chat of the last learner either.
-    const stored = Schema.decodeUnknownSync(StoredAiState)(
-      localStorage.getItem(STORAGE_KEY)
-    );
-    expect(stored.state.activeChatId).toBeNull();
+    // A reload does not open the chat of the last learner either: the browser keeps nothing.
+    expect(localStorage.getItem(STORAGE_KEY)).toBeNull();
   });
 
   it("starts every composer over with a new key, and leaves the text alone", () => {
@@ -469,6 +466,33 @@ describe("ai/store/create", () => {
     expect(Rec.keys(stored.state)).toEqual(["activeChatId"]);
     expect(stored.state.activeChatId).toBe(chatId);
     expect(sessionStorage.getItem(STORAGE_KEY)).toBeNull();
+  });
+
+  it("writes nothing to the browser while no chat is open, whatever the page sets as it loads", () => {
+    const written = vi.spyOn(Storage.prototype, "setItem");
+    const store = createAiStore();
+
+    store.getState().adoptDraftOwner(undefined);
+    store.getState().setContextTitle("Algebra");
+    store.getState().warm();
+    store.getState().setOpen(true);
+    store.getState().setActiveChatId(null);
+
+    expect(written).not.toHaveBeenCalled();
+    expect(localStorage.getItem(STORAGE_KEY)).toBeNull();
+    written.mockRestore();
+  });
+
+  it("writes the open chat once, not again on each change of the rest of the store", () => {
+    const store = createAiStore();
+    store.getState().setActiveChatId(chatId);
+    const written = vi.spyOn(Storage.prototype, "setItem");
+
+    store.getState().setContextTitle("Algebra");
+    store.getState().setOpen(false);
+
+    expect(written).not.toHaveBeenCalled();
+    written.mockRestore();
   });
 
   it("restores the persisted chat when the store is created", () => {
