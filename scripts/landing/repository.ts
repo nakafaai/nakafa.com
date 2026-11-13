@@ -12,6 +12,7 @@ import {
   String as Str,
 } from "effect";
 import { ChildProcessSpawner } from "effect/process";
+import { GATE_CONTEXT } from "#scripts/gate/github";
 import {
   type Candidate,
   type Combination,
@@ -29,9 +30,9 @@ const SPEC_FILE = /^apps\/www\/(?<spec>e2e\/.+\.browser\.ts)$/u;
 const COMMIT_SHA = /^[0-9a-f]{40}$/u;
 
 /**
- * The statuses that prove a head: the run's own summary when all three engines
- * pass, or the verdict `bun run proof` posts when the head fails nothing main
- * does not.
+ * The statuses that prove a head in the browsers: the run's own summary when
+ * all three engines pass, or the verdict `bun run proof` posts when the head
+ * fails nothing main does not.
  */
 const PROOF_CONTEXTS = ["proof", VERDICT_CONTEXT];
 
@@ -106,17 +107,22 @@ const DeployRunsJson = Schema.fromJsonString(
 
 const gh = (args: readonly string[]) => run("gh", args);
 
-/** Whether the proof workflow's summary status on a head says it passed. */
+/**
+ * Whether a head may ride: its static gate passed and its browser proof passed,
+ * both on that exact head.
+ */
 const provenHead = Effect.fn("landing.provenHead")(function* (sha: string) {
   const { statuses } = yield* gh([
     "api",
     `repos/${REPOSITORY}/commits/${sha}/status`,
   ]).pipe(Effect.flatMap(decoded(StatusJson)));
-  return Arr.some(
-    statuses,
-    (status) =>
-      Arr.contains(PROOF_CONTEXTS, status.context) && status.state === "success"
-  );
+  const passed = (contexts: readonly string[]) =>
+    Arr.some(
+      statuses,
+      (status) =>
+        Arr.contains(contexts, status.context) && status.state === "success"
+    );
+  return passed([GATE_CONTEXT]) && passed(PROOF_CONTEXTS);
 });
 
 /** Reads one pull request, waiting while GitHub still computes whether it merges. */
