@@ -7,7 +7,6 @@ import {
 import { LabSlider } from "@repo/design-system/components/contents/physics/canvas/slider";
 import { paintSea } from "@repo/design-system/components/contents/physics/vector/bearing/sea";
 import {
-  type Breeze,
   BreezeSchema,
   breezeParts,
 } from "@repo/design-system/components/contents/physics/vector/wind/breeze";
@@ -31,6 +30,10 @@ import { Schema } from "effect";
 import type p5 from "p5";
 import { type ReactNode, useState } from "react";
 
+/** What the sketch reads on every frame: the wind. */
+const BreezeFrameSchema = Schema.Struct({ breeze: BreezeSchema });
+type BreezeFrame = typeof BreezeFrameSchema.Type;
+
 /** The strongest wind the slider reaches, in m/s. */
 const MAX_SPEED = 20;
 
@@ -46,7 +49,7 @@ const DRIFT = 9;
  * place on a grid, the same length and the same direction wherever it is
  * drawn.
  */
-function breezeProgram(sketch: p5, read: () => { readonly breeze: Breeze }) {
+function breezeProgram(sketch: p5, read: () => BreezeFrame) {
   const backdrop = createBackdrop();
   let clock = 0;
   sketch.setup = () => {

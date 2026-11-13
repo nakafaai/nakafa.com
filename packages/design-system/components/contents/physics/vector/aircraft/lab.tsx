@@ -10,7 +10,6 @@ import {
 import { LabSlider } from "@repo/design-system/components/contents/physics/canvas/slider";
 import {
   bearingVector,
-  type Crosswind,
   CrosswindSchema,
   groundVelocity,
 } from "@repo/design-system/components/contents/physics/vector/aircraft/drift";
@@ -39,11 +38,12 @@ import { type ReactNode, useMemo, useState } from "react";
 /** Pixels the land slides per second for each km/h over the ground, so the motion reads without racing. */
 const LAND_RATE = 0.06;
 
-/** What the sketch reads on every frame. */
-interface CrosswindFrame {
-  readonly flight: Crosswind;
-  readonly heading: number;
-}
+/** What the sketch reads on every frame: the flight and the heading of the nose. */
+const CrosswindFrameSchema = Schema.Struct({
+  flight: CrosswindSchema,
+  heading: Schema.Finite,
+});
+type CrosswindFrame = typeof CrosswindFrameSchema.Type;
 
 /** The size of the land tile that repeats under the plane, in pixels. */
 const TILE = 640;

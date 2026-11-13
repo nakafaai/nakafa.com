@@ -9,7 +9,7 @@ import { Array as Arr, Schema } from "effect";
  */
 
 /** One leg: its distance in kilometres and its bearing in degrees. */
-export const CourseSchema = Schema.Struct({
+const CourseSchema = Schema.Struct({
   bearing: Schema.Finite,
   distance: Schema.Finite.pipe(Schema.check(Schema.isGreaterThan(0))),
 });

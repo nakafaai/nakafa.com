@@ -43,6 +43,10 @@ import { Array as Arr, Schema } from "effect";
 import type p5 from "p5";
 import { type ReactNode, useMemo, useState } from "react";
 
+/** What the sketch reads on every frame: the checkpoints and the chosen view. */
+const MapFrameSchema = Schema.Struct({ marks: MarksSchema, view: ViewSchema });
+type MapFrame = typeof MapFrameSchema.Type;
+
 /** The ring around each checkpoint on the map: A teal, B amber, C pink. */
 const RINGS = [PLOT_COLORS.teal, PLOT_COLORS.amber, PLOT_COLORS.pink] as const;
 
@@ -52,10 +56,7 @@ const RINGS = [PLOT_COLORS.teal, PLOT_COLORS.amber, PLOT_COLORS.pink] as const;
  * again from C beside the dashed original, or A to B as the difference of
  * the position vectors of B (amber) and A (teal).
  */
-function markProgram(
-  sketch: p5,
-  read: () => { readonly marks: Marks; readonly view: View }
-) {
+function markProgram(sketch: p5, read: () => MapFrame) {
   const backdrop = createBackdrop();
   sketch.setup = () => {
     sketch.createCanvas(1, 1);

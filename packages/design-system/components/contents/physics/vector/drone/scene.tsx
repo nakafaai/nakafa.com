@@ -34,7 +34,7 @@ const HOVER = 2;
 const SPAN = 0.9;
 
 /** A place east, north and up as a scene point: east is +x, up is +y, north is -z. */
-export function scenePoint(place: Hop) {
+function scenePoint(place: Hop) {
   return [place.east, place.up, -place.north] satisfies CoordinateTuple;
 }
 

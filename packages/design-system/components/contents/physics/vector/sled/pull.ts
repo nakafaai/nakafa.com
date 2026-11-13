@@ -10,7 +10,7 @@ import { Schema } from "effect";
  */
 
 /** Gravity on the snow, in m/s². */
-export const GRAVITY = 9.8;
+const GRAVITY = 9.8;
 
 /** The pull: rope force in N, sled and load mass in kg, and the distance pulled in m. */
 export const TowSchema = Schema.Struct({

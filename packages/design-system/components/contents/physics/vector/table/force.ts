@@ -8,14 +8,21 @@ import { Array as Arr, Schema } from "effect";
  */
 
 /** Gravity at the bench, in m/s². */
-export const GRAVITY = 9.8;
+const GRAVITY = 9.8;
 
 /** One string: the hanging mass in grams and the pulley's angle on the rim, in degrees counterclockwise from zero. */
-export const PullSchema = Schema.Struct({
+const PullSchema = Schema.Struct({
   angle: Schema.Finite,
   mass: Schema.Finite.pipe(Schema.check(Schema.isGreaterThan(0))),
 });
 export type Pull = typeof PullSchema.Type;
+
+/** A string with its place in the setup, which keys it on the table while its pulley turns. */
+const PlacedPullSchema = Schema.Struct({
+  ...PullSchema.fields,
+  slot: Schema.Int,
+});
+export type PlacedPull = typeof PlacedPullSchema.Type;
 
 /** The strings of one setup, two or more. */
 export const PullsSchema = Schema.Array(PullSchema).pipe(

@@ -2,6 +2,7 @@ import { LabSlider } from "@repo/design-system/components/contents/physics/canva
 import { FixedArrow } from "@repo/design-system/components/contents/physics/vector/solid/arrow";
 import { Rod } from "@repo/design-system/components/contents/physics/vector/solid/rod";
 import {
+  type PlacedPull,
   type Pull,
   PullsSchema,
   pullForce,
@@ -190,11 +191,7 @@ function Pulley({ pull, ring }: { pull: Pull; ring: CoordinateTuple }) {
 }
 
 /** The table with its strings, the ring they pull, and each pull and the resultant drawn above it. */
-function TableScene({
-  pulls,
-}: {
-  pulls: readonly (Pull & { readonly slot: number })[];
-}) {
+function TableScene({ pulls }: { pulls: readonly PlacedPull[] }) {
   const resultant = tableResultant(pulls);
   const nudge = Math.min(0.006, resultant.size * 0.003);
   const ring = onTable(nudge, resultant.angle, STRING);

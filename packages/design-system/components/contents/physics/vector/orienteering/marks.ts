@@ -9,11 +9,11 @@ import { Match, Schema } from "effect";
  */
 
 /** A place on the map, in metres east and north of the start. */
-export const MarkSchema = Schema.Struct({
+const MarkSchema = Schema.Struct({
   east: Schema.Finite,
   north: Schema.Finite,
 });
-export type Mark = typeof MarkSchema.Type;
+type Mark = typeof MarkSchema.Type;
 
 /** The three checkpoints. */
 export const MarksSchema = Schema.Struct({

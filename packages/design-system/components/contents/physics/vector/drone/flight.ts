@@ -9,7 +9,7 @@ import { Array as Arr, Schema } from "effect";
  */
 
 /** One straight leg of the flight: metres east, north and up (negative for west, south and down). */
-export const HopSchema = Schema.Struct({
+const HopSchema = Schema.Struct({
   east: Schema.Finite,
   north: Schema.Finite,
   up: Schema.Finite,
@@ -38,7 +38,7 @@ export function hopCorners(hops: readonly Hop[]) {
 }
 
 /** The length of one leg, in metres. */
-export function hopLength(hop: Hop) {
+function hopLength(hop: Hop) {
   return Math.hypot(hop.east, hop.north, hop.up);
 }
 

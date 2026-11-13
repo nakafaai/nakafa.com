@@ -4,13 +4,13 @@ import {
   fade,
   gradientRect,
   mix,
+  type PointSchema,
   spotlight,
   vignette,
 } from "@repo/design-system/components/contents/physics/canvas/paint";
 import { LabSlider } from "@repo/design-system/components/contents/physics/canvas/slider";
 import {
   ropeForces,
-  type Teams,
   TeamsSchema,
 } from "@repo/design-system/components/contents/physics/vector/tug/rope";
 import { useQuantity } from "@repo/design-system/components/contents/simulation/quantity";
@@ -32,6 +32,10 @@ import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Schema } from "effect";
 import type p5 from "p5";
 import { type ReactNode, useState } from "react";
+
+/** What the sketch reads on every frame: the two teams. */
+const TugFrameSchema = Schema.Struct({ teams: TeamsSchema });
+type TugFrame = typeof TugFrameSchema.Type;
 
 /** How far the ribbon may move from the centre line before the round starts again, as a share of the canvas width. */
 const WIN_LINE = 0.12;
@@ -84,7 +88,7 @@ function paintSunset(layer: p5) {
 /** One puller in silhouette against the sunset: braced legs with bent knees, a body leaning away from the rope's middle, both hands on the rope. */
 function paintPuller(
   sketch: p5,
-  at: { x: number; y: number },
+  at: typeof PointSchema.Type,
   size: number,
   side: -1 | 1
 ) {
@@ -140,7 +144,7 @@ function paintPuller(
  * red ribbon that drifts toward the stronger team, the two teams' pulls
  * (teal left, amber right) and the net force (violet) under the ribbon.
  */
-function tugProgram(sketch: p5, read: () => { readonly teams: Teams }) {
+function tugProgram(sketch: p5, read: () => TugFrame) {
   const backdrop = createBackdrop();
   let shift = 0;
   let rest = 0;

@@ -45,6 +45,10 @@ import { Array as Arr, Option, Schema } from "effect";
 import type p5 from "p5";
 import { type ReactNode, useMemo, useState } from "react";
 
+/** What the sketch reads on every frame: the voyage's legs. */
+const VoyageFrameSchema = Schema.Struct({ courses: CoursesSchema });
+type VoyageFrame = typeof VoyageFrameSchema.Type;
+
 /** How long the voyage plays, in wall seconds. */
 const PLAY_SECONDS = 6;
 
@@ -57,10 +61,7 @@ const HOLD_SECONDS = 1.5;
  * displacement from the harbour (violet) and its east (teal) and north
  * (amber) components.
  */
-function voyageProgram(
-  sketch: p5,
-  read: () => { readonly courses: readonly [Course, ...Course[]] }
-) {
+function voyageProgram(sketch: p5, read: () => VoyageFrame) {
   let time = Number.POSITIVE_INFINITY;
   const backdrop = createBackdrop();
   sketch.setup = () => {

@@ -17,7 +17,7 @@ import { useRef } from "react";
 import type { Group } from "three";
 
 /** The length of the plank, in metres. */
-export const PLANK = 0.8;
+const PLANK = 0.8;
 
 /** The thickness of the plank, in metres. */
 const THICK = 0.02;

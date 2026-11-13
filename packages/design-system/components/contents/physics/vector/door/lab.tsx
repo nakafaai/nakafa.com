@@ -5,12 +5,12 @@ import {
   fade,
   gradientRect,
   mix,
+  type PointSchema,
   vignette,
   withShadow,
 } from "@repo/design-system/components/contents/physics/canvas/paint";
 import { LabSlider } from "@repo/design-system/components/contents/physics/canvas/slider";
 import {
-  type Door,
   DoorSchema,
   doorTorque,
   swingAngle,
@@ -35,11 +35,19 @@ import { Schema } from "effect";
 import type p5 from "p5";
 import { type ReactNode, useMemo, useState } from "react";
 
+/** What the sketch reads on every frame: the push's angle, the hand's distance from the hinge, and the door. */
+const DoorFrameSchema = Schema.Struct({
+  angle: Schema.Finite,
+  arm: Schema.Finite,
+  door: DoorSchema,
+});
+type DoorFrame = typeof DoorFrameSchema.Type;
+
 /** How long the door rests wide open before it closes and is pushed again, in seconds. */
 const REST = 1.2;
 
 /** The floorboards and the wall with its doorway, seen from the ceiling. */
-function paintRoom(layer: p5, hinge: { x: number; y: number }, width: number) {
+function paintRoom(layer: p5, hinge: typeof PointSchema.Type, width: number) {
   gradientRect(
     layer,
     { height: layer.height, width: layer.width, x: 0, y: 0 },
@@ -71,14 +79,7 @@ function paintRoom(layer: p5, hinge: { x: number; y: number }, width: number) {
  * turns clockwise as seen from above, so the torque points down into the
  * floor, a cross in a circle.
  */
-function doorProgram(
-  sketch: p5,
-  read: () => {
-    readonly angle: number;
-    readonly arm: number;
-    readonly door: Door;
-  }
-) {
+function doorProgram(sketch: p5, read: () => DoorFrame) {
   const backdrop = createBackdrop();
   let time = 0;
   sketch.setup = () => {
