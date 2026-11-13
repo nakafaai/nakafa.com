@@ -4223,7 +4223,7 @@
     "title": "Usage data",
     "prompt-description": "Sharing details is optional.",
     "prompt-footer": "You can change it later.",
-    "description": "Nakafa counts visits without cookies, and with your consent it also sees which features you use, never your screen.",
+    "description": "Nakafa counts visits without cookies. With your consent it also sees which features you use and lets Google Analytics count visits, never your screen.",
     "allow": "Allow",
     "decline": "Decline",
     "manage": "Usage data",

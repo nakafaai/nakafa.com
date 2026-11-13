@@ -10,8 +10,13 @@ import {
   suspendBrowserAnalyticsIdentity,
 } from "@repo/analytics/posthog/browser";
 import { untilPageRead } from "@repo/design-system/lib/settle";
+import { MAIN_DOMAIN } from "@repo/site/domains";
 import { Effect, Fiber, type Option, Schedule } from "effect";
 import { useEffect } from "react";
+import {
+  startConsentMessage,
+  untilGoogleAllowsAnalytics,
+} from "@/lib/ads/consent";
 import {
   type AccountConsentDecision,
   type BrowserAnalyticsUser,
@@ -88,8 +93,38 @@ export function useAnalyticsRuntimeAlignment({
       )
     );
 
+    // Google's consent message and Google Analytics run on production only, after
+    // the page has its reader: the message on every page, and Google Analytics once
+    // Nakafa's consent and Google's both allow it. A denial stops it.
+    const googleFiber =
+      location.hostname === MAIN_DOMAIN
+        ? Effect.runFork(
+            untilPageRead.pipe(
+              Effect.andThen(
+                Effect.promise(() => import("@/lib/analytics/google"))
+              ),
+              Effect.andThen(({ startGoogleAnalytics, stopGoogleAnalytics }) =>
+                Effect.all(
+                  [
+                    startConsentMessage,
+                    analyticsIdentity
+                      ? untilGoogleAllowsAnalytics.pipe(
+                          Effect.andThen(startGoogleAnalytics)
+                        )
+                      : stopGoogleAnalytics,
+                  ],
+                  { concurrency: "unbounded", discard: true }
+                )
+              )
+            )
+          )
+        : null;
+
     return () => {
       Effect.runFork(Fiber.interrupt(runtimeFiber));
+      if (googleFiber) {
+        Effect.runFork(Fiber.interrupt(googleFiber));
+      }
       suspendBrowserAnalyticsIdentity();
     };
   }, [

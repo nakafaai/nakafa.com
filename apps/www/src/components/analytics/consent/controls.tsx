@@ -14,7 +14,10 @@ import {
   ConsentActions,
   ConsentDetails,
 } from "@/components/analytics/consent/details";
-import { AD_CONSENT_ATTRIBUTE } from "@/lib/ads/consent";
+import {
+  AD_CONSENT_ATTRIBUTE,
+  CONSENT_OWNER_ATTRIBUTE,
+} from "@/lib/ads/consent";
 import type { AnalyticsConsentContextValue } from "@/lib/analytics/consent/context";
 
 /** Names the prompt section, so the hide rules below can match it. */
@@ -45,6 +48,11 @@ const HIDE_PROMPT_WHILE_LOCKED = `:root:has([data-slot="sidebar-wrapper"][data-l
  * the two never stand over each other. It returns once that message closes.
  */
 const HIDE_PROMPT_WHILE_AD_CONSENT = `:root[${AD_CONSENT_ATTRIBUTE}] [${PROMPT_ATTRIBUTE}]{display:none}`;
+/**
+ * Hides the prompt while Google's consent message decides which prompt the visitor
+ * answers, and for good where that message governs, so a visitor never gets two.
+ */
+const HIDE_PROMPT_FOR_GOOGLE = `:root:is([${CONSENT_OWNER_ATTRIBUTE}="pending"],[${CONSENT_OWNER_ATTRIBUTE}="google"]) [${PROMPT_ATTRIBUTE}]{display:none}`;
 
 /**
  * Hides the prompt where scripts are off. Nothing runs there to record a choice,
@@ -89,7 +97,7 @@ export function AnalyticsConsentControls({
   return (
     <>
       <style>
-        {`${HIDE_PROMPT_WHILE_MARKED}${HIDE_PROMPT_WHILE_LOCKED}${HIDE_PROMPT_WHILE_AD_CONSENT}`}
+        {`${HIDE_PROMPT_WHILE_MARKED}${HIDE_PROMPT_WHILE_LOCKED}${HIDE_PROMPT_WHILE_AD_CONSENT}${HIDE_PROMPT_FOR_GOOGLE}`}
       </style>
       <noscript>
         <style>{HIDE_PROMPT_WITHOUT_SCRIPTS}</style>
