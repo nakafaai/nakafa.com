@@ -136,7 +136,9 @@ describe("curriculum artwork", () => {
     expect(
       resolveCurriculumArtwork("en", programRoot("international-baccalaureate"))
     ).toBeUndefined();
-    expect(resolveCurriculumArtwork("en", gradeRoute("form-6"))).toBeUndefined();
+    expect(
+      resolveCurriculumArtwork("en", gradeRoute("form-6"))
+    ).toBeUndefined();
     expect(
       resolveCurriculumArtwork("en", subjectRoute("geography"))
     ).toBeUndefined();
