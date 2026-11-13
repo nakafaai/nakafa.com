@@ -59,21 +59,33 @@ export const prepareAcceptanceSource = Effect.fn("acceptance.prepareSource")(
   }
 );
 
-/** Seeds a new local database through Aksara's signed production publication protocol. */
+/**
+ * Writes the renderer manifest of this checkout into a runtime directory and
+ * returns its path. The publication reads it, and the prepared runtime's key
+ * hashes it, so a renderer change prepares again.
+ */
+export const exportRenderer = Effect.fn("acceptance.exportRenderer")(function* (
+  root: string,
+  directory: string
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const renderer = `${directory}/renderer.json`;
+  yield* fs.writeFileString(renderer, "", { mode: 0o600 });
+  yield* runAcceptanceCommand({
+    command: "bun",
+    args: ["--silent", "run", "--cwd", "apps/www", "renderer:manifest"],
+    cwd: root,
+    operation: "Acceptance renderer export",
+    reportStderr: true,
+    stdoutPath: renderer,
+    stderrPath: `${directory}/renderer.log`,
+  });
+  return renderer;
+});
+
+/** Seeds a new local database through Aksara's signed production publication protocol, with the exported renderer. */
 export const publishAcceptanceSource = Effect.fn("acceptance.publishSource")(
-  function* (root: string, runtime: LocalRuntime) {
-    const fs = yield* FileSystem.FileSystem;
-    const renderer = `${runtime.directory}/renderer.json`;
-    yield* fs.writeFileString(renderer, "", { mode: 0o600 });
-    yield* runAcceptanceCommand({
-      command: "bun",
-      args: ["--silent", "run", "--cwd", "apps/www", "renderer:manifest"],
-      cwd: root,
-      operation: "Acceptance renderer export",
-      reportStderr: true,
-      stdoutPath: renderer,
-      stderrPath: `${runtime.directory}/renderer.log`,
-    });
+  function* (runtime: LocalRuntime, renderer: string) {
     const pinned = yield* prepareAcceptanceSource(runtime);
     yield* runAcceptanceCommand({
       command: "bun",
