@@ -205,8 +205,12 @@
               "level": "error",
               "options": {
                 "ignore": [
+                  "alphaMap",
                   "args",
                   "attach",
+                  "blending",
+                  "bumpMap",
+                  "bumpScale",
                   "castShadow",
                   "clearcoat",
                   "clearcoatRoughness",
@@ -214,6 +218,8 @@
                   "distance",
                   "emissive",
                   "emissiveIntensity",
+                  "envMapIntensity",
+                  "fog",
                   "frustumCulled",
                   "geometry",
                   "groundColor",
@@ -232,6 +238,7 @@
                   "renderOrder",
                   "rotation",
                   "roughness",
+                  "roughnessMap",
                   "shadow-bias",
                   "shadow-camera-bottom",
                   "shadow-camera-left",
@@ -245,6 +252,7 @@
                   "toneMapped",
                   "transparent",
                   "userData",
+                  "vertexColors",
                   "visible",
                   "wireframe"
                 ]

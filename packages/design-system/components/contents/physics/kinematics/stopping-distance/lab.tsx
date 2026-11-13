@@ -1,26 +1,29 @@
 import { useFrame } from "@react-three/fiber";
-import { PhysicsCarModel } from "@repo/design-system/components/contents/physics/kinematics/car";
-import { lerp } from "@repo/design-system/components/contents/physics/kinematics/lerp";
+import { FollowCamera } from "@repo/design-system/components/contents/physics/kinematics/follow";
 import {
-  formatRoundedMeterMath,
-  formatRoundedSpeedMath,
-} from "@repo/design-system/components/contents/physics/kinematics/math";
+  ROAD,
+  Road,
+} from "@repo/design-system/components/contents/physics/kinematics/road";
 import {
-  getStoppingDistanceState,
-  isStoppingDistanceSpeed,
-  STOPPING_DISTANCE_BRAKING_DECELERATION,
-  STOPPING_DISTANCE_CAMERA,
-  STOPPING_DISTANCE_CAR_MODEL_PATH,
-  STOPPING_DISTANCE_COLORS,
-  STOPPING_DISTANCE_REACTION_TIME,
-  STOPPING_DISTANCE_SCENE,
-  STOPPING_DISTANCE_SPEEDS,
-  type StoppingDistanceSpeed,
-  type StoppingDistanceState,
-} from "@repo/design-system/components/contents/physics/kinematics/stopping-distance/data";
+  Sedan,
+  type SedanRig,
+} from "@repo/design-system/components/contents/physics/kinematics/sedan";
+import {
+  brakingDistance,
+  reactionDistance,
+  type Stop,
+  stopPhase,
+  stopPosition,
+  stoppingDistance,
+  stoppingTime,
+} from "@repo/design-system/components/contents/physics/kinematics/stopping-distance/motion";
+import {
+  UNIT,
+  useQuantity,
+} from "@repo/design-system/components/contents/simulation/quantity";
+import { SimulationTicker } from "@repo/design-system/components/contents/simulation/ticker";
+import { useTimeline } from "@repo/design-system/components/contents/simulation/timeline";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
-import { CameraControls } from "@repo/design-system/components/three/camera/controls";
-import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene";
 import { ScienceStage } from "@repo/design-system/components/three/stage";
 import {
@@ -37,54 +40,63 @@ import {
 } from "@repo/design-system/components/visual/card";
 import { VisualFactIndicator } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
-import { getColor } from "@repo/design-system/lib/color";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
-import { Array as Arr } from "effect";
-import type { ReactNode, RefObject } from "react";
-import { Suspense, useMemo, useRef, useState } from "react";
-import type { Group } from "three";
+import { Array as Arr, Option } from "effect";
+import {
+  type ReactNode,
+  Suspense,
+  useCallback,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import { MATERIAL } from "@repo/design-system/lib/material";
 
-const PAUSE_SECONDS = 1;
-const BRAKE_DUST_PUFF_COUNT = 5;
-const ROAD_STRIPE_SPACING = 1.6;
-const REACTION_DISTANCE_COLOR = PLOT_COLORS.teal;
-const BRAKING_DISTANCE_COLOR = PLOT_COLORS.orange;
-const DISTANCE_MARKER_Z = STOPPING_DISTANCE_SCENE.roadWidth * 0.2;
+/** The speeds of the lesson's table, in m/s. */
+const SPEEDS = [10, 20, 30] as const;
 
-interface StoppingDistanceLabProps {
-  description: ReactNode;
-  labels: {
-    brakingDistance: ReactNode;
-    chooseSpeed: string;
-    reactionDistance: ReactNode;
-    speed: ReactNode;
-    stoppingDistance: ReactNode;
-    viewLabel: string;
-  };
-  title: ReactNode;
-}
+/** The lesson's driver: one second to react, then 5 m/s² of braking. */
+const REACTION = 1;
+const DECELERATION = 5;
 
+/** Seconds of driving shown before the hazard appears. */
+const LEAD_IN = 1.2;
+
+/** The road the reaction covers is teal and the braking is orange, as in the lesson. */
+const REACTION_COLOR = PLOT_COLORS.teal;
+const BRAKING_COLOR = PLOT_COLORS.orange;
+
+/** The camera rides 6 m behind, 2.6 m up and 10 m beside the car. */
+const CAMERA_OFFSET = [-6, 2.6, 10] as const;
+
+/**
+ * A car meets a hazard at the white line. For one second its driver reacts
+ * and the car rolls on at full speed over the teal stretch; then it brakes at
+ * 5 m/s² over the orange stretch to rest. The learner picks the speed and
+ * sees the reaction distance grow with v and the braking distance with v².
+ */
 export function StoppingDistanceLab({
-  title,
   description,
   labels,
-}: StoppingDistanceLabProps) {
-  const [speed, setSpeed] = useState<StoppingDistanceSpeed>(20);
-  const motion = useMemo(() => getStoppingDistanceState(speed), [speed]);
-
-  function handleSpeedChange(value: string) {
-    if (!value) {
-      return;
-    }
-
-    const nextSpeed = Number(value);
-
-    if (!isStoppingDistanceSpeed(nextSpeed)) {
-      return;
-    }
-
-    setSpeed(nextSpeed);
-  }
+  title,
+}: {
+  readonly description: ReactNode;
+  readonly labels: {
+    readonly brakingDistance: ReactNode;
+    readonly chooseSpeed: string;
+    readonly reactionDistance: ReactNode;
+    readonly speed: ReactNode;
+    readonly stoppingDistance: ReactNode;
+    readonly viewLabel: string;
+  };
+  readonly title: ReactNode;
+}) {
+  const [speed, setSpeed] = useState<(typeof SPEEDS)[number]>(20);
+  const quantity = useQuantity();
+  const stop = useMemo<Stop>(
+    () => ({ deceleration: DECELERATION, reaction: REACTION, speed }),
+    [speed]
+  );
 
   return (
     <VisualCard>
@@ -93,15 +105,19 @@ export function StoppingDistanceLab({
       <VisualCardToolbar>
         <ToggleGroup
           aria-label={labels.chooseSpeed}
-          gridColumns="3"
-          onValueChange={handleSpeedChange}
+          onValueChange={(value: string) => {
+            Option.map(
+              Arr.findFirst(SPEEDS, (each) => String(each) === value),
+              setSpeed
+            );
+          }}
           type="single"
           value={String(speed)}
           variant="outline"
         >
-          {Arr.map(STOPPING_DISTANCE_SPEEDS, (speedOption) => (
-            <ToggleGroupItem key={speedOption} value={String(speedOption)}>
-              <InlineMath math={formatRoundedSpeedMath(speedOption)} />
+          {Arr.map(SPEEDS, (each) => (
+            <ToggleGroupItem key={each} value={String(each)}>
+              <InlineMath math={quantity(each, UNIT.speed, 0)} />
             </ToggleGroupItem>
           ))}
         </ToggleGroup>
@@ -112,10 +128,9 @@ export function StoppingDistanceLab({
         className={threeSceneFrameVariants()}
         render={<section />}
       >
-        <ScienceStage frameloop="always" setting="field">
-          <Suspense>
-            <StoppingDistanceCamera />
-            <StoppingDistanceScene motion={motion} />
+        <ScienceStage setting="field" reach={40}>
+          <Suspense fallback={null}>
+            <StopScene stop={stop} />
           </Suspense>
         </ScienceStage>
       </VisualCardBody>
@@ -126,31 +141,29 @@ export function StoppingDistanceLab({
         <VisualCardFacts>
           <VisualFactIndicator
             label={labels.speed}
-            value={<InlineMath math={formatRoundedSpeedMath(motion.speed)} />}
+            value={<InlineMath math={quantity(speed, UNIT.speed, 0)} />}
           />
           <VisualFactIndicator
-            indicatorColor={REACTION_DISTANCE_COLOR}
+            indicatorColor={REACTION_COLOR}
             label={labels.reactionDistance}
             value={
               <InlineMath
-                math={formatRoundedMeterMath(motion.reactionDistance)}
+                math={quantity(reactionDistance(stop), UNIT.length)}
               />
             }
           />
           <VisualFactIndicator
-            indicatorColor={BRAKING_DISTANCE_COLOR}
+            indicatorColor={BRAKING_COLOR}
             label={labels.brakingDistance}
             value={
-              <InlineMath
-                math={formatRoundedMeterMath(motion.brakingDistance)}
-              />
+              <InlineMath math={quantity(brakingDistance(stop), UNIT.length)} />
             }
           />
           <VisualFactIndicator
             label={labels.stoppingDistance}
             value={
               <InlineMath
-                math={formatRoundedMeterMath(motion.stoppingDistance)}
+                math={quantity(stoppingDistance(stop), UNIT.length)}
               />
             }
           />
@@ -160,273 +173,83 @@ export function StoppingDistanceLab({
   );
 }
 
-function StoppingDistanceCamera() {
-  return (
-    <CameraControls
-      cameraPosition={STOPPING_DISTANCE_CAMERA.cameraPosition}
-      cameraTarget={STOPPING_DISTANCE_CAMERA.cameraTarget}
-      enablePan
-      enableRotate
-      enableZoom
-      fov={44}
-      framing="content"
-    />
-  );
+/** Where the car is `time` seconds after the hazard appeared. */
+function carAt(stop: Stop, time: number) {
+  return time < 0 ? stop.speed * time : stopPosition(stop, time);
 }
 
-function StoppingDistanceScene({ motion }: { motion: StoppingDistanceState }) {
-  return (
-    <group>
-      <CameraBounds exclude>
-        <Road />
-      </CameraBounds>
-      <DistanceStrip
-        color={REACTION_DISTANCE_COLOR}
-        endX={motion.reactionEndX}
-        startX={motion.startX}
-        z={DISTANCE_MARKER_Z}
-      />
-      <DistanceStrip
-        color={BRAKING_DISTANCE_COLOR}
-        endX={motion.stopX}
-        startX={motion.reactionEndX}
-        z={DISTANCE_MARKER_Z}
-      />
-      <StopCone x={motion.stopX} />
-      <AnimatedCar motion={motion} />
-    </group>
-  );
-}
-
-function AnimatedCar({ motion }: { motion: StoppingDistanceState }) {
-  const groupRef = useRef<Group>(null);
-  const brakeDustRef = useRef<Group>(null);
-  const animationStartRef = useRef<number | null>(null);
-  const animationSpeedRef = useRef<StoppingDistanceSpeed | null>(null);
-
-  useFrame((state) => {
-    if (!groupRef.current) {
-      return;
-    }
-
-    if (
-      animationStartRef.current === null ||
-      animationSpeedRef.current !== motion.speed
-    ) {
-      animationSpeedRef.current = motion.speed;
-      animationStartRef.current = state.clock.elapsedTime;
-    }
-
-    const elapsed =
-      (state.clock.elapsedTime - animationStartRef.current) %
-      getLoopSeconds(motion);
-    const carX = getAnimatedCarX(motion, elapsed);
-    groupRef.current.position.set(carX, 0.025, 0);
-
-    if (!brakeDustRef.current) {
-      return;
-    }
-
-    const brakingProgress = getBrakingProgress(motion, elapsed);
-    brakeDustRef.current.visible = brakingProgress > 0;
-    brakeDustRef.current.position.set(carX - 0.76, 0.16, 0);
-    const pulse = Math.sin(state.clock.elapsedTime * 9) * 0.1;
-    const size = 1 + brakingProgress * 0.42 + pulse;
-    brakeDustRef.current.scale.set(size, size, size);
-  });
-
-  return (
-    <>
-      <CameraBounds
-        motion={{
-          translation: {
-            x: { min: motion.startX, max: motion.stopX },
-            y: { min: 0.025, max: 0.025 },
-            z: { min: 0, max: 0 },
-          },
-        }}
-        objectRef={groupRef}
-      >
-        <group rotation={[0, Math.PI / 2, 0]} scale={0.66}>
-          <CarModel />
-        </group>
-      </CameraBounds>
-      <CameraBounds exclude>
-        <BrakeDust dustRef={brakeDustRef} />
-      </CameraBounds>
-    </>
-  );
-}
-
-function CarModel() {
-  return (
-    <PhysicsCarModel
-      bodyColor={STOPPING_DISTANCE_COLORS.carBody}
-      modelPath={STOPPING_DISTANCE_CAR_MODEL_PATH}
-    />
-  );
-}
-
-function BrakeDust({ dustRef }: { dustRef: RefObject<Group | null> }) {
-  const puffPositions = getBrakeDustPuffPositions();
-
-  return (
-    <group ref={dustRef} visible={false}>
-      {Arr.map(puffPositions, (position) => (
-        <mesh
-          key={Arr.join(Arr.map(position, String), "-")}
-          position={position}
-        >
-          <sphereGeometry args={[0.3, 12, 8]} />
-          <meshBasicMaterial
-            color={getColor("GRAY", 200)}
-            depthWrite={false}
-            opacity={0.78}
-            transparent
-          />
-        </mesh>
-      ))}
-    </group>
-  );
-}
-
-function getBrakeDustPuffPositions() {
-  const centerIndex = Math.floor(BRAKE_DUST_PUFF_COUNT / 2);
-
-  return Array.from({ length: BRAKE_DUST_PUFF_COUNT }, (_, index) => {
-    const offset = index - centerIndex;
-
-    if (offset === 0) {
-      return [-0.68, 0.34, 0] satisfies [number, number, number];
-    }
-
-    const ring = Math.abs(offset);
-    const side = Math.sign(offset);
-    const x = -0.18 - (ring - 1) * 0.24;
-    const y = 0.3 - (ring - 1) * 0.1;
-    const z = side * (0.58 - (ring - 1) * 0.12);
-
-    return [x, y, z] satisfies [number, number, number];
-  });
-}
-
-function Road() {
-  const roadCenterX = STOPPING_DISTANCE_SCENE.roadCenterX;
-  const roadLength = STOPPING_DISTANCE_SCENE.roadLength;
-  const laneCount = Math.ceil(roadLength / ROAD_STRIPE_SPACING);
-  const stripePositions = Array.from({ length: laneCount }, (_, index) => {
-    const spacing = roadLength / laneCount;
-    return roadCenterX - roadLength / 2 + spacing * index + spacing * 0.5;
-  });
-
-  return (
-    <group>
-      <mesh position={[roadCenterX, -0.02, 0]} receiveShadow>
-        <boxGeometry
-          args={[roadLength, 0.08, STOPPING_DISTANCE_SCENE.roadWidth]}
-        />
-        <meshStandardMaterial color={getColor("GRAY", 700)} roughness={0.72} />
-      </mesh>
-
-      {Arr.map(stripePositions, (x) => (
-        <mesh key={x} position={[x, 0.035, 0]}>
-          <boxGeometry args={[0.42, 0.018, 0.06]} />
-          <meshStandardMaterial
-            color={getColor("SLATE", 50)}
-            roughness={0.58}
-          />
-        </mesh>
-      ))}
-    </group>
-  );
-}
-
-function DistanceStrip({
+/**
+ * A stretch of road painted in a translucent colour, from `from` to `to`
+ * metres, across the car's lane.
+ */
+function Stretch({
   color,
-  endX,
-  startX,
-  z,
+  from,
+  to,
 }: {
-  color: string;
-  endX: number;
-  startX: number;
-  z: number;
+  readonly color: string;
+  readonly from: number;
+  readonly to: number;
 }) {
-  const length = Math.max(0.02, endX - startX);
-  const centerX = startX + length / 2;
-
   return (
-    <mesh position={[centerX, 0.045, z]}>
-      <boxGeometry args={[length, 0.03, 0.08]} />
-      <meshStandardMaterial color={color} roughness={0.44} />
+    <mesh
+      position={[(from + to) / 2, 0.008, ROAD.lane]}
+      rotation={[-Math.PI / 2, 0, 0]}
+    >
+      <planeGeometry args={[Math.max(0.01, to - from), 3.1]} />
+      <meshBasicMaterial
+        color={color}
+        depthWrite={false}
+        opacity={0.55}
+        transparent
+      />
     </mesh>
   );
 }
 
-function StopCone({ x }: { x: number }) {
+/** The road, the two painted stretches and the car, run by the play clock. */
+function StopScene({ stop }: { readonly stop: Stop }) {
+  const car = useRef<SedanRig>(null);
+  const shown = useRef(stoppingDistance(stop));
+  const { advance, playing } = useTimeline(-LEAD_IN, stoppingTime(stop));
+  const reactionEnd = reactionDistance(stop);
+  const end = stoppingDistance(stop);
+
+  // The scene moves before the camera that follows it reads where it is.
+  useFrame((_, delta) => {
+    const time = advance(delta);
+    const x = carAt(stop, time);
+    shown.current = x;
+    car.current?.place(x, time >= 0 && stopPhase(stop, time) === "braking");
+  }, -1);
+
+  const follow = useCallback(() => shown.current, []);
+
   return (
-    <group position={[x, 0.08, DISTANCE_MARKER_Z]}>
-      <mesh castShadow rotation={[0, 0, Math.PI]}>
-        <coneGeometry args={[0.17, 0.38, 24]} />
-        <meshStandardMaterial color={PLOT_COLORS.orange} roughness={0.5} />
-      </mesh>
-      <mesh position={[0, -0.2, 0]} receiveShadow>
-        <cylinderGeometry args={[0.2, 0.2, 0.04, 24]} />
-        <meshStandardMaterial color={getColor("GRAY", 800)} roughness={0.65} />
-      </mesh>
-    </group>
+    <>
+      <SimulationTicker running={playing} />
+      <FollowCamera
+        depth={ROAD.lane}
+        follow={follow}
+        lookAhead={3}
+        maxDistance={90}
+        minDistance={6}
+        offset={CAMERA_OFFSET}
+      />
+      <Road
+        from={-300}
+        posts={Arr.appendAll(
+          Arr.map(Arr.range(1, 6), (index) => index * 10),
+          Arr.map(Arr.range(4, 6), (index) => index * 20)
+        )}
+        surface="dry"
+        to={600}
+      />
+      <Stretch color={REACTION_COLOR} from={0} to={reactionEnd} />
+      <Stretch color={BRAKING_COLOR} from={reactionEnd} to={end} />
+      <group position={[0, 0, ROAD.lane]}>
+        <Sedan color={MATERIAL.carPaint} ref={car} />
+      </group>
+    </>
   );
-}
-
-function getAnimatedCarX(
-  motion: StoppingDistanceState,
-  elapsedSeconds: number
-) {
-  if (elapsedSeconds <= STOPPING_DISTANCE_REACTION_TIME) {
-    const progress = elapsedSeconds / STOPPING_DISTANCE_REACTION_TIME;
-    return lerp(motion.startX, motion.reactionEndX, progress);
-  }
-
-  const brakingSeconds = getBrakingSeconds(motion);
-  const brakingEnd = STOPPING_DISTANCE_REACTION_TIME + brakingSeconds;
-
-  if (elapsedSeconds <= brakingEnd) {
-    const progress =
-      (elapsedSeconds - STOPPING_DISTANCE_REACTION_TIME) / brakingSeconds;
-    const deceleratingProgress = 2 * progress - progress ** 2;
-    return lerp(motion.reactionEndX, motion.stopX, deceleratingProgress);
-  }
-
-  if (elapsedSeconds <= brakingEnd + PAUSE_SECONDS) {
-    return motion.stopX;
-  }
-
-  return motion.startX;
-}
-
-function getLoopSeconds(motion: StoppingDistanceState) {
-  return (
-    STOPPING_DISTANCE_REACTION_TIME + getBrakingSeconds(motion) + PAUSE_SECONDS
-  );
-}
-
-function getBrakingSeconds(motion: StoppingDistanceState) {
-  return motion.speed / STOPPING_DISTANCE_BRAKING_DECELERATION;
-}
-
-function getBrakingProgress(
-  motion: StoppingDistanceState,
-  elapsedSeconds: number
-) {
-  const brakingSeconds = getBrakingSeconds(motion);
-  const brakingEnd = STOPPING_DISTANCE_REACTION_TIME + brakingSeconds;
-
-  if (
-    elapsedSeconds <= STOPPING_DISTANCE_REACTION_TIME ||
-    elapsedSeconds > brakingEnd
-  ) {
-    return 0;
-  }
-
-  return (elapsedSeconds - STOPPING_DISTANCE_REACTION_TIME) / brakingSeconds;
 }
