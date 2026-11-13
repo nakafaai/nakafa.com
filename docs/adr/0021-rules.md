@@ -444,6 +444,19 @@ through another module, and no syntax rule can see that. So the check does not
 judge the modules below such a configuration, and it judges none when a shared
 or root configuration turns the option on. There the typecheck decides.
 
+### No list shows one icon on every option
+
+The owner's rule of 13 November 2026: a list whose options all share one icon
+tells them apart by nothing, as the language menus did with one translate icon
+for every language. The options are `DropdownMenuItem`, its radio, checkbox and
+sub-trigger kin, `SelectItem` and `PickerItem`. `scripts/check/options.ts`
+refuses an option drawn in a `map` whose `icon` reads none of the names the
+callback binds, its parameters and the variables it declares, and two or more
+options written side by side under one element that all name the same icon. A
+list of values whose trigger already shows their kind's icon marks its options
+`plain`, which show no icon, so the check reads nothing there.
+
+
 ### Class strings kept in a constant
 
 The editor's Tailwind language server completes, sorts, and checks a class
