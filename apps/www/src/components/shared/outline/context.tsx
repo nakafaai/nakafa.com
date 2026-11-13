@@ -1,23 +1,19 @@
 import type { ParsedHeading } from "@repo/contents/toc";
-import { extractAllHeadingIds } from "@repo/contents/toc";
 import { elementById } from "@repo/design-system/lib/element";
-import {
-  Array as Arr,
-  Equal,
-  HashSet,
-  MutableHashSet,
-  Option,
-  Schema,
-} from "effect";
+import { Array as Arr, Equal, Option, Schema } from "effect";
 import { createContext, type ReactNode, use, useEffect, useState } from "react";
 import { createStore, type StoreApi, useStore } from "zustand";
 import { useShallow } from "zustand/react/shallow";
+import {
+  outlineIds,
+  readingHeading,
+} from "@/components/shared/outline/reading";
 
 const TocStateSchema = Schema.Struct({
-  activeHeadings: Schema.Array(Schema.String),
+  active: Schema.Option(Schema.String),
 });
 
-/** The headings currently in the reading band, in the order they entered it. */
+/** The heading of the section being read, while the reader is in one. */
 type TocState = typeof TocStateSchema.Type;
 
 type TocStore = StoreApi<TocState>;
@@ -27,106 +23,93 @@ const TocContext = createContext<TocStore | null>(null);
 /** Distance from the end of the page that still counts as its end. */
 const SCROLL_BOTTOM_TOLERANCE = 6;
 
-/** Keeps heading ids a stable primitive for the effect that observes them. */
+/** Keeps heading ids a stable primitive for the effect that follows them. */
 const WATCH_SEPARATOR = "\n";
 
+/** The page's header, whose bottom edge the reading line never rises above. */
+const PAGE_HEADER = '[data-slot="page-header"]';
+
 /**
- * Tracks the headings in the reading band with one observer for the whole
- * outline and publishes them to the store only when they change. The headings
- * are already in the page when the outline mounts, so the observer watches each
- * one once. At the end of the page, the headings still in view stay active, or
- * the last heading when none is.
+ * Where each heading stands now. A heading's reading line is where a jump to it
+ * stops, its scroll margin, and never above the header's bottom edge, so a press
+ * on an entry reads the section it opens. A heading the page has not drawn, such
+ * as one in a later section that mounts as the reader nears it, has no place yet.
  */
-function observeHeadings(store: TocStore, watch: readonly string[]) {
-  /**
-   * The headings in the reading band, in the order they entered it. Two
-   * headings can share one id, so the set holds the elements, and each element
-   * is marked for reference equality before it reaches the set: Effect would
-   * otherwise compare two elements by their structure.
-   */
-  const visible = MutableHashSet.empty<Element>();
-
-  function enter(heading: Element) {
-    MutableHashSet.add(visible, Equal.byReferenceUnsafe(heading));
-  }
-
-  function leave(heading: Element) {
-    MutableHashSet.remove(visible, Equal.byReferenceUnsafe(heading));
-  }
-
-  function visibleIds() {
-    return Arr.map(Arr.fromIterable(visible), (heading) => heading.id);
-  }
-
-  function publish(activeHeadings: readonly string[]) {
-    const current = store.getState().activeHeadings;
-    if (
-      current.length === activeHeadings.length &&
-      Arr.every(current, (id, index) => id === activeHeadings[index])
-    ) {
-      return;
-    }
-    store.setState({ activeHeadings });
-  }
-
-  /** Publishes the headings in the band, keeping the last ones between them. */
-  function publishVisible() {
-    if (MutableHashSet.size(visible) > 0) {
-      publish(visibleIds());
-    }
-  }
-
-  const observer = new IntersectionObserver(
-    (entries) => {
-      for (const entry of entries) {
-        if (entry.isIntersecting) {
-          enter(entry.target);
-        } else {
-          leave(entry.target);
-        }
-      }
-      publishVisible();
-    },
-    { rootMargin: "-20px 0% -40% 0%", threshold: 1 }
+function measurePlaces(ids: readonly string[]) {
+  const header =
+    document.querySelector(PAGE_HEADER)?.getBoundingClientRect().bottom ?? 0;
+  return Arr.getSomes(
+    Arr.map(ids, (id) =>
+      Option.flatMap(Option.fromNullishOr(elementById(id)), (heading) =>
+        heading.getClientRects().length === 0
+          ? Option.none()
+          : Option.some({
+              id,
+              // A jump can leave the heading a fraction of a pixel under its line.
+              line:
+                Math.max(
+                  header,
+                  Number.parseFloat(getComputedStyle(heading).scrollMarginTop)
+                ) + 1,
+              top: heading.getBoundingClientRect().top,
+            })
+      )
+    )
   );
+}
 
-  function onScroll() {
-    const element = document.scrollingElement;
-    if (
-      !element ||
-      element.scrollTop + element.clientHeight <
-        element.scrollHeight - SCROLL_BOTTOM_TOLERANCE
-    ) {
-      return;
-    }
-    const ids = HashSet.fromIterable(visibleIds());
-    const inView = Arr.filter(watch, (id) => HashSet.has(ids, id));
-    const lastId = Arr.last(watch);
-    if (inView.length > 0) {
-      publish(inView);
-    } else if (Option.isSome(lastId) && lastId.value) {
-      publish([lastId.value]);
+/** Whether the page is scrolled to its end. */
+function isAtEnd() {
+  const page = document.scrollingElement;
+  return (
+    page !== null &&
+    page.scrollTop + page.clientHeight >=
+      page.scrollHeight - SCROLL_BOTTOM_TOLERANCE
+  );
+}
+
+/**
+ * Follows the section being read, once in each frame the page scrolls, resizes
+ * or grows, and publishes it only when it changes. Each frame measures every
+ * heading again, so a heading that mounts late is followed as soon as it draws.
+ */
+function followReading(store: TocStore, ids: readonly string[]) {
+  let frame = 0;
+
+  function measure() {
+    frame = 0;
+    const active = readingHeading(measurePlaces(ids), {
+      atEnd: isAtEnd(),
+      height: window.innerHeight,
+    });
+    if (!Equal.equals(active, store.getState().active)) {
+      store.setState({ active });
     }
   }
 
-  publish([]);
-  for (const id of watch) {
-    const heading = elementById(id);
-    if (heading) {
-      observer.observe(heading);
+  function schedule() {
+    if (frame === 0) {
+      frame = requestAnimationFrame(measure);
     }
   }
-  window.addEventListener("scroll", onScroll, { passive: true });
+
+  const grows = new ResizeObserver(schedule);
+  grows.observe(document.body);
+  window.addEventListener("scroll", schedule, { passive: true });
+  window.addEventListener("resize", schedule);
+  schedule();
 
   return () => {
-    window.removeEventListener("scroll", onScroll);
-    observer.disconnect();
+    cancelAnimationFrame(frame);
+    grows.disconnect();
+    window.removeEventListener("scroll", schedule);
+    window.removeEventListener("resize", schedule);
   };
 }
 
 /**
- * Owns the outline's active headings in a store, so each entry subscribes to
- * its own active state and only the entries that change re-render.
+ * Owns the outline's active heading in a store, so each entry subscribes to its
+ * own active state and only the entries that change re-render.
  */
 export function TocProvider({
   toc,
@@ -136,13 +119,13 @@ export function TocProvider({
   children: ReactNode;
 }) {
   const [store] = useState(() =>
-    createStore<TocState>()(() => ({ activeHeadings: [] }))
+    createStore<TocState>()(() => ({ active: Option.none() }))
   );
-  const watchKey = Arr.join(extractAllHeadingIds(toc), WATCH_SEPARATOR);
+  const watchKey = Arr.join(outlineIds(toc), WATCH_SEPARATOR);
 
   useEffect(
     () =>
-      observeHeadings(
+      followReading(
         store,
         watchKey.length === 0 ? [] : watchKey.split(WATCH_SEPARATOR)
       ),

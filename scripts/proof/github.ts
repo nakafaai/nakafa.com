@@ -28,7 +28,11 @@ export const REPOSITORY = "nakafaai/nakafa.com";
 export class ProofError extends Schema.TaggedError<
   ProofError,
   { readonly brand: unique symbol }
->()("ProofError", { message: Schema.String }) {}
+>()("ProofError", {
+  message: Schema.String,
+  /** Whether GitHub refused the call for the account's rate limit, which passes. */
+  limited: Schema.optionalKey(Schema.Boolean),
+}) {}
 
 /** How many machines prove each engine, unless the caller names another count. */
 export const DEFAULT_SHARDS = 3;
@@ -39,8 +43,14 @@ const NARROW_SHARDS = 1;
 /** The commit status that says whether a head fails anything main does not. */
 export const VERDICT_CONTEXT = "proof/new";
 
-/** Runs the GitHub CLI and returns what it printed, or fails with what it said. */
-export const gh = Effect.fn("proof.gh")(function* (args: readonly string[]) {
+/**
+ * Whether GitHub refused a call for the account's API rate limit, which every
+ * session on this account shares: 5,000 requests an hour.
+ */
+const RATE_LIMITED = /rate limit/iu;
+
+/** One attempt of a GitHub CLI call: what it printed, or what it said. */
+const ghOnce = Effect.fn("proof.ghOnce")(function* (args: readonly string[]) {
   const output = yield* runText("gh", args).pipe(
     Effect.mapError(
       () => new ProofError({ message: "The GitHub CLI could not start." })
@@ -49,10 +59,25 @@ export const gh = Effect.fn("proof.gh")(function* (args: readonly string[]) {
   if (output.code !== 0) {
     return yield* new ProofError({
       message: `gh ${Arr.join(Arr.take(args, 2), " ")} failed: ${output.stderr.trim()}`,
+      limited: RATE_LIMITED.test(output.stderr),
     });
   }
   return output.stdout;
 });
+
+/**
+ * Runs the GitHub CLI and returns what it printed, or fails with what it said.
+ * A call refused for the rate limit waits a minute and tries again, for as long
+ * as the hourly limit takes to reset, so a long proof outlives a busy hour.
+ */
+export const gh = (args: readonly string[]) =>
+  ghOnce(args).pipe(
+    Effect.retry({
+      while: (error) => error.limited === true,
+      schedule: Schedule.spaced("1 minute"),
+      times: 65,
+    })
+  );
 
 const Step = Schema.Struct({
   name: Schema.String,
@@ -79,6 +104,9 @@ const RunView = Schema.Struct({
 type RunView = typeof RunView.Type;
 const RunViewJson = Schema.fromJsonString(RunView);
 const RUN_FIELDS = "status,conclusion,url,createdAt,updatedAt,jobs";
+const RunStatusJson = Schema.fromJsonString(
+  Schema.Struct({ status: Schema.String })
+);
 
 const RunListJson = Schema.fromJsonString(
   Schema.Array(
@@ -165,22 +193,23 @@ const findRun = Effect.fn("proof.findRun")(function* (title: string) {
   );
 });
 
-/** Reads one run until it completes, checking every half minute. */
+/**
+ * Reads one run once it completes. While it runs, only its status is read, once
+ * every two minutes: one request, so many waiting proofs stay well inside the
+ * rate limit that every session shares.
+ */
 const awaitRun = Effect.fn("proof.awaitRun")(function* (id: number) {
-  const view = gh([
-    "run",
-    "view",
-    String(id),
-    "--repo",
-    REPOSITORY,
-    "--json",
-    RUN_FIELDS,
-  ]).pipe(Effect.flatMap(Schema.decodeEffect(RunViewJson)));
-  return yield* view.pipe(
+  const view = (fields: string) =>
+    gh(["run", "view", String(id), "--repo", REPOSITORY, "--json", fields]);
+  yield* view("status").pipe(
+    Effect.flatMap(Schema.decodeEffect(RunStatusJson)),
     Effect.repeat({
       until: (run) => run.status === "completed",
-      schedule: Schedule.spaced("30 seconds"),
+      schedule: Schedule.spaced("2 minutes"),
     })
+  );
+  return yield* view(RUN_FIELDS).pipe(
+    Effect.flatMap(Schema.decodeEffect(RunViewJson))
   );
 });
 
