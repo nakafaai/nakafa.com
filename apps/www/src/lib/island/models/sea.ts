@@ -21,13 +21,18 @@ const BELLY = rgb(0xdf_e6_ea);
 export function whaleFaces(): readonly Face[] {
   const length = 13;
   const at = (share: number) => m(length * share - length / 2);
-  const back = (share: number, width: number, depth: number, rise = 0) => ({
+  const back = (share: number, width: number, depth: number, rise: number) => ({
     high: m(rise),
     low: m(rise - depth * 0.45),
     width: m(width),
     z: at(share),
   });
-  const belly = (share: number, width: number, depth: number, rise = 0) => ({
+  const belly = (
+    share: number,
+    width: number,
+    depth: number,
+    rise: number
+  ) => ({
     high: m(rise - depth * 0.45),
     low: m(rise - depth),
     width: m(width * 0.92),
