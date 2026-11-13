@@ -4,12 +4,17 @@ import {
   signInAccount,
 } from "@repo/backend/scripts/content/acceptance/account";
 import type { RunConvex } from "@repo/backend/scripts/content/acceptance/convex";
+import {
+  ACCESS_TOKEN,
+  accessTokenOf,
+  SESSION_COOKIES,
+} from "@repo/backend/test/acceptance";
 import { nodePlatform } from "@repo/backend/test/platform";
 import { Array as Arr, Effect, MutableList, Option, Record } from "effect";
 
 const LEARNER_EMAIL = /^learner-[0-9a-f]{16}@acceptance\.invalid$/u;
 const TOKENS = {
-  accessToken: "access-token",
+  accessToken: ACCESS_TOKEN,
   refreshToken: "refresh-token",
   refreshTokenExpiresAt: 1,
   userId: "user-1",
@@ -47,19 +52,18 @@ function recordingRunner(
   return { calls: () => MutableList.toArray(calls), run };
 }
 
-const SESSION_COOKIES = [
-  { name: "__convexAuthJWT", value: "access-token" },
-  { name: "__convexAuthRefreshToken", value: "refresh-token" },
-];
-
 describe("content acceptance account", () => {
   it.effect(
-    "seeds a synthetic learner, signs it in with its password, and answers the session's cookies",
+    "seeds a synthetic learner, signs it in with its password, and answers its session and the session's cookies",
     () =>
       Effect.gen(function* () {
         const runner = recordingRunner();
         const account = yield* openLearnerAccount(runner.run);
-        expect(account).toEqual({ cookies: SESSION_COOKIES, userId: "user-1" });
+        expect(account).toEqual({
+          cookies: SESSION_COOKIES,
+          sessionId: "session-1",
+          userId: "user-1",
+        });
         const [seed, signIn] = runner.calls();
         expect(seed?.[0]).toBe("Learner account");
         expect(seed?.[1]).toMatchObject({
@@ -114,19 +118,28 @@ describe("content acceptance account", () => {
     }).pipe(Effect.provide(nodePlatform))
   );
 
-  it.effect("refuses a sign-in that made no session", () =>
-    Effect.gen(function* () {
-      const refused = recordingRunner({
-        "Learner sign-in": {
-          status: "error",
-          userError: { error: "INVALID_CREDENTIALS" },
-        },
-      });
-      expect(
-        yield* Effect.flip(
-          signInAccount(refused.run, { password: "wrong", userId: "user-1" })
-        )
-      ).toMatchObject({ _tag: "SchemaError" });
-    })
+  it.effect(
+    "refuses a sign-in that made no session, or whose token names none",
+    () =>
+      Effect.gen(function* () {
+        const account = { password: "wrong", userId: "user-1" };
+        const refused = recordingRunner({
+          "Learner sign-in": {
+            status: "error",
+            userError: { error: "INVALID_CREDENTIALS" },
+          },
+        });
+        const nameless = recordingRunner({
+          "Learner sign-in": {
+            status: "complete",
+            tokens: { ...TOKENS, accessToken: accessTokenOf({}) },
+          },
+        });
+        for (const runner of [refused, nameless]) {
+          expect(
+            yield* Effect.flip(signInAccount(runner.run, account))
+          ).toMatchObject({ _tag: "SchemaError" });
+        }
+      })
   );
 });
