@@ -81,7 +81,8 @@ export function upgradeOf(cells: Cells, level: number) {
   for (const cell of next) {
     MutableHashMap.set(wanted, cellOf(cell.x, cell.y, cell.z), cell.block);
   }
-  const blocked = Arr.some(next, (cell) => {
+  // The first cell the new walls would take from something the learner built, if any.
+  const blocking = Arr.findFirst(next, (cell) => {
     const there = cells[cellOf(cell.x, cell.y, cell.z)];
     return (
       there !== 0 &&
@@ -89,33 +90,35 @@ export function upgradeOf(cells: Cells, level: number) {
       !MutableHashMap.has(old, cellOf(cell.x, cell.y, cell.z))
     );
   });
-  if (blocked) {
+  if (Option.isSome(blocking)) {
     return Result.fail("room" as const);
   }
-  const built = Arr.filterMap(next, (cell: (typeof next)[number]) => {
+  let built: readonly Edit[] = [];
+  for (const cell of next) {
     const before = cells[cellOf(cell.x, cell.y, cell.z)];
-    return before === cell.block
-      ? Result.failVoid
-      : Result.succeed<Edit>({
-          after: cell.block,
-          before,
-          x: cell.x,
-          y: cell.y,
-          z: cell.z,
-        });
-  });
-  const cleared = Arr.filterMap(cellsOfTier(tier), (cell) => {
+    if (before !== cell.block) {
+      built = Arr.append(built, {
+        after: cell.block,
+        before,
+        x: cell.x,
+        y: cell.y,
+        z: cell.z,
+      });
+    }
+  }
+  let cleared: readonly Edit[] = [];
+  for (const cell of cellsOfTier(tier)) {
     const key = cellOf(cell.x, cell.y, cell.z);
-    return MutableHashMap.has(wanted, key) || cells[key] !== cell.block
-      ? Result.failVoid
-      : Result.succeed<Edit>({
-          after: 0,
-          before: cell.block,
-          x: cell.x,
-          y: cell.y,
-          z: cell.z,
-        });
-  });
+    if (!MutableHashMap.has(wanted, key) && cells[key] === cell.block) {
+      cleared = Arr.append(cleared, {
+        after: 0,
+        before: cell.block,
+        x: cell.x,
+        y: cell.y,
+        z: cell.z,
+      });
+    }
+  }
   return Result.succeed({
     edits: Arr.appendAll(cleared, built),
     tier: tier + 1,
