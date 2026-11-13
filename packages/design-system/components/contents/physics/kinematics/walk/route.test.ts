@@ -9,14 +9,14 @@ import {
 } from "@repo/design-system/components/contents/physics/kinematics/walk/route";
 import { Schema } from "effect";
 
-const detour = Schema.decodeUnknownSync(WalkSchema)({
+const detour = Schema.decodeSync(WalkSchema)({
   legs: [
     { east: 300, north: 0 },
     { east: 0, north: 400 },
   ],
   pace: 1.25,
 });
-const loop = Schema.decodeUnknownSync(WalkSchema)({
+const loop = Schema.decodeSync(WalkSchema)({
   legs: [
     { east: 100, north: 0 },
     { east: 0, north: 100 },
@@ -48,7 +48,7 @@ describe("walk geometry", () => {
       Schema.decodeUnknownSync(WalkSchema)({ legs: [], pace: 1 })
     ).toThrow();
     expect(() =>
-      Schema.decodeUnknownSync(WalkSchema)({
+      Schema.decodeSync(WalkSchema)({
         legs: [{ east: 1, north: 0 }],
         pace: 0,
       })
@@ -82,7 +82,7 @@ describe("walkReading", () => {
   });
 
   it("skips a leg of zero length", () => {
-    const still = Schema.decodeUnknownSync(WalkSchema)({
+    const still = Schema.decodeSync(WalkSchema)({
       legs: [
         { east: 0, north: 0 },
         { east: 10, north: 0 },
