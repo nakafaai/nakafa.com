@@ -1,5 +1,5 @@
 import { Array as Arr } from "effect";
-import { BODY_STRIDE } from "@/lib/island/bodies";
+import { BODY_STRIDE, type bodiesOf } from "@/lib/island/bodies";
 import { BodyKind, bodyFaces } from "@/lib/island/models/kinds";
 import { flatten, MODEL_STRIDE } from "@/lib/island/models/parts";
 
@@ -84,9 +84,9 @@ export function createBodies(gl: WebGL2RenderingContext) {
       });
     },
     /** Replaces where every kind's bodies stand this frame, up to the capacity of each. */
-    write(bodies: Readonly<Record<BodyKind, Float32Array>>) {
-      Arr.forEach(kinds, (entry) => {
-        const data = bodies[entry.kind];
+    write(bodies: ReturnType<typeof bodiesOf>) {
+      // Both lists follow BodyKind's order, so each kind meets its own places.
+      Arr.forEach(Arr.zip(kinds, bodies), ([entry, [, data]]) => {
         entry.count = Math.min(CAPACITY, data.length / BODY_STRIDE);
         gl.bindBuffer(gl.ARRAY_BUFFER, entry.places);
         gl.bufferSubData(
