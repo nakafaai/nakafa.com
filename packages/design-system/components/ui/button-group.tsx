@@ -13,8 +13,9 @@ import { cn } from "cn";
  * they join the row.
  *
  * CSS cannot see `display: none`, so a child that hides at some width would still shape its neighbours. A control that
- * changes form with the width is therefore one wrapper around both forms (`TableSearch`), never two children. Controls
- * that stand apart do not go in a group: they keep a clear gap.
+ * changes form with the width is therefore one wrapper around both forms (`TableSearch`), never two children. A last
+ * part that leaves from the `xl` width says so with `data-hides="xl"`, and the part before it then rounds its end.
+ * Controls that stand apart do not go in a group: they keep a clear gap.
  */
 const buttonGroupVariants = cva(
   "flex w-fit items-stretch *:focus-visible:relative *:focus-visible:z-10 has-[>[data-slot=button-group]]:gap-2 [&>[data-slot=select-trigger]:not([class*='w-'])]:w-fit [&>div:not([data-slot])]:rounded-md [&>div:not([data-slot])>[data-slot]]:rounded-[inherit] [&>input]:flex-1",
@@ -36,7 +37,7 @@ const buttonGroupVariants = cva(
     compoundVariants: [
       {
         className:
-          "[&>:is([data-slot],a,button,div):has(~:is([data-slot],a,button,div))]:rounded-r-none [&>:is([data-slot],a,button,div)~:is([data-slot],a,button,div)]:rounded-l-none [&>:is([data-slot],a,button,div)~:is([data-slot],a,button,div)]:border-l-0 [&>:is([data-slot],a,button,div)~div:not([data-slot])>[data-slot]]:border-l-0",
+          "xl:[&>:has(+[data-hides=xl]:last-child)]:rounded-r-md [&>:is([data-slot],a,button,div):has(~:is([data-slot],a,button,div))]:rounded-r-none [&>:is([data-slot],a,button,div)~:is([data-slot],a,button,div)]:rounded-l-none [&>:is([data-slot],a,button,div)~:is([data-slot],a,button,div)]:border-l-0 [&>:is([data-slot],a,button,div)~div:not([data-slot])>[data-slot]]:border-l-0",
         joined: true,
         orientation: "horizontal",
       },
