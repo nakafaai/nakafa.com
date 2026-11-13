@@ -24,7 +24,7 @@ vi.mock("@repo/analytics/posthog/server", () => ({
   captureServerException: analyticsMocks.captureServerException,
 }));
 
-vi.mock("@repo/analytics/reporting", () => ({
+vi.mock("@repo/analytics/gate", () => ({
   isServerExceptionReportingEnabled:
     analyticsMocks.isServerExceptionReportingEnabled,
 }));

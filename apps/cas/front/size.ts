@@ -27,7 +27,7 @@ export const readBoundedBody = Effect.fn("cas.size.readBoundedBody")(function* (
   const reader = body.getReader();
   const buffer = new Uint8Array(limit);
   let size = 0;
-  for (;;) {
+  while (true) {
     const next = yield* Effect.tryPromise({
       try: () => reader.read(),
       catch: (cause) => new CasRequestUnreadable({ cause }),
