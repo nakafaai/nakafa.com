@@ -46,6 +46,19 @@ const standing = (scroller: Locator) =>
     };
   });
 
+/** From this width a thread stands beside the chat with its Close button; below it, it is a sheet Escape closes. */
+const BESIDE_FROM = 1280;
+
+/** Closes the open thread: its Close button beside the chat, Escape on a phone's sheet, as `thread.browser.ts` does. */
+const closeThread = async (page: Page, width: number) => {
+  if (width >= BESIDE_FROM) {
+    await page.getByRole("button", { exact: true, name: "Close" }).click();
+  } else {
+    await page.keyboard.press("Escape");
+  }
+  await expect(page.locator("[data-slot=discussion]")).toHaveCount(0);
+};
+
 /** Scrolls a list of messages up by `pixels`, as a reader's finger or wheel does, in every engine. */
 const scrollUp = (scroller: Locator, pixels: number) =>
   scroller.evaluate((view, by) => {
@@ -226,8 +239,7 @@ for (const viewport of SCREENS) {
     await expect(pane.getByText("Balasan 30", { exact: true })).toBeVisible({
       timeout: readinessTimeoutMilliseconds,
     });
-    await page.keyboard.press("Escape");
-    await expect(pane).toHaveCount(0);
+    await closeThread(page, viewport.width);
 
     // The thread opens at its newest reply with its composer on the screen, and its list has room to scroll.
     const summary = page.getByRole("link", { name: THIRTY_REPLIES });
@@ -248,8 +260,7 @@ for (const viewport of SCREENS) {
     expect(left.fromEnd).toBeGreaterThan(300);
 
     // Closed and opened again, the thread stands where the reader left it.
-    await page.keyboard.press("Escape");
-    await expect(pane).toHaveCount(0);
+    await closeThread(page, viewport.width);
     await summary.click();
     await expect(pane.getByText(left.top, { exact: true })).toBeInViewport({
       timeout: readinessTimeoutMilliseconds,
@@ -294,8 +305,7 @@ for (const viewport of SCREENS) {
       await field.fill(`Balasan untuk ${text}`);
       await field.press("Enter");
       await expect(page.getByText(`Balasan untuk ${text}`)).toBeVisible();
-      await page.keyboard.press("Escape");
-      await expect(page.locator("[data-slot=discussion]")).toHaveCount(0);
+      await closeThread(page, viewport.width);
     }
     await page.goto(address("/classes/fisika-x-1/forum"));
     const rail = page.getByRole("complementary", { name: "Chats" });
