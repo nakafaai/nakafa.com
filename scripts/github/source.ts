@@ -1,5 +1,6 @@
 import { Array as Arr, Effect, FileSystem, Order, Path, Schema } from "effect";
 import { Yaml } from "effect/encoding";
+import { validateCliWorkflow } from "#scripts/github/cli";
 import {
   collectActionUses,
   validateGithubActionPolicy,
@@ -103,16 +104,36 @@ export const readCompositeActionUses = Effect.fn(
   );
 });
 
-/** Reads and validates the repository GitHub Action policy. */
+/** The workflow that publishes the CLI, whose trust boundary `validateCliWorkflow` judges. */
+const CLI_WORKFLOW_FILE = ".github/workflows/cli-publish.yml";
+
+/** The problems of the CLI publish workflow, or none when the repository publishes no CLI. */
+const readCliWorkflowProblems = Effect.fn("RepositoryPolicy.readCliWorkflow")(
+  function* (root: string) {
+    const fileSystem = yield* FileSystem.FileSystem;
+    const path = yield* Path.Path;
+    const file = path.join(root, CLI_WORKFLOW_FILE);
+    if (!(yield* fileSystem.exists(file))) {
+      return [];
+    }
+    return yield* validateCliWorkflow(yield* fileSystem.readFileString(file));
+  }
+);
+
+/** Reads and validates the repository GitHub Action policy and the CLI publish workflow. */
 export const inspectGithubActionPolicy = Effect.fn(
   "RepositoryPolicy.inspectGithubActions"
 )((root: string) =>
   Effect.all([
     readWorkflowActionUses(root),
     readCompositeActionUses(root),
+    readCliWorkflowProblems(root),
   ]).pipe(
-    Effect.map(([workflowUses, compositeUses]) =>
-      validateGithubActionPolicy(Arr.appendAll(workflowUses, compositeUses))
+    Effect.map(([workflowUses, compositeUses, cliProblems]) =>
+      Arr.appendAll(
+        validateGithubActionPolicy(Arr.appendAll(workflowUses, compositeUses)),
+        cliProblems
+      )
     ),
     Effect.catch((error) =>
       Effect.succeed([`Unable to inspect GitHub Actions: ${error.message}`])

@@ -6,7 +6,6 @@ import {
 } from "@nakafa/aksara-contracts/ids";
 import contentRelease from "@repo/backend/confect/_generated/refs/contentRelease";
 import { Duration, Effect, Option, Schema } from "effect";
-import { PublishedReleaseMismatchError } from "@/lib/content/published/errors";
 import {
   expireStoreTag,
   readStoreEntry,
@@ -102,24 +101,4 @@ export const expireActiveContentIdentity = Effect.fn(
   "NakafaContent.expireActiveContentIdentity"
 )(function* () {
   yield* expireStoreTag(ACTIVE_POINTER_TAG);
-});
-
-/**
- * Proves that the stored pointer of this isolate names the release that was just
- * activated. Reading the pointer back shows whether the expiry took effect here:
- * the pointer must now name `releaseId`, and the read stores the fresh pointer
- * for the next reader. A pointer that still names the previous release fails
- * with the mismatch, so the activation route can answer 503, and the publisher
- * repeats the call.
- */
-export const confirmActiveContentIdentity = Effect.fn(
-  "NakafaContent.confirmActiveContentIdentity"
-)(function* (releaseId: ActiveContentReleaseId) {
-  const stored = yield* readActiveContentIdentity();
-  if (stored?.releaseId !== releaseId) {
-    return yield* new PublishedReleaseMismatchError({
-      actualReleaseId: stored?.releaseId ?? null,
-      expectedReleaseId: releaseId,
-    });
-  }
 });

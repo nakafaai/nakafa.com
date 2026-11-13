@@ -30,11 +30,6 @@ export class ModelBuildCoordinator extends Context.Service<
   "@repo/backend/confect/contentRelease/ingress/models/ModelBuildCoordinator"
 ) {}
 
-/** Service shape of the private model-build coordinator. */
-export type ModelBuildCoordinatorService = Context.Service.Shape<
-  typeof ModelBuildCoordinator
->;
-
 /** Resolves the private model-build functions through native Confect runners. */
 export const modelBuildCoordinatorLayer = Layer.effect(
   ModelBuildCoordinator,

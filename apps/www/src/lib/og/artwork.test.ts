@@ -2,16 +2,32 @@
 
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
-import { Array as Arr, Effect, FileSystem, Order, Path } from "effect";
+import {
+  Array as Arr,
+  Effect,
+  FileSystem,
+  Order,
+  Path,
+  Record as Rec,
+} from "effect";
 import { getAppSocialArtwork } from "@/lib/og/app";
 import {
-  listStaticArtworkPaths,
+  artworkSources,
   resolveSocialArtwork,
   resolveStaticArtwork,
   toCardArtwork,
 } from "@/lib/og/artwork";
 
 const ARTWORK_FILENAME_PATTERN = /^(?:de|en|id)-[a-z0-9-]+\.png$/u;
+
+/** Every file of the static inventory: each design in each locale it has a file for. */
+function staticArtworkPaths() {
+  return Arr.flatMap(Rec.toEntries(artworkSources), ([identity, locales]) =>
+    Arr.flatMap(locales, (locale) =>
+      Arr.fromNullishOr(resolveStaticArtwork(identity, locale))
+    )
+  );
+}
 
 describe("public artwork", () => {
   it("prefers an exact locale and then the reviewed English default", () => {
@@ -71,7 +87,7 @@ describe("public artwork", () => {
       const path = yield* Path.Path;
       const artworkRoot = path.join(process.cwd(), "public");
 
-      const missing = yield* Effect.filter(listStaticArtworkPaths(), (file) =>
+      const missing = yield* Effect.filter(staticArtworkPaths(), (file) =>
         Effect.map(
           fs.exists(path.join(artworkRoot, toCardArtwork(file))),
           (exists) => !exists
@@ -87,7 +103,7 @@ describe("public artwork", () => {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
       const artworkRoot = path.join(process.cwd(), "public", "open-graph");
-      const manifestPaths = listStaticArtworkPaths();
+      const manifestPaths = staticArtworkPaths();
       const entries = yield* fs.readDirectory(artworkRoot, { recursive: true });
       const filesystemPaths = Arr.filter(entries, (entry) =>
         entry.endsWith(".png")

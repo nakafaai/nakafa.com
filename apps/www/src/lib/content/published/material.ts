@@ -8,10 +8,9 @@ import {
 import { Effect, Option, Schema } from "effect";
 import { decodeMaterialProjection } from "@/lib/content/material/decode";
 import { readRenderedBody } from "@/lib/content/published/body";
-import {
-  type PublishedContentData,
-  type PublishedContentRouteInput,
-  readCurrentPublishedContent,
+import type {
+  PublishedContentData,
+  PublishedContentRouteInput,
 } from "@/lib/content/published/exchange";
 
 /** Exact public material identity sent to the shared runtime seam. */
@@ -42,16 +41,6 @@ export const decodeMaterialData = Effect.fn("NakafaContent.decodeMaterialData")(
   }
 );
 
-/** Reads and strictly narrows one verified runtime exchange to material data. */
-export const readPublishedMaterial = Effect.fn(
-  "NakafaContent.readPublishedMaterial"
-)(function* (input: PublishedMaterialInput) {
-  return yield* decodeMaterialData(
-    yield* readCurrentPublishedContent(input),
-    input
-  );
-});
-
 /** Renders one artifact already authenticated by the runtime exchange. */
 export const renderMaterialArtifact = Effect.fn(
   "NakafaContent.renderMaterialArtifact"
@@ -70,12 +59,4 @@ export const renderMaterialArtifact = Effect.fn(
     sourcePath: data.sourcePath,
     sourceRevision: data.sourceRevision,
   };
-});
-
-/** Reads and renders one material through one signed publication program. */
-export const readRenderedMaterial = Effect.fn(
-  "NakafaContent.readRenderedMaterial"
-)(function* (input: PublishedMaterialInput) {
-  const data = yield* readPublishedMaterial(input);
-  return yield* renderMaterialArtifact(data);
 });

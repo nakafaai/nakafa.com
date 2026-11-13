@@ -50,8 +50,7 @@ const SUBJECT_MATERIALS = [
 export const MaterialSchema = Schema.Literals(SUBJECT_MATERIALS);
 type Material = typeof MaterialSchema.Type;
 
-/** Material domains with Nakafa-owned presentation labels and icons. */
-export const PRESENTED_MATERIAL_DOMAINS = SUBJECT_MATERIALS;
+/** A material domain with Nakafa-owned presentation labels and icons. */
 export type PresentedMaterialDomain = Material;
 
 /** Whether a key names one of the material domains that Nakafa presents. */

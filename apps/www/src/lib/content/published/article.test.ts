@@ -17,10 +17,14 @@ import {
 } from "@repo/backend/test/content/proof";
 import { Effect, Option } from "effect";
 import {
-  readPublishedArticle,
+  decodeArticleData,
   renderArticleArtifact,
 } from "@/lib/content/published/article";
 import { ContentExecutionError } from "@/lib/content/published/errors";
+import {
+  type PublishedContentInput,
+  readPublishedContent,
+} from "@/lib/content/published/exchange";
 import { previewProjection } from "@/test/manifest";
 import { makePublishedParts } from "@/test/parts";
 import {
@@ -110,11 +114,21 @@ beforeEach(() => {
   bodyMock.mockReset().mockReturnValue(Effect.succeed("cached-article-body"));
 });
 
+/** Reads one article the way its publication does: the signed exchange, then the article decode. */
+const readArticle = Effect.fn("test.www.publishedArticle.read")(function* (
+  articleInput: PublishedContentInput
+) {
+  return yield* decodeArticleData(
+    yield* readPublishedContent(articleInput),
+    articleInput
+  );
+});
+
 describe("published article delivery", () => {
   it.effect("keeps pinned source evidence with its signed rendered body", () =>
     Effect.gen(function* () {
       const found = yield* makeFound();
-      const data = yield* readPublishedArticle(input);
+      const data = yield* readArticle(input);
 
       expect(bodyMock).not.toHaveBeenCalled();
       expect(headMock).toHaveBeenCalledExactlyOnceWith(
@@ -160,7 +174,7 @@ describe("published article delivery", () => {
       const expectedReleaseId = ReleaseIdSchema.make("release-older");
 
       expect(
-        yield* readPublishedArticle({
+        yield* readArticle({
           ...input,
           activeReleaseId: expectedReleaseId,
         }).pipe(Effect.flip)
@@ -182,9 +196,7 @@ describe("published article delivery", () => {
           Effect.succeed({ ...found, projection: invalid })
         );
 
-        expect(
-          yield* readPublishedArticle(input).pipe(Effect.flip)
-        ).toMatchObject({
+        expect(yield* readArticle(input).pipe(Effect.flip)).toMatchObject({
           _tag: "PublishedProjectionError",
           appLocale: input.appLocale,
           publicPath: input.publicPath,
@@ -200,9 +212,7 @@ describe("published article delivery", () => {
     "rejects a projection selected for a different public identity",
     (request) =>
       Effect.gen(function* () {
-        expect(
-          yield* readPublishedArticle(request).pipe(Effect.flip)
-        ).toMatchObject({
+        expect(yield* readArticle(request).pipe(Effect.flip)).toMatchObject({
           _tag: "PublishedProjectionError",
           appLocale: request.appLocale,
           publicPath: request.publicPath,
@@ -218,9 +228,7 @@ describe("published article delivery", () => {
       });
       readMock.mockReturnValueOnce(Effect.fail(failure));
 
-      expect(yield* readPublishedArticle(input).pipe(Effect.flip)).toBe(
-        failure
-      );
+      expect(yield* readArticle(input).pipe(Effect.flip)).toBe(failure);
       expect(bodyMock).not.toHaveBeenCalled();
     })
   );
@@ -228,7 +236,7 @@ describe("published article delivery", () => {
   it.effect("preserves a typed failure from the immutable body cache", () =>
     Effect.gen(function* () {
       const found = yield* makeFound();
-      const data = yield* readPublishedArticle(input);
+      const data = yield* readArticle(input);
       const failure = new ContentExecutionError({
         contentKey: found.artifact.payload.contentKey,
         stage: "render",

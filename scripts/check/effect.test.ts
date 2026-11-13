@@ -2,8 +2,8 @@ import { afterEach, assert, describe, it } from "@effect/vitest";
 import { Array as Arr, Effect } from "effect";
 import { API, Checker, Snapshot } from "tsrs/sync";
 import { effectFindings, effectTestViolations } from "#scripts/check/effect";
-import { apiMethods } from "#scripts/check/fixture";
 import { parseSources, type RepositorySource } from "#scripts/check/source";
+import { apiMethods } from "#scripts/check/test.fixture";
 
 const FILE = "packages/example/src/program.test.ts";
 const VIOLATION =

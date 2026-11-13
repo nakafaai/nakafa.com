@@ -1,21 +1,16 @@
 // @vitest-environment node
 
 import { beforeEach, describe, expect, it } from "@effect/vitest";
-import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import { createTestPublication } from "@repo/backend/test/content/publication";
 import { makeProgramRuntimeSource } from "@repo/backend/test/program/runtime";
 import { Array as Arr, Effect, Layer } from "effect";
-import {
-  readPublishedProgramCatalog,
-  readPublishedProgramSubjects,
-} from "@/lib/content/program/catalog";
+import { readPublishedProgramCatalog } from "@/lib/content/program/catalog";
 import { activateTestRelease } from "@/test/active";
 import {
   testCurriculumRowJson,
   testProgramClass,
   testProgramRoot,
   testProgramRowJson,
-  testProgramSubject,
 } from "@/test/published/program";
 import { resetTestRuntimeCache } from "@/test/store";
 
@@ -75,31 +70,18 @@ describe("published program catalog", () => {
     activateTestRelease("program-release");
     runtimeQueryMock.mockReset();
   });
-  it.effect(
-    "reaches Convex once for the catalog and the subjects of each release and locale",
-    () =>
-      Effect.gen(function* () {
-        runtimeQueryMock.mockReturnValue(Effect.succeed(catalogResponse()));
-        yield* readPublishedProgramCatalog("en");
-        yield* readPublishedProgramCatalog("en");
-        expect(runtimeQueryMock).toHaveBeenCalledTimes(1);
+  it.effect("reaches Convex once for the catalog of each locale", () =>
+    Effect.gen(function* () {
+      runtimeQueryMock.mockReturnValue(Effect.succeed(catalogResponse()));
+      yield* readPublishedProgramCatalog("en");
+      yield* readPublishedProgramCatalog("en");
+      expect(runtimeQueryMock).toHaveBeenCalledTimes(1);
 
-        // The English response does not describe the Indonesian catalog, so
-        // that read fails its checks; it still has to reach Convex.
-        yield* readPublishedProgramCatalog("id").pipe(Effect.ignore);
-        expect(runtimeQueryMock).toHaveBeenCalledTimes(2);
-
-        runtimeQueryMock.mockReturnValue(
-          Effect.succeed({ managed: true, routeJson: [] })
-        );
-        yield* readPublishedProgramSubjects("en");
-        yield* readPublishedProgramSubjects("en");
-        expect(runtimeQueryMock).toHaveBeenCalledTimes(3);
-
-        activateTestRelease("program-release-next");
-        yield* readPublishedProgramSubjects("en");
-        expect(runtimeQueryMock).toHaveBeenCalledTimes(4);
-      })
+      // The English response does not describe the Indonesian catalog, so
+      // that read fails its checks; it still has to reach Convex.
+      yield* readPublishedProgramCatalog("id").pipe(Effect.ignore);
+      expect(runtimeQueryMock).toHaveBeenCalledTimes(2);
+    })
   );
   it.effect(
     "reads curriculum roots through the native Convex program query",
@@ -179,85 +161,6 @@ describe("published program catalog", () => {
         Effect.flip
       );
       expect(failure).toMatchObject({
-        _tag: "PublishedProjectionError",
-      });
-    })
-  );
-  it.effect("reads the bounded subject query and caches the result", () =>
-    Effect.gen(function* () {
-      runtimeQueryMock.mockReturnValueOnce(
-        Effect.succeed({
-          managed: true,
-          routeJson: [testCurriculumRowJson(testProgramSubject)],
-        })
-      );
-      expect(yield* readPublishedProgramSubjects("en")).toEqual([
-        testProgramSubject,
-      ]);
-      expect(runtimeQueryMock).toHaveBeenCalledExactlyOnceWith(
-        expect.anything(),
-        {
-          appLocale: "en",
-        }
-      );
-    })
-  );
-  it.effect("rejects subject reads before Aksara owns the program family", () =>
-    Effect.gen(function* () {
-      runtimeQueryMock.mockReturnValueOnce(
-        Effect.succeed({
-          managed: false,
-          routeJson: [],
-        })
-      );
-      expect(
-        yield* readPublishedProgramSubjects("en").pipe(Effect.flip)
-      ).toMatchObject({
-        _tag: "PublishedProjectionError",
-      });
-    })
-  );
-  it.effect.each([
-    [
-      "too many subjects",
-      Array.from(
-        {
-          length: 5,
-        },
-        () => testCurriculumRowJson(testProgramSubject)
-      ),
-    ],
-    [
-      "another locale",
-      [
-        testCurriculumRowJson({
-          ...testProgramSubject,
-          appLocale: AppLocaleSchema.make("id"),
-        }),
-      ],
-    ],
-    ["a program root", [testCurriculumRowJson(testProgramRoot)]],
-    [
-      "a hidden subject",
-      [
-        testCurriculumRowJson({
-          ...testProgramSubject,
-          sitemap: false,
-        }),
-      ],
-    ],
-    ["malformed signed rows", ["{}"]],
-  ])("rejects featured subjects containing %s", ([_name, routeJson]) =>
-    Effect.gen(function* () {
-      runtimeQueryMock.mockReturnValueOnce(
-        Effect.succeed({
-          managed: true,
-          routeJson,
-        })
-      );
-      expect(
-        yield* readPublishedProgramSubjects("en").pipe(Effect.flip)
-      ).toMatchObject({
         _tag: "PublishedProjectionError",
       });
     })

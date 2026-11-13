@@ -1,6 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
-import { getWcagContrast } from "@repo/design-system/lib/theme/contrast";
 import { getTileGradient, wrap } from "@repo/design-system/lib/tile";
+import { getWcagContrast } from "@repo/design-system/test/contrast";
 import Color from "colorjs.io";
 import { Array as Arr, HashMap, HashSet, Order } from "effect";
 

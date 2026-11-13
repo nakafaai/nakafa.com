@@ -29,15 +29,6 @@ export function schoolExamsTarget(slug: TenantSlug): LinkTarget {
   } satisfies LinkTarget;
 }
 
-/** The viewer's notifications from the school, in the school. */
-export function schoolNotificationsTarget(slug: TenantSlug): LinkTarget {
-  return {
-    from: LOCALE_ROUTE,
-    params: { slug },
-    to: "/school/$slug/notifications",
-  } satisfies LinkTarget;
-}
-
 /** The page of one exam. */
 export function schoolExamTarget(slug: TenantSlug, exam: string): LinkTarget {
   return {
@@ -69,19 +60,6 @@ export function schoolExamSittingTarget(
     from: LOCALE_ROUTE,
     params: { exam, sitting, slug },
     to: "/school/$slug/exams/$exam/sittings/$sitting",
-  } satisfies LinkTarget;
-}
-
-/** The results of one sitting of an exam. */
-export function schoolExamSittingResultsTarget(
-  slug: TenantSlug,
-  exam: string,
-  sitting: string
-): LinkTarget {
-  return {
-    from: LOCALE_ROUTE,
-    params: { exam, sitting, slug },
-    to: "/school/$slug/exams/$exam/sittings/$sitting/results",
   } satisfies LinkTarget;
 }
 
@@ -182,18 +160,5 @@ export function schoolClassTasksTarget(
     from: LOCALE_ROUTE,
     params: { classSlug, slug },
     to: "/school/$slug/classes/$classSlug/tasks",
-  } satisfies LinkTarget;
-}
-
-/** One task of a class of a school, by its address (ADR 0026). */
-export function schoolClassTaskTarget(
-  slug: TenantSlug,
-  classSlug: string,
-  task: string
-): LinkTarget {
-  return {
-    from: LOCALE_ROUTE,
-    params: { classSlug, slug, task },
-    to: "/school/$slug/classes/$classSlug/tasks/$task",
   } satisfies LinkTarget;
 }

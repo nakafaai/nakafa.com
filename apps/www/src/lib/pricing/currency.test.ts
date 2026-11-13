@@ -3,7 +3,6 @@ import { describe, expect, it } from "@effect/vitest";
 import { Option } from "effect";
 import {
   currencyForCountry,
-  currencyForTimeZone,
   PRICING_CURRENCY_ATTRIBUTE,
   pricingCurrencyCookieFor,
   pricingCurrencyScript,
@@ -55,23 +54,6 @@ describe("currency of a country", () => {
     [null, "USD"],
   ] as const)("prices country %s in %s", (country, currency) => {
     expect(currencyForCountry(country)).toBe(currency);
-  });
-});
-
-describe("currency of a time zone", () => {
-  it.each([
-    ["Asia/Jakarta", "IDR"],
-    ["Asia/Makassar", "IDR"],
-    ["Asia/Jayapura", "IDR"],
-    ["Asia/Kuala_Lumpur", "MYR"],
-    ["Asia/Kuching", "MYR"],
-    ["Europe/Berlin", "EUR"],
-    ["Asia/Nicosia", "EUR"],
-    ["Europe/London", "USD"],
-    ["America/New_York", "USD"],
-    ["", "USD"],
-  ])("prices time zone %s in %s", (zone, currency) => {
-    expect(currencyForTimeZone(zone)).toBe(currency);
   });
 });
 

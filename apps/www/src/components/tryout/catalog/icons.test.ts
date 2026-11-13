@@ -3,7 +3,7 @@ import type { IconSvgElement } from "@hugeicons/react";
 import { getLessonIcons } from "@repo/contents/curriculum/lesson";
 import { getMaterialIcons } from "@repo/contents/curriculum/material";
 import { SPARE_ICONS } from "@repo/contents/curriculum/spare";
-import { PRESENTED_MATERIAL_DOMAINS } from "@repo/contents/taxonomy";
+import { MaterialSchema } from "@repo/contents/taxonomy";
 import { getTileLooks, TILE_HUE_GAP } from "@repo/design-system/lib/look";
 import { readSeed, TURN, wrap } from "@repo/design-system/lib/tile";
 import { Array as Arr, Record as Rec, Tuple } from "effect";
@@ -57,7 +57,7 @@ const POOLS = [
   Tuple.make("the year groups", TRYOUT_YEAR_ICONS),
   Tuple.make("the grade groups", TRYOUT_GRADE_ICONS),
   Tuple.make("the institution groups", TRYOUT_INSTITUTION_ICONS),
-  ...Arr.map(PRESENTED_MATERIAL_DOMAINS, (material) =>
+  ...Arr.map(MaterialSchema.literals, (material) =>
     Tuple.make(`the lessons of ${material}`, getLessonIcons(material))
   ),
 ];
@@ -101,7 +101,7 @@ describe("icons of the product", () => {
       SPARE_ICONS,
       Rec.values(CURRICULUM_NAVIGATION_ICONS),
       Rec.values(ARTICLE_CATEGORY_ICONS),
-      Arr.flatMap(PRESENTED_MATERIAL_DOMAINS, (material) =>
+      Arr.flatMap(MaterialSchema.literals, (material) =>
         getLessonIcons(material)
       ),
     ]);

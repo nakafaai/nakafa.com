@@ -11,9 +11,9 @@ import {
   Ref,
   Stdio,
 } from "effect";
-import { capture, makeCapture } from "#scripts/capture";
 import { RULES } from "#scripts/check/rules";
 import { checkTestPolicy } from "#scripts/check/tests";
+import { capture, makeCapture } from "#scripts/test.capture";
 
 const CLEAN_TEST =
   'import { it } from "@effect/vitest";\nit("reads", () => {});\n';
@@ -107,6 +107,8 @@ describe("test ownership policy", () => {
           'import { it } from "@effect/vitest";\nimport { style } from "./style";\nit("keeps size-[4px]", () => style);\n',
         "apps/web/style.ts": 'export const style = "w-[calc(100%-2rem)]";\n',
         "apps/web/styles.css": "body:hover { color: inherit; }\n",
+        "apps/web/view.ts":
+          'import { style } from "./style";\nexport default style;\n',
         "apps/web/tsconfig.json":
           '{"extends":"@repo/typescript-config/base.json"}\n',
         "apps/web/value.test.ts": CLEAN_TEST,

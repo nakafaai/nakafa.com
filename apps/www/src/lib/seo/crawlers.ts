@@ -1,4 +1,4 @@
-import { Array as Arr, Schema } from "effect";
+import { Schema } from "effect";
 
 /**
  * A training-only crawler that Nakafa refuses. `sentAs` holds what its requests
@@ -28,17 +28,3 @@ export const TRAINING_CRAWLERS: typeof TrainingCrawlers.Type = [
   { sentAs: ["amazonbot"], token: "Amazonbot" },
   { sentAs: [], token: "Applebot-Extended" },
 ];
-
-/**
- * The edge rule's expression: the lowercased user agent contains one refused
- * token. A token that no request carries is left out.
- */
-export function renderTrainingCrawlerExpression(
-  crawlers: typeof TrainingCrawlers.Type
-) {
-  const matches = Arr.map(
-    Arr.flatMap(crawlers, (crawler) => crawler.sentAs),
-    (text) => `lower(http.user_agent) contains "${text}"`
-  );
-  return `(${Arr.join(matches, " or ")})`;
-}

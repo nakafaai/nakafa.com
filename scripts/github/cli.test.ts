@@ -3,7 +3,7 @@ import { NodeServices } from "@effect/platform-node";
 import { assert, describe, it } from "@effect/vitest";
 import { Array as Arr, Effect, FileSystem } from "effect";
 import { NODE_RUNTIME_VERSION } from "#scripts/dependencies/policy";
-import { validateCliWorkflow, verifyCliWorkflow } from "#scripts/github/cli";
+import { validateCliWorkflow } from "#scripts/github/cli";
 
 const WORKFLOW_PATH = fileURLToPath(
   new URL("../../.github/workflows/cli-publish.yml", import.meta.url)
@@ -18,7 +18,6 @@ describe("CLI workflow policy", () => {
   it.effect("accepts isolated publication and unprivileged verification", () =>
     Effect.gen(function* () {
       const source = yield* readWorkflow();
-      yield* verifyCliWorkflow(source);
       assert.deepStrictEqual(yield* validateCliWorkflow(source), []);
     }).pipe(Effect.provide(NodeServices.layer))
   );
@@ -346,11 +345,8 @@ describe("CLI workflow policy", () => {
       const source = "permissions: {}\njobs:\n  build:\n    steps: []\n";
       const problem =
         "CLI workflow requires separate build, publish, and verify jobs.";
-      const failure = yield* verifyCliWorkflow(source).pipe(Effect.flip);
 
       assert.deepStrictEqual(yield* validateCliWorkflow(source), [problem]);
-      assert.strictEqual(failure._tag, "CliWorkflowPolicyError");
-      assert.deepStrictEqual(failure.problems, [problem]);
     })
   );
 
