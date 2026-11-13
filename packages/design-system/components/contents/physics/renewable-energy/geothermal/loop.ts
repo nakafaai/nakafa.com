@@ -7,19 +7,19 @@
  */
 
 /** The water the production well brings up each second, in kilograms. */
-export const FLOW = 100;
+const FLOW = 100;
 
 /** The specific heat capacity of the water, in joules per kilogram kelvin. */
-export const SPECIFIC_HEAT = 4200;
+const SPECIFIC_HEAT = 4200;
 
 /** The temperature the water is sent back down at, in degrees Celsius. */
-export const RETURN_TEMPERATURE = 70;
+const RETURN_TEMPERATURE = 70;
 
 /** The temperature of the cooling air, in kelvin: 27 °C. */
-export const COOLING_KELVIN = 300;
+const COOLING_KELVIN = 300;
 
 /** The share of the ideal limit a real plant reaches. */
-export const REAL_SHARE = 0.4;
+const REAL_SHARE = 0.4;
 
 /** The reservoir temperatures the slider offers, in degrees Celsius. */
 export const RESERVOIR = { max: 300, min: 120, step: 10 } as const;

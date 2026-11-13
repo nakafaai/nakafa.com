@@ -34,6 +34,7 @@ import { P5Sketch } from "@repo/design-system/components/visual/sketch";
 import { getColor } from "@repo/design-system/lib/color";
 import { MATERIAL } from "@repo/design-system/lib/material";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
+import { Schema } from "effect";
 import type p5 from "p5";
 import { type ReactNode, useState } from "react";
 
@@ -45,9 +46,8 @@ const INFRARED = PLOT_COLORS.pink;
 const WIDEST = surfaceEmission(ABSORPTANCE.max);
 
 /** What the sketch reads on every frame: the share of infrared the layer absorbs. */
-interface GreenhouseFrame {
-  readonly absorptance: number;
-}
+const GreenhouseFrameSchema = Schema.Struct({ absorptance: Schema.Finite });
+type GreenhouseFrame = typeof GreenhouseFrameSchema.Type;
 
 /** A wavy column of infrared from one height to another, as wide as its flux. */
 function paintInfrared(

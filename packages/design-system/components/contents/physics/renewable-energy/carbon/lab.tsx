@@ -66,9 +66,8 @@ const MASS_COLORS = {
 } as const;
 
 /** What the sketch reads on every frame: the fuel on the burner. */
-interface CarbonFrame {
-  readonly fuel: Fuel;
-}
+const CarbonFrameSchema = Schema.Struct({ fuel: FuelSchema });
+type CarbonFrame = typeof CarbonFrameSchema.Type;
 
 /** The burner with its shrinking fuel and flame, feeding gas up the hood into the balloon. */
 function paintBurner(sketch: p5, fuel: Fuel, burnt: number, time: number) {

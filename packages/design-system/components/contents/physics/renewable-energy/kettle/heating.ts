@@ -8,7 +8,7 @@ import { Schema } from "effect";
  */
 
 /** The specific heat capacity of liquid water, in joules per kilogram kelvin. */
-export const SPECIFIC_HEAT = 4200;
+const SPECIFIC_HEAT = 4200;
 
 /** The element's electrical power, in watts. */
 export const ELEMENT_POWER = 2100;

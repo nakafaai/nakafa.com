@@ -55,9 +55,8 @@ const HOLD_SECONDS = 1.2;
 const BRIGHTEST = dropPower("fast");
 
 /** What the sketch reads on every frame: how slowly the bag sinks. */
-interface LampFrame {
-  readonly descent: Descent;
-}
+const LampFrameSchema = Schema.Struct({ descent: DescentSchema });
+type LampFrame = typeof LampFrameSchema.Type;
 
 /** The wall and floor of a dark room, which only the lamp lights. */
 function paintRoom(sketch: p5, floor: number) {

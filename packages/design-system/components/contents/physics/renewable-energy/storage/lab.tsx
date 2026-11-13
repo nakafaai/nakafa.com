@@ -61,10 +61,11 @@ const CHARGE = PLOT_COLORS.teal;
 const SizeSchema = Schema.Literals(["5", "10", "15"]);
 
 /** What the sketch reads on every frame: the battery's size and its charge through the day. */
-interface StorageFrame {
-  readonly charges: readonly number[];
-  readonly size: number;
-}
+const StorageFrameSchema = Schema.Struct({
+  charges: Schema.Array(Schema.Finite),
+  size: Schema.Finite,
+});
+type StorageFrame = typeof StorageFrameSchema.Type;
 
 /** The charge at `hour` through the settled day, in kilowatt-hours. */
 function chargeAt(charges: readonly number[], hour: number) {

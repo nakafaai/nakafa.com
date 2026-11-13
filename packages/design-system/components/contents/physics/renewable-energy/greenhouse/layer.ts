@@ -8,13 +8,13 @@
  */
 
 /** The sunlight arriving at the top of the atmosphere, in watts per square metre. */
-export const SOLAR_CONSTANT = 1361;
+const SOLAR_CONSTANT = 1361;
 
 /** The share of sunlight Earth reflects straight back to space. */
-export const ALBEDO = 0.3;
+const ALBEDO = 0.3;
 
 /** The Stefan-Boltzmann constant, in watts per square metre per kelvin to the fourth. */
-export const STEFAN_BOLTZMANN = 5.670_374e-8;
+const STEFAN_BOLTZMANN = 5.670_374e-8;
 
 /** The absorptances the slider offers. */
 export const ABSORPTANCE = { max: 0.95, min: 0, step: 0.01 } as const;

@@ -7,16 +7,16 @@
  */
 
 /** The density of water, in kilograms per cubic metre. */
-export const WATER_DENSITY = 1000;
+const WATER_DENSITY = 1000;
 
 /** The gravitational field strength, in newtons per kilogram. */
-export const GRAVITY = 10;
+const GRAVITY = 10;
 
 /** The share of the water's power the turbine and generator deliver. */
-export const EFFICIENCY = 0.7;
+const EFFICIENCY = 0.7;
 
 /** The evening power one home needs, in watts. */
-export const HOME_POWER = 250;
+const HOME_POWER = 250;
 
 /** The homes the hamlet has. */
 export const HOMES = 16;

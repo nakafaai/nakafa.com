@@ -13,13 +13,13 @@ import { Array as Arr, Schema } from "effect";
 export const SOLAR_PEAK = 3;
 
 /** The fridge's steady power, in kilowatts. */
-export const BASE_LOAD = 0.4;
+const BASE_LOAD = 0.4;
 
 /** The lights' and equipment's power from 18:00 to 22:00, in kilowatts. */
-export const EVENING_LOAD = 1;
+const EVENING_LOAD = 1;
 
 /** The share of energy kept on the way into the battery, and again on the way out. */
-export const WAY_EFFICIENCY = 0.95;
+const WAY_EFFICIENCY = 0.95;
 
 /** The battery sizes on offer, in kilowatt-hours. */
 export const BATTERY_SIZES = [5, 10, 15] as const;
@@ -46,7 +46,7 @@ export function demand(hour: number) {
 }
 
 /** One step of the battery's day: its charge at the end, and the energy it could not supply, in kilowatt-hours. */
-export const StorageStepSchema = Schema.Struct({
+const StorageStepSchema = Schema.Struct({
   charge: Schema.Finite,
   unmet: Schema.Finite,
 });

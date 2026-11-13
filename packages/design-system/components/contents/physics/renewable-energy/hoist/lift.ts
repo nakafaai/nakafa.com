@@ -8,10 +8,10 @@ import { Schema } from "effect";
  */
 
 /** The gravitational field strength, in newtons per kilogram. */
-export const GRAVITY = 10;
+const GRAVITY = 10;
 
 /** The crate's mass, in kilograms. */
-export const CRATE_MASS = 20;
+const CRATE_MASS = 20;
 
 /** How high the platform stands, in metres. */
 export const LIFT_HEIGHT = 5;

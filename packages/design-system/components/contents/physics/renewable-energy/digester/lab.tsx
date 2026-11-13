@@ -33,6 +33,7 @@ import { VisualCardSceneActions } from "@repo/design-system/components/visual/sc
 import { P5Sketch } from "@repo/design-system/components/visual/sketch";
 import { getColor } from "@repo/design-system/lib/color";
 import { MATERIAL } from "@repo/design-system/lib/material";
+import { Schema } from "effect";
 import type p5 from "p5";
 import { type ReactNode, useState } from "react";
 
@@ -42,9 +43,8 @@ const BRICK = MATERIAL.brick;
 const FLAME = MATERIAL.biogasFlame;
 
 /** What the sketch reads on every frame: the dung fed each day. */
-interface DigesterFrame {
-  readonly dung: number;
-}
+const DigesterFrameSchema = Schema.Struct({ dung: Schema.Finite });
+type DigesterFrame = typeof DigesterFrameSchema.Type;
 
 /** The soil in cross-section under the yard, darker with depth. */
 function paintSoil(sketch: p5, surface: number) {

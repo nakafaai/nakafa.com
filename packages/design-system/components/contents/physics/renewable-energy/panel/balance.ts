@@ -7,22 +7,22 @@
  */
 
 /** The panel's area, in square metres. */
-export const PANEL_AREA = 1.6;
+const PANEL_AREA = 1.6;
 
 /** The share of sunlight the cells turn into electricity at 25 °C. */
-export const RATED_EFFICIENCY = 0.2;
+const RATED_EFFICIENCY = 0.2;
 
 /** How much of that share the cells lose for every kelvin above 25 °C. */
-export const TEMPERATURE_COEFFICIENT = 0.004;
+const TEMPERATURE_COEFFICIENT = 0.004;
 
 /** The air temperature around the panel, in degrees Celsius. */
-export const AIR_TEMPERATURE = 30;
+const AIR_TEMPERATURE = 30;
 
 /** The cell temperature in 800 W/m² of sunlight and 20 °C air, from the panel's data sheet, in degrees Celsius. */
-export const NOMINAL_CELL_TEMPERATURE = 45;
+const NOMINAL_CELL_TEMPERATURE = 45;
 
 /** The share of sunlight the front glass reflects. */
-export const REFLECTED_SHARE = 0.04;
+const REFLECTED_SHARE = 0.04;
 
 /** The sunlight the slider offers, in watts per square metre. */
 export const IRRADIANCE = { max: 1000, min: 200, step: 100 } as const;

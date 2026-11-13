@@ -9,10 +9,10 @@ import { Schema } from "effect";
  */
 
 /** The voltage of two AA cells in series, in volts. */
-export const BATTERY_VOLTAGE = 3;
+const BATTERY_VOLTAGE = 3;
 
 /** The charge the cells deliver before they are flat, in ampere hours. */
-export const BATTERY_CHARGE = 2.5;
+const BATTERY_CHARGE = 2.5;
 
 /** The chemical energy the cells hand over as electrical energy, in joules. */
 export const BATTERY_ENERGY = BATTERY_VOLTAGE * BATTERY_CHARGE * 3600;

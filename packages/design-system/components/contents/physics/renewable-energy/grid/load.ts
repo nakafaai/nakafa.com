@@ -9,13 +9,13 @@ import { Array as Arr, Schema } from "effect";
  */
 
 /** The homes in the village. */
-export const HOMES = 100;
+const HOMES = 100;
 
 /** The most power the mini-grid can supply at once, in kilowatts. */
 export const CAPACITY = 50;
 
 /** One rice cooker's power, in kilowatts, run for one hour a day. */
-export const COOKER = 0.4;
+const COOKER = 0.4;
 
 /** Each home's demand in every hour of the day without the cooker, in kilowatts. */
 export const HOME_LOAD = [

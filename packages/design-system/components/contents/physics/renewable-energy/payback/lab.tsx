@@ -44,6 +44,7 @@ import { P5Sketch } from "@repo/design-system/components/visual/sketch";
 import { getColor } from "@repo/design-system/lib/color";
 import { MATERIAL } from "@repo/design-system/lib/material";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
+import { Schema } from "effect";
 import type p5 from "p5";
 import { type ReactNode, useState } from "react";
 
@@ -64,9 +65,8 @@ const GAIN = PLOT_COLORS.teal;
 const CHART_TOP = energyBalance(YIELD.max, CHART_YEARS);
 
 /** What the sketch reads on every frame: the yearly yield per kWp. */
-interface PaybackFrame {
-  readonly yieldPerPeak: number;
-}
+const PaybackFrameSchema = Schema.Struct({ yieldPerPeak: Schema.Finite });
+type PaybackFrame = typeof PaybackFrameSchema.Type;
 
 /** The house and its six panels in the sun, the sun as strong as the yield. */
 function paintHouse(

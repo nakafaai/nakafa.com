@@ -9,21 +9,27 @@ import { Schema } from "effect";
  */
 
 /** The density of seawater, in kilograms per cubic metre. */
-export const SEAWATER_DENSITY = 1025;
+const SEAWATER_DENSITY = 1025;
 
 /** The gravitational acceleration, in metres per second squared. */
-export const GRAVITY = 9.81;
+const GRAVITY = 9.81;
 
 /** The three sea states the buoy can face. */
 export const SeaSchema = Schema.Literals(["calm", "moderate", "rough"]);
 export type Sea = typeof SeaSchema.Type;
+
+/** A regular wave's height in metres and period in seconds. */
+const WaveSchema = Schema.Struct({
+  height: Schema.Finite,
+  period: Schema.Finite,
+});
 
 /** Each sea's wave height, trough to crest, in metres, and its period, in seconds. */
 export const SEA_STATES = {
   calm: { height: 1, period: 6 },
   moderate: { height: 2, period: 8 },
   rough: { height: 3, period: 10 },
-} as const satisfies Record<Sea, { height: number; period: number }>;
+} as const satisfies Record<Sea, typeof WaveSchema.Type>;
 
 /** The power the waves carry across one metre of crest, in watts. */
 export function wavePower(sea: Sea) {

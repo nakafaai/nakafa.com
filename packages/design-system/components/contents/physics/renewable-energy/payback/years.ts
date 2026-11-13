@@ -7,10 +7,10 @@
  */
 
 /** The system's peak power, in kilowatts. */
-export const SYSTEM_SIZE = 3;
+const SYSTEM_SIZE = 3;
 
 /** The energy spent to make and install each kWp, in kilowatt-hours. */
-export const MAKING_ENERGY = 1300;
+const MAKING_ENERGY = 1300;
 
 /** How long the panels work, in years. */
 export const LIFETIME = 25;

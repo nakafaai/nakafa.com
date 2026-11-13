@@ -53,9 +53,8 @@ const PLANT_COLORS = {
 const LOSS_COLOR = PLOT_COLORS.pink;
 
 /** What the sketch reads on every frame: the plant whose chain is drawn. */
-interface FlowFrame {
-  readonly plant: Plant;
-}
+const FlowFrameSchema = Schema.Struct({ plant: PlantSchema });
+type FlowFrame = typeof FlowFrameSchema.Type;
 
 /** Smooths a share from 0 to 1 so a band leaves and lands level. */
 function ease(share: number) {

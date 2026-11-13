@@ -23,7 +23,7 @@ export const PlantSchema = Schema.Literals([
 export type Plant = typeof PlantSchema.Type;
 
 /** The share each stage of a plant passes on, in order from the source. */
-export const PLANT_STAGES = {
+const PLANT_STAGES = {
   biogas: [0.35, 0.95],
   geothermal: [0.12, 0.95],
   hydro: [0.9, 0.95],

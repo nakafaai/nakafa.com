@@ -8,7 +8,7 @@ import { Schema } from "effect";
  */
 
 /** The gravitational field strength, in newtons per kilogram. */
-export const GRAVITY = 10;
+const GRAVITY = 10;
 
 /** The bag's mass, in kilograms. */
 export const BAG_MASS = 12;

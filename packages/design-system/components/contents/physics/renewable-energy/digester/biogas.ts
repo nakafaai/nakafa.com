@@ -7,16 +7,16 @@
  */
 
 /** The biogas each kilogram of fresh dung gives, in cubic metres. */
-export const GAS_YIELD = 0.04;
+const GAS_YIELD = 0.04;
 
 /** The share of the biogas that is methane, the part that burns. */
-export const METHANE_SHARE = 0.6;
+const METHANE_SHARE = 0.6;
 
 /** The heat a cubic metre of methane releases when it burns, in joules. */
-export const METHANE_ENERGY = 36_000_000;
+const METHANE_ENERGY = 36_000_000;
 
 /** The biogas one stove burner uses each hour, in cubic metres. */
-export const BURNER_FLOW = 0.4;
+const BURNER_FLOW = 0.4;
 
 /** The dung the slider offers each day, in kilograms. */
 export const DUNG = { max: 60, min: 10, step: 5 } as const;

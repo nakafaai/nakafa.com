@@ -9,16 +9,16 @@ import { Schema } from "effect";
  */
 
 /** The density of air near sea level, in kilograms per cubic metre. */
-export const AIR_DENSITY = 1.225;
+const AIR_DENSITY = 1.225;
 
 /** The rotor's radius, in metres. */
 export const ROTOR_RADIUS = 40;
 
 /** The share of the wind's power the turbine turns into electricity. */
-export const POWER_SHARE = 0.4;
+const POWER_SHARE = 0.4;
 
 /** How many times faster than the wind the blade tips move. */
-export const TIP_SPEED_RATIO = 7;
+const TIP_SPEED_RATIO = 7;
 
 /** The three sites the turbine can stand at. */
 export const SiteSchema = Schema.Literals(["valley", "hill", "coast"]);
@@ -32,7 +32,7 @@ export const SITE_WIND = {
 } as const satisfies Record<Site, number>;
 
 /** The area the rotor sweeps, in square metres. */
-export const ROTOR_AREA = Math.PI * ROTOR_RADIUS * ROTOR_RADIUS;
+const ROTOR_AREA = Math.PI * ROTOR_RADIUS * ROTOR_RADIUS;
 
 /** The power the wind carries through the rotor's disc, in watts. */
 export function windPower(site: Site) {

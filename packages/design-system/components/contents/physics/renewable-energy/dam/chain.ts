@@ -8,19 +8,19 @@
  */
 
 /** The gravitational field strength, in newtons per kilogram. */
-export const GRAVITY = 10;
+const GRAVITY = 10;
 
 /** The density of water, in kilograms per cubic metre. */
-export const WATER_DENSITY = 1000;
+const WATER_DENSITY = 1000;
 
 /** The water flowing through the penstock each second, in cubic metres. */
-export const FLOW = 10;
+const FLOW = 10;
 
 /** The share of the water's energy the turbine passes to its shaft. */
-export const TURBINE_EFFICIENCY = 0.9;
+const TURBINE_EFFICIENCY = 0.9;
 
 /** The share of the shaft's energy the generator turns into electricity. */
-export const GENERATOR_EFFICIENCY = 0.95;
+const GENERATOR_EFFICIENCY = 0.95;
 
 /** The heads the dam can hold, in metres. */
 export const HEAD = { max: 100, min: 20, step: 10 } as const;

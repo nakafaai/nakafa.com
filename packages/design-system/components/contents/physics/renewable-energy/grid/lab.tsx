@@ -64,9 +64,8 @@ const HOUSES = [
 ] as const;
 
 /** What the sketch reads on every frame: when the village cooks. */
-interface GridFrame {
-  readonly schedule: Schedule;
-}
+const GridFrameSchema = Schema.Struct({ schedule: ScheduleSchema });
+type GridFrame = typeof GridFrameSchema.Type;
 
 /** The daylight at `hour`, from 0 at night to 1 at noon. */
 function daylight(hour: number) {

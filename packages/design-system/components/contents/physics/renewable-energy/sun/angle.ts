@@ -8,13 +8,13 @@
  */
 
 /** The sunlight on a square metre square to the rays, in watts per square metre. */
-export const BEAM = 1000;
+const BEAM = 1000;
 
 /** The panel's area, in square metres. */
-export const PANEL_AREA = 1.6;
+const PANEL_AREA = 1.6;
 
 /** The share of sunlight the panel turns into electricity. */
-export const PANEL_EFFICIENCY = 0.2;
+const PANEL_EFFICIENCY = 0.2;
 
 /** The sun heights the slider offers, in degrees above the horizon. */
 export const SUN_HEIGHT = { max: 90, min: 10, step: 5 } as const;

@@ -9,13 +9,13 @@ import { Array as Arr, Schema } from "effect";
  */
 
 /** The gravitational field strength, in metres per second squared. */
-export const GRAVITY = 9.8;
+const GRAVITY = 9.8;
 
 /** The string's length, in metres. */
 export const LENGTH = 2;
 
 /** The bob's mass, in kilograms. */
-export const MASS = 1;
+const MASS = 1;
 
 /** The angle the bob is let go from, in radians. */
 export const RELEASE = (40 * Math.PI) / 180;
@@ -31,14 +31,14 @@ export const DragSchema = Schema.Literals(["none", "light", "strong"]);
 export type Drag = typeof DragSchema.Type;
 
 /** The damping rate of each drag, in reciprocal seconds: the angular deceleration per unit angular speed. */
-export const DAMPING = {
+const DAMPING = {
   light: 0.08,
   none: 0,
   strong: 0.35,
 } as const satisfies Record<Drag, number>;
 
 /** One moment of the swing: the angle, the angular speed and the heat handed to the air so far. */
-export const SwingSchema = Schema.Struct({
+const SwingSchema = Schema.Struct({
   angle: Schema.Finite,
   heat: Schema.Finite,
   spin: Schema.Finite,

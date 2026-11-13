@@ -1,6 +1,7 @@
 import {
   fade,
   mix,
+  type PointSchema,
   vignette,
   withShadow,
 } from "@repo/design-system/components/contents/physics/canvas/paint";
@@ -33,6 +34,7 @@ import { VisualCardSceneActions } from "@repo/design-system/components/visual/sc
 import { P5Sketch } from "@repo/design-system/components/visual/sketch";
 import { getColor } from "@repo/design-system/lib/color";
 import { MATERIAL } from "@repo/design-system/lib/material";
+import { Schema } from "effect";
 import type p5 from "p5";
 import { type ReactNode, useState } from "react";
 
@@ -43,16 +45,14 @@ const RAY = MATERIAL.sunDisc;
 const RAYS_EACH_SIDE = 9;
 
 /** What the sketch reads on every frame: the sun's height and the panel's tilt, in degrees. */
-interface SunFrame {
-  readonly sun: number;
-  readonly tilt: number;
-}
+const SunFrameSchema = Schema.Struct({
+  sun: Schema.Finite,
+  tilt: Schema.Finite,
+});
+type SunFrame = typeof SunFrameSchema.Type;
 
 /** A point on the canvas, in pixels. */
-interface Point {
-  readonly x: number;
-  readonly y: number;
-}
+type Point = typeof PointSchema.Type;
 
 /**
  * Draws the parallel rays of the sun: those that land on the panel end there,

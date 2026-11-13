@@ -13,21 +13,25 @@ import { Schema } from "effect";
 export const HEAT_INPUT = 1_000_000_000;
 
 /** The condenser's temperature, in kelvin: 30 °C. */
-export const CONDENSER_KELVIN = 303;
+const CONDENSER_KELVIN = 303;
 
 /** The three fuels that can heat the boiler. */
 export const FuelSchema = Schema.Literals(["coal", "gas", "uranium"]);
 export type Fuel = typeof FuelSchema.Type;
+
+/** A fuel's plant efficiency, the heat a kilogram releases in joules, and its steam temperature in degrees Celsius. */
+const FuelPlantSchema = Schema.Struct({
+  efficiency: Schema.Finite,
+  perKilogram: Schema.Finite,
+  steam: Schema.Finite,
+});
 
 /** Each fuel's steam temperature in degrees Celsius, the plant's efficiency, and the heat a kilogram releases in joules. */
 export const FUELS = {
   coal: { efficiency: 0.38, perKilogram: 24_000_000, steam: 540 },
   gas: { efficiency: 0.38, perKilogram: 50_000_000, steam: 540 },
   uranium: { efficiency: 0.33, perKilogram: 3_888_000_000_000, steam: 285 },
-} as const satisfies Record<
-  Fuel,
-  { efficiency: number; perKilogram: number; steam: number }
->;
+} as const satisfies Record<Fuel, typeof FuelPlantSchema.Type>;
 
 /** The ideal limit of a heat engine between the steam and the condenser. */
 export function idealEfficiency(fuel: Fuel) {
