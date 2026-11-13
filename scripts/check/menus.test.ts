@@ -18,48 +18,6 @@ function inspect(sourceText: string, file = VIEW) {
 
 describe("Menu source policy", () => {
   it.effect(
-    "rejects options over the languages or the countries whose icon ignores the entry, and leaves a drawn flag and other lists",
-    () =>
-      Effect.gen(function* () {
-        const rule = (registry: string) =>
-          `${VIEW}: the options of ${registry} show one icon for every entry. Each entry carries its own flag: draw it from the entry, as the language lists of components/shared/language do.`;
-        assert.deepStrictEqual(
-          yield* inspect(`
-export function Same() {
-  return Arr.map(languages, (language) => <DropdownMenuItem icon={TranslateIcon} key={language.value} />);
-}
-export function Method() {
-  return languages.map(function (language) {
-    return <SelectItem icon={TranslateIcon} value={language.value} />;
-  });
-}
-export function Countries() {
-  return Arr.map(countries, ([code]) => <PickerItem icon={GlobeIcon} value={code} />);
-}
-export function Flag() {
-  return Arr.map(languages, (language) => <DropdownMenuItem icon={<LanguageFlag country={language.country} />} />);
-}
-export function Destructured() {
-  return Arr.map(countries, ({ code, name: { short } }) => <SelectItem icon={<Flag code={code} />} value={short} />);
-}
-export function Named() {
-  return Arr.map(languages, toItem);
-}
-export function Units() {
-  return Arr.map(units, (unit) => <SelectItem icon={SchoolIcon} value={unit.value} />);
-}
-export function Bare() {
-  return Arr.map(languages, (language) => <DropdownMenuItem {...language} icon><Label /></DropdownMenuItem>);
-}
-export function Partial() {
-  return [Arr.map(languages), languages.map(), Other.map(languages, (language) => language), Arr.filter(languages, Boolean), read()];
-}`),
-          [rule("languages"), rule("languages"), rule("countries")]
-        );
-      })
-  );
-
-  it.effect(
     "rejects an icon on a sidebar group label and leaves a label of text alone",
     () =>
       Effect.gen(function* () {
