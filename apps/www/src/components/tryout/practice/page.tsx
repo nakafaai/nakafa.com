@@ -53,7 +53,10 @@ import {
 } from "@/components/tryout/practice/state";
 import { TryoutPaneOpener } from "@/components/tryout/review/result";
 import { TryoutPageLink } from "@/components/tryout/route/link";
-import type { TryoutPageAddress } from "@/components/tryout/route/path";
+import {
+  PRACTICE_SEARCH,
+  type TryoutPageAddress,
+} from "@/components/tryout/route/path";
 
 const decodeBody = Schema.decodeUnknownOption(TryoutQuestionBodyText);
 
@@ -303,4 +306,12 @@ function TryoutPracticeRestart({
       </Button>
     </>
   );
+}
+
+/** Whether the page's address opens its practice in place of its try-out (ADR 0044). */
+export function useTryoutPracticing() {
+  return useSearch({
+    select: (search) => search.mode === PRACTICE_SEARCH.mode,
+    strict: false,
+  });
 }

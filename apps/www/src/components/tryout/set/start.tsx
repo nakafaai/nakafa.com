@@ -368,6 +368,7 @@ function TryoutStartAction({ attempt, request }: StartTryoutButtonProps) {
         kind={dialogKind}
         onPrimary={onPrimary}
         open={dialogOpen}
+        pagePath={request.authRedirect.publicPath}
         setOpen={(open) => {
           if (open) {
             answerStart();
