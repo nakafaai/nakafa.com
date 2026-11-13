@@ -2771,7 +2771,7 @@
     "plan-pass-extend": "Lanjutkan",
     "plan-xendit-footer": "Tiada komitmen.",
     "plan-xendit-ending-footer": "Tiada caj lagi.",
-    "plan-cancel": "Batal",
+    "plan-cancel": "Batalkan Pro",
     "plan-keep": "Kekalkan Pro",
     "plan-cancel-title": "Batalkan Pro?",
     "plan-cancel-description": "Pro kekal sehingga {date}, dan tiada caj selepas itu.",
@@ -3793,76 +3793,6 @@
     },
     "comment-photo-fixed": {
       "title": "Foto komen yang dihantar kekal."
-    },
-    "island-refused-outside": {
-      "title": "Itu tidak muat di pulau kamu."
-    },
-    "island-refused-overlap": {
-      "title": "Sudah ada sesuatu di situ."
-    },
-    "island-refused-unsupported": {
-      "title": "Ia perlukan blok di bawahnya."
-    },
-    "island-refused-carrying": {
-      "title": "Ada sesuatu di atasnya."
-    },
-    "island-refused-locked": {
-      "title": "Ini terbuka pada tahap lebih tinggi."
-    },
-    "island-refused-unaffordable": {
-      "title": "Kamu perlukan lebih banyak Bintang."
-    },
-    "island-refused-starter": {
-      "title": "Ia datang bersama pulau dan kekal."
-    },
-    "island-refused-missing": {
-      "title": "Kepingan itu sudah tiada."
-    },
-    "island-refused-top": {
-      "title": "Ia sudah di peringkat tertinggi."
-    },
-    "island-refused-bottom": {
-      "title": "Ia sudah di peringkat pertama."
-    },
-    "island-stale": {
-      "title": "Pulau kamu berubah di tempat lain.",
-      "description": "Kami muatkan yang terbaru, jadi cuba lagi."
-    },
-    "island-refused-grows": {
-      "title": "Ia membesar bila kamu siram."
-    },
-    "island-refused-rooted": {
-      "title": "Ia sudah berakar, jadi alihkan."
-    },
-    "island-refused-materials": {
-      "title": "Kamu perlukan lebih hasil kebun."
-    },
-    "island-farm-unlearned": {
-      "title": "Belajar dahulu, kemudian siram."
-    },
-    "island-farm-watered": {
-      "title": "Kebun kamu sudah disiram hari ini."
-    },
-    "island-farm-barren": {
-      "title": "Tanam pokok atau bunga dahulu."
-    },
-    "island-farm-missing": {
-      "title": "Tumbuhan itu sudah tiada."
-    },
-    "island-farm-unripe": {
-      "title": "Ia belum mengeluarkan hasil lagi."
-    },
-    "island-link-copied": {
-      "title": "Pautan ke pulau kamu sudah disalin."
-    },
-    "island-watered": {
-      "title": "Kebun kamu sudah disiram."
-    },
-    "island-harvested-wood": {
-      "title": "Kamu mengumpul kayu."
-    },
-    "island-harvested-petals": {
-      "title": "Kamu mengumpul kelopak bunga."
     }
   },
   "Ai": {
@@ -4107,6 +4037,7 @@
     "pro-feature-2": "{credits, number} kredit setiap bulan untuk bertanya kepada Nina",
     "pro-feature-3": "Penyelesaian lengkap bagi setiap ujian latihan, termasuk cubaan terdahulu",
     "pro-feature-5": "Bantuan keutamaan apabila kamu memerlukan bimbingan",
+    "pro-feature-6": "Pelajaran dan artikel tanpa iklan",
     "pro-cta": "Dapatkan Pro",
     "offer-title": "Pilih cara membayar",
     "offer-description": "Pelan bulanan diperbaharui secara automatik, dan pas dibayar sekali.",
@@ -4302,6 +4233,17 @@
     "load-error": "Kami tidak dapat memuatkan pilihan kamu, jadi perkongsian kekal dimatikan semasa kami mencuba lagi.",
     "runtime-error": "Pilihan kamu disimpan, tetapi perkongsian kekal seperti sebelumnya.",
     "save-error": "Kami tidak dapat menyimpan pilihan kamu, jadi perkongsian kekal dimatikan."
+  },
+  "Ads": {
+    "label": "Iklan",
+    "footer": "Pro tiada iklan.",
+    "why": "Kenapa ada iklan?",
+    "pro": "Lihat Pro",
+    "note-title": "Kenapa Nakafa ada iklan?",
+    "note-description": "Nota ringkas daripada pengasas Nakafa.",
+    "note-reason": "Nakafa wujud supaya semua orang boleh belajar secara percuma. Pelayan, Nina dan kandungan baharu ada kosnya setiap bulan, jadi pelajaran dan artikel kini ada iklan. Percubaan dan Nina kekal tanpa iklan.",
+    "note-pro": "Kalau kamu mahu belajar tanpa iklan sambil membantu Nakafa terus berkembang, cubalah Pro.",
+    "note-signature": "Nabil, pengasas Nakafa"
   },
   "SEO": {
     "subject": {
@@ -4618,7 +4560,10 @@
     "demo-kind-image": "Imej",
     "demo-kind-link": "Pautan",
     "demo-exam-title": "Peperiksaan pertengahan tahun Fizik",
-    "demo-exam-question": "Sebiji bola 2 kg bergolek pada 3 m/s. Berapa momentumnya?",
+    "demo-exam-question": "Sebiji bola <mass></mass> bergolek pada <speed></speed>. Berapa momentumnya?",
+    "demo-exam-numeric": "Sebuah troli <cart></cart> bergerak pada <pace></pace>. Berapa momentumnya dalam <unit></unit>?",
+    "demo-exam-essay": "Mengapa lori bermuatan lebih sukar dihentikan berbanding basikal pada kelajuan yang sama?",
+    "demo-exam-rubric": "Markah penuh jika menyebut momentum, mengaitkannya dengan jisim, dan membandingkan kedua-duanya pada kelajuan yang sama.",
     "demo-exam-explanation": "Momentum ialah jisim darab halaju: <formula></formula>.",
     "demo-exam-answer": "Jawapan",
     "demo-exam-progress": "Soalan {current} daripada {total}",
@@ -4664,61 +4609,5 @@
     "faq-credits-answer": "Nina, AI Nakafa, menggunakan kredit bagi setiap jawapan. Seluruh sekolah berkongsi satu kumpulan kredit, dan pek 1,000 tambahan tahan selama 12 bulan.",
     "faq-change-question": "Boleh kami menukar pelan kemudian?",
     "faq-change-answer": "Boleh. Bertukar antara Pro dan Max atau tambah akaun bila-bila masa, dan perubahan berkuat kuasa mulai invois berbayar seterusnya."
-  },
-  "Island": {
-    "title": "Pulau",
-    "description": "Pulau kamu berkembang dengan setiap pelajaran dan percubaan.",
-    "name": "Pulau {name}",
-    "level": "Tahap {level}",
-    "stars": "Bintang",
-    "next": "Tahap seterusnya",
-    "next-value": "{stars} Bintang",
-    "top": "Tahap tertinggi",
-    "turn-left": "Pusing ke kiri",
-    "turn-right": "Pusing ke kanan",
-    "build": "Bina",
-    "done": "Siap",
-    "undo": "Buat asal",
-    "redo": "Buat semula",
-    "rotate": "Pusing",
-    "move": "Alih",
-    "remove": "Buang",
-    "upgrade": "Naik taraf",
-    "items": "Barang",
-    "price": "{stars} Bintang",
-    "locked": "Tahap {level}",
-    "item-house": "Rumah",
-    "item-tree": "Pokok",
-    "item-pond": "Kolam",
-    "item-grass": "Rumput",
-    "item-soil": "Tanah",
-    "item-stone": "Batu",
-    "item-sand": "Pasir",
-    "item-planks": "Papan",
-    "item-brick": "Bata",
-    "item-glass": "Kaca",
-    "item-tile": "Jubin merah",
-    "item-slate": "Jubin biru",
-    "item-flowers": "Bunga",
-    "item-bush": "Semak",
-    "item-rock": "Batu besar",
-    "item-lamp": "Lampu",
-    "water": "Siram kebun",
-    "harvest": "Tuai",
-    "sound": "Bunyi",
-    "enter": "Masuk",
-    "enter-next": "{stars} Bintang lagi untuk membesarkan pulau kamu ke tahap seterusnya.",
-    "enter-top": "Pulau kamu sudah sebesar mana-mana pulau boleh membesar.",
-    "earn-lesson": "+{stars} Bintang setiap pelajaran",
-    "earn-section": "+{stars} Bintang setiap bahagian",
-    "badges": "Lencana",
-    "share": "Kongsi",
-    "share-title": "Pulau saya di Nakafa",
-    "clip": "Rakam klip",
-    "clip-file": "nakafa-island",
-    "visit-description": "Pulau {name}, tumbuh daripada belajar di Nakafa.",
-    "materials": "Kebun",
-    "materials-value": "{wood} kayu, {petals} kelopak",
-    "price-wood": "{stars} Bintang, {wood} kayu"
   }
 }
