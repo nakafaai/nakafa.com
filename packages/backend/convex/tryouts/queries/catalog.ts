@@ -9,5 +9,6 @@ export const getLocalizedPath = registeredFunctions.getLocalizedPath;
 export const getMetadata = registeredFunctions.getMetadata;
 export const getSectionPage = registeredFunctions.getSectionPage;
 export const getSetPage = registeredFunctions.getSetPage;
+export const getSetSamples = registeredFunctions.getSetSamples;
 export const getTrackPage = registeredFunctions.getTrackPage;
 export const experimental_reuseContext = true;

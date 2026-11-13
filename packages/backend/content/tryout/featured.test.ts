@@ -98,7 +98,7 @@ describe("content/tryout/featured", () => {
             .pipe(Effect.flip)
         ).toMatchObject({
           code: "CONTENT_RELEASE_INTEGRITY",
-          message: expect.stringContaining("featured answer"),
+          message: expect.stringContaining("has no answer for"),
         });
         const unplaced = yield* featuredWorld;
         yield* unplaced.rewrite(isFeaturedPaper, (row) => {

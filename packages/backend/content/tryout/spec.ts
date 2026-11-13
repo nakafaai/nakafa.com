@@ -3,14 +3,20 @@ import { appLocaleValidator } from "@repo/backend/confect/contentRelease/spec";
 import { Schema } from "effect";
 
 /**
- * The question the landing demonstrates, as the JSON text of a question body
- * (`TryoutQuestionBodyText`): its prompt, its one interaction, the key's answer the demonstration
- * reveals, and the reading it was written against.
+ * One published question with its key, as a public page shows it (the landing's demonstration, a set page's
+ * samples): the JSON text of its question body (`TryoutQuestionBodyText`), with its prompt, its one
+ * interaction, the key's answer, the reading it was written against and, on a set page, its explanation;
+ * and its item version.
  */
-export const featuredTryoutValidator = Schema.Struct({
+export const keyedQuestionValidator = Schema.Struct({
   body: Schema.String,
   versionHash: Sha256HashSchema,
 });
+
+/** A set page's worked samples in question order, or none for a path that names no set. */
+export const tryoutSetSamplesValidator = Schema.NullOr(
+  Schema.Array(keyedQuestionValidator)
+);
 export const tryoutMetadataArgsValidator = {
   appLocale: appLocaleValidator,
   kind: Schema.Literals([

@@ -3,14 +3,9 @@ import { releaseFail } from "@repo/backend/confect/contentRelease/error";
 import { loadActiveAssessment } from "@repo/backend/confect/tryouts/active";
 import { readCatalogSet } from "@repo/backend/confect/tryouts/catalog/rows";
 import { tryoutSetIdentityOf } from "@repo/backend/confect/tryouts/route";
-import {
-  readItemKey,
-  readItemVersion,
-  readPaper,
-  readStimulus,
-} from "@repo/backend/confect/tryouts/rows";
-import { TryoutQuestionBodyText } from "@repo/backend/confect/tryouts/runtime/spec";
-import { Array as Arr, Effect, Option, Schema } from "effect";
+import { readPaper } from "@repo/backend/confect/tryouts/rows";
+import { readKeyedQuestion } from "@repo/backend/content/tryout/question";
+import { Array as Arr, Effect, Option } from "effect";
 
 /** The authored question the landing page demonstrates: the first place of one SNBT section. */
 export const LANDING_FEATURED_TRYOUT = {
@@ -67,31 +62,6 @@ export const readFeaturedTryout = Effect.fn("tryouts.catalog.readFeatured")(
     if (Option.isNone(place)) {
       return yield* missingFeatured("question");
     }
-    const [version, key] = yield* Effect.all([
-      readItemVersion(place.value.hash),
-      readItemKey(place.value.hash),
-    ]);
-    const interaction = Arr.headNonEmpty(version.interactions);
-    const answer = Arr.findFirst(
-      key.answers,
-      (candidate) => candidate.interaction === interaction.id
-    );
-    if (Option.isNone(answer)) {
-      return yield* missingFeatured("answer");
-    }
-    const stimulus =
-      version.stimulus === undefined
-        ? Option.none()
-        : Option.some((yield* readStimulus(version.stimulus.hash)).document);
-    const body = yield* Schema.encodeEffect(TryoutQuestionBodyText)({
-      interaction,
-      key: answer.value,
-      prompt: version.prompt,
-      ...(Option.isSome(stimulus) ? { stimulus: stimulus.value } : {}),
-    }).pipe(
-      // Every part was decoded by the contract, so it encodes.
-      Effect.orDie
-    );
-    return { body, versionHash: version.hash };
+    return yield* readKeyedQuestion(place.value.hash, Option.none());
   }
 );
