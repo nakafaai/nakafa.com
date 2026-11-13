@@ -11,6 +11,8 @@ export default Table.make(() =>
     learned: Schema.optionalKey(Schema.String),
     /** Every Star ever granted; the level and the footprint derive from it (ADR 0042, D3). */
     lifetime: Schema.Finite,
+    /** The days in a row the learner learned, up to `learned`; none before the first grant. */
+    streak: Schema.optionalKey(Schema.Int),
     /** The owner's zone, kept current by their own visits; it sets the island's day. */
     timeZone: Schema.TimeZoneNamedFromString,
     userId: IdSchema("users"),

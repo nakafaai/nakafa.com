@@ -2675,10 +2675,10 @@
     "title": "Was möchtest du lernen?",
     "contribute": "Mitwirken",
     "videos": "Videos",
-    "trending-subjects": "Beliebte Fächer dieser Woche",
-    "explore-materials": "Lernmaterialien entdecken",
     "guest": "du",
-    "continue-learning": "Weiterlernen"
+    "week-title": "Deine Woche",
+    "streak": "{days, plural, =0 {Fang heute eine Serie an} one {# Tag am Stück} other {# Tage am Stück}}",
+    "week-summary": "{lessons, plural, one {# Lektion} other {# Lektionen}}, {sections, plural, one {# Testabschnitt} other {# Testabschnitte}}, {stars} Sterne diese Woche"
   },
   "Marketing": {
     "learn": "Lernen",
@@ -4650,6 +4650,7 @@
     "notice-refused": "Das wurde nicht gespeichert, deine Insel ist wieder wie vorher.",
     "notice-stale": "Deine Insel hat sich woanders geändert, sie lädt gerade neu.",
     "next": "Noch {stars} Sterne bis Stufe {level}",
-    "top": "Alle Blöcke sind offen"
+    "top": "Alle Blöcke sind offen",
+    "play": "Spielen"
   }
 }

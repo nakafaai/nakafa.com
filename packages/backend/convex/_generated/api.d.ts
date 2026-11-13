@@ -10679,6 +10679,22 @@ export declare const api: {
           world: ArrayBuffer;
         } | null
       >;
+      week: FunctionReference<
+        "query",
+        "public",
+        {},
+        {
+          days: Array<{
+            day: string;
+            lessons: number;
+            sections: number;
+            sets: number;
+            stars: number;
+          }>;
+          streak: number;
+          today: string;
+        } | null
+      >;
     };
   };
   journal: {

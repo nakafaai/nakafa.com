@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it } from "@effect/vitest";
 import auth from "@repo/backend/confect/_generated/refs/auth";
 import chats from "@repo/backend/confect/_generated/refs/chats";
 import contents from "@repo/backend/confect/_generated/refs/contents";
+import island from "@repo/backend/confect/_generated/refs/island";
 import notifications from "@repo/backend/confect/_generated/refs/notifications";
 import onboarding from "@repo/backend/confect/_generated/refs/onboarding";
 import { isRedirect } from "@tanstack/react-router";
@@ -34,8 +35,6 @@ const mocks = vi.hoisted(() => ({
     >(),
   scheduleCurrentServerExceptionCapture:
     vi.fn<(error: unknown, properties: unknown) => Effect.Effect<void>>(),
-  readHomeTrendingSubjects:
-    vi.fn<(locale: string) => Effect.Effect<readonly []>>(),
   setResponseHeader: vi.fn<(name: string, value: string) => void>(),
 }));
 
@@ -52,10 +51,6 @@ vi.mock("@/lib/data/preload.server", () => ({
   preloadConfectQuery: mocks.preloadConfectQuery,
 }));
 
-vi.mock("@/lib/content/trending", () => ({
-  readHomeTrendingSubjects: mocks.readHomeTrendingSubjects,
-}));
-
 vi.mock("@/lib/analytics/exception.server", () => ({
   scheduleCurrentServerExceptionCapture:
     mocks.scheduleCurrentServerExceptionCapture,
@@ -63,7 +58,6 @@ vi.mock("@/lib/analytics/exception.server", () => ({
 
 beforeEach(() => {
   vi.clearAllMocks();
-  mocks.readHomeTrendingSubjects.mockReturnValue(Effect.succeed([]));
   mocks.scheduleCurrentServerExceptionCapture.mockReturnValue(Effect.void);
 });
 
@@ -120,6 +114,8 @@ describe("homeScreenHandler", () => {
       ],
       [auth.queries.getCurrentUser, null],
       [contents.queries.recent.getRecentlyViewed, []],
+      [island.queries.own, null],
+      [island.queries.week, null],
     ]);
     const cause = await failureOf(
       homeScreenHandler({ data: { locale: "en" } })
@@ -136,6 +132,8 @@ describe("homeScreenHandler", () => {
       ],
       [auth.queries.getCurrentUser, account],
       [contents.queries.recent.getRecentlyViewed, []],
+      [island.queries.own, null],
+      [island.queries.week, null],
     ]);
     const cause = await failureOf(
       homeScreenHandler({ data: { locale: "en" } })
@@ -143,8 +141,9 @@ describe("homeScreenHandler", () => {
     expect(isRedirect(cause)).toBe(true);
   });
 
-  it("answers the home screen with the account name and the recent subjects", async () => {
+  it("answers the home screen with the name, the island, the week and the last lesson", async () => {
     sessionWith(Option.some("token"));
+    const week = { days: [], streak: 2, today: "2026-11-09" };
     answerQueries([
       [
         onboarding.queries.getStatus,
@@ -155,15 +154,22 @@ describe("homeScreenHandler", () => {
         contents.queries.recent.getRecentlyViewed,
         [{ content_id: "math-1", materialDomain: "mathematics" }],
       ],
+      [island.queries.own, { badges: [], lifetime: 30, version: 1, world: [] }],
+      [island.queries.week, week],
     ]);
     const screen = await homeScreenHandler({ data: { locale: "en" } });
     expect(screen.name).toBe("Nabil");
-    expect(screen.recentRows).toEqual([
+    expect(screen.recent).toEqual([
       { content_id: "math-1", materialDomain: "mathematics" },
     ]);
     expect(screen.recentLooks).toHaveLength(1);
-    expect(screen.trending).toEqual([]);
-    expect(screen.trendingLooks).toEqual([]);
+    expect(screen.island).toMatchObject({ level: 1, lifetime: 30, version: 1 });
+    expect(screen.week).toEqual(week);
+    expect(mocks.preloadConfectQuery).toHaveBeenCalledWith(
+      contents.queries.recent.getRecentlyViewed,
+      { limit: 1, locale: "en" },
+      "token"
+    );
     expect(screen.seo).toMatchObject({
       canonicalPath: "/en",
       indexable: false,
@@ -189,9 +195,6 @@ describe("homeScreenHandler", () => {
         homeScreenHandler({ data: { locale: "en" } })
       );
       expect(screen.name).toBe("Nabil");
-      expect(mocks.readHomeTrendingSubjects).toHaveBeenCalledExactlyOnceWith(
-        "en"
-      );
     })
   );
 
@@ -207,7 +210,7 @@ describe("homeScreenHandler", () => {
       return Effect.succeed(account);
     });
     const screen = await homeScreenHandler({ data: { locale: "en" } });
-    expect(screen.recentRows).toStrictEqual([]);
+    expect(screen.recent).toStrictEqual([]);
     expect(screen.recentLooks).toStrictEqual([]);
     expect(screen.name).toBe("Nabil");
   });
@@ -221,9 +224,13 @@ describe("homeScreenHandler", () => {
       ],
       [auth.queries.getCurrentUser, null],
       [contents.queries.recent.getRecentlyViewed, []],
+      [island.queries.own, null],
+      [island.queries.week, null],
     ]);
     const screen = await homeScreenHandler({ data: { locale: "en" } });
     expect(screen.name).toBeUndefined();
+    expect(screen.week).toBeUndefined();
+    expect(screen.island).toMatchObject({ level: 1, lifetime: 0 });
   });
 });
 

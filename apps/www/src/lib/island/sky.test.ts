@@ -1,7 +1,7 @@
 // @vitest-environment node
 import { describe, expect, it } from "@effect/vitest";
-import { Option } from "effect";
-import { fallOf, lightOf, weatherOf } from "@/lib/island/sky";
+import { DateTime, Option } from "effect";
+import { fallOf, hourOf, lightOf, weatherOf } from "@/lib/island/sky";
 
 /** How bright a color is. */
 const brightness = (color: readonly number[]) => color[0] + color[1] + color[2];
@@ -59,5 +59,15 @@ describe("island/sky", () => {
     expect(storm?.speed).toBeGreaterThan(rain?.speed ?? 0);
     expect(snow?.flakes).toBe(true);
     expect(snow?.speed).toBeLessThan(rain?.speed ?? 0);
+  });
+
+  it("reads the hour of a moment in the learner's zone, minutes included", () => {
+    const moment = DateTime.makeUnsafe("2026-11-09T08:30:00Z");
+    expect(hourOf(moment, DateTime.zoneMakeNamedUnsafe("Asia/Jakarta"))).toBe(
+      15.5
+    );
+    expect(hourOf(moment, DateTime.zoneMakeNamedUnsafe("Europe/Berlin"))).toBe(
+      9.5
+    );
   });
 });

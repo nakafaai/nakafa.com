@@ -2675,10 +2675,10 @@
     "title": "What do you want to learn?",
     "contribute": "Contribute",
     "videos": "Videos",
-    "trending-subjects": "Trending Subjects This Week",
-    "explore-materials": "Explore Materials",
     "guest": "you",
-    "continue-learning": "Continue Learning"
+    "week-title": "Your week",
+    "streak": "{days, plural, =0 {Start a run today} one {# day in a row} other {# days in a row}}",
+    "week-summary": "{lessons, plural, one {# lesson} other {# lessons}}, {sections, plural, one {# try-out section} other {# try-out sections}}, {stars} Stars this week"
   },
   "Marketing": {
     "learn": "Learn",
@@ -4650,6 +4650,7 @@
     "notice-refused": "That change didn't save, so your island is back as it was.",
     "notice-stale": "Your island changed somewhere else, so it's loading again.",
     "next": "{stars} more Stars to level {level}",
-    "top": "Every block is open"
+    "top": "Every block is open",
+    "play": "Play"
   }
 }

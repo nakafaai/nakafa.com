@@ -1,4 +1,4 @@
-import { Array as Arr, Option, Schema } from "effect";
+import { Array as Arr, DateTime, Option, Schema } from "effect";
 import { rgbOf } from "@/lib/island/palette";
 
 const Color = Schema.Tuple([Schema.Finite, Schema.Finite, Schema.Finite]);
@@ -215,4 +215,12 @@ export function fallOf(weather: Weather): Option.Option<Fall> {
         sway: 0.6,
       })
     : Option.none();
+}
+
+/** The hour of a moment in a zone, from 0 to 24 with its minutes, the hour the island's light follows. */
+export function hourOf(now: DateTime.DateTime, zone: DateTime.TimeZone) {
+  const zoned = DateTime.setZone(now, zone);
+  return (
+    DateTime.getPart(zoned, "hour") + DateTime.getPart(zoned, "minute") / 60
+  );
 }

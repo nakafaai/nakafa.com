@@ -140,4 +140,59 @@ describe("island queries and mutations", () => {
         ).toBe(1);
       })
   );
+
+  it.effect(
+    "tracks the learner's week in their zone: grants by day, the Stars, and the run of days",
+    () =>
+      Effect.gen(function* () {
+        const world = yield* islandWorld();
+        expect(
+          yield* client(world.t).query(island.queries.week, {})
+        ).toBeNull();
+        expect(yield* world.owner.query(island.queries.week, {})).toBeNull();
+        yield* world.owner.mutation(island.mutations.open, {
+          timeZone: JAKARTA,
+        });
+        // A new island has no run of days yet.
+        expect(
+          (yield* world.owner.query(island.queries.week, {}))?.streak
+        ).toBe(0);
+        yield* Effect.promise(() =>
+          world.t.run(async (ctx) => {
+            const row = await ctx.db.query("islands").first();
+            if (row === null) {
+              return;
+            }
+            await ctx.db.patch("islands", row._id, {
+              learned: "2026-11-08",
+              streak: 3,
+            });
+            for (const [key, kind, stars] of [
+              ["lesson:a", "lesson", 5],
+              ["section:s:1", "section", 15],
+            ] as const) {
+              await ctx.db.insert("islandAwards", {
+                day: "2026-11-08",
+                key,
+                kind,
+                stars,
+                userId: row.userId,
+              });
+            }
+          })
+        );
+        const week = yield* world.owner.query(island.queries.week, {});
+        expect(week?.today).toBe("2026-11-08");
+        expect(week?.streak).toBe(3);
+        expect(week?.days).toHaveLength(7);
+        expect(week?.days[6]).toEqual({
+          day: "2026-11-08",
+          lessons: 1,
+          sections: 1,
+          sets: 0,
+          stars: 20,
+        });
+        expect(week?.days[0]?.day).toBe("2026-11-02");
+      })
+  );
 });

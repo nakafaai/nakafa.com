@@ -2675,10 +2675,10 @@
     "title": "Apa yang kamu mahu pelajari?",
     "contribute": "Sumbang",
     "videos": "Video",
-    "trending-subjects": "Mata Pelajaran Popular Minggu Ini",
-    "explore-materials": "Teroka Bahan",
     "guest": "kamu",
-    "continue-learning": "Teruskan Belajar"
+    "week-title": "Minggu kamu",
+    "streak": "{days, plural, =0 {Mulakan rentetan hari ini} other {# hari berturut-turut}}",
+    "week-summary": "{lessons} pelajaran, {sections} bahagian try out, {stars} Bintang minggu ini"
   },
   "Marketing": {
     "learn": "Belajar",
@@ -4650,6 +4650,7 @@
     "notice-refused": "Perubahan itu tak tersimpan, jadi pulau kamu kembali seperti tadi.",
     "notice-stale": "Pulau kamu berubah di tempat lain, jadi ia dimuat semula.",
     "next": "{stars} Bintang lagi ke tahap {level}",
-    "top": "Semua blok sudah dibuka"
+    "top": "Semua blok sudah dibuka",
+    "play": "Main"
   }
 }
