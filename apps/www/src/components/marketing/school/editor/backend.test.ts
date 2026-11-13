@@ -43,7 +43,7 @@ const PLACEHOLDER = "3f0e4f6a-8f1c-4d8e-9a5b-2c1d0e9f8a7b";
 const makeBackend = () =>
   createDemoBackend(
     demoExam({
-      answer: en.SchoolSite["demo-exam-answer"],
+      answer: en.Common.answer,
       essay: en.SchoolSite["demo-exam-essay"],
       explanation: en.SchoolSite["demo-exam-explanation"],
       numeric: en.SchoolSite["demo-exam-numeric"],
