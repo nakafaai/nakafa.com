@@ -73,7 +73,9 @@ describe("auth/grant/authorize", () => {
           (stored?.expiresAt ?? 0) - Duration.toMillis(CODE_LIFETIME)
         ).toBeGreaterThanOrEqual(NOW);
         expect(
-          yield* Schema.encodeEffect(Schema.UnknownFromJsonString)(stored)
+          yield* Schema.encodeEffect(Schema.fromJsonString(Schema.Unknown))(
+            stored
+          )
         ).not.toContain(code);
       })
   );
