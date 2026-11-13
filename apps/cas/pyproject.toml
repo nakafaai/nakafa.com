@@ -14,7 +14,8 @@ dependencies = [
 
 [dependency-groups]
 dev = [
-  # 1.40 widens SymPy 1.14 factor(Expr) to Basic, rejecting valid scalar algebra.
+  # 1.40 widens SymPy 1.14 factor(Expr) to Basic, rejecting valid scalar algebra
+  # (five errors in cas/algebra.py and cas/equation.py on 1.40.2, 13 November 2026).
   "basedpyright==1.39.10",
   "pytest>=9.0.0",
   "pytest-cov>=7.0.0",
