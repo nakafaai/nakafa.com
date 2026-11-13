@@ -56,6 +56,7 @@ import {
   useState,
 } from "react";
 import {
+  BackSide,
   type Group,
   MeshBasicMaterial,
   MeshStandardMaterial,
@@ -101,7 +102,7 @@ export function BrakeHeatLab({
   readonly title: ReactNode;
 }) {
   const [speed, setSpeed] = useState<(typeof SPEEDS)[number]>(20);
-  const [thermal, setThermal] = useState(true);
+  const [thermal, setThermal] = useState(false);
   const quantity = useQuantity();
 
   return (
@@ -252,6 +253,25 @@ function usePartMaterials(thermal: boolean) {
 }
 
 /**
+ * What the thermal camera sees around the wheel: the garage at the starting
+ * temperature, one flat colour from the camera's palette in every direction,
+ * so the warm parts stand out as they do in a thermal image.
+ */
+function ThermalSurround() {
+  const [red, green, blue] = thermalColor(START_TEMPERATURE);
+  return (
+    <mesh>
+      <sphereGeometry args={[4, 24, 12]} />
+      <meshBasicMaterial
+        color={[red, green, blue]}
+        side={BackSide}
+        toneMapped={false}
+      />
+    </mesh>
+  );
+}
+
+/**
  * The wheel, the disc and the caliper, run by the card's play clock: the
  * wheel slows from `speed` to rest at 5 m/s² while the disc warms.
  */
@@ -293,6 +313,7 @@ function WheelScene({
   return (
     <>
       <SimulationTicker running={playing} />
+      {thermal ? <ThermalSurround /> : null}
       <group ref={wheel}>
         <mesh material={materials.disc} rotation={[Math.PI / 2, 0, 0]}>
           <cylinderGeometry
