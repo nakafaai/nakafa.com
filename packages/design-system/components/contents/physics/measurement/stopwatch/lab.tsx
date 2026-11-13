@@ -57,7 +57,7 @@ const PLOT_FROM = 17.7;
 const PLOT_TO = 18.2;
 
 /** What the sketch reads on every frame: how many trials are recorded. */
-const TrialFrame = Schema.Struct({ count: Schema.Number });
+const TrialFrame = Schema.Struct({ count: Schema.Finite });
 
 /** The lab wall and the bench under the lamp. */
 function paintRoom(sketch: p5) {

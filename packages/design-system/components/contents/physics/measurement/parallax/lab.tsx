@@ -48,7 +48,7 @@ const LENS_HALF = 1.1;
 const MOVE_RATE = 6;
 
 /** What the sketch reads on every frame: the eye's height above the meniscus. */
-const EyeFrame = Schema.Struct({ offset: Schema.Number });
+const EyeFrame = Schema.Struct({ offset: Schema.Finite });
 
 /** Positions of the bench, the cylinder and the magnifier for one canvas size. */
 function layout(sketch: p5) {

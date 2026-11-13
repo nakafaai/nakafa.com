@@ -55,7 +55,7 @@ const TROLLEY_LENGTH = 0.16;
 const HOLD_SECONDS = 1.4;
 
 /** What the sketch reads on every frame: how far apart the gates stand. */
-const GateFrame = Schema.Struct({ distance: Schema.Number });
+const GateFrame = Schema.Struct({ distance: Schema.Finite });
 
 /** Positions of the track for one canvas size. */
 function layout(sketch: p5) {

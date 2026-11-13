@@ -43,7 +43,7 @@ const AMPLITUDE = 0.2;
 const BOB_ZOOM = 2.8;
 
 /** What the sketch reads on every frame: the length of the three strings. */
-const SwingFrame = Schema.Struct({ length: Schema.Number });
+const SwingFrame = Schema.Struct({ length: Schema.Finite });
 
 /** Each bob's surface: pale wood, polished brass, dull lead. */
 function bobColors(bob: typeof BobSchema.Type) {

@@ -51,7 +51,7 @@ const LENS_MILLIMETRES = 13;
 const SLIDE_RATE = 7;
 
 /** What the sketch reads on every frame: the width of the object between the jaws. */
-const CaliperFrame = Schema.Struct({ width: Schema.Number });
+const CaliperFrame = Schema.Struct({ width: Schema.Finite });
 
 /** Positions of the caliper and the magnifier for one canvas size. */
 function layout(sketch: p5) {

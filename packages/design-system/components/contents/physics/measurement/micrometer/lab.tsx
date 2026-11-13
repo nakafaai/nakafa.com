@@ -46,7 +46,7 @@ const LENS_SLEEVE = 5.5;
 const TURN_RATE = 6;
 
 /** What the sketch reads on every frame: the size of the ball between anvil and spindle. */
-const GaugeFrame = Schema.Struct({ thickness: Schema.Number });
+const GaugeFrame = Schema.Struct({ thickness: Schema.Finite });
 
 /** Positions of the gauge and the magnifier for one canvas size. */
 function layout(sketch: p5) {
