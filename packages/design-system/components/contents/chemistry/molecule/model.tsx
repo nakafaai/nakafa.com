@@ -105,13 +105,13 @@ export function AtomBall({
   readonly element: ElementSymbol;
   readonly opacity?: number;
   readonly position: Point;
-  readonly ref?: RefObject<Mesh | null> | undefined;
+  readonly ref?: RefObject<Mesh | null> | null;
   readonly style: ModelStyle;
 }) {
   const radius = atomRadius(element, style);
 
   return (
-    <mesh castShadow position={position} ref={ref} scale={radius}>
+    <mesh castShadow position={position} ref={ref ?? null} scale={radius}>
       <sphereGeometry args={[1, 48, 32]} />
       <meshPhysicalMaterial
         clearcoat={0.8}
