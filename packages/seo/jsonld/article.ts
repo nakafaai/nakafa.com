@@ -1,13 +1,10 @@
 import { ContentAuthorSchema } from "@nakafa/aksara-contracts/content";
-import {
-  PublicationDatesSchema,
-  withPublicationDates,
-} from "@nakafa/aksara-contracts/date";
+import { PublicationDatesSchema } from "@nakafa/aksara-contracts/date";
 import { ActiveAppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
 import { COMPANY_IDENTITY } from "@repo/seo/company";
 import { ORGANIZATION_ID } from "@repo/seo/jsonld/constants";
 import { CONTENT_LICENSE_URL } from "@repo/seo/license";
-import { Array as Arr, Option, Schema } from "effect";
+import { Array as Arr, DateTime, Option, Schema } from "effect";
 
 const SCHEMA_ORG = "https://schema.org";
 
@@ -22,6 +19,22 @@ const SiteUrlSchema = Schema.String.check(
     { message: "Expected an absolute URL on the Nakafa origin." }
   )
 );
+
+/**
+ * The start of a UTC day as an ISO 8601 date and time. Aksara dates content by
+ * the UTC day it was published or changed, and Google reads `datePublished` and
+ * `dateModified` as a DateTime with its time zone.
+ *
+ * @see https://developers.google.com/search/docs/appearance/structured-data/article#article-types
+ */
+const START_OF_UTC_DAY = /^\d{4}-\d{2}-\d{2}T00:00:00\.000Z$/u;
+
+const DayStartSchema = Schema.String.check(Schema.isPattern(START_OF_UTC_DAY));
+
+/** The DateTime at which an authored UTC day begins, such as `2025-05-10T00:00:00.000Z`. */
+function toDayStart(date: string) {
+  return DateTime.formatIso(DateTime.makeUnsafe(date));
+}
 
 const PersonSchema = Schema.Struct({
   "@type": Schema.Literal("Person"),
@@ -45,10 +58,12 @@ const PublisherSchema = Schema.Struct({
  * @see https://developers.google.com/search/docs/appearance/structured-data/article
  * @see https://developers.google.com/search/docs/appearance/structured-data/intro-structured-data#structured-data-vocabulary-and-format
  */
-const ArticleSchema = withPublicationDates({
+const ArticleSchema = Schema.Struct({
   "@context": Schema.Literal(SCHEMA_ORG),
   "@type": Schema.Literal("Article"),
   author: Schema.NonEmptyArray(Schema.Union([PersonSchema, PublisherSchema])),
+  dateModified: Schema.optionalKey(DayStartSchema),
+  datePublished: DayStartSchema,
   description: Schema.optionalKey(TextSchema),
   headline: TextSchema,
   image: SiteUrlSchema,
@@ -57,7 +72,16 @@ const ArticleSchema = withPublicationDates({
   license: Schema.Literal(CONTENT_LICENSE_URL),
   publisher: PublisherSchema,
   url: SiteUrlSchema,
-});
+}).pipe(
+  Schema.check(
+    Schema.makeFilter(
+      (article) =>
+        article.dateModified === undefined ||
+        article.dateModified > article.datePublished,
+      { message: "Expected dateModified to be later than datePublished." }
+    )
+  )
+);
 
 const ListItemSchema = Schema.Struct({
   "@type": Schema.Literal("ListItem"),
@@ -191,10 +215,10 @@ export function makeArticleJsonLd(input: ArticleJsonLdInput): ArticleJsonLd {
       inLanguage: input.locale,
       isAccessibleForFree: true,
       license: CONTENT_LICENSE_URL,
-      datePublished: input.dates.datePublished,
+      datePublished: toDayStart(input.dates.datePublished),
       ...(input.dates.dateModified === undefined
         ? {}
-        : { dateModified: input.dates.dateModified }),
+        : { dateModified: toDayStart(input.dates.dateModified) }),
       // A page that names no person, such as a policy, is the organization's own.
       author:
         firstAuthor === undefined
@@ -232,10 +256,10 @@ export function makeLearningResourceNode(
     learningResourceType: "lesson",
     isAccessibleForFree: true,
     license: CONTENT_LICENSE_URL,
-    datePublished: input.dates.datePublished,
+    datePublished: toDayStart(input.dates.datePublished),
     ...(input.dates.dateModified === undefined
       ? {}
-      : { dateModified: input.dates.dateModified }),
+      : { dateModified: toDayStart(input.dates.dateModified) }),
     author: Arr.map(input.authors, ({ name }) => ({
       "@type": "Person",
       name,
