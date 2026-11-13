@@ -1,11 +1,16 @@
 import { afterEach, describe, expect, it } from "@effect/vitest";
-import { SessionCookie } from "@repo/backend/scripts/content/acceptance/fixture";
+import { SessionCookies } from "@repo/backend/scripts/content/acceptance/fixture";
 import {
   inviteMode,
   seedInvite,
   waitForInboxRow,
 } from "@repo/backend/scripts/content/acceptance/invite";
-import { localConvexDouble } from "@repo/backend/test/acceptance";
+import {
+  ACCOUNT_SEED,
+  localConvexDouble,
+  SESSION_COOKIES,
+  SIGN_IN_ANSWERS,
+} from "@repo/backend/test/acceptance";
 import { nodePlatform } from "@repo/backend/test/platform";
 import {
   Array as Arr,
@@ -34,12 +39,11 @@ const SLUG = "acc-1a2b3c4d";
 const ADDRESS = "learner-1a2b3c4d@acceptance.example.test";
 const INVITED = { invite: "invite-1", person: "person-1" };
 
-/** What the local backend answers an invite: its ids, a new account and its app user, and the inbox row. */
+/** What the local backend answers an invite: its ids, the learner's sign-in, and the inbox row. */
 const ANSWERS = {
-  "adapter:create": { _creationTime: 1, _id: "user-1" },
+  ...SIGN_IN_ANSWERS,
   "tenancy/provision:invite": INVITED,
   "tenancy/seed:invitation": true,
-  "tenancy/seed:user": "app-user-1",
 };
 
 describe("acceptance invite", () => {
@@ -53,7 +57,7 @@ describe("acceptance invite", () => {
       Effect.gen(function* () {
         const backend = localConvexDouble(ANSWERS);
 
-        const cookie = yield* seedInvite(SLUG, ADDRESS).pipe(
+        const cookies = yield* seedInvite(SLUG, ADDRESS).pipe(
           Effect.provide(Layer.merge(backend.layer, nodePlatform))
         );
 
@@ -65,11 +69,11 @@ describe("acceptance invite", () => {
         });
         expect(backend.argsOf("tenancy/claims:run")).toEqual({
           cursor: null,
-          userId: "app-user-1",
+          userId: "user-1",
         });
         expect(backend.argsOf("tenancy/seed:invitation")).toEqual(INVITED);
         expect(backend.paths()).not.toContain("tenancy/seed:expired");
-        expect(cookie.name).toBe("better-auth.session_token");
+        expect(cookies).toEqual(SESSION_COOKIES);
       })
   );
 
@@ -89,7 +93,7 @@ describe("acceptance invite", () => {
         const paths = backend.paths();
         const at = (path: string) =>
           Option.getOrThrow(Arr.findFirstIndex(paths, (one) => one === path));
-        expect(at("tenancy/seed:expired")).toBeLessThan(at("adapter:create"));
+        expect(at("tenancy/seed:expired")).toBeLessThan(at(ACCOUNT_SEED));
         expect(backend.argsOf("tenancy/seed:expired")).toEqual({
           email: ADDRESS,
           slug: SLUG,
@@ -133,7 +137,7 @@ describe("acceptance invite", () => {
   );
 
   it.effect(
-    "writes the invited learner's cookie to the file the mode names",
+    "writes the invited learner's cookies to the file the mode names",
     () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
@@ -150,14 +154,14 @@ describe("acceptance invite", () => {
           "expired",
         ]);
 
-        const cookie = yield* fs
+        const cookies = yield* fs
           .readFileString(`${root}/cookie.json`)
           .pipe(
             Effect.flatMap(
-              Schema.decodeEffect(Schema.fromJsonString(SessionCookie))
+              Schema.decodeEffect(Schema.fromJsonString(SessionCookies))
             )
           );
-        expect(cookie.name).toBe("better-auth.session_token");
+        expect(cookies).toEqual(SESSION_COOKIES);
         expect(backend.paths()).toContain("tenancy/seed:expired");
       }).pipe(Effect.scoped, Effect.provide(nodePlatform))
   );

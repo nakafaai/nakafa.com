@@ -1,64 +1,31 @@
 import { describe, expect, it } from "@effect/vitest";
 import {
-  createLearnerAccount,
   openLearnerAccount,
+  signInAccount,
 } from "@repo/backend/scripts/content/acceptance/account";
 import type { RunConvex } from "@repo/backend/scripts/content/acceptance/convex";
 import { nodePlatform } from "@repo/backend/test/platform";
-import {
-  Array as Arr,
-  Duration,
-  Effect,
-  Logger,
-  MutableList,
-  MutableRef,
-  Option,
-  Schema,
-} from "effect";
-import { TestClock } from "effect/testing";
+import { Array as Arr, Effect, MutableList, Option, Record } from "effect";
 
-const NOW = 1_700_000_000_000;
-const LIFETIME = Duration.minutes(30);
 const LEARNER_EMAIL = /^learner-[0-9a-f]{16}@acceptance\.invalid$/u;
-
-/** What each command carries that the tests read back. */
-const CommandInput = Schema.Struct({
-  doc: Schema.optional(Schema.Struct({ _id: Schema.String })),
-  input: Schema.optional(
-    Schema.Struct({
-      data: Schema.optional(
-        Schema.Struct({
-          createdAt: Schema.Finite,
-          email: Schema.optional(Schema.String),
-          expiresAt: Schema.optional(Schema.Finite),
-          token: Schema.optional(Schema.String),
-          userId: Schema.optional(Schema.String),
-        })
-      ),
-      model: Schema.String,
-      where: Schema.optional(
-        Schema.Array(
-          Schema.Struct({
-            field: Schema.String,
-            operator: Schema.String,
-            value: Schema.String,
-          })
-        )
-      ),
-    })
-  ),
-});
+const TOKENS = {
+  accessToken: "access-token",
+  refreshToken: "refresh-token",
+  refreshTokenExpiresAt: 1,
+  userId: "user-1",
+};
 
 /** The arguments of one call to a runner: operation, the call, secrets. */
 type Call = Parameters<RunConvex<string, never>>;
 
 /**
- * A runner that answers the way the Better Auth adapter does and records each
- * call. The operations in `failing` fail with their own name.
+ * A runner that answers the way the acceptance seed and Convex Auth's
+ * password sign-in do, and records each call. `answers` replaces an answer
+ * by operation, and the operations in `failing` fail with their own name.
  */
 function recordingRunner(
-  failing: readonly string[] = [],
-  lookup: unknown = null
+  answers: Record<string, unknown> = {},
+  failing: readonly string[] = []
 ) {
   const calls = MutableList.make<Call>();
   const run: RunConvex<string, never> = (...call) => {
@@ -67,302 +34,99 @@ function recordingRunner(
     if (Arr.contains(failing, operation)) {
       return Effect.fail(`${operation} failed`);
     }
-    if (operation === "Learner account") {
-      return Effect.succeed({ _creationTime: 1, _id: "user-1", extra: true });
+    const answer = Record.get(answers, operation);
+    if (Option.isSome(answer)) {
+      return Effect.succeed(answer.value);
     }
-    if (operation === "Learner session") {
-      return Effect.succeed({ _creationTime: 2, _id: "session-1" });
-    }
-    if (operation === "Learner account lookup") {
-      return Effect.succeed(lookup);
-    }
-    return Effect.succeed(null);
+    return Effect.succeed(
+      operation === "Learner account"
+        ? { password: "seed-password", userId: "user-1" }
+        : { status: "complete", tokens: TOKENS }
+    );
   };
-  return { calls, run };
+  return { calls: () => MutableList.toArray(calls), run };
 }
 
-const readInput = ([, call]: Call) =>
-  Schema.decodeUnknownEffect(CommandInput)(call.args);
+const SESSION_COOKIES = [
+  { name: "__convexAuthJWT", value: "access-token" },
+  { name: "__convexAuthRefreshToken", value: "refresh-token" },
+];
 
-/** The operations of the calls a runner recorded, in order. */
-const operations = (calls: MutableList.MutableList<Call>) =>
-  Arr.map(MutableList.toArray(calls), ([operation]) => operation);
-
-describe("opening a learner account", () => {
-  const ADDRESS = "learner-1a2b3c4d@acceptance.example.test";
-
+describe("content acceptance account", () => {
   it.effect(
-    "signs the account that holds the address in again, with a new session and no new account",
+    "seeds a synthetic learner, signs it in with its password, and answers the session's cookies",
     () =>
       Effect.gen(function* () {
-        yield* TestClock.setTime(NOW);
-        const { calls, run } = recordingRunner([], { _id: "user-7" });
-
-        const account = yield* openLearnerAccount(run, LIFETIME, ADDRESS);
-
-        expect(account).toMatchObject({
-          sessionId: "session-1",
-          userId: "user-7",
+        const runner = recordingRunner();
+        const account = yield* openLearnerAccount(runner.run);
+        expect(account).toEqual({ cookies: SESSION_COOKIES, userId: "user-1" });
+        const [seed, signIn] = runner.calls();
+        expect(seed?.[0]).toBe("Learner account");
+        expect(seed?.[1]).toMatchObject({
+          args: { name: "Acceptance Learner" },
+          path: "acceptance/accounts:create",
         });
-        expect(operations(calls)).toEqual([
-          "Learner account lookup",
-          "Learner session",
-        ]);
-        const session = Option.getOrThrow(
-          Arr.findFirst(
-            MutableList.toArray(calls),
-            ([operation]) => operation === "Learner session"
-          )
-        );
-        expect((yield* readInput(session)).input?.data?.userId).toBe("user-7");
-      }).pipe(Effect.provide(nodePlatform))
-  );
-
-  it.effect(
-    "creates the account with the address, its session, and its profile when no account holds it",
-    () =>
-      Effect.gen(function* () {
-        yield* TestClock.setTime(NOW);
-        const { calls, run } = recordingRunner();
-
-        const account = yield* openLearnerAccount(run, LIFETIME, ADDRESS);
-
-        expect(account.userId).toBe("user-1");
-        expect(operations(calls)).toEqual([
-          "Learner account lookup",
-          "Learner account",
-          "Learner session",
-          "Learner profile",
-        ]);
-        const created = Option.getOrThrow(
-          Arr.findFirst(
-            MutableList.toArray(calls),
-            ([operation]) => operation === "Learner account"
-          )
-        );
-        expect((yield* readInput(created)).input?.data?.email).toBe(ADDRESS);
-      }).pipe(Effect.provide(nodePlatform))
-  );
-});
-
-describe("synthetic learner account", () => {
-  it.effect(
-    "creates the account, a session that lasts as long as asked, and the profile",
-    () =>
-      Effect.gen(function* () {
-        yield* TestClock.setTime(NOW);
-        const { calls, run } = recordingRunner();
-
-        const account = yield* createLearnerAccount(run, LIFETIME);
-
-        const made = MutableList.toArray(calls);
-        expect(operations(calls)).toEqual([
-          "Learner account",
-          "Learner session",
-          "Learner profile",
-        ]);
-        expect(
-          Arr.map(made, ([, call]) => [call.component, call.path])
-        ).toEqual([
-          ["betterAuth", "adapter:create"],
-          ["betterAuth", "adapter:create"],
-          [undefined, "auth/lifecycle:onCreate"],
-        ]);
-        const [user, session, profile] = yield* Effect.forEach(made, readInput);
-        expect(user?.input?.model).toBe("user");
-        expect(user?.input?.data?.email).toMatch(LEARNER_EMAIL);
-        expect(session?.input?.model).toBe("session");
-        expect(session?.input?.data?.userId).toBe("user-1");
-        expect(session?.input?.data?.createdAt).toBe(NOW);
-        expect(session?.input?.data?.expiresAt).toBe(
-          NOW + Duration.toMillis(LIFETIME)
-        );
-        expect(profile?.doc?._id).toBe("user-1");
-        const token = session?.input?.data?.token ?? "";
-        expect(token).toHaveLength(43);
-        expect(Arr.map(made, ([, , secrets]) => secrets)).toEqual([
-          undefined,
-          [token],
-          undefined,
-        ]);
-        expect(account).toEqual({
-          sessionId: "session-1",
-          token,
-          userId: "user-1",
+        expect(seed?.[1].args).toMatchObject({
+          email: expect.stringMatching(LEARNER_EMAIL),
         });
+        expect(signIn).toEqual([
+          "Learner sign-in",
+          {
+            args: { password: "seed-password", username: "user-1" },
+            path: "auth/core:signInWithUsernamePassword",
+          },
+        ]);
       }).pipe(Effect.provide(nodePlatform))
-  );
-
-  it.effect("gives every call a learner of its own", () =>
-    Effect.gen(function* () {
-      const { calls, run } = recordingRunner();
-
-      const first = yield* createLearnerAccount(run, LIFETIME);
-      const second = yield* createLearnerAccount(run, LIFETIME);
-
-      const [firstUser, , , secondUser] = yield* Effect.forEach(
-        MutableList.toArray(calls),
-        readInput
-      );
-      expect(firstUser?.input?.data?.email).not.toBe(
-        secondUser?.input?.data?.email
-      );
-      expect(first.token).not.toBe(second.token);
-    }).pipe(Effect.provide(nodePlatform))
-  );
-
-  it.effect("stops before the session when the account was not created", () =>
-    Effect.gen(function* () {
-      const calls = MutableList.make<string>();
-      const run: RunConvex<never, never> = (operation) => {
-        MutableList.append(calls, operation);
-        return Effect.succeed("Uncaught ConvexError");
-      };
-
-      const error = yield* createLearnerAccount(run, LIFETIME).pipe(
-        Effect.flip
-      );
-
-      expect(error._tag).toBe("SchemaError");
-      expect(MutableList.toArray(calls)).toEqual(["Learner account"]);
-    }).pipe(Effect.provide(nodePlatform))
   );
 
   it.effect(
-    "removes the account again when the session cannot be read back",
+    "signs in the account that holds an address, and gives every other call a learner of its own",
     () =>
       Effect.gen(function* () {
-        const calls = MutableList.make<string>();
-        const run: RunConvex<never, never> = (operation) => {
-          MutableList.append(calls, operation);
-          return Effect.succeed(
-            operation === "Learner session"
-              ? "Uncaught ConvexError"
-              : { _creationTime: 1, _id: "user-1" }
-          );
-        };
-
-        const error = yield* createLearnerAccount(run, LIFETIME).pipe(
-          Effect.flip
+        const runner = recordingRunner();
+        yield* openLearnerAccount(runner.run, "guru@acceptance.invalid");
+        yield* openLearnerAccount(runner.run);
+        yield* openLearnerAccount(runner.run);
+        const emails = Arr.map(
+          Arr.filter(runner.calls(), ([operation]) => operation === "Learner account"),
+          ([, call]) => call.args
         );
-
-        expect(error._tag).toBe("SchemaError");
-        expect(MutableList.toArray(calls)).toEqual([
-          "Learner account",
-          "Learner session",
-          "Learner account removal",
-        ]);
+        expect(emails[0]).toMatchObject({ email: "guru@acceptance.invalid" });
+        expect(emails[1]).not.toEqual(emails[2]);
       }).pipe(Effect.provide(nodePlatform))
   );
 
-  it.effect("removes the account again when the session cannot be opened", () =>
+  it.effect("stops before the sign-in when the seed fails or answers no account", () =>
     Effect.gen(function* () {
-      const { calls, run } = recordingRunner(["Learner session"]);
-
-      const error = yield* createLearnerAccount(run, LIFETIME).pipe(
-        Effect.flip
-      );
-
-      expect(error).toBe("Learner session failed");
-      expect(operations(calls)).toEqual([
-        "Learner account",
-        "Learner session",
-        "Learner account removal",
-      ]);
-      const removal = Option.getOrThrow(Arr.get(MutableList.toArray(calls), 2));
-      expect(removal[1]).toMatchObject({
-        component: "betterAuth",
-        path: "adapter:deleteOne",
-      });
-      expect((yield* readInput(removal)).input).toEqual({
-        model: "user",
-        where: [{ field: "_id", operator: "eq", value: "user-1" }],
-      });
+      const failed = recordingRunner({}, ["Learner account"]);
+      expect(
+        yield* Effect.flip(openLearnerAccount(failed.run))
+      ).toBe("Learner account failed");
+      const malformed = recordingRunner({ "Learner account": { userId: 1 } });
+      expect(
+        yield* Effect.flip(openLearnerAccount(malformed.run))
+      ).toMatchObject({ _tag: "SchemaError" });
+      for (const runner of [failed, malformed]) {
+        expect(Arr.map(runner.calls(), ([operation]) => operation)).toEqual([
+          "Learner account",
+        ]);
+      }
     }).pipe(Effect.provide(nodePlatform))
   );
 
-  it.effect(
-    "removes the session and then the account when the profile cannot be written",
-    () =>
-      Effect.gen(function* () {
-        const { calls, run } = recordingRunner(["Learner profile"]);
-
-        const error = yield* createLearnerAccount(run, LIFETIME).pipe(
-          Effect.flip
-        );
-
-        expect(error).toBe("Learner profile failed");
-        expect(operations(calls)).toEqual([
-          "Learner account",
-          "Learner session",
-          "Learner profile",
-          "Learner session removal",
-          "Learner account removal",
-        ]);
-        const removals = yield* Effect.forEach(
-          Arr.drop(MutableList.toArray(calls), 3),
-          readInput
-        );
-        expect(Arr.map(removals, (removal) => removal.input)).toEqual([
-          {
-            model: "session",
-            where: [{ field: "_id", operator: "eq", value: "session-1" }],
-          },
-          {
-            model: "user",
-            where: [{ field: "_id", operator: "eq", value: "user-1" }],
-          },
-        ]);
-      }).pipe(Effect.provide(nodePlatform))
-  );
-
-  it.live(
-    "fails with the step that failed and logs the rows a failed removal leaves",
-    () =>
-      Effect.gen(function* () {
-        const logged = MutableRef.make<readonly unknown[]>([]);
-        const { calls, run } = recordingRunner([
-          "Learner profile",
-          "Learner session removal",
-          "Learner account removal",
-        ]);
-
-        const error = yield* createLearnerAccount(run, LIFETIME).pipe(
-          Effect.flip,
-          Effect.provide(
-            Logger.layer([
-              Logger.formatStructured.pipe(
-                Logger.map(({ annotations, level, message }) =>
-                  MutableRef.update(
-                    logged,
-                    Arr.append({ annotations, level, message })
-                  )
-                )
-              ),
-            ])
-          )
-        );
-
-        expect(error).toBe("Learner profile failed");
-        expect(operations(calls)).toEqual([
-          "Learner account",
-          "Learner session",
-          "Learner profile",
-          "Learner session removal",
-          "Learner account removal",
-        ]);
-        expect(MutableRef.get(logged)).toEqual([
-          {
-            annotations: { id: "session-1", model: "session" },
-            level: "WARN",
-            message: "Learner session removal failed",
-          },
-          {
-            annotations: { id: "user-1", model: "user" },
-            level: "WARN",
-            message: "Learner account removal failed",
-          },
-        ]);
-      }).pipe(Effect.provide(nodePlatform))
+  it.effect("refuses a sign-in that made no session", () =>
+    Effect.gen(function* () {
+      const refused = recordingRunner({
+        "Learner sign-in": {
+          status: "error",
+          userError: { error: "INVALID_CREDENTIALS" },
+        },
+      });
+      expect(
+        yield* Effect.flip(
+          signInAccount(refused.run, { password: "wrong", userId: "user-1" })
+        )
+      ).toMatchObject({ _tag: "SchemaError" });
+    })
   );
 });
