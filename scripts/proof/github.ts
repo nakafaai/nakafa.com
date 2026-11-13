@@ -12,11 +12,13 @@ import {
   Duration,
   Effect,
   FileSystem,
+  HashSet,
   Layer,
   Option,
   Order,
   Schedule,
   Schema,
+  String as Str,
 } from "effect";
 import { ChildProcessSpawner } from "effect/process";
 import { runText } from "#scripts/process";
@@ -28,7 +30,11 @@ export const REPOSITORY = "nakafaai/nakafa.com";
 export class ProofError extends Schema.TaggedError<
   ProofError,
   { readonly brand: unique symbol }
->()("ProofError", { message: Schema.String }) {}
+>()("ProofError", {
+  message: Schema.String,
+  /** Whether GitHub refused the call for the account's rate limit, which passes. */
+  limited: Schema.optionalKey(Schema.Boolean),
+}) {}
 
 /** How many machines prove each engine, unless the caller names another count. */
 export const DEFAULT_SHARDS = 3;
@@ -39,8 +45,14 @@ const NARROW_SHARDS = 1;
 /** The commit status that says whether a head fails anything main does not. */
 export const VERDICT_CONTEXT = "proof/new";
 
-/** Runs the GitHub CLI and returns what it printed, or fails with what it said. */
-export const gh = Effect.fn("proof.gh")(function* (args: readonly string[]) {
+/**
+ * Whether GitHub refused a call for the account's API rate limit, which every
+ * session on this account shares: 5,000 requests an hour.
+ */
+const RATE_LIMITED = /rate limit/iu;
+
+/** One attempt of a GitHub CLI call: what it printed, or what it said. */
+const ghOnce = Effect.fn("proof.ghOnce")(function* (args: readonly string[]) {
   const output = yield* runText("gh", args).pipe(
     Effect.mapError(
       () => new ProofError({ message: "The GitHub CLI could not start." })
@@ -49,10 +61,25 @@ export const gh = Effect.fn("proof.gh")(function* (args: readonly string[]) {
   if (output.code !== 0) {
     return yield* new ProofError({
       message: `gh ${Arr.join(Arr.take(args, 2), " ")} failed: ${output.stderr.trim()}`,
+      limited: RATE_LIMITED.test(output.stderr),
     });
   }
   return output.stdout;
 });
+
+/**
+ * Runs the GitHub CLI and returns what it printed, or fails with what it said.
+ * A call refused for the rate limit waits a minute and tries again, for as long
+ * as the hourly limit takes to reset, so a long proof outlives a busy hour.
+ */
+export const gh = (args: readonly string[]) =>
+  ghOnce(args).pipe(
+    Effect.retry({
+      while: (error) => error.limited === true,
+      schedule: Schedule.spaced("1 minute"),
+      times: 65,
+    })
+  );
 
 const Step = Schema.Struct({
   name: Schema.String,
@@ -79,6 +106,9 @@ const RunView = Schema.Struct({
 type RunView = typeof RunView.Type;
 const RunViewJson = Schema.fromJsonString(RunView);
 const RUN_FIELDS = "status,conclusion,url,createdAt,updatedAt,jobs";
+const RunStatusJson = Schema.fromJsonString(
+  Schema.Struct({ status: Schema.String })
+);
 
 const RunListJson = Schema.fromJsonString(
   Schema.Array(
@@ -165,22 +195,23 @@ const findRun = Effect.fn("proof.findRun")(function* (title: string) {
   );
 });
 
-/** Reads one run until it completes, checking every half minute. */
+/**
+ * Reads one run once it completes. While it runs, only its status is read, once
+ * every two minutes: one request, so many waiting proofs stay well inside the
+ * rate limit that every session shares.
+ */
 const awaitRun = Effect.fn("proof.awaitRun")(function* (id: number) {
-  const view = gh([
-    "run",
-    "view",
-    String(id),
-    "--repo",
-    REPOSITORY,
-    "--json",
-    RUN_FIELDS,
-  ]).pipe(Effect.flatMap(Schema.decodeEffect(RunViewJson)));
-  return yield* view.pipe(
+  const view = (fields: string) =>
+    gh(["run", "view", String(id), "--repo", REPOSITORY, "--json", fields]);
+  yield* view("status").pipe(
+    Effect.flatMap(Schema.decodeEffect(RunStatusJson)),
     Effect.repeat({
       until: (run) => run.status === "completed",
-      schedule: Schedule.spaced("30 seconds"),
+      schedule: Schedule.spaced("2 minutes"),
     })
+  );
+  return yield* view(RUN_FIELDS).pipe(
+    Effect.flatMap(Schema.decodeEffect(RunViewJson))
   );
 });
 
@@ -214,6 +245,77 @@ const readShards = Effect.fn("proof.readShards")(function* (id: number) {
   );
 }, Effect.scoped);
 
+/** The head that a proof run's name carries: `Proof <sha> <nonce>`. */
+const PROOF_TITLE = /^Proof (?<sha>[0-9a-f]{40}) /u;
+
+/**
+ * Cancels every queued proof run whose head is no longer worth proving: not the
+ * head of an open pull request, not main's head, and not the tip of a train
+ * branch. A head that a newer push replaced, or that merged, would otherwise
+ * hold one of the 20 jobs that every proof and gate of the account shares.
+ * Runs that already started keep going. Returns how many it cancelled.
+ */
+export const sweepSuperseded = Effect.fn("proof.sweepSuperseded")(function* () {
+  const lines = (text: string) =>
+    Arr.filter(Str.split(text, "\n"), (line) => line !== "");
+  const heads = yield* gh([
+    "pr",
+    "list",
+    "--repo",
+    REPOSITORY,
+    "--state",
+    "open",
+    "--limit",
+    "300",
+    "--json",
+    "headRefOid",
+    "--jq",
+    ".[].headRefOid",
+  ]);
+  const trains = yield* gh([
+    "api",
+    `repos/${REPOSITORY}/git/matching-refs/heads/nabil/train-`,
+    "--jq",
+    ".[].object.sha",
+  ]);
+  const keep = HashSet.fromIterable([
+    ...lines(heads),
+    ...lines(trains),
+    yield* mainHead,
+  ]);
+  const queued = yield* gh([
+    "run",
+    "list",
+    "--repo",
+    REPOSITORY,
+    "--workflow",
+    "proof.yml",
+    "--status",
+    "queued",
+    "--limit",
+    "200",
+    "--json",
+    "databaseId,displayTitle",
+  ]).pipe(Effect.flatMap(Schema.decodeEffect(RunListJson)));
+  const stale = Arr.filter(queued, (run) =>
+    Option.match(
+      Option.fromNullishOr(PROOF_TITLE.exec(run.displayTitle)?.groups?.sha),
+      {
+        onNone: () => false,
+        onSome: (sha) => !HashSet.has(keep, sha),
+      }
+    )
+  );
+  yield* Effect.forEach(stale, (run) =>
+    gh(["run", "cancel", String(run.databaseId), "--repo", REPOSITORY]).pipe(
+      Effect.catchTag("ProofError", (error) =>
+        Effect.logWarning(`Run ${run.databaseId} stays: ${error.message}`)
+      )
+    )
+  );
+  return stale.length;
+});
+
 /**
  * Proves one head on GitHub's runners: dispatches the proof workflow, waits for
  * its run and combines what each machine reported. The verdict is the same one
@@ -221,6 +323,7 @@ const readShards = Effect.fn("proof.readShards")(function* (id: number) {
  */
 export const proveOnGithub = Effect.fn("proof.proveOnGithub")(
   function* (sha: string, specs: readonly string[], shards: number) {
+    yield* sweepSuperseded();
     const nonce = yield* randomUuid;
     yield* gh([
       "workflow",
