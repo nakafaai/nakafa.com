@@ -2678,7 +2678,9 @@
     "guest": "du",
     "week-title": "Deine Woche",
     "streak": "{days, plural, =0 {Fang heute eine Serie an} one {# Tag am Stück} other {# Tage am Stück}}",
-    "week-summary": "{lessons, plural, one {# Lektion} other {# Lektionen}}, {sections, plural, one {# Testabschnitt} other {# Testabschnitte}}, {stars} Sterne diese Woche"
+    "week-summary": "{lessons, plural, one {# Lektion} other {# Lektionen}}, {sections, plural, one {# Testabschnitt} other {# Testabschnitte}}, {stars} Sterne diese Woche",
+    "continue": "Weiterlernen",
+    "continue-empty": "Lektionen, die du öffnest, landen hier, damit du gleich weitermachen kannst."
   },
   "Marketing": {
     "learn": "Lernen",
@@ -4987,6 +4989,27 @@
     "home-cottage": "Häuschen",
     "home-house": "Zweistöckiges Haus",
     "home-manor": "Herrenhaus",
-    "upgrade": "Bau dein Zuhause zum {name} aus"
+    "upgrade": "Bau dein Zuhause zum {name} aus",
+    "world-title": "Deine Welt",
+    "open": "Welt öffnen",
+    "badges-title": "Abzeichen",
+    "badges-count": "{earned} von {total} verdient",
+    "badge-explorer": "Entdecker",
+    "badge-explorer-hint": "Lerne an 7 von 10 Tagen",
+    "badge-fighter": "Try-out-Kämpfer",
+    "badge-fighter-hint": "Schließe 10 Try-out-Sets ab",
+    "badge-mathematics": "Mathematik",
+    "badge-mathematics-hint": "Schließe 10 Mathe-Lektionen ab",
+    "badge-physics": "Physik",
+    "badge-physics-hint": "Schließe 10 Physik-Lektionen ab",
+    "badge-chemistry": "Chemie",
+    "badge-chemistry-hint": "Schließe 10 Chemie-Lektionen ab",
+    "badge-biology": "Biologie",
+    "badge-biology-hint": "Schließe 10 Bio-Lektionen ab",
+    "leaders-title": "Bestenliste",
+    "leaders-description": "Die Lernenden mit den meisten Sternen weltweit",
+    "leaders-empty": "Noch hat niemand Sterne verdient, also ist Platz eins noch frei für dich.",
+    "you": "{name} (du)",
+    "share-text": "Ich bin auf Stufe {level} auf meiner Nakafa-Insel. Bau dir deine eigene!"
   }
 }
