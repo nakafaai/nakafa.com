@@ -3,9 +3,9 @@ import type schemaDefinition from "./schema";
 
 export type AccountConsentDecisionsDoc = Document.Document<typeof schemaDefinition, "accountConsentDecisions">;
 export type AccountConsentsDoc = Document.Document<typeof schemaDefinition, "accountConsents">;
-export type AccountDeletionAttemptCancellationsDoc = Document.Document<typeof schemaDefinition, "accountDeletionAttemptCancellations">;
-export type AccountDeletionPreparationsDoc = Document.Document<typeof schemaDefinition, "accountDeletionPreparations">;
-export type AccountDeletionReceiptsDoc = Document.Document<typeof schemaDefinition, "accountDeletionReceipts">;
+export type AgentClientsDoc = Document.Document<typeof schemaDefinition, "agentClients">;
+export type AgentCodesDoc = Document.Document<typeof schemaDefinition, "agentCodes">;
+export type AgentGrantsDoc = Document.Document<typeof schemaDefinition, "agentGrants">;
 export type ArticleBucketsDoc = Document.Document<typeof schemaDefinition, "articleBuckets">;
 export type ArticleCatalogDoc = Document.Document<typeof schemaDefinition, "articleCatalog">;
 export type ArticleCategoriesDoc = Document.Document<typeof schemaDefinition, "articleCategories">;
@@ -94,7 +94,6 @@ export type ExamsDoc = Document.Document<typeof schemaDefinition, "exams">;
 export type GradingSchemesDoc = Document.Document<typeof schemaDefinition, "gradingSchemes">;
 export type GraduationLettersDoc = Document.Document<typeof schemaDefinition, "graduationLetters">;
 export type GraduationsDoc = Document.Document<typeof schemaDefinition, "graduations">;
-export type GuardianCodesDoc = Document.Document<typeof schemaDefinition, "guardianCodes">;
 export type GuardianConsentsDoc = Document.Document<typeof schemaDefinition, "guardianConsents">;
 export type GuardianLinksDoc = Document.Document<typeof schemaDefinition, "guardianLinks">;
 export type GuardianRequestsDoc = Document.Document<typeof schemaDefinition, "guardianRequests">;
@@ -184,9 +183,9 @@ export type WelcomeEmailIntentsDoc = Document.Document<typeof schemaDefinition, 
 export interface Docs {
   accountConsentDecisions: AccountConsentDecisionsDoc;
   accountConsents: AccountConsentsDoc;
-  accountDeletionAttemptCancellations: AccountDeletionAttemptCancellationsDoc;
-  accountDeletionPreparations: AccountDeletionPreparationsDoc;
-  accountDeletionReceipts: AccountDeletionReceiptsDoc;
+  agentClients: AgentClientsDoc;
+  agentCodes: AgentCodesDoc;
+  agentGrants: AgentGrantsDoc;
   articleBuckets: ArticleBucketsDoc;
   articleCatalog: ArticleCatalogDoc;
   articleCategories: ArticleCategoriesDoc;
@@ -275,7 +274,6 @@ export interface Docs {
   gradingSchemes: GradingSchemesDoc;
   graduationLetters: GraduationLettersDoc;
   graduations: GraduationsDoc;
-  guardianCodes: GuardianCodesDoc;
   guardianConsents: GuardianConsentsDoc;
   guardianLinks: GuardianLinksDoc;
   guardianRequests: GuardianRequestsDoc;

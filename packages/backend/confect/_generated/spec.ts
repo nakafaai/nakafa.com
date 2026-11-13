@@ -1,17 +1,19 @@
 import { GroupSpec, Spec } from "@confect/core";
+import acceptance_accounts from "../acceptance/accounts.spec";
 import access_grants from "../access/grants.spec";
 import analytics_capture from "../analytics/capture.spec";
 import analytics_erasure_action from "../analytics/erasure/action.spec";
 import analytics_erasure_workflow from "../analytics/erasure/workflow.spec";
-import auth_actions from "../auth/actions.spec";
+import auth_account from "../auth/account.spec";
+import auth_caller from "../auth/caller.spec";
 import auth_cleanup from "../auth/cleanup.spec";
+import auth_core from "../auth/core.spec";
 import auth_deletion from "../auth/deletion.spec";
 import auth_deletion_cleanup from "../auth/deletion/cleanup.spec";
-import auth_deletion_recovery from "../auth/deletion/recovery.spec";
-import auth_deletion_verification from "../auth/deletion/verification.spec";
 import auth_deletion_workflow from "../auth/deletion/workflow.spec";
-import auth_lifecycle from "../auth/lifecycle.spec";
+import auth_grant from "../auth/grant.spec";
 import auth_queries from "../auth/queries.spec";
+import auth_school from "../auth/school.spec";
 import billing_accounts from "../billing/accounts.spec";
 import billing_checkout from "../billing/checkout.spec";
 import billing_contracts from "../billing/contracts.spec";
@@ -146,7 +148,6 @@ import exams_screens from "../exams/screens.spec";
 import exams_seed from "../exams/seed.spec";
 import exams_sittings from "../exams/sittings.spec";
 import exams_sittings_timers from "../exams/sittings/timers.spec";
-import guardians_codes from "../guardians/codes.spec";
 import guardians_family from "../guardians/family.spec";
 import guardians_links from "../guardians/links.spec";
 import guardians_requests from "../guardians/requests.spec";
@@ -273,9 +274,10 @@ import users_queries from "../users/queries.spec";
 import vault_keys from "../vault/keys.spec";
 
 const spec: Spec.Spec<{
+  readonly acceptance: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "acceptance", never, GroupSpec.NamedAt<typeof acceptance_accounts, "accounts">>, "acceptance">;
   readonly access: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "access", never, GroupSpec.NamedAt<typeof access_grants, "grants">>, "access">;
   readonly analytics: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "analytics", never, GroupSpec.NamedAt<typeof analytics_capture, "capture"> | GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "erasure", never, GroupSpec.NamedAt<typeof analytics_erasure_action, "action"> | GroupSpec.NamedAt<typeof analytics_erasure_workflow, "workflow">>, "erasure">>, "analytics">;
-  readonly auth: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "auth", never, GroupSpec.NamedAt<typeof auth_actions, "actions"> | GroupSpec.NamedAt<typeof auth_cleanup, "cleanup"> | GroupSpec.NamedAt<GroupSpec.AddGroups<typeof auth_deletion, GroupSpec.NamedAt<typeof auth_deletion_cleanup, "cleanup"> | GroupSpec.NamedAt<typeof auth_deletion_recovery, "recovery"> | GroupSpec.NamedAt<typeof auth_deletion_verification, "verification"> | GroupSpec.NamedAt<typeof auth_deletion_workflow, "workflow">>, "deletion"> | GroupSpec.NamedAt<typeof auth_lifecycle, "lifecycle"> | GroupSpec.NamedAt<typeof auth_queries, "queries">>, "auth">;
+  readonly auth: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "auth", never, GroupSpec.NamedAt<typeof auth_account, "account"> | GroupSpec.NamedAt<typeof auth_caller, "caller"> | GroupSpec.NamedAt<typeof auth_cleanup, "cleanup"> | GroupSpec.NamedAt<typeof auth_core, "core"> | GroupSpec.NamedAt<GroupSpec.AddGroups<typeof auth_deletion, GroupSpec.NamedAt<typeof auth_deletion_cleanup, "cleanup"> | GroupSpec.NamedAt<typeof auth_deletion_workflow, "workflow">>, "deletion"> | GroupSpec.NamedAt<typeof auth_grant, "grant"> | GroupSpec.NamedAt<typeof auth_queries, "queries"> | GroupSpec.NamedAt<typeof auth_school, "school">>, "auth">;
   readonly billing: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "billing", never, GroupSpec.NamedAt<typeof billing_accounts, "accounts"> | GroupSpec.NamedAt<typeof billing_checkout, "checkout"> | GroupSpec.NamedAt<typeof billing_contracts, "contracts"> | GroupSpec.NamedAt<typeof billing_deletion, "deletion"> | GroupSpec.NamedAt<typeof billing_draw, "draw"> | GroupSpec.NamedAt<typeof billing_events, "events"> | GroupSpec.NamedAt<typeof billing_grants, "grants"> | GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "polar", never, GroupSpec.NamedAt<typeof billing_polar_school, "school">>, "polar"> | GroupSpec.NamedAt<typeof billing_queries, "queries"> | GroupSpec.NamedAt<typeof billing_receipts, "receipts"> | GroupSpec.NamedAt<typeof billing_reconcile, "reconcile"> | GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "reminder", never, GroupSpec.NamedAt<typeof billing_reminder_delivery, "delivery"> | GroupSpec.NamedAt<typeof billing_reminder_internal, "internal">>, "reminder"> | GroupSpec.NamedAt<typeof billing_school, "school"> | GroupSpec.NamedAt<typeof billing_sessions, "sessions"> | GroupSpec.NamedAt<typeof billing_topup, "topup"> | GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "xendit", never, GroupSpec.NamedAt<typeof billing_xendit_cancel, "cancel"> | GroupSpec.NamedAt<typeof billing_xendit_checkout, "checkout"> | GroupSpec.NamedAt<typeof billing_xendit_invoice, "invoice"> | GroupSpec.NamedAt<typeof billing_xendit_renewal, "renewal">>, "xendit">>, "billing">;
   readonly bucket: GroupSpec.NamedAt<typeof bucket, "bucket">;
   readonly chats: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "chats", never, GroupSpec.NamedAt<typeof chats_mutations, "mutations"> | GroupSpec.NamedAt<typeof chats_queries, "queries">>, "chats">;
@@ -289,7 +291,7 @@ const spec: Spec.Spec<{
   readonly editor: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "editor", never, GroupSpec.NamedAt<typeof editor_deletion, "deletion"> | GroupSpec.NamedAt<typeof editor_documents, "documents"> | GroupSpec.NamedAt<typeof editor_fold, "fold"> | GroupSpec.NamedAt<typeof editor_prune, "prune"> | GroupSpec.NamedAt<typeof editor_steps, "steps">>, "editor">;
   readonly emails: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "emails", never, GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "digest", never, GroupSpec.NamedAt<typeof emails_digest_delivery, "delivery"> | GroupSpec.NamedAt<typeof emails_digest_internal, "internal">>, "digest"> | GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "invite", never, GroupSpec.NamedAt<typeof emails_invite_delivery, "delivery"> | GroupSpec.NamedAt<typeof emails_invite_internal, "internal"> | GroupSpec.NamedAt<typeof emails_invite_workflow, "workflow">>, "invite"> | GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "notice", never, GroupSpec.NamedAt<typeof emails_notice_delivery, "delivery"> | GroupSpec.NamedAt<typeof emails_notice_internal, "internal">>, "notice"> | GroupSpec.NamedAt<typeof emails_retention, "retention"> | GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "welcome", never, GroupSpec.NamedAt<typeof emails_welcome_delivery, "delivery"> | GroupSpec.NamedAt<typeof emails_welcome_internal, "internal"> | GroupSpec.NamedAt<typeof emails_welcome_reconciliation, "reconciliation"> | GroupSpec.NamedAt<typeof emails_welcome_workflow, "workflow">>, "welcome">>, "emails">;
   readonly exams: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "exams", never, GroupSpec.NamedAt<typeof exams_assets, "assets"> | GroupSpec.NamedAt<typeof exams_exams, "exams"> | GroupSpec.NamedAt<typeof exams_imports, "imports"> | GroupSpec.NamedAt<typeof exams_joins, "joins"> | GroupSpec.NamedAt<typeof exams_presence, "presence"> | GroupSpec.NamedAt<typeof exams_questions, "questions"> | GroupSpec.NamedAt<typeof exams_reads, "reads"> | GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "results", never, GroupSpec.NamedAt<typeof exams_results_results, "results">>, "results"> | GroupSpec.NamedAt<typeof exams_rooms, "rooms"> | GroupSpec.NamedAt<typeof exams_screens, "screens"> | GroupSpec.NamedAt<typeof exams_seed, "seed"> | GroupSpec.NamedAt<GroupSpec.AddGroups<typeof exams_sittings, GroupSpec.NamedAt<typeof exams_sittings_timers, "timers">>, "sittings">>, "exams">;
-  readonly guardians: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "guardians", never, GroupSpec.NamedAt<typeof guardians_codes, "codes"> | GroupSpec.NamedAt<typeof guardians_family, "family"> | GroupSpec.NamedAt<typeof guardians_links, "links"> | GroupSpec.NamedAt<typeof guardians_requests, "requests"> | GroupSpec.NamedAt<typeof guardians_seed, "seed">>, "guardians">;
+  readonly guardians: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "guardians", never, GroupSpec.NamedAt<typeof guardians_family, "family"> | GroupSpec.NamedAt<typeof guardians_links, "links"> | GroupSpec.NamedAt<typeof guardians_requests, "requests"> | GroupSpec.NamedAt<typeof guardians_seed, "seed">>, "guardians">;
   readonly identity: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "identity", never, GroupSpec.NamedAt<typeof identity_cards, "cards"> | GroupSpec.NamedAt<typeof identity_logins, "logins"> | GroupSpec.NamedAt<typeof identity_seed, "seed">>, "identity">;
   readonly insight: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "insight", never, GroupSpec.NamedAt<typeof insight_calibration, "calibration"> | GroupSpec.NamedAt<typeof insight_drafts, "drafts"> | GroupSpec.NamedAt<typeof insight_narratives, "narratives"> | GroupSpec.NamedAt<typeof insight_observe, "observe"> | GroupSpec.NamedAt<typeof insight_practice, "practice"> | GroupSpec.NamedAt<typeof insight_reads, "reads"> | GroupSpec.NamedAt<typeof insight_retention, "retention"> | GroupSpec.NamedAt<typeof insight_tags, "tags">>, "insight">;
   readonly integrations: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "integrations", never, GroupSpec.NamedAt<typeof integrations_clients, "clients"> | GroupSpec.NamedAt<typeof integrations_devices, "devices"> | GroupSpec.NamedAt<typeof integrations_hooks, "hooks"> | GroupSpec.NamedAt<typeof integrations_reads, "reads"> | GroupSpec.NamedAt<typeof integrations_tokens, "tokens"> | GroupSpec.NamedAt<typeof integrations_webhooks, "webhooks"> | GroupSpec.NamedAt<typeof integrations_writes, "writes">>, "integrations">;
@@ -312,6 +314,9 @@ const spec: Spec.Spec<{
   readonly users: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "users", never, GroupSpec.NamedAt<typeof users_mutations, "mutations"> | GroupSpec.NamedAt<typeof users_queries, "queries">>, "users">;
   readonly vault: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "vault", never, GroupSpec.NamedAt<typeof vault_keys, "keys">>, "vault">;
 }> = Spec.fromGroups({
+  ["acceptance"]: GroupSpec.addGroupsAt(GroupSpec.make(), {
+    ["accounts"]: acceptance_accounts,
+  }),
   ["access"]: GroupSpec.addGroupsAt(GroupSpec.make(), {
     ["grants"]: access_grants,
   }),
@@ -323,16 +328,17 @@ const spec: Spec.Spec<{
     }),
   }),
   ["auth"]: GroupSpec.addGroupsAt(GroupSpec.make(), {
-    ["actions"]: auth_actions,
+    ["account"]: auth_account,
+    ["caller"]: auth_caller,
     ["cleanup"]: auth_cleanup,
+    ["core"]: auth_core,
     ["deletion"]: GroupSpec.addGroupsAt(auth_deletion, {
       ["cleanup"]: auth_deletion_cleanup,
-      ["recovery"]: auth_deletion_recovery,
-      ["verification"]: auth_deletion_verification,
       ["workflow"]: auth_deletion_workflow,
     }),
-    ["lifecycle"]: auth_lifecycle,
+    ["grant"]: auth_grant,
     ["queries"]: auth_queries,
+    ["school"]: auth_school,
   }),
   ["billing"]: GroupSpec.addGroupsAt(GroupSpec.make(), {
     ["accounts"]: billing_accounts,
@@ -530,7 +536,6 @@ const spec: Spec.Spec<{
     }),
   }),
   ["guardians"]: GroupSpec.addGroupsAt(GroupSpec.make(), {
-    ["codes"]: guardians_codes,
     ["family"]: guardians_family,
     ["links"]: guardians_links,
     ["requests"]: guardians_requests,

@@ -6,7 +6,7 @@ import {
   GoogleMethod,
   SchoolMethod,
   SchoolSignUpRefused,
-} from "@repo/backend/confect/auth/account";
+} from "@repo/backend/confect/auth/methods";
 import { Schema } from "effect";
 
 /**

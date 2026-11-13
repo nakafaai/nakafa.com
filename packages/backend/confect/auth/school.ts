@@ -2,29 +2,7 @@ import { loginAccountOf } from "@repo/backend/confect/identity/logins";
 import { MutationCtx } from "@repo/backend/confect/_generated/services";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { api } from "@repo/backend/convex/_generated/api";
-import { Effect, Option, Schema } from "effect";
-
-/** The tokens of a session that a sign-in made, as Convex Auth answers them. */
-const SessionTokens = Schema.Struct({
-  accessToken: Schema.String,
-  refreshToken: Schema.String,
-  refreshTokenExpiresAt: Schema.Finite,
-  userId: Schema.String,
-});
-
-/**
- * The answer of a school sign-in, in the envelope Convex Auth's sign-in route
- * forwards: the session's tokens, which the route moves into cookies, or one
- * refusal for every cause, so a visitor never learns whether a login name
- * exists on the school or whether its attempts ran out (ADR 0009).
- */
-export const SchoolSignIn = Schema.Union([
-  Schema.Struct({ status: Schema.Literal("complete"), tokens: SessionTokens }),
-  Schema.Struct({
-    status: Schema.Literal("error"),
-    userError: Schema.Struct({ error: Schema.Literal("INVALID_CREDENTIALS") }),
-  }),
-]);
+import { Effect, Option } from "effect";
 
 const refused = {
   status: "error" as const,

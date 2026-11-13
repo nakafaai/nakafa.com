@@ -2,10 +2,9 @@ import { setupGoogle } from "@convex-dev/auth/methods/google/server";
 import { setupUsernamePassword } from "@convex-dev/auth/methods/username-password/server";
 import { setupConvexAuth } from "@convex-dev/auth/server";
 import { components } from "@repo/backend/confect/_generated/components";
-import { readSiteUrls } from "@repo/backend/confect/site/config";
 import { internal } from "@repo/backend/convex/_generated/api";
 import { ConvexConfigProvider } from "@confect/server";
-import { Array as Arr, Duration, Effect } from "effect";
+import { Array as Arr, Config, Duration, Effect } from "effect";
 
 /**
  * How long an access token lives. A function resolves its caller through the
@@ -34,14 +33,21 @@ const core = setupConvexAuth({
 
 /**
  * The sites a Google sign-in may return to: production's site, or the dev
- * deployment's local and staging sites. A school host starts its sign-in on the
- * main site, whose cookie every school host shares (ADR 0026). Convex runs this
- * when it loads the module, so a deployment without a site refuses the push.
+ * deployment's local and staging sites (`site/config`). A school host starts
+ * its sign-in on the main site, whose cookie every school host shares
+ * (ADR 0026). Convex reads this when it loads the module; where no site is set,
+ * as when the CLI only reads the module's functions, no address is allowed.
  */
 const redirectOrigins = Effect.runSync(
-  readSiteUrls().pipe(
-    Effect.map((sites) => Arr.map(sites, (site) => site.origin)),
-    Effect.provide(ConvexConfigProvider.layer)
+  Effect.all([
+    Config.option(Config.URL("SITE_URL")),
+    Config.option(Config.URL("STAGING_SITE_URL")),
+  ]).pipe(
+    Effect.map((sites) =>
+      Arr.map(Arr.getSomes(sites), (site) => site.origin)
+    ),
+    Effect.provide(ConvexConfigProvider.layer),
+    Effect.orDie
   )
 );
 
