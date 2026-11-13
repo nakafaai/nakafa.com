@@ -9,6 +9,7 @@ import {
   levelOnDay,
   occupancyOf,
   SPIKES,
+  spikeAnchor,
 } from "@repo/design-system/components/contents/biology/virus/binding";
 import { Array as Arr } from "effect";
 
@@ -39,5 +40,16 @@ describe("antibodies on spikes", () => {
     expect(levelOnDay(0)).toBeLessThan(0.1);
     expect(levelOnDay(11)).toBeCloseTo(10);
     expect(levelOnDay(28)).toBeGreaterThan(19.9);
+  });
+});
+
+describe("spike anchors", () => {
+  it("puts every spike on the unit sphere, from pole to pole", () => {
+    Arr.forEach(Arr.range(0, SPIKES - 1), (index) => {
+      const [x, y, z] = spikeAnchor(index, SPIKES);
+      expect(Math.hypot(x, y, z)).toBeCloseTo(1);
+    });
+    expect(spikeAnchor(0, SPIKES)[1]).toBeGreaterThan(0.9);
+    expect(spikeAnchor(SPIKES - 1, SPIKES)[1]).toBeLessThan(-0.9);
   });
 });

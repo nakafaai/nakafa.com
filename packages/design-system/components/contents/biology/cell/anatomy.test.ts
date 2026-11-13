@@ -4,11 +4,14 @@ import { describe, expect, it } from "@effect/vitest";
 import {
   BUD_MINUTES,
   bodyOf,
+  focusAt,
+  LINEUP,
   budShare,
   isDividing,
   lengthOf,
   SIZES,
   scaleBar,
+  spotInHalf,
   timesLarger,
   viewWidth,
 } from "@repo/design-system/components/contents/biology/cell/anatomy";
@@ -64,5 +67,25 @@ describe("zooming from a cell to a virus", () => {
     );
     expect(viewWidth(-1)).toBe(50);
     expect(viewWidth(2)).toBeCloseTo(0.25);
+  });
+});
+
+describe("organelle spots", () => {
+  it("keeps every spot inside the back half, clear of the skin and the cut", () => {
+    for (let index = 0; index < 200; index += 1) {
+      const [x, y, z] = spotInHalf(index, 3, 0.1);
+      expect(Math.hypot(x, y, z)).toBeLessThanOrEqual(0.9 + 1e-9);
+      expect(z).toBeLessThanOrEqual(-0.1);
+    }
+  });
+});
+
+describe("the zoom's path", () => {
+  it("centres the cell, then the bacterium and virion, then the virion", () => {
+    expect(focusAt(50)).toBe(0);
+    expect(focusAt(5)).toBeGreaterThan(LINEUP.bacterium - 1);
+    expect(focusAt(5)).toBeLessThan(LINEUP.virion);
+    expect(focusAt(0.25)).toBe(LINEUP.virion);
+    expect(focusAt(80)).toBe(0);
   });
 });

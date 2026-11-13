@@ -8,6 +8,7 @@ import {
   pathwayOf,
   RECORD_SPAN,
   recordLevel,
+  recordRate,
   sinkAt,
 } from "@repo/design-system/components/contents/biology/climate/budget";
 import { Array as Arr, Option } from "effect";
@@ -19,6 +20,12 @@ describe("the Mauna Loa record", () => {
     expect(recordLevel(1965)).toBeCloseTo((316.91 + 325.68) / 2);
     expect(recordLevel(1900)).toBe(316.91);
     expect(recordLevel(2100)).toBe(424.61);
+  });
+
+  it("reads how fast the level rose over the last ten years", () => {
+    expect(recordRate(1970)).toBeCloseTo((325.68 - 316.91) / 10);
+    expect(recordRate(1960)).toBeCloseTo(recordRate(1970));
+    expect(recordRate(2020)).toBeCloseTo((414.21 - 390.1) / 10);
   });
 });
 

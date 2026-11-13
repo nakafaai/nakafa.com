@@ -36,7 +36,7 @@ export const SegmentSchema = Schema.Tuple([
 export type Segment = typeof SegmentSchema.Type;
 
 /** The spores sown on the beans: `count` of them at seeded spots, each one tip. */
-export function sporesOf(count: number) {
+export function sporesOf(count: number): readonly Tip[] {
   return Arr.map(Arr.range(0, count - 1), (id) => ({
     heading: hashUnit(id, 7) * Math.PI * 2,
     id,

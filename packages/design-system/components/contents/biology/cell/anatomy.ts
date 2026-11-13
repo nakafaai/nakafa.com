@@ -1,3 +1,4 @@
+import { hashUnit } from "@repo/design-system/components/contents/simulation/grain";
 import { Array as Arr, Schema } from "effect";
 
 /** The four cells a learner meets first: one from each kingdom they study. */
@@ -121,4 +122,34 @@ export function viewWidth(share: number) {
   const narrowest = 0.25;
   const clamped = Math.min(1, Math.max(0, share));
   return widest * (narrowest / widest) ** clamped;
+}
+
+/**
+ * A seeded spot inside the back half of a unit ball, kept `margin` from its
+ * skin and its cut, so organelles never poke through either.
+ */
+export function spotInHalf(index: number, salt: number, margin: number) {
+  const radius = (1 - margin) * Math.cbrt(hashUnit(index, salt));
+  const theta = Math.acos(2 * hashUnit(index, salt + 1) - 1);
+  const phi = Math.PI + hashUnit(index, salt + 2) * Math.PI;
+  const x = radius * Math.sin(theta) * Math.cos(phi);
+  const y = radius * Math.cos(theta);
+  const z = Math.min(-margin, radius * Math.sin(theta) * Math.sin(phi));
+  return [x, y, z] as const;
+}
+
+/** Where the virion sits beside the cell and the bacterium, in micrometres along x. */
+export const LINEUP = { bacterium: 11.8, cell: 0, virion: 13.3 } as const;
+
+/**
+ * The point the zoom centres on at a view `width` µm wide: the cell's middle
+ * when the whole cell shows, the bacterium and the virion together near
+ * 5 µm, and the virion alone at the closest zoom. The path follows the
+ * zoom's own logarithmic steps, eased at both ends.
+ */
+export function focusAt(width: number) {
+  const steps = Math.log(50 / width) / Math.log(200);
+  const share = Math.min(1, Math.max(0, steps / 0.55));
+  const eased = share * share * (3 - 2 * share);
+  return LINEUP.virion * eased;
 }

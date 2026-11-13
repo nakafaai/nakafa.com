@@ -53,14 +53,22 @@ export function outlookOf(scenario: Scenario) {
 }
 
 /**
- * The village in the card: a beach that climbs 1 m every 50 m inland, and
+ * The village in the card: a beach that climbs 1 m every 20 m inland, and
  * houses whose floors stand these heights in metres above today's high tide.
  */
 export const VILLAGE = {
   floors: [0.4, 0.6, 0.8, 1, 1.3, 1.6, 2, 2.5],
-  slope: 1 / 50,
+  slope: 1 / 20,
   wall: 1.5,
 } as const;
+
+/** The rate of rise in `year`'s period of the record, in metres a year. */
+export function recordRate(year: number) {
+  const clamped = Math.min(RECORD_YEARS.last, Math.max(RECORD_YEARS.first, year));
+  return Arr.reduce(RECORD, 0, (rate, span) =>
+    clamped >= span.from && clamped <= span.to ? span.rate : rate
+  );
+}
 
 /** How far inland the shoreline moves when the sea rises `rise` metres on a slope. */
 export function retreatOf(rise: number, slope: number) {
@@ -98,4 +106,18 @@ export function floodedCount(
     return 0;
   }
   return Arr.length(Arr.filter(floors, (floor) => floor < level));
+}
+
+/** The height of the ground `x` metres inland of today's high-tide line. */
+export function groundAt(x: number) {
+  return x * VILLAGE.slope;
+}
+
+/**
+ * Where house `index` stands, in metres: inland until the ground reaches its
+ * floor's height, in two staggered rows along the coast.
+ */
+export function houseSpot(index: number, floor: number) {
+  const x = floor / VILLAGE.slope;
+  return [x, groundAt(x), index % 2 === 0 ? -9 : 7] as const;
 }

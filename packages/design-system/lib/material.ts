@@ -112,9 +112,12 @@ export const MATERIAL = {
   mitochondrion: "#c8643c",
   nucleolus: "#5a3d72",
   nucleus: "#8f6bb0",
+  phosphate: "#e4dccb",
+  phosphateNew: "#9fc3c9",
   receptor: "#3d8f8a",
   reticulum: "#d9a7a0",
   ribosome: "#6b4a3a",
+  spike: "#c4704d",
   vacuole: "#dfeef0",
   yeastCell: "#e6d3a8",
 

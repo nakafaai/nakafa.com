@@ -58,3 +58,14 @@ export function levelOnDay(day: number) {
 function choose(n: number, k: number) {
   return Arr.reduce(Arr.range(1, k), 1, (product, step) => (product * (n - k + step)) / step);
 }
+
+/**
+ * Where spike `index` of `count` stands on a virion of radius 1: spread evenly
+ * over the sphere along a golden-angle spiral, so no two crowd together.
+ */
+export function spikeAnchor(index: number, count: number) {
+  const y = 1 - (2 * (index + 0.5)) / count;
+  const ring = Math.sqrt(1 - y * y);
+  const angle = index * Math.PI * (3 - Math.sqrt(5));
+  return [Math.cos(angle) * ring, y, Math.sin(angle) * ring] as const;
+}

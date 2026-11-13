@@ -23,12 +23,18 @@ export function recordLevel(year: number) {
   const clamped = Math.min(RECORD_SPAN.last, Math.max(RECORD_SPAN.first, year));
   return Arr.reduce(
     Arr.zip(MAUNA_LOA, Arr.drop(MAUNA_LOA, 1)),
-    MAUNA_LOA[0][1],
+    Number(MAUNA_LOA[0][1]),
     (level, [[from, low], [to, high]]) =>
       clamped >= from && clamped <= to
         ? low + ((high - low) * (clamped - from)) / (to - from)
         : level
   );
+}
+
+/** How fast CO2 rose over the ten years up to `year`, in ppm a year. */
+export function recordRate(year: number) {
+  const end = Math.min(RECORD_SPAN.last, Math.max(RECORD_SPAN.first + 10, year));
+  return (recordLevel(end) - recordLevel(end - 10)) / 10;
 }
 
 /**
@@ -101,13 +107,15 @@ export function fossilIn(year: number, pathway: Pathway) {
 export const YearSchema = Schema.Struct({
   level: Schema.Finite,
   net: Schema.Finite,
+  total: Schema.Finite,
   warming: Schema.Finite,
   year: Schema.Finite,
 });
 export type Year = typeof YearSchema.Type;
 
 /**
- * The budget year by year from 2024 to `last`. Each year the air gains what
+ * The budget year by year from 2024 to `last`, with the CO2 emitted since
+ * 2024 in GtC as `total`. Each year the air gains what
  * is emitted minus what the sinks and new forests take up. Warming follows
  * the cumulative CO2 emitted since 2024 at AR6's best estimate of 0.45 °C
  * per 1000 GtCO2 (SPM D.1.1), from about 1.3 °C of human-caused warming in
@@ -116,10 +124,17 @@ export type Year = typeof YearSchema.Type;
  */
 export function pathwayOf(pathway: Pathway, last: number) {
   const years = Math.max(1, Math.round(last - BUDGET.startYear));
+  const first: Year = {
+    level: BUDGET.start,
+    net: BUDGET.fossil + BUDGET.land - BUDGET.sinks,
+    total: 0,
+    warming: BUDGET.startWarming,
+    year: BUDGET.startYear,
+  };
   return Arr.scan(
     Arr.range(1, years),
-    { level: BUDGET.start, net: BUDGET.fossil + BUDGET.land - BUDGET.sinks, total: 0, warming: BUDGET.startWarming, year: BUDGET.startYear },
-    (state, step) => {
+    first,
+    (state, step): Year => {
       const year = BUDGET.startYear + step;
       const emitted = fossilIn(year, pathway) + BUDGET.land;
       const net = emitted - sinkAt(state.level) - Math.max(0, pathway.forest);
