@@ -9,11 +9,10 @@ import { ChildProcess } from "effect/process";
 import { runEntry } from "#scripts/entry";
 import { writeOutput } from "#scripts/output";
 import { failuresOf, makeBaseline } from "#scripts/proof/baseline";
+import { mainHead, ProofError } from "#scripts/proof/client";
 import {
   DEFAULT_SHARDS,
   githubProver,
-  mainHead,
-  ProofError,
   postVerdict,
   proveOnGithub,
   type RunTimings,

@@ -85,13 +85,44 @@ const download = (
         ),
       };
 
+/** One `proof` status on a head, as the waiter reads it. */
+const ProofStatus = Schema.Struct({
+  state: Schema.String,
+  targetUrl: Schema.String,
+});
+
+/** A GraphQL answer with these `proof` statuses on the head, or with no status at all. */
+export const statusAnswer = (
+  proofs: readonly (typeof ProofStatus.Type)[] | null
+) =>
+  toJson({
+    data: {
+      repository: {
+        object: {
+          status:
+            proofs === null
+              ? null
+              : {
+                  contexts: Arr.map(proofs, (proof) => ({
+                    context: "proof",
+                    ...proof,
+                  })),
+                },
+        },
+      },
+    },
+  });
+
 /** What the calls around a proof answer: the sweep's lists, the head of main and the statuses posted. */
 const housekeeping = (args: readonly string[]): Answer | undefined => {
-  if (args[0] === "pr" || args[1] === "cancel") {
+  if (args[0] === "pr" || args[0] === "fetch" || args[1] === "cancel") {
     return {};
   }
   if (Arr.contains(args, "--status")) {
     return { stdout: "[]" };
+  }
+  if (args[1] === "graphql") {
+    return { stdout: statusAnswer([{ state: "SUCCESS", targetUrl: RUN.url }]) };
   }
   if (args[0] === "api") {
     return Arr.contains(args, "--silent") ? {} : { stdout: `${MAIN}\n` };
