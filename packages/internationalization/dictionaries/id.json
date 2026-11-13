@@ -2664,11 +2664,21 @@
     "search-bar-placeholder": "Cari konten...",
     "search-placeholder": "Cari yang kamu mau...",
     "search-not-found": "Yah, nggak nemu apa-apa nih.",
-    "search-loading": "Lagi nyari...",
     "search-error": "Ada masalah saat mencari. Coba lagi ya.",
     "search-title": "Cari Materi Belajar",
     "search-results": "Hasil pencarian",
-    "search-description": "Cari materi belajar gratis, artikel edukasi, latihan soal, dan sumber belajar. Temukan topik yang sedang kamu pelajari."
+    "search-description": "Cari materi belajar gratis, artikel edukasi, latihan soal, dan sumber belajar. Temukan topik yang sedang kamu pelajari.",
+    "search-group-curricula": "Kurikulum",
+    "search-group-lessons": "Materi",
+    "search-group-tryouts": "Try out",
+    "search-group-quran": "Al-Qur'an",
+    "search-group-articles": "Artikel",
+    "search-group-pages": "Halaman",
+    "search-recent": "Terakhir dibuka",
+    "search-near": "Buat kamu",
+    "search-explore": "Jelajahi",
+    "search-full": "Cari \"{query}\" di materi",
+    "search-unavailable": "Pencarian belum siap. Coba pencarian lengkap."
   },
   "Home": {
     "greeting": "Hi, {name}",
