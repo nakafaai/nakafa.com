@@ -20,6 +20,7 @@ import {
   GameStoreContext,
   heldOf,
 } from "@/components/island/store";
+import { bodiesOf } from "@/lib/island/bodies";
 import {
   clampOrbit,
   easeOrbit,
@@ -29,7 +30,7 @@ import {
 import { hoeOf, ripeningOf, sownOf, waterOf } from "@/lib/island/farming";
 import type { Point } from "@/lib/island/gesture";
 import { itemPlanOf, turnOf } from "@/lib/island/items";
-import { type Animal, herdOf, herdQuads, wander } from "@/lib/island/life";
+import { type Animal, flatQuads, herdOf, wander } from "@/lib/island/life";
 import { changedChunks, glowOf } from "@/lib/island/light";
 import { rayThrough } from "@/lib/island/matrix";
 import { lightingOf, meshChunk } from "@/lib/island/mesh";
@@ -299,7 +300,7 @@ function start(
     return next;
   };
 
-  /** Hands the painter every creature this frame: the herd, the fox facing its way or its float, the wild visitors, and the float itself. */
+  /** Hands the painter every creature this frame: the herd and the fox facing its way or its float as true 3D bodies (D21), then the wild visitors and the float. */
   const drawLife = (
     cells: Cells,
     next: Option.Option<readonly [number, number]>,
@@ -322,12 +323,10 @@ function start(
       x: walker.x,
       z: walker.z,
     };
+    painter.bodies(bodiesOf(cells, Arr.append(herd, fox), seconds));
     painter.herd(
-      herdQuads(
-        cells,
-        Arr.append(herd, fox),
+      flatQuads(
         size,
-        orbit.yaw,
         seconds,
         Arr.appendAll(
           wildVertices(cells, wild, size, orbit.yaw, seconds),

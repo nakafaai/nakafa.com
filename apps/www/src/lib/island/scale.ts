@@ -23,4 +23,8 @@ export const SCALE = {
   fowl: 0.5,
   /** Nina, a young hammerhead, about 2.3 m long. */
   nina: 2.6,
+  /** A dairy cow: 1.4 m at the shoulder and 2.4 m from nose to tail, in blocks (D21). */
+  cow: { height: 1.4 / 0.9, length: 2.4 / 0.9 },
+  /** A young humpback whale, 13 m long, in blocks (D21). */
+  whale: 13 / 0.9,
 } as const;
