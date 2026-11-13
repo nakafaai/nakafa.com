@@ -5,6 +5,7 @@ import {
 } from "@confect/react";
 import { Share08Icon, Target02Icon } from "@hugeicons/core-free-icons";
 import insight from "@repo/backend/confect/_generated/refs/insight";
+import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { PersonAvatar } from "@repo/design-system/components/ui/person";
@@ -152,36 +153,38 @@ function TeacherInsight() {
       <SchoolHeader items={[{ label: t("title") }]} title={t("title")}>
         {Option.isSome(chosen) ? (
           <>
-            <Select
-              items={items}
-              onValueChange={(value) => setPicked(value)}
-              value={chosen.value.id}
-            >
-              <SelectTrigger aria-label={t("class")} className="w-32 sm:w-56">
-                <SelectValue placeholder={t("class")} />
-              </SelectTrigger>
-              <SelectContent label={common("menu-class")}>
-                {Arr.map(items, (item) => (
-                  <SelectItem
-                    icon={
-                      <PersonAvatar
-                        className="size-5"
-                        mascot={markOf(item.value)}
-                      />
-                    }
-                    key={item.value}
-                    value={item.value}
-                  >
-                    {item.label}
-                  </SelectItem>
-                ))}
-                {PaginatedQueryResult.isCanLoadMore(school) ? (
-                  <Intersection
-                    onIntersect={() => school.loadMore(CLASS_PAGE_SIZE)}
-                  />
-                ) : null}
-              </SelectContent>
-            </Select>
+            <ButtonGroup>
+              <Select
+                items={items}
+                onValueChange={(value) => setPicked(value)}
+                value={chosen.value.id}
+              >
+                <SelectTrigger aria-label={t("class")} className="w-32 sm:w-56">
+                  <SelectValue placeholder={t("class")} />
+                </SelectTrigger>
+                <SelectContent label={common("menu-class")}>
+                  {Arr.map(items, (item) => (
+                    <SelectItem
+                      icon={
+                        <PersonAvatar
+                          className="size-5"
+                          mascot={markOf(item.value)}
+                        />
+                      }
+                      key={item.value}
+                      value={item.value}
+                    >
+                      {item.label}
+                    </SelectItem>
+                  ))}
+                  {PaginatedQueryResult.isCanLoadMore(school) ? (
+                    <Intersection
+                      onIntersect={() => school.loadMore(CLASS_PAGE_SIZE)}
+                    />
+                  ) : null}
+                </SelectContent>
+              </Select>
+            </ButtonGroup>
             <QuestionTags />
           </>
         ) : null}

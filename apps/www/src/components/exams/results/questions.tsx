@@ -32,7 +32,6 @@ import { Button } from "@repo/design-system/components/ui/button";
 import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
 import { PopupHold } from "@repo/design-system/components/ui/hold";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { ScrollArea } from "@repo/design-system/components/ui/scroll-area";
 import {
   Select,
   SelectContent,
@@ -61,6 +60,7 @@ import {
   responseText,
   verdictKeys,
 } from "@/components/exams/results/model";
+import { PaneFill } from "@/components/shared/page/pane";
 import { reloadPage } from "@/components/shared/reload";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
@@ -154,8 +154,7 @@ function QuestionResults({
     return waits ? <PopupHold /> : null;
   }
   return (
-    <>
-      <QuestionCounts question={question} stats={stats.value} />
+    <PaneFill head={<QuestionCounts question={question} stats={stats.value} />}>
       {PaginatedQueryResult.isFailure(answers) ? (
         <DataFailure onRetry={reloadPage} />
       ) : null}
@@ -170,7 +169,7 @@ function QuestionResults({
         question={question}
         results={kept.value}
       />
-    </>
+    </PaneFill>
   );
 }
 
@@ -186,7 +185,7 @@ function QuestionCounts({
   const share = correctShare(stats);
 
   return (
-    <div className="flex flex-col gap-3 p-4">
+    <div className="flex flex-col gap-3">
       <div className="min-w-0 text-sm">
         {share === null ? null : (
           <p className="font-medium">{t("results-share", { share })}</p>
@@ -274,7 +273,7 @@ function AnswerList({
     );
   }
   return (
-    <div className="border-t [&_[data-slot=table-cell]]:whitespace-nowrap">
+    <>
       <DataTable
         columns={[
           answerColumns.text((answer) => answer.name, {
@@ -329,7 +328,7 @@ function AnswerList({
         />
       ) : null}
       {loadMore === null ? null : <TableEnd onLoad={loadMore} />}
-    </div>
+    </>
   );
 }
 
@@ -373,9 +372,7 @@ export function QuestionsSheet({
           // Each question holds its own search and verdict filter, so a question opened next starts whole.
           onSome: (question) => (
             <TableFiltersProvider key={question.id}>
-              <ScrollArea className="min-h-0 flex-1">
-                <QuestionResults question={question} waits={!moved} />
-              </ScrollArea>
+              <QuestionResults question={question} waits={!moved} />
               <SheetFooter className="flex-row items-center gap-2">
                 <ButtonGroup className="min-w-0 flex-1">
                   <Button

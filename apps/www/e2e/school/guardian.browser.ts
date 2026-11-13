@@ -136,7 +136,9 @@ test("an admin links a parent and corrects the mistyped email, the parent signs 
   await child.getByLabel("Child's NISN").fill(NISN);
   await child.getByRole("button", { name: "Check" }).click();
   await expect(child).toHaveAttribute("data-child", "verified");
-  await expect(child.getByText("No grade is released yet.")).toBeVisible();
+  await expect(
+    child.getByText("No grade is released yet", { exact: true })
+  ).toBeVisible();
 
   await settings.reload();
   await expect(row).toContainText("Verified");

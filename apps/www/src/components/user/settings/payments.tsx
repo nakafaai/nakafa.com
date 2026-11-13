@@ -19,6 +19,7 @@ import {
   CardSectionActions,
   CardSectionFooter,
 } from "@/components/shared/card/section";
+import { PaneFill } from "@/components/shared/page/pane";
 
 /** The receipts table's code, which the first intent on the card's action loads, so the sheet opens on its table. */
 const Receipts = lazy(() =>
@@ -65,9 +66,11 @@ export function UserSettingsPayments() {
             <SheetDescription>{t("payments-description")}</SheetDescription>
           </SheetHeader>
           {isActivated ? (
-            <Suspense fallback={<PopupHold />}>
-              <Receipts />
-            </Suspense>
+            <PaneFill>
+              <Suspense fallback={<PopupHold />}>
+                <Receipts />
+              </Suspense>
+            </PaneFill>
           ) : null}
           <SheetFooter>
             <p className="text-muted-foreground text-sm">

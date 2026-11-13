@@ -4,6 +4,7 @@ import {
   ArchiveRestoreIcon,
   Delete02Icon,
   PencilEdit02Icon,
+  TeacherIcon,
   UserGroupIcon,
 } from "@hugeicons/core-free-icons";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
@@ -33,6 +34,7 @@ import {
   removeCohortChange,
   restoreCohortChange,
 } from "@/components/tenant/settings/groups";
+import { HomeroomDialog } from "@/components/tenant/settings/homeroom";
 import type { Cohort } from "@/components/tenant/settings/state";
 import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 
@@ -116,7 +118,8 @@ function useCohortDelete(cohort: Cohort, slug: TenantSlug) {
 }
 
 /**
- * A cohort's row menu: Edit opens a dialog of its name and its school year, which starts from what the cohort holds
+ * A cohort's row menu: Homeroom teacher opens the cohort's homeroom (`HomeroomDialog`), and Edit opens a dialog of its
+ * name and its school year, which starts from what the cohort holds
  * and saves only a change; under the separator stand Archive and Delete for a cohort nothing holds (`useCohortDelete`).
  * An archived cohort offers Restore and Delete (`SchoolCohortRestore`), because the server refuses every other write.
  */
@@ -141,6 +144,7 @@ export function SchoolCohortMenu({
   );
   const remove = useCohortDelete(cohort, slug);
   const [isEditing, setIsEditing] = useState(false);
+  const [homeroomOpenings, setHomeroomOpenings] = useState(0);
   const [name, setName] = useState(cohort.name);
   const [gradeValue, setGradeValue] = useState<string | null>(
     String(cohort.grade)
@@ -193,6 +197,12 @@ export function SchoolCohortMenu({
         }
       >
         <DropdownMenuItem
+          icon={TeacherIcon}
+          onClick={() => setHomeroomOpenings((count) => count + 1)}
+        >
+          {t("homeroom-title")}
+        </DropdownMenuItem>
+        <DropdownMenuItem
           icon={PencilEdit02Icon}
           onClick={() => {
             setName(cohort.name);
@@ -244,6 +254,9 @@ export function SchoolCohortMenu({
           />
         </FieldGroup>
       </ResponsiveDialog>
+      {homeroomOpenings === 0 ? null : (
+        <HomeroomDialog cohort={cohort} key={homeroomOpenings} slug={slug} />
+      )}
     </>
   );
 }

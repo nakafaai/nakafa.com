@@ -269,8 +269,9 @@ const verifyReadingHeader = Effect.fn("NakafaE2E.verifyReadingHeader")(
       page.evaluate(() => {
         const kept = { text: "" };
         Object.assign(window, { copied: kept });
-        navigator.clipboard.writeText = async (text) => {
+        navigator.clipboard.writeText = (text) => {
           kept.text = text;
+          return Promise.resolve();
         };
         navigator.clipboard.write = async (items) => {
           for (const item of items) {

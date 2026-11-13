@@ -4,7 +4,6 @@ import exams from "@repo/backend/confect/_generated/refs/exams";
 import type { IntegrityRow } from "@repo/backend/confect/exams/results/contract";
 import { PopupHold } from "@repo/design-system/components/ui/hold";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { ScrollArea } from "@repo/design-system/components/ui/scroll-area";
 import {
   Sheet,
   SheetContent,
@@ -19,6 +18,7 @@ import {
   useSessionSettled,
 } from "@/components/exams/results/context";
 import { AwayCell } from "@/components/exams/results/students";
+import { PaneFill } from "@/components/shared/page/pane";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { RowCopy } from "@/components/shared/table/menu";
@@ -88,46 +88,47 @@ function IntegrityRows() {
   }
 
   return (
-    <>
-      <p className="text-muted-foreground border-b p-4 text-sm">
-        {t("integrity-clean", {
-          clean: students - rows.length,
-          students,
-        })}
-      </p>
-      <TableFiltersProvider>
-        <div className="[&_[data-slot=table-cell]]:whitespace-nowrap">
-          <DataTable
-            columns={[
-              integrityColumns.text((row) => row.name, {
-                header: t("results-name"),
-                id: "name",
-              }),
-              integrityColumns.number((row) => row.awaySeconds, {
-                cell: (info) => (
-                  <AwayCell
-                    awaySeconds={info.row.original.awaySeconds}
-                    exits={info.row.original.exits}
-                  />
-                ),
-                header: t("results-away"),
-                id: "away",
-              }),
-              integrityColumns.text(signalsOf, {
-                header: t("integrity-signals"),
-                id: "signals",
-              }),
-              integrityColumns.menu((info) => (
-                <RowCopy value={info.row.original.name} />
-              )),
-            ]}
-            data={rows}
-            plain
-            rowId={(row) => row.attemptId}
-          />
-        </div>
-      </TableFiltersProvider>
-    </>
+    <TableFiltersProvider>
+      <PaneFill
+        head={
+          <p className="text-muted-foreground text-sm">
+            {t("integrity-clean", {
+              clean: students - rows.length,
+              students,
+            })}
+          </p>
+        }
+      >
+        <DataTable
+          columns={[
+            integrityColumns.text((row) => row.name, {
+              header: t("results-name"),
+              id: "name",
+            }),
+            integrityColumns.number((row) => row.awaySeconds, {
+              cell: (info) => (
+                <AwayCell
+                  awaySeconds={info.row.original.awaySeconds}
+                  exits={info.row.original.exits}
+                />
+              ),
+              header: t("results-away"),
+              id: "away",
+            }),
+            integrityColumns.text(signalsOf, {
+              header: t("integrity-signals"),
+              id: "signals",
+            }),
+            integrityColumns.menu((info) => (
+              <RowCopy value={info.row.original.name} />
+            )),
+          ]}
+          data={rows}
+          plain
+          rowId={(row) => row.attemptId}
+        />
+      </PaneFill>
+    </TableFiltersProvider>
   );
 }
 
@@ -153,16 +154,14 @@ export function IntegritySheet({
           <HugeIcons className="size-5 shrink-0" icon={SecurityCheckIcon} />
           <SheetTitle>{t("integrity-title")}</SheetTitle>
         </SheetHeader>
-        <ScrollArea className="min-h-0 flex-1">
-          <ReadBoundary
-            read={{
-              args: { sittingId, slug },
-              ref: exams.results.results.integrity,
-            }}
-          >
-            <IntegrityRows />
-          </ReadBoundary>
-        </ScrollArea>
+        <ReadBoundary
+          read={{
+            args: { sittingId, slug },
+            ref: exams.results.results.integrity,
+          }}
+        >
+          <IntegrityRows />
+        </ReadBoundary>
         <SheetFooter>
           <p className="text-muted-foreground text-sm">
             {t("integrity-description")}

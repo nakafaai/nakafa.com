@@ -19,6 +19,7 @@ import {
   CardSectionActions,
   CardSectionFooter,
 } from "@/components/shared/card/section";
+import { PaneFill } from "@/components/shared/page/pane";
 import type { SchoolBilling } from "@/lib/billing/school";
 
 /** The invoices table's code, which the first intent on the card's action loads, so the sheet opens on its table. */
@@ -80,9 +81,11 @@ export function SchoolInvoicesCard({
             </SheetDescription>
           </SheetHeader>
           {isActivated ? (
-            <Suspense fallback={<PopupHold />}>
-              <SchoolInvoices billing={overview} />
-            </Suspense>
+            <PaneFill>
+              <Suspense fallback={<PopupHold />}>
+                <SchoolInvoices billing={overview} />
+              </Suspense>
+            </PaneFill>
           ) : null}
           <SheetFooter>
             <p className="text-muted-foreground text-sm">

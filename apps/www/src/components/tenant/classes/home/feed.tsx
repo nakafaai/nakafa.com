@@ -1,4 +1,5 @@
 import { Archive02Icon, Megaphone01Icon } from "@hugeicons/core-free-icons";
+import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
 import { ScrollArea } from "@repo/design-system/components/ui/scroll-area";
 import { cn } from "cn";
 import { type ReactNode, useState } from "react";
@@ -14,7 +15,8 @@ import { NewAnnouncement } from "@/components/tenant/classes/home/compose";
 import { NewPostPoll } from "@/components/tenant/classes/home/poll";
 
 /**
- * The class's announcements, with New poll and, standing alone, New announcement for its subject teachers. In the
+ * The class's announcements, with New poll in the header's group and, standing alone as the page's primary, New
+ * announcement for its subject teachers. In the
  * body, a subject teacher chooses between the live announcements and the archived ones, which take their place.
  */
 export function HomeFeed({ publishes }: { publishes: boolean }) {
@@ -26,7 +28,9 @@ export function HomeFeed({ publishes }: { publishes: boolean }) {
       <ClassHeader>
         {publishes ? (
           <>
-            <NewPostPoll />
+            <ButtonGroup>
+              <NewPostPoll />
+            </ButtonGroup>
             <NewAnnouncement />
           </>
         ) : null}

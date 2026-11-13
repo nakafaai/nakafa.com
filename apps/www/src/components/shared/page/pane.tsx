@@ -123,15 +123,19 @@ export function PaneBody({ children }: { children: ReactNode }) {
 /**
  * A detail's body that one list fills: its table in the list's card (`ListCard`), at the body's padding, filling the
  * height the pane leaves and scrolling inside the card with its heads in view, or an empty state in the card's middle.
- * What the table belongs to, such as the open row's facts, stands above the card (`head`).
+ * What the table belongs to, such as the open row's facts, stands above the card (`head`), and the list's views and its
+ * search right above it (`views`), as a page's list shows them, so the pane's body is still one list.
  */
 export function PaneFill({
   children,
   head,
+  views,
 }: {
   children: ReactNode;
   /** What stands above the table, such as the open row's facts (`PaneFacts`). */
   head?: ReactNode;
+  /** The list's views and its search, which stand right above the card (`TableViews`). */
+  views?: ReactNode;
 }) {
   return (
     <div
@@ -139,6 +143,11 @@ export function PaneFill({
       data-slot="pane-fill"
     >
       {head === undefined ? null : <div className="shrink-0">{head}</div>}
+      {views === undefined ? null : (
+        <div className="flex shrink-0 flex-wrap items-center gap-3">
+          {views}
+        </div>
+      )}
       <ListCard>{children}</ListCard>
     </div>
   );
