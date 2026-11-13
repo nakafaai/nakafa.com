@@ -21,10 +21,13 @@ import {
   VisualCard,
   VisualCardActions,
   VisualCardBody,
+  VisualCardFacts,
+  VisualCardFooter,
   VisualCardHeader,
   VisualCardMenu,
   VisualCardToolbar,
 } from "@repo/design-system/components/visual/card";
+import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr, Effect, Fiber, Schedule } from "effect";
 import {
@@ -159,12 +162,7 @@ export default function TableChairsAnimation({ labels }: TableChairsProps) {
 
   return (
     <VisualCard ref={ref}>
-      <VisualCardHeader
-        // One text node: a count that changes width would otherwise move the
-        // label beside it, a layout shift no learner caused.
-        description={`${deferredTableCount} ${labels.table} & ${chairCount} ${labels.chair}`}
-        title={labels.title}
-      />
+      <VisualCardHeader title={labels.title} />
 
       <VisualCardToolbar>
         <Select
@@ -318,6 +316,13 @@ export default function TableChairsAnimation({ labels }: TableChairsProps) {
           </DropdownMenuItem>
         </VisualCardMenu>
       </VisualCardActions>
+
+      <VisualCardFooter>
+        <VisualCardFacts>
+          <VisualFactTabular label={labels.table} value={deferredTableCount} />
+          <VisualFactTabular label={labels.chair} value={chairCount} />
+        </VisualCardFacts>
+      </VisualCardFooter>
     </VisualCard>
   );
 }

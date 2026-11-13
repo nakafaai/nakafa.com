@@ -11,6 +11,7 @@ import {
   isGlbbScenarioId,
 } from "@repo/design-system/components/contents/physics/kinematics/non-uniform-linear-motion/data";
 import { VelocityTimeGraph } from "@repo/design-system/components/contents/physics/kinematics/non-uniform-linear-motion/graph";
+import { InlineMath } from "@repo/design-system/components/markdown/math";
 import {
   ToggleGroup,
   ToggleGroupItem,
@@ -19,10 +20,13 @@ import {
   VisualCard,
   VisualCardActions,
   VisualCardBody,
+  VisualCardFacts,
+  VisualCardFooter,
   VisualCardFullscreen,
   VisualCardHeader,
   VisualCardToolbar,
 } from "@repo/design-system/components/visual/card";
+import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
 import { useState } from "react";
@@ -78,6 +82,22 @@ export function NonUniformLinearMotionGraphCard({
         <VisualCardActions>
           <VisualCardFullscreen />
         </VisualCardActions>
+        <VisualCardFooter>
+          <VisualCardFacts>
+            <VisualFactTabular
+              label={labels.velocityAxis}
+              value={
+                <InlineMath
+                  math={`${scenario.initialVelocity} \\to ${scenario.initialVelocity + scenario.acceleration * scenario.duration}`}
+                />
+              }
+            />
+            <VisualFactTabular
+              label={labels.timeAxis}
+              value={<InlineMath math={`0 \\to ${scenario.duration}`} />}
+            />
+          </VisualCardFacts>
+        </VisualCardFooter>
       </VisualCard>
     </GlbbLabelsProvider>
   );
