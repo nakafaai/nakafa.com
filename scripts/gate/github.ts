@@ -62,10 +62,16 @@ const StatusJson = Schema.fromJsonString(
 
 const Count = Schema.NumberFromString.check(Schema.isInt());
 
+/** One line break of an HTTP response, which GitHub ends with a carriage return. */
+const LINE = /\r?\n/u;
+
+/** The blank line between an HTTP response's headers and its body. */
+const BLANK_LINE = /\r?\n\r?\n/u;
+
 /** The headers of `gh api --include` output, by lower-case name. */
 function headersOf(head: string) {
   return Rec.fromEntries(
-    Arr.filterMap(Str.split(head, /\r?\n/u), (line) => {
+    Arr.filterMap(Str.split(head, LINE), (line) => {
       const colon = line.indexOf(":");
       return colon <= 0
         ? Result.failVoid
@@ -86,10 +92,7 @@ export function waitAfter(
   now: Option.Option<DateTime.Utc>
 ) {
   const count = (name: string) =>
-    Option.flatMap(
-      Rec.get(headers, name),
-      Schema.decodeUnknownOption(Count)
-    );
+    Option.flatMap(Rec.get(headers, name), Schema.decodeUnknownOption(Count));
   return Option.match(
     Option.all({
       now,
@@ -132,7 +135,7 @@ export const lookAt = Effect.fn("gate.lookAt")(function* (sha: string) {
       () => new GateError({ message: "The GitHub CLI could not start." })
     )
   );
-  const blank = output.stdout.search(/\r?\n\r?\n/u);
+  const blank = output.stdout.search(BLANK_LINE);
   const head = blank < 0 ? output.stdout : output.stdout.slice(0, blank);
   const headers = headersOf(head);
   const at = Option.flatMap(Rec.get(headers, "date"), DateTime.make);
@@ -140,7 +143,7 @@ export const lookAt = Effect.fn("gate.lookAt")(function* (sha: string) {
     at,
     wait: waitAfter(headers, at),
     commit: Option.map(
-      Schema.decodeUnknownOption(StatusJson)(
+      Schema.decodeOption(StatusJson)(
         blank < 0 ? "" : output.stdout.slice(blank)
       ),
       (answer) =>

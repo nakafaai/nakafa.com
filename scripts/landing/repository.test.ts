@@ -104,62 +104,81 @@ const withRepository = <A, E>(
     return { value, calls: yield* Ref.get(calls) };
   });
 
-const STATUS = (state: string) =>
-  toJson({ statuses: [{ context: "proof", state }] });
+const STATUS = (state: string, gate = "success") =>
+  toJson({
+    statuses: [
+      { context: "gate", state: gate },
+      { context: "proof", state },
+    ],
+  });
+
+/** The statuses of each fixture head: d failed its proof, e has no passed gate yet. */
+const statusOf = (path: string) => {
+  if (path.includes("d".repeat(40))) {
+    return STATUS("failure");
+  }
+  return path.includes("e".repeat(40))
+    ? STATUS("success", "pending")
+    : STATUS("success");
+};
 
 describe("train repository", () => {
-  it.effect("takes the open, ready pull requests whose proof passed", () =>
-    Effect.gen(function* () {
-      const { value } = yield* withRepository(
-        "/root",
-        (args) => {
-          if (args[0] === "pr") {
+  it.effect(
+    "takes the open, ready pull requests whose gate and proof passed",
+    () =>
+      Effect.gen(function* () {
+        const { value } = yield* withRepository(
+          "/root",
+          (args) => {
+            if (args[0] === "pr") {
+              return {
+                stdout: toJson([
+                  {
+                    number: 9,
+                    headRefOid: "c".repeat(40),
+                    title: "C",
+                    isDraft: false,
+                  },
+                  {
+                    number: 4,
+                    headRefOid: "a".repeat(40),
+                    title: "A",
+                    isDraft: false,
+                  },
+                  {
+                    number: 5,
+                    headRefOid: "b".repeat(40),
+                    title: "B",
+                    isDraft: true,
+                  },
+                  {
+                    number: 7,
+                    headRefOid: "e".repeat(40),
+                    title: "E",
+                    isDraft: false,
+                  },
+                  {
+                    number: 6,
+                    headRefOid: "d".repeat(40),
+                    title: "D",
+                    isDraft: false,
+                  },
+                ]),
+              };
+            }
+            return { stdout: statusOf(String(args[1])) };
+          },
+          Effect.gen(function* () {
+            const repository = yield* Repository;
             return {
-              stdout: toJson([
-                {
-                  number: 9,
-                  headRefOid: "c".repeat(40),
-                  title: "C",
-                  isDraft: false,
-                },
-                {
-                  number: 4,
-                  headRefOid: "a".repeat(40),
-                  title: "A",
-                  isDraft: false,
-                },
-                {
-                  number: 5,
-                  headRefOid: "b".repeat(40),
-                  title: "B",
-                  isDraft: true,
-                },
-                {
-                  number: 6,
-                  headRefOid: "d".repeat(40),
-                  title: "D",
-                  isDraft: false,
-                },
-              ]),
+              all: yield* repository.proven([]),
+              named: yield* repository.proven([9]),
             };
-          }
-          return {
-            stdout: String(args[1]).includes("d".repeat(40))
-              ? STATUS("failure")
-              : STATUS("success"),
-          };
-        },
-        Effect.gen(function* () {
-          const repository = yield* Repository;
-          return {
-            all: yield* repository.proven([]),
-            named: yield* repository.proven([9]),
-          };
-        })
-      );
-      expect(Arr.map(value.all, (one) => one.number)).toEqual([4, 9]);
-      expect(Arr.map(value.named, (one) => one.number)).toEqual([9]);
-    }).pipe(Effect.provide(NodeServices.layer))
+          })
+        );
+        expect(Arr.map(value.all, (one) => one.number)).toEqual([4, 9]);
+        expect(Arr.map(value.named, (one) => one.number)).toEqual([9]);
+      }).pipe(Effect.provide(NodeServices.layer))
   );
 
   it.effect(
