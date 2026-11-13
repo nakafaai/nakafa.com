@@ -5,8 +5,9 @@ import {
   MaterialLessonProjectionSchema,
   MaterialMetadataSchema,
 } from "@nakafa/aksara-contracts/projection/material";
-import { Effect, Option, Schema } from "effect";
+import { Effect, Schema } from "effect";
 import { decodeMaterialProjection } from "@/lib/content/material/decode";
+import { withAdSlots } from "@/lib/content/published/ads";
 import { readRenderedBody } from "@/lib/content/published/body";
 import {
   type PublishedContentData,
@@ -56,7 +57,10 @@ export const readPublishedMaterial = Effect.fn(
 export const renderMaterialArtifact = Effect.fn(
   "NakafaContent.renderMaterialArtifact"
 )(function* (data: PublishedMaterialData) {
-  const body = yield* readRenderedBody(data.artifact, Option.some("material"));
+  const body = yield* readRenderedBody(
+    data.artifact,
+    withAdSlots(data.artifact, "material")
+  );
 
   return {
     activeReleaseId: data.activeReleaseId,

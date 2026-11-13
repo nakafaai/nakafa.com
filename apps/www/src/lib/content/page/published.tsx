@@ -3,7 +3,7 @@ import "@tanstack/react-start/server-only";
 import { GitCommitShaSchema } from "@nakafa/aksara-contracts/ids";
 import { PublicPageProjectionSchema } from "@nakafa/aksara-contracts/projection/page";
 import { PublicContentRuntimeFoundSchema } from "@nakafa/aksara-contracts/runtime/spec";
-import { Effect, Option, Schema } from "effect";
+import { Effect, Function as Fn, Option, Schema } from "effect";
 import { readRenderedBody } from "@/lib/content/published/body";
 import {
   type PublishedContentData,
@@ -54,7 +54,7 @@ const readCurrentPublishedPage = Effect.fn(
 /** Evaluates one Page artifact already authenticated by its runtime exchange. */
 const renderPageArtifact = Effect.fn("NakafaContent.renderPageArtifact")(
   function* (data: PublishedPageData) {
-    const body = yield* readRenderedBody(data.artifact, Option.none());
+    const body = yield* readRenderedBody(data.artifact, Fn.identity);
     return {
       artifactHash: data.artifact.artifactHash,
       body,
