@@ -10,9 +10,18 @@ import {
   MutationCtx,
   MutationRunner,
 } from "@repo/backend/confect/_generated/services";
+import {
+  readMailBudget,
+  spendMailBudget,
+} from "@repo/backend/confect/emails/budget";
 import { EMAIL_FROM, sendMail } from "@repo/backend/confect/emails/client";
 import spec from "@repo/backend/confect/emails/digest/internal.spec";
 import { resolveLegalLinks } from "@repo/backend/confect/emails/legal";
+import type { Recipient } from "@repo/backend/confect/emails/unsubscribe/schema";
+import {
+  unsubscribePage,
+  unsubscribePost,
+} from "@repo/backend/confect/emails/unsubscribe/token";
 import { isLoginAddress } from "@repo/backend/confect/identity/address";
 import { ACCOUNT_LOCALE } from "@repo/backend/confect/notifications/copy";
 import {
@@ -31,18 +40,11 @@ import {
 import {
   Array as Arr,
   Clock,
-  DateTime,
   Effect,
   Layer,
   Number as Num,
   Option,
 } from "effect";
-
-/**
- * The notice mails one day sends. Resend's free plan takes 100 emails a day, and these keep 20 for what is always sent,
- * an invitation, a sign-in code, a welcome, so a burst of notices never holds an invitation back.
- */
-const DAILY_LIMIT = 80;
 
 /** The mails one sweep claims, so one run stays within what one action renders. */
 const SWEEP_MAILS = 40;
@@ -70,21 +72,29 @@ const leaveQueue = Effect.fn("emails.digest.leave")(function* (
   return Arr.filter(rows, (row) => row.expiresAt > now);
 });
 
-/** What one mail says: what it counts, the inbox it opens, and its language with that language's legal links. */
+/**
+ * What one mail says: what it counts, the inbox it opens, and its language with that language's legal links and the
+ * recipient's unsubscribe page.
+ */
 const inputOf = Effect.fn("emails.digest.input")(function* (
   counts: DigestEmailInput["counts"],
   inboxUrl: string,
   locale: DigestEmailInput["locale"],
-  catalog: Catalog,
-  siteUrl: URL
+  recipient: typeof Recipient.Type,
+  context: { readonly catalog: Catalog; readonly siteUrl: URL }
 ) {
-  const links = yield* resolveLegalLinks(catalog, locale, siteUrl);
+  const links = yield* resolveLegalLinks(
+    context.catalog,
+    locale,
+    context.siteUrl
+  );
   return {
     counts,
     inboxUrl,
     locale,
     privacyPolicyUrl: links.privacyPolicyUrl,
     termsOfServiceUrl: links.termsOfServiceUrl,
+    unsubscribeUrl: yield* unsubscribePage(recipient, locale),
   };
 });
 
@@ -138,6 +148,11 @@ const schoolMail = Effect.fn("emails.digest.school")(function* (
     .get(first.tenantId)
     .pipe(Effect.orDie);
   const school = yield* schoolAddress(siteUrl, tenant.slug);
+  const recipient: typeof Recipient.Type = {
+    _tag: "Person",
+    personId,
+    tenantId: person.tenantId,
+  };
   return Option.some({
     address: user.email,
     input: yield* inputOf(
@@ -150,10 +165,11 @@ const schoolMail = Effect.fn("emails.digest.school")(function* (
       ),
       new URL("/notifications", school).href,
       unit.contentLanguage,
-      catalog,
-      siteUrl
+      recipient,
+      { catalog, siteUrl }
     ),
     key: `notice-mail/${personId}/${first._id}`,
+    recipient,
   });
 });
 
@@ -185,17 +201,31 @@ const accountMail = Effect.fn("emails.digest.account")(function* (
   ) {
     return Option.none();
   }
+  const recipient: typeof Recipient.Type = { _tag: "Account", userId };
   return Option.some({
     address: user.value.email,
     input: yield* inputOf(
       [{ change: "comment.replied", count: live.length }],
       new URL(`/${ACCOUNT_LOCALE}/notifications`, siteUrl).href,
       ACCOUNT_LOCALE,
-      catalog,
-      siteUrl
+      recipient,
+      { catalog, siteUrl }
     ),
     key: `notice-mail/${userId}/${Arr.headNonEmpty(live)._id}`,
+    recipient,
   });
+});
+
+/** The mail of one row's recipient: an account's digest, or a Person's school digest. */
+const mailOf = Effect.fn("emails.digest.mail")(function* (
+  row: NoticeMailsDoc,
+  now: number,
+  catalog: Catalog,
+  siteUrl: URL
+) {
+  return isAccountMail(row)
+    ? yield* accountMail(row.recipientUserId, now, catalog, siteUrl)
+    : yield* schoolMail(row.recipientPersonId, now, catalog, siteUrl);
 });
 
 /** The one recipient of a row: a Person of a school, or an account. */
@@ -213,19 +243,9 @@ const claim = FunctionImpl.make(
   "claim",
   Effect.fn("emails.digest.claim")(function* () {
     const reader = yield* DatabaseReader;
-    const writer = yield* DatabaseWriter;
     const now = yield* Clock.currentTimeMillis;
-    const day = DateTime.formatIsoDateUtc(DateTime.makeUnsafe(now));
-    const budget = yield* reader
-      .table("noticeMailBudget")
-      .index("by_creation_time")
-      .first()
-      .pipe(Effect.orDie);
-    const sent = Option.match(budget, {
-      onNone: () => 0,
-      onSome: (row) => (row.day === day ? row.sent : 0),
-    });
-    const room = Num.min(DAILY_LIMIT - sent, SWEEP_MAILS);
+    const budget = yield* readMailBudget(now);
+    const room = Num.min(budget.left, SWEEP_MAILS);
     const waiting = yield* Effect.forEach(MAIL_RANKS, (rank) =>
       reader
         .table("noticeMails")
@@ -251,16 +271,10 @@ const claim = FunctionImpl.make(
     );
     const mails = Arr.getSomes(
       yield* Effect.forEach(recipients, (row) =>
-        isAccountMail(row)
-          ? accountMail(row.recipientUserId, now, catalog, siteUrl)
-          : schoolMail(row.recipientPersonId, now, catalog, siteUrl)
+        mailOf(row, now, catalog, siteUrl)
       )
     );
-    const spent = { day, sent: sent + mails.length };
-    yield* Option.match(budget, {
-      onNone: () => writer.table("noticeMailBudget").insert(spent),
-      onSome: (row) => writer.table("noticeMailBudget").patch(row._id, spent),
-    }).pipe(Effect.orDie);
+    yield* spendMailBudget(budget, mails.length);
     return mails;
   })
 );
@@ -274,13 +288,14 @@ const enqueue = FunctionImpl.make(
     const ctx = yield* MutationCtx;
     yield* Effect.forEach(
       messages,
-      ({ address, key, ...message }) =>
-        sendMail(ctx, {
-          ...message,
-          from: EMAIL_FROM,
-          idempotencyKey: key,
-          to: address,
-        }).pipe(Effect.orDie),
+      ({ address, key, recipient, ...message }) =>
+        Effect.flatMap(unsubscribePost(recipient), (unsubscribe) =>
+          sendMail(
+            ctx,
+            { ...message, from: EMAIL_FROM, idempotencyKey: key, to: address },
+            unsubscribe
+          )
+        ).pipe(Effect.orDie),
       { discard: true }
     );
     return null;
@@ -307,9 +322,9 @@ const send = FunctionImpl.make(
     }
     const messages = yield* Effect.forEach(
       mails,
-      ({ address, input, key }) =>
+      ({ address, input, key, recipient }) =>
         runAction(emailsInternal.digest.delivery.render, input).pipe(
-          Effect.map((message) => ({ ...message, address, key })),
+          Effect.map((message) => ({ ...message, address, key, recipient })),
           Effect.orDie
         ),
       { concurrency: 4 }

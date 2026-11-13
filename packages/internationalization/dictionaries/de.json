@@ -405,6 +405,7 @@
     "student-score": "{points} von {total} Punkten",
     "student-results-footer": "Deine Lehrkraft gibt die Ergebnisse nach Ende der Sitzung frei.",
     "student-answer": "Deine Antwort: <typed>{answer}</typed>",
+    "student-answer-label": "Deine Antwort:",
     "student-answers": "Deine Antworten",
     "student-results-released": "Deine Lehrkraft hat diese Ergebnisse freigegeben.",
     "schedule": "Planen",
@@ -2423,6 +2424,7 @@
     "channel-on": "An",
     "channel-off": "Aus",
     "kind-commentReply": "Antworten auf deine Kommentare",
+    "kind-tryoutReminder": "Probetest-Erinnerungen",
     "kind-forumMention": "Erwähnungen in einer Klasse",
     "kind-classAnnouncement": "Klassenankündigungen",
     "kind-taskPublished": "Neue Aufgaben",
@@ -2438,6 +2440,7 @@
     "topic-label": "Benachrichtigungen filtern",
     "topic-all": "Alle",
     "topic-comments": "Kommentare",
+    "topic-tryouts": "Probetest",
     "topic-school": "Schule",
     "topic-empty": "Hier ist noch nichts.",
     "empty": "Du hast noch keine Benachrichtigungen.",
@@ -2446,6 +2449,8 @@
     "forum-mentioned-gone": "Du wurdest in einer Klasse erwähnt, die du nicht mehr liest.",
     "comment-replied": "Hat auf deinen Kommentar geantwortet.",
     "comment-replied-gone": "Diese Antwort wurde gelöscht.",
+    "tryout-reminder": "Dein Probetest endet in einer Stunde. Mach jetzt weiter.",
+    "tryout-reminder-gone": "Dieser Probetest ist beendet.",
     "announcement-posted": "{actor} hat in {className} eine Ankündigung gepostet.",
     "announcement-posted-gone": "Eine Ankündigung, die es nicht mehr gibt.",
     "push-offer": "Erhalte auf diesem Gerät eine Benachrichtigung, wenn es etwas Neues gibt.",
@@ -2582,9 +2587,9 @@
     "action-loading": "Wird geladen",
     "cancel-cta": "Abbrechen",
     "start-dialog-title": "Diesen Probetest starten?",
-    "start-dialog-description": "Dein Probetest bleibt bis zu 3 Tage aktiv, und nach dem Start kannst du wählen, welchen Abschnitt du zuerst bearbeiten möchtest.",
+    "start-dialog-description": "Dein Probetest bleibt bis zu {hours, plural, one {# Stunde} other {# Stunden}} aktiv, und nach dem Start kannst du wählen, welchen Abschnitt du zuerst bearbeiten möchtest.",
     "free-dialog-title": "Probetest kostenlos starten",
-    "free-dialog-description": "Wiederhole beliebig oft mit gespeichertem Ergebnis, jeder Versuch bleibt 3 Tage aktiv, und Lösungswege gibt es mit Nakafa Pro.",
+    "free-dialog-description": "Wiederhole beliebig oft mit gespeichertem Ergebnis, jeder Versuch bleibt {hours, plural, one {# Stunde} other {# Stunden}} aktiv, und Lösungswege gibt es mit Nakafa Pro.",
     "free-entry-dialog-description": "Wiederhole beliebig oft mit gespeichertem Ergebnis, der Timer startet mit deinem Beginn, und Lösungswege gibt es mit Nakafa Pro.",
     "restart-dialog-title": "Diesen Probetest von vorn beginnen?",
     "restart-dialog-description": "Dein vorheriges Ergebnis bleibt gespeichert.",
@@ -2599,6 +2604,23 @@
     "score-label-standard": "Punktzahl",
     "correct-answers-label": "Richtige Antworten",
     "finished-panel": "Dein Ergebnis",
+    "finished-panel-description": "Deine Punktzahl, deine Zeit und das Ergebnis jeder Frage.",
+    "time-used-label": "Benötigte Zeit",
+    "time-limit-label": "Zeitlimit",
+    "result-short": "Ergebnis",
+    "result-open": "Dein Ergebnis öffnen, {correct} von {total} richtig",
+    "attempt-controls": "Versuchsoptionen",
+    "verdict": "{state, select, correct {Richtig} incorrect {Falsch} partial {Teilweise richtig} pending {Wartet auf die Bewertung} other {Unbeantwortet}}",
+    "practice-cta": "Üben",
+    "practice-title": "Übung: {title}",
+    "practice-pane": "Deine Übung",
+    "practice-description": "Die Fragen, die du geprüft hast, und wie jede ausging.",
+    "practice-footer": "Fang neu an, um jede Prüfung zu löschen.",
+    "practice-restart": "Neu anfangen",
+    "practice-checked-label": "Geprüft",
+    "practice-check": "Prüfen",
+    "practice-open": "Deine Übung öffnen, {checked} von {total} geprüft",
+    "practice-short": "Übung",
     "menu-history": "Verlauf",
     "attempt-menu-search-placeholder": "Versuche suchen...",
     "attempt-menu-empty": "Keine passenden Versuche gefunden.",
@@ -2628,6 +2650,9 @@
     "set-updating": "Wird aktualisiert...",
     "set-update-error": "Ergebnisse konnten nicht aktualisiert werden.",
     "set-offline": "Verbindung unterbrochen.",
+    "your-answer": "Deine Antwort",
+    "correct-answer": "Richtige Antwort",
+    "no-answer": "Nicht beantwortet",
     "check-answer": "Antwort prüfen",
     "reset": "Zurücksetzen",
     "explanation": "Lösungserklärung",
@@ -2648,6 +2673,8 @@
     "mode-list": "Liste",
     "mode-single": "Eine Aufgabe",
     "cell": "{state, select, answered {Aufgabe {number}, beantwortet} other {Aufgabe {number}, offen}}",
+    "cell-verdict": "{state, select, correct {Frage {number}, richtig} incorrect {Frage {number}, falsch} partial {Frage {number}, teilweise richtig} pending {Frage {number}, wartet auf die Bewertung} answered {Frage {number}, beantwortet} other {Frage {number}, unbeantwortet}}",
+    "review-legend": "Grün ist richtig, Rot ist falsch.",
     "unanswered": "Noch offen",
     "time-left": "Noch {hours, plural, =0 {} one {# Stunde } other {# Stunden }}{minutes, plural, one {# Minute} other {# Minuten}} {seconds, plural, one {# Sekunde} other {# Sekunden}}",
     "time-five": "Noch 5 Minuten",
@@ -2666,7 +2693,13 @@
     "answer": "Antwort",
     "statement": "Aussage",
     "correct": "Richtig",
-    "incorrect": "Falsch"
+    "incorrect": "Falsch",
+    "access": "Barrierefreiheit",
+    "access-description": "Alles hier geht mit deiner Tastatur, und ein Screenreader liest jede Nummer vor, ob sie beantwortet ist und wie viel Zeit bleibt.",
+    "menu-parts": "Fächer",
+    "parts-empty": "Kein Fach passt dazu.",
+    "parts-search": "Fach suchen",
+    "time": "Restzeit"
   },
   "Utils": {
     "clear-search": "Suche löschen",
@@ -2979,6 +3012,10 @@
     "saved-description": "Suche, ändere oder lösche, was Nina behält."
   },
   "Toast": {
+    "practice-failed": {
+      "title": "Übung nicht aktualisiert.",
+      "description": "Prüfe deine Verbindung und versuche es erneut."
+    },
     "offline-move": {
       "title": "Du bist offline.",
       "description": "Verbinde dich wieder, um diese Seite zu öffnen."
@@ -3154,6 +3191,9 @@
     },
     "memory-too-long": {
       "title": "Text zu lang für eine Erinnerung."
+    },
+    "essay-too-long": {
+      "title": "Text zu lang für eine Antwort."
     },
     "interpretation-error": {
       "title": "Tafsir konnte nicht geladen werden.",
@@ -4366,6 +4406,15 @@
     "period": "Zeitraum",
     "approved": "Genehmigt am",
     "issued": "Ausgestellt am"
+  },
+  "Unsubscribe": {
+    "ask-title": "Keine E-Mails mehr von Nakafa",
+    "ask-description": "Du erhältst keine Benachrichtigungs-E-Mails mehr. Anmeldecodes und Hinweise zu deinen Zahlungen kommen weiterhin.",
+    "confirm": "Abmelden",
+    "done-title": "Du bist abgemeldet",
+    "done-description": "Du kannst E-Mails in deinen Benachrichtigungseinstellungen wieder einschalten.",
+    "invalid-title": "Dieser Link funktioniert nicht",
+    "invalid-description": "Öffne den Abmeldelink in deiner neuesten E-Mail von Nakafa."
   },
   "SchoolInsight": {
     "title": "Insight",

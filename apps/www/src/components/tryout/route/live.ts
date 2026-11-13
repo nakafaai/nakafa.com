@@ -6,7 +6,7 @@ import type {
   retainedSetResultValidator,
 } from "@repo/backend/confect/tryouts/attemptPage/spec";
 import { useNavigate, useRouter, useRouterState } from "@tanstack/react-router";
-import { Effect, Option } from "effect";
+import { Effect, Option, Struct } from "effect";
 import { useEffect, useMemo, useState } from "react";
 import { useLocale } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
@@ -27,6 +27,8 @@ import {
 import {
   getTryoutAttemptAuthHref,
   getTryoutAttemptHref,
+  getTryoutPracticeAuthHref,
+  PRACTICE_SEARCH,
 } from "@/components/tryout/route/path";
 import type { TryoutAttemptSearch } from "@/components/tryout/route/search";
 import { holdsTryoutQuestions } from "@/components/tryout/runtime/state";
@@ -63,7 +65,7 @@ export function useKeptLearnerRead<Value>(read: LearnerRead<Value>) {
 function attemptOf(search: TryoutAttemptSearch) {
   return Option.getOrUndefined(
     Option.flatMapNullishOr(
-      readAddressIntent(search),
+      readAddressIntent(Struct.pick(search, ["attemptId", "view"])),
       (value) => value.attemptId
     )
   );
@@ -72,8 +74,10 @@ function attemptOf(search: TryoutAttemptSearch) {
 /** The player view a URL names, if it names a valid one. */
 function viewOfAddress(search: TryoutAttemptSearch) {
   return Option.getOrUndefined(
-    Option.flatMap(readAddressIntent(search), ({ view }) =>
-      view.kind === "valid" ? Option.some(view.mode) : Option.none()
+    Option.flatMap(
+      readAddressIntent(Struct.pick(search, ["attemptId", "view"])),
+      ({ view }) =>
+        view.kind === "valid" ? Option.some(view.mode) : Option.none()
     )
   );
 }
@@ -98,6 +102,7 @@ export function useAttemptSignIn(input: {
   );
   const attemptId = attemptOf(input.search);
   const view = viewOfAddress(input.search);
+  const practicing = input.search.mode === PRACTICE_SEARCH.mode;
   const signedOut = !(isLoading || isAuthenticated);
 
   useEffect(() => {
@@ -117,8 +122,25 @@ export function useAttemptSignIn(input: {
         ),
         replace: true,
       });
+      return;
     }
-  }, [attemptId, input.publicPath, locale, looked, navigate, signedOut, view]);
+    // A practice is a learner's own, so its address goes to sign-in as an attempt's does.
+    if (practicing) {
+      navigate({
+        href: getTryoutPracticeAuthHref(locale, input.publicPath),
+        replace: true,
+      });
+    }
+  }, [
+    attemptId,
+    input.publicPath,
+    locale,
+    looked,
+    navigate,
+    practicing,
+    signedOut,
+    view,
+  ]);
 }
 
 /**
@@ -134,7 +156,9 @@ function useLearnerGate(input: {
   const locale = useLocale();
   const isLoading = useConvexAuth((state) => state.isLoading);
   const isAuthenticated = useConvexAuth((state) => state.isAuthenticated);
-  const intent = readAddressIntent(input.search);
+  const intent = readAddressIntent(
+    Struct.pick(input.search, ["attemptId", "view"])
+  );
   const attemptId = attemptOf(input.search);
 
   return {

@@ -1,6 +1,3 @@
-import { ArrowLeft01Icon } from "@hugeicons/core-free-icons";
-import { Button } from "@repo/design-system/components/ui/button";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { lazyRouteComponent, useLocation } from "@tanstack/react-router";
 import { Array as Arr, Record as Rec } from "effect";
@@ -15,12 +12,7 @@ import { PlayerFinish } from "@/components/player/finish";
 import { PlayerFlag } from "@/components/player/flag";
 import { PlayerFooter, PlayerOpener } from "@/components/player/footer";
 import { PlayerMain } from "@/components/player/frame";
-import {
-  PlayerHeader,
-  PlayerHeaderEnd,
-  PlayerHeaderStart,
-  PlayerTitle,
-} from "@/components/player/header";
+import { PlayerHeaderEnd } from "@/components/player/header";
 import {
   readBrowserPlayerMode,
   readPlayerModeParam,
@@ -32,7 +24,12 @@ import { PlayerSidebar } from "@/components/player/navigator/sidebar";
 import { PlayerProvider } from "@/components/player/provider";
 import { ConvexIsland } from "@/components/providers/island";
 import { OfflineNote } from "@/components/shared/offline";
-import { TryoutPlayerTimer } from "@/components/tryout/player/timer";
+import { TryoutPlayerHeader } from "@/components/tryout/player/paper";
+import { TryoutPlayerParts } from "@/components/tryout/player/parts";
+import {
+  TryoutPlayerTimer,
+  TryoutPlayerTimerCard,
+} from "@/components/tryout/player/timer";
 
 /** The running player's code, which reaches KaTeX and the Markdown reader. */
 const LazyTryoutPlayer = lazyRouteComponent(
@@ -53,8 +50,8 @@ export function TryoutRunningPlayer(
     <Suspense
       fallback={
         <TryoutPlayerOpening
+          card={<TryoutPlayerTimerCard expiresAt={runtime.expiresAt} />}
           questionCount={runtime.questions.length}
-          title={props.title}
         >
           <TryoutPlayerTimer expiresAt={runtime.expiresAt} />
         </TryoutPlayerOpening>
@@ -67,21 +64,23 @@ export function TryoutRunningPlayer(
 
 /**
  * The player of a section that the learner's press is opening, drawn the moment they confirm. It is the
- * running player's own frame (the header with back, the title, the timer and Finish; the navigator; the
- * footer) built from what the page already knows: the title, the time limit the caller's timer shows, and
- * how many questions the section holds, none answered yet. Nothing in it acts while the server starts the
+ * running player's own frame (the header with the path, the timer and Finish; the pane with the sections, the
+ * time left and the numbers; the footer) built from what the page already knows: the path, the sections, the
+ * time the caller's timers show, and how many questions the section holds, none answered yet. The page's paper
+ * (`TryoutPaperProvider`) gives it the path and the sections. Nothing in it acts while the server starts the
  * attempt, and the loader stands where the first question arrives with the running player, which takes this
  * frame's place once the page reads the attempt, so the wait shows as the player opening.
  */
 export function TryoutPlayerOpening({
+  card,
   children,
   questionCount,
-  title,
 }: {
+  /** The pane's card of the time left, which the header's timer gives way to from the large breakpoint. */
+  card: ReactNode;
   /** The timer in the header's centre, at the section's whole time limit. */
   children: ReactNode;
   questionCount: number;
-  title: string;
 }) {
   const tCommon = useTranslations("Common");
   const tTryouts = useTranslations("Tryouts");
@@ -106,18 +105,12 @@ export function TryoutPlayerOpening({
           )
         )}
       >
-        <PlayerHeader>
-          <PlayerHeaderStart>
-            <Button size="icon" tooltip={tCommon("back")} variant="outline">
-              <HugeIcons icon={ArrowLeft01Icon} />
-            </Button>
-            <PlayerTitle>{title}</PlayerTitle>
+        <TryoutPlayerHeader>
+          {children}
+          <PlayerHeaderEnd>
             <ConvexIsland>
               <OfflineNote />
             </ConvexIsland>
-          </PlayerHeaderStart>
-          {children}
-          <PlayerHeaderEnd>
             <PlayerFinish
               description={tTryouts("complete-part-description")}
               label={tTryouts("complete-part-cta")}
@@ -128,10 +121,12 @@ export function TryoutPlayerOpening({
               title={tTryouts("complete-part-title")}
             />
           </PlayerHeaderEnd>
-        </PlayerHeader>
+        </TryoutPlayerHeader>
         <PlayerMain
           navigator={
             <PlayerSidebar>
+              <TryoutPlayerParts />
+              {card}
               <PlayerGrid questions={questions} />
               <PlayerLegend />
             </PlayerSidebar>
@@ -146,6 +141,7 @@ export function TryoutPlayerOpening({
           <PlayerOpener />
         </PlayerFooter>
         <PlayerSheet>
+          <TryoutPlayerParts />
           <PlayerGrid questions={questions} />
           <PlayerLegend />
         </PlayerSheet>

@@ -405,6 +405,7 @@
     "student-score": "{points} dari {total} poin",
     "student-results-footer": "Gurumu merilis hasil setelah sesi ditutup.",
     "student-answer": "Jawabanmu: <typed>{answer}</typed>",
+    "student-answer-label": "Jawabanmu:",
     "student-answers": "Jawabanmu",
     "student-results-released": "Gurumu sudah merilis hasil ini.",
     "schedule": "Jadwalkan",
@@ -2423,6 +2424,7 @@
     "channel-on": "Nyala",
     "channel-off": "Mati",
     "kind-commentReply": "Balasan untuk komentarmu",
+    "kind-tryoutReminder": "Pengingat try out",
     "kind-forumMention": "Sebutan di kelas",
     "kind-classAnnouncement": "Pengumuman kelas",
     "kind-taskPublished": "Tugas baru",
@@ -2438,6 +2440,7 @@
     "topic-label": "Saring notifikasi",
     "topic-all": "Semua",
     "topic-comments": "Komentar",
+    "topic-tryouts": "Try out",
     "topic-school": "Sekolah",
     "topic-empty": "Belum ada di sini.",
     "empty": "Belum ada notifikasi.",
@@ -2446,6 +2449,8 @@
     "forum-mentioned-gone": "Kamu disebut di kelas yang tidak lagi kamu baca.",
     "comment-replied": "Membalas komentarmu.",
     "comment-replied-gone": "Balasan ini sudah dihapus.",
+    "tryout-reminder": "Try out kamu berakhir satu jam lagi. Lanjutkan sekarang.",
+    "tryout-reminder-gone": "Try out ini sudah berakhir.",
     "announcement-posted": "{actor} mengirim pengumuman di {className}.",
     "announcement-posted-gone": "Pengumuman yang sudah tidak ada.",
     "push-offer": "Dapatkan notifikasi di perangkat ini saat ada yang baru.",
@@ -2582,9 +2587,9 @@
     "action-loading": "Memuat",
     "cancel-cta": "Batal",
     "start-dialog-title": "Mulai try out ini?",
-    "start-dialog-description": "Try out aktif hingga 3 hari, dan setelah mulai kamu bebas memilih bagian yang ingin dikerjakan lebih dulu.",
+    "start-dialog-description": "Try out aktif hingga {hours} jam, dan setelah mulai kamu bebas memilih bagian yang ingin dikerjakan lebih dulu.",
     "free-dialog-title": "Mulai try out gratis",
-    "free-dialog-description": "Mengulang bebas dan skor tetap tercatat, tiap percobaan aktif 3 hari, dan pembahasan ada di Nakafa Pro.",
+    "free-dialog-description": "Mengulang bebas dan skor tetap tercatat, tiap percobaan aktif {hours} jam, dan pembahasan ada di Nakafa Pro.",
     "free-entry-dialog-description": "Mengulang bebas dan skor tetap tercatat, waktu berjalan saat kamu mulai, dan pembahasan ada di Nakafa Pro.",
     "restart-dialog-title": "Mulai try out ini dari awal?",
     "restart-dialog-description": "Hasil sebelumnya tetap tersimpan.",
@@ -2599,6 +2604,23 @@
     "score-label-standard": "Nilai",
     "correct-answers-label": "Jawaban benar",
     "finished-panel": "Hasil kamu",
+    "finished-panel-description": "Nilai, waktu, dan hasil tiap soal kamu.",
+    "time-used-label": "Waktu dipakai",
+    "time-limit-label": "Batas waktu",
+    "result-short": "Hasil",
+    "result-open": "Buka hasil kamu, {correct} dari {total} benar",
+    "attempt-controls": "Pilihan percobaan",
+    "verdict": "{state, select, correct {Benar} incorrect {Salah} partial {Sebagian benar} pending {Menunggu dinilai} other {Belum dijawab}}",
+    "practice-cta": "Latihan",
+    "practice-title": "Latihan: {title}",
+    "practice-pane": "Latihanmu",
+    "practice-description": "Soal yang sudah kamu cek dan hasil tiap soal.",
+    "practice-footer": "Mulai lagi untuk menghapus semua cek.",
+    "practice-restart": "Mulai lagi",
+    "practice-checked-label": "Dicek",
+    "practice-check": "Cek",
+    "practice-open": "Buka latihanmu, {checked} dari {total} dicek",
+    "practice-short": "Latihan",
     "menu-history": "Riwayat",
     "attempt-menu-search-placeholder": "Cari percobaan...",
     "attempt-menu-empty": "Tidak ada percobaan yang cocok.",
@@ -2628,6 +2650,9 @@
     "set-updating": "Memperbarui...",
     "set-update-error": "Hasil belum bisa diperbarui.",
     "set-offline": "Koneksi terputus.",
+    "your-answer": "Jawaban kamu",
+    "correct-answer": "Jawaban benar",
+    "no-answer": "Tidak dijawab",
     "check-answer": "Cek jawaban",
     "reset": "Ulangi",
     "explanation": "Pembahasan",
@@ -2648,6 +2673,8 @@
     "mode-list": "Daftar",
     "mode-single": "Satu soal",
     "cell": "{state, select, answered {Soal {number}, terjawab} other {Soal {number}, belum dijawab}}",
+    "cell-verdict": "{state, select, correct {Soal {number}, benar} incorrect {Soal {number}, salah} partial {Soal {number}, sebagian benar} pending {Soal {number}, menunggu dinilai} answered {Soal {number}, dijawab} other {Soal {number}, belum dijawab}}",
+    "review-legend": "Hijau benar, merah salah.",
     "unanswered": "Belum dijawab",
     "time-left": "Sisa waktu {hours, plural, =0 {} other {# jam }}{minutes} menit {seconds} detik",
     "time-five": "Sisa waktu 5 menit",
@@ -2666,7 +2693,13 @@
     "answer": "Jawaban",
     "statement": "Pernyataan",
     "correct": "Benar",
-    "incorrect": "Salah"
+    "incorrect": "Salah",
+    "access": "Aksesibilitas",
+    "access-description": "Semua di sini bisa kamu pakai dari keyboard, dan pembaca layar menyebut tiap nomor, apakah sudah dijawab, dan sisa waktunya.",
+    "menu-parts": "Subtes",
+    "parts-empty": "Nggak ada subtes yang cocok.",
+    "parts-search": "Cari subtes",
+    "time": "Sisa waktu"
   },
   "Utils": {
     "clear-search": "Hapus pencarian",
@@ -2979,6 +3012,10 @@
     "saved-description": "Cari, ubah, atau hapus yang Nina simpan."
   },
   "Toast": {
+    "practice-failed": {
+      "title": "Latihanmu tidak diperbarui.",
+      "description": "Periksa koneksimu lalu coba lagi."
+    },
     "offline-move": {
       "title": "Kamu sedang offline.",
       "description": "Sambungkan lagi untuk membuka halaman ini."
@@ -3154,6 +3191,9 @@
     },
     "memory-too-long": {
       "title": "Teks terlalu panjang untuk memori."
+    },
+    "essay-too-long": {
+      "title": "Teks terlalu panjang untuk jawaban."
     },
     "interpretation-error": {
       "title": "Tafsir ayat ini belum bisa dimuat.",
@@ -4366,6 +4406,15 @@
     "period": "Periode",
     "approved": "Disetujui pada",
     "issued": "Diterbitkan pada"
+  },
+  "Unsubscribe": {
+    "ask-title": "Berhenti menerima email dari Nakafa",
+    "ask-description": "Kamu tidak akan menerima email notifikasi lagi. Kode masuk dan pemberitahuan pembayaranmu tetap terkirim.",
+    "confirm": "Berhenti berlangganan",
+    "done-title": "Kamu sudah berhenti berlangganan",
+    "done-description": "Kamu bisa menyalakan email lagi di pengaturan notifikasi.",
+    "invalid-title": "Tautan ini tidak berlaku",
+    "invalid-description": "Buka tautan berhenti berlangganan di email terbaru dari Nakafa."
   },
   "SchoolInsight": {
     "title": "Insight",

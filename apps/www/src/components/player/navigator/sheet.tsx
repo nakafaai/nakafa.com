@@ -1,28 +1,45 @@
 import {
   Drawer,
   DrawerContent,
-  DrawerDescription,
-  DrawerHeader,
-  DrawerPanel,
-  DrawerTitle,
 } from "@repo/design-system/components/ui/drawer";
 import { monospace } from "@repo/design-system/lib/monospace";
 import { cn } from "cn";
 import { type ReactNode, useRef } from "react";
 import { useTranslations } from "use-intl";
+import { PlayerTools } from "@/components/player/navigator/tools";
 import { usePlayer } from "@/components/player/provider";
+import { PaneBody, PaneHeader } from "@/components/shared/page/pane";
+import { PaneModeContext } from "@/components/shared/page/panes/mode";
 
 /**
- * The navigator below the large breakpoint: a drawer that the footer opens, with
- * the numbers and their legend in its body. It opens on the current number.
+ * The player's pane below the large breakpoint, with the same parts as its side pane (`PlayerSidebar`): a drawer
+ * that the footer opens, with the paper's parts, the card of the time left or the score, and the numbers and their
+ * legend in its body, and the accessibility info and the view in its footer. It opens on the current number.
  * Picking a number closes the drawer first, and the question is revealed once
  * the drawer has finished closing, because the page cannot scroll while the
- * drawer holds it.
+ * drawer holds it. A finished paper names the drawer for its result and closes
+ * it on a footer, as its pane does. It draws a pane's header, body and footer,
+ * as every phone sheet of a page's panes does.
  */
-export function PlayerSheet({ children }: { children: ReactNode }) {
+export function PlayerSheet({
+  children,
+  description,
+  footer,
+  title,
+}: {
+  /** From the top: the paper's parts (`PlayerParts`), the card of the paper's score, then the numbers. */
+  children: ReactNode;
+  /** What the drawer is for, the navigator's unless the paper says otherwise. */
+  description?: string;
+  /** What the drawer says and offers under its body, such as a result's legend and its one action. */
+  footer?: ReactNode;
+  /** The drawer's name, the navigator's unless the paper names it otherwise. */
+  title?: string;
+}) {
   const t = useTranslations("Player");
   const overlay = usePlayer((state) => state.overlay);
-  const waiting = usePlayer((state) => state.pending !== null);
+  // A question chosen here takes the focus, so the drawer never hands it back to where it opened.
+  const landed = usePlayer((state) => state.landed);
   const open = usePlayer((state) => state.open);
   const close = usePlayer((state) => state.close);
   const settle = usePlayer((state) => state.settle);
@@ -39,19 +56,24 @@ export function PlayerSheet({ children }: { children: ReactNode }) {
       open={overlay === "navigator"}
     >
       <DrawerContent
-        finalFocus={!waiting}
+        finalFocus={!landed}
         initialFocus={() =>
           body.current?.querySelector<HTMLElement>('[aria-current="step"]') ??
           true
         }
       >
-        <DrawerHeader>
-          <DrawerTitle>{t("navigator")}</DrawerTitle>
-          <DrawerDescription>{t("navigator-description")}</DrawerDescription>
-        </DrawerHeader>
-        <DrawerPanel className={cn(monospace, "grid gap-4")} ref={body}>
-          {children}
-        </DrawerPanel>
+        <PaneModeContext value={{ close, place: "sheet" }}>
+          <PaneHeader
+            description={description ?? t("navigator-description")}
+            title={title ?? t("navigator")}
+          />
+          <PaneBody>
+            <div className={cn(monospace, "grid gap-4")} ref={body}>
+              {children}
+            </div>
+          </PaneBody>
+          <PlayerTools>{footer}</PlayerTools>
+        </PaneModeContext>
       </DrawerContent>
     </Drawer>
   );

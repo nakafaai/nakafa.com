@@ -8,6 +8,10 @@ import { isAccountDeletionPending } from "@repo/backend/confect/auth/deletion/st
 import { latestPersonalGrant } from "@repo/backend/confect/billing/grants";
 import { EMAIL_FROM, sendMail } from "@repo/backend/confect/emails/client";
 import { resolveLegalLinks } from "@repo/backend/confect/emails/legal";
+import {
+  unsubscribePage,
+  unsubscribePost,
+} from "@repo/backend/confect/emails/unsubscribe/token";
 import { isLoginAddress } from "@repo/backend/confect/identity/address";
 import { readSiteUrl } from "@repo/backend/confect/site/config";
 import { publicationLayer } from "@repo/backend/content/publication/confect";
@@ -58,7 +62,11 @@ const readReminded = Effect.fn("billing.reminder.readReminded")(function* (
   ) {
     return Option.none();
   }
-  return Option.some({ endsAt: grant.value.validTo, email: user.value.email });
+  return Option.some({
+    email: user.value.email,
+    endsAt: grant.value.validTo,
+    userId: grant.value.userId,
+  });
 });
 
 /**
@@ -85,6 +93,10 @@ export const readPassReminderInput = Effect.fn("billing.reminder.readInput")(
       extendUrl: new URL(`/${locale}/user/settings/subscriptions`, siteUrl)
         .href,
       locale,
+      unsubscribeUrl: yield* unsubscribePage(
+        { _tag: "Account", userId: reminded.value.userId },
+        locale
+      ),
       ...legal,
     };
   }
@@ -108,12 +120,17 @@ export const enqueuePassReminder = Effect.fn("billing.reminder.enqueue")(
     if (Option.isNone(reminded)) {
       return null;
     }
-    yield* sendMail(yield* MutationCtx, {
-      ...message,
-      from: EMAIL_FROM,
-      idempotencyKey: `pass-reminder/${grantId}`,
-      to: reminded.value.email,
-    }).pipe(Effect.orDie);
+    // A notice of the learner's own payment, so an account that unsubscribed still receives it.
+    yield* sendMail(
+      yield* MutationCtx,
+      {
+        ...message,
+        from: EMAIL_FROM,
+        idempotencyKey: `pass-reminder/${grantId}`,
+        to: reminded.value.email,
+      },
+      yield* unsubscribePost({ _tag: "Account", userId: reminded.value.userId })
+    ).pipe(Effect.orDie);
     return null;
   }
 );

@@ -149,7 +149,7 @@ function WrappedTools({
  * the link field, keeps them open until the writer has chosen. Until the editor exists, every
  * control waits.
  */
-function EditorBar({
+export function EditorBar({
   align,
   className,
   groups,

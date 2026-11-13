@@ -81,6 +81,7 @@ import editorClients from "./tables/editorClients";
 import editorDocuments from "./tables/editorDocuments";
 import editorSnapshots from "./tables/editorSnapshots";
 import editorSteps from "./tables/editorSteps";
+import emailSuppressions from "./tables/emailSuppressions";
 import examAnswers from "./tables/examAnswers";
 import examAssets from "./tables/examAssets";
 import examAttempts from "./tables/examAttempts";
@@ -144,6 +145,9 @@ import onboardingProfiles from "./tables/onboardingProfiles";
 import operators from "./tables/operators";
 import postLikes from "./tables/postLikes";
 import posts from "./tables/posts";
+import practiceAnswers from "./tables/practiceAnswers";
+import practiceQuestions from "./tables/practiceQuestions";
+import practiceSessions from "./tables/practiceSessions";
 import programBuckets from "./tables/programBuckets";
 import programCatalog from "./tables/programCatalog";
 import pushSubscriptions from "./tables/pushSubscriptions";
@@ -262,6 +266,7 @@ export default $defineSchema({
   editorDocuments: $Table.tableDefinition(editorDocuments),
   editorSnapshots: $Table.tableDefinition(editorSnapshots),
   editorSteps: $Table.tableDefinition(editorSteps),
+  emailSuppressions: $Table.tableDefinition(emailSuppressions),
   examAnswers: $Table.tableDefinition(examAnswers),
   examAssets: $Table.tableDefinition(examAssets),
   examAttempts: $Table.tableDefinition(examAttempts),
@@ -325,6 +330,9 @@ export default $defineSchema({
   operators: $Table.tableDefinition(operators),
   postLikes: $Table.tableDefinition(postLikes),
   posts: $Table.tableDefinition(posts),
+  practiceAnswers: $Table.tableDefinition(practiceAnswers),
+  practiceQuestions: $Table.tableDefinition(practiceQuestions),
+  practiceSessions: $Table.tableDefinition(practiceSessions),
   programBuckets: $Table.tableDefinition(programBuckets),
   programCatalog: $Table.tableDefinition(programCatalog),
   pushSubscriptions: $Table.tableDefinition(pushSubscriptions),

@@ -4,6 +4,11 @@ import { ClockProvider } from "@/components/player/now";
 import { ConvexIsland } from "@/components/providers/island";
 import { ShellLockCarry, usePrepaintRelease } from "@/components/sidebar/lock";
 import { AppNotFound } from "@/components/state/app";
+import { useTryoutPracticing } from "@/components/tryout/practice/link";
+import {
+  TryoutPractice,
+  TryoutPracticeSession,
+} from "@/components/tryout/practice/page";
 import { TryoutAttemptReview } from "@/components/tryout/review/deferred";
 import { readTryoutSectionFn } from "@/components/tryout/route/attempt.functions";
 import { createTryoutHead } from "@/components/tryout/route/head";
@@ -15,6 +20,7 @@ import {
 import { TryoutAttemptSearch } from "@/components/tryout/route/search";
 import { TryoutPressProvider } from "@/components/tryout/runtime/start";
 import { TryoutSectionPageClient } from "@/components/tryout/section/client";
+import { TryoutPage } from "@/components/tryout/shell/header";
 import { readStaticData } from "@/lib/static/data";
 
 /**
@@ -54,11 +60,13 @@ export const Route = createFileRoute(
           canonicalPath: loaderData.head.canonicalPath,
           description: loaderData.head.description,
           image: loaderData.head.image,
-          // A URL bound to one attempt is personal, and one that names a view repeats the page,
+          // A URL bound to one attempt is personal, and one that names a view or a question repeats the page,
           // so only the bare address is indexed.
           indexable:
             loaderData.head.indexable &&
             match.search.attemptId === undefined &&
+            match.search.mode === undefined &&
+            match.search.question === undefined &&
             match.search.view === undefined,
           jsonLd: [],
           locale: params.locale,
@@ -118,6 +126,7 @@ function TryoutSectionView({
   readonly learner: ReturnType<typeof useLearnerSection>;
 }) {
   const route = Route.useLoaderData();
+  const practicing = useTryoutPracticing();
   // A read that answered decides the shell's lock, so the first frame's lock can go.
   usePrepaintRelease(
     learner.kind === "attempt" ||
@@ -126,6 +135,29 @@ function TryoutSectionView({
   );
   if (learner.kind === "notFound") {
     return <AppNotFound locale={route.route.locale} />;
+  }
+  // The section's practice, for a learner whose read answered.
+  if (practicing && (learner.kind === "attempt" || learner.kind === "none")) {
+    const { section, set } = route.page;
+    const target = {
+      countryKey: set.countryKey,
+      examKey: set.examKey,
+      locale: route.route.locale,
+      sectionKey: section.sectionKey,
+      setKey: set.setKey,
+      trackKey: set.trackKey,
+    };
+    return (
+      <TryoutPage>
+        <TryoutPractice target={target} title={section.title}>
+          <TryoutPracticeSession
+            returnAddress={{ publicPath: route.sectionPath }}
+            target={target}
+            title={section.title}
+          />
+        </TryoutPractice>
+      </TryoutPage>
+    );
   }
   const view =
     learner.kind === "attempt"
@@ -146,6 +178,7 @@ function TryoutSectionView({
         binding={view.binding}
         content={view.content}
         page={view.page}
+        parts={route.parts}
         pending={learner.kind === "pending"}
         route={route.route}
         setPath={view.setPath}

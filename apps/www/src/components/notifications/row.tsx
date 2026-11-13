@@ -1,4 +1,9 @@
 import { photoOf } from "@repo/backend/confect/users/picture";
+import {
+  Avatar,
+  AvatarFallback,
+} from "@repo/design-system/components/ui/avatar";
+import { Nina } from "@repo/design-system/components/ui/nina";
 import { cn } from "cn";
 import type { MouseEvent, ReactNode } from "react";
 import { useLocale, useTranslations } from "use-intl";
@@ -21,16 +26,37 @@ import {
   FeedRow,
 } from "@/components/user/feed";
 
-/** One row of the inbox: a reply shows who wrote it, and any other row its school. */
+/** One row of the inbox: a reply shows who wrote it, a try-out's reminder Nina, and any other row its school. */
 export function NotificationRow({
   notification,
 }: {
   notification: ListNotification;
 }) {
+  if (notification.changeType === "tryout.reminder") {
+    return (
+      <ReminderRow>
+        <NotificationBody name="Nina" notification={notification} />
+      </ReminderRow>
+    );
+  }
   return notification.changeType === "comment.replied" ? (
     <ReplyRow notification={notification} />
   ) : (
     <SchoolRow notification={notification} />
+  );
+}
+
+/** A try-out reminder's row: Nina's head beside its body, in the anatomy of a school's row, since Nina tells the learner. */
+function ReminderRow({ children }: { children: ReactNode }) {
+  return (
+    <FeedRow>
+      <Avatar aria-hidden="true" className="size-10 shrink-0">
+        <AvatarFallback>
+          <Nina label="" size={40} />
+        </AvatarFallback>
+      </Avatar>
+      {children}
+    </FeedRow>
   );
 }
 
@@ -54,7 +80,10 @@ function SchoolRow({ notification }: { notification: SchoolNotification }) {
 function ReplyRow({
   notification,
 }: {
-  notification: Exclude<ListNotification, SchoolNotification>;
+  notification: Extract<
+    ListNotification,
+    { readonly changeType: "comment.replied" }
+  >;
 }) {
   const t = useTranslations("Common");
   const { actor } = notification;

@@ -17,6 +17,7 @@ export const NoticeEmailInputSchema = Schema.Struct({
   locale: ActiveAppLocaleCodeSchema,
   privacyPolicyUrl: EmailUrlSchema,
   termsOfServiceUrl: EmailUrlSchema,
+  unsubscribeUrl: EmailUrlSchema,
 });
 export type NoticeEmailInput = typeof NoticeEmailInputSchema.Type;
 const NoticeEmailCopySchema = Schema.Struct({

@@ -224,8 +224,8 @@ function runPlaceScript(
         place.label = value;
       },
     }),
-    removeAttribute: () => {
-      place.empty = false;
+    removeAttribute: (name: string) => {
+      place.empty = name !== "hidden";
     },
   };
   new Function("localStorage", "location", "document", KEPT_ATTEMPT_SCRIPT)(

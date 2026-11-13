@@ -4710,6 +4710,18 @@ export declare const api: {
       >;
     };
   };
+  emails: {
+    unsubscribe: {
+      requests: {
+        confirm: FunctionReference<
+          "mutation",
+          "public",
+          { token: string },
+          null
+        >;
+      };
+    };
+  };
   exams: {
     assets: {
       canAdd: FunctionReference<
@@ -11756,6 +11768,19 @@ export declare const api: {
                 id: Id<"notifications">;
                 readAt?: number;
               }
+            | {
+                attemptId: Id<"tryoutAttempts">;
+                changeType: "tryout.reminder";
+                createdAt: number;
+                id: Id<"notifications">;
+                readAt?: number;
+                set: {
+                  countryKey: string;
+                  examKey: string;
+                  setKey: string;
+                  trackKey: string;
+                } | null;
+              }
           >;
           pageStatus?: "SplitRecommended" | "SplitRequired" | null;
           splitCursor?: string | null;
@@ -11839,6 +11864,19 @@ export declare const api: {
             id: Id<"notifications">;
             readAt?: number;
           }
+        | {
+            attemptId: Id<"tryoutAttempts">;
+            changeType: "tryout.reminder";
+            createdAt: number;
+            id: Id<"notifications">;
+            readAt?: number;
+            set: {
+              countryKey: string;
+              examKey: string;
+              setKey: string;
+              trackKey: string;
+            } | null;
+          }
       >;
       readAll: FunctionReference<
         "mutation",
@@ -11864,7 +11902,8 @@ export declare const api: {
             | "examStart"
             | "examGuardianReminder"
             | "invitation"
-            | "commentReply";
+            | "commentReply"
+            | "tryoutReminder";
         }>
       >;
       set: FunctionReference<
@@ -11882,7 +11921,8 @@ export declare const api: {
             | "examStart"
             | "examGuardianReminder"
             | "invitation"
-            | "commentReply";
+            | "commentReply"
+            | "tryoutReminder";
           on: boolean;
         },
         null
@@ -11905,7 +11945,8 @@ export declare const api: {
             | "examStart"
             | "examGuardianReminder"
             | "invitation"
-            | "commentReply";
+            | "commentReply"
+            | "tryoutReminder";
         }>
       >;
       set: FunctionReference<
@@ -11923,7 +11964,8 @@ export declare const api: {
             | "examStart"
             | "examGuardianReminder"
             | "invitation"
-            | "commentReply";
+            | "commentReply"
+            | "tryoutReminder";
           on: boolean;
           slug: string;
         },
@@ -12425,6 +12467,156 @@ export declare const api: {
           pageStatus?: "SplitRecommended" | "SplitRequired" | null;
           splitCursor?: string | null;
         }
+      >;
+    };
+  };
+  practice: {
+    sessions: {
+      check: FunctionReference<
+        "mutation",
+        "public",
+        {
+          questionId: Id<"practiceQuestions">;
+          response:
+            | Array<string>
+            | { text: string }
+            | { pairs: Array<{ source: string; target: string }> }
+            | { cells: Array<{ column: string; statement: string }> };
+        },
+        { verdict: "correct" | "incorrect" | "partial" | "pending" }
+      >;
+      content: FunctionReference<
+        "query",
+        "public",
+        {
+          locale: "en" | "id" | "de" | "ms";
+          sessionId: Id<"practiceSessions">;
+        },
+        Array<{
+          body: string;
+          questionId: Id<"practiceQuestions">;
+          versionHash: string;
+        }>
+      >;
+      explain: FunctionReference<
+        "query",
+        "public",
+        {
+          locale: "en" | "id" | "de" | "ms";
+          questionId: Id<"practiceQuestions">;
+        },
+        {
+          explanation?: any;
+          key:
+            | { correct: Array<string>; interaction: string; kind: "choice" }
+            | {
+                answers: Array<{ column: string; statement: string }>;
+                interaction: string;
+                kind: "matrix";
+              }
+            | {
+                interaction: string;
+                kind: "match";
+                pairs: Array<{ source: string; target: string }>;
+              }
+            | { interaction: string; kind: "order"; sequence: Array<string> }
+            | { correct: string; interaction: string; kind: "inlineChoice" }
+            | {
+                accepted: {
+                  acceptedAnswers: Array<string>;
+                  collapseWhitespace: boolean;
+                  ignoreCase: boolean;
+                  kind: "text";
+                };
+                interaction: string;
+                kind: "textEntry";
+              }
+            | {
+                interaction: string;
+                kind: "numericEntry";
+                tolerance?: { kind: "absolute" | "relative"; value: string };
+                value: string;
+              }
+            | { expression: string; interaction: string; kind: "mathEntry" }
+            | { correct: Array<string>; interaction: string; kind: "hotspot" }
+            | {
+                interaction: string;
+                kind: "gapMatch";
+                pairs: Array<{ choice: string; gap: string }>;
+              }
+            | {
+                interaction: string;
+                kind: "graphPoint";
+                target:
+                  | { kind: "points"; points: Array<{ x: number; y: number }> }
+                  | {
+                      kind: "lines";
+                      lines: Array<{
+                        through: Array<
+                          { x: number; y: number } | { x: number; y: number }
+                        >;
+                      }>;
+                    };
+                tolerance: number;
+              }
+            | {
+                criteria: Array<{
+                  criterion: string;
+                  levels: Array<{ descriptor: string; level: string }>;
+                }>;
+                interaction: string;
+                kind: "extendedText";
+              };
+        } | null
+      >;
+      open: FunctionReference<
+        "mutation",
+        "public",
+        {
+          countryKey: string;
+          examKey: string;
+          locale: "en" | "id" | "de" | "ms";
+          sectionKey: string;
+          setKey: string;
+          trackKey: string;
+        },
+        { sessionId: Id<"practiceSessions"> }
+      >;
+      restart: FunctionReference<
+        "mutation",
+        "public",
+        { sessionId: Id<"practiceSessions"> },
+        { sessionId: Id<"practiceSessions"> }
+      >;
+      state: FunctionReference<
+        "query",
+        "public",
+        {
+          countryKey: string;
+          examKey: string;
+          locale: "en" | "id" | "de" | "ms";
+          sectionKey: string;
+          setKey: string;
+          trackKey: string;
+        },
+        {
+          questions: Array<{
+            answer: {
+              checkedAt: number;
+              grade:
+                | { category: number; ceiling: number; status: "scored" }
+                | { ceiling: number; status: "pending" };
+              response:
+                | Array<string>
+                | { text: string }
+                | { pairs: Array<{ source: string; target: string }> }
+                | { cells: Array<{ column: string; statement: string }> };
+            } | null;
+            questionId: Id<"practiceQuestions">;
+            questionOrder: number;
+          }>;
+          sessionId: Id<"practiceSessions">;
+        } | null
       >;
     };
   };
@@ -16407,6 +16599,16 @@ export declare const internal: {
                 };
               }
             | {
+                name: "tryout reminder sent";
+                properties: {
+                  channel: "email" | "inbox";
+                  exam_key: string;
+                  hours_left: number;
+                  set_key: string;
+                  variant?: "a" | "b";
+                };
+              }
+            | {
                 name: "tryout paywall viewed";
                 properties: { source: "review" };
               }
@@ -16721,6 +16923,7 @@ export declare const internal: {
             locale: "en" | "id" | "de";
             privacyPolicyUrl: string;
             termsOfServiceUrl: string;
+            unsubscribeUrl: string;
           } | null
         >;
       };
@@ -16793,6 +16996,16 @@ export declare const internal: {
                     set_key: string;
                     total_questions: number;
                     track_key: string;
+                  };
+                }
+              | {
+                  name: "tryout reminder sent";
+                  properties: {
+                    channel: "email" | "inbox";
+                    exam_key: string;
+                    hours_left: number;
+                    set_key: string;
+                    variant?: "a" | "b";
                   };
                 }
               | {
@@ -19218,6 +19431,7 @@ export declare const internal: {
             locale: "en" | "id" | "de";
             privacyPolicyUrl: string;
             termsOfServiceUrl: string;
+            unsubscribeUrl: string;
           },
           { html: string; subject: string; text: string }
         >;
@@ -19245,8 +19459,17 @@ export declare const internal: {
               locale: "en" | "id" | "de";
               privacyPolicyUrl: string;
               termsOfServiceUrl: string;
+              unsubscribeUrl: string;
             };
             key: string;
+            recipient:
+              | { _tag: "Account"; userId: Id<"users"> }
+              | {
+                  _tag: "Person";
+                  personId: Id<"tenantPeople">;
+                  tenantId: Id<"tenants">;
+                }
+              | { _tag: "Address"; address: string };
           }>
         >;
         enqueue: FunctionReference<
@@ -19257,6 +19480,14 @@ export declare const internal: {
               address: string;
               html: string;
               key: string;
+              recipient:
+                | { _tag: "Account"; userId: Id<"users"> }
+                | {
+                    _tag: "Person";
+                    personId: Id<"tenantPeople">;
+                    tenantId: Id<"tenants">;
+                  }
+                | { _tag: "Address"; address: string };
               subject: string;
               text: string;
             }>;
@@ -19277,6 +19508,7 @@ export declare const internal: {
             privacyPolicyUrl: string;
             signInUrl: string;
             termsOfServiceUrl: string;
+            unsubscribeUrl: string;
           },
           { html: string; subject: string; text: string }
         >;
@@ -19304,6 +19536,7 @@ export declare const internal: {
             privacyPolicyUrl: string;
             signInUrl: string;
             termsOfServiceUrl: string;
+            unsubscribeUrl: string;
           } | null
         >;
       };
@@ -19354,12 +19587,15 @@ export declare const internal: {
           "action",
           "internal",
           {
-            classUrl: string;
-            locale: "en" | "id" | "de";
-            privacyPolicyUrl: string;
-            termsOfServiceUrl: string;
+            inputs: Array<{
+              classUrl: string;
+              locale: "en" | "id" | "de";
+              privacyPolicyUrl: string;
+              termsOfServiceUrl: string;
+              unsubscribeUrl: string;
+            }>;
           },
-          { html: string; subject: string; text: string }
+          Array<{ html: string; subject: string; text: string }>
         >;
       };
       internal: {
@@ -19367,11 +19603,15 @@ export declare const internal: {
           "mutation",
           "internal",
           {
-            addresses: Array<{ email: string; personId: Id<"tenantPeople"> }>;
-            html: string;
+            messages: Array<{
+              email: string;
+              html: string;
+              personId: Id<"tenantPeople">;
+              subject: string;
+              text: string;
+            }>;
             postId: Id<"classroomPosts">;
-            subject: string;
-            text: string;
+            tenantId: Id<"tenants">;
           },
           null
         >;
@@ -19383,13 +19623,18 @@ export declare const internal: {
             recipients: Array<Id<"tenantPeople">>;
           },
           {
-            addresses: Array<{ email: string; personId: Id<"tenantPeople"> }>;
-            input: {
-              classUrl: string;
-              locale: "en" | "id" | "de";
-              privacyPolicyUrl: string;
-              termsOfServiceUrl: string;
-            };
+            addresses: Array<{
+              email: string;
+              input: {
+                classUrl: string;
+                locale: "en" | "id" | "de";
+                privacyPolicyUrl: string;
+                termsOfServiceUrl: string;
+                unsubscribeUrl: string;
+              };
+              personId: Id<"tenantPeople">;
+            }>;
+            tenantId: Id<"tenants">;
           } | null
         >;
         send: FunctionReference<
@@ -19441,6 +19686,7 @@ export declare const internal: {
             locale: "en" | "id" | "de";
             privacyPolicyUrl: string;
             termsOfServiceUrl: string;
+            unsubscribeUrl: string;
           }
         >;
       };
@@ -21397,6 +21643,86 @@ export declare const internal: {
           null
         >;
         sweep: FunctionReference<"mutation", "internal", {}, null>;
+      };
+    };
+    reminders: {
+      delivery: {
+        render: FunctionReference<
+          "action",
+          "internal",
+          {
+            continueUrl: string;
+            hoursLeft: number;
+            locale: "en" | "id" | "de";
+            privacyPolicyUrl: string;
+            setTitle: string;
+            termsOfServiceUrl: string;
+            unsubscribeUrl: string;
+            variant: "a" | "b";
+          },
+          { html: string; subject: string; text: string }
+        >;
+      };
+      jobs: {
+        email: FunctionReference<
+          "action",
+          "internal",
+          {
+            attemptId: Id<"tryoutAttempts">;
+            expiresAt: number;
+            setTitle: string;
+          },
+          null
+        >;
+        enqueueEmail: FunctionReference<
+          "mutation",
+          "internal",
+          {
+            attemptId: Id<"tryoutAttempts">;
+            expiresAt: number;
+            html: string;
+            setTitle: string;
+            subject: string;
+            text: string;
+            variant: "a" | "b";
+          },
+          null
+        >;
+        hour: FunctionReference<
+          "mutation",
+          "internal",
+          {
+            attemptId: Id<"tryoutAttempts">;
+            expiresAt: number;
+            setTitle: string;
+          },
+          null
+        >;
+        readEmail: FunctionReference<
+          "query",
+          "internal",
+          {
+            attemptId: Id<"tryoutAttempts">;
+            expiresAt: number;
+            setTitle: string;
+          },
+          | { _tag: "Skip" }
+          | { _tag: "Later"; at: number }
+          | {
+              _tag: "Send";
+              input: {
+                continueUrl: string;
+                hoursLeft: number;
+                locale: "en" | "id" | "de";
+                privacyPolicyUrl: string;
+                setTitle: string;
+                termsOfServiceUrl: string;
+                unsubscribeUrl: string;
+                variant: "a" | "b";
+              };
+              userId: Id<"users">;
+            }
+        >;
       };
     };
   };

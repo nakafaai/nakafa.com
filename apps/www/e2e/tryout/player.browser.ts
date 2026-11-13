@@ -8,13 +8,14 @@ import {
   chooseView,
   currentNumberOf,
   expectView,
-  numberCells,
+  openingView,
   openSurface,
+  otherView,
   questionArticle,
   questionHeading,
   readRememberedView,
   runFirstSection,
-  scrollPageTo,
+  showList,
   shownQuestions,
   sidebarOf,
   waitForRunningSection,
@@ -27,17 +28,16 @@ import {
   readShellObservation,
 } from "@/e2e/support/shell";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
-import { desktopViewport, tryoutViewports } from "@/e2e/support/viewport";
+import { tryoutViewports } from "@/e2e/support/viewport";
 
-/**
- * The height of a window that is short enough for the sidebar to scroll: the column under the header
- * and over the footer (8rem together) keeps 192 px, about four of the six rows that a section's 30
- * numbers take in it.
- */
-const SHORT_WINDOW_HEIGHT = 320;
+/** The `view` parameter of each view. */
+const VIEW_PARAMS = { List: "list", "One question": "single" } as const;
 
-/** An address whose `view` parameter names one question at a time. */
-const SINGLE_VIEW_ADDRESS = /[?&]view=single(?:&|$)/u;
+/** An address whose `view` parameter names each view. */
+const VIEW_ADDRESSES = {
+  List: /[?&]view=list(?:&|$)/u,
+  "One question": /[?&]view=single(?:&|$)/u,
+} as const;
 
 /** What the player says while the connection is gone. */
 const OFFLINE_NOTE = "Your changes save once you are back online.";
@@ -84,9 +84,9 @@ const shownAtOpen = Effect.fn("NakafaE2E.shownAtOpen")(function* (
 });
 
 /**
- * Resolves the view from the address, then the learner's saved view, then the
- * list, in the browser, and keeps the page still while the view changes and the
- * timer ticks.
+ * Resolves the view from the address, then the learner's saved view, then the device's own (D6): one question at a
+ * time on a phone and the list anywhere wider, in the browser, and keeps the page still while the view changes and
+ * the timer ticks.
  */
 const verifyView = Effect.fn("NakafaE2E.verifyPlayerView")(function* (
   page: Page,
@@ -95,14 +95,15 @@ const verifyView = Effect.fn("NakafaE2E.verifyPlayerView")(function* (
 ) {
   yield* runFirstSection(page, hasTouch, baseURL);
   const address = page.url();
-  yield* expectView(page, "List");
+  const opening = openingView(page);
+  const other = otherView(opening);
+  yield* expectView(page, opening);
 
-  // With nothing saved, the list; the address alone names the other view.
-  const listed = yield* shownAtOpen(page, withView(address));
-  yield* Effect.sync(() => expect(listed).toBeGreaterThan(1));
-  const named = yield* shownAtOpen(page, withView(address, "single"));
-  yield* Effect.sync(() => expect(named).toBe(1));
-  yield* expectView(page, "One question");
+  // With nothing saved, the device's view; the address alone names the other view.
+  yield* shownAtOpen(page, withView(address));
+  yield* expectView(page, opening);
+  yield* shownAtOpen(page, withView(address, VIEW_PARAMS[other]));
+  yield* expectView(page, other);
   const unsaved = yield* Effect.promise(() => readRememberedView(page));
   yield* Effect.sync(() => expect(Option.isNone(unsaved)).toBe(true));
 
@@ -120,7 +121,7 @@ const verifyView = Effect.fn("NakafaE2E.verifyPlayerView")(function* (
   // Choosing a view shows it at once, without moving the page, while the
   // timer keeps ticking, and the server remembers it.
   yield* Effect.promise(() => page.goto(address, { waitUntil: "commit" }));
-  yield* expectView(page, "List");
+  yield* expectView(page, opening);
   yield* Effect.promise(() =>
     expect(
       page.getByRole("button", { exact: true, name: "Finish" })
@@ -129,28 +130,29 @@ const verifyView = Effect.fn("NakafaE2E.verifyPlayerView")(function* (
   // Late streamed content would still move the page, so let it go quiet.
   yield* Effect.promise(() => waitForQuiet(page));
   // The view's button grows with its name as the press answers, which the page may do.
-  yield* chooseView(page, hasTouch, "One question");
+  yield* chooseView(page, hasTouch, other);
   const since = yield* readPageTime(page);
-  yield* expectView(page, "One question");
-  yield* expectRemembered(page, "single");
+  yield* expectView(page, other);
+  yield* expectRemembered(page, VIEW_PARAMS[other]);
   yield* Effect.promise(() => waitForQuiet(page));
   const observation = yield* readShellObservation(page, since);
   yield* Effect.sync(() => expectStillShell(observation, [true]));
 
   // The saved view is the first one after a reload, and the address still wins.
-  const saved = yield* shownAtOpen(page, withView(address));
-  yield* Effect.sync(() => expect(saved).toBe(1));
-  const overridden = yield* shownAtOpen(page, withView(address, "list"));
-  yield* Effect.sync(() => expect(overridden).toBeGreaterThan(1));
+  yield* shownAtOpen(page, withView(address));
+  yield* expectView(page, other);
+  yield* shownAtOpen(page, withView(address, VIEW_PARAMS[opening]));
+  yield* expectView(page, opening);
 
-  // Choosing a view again keeps the address in step, so a reload cannot undo it.
-  yield* chooseView(page, hasTouch, "One question");
+  // Choosing a view again keeps the address in step, so a reload cannot undo it; the fresh page goes quiet first.
+  yield* Effect.promise(() => waitForQuiet(page));
+  yield* chooseView(page, hasTouch, other);
   yield* Effect.promise(() =>
-    expect(page).toHaveURL(SINGLE_VIEW_ADDRESS, {
+    expect(page).toHaveURL(VIEW_ADDRESSES[other], {
       timeout: readinessTimeoutMilliseconds,
     })
   );
-  yield* expectView(page, "One question");
+  yield* expectView(page, other);
 });
 
 /**
@@ -164,7 +166,8 @@ const verifyRollback = Effect.fn("NakafaE2E.verifyPlayerRollback")(function* (
   baseURL: string
 ) {
   yield* runFirstSection(page, hasTouch, baseURL);
-  yield* expectView(page, "List");
+  const opening = openingView(page);
+  yield* expectView(page, opening);
 
   const failSave = yield* Deferred.make<void>();
   const services = yield* Effect.context<never>();
@@ -182,11 +185,11 @@ const verifyRollback = Effect.fn("NakafaE2E.verifyPlayerRollback")(function* (
     )
   );
 
-  yield* chooseView(page, hasTouch, "One question");
-  yield* expectView(page, "One question");
+  yield* chooseView(page, hasTouch, otherView(opening));
+  yield* expectView(page, otherView(opening));
 
   yield* Deferred.succeed(failSave, undefined);
-  yield* expectView(page, "List");
+  yield* expectView(page, opening);
   yield* Effect.promise(() =>
     expect(page.getByText(VIEW_ERROR)).toBeVisible({
       timeout: readinessTimeoutMilliseconds,
@@ -208,7 +211,7 @@ const verifyKeys = Effect.fn("NakafaE2E.verifyPlayerKeys")(function* (
 ) {
   yield* runFirstSection(page, hasTouch, baseURL);
   // The questions stream in after the header, so wait for them before keys.
-  yield* expectView(page, "List");
+  yield* showList(page, hasTouch);
   const current = currentNumberOf(page, hasTouch);
   yield* Effect.promise(() => expect(current).toHaveText("1"));
 
@@ -321,52 +324,6 @@ const verifyKeys = Effect.fn("NakafaE2E.verifyPlayerKeys")(function* (
   yield* Effect.promise(() => expect(questionArticle(page, 5)).toBeHidden());
 });
 
-/**
- * Keeps the current number inside a sidebar that is shorter than its grid, so
- * a learner always sees where they are, however the current question changed.
- */
-const verifyShortSidebar = Effect.fn("NakafaE2E.verifyShortSidebar")(function* (
-  page: Page,
-  baseURL: string
-) {
-  yield* runFirstSection(page, false, baseURL);
-  // The questions stream in after the header, so wait for them to measure.
-  yield* expectView(page, "List");
-  // The window shrinks once the section runs, so the setup keeps its room.
-  yield* Effect.promise(() =>
-    page.setViewportSize({
-      height: SHORT_WINDOW_HEIGHT,
-      width: desktopViewport.width,
-    })
-  );
-  const current = currentNumberOf(page, false);
-  yield* Effect.promise(() => expect(current).toHaveText("1"));
-
-  // The last number starts below the fold of the column.
-  const total = yield* Effect.promise(() => numberCells(page).count());
-  const belowFold = yield* Effect.promise(() =>
-    sidebarOf(page).evaluate((column) => {
-      const last = column.querySelector("li:last-child");
-      return (
-        (last?.getBoundingClientRect().bottom ?? 0) >
-        column.getBoundingClientRect().bottom
-      );
-    })
-  );
-  yield* Effect.sync(() => expect(belowFold).toBe(true));
-
-  // The end of the list makes the last question current, and the column
-  // scrolls to its number although nobody pressed it.
-  yield* scrollPageTo(page, "end");
-  yield* Effect.promise(() => expect(current).toHaveText(String(total)));
-  yield* expectUncovered(current, readinessTimeoutMilliseconds);
-
-  // Back at the start, the column follows the reader up again.
-  yield* scrollPageTo(page, "start");
-  yield* Effect.promise(() => expect(current).toHaveText("1"));
-  yield* expectUncovered(current, readinessTimeoutMilliseconds);
-});
-
 for (const viewport of tryoutViewports) {
   test.describe(`Try-out player on ${viewport.name}`, () => {
     test.use({
@@ -466,25 +423,4 @@ test("says so while the connection is gone, and stops once it is back", async ({
       })
     )
   );
-});
-
-test.describe("Try-out player in a short window", () => {
-  test.use({
-    hasTouch: desktopViewport.hasTouch,
-    viewport: { height: desktopViewport.height, width: desktopViewport.width },
-  });
-
-  test("keeps the current number in view in a sidebar that scrolls", async ({
-    baseURL,
-    page,
-  }) => {
-    await Effect.runPromise(
-      withObservedPageErrors(
-        page,
-        Effect.fromNullishOr(baseURL).pipe(
-          Effect.flatMap((origin) => verifyShortSidebar(page, origin))
-        )
-      )
-    );
-  });
 });

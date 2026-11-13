@@ -13,7 +13,7 @@ import {
   secondsLeft,
   takesAnswers,
 } from "@/components/exams/sitting/attempt";
-import { PaperBack, PaperBar } from "@/components/exams/sitting/bar";
+import { PaperBar } from "@/components/exams/sitting/bar";
 import {
   isRetiredDevice,
   sittingFailureMessage,
@@ -51,7 +51,7 @@ import { PlayerSidebar } from "@/components/player/navigator/sidebar";
 import { useNow } from "@/components/player/now";
 import { PlayerProvider } from "@/components/player/provider";
 import { PlayerQuestions } from "@/components/player/questions";
-import { PlayerTimer } from "@/components/player/timer";
+import { PlayerTimer, PlayerTimerCard } from "@/components/player/timer";
 import { useHeartbeat } from "@/components/tenant/exams/beat";
 import { schoolCall } from "@/components/tenant/write";
 
@@ -120,10 +120,10 @@ export function StudentPlayer({
     return (
       <RunningPaper
         attemptId={attempt.id}
+        card={<SittingTimerCard deadline={attempt.deadline} />}
         deviceId={deviceId}
         header={
           <PaperBar
-            back={<PaperBack />}
             timer={<SittingTimer deadline={attempt.deadline} />}
             title={sitting.examTitle}
           >
@@ -155,7 +155,6 @@ export function StudentPlayer({
   return (
     <PlayerProvider keys={[]} mode={mode}>
       <PaperBar
-        back={<PaperBack />}
         timer={
           isActive(attempt.state) ? (
             <SittingTimer deadline={attempt.deadline} />
@@ -228,11 +227,22 @@ function StudentFinish({
   );
 }
 
-/** The timer of the attempt, counted down on the server's time, which the clock above the player keeps. */
+/**
+ * The timer of the attempt in the header, counted down on the server's time, which the clock above the player keeps.
+ * A paper on the screen shows the time in its pane from the large breakpoint (`SittingTimerCard`), and its header's
+ * timer steps aside there.
+ */
 function SittingTimer({ deadline }: { readonly deadline: number }) {
   const now = useNow(true);
 
   return <PlayerTimer seconds={secondsLeft(deadline, now)} />;
+}
+
+/** The time left of the attempt as the pane's card. */
+function SittingTimerCard({ deadline }: { readonly deadline: number }) {
+  const now = useNow(true);
+
+  return <PlayerTimerCard seconds={secondsLeft(deadline, now)} />;
 }
 
 /**
@@ -242,6 +252,7 @@ function SittingTimer({ deadline }: { readonly deadline: number }) {
  */
 function RunningPaper({
   attemptId,
+  card,
   deviceId,
   header,
   locked,
@@ -251,6 +262,8 @@ function RunningPaper({
   slug,
 }: {
   readonly attemptId: GenericId.GenericId<"examAttempts">;
+  /** The pane's card of the time left. */
+  readonly card: ReactNode;
   readonly deviceId: string;
   readonly header: ReactNode;
   readonly locked: boolean;
@@ -291,6 +304,7 @@ function RunningPaper({
       <PlayerMain
         navigator={
           <PlayerSidebar>
+            {card}
             <PlayerGrid questions={questions} />
             <PlayerLegend />
           </PlayerSidebar>

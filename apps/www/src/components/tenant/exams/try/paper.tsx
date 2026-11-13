@@ -8,7 +8,7 @@ import { useState } from "react";
 import { useTranslations } from "use-intl";
 import { useStore } from "zustand";
 import { useConvexAuth } from "@/components/auth/convex";
-import { PaperBack, PaperBar } from "@/components/exams/sitting/bar";
+import { PaperBar } from "@/components/exams/sitting/bar";
 import { PlayerFinish } from "@/components/player/finish";
 import { PlayerFlag } from "@/components/player/flag";
 import {
@@ -81,10 +81,7 @@ export function ExamTryPaper({
   if (Arr.isReadonlyArrayEmpty(exam.questions)) {
     return (
       <PlayerProvider keys={[]} mode="list">
-        <PaperBar
-          back={<PaperBack examId={examId} />}
-          title={exam.title || t("untitled")}
-        />
+        <PaperBar examId={examId} title={exam.title || t("untitled")} />
         <ExamTryEmpty examId={examId} />
       </PlayerProvider>
     );
@@ -106,10 +103,7 @@ export function ExamTryPaper({
               mode="list"
             >
               <PlayerKeys locked={false} questions={models} />
-              <PaperBar
-                back={<PaperBack examId={examId} />}
-                title={exam.title || t("untitled")}
-              >
+              <PaperBar examId={examId} title={exam.title || t("untitled")}>
                 {gone ? null : (
                   <PlayerFinish
                     description={t("try-note")}
