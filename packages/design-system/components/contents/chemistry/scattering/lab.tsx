@@ -200,7 +200,7 @@ function ScatteringScene({ approach }: { readonly approach: number }) {
   const flights = useMemo(
     () =>
       Arr.flatMap(IMPACTS, (impact, index) => {
-        const path = alphaPath(impact, approach, LIMIT, 1200);
+        const path = alphaPath(impact, approach, LIMIT, 500);
         if (path.length < 2) {
           return [];
         }

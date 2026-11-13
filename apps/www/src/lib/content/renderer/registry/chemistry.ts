@@ -41,10 +41,23 @@ import {
   ChemicalReactionTypesLab,
   MethaneCombustionEquationLab,
 } from "@/lib/content/renderer/client/chemistry/reaction";
+import {
+  AlkaliWaterLab,
+  IonFormationLab,
+  IonLatticeLab,
+  MassSpectrometerLab,
+  MillikanOilDropLab,
+  ParticleTrackLab,
+  RadioactiveDecayLab,
+} from "@/lib/content/renderer/client/chemistry/structure";
 import type { RendererImplementation } from "@/lib/content/renderer/selection";
 
 /** Every chemistry visual, which any lesson in any domain may use. */
 export const chemistryRenderers = [
+  {
+    name: chemistryComponentNames.alkaliWaterLab,
+    component: AlkaliWaterLab,
+  },
   {
     name: chemistryComponentNames.ancientAtomLab,
     component: AncientAtomLab,
@@ -90,8 +103,16 @@ export const chemistryRenderers = [
     component: ElectronConfigurationLab,
   },
   {
+    name: chemistryComponentNames.ionFormationLab,
+    component: IonFormationLab,
+  },
+  {
     name: chemistryComponentNames.ionLab,
     component: IonLab,
+  },
+  {
+    name: chemistryComponentNames.ionLatticeLab,
+    component: IonLatticeLab,
   },
   {
     name: chemistryComponentNames.isotopeLab,
@@ -102,12 +123,20 @@ export const chemistryRenderers = [
     component: MassConservationLab,
   },
   {
+    name: chemistryComponentNames.massSpectrometerLab,
+    component: MassSpectrometerLab,
+  },
+  {
     name: chemistryComponentNames.matterParticleReaderLab,
     component: MatterParticleReaderLab,
   },
   {
     name: chemistryComponentNames.methaneCombustionEquationLab,
     component: MethaneCombustionEquationLab,
+  },
+  {
+    name: chemistryComponentNames.millikanOilDropLab,
+    component: MillikanOilDropLab,
   },
   {
     name: chemistryComponentNames.modernPeriodicTableLab,
@@ -126,8 +155,16 @@ export const chemistryRenderers = [
     component: OrbitalCloudLab,
   },
   {
+    name: chemistryComponentNames.particleTrackLab,
+    component: ParticleTrackLab,
+  },
+  {
     name: chemistryComponentNames.periodicPropertiesLab,
     component: PeriodicPropertiesLab,
+  },
+  {
+    name: chemistryComponentNames.radioactiveDecayLab,
+    component: RadioactiveDecayLab,
   },
   {
     name: chemistryComponentNames.reactionBalanceLab,

@@ -26,6 +26,7 @@ export const ElementSymbolSchema = Schema.Literals([
   "Fe",
   "Cu",
   "Zn",
+  "Br",
   "Sr",
   "Ag",
   "Ba",
@@ -185,6 +186,13 @@ export const ELEMENTS = {
     mass: 65,
     number: 30,
     radius: 139,
+  },
+  Br: {
+    color: PLOT_COLORS.pink,
+    covalent: 120,
+    mass: 80,
+    number: 35,
+    radius: 185,
   },
   Sr: {
     color: getColor("GRAY", 300),
