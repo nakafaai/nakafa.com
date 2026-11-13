@@ -72,6 +72,10 @@ const LEARNER_TESTS = [
 // Nina's chats, on their page and in the sheet.
 const CHAT_TESTS = ["**/chat/**/*.browser.ts", "**/nina/**/*.browser.ts"];
 
+// A diagram's card and dialog, which each engine sizes and scrolls in its own
+// way, so the chat suite runs them in WebKit and Firefox too.
+const ENGINE_CHAT_TESTS = ["**/chat/diagram.browser.ts"];
+
 // Every School page, role and worst case, which the browsers suites run again in
 // Firefox, desktop Safari, an Android phone and an iPhone, after Chromium's run
 // in the runtime suite: a school must work on every device its people bring.
@@ -199,6 +203,14 @@ const PROJECTS = {
     testIgnore: TIMING_TESTS,
     testMatch: CHAT_TESTS,
   },
+  "chat-webkit": {
+    testMatch: ENGINE_CHAT_TESTS,
+    use: devices["Desktop Safari"],
+  },
+  "chat-firefox": {
+    testMatch: ENGINE_CHAT_TESTS,
+    use: devices["Desktop Firefox"],
+  },
   visual: {
     testIgnore: TIMING_TESTS,
     testMatch: VISUAL_TESTS,
@@ -284,7 +296,10 @@ type ProjectName = keyof typeof PROJECTS;
 const SUITES = {
   runtime: { projects: ["shared-runtime"], timing: false },
   learner: { projects: ["learner"], timing: false },
-  chat: { projects: ["chat"], timing: false },
+  chat: {
+    projects: ["chat", "chat-webkit", "chat-firefox"],
+    timing: false,
+  },
   visual: { projects: ["visual", "webkit"], timing: false },
   browsers: {
     projects: [
