@@ -55,7 +55,10 @@ interface Props {
   onOpenChangeComplete?: (open: boolean) => void;
   open: boolean;
   setOpen: (open: boolean) => void;
-  /** The width of the dialog on a wide screen: `wide` for content such as a diagram at its natural size. */
+  /**
+   * The size of the dialog: `wide` for a canvas such as a diagram, which takes most of a wide screen's width and
+   * height and fills a body that does not scroll, so what it holds is the one thing that scrolls.
+   */
   size?: ComponentProps<typeof DialogContent>["size"];
   title: ReactNode;
 }
@@ -115,7 +118,9 @@ export function ResponsiveDialog({
             <DialogTitle>{title}</DialogTitle>
             <DialogDescription>{description}</DialogDescription>
           </DialogHeader>
-          <DialogPanel onKeyDown={pressMain}>{children}</DialogPanel>
+          <DialogPanel fill={size === "wide"} onKeyDown={pressMain}>
+            {children}
+          </DialogPanel>
           <DialogFooter ref={footerPart}>
             <ResponsiveDialogCancel action={action} setOpen={setOpen} />
             {action}
@@ -132,7 +137,9 @@ export function ResponsiveDialog({
           <DrawerTitle>{title}</DrawerTitle>
           <DrawerDescription>{description}</DrawerDescription>
         </DrawerHeader>
-        <DrawerPanel onKeyDown={pressMain}>{children}</DrawerPanel>
+        <DrawerPanel fill={size === "wide"} onKeyDown={pressMain}>
+          {children}
+        </DrawerPanel>
         <DrawerFooter ref={footerPart}>
           <ResponsiveDialogCancel action={action} setOpen={setOpen} />
           {action}
