@@ -243,7 +243,9 @@ const posted = Effect.fn("proof.posted")(function* (sha: string, id: number) {
     (status) =>
       status.context === "proof" &&
       status.state !== "PENDING" &&
-      (status.targetUrl ?? "").endsWith(`/runs/${id}`)
+      Option.exists(Option.fromNullishOr(status.targetUrl), (url) =>
+        url.endsWith(`/runs/${id}`)
+      )
   );
 });
 
