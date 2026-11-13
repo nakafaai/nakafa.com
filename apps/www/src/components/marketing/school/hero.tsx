@@ -15,7 +15,7 @@ export function SchoolHero() {
 
   return (
     <section
-      className="relative isolate flex min-h-[min(calc(100svh-4rem),57.5rem)] scroll-mt-28 items-center overflow-hidden"
+      className="relative isolate flex min-h-(--marketing-screen) scroll-mt-28 items-center overflow-hidden"
       id="hero"
     >
       <div className="relative mx-auto grid w-full max-w-3xl justify-items-center gap-6 px-6 pt-28 pb-16 text-center md:pt-24">

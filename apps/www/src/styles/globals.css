@@ -99,6 +99,12 @@
   /* A pane's width, which a drag of its edge sets, so the page narrows beside it from the first paint. */
   --pane-width: 420px;
   --surah-header-height: 4rem;
+  /*
+   * One screen of a marketing page under its header, never taller than 57.5rem (920 px), the window of a large
+   * desktop. A crawler renders a page in a window as tall as the page, where a part sized by the window alone would
+   * grow with the page without end, so every part and its stand-in height read this (`marketing/shared`).
+   */
+  --marketing-screen: min(calc(100svh - 4rem), 57.5rem);
 }
 
 /*
@@ -132,11 +138,11 @@
  * A part of a marketing page below its first screen is drawn only once the
  * reader nears it: its style, layout and paint wait, so the first load styles
  * the screen the reader sees and not the dozen parts under it. Until it is
- * drawn a part stands at its least height, one screen under the header, and it
- * keeps the height it had once it was.
+ * drawn a part stands at its least height, one screen under the header
+ * (`--marketing-screen`), and it keeps the height it had once it was.
  */
 @utility content-auto-section {
-  contain-intrinsic-size: auto none auto calc(100svh - 4rem);
+  contain-intrinsic-size: auto none auto var(--marketing-screen);
   content-visibility: auto;
 }
 

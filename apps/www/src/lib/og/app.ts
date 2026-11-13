@@ -4,6 +4,7 @@ import { type ArtworkIdentity, resolveSocialArtwork } from "@/lib/og/artwork";
 const APP_ARTWORK_IDENTITIES = {
   "ask-nina": "app/ask-nina",
   home: undefined,
+  landing: "app/landing",
   pricing: "app/pricing",
   quran: "quran/index",
   school: "app/school",

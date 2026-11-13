@@ -54,6 +54,13 @@ describe("public artwork", () => {
     expect(
       getAppSocialArtwork({ key: "home", locale: "en", publicPath: "" })
     ).toBe("/en/og/image.png");
+    // The landing's artwork speaks Indonesian, so another language keeps its generated image.
+    expect(
+      getAppSocialArtwork({ key: "landing", locale: "id", publicPath: "" })
+    ).toBe("/open-graph/app/id-landing.png");
+    expect(
+      getAppSocialArtwork({ key: "landing", locale: "de", publicPath: "" })
+    ).toBe("/de/og/image.png");
   });
 
   it("draws a card's artwork from its WebP, and leaves a generated image alone", () => {
