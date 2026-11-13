@@ -4,7 +4,6 @@ import {
   isIdentifier,
   isJsxAttribute,
   isJsxElement,
-  isJsxSelfClosingElement,
   isObjectLiteralExpression,
   isPropertyAssignment,
   isStringLiteral,
@@ -12,11 +11,9 @@ import {
   type Node,
   type SourceFile,
 } from "tsrs/ast";
-import { tagText } from "#scripts/check/drilling";
-import { COMPONENT_SET_DIRECTORIES } from "#scripts/check/exports";
+import { judgesMarkup, opening } from "#scripts/check/jsx";
 import { children } from "#scripts/check/source";
 
-const JSX_MODULE_PATTERN = /\.tsx$/u;
 const GROUP_TAG = "ButtonGroup";
 const BUTTON_TAG = "Button";
 const BUTTON_CLASSES = "buttonVariants";
@@ -28,22 +25,6 @@ const GROUP_DEFAULT_VARIANT = "outline";
  * a dialog or a sheet holds is not part of the row that opened it.
  */
 const POPUP_TAG_PATTERN = /(?:Content|Popup)$|^ResponsiveDialog$/u;
-
-/** The tag and attributes of an element that a node opens, or none for any other node. */
-function opening(node: Node) {
-  if (isJsxSelfClosingElement(node)) {
-    return Option.some({
-      attributes: node.attributes,
-      tag: tagText(node.tagName),
-    });
-  }
-  return isJsxElement(node)
-    ? Option.some({
-        attributes: node.openingElement.attributes,
-        tag: tagText(node.openingElement.tagName),
-      })
-    : Option.none();
-}
 
 /** The one attribute of an element named `name`. */
 function attribute(attributes: JsxAttributes, name: string) {
@@ -153,12 +134,7 @@ function inspectGroup(file: string, group: Node, attributes: JsxAttributes) {
  * as at run time. The component sets that a registry ships keep their upstream shape.
  */
 export function inspectGroupSource(file: string, sourceFile: SourceFile) {
-  if (
-    !JSX_MODULE_PATTERN.test(file) ||
-    Arr.some(COMPONENT_SET_DIRECTORIES, (directory) =>
-      file.startsWith(directory)
-    )
-  ) {
+  if (!judgesMarkup(file)) {
     return [];
   }
   return Arr.flatMap(groupsBelow(sourceFile), ({ attributes, group }) =>
