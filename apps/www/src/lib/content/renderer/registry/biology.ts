@@ -1,10 +1,22 @@
 import { biologyComponentNames } from "@repo/design-system/lib/markdown/names";
 import { BacteriaStructureLab } from "@/lib/content/renderer/client/biology/bacteria";
 import {
+  CellCutawayLab,
+  CellScaleLab,
+  DnaHelixLab,
+} from "@/lib/content/renderer/client/biology/cells";
+import {
+  CarbonBudgetLab,
   ClimateObservationLab,
+  CoralBleachLab,
   GreenhouseEffectLab,
+  SeaLevelRiseLab,
 } from "@/lib/content/renderer/client/biology/climate";
-import { FungiMyceliumLab } from "@/lib/content/renderer/client/biology/fungi";
+import { PredatorPreyLab } from "@/lib/content/renderer/client/biology/ecology";
+import {
+  FungiMyceliumLab,
+  HyphaeDecayLab,
+} from "@/lib/content/renderer/client/biology/fungi";
 import {
   BinaryFissionLab,
   ChemotaxisLab,
@@ -13,6 +25,8 @@ import {
 } from "@/lib/content/renderer/client/biology/microbes";
 import { SarsCov2VirionLab } from "@/lib/content/renderer/client/biology/virion";
 import {
+  AntibodyNeutralizeLab,
+  EpidemicSpreadLab,
   VirusMorphologyLab,
   VirusReplicationLab,
   VirusRoleLab,
@@ -73,5 +87,45 @@ export const biologyRenderers = [
   {
     name: biologyComponentNames.virusStructureLab,
     component: VirusStructureLab,
+  },
+  {
+    name: biologyComponentNames.antibodyNeutralizeLab,
+    component: AntibodyNeutralizeLab,
+  },
+  {
+    name: biologyComponentNames.carbonBudgetLab,
+    component: CarbonBudgetLab,
+  },
+  {
+    name: biologyComponentNames.cellCutawayLab,
+    component: CellCutawayLab,
+  },
+  {
+    name: biologyComponentNames.cellScaleLab,
+    component: CellScaleLab,
+  },
+  {
+    name: biologyComponentNames.coralBleachLab,
+    component: CoralBleachLab,
+  },
+  {
+    name: biologyComponentNames.dnaHelixLab,
+    component: DnaHelixLab,
+  },
+  {
+    name: biologyComponentNames.epidemicSpreadLab,
+    component: EpidemicSpreadLab,
+  },
+  {
+    name: biologyComponentNames.hyphaeDecayLab,
+    component: HyphaeDecayLab,
+  },
+  {
+    name: biologyComponentNames.predatorPreyLab,
+    component: PredatorPreyLab,
+  },
+  {
+    name: biologyComponentNames.seaLevelRiseLab,
+    component: SeaLevelRiseLab,
   },
 ] satisfies readonly RendererImplementation[];

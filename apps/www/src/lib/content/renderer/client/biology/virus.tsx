@@ -34,3 +34,19 @@ export const VirusStructureLab = withHydrationBoundary(
     ).then((module) => ({ default: module.VirusStructureLab }))
   )
 );
+
+export const AntibodyNeutralizeLab = withHydrationBoundary(
+  lazy(() =>
+    import(
+      "@repo/design-system/components/contents/biology/virus/antibody"
+    ).then((module) => ({ default: module.AntibodyNeutralizeLab }))
+  )
+);
+
+export const EpidemicSpreadLab = withHydrationBoundary(
+  lazy(() =>
+    import(
+      "@repo/design-system/components/contents/biology/epidemic/town"
+    ).then((module) => ({ default: module.EpidemicSpreadLab }))
+  )
+);

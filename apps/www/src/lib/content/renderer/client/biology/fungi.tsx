@@ -10,3 +10,11 @@ export const FungiMyceliumLab = withHydrationBoundary(
     )
   )
 );
+
+export const HyphaeDecayLab = withHydrationBoundary(
+  lazy(() =>
+    import(
+      "@repo/design-system/components/contents/biology/hyphae/tempeh"
+    ).then((module) => ({ default: module.HyphaeDecayLab }))
+  )
+);
