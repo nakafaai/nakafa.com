@@ -45,6 +45,18 @@ describe("readMovedRedirect", () => {
     });
   });
 
+  it("answers a retired page that search still shows with the page that took over its job", () => {
+    expect(Option.getOrThrow(readAt("/id/latihan/tka"))).toEqual({
+      location: "/id/try-out/indonesia/tka",
+      status: 308,
+    });
+    expect(Option.getOrThrow(readAt("/en/subject/high-school/11"))).toEqual({
+      location: "/en/curriculum/merdeka/class-11",
+      status: 308,
+    });
+    expect(Option.isNone(readAt("/id/latihan/tka/matematika"))).toBe(true);
+  });
+
   it("leaves a current address and an unknown locale to the router", () => {
     expect(Option.isNone(readAt("/en/curriculum"))).toBe(true);
     expect(Option.isNone(readAt("/fr/about"))).toBe(true);
