@@ -8,7 +8,7 @@ describe("island/entry", () => {
     expect(
       entryOf(
         {
-          badges: [],
+          badges: [{ at: 1, badge: "explorer" }],
           lifetime: 420,
           version: 3,
           world: [{ block: 5, x: 30, y: 9, z: 30 }],
@@ -16,6 +16,7 @@ describe("island/entry", () => {
         "users-1"
       )
     ).toEqual({
+      badges: [{ at: 1, badge: "explorer" }],
       edits: [{ block: 5, x: 30, y: 9, z: 30 }],
       from: 400,
       level: 3,

@@ -10659,6 +10659,19 @@ export declare const api: {
       open: FunctionReference<"mutation", "public", { timeZone: string }, null>;
     };
     queries: {
+      leaders: FunctionReference<
+        "query",
+        "public",
+        {},
+        Array<{
+          level: number;
+          lifetime: number;
+          mascot: string;
+          name: string;
+          own: boolean;
+          place: number;
+        }>
+      >;
       own: FunctionReference<
         "query",
         "public",

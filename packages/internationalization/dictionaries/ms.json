@@ -2678,7 +2678,9 @@
     "guest": "kamu",
     "week-title": "Minggu kamu",
     "streak": "{days, plural, =0 {Mulakan rentetan hari ini} other {# hari berturut-turut}}",
-    "week-summary": "{lessons} pelajaran, {sections} bahagian try out, {stars} Bintang minggu ini"
+    "week-summary": "{lessons} pelajaran, {sections} bahagian try out, {stars} Bintang minggu ini",
+    "continue": "Teruskan belajar",
+    "continue-empty": "Pelajaran yang kamu buka akan muncul di sini, sedia untuk kamu sambung."
   },
   "Marketing": {
     "learn": "Belajar",
@@ -4987,6 +4989,27 @@
     "home-cottage": "Pondok",
     "home-house": "Rumah dua tingkat",
     "home-manor": "Rumah agam",
-    "upgrade": "Naik taraf rumahmu jadi {name}"
+    "upgrade": "Naik taraf rumahmu jadi {name}",
+    "world-title": "Duniamu",
+    "open": "Buka dunia",
+    "badges-title": "Lencana",
+    "badges-count": "{earned} daripada {total} diperoleh",
+    "badge-explorer": "Penjelajah",
+    "badge-explorer-hint": "Belajar pada 7 daripada 10 hari",
+    "badge-fighter": "Pejuang Try-out",
+    "badge-fighter-hint": "Selesaikan 10 set try-out",
+    "badge-mathematics": "Matematik",
+    "badge-mathematics-hint": "Selesaikan 10 pelajaran matematik",
+    "badge-physics": "Fizik",
+    "badge-physics-hint": "Selesaikan 10 pelajaran fizik",
+    "badge-chemistry": "Kimia",
+    "badge-chemistry-hint": "Selesaikan 10 pelajaran kimia",
+    "badge-biology": "Biologi",
+    "badge-biology-hint": "Selesaikan 10 pelajaran biologi",
+    "leaders-title": "Papan pendahulu",
+    "leaders-description": "Pelajar dengan Bintang terbanyak di seluruh dunia",
+    "leaders-empty": "Belum ada sesiapa yang dapat Bintang, jadi tempat teratas masih boleh kamu rebut.",
+    "you": "{name} (kamu)",
+    "share-text": "Aku dah tahap {level} di pulau Nakafa aku. Jom bina pulau kamu juga!"
   }
 }

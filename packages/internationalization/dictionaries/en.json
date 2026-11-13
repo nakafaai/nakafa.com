@@ -2678,7 +2678,9 @@
     "guest": "you",
     "week-title": "Your week",
     "streak": "{days, plural, =0 {Start a run today} one {# day in a row} other {# days in a row}}",
-    "week-summary": "{lessons, plural, one {# lesson} other {# lessons}}, {sections, plural, one {# try-out section} other {# try-out sections}}, {stars} Stars this week"
+    "week-summary": "{lessons, plural, one {# lesson} other {# lessons}}, {sections, plural, one {# try-out section} other {# try-out sections}}, {stars} Stars this week",
+    "continue": "Continue learning",
+    "continue-empty": "Lessons you open show up here, ready to pick up again."
   },
   "Marketing": {
     "learn": "Learn",
@@ -4987,6 +4989,27 @@
     "home-cottage": "Cottage",
     "home-house": "Two-storey house",
     "home-manor": "Manor",
-    "upgrade": "Upgrade your home to a {name}"
+    "upgrade": "Upgrade your home to a {name}",
+    "world-title": "Your world",
+    "open": "Open world",
+    "badges-title": "Badges",
+    "badges-count": "{earned} of {total} earned",
+    "badge-explorer": "Explorer",
+    "badge-explorer-hint": "Learn on 7 of any 10 days",
+    "badge-fighter": "Try-out Fighter",
+    "badge-fighter-hint": "Finish 10 try-out sets",
+    "badge-mathematics": "Mathematics",
+    "badge-mathematics-hint": "Finish 10 math lessons",
+    "badge-physics": "Physics",
+    "badge-physics-hint": "Finish 10 physics lessons",
+    "badge-chemistry": "Chemistry",
+    "badge-chemistry-hint": "Finish 10 chemistry lessons",
+    "badge-biology": "Biology",
+    "badge-biology-hint": "Finish 10 biology lessons",
+    "leaders-title": "Leaderboard",
+    "leaders-description": "The learners with the most Stars, all over the world",
+    "leaders-empty": "No one has earned Stars yet, so the top spot is yours to take.",
+    "you": "{name} (you)",
+    "share-text": "I'm level {level} on my Nakafa island. Come build yours!"
   }
 }

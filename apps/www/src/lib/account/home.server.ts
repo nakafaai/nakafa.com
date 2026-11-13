@@ -32,7 +32,7 @@ export const homeScreenHandler = accountHandler(
   ({ locale }: typeof LocaleInput.Type) =>
     Effect.gen(function* () {
       const token = yield* admitAccount(locale);
-      const [status, messages, account, recentRows, own, week] =
+      const [status, messages, account, recentRows, own, week, leaders] =
         yield* Effect.all(
           [
             readRequired(onboarding.queries.getStatus, {}, token),
@@ -40,11 +40,12 @@ export const homeScreenHandler = accountHandler(
             readOptional(auth.queries.getCurrentUser, {}, token),
             readOptional(
               contents.queries.recent.getRecentlyViewed,
-              { locale, limit: 1 },
+              { locale, limit: 3 },
               token
             ),
             readOptional(island.queries.own, {}, token),
             readOptional(island.queries.week, {}, token),
+            readOptional(island.queries.leaders, {}, token),
           ],
           { concurrency: "unbounded" }
         );
@@ -75,6 +76,7 @@ export const homeScreenHandler = accountHandler(
       const recent = recentRows ?? [];
       return {
         island: entryOf(own, account?.appUser._id),
+        leaders: leaders ?? [],
         name: Option.getOrUndefined(
           Option.map(
             Option.fromNullishOr(account),

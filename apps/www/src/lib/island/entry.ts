@@ -18,6 +18,7 @@ export function entryOf(
 ) {
   const growth = growthOf(own?.lifetime ?? 0);
   return {
+    badges: own?.badges ?? [],
     edits: own?.world ?? [],
     from: growth.from,
     level: growth.level,
