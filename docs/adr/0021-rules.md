@@ -402,6 +402,20 @@ slugs and the backend's function folders are judged too: none holds an
 `packages/site` took a domain word (`providers/system`, `code/block`,
 `comments/section`, `auth/action`).
 
+### Visual cards name what they show
+
+The owner's rule of 13 November 2026: a visual card has a title and a
+description, so a reader knows what a visual shows before reading it.
+`VisualCardHeader` draws nothing without a `title`, so the rule lives in the
+source: `scripts/check/visuals.ts` requires that every `VisualCard` holds a
+`VisualCardHeader` in its own module, and that every header writes both
+`title` and `description`. A frame component whose card places its caller's
+`children`, such as the unit circle's, takes the header from each caller: every
+usage of the frame in its module writes a `VisualCardHeader` among the children
+it hands over, and a frame that no usage in its module writes one for is
+reported at its card.
+
+
 ### Dictionary keys named twice
 
 A dictionary JSON file under `packages/internationalization/dictionaries`,
