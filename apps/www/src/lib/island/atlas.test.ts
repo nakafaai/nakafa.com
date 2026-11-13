@@ -40,6 +40,14 @@ const SEE_THROUGH = [
   "foxBottom",
   "foxStep",
   "bobber",
+  "riceSprout",
+  "cornSprout",
+  "cabbageSprout",
+  "tomatoSprout",
+  "chiliSprout",
+  "carrotSprout",
+  "cassavaSprout",
+  "sweetPotatoSprout",
 ];
 
 describe("island/atlas", () => {

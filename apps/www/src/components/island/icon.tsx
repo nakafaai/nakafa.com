@@ -1,7 +1,12 @@
 "use client";
 
 import type { BlockKey } from "@repo/backend/confect/island/blocks";
-import { ICON, iconOf, pictureOf } from "@/components/island/picture";
+import {
+  ICON,
+  iconOf,
+  pictureOf,
+  toolPictureOf,
+} from "@/components/island/picture";
 import { TILE } from "@/lib/island/tiles/paint";
 
 /**
@@ -29,6 +34,23 @@ export function SpeciesIcon({ index }: { index: number }) {
       className="size-full [image-rendering:pixelated]"
       height={TILE}
       src={pictureOf(index)}
+      width={TILE}
+    />
+  );
+}
+
+/** A farming tool as the hotbar shows it, from the same pixels as its cursor. */
+export function ToolIcon({
+  tool,
+}: {
+  tool: Parameters<typeof toolPictureOf>[0];
+}) {
+  return (
+    <img
+      alt=""
+      className="size-full [image-rendering:pixelated]"
+      height={TILE}
+      src={toolPictureOf(tool)}
       width={TILE}
     />
   );

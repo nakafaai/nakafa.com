@@ -4967,6 +4967,21 @@
     "notice-far": "Wirf in das Wasser nahe deinem Fuchs.",
     "notice-bite": "Ein Biss! Jetzt tippen!",
     "notice-escaped": "Er ist entwischt. Wirf noch mal!",
-    "caught": "Du hast einen Fang: {name}!"
+    "caught": "Du hast einen Fang: {name}!",
+    "hoe": "Hacke",
+    "can": "Gießkanne",
+    "notice-till": "Hack Gras oder Erde mit freiem Himmel darüber.",
+    "notice-water": "Gieß gehackte Erde oder einen Spross.",
+    "harvested": "+1 {name}, {count} in deinem Korb",
+    "block-farmland": "Ackerboden",
+    "block-wet-farmland": "Gegossener Ackerboden",
+    "block-rice-sprout": "Reisspross",
+    "block-corn-sprout": "Maisspross",
+    "block-cabbage-sprout": "Kohlspross",
+    "block-tomato-sprout": "Tomatenspross",
+    "block-chili-sprout": "Chilispross",
+    "block-carrot-sprout": "Karottenspross",
+    "block-cassava-sprout": "Maniokspross",
+    "block-sweet-potato-sprout": "Süßkartoffelspross"
   }
 }

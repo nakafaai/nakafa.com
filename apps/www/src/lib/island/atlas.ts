@@ -25,6 +25,7 @@ import {
   slateTile,
   woolTile,
 } from "@/lib/island/tiles/built";
+import { farmlandTile, sproutTile } from "@/lib/island/tiles/farm";
 import { folkBottomTile, folkTopTile } from "@/lib/island/tiles/folk";
 import {
   barkTile,
@@ -86,6 +87,16 @@ export const TILE_NAMES = [
   "foxBottom",
   "foxStep",
   "bobber",
+  "farmland",
+  "wetFarmland",
+  "riceSprout",
+  "cornSprout",
+  "cabbageSprout",
+  "tomatoSprout",
+  "chiliSprout",
+  "carrotSprout",
+  "cassavaSprout",
+  "sweetPotatoSprout",
 ] as const;
 
 /** The name of one tile of the atlas. */
@@ -135,6 +146,16 @@ const PAINTERS = {
   foxBottom: () => folkBottomTile("fox", false),
   foxStep: () => folkBottomTile("fox", true),
   bobber: bobberTile,
+  farmland: (seed: number) => farmlandTile(seed, false),
+  wetFarmland: (seed: number) => farmlandTile(seed, true),
+  riceSprout: () => sproutTile("lime", "sun"),
+  cornSprout: () => sproutTile("leaf", "sun"),
+  cabbageSprout: () => sproutTile("lime", "lime"),
+  tomatoSprout: () => sproutTile("leaf", "roof"),
+  chiliSprout: () => sproutTile("leaf", "rust"),
+  carrotSprout: () => sproutTile("lime", "ginger"),
+  cassavaSprout: () => sproutTile("leaf", "bark"),
+  sweetPotatoSprout: () => sproutTile("leaf", "violet"),
 } satisfies Record<TileName, (seed: number) => Pixels>;
 
 /** Tiles along one side of the atlas: room for every block, sprite and species. */
