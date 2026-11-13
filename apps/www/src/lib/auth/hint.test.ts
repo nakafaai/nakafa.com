@@ -1,5 +1,6 @@
 // @vitest-environment node
 import { describe, expect, it } from "@effect/vitest";
+import { Option } from "effect";
 import {
   expiredHintCookie,
   followSignedInHint,
@@ -13,8 +14,8 @@ import {
 } from "@/lib/auth/hint";
 import { ClientSession } from "@/lib/auth/visitor";
 
-const plain = { domain: "nakafa.com", secure: false } as const;
-const secure = { domain: "nakafa.com", secure: true } as const;
+const plain = { domain: Option.some("nakafa.com"), secure: false };
+const secure = { domain: Option.some("nakafa.com"), secure: true };
 
 describe("sign-in hint cookie", () => {
   it("is readable by the page and lasts the session lifetime", () => {
@@ -29,9 +30,9 @@ describe("sign-in hint cookie", () => {
     );
   });
 
-  it("shares the domain of the session cookie with every school host", () => {
-    expect(signedInHintCookie({ domain: "localhost", secure: false })).toBe(
-      "nakafa-signed-in=1; Domain=localhost; Path=/; SameSite=Lax; Max-Age=604800"
+  it("names no domain for a host that a cookie may not name", () => {
+    expect(signedInHintCookie({ domain: Option.none(), secure: false })).toBe(
+      "nakafa-signed-in=1; Path=/; SameSite=Lax; Max-Age=604800"
     );
   });
 
@@ -57,10 +58,18 @@ describe("sign-in hint cookie", () => {
 describe("sign-in hint scope", () => {
   it("names the site's host, and https only for a secure site", () => {
     expect(hintScopeFor(new URL("https://nakafa.com"))).toStrictEqual(secure);
-    expect(hintScopeFor(new URL("http://localhost:3000"))).toStrictEqual({
-      domain: "localhost",
+    expect(hintScopeFor(new URL("http://staging.nakafa.com"))).toStrictEqual({
+      domain: Option.some("staging.nakafa.com"),
       secure: false,
     });
+  });
+
+  it.each([
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "http://[::1]:3000",
+  ])("keeps the hint on the host alone at %s", (site) => {
+    expect(hintScopeFor(new URL(site)).domain).toStrictEqual(Option.none());
   });
 });
 

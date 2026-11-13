@@ -17,10 +17,11 @@ const HINT_MAX_AGE = 60 * 60 * 24 * 7;
 
 /**
  * Where the hint cookie lives: the domain of the session cookie, so every school
- * host under it reads the hint, and whether the site is served over https.
+ * host under it reads the hint, or none for a host-only cookie, and whether the
+ * site is served over https.
  */
 const HintScope = Schema.Struct({
-  domain: Schema.String,
+  domain: Schema.Option(Schema.String),
   secure: Schema.Boolean,
 });
 
@@ -28,8 +29,15 @@ type HintScope = typeof HintScope.Type;
 
 /** The attributes that every hint cookie shares. */
 function hintAttributes(scope: HintScope) {
-  return `Domain=${scope.domain}; Path=/; SameSite=Lax${scope.secure ? "; Secure" : ""}`;
+  const domain = Option.match(scope.domain, {
+    onNone: () => "",
+    onSome: (name) => `Domain=${name}; `,
+  });
+  return `${domain}Path=/; SameSite=Lax${scope.secure ? "; Secure" : ""}`;
 }
+
+/** A host that no cookie may name as its domain: one label, such as `localhost`, or an IP address. */
+const HOST_ONLY = /^(?:[^.]+|[\d.]+|\[.*\])$/u;
 
 /** The cookie that a response sets when the visitor has a session. */
 export function signedInHintCookie(scope: HintScope) {
@@ -48,10 +56,18 @@ export function hintCookieFor(session: ClientSession, scope: HintScope) {
     : expiredHintCookie(scope);
 }
 
-/** The scope of the hint cookie that the site's own URL names: its host, and https when the site has it. */
+/**
+ * The scope of the hint cookie that the site's own URL names: its host, and https
+ * when the site has it. A browser refuses a cookie whose domain is one label or an
+ * IP address (RFC 6265 5.3, and libpsl takes every one-label name for a public
+ * suffix, so WebKit on Linux drops `Domain=localhost`), so such a host gets a
+ * host-only hint.
+ */
 export function hintScopeFor(site: URL): HintScope {
   return HintScope.make({
-    domain: site.hostname,
+    domain: HOST_ONLY.test(site.hostname)
+      ? Option.none()
+      : Option.some(site.hostname),
     secure: site.protocol === "https:",
   });
 }
