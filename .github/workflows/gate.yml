@@ -102,7 +102,9 @@ jobs:
               bun run doctor --verbose --scope changed --base origin/main --blocking warning || failed=1
               bun run security:audit || failed=1
               bun run test:scripts || failed=1
-              bun run turbo run test --filter='!@repo/backend' --filter='!www' || failed=1
+              # One suite at a time: a runner has 4 cores, and the suites time some
+              # of their tests, so each takes the whole machine as it does on the Mac.
+              bun run turbo run test --concurrency=1 --filter='!@repo/backend' --filter='!www' || failed=1
               exit "$failed"
               ;;
             www) bun run turbo run test --filter=www ;;
