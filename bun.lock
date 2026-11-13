@@ -202,7 +202,7 @@
         "@fontsource-variable/inter": "5.3.0",
         "@fontsource-variable/noto-naskh-arabic": "5.3.0",
         "@nakafa/aksara-contracts": "6.3.0",
-        "@polar-sh/sdk": "^1.1.0",
+        "@polar-sh/sdk": "1.0.2",
         "@posthog/convex": "2.1.9",
         "@react-email/render": "catalog:",
         "@repo/analytics": "workspace:*",
@@ -1145,7 +1145,7 @@
 
     "@pnpm/deps.graph-sequencer": ["@pnpm/deps.graph-sequencer@1100.0.1", "", {}, "sha512-pOr5+q1fLYKwFN3LAJuGZEnfXDcQ73zqgDHMtGy+K+uIoUqyY+6MeDCWFwfu+4EFuq76I5EPFofoNAI+Bmmq4A=="],
 
-    "@polar-sh/sdk": ["@polar-sh/sdk@1.1.0", "", { "peerDependencies": { "@opentelemetry/api": "^1.9.1", "@opentelemetry/otlp-transformer": "^0.223.0", "@opentelemetry/resources": "^2.12.0", "@opentelemetry/sdk-metrics": "^2.12.0", "@opentelemetry/sdk-trace": "^2.12.0", "ioredis": "^5.11.0" }, "optionalPeers": ["@opentelemetry/api", "@opentelemetry/otlp-transformer", "@opentelemetry/resources", "@opentelemetry/sdk-metrics", "@opentelemetry/sdk-trace", "ioredis"] }, "sha512-Nv999RRY7sE5XdBggCctVv8rYJQWwFk4Hq7yEtaRG6FQCzEyWYxn1Ksi9VGevZSEF7edwZSyOiYuJ9VaYAdpCw=="],
+    "@polar-sh/sdk": ["@polar-sh/sdk@1.0.2", "", {}, "sha512-c3jdqYloVfcejKsAqYfYcW4bG7KkXj5bXkgdsdx4GHlJPzHFV5tysfeZGf9V7dJReLBirAluchsuHWiAIBco8w=="],
 
     "@polka/url": ["@polka/url@1.0.0-next.29", "", {}, "sha512-wwQAWhWSuHaag8c4q/KN/vCoeOJYshAIvMQwD4GpSb3OiZklFfvAgmj0VCBBImRpuF/aFgIRzllXlVX93Jevww=="],
 
