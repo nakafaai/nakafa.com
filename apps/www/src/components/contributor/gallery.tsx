@@ -170,7 +170,7 @@ function ContributorLinks({
                 rel="noopener noreferrer"
                 target="_blank"
               >
-                <HugeIcons className="size-4" icon={NewTwitterIcon} />
+                <HugeIcons icon={NewTwitterIcon} />
               </a>
             }
           />
@@ -188,7 +188,7 @@ function ContributorLinks({
                 rel="noopener noreferrer"
                 target="_blank"
               >
-                <HugeIcons className="size-4" icon={GithubIcon} />
+                <HugeIcons icon={GithubIcon} />
               </a>
             }
           />
@@ -206,7 +206,7 @@ function ContributorLinks({
                 rel="noopener noreferrer"
                 target="_blank"
               >
-                <HugeIcons className="size-4" icon={Linkedin02Icon} />
+                <HugeIcons icon={Linkedin02Icon} />
               </a>
             }
           />

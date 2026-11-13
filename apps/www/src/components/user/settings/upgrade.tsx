@@ -24,7 +24,7 @@ import { PricingCurrencySchema } from "@/lib/pricing/monthly";
 function Benefit({ icon, text }: { icon: typeof Tick01Icon; text: string }) {
   return (
     <li className="flex items-start gap-3 text-sm leading-6">
-      <HugeIcons className="mt-1 size-4 shrink-0" icon={icon} />
+      <HugeIcons className="mt-1 shrink-0" icon={icon} />
       <span className="text-pretty">{text}</span>
     </li>
   );

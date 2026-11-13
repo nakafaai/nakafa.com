@@ -152,7 +152,6 @@ export function ChatSharing({
                 <div className="flex flex-1 flex-col items-start justify-start gap-1">
                   <div className="flex items-center gap-2">
                     <HugeIcons
-                      className="size-4 shrink-0"
                       icon={isPublic ? Globe02Icon : SquareLock01Icon}
                     />
                     <span className="text-sm">{t(visibility)}</span>
@@ -164,7 +163,7 @@ export function ChatSharing({
 
                 <HugeIcons
                   className={cn(
-                    "text-primary group-hover:text-accent-foreground size-4 shrink-0 opacity-0 transition-opacity ease-out",
+                    "text-primary group-hover:text-accent-foreground shrink-0 opacity-0 transition-opacity ease-out",
                     !!isSelected && "opacity-100"
                   )}
                   icon={Tick01Icon}

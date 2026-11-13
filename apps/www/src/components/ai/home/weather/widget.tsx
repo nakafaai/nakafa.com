@@ -87,7 +87,7 @@ function WeatherSummary({ weather }: { weather: Promise<WeatherRead> }) {
           <p className="font-mono text-xl tracking-tight whitespace-nowrap">
             {currentTemp}° C
           </p>
-          <HugeIcons className="shrink-0" icon={getWeatherIcon(iconCode)} />
+          <HugeIcons icon={getWeatherIcon(iconCode)} />
         </WeatherCardHeader>
         <p className="text-card-foreground line-clamp-2 text-xs">
           {conditionTitle}

@@ -135,7 +135,7 @@ function ActivityTrigger() {
       </span>
       {artifactCount > 0 ? (
         <HugeIcons
-          className="mt-0.5 size-4 shrink-0 transition-transform group-data-panel-open/activity:rotate-180 motion-reduce:transition-none"
+          className="mt-0.5 shrink-0 transition-transform group-data-panel-open/activity:rotate-180 motion-reduce:transition-none"
           icon={ArrowDown01Icon}
         />
       ) : null}

@@ -132,7 +132,7 @@ export function LibraryTrash() {
         <span className="flex items-center gap-2 font-medium">
           <HugeIcons
             aria-label={t(`library-kind-${shownOf(info.row.original).kind}`)}
-            className="text-muted-foreground size-4 shrink-0"
+            className="text-muted-foreground shrink-0"
             icon={KIND_ICONS[shownOf(info.row.original).kind]}
           />
           <span dir="auto">{info.getValue()}</span>

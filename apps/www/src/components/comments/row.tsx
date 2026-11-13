@@ -181,7 +181,7 @@ export function ReplyingTo({
       href={`#${parentId}`}
       onClick={(event) => scrollToComment(event, parentId)}
     >
-      <HugeIcons className="size-3 shrink-0" icon={ArrowTurnForwardIcon} />
+      <HugeIcons icon={ArrowTurnForwardIcon} />
       <span className="min-w-0 truncate">{t("replying-to", { name })}</span>
     </a>
   );

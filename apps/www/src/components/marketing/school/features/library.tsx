@@ -55,7 +55,7 @@ function EntryTitle({ entry }: { entry: DemoEntry }) {
     <span className="flex items-center gap-2 font-medium">
       <HugeIcons
         aria-label={t(`demo-kind-${entry.kind}`)}
-        className="text-muted-foreground size-4 shrink-0"
+        className="text-muted-foreground shrink-0"
         icon={KIND_ICONS[entry.kind]}
       />
       {t(`demo-library-${entry.title}`)}

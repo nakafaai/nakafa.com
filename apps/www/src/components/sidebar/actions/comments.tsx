@@ -15,7 +15,7 @@ export function CommentsButton() {
         render={<a href="#comments" title={t("comments")} />}
         tooltip={t("comments")}
       >
-        <HugeIcons className="shrink-0" icon={MessageMultiple01Icon} />
+        <HugeIcons icon={MessageMultiple01Icon} />
         <span className="truncate">{t("comments")}</span>
       </SidebarMenuButton>
     </SidebarMenuItem>

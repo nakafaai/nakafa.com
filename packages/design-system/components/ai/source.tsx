@@ -199,7 +199,7 @@ function SourceIcon({ src }: { src: string }) {
       data-slot="source-icon"
     >
       {failed ? (
-        <HugeIcons className="size-4" icon={Link01Icon} />
+        <HugeIcons icon={Link01Icon} />
       ) : (
         <Image
           alt=""

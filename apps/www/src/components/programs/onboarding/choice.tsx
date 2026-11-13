@@ -43,7 +43,7 @@ export function OnboardingOption({ option }: { option: DisplayOption }) {
         {countryCode ? (
           <CountryFlagIcon className="size-4" countryCode={countryCode} />
         ) : null}
-        {icon ? <HugeIcons className="size-4" icon={icon} /> : null}
+        {icon ? <HugeIcons icon={icon} /> : null}
       </span>
       <span className="flex min-w-0 flex-col gap-1">
         <span className="font-medium">{title}</span>

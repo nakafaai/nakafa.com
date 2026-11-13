@@ -37,7 +37,7 @@ export function TableTitle({
   return (
     <span className="flex min-w-0 items-center gap-2 font-medium">
       <HugeIcons
-        className={statusIconVariants({ className: "size-4 shrink-0", tone })}
+        className={statusIconVariants({ className: "shrink-0", tone })}
         icon={icon}
       />
       <TableName>{children}</TableName>

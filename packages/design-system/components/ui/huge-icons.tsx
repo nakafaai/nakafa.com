@@ -7,18 +7,18 @@ const ICON_PIXELS = 16;
 
 /**
  * A Hugeicons icon at `size-4`, Nakafa's one icon size: the library draws 24px when nothing sizes it, so the wrapper
- * draws 16px, and a part that sizes the SVGs inside it, or a class, may only shrink it (`scripts/check/icons.ts`).
+ * draws 16px and takes no size from its caller. Only a part of the design system, such as a checkbox's tick, shrinks
+ * the icons inside it with a selector (`scripts/check/icons.ts`).
  */
 export function HugeIcons({
   className,
-  size = ICON_PIXELS,
   strokeWidth = 2,
   ...props
-}: ComponentProps<typeof HugeiconsIcon>) {
+}: Omit<ComponentProps<typeof HugeiconsIcon>, "size">) {
   return (
     <HugeiconsIcon
       className={cn("shrink-0", className)}
-      size={size}
+      size={ICON_PIXELS}
       strokeWidth={strokeWidth}
       {...props}
     />

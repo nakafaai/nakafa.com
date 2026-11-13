@@ -110,9 +110,7 @@ export function CodeBlockDownloadButton({
       variant="ghost"
       {...props}
     >
-      {children ?? (
-        <HugeIcons className="size-4 shrink-0" icon={Download01Icon} />
-      )}
+      {children ?? <HugeIcons icon={Download01Icon} />}
     </Button>
   );
 }
@@ -183,7 +181,7 @@ export function CodeBlockCopyButton({
       variant="ghost"
       {...props}
     >
-      {children ?? <HugeIcons className="size-4 shrink-0" icon={icon} />}
+      {children ?? <HugeIcons icon={icon} />}
     </Button>
   );
 }

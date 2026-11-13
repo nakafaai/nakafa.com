@@ -126,7 +126,7 @@ function MoveChoice({
       >
         <HugeIcons
           aria-hidden="true"
-          className="text-muted-foreground size-4 shrink-0"
+          className="text-muted-foreground shrink-0"
           icon={icon}
         />
         <span className="truncate" dir="auto">

@@ -32,7 +32,7 @@ export function Step({
         )}
         data-slot="evidence-step"
       >
-        <HugeIcons className="mt-0.5 size-4 shrink-0" icon={icon} />
+        <HugeIcons className="mt-0.5 shrink-0" icon={icon} />
         <span className="min-w-0">{label}</span>
       </p>
       {children ? <StepDetails>{children}</StepDetails> : null}
@@ -53,7 +53,7 @@ export function StepLabel({
 }) {
   return (
     <>
-      <HugeIcons className="mt-0.5 size-4 shrink-0" icon={icon} />
+      <HugeIcons className="mt-0.5 shrink-0" icon={icon} />
       <span className="min-w-0">{children}</span>
     </>
   );

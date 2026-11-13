@@ -13,7 +13,7 @@ export function Videos() {
 
       <div className="bg-card/80 mx-auto w-fit rounded-sm px-3 py-2 backdrop-blur-sm">
         <div className="flex flex-wrap items-center gap-2">
-          <HugeIcons className="hidden size-4 sm:block" icon={YoutubeIcon} />
+          <HugeIcons className="hidden sm:block" icon={YoutubeIcon} />
           <span className="text-xs text-pretty">{t("discover")}</span>
         </div>
       </div>

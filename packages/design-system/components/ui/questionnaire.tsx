@@ -132,7 +132,7 @@ function QuestionnaireChoice({
       />
       <span
         aria-hidden="true"
-        className="border-input group-data-checked/questionnaire-choice:border-primary group-data-checked/questionnaire-choice:bg-primary group-data-checked/questionnaire-choice:text-primary-foreground dark:bg-input/30 dark:group-data-checked/questionnaire-choice:bg-primary pointer-events-none relative flex size-4 shrink-0 translate-y-[var(--questionnaire-choice-y,--spacing(0.45))] items-center justify-center rounded-[4px] border group-data-[type=radio]/questionnaire-choice:rounded-full"
+        className="border-input group-data-checked/questionnaire-choice:border-primary group-data-checked/questionnaire-choice:bg-primary group-data-checked/questionnaire-choice:text-primary-foreground dark:bg-input/30 dark:group-data-checked/questionnaire-choice:bg-primary pointer-events-none relative flex size-4 shrink-0 translate-y-[var(--questionnaire-choice-y,--spacing(0.45))] items-center justify-center rounded-[4px] border group-data-[type=radio]/questionnaire-choice:rounded-full [&_svg]:size-3.5"
         data-slot="questionnaire-choice-indicator"
       >
         <span
@@ -140,7 +140,7 @@ function QuestionnaireChoice({
           data-slot="questionnaire-choice-indicator-dot"
         />
         <HugeIcons
-          className="hidden size-3.5 group-data-checked/questionnaire-choice:block group-data-[type=radio]/questionnaire-choice:hidden"
+          className="hidden group-data-checked/questionnaire-choice:block group-data-[type=radio]/questionnaire-choice:hidden"
           data-slot="questionnaire-choice-indicator-check"
           icon={Tick02Icon}
         />

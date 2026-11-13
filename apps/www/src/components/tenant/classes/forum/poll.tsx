@@ -160,9 +160,7 @@ export function PollCard({
               className="relative flex min-w-0 items-center gap-2 wrap-anywhere"
               dir="auto"
             >
-              {chosen ? (
-                <HugeIcons className="size-4" icon={CheckmarkCircle02Icon} />
-              ) : null}
+              {chosen ? <HugeIcons icon={CheckmarkCircle02Icon} /> : null}
               {option}
             </span>
             <span className="text-muted-foreground relative shrink-0 text-xs tabular-nums">

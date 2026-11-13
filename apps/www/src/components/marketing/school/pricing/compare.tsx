@@ -65,7 +65,7 @@ function Included() {
     <>
       <HugeIcons
         aria-hidden="true"
-        className="text-primary inline size-4"
+        className="text-primary inline"
         icon={Tick02Icon}
       />
       <span className="sr-only">{t("value-included")}</span>
@@ -81,7 +81,7 @@ function Unavailable() {
     <>
       <HugeIcons
         aria-hidden="true"
-        className="text-muted-foreground inline size-4"
+        className="text-muted-foreground inline"
         icon={MinusSignIcon}
       />
       <span className="sr-only">{t("value-unavailable")}</span>

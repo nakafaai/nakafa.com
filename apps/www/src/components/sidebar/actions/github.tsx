@@ -23,7 +23,7 @@ export function GithubButton({ githubUrl }: Props) {
             target="_blank"
             title={t("source-code")}
           >
-            <HugeIcons className="size-4 shrink-0" icon={GithubIcon} />
+            <HugeIcons icon={GithubIcon} />
             <span className="truncate">{t("source-code")}</span>
           </a>
         }

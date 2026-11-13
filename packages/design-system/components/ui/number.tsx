@@ -88,7 +88,7 @@ function NumberFieldDecrement({
       data-slot="number-field-decrement"
       {...props}
     >
-      <HugeIcons className="size-4" icon={MinusSignIcon} />
+      <HugeIcons icon={MinusSignIcon} />
     </NumberFieldPrimitive.Decrement>
   );
 }
@@ -107,7 +107,7 @@ function NumberFieldIncrement({
       data-slot="number-field-increment"
       {...props}
     >
-      <HugeIcons className="size-4" icon={PlusSignIcon} />
+      <HugeIcons icon={PlusSignIcon} />
     </NumberFieldPrimitive.Increment>
   );
 }

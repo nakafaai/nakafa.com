@@ -26,7 +26,7 @@ export function AiChatMessageRemembered() {
       title={t("remembered-title")}
       to="/$locale/user/settings/memory"
     >
-      <HugeIcons className="size-3.5" icon={Bookmark02Icon} />
+      <HugeIcons icon={Bookmark02Icon} />
       {t("remembered")}
     </Link>
   );

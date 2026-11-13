@@ -208,7 +208,7 @@ function StepperDefaultIndicator() {
       </span>
       <HugeIcons
         aria-hidden="true"
-        className="absolute size-4 scale-0 opacity-0 transition-[scale,opacity] group-data-[step-state=completed]/step:scale-100 group-data-[step-state=completed]/step:opacity-100"
+        className="absolute scale-0 opacity-0 transition-[scale,opacity] group-data-[step-state=completed]/step:scale-100 group-data-[step-state=completed]/step:opacity-100"
         icon={Tick01Icon}
       />
       {isLoading ? (

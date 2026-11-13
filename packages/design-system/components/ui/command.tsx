@@ -183,7 +183,7 @@ function CommandInput({
         )}
         showClear={showClear}
         size="lg"
-        startAddon={<HugeIcons className="size-4" icon={Search02Icon} />}
+        startAddon={<HugeIcons icon={Search02Icon} />}
         {...props}
       />
     </div>

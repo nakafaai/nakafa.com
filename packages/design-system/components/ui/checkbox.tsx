@@ -24,10 +24,10 @@ function Checkbox({
     >
       {letter ?? (
         <CheckboxPrimitive.Indicator
-          className="grid place-content-center text-current transition-none"
+          className="grid place-content-center text-current transition-none [&_svg]:size-3.5"
           data-slot="checkbox-indicator"
         >
-          <HugeIcons className="size-3.5" icon={Tick01Icon} />
+          <HugeIcons icon={Tick01Icon} />
         </CheckboxPrimitive.Indicator>
       )}
     </CheckboxPrimitive.Root>
