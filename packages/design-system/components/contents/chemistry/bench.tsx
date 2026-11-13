@@ -1,4 +1,3 @@
-import { RoundedBox } from "@react-three/drei";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import {
   GlassMaterial,
@@ -10,11 +9,12 @@ import { Array as Arr } from "effect";
 import {
   type ReactNode,
   type Ref,
+  useEffect,
   useImperativeHandle,
   useMemo,
   useRef,
 } from "react";
-import { Vector2 } from "three";
+import { ExtrudeGeometry, Shape, Vector2 } from "three";
 
 /**
  * A school chemistry bench at real size, in metres: a dark epoxy worktop 0.9 m
@@ -115,43 +115,106 @@ export function Scale({
     },
   }));
 
+  const body = useMemo(createBalanceBody, []);
+  useEffect(() => () => body.dispose(), [body]);
+
   return (
     <group>
-      <RoundedBox
-        args={[0.3, 0.07, 0.34]}
+      {Arr.map(BALANCE.feet, ([x, z]) => (
+        <mesh key={`${x}-${z}`} position={[x, 0.003, z]}>
+          <cylinderGeometry args={[0.012, 0.014, 0.006, 16]} />
+          <meshStandardMaterial color={MATERIAL.dashboard} roughness={0.8} />
+        </mesh>
+      ))}
+      <mesh
         castShadow
-        position={[0, 0.035, 0]}
-        radius={0.02}
+        geometry={body}
+        position={[0, 0.012, 0]}
         receiveShadow
+        rotation={[0, -Math.PI / 2, 0]}
       >
-        <meshStandardMaterial color={MATERIAL.balanceBody} roughness={0.45} />
-      </RoundedBox>
-      <mesh position={[0, 0.05, 0.171]}>
-        <boxGeometry args={[0.13, 0.034, 0.004]} />
-        <meshStandardMaterial
-          color={MATERIAL.lcd}
-          emissive={MATERIAL.lcdGlow}
-          emissiveIntensity={0.6}
-          roughness={0.25}
-        />
+        <meshStandardMaterial color={MATERIAL.balanceBody} roughness={0.6} />
       </mesh>
-      <ThreeLabel
-        color={MATERIAL.lcdInk}
-        fontSize="compact"
-        outlineColor={MATERIAL.lcdHalo}
-        outlineWidth={0.003}
-        position={[0, 0.05, 0.176]}
-      >
-        <span className="font-mono tabular-nums" ref={display} />{" "}
-        <span className="font-mono">{unitLabel}</span>
-      </ThreeLabel>
-      <mesh castShadow position={[0, 0.08, -0.02]}>
-        <cylinderGeometry args={[0.1, 0.1, 0.008, 48]} />
-        <MetalMaterial color={MATERIAL.panSteel} roughness={0.38} />
+      <group position={BALANCE.panel} rotation={[BALANCE.slope, 0, 0]}>
+        <mesh>
+          <boxGeometry args={[0.15, 0.004, 0.042]} />
+          <meshStandardMaterial color={MATERIAL.dashboard} roughness={0.5} />
+        </mesh>
+        <mesh position={[-0.02, 0.0025, 0]}>
+          <boxGeometry args={[0.09, 0.002, 0.028]} />
+          <meshStandardMaterial
+            color={MATERIAL.lcd}
+            emissive={MATERIAL.lcdGlow}
+            emissiveIntensity={0.6}
+            roughness={0.2}
+          />
+        </mesh>
+        {Arr.map([0.045, 0.062] as const, (x) => (
+          <mesh key={x} position={[x, 0.003, 0]}>
+            <cylinderGeometry args={[0.006, 0.006, 0.004, 16]} />
+            <meshStandardMaterial color={MATERIAL.balanceKey} roughness={0.5} />
+          </mesh>
+        ))}
+        <ThreeLabel
+          color={MATERIAL.lcdInk}
+          fontSize="compact"
+          outlineColor={MATERIAL.lcdHalo}
+          outlineWidth={0.003}
+          position={[-0.02, 0.006, 0]}
+        >
+          <span className="font-mono tabular-nums" ref={display} />{" "}
+          <span className="font-mono">{unitLabel}</span>
+        </ThreeLabel>
+      </group>
+      <mesh castShadow position={[0, 0.095, BALANCE.pan]}>
+        <cylinderGeometry args={[0.1, 0.098, 0.006, 64]} />
+        <MetalMaterial color={MATERIAL.panSteel} roughness={0.3} />
       </mesh>
-      <group position={[0, 0.084, -0.02]}>{children}</group>
+      <mesh position={[0, 0.098, BALANCE.pan]} rotation={[Math.PI / 2, 0, 0]}>
+        <torusGeometry args={[0.099, 0.002, 8, 64]} />
+        <MetalMaterial color={MATERIAL.panSteel} roughness={0.25} />
+      </mesh>
+      <group position={[0, 0.098, BALANCE.pan]}>{children}</group>
     </group>
   );
+}
+
+/**
+ * A top-loading laboratory balance, 30 cm wide and 34 cm deep: a flat back
+ * that carries the pan and a front sloped toward the user for the display and
+ * the keys. The side profile is drawn in the depth and height plane, front at
+ * +0.17 m, and extruded across the width.
+ */
+const BALANCE = {
+  feet: [
+    [0.12, 0.14],
+    [-0.12, 0.14],
+    [0.12, -0.14],
+    [-0.12, -0.14],
+  ],
+  pan: -0.035,
+  panel: [0, 0.07, 0.122],
+  slope: 0.43,
+} as const;
+
+/** The balance's housing: its side profile extruded 30 cm across, edges rounded. */
+function createBalanceBody() {
+  const side = new Shape();
+  side.moveTo(-0.17, 0);
+  side.lineTo(0.17, 0);
+  side.lineTo(0.17, 0.03);
+  side.lineTo(0.075, 0.074);
+  side.lineTo(-0.17, 0.074);
+  side.closePath();
+  const geometry = new ExtrudeGeometry(side, {
+    bevelEnabled: true,
+    bevelSegments: 3,
+    bevelSize: 0.006,
+    bevelThickness: 0.006,
+    depth: 0.288,
+  });
+  geometry.translate(0, 0, -0.144);
+  return geometry;
 }
 
 /** An outline turned around a vertical axis, from its radii at each height. */

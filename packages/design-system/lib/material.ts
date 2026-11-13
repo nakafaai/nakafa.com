@@ -42,7 +42,7 @@ export const MATERIAL = {
   grille: "#121416",
   headlightGlow: "#fff3d2",
   headlightLens: "#f3f1ea",
-  headliner: "#2a2b2e",
+  headliner: "#bdb8ae",
   hub: "#52565b",
   numberPlate: "#e9e6dc",
   rimBright: "#c9ced3",
@@ -51,7 +51,8 @@ export const MATERIAL = {
   tyre: "#151515",
 
   // The lab bench and its glassware.
-  balanceBody: "#e8e9e6",
+  balanceBody: "#d8d9d4",
+  balanceKey: "#5c6066",
   battery: "#202326",
   batteryTerminal: "#b08d57",
   bottleAmber: "#6b3d12",
@@ -70,6 +71,7 @@ export const MATERIAL = {
   lcdGlow: "#0c2416",
   lcdHalo: "#0d1a12",
   lcdInk: "#b8f5c8",
+  hotplateBody: "#c9ccc8",
   meterBody: "#2c3a4a",
   meterHalo: "#0b1520",
   meterInk: "#d6f5ff",
@@ -77,7 +79,6 @@ export const MATERIAL = {
   probeSteel: "#c8cdd2",
   stopper: "#3a2c26",
   trough: "#5b6066",
-  yogurtMaker: "#f2f0ea",
 
   // Reagents, products and specimens.
   bakingSoda: "#fbfbf8",

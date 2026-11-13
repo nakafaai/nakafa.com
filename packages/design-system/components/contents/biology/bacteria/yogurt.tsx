@@ -33,7 +33,6 @@ import {
 } from "@repo/design-system/components/visual/card";
 import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
-import { getColor } from "@repo/design-system/lib/color";
 import { MATERIAL } from "@repo/design-system/lib/material";
 import { type ReactNode, Suspense, useEffect, useRef, useState } from "react";
 import type { Group, Mesh, MeshPhysicalMaterial } from "three";
@@ -213,23 +212,41 @@ function YogurtScene({
       <SimulationTicker running={playing || easing} />
       <LabBench />
       <RoundedBox
-        args={[0.2, 0.06, 0.2]}
+        args={[0.2, 0.07, 0.24]}
         castShadow
-        position={[0, 0.03, 0]}
-        radius={0.02}
+        position={[0, 0.035, 0]}
+        radius={0.012}
+        receiveShadow
       >
-        <meshStandardMaterial color={MATERIAL.yogurtMaker} roughness={0.4} />
+        <meshStandardMaterial color={MATERIAL.hotplateBody} roughness={0.55} />
       </RoundedBox>
+      <mesh position={[0, 0.072, -0.01]} receiveShadow>
+        <cylinderGeometry args={[0.08, 0.08, 0.004, 64]} />
+        <MetalMaterial color={MATERIAL.panSteel} roughness={0.35} />
+      </mesh>
+      <mesh position={[-0.03, 0.035, 0.121]}>
+        <boxGeometry args={[0.07, 0.026, 0.002]} />
+        <meshStandardMaterial
+          color={MATERIAL.lcd}
+          emissive={MATERIAL.lcdGlow}
+          emissiveIntensity={0.6}
+          roughness={0.2}
+        />
+      </mesh>
       <ThreeLabel
-        color={getColor("GRAY", 800)}
+        color={MATERIAL.lcdInk}
         fontSize="compact"
-        outlineColor={getColor("SLATE", 50)}
+        outlineColor={MATERIAL.lcdHalo}
         outlineWidth={0.003}
-        position={[0, 0.035, 0.105]}
+        position={[-0.03, 0.035, 0.124]}
       >
-        43 °C
+        <span className="font-mono">43 °C</span>
       </ThreeLabel>
-      <group position={[0, 0.06, 0]} ref={jar}>
+      <mesh position={[0.05, 0.035, 0.126]} rotation={[Math.PI / 2, 0, 0]}>
+        <cylinderGeometry args={[0.014, 0.014, 0.012, 24]} />
+        <meshStandardMaterial color={MATERIAL.balanceKey} roughness={0.45} />
+      </mesh>
+      <group position={[0, 0.074, -0.01]} ref={jar}>
         <mesh castShadow position={[0, 0.06, 0]}>
           <cylinderGeometry args={[0.045, 0.045, 0.12, 40, 1, true]} />
           <GlassMaterial color={MATERIAL.glass} opacity={0.25} />
@@ -243,29 +260,34 @@ function YogurtScene({
             roughness={0.12}
           />
         </mesh>
-        <mesh position={[0.02, 0.1, 0]}>
-          <cylinderGeometry args={[0.004, 0.004, 0.13, 12]} />
-          <MetalMaterial color={MATERIAL.probeSteel} roughness={0.3} />
-        </mesh>
-      </group>
-      <group position={[0.17, 0, 0.04]}>
-        <RoundedBox
-          args={[0.07, 0.11, 0.03]}
-          castShadow
-          position={[0, 0.055, 0]}
-          radius={0.008}
-        >
-          <meshStandardMaterial color={MATERIAL.meterBody} roughness={0.5} />
-        </RoundedBox>
-        <ThreeLabel
-          color={MATERIAL.meterInk}
-          fontSize="compact"
-          outlineColor={MATERIAL.meterHalo}
-          outlineWidth={0.003}
-          position={[0, 0.075, 0.017]}
-        >
-          <span className="font-mono tabular-nums" ref={meter} />
-        </ThreeLabel>
+        <group position={[0.018, 0.1, 0.006]} rotation={[0, 0, -0.12]}>
+          <mesh castShadow>
+            <cylinderGeometry args={[0.011, 0.011, 0.15, 24]} />
+            <meshStandardMaterial color={MATERIAL.meterBody} roughness={0.5} />
+          </mesh>
+          <mesh position={[0, -0.09, 0]}>
+            <cylinderGeometry args={[0.006, 0.006, 0.03, 16]} />
+            <MetalMaterial color={MATERIAL.probeSteel} roughness={0.3} />
+          </mesh>
+          <mesh position={[0, 0.045, 0.0105]}>
+            <boxGeometry args={[0.016, 0.03, 0.002]} />
+            <meshStandardMaterial
+              color={MATERIAL.lcd}
+              emissive={MATERIAL.lcdGlow}
+              emissiveIntensity={0.6}
+              roughness={0.2}
+            />
+          </mesh>
+          <ThreeLabel
+            color={MATERIAL.meterInk}
+            fontSize="compact"
+            outlineColor={MATERIAL.meterHalo}
+            outlineWidth={0.003}
+            position={[0, 0.045, 0.014]}
+          >
+            <span className="font-mono tabular-nums" ref={meter} />
+          </ThreeLabel>
+        </group>
       </group>
     </>
   );

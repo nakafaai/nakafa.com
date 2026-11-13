@@ -206,18 +206,26 @@ function swimProgram(
   };
 }
 
-/** The dish's water, yellowing toward the sugar crystal at the right edge. */
+/**
+ * The dish's water across the whole view, yellowing toward the sugar crystal
+ * as the sugar spreads from it: beyond the crystal it stays at its sweetest.
+ */
 function drawDish(
   sketch: p5,
   toScreen: (x: number, y: number) => readonly [number, number]
 ) {
   sketch.noStroke();
-  const bands = 40;
+  const [left] = toScreen(-DISH / 2, 0);
+  const [right] = toScreen(DISH / 2, 0);
+  const bands = 48;
   Arr.forEach(Arr.range(0, bands - 1), (band) => {
-    const share = band / (bands - 1);
+    const x0 = (sketch.width * band) / bands;
+    const x1 = (sketch.width * (band + 1)) / bands;
+    const share = Math.min(
+      1,
+      Math.max(0, ((x0 + x1) / 2 - left) / (right - left))
+    );
     sketch.fill(238 + 10 * share, 242 - 4 * share, 240 - 46 * share);
-    const [x0] = toScreen(-DISH / 2 + (DISH * band) / bands, 0);
-    const [x1] = toScreen(-DISH / 2 + (DISH * (band + 1)) / bands, 0);
     sketch.rect(x0, 0, x1 - x0 + 1, sketch.height);
   });
   const [cx, cy] = toScreen(DISH / 2 - 8, 0);

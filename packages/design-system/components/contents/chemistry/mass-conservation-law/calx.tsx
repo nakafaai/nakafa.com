@@ -7,7 +7,10 @@ import {
   LAVOISIER,
   mercuryRiseAfterDays,
 } from "@repo/design-system/components/contents/chemistry/mass-conservation-law/masses";
-import { hashUnit } from "@repo/design-system/components/contents/simulation/grain";
+import {
+  grainField,
+  hashUnit,
+} from "@repo/design-system/components/contents/simulation/grain";
 import { useQuantity } from "@repo/design-system/components/contents/simulation/quantity";
 import { SimulationTicker } from "@repo/design-system/components/contents/simulation/ticker";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
@@ -42,9 +45,11 @@ import {
 } from "react";
 import {
   CatmullRomCurve3,
+  DataTexture,
   type InstancedMesh,
   type Mesh,
   type MeshStandardMaterial,
+  RepeatWrapping,
   TubeGeometry,
   Vector3,
 } from "three";
@@ -184,6 +189,23 @@ function createNeck() {
   );
 }
 
+/** The fired clay of the furnace's wall: a fine, uneven grain to catch the light. */
+function createClay() {
+  const size = 64;
+  const field = grainField(size);
+  const data = new Uint8Array(size * size * 4);
+  Arr.forEach(Arr.range(0, size * size - 1), (index) => {
+    const value = Math.round(255 * (field[index] ?? 0));
+    data.set([value, value, value, 255], index * 4);
+  });
+  const texture = new DataTexture(data, size, size);
+  texture.wrapS = RepeatWrapping;
+  texture.wrapT = RepeatWrapping;
+  texture.repeat.set(3, 2);
+  texture.needsUpdate = true;
+  return texture;
+}
+
 /**
  * The furnace, the matrass of mercury, the trough and the bell jar. Played,
  * the scene advances the day itself and hands it to the card, so the slider
@@ -203,7 +225,14 @@ function CalxScene({
   const clock = useRef(day);
   const sent = useRef(day);
   const neck = useMemo(createNeck, []);
-  useEffect(() => () => neck.dispose(), [neck]);
+  const clay = useMemo(createClay, []);
+  useEffect(
+    () => () => {
+      neck.dispose();
+      clay.dispose();
+    },
+    [clay, neck]
+  );
 
   // A day the learner set on the slider moves the clock; a day the scene
   // sent while playing is already on it.
@@ -247,11 +276,24 @@ function CalxScene({
       <LabBench width={2.6} />
       <group position={[BULB.x, 0, 0]}>
         <mesh castShadow position={[0, 0.07, 0]} receiveShadow>
-          <boxGeometry args={[0.18, 0.14, 0.16]} />
-          <meshStandardMaterial color={MATERIAL.brick} roughness={0.95} />
+          <cylinderGeometry args={[0.078, 0.09, 0.14, 48]} />
+          <meshStandardMaterial
+            bumpMap={clay}
+            bumpScale={4}
+            color={MATERIAL.brick}
+            roughness={0.95}
+          />
         </mesh>
-        <mesh position={[0, 0.06, 0.081]}>
-          <planeGeometry args={[0.08, 0.05]} />
+        <mesh position={[0, 0.142, 0]} rotation={[Math.PI / 2, 0, 0]}>
+          <torusGeometry args={[0.072, 0.006, 10, 48]} />
+          <MetalMaterial color={MATERIAL.ironOxide} roughness={0.7} />
+        </mesh>
+        <mesh position={[0, 0.05, 0.081]}>
+          <boxGeometry args={[0.07, 0.05, 0.016]} />
+          <meshStandardMaterial color={MATERIAL.coals} roughness={1} />
+        </mesh>
+        <mesh position={[0, 0.042, 0.0895]}>
+          <planeGeometry args={[0.058, 0.026]} />
           <meshStandardMaterial
             color={MATERIAL.coals}
             emissive={MATERIAL.coalGlow}
