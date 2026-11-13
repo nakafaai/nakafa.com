@@ -8,15 +8,18 @@ import type { Id } from "@repo/backend/confect/_generated/id";
 import classroom from "@repo/backend/confect/_generated/refs/classroom";
 import { threadTitle } from "@repo/backend/confect/classroom/forum/thread";
 import { useNavigate } from "@tanstack/react-router";
-import { Array as Arr, Option, Schema } from "effect";
-import { createContext, use, useState } from "react";
+import { Array as Arr, Effect, Option, Schema } from "effect";
+import { createContext, use, useMemo, useState } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { PaneHeader } from "@/components/shared/pane";
 import { PanesDetail, useWide } from "@/components/shared/panes";
 import { reloadPage } from "@/components/shared/reload";
 import { LoadFailure } from "@/components/state/failure";
-import { MESSAGE_PAGE_SIZE } from "@/components/tenant/classes/forum/channel";
+import {
+  MESSAGE_OPEN_MOST,
+  MESSAGE_PAGE_SIZE,
+} from "@/components/tenant/classes/forum/channel";
 import { ForumComposer } from "@/components/tenant/classes/forum/composer";
 import { isTitled } from "@/components/tenant/classes/forum/marks";
 import {
@@ -25,12 +28,14 @@ import {
 } from "@/components/tenant/classes/forum/open";
 import {
   ChannelScopeContext,
+  placeChatOf,
   useChannelScope,
 } from "@/components/tenant/classes/forum/scope";
 import { MessageStream } from "@/components/tenant/classes/forum/stream";
 import { useClassScope } from "@/components/tenant/classes/scope";
 import { isLostAccess } from "@/components/tenant/refusal";
 import { schoolClassChannelTarget } from "@/lib/routing/school/target";
+import { firstPageOf, readPlace } from "@/lib/scroll/place";
 
 /** The thread the pane shows. */
 type ShownThread = typeof OpenedThread.Type;
@@ -60,34 +65,56 @@ const holds = (lane: Option.Option<ShownThread>, thread: ShownThread) =>
 
 /**
  * The lanes after the asked thread: kept as they are while they already show it; a thread asked while none was
- * open, or with none drawn, in front at once; the next thread in the back lane while the one on screen stays, and in
- * front once its replies are in (`backSettled`). Closing keeps the last thread in front while the phone's sheet slides
- * away.
+ * open, or with none drawn, in front at once, or by turning to the back lane when the thread the reader reached for
+ * waits there with its replies read; beside the thread on screen, the one the reader reaches for in the back lane;
+ * the next thread in the back lane while the one on screen stays, and in front once its replies are in
+ * (`backSettled`). With no thread asked, an open pane closes and keeps the last thread in
+ * front while the phone's sheet slides away, and a closed pane reads the thread the reader reaches for (`warm`) in
+ * its back lane, so it opens drawn.
  */
 const nextLanes = (
   lanes: typeof Lanes.Type,
   asked: Option.Option<ShownThread>,
-  backSettled: boolean
+  backSettled: boolean,
+  warm: Option.Option<ShownThread>
 ): typeof Lanes.Type => {
   const back = otherLane(lanes.front);
   const front = lanes[lanes.front];
   if (Option.isNone(asked)) {
-    return lanes.open || Option.isSome(lanes[back])
-      ? { ...lanes, [back]: Option.none(), open: false }
-      : lanes;
+    if (lanes.open) {
+      return { ...lanes, [back]: Option.none(), open: false };
+    }
+    return Option.match(
+      Option.filter(
+        warm,
+        (reached) => !(holds(front, reached) || holds(lanes[back], reached))
+      ),
+      {
+        onNone: () => lanes,
+        onSome: (reached) => ({ ...lanes, [back]: Option.some(reached) }),
+      }
+    );
   }
   if (holds(front, asked.value)) {
-    return lanes.open && Option.isNone(lanes[back])
+    // Beside an open thread, the back lane reads the one the reader reaches for next, or nothing.
+    const reached = Option.filter(warm, (next) => !holds(front, next));
+    const kept = Option.match(reached, {
+      onNone: () => Option.isNone(lanes[back]),
+      onSome: (next) => holds(lanes[back], next),
+    });
+    return lanes.open && kept
       ? lanes
-      : { ...lanes, [back]: Option.none(), open: true };
+      : { ...lanes, [back]: reached, open: true };
   }
   if (!lanes.open || Option.isNone(front)) {
-    return {
-      ...lanes,
-      [back]: Option.none(),
-      [lanes.front]: asked,
-      open: true,
-    };
+    return holds(lanes[back], asked.value)
+      ? { ...lanes, front: back, [lanes.front]: Option.none(), open: true }
+      : {
+          ...lanes,
+          [back]: Option.none(),
+          [lanes.front]: asked,
+          open: true,
+        };
   }
   if (!holds(lanes[back], asked.value)) {
     return { ...lanes, [back]: asked };
@@ -97,18 +124,39 @@ const nextLanes = (
     : lanes;
 };
 
-/** What a thread's body draws from: its replies, page by page, and the viewer's read mark in it. */
+/**
+ * What a thread's body draws from: its replies, page by page, and the viewer's read mark in it. The first read holds
+ * the place the reader left the thread at in this browser.
+ */
 function useThreadFeed(thread: Option.Option<ShownThread>) {
   const { classId, slug } = useClassScope();
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
   const asked = Option.filter(thread, () => isSettled);
+  const shown = Option.getOrUndefined(thread);
+  const place = useMemo(
+    () =>
+      shown === undefined
+        ? Option.none()
+        : Effect.runSync(
+            readPlace(
+              placeChatOf({
+                channelId: shown.channelId,
+                classId,
+                discussion: shown.number,
+              })
+            )
+          ),
+    [classId, shown]
+  );
   const replies = usePaginatedQuery(
     classroom.forum.threads.replies,
     Option.match(asked, {
       onNone: () => "skip" as const,
       onSome: (kept) => ({ classId, number: kept.number, slug }),
     }),
-    { initialNumItems: MESSAGE_PAGE_SIZE }
+    {
+      initialNumItems: firstPageOf(place, MESSAGE_PAGE_SIZE, MESSAGE_OPEN_MOST),
+    }
   );
   const read = useQuery(
     classroom.forum.reads.get,
@@ -176,6 +224,7 @@ export function ThreadPane({
   const wide = useWide();
   const { classId, classSlug, slug } = useClassScope();
   const forget = useOpening((state) => state.forget);
+  const warm = useOpening((state) => state.warm);
   const [lanes, setLanes] = useState<typeof Lanes.Type>({
     a: thread,
     b: Option.none(),
@@ -189,7 +238,8 @@ export function ThreadPane({
   const next = nextLanes(
     lanes,
     thread,
-    Option.exists(lanes[back], (kept) => isSettledFeed(kept, feeds[back]))
+    Option.exists(lanes[back], (kept) => isSettledFeed(kept, feeds[back])),
+    warm
   );
   if (next !== lanes) {
     setLanes(next);
@@ -206,6 +256,7 @@ export function ThreadPane({
 
   return (
     <PanesDetail
+      fill
       label={Option.match(front, {
         onNone: () => "",
         onSome: (kept) =>

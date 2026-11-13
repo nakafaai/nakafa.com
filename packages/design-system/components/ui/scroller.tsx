@@ -64,6 +64,14 @@ export function MessageScrollerContent({
   );
 }
 
+/**
+ * One message of the list. Every message is laid out at its real height, never skipped with `content-visibility`:
+ * the scroller places the reader by the heights above them, so a row that grew or shrank from an estimate as it came
+ * into view moved what the reader was looking at, and opened a chat short of its end. Safari released before 2026
+ * has no scroll anchoring to hide such a move (WebKit bug 298514). A list reads its messages a page at a time, so
+ * laying out what it holds stays cheap. Each message is the box and the layer of what floats over it, such as its
+ * toolbar, so one message's toolbar never stands over another's.
+ */
 export function MessageScrollerItem({
   className,
   scrollAnchor = false,
@@ -71,10 +79,7 @@ export function MessageScrollerItem({
 }: ComponentProps<typeof Primitive.Item>) {
   return (
     <Primitive.Item
-      className={cn(
-        "min-w-0 shrink-0 [contain-intrinsic-size:auto_10rem] [content-visibility:auto]",
-        className
-      )}
+      className={cn("relative isolate min-w-0 shrink-0", className)}
       data-slot="message-scroller-item"
       scrollAnchor={scrollAnchor}
       {...props}

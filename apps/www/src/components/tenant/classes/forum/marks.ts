@@ -41,6 +41,23 @@ export const firstUnread = (
       );
 
 /**
+ * Whether the loaded messages, oldest first, show where the unread ones start: nothing is unread, the message
+ * before the first unread one is loaded, or the place holds nothing `older`. Until then the place reads older
+ * messages before it opens, so it opens at its first unread message, never at the oldest one it happened to load.
+ */
+export const showsUnreadStart = (
+  messages: readonly ForumMessage[],
+  at: number | null,
+  older: boolean
+) =>
+  !older ||
+  Option.match(firstUnread(messages, at), {
+    onNone: () => true,
+    onSome: (key) =>
+      Option.exists(Arr.head(messages), (first) => first.clientKey !== key),
+  });
+
+/**
  * The time of the newest message the reader has in view, which the read mark moves
  * to. A message the server is still saving is left out, because its time is the
  * browser's.

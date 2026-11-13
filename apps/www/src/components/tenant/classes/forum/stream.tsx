@@ -21,12 +21,13 @@ import {
 } from "@shadcn/react/message-scroller";
 import { cn } from "cn";
 import { Array as Arr, DateTime, Option } from "effect";
-import { useEffect, useRef, useState } from "react";
+import { use, useEffect, useRef, useState } from "react";
 import { useFormatter, useTranslations } from "use-intl";
 import {
   pageGutterVariants,
   readingMeasureVariants,
 } from "@/components/shared/content/width";
+import { KeepPlace, useKeptPlace } from "@/components/shared/place";
 import {
   firstUnread,
   headToKeep,
@@ -40,7 +41,9 @@ import {
   markUpdate,
 } from "@/components/tenant/classes/forum/optimistic";
 import {
+  PlaceShownContext,
   useChannelScope,
+  usePlaceChat,
   useReadPlace,
 } from "@/components/tenant/classes/forum/scope";
 import { TalliesProvider } from "@/components/tenant/classes/forum/tallies";
@@ -54,7 +57,8 @@ const MARK_DELAY_MILLISECONDS = 600;
  * a divider with its day, in a scroller that keeps
  * the reader's place (ADR 0025). It opens at the first message another member wrote after the read
  * mark the place had when it opened, under a divider that stays where it was while the reader
- * reads, or at the newest edge when nothing is unread. It follows the newest edge only while the
+ * reads; when nothing is unread, where the reader left it in this browser (`KeepPlace`), or at the
+ * newest edge. It follows the newest edge only while the
  * reader is there, loads older history upward without moving the reader, and jumps to the message
  * the address names for the place, loading older pages until it is there. The read mark follows the newest
  * message the reader has in view.
@@ -87,6 +91,12 @@ export function MessageStream({
   // divider stays there while the reader reads. A message that arrives later is never the anchor,
   // so it never moves a reader who is not at the newest edge.
   const [unread] = useState(() => firstUnread(messages, at));
+  const chat = usePlaceChat();
+  const left = useKeptPlace(chat);
+  // An unread message or the message the address names decides where the place opens; otherwise the kept place does.
+  const restore =
+    Option.isNone(unread) && Option.isNone(jump) ? left : Option.none();
+  const viewport = useRef<HTMLDivElement>(null);
   // The oldest loaded message keeps its author line when older history arrives, as React keeps state
   // from the previous render, so the message the reader looks at never moves by that line.
   const [kept, setKept] = useState<readonly string[]>([]);
@@ -129,6 +139,7 @@ export function MessageStream({
           <MessageScrollerViewport
             aria-label={t("messages")}
             preserveScrollOnPrepend
+            ref={viewport}
           >
             <MessageScrollerContent
               className={cn(
@@ -193,6 +204,7 @@ export function MessageStream({
           </MessageScrollerViewport>
           <MessageScrollerButton label={t("scroll-to-latest")} />
         </MessageScroller>
+        <KeepPlace chat={chat} restore={restore} viewport={viewport} />
         <ReadTracker at={at} messages={messages} />
         <JumpTo jump={jump} loadOlder={loadOlder} messages={messages} />
       </Primitive.Provider>
@@ -202,7 +214,8 @@ export function MessageStream({
 
 /**
  * Moves the viewer's read mark to the newest message in view once the view has been still for a
- * moment, so scrolling through history writes once. A mark that would not move is not sent.
+ * moment, so scrolling through history writes once. A mark that would not move is not sent, and a
+ * place out of sight moves none.
  */
 function ReadTracker({
   at,
@@ -212,6 +225,7 @@ function ReadTracker({
   messages: readonly ForumMessage[];
 }) {
   const { classId, slug } = useChannelScope();
+  const shown = use(PlaceShownContext);
   const place = useReadPlace();
   const mark = useMutation(classroom.forum.reads.mark);
   const { visibleMessageIds } = useMessageScrollerVisibility();
@@ -219,7 +233,8 @@ function ReadTracker({
   const [settled] = useDebouncedValue(seen, MARK_DELAY_MILLISECONDS);
 
   useEffect(() => {
-    if (settled === null || (at !== null && settled <= at)) {
+    // A place read ahead out of sight marks nothing: its messages are in the page, unseen.
+    if (!shown || settled === null || (at !== null && settled <= at)) {
       return;
     }
     runSchoolWrite(
@@ -233,7 +248,7 @@ function ReadTracker({
       ),
       { onRefused: () => undefined }
     );
-  }, [at, classId, mark, place, settled, slug]);
+  }, [at, classId, mark, place, settled, shown, slug]);
 
   return null;
 }

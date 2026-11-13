@@ -21,6 +21,12 @@ const ChannelScope = Schema.Struct({
   slug: TenantSlug,
 });
 
+/**
+ * Whether the place around the caller is on screen, not kept out of sight for the reader's next press. It stands apart
+ * from the scope every message reads, so showing a kept chat renders none of its messages again.
+ */
+export const PlaceShownContext = createContext(true);
+
 /** The channel, or the discussion, that the view provides to its messages and its composer. */
 export const ChannelScopeContext = createContext<
   typeof ChannelScope.Type | null
@@ -47,4 +53,22 @@ export function useReadPlace(): typeof ReadPlace.Type {
   return discussion === undefined
     ? { _tag: "channel", channelId }
     : { _tag: "discussion", number: discussion };
+}
+
+/**
+ * The key the place a reader left a chat or a discussion at is kept under in the browser: a channel by its ID, a
+ * discussion by its class and its number, which counts within the class.
+ */
+export const placeChatOf = ({
+  channelId,
+  classId,
+  discussion,
+}: Pick<typeof ChannelScope.Type, "channelId" | "classId" | "discussion">) =>
+  discussion === undefined
+    ? `channel:${channelId}`
+    : `discussion:${classId}:${discussion}`;
+
+/** The key of the place of the chat or the discussion around the caller. */
+export function usePlaceChat() {
+  return placeChatOf(useChannelScope());
 }
