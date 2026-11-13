@@ -101,10 +101,10 @@ const GATE_FAILURE = "gate:combination";
 
 /**
  * How many stacks of a red batch the train verifies at once. The account runs
- * about 20 jobs at a time across both repositories, so the train leaves the
- * rest to Aksara's gates and the deploy.
+ * about 20 jobs at a time across both repositories, and an Aksara gate takes
+ * several of them, so the train leaves the rest to Aksara's gates and the deploy.
  */
-const SPLIT_JOBS = 12;
+const SPLIT_JOBS = 8;
 
 /** The failure of a batch that an earlier train already verified red. */
 const RED_BATCH = "batch:red";
