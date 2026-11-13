@@ -98,25 +98,25 @@ describe("the local backend over HTTP", () => {
       withFetch(
         Effect.gen(function* () {
           const received = serve(() =>
-            json({ status: "success", value: { _id: "user-1" } })
+            json({ status: "success", value: "user-1" })
           );
           const convex = yield* backend;
 
-          const value = yield* convex.run("Learner account", {
-            args: { input: { model: "user" } },
-            component: "betterAuth",
-            path: "adapter:create",
+          const value = yield* convex.run("Learner username", {
+            args: { userId: "user-1" },
+            component: "authUsername",
+            path: "public:getUsername",
           });
 
-          expect(value).toEqual({ _id: "user-1" });
+          expect(value).toBe("user-1");
           const [request] = received();
           expect(request?.path).toBe("/api/function");
           expect(request?.authorization).toBe(`Convex ${ADMIN_KEY}`);
           expect(decodeJson(request?.body ?? "")).toEqual({
-            args: { input: { model: "user" } },
-            componentPath: "betterAuth",
+            args: { userId: "user-1" },
+            componentPath: "authUsername",
             format: "json",
-            path: "adapter:create",
+            path: "public:getUsername",
           });
         })
       )
@@ -159,9 +159,11 @@ describe("the local backend over HTTP", () => {
           const convex = yield* backend;
 
           const error = yield* convex
-            .run("Learner session", { args: {}, path: "adapter:create" }, [
-              "token-1",
-            ])
+            .run(
+              "Learner session",
+              { args: {}, path: "auth/core:signInWithUsernamePassword" },
+              ["token-1"]
+            )
             .pipe(Effect.asVoid, Effect.flip);
 
           expect(error.message).toBe(

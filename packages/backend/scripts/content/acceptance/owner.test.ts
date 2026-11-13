@@ -1,13 +1,19 @@
 import { afterEach, describe, expect, it } from "@effect/vitest";
-import { SessionCookie } from "@repo/backend/scripts/content/acceptance/fixture";
+import { SessionCookies } from "@repo/backend/scripts/content/acceptance/fixture";
 import {
   ownerMode,
   seedOwner,
 } from "@repo/backend/scripts/content/acceptance/owner";
 import { ownerAddress } from "@repo/backend/scripts/content/acceptance/school";
-import { localConvexDouble } from "@repo/backend/test/acceptance";
+import {
+  ACCOUNT_SEED,
+  localConvexDouble,
+  PASSWORD_SIGN_IN,
+  SESSION_COOKIES,
+  SIGN_IN_ANSWERS,
+} from "@repo/backend/test/acceptance";
 import { nodePlatform } from "@repo/backend/test/platform";
-import { Array as Arr, Effect, FileSystem, Layer, Schema } from "effect";
+import { Effect, FileSystem, Layer, Schema } from "effect";
 
 const mocks = vi.hoisted(() => ({ layer: vi.fn() }));
 vi.mock(
@@ -20,19 +26,15 @@ vi.mock(
   })
 );
 
-/** What the local backend answers a member's sign-in: a new account `user-1` whose app user is `app-user-1`. */
-const SIGN_IN = {
-  "adapter:create": { _creationTime: 1, _id: "user-1" },
-  "tenancy/seed:user": "app-user-1",
-};
-
-/** Reads the session cookie that a mode wrote. */
-const readCookie = Effect.fn(function* (path: string) {
+/** Reads the session cookies that a mode wrote. */
+const readCookies = Effect.fn(function* (path: string) {
   const fs = yield* FileSystem.FileSystem;
   return yield* fs
     .readFileString(path)
     .pipe(
-      Effect.flatMap(Schema.decodeEffect(Schema.fromJsonString(SessionCookie)))
+      Effect.flatMap(
+        Schema.decodeEffect(Schema.fromJsonString(SessionCookies))
+      )
     );
 });
 
@@ -42,85 +44,57 @@ describe("acceptance owner", () => {
   });
 
   it.effect(
-    "signs a new account of the member's address in and claims the school for its app user",
+    "signs the account of the member's address in and claims the school for it",
     () =>
       Effect.gen(function* () {
-        const backend = localConvexDouble(SIGN_IN);
+        const backend = localConvexDouble(SIGN_IN_ANSWERS);
 
-        const cookie = yield* seedOwner("acc-1").pipe(
+        const cookies = yield* seedOwner("acc-1").pipe(
           Effect.provide(Layer.merge(backend.layer, nodePlatform))
         );
 
         expect(backend.paths()).toEqual([
-          "adapter:findOne",
-          "adapter:create",
-          "adapter:create",
-          "auth/lifecycle:onCreate",
-          "tenancy/seed:user",
+          ACCOUNT_SEED,
+          PASSWORD_SIGN_IN,
           "tenancy/claims:run",
         ]);
-        expect(backend.argsOf("adapter:findOne")).toMatchObject({
-          where: [{ field: "email", value: ownerAddress("acc-1") }],
-        });
-        expect(backend.argsOf("tenancy/seed:user")).toEqual({
-          authId: "user-1",
+        expect(backend.argsOf(ACCOUNT_SEED)).toMatchObject({
+          email: ownerAddress("acc-1"),
         });
         expect(backend.argsOf("tenancy/claims:run")).toEqual({
           cursor: null,
-          userId: "app-user-1",
+          userId: "user-1",
         });
-        expect(cookie.name).toBe("better-auth.session_token");
+        expect(cookies).toEqual(SESSION_COOKIES);
       })
   );
 
-  it.effect(
-    "signs the account that already holds the address in again, with a new session and no second account",
-    () =>
-      Effect.gen(function* () {
-        const backend = localConvexDouble({
-          ...SIGN_IN,
-          "adapter:findOne": { _id: "user-1" },
-        });
-
-        yield* seedOwner("acc-1").pipe(
-          Effect.provide(Layer.merge(backend.layer, nodePlatform))
-        );
-
-        expect(
-          Arr.filter(backend.paths(), (path) => path === "adapter:create")
-        ).toHaveLength(1);
-        expect(backend.argsOf("adapter:create")).toMatchObject({
-          input: { data: { userId: "user-1" }, model: "session" },
-        });
-      })
-  );
-
-  it.effect("claims nothing when the new account has no app user", () =>
+  it.effect("claims nothing when the account cannot sign in", () =>
     Effect.gen(function* () {
-      const backend = localConvexDouble(SIGN_IN, ["tenancy/seed:user"]);
+      const backend = localConvexDouble(SIGN_IN_ANSWERS, [PASSWORD_SIGN_IN]);
 
       const error = yield* seedOwner("acc-1").pipe(
         Effect.provide(Layer.merge(backend.layer, nodePlatform)),
         Effect.flip
       );
 
-      expect(error._tag).toBe("AcceptanceRuntimeError");
+      expect(error).toMatchObject({ _tag: "AcceptanceRuntimeError" });
       expect(backend.paths()).not.toContain("tenancy/claims:run");
     })
   );
 
-  it.effect("writes the member's cookie to the file the mode names", () =>
+  it.effect("writes the member's cookies to the file the mode names", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const root = yield* fs.makeTempDirectoryScoped({
         prefix: "acceptance-member-test-",
       });
-      mocks.layer.mockReturnValue(localConvexDouble(SIGN_IN).layer);
+      mocks.layer.mockReturnValue(localConvexDouble(SIGN_IN_ANSWERS).layer);
 
       yield* ownerMode.run(root, ["acc-1", `${root}/cookie.json`, "ignored"]);
 
-      expect((yield* readCookie(`${root}/cookie.json`)).name).toBe(
-        "better-auth.session_token"
+      expect(yield* readCookies(`${root}/cookie.json`)).toEqual(
+        SESSION_COOKIES
       );
       expect(mocks.layer).toHaveBeenCalledWith(root);
     }).pipe(Effect.scoped, Effect.provide(nodePlatform))

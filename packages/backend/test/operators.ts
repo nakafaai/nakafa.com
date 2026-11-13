@@ -20,8 +20,7 @@ export const operatorAccount = Effect.fn("test.operators.account")(function* (
 ) {
   const account = yield* fixture.account(
     suffix,
-    `${suffix}@nakafa.example.test`,
-    true
+    `${suffix}@nakafa.example.test`
   );
   yield* fixture.internal.mutation(refs.internal.operators.staff.grant, {
     userId: account.userId,

@@ -56,7 +56,6 @@ async function createActivatedIntent(
       );
     }
     const userId = await ctx.db.insert("users", {
-      authId: `${suffix}-welcome-owner`,
       credits: 0,
       creditsResetAt: 0,
       email: "delivered@resend.dev",
@@ -300,7 +299,6 @@ describe("emails/welcome/delivery", () => {
     const test = convexTest(schema, convexModules);
     const userId = await test.mutation((ctx) =>
       ctx.db.insert("users", {
-        authId: "awaiting-render-owner",
         credits: 0,
         creditsResetAt: 0,
         email: "delivered@resend.dev",
@@ -335,15 +333,22 @@ describe("emails/welcome/delivery", () => {
       phase: "awaiting-onboarding",
     });
   });
-  it("drops a scheduled intent when its owner was deleted before enqueue", async () => {
+  it.each([
+    ["is gone", "gone"],
+    ["deleted the account", "deleted"],
+  ] as const)("drops a scheduled intent when its owner %s before enqueue", async (_case, cause) => {
     const test = convexTest(schema, convexModules);
     resendTest.register(test);
     workflowTest.register(test);
     const { intentId, userId } = await createActivatedIntent(
       test,
-      "deleted-before-enqueue"
+      `${cause}-before-enqueue`
     );
-    await test.mutation((ctx) => ctx.db.delete(userId));
+    await test.mutation((ctx) =>
+      cause === "gone"
+        ? ctx.db.delete(userId)
+        : ctx.db.patch("users", userId, { deletedAt: NOW })
+    );
     const send = vi.spyOn(resend, "sendEmail");
     expect(
       await test.query(internal.emails.welcome.internal.readIntentInput, {
@@ -363,71 +368,5 @@ describe("emails/welcome/delivery", () => {
     expect(
       await test.query((ctx) => ctx.db.get("welcomeEmailIntents", intentId))
     ).toBeNull();
-  });
-  it("defers enqueue when deletion starts after the message was rendered", async () => {
-    const test = convexTest(schema, convexModules);
-    resendTest.register(test);
-    workflowTest.register(test);
-    const { intentId, userId } = await createActivatedIntent(
-      test,
-      "deletion-after-render"
-    );
-    await test.mutation((ctx) =>
-      ctx.db.patch("users", userId, {
-        deletionPreparedAt: NOW,
-      })
-    );
-    const send = vi.spyOn(resend, "sendEmail");
-    await expect(
-      test.mutation(internal.emails.welcome.internal.enqueueRenderedWelcome, {
-        intentId,
-        html: "<p>Account ready</p>",
-        subject: "Account ready",
-        text: "Account ready",
-      })
-    ).rejects.toThrow();
-    expect(send).not.toHaveBeenCalled();
-    expect(
-      await test.query((ctx) => ctx.db.get("welcomeEmailIntents", intentId))
-    ).toMatchObject({
-      phase: "scheduled",
-    });
-  });
-  it("defers during reversible deletion and delivers after cancellation", async () => {
-    const test = convexTest(schema, convexModules);
-    resendTest.register(test);
-    workflowTest.register(test);
-    const { intentId, userId } = await createActivatedIntent(
-      test,
-      "deletion-deferred"
-    );
-    await test.mutation((ctx) =>
-      ctx.db.patch("users", userId, {
-        deletionPreparedAt: NOW,
-      })
-    );
-    await expect(
-      test.action(internal.emails.welcome.delivery.sendWelcomeEmail, {
-        intentId,
-      })
-    ).rejects.toThrow();
-    expect(
-      await test.query((ctx) => ctx.db.get("welcomeEmailIntents", intentId))
-    ).toMatchObject({
-      phase: "scheduled",
-    });
-    await test.mutation((ctx) =>
-      ctx.db.patch("users", userId, {
-        deletionPreparedAt: undefined,
-      })
-    );
-    await test.action(internal.emails.welcome.delivery.sendWelcomeEmail, {
-      intentId,
-    });
-    expect(
-      await test.query((ctx) => ctx.db.get("welcomeEmailIntents", intentId))
-    ).toMatchObject({
-      phase: "enqueued",
-    });
   });
 });

@@ -183,6 +183,36 @@ const RecordedImport = Schema.Struct({
   table: Schema.String,
 });
 
+/** The path of the acceptance seed of a password account. */
+export const ACCOUNT_SEED = "acceptance/accounts:create";
+
+/** The path of Convex Auth's password sign-in. */
+export const PASSWORD_SIGN_IN = "auth/core:signInWithUsernamePassword";
+
+/**
+ * What a running backend answers a sign-in of the acceptance runtime: the seed
+ * makes account `user-1` with a fresh password, and Convex Auth's password
+ * method makes its session.
+ */
+export const SIGN_IN_ANSWERS = {
+  [ACCOUNT_SEED]: { password: "seed-password", userId: "user-1" },
+  [PASSWORD_SIGN_IN]: {
+    status: "complete",
+    tokens: {
+      accessToken: "access-token",
+      refreshToken: "refresh-token",
+      refreshTokenExpiresAt: 1,
+      userId: "user-1",
+    },
+  },
+};
+
+/** The session cookies that `SIGN_IN_ANSWERS` make. */
+export const SESSION_COOKIES = [
+  { name: "__convexAuthJWT", value: "access-token" },
+  { name: "__convexAuthRefreshToken", value: "refresh-token" },
+];
+
 /**
  * A local backend that answers each function by its path from `answers`, null
  * for a path it does not name, and fails the paths in `failing` as the backend

@@ -132,7 +132,6 @@ export const claimedMembers = Effect.fn("test.tenancy.claimedMembers")(
       (index) =>
         Effect.gen(function* () {
           const userId = yield* writer.table("users").insert({
-            authId: `member-${index}`,
             credits: 0,
             creditsResetAt: 0,
             email: `member-${index}@example.com`,
@@ -212,22 +211,15 @@ export const tenancyFixture = Effect.gen(function* () {
   );
   return Struct.assign(seeded, {
     /**
-     * Seeds one more account with this Better Auth email, verified or not, and a
-     * client signed in as it. A hosted domain seeds a Google account of it too,
-     * null a personal one.
+     * Seeds one more account that holds this address, and a client signed in
+     * as it. Every account's address is one Google verified, since Convex Auth
+     * makes no account from an unverified one (`auth/account`).
      */
-    account: (
-      suffix: string,
-      email: string,
-      emailVerified: boolean,
-      hostedDomain?: string | null
-    ) =>
+    account: (suffix: string, email: string) =>
       Effect.promise(async () => {
         const account = await t.mutation((ctx) =>
           seedAuthenticatedUser(ctx, {
             email,
-            emailVerified,
-            ...(hostedDomain === undefined ? {} : { hostedDomain }),
             now: TENANCY_NOW,
             suffix,
           })
@@ -262,11 +254,9 @@ export const tenancyFixture = Effect.gen(function* () {
         vi.advanceTimersByTime(ms);
         await t.finishInProgressScheduledFunctions();
       }),
-    /** A client signed in as any session the test made, by the session's ID and its Better Auth user. */
-    signedIn: (identity: {
-      readonly sessionId: string;
-      readonly subject: string;
-    }) => client(t.withIdentity(identity)),
+    /** A client signed in as any session the test made: an access token's subject is its session. */
+    signedIn: (sessionId: string) =>
+      client(t.withIdentity({ subject: sessionId })),
     as: (account: keyof typeof seeded.users) =>
       client(
         t.withIdentity({ subject: seeded.users[account].sessionId })

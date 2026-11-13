@@ -148,7 +148,7 @@ describe("billing/xendit/checkout", () => {
         expect(ensureCustomer).toHaveBeenCalledExactlyOnceWith({
           email: expect.any(String),
           individual_detail: { given_names: expect.any(String) },
-          reference_id: user.authUserId,
+          reference_id: user.userId,
           type: "INDIVIDUAL",
         });
         expect(vi.mocked(createSession).mock.calls[0]?.[0]).toMatchObject({
@@ -285,7 +285,7 @@ describe("billing/xendit/checkout", () => {
       vi.mocked(createSession).mockReturnValue(
         Effect.promise(() =>
           t.mutation((ctx) =>
-            ctx.db.patch("users", user.userId, { deletionPreparedAt: NOW })
+            ctx.db.patch("users", user.userId, { deletedAt: NOW })
           )
         ).pipe(Effect.as(openedSession()))
       );
@@ -313,7 +313,7 @@ describe("billing/xendit/checkout", () => {
         const { authed, t, user } = yield* setup();
         yield* Effect.promise(() =>
           t.mutation((ctx) =>
-            ctx.db.patch("users", user.userId, { deletionPreparedAt: NOW })
+            ctx.db.patch("users", user.userId, { deletedAt: NOW })
           )
         );
         yield* Effect.promise(() =>

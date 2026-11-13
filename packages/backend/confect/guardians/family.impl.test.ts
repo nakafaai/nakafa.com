@@ -106,13 +106,13 @@ describe("guardians/family children and confirm", () => {
           expect.objectContaining({
             action: "granted",
             checker: link.guardian.id,
-            method: "code_nisn",
+            method: "address_nisn",
           }),
         ]);
         const entry = Arr.last(yield* fixture.run(journal));
         expect(entry).toMatchObject({
           _tag: "Some",
-          value: { change: { method: "code_nisn", type: "guardian.linked" } },
+          value: { change: { method: "address_nisn", type: "guardian.linked" } },
         });
         expect(
           yield* guardian.mutation(confirm, {

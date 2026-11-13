@@ -1,6 +1,5 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import {
-  claimAfterHostedDomain,
   claimAfterInvite,
   claimAfterVerification,
 } from "@repo/backend/confect/tenancy/claims";
@@ -36,7 +35,7 @@ describe("tenancy/claims after verification", () => {
   it.effect("schedules the claim when an invite waits for the address", () =>
     Effect.gen(function* () {
       const fixture = yield* tenancyFixture;
-      const account = yield* fixture.account("guru", address, true);
+      const account = yield* fixture.account("guru", address);
       yield* fixture.run(invitePerson(fixture.tenants.nf, address));
       yield* fixture.run(claimAfterVerification(account.userId, address));
       expect(yield* fixture.run(claimJobs)).toEqual([
@@ -48,7 +47,7 @@ describe("tenancy/claims after verification", () => {
   it.effect("schedules nothing when no invite waits for the address", () =>
     Effect.gen(function* () {
       const fixture = yield* tenancyFixture;
-      const account = yield* fixture.account("guru", address, true);
+      const account = yield* fixture.account("guru", address);
       yield* fixture.run(invitePerson(fixture.tenants.nf, other));
       yield* fixture.run(claimAfterVerification(account.userId, address));
       expect(yield* fixture.run(claimJobs)).toEqual([]);
@@ -58,7 +57,7 @@ describe("tenancy/claims after verification", () => {
   it.effect("counts only a pending invite", () =>
     Effect.gen(function* () {
       const fixture = yield* tenancyFixture;
-      const account = yield* fixture.account("guru", address, true);
+      const account = yield* fixture.account("guru", address);
       yield* fixture.run(
         invitePerson(fixture.tenants.nf, address, {
           invite: { at: 1, status: "revoked" },
@@ -77,7 +76,7 @@ describe("tenancy/claims after verification", () => {
   it.effect("ignores an address in a form that no invite stores", () =>
     Effect.gen(function* () {
       const fixture = yield* tenancyFixture;
-      const account = yield* fixture.account("guru", address, true);
+      const account = yield* fixture.account("guru", address);
       yield* fixture.run(invitePerson(fixture.tenants.nf, address));
       yield* fixture.run(
         claimAfterVerification(account.userId, "Guru@Harapan.Example.Test")
@@ -87,55 +86,14 @@ describe("tenancy/claims after verification", () => {
   );
 });
 
-describe("tenancy/claims after a hosted domain", () => {
-  const domain = "harapan.example.test";
-
-  it.effect(
-    "schedules the claim when a Google sign-in brings a new hosted domain and an invite waits for the address",
-    () =>
-      Effect.gen(function* () {
-        const fixture = yield* tenancyFixture;
-        const account = yield* fixture.account("guru", address, true);
-        yield* fixture.run(invitePerson(fixture.tenants.nf, address));
-        yield* fixture.run(
-          claimAfterHostedDomain(account.authUserId, domain, null)
-        );
-        expect(yield* fixture.run(claimJobs)).toEqual([
-          [{ cursor: null, userId: account.userId }],
-        ]);
-      })
-  );
-
-  it.effect(
-    "schedules nothing for a sign-in without a hosted domain, with the domain the account held, or for an account Nakafa does not hold",
-    () =>
-      Effect.gen(function* () {
-        const fixture = yield* tenancyFixture;
-        const account = yield* fixture.account("guru", address, true);
-        yield* fixture.run(invitePerson(fixture.tenants.nf, address));
-        yield* fixture.run(
-          Effect.all(
-            [
-              claimAfterHostedDomain(account.authUserId, null, undefined),
-              claimAfterHostedDomain(account.authUserId, domain, domain),
-              claimAfterHostedDomain("unknown-auth-user", domain, undefined),
-            ],
-            { discard: true }
-          )
-        );
-        expect(yield* fixture.run(claimJobs)).toEqual([]);
-      })
-  );
-});
-
 describe("tenancy/claims after an invite", () => {
   it.effect(
     "schedules the walk over the accounts that hold the address, and counts none of them itself",
     () =>
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
-        yield* fixture.account("guru", address, true);
-        yield* fixture.account("lain", other, true);
+        yield* fixture.account("guru", address);
+        yield* fixture.account("lain", other);
         yield* fixture.run(claimAfterInvite(address));
         expect(yield* fixture.run(jobsOf("tenancy/holders:schedule"))).toEqual([
           [{ cursor: null, email: address }],

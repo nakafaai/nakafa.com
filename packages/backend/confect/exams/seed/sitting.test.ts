@@ -380,7 +380,7 @@ describe("exams seed sitting", () => {
     () =>
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
-        yield* fixture.account("outsider", "outsider@example.test", true);
+        yield* fixture.account("outsider", "outsider@example.test");
         const exit = yield* Effect.exit(
           fixture.internal.mutation(seed, {
             email: addressOf("outsider@example.test"),

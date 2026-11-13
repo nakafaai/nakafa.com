@@ -4,7 +4,6 @@ import {
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
 import { api } from "@repo/backend/convex/_generated/api";
-import { MASCOT_CODE } from "@repo/backend/test/mascot";
 import { Effect } from "effect";
 
 const NOW = Date.UTC(2026, 7, 31, 12, 0, 0);
@@ -51,43 +50,4 @@ describe("onboarding/queries", () => {
     })
   );
 
-  it.effect("redacts inconsistent account linkage", () =>
-    Effect.gen(function* () {
-      const test = createConvexTestWithAuth();
-      const identity = yield* Effect.promise(() =>
-        test.mutation((ctx) =>
-          seedAuthenticatedUser(ctx, {
-            now: NOW,
-            suffix: "onboarding-query-linkage",
-          })
-        )
-      );
-      yield* Effect.promise(() =>
-        test.mutation((ctx) =>
-          ctx.db.insert("users", {
-            authId: identity.authUserId,
-            credits: 0,
-            creditsResetAt: NOW,
-            email: "duplicate-query-linkage@example.com",
-            mascot: MASCOT_CODE,
-            name: "Duplicate Query Linkage",
-            plan: "free",
-          })
-        )
-      );
-      const authenticated = test.withIdentity({ subject: identity.sessionId });
-
-      yield* Effect.promise(() =>
-        expect(
-          authenticated.query(api.onboarding.queries.getStatus, {})
-        ).rejects.toMatchObject({
-          data: {
-            _tag: "AuthReadError",
-            code: "AUTH_READ_FAILED",
-            message: "Unable to read authentication state.",
-          },
-        })
-      );
-    })
-  );
 });

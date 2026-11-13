@@ -15,7 +15,6 @@ import { Array as Arr, Effect, Exit, Option, Schema } from "effect";
 const seedTeacher = refs.internal.tenancy.seed.teacher;
 const seedStudent = refs.internal.tenancy.seed.student;
 const seedExpired = refs.internal.tenancy.seed.expired;
-const seedUser = refs.internal.tenancy.seed.user;
 const seedInvitation = refs.internal.tenancy.seed.invitation;
 const teacherAddress = Schema.decodeSync(Email)("guru@acceptance.example.test");
 const memberAddress = Schema.decodeSync(Email)("member-0@example.com");
@@ -200,7 +199,7 @@ describe("tenancy/seed student", () => {
     () =>
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
-        yield* fixture.account("walk-in", "walk-in@example.com", true);
+        yield* fixture.account("walk-in", "walk-in@example.com");
         const exit = yield* Effect.exit(
           fixture.internal.mutation(seedStudent, {
             email: walkInAddress,
@@ -277,41 +276,6 @@ describe("tenancy/seed expired", () => {
           "The school holds no pending invite for this address."
         );
       })
-  );
-});
-
-describe("tenancy/seed user", () => {
-  it.effect(
-    "answers the app user of an account, and dies for an account without one",
-    () =>
-      Effect.gen(function* () {
-        const fixture = yield* tenancyFixture;
-        const account = yield* fixture.account(
-          "seed-user",
-          "seed-user@example.com",
-          true
-        );
-        expect(
-          yield* fixture.internal.query(seedUser, {
-            authId: account.authUserId,
-          })
-        ).toBe(account.userId);
-        const exit = yield* Effect.exit(
-          fixture.internal.query(seedUser, { authId: "no-account" })
-        );
-        expect(defectOf(exit)).toContain("The account has no app user.");
-      })
-  );
-
-  it.effect("refuses to read outside the acceptance runtime", () =>
-    Effect.gen(function* () {
-      const fixture = yield* tenancyFixture;
-      vi.stubEnv("ACCEPTANCE_SEED", "false");
-      const refusal = yield* fixture.internal
-        .query(seedUser, { authId: "no-account" })
-        .pipe(Effect.flip);
-      expect(refusal).toMatchObject({ _tag: "SeedRefused" });
-    })
   );
 });
 

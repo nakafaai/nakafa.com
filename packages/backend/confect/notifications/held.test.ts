@@ -15,8 +15,7 @@ describe("notifications/held persons", () => {
         const fixture = yield* tenancyFixture;
         const ana = yield* fixture.account(
           "ana",
-          "ana@harapan.example.test",
-          true
+          "ana@harapan.example.test"
         );
         const persons = yield* claimedPersons(
           fixture,
@@ -38,8 +37,7 @@ describe("notifications/held persons", () => {
         const fixture = yield* tenancyFixture;
         const ana = yield* fixture.account(
           "ana",
-          "ana@harapan.example.test",
-          true
+          "ana@harapan.example.test"
         );
         yield* claimedPersons(fixture, ana.userId, HELD_SCHOOL_LIMIT + 1);
         const refused = yield* fixture.run(

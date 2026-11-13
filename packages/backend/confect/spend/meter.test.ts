@@ -53,7 +53,6 @@ describe("spend/meter", () => {
     const t = createConvexTestWithAuth();
     const userId = await t.run((ctx) =>
       ctx.db.insert("users", {
-        authId: "auth-meter",
         credits: 0,
         creditsResetAt: NOW,
         email: "meter@example.com",

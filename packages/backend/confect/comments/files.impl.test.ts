@@ -1,8 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
-// convex-test imports a function's module, and the Better Auth module behind a signed write, on the first
-// call, inside that test's 5 s, and the cold graph takes longer. Importing them here loads them while the
-// file is collected, so no test pays it.
-import "@repo/backend/components/betterAuth/session";
+// convex-test imports a function's module on the first call, inside that test's 5 s, and the cold graph
+// takes longer. Importing them here loads them while the file is collected, so no test pays it.
 import "@repo/backend/convex/bucket";
 import "@repo/backend/convex/comments/files";
 import "@repo/backend/convex/comments/mutations";

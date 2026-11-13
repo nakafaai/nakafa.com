@@ -30,7 +30,6 @@ describe("analytics erasure request", () => {
       const userId = yield* Effect.promise(() =>
         t.mutation((ctx) =>
           ctx.db.insert("users", {
-            authId: "erasure-request-user",
             credits: 0,
             creditsResetAt: 0,
             email: "erasure-request@example.com",
@@ -61,7 +60,6 @@ describe("analytics erasure request", () => {
       const userId = yield* Effect.promise(() =>
         t.mutation((ctx) =>
           ctx.db.insert("users", {
-            authId: "durable-erasure-request-user",
             credits: 0,
             creditsResetAt: 0,
             email: "durable-erasure-request@example.com",
@@ -105,7 +103,6 @@ describe("analytics erasure request", () => {
       const userId = yield* Effect.promise(() =>
         t.mutation((ctx) =>
           ctx.db.insert("users", {
-            authId: "failed-erasure-request-user",
             credits: 0,
             creditsResetAt: 0,
             email: "failed-erasure-request@example.com",
