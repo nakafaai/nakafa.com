@@ -123,9 +123,9 @@ export const GITHUB_ACTION_REVIEWS = Schema.decodeSync(
     action: "actions/upload-artifact",
     approvedSha: "cf430e030ddbb5b0abf93d22962f4752f3646cd9",
     expectedTag: "v7.0.2",
-    expectedUsages: 5,
+    expectedUsages: 7,
     reason:
-      "Separated CLI artifacts use the reviewed release, and the proof workflow hands its build to the spec machines and keeps each shard's result and failure traces.",
+      "Separated CLI artifacts use the reviewed release, and the proof workflow hands its build to the spec machines and keeps each engine's shard result and the failure traces.",
   },
   {
     action: "actions/download-artifact",
