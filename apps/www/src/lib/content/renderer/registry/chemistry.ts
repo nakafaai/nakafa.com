@@ -23,6 +23,10 @@ import {
   SubatomicParticlesLab,
 } from "@/lib/content/renderer/client/chemistry/particles";
 import {
+  MoleculeLab,
+  ReactionLab,
+} from "@/lib/content/renderer/client/chemistry/molecule";
+import {
   ModernPeriodicTableLab,
   PeriodicPropertiesLab,
 } from "@/lib/content/renderer/client/chemistry/periodic";
@@ -96,12 +100,20 @@ export const chemistryRenderers = [
     component: ModernPeriodicTableLab,
   },
   {
+    name: chemistryComponentNames.moleculeLab,
+    component: MoleculeLab,
+  },
+  {
     name: chemistryComponentNames.multipleProportionsLab,
     component: MultipleProportionsLab,
   },
   {
     name: chemistryComponentNames.periodicPropertiesLab,
     component: PeriodicPropertiesLab,
+  },
+  {
+    name: chemistryComponentNames.reactionLab,
+    component: ReactionLab,
   },
   {
     name: chemistryComponentNames.subatomicParticlePropertiesLab,
