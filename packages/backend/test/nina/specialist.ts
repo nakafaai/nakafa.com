@@ -17,7 +17,7 @@ import type {
 } from "@repo/backend/confect/nina/contract/agent";
 import type { Meter } from "@repo/backend/confect/spend/meter";
 import {
-  createConvexTestWithBetterAuth,
+  createConvexTestWithAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
 import { GatewayIsolated } from "@repo/backend/test/gateway";
@@ -58,7 +58,7 @@ export async function runSpecialist<A, E>(
     ActionCtx | Gateway | Meter | QueryRunner | VectorSearch
   >
 ) {
-  const t = createConvexTestWithBetterAuth();
+  const t = createConvexTestWithAuth();
   const { userId } = await t.mutation((ctx) =>
     seedAuthenticatedUser(ctx, {
       // The real clock, which the credit ledger also reads. A fixed past time

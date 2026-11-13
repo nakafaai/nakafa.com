@@ -5,7 +5,6 @@ import {
   resolveLegalLinks,
 } from "@repo/backend/confect/emails/legal";
 import {
-  deferWelcomeIntent,
   toWelcomeIntentError,
 } from "@repo/backend/confect/emails/welcome/impl";
 import type { welcomeIntentInputValidator } from "@repo/backend/confect/emails/welcome/schema";
@@ -53,9 +52,6 @@ export const readWelcomeIntentInput = Effect.fn(
       );
     if (!user || user.deletedAt !== undefined) {
       return null;
-    }
-    if (user.deletionPreparedAt !== undefined) {
-      return yield* deferWelcomeIntent();
     }
     const catalog = yield* readPageCatalog().pipe(
       Effect.provide(publicationLayer)

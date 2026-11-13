@@ -9,7 +9,7 @@ import {
 import { verifyContentRuntimeExchange } from "@nakafa/aksara-contracts/runtime/verify";
 import { ContentVerificationKeyResolver } from "@nakafa/aksara-contracts/signature/spec";
 import { decodeRendererJson } from "@repo/backend/confect/contentRelease/parse";
-import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
+import { createConvexTestWithAuth } from "@repo/backend/confect/test.helpers";
 import {
   CONTENT_RUNTIME_RESPONSE_HEADER,
   CONTENT_RUNTIME_RESPONSE_MARKER,
@@ -43,7 +43,7 @@ const decodePublicRequestJson = Schema.decodeUnknownEffect(publicRequestJson, {
 const encodePublicRequestJson = Schema.encodeUnknownSync(publicRequestJson);
 /** Encodes a body the contract rejects, keeping its exact invalid wire bytes. */
 const malformedJson = Schema.encodeUnknownSync(JsonTextSchema);
-type RuntimeTest = ReturnType<typeof createConvexTestWithBetterAuth>;
+type RuntimeTest = ReturnType<typeof createConvexTestWithAuth>;
 type RuntimeFetcher = Pick<RuntimeTest, "fetch">;
 /** Sends one request through the actual registered Convex HTTP route. */
 function post(
@@ -92,7 +92,7 @@ describe("public content runtime HTTP route", () => {
     const digest = vi
       .spyOn(crypto.subtle, "digest")
       .mockRejectedValueOnce(new Error("Hash service unavailable."));
-    const response = await post(createConvexTestWithBetterAuth(), "{}");
+    const response = await post(createConvexTestWithAuth(), "{}");
     digest.mockRestore();
     expect(response.status).toBe(500);
     await expect(response.json()).resolves.toEqual({
@@ -101,7 +101,7 @@ describe("public content runtime HTTP route", () => {
     });
   });
   it("returns the current publication contract on the canonical path", async () => {
-    const t = createConvexTestWithBetterAuth();
+    const t = createConvexTestWithAuth();
     await seedRuntime(t, "public");
 
     const response = await post(t, publicRuntimeRequest());
@@ -116,7 +116,7 @@ describe("public content runtime HTTP route", () => {
   it.each([undefined, "wrong-token"])(
     "rejects token %s before consuming a request body",
     async (token) => {
-      const t = createConvexTestWithBetterAuth();
+      const t = createConvexTestWithAuth();
       let pulls = 0;
       const body = new ReadableStream<Uint8Array>(
         {
@@ -171,11 +171,7 @@ describe("public content runtime HTTP route", () => {
   ] as const)(
     "rejects invalid bounded input",
     async (body, headers, status) => {
-      const response = await post(
-        createConvexTestWithBetterAuth(),
-        body,
-        headers
-      );
+      const response = await post(createConvexTestWithAuth(), body, headers);
       expect(response.status).toBe(status);
       await expect(response.json()).resolves.toEqual({
         code: "CONTENT_RUNTIME_INVALID",
@@ -187,7 +183,7 @@ describe("public content runtime HTTP route", () => {
     "transports evidence for application verification and exact absence",
     () =>
       Effect.gen(function* () {
-        const t = createConvexTestWithBetterAuth();
+        const t = createConvexTestWithAuth();
         yield* Effect.promise(() => seedRuntime(t, "public"));
         const found = yield* Effect.promise(() =>
           post(t, publicRuntimeRequest())
@@ -227,7 +223,7 @@ describe("public content runtime HTTP route", () => {
   );
   it.live("rejects found rows that do not belong to the exact request", () =>
     Effect.gen(function* () {
-      const t = createConvexTestWithBetterAuth();
+      const t = createConvexTestWithAuth();
       yield* Effect.promise(() => seedRuntime(t, "public"));
       const row = yield* Effect.promise(() =>
         t.query(internal.contentRelease.runtime.publication.internal.read, {
@@ -260,7 +256,7 @@ describe("public content runtime HTTP route", () => {
     })
   );
   it("rejects non-public delivery even when its stored head exists", async () => {
-    const t = createConvexTestWithBetterAuth();
+    const t = createConvexTestWithAuth();
     await seedRuntime(t, "authenticated");
     const response = await post(
       t,
@@ -277,7 +273,7 @@ describe("public content runtime HTTP route", () => {
     });
   });
   it("fails closed for corrupt or oversized runtime state", async () => {
-    const corrupt = createConvexTestWithBetterAuth();
+    const corrupt = createConvexTestWithAuth();
     await seedRuntime(corrupt, "public");
     await corrupt.mutation(async (ctx) => {
       const head = await ctx.db.query("contentHeads").unique();
@@ -288,7 +284,7 @@ describe("public content runtime HTTP route", () => {
         projectionHash: `sha256:${"f".repeat(64)}`,
       });
     });
-    const oversized = createConvexTestWithBetterAuth();
+    const oversized = createConvexTestWithAuth();
     await oversized.mutation(async (ctx) => {
       await insertRuntimeRelease(ctx);
       await insertRuntimeHead(ctx, "public", runtimeContentKey("public"), {

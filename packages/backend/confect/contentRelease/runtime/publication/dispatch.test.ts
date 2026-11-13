@@ -18,7 +18,7 @@ import {
   decodeRendererJson,
 } from "@repo/backend/confect/contentRelease/parse";
 import { dispatchProgram } from "@repo/backend/confect/contentRelease/runtime/publication/dispatch";
-import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
+import { createConvexTestWithAuth } from "@repo/backend/confect/test.helpers";
 import { internal } from "@repo/backend/convex/_generated/api";
 import {
   FUNCTION_MATERIAL_JSON,
@@ -47,7 +47,7 @@ import { insertSignedHead } from "@repo/backend/test/runtime/head";
 import { TEST_RUNTIME_PATH } from "@repo/backend/test/runtime/values";
 import { Effect, Schema } from "effect";
 
-type RuntimeTest = ReturnType<typeof createConvexTestWithBetterAuth>;
+type RuntimeTest = ReturnType<typeof createConvexTestWithAuth>;
 type RuntimeAction = Pick<RuntimeTest, "action">;
 const encodePublicRequestBody = Schema.encodeUnknownSync(
   Schema.fromJsonString(PublicContentRuntimeRequestSchema)
@@ -79,7 +79,7 @@ describe("contentRelease/runtime/publication/dispatch", () => {
     "returns one fully authenticated public artifact and exact absence",
     () =>
       Effect.gen(function* () {
-        const t = createConvexTestWithBetterAuth();
+        const t = createConvexTestWithAuth();
         yield* Effect.promise(() => seedSigned(t, "public"));
         const row = yield* Effect.promise(() =>
           t.query(internal.contentRelease.runtime.publication.internal.read, {
@@ -163,7 +163,7 @@ describe("contentRelease/runtime/publication/dispatch", () => {
       })
   );
   it("authenticates the real pair-grouped article source end to end", async () => {
-    const t = createConvexTestWithBetterAuth();
+    const t = createConvexTestWithAuth();
     await t.mutation(async (ctx) => {
       await insertSignedRelease(ctx);
       await insertSignedHead(ctx, "public", TEST_ARTICLE_KEY, {
@@ -200,7 +200,7 @@ describe("contentRelease/runtime/publication/dispatch", () => {
     });
   });
   it("authenticates one signed public page end to end", async () => {
-    const t = createConvexTestWithBetterAuth();
+    const t = createConvexTestWithAuth();
     await t.mutation(async (ctx) => {
       await insertSignedRelease(ctx);
       await insertSignedHead(ctx, "public", TEST_PAGE_KEY, {
@@ -236,7 +236,7 @@ describe("contentRelease/runtime/publication/dispatch", () => {
     });
   });
   it("authenticates the exact active canonical material", async () => {
-    const t = createConvexTestWithBetterAuth();
+    const t = createConvexTestWithAuth();
     await t.mutation(async (ctx) => {
       await insertSignedRelease(ctx);
       await insertSignedHead(ctx, "public", FUNCTION_MATERIAL_KEY, {
@@ -276,7 +276,7 @@ describe("contentRelease/runtime/publication/dispatch", () => {
     );
   });
   it("rejects malformed, mismatched, and oversized request bytes", async () => {
-    const t = createConvexTestWithBetterAuth();
+    const t = createConvexTestWithAuth();
     const source = encodePublicRequestBody({
       delivery: "public",
       appLocale: "en",
@@ -300,7 +300,7 @@ describe("contentRelease/runtime/publication/dispatch", () => {
     });
   });
   it("returns an internal failure when the runtime cannot hash a read row", async () => {
-    const t = createConvexTestWithBetterAuth();
+    const t = createConvexTestWithAuth();
     await seedSigned(t, "public");
     const source = encodePublicRequestBody({
       delivery: "public",
@@ -331,7 +331,7 @@ describe("contentRelease/runtime/publication/dispatch", () => {
     });
   });
   it("fails closed when authenticated stored evidence is tampered", async () => {
-    const t = createConvexTestWithBetterAuth();
+    const t = createConvexTestWithAuth();
     await seedSigned(t, "public");
     await t.mutation(async (ctx) => {
       const head = await ctx.db.query("contentHeads").unique();
@@ -359,7 +359,7 @@ describe("contentRelease/runtime/publication/dispatch", () => {
   it.each(["invalid", "rejected"])(
     "sanitizes a %s query response at the action boundary",
     async (failure) => {
-      const t = createConvexTestWithBetterAuth();
+      const t = createConvexTestWithAuth();
       const source = encodePublicRequestBody({
         delivery: "public",
         appLocale: "en",

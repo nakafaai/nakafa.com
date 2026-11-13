@@ -1,5 +1,5 @@
 import { assert } from "@effect/vitest";
-import type { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
+import type { createConvexTestWithAuth } from "@repo/backend/confect/test.helpers";
 import {
   insertRuntimeArticles,
   testArticleProjection,
@@ -18,7 +18,7 @@ import {
 } from "@repo/backend/test/runtime/values";
 import { Array as Arr, Effect } from "effect";
 
-type BackendTest = ReturnType<typeof createConvexTestWithBetterAuth>;
+type BackendTest = ReturnType<typeof createConvexTestWithAuth>;
 
 /** Publishes one signed article whose text the search index covers. */
 export async function seedArticle(test: BackendTest) {

@@ -126,24 +126,153 @@ export declare const api: {
     };
   };
   auth: {
-    deletion: {
-      cancelAccountDeletionAttempt: FunctionReference<
+    core: {
+      completeSignInWithGoogle: FunctionReference<
         "mutation",
         "public",
-        { attemptId: string },
-        "complete"
+        { code: string; state: string },
+        | {
+            status: "complete";
+            tokens: {
+              accessToken: string;
+              refreshToken: string;
+              refreshTokenExpiresAt: number;
+              userId: string;
+            };
+          }
+        | { status: "error"; userError: { error: "INVALID_CODE" } }
       >;
-      getAccountDeletionAttemptStatus: FunctionReference<
+      isAuthenticated: FunctionReference<"query", "public", {}, boolean>;
+      refreshSession: FunctionReference<
+        "mutation",
+        "public",
+        { refreshToken: string },
+        | {
+            kind: "rotated";
+            tokens: {
+              accessToken: string;
+              refreshToken: string;
+              refreshTokenExpiresAt: number;
+              userId: string;
+            };
+          }
+        | { kind: "noSession" }
+      >;
+      signInWithUsernamePassword: FunctionReference<
+        "mutation",
+        "public",
+        { password: string; username: string },
+        | {
+            status: "complete";
+            tokens: {
+              accessToken: string;
+              refreshToken: string;
+              refreshTokenExpiresAt: number;
+              userId: string;
+            };
+          }
+        | {
+            status: "error";
+            userError:
+              | { error: "PASSWORD_TOO_SHORT"; minimumLength: number }
+              | { error: "PASSWORD_TOO_LONG"; maximumLength: number }
+              | { error: "PASSWORD_HAS_SURROUNDING_WHITESPACE" }
+              | { error: "INVALID_CREDENTIALS" }
+              | { error: "RATE_LIMITED"; retryAfterMs: number }
+              | { error: "USER_NOT_FOUND" };
+          }
+      >;
+      signOut: FunctionReference<
+        "mutation",
+        "public",
+        { refreshToken: string },
+        null
+      >;
+      startSignInWithGoogle: FunctionReference<
+        "mutation",
+        "public",
+        { redirectTo: string },
+        { redirect: string; state: string }
+      >;
+    };
+    deletion: {
+      deleteAccount: FunctionReference<"mutation", "public", {}, null>;
+    };
+    grant: {
+      authorize: FunctionReference<
+        "mutation",
+        "public",
+        { clientId: string; codeChallenge: string; redirectUri: string },
+        { code: string }
+      >;
+      describe: FunctionReference<
         "query",
         "public",
-        { attemptId: string },
-        "committed" | "pending" | "unknown"
+        { clientId: string },
+        { name: string; redirect: string | null } | null
       >;
-      prepareCurrentAccountDeletion: FunctionReference<
+      exchange: FunctionReference<
         "mutation",
         "public",
-        { attemptId: string },
-        "ready" | "temporarily-unavailable"
+        {
+          clientId: string;
+          code: string;
+          codeVerifier: string;
+          redirectUri: string;
+        },
+        | {
+            outcome: "issued";
+            tokens: {
+              access_token: string;
+              expires_in: number;
+              refresh_token: string;
+              scope: string;
+              token_type: "Bearer";
+            };
+          }
+        | {
+            error: "invalid_grant";
+            error_description: string;
+            outcome: "refused";
+          }
+      >;
+      list: FunctionReference<
+        "query",
+        "public",
+        {},
+        Array<{ grantId: Id<"agentGrants">; name: string; refreshedAt: number }>
+      >;
+      refresh: FunctionReference<
+        "mutation",
+        "public",
+        { clientId: string; refreshToken: string },
+        | {
+            outcome: "issued";
+            tokens: {
+              access_token: string;
+              expires_in: number;
+              refresh_token: string;
+              scope: string;
+              token_type: "Bearer";
+            };
+          }
+        | {
+            error: "invalid_grant";
+            error_description: string;
+            outcome: "refused";
+          }
+      >;
+      register: FunctionReference<
+        "mutation",
+        "public",
+        { name: string; redirectUris: Array<string> },
+        { clientId: Id<"agentClients"> }
+      >;
+      revoke: FunctionReference<
+        "mutation",
+        "public",
+        { grantId: Id<"agentGrants"> },
+        null
       >;
     };
     queries: {
@@ -155,14 +284,12 @@ export declare const api: {
           appUser: {
             _creationTime: number;
             _id: Id<"users">;
-            authId: string;
-            authVerificationCleanupCursor?: string;
+            authId?: string;
             bio?: string;
             credits: number;
             creditsResetAt: number;
             deletedAt?: number;
             deletionCleanupStartedAt?: number;
-            deletionPreparedAt?: number;
             email: string;
             image?: string;
             mascot: string;
@@ -172,12 +299,6 @@ export declare const api: {
             planCreditGrantId?: Id<"creditTransactions">;
             role?: "teacher" | "student" | "parent" | "administrator";
             username?: string;
-          };
-          authUser: {
-            _id: string;
-            email: string;
-            image?: string | null;
-            name: string;
           };
         } | null
       >;
@@ -191,6 +312,23 @@ export declare const api: {
           name: string;
           picture?: "animal" | "photo";
         } | null
+      >;
+    };
+    school: {
+      signIn: FunctionReference<
+        "mutation",
+        "public",
+        { loginName: string; password: string; slug: string },
+        | {
+            status: "complete";
+            tokens: {
+              accessToken: string;
+              refreshToken: string;
+              refreshTokenExpiresAt: number;
+              userId: string;
+            };
+          }
+        | { status: "error"; userError: { error: "INVALID_CREDENTIALS" } }
       >;
     };
   };
@@ -9350,19 +9488,6 @@ export declare const api: {
     };
   };
   guardians: {
-    codes: {
-      send: FunctionReference<
-        "mutation",
-        "public",
-        {
-          deviceId: string;
-          email: string;
-          locale: "en" | "id" | "de";
-          slug: string;
-        },
-        { expiresAt: number }
-      >;
-    };
     family: {
       children: FunctionReference<
         "query",
@@ -9644,6 +9769,7 @@ export declare const api: {
             reason:
               | "expired"
               | "invalid"
+              | "passwordRejected"
               | "passwordTooLong"
               | "passwordTooShort"
               | "rateLimited"
@@ -10899,7 +11025,7 @@ export declare const api: {
                   type: "guardian.started";
                 }
               | {
-                  method: "code_nisn" | "staff";
+                  method: "address_nisn" | "staff";
                   student: Id<"tenantPeople">;
                   type: "guardian.linked";
                 }
@@ -10981,8 +11107,8 @@ export declare const api: {
                 }
               | {
                   method:
+                    | "address"
                     | "card"
-                    | "code"
                     | "invite"
                     | "operator"
                     | "founder"
@@ -16056,6 +16182,22 @@ export declare const api: {
  * ```
  */
 export declare const internal: {
+  acceptance: {
+    accounts: {
+      create: FunctionReference<
+        "mutation",
+        "internal",
+        { email: string; name: string },
+        { password: string; userId: Id<"users"> }
+      >;
+      profile: FunctionReference<
+        "mutation",
+        "internal",
+        { image?: string; name?: string; userId: Id<"users"> },
+        null
+      >;
+    };
+  };
   analytics: {
     capture: {
       deliverProductEvent: FunctionReference<
@@ -16112,19 +16254,76 @@ export declare const internal: {
     };
   };
   auth: {
-    actions: {
-      getLatestJwks: FunctionReference<
-        "action",
+    account: {
+      createGoogle: FunctionReference<
+        "mutation",
+        "internal",
+        {
+          method: {
+            name: "google";
+            profile: {
+              email?: string;
+              emailVerified: boolean;
+              id: string;
+              name?: string;
+              picture?: string;
+            };
+          };
+        },
+        Id<"users">
+      >;
+      createSchool: FunctionReference<
+        "mutation",
+        "internal",
+        { method: { name: "usernamePassword"; profile: {} } },
+        Id<"users">
+      >;
+      signInGoogle: FunctionReference<
+        "mutation",
+        "internal",
+        {
+          method: {
+            name: "google";
+            profile: {
+              email?: string;
+              emailVerified: boolean;
+              id: string;
+              name?: string;
+              picture?: string;
+            };
+          };
+          userId: Id<"users">;
+        },
+        null
+      >;
+    };
+    caller: {
+      read: FunctionReference<
+        "query",
         "internal",
         {},
-        Array<{
-          alg: "RS256";
-          createdAt: number;
-          expiresAt?: null | number;
-          id: string;
-          privateKey: string;
-          publicKey: string;
-        }>
+        {
+          appUser: {
+            _creationTime: number;
+            _id: Id<"users">;
+            authId?: string;
+            bio?: string;
+            credits: number;
+            creditsResetAt: number;
+            deletedAt?: number;
+            deletionCleanupStartedAt?: number;
+            email: string;
+            image?: string;
+            mascot: string;
+            name: string;
+            picture?: "animal" | "photo";
+            plan: "free" | "pro";
+            planCreditGrantId?: Id<"creditTransactions">;
+            role?: "teacher" | "student" | "parent" | "administrator";
+            username?: string;
+          } | null;
+          userId: Id<"users"> | null;
+        }
       >;
     };
     cleanup: {
@@ -16142,25 +16341,6 @@ export declare const internal: {
       >;
     };
     deletion: {
-      cancelAccountDeletion: FunctionReference<
-        "mutation",
-        "internal",
-        {
-          authId: string;
-          expectedPreparation: {
-            attemptId: string;
-            preparationId: Id<"accountDeletionPreparations">;
-            recoveryGeneration: number;
-          };
-        },
-        null
-      >;
-      claimAccountDeletion: FunctionReference<
-        "mutation",
-        "internal",
-        { attemptId: string; authId: string },
-        "ready" | "temporarily-unavailable"
-      >;
       cleanup: {
         cleanupDeletedUserAnalytics: FunctionReference<
           "mutation",
@@ -16183,32 +16363,11 @@ export declare const internal: {
                 | { kind: "canceled" };
             }
         >;
-        cleanupDeletedUserAuth: FunctionReference<
-          "mutation",
-          "internal",
-          {
-            args?: { authId: string; userId: Id<"users"> };
-            context?: any;
-            docs?: "To call a workflow directly, nest its arguments: { args: { ...yourWorkflowArgs } }";
-            generationNumber?: number;
-            onComplete?: string;
-            startAsync?: boolean;
-            workflowId?: string;
-          },
-          | string
-          | {
-              kind: "complete";
-              runResult:
-                | { kind: "success"; returnValue: null }
-                | { error: string; kind: "failed" }
-                | { kind: "canceled" };
-            }
-        >;
         cleanupDeletedUserBilling: FunctionReference<
           "mutation",
           "internal",
           {
-            args?: { authId: string; userId: Id<"users"> };
+            args?: { userId: Id<"users"> };
             context?: any;
             docs?: "To call a workflow directly, nest its arguments: { args: { ...yourWorkflowArgs } }";
             generationNumber?: number;
@@ -16247,107 +16406,23 @@ export declare const internal: {
             }
         >;
       };
-      continueAccountDeletionCommit: FunctionReference<
-        "mutation",
-        "internal",
-        {
-          authId: string;
-          expectedPreparation: {
-            attemptId: string;
-            preparationId: Id<"accountDeletionPreparations">;
-            recoveryGeneration: number;
-          };
-        },
-        boolean
-      >;
-      recovery: {
-        recoverAccountDeletion: FunctionReference<
-          "action",
-          "internal",
-          {
-            authId: string;
-            expectedPreparation: {
-              attemptId: string;
-              preparationId: Id<"accountDeletionPreparations">;
-              recoveryGeneration: number;
-            };
-          },
-          null
-        >;
-        sweepAccountDeletionRecovery: FunctionReference<
+      workflow: {
+        finalize: FunctionReference<
           "mutation",
-          "internal",
-          {},
-          null
-        >;
-      };
-      sweepAccountDeletionRetention: FunctionReference<
-        "mutation",
-        "internal",
-        {},
-        null
-      >;
-      verification: {
-        drainDeletedUserVerifications: FunctionReference<
-          "action",
-          "internal",
-          { authId: string; userId: Id<"users"> },
-          null
-        >;
-        loadDeletedUserVerificationCursor: FunctionReference<
-          "query",
           "internal",
           { userId: Id<"users"> },
-          null | string
-        >;
-        saveDeletedUserVerificationCursor: FunctionReference<
-          "mutation",
-          "internal",
-          { cursor: null | string; userId: Id<"users"> },
           null
         >;
-      };
-      workflow: {
-        finalizeDeletedUserCleanup: FunctionReference<
+        launch: FunctionReference<
           "mutation",
           "internal",
-          {
-            authId: string;
-            expectedPreparation?: {
-              attemptId: string;
-              preparationId: Id<"accountDeletionPreparations">;
-              recoveryGeneration: number;
-            };
-          },
-          null
-        >;
-        launchDeletedUserCleanup: FunctionReference<
-          "mutation",
-          "internal",
-          { authId: string; userId: Id<"users"> },
+          { userId: Id<"users"> },
           null
         >;
       };
     };
-    lifecycle: {
-      onCreate: FunctionReference<
-        "mutation",
-        "internal",
-        { doc: any; model: string },
-        any
-      >;
-      onDelete: FunctionReference<
-        "mutation",
-        "internal",
-        { doc: any; model: string },
-        any
-      >;
-      onUpdate: FunctionReference<
-        "mutation",
-        "internal",
-        { model: string; newDoc: any; oldDoc: any },
-        any
-      >;
+    grant: {
+      sweep: FunctionReference<"mutation", "internal", {}, null>;
     };
   };
   billing: {
@@ -16355,7 +16430,7 @@ export declare const internal: {
       linkPolarCustomer: FunctionReference<
         "mutation",
         "internal",
-        { authId: string; country: string; providerCustomerId: string },
+        { country: string; externalId: string; providerCustomerId: string },
         "linked" | "noUser" | "unavailable" | "conflict"
       >;
     };
@@ -16482,7 +16557,6 @@ export declare const internal: {
         { userId: Id<"users"> },
         | {
             accountId: Id<"billingAccounts">;
-            authId: string;
             email: string;
             kind: "open";
             name: string;
@@ -16552,7 +16626,7 @@ export declare const internal: {
       cleanupDeletedUserBilling: FunctionReference<
         "action",
         "internal",
-        { authId: string; userId: Id<"users"> },
+        { userId: Id<"users"> },
         null
       >;
       deleteRows: FunctionReference<
@@ -16882,7 +16956,6 @@ export declare const internal: {
           },
           {
             accountId: Id<"billingAccounts">;
-            authId: string;
             email: string;
             name: string;
             openUrl: string | null;
@@ -19578,7 +19651,7 @@ export declare const internal: {
           seats: Array<{ key: string; name: string; token: string }>;
           slug: string;
         },
-        null
+        Array<Id<"users">>
       >;
       sitting: FunctionReference<
         "mutation",
@@ -19631,33 +19704,16 @@ export declare const internal: {
     };
   };
   guardians: {
-    codes: {
-      redeem: FunctionReference<
-        "mutation",
-        "internal",
-        { code: string; email: string; slug: string },
-        { authId: string; outcome: "signedIn" } | { outcome: "refused" }
-      >;
-      sweep: FunctionReference<"mutation", "internal", {}, null>;
-    };
     seed: {
-      code: FunctionReference<
+      account: FunctionReference<
         "mutation",
         "internal",
         { email: string; nisn: string; slug: string },
-        { code: string }
+        { password: string; userId: Id<"users"> }
       >;
     };
   };
   identity: {
-    logins: {
-      usernameOf: FunctionReference<
-        "query",
-        "internal",
-        { loginName: string; slug: string },
-        { outcome: "found"; username: string } | { outcome: "missing" }
-      >;
-    };
     seed: {
       card: FunctionReference<
         "mutation",
@@ -21351,12 +21407,6 @@ export declare const internal: {
         },
         { invite: Id<"tenantInvites">; person: Id<"tenantPeople"> }
       >;
-      user: FunctionReference<
-        "query",
-        "internal",
-        { authId: string },
-        Id<"users">
-      >;
     };
   };
   triggers: {
@@ -21400,36 +21450,6 @@ export declare const internal: {
       };
     };
   };
-  users: {
-    queries: {
-      getUserByAuthId: FunctionReference<
-        "query",
-        "internal",
-        { authId: string },
-        {
-          _creationTime: number;
-          _id: Id<"users">;
-          authId: string;
-          authVerificationCleanupCursor?: string;
-          bio?: string;
-          credits: number;
-          creditsResetAt: number;
-          deletedAt?: number;
-          deletionCleanupStartedAt?: number;
-          deletionPreparedAt?: number;
-          email: string;
-          image?: string;
-          mascot: string;
-          name: string;
-          picture?: "animal" | "photo";
-          plan: "free" | "pro";
-          planCreditGrantId?: Id<"creditTransactions">;
-          role?: "teacher" | "student" | "parent" | "administrator";
-          username?: string;
-        } | null
-      >;
-    };
-  };
   vault: {
     keys: {
       rewrap: FunctionReference<"mutation", "internal", {}, number>;
@@ -21438,7 +21458,10 @@ export declare const internal: {
 };
 
 export declare const components: {
-  betterAuth: import("@repo/backend/components/betterAuth/_generated/component.js").ComponentApi<"betterAuth">;
+  auth: import("@convex-dev/auth/_generated/component.js").ComponentApi<"auth">;
+  authGoogle: import("@convex-dev/auth/components/google/_generated/component.js").ComponentApi<"authGoogle">;
+  authUsername: import("@convex-dev/auth/components/username/_generated/component.js").ComponentApi<"authUsername">;
+  authPassword: import("@convex-dev/auth/components/password/_generated/component.js").ComponentApi<"authPassword">;
   nina: import("@convex-dev/agent/_generated/component.js").ComponentApi<"nina">;
   presence: import("@convex-dev/presence/_generated/component.js").ComponentApi<"presence">;
   agentRateLimiter: import("@convex-dev/rate-limiter/_generated/component.js").ComponentApi<"agentRateLimiter">;

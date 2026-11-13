@@ -19,7 +19,7 @@ import {
   WORKFLOW_RECOVERY_DELAY_MS,
 } from "@repo/backend/confect/privacy/recovery";
 import { cleanupSource } from "@repo/backend/confect/privacy/spec";
-import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
+import { createConvexTestWithAuth } from "@repo/backend/confect/test.helpers";
 import { workflow } from "@repo/backend/confect/workflow";
 import { internal } from "@repo/backend/convex/_generated/api";
 import { registerWorkflow } from "@repo/backend/test/workflow";
@@ -67,11 +67,10 @@ async function admit() {
       });
     })
   );
-  const t = createConvexTestWithBetterAuth();
+  const t = createConvexTestWithAuth();
   await registerWorkflow(t);
   const userId = await t.mutation((ctx) =>
     ctx.db.insert("users", {
-      authId: "privacy-recovery-user",
       credits: 0,
       creditsResetAt: NOW,
       email: "privacy-recovery@example.invalid",

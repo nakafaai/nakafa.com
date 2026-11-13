@@ -14,7 +14,9 @@ import {
   LOGIN_NAME_MIN_LENGTH,
   LOGIN_NAME_PATTERN,
 } from "@repo/backend/confect/identity/schema";
+import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { isMisleadingName } from "@repo/backend/confect/users/reserved";
+import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { Effect, Option, pipe, Result, String as Str, Struct } from "effect";
 
 /**
@@ -54,6 +56,51 @@ export const loginOf = Effect.fn("identity.logins.of")(function* (
       Effect.catchTag("GetByIndexFailure", () => Effect.succeedNone),
       Effect.orDie
     );
+});
+
+/**
+ * The account that one school login signs in to on its school's host (ADR 0009),
+ * or none. A name the school cannot hold, an unknown school or name, a Person
+ * who is not active, and an account that a card did not make all read as none,
+ * so the answer never tells a visitor which of them held: only a card sets a
+ * password, so only a card account has one to check. Every read is indexed.
+ */
+export const loginAccountOf = Effect.fn("identity.logins.account")(function* (
+  slug: TenantSlug,
+  loginName: string
+) {
+  const name = readLoginName(loginName);
+  if (Result.isFailure(name)) {
+    return Option.none<Id<"users">>();
+  }
+  const reader = yield* DatabaseReader;
+  const tenant = yield* reader
+    .table("tenants")
+    .index("by_slug", (query) => query.eq("slug", slug))
+    .first()
+    .pipe(Effect.orDie);
+  if (Option.isNone(tenant)) {
+    return Option.none<Id<"users">>();
+  }
+  const login = yield* reader
+    .table("schoolLogins")
+    .index("by_tenantId_and_name", (query) =>
+      query.eq("tenantId", tenant.value._id).eq("name", name.success)
+    )
+    .first()
+    .pipe(Effect.orDie);
+  if (Option.isNone(login)) {
+    return Option.none<Id<"users">>();
+  }
+  const person = yield* reader
+    .table("tenantPeople")
+    .get(login.value.personId)
+    .pipe(Effect.orDie);
+  return person.status === "active" &&
+    person.account.state === "claimed" &&
+    person.account.method === "card"
+    ? Option.some(person.account.userId)
+    : Option.none<Id<"users">>();
 });
 
 /** Whether a Person of the school already holds the login name: one indexed read. */

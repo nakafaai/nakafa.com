@@ -5,126 +5,57 @@ import {
   Scheduler,
 } from "@repo/backend/confect/_generated/services";
 import { toUserCleanupError } from "@repo/backend/confect/auth/cleanup/spec";
-import { ACCOUNT_DELETION_RECONCILIATION_DELAY_MS } from "@repo/backend/confect/auth/deletion/constants";
-import { recordAccountDeletionReceipt } from "@repo/backend/confect/auth/deletion/receipt";
+import { ACCOUNT_DELETION_TRANSACTION_BATCH_SIZE } from "@repo/backend/confect/auth/deletion/constants";
+import { deleteAccountAgents } from "@repo/backend/confect/auth/grant/agents";
 import { releaseTenantPeople } from "@repo/backend/confect/auth/deletion/release";
-import type { AccountDeletionPreparationVersion } from "@repo/backend/confect/auth/deletion/spec";
 import { createDeletedUserTombstone } from "@repo/backend/confect/auth/deletion/tombstone";
-import { Clock, Duration, Effect, flow } from "effect";
+import type { Id } from "@repo/backend/convex/_generated/dataModel";
+import { Duration, Effect, flow, Option } from "effect";
+
 /**
- * Releases the account's Persons and finalizes the preparation only after
- * Better Auth confirms that its user row is gone, then journals durable
- * personal-data cleanup.
+ * Finishes a deleted account: deletes the agents it let in and releases its
+ * Persons, one bounded batch per transaction, then replaces the profile with the tombstone that shared records
+ * keep (`deletion/tombstone`) and starts the durable cleanup of everything else.
+ * A run that finds more agents or Persons schedules the next one; an account that is not
+ * deleted, or whose cleanup already started, is left as it is.
  */
 export const finalizeAccountDeletion = Effect.fn(
   "auth.deletion.finalizeAccountDeletion"
 )(
-  function* (
-    authId: string,
-    expectedPreparation?: AccountDeletionPreparationVersion
-  ) {
+  function* (userId: Id<"users">) {
     const scheduler = yield* Scheduler;
-    const database = yield* DatabaseReader;
-    const writer = yield* DatabaseWriter;
-    const preparation = yield* database
-      .table("accountDeletionPreparations")
-      .get("by_authId", authId)
-      .pipe(
-        Effect.catchTag("GetByIndexFailure", () => Effect.succeed(null)),
-        Effect.orDie
-      );
+    const user = yield* (yield* DatabaseReader)
+      .table("users")
+      .get(userId)
+      .pipe(Effect.option);
     if (
-      expectedPreparation !== undefined &&
-      (preparation?.attemptId !== expectedPreparation.attemptId ||
-        preparation._id !== expectedPreparation.preparationId ||
-        preparation.recoveryGeneration !==
-          expectedPreparation.recoveryGeneration)
+      Option.isNone(user) ||
+      user.value.deletedAt === undefined ||
+      user.value.deletionCleanupStartedAt !== undefined
     ) {
       return;
     }
-    const userByAuthId = yield* database
-      .table("users")
-      .get("by_authId", authId)
-      .pipe(
-        Effect.catchTag("GetByIndexFailure", () => Effect.succeed(null)),
-        Effect.orDie
-      );
-    const user =
-      userByAuthId ??
-      (preparation
-        ? yield* database
-            .table("users")
-            .get(preparation.userId)
-            .pipe(Effect.orDie)
-        : null);
-    if (!user) {
-      return;
-    }
-    if (
-      user.deletionCleanupStartedAt !== undefined &&
-      preparation?.finalizedAt !== undefined
-    ) {
-      yield* recordAccountDeletionReceipt(
-        preparation.attemptId,
-        preparation.finalizedAt
+    const { deletedAt } = user.value;
+    const moreAgents = yield* deleteAccountAgents(
+      userId,
+      ACCOUNT_DELETION_TRANSACTION_BATCH_SIZE
+    );
+    if (moreAgents || (yield* releaseTenantPeople(user.value, deletedAt))) {
+      yield* scheduler.runAfter(
+        Duration.zero,
+        authInternal.deletion.workflow.finalize,
+        { userId }
       );
       return;
     }
-    if (user.deletionCleanupStartedAt !== undefined) {
-      return;
-    }
-    const finalizedAt = yield* Clock.currentTimeMillis;
-    const continueCleanup = scheduler.runAfter(
-      Duration.zero,
-      authInternal.deletion.workflow.finalizeDeletedUserCleanup,
-      {
-        authId,
-        ...(expectedPreparation === undefined ? {} : { expectedPreparation }),
-      }
-    );
-    if (yield* releaseTenantPeople(user, finalizedAt)) {
-      yield* continueCleanup;
-      return;
-    }
-    if (preparation && preparation.finalizedAt === undefined) {
-      yield* writer
-        .table("accountDeletionPreparations")
-        .patch(preparation._id, {
-          finalizedAt,
-          recoveryAt: undefined,
-        })
-        .pipe(Effect.orDie);
-    } else if (!preparation) {
-      yield* writer
-        .table("accountDeletionPreparations")
-        .insert({
-          authId,
-          finalizedAt,
-          recoveryGeneration: 0,
-          userId: user._id,
-        })
-        .pipe(Effect.orDie);
-    }
-    yield* recordAccountDeletionReceipt(
-      preparation?.attemptId,
-      preparation?.finalizedAt ?? finalizedAt
-    );
-    yield* writer
+    yield* (yield* DatabaseWriter)
       .table("users")
-      .patch(
-        user._id,
-        createDeletedUserTombstone(user._id, user.deletedAt ?? finalizedAt)
-      )
+      .patch(userId, createDeletedUserTombstone(userId, deletedAt))
       .pipe(Effect.orDie);
     yield* scheduler.runAfter(
       Duration.zero,
-      authInternal.deletion.workflow.launchDeletedUserCleanup,
-      { authId, userId: user._id }
-    );
-    yield* scheduler.runAfter(
-      Duration.millis(ACCOUNT_DELETION_RECONCILIATION_DELAY_MS),
-      authInternal.deletion.workflow.finalizeDeletedUserCleanup,
-      { authId }
+      authInternal.deletion.workflow.launch,
+      { userId }
     );
   },
   Effect.catchDefect(flow(toUserCleanupError, Effect.fail))

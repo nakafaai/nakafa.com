@@ -30,11 +30,6 @@ const account = Schema.decodeUnknownSync(Account)({
     picture: "photo",
     plan: "free",
   },
-  authUser: {
-    _id: "auth-1",
-    email: "learner@example.com",
-    name: "Learner Name",
-  },
 });
 
 /** What every key of account state in the browser starts with, which signing out clears. */
@@ -79,7 +74,7 @@ describe("the account row the browser kept", () => {
           }))
         ).toStrictEqual(
           Option.some({
-            name: "Learner Name",
+            name: "Learner",
             photo: "https://example.com/photo.png",
             plan: "free",
           })

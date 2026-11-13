@@ -3,7 +3,7 @@ import { assert, describe, expect, it } from "@effect/vitest";
 import type { MaterialLessonProjection } from "@nakafa/aksara-contracts/projection/material";
 import confectSchema from "@repo/backend/confect/_generated/schema";
 import {
-  createConvexTestWithBetterAuth,
+  createConvexTestWithAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
 import { api } from "@repo/backend/convex/_generated/api";
@@ -46,7 +46,7 @@ async function insertMaterialRecent(
 }
 describe("contents/queries/recent", () => {
   it("hydrates a recent card from the current signed material", async () => {
-    const t = createConvexTestWithBetterAuth();
+    const t = createConvexTestWithAuth();
     await t.mutation((ctx) =>
       Effect.runPromise(
         activateMaterialCatalog([FUNCTION_MATERIAL]).pipe(
@@ -65,10 +65,7 @@ describe("contents/queries/recent", () => {
       return viewer;
     });
     const results = await t
-      .withIdentity({
-        sessionId: identity.sessionId,
-        subject: identity.authUserId,
-      })
+      .withIdentity({ subject: identity.sessionId })
       .query(api.contents.queries.recent.getRecentlyViewed, {
         locale: "en",
       });
@@ -100,10 +97,7 @@ describe("contents/queries/recent", () => {
     // Retiring the curriculum placement must preserve the canonical lesson card.
     await expect(
       t
-        .withIdentity({
-          sessionId: identity.sessionId,
-          subject: identity.authUserId,
-        })
+        .withIdentity({ subject: identity.sessionId })
         .query(api.contents.queries.recent.getRecentlyViewed, {
           locale: "en",
         })
@@ -115,10 +109,7 @@ describe("contents/queries/recent", () => {
     });
     await expect(
       t
-        .withIdentity({
-          sessionId: identity.sessionId,
-          subject: identity.authUserId,
-        })
+        .withIdentity({ subject: identity.sessionId })
         .query(api.contents.queries.recent.getRecentlyViewed, {
           locale: "en",
         })
@@ -133,7 +124,7 @@ describe("contents/queries/recent", () => {
     const current = makeMaterialProjection("en", 1, 10);
     const missingFirst = makeMaterialProjection("en", 2, 11);
     const missingSecond = makeMaterialProjection("en", 3, 12);
-    const t = createConvexTestWithBetterAuth();
+    const t = createConvexTestWithAuth();
     await t.mutation((ctx) =>
       Effect.runPromise(
         activateMaterialCatalog([current]).pipe(
@@ -154,10 +145,7 @@ describe("contents/queries/recent", () => {
       return viewer;
     });
     const results = await t
-      .withIdentity({
-        sessionId: identity.sessionId,
-        subject: identity.authUserId,
-      })
+      .withIdentity({ subject: identity.sessionId })
       .query(api.contents.queries.recent.getRecentlyViewed, {
         locale: "en",
         limit: 1,
@@ -171,7 +159,7 @@ describe("contents/queries/recent", () => {
     ]);
   });
   it("returns no cards for a zero result limit", async () => {
-    const t = createConvexTestWithBetterAuth();
+    const t = createConvexTestWithAuth();
     await t.mutation((ctx) =>
       Effect.runPromise(
         activateMaterialCatalog([FUNCTION_MATERIAL]).pipe(
@@ -189,10 +177,7 @@ describe("contents/queries/recent", () => {
     );
     await expect(
       t
-        .withIdentity({
-          sessionId: identity.sessionId,
-          subject: identity.authUserId,
-        })
+        .withIdentity({ subject: identity.sessionId })
         .query(api.contents.queries.recent.getRecentlyViewed, {
           locale: "en",
           limit: 0,
@@ -200,7 +185,7 @@ describe("contents/queries/recent", () => {
     ).resolves.toEqual([]);
   });
   it("returns no cards without an authenticated learner", async () => {
-    const t = createConvexTestWithBetterAuth();
+    const t = createConvexTestWithAuth();
     await t.mutation((ctx) =>
       Effect.runPromise(
         activateMaterialCatalog([FUNCTION_MATERIAL]).pipe(

@@ -5,7 +5,7 @@ import type { LearningContextStorage } from "@repo/backend/confect/contents/cont
 import { getContentAnalyticsPartition } from "@repo/backend/confect/contents/partitions";
 import type { RecordContentViewArgs } from "@repo/backend/confect/contents/views/spec";
 import {
-  type createConvexTestWithBetterAuth,
+  type createConvexTestWithAuth,
   seedAnalyticsConsent,
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
@@ -127,7 +127,7 @@ export function getContentViewDistinctId(job: { args: readonly unknown[] }) {
 
 /** Reads the bounded content-view state owned by one test fixture. */
 export async function readContentViewState(
-  target: ReturnType<typeof createConvexTestWithBetterAuth>
+  target: ReturnType<typeof createConvexTestWithAuth>
 ) {
   return await target.query(async (ctx) => {
     const scheduledFunctions = await ctx.db.system

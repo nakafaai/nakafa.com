@@ -5,7 +5,7 @@ import { Account } from "@repo/backend/confect/auth/schema";
 import Session from "@repo/backend/confect/middleware/session.spec";
 import { Schema, Struct } from "effect";
 /**
- * Gets the authenticated Better Auth user and matching app user, if present.
+ * Gets the signed-in account, if present.
  *
  * @see https://docs.convex.dev/functions/query-functions#query-names
  */

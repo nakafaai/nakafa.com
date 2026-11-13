@@ -68,8 +68,7 @@ beforeEach(() => {
 });
 
 const account = {
-  appUser: { _id: "users-1", username: "nabil" },
-  authUser: { name: "Nabil" },
+  appUser: { _id: "users-1", name: "Nabil", username: "nabil" },
 };
 
 /** Answers each Confect query with its value and fails any other query. */

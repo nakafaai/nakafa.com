@@ -1,6 +1,7 @@
 // @vitest-environment node
+import { AUTH_REFRESH_COOKIE } from "@convex-dev/auth/ssr";
 import { describe, expect, it } from "@effect/vitest";
-import { Effect } from "effect";
+import { Array as Arr, Effect, Option } from "effect";
 import {
   expiredHintCookie,
   hintScopeFor,
@@ -8,165 +9,77 @@ import {
 } from "@/lib/auth/hint";
 import { withSessionHint } from "@/lib/auth/hint.server";
 
-vi.hoisted(() => {
-  vi.stubEnv("SITE_URL", "https://nakafa.com");
-});
+const SITE = new URL("https://nakafa.com");
+const scope = hintScopeFor(SITE);
 
-const hint = signedInHintCookie(hintScopeFor(new URL("https://nakafa.com")));
+/** An auth route's answer that wrote the given Set-Cookie headers. */
+function answerWith(cookies: readonly string[], status = 200) {
+  const headers = new Headers();
+  for (const cookie of cookies) {
+    headers.append("set-cookie", cookie);
+  }
+  return Response.json({ tokens: null }, { headers, status });
+}
 
 describe("withSessionHint", () => {
-  const scope = hintScopeFor(new URL("https://nakafa.com"));
-
-  /** A session read, with the cookies that the browser sends. */
-  function sessionRead(cookie?: string) {
-    return new Request("https://nakafa.com/api/auth/get-session", {
-      headers: cookie === undefined ? {} : { cookie },
-    });
-  }
-
-  /** Better Auth's answer for a learner's session. */
-  const signedIn = () =>
-    Response.json({
-      session: { id: "session-1" },
-      user: { id: "user-1", name: "Ayu" },
-    });
-
-  it.effect("sets the hint on a signed-in answer to a request without it", () =>
+  it.effect("sets the signed-in hint when the route wrote a session", () =>
     Effect.gen(function* () {
-      const answer = yield* withSessionHint(
-        sessionRead("theme=dark"),
-        signedIn()
-      );
+      const session = `${AUTH_REFRESH_COOKIE}=refresh; Path=/; HttpOnly`;
+      const answer = withSessionHint(answerWith([session], 201), SITE, "");
 
       expect(answer.headers.getSetCookie()).toEqual([
+        session,
         signedInHintCookie(scope),
       ]);
-      expect(yield* Effect.promise(() => answer.json())).toMatchObject({
-        user: { name: "Ayu" },
+      expect(answer.status).toBe(201);
+      expect(yield* Effect.promise(() => answer.json())).toEqual({
+        tokens: null,
       });
     })
   );
 
-  it.effect(
-    "leaves an answer whose request already carries the right hint",
-    () =>
-      Effect.gen(function* () {
-        const response = signedIn();
+  it("expires the hint when the route cleared the session", () => {
+    const cleared = `${AUTH_REFRESH_COOKIE}=; Max-Age=0; Path=/`;
 
-        expect(yield* withSessionHint(sessionRead(hint), response)).toBe(
-          response
-        );
-      })
-  );
+    expect(
+      withSessionHint(answerWith([cleared]), SITE, "").headers.getSetCookie()
+    ).toEqual([cleared, expiredHintCookie(scope)]);
+  });
 
-  it.effect(
-    "clears the hint on a signed-out answer to a request that still carries it",
-    () =>
-      Effect.gen(function* () {
-        const answer = yield* withSessionHint(
-          sessionRead(hint),
-          Response.json(null)
-        );
+  it("reads the last write when the route cleared and then set the session", () => {
+    const answer = withSessionHint(
+      answerWith([
+        `${AUTH_REFRESH_COOKIE}=; Max-Age=0`,
+        `${AUTH_REFRESH_COOKIE}=next`,
+      ]),
+      SITE,
+      ""
+    );
 
-        expect(answer.headers.getSetCookie()).toEqual([
-          expiredHintCookie(scope),
-        ]);
-      })
-  );
+    expect(Arr.last(answer.headers.getSetCookie())).toStrictEqual(
+      Option.some(signedInHintCookie(scope))
+    );
+  });
 
-  it.effect("leaves an answer that is no session read unchanged", () =>
-    Effect.gen(function* () {
-      const response = new Response("<html>error</html>", { status: 502 });
+  it("leaves an answer that wrote no session cookie as it is", () => {
+    const response = answerWith(["theme=dark", "broken"]);
 
-      expect(yield* withSessionHint(sessionRead(), response)).toBe(response);
-    })
-  );
+    expect(withSessionHint(response, SITE, "")).toBe(response);
+  });
 
-  /** One answer of another Better Auth route, with the cookies that it writes. */
-  const writes = (...cookies: readonly string[]) => {
-    const headers = new Headers({ location: "/en/onboarding" });
-    for (const cookie of cookies) {
-      headers.append("set-cookie", cookie);
-    }
-    return new Response(null, { headers, status: 302 });
-  };
-  const callback = new Request(
-    "https://nakafa.com/api/auth/callback/google?code=one-time"
-  );
-  const SESSION_COOKIE = "__Secure-better-auth.session_token";
+  it("reads only the site's own cookie on a site with a prefix", () => {
+    const production = answerWith([`${AUTH_REFRESH_COOKIE}=production`]);
+    const own = `nakafa-dev.${AUTH_REFRESH_COOKIE}=staging`;
 
-  it.effect(
-    "sets the hint on the answer that signs in, so the static page it lands on starts signed in",
-    () =>
-      Effect.gen(function* () {
-        const session = `${SESSION_COOKIE}=token.signature; Max-Age=604800; Path=/; HttpOnly`;
-        const answer = yield* withSessionHint(callback, writes(session));
-
-        expect(answer.status).toBe(302);
-        expect(answer.headers.get("location")).toBe("/en/onboarding");
-        expect(answer.headers.getSetCookie()).toEqual([
-          session,
-          signedInHintCookie(scope),
-        ]);
-      })
-  );
-
-  it.effect(
-    "clears the hint on the answer that signs out, whose request still carries it",
-    () =>
-      Effect.gen(function* () {
-        const expired = `${SESSION_COOKIE}=; Max-Age=0; Path=/; HttpOnly`;
-        const answer = yield* withSessionHint(
-          new Request("https://nakafa.com/api/auth/sign-out", {
-            headers: { cookie: hint },
-            method: "POST",
-          }),
-          writes(expired)
-        );
-
-        expect(answer.headers.getSetCookie()).toEqual([
-          expired,
-          expiredHintCookie(scope),
-        ]);
-      })
-  );
-
-  it.effect("renews the hint on a session refresh, which keeps it alive", () =>
-    Effect.gen(function* () {
-      const refreshed = `${SESSION_COOKIE}=next.signature; Max-Age=604800`;
-      const answer = yield* withSessionHint(
-        sessionRead(hint),
-        writes(refreshed)
-      );
-
-      expect(answer.headers.getSetCookie()).toEqual([
-        refreshed,
-        signedInHintCookie(scope),
-      ]);
-    })
-  );
-
-  it.effect("takes the last write of the session cookie in one answer", () =>
-    Effect.gen(function* () {
-      const answer = yield* withSessionHint(
-        callback,
-        writes(
-          `${SESSION_COOKIE}=; Max-Age=0`,
-          `${SESSION_COOKIE}=token.signature`
-        )
-      );
-
-      expect(answer.headers.getSetCookie()).toContain(
-        signedInHintCookie(scope)
-      );
-    })
-  );
-
-  it.effect("leaves an answer that writes another cookie unchanged", () =>
-    Effect.gen(function* () {
-      const response = writes("__Secure-better-auth.state=one; Path=/");
-
-      expect(yield* withSessionHint(callback, response)).toBe(response);
-    })
-  );
+    expect(withSessionHint(production, SITE, "nakafa-dev.")).toBe(production);
+    expect(
+      Arr.last(
+        withSessionHint(
+          answerWith([own]),
+          SITE,
+          "nakafa-dev."
+        ).headers.getSetCookie()
+      )
+    ).toStrictEqual(Option.some(signedInHintCookie(scope)));
+  });
 });

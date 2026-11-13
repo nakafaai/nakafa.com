@@ -6,7 +6,6 @@ import {
 } from "@repo/backend/confect/_generated/services";
 import { EMAIL_FROM, sendMail } from "@repo/backend/confect/emails/client";
 import {
-  deferWelcomeIntent,
   toWelcomeIntentError,
 } from "@repo/backend/confect/emails/welcome/impl";
 import { Effect, flow } from "effect";
@@ -46,9 +45,6 @@ export const enqueueRenderedWelcomeProgram = Effect.fn(
     if (!user || user.deletedAt !== undefined) {
       yield* writer.table("welcomeEmailIntents").delete(intent._id);
       return null;
-    }
-    if (user.deletionPreparedAt !== undefined) {
-      return yield* deferWelcomeIntent();
     }
     const componentEmailId = yield* sendMail(ctx, {
       ...message,

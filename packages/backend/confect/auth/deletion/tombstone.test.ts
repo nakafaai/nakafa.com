@@ -22,7 +22,6 @@ describe("auth/deletion/tombstone", () => {
             const writer = yield* DatabaseWriter;
             const userId = yield* Effect.promise(() =>
               ctx.db.insert("users", {
-                authId: "auth-leaving",
                 bio: "Belajar fisika.",
                 credits: 100,
                 creditsResetAt: 0,

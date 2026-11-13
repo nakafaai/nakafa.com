@@ -111,7 +111,7 @@ describe("Convex authentication", () => {
     [signedIn("session-2"), "session-1", "session-2"],
     [previewAuthSession, "session-1", null],
   ])(
-    "holds the session the browser last had only until Better Auth answers",
+    "holds the session the browser last had only until the refresh route answers",
     (session, known, id) => {
       expect(readConvexSessionId(session, known)).toBe(id);
     }

@@ -14,7 +14,7 @@ import {
 } from "@repo/backend/confect/nina/sealed/thread";
 import type { NinaInput } from "@repo/backend/confect/nina/turns.spec";
 import {
-  type createConvexTestWithBetterAuth,
+  type createConvexTestWithAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
 import { BLIND_BYTES } from "@repo/backend/confect/vault/cipher";
@@ -28,7 +28,7 @@ import { Effect } from "effect";
 import { Base64Url } from "effect/encoding";
 
 /** A test deployment of the backend, as the sealed reads are run against it. */
-type Deployment = ReturnType<typeof createConvexTestWithBetterAuth>;
+type Deployment = ReturnType<typeof createConvexTestWithAuth>;
 /** The learner whose key opens the rows a read names. */
 type Owner = ThreadRead["owner"];
 

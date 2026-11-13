@@ -1,4 +1,8 @@
 import agentTest from "@convex-dev/agent/test";
+import authTest from "@convex-dev/auth/test";
+import authGoogleTest from "@convex-dev/auth/components/google/test";
+import authPasswordTest from "@convex-dev/auth/components/password/test";
+import authUsernameTest from "@convex-dev/auth/components/username/test";
 import aggregateTest from "@convex-dev/aggregate/test";
 import presenceTest from "@convex-dev/presence/test";
 import rateLimiterTest from "@convex-dev/rate-limiter/test";
@@ -8,7 +12,6 @@ import {
   ANALYTICS_CONSENT_MECHANISM,
   ANALYTICS_CONSENT_NOTICE_VERSION,
 } from "@repo/analytics/consent";
-import authSchema from "@repo/backend/components/betterAuth/schema";
 import { components } from "@repo/backend/confect/_generated/components";
 import {
   DEFAULT_USER_CREDITS,
@@ -21,11 +24,12 @@ import schema from "@repo/backend/convex/schema";
 import { MASCOT_CODE } from "@repo/backend/test/mascot";
 import { convexTest, type TestConvex } from "convex-test";
 
-const betterAuthModules = import.meta.glob([
-  "../components/betterAuth/**/*.ts",
-  "!../components/betterAuth/**/*.test.ts",
-]);
-const DEFAULT_SESSION_DURATION_MS = 365 * 24 * 60 * 60 * 1000;
+/** The lifetimes of a test session, as `auth/core` configures them. */
+const TEST_SESSION_LIFETIMES = {
+  accessTokenTtlSeconds: 15 * 60,
+  refreshInactivityTimeoutSeconds: 7 * 24 * 60 * 60,
+  sessionMaxLifetimeSeconds: 90 * 24 * 60 * 60,
+};
 
 /**
  * Registers the learning popularity ranking aggregate in tests that exercise
@@ -37,10 +41,13 @@ export function registerLearningPopularityAggregate(
   aggregateTest.register(t, "learningPopularityRankings");
 }
 
-/** Builds a Convex test instance with the Better Auth component registered. */
-export function createConvexTestWithBetterAuth() {
+/** Builds a Convex test instance with the Convex Auth components registered. */
+export function createConvexTestWithAuth() {
   const t = convexTest(schema, convexModules);
-  t.registerComponent("betterAuth", authSchema, betterAuthModules);
+  authTest.registerCore(t);
+  authGoogleTest.registerGoogleOauth(t);
+  authPasswordTest.registerPassword(t);
+  authUsernameTest.registerUsername(t);
   registerLearningPopularityAggregate(t);
   rateLimiterTest.register(t, "agentRateLimiter");
   agentTest.register(t, "nina");
@@ -74,7 +81,12 @@ export async function seedAnalyticsConsent(
   return await ctx.db.insert("accountConsents", decision);
 }
 
-/** Seeds one authenticated Better Auth user and the matching app user row. */
+/**
+ * Seeds one app user and a live Convex Auth session of it, as a sign-in makes
+ * one, and answers the user and the session. A test calls as that session with
+ * `t.withIdentity({ subject: sessionId })`: an access token's subject is its
+ * session, and the session middleware resolves the user through it.
+ */
 export async function seedAuthenticatedUser(
   ctx: MutationCtx,
   {
@@ -83,78 +95,26 @@ export async function seedAuthenticatedUser(
     credits = DEFAULT_USER_CREDITS,
     creditsResetAt = now,
     email = `${suffix}@example.com`,
-    emailVerified = true,
-    hostedDomain,
     name = `User ${suffix}`,
     plan = DEFAULT_USER_PLAN,
     role,
-    sessionDurationMs = DEFAULT_SESSION_DURATION_MS,
-    sessionToken = `session-${suffix}`,
   }: {
     credits?: Doc<"users">["credits"];
     creditsResetAt?: Doc<"users">["creditsResetAt"];
     email?: Doc<"users">["email"];
-    emailVerified?: boolean;
-    /** Seeds a Google account too, whose latest sign-in wrote this hosted domain. */
-    hostedDomain?: string | null;
     name?: Doc<"users">["name"];
     now: number;
     plan?: Doc<"users">["plan"];
     role?: Doc<"users">["role"];
-    sessionDurationMs?: number;
-    sessionToken?: string;
     suffix?: string;
   }
 ) {
-  const authUser = await ctx.runMutation(components.betterAuth.adapter.create, {
-    input: {
-      model: "user",
-      data: {
-        createdAt: now,
-        email,
-        emailVerified,
-        name,
-        updatedAt: now,
-      },
-    },
-    select: ["_id", "email", "name"],
-  });
-  const session = await ctx.runMutation(components.betterAuth.adapter.create, {
-    input: {
-      model: "session",
-      data: {
-        createdAt: now,
-        expiresAt: now + sessionDurationMs,
-        token: sessionToken,
-        updatedAt: now,
-        userId: authUser._id,
-      },
-    },
-    select: ["_id"],
-  });
-  if (hostedDomain !== undefined) {
-    await ctx.runMutation(components.betterAuth.adapter.create, {
-      input: {
-        model: "account",
-        data: {
-          accountId: `google-${suffix}`,
-          createdAt: now,
-          hostedDomain,
-          providerId: "google",
-          updatedAt: now,
-          userId: authUser._id,
-        },
-      },
-      select: ["_id"],
-    });
-  }
   const userId = await ctx.db.insert("users", {
-    authId: authUser._id,
     credits,
     creditsResetAt,
-    email: authUser.email,
+    email,
     mascot: MASCOT_CODE,
-    name: authUser.name,
+    name,
     plan,
     ...(role
       ? {
@@ -162,9 +122,17 @@ export async function seedAuthenticatedUser(
         }
       : {}),
   });
+  const tokens = await ctx.runMutation(
+    components.auth.public._internal_dangerous_signIn,
+    {
+      ...TEST_SESSION_LIFETIMES,
+      claims: { method: "test", profile: {} },
+      componentPath: "test",
+      userId,
+    }
+  );
   return {
-    authUserId: authUser._id,
-    sessionId: session._id,
+    sessionId: authTest.sessionIdentity(tokens).subject,
     userId,
   };
 }

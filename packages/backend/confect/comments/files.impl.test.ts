@@ -1,15 +1,13 @@
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
-// convex-test imports a function's module, and the Better Auth module behind a signed write, on the first
-// call, inside that test's 5 s, and the cold graph takes longer. Importing them here loads them while the
-// file is collected, so no test pays it.
-import "@repo/backend/components/betterAuth/session";
+// convex-test imports a function's module on the first call, inside that test's 5 s, and the cold graph
+// takes longer. Importing them here loads them while the file is collected, so no test pays it.
 import "@repo/backend/convex/bucket";
 import "@repo/backend/convex/comments/files";
 import "@repo/backend/convex/comments/mutations";
 import "@repo/backend/convex/comments/queries";
 import { COMMENT_PHOTO_BYTE_LIMIT } from "@repo/backend/confect/comments/photo";
 import {
-  createConvexTestWithBetterAuth,
+  createConvexTestWithAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
 import { api, internal } from "@repo/backend/convex/_generated/api";
@@ -38,7 +36,7 @@ function paddedPng(extra: number) {
 
 /** Two learners, both signed in, with the clients that act as each of them. */
 async function learners() {
-  const t = createConvexTestWithBetterAuth();
+  const t = createConvexTestWithAuth();
   const [author, other] = await t.mutation((ctx) =>
     Promise.all([
       seedAuthenticatedUser(ctx, { now: NOW, suffix: "photo-author" }),
@@ -46,7 +44,7 @@ async function learners() {
     ])
   );
   const as = (user: typeof author) =>
-    t.withIdentity({ sessionId: user.sessionId, subject: user.authUserId });
+    t.withIdentity({ subject: user.sessionId });
   return { author: as(author), other: as(other), t };
 }
 

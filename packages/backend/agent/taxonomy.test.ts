@@ -4,7 +4,7 @@ import { Sha256HashSchema } from "@nakafa/aksara-contracts/ids";
 import type { ActiveAppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import { getNakafaTaxonomy } from "@repo/backend/agent/taxonomy";
 import confectSchema from "@repo/backend/confect/_generated/schema";
-import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
+import { createConvexTestWithAuth } from "@repo/backend/confect/test.helpers";
 import type { api } from "@repo/backend/convex/_generated/api";
 import type { ActionCtx } from "@repo/backend/convex/_generated/server";
 import {
@@ -128,7 +128,7 @@ describe("agent/taxonomy", () => {
       const catalog = yield* makeCatalog();
       const runtimeServices = yield* Effect.context<never>();
       yield* Effect.promise(() =>
-        createConvexTestWithBetterAuth().action(async (ctx) => {
+        createConvexTestWithAuth().action(async (ctx) => {
           queryResponses(ctx, catalog, { malformed });
           const error = await Effect.runPromiseWith(runtimeServices)(
             getNakafaTaxonomy().pipe(
@@ -151,7 +151,7 @@ describe("agent/taxonomy", () => {
       Effect.gen(function* () {
         const catalog = yield* makeCatalog();
         const runtimeServices = yield* Effect.context<never>();
-        const test = createConvexTestWithBetterAuth();
+        const test = createConvexTestWithAuth();
         yield* Effect.promise(() =>
           test.action(async (ctx) => {
             const queries = queryResponses(ctx, catalog);
@@ -224,7 +224,7 @@ describe("agent/taxonomy", () => {
       Effect.gen(function* () {
         const catalog = yield* makeCatalog();
         const runtimeServices = yield* Effect.context<never>();
-        const test = createConvexTestWithBetterAuth();
+        const test = createConvexTestWithAuth();
         yield* Effect.promise(() =>
           test.action(async (ctx) => {
             queryResponses(ctx, catalog, {
@@ -283,7 +283,7 @@ describe("agent/taxonomy", () => {
       Effect.gen(function* () {
         const catalog = yield* makeCatalog();
         const runtimeServices = yield* Effect.context<never>();
-        const test = createConvexTestWithBetterAuth();
+        const test = createConvexTestWithAuth();
         yield* Effect.promise(() =>
           test.action(async (ctx) => {
             queryResponses(ctx, catalog, options);

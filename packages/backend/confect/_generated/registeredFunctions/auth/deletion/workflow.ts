@@ -7,6 +7,6 @@ const forward = <Ctx, Args, Returns>(handler: (ctx: Ctx, args: Args) => Promise<
 const definitions = ConvexFunctionDefinitions.buildForGroup<typeof import("../../../../auth/deletion/workflow.spec")["default"]>(databaseSchema, groupLayer);
 
 export default {
-["finalizeDeletedUserCleanup"]: RegisteredConvexFunction.register({ ...definitions["finalizeDeletedUserCleanup"], handler: forward(definitions["finalizeDeletedUserCleanup"].handler) }),
-["launchDeletedUserCleanup"]: RegisteredConvexFunction.register({ ...definitions["launchDeletedUserCleanup"], handler: forward(definitions["launchDeletedUserCleanup"].handler) }),
+["finalize"]: RegisteredConvexFunction.register({ ...definitions["finalize"], handler: forward(definitions["finalize"].handler) }),
+["launch"]: RegisteredConvexFunction.register({ ...definitions["launch"], handler: forward(definitions["launch"].handler) }),
 } as RegisteredFunctions.RegisteredFunctionsForGroupSpec<typeof import("../../../../auth/deletion/workflow.spec")["default"]>;

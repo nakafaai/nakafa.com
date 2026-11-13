@@ -7,7 +7,7 @@ import {
   AppLocaleSchema,
 } from "@nakafa/aksara-contracts/locale";
 import refs from "@repo/backend/confect/_generated/refs";
-import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
+import { createConvexTestWithAuth } from "@repo/backend/confect/test.helpers";
 import { FIXTURE_REVISION } from "@repo/backend/test/assessment/snapshot";
 import { client } from "@repo/backend/test/client";
 import { tryoutWorld } from "@repo/backend/test/tryout/world";
@@ -273,7 +273,7 @@ describe("immutable try-out application catalog", () => {
       Effect.gen(function* () {
         // A deployment with no active release publishes no catalog.
         fetchQueryMock.mockImplementation(
-          client(createConvexTestWithBetterAuth()).query
+          client(createConvexTestWithAuth()).query
         );
         expect(yield* readTryoutHubPage("en").pipe(Effect.flip)).toMatchObject({
           _tag: "TryoutCatalogReadError",

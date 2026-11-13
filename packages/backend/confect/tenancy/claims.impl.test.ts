@@ -1,12 +1,11 @@
 import type { GenericId } from "@confect/core";
 import { beforeEach, describe, expect, it } from "@effect/vitest";
-import { components } from "@repo/backend/confect/_generated/components";
 import refs from "@repo/backend/confect/_generated/refs";
 import {
   DatabaseReader,
   DatabaseWriter,
-  MutationCtx,
 } from "@repo/backend/confect/_generated/services";
+import { loginAddress } from "@repo/backend/confect/identity/address";
 import { CLAIM_PAGE_SIZE } from "@repo/backend/confect/tenancy/claims";
 import { NEW_TENANT_POLICIES } from "@repo/backend/confect/tenancy/policy";
 import {
@@ -77,7 +76,7 @@ describe("tenancy/claims run", () => {
     () =>
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
-        const account = yield* fixture.account("guru", address, true);
+        const account = yield* fixture.account("guru", address);
         const { inviteId, personId } = yield* fixture.run(
           invitePerson(fixture.tenants.nf, address)
         );
@@ -118,7 +117,7 @@ describe("tenancy/claims run", () => {
   it.effect("claims once, however often it runs", () =>
     Effect.gen(function* () {
       const fixture = yield* tenancyFixture;
-      const account = yield* fixture.account("guru", address, true);
+      const account = yield* fixture.account("guru", address);
       const { inviteId, personId } = yield* fixture.run(
         invitePerson(fixture.tenants.nf, address)
       );
@@ -135,27 +134,10 @@ describe("tenancy/claims run", () => {
     })
   );
 
-  it.effect(
-    "never claims from an address that Better Auth has not verified",
-    () =>
-      Effect.gen(function* () {
-        const fixture = yield* tenancyFixture;
-        const account = yield* fixture.account("guru", address, false);
-        const { inviteId, personId } = yield* fixture.run(
-          invitePerson(fixture.tenants.nf, address)
-        );
-        yield* fixture.internal.mutation(run, {
-          cursor: null,
-          userId: account.userId,
-        });
-        untouched(yield* fixture.run(stored(personId, inviteId)));
-      })
-  );
-
   it.effect("never claims an invite that names another address", () =>
     Effect.gen(function* () {
       const fixture = yield* tenancyFixture;
-      const account = yield* fixture.account("guru", address, true);
+      const account = yield* fixture.account("guru", address);
       const { inviteId, personId } = yield* fixture.run(
         invitePerson(fixture.tenants.nf, other)
       );
@@ -170,7 +152,7 @@ describe("tenancy/claims run", () => {
   it.effect("never claims an invite that was revoked", () =>
     Effect.gen(function* () {
       const fixture = yield* tenancyFixture;
-      const account = yield* fixture.account("guru", address, true);
+      const account = yield* fixture.account("guru", address);
       const { personId } = yield* fixture.run(
         invitePerson(fixture.tenants.nf, address, {
           invite: { at: 1, status: "revoked" },
@@ -192,7 +174,7 @@ describe("tenancy/claims run", () => {
   it.effect("never claims a Person who is no longer active", () =>
     Effect.gen(function* () {
       const fixture = yield* tenancyFixture;
-      const account = yield* fixture.account("guru", address, true);
+      const account = yield* fixture.account("guru", address);
       const { inviteId, personId } = yield* fixture.run(
         invitePerson(fixture.tenants.nf, address, { person: "removed" })
       );
@@ -210,7 +192,7 @@ describe("tenancy/claims run", () => {
   it.effect("never claims an invite while its organisation is suspended", () =>
     Effect.gen(function* () {
       const fixture = yield* tenancyFixture;
-      const account = yield* fixture.account("guru", address, true);
+      const account = yield* fixture.account("guru", address);
       const { inviteId, personId } = yield* fixture.run(
         invitePerson(fixture.tenants.nf, address)
       );
@@ -237,8 +219,8 @@ describe("tenancy/claims run", () => {
     () =>
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
-        const first = yield* fixture.account("first", other, true);
-        const second = yield* fixture.account("second", address, true);
+        const first = yield* fixture.account("first", other);
+        const second = yield* fixture.account("second", address);
         const claimed: typeof Account.Type = {
           claimedAt: 1,
           method: "invite",
@@ -276,7 +258,7 @@ describe("tenancy/claims run", () => {
   it.effect("gives an account one Person in a tenant", () =>
     Effect.gen(function* () {
       const fixture = yield* tenancyFixture;
-      const account = yield* fixture.account("guru", address, true);
+      const account = yield* fixture.account("guru", address);
       yield* fixture.run(
         invitePerson(fixture.tenants.nf, other, {
           account: {
@@ -302,7 +284,7 @@ describe("tenancy/claims run", () => {
   it.effect("claims the invites of every organisation, a page at a time", () =>
     Effect.gen(function* () {
       const fixture = yield* tenancyFixture;
-      const account = yield* fixture.account("guru", address, true);
+      const account = yield* fixture.account("guru", address);
       const people = yield* fixture.run(
         Effect.forEach(Arr.range(1, CLAIM_PAGE_SIZE + 1), (index) =>
           Effect.gen(function* () {
@@ -353,15 +335,13 @@ describe("tenancy/claims run", () => {
   it.effect("claims nothing for an account that is being deleted", () =>
     Effect.gen(function* () {
       const fixture = yield* tenancyFixture;
-      const account = yield* fixture.account("guru", address, true);
+      const account = yield* fixture.account("guru", address);
       const { inviteId, personId } = yield* fixture.run(
         invitePerson(fixture.tenants.nf, address)
       );
       yield* fixture.run(
         Effect.flatMap(DatabaseWriter, (writer) =>
-          writer
-            .table("users")
-            .patch(account.userId, { deletionPreparedAt: NOW })
+          writer.table("users").patch(account.userId, { deletedAt: NOW })
         )
       );
       yield* fixture.internal.mutation(run, {
@@ -375,7 +355,7 @@ describe("tenancy/claims run", () => {
   it.effect("claims nothing for an account that no longer exists", () =>
     Effect.gen(function* () {
       const fixture = yield* tenancyFixture;
-      const account = yield* fixture.account("guru", address, true);
+      const account = yield* fixture.account("guru", address);
       const { inviteId, personId } = yield* fixture.run(
         invitePerson(fixture.tenants.nf, address)
       );
@@ -392,27 +372,17 @@ describe("tenancy/claims run", () => {
     })
   );
 
-  it.effect("claims nothing when Better Auth no longer holds the user", () =>
+  it.effect("claims nothing for an account whose row is gone", () =>
     Effect.gen(function* () {
       const fixture = yield* tenancyFixture;
-      const account = yield* fixture.account("guru", address, true);
+      const account = yield* fixture.account("guru", address);
       const { inviteId, personId } = yield* fixture.run(
         invitePerson(fixture.tenants.nf, address)
       );
       yield* fixture.run(
-        Effect.gen(function* () {
-          const ctx = yield* MutationCtx;
-          yield* Effect.promise(() =>
-            ctx.runMutation(components.betterAuth.adapter.deleteOne, {
-              input: {
-                model: "user",
-                where: [
-                  { field: "_id", operator: "eq", value: account.authUserId },
-                ],
-              },
-            })
-          );
-        })
+        Effect.flatMap(DatabaseWriter, (writer) =>
+          writer.table("users").delete(account.userId)
+        )
       );
       yield* fixture.internal.mutation(run, {
         cursor: null,
@@ -423,37 +393,57 @@ describe("tenancy/claims run", () => {
   );
 
   it.effect(
-    "claims an address on one of the tenant's email domains for a Google Workspace account of them, and no personal Google account",
+    "claims nothing for a school account, whose placeholder address has no mailbox",
     () =>
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
-        const domain = "harapan.example.test";
-        const account = yield* fixture.account("guru", address, true, domain);
-        const personal = yield* fixture.account("lain", other, true, null);
-        yield* fixture.run(
-          admitOnly(fixture.tenants.nf, ["belajar.id", domain])
+        const placeholder = loginAddress(
+          "0f8fad5b-d9cb-4691-a165-8c45a5d2a1e1"
         );
+        const account = yield* fixture.account("siswa", placeholder);
         const { inviteId, personId } = yield* fixture.run(
           invitePerson(fixture.tenants.nf, address)
         );
-        const waiting = yield* fixture.run(
-          invitePerson(fixture.tenants.nf, other)
+        // Even an invite that names the placeholder is never claimed by it.
+        yield* fixture.run(
+          Effect.flatMap(DatabaseWriter, (writer) =>
+            writer.table("tenantInvites").patch(inviteId, {
+              channel: {
+                email: Schema.decodeSync(Email)(placeholder),
+                kind: "email",
+              },
+            })
+          )
         );
-        for (const { userId } of [account, personal]) {
-          yield* fixture.internal.mutation(run, { cursor: null, userId });
-        }
-        const after = yield* fixture.run(stored(personId, inviteId));
-        expect(after.person.account).toMatchObject({
-          state: "claimed",
+        yield* fixture.internal.mutation(run, {
+          cursor: null,
           userId: account.userId,
         });
-        expect(after.invite.state).toMatchObject({ status: "accepted" });
-        const pending = yield* fixture.run(
-          stored(waiting.personId, waiting.inviteId)
-        );
-        expect(pending.person.account).toEqual({ state: "unclaimed" });
-        expect(pending.invite.state).toEqual({ status: "pending" });
+        untouched(yield* fixture.run(stored(personId, inviteId)));
       })
+  );
+
+  it.effect("claims an address on one of the tenant's email domains", () =>
+    Effect.gen(function* () {
+      const fixture = yield* tenancyFixture;
+      const account = yield* fixture.account("guru", address);
+      yield* fixture.run(
+        admitOnly(fixture.tenants.nf, ["belajar.id", "harapan.example.test"])
+      );
+      const { inviteId, personId } = yield* fixture.run(
+        invitePerson(fixture.tenants.nf, address)
+      );
+      yield* fixture.internal.mutation(run, {
+        cursor: null,
+        userId: account.userId,
+      });
+      const after = yield* fixture.run(stored(personId, inviteId));
+      expect(after.person.account).toMatchObject({
+        state: "claimed",
+        userId: account.userId,
+      });
+      expect(after.invite.state).toMatchObject({ status: "accepted" });
+    })
   );
 
   it.effect(
@@ -461,7 +451,7 @@ describe("tenancy/claims run", () => {
     () =>
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
-        const account = yield* fixture.account("guru", address, true);
+        const account = yield* fixture.account("guru", address);
         yield* fixture.run(admitOnly(fixture.tenants.nf, ["belajar.id"]));
         const closed = yield* fixture.run(
           invitePerson(fixture.tenants.nf, address)

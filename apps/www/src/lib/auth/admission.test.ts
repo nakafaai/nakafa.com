@@ -1,19 +1,14 @@
 // @vitest-environment node
 import { describe, expect, it } from "@effect/vitest";
-import { JsonTextSchema } from "@repo/utilities/json";
-import { getTestInstance } from "better-auth/test";
-import { Array as Arr, Effect, Option, Schema } from "effect";
+import { Option } from "effect";
 import {
   getPostAuthDestination,
   getPostAuthIntentSource,
   getPostAuthOnboardingHref,
-  getPostAuthProviderErrorHref,
-  getPostAuthProviderRetrySearch,
   getPostAuthSignInHref,
   getPostAuthSignInHrefForLocation,
   getPostAuthSignInTarget,
   getSignedInHref,
-  isPostAuthProviderError,
   PostAuthIntentSchema,
   resolvePostAuthIntent,
   startsSchool,
@@ -89,8 +84,6 @@ describe("post-auth admission", () => {
     for (const href of [
       getPostAuthSignInHref(resume),
       getPostAuthOnboardingHref(source, "en"),
-      getPostAuthProviderErrorHref(source, "en"),
-      new URLSearchParams(getPostAuthProviderRetrySearch(resume)).toString(),
       getPostAuthDestination(resume, "en").href,
     ]) {
       expect(href).not.toContain(token);
@@ -152,83 +145,6 @@ describe("post-auth admission", () => {
       locale: "id",
     });
   });
-
-  it.effect("isolates diagnostics appended by installed Better Auth", () =>
-    Effect.gen(function* () {
-      const { auth } = yield* Effect.promise(() =>
-        getTestInstance({}, { disableTestUser: true })
-      );
-      const errorCallbackURL = getPostAuthProviderErrorHref(
-        "/en/search?q=geometry#results",
-        "en"
-      );
-      const signInBody = yield* Schema.encodeEffect(JsonTextSchema)({
-        callbackURL: "/en/onboarding",
-        errorCallbackURL,
-        provider: "google",
-      });
-      const signInResponse = yield* Effect.promise(() =>
-        auth.handler(
-          new Request("http://localhost:3000/api/auth/sign-in/social", {
-            body: signInBody,
-            headers: {
-              "content-type": "application/json",
-              origin: "http://localhost:3000",
-            },
-            method: "POST",
-          })
-        )
-      );
-      const authorizationLocation = yield* Effect.fromNullishOr(
-        signInResponse.headers.get("location")
-      ).pipe(Effect.orDie);
-      const state = yield* Effect.fromNullishOr(
-        new URL(authorizationLocation).searchParams.get("state")
-      ).pipe(Effect.orDie);
-      const cookie = Arr.join(
-        Arr.map(
-          signInResponse.headers.getSetCookie(),
-          (value) => value.split(";", 1)[0]
-        ),
-        "; "
-      );
-
-      const providerResponse = yield* Effect.promise(() =>
-        auth.handler(
-          new Request(
-            `http://localhost:3000/api/auth/callback/google?${new URLSearchParams(
-              {
-                error: "access_denied",
-                error_description: "provider diagnostic",
-                state,
-              }
-            )}`,
-            { headers: { cookie } }
-          )
-        )
-      );
-      const providerLocation = yield* Effect.fromNullishOr(
-        providerResponse.headers.get("location")
-      ).pipe(Effect.orDie);
-      const providerUrl = new URL(providerLocation, "http://localhost:3000");
-
-      expect(providerResponse.status).toBe(302);
-      expect(`${providerUrl.pathname}${providerUrl.search}`).toBe(
-        `${errorCallbackURL}&error=access_denied&error_description=provider+diagnostic`
-      );
-
-      const retrySearch = getPostAuthProviderRetrySearch(
-        resolvePostAuthIntent(providerUrl.searchParams.get("intent"), "en")
-      );
-      expect(retrySearch).toStrictEqual({
-        error: "oauth",
-        redirect: "/en/search?q=geometry#results",
-      });
-      expect(new URLSearchParams(retrySearch).toString()).toBe(
-        "redirect=%2Fen%2Fsearch%3Fq%3Dgeometry%23results&error=oauth"
-      );
-    })
-  );
 
   it("resumes a localized public path in its source locale", () => {
     const intent = resolvePostAuthIntent(
@@ -360,21 +276,6 @@ describe("post-auth admission", () => {
       href: "/home",
       locale: "en",
     });
-    expect(getPostAuthProviderErrorHref("/id/search?q=geometry", "id")).toBe(
-      "/id/auth/error?intent=%2Fid%2Fsearch%3Fq%3Dgeometry"
-    );
-    expect(
-      getPostAuthProviderErrorHref("https://evil.example", "unsupported")
-    ).toBe("/en/auth/error");
-    expect(getPostAuthProviderRetrySearch(resume)).toStrictEqual({
-      error: "oauth",
-      redirect: "/en/chat/chat-id",
-    });
-    expect(getPostAuthProviderRetrySearch(none)).toStrictEqual({
-      error: "oauth",
-    });
-    expect(isPostAuthProviderError("oauth")).toBe(true);
-    expect(isPostAuthProviderError("access_denied")).toBe(false);
   });
   it("lets the page that opens a school stand in for the learner's first run", () => {
     expect(startsSchool(resolvePostAuthIntent("/id/school/new", "id"))).toBe(

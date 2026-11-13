@@ -64,12 +64,10 @@ beforeEach(() => {
 
 const profile = { _id: "users-owner", username: "nabil" };
 const ownerAccount = {
-  appUser: { _id: "users-owner", username: "nabil" },
-  authUser: { name: "Nabil" },
+  appUser: { _id: "users-owner", name: "Nabil", username: "nabil" },
 };
 const otherAccount = {
-  appUser: { _id: "users-other", username: "other" },
-  authUser: { name: "Other" },
+  appUser: { _id: "users-other", name: "Other", username: "other" },
 };
 
 /** Answers each Confect query with its value and fails any other query. */

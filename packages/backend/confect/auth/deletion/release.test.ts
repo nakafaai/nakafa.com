@@ -22,7 +22,7 @@ import {
   suspend,
   tenancyFixture,
 } from "@repo/backend/test/tenancy";
-import { Array as Arr, Effect, Schema } from "effect";
+import { Array as Arr, Clock, Effect, Schema } from "effect";
 
 const NOW = Date.UTC(2026, 9, 13, 9, 0, 0);
 const guru = Schema.decodeSync(Email)("guru@harapan.example.test");
@@ -33,6 +33,15 @@ const approve = refs.public.operators.visits.approve;
 const endVisit = refs.public.operators.visits.end;
 
 type Fixture = Effect.Success<typeof tenancyFixture>;
+
+/** Deletes the account the way its request does, then runs its finalize step. */
+const deleteAndFinalize = (userId: GenericId.GenericId<"users">) =>
+  Effect.gen(function* () {
+    yield* (yield* DatabaseWriter)
+      .table("users")
+      .patch(userId, { deletedAt: yield* Clock.currentTimeMillis });
+    yield* finalizeAccountDeletion(userId);
+  });
 
 /** Claims `count` new Persons of the school for one account, the way a deleted account leaves them. */
 const claimPersons = (
@@ -87,7 +96,7 @@ describe("auth/deletion release", () => {
     () =>
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
-        const account = yield* fixture.account("guru", guru, true);
+        const account = yield* fixture.account("guru", guru);
         const { inviteId, personId } = yield* fixture.run(
           invitePerson(fixture.tenants.nf, guru, {
             account: {
@@ -104,7 +113,7 @@ describe("auth/deletion release", () => {
           })
         );
         vi.setSystemTime(actedAt(0, NOW));
-        yield* fixture.run(finalizeAccountDeletion(account.authUserId));
+        yield* fixture.run(deleteAndFinalize(account.userId));
         const released = yield* fixture.run(
           Effect.flatMap(DatabaseReader, (reader) =>
             Effect.all({
@@ -146,7 +155,7 @@ describe("auth/deletion release", () => {
         });
         const person = yield* personOf(fixture, staff.userId);
         vi.setSystemTime(actedAt(0, NOW));
-        yield* fixture.run(finalizeAccountDeletion(staff.authUserId));
+        yield* fixture.run(deleteAndFinalize(staff.userId));
         const released = yield* fixture.run(
           Effect.flatMap(DatabaseReader, (reader) =>
             Effect.all({
@@ -211,7 +220,7 @@ describe("auth/deletion release", () => {
           slug: nf,
           visitId: visit.id,
         });
-        yield* fixture.run(finalizeAccountDeletion(staff.authUserId));
+        yield* fixture.run(deleteAndFinalize(staff.userId));
         const released = yield* fixture.run(
           Effect.flatMap(DatabaseReader, (reader) =>
             reader.table("tenantPeople").get(person._id)
@@ -233,7 +242,7 @@ describe("auth/deletion release", () => {
   it.effect("releases a Person while its school is suspended", () =>
     Effect.gen(function* () {
       const fixture = yield* tenancyFixture;
-      const account = yield* fixture.account("guru", guru, true);
+      const account = yield* fixture.account("guru", guru);
       const { personId } = yield* fixture.run(
         invitePerson(fixture.tenants.nf, guru, {
           account: {
@@ -246,7 +255,7 @@ describe("auth/deletion release", () => {
         })
       );
       yield* fixture.run(suspend(fixture.tenants.nf));
-      yield* fixture.run(finalizeAccountDeletion(account.authUserId));
+      yield* fixture.run(deleteAndFinalize(account.userId));
       const person = yield* fixture.run(
         Effect.flatMap(DatabaseReader, (reader) =>
           reader.table("tenantPeople").get(personId)
@@ -259,7 +268,7 @@ describe("auth/deletion release", () => {
   it.effect("releases one batch at a time, and reports the rest", () =>
     Effect.gen(function* () {
       const fixture = yield* tenancyFixture;
-      const account = yield* fixture.account("kepala", guru, true);
+      const account = yield* fixture.account("kepala", guru);
       const user = yield* fixture.run(
         Effect.flatMap(DatabaseReader, (reader) =>
           reader.table("users").get(account.userId)
@@ -281,9 +290,9 @@ describe("auth/deletion release", () => {
     () =>
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
-        const account = yield* fixture.account("siswa", guru, true);
+        const account = yield* fixture.account("siswa", guru);
         yield* claimPersons(fixture, account.userId, BATCH_PLUS_ONE);
-        yield* fixture.run(finalizeAccountDeletion(account.authUserId));
+        yield* fixture.run(deleteAndFinalize(account.userId));
         const left = yield* claimedBy(fixture, account.userId);
         expect(Arr.map(left, (person) => person.account.state)).toEqual([
           "claimed",
@@ -294,7 +303,7 @@ describe("auth/deletion release", () => {
   it.effect("releases nothing for an account that holds no Person", () =>
     Effect.gen(function* () {
       const fixture = yield* tenancyFixture;
-      const account = yield* fixture.account("sendiri", guru, true);
+      const account = yield* fixture.account("sendiri", guru);
       const user = yield* fixture.run(
         Effect.flatMap(DatabaseReader, (reader) =>
           reader.table("users").get(account.userId)

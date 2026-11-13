@@ -4,7 +4,7 @@ import { POST_PAGE_SIZE } from "@repo/backend/client/posts/list";
 import type { Id } from "@repo/backend/confect/_generated/id";
 import refs from "@repo/backend/confect/_generated/refs";
 import {
-  createConvexTestWithBetterAuth,
+  createConvexTestWithAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
 import { seedSchoolMember } from "@repo/backend/test/member";
@@ -24,7 +24,7 @@ afterEach(() => vi.useRealTimers());
 
 /** Creates an author, another learner, and a signed-out caller of the same posts. */
 async function createReaders() {
-  const t = createConvexTestWithBetterAuth();
+  const t = createConvexTestWithAuth();
   const [author, stranger] = await t.mutation(async (ctx) =>
     Promise.all([
       seedAuthenticatedUser(ctx, { now, suffix: "list-author" }),
@@ -34,16 +34,10 @@ async function createReaders() {
   return {
     anonymous: t,
     author: {
-      session: t.withIdentity({
-        subject: author.authUserId,
-        sessionId: author.sessionId,
-      }),
+      session: t.withIdentity({ subject: author.sessionId }),
       userId: author.userId,
     },
-    stranger: t.withIdentity({
-      subject: stranger.authUserId,
-      sessionId: stranger.sessionId,
-    }),
+    stranger: t.withIdentity({ subject: stranger.sessionId }),
   };
 }
 

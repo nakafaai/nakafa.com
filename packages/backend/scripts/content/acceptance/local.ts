@@ -4,10 +4,6 @@ import {
 } from "@repo/backend/agent/edge";
 import { reserveAnalyticsOrigin } from "@repo/backend/scripts/content/acceptance/analytics";
 import {
-  createLocalJwks,
-  LOCAL_AUTH_SECRET,
-} from "@repo/backend/scripts/content/acceptance/auth";
-import {
   BUCKET_PATH,
   localBucketEnvironment,
 } from "@repo/backend/scripts/content/acceptance/bucket";
@@ -76,9 +72,9 @@ const LOCAL_RUNTIME_TOKEN = "acceptance-local-runtime";
 
 /**
  * One inert backend environment for signed reads in local production builds.
- * Google sign-in stays disabled; each runtime adds its own session signing key
- * as `JWKS` and its app origin as `SITE_URL`, so synthetic learners can sign in
- * locally. The acceptance seeds run only where `ACCEPTANCE_SEED` is set, and
+ * Google sign-in stays disabled; each runtime adds its app origin as `SITE_URL`,
+ * and synthetic learners sign in with Convex Auth's password method, whose
+ * tokens the deployment signs with its own key. The acceptance seeds run only where `ACCEPTANCE_SEED` is set, and
  * only this runtime sets it. The runtime offers every Google connector with an
  * inert client, so a browser test reaches Google's consent address and the
  * callback, and no exchange with Google succeeds.
@@ -92,7 +88,6 @@ export const localEnvironment = {
   GOOGLE_PICKER_API_KEY: "build-disabled",
   GOOGLE_AUTH_CLIENT_ID: "build-disabled",
   GOOGLE_AUTH_CLIENT_SECRET: "build-disabled",
-  BETTER_AUTH_SECRET: LOCAL_AUTH_SECRET,
   CONTENT_READ_TOKEN: LOCAL_RUNTIME_TOKEN,
   FIRECRAWL_API_KEY: "build-disabled",
   LOGIN_CARD_SECRET: "acceptance-local-login-card-secret",
@@ -276,30 +271,24 @@ export const initializeLocalRuntime = Effect.fn(
       "Anonymous Convex query and HTTP ports must differ."
     );
   }
-  const jwks = yield* createLocalJwks();
   // The bucket stand-in answers under the analytics stand-in's origin, so its address is known before the backend's environment is.
   const analytics = yield* reserveAnalyticsOrigin();
   yield* retryVersionServiceStart(
     command(
       ["env", "set", "--force"],
       Arr.join(
-        [
-          ...Arr.map(
-            Rec.toEntries({
-              ...localEnvironment,
-              AKSARA_AGENT_SIGNING_KEY_ID: identity.signing.keyId,
-              AKSARA_AGENT_SIGNING_PUBLIC_KEY: identity.signing.publicKeyPem,
-              AKSARA_PUBLICATION_TOKEN: identity.publicationToken,
-              ...localBucketEnvironment,
-              R2_ENDPOINT: `${analytics}${BUCKET_PATH}`,
-              SITE_URL: app,
-            }),
-            ([key, value]) => `${key}=${encodeJsonText(value)}`
-          ),
-          // Convex reads these lines with dotenv, which keeps a double-quoted
-          // value's escaped quotes but takes a single-quoted one literally.
-          `JWKS='${jwks}'`,
-        ],
+        Arr.map(
+          Rec.toEntries({
+            ...localEnvironment,
+            AKSARA_AGENT_SIGNING_KEY_ID: identity.signing.keyId,
+            AKSARA_AGENT_SIGNING_PUBLIC_KEY: identity.signing.publicKeyPem,
+            AKSARA_PUBLICATION_TOKEN: identity.publicationToken,
+            ...localBucketEnvironment,
+            R2_ENDPOINT: `${analytics}${BUCKET_PATH}`,
+            SITE_URL: app,
+          }),
+          ([key, value]) => `${key}=${encodeJsonText(value)}`
+        ),
         "\n"
       )
     )

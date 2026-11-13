@@ -221,7 +221,7 @@ describe("dependency updates", () => {
             stdout: outdatedTable("unreviewed-library"),
           };
         }
-        if (args[1] === "better-auth@latest") {
+        if (args[1] === "@convex-dev/auth@latest") {
           return { exitCode: 1, stderr: "", stdout: "" };
         }
         if (args[1] === "effect@latest") {
@@ -241,7 +241,7 @@ describe("dependency updates", () => {
         "registry unavailable\n" +
           "@effect/platform-node@latest returned invalid registry metadata.\n" +
           `@effect/platform-node-shared@latest is now 99.0.0; last reviewed ${sharedPlatformReview[1]}.\n` +
-          "Unable to inspect reviewed dependency better-auth@latest.\n" +
+          "Unable to inspect reviewed dependency @convex-dev/auth@latest.\n" +
           "Routine dependencies remain outdated: unreviewed-library.\n",
       ]);
       assert.ok(

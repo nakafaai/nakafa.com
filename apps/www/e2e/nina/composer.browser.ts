@@ -10,9 +10,9 @@ import { openSheet } from "@/e2e/support/sheet";
 import { waitUntilTakenOver } from "@/e2e/support/window";
 
 /** The answer that hands a signed-in page its Convex token. */
-const TOKEN_ANSWER = "/api/auth/convex/token";
-/** Better Auth's answer for the session, which a test holds back. */
-const SESSION_ANSWER = "**/api/auth/get-session**";
+const TOKEN_ANSWER = "/api/auth/refresh";
+/** the refresh route's answer, which a test holds back. */
+const SESSION_ANSWER = "**/api/auth/refresh**";
 
 const SAMPLE_IMAGE = Buffer.from(
   "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aZ1sAAAAASUVORK5CYII=",
@@ -176,7 +176,7 @@ for (const surface of EARLY_SURFACES) {
       Effect.gen(function* () {
         yield* seedAnalyticsConsent(page, "denied");
         yield* signInLearner(page.context(), origin);
-        // Better Auth's answer for the session is held back, so the press lands
+        // the refresh route's answer is held back, so the press lands
         // in the moment before the page knows who is signed in.
         const answered = yield* Deferred.make<void>();
         const run = Effect.runPromiseWith(yield* Effect.context<never>());

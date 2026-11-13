@@ -59,7 +59,6 @@ function subscriptionEvent(
 /** Seeds a user with a Polar account linked to the webhook customer. */
 async function seed(ctx: MutationCtx, customer = CUSTOMER) {
   const userId = await ctx.db.insert("users", {
-    authId: "auth-polar-webhook",
     credits: 0,
     creditsResetAt: 0,
     email: "polar-webhook@example.com",

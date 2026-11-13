@@ -113,10 +113,7 @@ describe("tryouts/queries/runtime", () => {
           )
         );
         const outsider = client(
-          world.t.withIdentity({
-            sessionId: other.sessionId,
-            subject: other.authUserId,
-          })
+          world.t.withIdentity({ subject: other.sessionId })
         );
         for (const caller of [world.visitor, outsider]) {
           expect(

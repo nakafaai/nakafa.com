@@ -23,7 +23,7 @@ import {
 } from "@repo/backend/confect/tenancy/schema";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import {
-  createConvexTestWithBetterAuth,
+  createConvexTestWithAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
 import { client, inMutation, internalClient } from "@repo/backend/test/client";
@@ -132,7 +132,6 @@ export const claimedMembers = Effect.fn("test.tenancy.claimedMembers")(
       (index) =>
         Effect.gen(function* () {
           const userId = yield* writer.table("users").insert({
-            authId: `member-${index}`,
             credits: 0,
             creditsResetAt: 0,
             email: `member-${index}@example.com`,
@@ -204,7 +203,7 @@ export const scheduledJobs = Effect.gen(function* () {
  * the delivery of its invitation email.
  */
 export const tenancyFixture = Effect.gen(function* () {
-  const t = createConvexTestWithBetterAuth();
+  const t = createConvexTestWithAuth();
   resendTest.register(t);
   workflowTest.register(t);
   const seeded = yield* Effect.promise(() =>
@@ -212,33 +211,21 @@ export const tenancyFixture = Effect.gen(function* () {
   );
   return Struct.assign(seeded, {
     /**
-     * Seeds one more account with this Better Auth email, verified or not, and a
-     * client signed in as it. A hosted domain seeds a Google account of it too,
-     * null a personal one.
+     * Seeds one more account that holds this address, and a client signed in
+     * as it. Every account's address is one Google verified, since Convex Auth
+     * makes no account from an unverified one (`auth/account`).
      */
-    account: (
-      suffix: string,
-      email: string,
-      emailVerified: boolean,
-      hostedDomain?: string | null
-    ) =>
+    account: (suffix: string, email: string) =>
       Effect.promise(async () => {
         const account = await t.mutation((ctx) =>
           seedAuthenticatedUser(ctx, {
             email,
-            emailVerified,
-            ...(hostedDomain === undefined ? {} : { hostedDomain }),
             now: TENANCY_NOW,
             suffix,
           })
         );
         return Struct.assign(account, {
-          client: client(
-            t.withIdentity({
-              sessionId: account.sessionId,
-              subject: account.authUserId,
-            })
-          ),
+          client: client(t.withIdentity({ subject: account.sessionId })),
         });
       }),
     anonymous: client(t),
@@ -251,10 +238,7 @@ export const tenancyFixture = Effect.gen(function* () {
       init?: RequestInit
     ) =>
       t
-        .withIdentity({
-          sessionId: seeded.users[account].sessionId,
-          subject: seeded.users[account].authUserId,
-        })
+        .withIdentity({ subject: seeded.users[account].sessionId })
         .fetch(path, init),
     /** Runs the scheduled functions whose time has come. */
     finishScheduled: () =>
@@ -268,18 +252,11 @@ export const tenancyFixture = Effect.gen(function* () {
         vi.advanceTimersByTime(ms);
         await t.finishInProgressScheduledFunctions();
       }),
-    /** A client signed in as any session the test made, by the session's ID and its Better Auth user. */
-    signedIn: (identity: {
-      readonly sessionId: string;
-      readonly subject: string;
-    }) => client(t.withIdentity(identity)),
+    /** A client signed in as any session the test made: an access token's subject is its session. */
+    signedIn: (sessionId: string) =>
+      client(t.withIdentity({ subject: sessionId })),
     as: (account: keyof typeof seeded.users) =>
-      client(
-        t.withIdentity({
-          sessionId: seeded.users[account].sessionId,
-          subject: seeded.users[account].authUserId,
-        })
-      ),
+      client(t.withIdentity({ subject: seeded.users[account].sessionId })),
     /** Calls internal functions the way the platform and `convex run` do, with no identity. */
     internal: internalClient(t),
     /** Runs a Confect program against the fixture's database, outside any function. */

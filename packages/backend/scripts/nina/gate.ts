@@ -82,7 +82,6 @@ export const runGate = Effect.fn("ninaGate.run")(function* () {
           deployment.retire(signedIn).pipe(
             Effect.catchTag("NinaGateError", (error) =>
               Effect.logWarning("The synthetic learner was not removed", {
-                authId: signedIn.authId,
                 reason: error.message,
               })
             )

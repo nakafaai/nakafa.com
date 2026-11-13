@@ -1,15 +1,13 @@
 import { Ref } from "@confect/core";
-// convex-test imports a function's module, and the Better Auth module behind a signed write, on the first
-// call, inside that test's 5 s, and the cold graph takes longer. Importing them here loads them while the
-// file is collected, so no test pays it.
-import "@repo/backend/components/betterAuth/session";
+// convex-test imports a function's module on the first call, inside that test's 5 s, and the cold graph
+// takes longer. Importing them here loads them while the file is collected, so no test pays it.
 import "@repo/backend/convex/comments/mutations";
 import "@repo/backend/convex/comments/queries";
 import { describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
 import { TEXT_REFUSAL_MESSAGE } from "@repo/backend/confect/comments/text";
 import {
-  createConvexTestWithBetterAuth,
+  createConvexTestWithAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
 import { LEARNER_TEXT_MAX_LENGTH } from "@repo/backend/confect/writing/text";
@@ -33,7 +31,7 @@ const paginationOpts = { cursor: null, numItems: 20 };
 
 /** An author and a reader, both signed in, with the clients that act as each of them. */
 async function createLearners() {
-  const t = createConvexTestWithBetterAuth();
+  const t = createConvexTestWithAuth();
   const [author, reader] = await t.mutation(async (ctx) =>
     Promise.all([
       seedAuthenticatedUser(ctx, { now, suffix: "comment-author" }),
@@ -43,17 +41,11 @@ async function createLearners() {
   return {
     t,
     author: {
-      session: t.withIdentity({
-        subject: author.authUserId,
-        sessionId: author.sessionId,
-      }),
+      session: t.withIdentity({ subject: author.sessionId }),
       userId: author.userId,
     },
     reader: {
-      session: t.withIdentity({
-        subject: reader.authUserId,
-        sessionId: reader.sessionId,
-      }),
+      session: t.withIdentity({ subject: reader.sessionId }),
       userId: reader.userId,
     },
   };

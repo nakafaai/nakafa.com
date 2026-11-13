@@ -97,6 +97,7 @@ export function isApplicationRoutePath(
   if (
     Arr.contains(
       [
+        "auth",
         "contributor",
         "home",
         "notifications",
@@ -108,10 +109,6 @@ export function isApplicationRoutePath(
     )
   ) {
     return segments.length === 0;
-  }
-
-  if (root === "auth") {
-    return Arr.contains(["", "error"], Arr.join(segments, "/"));
   }
 
   if (root === "chat") {

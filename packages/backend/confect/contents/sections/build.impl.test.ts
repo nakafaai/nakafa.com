@@ -6,7 +6,7 @@ import type {
   stepInputValidator,
 } from "@repo/backend/confect/contents/sections/build.spec";
 import { GatewayConfigurationError } from "@repo/backend/confect/gateway/failure";
-import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
+import { createConvexTestWithAuth } from "@repo/backend/confect/test.helpers";
 import { deployment, provider } from "@repo/backend/test/gateway";
 import {
   editKnowledgeLesson,
@@ -31,7 +31,7 @@ afterEach(() => {
 
 /** Runs a build from one step to the last, one step at a time as the scheduler does, and gives the position of each. */
 async function positionsFrom(
-  t: ReturnType<typeof createConvexTestWithBetterAuth>,
+  t: ReturnType<typeof createConvexTestWithAuth>,
   input: typeof stepInputValidator.Type
 ): Promise<readonly Position[]> {
   const step = await t.action(run, input);
@@ -44,7 +44,7 @@ async function positionsFrom(
 describe("section build function", () => {
   it("runs a step of the build for the active release", async () => {
     embedWithKnowledge();
-    const t = createConvexTestWithBetterAuth();
+    const t = createConvexTestWithAuth();
     await t.mutation(seedKnowledge);
     const result = await t.action(run, {});
     expect(result).toMatchObject({
@@ -57,7 +57,7 @@ describe("section build function", () => {
 
   it("resumes from the logged position of a step with the count of the sections it left out before that position", async () => {
     embedWithKnowledgeRefusing("Terlarang");
-    const t = createConvexTestWithBetterAuth();
+    const t = createConvexTestWithAuth();
     await t.mutation(async (ctx) => {
       await seedKnowledge(ctx);
       await editKnowledgeLesson(
@@ -84,7 +84,7 @@ describe("section build function", () => {
     deployment.mockReturnValue(
       Effect.fail(new GatewayConfigurationError({ message: "No gateway." }))
     );
-    const t = createConvexTestWithBetterAuth();
+    const t = createConvexTestWithAuth();
     await t.mutation(seedKnowledge);
     await expect(t.action(run, {})).rejects.toThrow();
   });

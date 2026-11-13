@@ -21,15 +21,12 @@ for the least permission that does the job, a permission the owner can take back
 at any time, and a strict split between a learner's own data and a school's
 data, the split that K3 makes for memory.
 
-Today Google is a sign-in provider only.
-`packages/backend/confect/auth/tokens.ts` sends Google the prompt
-`select_account` and no `access_type`, so Google issues no refresh token. It
-also turns off ID token sign-in. Better Auth's account hooks keep every provider
-token out of the `account` table (#1052 and #1069). Sign-in asks for no scope
-beyond Better Auth's defaults (`email`, `profile`, and `openid`). Better Auth's
-Google provider still adds `include_granted_scopes=true` to every sign-in request
-(`@better-auth/core` 1.6.33, `dist/social-providers/google.mjs`), so connectors
-keep a Google Cloud project of their own (see Decision).
+Today Google is a sign-in provider only. Convex Auth's Google method sends no
+`access_type`, so Google issues no refresh token, and it stores no provider
+token: its account row holds Google's subject and the Nakafa user (ADR 0009).
+Sign-in asks for `openid email profile` and no other scope
+(`components/google/constants.js` of `@convex-dev/auth` 2.0.0). Connectors keep a
+Google Cloud project of their own (see Decision).
 
 These rules of Google shape the design. Each was read on its own page on 13
 October 2026, and References lists the pages.
@@ -161,13 +158,10 @@ Google's class is the class on Google's page where the page gives one.
   a token that covers its own scopes.
 - Connectors use a Google Cloud project of their own, with their own OAuth
   client and consent screen. Sign-in keeps the project it has and never asks for
-  a connector scope (ADR 0009). Three facts decide it. Better Auth sends
-  `include_granted_scopes=true` with every sign-in request, so a sign-in in a
-  shared project would carry every connector scope the user granted. A
-  revocation removes every grant of the project, so a connector's revocation
-  would reach sign-in. The consent screen and its verification belong to the
-  project, so sign-in would sit behind a sensitive-scope review. With two
-  projects, none of the three crosses.
+  a connector scope (ADR 0009). Two facts decide it. A revocation removes every
+  grant of the project, so a connector's revocation would reach sign-in. The
+  consent screen and its verification belong to the project, so sign-in would
+  sit behind a sensitive-scope review. With two projects, neither crosses.
 - Each connection runs the authorization code flow with PKCE, method S256, which
   Google's discovery document lists.
 - The callback address is one fixed address per data cell. Google registers
@@ -260,11 +254,9 @@ Sign in with Google needs. Google names the error that follows a refusal
 | Teacher, by user ID | A member of the class who holds the teacher relation | The same rule |
 | Member email | Invitations only | An email never matches a member |
 
-ADR 0009 matches a school account by its Google issuer and subject. Better Auth
-takes a Google user's ID from the `sub` of the ID token (`@better-auth/core`
-1.6.33, `dist/social-providers/google.mjs`) and stores it as `accountId` beside
-`providerId`, with an `accountId_providerId` index
-(`packages/backend/components/betterAuth/schema.ts`). Google tells the
+ADR 0009 matches a Google identity by its subject. Convex Auth takes a Google
+user's ID from the `sub` of the ID token and stores it as `providerAccountId`,
+with an index on it (`lib/oauth/schema.js` of `@convex-dev/auth` 2.0.0). Google tells the
 application to use `sub` as the key of a user and not the email, which can
 change. A learner who never signs in with Google stays on the invitation list,
 and an invitation claim is the one place a verified email matches an account
@@ -423,12 +415,12 @@ Two kinds of connection decides.
 
 - Incremental authorization with `include_granted_scopes`. It puts every scope
   a user ever granted into each new token.
-- One Google Cloud project for sign-in and connectors. Better Auth's sign-in
-  request would carry the connector scopes, a revocation would reach sign-in,
-  and sign-in would sit behind the verification.
+- One Google Cloud project for sign-in and connectors. The grants would mix
+  between sign-in and connections, a revocation would reach sign-in, and
+  sign-in would sit behind the verification.
 - A second vault for connector tokens. The vault is the one place that seals
   text under an owner's key.
-- Storing tokens on the Better Auth account. ADR 0009 stops that.
+- Storing tokens on the sign-in account. ADR 0009 stops that.
 - Matching Classroom members by email. Google says an email can change and is
   not a stable key.
 - A workpool for each school. A pool is a component that is declared when the
@@ -544,9 +536,9 @@ section says why.
   `shared.ts`, on the order of starts. `@convex-dev/resend` 0.2.8,
   `src/component/lib.ts`, on its two pools.
 - Convex limits (docs.convex.dev/production/state/limits).
-- `@better-auth/core` 1.6.33, `dist/social-providers/google.mjs` and
-  `dist/oauth2/create-authorization-url.mjs`: the scopes, the PKCE method, the
-  `include_granted_scopes` parameter, and the user ID.
+- `@convex-dev/auth` 2.0.0, `components/google/constants.js` and
+  `lib/oauth/authorize.js`: the sign-in's scopes, its PKCE method, and the
+  parameters Google receives.
 - npm registry on 13 October 2026: `xlsx` 0.18.5 (Apache-2.0) and `exceljs`
   4.4.0 (MIT) are the latest releases.
 - The privacy policy of the Aksara release `edadc28a9d`

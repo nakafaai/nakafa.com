@@ -14,7 +14,7 @@ import { POPULARITY_WINDOW } from "@repo/backend/confect/contents/popularity";
 import { learningPopularityRankings } from "@repo/backend/confect/contents/rankings";
 import { listTrendingSubjects } from "@repo/backend/confect/contents/trending/impl";
 import {
-  createConvexTestWithBetterAuth,
+  createConvexTestWithAuth,
   registerLearningPopularityAggregate,
 } from "@repo/backend/confect/test.helpers";
 import { convexModules } from "@repo/backend/confect/test.setup";
@@ -288,7 +288,7 @@ describe("contents/queries/trending", () => {
   it("ranks a lesson from the views the pipeline recorded", async () => {
     vi.useFakeTimers({ now: CONTENT_VIEW_NOW });
     try {
-      const target = createConvexTestWithBetterAuth();
+      const target = createConvexTestWithAuth();
       const material = await target.mutation((ctx) => insertMaterial(ctx));
       for (const deviceId of [
         "device-1",

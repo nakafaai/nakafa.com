@@ -19,10 +19,7 @@ import notificationsInternal from "@repo/backend/confect/_generated/refs/notific
 import operatorsInternal from "@repo/backend/confect/_generated/refs/operators.server";
 import tenancyInternal from "@repo/backend/confect/_generated/refs/tenancy.server";
 import tryoutsInternal from "@repo/backend/confect/_generated/refs/tryouts.server";
-import {
-  ACCOUNT_DELETION_ATTEMPT_SWEEP_INTERVAL_HOURS,
-  ACCOUNT_DELETION_RECOVERY_SWEEP_INTERVAL_MINUTES,
-} from "@repo/backend/confect/auth/deletion/constants";
+import { AGENT_SWEEP_INTERVAL } from "@repo/backend/confect/auth/grant/sweep";
 import { BILLING_EVENT_SWEEP_INTERVAL_MINUTES } from "@repo/backend/confect/billing/sweep";
 import { PRUNE_INTERVAL } from "@repo/backend/confect/editor/prune";
 import { SITTING_SWEEP_INTERVAL } from "@repo/backend/confect/exams/sittings/sweep";
@@ -36,7 +33,6 @@ const CONTENT_ANALYTICS_BACKSTOP_INTERVAL_HOURS = 1;
 const CONTENT_RELEASE_COMPACTION_INTERVAL_MINUTES = 10;
 const CREDIT_RESET_PERIOD_RECONCILE_INTERVAL_MINUTES = 10;
 const EMAIL_RETENTION_SWEEP_INTERVAL_HOURS = 1;
-const GUARDIAN_CODE_SWEEP_INTERVAL_HOURS = 1;
 const INBOX_SWEEP_INTERVAL_MINUTES = 1;
 const INTEGRATION_TOKEN_SWEEP_INTERVAL_HOURS = 1;
 const WEBHOOK_DELIVERY_PRUNE_INTERVAL_HOURS = 1;
@@ -45,11 +41,16 @@ const INVITE_EXPIRY_SWEEP_INTERVAL_HOURS = 1;
 const TRYOUT_EXPIRY_SWEEP_INTERVAL_MINUTES = 5;
 const VISIT_EXPIRY_SWEEP_INTERVAL_HOURS = 1;
 
-/**
- * Reconciles prepared deletions even when an at-most-once recovery action
- * never starts.
- */
+/** Every scheduled job of the backend. */
 export default CronJobs.make()
+  .add(
+    CronJob.make(
+      "delete spent agent codes, ended grants and idle registrations",
+      AGENT_SWEEP_INTERVAL,
+      authInternal.grant.sweep,
+      {}
+    )
+  )
   .add(
     CronJob.make(
       "delete old school API requests",
@@ -174,22 +175,6 @@ export default CronJobs.make()
       "sweep stuck Nina turns",
       SWEEP_INTERVAL,
       ninaInternal.lifecycle.sweep,
-      {}
-    )
-  )
-  .add(
-    CronJob.make(
-      "sweep account deletion recovery",
-      Duration.minutes(ACCOUNT_DELETION_RECOVERY_SWEEP_INTERVAL_MINUTES),
-      authInternal.deletion.recovery.sweepAccountDeletionRecovery,
-      {}
-    )
-  )
-  .add(
-    /** Removes expired opaque attempt artifacts after the retry window closes. */ CronJob.make(
-      "sweep account deletion retention",
-      Duration.hours(ACCOUNT_DELETION_ATTEMPT_SWEEP_INTERVAL_HOURS),
-      authInternal.deletion.sweepAccountDeletionRetention,
       {}
     )
   )
@@ -388,15 +373,6 @@ export default CronJobs.make()
       "sweep inbox runs",
       Duration.minutes(INBOX_SWEEP_INTERVAL_MINUTES),
       notificationsInternal.consume.sweep,
-      {}
-    )
-  )
-  .add(
-    /** Deletes guardian sign-in codes that expired unused (ADR 0034). */
-    CronJob.make(
-      "delete expired guardian codes",
-      Duration.hours(GUARDIAN_CODE_SWEEP_INTERVAL_HOURS),
-      guardiansInternal.codes.sweep,
       {}
     )
   )

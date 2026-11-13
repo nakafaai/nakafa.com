@@ -158,7 +158,7 @@ export const countMismatch = (link: GuardianLinksDoc) =>
 /**
  * Grants consent on a link: writes the `granted` ledger row, makes the link the
  * verified relation, and journals `guardian.linked`, all in one transaction
- * (ADR 0034). `checker` is the guardian for `code_nisn` and the staff Person for
+ * (ADR 0034). `checker` is the guardian for `address_nisn` and the staff Person for
  * `staff`.
  */
 export const grantConsent = Effect.fn("guardians.link.grant")(function* (

@@ -8,7 +8,7 @@ import { hintCookieFor, hintScopeFor, isHintCurrent } from "@/lib/auth/hint";
 import { recoverStaleFunction } from "@/lib/chunks/stale";
 import { pricingCurrencyCookieFor } from "@/lib/pricing/currency";
 
-/** The path of Better Auth's routes, which the proxy serves on this site. */
+/** The path of the auth routes (`routes/api/auth`), which keep the session cookies. */
 const AUTH_ROUTE_PREFIX = "/api/auth/";
 
 /**
@@ -21,9 +21,9 @@ const AUTH_ROUTE_PREFIX = "/api/auth/";
  */
 const requestSession = createMiddleware({ type: "request" }).server(
   async ({ next, request }) => {
-    // Better Auth's own routes read the session themselves, and the proxy keeps the
-    // hint from the session read's answer (`withSessionHint`), so a second read here
-    // would only repeat a Convex call.
+    // The auth routes set the session cookies themselves and keep the hint from
+    // their own answer (`withSessionHint`), so a session read here would only
+    // repeat a Convex call.
     if (new URL(request.url).pathname.startsWith(AUTH_ROUTE_PREFIX)) {
       return next();
     }

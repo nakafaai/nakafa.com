@@ -14,7 +14,6 @@ const openedAccountValidator = Schema.Union([
   Schema.Struct({
     kind: Schema.Literal("open"),
     accountId: IdSchema("billingAccounts"),
-    authId: Schema.String,
     email: Schema.String,
     name: Schema.String,
     providerCustomerId: Schema.NullOr(Schema.String),

@@ -8,10 +8,6 @@ import { Duration, Schema } from "effect";
 
 /** How long a link waits for its check: the term of an invite (ADR 0034, GLOSSARY Invite). */
 export const LINK_TERM = Duration.days(14);
-/** How long one email code lives (ADR 0009). */
-export const CODE_TERM = Duration.minutes(5);
-/** Wrong tries that void one code (ADR 0009). */
-export const CODE_TRIES = 3;
 
 /**
  * The version of the consent rule a consent row was given under. The signed
@@ -60,21 +56,8 @@ export const guardianLinkValidator = Schema.Struct({
   tenantId: Id("tenants"),
 });
 
-/**
- * The one live sign-in code of one address at one school. Only an HMAC of the code
- * is kept, so a reader of the row cannot learn the code (ADR 0009). A new code
- * replaces the row, and a used, voided, or expired code is deleted.
- */
-export const guardianCodeValidator = Schema.Struct({
-  codeHash: Schema.String,
-  email: Email,
-  expiresAt: Schema.Finite,
-  tenantId: Id("tenants"),
-  tries: Schema.Finite,
-});
-
-/** How a consent was checked: the email code with the NISN, or a staff member's check. */
-export const ConsentMethod = Schema.Literals(["code_nisn", "staff"]);
+/** How a consent was checked: the guardian's verified address with the NISN, or a staff member's check. */
+export const ConsentMethod = Schema.Literals(["address_nisn", "staff"]);
 
 /**
  * One row of the append-only consent ledger. A withdrawal is a new row. A row holds
@@ -137,22 +120,6 @@ export const ChildView = Schema.Struct({
 
 /** The answer of a NISN check: verified, or refused with the same words as a wrong code. */
 export const ConfirmOutcome = Schema.Literals(["verified", "refused"]);
-
-/** The answer of a code request. It is the same whether or not the address has a link. */
-export const CodeSent = Schema.Struct({ expiresAt: Schema.Finite });
-
-/** What the code sign-in endpoint sends the internal redeem: the school, the address, and the typed code. */
-export const CodeRedeem = Schema.Struct({
-  code: Schema.String,
-  email: Schema.String,
-  slug: Schema.String,
-});
-
-/** The answer of a redeem: the Better Auth account to sign in, or a refusal with no reason. */
-export const RedeemAnswer = Schema.Union([
-  Schema.Struct({ authId: Schema.String, outcome: Schema.Literal("signedIn") }),
-  Schema.Struct({ outcome: Schema.Literal("refused") }),
-]);
 
 /** The NISN checks a link allows before only staff may check it. */
 export const NISN_TRIES = 3;

@@ -13,7 +13,7 @@ export default GroupSpec.make().addFunction(
   FunctionSpec.internalMutation({
     name: "linkPolarCustomer",
     args: () => ({
-      authId: Schema.String,
+      externalId: Schema.String,
       country: BillingCountry,
       providerCustomerId: Schema.String,
     }),

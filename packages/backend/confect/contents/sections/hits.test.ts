@@ -9,7 +9,7 @@ import {
 } from "@effect/vitest";
 import confectSchema from "@repo/backend/confect/_generated/schema";
 import { resolveHits } from "@repo/backend/confect/contents/sections/hits";
-import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
+import { createConvexTestWithAuth } from "@repo/backend/confect/test.helpers";
 import { provider } from "@repo/backend/test/gateway";
 import {
   embedWithKnowledge,
@@ -26,7 +26,7 @@ type Input = Parameters<typeof resolveHits>[0];
 /** A deployment whose active release is indexed. */
 async function indexed() {
   embedWithKnowledge();
-  const t = createConvexTestWithBetterAuth();
+  const t = createConvexTestWithAuth();
   await t.mutation(seedKnowledge);
   await knowledgeBuild(t).build();
   const rows = () =>

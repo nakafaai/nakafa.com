@@ -1,7 +1,7 @@
 import { type Browser, expect, test } from "@playwright/test";
 import { Effect } from "effect";
 import { saved, trackChanges } from "@/e2e/support/changes";
-import { seedGuardianCode } from "@/e2e/support/guardian";
+import { signInGuardian } from "@/e2e/support/guardian";
 import { giveRole } from "@/e2e/support/roles";
 import {
   createSchool,
@@ -157,18 +157,16 @@ async function signInParent(
   await saved(changes, linkedBefore);
   await settings.close();
 
+  await Effect.runPromise(
+    signInGuardian(
+      context,
+      { address: school.home, slug: school.slug },
+      email,
+      NISN
+    )
+  );
   const page = await context.newPage();
   await page.goto(new URL("/parents", school.home).href);
-  const send = page.getByRole("button", { name: "Send code" });
-  await waitUntilTakenOver(send);
-  await page.getByLabel("Parent email").fill(email);
-  await send.click();
-  await expect(page.getByLabel("Sign-in code")).toBeVisible();
-  const seeded = await Effect.runPromise(
-    seedGuardianCode(school.slug, email, NISN)
-  );
-  await page.getByLabel("Sign-in code").fill(seeded.code);
-  await page.getByRole("button", { name: "Sign in" }).click();
   await expect(page.getByRole("button", { name: CARD_STUDENT })).toBeVisible({
     timeout: readinessTimeoutMilliseconds,
   });

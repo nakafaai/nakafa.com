@@ -19,7 +19,7 @@ import type { PageNavigation } from "@/lib/content/page/navigation";
  * still pending when an ancestor context changes, so state that resolves in the browser
  * reaches readers through stores instead.
  *
- * @see https://labs.convex.dev/better-auth
+ * @see https://docs.convex.dev/auth/convex-auth/ssr-nextjs/setup
  */
 export function AppProviders({
   children,

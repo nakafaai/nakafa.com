@@ -14,7 +14,7 @@ import { inTheSheet, openSheet } from "@/e2e/support/sheet";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
 /** The session read, which these tests answer late so the viewer loads on screen. */
-const SESSION_READ = "**/api/auth/get-session**";
+const SESSION_READ = "**/api/auth/refresh**";
 /** How long the session read waits before it answers. */
 const SESSION_DELAY = Duration.seconds(2);
 

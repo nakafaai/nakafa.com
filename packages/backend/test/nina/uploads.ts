@@ -2,7 +2,7 @@ import { Ref } from "@confect/core";
 import type { Docs } from "@repo/backend/confect/_generated/docs";
 import refs from "@repo/backend/confect/_generated/refs";
 import {
-  createConvexTestWithBetterAuth,
+  createConvexTestWithAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
 import { NOW, start } from "@repo/backend/test/nina/admission";
@@ -42,14 +42,11 @@ export const sending = <T extends string>(uploadIds: T[]) => ({
 
 /** A backend with one signed-in learner who holds ten credits. */
 export async function uploadFixture() {
-  const t = createConvexTestWithBetterAuth();
+  const t = createConvexTestWithAuth();
   const identity = await t.mutation((ctx) =>
     seedAuthenticatedUser(ctx, { now: NOW, credits: 10 })
   );
-  const owner = t.withIdentity({
-    subject: identity.authUserId,
-    sessionId: identity.sessionId,
-  });
+  const owner = t.withIdentity({ subject: identity.sessionId });
   return { t, owner, identity };
 }
 
@@ -67,7 +64,7 @@ export const saved = async (
 
 /** The file of a ready upload, read from the test deployment. A test fails when the upload is not ready. */
 export async function readyFileIdIn(
-  t: ReturnType<typeof createConvexTestWithBetterAuth>,
+  t: ReturnType<typeof createConvexTestWithAuth>,
   uploadId: Docs["ninaUploads"]["_id"]
 ) {
   const grant = await t.query((ctx) => ctx.db.get("ninaUploads", uploadId));
@@ -91,7 +88,7 @@ export const started = async (owner: Owner, args: FunctionArgs<typeof start>) =>
   );
 
 /** A test deployment of the backend. */
-type Deployment = ReturnType<typeof createConvexTestWithBetterAuth>;
+type Deployment = ReturnType<typeof createConvexTestWithAuth>;
 
 /** A stored file of the bucket that no upload holds, for a call that names a file. */
 export const looseFile = (t: Deployment) =>

@@ -2,7 +2,7 @@ import { Ref } from "@confect/core";
 import { RateLimiter } from "@convex-dev/rate-limiter";
 import { afterEach, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
-import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
+import { createConvexTestWithAuth } from "@repo/backend/confect/test.helpers";
 
 afterEach(() => vi.restoreAllMocks());
 
@@ -11,7 +11,7 @@ it("reports a component outage as unavailable instead of approving an unmetered 
     new Error("quota unavailable")
   );
   await expect(
-    createConvexTestWithBetterAuth().mutation(
+    createConvexTestWithAuth().mutation(
       Ref.getFunctionReference(refs.internal.routes.agent.quota.consume),
       { key: "a".repeat(64) }
     )
@@ -24,7 +24,7 @@ it("reports a component outage as unavailable instead of approving an unmetered 
 });
 
 it("answers the reads left after each admitted read", async () => {
-  const t = createConvexTestWithBetterAuth();
+  const t = createConvexTestWithAuth();
   const consume = Ref.getFunctionReference(
     refs.internal.routes.agent.quota.consume
   );
@@ -42,7 +42,7 @@ it("reports an unreadable bucket as unavailable instead of guessing what is left
     new Error("bucket unavailable")
   );
   await expect(
-    createConvexTestWithBetterAuth().mutation(
+    createConvexTestWithAuth().mutation(
       Ref.getFunctionReference(refs.internal.routes.agent.quota.consume),
       { key: "c".repeat(64) }
     )

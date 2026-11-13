@@ -11,7 +11,7 @@ export class AccountUnavailable extends Schema.TaggedError<
   message: Schema.String,
 }) {}
 
-/** Better Auth could not establish a current session. */
+/** The caller's session could not be read. */
 export class SessionRequired extends Schema.TaggedError<
   SessionRequired,
   { readonly brand: unique symbol }

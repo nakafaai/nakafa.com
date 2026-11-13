@@ -22,13 +22,13 @@ two names in the repository today: the notification rules use `guardian`
 (`notifications/rules.ts`), and ADR 0012 names it `verified parent`. The
 `BuiltinRole` list keeps `guardian` for its label, "Orang tua".
 
-ADR 0009 plans the parent's sign-in with a six-digit email code. The code is
-valid five minutes, void after three wrong tries, and kept only as a keyed hash.
-ADR 0027 allows that code to be the one code an email carries, and no other.
+A parent signs in with Google (ADR 0009). Google verifies the parent's address,
+which is what the earlier six-digit email code proved, so no code is drawn,
+mailed, or stored (amended 13 November 2026, with the move to Convex Auth).
 
 K2 (owner, 13 October 2026) says the school is the data controller, signing in is
-not a child's consent, and a parent consents with an email code plus a second
-check. The time, method, policy version, and checker are recorded. K2 also held a
+not a child's consent, and a parent consents with a verified address plus a
+second check. The time, method, policy version, and checker are recorded. K2 also held a
 student below the age limit back from Nina, the class forum, and active grading
 until that consent. The owner's rule of 2 October 2026 replaces that part (see
 Status).
@@ -65,9 +65,9 @@ waits for the same guardian checks (see Linking a guardian).
    live links. Either way nothing about the link is verified yet. The link is a
    row with the same 14-day expiry as an invite (GLOSSARY, Invite). Nothing is sent
    to a guardian who has no link.
-2. The guardian signs in on the school host at `/parents` with the six-digit
-   code sent to that address. The code lives five minutes. Three wrong tries void
-   it, and the same request limit as the sign-in applies.
+2. The guardian signs in with Google with that address. Each sign-in binds the
+   guardian Person of every live link of the verified address that no account
+   holds yet (`claimGuardianPersons`, claim method `address`).
 3. The guardian enters the student's NISN, and the server compares it with the
    roster. The NISN is never shown back, and it is compared through the blind
    hash of the school key (ADR 0030, Blind word), so no plain NISN is read to
@@ -78,22 +78,16 @@ waits for the same guardian checks (see Linking a guardian).
 5. On success the server writes a `granted` consent row and the relation
    becomes active in the same transaction. It journals `guardian.linked`.
 
-A mismatch leaves the link unverified. The guardian sees the same message as for
-a wrong code, and Staff sees the mismatch in the link list. Nothing reveals
+A mismatch leaves the link unverified. The guardian sees one message whatever
+failed, and Staff sees the mismatch in the link list. Nothing reveals
 which of the two checks failed.
 
-### The email code
+### The verified address
 
-- The code is six digits. Nakafa stores only an HMAC-SHA-256 of it, under the
-  server secret and with a purpose label of its own, `guardian-code`, so a
-  login-card hash and a guardian code never match (ADR 0009, Login card and Parent).
-- The codes live in `guardianCodes`, which Nakafa writes itself. The Better Auth
-  email one-time-code plugin is not used for guardian codes, so no plugin storage
-  hook decides how a code is kept. That keeps the storage rule in code this
-  repository owns (ADR 0009).
-- `confect/emails` sends the code, and the email carries only the code and a
-  general sentence (ADR 0027). A code row is deleted when the code is used or its
-  link ends, and a sweep removes a code that has expired unused.
+- The proof of a guardian's address is Google's: the sign-in admits only an
+  address that Google verified (ADR 0009), and the claim matches it exactly to
+  the address the link names, both lowercase.
+- Nothing is mailed to a guardian, and no code is stored.
 
 ### The consent ledger
 
@@ -105,9 +99,9 @@ which of the two checks failed.
 | `studentPersonId`, `guardianPersonId` | The two Persons of the relation |
 | `action` | `granted` or `withdrawn` |
 | `at` | The server time of the row |
-| `method` | `code_nisn` for the email code and the NISN check, or `staff` for a manual check |
+| `method` | `address_nisn` for the verified address and the NISN check, or `staff` for a manual check |
 | `policyVersion` | The version of the signed consent rule of the country profile (ADR 0032). Until the profile is signed, a version constant in code, named for the profile it stands in for |
-| `checker` | The Person who gave the check: the guardian for `code_nisn`, or the staff Person for `staff` |
+| `checker` | The Person who gave the check: the guardian for `address_nisn`, or the staff Person for `staff` |
 
 A row holds IDs and codes only, never a name, an email address, or free text
 (ADR 0016). Withdrawal applies at once: its row ends the relation in the same
@@ -154,15 +148,13 @@ withdrawal is done (blueprint, Orang tua, requests).
 
 ## Rejected Alternatives
 
-- The Better Auth email one-time-code plugin for guardian codes. Its storage of
-  codes is the plugin's, and the repository would depend on a behaviour it has
-  not verified (ADR 0009 keeps the code's storage in Nakafa).
+- An email code for guardians, kept after the move to Convex Auth. Google already
+  verifies the address, so a code would add a secret to store and a mail to send
+  and prove nothing more.
 - A `guardian` relation with the role's name. The role grants nothing, so the
   relation name should say what the link is (ADR 0012).
 - An update of the consent state in place. The ledger must show every change.
 - Storing a birth date or an age flag. Nothing reads an age.
-- A guardian code accepted on nakafa.com. ADR 0009 accepts a parent's code only on
-  the school host, at `/parents`, so a code typed anywhere else finds nothing.
 
 ## What Stays Open
 
@@ -177,7 +169,7 @@ withdrawal is done (blueprint, Orang tua, requests).
 | --- | --- |
 | The decision in this ADR | Recorded by S0 |
 | `verifiedParent` relation and the link rows | Built, S7: `guardianLinks` and the `guardianLink` kind (`confect/guardians`). Admin and Staff start, list, check by hand, and revoke links (`guardians/links`). An address reuses its guardian Person, and one address holds one live link to a student. |
-| `guardianCodes` and the email code at `/parents` | Built, S8: `guardians/codes:send` mails the code from the mutation that draws it, through `confect/emails`, and answers the same for every address. The HMAC uses `LOGIN_CARD_SECRET` under the purpose label `nakafa/identity/guardian-code/v1`, bound to the school and the address (`identity/secret.ts`). The school host's Better Auth endpoint `/school/guardian/sign-in` (`auth/guardian.ts`) redeems the code through `guardians/codes:redeem`, binds the guardian Person with the claim method `code`, and makes the session. A sweep deletes expired codes hourly. |
+| The verified address (replaced the email code on 13 November 2026) | Built: a guardian signs in with Google, and `guardians/claim.ts` binds the guardian Persons of the address's live links (claim method `address`). |
 | `guardianConsents` and the NISN second check | Built, S8: the guardian's check compares the blind of the typed NISN with the roster's (`guardians/family:confirm`). Three mismatches leave only the staff check. Withdrawal writes the `withdrawn` row with the method of its grant and ends the link in one transaction. |
 | The NISN on the school roster | Built: `rosterEntries` holds the NISN, sealed and blinded under the school key (`confect/roster`). Admin and Staff set it with `roster/entries:set`, and the Dapodik import sets it (ADR 0015). |
 | Guardian notices and the rename of the notification relation | Planned, S9 |

@@ -37,7 +37,7 @@ function startsNoSession() {
  * keeps its text while the page's session settles, so a signed-in learner never
  * sees it dim and come back. A visitor's attach and send ask for sign-in. A send
  * or an attach pressed while the session loads, or before the live composer
- * loaded, is held: a session that Better Auth confirms loads the live composer,
+ * loaded, is held: a session that Convex Auth confirms loads the live composer,
  * which admits the send or opens the file picker, and any other answer, signed
  * out or a read that failed, asks for sign-in, where a learner who is signed in
  * after all is sent straight back. The page's session starts only after React
@@ -71,7 +71,7 @@ function NinaComposerInput() {
       Deferred.doneUnsafe(sessionKnown, Effect.void);
     }
   }, [hasSessionError, isSessionPending, isSignedIn, sessionKnown]);
-  /** Loads the live composer for a session Better Auth confirmed, or asks for sign-in. */
+  /** Loads the live composer for a session Convex Auth confirmed, or asks for sign-in. */
   function followSession() {
     if (isSignedIn && hasSession) {
       startTransition(() => setEngaged(true));

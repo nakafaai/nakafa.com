@@ -1,4 +1,5 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
+import { Id } from "@repo/backend/confect/_generated/id";
 import { SeedRefused } from "@repo/backend/confect/acceptance/seed";
 import { Nisn } from "@repo/backend/confect/roster/schema";
 import { Email } from "@repo/backend/confect/tenancy/schema";
@@ -10,9 +11,10 @@ import { Schema } from "effect";
  */
 export default GroupSpec.make().addFunction(
   FunctionSpec.internalMutation({
-    name: "code",
+    name: "account",
     args: () => ({ email: Email, nisn: Nisn, slug: Schema.String }),
-    returns: () => Schema.Struct({ code: Schema.String }),
+    returns: () =>
+      Schema.Struct({ password: Schema.String, userId: Id("users") }),
     error: () => SeedRefused,
   })
 );

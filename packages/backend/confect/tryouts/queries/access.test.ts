@@ -1,6 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
 import {
-  createConvexTestWithBetterAuth,
+  createConvexTestWithAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
 import { api } from "@repo/backend/convex/_generated/api";
@@ -20,7 +20,7 @@ const startAccessArgs: FunctionArgs<
 
 describe("tryouts/queries/access", () => {
   it("shows free access to anonymous and free accounts", async () => {
-    const t = createConvexTestWithBetterAuth();
+    const t = createConvexTestWithAuth();
 
     expect(
       await t.query(api.tryouts.queries.access.getStartAccess, startAccessArgs)
@@ -32,10 +32,7 @@ describe("tryouts/queries/access", () => {
         suffix: "start-access-free",
       })
     );
-    const authed = t.withIdentity({
-      sessionId: identity.sessionId,
-      subject: identity.authUserId,
-    });
+    const authed = t.withIdentity({ subject: identity.sessionId });
 
     expect(
       await authed.query(
@@ -46,7 +43,7 @@ describe("tryouts/queries/access", () => {
   });
 
   it("shows included access to a Pro learner whose plan comes from a pass, with no subscription", async () => {
-    const t = createConvexTestWithBetterAuth();
+    const t = createConvexTestWithAuth();
     const identity = await t.mutation((ctx) =>
       seedAuthenticatedUser(ctx, {
         now: TRYOUT_NOW,
@@ -54,10 +51,7 @@ describe("tryouts/queries/access", () => {
         suffix: "start-access-included",
       })
     );
-    const authed = t.withIdentity({
-      sessionId: identity.sessionId,
-      subject: identity.authUserId,
-    });
+    const authed = t.withIdentity({ subject: identity.sessionId });
 
     expect(
       await authed.query(

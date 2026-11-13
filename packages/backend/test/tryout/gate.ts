@@ -200,12 +200,7 @@ export const seedTryoutGate = Effect.gen(function* () {
   yield* Effect.sync(() => vi.setSystemTime(GATE_NOW));
   const clients = {
     learner: world.learner,
-    other: client(
-      world.t.withIdentity({
-        sessionId: seeded.other.sessionId,
-        subject: seeded.other.authUserId,
-      })
-    ),
+    other: client(world.t.withIdentity({ subject: seeded.other.sessionId })),
   };
   const placements = {
     missing: seeded.missingPlacementId,

@@ -4,7 +4,7 @@ import databaseSchema from "@repo/backend/confect/_generated/schema";
 import { requireChatOwner } from "@repo/backend/confect/chats/access/owner";
 import { ChatAccessError } from "@repo/backend/confect/chats/access/spec";
 import {
-  createConvexTestWithBetterAuth,
+  createConvexTestWithAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
 import { Effect, Schema } from "effect";
@@ -13,7 +13,7 @@ const now = Date.UTC(2026, 8, 1);
 
 describe("private chat ownership", () => {
   it("loads only the owner's chat and preserves typed missing and forbidden failures", async () => {
-    const t = createConvexTestWithBetterAuth();
+    const t = createConvexTestWithAuth();
     const { owner, outsider, chatId } = await t.mutation(async (ctx) => {
       const owner = await seedAuthenticatedUser(ctx, {
         now,

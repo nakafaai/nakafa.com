@@ -9,7 +9,7 @@ import type { NinaHistoryCost } from "@repo/backend/confect/nina/contract/turn";
 import { readInput } from "@repo/backend/confect/nina/input";
 import { refreshSummary } from "@repo/backend/confect/nina/summary";
 import {
-  createConvexTestWithBetterAuth,
+  createConvexTestWithAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
 import { GatewayIsolated } from "@repo/backend/test/gateway";
@@ -100,7 +100,7 @@ export async function createSummaryTest(
   shape: (order: number) => typeof EarlierTurn.Type = () => ({}),
   options: { readonly copy?: "plain" | "written" | "sealed" } = {}
 ) {
-  const t = createConvexTestWithBetterAuth();
+  const t = createConvexTestWithAuth();
   const plain = await t.mutation(async (ctx) => {
     const { userId } = await seedAuthenticatedUser(ctx, { now: NOW });
     const threadId = await createThread(ctx, components.nina, { userId });

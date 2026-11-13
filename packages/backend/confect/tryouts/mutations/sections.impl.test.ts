@@ -242,10 +242,7 @@ describe("tryouts/mutations/sections", () => {
           )
         );
         const otherLearner = client(
-          world.t.withIdentity({
-            sessionId: other.sessionId,
-            subject: other.authUserId,
-          })
+          world.t.withIdentity({ subject: other.sessionId })
         );
         for (const call of [
           tryouts.mutations.sections.start,

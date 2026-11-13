@@ -11,7 +11,7 @@ import { ACTIVE_APP_LOCALE_CODES } from "@nakafa/aksara-contracts/locale";
 import { QURAN_SURAH_COUNT } from "@nakafa/aksara-contracts/quran/spec";
 import confectSchema from "@repo/backend/confect/_generated/schema";
 import { readSurah } from "@repo/backend/confect/contents/sections/quran";
-import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
+import { createConvexTestWithAuth } from "@repo/backend/confect/test.helpers";
 import { TEST_RELEASE_ID } from "@repo/backend/test/content/release";
 import { provider } from "@repo/backend/test/gateway";
 import {
@@ -28,7 +28,7 @@ import {
 import { Array as Arr, Effect, Option } from "effect";
 
 function setup() {
-  const t = createConvexTestWithBetterAuth();
+  const t = createConvexTestWithAuth();
   const read = (input: Parameters<typeof readSurah>[0]) =>
     t.mutation((ctx) =>
       Effect.runPromise(
@@ -275,7 +275,7 @@ describe("section build of the Quran", () => {
 
   /** A test deployment with the steps of the build and the rows that they store. */
   function building() {
-    const t = createConvexTestWithBetterAuth();
+    const t = createConvexTestWithAuth();
     const rows = () =>
       t.query((ctx) => ctx.db.query("contentSections").collect());
     const sources = () =>

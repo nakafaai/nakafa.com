@@ -4,9 +4,8 @@ import { isAccountDeletionPending } from "@repo/backend/confect/auth/deletion/st
 describe("auth/deletion/state", () => {
   it.each([
     [{}, false],
-    [{ deletionPreparedAt: 1 }, true],
     [{ deletedAt: 1 }, true],
-  ])("classifies account deletion state", (state, expected) => {
+  ])("treats only a deleted account as quiesced", (state, expected) => {
     expect(isAccountDeletionPending(state)).toBe(expected);
   });
 });

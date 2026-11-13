@@ -1,11 +1,11 @@
 import { RateLimiter } from "@convex-dev/rate-limiter";
 import { expect } from "@effect/vitest";
-import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
+import { createConvexTestWithAuth } from "@repo/backend/confect/test.helpers";
 import { seedArticle, seedQuran } from "@repo/backend/test/mcp/seed";
 import { encodeJsonText, JsonTextSchema } from "@repo/utilities/json";
 import { Array as Arr, Effect, Record, Schema } from "effect";
 
-type BackendTest = ReturnType<typeof createConvexTestWithBetterAuth>;
+type BackendTest = ReturnType<typeof createConvexTestWithAuth>;
 
 /** Wire literals that a client or the edge Worker sends or receives. */
 const MCP_PATH = "/internal/mcp";
@@ -203,7 +203,7 @@ const ARRANGEMENTS: Record<
 export const sendMcpCase = Effect.fn("TestMcp.sendCase")(function* (
   testCase: McpCase
 ) {
-  const test = createConvexTestWithBetterAuth();
+  const test = createConvexTestWithAuth();
   yield* ARRANGEMENTS[testCase.arrangement ?? "empty"](test);
   return yield* Effect.promise(() => sendMcpRequest(test, testCase.request));
 });

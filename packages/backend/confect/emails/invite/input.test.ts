@@ -106,7 +106,7 @@ describe("emails/invite/input", () => {
     Effect.gen(function* () {
       const fixture = yield* tenancyFixture;
       yield* fixture.run(signedPages);
-      const account = yield* fixture.account("kepala", address, true);
+      const account = yield* fixture.account("kepala", address);
       const { inviteId } = yield* fixture.run(
         invitePerson(fixture.tenants.nf, address, {
           invite: { at: 1, status: "accepted", userId: account.userId },

@@ -12,7 +12,7 @@ import { questionArticle } from "@/e2e/support/player";
 import { waitForQuiet } from "@/e2e/support/quiet";
 
 /** The route the page reads its Convex token from. */
-const TOKEN_ROUTE = "**/api/auth/convex/token**";
+const TOKEN_ROUTE = "**/api/auth/refresh**";
 
 /**
  * Has Convex refuse the page's session while its next token read is refused

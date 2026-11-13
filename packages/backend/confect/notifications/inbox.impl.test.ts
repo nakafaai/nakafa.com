@@ -35,15 +35,10 @@ describe("notifications/inbox list", () => {
     () =>
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
-        const ana = yield* fixture.account(
-          "ana",
-          "ana@harapan.example.test",
-          true
-        );
+        const ana = yield* fixture.account("ana", "ana@harapan.example.test");
         const budi = yield* fixture.account(
           "budi",
-          "budi@harapan.example.test",
-          true
+          "budi@harapan.example.test"
         );
         const anaNf = yield* addPerson(fixture, fixture.tenants.nf, "Ana");
         const anaOther = yield* addPerson(
@@ -93,11 +88,7 @@ describe("notifications/inbox list", () => {
   it.effect("pages the rows, and continues after the last row shown", () =>
     Effect.gen(function* () {
       const fixture = yield* tenancyFixture;
-      const ana = yield* fixture.account(
-        "ana",
-        "ana@harapan.example.test",
-        true
-      );
+      const ana = yield* fixture.account("ana", "ana@harapan.example.test");
       const anaNf = yield* addPerson(fixture, fixture.tenants.nf, "Ana");
       const anaOther = yield* addPerson(fixture, fixture.tenants.other, "Ana");
       yield* inviteAt(fixture, "nf", anaNf, "ana@harapan.example.test");
@@ -129,11 +120,7 @@ describe("notifications/inbox list", () => {
     () =>
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
-        const ana = yield* fixture.account(
-          "ana",
-          "ana@harapan.example.test",
-          true
-        );
+        const ana = yield* fixture.account("ana", "ana@harapan.example.test");
         const anaNf = yield* addPerson(fixture, fixture.tenants.nf, "Ana");
         const anaOther = yield* addPerson(
           fixture,
@@ -205,11 +192,7 @@ describe("notifications/inbox list", () => {
     () =>
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
-        const ana = yield* fixture.account(
-          "ana",
-          "ana@harapan.example.test",
-          true
-        );
+        const ana = yield* fixture.account("ana", "ana@harapan.example.test");
         const anaNf = yield* addPerson(fixture, fixture.tenants.nf, "Ana");
         const made = yield* inviteAt(fixture, "nf", anaNf, ANA);
         yield* claim(fixture, anaNf, ana.userId);
@@ -268,11 +251,7 @@ describe("notifications/inbox list", () => {
     () =>
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
-        const ana = yield* fixture.account(
-          "ana",
-          "ana@harapan.example.test",
-          true
-        );
+        const ana = yield* fixture.account("ana", "ana@harapan.example.test");
         yield* claimedPersons(fixture, ana.userId, HELD_SCHOOL_LIMIT + 1);
         const refusedList = yield* ana.client
           .query(list, firstPage)
@@ -292,11 +271,7 @@ describe("notifications/inbox list", () => {
   it.effect("refuses a page cursor that the list did not return", () =>
     Effect.gen(function* () {
       const fixture = yield* tenancyFixture;
-      const ana = yield* fixture.account(
-        "ana",
-        "ana@harapan.example.test",
-        true
-      );
+      const ana = yield* fixture.account("ana", "ana@harapan.example.test");
       const refused = yield* ana.client
         .query(list, {
           paginationOpts: { cursor: "not a cursor", numItems: 1 },
@@ -327,11 +302,7 @@ describe("notifications/inbox list", () => {
   it.effect("keeps the cursor of a page that holds no more rows", () =>
     Effect.gen(function* () {
       const fixture = yield* tenancyFixture;
-      const ana = yield* fixture.account(
-        "ana",
-        "ana@harapan.example.test",
-        true
-      );
+      const ana = yield* fixture.account("ana", "ana@harapan.example.test");
       const anaNf = yield* addPerson(fixture, fixture.tenants.nf, "Ana");
       yield* inviteAt(fixture, "nf", anaNf, "ana@harapan.example.test");
       yield* consumeSchool(fixture, fixture.tenants.nf);
@@ -350,11 +321,7 @@ describe("notifications/inbox read", () => {
   it.effect("marks one row read at the moment of the first read only", () =>
     Effect.gen(function* () {
       const fixture = yield* tenancyFixture;
-      const ana = yield* fixture.account(
-        "ana",
-        "ana@harapan.example.test",
-        true
-      );
+      const ana = yield* fixture.account("ana", "ana@harapan.example.test");
       const anaNf = yield* addPerson(fixture, fixture.tenants.nf, "Ana");
       yield* inviteAt(fixture, "nf", anaNf, "ana@harapan.example.test");
       yield* consumeSchool(fixture, fixture.tenants.nf);
@@ -381,15 +348,10 @@ describe("notifications/inbox read", () => {
     () =>
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
-        const ana = yield* fixture.account(
-          "ana",
-          "ana@harapan.example.test",
-          true
-        );
+        const ana = yield* fixture.account("ana", "ana@harapan.example.test");
         const budi = yield* fixture.account(
           "budi",
-          "budi@harapan.example.test",
-          true
+          "budi@harapan.example.test"
         );
         const anaNf = yield* addPerson(fixture, fixture.tenants.nf, "Ana");
         yield* inviteAt(fixture, "nf", anaNf, "ana@harapan.example.test");
@@ -411,11 +373,7 @@ describe("notifications/inbox read", () => {
   it.effect("refuses a row of a Person the account no longer holds", () =>
     Effect.gen(function* () {
       const fixture = yield* tenancyFixture;
-      const ana = yield* fixture.account(
-        "ana",
-        "ana@harapan.example.test",
-        true
-      );
+      const ana = yield* fixture.account("ana", "ana@harapan.example.test");
       const anaNf = yield* addPerson(fixture, fixture.tenants.nf, "Ana");
       yield* inviteAt(fixture, "nf", anaNf, "ana@harapan.example.test");
       yield* consumeSchool(fixture, fixture.tenants.nf);

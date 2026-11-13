@@ -1,7 +1,7 @@
 import { Ref } from "@confect/core";
 import refs from "@repo/backend/confect/_generated/refs";
 import {
-  createConvexTestWithBetterAuth,
+  createConvexTestWithAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
 import { ninaStream, ninaToolInput, ninaUsage } from "@repo/backend/test/nina";
@@ -13,7 +13,6 @@ import { Array as Arr, Record } from "effect";
 // time: about a second each for the learner's seed, the admission and the answer on a loaded
 // machine. A learner asked here calls these three, so they load while the test file is
 // collected, and a seal test's time holds its turn and not those imports.
-import "@repo/backend/components/betterAuth/adapter";
 import "@repo/backend/convex/nina/response";
 import "@repo/backend/convex/nina/turns";
 
@@ -98,14 +97,11 @@ export function plantedModel() {
  * chat, the thread, the turn and the prompt.
  */
 export async function askedIn(text: string) {
-  const t = createConvexTestWithBetterAuth();
+  const t = createConvexTestWithAuth();
   const identity = await t.mutation((ctx) =>
     seedAuthenticatedUser(ctx, { now: NOW, credits: 10 })
   );
-  const owner = t.withIdentity({
-    subject: identity.authUserId,
-    sessionId: identity.sessionId,
-  });
+  const owner = t.withIdentity({ subject: identity.sessionId });
   const receipt = Ref.decodeReturnsSync(
     refs.public.nina.turns.start,
     await owner.mutation(start, {

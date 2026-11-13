@@ -1,14 +1,12 @@
 import { Ref } from "@confect/core";
-// convex-test imports a function's module, and the Better Auth module behind a signed write, on the first
-// call, inside that test's 5 s, and the cold graph takes longer. Importing them here loads them while the
-// file is collected, so no test pays it.
-import "@repo/backend/components/betterAuth/session";
+// convex-test imports a function's module on the first call, inside that test's 5 s, and the cold graph
+// takes longer. Importing them here loads them while the file is collected, so no test pays it.
 import "@repo/backend/convex/comments/mutations";
 import "@repo/backend/convex/comments/queries";
 import { describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
 import {
-  createConvexTestWithBetterAuth,
+  createConvexTestWithAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
 import { api } from "@repo/backend/convex/_generated/api";
@@ -41,7 +39,7 @@ function rowOf<T extends { text: string }>(page: readonly T[], text: string) {
 
 describe("comments/queries", () => {
   it("shows the animal of each author and of each reply target", async () => {
-    const t = createConvexTestWithBetterAuth();
+    const t = createConvexTestWithAuth();
     const asker = await t.mutation(async (ctx) => {
       const user = await seedAuthenticatedUser(ctx, {
         now,
@@ -55,20 +53,14 @@ describe("comments/queries", () => {
     );
     const slug = "articles/animals";
     const question = await t
-      .withIdentity({
-        subject: asker.authUserId,
-        sessionId: asker.sessionId,
-      })
+      .withIdentity({ subject: asker.sessionId })
       .mutation(api.comments.mutations.addComment, {
         uploads: [],
         slug,
         text: "Pertanyaan",
       });
     await t
-      .withIdentity({
-        subject: answerer.authUserId,
-        sessionId: answerer.sessionId,
-      })
+      .withIdentity({ subject: answerer.sessionId })
       .mutation(api.comments.mutations.addComment, {
         uploads: [],
         slug,
@@ -105,7 +97,7 @@ describe("comments/queries", () => {
   });
 
   it("shows no author for a comment and no reply target whose author row no longer exists", async () => {
-    const t = createConvexTestWithBetterAuth();
+    const t = createConvexTestWithAuth();
     const gone = await t.mutation((ctx) =>
       seedAuthenticatedUser(ctx, { now, suffix: "gone-author" })
     );
@@ -114,17 +106,14 @@ describe("comments/queries", () => {
     );
     const slug = "articles/removed";
     const question = await t
-      .withIdentity({ subject: gone.authUserId, sessionId: gone.sessionId })
+      .withIdentity({ subject: gone.sessionId })
       .mutation(api.comments.mutations.addComment, {
         uploads: [],
         slug,
         text: "Pertanyaan lama",
       });
     await t
-      .withIdentity({
-        subject: replier.authUserId,
-        sessionId: replier.sessionId,
-      })
+      .withIdentity({ subject: replier.sessionId })
       .mutation(api.comments.mutations.addComment, {
         uploads: [],
         slug,
@@ -150,7 +139,7 @@ describe("comments/queries", () => {
   });
 
   it("shows an author's Google photo only while the author shows it", async () => {
-    const t = createConvexTestWithBetterAuth();
+    const t = createConvexTestWithAuth();
     const asker = await t.mutation(async (ctx) => {
       const user = await seedAuthenticatedUser(ctx, {
         now,
@@ -174,20 +163,14 @@ describe("comments/queries", () => {
     });
     const slug = "articles/photos";
     const question = await t
-      .withIdentity({
-        subject: asker.authUserId,
-        sessionId: asker.sessionId,
-      })
+      .withIdentity({ subject: asker.sessionId })
       .mutation(api.comments.mutations.addComment, {
         uploads: [],
         slug,
         text: "Pertanyaan foto",
       });
     await t
-      .withIdentity({
-        subject: answerer.authUserId,
-        sessionId: answerer.sessionId,
-      })
+      .withIdentity({ subject: answerer.sessionId })
       .mutation(api.comments.mutations.addComment, {
         uploads: [],
         slug,
@@ -222,21 +205,15 @@ describe("comments/queries", () => {
   });
 
   it("lists only the top-level comments of a slug, and says which of them the viewer liked", async () => {
-    const t = createConvexTestWithBetterAuth();
+    const t = createConvexTestWithAuth();
     const author = await t.mutation((ctx) =>
       seedAuthenticatedUser(ctx, { now, suffix: "list-author" })
     );
     const reader = await t.mutation((ctx) =>
       seedAuthenticatedUser(ctx, { now, suffix: "list-reader" })
     );
-    const authorClient = t.withIdentity({
-      subject: author.authUserId,
-      sessionId: author.sessionId,
-    });
-    const readerClient = t.withIdentity({
-      subject: reader.authUserId,
-      sessionId: reader.sessionId,
-    });
+    const authorClient = t.withIdentity({ subject: author.sessionId });
+    const readerClient = t.withIdentity({ subject: reader.sessionId });
     const slug = "articles/listing";
     const root = await authorClient.mutation(
       api.comments.mutations.addComment,
@@ -271,7 +248,7 @@ describe("comments/queries", () => {
   });
 
   it("reads a school member's comments to the member alone, and an empty page to anyone else (K15)", async () => {
-    const t = createConvexTestWithBetterAuth();
+    const t = createConvexTestWithAuth();
     const author = await t.mutation(async (ctx) => {
       const seeded = await seedAuthenticatedUser(ctx, {
         now,
@@ -294,12 +271,7 @@ describe("comments/queries", () => {
       });
 
     expect(
-      await readAs(
-        t.withIdentity({
-          sessionId: author.sessionId,
-          subject: author.authUserId,
-        })
-      )
+      await readAs(t.withIdentity({ subject: author.sessionId }))
     ).toMatchObject({ page: [{ text: "Komentar anggota sekolah" }] });
     expect(await readAs(t)).toStrictEqual({
       continueCursor: "",
@@ -309,7 +281,7 @@ describe("comments/queries", () => {
   });
 
   it("reads one comment with its author, and nothing once it is deleted", async () => {
-    const t = createConvexTestWithBetterAuth();
+    const t = createConvexTestWithAuth();
     const { reply, session } = await t.mutation(async (ctx) => {
       const user = await seedAuthenticatedUser(ctx, {
         now,
@@ -329,10 +301,7 @@ describe("comments/queries", () => {
     const getComment = Ref.getFunctionReference(
       refs.public.comments.queries.getComment
     );
-    const reader = t.withIdentity({
-      subject: session.authUserId,
-      sessionId: session.sessionId,
-    });
+    const reader = t.withIdentity({ subject: session.sessionId });
 
     expect(await reader.query(getComment, { commentId: reply })).toMatchObject({
       liked: false,
@@ -347,21 +316,15 @@ describe("comments/queries", () => {
   });
 
   it("orders a slug's comments by likes for Top and by time for Newest, and counts its comments with replies", async () => {
-    const t = createConvexTestWithBetterAuth();
+    const t = createConvexTestWithAuth();
     const [author, reader] = await t.mutation((ctx) =>
       Promise.all([
         seedAuthenticatedUser(ctx, { now, suffix: "order-author" }),
         seedAuthenticatedUser(ctx, { now, suffix: "order-reader" }),
       ])
     );
-    const authorClient = t.withIdentity({
-      subject: author.authUserId,
-      sessionId: author.sessionId,
-    });
-    const readerClient = t.withIdentity({
-      subject: reader.authUserId,
-      sessionId: reader.sessionId,
-    });
+    const authorClient = t.withIdentity({ subject: author.sessionId });
+    const readerClient = t.withIdentity({ subject: reader.sessionId });
     const slug = "articles/order";
     const post = (text: string) =>
       authorClient.mutation(api.comments.mutations.addComment, {

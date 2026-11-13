@@ -8,6 +8,7 @@ import {
 import { Effect } from "effect";
 import type { reportClientException } from "@/lib/analytics/client";
 import { AnalyticsConsentStorageFailed } from "@/lib/analytics/consent/storage";
+import { SignOutFailed } from "@/lib/auth/client";
 import {
   AccountSignOutFailed,
   clearAccountBrowserIdentity,
@@ -16,8 +17,13 @@ import {
 } from "@/lib/auth/identity/browser";
 import { followAuthSession, releaseSession } from "@/lib/auth/session";
 
-const authClient = vi.hoisted(() => ({ signOut: vi.fn() }));
-vi.mock("@/lib/auth/client", () => ({ readAuthClient: () => authClient }));
+/** The page's sign-out through Convex Auth's client, which the default sign-out runs. */
+const signOutSession = vi.hoisted(() => vi.fn());
+vi.mock(import("@/lib/auth/client"), async (importOriginal) => ({
+  ...(await importOriginal()),
+  signOutSession,
+}));
+vi.mock("@/lib/convex/client", () => ({ readConvexClient: () => ({}) }));
 
 const reportClientExceptionMock = vi.hoisted(() =>
   vi.fn<typeof reportClientException>(() => Effect.void)
@@ -32,14 +38,19 @@ vi.mock(import("@repo/analytics/posthog/browser"), async (importOriginal) => ({
   resetBrowserAnalyticsIdentity: vi.fn(),
 }));
 
-/** The session readers saw, and Better Auth's answer once the account signed out. */
+/** The session readers saw, and the client's answer once the account signed out. */
 const shownSession = {
   hasError: false,
   isPending: false,
   sessionId: "session-1",
   userId: "user-1",
 };
-const signedOutValue = { data: null, error: null, isPending: false };
+const signedOutValue = {
+  hasError: false,
+  isPending: false,
+  sessionId: null,
+  userId: null,
+};
 
 /** Whether the page's readers would keep the session they see, as while it signs out. */
 const keepsSession = () =>
@@ -232,10 +243,7 @@ describe("account browser identity", () => {
 
   it.effect("clears browser identity after successful sign-out", () =>
     Effect.gen(function* () {
-      vi.mocked(authClient.signOut).mockResolvedValue({
-        data: { success: true },
-        error: null,
-      });
+      signOutSession.mockReturnValue(Effect.void);
       window.localStorage.setItem("nakafa-ai", "deleted-account-chat");
       window.sessionStorage.setItem("nakafa-search", "deleted-account-search");
 
@@ -247,14 +255,12 @@ describe("account browser identity", () => {
       expect(window.sessionStorage.getItem("nakafa-search")).toBeNull();
       expect(revokeToBaselineAnalytics).not.toHaveBeenCalled();
       expect(resetBrowserAnalyticsIdentity).toHaveBeenCalledWith(true);
-      expect(authClient.signOut).toHaveBeenCalledOnce();
-      expect(
-        vi.mocked(authClient.signOut).mock.invocationCallOrder[0]
-      ).toBeLessThan(
+      expect(signOutSession).toHaveBeenCalledOnce();
+      expect(signOutSession.mock.invocationCallOrder[0]).toBeLessThan(
         vi.mocked(resetBrowserAnalyticsIdentity).mock.invocationCallOrder[0] ??
           0
       );
-      // A real page leaves after a sign-out; the test lets the readers follow Better Auth again.
+      // A real page leaves after a sign-out; the test lets the readers follow the session again.
     }).pipe(Effect.ensuring(releaseSession()))
   );
 
@@ -262,39 +268,14 @@ describe("account browser identity", () => {
     Effect.gen(function* () {
       window.localStorage.setItem("nakafa-ai", "active-account-chat");
 
-      const failure = yield* signOutAccountBrowserIdentity(() =>
-        Promise.resolve({
-          data: null,
-          error: {
-            code: "SIGN_OUT_FAILED",
-            message: "Sign-out failed",
-            status: 500,
-            statusText: "INTERNAL_SERVER_ERROR",
-          },
-        })
+      const failure = yield* signOutAccountBrowserIdentity(
+        Effect.fail(new SignOutFailed())
       ).pipe(Effect.flip);
 
       expect(failure).toBeInstanceOf(AccountSignOutFailed);
       expect(keepsSession()).toBe(false);
       expect(window.localStorage.getItem("nakafa-ai")).toBe(
         "active-account-chat"
-      );
-      expect(resetBrowserAnalyticsIdentity).not.toHaveBeenCalled();
-    })
-  );
-
-  it.effect("preserves browser identity when sign-out cannot start", () =>
-    Effect.gen(function* () {
-      window.sessionStorage.setItem("nakafa-search", "active-account-search");
-
-      const failure = yield* signOutAccountBrowserIdentity(() =>
-        Promise.reject(new Error("network unavailable"))
-      ).pipe(Effect.flip);
-
-      expect(failure).toBeInstanceOf(AccountSignOutFailed);
-      expect(keepsSession()).toBe(false);
-      expect(window.sessionStorage.getItem("nakafa-search")).toBe(
-        "active-account-search"
       );
       expect(resetBrowserAnalyticsIdentity).not.toHaveBeenCalled();
     })

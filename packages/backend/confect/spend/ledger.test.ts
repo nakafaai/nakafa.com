@@ -37,7 +37,6 @@ afterEach(() => {
 /** One learner on a plan. */
 function insertLearner(ctx: MutationCtx, plan: "free" | "pro") {
   return ctx.db.insert("users", {
-    authId: `auth-${plan}`,
     credits: 0,
     creditsResetAt: NOW,
     email: `${plan}@example.com`,

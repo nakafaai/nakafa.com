@@ -30,7 +30,6 @@ const learner = Effect.fn("test.summaries.text.learner")(function* (
   name: string
 ) {
   return yield* (yield* DatabaseWriter).table("users").insert({
-    authId: `summary-${name}`,
     credits: 0,
     creditsResetAt: 0,
     email: `${name}@example.com`,

@@ -25,7 +25,6 @@ export const learner = Effect.fn("test.vault.owner.learner")(function* (
   name: string
 ) {
   return yield* (yield* DatabaseWriter).table("users").insert({
-    authId: `vault-${name}`,
     credits: 0,
     creditsResetAt: 0,
     email: `${name}@example.com`,

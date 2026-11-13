@@ -1,7 +1,7 @@
 import { describe, expect, it } from "@effect/vitest";
 import contents from "@repo/backend/confect/_generated/refs/contents";
 import {
-  createConvexTestWithBetterAuth,
+  createConvexTestWithAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
 import { client } from "@repo/backend/test/client";
@@ -19,19 +19,14 @@ const views = contents.mutations.views;
 /** A signed-in reader of the test lesson, and the lesson's finish arguments. */
 const readerWorld = Effect.fn("test.contents.finish.reader")(function* () {
   vi.useFakeTimers({ now: NOW });
-  const t = createConvexTestWithBetterAuth();
+  const t = createConvexTestWithAuth();
   const reader = yield* Effect.promise(() =>
     t.mutation((ctx) => seedMaterialViewer(ctx, "reader"))
   );
   const { contentId, locale, publicPath } = makeMaterialViewArgs();
   return {
     finish: { contentId, locale, publicPath },
-    reader: client(
-      t.withIdentity({
-        sessionId: reader.sessionId,
-        subject: reader.authUserId,
-      })
-    ),
+    reader: client(t.withIdentity({ subject: reader.sessionId })),
     t,
   };
 });
@@ -101,10 +96,7 @@ describe("contents/views/finish", () => {
       );
       vi.setSystemTime(NOW + 60_000);
       yield* client(
-        world.t.withIdentity({
-          sessionId: other.sessionId,
-          subject: other.authUserId,
-        })
+        world.t.withIdentity({ subject: other.sessionId })
       ).mutation(views.recordContentView, makeMaterialViewArgs());
       vi.setSystemTime(NOW + 600_000);
       expect(

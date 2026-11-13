@@ -8,7 +8,7 @@ import {
 } from "@repo/analytics/consent";
 import refs from "@repo/backend/confect/_generated/refs";
 import {
-  createConvexTestWithBetterAuth,
+  createConvexTestWithAuth,
   seedAnalyticsConsent,
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
@@ -23,7 +23,7 @@ describe("consents/current", () => {
     vi.useRealTimers();
   });
   it("requires authentication to read", async () => {
-    const t = createConvexTestWithBetterAuth();
+    const t = createConvexTestWithAuth();
     await expect(
       t.query(api.consents.current.get, {
         category: analyticsCategory,
@@ -31,7 +31,7 @@ describe("consents/current", () => {
     ).rejects.toThrow();
   });
   it("returns the current notice and explicit account decision", async () => {
-    const t = createConvexTestWithBetterAuth();
+    const t = createConvexTestWithAuth();
     const identity = await t.mutation(async (ctx) => {
       const seeded = await seedAuthenticatedUser(ctx, {
         now: NOW,
@@ -43,10 +43,7 @@ describe("consents/current", () => {
       });
       return seeded;
     });
-    const authenticated = t.withIdentity({
-      sessionId: identity.sessionId,
-      subject: identity.authUserId,
-    });
+    const authenticated = t.withIdentity({ subject: identity.sessionId });
     await expect(
       authenticated.query(api.consents.current.get, {
         category: analyticsCategory,
@@ -63,7 +60,7 @@ describe("consents/current", () => {
     });
   });
   it("returns no decision for an account that has not decided", async () => {
-    const t = createConvexTestWithBetterAuth();
+    const t = createConvexTestWithAuth();
     const identity = await t.mutation((ctx) =>
       seedAuthenticatedUser(ctx, {
         now: NOW,
@@ -72,10 +69,7 @@ describe("consents/current", () => {
     );
     await expect(
       t
-        .withIdentity({
-          sessionId: identity.sessionId,
-          subject: identity.authUserId,
-        })
+        .withIdentity({ subject: identity.sessionId })
         .query(api.consents.current.get, {
           category: analyticsCategory,
         })
@@ -85,7 +79,7 @@ describe("consents/current", () => {
     });
   });
   it("fails through the typed domain channel for duplicate state", async () => {
-    const t = createConvexTestWithBetterAuth();
+    const t = createConvexTestWithAuth();
     const identity = await t.mutation(async (ctx) => {
       const seeded = await seedAuthenticatedUser(ctx, {
         now: NOW,
@@ -103,10 +97,7 @@ describe("consents/current", () => {
     });
     await expect(
       t
-        .withIdentity({
-          sessionId: identity.sessionId,
-          subject: identity.authUserId,
-        })
+        .withIdentity({ subject: identity.sessionId })
         .query(api.consents.current.get, {
           category: analyticsCategory,
         })
@@ -118,7 +109,7 @@ describe("consents/current", () => {
     });
   });
   it("requires authentication to write", async () => {
-    const t = createConvexTestWithBetterAuth();
+    const t = createConvexTestWithAuth();
     const identity = await t.mutation((ctx) =>
       seedAuthenticatedUser(ctx, {
         now: NOW,
@@ -138,7 +129,7 @@ describe("consents/current", () => {
     ).rejects.toThrow();
   });
   it("rejects a decision queued by a different account", async () => {
-    const t = createConvexTestWithBetterAuth();
+    const t = createConvexTestWithAuth();
     const original = await t.mutation((ctx) =>
       seedAuthenticatedUser(ctx, {
         now: NOW,
@@ -151,10 +142,7 @@ describe("consents/current", () => {
         suffix: "consent-current-active",
       })
     );
-    const authenticated = t.withIdentity({
-      sessionId: current.sessionId,
-      subject: current.authUserId,
-    });
+    const authenticated = t.withIdentity({ subject: current.sessionId });
     const rejected = await authenticated
       .mutation(api.consents.current.set, {
         decision: {
@@ -188,17 +176,14 @@ describe("consents/current", () => {
   });
   it("atomically records grant and withdrawal", async () => {
     vi.setSystemTime(NOW);
-    const t = createConvexTestWithBetterAuth();
+    const t = createConvexTestWithAuth();
     const identity = await t.mutation((ctx) =>
       seedAuthenticatedUser(ctx, {
         now: NOW,
         suffix: "consent-current-write",
       })
     );
-    const authenticated = t.withIdentity({
-      sessionId: identity.sessionId,
-      subject: identity.authUserId,
-    });
+    const authenticated = t.withIdentity({ subject: identity.sessionId });
     const granted = await authenticated.mutation(api.consents.current.set, {
       decision: {
         category: analyticsCategory,
@@ -272,17 +257,14 @@ describe("consents/current", () => {
   });
   it("returns an exact repeated decision without appending history", async () => {
     vi.setSystemTime(NOW);
-    const t = createConvexTestWithBetterAuth();
+    const t = createConvexTestWithAuth();
     const identity = await t.mutation((ctx) =>
       seedAuthenticatedUser(ctx, {
         now: NOW,
         suffix: "consent-current-idempotent",
       })
     );
-    const authenticated = t.withIdentity({
-      sessionId: identity.sessionId,
-      subject: identity.authUserId,
-    });
+    const authenticated = t.withIdentity({ subject: identity.sessionId });
     const input: FunctionArgs<typeof api.consents.current.set> = {
       decision: {
         category: analyticsCategory,

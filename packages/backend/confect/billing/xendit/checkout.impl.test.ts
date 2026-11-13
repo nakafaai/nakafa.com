@@ -29,10 +29,9 @@ const event = {
 /** Inserts one learner, optionally marked as deleting. */
 function insertUser(ctx: MutationCtx, deleting = false) {
   return ctx.db.insert("users", {
-    authId: `auth-xendit-checkout-${deleting ? "deleting" : "active"}`,
     credits: 0,
     creditsResetAt: NOW,
-    ...(deleting ? { deletionPreparedAt: NOW } : {}),
+    ...(deleting ? { deletedAt: NOW } : {}),
     email: "xendit-checkout@example.com",
     mascot: MASCOT_CODE,
     name: "Xendit Checkout",
@@ -71,7 +70,6 @@ describe("billing/xendit/checkout internal steps", () => {
     });
     expect(first).toEqual({
       accountId: expect.any(String),
-      authId: "auth-xendit-checkout-active",
       email: "xendit-checkout@example.com",
       name: "Xendit Checkout",
       openUrl: null,
@@ -177,9 +175,7 @@ describe("billing/xendit/checkout internal steps", () => {
       offer: "pro.monthly",
       userId,
     });
-    await t.mutation((ctx) =>
-      ctx.db.patch(userId, { deletionPreparedAt: NOW })
-    );
+    await t.mutation((ctx) => ctx.db.patch(userId, { deletedAt: NOW }));
     await expect(
       t.mutation(steps.admit, {
         accountId: prepared.accountId,

@@ -336,7 +336,6 @@ describe("billing/school payments", () => {
     const t = createBillingTestConvex();
     const failure = await t.run(async (ctx) => {
       const userId = await ctx.db.insert("users", {
-        authId: "auth-school-invoice",
         credits: 0,
         creditsResetAt: 0,
         email: "invoice@example.com",

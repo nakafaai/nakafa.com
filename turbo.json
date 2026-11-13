@@ -17,8 +17,7 @@
     "POLAR_ACCESS_TOKEN",
     "POLAR_WEBHOOK_SECRET",
     "CONVEX_URL",
-    "CONVEX_SITE_URL",
-    "BETTER_AUTH_SECRET"
+    "CONVEX_SITE_URL"
   ],
   "boundaries": {
     "tags": {

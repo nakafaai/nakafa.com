@@ -1,6 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
 import {
-  createConvexTestWithBetterAuth,
+  createConvexTestWithAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
 import { api } from "@repo/backend/convex/_generated/api";
@@ -17,7 +17,7 @@ const NEXT_MONTH = Date.UTC(2026, 10, 1);
 
 /** Seeds a signed-in viewer on `plan` and returns the client that acts as that viewer. */
 async function signIn(plan: "free" | "pro") {
-  const t = createConvexTestWithBetterAuth();
+  const t = createConvexTestWithAuth();
   const user = await t.mutation((ctx) =>
     seedAuthenticatedUser(ctx, {
       credits: plan === "pro" ? 1000 : 10,
@@ -26,10 +26,7 @@ async function signIn(plan: "free" | "pro") {
       suffix: `overview-${plan}`,
     })
   );
-  const authed = t.withIdentity({
-    sessionId: user.sessionId,
-    subject: user.authUserId,
-  });
+  const authed = t.withIdentity({ subject: user.sessionId });
   return { authed, t, user };
 }
 
@@ -171,7 +168,7 @@ describe("billing/queries overview", () => {
   });
 
   it("refuses the overview to an unauthenticated viewer", async () => {
-    const t = createConvexTestWithBetterAuth();
+    const t = createConvexTestWithAuth();
     await expect(t.query(api.billing.queries.overview, {})).rejects.toThrow();
   });
 
@@ -271,7 +268,7 @@ describe("billing/queries overview", () => {
 
 describe("billing/queries proOffers", () => {
   it("sells the monthly plan alone in rupiah on Polar, and the passes beside it once Xendit takes Indonesia", async () => {
-    const t = createConvexTestWithBetterAuth();
+    const t = createConvexTestWithAuth();
     try {
       expect(
         await t.query(api.billing.queries.proOffers, { currency: "IDR" })

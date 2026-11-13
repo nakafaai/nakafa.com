@@ -19,7 +19,7 @@ import {
   takeLiveRead,
 } from "@/lib/tenant/visit";
 
-/** One fetch double for the whole file: the browser's request to the token route. */
+/** One fetch double for the whole file: the browser's request to the refresh route. */
 const fetcher = vi.fn<typeof fetch>();
 
 /** The school decision, which `read.test.ts` proves; these tests read only the token it is asked with. */
@@ -63,15 +63,10 @@ const jsonOf = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
 
 /** A Convex token of the session `session-ayu`, whose claims the decision reads and does not verify. */
 const AYU_TOKEN = `header.${Base64Url.encode(
-  jsonOf({
-    exp: 1_800_000_000,
-    name: "Ayu",
-    sessionId: "session-ayu",
-    sub: "user-ayu",
-  })
+  jsonOf({ exp: 1_800_000_000, sub: "session-ayu" })
 )}.signature`;
 
-/** The school host whose token route the presence of these tests reads. */
+/** The school host whose refresh route the presence of these tests reads. */
 const ORIGIN = "https://harapan.nakafa.com";
 
 /** The presence of a browser whose cookie holds the signed-in hint, or none. */
@@ -80,7 +75,7 @@ function presenceOf(signedIn: boolean) {
 }
 
 /**
- * Decides the school in the browser of these tests, whose token route answers with the fetch double, with the
+ * Decides the school in the browser of these tests, whose refresh route answers with the fetch double, with the
  * sign-in hint saying signed in unless the test says otherwise.
  */
 function decide(locale: "en" | "id", signedIn = true) {
@@ -103,10 +98,14 @@ describe("readBrowserSchoolFrame", () => {
   });
 
   it.effect(
-    "decides the school with the token from the school host's own token route, and reads no legal links for it",
+    "decides the school with the token from the school host's own refresh route, and reads no legal links for it",
     () =>
       Effect.gen(function* () {
-        fetcher.mockResolvedValueOnce(Response.json({ token: "token-ayu" }));
+        fetcher.mockResolvedValueOnce(
+          Response.json({
+            tokens: { accessToken: "token-ayu", userId: "user-1" },
+          })
+        );
 
         expect(yield* decide("en")).toEqual({
           legal: null,
@@ -117,7 +116,7 @@ describe("readBrowserSchoolFrame", () => {
 
         const [address] = fetcher.mock.calls[0] ?? [];
         expect(String(address)).toBe(
-          "https://harapan.nakafa.com/api/auth/convex/token"
+          "https://harapan.nakafa.com/api/auth/refresh"
         );
         expect(frame.read).toHaveBeenCalledWith({
           locale: "en",
@@ -128,7 +127,7 @@ describe("readBrowserSchoolFrame", () => {
   );
 
   it.effect(
-    "decides a visitor's school when the token route finds no session, with the legal links read beside it",
+    "decides a visitor's school when the refresh route finds no session, with the legal links read beside it",
     () =>
       Effect.gen(function* () {
         const visitor = { _tag: "Visitor" };
@@ -168,7 +167,7 @@ describe("readBrowserSchoolFrame", () => {
     "names the session that the token belongs to, so a kept frame is kept for it",
     () =>
       Effect.gen(function* () {
-        fetcher.mockResolvedValueOnce(Response.json({ token: AYU_TOKEN }));
+        fetcher.mockResolvedValueOnce(Response.json({ tokens: { accessToken: AYU_TOKEN, userId: "user-ayu" } }));
 
         expect((yield* decide("en")).sessionId).toBe("session-ayu");
       })
@@ -203,7 +202,7 @@ describe("readBrowserSchoolFrame", () => {
               ? Effect.succeed(member)
               : Effect.fail(new SchoolReadFailed({ cause: "profile" }))
         );
-        fetcher.mockResolvedValueOnce(Response.json({ token: AYU_TOKEN }));
+        fetcher.mockResolvedValueOnce(Response.json({ tokens: { accessToken: AYU_TOKEN, userId: "user-ayu" } }));
 
         expect(yield* decide("en", false)).toEqual({
           legal: null,
@@ -229,7 +228,7 @@ describe("readBrowserSchoolFrame", () => {
   );
 
   it.effect(
-    "fails the decision when the token route refuses, so an outage never reads as a visitor",
+    "fails the decision when the refresh route refuses, so an outage never reads as a visitor",
     () =>
       Effect.gen(function* () {
         fetcher.mockResolvedValueOnce(new Response(null, { status: 403 }));
@@ -280,7 +279,7 @@ describe("frameOfNavigation", () => {
   /** A navigation that stays in the visit, and one that enters it. */
   const STAY = { cause: "stay", invalid: false } as const;
   const ENTER = { cause: "enter", invalid: false } as const;
-  /** The presence of a browser with no session, whose token route the fetch double answers with a 401. */
+  /** The presence of a browser with no session, whose refresh route the fetch double answers with a 401. */
   const VISITOR_PRESENCE = presenceOf(false);
 
   const PROFILE = {

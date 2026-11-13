@@ -124,13 +124,7 @@ export const Route = createFileRoute("/school/$slug")({
       window.location.origin
     );
     const shell = presence.signedIn ? SchoolMember.preload?.() : undefined;
-    const entry = loadEntryForm({
-      guardian: Arr.some(
-        matches,
-        (match) => match.routeId === "/school/$slug/parents"
-      ),
-      signIn: search["sign-in"],
-    });
+    const entry = loadEntryForm({ signIn: search["sign-in"] });
     const { visit } = context;
     const invalid = Arr.some(
       matches,

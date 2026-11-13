@@ -23,7 +23,7 @@ export const fetcher = vi.fn<typeof fetch>();
 vi.stubGlobal("fetch", fetcher);
 
 export const SCHOOL_ROOT = "https://harapan.nakafa.com/";
-export const SESSION_COOKIE = "better-auth.session_token=session-value";
+export const SESSION_COOKIE = "__convexAuthRefreshToken=session-value";
 export const REFUSAL = getConvexFunctionName(tenancy.profile.refusal);
 
 /** One answer of the fake backend. It is a function, so a request can wait or fail. */
