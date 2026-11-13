@@ -6,7 +6,7 @@ import {
 } from "@repo/design-system/components/contents/physics/kinematics/river/crossing";
 import { Schema } from "effect";
 
-const river = Schema.decodeUnknownSync(RiverSchema)({
+const river = Schema.decodeSync(RiverSchema)({
   boatSpeed: 4,
   current: 3,
   width: 60,
@@ -34,7 +34,7 @@ describe("riverCrossing", () => {
   });
 
   it("cannot cancel a current faster than the boat", () => {
-    const flood = Schema.decodeUnknownSync(RiverSchema)({
+    const flood = Schema.decodeSync(RiverSchema)({
       boatSpeed: 2,
       current: 3,
       width: 60,
@@ -44,7 +44,7 @@ describe("riverCrossing", () => {
 
   it("refuses a river with no width", () => {
     expect(() =>
-      Schema.decodeUnknownSync(RiverSchema)({
+      Schema.decodeSync(RiverSchema)({
         boatSpeed: 2,
         current: 3,
         width: 0,

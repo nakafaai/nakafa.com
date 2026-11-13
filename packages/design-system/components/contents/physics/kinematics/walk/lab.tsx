@@ -191,7 +191,7 @@ export function CityWalkDisplacementLab({
 }: CityWalkDisplacementLabProps) {
   const quantity = useQuantity();
   const walk = useMemo(
-    () => Schema.decodeUnknownSync(WalkSchema)({ legs, pace }),
+    () => Schema.decodeSync(WalkSchema)({ legs, pace }),
     [legs, pace]
   );
   const end = walkReading(walk, walkDuration(walk));

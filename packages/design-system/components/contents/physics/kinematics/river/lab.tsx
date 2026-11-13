@@ -280,7 +280,7 @@ export function RiverBoatCrossingLab({
   const [heading, setHeading] = useState(initial);
   const quantity = useQuantity();
   const river = useMemo(
-    () => Schema.decodeUnknownSync(RiverSchema)({ boatSpeed, current, width }),
+    () => Schema.decodeSync(RiverSchema)({ boatSpeed, current, width }),
     [boatSpeed, current, width]
   );
   const crossing = riverCrossing(river, heading);

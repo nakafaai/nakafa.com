@@ -16,13 +16,13 @@ import type p5 from "p5";
  */
 export const GraphSchema = Schema.Struct({
   box: Schema.Struct({
-    height: Schema.Number,
-    width: Schema.Number,
-    x: Schema.Number,
-    y: Schema.Number,
+    height: Schema.Finite,
+    width: Schema.Finite,
+    x: Schema.Finite,
+    y: Schema.Finite,
   }),
-  time: Schema.Tuple([Schema.Number, Schema.Number]),
-  value: Schema.Tuple([Schema.Number, Schema.Number]),
+  time: Schema.Tuple([Schema.Finite, Schema.Finite]),
+  value: Schema.Tuple([Schema.Finite, Schema.Finite]),
 });
 export type Graph = typeof GraphSchema.Type;
 

@@ -20,9 +20,9 @@ import type p5 from "p5";
 
 /** How metres east and north map onto the canvas: the canvas point of the origin and pixels per metre. */
 export const PlanSchema = Schema.Struct({
-  originX: Schema.Number,
-  originY: Schema.Number,
-  scale: Schema.Number,
+  originX: Schema.Finite,
+  originY: Schema.Finite,
+  scale: Schema.Finite,
 });
 export type Plan = typeof PlanSchema.Type;
 
