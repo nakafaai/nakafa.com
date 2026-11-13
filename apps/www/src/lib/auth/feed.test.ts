@@ -1,5 +1,4 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
-import type { ConvexReactClient } from "convex/react";
 import { Array as Arr, Effect, Schema } from "effect";
 import { Base64Url } from "effect/encoding";
 import { followClientSession } from "@/lib/auth/feed";
@@ -50,14 +49,12 @@ vi.mock("@/lib/auth/client", () => ({
 
 /** The page's Convex client, which the mocked auth client never reads. */
 const convex = {
-  mutation: vi.fn<ConvexReactClient["mutation"]>(),
+  mutation: vi.fn(),
   url: "https://example.convex.cloud",
 };
 
 /** Lets the feed's fiber and the refresh it awaits run. */
-const settle = Effect.promise(
-  () => new Promise<void>((resolve) => setTimeout(resolve))
-);
+const settle = Effect.sleep("20 millis");
 
 /** Follows the feed and collects what it reports. */
 function follow() {
@@ -76,7 +73,7 @@ beforeEach(() => {
 });
 
 describe("followClientSession", () => {
-  it.effect("reports a held session with the account its answer named", () =>
+  it.live("reports a held session with the account its answer named", () =>
     Effect.gen(function* () {
       auth.snapshot = { isLoading: false, token: TOKEN };
       sessionUser.setState({
@@ -103,7 +100,7 @@ describe("followClientSession", () => {
     })
   );
 
-  it.effect("reads as pending until the first refresh answers", () =>
+  it.live("reads as pending until the first refresh answers", () =>
     Effect.gen(function* () {
       auth.fetchAccessToken.mockImplementation(() => {
         auth.snapshot = { isLoading: false, token: TOKEN };
@@ -126,7 +123,7 @@ describe("followClientSession", () => {
     })
   );
 
-  it.effect(
+  it.live(
     "reports a failed first refresh as a failed read, not a visitor",
     () =>
       Effect.gen(function* () {

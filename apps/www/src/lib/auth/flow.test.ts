@@ -1,5 +1,4 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
-import type { ConvexReactClient } from "convex/react";
 import { Effect } from "effect";
 import { followGoogleFailure } from "@/lib/auth/flow";
 
@@ -29,14 +28,12 @@ vi.mock("@/lib/auth/client", () => ({
 
 /** The page's Convex client, which the mocked auth client never reads. */
 const convex = {
-  mutation: vi.fn<ConvexReactClient["mutation"]>(),
+  mutation: vi.fn(),
   url: "https://example.convex.cloud",
 };
 
 /** Lets the follower's fiber run. */
-const settle = Effect.promise(
-  () => new Promise<void>((resolve) => setTimeout(resolve))
-);
+const settle = Effect.sleep("20 millis");
 
 /** Publishes a flow error and tells every listener, as Convex Auth's client does. */
 const publish = (flowError: unknown) => {
@@ -53,7 +50,7 @@ beforeEach(() => {
 });
 
 describe("followGoogleFailure", () => {
-  it.effect(
+  it.live(
     "reports a failed return, its clearing, and stops when unsubscribed",
     () =>
       Effect.gen(function* () {
@@ -76,7 +73,7 @@ describe("followGoogleFailure", () => {
       })
   );
 
-  it.effect("reads a flow error that was already there when it started", () =>
+  it.live("reads a flow error that was already there when it started", () =>
     Effect.gen(function* () {
       oauth.flowError = { error: "EXPIRED" };
       const seen: boolean[] = [];

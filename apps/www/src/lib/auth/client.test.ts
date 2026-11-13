@@ -1,6 +1,5 @@
 import type { AuthClientConfig } from "@convex-dev/auth/browser";
 import { beforeEach, describe, expect, it } from "@effect/vitest";
-import type { ConvexReactClient } from "convex/react";
 import { makeFunctionReference } from "convex/server";
 import { Effect } from "effect";
 
@@ -86,7 +85,7 @@ vi.mock("@/lib/auth/user", () => ({ rememberSessionUser: remembered }));
 
 /** The page's Convex client, as far as the auth client uses it. */
 const convex = {
-  mutation: vi.fn<ConvexReactClient["mutation"]>(),
+  mutation: vi.fn(),
   url: "https://example.convex.cloud",
 };
 
@@ -100,6 +99,7 @@ const loadModule = async () => {
 const configOf = () => Effect.fromNullishOr(made.clients[0]).pipe(Effect.orDie);
 
 const RANDOM = makeFunctionReference<"mutation">("auth/school:signIn");
+const ACTION = makeFunctionReference<"action">("auth/school:signIn");
 
 beforeEach(() => {
   made.clients.length = 0;
@@ -174,7 +174,7 @@ describe("the client's sign-in calls", () => {
         expect(remembered).toHaveBeenCalledOnce();
 
         expect(
-          yield* Effect.promise(async () => await signInApi?.action(RANDOM, {}))
+          yield* Effect.promise(async () => await signInApi?.action(ACTION, {}))
         ).toBe("acted");
       })
   );
@@ -193,7 +193,7 @@ describe("the client's sign-in calls", () => {
             async () => await ambient?.convex.mutation(RANDOM, {})
           )
         ).toBe("started");
-        ambient?.replaceUrl("/en/home?done=1");
+        ambient?.replaceUrl?.("/en/home?done=1");
         expect(window.location.pathname).toBe("/en/home");
         expect(ambient?.signIns).toEqual(["oauth"]);
       })

@@ -17,9 +17,8 @@ const register: FunctionReference<"mutation"> = makeFunctionReference(
 const exchange: FunctionReference<"mutation"> = makeFunctionReference(
   "auth/grant:exchange"
 );
-const refresh: FunctionReference<"mutation"> = makeFunctionReference(
-  "auth/grant:refresh"
-);
+const refresh: FunctionReference<"mutation"> =
+  makeFunctionReference("auth/grant:refresh");
 
 /** A dynamic client registration request (RFC 7591), of the fields Nakafa reads. */
 const RegistrationRequest = Schema.Struct({
@@ -42,6 +41,12 @@ const TokenRequest = Schema.Union([
     refresh_token: Schema.String,
   }),
 ]);
+
+/** An agent call that did not answer: the error Convex raised, refusal or not. */
+class AgentCallFailed extends Schema.TaggedError<
+  AgentCallFailed,
+  { readonly brand: unique symbol }
+>()("AgentCallFailed", { cause: Schema.Defect }) {}
 
 /** A refusal that `auth/grant` raised, as the error data Convex returns. */
 const Refusal = Schema.Struct({
@@ -79,9 +84,7 @@ const oauthAnswer = (body: unknown, status: number) =>
 const readFields = Effect.fn("www.agent.fields")(function* (request: Request) {
   const text = yield* Effect.promise(() => request.text());
   if ((request.headers.get("content-type") ?? "").includes("json")) {
-    return Schema.decodeUnknownOption(Schema.fromJsonString(Schema.Unknown))(
-      text
-    );
+    return Schema.decodeOption(Schema.fromJsonString(Schema.Unknown))(text);
   }
   return Option.some(
     Record.fromEntries(Arr.fromIterable(new URLSearchParams(text)))
@@ -89,7 +92,7 @@ const readFields = Effect.fn("www.agent.fields")(function* (request: Request) {
 });
 
 /** The refusal that a failed agent call carries, if it is one. */
-const refusalOf = (cause: unknown) =>
+const refusalOf = ({ cause }: AgentCallFailed) =>
   Predicate.hasProperty(cause, "data")
     ? Schema.decodeUnknownOption(Refusal)(cause.data)
     : Option.none();
@@ -117,13 +120,19 @@ export const registerAgent = Effect.fn("www.agent.register")(function* (
   const name = body.value.client_name ?? "Agent";
   const client = new ConvexHttpClient(yield* CONVEX_URL);
   const answer = yield* Effect.tryPromise({
-    catch: (cause) => cause,
+    catch: (cause) => new AgentCallFailed({ cause }),
     try: () =>
       client.mutation(register, {
         name,
         redirectUris: body.value.redirect_uris,
       }),
-  }).pipe(Effect.flatMap(Schema.decodeUnknownEffect(Registered)), Effect.result);
+  }).pipe(
+    Effect.flatMap(Schema.decodeUnknownEffect(Registered)),
+    Effect.catchTag("SchemaError", (cause) =>
+      Effect.fail(new AgentCallFailed({ cause }))
+    ),
+    Effect.result
+  );
   if (answer._tag === "Failure") {
     const refusal = refusalOf(answer.failure);
     if (Option.isNone(refusal)) {
@@ -167,7 +176,7 @@ export const issueAgentTokens = Effect.fn("www.agent.token")(function* (
   const grant = body.value;
   const client = new ConvexHttpClient(yield* CONVEX_URL);
   const answer = yield* Effect.tryPromise({
-    catch: (cause) => cause,
+    catch: (cause) => new AgentCallFailed({ cause }),
     try: () =>
       grant.grant_type === "authorization_code"
         ? client.mutation(exchange, {
@@ -180,7 +189,13 @@ export const issueAgentTokens = Effect.fn("www.agent.token")(function* (
             clientId: grant.client_id,
             refreshToken: grant.refresh_token,
           }),
-  }).pipe(Effect.flatMap(Schema.decodeUnknownEffect(Exchange)), Effect.result);
+  }).pipe(
+    Effect.flatMap(Schema.decodeUnknownEffect(Exchange)),
+    Effect.catchTag("SchemaError", (cause) =>
+      Effect.fail(new AgentCallFailed({ cause }))
+    ),
+    Effect.result
+  );
   if (answer._tag === "Failure") {
     const refusal = refusalOf(answer.failure);
     if (Option.isNone(refusal)) {

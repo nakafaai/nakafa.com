@@ -7,7 +7,7 @@ import { Effect, Schema } from "effect";
 import { HttpClient, HttpClientRequest, HttpClientResponse } from "effect/http";
 
 /** The refresh route of Convex Auth, which answers the access token of the refresh cookie's session. */
-const REFRESH_PATH = "/api/auth/refresh";
+export const REFRESH_PATH = "/api/auth/refresh";
 
 /**
  * The refresh route could not answer for a request that carries a session cookie.

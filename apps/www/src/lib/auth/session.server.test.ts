@@ -87,7 +87,7 @@ describe("readRequestSession", () => {
     "makes no network call for a visitor without a session cookie",
     () =>
       Effect.gen(function* () {
-        const session = yield* readRequestSession(visit("theme=dark"));
+        const session = yield* readRequestSession(visit());
 
         expect(session.client._tag).toBe("SignedOut");
         expect(session.convexToken).toStrictEqual(Option.none());

@@ -45,11 +45,11 @@ export function rememberSessionUser(accessToken: string, userId: string) {
   const user = SessionUser.make({ sessionId, userId });
   sessionUser.setState({ user });
   Effect.runSync(
-    Effect.try(() =>
-      window.localStorage.setItem(
-        SESSION_USER_KEY,
-        Schema.encodeSync(Schema.fromJsonString(SessionUser))(user)
-      )
-    ).pipe(Effect.ignore)
+    Schema.encodeEffect(Schema.fromJsonString(SessionUser))(user).pipe(
+      Effect.flatMap((text) =>
+        Effect.try(() => window.localStorage.setItem(SESSION_USER_KEY, text))
+      ),
+      Effect.ignore
+    )
   );
 }

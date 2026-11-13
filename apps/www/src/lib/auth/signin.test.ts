@@ -1,5 +1,4 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
-import type { ConvexReactClient } from "convex/react";
 import { getFunctionName } from "convex/server";
 import { Effect } from "effect";
 import {
@@ -45,7 +44,7 @@ vi.mock("@/lib/auth/user", () => ({ rememberSessionUser: remembered }));
 
 /** The page's Convex client, which the mocked auth client never reads. */
 const convex = {
-  mutation: vi.fn<ConvexReactClient["mutation"]>(),
+  mutation: vi.fn(),
   url: "https://example.convex.cloud",
 };
 
@@ -61,7 +60,9 @@ beforeEach(() => {
 describe("startGoogleSignIn", () => {
   it.effect("starts Google's sign-in with the main site's return address", () =>
     Effect.gen(function* () {
-      const signIn = vi.fn(() => Promise.resolve({ status: "redirect" }));
+      const signIn = vi.fn<
+        (provider: unknown, options: unknown) => Promise<{ status: string }>
+      >(() => Promise.resolve({ status: "redirect" }));
       auth.actions.set("actions", { signIn });
 
       yield* startGoogleSignIn(convex, "https://nakafa.com/en/home");
