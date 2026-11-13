@@ -47,6 +47,13 @@ const MEMORY_MAX_DECODED_BYTES = 3_121_000;
 const LESSON_MAX_ENCODED_BYTES = 1_195_000;
 const LESSON_MAX_DECODED_BYTES = 3_545_000;
 
+// Google renders a page in a browser that loads about 250 of its resources and
+// fails every later one, so a page over that count never starts for Google and
+// AdSense reads the site as down (`BOOT_SCRIPT_LIMIT` in src/lib/static/scripts.ts
+// holds the measurement). A route's whole graph, its warmed links included,
+// leaves the rest of that count to its stylesheets, fonts, images and ads.
+const ROUTE_MAX_SCRIPTS = 150;
+
 const routeBudgets = [
   {
     decodedBodySize: HOMEPAGE_MAX_DECODED_BYTES,
@@ -114,6 +121,10 @@ for (const budget of routeBudgets) {
     );
 
     expect(measurement.worst.resourceCount).toBeGreaterThan(0);
+    expect(
+      measurement.worst.resourceCount,
+      measurementEvidence
+    ).toBeLessThanOrEqual(ROUTE_MAX_SCRIPTS);
     expect(
       measurement.worst.encodedBodySize,
       measurementEvidence
