@@ -1,0 +1,21 @@
+# Throwaway probe on a branch that is never merged: Linux WebKit cookies on loopback hosts.
+name: Cookie probe
+on:
+  push:
+    branches: [nabil/perf-lh]
+    paths: [.cookie/**, .github/workflows/cookie.yml]
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          sparse-checkout: .cookie
+      - run: |
+          cd .cookie
+          npm init -y >/dev/null
+          npm install playwright@1.65.0 >/dev/null
+          npx playwright install --with-deps webkit chromium firefox >/dev/null
+          node probe.mjs
