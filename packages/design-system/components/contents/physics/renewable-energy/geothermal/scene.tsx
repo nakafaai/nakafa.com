@@ -34,8 +34,8 @@ const WELLS = { cool: 2.4, hot: -2.4 } as const;
 /** The plant hall: its middle, size and the height its gable rises above the walls. */
 const HALL = { at: [0, 0.8, 1], gable: 0.5, size: [6.2, 1.6, 2.4] } as const;
 
-/** The small cooling tower behind the hall, in scene units. */
-const TOWER = { at: [0, 0, -1.7], tall: 2.4 } as const;
+/** The small cooling tower beside the hall, in scene units. */
+const TOWER = { at: [-4.8, 0, 1.2], tall: 2.8 } as const;
 
 /**
  * The tower's shell, base to rim: wide at the foot, pinched near the top and
@@ -44,7 +44,7 @@ const TOWER = { at: [0, 0, -1.7], tall: 2.4 } as const;
 const TOWER_SHELL = Arr.makeBy(13, (step) => {
   const along = step / 12;
   const waist = (along - 0.72) / 0.72;
-  return new Vector2(0.42 + 0.38 * waist * waist, along * TOWER.tall);
+  return new Vector2(0.5 + 0.45 * waist * waist, along * TOWER.tall);
 });
 
 /**
@@ -174,20 +174,16 @@ export function GeothermalScene({
           </mesh>
         </group>
       ))}
-      <Pipe
-        from={[-0.6, 0.5, HALL.at[2] - HALL.size[2] / 2]}
-        radius={0.09}
-        to={[-0.6, 0.5, TOWER.at[2] + 0.6]}
-      >
-        <MetalMaterial color={MATERIAL.galvanizedSteel} roughness={0.45} />
-      </Pipe>
-      <Pipe
-        from={[0.6, 0.3, TOWER.at[2] + 0.6]}
-        radius={0.09}
-        to={[0.6, 0.3, HALL.at[2] - HALL.size[2] / 2]}
-      >
-        <MetalMaterial color={MATERIAL.galvanizedSteel} roughness={0.45} />
-      </Pipe>
+      {Arr.map([-0.2, 0.2] as const, (offset) => (
+        <Pipe
+          from={[-HALL.size[0] / 2, 0.4, TOWER.at[2] + offset]}
+          key={offset}
+          radius={0.09}
+          to={[TOWER.at[0] + 0.75, 0.4, TOWER.at[2] + offset]}
+        >
+          <MetalMaterial color={MATERIAL.galvanizedSteel} roughness={0.45} />
+        </Pipe>
+      ))}
       <mesh castShadow position={[...TOWER.at]} receiveShadow>
         <latheGeometry args={[TOWER_SHELL, 40]} />
         <meshStandardMaterial
