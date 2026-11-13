@@ -64,7 +64,7 @@ function arrows(
   if (kind === "line") {
     return "both";
   }
-  return kind === "ray" ? "end" : "none";
+  return kind === "ray" || kind === "vector" ? "end" : "none";
 }
 /** Collects the markers, paths, and regions of one scene in the order its objects add them. */
 function createGeometryBuilder() {
@@ -169,7 +169,9 @@ function appendPlane(
     object,
     clipPlanePath(
       scene.frame,
-      object.kind === "segment" ? [object.from, object.to] : object.vertices
+      object.kind === "segment" || object.kind === "vector"
+        ? [object.from, object.to]
+        : object.vertices
     ),
     projection
   );
@@ -218,7 +220,9 @@ function appendSpace(
     object,
     clipSpacePath(
       scene.frame,
-      object.kind === "segment" ? [object.from, object.to] : object.vertices,
+      object.kind === "segment" || object.kind === "vector"
+        ? [object.from, object.to]
+        : object.vertices,
       object.kind === "polygon"
     ),
     projection
