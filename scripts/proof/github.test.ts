@@ -17,6 +17,7 @@ import {
   Prover,
   proveOnGithub,
   runTimings,
+  sweepSuperseded,
 } from "#scripts/proof/github";
 import {
   formatProof,
@@ -102,6 +103,12 @@ const github = (
         ).slice(4)
       );
       return {};
+    }
+    if (args[0] === "pr" || args[1] === "cancel") {
+      return {};
+    }
+    if (Arr.contains(args, "--status")) {
+      return { stdout: "[]" };
     }
     if (args[0] === "api") {
       return Arr.contains(args, "--silent") ? {} : { stdout: `${MAIN}\n` };
@@ -189,10 +196,16 @@ describe("GitHub proof runner", () => {
           specs: Option.some(10),
           total: Option.some(50),
         });
-        expect(calls[0]).toMatch(
-          new RegExp(
-            `^gh workflow run proof.yml --repo nakafaai/nakafa.com --ref main -f sha=${SHA} -f specs=e2e/a.browser.ts -f shards=1 -f nonce=[0-9a-f-]{36}$`,
-            "u"
+        expect(
+          Arr.findFirst(calls, (call) => call.startsWith("gh workflow run"))
+        ).toEqual(
+          Option.some(
+            expect.stringMatching(
+              new RegExp(
+                `^gh workflow run proof.yml --repo nakafaai/nakafa.com --ref main -f sha=${SHA} -f specs=e2e/a.browser.ts -f shards=1 -f nonce=[0-9a-f-]{36}$`,
+                "u"
+              )
+            )
           )
         );
         expect(formatProof(result, timings)).toBe(
@@ -260,7 +273,7 @@ describe("GitHub proof runner", () => {
         proveOnGithub(SHA, [], 3)
       );
       expect(yield* Effect.flip(refused.exit)).toMatchObject({
-        message: "gh workflow run failed: HTTP 404: not found",
+        message: "gh pr list failed: HTTP 404: not found",
       });
       const garbled = yield* withGithub(
         github({}, { status: 1 }),
@@ -359,6 +372,56 @@ describe("GitHub proof runner", () => {
   });
 });
 
+describe("superseded proof runs", () => {
+  it.effect(
+    "cancels the queued runs of heads no pull request, train or main holds",
+    () =>
+      Effect.gen(function* () {
+        const open = "1".repeat(40);
+        const train = "2".repeat(40);
+        const gone = "3".repeat(40);
+        const refused = "4".repeat(40);
+        const { exit, calls } = yield* withGithub((args) => {
+          if (args[0] === "pr") {
+            return { stdout: `${open}\n` };
+          }
+          if (args[0] === "api") {
+            return {
+              stdout: Arr.some(args, (arg) => arg.includes("matching-refs"))
+                ? `${train}\n`
+                : `${MAIN}\n`,
+            };
+          }
+          if (args[1] === "cancel") {
+            return args[2] === "14"
+              ? {
+                  code: 1,
+                  stderr: "Cannot cancel a workflow run that is completed",
+                }
+              : {};
+          }
+          return {
+            stdout: toJson([
+              { databaseId: 10, displayTitle: `Proof ${open} a` },
+              { databaseId: 11, displayTitle: `Proof ${train} b` },
+              { databaseId: 12, displayTitle: `Proof ${MAIN} c` },
+              { databaseId: 13, displayTitle: `Proof ${gone} d` },
+              { databaseId: 14, displayTitle: `Proof ${refused} e` },
+              { databaseId: 15, displayTitle: `Gate ${gone} f` },
+            ]),
+          };
+        }, sweepSuperseded());
+        expect(yield* exit).toBe(2);
+        expect(
+          Arr.filter(calls, (call) => call.startsWith("gh run cancel"))
+        ).toEqual([
+          "gh run cancel 13 --repo nakafaai/nakafa.com",
+          "gh run cancel 14 --repo nakafaai/nakafa.com",
+        ]);
+      }).pipe(Effect.provide(NodeServices.layer))
+  );
+});
+
 describe("proof command line", () => {
   it.effect("reads where, which head, which specs and how many machines", () =>
     Effect.gen(function* () {
@@ -376,6 +439,9 @@ describe("proof command line", () => {
         sha: SHA,
         specs: [],
       });
+      expect(
+        (yield* parseProofArguments([SHA, "e2e/a.browser.ts"])).shards
+      ).toBe(1);
       for (const argv of [
         [],
         ["main"],

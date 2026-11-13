@@ -31,14 +31,15 @@ const Shards = Schema.NumberFromString.check(
 export const parseProofArguments = Effect.fn("proof.parseArguments")(
   function* (argv: readonly string[]) {
     const local = Arr.contains(argv, "--local");
+    const [sha, ...specs] = Arr.filter(argv, (arg) => !arg.startsWith("--"));
+    // A proof narrowed to some specs runs on one machine for all three engines.
     const shards = yield* Option.match(
       Arr.findFirst(argv, (arg) => arg.startsWith("--shards=")),
       {
-        onNone: () => Effect.succeed(DEFAULT_SHARDS),
+        onNone: () => Effect.succeed(specs.length === 0 ? DEFAULT_SHARDS : 1),
         onSome: (arg) => Schema.decodeEffect(Shards)(arg.slice(9)),
       }
     );
-    const [sha, ...specs] = Arr.filter(argv, (arg) => !arg.startsWith("--"));
     return {
       local,
       shards,

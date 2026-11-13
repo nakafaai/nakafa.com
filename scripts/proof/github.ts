@@ -12,11 +12,13 @@ import {
   Duration,
   Effect,
   FileSystem,
+  HashSet,
   Layer,
   Option,
   Order,
   Schedule,
   Schema,
+  String as Str,
 } from "effect";
 import { ChildProcessSpawner } from "effect/process";
 import { runText } from "#scripts/process";
@@ -243,6 +245,79 @@ const readShards = Effect.fn("proof.readShards")(function* (id: number) {
   );
 }, Effect.scoped);
 
+/** The head that a proof run's name carries: `Proof <sha> <nonce>`. */
+const PROOF_TITLE = /^Proof (?<sha>[0-9a-f]{40}) /u;
+
+/**
+ * Cancels every queued proof run whose head is no longer worth proving: not the
+ * head of an open pull request, not main's head, and not the tip of a train
+ * branch. A head that a newer push replaced, or that merged, would otherwise
+ * hold one of the 20 jobs that every proof and gate of the account shares.
+ * Runs that already started keep going. Returns how many it cancelled.
+ */
+export const sweepSuperseded = Effect.fn("proof.sweepSuperseded")(
+  function* () {
+    const lines = (text: string) =>
+      Arr.filter(Str.split(text, "\n"), (line) => line !== "");
+    const heads = yield* gh([
+      "pr",
+      "list",
+      "--repo",
+      REPOSITORY,
+      "--state",
+      "open",
+      "--limit",
+      "300",
+      "--json",
+      "headRefOid",
+      "--jq",
+      ".[].headRefOid",
+    ]);
+    const trains = yield* gh([
+      "api",
+      `repos/${REPOSITORY}/git/matching-refs/heads/nabil/train-`,
+      "--jq",
+      ".[].object.sha",
+    ]);
+    const keep = HashSet.fromIterable([
+      ...lines(heads),
+      ...lines(trains),
+      yield* mainHead,
+    ]);
+    const queued = yield* gh([
+      "run",
+      "list",
+      "--repo",
+      REPOSITORY,
+      "--workflow",
+      "proof.yml",
+      "--status",
+      "queued",
+      "--limit",
+      "200",
+      "--json",
+      "databaseId,displayTitle",
+    ]).pipe(Effect.flatMap(Schema.decodeEffect(RunListJson)));
+    const stale = Arr.filter(queued, (run) =>
+      Option.match(
+        Option.fromNullishOr(PROOF_TITLE.exec(run.displayTitle)?.groups?.sha),
+        {
+          onNone: () => false,
+          onSome: (sha) => !HashSet.has(keep, sha),
+        }
+      )
+    );
+    yield* Effect.forEach(stale, (run) =>
+      gh(["run", "cancel", String(run.databaseId), "--repo", REPOSITORY]).pipe(
+        Effect.catchTag("ProofError", (error) =>
+          Effect.logWarning(`Run ${run.databaseId} stays: ${error.message}`)
+        )
+      )
+    );
+    return stale.length;
+  }
+);
+
 /**
  * Proves one head on GitHub's runners: dispatches the proof workflow, waits for
  * its run and combines what each machine reported. The verdict is the same one
@@ -250,6 +325,7 @@ const readShards = Effect.fn("proof.readShards")(function* (id: number) {
  */
 export const proveOnGithub = Effect.fn("proof.proveOnGithub")(
   function* (sha: string, specs: readonly string[], shards: number) {
+    yield* sweepSuperseded();
     const nonce = yield* randomUuid;
     yield* gh([
       "workflow",
