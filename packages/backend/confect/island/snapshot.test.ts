@@ -46,9 +46,7 @@ const snapshotWorld = Effect.fn("test.island.snapshot.world")(function* () {
     })
   );
   const as = (user: typeof users.owner) =>
-    client(
-      t.withIdentity({ subject: user.sessionId })
-    );
+    client(t.withIdentity({ subject: user.sessionId }));
   const owner = as(users.owner);
   yield* owner.mutation(island.mutations.share, { visibility: "link" });
   return {

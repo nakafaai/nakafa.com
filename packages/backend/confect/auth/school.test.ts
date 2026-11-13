@@ -1,5 +1,5 @@
-import { beforeEach, describe, expect, it } from "@effect/vitest";
 import authTest from "@convex-dev/auth/test";
+import { beforeEach, describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
 import {
   CARD_NOW,

@@ -225,9 +225,7 @@ export const tenancyFixture = Effect.gen(function* () {
           })
         );
         return Struct.assign(account, {
-          client: client(
-            t.withIdentity({ subject: account.sessionId })
-          ),
+          client: client(t.withIdentity({ subject: account.sessionId })),
         });
       }),
     anonymous: client(t),
@@ -258,9 +256,7 @@ export const tenancyFixture = Effect.gen(function* () {
     signedIn: (sessionId: string) =>
       client(t.withIdentity({ subject: sessionId })),
     as: (account: keyof typeof seeded.users) =>
-      client(
-        t.withIdentity({ subject: seeded.users[account].sessionId })
-      ),
+      client(t.withIdentity({ subject: seeded.users[account].sessionId })),
     /** Calls internal functions the way the platform and `convex run` do, with no identity. */
     internal: internalClient(t),
     /** Runs a Confect program against the fixture's database, outside any function. */

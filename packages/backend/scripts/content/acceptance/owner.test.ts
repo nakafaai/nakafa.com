@@ -32,9 +32,7 @@ const readCookies = Effect.fn(function* (path: string) {
   return yield* fs
     .readFileString(path)
     .pipe(
-      Effect.flatMap(
-        Schema.decodeEffect(Schema.fromJsonString(SessionCookies))
-      )
+      Effect.flatMap(Schema.decodeEffect(Schema.fromJsonString(SessionCookies)))
     );
 });
 

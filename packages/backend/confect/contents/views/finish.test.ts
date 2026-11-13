@@ -26,9 +26,7 @@ const readerWorld = Effect.fn("test.contents.finish.reader")(function* () {
   const { contentId, locale, publicPath } = makeMaterialViewArgs();
   return {
     finish: { contentId, locale, publicPath },
-    reader: client(
-      t.withIdentity({ subject: reader.sessionId })
-    ),
+    reader: client(t.withIdentity({ subject: reader.sessionId })),
     t,
   };
 });

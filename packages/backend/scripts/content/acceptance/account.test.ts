@@ -92,7 +92,10 @@ describe("content acceptance account", () => {
         yield* openLearnerAccount(runner.run);
         yield* openLearnerAccount(runner.run);
         const emails = Arr.map(
-          Arr.filter(runner.calls(), ([operation]) => operation === "Learner account"),
+          Arr.filter(
+            runner.calls(),
+            ([operation]) => operation === "Learner account"
+          ),
           ([, call]) => call.args
         );
         expect(emails[0]).toMatchObject({ email: "guru@acceptance.invalid" });
@@ -100,22 +103,24 @@ describe("content acceptance account", () => {
       }).pipe(Effect.provide(nodePlatform))
   );
 
-  it.effect("stops before the sign-in when the seed fails or answers no account", () =>
-    Effect.gen(function* () {
-      const failed = recordingRunner({}, ["Learner account"]);
-      expect(
-        yield* Effect.flip(openLearnerAccount(failed.run))
-      ).toBe("Learner account failed");
-      const malformed = recordingRunner({ "Learner account": { userId: 1 } });
-      expect(
-        yield* Effect.flip(openLearnerAccount(malformed.run))
-      ).toMatchObject({ _tag: "SchemaError" });
-      for (const runner of [failed, malformed]) {
-        expect(Arr.map(runner.calls(), ([operation]) => operation)).toEqual([
-          "Learner account",
-        ]);
-      }
-    }).pipe(Effect.provide(nodePlatform))
+  it.effect(
+    "stops before the sign-in when the seed fails or answers no account",
+    () =>
+      Effect.gen(function* () {
+        const failed = recordingRunner({}, ["Learner account"]);
+        expect(yield* Effect.flip(openLearnerAccount(failed.run))).toBe(
+          "Learner account failed"
+        );
+        const malformed = recordingRunner({ "Learner account": { userId: 1 } });
+        expect(
+          yield* Effect.flip(openLearnerAccount(malformed.run))
+        ).toMatchObject({ _tag: "SchemaError" });
+        for (const runner of [failed, malformed]) {
+          expect(Arr.map(runner.calls(), ([operation]) => operation)).toEqual([
+            "Learner account",
+          ]);
+        }
+      }).pipe(Effect.provide(nodePlatform))
   );
 
   it.effect(

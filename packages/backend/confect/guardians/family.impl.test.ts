@@ -112,7 +112,9 @@ describe("guardians/family children and confirm", () => {
         const entry = Arr.last(yield* fixture.run(journal));
         expect(entry).toMatchObject({
           _tag: "Some",
-          value: { change: { method: "address_nisn", type: "guardian.linked" } },
+          value: {
+            change: { method: "address_nisn", type: "guardian.linked" },
+          },
         });
         expect(
           yield* guardian.mutation(confirm, {

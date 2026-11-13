@@ -17,7 +17,9 @@ export const VERIFIER = "the-test-agent-keeps-this-verifier-0123456789";
 /** The S256 challenge of a PKCE verifier (RFC 7636 section 4.2). */
 export const challengeOf = (verifier: string) =>
   Effect.runPromise(
-    sha256(new TextEncoder().encode(verifier)).pipe(Effect.map(Base64Url.encode))
+    sha256(new TextEncoder().encode(verifier)).pipe(
+      Effect.map(Base64Url.encode)
+    )
   );
 
 /** Registers the test agent, as its first run does, and answers its `client_id`. */

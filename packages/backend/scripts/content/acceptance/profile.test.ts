@@ -26,20 +26,22 @@ describe("acceptance profile", () => {
     vi.resetAllMocks();
   });
 
-  it.effect("writes only the fields a test names, for the learner of an account id", () =>
-    Effect.gen(function* () {
-      const backend = localConvexDouble();
-      yield* seedProfile("user-1", { image: IMAGE }).pipe(
-        Effect.provide(Layer.merge(backend.layer, nodePlatform))
-      );
-      yield* seedProfile("user-1", { name: "Ayu" }).pipe(
-        Effect.provide(Layer.merge(backend.layer, nodePlatform))
-      );
-      expect(backend.calls()).toMatchObject([
-        { call: { args: { image: IMAGE, userId: "user-1" }, path: PROFILE } },
-        { call: { args: { name: "Ayu", userId: "user-1" }, path: PROFILE } },
-      ]);
-    })
+  it.effect(
+    "writes only the fields a test names, for the learner of an account id",
+    () =>
+      Effect.gen(function* () {
+        const backend = localConvexDouble();
+        yield* seedProfile("user-1", { image: IMAGE }).pipe(
+          Effect.provide(Layer.merge(backend.layer, nodePlatform))
+        );
+        yield* seedProfile("user-1", { name: "Ayu" }).pipe(
+          Effect.provide(Layer.merge(backend.layer, nodePlatform))
+        );
+        expect(backend.calls()).toMatchObject([
+          { call: { args: { image: IMAGE, userId: "user-1" }, path: PROFILE } },
+          { call: { args: { name: "Ayu", userId: "user-1" }, path: PROFILE } },
+        ]);
+      })
   );
 
   it.effect(

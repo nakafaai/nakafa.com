@@ -35,10 +35,7 @@ beforeEach(() => {
 afterEach(() => {
   vi.useRealTimers();
 });
-async function createActivatedIntent(
-  test: TestConvex<typeof schema>,
-  suffix: string
-) {
+async function createActivatedIntent(test: TestConvex<typeof schema>) {
   return await test.mutation(async (ctx) => {
     await insertRuntimeRelease(ctx, ["page"]);
     for (const locale of ACTIVE_APP_LOCALE_CODES) {
@@ -115,7 +112,7 @@ describe("emails/welcome/delivery", () => {
   it("runs the provider action with the deletion-aware retry policy", async () => {
     const test = convexTest(schema, convexModules);
     workflowTest.register(test);
-    const { intentId } = await createActivatedIntent(test, "workflow");
+    const { intentId } = await createActivatedIntent(test);
     const runAction = vi.fn(async () => null);
     const result = await runWelcomeEmailDelivery(
       {
@@ -140,7 +137,7 @@ describe("emails/welcome/delivery", () => {
     const test = convexTest(schema, convexModules);
     resendTest.register(test);
     workflowTest.register(test);
-    const { intentId, userId } = await createActivatedIntent(test, "localized");
+    const { intentId, userId } = await createActivatedIntent(test);
     await test.action(internal.emails.welcome.delivery.sendWelcomeEmail, {
       intentId,
     });
@@ -186,7 +183,7 @@ describe("emails/welcome/delivery", () => {
     const test = convexTest(schema, convexModules);
     resendTest.register(test);
     workflowTest.register(test);
-    const { intentId } = await createActivatedIntent(test, "completed");
+    const { intentId } = await createActivatedIntent(test);
     await test.action(internal.emails.welcome.delivery.sendWelcomeEmail, {
       intentId,
     });
@@ -225,7 +222,7 @@ describe("emails/welcome/delivery", () => {
   it("reconciles a failed workflow after its completion callback was missed", async () => {
     const test = convexTest(schema, convexModules);
     workflowTest.register(test);
-    const { intentId } = await createActivatedIntent(test, "failed");
+    const { intentId } = await createActivatedIntent(test);
     const workflowId = await completeWelcomeWorkflow(test, intentId, {
       error: "Synthetic failure",
       kind: "failed",
@@ -258,7 +255,7 @@ describe("emails/welcome/delivery", () => {
     const test = convexTest(schema, convexModules);
     resendTest.register(test);
     workflowTest.register(test);
-    const { intentId, userId } = await createActivatedIntent(test, "deleted");
+    const { intentId, userId } = await createActivatedIntent(test);
     const input = await test.query(
       internal.emails.welcome.internal.readIntentInput,
       {
@@ -336,37 +333,37 @@ describe("emails/welcome/delivery", () => {
   it.each([
     ["is gone", "gone"],
     ["deleted the account", "deleted"],
-  ] as const)("drops a scheduled intent when its owner %s before enqueue", async (_case, cause) => {
-    const test = convexTest(schema, convexModules);
-    resendTest.register(test);
-    workflowTest.register(test);
-    const { intentId, userId } = await createActivatedIntent(
-      test,
-      `${cause}-before-enqueue`
-    );
-    await test.mutation((ctx) =>
-      cause === "gone"
-        ? ctx.db.delete(userId)
-        : ctx.db.patch("users", userId, { deletedAt: NOW })
-    );
-    const send = vi.spyOn(resend, "sendEmail");
-    expect(
-      await test.query(internal.emails.welcome.internal.readIntentInput, {
-        intentId,
-      })
-    ).toBeNull();
-    await test.mutation(
-      internal.emails.welcome.internal.enqueueRenderedWelcome,
-      {
-        intentId,
-        html: "<p>Account ready</p>",
-        subject: "Account ready",
-        text: "Account ready",
-      }
-    );
-    expect(send).not.toHaveBeenCalled();
-    expect(
-      await test.query((ctx) => ctx.db.get("welcomeEmailIntents", intentId))
-    ).toBeNull();
-  });
+  ] as const)(
+    "drops a scheduled intent when its owner %s before enqueue",
+    async (_case, cause) => {
+      const test = convexTest(schema, convexModules);
+      resendTest.register(test);
+      workflowTest.register(test);
+      const { intentId, userId } = await createActivatedIntent(test);
+      await test.mutation((ctx) =>
+        cause === "gone"
+          ? ctx.db.delete(userId)
+          : ctx.db.patch("users", userId, { deletedAt: NOW })
+      );
+      const send = vi.spyOn(resend, "sendEmail");
+      expect(
+        await test.query(internal.emails.welcome.internal.readIntentInput, {
+          intentId,
+        })
+      ).toBeNull();
+      await test.mutation(
+        internal.emails.welcome.internal.enqueueRenderedWelcome,
+        {
+          intentId,
+          html: "<p>Account ready</p>",
+          subject: "Account ready",
+          text: "Account ready",
+        }
+      );
+      expect(send).not.toHaveBeenCalled();
+      expect(
+        await test.query((ctx) => ctx.db.get("welcomeEmailIntents", intentId))
+      ).toBeNull();
+    }
+  );
 });

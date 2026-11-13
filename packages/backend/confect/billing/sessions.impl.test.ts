@@ -7,11 +7,11 @@ import {
   PolarDuplicateEmailError,
   polarDuplicateEmailCode,
 } from "@repo/backend/confect/billing/polar/spec";
+import { loginAddress } from "@repo/backend/confect/identity/address";
 import {
   createConvexTestWithAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
-import { loginAddress } from "@repo/backend/confect/identity/address";
 import { api } from "@repo/backend/convex/_generated/api";
 import { MASCOT_CODE } from "@repo/backend/test/mascot";
 import { Clock, Effect } from "effect";

@@ -124,9 +124,10 @@ describe("auth/deletion/finalize", () => {
     for (const field of ["bio", "image", "role", "username"]) {
       expect(owner).not.toHaveProperty(field);
     }
-    await expect(
-      t.mutation((ctx) => agentRows(ctx, userId))
-    ).resolves.toEqual([[], []]);
+    await expect(t.mutation((ctx) => agentRows(ctx, userId))).resolves.toEqual([
+      [],
+      [],
+    ]);
     await expect(pendingJobs(t, launchName)).resolves.toEqual([[{ userId }]]);
     await expect(pendingJobs(t, finalizeName)).resolves.toEqual([]);
   });
@@ -152,14 +153,13 @@ describe("auth/deletion/finalize", () => {
     await expect(
       t.query((ctx) => ctx.db.get("users", userId))
     ).resolves.toMatchObject({ email: "many-agents@example.com" });
-    await expect(pendingJobs(t, finalizeName)).resolves.toEqual([
-      [{ userId }],
-    ]);
+    await expect(pendingJobs(t, finalizeName)).resolves.toEqual([[{ userId }]]);
     await expect(pendingJobs(t, launchName)).resolves.toEqual([]);
     await finalize(t, userId);
-    await expect(
-      t.mutation((ctx) => agentRows(ctx, userId))
-    ).resolves.toEqual([[], []]);
+    await expect(t.mutation((ctx) => agentRows(ctx, userId))).resolves.toEqual([
+      [],
+      [],
+    ]);
     await expect(pendingJobs(t, launchName)).resolves.toEqual([[{ userId }]]);
   });
 

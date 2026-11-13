@@ -100,7 +100,10 @@ describe("the deployment of the release gate over a runner", () => {
 
         expect(yield* deployment.signIn).toEqual(LEARNER);
         expect(
-          Arr.map(MutableList.toArray(calls), ([step, call]) => [step, call.path])
+          Arr.map(MutableList.toArray(calls), ([step, call]) => [
+            step,
+            call.path,
+          ])
         ).toEqual([
           ["Learner account", "acceptance/accounts:create"],
           ["Learner sign-in", "auth/core:signInWithUsernamePassword"],

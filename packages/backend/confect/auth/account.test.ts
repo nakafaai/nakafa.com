@@ -18,7 +18,10 @@ function google(profile: {
   readonly name?: string;
   readonly picture?: string;
 }) {
-  return { name: "google" as const, profile: { id: "google-sub-1", ...profile } };
+  return {
+    name: "google" as const,
+    profile: { id: "google-sub-1", ...profile },
+  };
 }
 
 describe("auth/account", () => {

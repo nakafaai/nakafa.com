@@ -77,9 +77,9 @@ describe("acceptance/account", () => {
     });
     expect([first.userId, second.userId]).toEqual([held.userId, held.userId]);
     expect(second.password).not.toBe(first.password);
-    await expect(
-      signsInWith(t, held.userId, second.password)
-    ).resolves.toEqual({ success: true });
+    await expect(signsInWith(t, held.userId, second.password)).resolves.toEqual(
+      { success: true }
+    );
     await expect(
       t.query((ctx) => ctx.db.query("users").collect())
     ).resolves.toHaveLength(1);

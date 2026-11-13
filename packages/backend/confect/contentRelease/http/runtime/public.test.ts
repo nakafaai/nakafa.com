@@ -171,11 +171,7 @@ describe("public content runtime HTTP route", () => {
   ] as const)(
     "rejects invalid bounded input",
     async (body, headers, status) => {
-      const response = await post(
-        createConvexTestWithAuth(),
-        body,
-        headers
-      );
+      const response = await post(createConvexTestWithAuth(), body, headers);
       expect(response.status).toBe(status);
       await expect(response.json()).resolves.toEqual({
         code: "CONTENT_RUNTIME_INVALID",

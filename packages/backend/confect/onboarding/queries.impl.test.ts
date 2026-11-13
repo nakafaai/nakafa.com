@@ -49,5 +49,4 @@ describe("onboarding/queries", () => {
       });
     })
   );
-
 });

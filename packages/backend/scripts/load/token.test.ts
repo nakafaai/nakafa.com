@@ -57,7 +57,9 @@ describe("load token", () => {
             answer({ status: "complete", tokens: tokens(1) })
           )
           .mockResolvedValueOnce(answer({ kind: "rotated", tokens: tokens(2) }))
-          .mockResolvedValueOnce(answer({ kind: "rotated", tokens: tokens(3) }));
+          .mockResolvedValueOnce(
+            answer({ kind: "rotated", tokens: tokens(3) })
+          );
         const ask = yield* source;
         expect([yield* ask, yield* ask, yield* ask]).toEqual([
           "access-1",
@@ -96,7 +98,9 @@ describe("load token", () => {
   it.effect("answers no token once the session is gone", () =>
     Effect.gen(function* () {
       fetcher
-        .mockResolvedValueOnce(answer({ status: "complete", tokens: tokens(1) }))
+        .mockResolvedValueOnce(
+          answer({ status: "complete", tokens: tokens(1) })
+        )
         .mockResolvedValueOnce(answer({ kind: "noSession" }));
       const ask = yield* source;
       yield* ask;

@@ -24,13 +24,10 @@ const profileOf = (
 const callerOf = (
   t: ReturnType<typeof createConvexTestWithAuth>,
   account: Awaited<ReturnType<typeof seedAuthenticatedUser>>
-) =>
-  t.withIdentity({ subject: account.sessionId });
+) => t.withIdentity({ subject: account.sessionId });
 
 /** A learner who holds the username nabilfatih with a bio and a photo, and another account. */
-async function seedProfiles(
-  t: ReturnType<typeof createConvexTestWithAuth>
-) {
+async function seedProfiles(t: ReturnType<typeof createConvexTestWithAuth>) {
   const holder = await t.mutation(async (ctx) => {
     const seeded = await seedAuthenticatedUser(ctx, {
       now: NOW,

@@ -33,8 +33,7 @@ async function fixture() {
       seedAuthenticatedUser(ctx, { now: NOW, suffix: "list-stranger" }),
     ])
   );
-  const as = (who: typeof owner) =>
-    t.withIdentity({ subject: who.sessionId });
+  const as = (who: typeof owner) => t.withIdentity({ subject: who.sessionId });
   const add = async (
     who: typeof owner,
     visibility: Doc<"chats">["visibility"],

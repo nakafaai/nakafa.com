@@ -26,10 +26,10 @@ describe("public Quran API routes", () => {
   ])(
     "rejects invalid passage bounds before reading publication: %s",
     async (path) => {
-      await expectProblem(
-        await fetchApi(createConvexTestWithAuth(), path),
-        { code: "UNPROCESSABLE_REQUEST", status: 422 }
-      );
+      await expectProblem(await fetchApi(createConvexTestWithAuth(), path), {
+        code: "UNPROCESSABLE_REQUEST",
+        status: 422,
+      });
     }
   );
 
@@ -86,10 +86,7 @@ describe("public Quran API routes", () => {
   );
 
   it("rejects an out-of-range canonical surah", async () => {
-    const response = await fetchApi(
-      createConvexTestWithAuth(),
-      "/quran/115"
-    );
+    const response = await fetchApi(createConvexTestWithAuth(), "/quran/115");
 
     await expectProblem(response, {
       code: "UNPROCESSABLE_REQUEST",

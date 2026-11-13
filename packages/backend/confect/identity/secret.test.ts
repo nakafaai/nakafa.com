@@ -3,7 +3,7 @@ import {
   drawCardCode,
   hashCardCode,
 } from "@repo/backend/confect/identity/secret";
-import { Array as Arr, ConfigProvider, Effect } from "effect";
+import { ConfigProvider, Effect } from "effect";
 
 const CODE_PATTERN = /^[0-9A-HJKMNP-TV-Z]{10}$/u;
 const HEX_DIGEST_PATTERN = /^[0-9a-f]{64}$/u;

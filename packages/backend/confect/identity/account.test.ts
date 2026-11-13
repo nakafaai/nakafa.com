@@ -86,7 +86,9 @@ describe("identity/account", () => {
     await expect(verify(PASSWORD)).resolves.toEqual({ success: true });
     await expect(
       t.mutation(
-        inMutation(() => setLoginPassword(account.userId, "another fine phrase"))
+        inMutation(() =>
+          setLoginPassword(account.userId, "another fine phrase")
+        )
       )
     ).resolves.toBeNull();
     await expect(verify("another fine phrase")).resolves.toEqual({

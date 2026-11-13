@@ -70,58 +70,30 @@ describe("auth/deletion/workflow", () => {
       }
     })
   );
-  it.effect("does nothing for an account that is gone, live, or already cleaning up", () =>
-    Effect.gen(function* () {
-      const runtimeServices = yield* Effect.context<never>();
-      const t = convexTest(schema, convexModules);
-      const starters = createCleanupStarters();
-      const missingUserId = yield* Effect.promise(() =>
-        t.mutation((ctx) =>
-          Effect.runPromiseWith(runtimeServices)(
-            Effect.gen(function* () {
-              const userId = yield* Effect.promise(() =>
-                ctx.db.insert("users", {
-                  credits: 0,
-                  creditsResetAt: 0,
-                  email: "removed@example.com",
-                  mascot: MASCOT_CODE,
-                  name: "Removed User",
-                  plan: "free",
-                })
-              );
-              yield* Effect.promise(() => ctx.db.delete("users", userId));
-              return userId;
-            }).pipe(
-              Effect.provide(
-                RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
-              )
-            )
-          )
-        )
-      );
-      const [live, started] = yield* Effect.promise(() =>
-        t.mutation(async (ctx) => {
-          const account = (deletion: object) =>
-            ctx.db.insert("users", {
-              credits: 0,
-              creditsResetAt: 0,
-              email: "kept@example.com",
-              mascot: MASCOT_CODE,
-              name: "Kept User",
-              plan: "free",
-              ...deletion,
-            });
-          return [
-            await account({}),
-            await account({ deletedAt: 1, deletionCleanupStartedAt: 2 }),
-          ];
-        })
-      );
-      for (const userId of [missingUserId, live, started]) {
-        yield* Effect.promise(() =>
+  it.effect(
+    "does nothing for an account that is gone, live, or already cleaning up",
+    () =>
+      Effect.gen(function* () {
+        const runtimeServices = yield* Effect.context<never>();
+        const t = convexTest(schema, convexModules);
+        const starters = createCleanupStarters();
+        const missingUserId = yield* Effect.promise(() =>
           t.mutation((ctx) =>
             Effect.runPromiseWith(runtimeServices)(
-              launchDeletedUserCleanupProgram(userId, starters).pipe(
+              Effect.gen(function* () {
+                const userId = yield* Effect.promise(() =>
+                  ctx.db.insert("users", {
+                    credits: 0,
+                    creditsResetAt: 0,
+                    email: "removed@example.com",
+                    mascot: MASCOT_CODE,
+                    name: "Removed User",
+                    plan: "free",
+                  })
+                );
+                yield* Effect.promise(() => ctx.db.delete("users", userId));
+                return userId;
+              }).pipe(
                 Effect.provide(
                   RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
                 )
@@ -129,11 +101,41 @@ describe("auth/deletion/workflow", () => {
             )
           )
         );
-      }
-      for (const start of Record.values(starters)) {
-        expect(start).not.toHaveBeenCalled();
-      }
-    })
+        const [live, started] = yield* Effect.promise(() =>
+          t.mutation(async (ctx) => {
+            const account = (deletion: object) =>
+              ctx.db.insert("users", {
+                credits: 0,
+                creditsResetAt: 0,
+                email: "kept@example.com",
+                mascot: MASCOT_CODE,
+                name: "Kept User",
+                plan: "free",
+                ...deletion,
+              });
+            return [
+              await account({}),
+              await account({ deletedAt: 1, deletionCleanupStartedAt: 2 }),
+            ];
+          })
+        );
+        for (const userId of [missingUserId, live, started]) {
+          yield* Effect.promise(() =>
+            t.mutation((ctx) =>
+              Effect.runPromiseWith(runtimeServices)(
+                launchDeletedUserCleanupProgram(userId, starters).pipe(
+                  Effect.provide(
+                    RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+                  )
+                )
+              )
+            )
+          );
+        }
+        for (const start of Record.values(starters)) {
+          expect(start).not.toHaveBeenCalled();
+        }
+      })
   );
   it.effect("returns a typed failure when any workflow cannot start", () =>
     Effect.gen(function* () {

@@ -19,7 +19,8 @@ const authServer = vi.hoisted(() => ({ failNext: false }));
 // The session read is Convex Auth's own; a test makes it fail once to prove
 // that a failed read is a typed, sanitized refusal and never a guess.
 vi.mock("@convex-dev/auth/server", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("@convex-dev/auth/server")>();
+  const actual =
+    await importOriginal<typeof import("@convex-dev/auth/server")>();
   return {
     ...actual,
     getAuthUserId: (ctx: Parameters<typeof actual.getAuthUserId>[0]) => {

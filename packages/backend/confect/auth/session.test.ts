@@ -102,9 +102,9 @@ describe("token-verified reads and session-validated writes", () => {
       })
     );
     expect(await signedOut.query(currentUser, {})).toBeNull();
-    await expect(
-      signedOut.query(memberships, firstPage)
-    ).rejects.toMatchObject({ data: { _tag: "SessionRequired" } });
+    await expect(signedOut.query(memberships, firstPage)).rejects.toMatchObject(
+      { data: { _tag: "SessionRequired" } }
+    );
     expect(await signedOut.mutation(admitOnboarding, {})).toMatchObject({
       isAuthenticated: false,
     });

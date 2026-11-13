@@ -14,9 +14,9 @@ import {
 } from "@repo/backend/confect/_generated/services";
 import { schoolTiers } from "@repo/backend/confect/billing/tiers";
 import { systemActor } from "@repo/backend/confect/tenancy/actor";
+import { api } from "@repo/backend/convex/_generated/api";
 import { nf } from "@repo/backend/test/editor";
 import { keyedSchool } from "@repo/backend/test/sittings";
-import { api } from "@repo/backend/convex/_generated/api";
 import { TENANCY_NOW, tenancyFixture } from "@repo/backend/test/tenancy";
 import { Array as Arr, Effect } from "effect";
 

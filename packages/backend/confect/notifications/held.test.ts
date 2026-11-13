@@ -13,10 +13,7 @@ describe("notifications/held persons", () => {
     () =>
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
-        const ana = yield* fixture.account(
-          "ana",
-          "ana@harapan.example.test"
-        );
+        const ana = yield* fixture.account("ana", "ana@harapan.example.test");
         const persons = yield* claimedPersons(
           fixture,
           ana.userId,
@@ -35,10 +32,7 @@ describe("notifications/held persons", () => {
     () =>
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
-        const ana = yield* fixture.account(
-          "ana",
-          "ana@harapan.example.test"
-        );
+        const ana = yield* fixture.account("ana", "ana@harapan.example.test");
         yield* claimedPersons(fixture, ana.userId, HELD_SCHOOL_LIMIT + 1);
         const refused = yield* fixture.run(
           heldPersons(ana.userId).pipe(

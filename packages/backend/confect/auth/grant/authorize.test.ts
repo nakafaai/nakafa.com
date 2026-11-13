@@ -41,39 +41,41 @@ describe("auth/grant/authorize", () => {
     ).resolves.toBeNull();
   });
 
-  it.effect("gives a signed-in person's agent a code that only its hash and challenge are kept of", () =>
-    Effect.gen(function* () {
-      vi.useFakeTimers();
-      vi.setSystemTime(NOW);
-      const t = createConvexTestWithAuth();
-      const learner = yield* Effect.promise(() =>
-        t.mutation((ctx) =>
-          seedAuthenticatedUser(ctx, { now: NOW, suffix: "consent" })
-        )
-      );
-      const clientId = yield* Effect.promise(() => registerTestAgent(t));
-      const code = yield* Effect.promise(() =>
-        authorizeTestAgent(t, learner.sessionId, clientId)
-      );
-      const stored = yield* Effect.promise(() =>
-        t.query((ctx) => ctx.db.query("agentCodes").unique())
-      );
-      expect(stored).toMatchObject({
-        clientId,
-        codeChallenge: yield* Effect.promise(() => challengeOf(VERIFIER)),
-        codeHash: yield* sha256Hex(code),
-        redirectUri: REDIRECT,
-        userId: learner.userId,
-      });
-      // The code lives `CODE_LIFETIME` from the moment it was given, a moment
-      // after the setup's commit.
-      expect(
-        (stored?.expiresAt ?? 0) - Duration.toMillis(CODE_LIFETIME)
-      ).toBeGreaterThanOrEqual(NOW);
-      expect(
-        yield* Schema.encodeEffect(Schema.UnknownFromJsonString)(stored)
-      ).not.toContain(code);
-    })
+  it.effect(
+    "gives a signed-in person's agent a code that only its hash and challenge are kept of",
+    () =>
+      Effect.gen(function* () {
+        vi.useFakeTimers();
+        vi.setSystemTime(NOW);
+        const t = createConvexTestWithAuth();
+        const learner = yield* Effect.promise(() =>
+          t.mutation((ctx) =>
+            seedAuthenticatedUser(ctx, { now: NOW, suffix: "consent" })
+          )
+        );
+        const clientId = yield* Effect.promise(() => registerTestAgent(t));
+        const code = yield* Effect.promise(() =>
+          authorizeTestAgent(t, learner.sessionId, clientId)
+        );
+        const stored = yield* Effect.promise(() =>
+          t.query((ctx) => ctx.db.query("agentCodes").unique())
+        );
+        expect(stored).toMatchObject({
+          clientId,
+          codeChallenge: yield* Effect.promise(() => challengeOf(VERIFIER)),
+          codeHash: yield* sha256Hex(code),
+          redirectUri: REDIRECT,
+          userId: learner.userId,
+        });
+        // The code lives `CODE_LIFETIME` from the moment it was given, a moment
+        // after the setup's commit.
+        expect(
+          (stored?.expiresAt ?? 0) - Duration.toMillis(CODE_LIFETIME)
+        ).toBeGreaterThanOrEqual(NOW);
+        expect(
+          yield* Schema.encodeEffect(Schema.UnknownFromJsonString)(stored)
+        ).not.toContain(code);
+      })
   );
 
   it("refuses a caller without a session, an unknown agent, a foreign address and a missing S256 challenge", async () => {
@@ -87,10 +89,10 @@ describe("auth/grant/authorize", () => {
       args: { clientId: string; codeChallenge: string; redirectUri: string },
       sessionId: string | null = learner.sessionId
     ) =>
-      (sessionId === null ? t : t.withIdentity({ subject: sessionId })).mutation(
-        api.auth.grant.authorize,
-        args
-      );
+      (sessionId === null
+        ? t
+        : t.withIdentity({ subject: sessionId })
+      ).mutation(api.auth.grant.authorize, args);
     await expect(
       authorize({ clientId, codeChallenge, redirectUri: REDIRECT }, null)
     ).rejects.toMatchObject({ data: { _tag: "SessionRequired" } });

@@ -62,7 +62,9 @@ describe("acceptance learner", () => {
                     )
                   )
                 : Effect.succeed(
-                    call.path === ACCOUNT_SEED ? SIGN_IN_ANSWERS[ACCOUNT_SEED] : SIGN_IN_ANSWERS[PASSWORD_SIGN_IN]
+                    call.path === ACCOUNT_SEED
+                      ? SIGN_IN_ANSWERS[ACCOUNT_SEED]
+                      : SIGN_IN_ANSWERS[PASSWORD_SIGN_IN]
                   );
             }),
         });
@@ -71,7 +73,11 @@ describe("acceptance learner", () => {
             Layer.merge(Layer.succeed(LocalConvex, timingOut), nodePlatform)
           )
         );
-        expect(MutableList.toArray(calls)).toEqual([ACCOUNT_SEED, ACCOUNT_SEED, PASSWORD_SIGN_IN]);
+        expect(MutableList.toArray(calls)).toEqual([
+          ACCOUNT_SEED,
+          ACCOUNT_SEED,
+          PASSWORD_SIGN_IN,
+        ]);
       })
   );
 

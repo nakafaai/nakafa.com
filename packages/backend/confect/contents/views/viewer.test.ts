@@ -91,8 +91,12 @@ describe("contents/views/viewer", () => {
 
       return { contentId: material.contentId, firstUser, secondUser };
     });
-    const firstSignedIn = t.withIdentity({ subject: identity.firstUser.sessionId });
-    const secondSignedIn = t.withIdentity({ subject: identity.secondUser.sessionId });
+    const firstSignedIn = t.withIdentity({
+      subject: identity.firstUser.sessionId,
+    });
+    const secondSignedIn = t.withIdentity({
+      subject: identity.secondUser.sessionId,
+    });
 
     await firstSignedIn.mutation(
       api.contents.mutations.views.recordContentView,

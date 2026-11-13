@@ -271,9 +271,7 @@ describe("comments/queries", () => {
       });
 
     expect(
-      await readAs(
-        t.withIdentity({ subject: author.sessionId })
-      )
+      await readAs(t.withIdentity({ subject: author.sessionId }))
     ).toMatchObject({ page: [{ text: "Komentar anggota sekolah" }] });
     expect(await readAs(t)).toStrictEqual({
       continueCursor: "",

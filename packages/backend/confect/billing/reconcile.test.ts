@@ -52,11 +52,7 @@ function listedSubscription(
 }
 
 /** Seeds one user under the given name and a Polar account linked to the given customer. */
-async function seedLinked(
-  ctx: MutationCtx,
-  name: string,
-  customerId: string
-) {
+async function seedLinked(ctx: MutationCtx, name: string, customerId: string) {
   const userId = await ctx.db.insert("users", {
     credits: 0,
     creditsResetAt: NOW,
@@ -176,9 +172,7 @@ describe("billing/reconcile", () => {
 
   it("counts a customer Polar cannot read as unresolved, and applies the rest of the page", async () => {
     const t = createBillingTestConvex();
-    await t.mutation((ctx) =>
-      seedLinked(ctx, "reconcile-4", "cust_r4_known")
-    );
+    await t.mutation((ctx) => seedLinked(ctx, "reconcile-4", "cust_r4_known"));
     polarGateway.listSubscriptions.mockReturnValue(
       Effect.succeed({
         items: [

@@ -35,9 +35,7 @@ const islandWorld = Effect.fn("test.island.world")(function* () {
     })
   );
   const as = (user: typeof owner) =>
-    client(
-      t.withIdentity({ subject: user.sessionId })
-    );
+    client(t.withIdentity({ subject: user.sessionId }));
   return { owner: as(owner), ownerId: owner.userId, stranger: as(stranger), t };
 });
 

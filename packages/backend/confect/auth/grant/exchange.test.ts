@@ -118,33 +118,37 @@ describe("auth/grant/exchange code", () => {
     ["a wrong verifier", { codeVerifier: `${VERIFIER}-wrong` }],
     ["a stale code", { late: true }],
     ["a deleted account", { deleted: true }],
-  ] as const)("spends the code and answers one refusal for %s", async (_case, change) => {
-    const { clientId, learner, t } = await setUp();
-    const code = await authorizeTestAgent(t, learner.sessionId, clientId);
-    const other =
-      "otherAgent" in change ? await registerTestAgent(t, "Other") : clientId;
-    if ("late" in change) {
-      // Past the lifetime of a code given a moment after the setup.
-      vi.setSystemTime(NOW + Duration.toMillis(CODE_LIFETIME) + 1000);
+  ] as const)(
+    "spends the code and answers one refusal for %s",
+    async (_case, change) => {
+      const { clientId, learner, t } = await setUp();
+      const code = await authorizeTestAgent(t, learner.sessionId, clientId);
+      const other =
+        "otherAgent" in change ? await registerTestAgent(t, "Other") : clientId;
+      if ("late" in change) {
+        // Past the lifetime of a code given a moment after the setup.
+        vi.setSystemTime(NOW + Duration.toMillis(CODE_LIFETIME) + 1000);
+      }
+      if ("deleted" in change) {
+        await t.mutation((ctx) =>
+          ctx.db.patch("users", learner.userId, { deletedAt: NOW })
+        );
+      }
+      await expect(
+        t.mutation(api.auth.grant.exchange, {
+          clientId: other,
+          code: "code" in change ? change.code : code,
+          codeVerifier:
+            "codeVerifier" in change ? change.codeVerifier : VERIFIER,
+          redirectUri: "redirectUri" in change ? change.redirectUri : REDIRECT,
+        })
+      ).resolves.toEqual(REFUSED);
+      const rows = await agentRows(t);
+      expect(rows.grants).toEqual([]);
+      // Only an unknown code leaves the real one waiting.
+      expect(rows.codes).toHaveLength("code" in change ? 1 : 0);
     }
-    if ("deleted" in change) {
-      await t.mutation((ctx) =>
-        ctx.db.patch("users", learner.userId, { deletedAt: NOW })
-      );
-    }
-    await expect(
-      t.mutation(api.auth.grant.exchange, {
-        clientId: other,
-        code: "code" in change ? change.code : code,
-        codeVerifier: "codeVerifier" in change ? change.codeVerifier : VERIFIER,
-        redirectUri: "redirectUri" in change ? change.redirectUri : REDIRECT,
-      })
-    ).resolves.toEqual(REFUSED);
-    const rows = await agentRows(t);
-    expect(rows.grants).toEqual([]);
-    // Only an unknown code leaves the real one waiting.
-    expect(rows.codes).toHaveLength("code" in change ? 1 : 0);
-  });
+  );
 });
 
 describe("auth/grant/exchange refresh", () => {

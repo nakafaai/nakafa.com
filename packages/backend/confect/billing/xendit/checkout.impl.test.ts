@@ -175,9 +175,7 @@ describe("billing/xendit/checkout internal steps", () => {
       offer: "pro.monthly",
       userId,
     });
-    await t.mutation((ctx) =>
-      ctx.db.patch(userId, { deletedAt: NOW })
-    );
+    await t.mutation((ctx) => ctx.db.patch(userId, { deletedAt: NOW }));
     await expect(
       t.mutation(steps.admit, {
         accountId: prepared.accountId,

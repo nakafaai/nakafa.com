@@ -28,10 +28,7 @@ setupApiTest();
 describe("public agent API routes", () => {
   it("fails closed with service unavailable when the origin secret is unconfigured", async () => {
     vi.stubEnv(NAKAFA_API_EDGE_CONTRACT.secretEnvironment, "");
-    const response = await fetchApi(
-      createConvexTestWithAuth(),
-      "/health"
-    );
+    const response = await fetchApi(createConvexTestWithAuth(), "/health");
     await expectProblem(response, {
       code: "SERVICE_UNAVAILABLE",
       status: 503,
@@ -54,13 +51,9 @@ describe("public agent API routes", () => {
     expect(response.status).toBe(204);
   });
   it("returns method guidance for a non-read request to an unknown API path", async () => {
-    const response = await fetchApi(
-      createConvexTestWithAuth(),
-      "/unknown",
-      {
-        method: "POST",
-      }
-    );
+    const response = await fetchApi(createConvexTestWithAuth(), "/unknown", {
+      method: "POST",
+    });
     await expectProblem(response, {
       code: "METHOD_NOT_ALLOWED",
       status: 405,
@@ -241,11 +234,7 @@ describe("public agent API routes", () => {
   ] as const)(
     "returns a structured problem for %s",
     async (path, init, code, status) => {
-      const response = await fetchApi(
-        createConvexTestWithAuth(),
-        path,
-        init
-      );
+      const response = await fetchApi(createConvexTestWithAuth(), path, init);
       await expectProblem(response, {
         code,
         status,

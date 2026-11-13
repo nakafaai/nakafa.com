@@ -341,9 +341,7 @@ describe("tenancy/claims run", () => {
       );
       yield* fixture.run(
         Effect.flatMap(DatabaseWriter, (writer) =>
-          writer
-            .table("users")
-            .patch(account.userId, { deletedAt: NOW })
+          writer.table("users").patch(account.userId, { deletedAt: NOW })
         )
       );
       yield* fixture.internal.mutation(run, {
@@ -399,7 +397,9 @@ describe("tenancy/claims run", () => {
     () =>
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
-        const placeholder = loginAddress("0f8fad5b-d9cb-4691-a165-8c45a5d2a1e1");
+        const placeholder = loginAddress(
+          "0f8fad5b-d9cb-4691-a165-8c45a5d2a1e1"
+        );
         const account = yield* fixture.account("siswa", placeholder);
         const { inviteId, personId } = yield* fixture.run(
           invitePerson(fixture.tenants.nf, address)
@@ -407,14 +407,12 @@ describe("tenancy/claims run", () => {
         // Even an invite that names the placeholder is never claimed by it.
         yield* fixture.run(
           Effect.flatMap(DatabaseWriter, (writer) =>
-            writer
-              .table("tenantInvites")
-              .patch(inviteId, {
-                channel: {
-                  email: Schema.decodeSync(Email)(placeholder),
-                  kind: "email",
-                },
-              })
+            writer.table("tenantInvites").patch(inviteId, {
+              channel: {
+                email: Schema.decodeSync(Email)(placeholder),
+                kind: "email",
+              },
+            })
           )
         );
         yield* fixture.internal.mutation(run, {
