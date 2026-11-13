@@ -26,7 +26,7 @@ const FATIHAH = "/en/quran/1";
 
 /**
  * Runs in the page: for every Arabic name on screen that follows a Latin name
- * in its row, how far the Arabic name's centre line lies below the Latin one's.
+ * on the same line of its row, how far the Arabic name's centre line lies below the Latin one's.
  * A name's centre line is the middle of the band its script fills, from the
  * place each engine laid out its baseline: a Latin capital's height above the
  * baseline, and for the Arabic the whole reach of its face's letters, from the
@@ -65,6 +65,12 @@ function measureNames() {
       !arabic.checkVisibility() ||
       arabic.getBoundingClientRect().width <= 1
     ) {
+      return [];
+    }
+    // A name sits beside its Latin name on one line; a verse under its heading does not.
+    const arabicBox = arabic.getBoundingClientRect();
+    const latinBox = latin.getBoundingClientRect();
+    if (arabicBox.top >= latinBox.bottom || latinBox.top >= arabicBox.bottom) {
       return [];
     }
     return [
