@@ -8,7 +8,7 @@ import {
 import { basename, dirname, join } from "node:path";
 import { DEFAULT_LOCALE, LOCALES } from "@repo/internationalization/src/locale";
 import { FetchClient } from "@repo/utilities/http/client";
-import { Effect, Option, Result, Schema } from "effect";
+import { Array as Arr, Effect, Option, Record, Result, Schema } from "effect";
 import { HttpClient } from "effect/http";
 import { toJSONAsync } from "seroval";
 import type { Plugin } from "vite";
@@ -19,6 +19,7 @@ import {
   staticDataPath,
   toStaticFile,
 } from "#www/src/lib/static/calls";
+import { type BuiltChunk, readParts } from "#www/src/lib/static/chunks";
 import { composeSchoolEntry, readSchoolEntry } from "#www/src/lib/static/entry";
 import {
   notFoundOutputPath,
@@ -240,20 +241,58 @@ export const writeStaticAnswers = (pages: readonly string[]): Plugin => ({
 });
 
 /**
+ * Records every chunk of the client build: its address, its static imports and
+ * the route parts it holds, which `deferStaticPageScripts` reads to start only
+ * what a page's first paint runs. The client build runs before the prerender, in
+ * the same process as the steps that read the record.
+ */
+export function recordClientChunks() {
+  let chunks: readonly BuiltChunk[] = [];
+  const plugin: Plugin = {
+    apply: "build",
+    applyToEnvironment: (environment) => environment.name === "client",
+    generateBundle: (_, bundle) => {
+      chunks = Arr.flatMap(Record.values(bundle), (output) =>
+        output.type === "chunk"
+          ? [
+              {
+                href: `/${output.fileName}`,
+                imports: Arr.map(output.imports, (file) => `/${file}`),
+                parts: readParts(output.moduleIds),
+              },
+            ]
+          : []
+      );
+    },
+    name: "www:record-client-chunks",
+  };
+  return { plugin, read: () => chunks };
+}
+
+/**
  * Defers the scripts of every prerendered page until the page has painted (see
  * `deferStaticScripts`). It runs after the static answers, which close each page.
+ * A build that recorded no client chunk fails here, since every page would then
+ * preload the chunks it never runs.
  */
-export const deferStaticPageScripts = (pages: readonly string[]): Plugin => ({
+export const deferStaticPageScripts = (
+  pages: readonly string[],
+  readChunks: () => readonly BuiltChunk[]
+): Plugin => ({
   apply: "build",
   enforce: "post",
   buildApp: {
     order: "post",
     handler: (builder) => {
       const outDir = builder.environments.client.config.build.outDir;
+      const chunks = readChunks();
+      if (pages.length > 0 && chunks.length === 0) {
+        throw new Error("The client build recorded no chunk to defer.");
+      }
       for (const path of pages) {
         const file = join(outDir, path, "index.html");
         const deferred = Result.getOrThrowWith(
-          deferStaticScripts(readFileSync(file, "utf8")),
+          deferStaticScripts(readFileSync(file, "utf8"), chunks),
           (error) =>
             new Error(
               `The prerendered page ${path} cannot defer its scripts: ${error.reason}`
