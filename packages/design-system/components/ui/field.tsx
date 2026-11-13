@@ -7,7 +7,7 @@ function FieldSet({ className, ...props }: React.ComponentProps<"fieldset">) {
     <fieldset
       className={cn(
         // A fieldset keeps the browser's min-content floor, so a long value would widen it past its container.
-        "flex min-w-0 flex-col gap-6",
+        "flex min-w-0 flex-col gap-4",
         "has-[>[data-slot=checkbox-group]]:gap-3 has-[>[data-slot=radio-group]]:gap-3",
         className
       )}
@@ -45,7 +45,7 @@ function FieldGroup({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       className={cn(
-        "group/field-group @container/field-group flex w-full flex-col gap-6 has-[>[data-slot=field-set]]:gap-8 data-[slot=checkbox-group]:gap-3 *:data-[slot=field-group]:gap-4",
+        "group/field-group @container/field-group flex w-full flex-col gap-4 has-[>[data-slot=field-set]]:gap-6 data-[slot=checkbox-group]:gap-3 *:data-[slot=field-group]:gap-3",
         className
       )}
       data-slot="field-group"
@@ -63,7 +63,7 @@ const fieldVariants = cva(
         vertical: ["flex-col *:w-full [&>.sr-only]:w-auto"],
         horizontal: [
           "flex-row items-center",
-          "*:data-[slot=field-label]:flex-auto",
+          "*:not-data-[slot=field-label]:not-data-[slot=field-content]:shrink-0 *:data-[slot=field-label]:min-w-0 *:data-[slot=field-label]:flex-auto",
           "has-[>[data-slot=field-content]]:items-start [&>:is([role=checkbox],[role=radio]):has(~[data-slot=field-content])]:mt-px [&>[data-slot=field-content]~:is([role=checkbox],[role=radio])]:mt-px",
         ],
         responsive: [
