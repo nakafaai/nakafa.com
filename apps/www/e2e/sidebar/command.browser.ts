@@ -8,6 +8,12 @@ import { LESSON_PATH } from "@/e2e/support/chat";
 /** The search button of the sidebar, in English. */
 const SEARCH = "Search content...";
 
+/**
+ * How long a lesson may take to hydrate. WebKit and Firefox take longer than
+ * Chromium on a loaded machine, and a press before hydration is lost.
+ */
+const HYDRATED_WITHIN = 15_000;
+
 /** The last row of a query, which searches inside every lesson. */
 const FULL_SEARCH = /Search lessons for "mathematcs"/u;
 
@@ -34,10 +40,12 @@ test("the shell's palette suggests from the page and finds a subject through a t
   const search = page.getByRole("button", { name: SEARCH }).first();
   await expect(search).toBeVisible();
   await expect
-    .poll(() =>
-      search.evaluate((node) =>
-        Object.keys(node).some((key) => key.startsWith("__reactProps$"))
-      )
+    .poll(
+      () =>
+        search.evaluate((node) =>
+          Object.keys(node).some((key) => key.startsWith("__reactProps$"))
+        ),
+      { timeout: HYDRATED_WITHIN }
     )
     .toBe(true);
   await search.click();
@@ -78,10 +86,12 @@ test("a row picked in the phone's search opens with the sidebar out of the way",
   const trigger = page.getByRole("button", { name: "Toggle Sidebar" }).first();
   await expect(trigger).toBeVisible();
   await expect
-    .poll(() =>
-      trigger.evaluate((node) =>
-        Object.keys(node).some((key) => key.startsWith("__reactProps$"))
-      )
+    .poll(
+      () =>
+        trigger.evaluate((node) =>
+          Object.keys(node).some((key) => key.startsWith("__reactProps$"))
+        ),
+      { timeout: HYDRATED_WITHIN }
     )
     .toBe(true);
   await trigger.click();

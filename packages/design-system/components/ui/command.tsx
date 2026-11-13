@@ -24,7 +24,7 @@ import { ButtonGroupVariant } from "@repo/design-system/lib/group";
 import { cn } from "cn";
 import { Array as Arr, Predicate } from "effect";
 import type * as React from "react";
-import { createContext, use } from "react";
+import { createContext, use, useRef } from "react";
 
 /** Whether the palette opens as a dialog, from the medium breakpoint, or as a drawer on a phone. */
 const CommandSurfaceContext = createContext<"dialog" | "drawer">("dialog");
@@ -146,17 +146,34 @@ function CommandDialogPopup({
   /** The name of the dialog, in the reader's language. */
   title: React.ReactNode;
 }) {
+  const body = useRef<HTMLDivElement>(null);
   if (use(CommandSurfaceContext) === "drawer") {
+    // As a `Picker` drawer does: a press focuses the search field, and a touch
+    // focuses the drawer itself, so no keyboard covers the rows before the
+    // learner asks for it.
     return (
       <DrawerPrimitive.VirtualKeyboardProvider>
-        <DrawerContent className="[--drawer-content-height:calc(100dvh-6rem)]">
+        <DrawerContent
+          className="[--drawer-content-height:calc(100dvh-6rem)]"
+          initialFocus={(type) =>
+            type === "touch"
+              ? body.current
+              : (body.current?.querySelector("input") ?? true)
+          }
+        >
           <DrawerPrimitive.Title className="sr-only">
             {title}
           </DrawerPrimitive.Title>
           <DrawerPrimitive.Description className="sr-only">
             {description}
           </DrawerPrimitive.Description>
-          {children}
+          <div
+            className="flex min-h-0 flex-1 flex-col outline-none"
+            ref={body}
+            tabIndex={-1}
+          >
+            {children}
+          </div>
         </DrawerContent>
       </DrawerPrimitive.VirtualKeyboardProvider>
     );
