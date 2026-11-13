@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it } from "@effect/vitest";
+import { AGENT_TOKEN_AUDIENCE } from "@repo/backend/confect/auth/grant/audience";
 
 const CLOUD_URL = "https://technical-auth.convex.cloud";
 
@@ -16,7 +17,7 @@ async function loadConfig() {
 describe("auth configuration", () => {
   it("accepts Convex Auth's session tokens and the agent tokens the deployment signs", async () => {
     vi.stubEnv("CONVEX_CLOUD_URL", CLOUD_URL);
-    const { AGENT_TOKEN_AUDIENCE, default: config } = await loadConfig();
+    const { default: config } = await loadConfig();
     expect(config.providers).toEqual([
       {
         type: "customJwt",

@@ -12,11 +12,13 @@ import {
   reserveLocalRuntime,
 } from "@repo/backend/scripts/content/acceptance/local";
 import {
+  anonymousConvexCommand,
   fixture,
   isPortOccupied,
   leaseClaims,
   occupyPort,
   ticking,
+  versionServiceError,
 } from "@repo/backend/test/acceptance";
 import { nodePlatform } from "@repo/backend/test/platform";
 import { JsonTextSchema } from "@repo/utilities/json";
@@ -44,6 +46,16 @@ const encodeJson = Schema.encodeEffect(JsonTextSchema);
 const encodeRuntime = Schema.encodeEffect(LocalRuntimeJson);
 const environment =
   "VITE_CONVEX_URL=http://127.0.0.1:43120\nVITE_CONVEX_SITE_URL=http://127.0.0.1:43121\n";
+const initialize = (source = environment, statuses: readonly number[] = []) => {
+  // Temporary roots that existed while their Convex command ran.
+  const temporaryRoots = MutableList.make<string>();
+  const failures = Arr.map(statuses, versionServiceError);
+  mocks.command.mockImplementation(
+    anonymousConvexCommand(source, temporaryRoots, failures)
+  );
+  return temporaryRoots;
+};
+
 describe("local acceptance environment", () => {
   it.effect("passes the erasure check that account deletion starts with", () =>
     ensurePostHogErasureConfigured({
@@ -94,6 +106,15 @@ describe("owned signed acceptance runtime", () => {
             stdin: expect.stringContaining(privateKey),
           })
         );
+        // Convex Auth signs the learners' sessions with the deployment's own key,
+        // so the runtime configures no signing key or secret of its own.
+        for (const retired of ["JWKS=", "BETTER_AUTH_SECRET="]) {
+          expect(mocks.command).not.toHaveBeenCalledWith(
+            expect.objectContaining({
+              stdin: expect.stringContaining(retired),
+            })
+          );
+        }
         expect(runtime.app).toBe("http://localhost:3000");
         expect(localApplicationEnvironment(runtime)).toMatchObject({
           CONVEX_AGENT_MODE: "anonymous",

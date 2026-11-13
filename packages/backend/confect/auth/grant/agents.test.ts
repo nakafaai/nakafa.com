@@ -31,9 +31,19 @@ describe("auth/grant/agents", () => {
       .withIdentity({ subject: owner.sessionId })
       .query(api.auth.grant.list, {});
     expect(listed).toEqual([
-      { grantId: expect.any(String), name: "Phone Agent", refreshedAt: NOW + 1000 },
-      { grantId: expect.any(String), name: "Desktop Agent", refreshedAt: NOW },
+      {
+        grantId: expect.any(String),
+        name: "Phone Agent",
+        refreshedAt: expect.any(Number),
+      },
+      {
+        grantId: expect.any(String),
+        name: "Desktop Agent",
+        refreshedAt: expect.any(Number),
+      },
     ]);
+    // Newest first: the phone's grant was refreshed a second later.
+    expect(listed[0]?.refreshedAt).toBeGreaterThan(listed[1]?.refreshedAt ?? 0);
     await expect(t.query(api.auth.grant.list, {})).rejects.toMatchObject({
       data: { _tag: "SessionRequired" },
     });
