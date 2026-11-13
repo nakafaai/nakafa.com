@@ -1,4 +1,5 @@
 import { useThree } from "@react-three/fiber";
+import { toggleColumns } from "@repo/design-system/components/contents/chemistry/columns";
 import {
   balanceTex,
   economyTex,
@@ -149,7 +150,7 @@ function ReactionCard({
           {offered.length > 1 ? (
             <ToggleGroup
               aria-label={labels.choose}
-              gridColumns={offered.length > 3 ? "4" : "3"}
+              gridColumns={toggleColumns(offered.length)}
               onValueChange={choose}
               type="single"
               value={shown}

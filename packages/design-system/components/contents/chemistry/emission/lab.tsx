@@ -1,5 +1,6 @@
 import { Line } from "@react-three/drei";
 import { useFrame, useThree } from "@react-three/fiber";
+import { toggleColumns } from "@repo/design-system/components/contents/chemistry/columns";
 import {
   frequency,
   orbitRadius,
@@ -135,7 +136,7 @@ export function BohrEmissionLab({
         <VisualCardToolbar>
           <ToggleGroup
             aria-label={labels.choose}
-            gridColumns={offered.length > 3 ? "4" : "3"}
+            gridColumns={toggleColumns(offered.length)}
             onValueChange={(value: string) => {
               if (value) {
                 setChosen(value);

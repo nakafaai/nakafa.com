@@ -1,4 +1,5 @@
 import { Atom02Icon } from "@hugeicons/core-free-icons";
+import { toggleColumns } from "@repo/design-system/components/contents/chemistry/columns";
 import {
   getMolecule,
   type MoleculeId,
@@ -121,7 +122,7 @@ export function MoleculeShapeLab({
         <VisualCardToolbar>
           <ToggleGroup
             aria-label={labels.choose}
-            gridColumns={offered.length > 3 ? "4" : "3"}
+            gridColumns={toggleColumns(offered.length)}
             onValueChange={choose}
             type="single"
             value={shown}

@@ -1,5 +1,6 @@
 import { Line, PointMaterial, Points } from "@react-three/drei";
 import { useThree } from "@react-three/fiber";
+import { toggleColumns } from "@repo/design-system/components/contents/chemistry/columns";
 import {
   type OrbitalId,
   OrbitalIdSchema,
@@ -110,7 +111,7 @@ export function OrbitalCloudLab({
         <VisualCardToolbar>
           <ToggleGroup
             aria-label={labels.choose}
-            gridColumns={offered.length > 3 ? "4" : "3"}
+            gridColumns={toggleColumns(offered.length)}
             onValueChange={choose}
             type="single"
             value={shown}
