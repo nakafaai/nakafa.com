@@ -27,6 +27,10 @@ import {
   readPublishedTrackSets,
 } from "@repo/backend/content/tryout/hierarchy";
 import {
+  readPublishedEntrySection,
+  toPublicPublishedSection,
+} from "@repo/backend/content/tryout/published";
+import {
   Array as Arr,
   Effect,
   HashMap,
@@ -113,17 +117,26 @@ const readJoinedSets = Effect.fn("tryouts.sets.readPublishedProgress")(
         const row = Option.getOrNull(
           MutableHashMap.get(progress, tryoutSetIdentityOf(set))
         );
+        const sections = readPublishedSetSections(found.index, set);
         return {
           durationSeconds: Arr.reduce(
             setFacts.sections,
             0,
             (total, section) => total + section.timeLimitSeconds
           ),
+          entrySection: yield* toPublicPublishedSection(
+            yield* readPublishedEntrySection(set, sections),
+            setFacts
+          ),
           facts: setFacts,
           progress: row,
           runningAttempt: yield* readRunningAttempt(row, identity.locale),
-          sections: readPublishedSetSections(found.index, set),
+          sections,
           set,
+          visibleSections: yield* Effect.forEach(
+            Arr.filter(sections, ({ visibility }) => visibility === "visible"),
+            (section) => toPublicPublishedSection(section, setFacts)
+          ),
         };
       })
     );

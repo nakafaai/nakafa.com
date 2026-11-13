@@ -2,6 +2,7 @@ import { getRouteApi, useLocation } from "@tanstack/react-router";
 import { Effect, Schema } from "effect";
 import { useState } from "react";
 import { ConvexIsland } from "@/components/providers/island";
+import { PanesProvider } from "@/components/shared/panes";
 import { TableFiltersProvider } from "@/components/shared/table/toolbar";
 import { useTryoutSetData } from "@/components/tryout/catalog/table/data";
 import { TryoutSetFrame } from "@/components/tryout/catalog/table/frame";
@@ -83,14 +84,20 @@ export function TryoutSetTable({ bootstrap }: TryoutSetTableProps) {
       }}
     >
       <TableFiltersProvider>
-        <ConvexIsland
-          fallback={
-            <TryoutSetVisitorCatalog bootstrap={bootstrap} request={request} />
-          }
-          keepsPress
-        >
-          <TryoutSetSignedCatalog bootstrap={bootstrap} request={request} />
-        </ConvexIsland>
+        {/* The open set outlives the visitor's table turning into the learner's. */}
+        <PanesProvider wideFrom="lg">
+          <ConvexIsland
+            fallback={
+              <TryoutSetVisitorCatalog
+                bootstrap={bootstrap}
+                request={request}
+              />
+            }
+            keepsPress
+          >
+            <TryoutSetSignedCatalog bootstrap={bootstrap} request={request} />
+          </ConvexIsland>
+        </PanesProvider>
       </TableFiltersProvider>
     </TryoutSetTableContext>
   );

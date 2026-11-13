@@ -16157,6 +16157,15 @@ export declare const api: {
               countryKey: string;
               description?: string;
               durationSeconds: number;
+              entrySection: {
+                description?: string;
+                publicPath?: string;
+                questionCount: number;
+                sectionKey: string;
+                timeLimitSeconds: number;
+                title: string;
+                visibility: "internal-entry" | "visible";
+              };
               examKey: string;
               publicPath: string;
               publishedScore: number | null;
@@ -16167,6 +16176,15 @@ export declare const api: {
               };
               scoringStrategy: "irt" | "raw" | "penalized" | "composite";
               sectionCount: number;
+              sections: Array<{
+                description?: string;
+                publicPath?: string;
+                questionCount: number;
+                sectionKey: string;
+                timeLimitSeconds: number;
+                title: string;
+                visibility: "internal-entry" | "visible";
+              }>;
               setKey: string;
               title: string;
               trackKey: string;

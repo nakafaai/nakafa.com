@@ -4,10 +4,13 @@ import {
 } from "@repo/backend/confect/tryouts/sets/query";
 import { Option, Schema } from "effect";
 import { useTranslations } from "use-intl";
+import { Panes, PanesDetail, PanesList } from "@/components/shared/panes";
 import { DataTable } from "@/components/shared/table/data";
 import { TablePageBody } from "@/components/shared/table/frame";
 import { useTryoutSetColumns } from "@/components/tryout/catalog/table/columns";
+import { TryoutSetPane } from "@/components/tryout/catalog/table/pane";
 import { useTryoutSetTable } from "@/components/tryout/catalog/table/selection";
+import { isUnstartedSet } from "@/components/tryout/catalog/table/started";
 import type { TryoutSetData } from "@/components/tryout/catalog/table/types";
 
 /**
@@ -33,48 +36,56 @@ export function TryoutSetFrame({ data }: { data: TryoutSetData }) {
     data.hasMore && !data.busy && !data.error && !data.offline;
 
   return (
-    <TablePageBody>
-      {/* The rows every visitor reads hide a learner's progress marks under a signed-in hint. */}
-      <div
-        className="contents"
-        data-catalog-snapshot={data.snapshotId}
-        data-rows={data.shared ? "shared" : undefined}
-      >
-        <DataTable
-          columns={columns}
-          data={data.rows}
-          loading={data.busy}
-          rowId={(row) => row.publicPath}
-          server={{
-            choose: (_column, value) => {
-              if (Schema.is(setFilterValidator)(value)) {
-                onFilter(value);
-              }
-            },
-            chosen: { status: filter },
-            more: canLoadMore ? Option.some(data.loadMore) : Option.none(),
-            onSort: (column, descending) => {
-              if (Schema.is(setSortValidator.fields.field)(column)) {
-                onSort({
-                  direction: descending ? "desc" : "asc",
-                  field: column,
-                });
-              }
-            },
-            snapshot: `${filter}:${sort.field}:${sort.direction}:${data.snapshotId ?? ""}`,
-            sort:
-              sort.field === "order"
-                ? Option.none()
-                : Option.some({
-                    column: sort.field,
-                    descending: sort.direction === "desc",
-                  }),
-          }}
-        />
-      </div>
-      <span aria-live="polite" className="sr-only" role="status">
-        {status}
-      </span>
-    </TablePageBody>
+    <Panes fill="parent" id="tryout-sets">
+      <PanesList>
+        <TablePageBody>
+          {/* The rows every visitor reads hide a learner's progress marks under a signed-in hint. */}
+          <div
+            className="contents"
+            data-catalog-snapshot={data.snapshotId}
+            data-rows={data.shared ? "shared" : undefined}
+          >
+            <DataTable
+              columns={columns}
+              data={data.rows}
+              loading={data.busy}
+              opens={isUnstartedSet}
+              rowId={(row) => row.publicPath}
+              server={{
+                choose: (_column, value) => {
+                  if (Schema.is(setFilterValidator)(value)) {
+                    onFilter(value);
+                  }
+                },
+                chosen: { status: filter },
+                more: canLoadMore ? Option.some(data.loadMore) : Option.none(),
+                onSort: (column, descending) => {
+                  if (Schema.is(setSortValidator.fields.field)(column)) {
+                    onSort({
+                      direction: descending ? "desc" : "asc",
+                      field: column,
+                    });
+                  }
+                },
+                snapshot: `${filter}:${sort.field}:${sort.direction}:${data.snapshotId ?? ""}`,
+                sort:
+                  sort.field === "order"
+                    ? Option.none()
+                    : Option.some({
+                        column: sort.field,
+                        descending: sort.direction === "desc",
+                      }),
+              }}
+            />
+          </div>
+          <span aria-live="polite" className="sr-only" role="status">
+            {status}
+          </span>
+        </TablePageBody>
+      </PanesList>
+      <PanesDetail label={t("set-pane")}>
+        <TryoutSetPane rows={data.rows} />
+      </PanesDetail>
+    </Panes>
   );
 }
