@@ -1,12 +1,14 @@
 import { idOf } from "@repo/backend/confect/island/blocks";
 import { footprintOf, SPAN } from "@repo/backend/confect/island/world";
-import { Array as Arr, Option, Order, Schema } from "effect";
-import { SPECIES_SLOT, slotUv, speciesPixels } from "@/lib/island/atlas";
+import { Array as Arr, Option, Order, Result, Schema } from "effect";
+import { NO_SHADOW } from "@/lib/island/bodies";
 import { SPECIES } from "@/lib/island/fauna/species";
 import { groundOf } from "@/lib/island/life";
+import { KIND, LOOK } from "@/lib/island/look";
+import { schoolOf } from "@/lib/island/models/ocean";
 import { unitOf } from "@/lib/island/noise";
-import { TILE } from "@/lib/island/tiles/paint";
-import { type Cells, SEA_LEVEL } from "@/lib/island/world";
+import { shoreOf } from "@/lib/island/terrain";
+import { blockAt, type Cells, SEA_LEVEL } from "@/lib/island/world";
 
 /** How many of each home's species a day brings to the island. */
 const VISITORS = { bloom: 4, land: 6, sea: 6, shore: 3, sky: 5 } as const;
@@ -16,9 +18,6 @@ const GROUNDS = {
   land: [idOf("grass"), idOf("dirt")],
   shore: [idOf("sand")],
 } as const;
-
-/** The smallest and largest a wild creature is drawn, in blocks, so a beetle still shows and a giraffe still fits. */
-const DRAWN = { largest: 5.5, smallest: 0.32 } as const;
 
 /**
  * One wild creature on the island today (ADR 0047, D11): which species it is,
@@ -36,22 +35,6 @@ const Wild = Schema.Struct({
   z: Schema.Finite,
 });
 type Wild = typeof Wild.Type;
-
-/** How many rows of its tile a species' drawing fills, so it can be drawn at its real height. */
-const ROWS = Arr.map(SPECIES, (_species, index) => {
-  const pixels = speciesPixels(index);
-  return Arr.reduce(
-    Arr.makeBy(TILE, (row) => row),
-    0,
-    (rows, row) =>
-      Arr.some(
-        Arr.makeBy(TILE, (x) => x),
-        (x) => pixels[(row * TILE + x) * 4 + 3] > 0
-      )
-        ? rows + 1
-        : rows
-  );
-});
 
 /** Whether a walker of this home can stand in a column. */
 function standsOn(cells: Cells, home: "land" | "shore", x: number, z: number) {
@@ -105,12 +88,17 @@ export function wildOf(cells: Cells, seed: number, size: number, day: number) {
               standsOn(cells, home, x + 0.5, z + 0.5)
             )
           : columns;
-      return Arr.zipWith(
-        kinds,
-        Arr.take(spots, kinds.length),
-        ({ index }, { x, z }) => ({
+      return Arr.map(
+        Arr.zip(kinds, Arr.take(spots, kinds.length)),
+        ([{ index }, { x, z }], order) => ({
           index,
-          phase: unitOf(seed, index, day, 9) * Math.PI * 2,
+          // Sea visitors share one loop, so they keep evenly apart on it and never swim through each other.
+          phase:
+            home === "sea"
+              ? ((order + unitOf(seed, day, 9, 0) / 2) / kinds.length) *
+                Math.PI *
+                2
+              : unitOf(seed, index, day, 9) * Math.PI * 2,
           rest: 0,
           steps: 0,
           tx: x + 0.5,
@@ -137,11 +125,21 @@ export function roam(cells: Cells, wild: Wild, seed: number, dt: number): Wild {
   const distance = Math.hypot(dx, dz);
   const reach = Math.min(1.6, 0.4 + SPECIES[wild.index].height) * dt;
   if (distance > reach) {
-    return {
-      ...wild,
+    const next = {
       x: wild.x + (dx / distance) * reach,
       z: wild.z + (dz / distance) * reach,
     };
+    // A walker never climbs a step or crosses a wall on its way: it stops there and rests (ADR 0047, D25).
+    const level = (x: number, z: number) =>
+      Option.map(groundOf(cells, Math.floor(x), Math.floor(z)), ({ y }) => y);
+    const open =
+      standsOn(cells, home, next.x, next.z) &&
+      Option.exists(level(next.x, next.z), (ahead) =>
+        Option.exists(level(wild.x, wild.z), (here) => ahead === here)
+      );
+    return open
+      ? { ...wild, ...next }
+      : { ...wild, rest: 1, tx: wild.x, tz: wild.z };
   }
   const roll = (channel: number) =>
     unitOf(seed + wild.index * 13, wild.steps, channel);
@@ -157,15 +155,6 @@ export function roam(cells: Cells, wild: Wild, seed: number, dt: number): Wild {
     tx: ok ? goal.x : wild.tx,
     tz: ok ? goal.z : wild.tz,
   };
-}
-
-/** The size a species is drawn at: its real height spread over the rows its drawing fills. */
-function drawnOf(index: number) {
-  const real = Math.min(
-    DRAWN.largest,
-    Math.max(DRAWN.smallest, SPECIES[index].height)
-  );
-  return (real * TILE) / Math.max(1, ROWS[index]);
 }
 
 /** Where a creature of the sky, the sea or the flowers is at `time`, and which way it faces. */
@@ -184,11 +173,12 @@ function loopOf(
       y: SEA_LEVEL + 2.2,
       z: middle + 6.5,
     },
+    // Sea visitors keep to water at least three blocks deep, inside the whale's round (ADR 0047, D24).
     sea: {
-      radius: size / 2 + 1 + (wild.phase % 4),
+      radius: shoreOf(size) + 4,
       speed: 1.2,
       x: middle,
-      y: SEA_LEVEL - 0.08,
+      y: SEA_LEVEL - 0.9,
       z: middle,
     },
     sky: {
@@ -208,115 +198,144 @@ function loopOf(
   };
 }
 
-/** A quad's four corners, as the chunk program reads them, from its slot and its corners in the world. */
-function quadOf(
-  slot: number,
-  corners: readonly (readonly [number, number, number])[],
-  flip: boolean
-) {
-  return Arr.flatMap(
-    [
-      [0, 1],
-      [1, 1],
-      [1, 0],
-      [0, 0],
-    ] as const,
-    ([u, v], corner) => {
-      const [tu, tv] = slotUv(slot, u, v, flip);
-      return [...corners[corner], tu, tv, 1, 1, 0];
-    }
+/** How many fish of a species swim together, by its length in blocks: shoals of small fish, a few big ones, a big one alone. */
+function shoalOf(length: number) {
+  return Math.min(9, Math.max(1, Math.round(2.4 / length)));
+}
+
+/** The top of the sea floor under a column: its highest solid block below the surface, none where nothing lies under the water. */
+function seabedOf(cells: Cells, x: number, z: number) {
+  return Option.map(
+    Arr.findFirst(
+      Arr.makeBy(SEA_LEVEL, (index) => SEA_LEVEL - 1 - index),
+      (y) => {
+        const kind =
+          LOOK.kinds[blockAt(cells, Math.floor(x), y, Math.floor(z))];
+        return kind === KIND.solid || kind === KIND.cutout;
+      }
+    ),
+    (y) => y + 1
   );
+}
+
+/** The way a creature on a loop faces, as a body's yaw, from the heading of its loop. */
+function yawOf(heading: number) {
+  return Math.atan2(Math.cos(heading), Math.sin(heading));
 }
 
 /**
- * The wild creatures as quads in the chunk program's vertex layout: walkers
- * and flyers stand up facing the camera turned by `yaw`, at their real
- * height; swimmers lie flat on the sea, heading along their loop.
+ * A sea visitor on its loop (ADR 0047, D24): a waterbird floating on the
+ * surface; a lobster walking the sea floor; a fish in a school of its kind;
+ * an eel, a ray, a turtle or a sea snake swimming alone. Each one under the
+ * surface keeps between the sea floor and the surface, and one with no water
+ * there is left out rather than drawn through the ground.
  */
-export function wildVertices(
-  cells: Cells,
-  wilds: readonly Wild[],
-  size: number,
-  yaw: number,
-  time: number
-) {
-  const right = [Math.cos(yaw), -Math.sin(yaw)] as const;
-  return Arr.flatMap(wilds, (wild) => {
-    const species = SPECIES[wild.index];
-    const drawn = drawnOf(wild.index);
-    const slot = SPECIES_SLOT + wild.index;
-    if (species.home === "sea") {
-      const at = loopOf(wild, "sea", size, time);
-      const ahead = [Math.cos(at.heading), Math.sin(at.heading)] as const;
-      const corner = (along: number, across: number) =>
-        [
-          at.x + ahead[0] * along * drawn - ahead[1] * across * drawn,
-          at.y,
-          at.z + ahead[1] * along * drawn + ahead[0] * across * drawn,
-        ] as const;
-      return quadOf(
-        slot,
-        [
-          corner(-0.5, 0.5),
-          corner(0.5, 0.5),
-          corner(0.5, -0.5),
-          corner(-0.5, -0.5),
-        ],
-        false
-      );
+function seaPlaces(cells: Cells, wild: Wild, size: number, time: number) {
+  const species = SPECIES[wild.index];
+  const length = Math.max(0.2, species.height);
+  const at = loopOf(wild, "sea", size, time);
+  const yaw = yawOf(at.heading);
+  if (species.family === "waterbird") {
+    return [[at.x, SEA_LEVEL - 0.2, at.z, yaw, 0, NO_SHADOW]];
+  }
+  const [c, s] = [Math.cos(yaw), Math.sin(yaw)];
+  const half = length / 4;
+  // One that swims alone keeps to its loop; a shoal spreads round it.
+  const school =
+    species.family === "fish"
+      ? schoolOf(shoalOf(length), length, wild.index * 131)
+      : [{ at: [0, 0, 0], lag: 0.5 }];
+  return Arr.filterMap(school, (fish) => {
+    const [ox, oy, oz] = fish.at;
+    const x = at.x + ox * c + oz * s;
+    const z = at.z - ox * s + oz * c;
+    const floor = seabedOf(cells, x, z);
+    const low = Option.match(floor, {
+      onNone: () => Number.NEGATIVE_INFINITY,
+      onSome: (top) => top + half + 0.1,
+    });
+    const high = SEA_LEVEL - 0.2 - half;
+    if (low > high) {
+      return Result.failVoid;
     }
-    const home = species.home;
-    const at =
-      home === "land" || home === "shore"
-        ? {
-            heading: Math.atan2(wild.tz - wild.z, wild.tx - wild.x),
-            x: wild.x,
-            y: Option.match(
-              groundOf(cells, Math.floor(wild.x), Math.floor(wild.z)),
-              {
-                onNone: () => SEA_LEVEL,
-                onSome: ({ y }) => y + 1,
-              }
-            ),
-            z: wild.z,
-          }
-        : loopOf(wild, home, size, time);
-    const flip =
-      Math.cos(at.heading) * right[0] + Math.sin(at.heading) * right[1] < 0;
-    const side = (u: number) =>
-      [
-        at.x + right[0] * (u - 0.5) * drawn,
-        at.z + right[1] * (u - 0.5) * drawn,
-      ] as const;
-    const corner = (u: number, up: number) => {
-      const [x, z] = side(u);
-      return [x, at.y + up * drawn, z] as const;
-    };
-    return quadOf(
-      slot,
-      [corner(0, 0), corner(1, 0), corner(1, 1), corner(0, 1)],
-      flip
-    );
+    // A lobster stands on the floor; every other swimmer holds its depth in the school.
+    const y =
+      species.family === "crab"
+        ? Option.getOrElse(floor, () => at.y)
+        : Math.min(high, Math.max(low, at.y + oy));
+    return Result.succeed([
+      x,
+      y,
+      z,
+      yaw + (fish.lag - 0.5) * 0.3,
+      0,
+      NO_SHADOW,
+    ]);
   });
 }
 
-/** One upright quad of a tile standing at `at`, `size` blocks tall, facing a camera turned by `yaw`; a float on the water, say. */
-export function standingQuad(
-  slot: number,
-  at: readonly [number, number, number],
+/**
+ * A walker, a flyer or a flower visitor as one body: a walker on its ground
+ * facing its goal, bobbing while it walks, its shadow at its feet; a flyer on
+ * its loop facing its way, its shadow on the ground below, none over water.
+ */
+function creaturePlaces(
+  cells: Cells,
+  wild: Wild,
+  home: "land" | "shore" | "sky" | "bloom",
   size: number,
-  yaw: number
+  time: number
 ) {
-  const right = [Math.cos(yaw), -Math.sin(yaw)] as const;
-  const corner = (u: number, up: number) =>
-    [
-      at[0] + right[0] * (u - 0.5) * size,
-      at[1] + up * size,
-      at[2] + right[1] * (u - 0.5) * size,
-    ] as const;
-  return quadOf(
-    slot,
-    [corner(0, 0), corner(1, 0), corner(1, 1), corner(0, 1)],
-    false
+  if (home === "land" || home === "shore") {
+    const [dx, dz] = [wild.tx - wild.x, wild.tz - wild.z];
+    const moving = Math.hypot(dx, dz) > 0.05;
+    const ground = Option.match(
+      groundOf(cells, Math.floor(wild.x), Math.floor(wild.z)),
+      { onNone: () => SEA_LEVEL, onSome: ({ y }) => y + 1 }
+    );
+    return [
+      [
+        wild.x,
+        ground,
+        wild.z,
+        moving ? Math.atan2(dx, dz) : wild.phase,
+        moving && wild.rest <= 0 ? 0.04 : 0,
+        ground,
+      ],
+    ];
+  }
+  const at = loopOf(wild, home, size, time);
+  const shadow = Option.match(
+    groundOf(cells, Math.floor(at.x), Math.floor(at.z)),
+    {
+      onNone: () => NO_SHADOW,
+      onSome: ({ block, y }) =>
+        LOOK.kinds[block] === KIND.liquid ? NO_SHADOW : y + 1,
+    }
   );
+  return [[at.x, at.y, at.z, yawOf(at.heading), 0, shadow]];
+}
+
+/**
+ * The wild creatures of the day as true 3D bodies at their real size (ADR
+ * 0047, D24 and D25), one model a species with its bodies as one run of
+ * numbers, `BODY_STRIDE` a body: walkers on their ground, flyers on their
+ * loops, and each sea species on or under the sea. A day brings each
+ * species once.
+ */
+export function wildBodies(
+  cells: Cells,
+  wilds: readonly Wild[],
+  size: number,
+  time: number
+) {
+  return Arr.map(wilds, (wild) => {
+    const home = SPECIES[wild.index].home;
+    const places =
+      home === "sea"
+        ? seaPlaces(cells, wild, size, time)
+        : creaturePlaces(cells, wild, home, size, time);
+    const model = { _tag: "species", index: wild.index } as const;
+    return [model, Float32Array.from(Arr.flatten(places))] as const;
+  });
 }

@@ -140,11 +140,8 @@ export function tilePixels(name: TileName) {
   return PAINTERS[name](TEXTURE_SEED + SLOTS[name] * 101);
 }
 
-/** The atlas slot of the first species; each species follows in the catalog's order (ADR 0047, D11). */
-export const SPECIES_SLOT = TILE_NAMES.length;
-
 /** The atlas slot of the first plant; each plant follows in the order of its id. */
-export const PLANT_SLOT = SPECIES_SLOT + SPECIES.length;
+export const PLANT_SLOT = TILE_NAMES.length;
 
 /** One plant drawn by its family's shape in its own coat. */
 export function plantPixels(index: number) {
@@ -154,7 +151,7 @@ export function plantPixels(index: number) {
   return paintShape(shape, look.coat);
 }
 
-/** One species drawn by its family's shape in its own coat and pattern. */
+/** One species drawn by its family's shape in its own coat and pattern, for the block book's field guide. */
 export function speciesPixels(index: number) {
   const species = SPECIES[index];
   const shape = emptyShape();
@@ -175,15 +172,12 @@ function placeTile(atlas: Uint8ClampedArray, tile: Pixels, slot: number) {
   }
 }
 
-/** The whole atlas as RGBA pixels: every named tile in its slot, then every species, row by row. */
+/** The whole atlas as RGBA pixels: every named tile in its slot, then every plant, row by row. */
 export function atlasPixels() {
   const atlas = new Uint8ClampedArray(ATLAS_SIZE * ATLAS_SIZE * 4);
   for (const name of TILE_NAMES) {
     placeTile(atlas, tilePixels(name), SLOTS[name]);
   }
-  Arr.forEach(SPECIES, (_species, index) =>
-    placeTile(atlas, speciesPixels(index), SPECIES_SLOT + index)
-  );
   Arr.forEach(PLANT_KEYS, (_plant, index) =>
     placeTile(atlas, plantPixels(index), PLANT_SLOT + index)
   );

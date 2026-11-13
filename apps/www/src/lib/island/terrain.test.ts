@@ -5,7 +5,7 @@ import { idOf } from "@repo/backend/confect/island/blocks";
 import { PLANT_KEYS } from "@repo/backend/confect/island/flora";
 import { SPAN } from "@repo/backend/confect/island/world";
 import { Array as Arr } from "effect";
-import { columnOf, terrainOf, worldOf } from "@/lib/island/terrain";
+import { columnOf, shoreOf, terrainOf, worldOf } from "@/lib/island/terrain";
 import { blockAt, SEA_LEVEL } from "@/lib/island/world";
 
 /** How many cells of the world hold this block. */
@@ -75,6 +75,29 @@ describe("island/terrain", () => {
     const far = columnOf(3, 44, 32, 1);
     expect(near.land || near.top >= far.top).toBe(true);
     expect(far).toEqual({ land: false, top: SEA_LEVEL - 5 });
+  });
+
+  it("keeps every island's land inside its shore, with deep water a few cells past it", () => {
+    for (const size of [52, 64]) {
+      const columns = Arr.flatMap(
+        Arr.makeBy(SPAN, (x) => x),
+        (x) =>
+          Arr.map(
+            Arr.makeBy(SPAN, (z) => z),
+            (z) => [x, z] as const
+          )
+      );
+      for (const [x, z] of columns) {
+        const away = Math.hypot(x + 0.5 - SPAN / 2, z + 0.5 - SPAN / 2);
+        const column = columnOf(5, size, x, z);
+        if (column.land) {
+          expect(away).toBeLessThanOrEqual(shoreOf(size));
+        }
+        if (away >= shoreOf(size) + 4) {
+          expect(column.top).toBeLessThanOrEqual(SEA_LEVEL - 3);
+        }
+      }
+    }
   });
 
   it("lays the learner's edits over the terrain, emptied cells included", () => {
