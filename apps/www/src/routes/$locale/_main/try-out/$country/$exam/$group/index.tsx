@@ -1,25 +1,18 @@
 import { makeBreadcrumbNodes } from "@repo/seo/jsonld/node";
 import { createFileRoute, notFound, redirect } from "@tanstack/react-router";
-import { Option } from "effect";
-import { BreadcrumbHeader } from "@/components/shared/breadcrumb/header";
 import { LayoutMaterialContent } from "@/components/shared/material/content";
 import { LayoutMaterial } from "@/components/shared/material/frame";
-import { TryoutCatalogChoices } from "@/components/tryout/catalog/choice";
 import { TryoutGroupPageClient } from "@/components/tryout/catalog/group";
-import {
-  TryoutExamSelector,
-  TryoutGroupSelector,
-} from "@/components/tryout/catalog/selector";
+import { TryoutTrailHeader } from "@/components/tryout/catalog/trail";
 import { readTryoutGroupFn } from "@/components/tryout/route/catalog.functions";
 import { createTryoutHead } from "@/components/tryout/route/head";
 import { readTryoutCatalogHeaders } from "@/components/tryout/route/headers";
-import { getTryoutCrumbTarget } from "@/components/tryout/route/path";
-import { HOME_TARGET } from "@/lib/routing/target";
 import { readStaticData } from "@/lib/static/data";
 
 /**
  * One group of an exam: a year of SNBT, a grade of TKA, or a Studienkolleg. Its
- * header picks the exam and the group, and its body holds the group's tracks.
+ * header's trail opens the other exams and groups, and its body holds the
+ * group's tracks.
  */
 export const Route = createFileRoute(
   "/$locale/_main/try-out/$country/$exam/$group/"
@@ -66,37 +59,10 @@ function TryoutGroupPage() {
   return (
     <LayoutMaterial>
       <LayoutMaterialContent>
-        <BreadcrumbHeader
-          value={{
-            action: (
-              <TryoutCatalogChoices>
-                <TryoutExamSelector
-                  currentValue={route.page.exam.publicPath}
-                  options={route.examOptions}
-                />
-                {route.groupOptions.length > 0 ? (
-                  <TryoutGroupSelector
-                    axis={route.page.exam.groupAxis}
-                    currentValue={route.page.group.publicPath}
-                    options={route.groupOptions}
-                  />
-                ) : null}
-              </TryoutCatalogChoices>
-            ),
-            home: HOME_TARGET,
-            homeLabel: route.labels.home,
-            items: [
-              {
-                label: route.labels.tryOut,
-                menuLabel: route.labels.tryOutShort,
-                target: Option.getOrUndefined(
-                  getTryoutCrumbTarget(route.countryPath)
-                ),
-              },
-              { label: route.name },
-            ],
-            title: route.name,
-          }}
+        <TryoutTrailHeader
+          labels={route.labels}
+          title={route.title}
+          trail={route.trail}
         />
         <TryoutGroupPageClient locale={locale} page={route.page} />
       </LayoutMaterialContent>

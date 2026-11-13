@@ -57,7 +57,7 @@ const GROUP = "try-out/id/snbt/2027";
 const TRACK = "try-out/id/snbt/2027/utbk";
 
 const countryPage = {
-  country: { countryKey: "id" },
+  country: { countryKey: "id", title: "Indonesia" },
   exams: [
     { examKey: "snbt", imageKey: "exam-a", publicPath: EXAM, title: "SNBT" },
     {
@@ -228,6 +228,13 @@ describe("readTryoutCountryRoute", () => {
             { examKey: "snbt", imageSrc: "card-snbt.png" },
             { examKey: "utbk" },
           ],
+          title: "Indonesia",
+          trail: {
+            country: {
+              current: COUNTRY,
+              options: [{ value: COUNTRY }, { value: "try-out/de" }],
+            },
+          },
         });
       })
   );
@@ -269,21 +276,28 @@ describe("readTryoutGroupRoute", () => {
   );
 
   it.effect(
-    "names a single year with its exam and offers a grade as the header's one choice",
+    "names a single year in its exam's crumb, and keeps a grade as a crumb of its own",
     () =>
       Effect.gen(function* () {
-        expect(yield* readGroup()).toMatchObject({
-          countryPath: COUNTRY,
-          examOptions: [
-            { examKey: "snbt", title: "SNBT", value: EXAM },
-            { examKey: "utbk", title: "UTBK", value: "try-out/id/utbk" },
-          ],
-          groupOptions: [],
+        const year = yield* readGroup();
+        expect(year).toMatchObject({
           head: { title: "search-title SNBT 2027" },
           kind: "found",
-          name: "SNBT 2027",
           page: groupPage,
+          title: "SNBT 2027",
+          trail: {
+            country: { current: COUNTRY },
+            exam: {
+              label: "SNBT 2027",
+              options: [
+                { examKey: "snbt", title: "SNBT", value: EXAM },
+                { examKey: "utbk", title: "UTBK", value: "try-out/id/utbk" },
+              ],
+            },
+          },
         });
+        expect(year).not.toHaveProperty("trail.group");
+        expect(year).not.toHaveProperty("trail.track");
 
         catalog.readTryoutGroupPage.mockReturnValueOnce(
           Effect.succeed({
@@ -292,15 +306,21 @@ describe("readTryoutGroupRoute", () => {
           })
         );
         expect(yield* readGroup()).toMatchObject({
-          groupOptions: [
-            {
-              entryPath: GROUP,
-              groupKey: "2027",
-              title: "2027",
-              value: GROUP,
+          trail: {
+            exam: { label: "TKA" },
+            group: {
+              axis: "grade",
+              current: GROUP,
+              options: [
+                {
+                  entryPath: GROUP,
+                  groupKey: "2027",
+                  title: "2027",
+                  value: GROUP,
+                },
+              ],
             },
-          ],
-          name: "TKA",
+          },
         });
       })
   );
@@ -367,10 +387,13 @@ describe("readTryoutTrackRoute", () => {
   );
 
   it.effect(
-    "answers not found when the track, its country or its head is missing",
+    "answers not found when the track, its group, its country or its head is missing",
     () =>
       Effect.gen(function* () {
         catalog.readTryoutTrackPage.mockReturnValueOnce(Effect.void);
+        expect(yield* readTrack()).toEqual({ kind: "notFound" });
+
+        catalog.readTryoutGroupPage.mockReturnValueOnce(Effect.void);
         expect(yield* readTrack()).toEqual({ kind: "notFound" });
 
         catalog.readTryoutCountryPage.mockReturnValueOnce(Effect.succeedNone);
@@ -382,15 +405,30 @@ describe("readTryoutTrackRoute", () => {
   );
 
   it.effect(
-    "builds the track page with its exam and group, its selectors and its set list",
+    "builds the track page with its trail, its group's tracks among it, and its set list",
     () =>
       Effect.gen(function* () {
+        const tracks = [
+          { publicPath: TRACK, title: "UTBK", trackKey: "utbk" },
+          { publicPath: `${GROUP}/tps`, title: "TPS", trackKey: "tps" },
+        ];
+        catalog.readTryoutGroupPage.mockReturnValueOnce(
+          Effect.succeed({ ...groupPage, tracks })
+        );
         const route = yield* readTrack();
 
         expect(route).toMatchObject({
-          // The year's one track is its entry, so the crumb names the year and links nowhere.
-          examCrumb: { label: "SNBT 2027" },
-          groupOptions: [],
+          trail: {
+            country: { current: COUNTRY },
+            exam: { label: "SNBT 2027" },
+            track: {
+              current: TRACK,
+              options: [
+                { title: "UTBK", trackKey: "utbk", value: TRACK },
+                { title: "TPS", trackKey: "tps", value: `${GROUP}/tps` },
+              ],
+            },
+          },
           head: {
             description: "track-metadata-description",
             title: "search-title SNBT 2027 UTBK",
@@ -399,6 +437,7 @@ describe("readTryoutTrackRoute", () => {
           list: { result: { isDone: true, page: [] } },
           page: trackPage,
         });
+        expect(route).not.toHaveProperty("trail.group");
         expect(catalog.readTryoutSetList).toHaveBeenCalledExactlyOnceWith(
           expect.objectContaining({
             countryKey: "id",
@@ -406,26 +445,6 @@ describe("readTryoutTrackRoute", () => {
             trackKey: "2027",
           })
         );
-      })
-  );
-});
-
-describe("readTryoutTrackRoute's crumb", () => {
-  it.effect(
-    "links the exam's crumb to its group's track cards when the group has some",
-    () =>
-      Effect.gen(function* () {
-        catalog.readTryoutTrackPage.mockReturnValueOnce(
-          Effect.succeed({
-            ...trackPage,
-            exam: { examKey: "tka", groupAxis: "grade", title: "TKA" },
-            groups: [{ ...groups[0], entryPath: GROUP }],
-          })
-        );
-        expect(yield* readTrack()).toMatchObject({
-          examCrumb: { label: "TKA", path: GROUP },
-          groupOptions: [{ entryPath: GROUP, value: GROUP }],
-        });
       })
   );
 });
