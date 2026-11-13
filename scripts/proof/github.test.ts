@@ -6,15 +6,16 @@ import {
   Prover,
   proveOnGithub,
   runTimings,
-  sweepSuperseded,
 } from "#scripts/proof/github";
 import { formatProof } from "#scripts/proof/main";
 import {
   github,
-  MAIN,
+  JOB,
+  PROCESS_TIMEOUT,
   RUN,
   SHA,
   shard,
+  statusAnswer,
   step,
   toJson,
   withGithub,
@@ -22,18 +23,19 @@ import {
 
 describe("GitHub proof runner", () => {
   it.effect(
-    "dispatches a proof, finds and awaits its run, and combines its shards",
+    "dispatches one job, finds and awaits its run, and reads its gate, results and phases",
     () =>
       Effect.gen(function* () {
         const { exit, calls } = yield* withGithub(
           github({
-            "result-chromium-1": shard("chromium"),
-            "result-firefox-1": shard("firefox", ["e2e/a.browser.ts"]),
-            "result-webkit-1": shard("webkit"),
+            chromium: shard("chromium"),
+            firefox: shard("firefox", ["e2e/a.browser.ts"]),
+            webkit: shard("webkit"),
           }),
-          proveOnGithub(SHA, ["e2e/a.browser.ts"], 1)
+          proveOnGithub(SHA, ["e2e/a.browser.ts"], { gate: true, full: false })
         );
-        const { result, timings } = yield* exit;
+        const { result, gated, timings } = yield* exit;
+        expect(gated).toEqual(Option.some(true));
         expect(result.engines.firefox).toEqual({
           passed: false,
           failures: ["e2e/a.browser.ts"],
@@ -41,6 +43,7 @@ describe("GitHub proof runner", () => {
         expect(result.url).toBe(RUN.url);
         expect(timings).toEqual({
           queue: Option.some(5),
+          gate: Option.some(11),
           prepare: Option.some(4),
           restored: Option.some(true),
           build: Option.some(18),
@@ -53,21 +56,22 @@ describe("GitHub proof runner", () => {
           Option.some(
             expect.stringMatching(
               new RegExp(
-                `^gh workflow run proof.yml --repo nakafaai/nakafa.com --ref main -f sha=${SHA} -f specs=e2e/a.browser.ts -f shards=1 -f nonce=[0-9a-f-]{36}$`,
+                `^gh workflow run proof.yml --repo nakafaai/nakafa.com --ref main -f sha=${SHA} -f specs=e2e/a.browser.ts -f gate=true -f full=false -f nonce=[0-9a-f-]{36}$`,
                 "u"
               )
             )
           )
         );
-        expect(formatProof(result, timings)).toBe(
+        expect(formatProof(result, gated, timings)).toBe(
           Arr.join(
             [
               `Proof of ${SHA}: failed`,
               RUN.url,
+              "gate     passed",
               "chromium passed",
               "firefox  failed\n  e2e/a.browser.ts",
               "webkit   passed",
-              "queue 5s, prepare 4s (restored), build 18s, specs 10s, total 50s",
+              "queue 5s, gate 11s, prepare 4s (restored), build 18s, specs 10s, total 50s",
               "",
             ],
             "\n"
@@ -80,7 +84,7 @@ describe("GitHub proof runner", () => {
     "fails every engine of a run without results, and the prover answers the same",
     () =>
       Effect.gen(function* () {
-        const { exit } = yield* withGithub(
+        const { exit, calls } = yield* withGithub(
           github(undefined),
           Effect.flatMap(Prover, (prover) => prover.prove(SHA, [])).pipe(
             Effect.provide(githubProver)
@@ -92,15 +96,62 @@ describe("GitHub proof runner", () => {
           passed: false,
           failures: [],
         });
+        // A proof alone, such as main's baseline, skips the gate.
+        expect(
+          Arr.some(calls, (call) =>
+            call.includes("-f gate=false -f full=false")
+          )
+        ).toBe(true);
       }).pipe(Effect.provide(NodeServices.layer))
+  );
+
+  it.effect(
+    "verifies a combination whole in one job, and a gate that did not pass or run fails it",
+    () =>
+      Effect.gen(function* () {
+        const green = {
+          chromium: shard("chromium"),
+          firefox: shard("firefox"),
+          webkit: shard("webkit"),
+        };
+        const verify = (run: unknown) =>
+          withGithub(
+            github(green, run),
+            Effect.flatMap(Prover, (prover) => prover.verify(SHA, [])).pipe(
+              Effect.provide(githubProver)
+            )
+          );
+        const passed = yield* verify(RUN);
+        expect((yield* passed.exit).gated).toBe(true);
+        expect(
+          Arr.some(passed.calls, (call) =>
+            call.includes("-f gate=true -f full=true")
+          )
+        ).toBe(true);
+        const failed = yield* verify({
+          ...RUN,
+          jobs: [
+            {
+              ...JOB,
+              steps: [step("Gate www", 12, 14, "failure"), ...JOB.steps],
+            },
+          ],
+        });
+        expect((yield* failed.exit).gated).toBe(false);
+        const never = yield* verify({ ...RUN, jobs: [] });
+        const unread = yield* never.exit;
+        expect(unread.gated).toBe(false);
+        expect(unread.result.passed).toBe(true);
+      }).pipe(Effect.provide(NodeServices.layer)),
+    PROCESS_TIMEOUT
   );
 
   it.effect("waits out GitHub's rate limit and goes on", () =>
     Effect.gen(function* () {
       const answer = github({
-        "result-chromium-1": shard("chromium"),
-        "result-firefox-1": shard("firefox"),
-        "result-webkit-1": shard("webkit"),
+        chromium: shard("chromium"),
+        firefox: shard("firefox"),
+        webkit: shard("webkit"),
       });
       const refusals = MutableRef.make(2);
       const { exit, calls } = yield* withGithub(
@@ -108,7 +159,7 @@ describe("GitHub proof runner", () => {
           args[0] === "workflow" && MutableRef.getAndDecrement(refusals) > 0
             ? { code: 1, stderr: "HTTP 403: API rate limit exceeded for user" }
             : answer(args),
-        proveOnGithub(SHA, [], 1)
+        proveOnGithub(SHA, [], { gate: true, full: false })
       );
       expect((yield* exit).result.passed).toBe(true);
       expect(
@@ -117,45 +168,48 @@ describe("GitHub proof runner", () => {
     }).pipe(Effect.provide(NodeServices.layer))
   );
 
-  it.effect("fails with what GitHub said, or answered unexpectedly", () =>
-    Effect.gen(function* () {
-      const refused = yield* withGithub(
-        () => ({ code: 1, stderr: "HTTP 404: not found\n" }),
-        proveOnGithub(SHA, [], 3)
-      );
-      expect(yield* Effect.flip(refused.exit)).toMatchObject({
-        message: "gh pr list failed: HTTP 404: not found",
-      });
-      const garbled = yield* withGithub(
-        github({}, { status: 1 }),
-        proveOnGithub(SHA, [], 3)
-      );
-      expect((yield* Effect.flip(garbled.exit)).message).toContain(
-        "GitHub answered unexpectedly"
-      );
-      const unreadable = yield* withGithub(
-        github({ "result-chromium-1": "not json" }),
-        proveOnGithub(SHA, [], 3)
-      );
-      expect((yield* Effect.flip(unreadable.exit)).message).toContain(
-        "The results of run 7"
-      );
-      const absent = yield* withGithub(
-        () => ({ missing: true }),
-        proveOnGithub(SHA, [], 3)
-      );
-      expect((yield* Effect.flip(absent.exit)).message).toBe(
-        "The GitHub CLI could not start."
-      );
-      const answer = github({});
-      const vanished = yield* withGithub(
-        (args) => (args[1] === "download" ? { missing: true } : answer(args)),
-        proveOnGithub(SHA, [], 3)
-      );
-      expect((yield* Effect.flip(vanished.exit)).message).toBe(
-        "The results of run 7: The GitHub CLI could not start."
-      );
-    }).pipe(Effect.provide(NodeServices.layer))
+  it.effect(
+    "fails with what GitHub said, or answered unexpectedly",
+    () =>
+      Effect.gen(function* () {
+        const refused = yield* withGithub(
+          () => ({ code: 1, stderr: "HTTP 404: not found\n" }),
+          proveOnGithub(SHA, [], { gate: true, full: false })
+        );
+        expect(yield* Effect.flip(refused.exit)).toMatchObject({
+          message: "gh pr list failed: HTTP 404: not found",
+        });
+        const garbled = yield* withGithub(
+          github({}, { status: 1 }),
+          proveOnGithub(SHA, [], { gate: true, full: false })
+        );
+        expect((yield* Effect.flip(garbled.exit)).message).toContain(
+          "GitHub answered unexpectedly"
+        );
+        const unreadable = yield* withGithub(
+          github({ chromium: "not json" }),
+          proveOnGithub(SHA, [], { gate: true, full: false })
+        );
+        expect((yield* Effect.flip(unreadable.exit)).message).toContain(
+          "The results of run 7"
+        );
+        const absent = yield* withGithub(
+          () => ({ missing: true }),
+          proveOnGithub(SHA, [], { gate: true, full: false })
+        );
+        expect((yield* Effect.flip(absent.exit)).message).toBe(
+          "The GitHub CLI could not start."
+        );
+        const answer = github({});
+        const vanished = yield* withGithub(
+          (args) => (args[1] === "download" ? { missing: true } : answer(args)),
+          proveOnGithub(SHA, [], { gate: true, full: false })
+        );
+        expect((yield* Effect.flip(vanished.exit)).message).toBe(
+          "The results of run 7: The GitHub CLI could not start."
+        );
+      }).pipe(Effect.provide(NodeServices.layer)),
+    PROCESS_TIMEOUT
   );
 
   it("reads no phase that a run never reached", () => {
@@ -163,112 +217,103 @@ describe("GitHub proof runner", () => {
       runTimings({
         ...RUN,
         jobs: [
-          { ...RUN.jobs[0], name: "Other", startedAt: null, steps: [] },
           {
-            name: "Build",
+            ...JOB,
             conclusion: "cancelled",
             startedAt: null,
-            completedAt: null,
-            steps: [{ ...step("Prepare", 6, 10), completedAt: null }],
-          },
-          {
-            ...RUN.jobs[1],
-            startedAt: null,
-            steps: [{ ...step("Run specs", 1, 2), startedAt: null }],
+            steps: [
+              { ...step("Gate static", 5, 12), completedAt: null },
+              { ...step("Prepare", 16, 20), completedAt: null },
+              { ...step("Run specs", 38, 48), startedAt: null },
+            ],
           },
         ],
       })
     ).toEqual({
       queue: Option.none(),
+      gate: Option.none(),
       prepare: Option.none(),
       restored: Option.none(),
       build: Option.none(),
       specs: Option.none(),
       total: Option.some(50),
     });
+    expect(runTimings({ ...RUN, jobs: [] }).queue).toEqual(Option.none());
+    const passed = {
+      sha: SHA,
+      url: "local",
+      passed: true,
+      engines: {
+        chromium: { passed: true, failures: [] },
+        firefox: { passed: true, failures: [] },
+        webkit: { passed: true, failures: [] },
+      },
+    };
     expect(
-      formatProof(
-        {
-          sha: SHA,
-          url: "local",
-          passed: true,
-          engines: {
-            chromium: { passed: true, failures: [] },
-            firefox: { passed: true, failures: [] },
-            webkit: { passed: true, failures: [] },
-          },
-        },
-        {
-          ...runTimings(RUN),
-          restored: Option.some(false),
-          queue: Option.none(),
-        }
-      )
-    ).toContain("queue -, prepare 4s (prepared)");
+      formatProof(passed, Option.none(), {
+        ...runTimings(RUN),
+        restored: Option.some(false),
+        queue: Option.none(),
+      })
+    ).toContain("queue -, gate 11s, prepare 4s (prepared)");
     expect(
-      formatProof(
-        {
-          sha: SHA,
-          url: "local",
-          passed: true,
-          engines: {
-            chromium: { passed: true, failures: [] },
-            firefox: { passed: true, failures: [] },
-            webkit: { passed: true, failures: [] },
-          },
-        },
-        { ...runTimings(RUN), restored: Option.none() }
-      )
+      formatProof(passed, Option.some(false), {
+        ...runTimings(RUN),
+        restored: Option.none(),
+      })
+    ).toContain("gate     failed\nchromium passed");
+    expect(
+      formatProof(passed, Option.none(), {
+        ...runTimings(RUN),
+        restored: Option.none(),
+      })
     ).toContain("prepare 4s, build");
   });
 });
 
-describe("superseded proof runs", () => {
+describe("proof waiter", () => {
   it.effect(
-    "cancels the queued runs of heads no pull request, train or main holds",
+    "waits on GraphQL statuses and reads the run itself every fifth look",
     () =>
       Effect.gen(function* () {
-        const open = "1".repeat(40);
-        const train = "2".repeat(40);
-        const gone = "3".repeat(40);
-        const refused = "4".repeat(40);
-        const { exit, calls } = yield* withGithub((args) => {
-          if (args[0] === "pr") {
-            return { stdout: `${open}\n` };
-          }
-          if (args[0] === "api") {
-            return {
-              stdout: Arr.some(args, (arg) => arg.includes("matching-refs"))
-                ? `${train}\n`
-                : `${MAIN}\n`,
-            };
-          }
-          if (args[1] === "cancel") {
-            return args[2] === "14"
-              ? {
-                  code: 1,
-                  stderr: "Cannot cancel a workflow run that is completed",
-                }
-              : {};
-          }
-          return {
-            stdout: toJson([
-              { databaseId: 10, displayTitle: `Proof ${open} a` },
-              { databaseId: 11, displayTitle: `Proof ${train} b` },
-              { databaseId: 12, displayTitle: `Proof ${MAIN} c` },
-              { databaseId: 13, displayTitle: `Proof ${gone} d` },
-              { databaseId: 14, displayTitle: `Proof ${refused} e` },
-              { databaseId: 15, displayTitle: `Gate ${gone} f` },
-            ]),
-          };
-        }, sweepSuperseded());
-        expect(yield* exit).toBe(2);
+        const answer = github({
+          chromium: shard("chromium"),
+          firefox: shard("firefox"),
+          webkit: shard("webkit"),
+        });
+        const graphql = [
+          toJson({ data: { repository: { object: null } } }),
+          statusAnswer(null),
+          statusAnswer([{ state: "PENDING", targetUrl: RUN.url }]),
+          statusAnswer([
+            { state: "SUCCESS", targetUrl: "https://example.test/runs/6" },
+          ]),
+        ];
+        const looked = MutableRef.make(0);
+        const { exit, calls } = yield* withGithub(
+          (args) => {
+            if (args[1] === "graphql") {
+              return {
+                stdout:
+                  graphql[MutableRef.getAndIncrement(looked)] ??
+                  statusAnswer([]),
+              };
+            }
+            if (args[1] === "view" && Arr.contains(args, "status")) {
+              return { stdout: toJson({ status: "completed" }) };
+            }
+            return answer(args);
+          },
+          proveOnGithub(SHA, ["e2e/a.browser.ts"], { gate: true, full: false })
+        );
+        expect((yield* exit).result.passed).toBe(true);
         expect(
-          Arr.filter(calls, (call) => call.startsWith("gh run cancel"))
-        ).toEqual([
-          "gh run cancel 13 --repo nakafaai/nakafa.com",
-          "gh run cancel 14 --repo nakafaai/nakafa.com",
-        ]);
-      }).pipe(Effect.provide(NodeServices.layer))
+          Arr.filter(calls, (call) => call.includes("api graphql"))
+        ).toHaveLength(5);
+        expect(
+          Arr.filter(calls, (call) => call.endsWith("--json status"))
+        ).toHaveLength(1);
+      }).pipe(Effect.provide(NodeServices.layer)),
+    PROCESS_TIMEOUT
   );
 });
