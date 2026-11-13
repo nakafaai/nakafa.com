@@ -1,4 +1,5 @@
-import { useFrame } from "@react-three/fiber";
+import { useFrame, useThree } from "@react-three/fiber";
+import { useLabelInk } from "@repo/design-system/components/contents/biology/cell/parts";
 import {
   ladderOf,
   type Point,
@@ -21,7 +22,10 @@ import { SimulationTicker } from "@repo/design-system/components/contents/simula
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { CameraControls } from "@repo/design-system/components/three/camera/controls";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
-import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene";
+import {
+  isNarrowThreeScene,
+  threeSceneFrameVariants,
+} from "@repo/design-system/components/three/scene";
 import { ScienceStage } from "@repo/design-system/components/three/stage";
 import { Slider } from "@repo/design-system/components/ui/slider";
 import {
@@ -39,7 +43,6 @@ import {
 } from "@repo/design-system/components/visual/card";
 import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
-import { getColor } from "@repo/design-system/lib/color";
 import { MATERIAL } from "@repo/design-system/lib/material";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr } from "effect";
@@ -62,6 +65,9 @@ const BASE_COLORS = {
   U: PLOT_COLORS.orange,
 } as const satisfies Record<Base, string>;
 
+/** A card narrower than this width-to-height ratio gets the farther camera. */
+const NARROW_ASPECT = 1.2;
+
 /** Played, copying a stretch takes ten seconds. */
 const COPY_SECONDS = 10;
 
@@ -71,8 +77,7 @@ const COPY_SECONDS = 10;
  * grooves. With a `variant`, the reader switches between two sequences and
  * the changed bases glow; with `copy`, a slider opens the helix from one end
  * and new nucleotides pair with both parents, as in replication. An RNA
- * genome stands as one strand until it is copied; with `genome`, the footer
- * compares the stretch shown with the whole genome's length in bases.
+ * genome stands as one strand until it is copied.
  */
 export function DnaHelixLab({
   copy = false,
@@ -109,14 +114,12 @@ export function DnaHelixLab({
 }) {
   const [shown, setShown] = useState<"first" | "second">("first");
   const [share, setShare] = useState(copy ? 0.5 : 0);
-  const quantity = useQuantity();
   const first = useMemo(() => basesOf(sequence, nucleic), [nucleic, sequence]);
   const second = useMemo(
     () => (variant === undefined ? first : basesOf(variant, nucleic)),
     [first, nucleic, variant]
   );
   const bases = shown === "first" ? first : second;
-  const count = bases.length;
   const changed = useMemo(
     () => Arr.map(bases, (_, index) => second[index] !== first[index]),
     [bases, first, second]
@@ -172,13 +175,7 @@ export function DnaHelixLab({
       >
         <ScienceStage reach={6} setting="studio">
           <Suspense fallback={null}>
-            <CameraControls
-              cameraPosition={[0, 1.6, 14]}
-              cameraTarget={[0, 0, 0]}
-              fov={34}
-              maxDistance={24}
-              minDistance={4}
-            />
+            <HelixCamera />
             <HelixScene
               bases={bases}
               changed={changed}
@@ -194,90 +191,131 @@ export function DnaHelixLab({
       <VisualCardSceneActions />
 
       <VisualCardFooter>
-        <VisualCardFacts>
-          <VisualFactTabular
-            label={labels.length}
-            value={<InlineMath math={quantity(count, "", 0)} />}
-          />
-          {genome === undefined ? (
-            <VisualFactTabular
-              label={labels.span}
-              value={
-                <InlineMath math={quantity(spanOf(count), "\\text{ nm}", 1)} />
-              }
-            />
-          ) : (
-            <VisualFactTabular
-              label={labels.whole}
-              value={<InlineMath math={quantity(genome, "", 0)} />}
-            />
-          )}
-          {variant !== undefined && (
-            <>
-              <VisualFactTabular
-                label={labels.differences}
-                value={
-                  <InlineMath
-                    math={quantity(differencesOf(first, second), "", 0)}
-                  />
-                }
-              />
-              <VisualFactTabular
-                label={labels.identity}
-                value={
-                  <InlineMath
-                    math={quantity(identityOf(first, second) * 100, "\\%", 1)}
-                  />
-                }
-              />
-            </>
-          )}
-          {variant === undefined && copy && (
-            <>
-              <VisualFactTabular
-                label={labels.copied}
-                value={
-                  <InlineMath
-                    math={quantity(copiedCount(count, share), "", 0)}
-                  />
-                }
-              />
-              <VisualFactTabular
-                label={labels.turns}
-                value={<InlineMath math={quantity(turnsOf(count), "", 1)} />}
-              />
-            </>
-          )}
-          {variant === undefined && !copy && (
-            <>
-              {genome === undefined ? (
-                <VisualFactTabular
-                  label={labels.turns}
-                  value={<InlineMath math={quantity(turnsOf(count), "", 1)} />}
-                />
-              ) : (
-                <VisualFactTabular
-                  label={labels.share}
-                  value={
-                    <InlineMath
-                      math={quantity((count / genome) * 100, "\\%", 2)}
-                    />
-                  }
-                />
-              )}
-              <VisualFactTabular
-                label={labels.gc}
-                value={
-                  <InlineMath
-                    math={quantity(gcShareOf(bases) * 100, "\\%", 0)}
-                  />
-                }
-              />
-            </>
-          )}
-        </VisualCardFacts>
+        <HelixFacts
+          bases={bases}
+          copy={copy}
+          first={first}
+          genome={genome}
+          labels={labels}
+          nucleic={nucleic}
+          second={variant === undefined ? undefined : second}
+          share={share}
+        />
       </VisualCardFooter>
     </VisualCard>
+  );
+}
+
+/**
+ * The footer's readings. Every card counts its bases; double-stranded DNA
+ * gives its length at 0.34 nm a pair, then the differences between two
+ * sequences, the copying progress, or its turns and G and C share. A single
+ * RNA strand has no fixed rise or turn, so it gives its G and C share and,
+ * with `genome`, how much of the whole genome the stretch shows.
+ */
+function HelixFacts({
+  bases,
+  copy,
+  first,
+  genome,
+  labels,
+  nucleic,
+  second,
+  share,
+}: {
+  readonly bases: readonly Base[];
+  readonly copy: boolean;
+  readonly first: readonly Base[];
+  readonly genome: number | undefined;
+  readonly labels: Readonly<{
+    copied?: ReactNode;
+    differences?: ReactNode;
+    gc?: ReactNode;
+    identity?: ReactNode;
+    length: ReactNode;
+    share?: ReactNode;
+    span?: ReactNode;
+    turns?: ReactNode;
+    whole?: ReactNode;
+  }>;
+  readonly nucleic: Nucleic;
+  readonly second: readonly Base[] | undefined;
+  readonly share: number;
+}) {
+  const quantity = useQuantity();
+  const count = bases.length;
+  const single = nucleic === "rna" && !copy;
+  return (
+    <VisualCardFacts>
+      <VisualFactTabular
+        label={labels.length}
+        value={<InlineMath math={quantity(count, "", 0)} />}
+      />
+      {!single && (
+        <VisualFactTabular
+          label={labels.span}
+          value={
+            <InlineMath math={quantity(spanOf(count), "\\text{ nm}", 1)} />
+          }
+        />
+      )}
+      {second !== undefined && (
+        <>
+          <VisualFactTabular
+            label={labels.differences}
+            value={
+              <InlineMath
+                math={quantity(differencesOf(first, second), "", 0)}
+              />
+            }
+          />
+          <VisualFactTabular
+            label={labels.identity}
+            value={
+              <InlineMath
+                math={quantity(identityOf(first, second) * 100, "\\%", 1)}
+              />
+            }
+          />
+        </>
+      )}
+      {second === undefined && copy && (
+        <VisualFactTabular
+          label={labels.copied}
+          value={
+            <InlineMath math={quantity(copiedCount(count, share), "", 0)} />
+          }
+        />
+      )}
+      {second === undefined && !single && (
+        <VisualFactTabular
+          label={labels.turns}
+          value={<InlineMath math={quantity(turnsOf(count), "", 1)} />}
+        />
+      )}
+      {second === undefined && !copy && (
+        <VisualFactTabular
+          label={labels.gc}
+          value={
+            <InlineMath math={quantity(gcShareOf(bases) * 100, "\\%", 0)} />
+          }
+        />
+      )}
+      {single && genome !== undefined && (
+        <>
+          <VisualFactTabular
+            label={labels.whole}
+            value={<InlineMath math={quantity(genome, "", 0)} />}
+          />
+          <VisualFactTabular
+            label={labels.share}
+            value={
+              <InlineMath math={quantity((count / genome) * 100, "\\%", 2)} />
+            }
+          />
+        </>
+      )}
+    </VisualCardFacts>
   );
 }
 
@@ -338,8 +376,7 @@ function HelixScene({
     }
   });
 
-  const ink = getColor("ZINC", 900);
-  const halo = getColor("SLATE", 50);
+  const ink = useLabelInk();
 
   return (
     <>
@@ -373,8 +410,6 @@ function HelixScene({
             color={ink}
             fontSize="compact"
             key={rung.index}
-            outlineColor={halo}
-            outlineWidth={0.004}
             position={[rung.index * 0.34, rung.open ? 3.2 : 1.7, 0]}
           >
             {bases[rung.index]}
@@ -382,6 +417,25 @@ function HelixScene({
         ))}
       </group>
     </>
+  );
+}
+
+/**
+ * The camera on the helix: farther back on a narrow card, such as a phone's
+ * square frame, so the whole stretch and its letters stay in view.
+ */
+function HelixCamera() {
+  const size = useThree((state) => state.size);
+  return (
+    <CameraControls
+      cameraPosition={
+        isNarrowThreeScene(size, NARROW_ASPECT) ? [0, 1.6, 20] : [0, 1.6, 14]
+      }
+      cameraTarget={[0, 0, 0]}
+      fov={34}
+      maxDistance={30}
+      minDistance={4}
+    />
   );
 }
 

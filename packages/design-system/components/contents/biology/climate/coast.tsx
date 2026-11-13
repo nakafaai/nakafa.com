@@ -83,6 +83,7 @@ export function SeaLevelRiseLab({
     readonly flooded?: ReactNode;
     readonly level: ReactNode;
     readonly range?: ReactNode;
+    readonly perYear?: string;
     readonly rate?: ReactNode;
     readonly retreat: ReactNode;
     readonly rise?: string;
@@ -260,6 +261,7 @@ function CoastFacts({
     readonly flooded?: ReactNode;
     readonly level: ReactNode;
     readonly range?: ReactNode;
+    readonly perYear?: string;
     readonly rate?: ReactNode;
     readonly retreat: ReactNode;
     readonly rise?: string;
@@ -292,7 +294,11 @@ function CoastFacts({
             label={labels.rate}
             value={
               <InlineMath
-                math={quantity(recordRate(year) * 1000, "\\text{ mm}", 1)}
+                math={quantity(
+                  recordRate(year) * 1000,
+                  `\\text{ mm/${labels.perYear ?? ""}}`,
+                  1
+                )}
               />
             }
           />
