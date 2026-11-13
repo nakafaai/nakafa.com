@@ -4,12 +4,12 @@ import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { useEarlyPress } from "@repo/design-system/hooks/press";
 import { ClientOnly, useLocation } from "@tanstack/react-router";
 import { useConvex } from "convex/react";
-import { Effect, Function as Fn, Option } from "effect";
+import { Effect, Option } from "effect";
 import { useEffect, useState, useTransition } from "react";
 import { useLocale, useTranslations } from "use-intl";
 import { signInReturn } from "@/components/tenant/resume";
 import { reportClientException } from "@/lib/analytics/client";
-import { readAuthClient } from "@/lib/auth/client";
+import { followGoogleFailure } from "@/lib/auth/flow";
 import { useCurrentAuthNavigation } from "@/lib/auth/location";
 import {
   googleReturnAddress,
@@ -32,7 +32,12 @@ export function AuthGoogle() {
   const convex = useConvex();
   const search = useLocation({ select: (location) => location.search });
   const { redirect, school } = readAuthReturnQuery(search);
-  const providerFailed = useGoogleFailure(convex);
+  const [providerFailed, setProviderFailed] = useState(false);
+  // Google's return completes when the page's client starts, which reports a failure here.
+  useEffect(
+    () => followGoogleFailure(convex).subscribe(setProviderFailed),
+    [convex]
+  );
   const [hasClientError, setHasClientError] = useState(false);
   const [isPending, startTransition] = useTransition();
   const authNavigation = useCurrentAuthNavigation();
@@ -77,33 +82,6 @@ export function AuthGoogle() {
       </ClientOnly>
     </div>
   );
-}
-
-/**
- * Whether Google's last return to this page failed, as the page's auth client
- * reports it: Convex Auth completes the sign-in when the page's client starts,
- * and publishes a failure there, not in the address.
- */
-function useGoogleFailure(convex: ReturnType<typeof useConvex>) {
-  const [failed, setFailed] = useState(false);
-  useEffect(() => {
-    let stop = Fn.constVoid;
-    let active = true;
-    Effect.runPromise(readAuthClient(convex)).then((client) => {
-      if (!active) {
-        return;
-      }
-      const values = client.ambientSignInValues("oauth");
-      const read = () => setFailed(values.get("flowError") != null);
-      read();
-      stop = values.subscribe("flowError", read);
-    });
-    return () => {
-      active = false;
-      stop();
-    };
-  }, [convex]);
-  return failed;
 }
 
 /** Says that Google's sign-in did not finish, under the button that retries it. */

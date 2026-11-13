@@ -34,6 +34,7 @@ const AgentSearch = Schema.Struct({
  */
 export const Route = createFileRoute("/$locale/_entry/agent")({
   validateSearch: Schema.toStandardSchemaV1(AgentSearch),
+  loaderDeps: ({ search }) => search,
   ssr: false,
   beforeLoad: async ({ location, params }) => {
     if (await isSignedIn()) {
@@ -41,7 +42,6 @@ export const Route = createFileRoute("/$locale/_entry/agent")({
     }
     throw redirect(getPostAuthSignInTarget(location.publicHref, params.locale));
   },
-  loaderDeps: ({ search }) => search,
   loader: async ({ deps }) => {
     const request = readAgentRequest(deps);
     if (Option.isNone(request)) {
