@@ -3,7 +3,12 @@ import { stackReading } from "@repo/design-system/components/contents/physics/me
 
 describe("one sheet from a stack of paper", () => {
   it("reads 10 sheets as 1 mm, one significant figure", () => {
-    expect(stackReading("10")).toEqual({ figures: 1, height: 1, sheet: 0.0001, sheets: 10 });
+    expect(stackReading("10")).toEqual({
+      figures: 1,
+      height: 1,
+      sheet: 0.0001,
+      sheets: 10,
+    });
   });
 
   it("reads 100 sheets as 10 mm and 500 as 52 mm, two figures", () => {

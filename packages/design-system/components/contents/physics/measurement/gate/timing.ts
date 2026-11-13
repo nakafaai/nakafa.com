@@ -20,6 +20,8 @@ export const TIMER_STEP = 0.001;
  * millisecond, and the speed it and the distance give.
  */
 export function gateReading(distance: number) {
-  const time = Math.round(distance / TROLLEY_SPEED / TIMER_STEP) / Math.round(1 / TIMER_STEP);
+  const time =
+    Math.round(distance / TROLLEY_SPEED / TIMER_STEP) /
+    Math.round(1 / TIMER_STEP);
   return { speed: distance / time, time };
 }

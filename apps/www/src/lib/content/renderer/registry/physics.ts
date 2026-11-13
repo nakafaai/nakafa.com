@@ -24,8 +24,22 @@ import {
   UniformLinearMotionLab,
 } from "@/lib/content/renderer/client/physics/linear";
 import {
+  BoltDimensionsLab,
+  CommonReferenceLab,
+  DecimalSumLab,
+  DensityMeasurementLab,
   DimensionLab,
+  LightGateSpeedLab,
   MeasurementToolsLab,
+  MicrometerScrewLab,
+  MicroscopeScaleLab,
+  PaperStackLab,
+  ParallaxReadingLab,
+  PendulumPeriodLab,
+  SignificantZerosLab,
+  StopwatchSpreadLab,
+  UnitSystemsLab,
+  VernierCaliperLab,
 } from "@/lib/content/renderer/client/physics/measurement";
 import {
   RelativeMovementLab,
@@ -102,6 +116,62 @@ export const physicsRenderers = [
   {
     name: physicsComponentNames.measurementToolsLab,
     component: MeasurementToolsLab,
+  },
+  {
+    name: physicsComponentNames.boltDimensionsLab,
+    component: BoltDimensionsLab,
+  },
+  {
+    name: physicsComponentNames.commonReferenceLab,
+    component: CommonReferenceLab,
+  },
+  {
+    name: physicsComponentNames.decimalSumLab,
+    component: DecimalSumLab,
+  },
+  {
+    name: physicsComponentNames.densityMeasurementLab,
+    component: DensityMeasurementLab,
+  },
+  {
+    name: physicsComponentNames.lightGateSpeedLab,
+    component: LightGateSpeedLab,
+  },
+  {
+    name: physicsComponentNames.micrometerScrewLab,
+    component: MicrometerScrewLab,
+  },
+  {
+    name: physicsComponentNames.microscopeScaleLab,
+    component: MicroscopeScaleLab,
+  },
+  {
+    name: physicsComponentNames.paperStackLab,
+    component: PaperStackLab,
+  },
+  {
+    name: physicsComponentNames.parallaxReadingLab,
+    component: ParallaxReadingLab,
+  },
+  {
+    name: physicsComponentNames.pendulumPeriodLab,
+    component: PendulumPeriodLab,
+  },
+  {
+    name: physicsComponentNames.significantZerosLab,
+    component: SignificantZerosLab,
+  },
+  {
+    name: physicsComponentNames.stopwatchSpreadLab,
+    component: StopwatchSpreadLab,
+  },
+  {
+    name: physicsComponentNames.unitSystemsLab,
+    component: UnitSystemsLab,
+  },
+  {
+    name: physicsComponentNames.vernierCaliperLab,
+    component: VernierCaliperLab,
   },
   {
     name: physicsComponentNames.nonUniformLinearMotionGraphCard,

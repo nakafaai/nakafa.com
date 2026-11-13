@@ -41,5 +41,7 @@ export function micrometerReading(thickness: number) {
  */
 export function thimbleTurn(travel: number) {
   const divisions = travel / SCREW_RESOLUTION;
-  return divisions - Math.floor(divisions / THIMBLE_DIVISIONS) * THIMBLE_DIVISIONS;
+  return (
+    divisions - Math.floor(divisions / THIMBLE_DIVISIONS) * THIMBLE_DIVISIONS
+  );
 }

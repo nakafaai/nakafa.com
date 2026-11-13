@@ -34,19 +34,24 @@ export const STOPWATCH_STEP = 0.01;
 export const MAX_TRIALS = 20;
 
 /** The seed of the trials, so every learner sees the same readings. */
-const SEED = 2026;
+const SEED = 42_424_242;
+
+/** The modulus of the Lehmer generator, the Mersenne prime 2^31 - 1. */
+const MODULUS = 2_147_483_647;
+
+/** The Lehmer generator's multiplier (Park and Miller, 1993). */
+const MULTIPLIER = 48_271;
 
 /**
- * A stream of evenly spread numbers in [0, 1) from a seed (mulberry32), so
- * the scatter is the same on every visit.
+ * A stream of evenly spread numbers in (0, 1) from a seed, by the Lehmer
+ * generator, so the scatter is the same on every visit. Every product stays
+ * below 2^53, so plain number arithmetic keeps it exact.
  */
 function uniforms(count: number) {
   let state = SEED;
   return Arr.makeBy(count, () => {
-    state = (state + 0x6d2b79f5) >>> 0;
-    let mixed = Math.imul(state ^ (state >>> 15), state | 1);
-    mixed ^= mixed + Math.imul(mixed ^ (mixed >>> 7), mixed | 61);
-    return ((mixed ^ (mixed >>> 14)) >>> 0) / 4_294_967_296;
+    state = (state * MULTIPLIER) % MODULUS;
+    return state / MODULUS;
   });
 }
 
@@ -64,7 +69,10 @@ export function trialTimes(count: number) {
     const radius = Math.sqrt(-2 * Math.log(1 - first));
     const stop = radius * Math.cos(2 * Math.PI * second) * PRESS_SPREAD;
     const start = radius * Math.sin(2 * Math.PI * second) * PRESS_SPREAD;
-    return Math.round((TRUE_TIME + stop - start) / STOPWATCH_STEP) / Math.round(1 / STOPWATCH_STEP);
+    return (
+      Math.round((TRUE_TIME + stop - start) / STOPWATCH_STEP) /
+      Math.round(1 / STOPWATCH_STEP)
+    );
   });
 }
 

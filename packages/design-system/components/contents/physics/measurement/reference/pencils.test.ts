@@ -21,7 +21,9 @@ describe("a desk measured in pencils", () => {
 
   it("multiplies back to the same desk whichever reference is used", () => {
     for (const reference of ReferenceSchema.literals) {
-      expect(referenceCount(reference).count * REFERENCES[reference]).toBeCloseTo(DESK_LENGTH, 12);
+      expect(
+        referenceCount(reference).count * REFERENCES[reference]
+      ).toBeCloseTo(DESK_LENGTH, 12);
     }
   });
 });

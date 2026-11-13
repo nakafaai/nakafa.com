@@ -75,38 +75,82 @@ function paintBench(sketch: p5) {
 }
 
 /** The C frame, anvil, ball, spindle, sleeve and thimble, closed to `travel` millimetres. */
-function paintGauge(sketch: p5, place: ReturnType<typeof layout>, travel: number) {
+function paintGauge(
+  sketch: p5,
+  place: ReturnType<typeof layout>,
+  travel: number
+) {
   const { height, width } = sketch;
   const rod = height * 0.035;
   const face = place.anvil + travel * place.millimetre;
   const frame = mix(getColor("SLATE", 700), PLOT_COLORS.slate, 0.3);
-  withShadow(sketch, { blur: 20, color: fade(getColor("BLACK"), 0.65), drop: 9 }, () => {
-    sketch.noFill();
-    sketch.stroke(frame);
-    sketch.strokeWeight(height * 0.07);
-    sketch.strokeJoin(sketch.ROUND);
-    sketch.beginShape();
-    sketch.vertex(place.anvil - width * 0.05, place.axis);
-    sketch.vertex(place.anvil - width * 0.05, height * 0.43);
-    sketch.vertex(place.sleeve - width * 0.03, height * 0.43);
-    sketch.vertex(place.sleeve - width * 0.03, place.axis);
-    sketch.endShape();
-    sketch.stroke(fade(getColor("WHITE"), 0.18));
-    sketch.strokeWeight(height * 0.012);
-    sketch.line(place.anvil - width * 0.065, place.axis, place.anvil - width * 0.065, height * 0.42);
-    sketch.noStroke();
-  });
+  withShadow(
+    sketch,
+    { blur: 20, color: fade(getColor("BLACK"), 0.65), drop: 9 },
+    () => {
+      sketch.noFill();
+      sketch.stroke(frame);
+      sketch.strokeWeight(height * 0.07);
+      sketch.strokeJoin(sketch.ROUND);
+      sketch.beginShape();
+      sketch.vertex(place.anvil - width * 0.05, place.axis);
+      sketch.vertex(place.anvil - width * 0.05, height * 0.43);
+      sketch.vertex(place.sleeve - width * 0.03, height * 0.43);
+      sketch.vertex(place.sleeve - width * 0.03, place.axis);
+      sketch.endShape();
+      sketch.stroke(fade(getColor("WHITE"), 0.18));
+      sketch.strokeWeight(height * 0.012);
+      sketch.line(
+        place.anvil - width * 0.065,
+        place.axis,
+        place.anvil - width * 0.065,
+        height * 0.42
+      );
+      sketch.noStroke();
+    }
+  );
   const ball = (travel * place.millimetre) / 2;
-  withShadow(sketch, { blur: 12, color: fade(getColor("BLACK"), 0.6), drop: 5 }, () => {
-    litBall(sketch, { x: place.anvil + ball, y: place.axis }, ball, {
-      dark: getColor("SLATE", 600),
-      light: getColor("SLATE", 50),
-    });
-  });
-  gradientRect(sketch, { height: rod, width: width * 0.04, x: place.anvil - width * 0.04, y: place.axis - rod / 2 }, steelStops());
-  gradientRect(sketch, { height: rod, width: place.sleeve - face, x: face, y: place.axis - rod / 2 }, steelStops());
+  withShadow(
+    sketch,
+    { blur: 12, color: fade(getColor("BLACK"), 0.6), drop: 5 },
+    () => {
+      litBall(sketch, { x: place.anvil + ball, y: place.axis }, ball, {
+        dark: getColor("SLATE", 600),
+        light: getColor("SLATE", 50),
+      });
+    }
+  );
+  gradientRect(
+    sketch,
+    {
+      height: rod,
+      width: width * 0.04,
+      x: place.anvil - width * 0.04,
+      y: place.axis - rod / 2,
+    },
+    steelStops()
+  );
+  gradientRect(
+    sketch,
+    {
+      height: rod,
+      width: place.sleeve - face,
+      x: face,
+      y: place.axis - rod / 2,
+    },
+    steelStops()
+  );
   const sleeveHeight = height * 0.06;
-  gradientRect(sketch, { height: sleeveHeight, width: width * 0.24, x: place.sleeve, y: place.axis - sleeveHeight / 2 }, steelStops(0.1));
+  gradientRect(
+    sketch,
+    {
+      height: sleeveHeight,
+      width: width * 0.24,
+      x: place.sleeve,
+      y: place.axis - sleeveHeight / 2,
+    },
+    steelStops(0.1)
+  );
   paintTicks(sketch, {
     color: fade(getColor("ZINC", 900), 0.8),
     count: 13,
@@ -119,22 +163,65 @@ function paintGauge(sketch: p5, place: ReturnType<typeof layout>, travel: number
   });
   const thimbleHeight = height * 0.09;
   const edge = place.sleeve + width * 0.01 + travel * place.millimetre;
-  withShadow(sketch, { blur: 10, color: fade(getColor("BLACK"), 0.5), drop: 4 }, () => {
-    gradientRect(sketch, { height: thimbleHeight, width: width * 0.17, x: edge, y: place.axis - thimbleHeight / 2 }, steelStops(0.25));
-    gradientRect(sketch, { height: thimbleHeight * 0.7, width: width * 0.05, x: edge + width * 0.17, y: place.axis - thimbleHeight * 0.35 }, steelStops(0.5));
-  });
+  withShadow(
+    sketch,
+    { blur: 10, color: fade(getColor("BLACK"), 0.5), drop: 4 },
+    () => {
+      gradientRect(
+        sketch,
+        {
+          height: thimbleHeight,
+          width: width * 0.17,
+          x: edge,
+          y: place.axis - thimbleHeight / 2,
+        },
+        steelStops(0.25)
+      );
+      gradientRect(
+        sketch,
+        {
+          height: thimbleHeight * 0.7,
+          width: width * 0.05,
+          x: edge + width * 0.17,
+          y: place.axis - thimbleHeight * 0.35,
+        },
+        steelStops(0.5)
+      );
+    }
+  );
   for (let knurl = 0; knurl < 9; knurl += 1) {
     sketch.stroke(fade(getColor("ZINC", 900), 0.35));
     sketch.strokeWeight(1);
     const x = edge + width * 0.08 + knurl * width * 0.009;
-    sketch.line(x, place.axis - thimbleHeight / 2, x, place.axis + thimbleHeight / 2);
+    sketch.line(
+      x,
+      place.axis - thimbleHeight / 2,
+      x,
+      place.axis + thimbleHeight / 2
+    );
   }
   sketch.noFill();
   sketch.stroke(fade(PLOT_COLORS.fuchsia, 0.85));
   sketch.strokeWeight(1.5);
-  sketch.rect(edge - width * 0.07, place.axis - thimbleHeight * 0.7, width * 0.1, thimbleHeight * 1.4, 4);
-  sketch.line(edge - width * 0.07, place.axis + thimbleHeight * 0.7, width * 0.04, place.lensTop);
-  sketch.line(edge + width * 0.03, place.axis + thimbleHeight * 0.7, width * 0.96, place.lensTop);
+  sketch.rect(
+    edge - width * 0.07,
+    place.axis - thimbleHeight * 0.7,
+    width * 0.1,
+    thimbleHeight * 1.4,
+    4
+  );
+  sketch.line(
+    edge - width * 0.07,
+    place.axis + thimbleHeight * 0.7,
+    width * 0.04,
+    place.lensTop
+  );
+  sketch.line(
+    edge + width * 0.03,
+    place.axis + thimbleHeight * 0.7,
+    width * 0.96,
+    place.lensTop
+  );
   sketch.noStroke();
 }
 
@@ -142,7 +229,11 @@ function paintGauge(sketch: p5, place: ReturnType<typeof layout>, travel: number
  * The magnifier: whole and half millimetres on the sleeve around its datum
  * line, and the thimble rim whose divisions wrap round the screw.
  */
-function paintLens(sketch: p5, place: ReturnType<typeof layout>, travel: number) {
+function paintLens(
+  sketch: p5,
+  place: ReturnType<typeof layout>,
+  travel: number
+) {
   const { width } = sketch;
   const left = width * 0.04;
   const lensWidth = width * 0.92;
@@ -151,12 +242,25 @@ function paintLens(sketch: p5, place: ReturnType<typeof layout>, travel: number)
   const edge = left + lensWidth * 0.62;
   const datum = place.lensTop + lensHeight * 0.5;
   const toX = (millimetre: number) => edge - (travel - millimetre) * scale;
-  withShadow(sketch, { blur: 22, color: fade(getColor("BLACK"), 0.7), drop: 8 }, () => {
-    sketch.fill(getColor("ZINC", 900));
-    sketch.rect(left, place.lensTop, lensWidth, lensHeight, 14);
-  });
+  withShadow(
+    sketch,
+    { blur: 22, color: fade(getColor("BLACK"), 0.7), drop: 8 },
+    () => {
+      sketch.fill(getColor("ZINC", 900));
+      sketch.rect(left, place.lensTop, lensWidth, lensHeight, 14);
+    }
+  );
   const sleeveHalf = lensHeight * 0.24;
-  gradientRect(sketch, { height: sleeveHalf * 2, width: edge - left, x: left, y: datum - sleeveHalf }, steelStops());
+  gradientRect(
+    sketch,
+    {
+      height: sleeveHalf * 2,
+      width: edge - left,
+      x: left,
+      y: datum - sleeveHalf,
+    },
+    steelStops()
+  );
   sketch.stroke(PLOT_COLORS.teal);
   sketch.strokeWeight(2.5);
   sketch.line(left, datum, edge, datum);
@@ -183,25 +287,52 @@ function paintLens(sketch: p5, place: ReturnType<typeof layout>, travel: number)
     y: datum + 1,
   });
   const radius = lensHeight * 0.42;
-  withShadow(sketch, { blur: 14, color: fade(getColor("BLACK"), 0.6), drop: 0 }, () => {
-    gradientRect(sketch, { height: radius * 2, width: left + lensWidth - edge, x: edge, y: datum - radius }, steelStops(0.2));
-  });
+  withShadow(
+    sketch,
+    { blur: 14, color: fade(getColor("BLACK"), 0.6), drop: 0 },
+    () => {
+      gradientRect(
+        sketch,
+        {
+          height: radius * 2,
+          width: left + lensWidth - edge,
+          x: edge,
+          y: datum - radius,
+        },
+        steelStops(0.2)
+      );
+    }
+  );
   const turned = thimbleTurn(travel);
   for (let division = 0; division < THIMBLE_DIVISIONS; division += 1) {
     const angle = ((division - turned) / THIMBLE_DIVISIONS) * Math.PI * 2;
     if (Math.cos(angle) > 0.15) {
       const y = datum - radius * Math.sin(angle);
-      const onDatum = Math.abs(division - Math.round(turned) % THIMBLE_DIVISIONS) === 0;
-      sketch.stroke(onDatum ? PLOT_COLORS.fuchsia : fade(getColor("ZINC", 900), 0.4 + 0.6 * Math.cos(angle)));
+      const onDatum =
+        Math.abs(division - (Math.round(turned) % THIMBLE_DIVISIONS)) === 0;
+      sketch.stroke(
+        onDatum
+          ? PLOT_COLORS.fuchsia
+          : fade(getColor("ZINC", 900), 0.4 + 0.6 * Math.cos(angle))
+      );
       sketch.strokeWeight(onDatum ? 3.5 : 2);
-      sketch.line(edge, y, edge + lensWidth * (division % 5 === 0 ? 0.13 : 0.08), y);
+      sketch.line(
+        edge,
+        y,
+        edge + lensWidth * (division % 5 === 0 ? 0.13 : 0.08),
+        y
+      );
     }
   }
   sketch.noStroke();
-  gradientRect(sketch, { height: lensHeight * 0.18, width: lensWidth, x: left, y: place.lensTop }, [
-    [0, fade(getColor("WHITE"), 0.1)],
-    [1, fade(getColor("WHITE"), 0)],
-  ]);
+  gradientRect(
+    sketch,
+    { height: lensHeight * 0.18, width: lensWidth, x: left, y: place.lensTop },
+    [
+      [0, fade(getColor("WHITE"), 0.1)],
+      [1, fade(getColor("WHITE"), 0)],
+    ]
+  );
 }
 
 /** Draws one moment: the thimble turns until the spindle meets the ball. */
@@ -214,7 +345,9 @@ function gaugeProgram(sketch: p5, read: () => typeof GaugeFrame.Type) {
   sketch.draw = () => {
     const { thickness } = read();
     const step = Math.min(sketch.deltaTime / 1000, 0.1) * TURN_RATE;
-    travel = sketch.isLooping() ? travel + (thickness - travel) * Math.min(step, 1) : thickness;
+    travel = sketch.isLooping()
+      ? travel + (thickness - travel) * Math.min(step, 1)
+      : thickness;
     const place = layout(sketch);
     paintBench(sketch);
     paintGauge(sketch, place, travel);
@@ -242,7 +375,12 @@ interface MicrometerScrewLabProps {
  * sleeve and thimble. The sleeve gives whole and half millimetres; the
  * thimble division on the datum line adds hundredths of a millimetre.
  */
-export function MicrometerScrewLab({ description, labels, thickness: initialThickness = 6.35, title }: MicrometerScrewLabProps) {
+export function MicrometerScrewLab({
+  description,
+  labels,
+  thickness: initialThickness = 6.35,
+  title,
+}: MicrometerScrewLabProps) {
   const [thickness, setThickness] = useState(initialThickness);
   const measure = useMeasure();
   const { division, reading, sleeve } = micrometerReading(thickness);
@@ -269,13 +407,23 @@ export function MicrometerScrewLab({ description, labels, thickness: initialThic
         </div>
       </VisualCardToolbar>
       <VisualCardBody aria-label={labels.viewLabel} render={<section />}>
-        <P5Sketch label={labels.viewLabel} program={gaugeProgram} state={{ thickness: reading }} />
+        <P5Sketch
+          label={labels.viewLabel}
+          program={gaugeProgram}
+          state={{ thickness: reading }}
+        />
       </VisualCardBody>
       <VisualCardSceneActions />
       <VisualCardFooter>
         <VisualCardFacts>
-          <VisualFactTabular label={labels.sleeve} value={<InlineMath math={measure(sleeve, "\\text{ mm}", 1)} />} />
-          <VisualFactTabular label={labels.division} value={<InlineMath math={`${division}`} />} />
+          <VisualFactTabular
+            label={labels.sleeve}
+            value={<InlineMath math={measure(sleeve, "\\text{ mm}", 1)} />}
+          />
+          <VisualFactTabular
+            label={labels.division}
+            value={<InlineMath math={`${division}`} />}
+          />
           <VisualFactTabular
             label={labels.reading}
             value={

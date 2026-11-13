@@ -46,11 +46,19 @@ const SwingFrame = Schema.Struct({ length: Schema.Number });
 
 /** Each bob's surface: pale wood, polished brass, dull lead. */
 function bobColors(bob: typeof BobSchema.Type) {
-  return bob === "wood"
-    ? { dark: mix(PLOT_COLORS.orange, getColor("BLACK"), 0.35), light: mix(PLOT_COLORS.amber, getColor("WHITE"), 0.55) }
-    : bob === "brass"
-      ? { dark: mix(PLOT_COLORS.amber, getColor("BLACK"), 0.5), light: mix(PLOT_COLORS.amber, getColor("WHITE"), 0.65) }
-      : { dark: getColor("ZINC", 900), light: getColor("SLATE", 400) };
+  if (bob === "wood") {
+    return {
+      dark: mix(PLOT_COLORS.orange, getColor("BLACK"), 0.35),
+      light: mix(PLOT_COLORS.amber, getColor("WHITE"), 0.55),
+    };
+  }
+  if (bob === "brass") {
+    return {
+      dark: mix(PLOT_COLORS.amber, getColor("BLACK"), 0.5),
+      light: mix(PLOT_COLORS.amber, getColor("WHITE"), 0.65),
+    };
+  }
+  return { dark: getColor("ZINC", 900), light: getColor("SLATE", 400) };
 }
 
 /** The lab wall, the bench and the lamp. */
@@ -77,27 +85,66 @@ function paintPendulums(sketch: p5, length: number, time: number) {
   const { height, width } = sketch;
   const bar = height * 0.08;
   const metre = (height * 0.74) / STRING_RANGE.max;
-  withShadow(sketch, { blur: 16, color: fade(getColor("BLACK"), 0.55), drop: 7 }, () => {
-    gradientRect(sketch, { height: height * 0.025, width: width * 0.76, x: width * 0.12, y: bar - height * 0.0125 }, steelStops(0.2));
-    gradientRect(sketch, { height: height * 0.85, width: width * 0.016, x: width * 0.1, y: bar - height * 0.02 }, steelStops(0.3), true);
-  });
-  const angle = AMPLITUDE * Math.cos((2 * Math.PI * time) / pendulumPeriod(length, BOBS.brass.mass));
+  withShadow(
+    sketch,
+    { blur: 16, color: fade(getColor("BLACK"), 0.55), drop: 7 },
+    () => {
+      gradientRect(
+        sketch,
+        {
+          height: height * 0.025,
+          width: width * 0.76,
+          x: width * 0.12,
+          y: bar - height * 0.0125,
+        },
+        steelStops(0.2)
+      );
+      gradientRect(
+        sketch,
+        {
+          height: height * 0.85,
+          width: width * 0.016,
+          x: width * 0.1,
+          y: bar - height * 0.02,
+        },
+        steelStops(0.3),
+        true
+      );
+    }
+  );
+  const angle =
+    AMPLITUDE *
+    Math.cos((2 * Math.PI * time) / pendulumPeriod(length, BOBS.brass.mass));
   Arr.forEach(BobSchema.literals, (bob, index) => {
     const pivot = { x: width * (0.3 + index * 0.22), y: bar };
     const string = length * metre;
-    const centre = { x: pivot.x + string * Math.sin(angle), y: pivot.y + string * Math.cos(angle) };
+    const centre = {
+      x: pivot.x + string * Math.sin(angle),
+      y: pivot.y + string * Math.cos(angle),
+    };
     sketch.noFill();
     sketch.stroke(fade(getColor("SLATE", 200), 0.12));
     sketch.strokeWeight(2);
-    sketch.arc(pivot.x, pivot.y, string * 2, string * 2, Math.PI / 2 - AMPLITUDE, Math.PI / 2 + AMPLITUDE);
+    sketch.arc(
+      pivot.x,
+      pivot.y,
+      string * 2,
+      string * 2,
+      Math.PI / 2 - AMPLITUDE,
+      Math.PI / 2 + AMPLITUDE
+    );
     sketch.stroke(fade(getColor("SLATE", 200), 0.9));
     sketch.strokeWeight(1.2);
     sketch.line(pivot.x, pivot.y, centre.x, centre.y);
     sketch.noStroke();
     const radius = bobRadius(bob) * metre * BOB_ZOOM;
-    withShadow(sketch, { blur: 12, color: fade(getColor("BLACK"), 0.5), drop: 6 }, () => {
-      litBall(sketch, centre, radius, bobColors(bob));
-    });
+    withShadow(
+      sketch,
+      { blur: 12, color: fade(getColor("BLACK"), 0.5), drop: 6 },
+      () => {
+        litBall(sketch, centre, radius, bobColors(bob));
+      }
+    );
   });
 }
 
@@ -138,7 +185,12 @@ interface PendulumPeriodLabProps {
  * longer string doubles their period: the period is 2π √(l/g), with mass to
  * the power zero, just as dimensional analysis predicts.
  */
-export function PendulumPeriodLab({ description, labels, length: initialLength = 0.8, title }: PendulumPeriodLabProps) {
+export function PendulumPeriodLab({
+  description,
+  labels,
+  length: initialLength = 0.8,
+  title,
+}: PendulumPeriodLabProps) {
   const [length, setLength] = useState(initialLength);
   const fixed = useFixed();
   const period = pendulumPeriod(length, BOBS.brass.mass);
@@ -154,21 +206,48 @@ export function PendulumPeriodLab({ description, labels, length: initialLength =
               <InlineMath math={`l=${fixed(length, "\\text{ m}", 2)}`} />
             </span>
           </div>
-          <Slider aria-label={labels.length} max={STRING_RANGE.max} min={STRING_RANGE.min} onValueChange={setLength} step={0.05} value={length} />
+          <Slider
+            aria-label={labels.length}
+            max={STRING_RANGE.max}
+            min={STRING_RANGE.min}
+            onValueChange={setLength}
+            step={0.05}
+            value={length}
+          />
         </div>
       </VisualCardToolbar>
       <VisualCardBody aria-label={labels.viewLabel} render={<section />}>
-        <P5Sketch label={labels.viewLabel} program={swingProgram} state={{ length }} />
+        <P5Sketch
+          label={labels.viewLabel}
+          program={swingProgram}
+          state={{ length }}
+        />
       </VisualCardBody>
       <VisualCardSceneActions />
       <VisualCardFooter>
         <VisualCardFacts>
           <VisualFactTabular
             label={labels.masses}
-            value={<InlineMath math={`${fixed(BOBS.wood.mass * 1000, "\\text{ g}", 0)};\\ ${fixed(BOBS.brass.mass * 1000, "\\text{ g}", 0)};\\ ${fixed(BOBS.lead.mass * 1000, "\\text{ g}", 0)}`} />}
+            value={
+              <InlineMath
+                math={`${fixed(BOBS.wood.mass * 1000, "\\text{ g}", 0)};\\ ${fixed(BOBS.brass.mass * 1000, "\\text{ g}", 0)};\\ ${fixed(BOBS.lead.mass * 1000, "\\text{ g}", 0)}`}
+              />
+            }
           />
-          <VisualFactTabular label={labels.period} value={<InlineMath math={`T=2\\pi\\sqrt{\\frac{l}{g}}=${fixed(period, "\\text{ s}", 2)}`} />} />
-          <VisualFactTabular label={labels.check} value={<InlineMath math="[\mathrm{M}]^0[\mathrm{L}]^{\frac12}\left([\mathrm{L}][\mathrm{T}]^{-2}\right)^{-\frac12}=[\mathrm{T}]" />} />
+          <VisualFactTabular
+            label={labels.period}
+            value={
+              <InlineMath
+                math={`T=2\\pi\\sqrt{\\frac{l}{g}}=${fixed(period, "\\text{ s}", 2)}`}
+              />
+            }
+          />
+          <VisualFactTabular
+            label={labels.check}
+            value={
+              <InlineMath math="[\mathrm{M}]^0[\mathrm{L}]^{\frac12}\left([\mathrm{L}][\mathrm{T}]^{-2}\right)^{-\frac12}=[\mathrm{T}]" />
+            }
+          />
         </VisualCardFacts>
       </VisualCardFooter>
     </VisualCard>

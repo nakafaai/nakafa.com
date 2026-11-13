@@ -9,11 +9,11 @@ import type p5 from "p5";
  */
 
 /** The marks of one straight scale, in pixels. */
-type Ticks = {
-  /** How many marks the scale draws, from its first one. */
-  readonly count: number;
+interface Ticks {
   /** The engraving color. */
   readonly color: string;
+  /** How many marks the scale draws, from its first one. */
+  readonly count: number;
   /** Which way the marks grow from the edge: up is -1, down is 1. */
   readonly direction: -1 | 1;
   /** The length of a mark by its index, in pixels. */
@@ -22,11 +22,29 @@ type Ticks = {
   readonly start: number;
   /** The distance between two marks. */
   readonly step: number;
-  /** The edge the marks grow from. */
-  readonly y: number;
   /** The stroke width of a mark. */
   readonly weight: number;
-};
+  /** The edge the marks grow from. */
+  readonly y: number;
+}
+
+/**
+ * The length of the mark at `index` on a scale whose every `major`th mark is
+ * long and every `minor`th one middle: `long`, `middle` or `short`.
+ */
+export function tier(
+  index: number,
+  every: readonly [major: number, minor: number],
+  lengths: readonly [long: number, middle: number, short: number]
+) {
+  if (index % every[0] === 0) {
+    return lengths[0];
+  }
+  if (index % every[1] === 0) {
+    return lengths[1];
+  }
+  return lengths[2];
+}
 
 /** Engraves the marks of a straight scale, each from the scale's edge. */
 export function paintTicks(sketch: p5, ticks: Ticks) {

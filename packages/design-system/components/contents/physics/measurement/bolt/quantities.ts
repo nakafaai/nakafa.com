@@ -18,7 +18,14 @@ export const SHANK_DIAMETER = 10;
 export const STEEL_DENSITY = 7850;
 
 /** The quantities the lab shows. */
-export const BoltQuantitySchema = Schema.Literals(["length", "diameter", "area", "volume", "mass", "density"]);
+export const BoltQuantitySchema = Schema.Literals([
+  "length",
+  "diameter",
+  "area",
+  "volume",
+  "mass",
+  "density",
+]);
 
 /** Each quantity's value in SI units, and its powers of [M] and [L]. */
 export function boltQuantities() {

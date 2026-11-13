@@ -21,7 +21,9 @@ describe("timing a pendulum by hand", () => {
     expect(Arr.take(times, 5)).toEqual(trialTimes(5));
     for (const time of times) {
       expect(Math.round(time * 100) / 100).toBe(time);
-      expect(Math.abs(time - TRUE_TIME)).toBeLessThan(5 * PRESS_SPREAD * Math.SQRT2);
+      expect(Math.abs(time - TRUE_TIME)).toBeLessThan(
+        5 * PRESS_SPREAD * Math.SQRT2
+      );
     }
   });
 
@@ -38,6 +40,10 @@ describe("timing a pendulum by hand", () => {
   });
 
   it("has no spread from a single reading", () => {
-    expect(timingSpread([17.9])).toEqual({ mean: 17.9, spread: 0, uncertainty: 0 });
+    expect(timingSpread([17.9])).toEqual({
+      mean: 17.9,
+      spread: 0,
+      uncertainty: 0,
+    });
   });
 });

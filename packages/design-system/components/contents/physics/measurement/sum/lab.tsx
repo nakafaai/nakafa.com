@@ -10,6 +10,7 @@ import { useFixed } from "@repo/design-system/components/contents/physics/measur
 import {
   paintTicks,
   steelStops,
+  tier,
 } from "@repo/design-system/components/contents/physics/measurement/scale";
 import {
   COPPER_LENGTH,
@@ -75,14 +76,22 @@ function paintBench(sketch: p5) {
   const centimetre = (width * 0.88) / RULER_CENTIMETRES;
   const top = height * 0.26;
   const strip = height * 0.08;
-  withShadow(sketch, { blur: 14, color: fade(getColor("BLACK"), 0.5), drop: 6 }, () => {
-    gradientRect(sketch, { height: strip, width: width * 0.91, x: left - width * 0.015, y: top }, steelStops());
-  });
+  withShadow(
+    sketch,
+    { blur: 14, color: fade(getColor("BLACK"), 0.5), drop: 6 },
+    () => {
+      gradientRect(
+        sketch,
+        { height: strip, width: width * 0.91, x: left - width * 0.015, y: top },
+        steelStops()
+      );
+    }
+  );
   paintTicks(sketch, {
     color: fade(getColor("ZINC", 900), 0.8),
     count: RULER_CENTIMETRES * 10 + 1,
     direction: 1,
-    length: (index) => strip * (index % 10 === 0 ? 0.6 : index % 5 === 0 ? 0.42 : 0.26),
+    length: (index) => strip * tier(index, [10, 5], [0.6, 0.42, 0.26]),
     start: left,
     step: centimetre / 10,
     weight: 1,
@@ -91,16 +100,34 @@ function paintBench(sketch: p5) {
   const thick = height * 0.06;
   const joint = left + IRON_LENGTH * centimetre;
   const end = joint + COPPER_LENGTH * centimetre;
-  withShadow(sketch, { blur: 12, color: fade(getColor("BLACK"), 0.55), drop: 6 }, () => {
-    gradientRect(sketch, { height: thick, width: joint - left, x: left, y: top - thick * 1.1 }, steelStops(0.55));
-    gradientRect(sketch, { height: thick, width: end - joint, x: joint, y: top - thick * 1.1 }, copperStops());
-  });
+  withShadow(
+    sketch,
+    { blur: 12, color: fade(getColor("BLACK"), 0.55), drop: 6 },
+    () => {
+      gradientRect(
+        sketch,
+        { height: thick, width: joint - left, x: left, y: top - thick * 1.1 },
+        steelStops(0.55)
+      );
+      gradientRect(
+        sketch,
+        { height: thick, width: end - joint, x: joint, y: top - thick * 1.1 },
+        copperStops()
+      );
+    }
+  );
   sketch.noFill();
   sketch.stroke(fade(PLOT_COLORS.fuchsia, 0.85));
   sketch.strokeWeight(1.5);
   const lensLeft = left + LENS_FROM * centimetre;
   const lensRight = left + LENS_TO * centimetre;
-  sketch.rect(lensLeft, top - thick * 1.3, lensRight - lensLeft, thick * 1.3 + strip, 3);
+  sketch.rect(
+    lensLeft,
+    top - thick * 1.3,
+    lensRight - lensLeft,
+    thick * 1.3 + strip,
+    3
+  );
   sketch.line(lensLeft, top + strip, width * 0.04, height * 0.5);
   sketch.line(lensRight, top + strip, width * 0.96, height * 0.5);
   sketch.noStroke();
@@ -119,12 +146,20 @@ function paintLens(sketch: p5, tool: typeof CopperToolSchema.Type) {
   const scale = lensWidth / (LENS_TO - LENS_FROM);
   const toX = (centimetre: number) => left + (centimetre - LENS_FROM) * scale;
   const rods = joinedRods(tool);
-  withShadow(sketch, { blur: 22, color: fade(getColor("BLACK"), 0.7), drop: 8 }, () => {
-    sketch.fill(getColor("ZINC", 900));
-    sketch.rect(left, top, lensWidth, lensHeight, 14);
-  });
+  withShadow(
+    sketch,
+    { blur: 22, color: fade(getColor("BLACK"), 0.7), drop: 8 },
+    () => {
+      sketch.fill(getColor("ZINC", 900));
+      sketch.rect(left, top, lensWidth, lensHeight, 14);
+    }
+  );
   const edge = top + lensHeight * 0.55;
-  gradientRect(sketch, { height: lensHeight * 0.4, width: lensWidth, x: left, y: edge }, steelStops());
+  gradientRect(
+    sketch,
+    { height: lensHeight * 0.4, width: lensWidth, x: left, y: edge },
+    steelStops()
+  );
   paintTicks(sketch, {
     color: fade(getColor("ZINC", 900), 0.35),
     count: Math.round((LENS_TO - LENS_FROM) * 100) + 1,
@@ -146,18 +181,46 @@ function paintLens(sketch: p5, tool: typeof CopperToolSchema.Type) {
     y: edge,
   });
   const thick = lensHeight * 0.26;
-  withShadow(sketch, { blur: 16, color: fade(getColor("BLACK"), 0.6), drop: 8 }, () => {
-    gradientRect(sketch, { height: thick, width: toX(IRON_LENGTH + COPPER_LENGTH) - left, x: left, y: edge - thick - lensHeight * 0.04 }, copperStops());
-  });
+  withShadow(
+    sketch,
+    { blur: 16, color: fade(getColor("BLACK"), 0.6), drop: 8 },
+    () => {
+      gradientRect(
+        sketch,
+        {
+          height: thick,
+          width: toX(IRON_LENGTH + COPPER_LENGTH) - left,
+          x: left,
+          y: edge - thick - lensHeight * 0.04,
+        },
+        copperStops()
+      );
+    }
+  );
   sketch.fill(fade(PLOT_COLORS.teal, 0.35));
   const bandLeft = toX(rods.raw - rods.spread);
-  sketch.rect(bandLeft, top + lensHeight * 0.06, toX(rods.raw + rods.spread) - bandLeft, lensHeight * 0.88);
+  sketch.rect(
+    bandLeft,
+    top + lensHeight * 0.06,
+    toX(rods.raw + rods.spread) - bandLeft,
+    lensHeight * 0.88
+  );
   sketch.stroke(PLOT_COLORS.violet);
   sketch.strokeWeight(2);
-  sketch.line(toX(rods.raw), top + lensHeight * 0.06, toX(rods.raw), top + lensHeight * 0.94);
+  sketch.line(
+    toX(rods.raw),
+    top + lensHeight * 0.06,
+    toX(rods.raw),
+    top + lensHeight * 0.94
+  );
   sketch.stroke(PLOT_COLORS.fuchsia);
   sketch.strokeWeight(4);
-  sketch.line(toX(rods.reported), edge - lensHeight * 0.05, toX(rods.reported), edge + lensHeight * 0.28);
+  sketch.line(
+    toX(rods.reported),
+    edge - lensHeight * 0.05,
+    toX(rods.reported),
+    edge + lensHeight * 0.28
+  );
   sketch.noStroke();
 }
 
@@ -193,7 +256,11 @@ interface DecimalSumLabProps {
  * or the caliper. The magnifier shows the band where the joined end may lie:
  * a ruler reading widens it past every hundredth, so the sum keeps one decimal.
  */
-export function DecimalSumLab({ description, labels, title }: DecimalSumLabProps) {
+export function DecimalSumLab({
+  description,
+  labels,
+  title,
+}: DecimalSumLabProps) {
   const [tool, setTool] = useState<typeof CopperToolSchema.Type>("ruler");
   const fixed = useFixed();
   const rods = joinedRods(tool);
@@ -223,15 +290,47 @@ export function DecimalSumLab({ description, labels, title }: DecimalSumLabProps
         </ToggleGroup>
       </VisualCardToolbar>
       <VisualCardBody aria-label={labels.viewLabel} render={<section />}>
-        <P5Sketch label={labels.viewLabel} program={sumProgram} state={{ tool }} />
+        <P5Sketch
+          label={labels.viewLabel}
+          program={sumProgram}
+          state={{ tool }}
+        />
       </VisualCardBody>
       <VisualCardSceneActions />
       <VisualCardFooter>
         <VisualCardFacts>
-          <VisualFactTabular label={labels.iron} value={<InlineMath math={fixed(rods.iron, "\\text{ cm}", rods.ironDecimals)} />} />
-          <VisualFactTabular label={labels.copper} value={<InlineMath math={fixed(rods.copper, "\\text{ cm}", rods.copperDecimals)} />} />
-          <VisualFactTabular label={labels.raw} value={<InlineMath math={fixed(rods.raw, "\\text{ cm}", rods.ironDecimals)} />} />
-          <VisualFactTabular label={labels.reported} value={<InlineMath math={fixed(rods.reported, "\\text{ cm}", rods.decimals)} />} />
+          <VisualFactTabular
+            label={labels.iron}
+            value={
+              <InlineMath
+                math={fixed(rods.iron, "\\text{ cm}", rods.ironDecimals)}
+              />
+            }
+          />
+          <VisualFactTabular
+            label={labels.copper}
+            value={
+              <InlineMath
+                math={fixed(rods.copper, "\\text{ cm}", rods.copperDecimals)}
+              />
+            }
+          />
+          <VisualFactTabular
+            label={labels.raw}
+            value={
+              <InlineMath
+                math={fixed(rods.raw, "\\text{ cm}", rods.ironDecimals)}
+              />
+            }
+          />
+          <VisualFactTabular
+            label={labels.reported}
+            value={
+              <InlineMath
+                math={fixed(rods.reported, "\\text{ cm}", rods.decimals)}
+              />
+            }
+          />
         </VisualCardFacts>
       </VisualCardFooter>
     </VisualCard>

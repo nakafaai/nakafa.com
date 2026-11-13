@@ -20,10 +20,10 @@ export const CALIPER_STEP = 0.005;
 
 /** The instruments the copper rod can be read with, by the step each resolves, in centimetres. */
 export const CopperToolSchema = Schema.Literals(["ruler", "caliper"]);
-export const COPPER_TOOLS = { caliper: CALIPER_STEP, ruler: 0.1 } as const satisfies Record<
-  typeof CopperToolSchema.Type,
-  number
->;
+export const COPPER_TOOLS = {
+  caliper: CALIPER_STEP,
+  ruler: 0.1,
+} as const satisfies Record<typeof CopperToolSchema.Type, number>;
 
 /** How many decimals a reading resolved to `step` centimetres is written with. */
 function decimalsOf(step: number) {

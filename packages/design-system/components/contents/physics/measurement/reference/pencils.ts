@@ -11,11 +11,18 @@ import { Schema } from "effect";
 export const DESK_LENGTH = 1.2;
 
 /** The references, each with its length in metres. */
-export const ReferenceSchema = Schema.Literals(["short", "medium", "long", "rule"]);
-export const REFERENCES = { long: 0.22, medium: 0.19, rule: 1, short: 0.15 } as const satisfies Record<
-  typeof ReferenceSchema.Type,
-  number
->;
+export const ReferenceSchema = Schema.Literals([
+  "short",
+  "medium",
+  "long",
+  "rule",
+]);
+export const REFERENCES = {
+  long: 0.22,
+  medium: 0.19,
+  rule: 1,
+  short: 0.15,
+} as const satisfies Record<typeof ReferenceSchema.Type, number>;
 
 /** How many references fit along the desk, and the whole ones laid down. */
 export function referenceCount(reference: typeof ReferenceSchema.Type) {

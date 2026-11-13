@@ -64,9 +64,17 @@ const BoltFrame = Schema.Struct({ quantity: BoltQuantitySchema });
 /** Positions of the bolt for one canvas size. */
 function layout(sketch: p5) {
   const { height, width } = sketch;
-  const millimetre = Math.min((width * 0.62) / (SHANK_LENGTH + HEAD_THICK), (height * 0.5) / HEAD_HEIGHT);
+  const millimetre = Math.min(
+    (width * 0.62) / (SHANK_LENGTH + HEAD_THICK),
+    (height * 0.5) / HEAD_HEIGHT
+  );
   const left = (width - (SHANK_LENGTH + HEAD_THICK) * millimetre) / 2;
-  return { axis: height * 0.42, head: left + HEAD_THICK * millimetre, left, millimetre };
+  return {
+    axis: height * 0.42,
+    head: left + HEAD_THICK * millimetre,
+    left,
+    millimetre,
+  };
 }
 
 /** The bench under a lamp. */
@@ -85,27 +93,60 @@ function paintBench(sketch: p5) {
 /** The weighing pan the bolt rests on when its mass is read, with the dial at `grams`. */
 function paintPan(sketch: p5, place: ReturnType<typeof layout>, grams: number) {
   const { height, width } = sketch;
-  const pan = place.axis + (SHANK_DIAMETER / 2) * place.millimetre + height * 0.06;
-  withShadow(sketch, { blur: 18, color: fade(getColor("BLACK"), 0.55), drop: 8 }, () => {
-    gradientRect(sketch, { height: height * 0.025, width: width * 0.8, x: width * 0.1, y: pan }, steelStops(0.05));
-    gradientRect(sketch, { height: height * 0.2, width: width * 0.5, x: width * 0.25, y: pan + height * 0.025 }, [
-      [0, getColor("SLATE", 300)],
-      [1, getColor("SLATE", 700)],
-    ]);
-  });
+  const pan =
+    place.axis + (SHANK_DIAMETER / 2) * place.millimetre + height * 0.06;
+  withShadow(
+    sketch,
+    { blur: 18, color: fade(getColor("BLACK"), 0.55), drop: 8 },
+    () => {
+      gradientRect(
+        sketch,
+        { height: height * 0.025, width: width * 0.8, x: width * 0.1, y: pan },
+        steelStops(0.05)
+      );
+      gradientRect(
+        sketch,
+        {
+          height: height * 0.2,
+          width: width * 0.5,
+          x: width * 0.25,
+          y: pan + height * 0.025,
+        },
+        [
+          [0, getColor("SLATE", 300)],
+          [1, getColor("SLATE", 700)],
+        ]
+      );
+    }
+  );
   const dial = { x: width * 0.5, y: pan + height * 0.125 };
   const radius = height * 0.075;
-  litBall(sketch, dial, radius, { dark: getColor("SLATE", 300), light: getColor("WHITE") });
+  litBall(sketch, dial, radius, {
+    dark: getColor("SLATE", 300),
+    light: getColor("WHITE"),
+  });
   sketch.stroke(getColor("ZINC", 900));
   sketch.strokeWeight(1);
   Arr.forEach(Arr.range(0, 20), (mark) => {
-    const angle = -Math.PI / 2 - (Math.PI * 5) / 6 + (mark / 20) * ((Math.PI * 5) / 3);
-    sketch.line(dial.x + radius * 0.72 * Math.cos(angle), dial.y + radius * 0.72 * Math.sin(angle), dial.x + radius * 0.88 * Math.cos(angle), dial.y + radius * 0.88 * Math.sin(angle));
+    const angle =
+      -Math.PI / 2 - (Math.PI * 5) / 6 + (mark / 20) * ((Math.PI * 5) / 3);
+    sketch.line(
+      dial.x + radius * 0.72 * Math.cos(angle),
+      dial.y + radius * 0.72 * Math.sin(angle),
+      dial.x + radius * 0.88 * Math.cos(angle),
+      dial.y + radius * 0.88 * Math.sin(angle)
+    );
   });
-  const needle = -Math.PI / 2 - (Math.PI * 5) / 6 + (grams / 100) * ((Math.PI * 5) / 3);
+  const needle =
+    -Math.PI / 2 - (Math.PI * 5) / 6 + (grams / 100) * ((Math.PI * 5) / 3);
   sketch.stroke(PLOT_COLORS.pink);
   sketch.strokeWeight(2.5);
-  sketch.line(dial.x, dial.y, dial.x + radius * 0.85 * Math.cos(needle), dial.y + radius * 0.85 * Math.sin(needle));
+  sketch.line(
+    dial.x,
+    dial.y,
+    dial.x + radius * 0.85 * Math.cos(needle),
+    dial.y + radius * 0.85 * Math.sin(needle)
+  );
   sketch.noStroke();
 }
 
@@ -114,18 +155,64 @@ function paintBolt(sketch: p5, place: ReturnType<typeof layout>) {
   const shank = (SHANK_DIAMETER / 2) * place.millimetre;
   const head = (HEAD_HEIGHT / 2) * place.millimetre;
   const tip = place.head + SHANK_LENGTH * place.millimetre;
-  withShadow(sketch, { blur: 22, color: fade(getColor("BLACK"), 0.6), drop: 10 }, () => {
-    gradientRect(sketch, { height: shank * 2, width: tip - place.head - shank * 0.3, x: place.head, y: place.axis - shank }, steelStops(0.15));
-    sketch.fill(getColor("SLATE", 400));
-    sketch.quad(tip - shank * 0.3, place.axis - shank, tip, place.axis - shank * 0.7, tip, place.axis + shank * 0.7, tip - shank * 0.3, place.axis + shank);
-    gradientRect(sketch, { height: head * 2, width: place.head - place.left, x: place.left, y: place.axis - head }, steelStops(0.25));
-  });
+  withShadow(
+    sketch,
+    { blur: 22, color: fade(getColor("BLACK"), 0.6), drop: 10 },
+    () => {
+      gradientRect(
+        sketch,
+        {
+          height: shank * 2,
+          width: tip - place.head - shank * 0.3,
+          x: place.head,
+          y: place.axis - shank,
+        },
+        steelStops(0.15)
+      );
+      sketch.fill(getColor("SLATE", 400));
+      sketch.quad(
+        tip - shank * 0.3,
+        place.axis - shank,
+        tip,
+        place.axis - shank * 0.7,
+        tip,
+        place.axis + shank * 0.7,
+        tip - shank * 0.3,
+        place.axis + shank
+      );
+      gradientRect(
+        sketch,
+        {
+          height: head * 2,
+          width: place.head - place.left,
+          x: place.left,
+          y: place.axis - head,
+        },
+        steelStops(0.25)
+      );
+    }
+  );
   sketch.fill(fade(getColor("WHITE"), 0.25));
-  sketch.rect(place.left, place.axis - head * 0.5, place.head - place.left, head);
+  sketch.rect(
+    place.left,
+    place.axis - head * 0.5,
+    place.head - place.left,
+    head
+  );
   sketch.stroke(fade(getColor("ZINC", 900), 0.45));
   sketch.strokeWeight(1);
-  sketch.line(place.left, place.axis - head * 0.5, place.head, place.axis - head * 0.5);
-  sketch.line(place.left, place.axis + head * 0.5, place.head, place.axis + head * 0.5);
+  sketch.line(
+    place.left,
+    place.axis - head * 0.5,
+    place.head,
+    place.axis - head * 0.5
+  );
+  sketch.line(
+    place.left,
+    place.axis + head * 0.5,
+    place.head,
+    place.axis + head * 0.5
+  );
   const pitch = 1.5 * place.millimetre;
   const threadStart = tip - SHANK_LENGTH * THREAD_SHARE * place.millimetre;
   sketch.strokeWeight(Math.max(place.millimetre * 0.25, 1));
@@ -133,13 +220,22 @@ function paintBolt(sketch: p5, place: ReturnType<typeof layout>) {
     sketch.stroke(fade(getColor("ZINC", 900), 0.5));
     sketch.line(x, place.axis - shank, x + pitch * 0.6, place.axis + shank);
     sketch.stroke(fade(getColor("WHITE"), 0.35));
-    sketch.line(x + pitch * 0.25, place.axis - shank, x + pitch * 0.85, place.axis + shank);
+    sketch.line(
+      x + pitch * 0.25,
+      place.axis - shank,
+      x + pitch * 0.85,
+      place.axis + shank
+    );
   }
   sketch.noStroke();
 }
 
 /** The highlight for the quantity in view: an arrow for a length, the cut face for the area, a glow for the volume. */
-function paintQuantity(sketch: p5, place: ReturnType<typeof layout>, quantity: typeof BoltQuantitySchema.Type) {
+function paintQuantity(
+  sketch: p5,
+  place: ReturnType<typeof layout>,
+  quantity: typeof BoltQuantitySchema.Type
+) {
   const shank = (SHANK_DIAMETER / 2) * place.millimetre;
   const tip = place.head + SHANK_LENGTH * place.millimetre;
   const ink = { color: PLOT_COLORS.orange, head: 10, weight: 3 };
@@ -156,11 +252,26 @@ function paintQuantity(sketch: p5, place: ReturnType<typeof layout>, quantity: t
   }
   if (quantity === "area") {
     sketch.fill(fade(PLOT_COLORS.fuchsia, 0.7));
-    sketch.ellipse(tip + sketch.width * 0.05, place.axis, shank * 0.8, shank * 2);
+    sketch.ellipse(
+      tip + sketch.width * 0.05,
+      place.axis,
+      shank * 0.8,
+      shank * 2
+    );
     sketch.stroke(fade(PLOT_COLORS.fuchsia, 0.8));
     sketch.strokeWeight(1.5);
-    sketch.line(tip, place.axis - shank * 0.7, tip + sketch.width * 0.05, place.axis - shank);
-    sketch.line(tip, place.axis + shank * 0.7, tip + sketch.width * 0.05, place.axis + shank);
+    sketch.line(
+      tip,
+      place.axis - shank * 0.7,
+      tip + sketch.width * 0.05,
+      place.axis - shank
+    );
+    sketch.line(
+      tip,
+      place.axis + shank * 0.7,
+      tip + sketch.width * 0.05,
+      place.axis + shank
+    );
     sketch.noStroke();
   }
   if (quantity === "volume" || quantity === "density") {
@@ -190,8 +301,14 @@ function boltProgram(sketch: p5, read: () => typeof BoltFrame.Type) {
 
 /** A dimension as KaTeX from its powers of mass and length: [M], [L]^2, [M][L]^{-3}. */
 function dimensionOf(mass: number, length: number) {
-  const part = (symbol: string, power: number) =>
-    power === 0 ? "" : power === 1 ? `[\\mathrm{${symbol}}]` : `[\\mathrm{${symbol}}]^{${power}}`;
+  const part = (symbol: string, power: number) => {
+    if (power === 0) {
+      return "";
+    }
+    return power === 1
+      ? `[\\mathrm{${symbol}}]`
+      : `[\\mathrm{${symbol}}]^{${power}}`;
+  };
   return `${part("M", mass)}${part("L", length)}`;
 }
 
@@ -212,8 +329,13 @@ interface BoltDimensionsLabProps {
  * cross-section and volume, its mass, and the density of its steel. Each
  * quantity marks its part of the bolt and shows its value and dimension.
  */
-export function BoltDimensionsLab({ description, labels, title }: BoltDimensionsLabProps) {
-  const [quantity, setQuantity] = useState<typeof BoltQuantitySchema.Type>("length");
+export function BoltDimensionsLab({
+  description,
+  labels,
+  title,
+}: BoltDimensionsLabProps) {
+  const [quantity, setQuantity] =
+    useState<typeof BoltQuantitySchema.Type>("length");
   const fixed = useFixed();
   const shown = boltQuantities()[quantity];
   const value = scientific(shown.value, 3);
@@ -243,13 +365,27 @@ export function BoltDimensionsLab({ description, labels, title }: BoltDimensions
         </ToggleGroup>
       </VisualCardToolbar>
       <VisualCardBody aria-label={labels.viewLabel} render={<section />}>
-        <P5Sketch label={labels.viewLabel} program={boltProgram} state={{ quantity }} />
+        <P5Sketch
+          label={labels.viewLabel}
+          program={boltProgram}
+          state={{ quantity }}
+        />
       </VisualCardBody>
       <VisualCardSceneActions />
       <VisualCardFooter>
         <VisualCardFacts>
-          <VisualFactTabular label={labels.value} value={<InlineMath math={`${fixed(value.coefficient, "", 2)}\\times10^{${value.exponent}}${UNITS[quantity]}`} />} />
-          <VisualFactTabular label={labels.dimension} value={<InlineMath math={dimensionOf(shown.mass, shown.length)} />} />
+          <VisualFactTabular
+            label={labels.value}
+            value={
+              <InlineMath
+                math={`${fixed(value.coefficient, "", 2)}\\times10^{${value.exponent}}${UNITS[quantity]}`}
+              />
+            }
+          />
+          <VisualFactTabular
+            label={labels.dimension}
+            value={<InlineMath math={dimensionOf(shown.mass, shown.length)} />}
+          />
         </VisualCardFacts>
       </VisualCardFooter>
     </VisualCard>

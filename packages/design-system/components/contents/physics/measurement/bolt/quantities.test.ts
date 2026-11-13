@@ -9,7 +9,7 @@ describe("one bolt, many quantities", () => {
   });
 
   it("weighs the shank at 30.8 g of steel", () => {
-    expect(boltQuantities().mass.value).toBeCloseTo(0.03083, 5);
+    expect(boltQuantities().mass.value).toBeCloseTo(0.030_83, 5);
   });
 
   it("gives density the dimension of mass over volume", () => {

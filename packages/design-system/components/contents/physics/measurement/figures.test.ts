@@ -7,8 +7,14 @@ import {
 
 describe("significant figures", () => {
   it("writes a small value with its coefficient and a negative exponent", () => {
-    expect(scientific(0.000764, 3)).toEqual({ coefficient: 7.64, exponent: -4 });
-    expect(scientific(0.000068, 2)).toEqual({ coefficient: 6.8, exponent: -5 });
+    expect(scientific(0.000_764, 3)).toEqual({
+      coefficient: 7.64,
+      exponent: -4,
+    });
+    expect(scientific(0.000_068, 2)).toEqual({
+      coefficient: 6.8,
+      exponent: -5,
+    });
   });
 
   it("moves one power over when the coefficient rounds up to ten", () => {

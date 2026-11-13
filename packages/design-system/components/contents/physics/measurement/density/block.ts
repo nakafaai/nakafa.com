@@ -12,10 +12,11 @@ export const BLOCK_SIDES = { height: 2.5, length: 5, width: 4 } as const;
 
 /** The materials, by their density in grams per cubic centimetre. */
 export const MaterialSchema = Schema.Literals(["pine", "aluminium", "brass"]);
-export const DENSITIES = { aluminium: 2.7, brass: 8.5, pine: 0.5 } as const satisfies Record<
-  typeof MaterialSchema.Type,
-  number
->;
+export const DENSITIES = {
+  aluminium: 2.7,
+  brass: 8.5,
+  pine: 0.5,
+} as const satisfies Record<typeof MaterialSchema.Type, number>;
 
 /** The block's volume in cubic centimetres, its mass in grams, and its density in both units. */
 export function blockReading(material: typeof MaterialSchema.Type) {

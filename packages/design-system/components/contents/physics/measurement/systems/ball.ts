@@ -24,5 +24,8 @@ export const UNIT_SYSTEMS = {
 /** The ball's diameter and mass in `system`'s units. */
 export function ballIn(system: typeof UnitSystemSchema.Type) {
   const units = UNIT_SYSTEMS[system];
-  return { diameter: BALL_DIAMETER / units.length, mass: BALL_MASS / units.mass };
+  return {
+    diameter: BALL_DIAMETER / units.length,
+    mass: BALL_MASS / units.mass,
+  };
 }

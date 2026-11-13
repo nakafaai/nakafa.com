@@ -31,7 +31,10 @@ describe("vernier caliper", () => {
     const { line } = vernierReading(zero);
     expect(vernierMark(zero, line)).toBeCloseTo(30, 9);
     expect(vernierMiss(zero, line)).toBeCloseTo(0, 9);
-    const others = Arr.filter(Arr.range(0, VERNIER_DIVISIONS), (index) => index !== line);
+    const others = Arr.filter(
+      Arr.range(0, VERNIER_DIVISIONS),
+      (index) => index !== line
+    );
     for (const index of others) {
       expect(vernierMiss(zero, index)).toBeGreaterThan(0.05);
     }

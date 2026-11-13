@@ -31,7 +31,9 @@ describe("two rods joined end to end", () => {
   it("puts the true joined end inside the band the readings allow", () => {
     for (const tool of CopperToolSchema.literals) {
       const rods = joinedRods(tool);
-      expect(Math.abs(IRON_LENGTH + COPPER_LENGTH - rods.raw)).toBeLessThanOrEqual(rods.spread);
+      expect(
+        Math.abs(IRON_LENGTH + COPPER_LENGTH - rods.raw)
+      ).toBeLessThanOrEqual(rods.spread);
     }
   });
 });

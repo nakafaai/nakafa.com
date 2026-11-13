@@ -1,9 +1,9 @@
 import { describe, expect, it } from "@effect/vitest";
 import {
+  micrometerReading,
   SCREW_PITCH,
   SCREW_RESOLUTION,
   THIMBLE_DIVISIONS,
-  micrometerReading,
   thimbleTurn,
 } from "@repo/design-system/components/contents/physics/measurement/micrometer/screw";
 

@@ -18,11 +18,17 @@ describe("a pendulum's period by dimensional analysis", () => {
 
   it("swings a 1.00 m pendulum in 2.01 s and a 0.25 m one in half that", () => {
     expect(pendulumPeriod(1, BOBS.brass.mass)).toBeCloseTo(2.006, 3);
-    expect(pendulumPeriod(0.25, BOBS.brass.mass)).toBeCloseTo(pendulumPeriod(1, BOBS.brass.mass) / 2, 12);
+    expect(pendulumPeriod(0.25, BOBS.brass.mass)).toBeCloseTo(
+      pendulumPeriod(1, BOBS.brass.mass) / 2,
+      12
+    );
   });
 
   it("keeps the period when the bob is ten times heavier", () => {
-    expect(pendulumPeriod(0.8, BOBS.lead.mass)).toBeCloseTo(pendulumPeriod(0.8, BOBS.wood.mass), 12);
+    expect(pendulumPeriod(0.8, BOBS.lead.mass)).toBeCloseTo(
+      pendulumPeriod(0.8, BOBS.wood.mass),
+      12
+    );
   });
 
   it("makes the light wooden bob the biggest ball and the brass one the smallest", () => {

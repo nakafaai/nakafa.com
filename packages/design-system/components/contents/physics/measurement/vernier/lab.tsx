@@ -12,6 +12,7 @@ import {
   brassStops,
   paintTicks,
   steelStops,
+  tier,
 } from "@repo/design-system/components/contents/physics/measurement/scale";
 import {
   CALIPER_RANGE,
@@ -80,7 +81,11 @@ function paintBench(sketch: p5) {
 }
 
 /** The beam, both jaws, and the brass cylinder they hold, at jaw opening `opening`. */
-function paintCaliper(sketch: p5, place: ReturnType<typeof layout>, opening: number) {
+function paintCaliper(
+  sketch: p5,
+  place: ReturnType<typeof layout>,
+  opening: number
+) {
   const { width } = sketch;
   const face = place.zero + opening * place.millimetre;
   const jawWidth = width * 0.035;
@@ -88,20 +93,73 @@ function paintCaliper(sketch: p5, place: ReturnType<typeof layout>, opening: num
   const top = place.beamTop + place.beamHeight * 1.6;
   const tall = place.jawBottom - top - sketch.height * 0.01;
   withShadow(sketch, shadow, () => {
-    gradientRect(sketch, { height: tall, width: face - place.zero, x: place.zero, y: top }, brassStops(PLOT_COLORS.amber), true);
+    gradientRect(
+      sketch,
+      { height: tall, width: face - place.zero, x: place.zero, y: top },
+      brassStops(PLOT_COLORS.amber),
+      true
+    );
   });
   sketch.fill(fade(getColor("WHITE"), 0.25));
-  sketch.ellipse((place.zero + face) / 2, top, face - place.zero, sketch.height * 0.018);
+  sketch.ellipse(
+    (place.zero + face) / 2,
+    top,
+    face - place.zero,
+    sketch.height * 0.018
+  );
   withShadow(sketch, shadow, () => {
-    gradientRect(sketch, { height: place.beamHeight, width: width * 0.96 - place.zero + jawWidth, x: place.zero - jawWidth, y: place.beamTop }, steelStops());
-    gradientRect(sketch, { height: place.jawBottom - place.beamTop, width: jawWidth, x: place.zero - jawWidth, y: place.beamTop }, steelStops(0.15), true);
-    gradientRect(sketch, { height: place.jawBottom - place.beamTop, width: jawWidth, x: face, y: place.beamTop }, steelStops(0.15), true);
-    gradientRect(sketch, { height: place.beamHeight * 1.5, width: width * 0.16, x: face, y: place.beamTop + place.beamHeight * 0.55 }, steelStops(0.3));
+    gradientRect(
+      sketch,
+      {
+        height: place.beamHeight,
+        width: width * 0.96 - place.zero + jawWidth,
+        x: place.zero - jawWidth,
+        y: place.beamTop,
+      },
+      steelStops()
+    );
+    gradientRect(
+      sketch,
+      {
+        height: place.jawBottom - place.beamTop,
+        width: jawWidth,
+        x: place.zero - jawWidth,
+        y: place.beamTop,
+      },
+      steelStops(0.15),
+      true
+    );
+    gradientRect(
+      sketch,
+      {
+        height: place.jawBottom - place.beamTop,
+        width: jawWidth,
+        x: face,
+        y: place.beamTop,
+      },
+      steelStops(0.15),
+      true
+    );
+    gradientRect(
+      sketch,
+      {
+        height: place.beamHeight * 1.5,
+        width: width * 0.16,
+        x: face,
+        y: place.beamTop + place.beamHeight * 0.55,
+      },
+      steelStops(0.3)
+    );
   });
-  litBall(sketch, { x: face + width * 0.11, y: place.beamTop - place.beamHeight * 0.15 }, place.beamHeight * 0.32, {
-    dark: getColor("SLATE", 600),
-    light: getColor("SLATE", 50),
-  });
+  litBall(
+    sketch,
+    { x: face + width * 0.11, y: place.beamTop - place.beamHeight * 0.15 },
+    place.beamHeight * 0.32,
+    {
+      dark: getColor("SLATE", 600),
+      light: getColor("SLATE", 50),
+    }
+  );
   paintTicks(sketch, {
     color: fade(getColor("ZINC", 900), 0.85),
     count: VERNIER_DIVISIONS + 1,
@@ -116,7 +174,8 @@ function paintCaliper(sketch: p5, place: ReturnType<typeof layout>, opening: num
     color: fade(getColor("ZINC", 900), 0.85),
     count: BEAM_MILLIMETRES + 1,
     direction: -1,
-    length: (index) => place.beamHeight * (index % 10 === 0 ? 0.6 : index % 5 === 0 ? 0.45 : 0.3),
+    length: (index) =>
+      place.beamHeight * tier(index, [10, 5], [0.6, 0.45, 0.3]),
     start: place.zero,
     step: place.millimetre,
     weight: 1,
@@ -125,9 +184,25 @@ function paintCaliper(sketch: p5, place: ReturnType<typeof layout>, opening: num
   sketch.noFill();
   sketch.stroke(fade(PLOT_COLORS.fuchsia, 0.85));
   sketch.strokeWeight(1.5);
-  sketch.rect(face - place.millimetre * 1.5, place.beamTop - 2, place.millimetre * LENS_MILLIMETRES, place.beamHeight * 2.2, 4);
-  sketch.line(face - place.millimetre * 1.5, place.beamTop + place.beamHeight * 2.2, sketch.width * 0.04, place.lensTop);
-  sketch.line(face + place.millimetre * (LENS_MILLIMETRES - 1.5), place.beamTop + place.beamHeight * 2.2, sketch.width * 0.96, place.lensTop);
+  sketch.rect(
+    face - place.millimetre * 1.5,
+    place.beamTop - 2,
+    place.millimetre * LENS_MILLIMETRES,
+    place.beamHeight * 2.2,
+    4
+  );
+  sketch.line(
+    face - place.millimetre * 1.5,
+    place.beamTop + place.beamHeight * 2.2,
+    sketch.width * 0.04,
+    place.lensTop
+  );
+  sketch.line(
+    face + place.millimetre * (LENS_MILLIMETRES - 1.5),
+    place.beamTop + place.beamHeight * 2.2,
+    sketch.width * 0.96,
+    place.lensTop
+  );
   sketch.noStroke();
 }
 
@@ -135,7 +210,11 @@ function paintCaliper(sketch: p5, place: ReturnType<typeof layout>, opening: num
  * The magnifier: the main scale over the vernier around the vernier zero,
  * with the one pair of lines that meet in fuchsia.
  */
-function paintLens(sketch: p5, place: ReturnType<typeof layout>, opening: number) {
+function paintLens(
+  sketch: p5,
+  place: ReturnType<typeof layout>,
+  opening: number
+) {
   const { width } = sketch;
   const left = width * 0.04;
   const lensWidth = width * 0.92;
@@ -143,13 +222,35 @@ function paintLens(sketch: p5, place: ReturnType<typeof layout>, opening: number
   const scale = lensWidth / LENS_MILLIMETRES;
   const from = opening - 1.5;
   const toX = (millimetre: number) => left + (millimetre - from) * scale;
-  withShadow(sketch, { blur: 22, color: fade(getColor("BLACK"), 0.7), drop: 8 }, () => {
-    sketch.fill(getColor("ZINC", 900));
-    sketch.rect(left, place.lensTop, lensWidth, lensHeight, 14);
-  });
+  withShadow(
+    sketch,
+    { blur: 22, color: fade(getColor("BLACK"), 0.7), drop: 8 },
+    () => {
+      sketch.fill(getColor("ZINC", 900));
+      sketch.rect(left, place.lensTop, lensWidth, lensHeight, 14);
+    }
+  );
   const edge = place.lensTop + lensHeight * 0.48;
-  gradientRect(sketch, { height: edge - place.lensTop - lensHeight * 0.08, width: lensWidth, x: left, y: place.lensTop + lensHeight * 0.08 }, steelStops());
-  gradientRect(sketch, { height: lensHeight * 0.36, width: lensWidth - (toX(opening) - left) + scale * 0.6, x: toX(opening) - scale * 0.6, y: edge + 2 }, steelStops(0.3));
+  gradientRect(
+    sketch,
+    {
+      height: edge - place.lensTop - lensHeight * 0.08,
+      width: lensWidth,
+      x: left,
+      y: place.lensTop + lensHeight * 0.08,
+    },
+    steelStops()
+  );
+  gradientRect(
+    sketch,
+    {
+      height: lensHeight * 0.36,
+      width: lensWidth - (toX(opening) - left) + scale * 0.6,
+      x: toX(opening) - scale * 0.6,
+      y: edge + 2,
+    },
+    steelStops(0.3)
+  );
   const first = Math.ceil(from);
   const { line } = vernierReading(opening);
   const met = vernierMark(opening, line);
@@ -157,7 +258,8 @@ function paintLens(sketch: p5, place: ReturnType<typeof layout>, opening: number
     color: getColor("ZINC", 900),
     count: LENS_MILLIMETRES + 1,
     direction: -1,
-    length: (index) => lensHeight * ((first + index) % 10 === 0 ? 0.3 : (first + index) % 5 === 0 ? 0.22 : 0.15),
+    length: (index) =>
+      lensHeight * tier(first + index, [10, 5], [0.3, 0.22, 0.15]),
     start: toX(first),
     step: scale,
     weight: 2,
@@ -175,14 +277,23 @@ function paintLens(sketch: p5, place: ReturnType<typeof layout>, opening: number
   });
   sketch.stroke(PLOT_COLORS.fuchsia);
   sketch.strokeWeight(3.5);
-  sketch.line(toX(met), edge - lensHeight * 0.17, toX(met), edge + lensHeight * 0.2);
+  sketch.line(
+    toX(met),
+    edge - lensHeight * 0.17,
+    toX(met),
+    edge + lensHeight * 0.2
+  );
   sketch.stroke(PLOT_COLORS.teal);
   sketch.line(toX(opening), edge + 2, toX(opening), edge + lensHeight * 0.28);
   sketch.noStroke();
-  gradientRect(sketch, { height: lensHeight * 0.18, width: lensWidth, x: left, y: place.lensTop }, [
-    [0, fade(getColor("WHITE"), 0.12)],
-    [1, fade(getColor("WHITE"), 0)],
-  ]);
+  gradientRect(
+    sketch,
+    { height: lensHeight * 0.18, width: lensWidth, x: left, y: place.lensTop },
+    [
+      [0, fade(getColor("WHITE"), 0.12)],
+      [1, fade(getColor("WHITE"), 0)],
+    ]
+  );
 }
 
 /** Draws one moment: the jaw slides to the object, and the magnifier follows its vernier zero. */
@@ -195,7 +306,9 @@ function caliperProgram(sketch: p5, read: () => typeof CaliperFrame.Type) {
   sketch.draw = () => {
     const { width } = read();
     const step = Math.min(sketch.deltaTime / 1000, 0.1) * SLIDE_RATE;
-    opening = sketch.isLooping() ? opening + (width - opening) * Math.min(step, 1) : width;
+    opening = sketch.isLooping()
+      ? opening + (width - opening) * Math.min(step, 1)
+      : width;
     const place = layout(sketch);
     paintBench(sketch);
     paintCaliper(sketch, place, opening);
@@ -224,7 +337,12 @@ interface VernierCaliperLabProps {
  * scales. Slide the jaw: the vernier zero gives the whole millimetres, and the
  * one vernier line that meets a main mark gives the tenth.
  */
-export function VernierCaliperLab({ description, labels, title, width: initialWidth = 18.4 }: VernierCaliperLabProps) {
+export function VernierCaliperLab({
+  description,
+  labels,
+  title,
+  width: initialWidth = 18.4,
+}: VernierCaliperLabProps) {
   const [width, setWidth] = useState(initialWidth);
   const measure = useMeasure();
   const { line, main, reading } = vernierReading(width);
@@ -251,13 +369,23 @@ export function VernierCaliperLab({ description, labels, title, width: initialWi
         </div>
       </VisualCardToolbar>
       <VisualCardBody aria-label={labels.viewLabel} render={<section />}>
-        <P5Sketch label={labels.viewLabel} program={caliperProgram} state={{ width: reading }} />
+        <P5Sketch
+          label={labels.viewLabel}
+          program={caliperProgram}
+          state={{ width: reading }}
+        />
       </VisualCardBody>
       <VisualCardSceneActions />
       <VisualCardFooter>
         <VisualCardFacts>
-          <VisualFactTabular label={labels.main} value={<InlineMath math={measure(main, "\\text{ mm}", 0)} />} />
-          <VisualFactTabular label={labels.line} value={<InlineMath math={`${line}`} />} />
+          <VisualFactTabular
+            label={labels.main}
+            value={<InlineMath math={measure(main, "\\text{ mm}", 0)} />}
+          />
+          <VisualFactTabular
+            label={labels.line}
+            value={<InlineMath math={`${line}`} />}
+          />
           <VisualFactTabular
             label={labels.reading}
             value={
@@ -266,7 +394,12 @@ export function VernierCaliperLab({ description, labels, title, width: initialWi
               />
             }
           />
-          <VisualFactTabular label={labels.centimetres} value={<InlineMath math={measure(reading / 10, "\\text{ cm}", 2)} />} />
+          <VisualFactTabular
+            label={labels.centimetres}
+            value={
+              <InlineMath math={measure(reading / 10, "\\text{ cm}", 2)} />
+            }
+          />
         </VisualCardFacts>
       </VisualCardFooter>
     </VisualCard>

@@ -32,5 +32,7 @@ export function readingFigures(value: number, resolution: number) {
 /** The value rounded to the nearest step the instrument resolves. */
 export function resolve(value: number, resolution: number) {
   const steps = Math.round(value / resolution);
-  return resolution >= 1 ? steps * resolution : steps / Math.round(1 / resolution);
+  return resolution >= 1
+    ? steps * resolution
+    : steps / Math.round(1 / resolution);
 }
