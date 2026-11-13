@@ -13,10 +13,8 @@ import { useTranslations } from "use-intl";
 import { BreadcrumbAnchor } from "@/components/shared/breadcrumb/anchor";
 import { BreadcrumbHeaderFrame } from "@/components/shared/breadcrumb/frame";
 import { BreadcrumbMenu } from "@/components/shared/breadcrumb/menu";
-import {
-  BreadcrumbSiblingsSegment,
-  type CrumbSiblings,
-} from "@/components/shared/breadcrumb/siblings";
+import type { CrumbSiblings } from "@/components/shared/breadcrumb/pages";
+import { BreadcrumbSiblingsSegment } from "@/components/shared/breadcrumb/siblings";
 import { Link, type LinkTarget } from "@/lib/routing/link";
 
 /**
