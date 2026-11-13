@@ -26,7 +26,6 @@ import {
   saved,
 } from "@/e2e/support/changes";
 import { activate, activateUntilVisible } from "@/e2e/support/input";
-import { APP_CHUNK_PATH } from "@/e2e/support/route";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
 /**
@@ -243,14 +242,6 @@ export const compactContext: BrowserContextOptions = {
 
 /** React reports a hydration mismatch as a console error that names it. */
 const HYDRATION_ERROR = /hydrat|#41[89]|#42[35]/iu;
-
-/**
- * Stops every app chunk from loading, so the page stays as the server sent it
- * and only the inline bootstrap script and the stylesheet can act.
- */
-export async function stopAppCode(page: Page) {
-  await page.route(APP_CHUNK_PATH, (route) => route.abort());
-}
 
 /** Collects the hydration errors that the page reports while it runs. */
 export function observeHydrationErrors(page: Page) {

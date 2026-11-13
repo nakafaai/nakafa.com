@@ -45,6 +45,14 @@ export const waitForServedRoute = Effect.fn("NakafaE2E.waitForServedRoute")(
 export const APP_CHUNK_PATH = /\/assets\/.*\.js(?:\?.*)?$/u;
 
 /**
+ * Stops every app chunk from loading, so the page stays as the server sent it
+ * and only the inline bootstrap script and the stylesheet can act.
+ */
+export async function stopAppCode(page: Page) {
+  await page.route(APP_CHUNK_PATH, (route) => route.abort());
+}
+
+/**
  * The most chunks that the routes of one page fetch from the server at once: the
  * six connections a browser opens to one HTTP/1.1 host. `route.fetch` sends each
  * request from Node, which opens a connection for every request in flight, so
