@@ -6,6 +6,7 @@ import {
   publicTryoutCountryValidator,
   publicTryoutExamValidator,
   publicTryoutGroupChoiceValidator,
+  publicTryoutTrackValidator,
 } from "@repo/backend/confect/tryouts/queries/model";
 import { Array as Arr, HashMap, Option, Schema } from "effect";
 
@@ -50,6 +51,15 @@ const TryoutGroupSelectorOptionSchema = Schema.Struct({
 export type TryoutGroupSelectorOption =
   typeof TryoutGroupSelectorOptionSchema.Type;
 
+/** One track of a group, a sibling its crumb offers: its value is the track's path, where choosing it lands. */
+const TryoutTrackOptionSchema = Schema.Struct({
+  title: publicTryoutTrackValidator.fields.title,
+  trackKey: publicTryoutTrackValidator.fields.trackKey,
+  value: publicTryoutTrackValidator.fields.publicPath,
+});
+
+export type TryoutTrackOption = typeof TryoutTrackOptionSchema.Type;
+
 /** Projects active country rows into localized selector options. */
 export function buildTryoutCountryOptions(
   countries: TryoutHubPage["countries"]
@@ -84,6 +94,17 @@ export function buildTryoutGroupOptions(
     groupKey: group.groupKey,
     title: group.title,
     value: group.publicPath,
+  }));
+}
+
+/** Projects the tracks of one group into localized options. */
+export function buildTryoutTrackOptions(
+  tracks: TryoutGroupPage["tracks"]
+): readonly TryoutTrackOption[] {
+  return Arr.map(tracks, (track) => ({
+    title: track.title,
+    trackKey: track.trackKey,
+    value: track.publicPath,
   }));
 }
 
