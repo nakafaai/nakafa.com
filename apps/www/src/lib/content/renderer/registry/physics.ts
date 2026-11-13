@@ -15,6 +15,7 @@ import {
   StoppingDistanceLab,
 } from "@/lib/content/renderer/client/physics/distance";
 import { WindEnergyConversionLab } from "@/lib/content/renderer/client/physics/energy";
+import { HoseJetProjectileLab } from "@/lib/content/renderer/client/physics/fountain";
 import { GalileoInclineBellsLab } from "@/lib/content/renderer/client/physics/galileo";
 import { FallingTargetAimLab } from "@/lib/content/renderer/client/physics/hunter";
 import {
@@ -30,6 +31,7 @@ import {
   RelativeMovementLab,
   VerticalMovementLab,
 } from "@/lib/content/renderer/client/physics/movement";
+import { SatelliteOrbitCircularLab } from "@/lib/content/renderer/client/physics/orbit";
 import {
   ParabolicMovementAnalysisLab,
   ParabolicMovementLab,
@@ -41,6 +43,7 @@ import { StreetOriginPositionLab } from "@/lib/content/renderer/client/physics/s
 import { StrobePhotoMotionLab } from "@/lib/content/renderer/client/physics/strobe";
 import { TickerTapeMotionLab } from "@/lib/content/renderer/client/physics/ticker";
 import { RunningTrackDisplacementLab } from "@/lib/content/renderer/client/physics/track";
+import { TrainPassengerRelativeLab } from "@/lib/content/renderer/client/physics/train";
 import { SpeedTrapInstantSpeedLab } from "@/lib/content/renderer/client/physics/trap";
 import { CarTripSecantSlopeLab } from "@/lib/content/renderer/client/physics/trip";
 import { FeatherCoinVacuumLab } from "@/lib/content/renderer/client/physics/vacuum";
@@ -203,5 +206,17 @@ export const physicsRenderers = [
   {
     name: physicsComponentNames.galileoInclineBellsLab,
     component: GalileoInclineBellsLab,
+  },
+  {
+    name: physicsComponentNames.hoseJetProjectileLab,
+    component: HoseJetProjectileLab,
+  },
+  {
+    name: physicsComponentNames.trainPassengerRelativeLab,
+    component: TrainPassengerRelativeLab,
+  },
+  {
+    name: physicsComponentNames.satelliteOrbitCircularLab,
+    component: SatelliteOrbitCircularLab,
   },
 ] satisfies readonly RendererImplementation[];

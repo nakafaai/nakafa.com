@@ -245,3 +245,36 @@ export function paintCar(
   }
   sketch.pop();
 }
+
+/**
+ * A person seen from the side, standing with feet at `at`, `tall` pixels
+ * high, mid-stride, in a shirt of `color`.
+ */
+export function paintPerson(
+  sketch: p5,
+  at: { readonly x: number; readonly y: number },
+  tall: number,
+  color: string
+) {
+  const head = tall * 0.13;
+  sketch.push();
+  sketch.noStroke();
+  sketch.fill(fade(getColor("BLACK"), 0.35));
+  sketch.ellipse(at.x, at.y, tall * 0.36, tall * 0.05);
+  sketch.stroke(MATERIAL.tintedGlass);
+  sketch.strokeWeight(tall * 0.07);
+  sketch.strokeCap(sketch.ROUND);
+  sketch.line(at.x, at.y - tall * 0.46, at.x - tall * 0.08, at.y);
+  sketch.line(at.x, at.y - tall * 0.46, at.x + tall * 0.09, at.y);
+  sketch.stroke(color);
+  sketch.strokeWeight(tall * 0.12);
+  sketch.line(at.x, at.y - tall * 0.48, at.x + tall * 0.01, at.y - tall * 0.78);
+  sketch.noStroke();
+  sketch.fill(mix(getColor("STONE", 600), getColor("WHITE"), 0.35));
+  sketch.circle(
+    at.x + tall * 0.02,
+    at.y - tall * 0.78 - head * 0.75,
+    head * 1.5
+  );
+  sketch.pop();
+}
