@@ -114,7 +114,6 @@ export const mathematicsComponentNames = {
   functionExplorationVirusChart: "FunctionExplorationVirusChart",
   functionMachine: "FunctionMachine",
   histogramChart: "HistogramChart",
-  inequality: "Inequality",
   inverseFunctionIllustration: "InverseFunctionIllustration",
   lineEquation: "LineEquation",
   numberLine: "NumberLine",
