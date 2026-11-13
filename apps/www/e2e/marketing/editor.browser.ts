@@ -1,7 +1,11 @@
-import { expect, type Page, test } from "@playwright/test";
+import { expect, type Page, type Request, test } from "@playwright/test";
 import { Effect } from "effect";
 import { loadMarketingPage } from "@/e2e/support/marketing";
-import { withObservedPageErrors } from "@/e2e/support/observe";
+import {
+  withObservedEvents,
+  withObservedPageErrors,
+} from "@/e2e/support/observe";
+import { stepTo } from "@/e2e/support/scroll";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
 /** The demo's first question names its right answer, option C, as a teacher marks it. */
@@ -20,7 +24,8 @@ const verifyLandingEditor = Effect.fn("NakafaE2E.verifyLandingEditor")(
   function* (page: Page) {
     yield* loadMarketingPage(page, "/en/school");
     const editor = page.locator("section#exams");
-    yield* Effect.promise(() => editor.scrollIntoViewIfNeeded());
+    // WebKit's scrollIntoView skips a part the page has not drawn yet, so the page steps to the editor as a reader does.
+    yield* stepTo(page, editor.locator('[data-slot="editor-demo"]'));
 
     yield* Effect.promise(() =>
       expect(editor.getByRole("textbox", { name: "Exam title" })).toHaveValue(
@@ -70,3 +75,77 @@ test("the School landing's exam editor is the real editor and takes a visitor's 
     withObservedPageErrors(page, verifyLandingEditor(page))
   );
 });
+
+/** How far one turn of the wheel scrolls the page, in pixels. */
+const WHEEL_STEP = 600;
+
+/** The most turns of the wheel the page takes from its top to its bottom. */
+const WHEEL_TURNS = 60;
+
+/**
+ * Scrolls the page from its top to its bottom with the wheel, as a reader does, so every part loads its code and
+ * the demo's screens start, then waits for what they start to settle.
+ */
+const scrollToEnd = Effect.fn("NakafaE2E.scrollToEnd")(function* (page: Page) {
+  const turn = Effect.gen(function* () {
+    const atEnd = yield* Effect.promise(() =>
+      page.evaluate(() => {
+        const root = document.scrollingElement ?? document.documentElement;
+        return root.scrollTop + window.innerHeight >= root.scrollHeight - 2;
+      })
+    );
+    if (!atEnd) {
+      yield* Effect.promise(() => page.mouse.wheel(0, WHEEL_STEP));
+      yield* Effect.promise(() => page.waitForTimeout(250));
+    }
+    return atEnd;
+  });
+  yield* turn.pipe(
+    Effect.repeat({ times: WHEEL_TURNS, until: (atEnd) => atEnd })
+  );
+  yield* Effect.promise(() => page.waitForLoadState("networkidle"));
+});
+
+/**
+ * The School landing logs no error from its top to its bottom: no console error, no failed request and no page
+ * error (owner, 13 Nov 2026). Its demos answer every call in the page, so none of them may open a connection, which
+ * the page's Content Security Policy refuses with an error in every engine.
+ */
+for (const width of [390, 768, 1440]) {
+  test(`the School landing logs no error from top to bottom at ${width}px`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ height: 900, width });
+    await Effect.runPromise(
+      withObservedEvents(
+        (record) => {
+          const listen = (message: {
+            text: () => string;
+            type: () => string;
+          }) => {
+            if (message.type() === "error") {
+              record(`error: ${message.text()}`);
+            }
+          };
+          const failed = (request: Request) =>
+            record(`failed: ${request.url()}`);
+          page.on("console", listen);
+          page.on("requestfailed", failed);
+          return () => {
+            page.off("console", listen);
+            page.off("requestfailed", failed);
+          };
+        },
+        (said) =>
+          withObservedPageErrors(
+            page,
+            Effect.gen(function* () {
+              yield* loadMarketingPage(page, "/en/school");
+              yield* scrollToEnd(page);
+              expect(yield* said).toEqual([]);
+            })
+          )
+      )
+    );
+  });
+}

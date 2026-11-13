@@ -7,8 +7,9 @@ import {
   type ContentTreeValue,
   contentTreeComponentNames,
 } from "@nakafa/aksara-contracts/tree";
+import { headingIdOf } from "@repo/contents/toc";
 import type { MDXComponents } from "@repo/design-system/types/markdown";
-import { Array as Arr, Effect, Predicate, Record as Rec } from "effect";
+import { Array as Arr, Effect, Option, Predicate, Record as Rec } from "effect";
 import {
   createElement,
   Fragment,
@@ -62,7 +63,8 @@ function renderValue(
  * Renders one element with the component map. An intrinsic tag resolves through
  * the same map and stays the literal tag when the map has no entry for it, so
  * `br` is never mapped. A component marked with `TAKES_LOCALE` also gets the
- * artifact's locale.
+ * artifact's locale. A heading gets the id the page's outline links to
+ * (`headingIdOf`), so the two come from one source.
  */
 function renderElement(
   element: ContentTreeElement,
@@ -73,9 +75,13 @@ function renderElement(
     element.name === FRAGMENT
       ? Fragment
       : (components[element.name] ?? element.name);
-  const props = Rec.map(element.props, (value) =>
+  const rendered = Rec.map(element.props, (value) =>
     renderValue(value, components, locale)
   );
+  const props = Option.match(headingIdOf(element), {
+    onNone: () => rendered,
+    onSome: (id) => Rec.set(rendered, "id", id),
+  });
   const children = Arr.map(element.children, (child) =>
     typeof child === "string" ? child : renderElement(child, components, locale)
   );
