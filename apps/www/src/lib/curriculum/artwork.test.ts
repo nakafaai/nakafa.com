@@ -111,11 +111,32 @@ describe("curriculum artwork", () => {
     ).toBe("/open-graph/grade/en-high-school.png");
   });
 
+  it("draws the KSSM program and Form art, with Tingkatan where the class reads Tingkatan", () => {
+    expect(resolveCurriculumArtwork("en", programRoot("kssm"))).toBe(
+      "/open-graph/curriculum/en-kssm.png"
+    );
+    expect(resolveCurriculumArtwork("de", programRoot("kssm"))).toBe(
+      "/open-graph/curriculum/en-kssm.png"
+    );
+    expect(resolveCurriculumArtwork("en", gradeRoute("form-4"))).toBe(
+      "/open-graph/grade/en-form-4.png"
+    );
+    expect(resolveCurriculumArtwork("de", gradeRoute("form-5"))).toBe(
+      "/open-graph/grade/en-form-5.png"
+    );
+    expect(resolveCurriculumArtwork("id", gradeRoute("form-4"))).toBe(
+      "/open-graph/grade/id-form-4.png"
+    );
+    expect(resolveCurriculumArtwork("id", gradeRoute("form-5"))).toBe(
+      "/open-graph/grade/id-form-5.png"
+    );
+  });
+
   it("draws the tile of a route that no design names yet", () => {
-    expect(resolveCurriculumArtwork("en", programRoot("kssm"))).toBeUndefined();
     expect(
-      resolveCurriculumArtwork("en", gradeRoute("form-4"))
+      resolveCurriculumArtwork("en", programRoot("international-baccalaureate"))
     ).toBeUndefined();
+    expect(resolveCurriculumArtwork("en", gradeRoute("form-6"))).toBeUndefined();
     expect(
       resolveCurriculumArtwork("en", subjectRoute("geography"))
     ).toBeUndefined();
@@ -186,6 +207,18 @@ describe("curriculum artwork", () => {
         {
           ...testProgramRoot,
           publicPath: PublicPathSchema.make("curriculum/kssm"),
+        }
+      )
+    ).toBe("/open-graph/curriculum/en-kssm.png");
+    expect(
+      getCurriculumRouteSocialImage(
+        "en",
+        LearningProgramKeySchema.make("international-baccalaureate"),
+        {
+          ...testProgramRoot,
+          publicPath: PublicPathSchema.make(
+            "curriculum/international-baccalaureate"
+          ),
         }
       )
     ).toBe("/en/og/curriculum/image.png");
