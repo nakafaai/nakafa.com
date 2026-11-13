@@ -1,7 +1,5 @@
 import {
   Add01Icon,
-  ArrowExpand01Icon,
-  ArrowShrink02Icon,
   Cancel01Icon,
   ChatSearch01Icon,
   MoreHorizontalIcon,
@@ -23,7 +21,7 @@ import {
 } from "@repo/design-system/components/ui/sheet";
 import { lazy } from "@repo/design-system/lib/lazy";
 import { ClientOnly } from "@tanstack/react-router";
-import { Activity, Suspense, useState } from "react";
+import { Suspense, useState } from "react";
 import { useTranslations } from "use-intl";
 import { useAi } from "@/components/ai/context";
 import { ConvexIsland } from "@/components/providers/island";
@@ -36,19 +34,12 @@ const SheetHistory = lazy(() =>
   }))
 );
 
-interface Props {
-  expanded: boolean;
-  onResizeToggle: () => void;
-}
-
 /**
- * Renders Nina sheet actions without owning the sheet layout: the history and a
- * menu of the other actions in one group, and the close button on its own. The
- * menu holds a new chat while a chat is open, and the width on a screen wide
- * enough to change it; below that width, with no chat open, it would be empty,
- * so its button leaves the header.
+ * Renders Nina sheet actions without owning the sheet layout: the history, a
+ * menu with a new chat while a chat is open, and the close, in one ghost group.
+ * The sheet's edge changes its width, as the page's pane does.
  */
-export function AiSheetHeader({ expanded, onResizeToggle }: Props) {
+export function AiSheetHeader() {
   const activeChatId = useAi((state) => state.activeChatId);
   const setActiveChatId = useAi((state) => state.setActiveChatId);
   const setOpen = useAi((state) => state.setOpen);
@@ -66,40 +57,29 @@ export function AiSheetHeader({ expanded, onResizeToggle }: Props) {
         {/* The header's icon buttons touch, as one ghost group, so they read as one row of tools. */}
         <ButtonGroup aria-label={t("Ai.chat-actions")} variant="ghost">
           <HistorySlot />
-          <DropdownMenu>
-            <DropdownMenuTrigger
-              render={
-                <Button
-                  className={activeChatId ? undefined : "hidden sm:inline-flex"}
-                  size="icon-sm"
-                  tooltip={t("Common.more-actions")}
-                >
-                  <HugeIcons icon={MoreHorizontalIcon} />
-                </Button>
-              }
-            />
-            <DropdownMenuContent
-              align="end"
-              className="w-48"
-              label={t("Common.menu-actions")}
-            >
-              <Activity mode={activeChatId ? "visible" : "hidden"}>
+          {activeChatId ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger
+                render={
+                  <Button size="icon-sm" tooltip={t("Common.more-actions")}>
+                    <HugeIcons icon={MoreHorizontalIcon} />
+                  </Button>
+                }
+              />
+              <DropdownMenuContent
+                align="end"
+                className="w-48"
+                label={t("Common.menu-actions")}
+              >
                 <DropdownMenuItem
                   icon={Add01Icon}
                   onClick={() => setActiveChatId(null)}
                 >
                   {t("Ai.new-chat")}
                 </DropdownMenuItem>
-              </Activity>
-              <DropdownMenuItem
-                className="hidden sm:flex"
-                icon={expanded ? ArrowShrink02Icon : ArrowExpand01Icon}
-                onClick={onResizeToggle}
-              >
-                {t(expanded ? "Ai.narrower" : "Ai.wider")}
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : null}
           <Button
             onClick={() => setOpen(false)}
             size="icon-sm"

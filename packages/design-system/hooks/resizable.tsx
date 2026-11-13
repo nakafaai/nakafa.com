@@ -1,8 +1,19 @@
 import { useLocalStorage } from "@mantine/hooks";
 import { Number as Num, Schema } from "effect";
-import { useCallback, useEffect, useEffectEvent, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useEffectEvent,
+  useState,
+  useSyncExternalStore,
+} from "react";
 
 const UseResizableOptionsSchema = Schema.Struct({
+  /**
+   * The side the panel stands at: `end` for a panel at the window's right, which grows as its edge moves left, and
+   * `start` for one at its left, which grows as its edge moves right.
+   */
+  anchor: Schema.optionalKey(Schema.Literals(["end", "start"])),
   initialWidth: Schema.Finite,
   maxWidth: Schema.Finite,
   minWidth: Schema.Finite,
@@ -27,6 +38,7 @@ const STEP = 10;
  * the kept width is read after the first render and nothing that shows moves.
  */
 export function useResizable({
+  anchor = "end",
   initialWidth,
   minWidth,
   maxWidth,
@@ -60,24 +72,31 @@ export function useResizable({
   // in. The window is wider by the scrollbar a browser may take from the page,
   // so measuring from the window would leave the edge that far from the pointer.
   const handleMouseMove = useEffectEvent((e: MouseEvent) => {
-    setWidth(document.documentElement.clientWidth - e.clientX);
+    setWidth(
+      anchor === "end"
+        ? document.documentElement.clientWidth - e.clientX
+        : e.clientX
+    );
   });
 
+  // An arrow toward the page widens the panel, whichever side it stands at.
+  const grow = anchor === "end" ? "ArrowLeft" : "ArrowRight";
+  const shrink = anchor === "end" ? "ArrowRight" : "ArrowLeft";
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
-      if (e.key === "ArrowLeft") {
+      if (e.key === grow) {
         e.preventDefault();
         e.stopPropagation();
         setWidth(width + STEP);
       }
 
-      if (e.key === "ArrowRight") {
+      if (e.key === shrink) {
         e.preventDefault();
         e.stopPropagation();
         setWidth(width - STEP);
       }
     },
-    [width, setWidth]
+    [grow, shrink, width, setWidth]
   );
 
   useEffect(() => {
@@ -110,4 +129,25 @@ export function useResizable({
     },
     setWidth,
   };
+}
+
+/** Tells when the window changes its width. */
+function subscribeToWindow(notify: () => void) {
+  window.addEventListener("resize", notify);
+
+  return () => window.removeEventListener("resize", notify);
+}
+
+/** Before the browser can measure the window, a panel has all the room it asks for. */
+function readNoRoom() {
+  return Number.POSITIVE_INFINITY;
+}
+
+/** The width the window leaves a panel once `keep` pixels of it stay for the page, in pixels. */
+export function useWindowRoom(keep: number) {
+  return useSyncExternalStore(
+    subscribeToWindow,
+    () => window.innerWidth - keep,
+    readNoRoom
+  );
 }

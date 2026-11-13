@@ -2,21 +2,15 @@
 
 import nina from "@repo/backend/confect/_generated/refs/nina";
 import { Sheet, SheetContent } from "@repo/design-system/components/ui/sheet";
-import { useResizable } from "@repo/design-system/hooks/resizable";
 import { lazy } from "@repo/design-system/lib/lazy";
 import { ClientOnly } from "@tanstack/react-router";
-import { cn } from "cn";
 import { Array as Arr, Option } from "effect";
 import { Activity, Suspense, useRef, useState } from "react";
-import { useTranslations } from "use-intl";
 import { readChatArgs } from "@/components/ai/chat/access";
 import { useAi } from "@/components/ai/context";
 import { AiSheetHeader } from "@/components/ai/sheet/header";
 import { Unauthenticated, UnlessSignedOut } from "@/components/auth/gate";
 import { ConvexIsland } from "@/components/providers/island";
-
-const MIN_WIDTH = 384;
-const MAX_WIDTH = 672;
 
 const SheetNew = lazy(() =>
   import("@/components/ai/sheet/new").then((module) => ({
@@ -49,7 +43,6 @@ const ChatBoundary = lazy(() =>
  * the body's code arrives.
  */
 export function AiSheet() {
-  const t = useTranslations("Ai");
   const open = useAi((state) => state.open);
   const setOpen = useAi((state) => state.setOpen);
   const warmed = useAi((state) => state.warmed);
@@ -57,19 +50,6 @@ export function AiSheet() {
   // True from the end of the opening slide to the end of the closing one, so
   // the content stays in the sheet while it slides out.
   const [settledOpen, setSettledOpen] = useState(false);
-
-  const { width, isResizing, resizerProps, setWidth } = useResizable({
-    initialWidth: MIN_WIDTH,
-    maxWidth: MAX_WIDTH,
-    minWidth: MIN_WIDTH,
-    storageKey: "nakafa-resize-nina",
-  });
-  const expanded = width === MAX_WIDTH;
-
-  /** Toggles Nina sheet between compact and expanded widths. */
-  function handleResizeToggle() {
-    setWidth(expanded ? MIN_WIDTH : MAX_WIDTH);
-  }
 
   /**
    * Opening lands in the composer that is showing, not on a header button. The
@@ -94,30 +74,14 @@ export function AiSheet() {
       open={open}
     >
       <SheetContent
-        className={cn(
-          "w-full max-w-none gap-0 border-l-0 sm:w-(--nina-width) sm:max-w-none sm:border-l",
-          !!isResizing && "transition-none"
-        )}
+        className="w-full max-w-none border-l-0 sm:border-l"
         initialFocus={focusComposer}
         keepMounted
         showCloseButton={false}
-        style={{ "--nina-width": `${width}px` }}
+        widthKey="nakafa-resize-nina"
       >
         <Activity mode={open || settledOpen ? "visible" : "hidden"}>
-          <button
-            aria-label={t("resize")}
-            className={cn(
-              "hover:bg-ring focus-visible:bg-ring absolute top-0 bottom-0 left-0 z-10 hidden w-1 cursor-col-resize ring-0 outline-0 transition-colors sm:block",
-              !!isResizing && "bg-ring"
-            )}
-            onKeyDown={resizerProps.onKeyDown}
-            onMouseDown={resizerProps.onMouseDown}
-            type="button"
-          />
-          <AiSheetHeader
-            expanded={expanded}
-            onResizeToggle={handleResizeToggle}
-          />
+          <AiSheetHeader />
           <div className="flex min-h-0 flex-1 flex-col" ref={content}>
             {warmed ? <SheetBody /> : null}
           </div>

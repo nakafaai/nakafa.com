@@ -2342,7 +2342,8 @@
     "menu-more": "More",
     "menu-view": "View",
     "menu-sort": "Sort",
-    "save": "Save"
+    "save": "Save",
+    "resize": "Change width"
   },
   "LearningPrograms": {
     "metadata-title": "Start learning with Nakafa",
@@ -3962,9 +3963,6 @@
     "suggestion-summary": "Get key points",
     "suggestion-summary-prompt": "Summarize {title} into the key ideas I need to remember.",
     "new-chat": "New chat",
-    "resize": "Change width",
-    "wider": "Make wider",
-    "narrower": "Make narrower",
     "sheet-description": "Ask Nina, Nakafa's AI tutor, about what you are learning.",
     "chats": "Chats",
     "search-chats": "Search your chats...",

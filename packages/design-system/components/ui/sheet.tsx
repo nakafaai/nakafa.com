@@ -1,7 +1,12 @@
 import { Dialog as SheetPrimitive } from "@base-ui/react/dialog";
 import { Cancel01Icon } from "@hugeicons/core-free-icons";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { ResizeEdge } from "@repo/design-system/components/ui/resizable";
 import { ScrollArea } from "@repo/design-system/components/ui/scroll-area";
+import {
+  useResizable,
+  useWindowRoom,
+} from "@repo/design-system/hooks/resizable";
 import { ButtonGroupVariant } from "@repo/design-system/lib/group";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "cn";
@@ -31,7 +36,7 @@ function SheetClose(props: SheetPrimitive.Close.Props) {
 }
 
 const sheetPopupVariants = cva(
-  "bg-popover text-popover-foreground duration-surface fixed z-50 flex flex-col overflow-y-auto shadow-lg transition-[opacity,translate,width] will-change-transform [--sheet-inset:0px] has-[[data-popup-hold]]:pointer-events-none has-[[data-popup-hold]]:opacity-0 data-ending-style:opacity-0 data-starting-style:opacity-0 motion-reduce:transition-none",
+  "bg-popover text-popover-foreground duration-surface fixed z-50 flex flex-col shadow-lg transition-[opacity,translate,width] will-change-transform [--sheet-inset:0px] has-[[data-popup-hold]]:pointer-events-none has-[[data-popup-hold]]:opacity-0 data-ending-style:opacity-0 data-starting-style:opacity-0 motion-reduce:transition-none",
   {
     defaultVariants: {
       inset: false,
@@ -53,6 +58,16 @@ const sheetPopupVariants = cva(
   }
 );
 
+/**
+ * How wide a side sheet starts on a wide screen, by what it holds, in pixels: a menu, a list or a form, a wider
+ * form, a document, and a table. A drag of its edge takes it from `SHEET_MIN_WIDTH` to the room the window leaves.
+ */
+const SHEET_WIDTHS = { lg: 672, md: 576, sm: 384, xl: 768, xs: 288 } as const;
+const SHEET_MIN_WIDTH = 288;
+const SHEET_MAX_WIDTH = 1024;
+/** What a window keeps beside a side sheet, in pixels, so the page behind it still shows. */
+const SHEET_PAGE_ROOM = 64;
+
 function SheetBackdrop({ className, ...props }: SheetPrimitive.Backdrop.Props) {
   return (
     <SheetPrimitive.Backdrop
@@ -69,7 +84,10 @@ function SheetBackdrop({ className, ...props }: SheetPrimitive.Backdrop.Props) {
 /**
  * Renders the positioned sheet popup and optional close affordance. A sheet
  * that sets `keepMounted` stays in the document while closed, so its content
- * can be ready before it opens.
+ * can be ready before it opens. A sheet at the side of a wide screen resizes as
+ * the page's pane does: its edge facing the page carries the same grip, starts
+ * at the width its `size` names, and the width a reader drags it to holds in
+ * this browser under `widthKey`, one per kind of sheet unless it names its own.
  */
 function SheetPopup({
   className,
@@ -78,13 +96,31 @@ function SheetPopup({
   showCloseButton = true,
   side = "right",
   inset = false,
+  size = "sm",
+  widthKey,
+  style,
   ...props
 }: SheetPrimitive.Popup.Props & {
   keepMounted?: boolean;
   showCloseButton?: boolean;
+  /** How wide the sheet starts on a wide screen: `xs` for a menu, `sm` for a list or a form, up to `xl` for a table. */
+  size?: keyof typeof SHEET_WIDTHS;
+  /** The name its width stays under in this browser, for a sheet that keeps a width of its own. */
+  widthKey?: string;
 } & VariantProps<typeof sheetPopupVariants>) {
   const modal = use(SheetContext);
   const t = useTranslations("Common");
+  const room = useWindowRoom(SHEET_PAGE_ROOM);
+  const anchor = side === "left" ? "start" : "end";
+  const { isResizing, resizerProps, width } = useResizable({
+    anchor,
+    initialWidth: SHEET_WIDTHS[size],
+    // Never narrower than the smallest sheet, whatever the room says.
+    maxWidth: Math.max(SHEET_MIN_WIDTH, Math.min(SHEET_MAX_WIDTH, room)),
+    minWidth: SHEET_MIN_WIDTH,
+    storageKey: widthKey ?? `nakafa-sheet-${side}-${size}`,
+  });
+  const sideways = side === "left" || side === "right";
 
   return (
     <ButtonGroupVariant value={undefined}>
@@ -93,11 +129,33 @@ function SheetPopup({
           <SheetBackdrop />
         </Activity>
         <SheetPrimitive.Popup
-          className={cn(sheetPopupVariants({ inset, side }), className)}
+          className={cn(
+            sheetPopupVariants({ inset, side }),
+            className,
+            sideways && "sm:w-(--sheet-width) sm:max-w-none",
+            isResizing && "transition-none"
+          )}
           data-slot="sheet-popup"
+          style={(state) => ({
+            ...(typeof style === "function" ? style(state) : style),
+            "--sheet-width": `${width}px`,
+          })}
           {...props}
         >
-          {children}
+          {/* The sheet scrolls within its frame, so its edge's grip stands across its border, outside the scroll. */}
+          <div
+            className="flex min-h-0 flex-1 flex-col overflow-y-auto rounded-[inherit]"
+            data-slot="sheet-frame"
+          >
+            {children}
+          </div>
+          {sideways ? (
+            <ResizeEdge
+              anchor={anchor}
+              className="max-sm:hidden"
+              resizer={resizerProps}
+            />
+          ) : null}
           {!!showCloseButton && (
             <SheetPrimitive.Close
               className="pressable focus-visible:ring-ring focus-visible:ring-offset-background absolute inset-e-2 top-2 inline-flex size-7 shrink-0 items-center justify-center rounded-md border border-transparent opacity-80 transition-[scale,color,background-color,box-shadow,opacity] outline-none hover:opacity-100 focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:transition-none pointer-coarse:after:absolute pointer-coarse:after:size-full pointer-coarse:after:min-h-11 pointer-coarse:after:min-w-11 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4"

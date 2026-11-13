@@ -58,7 +58,7 @@ export function NoticePreferences({ children }: { children: ReactNode }) {
           </Button>
         }
       />
-      <SheetContent className="sm:max-w-xl" keepMounted>
+      <SheetContent keepMounted size="md">
         <SheetHeader>
           <SheetTitle>{t("preferences")}</SheetTitle>
           <SheetDescription>{t("preferences-description")}</SheetDescription>
