@@ -61,7 +61,7 @@ describe("lib/tenant/api", () => {
     const sent = forwardedRequestHeaders(
       new Headers({
         authorization: "Bearer t",
-        cookie: "better-auth.session_token=s",
+        cookie: "__convexAuthRefreshToken=s",
         "content-type": "application/x-www-form-urlencoded",
       })
     );

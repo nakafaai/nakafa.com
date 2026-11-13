@@ -68,7 +68,7 @@ describe("rendered paths", () => {
     "/$locale/chat/$id",
     "/$locale/search",
     "/.well-known/agent-skills/index.json",
-    "/api/auth/$",
+    "/api/agent/$",
     "/school/$slug/$",
   ];
 
@@ -87,7 +87,7 @@ describe("rendered paths", () => {
     expect(
       isRenderedPath("/.well-known/agent-skills/index.json", rendered)
     ).toBe(true);
-    expect(isRenderedPath("/api/auth/get-session", rendered)).toBe(true);
+    expect(isRenderedPath("/api/agent/token", rendered)).toBe(true);
     expect(isRenderedPath("/.well-known/assetlinks.json", rendered)).toBe(
       false
     );

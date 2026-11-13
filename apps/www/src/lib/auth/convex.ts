@@ -25,7 +25,7 @@ export const ConvexAuth = Schema.Struct({
 
 export type ConvexAuth = typeof ConvexAuth.Type;
 
-/** Convex's answer to the credentials of one Better Auth session. */
+/** Convex's answer to the credentials of one Convex Auth session. */
 export const ConvexAuthConfirmation = Schema.Struct({
   isAuthenticated: Schema.Boolean,
   sessionId: Schema.String,
@@ -49,7 +49,7 @@ export type ConvexAuthStore = ReturnType<typeof createConvexAuthStore>;
 export const ConvexAuthContext = createContext<ConvexAuthStore | null>(null);
 
 /**
- * A Better Auth token request that produced no usable Convex credential.
+ * A token request that produced no usable Convex credential.
  * `retryable` says whether asking again can answer otherwise: a request that
  * failed on its way or a server failure can, a refused session cannot.
  */
@@ -64,7 +64,7 @@ export class ConvexTokenReadError extends Schema.TaggedError<
 /** The part of Convex's React client that authentication drives. */
 type ConvexAuthClient = Pick<ConvexReactClient, "setAuth">;
 
-/** Whom Convex authenticates, read from the Better Auth session. */
+/** Whom Convex authenticates, read from the page's session. */
 const ConvexAuthTarget = Schema.TaggedUnion({
   Pending: {},
   SignedIn: { sessionId: Schema.String },
@@ -102,8 +102,8 @@ function readTarget(session: AuthSession): ConvexAuthTarget {
 
 /**
  * Returns the session whose credentials Convex should hold: the signed-in
- * session once Better Auth has settled on one, and `null` once it has settled
- * on none. While Better Auth has not answered yet, it is `known`, the session
+ * session once the page has settled on one, and `null` once it has settled
+ * on none. While the refresh route has not answered yet, it is `known`, the session
  * the browser last had, so Convex asks for that session's token at once and
  * holds every function call until it has an answer. The cookie decides whom
  * the token names, so a session that turns out to be another one or none only
@@ -120,7 +120,7 @@ export function readConvexSessionId(
   });
 }
 
-/** Whether Better Auth has settled on no session, so Convex holds no credentials. */
+/** Whether the page has settled on no session, so Convex holds no credentials. */
 export function hasSettledSignedOut(session: AuthSession) {
   return ConvexAuthTarget.match(readTarget(session), {
     Pending: () => false,
@@ -224,7 +224,7 @@ const makeTokenFetcher = Effect.fnUntraced(function* (
 
 /**
  * Each time the reader comes back to the page, named by the event that brought
- * them: the tab shows again, or the network returns. Better Auth reads the
+ * them: the tab shows again, or the network returns. Convex Auth's client reads the
  * session again at the same moments. The tab's state is read when its event
  * fires, so a tab that was hidden again before the stream is read still counts
  * only when it showed.

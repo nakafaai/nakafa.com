@@ -1,5 +1,4 @@
 import {
-  AUTH_REFRESH_COOKIE,
   decodeAccessToken,
   httpCookies,
   type RefreshSessionFn,
@@ -15,6 +14,7 @@ import { ConvexHttpClient } from "convex/browser";
 import { type FunctionReference, makeFunctionReference } from "convex/server";
 import { Array as Arr, Effect, Option, Schema } from "effect";
 import {
+  hasSessionCookie,
   inboundCookieHeader,
   outboundSetCookie,
   siteAuthCookies,
@@ -77,18 +77,17 @@ function signedOut(setCookies: readonly string[]) {
 export const readRequestSession = Effect.fn("www.auth.session.read")(function* (
   request: Request
 ) {
-  const { options, prefix } = siteAuthCookies(new URL(siteUrlKeys().SITE_URL));
+  const site = new URL(siteUrlKeys().SITE_URL);
+  if (!hasSessionCookie(request, site)) {
+    return signedOut([]);
+  }
+  const { options, prefix } = siteAuthCookies(site);
   const headers = new Headers(request.headers);
   headers.set(
     "cookie",
     inboundCookieHeader(headers.get("cookie") ?? "", prefix)
   );
   const cookies = httpCookies(new Request(request.url, { headers }));
-  if ((yield* Effect.promise(() =>
-      Promise.resolve(cookies.get(AUTH_REFRESH_COOKIE))
-    )) === undefined) {
-    return signedOut([]);
-  }
   const client = new ConvexHttpClient(yield* CONVEX_URL);
   const session = new ServerAuthSession({
     cookieOptions: options,
@@ -108,21 +107,25 @@ export const readRequestSession = Effect.fn("www.auth.session.read")(function* (
   if (token === null) {
     return signedOut(setCookies);
   }
+  const sessionId = decodeAccessToken(token).sub;
+  if (sessionId === null) {
+    return yield* new SessionUnavailable({ reason: "body" });
+  }
   client.setAuth(token);
-  const account = yield* Effect.tryPromise({
+  const answer = yield* Effect.tryPromise({
     catch: () => new SessionUnavailable({ reason: "fetch" }),
     try: () => client.query(currentUser, {}),
-  }).pipe(
-    Effect.flatMap(Schema.decodeUnknownEffect(CurrentAccount)),
-    Effect.mapError(() => new SessionUnavailable({ reason: "body" }))
-  );
+  });
+  const account = yield* Schema.decodeUnknownEffect(CurrentAccount)(
+    answer
+  ).pipe(Effect.mapError(() => new SessionUnavailable({ reason: "body" })));
   if (account === null) {
     return signedOut(setCookies);
   }
   return RequestSession.make({
     client: ClientSession.cases.SignedIn.make({
       name: account.appUser.name,
-      sessionId: decodeAccessToken(token).sub,
+      sessionId,
       userId: account.appUser._id,
     }),
     convexToken: Option.some(token),

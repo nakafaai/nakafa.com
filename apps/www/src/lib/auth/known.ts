@@ -29,7 +29,7 @@ function withStorage<A>(
  * cause. The id names a session and is no credential: only the session cookie,
  * which scripts cannot read, signs a request.
  *
- * Better Auth answers for the session one request after the page loads. With
+ * The refresh route answers for the session one request after the page loads. With
  * this id Convex asks for its token at once instead of after that answer, and
  * holds every function call until it has one, so a change the learner makes
  * in that moment is sent signed in.
@@ -51,7 +51,7 @@ export const loadKnownSession = Effect.fn("www.auth.loadKnownSession")(
 
 /**
  * Keeps what a settled session says: its id while signed in, nothing once
- * Better Auth says the browser is signed out, the account row and the schools
+ * the refresh route says the browser is signed out, the account row and the schools
  * the sidebar kept for it and the school frame a school host kept for it
  * included. A pending session and a session request that failed say nothing, so
  * what the browser knew stays. A storage write that fails is reported with its

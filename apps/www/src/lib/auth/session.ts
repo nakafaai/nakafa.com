@@ -26,11 +26,16 @@ export const previewAuthSession = AuthSession.make({
 /**
  * Reads the state of Convex Auth's client (`AuthClient`) as the page's session.
  * The access token names the session; the account comes from the latest answer
- * of a sign-in or a refresh (`sessionUser`).
+ * of a sign-in or a refresh (`sessionUser`), which counts only for the session
+ * it named. `hasError` marks a refresh that failed.
  */
 export function readClientSession(
-  state: { readonly isLoading: boolean; readonly token: string | null },
-  userId: string | null
+  state: {
+    readonly hasError: boolean;
+    readonly isLoading: boolean;
+    readonly token: string | null;
+  },
+  user: { readonly sessionId: string; readonly userId: string } | null
 ) {
   const sessionId = Option.getOrNull(
     Option.map(
@@ -39,10 +44,11 @@ export function readClientSession(
     )
   );
   return AuthSession.make({
-    hasError: false,
+    hasError: state.hasError,
     isPending: state.isLoading,
     sessionId,
-    userId: sessionId === null ? null : userId,
+    userId:
+      sessionId !== null && user?.sessionId === sessionId ? user.userId : null,
   });
 }
 
