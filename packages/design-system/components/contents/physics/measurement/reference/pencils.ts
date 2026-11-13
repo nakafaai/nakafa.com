@@ -24,8 +24,15 @@ export const REFERENCES = {
   short: 0.15,
 } as const satisfies Record<typeof ReferenceSchema.Type, number>;
 
-/** How many references fit along the desk, and the whole ones laid down. */
+/**
+ * How many references fit along the desk, the whole ones laid down, and
+ * whether the count ends within a tenth, so it can be written without "about".
+ */
 export function referenceCount(reference: typeof ReferenceSchema.Type) {
   const count = DESK_LENGTH / REFERENCES[reference];
-  return { count, whole: Math.floor(count + 1e-9) };
+  return {
+    count,
+    exact: Math.abs(count * 10 - Math.round(count * 10)) < 1e-9,
+    whole: Math.floor(count + 1e-9),
+  };
 }

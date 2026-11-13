@@ -390,7 +390,7 @@ export function CommonReferenceLab({
   const [reference, setReference] =
     useState<typeof ReferenceSchema.Type>("short");
   const fixed = useFixed();
-  const { count } = referenceCount(reference);
+  const { count, exact } = referenceCount(reference);
   const isReference = Schema.is(ReferenceSchema);
 
   return (
@@ -442,7 +442,7 @@ export function CommonReferenceLab({
             label={labels.count}
             value={
               <InlineMath
-                math={`${Number.isInteger(count) ? "" : "\\approx "}${fixed(count, "", Number.isInteger(count) ? 0 : 1)}`}
+                math={`${exact ? "" : "\\approx "}${fixed(count, "", Number.isInteger(count) ? 0 : 1)}`}
               />
             }
           />
