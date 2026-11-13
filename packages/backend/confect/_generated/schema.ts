@@ -80,6 +80,7 @@ import editorClients from "./tables/editorClients";
 import editorDocuments from "./tables/editorDocuments";
 import editorSnapshots from "./tables/editorSnapshots";
 import editorSteps from "./tables/editorSteps";
+import emailSuppressions from "./tables/emailSuppressions";
 import examAnswers from "./tables/examAnswers";
 import examAssets from "./tables/examAssets";
 import examAttempts from "./tables/examAttempts";
@@ -143,6 +144,9 @@ import onboardingProfiles from "./tables/onboardingProfiles";
 import operators from "./tables/operators";
 import postLikes from "./tables/postLikes";
 import posts from "./tables/posts";
+import practiceAnswers from "./tables/practiceAnswers";
+import practiceQuestions from "./tables/practiceQuestions";
+import practiceSessions from "./tables/practiceSessions";
 import programBuckets from "./tables/programBuckets";
 import programCatalog from "./tables/programCatalog";
 import pushSubscriptions from "./tables/pushSubscriptions";
@@ -261,6 +265,7 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   readonly editorDocuments: typeof editorDocuments;
   readonly editorSnapshots: typeof editorSnapshots;
   readonly editorSteps: typeof editorSteps;
+  readonly emailSuppressions: typeof emailSuppressions;
   readonly examAnswers: typeof examAnswers;
   readonly examAssets: typeof examAssets;
   readonly examAttempts: typeof examAttempts;
@@ -324,6 +329,9 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   readonly operators: typeof operators;
   readonly postLikes: typeof postLikes;
   readonly posts: typeof posts;
+  readonly practiceAnswers: typeof practiceAnswers;
+  readonly practiceQuestions: typeof practiceQuestions;
+  readonly practiceSessions: typeof practiceSessions;
   readonly programBuckets: typeof programBuckets;
   readonly programCatalog: typeof programCatalog;
   readonly pushSubscriptions: typeof pushSubscriptions;
@@ -441,6 +449,7 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   editorDocuments,
   editorSnapshots,
   editorSteps,
+  emailSuppressions,
   examAnswers,
   examAssets,
   examAttempts,
@@ -504,6 +513,9 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   operators,
   postLikes,
   posts,
+  practiceAnswers,
+  practiceQuestions,
+  practiceSessions,
   programBuckets,
   programCatalog,
   pushSubscriptions,

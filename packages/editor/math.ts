@@ -2,6 +2,9 @@ import { findFormulas } from "@repo/editor/formula";
 import {
   type AnyExtension,
   Extension,
+  type JSONContent,
+  type MarkdownToken,
+  type MarkdownTokenizer,
   mergeAttributes,
   Node,
   type NodeViewRenderer,
@@ -14,7 +17,7 @@ import {
   TextSelection,
   type Transaction,
 } from "@tiptap/pm/state";
-import { Array as Arr, Option, String as Str } from "effect";
+import { Array as Arr, Function as Fn, Option, String as Str } from "effect";
 
 /** The two formula nodes: a formula inside a line of text, and a formula on a line of its own. */
 type FormulaType = "mathBlock" | "mathInline";
@@ -69,6 +72,64 @@ const LATEX = {
 };
 
 /**
+ * The Markdown of the two formulas, which an editor of Markdown writes and the page's reader draws
+ * (`preprocessLaTeX` and remark-math): an inline formula between two pairs of dollars inside its line, and a
+ * formula on a line of its own as a `math` fence. Each node reads the form it writes, so a saved text opens with
+ * the formulas it was saved with, and a formula whose LaTeX is blank is no formula.
+ */
+const MARKDOWN = {
+  mathBlock: {
+    level: "block",
+    pattern: /^```math\n(?<latex>[\s\S]*?)\n```(?:\n|$)/u,
+    start: "```math",
+  },
+  mathInline: {
+    level: "inline",
+    pattern: /^\$\$(?<latex>[^$\n]+)\$\$/u,
+    start: "$$",
+  },
+} as const;
+
+/** The tokenizer of one formula's Markdown, which reads the form its node writes. */
+export function formulaTokenizer(type: FormulaType): MarkdownTokenizer {
+  const { level, pattern, start } = MARKDOWN[type];
+  return {
+    level,
+    name: type,
+    start: (src) => src.indexOf(start),
+    tokenize: (src) =>
+      Option.match(
+        Option.flatMap(Option.fromNullishOr(pattern.exec(src)), (match) =>
+          Option.map(
+            Option.filter(
+              Option.map(Option.fromNullishOr(match.groups?.latex), Str.trim),
+              Str.isNonEmpty
+            ),
+            (latex) => ({ latex, raw: match[0], type })
+          )
+        ),
+        { onNone: Fn.constUndefined, onSome: Fn.identity }
+      ),
+  };
+}
+
+/** The node of one formula type for its token, with the token's LaTeX as its one attribute. */
+export const parseFormula =
+  (type: FormulaType) =>
+  (token: MarkdownToken): JSONContent => ({
+    attrs: { latex: token.latex },
+    type,
+  });
+
+/** Writes an inline formula as its Markdown, between two pairs of dollars. */
+export const renderInlineFormula = (node: JSONContent) =>
+  `$$${node.attrs?.latex}$$`;
+
+/** Writes a formula on a line of its own as its Markdown, a `math` fence. */
+export const renderBlockFormula = (node: JSONContent) =>
+  Arr.join(["```math", node.attrs?.latex, "```"], "\n");
+
+/**
  * Inline math: a formula inside a line of text, written as the contract's `mathInline`
  * with its LaTeX as the one attribute. It is an atom, so a step moves it whole.
  */
@@ -86,15 +147,18 @@ const MathInline = Node.create<{ view: NodeViewRenderer | null }>({
   atom: true,
   group: "inline",
   inline: true,
+  markdownTokenizer: formulaTokenizer("mathInline"),
   parseHTML() {
     return [{ tag: 'span[data-type="math-inline"]' }];
   },
+  parseMarkdown: parseFormula("mathInline"),
   renderHTML({ HTMLAttributes }) {
     return [
       "span",
       mergeAttributes(HTMLAttributes, { "data-type": "math-inline" }),
     ];
   },
+  renderMarkdown: renderInlineFormula,
   selectable: true,
 });
 
@@ -115,15 +179,18 @@ const MathBlock = Node.create<{ view: NodeViewRenderer | null }>({
   },
   atom: true,
   group: "block",
+  markdownTokenizer: formulaTokenizer("mathBlock"),
   parseHTML() {
     return [{ tag: 'div[data-type="math-block"]' }];
   },
+  parseMarkdown: parseFormula("mathBlock"),
   renderHTML({ HTMLAttributes }) {
     return [
       "div",
       mergeAttributes(HTMLAttributes, { "data-type": "math-block" }),
     ];
   },
+  renderMarkdown: renderBlockFormula,
   selectable: true,
 });
 

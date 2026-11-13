@@ -13,8 +13,9 @@ import { cn } from "cn";
  * they join the row.
  *
  * CSS cannot see `display: none`, so a child that hides at some width would still shape its neighbours. A control that
- * changes form with the width is therefore one wrapper around both forms (`TableSearch`), never two children. Controls
- * that stand apart do not go in a group: they keep a clear gap.
+ * changes form with the width is therefore one wrapper around both forms (`TableSearch`), never two children. A part
+ * that waits hidden by its `hidden` attribute, such as a place an inline script shows before the first paint, shapes
+ * nothing until it shows. Controls that stand apart do not go in a group: they keep a clear gap.
  */
 const buttonGroupVariants = cva(
   "flex w-fit items-stretch *:focus-visible:relative *:focus-visible:z-10 has-[>[data-slot=button-group]]:gap-2 [&>[data-slot=select-trigger]:not([class*='w-'])]:w-fit [&>div:not([data-slot])]:rounded-md [&>div:not([data-slot])>[data-slot]]:rounded-[inherit] [&>input]:flex-1",
@@ -22,9 +23,9 @@ const buttonGroupVariants = cva(
     variants: {
       orientation: {
         horizontal:
-          "[&>:is([data-slot],a,button,div):has(~:is([data-slot],a,button,div))]:rounded-r-none [&>:is([data-slot],a,button,div)~:is([data-slot],a,button,div)]:rounded-l-none [&>:is([data-slot],a,button,div)~:is([data-slot],a,button,div)]:border-l-0 [&>:is([data-slot],a,button,div)~div:not([data-slot])>[data-slot]]:border-l-0",
+          "[&>:is([data-slot],a,button,div):not([hidden]):has(~:is([data-slot],a,button,div):not([hidden]))]:rounded-r-none [&>:is([data-slot],a,button,div):not([hidden])~:is([data-slot],a,button,div):not([hidden])]:rounded-l-none [&>:is([data-slot],a,button,div):not([hidden])~:is([data-slot],a,button,div):not([hidden])]:border-l-0 [&>:is([data-slot],a,button,div):not([hidden])~div:not([data-slot]):not([hidden])>[data-slot]]:border-l-0",
         vertical:
-          "flex-col [&>:is([data-slot],a,button,div):has(~:is([data-slot],a,button,div))]:rounded-b-none [&>:is([data-slot],a,button,div)~:is([data-slot],a,button,div)]:rounded-t-none [&>:is([data-slot],a,button,div)~:is([data-slot],a,button,div)]:border-t-0 [&>:is([data-slot],a,button,div)~div:not([data-slot])>[data-slot]]:border-t-0",
+          "flex-col [&>:is([data-slot],a,button,div):not([hidden]):has(~:is([data-slot],a,button,div):not([hidden]))]:rounded-b-none [&>:is([data-slot],a,button,div):not([hidden])~:is([data-slot],a,button,div):not([hidden])]:rounded-t-none [&>:is([data-slot],a,button,div):not([hidden])~:is([data-slot],a,button,div):not([hidden])]:border-t-0 [&>:is([data-slot],a,button,div):not([hidden])~div:not([data-slot]):not([hidden])>[data-slot]]:border-t-0",
       },
     },
     defaultVariants: {

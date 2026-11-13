@@ -14,6 +14,7 @@ import { Option, Schema } from "effect";
 import { createContext, type ReactNode, use, useState } from "react";
 import { createPortal } from "react-dom";
 import { createStore, type StoreApi, useStore } from "zustand";
+import { PaneModeContext } from "@/components/shared/page/panes/mode";
 import {
   PanesGroupContext,
   PanesGroupProvider,
@@ -76,27 +77,6 @@ const createPanes = (opened: Option.Option<string>) =>
 const PanesContext = createContext<StoreApi<PanesStore> | null>(null);
 
 const PanesWidthContext = createContext<typeof PanesWidth.Type>("xl");
-
-/**
- * Where a detail draws, and how its header closes it: beside the first pane, where a row's
- * detail closes and an always-on detail does not, or in the phone's sheet, which closes itself.
- * It holds the close action, a function, so it is a plain shape.
- */
-interface PaneMode {
-  /** Closes the detail from its header; none for an always-on detail beside the first pane. */
-  readonly close: (() => void) | undefined;
-  readonly place: "aside" | "sheet";
-}
-
-const PaneModeContext = createContext<PaneMode>({
-  close: undefined,
-  place: "aside",
-});
-
-/** Where the detail around the caller draws, and how its header closes it. */
-export function usePaneMode() {
-  return use(PaneModeContext);
-}
 
 /**
  * Gives a page its two panes, created once for the page: the list or the canvas in the first,

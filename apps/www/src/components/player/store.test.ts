@@ -31,11 +31,19 @@ describe("player store", () => {
       anchor: null,
       current: "a",
       jump: null,
+      landed: false,
       mode: "single",
       overlay: "none",
       pending: null,
       pinned: false,
     });
+  });
+
+  it("reads a finished paper as a review", () => {
+    expect(
+      createPlayerStore({ keys: ["a"], mode: "list", review: true }).getState()
+        .review
+    ).toBe(true);
   });
 
   it.effect("has no current question without questions", () =>
@@ -97,6 +105,7 @@ describe("player store", () => {
     expect(store.getState()).toMatchObject({
       current: "b",
       jump: null,
+      landed: true,
       overlay: "none",
       pending: "b",
     });
@@ -104,11 +113,16 @@ describe("player store", () => {
     store.getState().settle();
     expect(store.getState()).toMatchObject({
       jump: { key: "b", seq: 1 },
+      landed: true,
       pending: null,
     });
 
     store.getState().settle();
     expect(store.getState().jump).toEqual({ key: "b", seq: 1 });
+
+    // The overlay keeps the focus from its opener until another overlay opens.
+    store.getState().open("finish");
+    expect(store.getState().landed).toBe(false);
   });
 
   it("opens one overlay in place of another and closes it", () => {

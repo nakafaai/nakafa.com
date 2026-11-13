@@ -1,5 +1,5 @@
 import { LocalClock } from "@repo/backend/confect/notifications/clock";
-import { Array as Arr, Option, Schema } from "effect";
+import { Array as Arr, Duration, Option, Schema } from "effect";
 
 /**
  * A kind of notice, one row of the channel table of ADR 0027. A kind is keyed by
@@ -17,12 +17,13 @@ export const NoticeKind = Schema.Literals([
   "examGuardianReminder",
   "invitation",
   "commentReply",
+  "tryoutReminder",
 ]);
 
 /**
  * How a recipient relates to the object of a notice: a student or a teacher of
- * its class, the guardian of a student, the Person that an invitation names, or
- * the account whose comment was answered.
+ * its class, the guardian of a student, the Person that an invitation names, the
+ * account whose comment was answered, or the learner whose try-out is running.
  */
 export const Relation = Schema.Literals([
   "student",
@@ -30,7 +31,17 @@ export const Relation = Schema.Literals([
   "guardian",
   "invitee",
   "commenter",
+  "learner",
 ]);
+
+/**
+ * The relations of a notice that no school holds, whose switches an account keeps rather than a Person: the account
+ * whose comment was answered, and the learner whose try-out is running.
+ */
+export const ACCOUNT_RELATIONS: readonly (typeof Relation.Type)[] = [
+  "commenter",
+  "learner",
+];
 
 /** A channel that reaches a person: the inbox row, a push, or an email. */
 export const Channel = Schema.Literals(["inbox", "push", "email"]);
@@ -119,6 +130,21 @@ const NOW: typeof Timing.Type = { _tag: "Now" };
 const CHOSEN: typeof Timing.Type = { _tag: "Chosen" };
 const DIGEST: typeof Timing.Type = { _tag: "Digest" };
 const ONE_HOUR_BEFORE: typeof Timing.Type = { _tag: "Before", minutes: 60 };
+
+/**
+ * How long before a running try-out ends each of its reminders leaves (decision D4): the email six hours before,
+ * the push and the inbox row one hour before. The rule below and the reminder jobs both read them.
+ */
+export const TRYOUT_REMINDER_LEADS = {
+  email: Duration.hours(6),
+  hour: Duration.hours(1),
+} as const;
+
+/** A try-out reminder's time on the channel table, its lead before the attempt ends. */
+const beforeEnd = (lead: Duration.Duration): typeof Timing.Type => ({
+  _tag: "Before",
+  minutes: Duration.toMinutes(lead),
+});
 const FIFTEEN_MINUTES_BEFORE: typeof Timing.Type = {
   _tag: "Before",
   minutes: 15,
@@ -207,6 +233,18 @@ export const NOTICE_RULES: typeof NoticeRules.Type = {
   commentReply: {
     routes: [
       { relation: "commenter", inbox: [NOW], push: [NOW], email: [DIGEST] },
+    ],
+  },
+  // A running try-out's reminders (decision D4 of the consumer program): an email six hours before it ends, sent
+  // only to a learner idle for an hour, and a push and an inbox row an hour before it ends.
+  tryoutReminder: {
+    routes: [
+      {
+        relation: "learner",
+        inbox: [beforeEnd(TRYOUT_REMINDER_LEADS.hour)],
+        push: [beforeEnd(TRYOUT_REMINDER_LEADS.hour)],
+        email: [beforeEnd(TRYOUT_REMINDER_LEADS.email)],
+      },
     ],
   },
 };

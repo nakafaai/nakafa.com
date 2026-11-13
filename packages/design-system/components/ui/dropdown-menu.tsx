@@ -57,10 +57,13 @@ function DropdownMenuContent({
         container={use(PortalContainer)}
         keepMounted={keepMounted}
       >
+        {/* Fixed to the screen, so a page that scrolls under an open menu never pulls it off its trigger, which
+            mostly stands in a sticky header. */}
         <MenuPrimitive.Positioner
           align={align}
           alignOffset={alignOffset}
           className="isolate z-50 outline-none"
+          positionMethod="fixed"
           side={side}
           sideOffset={sideOffset}
         >

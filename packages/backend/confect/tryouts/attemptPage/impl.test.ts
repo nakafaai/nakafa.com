@@ -138,6 +138,27 @@ describe("tryouts/attemptPage", () => {
   );
 
   it.effect(
+    "opens no question of a section the learner finished while the rest of its attempt still runs",
+    () =>
+      Effect.gen(function* () {
+        const world = yield* tryoutWorld();
+        const { attemptId } = yield* world.start();
+        yield* world.startSection(attemptId, "section-a");
+        yield* world.completeSection(attemptId, "section-a");
+        const section = yield* world.learner.query(
+          tryouts.queries.attemptPage.getSection,
+          { request: retained(attemptId, `${SET_PATH}/section-a`) }
+        );
+        expect(section).toMatchObject({
+          attemptId,
+          content: [],
+          initialState: { runtime: null },
+          kind: "retained",
+        });
+      })
+  );
+
+  it.effect(
     "shows a finished set page with its frozen catalog, and reviews a section with the free preview's keys and explanations",
     () =>
       Effect.gen(function* () {

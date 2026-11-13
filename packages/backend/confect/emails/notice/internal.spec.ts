@@ -26,10 +26,11 @@ export default GroupSpec.make()
             addresses: Schema.Array(
               Schema.Struct({
                 email: Schema.String,
+                input: NoticeEmailInputSchema,
                 personId: Id("tenantPeople"),
               })
             ),
-            input: NoticeEmailInputSchema,
+            tenantId: Id("tenants"),
           })
         ),
       error: () => Schema.Union([ReleaseError, SiteConfigError]),
@@ -39,13 +40,17 @@ export default GroupSpec.make()
     FunctionSpec.internalMutation({
       name: "enqueue",
       args: () => ({
-        addresses: Schema.Array(
-          Schema.Struct({ email: Schema.String, personId: Id("tenantPeople") })
+        messages: Schema.Array(
+          Schema.Struct({
+            email: Schema.String,
+            html: Schema.String,
+            personId: Id("tenantPeople"),
+            subject: Schema.String,
+            text: Schema.String,
+          })
         ),
-        html: Schema.String,
         postId: Id("classroomPosts"),
-        subject: Schema.String,
-        text: Schema.String,
+        tenantId: Id("tenants"),
       }),
       returns: () => Schema.Null,
     })

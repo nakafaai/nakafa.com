@@ -4,6 +4,8 @@ import {
   MutationCtx,
 } from "@repo/backend/confect/_generated/services";
 import { EMAIL_FROM, sendMail } from "@repo/backend/confect/emails/client";
+import { isSuppressed } from "@repo/backend/confect/emails/unsubscribe/apply";
+import { unsubscribePost } from "@repo/backend/confect/emails/unsubscribe/token";
 import { isLoginAddress } from "@repo/backend/confect/identity/address";
 import { Clock, Effect } from "effect";
 
@@ -12,8 +14,9 @@ import { Clock, Effect } from "effect";
  * invite. The invite id and the moment of the send are the idempotency key, so
  * a retried step or a repeated run of one send sends one message, while a
  * resend, which has its own moment, sends again. An invite that was revoked
- * since it was rendered, whose term ended while the workflow waited, or whose
- * address is a school login's placeholder sends nothing.
+ * since it was rendered, whose term ended while the workflow waited, whose
+ * address is a school login's placeholder, or whose address unsubscribed sends
+ * nothing.
  */
 export const enqueueRenderedInviteProgram = Effect.fn("emails.invite.enqueue")(
   function* (
@@ -34,16 +37,21 @@ export const enqueueRenderedInviteProgram = Effect.fn("emails.invite.enqueue")(
     if (
       invite.state.status === "revoked" ||
       invite.expiresAt <= now ||
-      isLoginAddress(invite.channel.email)
+      isLoginAddress(invite.channel.email) ||
+      (yield* isSuppressed(invite.channel.email))
     ) {
       return null;
     }
-    yield* sendMail(ctx, {
-      ...message,
-      from: EMAIL_FROM,
-      idempotencyKey: `invite-email/${inviteId}/${requestedAt}`,
-      to: invite.channel.email,
-    }).pipe(Effect.orDie);
+    yield* sendMail(
+      ctx,
+      {
+        ...message,
+        from: EMAIL_FROM,
+        idempotencyKey: `invite-email/${inviteId}/${requestedAt}`,
+        to: invite.channel.email,
+      },
+      yield* unsubscribePost({ _tag: "Address", address: invite.channel.email })
+    ).pipe(Effect.orDie);
     return null;
   }
 );

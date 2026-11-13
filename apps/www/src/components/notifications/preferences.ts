@@ -18,11 +18,16 @@ const switchable = (
     Arr.some(route[channel] ?? [], (timing) => timing._tag !== "Chosen")
   );
 
-/** Each kind a relation receives, with the channels that person can switch off, and no row for a kind with none. */
-export const preferenceRowsOf = (relation: typeof Relation.Type) =>
+/**
+ * Each kind the relations receive, with the channels that person can switch off, and no row for a kind with none. An
+ * account reads its notices as every relation of a notice no school holds (`ACCOUNT_RELATIONS`).
+ */
+export const preferenceRowsOf = (
+  relations: readonly (typeof Relation.Type)[]
+) =>
   Arr.filterMap(NoticeKind.literals, (kind) => {
     const channels = Arr.filter(["push", "email"] as const, (channel) =>
-      switchable(kind, relation, channel)
+      Arr.some(relations, (relation) => switchable(kind, relation, channel))
     );
     return Arr.isReadonlyArrayEmpty(channels)
       ? Result.failVoid
@@ -34,10 +39,10 @@ export const preferenceRowsOf = (relation: typeof Relation.Type) =>
  * keeps the accessors of its first columns, so a column that asked `off` itself would show the first answer for good.
  */
 export const preferenceChoicesOf = (
-  relation: typeof Relation.Type,
+  relations: readonly (typeof Relation.Type)[],
   off: readonly (typeof SwitchedOff.Type)[]
 ) =>
-  Arr.map(preferenceRowsOf(relation), (row) => ({
+  Arr.map(preferenceRowsOf(relations), (row) => ({
     ...row,
     on: Arr.filter(
       row.channels,

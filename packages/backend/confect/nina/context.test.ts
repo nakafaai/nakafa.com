@@ -29,7 +29,7 @@ import {
 } from "@repo/backend/test/program/snapshot";
 import { activateAssessmentTestSnapshot } from "@repo/backend/test/snapshot/assessment";
 import { SITE_ORIGIN } from "@repo/seo/origin";
-import { Effect, Exit } from "effect";
+import { Effect } from "effect";
 
 const material = makeMaterialProjection("en", 1, 1);
 const seedUser = Effect.fn("test.nina.context.user")(function* () {
@@ -311,7 +311,7 @@ describe("Nina signed learning context", () => {
     });
   });
 
-  it("freezes an asked question and keeps it for the conversation's next turn", async () => {
+  it("freezes an asked question, keeps it for the conversation's next turn, and keeps it for a learner on the free plan (D1)", async () => {
     const f = await createFocusTest();
     const learner = () =>
       Effect.flatMap(DatabaseReader, (database) =>
@@ -338,6 +338,7 @@ describe("Nina signed learning context", () => {
           value: { page: { nina: { focus: f.frozen } } },
         })
     );
+    // Every learner may ask Nina about a question of a finished section, so the plan changes nothing.
     await f.t.mutation((ctx) =>
       ctx.db.patch("users", f.identity.userId, { plan: "free" })
     );
@@ -345,21 +346,21 @@ describe("Nina signed learning context", () => {
       Effect.flatMap(learner(), (user) =>
         resolveNinaContext({ locale: "en", slug: "", focus: f.focus }, user)
       ),
-      (exit) => {
-        expect(Exit.isFailure(exit)).toBe(true);
+      (exit) =>
         expect(exit).toMatchObject({
-          cause: { reasons: [{ error: { code: "NINA_CONTEXT_FAILED" } }] },
-        });
-      }
+          _tag: "Success",
+          value: { page: { nina: { focus: f.frozen } } },
+        })
     );
     await f.expectExit(
       Effect.flatMap(learner(), (user) =>
         resolveNinaContext({ locale: "en", slug: "" }, user, f.chatId)
       ),
       (exit) =>
-        expect(Exit.isSuccess(exit) && exit.value.page.nina.focus).toBe(
-          undefined
-        )
+        expect(exit).toMatchObject({
+          _tag: "Success",
+          value: { page: { nina: { focus: f.frozen } } },
+        })
     );
   });
 });

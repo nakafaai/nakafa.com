@@ -81,6 +81,7 @@ export type EditorClientsDoc = Document.Document<typeof schemaDefinition, "edito
 export type EditorDocumentsDoc = Document.Document<typeof schemaDefinition, "editorDocuments">;
 export type EditorSnapshotsDoc = Document.Document<typeof schemaDefinition, "editorSnapshots">;
 export type EditorStepsDoc = Document.Document<typeof schemaDefinition, "editorSteps">;
+export type EmailSuppressionsDoc = Document.Document<typeof schemaDefinition, "emailSuppressions">;
 export type ExamAnswersDoc = Document.Document<typeof schemaDefinition, "examAnswers">;
 export type ExamAssetsDoc = Document.Document<typeof schemaDefinition, "examAssets">;
 export type ExamAttemptsDoc = Document.Document<typeof schemaDefinition, "examAttempts">;
@@ -144,6 +145,9 @@ export type OnboardingProfilesDoc = Document.Document<typeof schemaDefinition, "
 export type OperatorsDoc = Document.Document<typeof schemaDefinition, "operators">;
 export type PostLikesDoc = Document.Document<typeof schemaDefinition, "postLikes">;
 export type PostsDoc = Document.Document<typeof schemaDefinition, "posts">;
+export type PracticeAnswersDoc = Document.Document<typeof schemaDefinition, "practiceAnswers">;
+export type PracticeQuestionsDoc = Document.Document<typeof schemaDefinition, "practiceQuestions">;
+export type PracticeSessionsDoc = Document.Document<typeof schemaDefinition, "practiceSessions">;
 export type ProgramBucketsDoc = Document.Document<typeof schemaDefinition, "programBuckets">;
 export type ProgramCatalogDoc = Document.Document<typeof schemaDefinition, "programCatalog">;
 export type PushSubscriptionsDoc = Document.Document<typeof schemaDefinition, "pushSubscriptions">;
@@ -262,6 +266,7 @@ export interface Docs {
   editorDocuments: EditorDocumentsDoc;
   editorSnapshots: EditorSnapshotsDoc;
   editorSteps: EditorStepsDoc;
+  emailSuppressions: EmailSuppressionsDoc;
   examAnswers: ExamAnswersDoc;
   examAssets: ExamAssetsDoc;
   examAttempts: ExamAttemptsDoc;
@@ -325,6 +330,9 @@ export interface Docs {
   operators: OperatorsDoc;
   postLikes: PostLikesDoc;
   posts: PostsDoc;
+  practiceAnswers: PracticeAnswersDoc;
+  practiceQuestions: PracticeQuestionsDoc;
+  practiceSessions: PracticeSessionsDoc;
   programBuckets: ProgramBucketsDoc;
   programCatalog: ProgramCatalogDoc;
   pushSubscriptions: PushSubscriptionsDoc;

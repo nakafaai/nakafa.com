@@ -1,5 +1,6 @@
 import { QueryResult, useQuery } from "@confect/react";
 import tryouts from "@repo/backend/confect/_generated/refs/tryouts";
+import type { TryoutScoreResult } from "@repo/backend/confect/tryouts/score";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { Option } from "effect";
 import { createContext, type ReactNode, use, useState } from "react";
@@ -19,12 +20,12 @@ import {
   TryoutPlayerOpening,
   TryoutRunningPlayer,
 } from "@/components/tryout/player/opening";
+import { TryoutPracticeLink } from "@/components/tryout/practice/link";
 import {
-  TryoutFinishedFacts,
-  TryoutFinishedPanel,
-  TryoutFinishedPanes,
   TryoutFinishedPlace,
-} from "@/components/tryout/review/panes";
+  TryoutReviewFrame,
+  TryoutReviewView,
+} from "@/components/tryout/review/frame";
 import { useTryoutLeave } from "@/components/tryout/route/leave";
 import {
   getTryoutAttemptLock,
@@ -42,7 +43,9 @@ import {
   isTryoutRuntimeRunning,
   isTryoutStateLive,
   selectActionAttempt,
+  type TryoutRuntimeState,
 } from "@/components/tryout/runtime/state";
+import type { TryoutSectionRuntime } from "@/components/tryout/runtime/types";
 import {
   type TryoutStartDestination,
   TryoutSummaryAction,
@@ -111,21 +114,21 @@ export function TryoutSectionPageClient({
     <TryoutContentContext value={{ bodies: content }}>
       <TryoutSectionPageContext value={{ page, pending, route, setPath }}>
         <TryoutStartProvider>
-          {binding !== null && isTryoutStateLive(binding.initialState) ? (
+          {binding === null ? (
+            <ResolvedTryoutSectionPage
+              binding={null}
+              finish={null}
+              state={null}
+            >
+              {children}
+            </ResolvedTryoutSectionPage>
+          ) : (
             <LiveTryoutSectionPage
               binding={binding}
               key={`${binding.attemptId}:${page.section.sectionKey}`}
             >
               {children}
             </LiveTryoutSectionPage>
-          ) : (
-            <ResolvedTryoutSectionPage
-              binding={binding}
-              finish={null}
-              state={binding?.initialState ?? null}
-            >
-              {children}
-            </ResolvedTryoutSectionPage>
           )}
         </TryoutStartProvider>
       </TryoutSectionPageContext>
@@ -133,7 +136,12 @@ export function TryoutSectionPageClient({
   );
 }
 
-/** Owns one active subscription and skips it after a terminal update. */
+/**
+ * Owns the page of one attempt, from its first frame for as long as the attempt is on screen. While the attempt
+ * runs, it follows it with its own subscription, which it skips after a terminal update; once the page's read holds
+ * the ended attempt, the page shows that read, which stays current. The page never swaps its tree when the attempt
+ * ends, so the review that follows keeps its state, such as an open result sheet, when the page's read catches up.
+ */
 function LiveTryoutSectionPage({
   binding,
   children,
@@ -147,10 +155,13 @@ function LiveTryoutSectionPage({
   const [terminalState, setTerminalState] = useState<
     SectionState | undefined
   >();
+  // Nothing follows an attempt that ended here, or one the page's read already holds as ended.
+  const following =
+    isTryoutStateLive(binding.initialState) && terminalState === undefined;
   // An unauthenticated response during hydration is not a terminal attempt.
   const liveState = useQuery(
     tryouts.queries.runtime.getSectionAttemptState,
-    !isLoading && terminalState === undefined
+    !isLoading && following
       ? {
           attemptId: binding.attemptId,
           sectionKey: page.section.sectionKey,
@@ -162,7 +173,7 @@ function LiveTryoutSectionPage({
   const live = useLastValue(liveState);
 
   if (
-    terminalState === undefined &&
+    following &&
     QueryResult.isSuccess(liveState) &&
     !isTryoutStateLive(liveState.value)
   ) {
@@ -174,6 +185,11 @@ function LiveTryoutSectionPage({
   let state: SectionState = Option.getOrElse(live, () => binding.initialState);
   if (terminalState !== undefined) {
     state = terminalState;
+  }
+  // Once the page's read holds the ended attempt, the page shows that read, so a later change such as its
+  // score still reaches the review; until then an attempt that ended here shows its last live answer.
+  if (!isTryoutStateLive(binding.initialState)) {
+    state = binding.initialState;
   }
   // The finish holds the running state, so it reads the state before any early exit.
   const returnAddress = {
@@ -217,7 +233,7 @@ function ResolvedTryoutSectionPage({
   finish,
   state,
 }: Pick<TryoutSectionPageClientProps, "binding" | "children"> & {
-  /** The finish of a live attempt; a page without a live attempt has none. */
+  /** The finish of the attempt the page is bound to; a page bound to none has none. */
   finish: TryoutFinish | null;
   state: SectionState;
 }) {
@@ -277,38 +293,76 @@ function ResolvedTryoutSectionPage({
   return (
     <TryoutPage>
       <SectionLock binding={binding} />
-      <TryoutSectionHeader
-        actionAttempt={actionAttempt}
-        activeAttempt={activeAttempt}
+      <TryoutSectionBody
         binding={binding}
-        sectionStatus={sectionStatus}
-      />
-      {runtimeState.kind === "review" && actionAttempt?.section?.score ? (
-        <TryoutFinishedPanes
-          panel={
-            <TryoutFinishedPanel runtime={runtimeState.runtime}>
-              <TryoutFinishedFacts
-                score={actionAttempt.section.score}
-                seconds={page.section.timeLimitSeconds}
-              />
-            </TryoutFinishedPanel>
-          }
-        >
-          {children}
-        </TryoutFinishedPanes>
-      ) : (
-        <TryoutPageBody>
-          <TryoutSectionSummary
-            value={{
-              pending: actionAttempt === undefined,
-              score: actionAttempt?.section?.score ?? null,
-              section: page.section,
-            }}
-          />
-          <TryoutFinishedPlace pending={actionAttempt === undefined} />
-        </TryoutPageBody>
-      )}
+        header={
+          <TryoutSectionHeader
+            actionAttempt={actionAttempt}
+            activeAttempt={activeAttempt}
+            binding={binding}
+            sectionStatus={sectionStatus}
+          >
+            <TryoutReviewView
+              outside={
+                <TryoutPracticeLink publicPath={getTryoutPublicPath(route)} />
+              }
+            />
+          </TryoutSectionHeader>
+        }
+        pending={actionAttempt === undefined}
+        runtimeState={runtimeState}
+        score={actionAttempt?.section?.score ?? null}
+      >
+        {children}
+      </TryoutSectionBody>
     </TryoutPage>
+  );
+}
+
+/**
+ * The section page under its header once nothing runs: a finished section's review in the player that ran
+ * it, or the section's card, which says its facts, its score, or nothing while the learner's read is pending.
+ */
+function TryoutSectionBody({
+  binding,
+  children,
+  header,
+  pending,
+  runtimeState,
+  score,
+}: Pick<TryoutSectionPageClientProps, "binding" | "children"> & {
+  /** The page's header, which joins the review's frame in a review. */
+  header: ReactNode;
+  /** The learner read that decides the card has not answered yet. */
+  pending: boolean;
+  runtimeState: TryoutRuntimeState<TryoutSectionRuntime>;
+  score: TryoutScoreResult | null;
+}) {
+  const { page } = useTryoutSectionPage();
+  if (binding && score && runtimeState.kind === "review") {
+    return (
+      <TryoutReviewFrame
+        header={header}
+        limit={Option.some(page.section.timeLimitSeconds)}
+        mode={binding.mode}
+        runtime={runtimeState.runtime}
+        score={score}
+      >
+        {children}
+      </TryoutReviewFrame>
+    );
+  }
+
+  return (
+    <>
+      {header}
+      <TryoutPageBody>
+        <TryoutSectionSummary
+          value={{ pending, score, section: page.section }}
+        />
+        <TryoutFinishedPlace pending={pending} />
+      </TryoutPageBody>
+    </>
   );
 }
 
@@ -356,13 +410,15 @@ function SectionLock({
   return opening ? <ShellLock /> : null;
 }
 
-/** Renders the section heading with its start or return action. */
+/** Renders the section heading with what the page adds, such as the view of a review's questions, and its start or return action. */
 function TryoutSectionHeader({
   activeAttempt,
   actionAttempt,
   binding,
+  children,
   sectionStatus,
 }: Pick<TryoutSectionPageClientProps, "binding"> & {
+  children?: ReactNode;
   activeAttempt: NonNullable<SectionState>["attempt"] | null;
   /** The attempt the action reads; none while the learner read is pending. */
   actionAttempt: NonNullable<SectionState>["attempt"] | null | undefined;
@@ -391,6 +447,7 @@ function TryoutSectionHeader({
       parents={hasCurrentPath ? "linked" : "unlinked"}
       setPath={returnAddress.publicPath}
     >
+      {children}
       <TryoutSummaryAction
         value={{
           activeAttempt,
