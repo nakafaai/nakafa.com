@@ -4,6 +4,7 @@ import {
   Effect,
   HashSet,
   Option,
+  Order,
   Ref,
   Schema,
 } from "effect";
@@ -15,6 +16,8 @@ export const Candidate = Schema.Struct({
   number: Schema.Int,
   sha: Schema.String,
   title: Schema.String,
+  /** The spec files the pull request adds or changes, which its combination is proven on. */
+  specs: Schema.Array(Schema.String),
 });
 export type Candidate = typeof Candidate.Type;
 
@@ -82,6 +85,20 @@ const TrainReport = Schema.Struct({
 type TrainReport = typeof TrainReport.Type;
 
 /**
+ * The specs a combination is proven on: those the caller names and those its
+ * pull requests add or change. None at all proves every suite, which a batch of
+ * changes that touch no spec needs.
+ */
+const proofSpecs = (
+  specs: readonly string[],
+  heads: readonly Candidate[]
+): readonly string[] =>
+  Arr.sort(
+    Arr.dedupe([...specs, ...Arr.flatMap(heads, (head) => head.specs)]),
+    Order.String
+  );
+
+/**
  * Lands every pull request whose own proof passed, after one proof of their
  * combination on main. A failing spec that fails on main too belongs to main:
  * the train reports it and ignores it. Any other failure splits the batch in
@@ -131,7 +148,12 @@ export const runTrain = Effect.fn("landing.runTrain")(function* (
       if (riding.length === 0) {
         return;
       }
-      const failures = failuresOf(yield* prover.prove(combination.sha, specs));
+      const failures = failuresOf(
+        yield* prover.prove(
+          combination.sha,
+          proofSpecs(specs, [...before, ...riding])
+        )
+      );
       const known = HashSet.fromIterable(yield* baseline.shared(failures));
       const caused = Arr.filter(
         failures,
