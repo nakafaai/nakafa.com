@@ -5,7 +5,6 @@ import { UserSettingsProfilePage } from "@/components/user/settings/profile";
 import { UserSettingsPage } from "@/components/user/settings/section";
 import { privateHead } from "@/lib/account/head";
 import { settingsScreenFn } from "@/lib/account/settings.functions";
-import { readAuthClient } from "@/lib/auth/client";
 
 /** The agents a person let in, as the auth server lists them. */
 const Agents = Schema.Array(
@@ -19,9 +18,13 @@ export const Route = createFileRoute(
   "/$locale/_main/_app/_account/user/settings/"
 )({
   loader: async ({ params }) => {
+    // A loader sits in the first JavaScript of every page, so the auth client
+    // loads here, when a person opens their settings.
     const [screen, agents] = await Promise.all([
       settingsScreenFn({ data: { locale: params.locale } }),
-      readAuthClient().$fetch("/agent/list"),
+      import("@/lib/auth/client").then(({ readAuthClient }) =>
+        readAuthClient().$fetch("/agent/list")
+      ),
     ]);
     return {
       ...screen,

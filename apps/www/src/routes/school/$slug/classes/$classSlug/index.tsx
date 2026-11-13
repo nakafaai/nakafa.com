@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Option } from "effect";
 import type { ReactElement } from "react";
 import { ClassShell } from "@/components/tenant/classes/shell";
+import { SchoolPageNotFound } from "@/components/tenant/notfound";
 import { guardSchoolPage } from "@/lib/tenant/guard";
 import { readClassAddress } from "@/lib/tenant/params";
 
@@ -10,10 +11,11 @@ import { readClassAddress } from "@/lib/tenant/params";
  * address to a class is not found for every viewer.
  */
 export const Route = createFileRoute("/school/$slug/classes/$classSlug/")({
-  ...guardSchoolPage({
+  beforeLoad: guardSchoolPage({
     reads: (params: { readonly classSlug: string }) =>
       Option.all({ classAddress: readClassAddress(params.classSlug) }),
   }),
+  notFoundComponent: SchoolPageNotFound,
   component: SchoolClassPage,
 });
 
