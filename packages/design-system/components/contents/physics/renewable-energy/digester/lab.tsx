@@ -17,7 +17,6 @@ import {
 import {
   paintHills,
   paintSky,
-  SCENERY,
 } from "@repo/design-system/components/contents/physics/renewable-energy/scenery/outdoor";
 import { useQuantity } from "@repo/design-system/components/contents/simulation/quantity";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
@@ -33,14 +32,14 @@ import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { P5Sketch } from "@repo/design-system/components/visual/sketch";
 import { getColor } from "@repo/design-system/lib/color";
-import { PLOT_COLORS } from "@repo/design-system/lib/plot";
+import { MATERIAL } from "@repo/design-system/lib/material";
 import type p5 from "p5";
 import { type ReactNode, useState } from "react";
 
 /** The tones of the slurry, the brick dome and the stove flame. */
-const SLURRY = mix(getColor("STONE", 600), PLOT_COLORS.amber, 0.25);
-const BRICK = mix(PLOT_COLORS.orange, getColor("STONE", 600), 0.6);
-const FLAME = mix(PLOT_COLORS.amber, PLOT_COLORS.orange, 0.4);
+const SLURRY = MATERIAL.dungSlurry;
+const BRICK = MATERIAL.brick;
+const FLAME = MATERIAL.biogasFlame;
 
 /** What the sketch reads on every frame: the dung fed each day. */
 interface DigesterFrame {
@@ -51,11 +50,11 @@ interface DigesterFrame {
 function paintSoil(sketch: p5, surface: number) {
   const { height, width } = sketch;
   gradientRect(sketch, { height: height - surface, width, x: 0, y: surface }, [
-    [0, mix(SCENERY.soil, getColor("WHITE"), 0.12)],
-    [0.08, SCENERY.soil],
-    [1, mix(SCENERY.soil, getColor("BLACK"), 0.6)],
+    [0, mix(MATERIAL.soil, getColor("WHITE"), 0.12)],
+    [0.08, MATERIAL.soil],
+    [1, mix(MATERIAL.soil, getColor("BLACK"), 0.6)],
   ]);
-  sketch.fill(SCENERY.grass);
+  sketch.fill(MATERIAL.grass);
   sketch.rect(0, surface - 4, width, 6);
 }
 
@@ -86,7 +85,7 @@ function paintDome(
       sketch.rect(centre.x - size * 1.06, centre.y, size * 2.12, size * 0.5);
     }
   );
-  sketch.fill(mix(getColor("SLATE", 200), PLOT_COLORS.teal, 0.15));
+  sketch.fill(MATERIAL.gasWisp);
   sketch.arc(centre.x, centre.y, size * 2, size * 2, Math.PI, Math.PI * 2);
   sketch.rect(centre.x - size, centre.y, size * 2, size * 0.44);
   const level = centre.y - size * 0.25;
@@ -250,8 +249,8 @@ function digesterProgram(sketch: p5, read: () => DigesterFrame) {
             y: surface - height * 0.26,
           },
           [
-            [0, mix(getColor("STONE", 600), getColor("WHITE"), 0.5)],
-            [1, mix(getColor("STONE", 600), getColor("WHITE"), 0.25)],
+            [0, MATERIAL.wallPlaster],
+            [1, mix(MATERIAL.wallPlaster, getColor("BLACK"), 0.15)],
           ]
         );
       }

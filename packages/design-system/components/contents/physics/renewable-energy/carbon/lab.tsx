@@ -43,6 +43,7 @@ import {
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { P5Sketch } from "@repo/design-system/components/visual/sketch";
 import { getColor } from "@repo/design-system/lib/color";
+import { MATERIAL } from "@repo/design-system/lib/material";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr, Schema } from "effect";
 import type p5 from "p5";
@@ -59,7 +60,7 @@ const BAR_TOP = 3.5;
 
 /** The colors of the three masses: the fuel's carbon, the oxygen from the air, the carbon dioxide. */
 const MASS_COLORS = {
-  carbon: mix(getColor("STONE", 600), getColor("ZINC", 900), 0.3),
+  carbon: getColor("SLATE", 600),
   dioxide: PLOT_COLORS.violet,
   oxygen: PLOT_COLORS.teal,
 } as const;
@@ -87,23 +88,23 @@ function paintBurner(sketch: p5, fuel: Fuel, burnt: number, time: number) {
       litBall(sketch, { x: centre, y: bench - lump * 0.6 }, lump, {
         dark:
           fuel === "coal"
-            ? getColor("ZINC", 950)
-            : mix(PLOT_COLORS.amber, getColor("BLACK"), 0.5),
+            ? MATERIAL.coalLump
+            : mix(MATERIAL.dieselFuel, getColor("BLACK"), 0.5),
         light:
           fuel === "coal"
-            ? getColor("SLATE", 600)
-            : mix(PLOT_COLORS.amber, getColor("WHITE"), 0.4),
+            ? mix(MATERIAL.coalLump, getColor("WHITE"), 0.3)
+            : mix(MATERIAL.dieselFuel, getColor("WHITE"), 0.4),
       });
     }
   );
   if (burnt < 1) {
     spotlight(sketch, { x: centre, y: bench - lump * 1.6 }, height * 0.22, {
-      color: PLOT_COLORS.orange,
+      color: MATERIAL.coalGlow,
       strength: 0.6,
     });
     for (let tongue = -1; tongue <= 1; tongue += 1) {
       const flicker = 1 + Math.sin(time * 13 + tongue * 2) * 0.15;
-      sketch.fill(fade(mix(PLOT_COLORS.amber, PLOT_COLORS.orange, 0.4), 0.85));
+      sketch.fill(fade(MATERIAL.gasFlame, 0.85));
       sketch.ellipse(
         centre + tongue * lump * 0.5,
         bench - lump * 1.3 - height * 0.04 * flicker,
@@ -249,7 +250,7 @@ function carbonProgram(sketch: p5, read: () => CarbonFrame) {
       [1, mix(getColor("SLATE", 700), getColor("SLATE", 400), 0.3)],
     ]);
     spotlight(sketch, { x: width * 0.3, y: height * 0.4 }, width * 0.5, {
-      color: mix(PLOT_COLORS.amber, getColor("WHITE"), 0.8),
+      color: MATERIAL.sunDisc,
       strength: 0.2,
     });
     paintBurner(sketch, fuel, burnt, flames);

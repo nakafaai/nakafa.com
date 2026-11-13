@@ -6,54 +6,24 @@ import {
   spotlight,
 } from "@repo/design-system/components/contents/physics/canvas/paint";
 import { getColor } from "@repo/design-system/lib/color";
-import { PLOT_COLORS } from "@repo/design-system/lib/plot";
+import { MATERIAL } from "@repo/design-system/lib/material";
 import type p5 from "p5";
 
 /**
  * The outdoor world the renewable-energy sketches share: a sky that falls off
  * toward a hazy horizon, a sun with its glare, hills the lens leaves out of
- * focus, ground and water. Plot hues and neutral shades are blended into the
- * tones of a landscape, because no other color may reach a lesson visual.
+ * focus, ground and clouds. Every tone is a real material from `MATERIAL`, so
+ * grass, water and sky look the same as in every other lesson.
  */
-
-/** The tones of the scenery, blended once from the plot and neutral palettes. */
-export const SCENERY = {
-  cloud: mix(getColor("SLATE", 50), getColor("WHITE"), 0.6),
-  concrete: mix(getColor("STONE", 600), getColor("SLATE", 200), 0.55),
-  grass: mix(PLOT_COLORS.teal, PLOT_COLORS.amber, 0.48),
-  grassDark: mix(
-    mix(PLOT_COLORS.teal, PLOT_COLORS.amber, 0.4),
-    getColor("BLACK"),
-    0.45
-  ),
-  haze: mix(getColor("SLATE", 200), PLOT_COLORS.teal, 0.14),
-  rock: mix(getColor("STONE", 600), getColor("NEUTRAL", 800), 0.35),
-  skyDay: mix(getColor("SLATE", 600), PLOT_COLORS.teal, 0.38),
-  soil: mix(getColor("STONE", 600), PLOT_COLORS.orange, 0.28),
-  steel: getColor("SLATE", 400),
-  sun: mix(PLOT_COLORS.amber, getColor("WHITE"), 0.82),
-  water: mix(PLOT_COLORS.teal, getColor("SLATE", 600), 0.45),
-  waterLight: mix(PLOT_COLORS.teal, getColor("SLATE", 200), 0.55),
-} as const;
 
 /** How light the sky is: full day, the glow before sunset, or night. */
 type Daylight = "day" | "dusk" | "night";
 
 /** The top and horizon tones of each daylight. */
 const SKY_TONES = {
-  day: [SCENERY.skyDay, SCENERY.haze],
-  dusk: [
-    mix(getColor("SLATE", 800), PLOT_COLORS.violet, 0.35),
-    mix(
-      mix(PLOT_COLORS.orange, PLOT_COLORS.pink, 0.35),
-      getColor("WHITE"),
-      0.35
-    ),
-  ],
-  night: [
-    getColor("ZINC", 950),
-    mix(getColor("SLATE", 800), PLOT_COLORS.violet, 0.2),
-  ],
+  day: [MATERIAL.skyZenith, MATERIAL.skyHaze],
+  dusk: [MATERIAL.duskZenith, MATERIAL.duskGlow],
+  night: [MATERIAL.nightSky, mix(MATERIAL.nightSky, MATERIAL.duskZenith, 0.5)],
 } as const satisfies Record<Daylight, readonly [string, string]>;
 
 /** Paints the sky from the top of the frame down to the horizon. */
@@ -82,7 +52,7 @@ export function paintSun(
   strength = 1
 ) {
   spotlight(sketch, center, radius * 9, {
-    color: SCENERY.sun,
+    color: MATERIAL.sunDisc,
     strength: 0.42 * strength,
   });
   spotlight(sketch, center, radius * 2.4, {
@@ -90,7 +60,7 @@ export function paintSun(
     strength: 0.7 * strength,
   });
   sketch.noStroke();
-  sketch.fill(fade(SCENERY.sun, Math.min(1, 0.35 + 0.65 * strength)));
+  sketch.fill(fade(MATERIAL.sunDisc, Math.min(1, 0.35 + 0.65 * strength)));
   sketch.circle(center.x, center.y, radius * 2);
 }
 
@@ -112,7 +82,7 @@ export function paintHills(
   outOfFocus(sketch, Math.max(1.5, width / 260), () => {
     for (const range of ranges) {
       sketch.noStroke();
-      sketch.fill(mix(SCENERY.grassDark, low, range.amount));
+      sketch.fill(mix(MATERIAL.foliageDark, low, range.amount));
       sketch.beginShape();
       sketch.vertex(-10, horizon + 4);
       for (let x = -10; x <= width + 10; x += 12) {
@@ -133,13 +103,13 @@ export function paintHills(
 export function paintGround(
   sketch: p5,
   horizon: number,
-  tone: string = SCENERY.grass
+  tone: string = MATERIAL.grass
 ) {
   gradientRect(
     sketch,
     { height: sketch.height - horizon, width: sketch.width, x: 0, y: horizon },
     [
-      [0, mix(tone, SCENERY.haze, 0.35)],
+      [0, mix(tone, MATERIAL.skyHaze, 0.35)],
       [0.35, tone],
       [1, mix(tone, getColor("BLACK"), 0.45)],
     ]
@@ -166,7 +136,7 @@ export function paintClouds(
       const x = ((cloud.at * span + time * cloud.speed) % span) - width * 0.15;
       const y = horizon * cloud.high;
       const size = width * cloud.size;
-      sketch.fill(fade(SCENERY.cloud, opacity));
+      sketch.fill(fade(MATERIAL.cloud, opacity));
       sketch.ellipse(x, y, size, size * 0.34);
       sketch.ellipse(x + size * 0.22, y - size * 0.1, size * 0.6, size * 0.36);
       sketch.ellipse(x - size * 0.25, y - size * 0.04, size * 0.5, size * 0.26);

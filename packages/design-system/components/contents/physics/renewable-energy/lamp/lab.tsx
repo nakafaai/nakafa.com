@@ -39,6 +39,7 @@ import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { P5Sketch } from "@repo/design-system/components/visual/sketch";
 import { getColor } from "@repo/design-system/lib/color";
+import { MATERIAL } from "@repo/design-system/lib/material";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr, Schema } from "effect";
 import type p5 from "p5";
@@ -79,7 +80,7 @@ function paintLamp(
   glow: number
 ) {
   spotlight(sketch, { x: at.x, y: at.y + size * 2.2 }, size * 7, {
-    color: mix(PLOT_COLORS.amber, getColor("WHITE"), 0.8),
+    color: MATERIAL.ledGlow,
     strength: 0.55 * glow,
   });
   withShadow(
@@ -102,9 +103,7 @@ function paintLamp(
     }
   );
   sketch.noStroke();
-  sketch.fill(
-    fade(mix(PLOT_COLORS.amber, getColor("WHITE"), 0.9), 0.25 + 0.75 * glow)
-  );
+  sketch.fill(fade(MATERIAL.ledGlow, 0.25 + 0.75 * glow));
   sketch.ellipse(at.x, at.y + size * 0.62, size * 0.9, size * 0.28);
   spotlight(sketch, { x: at.x, y: at.y + size * 0.62 }, size * 1.4, {
     color: getColor("WHITE"),
@@ -146,7 +145,7 @@ function paintBag(
 }
 
 /** The tone of a canvas bag of sand. */
-const SAND = mix(PLOT_COLORS.amber, getColor("STONE", 600), 0.55);
+const SAND = MATERIAL.bagCanvas;
 
 /**
  * Draws one moment of the descent, sped up from minutes to seconds: the bag

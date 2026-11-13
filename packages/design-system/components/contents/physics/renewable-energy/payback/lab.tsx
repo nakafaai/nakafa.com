@@ -24,7 +24,6 @@ import {
   paintHills,
   paintSky,
   paintSun,
-  SCENERY,
 } from "@repo/design-system/components/contents/physics/renewable-energy/scenery/outdoor";
 import { useQuantity } from "@repo/design-system/components/contents/simulation/quantity";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
@@ -43,6 +42,7 @@ import {
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { P5Sketch } from "@repo/design-system/components/visual/sketch";
 import { getColor } from "@repo/design-system/lib/color";
+import { MATERIAL } from "@repo/design-system/lib/material";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import type p5 from "p5";
 import { type ReactNode, useState } from "react";
@@ -86,8 +86,8 @@ function paintHouse(
   paintClouds(sketch, ground, time, 1 - strength * 0.6);
   paintHills(sketch, ground);
   gradientRect(sketch, { height: height - ground, width, x: 0, y: ground }, [
-    [0, SCENERY.grass],
-    [1, SCENERY.grassDark],
+    [0, MATERIAL.grass],
+    [1, MATERIAL.foliageDark],
   ]);
   const wall = {
     height: height * 0.14,
@@ -100,12 +100,12 @@ function paintHouse(
     { blur: 14, color: fade(getColor("BLACK"), 0.5), drop: 6 },
     () => {
       gradientRect(sketch, wall, [
-        [0, mix(getColor("STONE", 600), getColor("WHITE"), 0.6)],
-        [1, mix(getColor("STONE", 600), getColor("WHITE"), 0.35)],
+        [0, MATERIAL.wallPlaster],
+        [1, mix(MATERIAL.wallPlaster, getColor("BLACK"), 0.15)],
       ]);
     }
   );
-  const roof = mix(PLOT_COLORS.orange, getColor("STONE", 600), 0.55);
+  const roof = MATERIAL.roofTerracotta;
   sketch.fill(roof);
   sketch.triangle(
     wall.x - width * 0.02,
@@ -115,7 +115,7 @@ function paintHouse(
     wall.x + wall.width / 2,
     wall.y - height * 0.12
   );
-  sketch.fill(mix(getColor("ZINC", 900), getColor("SLATE", 600), 0.35));
+  sketch.fill(MATERIAL.solarCell);
   for (let panel = 0; panel < 3; panel += 1) {
     const left = wall.x + wall.width * (0.52 + panel * 0.12);
     sketch.quad(

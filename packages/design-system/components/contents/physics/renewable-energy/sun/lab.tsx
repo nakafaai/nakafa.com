@@ -10,7 +10,6 @@ import {
   paintHills,
   paintSky,
   paintSun,
-  SCENERY,
 } from "@repo/design-system/components/contents/physics/renewable-energy/scenery/outdoor";
 import {
   incidenceAngle,
@@ -33,12 +32,12 @@ import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { P5Sketch } from "@repo/design-system/components/visual/sketch";
 import { getColor } from "@repo/design-system/lib/color";
-import { PLOT_COLORS } from "@repo/design-system/lib/plot";
+import { MATERIAL } from "@repo/design-system/lib/material";
 import type p5 from "p5";
 import { type ReactNode, useState } from "react";
 
 /** The color of the sun's rays. */
-const RAY = mix(PLOT_COLORS.amber, getColor("WHITE"), 0.35);
+const RAY = MATERIAL.sunDisc;
 
 /** How many rays the sketch draws on either side of the one through the panel's centre. */
 const RAYS_EACH_SIDE = 9;
@@ -160,7 +159,7 @@ function sunProgram(sketch: p5, read: () => SunFrame) {
       Math.max(height * 0.035, 9)
     );
     paintHills(sketch, ground);
-    paintGround(sketch, ground, SCENERY.grass);
+    paintGround(sketch, ground, MATERIAL.grass);
     paintRays(sketch, centre, half, along, sun, ground);
     paintPanel(sketch, centre, half, along, ground);
     vignette(sketch, 0.3);

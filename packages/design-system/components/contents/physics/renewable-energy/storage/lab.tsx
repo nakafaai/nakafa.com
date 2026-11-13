@@ -11,7 +11,6 @@ import {
   paintHills,
   paintSky,
   paintSun,
-  SCENERY,
 } from "@repo/design-system/components/contents/physics/renewable-energy/scenery/outdoor";
 import {
   BATTERY_SIZES,
@@ -44,6 +43,7 @@ import {
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { P5Sketch } from "@repo/design-system/components/visual/sketch";
 import { getColor } from "@repo/design-system/lib/color";
+import { MATERIAL } from "@repo/design-system/lib/material";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr, Schema } from "effect";
 import type p5 from "p5";
@@ -101,7 +101,7 @@ function paintPost(
     );
   }
   paintHills(sketch, ground, light > 0.1 ? "day" : "night");
-  sketch.fill(mix(SCENERY.grassDark, getColor("BLACK"), 0.5 * (1 - light)));
+  sketch.fill(mix(MATERIAL.foliageDark, getColor("BLACK"), 0.5 * (1 - light)));
   sketch.rect(0, ground, width, height - ground);
   const wall = {
     height: height * 0.2,
@@ -115,11 +115,7 @@ function paintPost(
     { blur: 14, color: fade(getColor("BLACK"), 0.5), drop: 6 },
     () => {
       sketch.fill(
-        mix(
-          mix(getColor("STONE", 600), getColor("WHITE"), 0.6),
-          getColor("BLACK"),
-          0.6 * (1 - light)
-        )
+        mix(MATERIAL.wallPlaster, getColor("BLACK"), 0.6 * (1 - light))
       );
       sketch.rect(wall.x, wall.y, wall.width, wall.height);
     }
@@ -140,7 +136,7 @@ function paintPost(
     const glow = powered && (evening || light < 0.2);
     sketch.fill(
       glow
-        ? mix(PLOT_COLORS.amber, getColor("WHITE"), 0.55)
+        ? MATERIAL.windowGlow
         : mix(getColor("ZINC", 900), getColor("SLATE", 600), 0.4)
     );
     sketch.rect(
@@ -157,7 +153,7 @@ function paintPost(
           y: wall.y + wall.height * 0.45,
         },
         wall.width * 0.25,
-        { color: PLOT_COLORS.amber, strength: 0.35 }
+        { color: MATERIAL.windowGlow, strength: 0.35 }
       );
     }
   }

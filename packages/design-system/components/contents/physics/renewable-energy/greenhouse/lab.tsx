@@ -15,7 +15,6 @@ import {
   surfaceEmission,
   surfaceTemperature,
 } from "@repo/design-system/components/contents/physics/renewable-energy/greenhouse/layer";
-import { SCENERY } from "@repo/design-system/components/contents/physics/renewable-energy/scenery/outdoor";
 import { useQuantity } from "@repo/design-system/components/contents/simulation/quantity";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import {
@@ -33,6 +32,7 @@ import {
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { P5Sketch } from "@repo/design-system/components/visual/sketch";
 import { getColor } from "@repo/design-system/lib/color";
+import { MATERIAL } from "@repo/design-system/lib/material";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import type p5 from "p5";
 import { type ReactNode, useState } from "react";
@@ -103,7 +103,7 @@ function greenhouseProgram(sketch: p5, read: () => GreenhouseFrame) {
     gradientRect(sketch, { height: ground, width, x: 0, y: 0 }, [
       [0, getColor("ZINC", 950)],
       [0.5, mix(getColor("ZINC", 950), getColor("SLATE", 800), 0.7)],
-      [1, mix(getColor("SLATE", 800), SCENERY.skyDay, 0.5)],
+      [1, mix(getColor("SLATE", 800), MATERIAL.skyZenith, 0.5)],
     ]);
     gradientRect(
       sketch,
@@ -124,7 +124,7 @@ function greenhouseProgram(sketch: p5, read: () => GreenhouseFrame) {
       Math.max((surfaceTemperature(absorptance) - BARE_TEMPERATURE) / 55, 0),
       1
     );
-    sketch.fill(mix(SCENERY.grass, PLOT_COLORS.orange, warmth * 0.55));
+    sketch.fill(mix(MATERIAL.grass, MATERIAL.sand, warmth * 0.6));
     sketch.ellipse(width / 2, ground + width * 1.6, width * 4, width * 3.2);
     spotlight(
       sketch,
