@@ -25,7 +25,7 @@ export const DISTANCE = { far: 120, near: 10 } as const;
 export const PITCH = { high: 1.35, low: 0.32 } as const;
 
 /** The cells across the opening view frames: the village and its shore, whatever the footprint. */
-const FRAMED = 34;
+const FRAMED = 24;
 
 /**
  * The camera an island of this footprint side opens with, on a screen of this

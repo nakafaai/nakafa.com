@@ -1,17 +1,11 @@
 "use client";
 
 import { SPAN } from "@repo/backend/confect/island/world";
-import {
-  Array as Arr,
-  DateTime,
-  HashSet,
-  MutableHashMap,
-  Option,
-  Record as Rec,
-  Result,
-} from "effect";
+import { Array as Arr, DateTime, HashSet, Option, Result } from "effect";
 import { use, useState } from "react";
 import { createPainter, type Painter } from "@/components/island/draw";
+import { bindInput } from "@/components/island/input";
+import { cursorOf } from "@/components/island/picture";
 import {
   type GameStoreApi,
   GameStoreContext,
@@ -22,19 +16,8 @@ import {
   easeOrbit,
   type Orbit,
   openingOrbit,
-  panOrbit,
-  turnOrbit,
-  zoomOrbit,
 } from "@/lib/island/camera";
-import {
-  distanceOf,
-  isTap,
-  LONG_PRESS,
-  type Point,
-  type Press,
-  pinchOf,
-  wheelZoomOf,
-} from "@/lib/island/gesture";
+import type { Point } from "@/lib/island/gesture";
 import { itemPlanOf, turnOf } from "@/lib/island/items";
 import { type Animal, herdOf, herdQuads, wander } from "@/lib/island/life";
 import { changedChunks, glowOf } from "@/lib/island/light";
@@ -101,7 +84,6 @@ function start(
   let needsDraw = true;
   let frame = 0;
   let lastWater = 0;
-  const presses = MutableHashMap.empty<number, Press>();
 
   let glow = glowOf(store.getState().cells);
   let herd = herdOf(store.getState().cells, store.getState().seed, size);
@@ -130,7 +112,21 @@ function start(
   };
   remesh(Arr.makeBy(CHUNKS * CHUNKS, (index) => index));
 
+  /** Shows the cursor of the hand the learner holds, or a grabbing hand while they drag the world. */
+  const showCursor = (dragging: boolean) => {
+    const { hotbar, slot, tool } = store.getState();
+    canvas.style.cursor = dragging ? "grabbing" : cursorOf(tool, hotbar[slot]);
+  };
+  showCursor(false);
+
   const unsubscribe = store.subscribe((state, previous) => {
+    if (
+      state.tool !== previous.tool ||
+      state.slot !== previous.slot ||
+      state.hotbar !== previous.hotbar
+    ) {
+      showCursor(false);
+    }
     if (state.revision !== previous.revision) {
       // A changed block can move light far past its own chunk, so every chunk whose light moved is meshed again too.
       const relit = glowOf(state.cells);
@@ -220,6 +216,7 @@ function start(
 
   const tick = (now: number) => {
     frame = requestAnimationFrame(tick);
+    input.tend(now);
     const moving =
       Math.abs(goal.yaw - orbit.yaw) > 1e-3 ||
       Math.abs(goal.distance - orbit.distance) > 1e-2 ||
@@ -310,104 +307,6 @@ function start(
   });
   resize.observe(canvas);
 
-  const move = (next: Orbit, eased = false) => {
-    goal = clampOrbit(next);
-    if (!eased) {
-      orbit = goal;
-    }
-    needsDraw = true;
-  };
-
-  /** Marks every press as used, so none of them builds when it lifts. */
-  const spendPresses = () => {
-    MutableHashMap.forEach(presses, (press, id) =>
-      MutableHashMap.set(presses, id, { ...press, used: true })
-    );
-  };
-  const onDown = (event: PointerEvent) => {
-    canvas.setPointerCapture(event.pointerId);
-    aim = Option.none();
-    spendPresses();
-    const point = { x: event.clientX, y: event.clientY };
-    const id = event.pointerId;
-    MutableHashMap.set(presses, id, {
-      at: event.timeStamp,
-      button: event.button,
-      last: point,
-      moved: 0,
-      start: point,
-      used: MutableHashMap.size(presses) > 0,
-    });
-    // A press held still digs out the block under it, without waiting for the lift.
-    window.setTimeout(() => {
-      Option.map(MutableHashMap.get(presses, id), (press) => {
-        if (press.used || press.moved >= 8) {
-          return;
-        }
-        MutableHashMap.set(presses, id, { ...press, used: true });
-        act(press.start, true);
-      });
-    }, LONG_PRESS);
-  };
-  const onMove = (event: PointerEvent) => {
-    const found = MutableHashMap.get(presses, event.pointerId);
-    if (Option.isNone(found)) {
-      if (event.pointerType === "mouse") {
-        const { tool } = store.getState();
-        aim = Option.map(
-          planAt({ x: event.clientX, y: event.clientY }, tool === "remove"),
-          (edit) => [edit.x, edit.y, edit.z] as const
-        );
-        needsDraw = true;
-      }
-      return;
-    }
-    const press = found.value;
-    const point = { x: event.clientX, y: event.clientY };
-    const other = Arr.findFirst(
-      Arr.fromIterable(MutableHashMap.values(presses)),
-      (entry) => entry !== press
-    );
-    if (Option.isSome(other)) {
-      const pinch = pinchOf(
-        [press.last, other.value.last],
-        [point, other.value.last]
-      );
-      const panned = panOrbit(orbit, pinch.dx, pinch.dy, canvas.clientHeight);
-      move(turnOrbit(zoomOrbit(panned, pinch.zoom), -pinch.twist));
-    } else if (press.button === 2 || event.shiftKey) {
-      const dx = point.x - press.last.x;
-      const dy = point.y - press.last.y;
-      move(turnOrbit(orbit, -dx * 0.01, dy * 0.006));
-    } else {
-      move(
-        panOrbit(
-          orbit,
-          point.x - press.last.x,
-          point.y - press.last.y,
-          canvas.clientHeight
-        )
-      );
-    }
-    MutableHashMap.set(presses, event.pointerId, {
-      ...press,
-      last: point,
-      moved: Math.max(press.moved, distanceOf(press.start, point)),
-    });
-  };
-  const onUp = (event: PointerEvent) => {
-    const found = MutableHashMap.get(presses, event.pointerId);
-    MutableHashMap.remove(presses, event.pointerId);
-    Option.map(found, (press) => {
-      if (!press.used && isTap(press.moved, event.timeStamp - press.at)) {
-        act(press.start, press.button === 2);
-      }
-    });
-  };
-  const onWheel = (event: WheelEvent) => {
-    event.preventDefault();
-    move(zoomOrbit(goal, wheelZoomOf(event.deltaY)), true);
-  };
   /** Walks the fox one cell, right (`across`) or away from the camera (`ahead` negative), as the camera faces. */
   const step = (across: number, ahead: number) => {
     const quarter = turnOf(orbit.yaw);
@@ -424,53 +323,34 @@ function start(
     );
     walkTo([last[0] + dx, last[1] + dz]);
   };
-  const onKey = (event: KeyboardEvent) => {
-    if (event.metaKey || event.ctrlKey || event.altKey) {
-      return;
-    }
-    const height = canvas.clientHeight;
-    const keys: Record<string, () => void> = {
-      "+": () => move(zoomOrbit(goal, 0.85), true),
-      "-": () => move(zoomOrbit(goal, 1.18), true),
-      a: () => step(-1, 0),
-      arrowdown: () => move(panOrbit(orbit, 0, -24, height)),
-      arrowleft: () => move(panOrbit(orbit, 24, 0, height)),
-      arrowright: () => move(panOrbit(orbit, -24, 0, height)),
-      arrowup: () => move(panOrbit(orbit, 0, 24, height)),
-      d: () => step(1, 0),
-      e: () => move(turnOrbit(goal, -Math.PI / 4), true),
-      q: () => move(turnOrbit(goal, Math.PI / 4), true),
-      s: () => step(0, 1),
-      w: () => step(0, -1),
-    };
-    const digit = Number.parseInt(event.key, 10);
-    if (digit >= 1 && digit <= store.getState().hotbar.length) {
-      store.getState().choose(digit - 1);
-      return;
-    }
-    Option.map(Rec.get(keys, event.key.toLowerCase()), (handler) => {
-      event.preventDefault();
-      handler();
-    });
-  };
 
-  canvas.addEventListener("pointerdown", onDown);
-  canvas.addEventListener("pointermove", onMove);
-  canvas.addEventListener("pointerup", onUp);
-  canvas.addEventListener("pointercancel", onUp);
-  canvas.addEventListener("wheel", onWheel, { passive: false });
-  window.addEventListener("keydown", onKey);
+  const input = bindInput(canvas, store, {
+    camera: () => ({ goal, orbit }),
+    drag: showCursor,
+    hover: (point) => {
+      const remove = store.getState().tool === "remove";
+      aim = Option.map(
+        Option.flatMap(point, (at) => planAt(at, remove)),
+        (edit) => [edit.x, edit.y, edit.z] as const
+      );
+      needsDraw = true;
+    },
+    move: (next, eased = false) => {
+      goal = clampOrbit(next);
+      if (!eased) {
+        orbit = goal;
+      }
+      needsDraw = true;
+    },
+    press: act,
+    step,
+  });
 
   return () => {
     cancelAnimationFrame(frame);
     resize.disconnect();
     unsubscribe();
-    canvas.removeEventListener("pointerdown", onDown);
-    canvas.removeEventListener("pointermove", onMove);
-    canvas.removeEventListener("pointerup", onUp);
-    canvas.removeEventListener("pointercancel", onUp);
-    canvas.removeEventListener("wheel", onWheel);
-    window.removeEventListener("keydown", onKey);
+    input.release();
     painter.release();
   };
 }

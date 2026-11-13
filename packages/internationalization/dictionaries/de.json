@@ -4653,7 +4653,7 @@
     "top": "Alle Blöcke sind offen",
     "play": "Spielen",
     "mute": "Ton aus",
-    "items": "Fertig",
+    "items": "Objekte",
     "blocks": "Blöcke",
     "item-house": "Häuschen",
     "item-tree": "Baum",
@@ -4961,6 +4961,7 @@
     "block-papaya": "Papayapflanze",
     "plants": "Pflanzen",
     "walk": "Laufen",
-    "notice-path": "Dahin führt kein Weg. Probier eine Stelle, die dein Fuchs erreicht."
+    "notice-path": "Dahin führt kein Weg. Probier eine Stelle, die dein Fuchs erreicht.",
+    "search": "Suchen"
   }
 }
