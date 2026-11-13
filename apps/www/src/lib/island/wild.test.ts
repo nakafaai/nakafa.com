@@ -97,4 +97,19 @@ describe("island/wild", () => {
       }
     });
   });
+
+  it("stands a walker on the sea's level once the ground under it is dug away", () => {
+    const cells = terrainOf(11, 52);
+    const walker = Arr.findFirst(
+      wildOf(cells, 11, 52, DAY),
+      (creature) => SPECIES[creature.index].home === "land"
+    );
+    expect(Option.isSome(walker)).toBe(true);
+    if (Option.isNone(walker)) {
+      return;
+    }
+    const dug = new Uint8Array(cells.length);
+    const vertices = wildVertices(dug, [walker.value], 52, 0.7, 12);
+    expect(vertices[1]).toBeCloseTo(SEA_LEVEL);
+  });
 });

@@ -65,10 +65,14 @@ export function pathOf(
 ) {
   const start = from[1] * SPAN + from[0];
   const goal = to[1] * SPAN + to[0];
-  if (Option.isNone(standOf(cells, to[0], to[1]))) {
+  const ground = standOf(cells, from[0], from[1]);
+  if (Option.isNone(ground) || Option.isNone(standOf(cells, to[0], to[1]))) {
     return Option.none();
   }
   const before = new Int32Array(SPAN * SPAN).fill(-1);
+  // The height each reached cell is stood on, so a step compares feet without asking again.
+  const feet = new Int16Array(SPAN * SPAN);
+  feet[start] = ground.value;
   const queue = new Int32Array(SEARCH);
   before[start] = start;
   queue[0] = start;
@@ -79,7 +83,6 @@ export function pathOf(
     head += 1;
     const x = at % SPAN;
     const z = Math.floor(at / SPAN);
-    const feet = Option.getOrElse(standOf(cells, x, z), () => -9);
     for (const [dx, dz] of STEPS) {
       const next = (z + dz) * SPAN + x + dx;
       const stand = standOf(cells, x + dx, z + dz);
@@ -88,8 +91,10 @@ export function pathOf(
         x + dx >= 0 &&
         x + dx < SPAN &&
         before[next] === -1 &&
-        Option.exists(stand, (y) => Math.abs(y - feet) <= 1)
+        Option.isSome(stand) &&
+        Math.abs(stand.value - feet[at]) <= 1
       ) {
+        feet[next] = stand.value;
         before[next] = at;
         queue[tail] = next;
         tail += 1;

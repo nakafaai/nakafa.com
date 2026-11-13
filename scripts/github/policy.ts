@@ -12,6 +12,10 @@ const NonNegativeInteger = Schema.Finite.pipe(
 
 const GithubActionReviewSchema = Schema.Struct({
   action: Schema.String,
+  /** Other reviewed input sets of the same action, for workflows that use it for another purpose. */
+  alternativeInputs: Schema.optional(
+    Schema.Array(Schema.Record(Schema.String, Schema.String))
+  ),
   approvedSha: Schema.String,
   expectedInputs: Schema.optional(Schema.Record(Schema.String, Schema.String)),
   expectedTag: Schema.String,
@@ -38,6 +42,9 @@ const STAGE_READS = `reads-${expression("env.NAKAFA_DEPLOY_STAGE")}-`;
 /** The prefix of the deploy's read store saves for one release of one stage. */
 const RELEASE_READS = `${STAGE_READS}${expression("steps.release.outputs.id")}-`;
 
+/** The folders a proof caches its prepared runtime in: the snapshot store and the Convex backend binary. */
+const PREPARED_PATHS = `${expression("runner.temp")}/snapshots\n~/.cache/convex/binaries\n`;
+
 export const GITHUB_ACTION_REVIEWS = Schema.decodeSync(
   Schema.Array(GithubActionReviewSchema)
 )([
@@ -45,9 +52,9 @@ export const GITHUB_ACTION_REVIEWS = Schema.decodeSync(
     action: "actions/checkout",
     approvedSha: "3d3c42e5aac5ba805825da76410c181273ba90b1",
     expectedTag: "v7.0.1",
-    expectedUsages: 2,
+    expectedUsages: 4,
     reason:
-      "Checkout is pinned to the latest reviewed stable release. The CLI publication and the deploy workflow each check out the commit.",
+      "Checkout is pinned to the latest reviewed stable release. The CLI publication and the deploy workflow each check out the commit, and the proof workflow checks out the proven head without credentials in its build and spec jobs.",
   },
   {
     action: "oven-sh/setup-bun",
@@ -72,6 +79,17 @@ export const GITHUB_ACTION_REVIEWS = Schema.decodeSync(
   },
   {
     action: "actions/cache/restore",
+    alternativeInputs: [
+      {
+        key: `prepared-${expression("steps.key.outputs.key")}`,
+        path: PREPARED_PATHS,
+      },
+      {
+        "fail-on-cache-miss": "true",
+        key: `prepared-${expression("needs.build.outputs.key")}`,
+        path: PREPARED_PATHS,
+      },
+    ],
     approvedSha: "55cc8345863c7cc4c66a329aec7e433d2d1c52a9",
     expectedInputs: {
       key: `${RELEASE_READS}${expression("github.run_id")}-${expression("github.run_attempt")}`,
@@ -79,35 +97,43 @@ export const GITHUB_ACTION_REVIEWS = Schema.decodeSync(
       "restore-keys": `${RELEASE_READS}\n${STAGE_READS}\n`,
     },
     expectedTag: "v6.1.0",
-    expectedUsages: 1,
+    expectedUsages: 3,
     reason:
-      "The deploy job restores the newest Convex reads that a deploy of the same stage kept, the same release first: every store entry is keyed by what its answer depends on, so the cache key names the stage and the release alone, never the code or the dependencies, which would read the whole release again (docs/convex/cost.md, Deploy reads).",
+      "The proof workflow restores the prepared acceptance runtime only by its exact key, the hash of everything that state depends on, so a changed input never reuses it; its spec machines refuse a miss. The deploy job restores the newest Convex reads that a deploy of the same stage kept, the same release first: every store entry is keyed by what its answer depends on, so the cache key names the stage and the release alone, never the code or the dependencies, which would read the whole release again (docs/convex/cost.md, Deploy reads).",
   },
   {
     action: "actions/cache/save",
+    alternativeInputs: [
+      {
+        key: `prepared-${expression("steps.key.outputs.key")}`,
+        path: PREPARED_PATHS,
+      },
+    ],
     approvedSha: "55cc8345863c7cc4c66a329aec7e433d2d1c52a9",
     expectedInputs: {
       key: expression("steps.reads.outputs.cache-primary-key"),
       path: ".cache/reads",
     },
     expectedTag: "v6.1.0",
-    expectedUsages: 1,
+    expectedUsages: 2,
     reason:
-      "The deploy job saves the Convex reads it added under its own run's key, so the next deploy of the release restores them (docs/convex/cost.md, Deploy reads).",
+      "The proof workflow saves a prepared acceptance runtime it had to prepare, under its exact key. The deploy job saves the Convex reads it added under its own run's key, so the next deploy of the release restores them (docs/convex/cost.md, Deploy reads).",
   },
   {
     action: "actions/upload-artifact",
     approvedSha: "cf430e030ddbb5b0abf93d22962f4752f3646cd9",
     expectedTag: "v7.0.2",
-    expectedUsages: 2,
-    reason: "Separated CLI artifacts use the reviewed release.",
+    expectedUsages: 5,
+    reason:
+      "Separated CLI artifacts use the reviewed release, and the proof workflow hands its build to the spec machines and keeps each shard's result and failure traces.",
   },
   {
     action: "actions/download-artifact",
     approvedSha: "9000827ccba6bdab643e8b6fd33ac0654aef8333",
     expectedTag: "v8.0.2",
-    expectedUsages: 3,
-    reason: "CLI publishing and verification download separated artifacts.",
+    expectedUsages: 5,
+    reason:
+      "CLI publishing and verification download separated artifacts, a proof's spec machines download its build, and its report collects the shard results.",
   },
   {
     action: "actions/setup-node",
@@ -187,6 +213,23 @@ function inputProblems(
   );
 }
 
+/**
+ * The input problems of one use: none when its inputs are exactly one of the
+ * review's alternative sets, otherwise those against the expected set.
+ */
+function reviewedInputProblems(
+  use: GithubActionUse,
+  action: string,
+  expectedInputs: Readonly<Record<string, string>>,
+  alternativeInputs: readonly Readonly<Record<string, string>>[]
+) {
+  const alternative = Arr.some(
+    alternativeInputs,
+    (inputs) => inputProblems(use, action, inputs).length === 0
+  );
+  return alternative ? [] : inputProblems(use, action, expectedInputs);
+}
+
 /** Validates immutable revisions, exact reviewed inputs, complete action coverage, and where local actions live. */
 export function validateGithubActionPolicy(
   actionUses: readonly GithubActionUse[]
@@ -232,7 +275,12 @@ export function validateGithubActionPolicy(
           `${use.workflowPath} pins ${parsed.action} to ${parsed.revision}; approved ${review.approvedSha}.`
         ),
         review.expectedInputs
-          ? inputProblems(use, parsed.action, review.expectedInputs)
+          ? reviewedInputProblems(
+              use,
+              parsed.action,
+              review.expectedInputs,
+              review.alternativeInputs ?? []
+            )
           : []
       ),
       reviewed: [parsed.action],

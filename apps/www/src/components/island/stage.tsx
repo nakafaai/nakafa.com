@@ -1,6 +1,6 @@
 "use client";
 
-import { idOf, keyOf } from "@repo/backend/confect/island/blocks";
+import { keyOf } from "@repo/backend/confect/island/blocks";
 import { SPAN } from "@repo/backend/confect/island/world";
 import {
   Array as Arr,
@@ -8,45 +8,26 @@ import {
   HashSet,
   MutableHashMap,
   Option,
-  Record as Rec,
   Result,
 } from "effect";
 import { use, useState } from "react";
 import { createPainter, type Painter } from "@/components/island/draw";
-import { cursorOf } from "@/components/island/icon";
+import { bindInput } from "@/components/island/input";
+import { cursorOf } from "@/components/island/picture";
+import { createRod } from "@/components/island/rod";
 import {
   type GameStoreApi,
   GameStoreContext,
   heldOf,
 } from "@/components/island/store";
-import { SLOTS } from "@/lib/island/atlas";
 import {
   clampOrbit,
   easeOrbit,
   type Orbit,
   openingOrbit,
-  panOrbit,
-  turnOrbit,
-  zoomOrbit,
 } from "@/lib/island/camera";
 import { hoeOf, ripeningOf, sownOf, waterOf } from "@/lib/island/farming";
-import {
-  BITE,
-  type Cast,
-  castOf,
-  catchOf,
-  dipOf,
-  reelOf,
-} from "@/lib/island/fishing";
-import {
-  distanceOf,
-  isTap,
-  LONG_PRESS,
-  type Point,
-  type Press,
-  pinchOf,
-  wheelZoomOf,
-} from "@/lib/island/gesture";
+import type { Point } from "@/lib/island/gesture";
 import { itemPlanOf, turnOf } from "@/lib/island/items";
 import { type Animal, herdOf, herdQuads, wander } from "@/lib/island/life";
 import { changedChunks, glowOf } from "@/lib/island/light";
@@ -56,7 +37,7 @@ import { pathOf } from "@/lib/island/path";
 import { planOf } from "@/lib/island/plan";
 import { castRay } from "@/lib/island/ray";
 import { hourOf, lightOf } from "@/lib/island/sky";
-import { roam, standingQuad, wildOf, wildVertices } from "@/lib/island/wild";
+import { roam, wildOf, wildVertices } from "@/lib/island/wild";
 import { type Cells, CHUNKS, SEA_LEVEL } from "@/lib/island/world";
 
 /**
@@ -95,9 +76,6 @@ export function IslandStage({ size }: { size: number }) {
   );
 }
 
-/** The water block, where a line is cast. */
-const WATER_BLOCK = idOf("water");
-
 /** How fast the learner's fox walks, in cells a second. */
 const WALK_SPEED = 3.2;
 
@@ -116,7 +94,6 @@ function start(
   let needsDraw = true;
   let frame = 0;
   let lastWater = 0;
-  const presses = MutableHashMap.empty<number, Press>();
 
   let glow = glowOf(store.getState().cells);
   let herd = herdOf(store.getState().cells, store.getState().seed, size);
@@ -130,7 +107,7 @@ function start(
   let lastLife = 0;
   // The learner's own fox (ADR 0047, D12): it starts on the village square and walks where the learner sends it.
   let walker = { x: SPAN / 2 + 0.5, z: SPAN / 2 + 2.5 };
-  let route = Arr.empty<readonly [number, number]>();
+  let route: readonly (readonly [number, number])[] = [];
   canvas.dataset.player = `${Math.floor(walker.x)},${Math.floor(walker.z)}`;
   const remesh = (chunks: Iterable<number>) => {
     const { cells } = store.getState();
@@ -193,44 +170,8 @@ function start(
     );
   };
 
-  // A line in the water (ADR 0047, D15): a float until a fish bites and the learner reels in.
-  let cast = Option.none<Cast>();
-  let casts = 0;
-  let warned = false;
-
-  /** Casts into the water a press hit, or reels in the line already out. */
-  const fish = (point: Point) => {
-    const state = store.getState();
-    const now = performance.now() / 1000;
-    needsDraw = true;
-    if (Option.isSome(cast)) {
-      if (reelOf(cast.value, now) === "caught") {
-        state.setNotice(null);
-        state.addCatch(catchOf(state.seed, casts));
-      } else {
-        state.setNotice("escaped");
-      }
-      cast = Option.none();
-      return;
-    }
-    Option.map(hitAt(point), (hit) => {
-      if (hit.block !== WATER_BLOCK) {
-        state.setNotice("far");
-        return;
-      }
-      Result.match(
-        castOf([walker.x, walker.z], hit.hit, state.seed, casts, now),
-        {
-          onFailure: () => state.setNotice("far"),
-          onSuccess: (line) => {
-            cast = Option.some(line);
-            casts += 1;
-            warned = false;
-          },
-        }
-      );
-    });
-  };
+  // The learner's fishing rod (ADR 0047, D15).
+  const rod = createRod(store);
 
   /** Tills, harvests or waters at a point of the screen (D16), or says what the tool needs. */
   const farm = (point: Point, tool: "hoe" | "can") => {
@@ -289,7 +230,8 @@ function start(
       return;
     }
     if (state.tool === "fish" && !remove) {
-      fish(point);
+      needsDraw = true;
+      rod.press(hitAt(point), [walker.x, walker.z]);
       return;
     }
     if (state.tool === "walk" && !remove) {
@@ -357,41 +299,17 @@ function start(
     return next;
   };
 
-  /** Warns of a bite on the line out, and lets the fish go once the bite is over. */
-  const tendLine = (seconds: number) => {
-    Option.map(cast, (line) => {
-      if (seconds >= line.bite && !warned) {
-        warned = true;
-        store.getState().setNotice("bite");
-      }
-      if (seconds > line.bite + BITE) {
-        cast = Option.none();
-        store.getState().setNotice("escaped");
-      }
-    });
-  };
-
   /** Hands the painter every creature this frame: the herd, the fox facing its way or its float, the wild visitors, and the float itself. */
   const drawLife = (
     cells: Cells,
     next: Option.Option<readonly [number, number]>,
     seconds: number
   ) => {
-    const float = Option.match(cast, {
-      onNone: () => [],
-      onSome: (line) =>
-        standingQuad(
-          SLOTS.bobber,
-          [line.x, line.y - 0.3 + dipOf(line, seconds), line.z],
-          0.5,
-          orbit.yaw
-        ),
-    });
     // The fox faces where it walks, or its float while it fishes.
     const facing = Option.getOrElse(
       Option.orElse(
         Option.map(next, ([cx, cz]) => [cx + 0.5, cz + 0.5] as const),
-        () => Option.map(cast, (line) => [line.x, line.z] as const)
+        rod.float
       ),
       () => [walker.x, walker.z] as const
     );
@@ -413,7 +331,7 @@ function start(
         seconds,
         Arr.appendAll(
           wildVertices(cells, wild, size, orbit.yaw, seconds),
-          float
+          rod.quads(seconds, orbit.yaw)
         )
       )
     );
@@ -438,7 +356,7 @@ function start(
       weather === "rain" || weather === "storm" || weather === "snow";
     const waterDue = now - lastWater > (falling ? 33 : 66);
     if (
-      !(needsDraw || waterDue || route.length > 0 || Option.isSome(cast)) ||
+      !(needsDraw || waterDue || route.length > 0 || rod.active()) ||
       document.hidden
     ) {
       return;
@@ -458,8 +376,8 @@ function start(
       lastGrowth = now;
       growCrops(now / 1000);
     }
-    tendLine(now / 1000);
-    canvas.dataset.fishing = Option.isSome(cast) ? "true" : "false";
+    rod.tend(now / 1000);
+    canvas.dataset.fishing = rod.active() ? "true" : "false";
     drawLife(cells, next, now / 1000);
     const hour = hourOf(DateTime.nowUnsafe(), DateTime.zoneMakeLocal());
     const minute = Math.floor(hour * 60) % (24 * 60);
@@ -480,109 +398,6 @@ function start(
   });
   resize.observe(canvas);
 
-  const move = (next: Orbit, eased = false) => {
-    goal = clampOrbit(next);
-    if (!eased) {
-      orbit = goal;
-    }
-    needsDraw = true;
-  };
-
-  /** Marks every press as used, so none of them builds when it lifts. */
-  const spendPresses = () => {
-    MutableHashMap.forEach(presses, (press, id) =>
-      MutableHashMap.set(presses, id, { ...press, used: true })
-    );
-  };
-  const onDown = (event: PointerEvent) => {
-    canvas.setPointerCapture(event.pointerId);
-    aim = Option.none();
-    spendPresses();
-    const point = { x: event.clientX, y: event.clientY };
-    const id = event.pointerId;
-    MutableHashMap.set(presses, id, {
-      at: event.timeStamp,
-      button: event.button,
-      last: point,
-      moved: 0,
-      start: point,
-      used: MutableHashMap.size(presses) > 0,
-    });
-    // A press held still digs out the block under it, without waiting for the lift.
-    window.setTimeout(() => {
-      Option.map(MutableHashMap.get(presses, id), (press) => {
-        if (press.used || press.moved >= 8) {
-          return;
-        }
-        MutableHashMap.set(presses, id, { ...press, used: true });
-        act(press.start, true);
-      });
-    }, LONG_PRESS);
-  };
-  const onMove = (event: PointerEvent) => {
-    const found = MutableHashMap.get(presses, event.pointerId);
-    if (Option.isNone(found)) {
-      if (event.pointerType === "mouse") {
-        const { tool } = store.getState();
-        aim = Option.map(
-          planAt({ x: event.clientX, y: event.clientY }, tool === "remove"),
-          (edit) => [edit.x, edit.y, edit.z] as const
-        );
-        needsDraw = true;
-      }
-      return;
-    }
-    const press = found.value;
-    const point = { x: event.clientX, y: event.clientY };
-    const other = Arr.findFirst(
-      Arr.fromIterable(MutableHashMap.values(presses)),
-      (entry) => entry !== press
-    );
-    if (Option.isSome(other)) {
-      const pinch = pinchOf(
-        [press.last, other.value.last],
-        [point, other.value.last]
-      );
-      const panned = panOrbit(orbit, pinch.dx, pinch.dy, canvas.clientHeight);
-      move(turnOrbit(zoomOrbit(panned, pinch.zoom), -pinch.twist));
-    } else if (press.button === 2 || event.shiftKey) {
-      const dx = point.x - press.last.x;
-      const dy = point.y - press.last.y;
-      move(turnOrbit(orbit, -dx * 0.01, dy * 0.006));
-    } else {
-      move(
-        panOrbit(
-          orbit,
-          point.x - press.last.x,
-          point.y - press.last.y,
-          canvas.clientHeight
-        )
-      );
-    }
-    const moved = Math.max(press.moved, distanceOf(press.start, point));
-    if (moved >= 8) {
-      showCursor(true);
-    }
-    MutableHashMap.set(presses, event.pointerId, {
-      ...press,
-      last: point,
-      moved,
-    });
-  };
-  const onUp = (event: PointerEvent) => {
-    const found = MutableHashMap.get(presses, event.pointerId);
-    MutableHashMap.remove(presses, event.pointerId);
-    showCursor(false);
-    Option.map(found, (press) => {
-      if (!press.used && isTap(press.moved, event.timeStamp - press.at)) {
-        act(press.start, press.button === 2);
-      }
-    });
-  };
-  const onWheel = (event: WheelEvent) => {
-    event.preventDefault();
-    move(zoomOrbit(goal, wheelZoomOf(event.deltaY)), true);
-  };
   /** Walks the fox one cell, right (`across`) or away from the camera (`ahead` negative), as the camera faces. */
   const step = (across: number, ahead: number) => {
     const quarter = turnOf(orbit.yaw);
@@ -599,64 +414,34 @@ function start(
     );
     walkTo([last[0] + dx, last[1] + dz]);
   };
-  const onKey = (event: KeyboardEvent) => {
-    if (event.key === "Escape" && store.getState().book) {
-      store.getState().setBook(false);
-      return;
-    }
-    // Keys typed into the book's search, or pressed while the book is open, are not moves in the world.
-    if (
-      event.metaKey ||
-      event.ctrlKey ||
-      event.altKey ||
-      event.target instanceof HTMLInputElement ||
-      store.getState().book
-    ) {
-      return;
-    }
-    const height = canvas.clientHeight;
-    const keys: Record<string, () => void> = {
-      "+": () => move(zoomOrbit(goal, 0.85), true),
-      "-": () => move(zoomOrbit(goal, 1.18), true),
-      a: () => step(-1, 0),
-      arrowdown: () => move(panOrbit(orbit, 0, -24, height)),
-      arrowleft: () => move(panOrbit(orbit, 24, 0, height)),
-      arrowright: () => move(panOrbit(orbit, -24, 0, height)),
-      arrowup: () => move(panOrbit(orbit, 0, 24, height)),
-      d: () => step(1, 0),
-      e: () => move(turnOrbit(goal, -Math.PI / 4), true),
-      q: () => move(turnOrbit(goal, Math.PI / 4), true),
-      s: () => step(0, 1),
-      w: () => step(0, -1),
-    };
-    const digit = Number.parseInt(event.key, 10);
-    if (digit >= 1 && digit <= store.getState().hotbar.length) {
-      store.getState().choose(digit - 1);
-      return;
-    }
-    Option.map(Rec.get(keys, event.key.toLowerCase()), (handler) => {
-      event.preventDefault();
-      handler();
-    });
-  };
 
-  canvas.addEventListener("pointerdown", onDown);
-  canvas.addEventListener("pointermove", onMove);
-  canvas.addEventListener("pointerup", onUp);
-  canvas.addEventListener("pointercancel", onUp);
-  canvas.addEventListener("wheel", onWheel, { passive: false });
-  window.addEventListener("keydown", onKey);
+  const unbind = bindInput(canvas, store, {
+    camera: () => ({ goal, orbit }),
+    drag: showCursor,
+    hover: (point) => {
+      const remove = store.getState().tool === "remove";
+      aim = Option.map(
+        Option.flatMap(point, (at) => planAt(at, remove)),
+        (edit) => [edit.x, edit.y, edit.z] as const
+      );
+      needsDraw = true;
+    },
+    move: (next, eased = false) => {
+      goal = clampOrbit(next);
+      if (!eased) {
+        orbit = goal;
+      }
+      needsDraw = true;
+    },
+    press: act,
+    step,
+  });
 
   return () => {
     cancelAnimationFrame(frame);
     resize.disconnect();
     unsubscribe();
-    canvas.removeEventListener("pointerdown", onDown);
-    canvas.removeEventListener("pointermove", onMove);
-    canvas.removeEventListener("pointerup", onUp);
-    canvas.removeEventListener("pointercancel", onUp);
-    canvas.removeEventListener("wheel", onWheel);
-    window.removeEventListener("keydown", onKey);
+    unbind();
     painter.release();
   };
 }
