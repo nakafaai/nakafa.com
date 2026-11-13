@@ -53,6 +53,7 @@ import { inspectCohortPins, inspectSharedFiles } from "#scripts/check/shared";
 import { inspectStylesheet } from "#scripts/check/sheets";
 import { inspectModuleSize } from "#scripts/check/size";
 import { openRepositoryCompiler, parseSources } from "#scripts/check/source";
+import { inspectTables } from "#scripts/check/tables";
 import { inspectTailwindSource } from "#scripts/check/tailwind";
 import { inspectToastSource } from "#scripts/check/toasts";
 import { runEntry } from "#scripts/entry";
@@ -128,6 +129,7 @@ const inspectSources = Effect.fn("RepositoryPolicy.inspectSources")(function* (
       ])
     ),
     inspectExports(parsed.modules, otherModules, unjudged),
+    inspectTables(parsed.modules),
     yield* classFindings(parsed),
   ]);
 }, Effect.scoped);
