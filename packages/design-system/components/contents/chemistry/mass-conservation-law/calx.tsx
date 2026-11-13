@@ -263,7 +263,7 @@ function CalxScene({
       </group>
       <mesh castShadow position={BULB}>
         <sphereGeometry args={[0.05, 40, 24]} />
-        <GlassMaterial color={MATERIAL.glass} opacity={0.22} />
+        <GlassMaterial color={MATERIAL.glass} opacity={0.14} />
       </mesh>
       <mesh position={[BULB.x, BULB.y - 0.03, 0]}>
         <sphereGeometry
@@ -291,7 +291,7 @@ function CalxScene({
         })}
       </Instances>
       <mesh geometry={neck}>
-        <GlassMaterial color={MATERIAL.glass} opacity={0.3} />
+        <GlassMaterial color={MATERIAL.glass} opacity={0.16} />
       </mesh>
       <group position={JAR}>
         <mesh position={[0, 0.015, 0]} receiveShadow>
@@ -312,13 +312,13 @@ function CalxScene({
           <cylinderGeometry
             args={[JAR_RADIUS, JAR_RADIUS, 0.16, 48, 1, true]}
           />
-          <GlassMaterial color={MATERIAL.glass} opacity={0.2} />
+          <GlassMaterial color={MATERIAL.glass} opacity={0.12} />
         </mesh>
         <mesh position={[0, 0.18, 0]}>
           <sphereGeometry
             args={[JAR_RADIUS, 48, 16, 0, Math.PI * 2, 0, Math.PI / 2]}
           />
-          <GlassMaterial color={MATERIAL.glass} opacity={0.2} />
+          <GlassMaterial color={MATERIAL.glass} opacity={0.12} />
         </mesh>
       </group>
     </>
