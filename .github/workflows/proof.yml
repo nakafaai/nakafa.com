@@ -37,11 +37,10 @@ on:
         default: ""
         type: string
 
+# No concurrency group: a group named by the specs outgrows GitHub's limit on a
+# group name with a long selection, and every dispatch of `bun run proof` is its
+# own proof, named by its nonce.
 permissions: {}
-
-concurrency:
-  group: proof-${{ inputs.sha }}-${{ inputs.specs }}
-  cancel-in-progress: true
 
 jobs:
   build:
