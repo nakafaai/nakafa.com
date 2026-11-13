@@ -20,7 +20,6 @@ import {
   TryoutPlayerOpening,
   TryoutRunningPlayer,
 } from "@/components/tryout/player/opening";
-import { TryoutPracticeLink } from "@/components/tryout/practice/link";
 import {
   TryoutFinishedPlace,
   TryoutReviewFrame,
@@ -302,11 +301,7 @@ function ResolvedTryoutSectionPage({
             binding={binding}
             sectionStatus={sectionStatus}
           >
-            <TryoutReviewView
-              outside={
-                <TryoutPracticeLink publicPath={getTryoutPublicPath(route)} />
-              }
-            />
+            <TryoutReviewView />
           </TryoutSectionHeader>
         }
         pending={actionAttempt === undefined}

@@ -5,10 +5,10 @@ import { ClockProvider } from "@/components/player/now";
 import { ConvexIsland } from "@/components/providers/island";
 import { ShellLockCarry, usePrepaintRelease } from "@/components/sidebar/lock";
 import { AppNotFound } from "@/components/state/app";
-import { useTryoutPracticing } from "@/components/tryout/practice/link";
 import {
   TryoutPractice,
   TryoutPracticeSession,
+  useTryoutPracticing,
 } from "@/components/tryout/practice/page";
 import { TryoutAttemptReview } from "@/components/tryout/review/deferred";
 import { readTryoutSetFn } from "@/components/tryout/route/attempt.functions";

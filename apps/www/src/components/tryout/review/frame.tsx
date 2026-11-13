@@ -107,10 +107,10 @@ export function TryoutReviewFrame({
 
 /**
  * The header's second control, for a header that a review and the section page share: the view of the
- * questions in a review's frame, since only a review has questions to lay out, and `outside` anywhere else.
+ * questions in a review's frame, since only a review has questions to lay out, and nothing anywhere else.
  */
-export function TryoutReviewView({ outside }: { outside: ReactNode }) {
-  return use(TryoutReviewContext) === null ? outside : <PlayerViewSwitch />;
+export function TryoutReviewView() {
+  return use(TryoutReviewContext) === null ? null : <PlayerViewSwitch />;
 }
 
 /**
