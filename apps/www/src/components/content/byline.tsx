@@ -71,7 +71,7 @@ function ContentDate({
   return (
     <div className="flex items-center gap-1.5" title={label}>
       <dt className="sr-only">{label}</dt>
-      <HugeIcons aria-hidden="true" className="size-4" icon={icon} />
+      <HugeIcons aria-hidden="true" icon={icon} />
       <dd>
         <time className="tabular-nums" dateTime={date}>
           {formatter.dateTime(

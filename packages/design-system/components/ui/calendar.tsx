@@ -68,31 +68,17 @@ function CalendarChevron({
 }) {
   if (orientation === "left") {
     return (
-      <HugeIcons
-        className={cn("size-4", className)}
-        icon={ArrowLeft01Icon}
-        {...props}
-      />
+      <HugeIcons className={className} icon={ArrowLeft01Icon} {...props} />
     );
   }
 
   if (orientation === "right") {
     return (
-      <HugeIcons
-        className={cn("size-4", className)}
-        icon={ArrowRight01Icon}
-        {...props}
-      />
+      <HugeIcons className={className} icon={ArrowRight01Icon} {...props} />
     );
   }
 
-  return (
-    <HugeIcons
-      className={cn("size-4", className)}
-      icon={ArrowDown01Icon}
-      {...props}
-    />
-  );
+  return <HugeIcons className={className} icon={ArrowDown01Icon} {...props} />;
 }
 
 /**

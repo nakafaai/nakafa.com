@@ -82,7 +82,7 @@ function DatePicker({
         )}
       >
         <HugeIcons
-          className="text-muted-foreground size-4 shrink-0"
+          className="text-muted-foreground shrink-0"
           icon={Calendar03Icon}
         />
         <span className="flex-1 whitespace-nowrap" id={shownId}>

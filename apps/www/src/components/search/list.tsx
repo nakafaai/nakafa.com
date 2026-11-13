@@ -49,7 +49,7 @@ export function SearchResults({
   if (isError) {
     return (
       <div className="text-muted-foreground flex items-center justify-center gap-1 text-sm">
-        <HugeIcons className="size-4" icon={InformationCircleIcon} />
+        <HugeIcons icon={InformationCircleIcon} />
         <div className="mt-1">{t("search-error")}</div>
         <div className="mt-2 max-w-xs text-xs wrap-break-word">{error}</div>
       </div>
@@ -112,7 +112,7 @@ function ResultGroup({ group }: { group: SearchResultGroup }) {
           >
             <div className="flex items-center gap-2">
               <HugeIcons
-                className="text-muted-foreground group-hover:text-accent-foreground size-4 shrink-0"
+                className="text-muted-foreground group-hover:text-accent-foreground shrink-0"
                 icon={FileIcon}
               />
               <span className="line-clamp-1">{result.title}</span>

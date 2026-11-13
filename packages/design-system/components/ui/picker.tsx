@@ -308,7 +308,7 @@ function PickerContent<Item>({
             placeholder={placeholder}
             showClear
             size={surface === "drawer" ? "lg" : "default"}
-            startAddon={<HugeIcons className="size-4" icon={Search02Icon} />}
+            startAddon={<HugeIcons icon={Search02Icon} />}
           />
         </div>
         <ScrollArea
@@ -366,7 +366,7 @@ function PickerItem({
       <OptionIcon icon={icon} />
       <span className="flex min-w-0 flex-1 items-center gap-2">{children}</span>
       <HugeIcons
-        className="size-4 opacity-0 transition-opacity ease-out group-data-chosen/picker-item:opacity-100"
+        className="opacity-0 transition-opacity ease-out group-data-chosen/picker-item:opacity-100"
         icon={Tick01Icon}
       />
     </AutocompleteItem>

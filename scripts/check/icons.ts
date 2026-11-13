@@ -13,7 +13,6 @@ import {
   isJsxExpression,
   isJsxSelfClosingElement,
   isLiteralLikeNode,
-  isNumericLiteral,
   type JsxAttributes,
   type Node,
   type SourceFile,
@@ -21,9 +20,8 @@ import {
 import { nodesBelow, tagText } from "#scripts/check/drilling";
 
 const SOURCE_PATTERN = /^(?:apps|packages)\/.+\.tsx?$/u;
-/** The largest icon on Nakafa's scale, `size-4`, in Tailwind's steps and in pixels. */
+/** The largest icon on Nakafa's scale, `size-4`, in Tailwind's steps; a part may shrink its icons below it. */
 const LARGEST_STEP = 4;
-const LARGEST_PIXELS = 16;
 /** What draws a Hugeicons icon: the design system's wrapper and the library's own component. */
 const ICON_TAGS = HashSet.make("HugeIcons", "HugeiconsIcon");
 /** The library's own component, which draws 24px unless told otherwise, and the one module that wraps it. */
@@ -36,8 +34,12 @@ const ELEMENT_SIZE_PATTERN =
 const SELECTOR_SIZE_PATTERN =
   /svg\S*?\]:(?<utility>(?:size|h|w)-(?<step>\d+(?:\.\d+)?))(?=[\s"'`]|$)/gu;
 
-/** The utilities that a pattern finds in a class text above `size-4`, such as `size-6`. */
-function oversized(pattern: RegExp, classes: string) {
+/** The utilities that a pattern finds in a class text whose step passes `keep`, such as `size-6`. */
+function sizes(
+  pattern: RegExp,
+  classes: string,
+  keep: (step: number) => boolean
+) {
   return Arr.filterMap(Arr.fromIterable(classes.matchAll(pattern)), (match) =>
     Option.match(
       Option.filter(
@@ -47,7 +49,7 @@ function oversized(pattern: RegExp, classes: string) {
             utility: Record.get(groups, "utility"),
           })
         ),
-        ({ step }) => step > LARGEST_STEP
+        ({ step }) => keep(step)
       ),
       {
         onNone: () => Result.failVoid,
@@ -104,28 +106,20 @@ function literalText(node: Node) {
   );
 }
 
-/** What an icon element sets above `size-4`: its classes, and a `size` in pixels. */
-function iconFindings(attributes: JsxAttributes) {
-  const classes = Option.match(attributeValue(attributes, "className"), {
-    onNone: () => [],
-    onSome: (value) => oversized(ELEMENT_SIZE_PATTERN, literalText(value)),
-  });
-  const pixels = Option.match(attributeValue(attributes, "size"), {
+/** The sizes an icon element's own classes give it, which the wrapper alone decides. */
+function ownSizes(attributes: JsxAttributes) {
+  return Option.match(attributeValue(attributes, "className"), {
     onNone: () => [],
     onSome: (value) =>
-      isNumericLiteral(value) &&
-      Option.exists(Num.parse(value.text), (pixels) => pixels > LARGEST_PIXELS)
-        ? [`size={${value.text}}`]
-        : [],
+      sizes(ELEMENT_SIZE_PATTERN, literalText(value), () => true),
   });
-  return Arr.appendAll(classes, pixels);
 }
 
 /**
- * Reports a Hugeicons icon drawn above `size-4`, Nakafa's one icon size and its largest: a class or a `size` on the
- * icon itself, or a selector that sizes every SVG inside an element. The design system's wrapper (`HugeIcons`) draws
- * `size-4` when nothing sizes it, and a smaller part may shrink it, so the library's own component, which draws 24px,
- * is drawn by that wrapper alone.
+ * Reports a Hugeicons icon that is not drawn at `size-4`, Nakafa's one icon size: a size class on the icon itself, a
+ * selector that sizes the SVGs inside an element above `size-4`, or the library's own component, which draws 24px.
+ * The design system's wrapper (`HugeIcons`) draws every icon at `size-4` and takes no size from its caller; only a
+ * part, such as a checkbox's tick, shrinks the icons inside it with a selector.
  */
 export function inspectIconSource(file: string, sourceFile: SourceFile) {
   if (!SOURCE_PATTERN.test(file)) {
@@ -138,11 +132,11 @@ export function inspectIconSource(file: string, sourceFile: SourceFile) {
       onSome: Result.succeed,
     })
   );
-  const sized = Arr.flatMap(icons, ({ attributes }) =>
-    iconFindings(attributes)
-  );
+  const own = Arr.flatMap(icons, ({ attributes }) => ownSizes(attributes));
   const bySelector = Arr.flatMap(nodes, (node) =>
-    isLiteralLikeNode(node) ? oversized(SELECTOR_SIZE_PATTERN, node.text) : []
+    isLiteralLikeNode(node)
+      ? sizes(SELECTOR_SIZE_PATTERN, node.text, (step) => step > LARGEST_STEP)
+      : []
   );
   const library =
     file === WRAPPER_MODULE
@@ -150,9 +144,14 @@ export function inspectIconSource(file: string, sourceFile: SourceFile) {
       : Arr.filter(icons, ({ tag }) => tag === LIBRARY_TAG);
   return Arr.flatten([
     Arr.map(
-      Arr.appendAll(sized, bySelector),
+      own,
       (found) =>
-        `${file}: an icon is drawn at ${found}, above size-4. Every Hugeicons icon is size-4 at most: drop the class, or use size-4 or a smaller step.`
+        `${file}: an icon sets its own size, ${found}. HugeIcons draws every icon at size-4: drop the class, and let a design-system part shrink the icons inside it with a selector.`
+    ),
+    Arr.map(
+      bySelector,
+      (found) =>
+        `${file}: a selector draws icons at ${found}, above size-4. Every Hugeicons icon is size-4 at most: use size-4 or a smaller step.`
     ),
     Arr.map(
       library,

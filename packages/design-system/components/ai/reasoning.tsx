@@ -184,7 +184,7 @@ function ReasoningSummary() {
         <span className={lineMark()}>
           <HugeIcons
             className={cn(
-              "size-4 shrink-0 transition-transform",
+              "shrink-0 transition-transform",
               isOpen ? "rotate-180" : "rotate-0"
             )}
             icon={ArrowDown01Icon}

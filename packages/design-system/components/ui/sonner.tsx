@@ -94,10 +94,10 @@ function Toaster({
       closeButton
       containerAriaLabel={containerAriaLabel}
       icons={{
-        success: <HugeIcons className="size-4" icon={Tick01Icon} />,
-        info: <HugeIcons className="size-4" icon={InformationCircleIcon} />,
-        warning: <HugeIcons className="size-4" icon={Alert02Icon} />,
-        error: <HugeIcons className="size-4" icon={SadDizzyIcon} />,
+        success: <HugeIcons icon={Tick01Icon} />,
+        info: <HugeIcons icon={InformationCircleIcon} />,
+        warning: <HugeIcons icon={Alert02Icon} />,
+        error: <HugeIcons icon={SadDizzyIcon} />,
         loading: <Spinner className="size-4" />,
       }}
       richColors

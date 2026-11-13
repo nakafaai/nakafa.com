@@ -186,7 +186,7 @@ export function SchoolForum() {
       <FeatureCard>
         <div className="flex items-center justify-between gap-4">
           <p className="flex min-w-0 items-center gap-2 font-medium">
-            <HugeIcons className="size-4" icon={MessageMultiple01Icon} />
+            <HugeIcons icon={MessageMultiple01Icon} />
             <span className="truncate">{t("demo-class")}</span>
           </p>
           <AvatarGroup>

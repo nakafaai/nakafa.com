@@ -57,14 +57,7 @@ function Tile({
  * The contrast test of `getTileGradient` measures the 16px icon on the 40px tile.
  */
 function TileIcon({ icon }: { icon: IconSvgElement }) {
-  return (
-    <HugeIcons
-      aria-hidden
-      className="size-4"
-      data-slot="tile-icon"
-      icon={icon}
-    />
-  );
+  return <HugeIcons aria-hidden data-slot="tile-icon" icon={icon} />;
 }
 
 export { Tile, TileIcon };

@@ -63,7 +63,7 @@ export function AiChatMessageCredits() {
           {/* Credits */}
           <div className="flex items-center justify-between text-sm">
             <div className="flex items-center gap-2">
-              <HugeIcons className="size-4" icon={Coins01Icon} />
+              <HugeIcons icon={Coins01Icon} />
               <span className="text-muted-foreground">
                 {t("credits-label")}
               </span>
@@ -75,7 +75,7 @@ export function AiChatMessageCredits() {
           {tokens.total > 0 && (
             <div className="space-y-2">
               <div className="flex items-center gap-2">
-                <HugeIcons className="size-4" icon={TextAllCapsIcon} />
+                <HugeIcons icon={TextAllCapsIcon} />
                 <div className="text-muted-foreground text-sm">
                   {t("token-usage")}
                 </div>
@@ -86,7 +86,7 @@ export function AiChatMessageCredits() {
                 {tokens.input > 0 && (
                   <div className="bg-muted flex items-center justify-between rounded-sm p-2 text-sm">
                     <div className="flex items-center gap-2">
-                      <HugeIcons className="size-4" icon={ArrowLeft02Icon} />
+                      <HugeIcons icon={ArrowLeft02Icon} />
                       <span>{t("input-tokens")}</span>
                     </div>
                     <span className="tabular-nums">
@@ -99,7 +99,7 @@ export function AiChatMessageCredits() {
                 {tokens.output > 0 && (
                   <div className="bg-muted flex items-center justify-between rounded-sm p-2 text-sm">
                     <div className="flex items-center gap-2">
-                      <HugeIcons className="size-4" icon={ArrowRight02Icon} />
+                      <HugeIcons icon={ArrowRight02Icon} />
                       <span>{t("output-tokens")}</span>
                     </div>
                     <span className="tabular-nums">
@@ -112,7 +112,7 @@ export function AiChatMessageCredits() {
                 {tokens.total > 0 && (
                   <div className="bg-secondary text-secondary-foreground flex items-center justify-between rounded-sm p-2 text-sm">
                     <div className="flex items-center gap-2">
-                      <HugeIcons className="size-4" icon={Summation01Icon} />
+                      <HugeIcons icon={Summation01Icon} />
                       <span>{t("total-tokens")}</span>
                     </div>
                     <span className="tabular-nums">

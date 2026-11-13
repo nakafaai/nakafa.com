@@ -193,7 +193,7 @@ function SearchEmpty({
     <CommandEmpty className="text-muted-foreground text-center text-sm not-empty:flex not-empty:flex-col not-empty:items-center not-empty:justify-center not-empty:gap-1 not-empty:p-7.5">
       {!!error && (
         <>
-          <HugeIcons className="size-4" icon={InformationCircleIcon} />
+          <HugeIcons icon={InformationCircleIcon} />
           <div className="mt-1">{t("search-error")}</div>
           <div className="mt-2 max-w-xs text-xs wrap-break-word">{error}</div>
         </>

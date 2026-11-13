@@ -69,7 +69,7 @@ export function HeaderSearch() {
       variant="outline"
     >
       <span className="flex min-w-0 items-center gap-2">
-        <HugeIcons className="size-4" icon={Search02Icon} />
+        <HugeIcons icon={Search02Icon} />
         <span className="truncate font-normal">
           {t("search-bar-placeholder")}
         </span>

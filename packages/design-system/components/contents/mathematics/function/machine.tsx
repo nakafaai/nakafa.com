@@ -74,27 +74,15 @@ export function FunctionMachine({ title, description, inputLabel }: Props) {
             <InlineMath math={`x = ${input}`} />
           </UiButton>
 
-          <HugeIcons
-            className="hidden size-4 sm:block"
-            icon={ArrowRight02Icon}
-          />
-          <HugeIcons
-            className="block size-4 sm:hidden"
-            icon={ArrowDown02Icon}
-          />
+          <HugeIcons className="hidden sm:block" icon={ArrowRight02Icon} />
+          <HugeIcons className="block sm:hidden" icon={ArrowDown02Icon} />
 
           <div className="bg-accent text-accent-foreground flex items-center justify-center rounded-md p-8 shadow-xs">
             <InlineMath math="f(x) = 2x + 1" />
           </div>
 
-          <HugeIcons
-            className="block size-4 sm:hidden"
-            icon={ArrowDown02Icon}
-          />
-          <HugeIcons
-            className="hidden size-4 sm:block"
-            icon={ArrowRight02Icon}
-          />
+          <HugeIcons className="block sm:hidden" icon={ArrowDown02Icon} />
+          <HugeIcons className="hidden sm:block" icon={ArrowRight02Icon} />
 
           <UiButton className="pointer-events-none" variant="secondary">
             <InlineMath math={`f(x) = ${output}`} />

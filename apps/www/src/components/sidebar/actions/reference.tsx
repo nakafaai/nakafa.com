@@ -48,7 +48,7 @@ export function ReferenceButton({ references }: Props) {
     <>
       <SidebarMenuItem>
         <SidebarMenuButton onClick={toggle} tooltip={t("bibliography")}>
-          <HugeIcons className="size-4 shrink-0" icon={LayerIcon} />
+          <HugeIcons icon={LayerIcon} />
           <span className="truncate">{t("bibliography")}</span>
         </SidebarMenuButton>
       </SidebarMenuItem>
@@ -90,10 +90,7 @@ export function ReferenceButton({ references }: Props) {
                               {reference.title.toLowerCase()}
                             </h3>
                             <div className="text-muted-foreground flex min-w-0 items-center gap-2 text-sm">
-                              <HugeIcons
-                                className="size-4 shrink-0"
-                                icon={Globe02Icon}
-                              />
+                              <HugeIcons icon={Globe02Icon} />
                               {reference.url ? (
                                 <a
                                   className="min-w-0 truncate underline-offset-4 hover:underline"
@@ -113,29 +110,20 @@ export function ReferenceButton({ references }: Props) {
 
                           <div className="flex flex-col gap-3">
                             <div className="flex items-center gap-2">
-                              <HugeIcons
-                                className="size-4 shrink-0"
-                                icon={QuillWrite01Icon}
-                              />
+                              <HugeIcons icon={QuillWrite01Icon} />
                               <span className="line-clamp-1 text-sm">
                                 {reference.authors}
                               </span>
                             </div>
 
                             <div className="flex items-center gap-2">
-                              <HugeIcons
-                                className="size-4 shrink-0"
-                                icon={Calendar03Icon}
-                              />
+                              <HugeIcons icon={Calendar03Icon} />
                               <span className="text-sm">{reference.year}</span>
                             </div>
 
                             {!!reference.publication && (
                               <div className="flex items-center gap-2">
-                                <HugeIcons
-                                  className="size-4 shrink-0"
-                                  icon={BookOpen02Icon}
-                                />
+                                <HugeIcons icon={BookOpen02Icon} />
                                 <span className="line-clamp-1 text-sm">
                                   {reference.publication}
                                 </span>
@@ -145,7 +133,7 @@ export function ReferenceButton({ references }: Props) {
                             {!!reference.details && (
                               <div className="flex items-start gap-2">
                                 <HugeIcons
-                                  className="mt-0.5 size-4 shrink-0"
+                                  className="mt-0.5 shrink-0"
                                   icon={Book03Icon}
                                 />
                                 <span className="min-w-0 text-sm wrap-anywhere">

@@ -31,7 +31,7 @@ export function DiagramFrame({
     >
       <div className="bg-muted/80 text-muted-foreground flex items-center justify-between gap-2 p-1 text-sm">
         <div className="flex min-w-0 items-center gap-2 px-4 py-1.5">
-          <HugeIcons className="size-4" icon={FlowchartIcon} />
+          <HugeIcons icon={FlowchartIcon} />
           <span className="text-foreground ml-1 truncate" title={title}>
             {title}
           </span>

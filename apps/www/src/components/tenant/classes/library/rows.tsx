@@ -307,7 +307,7 @@ function LibraryTitle({ row }: { row: LibraryRow }) {
     >
       <HugeIcons
         aria-label={t(`library-kind-${shown.kind}`)}
-        className="text-muted-foreground size-4 shrink-0"
+        className="text-muted-foreground shrink-0"
         icon={KIND_ICONS[shown.kind]}
       />
       {row._tag === "folder" && isSavedFolder(row.folder) ? (

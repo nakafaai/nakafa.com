@@ -45,10 +45,7 @@ export function OfflineNote() {
       >
         <HugeIcons
           aria-hidden="true"
-          className={statusIconVariants({
-            className: "size-3.5",
-            tone: "warning",
-          })}
+          className={statusIconVariants({ tone: "warning" })}
           icon={CloudOffIcon}
         />
         <span className="max-md:sr-only">{t("offline-note")}</span>

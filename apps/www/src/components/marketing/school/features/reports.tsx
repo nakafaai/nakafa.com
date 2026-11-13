@@ -77,14 +77,11 @@ export function SchoolReports() {
           })}
         >
           <p className="flex items-center gap-2">
-            <HugeIcons
-              className="text-success size-4"
-              icon={CheckmarkCircle02Icon}
-            />
+            <HugeIcons className="text-success" icon={CheckmarkCircle02Icon} />
             {t("demo-report-signed")}
           </p>
           <p className="text-muted-foreground flex items-center gap-2">
-            <HugeIcons className="size-4" icon={QrCodeIcon} />
+            <HugeIcons icon={QrCodeIcon} />
             {t("demo-report-verify")}
           </p>
         </div>

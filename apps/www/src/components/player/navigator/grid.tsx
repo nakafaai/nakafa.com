@@ -59,7 +59,7 @@ function PlayerCell({ question }: { question: PlayerCellModel }) {
 }
 
 const flagMarkVariants = cva(
-  "bg-warning text-warning-foreground grid size-4 shrink-0 place-items-center rounded-full",
+  "bg-warning text-warning-foreground grid size-4 shrink-0 place-items-center rounded-full [&_svg]:size-2.5",
   {
     variants: {
       placement: {
@@ -81,7 +81,7 @@ export function PlayerFlagMark({
 }) {
   return (
     <span aria-hidden="true" className={flagMarkVariants({ placement })}>
-      <HugeIcons className="size-2.5" icon={Flag02Icon} />
+      <HugeIcons icon={Flag02Icon} />
     </span>
   );
 }

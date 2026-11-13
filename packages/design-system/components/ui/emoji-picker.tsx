@@ -38,7 +38,7 @@ function EmojiPickerSearch({
     >
       <HugeIcons
         aria-hidden="true"
-        className="size-4 shrink-0 opacity-50"
+        className="shrink-0 opacity-50"
         icon={Search02Icon}
       />
       <EmojiPickerPrimitive.Search

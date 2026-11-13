@@ -137,7 +137,7 @@ export function StartNameQuestion() {
                 <>
                   <HugeIcons
                     aria-hidden="true"
-                    className="text-primary size-4"
+                    className="text-primary"
                     icon={CheckmarkCircle02Icon}
                   />
                   <span className="sr-only">{t("address-free")}</span>

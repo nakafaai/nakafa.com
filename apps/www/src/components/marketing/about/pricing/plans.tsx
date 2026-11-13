@@ -40,10 +40,7 @@ function PricingFeature({
 }) {
   return (
     <li className="flex items-start gap-3 text-base leading-6">
-      <HugeIcons
-        className="mt-1 size-4 shrink-0"
-        icon={planFeatureIcons[feature]}
-      />
+      <HugeIcons className="mt-1 shrink-0" icon={planFeatureIcons[feature]} />
       <span className="text-pretty">{text}</span>
     </li>
   );

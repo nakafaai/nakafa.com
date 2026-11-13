@@ -31,7 +31,7 @@ export function StartOption({
         />
       )}
       {icon === undefined ? null : (
-        <HugeIcons className="mt-0.5 size-4 shrink-0" icon={icon} />
+        <HugeIcons className="mt-0.5 shrink-0" icon={icon} />
       )}
       <span className="flex min-w-0 flex-col gap-1">
         <span className="font-medium">{title}</span>

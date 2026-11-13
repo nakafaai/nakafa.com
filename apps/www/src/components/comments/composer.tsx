@@ -55,7 +55,7 @@ function VisitorComposer() {
   const authNavigation = useCurrentAuthNavigation();
   return (
     <Link className={closedField()} {...authNavigation.linkProps}>
-      <HugeIcons className="me-2 size-4 shrink-0" icon={Login01Icon} />
+      <HugeIcons className="me-2 shrink-0" icon={Login01Icon} />
       <span className="truncate">{t("sign-in-to-comment")}</span>
     </Link>
   );

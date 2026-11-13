@@ -19,7 +19,7 @@ export function ReportButton() {
             target="_blank"
             title={t("report")}
           >
-            <HugeIcons className="size-4 shrink-0" icon={Bug02Icon} />
+            <HugeIcons icon={Bug02Icon} />
             <span className="truncate">{t("report")}</span>
           </a>
         }

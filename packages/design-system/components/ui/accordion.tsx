@@ -40,7 +40,7 @@ function AccordionTrigger({
       >
         {children}
         <HugeIcons
-          className="text-muted-foreground pointer-events-none size-4 shrink-0 translate-y-0.5 transition-transform group-aria-expanded/accordion-trigger:rotate-180 motion-reduce:transition-none"
+          className="text-muted-foreground pointer-events-none shrink-0 translate-y-0.5 transition-transform group-aria-expanded/accordion-trigger:rotate-180 motion-reduce:transition-none"
           icon={ArrowDown01Icon}
         />
       </AccordionPrimitive.Trigger>

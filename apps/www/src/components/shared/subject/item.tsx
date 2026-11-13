@@ -21,10 +21,10 @@ export function SubjectItem({
     <Link className="group block min-w-0" {...target}>
       <div className="group-hover:bg-accent group-hover:text-accent-foreground relative overflow-hidden p-6 transition-colors ease-out">
         <div className="flex items-center gap-2">
-          <HugeIcons className="size-4 shrink-0" icon={icon} />
+          <HugeIcons icon={icon} />
           <Heading className="min-w-0 flex-1 text-pretty">{label}</Heading>
           <HugeIcons
-            className="size-4 shrink-0 opacity-0 transition-opacity ease-out group-hover:opacity-100"
+            className="shrink-0 opacity-0 transition-opacity ease-out group-hover:opacity-100"
             icon={ArrowRight02Icon}
           />
         </div>

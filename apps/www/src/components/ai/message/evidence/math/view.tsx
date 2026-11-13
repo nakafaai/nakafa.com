@@ -51,7 +51,7 @@ export function MathPart({ children, icon, message }: Props) {
         </StepLabel>
         <HugeIcons
           className={cn(
-            "mt-0.5 size-4 shrink-0 transition-transform duration-150 motion-reduce:transition-none",
+            "mt-0.5 shrink-0 transition-transform duration-150 motion-reduce:transition-none",
             expanded ? "rotate-180" : "rotate-0"
           )}
           icon={ArrowDown01Icon}
