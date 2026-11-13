@@ -45,7 +45,12 @@ const shownSession = {
   sessionId: "session-1",
   userId: "user-1",
 };
-const signedOutValue = { data: null, error: null, isPending: false };
+const signedOutValue = {
+  hasError: false,
+  isPending: false,
+  sessionId: null,
+  userId: null,
+};
 
 /** Whether the page's readers would keep the session they see, as while it signs out. */
 const keepsSession = () =>

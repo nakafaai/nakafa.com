@@ -41,10 +41,14 @@ const rotated = {
   },
 };
 
-/** A browser's post to one of the site's auth routes, with the cookies it sends. */
-const post = (site: string, route: string, cookie: string) =>
+/** A browser's post to one of the site's auth routes, with the cookies it sends, if any. */
+const post = (site: string, route: string, cookie?: string) =>
   new Request(`${site}/api/auth/${route}`, {
-    headers: { cookie, host: new URL(site).host, origin: site },
+    headers: {
+      host: new URL(site).host,
+      origin: site,
+      ...(cookie === undefined ? {} : { cookie }),
+    },
     method: "POST",
   });
 
@@ -157,7 +161,7 @@ describe("readAuthRoutes", () => {
         const routes = yield* readAuthRoutes();
 
         const response = yield* Effect.promise(() =>
-          routes.refreshHandler(post(STAGING, "refresh", "theme=dark"))
+          routes.refreshHandler(post(STAGING, "refresh"))
         );
 
         expect(fetcher).not.toHaveBeenCalled();

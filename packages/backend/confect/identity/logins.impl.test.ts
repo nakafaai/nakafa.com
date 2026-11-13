@@ -108,7 +108,10 @@ describe("identity/logins rename", () => {
   const signsIn = (
     fixture: Effect.Success<typeof tenancyFixture>,
     loginName: string
-  ) => fixture.run(loginAccountOf(nf, loginName)).pipe(Effect.map(Option.isSome));
+  ) =>
+    // The run's answer crosses Convex's serialization, which keeps no Option, so
+    // the answer is read inside the run.
+    fixture.run(loginAccountOf(nf, loginName).pipe(Effect.map(Option.isSome)));
 
   it.effect(
     "renames a claimed login, read as typed, which then signs in by its new name only, and records the rename once",

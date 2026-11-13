@@ -14,9 +14,9 @@ import {
 } from "@repo/backend/confect/_generated/services";
 import { schoolTiers } from "@repo/backend/confect/billing/tiers";
 import { systemActor } from "@repo/backend/confect/tenancy/actor";
+import { api } from "@repo/backend/convex/_generated/api";
 import { nf } from "@repo/backend/test/editor";
 import { keyedSchool } from "@repo/backend/test/sittings";
-import { api } from "@repo/backend/convex/_generated/api";
 import { TENANCY_NOW, tenancyFixture } from "@repo/backend/test/tenancy";
 import { Array as Arr, Effect } from "effect";
 
@@ -27,7 +27,7 @@ const { dashboard, enter, mine } = refs.public.exams.sittings;
 const seat = (number: number) => ({
   key: `load-test-${number}`,
   name: `Siswa ${number}`,
-  token: `token-${number}`,
+  token: `seat-token-${number}`,
 });
 
 describe("exams seed seats", () => {
@@ -161,7 +161,7 @@ describe("exams seed seats", () => {
               );
             })
           );
-        const student = yield* signedIn(students[1], "token-2");
+        const student = yield* signedIn(students[1], "seat-token-2");
         const listed = yield* student.query(mine, { slug: nf });
         expect(Arr.map(listed, (row) => row.id)).toEqual([room.id]);
         const entered = yield* student.mutation(enter, {
@@ -171,7 +171,7 @@ describe("exams seed seats", () => {
           token: room.token,
         });
         expect(entered).toMatchObject({ outcome: "admitted" });
-        const proctor = yield* signedIn(proctors[0], "token-3");
+        const proctor = yield* signedIn(proctors[0], "seat-token-3");
         const page = yield* proctor.query(dashboard, {
           paginationOpts: { cursor: null, numItems: 100 },
           sittingId: room.id,

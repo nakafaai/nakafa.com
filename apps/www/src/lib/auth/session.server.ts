@@ -78,16 +78,16 @@ export const readRequestSession = Effect.fn("www.auth.session.read")(function* (
   request: Request
 ) {
   const site = new URL(siteUrlKeys().SITE_URL);
+  const cookie = request.headers.get("cookie") ?? "";
   if (!hasSessionCookie(request, site)) {
     return signedOut([]);
   }
   const { options, prefix } = siteAuthCookies(site);
-  const headers = new Headers(request.headers);
-  headers.set(
-    "cookie",
-    inboundCookieHeader(headers.get("cookie") ?? "", prefix)
+  const cookies = httpCookies(
+    new Request(request.url, {
+      headers: { cookie: inboundCookieHeader(cookie, prefix) },
+    })
   );
-  const cookies = httpCookies(new Request(request.url, { headers }));
   const client = new ConvexHttpClient(yield* CONVEX_URL);
   const session = new ServerAuthSession({
     cookieOptions: options,

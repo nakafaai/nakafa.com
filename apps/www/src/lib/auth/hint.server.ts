@@ -8,7 +8,7 @@ import {
 
 /** The name and value of one Set-Cookie header. */
 const nameAndValue = (setCookie: string) => {
-  const pair = Str.split(setCookie, ";")[0] ?? "";
+  const pair = Arr.headNonEmpty(Str.split(setCookie, ";"));
   const at = pair.indexOf("=");
   return at < 0
     ? Result.failVoid

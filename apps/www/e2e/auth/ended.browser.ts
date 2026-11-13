@@ -3,7 +3,7 @@ import { Array as Arr, MutableList } from "effect";
 import { seedRawStorage } from "@/e2e/support/consent";
 import { SIGNED_IN_HINT_COOKIE } from "@/lib/auth/hint";
 import { KNOWN_SESSION_KEY } from "@/lib/auth/keys";
-import { TOKEN_PATH } from "@/lib/auth/session";
+import { REFRESH_PATH } from "@/lib/auth/token";
 
 /** The id of a session the browser remembers, which the server no longer holds. */
 const ENDED_SESSION = "ended-session";
@@ -33,7 +33,7 @@ test("the learner home of a remembered session that has ended loads with no cons
   });
   page.on("pageerror", (error) => MutableList.append(errors, String(error)));
   page.on("response", (response) => {
-    if (new URL(response.url()).pathname === TOKEN_PATH) {
+    if (new URL(response.url()).pathname === REFRESH_PATH) {
       MutableList.append(tokenAnswers, response.status());
     }
   });
@@ -48,7 +48,7 @@ test("the learner home of a remembered session that has ended loads with no cons
   await seedRawStorage(page, KNOWN_SESSION_KEY, ENDED_SESSION);
 
   const tokenRead = page.waitForResponse(
-    (response) => new URL(response.url()).pathname === TOKEN_PATH
+    (response) => new URL(response.url()).pathname === REFRESH_PATH
   );
   await page.goto(HOME);
   expect(await (await tokenRead).json()).toStrictEqual({ token: null });
