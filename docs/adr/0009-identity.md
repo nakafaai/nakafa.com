@@ -220,8 +220,13 @@ release, with no compatibility window and no migration function.
 - The earlier component's data is deleted, and the deployment variables it read,
   its secret and its key set, are removed by name.
 - Upstream changes that close the gaps of Account Deletion and of the hosted
-  domain check: deletion by user for the Google (OAuth) and password
-  components, and `hd` in the Google profile (convex/convex-auth).
+  domain check, opened on 13 November 2026: `deletePassword` for the password
+  component (https://github.com/convex/convex-auth/pull/924),
+  `deleteUserAccounts` for the OAuth components
+  (https://github.com/convex/convex-auth/pull/925), and the Workspace domain
+  in the Google profile (https://github.com/convex/convex-auth/pull/926). When
+  they ship, the deletion workflow erases both rows and the invite claim checks
+  the hosted domain again.
 
 ## Usernames And Profiles
 
