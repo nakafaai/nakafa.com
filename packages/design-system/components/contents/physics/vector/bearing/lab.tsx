@@ -41,7 +41,7 @@ import { VisualCardSceneActions } from "@repo/design-system/components/visual/sc
 import { P5Sketch } from "@repo/design-system/components/visual/sketch";
 import { getColor } from "@repo/design-system/lib/color";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
-import { Array as Arr, Schema } from "effect";
+import { Array as Arr, Option, Schema } from "effect";
 import type p5 from "p5";
 import { type ReactNode, useMemo, useState } from "react";
 
@@ -86,7 +86,10 @@ function voyageProgram(
     backdrop(
       sketch,
       Arr.join(
-        Arr.map(route, (point) => `${point.x.toFixed(0)},${point.y.toFixed(0)}`),
+        Arr.map(
+          route,
+          (point) => `${point.x.toFixed(0)},${point.y.toFixed(0)}`
+        ),
         ";"
       ),
       (layer) => paintSea(layer, harbour, route)
@@ -101,14 +104,22 @@ function voyageProgram(
         });
       }
     });
-    const last = courses[courses.length - 1] ?? courses[0];
-    const start = route[route.length - 2] ?? harbour;
+    const last = Arr.lastNonEmpty(courses);
+    const start = Option.getOrElse(
+      Arr.get(route, route.length - 2),
+      () => harbour
+    );
     const radius = Math.min(sketch.width, sketch.height) * 0.09;
-    dashed(sketch, start, { x: start.x, y: start.y - radius * 1.6 }, {
-      color: fade(getColor("WHITE"), 0.8),
-      dash: 4,
-      weight: 1.5,
-    });
+    dashed(
+      sketch,
+      start,
+      { x: start.x, y: start.y - radius * 1.6 },
+      {
+        color: fade(getColor("WHITE"), 0.8),
+        dash: 4,
+        weight: 1.5,
+      }
+    );
     sketch.push();
     sketch.noFill();
     sketch.stroke(fade(getColor("WHITE"), 0.9));
@@ -125,9 +136,17 @@ function voyageProgram(
     const head = Math.max(11, radius * 0.22);
     const end = planPoint(plan, { east: moved.east, north: moved.north });
     const corner = planPoint(plan, { east: moved.east, north: 0 });
-    arrow(sketch, harbour, corner, { color: PLOT_COLORS.teal, head, weight: 3.5 });
+    arrow(sketch, harbour, corner, {
+      color: PLOT_COLORS.teal,
+      head,
+      weight: 3.5,
+    });
     arrow(sketch, corner, end, { color: PLOT_COLORS.amber, head, weight: 3.5 });
-    arrow(sketch, harbour, end, { color: PLOT_COLORS.violet, head, weight: 4.5 });
+    arrow(sketch, harbour, end, {
+      color: PLOT_COLORS.violet,
+      head,
+      weight: 4.5,
+    });
     if (sketch.isLooping()) {
       time = advanceRun(Math.min(time, moved.path), sketch.deltaTime / 1000, {
         duration: moved.path,
@@ -229,9 +248,7 @@ export function ShipBearingComponentLab({
         <VisualCardFacts>
           <VisualFactTabular
             label={labels.east}
-            value={
-              <InlineMath math={quantity(moved.east, "\\text{ km}", 2)} />
-            }
+            value={<InlineMath math={quantity(moved.east, "\\text{ km}", 2)} />}
           />
           <VisualFactTabular
             label={labels.north}
@@ -241,15 +258,11 @@ export function ShipBearingComponentLab({
           />
           <VisualFactTabular
             label={labels.distance}
-            value={
-              <InlineMath math={quantity(moved.size, "\\text{ km}", 2)} />
-            }
+            value={<InlineMath math={quantity(moved.size, "\\text{ km}", 2)} />}
           />
           <VisualFactTabular
             label={labels.direction}
-            value={
-              <InlineMath math={quantity(moved.bearing, "^\\circ", 1)} />
-            }
+            value={<InlineMath math={quantity(moved.bearing, "^\\circ", 1)} />}
           />
         </VisualCardFacts>
       </VisualCardFooter>

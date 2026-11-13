@@ -103,7 +103,11 @@ export function DroneDisplacementLab({
           <Suspense fallback={null}>
             <CameraControls
               cameraPosition={[-reach * 0.55, reach * 0.75, reach * 1.45]}
-              cameraTarget={[moved.east * 0.4, moved.up * 0.4, -moved.north * 0.4]}
+              cameraTarget={[
+                moved.east * 0.4,
+                moved.up * 0.4,
+                -moved.north * 0.4,
+              ]}
               fov={40}
               maxDistance={reach * 4}
               minDistance={reach * 0.4}
@@ -129,9 +133,7 @@ export function DroneDisplacementLab({
           />
           <VisualFactTabular
             label={labels.size}
-            value={
-              <InlineMath math={quantity(moved.size, "\\text{ m}", 1)} />
-            }
+            value={<InlineMath math={quantity(moved.size, "\\text{ m}", 1)} />}
           />
           <VisualFactTabular
             label={labels.path}

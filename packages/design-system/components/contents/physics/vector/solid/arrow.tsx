@@ -36,11 +36,6 @@ export function FixedArrow({
   }, [fx, fy, fz, vx, vy, vz, invalidate]);
 
   return (
-    <VectorArrow
-      color={color}
-      head={head}
-      ref={handle}
-      thickness={thickness}
-    />
+    <VectorArrow color={color} head={head} ref={handle} thickness={thickness} />
   );
 }

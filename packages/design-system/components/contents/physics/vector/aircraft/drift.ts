@@ -25,7 +25,7 @@ export function bearingVector(size: number, bearing: number) {
 
 /** An angle in degrees brought into (-180, 180]. */
 export function signedAngle(angle: number) {
-  const wrapped = (((angle % 360) + 360) % 360);
+  const wrapped = ((angle % 360) + 360) % 360;
   return wrapped > 180 ? wrapped - 360 : wrapped;
 }
 
@@ -39,7 +39,7 @@ export function groundVelocity(flight: Crosswind, heading: number) {
   const wind = bearingVector(flight.wind, flight.toward);
   const east = air.east + wind.east;
   const north = air.north + wind.north;
-  const track = (((Math.atan2(east, north) * 180) / Math.PI) + 360) % 360;
+  const track = ((Math.atan2(east, north) * 180) / Math.PI + 360) % 360;
   return {
     between: Math.abs(signedAngle(flight.toward - heading)),
     drift: signedAngle(track - heading),
@@ -54,7 +54,10 @@ export function groundVelocity(flight: Crosswind, heading: number) {
 export function cosineSpeed(airspeed: number, wind: number, between: number) {
   const turn = (between * Math.PI) / 180;
   return Math.sqrt(
-    Math.max(0, airspeed ** 2 + wind ** 2 + 2 * airspeed * wind * Math.cos(turn))
+    Math.max(
+      0,
+      airspeed ** 2 + wind ** 2 + 2 * airspeed * wind * Math.cos(turn)
+    )
   );
 }
 

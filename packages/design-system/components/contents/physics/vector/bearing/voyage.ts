@@ -53,7 +53,7 @@ export function voyageDisplacement(courses: readonly Course[]) {
   const size = Math.hypot(east, north);
   return {
     bearing:
-      size < 1e-9 ? 0 : (((Math.atan2(east, north) * 180) / Math.PI) + 360) % 360,
+      size < 1e-9 ? 0 : ((Math.atan2(east, north) * 180) / Math.PI + 360) % 360,
     east,
     north,
     path: Arr.reduce(courses, 0, (sum, course) => sum + course.distance),

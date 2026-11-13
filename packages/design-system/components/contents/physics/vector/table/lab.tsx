@@ -156,7 +156,10 @@ function Pulley({ pull, ring }: { pull: Pull; ring: CoordinateTuple }) {
           />
         </mesh>
       </group>
-      <mesh castShadow position={onTable(RADIUS - 0.004, pull.angle, TOP - 0.02)}>
+      <mesh
+        castShadow
+        position={onTable(RADIUS - 0.004, pull.angle, TOP - 0.02)}
+      >
         <boxGeometry args={[0.022, 0.03, 0.022]} />
         <meshStandardMaterial
           color={MATERIAL.castIron}
@@ -183,7 +186,11 @@ function Pulley({ pull, ring }: { pull: Pull; ring: CoordinateTuple }) {
 }
 
 /** The table with its strings, the ring they pull, and each pull and the resultant drawn above it. */
-function TableScene({ pulls }: { pulls: readonly Pull[] }) {
+function TableScene({
+  pulls,
+}: {
+  pulls: readonly (Pull & { readonly slot: number })[];
+}) {
   const resultant = tableResultant(pulls);
   const nudge = Math.min(0.006, resultant.size * 0.003);
   const ring = onTable(nudge, resultant.angle, STRING);
@@ -200,12 +207,12 @@ function TableScene({ pulls }: { pulls: readonly Pull[] }) {
           roughness={0.2}
         />
       </mesh>
-      {Arr.map(pulls, (pull, index) => {
+      {Arr.map(pulls, (pull) => {
         const force = pullForce(pull);
-        const color = PULL_COLORS[index % PULL_COLORS.length];
+        const color = PULL_COLORS[pull.slot % PULL_COLORS.length];
         const tip = onTable(force.size * ARROW_SCALE, pull.angle, 0);
         return (
-          <group key={index}>
+          <group key={pull.slot}>
             <Pulley pull={pull} ring={ring} />
             <FixedArrow
               color={color}
@@ -223,7 +230,7 @@ function TableScene({ pulls }: { pulls: readonly Pull[] }) {
                 arrowHeight
               )}
             >
-              <InlineMath math={`\\vec F_{${index + 1}}`} />
+              <InlineMath math={`\\vec F_{${pull.slot + 1}}`} />
             </ThreeLabel>
           </group>
         );
@@ -286,8 +293,8 @@ export function ForceTableResultantLab({
   );
   const last = setup.length - 1;
   const [angle, setAngle] = useState(setup[last]?.angle ?? 0);
-  const pulls = Arr.map(setup, (pull, index) =>
-    index === last ? { ...pull, angle } : pull
+  const pulls = Arr.map(setup, (pull, slot) =>
+    slot === last ? { ...pull, angle, slot } : { ...pull, slot }
   );
   const resultant = tableResultant(pulls);
 
@@ -330,19 +337,25 @@ export function ForceTableResultantLab({
           <VisualFactTabular
             label={labels.sumX}
             value={
-              <InlineMath math={quantity(rounded(resultant.x), "\\text{ N}", 2)} />
+              <InlineMath
+                math={quantity(rounded(resultant.x), "\\text{ N}", 2)}
+              />
             }
           />
           <VisualFactTabular
             label={labels.sumY}
             value={
-              <InlineMath math={quantity(rounded(resultant.y), "\\text{ N}", 2)} />
+              <InlineMath
+                math={quantity(rounded(resultant.y), "\\text{ N}", 2)}
+              />
             }
           />
           <VisualFactTabular
             label={labels.resultant}
             value={
-              <InlineMath math={quantity(rounded(resultant.size), "\\text{ N}", 2)} />
+              <InlineMath
+                math={quantity(rounded(resultant.size), "\\text{ N}", 2)}
+              />
             }
           />
           <VisualFactTabular

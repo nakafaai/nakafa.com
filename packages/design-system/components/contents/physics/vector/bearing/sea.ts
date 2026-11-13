@@ -23,7 +23,10 @@ function segmentGap(point: Spot, from: Spot, to: Spot) {
     length === 0
       ? 0
       : Math.min(
-          Math.max(((point.x - from.x) * dx + (point.y - from.y) * dy) / length, 0),
+          Math.max(
+            ((point.x - from.x) * dx + (point.y - from.y) * dy) / length,
+            0
+          ),
           1
         );
   return Math.hypot(point.x - from.x - dx * part, point.y - from.y - dy * part);
@@ -52,10 +55,14 @@ function paintIsland(layer: p5, center: Spot, radius: number, seed: number) {
   outline(1.35);
   layer.fill(MATERIAL.sand);
   outline(1.05);
-  withShadow(layer, { blur: 6, color: fade(getColor("BLACK"), 0.35), drop: 3 }, () => {
-    layer.fill(MATERIAL.foliageShade);
-    outline(0.88);
-  });
+  withShadow(
+    layer,
+    { blur: 6, color: fade(getColor("BLACK"), 0.35), drop: 3 },
+    () => {
+      layer.fill(MATERIAL.foliageShade);
+      outline(0.88);
+    }
+  );
   layer.fill(MATERIAL.foliageLight);
   for (let tree = 0; tree < 9; tree += 1) {
     layer.circle(
@@ -69,9 +76,13 @@ function paintIsland(layer: p5, center: Spot, radius: number, seed: number) {
 /**
  * Paints the open sea seen from far above: deep water darker toward the
  * edges, swell lines, islands that keep clear of the route, and the harbour
- * quay the voyage leaves from.
+ * quay the voyage leaves from, when there is one.
  */
-export function paintSea(layer: p5, harbour: Spot, route: readonly Spot[]) {
+export function paintSea(
+  layer: p5,
+  harbour: Spot | undefined,
+  route: readonly Spot[]
+) {
   gradientRect(
     layer,
     { height: layer.height, width: layer.width, x: 0, y: 0 },
@@ -103,24 +114,48 @@ export function paintSea(layer: p5, harbour: Spot, route: readonly Spot[]) {
         index > 0 &&
         segmentGap(center, route[index - 1] ?? point, point) < radius * 1.6
     );
-    if (!near && Math.hypot(center.x - harbour.x, center.y - harbour.y) > radius * 2) {
+    const clear =
+      harbour === undefined ||
+      Math.hypot(center.x - harbour.x, center.y - harbour.y) > radius * 2;
+    if (!near && clear) {
       paintIsland(layer, center, radius, island * 17);
     }
   }
-  withShadow(layer, { blur: 5, color: fade(getColor("BLACK"), 0.4), drop: 2 }, () => {
-    layer.fill(MATERIAL.concrete);
-    layer.rect(harbour.x - 34, harbour.y + 6, 68, 10);
-    layer.rect(harbour.x - 5, harbour.y + 6, 10, 26);
-  });
+  if (harbour === undefined) {
+    return;
+  }
+  withShadow(
+    layer,
+    { blur: 5, color: fade(getColor("BLACK"), 0.4), drop: 2 },
+    () => {
+      layer.fill(MATERIAL.concrete);
+      layer.rect(harbour.x - 34, harbour.y + 6, 68, 10);
+      layer.rect(harbour.x - 5, harbour.y + 6, 10, 26);
+    }
+  );
 }
 
 /** A ferry seen from above, bow up the canvas before it turns to its bearing, with its wake behind. */
 export function paintFerry(sketch: p5, size: number) {
   sketch.noStroke();
   sketch.fill(fade(MATERIAL.waterGlint, 0.5));
-  sketch.triangle(0, size * 0.4, -size * 0.45, size * 1.6, size * 0.45, size * 1.6);
+  sketch.triangle(
+    0,
+    size * 0.4,
+    -size * 0.45,
+    size * 1.6,
+    size * 0.45,
+    size * 1.6
+  );
   sketch.fill(fade(MATERIAL.waterDeep, 1));
-  sketch.triangle(0, size * 0.6, -size * 0.3, size * 1.6, size * 0.3, size * 1.6);
+  sketch.triangle(
+    0,
+    size * 0.6,
+    -size * 0.3,
+    size * 1.6,
+    size * 0.3,
+    size * 1.6
+  );
   sketch.fill(MATERIAL.hullNavy);
   sketch.beginShape();
   sketch.vertex(0, -size * 0.55);

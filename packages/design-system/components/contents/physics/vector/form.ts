@@ -1,7 +1,11 @@
 import { Array as Arr } from "effect";
 
 /** The unit vectors along x, y and z, as KaTeX. */
-export const UNIT_VECTORS = ["\\hat{\\imath}", "\\hat{\\jmath}", "\\hat{k}"] as const;
+export const UNIT_VECTORS = [
+  "\\hat{\\imath}",
+  "\\hat{\\jmath}",
+  "\\hat{k}",
+] as const;
 
 /**
  * Writes a vector as a sum of unit vectors in KaTeX, such as

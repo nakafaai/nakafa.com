@@ -1,5 +1,6 @@
 import { Line } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
+import { mix } from "@repo/design-system/components/contents/physics/canvas/paint";
 import {
   VectorArrow,
   type VectorArrowHandle,
@@ -10,7 +11,6 @@ import {
   hopPoint,
   pathLength,
 } from "@repo/design-system/components/contents/physics/vector/drone/flight";
-import { mix } from "@repo/design-system/components/contents/physics/canvas/paint";
 import { FixedArrow } from "@repo/design-system/components/contents/physics/vector/solid/arrow";
 import { SimulationTicker } from "@repo/design-system/components/contents/simulation/ticker";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
@@ -178,15 +178,22 @@ export function DroneScene({
     const at = hopPoint(hops, Math.min(time.current, duration) * FLIGHT_SPEED);
     const [x, y, z] = scenePoint(at);
     drone.current?.position.set(x, y + 0.12, z);
-    for (const rotor of rotors.current?.getObjectsByProperty(
-      "name",
-      "rotor"
-    ) ?? []) {
+    for (const rotor of rotors.current?.getObjectsByProperty("name", "rotor") ??
+      []) {
       rotor.rotation.y += playing ? Math.min(delta, 0.1) * 40 : 0;
     }
-    reach.current?.set(from.current.set(0, 0.02, 0), vector.current.set(x, y, z));
-    east.current?.set(from.current.set(0, 0.02, 0), vector.current.set(x, 0, 0));
-    north.current?.set(from.current.set(x, 0.02, 0), vector.current.set(0, 0, z));
+    reach.current?.set(
+      from.current.set(0, 0.02, 0),
+      vector.current.set(x, y, z)
+    );
+    east.current?.set(
+      from.current.set(0, 0.02, 0),
+      vector.current.set(x, 0, 0)
+    );
+    north.current?.set(
+      from.current.set(x, 0.02, 0),
+      vector.current.set(0, 0, z)
+    );
     up.current?.set(from.current.set(x, 0.02, z), vector.current.set(0, y, 0));
   });
 
@@ -197,21 +204,41 @@ export function DroneScene({
       <Pad />
       <Line
         color={getColor("WHITE")}
-        dashSize={0.4}
         dashed
+        dashSize={0.4}
         gapSize={0.3}
         lineWidth={2}
+        opacity={0.85}
         points={corners}
         transparent
-        opacity={0.85}
       />
       <group ref={drone}>
         <Quadcopter rotors={rotors} />
       </group>
-      <VectorArrow color={PLOT_COLORS.teal} head={0.5} ref={east} thickness={0.07} />
-      <VectorArrow color={PLOT_COLORS.amber} head={0.5} ref={north} thickness={0.07} />
-      <VectorArrow color={PLOT_COLORS.fuchsia} head={0.5} ref={up} thickness={0.07} />
-      <VectorArrow color={PLOT_COLORS.violet} head={0.6} ref={reach} thickness={0.1} />
+      <VectorArrow
+        color={PLOT_COLORS.teal}
+        head={0.5}
+        ref={east}
+        thickness={0.07}
+      />
+      <VectorArrow
+        color={PLOT_COLORS.amber}
+        head={0.5}
+        ref={north}
+        thickness={0.07}
+      />
+      <VectorArrow
+        color={PLOT_COLORS.fuchsia}
+        head={0.5}
+        ref={up}
+        thickness={0.07}
+      />
+      <VectorArrow
+        color={PLOT_COLORS.violet}
+        head={0.6}
+        ref={reach}
+        thickness={0.1}
+      />
       {units ? <UnitArrows /> : null}
     </group>
   );
@@ -220,9 +247,21 @@ export function DroneScene({
 /** The three unit vectors at the pad, one metre each, east, north and up. */
 function UnitArrows() {
   const units = [
-    { color: PLOT_COLORS.teal, math: "\\hat{\\imath}", to: { east: 1, north: 0, up: 0 } },
-    { color: PLOT_COLORS.amber, math: "\\hat{\\jmath}", to: { east: 0, north: 1, up: 0 } },
-    { color: PLOT_COLORS.fuchsia, math: "\\hat{k}", to: { east: 0, north: 0, up: 1 } },
+    {
+      color: PLOT_COLORS.teal,
+      math: "\\hat{\\imath}",
+      to: { east: 1, north: 0, up: 0 },
+    },
+    {
+      color: PLOT_COLORS.amber,
+      math: "\\hat{\\jmath}",
+      to: { east: 0, north: 1, up: 0 },
+    },
+    {
+      color: PLOT_COLORS.fuchsia,
+      math: "\\hat{k}",
+      to: { east: 0, north: 0, up: 1 },
+    },
   ] as const;
   return (
     <group position={[-1.4, 0.03, 1.4]}>

@@ -20,44 +20,37 @@ const CROPS = [
   mix(MATERIAL.wheatField, MATERIAL.grass, 0.5),
 ] as const;
 
-/**
- * Paints farmland seen from ten kilometres up into a square layer that tiles
- * without a seam: a grid of fields in crops and bare soil, some split in
- * strips, with farm tracks and tree lines along their edges and a farmhouse
- * here and there. Every field looks the same on every visit, because its
- * look comes from a hash of its place.
- */
-export function paintFarmland(layer: p5) {
-  const cell = layer.width / FIELDS;
-  layer.noStroke();
-  for (let column = 0; column < FIELDS; column += 1) {
-    for (let row = 0; row < FIELDS; row += 1) {
-      const x = column * cell;
-      const y = row * cell;
-      const crop =
-        CROPS[Math.floor(hashUnit(column, row) * CROPS.length)] ?? MATERIAL.grass;
-      const strips = hashUnit(column + 31, row) < 0.4 ? 3 : 1;
-      for (let strip = 0; strip < strips; strip += 1) {
-        const tone = mix(
-          crop,
-          strip % 2 === 0 ? getColor("WHITE") : getColor("BLACK"),
-          0.06 + hashUnit(column, row + strip * 7) * 0.08
-        );
-        layer.fill(tone);
-        layer.rect(x, y + (cell / strips) * strip, cell, cell / strips + 1);
-      }
-      layer.fill(fade(getColor("BLACK"), 0.05));
-      for (let furrow = 0; furrow < cell; furrow += 4) {
-        layer.rect(x, y + furrow, cell, 1);
-      }
-      if (hashUnit(column, row + 101) < 0.18) {
-        layer.fill(fade(getColor("BLACK"), 0.3));
-        layer.rect(x + cell * 0.42, y + cell * 0.42, cell * 0.1, cell * 0.08);
-        layer.fill(MATERIAL.roofTerracotta);
-        layer.rect(x + cell * 0.4, y + cell * 0.4, cell * 0.1, cell * 0.08);
-      }
-    }
+/** One field: its crop in one or three strips, its furrows, and sometimes a farmhouse. */
+function paintField(layer: p5, column: number, row: number, cell: number) {
+  const x = column * cell;
+  const y = row * cell;
+  const crop =
+    CROPS[Math.floor(hashUnit(column, row) * CROPS.length)] ?? MATERIAL.grass;
+  const strips = hashUnit(column + 31, row) < 0.4 ? 3 : 1;
+  for (let strip = 0; strip < strips; strip += 1) {
+    layer.fill(
+      mix(
+        crop,
+        strip % 2 === 0 ? getColor("WHITE") : getColor("BLACK"),
+        0.06 + hashUnit(column, row + strip * 7) * 0.08
+      )
+    );
+    layer.rect(x, y + (cell / strips) * strip, cell, cell / strips + 1);
   }
+  layer.fill(fade(getColor("BLACK"), 0.05));
+  for (let furrow = 0; furrow < cell; furrow += 4) {
+    layer.rect(x, y + furrow, cell, 1);
+  }
+  if (hashUnit(column, row + 101) < 0.18) {
+    layer.fill(fade(getColor("BLACK"), 0.3));
+    layer.rect(x + cell * 0.42, y + cell * 0.42, cell * 0.1, cell * 0.08);
+    layer.fill(MATERIAL.roofTerracotta);
+    layer.rect(x + cell * 0.4, y + cell * 0.4, cell * 0.1, cell * 0.08);
+  }
+}
+
+/** The farm tracks and tree lines along some of the field edges. */
+function paintEdges(layer: p5, cell: number) {
   for (let line = 0; line <= FIELDS; line += 1) {
     const at = line * cell;
     if (hashUnit(line, 3) < 0.5) {
@@ -71,4 +64,22 @@ export function paintFarmland(layer: p5) {
       }
     }
   }
+}
+
+/**
+ * Paints farmland seen from ten kilometres up into a square layer that tiles
+ * without a seam: a grid of fields in crops and bare soil, some split in
+ * strips, with farm tracks and tree lines along their edges and a farmhouse
+ * here and there. Every field looks the same on every visit, because its
+ * look comes from a hash of its place.
+ */
+export function paintFarmland(layer: p5) {
+  const cell = layer.width / FIELDS;
+  layer.noStroke();
+  for (let column = 0; column < FIELDS; column += 1) {
+    for (let row = 0; row < FIELDS; row += 1) {
+      paintField(layer, column, row, cell);
+    }
+  }
+  paintEdges(layer, cell);
 }

@@ -70,12 +70,24 @@ function paintAirliner(sketch: p5, size: number) {
   sketch.vertex(-size * 0.18, size * 0.46);
   sketch.endShape(sketch.CLOSE);
   sketch.fill(body);
-  sketch.rect(-size * 0.055, -size * 0.5, size * 0.11, size * 0.98, size * 0.055);
+  sketch.rect(
+    -size * 0.055,
+    -size * 0.5,
+    size * 0.11,
+    size * 0.98,
+    size * 0.055
+  );
   sketch.fill(MATERIAL.aluminium);
   sketch.rect(-size * 0.2, size * 0.02, size * 0.05, size * 0.12, size * 0.02);
   sketch.rect(size * 0.15, size * 0.02, size * 0.05, size * 0.12, size * 0.02);
   sketch.fill(MATERIAL.tintedGlass);
-  sketch.rect(-size * 0.03, -size * 0.47, size * 0.06, size * 0.04, size * 0.02);
+  sketch.rect(
+    -size * 0.03,
+    -size * 0.47,
+    size * 0.06,
+    size * 0.04,
+    size * 0.02
+  );
 }
 
 /**
@@ -112,7 +124,7 @@ function crosswindProgram(sketch: p5, read: () => CrosswindFrame) {
     const drawing = sketch.drawingContext;
     if (drawing instanceof CanvasRenderingContext2D) {
       const left = -(((east % TILE) + TILE) % TILE);
-      const top = ((north % TILE) + TILE) % TILE - TILE;
+      const top = (((north % TILE) + TILE) % TILE) - TILE;
       for (let x = left; x < sketch.width; x += TILE) {
         for (let y = top; y < sketch.height; y += TILE) {
           drawing.drawImage(land.elt, x, y, TILE, TILE);
@@ -124,8 +136,10 @@ function crosswindProgram(sketch: p5, read: () => CrosswindFrame) {
       for (let index = 0; index < 5; index += 1) {
         const span = sketch.width + 260;
         const tall = sketch.height + 200;
-        const x = ((((index * 197 - windEast * 1.4) % span) + span) % span) - 130;
-        const y = ((((index * 131 + windNorth * 1.4) % tall) + tall) % tall) - 100;
+        const x =
+          ((((index * 197 - windEast * 1.4) % span) + span) % span) - 130;
+        const y =
+          ((((index * 131 + windNorth * 1.4) % tall) + tall) % tall) - 100;
         for (let puff = 0; puff < 7; puff += 1) {
           const dx = (hashUnit(index, puff) - 0.5) * 120;
           const dy = (hashUnit(puff, index + 9) - 0.5) * 60;
@@ -229,8 +243,7 @@ export function AircraftCrosswindLab({
   const [heading, setHeading] = useState(initial);
   const quantity = useQuantity();
   const flight = useMemo(
-    () =>
-      Schema.decodeUnknownSync(CrosswindSchema)({ airspeed, toward, wind }),
+    () => Schema.decodeUnknownSync(CrosswindSchema)({ airspeed, toward, wind }),
     [airspeed, toward, wind]
   );
   const ground = groundVelocity(flight, heading);
