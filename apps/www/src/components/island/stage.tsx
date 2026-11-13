@@ -115,7 +115,7 @@ function start(
   let lastLife = 0;
   // The learner's own fox (ADR 0047, D12): it starts on the village square and walks where the learner sends it.
   let walker = { x: SPAN / 2 + 0.5, z: SPAN / 2 + 2.5 };
-  let route = Arr.empty<readonly [number, number]>();
+  let route: readonly (readonly [number, number])[] = [];
   canvas.dataset.player = `${Math.floor(walker.x)},${Math.floor(walker.z)}`;
   const remesh = (chunks: Iterable<number>) => {
     const { cells } = store.getState();

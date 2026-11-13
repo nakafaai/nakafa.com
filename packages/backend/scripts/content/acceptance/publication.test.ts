@@ -4,6 +4,7 @@ import { TrustedKeySchema } from "@nakafa/aksara-contracts/signature/trusted";
 import { acceptanceRuntimeError } from "@repo/backend/scripts/content/acceptance/error";
 import type { LocalRuntime } from "@repo/backend/scripts/content/acceptance/local";
 import {
+  exportRenderer,
   prepareAcceptanceSource,
   publishAcceptanceSource,
 } from "@repo/backend/scripts/content/acceptance/publication";
@@ -63,7 +64,11 @@ describe("pinned Aksara acceptance publication", () => {
               ? fs.writeFileString(spec.stdoutPath, "test-real-renderer-output")
               : Effect.void
         );
-        yield* publishAcceptanceSource("/test/nakafa", runtime);
+        const renderer = yield* exportRenderer(
+          "/test/nakafa",
+          runtime.directory
+        );
+        yield* publishAcceptanceSource(runtime, renderer);
         expect(
           yield* fs.readFileString(`${runtime.directory}/renderer.json`)
         ).toBe("test-real-renderer-output");
