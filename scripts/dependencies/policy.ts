@@ -73,7 +73,7 @@ export const ALCHEMY_COHORT = {
  * manifest that pins the cohort: the policy test reports each declaration that still
  * holds the old version, so none is missed.
  */
-const TIPTAP_COHORT_VERSION = "3.33.0";
+const TIPTAP_COHORT_VERSION = "3.33.1";
 /**
  * The Tiptap packages each manifest declares. The editor package holds the schema of
  * an assessment document, the design system holds the Memory editor, and the web app
@@ -168,15 +168,16 @@ function exactCohortHolds(
 }
 
 /**
- * Eight transitive overrides in the root `package.json` hold a version for a reason
+ * Nine transitive overrides in the root `package.json` hold a version for a reason
  * that no manifest states. `seroval` 1.8.1 and `seroval-plugins` 1.8.0 are one copy each
  * for TanStack Start's serializer, its web plugins, and the prerender
  * (`apps/www/prerender.config.ts`): the TanStack packages declare `^1.6.7`, and Bun
  * kept their nested 1.6.8 copies, which GHSA-9wx9-5pv9-3349 and GHSA-f86p-h4j2-7qgj
- * affect, when the web app moved. `prosemirror-transform` 1.12.4 is the one copy that the
- * ProseMirror packages of `@tiptap/pm` and the backend's step folding share: Bun
- * kept the packages' nested 1.12.2 copies when the backend moved to 1.12.4, and a
- * step made by one copy fails `instanceof` checks against the other. `convex-helpers`
+ * affect, when the web app moved. `prosemirror-model` 1.25.13 and `prosemirror-transform`
+ * 1.12.5 are the one copy each that the ProseMirror packages of `@tiptap/pm` and the
+ * backend's step folding share: Bun kept the packages' nested copies when the backend
+ * moved (transform 1.12.2 at 1.12.4, model 1.25.12 at 1.25.13), and a node or step made
+ * by one copy fails `instanceof` checks against the other. `convex-helpers`
  * 0.1.133 keeps one copy for every Convex component: @convex-dev/aggregate 0.3.4 pins
  * 0.1.128 exactly, the Agent and Workflow peers need ^0.1.127, and the Workpool peer
  * needs ^0.1.94, so one copy satisfies every range. `lodash` 4.18.1 replaces the
@@ -277,7 +278,7 @@ export const DEPENDENCY_HOLDS: readonly DependencyHold[] = [
     dependency: "marked-tiptap",
     minimumDeclarations: 1,
   },
-  // The collab plugin that steps sync uses (ADR 0028). Tiptap 3.33.0 does not
+  // The collab plugin that steps sync uses (ADR 0028). Tiptap 3.33.1 does not
   // ship it. It is MIT, depends on prosemirror-state alone, and its last
   // release is 1.3.1 of 17 May 2023, so it is pinned exactly, as Tiptap is. The
   // design system installs its extension, and the sync loop of the web app
@@ -291,16 +292,16 @@ export const DEPENDENCY_HOLDS: readonly DependencyHold[] = [
     dependency: "prosemirror-collab",
   },
   // The model and the transform that the server folds stored steps with (ADR
-  // 0028). They are the versions that `@tiptap/pm` 3.33.0 resolves in
+  // 0028). They are the versions that `@tiptap/pm` 3.33.1 resolves in
   // `bun.lock` (the transform through its root override), so the server applies
   // a step with the code the editors run.
   {
-    approved: "1.25.12",
+    approved: "1.25.13",
     declarationPaths: ["packages/backend/package.json"],
     dependency: "prosemirror-model",
   },
   {
-    approved: "1.12.4",
+    approved: "1.12.5",
     declarationPaths: ["packages/backend/package.json"],
     dependency: "prosemirror-transform",
   },
