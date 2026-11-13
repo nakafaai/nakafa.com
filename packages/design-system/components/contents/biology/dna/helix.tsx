@@ -1,4 +1,5 @@
-import { useFrame } from "@react-three/fiber";
+import { useFrame, useThree } from "@react-three/fiber";
+import { useLabelInk } from "@repo/design-system/components/contents/biology/cell/parts";
 import {
   ladderOf,
   type Point,
@@ -21,7 +22,10 @@ import { SimulationTicker } from "@repo/design-system/components/contents/simula
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { CameraControls } from "@repo/design-system/components/three/camera/controls";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
-import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene";
+import {
+  isNarrowThreeScene,
+  threeSceneFrameVariants,
+} from "@repo/design-system/components/three/scene";
 import { ScienceStage } from "@repo/design-system/components/three/stage";
 import { Slider } from "@repo/design-system/components/ui/slider";
 import {
@@ -39,7 +43,6 @@ import {
 } from "@repo/design-system/components/visual/card";
 import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
-import { getColor } from "@repo/design-system/lib/color";
 import { MATERIAL } from "@repo/design-system/lib/material";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr } from "effect";
@@ -61,6 +64,9 @@ const BASE_COLORS = {
   T: PLOT_COLORS.teal,
   U: PLOT_COLORS.orange,
 } as const satisfies Record<Base, string>;
+
+/** A card narrower than this width-to-height ratio gets the farther camera. */
+const NARROW_ASPECT = 1.2;
 
 /** Played, copying a stretch takes ten seconds. */
 const COPY_SECONDS = 10;
@@ -172,13 +178,7 @@ export function DnaHelixLab({
       >
         <ScienceStage reach={6} setting="studio">
           <Suspense fallback={null}>
-            <CameraControls
-              cameraPosition={[0, 1.6, 14]}
-              cameraTarget={[0, 0, 0]}
-              fov={34}
-              maxDistance={24}
-              minDistance={4}
-            />
+            <HelixCamera />
             <HelixScene
               bases={bases}
               changed={changed}
@@ -338,8 +338,7 @@ function HelixScene({
     }
   });
 
-  const ink = getColor("ZINC", 900);
-  const halo = getColor("SLATE", 50);
+  const ink = useLabelInk();
 
   return (
     <>
@@ -373,8 +372,6 @@ function HelixScene({
             color={ink}
             fontSize="compact"
             key={rung.index}
-            outlineColor={halo}
-            outlineWidth={0.004}
             position={[rung.index * 0.34, rung.open ? 3.2 : 1.7, 0]}
           >
             {bases[rung.index]}
@@ -382,6 +379,25 @@ function HelixScene({
         ))}
       </group>
     </>
+  );
+}
+
+/**
+ * The camera on the helix: farther back on a narrow card, such as a phone's
+ * square frame, so the whole stretch and its letters stay in view.
+ */
+function HelixCamera() {
+  const size = useThree((state) => state.size);
+  return (
+    <CameraControls
+      cameraPosition={
+        isNarrowThreeScene(size, NARROW_ASPECT) ? [0, 1.6, 20] : [0, 1.6, 14]
+      }
+      cameraTarget={[0, 0, 0]}
+      fov={34}
+      maxDistance={30}
+      minDistance={4}
+    />
   );
 }
 

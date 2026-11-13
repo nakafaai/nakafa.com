@@ -10,7 +10,10 @@ import {
   WINDOW_WEEKS,
 } from "@repo/design-system/components/contents/biology/climate/bleaching";
 import { LabBench } from "@repo/design-system/components/contents/chemistry/bench";
-import { hashUnit } from "@repo/design-system/components/contents/simulation/grain";
+import {
+  hashUnit,
+  valueNoise,
+} from "@repo/design-system/components/contents/simulation/grain";
 import {
   useQuantity,
   useReading,
@@ -48,7 +51,7 @@ import {
   useRef,
   useState,
 } from "react";
-import { Color } from "three";
+import { Color, SphereGeometry } from "three";
 
 /** Played, a week passes each second. */
 const WEEKS_PER_SECOND = 1;
@@ -281,10 +284,7 @@ function TankScene({
           seed={2}
           tips={tips}
         />
-        <mesh castShadow position={[0.02, 0.07, -0.06]} scale={[1, 0.7, 1]}>
-          <sphereGeometry args={[0.06, 40, 24]} />
-          <meshStandardMaterial color={tissue} roughness={0.85} />
-        </mesh>
+        <BrainCoral color={tissue} />
         <mesh
           castShadow
           position={[-0.02, 0.06, 0.09]}
@@ -364,8 +364,8 @@ function TankGlass() {
 }
 
 /**
- * A branching coral colony like Acropora: a short base, then branches that
- * fork twice, each tipped with a paler growing tip.
+ * A branching coral colony like Acropora: branches that fan up from a short
+ * base and fork in two, each fork tipped with a paler growing tip.
  */
 function BranchingCoral({
   color,
@@ -383,17 +383,82 @@ function BranchingCoral({
     <group position={position}>
       {Arr.map(branches, ([id, x, y, z, tiltX, tiltZ, length, radius]) => (
         <group key={id} position={[x, y, z]} rotation={[tiltX, 0, tiltZ]}>
-          <mesh castShadow position={[0, length / 2, 0]}>
-            <cylinderGeometry args={[radius * 0.8, radius, length, 10]} />
-            <meshStandardMaterial color={color} roughness={0.85} />
-          </mesh>
-          <mesh castShadow position={[0, length, 0]}>
-            <sphereGeometry args={[radius * 0.85, 10, 8]} />
-            <meshStandardMaterial color={tips} roughness={0.7} />
-          </mesh>
+          <Branch color={color} length={length} radius={radius} />
+          {Arr.map([-1, 1], (side) => (
+            <group
+              key={side}
+              position={[0, length, 0]}
+              rotation={[side * 0.35, 0, side * 0.55]}
+            >
+              <Branch
+                color={color}
+                length={length * 0.55}
+                radius={radius * 0.8}
+              />
+              <mesh castShadow position={[0, length * 0.55, 0]}>
+                <sphereGeometry args={[radius * 0.7, 10, 8]} />
+                <meshStandardMaterial color={tips} roughness={0.7} />
+              </mesh>
+            </group>
+          ))}
         </group>
       ))}
     </group>
+  );
+}
+
+/** One tapering stretch of a coral branch, standing on its base. */
+function Branch({
+  color,
+  length,
+  radius,
+}: {
+  readonly color: Color;
+  readonly length: number;
+  readonly radius: number;
+}) {
+  return (
+    <mesh castShadow position={[0, length / 2, 0]}>
+      <cylinderGeometry args={[radius * 0.8, radius, length, 10]} />
+      <meshStandardMaterial color={color} roughness={0.85} />
+    </mesh>
+  );
+}
+
+/**
+ * A brain coral: a dome whose surface folds into meandering ridges and
+ * valleys, raised from seeded value noise so every visit shows the same
+ * maze.
+ */
+function BrainCoral({ color }: { readonly color: Color }) {
+  const geometry = useMemo(() => {
+    const dome = new SphereGeometry(0.06, 96, 64);
+    const positions = dome.attributes.position;
+    if (positions) {
+      Arr.forEach(Arr.range(0, positions.count - 1), (index) => {
+        const x = positions.getX(index);
+        const y = positions.getY(index);
+        const z = positions.getZ(index);
+        const ridge = Math.sin(
+          valueNoise((x + 0.06) * 90, (z + 0.06) * 90, 16) * Math.PI * 9 +
+            y * 60
+        );
+        const lift = 1 + 0.035 * ridge;
+        positions.setXYZ(index, x * lift, y * lift, z * lift);
+      });
+    }
+    dome.computeVertexNormals();
+    return dome;
+  }, []);
+  return (
+    <mesh
+      castShadow
+      geometry={geometry}
+      position={[0.02, 0.07, -0.06]}
+      scale={[1, 0.7, 1]}
+    >
+      <meshStandardMaterial color={color} roughness={0.85} />
+    </mesh>
   );
 }
 

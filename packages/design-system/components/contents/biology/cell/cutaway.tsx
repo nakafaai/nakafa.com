@@ -14,7 +14,10 @@ import {
   BacteriumCell,
   YeastCell,
 } from "@repo/design-system/components/contents/biology/cell/microbe";
-import { Sway } from "@repo/design-system/components/contents/biology/cell/parts";
+import {
+  Sway,
+  useLabelInk,
+} from "@repo/design-system/components/contents/biology/cell/parts";
 import { useQuantity } from "@repo/design-system/components/contents/simulation/quantity";
 import { SimulationTicker } from "@repo/design-system/components/contents/simulation/ticker";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
@@ -38,7 +41,6 @@ import {
 } from "@repo/design-system/components/visual/card";
 import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
-import { getColor } from "@repo/design-system/lib/color";
 import { Array as Arr, Schema } from "effect";
 import { type ReactNode, Suspense, useEffect, useRef, useState } from "react";
 
@@ -192,6 +194,7 @@ function CellScene({
   const clock = useRef(minutes);
   const sent = useRef(minutes);
   const quantity = useQuantity();
+  const ink = useLabelInk();
   const length = lengthOf(kind);
   const bar = scaleBar(length);
   const barUnits = (bar / length) * 2 * (kind === "bacterium" ? ROD_SCALE : 1);
@@ -235,15 +238,9 @@ function CellScene({
       <group position={[0, -1.12, 0.1]}>
         <mesh>
           <boxGeometry args={[barUnits, 0.025, 0.025]} />
-          <meshStandardMaterial color={getColor("GRAY", 800)} roughness={0.5} />
+          <meshStandardMaterial color={ink} roughness={0.5} />
         </mesh>
-        <ThreeLabel
-          color={getColor("ZINC", 900)}
-          fontSize="compact"
-          outlineColor={getColor("SLATE", 50)}
-          outlineWidth={0.004}
-          position={[0, -0.09, 0]}
-        >
+        <ThreeLabel color={ink} fontSize="compact" position={[0, -0.09, 0]}>
           <InlineMath math={quantity(bar, "\\,\\mu\\text{m}", 1)} />
         </ThreeLabel>
       </group>
