@@ -359,6 +359,13 @@ function start(
   // share of the thread on a slow phone (ADR 0047, D26); the learner's own
   // moves still draw at once.
   const pace = createFramePace();
+  /** Whether the world moving by itself is due a frame: its water every 66 ms, or 33 in rain or snow, when the pace allows. */
+  const ambientDue = (now: number) => {
+    const { weather } = store.getState();
+    const falling =
+      weather === "rain" || weather === "storm" || weather === "snow";
+    return now - lastWater > (falling ? 33 : 66) && pace.isDue(now);
+  };
   const tick = (now: number) => {
     frame = requestAnimationFrame(tick);
     input.tend(now);
@@ -372,9 +379,7 @@ function start(
       needsDraw = true;
     }
     const { weather } = store.getState();
-    const falling =
-      weather === "rain" || weather === "storm" || weather === "snow";
-    const waterDue = now - lastWater > (falling ? 33 : 66) && pace.isDue(now);
+    const waterDue = ambientDue(now);
     if (
       !(needsDraw || waterDue || route.length > 0 || rod.active()) ||
       document.hidden
