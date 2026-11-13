@@ -5,7 +5,7 @@ import {
 } from "@repo/design-system/components/contents/physics/vector/sled/pull";
 import { Schema } from "effect";
 
-const tow = Schema.decodeUnknownSync(TowSchema)({
+const tow = Schema.decodeSync(TowSchema)({
   distance: 10,
   force: 50,
   mass: 20,
@@ -26,7 +26,7 @@ describe("towParts", () => {
   });
 
   it("never pushes the snow with a negative normal force", () => {
-    const light = Schema.decodeUnknownSync(TowSchema)({
+    const light = Schema.decodeSync(TowSchema)({
       distance: 1,
       force: 500,
       mass: 1,

@@ -5,7 +5,7 @@ import {
 } from "@repo/design-system/components/contents/physics/vector/wrench/torque";
 import { Schema } from "effect";
 
-const grip = Schema.decodeUnknownSync(GripSchema)({ arm: 0.4, force: 200 });
+const grip = Schema.decodeSync(GripSchema)({ arm: 0.4, force: 200 });
 
 describe("wrenchTorque", () => {
   it("turns with 80 N·m when 200 N pulls square to a 0.4 m arm", () => {

@@ -150,7 +150,7 @@ export function WindMapVectorLab({
   const quantity = useQuantity();
   const [angle, setAngle] = useState(startAngle);
   const [speed, setSpeed] = useState(startSpeed);
-  const breeze = Schema.decodeUnknownSync(BreezeSchema)({ angle, speed });
+  const breeze = Schema.decodeSync(BreezeSchema)({ angle, speed });
   const parts = breezeParts(breeze);
 
   return (

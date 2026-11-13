@@ -5,7 +5,7 @@ import {
 } from "@repo/design-system/components/contents/physics/vector/tug/rope";
 import { Schema } from "effect";
 
-const decode = Schema.decodeUnknownSync(TeamsSchema);
+const decode = Schema.decodeSync(TeamsSchema);
 
 describe("ropeForces", () => {
   it("pulls 3 times 400 N left against 4 times 400 N right, 400 N net to the right", () => {
@@ -21,7 +21,7 @@ describe("ropeForces", () => {
   });
 
   it("refuses a team of more than eight or of part of a person", () => {
-    const check = Schema.decodeUnknownExit(TeamsSchema);
+    const check = Schema.decodeExit(TeamsSchema);
     expect(check({ left: 9, pull: 400, right: 1 })._tag).toBe("Failure");
     expect(check({ left: 1.5, pull: 400, right: 1 })._tag).toBe("Failure");
   });

@@ -96,7 +96,11 @@ function KiteScene({
   return (
     <group>
       <SimulationTicker running={playing} />
-      <mesh position={[0, 0.002, 0]} receiveShadow rotation={[-Math.PI / 2, 0, 0]}>
+      <mesh
+        position={[0, 0.002, 0]}
+        receiveShadow
+        rotation={[-Math.PI / 2, 0, 0]}
+      >
         <circleGeometry args={[60, 64]} />
         <meshStandardMaterial color={MATERIAL.sand} roughness={0.95} />
       </mesh>
@@ -196,7 +200,7 @@ export function KiteStringTensionLab({
   const quantity = useQuantity();
   const [angle, setAngle] = useState(start);
   const line = useMemo(
-    () => Schema.decodeUnknownSync(LineSchema)({ length, tension }),
+    () => Schema.decodeSync(LineSchema)({ length, tension }),
     [length, tension]
   );
   const parts = lineParts(line, angle);

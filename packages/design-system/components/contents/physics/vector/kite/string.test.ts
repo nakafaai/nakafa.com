@@ -5,7 +5,7 @@ import {
 } from "@repo/design-system/components/contents/physics/vector/kite/string";
 import { Schema } from "effect";
 
-const line = Schema.decodeUnknownSync(LineSchema)({ length: 30, tension: 40 });
+const line = Schema.decodeSync(LineSchema)({ length: 30, tension: 40 });
 
 describe("lineParts", () => {
   it("takes the cosine for the vertical part when the angle is from the vertical", () => {

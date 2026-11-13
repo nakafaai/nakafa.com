@@ -58,7 +58,7 @@ export function TugboatResultantLab({
   const quantity = useQuantity();
   const [between, setBetween] = useState(start);
   const tugs = useMemo(
-    () => Schema.decodeUnknownSync(TugsSchema)({ first, second }),
+    () => Schema.decodeSync(TugsSchema)({ first, second }),
     [first, second]
   );
   const resultant = towResultant(tugs, between);

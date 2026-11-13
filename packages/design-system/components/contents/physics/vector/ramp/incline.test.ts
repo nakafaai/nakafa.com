@@ -6,7 +6,7 @@ import {
 } from "@repo/design-system/components/contents/physics/vector/ramp/incline";
 import { Schema } from "effect";
 
-const block = Schema.decodeUnknownSync(BlockSchema)({ friction: 0.5, mass: 2 });
+const block = Schema.decodeSync(BlockSchema)({ friction: 0.5, mass: 2 });
 
 describe("rampForces", () => {
   it("splits 19.6 N at 30° into 9.8 N down the slope and 16.97 N into it", () => {

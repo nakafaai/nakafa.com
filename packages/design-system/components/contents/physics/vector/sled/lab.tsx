@@ -62,7 +62,7 @@ export function SledPullWorkLab({
   const quantity = useQuantity();
   const [angle, setAngle] = useState(start);
   const tow = useMemo(
-    () => Schema.decodeUnknownSync(TowSchema)({ distance, force, mass }),
+    () => Schema.decodeSync(TowSchema)({ distance, force, mass }),
     [distance, force, mass]
   );
   const parts = towParts(tow, angle);

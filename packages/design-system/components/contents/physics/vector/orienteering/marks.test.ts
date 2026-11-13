@@ -6,7 +6,7 @@ import {
 } from "@repo/design-system/components/contents/physics/vector/orienteering/marks";
 import { Schema } from "effect";
 
-const marks = Schema.decodeUnknownSync(MarksSchema)({
+const marks = Schema.decodeSync(MarksSchema)({
   a: { east: 20, north: 10 },
   b: { east: 80, north: 90 },
   c: { east: 120, north: -20 },

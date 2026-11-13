@@ -218,7 +218,7 @@ export function WrenchTorqueLab({
   const quantity = useQuantity();
   const [angle, setAngle] = useState(start);
   const grip = useMemo(
-    () => Schema.decodeUnknownSync(GripSchema)({ arm, force }),
+    () => Schema.decodeSync(GripSchema)({ arm, force }),
     [arm, force]
   );
   const parts = wrenchTorque(grip, angle);

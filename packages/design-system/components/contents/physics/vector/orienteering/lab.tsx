@@ -174,10 +174,7 @@ export function OrienteeringMapVectorLab({
   views = ViewSchema.literals,
 }: OrienteeringMapVectorLabProps) {
   const quantity = useQuantity();
-  const marks = useMemo(
-    () => Schema.decodeUnknownSync(MarksSchema)(given),
-    [given]
-  );
+  const marks = useMemo(() => Schema.decodeSync(MarksSchema)(given), [given]);
   const [view, setView] = useState<View>(views[0] ?? "forward");
   const isView = Schema.is(ViewSchema);
   const { vector } = shownVector(marks, view);

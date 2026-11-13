@@ -213,7 +213,7 @@ export function SolarPanelFluxLab({
   const quantity = useQuantity();
   const [tilt, setTilt] = useState(start);
   const panel = useMemo(
-    () => Schema.decodeUnknownSync(PanelSchema)({ area, elevation, sunlight }),
+    () => Schema.decodeSync(PanelSchema)({ area, elevation, sunlight }),
     [area, elevation, sunlight]
   );
   const caught = panelPower(panel, tilt);

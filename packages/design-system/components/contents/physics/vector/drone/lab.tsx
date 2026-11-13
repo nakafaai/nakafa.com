@@ -34,7 +34,7 @@ interface DroneDisplacementLabProps {
   /** Numbers the learner multiplies the flight plan by, when the card offers that choice. */
   factors?: readonly number[];
   /** The flight plan: legs in metres east, north and up. */
-  hops: readonly Hop[];
+  hops: readonly [Hop, ...Hop[]];
   labels: {
     chooseFactor: string;
     displacement: ReactNode;
@@ -64,10 +64,7 @@ export function DroneDisplacementLab({
   units = false,
 }: DroneDisplacementLabProps) {
   const quantity = useQuantity();
-  const decoded = useMemo(
-    () => Schema.decodeUnknownSync(HopsSchema)(plan),
-    [plan]
-  );
+  const decoded = useMemo(() => Schema.decodeSync(HopsSchema)(plan), [plan]);
   const [factor, setFactor] = useState(1);
   const hops = scaleHops(decoded, factor);
   const moved = displacement(hops);

@@ -23,7 +23,7 @@ describe("courseParts", () => {
 });
 
 describe("voyageDisplacement", () => {
-  const voyage = Schema.decodeUnknownSync(CoursesSchema)([
+  const voyage = Schema.decodeSync(CoursesSchema)([
     { bearing: 90, distance: 6 },
     { bearing: 0, distance: 8 },
   ]);

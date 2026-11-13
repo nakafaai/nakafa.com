@@ -6,7 +6,7 @@ import {
 } from "@repo/design-system/components/contents/physics/vector/door/swing";
 import { Schema } from "effect";
 
-const door = Schema.decodeUnknownSync(DoorSchema)({
+const door = Schema.decodeSync(DoorSchema)({
   force: 20,
   mass: 18,
   width: 0.9,

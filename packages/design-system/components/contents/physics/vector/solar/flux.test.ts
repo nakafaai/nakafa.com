@@ -5,7 +5,7 @@ import {
 } from "@repo/design-system/components/contents/physics/vector/solar/flux";
 import { Schema } from "effect";
 
-const panel = Schema.decodeUnknownSync(PanelSchema)({
+const panel = Schema.decodeSync(PanelSchema)({
   area: 1.7,
   elevation: 60,
   sunlight: 1000,
@@ -26,7 +26,7 @@ describe("panelPower", () => {
   });
 
   it("catches nothing once the sun is behind the panel", () => {
-    const low = Schema.decodeUnknownSync(PanelSchema)({
+    const low = Schema.decodeSync(PanelSchema)({
       area: 1.7,
       elevation: 0,
       sunlight: 1000,

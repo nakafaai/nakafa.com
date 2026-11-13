@@ -5,7 +5,7 @@ import {
 } from "@repo/design-system/components/contents/physics/vector/tugboat/tow";
 import { Schema } from "effect";
 
-const tugs = Schema.decodeUnknownSync(TugsSchema)({ first: 40, second: 30 });
+const tugs = Schema.decodeSync(TugsSchema)({ first: 40, second: 30 });
 
 describe("towResultant", () => {
   it("adds 40 kN and 30 kN at right angles into 50 kN, 36.87° from the first cable", () => {
@@ -33,7 +33,7 @@ describe("towResultant", () => {
   });
 
   it("reads an obtuse angle from a weak first cable", () => {
-    const weak = Schema.decodeUnknownSync(TugsSchema)({
+    const weak = Schema.decodeSync(TugsSchema)({
       first: 10,
       second: 40,
     });

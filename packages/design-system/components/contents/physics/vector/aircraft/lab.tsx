@@ -243,7 +243,7 @@ export function AircraftCrosswindLab({
   const [heading, setHeading] = useState(initial);
   const quantity = useQuantity();
   const flight = useMemo(
-    () => Schema.decodeUnknownSync(CrosswindSchema)({ airspeed, toward, wind }),
+    () => Schema.decodeSync(CrosswindSchema)({ airspeed, toward, wind }),
     [airspeed, toward, wind]
   );
   const ground = groundVelocity(flight, heading);

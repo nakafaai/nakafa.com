@@ -63,7 +63,7 @@ export function RampBlockComponentLab({
   const quantity = useQuantity();
   const [angle, setAngle] = useState(start);
   const block = useMemo(
-    () => Schema.decodeUnknownSync(BlockSchema)({ friction, mass }),
+    () => Schema.decodeSync(BlockSchema)({ friction, mass }),
     [friction, mass]
   );
   const forces = rampForces(block, angle);

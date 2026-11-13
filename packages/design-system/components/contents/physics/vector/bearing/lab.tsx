@@ -182,7 +182,7 @@ function voyageProgram(
 
 interface ShipBearingComponentLabProps {
   /** The legs of the voyage, distances in km and bearings in degrees; the learner turns the last leg's bearing. */
-  courses: readonly Course[];
+  courses: readonly [Course, ...Course[]];
   description: ReactNode;
   labels: {
     bearing: ReactNode;
@@ -210,10 +210,7 @@ export function ShipBearingComponentLab({
   title,
 }: ShipBearingComponentLabProps) {
   const quantity = useQuantity();
-  const decoded = useMemo(
-    () => Schema.decodeUnknownSync(CoursesSchema)(plan),
-    [plan]
-  );
+  const decoded = useMemo(() => Schema.decodeSync(CoursesSchema)(plan), [plan]);
   const lastIndex = decoded.length - 1;
   const [bearing, setBearing] = useState(decoded[lastIndex]?.bearing ?? 0);
   const courses = Arr.map(decoded, (course, index) =>

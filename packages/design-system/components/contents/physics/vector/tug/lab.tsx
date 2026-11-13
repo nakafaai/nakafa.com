@@ -265,7 +265,7 @@ export function TugOfWarForceLab({
   const quantity = useQuantity();
   const [left, setLeft] = useState(startLeft);
   const [right, setRight] = useState(startRight);
-  const teams = Schema.decodeUnknownSync(TeamsSchema)({ left, pull, right });
+  const teams = Schema.decodeSync(TeamsSchema)({ left, pull, right });
   const forces = ropeForces(teams);
 
   return (

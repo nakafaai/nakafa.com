@@ -92,7 +92,7 @@ describe("twoPullResultant", () => {
 
 describe("PullsSchema", () => {
   it("needs at least two strings with positive masses", () => {
-    const decode = Schema.decodeUnknownExit(PullsSchema);
+    const decode = Schema.decodeExit(PullsSchema);
     expect(decode([{ angle: 0, mass: 100 }])._tag).toBe("Failure");
     expect(
       decode([

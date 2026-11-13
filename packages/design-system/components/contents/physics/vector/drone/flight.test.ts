@@ -9,7 +9,7 @@ import {
 } from "@repo/design-system/components/contents/physics/vector/drone/flight";
 import { Schema } from "effect";
 
-const flight = Schema.decodeUnknownSync(HopsSchema)([
+const flight = Schema.decodeSync(HopsSchema)([
   { east: 0, north: 0, up: 12 },
   { east: 3, north: 4, up: 0 },
 ]);
@@ -58,9 +58,7 @@ describe("hopPoint", () => {
   });
 
   it("stands still on a leg of no length", () => {
-    const hover = Schema.decodeUnknownSync(HopsSchema)([
-      { east: 0, north: 0, up: 0 },
-    ]);
+    const hover = Schema.decodeSync(HopsSchema)([{ east: 0, north: 0, up: 0 }]);
     expect(hopPoint(hover, 5)).toEqual({ east: 0, north: 0, up: 0 });
   });
 });

@@ -292,7 +292,7 @@ export function ForceTableResultantLab({
 }: ForceTableResultantLabProps) {
   const quantity = useQuantity();
   const setup = useMemo(
-    () => Schema.decodeUnknownSync(PullsSchema)(initial),
+    () => Schema.decodeSync(PullsSchema)(initial),
     [initial]
   );
   const last = setup.length - 1;

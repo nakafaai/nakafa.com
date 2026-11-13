@@ -208,7 +208,7 @@ export function DoorHingeTorqueLab({
   const [angle, setAngle] = useState(startAngle);
   const [arm, setArm] = useState(startArm);
   const door = useMemo(
-    () => Schema.decodeUnknownSync(DoorSchema)({ force, mass, width }),
+    () => Schema.decodeSync(DoorSchema)({ force, mass, width }),
     [force, mass, width]
   );
   const push = doorTorque(door, arm, angle);

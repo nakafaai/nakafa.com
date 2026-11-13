@@ -6,7 +6,7 @@ import {
 } from "@repo/design-system/components/contents/physics/vector/wind/breeze";
 import { Schema } from "effect";
 
-const decode = Schema.decodeUnknownSync(BreezeSchema);
+const decode = Schema.decodeSync(BreezeSchema);
 
 describe("breezeParts", () => {
   it("splits 10 m/s at 30° into 8.66 m/s east and 5 m/s north", () => {

@@ -9,7 +9,7 @@ import {
 } from "@repo/design-system/components/contents/physics/vector/aircraft/drift";
 import { Schema } from "effect";
 
-const flight = Schema.decodeUnknownSync(CrosswindSchema)({
+const flight = Schema.decodeSync(CrosswindSchema)({
   airspeed: 400,
   toward: 90,
   wind: 300,
