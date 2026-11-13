@@ -205,9 +205,9 @@ function sideTex(terms: readonly Term[]) {
 }
 
 /** The balanced equation in TeX, with the arrow the corpus writes. */
-export function equationTex(id: ReactionId) {
+export function equationLines(id: ReactionId) {
   const { products, reactants } = getReaction(id);
-  return `${sideTex(reactants)} \\rightarrow ${sideTex(products)}`;
+  return [sideTex(reactants), `\\rightarrow ${sideTex(products)}`] as const;
 }
 
 /** How many atoms of each element one side holds, in periodic-table order. */
@@ -238,20 +238,16 @@ function countOf(atoms: ReturnType<typeof sideAtoms>, element: ElementSymbol) {
 }
 
 /**
- * The atoms of each element on both sides as math, which a balanced equation
- * keeps equal: "\\mathrm{H}: 4 = 4,\\ \\mathrm{O}: 2 = 2".
+ * The atoms of each element on both sides as math, one element a line, which
+ * a balanced equation keeps equal: "\\mathrm{H}: 4 = 4".
  */
-export function balanceTex(id: ReactionId) {
+export function balanceLines(id: ReactionId) {
   const { products, reactants } = getReaction(id);
-  const before = sideAtoms(reactants);
   const after = sideAtoms(products);
-  return Arr.join(
-    Arr.map(
-      before,
-      ([element, count]) =>
-        `\\mathrm{${element}}: ${count} = ${countOf(after, element)}`
-    ),
-    ",\\ "
+  return Arr.map(
+    sideAtoms(reactants),
+    ([element, count]) =>
+      `\\mathrm{${element}}: ${count} = ${countOf(after, element)}`
   );
 }
 
@@ -292,15 +288,21 @@ export function atomEconomy(id: ReactionId) {
   );
 }
 
-/** The atom economy worked out in math: "\dfrac{2(18)}{36} \times 100\% = 100\%". */
-export function economyTex(id: ReactionId, format: MathNumber) {
+/**
+ * The atom economy worked out in math, the working on one line and the result
+ * on the next: "\dfrac{2(18)}{36} \times 100\%" and "= 100\%".
+ */
+export function economyLines(id: ReactionId, format: MathNumber) {
   const { products, reactants } = getReaction(id);
   return Option.map(
     Option.all([Arr.head(products), atomEconomy(id)]),
     ([[molecule, coefficient], economy]) => {
       const product = format(relativeMass(molecule));
       const top = coefficient === 1 ? product : `${coefficient}(${product})`;
-      return `\\dfrac{${top}}{${format(sideMass(reactants))}} \\times 100\\% = ${format(economy)}\\%`;
+      return [
+        `\\dfrac{${top}}{${format(sideMass(reactants))}} \\times 100\\%`,
+        `= ${format(economy)}\\%`,
+      ] as const;
     }
   );
 }
