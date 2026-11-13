@@ -95,7 +95,7 @@ export function SolarPanelHeatLab({
           <Suspense fallback={null}>
             <CameraControls
               cameraPosition={[6.5, 5.5, 9.5]}
-              cameraTarget={[-0.8, 2.8, 0]}
+              cameraTarget={[1, 3, 0]}
               fov={36}
               maxDistance={22}
               minDistance={4}

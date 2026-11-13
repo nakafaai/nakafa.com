@@ -96,10 +96,10 @@ export function HoistWorkLab({
         <ScienceStage floor={0} frameloop="always" reach={5} setting="studio">
           <Suspense fallback={null}>
             <CameraControls
-              cameraPosition={[6.5, 4.2, 8.5]}
-              cameraTarget={[0.5, 3, 0]}
-              fov={36}
-              maxDistance={18}
+              cameraPosition={[7.5, 5.2, 11]}
+              cameraTarget={[0.8, 3.2, 0]}
+              fov={40}
+              maxDistance={20}
               minDistance={4}
             />
             <HoistScene motor={motor} />

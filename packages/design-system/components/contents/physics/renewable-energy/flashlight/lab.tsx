@@ -107,9 +107,9 @@ export function FlashlightEfficiencyLab({
         <ScienceStage floor={0} frameloop="always" reach={0.8} setting="studio">
           <Suspense fallback={null}>
             <CameraControls
-              cameraPosition={[0.55, 0.42, 0.95]}
-              cameraTarget={[0.35, 0.08, 0]}
-              fov={36}
+              cameraPosition={[0.4, 0.45, 1.45]}
+              cameraTarget={[0.42, 0.12, 0]}
+              fov={40}
               maxDistance={2.4}
               minDistance={0.4}
             />

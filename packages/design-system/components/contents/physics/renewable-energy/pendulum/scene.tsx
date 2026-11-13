@@ -28,6 +28,9 @@ const PIVOT = LENGTH + 0.35;
 /** How tall the column stands for the starting energy, in metres. */
 const COLUMN = 1.6;
 
+/** Where the column stands, clear of the swing, in metres from the pivot. */
+const COLUMN_X = 2;
+
 /** The three stores, bottom to top in the column. */
 const STORES = ["potential", "kinetic", "heat"] as const;
 
@@ -73,7 +76,7 @@ export function PendulumScene({
       const band = bands.current[index];
       if (band) {
         band.scale.set(1, Math.max(tall, 0.001), 1);
-        band.position.set(1.15, base + tall / 2, 0);
+        band.position.set(COLUMN_X, base + tall / 2, 0);
       }
       base += tall;
     });
@@ -120,7 +123,7 @@ export function PendulumScene({
           />
         </mesh>
       ))}
-      <mesh position={[1.15, COLUMN + 0.004, 0]}>
+      <mesh position={[COLUMN_X, COLUMN + 0.004, 0]}>
         <boxGeometry args={[0.32, 0.008, 0.32]} />
         <meshStandardMaterial color={getColor("WHITE")} />
       </mesh>

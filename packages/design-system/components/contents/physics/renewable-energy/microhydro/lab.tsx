@@ -89,8 +89,8 @@ export function MicrohydroLab({
         <ScienceStage floor={0} frameloop="always" reach={12} setting="field">
           <Suspense fallback={null}>
             <CameraControls
-              cameraPosition={[6, 9, 20]}
-              cameraTarget={[1, 2, 0]}
+              cameraPosition={[9, 9, 22]}
+              cameraTarget={[3.5, 1.5, 0]}
               fov={38}
               maxDistance={44}
               minDistance={6}

@@ -131,11 +131,11 @@ export function FlashlightScene({
             />
           </mesh>
           <mesh position={[0.055, 0.03, 0]}>
-            <sphereGeometry args={[0.05 + heat * 0.05, 24, 16]} />
+            <sphereGeometry args={[0.03 + heat * 0.025, 24, 16]} />
             <meshBasicMaterial
               color={heatColor}
               depthWrite={false}
-              opacity={0.12 + 0.25 * heat}
+              opacity={0.08 + 0.18 * heat}
               transparent
             />
           </mesh>

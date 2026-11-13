@@ -45,8 +45,8 @@ interface WaveBuoyPowerLabProps {
 }
 
 /**
- * A wave-energy buoy riding deep-water waves, drawn in cross-section with the
- * height stretched seven times. Each sea carries ρ g² H² T / (64π) watts
+ * A wave-energy buoy riding deep-water waves, drawn with the height stretched
+ * four times. Each sea carries ρ g² H² T / (64π) watts
  * across every metre of crest: twice the wave height brings four times the
  * power, and the buoy's generator on the seabed turns part of it into
  * electricity.
@@ -92,8 +92,8 @@ export function WaveBuoyPowerLab({
         <ScienceStage floor={0} frameloop="always" reach={40} setting="field">
           <Suspense fallback={null}>
             <CameraControls
-              cameraPosition={[34, 14, 40]}
-              cameraTarget={[2, 0, 0]}
+              cameraPosition={[24, 7, 30]}
+              cameraTarget={[4, 0, 0]}
               fov={36}
               maxDistance={90}
               minDistance={10}

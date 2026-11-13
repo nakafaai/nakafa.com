@@ -17,7 +17,10 @@ import { type Group, PlaneGeometry } from "three";
 const SCALE = 0.5;
 
 /** How much sea the scene spans, in metres along the waves and across them. */
-const SPAN = { across: 120, along: 200 } as const;
+const SPAN = { across: 260, along: 360 } as const;
+
+/** How many times taller than true the waves are drawn, so a 1 m swell can be seen. */
+const STRETCH = 4;
 
 /** Where the buoy floats, in metres along the waves from the scene's middle. */
 const BUOY_AT = 10;
@@ -26,7 +29,7 @@ const BUOY_AT = 10;
 const BUOY = 4;
 
 /**
- * Open sea rolling past a wave-energy buoy, at true scale. The surface moves
+ * Open sea rolling past a wave-energy buoy, its height stretched four times. The surface moves
  * with the regular wave of the chosen sea, ρ g² H² T / (64π) watts across
  * every metre of crest, and the buoy heaves with the water at its place.
  */
@@ -37,7 +40,7 @@ export function WaveScene({ sea }: { readonly sea: Sea }) {
     const plane = new PlaneGeometry(
       SPAN.along * SCALE,
       SPAN.across * SCALE,
-      160,
+      240,
       24
     );
     plane.rotateX(-Math.PI / 2);
@@ -48,12 +51,16 @@ export function WaveScene({ sea }: { readonly sea: Sea }) {
     const position = surface.getAttribute("position");
     for (let vertex = 0; vertex < position.count; vertex += 1) {
       const metres = position.getX(vertex) / SCALE;
-      position.setY(vertex, surfaceHeight(sea, metres, time.current) * SCALE);
+      position.setY(
+        vertex,
+        surfaceHeight(sea, metres, time.current) * SCALE * STRETCH
+      );
     }
     position.needsUpdate = true;
     surface.computeVertexNormals();
-    const rise = surfaceHeight(sea, BUOY_AT, time.current) * SCALE;
-    const ahead = surfaceHeight(sea, BUOY_AT + 2, time.current) * SCALE;
+    const rise = surfaceHeight(sea, BUOY_AT, time.current) * SCALE * STRETCH;
+    const ahead =
+      surfaceHeight(sea, BUOY_AT + 2, time.current) * SCALE * STRETCH;
     buoy.current?.position.set(BUOY_AT * SCALE, rise, 0);
     buoy.current?.rotation.set(0, 0, Math.atan2(ahead - rise, 2 * SCALE));
   });

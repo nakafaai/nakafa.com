@@ -90,7 +90,7 @@ export function HydroDamLab({
         <ScienceStage floor={0} frameloop="always" reach={14} setting="field">
           <Suspense fallback={null}>
             <CameraControls
-              cameraPosition={[17, 11, 21]}
+              cameraPosition={[3, 8, 26]}
               cameraTarget={[0, 3.5, 0]}
               fov={36}
               maxDistance={48}

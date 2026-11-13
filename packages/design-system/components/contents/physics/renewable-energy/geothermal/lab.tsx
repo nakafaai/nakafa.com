@@ -80,7 +80,7 @@ export function GeothermalLoopLab({
         <ScienceStage floor={0} frameloop="always" reach={9} setting="field">
           <Suspense fallback={null}>
             <CameraControls
-              cameraPosition={[9, 4, 15]}
+              cameraPosition={[10, 4, 18]}
               cameraTarget={[0, -2.2, 0]}
               fov={38}
               maxDistance={34}

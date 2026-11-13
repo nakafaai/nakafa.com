@@ -86,17 +86,10 @@ export function DamScene({
       <mesh castShadow geometry={wall} receiveShadow>
         <meshStandardMaterial color={MATERIAL.concrete} roughness={0.85} />
       </mesh>
-      {Arr.map([-1, 1] as const, (side) => (
-        <mesh
-          key={side}
-          position={[-4, 4, side * 10]}
-          receiveShadow
-          scale={[14, 6, 4]}
-        >
-          <sphereGeometry args={[1, 32, 16]} />
-          <meshStandardMaterial color={MATERIAL.foliageDark} roughness={1} />
-        </mesh>
-      ))}
+      <mesh position={[-4, 4, -10]} receiveShadow scale={[14, 6, 4]}>
+        <sphereGeometry args={[1, 32, 16]} />
+        <meshStandardMaterial color={MATERIAL.foliageDark} roughness={1} />
+      </mesh>
       <Pipe from={[-2.4, 1.4, 3]} radius={0.28} to={[2.4, 0.5, 3]}>
         <MetalMaterial color={MATERIAL.galvanizedSteel} roughness={0.5} />
       </Pipe>

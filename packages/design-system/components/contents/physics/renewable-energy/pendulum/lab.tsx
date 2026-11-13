@@ -108,8 +108,8 @@ export function PendulumEnergyLab({
         <ScienceStage floor={0} frameloop="always" reach={2.5} setting="lab">
           <Suspense fallback={null}>
             <CameraControls
-              cameraPosition={[2.4, 1.7, 3.6]}
-              cameraTarget={[0.35, 1.25, 0]}
+              cameraPosition={[1.6, 1.8, 5.6]}
+              cameraTarget={[0.7, 1.2, 0]}
               fov={38}
               maxDistance={8}
               minDistance={1.5}

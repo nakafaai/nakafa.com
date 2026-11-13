@@ -92,7 +92,7 @@ export function WindRotorLab({
         <ScienceStage floor={0} frameloop="always" reach={18} setting="field">
           <Suspense fallback={null}>
             <CameraControls
-              cameraPosition={[20, 8, 26]}
+              cameraPosition={[15, 7, 19]}
               cameraTarget={[0, 5.5, 0]}
               fov={38}
               maxDistance={60}

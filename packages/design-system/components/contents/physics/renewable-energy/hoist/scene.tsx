@@ -71,10 +71,10 @@ function Tower() {
       ))}
       <mesh
         castShadow
-        position={[CRATE_X, LIFT_HEIGHT - 0.05, 0]}
+        position={[CRATE_X + 0.95, LIFT_HEIGHT - 0.05, 0]}
         receiveShadow
       >
-        <boxGeometry args={[1.5, 0.1, 1.1]} />
+        <boxGeometry args={[1.2, 0.1, 1.1]} />
         <meshStandardMaterial color={MATERIAL.concrete} roughness={0.85} />
       </mesh>
     </group>

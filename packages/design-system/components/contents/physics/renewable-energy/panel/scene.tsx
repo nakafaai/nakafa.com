@@ -60,7 +60,7 @@ export function PanelScene({
     (cellTemperature(irradiance) - cellTemperature(IRRADIANCE.min)) /
     (cellTemperature(IRRADIANCE.max) - cellTemperature(IRRADIANCE.min));
   const width = (power: number) => Math.max((power / 1600) * WIDEST, 0.012);
-  const slope = { x: -1.3, y: 2.6 + Math.tan(PITCH) * 1.3 };
+  const slope = { x: 1.3, y: 2.6 + Math.tan(PITCH) * 1.3 };
 
   return (
     <group>
@@ -71,7 +71,7 @@ export function PanelScene({
       <mesh castShadow geometry={roof} receiveShadow>
         <meshStandardMaterial color={MATERIAL.roofTerracotta} roughness={0.8} />
       </mesh>
-      <group position={[slope.x, slope.y + 0.06, 0]} rotation={[0, 0, PITCH]}>
+      <group position={[slope.x, slope.y + 0.06, 0]} rotation={[0, 0, -PITCH]}>
         <mesh castShadow>
           <boxGeometry args={[1.05, 0.05, 1.75]} />
           <MetalMaterial color={MATERIAL.solarFrame} roughness={0.35} />
@@ -92,15 +92,15 @@ export function PanelScene({
       </group>
       <Beam
         color={colors.input}
-        from={[-4.2, 6.6, 0]}
+        from={[4.6, 6.8, 0.6]}
         radius={width(balance.input)}
-        to={[slope.x - 0.1, slope.y + 0.2, 0]}
+        to={[slope.x + 0.1, slope.y + 0.2, 0]}
       />
       <Beam
         color={colors.reflected}
-        from={[slope.x + 0.1, slope.y + 0.2, 0]}
+        from={[slope.x - 0.1, slope.y + 0.2, 0]}
         radius={width(balance.reflected)}
-        to={[0.6, 5.6, 0.4]}
+        to={[-0.4, 5.8, 0.6]}
       />
       <Puffs
         amount={balance.heat / 1600}
@@ -110,21 +110,21 @@ export function PanelScene({
         size={0.22}
       />
       <Pipe
-        from={[slope.x - 0.5, slope.y - 0.2, 0.9]}
+        from={[slope.x + 0.5, slope.y - 0.2, 0.9]}
         radius={0.02}
-        to={[-2.55, 1.4, 0.9]}
+        to={[2.55, 1.4, 0.9]}
       >
         <meshStandardMaterial color={MATERIAL.tyre} roughness={0.7} />
       </Pipe>
       <Parcels
         color={colors.electric}
         count={Math.max(2, Math.round((balance.electric / 274) * 6))}
-        from={[slope.x - 0.5, slope.y - 0.2, 0.9]}
+        from={[slope.x + 0.5, slope.y - 0.2, 0.9]}
         pace={0.4}
         size={0.045}
-        to={[-2.55, 1.4, 0.9]}
+        to={[2.55, 1.4, 0.9]}
       />
-      <mesh castShadow position={[-2.62, 1.2, 0.9]}>
+      <mesh castShadow position={[2.62, 1.2, 0.9]}>
         <boxGeometry args={[0.12, 0.45, 0.35]} />
         <meshStandardMaterial color={getColor("SLATE", 300)} roughness={0.6} />
       </mesh>
