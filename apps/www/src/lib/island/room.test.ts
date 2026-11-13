@@ -50,9 +50,10 @@ describe("island/room", () => {
     expect(roomOf(cells, "cat", 30.5, 30.5, 0)).toBe(false);
     cells[cellOf(5, 9, 6)] = idOf("dirt");
     expect(roomOf(cells, "cat", 5.5, 6.5, 0, Option.some(9))).toBe(false);
+    // A stone at head height over the meadow is a roof a walker there cannot pass under.
     cells[cellOf(5, 9, 5)] = 0;
     cells[cellOf(5, 10, 5)] = idOf("stone");
-    expect(roomOf(cells, "cat", 5.5, 5.5, 0)).toBe(false);
+    expect(roomOf(cells, "cat", 5.5, 5.5, 0, Option.some(9))).toBe(false);
   });
 
   it("says when two bodies overlap, a cow by the length it faces", () => {

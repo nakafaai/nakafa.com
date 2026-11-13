@@ -401,20 +401,12 @@ export function IslandBook() {
     <dialog
       aria-label={t("book")}
       className="pointer-events-auto m-0 mt-auto h-auto max-h-[88dvh] w-full max-w-none border-0 bg-transparent p-0 backdrop:bg-[#1b100a]/40 sm:mt-0 sm:ml-auto sm:h-full sm:max-h-none sm:w-104"
+      // A press on the dimmed world closes the book as Escape does, through its cancel event.
+      closedby="any"
       onCancel={(event) => {
-        // Escape closes the book through the store, so the game and the page agree it is closed.
+        // Escape or a press outside closes the book through the store, so the game and the page agree it is closed.
         event.preventDefault();
         setBook(false);
-      }}
-      onClick={(event) => {
-        if (event.target === event.currentTarget) {
-          setBook(false);
-        }
-      }}
-      onKeyDown={(event) => {
-        if (event.key === "Escape") {
-          setBook(false);
-        }
       }}
       ref={(dialog) => {
         dialog?.showModal();
