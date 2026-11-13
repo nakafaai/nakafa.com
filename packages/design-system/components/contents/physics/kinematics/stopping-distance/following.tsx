@@ -159,7 +159,7 @@ export function FollowingDistanceLab({
         className={threeSceneFrameVariants()}
         render={<section />}
       >
-        <ScienceStage reach={60} setting="field">
+        <ScienceStage floor={0} reach={60} setting="field">
           <Suspense fallback={null}>
             <FollowingScene follow={follow} />
           </Suspense>
