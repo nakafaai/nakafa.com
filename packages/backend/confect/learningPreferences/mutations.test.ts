@@ -254,7 +254,7 @@ describe("learningPreferences", () => {
       yield* Effect.promise(() =>
         t.mutation((ctx) =>
           ctx.db.patch("users", identity.userId, {
-            deletionPreparedAt: NOW,
+            deletedAt: NOW,
           })
         )
       );

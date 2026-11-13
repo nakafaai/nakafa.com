@@ -7,6 +7,9 @@ import { fakeServer } from "@repo/backend/test/load";
 import { nodePlatform } from "@repo/backend/test/platform";
 import { Array as Arr, Effect, FileSystem, Schema } from "effect";
 
+/** The seats of one seats call, which the fake answers an account id for each. */
+const SeatBatch = Schema.Struct({ seats: Schema.Array(Schema.Unknown) });
+
 const encodeJson = Schema.encodeUnknownSync(
   Schema.fromJsonString(Schema.Unknown)
 );
@@ -87,6 +90,13 @@ describe("load run", () => {
                         },
                       ],
                 };
+              }
+              if (call.path === "exams/seed:seats") {
+                // A seats call answers the account id of each seat, in the order of the seats.
+                return Arr.map(
+                  Schema.decodeUnknownSync(SeatBatch)(call.args).seats,
+                  (_seat, index) => `user-${index}`
+                );
               }
               return null;
             }),

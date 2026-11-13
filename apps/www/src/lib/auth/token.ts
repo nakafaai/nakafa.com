@@ -23,23 +23,27 @@ export class SessionTokenUnavailable extends Schema.TaggedError<
   status: Schema.optionalKey(Schema.Int),
 }) {}
 
-/** The refresh route's answer: the access token and its user, or `null` for a request whose session is missing or has ended. */
+/** A live session as the refresh route names it: its access token and its account. */
+export const SessionTokens = Schema.Struct({
+  accessToken: Schema.String,
+  userId: Schema.String,
+});
+
+/** The refresh route's answer: the session, or `null` for a request whose session is missing or has ended. */
 const TokenResponseSchema = Schema.Struct({
-  tokens: Schema.NullOr(
-    Schema.Struct({ accessToken: Schema.String, userId: Schema.String })
-  ),
+  tokens: Schema.NullOr(SessionTokens),
 });
 
 /**
- * Classifies the token route's answer. A 200 must decode to a token or to `null`,
- * which means no session, as a 401 does; a 5xx may be tried again, and every
- * other status is final.
+ * Classifies the refresh route's answer. A 200 must decode to a session or to
+ * `null`, which means no session, as a 401 does; a 5xx may be tried again, and
+ * every other status is final.
  */
 const readTokenAnswer = Effect.fn("www.auth.readTokenAnswer")(function* (
   response: HttpClientResponse.HttpClientResponse
 ) {
   if (response.status === 401) {
-    return;
+    return null;
   }
   if (response.status === 200) {
     const { tokens } = yield* HttpClientResponse.schemaBodyJson(
@@ -47,7 +51,7 @@ const readTokenAnswer = Effect.fn("www.auth.readTokenAnswer")(function* (
     )(response).pipe(
       Effect.mapError(() => new SessionTokenUnavailable({ reason: "body" }))
     );
-    return tokens?.accessToken;
+    return tokens;
   }
   const failure = new SessionTokenUnavailable({
     reason: "status",
@@ -67,9 +71,9 @@ type TransportFailure = (
 /**
  * The browser's rule: every failure is tried again. A browser rejects a dropped
  * connection with a bare TypeError that names no network code, so no failure on
- * the way can be told apart from a dropped one, and Convex Auth keeps a
- * presented refresh token working until its successor is used, so a refresh
- * whose answer was lost may go again.
+ * the way can be told apart from a dropped one, and Convex Auth accepts a
+ * redeemed refresh token again while none of its successors has been
+ * presented, so a refresh whose answer was lost may go again.
  */
 const retryBrowserTransport: TransportFailure = () =>
   new RetryableNetworkAttempt({
@@ -93,7 +97,7 @@ const sendTokenRequest = Effect.fn("www.auth.sendTokenRequest")(function* (
 
 /**
  * Sends one refresh request until it answers. The route answers with the
- * access token, or with `undefined` for a 401. Any other answer fails with
+ * session, or with `null` for a 401. Any other answer fails with
  * `SessionTokenUnavailable`, so an outage never looks like a signed-out visitor.
  * A 5xx answer, a missed deadline, and a retryable network failure are tried
  * again on the shared schedule.
@@ -109,18 +113,18 @@ const sendUntilAnswered = Effect.fn("www.auth.sendUntilAnswered")(function* (
 }, Effect.provide(FetchClient));
 
 /**
- * Reads the access token in the browser, for a page that renders only there.
- * The refresh cookie is not readable in the browser, so the refresh route of
- * the page's own host decides: the browser sends the cookie itself, and the
- * route answers `undefined` for a visitor with no session.
+ * Refreshes the browser's session through the refresh route of the page's own
+ * host, which reads the httpOnly refresh cookie that scripts cannot: it answers
+ * the session's new access token and its account, or `null` for a visitor or a
+ * session that ended. An outage fails, so it never reads as signed out.
  */
-export const readBrowserSessionToken = Effect.fn(
-  "www.auth.readBrowserSessionToken"
-)(function* (origin: string) {
-  return yield* sendUntilAnswered(
-    HttpClientRequest.post(new URL(REFRESH_PATH, origin)).pipe(
-      HttpClientRequest.bodyJson({})
-    ),
-    retryBrowserTransport
-  );
-});
+export const readBrowserSession = Effect.fn("www.auth.readBrowserSession")(
+  function* (origin: string) {
+    return yield* sendUntilAnswered(
+      HttpClientRequest.post(new URL(REFRESH_PATH, origin)).pipe(
+        HttpClientRequest.bodyJson({})
+      ),
+      retryBrowserTransport
+    );
+  }
+);

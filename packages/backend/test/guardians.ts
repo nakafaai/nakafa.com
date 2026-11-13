@@ -1,21 +1,12 @@
 import type { GenericId } from "@confect/core";
 import refs from "@repo/backend/confect/_generated/refs";
-import {
-  DatabaseReader,
-  DatabaseWriter,
-} from "@repo/backend/confect/_generated/services";
-import { CODE_TERM } from "@repo/backend/confect/guardians/schema";
-import { hashGuardianCode } from "@repo/backend/confect/identity/secret";
+import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { Nisn } from "@repo/backend/confect/roster/schema";
 import { Email } from "@repo/backend/confect/tenancy/schema";
 import { createTenantKey } from "@repo/backend/confect/vault/keys";
 import { nf } from "@repo/backend/test/classroom";
-import {
-  grantRole,
-  TENANCY_NOW,
-  type tenancyFixture,
-} from "@repo/backend/test/tenancy";
-import { Duration, Effect, Schema } from "effect";
+import { grantRole, type tenancyFixture } from "@repo/backend/test/tenancy";
+import { Effect, Schema } from "effect";
 
 /** The fixture `tenancyFixture` seeds, which the guardian tests extend. */
 export type Fixture = Effect.Success<typeof tenancyFixture>;
@@ -59,47 +50,21 @@ export const setRoster = (fixture: Fixture, nisn: typeof Nisn.Type) =>
   });
 
 /**
- * Stores a code that the test knows as the live code of an address, as `send` would at
- * `issuedAt`, so a test redeems it without reading a mail.
- */
-export const knownCode = Effect.fn("test.guardians.knownCode")(function* (
-  fixture: Fixture,
-  code: string,
-  email: typeof Email.Type = IBU,
-  issuedAt = TENANCY_NOW
-) {
-  const codeHash = yield* hashGuardianCode(fixture.tenants.nf, email, code);
-  yield* fixture.run(
-    Effect.flatMap(DatabaseWriter, (writer) =>
-      writer.table("guardianCodes").insert({
-        codeHash,
-        email,
-        expiresAt: issuedAt + Duration.toMillis(CODE_TERM),
-        tenantId: fixture.tenants.nf,
-        tries: 0,
-      })
-    )
-  );
-});
-
-/** Redeems a code as the sign-in endpoint does. */
-export const redeem = (fixture: Fixture, code: string, email: string = IBU) =>
-  fixture.internal.mutation(refs.internal.guardians.codes.redeem, {
-    code,
-    email,
-    slug: "nf",
-  });
-
-/**
- * Signs the guardian in: seeds an account that holds the address, redeems a known
- * code, which binds the guardian Person to it, and answers its client.
+ * Signs the guardian in with Google: seeds an account that holds the address,
+ * whose sign-in claims the guardian Persons a live link of that address names
+ * (ADR 0034), and answers its client.
  */
 export const signInGuardian = Effect.fn("test.guardians.signIn")(function* (
   fixture: Fixture
 ) {
-  const account = yield* fixture.account("ibu", IBU, true);
-  yield* knownCode(fixture, "123456");
-  yield* redeem(fixture, "123456");
+  const account = yield* fixture.account("ibu", IBU);
+  yield* fixture.internal.mutation(refs.internal.auth.account.signInGoogle, {
+    method: {
+      name: "google",
+      profile: { email: IBU, emailVerified: true, id: "google-ibu" },
+    },
+    userId: account.userId,
+  });
   return account;
 });
 

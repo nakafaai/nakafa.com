@@ -422,7 +422,7 @@ describe("native Nina settlement", () => {
       await f.t.mutation(async (ctx) => {
         if (state === "deleted-user") {
           await ctx.db.patch("users", f.identity.userId, {
-            deletionPreparedAt: NOW,
+            deletedAt: NOW,
           });
         }
         if (state === "missing-user") {

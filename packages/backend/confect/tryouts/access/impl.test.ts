@@ -24,7 +24,6 @@ const NOW = Date.UTC(2026, 6, 7, 12, 0, 0);
 /** Inserts one user row for try-out access tests. */
 async function insertUser(ctx: MutationCtx) {
   return await ctx.db.insert("users", {
-    authId: "auth-tryout-access",
     credits: 10,
     creditsResetAt: NOW,
     email: "tryout-access@example.com",

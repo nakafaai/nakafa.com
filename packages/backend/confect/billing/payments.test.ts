@@ -11,7 +11,6 @@ describe("billing/payments", () => {
     const t = createBillingTestConvex();
     const result = await t.run(async (ctx) => {
       const userId = await ctx.db.insert("users", {
-        authId: "auth-billing-payment",
         credits: 0,
         creditsResetAt: 0,
         email: "billing-payment@example.com",
@@ -65,7 +64,6 @@ describe("billing/payments", () => {
     const t = createBillingTestConvex();
     const result = await t.run(async (ctx) => {
       const userId = await ctx.db.insert("users", {
-        authId: "auth-billing-payment-state",
         credits: 0,
         creditsResetAt: 0,
         email: "billing-payment-state@example.com",

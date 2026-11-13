@@ -378,7 +378,7 @@ describe("Nina presentation after an answer", () => {
       }
       if (state === "deleting-user") {
         await ctx.db.patch("users", f.identity.userId, {
-          deletionPreparedAt: NOW,
+          deletedAt: NOW,
         });
       }
       if (state === "missing-context") {

@@ -26,7 +26,6 @@ const unreachable = (fixture: Effect.Success<typeof keyedFixture>) =>
     Effect.gen(function* () {
       const writer = yield* DatabaseWriter;
       const userId = yield* writer.table("users").insert({
-        authId: "card-login",
         credits: 0,
         creditsResetAt: 0,
         email: loginAddress("raka"),

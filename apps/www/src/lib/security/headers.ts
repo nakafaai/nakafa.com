@@ -20,7 +20,7 @@ export type WwwHeader = typeof WwwHeaderSchema.Type;
 const WwwHeaderOriginsSchema = Schema.Struct({
   /** The Convex deployment that the browser calls, or none when unset. */
   convexUrl: Schema.UndefinedOr(Schema.String),
-  /** The Convex site that serves Better Auth, which the server calls. */
+  /** The Convex site, which serves the HTTP actions that the page and the server call. */
   convexSiteUrl: Schema.String,
   /** The first-party PostHog proxy host that analytics sends events to. */
   posthogProxyHost: Schema.String,

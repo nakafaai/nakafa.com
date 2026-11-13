@@ -7,10 +7,10 @@ import { Schema } from "effect";
  */
 export const GoogleProfile = Schema.Struct({
   id: Schema.String,
-  email: Schema.optionalKey(Schema.String),
+  email: Schema.optional(Schema.String),
   emailVerified: Schema.Boolean,
-  name: Schema.optionalKey(Schema.String),
-  picture: Schema.optionalKey(Schema.String),
+  name: Schema.optional(Schema.String),
+  picture: Schema.optional(Schema.String),
 });
 
 /** The Google method as Convex Auth names it to the user callbacks. */

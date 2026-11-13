@@ -5,12 +5,9 @@ import {
   createConvexTestWithAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
-import { convexModules } from "@repo/backend/confect/test.setup";
-import { api, internal } from "@repo/backend/convex/_generated/api";
-import schema from "@repo/backend/convex/schema";
+import { api } from "@repo/backend/convex/_generated/api";
 import { MASCOT_CODE } from "@repo/backend/test/mascot";
 import { seedSchoolMember } from "@repo/backend/test/member";
-import { convexTest } from "convex-test";
 
 const NOW = Date.UTC(2026, 9, 12, 12, 0, 0);
 const getProfileByUsername = Ref.getFunctionReference(
@@ -55,34 +52,6 @@ async function seedProfiles(
 }
 
 describe("users/queries", () => {
-  it("loads users by id and auth id", async () => {
-    const t = convexTest(schema, convexModules);
-
-    const userId = await t.mutation(async (ctx) =>
-      ctx.db.insert("users", {
-        authId: "auth_user_real_example",
-        email: "nabil@example.com",
-        mascot: MASCOT_CODE,
-        name: "Test Learner",
-        plan: "free",
-        credits: 7,
-        creditsResetAt: Date.UTC(2026, 3, 2, 0, 0, 0),
-      })
-    );
-
-    const [byAuthId, missingByAuthId] = await Promise.all([
-      t.query(internal.users.queries.getUserByAuthId, {
-        authId: "auth_user_real_example",
-      }),
-      t.query(internal.users.queries.getUserByAuthId, {
-        authId: "missing_auth_user",
-      }),
-    ]);
-
-    expect(byAuthId?._id).toBe(userId);
-    expect(missingByAuthId).toBeNull();
-  });
-
   it("refuses a visitor and checks a username for an account and for the account that holds it", async () => {
     const t = createConvexTestWithAuth();
     const holder = await t.mutation(async (ctx) => {

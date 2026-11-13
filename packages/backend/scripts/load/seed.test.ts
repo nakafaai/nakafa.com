@@ -40,6 +40,7 @@ describe("load seed", () => {
         const seeded = yield* seedRun(
           (_operation, call, sensitive = []) => {
             MutableList.append(calls, { call, sensitive });
+            // A seats call answers the account id of each seat, in the order of the seats.
             return Effect.succeed(
               call.path === "exams/seed:load"
                 ? {
@@ -49,7 +50,10 @@ describe("load seed", () => {
                       { id: "s2", room: "Ruang 02", token: "BBBBBB" },
                     ],
                   }
-                : null
+                : Arr.map(
+                    Schema.decodeUnknownSync(SeatsArgs)(call.args).seats,
+                    (seat) => `user-${seat.key}`
+                  )
             );
           },
           plan,
@@ -87,7 +91,13 @@ describe("load seed", () => {
           Arr.map(Arr.take(seeded.students, 3), (seat) => seat.room)
         ).toEqual([0, 1, 0]);
         expect(seeded.proctors).toHaveLength(4);
-        expect(seeded.students[0]?.token).toBe(batches[0]?.seats[0]?.token);
+        expect(seeded.students[0]).toMatchObject({
+          token: batches[0]?.seats[0]?.token,
+          userId: `user-${batches[0]?.seats[0]?.key}`,
+        });
+        expect(seeded.proctors[3]).toMatchObject({
+          userId: `user-${batches[12]?.seats[3]?.key}`,
+        });
       }).pipe(Effect.provide(nodePlatform))
   );
 
@@ -109,7 +119,7 @@ describe("load seed", () => {
                 MutableList.append(attempts, call.path);
                 return MutableList.toArray(attempts).length <= failures
                   ? Effect.fail("timed out")
-                  : Effect.succeed(null);
+                  : Effect.succeed(["user-1"]);
               },
               LoadPlan.make({ ...plan, proctors: 1, rooms: 1, students: 1 }),
               "sekolah"

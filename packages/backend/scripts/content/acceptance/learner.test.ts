@@ -1,16 +1,19 @@
 import { afterEach, describe, expect, it } from "@effect/vitest";
-import { LOCAL_AUTH_SECRET } from "@repo/backend/scripts/content/acceptance/auth";
 import { LocalConvex } from "@repo/backend/scripts/content/acceptance/convex";
 import { acceptanceRuntimeError } from "@repo/backend/scripts/content/acceptance/error";
-import { SessionCookie } from "@repo/backend/scripts/content/acceptance/fixture";
+import { SessionCookies } from "@repo/backend/scripts/content/acceptance/fixture";
 import {
   learnerMode,
   seedLearner,
-  sessionCookieOf,
 } from "@repo/backend/scripts/content/acceptance/learner";
-import { localConvexDouble } from "@repo/backend/test/acceptance";
+import {
+  ACCOUNT_SEED,
+  localConvexDouble,
+  PASSWORD_SIGN_IN,
+  SESSION_COOKIES,
+  SIGN_IN_ANSWERS,
+} from "@repo/backend/test/acceptance";
 import { nodePlatform } from "@repo/backend/test/platform";
-import { makeSignature } from "better-auth/crypto";
 import { Effect, FileSystem, Layer, MutableList, Schema } from "effect";
 
 const mocks = vi.hoisted(() => ({ layer: vi.fn() }));
@@ -23,26 +26,6 @@ vi.mock(
     localConvexLayer: mocks.layer,
   })
 );
-vi.mock("better-auth/crypto", async (importOriginal) => {
-  const original = await importOriginal<typeof import("better-auth/crypto")>();
-  return { ...original, makeSignature: vi.fn(original.makeSignature) };
-});
-
-/** What Better Auth's adapter answers for a created row. */
-const CREATED = { _creationTime: 1, _id: "user-1" };
-const CREATE = "adapter:create";
-const LEARNER_EMAIL = /^learner-[0-9a-f]{16}@acceptance\.invalid$/u;
-
-/** The session token a cookie carries, and whether Better Auth's signature over it holds. */
-const verify = Effect.fn(function* (cookie: typeof SessionCookie.Type) {
-  const [token = "", signature = ""] = decodeURIComponent(cookie.value).split(
-    "."
-  );
-  const expected = yield* Effect.promise(() =>
-    makeSignature(token, LOCAL_AUTH_SECRET)
-  );
-  return { signed: signature === expected, token };
-});
 
 describe("acceptance learner", () => {
   afterEach(() => {
@@ -50,53 +33,20 @@ describe("acceptance learner", () => {
   });
 
   it.effect(
-    "creates a new learner, its session and its profile, and answers a cookie Better Auth reads",
+    "seeds a new learner and answers the cookies of the session Convex Auth made",
     () =>
       Effect.gen(function* () {
-        const backend = localConvexDouble({ [CREATE]: CREATED });
-
-        const cookie = yield* seedLearner().pipe(
+        const backend = localConvexDouble(SIGN_IN_ANSWERS);
+        const cookies = yield* seedLearner().pipe(
           Effect.provide(Layer.merge(backend.layer, nodePlatform))
         );
-
-        expect(backend.paths()).toEqual([
-          CREATE,
-          CREATE,
-          "auth/lifecycle:onCreate",
-        ]);
-        const [account, session] = backend.calls();
-        expect(account?.call).toMatchObject({
-          args: {
-            input: {
-              data: { email: expect.stringMatching(LEARNER_EMAIL) },
-              model: "user",
-            },
-          },
-          component: "betterAuth",
-        });
-        const { signed, token } = yield* verify(cookie);
-        expect(cookie.name).toBe("better-auth.session_token");
-        expect(signed).toBe(true);
-        expect(session?.call.args).toMatchObject({
-          input: { data: { token, userId: "user-1" }, model: "session" },
-        });
-        expect(session?.sensitiveValues).toEqual([token]);
+        expect(cookies).toEqual(SESSION_COOKIES);
+        expect(backend.paths()).toEqual([ACCOUNT_SEED, PASSWORD_SIGN_IN]);
       })
   );
 
-  it.effect("fails when the session cannot be signed", () =>
-    Effect.gen(function* () {
-      vi.mocked(makeSignature).mockRejectedValueOnce(new Error("no key"));
-
-      expect(yield* sessionCookieOf("token").pipe(Effect.flip)).toMatchObject({
-        _tag: "AcceptanceRuntimeError",
-        message: "The session cookie could not be signed.",
-      });
-    })
-  );
-
   it.live(
-    "creates the learner again after the local backend timed out, and only then",
+    "seeds the learner again after the local backend timed out, and only then",
     () =>
       Effect.gen(function* () {
         const calls = MutableList.make<string>();
@@ -111,62 +61,51 @@ describe("acceptance learner", () => {
                       `${operation} failed: Function execution timed out (maximum duration: 5s)`
                     )
                   )
-                : Effect.succeed(call.path === CREATE ? CREATED : null);
+                : Effect.succeed(
+                    call.path === ACCOUNT_SEED ? SIGN_IN_ANSWERS[ACCOUNT_SEED] : SIGN_IN_ANSWERS[PASSWORD_SIGN_IN]
+                  );
             }),
         });
-
         yield* seedLearner().pipe(
           Effect.provide(
             Layer.merge(Layer.succeed(LocalConvex, timingOut), nodePlatform)
           )
         );
-
-        expect(MutableList.toArray(calls)).toEqual([
-          CREATE,
-          CREATE,
-          CREATE,
-          "auth/lifecycle:onCreate",
-        ]);
+        expect(MutableList.toArray(calls)).toEqual([ACCOUNT_SEED, ACCOUNT_SEED, PASSWORD_SIGN_IN]);
       })
   );
 
-  it.effect("does not create the learner again after any other failure", () =>
+  it.effect("does not seed the learner again after any other failure", () =>
     Effect.gen(function* () {
-      const backend = localConvexDouble({}, [CREATE]);
-
+      const backend = localConvexDouble({}, [ACCOUNT_SEED]);
       const error = yield* seedLearner().pipe(
         Effect.provide(Layer.merge(backend.layer, nodePlatform)),
         Effect.flip
       );
-
-      expect(error._tag).toBe("AcceptanceRuntimeError");
-      expect(backend.paths()).toEqual([CREATE]);
+      expect(error).toMatchObject({ _tag: "AcceptanceRuntimeError" });
+      expect(backend.paths()).toEqual([ACCOUNT_SEED]);
     })
   );
 
   it.effect(
-    "writes the cookie of a new learner to the file the mode names, mode 600",
+    "writes the cookies of a new learner to the file the mode names, mode 600",
     () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const root = yield* fs.makeTempDirectoryScoped({
           prefix: "acceptance-learner-test-",
         });
-        mocks.layer.mockReturnValue(
-          localConvexDouble({ [CREATE]: CREATED }).layer
-        );
-
-        yield* learnerMode.run(root, [`${root}/cookie.json`]);
-
-        const cookie = yield* fs
-          .readFileString(`${root}/cookie.json`)
+        mocks.layer.mockReturnValue(localConvexDouble(SIGN_IN_ANSWERS).layer);
+        yield* learnerMode.run(root, [`${root}/cookies.json`]);
+        const written = yield* fs
+          .readFileString(`${root}/cookies.json`)
           .pipe(
             Effect.flatMap(
-              Schema.decodeEffect(Schema.fromJsonString(SessionCookie))
+              Schema.decodeEffect(Schema.fromJsonString(SessionCookies))
             )
           );
-        expect((yield* verify(cookie)).signed).toBe(true);
-        expect((yield* fs.stat(`${root}/cookie.json`)).mode % 0o1000).toBe(
+        expect(written).toEqual(SESSION_COOKIES);
+        expect((yield* fs.stat(`${root}/cookies.json`)).mode % 0o1000).toBe(
           0o600
         );
       }).pipe(Effect.scoped, Effect.provide(nodePlatform))

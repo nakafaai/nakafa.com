@@ -20,6 +20,10 @@ import {
 import { systemActor } from "@repo/backend/confect/tenancy/actor";
 import { Clock, Effect } from "effect";
 
+/** The role that a seat's grant gives in the school's first active unit. */
+const roleOf = (kind: typeof SeatKind.Type) =>
+  kind === "student" ? "student" : "teacher";
+
 /**
  * Seats one Person that signs in: a school account made the way a login card
  * makes one, with the seat's token as its password, and a Person of the school

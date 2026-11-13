@@ -92,8 +92,7 @@ describe("tenancy/start", () => {
         const fixture = yield* tenancyFixture;
         const founder = yield* fixture.account(
           "founder",
-          "guru@harapan.example.test",
-          true
+          "guru@harapan.example.test"
         );
         yield* founder.client.mutation(save, {
           answer: {
@@ -200,8 +199,7 @@ describe("tenancy/start", () => {
         const fixture = yield* tenancyFixture;
         const founder = yield* fixture.account(
           "foundation",
-          "ketua@yayasan.example.test",
-          true
+          "ketua@yayasan.example.test"
         );
         yield* fixture.run(
           Effect.gen(function* () {
@@ -253,8 +251,7 @@ describe("tenancy/start", () => {
         const fixture = yield* tenancyFixture;
         const founder = yield* fixture.account(
           "lines",
-          "baris@harapan.example.test",
-          true
+          "baris@harapan.example.test"
         );
         yield* fixture.run(
           Effect.gen(function* () {
@@ -279,8 +276,7 @@ describe("tenancy/start", () => {
         const fixture = yield* tenancyFixture;
         const founder = yield* fixture.account(
           "address",
-          "tu@harapan.example.test",
-          true
+          "tu@harapan.example.test"
         );
         const states = yield* Effect.forEach(
           ["harapan-baru", "nf", "new", "Bad Address"],
@@ -305,8 +301,7 @@ describe("tenancy/start", () => {
         const fixture = yield* tenancyFixture;
         const card = yield* fixture.account(
           "card",
-          loginAddress("harapan-card"),
-          false
+          loginAddress("harapan-card")
         );
         yield* card.client.mutation(save, {
           answer: {
@@ -335,8 +330,7 @@ describe("tenancy/start", () => {
         const fixture = yield* tenancyFixture;
         const founder = yield* fixture.account(
           "limit",
-          "pendiri@harapan.example.test",
-          true
+          "pendiri@harapan.example.test"
         );
         yield* Effect.forEach(["satu", "dua", "tiga"], (slug) =>
           founder.client.mutation(open, harapan(slug))
@@ -379,8 +373,7 @@ describe("tenancy/start", () => {
         const fixture = yield* tenancyFixture;
         const founder = yield* fixture.account(
           "draft",
-          "draf@harapan.example.test",
-          true
+          "draf@harapan.example.test"
         );
         expect(yield* founder.client.query(draft, {})).toBeNull();
         yield* founder.client.mutation(save, {

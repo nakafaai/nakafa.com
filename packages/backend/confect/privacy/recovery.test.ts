@@ -71,7 +71,6 @@ async function admit() {
   await registerWorkflow(t);
   const userId = await t.mutation((ctx) =>
     ctx.db.insert("users", {
-      authId: "privacy-recovery-user",
       credits: 0,
       creditsResetAt: NOW,
       email: "privacy-recovery@example.invalid",

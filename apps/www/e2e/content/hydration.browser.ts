@@ -50,7 +50,7 @@ const runs = [
   { signedIn: true, slot: 3, viewport: { height: 900, width: 1440 } },
 ] as const;
 
-const CONVEX_TOKEN_PATH = "/api/auth/convex/token";
+const CONVEX_TOKEN_PATH = "/api/auth/refresh";
 // Settling keeps its own budget, so it can change apart from readiness.
 const SETTLE_TIMEOUT_MILLISECONDS = readinessTimeoutMilliseconds;
 
@@ -192,7 +192,7 @@ const verifyServerContentSurvives = Effect.fn(
 
 /**
  * Lets a signed-in browser settle its session the way its first page does:
- * Better Auth answers once, and the browser keeps the id of that session, as
+ * the refresh route answers once, and the browser keeps the id of that session, as
  * `saveKnownSession` writes it after each settled answer. The session test does
  * the same before it checks the saved session.
  */

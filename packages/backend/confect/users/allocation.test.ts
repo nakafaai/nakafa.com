@@ -52,7 +52,6 @@ const insertAccount = Effect.fn("test.insertAccount")(function* (
   const ctx = yield* MutationCtx;
   return yield* Effect.promise(() =>
     ctx.db.insert("users", {
-      authId: `auth-${index}`,
       credits: 100,
       creditsResetAt: 0,
       email: `account-${index}@example.com`,

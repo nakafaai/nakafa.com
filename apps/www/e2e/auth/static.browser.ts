@@ -12,7 +12,7 @@ const PRESS_TO_TITLE_BUDGET = 200;
 /** The cookie that tells a page, before any script runs, that a session may exist. */
 const SIGNED_IN_HINT = "nakafa-signed-in";
 /** Addresses that only the Worker answers: the auth API, the search screen and the chat. */
-const WORKER_PATHS = ["/api/auth/get-session", "/en/search", "/en/chat"];
+const WORKER_PATHS = ["/api/auth/refresh", "/en/search", "/en/chat"];
 /** What React writes to the console when the server's HTML and the first render differ. */
 const HYDRATION_ERROR = /hydrat|#418|#423|did not match/iu;
 
@@ -107,7 +107,7 @@ test("every address that no asset holds still reaches the Worker", async ({
 
 /**
  * A hint that outlived its session hides the sign-in body before the first
- * paint, as it does for a signed-in visitor. Better Auth's answer that there is
+ * paint, as it does for a signed-in visitor. The refresh route's answer that there is
  * no session clears the hint cookie, and the page then shows its sign-in button.
  */
 test("a visitor whose hint outlived the session gets the sign-in button once the session is read", async ({
@@ -175,8 +175,8 @@ test("a provider failure in the address shows on the static page without a hydra
   ).toEqual([]);
 });
 
-/** Better Auth's start of a Google sign-in, which a test holds back. */
-const GOOGLE_START = "**/api/auth/sign-in/social*";
+/** Google's sign-in page, where a started sign-in leaves for and which a test holds back. */
+const GOOGLE_START = "https://accounts.google.com/**";
 
 /**
  * The Google button keeps its words: it stands in the page's first HTML, a

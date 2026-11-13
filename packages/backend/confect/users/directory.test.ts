@@ -2,7 +2,6 @@ import { describe, expect, it } from "@effect/vitest";
 import { MutationCtx } from "@repo/backend/confect/_generated/services";
 import { Confect, confectLayer } from "@repo/backend/confect/test.setup";
 import {
-  getAppUserByAuthId,
   getAppUserByUsername,
   getUserMap,
 } from "@repo/backend/confect/users/directory";
@@ -46,7 +45,6 @@ describe("users/directory", () => {
                 ids,
                 yield* Effect.promise(() =>
                   tCtx.db.insert("users", {
-                    authId: `auth-${suffix}`,
                     credits: 100,
                     creditsResetAt: 0,
                     email: `${suffix}@example.com`,
@@ -93,34 +91,6 @@ describe("users/directory", () => {
       })
   );
   it.effect(
-    "looks up the app user by auth identity and returns null for an unknown identity",
-    () =>
-      Effect.gen(function* () {
-        const t = yield* Confect.pipe(Effect.provide(confectLayer));
-        yield* t.run(
-          Effect.gen(function* () {
-            const tCtx = yield* MutationCtx;
-            const userId = yield* Effect.promise(() =>
-              tCtx.db.insert("users", {
-                authId: "auth-known",
-                credits: 100,
-                creditsResetAt: 0,
-                email: "known@example.com",
-                mascot: MASCOT_CODE,
-                name: "Known user",
-                plan: "free",
-              })
-            );
-            expect(yield* getAppUserByAuthId("auth-known")).toMatchObject({
-              _id: userId,
-              name: "Known user",
-            });
-            expect(yield* getAppUserByAuthId("auth-missing")).toBeNull();
-          })
-        );
-      })
-  );
-  it.effect(
     "looks up the app user that holds a username and returns null when no account holds it",
     () =>
       Effect.gen(function* () {
@@ -130,7 +100,6 @@ describe("users/directory", () => {
             const tCtx = yield* MutationCtx;
             const userId = yield* Effect.promise(() =>
               tCtx.db.insert("users", {
-                authId: "auth-handle",
                 credits: 100,
                 creditsResetAt: 0,
                 email: "handle@example.com",

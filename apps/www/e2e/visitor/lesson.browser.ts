@@ -7,11 +7,11 @@ import { LESSON_PATH } from "@/e2e/support/chat";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { waitUntilTakenOver } from "@/e2e/support/window";
 
-const SESSION_READ = "/api/auth/get-session";
+const SESSION_READ = "/api/auth/refresh";
 
 /**
  * A visitor's lesson load creates no Convex client. The page opens no WebSocket,
- * sends no Better Auth session read, and throws no error. The lesson still shows,
+ * sends no session read, and throws no error. The lesson still shows,
  * with the usage-data prompt through the anonymous browser path, and the sidebar
  * footer is the visitor's guest card. The first scroll and key press warm Nina's
  * sheet, whose composer renders without a client, so the page still opens no socket

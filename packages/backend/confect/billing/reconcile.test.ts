@@ -51,17 +51,16 @@ function listedSubscription(
   };
 }
 
-/** Seeds one user with an auth ID and a Polar account linked to the given customer. */
+/** Seeds one user under the given name and a Polar account linked to the given customer. */
 async function seedLinked(
   ctx: MutationCtx,
-  authId: string,
+  name: string,
   customerId: string
 ) {
   const userId = await ctx.db.insert("users", {
-    authId,
     credits: 0,
     creditsResetAt: NOW,
-    email: `${authId}@example.com`,
+    email: `${name}@example.com`,
     mascot: MASCOT_CODE,
     name: "Reconciled",
     plan: "free",
@@ -80,7 +79,7 @@ function readBilling(t: ReturnType<typeof createBillingTestConvex>) {
 describe("billing/reconcile", () => {
   it("applies each listed subscription through the webhook path, and ignores what it does not sell", async () => {
     const t = createBillingTestConvex();
-    await t.mutation((ctx) => seedLinked(ctx, "auth-reconcile-1", "cust_r1"));
+    await t.mutation((ctx) => seedLinked(ctx, "reconcile-1", "cust_r1"));
     polarGateway.listSubscriptions.mockReturnValue(
       Effect.succeed({
         items: [
@@ -108,12 +107,11 @@ describe("billing/reconcile", () => {
 
   it("links a listed customer Nakafa holds no account for, then applies its subscription", async () => {
     const t = createBillingTestConvex();
-    await t.mutation((ctx) =>
+    const userId = await t.mutation((ctx) =>
       ctx.db.insert("users", {
-        authId: "auth-reconcile-2",
         credits: 0,
         creditsResetAt: NOW,
-        email: "auth-reconcile-2@example.com",
+        email: "reconcile-2@example.com",
         mascot: MASCOT_CODE,
         name: "Reconciled Two",
         plan: "free",
@@ -129,7 +127,7 @@ describe("billing/reconcile", () => {
       Effect.succeed({
         billingCountry: "ID",
         email: null,
-        externalId: "auth-reconcile-2",
+        externalId: userId,
         id: "cust_r2",
         name: null,
       })
@@ -147,12 +145,11 @@ describe("billing/reconcile", () => {
 
   it("does not apply a subscription whose customer is still unknown after another customer was linked", async () => {
     const t = createBillingTestConvex();
-    await t.mutation((ctx) =>
+    const userId = await t.mutation((ctx) =>
       ctx.db.insert("users", {
-        authId: "auth-reconcile-3",
         credits: 0,
         creditsResetAt: NOW,
-        email: "auth-reconcile-3@example.com",
+        email: "reconcile-3@example.com",
         mascot: MASCOT_CODE,
         name: "Reconciled Three",
         plan: "free",
@@ -168,7 +165,7 @@ describe("billing/reconcile", () => {
       Effect.succeed({
         billingCountry: null,
         email: null,
-        externalId: "auth-reconcile-3",
+        externalId: userId,
         id: "cust_r3_other",
         name: null,
       })
@@ -180,7 +177,7 @@ describe("billing/reconcile", () => {
   it("counts a customer Polar cannot read as unresolved, and applies the rest of the page", async () => {
     const t = createBillingTestConvex();
     await t.mutation((ctx) =>
-      seedLinked(ctx, "auth-reconcile-4", "cust_r4_known")
+      seedLinked(ctx, "reconcile-4", "cust_r4_known")
     );
     polarGateway.listSubscriptions.mockReturnValue(
       Effect.succeed({
@@ -225,7 +222,7 @@ describe("billing/reconcile", () => {
 
   it("applies the same listed state once: a second run changes nothing, and an older state is refused", async () => {
     const t = createBillingTestConvex();
-    await t.mutation((ctx) => seedLinked(ctx, "auth-reconcile-5", "cust_r5"));
+    await t.mutation((ctx) => seedLinked(ctx, "reconcile-5", "cust_r5"));
     polarGateway.listSubscriptions.mockReturnValue(
       Effect.succeed({
         items: [listedSubscription("sub_r5", "cust_r5")],

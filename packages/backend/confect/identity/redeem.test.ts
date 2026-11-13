@@ -30,7 +30,7 @@ import {
 } from "@repo/backend/test/tenancy";
 import { Array as Arr, Duration, Effect, Exit, Option, Schema } from "effect";
 
-// The password step is the one Better Auth call in a redemption. A test makes it
+// The password step is the one Convex Auth call in a redemption. A test makes it
 // fail once to prove that the card and the account roll back together.
 vi.mock("@repo/backend/confect/identity/account", async (importOriginal) => {
   const actual =
@@ -229,11 +229,11 @@ describe("identity/cards redeem", () => {
       })
   );
 
-  it.effect("refuses a password longer than Better Auth accepts", () =>
+  it.effect("refuses a password longer than Convex Auth accepts", () =>
     Effect.gen(function* () {
       const fixture = yield* tenancyFixture;
       const issued = yield* issueFirst(fixture);
-      expect(yield* redeemOn(fixture, issued.code, "x".repeat(129))).toEqual({
+      expect(yield* redeemOn(fixture, issued.code, "x".repeat(101))).toEqual({
         outcome: "refused",
         reason: "passwordTooLong",
       });
@@ -437,7 +437,7 @@ describe("identity/cards redeem", () => {
         const fixture = yield* tenancyFixture;
         const issued = yield* issueFirst(fixture);
         vi.mocked(setLoginPassword).mockImplementationOnce(() =>
-          Effect.die(new Error("Better Auth is unavailable"))
+          Effect.die(new Error("Convex Auth is unavailable"))
         );
         const failed = yield* redeemOn(fixture, issued.code).pipe(Effect.exit);
         expect(Exit.isFailure(failed)).toBe(true);

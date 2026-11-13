@@ -1,5 +1,6 @@
 // @vitest-environment node
 
+import { AUTH_REFRESH_COOKIE } from "@convex-dev/auth/ssr";
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { Effect, Option } from "effect";
 import { clientEnv } from "@/env.public";
@@ -24,7 +25,7 @@ vi.mock("cloudflare:workers", () => ({
 }));
 
 /** The session cookie of a browser that is signed in. */
-const SESSION_COOKIE = "__Secure-better-auth.session_token";
+const SESSION_COOKIE = AUTH_REFRESH_COOKIE;
 
 /** The answer of every request that the shell does not answer. */
 const OTHERWISE = new Response("<html>page</html>");

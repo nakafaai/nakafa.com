@@ -173,7 +173,6 @@ describe("billing/events", () => {
     const t = createBillingTestConvex();
     const result = await t.run(async (ctx) => {
       const userId = await ctx.db.insert("users", {
-        authId: "auth-event-linked",
         credits: 0,
         creditsResetAt: NOW,
         email: "event-linked@example.com",
@@ -215,7 +214,6 @@ describe("billing/events", () => {
     const t = createBillingTestConvex();
     const eventId = await t.run(async (ctx) => {
       await ctx.db.insert("users", {
-        authId: "auth-event-link",
         credits: 0,
         creditsResetAt: NOW,
         email: "event-link@example.com",

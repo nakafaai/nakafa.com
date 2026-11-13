@@ -19,7 +19,6 @@ import { MASCOT_CODE } from "@repo/backend/test/mascot";
 import { Effect, Layer } from "effect";
 
 const NOW = Date.UTC(2026, 6, 22, 8, 0, 0);
-const deletedAuthIdPattern = /^deleted:/u;
 const deletedEmailPattern = /^deleted-.+@account\.nakafa\.invalid$/u;
 describe("auth/cleanup", () => {
   it.effect(
@@ -41,7 +40,6 @@ describe("auth/cleanup", () => {
       const state = yield* Effect.promise(() =>
         t.mutation(async (ctx) => {
           const userId = await ctx.db.insert("users", {
-            authId: "bounded-cleanup-user",
             credits: 10,
             creditsResetAt: NOW,
             email: "bounded@example.com",
@@ -55,7 +53,6 @@ describe("auth/cleanup", () => {
             createDeletedUserTombstone(userId, NOW)
           );
           const otherUserId = await ctx.db.insert("users", {
-            authId: "bounded-cleanup-reader",
             credits: 10,
             creditsResetAt: NOW,
             email: "reader@example.com",
@@ -102,7 +99,6 @@ describe("auth/cleanup", () => {
       expect(remaining.reply?.replyToUserId).toBeUndefined();
       expect(remaining.comment).not.toBeNull();
       expect(remaining.user).toMatchObject({
-        authId: expect.stringMatching(deletedAuthIdPattern),
         email: expect.stringMatching(deletedEmailPattern),
       });
     })
@@ -116,7 +112,6 @@ describe("auth/cleanup", () => {
         const result = yield* Effect.promise(() =>
           t.mutation(async (ctx) => {
             const userId = await ctx.db.insert("users", {
-              authId: "deleted-auth-user",
               credits: 10,
               creditsResetAt: NOW,
               email: "deleted@example.com",
@@ -130,7 +125,6 @@ describe("auth/cleanup", () => {
               createDeletedUserTombstone(userId, NOW)
             );
             const otherUserId = await ctx.db.insert("users", {
-              authId: "retained-auth-user",
               credits: 10,
               creditsResetAt: NOW,
               email: "retained@example.com",
@@ -238,7 +232,6 @@ describe("auth/cleanup", () => {
             text: "Reply without retained personal preview",
           }),
           user: expect.objectContaining({
-            authId: expect.stringMatching(deletedAuthIdPattern),
             credits: 0,
             creditsResetAt: 0,
             deletedAt: expect.any(Number),
@@ -258,7 +251,6 @@ describe("auth/cleanup", () => {
     const seeded = await t.mutation(async (ctx) => {
       const seedUser = (name: string) =>
         ctx.db.insert("users", {
-          authId: `connections-${name}`,
           credits: 10,
           creditsResetAt: NOW,
           email: `connections-${name}@example.com`,

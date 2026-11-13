@@ -5,7 +5,7 @@ import { readRequestHostRole } from "@/lib/routing/school/host";
 /** The path of a resource's metadata (RFC 9728), which a client reads before it has a token. */
 const RESOURCE_METADATA_PATH = `/.well-known/oauth-protected-resource${SCHOOL_HOST_MCP_PATH}`;
 
-/** The scope of every grant: the sign-in, and the refresh token that outlives a Convex token. */
+/** The scope of every grant: the sign-in, and the refresh token that outlives an access token. */
 const SCOPES = ["openid", "offline_access"];
 
 /** The origin of a request as the browser sent it, so staging and a school host name themselves. */
@@ -23,18 +23,21 @@ function readSignInOrigin(request: Request) {
     : readOrigin(request);
 }
 
-/** The authorization server's metadata (RFC 8414), over Better Auth's OAuth routes. */
+/**
+ * The authorization server's metadata (RFC 8414): the consent page authorizes,
+ * and the agent endpoints register and issue tokens (ADR 0029).
+ */
 export function readAuthorizationServer(request: Request) {
   const origin = readSignInOrigin(request);
   return {
-    authorization_endpoint: `${origin}/api/auth/mcp/authorize`,
+    authorization_endpoint: `${origin}/agent`,
     code_challenge_methods_supported: ["S256"],
     grant_types_supported: ["authorization_code", "refresh_token"],
     issuer: origin,
-    registration_endpoint: `${origin}/api/auth/mcp/register`,
+    registration_endpoint: `${origin}/api/agent/register`,
     response_types_supported: ["code"],
     scopes_supported: SCOPES,
-    token_endpoint: `${origin}/api/auth/mcp/token`,
+    token_endpoint: `${origin}/api/agent/token`,
     token_endpoint_auth_methods_supported: ["none"],
   };
 }

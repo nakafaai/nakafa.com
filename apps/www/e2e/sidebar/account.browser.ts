@@ -8,7 +8,7 @@ import { createSchool, inviteLearner } from "@/e2e/support/school";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { desktopViewport, touchViewport } from "@/e2e/support/viewport";
 
-const SESSION_READ = "**/api/auth/get-session*";
+const SESSION_READ = "**/api/auth/refresh*";
 
 /** Every script of the page, held back so the page shows what its HTML and inline scripts draw. */
 const SCRIPTS = /\/assets\/.*\.js/u;

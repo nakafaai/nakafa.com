@@ -3,7 +3,7 @@ import { seedLearner } from "@repo/backend/scripts/content/acceptance/learner";
 import { seedOperator } from "@repo/backend/scripts/content/acceptance/operator";
 import { Effect } from "effect";
 import { runFixture } from "@/e2e/support/acceptance";
-import { addSessionCookie } from "@/e2e/support/context";
+import { addSessionCookies } from "@/e2e/support/context";
 
 /**
  * Signs a new synthetic learner into one browser context. The running local
@@ -22,7 +22,7 @@ export const signInLearner = Effect.fn("NakafaE2E.signInLearner")(function* (
   const cookie = yield* runFixture(seedLearner()).pipe(
     Effect.retry({ times: 2 })
   );
-  yield* addSessionCookie(context, cookie, baseURL);
+  yield* addSessionCookies(context, cookie, baseURL);
 });
 
 /**
@@ -36,5 +36,5 @@ export const signInOperator = Effect.fn("NakafaE2E.signInOperator")(function* (
   const cookie = yield* runFixture(seedOperator()).pipe(
     Effect.retry({ times: 2 })
   );
-  yield* addSessionCookie(context, cookie, baseURL);
+  yield* addSessionCookies(context, cookie, baseURL);
 });

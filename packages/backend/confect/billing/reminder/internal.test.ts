@@ -152,7 +152,7 @@ describe("billing/reminder", () => {
           Effect.flatMap(MutationCtx, (ctx) =>
             Effect.promise(async () => {
               await ctx.db.patch(fixture.users.teacher.userId, {
-                deletionPreparedAt: TENANCY_NOW,
+                deletedAt: TENANCY_NOW,
               });
               await ctx.db.delete(removed);
               await ctx.db.patch(fixture.users.counselor.userId, {

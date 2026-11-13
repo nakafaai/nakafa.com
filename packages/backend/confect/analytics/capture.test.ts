@@ -44,7 +44,6 @@ describe("analytics/capture", () => {
         const scheduledJobs = yield* Effect.promise(() =>
           t.mutation(async (ctx) => {
             const userId = await ctx.db.insert("users", {
-              authId: "analytics-user-auth",
               credits: 10,
               creditsResetAt: NOW,
               email: "analytics@example.com",
@@ -103,7 +102,6 @@ describe("analytics/capture", () => {
       const scheduledJobs = yield* Effect.promise(() =>
         t.mutation(async (ctx) => {
           const userId = await ctx.db.insert("users", {
-            authId: "analytics-scheduling-failure-auth",
             credits: 10,
             creditsResetAt: NOW,
             email: "analytics-scheduling-failure@example.com",
@@ -239,7 +237,6 @@ it.each(["missing", "deleting"] as const)(
     const t = convexTest(schema, convexModules);
     const userId = await t.mutation(async (ctx) => {
       const id = await ctx.db.insert("users", {
-        authId: "eligibility",
         credits: 0,
         creditsResetAt: NOW,
         email: "eligibility@example.com",
@@ -251,7 +248,7 @@ it.each(["missing", "deleting"] as const)(
         await ctx.db.delete("users", id);
       } else {
         await ctx.db.patch("users", id, {
-          deletionPreparedAt: NOW,
+          deletedAt: NOW,
         });
       }
       return id;
@@ -270,7 +267,6 @@ it.each([false, true])(
     workflowTest.register(t);
     const userId = await t.mutation(async (ctx) => {
       const id = await ctx.db.insert("users", {
-        authId: "overlap",
         credits: 0,
         creditsResetAt: NOW,
         email: "overlap@example.com",
@@ -324,7 +320,7 @@ it.each([false, true])(
     await started;
     await t.mutation((ctx) =>
       ctx.db.patch("users", userId, {
-        deletionPreparedAt: NOW,
+        deletedAt: NOW,
       })
     );
     finishCapture();

@@ -38,7 +38,7 @@ function reusesVisitFrame(navigation: {
 
 /**
  * Decides a school page in the browser, where every school page renders (ADR 0038
- * D2): the session's Convex token from the presence (the token route of the
+ * D2): the session's Convex token from the presence (the refresh route of the
  * school's own host), then the same decision as `readSchoolFrame`. A failed token
  * read fails the decision, so an outage never looks like a signed-out visitor. A
  * visitor's entry page names the privacy and terms pages, so a read with no

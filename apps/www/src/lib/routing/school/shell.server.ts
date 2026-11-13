@@ -1,7 +1,8 @@
 import { negotiateLocale } from "@repo/internationalization/src/negotiate";
 import { isSharedPath } from "@repo/internationalization/src/rewrite";
 import { Effect, Option } from "effect";
-import { readSessionCookie } from "@/lib/auth/cookie.server";
+import { siteUrlKeys } from "@repo/site/keys";
+import { hasSessionCookie } from "@/lib/auth/cookies";
 import { hasStaticRelease } from "@/lib/routing/release";
 import { readRequestHostRole } from "@/lib/routing/school/host";
 import { SHELL_PATH, schoolEntryPath } from "@/lib/routing/shell";
@@ -62,7 +63,7 @@ function readSchoolShellPath(request: Request) {
   const { pathname, search } = new URL(request.url);
   return pathname === "/" &&
     search === "" &&
-    readSessionCookie(request) === null
+    !hasSessionCookie(request, new URL(siteUrlKeys().SITE_URL))
     ? schoolEntryPath(negotiateLocale(request.headers))
     : SHELL_PATH;
 }

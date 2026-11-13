@@ -7,6 +7,7 @@ import {
   expect,
   it,
 } from "@effect/vitest";
+import { components } from "@repo/backend/confect/_generated/components";
 import refs from "@repo/backend/confect/_generated/refs";
 import { AuthFailure, SessionRequired } from "@repo/backend/confect/auth/spec";
 import {
@@ -85,79 +86,50 @@ describe("token-verified reads and session-validated writes", () => {
     });
   });
 
-  it("reads from the verified token alone and confirms the live session before writes", async () => {
+  it("stops a signed-out session at once on every function type", async () => {
     const t = createConvexTestWithAuth();
     const identity = await t.mutation((ctx) =>
-      seedAuthenticatedUser(ctx, {
-        now: NOW,
-        suffix: "expired-auth",
-        sessionDurationMs: 0,
+      seedAuthenticatedUser(ctx, { now: NOW, suffix: "signed-out" })
+    );
+    const signedOut = t.withIdentity({ subject: identity.sessionId });
+    expect(await signedOut.query(currentUser, {})).toMatchObject({
+      appUser: { _id: identity.userId },
+    });
+    // The token still verifies, but its session row is gone.
+    await t.mutation((ctx) =>
+      ctx.runMutation(components.auth.public.revokeSessions, {
+        sessionIds: [identity.sessionId],
       })
     );
-    const expired = t.withIdentity({ subject: identity.sessionId });
-    // Revocation follows the token's short lifetime for reads: an expired
-    // session still reads, so a read asks Better Auth nothing.
-    expect(await expired.query(currentUser, {})).toMatchObject({
-      appUser: { _id: identity.userId },
-      authUser: { _id: identity.authUserId, name: "User expired-auth" },
-    });
-    expect(await expired.query(memberships, firstPage)).toMatchObject({
-      isDone: true,
-      page: [],
-    });
-    expect(await expired.mutation(admitOnboarding, {})).toMatchObject({
+    expect(await signedOut.query(currentUser, {})).toBeNull();
+    await expect(
+      signedOut.query(memberships, firstPage)
+    ).rejects.toMatchObject({ data: { _tag: "SessionRequired" } });
+    expect(await signedOut.mutation(admitOnboarding, {})).toMatchObject({
       isAuthenticated: false,
     });
     await expect(
-      expired.mutation(updateName, { name: "Verified user" })
+      signedOut.mutation(updateName, { name: "Verified user" })
     ).rejects.toMatchObject({ data: { _tag: "SessionRequired" } });
-    await expect(expired.action(customerPortal, {})).rejects.toMatchObject({
+    await expect(signedOut.action(customerPortal, {})).rejects.toMatchObject({
       data: { _tag: "SessionRequired" },
     });
   });
 
-  it("refuses a write whose token names another user's session", async () => {
-    const t = createConvexTestWithAuth();
-    const [owner, other] = await t.mutation(async (ctx) => [
-      await seedAuthenticatedUser(ctx, { now: NOW, suffix: "session-owner" }),
-      await seedAuthenticatedUser(ctx, { now: NOW, suffix: "session-other" }),
-    ]);
-    const mismatched = t.withIdentity({
-      sessionId: owner.sessionId,
-      subject: other.authUserId,
-    });
-    await expect(
-      mismatched.mutation(updateName, { name: "Verified user" })
-    ).rejects.toMatchObject({ data: { _tag: "SessionRequired" } });
-    await expect(mismatched.action(customerPortal, {})).rejects.toMatchObject({
-      data: { _tag: "SessionRequired" },
-    });
-  });
-
-  it("fails a write whose token does not name its session, also where a caller without a session may write", async () => {
+  it("resolves a token whose subject is no session to nobody", async () => {
     const t = createConvexTestWithAuth();
     const identity = await t.mutation((ctx) =>
       seedAuthenticatedUser(ctx, { now: NOW, suffix: "no-session" })
     );
-    const unnamed = t.withIdentity({ subject: identity.authUserId });
-    const failed = {
-      data: {
-        _tag: "AuthReadError",
-        code: "AUTH_READ_FAILED",
-        message: "Unable to read authentication state.",
-      },
-    };
+    // The subject names the user, not a session, so no session row answers it.
+    const unnamed = t.withIdentity({ subject: identity.userId });
+    expect(await unnamed.query(currentUser, {})).toBeNull();
     await expect(
       unnamed.mutation(updateName, { name: "Verified user" })
-    ).rejects.toMatchObject(failed);
-    // Onboarding admits a caller without a session, so an absent session
-    // would let this write through as anonymous.
-    await expect(unnamed.mutation(admitOnboarding, {})).rejects.toMatchObject(
-      failed
-    );
-    await expect(unnamed.action(customerPortal, {})).rejects.toMatchObject(
-      failed
-    );
+    ).rejects.toMatchObject({ data: { _tag: "SessionRequired" } });
+    expect(await unnamed.mutation(admitOnboarding, {})).toMatchObject({
+      isAuthenticated: false,
+    });
   });
 
   it("rejects removed accounts instead of allowing them to write anonymously", async () => {
@@ -182,40 +154,6 @@ describe("token-verified reads and session-validated writes", () => {
     });
     await t.mutation((ctx) => ctx.db.delete("users", identity.userId));
     expect(await authenticated.query(currentUser, {})).toBeNull();
-    await expect(
-      authenticated.mutation(admitOnboarding, {})
-    ).rejects.toMatchObject({
-      data: { _tag: "AccountUnavailable", code: "UNAUTHORIZED" },
-    });
-    await expect(
-      authenticated.query(memberships, firstPage)
-    ).rejects.toMatchObject({
-      data: { _tag: "AccountUnavailable", code: "UNAUTHORIZED" },
-    });
-    await expect(
-      authenticated.action(customerPortal, {})
-    ).rejects.toMatchObject({
-      data: { _tag: "AccountUnavailable", code: "UNAUTHORIZED" },
-    });
-  });
-
-  it("keeps prepared users readable while rejecting authenticated operations", async () => {
-    const t = createConvexTestWithAuth();
-    const identity = await t.mutation((ctx) =>
-      seedAuthenticatedUser(ctx, { now: NOW, suffix: "prepared-auth" })
-    );
-    await t.mutation((ctx) =>
-      ctx.db.patch("users", identity.userId, { deletionPreparedAt: NOW })
-    );
-    const authenticated = t.withIdentity({ subject: identity.sessionId });
-    expect(await authenticated.query(currentUser, {})).toMatchObject({
-      appUser: { _id: identity.userId },
-    });
-    await expect(
-      authenticated.mutation(updateName, { name: "Verified user" })
-    ).rejects.toMatchObject({
-      data: { _tag: "AccountUnavailable", code: "UNAUTHORIZED" },
-    });
     await expect(
       authenticated.mutation(admitOnboarding, {})
     ).rejects.toMatchObject({

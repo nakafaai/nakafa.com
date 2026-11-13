@@ -8,10 +8,9 @@ import {
 import { appRoutes } from "@/e2e/support/route";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
-const SESSION_ANSWER = "**/api/auth/get-session**";
-/** What Better Auth answers when its session lookup throws, as the trace of a failed run showed. */
-const SESSION_REFUSED =
-  '{"message":"Failed to get session","code":"FAILED_TO_GET_SESSION"}';
+const SESSION_ANSWER = "**/api/auth/refresh**";
+/** What the refresh route answers when the deployment cannot refresh the session: the route throws, and the server answers with its failure. */
+const SESSION_REFUSED = "Internal Server Error";
 const NAME = "Learner After Reload";
 /** How Convex's sync protocol names the server's answer to a mutation. */
 const MUTATION_ANSWER = '"type":"MutationResponse"';
@@ -66,7 +65,7 @@ test("a change made the moment a page loads is sent signed in", async ({
           )
         );
 
-        // On the next load Better Auth's answer for the session is held back,
+        // On the next load the refresh route's answer is held back,
         // so the page stays in the moment before it knows who is signed in.
         const answered = yield* Deferred.make<void>();
         const run = Effect.runPromiseWith(yield* Effect.context<never>());
@@ -159,7 +158,7 @@ test("a session read the server refuses once is read again", async ({
             }
             await route.fulfill({
               body: SESSION_REFUSED,
-              contentType: "application/json",
+              contentType: "text/plain",
               status: 500,
             });
           })

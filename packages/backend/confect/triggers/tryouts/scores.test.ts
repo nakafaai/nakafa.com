@@ -25,7 +25,6 @@ function createTryoutScoreTriggerTest() {
 /** Inserts the immutable attempt graph observed by the score trigger. */
 async function insertScoreGraph(ctx: MutationCtx) {
   const userId = await ctx.db.insert("users", {
-    authId: "auth-tryout-score-trigger",
     credits: 0,
     creditsResetAt: NOW,
     email: "tryout-score-trigger@example.com",

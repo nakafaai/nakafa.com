@@ -6,7 +6,7 @@ import {
   useSignedInHint,
 } from "@/components/auth/session";
 import { clientEnv } from "@/env.public";
-import { followClientSession } from "@/lib/auth/client";
+import { followClientSession } from "@/lib/auth/feed";
 import { followAuthSession, previewAuthSession } from "@/lib/auth/session";
 import { readConvexClient } from "@/lib/convex/client";
 

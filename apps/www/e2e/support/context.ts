@@ -4,7 +4,7 @@ import {
   type BrowserContextOptions,
   expect,
 } from "@playwright/test";
-import type { SessionCookie } from "@repo/backend/scripts/content/acceptance/fixture";
+import type { SessionCookies } from "@repo/backend/scripts/content/acceptance/fixture";
 import { Effect } from "effect";
 
 /**
@@ -28,42 +28,46 @@ const REAL_USER_AGENT_BRANDS = [
 ];
 
 /**
- * Adds a session cookie that the local acceptance runtime signed in, for the
- * address of one host, and lands it as a sign-in does. The attributes are those
- * of the session cookie that Better Auth sets: HttpOnly, and SameSite Lax.
+ * Adds the session cookies that the local acceptance runtime signed in, for the
+ * address of one host, and lands them as a sign-in does. The attributes are
+ * those of the cookies that Convex Auth's sign-in route sets: HttpOnly, and
+ * SameSite Lax.
  *
  * The answer that signs a browser in sets the signed-in hint that tells a static
- * page to start its live session (`withSessionHint`). This cookie reached the
+ * page to start its live session (`withSessionHint`). These cookies reached the
  * browser without that answer, and every public page is static since ADR 0038, so
- * a browser that only held it would stay a visitor there. One session read through
+ * a browser that only held them would stay a visitor there. One refresh through
  * the context's own request client gets the Worker's answer, and the cookies it
  * sets stay with the browser.
  */
-export const addSessionCookie = Effect.fn("NakafaE2E.addSessionCookie")(
+export const addSessionCookies = Effect.fn("NakafaE2E.addSessionCookies")(
   function* (
     context: BrowserContext,
-    cookie: typeof SessionCookie.Type,
+    cookies: typeof SessionCookies.Type,
     url: string
   ) {
     yield* Effect.promise(() =>
-      context.addCookies([
-        {
+      context.addCookies(
+        cookies.map((cookie) => ({
           httpOnly: true,
           name: cookie.name,
-          sameSite: "Lax",
+          sameSite: "Lax" as const,
           url,
           value: cookie.value,
-        },
-      ])
+        }))
+      )
     );
-    const session = new URL("/api/auth/get-session", url);
+    const refresh = new URL("/api/auth/refresh", url);
     const response = yield* Effect.promise(() =>
-      context.request.get(session.href)
+      context.request.post(refresh.href, {
+        data: {},
+        headers: { origin: new URL(url).origin },
+      })
     );
     yield* Effect.sync(() =>
       expect(
         response.ok(),
-        `${session.href} answered ${response.status()}`
+        `${refresh.href} answered ${response.status()}`
       ).toBe(true)
     );
   }

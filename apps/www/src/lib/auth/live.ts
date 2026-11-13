@@ -2,8 +2,8 @@ import type { ConvexReactClient } from "convex/react";
 import { Effect, Option, Result, Schema } from "effect";
 import { createStore, type StoreApi } from "zustand";
 import { reportClientException } from "@/lib/analytics/client";
-import type { SessionFeed } from "@/lib/auth/client";
 import type { ConvexAuthConfirmation } from "@/lib/auth/convex";
+import type { SessionFeed } from "@/lib/auth/feed";
 import { hasSignedInHint } from "@/lib/auth/hint";
 import { followAuthSession, previewAuthSession } from "@/lib/auth/session";
 
@@ -49,15 +49,12 @@ export class LiveSessionLoadFailed extends Schema.TaggedError<
   { readonly brand: unique symbol }
 >()("LiveSessionLoadFailed", { cause: Schema.Unknown }) {}
 
-
 /** The browser modules a signed-in page loads, as the page loads them. */
 export interface LiveSessionModules {
   /** Convex Auth's session, which a signed-in page needs and a visitor never does. */
   readonly auth: Effect.Effect<
     {
-      readonly followClientSession: (
-        convex: ConvexReactClient
-      ) => SessionFeed;
+      readonly followClientSession: (convex: ConvexReactClient) => SessionFeed;
     },
     LiveSessionLoadFailed
   >;
@@ -80,7 +77,7 @@ export function loadPageModule<A>(load: () => Promise<A>) {
 
 /** The page's browser modules, loaded with dynamic imports so a visitor's page never loads them. */
 const liveSessionModules: LiveSessionModules = {
-  auth: loadPageModule(() => import("@/lib/auth/client")),
+  auth: loadPageModule(() => import("@/lib/auth/feed")),
   convex: loadPageModule(() => import("@/lib/convex/client")),
 };
 
