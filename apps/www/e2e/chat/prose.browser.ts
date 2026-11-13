@@ -1,27 +1,30 @@
 import { expect, test } from "@playwright/test";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 import { runOnPage } from "@/e2e/support/chat";
 import { answerTurn, chatOf } from "@/e2e/support/prose";
 import { openServedChat } from "@/e2e/support/serve";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
 /** An answer with every block of a lesson's prose: headings of three levels, paragraphs and a list. */
-const ANSWER = [
-  "# Persamaan kuadrat",
-  "",
-  "Kita mulai dari bentuk umumnya.",
-  "",
-  "## Faktorkan",
-  "",
-  "Cari dua bilangan yang hasil kalinya sama dengan konstanta.",
-  "",
-  "### Periksa",
-  "",
-  "- Hasil kalinya benar.",
-  "- Jumlahnya benar.",
-  "",
-  "Jadi kedua akarnya ketemu.",
-].join("\n");
+const ANSWER = Arr.join(
+  [
+    "# Persamaan kuadrat",
+    "",
+    "Kita mulai dari bentuk umumnya.",
+    "",
+    "## Faktorkan",
+    "",
+    "Cari dua bilangan yang hasil kalinya sama dengan konstanta.",
+    "",
+    "### Periksa",
+    "",
+    "- Hasil kalinya benar.",
+    "- Jumlahnya benar.",
+    "",
+    "Jadi kedua akarnya ketemu.",
+  ],
+  "\n"
+);
 
 /** What a lesson draws at its 16px base, scaled to the chat's 15px: every size and room at 15/16. */
 const AT_CHAT_SIZE = (lesson: number) => `${(lesson * 15) / 16}px`;
@@ -36,13 +39,13 @@ test("draws an answer with the lesson's prose, scaled from a 15px base", async (
 }) => {
   await page.setViewportSize({ height: 900, width: 390 });
   await runOnPage(page, baseURL, (origin) =>
-    Effect.gen(function* () {
-      yield* openServedChat(
+    Effect.asVoid(
+      openServedChat(
         page,
         origin,
         chatOf([answerTurn({ markdown: ANSWER, order: 1 })])
-      );
-    })
+      )
+    )
   );
   const heading = page.locator('[data-nakafa="heading-1"]').first();
   await expect(heading).toBeVisible({ timeout: readinessTimeoutMilliseconds });
