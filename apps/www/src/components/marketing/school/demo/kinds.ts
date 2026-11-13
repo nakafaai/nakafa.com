@@ -89,8 +89,9 @@ export function paperExam(texts: {
   const [match] = matchAnswers();
   const [table] = tableAnswers(texts.truth);
   const [choices] = choiceAnswers(
-    Arr.map([texts.velocity, texts.mass, texts.momentum, texts.time], (word) =>
-      sentenceLabel(word)
+    Arr.map(
+      Arr.make(texts.velocity, texts.mass, texts.momentum, texts.time),
+      (word) => sentenceLabel(word)
     )
   );
   const [reason] = choiceAnswers(

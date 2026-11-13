@@ -104,8 +104,7 @@ describe("the School landing's demo exam", () => {
 
     expect(inlineOf(documents.seedrubric1)).toEqual([]);
     expect(inlineOf(documents.seedprompt3)).toEqual([
-      { text: "Explain ", type: "text" },
-      { text: ".", type: "text" },
+      { text: "Explain .", type: "text" },
     ]);
   });
 });

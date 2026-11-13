@@ -10,6 +10,9 @@ import {
 /** A placeholder of a formula in a demo sentence: `<mass></mass>` names the formula `mass`. */
 const FORMULA_TAG = /<(?<name>\w+)><\/\k<name>>/u;
 
+/** Every placeholder of a formula in a sentence. */
+const FORMULA_TAGS = /<(?<name>\w+)><\/\k<name>>/gu;
+
 /** The JSON text of a document, as the server stores it. */
 const DocumentText = Schema.fromJsonString(Schema.Unknown);
 
@@ -33,22 +36,34 @@ const FORMULAS: Readonly<Record<string, string>> = {
 };
 
 /**
+ * A sentence without the placeholders of formulas the demo does not know, so the words around one join into one
+ * text, as the content contract requires of neighbouring words.
+ */
+const withKnownFormulas = (sentence: string) =>
+  sentence.replaceAll(FORMULA_TAGS, (tag, name: string) =>
+    Rec.has(FORMULAS, name) ? tag : ""
+  );
+
+/**
  * The inline content of one sentence: its words as text, and each formula it names as an inline formula, the way
  * the editor writes a formula a teacher types.
  */
 const inline = (sentence: string) =>
   Arr.getSomes(
-    Arr.map(Str.split(sentence, FORMULA_TAG), (part, index) => {
-      if (index % 2 === 1) {
-        return Option.map(Rec.get(FORMULAS, part), (latex) => ({
-          attrs: { latex },
-          type: "mathInline",
-        }));
+    Arr.map(
+      Str.split(withKnownFormulas(sentence), FORMULA_TAG),
+      (part, index) => {
+        if (index % 2 === 1) {
+          return Option.map(Rec.get(FORMULAS, part), (latex) => ({
+            attrs: { latex },
+            type: "mathInline",
+          }));
+        }
+        return part === ""
+          ? Option.none()
+          : Option.some({ text: part, type: "text" });
       }
-      return part === ""
-        ? Option.none()
-        : Option.some({ text: part, type: "text" });
-    })
+    )
   );
 
 /** A document of one paragraph holding `content`. */
