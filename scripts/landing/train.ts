@@ -131,9 +131,9 @@ const proofSpecs = (
  * splits the batch. A batch of several stacks verifies every stack on its own,
  * side by side, so a split costs one wait in the runner queue, not one for each
  * half; the stacks that passed are verified together once more, and a failing
- * stack splits in halves. Everything is verified on top of what the train
- * already accepted, so what lands is always one gated and proven combination,
- * and each pull request lands by its exact head.
+ * stack splits in halves. Each green group lands at once, by each exact head,
+ * and deploys, and everything after it is verified on top of what landed, so
+ * what lands is always one gated and proven combination.
  */
 export const runTrain = Effect.fn("landing.runTrain")(function* (
   numbers: readonly number[],
@@ -148,6 +148,7 @@ export const runTrain = Effect.fn("landing.runTrain")(function* (
     ? repository.ready(numbers)
     : repository.proven(numbers);
   const accepted = yield* Ref.make<readonly Candidate[]>([]);
+  const landings = yield* Ref.make<readonly Landing[]>([]);
   const rejected = yield* Ref.make<readonly Rejection[]>([]);
   const baseline = yield* makeBaseline(main);
   // Stacks verified side by side ask main about their failures one at a time,
@@ -156,8 +157,29 @@ export const runTrain = Effect.fn("landing.runTrain")(function* (
 
   const reject = (candidate: Candidate, reason: string) =>
     Ref.update(rejected, Arr.append({ candidate, reason }));
+  /**
+   * Lands a verified group at once, by each exact head, and deploys it, so a
+   * green group never waits for the rest of the train. Only what landed joins
+   * the base of the next verification.
+   */
   const accept = (riding: readonly Candidate[]) =>
-    Ref.update(accepted, Arr.appendAll(riding));
+    Effect.gen(function* () {
+      const group = yield* Effect.forEach(riding, repository.land);
+      yield* Ref.update(landings, Arr.appendAll(group));
+      const landed = Arr.flatMap(group, (landing) =>
+        landing._tag === "landed" ? [landing.candidate] : []
+      );
+      yield* Ref.update(accepted, Arr.appendAll(landed));
+      if (landed.length > 0) {
+        yield* Effect.logInfo(
+          `Landed ${Arr.join(
+            Arr.map(landed, (candidate) => `#${candidate.number}`),
+            " "
+          )}; deploying.`
+        );
+        yield* repository.deploy;
+      }
+    });
 
   /**
    * Verifies heads on main above what the train accepted, in one job. Answers
@@ -303,20 +325,13 @@ export const runTrain = Effect.fn("landing.runTrain")(function* (
       ? split(candidates, [RED_BATCH])
       : attempt(candidates);
   }
-  const landings = yield* Effect.forEach(
-    yield* Ref.get(accepted),
-    repository.land
-  );
-  const landed = Arr.flatMap(landings, (landing) =>
-    landing._tag === "landed" ? [landing.candidate] : []
-  );
-  if (landed.length > 0) {
-    yield* repository.deploy;
-  }
+  const all = yield* Ref.get(landings);
   const report: TrainReport = {
     main,
-    landed,
-    skipped: Arr.flatMap(landings, (landing) =>
+    landed: Arr.flatMap(all, (landing) =>
+      landing._tag === "landed" ? [landing.candidate] : []
+    ),
+    skipped: Arr.flatMap(all, (landing) =>
       landing._tag === "skipped"
         ? [{ candidate: landing.candidate, reason: landing.reason }]
         : []
@@ -344,7 +359,7 @@ export function formatTrain(report: TrainReport) {
       ...Arr.map(report.mainFailures, (spec) => `main fails ${spec}`),
       Option.match(Arr.head(report.landed), {
         onNone: () => "nothing landed, no deploy",
-        onSome: () => "one production deploy started",
+        onSome: () => "each landed group deployed",
       }),
       "",
     ],
