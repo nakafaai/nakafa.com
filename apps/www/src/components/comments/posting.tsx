@@ -55,8 +55,8 @@ export function usePostComment() {
     }
     const author: CommentAuthor = {
       _id: viewer.appUser._id,
-      image: viewer.authUser.image ?? null,
-      name: viewer.authUser.name,
+      image: viewer.appUser.image ?? null,
+      name: viewer.appUser.name,
       ...Struct.pick(viewer.appUser, ["mascot", "picture"]),
     };
     const uploads = Arr.getSomes(Arr.map(post.photos, (photo) => photo.upload));
