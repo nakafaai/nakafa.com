@@ -9,39 +9,24 @@ import { ChildProcess } from "effect/process";
 import { runEntry } from "#scripts/entry";
 import { writeOutput } from "#scripts/output";
 import { failuresOf, makeBaseline } from "#scripts/proof/baseline";
+import { mainHead, ProofError } from "#scripts/proof/client";
 import {
-  DEFAULT_SHARDS,
   githubProver,
-  mainHead,
-  ProofError,
   postVerdict,
   proveOnGithub,
   type RunTimings,
 } from "#scripts/proof/github";
 
 const USAGE =
-  "Usage: bun run proof <sha> [spec...] [--shards=<1-6>], or bun run proof --local <sha> [spec...]";
-
-const Shards = Schema.NumberFromString.check(
-  Schema.isInt(),
-  Schema.isBetween({ minimum: 1, maximum: 6 })
-);
+  "Usage: bun run proof <sha> [spec...], or bun run proof --local <sha> [spec...]";
 
 /** What the command line asks for: where to prove, which head, which specs. */
 export const parseProofArguments = Effect.fn("proof.parseArguments")(
   function* (argv: readonly string[]) {
     const local = Arr.contains(argv, "--local");
-    const shards = yield* Option.match(
-      Arr.findFirst(argv, (arg) => arg.startsWith("--shards=")),
-      {
-        onNone: () => Effect.succeed(DEFAULT_SHARDS),
-        onSome: (arg) => Schema.decodeEffect(Shards)(arg.slice(9)),
-      }
-    );
     const [sha, ...specs] = Arr.filter(argv, (arg) => !arg.startsWith("--"));
     return {
       local,
-      shards,
       sha: yield* Schema.decodeEffect(HeadSha)(sha ?? ""),
       specs: yield* Schema.decodeEffect(Schema.Array(SpecPath))(specs),
     };
@@ -53,8 +38,12 @@ export const parseProofArguments = Effect.fn("proof.parseArguments")(
 const seconds = (value: Option.Option<number>) =>
   Option.match(value, { onNone: () => "-", onSome: (n) => `${n}s` });
 
-/** The report of one proof: its verdict per engine with the failing specs, then its phases. */
-export function formatProof(result: ProofResult, timings: RunTimings) {
+/** The report of one run: its gate, its verdict per engine with the failing specs, then its phases. */
+export function formatProof(
+  result: ProofResult,
+  gated: Option.Option<boolean>,
+  timings: RunTimings
+) {
   const engines = Arr.map(ENGINES, (engine) => {
     const { passed, failures } = result.engines[engine];
     return `${engine.padEnd(9)}${passed ? "passed" : "failed"}${Arr.join(
@@ -70,8 +59,12 @@ export function formatProof(result: ProofResult, timings: RunTimings) {
     [
       `Proof of ${result.sha}: ${result.passed ? "passed" : "failed"}`,
       result.url,
+      ...Option.match(gated, {
+        onNone: () => [],
+        onSome: (passed) => [`gate     ${passed ? "passed" : "failed"}`],
+      }),
       ...engines,
-      `queue ${seconds(timings.queue)}, prepare ${seconds(timings.prepare)}${prepared}, build ${seconds(timings.build)}, specs ${seconds(timings.specs)}, total ${seconds(timings.total)}`,
+      `queue ${seconds(timings.queue)}, gate ${seconds(timings.gate)}, prepare ${seconds(timings.prepare)}${prepared}, build ${seconds(timings.build)}, specs ${seconds(timings.specs)}, total ${seconds(timings.total)}`,
       "",
     ],
     "\n"
@@ -79,9 +72,11 @@ export function formatProof(result: ProofResult, timings: RunTimings) {
 }
 
 /**
- * Proves one head and prints its verdict, exiting 0 only when every engine
- * passed. `--local` proves it on this machine through the acceptance runtime,
- * the adapter for debugging, which a session runs through the Mac's queue.
+ * Verifies one head in one job, its gate over the workspaces it changes and its
+ * proof, and prints both, exiting 0 only when the gate passed and the head fails
+ * nothing that main does not. `--local` proves it on this machine through the
+ * acceptance runtime, the adapter for debugging, which a session runs through
+ * the Mac's queue.
  */
 export const runProof = Effect.fn("proof.run")(function* (
   root: string,
@@ -104,15 +99,24 @@ export const runProof = Effect.fn("proof.run")(function* (
     );
     return Number(yield* child.exitCode);
   }
-  const { result, timings } = yield* proveOnGithub(
+  const { result, gated, timings } = yield* proveOnGithub(
     input.sha,
     input.specs,
-    input.shards
+    { gate: true, full: false }
   );
+  const gatePassed = Option.exists(gated, (passed) => passed);
   const main = yield* mainHead;
   const failures = failuresOf(result);
+  if (main === input.sha) {
+    // Main has nothing to be judged against: its failures are its own, and the
+    // run's statuses already say so.
+    yield* writeOutput(
+      `${formatProof(result, gated, timings)}Verdict: this is main, which fails ${failures.length} specs\n`
+    );
+    return failures.length === 0 && gatePassed ? 0 : 1;
+  }
   const shared =
-    failures.length === 0 || main === input.sha
+    failures.length === 0
       ? []
       : yield* makeBaseline(main).pipe(
           Effect.flatMap((baseline) => baseline.shared(failures)),
@@ -124,9 +128,9 @@ export const runProof = Effect.fn("proof.run")(function* (
   );
   yield* postVerdict(input.sha, result.url, fresh, shared, main);
   yield* writeOutput(
-    `${formatProof(result, timings)}${formatVerdict(fresh, shared, main)}`
+    `${formatProof(result, gated, timings)}${formatVerdict(fresh, shared, main)}`
   );
-  return fresh.length === 0 ? 0 : 1;
+  return fresh.length === 0 && gatePassed ? 0 : 1;
 }, Effect.scoped);
 
 /** The verdict against main: each failure, new or shared with main, then the one line a caller acts on. */
