@@ -30,25 +30,28 @@ const visit = Effect.fn("NakafaE2E.visitLayoutRoute")(function* (
   );
 });
 
+/** The page's body, whichever kind the page has: a reading flow, a stack of sections, or a list in its card. */
+const BODY =
+  'main :is(article, [data-slot="page-stack"], [data-slot="page-list"])';
+
 /** The page column spans the app shell's width up to the shared cap. */
 const verifyContentColumn = Effect.fn("NakafaE2E.verifyContentColumn")(
   function* (page: Page, href: string) {
     yield* visit(page, href);
     yield* Effect.promise(() =>
-      expect(page.locator("main article").first()).toBeVisible()
+      expect(page.locator(BODY).first()).toBeVisible()
     );
     const widths = yield* Effect.promise(() =>
-      page.evaluate(() => ({
+      page.evaluate((body) => ({
         column: Math.round(
-          document.querySelector("main article")?.getBoundingClientRect()
-            .width ?? 0
+          document.querySelector(body)?.getBoundingClientRect().width ?? 0
         ),
         shell: Math.round(
           document
             .querySelector('main[data-slot="sidebar-inset"]')
             ?.getBoundingClientRect().width ?? 0
         ),
-      }))
+      }), BODY)
     );
 
     yield* Effect.sync(() =>

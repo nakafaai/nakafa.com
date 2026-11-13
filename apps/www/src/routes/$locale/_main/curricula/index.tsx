@@ -10,11 +10,10 @@ import { Array as Arr, Effect, Schema } from "effect";
 import { createTranslator } from "use-intl/core";
 import { CurriculumCardGrid } from "@/components/curriculum/cards";
 import { BreadcrumbHeader } from "@/components/shared/breadcrumb/header";
-import { FooterContent } from "@/components/shared/content/footer";
-import { LayoutContent } from "@/components/shared/content/frame";
 import { RefContent } from "@/components/shared/content/references";
-import { LayoutMaterialContent } from "@/components/shared/material/content";
-import { LayoutMaterial } from "@/components/shared/material/frame";
+import { PageBody } from "@/components/shared/page/body";
+import { PageFooter } from "@/components/shared/page/footer";
+import { Page } from "@/components/shared/page/frame";
 import { ComingSoon } from "@/components/shared/upcoming";
 import { PUBLIC_CONTENT_HEADERS } from "@/lib/content/delivery";
 import { getAksaraTreeUrl } from "@/lib/content/repository";
@@ -143,32 +142,30 @@ export const Route = createFileRoute("/$locale/_main/curricula/")({
 function CurriculumIndexPage() {
   const page = Route.useLoaderData();
   return (
-    <LayoutMaterial>
-      <LayoutMaterialContent>
-        <BreadcrumbHeader
-          value={{
-            home: HOME_TARGET,
-            homeLabel: page.labels.home,
-            items: [{ label: page.title }],
-            title: page.title,
-          }}
-        />
-        <LayoutContent>
-          {page.cards.length > 0 ? (
-            <CurriculumCardGrid
-              actionLabel={page.actionLabel}
-              cards={page.cards}
-            />
-          ) : (
-            <ComingSoon />
-          )}
-        </LayoutContent>
-        {page.sourceUrl ? (
-          <FooterContent>
-            <RefContent githubUrl={page.sourceUrl} />
-          </FooterContent>
-        ) : null}
-      </LayoutMaterialContent>
-    </LayoutMaterial>
+    <Page>
+      <BreadcrumbHeader
+        value={{
+          home: HOME_TARGET,
+          homeLabel: page.labels.home,
+          items: [{ label: page.title }],
+          title: page.title,
+        }}
+      />
+      <PageBody>
+        {page.cards.length > 0 ? (
+          <CurriculumCardGrid
+            actionLabel={page.actionLabel}
+            cards={page.cards}
+          />
+        ) : (
+          <ComingSoon />
+        )}
+      </PageBody>
+      {page.sourceUrl ? (
+        <PageFooter>
+          <RefContent githubUrl={page.sourceUrl} />
+        </PageFooter>
+      ) : null}
+    </Page>
   );
 }

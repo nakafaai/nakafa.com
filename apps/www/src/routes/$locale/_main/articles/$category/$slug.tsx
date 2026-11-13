@@ -14,10 +14,6 @@ import { ContentHeader } from "@/components/content/header";
 import { ContentLead } from "@/components/content/title";
 import { BreadcrumbHeaderPath } from "@/components/shared/breadcrumb/header";
 import { OpenContent } from "@/components/shared/content/actions";
-import { FooterContent } from "@/components/shared/content/footer";
-import { LayoutContent } from "@/components/shared/content/frame";
-import { LayoutMaterialContent } from "@/components/shared/material/content";
-import { LayoutMaterial } from "@/components/shared/material/frame";
 import {
   SidebarRightFooter,
   SidebarRightHeader,
@@ -25,6 +21,9 @@ import {
   SidebarRightProvider,
 } from "@/components/shared/outline/panel";
 import { SidebarTree } from "@/components/shared/outline/tree";
+import { PageBody } from "@/components/shared/page/body";
+import { PageFooter } from "@/components/shared/page/footer";
+import { Page } from "@/components/shared/page/frame";
 import { ComingSoon } from "@/components/shared/upcoming";
 import { CommentsButton } from "@/components/sidebar/actions/comments";
 import { GithubButton } from "@/components/sidebar/actions/github";
@@ -231,90 +230,85 @@ function ArticlePage() {
     publicPath,
   } = article;
   return (
-    <LayoutMaterial>
-      <ContentViewTracker
-        contentId={article.contentId}
-        enabled
-        locale={locale}
-        publicPath={article.publicPath}
-        section="articles"
-      >
-        <SidebarRightProvider>
-          <LayoutMaterialContent>
-            <ContentHeader
-              breadcrumb={
-                <BreadcrumbHeaderPath
-                  home={HOME_TARGET}
-                  homeLabel={labels.home}
-                  items={[
-                    {
-                      label: labels.articles,
-                      target: ARTICLES_TARGET,
-                    },
-                    {
-                      label: article.categoryLabel,
-                      target: articleCategoryTarget(article.category),
-                    },
-                    { label: metadata.title },
-                  ]}
-                  visibleItemCount={1}
-                />
-              }
-              title={metadata.title}
-            >
-              <OpenContent
-                content={article.content}
-                copySourceUrl={article.copySourceUrl}
-                slug={`/${locale}${filePath}`}
-                sourceUrl={article.sourceUrl}
-              >
-                <AiMenuItem contextTitle={metadata.title} />
-              </OpenContent>
-            </ContentHeader>
-            <ContentLead>
-              <ContentByline
-                authors={metadata.authors}
-                {...(metadata.dateModified === undefined
-                  ? {}
-                  : { dateModified: metadata.dateModified })}
-                datePublished={metadata.datePublished}
-              />
-            </ContentLead>
-            <LayoutContent>
-              {headings.length === 0 ? <ComingSoon /> : article.body}
-            </LayoutContent>
-            <FooterContent rule>
-              <DeferredComments key={`comments:${filePath}`} slug={filePath} />
-            </FooterContent>
-            <SheetEntry
-              contextTitle={metadata.title}
-              key={`nina:${filePath}`}
-            />
-          </LayoutMaterialContent>
-          <SidebarRightPanel
-            footer={
-              <SidebarRightFooter>
-                <CommentsButton />
-                <ReferenceButton references={article.references} />
-                <ReportButton />
-                {article.sourceUrl ? (
-                  <GithubButton githubUrl={article.sourceUrl} />
-                ) : null}
-                <ShareButton />
-              </SidebarRightFooter>
-            }
-            header={
-              <SidebarRightHeader
-                description={description}
-                publicPath={publicPath}
-                title={metadata.title}
+    <ContentViewTracker
+      contentId={article.contentId}
+      enabled
+      locale={locale}
+      publicPath={article.publicPath}
+      section="articles"
+    >
+      <SidebarRightProvider>
+        <Page>
+          <ContentHeader
+            breadcrumb={
+              <BreadcrumbHeaderPath
+                home={HOME_TARGET}
+                homeLabel={labels.home}
+                items={[
+                  {
+                    label: labels.articles,
+                    target: ARTICLES_TARGET,
+                  },
+                  {
+                    label: article.categoryLabel,
+                    target: articleCategoryTarget(article.category),
+                  },
+                  { label: metadata.title },
+                ]}
+                visibleItemCount={1}
               />
             }
+            title={metadata.title}
           >
-            <SidebarTree data={headings} title={labels.onThisPage} />
-          </SidebarRightPanel>
-        </SidebarRightProvider>
-      </ContentViewTracker>
-    </LayoutMaterial>
+            <OpenContent
+              content={article.content}
+              copySourceUrl={article.copySourceUrl}
+              slug={`/${locale}${filePath}`}
+              sourceUrl={article.sourceUrl}
+            >
+              <AiMenuItem contextTitle={metadata.title} />
+            </OpenContent>
+          </ContentHeader>
+          <ContentLead>
+            <ContentByline
+              authors={metadata.authors}
+              {...(metadata.dateModified === undefined
+                ? {}
+                : { dateModified: metadata.dateModified })}
+              datePublished={metadata.datePublished}
+            />
+          </ContentLead>
+          <PageBody>
+            {headings.length === 0 ? <ComingSoon /> : article.body}
+          </PageBody>
+          <PageFooter rule>
+            <DeferredComments key={`comments:${filePath}`} slug={filePath} />
+          </PageFooter>
+          <SheetEntry contextTitle={metadata.title} key={`nina:${filePath}`} />
+        </Page>
+        <SidebarRightPanel
+          footer={
+            <SidebarRightFooter>
+              <CommentsButton />
+              <ReferenceButton references={article.references} />
+              <ReportButton />
+              {article.sourceUrl ? (
+                <GithubButton githubUrl={article.sourceUrl} />
+              ) : null}
+              <ShareButton />
+            </SidebarRightFooter>
+          }
+          header={
+            <SidebarRightHeader
+              description={description}
+              publicPath={publicPath}
+              title={metadata.title}
+            />
+          }
+        >
+          <SidebarTree data={headings} title={labels.onThisPage} />
+        </SidebarRightPanel>
+      </SidebarRightProvider>
+    </ContentViewTracker>
   );
 }

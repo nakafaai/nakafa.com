@@ -215,7 +215,7 @@ test("an admin reads the role guide and finds the owner's grant on Roles", async
   const search = header.getByRole("textbox", { name: "Find a person" });
   await expect(search).toBeVisible();
   const row = header.locator(":scope > div");
-  const body = page.locator('[data-slot="table-page-body"]');
+  const body = page.locator('[data-slot="page-list"]');
   const [rowBox, bodyBox] = await Promise.all([
     row.boundingBox(),
     body.boundingBox(),

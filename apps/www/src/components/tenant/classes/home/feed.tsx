@@ -3,7 +3,7 @@ import { ScrollArea } from "@repo/design-system/components/ui/scroll-area";
 import { cn } from "cn";
 import { type ReactNode, useState } from "react";
 import { useTranslations } from "use-intl";
-import { pageRowVariants } from "@/components/shared/content/width";
+import { pageRowVariants } from "@/components/shared/page/width";
 import { TableViews } from "@/components/shared/table/views";
 import { ClassHeader } from "@/components/tenant/classes/header";
 import { ClassHome } from "@/components/tenant/classes/home/board";

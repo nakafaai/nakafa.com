@@ -6,7 +6,7 @@ import { buttonVariants } from "@repo/design-system/lib/button";
 import { cn } from "cn";
 import { Option } from "effect";
 import { useTranslations } from "use-intl";
-import { pageRowVariants } from "@/components/shared/content/width";
+import { pageRowVariants } from "@/components/shared/page/width";
 import { TargetLink } from "@/lib/routing/link";
 import { publicPathTarget } from "@/lib/routing/target";
 

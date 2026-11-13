@@ -19,7 +19,7 @@ import { Array as Arr, Option } from "effect";
 import { type ReactNode, useState } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
-import { HeaderLabel } from "@/components/shared/breadcrumb/frame";
+import { PageHeaderLabel } from "@/components/shared/page/header";
 import { getTryoutAttemptHref } from "@/components/tryout/route/path";
 import { useFactsWaiting } from "@/components/tryout/section/summary";
 import { KEPT_ATTEMPT_SCRIPT } from "@/components/tryout/set/kept";
@@ -89,7 +89,7 @@ function TryoutAttemptFace({ children }: { children?: ReactNode }) {
   return (
     <>
       <HugeIcons icon={TransactionHistoryIcon} />
-      <HeaderLabel>{children}</HeaderLabel>
+      <PageHeaderLabel>{children}</PageHeaderLabel>
       <HugeIcons
         className="tryout-history-chevron ml-auto size-4 transition-transform ease-out @max-2xl/header:hidden"
         icon={ArrowDown01Icon}

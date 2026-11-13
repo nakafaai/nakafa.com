@@ -7,7 +7,7 @@ import { useTranslations } from "use-intl";
 import { reloadPage } from "@/components/shared/reload";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
-import { TableFrame } from "@/components/shared/table/frame";
+import { TableFrame } from "@/components/shared/table/inset";
 import { RowCopy } from "@/components/shared/table/menu";
 import { LoadFailure } from "@/components/state/failure";
 import { useClassScope } from "@/components/tenant/classes/scope";

@@ -10,7 +10,7 @@ import { Array as Arr, Effect, Schema } from "effect";
 import { useTranslations } from "use-intl";
 import { createTranslator } from "use-intl/core";
 import { BreadcrumbHeader } from "@/components/shared/breadcrumb/header";
-import { LayoutContent } from "@/components/shared/content/frame";
+import { PageStack } from "@/components/shared/page/body";
 import { QuranSurahCatalog } from "@/components/shared/quran/catalog";
 import {
   TableFiltersProvider,
@@ -119,9 +119,9 @@ function QuranIndexPage() {
           title: page.title,
         }}
       />
-      <LayoutContent className="py-6 pb-20">
+      <PageStack>
         <QuranSurahCatalog surahs={page.surahs} />
-      </LayoutContent>
+      </PageStack>
     </TableFiltersProvider>
   );
 }

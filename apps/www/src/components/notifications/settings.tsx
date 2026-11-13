@@ -34,10 +34,10 @@ import { useTranslations } from "use-intl";
 import { ChoiceContext } from "@/components/notifications/choice";
 import { preferenceChoicesOf } from "@/components/notifications/preferences";
 import { PushOffer } from "@/components/notifications/push";
-import { HeaderLabel } from "@/components/shared/breadcrumb/frame";
+import { PageHeaderLabel } from "@/components/shared/page/header";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
-import { TableFrame } from "@/components/shared/table/frame";
+import { TableFrame } from "@/components/shared/table/inset";
 import { RowItems } from "@/components/shared/table/menu";
 import { TableFiltersProvider } from "@/components/shared/table/toolbar";
 
@@ -54,7 +54,7 @@ export function NoticePreferences({ children }: { children: ReactNode }) {
         render={
           <Button type="button" variant="outline">
             <HugeIcons icon={Settings01Icon} />
-            <HeaderLabel>{t("preferences")}</HeaderLabel>
+            <PageHeaderLabel>{t("preferences")}</PageHeaderLabel>
           </Button>
         }
       />

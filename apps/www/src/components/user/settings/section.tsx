@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { LayoutContent } from "@/components/shared/content/frame";
+import { PageStack } from "@/components/shared/page/body";
 import { UserSettingsHeader } from "@/components/user/settings/header";
 
 /**
@@ -11,9 +11,7 @@ export function UserSettingsPage({ children }: { children: ReactNode }) {
   return (
     <>
       <UserSettingsHeader />
-      <LayoutContent className="flex flex-col gap-6 py-6">
-        {children}
-      </LayoutContent>
+      <PageStack>{children}</PageStack>
     </>
   );
 }

@@ -1,5 +1,5 @@
 import { useTranslations } from "use-intl";
-import { LayoutContent } from "@/components/shared/content/frame";
+import { PageState } from "@/components/shared/page/body";
 import { ActionLink } from "@/components/state/action";
 import { EmptyState } from "@/components/state/empty";
 import { DeferredFigure } from "@/components/state/mascot";
@@ -10,7 +10,7 @@ export function ClassMissingBody() {
   const tState = useTranslations("State");
 
   return (
-    <LayoutContent className="flex flex-1 items-center py-6">
+    <PageState>
       <EmptyState
         action={
           <ActionLink
@@ -24,6 +24,6 @@ export function ClassMissingBody() {
         scene={<DeferredFigure scene="missing" />}
         title={<h1>{t("title")}</h1>}
       />
-    </LayoutContent>
+    </PageState>
   );
 }

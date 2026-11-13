@@ -43,7 +43,7 @@ import {
 import { handleTitleKeyDown } from "@/components/ai/chat/rename";
 import { ChatSharing } from "@/components/ai/chat/sharing";
 import { readChatTitle, useChatRename } from "@/components/ai/chat/title";
-import { BreadcrumbHeaderFrame } from "@/components/shared/breadcrumb/frame";
+import { PageActions, PageHeader } from "@/components/shared/page/header";
 import { PanelSheetTrigger } from "@/components/sidebar/sheet";
 
 /**
@@ -238,9 +238,9 @@ export function ChatHeader({
 }: PropsWithChildren<{ actions?: ReactNode }>) {
   const t = useTranslations("Ai");
   return (
-    <BreadcrumbHeaderFrame>
+    <PageHeader>
       <div className="min-w-0 flex-1">{children}</div>
-      <div className="flex shrink-0 items-center gap-2">
+      <PageActions>
         {actions === undefined ? null : (
           <ButtonGroup aria-label={t("chat-actions")}>{actions}</ButtonGroup>
         )}
@@ -248,7 +248,7 @@ export function ChatHeader({
           icon={MessageMultiple02Icon}
           label={t("chat-history")}
         />
-      </div>
-    </BreadcrumbHeaderFrame>
+      </PageActions>
+    </PageHeader>
   );
 }
