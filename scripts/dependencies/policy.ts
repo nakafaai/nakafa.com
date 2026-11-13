@@ -28,7 +28,7 @@ export const PACKAGE_MANAGER = "bun@1.4.4";
 export const NODE_RUNTIME_VERSION = "26.13.1";
 const CONTRACT_PACKAGE_VERSION = "6.3.0";
 /** Effect and its platform and test packages move as one exact cohort. */
-export const EFFECT_COHORT_VERSION = "4.1.2";
+export const EFFECT_COHORT_VERSION = "4.1.4";
 /**
  * Effect packages that only dependencies declare: the Confect CLI's platform
  * packages and the Confect server's AI providers. An override keeps each one
@@ -61,10 +61,10 @@ export const AI_SDK_COHORT = {
  * the cohort is the same release.
  */
 export const ALCHEMY_COHORT = {
-  "@alchemy.run/cloudflare": "2.0.0-beta.85",
-  "@alchemy.run/cloudflare-runtime": "2.0.0-beta.85",
-  "@alchemy.run/github": "2.0.0-beta.85",
-  alchemy: "2.0.0-beta.85",
+  "@alchemy.run/cloudflare": "2.0.0-beta.87",
+  "@alchemy.run/cloudflare-runtime": "2.0.0-beta.87",
+  "@alchemy.run/github": "2.0.0-beta.87",
+  alchemy: "2.0.0-beta.87",
 } as const;
 /**
  * Tiptap moves as one exact cohort, and the workspace catalog does not hold it, so
