@@ -23,15 +23,20 @@ const PLANTS = Arr.map(PLANT_KEYS, (key, index) => ({
   key,
 }));
 
-/** A model as one string, to tell models apart. */
-const drawingOf = (faces: readonly Face[]) =>
-  Arr.join(
-    Arr.map(Arr.fromIterable(flatten(faces)), (value) => value.toFixed(4)),
-    ","
+/** A model's fingerprint: its length and a hash of every number the renderer uploads, to tell models apart. */
+const drawingOf = (faces: readonly Face[]) => {
+  const data = Arr.fromIterable(flatten(faces));
+  const hash = Arr.reduce(
+    data,
+    7,
+    (sum, value) => (sum * 31 + Math.round(value * 1e4)) % 2_147_483_647
   );
+  return `${data.length}:${hash}`;
+};
 
-/** How many triangles the renderer draws for a model: nine numbers a corner, three corners a triangle. */
-const trianglesOf = (faces: readonly Face[]) => flatten(faces).length / 27;
+/** How many triangles the renderer draws for a model: one face of n corners is n - 2 triangles. */
+const trianglesOf = (faces: readonly Face[]) =>
+  Arr.reduce(faces, 0, (sum, face) => sum + face.corners.length - 2);
 
 /** Whether every face of a model is a real flat face with finite corners. */
 const isSound = (faces: readonly Face[]) =>

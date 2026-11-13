@@ -24,7 +24,7 @@ function splayed(at: Vec, thick: number, coat: Coat) {
     ),
     ...rod(
       [x + thick * 2.6, y + thick * 0.4, z + thick * 0.6],
-      [x + thick * 3.2, 0, z + thick * 1.4],
+      [x + thick * 3.2, thick * 0.5, z + thick * 1.4],
       [thick * 0.8, thick * 0.6],
       coat.leg,
       4
@@ -45,10 +45,10 @@ export function lizard(species: Species, coat: Coat): readonly Face[] {
     return {
       at: [
         Math.sin(along * 2.4) * 0.05,
-        0.035 * (1 - along) + 0.005,
+        0.045 * (1 - along) + 0.006,
         -0.1 - along * 0.38,
       ] as Vec,
-      high: index === 4 ? 0 : 0.045 * (1 - along * 0.8),
+      high: index === 4 ? 0 : 0.04 * (1 - along * 0.8),
       wide: index === 4 ? 0 : 0.05 * (1 - along * 0.8),
     };
   });
