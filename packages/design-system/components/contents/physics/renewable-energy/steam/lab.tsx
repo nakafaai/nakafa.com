@@ -108,10 +108,10 @@ export function SteamPlantCycleLab({
         <ScienceStage floor={0} frameloop="always" reach={12} setting="field">
           <Suspense fallback={null}>
             <CameraControls
-              cameraPosition={[6, 9, 20]}
-              cameraTarget={[1, 2.4, 0]}
+              cameraPosition={[6, 12, 30]}
+              cameraTarget={[0.5, 3, 0]}
               fov={38}
-              maxDistance={44}
+              maxDistance={50}
               minDistance={8}
             />
             <SteamScene colors={FLOW_COLORS} fuel={fuel} />

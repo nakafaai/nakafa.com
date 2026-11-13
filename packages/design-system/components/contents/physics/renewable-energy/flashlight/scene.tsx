@@ -30,7 +30,7 @@ const BULB_GLOW = {
 } as const satisfies Record<Bulb, string>;
 
 /** How far the wall stands from the lens, in metres. */
-const THROW = 0.9;
+const THROW = 0.6;
 
 /**
  * A flashlight on a board, its body cut away to show its two cells draining
@@ -73,8 +73,8 @@ export function FlashlightScene({
 
   return (
     <group>
-      <mesh position={[0.3, -0.01, 0]} receiveShadow>
-        <boxGeometry args={[1.6, 0.02, 0.5]} />
+      <mesh position={[0.2, -0.01, 0]} receiveShadow>
+        <boxGeometry args={[1.1, 0.02, 0.45]} />
         <meshStandardMaterial color={MATERIAL.crateWood} roughness={0.7} />
       </mesh>
       <group position={[-0.1, 0.03, 0]} rotation={[0, 0, -Math.PI / 2]}>

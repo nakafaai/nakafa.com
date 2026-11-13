@@ -25,8 +25,8 @@ function useHillside(head: number) {
   return useMemo(() => {
     const drop = head * SCALE;
     const profile = new Shape();
-    profile.moveTo(-RUN - 4, 0);
-    profile.lineTo(-RUN - 4, drop + 0.6);
+    profile.moveTo(-RUN - 1.5, 0);
+    profile.lineTo(-RUN - 1.5, drop + 0.6);
     profile.lineTo(-RUN, drop + 0.6);
     profile.lineTo(0.5, 0);
     profile.closePath();
@@ -63,10 +63,10 @@ export function MicrohydroScene({
         <meshStandardMaterial color={MATERIAL.foliageDark} roughness={1} />
       </mesh>
       <mesh
-        position={[-RUN - 2, drop + 0.62, 0]}
+        position={[-RUN - 0.75, drop + 0.62, 0]}
         rotation={[-Math.PI / 2, 0, 0]}
       >
-        <planeGeometry args={[4, 2.4]} />
+        <planeGeometry args={[1.5, 2.4]} />
         <meshPhysicalMaterial
           clearcoat={1}
           color={MATERIAL.water}
@@ -89,11 +89,11 @@ export function MicrohydroScene({
         <meshStandardMaterial color={MATERIAL.concrete} roughness={0.8} />
       </mesh>
       {Arr.map(Arr.range(0, HOMES - 1), (home) => {
-        const row = home < HOMES / 2 ? 0 : 1;
-        const column = home % (HOMES / 2);
+        const row = Math.floor(home / 4);
+        const column = home % 4;
         return (
           <House
-            at={[4 + column * 1.6, 0, -0.5 + row * 2.4]}
+            at={[3.6 + column * 1.5, 0, 2.4 - row * 1.6]}
             key={home}
             lit={home < lit}
             size={1.1}
