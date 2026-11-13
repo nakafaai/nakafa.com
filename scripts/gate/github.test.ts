@@ -130,7 +130,7 @@ describe("gate", () => {
         expect(
           Arr.filter(calls, (call) => call.startsWith("gh workflow"))
         ).toEqual([
-          `gh workflow run gate.yml --repo nakafaai/nakafa.com --ref main -f sha=${SHA}`,
+          `gh workflow run proof.yml --repo nakafaai/nakafa.com --ref main -f sha=${SHA} -f proof=false`,
         ]);
         expect(calls[0]).toContain(
           `-f owner=nakafaai -f name=nakafa.com -f oid=${SHA}`
@@ -181,9 +181,9 @@ describe("gate", () => {
       expect(
         yield* failure([response(commit([]))], [SHA], {
           code: 1,
-          stderr: "workflow gate.yml not found",
+          stderr: "workflow proof.yml not found",
         })
-      ).toBe("gh workflow run failed: workflow gate.yml not found");
+      ).toBe("gh workflow run failed: workflow proof.yml not found");
       expect(
         yield* failure([response(commit([status("gate", "PENDING")]))])
       ).toBe(

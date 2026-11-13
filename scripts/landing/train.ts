@@ -68,8 +68,6 @@ export class Repository extends Context.Service<
     readonly ready: (
       numbers: readonly number[]
     ) => Effect.Effect<readonly Candidate[], TrainError>;
-    /** Gates one exact head on the free runners and answers whether every part passed. */
-    readonly gate: (sha: string) => Effect.Effect<boolean, TrainError>;
     /** The exact head of main now. */
     readonly main: Effect.Effect<string, TrainError>;
     /** Merges the heads onto the base in order, by SHA, and publishes the result for a proof. */
@@ -166,19 +164,16 @@ export const runTrain = Effect.fn("landing.runTrain")(function* (
       if (riding.length === 0) {
         return;
       }
-      // One gate and one proof of the combination, side by side: it holds every
-      // head merged with main, which is what lands.
-      const [proof, gated] = yield* Effect.all(
-        [
-          prover.prove(
-            combination.sha,
-            proofSpecs(specs, [...before, ...riding])
-          ),
-          repository.gate(combination.sha),
-        ],
-        { concurrency: 2 }
+      // One job gates and proves the combination: it holds every head merged
+      // with main, which is what lands.
+      const { result, gated } = yield* prover.verify(
+        combination.sha,
+        proofSpecs(specs, [...before, ...riding])
       );
-      const failures = [...failuresOf(proof), ...(gated ? [] : [GATE_FAILURE])];
+      const failures = [
+        ...failuresOf(result),
+        ...(gated ? [] : [GATE_FAILURE]),
+      ];
       const known = HashSet.fromIterable(yield* baseline.shared(failures));
       const caused = Arr.filter(
         failures,
