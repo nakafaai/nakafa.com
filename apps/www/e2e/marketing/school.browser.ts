@@ -14,7 +14,7 @@ const TWELVE_MONTHS = /^12 bulan/u;
 /** The structured data nodes and the Indonesian alternate that a School page's head carries. */
 const BREADCRUMB_NODE = /"@type":\s*"BreadcrumbList"/u;
 const FAQ_NODE = /"@type":\s*"FAQPage"/u;
-const PRODUCT_NODE = /"@type":\s*"Product"/u;
+const PLAN_NODE = /"@type":\s*"Service"/u;
 const INDONESIAN_ALTERNATE = /hreflang="id"/iu;
 
 /** A rupiah price as the page writes it, with the no-break space after the symbol. */
@@ -173,6 +173,6 @@ test("the School pages stand in the first HTML with their structured data", asyn
 
   expect(landing).toMatch(BREADCRUMB_NODE);
   expect(landing).toMatch(FAQ_NODE);
-  expect(pricing).toMatch(PRODUCT_NODE);
+  expect(pricing).toMatch(PLAN_NODE);
   expect(pricing).toMatch(INDONESIAN_ALTERNATE);
 });

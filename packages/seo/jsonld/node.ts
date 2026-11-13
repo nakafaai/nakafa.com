@@ -80,16 +80,16 @@ const ContributorsInput = Schema.Struct({
 });
 
 /** One monthly price of a plan, in a currency's major units, before tax. */
-const ProductOffer = Schema.Struct({
+const PlanOffer = Schema.Struct({
   amount: Schema.Finite,
   currency: Schema.String,
 });
 
-const ProductInput = Schema.Struct({
+const PlanInput = Schema.Struct({
   description: Schema.String,
   image: Schema.String,
   name: Schema.String,
-  offers: Schema.Array(ProductOffer),
+  offers: Schema.Array(PlanOffer),
   url: Schema.String,
 });
 
@@ -143,20 +143,23 @@ export function makeFaqPageNode(input: typeof FaqPageInput.Type) {
 }
 
 /**
- * One paid plan as a product with its monthly price in each currency, so an answer
- * service can quote what it costs. Every price excludes tax.
+ * One paid plan as a service that the organization provides, with its monthly
+ * price in each currency, so an answer service can quote what it costs. Every price
+ * excludes tax. A plan is a subscription, not merchant goods: as a Product, Google
+ * asked it for ratings, shipping and a return policy that a plan does not have.
  *
- * @see https://developers.google.com/search/docs/appearance/structured-data/product-snippet
+ * @see https://schema.org/Service
  */
-export function makeProductNode(input: typeof ProductInput.Type) {
+export function makePlanNode(input: typeof PlanInput.Type) {
   return {
     "@context": "https://schema.org",
-    "@type": "Product",
+    "@type": "Service",
     name: input.name,
     description: input.description,
     image: input.image,
     url: input.url,
     brand: { "@type": "Brand", name: COMPANY_IDENTITY.brandName },
+    provider: ORGANIZATION_REFERENCE,
     offers: Arr.map(input.offers, ({ amount, currency }) => ({
       "@type": "Offer",
       availability: "https://schema.org/InStock",

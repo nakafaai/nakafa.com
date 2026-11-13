@@ -7,7 +7,7 @@ import {
   makeContributorsNode,
   makeEducationalOrganizationNode,
   makeFaqPageNode,
-  makeProductNode,
+  makePlanNode,
   makeSurahNode,
   makeWebsiteNode,
 } from "@repo/seo/jsonld/node";
@@ -164,9 +164,9 @@ describe("makeContributorsNode", () => {
   });
 });
 
-describe("makeProductNode", () => {
-  it("offers the plan in each currency, by the month and before tax", () => {
-    const node = makeProductNode({
+describe("makePlanNode", () => {
+  it("offers the plan as the organization's service in each currency, by the month and before tax", () => {
+    const node = makePlanNode({
       description: "Compare the plans.",
       image: "https://nakafa.com/og.png",
       name: "Nakafa Pro",
@@ -178,9 +178,10 @@ describe("makeProductNode", () => {
     });
 
     expect(node).toMatchObject({
-      "@type": "Product",
+      "@type": "Service",
       brand: { name: "Nakafa" },
       name: "Nakafa Pro",
+      provider: { "@id": "https://nakafa.com/#organization" },
     });
     expect(node.offers).toHaveLength(2);
     expect(node.offers[0]).toMatchObject({
