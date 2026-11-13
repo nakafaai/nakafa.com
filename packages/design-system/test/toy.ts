@@ -109,8 +109,13 @@ export function click(target: EventTarget) {
   return event;
 }
 
+/**
+ * The pose a toy was drawn with, read back from its style as a browser serializes it: jsdom 31,
+ * like a browser, writes `translate3d(100px, -10px, 0px) rotate(0deg)` for the
+ * `translate3d(100.0px,-10.0px,0) rotate(0.0deg)` the toy sets.
+ */
 const POSE =
-  /translate3d\((?<x>-?[0-9.]+)px,(?<y>-?[0-9.]+)px,0\) rotate\((?<angle>-?[0-9.]+)deg\)/u;
+  /translate3d\((?<x>-?[0-9.]+)px,\s*(?<y>-?[0-9.]+)px,\s*0(?:px)?\)\s*rotate\((?<angle>-?[0-9.]+)deg\)/u;
 
 /** Where the toy is, as the browser was told to draw it: its offset from the place it lies at. */
 export function offsetOf(toy: HTMLElement) {
