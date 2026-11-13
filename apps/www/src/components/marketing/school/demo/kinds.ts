@@ -45,7 +45,7 @@ const PaperQuestion = Schema.Struct({
 
 /** A key that marks `correct` among the options of the choice `interaction`. */
 const chosen = (
-  correct: readonly string[],
+  correct: Arr.NonEmptyReadonlyArray<string>,
   interaction = "choice"
 ): InteractionKey => ({ correct, interaction, kind: "choice" });
 

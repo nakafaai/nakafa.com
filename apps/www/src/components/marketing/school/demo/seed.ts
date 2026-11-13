@@ -1,3 +1,4 @@
+import { ContentDocumentSchema } from "@nakafa/aksara-contracts/assessment/document";
 import {
   Array as Arr,
   Option,
@@ -60,13 +61,16 @@ const paragraphOf = (content: readonly unknown[]) => ({
   type: "doc",
 });
 
+/** Reads a document the demo wrote as the contract's content, which an option's label must be. */
+const asContent = Schema.decodeUnknownSync(ContentDocumentSchema);
+
 /** A document holding one LaTeX formula alone, as an option whose label is all math is written. */
 export const latexLabel = (latex: string) =>
-  paragraphOf([{ attrs: { latex }, type: "mathInline" }]);
+  asContent(paragraphOf([{ attrs: { latex }, type: "mathInline" }]));
 
 /** A document of one sentence, as an option's label is written: its words, and its formulas as math. */
 export const sentenceLabel = (sentence: string) =>
-  paragraphOf(inline(sentence));
+  asContent(paragraphOf(inline(sentence)));
 
 /** A document holding one of the demo's formulas alone, by its name. */
 export const formulaLabel = (name: string) =>
