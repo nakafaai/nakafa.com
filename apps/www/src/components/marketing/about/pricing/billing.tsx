@@ -14,7 +14,7 @@ import { ProOfferDialog } from "@/components/billing/offers";
 import {
   usePricingButtonVariant,
   usePricingPress,
-} from "@/components/marketing/about/pricing/button";
+} from "@/components/marketing/about/pricing/action";
 import { reportClientException } from "@/lib/analytics/client";
 import {
   getPostAuthOnboardingHref,

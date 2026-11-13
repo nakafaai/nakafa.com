@@ -75,7 +75,7 @@ jobs:
         if: matrix.part == 'static'
         uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
         with:
-          version: "0.13.6"
+          version: "0.13.8"
           # The default glob walks every folder, node_modules included, for 3.5 minutes.
           cache-dependency-glob: apps/cas/uv.lock
 
