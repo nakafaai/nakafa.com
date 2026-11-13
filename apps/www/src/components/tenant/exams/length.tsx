@@ -1,4 +1,3 @@
-import { Clock01Icon } from "@hugeicons/core-free-icons";
 import { Field, FieldLabel } from "@repo/design-system/components/ui/field";
 import {
   Select,
@@ -54,7 +53,7 @@ export function RoomLengthField({
         </SelectTrigger>
         <SelectContent label={common("menu-length")}>
           {Arr.map(items, (item) => (
-            <SelectItem icon={Clock01Icon} key={item.value} value={item.value}>
+            <SelectItem key={item.value} plain value={item.value}>
               {item.label}
             </SelectItem>
           ))}

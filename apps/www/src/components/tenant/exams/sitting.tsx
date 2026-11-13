@@ -1,9 +1,5 @@
 import { QueryResult, useMutation, useQuery } from "@confect/react";
-import {
-  Building03Icon,
-  SchoolIcon,
-  UserMultiple02Icon,
-} from "@hugeicons/core-free-icons";
+import { Building03Icon, UserMultiple02Icon } from "@hugeicons/core-free-icons";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import {
   questionGap,
@@ -289,11 +285,7 @@ export function ScheduleSitting({
             </SelectTrigger>
             <SelectContent label={common("menu-unit")}>
               {Arr.map(unitItems, (item) => (
-                <SelectItem
-                  icon={SchoolIcon}
-                  key={item.value}
-                  value={item.value}
-                >
+                <SelectItem key={item.value} plain value={item.value}>
                   {item.label}
                 </SelectItem>
               ))}

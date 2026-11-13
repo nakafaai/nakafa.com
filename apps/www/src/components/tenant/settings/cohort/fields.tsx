@@ -1,4 +1,3 @@
-import { Mortarboard01Icon } from "@hugeicons/core-free-icons";
 import { Field, FieldLabel } from "@repo/design-system/components/ui/field";
 import { Input } from "@repo/design-system/components/ui/input";
 import {
@@ -69,11 +68,7 @@ export function CohortGradeField({
         </SelectTrigger>
         <SelectContent label={common("menu-grade")}>
           {Arr.map(gradeItems, (item) => (
-            <SelectItem
-              icon={Mortarboard01Icon}
-              key={item.value}
-              value={item.value}
-            >
+            <SelectItem key={item.value} plain value={item.value}>
               {item.label}
             </SelectItem>
           ))}

@@ -1,5 +1,4 @@
 import { useMutation } from "@confect/react";
-import { BookOpen01Icon } from "@hugeicons/core-free-icons";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import type { ReadingSource } from "@repo/backend/confect/exams/question";
 import {
@@ -104,11 +103,7 @@ export function ReadingField({
         </SelectTrigger>
         <SelectContent label={common("menu-passage")}>
           {Arr.map(items, (item) => (
-            <SelectItem
-              icon={BookOpen01Icon}
-              key={item.value}
-              value={item.value}
-            >
+            <SelectItem key={item.value} plain value={item.value}>
               {item.label}
             </SelectItem>
           ))}

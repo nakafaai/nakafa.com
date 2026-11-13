@@ -1,5 +1,4 @@
 import { useMutation } from "@confect/react";
-import { CheckmarkCircle02Icon } from "@hugeicons/core-free-icons";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import { ScoringKind } from "@repo/backend/confect/exams/scoring";
 import {
@@ -91,7 +90,7 @@ export function ScoringField({
         </SelectTrigger>
         <SelectContent label={common("menu-scoring")}>
           {Arr.map(ScoringKind.literals, (value) => (
-            <SelectItem icon={CheckmarkCircle02Icon} key={value} value={value}>
+            <SelectItem key={value} plain value={value}>
               {t(SCORING_NAME[value])}
             </SelectItem>
           ))}
