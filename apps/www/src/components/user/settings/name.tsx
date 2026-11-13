@@ -36,7 +36,7 @@ export function UserSettingsName({ user }: { user: CurrentUser }) {
   const latestSave = useRef(0);
   const form = useForm({
     defaultValues: {
-      name: user.authUser.name,
+      name: user.appUser.name,
     },
     validators: {
       onChange: formSchema,

@@ -1,9 +1,10 @@
+import { Ref } from "@confect/core";
+import { ConvexConfigProvider } from "@confect/server";
 import { setupGoogle } from "@convex-dev/auth/methods/google/server";
 import { setupUsernamePassword } from "@convex-dev/auth/methods/username-password/server";
 import { setupConvexAuth } from "@convex-dev/auth/server";
 import { components } from "@repo/backend/confect/_generated/components";
-import { internal } from "@repo/backend/convex/_generated/api";
-import { ConvexConfigProvider } from "@confect/server";
+import authInternal from "@repo/backend/confect/_generated/refs/auth.server";
 import { Array as Arr, Config, Duration, Effect } from "effect";
 
 /**
@@ -43,9 +44,7 @@ const redirectOrigins = Effect.runSync(
     Config.option(Config.URL("SITE_URL")),
     Config.option(Config.URL("STAGING_SITE_URL")),
   ]).pipe(
-    Effect.map((sites) =>
-      Arr.map(Arr.getSomes(sites), (site) => site.origin)
-    ),
+    Effect.map((sites) => Arr.map(Arr.getSomes(sites), (site) => site.origin)),
     Effect.provide(ConvexConfigProvider.layer),
     Effect.orDie
   )
@@ -53,13 +52,17 @@ const redirectOrigins = Effect.runSync(
 
 export const { signOut, refreshSession, isAuthenticated } = core;
 
-/** Google sign-in, which links the account of the address Google verified (ADR 0009). */
+/**
+ * Google sign-in, which links the account of the address Google verified
+ * (ADR 0009). The callbacks are Confect functions whose specs own their
+ * arguments (`auth/methods`), handed to Convex Auth as plain references.
+ */
 export const { startSignInWithGoogle, completeSignInWithGoogle } = setupGoogle(
   core,
   { component: components.authGoogle, allowedRedirectOrigins: redirectOrigins }
 ).attachUserCallbacks({
-  createUser: internal.auth.account.createGoogle,
-  onSignIn: internal.auth.account.signInGoogle,
+  createUser: Ref.getFunctionReference(authInternal.account.createGoogle),
+  onSignIn: Ref.getFunctionReference(authInternal.account.signInGoogle),
 });
 
 /**
@@ -71,5 +74,5 @@ export const { signInWithUsernamePassword } = setupUsernamePassword(core, {
   component: components.authPassword,
   usernameComponent: components.authUsername,
 }).attachUserCallbacks({
-  createUser: internal.auth.account.createSchool,
+  createUser: Ref.getFunctionReference(authInternal.account.createSchool),
 });

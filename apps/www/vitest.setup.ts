@@ -3,6 +3,8 @@ process.env.VITE_SITE_URL ??= "https://nakafa.com";
 process.env.VITE_CONVEX_URL ??= "https://example.convex.cloud";
 process.env.VITE_CONVEX_SITE_URL ??= "https://example.convex.site";
 process.env.VITE_POSTHOG_PROXY_HOST ??= "https://t.nakafa.com";
+/** The deployment's own address, the issuer Convex Auth checks in the backend's test functions. */
+process.env.CONVEX_CLOUD_URL ??= "https://example.convex.cloud";
 /** The server's own site, whose host names the session cookie's prefix. */
 process.env.SITE_URL ??= "https://nakafa.com";
 

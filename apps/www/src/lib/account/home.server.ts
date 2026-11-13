@@ -74,10 +74,7 @@ export const homeScreenHandler = accountHandler(
       const recentLooks = getMaterialLooks(recentRows ?? []);
       return {
         name: Option.getOrUndefined(
-          Option.map(
-            Option.fromNullishOr(account),
-            (user) => user.authUser.name
-          )
+          Option.map(Option.fromNullishOr(account), (user) => user.appUser.name)
         ),
         recentLooks,
         recentRows: recentRows ?? [],
@@ -161,7 +158,7 @@ export const searchScreenHandler = accountHandler(
       };
       return {
         name: Option.getOrUndefined(
-          Option.map(account, (user) => user.authUser.name)
+          Option.map(account, (user) => user.appUser.name)
         ),
         seo,
       };
