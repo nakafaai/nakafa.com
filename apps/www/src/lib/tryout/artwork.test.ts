@@ -11,11 +11,15 @@ import {
 
 describe("try-out artwork", () => {
   it.effect.each(["en", "id", "de"] as const)(
-    "draws each exam card with that exam's own design, and the Aufnahmeprüfung with none yet, in %s",
+    "draws each exam card with that exam's own design, the Aufnahmeprüfung with TU Darmstadt's Studienkolleg's mark, in %s",
     (appLocale) =>
       Effect.gen(function* () {
         for (const [countryKey, examKey, artwork] of [
-          ["germany", "entrance-examination", undefined],
+          [
+            "germany",
+            "entrance-examination",
+            "/open-graph/tryout/germany/en-entrance-examination.png",
+          ],
           ["indonesia", "snbt", "/open-graph/tryout/indonesia/en-snbt.png"],
           ["indonesia", "tka", "/open-graph/tryout/indonesia/en-tka.png"],
         ] as const) {
@@ -196,7 +200,7 @@ describe("try-out artwork", () => {
   );
 
   it.each(["en", "id", "de"] as const)(
-    "never lends another entity's art to Germany's Darmstadt Mathematics in %s",
+    "draws Germany's Darmstadt Mathematics with its own design, one file for every locale, in %s",
     (locale) => {
       expect(
         getTryoutTrackCatalogArtwork(locale, {
@@ -204,7 +208,9 @@ describe("try-out artwork", () => {
           examKey: "entrance-examination",
           trackKey: "tu-darmstadt-mathematics",
         })
-      ).toBeUndefined();
+      ).toBe(
+        "/open-graph/tryout/germany/entrance-examination/en-tu-darmstadt-mathematics.png"
+      );
     }
   );
 

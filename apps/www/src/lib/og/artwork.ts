@@ -37,6 +37,9 @@ const artworkSources = {
   "subject/mathematics": ALL_ARTWORK_LOCALES,
   "subject/physics": ALL_ARTWORK_LOCALES,
   "subject/science": ALL_ARTWORK_LOCALES,
+  "tryout/germany/entrance-examination": ENGLISH_ARTWORK,
+  "tryout/germany/entrance-examination/tu-darmstadt-mathematics":
+    ENGLISH_ARTWORK,
   "tryout/germany/index": ENGLISH_ARTWORK,
   "tryout/indonesia/2027": ENGLISH_ARTWORK,
   "tryout/indonesia/index": ENGLISH_ARTWORK,
