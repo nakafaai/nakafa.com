@@ -85,11 +85,7 @@ export function tripState(trip: Trip, time: number) {
 /** How long a trip lasts, in seconds. */
 export function tripDuration(trip: Trip) {
   const stretches: readonly Stretch[] = TRIPS[trip].stretches;
-  return Arr.reduce(
-    stretches,
-    0,
-    (sum, stretch) => sum + stretch.duration
-  );
+  return Arr.reduce(stretches, 0, (sum, stretch) => sum + stretch.duration);
 }
 
 /** The intervals a learner can choose, as start and end times in seconds. */
