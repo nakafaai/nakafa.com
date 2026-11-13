@@ -34,6 +34,12 @@ env:
   VITE_CONVEX_SITE_URL: http://127.0.0.1:3211
   VITE_CONVEX_URL: http://127.0.0.1:3210
   VITE_SITE_URL: http://localhost:3000
+  # The landing train's tests write commits, as the train does on the Mac, so the
+  # runner names an author the way the Mac's Git configuration does.
+  GIT_AUTHOR_EMAIL: 41898282+github-actions[bot]@users.noreply.github.com
+  GIT_AUTHOR_NAME: github-actions[bot]
+  GIT_COMMITTER_EMAIL: 41898282+github-actions[bot]@users.noreply.github.com
+  GIT_COMMITTER_NAME: github-actions[bot]
 
 jobs:
   check:
@@ -79,7 +85,7 @@ jobs:
           # The default glob walks every folder, node_modules included, for 3.5 minutes.
           cache-dependency-glob: apps/cas/uv.lock
 
-      # The policy part runs all three of its commands, so one failure never hides another.
+      # The workspaces and policy parts run every command, so one failure never hides another.
       - name: Run ${{ matrix.part }}
         id: part
         env:
@@ -97,8 +103,10 @@ jobs:
             backend) bun run turbo run test --filter=@repo/backend ;;
             www) bun run turbo run test --filter=www ;;
             workspaces)
-              bun run test:scripts
-              bun run turbo run test --filter='!@repo/backend' --filter='!www'
+              failed=0
+              bun run test:scripts || failed=1
+              bun run turbo run test --filter='!@repo/backend' --filter='!www' || failed=1
+              exit "$failed"
               ;;
             policy)
               failed=0

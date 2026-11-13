@@ -117,7 +117,7 @@ export function waitAfter(
  * the next look, and the statuses, or none when the answer could not be read.
  * A head GitHub does not know has no commit.
  */
-export const lookAt = Effect.fn("gate.lookAt")(function* (sha: string) {
+const lookAt = Effect.fn("gate.lookAt")(function* (sha: string) {
   const output = yield* runText("gh", [
     "api",
     "graphql",
