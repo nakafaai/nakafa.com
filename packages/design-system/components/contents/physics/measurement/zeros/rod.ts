@@ -26,7 +26,7 @@ export const ROD_TOOLS = {
 
 /** The units a reading is written in, each as the power of ten one centimetre is in it. */
 export const RodUnitSchema = Schema.Literals(["mm", "cm", "m"]);
-export const ROD_UNITS = { cm: 0, m: -2, mm: 1 } as const satisfies Record<
+const ROD_UNITS = { cm: 0, m: -2, mm: 1 } as const satisfies Record<
   typeof RodUnitSchema.Type,
   number
 >;

@@ -13,7 +13,7 @@ export const TROLLEY_SPEED = 0.48;
 export const GATE_RANGE = { max: 1.2, min: 0.2 } as const;
 
 /** The timer's resolution, in seconds. */
-export const TIMER_STEP = 0.001;
+const TIMER_STEP = 0.001;
 
 /**
  * The timer's reading for gates `distance` metres apart, to the

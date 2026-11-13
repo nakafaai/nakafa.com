@@ -10,13 +10,13 @@ import { Array as Arr } from "effect";
  */
 
 /** The pendulum's length, in metres. */
-export const PENDULUM_LENGTH = 0.8;
+const PENDULUM_LENGTH = 0.8;
 
 /** Gravitational acceleration at the bench, in metres per second squared. */
-export const GRAVITY = 9.81;
+const GRAVITY = 9.81;
 
 /** How many swings each trial times. */
-export const SWINGS = 10;
+const SWINGS = 10;
 
 /** The pendulum's true period, in seconds. */
 export const PERIOD = 2 * Math.PI * Math.sqrt(PENDULUM_LENGTH / GRAVITY);
@@ -28,7 +28,7 @@ export const TRUE_TIME = SWINGS * PERIOD;
 export const PRESS_SPREAD = 0.08;
 
 /** The stopwatch's resolution, in seconds. */
-export const STOPWATCH_STEP = 0.01;
+const STOPWATCH_STEP = 0.01;
 
 /** The most trials the lab records. */
 export const MAX_TRIALS = 20;

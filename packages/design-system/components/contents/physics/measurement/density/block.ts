@@ -12,7 +12,7 @@ export const BLOCK_SIDES = { height: 2.5, length: 5, width: 4 } as const;
 
 /** The materials, by their density in grams per cubic centimetre. */
 export const MaterialSchema = Schema.Literals(["pine", "aluminium", "brass"]);
-export const DENSITIES = {
+const DENSITIES = {
   aluminium: 2.7,
   brass: 8.5,
   pine: 0.5,

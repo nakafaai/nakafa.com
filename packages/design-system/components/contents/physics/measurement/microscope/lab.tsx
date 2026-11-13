@@ -111,7 +111,7 @@ function paintHair(sketch: p5, x: number, width: number, field: number) {
  * which stays sharp and the same size whatever the objective.
  */
 function fieldProgram(sketch: p5, read: () => typeof FieldFrame.Type) {
-  let division = OBJECTIVES[read().objective].division;
+  let division: number = OBJECTIVES[read().objective].division;
   sketch.setup = () => {
     sketch.createCanvas(1, 1);
     sketch.noStroke();

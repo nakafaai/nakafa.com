@@ -16,11 +16,11 @@ export const IRON_LENGTH = 8.2352;
 export const COPPER_LENGTH = 4.4984;
 
 /** The caliper's resolution, in centimetres. */
-export const CALIPER_STEP = 0.005;
+const CALIPER_STEP = 0.005;
 
 /** The instruments the copper rod can be read with, by the step each resolves, in centimetres. */
 export const CopperToolSchema = Schema.Literals(["ruler", "caliper"]);
-export const COPPER_TOOLS = {
+const COPPER_TOOLS = {
   caliper: CALIPER_STEP,
   ruler: 0.1,
 } as const satisfies Record<typeof CopperToolSchema.Type, number>;

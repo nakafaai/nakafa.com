@@ -15,7 +15,7 @@ export const SHANK_LENGTH = 50;
 export const SHANK_DIAMETER = 10;
 
 /** The density of steel, in kilograms per cubic metre. */
-export const STEEL_DENSITY = 7850;
+const STEEL_DENSITY = 7850;
 
 /** The quantities the lab shows. */
 export const BoltQuantitySchema = Schema.Literals([
