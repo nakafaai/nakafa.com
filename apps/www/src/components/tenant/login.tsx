@@ -12,6 +12,7 @@ import {
 import { Input } from "@repo/design-system/components/ui/input";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { getRouteApi } from "@tanstack/react-router";
+import { useConvex } from "convex/react";
 import { Effect } from "effect";
 import { type FormEvent, useId, useState, useTransition } from "react";
 import { useTranslations } from "use-intl";
@@ -21,11 +22,10 @@ import {
   pageDeviceIdOf,
   RedeemUnanswered,
   SignInUnanswered,
-  signInAnswerOf,
   submitLogin,
 } from "@/components/tenant/signin";
 import { clientEnv } from "@/env.public";
-import { readAuthClient } from "@/lib/auth/client";
+import { signInSchoolLogin } from "@/lib/auth/client";
 
 /** The school layout's route, which holds the profile of the school the student signs in to. */
 const schoolRoute = getRouteApi("/school/$slug");
@@ -53,6 +53,7 @@ function TenantLoginForm() {
   const t = useTranslations("SchoolEntry");
   const { slug } = schoolRoute.useRouteContext().school.profile;
   const id = useId();
+  const convex = useConvex();
   const redeem = useMutation(identity.cards.redeem);
   const [isPending, startTransition] = useTransition();
   const [loginName, setLoginName] = useState("");
@@ -76,11 +77,8 @@ function TenantLoginForm() {
                 catch: () => new RedeemUnanswered(),
               }),
             signIn: (credentials) =>
-              Effect.tryPromise({
-                try: () => readAuthClient().signIn.username(credentials),
-                catch: () => new SignInUnanswered(),
-              }).pipe(
-                Effect.flatMap((answer) => signInAnswerOf(answer.error?.status))
+              signInSchoolLogin(convex, { ...credentials, slug }).pipe(
+                Effect.catchDefect(() => Effect.fail(new SignInUnanswered()))
               ),
           }
         )

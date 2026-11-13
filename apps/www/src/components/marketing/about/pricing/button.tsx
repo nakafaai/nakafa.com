@@ -15,14 +15,11 @@ import {
   useState,
   useTransition,
 } from "react";
-import { useLocale, useTranslations } from "use-intl";
+import { type Locale, useLocale, useTranslations } from "use-intl";
 import { createStore, type StoreApi, useStore } from "zustand";
 import { useLiveSession } from "@/components/providers/live";
 import { reportClientException } from "@/lib/analytics/client";
-import {
-  getPostAuthOnboardingHref,
-  getPostAuthProviderErrorHref,
-} from "@/lib/auth/admission";
+import { googleReturnAddress } from "@/lib/auth/return";
 import { isActiveLocale } from "@/lib/i18n/active";
 
 /** The emphasis of the Pro action: the page's one primary on the pricing page, secondary elsewhere. */
@@ -92,22 +89,27 @@ const BillingButton = lazy(() =>
 );
 
 /**
- * Starts Google sign-in for a visitor. The sign-in modules load here, on the click,
- * and the result says whether the provider began the sign-in.
+ * Starts Google sign-in for a visitor, which returns to the sign-in page and
+ * resumes on pricing. The Convex and sign-in modules load here, on the click,
+ * and the result says whether the sign-in left for Google.
  */
-async function startVisitorSignIn(
-  callbackURL: string,
-  errorCallbackURL: string
-) {
-  const [social, socialClient] = await Promise.all([
-    import("@/lib/auth/social"),
-    import("@/lib/auth/google"),
+async function startVisitorSignIn(locale: Locale) {
+  const [convex, auth, env] = await Promise.all([
+    import("@/lib/convex/client"),
+    import("@/lib/auth/client"),
+    import("@/env.public"),
   ]);
+  const redirectTo = googleReturnAddress({
+    intent: "/pricing",
+    locale,
+    origin: window.location.origin,
+    school: Option.none(),
+  });
   return Effect.runPromise(
-    social
+    auth
       .startGoogleSignIn(
-        { callbackURL, errorCallbackURL },
-        socialClient.requestGoogleSignIn
+        convex.readConvexClient(env.clientEnv.VITE_CONVEX_URL),
+        redirectTo
       )
       .pipe(
         Effect.tapError((error) =>
@@ -120,7 +122,7 @@ async function startVisitorSignIn(
 
 /**
  * A visitor's Pro action starts Google sign-in. The sign-in code loads on the
- * click, so the page itself carries no Better Auth client.
+ * click, so the page itself carries no Convex or sign-in client.
  */
 function VisitorButton() {
   const variant = usePricingButtonVariant();
@@ -134,10 +136,7 @@ function VisitorButton() {
       return;
     }
     startTransition(async () => {
-      const started = await startVisitorSignIn(
-        getPostAuthOnboardingHref("/pricing", locale),
-        getPostAuthProviderErrorHref("/pricing", locale)
-      );
+      const started = await startVisitorSignIn(locale);
       if (!started) {
         toast.error({
           description: "provider-error.description",

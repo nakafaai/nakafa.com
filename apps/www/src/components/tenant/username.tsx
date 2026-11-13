@@ -2,24 +2,19 @@ import { ArrowLeft01Icon } from "@hugeicons/core-free-icons";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { buttonVariants } from "@repo/design-system/lib/button";
-import {
-  getRouteApi,
-  useLocation,
-  useMatchRoute,
-} from "@tanstack/react-router";
+import { getRouteApi, useMatchRoute } from "@tanstack/react-router";
 import { Effect } from "effect";
 import { useEffect } from "react";
 import { useTranslations } from "use-intl";
-import { AuthGoogle } from "@/components/auth/google";
+import { SchoolGoogle } from "@/components/auth/google";
 import { keepRoomCode } from "@/components/exams/sitting/scan";
-import { TenantGuardianSignIn, TenantLogin } from "@/components/tenant/forms";
-import { signInReturn } from "@/components/tenant/resume";
+import { TenantLogin } from "@/components/tenant/forms";
 import { Link } from "@/lib/routing/link";
 
 /** The school layout's route, whose validated search holds the `sign-in` address. */
 const schoolRoute = getRouteApi("/school/$slug");
 
-/** Whether the visitor is on the parent address, `/parents`, whose sign-in is the email code. */
+/** Whether the visitor is on the parent address, `/parents`, whose sign-in is Google alone. */
 function useGuardianAddress() {
   const matchRoute = useMatchRoute();
   return matchRoute({ to: "/school/$slug/parents" }) !== false;
@@ -27,11 +22,12 @@ function useGuardianAddress() {
 
 /**
  * The sign-in of a school host, one way at a time: Google with the links to the school username
- * form and to a parent's email code, the username form alone at the address `?sign-in=username`,
- * or the code form alone at the parent address `/parents`. Each address opens with its form in
- * place, so a visitor who signs out to sign in with a card lands on it. Google and the username form open
- * over the page the visitor is on and return to it, and the code of an exam room that a
- * student scanned waits in the tab while they sign in, so they land in the room.
+ * form and to the parent address, the username form alone at the address `?sign-in=username`, or
+ * Google alone at the parent address `/parents`, where a parent signs in with the address the school
+ * registered and the sign-in claims the children that address names. Each address opens with its
+ * way in place, so a visitor who signs out to sign in with a card lands on it. Google and the
+ * username form return to the page the visitor is on, and the code of an exam room that a student
+ * scanned waits in the tab while they sign in, so they land in the room.
  */
 export function TenantEntryActions({ slug }: { slug: TenantSlug }) {
   const t = useTranslations("SchoolEntry");
@@ -40,9 +36,6 @@ export function TenantEntryActions({ slug }: { slug: TenantSlug }) {
     select: (search) => search["sign-in"],
   });
   const guardian = useGuardianAddress();
-  const returnPath = useLocation({
-    select: (location) => signInReturn(location.publicHref),
-  });
 
   useEffect(() => {
     // A browser that keeps no session storage drops the code, and the student types the token.
@@ -54,7 +47,7 @@ export function TenantEntryActions({ slug }: { slug: TenantSlug }) {
   }, []);
 
   if (guardian) {
-    return <TenantGuardianSignIn />;
+    return <SchoolGoogle />;
   }
 
   if (signIn === "username") {
@@ -63,7 +56,7 @@ export function TenantEntryActions({ slug }: { slug: TenantSlug }) {
 
   return (
     <div className="flex w-full flex-col items-center gap-3">
-      <AuthGoogle returnPath={returnPath} />
+      <SchoolGoogle />
       <Link
         className={buttonVariants({ variant: "outline" })}
         search={(previous) => ({ ...previous, "sign-in": "username" })}

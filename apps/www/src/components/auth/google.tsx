@@ -3,68 +3,53 @@ import { Button } from "@repo/design-system/components/ui/button";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { useEarlyPress } from "@repo/design-system/hooks/press";
 import { ClientOnly, useLocation } from "@tanstack/react-router";
-import { Effect } from "effect";
-import { type ComponentProps, useState, useTransition } from "react";
+import { useConvex } from "convex/react";
+import { Effect, Option } from "effect";
+import { useState, useTransition } from "react";
 import { useLocale, useTranslations } from "use-intl";
+import { useStore } from "zustand";
+import { signInReturn } from "@/components/tenant/resume";
 import { reportClientException } from "@/lib/analytics/client";
-import {
-  getPostAuthOnboardingHref,
-  getPostAuthProviderErrorHref,
-  isPostAuthProviderError,
-} from "@/lib/auth/admission";
-import { requestGoogleSignIn } from "@/lib/auth/google";
+import { oauthFailure, startGoogleSignIn } from "@/lib/auth/client";
 import { useCurrentAuthNavigation } from "@/lib/auth/location";
-import { readAuthReturnQuery } from "@/lib/auth/return";
-import { startGoogleSignIn } from "@/lib/auth/social";
-
-interface Props {
-  /**
-   * A path on the host the visitor signs in from, such as the root of a school.
-   * Google returns the visitor to that host, in place of a Nakafa destination.
-   */
-  returnPath?: string | undefined;
-  /** The button's look. A page that shows another primary action beside it asks for `outline`. */
-  variant?: ComponentProps<typeof Button>["variant"];
-}
+import {
+  googleReturnAddress,
+  mainSignInAddress,
+  readAuthReturnQuery,
+  readSchoolReturn,
+} from "@/lib/auth/return";
 
 /**
- * Renders the Google sign-in button, which returns the visitor to one sanitized
- * internal destination, or to `returnPath` on the host the button is on. The
- * button renders under several routes, so it reads the sign-in query of the
- * address itself.
+ * Renders the Google sign-in button of the main site. Google returns to the
+ * sign-in page on this origin, where the page's client completes the sign-in,
+ * and that page sends the visitor on: to the intent through the first run, or
+ * back to the school host the visitor came from. The button renders under
+ * several routes, so it reads the sign-in query of the address itself.
  */
-export function AuthGoogle({ returnPath, variant }: Props) {
+export function AuthGoogle() {
   const locale = useLocale();
   const t = useTranslations("Auth");
-  const tToast = useTranslations("Toast");
+  const convex = useConvex();
   const search = useLocation({ select: (location) => location.search });
-  const { error: errorQuery, redirect: redirectQuery } =
-    readAuthReturnQuery(search);
+  const { redirect, school } = readAuthReturnQuery(search);
+  const providerFailed = useStore(oauthFailure, (state) => state.failed);
   const [hasClientError, setHasClientError] = useState(false);
   const [isPending, startTransition] = useTransition();
   const authNavigation = useCurrentAuthNavigation();
   const press = useEarlyPress<HTMLButtonElement>(handleGoogleSignIn);
-  const hasProviderError =
-    hasClientError || isPostAuthProviderError(errorQuery);
 
-  /** Starts the Better Auth Google flow with one safe callback destination. */
+  /** Starts Convex Auth's Google flow with one safe return address. */
   function handleGoogleSignIn() {
     setHasClientError(false);
     startTransition(async () => {
-      const intentSource = redirectQuery ?? authNavigation.readIntentSource();
-      const callbackURL =
-        returnPath === undefined
-          ? getPostAuthOnboardingHref(intentSource, locale)
-          : new URL(returnPath, window.location.href).href;
-      const errorCallbackURL = getPostAuthProviderErrorHref(
-        intentSource,
-        locale
-      );
+      const redirectTo = googleReturnAddress({
+        intent: redirect ?? authNavigation.readIntentSource(),
+        locale,
+        origin: window.location.origin,
+        school: readSchoolReturn(school, window.location),
+      });
       const started = await Effect.runPromise(
-        startGoogleSignIn(
-          { callbackURL, errorCallbackURL },
-          requestGoogleSignIn
-        ).pipe(
+        startGoogleSignIn(convex, redirectTo).pipe(
           Effect.tapError((error) =>
             reportClientException(error, { source: "google-sign-in" })
           ),
@@ -81,29 +66,54 @@ export function AuthGoogle({ returnPath, variant }: Props) {
     <div className="flex flex-col items-center gap-2">
       {/* The label stays one width while Google opens, and the button says it is
           busy: a spinner takes the logo's place. A failure shows below it. */}
-      <Button
-        aria-busy={isPending || undefined}
-        disabled={isPending}
-        variant={variant}
-        {...press}
-      >
+      <Button aria-busy={isPending || undefined} disabled={isPending} {...press}>
         {isPending ? <Spinner /> : <BrandLogo name="google" />}
         {t("continue-with-google")}
       </Button>
-      {/* The sign-in page is static and prerendered without a query, so the
-          provider's failure, which the query carries, shows once the page has
-          hydrated, under the button. */}
+      {/* The sign-in page is static and prerendered, so a failure that Google's
+          return reports shows once the page has hydrated, under the button. */}
       <ClientOnly fallback={null}>
-        {hasProviderError ? (
-          <div
-            className="text-destructive max-w-sm text-center text-sm"
-            role="alert"
-          >
-            <p className="font-medium">{tToast("provider-error.title")}</p>
-            <p>{tToast("provider-error.description")}</p>
-          </div>
-        ) : null}
+        {hasClientError || providerFailed ? <GoogleFailure /> : null}
       </ClientOnly>
     </div>
+  );
+}
+
+/** Says that Google's sign-in did not finish, under the button that retries it. */
+function GoogleFailure() {
+  const t = useTranslations("Toast");
+  return (
+    <div className="text-destructive max-w-sm text-center text-sm" role="alert">
+      <p className="font-medium">{t("provider-error.title")}</p>
+      <p>{t("provider-error.description")}</p>
+    </div>
+  );
+}
+
+/**
+ * The Google button of a school host. Google's flow completes on the origin
+ * that starts it, so a school host sends the visitor to the main site's
+ * sign-in page, which returns them here, to the page they are on, once signed
+ * in; the session cookie reaches every school host (ADR 0026).
+ */
+export function SchoolGoogle() {
+  const locale = useLocale();
+  const t = useTranslations("Auth");
+  const press = useEarlyPress<HTMLButtonElement>(() => {
+    const school = new URL(
+      signInReturn(window.location.href),
+      window.location.href
+    );
+    const address = mainSignInAddress(school, locale);
+    if (Option.isSome(address)) {
+      window.location.assign(address.value);
+    }
+  });
+
+  return (
+    <Button {...press}>
+      <BrandLogo name="google" />
+      {t("continue-with-google")}
+    </Button>
   );
 }

@@ -12,13 +12,10 @@ const URL_PARSE_BASE = "https://internal.invalid";
 const CONTROL_CHARACTER_PATTERN = /\p{Cc}/u;
 const MAX_INTENT_LENGTH = 4096;
 const AUTH_PATH = "/auth";
-const PROVIDER_ERROR_PATH = "/auth/error";
 const HOME_PATH = "/home";
 const INTENT_PARAM = "intent";
 const ONBOARDING_PATH = "/onboarding";
 const REDIRECT_PARAM = "redirect";
-const PROVIDER_ERROR_PARAM = "error";
-const PROVIDER_ERROR_VALUE = "oauth";
 
 /** Returns whether untrusted text has the shape of one internal href. */
 function hasSafeInternalShape(source: string) {
@@ -279,46 +276,6 @@ export function getPostAuthSignInHref(resolution: PostAuthIntentResolution) {
   return `${AUTH_PATH}?${new URLSearchParams({
     [REDIRECT_PARAM]: resolution.intent,
   })}`;
-}
-
-/** Builds the same-origin landing that contains a provider's raw failure. */
-export function getPostAuthProviderErrorHref(
-  rawIntent: unknown,
-  rawLocale: string
-) {
-  const locale = Option.getOrElse(
-    decodeLocale(rawLocale),
-    () => DEFAULT_LOCALE
-  );
-  const landing = withIntent(
-    PROVIDER_ERROR_PATH,
-    resolvePostAuthIntent(rawIntent, locale)
-  );
-  return `/${locale}${landing}`;
-}
-
-/**
- * The typed search of the generic retry on the sign-in page, after provider
- * diagnostics are discarded. The route hands it to its typed redirect, so the
- * search keys stay the sign-in route's own schema. The router writes the keys in
- * this order, so the retry's address starts with the redirect, as every other
- * sign-in address does.
- */
-export function getPostAuthProviderRetrySearch(
-  resolution: PostAuthIntentResolution
-) {
-  if (resolution.kind === "none") {
-    return { [PROVIDER_ERROR_PARAM]: PROVIDER_ERROR_VALUE };
-  }
-  return {
-    [REDIRECT_PARAM]: resolution.intent,
-    [PROVIDER_ERROR_PARAM]: PROVIDER_ERROR_VALUE,
-  };
-}
-
-/** Returns whether a sanitized retry represents a social-provider failure. */
-export function isPostAuthProviderError(rawError: unknown) {
-  return rawError === PROVIDER_ERROR_VALUE;
 }
 
 /** The page where an account opens its own school, without its locale. */
