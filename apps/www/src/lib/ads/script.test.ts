@@ -1,6 +1,11 @@
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import { Effect, Exit, Fiber } from "effect";
-import { AD_SCRIPT_SOURCE, loadAdScript, requestAd } from "@/lib/ads/script";
+import {
+  AD_SCRIPT_SOURCE,
+  loadAdScript,
+  requestAd,
+  untilFilled,
+} from "@/lib/ads/script";
 
 /** The one ad script the document holds. */
 function adScript() {
@@ -126,4 +131,40 @@ describe("asking for a unit's ad", () => {
       expect(queue).toHaveLength(2);
     })
   );
+});
+
+describe("waiting for AdSense to fill a unit", () => {
+  it.effect("completes once the unit is marked filled, not unfilled", () =>
+    Effect.gen(function* () {
+      const unit = document.createElement("ins");
+      const waiting = yield* Effect.forkChild(untilFilled(unit));
+
+      unit.setAttribute("data-ad-status", "unfilled");
+      yield* Effect.promise(() => Promise.resolve());
+      expect(waiting.pollUnsafe()).toBeUndefined();
+
+      unit.setAttribute("data-ad-status", "filled");
+      yield* Fiber.join(waiting);
+    })
+  );
+
+  it.effect("stops watching the unit when its frame leaves first", () =>
+    Effect.gen(function* () {
+      const unit = document.createElement("ins");
+      const waiting = yield* Effect.forkChild(untilFilled(unit));
+      yield* Effect.yieldNow;
+
+      yield* Fiber.interrupt(waiting);
+      unit.setAttribute("data-ad-status", "filled");
+      yield* Effect.promise(() => Promise.resolve());
+
+      expect(Exit.hasInterrupts(yield* Fiber.await(waiting))).toBe(true);
+    })
+  );
+
+  it.effect("completes at once for a unit already marked filled", () => {
+    const unit = document.createElement("ins");
+    unit.setAttribute("data-ad-status", "filled");
+    return untilFilled(unit);
+  });
 });
