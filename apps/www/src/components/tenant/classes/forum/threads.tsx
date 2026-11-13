@@ -39,7 +39,9 @@ import { reloadPage } from "@/components/shared/reload";
 import { matchesSearch } from "@/components/shared/table/search";
 import { useTableFilters } from "@/components/shared/table/toolbar";
 import { TableViews } from "@/components/shared/table/views";
+import { EmptyState } from "@/components/state/empty";
 import { LoadFailure } from "@/components/state/failure";
+import { EmptyNina } from "@/components/state/nina";
 import { ChannelUnread } from "@/components/tenant/classes/channels";
 import {
   archiveThreadUpdate,
@@ -132,9 +134,11 @@ function ThreadList({
   const table = useTranslations("DataTable");
 
   return Arr.isReadonlyArrayEmpty(rows) ? (
-    <p className="text-muted-foreground p-4 text-center text-sm">
-      {table("no-results")}
-    </p>
+    <EmptyState
+      frame="table"
+      scene={<EmptyNina act="thinking" />}
+      title={table("no-results")}
+    />
   ) : (
     <ItemGroup
       aria-label={t("chat-filter-threads")}

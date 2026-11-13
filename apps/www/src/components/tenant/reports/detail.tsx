@@ -35,6 +35,8 @@ import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { RowCopy } from "@/components/shared/table/menu";
 import { TableFiltersProvider } from "@/components/shared/table/toolbar";
+import { EmptyState } from "@/components/state/empty";
+import { EmptyNina } from "@/components/state/nina";
 import { useTenant } from "@/components/tenant/context";
 import { menuOf } from "@/components/tenant/reports/access";
 import { useReportActions } from "@/components/tenant/reports/actions";
@@ -73,9 +75,10 @@ export function ReportLineDetail({ lines }: { lines: readonly ReportLine[] }) {
       />
       {found.report === null ? (
         <PaneBody>
-          <p className="text-muted-foreground text-center text-sm">
-            {t("report-empty")}
-          </p>
+          <EmptyState
+            scene={<EmptyNina act="stamping" />}
+            title={t("report-empty")}
+          />
         </PaneBody>
       ) : (
         <ReportDetailBody reportId={found.report.id} />
@@ -109,7 +112,10 @@ function ReportDetailBody({ reportId }: { reportId: Id<"reportCards"> }) {
       <PaneBody>
         <div className="flex flex-col gap-6">
           <ReportFacts report={report} />
-          <p className="text-muted-foreground text-sm">{t("subjects-empty")}</p>
+          <EmptyState
+            scene={<EmptyNina act="counting" />}
+            title={t("subjects-empty")}
+          />
         </div>
       </PaneBody>
     );
