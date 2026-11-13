@@ -41,7 +41,7 @@ export const agentGrantValidator = Schema.Struct({
  * The OAuth error codes that the agent endpoints answer (RFC 6749 section 5.2,
  * RFC 7591 section 3.2.2). `slow_down` is a registration over the limit.
  */
-export const AgentRefusalCode = Schema.Literals([
+const AgentRefusalCode = Schema.Literals([
   "invalid_client",
   "invalid_client_metadata",
   "invalid_grant",
@@ -60,7 +60,7 @@ export class AgentRefused extends Schema.TaggedError<
 }) {}
 
 /** The token answer of RFC 6749 section 5.1. */
-export const AgentTokens = Schema.Struct({
+const AgentTokens = Schema.Struct({
   access_token: Schema.String,
   expires_in: Schema.Finite,
   refresh_token: Schema.String,

@@ -8,10 +8,6 @@ import { Duration, Schema } from "effect";
 
 /** How long a link waits for its check: the term of an invite (ADR 0034, GLOSSARY Invite). */
 export const LINK_TERM = Duration.days(14);
-/** How long one email code lives (ADR 0009). */
-export const CODE_TERM = Duration.minutes(5);
-/** Wrong tries that void one code (ADR 0009). */
-export const CODE_TRIES = 3;
 
 /**
  * The version of the consent rule a consent row was given under. The signed
