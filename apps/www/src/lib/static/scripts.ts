@@ -45,6 +45,24 @@ class StaticScriptsUnreadable extends Schema.TaggedError<
 >()("StaticScriptsUnreadable", { reason: Schema.String }) {}
 
 /**
+ * The most scripts a static page may boot. Google renders a page in a browser
+ * that loads about 250 of its resources and fails every later one, and a module
+ * graph that misses one module never runs. The Search Console live test, the Rich
+ * Results Test and AdSense's site review render this way, so a page over that
+ * count never starts for Google, and AdSense reads the site as down (13 November
+ * 2026: 249 of 300 independent modules loaded, and every page booted 246 to 399).
+ * The limit leaves the rest of that count to the page's stylesheets, fonts,
+ * images, later sections and ads.
+ */
+export const BOOT_SCRIPT_LIMIT = 100;
+
+/** A prerendered page that boots more scripts than Google's renderer can load beside the rest of the page. */
+class StaticScriptsOverLimit extends Schema.TaggedError<
+  StaticScriptsOverLimit,
+  { readonly brand: unique symbol }
+>()("StaticScriptsOverLimit", { reason: Schema.String }) {}
+
+/**
  * Starts a static page's scripts once the browser has parsed and painted the page,
  * with the attributes the page gave them, in the page's order. A hidden page paints
  * nothing, so it starts after parsing alone, and a browser that never reports the
@@ -118,11 +136,12 @@ const STATIC_SCRIPTS_LOADER = `(function (scripts) {
  * after the first paint. A module that the page preloads twice keeps the attributes
  * of its first link, as the browser does. The router's dehydrated manifest stops
  * naming the preloads, so the head that React hydrates adds no second link for a
- * module that the loader has already started.
+ * module that the loader has already started. A page that boots more scripts than
+ * `BOOT_SCRIPT_LIMIT`, its entry included, fails the build.
  */
 export function deferStaticScripts(
   html: string
-): Result.Result<string, StaticScriptsUnreadable> {
+): Result.Result<string, StaticScriptsUnreadable | StaticScriptsOverLimit> {
   const entries = Arr.fromIterable(html.matchAll(ENTRY_SCRIPT));
   const [entry] = entries;
   if (entry === undefined || entries.length > 1) {
@@ -152,9 +171,10 @@ export function deferStaticScripts(
     preloads,
   }).pipe(
     Result.mapError(
-      (error) => new StaticScriptsUnreadable({ reason: error.message })
+      (error): StaticScriptsUnreadable | StaticScriptsOverLimit =>
+        new StaticScriptsUnreadable({ reason: error.message })
     ),
-    Result.map((scripts) => {
+    Result.flatMap((scripts) => {
       const unique = {
         entry: scripts.entry,
         preloads: Arr.dedupeWith(
@@ -162,12 +182,25 @@ export function deferStaticScripts(
           (first, second) => first.href === second.href
         ),
       };
+      const booted = Arr.dedupe([
+        unique.entry,
+        ...Arr.map(unique.preloads, ({ href }) => href),
+      ]).length;
+      if (booted > BOOT_SCRIPT_LIMIT) {
+        return Result.fail(
+          new StaticScriptsOverLimit({
+            reason: `The page boots ${booted} scripts, over the limit of ${BOOT_SCRIPT_LIMIT} that Google's renderer leaves room for.`,
+          })
+        );
+      }
       const loader = `<script>${STATIC_SCRIPTS_LOADER}(${Schema.encodeSync(StaticScriptsJson)(unique)});</script>`;
-      return html
-        .replace(MODULE_PRELOAD, "")
-        .replace(MANIFEST_PRELOADS, "preloads:$<slot>=[]")
-        .replace(entry[0], "")
-        .replace(BODY_END, () => `${loader}${BODY_END}`);
+      return Result.succeed(
+        html
+          .replace(MODULE_PRELOAD, "")
+          .replace(MANIFEST_PRELOADS, "preloads:$<slot>=[]")
+          .replace(entry[0], "")
+          .replace(BODY_END, () => `${loader}${BODY_END}`)
+      );
     })
   );
 }
