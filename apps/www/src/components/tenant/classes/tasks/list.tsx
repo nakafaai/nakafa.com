@@ -311,13 +311,13 @@ function TaskEmpty({ archived }: { archived: boolean }) {
   return archived ? (
     <EmptyState
       description={t("tasks-archived-empty-description")}
-      scene={<EmptyNina act="reading" />}
+      scene={<EmptyNina act="unboxing" />}
       title={t("tasks-archived-empty")}
     />
   ) : (
     <EmptyState
       description={t("tasks-empty-description")}
-      scene={<EmptyNina act="writing" />}
+      scene={<EmptyNina act="checking" />}
       title={t("tasks-empty")}
     />
   );

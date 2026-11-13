@@ -71,7 +71,7 @@ function FamilyList() {
     return (
       <EmptyState
         description={t("family-empty-description")}
-        scene={<EmptyNina act="typing" />}
+        scene={<EmptyNina act="photographing" />}
         title={t("links-empty")}
       />
     );

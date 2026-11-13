@@ -226,7 +226,7 @@ function NoClass() {
         ) : undefined
       }
       description={leads ? t("no-class-description") : t("no-class-member")}
-      scene={<EmptyNina act="pointing" />}
+      scene={<EmptyNina act="charting" />}
       title={t("no-class")}
     />
   );
