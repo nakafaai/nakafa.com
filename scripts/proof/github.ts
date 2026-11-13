@@ -1,6 +1,5 @@
 import {
   combineShards,
-  HeadSha,
   type ProofResult,
   ShardResultJson,
 } from "@repo/backend/scripts/content/acceptance/result";
@@ -12,30 +11,17 @@ import {
   Duration,
   Effect,
   FileSystem,
-  HashSet,
   Layer,
   Option,
   Order,
   Ref,
   Schedule,
   Schema,
-  String as Str,
 } from "effect";
 import { ChildProcessSpawner } from "effect/process";
 import { runText } from "#scripts/process";
-
-/** The repository whose proof workflow proves every head. */
-export const REPOSITORY = "nakafaai/nakafa.com";
-
-/** A proof that could not run, or whose run could not be read. */
-export class ProofError extends Schema.TaggedError<
-  ProofError,
-  { readonly brand: unique symbol }
->()("ProofError", {
-  message: Schema.String,
-  /** Whether GitHub refused the call for the account's rate limit, which passes. */
-  limited: Schema.optionalKey(Schema.Boolean),
-}) {}
+import { gh, ProofError, REPOSITORY, RunListJson } from "#scripts/proof/client";
+import { sweepSuperseded } from "#scripts/proof/sweep";
 
 /** How many machines prove each engine, unless the caller names another count. */
 export const DEFAULT_SHARDS = 3;
@@ -45,41 +31,6 @@ const NARROW_SHARDS = 1;
 
 /** The commit status that says whether a head fails anything main does not. */
 export const VERDICT_CONTEXT = "proof/new";
-
-/**
- * Whether GitHub refused a call for the account's API rate limit, which every
- * session on this account shares: 5,000 requests an hour.
- */
-const RATE_LIMITED = /rate limit/iu;
-
-/** One attempt of a GitHub CLI call: what it printed, or what it said. */
-const ghOnce = Effect.fn("proof.ghOnce")(function* (args: readonly string[]) {
-  const output = yield* runText("gh", args).pipe(
-    Effect.mapError(
-      () => new ProofError({ message: "The GitHub CLI could not start." })
-    )
-  );
-  if (output.code !== 0) {
-    return yield* new ProofError({
-      message: `gh ${Arr.join(Arr.take(args, 2), " ")} failed: ${output.stderr.trim()}`,
-      limited: RATE_LIMITED.test(output.stderr),
-    });
-  }
-  return output.stdout;
-});
-
-/**
- * Runs the GitHub CLI and returns what it printed, or fails with what it said.
- * A call refused for the rate limit waits a minute and tries again, for as long
- * as the limit stays spent, so a proof waits out any number of busy hours.
- */
-export const gh = (args: readonly string[]) =>
-  ghOnce(args).pipe(
-    Effect.retry({
-      while: (error) => error.limited === true,
-      schedule: Schedule.spaced("1 minute"),
-    })
-  );
 
 const Step = Schema.Struct({
   name: Schema.String,
@@ -108,12 +59,6 @@ const RunViewJson = Schema.fromJsonString(RunView);
 const RUN_FIELDS = "status,conclusion,url,createdAt,updatedAt,jobs";
 const RunStatusJson = Schema.fromJsonString(
   Schema.Struct({ status: Schema.String })
-);
-
-const RunListJson = Schema.fromJsonString(
-  Schema.Array(
-    Schema.Struct({ databaseId: Schema.Int, displayTitle: Schema.String })
-  )
 );
 
 /** Seconds between two moments that GitHub reports, or none when one is missing. */
@@ -320,106 +265,6 @@ const readShards = Effect.fn("proof.readShards")(function* (id: number) {
   );
 }, Effect.scoped);
 
-/** The head that a proof run's name carries: `Proof <sha> <nonce>`. */
-const PROOF_TITLE = /^Proof (?<sha>[0-9a-f]{40}) /u;
-
-/**
- * Runs Git in this checkout and returns its exit code. A question Git answers by
- * its exit code, such as whether one commit is an ancestor of another, says so;
- * any other command that fails fails the proof.
- */
-const runGit = Effect.fn("proof.runGit")(function* (
-  args: readonly string[],
-  answersByCode: boolean
-) {
-  const output = yield* runText("git", args).pipe(
-    Effect.mapError(() => new ProofError({ message: "Git could not start." }))
-  );
-  if (output.code !== 0 && !answersByCode) {
-    return yield* new ProofError({
-      message: `git ${Arr.join(Arr.take(args, 1), " ")} failed: ${output.stderr.trim()}`,
-    });
-  }
-  return output.code;
-});
-
-/**
- * Cancels every queued proof run whose head is no longer worth proving: not the
- * head of an open pull request, not main's head, and not the tip of a train
- * branch. A head that a newer push replaced, or that merged, would otherwise
- * hold one of the 20 jobs that every proof and gate of the account shares.
- * Runs that already started keep going. Returns how many it cancelled.
- */
-export const sweepSuperseded = Effect.fn("proof.sweepSuperseded")(function* () {
-  const lines = (text: string) =>
-    Arr.filter(Str.split(text, "\n"), (line) => line !== "");
-  const heads = yield* gh([
-    "pr",
-    "list",
-    "--repo",
-    REPOSITORY,
-    "--state",
-    "open",
-    "--limit",
-    "300",
-    "--json",
-    "headRefOid",
-    "--jq",
-    ".[].headRefOid",
-  ]);
-  const trains = yield* gh([
-    "api",
-    `repos/${REPOSITORY}/git/matching-refs/heads/nabil/train-`,
-    "--jq",
-    ".[].object.sha",
-  ]);
-  const keep = HashSet.fromIterable([
-    ...lines(heads),
-    ...lines(trains),
-    yield* mainHead,
-  ]);
-  const queued = yield* gh([
-    "run",
-    "list",
-    "--repo",
-    REPOSITORY,
-    "--workflow",
-    "proof.yml",
-    "--status",
-    "queued",
-    "--limit",
-    "200",
-    "--json",
-    "databaseId,displayTitle",
-  ]).pipe(Effect.flatMap(Schema.decodeEffect(RunListJson)));
-  // A proof of a commit on main, such as a baseline a verdict compares with, is
-  // never superseded, whatever main's head is now.
-  yield* runGit(["fetch", "--quiet", "origin", "main"], false);
-  const stale = yield* Effect.filter(queued, (run) =>
-    Option.match(
-      Option.fromNullishOr(PROOF_TITLE.exec(run.displayTitle)?.groups?.sha),
-      {
-        onNone: () => Effect.succeed(false),
-        onSome: (sha) =>
-          HashSet.has(keep, sha)
-            ? Effect.succeed(false)
-            : runGit(
-                ["merge-base", "--is-ancestor", sha, "origin/main"],
-                true
-              ).pipe(Effect.map((code) => code !== 0)),
-      }
-    )
-  );
-  yield* Effect.forEach(stale, (run) =>
-    gh(["run", "cancel", String(run.databaseId), "--repo", REPOSITORY]).pipe(
-      Effect.catchTag("ProofError", (error) =>
-        Effect.logWarning(`Run ${run.databaseId} stays: ${error.message}`)
-      )
-    )
-  );
-  return stale.length;
-});
-
 /**
  * Proves one head on GitHub's runners: dispatches the proof workflow, waits for
  * its run and combines what each machine reported. The verdict is the same one
@@ -508,20 +353,6 @@ export const githubProver = Layer.effect(
         ),
     };
   })
-);
-
-/** The exact head of main now. */
-export const mainHead = gh([
-  "api",
-  `repos/${REPOSITORY}/commits/main`,
-  "--jq",
-  ".sha",
-]).pipe(
-  Effect.map((text) => text.trim()),
-  Effect.flatMap(Schema.decodeEffect(HeadSha)),
-  Effect.catchTag("SchemaError", () =>
-    Effect.fail(new ProofError({ message: "GitHub named no main head." }))
-  )
 );
 
 /**

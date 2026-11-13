@@ -31,7 +31,8 @@ import {
   Repository,
   TrainError,
 } from "#scripts/landing/train";
-import { REPOSITORY, VERDICT_CONTEXT } from "#scripts/proof/github";
+import { REPOSITORY } from "#scripts/proof/client";
+import { VERDICT_CONTEXT } from "#scripts/proof/github";
 
 /** A spec file of the browser suites, as a path in the repository; its group is the path under `apps/www`. */
 const SPEC_FILE = /^apps\/www\/(?<spec>e2e\/.+\.browser\.ts)$/u;

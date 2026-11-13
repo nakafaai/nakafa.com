@@ -85,11 +85,15 @@ const download = (
         ),
       };
 
+/** One `proof` status on a head, as the waiter reads it. */
+const ProofStatus = Schema.Struct({
+  state: Schema.String,
+  targetUrl: Schema.String,
+});
+
 /** A GraphQL answer with these `proof` statuses on the head, or with no status at all. */
 export const statusAnswer = (
-  proofs:
-    | readonly { readonly state: string; readonly targetUrl: string }[]
-    | null
+  proofs: readonly (typeof ProofStatus.Type)[] | null
 ) =>
   toJson({
     data: {

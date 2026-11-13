@@ -9,7 +9,8 @@ import {
   Schema,
 } from "effect";
 import { failuresOf, makeBaseline } from "#scripts/proof/baseline";
-import { type ProofError, Prover } from "#scripts/proof/github";
+import type { ProofError } from "#scripts/proof/client";
+import { Prover } from "#scripts/proof/github";
 
 /** A pull request that may ride the train: its number, the exact head its own proof passed, and its title. */
 export const Candidate = Schema.Struct({

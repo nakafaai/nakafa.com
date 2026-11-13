@@ -8,7 +8,7 @@ import {
 } from "effect";
 import { attempt, decoded, gh, run } from "#scripts/landing/command";
 import type { Candidate, Landing } from "#scripts/landing/train";
-import { REPOSITORY } from "#scripts/proof/github";
+import { REPOSITORY } from "#scripts/proof/client";
 
 const PullViewJson = Schema.fromJsonString(
   Schema.Struct({
