@@ -1,3 +1,4 @@
+import { contentOutline } from "@repo/contents/toc";
 import "@tanstack/react-start/server-only";
 
 import { Effect, Option } from "effect";
@@ -54,6 +55,7 @@ export const renderArticleArtifact = Effect.fn(
     body,
     categoryTitle: data.projection.categoryTitle,
     contentId: data.projection.graph.assetId,
+    headings: contentOutline(data.artifact.payload.contentTree),
     metadata: data.projection.metadata,
     official: data.projection.official,
     projection: data.projection,

@@ -44,6 +44,19 @@ const makeFound = Effect.fn("test.www.publishedMaterial.found")(function* () {
     activeReleaseId: release.manifest.releaseId,
     artifact: yield* testSignedArtifact("mathematics", {
       contentKey: projection.contentKey,
+      contentTree: {
+        $node: "element",
+        children: [
+          {
+            $node: "element",
+            children: ["Material delivery evidence"],
+            name: "h2",
+            props: {},
+          },
+        ],
+        name: "fragment",
+        props: {},
+      },
       rawMdx: "## Material delivery evidence\n\nThe signed material source.",
     }),
     delivery: "public",
@@ -108,6 +121,13 @@ describe("published material delivery", () => {
         activeReleaseId: found.activeReleaseId,
         artifactHash: found.artifact.artifactHash,
         body: "cached-material-body",
+        headings: [
+          {
+            children: [],
+            href: "#material-delivery-evidence",
+            label: "Material delivery evidence",
+          },
+        ],
         metadata: projection.metadata,
         projection,
         rawMdx: found.artifact.payload.rawMdx,
