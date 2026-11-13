@@ -6,6 +6,7 @@ import {
   Array as Arr,
   Effect,
   MutableList,
+  MutableRef,
   Number as Num,
   Schema,
 } from "effect";
@@ -80,6 +81,15 @@ const SHIFT_TOLERANCE_MILLISECONDS = 50;
  * its dots with it. The field loads while the hero hydrates.
  */
 const PARTICLES_MARKER = "oklch(0.985 0 0)";
+
+/**
+ * How long the particle check waits for the field to ask for its code: the field waits for the page to settle and
+ * for a gesture, or ten seconds without one, so this covers the slowest of them.
+ */
+const PARTICLE_WAIT_MILLISECONDS = 20_000;
+
+/** The letter a choice's name starts with, as a screen reader hears "A" before the choice's words. */
+const OPTION_LETTER = /^[A-Z]$/u;
 
 /** Collects the console errors and warnings a page writes, hydration warnings included. */
 function observeConsole(page: Page) {
@@ -212,13 +222,26 @@ test("home page keeps the hero when the particle field fails to load", async ({
                 PARTICLES_MARKER
               );
               yield* openRoute(page, "/en", "denied");
-              // The field is decoration, which waits for the reader's first gesture.
-              yield* Effect.promise(() => page.mouse.move(10, 10));
+              // The field is decoration: it waits for the page to settle, then for the reader's first gesture, so
+              // the pointer moves as a reader's does until the field asks for its code.
+              const step = MutableRef.make(0);
+              yield* Effect.promise(() =>
+                expect
+                  .poll(
+                    async () => {
+                      MutableRef.increment(step);
+                      await page.mouse.move(
+                        10 + (MutableRef.get(step) % 2) * 40,
+                        10
+                      );
+                      return MutableList.toArray(abortedParticles).length;
+                    },
+                    { timeout: PARTICLE_WAIT_MILLISECONDS }
+                  )
+                  .toBeGreaterThan(0)
+              );
               // Waits for the page's requests to settle, so the aborted chunk has failed before the hero is checked.
               yield* Effect.promise(() => page.waitForLoadState("networkidle"));
-              yield* Effect.sync(() =>
-                expect(MutableList.toArray(abortedParticles)).not.toEqual([])
-              );
               yield* Effect.promise(() =>
                 expect(
                   page.getByRole("heading", { level: 1, name: en.Error.title })
@@ -362,8 +385,12 @@ test("every choice of the home's practice question is named once, by its own wor
     expect(name).not.toBe("");
     // The drawing, its MathML copy included, is hidden, so its words are read once.
     expect(await choice.evaluate(reachableDrawings)).toBe(0);
-    // A plain number is named with exactly the text its MathML holds.
+    // A choice is named by its letter, then its words: a plain number with exactly the text its MathML holds.
     const number = await choice.evaluate(plainNumberText);
-    expect(name).toBe(number === "" ? name : number);
+    const [letter, ...words] = name.split(" ");
+    expect(letter).toMatch(OPTION_LETTER);
+    expect(Arr.join(words, " ")).toBe(
+      number === "" ? Arr.join(words, " ") : number
+    );
   }
 });

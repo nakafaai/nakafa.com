@@ -1,6 +1,7 @@
 import { expect, type Page, test } from "@playwright/test";
 import { Array as Arr, Effect } from "effect";
 import { withBrowserContext } from "@/e2e/support/context";
+import { movePointerTo } from "@/e2e/support/input";
 import { loadMarketingPage } from "@/e2e/support/marketing";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { waitForScrollRest } from "@/e2e/support/quiet";
@@ -152,8 +153,11 @@ test.describe("the header's sections at desktop", () => {
           yield* Effect.promise(() =>
             expect(popup.getByRole("link", { name: "Forum" })).toBeVisible()
           );
-          yield* Effect.promise(() =>
-            header.getByRole("button", { name: "Learn" }).hover()
+          // A reader's pointer travels to the next trigger: the open section holds the other triggers still while
+          // the pointer may be on its way into the popup, and lets them go once the pointer heads elsewhere.
+          yield* movePointerTo(
+            page,
+            header.getByRole("button", { name: "Learn" })
           );
           yield* Effect.promise(() =>
             expect(popup.getByRole("link", { name: "Subjects" })).toBeVisible()

@@ -6,7 +6,7 @@ import { VISUAL_CARD } from "@/e2e/support/selector";
  * Records, from the first script on, the start time, value and input of every
  * layout shift the browser reports, in the page global `key`, with one line per
  * element that moved: what it is, where it was, and where it went. A shift is
- * left out when everything that moved sits inside a fixed element that matches
+ * left out when everything that moved sits inside a floating element that matches
  * `overlay`, such as the list that holds the toasts: a toast stacks over the
  * page and animates its own height, which is not the page moving. An element
  * that stays in the flow of the page is the page, so its shifts count.
@@ -42,14 +42,15 @@ export function recordLayoutShifts({
     const classes = owner.getAttribute("class") ?? "";
     return `${owner.tagName.toLowerCase()}${slot ? `[data-slot=${slot}]` : ""} class="${classes.slice(0, 80)}"${element ? "" : " (text)"}`;
   };
-  // Whether the node sits inside a fixed element that matches `overlay`.
+  // Whether the node sits inside a floating element that matches `overlay`: one out of the page's flow, fixed to
+  // the screen or placed absolutely over the page, as Base UI places a popup, so its own motion moves no content.
   const insideOverlay = (node: unknown) => {
     const owner = node instanceof Node ? node : null;
     const element = owner instanceof Element ? owner : owner?.parentElement;
     const container = element?.closest(overlay);
     return (
       container instanceof Element &&
-      getComputedStyle(container).position === "fixed"
+      ["absolute", "fixed"].includes(getComputedStyle(container).position)
     );
   };
   new PerformanceObserver((list) => {
