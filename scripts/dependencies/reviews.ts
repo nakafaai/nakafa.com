@@ -48,8 +48,8 @@ export const REGISTRY_REVIEWS = [
   ],
   [
     "@confect/core@latest",
-    "10.5.0",
-    "Confect moves with the Effect cohort (CONFECT_COHORT_VERSION). 10.5.0 is the latest release and the adopted one: its core, server, client, CLI and test packages admit effect ~4.1.0, which holds 4.1.2.",
+    "10.6.0",
+    "Confect moves with the Effect cohort (CONFECT_COHORT_VERSION). 10.6.0 is the latest release and the adopted one: its core, server, client, CLI and test packages admit effect ~4.1.0, which holds 4.1.2, and its server requires convex 1.48.0 or later and convex-test 0.0.67 or later. It backs first() and take(n) with Convex's native take() and refuses a count that is not a non-negative integer. Checked 13 November 2026.",
   ],
   [
     "@effect/tsgo@latest",
