@@ -378,6 +378,29 @@ and model reads, which open each row for its owner. It does not judge a command
 string, such as the `messages:listMessagesByThreadId` that the CLI gate sends to
 `convex run`: that gate reads only plain fields, which ADR 0024 records.
 
+### Overlays scroll downwards only
+
+The owner's rule of 13 November 2026: a dialog, a sheet or a drawer never scrolls
+sideways. A phone shows an overlay at the screen's width, and a poll sheet that
+scrolled sideways shifted every field and clipped its label. The cause was the
+design system's own bodies: `SheetPanel`, `DialogPanel` and `DrawerPanel` wrap
+what they hold in a `ScrollArea`, whose `axis` is `"both"` unless it says
+otherwise.
+
+`scripts/check/scroll.ts` judges two places. In the three overlay modules of the
+design system (`ui/dialog.tsx`, `ui/drawer.tsx`, `ui/sheet.tsx`), every
+`ScrollArea` takes `axis="vertical"`. In application code, inside the element of
+an overlay (`ResponsiveDialog`, `DialogContent`, `AlertDialogContent`,
+`SheetContent`, `DrawerContent`) in the same module, the check refuses a
+`ScrollArea` without that axis, a `ScrollBar` with `orientation="horizontal"`,
+and an `overflow-auto` or `overflow-x-auto` class or its `scroll` form, after
+any variant. A vertical axis clips what is too wide, so the fix also lets the
+content wrap, truncate or stack. The check reads one module: a component that
+an overlay renders from another module is judged by the overlay modules' own
+axis, which holds whatever it renders. A table's own scroll, inside the card it
+stands in, is not judged here.
+
+
 ### Module size
 
 A hand-written module has at most 500 lines. The check reports a longer one
