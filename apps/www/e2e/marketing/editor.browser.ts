@@ -5,6 +5,7 @@ import {
   withObservedEvents,
   withObservedPageErrors,
 } from "@/e2e/support/observe";
+import { stepTo } from "@/e2e/support/scroll";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
 /** The demo's first question names its right answer, option C, as a teacher marks it. */
@@ -23,7 +24,8 @@ const verifyLandingEditor = Effect.fn("NakafaE2E.verifyLandingEditor")(
   function* (page: Page) {
     yield* loadMarketingPage(page, "/en/school");
     const editor = page.locator("section#exams");
-    yield* Effect.promise(() => editor.scrollIntoViewIfNeeded());
+    // WebKit's scrollIntoView skips a part the page has not drawn yet, so the page steps to the editor as a reader does.
+    yield* stepTo(page, editor.locator('[data-slot="editor-demo"]'));
 
     yield* Effect.promise(() =>
       expect(editor.getByRole("textbox", { name: "Exam title" })).toHaveValue(
