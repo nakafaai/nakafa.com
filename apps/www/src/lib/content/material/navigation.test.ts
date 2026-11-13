@@ -249,10 +249,7 @@ describe("material lesson navigation", () => {
       },
     ]);
     expect(
-      readMaterialPath(
-        readMaterialNavigation(publishedPage, placement),
-        "Function concept"
-      )
+      readMaterialPath(readMaterialNavigation(publishedPage, placement))
     ).toMatchObject([
       { label: "Kurikulum Merdeka", target: { params: { _splat: "" } } },
       { label: "Class 11", target: { params: { _splat: "class-11" } } },
@@ -286,13 +283,10 @@ describe("material lesson navigation", () => {
     ]);
   });
 
-  it("names only the lesson without a placement, or with a path that names no page", () => {
+  it("ends at Home without a placement, or with a path that names no page, and never names the lesson", () => {
     expect(
-      readMaterialPath(
-        readMaterialNavigation(publishedPage, null),
-        "Function concept"
-      )
-    ).toStrictEqual([{ label: "Function concept" }]);
+      readMaterialPath(readMaterialNavigation(publishedPage, null))
+    ).toStrictEqual([]);
     const placement = toMaterialPlacement(
       publishedContext(previewProjection.parentPath)
     );
@@ -306,10 +300,9 @@ describe("material lesson navigation", () => {
               publicPath: PublicPathSchema.make("articles/too/deep/path"),
             },
           ],
-        }),
-        "Function concept"
+        })
       )
-    ).toStrictEqual([{ label: "Function concept" }]);
+    ).toStrictEqual([]);
   });
 
   it("keeps unrelated siblings canonical and drops stale context", () => {
