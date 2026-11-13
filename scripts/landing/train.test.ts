@@ -14,6 +14,7 @@ const pull = (number: number): Candidate => ({
   number,
   sha: String(number).repeat(40).slice(0, 40),
   title: `Change ${number}`,
+  specs: [],
 });
 
 /** A proof that fails these specs in Chromium, or passes when there are none. */
@@ -138,6 +139,22 @@ describe("landing train", () => {
         "deploy",
       ]);
       expect(formatTrain(report)).toContain("one production deploy started");
+    })
+  );
+
+  it.effect("proves a combination on the specs its pull requests change", () =>
+    Effect.gen(function* () {
+      const { layer, log } = yield* world({
+        pulls: [
+          { ...pull(1), specs: ["e2e/b.browser.ts", "e2e/a.browser.ts"] },
+          { ...pull(2), specs: ["e2e/a.browser.ts"] },
+        ],
+        fails: () => [],
+      });
+      yield* runTrain([], ["e2e/c.browser.ts"]).pipe(Effect.provide(layer));
+      expect(yield* Ref.get(log)).toContain(
+        "prove merge:1,2 e2e/a.browser.ts e2e/b.browser.ts e2e/c.browser.ts"
+      );
     })
   );
 
