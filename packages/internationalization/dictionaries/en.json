@@ -2553,7 +2553,6 @@
   },
   "Tryouts": {
     "title": "What try out do you want today?",
-    "hub-search-title": "Free Online Practice Exams with Instant Scores",
     "metadata-description": "Timed practice exams, scored the moment you finish. Free and unlimited on Nakafa.",
     "route-metadata-description": "Timed {name} practice exams, scored the moment you finish. Free and unlimited on Nakafa.",
     "search-title": "Free {name} Practice Exam",
@@ -2562,7 +2561,6 @@
     "section-metadata-description": "Practice {section} from {exam} {set} on Nakafa: a timed try out, scored the moment you finish.",
     "country-selector-label": "Country",
     "exam-selector-label": "Exam",
-    "open-country-cta": "View exams",
     "open-exam-cta": "View options",
     "open-set-cta": "View sets",
     "list-empty": "There are no try outs showing right now.",

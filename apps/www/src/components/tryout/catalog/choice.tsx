@@ -49,7 +49,7 @@ export function TryoutCatalogChoice({
     >
       <SelectTrigger
         aria-label={label}
-        className="w-auto min-w-0 sm:max-w-[min(32rem,calc(100vw-2rem))]"
+        className="w-auto min-w-0 sm:max-w-44 lg:max-w-56"
       >
         <span
           className="flex min-w-0 items-center gap-2"

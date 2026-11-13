@@ -23,7 +23,10 @@ export const publicTryoutExamValidator = Schema.Struct({
   publicPath: Schema.String,
   title: Schema.String,
 });
-/** An exam of a country page, with its entry: the path of its first group, where a link to the exam lands. */
+/**
+ * An exam of a country page, with its entry: where a link to the exam lands, its
+ * first group's entry (`readPublishedGroupEntry`).
+ */
 export const publicTryoutCountryExamValidator = Schema.Struct({
   ...publicTryoutExamValidator.fields,
   entryPath: Schema.String,
@@ -33,6 +36,11 @@ export const publicTryoutGroupValidator = Schema.Struct({
   groupKey: tryoutRouteKeyValidator,
   publicPath: Schema.String,
   title: Schema.String,
+});
+/** A group that a page's group selector offers, with its entry, where choosing it lands. */
+export const publicTryoutGroupChoiceValidator = Schema.Struct({
+  ...publicTryoutGroupValidator.fields,
+  entryPath: Schema.String,
 });
 export const publicTryoutSetValidator = Schema.Struct({
   countryKey: tryoutRouteKeyValidator,

@@ -76,6 +76,20 @@ export const headWidth = cva("", {
   },
 });
 
+/**
+ * How a column stands on a phone, for a table whose rows must read whole there without scrolling sideways: a column
+ * that `fit`s shrinks to what it holds below the small breakpoint, and a `hidden` one steps aside until it. A column
+ * that names neither keeps its width at every size.
+ */
+export const phoneColumn = cva("", {
+  variants: {
+    phone: {
+      fit: "max-sm:w-auto max-sm:min-w-0",
+      hidden: "max-sm:hidden",
+    },
+  },
+});
+
 /** Where a head's button stands at each place of its column: over a column's figures, and in the middle over a menu. */
 export const headPlace = {
   center: "center",

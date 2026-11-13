@@ -43,9 +43,7 @@ const DESKTOP_PX = 1024;
 const publicRoutes = [
   appRoutes.quranSurahId,
   appRoutes.quran,
-  appRoutes.tryout,
   "/en/try-out/indonesia",
-  "/en/try-out/indonesia/snbt/2027",
   "/en/try-out/indonesia/snbt/2027/utbk",
   "/en/try-out/indonesia/snbt/2027/utbk/set-1",
   "/en/curriculum",
@@ -57,7 +55,8 @@ const publicRoutes = [
 ];
 
 /** The try-out page of an exam's group, which a phone reaches from a set page's folded path. */
-const GROUP_PAGE = /\/en\/try-out\/indonesia\/snbt\/2027$/u;
+/** The year's crumb opens its one track's set table, where its group's address leads. */
+const GROUP_PAGE = /\/en\/try-out\/indonesia\/snbt\/2027\/utbk$/u;
 
 /** The pages of a signed-in learner, each with its own header. */
 const learnerRoutes = [

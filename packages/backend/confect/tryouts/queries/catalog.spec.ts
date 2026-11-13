@@ -6,6 +6,7 @@ import {
   publicTryoutCountryValidator,
   publicTryoutCountryWithExamCountValidator,
   publicTryoutExamValidator,
+  publicTryoutGroupChoiceValidator,
   publicTryoutGroupValidator,
   publicTryoutSectionValidator,
   publicTryoutSetValidator,
@@ -22,7 +23,7 @@ import {
 import { Schema } from "effect";
 
 const groupsValidator = Schema.mutable(
-  Schema.Array(publicTryoutGroupValidator)
+  Schema.Array(publicTryoutGroupChoiceValidator)
 );
 const sectionPageFields = {
   exam: publicTryoutExamValidator,

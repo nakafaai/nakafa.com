@@ -11,7 +11,7 @@ import {
   arrive,
   arriveLocked,
   onPath,
-  openHub,
+  openCountry,
   openTrack,
   setHref,
 } from "@/e2e/support/tryout";
@@ -176,7 +176,7 @@ export const runFirstSection = Effect.fn("NakafaE2E.runFirstSection")(
     yield* seedAnalyticsConsent(page, "denied");
     yield* signInLearner(page.context(), baseURL);
     yield* observeShell(page);
-    yield* openHub(page);
+    yield* openCountry(page);
     yield* pressDecline(page, hasTouch);
     yield* openTrack(page, hasTouch);
 

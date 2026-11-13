@@ -13,17 +13,22 @@ import { CatalogActionLabelContext } from "@/components/shared/catalog/label";
 import { ComingSoon } from "@/components/shared/upcoming";
 import { getTryoutExamIcons } from "@/components/tryout/catalog/icons";
 import { TryoutPageLink } from "@/components/tryout/route/link";
+import { CardArtworkSchema } from "@/lib/tryout/artwork";
 
 type CountryPageQuery = typeof tryouts.queries.catalog.getCountryPage;
 type CountryPage = NonNullable<Ref.Returns<CountryPageQuery>>;
+/** An exam card's image: only an entity's card artwork, never a page's social image. */
 const CountryExamCardImageSchema = Schema.Struct({
-  imageSrc: Schema.optionalKey(Schema.String),
+  imageSrc: Schema.optionalKey(CardArtworkSchema),
 });
 
 type CountryExamCard = CountryPage["exams"][number] &
   typeof CountryExamCardImageSchema.Type;
 
-/** Renders one signed try-out country catalog with reviewed art or tiles. */
+/**
+ * Renders one signed try-out country's exams, each a card with its own artwork,
+ * or, until the owner draws it, the tile of the exam's icon.
+ */
 export function TryoutCountryPageClient({
   page,
 }: {

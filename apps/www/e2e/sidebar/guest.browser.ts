@@ -329,49 +329,18 @@ test("guest reaches authentication only when starting a public tryout", async ({
         );
         yield* Effect.sync(() => expect(response?.ok()).toBe(true));
 
-        const countryHref = "/en/try-out/indonesia";
-        const country = page.getByRole("link", {
-          exact: true,
-          name: "View exams Indonesia",
-        });
-        yield* Effect.promise(() => expect(country).toBeVisible());
-        yield* Effect.promise(() =>
-          expect(country).toHaveAttribute("href", countryHref)
-        );
-        yield* Effect.promise(() => country.click());
-        yield* Effect.promise(() =>
-          expect(page).toHaveURL(new URL(countryHref, page.url()).toString(), {
-            timeout: readinessTimeoutMilliseconds,
-          })
-        );
-
-        // An exam's card opens its first group, SNBT's year 2027.
-        const groupHref = `${countryHref}/snbt/2027`;
+        // The address of Try out opens Indonesia's page, the English reader's
+        // first country, and SNBT's card opens its one track's set table.
+        const trackHref = "/en/try-out/indonesia/snbt/2027/utbk";
         const exam = page.getByRole("link", {
           exact: true,
           name: "View options SNBT",
         });
         yield* Effect.promise(() => expect(exam).toBeVisible());
         yield* Effect.promise(() =>
-          expect(exam).toHaveAttribute("href", groupHref)
+          expect(exam).toHaveAttribute("href", trackHref)
         );
         yield* Effect.promise(() => exam.click());
-        yield* Effect.promise(() =>
-          expect(page).toHaveURL(new URL(groupHref, page.url()).toString(), {
-            timeout: readinessTimeoutMilliseconds,
-          })
-        );
-
-        const trackHref = `${groupHref}/utbk`;
-        const track = page.getByRole("link", {
-          exact: true,
-          name: "View sets UTBK",
-        });
-        yield* Effect.promise(() => expect(track).toBeVisible());
-        yield* Effect.promise(() =>
-          expect(track).toHaveAttribute("href", trackHref)
-        );
-        yield* Effect.promise(() => track.click());
         yield* Effect.promise(() =>
           expect(page).toHaveURL(new URL(trackHref, page.url()).toString(), {
             timeout: readinessTimeoutMilliseconds,

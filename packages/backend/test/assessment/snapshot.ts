@@ -197,6 +197,8 @@ export const makeAssessmentSnapshot = Effect.fn(
   options: {
     readonly entry?: boolean;
     readonly firstSectionKey?: string;
+    /** Adds a second track without sets to the fixture group, so the group opens its track cards. */
+    readonly paired?: boolean;
     readonly renamed?: boolean;
     readonly scoring?: ScoringStrategy;
     readonly sets?: number;
@@ -299,6 +301,7 @@ export const makeAssessmentSnapshot = Effect.fn(
   const catalog = Arr.flatMap(FIXTURE_LOCALES, (appLocale) =>
     makeCatalog(appLocale, {
       entry: options.entry === true,
+      paired: options.paired === true,
       renamed: options.renamed === true,
       sections: Arr.map(sections, ({ id }) => id),
       sets: Arr.map(sets, ({ key, paper, paperHash }) => ({
@@ -346,6 +349,7 @@ function makeCatalog(
   appLocale: AppLocaleCode,
   track: {
     readonly entry: boolean;
+    readonly paired: boolean;
     readonly renamed: boolean;
     readonly sections: readonly string[];
     readonly sets: readonly Pick<CatalogSet, "paper" | "setKey">[];
@@ -398,6 +402,20 @@ function makeCatalog(
         order: 1,
         publicPath: `try-out/indonesia/snbt/2027/utbk-${appLocale}`,
       },
+      ...(track.paired
+        ? [
+            {
+              ...base,
+              ...FIXTURE_TRACK,
+              graph: graph(appLocale, "paired-track"),
+              groupKey: FIXTURE_GROUP_KEY,
+              kind: "track",
+              order: 2,
+              publicPath: `try-out/indonesia/snbt/2027/paired-${appLocale}`,
+              trackKey: "paired",
+            },
+          ]
+        : []),
       ...Arr.flatMap(track.sets, (set, setIndex) => {
         const setPath = fixtureSetPath(set.setKey, appLocale, track.renamed);
         const keys = { ...FIXTURE_TRACK, setKey: set.setKey };

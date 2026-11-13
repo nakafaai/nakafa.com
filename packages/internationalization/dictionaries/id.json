@@ -2553,7 +2553,6 @@
   },
   "Tryouts": {
     "title": "Mau coba try out apa hari ini?",
-    "hub-search-title": "Try Out Online Gratis dengan Skor Langsung",
     "metadata-description": "Try out berwaktu dengan skor langsung setelah selesai. Gratis dan tanpa batas di Nakafa.",
     "route-metadata-description": "Try out {name} berwaktu dengan skor langsung setelah selesai. Gratis dan tanpa batas di Nakafa.",
     "search-title": "Try Out {name} Gratis",
@@ -2562,7 +2561,6 @@
     "section-metadata-description": "Latihan {section} dari {set} {exam} di Nakafa: try out berwaktu dengan skor langsung setelah selesai.",
     "country-selector-label": "Negara",
     "exam-selector-label": "Ujian",
-    "open-country-cta": "Lihat ujian",
     "open-exam-cta": "Lihat pilihan",
     "open-set-cta": "Lihat set",
     "list-empty": "Belum ada try out yang tampil sekarang.",

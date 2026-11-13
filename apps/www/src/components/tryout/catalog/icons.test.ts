@@ -21,7 +21,7 @@ import {
 import { CURRICULUM_NAVIGATION_ICONS } from "@/lib/curriculum/icons";
 
 /** The exams of the catalog. */
-const EXAMS = ["snbt", "tka"];
+const EXAMS = ["entrance-examination", "snbt", "tka"];
 /** UTBK-SNBT subtests under their official names, in exam order. */
 const SNBT_SECTIONS = [
   "general-reasoning",

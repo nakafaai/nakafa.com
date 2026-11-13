@@ -91,13 +91,28 @@ export function serveTryoutCatalog(
         )
       )
   );
+  // A group enters at its one track's table, or at its own page of track cards, as the catalog's depth rule does.
+  const entryOf = (
+    appLocale: AppLocaleCode,
+    group: ExamFixture["groups"][number]
+  ) =>
+    Option.match(findRow(groups, { appLocale, publicPath: group.publicPath }), {
+      onNone: () => group.publicPath,
+      onSome: ({ tracks }) =>
+        tracks.length === 1 && tracks[0] !== undefined
+          ? tracks[0].publicPath
+          : group.publicPath,
+    });
   mocks.exam.mockImplementation(
     (input: { appLocale: AppLocaleCode; publicPath: string }) =>
       Effect.succeed(
         Option.getOrNull(
           Option.map(findRow(exams, input), (exam) => ({
             exam: { groupAxis: exam.groupAxis },
-            groups: exam.groups,
+            groups: Arr.map(exam.groups, (group) => ({
+              ...group,
+              entryPath: entryOf(input.appLocale, group),
+            })),
           }))
         )
       )

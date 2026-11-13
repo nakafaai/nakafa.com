@@ -22,6 +22,7 @@ import { Array as Arr, Option } from "effect";
 import type { ComponentProps } from "react";
 import { canonicalHref } from "@/lib/routing/target";
 import { EXACT_ACTIVE_OPTIONS, type LOCALE_ROUTE } from "@/lib/routing/tree";
+import { useLinkDestination } from "@/lib/tryout/entry";
 
 /**
  * Every full path of the app's route tree, as the router spells a `to`. The
@@ -166,7 +167,8 @@ export function Link<const TTo extends string | undefined = undefined>(
  * a card row or a search result. The producer's target is a typed union of
  * `linkOptions`, which the router's Link cannot take in one JSX spread, so this
  * one component spreads it into the router's Link. Each member keeps the typing
- * of the route it names, and no caller writes a path string.
+ * of the route it names, and no caller writes a path string. A target of the
+ * address of Try out opens the locale's try-out entry (`useLinkDestination`).
  */
 export function TargetLink({
   hash,
@@ -181,12 +183,13 @@ export function TargetLink({
   readonly preload?: LinkPreload | undefined;
   readonly target: LinkTarget;
 }) {
+  const destination = useLinkDestination(target);
   return (
     <Link
       {...anchor}
       {...(hash === undefined ? {} : { hash })}
       {...(preload === undefined ? {} : { preload })}
-      {...target}
+      {...destination}
     />
   );
 }

@@ -19,7 +19,7 @@ import {
   arriveLocked,
   LOCKED_SHELL,
   onPath,
-  openHub,
+  openCountry,
   openTrack,
   setHref,
   trackHref,
@@ -70,7 +70,7 @@ const verifyAttemptShell = Effect.fn("NakafaE2E.verifyAttemptShell")(function* (
   yield* seedAnalyticsConsent(page, "denied");
   yield* signInLearner(page.context(), baseURL);
   yield* observeShell(page);
-  yield* openHub(page);
+  yield* openCountry(page);
   // The page loads again only at the reload below. The attempt starts before
   // it on this connection, and the server runs the changes of a connection in
   // the order they were sent, so it stores this choice first.

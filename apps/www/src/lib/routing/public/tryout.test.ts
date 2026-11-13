@@ -14,6 +14,13 @@ vi.mock("@/lib/content/tryout/path", () => ({
   readPublishedTryoutLocalizedPath: mocks.path,
 }));
 vi.mock("@/lib/content/tryout/catalog", () => ({
+  readPublishedTryoutHubPage: () =>
+    Effect.succeed({
+      countries: [
+        { countryCode: "ID", publicPath: "try-out/indonesia" },
+        { countryCode: "DE", publicPath: "try-out/germany" },
+      ],
+    }),
   readPublishedTryoutExamPage: mocks.exam,
   readPublishedTryoutGroupPage: mocks.group,
   readPublishedTryoutSectionPage: mocks.section,
@@ -42,11 +49,30 @@ beforeEach(() => {
 });
 
 describe("retired try-out redirects", () => {
+  it.effect(
+    "opens a locale's own country for the address of Try out, and moves a renamed exam for good",
+    () =>
+      Effect.gen(function* () {
+        expect(yield* readTryoutRedirect("/de/try-out")).toEqual({
+          destination: "/de/try-out/germany",
+          status: 307,
+        });
+        serveTryoutCatalog(mocks, {
+          routes: [{ en: "try-out/germany/aufnahmepruefung" }],
+        });
+        expect(
+          yield* readTryoutRedirect("/en/try-out/germany/entrance-examination")
+        ).toEqual({
+          destination: "/en/try-out/germany/aufnahmepruefung",
+          status: 308,
+        });
+      })
+  );
+
   it.effect.each([
     "/fr/try-out/indonesia/snbt/2027/utbk/set-1/bahasa-inggris",
     "/en/articles/politics/bahasa-inggris",
     "/id",
-    "/en/try-out",
     "/en/try-out/indonesia",
     "/fr/try-out/snbt",
   ])(

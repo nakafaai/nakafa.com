@@ -38,7 +38,6 @@ const artworkSources = {
   "subject/physics": ALL_ARTWORK_LOCALES,
   "subject/science": ALL_ARTWORK_LOCALES,
   "tryout/germany/index": ENGLISH_ARTWORK,
-  "tryout/index": ["en", "de"],
   "tryout/indonesia/2027": ENGLISH_ARTWORK,
   "tryout/indonesia/index": ENGLISH_ARTWORK,
   "tryout/indonesia/snbt": ENGLISH_ARTWORK,

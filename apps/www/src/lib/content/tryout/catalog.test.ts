@@ -7,6 +7,7 @@ import { Effect, Layer } from "effect";
 import {
   readPublishedTryoutExamPage,
   readPublishedTryoutGroupPage,
+  readPublishedTryoutHubPage,
   readPublishedTryoutSectionPage,
 } from "@/lib/content/tryout/catalog";
 import { resetTestRuntimeCache } from "@/test/store";
@@ -51,6 +52,11 @@ describe("published try-out pages for routing", () => {
         const world = yield* tryoutWorld();
         runtimeQueryMock.mockImplementation(world.visitor.query);
 
+        expect(
+          yield* readPublishedTryoutHubPage({ appLocale: "en" })
+        ).toMatchObject({
+          countries: [{ countryKey: "indonesia", examCount: 1 }],
+        });
         expect(
           yield* readPublishedTryoutExamPage({
             appLocale: "en",

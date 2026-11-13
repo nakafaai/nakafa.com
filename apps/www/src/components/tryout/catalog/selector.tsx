@@ -142,7 +142,7 @@ function TryoutCountrySelect({
     <Select items={items} onValueChange={onValueChange} value={currentValue}>
       <SelectTrigger
         aria-label={label}
-        className="w-auto min-w-0 sm:max-w-[min(32rem,calc(100vw-2rem))]"
+        className="w-auto min-w-0 sm:max-w-44 lg:max-w-56"
         disabled={disabled}
       >
         <span
@@ -228,9 +228,10 @@ const GROUP_MENU_LABELS = {
 } as const;
 
 /**
- * Renders the group selector beside the exam selector: the years of SNBT, the
- * grades of TKA, or the Studienkollegs of a German exam. Each group links to its
- * page and takes its own icon of its exam's axis.
+ * Renders the group selector beside the exam selector: the grades of TKA, the
+ * Studienkollegs of a German exam, or the years of SNBT once it has two. Each
+ * group links to its entry, its set table when it holds one track, and takes
+ * its own icon of its exam's axis.
  */
 export function TryoutGroupSelector({
   axis,
@@ -250,7 +251,7 @@ export function TryoutGroupSelector({
   );
   const entries = Arr.zipWith(options, looks, (option, look) => ({
     icon: look.icon,
-    publicPath: option.value,
+    publicPath: option.entryPath,
     title: option.title,
     value: option.value,
   }));

@@ -146,7 +146,8 @@ describe("immutable try-out application catalog", () => {
         });
         expect(Option.getOrThrow(pages[1])).toMatchObject({
           country: { publicPath: COUNTRY(locale) },
-          exams: [{ entryPath: GROUP(locale), publicPath: EXAM(locale) }],
+          // The year holds one track, so a link to the exam opens its set table.
+          exams: [{ entryPath: TRACK(locale), publicPath: EXAM(locale) }],
         });
         expect(pages[2]).toMatchObject({
           exam: { publicPath: EXAM(locale) },

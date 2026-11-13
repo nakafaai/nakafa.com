@@ -13,9 +13,6 @@ import {
 } from "@/components/tryout/route/catalog.server";
 
 const catalog = vi.hoisted(() => ({
-  buildTryoutCountryOptions: vi.fn(),
-  buildTryoutExamOptions: vi.fn(),
-  buildTryoutGroupOptions: vi.fn(),
   getAppSocialArtwork: vi.fn(),
   getOgUrl: vi.fn(),
   readServerTranslator: vi.fn(),
@@ -30,11 +27,6 @@ const catalog = vi.hoisted(() => ({
 
 vi.mock("@tanstack/react-start/server", () => ({
   getRequest: () => new Request("https://nakafa.com/en/try-out"),
-}));
-vi.mock("@/components/tryout/catalog/options", () => ({
-  buildTryoutCountryOptions: catalog.buildTryoutCountryOptions,
-  buildTryoutExamOptions: catalog.buildTryoutExamOptions,
-  buildTryoutGroupOptions: catalog.buildTryoutGroupOptions,
 }));
 vi.mock("@/components/tryout/catalog/source.server", () => ({
   readTryoutCountryPage: catalog.readTryoutCountryPage,
@@ -77,11 +69,14 @@ const countryPage = {
   ],
   sourceRevision: "2026-10-02",
 };
-const groups = [{ groupKey: "2027", publicPath: GROUP, title: "2027" }];
+const groups = [
+  { entryPath: TRACK, groupKey: "2027", publicPath: GROUP, title: "2027" },
+];
+/** A group that holds its track cards, so it is its own entry. */
 const groupPage = {
   exam: { examKey: "snbt", groupAxis: "year", title: "SNBT" },
   group: { groupKey: "2027", publicPath: GROUP, title: "2027" },
-  groups,
+  groups: [{ ...groups[0], entryPath: GROUP }],
   tracks: [],
 };
 const trackPage = {
@@ -93,7 +88,10 @@ const trackPage = {
   track: { title: "UTBK", trackKey: "2027" },
 };
 const hub = {
-  countries: [{ publicPath: COUNTRY, title: "Indonesia" }],
+  countries: [
+    { countryCode: "ID", publicPath: COUNTRY, title: "Indonesia" },
+    { countryCode: "DE", publicPath: "try-out/de", title: "Germany" },
+  ],
   sourceRevision: undefined,
 };
 /** The country's address in each locale, as the catalog resolves its node: its slug differs in German. */
@@ -127,9 +125,6 @@ beforeEach(() => {
   );
   catalog.getOgUrl.mockReturnValue("og-url");
   catalog.getAppSocialArtwork.mockReturnValue("og-app");
-  catalog.buildTryoutCountryOptions.mockReturnValue([]);
-  catalog.buildTryoutExamOptions.mockReturnValue([]);
-  catalog.buildTryoutGroupOptions.mockReturnValue([]);
   catalog.readTryoutHubPage.mockReturnValue(Effect.succeed(hub));
   catalog.readTryoutCountryPage.mockReturnValue(
     Effect.succeedSome(countryPage)
@@ -146,18 +141,27 @@ beforeEach(() => {
 });
 
 describe("readTryoutHubRoute", () => {
-  it.effect("answers the hub with its catalog and its social artwork", () =>
+  it.effect("opens the locale's own country, else the catalog's first", () =>
     Effect.gen(function* () {
-      const route = yield* readTryoutHubRoute("en");
-
-      expect(route.page).toEqual(hub);
-      expect(route.image).toBe("og-app");
+      expect(yield* readTryoutHubRoute("de")).toEqual({
+        entryPath: "try-out/de",
+        kind: "entry",
+      });
+      expect(yield* readTryoutHubRoute("en")).toEqual({
+        entryPath: COUNTRY,
+        kind: "entry",
+      });
+      catalog.readTryoutHubPage.mockReturnValueOnce(
+        Effect.succeed({ countries: [], sourceRevision: undefined })
+      );
+      expect(yield* readTryoutHubRoute("en")).toEqual({ kind: "notFound" });
     })
   );
   it("answers the hub through its server handler", async () => {
-    const route = await readTryoutHubHandler({ data: { locale: "en" } });
-
-    expect(route.page).toEqual(hub);
+    expect(await readTryoutHubHandler({ data: { locale: "id" } })).toEqual({
+      entryPath: COUNTRY,
+      kind: "entry",
+    });
   });
 });
 
@@ -186,6 +190,27 @@ describe("readTryoutCountryRoute", () => {
 
       expect(route).toEqual({ kind: "notFound" });
     })
+  );
+
+  it.effect(
+    "gives a country page its own design as its social image, and the generated image otherwise",
+    () =>
+      Effect.gen(function* () {
+        expect(
+          yield* readTryoutCountryRoute({ country: "id", locale: "en" })
+        ).toMatchObject({ head: { image: "og-url" } });
+        catalog.readTryoutCountryPage.mockReturnValueOnce(
+          Effect.succeedSome({
+            ...countryPage,
+            country: { countryKey: "indonesia" },
+          })
+        );
+        expect(
+          yield* readTryoutCountryRoute({ country: "id", locale: "en" })
+        ).toMatchObject({
+          head: { image: "/open-graph/tryout/indonesia/en-index.png" },
+        });
+      })
   );
 
   it.effect(
@@ -233,25 +258,50 @@ describe("readTryoutGroupRoute", () => {
       })
   );
 
+  it.effect("sends a group with one track to that track's set table", () =>
+    Effect.gen(function* () {
+      catalog.readTryoutGroupPage.mockReturnValueOnce(
+        Effect.succeed({ ...groupPage, groups })
+      );
+
+      expect(yield* readGroup()).toEqual({ entryPath: TRACK, kind: "entry" });
+    })
+  );
+
   it.effect(
-    "names the group by its exam and builds both selectors from the country's exams and the exam's groups",
+    "names a single year with its exam and offers a grade as the header's one choice",
     () =>
       Effect.gen(function* () {
-        const route = yield* readGroup();
-
-        expect(route).toMatchObject({
-          countryPath: "try-out/id",
+        expect(yield* readGroup()).toMatchObject({
+          countryPath: COUNTRY,
+          examOptions: [
+            { examKey: "snbt", title: "SNBT", value: EXAM },
+            { examKey: "utbk", title: "UTBK", value: "try-out/id/utbk" },
+          ],
+          groupOptions: [],
           head: { title: "search-title SNBT 2027" },
           kind: "found",
           name: "SNBT 2027",
           page: groupPage,
         });
-        expect(catalog.buildTryoutExamOptions).toHaveBeenCalledExactlyOnceWith(
-          countryPage.exams
+
+        catalog.readTryoutGroupPage.mockReturnValueOnce(
+          Effect.succeed({
+            ...groupPage,
+            exam: { examKey: "tka", groupAxis: "grade", title: "TKA" },
+          })
         );
-        expect(catalog.buildTryoutGroupOptions).toHaveBeenCalledExactlyOnceWith(
-          groups
-        );
+        expect(yield* readGroup()).toMatchObject({
+          groupOptions: [
+            {
+              entryPath: GROUP,
+              groupKey: "2027",
+              title: "2027",
+              value: GROUP,
+            },
+          ],
+          name: "TKA",
+        });
       })
   );
 });
@@ -338,7 +388,9 @@ describe("readTryoutTrackRoute", () => {
         const route = yield* readTrack();
 
         expect(route).toMatchObject({
-          countryPath: "try-out/id",
+          // The year's one track is its entry, so the crumb names the year and links nowhere.
+          examCrumb: { label: "SNBT 2027" },
+          groupOptions: [],
           head: {
             description: "track-metadata-description",
             title: "search-title SNBT 2027 UTBK",
@@ -354,6 +406,26 @@ describe("readTryoutTrackRoute", () => {
             trackKey: "2027",
           })
         );
+      })
+  );
+});
+
+describe("readTryoutTrackRoute's crumb", () => {
+  it.effect(
+    "links the exam's crumb to its group's track cards when the group has some",
+    () =>
+      Effect.gen(function* () {
+        catalog.readTryoutTrackPage.mockReturnValueOnce(
+          Effect.succeed({
+            ...trackPage,
+            exam: { examKey: "tka", groupAxis: "grade", title: "TKA" },
+            groups: [{ ...groups[0], entryPath: GROUP }],
+          })
+        );
+        expect(yield* readTrack()).toMatchObject({
+          examCrumb: { label: "TKA", path: GROUP },
+          groupOptions: [{ entryPath: GROUP, value: GROUP }],
+        });
       })
   );
 });

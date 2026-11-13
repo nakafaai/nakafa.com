@@ -78,9 +78,10 @@ function readExamRoute(pathname: string) {
 }
 
 /**
- * Answers an exam's own address with a temporary redirect to its first group,
- * where a link to the exam lands: an exam has no page of its own, and a newer
- * group can come first, so the answer must not be permanent.
+ * Answers an exam's own address with a temporary redirect to its entry, its
+ * first group's entry, where a link to the exam lands: an exam has no page of
+ * its own, and a newer group can come first, so the answer must not be
+ * permanent.
  */
 const readExamEntryRedirect = Effect.fn(
   "www.routing.publicHtml.tryoutExamEntry"
@@ -94,7 +95,32 @@ const readExamEntryRedirect = Effect.fn(
   );
   return Option.match(group, {
     onNone: () => null,
-    onSome: (first) => temporaryRedirect(`/${appLocale}/${first.publicPath}`),
+    onSome: (first) => temporaryRedirect(`/${appLocale}/${first.entryPath}`),
+  });
+});
+
+/**
+ * Answers a group's own address with a temporary redirect to its entry when
+ * the group holds a single track, a level with one option that is never a page
+ * of its own. A second track makes it a page again, so the answer is temporary.
+ */
+const readGroupEntryRedirect = Effect.fn(
+  "www.routing.publicHtml.tryoutGroupEntry"
+)(function* (appLocale: ActiveAppLocaleCode, examPath: string, path: string) {
+  const exam = yield* readPublishedTryoutExamPage({
+    appLocale,
+    publicPath: examPath,
+  });
+  const group = Arr.findFirst(
+    exam?.groups ?? [],
+    (row) => row.publicPath === path
+  );
+  return Option.match(group, {
+    onNone: () => null,
+    onSome: (own) =>
+      own.entryPath === own.publicPath
+        ? null
+        : temporaryRedirect(`/${appLocale}/${own.entryPath}`),
   });
 });
 
@@ -189,7 +215,9 @@ export const readGroupRedirect = Effect.fn(
   }
   const path = Arr.join([examPath, ...rest], "/");
   if ((yield* readActiveTryoutPath(appLocale, path)) !== null) {
-    return null;
+    return set === undefined
+      ? yield* readGroupEntryRedirect(appLocale, examPath, path)
+      : null;
   }
   const groupPath = `${examPath}/${segment}`;
   if (
