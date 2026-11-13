@@ -7,7 +7,7 @@ import {
   rgb,
   type Vec,
 } from "@/lib/island/models/parts";
-import { scaled, slab, tube } from "@/lib/island/models/solids";
+import { type Ring, scaled, slab, tube } from "@/lib/island/models/solids";
 import { unitOf } from "@/lib/island/noise";
 
 /** The open sea's big swimmers (ADR 0047, D24), beside the lane's humpback whale. */
@@ -64,11 +64,14 @@ function hullOf(
   shape: readonly (readonly [number, number, number])[],
   paint: (along: number, up: number) => Rgb
 ) {
-  const rings = Arr.map(shape, ([along, wide, high], index) => ({
-    at: [0, 0, 0.5 - along] as Vec,
-    high: index === 0 || index === shape.length - 1 ? 0 : high,
-    wide: index === 0 || index === shape.length - 1 ? 0 : wide,
-  }));
+  const rings = Arr.map(
+    shape,
+    ([along, wide, high], index): Ring => ({
+      at: [0, 0, 0.5 - along],
+      high: index === 0 || index === shape.length - 1 ? 0 : high,
+      wide: index === 0 || index === shape.length - 1 ? 0 : wide,
+    })
+  );
   const [first, ...rest] = rings;
   return tube([first, ...rest], (spot) => paint(spot.along, spot.up), 8);
 }
