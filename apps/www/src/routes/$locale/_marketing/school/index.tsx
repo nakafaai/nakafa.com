@@ -57,11 +57,11 @@ export const Route = createFileRoute("/$locale/_marketing/school/")({
         locale: params.locale,
         namespaces: ["Common", "SchoolSite"],
       }),
-      // The words of the School screens the sections draw as the app does: the forum, the editor's
-      // toolbar and the exam editor. Only this page reads them; the player's are the marketing pages'.
+      // The words of the School screens the sections draw as the app does: the forum and its emoji
+      // chooser, the editor's toolbar and the exam editor. Only this page reads them; the player's are the marketing pages'.
       readStaticData(readRouteMessages, {
         locale: params.locale,
-        namespaces: ["Classroom", "Editor", "Exams"],
+        namespaces: ["Classroom", "Editor", "Emoji", "Exams"],
       }),
     ]);
     const t = createTranslator({

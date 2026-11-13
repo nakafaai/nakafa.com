@@ -1489,7 +1489,6 @@
     "attach-add": "Tambah foto, dokumen, atau polling",
     "attach-photo": "Foto",
     "attach-poll": "Polling",
-    "emoji-open": "Tambah emoji",
     "reaction-add": "Beri reaksi",
     "reaction-label": "{emoji}, {count}",
     "reply-thread": "Balas di thread",
@@ -1498,8 +1497,6 @@
     "thread-title": "Thread",
     "thread-empty": "Belum ada balasan",
     "thread-last": "Balasan terakhir {time}",
-    "emoji-search": "Cari emoji",
-    "emoji-categories": "Kategori emoji",
     "media-description": "Foto dalam ukuran penuh.",
     "media-download": "Unduh",
     "poll-title": "Polling baru",
@@ -1569,16 +1566,6 @@
       "document": "Dokumen",
       "image": "Foto",
       "poll": "Polling"
-    },
-    "emoji": {
-      "activities": "Aktivitas",
-      "food": "Makanan dan minuman",
-      "nature": "Hewan dan alam",
-      "objects": "Benda",
-      "people": "Orang dan gestur",
-      "smileys": "Ekspresi",
-      "symbols": "Simbol",
-      "travel": "Tempat dan perjalanan"
     },
     "library-kind": {
       "folder": "Folder",
@@ -2775,6 +2762,19 @@
       "right": "Geser ke kanan",
       "symbols": "Simbol"
     }
+  },
+  "Emoji": {
+    "open": "Tambah emoji",
+    "search": "Cari emoji",
+    "categories": "Kategori emoji",
+    "smileys": "Ekspresi",
+    "people": "Orang dan gestur",
+    "nature": "Hewan dan alam",
+    "food": "Makanan dan minuman",
+    "activities": "Aktivitas",
+    "travel": "Tempat dan perjalanan",
+    "objects": "Benda",
+    "symbols": "Simbol"
   },
   "Memory": {
     "remember": "Izinkan Nina menyimpan dan memakai memori",
