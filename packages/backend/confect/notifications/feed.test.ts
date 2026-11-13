@@ -106,7 +106,7 @@ describe("notifications/feed cursor", () => {
     () =>
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
-        const ana = yield* fixture.account("ana", ANA, true);
+        const ana = yield* fixture.account("ana", ANA);
         const anaNf = yield* addPerson(fixture, fixture.tenants.nf, "Ana");
         yield* claim(fixture, anaNf, ana.userId);
         yield* insertRows(fixture, anaNf, fixture.tenants.nf, 1);
@@ -129,7 +129,7 @@ describe("notifications/feed cursor", () => {
     () =>
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
-        const ana = yield* fixture.account("ana", ANA, true);
+        const ana = yield* fixture.account("ana", ANA);
         const personIds = yield* claimedPersons(
           fixture,
           ana.userId,

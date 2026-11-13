@@ -87,7 +87,7 @@ describe("auth/deletion release", () => {
     () =>
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
-        const account = yield* fixture.account("guru", guru, true);
+        const account = yield* fixture.account("guru", guru);
         const { inviteId, personId } = yield* fixture.run(
           invitePerson(fixture.tenants.nf, guru, {
             account: {
@@ -233,7 +233,7 @@ describe("auth/deletion release", () => {
   it.effect("releases a Person while its school is suspended", () =>
     Effect.gen(function* () {
       const fixture = yield* tenancyFixture;
-      const account = yield* fixture.account("guru", guru, true);
+      const account = yield* fixture.account("guru", guru);
       const { personId } = yield* fixture.run(
         invitePerson(fixture.tenants.nf, guru, {
           account: {
@@ -259,7 +259,7 @@ describe("auth/deletion release", () => {
   it.effect("releases one batch at a time, and reports the rest", () =>
     Effect.gen(function* () {
       const fixture = yield* tenancyFixture;
-      const account = yield* fixture.account("kepala", guru, true);
+      const account = yield* fixture.account("kepala", guru);
       const user = yield* fixture.run(
         Effect.flatMap(DatabaseReader, (reader) =>
           reader.table("users").get(account.userId)
@@ -281,7 +281,7 @@ describe("auth/deletion release", () => {
     () =>
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
-        const account = yield* fixture.account("siswa", guru, true);
+        const account = yield* fixture.account("siswa", guru);
         yield* claimPersons(fixture, account.userId, BATCH_PLUS_ONE);
         yield* fixture.run(finalizeAccountDeletion(account.authUserId));
         const left = yield* claimedBy(fixture, account.userId);
@@ -294,7 +294,7 @@ describe("auth/deletion release", () => {
   it.effect("releases nothing for an account that holds no Person", () =>
     Effect.gen(function* () {
       const fixture = yield* tenancyFixture;
-      const account = yield* fixture.account("sendiri", guru, true);
+      const account = yield* fixture.account("sendiri", guru);
       const user = yield* fixture.run(
         Effect.flatMap(DatabaseReader, (reader) =>
           reader.table("users").get(account.userId)
