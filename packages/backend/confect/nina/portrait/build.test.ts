@@ -236,7 +236,7 @@ describe("a portrait build", () => {
     const f = await createRequestedTest();
     await f.seed({ text: "Mau ikut SNBT 2027." });
     await f.t.mutation((ctx) =>
-      ctx.db.patch(f.identity.userId, { deletionPreparedAt: NOW })
+      ctx.db.patch(f.identity.userId, { deletedAt: NOW })
     );
     const model = writes("Never written.");
     await f.build();

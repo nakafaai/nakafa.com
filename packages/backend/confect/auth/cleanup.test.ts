@@ -19,7 +19,6 @@ import { MASCOT_CODE } from "@repo/backend/test/mascot";
 import { Effect, Layer } from "effect";
 
 const NOW = Date.UTC(2026, 6, 22, 8, 0, 0);
-const deletedAuthIdPattern = /^deleted:/u;
 const deletedEmailPattern = /^deleted-.+@account\.nakafa\.invalid$/u;
 describe("auth/cleanup", () => {
   it.effect(
@@ -100,7 +99,6 @@ describe("auth/cleanup", () => {
       expect(remaining.reply?.replyToUserId).toBeUndefined();
       expect(remaining.comment).not.toBeNull();
       expect(remaining.user).toMatchObject({
-        authId: expect.stringMatching(deletedAuthIdPattern),
         email: expect.stringMatching(deletedEmailPattern),
       });
     })
@@ -234,7 +232,6 @@ describe("auth/cleanup", () => {
             text: "Reply without retained personal preview",
           }),
           user: expect.objectContaining({
-            authId: expect.stringMatching(deletedAuthIdPattern),
             credits: 0,
             creditsResetAt: 0,
             deletedAt: expect.any(Number),

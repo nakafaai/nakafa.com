@@ -13,7 +13,6 @@ import { Array as Arr, Record } from "effect";
 // time: about a second each for the learner's seed, the admission and the answer on a loaded
 // machine. A learner asked here calls these three, so they load while the test file is
 // collected, and a seal test's time holds its turn and not those imports.
-import "@repo/backend/components/betterAuth/adapter";
 import "@repo/backend/convex/nina/response";
 import "@repo/backend/convex/nina/turns";
 

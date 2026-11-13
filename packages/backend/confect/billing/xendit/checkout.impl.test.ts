@@ -31,7 +31,7 @@ function insertUser(ctx: MutationCtx, deleting = false) {
   return ctx.db.insert("users", {
     credits: 0,
     creditsResetAt: NOW,
-    ...(deleting ? { deletionPreparedAt: NOW } : {}),
+    ...(deleting ? { deletedAt: NOW } : {}),
     email: "xendit-checkout@example.com",
     mascot: MASCOT_CODE,
     name: "Xendit Checkout",
@@ -176,7 +176,7 @@ describe("billing/xendit/checkout internal steps", () => {
       userId,
     });
     await t.mutation((ctx) =>
-      ctx.db.patch(userId, { deletionPreparedAt: NOW })
+      ctx.db.patch(userId, { deletedAt: NOW })
     );
     await expect(
       t.mutation(steps.admit, {

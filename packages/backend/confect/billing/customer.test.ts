@@ -25,7 +25,7 @@ const seedUser = Effect.fn("billing.customer.test.seedUser")(function* (
   return yield* writer.table("users").insert({
     credits: 0,
     creditsResetAt: NOW,
-    ...(deleting ? { deletionPreparedAt: NOW } : {}),
+    ...(deleting ? { deletedAt: NOW } : {}),
     email: "customer@example.com",
     mascot: MASCOT,
     name: "Customer",

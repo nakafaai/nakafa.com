@@ -315,7 +315,7 @@ describe("billing/grants", () => {
     const t = createBillingTestConvex();
     const result = await t.run(async (ctx) => {
       const { accountId, userId } = await insertPerson(ctx);
-      await ctx.db.patch(userId, { deletionPreparedAt: START });
+      await ctx.db.patch(userId, { deletedAt: START });
       const applied = await runInMutation(
         ctx,
         applySubscriptionState(proState(accountId))

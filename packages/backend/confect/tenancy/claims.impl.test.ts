@@ -343,7 +343,7 @@ describe("tenancy/claims run", () => {
         Effect.flatMap(DatabaseWriter, (writer) =>
           writer
             .table("users")
-            .patch(account.userId, { deletionPreparedAt: NOW })
+            .patch(account.userId, { deletedAt: NOW })
         )
       );
       yield* fixture.internal.mutation(run, {

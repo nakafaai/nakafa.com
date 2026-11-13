@@ -112,7 +112,7 @@ describe("claiming a portrait build", () => {
     await f.seed({ confirmedAt: 5, text: "Kelas 12 IPA" });
     await f.seedPortrait({ scheduledAt: NOW });
     await f.t.mutation((ctx) =>
-      ctx.db.patch(f.identity.userId, { deletionPreparedAt: NOW })
+      ctx.db.patch(f.identity.userId, { deletedAt: NOW })
     );
     expect(await claimAt(f)).toBeNull();
     await f.t.mutation((ctx) => ctx.db.delete(f.identity.userId));

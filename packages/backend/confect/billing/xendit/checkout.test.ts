@@ -285,7 +285,7 @@ describe("billing/xendit/checkout", () => {
       vi.mocked(createSession).mockReturnValue(
         Effect.promise(() =>
           t.mutation((ctx) =>
-            ctx.db.patch("users", user.userId, { deletionPreparedAt: NOW })
+            ctx.db.patch("users", user.userId, { deletedAt: NOW })
           )
         ).pipe(Effect.as(openedSession()))
       );
@@ -313,7 +313,7 @@ describe("billing/xendit/checkout", () => {
         const { authed, t, user } = yield* setup();
         yield* Effect.promise(() =>
           t.mutation((ctx) =>
-            ctx.db.patch("users", user.userId, { deletionPreparedAt: NOW })
+            ctx.db.patch("users", user.userId, { deletedAt: NOW })
           )
         );
         yield* Effect.promise(() =>

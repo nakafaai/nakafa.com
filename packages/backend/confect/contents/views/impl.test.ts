@@ -184,16 +184,16 @@ describe("contents/views/impl", () => {
     expect(state.views).toEqual([]);
   });
 
-  it("does not treat a prepared signed-in viewer as anonymous", async () => {
+  it("does not treat a deleted signed-in viewer as anonymous", async () => {
     const t = createConvexTestWithAuth();
     const identity = await t.mutation(async (ctx) => {
       const material = await insertMaterial(ctx);
       const user = await seedAuthenticatedUser(ctx, {
         now: NOW,
-        suffix: "prepared-viewer",
+        suffix: "deleted-viewer",
       });
       await ctx.db.patch("users", user.userId, {
-        deletionPreparedAt: NOW,
+        deletedAt: NOW,
       });
 
       return { ...user, contentId: material.contentId };
@@ -204,7 +204,7 @@ describe("contents/views/impl", () => {
         .withIdentity({ subject: identity.sessionId })
         .mutation(
           api.contents.mutations.views.recordContentView,
-          makeMaterialViewArgs("prepared-device")
+          makeMaterialViewArgs("deleted-device")
         )
     ).rejects.toMatchObject({
       data: {
@@ -225,10 +225,7 @@ describe("contents/views/impl", () => {
 
     await expect(
       t
-        .withIdentity({
-          sessionId: "missing-session",
-          subject: "missing-auth-user",
-        })
+        .withIdentity({ subject: "missing-session" })
         .mutation(
           api.contents.mutations.views.recordContentView,
           makeArticleViewArgs(ARTICLE_CONTENT_ID, "device-1")

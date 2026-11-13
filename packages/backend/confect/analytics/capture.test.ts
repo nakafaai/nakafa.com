@@ -248,7 +248,7 @@ it.each(["missing", "deleting"] as const)(
         await ctx.db.delete("users", id);
       } else {
         await ctx.db.patch("users", id, {
-          deletionPreparedAt: NOW,
+          deletedAt: NOW,
         });
       }
       return id;
@@ -320,7 +320,7 @@ it.each([false, true])(
     await started;
     await t.mutation((ctx) =>
       ctx.db.patch("users", userId, {
-        deletionPreparedAt: NOW,
+        deletedAt: NOW,
       })
     );
     finishCapture();

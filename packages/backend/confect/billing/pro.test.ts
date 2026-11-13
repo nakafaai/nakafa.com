@@ -36,20 +36,12 @@ const request = {
   successUrl: "http://localhost:3000/de/settings/billing",
 } as const;
 
-const setup = Effect.fn("billing.pro.test.setup")(function* (
-  emailVerified = true
-) {
+const setup = Effect.fn("billing.pro.test.setup")(function* () {
   const t = createConvexTestWithAuth();
   yield* TestClock.setTime(NOW);
   const now = yield* Clock.currentTimeMillis;
   const user = yield* Effect.promise(() =>
-    t.mutation((ctx) =>
-      seedAuthenticatedUser(ctx, {
-        emailVerified,
-        now,
-        suffix: "billing",
-      })
-    )
+    t.mutation((ctx) => seedAuthenticatedUser(ctx, { now, suffix: "billing" }))
   );
   const customer = {
     email: "billing@example.com",
@@ -151,7 +143,7 @@ describe("billing/pro", () => {
           yield* Effect.promise(() =>
             t.mutation((ctx) =>
               ctx.db.patch("users", user.userId, {
-                deletionPreparedAt: now,
+                deletedAt: now,
               })
             )
           );
