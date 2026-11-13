@@ -7,10 +7,10 @@ import { SecureRandom } from "effect/crypto";
 import { Base64Url, Hex } from "effect/encoding";
 
 /**
- * The seats one seed call seats. Each seat makes three nested component calls (the Better Auth
- * user, its app profile's link, and its session) beside the app profile, a Person, a grant and
- * its journal entry, and the backend stops a mutation that spends too long in such calls: on
- * 30 Oct, at a load average of 25, a call of twenty-five seats hit that system timeout.
+ * The seats one seed call seats. Each seat makes nested component calls (its Convex Auth
+ * username and password) beside the app profile, a Person, a grant and its journal entry, and
+ * the backend stops a mutation that spends too long in such calls: on 30 Oct, at a load average
+ * of 25, a call of twenty-five seats hit that system timeout.
  */
 const SEATS_PER_CALL = 10;
 
@@ -92,11 +92,15 @@ const seatAll = Effect.fn("load.seed.seats")(function* <E, R>(
       ),
     { concurrency: SEED_CONCURRENCY }
   );
-  return Arr.zipWith(seats, Arr.flatten(accounts), ({ room, token }, userId) => ({
-    room,
-    token,
-    userId,
-  }));
+  return Arr.zipWith(
+    seats,
+    Arr.flatten(accounts),
+    ({ room, token }, userId) => ({
+      room,
+      token,
+      userId,
+    })
+  );
 });
 
 /**

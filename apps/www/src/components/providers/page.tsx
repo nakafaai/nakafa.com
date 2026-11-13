@@ -104,7 +104,7 @@ function usePointerState(store: LiveSessionStore) {
  * read: the marketing pages and the student shell. The store is created once and
  * its context value never changes. The page starts the session after hydration,
  * and only a signed-in hint starts it: a visitor's page creates no Convex client,
- * no Better Auth client and no socket. Leaves that need Convex mount their own
+ * no Convex Auth client and no socket. Leaves that need Convex mount their own
  * island around that one client (see `ConvexIsland`), and render their visitor
  * variant until it exists.
  */

@@ -66,7 +66,7 @@ function useCommittedResult(
   return candidate;
 }
 
-/** Better Auth identifies the principal; Convex must finish switching before subscribing. */
+/** Convex Auth identifies the principal; Convex must finish switching before subscribing. */
 function useViewer(initial: string | null) {
   const sessionViewer = useAuthSession((session) =>
     session.isPending ? undefined : session.userId

@@ -38,7 +38,7 @@ vi.mock(import("@repo/analytics/posthog/browser"), async (importOriginal) => ({
   resetBrowserAnalyticsIdentity: vi.fn(),
 }));
 
-/** The session readers saw, and Better Auth's answer once the account signed out. */
+/** The session readers saw, and the client's answer once the account signed out. */
 const shownSession = {
   hasError: false,
   isPending: false,

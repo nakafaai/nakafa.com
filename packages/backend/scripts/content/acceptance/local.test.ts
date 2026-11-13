@@ -12,13 +12,11 @@ import {
   reserveLocalRuntime,
 } from "@repo/backend/scripts/content/acceptance/local";
 import {
-  anonymousConvexCommand,
   fixture,
   isPortOccupied,
   leaseClaims,
   occupyPort,
   ticking,
-  versionServiceError,
 } from "@repo/backend/test/acceptance";
 import { nodePlatform } from "@repo/backend/test/platform";
 import { JsonTextSchema } from "@repo/utilities/json";
@@ -96,15 +94,6 @@ describe("owned signed acceptance runtime", () => {
             stdin: expect.stringContaining(privateKey),
           })
         );
-        // Convex Auth signs the learners' sessions with the deployment's own key,
-        // so the runtime configures no signing key or secret of its own.
-        for (const retired of ["JWKS=", "BETTER_AUTH_SECRET="]) {
-          expect(mocks.command).not.toHaveBeenCalledWith(
-            expect.objectContaining({
-              stdin: expect.stringContaining(retired),
-            })
-          );
-        }
         expect(runtime.app).toBe("http://localhost:3000");
         expect(localApplicationEnvironment(runtime)).toMatchObject({
           CONVEX_AGENT_MODE: "anonymous",

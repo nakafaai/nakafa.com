@@ -13,7 +13,7 @@ import {
  * subscription to both stores, so a reader runs only when its selection
  * changes, and the server snapshot is the state the server rendered. The hook
  * lives apart from the provider, so a visitor's page that reads it never loads
- * the Better Auth or Convex client modules.
+ * the Convex Auth or Convex client modules.
  */
 export function useConvexAuth<T>(selector: (auth: ConvexAuth) => T) {
   const store = use(ConvexAuthContext);

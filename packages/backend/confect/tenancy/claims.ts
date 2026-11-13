@@ -5,7 +5,7 @@ import {
   Scheduler,
 } from "@repo/backend/confect/_generated/services";
 import type { Email } from "@repo/backend/confect/tenancy/schema";
-import { Duration, Effect, Option, Predicate } from "effect";
+import { Duration, Effect, Option } from "effect";
 
 /**
  * Rows one scheduled claim step handles at most: the invites that one run
@@ -27,7 +27,7 @@ export const scheduleRun = Effect.fn("tenancy.claims.schedule")(function* (
 });
 
 /**
- * After an account signs up or Better Auth verifies its address: schedules the
+ * After an account signs up with an address Google verified: schedules the
  * claim run only when an invite waits for that address, so a sign-up with no
  * invite costs one indexed read. Invites store the form that `Email` accepts,
  * trimmed and lowercase, so an address in any other form matches none.

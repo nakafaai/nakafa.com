@@ -80,7 +80,7 @@ const readStoredRecord = (text: string) =>
  * or when the stored anonymous record decides: a denial under any notice, and a
  * grant under the current notice only. It is "pending" while a session is known,
  * whether it is signed in or a sign-in is on its way, because the store waits for
- * Better Auth, Convex, and the account's choice before it knows the status. It is
+ * Convex Auth, Convex, and the account's choice before it knows the status. It is
  * null when the prompt may show.
  *
  * The inline script is built from this function's source text, so it refers to

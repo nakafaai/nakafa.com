@@ -29,8 +29,8 @@ export const agentTrustKeys = () => ({
   ),
 });
 /**
- * Reads the Convex site address that server code calls for Better Auth, the
- * session and the token routes. The browser reads the same public name through
+ * Reads the Convex site address, which serves the deployment's HTTP actions
+ * that the page and server code call. The browser reads the same public name through
  * `@repo/backend/public`, so the Worker binds this key with the other server values.
  */
 export const convexSiteServerKeys = () =>

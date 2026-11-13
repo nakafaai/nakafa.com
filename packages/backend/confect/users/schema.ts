@@ -29,7 +29,7 @@ export type UserPlan = typeof userPlanValidator.Type;
  */
 export const userValidator = Schema.Struct({
   email: Schema.String,
-  // The retired Better Auth id of an account made before Convex Auth. Nothing
+  // The retired id of the earlier auth system, on accounts made before Convex Auth. Nothing
   // reads or writes it: the Convex CLI clears it right after the deploy that
   // retires it, because Convex refuses to drop a required field that every row
   // holds in one deploy, and the next change deletes this line.

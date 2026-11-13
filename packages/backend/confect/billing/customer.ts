@@ -58,11 +58,11 @@ const adoptCustomerByEmail = Effect.fn("billing.customer.adoptByEmail")(
 
 /**
  * Links the Polar customer of a Nakafa user to the identity Nakafa holds. Polar
- * finds the customer by its external ID, which is the Better Auth user ID: the
- * external ID every customer created before billing accounts carries, so those
- * customers are reused rather than duplicated. A customer that Polar already
- * holds is updated only where its email or name has drifted, and one that holds
- * the email under another external ID is adopted when the user may adopt it.
+ * finds the customer by its external ID, which is the user's id. A customer
+ * that Polar already holds is updated only where its email or name has drifted,
+ * and one that holds the email under another external ID, as every customer
+ * made under the earlier account ids does, is adopted when the user may adopt
+ * it, so it is reused rather than duplicated.
  */
 const linkPolarCustomer = Effect.fn("billing.customer.link")(function* (
   userId: Docs["users"]["_id"],
