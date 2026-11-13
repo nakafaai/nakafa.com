@@ -1,12 +1,11 @@
 import { idOf } from "@repo/backend/confect/island/blocks";
 import { footprintOf, HEIGHT, SPAN } from "@repo/backend/confect/island/world";
 import { Array as Arr, Option, Order, Schema } from "effect";
-import { SLOTS, slotUv, TileName } from "@/lib/island/atlas";
+import { SLOTS, slotUv, type TileName } from "@/lib/island/atlas";
 import { KIND, LOOK } from "@/lib/island/look";
 import { STRIDE } from "@/lib/island/mesh";
 import { unitOf } from "@/lib/island/noise";
 import { SCALE } from "@/lib/island/scale";
-import { TILE } from "@/lib/island/tiles/paint";
 import { blockAt, type Cells, SEA_LEVEL } from "@/lib/island/world";
 
 const WATER = idOf("water");
@@ -23,7 +22,7 @@ const FOLK = ["cat", "rabbit", "bear"] as const;
  * long it still rests before it goes on.
  */
 export const Animal = Schema.Struct({
-  kind: Schema.Literals(["hen", "duck", ...FOLK, "fox"]),
+  kind: Schema.Literals(["hen", "duck", "cow", ...FOLK, "fox"]),
   rest: Schema.Finite,
   steps: Schema.Int,
   tx: Schema.Finite,
@@ -55,7 +54,9 @@ export function suitsOf(
       if (kind === "duck") {
         return block === WATER;
       }
-      return kind === "hen" ? Arr.contains(WALKABLE, block) : block === PATH;
+      return kind === "hen" || kind === "cow"
+        ? Arr.contains(WALKABLE, block)
+        : block === PATH;
     }
   );
 }
@@ -97,13 +98,20 @@ export function herdOf(cells: Cells, seed: number, size: number) {
     suiting("cat", FOLK.length),
     (kind, { x, z }) => placed(kind, x, z)
   );
-  return Arr.appendAll(Arr.appendAll(pick("hen", 3), pick("duck", 2)), folk);
+  return Arr.appendAll(
+    Arr.appendAll(
+      Arr.appendAll(pick("hen", 3), pick("cow", 3)),
+      pick("duck", 2)
+    ),
+    folk
+  );
 }
 
 /** How fast each kind moves, in cells a second; the fox is the learner, who walks where they press. */
 const SPEED = {
   bear: 0.9,
   cat: 1.2,
+  cow: 0.5,
   duck: 0.6,
   fox: 3.2,
   hen: 1.1,
@@ -208,121 +216,21 @@ function ninaVertices(size: number, time: number) {
   );
 }
 
-/** One upright sprite: a tile, where its feet stand, how tall it is drawn in blocks, and whether it is mirrored. */
-const Sprite = Schema.Struct({
-  flip: Schema.Boolean,
-  name: TileName,
-  size: Schema.Finite,
-  x: Schema.Finite,
-  y: Schema.Finite,
-  z: Schema.Finite,
-});
-type Sprite = typeof Sprite.Type;
-
-/** How many of a fowl's tile rows its body fills, so it is drawn at its real height. */
-const FOWL_ROWS = { duck: 9, hen: 13 } as const;
-
 /**
- * The sprites one creature is drawn as: a hen or a duck as one tile at its
- * real height, a villager as a head tile over a body tile, two blocks tall,
- * stepping as they walk. Each faces the way it moves.
+ * What of the island's life is still drawn flat, as quads in the chunk
+ * program's vertex layout: the wild visitors' quads (`wild`), then Nina lying
+ * flat on the sea, swimming her loop. The herd and the learner's fox are true
+ * 3D bodies (ADR 0047, D21).
  */
-function spritesOf(
-  cells: Cells,
-  animal: Animal,
-  index: number,
-  right: readonly [number, number, number],
-  time: number
-): readonly Sprite[] {
-  const flip =
-    (animal.tx - animal.x) * right[0] + (animal.tz - animal.z) * right[2] < 0;
-  const stride = animal.rest === 0 && Math.floor(time * 6) % 2 === 1;
-  const ground = Option.match(
-    groundOf(cells, Math.floor(animal.x), Math.floor(animal.z)),
-    {
-      onNone: () => SEA_LEVEL,
-      onSome: ({ y }) => y + 1,
-    }
-  );
-  const at = { flip, x: animal.x, z: animal.z };
-  if (animal.kind === "duck") {
-    const size = (SCALE.fowl * TILE) / FOWL_ROWS.duck;
-    const bob = Math.sin(time * 2 + index) * 0.04;
-    return [
-      { ...at, name: "duck", size, y: SEA_LEVEL - 0.15 - size * 0.55 + bob },
-    ];
-  }
-  if (animal.kind === "hen") {
-    const size = (SCALE.fowl * TILE) / FOWL_ROWS.hen;
-    return [
-      { ...at, name: stride ? "henStep" : "hen", size, y: ground - 0.02 },
-    ];
-  }
-  const half = SCALE.person / 2;
-  return [
-    {
-      ...at,
-      name: `${animal.kind}${stride ? "Step" : "Bottom"}`,
-      size: half,
-      y: ground,
-    },
-    { ...at, name: `${animal.kind}Top`, size: half, y: ground + half },
-  ];
-}
-
-/** A sprite's four corners as a quad that faces the camera, standing on its feet. */
-function billboardOf(sprite: Sprite, right: readonly [number, number, number]) {
-  return Arr.flatMap(
-    [
-      [0, 1],
-      [1, 1],
-      [1, 0],
-      [0, 0],
-    ] as const,
-    ([u, v]) => {
-      const side = (u - 0.5) * sprite.size;
-      const [tu, tv] = slotUv(SLOTS[sprite.name], u, v, sprite.flip);
-      return [
-        sprite.x + right[0] * side,
-        sprite.y + (1 - v) * sprite.size,
-        sprite.z + right[2] * side,
-        tu,
-        tv,
-        1,
-        1,
-        0,
-      ];
-    }
-  );
-}
-
-/**
- * The island's life as quads in the chunk program's vertex layout: every
- * creature's sprites facing the camera turned by `yaw`, the wild visitors'
- * quads (`wild`), then Nina lying flat on the sea, swimming her loop.
- */
-export function herdQuads(
-  cells: Cells,
-  herd: readonly Animal[],
+export function flatQuads(
   size: number,
-  yaw: number,
   time: number,
   wild: readonly number[] = []
 ) {
-  const right = [Math.cos(yaw), 0, -Math.sin(yaw)] as const;
-  const sprites = Arr.flatMap(herd, (animal, index) =>
-    spritesOf(cells, animal, index, right, time)
-  );
   const vertices = new Float32Array(
-    Arr.appendAll(
-      Arr.appendAll(
-        Arr.flatMap(sprites, (sprite) => billboardOf(sprite, right)),
-        wild
-      ),
-      ninaVertices(size, time)
-    )
+    Arr.appendAll(wild, ninaVertices(size, time))
   );
-  const quads = sprites.length + wild.length / (4 * STRIDE) + 1;
+  const quads = wild.length / (4 * STRIDE) + 1;
   const indices = new Uint32Array(
     Arr.flatMap(
       Arr.makeBy(quads, (quad) => quad),

@@ -229,3 +229,69 @@ void main() {
   vec3 lit = base.rgb * (1.0 - 0.5 * outline);
   color = vec4(mix(lit, min(lit * 1.25 + 0.03, vec3(1.0)), crease * (1.0 - outline)), 1.0);
 }`;
+
+/**
+ * The body program (ADR 0047, D21): every true 3D model of one kind at once,
+ * each body placed, turned to face its way and bobbing as it walks from its
+ * own numbers. Faces are lit flat by the sun from the upper left and the sky,
+ * in the same few steps of light as the blocks, and write their direction for
+ * the edge pass, so every body is outlined as crisply as a house. A shadow
+ * pass draws the same kind flattened to a dark disc on the ground.
+ */
+export const BODY_VERTEX = `#version 300 es
+layout(location = 0) in vec3 aPosition;
+layout(location = 1) in vec3 aNormal;
+layout(location = 2) in vec3 aColor;
+layout(location = 3) in vec4 aPlace;
+layout(location = 4) in float aBob;
+uniform mat4 uViewProjection;
+uniform float uTime;
+uniform float uShadow;
+out vec3 vColor;
+out vec3 vNormal;
+out vec3 vWorld;
+void main() {
+  float c = cos(aPlace.w);
+  float s = sin(aPlace.w);
+  vec3 local = aPosition;
+  if (uShadow > 0.5) {
+    // A shadow is the body pressed flat, a hair above the ground so it never fights it.
+    local = vec3(local.x * 0.9, 0.03, local.z * 0.9);
+  }
+  vec3 turned = vec3(local.x * c + local.z * s, local.y, -local.x * s + local.z * c);
+  vec3 place = aPlace.xyz + turned;
+  place.y += abs(sin(uTime * 9.0 + aPlace.x * 3.1)) * aBob * (1.0 - uShadow);
+  vNormal = vec3(aNormal.x * c + aNormal.z * s, aNormal.y, -aNormal.x * s + aNormal.z * c);
+  vColor = aColor;
+  vWorld = place;
+  gl_Position = uViewProjection * vec4(place, 1.0);
+}`;
+
+export const BODY_FRAGMENT = `#version 300 es
+precision highp float;
+uniform vec3 uSun;
+uniform vec3 uAmbient;
+uniform vec3 uFog;
+uniform vec2 uFogRange;
+uniform vec3 uEye;
+uniform float uShadow;
+in vec3 vColor;
+in vec3 vNormal;
+in vec3 vWorld;
+layout(location = 0) out vec4 color;
+layout(location = 1) out vec4 surface;
+void main() {
+  vec3 normal = normalize(vNormal);
+  if (uShadow > 0.5) {
+    color = vec4(0.0, 0.0, 0.0, 0.28);
+    surface = vec4(0.5, 1.0, 0.5, 1.0);
+    return;
+  }
+  float facing = max(dot(normal, normalize(vec3(-0.45, 0.8, 0.4))), 0.0);
+  float shade = 0.62 + 0.38 * max(normal.y, 0.0);
+  vec3 light = uAmbient * shade + uSun * facing;
+  light = floor(light * 6.0 + 0.5) / 6.0;
+  float fog = smoothstep(uFogRange.x, uFogRange.y, distance(vWorld, uEye));
+  color = vec4(mix(vColor * light, uFog, fog), 1.0);
+  surface = vec4(normal * 0.5 + 0.5, 1.0);
+}`;
