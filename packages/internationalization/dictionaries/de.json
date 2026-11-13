@@ -399,6 +399,7 @@
     "student-score": "{points} von {total} Punkten",
     "student-results-footer": "Deine Lehrkraft gibt die Ergebnisse nach Ende der Sitzung frei.",
     "student-answer": "Deine Antwort: <typed>{answer}</typed>",
+    "student-answer-label": "Deine Antwort:",
     "student-answers": "Deine Antworten",
     "student-results-released": "Deine Lehrkraft hat diese Ergebnisse freigegeben.",
     "schedule": "Planen",
@@ -3175,6 +3176,9 @@
     },
     "memory-too-long": {
       "title": "Text zu lang für eine Erinnerung."
+    },
+    "essay-too-long": {
+      "title": "Text zu lang für eine Antwort."
     },
     "interpretation-error": {
       "title": "Tafsir konnte nicht geladen werden.",

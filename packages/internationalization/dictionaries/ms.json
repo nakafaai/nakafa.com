@@ -399,6 +399,7 @@
     "student-score": "{points} daripada {total} mata",
     "student-results-footer": "Guru kamu mengeluarkan keputusan selepas sesi ditutup.",
     "student-answer": "Jawapan kamu: <typed>{answer}</typed>",
+    "student-answer-label": "Jawapan kamu:",
     "student-answers": "Jawapan kamu",
     "student-results-released": "Guru kamu telah mengeluarkan keputusan ini.",
     "schedule": "Jadual",
@@ -3175,6 +3176,9 @@
     },
     "memory-too-long": {
       "title": "Terlalu panjang untuk satu memori."
+    },
+    "essay-too-long": {
+      "title": "Teks terlalu panjang untuk jawapan."
     },
     "interpretation-error": {
       "title": "Tidak dapat memuatkan tafsiran ini.",
