@@ -51,4 +51,17 @@ describe("island/gravity", () => {
     expect(blockAt(cells, 6, 9, 5)).toBe(0);
     expect(settleOf(cells, [])).toEqual([]);
   });
+
+  it("drops sand through a flower, which it buries, and down to the world's floor where nothing holds it", () => {
+    const cells = ground();
+    cells[cellOf(5, 9, 5)] = idOf("rose");
+    cells[cellOf(5, 10, 5)] = idOf("sand");
+    settleOf(cells, [{ after: idOf("sand"), before: 0, x: 5, y: 10, z: 5 }]);
+    expect(blockAt(cells, 5, 9, 5)).toBe(idOf("sand"));
+    expect(blockAt(cells, 5, 10, 5)).toBe(0);
+    const open = emptyCells();
+    open[cellOf(9, 3, 9)] = idOf("sand");
+    settleOf(open, [{ after: idOf("sand"), before: 0, x: 9, y: 3, z: 9 }]);
+    expect(blockAt(open, 9, 0, 9)).toBe(idOf("sand"));
+  });
 });
