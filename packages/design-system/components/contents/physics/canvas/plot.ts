@@ -5,6 +5,7 @@ import {
   mix,
 } from "@repo/design-system/components/contents/physics/canvas/paint";
 import { getColor } from "@repo/design-system/lib/color";
+import { Schema } from "effect";
 import type p5 from "p5";
 
 /**
@@ -13,16 +14,17 @@ import type p5 from "p5";
  * velocity-time graph beside its scene maps through one of these, so every
  * curve, secant, and tangent lands where its value says.
  */
-export type Graph = {
-  readonly box: {
-    readonly height: number;
-    readonly width: number;
-    readonly x: number;
-    readonly y: number;
-  };
-  readonly time: readonly [number, number];
-  readonly value: readonly [number, number];
-};
+export const GraphSchema = Schema.Struct({
+  box: Schema.Struct({
+    height: Schema.Number,
+    width: Schema.Number,
+    x: Schema.Number,
+    y: Schema.Number,
+  }),
+  time: Schema.Tuple([Schema.Number, Schema.Number]),
+  value: Schema.Tuple([Schema.Number, Schema.Number]),
+});
+export type Graph = typeof GraphSchema.Type;
 
 /** The canvas x of a moment on the graph. */
 export function graphX(graph: Graph, time: number) {
@@ -33,7 +35,11 @@ export function graphX(graph: Graph, time: number) {
 /** The canvas y of a value on the graph, which grows upward. */
 export function graphY(graph: Graph, value: number) {
   const [low, high] = graph.value;
-  return graph.box.y + graph.box.height - ((value - low) / (high - low)) * graph.box.height;
+  return (
+    graph.box.y +
+    graph.box.height -
+    ((value - low) / (high - low)) * graph.box.height
+  );
 }
 
 /**
@@ -53,15 +59,29 @@ export function paintGraph(
   sketch.push();
   sketch.strokeWeight(1);
   sketch.stroke(fade(getColor("SLATE", 400), 0.18));
-  for (let time = graph.time[0]; time <= graph.time[1] + 1e-9; time += step.time) {
-    sketch.line(graphX(graph, time), box.y, graphX(graph, time), box.y + box.height);
+  for (
+    let time = graph.time[0];
+    time <= graph.time[1] + 1e-9;
+    time += step.time
+  ) {
+    sketch.line(
+      graphX(graph, time),
+      box.y,
+      graphX(graph, time),
+      box.y + box.height
+    );
   }
   for (
     let value = Math.ceil(graph.value[0] / step.value) * step.value;
     value <= graph.value[1] + 1e-9;
     value += step.value
   ) {
-    sketch.line(box.x, graphY(graph, value), box.x + box.width, graphY(graph, value));
+    sketch.line(
+      box.x,
+      graphY(graph, value),
+      box.x + box.width,
+      graphY(graph, value)
+    );
   }
   sketch.stroke(fade(getColor("SLATE", 200), 0.7));
   sketch.strokeWeight(1.5);
@@ -79,7 +99,11 @@ export function paintCurve(
   sketch: p5,
   graph: Graph,
   curve: (time: number) => number,
-  style: { readonly color: string; readonly until: number; readonly weight: number }
+  style: {
+    readonly color: string;
+    readonly until: number;
+    readonly weight: number;
+  }
 ) {
   const [start, end] = graph.time;
   const last = Math.min(style.until, end);
@@ -111,8 +135,14 @@ export function paintSlopeLine(
   const [start, end] = graph.time;
   dashed(
     sketch,
-    { x: graphX(graph, start), y: graphY(graph, through.value + slope * (start - through.time)) },
-    { x: graphX(graph, end), y: graphY(graph, through.value + slope * (end - through.time)) },
+    {
+      x: graphX(graph, start),
+      y: graphY(graph, through.value + slope * (start - through.time)),
+    },
+    {
+      x: graphX(graph, end),
+      y: graphY(graph, through.value + slope * (end - through.time)),
+    },
     { color: style.color, dash: 6, weight: style.weight }
   );
 }

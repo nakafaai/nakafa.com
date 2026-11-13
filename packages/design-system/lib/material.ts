@@ -8,6 +8,10 @@
  * surfaces from `getColor` in `@repo/design-system/lib/color`.
  */
 export const MATERIAL = {
+  // The open sky, deep overhead and hazy at the horizon.
+  skyHaze: "#c9d6df",
+  skyZenith: "#5f88b3",
+
   // The road and its roadside.
   asphalt: "#3a3c3f",
   bark: "#4a3a2c",

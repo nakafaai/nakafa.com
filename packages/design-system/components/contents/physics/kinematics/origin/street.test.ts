@@ -2,8 +2,8 @@ import { describe, expect, it } from "@effect/vitest";
 import {
   measuredFrom,
   RIDE_DURATION,
-  rideSummary,
   ridePosition,
+  rideSummary,
 } from "@repo/design-system/components/contents/physics/kinematics/origin/street";
 
 describe("ridePosition", () => {

@@ -11,7 +11,11 @@ import { Array as Arr, Schema } from "effect";
 export const TripSchema = Schema.Literals(["commute", "cruise", "return"]);
 export type Trip = typeof TripSchema.Type;
 
-type Stretch = { readonly acceleration: number; readonly duration: number };
+const StretchSchema = Schema.Struct({
+  acceleration: Schema.Number,
+  duration: Schema.Number,
+});
+type Stretch = typeof StretchSchema.Type;
 
 /**
  * commute: speeds up, cruises, brakes to a red light, waits, and drives on,
@@ -80,7 +84,11 @@ export function tripState(trip: Trip, time: number) {
 
 /** How long a trip lasts, in seconds. */
 export function tripDuration(trip: Trip) {
-  return Arr.reduce(TRIPS[trip].stretches, 0, (sum, stretch) => sum + stretch.duration);
+  return Arr.reduce(
+    TRIPS[trip].stretches,
+    0,
+    (sum, stretch) => sum + stretch.duration
+  );
 }
 
 /** The intervals a learner can choose, as start and end times in seconds. */
@@ -89,16 +97,21 @@ export function tripIntervals(trip: Trip) {
 }
 
 /** The change of position, the time, and the average velocity over one interval. */
-export function averageOver(trip: Trip, [start, end]: readonly [number, number]) {
-  const displacement = tripState(trip, end).position - tripState(trip, start).position;
+export function averageOver(
+  trip: Trip,
+  [start, end]: readonly [number, number]
+) {
+  const displacement =
+    tripState(trip, end).position - tripState(trip, start).position;
   const elapsed = end - start;
   return { displacement, elapsed, velocity: displacement / elapsed };
 }
 
 /** The lowest and highest positions a trip reaches, for the graph's range. */
 export function tripReach(trip: Trip) {
-  const samples = Arr.makeBy(201, (index) =>
-    tripState(trip, (tripDuration(trip) * index) / 200).position
+  const samples = Arr.makeBy(
+    201,
+    (index) => tripState(trip, (tripDuration(trip) * index) / 200).position
   );
   return { highest: Math.max(...samples), lowest: Math.min(...samples) };
 }

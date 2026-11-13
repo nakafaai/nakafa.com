@@ -12,7 +12,11 @@ export const LandmarkSchema = Schema.Literals(["store", "house", "pole"]);
 export type Landmark = typeof LandmarkSchema.Type;
 
 /** Where each landmark stands, in metres east of the store. */
-export const LANDMARKS = { house: 20, pole: 50, store: 0 } as const satisfies Record<Landmark, number>;
+export const LANDMARKS = {
+  house: 20,
+  pole: 50,
+  store: 0,
+} as const satisfies Record<Landmark, number>;
 
 /** The ride: start, the far point, and the end, in metres east of the store; each leg lasts 6 s. */
 export const RIDE = { end: 35, far: 50, leg: 6, start: 20 } as const;

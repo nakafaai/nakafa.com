@@ -16,7 +16,11 @@ const MAX_STEP = 0.1;
 export function advanceRun(
   time: number,
   elapsed: number,
-  run: { readonly duration: number; readonly hold: number; readonly rate: number }
+  run: {
+    readonly duration: number;
+    readonly hold: number;
+    readonly rate: number;
+  }
 ) {
   const next = time + Math.min(elapsed, MAX_STEP) * run.rate;
   return next > run.duration + run.hold * run.rate ? 0 : next;

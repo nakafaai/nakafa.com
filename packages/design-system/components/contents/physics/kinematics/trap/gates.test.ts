@@ -1,11 +1,11 @@
 import { describe, expect, it } from "@effect/vitest";
-import { Array as Arr } from "effect";
 import {
   TRAP_CENTRE,
   trapArrival,
   trapPosition,
   trapReading,
 } from "@repo/design-system/components/contents/physics/kinematics/trap/gates";
+import { Array as Arr } from "effect";
 
 describe("trap motion", () => {
   it("reaches the centre at 5 s, moving at 20 m/s", () => {
@@ -25,7 +25,10 @@ describe("trapReading", () => {
 
   it("closes in on the instantaneous speed as the gap shrinks", () => {
     const readings = [40, 20, 10, 2] as const;
-    const errors = Arr.map(readings, (gap) => trapReading(gap).instant - trapReading(gap).average);
+    const errors = Arr.map(
+      readings,
+      (gap) => trapReading(gap).instant - trapReading(gap).average
+    );
     expect(errors[0]).toBeGreaterThan(errors[1] ?? 0);
     expect(errors[1]).toBeGreaterThan(errors[2] ?? 0);
     expect(errors[2]).toBeGreaterThan(errors[3] ?? 0);

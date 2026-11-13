@@ -38,7 +38,11 @@ describe("strobeFlashes", () => {
 
 describe("strobeFacts", () => {
   it("reads each shot's outcome", () => {
-    expect(strobeFacts("drop")).toEqual({ airTime: 0.6, height: 1.8, outcome: 6 });
+    expect(strobeFacts("drop")).toEqual({
+      airTime: 0.6,
+      height: 1.8,
+      outcome: 6,
+    });
     expect(strobeFacts("toss").outcome).toBeCloseTo(1.25);
     expect(strobeFacts("launch").outcome).toBeCloseTo(2);
     expect(strobeFacts("components").outcome).toBeCloseTo(9.6);

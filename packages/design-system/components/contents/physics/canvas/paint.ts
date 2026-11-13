@@ -1,4 +1,5 @@
 import { getColor } from "@repo/design-system/lib/color";
+import { Schema } from "effect";
 import type p5 from "p5";
 
 /**
@@ -9,7 +10,11 @@ import type p5 from "p5";
  */
 
 /** A point on the canvas, in pixels. */
-type Point = { readonly x: number; readonly y: number };
+export const PointSchema = Schema.Struct({
+  x: Schema.Number,
+  y: Schema.Number,
+});
+type Point = typeof PointSchema.Type;
 
 /** The 2D context under a p5 canvas, which carries gradients and shadows. */
 function context(sketch: p5) {
@@ -26,7 +31,8 @@ export function mix(from: string, to: string, amount: number) {
     Number.parseInt(color.slice(start, start + 2), 16);
   const blend = (start: number) =>
     Math.round(
-      channel(from, start) + (channel(to, start) - channel(from, start)) * amount
+      channel(from, start) +
+        (channel(to, start) - channel(from, start)) * amount
     )
       .toString(16)
       .padStart(2, "0");
@@ -45,7 +51,12 @@ export function fade(color: string, opacity: number) {
  */
 export function gradientRect(
   sketch: p5,
-  box: { readonly height: number; readonly width: number; readonly x: number; readonly y: number },
+  box: {
+    readonly height: number;
+    readonly width: number;
+    readonly x: number;
+    readonly y: number;
+  },
   stops: readonly (readonly [offset: number, color: string])[],
   across = false
 ) {
@@ -103,7 +114,11 @@ export function litBall(
  */
 export function withShadow(
   sketch: p5,
-  shadow: { readonly blur: number; readonly color: string; readonly drop: number },
+  shadow: {
+    readonly blur: number;
+    readonly color: string;
+    readonly drop: number;
+  },
   paint: () => void
 ) {
   const drawing = context(sketch);
@@ -143,7 +158,11 @@ export function arrow(
   sketch: p5,
   from: Point,
   to: Point,
-  style: { readonly color: string; readonly head: number; readonly weight: number }
+  style: {
+    readonly color: string;
+    readonly head: number;
+    readonly weight: number;
+  }
 ) {
   const dx = to.x - from.x;
   const dy = to.y - from.y;
@@ -179,7 +198,11 @@ export function dashed(
   sketch: p5,
   from: Point,
   to: Point,
-  style: { readonly color: string; readonly dash: number; readonly weight: number }
+  style: {
+    readonly color: string;
+    readonly dash: number;
+    readonly weight: number;
+  }
 ) {
   const drawing = context(sketch);
   sketch.push();
@@ -217,7 +240,12 @@ export function spotlight(
   gradient.addColorStop(1, fade(light.color, 0));
   drawing.save();
   drawing.fillStyle = gradient;
-  drawing.fillRect(center.x - radius, center.y - radius, radius * 2, radius * 2);
+  drawing.fillRect(
+    center.x - radius,
+    center.y - radius,
+    radius * 2,
+    radius * 2
+  );
   drawing.restore();
 }
 

@@ -32,7 +32,11 @@ import {
   ParabolicMovementAnalysisLab,
   ParabolicMovementLab,
 } from "@/lib/content/renderer/client/physics/parabolic";
-import { TickerTapeLab } from "@/lib/content/renderer/client/physics/ticker";
+import { StreetOriginPositionLab } from "@/lib/content/renderer/client/physics/street";
+import { StrobePhotoMotionLab } from "@/lib/content/renderer/client/physics/strobe";
+import { TickerTapeMotionLab } from "@/lib/content/renderer/client/physics/ticker";
+import { SpeedTrapInstantSpeedLab } from "@/lib/content/renderer/client/physics/trap";
+import { CarTripAverageVelocityLab } from "@/lib/content/renderer/client/physics/trip";
 import { VectorConceptLab } from "@/lib/content/renderer/client/physics/vector";
 import {
   AverageVelocitySpeedLab,
@@ -112,8 +116,8 @@ export const physicsRenderers = [
     component: StoppingDistanceLab,
   },
   {
-    name: physicsComponentNames.tickerTapeLab,
-    component: TickerTapeLab,
+    name: physicsComponentNames.tickerTapeMotionLab,
+    component: TickerTapeMotionLab,
   },
   {
     name: physicsComponentNames.uniformCircularMotionLab,
@@ -138,5 +142,21 @@ export const physicsRenderers = [
   {
     name: physicsComponentNames.windEnergyConversionLab,
     component: WindEnergyConversionLab,
+  },
+  {
+    name: physicsComponentNames.carTripAverageVelocityLab,
+    component: CarTripAverageVelocityLab,
+  },
+  {
+    name: physicsComponentNames.speedTrapInstantSpeedLab,
+    component: SpeedTrapInstantSpeedLab,
+  },
+  {
+    name: physicsComponentNames.streetOriginPositionLab,
+    component: StreetOriginPositionLab,
+  },
+  {
+    name: physicsComponentNames.strobePhotoMotionLab,
+    component: StrobePhotoMotionLab,
   },
 ] satisfies readonly RendererImplementation[];

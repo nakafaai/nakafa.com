@@ -12,11 +12,22 @@ import { Array as Arr, Match, Schema } from "effect";
 export const GRAVITY = 10;
 
 /** The photographs a lesson can show. */
-export const StrobeShotSchema = Schema.Literals(["drop", "toss", "launch", "components"]);
+export const StrobeShotSchema = Schema.Literals([
+  "drop",
+  "toss",
+  "launch",
+  "components",
+]);
 export type StrobeShot = typeof StrobeShotSchema.Type;
 
 /** One ball in a photograph: where it is at a time after release, in metres. */
-type Ball = { readonly x: number; readonly y: number; readonly vx: number; readonly vy: number };
+const BallSchema = Schema.Struct({
+  vx: Schema.Number,
+  vy: Schema.Number,
+  x: Schema.Number,
+  y: Schema.Number,
+});
+type Ball = typeof BallSchema.Type;
 
 /** A ball that starts at (x, y) with velocity (vx, vy) and then only falls. */
 function thrown(start: Ball, time: number): Ball {
@@ -81,7 +92,10 @@ export function strobeBalls(shot: StrobeShot, time: number) {
 /** The flash times of a shot, from release to the end. */
 export function strobeFlashes(shot: StrobeShot) {
   const { duration, interval } = STROBE_SHOTS[shot];
-  return Arr.makeBy(Math.round(duration / interval) + 1, (index) => index * interval);
+  return Arr.makeBy(
+    Math.round(duration / interval) + 1,
+    (index) => index * interval
+  );
 }
 
 /**

@@ -11,7 +11,9 @@ import {
 describe("tape motions", () => {
   it("cover the same 0.48 m in 0.8 s, so only the spacing differs", () => {
     for (const motion of ["uniform", "speeding", "slowing"] as const) {
-      expect(tapePosition(motion, TAPE_MOTIONS[motion].duration)).toBeCloseTo(0.48);
+      expect(tapePosition(motion, TAPE_MOTIONS[motion].duration)).toBeCloseTo(
+        0.48
+      );
     }
   });
 
@@ -57,7 +59,7 @@ describe("stripAcceleration", () => {
   it("reads the acceleration back from the strips", () => {
     expect(stripAcceleration(tapeStrips("speeding"))).toBeCloseTo(1);
     expect(stripAcceleration(tapeStrips("slowing"))).toBeCloseTo(-1);
-    expect(stripAcceleration(tapeStrips("uniform"))).toBeCloseTo(0);
+    expect(stripAcceleration(tapeStrips("uniform"))).toBe(0);
   });
 
   it("reads no acceleration from one strip or none", () => {

@@ -33,7 +33,11 @@ describe("averageOver", () => {
     expect(averageOver("commute", [0, 4]).velocity).toBe(5);
     expect(averageOver("commute", [4, 10]).velocity).toBe(10);
     expect(averageOver("commute", [10, 16]).velocity).toBeCloseTo(10 / 6);
-    expect(averageOver("commute", [0, 20])).toEqual({ displacement: 110, elapsed: 20, velocity: 5.5 });
+    expect(averageOver("commute", [0, 20])).toEqual({
+      displacement: 110,
+      elapsed: 20,
+      velocity: 5.5,
+    });
   });
 
   it("is the same for every interval of a steady cruise", () => {

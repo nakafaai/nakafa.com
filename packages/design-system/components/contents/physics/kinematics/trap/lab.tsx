@@ -2,7 +2,6 @@ import {
   advanceRun,
   shownTime,
 } from "@repo/design-system/components/contents/physics/canvas/clock";
-import { useMeasure } from "@repo/design-system/components/contents/physics/canvas/measure";
 import {
   fade,
   mix,
@@ -34,6 +33,7 @@ import {
   trapPosition,
   trapReading,
 } from "@repo/design-system/components/contents/physics/kinematics/trap/gates";
+import { useQuantity } from "@repo/design-system/components/contents/simulation/quantity";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import {
   ToggleGroup,
@@ -85,7 +85,12 @@ function layout(sketch: p5) {
     top: 0,
   };
   const graph: Graph = {
-    box: { height: height * 0.42, width: width - 2 * margin, x: margin, y: height * 0.53 },
+    box: {
+      height: height * 0.42,
+      width: width - 2 * margin,
+      x: margin,
+      y: height * 0.53,
+    },
     time: [0, Math.ceil(DURATION)],
     value: [-4, TRACK + 4],
   };
@@ -104,9 +109,16 @@ function paintGate(sketch: p5, road: Road, metres: number, broken: boolean) {
   sketch.rect(x - 7, road.surface - tall, 14, tall * 0.14, 3);
   const lens = { x, y: road.surface - road.height * 0.12 };
   if (broken) {
-    spotlight(sketch, lens, road.height * 0.22, { color: PLOT_COLORS.amber, strength: 0.85 });
+    spotlight(sketch, lens, road.height * 0.22, {
+      color: PLOT_COLORS.amber,
+      strength: 0.85,
+    });
   }
-  sketch.fill(broken ? PLOT_COLORS.amber : mix(PLOT_COLORS.amber, getColor("ZINC", 900), 0.6));
+  sketch.fill(
+    broken
+      ? PLOT_COLORS.amber
+      : mix(PLOT_COLORS.amber, getColor("ZINC", 900), 0.6)
+  );
   sketch.circle(lens.x, lens.y, 9);
   sketch.pop();
 }
@@ -124,7 +136,11 @@ function trapProgram(sketch: p5, read: () => TrapFrame) {
   sketch.draw = () => {
     const { gap } = read();
     if (sketch.isLooping()) {
-      time = advanceRun(time, sketch.deltaTime / 1000, { duration: DURATION, hold: HOLD_SECONDS, rate: PLAY_RATE });
+      time = advanceRun(time, sketch.deltaTime / 1000, {
+        duration: DURATION,
+        hold: HOLD_SECONDS,
+        rate: PLAY_RATE,
+      });
     }
     const now = shownTime(time, DURATION);
     const { graph, road } = layout(sketch);
@@ -136,34 +152,76 @@ function trapProgram(sketch: p5, read: () => TrapFrame) {
     sketch.push();
     sketch.noStroke();
     sketch.fill(fade(PLOT_COLORS.amber, 0.14));
-    sketch.rect(roadX(road, TRAP_CENTRE - gap / 2), road.surface - road.height * 0.05, (gap * road.scale), road.height * 0.25);
+    sketch.rect(
+      roadX(road, TRAP_CENTRE - gap / 2),
+      road.surface - road.height * 0.05,
+      gap * road.scale,
+      road.height * 0.25
+    );
     sketch.pop();
     const carLength = Math.min(road.height * 0.5, sketch.width * 0.13);
     const front = roadX(road, position);
-    paintGate(sketch, road, TRAP_CENTRE - gap / 2, now >= reading.enter && front - carLength <= roadX(road, TRAP_CENTRE - gap / 2));
-    paintGate(sketch, road, TRAP_CENTRE + gap / 2, now >= reading.leave && front - carLength <= roadX(road, TRAP_CENTRE + gap / 2));
-    paintCar(sketch, road, { color: PLOT_COLORS.pink, length: carLength, rear: front - carLength });
+    paintGate(
+      sketch,
+      road,
+      TRAP_CENTRE - gap / 2,
+      now >= reading.enter &&
+        front - carLength <= roadX(road, TRAP_CENTRE - gap / 2)
+    );
+    paintGate(
+      sketch,
+      road,
+      TRAP_CENTRE + gap / 2,
+      now >= reading.leave &&
+        front - carLength <= roadX(road, TRAP_CENTRE + gap / 2)
+    );
+    paintCar(sketch, road, {
+      color: PLOT_COLORS.pink,
+      length: carLength,
+      rear: front - carLength,
+    });
 
     paintGraph(sketch, graph, { time: 1, value: 10 });
-    paintCurve(sketch, graph, trapPosition, { color: fade(getColor("SLATE", 300), 0.35), until: DURATION, weight: 2 });
-    paintCurve(sketch, graph, trapPosition, { color: PLOT_COLORS.pink, until: now, weight: 3 });
+    paintCurve(sketch, graph, trapPosition, {
+      color: fade(getColor("SLATE", 300), 0.35),
+      until: DURATION,
+      weight: 2,
+    });
+    paintCurve(sketch, graph, trapPosition, {
+      color: PLOT_COLORS.pink,
+      until: now,
+      weight: 3,
+    });
     const centre = { time: trapArrival(TRAP_CENTRE), value: TRAP_CENTRE };
-    paintSlopeLine(sketch, graph, centre, reading.instant, { color: fade(getColor("ZINC", 100), 0.65), weight: 1.5 });
+    paintSlopeLine(sketch, graph, centre, reading.instant, {
+      color: fade(getColor("ZINC", 100), 0.65),
+      weight: 1.5,
+    });
     const enter = { time: reading.enter, value: TRAP_CENTRE - gap / 2 };
     const leave = { time: reading.leave, value: TRAP_CENTRE + gap / 2 };
     sketch.push();
     sketch.stroke(PLOT_COLORS.amber);
     sketch.strokeWeight(3);
-    sketch.line(graphX(graph, enter.time), graphY(graph, enter.value), graphX(graph, leave.time), graphY(graph, leave.value));
+    sketch.line(
+      graphX(graph, enter.time),
+      graphY(graph, enter.value),
+      graphX(graph, leave.time),
+      graphY(graph, leave.value)
+    );
     sketch.pop();
     paintGraphDot(sketch, graph, enter, PLOT_COLORS.amber);
     paintGraphDot(sketch, graph, leave, PLOT_COLORS.amber);
-    paintGraphDot(sketch, graph, { time: now, value: position }, PLOT_COLORS.pink);
+    paintGraphDot(
+      sketch,
+      graph,
+      { time: now, value: position },
+      PLOT_COLORS.pink
+    );
     vignette(sketch, 0.3);
   };
 }
 
-interface SpeedTrapLabProps {
+interface SpeedTrapInstantSpeedLabProps {
   description: ReactNode;
   labels: {
     averageSpeed: ReactNode;
@@ -183,9 +241,13 @@ interface SpeedTrapLabProps {
  * the car's instantaneous speed at the centre, 20 m/s, and on the graph the
  * secant turns into the tangent.
  */
-export function SpeedTrapLab({ description, labels, title }: SpeedTrapLabProps) {
+export function SpeedTrapInstantSpeedLab({
+  description,
+  labels,
+  title,
+}: SpeedTrapInstantSpeedLabProps) {
   const [gap, setGap] = useState<TrapGap>(40);
-  const measure = useMeasure();
+  const measure = useQuantity();
   const reading = trapReading(gap);
   const isGap = Schema.is(TrapGapSchema);
 
@@ -214,15 +276,43 @@ export function SpeedTrapLab({ description, labels, title }: SpeedTrapLabProps) 
         </ToggleGroup>
       </VisualCardToolbar>
       <VisualCardBody aria-label={labels.viewLabel} render={<section />}>
-        <P5Sketch label={labels.viewLabel} program={trapProgram} state={{ gap }} />
+        <P5Sketch
+          label={labels.viewLabel}
+          program={trapProgram}
+          state={{ gap }}
+        />
       </VisualCardBody>
       <VisualCardSceneActions />
       <VisualCardFooter>
         <VisualCardFacts>
-          <VisualFactTabular label={labels.gap} value={<InlineMath math={measure(gap, "\\text{ m}", 0)} />} />
-          <VisualFactTabular label={labels.elapsed} value={<InlineMath math={measure(reading.elapsed, "\\text{ s}", 3)} />} />
-          <VisualFactTabular label={labels.averageSpeed} value={<InlineMath math={measure(reading.average, "\\text{ m/s}", 2)} />} />
-          <VisualFactTabular label={labels.instantSpeed} value={<InlineMath math={measure(TRAP_ACCELERATION * trapArrival(TRAP_CENTRE), "\\text{ m/s}", 2)} />} />
+          <VisualFactTabular
+            label={labels.gap}
+            value={<InlineMath math={measure(gap, "\\text{ m}", 0)} />}
+          />
+          <VisualFactTabular
+            label={labels.elapsed}
+            value={
+              <InlineMath math={measure(reading.elapsed, "\\text{ s}", 3)} />
+            }
+          />
+          <VisualFactTabular
+            label={labels.averageSpeed}
+            value={
+              <InlineMath math={measure(reading.average, "\\text{ m/s}", 2)} />
+            }
+          />
+          <VisualFactTabular
+            label={labels.instantSpeed}
+            value={
+              <InlineMath
+                math={measure(
+                  TRAP_ACCELERATION * trapArrival(TRAP_CENTRE),
+                  "\\text{ m/s}",
+                  2
+                )}
+              />
+            }
+          />
         </VisualCardFacts>
       </VisualCardFooter>
     </VisualCard>

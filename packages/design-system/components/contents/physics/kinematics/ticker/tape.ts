@@ -17,7 +17,11 @@ export const GAPS_PER_STRIP = 5;
 export const STRIP_SECONDS = GAPS_PER_STRIP / TICKS_PER_SECOND;
 
 /** The three motions the trolley can make. */
-export const TapeMotionSchema = Schema.Literals(["uniform", "speeding", "slowing"]);
+export const TapeMotionSchema = Schema.Literals([
+  "uniform",
+  "speeding",
+  "slowing",
+]);
 export type TapeMotion = typeof TapeMotionSchema.Type;
 
 /**
@@ -66,5 +70,7 @@ export function stripAcceleration(strips: readonly number[]) {
   const first = strips.at(0) ?? 0;
   const last = strips.at(-1) ?? 0;
   const steps = Math.max(strips.length - 1, 1);
-  return (last - first) / steps / (STRIP_SECONDS * STRIP_SECONDS);
+  const acceleration = (last - first) / steps / (STRIP_SECONDS * STRIP_SECONDS);
+  // Equal strips differ by rounding alone; a reading of zero is never negative.
+  return Math.round(acceleration * 1e9) / 1e9 + 0;
 }
