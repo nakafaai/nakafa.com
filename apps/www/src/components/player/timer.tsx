@@ -63,9 +63,10 @@ export function PlayerDigits({
 }
 
 /**
- * Shows the time left with digits that animate as they change. The timer is
- * named by the time left and stays silent while it counts; a status speaks
- * once at five minutes and once at one minute.
+ * Shows the time left in the header's centre with digits that animate as they change. From the large breakpoint a
+ * player whose pane shows the time (`PlayerTimerCard`) sets `--player-clock` to hide the header's copy
+ * (`PlayerProvider`), so one timer is on the screen at every width. The timer is named by the time left and stays silent while it counts; a status speaks once at five minutes
+ * and once at one minute.
  */
 export function PlayerTimer({ seconds }: { seconds: number }) {
   const t = useTranslations("Player");
@@ -73,16 +74,44 @@ export function PlayerTimer({ seconds }: { seconds: number }) {
 
   return (
     <PageCenter>
-      <div
-        aria-label={t("time-left", splitTime(seconds))}
-        className="shrink-0"
-        role="timer"
-      >
-        <PlayerDigits seconds={seconds} />
+      <div className="[display:var(--player-clock,contents)]">
+        <div
+          aria-label={t("time-left", splitTime(seconds))}
+          className="shrink-0"
+          role="timer"
+        >
+          <PlayerDigits seconds={seconds} />
+        </div>
+        <output className="sr-only">
+          {notice === "none" ? "" : t(`time-${notice}`)}
+        </output>
+      </div>
+    </PageCenter>
+  );
+}
+
+/**
+ * The time left as the pane's card from the large breakpoint, where the header shows no timer: its name, then the
+ * digits at a metric's size. It speaks as the header's timer does, and only one of the two is ever on the screen,
+ * because the pane stands only from the large breakpoint and the header's copy steps aside there.
+ */
+export function PlayerTimerCard({ seconds }: { seconds: number }) {
+  const t = useTranslations("Player");
+  const notice = readTimeNotice(seconds);
+
+  return (
+    <section
+      aria-label={t("time")}
+      className="bg-card text-card-foreground flex flex-col items-center gap-1 rounded-xl border px-4 py-5"
+      data-player-time=""
+    >
+      <p className="text-muted-foreground text-sm">{t("time")}</p>
+      <div aria-label={t("time-left", splitTime(seconds))} role="timer">
+        <PlayerDigits seconds={seconds} size="metric" />
       </div>
       <output className="sr-only">
         {notice === "none" ? "" : t(`time-${notice}`)}
       </output>
-    </PageCenter>
+    </section>
   );
 }

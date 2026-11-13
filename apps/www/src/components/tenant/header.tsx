@@ -98,7 +98,7 @@ export function SchoolHeaderAdd({
  * The path of a school page after its home, with the page itself last, as the current page without a
  * target. On the school's home the path is home alone, as the current page.
  */
-function SchoolPath({
+export function SchoolPath({
   items,
 }: {
   /** The path after the school's home, the page itself last with no target; empty on the school's home. */

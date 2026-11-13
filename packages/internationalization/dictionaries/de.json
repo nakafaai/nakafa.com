@@ -2693,7 +2693,13 @@
     "answer": "Antwort",
     "statement": "Aussage",
     "correct": "Richtig",
-    "incorrect": "Falsch"
+    "incorrect": "Falsch",
+    "access": "Barrierefreiheit",
+    "access-description": "Alles hier geht mit deiner Tastatur, und ein Screenreader liest jede Nummer vor, ob sie beantwortet ist und wie viel Zeit bleibt.",
+    "menu-parts": "Fächer",
+    "parts-empty": "Kein Fach passt dazu.",
+    "parts-search": "Fach suchen",
+    "time": "Restzeit"
   },
   "Utils": {
     "clear-search": "Suche löschen",

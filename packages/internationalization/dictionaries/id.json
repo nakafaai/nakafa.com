@@ -2693,7 +2693,13 @@
     "answer": "Jawaban",
     "statement": "Pernyataan",
     "correct": "Benar",
-    "incorrect": "Salah"
+    "incorrect": "Salah",
+    "access": "Aksesibilitas",
+    "access-description": "Semua di sini bisa kamu pakai dari keyboard, dan pembaca layar menyebut tiap nomor, apakah sudah dijawab, dan sisa waktunya.",
+    "menu-parts": "Subtes",
+    "parts-empty": "Nggak ada subtes yang cocok.",
+    "parts-search": "Cari subtes",
+    "time": "Sisa waktu"
   },
   "Utils": {
     "clear-search": "Hapus pencarian",

@@ -71,8 +71,14 @@ export const questionHeading = (page: Page, number: number) =>
 /** The navigator column that the large breakpoint shows beside the questions. */
 export const sidebarOf = (page: Page) => page.locator("[data-player-sidebar]");
 
-/** The view in the player's header: one button that opens the menu of views. */
-const viewOf = (page: Page) => page.locator("[data-player-view]");
+/**
+ * The view in the pane's footer, one button that opens the menu of views: in the pane beside the questions from the
+ * large breakpoint, and in the sheet the footer's opener shows below it.
+ */
+const viewOf = (page: Page, hasTouch: boolean) =>
+  (hasTouch ? openSurface(page) : sidebarOf(page)).locator(
+    "[data-player-view]"
+  );
 
 /** The button in the footer that opens the navigator sheet and names the current question. */
 const openerOf = (page: Page) =>
@@ -233,22 +239,30 @@ export const finishSection = Effect.fn("NakafaE2E.finishTryoutSection")(
 );
 
 /**
- * Switches the player to one of its views from the menu behind the view button
- * in its header.
+ * Switches the player to one of its views from the menu behind the view button in its pane's footer. Below the large
+ * breakpoint the pane is the sheet, which the footer's opener shows and which closes once the view is chosen.
  */
 export const chooseView = Effect.fn("NakafaE2E.chooseView")(function* (
   page: Page,
   hasTouch: boolean,
   view: PlayerView
 ) {
-  const menu = viewOf(page).getByRole("button");
-  // A page that was just loaded may not be React's yet, and a press before then is lost.
+  if (hasTouch) {
+    // A page that was just loaded may not be React's yet, and a press before then is lost.
+    yield* Effect.promise(() => waitUntilTakenOver(openerOf(page)));
+    yield* activate(openerOf(page), hasTouch);
+  }
+  const menu = viewOf(page, hasTouch).getByRole("button");
   yield* Effect.promise(() => waitUntilTakenOver(menu));
   yield* activate(menu, hasTouch);
   yield* activate(
     page.getByRole("menuitemradio", { exact: true, name: view }),
     hasTouch
   );
+  if (hasTouch) {
+    yield* Effect.promise(() => page.keyboard.press("Escape"));
+    yield* Effect.promise(() => expect(openSurface(page)).toBeHidden());
+  }
 });
 
 /**

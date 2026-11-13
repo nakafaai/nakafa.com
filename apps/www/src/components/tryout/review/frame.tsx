@@ -10,12 +10,12 @@ import type { PlayerMode } from "@/components/player/mode";
 import { PlayerSheet } from "@/components/player/navigator/sheet";
 import { PlayerSidebar } from "@/components/player/navigator/sidebar";
 import { PlayerProvider } from "@/components/player/provider";
-import { PlayerViewSwitch } from "@/components/player/view";
 import { PaneHeader } from "@/components/shared/page/pane";
 import { PaneEdge } from "@/components/shared/page/panes/edge";
 import { paneSideVariants } from "@/components/shared/page/panes/side";
 import { joinTryoutBodies } from "@/components/tryout/content/body";
 import { TryoutContentContext } from "@/components/tryout/content/context";
+import { TryoutPlayerParts } from "@/components/tryout/player/parts";
 import {
   createExplainedStore,
   TryoutExplainedContext,
@@ -51,7 +51,7 @@ export function TryoutReviewFrame({
 }: {
   /** The questions the review shows, in the player's column. */
   children: ReactNode;
-  /** The page's header, which the view of the questions joins. */
+  /** The page's header. */
   header: ReactNode;
   /** The section's time limit, in seconds. */
   limit: Option.Option<number>;
@@ -83,6 +83,7 @@ export function TryoutReviewFrame({
                 footer={<TryoutResultFooter />}
                 title={t("finished-panel")}
               >
+                <TryoutPlayerParts />
                 <TryoutResult />
               </PlayerSidebar>
             }
@@ -97,20 +98,13 @@ export function TryoutReviewFrame({
             footer={<TryoutResultFooter />}
             title={t("finished-panel")}
           >
+            <TryoutPlayerParts />
             <TryoutResult />
           </PlayerSheet>
         </PlayerProvider>
       </TryoutExplainedContext>
     </TryoutReviewContext>
   );
-}
-
-/**
- * The header's second control, for a header that a review and the section page share: the view of the
- * questions in a review's frame, since only a review has questions to lay out, and `outside` anywhere else.
- */
-export function TryoutReviewView({ outside }: { outside: ReactNode }) {
-  return use(TryoutReviewContext) === null ? outside : <PlayerViewSwitch />;
 }
 
 /**

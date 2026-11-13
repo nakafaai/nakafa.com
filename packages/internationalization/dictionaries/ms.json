@@ -2693,7 +2693,13 @@
     "answer": "Jawapan",
     "statement": "Pernyataan",
     "correct": "Betul",
-    "incorrect": "Salah"
+    "incorrect": "Salah",
+    "access": "Kebolehcapaian",
+    "access-description": "Semua di sini boleh kamu guna dengan papan kekunci, dan pembaca skrin menyebut setiap nombor, sama ada sudah dijawab, dan baki masanya.",
+    "menu-parts": "Subjek",
+    "parts-empty": "Tiada subjek yang sepadan.",
+    "parts-search": "Cari subjek",
+    "time": "Baki masa"
   },
   "Utils": {
     "clear-search": "Kosongkan carian",

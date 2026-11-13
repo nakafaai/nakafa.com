@@ -1,28 +1,25 @@
 import { type ReactNode, useEffect, useRef } from "react";
 import { useTranslations } from "use-intl";
 import { keepVisible } from "@/components/player/navigator/scroll";
-import { PlayerShortcuts } from "@/components/player/navigator/shortcuts";
+import { PlayerTools } from "@/components/player/navigator/tools";
 import { usePlayer } from "@/components/player/provider";
-import {
-  PaneBody,
-  PaneFooter,
-  PaneHeader,
-} from "@/components/shared/page/pane";
+import { PaneBody, PaneHeader } from "@/components/shared/page/pane";
 
 /**
- * The navigator in its pane beside the questions from the large breakpoint: the
- * numbers, then the keys, in a column as wide as its pane that stays under the
- * header while the questions scroll, and scrolls by itself to keep the current
- * number in view. The page never moves for it. A finished paper names the pane
- * for its result and closes it on a footer.
+ * The player's pane beside the questions from the large breakpoint, the same for every paper: its title; the paper's
+ * parts as a picker, when it has more than one (`PlayerParts`); the card of the time left or the score; the numbers;
+ * and the footer with the accessibility info and the view (`PlayerTools`). It is a column as wide as its pane that
+ * stays under the header while the questions scroll, and scrolls by itself to keep the current number in view. The
+ * page never moves for it. Below the large breakpoint the same parts open in the sheet (`PlayerSheet`).
  */
 export function PlayerSidebar({
   children,
   footer,
   title,
 }: {
+  /** From the top: the paper's parts (`PlayerParts`), the card of the time left or the score, then the numbers. */
   children: ReactNode;
-  /** What the pane says and offers under its body, such as a result's legend and its one action. */
+  /** What the paper adds to the footer, such as a result's one action. */
   footer?: ReactNode;
   /** The pane's name, the navigator's unless the paper names its pane otherwise. */
   title?: string;
@@ -55,12 +52,9 @@ export function PlayerSidebar({
     >
       <PaneHeader title={title ?? t("navigator")} />
       <PaneBody viewportRef={column}>
-        <div className="flex flex-col gap-4">
-          {children}
-          <PlayerShortcuts />
-        </div>
+        <div className="flex flex-col gap-4">{children}</div>
       </PaneBody>
-      {footer === undefined ? null : <PaneFooter>{footer}</PaneFooter>}
+      <PlayerTools>{footer}</PlayerTools>
     </div>
   );
 }

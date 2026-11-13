@@ -1,29 +1,16 @@
 import { QueryResult, useMutation, useQuery } from "@confect/react";
-import { ArrowLeft01Icon, Target02Icon } from "@hugeicons/core-free-icons";
+import { Target02Icon } from "@hugeicons/core-free-icons";
 import practice from "@repo/backend/confect/_generated/refs/practice";
 import type { PracticeTarget } from "@repo/backend/confect/practice/sessions.spec";
 import { TryoutQuestionBodyText } from "@repo/backend/confect/tryouts/runtime/spec";
 import { Button } from "@repo/design-system/components/ui/button";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@repo/design-system/components/ui/tooltip";
-import { buttonVariants } from "@repo/design-system/lib/button";
 import { useSearch } from "@tanstack/react-router";
 import { Array as Arr, Effect, Option, Schema } from "effect";
 import { type ReactNode, useEffect, useTransition } from "react";
 import { useTranslations } from "use-intl";
 import { PlayerFooter } from "@/components/player/footer";
 import { PlayerMain } from "@/components/player/frame";
-import {
-  PlayerHeader,
-  PlayerHeaderEnd,
-  PlayerHeaderStart,
-  PlayerTitle,
-} from "@/components/player/header";
 import { PlayerKeys } from "@/components/player/keys";
 import {
   readBrowserPlayerMode,
@@ -34,6 +21,8 @@ import { PlayerSheet } from "@/components/player/navigator/sheet";
 import { PlayerSidebar } from "@/components/player/navigator/sidebar";
 import { PlayerProvider, usePlayer } from "@/components/player/provider";
 import { PlayerQuestions } from "@/components/player/questions";
+import { BreadcrumbHeaderPath } from "@/components/shared/breadcrumb/header";
+import { PageHeader } from "@/components/shared/page/header";
 import { PaneFact, PaneFacts } from "@/components/shared/page/pane";
 import { reportPracticeFailure } from "@/components/tryout/practice/failure";
 import {
@@ -52,8 +41,12 @@ import {
   usePracticeState,
 } from "@/components/tryout/practice/state";
 import { TryoutPaneOpener } from "@/components/tryout/review/result";
-import { TryoutPageLink } from "@/components/tryout/route/link";
-import type { TryoutPageAddress } from "@/components/tryout/route/path";
+import {
+  getTryoutPageTarget,
+  type TryoutPageAddress,
+} from "@/components/tryout/route/path";
+import { useTryoutPath } from "@/components/tryout/shell/header";
+import { HOME_TARGET } from "@/lib/routing/target";
 
 const decodeBody = Schema.decodeUnknownOption(TryoutQuestionBodyText);
 
@@ -120,6 +113,14 @@ export function TryoutPracticeSession({
   const t = useTranslations("Tryouts");
   const tCommon = useTranslations("Common");
   const state = usePracticeState();
+  // The way here: the try-out, the set or section this practice belongs to, then the practice itself.
+  const path = useTryoutPath([
+    {
+      label: title,
+      target: Option.getOrUndefined(getTryoutPageTarget(returnAddress)),
+    },
+    { label: t("practice-short") },
+  ]);
   const view = useSearch({ select: (search) => search.view, strict: false });
   const content = useQuery(practice.sessions.content, {
     locale: target.locale,
@@ -144,29 +145,13 @@ export function TryoutPracticeSession({
       review
     >
       <PlayerKeys locked questions={[]} />
-      <PlayerHeader>
-        <PlayerHeaderStart>
-          <Tooltip>
-            <TooltipTrigger
-              render={
-                <TryoutPageLink
-                  aria-label={tCommon("back")}
-                  className={buttonVariants({
-                    size: "icon",
-                    variant: "outline",
-                  })}
-                  {...returnAddress}
-                >
-                  <HugeIcons icon={ArrowLeft01Icon} />
-                </TryoutPageLink>
-              }
-            />
-            <TooltipContent>{tCommon("back")}</TooltipContent>
-          </Tooltip>
-          <PlayerTitle>{t("practice-title", { title })}</PlayerTitle>
-        </PlayerHeaderStart>
-        <PlayerHeaderEnd>{null}</PlayerHeaderEnd>
-      </PlayerHeader>
+      <PageHeader title={t("practice-title", { title })}>
+        <BreadcrumbHeaderPath
+          home={HOME_TARGET}
+          homeLabel={tCommon("home")}
+          items={path}
+        />
+      </PageHeader>
       <PlayerMain
         label={t("practice-pane")}
         navigator={

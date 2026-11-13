@@ -38,13 +38,7 @@ export function TryoutPageHeader({
   title: string;
 }) {
   const tCommon = useTranslations("Common");
-  const path: readonly BreadcrumbHeaderItem[] = [
-    {
-      label: tCommon("try-out-short"),
-      target: TRYOUT_TARGET,
-    },
-    ...items,
-  ];
+  const path = useTryoutPath(items);
   return (
     <PageHeader>
       <div className="min-w-0">
@@ -75,6 +69,14 @@ export function TryoutPageHeader({
       <PageActions>{children}</PageActions>
     </PageHeader>
   );
+}
+
+/** A try-out page's path: the try-out root under Home, then the page's own items. */
+export function useTryoutPath(
+  items: readonly BreadcrumbHeaderItem[]
+): readonly BreadcrumbHeaderItem[] {
+  const tCommon = useTranslations("Common");
+  return [{ label: tCommon("try-out-short"), target: TRYOUT_TARGET }, ...items];
 }
 
 /**

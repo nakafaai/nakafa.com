@@ -6,13 +6,15 @@ import { monospace } from "@repo/design-system/lib/monospace";
 import { cn } from "cn";
 import { type ReactNode, useRef } from "react";
 import { useTranslations } from "use-intl";
+import { PlayerTools } from "@/components/player/navigator/tools";
 import { usePlayer } from "@/components/player/provider";
-import { PaneBody, PaneFooter, PaneHeader } from "@/components/shared/page/pane";
+import { PaneBody, PaneHeader } from "@/components/shared/page/pane";
 import { PaneModeContext } from "@/components/shared/page/panes/mode";
 
 /**
- * The navigator below the large breakpoint: a drawer that the footer opens, with
- * the numbers and their legend in its body. It opens on the current number.
+ * The player's pane below the large breakpoint, with the same parts as its side pane (`PlayerSidebar`): a drawer
+ * that the footer opens, with the paper's parts, the card of the time left or the score, and the numbers and their
+ * legend in its body, and the accessibility info and the view in its footer. It opens on the current number.
  * Picking a number closes the drawer first, and the question is revealed once
  * the drawer has finished closing, because the page cannot scroll while the
  * drawer holds it. A finished paper names the drawer for its result and closes
@@ -25,6 +27,7 @@ export function PlayerSheet({
   footer,
   title,
 }: {
+  /** From the top: the paper's parts (`PlayerParts`), the card of the paper's score, then the numbers. */
   children: ReactNode;
   /** What the drawer is for, the navigator's unless the paper says otherwise. */
   description?: string;
@@ -69,7 +72,7 @@ export function PlayerSheet({
               {children}
             </div>
           </PaneBody>
-          {footer === undefined ? null : <PaneFooter>{footer}</PaneFooter>}
+          <PlayerTools>{footer}</PlayerTools>
         </PaneModeContext>
       </DrawerContent>
     </Drawer>

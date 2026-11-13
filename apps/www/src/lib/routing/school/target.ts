@@ -85,6 +85,15 @@ export function schoolExamSittingResultsTarget(
   } satisfies LinkTarget;
 }
 
+/** A student's own exams, the list a student's sitting leads back to. */
+export function schoolSittingsTarget(slug: TenantSlug): LinkTarget {
+  return {
+    from: LOCALE_ROUTE,
+    params: { slug },
+    to: "/school/$slug/sittings",
+  } satisfies LinkTarget;
+}
+
 /** One sitting of a student, which the sitting's own route owns. */
 export function schoolSittingTarget(
   slug: TenantSlug,

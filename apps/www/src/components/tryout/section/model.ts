@@ -35,3 +35,13 @@ const TryoutSectionRouteSchema = Schema.Struct({
 
 /** URL route coordinates for one try-out section page. */
 export type TryoutSectionRoute = typeof TryoutSectionRouteSchema.Type;
+
+/** One section of a set, as the player's pane offers it: its key, its name, and its page. */
+const TryoutSectionPartSchema = Schema.Struct({
+  key: Schema.String,
+  label: Schema.String,
+  publicPath: Schema.String,
+});
+
+/** One section of a set, as the player's pane offers it. */
+export type TryoutSectionPart = typeof TryoutSectionPartSchema.Type;

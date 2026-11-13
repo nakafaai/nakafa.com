@@ -2,15 +2,15 @@ import type { TryoutScoreResult } from "@repo/backend/confect/tryouts/score";
 import { cn } from "cn";
 import type { ReactNode } from "react";
 import { useTranslations } from "use-intl";
-import { pageRowVariants } from "@/components/shared/page/width";
 import { PaneBody, PaneHeader } from "@/components/shared/page/pane";
 import {
+  PagePane,
   Panes,
-  PanesDetail,
   PanesList,
   PanesProvider,
   usePanes,
 } from "@/components/shared/page/panes";
+import { pageRowVariants } from "@/components/shared/page/width";
 import { TryoutPaneOpener } from "@/components/tryout/review/result";
 
 /**
@@ -41,10 +41,10 @@ export function TryoutPartsResult({
             {children}
           </div>
         </PanesList>
-        <PanesDetail alwaysOn label={t("finished-panel")}>
+        <PagePane alwaysOn label={t("finished-panel")}>
           <PaneHeader title={t("finished-panel")} />
           <PaneBody>{facts}</PaneBody>
-        </PanesDetail>
+        </PagePane>
       </Panes>
       <footer className="bg-background sticky bottom-0 z-10 border-t pb-[env(safe-area-inset-bottom,0px)] lg:hidden">
         <div

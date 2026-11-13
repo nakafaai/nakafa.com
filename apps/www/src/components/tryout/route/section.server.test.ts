@@ -7,6 +7,7 @@ import { readTryoutSectionRoute } from "@/components/tryout/route/section.server
 const mocks = vi.hoisted(() => ({
   readTryoutRouteHead: vi.fn(),
   readTryoutSectionPage: vi.fn(),
+  readTryoutSetPage: vi.fn(),
 }));
 
 vi.mock("@repo/internationalization/src/translator", () => ({
@@ -14,6 +15,7 @@ vi.mock("@repo/internationalization/src/translator", () => ({
 }));
 vi.mock("@/components/tryout/catalog/source.server", () => ({
   readTryoutSectionPage: mocks.readTryoutSectionPage,
+  readTryoutSetPage: mocks.readTryoutSetPage,
 }));
 vi.mock("@/components/tryout/route/metadata.server", () => ({
   readTryoutRouteHead: mocks.readTryoutRouteHead,
@@ -45,9 +47,22 @@ const catalogSection = {
   track: { title: "UTBK" },
 };
 
+const setPage = {
+  sections: [
+    { publicPath: SECTION, sectionKey: "section-1", title: "Section 1" },
+    {
+      publicPath: `${SET}/section-2`,
+      sectionKey: "section-2",
+      title: "Section 2",
+    },
+    { sectionKey: "section-3", title: "Section 3" },
+  ],
+};
+
 beforeEach(() => {
   vi.clearAllMocks();
   mocks.readTryoutSectionPage.mockReturnValue(Effect.succeed(catalogSection));
+  mocks.readTryoutSetPage.mockReturnValue(Effect.succeed(setPage));
   mocks.readTryoutRouteHead.mockReturnValue(Effect.succeedSome(head));
 });
 
@@ -65,15 +80,37 @@ describe("readTryoutSectionRoute", () => {
           },
           kind: "catalog",
           page: catalogSection,
+          parts: [
+            { key: "section-1", label: "Section 1", publicPath: SECTION },
+            {
+              key: "section-2",
+              label: "Section 2",
+              publicPath: `${SET}/section-2`,
+            },
+          ],
           route: address,
           sectionPath: SECTION,
           setPath: SET,
         });
+        expect(mocks.readTryoutSetPage).toHaveBeenCalledExactlyOnceWith(
+          "en",
+          SET
+        );
         expect(mocks.readTryoutSectionPage).toHaveBeenCalledExactlyOnceWith(
           "en",
           SECTION
         );
       })
+  );
+
+  it.effect("offers no parts when the set's page is gone", () =>
+    Effect.gen(function* () {
+      mocks.readTryoutSetPage.mockReturnValue(Effect.succeed(null));
+      expect(yield* readTryoutSectionRoute(address)).toMatchObject({
+        kind: "catalog",
+        parts: [],
+      });
+    })
   );
 
   it.effect(

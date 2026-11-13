@@ -2693,7 +2693,13 @@
     "answer": "Answer",
     "statement": "Statement",
     "correct": "Correct",
-    "incorrect": "Incorrect"
+    "incorrect": "Incorrect",
+    "access": "Accessibility",
+    "access-description": "Everything here works from your keyboard, and a screen reader hears each number, whether it is answered, and the time left.",
+    "menu-parts": "Subjects",
+    "parts-empty": "No subject matches that.",
+    "parts-search": "Find a subject",
+    "time": "Time left"
   },
   "Utils": {
     "clear-search": "Clear search",

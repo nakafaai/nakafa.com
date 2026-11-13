@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { useTranslations } from "use-intl";
-import { PaperBack, PaperBar } from "@/components/exams/sitting/bar";
+import { PaperBar } from "@/components/exams/sitting/bar";
 import { useSittingMode } from "@/components/exams/sitting/mode";
 import { SittingRetry } from "@/components/exams/sitting/retry";
 import { PlayerMain } from "@/components/player/frame";
@@ -36,9 +36,7 @@ function PaperHold({ children }: { readonly children: ReactNode }) {
   const t = useTranslations("Exams");
 
   return (
-    <PaperFrame bar={<PaperBar back={<PaperBack />} title={t("sitting")} />}>
-      {children}
-    </PaperFrame>
+    <PaperFrame bar={<PaperBar title={t("sitting")} />}>{children}</PaperFrame>
   );
 }
 
