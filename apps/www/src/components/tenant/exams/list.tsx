@@ -13,6 +13,7 @@ import { useFormatter, useTranslations } from "use-intl";
 import { useStore } from "zustand";
 import { useConvexAuth } from "@/components/auth/convex";
 import { PageList } from "@/components/shared/page/body";
+import { Page } from "@/components/shared/page/frame";
 import { useFormatTimeZone } from "@/components/shared/table/calendar";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
@@ -77,21 +78,23 @@ export function ExamList({ slug }: { slug: TenantSlug }) {
   return (
     <ExamDraftsProvider drafts={drafts}>
       <TableFiltersProvider>
-        <SchoolHeader items={[{ label: t("title") }]} title={t("title")}>
-          <TableSearch placeholder={t("exams-search")} />
-          {tenant.home.canCreate ? (
-            <CreateExam
-              choices={tenant.home.choices}
-              slug={slug}
-              waiting={PaginatedQueryResult.isLoadingFirstPage(pagination)}
-            />
-          ) : null}
-        </SchoolHeader>
-        <PageList>
-          <TablePages pageSize={EXAM_PAGE_SIZE} pagination={pagination}>
-            <ExamListRows exams={pagination.results} saving={saving} />
-          </TablePages>
-        </PageList>
+        <Page height="screen">
+          <SchoolHeader items={[{ label: t("title") }]} title={t("title")}>
+            <TableSearch placeholder={t("exams-search")} />
+            {tenant.home.canCreate ? (
+              <CreateExam
+                choices={tenant.home.choices}
+                slug={slug}
+                waiting={PaginatedQueryResult.isLoadingFirstPage(pagination)}
+              />
+            ) : null}
+          </SchoolHeader>
+          <PageList>
+            <TablePages pageSize={EXAM_PAGE_SIZE} pagination={pagination}>
+              <ExamListRows exams={pagination.results} saving={saving} />
+            </TablePages>
+          </PageList>
+        </Page>
       </TableFiltersProvider>
     </ExamDraftsProvider>
   );

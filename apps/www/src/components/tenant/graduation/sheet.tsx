@@ -15,6 +15,7 @@ import { DropdownMenuItem } from "@repo/design-system/components/ui/dropdown-men
 import { Array as Arr } from "effect";
 import { useFormatter, useLocale, useTranslations } from "use-intl";
 import { PageList } from "@/components/shared/page/body";
+import { Page } from "@/components/shared/page/frame";
 import { PaneOpen } from "@/components/shared/page/pane";
 import {
   PagePane,
@@ -100,8 +101,10 @@ export function CohortGraduation() {
   return (
     <TableFiltersProvider>
       <PanesProvider>
-        <CohortGraduationHeader />
-        <CohortGraduationBody />
+        <Page height="screen">
+          <CohortGraduationHeader />
+          <CohortGraduationBody />
+        </Page>
       </PanesProvider>
     </TableFiltersProvider>
   );

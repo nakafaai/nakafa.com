@@ -10,7 +10,10 @@ import {
 } from "@/components/ai/chat/new";
 import { StartPrompt } from "@/components/ai/chat/start";
 import { HomeTitle } from "@/components/ai/home/title";
-import { pageRowVariants } from "@/components/shared/page/width";
+import {
+  pageRhythmVariants,
+  pageRowVariants,
+} from "@/components/shared/page/width";
 import { chatTarget } from "@/lib/routing/target";
 
 /**
@@ -58,7 +61,7 @@ function NewChatLayout({ children }: { children: ReactNode }) {
       )}
       {prompt ? (
         <StartPrompt
-          className={cn(pageRowVariants(), "py-6")}
+          className={cn(pageRowVariants(), pageRhythmVariants())}
           prompt={prompt}
         />
       ) : (

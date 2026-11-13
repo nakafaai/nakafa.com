@@ -16,6 +16,7 @@ import { useId, useState, useTransition } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { PageList } from "@/components/shared/page/body";
+import { Page } from "@/components/shared/page/frame";
 import { reloadPage } from "@/components/shared/reload";
 import { TableStatus } from "@/components/shared/table/status";
 import { EmptyState } from "@/components/state/empty";
@@ -41,14 +42,16 @@ export function StudentFamily() {
 
   return (
     <>
-      <SchoolHeader items={[{ label: t("family-title") }]}>
-        <Button onClick={() => setIsInviting(true)} type="button">
-          {t("family-invite")}
-        </Button>
-      </SchoolHeader>
-      <PageList>
-        <FamilyList />
-      </PageList>
+      <Page height="screen">
+        <SchoolHeader items={[{ label: t("family-title") }]}>
+          <Button onClick={() => setIsInviting(true)} type="button">
+            {t("family-invite")}
+          </Button>
+        </SchoolHeader>
+        <PageList>
+          <FamilyList />
+        </PageList>
+      </Page>
       <ParentInviteDialog open={isInviting} setOpen={setIsInviting} />
     </>
   );

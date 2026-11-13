@@ -27,6 +27,8 @@ import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { keepRoomCode, roomCodeOf } from "@/components/exams/sitting/scan";
 import { ConvexProvider } from "@/components/providers/convex";
+import { PageState } from "@/components/shared/page/body";
+import { Page } from "@/components/shared/page/frame";
 import { SchoolHeader } from "@/components/tenant/header";
 import { clientEnv } from "@/env.public";
 import { reportClientException } from "@/lib/analytics/client";
@@ -74,24 +76,26 @@ export function OutsiderRoom() {
 
 /**
  * The page where a member types a room's code: the school's header, one sentence, and the form, in
- * the middle of the page.
+ * the middle of the height the header leaves (`PageState`).
  */
 export function MemberRoomJoin() {
   const t = useTranslations("Exams");
 
   return (
-    <>
+    <Page width="column">
       <SchoolHeader
         items={[{ label: t("join-room-title") }]}
         title={t("join-room-title")}
       />
-      <div className="flex flex-1 flex-col items-center justify-center gap-6 p-4">
-        <p className="text-muted-foreground text-center text-balance">
-          {t("join-member-description")}
-        </p>
-        <RoomJoinForm />
-      </div>
-    </>
+      <PageState>
+        <div className="flex w-full flex-col items-center gap-6">
+          <p className="text-muted-foreground text-center text-balance">
+            {t("join-member-description")}
+          </p>
+          <RoomJoinForm />
+        </div>
+      </PageState>
+    </Page>
   );
 }
 

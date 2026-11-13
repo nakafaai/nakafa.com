@@ -11,6 +11,7 @@ import { useTranslations } from "use-intl";
 import { createTranslator } from "use-intl/core";
 import { BreadcrumbHeader } from "@/components/shared/breadcrumb/header";
 import { PageStack } from "@/components/shared/page/body";
+import { Page } from "@/components/shared/page/frame";
 import { QuranSurahCatalog } from "@/components/shared/quran/catalog";
 import {
   TableFiltersProvider,
@@ -110,18 +111,20 @@ function QuranIndexPage() {
   const tCommon = useTranslations("Common");
   return (
     <TableFiltersProvider>
-      <BreadcrumbHeader
-        value={{
-          action: <TableSearch placeholder={t("search-surah")} />,
-          home: HOME_TARGET,
-          homeLabel: tCommon("home"),
-          items: [{ label: page.title }],
-          title: page.title,
-        }}
-      />
-      <PageStack>
-        <QuranSurahCatalog surahs={page.surahs} />
-      </PageStack>
+      <Page width="column">
+        <BreadcrumbHeader
+          value={{
+            action: <TableSearch placeholder={t("search-surah")} />,
+            home: HOME_TARGET,
+            homeLabel: tCommon("home"),
+            items: [{ label: page.title }],
+            title: page.title,
+          }}
+        />
+        <PageStack>
+          <QuranSurahCatalog surahs={page.surahs} />
+        </PageStack>
+      </Page>
     </TableFiltersProvider>
   );
 }

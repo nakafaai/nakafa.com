@@ -20,6 +20,7 @@ import { Array as Arr } from "effect";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { PageList } from "@/components/shared/page/body";
+import { Page } from "@/components/shared/page/frame";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { namedOptions } from "@/components/shared/table/filter";
@@ -70,12 +71,17 @@ export function SchoolOwnGrades() {
 
   return (
     <TableFiltersProvider>
-      <SchoolHeader items={[{ label: t("own-title") }]} title={t("own-title")}>
-        <TableSearch placeholder={t("own-search")} />
-      </SchoolHeader>
-      <PageList>
-        <OwnGradeTable />
-      </PageList>
+      <Page height="screen">
+        <SchoolHeader
+          items={[{ label: t("own-title") }]}
+          title={t("own-title")}
+        >
+          <TableSearch placeholder={t("own-search")} />
+        </SchoolHeader>
+        <PageList>
+          <OwnGradeTable />
+        </PageList>
+      </Page>
     </TableFiltersProvider>
   );
 }

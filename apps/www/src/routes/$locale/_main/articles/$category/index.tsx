@@ -17,6 +17,7 @@ import { ContainerList } from "@/components/shared/card/list";
 import { RefContent } from "@/components/shared/content/references";
 import { PageStack } from "@/components/shared/page/body";
 import { PageFooter } from "@/components/shared/page/footer";
+import { Page } from "@/components/shared/page/frame";
 import {
   ARTICLE_SOURCE_ROOT,
   type ArticlePageCursor,
@@ -228,7 +229,7 @@ function ArticleCategoryPage() {
   const t = useTranslations("Articles");
   const tCommon = useTranslations("Common");
   return (
-    <>
+    <Page width="column">
       <BreadcrumbHeader
         value={{
           home: HOME_TARGET,
@@ -255,6 +256,6 @@ function ArticleCategoryPage() {
           <RefContent githubUrl={page.sourceUrl} />
         </PageFooter>
       ) : null}
-    </>
+    </Page>
   );
 }

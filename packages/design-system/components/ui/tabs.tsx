@@ -32,7 +32,8 @@ export function TabsList({
       <TabsPrimitive.List
         className={cn(
           // The underline waits for the page's scripts, so until it shows the current tab draws its own in the same place.
-          "relative -mb-px flex h-12 w-full gap-6 overflow-x-auto [&:not(:has(>[data-slot=tab-indicator]:not([hidden])))]:[--tab-active-line:var(--foreground)]",
+          // A bar wider than its row scrolls, and fades the edge that has more tabs beyond it.
+          "scroll-fade-x relative -mb-px flex h-12 w-full gap-6 overflow-x-auto [&:not(:has(>[data-slot=tab-indicator]:not([hidden])))]:[--tab-active-line:var(--foreground)]",
           className
         )}
         data-slot="tabs-list"

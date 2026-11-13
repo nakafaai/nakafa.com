@@ -487,6 +487,60 @@
   }
 }
 
+/* A row that scrolls sideways, such as a tab bar wider than a phone, fades the
+ * edge that has more beyond it, so the reader sees that the row goes on: the
+ * end fades at the start of the scroll, the start fades once it moved, and
+ * both while it is between. A row that fits has no scroll range, so its
+ * timeline is inactive and nothing fades. A browser without scroll-driven
+ * animation scrolls the row without the fade. */
+@property --scroll-fade-start {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
+}
+
+@property --scroll-fade-end {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
+}
+
+@keyframes scroll-fade {
+  from {
+    --scroll-fade-start: 0px;
+    --scroll-fade-end: 2rem;
+  }
+  10% {
+    --scroll-fade-start: 2rem;
+  }
+  90% {
+    --scroll-fade-end: 2rem;
+  }
+  to {
+    --scroll-fade-start: 2rem;
+    --scroll-fade-end: 0px;
+  }
+}
+
+@utility scroll-fade-x {
+  @supports (animation-timeline: scroll()) {
+    --scroll-fade-side: right;
+    mask-image: linear-gradient(
+      to var(--scroll-fade-side),
+      transparent,
+      #000 var(--scroll-fade-start),
+      #000 calc(100% - var(--scroll-fade-end)),
+      transparent
+    );
+    animation: scroll-fade linear both;
+    animation-timeline: scroll(self inline);
+
+    &:dir(rtl) {
+      --scroll-fade-side: left;
+    }
+  }
+}
+
 /* Nina's answers step their headings down so the order of her thinking shows:
  * 22px for level one, 19px for level two, 17px for level three, and the size
  * of the answer from level four. A heading element sets its own leading,
