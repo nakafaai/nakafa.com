@@ -1,30 +1,54 @@
 import {
   Array as Arr,
   Effect,
+  HashSet,
   Layer,
   Option,
-  Order,
   Ref,
   Result,
-  Schedule,
   Schema,
   Scope,
   String as Str,
 } from "effect";
 import { ChildProcessSpawner } from "effect/process";
-import { GATE_CONTEXT } from "#scripts/gate/github";
+import {
+  awaitVerdict,
+  GATE_CONTEXT,
+  startingMoment,
+} from "#scripts/gate/github";
+import { attempt, decoded, gh, run } from "#scripts/landing/command";
+import { landPull } from "#scripts/landing/merge";
+import {
+  highestProven,
+  landingOrder,
+  Pull,
+  type Rider,
+  stacksOf,
+} from "#scripts/landing/stack";
 import {
   type Candidate,
   type Combination,
-  type Landing,
   Repository,
   TrainError,
 } from "#scripts/landing/train";
-import { runText } from "#scripts/process";
-import { REPOSITORY, VERDICT_CONTEXT } from "#scripts/proof/github";
+import { REPOSITORY } from "#scripts/proof/client";
+import { VERDICT_CONTEXT } from "#scripts/proof/github";
 
 /** A spec file of the browser suites, as a path in the repository; its group is the path under `apps/www`. */
 const SPEC_FILE = /^apps\/www\/(?<spec>e2e\/.+\.browser\.ts)$/u;
+
+/** A pull request as a candidate of the train, with the spec files it adds or changes. */
+const candidateOf = (pull: Pull): Candidate => ({
+  number: pull.number,
+  sha: pull.headRefOid,
+  title: pull.title,
+  specs: Arr.filterMap(pull.files, ({ path }) =>
+    Option.match(Option.fromNullishOr(SPEC_FILE.exec(path)?.groups?.spec), {
+      onNone: () => Result.failVoid,
+      onSome: Result.succeed,
+    })
+  ),
+});
 
 /** A full commit SHA, as `git ls-remote` prints one. */
 const COMMIT_SHA = /^[0-9a-f]{40}$/u;
@@ -36,53 +60,7 @@ const COMMIT_SHA = /^[0-9a-f]{40}$/u;
  */
 const PROOF_CONTEXTS = ["proof", VERDICT_CONTEXT];
 
-/** Runs a command and returns how it exited and what it printed. */
-const attempt = (command: string, args: readonly string[], cwd?: string) =>
-  runText(command, args, cwd).pipe(
-    Effect.mapError(
-      () => new TrainError({ message: `${command} could not start.` })
-    )
-  );
-
-/** Runs a command and returns what it printed, or fails with what it said. */
-const run = Effect.fn("landing.run")(function* (
-  command: string,
-  args: readonly string[],
-  cwd?: string
-) {
-  const output = yield* attempt(command, args, cwd);
-  if (output.code !== 0) {
-    return yield* new TrainError({
-      message: `${command} ${Arr.join(Arr.take(args, 2), " ")} failed: ${output.stderr.trim()}`,
-    });
-  }
-  return output.stdout;
-});
-
-/** Decodes what a command printed, failing as the train fails. */
-const decoded =
-  <A>(schema: Schema.Codec<A, string>) =>
-  (text: string) =>
-    Schema.decodeEffect(schema)(text).pipe(
-      Effect.mapError(
-        (error) =>
-          new TrainError({
-            message: `GitHub answered unexpectedly: ${error.message}`,
-          })
-      )
-    );
-
-const PullListJson = Schema.fromJsonString(
-  Schema.Array(
-    Schema.Struct({
-      number: Schema.Int,
-      headRefOid: Schema.String,
-      title: Schema.String,
-      isDraft: Schema.Boolean,
-      files: Schema.Array(Schema.Struct({ path: Schema.String })),
-    })
-  )
-);
+const PullListJson = Schema.fromJsonString(Schema.Array(Pull));
 
 const StatusJson = Schema.fromJsonString(
   Schema.Struct({
@@ -92,20 +70,9 @@ const StatusJson = Schema.fromJsonString(
   })
 );
 
-const PullViewJson = Schema.fromJsonString(
-  Schema.Struct({
-    state: Schema.String,
-    headRefOid: Schema.String,
-    mergeable: Schema.String,
-    baseRefName: Schema.String,
-  })
-);
-
 const DeployRunsJson = Schema.fromJsonString(
   Schema.Array(Schema.Struct({ databaseId: Schema.Int, status: Schema.String }))
 );
-
-const gh = (args: readonly string[]) => run("gh", args);
 
 /**
  * Whether a head may ride: its static gate passed and its browser proof passed,
@@ -123,101 +90,6 @@ const provenHead = Effect.fn("landing.provenHead")(function* (sha: string) {
         Arr.contains(contexts, status.context) && status.state === "success"
     );
   return passed([GATE_CONTEXT]) && passed(PROOF_CONTEXTS);
-});
-
-/** Reads one pull request, waiting while GitHub still computes whether it merges. */
-const viewPull = Effect.fn("landing.viewPull")(function* (number: number) {
-  return yield* gh([
-    "pr",
-    "view",
-    String(number),
-    "--repo",
-    REPOSITORY,
-    "--json",
-    "state,headRefOid,mergeable,baseRefName",
-  ]).pipe(
-    Effect.flatMap(decoded(PullViewJson)),
-    Effect.repeat({
-      until: (view) => view.mergeable !== "UNKNOWN",
-      schedule: Schedule.spaced("4 seconds"),
-      times: 8,
-    })
-  );
-});
-
-/**
- * Squash-merges one pull request at the exact head the train proved. A pull
- * request of a GitHub stack refuses that merge and takes the asynchronous merge
- * instead, with the same head; the train then waits until GitHub reports it
- * merged.
- */
-const landPull = Effect.fn("landing.landPull")(function* (
-  candidate: Candidate
-) {
-  const skip = (reason: string): Landing => ({
-    _tag: "skipped",
-    candidate,
-    reason,
-  });
-  const number = String(candidate.number);
-  const view = yield* viewPull(candidate.number);
-  if (view.state !== "OPEN") {
-    return skip(`already ${view.state.toLowerCase()}`);
-  }
-  if (view.headRefOid !== candidate.sha) {
-    return skip("its head moved after its proof: prove the new head");
-  }
-  if (view.baseRefName !== "main") {
-    return skip(
-      `it targets ${view.baseRefName}: land its base first, then prove it again`
-    );
-  }
-  if (view.mergeable !== "MERGEABLE") {
-    return skip(`GitHub reports it ${view.mergeable.toLowerCase()}`);
-  }
-  const subject = `${candidate.title} (#${candidate.number})`;
-  const merge = yield* attempt("gh", [
-    "pr",
-    "merge",
-    number,
-    "--repo",
-    REPOSITORY,
-    "--squash",
-    "--match-head-commit",
-    candidate.sha,
-    "--subject",
-    subject,
-  ]);
-  if (merge.code === 0) {
-    return { _tag: "landed", candidate } satisfies Landing;
-  }
-  if (!merge.stderr.includes("asynchronous merge")) {
-    return skip(merge.stderr.trim());
-  }
-  yield* gh([
-    "api",
-    "-X",
-    "PUT",
-    `repos/${REPOSITORY}/pulls/${number}/merge-async`,
-    "-f",
-    "merge_action=direct_merge",
-    "-f",
-    "merge_method=squash",
-    "-f",
-    `sha=${candidate.sha}`,
-    "-f",
-    `commit_title=${subject}`,
-  ]);
-  const merged = yield* viewPull(candidate.number).pipe(
-    Effect.repeat({
-      until: (pull) => pull.state === "MERGED",
-      schedule: Schedule.spaced("5 seconds"),
-      times: 24,
-    })
-  );
-  return merged.state === "MERGED"
-    ? ({ _tag: "landed", candidate } satisfies Landing)
-    : skip("the asynchronous merge did not finish in two minutes");
 });
 
 /**
@@ -262,51 +134,144 @@ export const githubRepository = (root: string) =>
           )
         );
 
+      /**
+       * The members below a stack's proven top that it carries: those whose head
+       * the top's head contains, so its gate and proof ran on their changes.
+       */
+      const carried = (top: Pull, below: readonly Pull[]) =>
+        Effect.gen(function* () {
+          if (below.length === 0) {
+            return Arr.empty<Pull>();
+          }
+          yield* git([
+            "fetch",
+            "--quiet",
+            "origin",
+            ...Arr.map(
+              [...below, top],
+              (pull) => `refs/pull/${pull.number}/head`
+            ),
+          ]);
+          return yield* Effect.filter(below, (member) =>
+            attempt(
+              "git",
+              [
+                "merge-base",
+                "--is-ancestor",
+                member.headRefOid,
+                top.headRefOid,
+              ],
+              root
+            ).pipe(Effect.map((output) => output.code === 0))
+          );
+        });
+
+      /** The open pull requests that are no draft. */
+      const openPulls = gh([
+        "pr",
+        "list",
+        "--repo",
+        REPOSITORY,
+        "--state",
+        "open",
+        "--limit",
+        "200",
+        "--json",
+        "number,headRefOid,headRefName,baseRefName,title,isDraft,files",
+      ]).pipe(
+        Effect.flatMap(decoded(PullListJson)),
+        Effect.map(Arr.filter((pull: Pull) => !pull.isDraft))
+      );
+
       return {
         proven: (numbers) =>
           provide(
             Effect.gen(function* () {
-              const pulls = yield* gh([
-                "pr",
-                "list",
-                "--repo",
-                REPOSITORY,
-                "--state",
-                "open",
-                "--base",
-                "main",
-                "--limit",
-                "200",
-                "--json",
-                "number,headRefOid,title,isDraft,files",
-              ]).pipe(Effect.flatMap(decoded(PullListJson)));
-              const chosen = Arr.filter(
-                pulls,
-                (pull) =>
-                  !pull.isDraft &&
-                  (numbers.length === 0 || Arr.contains(numbers, pull.number))
-              );
-              const proven = yield* Effect.filter(chosen, (pull) =>
-                provenHead(pull.headRefOid)
-              );
-              return Arr.sort(
-                Arr.map(proven, (pull) => ({
-                  number: pull.number,
-                  sha: pull.headRefOid,
-                  title: pull.title,
-                  specs: Arr.filterMap(pull.files, ({ path }) =>
-                    Option.match(
-                      Option.fromNullishOr(SPEC_FILE.exec(path)?.groups?.spec),
-                      {
-                        onNone: () => Result.failVoid,
-                        onSome: Result.succeed,
-                      }
-                    )
+              const pulls = yield* openPulls;
+              const stacks = stacksOf(pulls);
+              const proven = HashSet.fromIterable(
+                Arr.map(
+                  yield* Effect.filter(Arr.flatten(stacks), (pull) =>
+                    provenHead(pull.headRefOid)
                   ),
-                })),
-                Order.mapInput(Order.Number, (pull: Candidate) => pull.number)
+                  (pull) => pull.number
+                )
+              );
+              const riding = yield* Effect.forEach(stacks, (stack) =>
+                Option.match(
+                  highestProven(stack, (pull) =>
+                    HashSet.has(proven, pull.number)
+                  ),
+                  {
+                    onNone: () => Effect.succeed(Arr.empty<Rider>()),
+                    onSome: ({ top, below }) =>
+                      carried(top, below).pipe(
+                        Effect.map((members) => {
+                          const chosen = HashSet.fromIterable(
+                            Arr.map(
+                              Arr.append(members, top),
+                              (pull) => pull.number
+                            )
+                          );
+                          return Arr.filter(
+                            Arr.map(stack, (pull, depth) => ({ pull, depth })),
+                            (rider) => HashSet.has(chosen, rider.pull.number)
+                          );
+                        })
+                      ),
+                  }
+                )
+              );
+              return Arr.map(
+                Arr.filter(
+                  landingOrder(Arr.flatten(riding)),
+                  (pull) =>
+                    numbers.length === 0 || Arr.contains(numbers, pull.number)
+                ),
+                candidateOf
               );
             })
+          ),
+        ready: (numbers) =>
+          provide(
+            openPulls.pipe(
+              Effect.map((pulls) =>
+                Arr.map(
+                  Arr.filter(
+                    landingOrder(
+                      Arr.flatMap(stacksOf(pulls), (stack) =>
+                        Arr.map(stack, (pull, depth) => ({ pull, depth }))
+                      )
+                    ),
+                    (pull) =>
+                      numbers.length === 0 || Arr.contains(numbers, pull.number)
+                  ),
+                  candidateOf
+                )
+              )
+            )
+          ),
+        gate: (sha) =>
+          provide(
+            Effect.gen(function* () {
+              const since = yield* startingMoment(sha);
+              yield* gh([
+                "workflow",
+                "run",
+                "gate.yml",
+                "--repo",
+                REPOSITORY,
+                "--ref",
+                "main",
+                "-f",
+                `sha=${sha}`,
+              ]);
+              return (yield* awaitVerdict(sha, since)).passed;
+            }).pipe(
+              Effect.mapError(
+                (error) => new TrainError({ message: error.message })
+              )
+            )
           ),
         main: provide(
           git(["ls-remote", "origin", "refs/heads/main"]).pipe(
@@ -373,7 +338,7 @@ export const githubRepository = (root: string) =>
               return combination;
             })
           ),
-        land: (candidate) => provide(landPull(candidate)),
+        land: (candidate) => provide(landPull(root, candidate)),
         deploy: provide(
           Effect.gen(function* () {
             const runs = yield* gh([

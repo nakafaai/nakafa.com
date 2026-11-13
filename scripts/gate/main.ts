@@ -9,7 +9,7 @@ import {
   type Verdict,
 } from "#scripts/gate/github";
 import { writeOutput } from "#scripts/output";
-import { gh, REPOSITORY } from "#scripts/proof/github";
+import { gh, REPOSITORY } from "#scripts/proof/client";
 
 const USAGE = "Usage: bun run gate <sha>";
 
