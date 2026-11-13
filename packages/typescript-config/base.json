@@ -109,6 +109,7 @@
           "nonObjectEffectServiceType": "error",
           "obsoleteMatchImport": "error",
           "obsoleteSchemaImport": "error",
+          "onExitFailureToOnError": "error",
           "optionMatchToFromOption": "error",
           "outdatedApi": "error",
           "overriddenSchemaConstructor": "error",

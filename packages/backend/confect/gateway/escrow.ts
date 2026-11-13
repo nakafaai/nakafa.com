@@ -7,7 +7,7 @@ import {
 } from "@repo/backend/confect/spend/rates";
 import type { Escrow } from "@repo/backend/confect/spend/schema";
 import type { LanguageModelMiddleware } from "ai";
-import { Effect, Exit } from "effect";
+import { Effect } from "effect";
 
 type Meters = Meter["Service"];
 
@@ -139,9 +139,7 @@ export function escrowed(
         Effect.gen(function* () {
           const escrow = yield* meter.hold(purpose, ceiling);
           const result = yield* Effect.promise(doStream).pipe(
-            Effect.onExit((exit) =>
-              Exit.isSuccess(exit) ? Effect.void : meter.settle(escrow, ceiling)
-            )
+            Effect.onError(() => meter.settle(escrow, ceiling))
           );
           return {
             ...result,
