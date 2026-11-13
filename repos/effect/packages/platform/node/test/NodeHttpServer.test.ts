@@ -1430,6 +1430,56 @@ describe("HttpServer", () => {
     )
   })
 
+  it.live.each([false, true])("shuts down WebSockets (unresponsive: %s)", (unresponsive) =>
+    Effect.gen(function*() {
+      const server = Http.createServer()
+      const scope = yield* Scope.make()
+      yield* Effect.addFinalizer(() => Scope.close(scope, Exit.void))
+      yield* HttpRouter.add(
+        "GET",
+        "/ws",
+        Effect.gen(function*() {
+          const request = yield* HttpServerRequest.HttpServerRequest
+          const socket = yield* request.upgrade
+          yield* Stream.runDrain(Socket.toStream(socket)).pipe(Effect.ignore)
+          return HttpServerResponse.empty()
+        })
+      ).pipe(
+        (layer) => HttpRouter.serve(layer, { disableListenLog: true }),
+        Layer.provide(NodeHttpServer.layer(() => server, {
+          port: 0,
+          gracefulShutdownTimeout: unresponsive ? "250 millis" : "10 seconds"
+        })),
+        Layer.buildWithScope(scope)
+      )
+      const client = yield* Effect.acquireRelease(
+        Effect.sync(() => new NodeWS.WebSocket("ws://127.0.0.1:" + tcpPort(server) + "/ws")),
+        (client) => Effect.sync(() => client.terminate())
+      )
+      const clientClosed = Latch.makeUnsafe()
+      let closeCode: number | undefined
+      client.on("close", (code) => {
+        closeCode = code
+        clientClosed.openUnsafe()
+      })
+      yield* Effect.callback<void, Error>((resume) => {
+        client.on("open", () => resume(Effect.void))
+        client.on("error", (error) => resume(Effect.fail(error)))
+      }).pipe(Effect.timeout("2 seconds"))
+      if (unresponsive) client.pause() // Do not receive or answer the close frame.
+
+      const started = performance.now()
+      // Finalizers are uninterruptible, so bound the join, not Scope.close.
+      const closed = yield* Effect.forkDetach(Scope.close(scope, Exit.void))
+      yield* Fiber.join(closed).pipe(Effect.timeout("2 seconds"))
+      if (unresponsive) {
+        assert.isAtLeast(performance.now() - started, 200)
+      } else {
+        yield* clientClosed.await.pipe(Effect.timeout("1 second"))
+        assert.strictEqual(closeCode, 1001)
+      }
+    }))
+
   it.live("closes idle HTTP/2 sessions on shutdown", () =>
     Effect.gen(function*() {
       const server = Http2.createServer()
@@ -1488,6 +1538,33 @@ describe("HttpServer", () => {
       }).pipe(Effect.timeout("2 seconds"))
 
       yield* Fiber.join(closed).pipe(Effect.timeout("2 seconds"))
+    }))
+
+  it.live("interrupts an interruptible served handler once the graceful shutdown timeout elapses", () =>
+    Effect.gen(function*() {
+      const server = Http.createServer()
+      const scope = yield* Scope.make()
+      const started = Latch.makeUnsafe()
+      let interrupted = false
+      yield* HttpServer.serve(Effect.interruptible(
+        Effect.gen(function*() {
+          yield* started.open
+          yield* Effect.sleep("10 seconds")
+          return HttpServerResponse.text("done")
+        }).pipe(Effect.onInterrupt(() => Effect.sync(() => interrupted = true)))
+      )).pipe(
+        Layer.provide(NodeHttpServer.layer(() => server, { port: 0, gracefulShutdownTimeout: "100 millis" })),
+        Layer.buildWithScope(scope)
+      )
+      const request = Http.get({ host: "127.0.0.1", port: tcpPort(server) })
+      request.on("error", constVoid)
+      yield* Effect.addFinalizer(() => Effect.sync(() => request.destroy()))
+      yield* started.await.pipe(Effect.timeout("2 seconds"))
+
+      // Finalizers are uninterruptible, so the timeout applies to the join
+      const closed = yield* Effect.forkDetach(Scope.close(scope, Exit.void))
+      yield* Fiber.join(closed).pipe(Effect.timeout("2 seconds"))
+      assert.isTrue(interrupted)
     }))
 
   it.live("disposes after a client aborts a handler awaiting an upstream request", () => {
@@ -2081,6 +2158,63 @@ describe("HttpServer", () => {
       } else {
         assert.match(response, /^HTTP\/1\.1 411 /)
       }
+    }).pipe(Effect.provide(layerTestWebsocket)))
+
+  // Node 26 parses chunked upgrade bodies, so only older versions refuse them.
+  it.effect.skipIf(Number(process.versions.node.split(".")[0]) >= 26)(
+    "closes a refused chunked upgrade when the body arrives after the 411",
+    () =>
+      Effect.gen(function*() {
+        yield* HttpRouter.add("POST", "/attach", Effect.succeed(HttpServerResponse.empty())).pipe(
+          HttpRouter.serve,
+          Layer.build
+        )
+        const server = yield* HttpServer.HttpServer
+        const port = (server.address as NetAddress.InetAddress).port
+        const response = yield* Effect.callback<string>((resume) => {
+          // Half-open, so the body is still sent after the server ends its side.
+          const socket = Net.createConnection({ host: "127.0.0.1", port, allowHalfOpen: true })
+          let received = ""
+          socket.on("connect", () =>
+            socket.write(
+              "POST /attach HTTP/1.1\r\nHost: 127.0.0.1\r\nConnection: Upgrade\r\nUpgrade: tcp\r\nTransfer-Encoding: chunked\r\n\r\n"
+            ))
+          socket.once("data", () => socket.end("5\r\nhello\r\n0\r\n\r\n"))
+          socket.on("data", (data) => {
+            received += data.toString()
+          })
+          socket.on("error", constVoid)
+          socket.on("close", () => resume(Effect.succeed(received)))
+          return Effect.sync(() => socket.destroy())
+        })
+        assert.match(response, /^HTTP\/1\.1 411 /)
+      }).pipe(Effect.provide(layerTestWebsocket))
+  )
+
+  it.effect("closes an upgrade answered with a response when more bytes arrive after it", () =>
+    Effect.gen(function*() {
+      yield* HttpRouter.add("GET", "/other", Effect.succeed(HttpServerResponse.empty())).pipe(
+        HttpRouter.serve,
+        Layer.build
+      )
+      const server = yield* HttpServer.HttpServer
+      const port = (server.address as NetAddress.InetAddress).port
+      const response = yield* Effect.callback<string>((resume) => {
+        // Half-open, so the bytes are still sent after the server ends its side.
+        const socket = Net.createConnection({ host: "127.0.0.1", port, allowHalfOpen: true })
+        let received = ""
+        socket.on("connect", () =>
+          socket.write("GET /attach HTTP/1.1\r\nHost: 127.0.0.1\r\nConnection: Upgrade\r\nUpgrade: tcp\r\n\r\n"))
+        socket.once("data", () =>
+          socket.end("early"))
+        socket.on("data", (data) => {
+          received += data.toString()
+        })
+        socket.on("error", constVoid)
+        socket.on("close", () => resume(Effect.succeed(received)))
+        return Effect.sync(() => socket.destroy())
+      })
+      assert.match(response, /^HTTP\/1\.1 404 /)
     }).pipe(Effect.provide(layerTestWebsocket)))
 
   it.effect.each([

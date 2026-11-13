@@ -1,16 +1,19 @@
 import { assert, describe, it, vi } from "@effect/vitest"
 import {
   Cause,
+  Context,
   DateTime,
   Effect,
   type Exit,
+  Fiber,
   FileSystem,
   Layer,
   Path,
   Redacted,
   Schema,
   SchemaTransformation,
-  Stream
+  Stream,
+  Tracer
 } from "effect"
 import {
   Etag,
@@ -18,6 +21,7 @@ import {
   HttpClientRequest,
   HttpClientResponse,
   HttpEffect,
+  HttpMiddleware,
   HttpPlatform,
   HttpRouter,
   HttpServerRequest,
@@ -34,6 +38,7 @@ import {
   HttpApiSecurity,
   HttpApiTest
 } from "effect/http-api"
+import { TestClock } from "effect/testing"
 
 const textDecoder = new TextDecoder()
 
@@ -1514,6 +1519,34 @@ it.layer(TestServices)("HttpApiBuilder streaming success responses", (it) => {
       )
     }))
 
+  it.effect("writes StreamSse keepAlive comments while the event stream is idle", () =>
+    Effect.gen(function*() {
+      const Api = HttpApi.make("Api").add(
+        HttpApiGroup.make("test").add(
+          HttpApiEndpoint.get("events", "/test", {
+            success: HttpApiSchema.StreamSse({ data: Schema.String, keepAlive: "15 seconds" })
+          })
+        )
+      )
+      const GroupLayer = HttpApiBuilder.group(
+        Api,
+        "test",
+        (handlers) => handlers.handle("events", () => Effect.succeed(Stream.concat(Stream.make("hello"), Stream.never)))
+      )
+
+      const client = yield* HttpApiTest.groups(Api, ["test"]).pipe(Effect.provide(GroupLayer))
+      const response = yield* client.test.events({ responseMode: "response-only" })
+      const fiber = yield* response.stream.pipe(Stream.take(3), Stream.runCollect, Effect.forkChild)
+      yield* TestClock.adjust("30 seconds")
+      const chunks = yield* Fiber.join(fiber)
+
+      assert.deepStrictEqual(Array.from(chunks, (chunk) => textDecoder.decode(chunk)), [
+        `data: "hello"\n\n`,
+        ": keepalive\n\n",
+        ": keepalive\n\n"
+      ])
+    }))
+
   it.effect("unwraps WithHeaders StreamSse responses before SSE encoding", () =>
     Effect.gen(function*() {
       const Events = Schema.Struct({
@@ -2051,6 +2084,79 @@ it.layer(TestServices)("HttpApiBuilder middleware error responses", (it) => {
 
       assert.deepStrictEqual(error, { retryAfter: 30n })
     }))
+})
+
+describe("HttpApiBuilder RedactedNames", () => {
+  it("redacts declared query and header names in server spans", async () => {
+    const Api = HttpApi.make("Api").add(
+      HttpApiGroup.make("images").add(
+        HttpApiEndpoint.post("build", "/build", {
+          query: { remote: Schema.String, t: Schema.String },
+          headers: { "x-registry-config": Schema.String },
+          success: Schema.String
+        }).annotate(HttpApi.RedactedNames, {
+          query: ["remote"],
+          headers: ["x-registry-config"]
+        })
+      )
+    )
+    let received: unknown
+    const GroupLayer = HttpApiBuilder.group(
+      Api,
+      "images",
+      (handlers) =>
+        handlers.handle("build", ({ headers, query }) =>
+          Effect.sync(() => {
+            received = { remote: query.remote, t: query.t, config: headers["x-registry-config"] }
+            return "ok"
+          }))
+    )
+    const spans: Array<Tracer.NativeSpan> = []
+    const tracer = Tracer.make({
+      span(options) {
+        const span = new Tracer.NativeSpan(options)
+        spans.push(span)
+        return span
+      }
+    })
+    const { dispose, handler } = HttpRouter.toWebHandler(
+      HttpApiBuilder.layer(Api).pipe(Layer.provide(GroupLayer), Layer.provide(TestServices)),
+      { disableLogger: true }
+    )
+    const context = Context.make(Tracer.Tracer, tracer).pipe(Context.add(HttpMiddleware.TracerHeaderFilter, () => true))
+    const statuses: Array<number> = []
+    try {
+      for (
+        const url of [
+          "/build?remote=https%3A%2F%2Fuser%3Apass%40host%2Frepo.git&t=app",
+          // Fails query decoding, as `t` is missing: names apply before decoding.
+          "/build?remote=https%3A%2F%2Fuser%3Apass%40host%2Frepo.git"
+        ]
+      ) {
+        const response = await handler(
+          new Request(`http://localhost${url}`, {
+            method: "POST",
+            headers: { "x-registry-config": "cfg-s3cret", "x-page": "1" }
+          }),
+          context
+        )
+        statuses.push(response.status)
+      }
+    } finally {
+      await dispose()
+    }
+
+    assert.deepStrictEqual(statuses, [200, 400])
+    const [success, invalid] = spans
+    assert.strictEqual(success.attributes.get("url.full"), "http://localhost/build?remote=REDACTED&t=app")
+    assert.strictEqual(success.attributes.get("url.query"), "remote=REDACTED&t=app")
+    assert.strictEqual(success.attributes.get("http.request.header.x-registry-config"), "<redacted>")
+    assert.strictEqual(success.attributes.get("http.request.header.x-page"), "1")
+    // The handler sees the values unchanged.
+    assert.deepStrictEqual(received, { remote: "https://user:pass@host/repo.git", t: "app", config: "cfg-s3cret" })
+    assert.strictEqual(invalid.attributes.get("url.full"), "http://localhost/build?remote=REDACTED")
+    assert.strictEqual(invalid.attributes.get("http.request.header.x-registry-config"), "<redacted>")
+  })
 })
 
 describe("HttpApiBuilder streaming payloads", () => {
