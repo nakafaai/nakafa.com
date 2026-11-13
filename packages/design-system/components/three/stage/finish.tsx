@@ -18,25 +18,37 @@ import { Vector3 } from "three";
 /** Where the camera looks when no controls name a target, the lab's middle. */
 const ORIGIN = new Vector3();
 
+/** The camera's world position, measured again on every frame. */
+const EYE = new Vector3();
+
 /**
  * Keeps the lens focused on what the reader orbits: the target of the
- * scene's default controls, read every frame so a pan or a zoom refocuses.
+ * scene's default controls, measured from the live camera on every frame so
+ * a pan or a zoom refocuses. The circle of confusion reads depth with the
+ * camera's near and far planes, which it copies only once; the camera
+ * controls fit those planes to the lab after the finish mounts, so the lens
+ * adopts them again each frame, or every depth would be misread and a
+ * sub-metre lab would blur whole.
  */
 function Lens() {
   const { reach } = useStage();
   const lens = useRef<DepthOfFieldEffect>(null);
   const controls = useThree((state) => state.controls);
 
-  useFrame(() => {
+  useFrame(({ camera }) => {
     if (lens.current === null) {
       return;
     }
-    lens.current.target =
+    const focus =
       controls !== null &&
       "target" in controls &&
       controls.target instanceof Vector3
         ? controls.target
         : ORIGIN;
+    lens.current.cocMaterial.adoptCameraSettings(camera);
+    lens.current.cocMaterial.focusDistance = camera
+      .getWorldPosition(EYE)
+      .distanceTo(focus);
   });
 
   return (
