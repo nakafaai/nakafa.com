@@ -25,7 +25,7 @@ import session from "@repo/backend/confect/middleware/session.impl";
 import { sealFileName } from "@repo/backend/confect/nina/sealed/file";
 import spec from "@repo/backend/confect/nina/uploads.spec";
 import { ensureLearnerKeys } from "@repo/backend/confect/vault/keys";
-import { Clock, Duration, Effect, Exit, Layer } from "effect";
+import { Clock, Duration, Effect, Layer } from "effect";
 
 const uploadQuota = new RateLimiter(components.agentRateLimiter, {
   ninaUpload: {
@@ -117,12 +117,8 @@ const save = FunctionImpl.make(
         );
         yield* mutate(ninaInternal.uploads.complete, { uploadId, fileId });
       }).pipe(
-        Effect.onExit((exit) =>
-          Exit.isFailure(exit)
-            ? mutate(ninaInternal.uploads.discard, { uploadId }).pipe(
-                Effect.orDie
-              )
-            : Effect.void
+        Effect.onError(() =>
+          mutate(ninaInternal.uploads.discard, { uploadId }).pipe(Effect.orDie)
         )
       );
       return uploadId;
