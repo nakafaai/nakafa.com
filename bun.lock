@@ -11,6 +11,7 @@
         "@effect/platform-node": "catalog:",
         "@effect/tsgo": "0.67.5",
         "@effect/vitest": "catalog:",
+        "@repo/backend": "workspace:*",
         "@repo/testing": "workspace:*",
         "@repo/utilities": "workspace:*",
         "@sigstore/bundle": "5.0.1",
@@ -91,7 +92,7 @@
         "@hugeicons/core-free-icons": "catalog:",
         "@hugeicons/react": "catalog:",
         "@mantine/hooks": "catalog:",
-        "@nakafa/aksara-contracts": "6.2.0",
+        "@nakafa/aksara-contracts": "6.3.0",
         "@repo/analytics": "workspace:*",
         "@repo/backend": "workspace:*",
         "@repo/contents": "workspace:*",
@@ -198,7 +199,7 @@
         "@effect/platform-node": "catalog:",
         "@fontsource-variable/inter": "5.3.0",
         "@fontsource-variable/noto-naskh-arabic": "5.3.0",
-        "@nakafa/aksara-contracts": "6.2.0",
+        "@nakafa/aksara-contracts": "6.3.0",
         "@polar-sh/sdk": "^1.0.2",
         "@posthog/convex": "2.1.8",
         "@react-email/render": "catalog:",
@@ -282,7 +283,7 @@
       "version": "2.0.2",
       "dependencies": {
         "@hugeicons/core-free-icons": "catalog:",
-        "@nakafa/aksara-contracts": "6.2.0",
+        "@nakafa/aksara-contracts": "6.3.0",
         "@repo/math": "workspace:*",
         "@repo/seo": "workspace:*",
         "@repo/utilities": "workspace:*",
@@ -416,7 +417,7 @@
       "name": "@repo/email",
       "version": "0.0.3",
       "dependencies": {
-        "@nakafa/aksara-contracts": "6.2.0",
+        "@nakafa/aksara-contracts": "6.3.0",
         "@react-email/render": "catalog:",
         "@repo/design-system": "workspace:*",
         "@repo/seo": "workspace:*",
@@ -440,7 +441,7 @@
       "name": "@repo/internationalization",
       "version": "1.0.0",
       "dependencies": {
-        "@nakafa/aksara-contracts": "6.2.0",
+        "@nakafa/aksara-contracts": "6.3.0",
         "@repo/seo": "workspace:*",
         "@repo/utilities": "workspace:*",
         "effect": "catalog:",
@@ -488,7 +489,7 @@
       "name": "@repo/seo",
       "version": "1.0.1",
       "dependencies": {
-        "@nakafa/aksara-contracts": "6.2.0",
+        "@nakafa/aksara-contracts": "6.3.0",
         "@repo/site": "workspace:*",
         "effect": "catalog:",
         "schema-dts": "^2.1.0",
@@ -559,7 +560,6 @@
     "@effect/platform-node-shared": "4.1.2",
     "convex-helpers": "0.1.133",
     "glob": "14.0.3",
-    "lodash": "4.18.1",
     "micromark-extension-math@3.1.0": {
       "katex": "0.19.1",
     },
@@ -1045,7 +1045,7 @@
 
     "@monogrid/gainmap-js": ["@monogrid/gainmap-js@3.4.0", "", { "dependencies": { "promise-worker-transferable": "1.0.4" }, "peerDependencies": { "three": ">= 0.159.0" } }, "sha512-2Z0FATFHaoYJ8b+Y4y4Hgfn3FRFwuU5zRrk+9dFWp4uGAdHGqVEdP7HP+gLA3X469KXHmfupJaUbKo1b/aDKIg=="],
 
-    "@nakafa/aksara-contracts": ["@nakafa/aksara-contracts@6.2.0", "", { "peerDependencies": { "effect": "4.1.2" } }, "sha512-5HcwZpoKtH/M4YJEgx+dMHMu1mq9elarRC60DxXayaL3lqPFLKe0a0RZgcEObw9RqoQKRIzRIFQWA/VsCk2Sfw=="],
+    "@nakafa/aksara-contracts": ["@nakafa/aksara-contracts@6.3.0", "", { "peerDependencies": { "effect": "4.1.2" } }, "sha512-gZCc8FsUo8CsimOtJX31RYiGMKh3lmuDa1M6opy1HJlGl1Xl3+Nl9miUSytD51+S0GC+7jEtFXH6KusyINh0BQ=="],
 
     "@nakafa/cli": ["@nakafa/cli@workspace:packages/cli"],
 

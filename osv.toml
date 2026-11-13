@@ -8,6 +8,6 @@
 
 [[IgnoredVulns]]
 id = "GHSA-gcqx-w48m-w2h4"
-ignoreUntil = 2026-11-13
-reason = "deepmerge 4.3.1 is the newest release and the advisory lists no fix. Only the root devDependency ultracite reaches it (ultracite -> deepmerge), which merges its own preset objects while it writes or checks lint configuration, so no untrusted object reaches mergeObject. The runtime path (@react-email/render -> html-to-text 9 -> deepmerge) is gone: @react-email/render 2.2.0 uses html-to-text 10, which merges with deepmerge-ts. Checked on 30 October 2026: ultracite 8.1.0 still depends on deepmerge ^4.3.1."
+ignoreUntil = 2026-11-27
+reason = "deepmerge 4.3.1 is the newest release and the advisory lists no fix (vulnerable >= 4.2.0, <= 4.3.1, no patched version). Only the root devDependency ultracite reaches it (ultracite -> deepmerge), which merges its own preset objects while it writes or checks lint configuration, so no untrusted object reaches mergeObject. The runtime path (@react-email/render -> html-to-text 9 -> deepmerge) is gone: @react-email/render 2.2.0 uses html-to-text 10, which merges with deepmerge-ts. Checked on 13 November 2026: deepmerge 4.3.1 is still the newest release, and ultracite 8.2.0, its newest, still depends on deepmerge ^4.3.1."
 
