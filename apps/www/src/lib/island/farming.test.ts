@@ -70,4 +70,16 @@ describe("island/farming", () => {
       Option.some(0)
     );
   });
+
+  it("sows and harvests on wet farmland too, and leaves a crop standing on grass to the pickaxe", () => {
+    const cells = meadow();
+    cells[cellOf(2, 8, 2)] = idOf("wet-farmland");
+    expect(sownOf(cells, [2, 9, 2], idOf("rice"))).toBe(idOf("rice-sprout"));
+    cells[cellOf(2, 9, 2)] = idOf("rice");
+    expect(
+      Option.map(hoeOf(cells, [2, 9, 2]), (edits) => edits[0].after)
+    ).toEqual(Option.some(0));
+    cells[cellOf(4, 9, 4)] = idOf("rice");
+    expect(hoeOf(cells, [4, 9, 4])).toEqual(Option.none());
+  });
 });

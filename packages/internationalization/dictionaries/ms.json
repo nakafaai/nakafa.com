@@ -2771,7 +2771,7 @@
     "plan-pass-extend": "Lanjutkan",
     "plan-xendit-footer": "Tiada komitmen.",
     "plan-xendit-ending-footer": "Tiada caj lagi.",
-    "plan-cancel": "Batal",
+    "plan-cancel": "Batalkan Pro",
     "plan-keep": "Kekalkan Pro",
     "plan-cancel-title": "Batalkan Pro?",
     "plan-cancel-description": "Pro kekal sehingga {date}, dan tiada caj selepas itu.",
@@ -4560,7 +4560,10 @@
     "demo-kind-image": "Imej",
     "demo-kind-link": "Pautan",
     "demo-exam-title": "Peperiksaan pertengahan tahun Fizik",
-    "demo-exam-question": "Sebiji bola 2 kg bergolek pada 3 m/s. Berapa momentumnya?",
+    "demo-exam-question": "Sebiji bola <mass></mass> bergolek pada <speed></speed>. Berapa momentumnya?",
+    "demo-exam-numeric": "Sebuah troli <cart></cart> bergerak pada <pace></pace>. Berapa momentumnya dalam <unit></unit>?",
+    "demo-exam-essay": "Mengapa lori bermuatan lebih sukar dihentikan berbanding basikal pada kelajuan yang sama?",
+    "demo-exam-rubric": "Markah penuh jika menyebut momentum, mengaitkannya dengan jisim, dan membandingkan kedua-duanya pada kelajuan yang sama.",
     "demo-exam-explanation": "Momentum ialah jisim darab halaju: <formula></formula>.",
     "demo-exam-answer": "Jawapan",
     "demo-exam-progress": "Soalan {current} daripada {total}",
@@ -4978,9 +4981,9 @@
     "block-cassava-sprout": "Tunas ubi kayu",
     "block-sweet-potato-sprout": "Tunas ubi keledek",
     "home-top": "Rumah agammu sudah paling hebat",
-    "home-0": "Pondok",
-    "home-1": "Rumah dua tingkat",
-    "home-2": "Rumah agam",
+    "home-cottage": "Pondok",
+    "home-house": "Rumah dua tingkat",
+    "home-manor": "Rumah agam",
     "upgrade": "Naik taraf rumahmu jadi {name}"
   }
 }

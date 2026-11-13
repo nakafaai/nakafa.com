@@ -130,7 +130,7 @@ export function ripenOf(
 }
 
 /** Whether a block is a sprout still growing. */
-export function isSprout(block: number) {
+function isSprout(block: number) {
   return Option.isSome(grownOf(block));
 }
 

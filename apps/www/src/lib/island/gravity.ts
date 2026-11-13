@@ -1,5 +1,5 @@
 import { idOf } from "@repo/backend/confect/island/blocks";
-import { HEIGHT } from "@repo/backend/confect/island/world";
+import { HEIGHT, SPAN } from "@repo/backend/confect/island/world";
 import { Array as Arr } from "effect";
 import type { Edit } from "@/lib/island/edits";
 import { KIND, LOOK } from "@/lib/island/look";
@@ -64,9 +64,8 @@ function settleColumn(cells: Cells, x: number, z: number) {
  * and belong with the change that caused them, so one undo takes back both.
  */
 export function settleOf(cells: Cells, edits: readonly Edit[]) {
-  const columns = Arr.dedupeWith(
-    Arr.map(edits, (edit) => [edit.x, edit.z] as const),
-    (a, b) => a[0] === b[0] && a[1] === b[1]
+  const columns = Arr.dedupe(Arr.map(edits, (edit) => edit.z * SPAN + edit.x));
+  return Arr.flatMap(columns, (column) =>
+    settleColumn(cells, column % SPAN, Math.floor(column / SPAN))
   );
-  return Arr.flatMap(columns, ([x, z]) => settleColumn(cells, x, z));
 }

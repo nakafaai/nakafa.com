@@ -32,7 +32,7 @@ describe("island/path", () => {
     expect(standOf(emptyCells(), 5, 5)).toEqual(Option.none());
   });
 
-  it("walks the shortest way around a wall, up one block a step, and finds no way up two or to nowhere", () => {
+  it("walks the shortest way around a wall, up one block a step, and finds no way up two, to nowhere, or out of the water", () => {
     const cells = floor();
     for (let z = 0; z < 20; z += 1) {
       cells[cellOf(20, 9, z)] = idOf("stone");
@@ -60,5 +60,6 @@ describe("island/path", () => {
     }
     expect(pathOf(cells, [38, 40], [40, 40])).toEqual(Option.none());
     expect(pathOf(emptyCells(), [1, 1], [2, 2])).toEqual(Option.none());
+    expect(pathOf(cells, [39, 40], [22, 5])).toEqual(Option.none());
   });
 });

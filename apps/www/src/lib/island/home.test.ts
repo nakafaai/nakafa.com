@@ -33,7 +33,7 @@ describe("island/home", () => {
       apply(cells, second.success.edits);
     }
     expect(tierOf(cells)).toBe(1);
-    expect(nextTierOf(cells)).toEqual(Option.some(2));
+    expect(nextTierOf(cells)).toEqual(Option.some({ name: "manor", tier: 2 }));
     expect(upgradeOf(cells, 3)).toEqual(Result.fail("locked"));
     const manor = upgradeOf(cells, 4);
     if (Result.isSuccess(manor)) {

@@ -4561,6 +4561,9 @@
     "demo-kind-link": "Tautan",
     "demo-exam-title": "UTS Fisika",
     "demo-exam-question": "Bola <mass></mass> menggelinding dengan kecepatan <speed></speed>. Berapa momentumnya?",
+    "demo-exam-numeric": "Troli <cart></cart> bergerak dengan kecepatan <pace></pace>. Berapa momentumnya dalam <unit></unit>?",
+    "demo-exam-essay": "Mengapa truk bermuatan lebih sulit dihentikan daripada sepeda pada kecepatan yang sama?",
+    "demo-exam-rubric": "Nilai penuh kalau menyebut momentum, mengaitkannya dengan massa, dan membandingkan keduanya pada kecepatan yang sama.",
     "demo-exam-explanation": "Momentum adalah massa kali kecepatan: <formula></formula>.",
     "demo-exam-answer": "Jawaban",
     "demo-exam-progress": "Soal {current} dari {total}",
@@ -4978,9 +4981,9 @@
     "block-cassava-sprout": "Tunas singkong",
     "block-sweet-potato-sprout": "Tunas ubi jalar",
     "home-top": "Rumah besarmu sudah paling keren",
-    "home-0": "Pondok",
-    "home-1": "Rumah dua lantai",
-    "home-2": "Rumah besar",
+    "home-cottage": "Pondok",
+    "home-house": "Rumah dua lantai",
+    "home-manor": "Rumah besar",
     "upgrade": "Tingkatkan rumahmu jadi {name}"
   }
 }

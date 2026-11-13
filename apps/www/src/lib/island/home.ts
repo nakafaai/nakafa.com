@@ -11,10 +11,16 @@ import { type Cells, cellOf, SEA_LEVEL } from "@/lib/island/world";
  * and what it grows into as the learner levels up. Each tier keeps the same
  * plot, so an upgrade never pushes into a neighbour.
  */
-export const HOME_TIERS = [
-  COTTAGE,
-  { lower: "plaster", roof: "roof", storeys: 2, upper: "plaster" },
-  { lower: "brick", roof: "slate", storeys: 2, upper: "plaster" },
+const HOME_TIERS = [
+  { name: "cottage", style: COTTAGE },
+  {
+    name: "house",
+    style: { lower: "plaster", roof: "roof", storeys: 2, upper: "plaster" },
+  },
+  {
+    name: "manor",
+    style: { lower: "brick", roof: "slate", storeys: 2, upper: "plaster" },
+  },
 ] as const;
 
 /** The cell the home's walls stand around: the middle of its plot, on the ground row. */
@@ -25,7 +31,7 @@ const ORIGIN = { x: 3, z: 3 };
 
 /** Every cell of a tier, in the world, with the block it holds. */
 function cellsOfTier(tier: number) {
-  return Arr.map(houseParts(HOME_TIERS[tier]), (part) => ({
+  return Arr.map(houseParts(HOME_TIERS[tier].style), (part) => ({
     block: idOf(part.block),
     x: HOME.x + part.x - ORIGIN.x,
     y: HOME.y + part.y,
@@ -46,7 +52,7 @@ export function tierOf(cells: Cells) {
 
 /** The level that opens a tier: the latest level of any of its blocks. */
 export function tierOpensAt(tier: number) {
-  return Arr.reduce(houseParts(HOME_TIERS[tier]), 1, (level, part) =>
+  return Arr.reduce(houseParts(HOME_TIERS[tier].style), 1, (level, part) =>
     Math.max(level, opensAt(part.block))
   );
 }
@@ -86,7 +92,7 @@ export function upgradeOf(cells: Cells, level: number) {
   if (blocked) {
     return Result.fail("room" as const);
   }
-  const built = Arr.filterMap(next, (cell) => {
+  const built = Arr.filterMap(next, (cell: (typeof next)[number]) => {
     const before = cells[cellOf(cell.x, cell.y, cell.z)];
     return before === cell.block
       ? Result.failVoid
@@ -116,8 +122,10 @@ export function upgradeOf(cells: Cells, level: number) {
   });
 }
 
-/** The tier after the home's own, none at the top. */
+/** The tier after the home's own and its name, none at the top. */
 export function nextTierOf(cells: Cells) {
-  const tier = tierOf(cells);
-  return tier < HOME_TIERS.length - 1 ? Option.some(tier + 1) : Option.none();
+  const tier = tierOf(cells) + 1;
+  return tier < HOME_TIERS.length
+    ? Option.some({ name: HOME_TIERS[tier].name, tier })
+    : Option.none();
 }
