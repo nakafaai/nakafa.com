@@ -4959,6 +4959,8 @@
     "block-taro": "Taro",
     "block-monstera": "Monstera",
     "block-papaya": "Papaya plant",
-    "plants": "Plants"
+    "plants": "Plants",
+    "walk": "Walk",
+    "notice-path": "No way leads there. Try a spot your fox can reach."
   }
 }

@@ -81,6 +81,9 @@ export const TILE_NAMES = [
   "bearTop",
   "bearBottom",
   "bearStep",
+  "foxTop",
+  "foxBottom",
+  "foxStep",
 ] as const;
 
 /** The name of one tile of the atlas. */
@@ -126,6 +129,9 @@ const PAINTERS = {
   bearTop: () => folkTopTile("bear"),
   bearBottom: () => folkBottomTile("bear", false),
   bearStep: () => folkBottomTile("bear", true),
+  foxTop: () => folkTopTile("fox"),
+  foxBottom: () => folkBottomTile("fox", false),
+  foxStep: () => folkBottomTile("fox", true),
 } satisfies Record<TileName, (seed: number) => Pixels>;
 
 /** Tiles along one side of the atlas: room for every block, sprite and species. */

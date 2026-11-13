@@ -82,6 +82,19 @@ const KINDS = {
     muzzle: ["plaster", 3],
     shirt: ["leaf", 2],
   },
+  fox: {
+    ears: [
+      "........",
+      "........",
+      "..o.....",
+      "..oo....",
+      "..ofo...",
+      "..ofpooo",
+    ],
+    fur: ["ginger", 2],
+    muzzle: ["plaster", 3],
+    shirt: ["sky", 2],
+  },
   rabbit: {
     ears: [
       "...oo...",
