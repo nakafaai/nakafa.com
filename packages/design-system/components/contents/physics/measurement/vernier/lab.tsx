@@ -355,7 +355,7 @@ export function VernierCaliperLab({
           <div className="flex items-center justify-between gap-4 text-sm">
             <span>{labels.width}</span>
             <span className="shrink-0 tabular-nums">
-              <InlineMath math={measure(reading, "\\text{ mm}", 1)} />
+              <InlineMath math={fixed(reading, "\\text{ mm}", 1)} />
             </span>
           </div>
           <Slider
@@ -380,7 +380,7 @@ export function VernierCaliperLab({
         <VisualCardFacts>
           <VisualFactTabular
             label={labels.main}
-            value={<InlineMath math={measure(main, "\\text{ mm}", 0)} />}
+            value={<InlineMath math={fixed(main, "\\text{ mm}", 0)} />}
           />
           <VisualFactTabular
             label={labels.line}
@@ -390,14 +390,14 @@ export function VernierCaliperLab({
             label={labels.reading}
             value={
               <InlineMath
-                math={`${main}+${line}\\times${measure(VERNIER_RESOLUTION, "", 1)}=${measure(reading, "\\text{ mm}", 1)}`}
+                math={`${main}+${line}\\times${fixed(VERNIER_RESOLUTION, "", 1)}=${fixed(reading, "\\text{ mm}", 1)}`}
               />
             }
           />
           <VisualFactTabular
             label={labels.centimetres}
             value={
-              <InlineMath math={measure(reading / 10, "\\text{ cm}", 2)} />
+              <InlineMath math={fixed(reading / 10, "\\text{ cm}", 2)} />
             }
           />
         </VisualCardFacts>

@@ -393,7 +393,7 @@ export function MicrometerScrewLab({
           <div className="flex items-center justify-between gap-4 text-sm">
             <span>{labels.size}</span>
             <span className="shrink-0 tabular-nums">
-              <InlineMath math={measure(reading, "\\text{ mm}", 2)} />
+              <InlineMath math={fixed(reading, "\\text{ mm}", 2)} />
             </span>
           </div>
           <Slider
@@ -418,7 +418,7 @@ export function MicrometerScrewLab({
         <VisualCardFacts>
           <VisualFactTabular
             label={labels.sleeve}
-            value={<InlineMath math={measure(sleeve, "\\text{ mm}", 1)} />}
+            value={<InlineMath math={fixed(sleeve, "\\text{ mm}", 1)} />}
           />
           <VisualFactTabular
             label={labels.division}
@@ -428,7 +428,7 @@ export function MicrometerScrewLab({
             label={labels.reading}
             value={
               <InlineMath
-                math={`${measure(sleeve, "", 1)}+${division}\\times${measure(SCREW_RESOLUTION, "", 2)}=${measure(reading, "\\text{ mm}", 2)}`}
+                math={`${fixed(sleeve, "", 1)}+${division}\\times${fixed(SCREW_RESOLUTION, "", 2)}=${fixed(reading, "\\text{ mm}", 2)}`}
               />
             }
           />
