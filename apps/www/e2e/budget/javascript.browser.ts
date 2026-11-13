@@ -13,6 +13,13 @@ import { appRoutes } from "@/e2e/support/route";
 // but never the sections under its first screen (ADR 0039 D3). Measured on the
 // Start build of 8 November 2026 (production build, 1440 by 900, three uncached
 // runs, all equal). Each limit keeps the ~6% margin over its measurement.
+//
+// Since 13 November 2026 the build copies each shared chunk under 16 KB into
+// the chunks that use it and runs every module in source order (output.config.ts),
+// so a route loads about a tenth of the files it did. The copies and the order
+// wrappers add text that compression removes: the bytes a route transfers held
+// or fell, while the decoded bytes of a graph that warms other pages grew by up
+// to 7%, and those two limits rose with them.
 
 // 897,759 encoded / 2,532,335 decoded: 758,203 at first paint, and the warmed
 // links on screen.
@@ -25,9 +32,10 @@ const PRICING_MAX_ENCODED_BYTES = 726_000;
 const PRICING_MAX_DECODED_BYTES = 2_038_000;
 
 // 833,187 encoded / 2,306,088 decoded: 730,190 at first paint, the always-on
-// analytics baseline included.
+// analytics baseline included. With the copied chunks: 822,414 encoded /
+// 2,456,884 decoded.
 const QURAN_MAX_ENCODED_BYTES = 884_000;
-const QURAN_MAX_DECODED_BYTES = 2_445_000;
+const QURAN_MAX_DECODED_BYTES = 2_604_000;
 
 // 567,013 encoded / 1,619,294 decoded, all at first paint with the animal pool
 // a wide screen loads; it warms nothing. Since the Start migration every first
@@ -37,9 +45,10 @@ const AUTH_MAX_ENCODED_BYTES = 602_000;
 const AUTH_MAX_DECODED_BYTES = 1_717_000;
 
 // The Memory page, signed in, warms its settings tabs: 1,049,988 encoded /
-// 2,944,185 decoded, measured on the Start build of 8 November 2026.
+// 2,944,185 decoded, measured on the Start build of 8 November 2026. With the
+// copied chunks: 1,049,197 encoded / 3,156,362 decoded.
 const MEMORY_MAX_ENCODED_BYTES = 1_113_000;
-const MEMORY_MAX_DECODED_BYTES = 3_121_000;
+const MEMORY_MAX_DECODED_BYTES = 3_346_000;
 
 // A lesson, whose first visual card is near enough to the first screen to load
 // its 3D scene: 1,127,084 encoded / 3,343,730 decoded, 1,017,722 before its
