@@ -1,13 +1,9 @@
-import { Array as Arr, HashSet, Option, Result } from "effect";
+import { Array as Arr, HashSet, Option } from "effect";
 import {
   isCallExpression,
   isIdentifier,
-  isJsxAttribute,
   isJsxElement,
-  isJsxExpression,
-  isJsxSelfClosingElement,
   isJsxText,
-  isLiteralLikeNode,
   isObjectLiteralExpression,
   isPropertyAssignment,
   isStringLiteralLikeNode,
@@ -15,11 +11,15 @@ import {
   type Node,
   type SourceFile,
 } from "tsrs/ast";
-import { nodesBelow, tagText } from "#scripts/check/drilling";
-import { COMPONENT_SET_DIRECTORIES } from "#scripts/check/exports";
+import { nodesBelow } from "#scripts/check/drilling";
+import {
+  attributeValue,
+  classText,
+  judgesMarkup,
+  opening,
+} from "#scripts/check/jsx";
 import { children } from "#scripts/check/source";
 
-const JSX_MODULE_PATTERN = /\.tsx$/u;
 /** What draws a button: the component, the one inside an input, or the classes that make a link look like one. */
 const BUTTON_TAGS = HashSet.make("Button", "InputGroupButton");
 const BUTTON_CLASSES = "buttonVariants";
@@ -31,36 +31,6 @@ const ICON_TAG_PATTERN = /^(?:HugeIcons|Spinner|svg|[A-Z]\w*Icon)$/u;
 /** A height or a square under the small button's, which a finger cannot press and a row cannot match. */
 const SMALL_HEIGHT_PATTERN =
   /(?:^|\s|:)(?:h|size|min-h)-(?:[0-7](?:\.5)?|px)(?=\s|$)/u;
-
-/** The tag and attributes of an element that a node opens, or none for any other node. */
-function opening(node: Node) {
-  if (isJsxElement(node)) {
-    return Option.some({
-      attributes: node.openingElement.attributes,
-      tag: tagText(node.openingElement.tagName),
-    });
-  }
-  return isJsxSelfClosingElement(node)
-    ? Option.some({ attributes: node.attributes, tag: tagText(node.tagName) })
-    : Option.none();
-}
-
-/** The value an attribute holds: its expression in braces or its quoted text. */
-function attributeValue(attributes: JsxAttributes, name: string) {
-  return Arr.findFirst(attributes.properties, (property) =>
-    isJsxAttribute(property) &&
-    isIdentifier(property.name) &&
-    property.name.text === name &&
-    property.initializer !== undefined
-      ? Option.some<Node>(
-          isJsxExpression(property.initializer) &&
-            property.initializer.expression !== undefined
-            ? property.initializer.expression
-            : property.initializer
-        )
-      : Option.none()
-  );
-}
 
 /**
  * Whether an element answers for an icon alone: an icon size, whose type requires the tooltip, or a tooltip of its
@@ -103,18 +73,6 @@ function renderedButton(attributes: JsxAttributes) {
     Option.filter(
       opening(render),
       ({ tag }) => tag !== undefined && HashSet.has(BUTTON_TAGS, tag)
-    )
-  );
-}
-
-/** The class text of an element's `className`: every literal it writes, in a string, a template or a call. */
-function classText(attributes: JsxAttributes) {
-  return Option.map(attributeValue(attributes, "className"), (value) =>
-    Arr.join(
-      Arr.filterMap(Arr.prepend(nodesBelow(value), value), (node) =>
-        isLiteralLikeNode(node) ? Result.succeed(node.text) : Result.failVoid
-      ),
-      " "
     )
   );
 }
@@ -170,12 +128,7 @@ function untippedIconLinks(node: Node): readonly Node[] {
  * component sets that a registry ships keep their upstream shape.
  */
 export function inspectButtonSource(file: string, sourceFile: SourceFile) {
-  if (
-    !JSX_MODULE_PATTERN.test(file) ||
-    Arr.some(COMPONENT_SET_DIRECTORIES, (directory) =>
-      file.startsWith(directory)
-    )
-  ) {
+  if (!judgesMarkup(file)) {
     return [];
   }
   const nodes = nodesBelow(sourceFile);
