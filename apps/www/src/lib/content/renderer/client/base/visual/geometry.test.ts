@@ -42,6 +42,41 @@ describe("MathVisual geometry", () => {
       ],
     });
   });
+  it("draws a vector as its segment with one arrowhead at the head, in plane and space", () => {
+    expect(
+      resolveVisualGeometry(
+        plane({
+          appearance: "primary",
+          from: { x: 0, y: 0 },
+          id: "force",
+          kind: "vector",
+          to: { x: 3, y: 2 },
+        })
+      ).paths
+    ).toEqual([
+      {
+        appearance: "primary",
+        arrows: "end",
+        id: "force",
+        points: [
+          { x: 0, y: 0, z: 0 },
+          { x: 3, y: 2, z: 0 },
+        ],
+      },
+    ]);
+    const [path] = resolveVisualGeometry(
+      space({
+        appearance: "secondary",
+        from: { x: 0, y: 0, z: 0 },
+        id: "velocity",
+        kind: "vector",
+        to: { x: 1, y: 2, z: 3 },
+      })
+    ).paths;
+    expect(path?.arrows).toBe("end");
+    expect(path?.points).toHaveLength(2);
+  });
+
   it("preserves an exact plane corner tangent and omits a zero-length path", () => {
     const geometry = resolveVisualGeometry(
       plane(
