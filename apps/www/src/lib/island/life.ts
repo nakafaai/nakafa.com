@@ -275,7 +275,7 @@ function quadOf(
       [0, 0],
     ] as const,
     ([u, v], corner) => {
-      const [tu, tv] = slotUv(slot, u, v, false);
+      const [tu, tv] = slotUv(slot, u, v);
       return [...corners[corner], tu, tv, 1, 1, 0];
     }
   );

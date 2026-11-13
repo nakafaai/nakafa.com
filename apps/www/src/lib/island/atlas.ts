@@ -184,11 +184,10 @@ export function atlasPixels() {
   return atlas;
 }
 
-/** The atlas coordinate of a corner of the tile in a slot, inset a hair, mirrored across when `flip`. */
-export function slotUv(slot: number, u: number, v: number, flip: boolean) {
-  const across = flip ? 1 - u : u;
+/** The atlas coordinate of a corner of the tile in a slot, inset a hair. */
+export function slotUv(slot: number, u: number, v: number) {
   return [
-    ((slot % ATLAS_TILES) + 0.002 + across * 0.996) / ATLAS_TILES,
+    ((slot % ATLAS_TILES) + 0.002 + u * 0.996) / ATLAS_TILES,
     (Math.floor(slot / ATLAS_TILES) + 0.002 + v * 0.996) / ATLAS_TILES,
   ] as const;
 }
