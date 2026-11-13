@@ -1,13 +1,11 @@
 import { CheckmarkCircle02Icon, QrCodeIcon } from "@hugeicons/core-free-icons";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { Nina } from "@repo/design-system/components/ui/nina";
 import { PersonAvatar } from "@repo/design-system/components/ui/person";
 import { Array as Arr } from "effect";
 import { useFormatter, useTranslations } from "use-intl";
 import { DEMO_REPORTED } from "@/components/marketing/school/features/cast";
 import { stepVariants } from "@/components/marketing/school/features/step";
-import { SchoolFeatureText } from "@/components/marketing/school/features/text";
-import { FeatureCard, FeatureRow } from "@/components/marketing/shared/feature";
+import { FeatureCard } from "@/components/marketing/shared/feature";
 
 /** The subjects of the demo report card with the grades the student earned. */
 const REPORT_GRADES = [
@@ -23,72 +21,66 @@ const REPORT_AVERAGE =
   REPORT_GRADES.length;
 
 /**
- * The report cards row: one student's card as the school signs it, the grades
- * of each subject with their average, the school's signature, and the QR code
- * that lets anyone check it.
+ * One student's report card as the school signs it: the grades of each subject with their average, the school's
+ * signature, and the QR code that lets anyone check it.
  */
-export function SchoolReports() {
+export function ReportCard() {
   const t = useTranslations("SchoolSite");
   const tSubject = useTranslations("Subject");
   const format = useFormatter();
 
   return (
-    <FeatureRow id="reports" layout="end">
-      <SchoolFeatureText feature="reports">
-        <Nina act="stamping" label="" size={88} whole />
-      </SchoolFeatureText>
-      <FeatureCard>
-        <div className="flex items-center gap-3">
-          <PersonAvatar mascot={DEMO_REPORTED.mascot} size="lg" />
-          <div className="grid min-w-0 gap-0.5">
-            <p className="truncate font-medium">{DEMO_REPORTED.name}</p>
-            <p className="text-muted-foreground truncate text-sm">
-              {t("demo-report-term")}
-            </p>
-          </div>
+    <FeatureCard>
+      <div className="flex items-center gap-3">
+        <PersonAvatar mascot={DEMO_REPORTED.mascot} size="lg" />
+        <div className="grid min-w-0 gap-0.5">
+          <p className="truncate font-medium">{DEMO_REPORTED.name}</p>
+          <p className="text-muted-foreground truncate text-sm">
+            {t("demo-report-term")}
+          </p>
         </div>
-        <dl className="grid gap-3">
-          {Arr.map(REPORT_GRADES, ({ score, subject }) => (
-            <div
-              className="flex items-center justify-between gap-4"
-              key={subject}
-            >
-              <dt className="text-sm">{tSubject(subject)}</dt>
-              <dd className="text-sm tabular-nums">{format.number(score)}</dd>
-            </div>
-          ))}
+      </div>
+      <dl className="grid gap-3">
+        {Arr.map(REPORT_GRADES, ({ score, subject }) => (
           <div
-            className={stepVariants({
-              className: "flex items-center justify-between gap-4",
-              step: 5,
-            })}
+            className="flex items-center justify-between gap-4"
+            key={subject}
           >
-            <dt className="text-sm font-medium">{t("demo-report-average")}</dt>
-            <dd className="text-sm font-medium tabular-nums">
-              {format.number(REPORT_AVERAGE)}
-            </dd>
+            <dt className="text-sm">{tSubject(subject)}</dt>
+            <dd className="text-sm tabular-nums">{format.number(score)}</dd>
           </div>
-        </dl>
+        ))}
         <div
           className={stepVariants({
-            className:
-              "flex flex-wrap items-center justify-between gap-3 text-sm",
-            step: 6,
+            className: "flex items-center justify-between gap-4",
+            step: 5,
           })}
         >
-          <p className="flex items-center gap-2">
-            <HugeIcons
-              className="text-success size-4"
-              icon={CheckmarkCircle02Icon}
-            />
-            {t("demo-report-signed")}
-          </p>
-          <p className="text-muted-foreground flex items-center gap-2">
-            <HugeIcons className="size-4" icon={QrCodeIcon} />
-            {t("demo-report-verify")}
-          </p>
+          <dt className="text-sm font-medium">{t("demo-report-average")}</dt>
+          <dd className="text-sm font-medium tabular-nums">
+            {format.number(REPORT_AVERAGE)}
+          </dd>
         </div>
-      </FeatureCard>
-    </FeatureRow>
+      </dl>
+      <div
+        className={stepVariants({
+          className:
+            "flex flex-wrap items-center justify-between gap-3 text-sm",
+          step: 6,
+        })}
+      >
+        <p className="flex items-center gap-2">
+          <HugeIcons
+            className="text-success size-4"
+            icon={CheckmarkCircle02Icon}
+          />
+          {t("demo-report-signed")}
+        </p>
+        <p className="text-muted-foreground flex items-center gap-2">
+          <HugeIcons className="size-4" icon={QrCodeIcon} />
+          {t("demo-report-verify")}
+        </p>
+      </div>
+    </FeatureCard>
   );
 }

@@ -4,13 +4,7 @@ import {
   NoteEditIcon,
   StudentIcon,
 } from "@hugeicons/core-free-icons";
-import { Nina } from "@repo/design-system/components/ui/nina";
 import { useTranslations } from "use-intl";
-import { SchoolFeatureText } from "@/components/marketing/school/features/text";
-import {
-  FeatureProduct,
-  FeatureRow,
-} from "@/components/marketing/shared/feature";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { TablePageBody } from "@/components/shared/table/frame";
@@ -97,29 +91,21 @@ function useDemoColumns() {
 }
 
 /**
- * The insight part, as wide as the page under its words: one class's students in the School's own
- * insight table, with the mastery that
- * shows who needs help and where each narrative stands, before any report is due.
+ * One class's students in the School's own insight table, with the mastery that shows who needs help and where each
+ * narrative stands, before any report is due.
  */
-export function SchoolInsight() {
+export function InsightTable() {
   const columns = useDemoColumns();
 
   return (
-    <FeatureRow id="insight" layout="wide">
-      <SchoolFeatureText feature="insight">
-        <Nina act="searching" label="" size={88} whole />
-      </SchoolFeatureText>
-      <FeatureProduct>
-        <TableFiltersProvider>
-          <TablePageBody>
-            <DataTable
-              columns={columns}
-              data={DEMO_STUDENTS}
-              rowId={(row) => row.name}
-            />
-          </TablePageBody>
-        </TableFiltersProvider>
-      </FeatureProduct>
-    </FeatureRow>
+    <TableFiltersProvider>
+      <TablePageBody>
+        <DataTable
+          columns={columns}
+          data={DEMO_STUDENTS}
+          rowId={(row) => row.name}
+        />
+      </TablePageBody>
+    </TableFiltersProvider>
   );
 }

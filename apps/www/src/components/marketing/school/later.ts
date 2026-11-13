@@ -17,6 +17,11 @@ export const schoolSections = {
       (module) => module.SchoolCalculator
     )
   ),
+  class: laterCode(() =>
+    import("@/components/marketing/school/features/class").then(
+      (module) => module.SchoolClass
+    )
+  ),
   closing: laterCode(() =>
     import("@/components/marketing/school/closing").then(
       (module) => module.SchoolClosing
@@ -42,39 +47,14 @@ export const schoolSections = {
       (module) => module.SchoolForum
     )
   ),
-  graduation: laterCode(() =>
-    import("@/components/marketing/school/features/graduation").then(
-      (module) => module.SchoolGraduation
-    )
-  ),
-  insight: laterCode(() =>
-    import("@/components/marketing/school/features/insight").then(
-      (module) => module.SchoolInsight
-    )
-  ),
-  library: laterCode(() =>
-    import("@/components/marketing/school/features/library").then(
-      (module) => module.SchoolLibrary
-    )
-  ),
-  parents: laterCode(() =>
-    import("@/components/marketing/school/features/parents").then(
-      (module) => module.SchoolParents
-    )
-  ),
   player: laterCode(() =>
     import("@/components/marketing/school/features/player").then(
       (module) => module.SchoolPlayer
     )
   ),
-  reports: laterCode(() =>
-    import("@/components/marketing/school/features/reports").then(
-      (module) => module.SchoolReports
-    )
-  ),
-  tasks: laterCode(() =>
-    import("@/components/marketing/school/features/tasks").then(
-      (module) => module.SchoolTasks
+  year: laterCode(() =>
+    import("@/components/marketing/school/features/year").then(
+      (module) => module.SchoolYear
     )
   ),
 };
@@ -87,17 +67,13 @@ export const schoolSections = {
  */
 export function openSchoolLanding() {
   return Promise.all([
+    openLaterCode(schoolSections.class),
     openLaterCode(schoolSections.closing),
     openLaterCode(schoolSections.exams),
     openLaterCode(schoolSections.faq),
     openLaterCode(schoolSections.forum),
-    openLaterCode(schoolSections.graduation),
-    openLaterCode(schoolSections.insight),
-    openLaterCode(schoolSections.library),
-    openLaterCode(schoolSections.parents),
     openLaterCode(schoolSections.player),
-    openLaterCode(schoolSections.reports),
-    openLaterCode(schoolSections.tasks),
+    openLaterCode(schoolSections.year),
   ]);
 }
 

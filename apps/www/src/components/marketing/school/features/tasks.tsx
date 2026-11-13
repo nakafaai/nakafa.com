@@ -1,12 +1,6 @@
 import { TaskEdit01Icon } from "@hugeicons/core-free-icons";
-import { Nina } from "@repo/design-system/components/ui/nina";
 import { DateTime } from "effect";
 import { useFormatter, useTranslations } from "use-intl";
-import { SchoolFeatureText } from "@/components/marketing/school/features/text";
-import {
-  FeatureProduct,
-  FeatureRow,
-} from "@/components/marketing/shared/feature";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { TablePageBody } from "@/components/shared/table/frame";
@@ -101,28 +95,21 @@ function useDemoColumns() {
 }
 
 /**
- * The tasks part: a class's tasks in the School's own task table, the soonest deadline first, with
- * how many handed each one in. Its heads filter the rows, and each row's menu copies its title.
+ * A class's tasks in the School's own task table, the soonest deadline first, with how many handed each one in. Its
+ * heads filter the rows, and each row's menu copies its title.
  */
-export function SchoolTasks() {
+export function TaskTable() {
   const columns = useDemoColumns();
 
   return (
-    <FeatureRow id="tasks" layout="end">
-      <SchoolFeatureText feature="tasks">
-        <Nina act="writing" label="" size={88} whole />
-      </SchoolFeatureText>
-      <FeatureProduct>
-        <TableFiltersProvider>
-          <TablePageBody>
-            <DataTable
-              columns={columns}
-              data={DEMO_TASKS}
-              rowId={(task) => task.title}
-            />
-          </TablePageBody>
-        </TableFiltersProvider>
-      </FeatureProduct>
-    </FeatureRow>
+    <TableFiltersProvider>
+      <TablePageBody>
+        <DataTable
+          columns={columns}
+          data={DEMO_TASKS}
+          rowId={(task) => task.title}
+        />
+      </TablePageBody>
+    </TableFiltersProvider>
   );
 }

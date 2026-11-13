@@ -29,22 +29,16 @@ const readOverflow = (page: Page) =>
   );
 
 /**
- * The name of the exam's right answer, the momentum of a 2 kg ball at 3 m/s: its formula reads 6, and no
+ * The name of the paper's right answer, the momentum of a 2 kg ball at 3 m/s: its formula reads 6, and no
  * other answer holds that digit.
  */
 const MOMENTUM = /6/u;
 
-/** The sections of the School landing, one per feature, in the order the page shows them. */
-const FEATURE_SECTIONS = [
-  "forum",
-  "library",
-  "tasks",
-  "exams",
-  "reports",
-  "insight",
-  "graduation",
-  "parents",
-] as const;
+/** The parts of the School landing under its hero, in the order the page shows them. */
+const PARTS = ["forum", "class", "exams", "player", "year"] as const;
+
+/** The ten types of question the paper names, in the order of the editor's type menu. */
+const TYPES = 10;
 
 const verifySchoolLanding = Effect.fn("NakafaE2E.verifySchoolLanding")(
   function* (page: Page) {
@@ -59,24 +53,41 @@ const verifySchoolLanding = Effect.fn("NakafaE2E.verifySchoolLanding")(
         page.locator("#hero").getByRole("link", { name: "Start free trial" })
       ).toHaveAttribute("href", "/en/school/new")
     );
-    // Each feature has one title; the exam editor's own pages, which name their questions, stand under it.
-    for (const feature of FEATURE_SECTIONS) {
+    // Each part has one title; the exam editor's own pages, which name their questions, stand under it.
+    for (const part of PARTS) {
       yield* Effect.promise(() =>
         expect(
-          page.locator(
-            `section#${feature} h2:not([data-slot="editor-demo"] h2)`
-          )
+          page.locator(`section#${part} h2:not([data-slot="editor-demo"] h2)`)
         ).toHaveCount(1)
       );
     }
-    // The exam answers itself with the momentum of a 2 kg ball at 3 m/s.
-    const exam = page.locator("#player");
-    yield* Effect.promise(() => exam.scrollIntoViewIfNeeded());
+    // The paper names every type of question, and each press opens that type's question in the player.
+    const paper = page.locator("#player");
+    yield* Effect.promise(() => paper.scrollIntoViewIfNeeded());
+    const types = paper.getByRole("group", { name: "Question types" });
     yield* Effect.promise(() =>
-      expect(exam.getByRole("radio", { checked: true })).toHaveAccessibleName(
-        MOMENTUM,
-        { timeout: 10_000 }
-      )
+      expect(types.getByRole("button")).toHaveCount(TYPES)
+    );
+    yield* Effect.promise(() =>
+      types.getByRole("button", { name: "True or false table" }).click()
+    );
+    yield* Effect.promise(() =>
+      expect(paper.getByText("Momentum is measured in joules.")).toBeVisible()
+    );
+    yield* Effect.promise(() =>
+      types
+        .getByRole("button", { name: "Multiple choice", exact: true })
+        .click()
+    );
+    const answer = paper.getByRole("radio", { name: MOMENTUM });
+    yield* Effect.promise(() => answer.click());
+    yield* Effect.promise(() => expect(answer).toBeChecked());
+    // A header link to a feature opens it in its part.
+    yield* Effect.promise(() => page.goto("/en/school#insight"));
+    yield* Effect.promise(() =>
+      expect(
+        page.locator("#class").getByRole("button", { name: "Insight" })
+      ).toHaveAttribute("aria-pressed", "true")
     );
     yield* Effect.promise(() =>
       expect(

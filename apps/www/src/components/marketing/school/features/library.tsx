@@ -5,14 +5,8 @@ import {
   Pdf02Icon,
 } from "@hugeicons/core-free-icons";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { Nina } from "@repo/design-system/components/ui/nina";
 import { Array as Arr } from "effect";
 import { useTranslations } from "use-intl";
-import { SchoolFeatureText } from "@/components/marketing/school/features/text";
-import {
-  FeatureProduct,
-  FeatureRow,
-} from "@/components/marketing/shared/feature";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { namedOptions } from "@/components/shared/table/filter";
@@ -108,30 +102,21 @@ function useDemoColumns() {
 }
 
 /**
- * The library part, as wide as the page under its words: one class's drive in the School's own library
- * table, the chapter's folder first
- * and its files under it, Nina's summary among them. Its heads filter the rows, and each row's menu
- * copies its title.
+ * One class's drive in the School's own library table, the chapter's folder first and its files under it, Nina's
+ * summary among them. Its heads filter the rows, and each row's menu copies its title.
  */
-export function SchoolLibrary() {
+export function LibraryTable() {
   const columns = useDemoColumns();
 
   return (
-    <FeatureRow id="library" layout="wide">
-      <SchoolFeatureText feature="library">
-        <Nina act="carrying" label="" size={88} whole />
-      </SchoolFeatureText>
-      <FeatureProduct>
-        <TableFiltersProvider>
-          <TablePageBody>
-            <DataTable
-              columns={columns}
-              data={DEMO_ENTRIES}
-              rowId={(entry) => entry.title}
-            />
-          </TablePageBody>
-        </TableFiltersProvider>
-      </FeatureProduct>
-    </FeatureRow>
+    <TableFiltersProvider>
+      <TablePageBody>
+        <DataTable
+          columns={columns}
+          data={DEMO_ENTRIES}
+          rowId={(entry) => entry.title}
+        />
+      </TablePageBody>
+    </TableFiltersProvider>
   );
 }

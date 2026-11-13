@@ -8,6 +8,7 @@ import {
   TaskEdit01Icon,
   UserLove01Icon,
 } from "@hugeicons/core-free-icons";
+import { Schema } from "effect";
 
 /**
  * What Nakafa School gives a school, in the order its landing shows them. Each
@@ -24,3 +25,16 @@ export const SCHOOL_FEATURES = [
   { icon: MortarboardIcon, key: "graduation" },
   { icon: UserLove01Icon, key: "parents" },
 ] as const;
+
+/**
+ * The parts of the School landing under its hero, in the order it shows them. Each key is the part's id and names its
+ * words; the class part holds the library, the tasks and the insight, and the year part the report cards, the
+ * graduation and the parents, so a feature's header link opens it in its part.
+ */
+export const SchoolPart = Schema.Literals([
+  "forum",
+  "class",
+  "exams",
+  "player",
+  "year",
+]);
