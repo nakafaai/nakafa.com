@@ -233,7 +233,11 @@ function trayProgram(sketch: p5, read: () => Tray) {
   };
 }
 
-/** Split soybeans about 8 mm long, packed across the tray, each with its seam. */
+/**
+ * Split soybean halves about 5.4 mm by 4.2 mm, packed in rows across the
+ * tray without touching: each a rounded cotyledon with its paler split face
+ * up and the small dark germ notch at one end.
+ */
 function drawBeans(
   sketch: p5,
   x: (mm: number) => number,
@@ -249,22 +253,23 @@ function drawBeans(
     const cx =
       -TEMPEH.size / 2 +
       ((column + 0.5) * TEMPEH.size) / columns +
-      (hashUnit(bean, 1) - 0.5) * 1.5;
+      (hashUnit(bean, 1) - 0.5) * 0.4;
     const cy =
       -TEMPEH.size / 2 +
       ((row + 0.5) * TEMPEH.size) / rows +
-      (hashUnit(bean, 2) - 0.5) * 1.2;
+      (hashUnit(bean, 2) - 0.5) * 0.3;
     sketch.push();
     sketch.translate(x(cx), y(cy));
-    sketch.rotate(hashUnit(bean, 3) * Math.PI);
-    sketch.fill(MATERIAL.chitin);
-    sketch.ellipse(0, 0, 7.6 * scale, 5.2 * scale);
-    sketch.fill(MATERIAL.yeastCell);
-    sketch.ellipse(-0.4 * scale, -0.4 * scale, 6.2 * scale, 3.8 * scale);
+    sketch.rotate((hashUnit(bean, 3) - 0.5) * 0.24 + (bean % 2) * Math.PI);
     sketch.stroke(MATERIAL.leafLitter);
-    sketch.strokeWeight(Math.max(0.5, 0.15 * scale));
-    sketch.line(-3.4 * scale, 0, 3.4 * scale, 0);
+    sketch.strokeWeight(Math.max(0.5, 0.12 * scale));
+    sketch.fill(MATERIAL.soybean);
+    sketch.ellipse(0, 0, 5.4 * scale, 4.2 * scale);
     sketch.noStroke();
+    sketch.fill(MATERIAL.soybeanFace);
+    sketch.ellipse(0.2 * scale, -0.2 * scale, 4.2 * scale, 3 * scale);
+    sketch.fill(MATERIAL.leafLitter);
+    sketch.ellipse(-2.1 * scale, 0, 0.7 * scale, 1.1 * scale);
     sketch.pop();
   });
 }

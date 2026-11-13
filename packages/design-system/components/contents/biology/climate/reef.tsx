@@ -51,7 +51,13 @@ import {
   useRef,
   useState,
 } from "react";
-import { Color, SphereGeometry } from "three";
+import {
+  Color,
+  DoubleSide,
+  LatheGeometry,
+  SphereGeometry,
+  Vector2,
+} from "three";
 
 /** Played, a week passes each second. */
 const WEEKS_PER_SECOND = 1;
@@ -285,14 +291,7 @@ function TankScene({
           tips={tips}
         />
         <BrainCoral color={tissue} />
-        <mesh
-          castShadow
-          position={[-0.02, 0.06, 0.09]}
-          rotation={[0.1, 0, 0.12]}
-        >
-          <cylinderGeometry args={[0.07, 0.02, 0.012, 32]} />
-          <meshStandardMaterial color={tissue} roughness={0.8} />
-        </mesh>
+        <PlateCoral color={tissue} />
         <group
           position={[TANK.length / 2 - 0.04, 0.16, -TANK.depth / 2 + 0.03]}
         >
@@ -421,6 +420,57 @@ function Branch({
     <mesh castShadow position={[0, length / 2, 0]}>
       <cylinderGeometry args={[radius * 0.8, radius, length, 10]} />
       <meshStandardMaterial color={color} roughness={0.85} />
+    </mesh>
+  );
+}
+
+/**
+ * A plate coral such as Turbinaria: a short stalk that opens into a broad,
+ * shallow cup whose rim lifts and waves, its surface pitted by its polyps.
+ */
+function PlateCoral({ color }: { readonly color: Color }) {
+  const geometry = useMemo(() => {
+    const profile = Arr.map(
+      [
+        [0.004, 0],
+        [0.009, 0.004],
+        [0.012, 0.018],
+        [0.03, 0.026],
+        [0.055, 0.03],
+        [0.072, 0.036],
+        [0.078, 0.046],
+        [0.074, 0.049],
+        [0.066, 0.041],
+        [0.048, 0.034],
+        [0.02, 0.03],
+        [0.002, 0.028],
+      ] as const,
+      ([radius, height]) => new Vector2(radius, height)
+    );
+    const cup = new LatheGeometry(profile, 72);
+    const positions = cup.attributes.position;
+    if (positions) {
+      Arr.forEach(Arr.range(0, positions.count - 1), (index) => {
+        const x = positions.getX(index);
+        const z = positions.getZ(index);
+        const reach = Math.hypot(x, z);
+        const wave = Math.sin(Math.atan2(z, x) * 5) * 0.004 * (reach / 0.078);
+        const pits = (valueNoise(x * 600, z * 600, 64) - 0.5) * 0.0015;
+        positions.setY(index, positions.getY(index) + wave + pits);
+      });
+    }
+    cup.computeVertexNormals();
+    return cup;
+  }, []);
+  return (
+    <mesh
+      castShadow
+      geometry={geometry}
+      position={[-0.03, 0.035, 0.09]}
+      receiveShadow
+      rotation={[0.08, 0, 0.1]}
+    >
+      <meshStandardMaterial color={color} roughness={0.85} side={DoubleSide} />
     </mesh>
   );
 }

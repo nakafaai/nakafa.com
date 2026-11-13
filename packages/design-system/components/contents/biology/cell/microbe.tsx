@@ -32,7 +32,7 @@ export function YeastCell({ minutes }: { readonly minutes: number }) {
   const neck = MOTHER[0] * 0.92;
 
   return (
-    <group position={[-share * 0.45, 0, 0]}>
+    <group position={[-share * 0.89, 0, 0]}>
       <HalfShell
         color={MATERIAL.chitin}
         roughness={0.75}
@@ -44,18 +44,18 @@ export function YeastCell({ minutes }: { readonly minutes: number }) {
       </group>
       <mesh
         castShadow
-        position={[dividing ? neck - 0.12 : 0.05, 0.05, -0.38]}
+        position={[dividing ? neck - 0.12 : 0.05, 0.05, -0.36]}
         scale={dividing ? [1.7, 0.75, 0.75] : [1, 1, 1]}
       >
-        <sphereGeometry args={[1 * YEAST_UM, 32, 24]} />
+        <sphereGeometry args={[0.8 * YEAST_UM, 32, 24]} />
         <meshPhysicalMaterial
           clearcoat={0.5}
           color={MATERIAL.nucleus}
           roughness={0.45}
         />
       </mesh>
-      <mesh position={[-0.42, -0.12, -0.36]}>
-        <sphereGeometry args={[0.9 * YEAST_UM, 32, 24]} />
+      <mesh position={[-0.42, -0.12, -0.34]}>
+        <sphereGeometry args={[0.85 * YEAST_UM, 32, 24]} />
         <meshPhysicalMaterial
           color={MATERIAL.vacuole}
           opacity={0.7}
@@ -64,7 +64,7 @@ export function YeastCell({ minutes }: { readonly minutes: number }) {
         />
       </mesh>
       <group scale={MOTHER}>
-        <Mitochondria count={7} margin={0.25} size={YEAST_UM} />
+        <Mitochondria count={7} margin={0.45} size={YEAST_UM * 0.8} />
         <Ribosomes count={260} margin={0.12} size={YEAST_UM} />
       </group>
       {share > 0 && (

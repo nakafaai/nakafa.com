@@ -1,7 +1,6 @@
 import {
   crowdOf,
   type Day,
-  everInfectedOf,
   immuneShare,
   type Measures,
   nextInfected,
@@ -65,7 +64,8 @@ type Town = Readonly<{
  * virus spreads. The outbreak follows the SIR model day by day, and each new
  * case appears beside someone already infected. Sliders set the share of
  * people who wear masks, wash their hands, are vaccinated or stay home; the
- * footer reads the reproduction number, the peak and the share ever infected.
+ * footer reads the reproduction number, the peak, and the shares susceptible,
+ * infected, recovered and immune on the day shown, each beside its colour.
  */
 export function EpidemicSpreadLab({
   description,
@@ -85,7 +85,7 @@ export function EpidemicSpreadLab({
     readonly recovered: ReactNode;
     readonly reproduction: ReactNode;
     readonly routes?: Readonly<{ air: ReactNode; touch: ReactNode }>;
-    readonly total: ReactNode;
+    readonly susceptible: ReactNode;
     readonly vaccinated?: string;
     readonly viewLabel: string;
     readonly washing?: string;
@@ -190,13 +190,10 @@ export function EpidemicSpreadLab({
               <InlineMath math={quantity(peakOf(outbreak) * 100, "\\%", 0)} />
             }
           />
-          <VisualFactTabular
-            label={labels.total}
-            value={
-              <InlineMath
-                math={quantity(everInfectedOf(outbreak) * 100, "\\%", 0)}
-              />
-            }
+          <VisualFactIndicator
+            indicatorColor={STATE_COLORS.susceptible}
+            label={labels.susceptible}
+            value={percent(today?.susceptible ?? 0)}
           />
           <VisualFactIndicator
             indicatorColor={STATE_COLORS.infected}
@@ -332,17 +329,35 @@ function townProgram(sketch: p5, read: () => Town) {
   };
 }
 
-/** How the square's metres map onto the upper three quarters of the canvas. */
+/**
+ * Where the square and the graph go: side by side on a wide card, the
+ * square on the left filling the height; stacked on a narrow one, the square
+ * over the graph. The square keeps its 60 m by 40 m shape either way.
+ */
+function layoutOf(sketch: p5) {
+  const wide = sketch.width > sketch.height * 1.3;
+  const plazaWidth = wide ? sketch.width * 0.64 : sketch.width;
+  const plazaHeight = wide ? sketch.height : sketch.height * 0.72;
+  return {
+    graphBottom: wide ? sketch.height * 0.88 : sketch.height - 10,
+    graphLeft: wide ? plazaWidth + 16 : 12,
+    graphTop: wide ? sketch.height * 0.12 : sketch.height * 0.75,
+    plazaHeight,
+    plazaWidth,
+  };
+}
+
+/** How the square's metres map onto its part of the canvas. */
 function squareFrame(sketch: p5) {
-  const height = sketch.height * 0.72;
+  const { plazaHeight, plazaWidth } = layoutOf(sketch);
   const scale = Math.min(
-    sketch.width / (SQUARE.width + 6),
-    height / (SQUARE.depth + 6)
+    plazaWidth / (SQUARE.width + 6),
+    plazaHeight / (SQUARE.depth + 6)
   );
   return {
     scale,
-    x: (metres: number) => sketch.width / 2 + metres * scale,
-    y: (metres: number) => height / 2 + metres * scale,
+    x: (metres: number) => plazaWidth / 2 + metres * scale,
+    y: (metres: number) => plazaHeight / 2 + metres * scale,
   };
 }
 
@@ -352,7 +367,8 @@ function drawSquare(sketch: p5) {
   sketch.clear();
   sketch.noStroke();
   sketch.fill(MATERIAL.grass);
-  sketch.rect(0, 0, sketch.width, sketch.height * 0.72);
+  const { plazaHeight, plazaWidth } = layoutOf(sketch);
+  sketch.rect(0, 0, plazaWidth, plazaHeight);
   sketch.noStroke();
   sketch.fill(MATERIAL.pavement);
   sketch.rect(
@@ -442,9 +458,11 @@ function drawPeople(
 
 /** The share infected, recovered and still susceptible over the days, under the square. */
 function drawGraph(sketch: p5, town: Town, today: number) {
-  const top = sketch.height * 0.75;
-  const bottom = sketch.height - 10;
-  const left = 12;
+  const {
+    graphBottom: bottom,
+    graphLeft: left,
+    graphTop: top,
+  } = layoutOf(sketch);
   const right = sketch.width - 12;
   const x = (dayIndex: number) => left + ((right - left) * dayIndex) / DAYS;
   const y = (share: number) => bottom - (bottom - top) * share;

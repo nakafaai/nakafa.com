@@ -1,4 +1,4 @@
-import { useFrame } from "@react-three/fiber";
+import { useFrame, useThree } from "@react-three/fiber";
 import {
   BUD_MINUTES,
   type CellKind,
@@ -23,7 +23,10 @@ import { SimulationTicker } from "@repo/design-system/components/contents/simula
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { CameraControls } from "@repo/design-system/components/three/camera/controls";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
-import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene";
+import {
+  isNarrowThreeScene,
+  threeSceneFrameVariants,
+} from "@repo/design-system/components/three/scene";
 import { ScienceStage } from "@repo/design-system/components/three/stage";
 import { Slider } from "@repo/design-system/components/ui/slider";
 import {
@@ -144,13 +147,7 @@ export function CellCutawayLab({
       >
         <ScienceStage floor={-1.3} reach={2.2} setting="studio">
           <Suspense fallback={null}>
-            <CameraControls
-              cameraPosition={[0.6, 1.05, 4.4]}
-              cameraTarget={[0, -0.12, -0.3]}
-              fov={34}
-              maxDistance={7}
-              minDistance={1.6}
-            />
+            <CutawayCamera />
             <CellScene kind={kind} minutes={minutes} onMinutes={setMinutes} />
           </Suspense>
         </ScienceStage>
@@ -174,6 +171,25 @@ export function CellCutawayLab({
         </VisualCardFacts>
       </VisualCardFooter>
     </VisualCard>
+  );
+}
+
+/**
+ * The camera on the cut cell: farther back on a narrow card, such as a
+ * phone's square frame, so a budding yeast cell and its bud fit whole.
+ */
+function CutawayCamera() {
+  const size = useThree((state) => state.size);
+  return (
+    <CameraControls
+      cameraPosition={
+        isNarrowThreeScene(size, 1.2) ? [0.8, 1.4, 6.8] : [0.6, 1.05, 4.4]
+      }
+      cameraTarget={[0, -0.12, -0.3]}
+      fov={34}
+      maxDistance={9}
+      minDistance={1.6}
+    />
   );
 }
 

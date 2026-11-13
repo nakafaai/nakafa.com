@@ -44,6 +44,17 @@ const END_YEAR = 2100;
 /** The tank is empty at 250 ppm and full at 600 ppm. */
 const TANK = { empty: 250, full: 600 } as const;
 
+/** The chart's axes: CO2 in ppm and the years, for the record and for pathways. */
+const AXES = {
+  pathway: { first: BUDGET.startYear, high: 560, last: END_YEAR, low: 380 },
+  record: {
+    first: RECORD_SPAN.first,
+    high: 440,
+    last: RECORD_SPAN.last,
+    low: 300,
+  },
+} as const;
+
 /** GtC to GtCO2. */
 const CO2_PER_C = 3.664;
 
@@ -178,7 +189,10 @@ export function CarbonBudgetLab({
       </VisualCardToolbar>
 
       <VisualCardBody className="bg-card">
-        <P5Sketch label={labels.viewLabel} program={tubProgram} state={tub} />
+        <div className="relative">
+          <P5Sketch label={labels.viewLabel} program={tubProgram} state={tub} />
+          <ChartScale record={mode === "record"} />
+        </div>
       </VisualCardBody>
 
       <VisualCardSceneActions />
@@ -255,6 +269,41 @@ export function CarbonBudgetLab({
         )}
       </VisualCardFooter>
     </VisualCard>
+  );
+}
+
+/**
+ * The values on the chart's axes, written over the sketch where its axes
+ * stand: the CO2 level in ppm just inside the vertical axis at its bottom,
+ * middle and top, clear of the tub's drain, and the first and last year
+ * under the horizontal one. The sketch
+ * places its chart at the same shares of its width and height.
+ */
+function ChartScale({ record }: { readonly record: boolean }) {
+  const quantity = useQuantity();
+  const { first, high, last, low } = record ? AXES.record : AXES.pathway;
+  return (
+    <div
+      aria-hidden="true"
+      className="text-muted-foreground pointer-events-none absolute inset-0 text-xs"
+    >
+      <span className="absolute top-[3%] left-[46%] -translate-x-1/2">
+        <InlineMath math="\text{ppm}" />
+      </span>
+      <span className="absolute top-[12%] left-[46%] -translate-y-1/2 ps-1.5">
+        <InlineMath math={quantity(high, "", 0)} />
+      </span>
+      <span className="absolute top-[49%] left-[46%] -translate-y-1/2 ps-1.5">
+        <InlineMath math={quantity((low + high) / 2, "", 0)} />
+      </span>
+      <span className="absolute top-[86%] left-[46%] -translate-y-1/2 ps-1.5">
+        <InlineMath math={quantity(low, "", 0)} />
+      </span>
+      <span className="absolute top-[89%] left-[46%] -translate-x-1/2">
+        {first}
+      </span>
+      <span className="absolute top-[89%] right-4 translate-x-1/2">{last}</span>
+    </div>
   );
 }
 
@@ -343,10 +392,21 @@ function drawTub(
   const bottom = sketch.height * 0.88;
   const share = (level - TANK.empty) / (TANK.full - TANK.empty);
   const surface = bottom - (bottom - top) * Math.min(1, Math.max(0, share));
+  const ripple = sketch.frameCount / 20;
   sketch.noStroke();
-  sketch.fill(MATERIAL.seawater);
+  sketch.fill(MATERIAL.seawaterDeep);
   sketch.rect(left, surface, width, bottom - surface);
+  sketch.fill(MATERIAL.seawater);
+  sketch.rect(left, surface, width, (bottom - surface) * 0.45);
   sketch.noFill();
+  sketch.stroke(MATERIAL.glass);
+  sketch.strokeWeight(2);
+  sketch.beginShape();
+  Arr.forEach(Arr.range(0, 24), (step) => {
+    const along = left + (width * step) / 24;
+    sketch.vertex(along, surface + Math.sin(step * 0.9 + ripple) * 1.5);
+  });
+  sketch.endShape();
   sketch.stroke(getColor("SLATE", 600));
   sketch.strokeWeight(3);
   sketch.line(left, top, left, bottom);
@@ -365,22 +425,31 @@ function drawTub(
       preindustrial
     );
   });
-  if (!tub.record) {
-    sketch.noStroke();
-    sketch.fill(MATERIAL.seawater);
-    sketch.rect(
-      left + width * 0.2,
-      top - 26,
-      Math.max(2, emitted * 1.6),
-      surface - top + 26
-    );
-    sketch.rect(
-      left + width,
-      bottom - 14,
-      sketch.width * 0.06,
-      Math.max(2, taken * 1.6)
-    );
+  if (tub.record) {
+    return;
   }
+  // The tap pours as wide as the year's emissions; the drain low on the
+  // right wall spills as wide as the year's uptake.
+  const pipe = getColor("SLATE", 600);
+  const spout = left + width * 0.3;
+  sketch.noStroke();
+  sketch.fill(pipe);
+  sketch.rect(left - 6, top - 34, width * 0.3 + 12, 8, 3);
+  sketch.rect(spout - 2, top - 30, 10, 14, 2);
+  sketch.fill(MATERIAL.seawater);
+  const pour = Math.max(2, emitted * 1.2);
+  sketch.rect(spout + 3 - pour / 2, top - 16, pour, surface - top + 16);
+  const drain = left + width;
+  sketch.fill(pipe);
+  sketch.rect(drain, bottom - 14, sketch.width * 0.04, 8, 2);
+  sketch.fill(MATERIAL.seawater);
+  const spill = Math.max(2, taken * 1.2);
+  sketch.rect(
+    drain + sketch.width * 0.04 - spill,
+    bottom - 6,
+    spill,
+    sketch.height - bottom + 6
+  );
 }
 
 /** The CO2 level over the years, with axis ticks, beside the tub. */
@@ -389,10 +458,7 @@ function drawChart(sketch: p5, tub: Tub, drawnTo: number) {
   const right = sketch.width - 16;
   const top = sketch.height * 0.12;
   const bottom = sketch.height * 0.86;
-  const first = tub.record ? RECORD_SPAN.first : BUDGET.startYear;
-  const last = tub.record ? RECORD_SPAN.last : END_YEAR;
-  const low = tub.record ? 300 : 380;
-  const high = tub.record ? 440 : 560;
+  const { first, high, last, low } = tub.record ? AXES.record : AXES.pathway;
   const x = (year: number) =>
     left + ((right - left) * (year - first)) / (last - first);
   const y = (ppm: number) =>
