@@ -43,7 +43,6 @@ export function Virion({
           clearcoat={0.3}
           color={MATERIAL.membrane}
           roughness={0.6}
-          sheen={0.7}
         />
       </mesh>
       {Arr.map(turns, ({ index, position, quaternion }) => (
@@ -72,15 +71,27 @@ function Antibody() {
     <group position={[0, 0.42, 0]}>
       <mesh castShadow position={[0, 0.2, 0]}>
         <capsuleGeometry args={[0.045, 0.2, 4, 8]} />
-        <meshPhysicalMaterial clearcoat={0.5} color={MATERIAL.antibody} roughness={0.35} />
+        <meshPhysicalMaterial
+          clearcoat={0.5}
+          color={MATERIAL.antibody}
+          roughness={0.35}
+        />
       </mesh>
       <mesh castShadow position={[-0.09, 0.02, 0]} rotation={[0, 0, -0.75]}>
         <capsuleGeometry args={[0.04, 0.17, 4, 8]} />
-        <meshPhysicalMaterial clearcoat={0.5} color={MATERIAL.antibody} roughness={0.35} />
+        <meshPhysicalMaterial
+          clearcoat={0.5}
+          color={MATERIAL.antibody}
+          roughness={0.35}
+        />
       </mesh>
       <mesh castShadow position={[0.09, 0.02, 0]} rotation={[0, 0, 0.75]}>
         <capsuleGeometry args={[0.04, 0.17, 4, 8]} />
-        <meshPhysicalMaterial clearcoat={0.5} color={MATERIAL.antibody} roughness={0.35} />
+        <meshPhysicalMaterial
+          clearcoat={0.5}
+          color={MATERIAL.antibody}
+          roughness={0.35}
+        />
       </mesh>
     </group>
   );

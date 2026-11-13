@@ -58,7 +58,8 @@ export function rateOf(herd: Herd, rates: Rates): Herd {
     : 1;
   return {
     predators:
-      rates.converting * herd.prey * herd.predators - rates.dying * herd.predators,
+      rates.converting * herd.prey * herd.predators -
+      rates.dying * herd.predators,
     prey:
       rates.growth * herd.prey * room -
       rates.catching * herd.prey * herd.predators,

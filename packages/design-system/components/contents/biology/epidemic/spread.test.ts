@@ -91,9 +91,28 @@ describe("the square", () => {
       { heading: 0, home: true, x: 0.5, y: 0 },
     ];
     expect(
-      nextInfected(walkers, [true, false, false, false], [false, true, true, true], 1)
+      nextInfected(
+        walkers,
+        [true, false, false, false],
+        [false, true, true, true],
+        1
+      )
     ).toEqual([1]);
-    expect(nextInfected(walkers, [false, false, false, false], [true, true, true, true], 2)).toEqual([]);
-    expect(nextInfected(walkers, [true, false, false, false], [false, true, true, true], 0)).toEqual([]);
+    expect(
+      nextInfected(
+        walkers,
+        [false, false, false, false],
+        [true, true, true, true],
+        2
+      )
+    ).toEqual([]);
+    expect(
+      nextInfected(
+        walkers,
+        [true, false, false, false],
+        [false, true, true, true],
+        0
+      )
+    ).toEqual([]);
   });
 });

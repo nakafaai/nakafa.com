@@ -19,10 +19,17 @@ describe("tempeh mould", () => {
   });
 
   it("branches every 2 mm until the tray is full", () => {
-    const run = Arr.reduce(Arr.range(1, 40), { length: 0, tips: sporesOf(4) }, (state, hour) => {
-      const next = growOf(state.tips, 1, hour);
-      return { length: state.length + lengthOf(next.segments), tips: next.tips };
-    });
+    const run = Arr.reduce(
+      Arr.range(1, 40),
+      { length: 0, tips: sporesOf(4) },
+      (state, hour) => {
+        const next = growOf(state.tips, 1, hour);
+        return {
+          length: state.length + lengthOf(next.segments),
+          tips: next.tips,
+        };
+      }
+    );
     expect(run.tips.length).toBe(TEMPEH.tips);
     expect(run.length).toBeGreaterThan(1000);
   });
@@ -38,6 +45,14 @@ describe("tempeh mould", () => {
   it("measures how much of the tray the hyphae reach", () => {
     expect(coverOf([], 10)).toBe(0);
     expect(coverOf([[0, 0, 15, 15]], 2)).toBe(0.25);
-    expect(coverOf([[0, 0, -15, -15], [0, 0, 1, 1]], 2)).toBe(0.5);
+    expect(
+      coverOf(
+        [
+          [0, 0, -15, -15],
+          [0, 0, 1, 1],
+        ],
+        2
+      )
+    ).toBe(0.5);
   });
 });

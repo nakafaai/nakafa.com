@@ -100,18 +100,24 @@ export function SeaLevelRiseLab({
   const [year, setYear] = useState<number>(RECORD_YEARS.last);
   const [scenario, setScenario] = useState<Scenario>(scenarios[0] ?? "ssp245");
   const [rise, setRise] = useState(0.5);
-  const [defences, setDefences] = useState<readonly Defence[]>(mode === "adapt" ? ["storm"] : []);
-  const quantity = useQuantity();
+  const [defences, setDefences] = useState<readonly Defence[]>(
+    mode === "adapt" ? ["storm"] : []
+  );
   const reading = useReading();
   const storm = mode === "adapt" || Arr.contains(defences, "storm");
   const mangrove = mode === "adapt" && Arr.contains(defences, "mangrove");
   const wall = mode === "adapt" && Arr.contains(defences, "wall");
   const outlook = outlookOf(scenario);
   const sea = seaRise(mode, year, outlook.rise, rise);
-  const wave = waveAtShore(storm ? STORM.wave : CALM_WAVE, mangrove ? MANGROVE_WIDTH : 0);
-  const level = mode === "record" || mode === "scenario" ? sea : floodLevel(sea, storm ? STORM.surge : 0, wave);
+  const wave = waveAtShore(
+    storm ? STORM.wave : CALM_WAVE,
+    mangrove ? MANGROVE_WIDTH : 0
+  );
+  const level =
+    mode === "record" || mode === "scenario"
+      ? sea
+      : floodLevel(sea, storm ? STORM.surge : 0, wave);
   const flooded = floodedCount(level, VILLAGE.floors, wall ? VILLAGE.wall : 0);
-  const metres = "\\text{ m}";
 
   return (
     <VisualCard>
@@ -120,7 +126,14 @@ export function SeaLevelRiseLab({
       <VisualCardToolbar>
         {mode === "record" && (
           <Labeled label={labels.year} shown={String(Math.round(year))}>
-            <Slider aria-label={labels.year} max={RECORD_YEARS.last} min={RECORD_YEARS.first} onValueChange={setYear} step={1} value={year} />
+            <Slider
+              aria-label={labels.year}
+              max={RECORD_YEARS.last}
+              min={RECORD_YEARS.first}
+              onValueChange={setYear}
+              step={1}
+              value={year}
+            />
           </Labeled>
         )}
         {mode === "scenario" && labels.scenarios && (
@@ -145,7 +158,14 @@ export function SeaLevelRiseLab({
         {(mode === "flood" || mode === "adapt") && (
           <>
             <Labeled label={labels.rise} shown={`${reading(rise, 1)} m`}>
-              <Slider aria-label={labels.rise} max={1} min={0} onValueChange={setRise} step={0.1} value={rise} />
+              <Slider
+                aria-label={labels.rise}
+                max={1}
+                min={0}
+                onValueChange={setRise}
+                step={0.1}
+                value={rise}
+              />
             </Labeled>
             {labels.defences && (
               <ToggleGroup
@@ -157,18 +177,27 @@ export function SeaLevelRiseLab({
                 value={defences}
                 variant="outline"
               >
-                {Arr.map(mode === "adapt" ? (["wall", "mangrove"] as const) : (["storm"] as const), (each) => (
-                  <ToggleGroupItem key={each} value={each}>
-                    {labels.defences?.[each]}
-                  </ToggleGroupItem>
-                ))}
+                {Arr.map(
+                  mode === "adapt"
+                    ? (["wall", "mangrove"] as const)
+                    : (["storm"] as const),
+                  (each) => (
+                    <ToggleGroupItem key={each} value={each}>
+                      {labels.defences?.[each]}
+                    </ToggleGroupItem>
+                  )
+                )}
               </ToggleGroup>
             )}
           </>
         )}
       </VisualCardToolbar>
 
-      <VisualCardBody aria-label={labels.viewLabel} className={threeSceneFrameVariants()} render={<section />}>
+      <VisualCardBody
+        aria-label={labels.viewLabel}
+        className={threeSceneFrameVariants()}
+        render={<section />}
+      >
         <ScienceStage floor={0} reach={45} setting="field">
           <Suspense fallback={null}>
             <CameraControls
@@ -181,7 +210,11 @@ export function SeaLevelRiseLab({
             />
             <Beach />
             {Arr.map(VILLAGE.floors, (floor, index) => (
-              <House index={index} key={floor} wet={level > floor && !(wall && level < VILLAGE.wall)} />
+              <House
+                index={index}
+                key={floor}
+                wet={level > floor && !(wall && level < VILLAGE.wall)}
+              />
             ))}
             <TideGauge />
             {wall && <SeaWall />}
@@ -194,30 +227,124 @@ export function SeaLevelRiseLab({
       <VisualCardSceneActions />
 
       <VisualCardFooter>
-        <VisualCardFacts>
-          <VisualFactTabular label={labels.level} value={<InlineMath math={quantity(level, metres, 2)} />} />
-          {mode === "record" && (
-            <>
-              <VisualFactTabular label={labels.rate} value={<InlineMath math={quantity(recordRate(year) * 1000, "\\text{ mm}", 1)} />} />
-              <VisualFactTabular label={labels.span} value={<InlineMath math={quantity(year - RECORD_YEARS.first, "", 0)} />} />
-            </>
-          )}
-          {mode === "scenario" && (
-            <>
-              <VisualFactTabular label={labels.warming} value={<InlineMath math={quantity(outlook.warming, "\\,^\\circ\\text{C}", 1)} />} />
-              <VisualFactTabular label={labels.range} value={<InlineMath math={`${quantity(outlook.low, "", 2)}\\text{ -- }${quantity(outlook.high, metres, 2)}`} />} />
-            </>
-          )}
-          {(mode === "flood" || mode === "adapt") && (
-            <>
-              <VisualFactTabular label={labels.wave} value={<InlineMath math={quantity(wave, metres, 2)} />} />
-              <VisualFactTabular label={labels.flooded} value={<InlineMath math={`${flooded}/${VILLAGE.floors.length}`} />} />
-            </>
-          )}
-          <VisualFactTabular label={labels.retreat} value={<InlineMath math={quantity(retreatOf(sea, VILLAGE.slope), metres, 0)} />} />
-        </VisualCardFacts>
+        <CoastFacts
+          flooded={flooded}
+          labels={labels}
+          level={level}
+          mode={mode}
+          rise={sea}
+          scenario={scenario}
+          wave={wave}
+          year={year}
+        />
       </VisualCardFooter>
     </VisualCard>
+  );
+}
+
+/** The footer's readings for each mode: the water level, two readings of the mode, and the shoreline's retreat. */
+function CoastFacts({
+  flooded,
+  labels,
+  level,
+  mode,
+  rise: sea,
+  scenario,
+  wave,
+  year,
+}: {
+  readonly flooded: number;
+  readonly labels: {
+    readonly choose?: string;
+    readonly defences?: Readonly<Partial<Record<Defence, ReactNode>>>;
+    readonly flooded?: ReactNode;
+    readonly level: ReactNode;
+    readonly range?: ReactNode;
+    readonly rate?: ReactNode;
+    readonly retreat: ReactNode;
+    readonly rise?: string;
+    readonly scenarios?: Readonly<Partial<Record<Scenario, ReactNode>>>;
+    readonly span?: ReactNode;
+    readonly viewLabel: string;
+    readonly warming?: ReactNode;
+    readonly wave?: ReactNode;
+    readonly year?: string;
+  };
+  readonly level: number;
+  readonly mode: "adapt" | "flood" | "record" | "scenario";
+  readonly rise: number;
+  readonly scenario: Scenario;
+  readonly wave: number;
+  readonly year: number;
+}) {
+  const quantity = useQuantity();
+  const outlook = outlookOf(scenario);
+  const metres = "\\text{ m}";
+  return (
+    <VisualCardFacts>
+      <VisualFactTabular
+        label={labels.level}
+        value={<InlineMath math={quantity(level, metres, 2)} />}
+      />
+      {mode === "record" && (
+        <>
+          <VisualFactTabular
+            label={labels.rate}
+            value={
+              <InlineMath
+                math={quantity(recordRate(year) * 1000, "\\text{ mm}", 1)}
+              />
+            }
+          />
+          <VisualFactTabular
+            label={labels.span}
+            value={
+              <InlineMath math={quantity(year - RECORD_YEARS.first, "", 0)} />
+            }
+          />
+        </>
+      )}
+      {mode === "scenario" && (
+        <>
+          <VisualFactTabular
+            label={labels.warming}
+            value={
+              <InlineMath
+                math={quantity(outlook.warming, "\\,^\\circ\\text{C}", 1)}
+              />
+            }
+          />
+          <VisualFactTabular
+            label={labels.range}
+            value={
+              <InlineMath
+                math={`${quantity(outlook.low, "", 2)}\\text{ -- }${quantity(outlook.high, metres, 2)}`}
+              />
+            }
+          />
+        </>
+      )}
+      {(mode === "flood" || mode === "adapt") && (
+        <>
+          <VisualFactTabular
+            label={labels.wave}
+            value={<InlineMath math={quantity(wave, metres, 2)} />}
+          />
+          <VisualFactTabular
+            label={labels.flooded}
+            value={<InlineMath math={`${flooded}/${VILLAGE.floors.length}`} />}
+          />
+        </>
+      )}
+      <VisualFactTabular
+        label={labels.retreat}
+        value={
+          <InlineMath
+            math={quantity(retreatOf(sea, VILLAGE.slope), metres, 0)}
+          />
+        }
+      />
+    </VisualCardFacts>
   );
 }
 
@@ -259,7 +386,13 @@ function Labeled({
  * The sea at `level`. Played, it eases toward its level and heaves by the
  * waves' height, so the reader sees how far a wave reaches up the beach.
  */
-function Water({ level, wave }: { readonly level: number; readonly wave: number }) {
+function Water({
+  level,
+  wave,
+}: {
+  readonly level: number;
+  readonly wave: number;
+}) {
   const playing = useVisualScene((card) => card.playing, false);
   const surface = useRef<Group>(null);
   const clock = useRef(0);
@@ -269,7 +402,8 @@ function Water({ level, wave }: { readonly level: number; readonly wave: number 
       return;
     }
     clock.current += Math.min(delta, 0.1);
-    surface.current.position.y = level + Math.sin(clock.current * 1.4) * (wave / 2);
+    surface.current.position.y =
+      level + Math.sin(clock.current * 1.4) * (wave / 2);
   });
 
   return (

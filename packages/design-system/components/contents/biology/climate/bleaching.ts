@@ -22,7 +22,11 @@ export function hotspotOf(temperature: number, mmm: number) {
  * week adds its HotSpot once it reaches 1 °C, and only the last 12 weeks
  * count.
  */
-export function heatingWeeksOf(temperature: number, weeks: number, mmm: number) {
+export function heatingWeeksOf(
+  temperature: number,
+  weeks: number,
+  mmm: number
+) {
   const hotspot = hotspotOf(temperature, mmm);
   if (hotspot < 1) {
     return 0;

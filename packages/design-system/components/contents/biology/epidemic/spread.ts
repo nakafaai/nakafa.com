@@ -87,7 +87,12 @@ export function outbreakOf(measures: Measures, route: Route, days: number) {
 
   return Arr.scan(
     Arr.range(1, Math.max(1, Math.round(days))),
-    { day: 0, infected: seed, recovered: immune, susceptible: 1 - seed - immune },
+    {
+      day: 0,
+      infected: seed,
+      recovered: immune,
+      susceptible: 1 - seed - immune,
+    },
     (state, day) => {
       let s = state.susceptible;
       let i = state.infected;

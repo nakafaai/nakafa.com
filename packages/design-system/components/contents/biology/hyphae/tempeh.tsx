@@ -40,10 +40,18 @@ const HOURS_PER_SECOND = 2;
 const COVER_CELLS = 24;
 
 /** One quarter-hour of growth: the hyphae laid so far and the tips growing. */
-type Stage = Readonly<{ hours: number; segments: readonly Segment[]; tips: number }>;
+type Stage = Readonly<{
+  hours: number;
+  segments: readonly Segment[];
+  tips: number;
+}>;
 
 /** What the sketch reads from the card on every frame. */
-type Tray = Readonly<{ hours: number; report: (hours: number) => void; stages: readonly Stage[] }>;
+type Tray = Readonly<{
+  hours: number;
+  report: (hours: number) => void;
+  stages: readonly Stage[];
+}>;
 
 /**
  * Tempeh in the making, seen from above: cooked soybean halves sown with
@@ -72,8 +80,12 @@ export function HyphaeDecayLab({
   const [hours, setHours] = useState<number>(TEMPEH.hours);
   const quantity = useQuantity();
   const stages = useMemo(() => growthOf(), []);
-  const tray = useMemo(() => ({ hours, report: setHours, stages }), [hours, stages]);
-  const stage = stages[Math.min(stages.length - 1, Math.round(hours / STEP_HOURS))];
+  const tray = useMemo(
+    () => ({ hours, report: setHours, stages }),
+    [hours, stages]
+  );
+  const stage =
+    stages[Math.min(stages.length - 1, Math.round(hours / STEP_HOURS))];
   const segments = stage?.segments ?? [];
 
   return (
@@ -113,7 +125,11 @@ export function HyphaeDecayLab({
           />
           <VisualFactTabular
             label={labels.length}
-            value={<InlineMath math={quantity(lengthOf(segments) / 10, "\\text{ cm}", 0)} />}
+            value={
+              <InlineMath
+                math={quantity(lengthOf(segments) / 10, "\\text{ cm}", 0)}
+              />
+            }
           />
           <VisualFactTabular
             label={labels.tips}
@@ -121,7 +137,11 @@ export function HyphaeDecayLab({
           />
           <VisualFactTabular
             label={labels.cover}
-            value={<InlineMath math={quantity(coverOf(segments, COVER_CELLS) * 100, "\\%", 0)} />}
+            value={
+              <InlineMath
+                math={quantity(coverOf(segments, COVER_CELLS) * 100, "\\%", 0)}
+              />
+            }
           />
         </VisualCardFacts>
       </VisualCardFooter>
@@ -134,7 +154,12 @@ function growthOf(): readonly Stage[] {
   const steps = Math.round(TEMPEH.hours / STEP_HOURS);
   return Arr.scan(
     Arr.range(1, steps),
-    { hours: 0, live: sporesOf(SPORES), segments: Arr.empty<Segment>(), tips: SPORES },
+    {
+      hours: 0,
+      live: sporesOf(SPORES),
+      segments: Arr.empty<Segment>(),
+      tips: SPORES,
+    },
     (stage, step) => {
       const grown = growOf(stage.live, STEP_HOURS, step);
       return {
@@ -173,7 +198,10 @@ function trayProgram(sketch: p5, read: () => Tray) {
       }
     }
     shownHours = Math.min(TEMPEH.hours, hours);
-    const stage = tray.stages[Math.min(tray.stages.length - 1, Math.round(shownHours / STEP_HOURS))];
+    const stage =
+      tray.stages[
+        Math.min(tray.stages.length - 1, Math.round(shownHours / STEP_HOURS))
+      ];
     const segments = stage?.segments ?? [];
     const size = Math.min(sketch.width, sketch.height) * 0.94;
     const scale = size / TEMPEH.size;
@@ -218,8 +246,14 @@ function drawBeans(
   Arr.forEach(Arr.range(0, columns * rows - 1), (bean) => {
     const column = bean % columns;
     const row = Math.floor(bean / columns);
-    const cx = -TEMPEH.size / 2 + ((column + 0.5) * TEMPEH.size) / columns + (hashUnit(bean, 1) - 0.5) * 1.5;
-    const cy = -TEMPEH.size / 2 + ((row + 0.5) * TEMPEH.size) / rows + (hashUnit(bean, 2) - 0.5) * 1.2;
+    const cx =
+      -TEMPEH.size / 2 +
+      ((column + 0.5) * TEMPEH.size) / columns +
+      (hashUnit(bean, 1) - 0.5) * 1.5;
+    const cy =
+      -TEMPEH.size / 2 +
+      ((row + 0.5) * TEMPEH.size) / rows +
+      (hashUnit(bean, 2) - 0.5) * 1.2;
     sketch.push();
     sketch.translate(x(cx), y(cy));
     sketch.rotate(hashUnit(bean, 3) * Math.PI);

@@ -33,7 +33,10 @@ export function recordLevel(year: number) {
 
 /** How fast CO2 rose over the ten years up to `year`, in ppm a year. */
 export function recordRate(year: number) {
-  const end = Math.min(RECORD_SPAN.last, Math.max(RECORD_SPAN.first + 10, year));
+  const end = Math.min(
+    RECORD_SPAN.last,
+    Math.max(RECORD_SPAN.first + 10, year)
+  );
   return (recordLevel(end) - recordLevel(end - 10)) / 10;
 }
 
@@ -86,7 +89,11 @@ export type Pathway = typeof PathwaySchema.Type;
 
 /** The cut that the regions which join an agreement bring: all of their fossil CO2 by 2050. */
 export function cutOf(joined: readonly Region[]) {
-  return Arr.reduce(Arr.dedupe(joined), 0, (cut, region) => cut + REGIONS[region]);
+  return Arr.reduce(
+    Arr.dedupe(joined),
+    0,
+    (cut, region) => cut + REGIONS[region]
+  );
 }
 
 /**
@@ -94,12 +101,18 @@ export function cutOf(joined: readonly Region[]) {
  * preindustrial 280 ppm, which matches 6.1 GtC a year at today's level.
  */
 export function sinkAt(level: number) {
-  return (BUDGET.sinks * (level - BUDGET.preindustrial)) / (BUDGET.start - BUDGET.preindustrial);
+  return (
+    (BUDGET.sinks * (level - BUDGET.preindustrial)) /
+    (BUDGET.start - BUDGET.preindustrial)
+  );
 }
 
 /** Fossil emissions in `year`, falling in a straight line by the pathway's cut until 2050. */
 export function fossilIn(year: number, pathway: Pathway) {
-  const progress = Math.min(1, Math.max(0, (year - BUDGET.startYear) / (2050 - BUDGET.startYear)));
+  const progress = Math.min(
+    1,
+    Math.max(0, (year - BUDGET.startYear) / (2050 - BUDGET.startYear))
+  );
   return BUDGET.fossil * (1 - Math.min(1, Math.max(0, pathway.cut)) * progress);
 }
 
@@ -131,21 +144,17 @@ export function pathwayOf(pathway: Pathway, last: number) {
     warming: BUDGET.startWarming,
     year: BUDGET.startYear,
   };
-  return Arr.scan(
-    Arr.range(1, years),
-    first,
-    (state, step): Year => {
-      const year = BUDGET.startYear + step;
-      const emitted = fossilIn(year, pathway) + BUDGET.land;
-      const net = emitted - sinkAt(state.level) - Math.max(0, pathway.forest);
-      const total = state.total + emitted - Math.max(0, pathway.forest);
-      return {
-        level: state.level + net / BUDGET.perPpm,
-        net,
-        total,
-        warming: BUDGET.startWarming + (0.45 * total * 3.664) / 1000,
-        year,
-      };
-    }
-  );
+  return Arr.scan(Arr.range(1, years), first, (state, step): Year => {
+    const year = BUDGET.startYear + step;
+    const emitted = fossilIn(year, pathway) + BUDGET.land;
+    const net = emitted - sinkAt(state.level) - Math.max(0, pathway.forest);
+    const total = state.total + emitted - Math.max(0, pathway.forest);
+    return {
+      level: state.level + net / BUDGET.perPpm,
+      net,
+      total,
+      warming: BUDGET.startWarming + (0.45 * total * 3.664) / 1000,
+      year,
+    };
+  });
 }

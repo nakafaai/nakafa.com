@@ -43,7 +43,14 @@ import { getColor } from "@repo/design-system/lib/color";
 import { MATERIAL } from "@repo/design-system/lib/material";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr } from "effect";
-import { type ReactNode, Suspense, useEffect, useMemo, useRef, useState } from "react";
+import {
+  type ReactNode,
+  Suspense,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { CatmullRomCurve3, type Group, Quaternion, Vector3 } from "three";
 
 /** Each base keeps one colour in every lesson, from the plot palette. */
@@ -126,8 +133,12 @@ export function DnaHelixLab({
               value={shown}
               variant="outline"
             >
-              <ToggleGroupItem value="first">{labels.strands.first}</ToggleGroupItem>
-              <ToggleGroupItem value="second">{labels.strands.second}</ToggleGroupItem>
+              <ToggleGroupItem value="first">
+                {labels.strands.first}
+              </ToggleGroupItem>
+              <ToggleGroupItem value="second">
+                {labels.strands.second}
+              </ToggleGroupItem>
             </ToggleGroup>
           )}
           {copy && (
@@ -185,18 +196,26 @@ export function DnaHelixLab({
           />
           <VisualFactTabular
             label={labels.span}
-            value={<InlineMath math={quantity(spanOf(count), "\\text{ nm}", 1)} />}
+            value={
+              <InlineMath math={quantity(spanOf(count), "\\text{ nm}", 1)} />
+            }
           />
           {variant !== undefined && (
             <>
               <VisualFactTabular
                 label={labels.differences}
-                value={<InlineMath math={quantity(differencesOf(first, second), "", 0)} />}
+                value={
+                  <InlineMath
+                    math={quantity(differencesOf(first, second), "", 0)}
+                  />
+                }
               />
               <VisualFactTabular
                 label={labels.identity}
                 value={
-                  <InlineMath math={quantity(identityOf(first, second) * 100, "\\%", 1)} />
+                  <InlineMath
+                    math={quantity(identityOf(first, second) * 100, "\\%", 1)}
+                  />
                 }
               />
             </>
@@ -205,7 +224,11 @@ export function DnaHelixLab({
             <>
               <VisualFactTabular
                 label={labels.copied}
-                value={<InlineMath math={quantity(copiedCount(count, share), "", 0)} />}
+                value={
+                  <InlineMath
+                    math={quantity(copiedCount(count, share), "", 0)}
+                  />
+                }
               />
               <VisualFactTabular
                 label={labels.turns}
@@ -221,7 +244,11 @@ export function DnaHelixLab({
               />
               <VisualFactTabular
                 label={labels.gc}
-                value={<InlineMath math={quantity(gcShareOf(bases) * 100, "\\%", 0)} />}
+                value={
+                  <InlineMath
+                    math={quantity(gcShareOf(bases) * 100, "\\%", 0)}
+                  />
+                }
               />
             </>
           )}
@@ -255,7 +282,10 @@ function HelixScene({
   const spin = useRef<Group>(null);
   const progress = useRef(share);
   const sent = useRef(share);
-  const ladder = useMemo(() => ladderOf(bases.length, share), [bases.length, share]);
+  const ladder = useMemo(
+    () => ladderOf(bases.length, share),
+    [bases.length, share]
+  );
   const single = nucleic === "rna";
   const middle = ((bases.length - 1) * 0.34) / 2;
 
@@ -293,7 +323,10 @@ function HelixScene({
       <SimulationTicker running={playing} />
       <group position={[-middle, 0, 0]}>
         <group ref={spin}>
-          <Backbone color={MATERIAL.phosphate} points={Arr.map(ladder, (rung) => rung.first)} />
+          <Backbone
+            color={MATERIAL.phosphate}
+            points={Arr.map(ladder, (rung) => rung.first)}
+          />
           {!(single && share === 0) && (
             <Backbone
               color={single ? MATERIAL.phosphateNew : MATERIAL.phosphate}
@@ -341,7 +374,9 @@ function Backbone({
     () =>
       points.length < 2
         ? undefined
-        : new CatmullRomCurve3(Arr.map(points, ([x, y, z]) => new Vector3(x, y, z))),
+        : new CatmullRomCurve3(
+            Arr.map(points, ([x, y, z]) => new Vector3(x, y, z))
+          ),
     [points]
   );
   if (curve === undefined) {
@@ -360,8 +395,14 @@ function NewStrands({ ladder }: { readonly ladder: readonly Rung[] }) {
   const copied = Arr.filter(ladder, (rung) => rung.copied);
   return (
     <>
-      <Backbone color={MATERIAL.phosphateNew} points={Arr.map(copied, (rung) => rung.newFirst)} />
-      <Backbone color={MATERIAL.phosphateNew} points={Arr.map(copied, (rung) => rung.newSecond)} />
+      <Backbone
+        color={MATERIAL.phosphateNew}
+        points={Arr.map(copied, (rung) => rung.newFirst)}
+      />
+      <Backbone
+        color={MATERIAL.phosphateNew}
+        points={Arr.map(copied, (rung) => rung.newSecond)}
+      />
     </>
   );
 }
@@ -390,21 +431,59 @@ function Pair({
     const middle = midpoint(rung.first, rung.second);
     return (
       <>
-        <Rod color={BASE_COLORS[base]} from={rung.first} glow={changed} to={single ? stub(rung.first, rung.second) : middle} />
-        {!single && <Rod color={BASE_COLORS[partner]} from={rung.second} glow={changed} to={middle} />}
+        <Rod
+          color={BASE_COLORS[base]}
+          from={rung.first}
+          glow={changed}
+          to={single ? stub(rung.first, rung.second) : middle}
+        />
+        {!single && (
+          <Rod
+            color={BASE_COLORS[partner]}
+            from={rung.second}
+            glow={changed}
+            to={middle}
+          />
+        )}
       </>
     );
   }
   const upper = rung.copied ? rung.newFirst : stub(rung.first, rung.newFirst);
-  const lower = rung.copied ? rung.newSecond : stub(rung.second, rung.newSecond);
+  const lower = rung.copied
+    ? rung.newSecond
+    : stub(rung.second, rung.newSecond);
   return (
     <>
-      <Rod color={BASE_COLORS[base]} from={rung.first} glow={changed} to={midpoint(rung.first, upper)} />
-      {rung.copied && <Rod color={BASE_COLORS[partner]} from={rung.newFirst} glow={false} to={midpoint(rung.first, upper)} />}
+      <Rod
+        color={BASE_COLORS[base]}
+        from={rung.first}
+        glow={changed}
+        to={midpoint(rung.first, upper)}
+      />
+      {rung.copied && (
+        <Rod
+          color={BASE_COLORS[partner]}
+          from={rung.newFirst}
+          glow={false}
+          to={midpoint(rung.first, upper)}
+        />
+      )}
       {!single && (
         <>
-          <Rod color={BASE_COLORS[partner]} from={rung.second} glow={false} to={midpoint(rung.second, lower)} />
-          {rung.copied && <Rod color={BASE_COLORS[base]} from={rung.newSecond} glow={false} to={midpoint(rung.second, lower)} />}
+          <Rod
+            color={BASE_COLORS[partner]}
+            from={rung.second}
+            glow={false}
+            to={midpoint(rung.second, lower)}
+          />
+          {rung.copied && (
+            <Rod
+              color={BASE_COLORS[base]}
+              from={rung.newSecond}
+              glow={false}
+              to={midpoint(rung.second, lower)}
+            />
+          )}
         </>
       )}
     </>

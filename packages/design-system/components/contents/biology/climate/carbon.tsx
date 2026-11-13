@@ -25,7 +25,10 @@ import {
   VisualCardHeader,
   VisualCardToolbar,
 } from "@repo/design-system/components/visual/card";
-import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
+import {
+  VisualFactIndicator,
+  VisualFactTabular,
+} from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { P5Sketch } from "@repo/design-system/components/visual/sketch";
 import { getColor } from "@repo/design-system/lib/color";
@@ -47,7 +50,6 @@ const CO2_PER_C = 3.664;
 /** What the sketch reads from the card on every frame. */
 type Tub = Readonly<{
   baseline: readonly Year[];
-  inflow: Readonly<{ emitted: string; taken: string }>;
   pathway: readonly Year[];
   record: boolean;
   year: number;
@@ -75,7 +77,6 @@ export function CarbonBudgetLab({
     readonly cut?: string;
     readonly emissions?: ReactNode;
     readonly forest?: string;
-    readonly inflow: Readonly<{ emitted: string; taken: string }>;
     readonly level: ReactNode;
     readonly peak?: ReactNode;
     readonly rate?: ReactNode;
@@ -101,13 +102,18 @@ export function CarbonBudgetLab({
     [cut, forest, joined, mode]
   );
   const pathway = useMemo(() => pathwayOf(plan, END_YEAR), [plan]);
-  const baseline = useMemo(() => pathwayOf({ cut: 0, forest: 0 }, END_YEAR), []);
+  const baseline = useMemo(
+    () => pathwayOf({ cut: 0, forest: 0 }, END_YEAR),
+    []
+  );
   const tub = useMemo(
-    () => ({ baseline, inflow: labels.inflow, pathway, record: mode === "record", year }),
-    [baseline, labels.inflow, mode, pathway, year]
+    () => ({ baseline, pathway, record: mode === "record", year }),
+    [baseline, mode, pathway, year]
   );
   const last = Option.getOrElse(Arr.last(pathway), () => baseline[0]);
-  const peak = Arr.reduce(pathway, 0, (high, each) => Math.max(high, each.level));
+  const peak = Arr.reduce(pathway, 0, (high, each) =>
+    Math.max(high, each.level)
+  );
   const in2050 = (fossilIn(2050, plan) + BUDGET.land - plan.forest) * CO2_PER_C;
   const ppm = "\\text{ ppm}";
 
@@ -148,10 +154,24 @@ export function CarbonBudgetLab({
         {mode === "mitigate" && (
           <>
             <Labeled label={labels.cut} shown={`${Math.round(cut * 100)}%`}>
-              <Slider aria-label={labels.cut} max={1} min={0} onValueChange={setCut} step={0.05} value={cut} />
+              <Slider
+                aria-label={labels.cut}
+                max={1}
+                min={0}
+                onValueChange={setCut}
+                step={0.05}
+                value={cut}
+              />
             </Labeled>
             <Labeled label={labels.forest} shown={String(forest)}>
-              <Slider aria-label={labels.forest} max={7} min={0} onValueChange={setForest} step={0.5} value={forest} />
+              <Slider
+                aria-label={labels.forest}
+                max={7}
+                min={0}
+                onValueChange={setForest}
+                step={0.5}
+                value={forest}
+              />
             </Labeled>
           </>
         )}
@@ -166,17 +186,71 @@ export function CarbonBudgetLab({
       <VisualCardFooter>
         {mode === "record" ? (
           <VisualCardFacts>
-            <VisualFactTabular label={labels.level} value={<InlineMath math={quantity(recordLevel(year), ppm, 1)} />} />
-            <VisualFactTabular label={labels.rise} value={<InlineMath math={quantity(recordLevel(year) - recordLevel(RECORD_SPAN.first), ppm, 1)} />} />
-            <VisualFactTabular label={labels.rate} value={<InlineMath math={quantity(recordRate(year), ppm, 2)} />} />
-            <VisualFactTabular label={labels.above} value={<InlineMath math={quantity((recordLevel(year) / BUDGET.preindustrial - 1) * 100, "\\%", 0)} />} />
+            <VisualFactIndicator
+              indicatorColor={PLOT_COLORS.orange}
+              label={labels.level}
+              value={<InlineMath math={quantity(recordLevel(year), ppm, 1)} />}
+            />
+            <VisualFactTabular
+              label={labels.rise}
+              value={
+                <InlineMath
+                  math={quantity(
+                    recordLevel(year) - recordLevel(RECORD_SPAN.first),
+                    ppm,
+                    1
+                  )}
+                />
+              }
+            />
+            <VisualFactTabular
+              label={labels.rate}
+              value={<InlineMath math={quantity(recordRate(year), ppm, 2)} />}
+            />
+            <VisualFactTabular
+              label={labels.above}
+              value={
+                <InlineMath
+                  math={quantity(
+                    (recordLevel(year) / BUDGET.preindustrial - 1) * 100,
+                    "\\%",
+                    0
+                  )}
+                />
+              }
+            />
           </VisualCardFacts>
         ) : (
           <VisualCardFacts>
-            <VisualFactTabular label={labels.level} value={<InlineMath math={quantity(last?.level ?? BUDGET.start, ppm, 0)} />} />
-            <VisualFactTabular label={labels.warming} value={<InlineMath math={quantity(last?.warming ?? BUDGET.startWarming, "\\,^\\circ\\text{C}", 1)} />} />
-            <VisualFactTabular label={labels.emissions} value={<InlineMath math={quantity(in2050, "\\text{ Gt}", 1)} />} />
-            <VisualFactTabular label={labels.peak} value={<InlineMath math={quantity(peak, ppm, 0)} />} />
+            <VisualFactIndicator
+              indicatorColor={PLOT_COLORS.orange}
+              label={labels.level}
+              value={
+                <InlineMath
+                  math={quantity(last?.level ?? BUDGET.start, ppm, 0)}
+                />
+              }
+            />
+            <VisualFactTabular
+              label={labels.warming}
+              value={
+                <InlineMath
+                  math={quantity(
+                    last?.warming ?? BUDGET.startWarming,
+                    "\\,^\\circ\\text{C}",
+                    1
+                  )}
+                />
+              }
+            />
+            <VisualFactTabular
+              label={labels.emissions}
+              value={<InlineMath math={quantity(in2050, "\\text{ Gt}", 1)} />}
+            />
+            <VisualFactTabular
+              label={labels.peak}
+              value={<InlineMath math={quantity(peak, ppm, 0)} />}
+            />
           </VisualCardFacts>
         )}
       </VisualCardFooter>
@@ -222,10 +296,16 @@ function tubProgram(sketch: p5, read: () => Tub) {
   sketch.draw = () => {
     const tub = read();
     if (tub !== shown) {
-      drawnTo = sketch.isLooping() && shown !== undefined && !tub.record ? BUDGET.startYear : END_YEAR;
+      drawnTo =
+        sketch.isLooping() && shown !== undefined && !tub.record
+          ? BUDGET.startYear
+          : END_YEAR;
       shown = tub;
     }
-    drawnTo = Math.min(END_YEAR, drawnTo + Math.min(0.1, sketch.deltaTime / 1000) * 10);
+    drawnTo = Math.min(
+      END_YEAR,
+      drawnTo + Math.min(0.1, sketch.deltaTime / 1000) * 10
+    );
     sketch.background(getColor("SLATE", 50));
     const current = tub.record
       ? { emitted: 0, level: recordLevel(tub.year), taken: 0 }
@@ -237,15 +317,26 @@ function tubProgram(sketch: p5, read: () => Tub) {
 
 /** The level, emissions and uptake of a pathway in `year`. */
 function yearOf(pathway: readonly Year[], year: number) {
-  const index = Math.max(0, Math.min(pathway.length - 1, Math.round(year - BUDGET.startYear)));
+  const index = Math.max(
+    0,
+    Math.min(pathway.length - 1, Math.round(year - BUDGET.startYear))
+  );
   const each = pathway[index];
   const level = each?.level ?? BUDGET.start;
-  const taken = (BUDGET.sinks * (level - BUDGET.preindustrial)) / (BUDGET.start - BUDGET.preindustrial);
+  const taken =
+    (BUDGET.sinks * (level - BUDGET.preindustrial)) /
+    (BUDGET.start - BUDGET.preindustrial);
   return { emitted: (each?.net ?? 0) + taken, level, taken };
 }
 
 /** The tub, its water at `level`, the tap and the drain. */
-function drawTub(sketch: p5, level: number, emitted: number, taken: number, tub: Tub) {
+function drawTub(
+  sketch: p5,
+  level: number,
+  emitted: number,
+  taken: number,
+  tub: Tub
+) {
   const left = sketch.width * 0.06;
   const width = sketch.width * 0.3;
   const top = sketch.height * 0.2;
@@ -261,22 +352,34 @@ function drawTub(sketch: p5, level: number, emitted: number, taken: number, tub:
   sketch.line(left, top, left, bottom);
   sketch.line(left, bottom, left + width, bottom);
   sketch.line(left + width, top, left + width, bottom);
-  const preindustrial = bottom - (bottom - top) * ((BUDGET.preindustrial - TANK.empty) / (TANK.full - TANK.empty));
+  const preindustrial =
+    bottom -
+    (bottom - top) *
+      ((BUDGET.preindustrial - TANK.empty) / (TANK.full - TANK.empty));
   sketch.strokeWeight(1);
   Arr.forEach(Arr.range(0, Math.floor(width / 8)), (dash) => {
-    sketch.line(left + dash * 8, preindustrial, left + dash * 8 + 4, preindustrial);
+    sketch.line(
+      left + dash * 8,
+      preindustrial,
+      left + dash * 8 + 4,
+      preindustrial
+    );
   });
   if (!tub.record) {
     sketch.noStroke();
     sketch.fill(MATERIAL.seawater);
-    sketch.rect(left + width * 0.2, top - 26, Math.max(2, emitted * 1.6), surface - top + 26);
-    sketch.rect(left + width, bottom - 14, sketch.width * 0.06, Math.max(2, taken * 1.6));
-    sketch.fill(getColor("GRAY", 800));
-    sketch.textSize(11);
-    sketch.textAlign(sketch.LEFT, sketch.BOTTOM);
-    sketch.text(tub.inflow.emitted, left + width * 0.2, top - 30);
-    sketch.textAlign(sketch.LEFT, sketch.TOP);
-    sketch.text(tub.inflow.taken, left + width, bottom + 4);
+    sketch.rect(
+      left + width * 0.2,
+      top - 26,
+      Math.max(2, emitted * 1.6),
+      surface - top + 26
+    );
+    sketch.rect(
+      left + width,
+      bottom - 14,
+      sketch.width * 0.06,
+      Math.max(2, taken * 1.6)
+    );
   }
 }
 
@@ -290,21 +393,18 @@ function drawChart(sketch: p5, tub: Tub, drawnTo: number) {
   const last = tub.record ? RECORD_SPAN.last : END_YEAR;
   const low = tub.record ? 300 : 380;
   const high = tub.record ? 440 : 560;
-  const x = (year: number) => left + ((right - left) * (year - first)) / (last - first);
-  const y = (ppm: number) => bottom - ((bottom - top) * (ppm - low)) / (high - low);
+  const x = (year: number) =>
+    left + ((right - left) * (year - first)) / (last - first);
+  const y = (ppm: number) =>
+    bottom - ((bottom - top) * (ppm - low)) / (high - low);
   sketch.stroke(getColor("SLATE", 300));
   sketch.strokeWeight(1);
   sketch.line(left, bottom, right, bottom);
   sketch.line(left, top, left, bottom);
-  sketch.noStroke();
-  sketch.fill(getColor("GRAY", 700));
-  sketch.textSize(10);
-  sketch.textAlign(sketch.CENTER, sketch.TOP);
-  sketch.text(String(first), x(first), bottom + 4);
-  sketch.text(String(last), x(last), bottom + 4);
-  sketch.textAlign(sketch.RIGHT, sketch.CENTER);
-  sketch.text(String(low), left - 4, y(low));
-  sketch.text(String(high), left - 4, y(high));
+  Arr.forEach(Arr.range(0, 4), (tick) => {
+    const ppm = low + ((high - low) * tick) / 4;
+    sketch.line(left - 4, y(ppm), left, y(ppm));
+  });
   sketch.noFill();
   sketch.strokeWeight(2);
   if (tub.record) {
@@ -319,7 +419,9 @@ function drawChart(sketch: p5, tub: Tub, drawnTo: number) {
   sketch.stroke(PLOT_COLORS.slate);
   sketch.strokeWeight(1);
   sketch.beginShape();
-  Arr.forEach(tub.baseline, (each) => sketch.vertex(x(each.year), y(each.level)));
+  Arr.forEach(tub.baseline, (each) =>
+    sketch.vertex(x(each.year), y(each.level))
+  );
   sketch.endShape();
   sketch.strokeWeight(2.5);
   sketch.stroke(PLOT_COLORS.orange);

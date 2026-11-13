@@ -11,7 +11,9 @@ describe("the drawn ladder", () => {
     expect(ladder).toHaveLength(21);
     Arr.forEach(ladder, (rung) => {
       expect(rung.open).toBe(false);
-      expect(Math.hypot(rung.first[1], rung.first[2])).toBeCloseTo(HELIX.diameter / 2);
+      expect(Math.hypot(rung.first[1], rung.first[2])).toBeCloseTo(
+        HELIX.diameter / 2
+      );
       expect(rung.first[0]).toBeCloseTo(rung.index * HELIX.rise);
     });
   });
@@ -25,8 +27,8 @@ describe("the drawn ladder", () => {
     expect(fork?.open).toBe(true);
     expect(fork?.copied).toBe(false);
     expect(far?.copied).toBe(true);
-    expect(far && far.first[1] - far.newFirst[1]).toBeCloseTo(1.1);
-    expect(far && far.first[1]).toBeGreaterThan(fork ? fork.first[1] : 0);
+    expect((far?.first[1] ?? 0) - (far?.newFirst[1] ?? 0)).toBeCloseTo(1.1);
+    expect(far?.first[1]).toBeGreaterThan(fork?.first[1] ?? 0);
     expect(far?.second[1]).toBeCloseTo(-(far?.first[1] ?? 0));
   });
 

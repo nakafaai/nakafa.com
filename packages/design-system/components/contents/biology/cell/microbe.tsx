@@ -33,7 +33,12 @@ export function YeastCell({ minutes }: { readonly minutes: number }) {
 
   return (
     <group position={[-share * 0.45, 0, 0]}>
-      <HalfShell color={MATERIAL.chitin} roughness={0.75} scale={MOTHER} thickness={0.07} />
+      <HalfShell
+        color={MATERIAL.chitin}
+        roughness={0.75}
+        scale={MOTHER}
+        thickness={0.07}
+      />
       <group scale={[0.93, 0.93, 0.93]}>
         <HalfShell color={MATERIAL.yeastCell} scale={MOTHER} thickness={0.02} />
       </group>
@@ -43,7 +48,11 @@ export function YeastCell({ minutes }: { readonly minutes: number }) {
         scale={dividing ? [1.7, 0.75, 0.75] : [1, 1, 1]}
       >
         <sphereGeometry args={[1 * YEAST_UM, 32, 24]} />
-        <meshPhysicalMaterial clearcoat={0.5} color={MATERIAL.nucleus} roughness={0.45} />
+        <meshPhysicalMaterial
+          clearcoat={0.5}
+          color={MATERIAL.nucleus}
+          roughness={0.45}
+        />
       </mesh>
       <mesh position={[-0.42, -0.12, -0.36]}>
         <sphereGeometry args={[0.9 * YEAST_UM, 32, 24]} />
@@ -51,7 +60,6 @@ export function YeastCell({ minutes }: { readonly minutes: number }) {
           color={MATERIAL.vacuole}
           opacity={0.7}
           roughness={0.15}
-          transmission={0.5}
           transparent
         />
       </mesh>
@@ -60,10 +68,22 @@ export function YeastCell({ minutes }: { readonly minutes: number }) {
         <Ribosomes count={260} margin={0.12} size={YEAST_UM} />
       </group>
       {share > 0 && (
-        <group position={[neck + share * 0.78, 0, 0]} scale={[share, share, share]}>
-          <HalfShell color={MATERIAL.chitin} roughness={0.75} scale={MOTHER} thickness={0.07} />
+        <group
+          position={[neck + share * 0.78, 0, 0]}
+          scale={[share, share, share]}
+        >
+          <HalfShell
+            color={MATERIAL.chitin}
+            roughness={0.75}
+            scale={MOTHER}
+            thickness={0.07}
+          />
           <group scale={[0.92, 0.92, 0.92]}>
-            <HalfShell color={MATERIAL.yeastCell} scale={MOTHER} thickness={0.02} />
+            <HalfShell
+              color={MATERIAL.yeastCell}
+              scale={MOTHER}
+              thickness={0.02}
+            />
           </group>
         </group>
       )}
@@ -87,13 +107,23 @@ export function BacteriumCell({ playing }: { readonly playing: boolean }) {
   return (
     <group>
       <RodShell color={MATERIAL.cellBody} radius={ROD.radius} roughness={0.7} />
-      <RodShell color={MATERIAL.membrane} radius={ROD.radius * 0.9} roughness={0.5} />
+      <RodShell
+        color={MATERIAL.membrane}
+        radius={ROD.radius * 0.9}
+        roughness={0.5}
+      />
       <Nucleoid />
       <mesh position={[0.45, -0.18, -0.2]} rotation={[0.4, 0.2, 0]}>
         <torusGeometry args={[0.07, 0.008, 8, 32]} />
         <meshStandardMaterial color={MATERIAL.nucleolus} roughness={0.5} />
       </mesh>
-      <group scale={[ROD.middle / 2 + ROD.radius * 0.85, ROD.radius * 0.85, ROD.radius * 0.85]}>
+      <group
+        scale={[
+          ROD.middle / 2 + ROD.radius * 0.85,
+          ROD.radius * 0.85,
+          ROD.radius * 0.85,
+        ]}
+      >
         <Ribosomes count={520} margin={0.08} size={ROD_UM} />
       </group>
       <Flagellum playing={playing} />
@@ -118,15 +148,27 @@ function RodShell({
         <cylinderGeometry
           args={[radius, radius, ROD.middle, 64, 1, true, Math.PI / 2, Math.PI]}
         />
-        <meshPhysicalMaterial color={color} roughness={roughness} sheen={0.5} side={DoubleSide} />
+        <meshPhysicalMaterial
+          color={color}
+          roughness={roughness}
+          side={DoubleSide}
+        />
       </mesh>
       <mesh castShadow position={[half, 0, 0]}>
         <sphereGeometry args={[radius, 48, 32, Math.PI, Math.PI / 2]} />
-        <meshPhysicalMaterial color={color} roughness={roughness} sheen={0.5} side={DoubleSide} />
+        <meshPhysicalMaterial
+          color={color}
+          roughness={roughness}
+          side={DoubleSide}
+        />
       </mesh>
       <mesh castShadow position={[-half, 0, 0]}>
         <sphereGeometry args={[radius, 48, 32, Math.PI * 1.5, Math.PI / 2]} />
-        <meshPhysicalMaterial color={color} roughness={roughness} sheen={0.5} side={DoubleSide} />
+        <meshPhysicalMaterial
+          color={color}
+          roughness={roughness}
+          side={DoubleSide}
+        />
       </mesh>
     </group>
   );
@@ -162,7 +204,11 @@ function Flagellum({ playing }: { readonly playing: boolean }) {
         Arr.map(Arr.range(0, 80), (step) => {
           const along = step / 80;
           const angle = along * Math.PI * 2 * 3;
-          return new Vector3(-along * 2.5, Math.cos(angle) * 0.12, Math.sin(angle) * 0.12 - 0.1);
+          return new Vector3(
+            -along * 2.5,
+            Math.cos(angle) * 0.12,
+            Math.sin(angle) * 0.12 - 0.1
+          );
         })
       ),
     []

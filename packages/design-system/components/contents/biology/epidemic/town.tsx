@@ -28,7 +28,10 @@ import {
   VisualCardHeader,
   VisualCardToolbar,
 } from "@repo/design-system/components/visual/card";
-import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
+import {
+  VisualFactIndicator,
+  VisualFactTabular,
+} from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { P5Sketch } from "@repo/design-system/components/visual/sketch";
 import { getColor } from "@repo/design-system/lib/color";
@@ -52,7 +55,6 @@ const MEASURES = ["masks", "washing", "vaccinated", "distancing"] as const;
 
 /** What the sketch reads from the card on every frame. */
 type Town = Readonly<{
-  legend: Readonly<{ immune: string; infected: string; recovered: string; susceptible: string }>;
   measures: Measures;
   outbreak: readonly Day[];
   report: (day: number) => void;
@@ -75,11 +77,12 @@ export function EpidemicSpreadLab({
   readonly description: ReactNode;
   readonly labels: {
     readonly chooseRoute?: string;
-    readonly day: ReactNode;
     readonly distancing?: string;
-    readonly legend: Readonly<{ immune: string; infected: string; recovered: string; susceptible: string }>;
+    readonly immune: ReactNode;
+    readonly infected: ReactNode;
     readonly masks?: string;
     readonly peak: ReactNode;
+    readonly recovered: ReactNode;
     readonly reproduction: ReactNode;
     readonly routes?: Readonly<{ air: ReactNode; touch: ReactNode }>;
     readonly total: ReactNode;
@@ -100,10 +103,17 @@ export function EpidemicSpreadLab({
   const [route, setRoute] = useState<Route>(routes[0] ?? "air");
   const [day, setDay] = useState(DAYS);
   const quantity = useQuantity();
-  const outbreak = useMemo(() => outbreakOf(values, route, DAYS), [values, route]);
+  const percent = (share: number) => (
+    <InlineMath math={quantity(share * 100, "\\%", 0)} />
+  );
+  const outbreak = useMemo(
+    () => outbreakOf(values, route, DAYS),
+    [values, route]
+  );
+  const today = outbreak[Math.min(DAYS, Math.round(day))];
   const town = useMemo(
-    () => ({ legend: labels.legend, measures: values, outbreak, report: setDay }),
-    [labels.legend, outbreak, values]
+    () => ({ measures: values, outbreak, report: setDay }),
+    [outbreak, values]
   );
 
   return (
@@ -115,7 +125,9 @@ export function EpidemicSpreadLab({
           {routes.length > 1 && labels.routes && (
             <ToggleGroup
               aria-label={labels.chooseRoute}
-              onValueChange={(value: string) => setRoute(value === "touch" ? "touch" : "air")}
+              onValueChange={(value: string) =>
+                setRoute(value === "touch" ? "touch" : "air")
+              }
               type="single"
               value={route}
               variant="outline"
@@ -130,10 +142,15 @@ export function EpidemicSpreadLab({
           {Arr.map(
             Arr.filter(MEASURES, (measure) => Arr.contains(measures, measure)),
             (measure) => (
-              <div className="flex min-w-40 flex-1 flex-col gap-2" key={measure}>
+              <div
+                className="flex min-w-40 flex-1 flex-col gap-2"
+                key={measure}
+              >
                 <div className="flex items-center justify-between gap-4 text-sm">
                   <span>{labels[measure]}</span>
-                  <span className="tabular-nums">{Math.round(values[measure] * 100)}%</span>
+                  <span className="tabular-nums">
+                    {Math.round(values[measure] * 100)}%
+                  </span>
                 </div>
                 <Slider
                   aria-label={labels[measure]}
@@ -161,19 +178,42 @@ export function EpidemicSpreadLab({
         <VisualCardFacts>
           <VisualFactTabular
             label={labels.reproduction}
-            value={<InlineMath math={quantity(reproductionOf(values, route), "", 2)} />}
+            value={
+              <InlineMath
+                math={quantity(reproductionOf(values, route), "", 2)}
+              />
+            }
           />
           <VisualFactTabular
             label={labels.peak}
-            value={<InlineMath math={quantity(peakOf(outbreak) * 100, "\\%", 0)} />}
+            value={
+              <InlineMath math={quantity(peakOf(outbreak) * 100, "\\%", 0)} />
+            }
           />
           <VisualFactTabular
             label={labels.total}
-            value={<InlineMath math={quantity(everInfectedOf(outbreak) * 100, "\\%", 0)} />}
+            value={
+              <InlineMath
+                math={quantity(everInfectedOf(outbreak) * 100, "\\%", 0)}
+              />
+            }
           />
-          <VisualFactTabular
-            label={labels.day}
-            value={<InlineMath math={quantity(Math.round(day), "", 0)} />}
+          <VisualFactIndicator
+            indicatorColor={STATE_COLORS.infected}
+            label={labels.infected}
+            value={percent(today?.infected ?? 0)}
+          />
+          <VisualFactIndicator
+            indicatorColor={STATE_COLORS.recovered}
+            label={labels.recovered}
+            value={percent(
+              Math.max(0, (today?.recovered ?? 0) - immuneShare(values))
+            )}
+          />
+          <VisualFactIndicator
+            indicatorColor={STATE_COLORS.immune}
+            label={labels.immune}
+            value={percent(immuneShare(values))}
           />
         </VisualCardFacts>
       </VisualCardFooter>
@@ -210,7 +250,10 @@ function townProgram(sketch: p5, read: () => Town) {
     const protectedCount = Math.round(immuneShare(town.measures) * PEOPLE);
     immune = Arr.map(walkers, (_, index) => index >= PEOPLE - protectedCount);
     const seed = Option.getOrElse(
-      Arr.findFirstIndex(walkers, (walker, index) => !walker.home && immune[index] !== true),
+      Arr.findFirstIndex(
+        walkers,
+        (walker, index) => !walker.home && immune[index] !== true
+      ),
       () => 0
     );
     infected = Arr.map(walkers, (_, index) => index === seed);
@@ -238,22 +281,48 @@ function townProgram(sketch: p5, read: () => Town) {
     const sample = town.outbreak[Math.floor(today)] ?? town.outbreak[0];
     if (sample) {
       const startImmune = Arr.length(Arr.filter(immune, Boolean));
-      const everTarget = Math.round((1 - sample.susceptible) * PEOPLE) - startImmune;
-      const recoveredTarget = Math.round(sample.recovered * PEOPLE) - startImmune;
-      const susceptible = Arr.map(walkers, (_, index) =>
-        infected[index] !== true && recovered[index] !== true && immune[index] !== true
+      const everTarget =
+        Math.round((1 - sample.susceptible) * PEOPLE) - startImmune;
+      const recoveredTarget =
+        Math.round(sample.recovered * PEOPLE) - startImmune;
+      const susceptible = Arr.map(
+        walkers,
+        (_, index) =>
+          infected[index] !== true &&
+          recovered[index] !== true &&
+          immune[index] !== true
       );
-      const fresh = nextInfected(walkers, infected, susceptible, everTarget - order.length);
-      infected = Arr.map(infected, (value, index) => value || Arr.contains(fresh, index));
+      const fresh = nextInfected(
+        walkers,
+        infected,
+        susceptible,
+        everTarget - order.length
+      );
+      infected = Arr.map(
+        infected,
+        (value, index) => value || Arr.contains(fresh, index)
+      );
       order = Arr.appendAll(order, fresh);
       const healed = Arr.take(order, Math.max(0, recoveredTarget));
       recovered = Arr.map(walkers, (_, index) => Arr.contains(healed, index));
-      infected = Arr.map(infected, (value, index) => value && !recovered[index]);
+      infected = Arr.map(
+        infected,
+        (value, index) => value && !recovered[index]
+      );
     }
-    walkers = Arr.map(walkers, (walker, index) => walk(walker, seconds * 4, index + Math.floor(day * 10)));
+    walkers = Arr.map(walkers, (walker, index) =>
+      walk(walker, seconds * 4, index + Math.floor(day * 10))
+    );
 
     drawSquare(sketch);
-    drawPeople(sketch, walkers, infected, recovered, immune, town.measures.masks);
+    drawPeople(
+      sketch,
+      walkers,
+      infected,
+      recovered,
+      immune,
+      town.measures.masks
+    );
     drawGraph(sketch, town, today);
 
     if (Math.floor(today) !== reported) {
@@ -266,7 +335,10 @@ function townProgram(sketch: p5, read: () => Town) {
 /** How the square's metres map onto the upper three quarters of the canvas. */
 function squareFrame(sketch: p5) {
   const height = sketch.height * 0.72;
-  const scale = Math.min(sketch.width / (SQUARE.width + 6), height / (SQUARE.depth + 6));
+  const scale = Math.min(
+    sketch.width / (SQUARE.width + 6),
+    height / (SQUARE.depth + 6)
+  );
   return {
     scale,
     x: (metres: number) => sketch.width / 2 + metres * scale,
@@ -280,14 +352,30 @@ function drawSquare(sketch: p5) {
   sketch.background(MATERIAL.grass);
   sketch.noStroke();
   sketch.fill(MATERIAL.pavement);
-  sketch.rect(frame.x(-SQUARE.width / 2), frame.y(-SQUARE.depth / 2), SQUARE.width * frame.scale, SQUARE.depth * frame.scale, 4);
+  sketch.rect(
+    frame.x(-SQUARE.width / 2),
+    frame.y(-SQUARE.depth / 2),
+    SQUARE.width * frame.scale,
+    SQUARE.depth * frame.scale,
+    4
+  );
   sketch.stroke(getColor("SLATE", 400));
   sketch.strokeWeight(0.6);
   Arr.forEach(Arr.range(-14, 14), (column) => {
-    sketch.line(frame.x(column * 2), frame.y(-SQUARE.depth / 2), frame.x(column * 2), frame.y(SQUARE.depth / 2));
+    sketch.line(
+      frame.x(column * 2),
+      frame.y(-SQUARE.depth / 2),
+      frame.x(column * 2),
+      frame.y(SQUARE.depth / 2)
+    );
   });
   Arr.forEach(Arr.range(-9, 9), (row) => {
-    sketch.line(frame.x(-SQUARE.width / 2), frame.y(row * 2), frame.x(SQUARE.width / 2), frame.y(row * 2));
+    sketch.line(
+      frame.x(-SQUARE.width / 2),
+      frame.y(row * 2),
+      frame.x(SQUARE.width / 2),
+      frame.y(row * 2)
+    );
   });
   sketch.noStroke();
   sketch.fill(MATERIAL.concrete);
@@ -295,12 +383,21 @@ function drawSquare(sketch: p5) {
   sketch.fill(MATERIAL.seawater);
   sketch.circle(frame.x(0), frame.y(0), 7.4 * frame.scale);
   Arr.forEach(
-    [[-26, -16], [26, -16], [-26, 16], [26, 16]] as const,
+    [
+      [-26, -16],
+      [26, -16],
+      [-26, 16],
+      [26, 16],
+    ] as const,
     ([x, y]) => {
       sketch.fill(MATERIAL.foliageShade);
       sketch.circle(frame.x(x), frame.y(y), 7 * frame.scale);
       sketch.fill(MATERIAL.foliageLight);
-      sketch.circle(frame.x(x) - frame.scale, frame.y(y) - frame.scale, 4.6 * frame.scale);
+      sketch.circle(
+        frame.x(x) - frame.scale,
+        frame.y(y) - frame.scale,
+        4.6 * frame.scale
+      );
     }
   );
 }
@@ -343,7 +440,7 @@ function drawPeople(
 /** The share infected, recovered and still susceptible over the days, under the square. */
 function drawGraph(sketch: p5, town: Town, today: number) {
   const top = sketch.height * 0.75;
-  const bottom = sketch.height - 24;
+  const bottom = sketch.height - 10;
   const left = 12;
   const right = sketch.width - 12;
   const x = (dayIndex: number) => left + ((right - left) * dayIndex) / DAYS;
@@ -365,15 +462,5 @@ function drawGraph(sketch: p5, town: Town, today: number) {
       sketch.vertex(x(each.day), y(value(each)));
     });
     sketch.endShape();
-  });
-  sketch.noStroke();
-  sketch.textSize(11);
-  sketch.textAlign(sketch.LEFT, sketch.CENTER);
-  Arr.forEach(["susceptible", "infected", "recovered", "immune"] as const, (state, index) => {
-    const lx = left + index * Math.max(70, (right - left) / 4);
-    sketch.fill(STATE_COLORS[state]);
-    sketch.circle(lx + 5, sketch.height - 8, 8);
-    sketch.fill(getColor("GRAY", 800));
-    sketch.text(town.legend[state], lx + 13, sketch.height - 8);
   });
 }

@@ -16,7 +16,10 @@ import {
   VisualCardHeader,
   VisualCardToolbar,
 } from "@repo/design-system/components/visual/card";
-import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
+import {
+  VisualFactIndicator,
+  VisualFactTabular,
+} from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { P5Sketch } from "@repo/design-system/components/visual/sketch";
 import { getColor } from "@repo/design-system/lib/color";
@@ -42,7 +45,6 @@ const DRAWN = { predators: 60, prey: 320 } as const;
 /** What the sketch reads from the card on every frame. */
 type Field = Readonly<{
   history: readonly Herd[];
-  legend: Readonly<{ predators: string; prey: string }>;
   report: (year: number) => void;
 }>;
 
@@ -63,7 +65,6 @@ export function PredatorPreyLab({
   readonly capacity?: number;
   readonly description: ReactNode;
   readonly labels: {
-    readonly legend: Readonly<{ predators: string; prey: string }>;
     readonly peak: ReactNode;
     readonly predators: ReactNode;
     readonly prey: ReactNode;
@@ -84,12 +85,13 @@ export function PredatorPreyLab({
     () => historyOf({ predators: owls, prey: START_PREY }, rates, YEARS, EVERY),
     [owls, rates]
   );
-  const field = useMemo(
-    () => ({ history, legend: labels.legend, report: setYear }),
-    [history, labels.legend]
+  const field = useMemo(() => ({ history, report: setYear }), [history]);
+  const now =
+    history[Math.min(history.length - 1, Math.round(year / EVERY))] ??
+    balanceOf(rates);
+  const peak = Arr.reduce(history, 0, (most, herd) =>
+    Math.max(most, herd.prey)
   );
-  const now = history[Math.min(history.length - 1, Math.round(year / EVERY))] ?? balanceOf(rates);
-  const peak = Arr.reduce(history, 0, (most, herd) => Math.max(most, herd.prey));
 
   return (
     <VisualCard>
@@ -113,18 +115,24 @@ export function PredatorPreyLab({
       </VisualCardToolbar>
 
       <VisualCardBody className="bg-card">
-        <P5Sketch label={labels.viewLabel} program={fieldProgram} state={field} />
+        <P5Sketch
+          label={labels.viewLabel}
+          program={fieldProgram}
+          state={field}
+        />
       </VisualCardBody>
 
       <VisualCardSceneActions />
 
       <VisualCardFooter>
         <VisualCardFacts>
-          <VisualFactTabular
+          <VisualFactIndicator
+            indicatorColor={HERD_COLORS.prey}
             label={labels.prey}
             value={<InlineMath math={quantity(now.prey, "", 0)} />}
           />
-          <VisualFactTabular
+          <VisualFactIndicator
+            indicatorColor={HERD_COLORS.predators}
             label={labels.predators}
             value={<InlineMath math={quantity(now.predators, "", 0)} />}
           />
@@ -178,8 +186,18 @@ function fieldProgram(sketch: p5, read: () => Field) {
 
     drawPaddy(sketch, height);
     if (herd) {
-      drawRats(sketch, Math.min(DRAWN.prey, Math.round(herd.prey)), height, year);
-      drawOwls(sketch, Math.min(DRAWN.predators, Math.round(herd.predators)), height, year);
+      drawRats(
+        sketch,
+        Math.min(DRAWN.prey, Math.round(herd.prey)),
+        height,
+        year
+      );
+      drawOwls(
+        sketch,
+        Math.min(DRAWN.predators, Math.round(herd.predators)),
+        height,
+        year
+      );
     }
     drawHistory(sketch, field, today, height);
 
@@ -224,8 +242,10 @@ function drawPaddy(sketch: p5, height: number) {
 function drawRats(sketch: p5, count: number, height: number, year: number) {
   sketch.noStroke();
   Arr.forEach(Arr.range(0, Math.max(0, count - 1)), (rat) => {
-    const x = (hashUnit(rat, 1) + 0.02 * Math.sin(year * 6 + rat)) * sketch.width;
-    const y = 8 + (hashUnit(rat, 2) + 0.02 * Math.cos(year * 5 + rat)) * (height - 16);
+    const x =
+      (hashUnit(rat, 1) + 0.02 * Math.sin(year * 6 + rat)) * sketch.width;
+    const y =
+      8 + (hashUnit(rat, 2) + 0.02 * Math.cos(year * 5 + rat)) * (height - 16);
     const heading = hashUnit(rat, 3) * Math.PI * 2 + Math.sin(year * 3 + rat);
     sketch.push();
     sketch.translate(x, y);
@@ -243,7 +263,8 @@ function drawRats(sketch: p5, count: number, height: number, year: number) {
 /** Barn owls gliding in wide circles, each over its own shadow. */
 function drawOwls(sketch: p5, count: number, height: number, year: number) {
   Arr.forEach(Arr.range(0, Math.max(0, count - 1)), (owl) => {
-    const angle = year * (1.2 + hashUnit(owl, 4)) + hashUnit(owl, 5) * Math.PI * 2;
+    const angle =
+      year * (1.2 + hashUnit(owl, 4)) + hashUnit(owl, 5) * Math.PI * 2;
     const cx = hashUnit(owl, 6) * sketch.width;
     const cy = hashUnit(owl, 7) * height;
     const x = cx + Math.cos(angle) * 30;
@@ -264,10 +285,12 @@ function drawOwls(sketch: p5, count: number, height: number, year: number) {
 
 /** Both populations over the years so far, under the field. */
 function drawHistory(sketch: p5, field: Field, today: number, top: number) {
-  const bottom = sketch.height - 24;
+  const bottom = sketch.height - 10;
   const left = 12;
   const right = sketch.width - 12;
-  const most = Arr.reduce(field.history, 1, (high, herd) => Math.max(high, herd.prey));
+  const most = Arr.reduce(field.history, 1, (high, herd) =>
+    Math.max(high, herd.prey)
+  );
   const x = (year: number) => left + ((right - left) * year) / YEARS;
   const y = (count: number) => bottom - ((bottom - top - 12) * count) / most;
   sketch.noStroke();
@@ -278,19 +301,12 @@ function drawHistory(sketch: p5, field: Field, today: number, top: number) {
   Arr.forEach(["prey", "predators"] as const, (kind) => {
     sketch.stroke(HERD_COLORS[kind]);
     sketch.beginShape();
-    Arr.forEach(Arr.take(field.history, Math.round(today / EVERY) + 1), (herd, index) => {
-      sketch.vertex(x(index * EVERY), y(herd[kind]));
-    });
+    Arr.forEach(
+      Arr.take(field.history, Math.round(today / EVERY) + 1),
+      (herd, index) => {
+        sketch.vertex(x(index * EVERY), y(herd[kind]));
+      }
+    );
     sketch.endShape();
-  });
-  sketch.noStroke();
-  sketch.textSize(11);
-  sketch.textAlign(sketch.LEFT, sketch.CENTER);
-  Arr.forEach(["prey", "predators"] as const, (kind, index) => {
-    const lx = left + index * Math.max(90, (right - left) / 3);
-    sketch.fill(HERD_COLORS[kind]);
-    sketch.circle(lx + 5, sketch.height - 9, 8);
-    sketch.fill(getColor("GRAY", 800));
-    sketch.text(field.legend[kind], lx + 13, sketch.height - 9);
   });
 }

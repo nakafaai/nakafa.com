@@ -29,7 +29,10 @@ export function occupancyOf(nanomolar: number) {
 
 /** Which of virion `virion`'s spikes hold an antibody at occupancy `share`. */
 export function boundSpikes(virion: number, share: number) {
-  return Arr.map(Arr.range(0, SPIKES - 1), (spike) => hashUnit(virion, spike) < share);
+  return Arr.map(
+    Arr.range(0, SPIKES - 1),
+    (spike) => hashUnit(virion, spike) < share
+  );
 }
 
 /** Whether antibodies cover enough of a virion's spikes to stop it docking. */
@@ -39,8 +42,12 @@ export function isBlocked(bound: readonly boolean[]) {
 
 /** The chance that at least `BLOCKING` of the spikes are bound, each with chance `share`. */
 export function blockedChance(share: number) {
-  return Arr.reduce(Arr.range(BLOCKING, SPIKES), 0, (sum, bound) =>
-    sum + choose(SPIKES, bound) * share ** bound * (1 - share) ** (SPIKES - bound)
+  return Arr.reduce(
+    Arr.range(BLOCKING, SPIKES),
+    0,
+    (sum, bound) =>
+      sum +
+      choose(SPIKES, bound) * share ** bound * (1 - share) ** (SPIKES - bound)
   );
 }
 
@@ -56,7 +63,11 @@ export function levelOnDay(day: number) {
 
 /** The number of ways to pick `k` of `n`. */
 function choose(n: number, k: number) {
-  return Arr.reduce(Arr.range(1, k), 1, (product, step) => (product * (n - k + step)) / step);
+  return Arr.reduce(
+    Arr.range(1, k),
+    1,
+    (product, step) => (product * (n - k + step)) / step
+  );
 }
 
 /**

@@ -198,13 +198,34 @@ function LineupScene({
         <group position={[LINEUP.virion, 0, 0]} scale={[0.05, 0.05, 0.05]}>
           <Virion />
         </group>
-        <ThreeLabel color={ink} fontSize="compact" outlineColor={halo} outlineWidth={0.004} position={[LINEUP.cell, -11, 0]} visible={width >= 12}>
+        <ThreeLabel
+          color={ink}
+          fontSize="compact"
+          outlineColor={halo}
+          outlineWidth={0.004}
+          position={[LINEUP.cell, -11, 0]}
+          visible={width >= 12}
+        >
           {labels.cell}
         </ThreeLabel>
-        <ThreeLabel color={ink} fontSize="compact" outlineColor={halo} outlineWidth={0.004} position={[LINEUP.bacterium, -0.9, 0]} visible={width <= 16 && width >= 1}>
+        <ThreeLabel
+          color={ink}
+          fontSize="compact"
+          outlineColor={halo}
+          outlineWidth={0.004}
+          position={[LINEUP.bacterium, -0.9, 0]}
+          visible={width <= 16 && width >= 1}
+        >
           {labels.bacterium}
         </ThreeLabel>
-        <ThreeLabel color={ink} fontSize="compact" outlineColor={halo} outlineWidth={0.004} position={[LINEUP.virion, -0.09, 0]} visible={width <= 1.6}>
+        <ThreeLabel
+          color={ink}
+          fontSize="compact"
+          outlineColor={halo}
+          outlineWidth={0.004}
+          position={[LINEUP.virion, -0.09, 0]}
+          visible={width <= 1.6}
+        >
           {labels.virion}
         </ThreeLabel>
       </group>

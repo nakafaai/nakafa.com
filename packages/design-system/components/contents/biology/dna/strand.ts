@@ -101,10 +101,7 @@ export function backboneAt(index: number, strand: 0 | 1) {
 }
 
 /** How many positions of `first` and `second` hold different bases. */
-export function differencesOf(
-  first: readonly Base[],
-  second: readonly Base[]
-) {
+export function differencesOf(first: readonly Base[], second: readonly Base[]) {
   return Arr.reduce(
     Arr.zip(first, second),
     0,
@@ -203,10 +200,7 @@ export function aminoAt(bases: readonly Base[], index: number) {
 }
 
 /** The codon indexes, from zero, where `first` and `second` code differently. */
-export function changedCodons(
-  first: readonly Base[],
-  second: readonly Base[]
-) {
+export function changedCodons(first: readonly Base[], second: readonly Base[]) {
   const codons = Math.floor(Math.min(first.length, second.length) / 3);
   if (codons === 0) {
     return [];

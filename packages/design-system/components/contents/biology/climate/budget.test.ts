@@ -51,8 +51,12 @@ describe("the budget", () => {
   });
 
   it("keeps rising without cuts and turns down with them", () => {
-    const current = Option.getOrThrow(Arr.last(pathwayOf({ cut: 0, forest: 0 }, 2100)));
-    const zero = Option.getOrThrow(Arr.last(pathwayOf({ cut: 1, forest: 1 }, 2100)));
+    const current = Option.getOrThrow(
+      Arr.last(pathwayOf({ cut: 0, forest: 0 }, 2100))
+    );
+    const zero = Option.getOrThrow(
+      Arr.last(pathwayOf({ cut: 1, forest: 1 }, 2100))
+    );
     expect(current.year).toBe(2100);
     expect(current.level).toBeGreaterThan(510);
     expect(current.net).toBeGreaterThan(0);

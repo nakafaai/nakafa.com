@@ -54,10 +54,8 @@ export function lengthOf(kind: CellKind) {
 export function scaleBar(length: number) {
   const half = length / 2;
   const power = 10 ** Math.floor(Math.log10(half));
-  return Arr.reduce(
-    [1, 2, 5],
-    power,
-    (best, step) => (step * power <= half ? step * power : best)
+  return Arr.reduce([1, 2, 5], power, (best, step) =>
+    step * power <= half ? step * power : best
   );
 }
 

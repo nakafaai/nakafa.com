@@ -64,7 +64,10 @@ export const VILLAGE = {
 
 /** The rate of rise in `year`'s period of the record, in metres a year. */
 export function recordRate(year: number) {
-  const clamped = Math.min(RECORD_YEARS.last, Math.max(RECORD_YEARS.first, year));
+  const clamped = Math.min(
+    RECORD_YEARS.last,
+    Math.max(RECORD_YEARS.first, year)
+  );
   return Arr.reduce(RECORD, 0, (rate, span) =>
     clamped >= span.from && clamped <= span.to ? span.rate : rate
   );

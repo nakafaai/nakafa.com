@@ -24,11 +24,7 @@ const NUCLEUS = { radius: 3 * ANIMAL_UM, x: -0.2, y: 0.05, z: -0.42 } as const;
 export function AnimalCell() {
   return (
     <group>
-      <HalfShell
-        color={MATERIAL.membrane}
-        scale={[1, 1, 1]}
-        thickness={0.02}
-      />
+      <HalfShell color={MATERIAL.membrane} scale={[1, 1, 1]} thickness={0.02} />
       <Nucleus />
       <Reticulum />
       <Golgi position={[0.42, 0.22, -0.45]} />
@@ -128,7 +124,9 @@ function Golgi({
           position={[0, sac * 0.03, 0]}
           scale={[1, 0.18, 0.55]}
         >
-          <torusGeometry args={[0.12 - sac * 0.01, 0.035, 12, 40, Math.PI * 1.2]} />
+          <torusGeometry
+            args={[0.12 - sac * 0.01, 0.035, 12, 40, Math.PI * 1.2]}
+          />
           <meshPhysicalMaterial
             clearcoat={0.4}
             color={MATERIAL.golgi}
@@ -218,7 +216,6 @@ export function PlantCell() {
           color={MATERIAL.vacuole}
           opacity={0.55}
           roughness={0.1}
-          transmission={0.6}
           transparent
         />
       </RoundedBox>
@@ -230,9 +227,16 @@ export function PlantCell() {
           roughness={0.45}
         />
       </Scatter>
-      <mesh castShadow position={[-PLANT.x * 0.78, -PLANT.y * 0.62, -PLANT.z * 0.5]}>
+      <mesh
+        castShadow
+        position={[-PLANT.x * 0.78, -PLANT.y * 0.62, -PLANT.z * 0.5]}
+      >
         <sphereGeometry args={[3 * PLANT_UM, 32, 24]} />
-        <meshPhysicalMaterial clearcoat={0.5} color={MATERIAL.nucleus} roughness={0.45} />
+        <meshPhysicalMaterial
+          clearcoat={0.5}
+          color={MATERIAL.nucleus}
+          roughness={0.45}
+        />
       </mesh>
     </group>
   );
@@ -250,11 +254,30 @@ function chloroplastSpot(index: number) {
   const flat = [length, 1.2 * PLANT_UM, 0.8 * PLANT_UM] as const;
   const inset = 1.6 * PLANT_UM;
   const sides = [
-    [[along * PLANT.x * 0.85, PLANT.y - inset, -across * PLANT.z * 0.9], [0, 0, 0]],
-    [[along * PLANT.x * 0.85, -PLANT.y + inset, -across * PLANT.z * 0.9], [0, 0, 0]],
-    [[PLANT.x - inset, along * PLANT.y * 0.8, -across * PLANT.z * 0.9], [0, 0, Math.PI / 2]],
-    [[-PLANT.x + inset, along * PLANT.y * 0.8, -across * PLANT.z * 0.9], [0, 0, Math.PI / 2]],
-    [[along * PLANT.x * 0.85, (across * 2 - 1) * PLANT.y * 0.8, -PLANT.z + inset], [Math.PI / 2, 0, 0]],
+    [
+      [along * PLANT.x * 0.85, PLANT.y - inset, -across * PLANT.z * 0.9],
+      [0, 0, 0],
+    ],
+    [
+      [along * PLANT.x * 0.85, -PLANT.y + inset, -across * PLANT.z * 0.9],
+      [0, 0, 0],
+    ],
+    [
+      [PLANT.x - inset, along * PLANT.y * 0.8, -across * PLANT.z * 0.9],
+      [0, 0, Math.PI / 2],
+    ],
+    [
+      [-PLANT.x + inset, along * PLANT.y * 0.8, -across * PLANT.z * 0.9],
+      [0, 0, Math.PI / 2],
+    ],
+    [
+      [
+        along * PLANT.x * 0.85,
+        (across * 2 - 1) * PLANT.y * 0.8,
+        -PLANT.z + inset,
+      ],
+      [Math.PI / 2, 0, 0],
+    ],
   ] as const;
   const [position, rotation] = sides[side] ?? sides[0];
   return [position, rotation, flat] as const;
@@ -269,16 +292,16 @@ function Wall({
   readonly thickness: number;
 }) {
   const slabs = [
-    [[0, 0, -depth], [PLANT.x * 2, PLANT.y * 2, thickness]],
-    [[0, PLANT.y, -depth / 2], [PLANT.x * 2, thickness, depth]],
-    [[0, -PLANT.y, -depth / 2], [PLANT.x * 2, thickness, depth]],
-    [[PLANT.x, 0, -depth / 2], [thickness, PLANT.y * 2, depth]],
-    [[-PLANT.x, 0, -depth / 2], [thickness, PLANT.y * 2, depth]],
+    ["back", [0, 0, -depth], [PLANT.x * 2, PLANT.y * 2, thickness]],
+    ["top", [0, PLANT.y, -depth / 2], [PLANT.x * 2, thickness, depth]],
+    ["bottom", [0, -PLANT.y, -depth / 2], [PLANT.x * 2, thickness, depth]],
+    ["right", [PLANT.x, 0, -depth / 2], [thickness, PLANT.y * 2, depth]],
+    ["left", [-PLANT.x, 0, -depth / 2], [thickness, PLANT.y * 2, depth]],
   ] as const;
   return (
     <group>
-      {Arr.map(slabs, ([position, size], index) => (
-        <mesh castShadow key={index} position={position} receiveShadow>
+      {Arr.map(slabs, ([name, position, size]) => (
+        <mesh castShadow key={name} position={position} receiveShadow>
           <boxGeometry args={size} />
           <meshStandardMaterial color={MATERIAL.cellWall} roughness={0.8} />
         </mesh>

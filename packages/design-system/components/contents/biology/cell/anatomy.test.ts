@@ -4,10 +4,10 @@ import { describe, expect, it } from "@effect/vitest";
 import {
   BUD_MINUTES,
   bodyOf,
-  focusAt,
-  LINEUP,
   budShare,
+  focusAt,
   isDividing,
+  LINEUP,
   lengthOf,
   SIZES,
   scaleBar,

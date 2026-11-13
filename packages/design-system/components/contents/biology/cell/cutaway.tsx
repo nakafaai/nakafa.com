@@ -161,7 +161,9 @@ export function CellCutawayLab({
           <VisualFactTabular
             label={labels.size}
             value={
-              <InlineMath math={quantity(lengthOf(kind), "\\,\\mu\\text{m}", 0)} />
+              <InlineMath
+                math={quantity(lengthOf(kind), "\\,\\mu\\text{m}", 0)}
+              />
             }
           />
           <VisualFactTabular label={labels.nucleus} value={facts?.nucleus} />
@@ -205,7 +207,8 @@ function CellScene({
     if (!(playing && kind === "yeast")) {
       return;
     }
-    clock.current = (clock.current + Math.min(delta, 0.1) * MINUTES_PER_SECOND) % BUD_MINUTES;
+    clock.current =
+      (clock.current + Math.min(delta, 0.1) * MINUTES_PER_SECOND) % BUD_MINUTES;
     const whole = Math.round(clock.current);
     if (whole !== sent.current) {
       sent.current = whole;
@@ -221,7 +224,10 @@ function CellScene({
         {kind === "plant" && <PlantCell />}
         {kind === "yeast" && <YeastCell minutes={minutes} />}
         {kind === "bacterium" && (
-          <group position={[0.55, 0, 0]} scale={[ROD_SCALE, ROD_SCALE, ROD_SCALE]}>
+          <group
+            position={[0.55, 0, 0]}
+            scale={[ROD_SCALE, ROD_SCALE, ROD_SCALE]}
+          >
             <BacteriumCell playing={playing} />
           </group>
         )}

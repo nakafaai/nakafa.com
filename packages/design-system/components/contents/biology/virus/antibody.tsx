@@ -72,7 +72,10 @@ export function AntibodyNeutralizeLab({
     readonly covered: ReactNode;
     readonly day?: string;
     readonly level: ReactNode;
-    readonly people?: Readonly<{ unvaccinated: ReactNode; vaccinated: ReactNode }>;
+    readonly people?: Readonly<{
+      unvaccinated: ReactNode;
+      vaccinated: ReactNode;
+    }>;
     readonly viewLabel: string;
   };
   readonly mode: "days" | "vaccine";
@@ -84,11 +87,17 @@ export function AntibodyNeutralizeLab({
   const reading = useReading();
   const level = antibodyLevel(mode, vaccinated, day);
   const share = occupancyOf(level);
-  const spikes = useMemo(
-    () => Arr.map(Arr.range(0, VIRIONS - 1), (virion) => boundSpikes(virion, share)),
+  const virions = useMemo(
+    () =>
+      Arr.map(Arr.range(0, VIRIONS - 1), (id) => ({
+        bound: boundSpikes(id, share),
+        id,
+      })),
     [share]
   );
-  const blocked = Arr.length(Arr.filter(spikes, isBlocked));
+  const blocked = Arr.length(
+    Arr.filter(virions, ({ bound }) => isBlocked(bound))
+  );
 
   return (
     <VisualCard>
@@ -98,13 +107,19 @@ export function AntibodyNeutralizeLab({
         {mode === "vaccine" && labels.people && (
           <ToggleGroup
             aria-label={labels.choose}
-            onValueChange={(value: string) => setVaccinated(value !== "unvaccinated")}
+            onValueChange={(value: string) =>
+              setVaccinated(value !== "unvaccinated")
+            }
             type="single"
             value={vaccinated ? "vaccinated" : "unvaccinated"}
             variant="outline"
           >
-            <ToggleGroupItem value="unvaccinated">{labels.people.unvaccinated}</ToggleGroupItem>
-            <ToggleGroupItem value="vaccinated">{labels.people.vaccinated}</ToggleGroupItem>
+            <ToggleGroupItem value="unvaccinated">
+              {labels.people.unvaccinated}
+            </ToggleGroupItem>
+            <ToggleGroupItem value="vaccinated">
+              {labels.people.vaccinated}
+            </ToggleGroupItem>
           </ToggleGroup>
         )}
         {mode === "days" && (
@@ -113,12 +128,23 @@ export function AntibodyNeutralizeLab({
               <span>{labels.day}</span>
               <span className="tabular-nums">{reading(day, 0)}/28</span>
             </div>
-            <Slider aria-label={labels.day} max={28} min={0} onValueChange={setDay} step={1} value={day} />
+            <Slider
+              aria-label={labels.day}
+              max={28}
+              min={0}
+              onValueChange={setDay}
+              step={1}
+              value={day}
+            />
           </div>
         )}
       </VisualCardToolbar>
 
-      <VisualCardBody aria-label={labels.viewLabel} className={threeSceneFrameVariants()} render={<section />}>
+      <VisualCardBody
+        aria-label={labels.viewLabel}
+        className={threeSceneFrameVariants()}
+        render={<section />}
+      >
         <ScienceStage reach={6} setting="studio">
           <Suspense fallback={null}>
             <CameraControls
@@ -128,7 +154,7 @@ export function AntibodyNeutralizeLab({
               maxDistance={24}
               minDistance={5}
             />
-            <DockingScene spikes={spikes} />
+            <DockingScene virions={virions} />
           </Suspense>
         </ScienceStage>
       </VisualCardBody>
@@ -137,10 +163,26 @@ export function AntibodyNeutralizeLab({
 
       <VisualCardFooter>
         <VisualCardFacts>
-          <VisualFactTabular label={labels.level} value={<InlineMath math={quantity(level, "\\text{ nM}", 1)} />} />
-          <VisualFactTabular label={labels.covered} value={<InlineMath math={quantity(share * 100, "\\%", 0)} />} />
-          <VisualFactTabular label={labels.blocked} value={<InlineMath math={`${blocked}/${VIRIONS}`} />} />
-          <VisualFactTabular label={labels.chance} value={<InlineMath math={quantity(blockedChance(share) * 100, "\\%", 0)} />} />
+          <VisualFactTabular
+            label={labels.level}
+            value={<InlineMath math={quantity(level, "\\text{ nM}", 1)} />}
+          />
+          <VisualFactTabular
+            label={labels.covered}
+            value={<InlineMath math={quantity(share * 100, "\\%", 0)} />}
+          />
+          <VisualFactTabular
+            label={labels.blocked}
+            value={<InlineMath math={`${blocked}/${VIRIONS}`} />}
+          />
+          <VisualFactTabular
+            label={labels.chance}
+            value={
+              <InlineMath
+                math={quantity(blockedChance(share) * 100, "\\%", 0)}
+              />
+            }
+          />
         </VisualCardFacts>
       </VisualCardFooter>
     </VisualCard>
@@ -148,7 +190,11 @@ export function AntibodyNeutralizeLab({
 }
 
 /** The antibody level the card shows, in nM. */
-function antibodyLevel(mode: "days" | "vaccine", vaccinated: boolean, day: number) {
+function antibodyLevel(
+  mode: "days" | "vaccine",
+  vaccinated: boolean,
+  day: number
+) {
   if (mode === "days") {
     return levelOnDay(day);
   }
@@ -160,7 +206,14 @@ function antibodyLevel(mode: "days" | "vaccine", vaccinated: boolean, day: numbe
  * every virion drifts down; a free one docks on a receptor, a blocked one
  * bounces off and drifts away.
  */
-function DockingScene({ spikes }: { readonly spikes: readonly (readonly boolean[])[] }) {
+function DockingScene({
+  virions,
+}: {
+  readonly virions: readonly Readonly<{
+    bound: readonly boolean[];
+    id: number;
+  }>[];
+}) {
   const playing = useVisualScene((card) => card.playing, false);
   const clock = useRef(FALL_SECONDS);
 
@@ -179,13 +232,13 @@ function DockingScene({ spikes }: { readonly spikes: readonly (readonly boolean[
       <SimulationTicker running={playing} />
       <mesh position={[0, -CELL_RADIUS, 0]} receiveShadow>
         <sphereGeometry args={[CELL_RADIUS, 96, 48]} />
-        <meshPhysicalMaterial color={MATERIAL.membrane} roughness={0.55} sheen={0.7} />
+        <meshPhysicalMaterial color={MATERIAL.membrane} roughness={0.55} />
       </mesh>
       {Arr.map(Arr.range(0, 39), (receptor) => (
         <Receptor index={receptor} key={receptor} />
       ))}
-      {Arr.map(spikes, (bound, index) => (
-        <FallingVirion bound={bound} clock={clock} index={index} key={index} />
+      {Arr.map(virions, ({ bound, id }) => (
+        <FallingVirion bound={bound} clock={clock} index={id} key={id} />
       ))}
     </>
   );
@@ -194,7 +247,13 @@ function DockingScene({ spikes }: { readonly spikes: readonly (readonly boolean[
 /** An ACE2 receptor standing on the cell: a stalk with a rounded head. */
 function Receptor({ index }: { readonly index: number }) {
   return (
-    <group position={[(hashUnit(index, 7) - 0.5) * 18, 0, (hashUnit(index, 8) - 0.5) * 6]}>
+    <group
+      position={[
+        (hashUnit(index, 7) - 0.5) * 18,
+        0,
+        (hashUnit(index, 8) - 0.5) * 6,
+      ]}
+    >
       <mesh castShadow position={[0, 0.12, 0]}>
         <cylinderGeometry args={[0.04, 0.05, 0.24, 8]} />
         <meshStandardMaterial color={MATERIAL.receptor} roughness={0.6} />

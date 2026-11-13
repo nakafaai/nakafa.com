@@ -28,7 +28,6 @@ export function HalfShell({
           clearcoatRoughness={0.5}
           color={color}
           roughness={roughness}
-          sheen={0.6}
           side={DoubleSide}
         />
       </mesh>

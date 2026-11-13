@@ -7,7 +7,11 @@ import {
 import { Array as Arr, Schema } from "effect";
 
 /** A point in nanometres. */
-export const PointSchema = Schema.Tuple([Schema.Finite, Schema.Finite, Schema.Finite]);
+export const PointSchema = Schema.Tuple([
+  Schema.Finite,
+  Schema.Finite,
+  Schema.Finite,
+]);
 export type Point = typeof PointSchema.Type;
 
 /**

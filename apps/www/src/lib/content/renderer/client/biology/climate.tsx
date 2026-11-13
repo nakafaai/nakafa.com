@@ -29,9 +29,9 @@ export const CarbonBudgetLab = withHydrationBoundary(
 
 export const CoralBleachLab = withHydrationBoundary(
   lazy(() =>
-    import(
-      "@repo/design-system/components/contents/biology/climate/reef"
-    ).then((module) => ({ default: module.CoralBleachLab }))
+    import("@repo/design-system/components/contents/biology/climate/reef").then(
+      (module) => ({ default: module.CoralBleachLab })
+    )
   )
 );
 
