@@ -2532,7 +2532,7 @@ export function stepArray(
   if (exit._tag === "Failure") {
     return wrapPropertyKeyIssue(s, s.ast, i, exit)
   }
-  const value = exit === InternalParser.sameExit
+  const value = InternalParser.isSameExit(exit)
     ? item
     : (exit as InternalParser.Success<unknown, SchemaIssue.Issue>)[InternalParser.args]
   if (value !== InternalParser.missing) {
@@ -2913,7 +2913,8 @@ export const Objects: new(
         properties = ast.propertySignatures.map((ps) => ({
           parser: compileField(ps.type),
           name: ps.name,
-          type: ps.type
+          type: ps.type,
+          ownOnly: requiresOwnProperty(ps.name)
         }))
         indexes = indexCount
           ? ast.indexSignatures.map((is) => ({
@@ -2940,7 +2941,7 @@ export const Objects: new(
         if (exitValue._tag === "Failure") {
           return wrapPropertyKeyIssue(s, ast, key, exitValue) ?? Exit.void
         }
-        const value = exitValue === InternalParser.sameExit
+        const value = InternalParser.isSameExit(exitValue)
           ? inputValue
           : (exitValue as InternalParser.Success<unknown, SchemaIssue.Issue>)[InternalParser.args]
         if (k2 !== InternalParser.missing && value !== InternalParser.missing) {
@@ -2968,7 +2969,7 @@ export const Objects: new(
         if (exitKey._tag === "Failure") {
           return wrapPropertyKeyIssue(s, ast, key, exitKey) ?? Exit.void
         }
-        const k2 = exitKey === InternalParser.sameExit
+        const k2 = InternalParser.isSameExit(exitKey)
           ? key
           : (exitKey as InternalParser.Success<PropertyKey, SchemaIssue.Issue>)[InternalParser.args]
         const inputValue = s.input[key]
@@ -3119,7 +3120,7 @@ export const Objects: new(
       pending: Effect.Effect<unknown, SchemaIssue.Issue, any>
     ): Effect.Effect<unknown, SchemaIssue.Issue, any> => {
       const property = properties![index]
-      return Effect.flatMap(Effect.exit(pending), (exit) => {
+      return Effect.flatMap(Effect.exit(pending), (exit): Effect.Effect<unknown, SchemaIssue.Issue, any> => {
         // Copy the parsed prefix per execution so reruns cannot overwrite earlier results.
         const state: ObjectParserState = { ...snapshot, out: { ...snapshot.out } }
         const terminal = stepProperty(state, property, exit)
@@ -3152,13 +3153,13 @@ export const Objects: new(
         for (let index = 0; index < props.length; index++) {
           const property = props[index]
           const name = property.name
-          const hasKey = hasPropertySignature(record, name)
+          const hasKey = property.ownOnly ? Object.hasOwn(record, name) : name in record
           const value = hasKey ? record[name] : InternalParser.missing
           const exit = property.parser(value, options)
           if (!effectIsExit(exit)) {
             return resume(state, index, exit)
           }
-          if (exit === InternalParser.sameExit) {
+          if (InternalParser.isSameExit(exit)) {
             if (hasKey) InternalRecord.assignProperty(out, name, value)
             continue
           }
@@ -3230,6 +3231,7 @@ type ParsedProperty = {
   readonly parser: SchemaParser.Parser
   readonly name: PropertyKey
   readonly type: AST
+  readonly ownOnly: boolean
 }
 
 /** @internal */
@@ -3241,7 +3243,7 @@ export function stepProperty(
   if (exit._tag === "Failure") {
     return wrapPropertyKeyIssue(s, s.ast, p.name, exit)
   }
-  if (exit === InternalParser.sameExit) return
+  if (InternalParser.isSameExit(exit)) return
   const value = (exit as InternalParser.Success<unknown, SchemaIssue.Issue>)[InternalParser.args]
   if (value !== InternalParser.missing) {
     InternalRecord.assignProperty(s.out, p.name, value)
@@ -3264,7 +3266,7 @@ export function stepProperty(
 
 const parsePropertiesOptions = {
   onItem(s: ObjectParserState, p: ParsedProperty) {
-    if (!hasPropertySignature(s.input, p.name)) {
+    if (!(p.ownOnly ? Object.hasOwn(s.input, p.name) : p.name in s.input)) {
       return p.parser(InternalParser.missing, s.options)
     }
     const value = s.input[p.name]
@@ -3508,8 +3510,22 @@ const emptyCandidates: ReadonlyArray<never> = Object.freeze([])
 
 const getRuntimeType = (input: unknown): Type => input === null ? "null" : Array.isArray(input) ? "array" : typeof input
 
+// Snapshot once so parser initialization and code generation use the same policy.
+// Keep __proto__ own-only even when Node's --disable-proto=delete removes its accessor.
+// Avoid an iterable spread so bundles that do not use this policy can drop the snapshot.
+const objectPrototypeKeys = new Set<PropertyKey>(Reflect.ownKeys(Object.prototype)).add("__proto__")
+
+/**
+ * Fields named after `Object.prototype` members must be own properties.
+ *
+ * @internal
+ */
+export const requiresOwnProperty = (key: PropertyKey): boolean =>
+  objectPrototypeKeys.has(typeof key === "number" ? globalThis.String(key) : key)
+
+// Check own properties first so the name rule only runs for inherited keys.
 const hasPropertySignature = (input: object, key: PropertyKey): boolean =>
-  key === "__proto__" ? Object.hasOwn(input, key) : key in input
+  Object.hasOwn(input, key) || (key in input && !requiresOwnProperty(key))
 
 /** @internal */
 export function getCandidateIndex(types: ReadonlyArray<AST>): CandidateIndex {
@@ -3919,8 +3935,7 @@ function resumeUnion(
   state: UnionParserState
 ): Effect.Effect<unknown, SchemaIssue.Issue, any> {
   return Effect.flatMapEager(eff, (_) => {
-    if (state.out === InternalParser.sameExit) return Effect.succeed(state.input)
-    if (state.out) return state.out
+    if (state.out) return InternalParser.isSameExit(state.out) ? Effect.succeed(state.input) : state.out
     return Effect.fail(new SchemaIssue.AnyOf(state.ast, state.issues ?? [], state.input, state.options))
   })
 }
@@ -4739,7 +4754,8 @@ export const toType = memoizeIdempotent(<A extends AST>(ast: A): A => {
       : undefined
     return copy(type, {
       encodingChecks: undefined,
-      checks: combineChecks(type.checks, checks)
+      // Match parsing order and preserve annotation precedence for decoded checks.
+      checks: combineChecks(checks, type.checks)
     })
   }
   return type
