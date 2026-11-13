@@ -28,6 +28,7 @@ import { Array as Arr, Option } from "effect";
 import { useId, useState, useTransition } from "react";
 import { useTranslations } from "use-intl";
 import { PageList } from "@/components/shared/page/body";
+import { Page } from "@/components/shared/page/frame";
 import {
   PaneBody,
   PaneFill,
@@ -88,25 +89,27 @@ export function GuardianHome() {
   return (
     <TableFiltersProvider>
       <PanesProvider>
-        <SchoolHeader
-          items={[{ label: t("home-title") }]}
-          title={t("home-title")}
-        />
-        <Panes id="guardian">
-          <PanesList>
-            <PageList>
-              {QueryResult.isFailure(children) ? (
-                <LoadFailure onRetry={reloadPage} />
-              ) : null}
-              {QueryResult.isSuccess(children) ? <GuardianChildren /> : null}
-            </PageList>
-          </PanesList>
-          {QueryResult.isSuccess(children) ? (
-            <PagePane label={t("child-detail")}>
-              <GuardianChild items={children.value} />
-            </PagePane>
-          ) : null}
-        </Panes>
+        <Page height="screen">
+          <SchoolHeader
+            items={[{ label: t("home-title") }]}
+            title={t("home-title")}
+          />
+          <Panes id="guardian">
+            <PanesList>
+              <PageList>
+                {QueryResult.isFailure(children) ? (
+                  <LoadFailure onRetry={reloadPage} />
+                ) : null}
+                {QueryResult.isSuccess(children) ? <GuardianChildren /> : null}
+              </PageList>
+            </PanesList>
+            {QueryResult.isSuccess(children) ? (
+              <PagePane label={t("child-detail")}>
+                <GuardianChild items={children.value} />
+              </PagePane>
+            ) : null}
+          </Panes>
+        </Page>
       </PanesProvider>
     </TableFiltersProvider>
   );

@@ -22,7 +22,10 @@ import { AiChatError } from "@/components/ai/chat/retry";
 import { LastMessageContext } from "@/components/ai/message/last";
 import { sameRow } from "@/components/ai/message/row";
 import { AiChatMessage } from "@/components/ai/message/view";
-import { pageRowVariants } from "@/components/shared/page/width";
+import {
+  pageRhythmVariants,
+  pageRowVariants,
+} from "@/components/shared/page/width";
 
 /**
  * Agent supplies messages; shadcn preserves the reader's position. This is the
@@ -63,7 +66,7 @@ export function NinaTranscript() {
         <MessageScrollerViewport aria-label={t("messages")}>
           <MessageScrollerContent
             aria-busy={busy}
-            className={cn(pageRowVariants(), "py-6")}
+            className={cn(pageRowVariants(), pageRhythmVariants())}
           >
             {Arr.map(messages, (message, index) => (
               <TranscriptRow

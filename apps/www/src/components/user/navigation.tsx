@@ -17,12 +17,12 @@ interface Props {
 
 /**
  * The tabs of a profile, in the one tab bar, of equal width across the column as in
- * Threads. They stay right under the app's header while the rows scroll beneath them.
+ * Threads. They stay right under the page's header, one row high, while the rows scroll beneath them.
  * Each tab is warmed, so a press finds its page in hand.
  */
 export function SharedTabs({ tabs, value }: Props) {
   return (
-    <nav className="bg-background sticky top-[var(--app-header-top,4rem)] z-20 lg:top-0">
+    <nav className="bg-background sticky top-[calc(var(--app-header-top,4rem)+4rem)] z-20 lg:top-16">
       <Tabs className="contents" value={value}>
         <TabsList className="gap-0">
           {Arr.map(tabs, (tab) => (

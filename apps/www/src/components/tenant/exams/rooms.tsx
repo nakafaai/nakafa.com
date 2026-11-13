@@ -25,6 +25,7 @@ import { useLocale, useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import type { BreadcrumbHeaderItem } from "@/components/shared/breadcrumb/header";
 import { PageList } from "@/components/shared/page/body";
+import { Page } from "@/components/shared/page/frame";
 import { reloadPage } from "@/components/shared/reload";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
@@ -104,20 +105,22 @@ export function ExamRooms({
   const examsItems = useExamsItems(tenant.canOpenExams);
 
   return (
-    <ReadBoundary
-      fallback={(failure) => (
-        <>
-          <SchoolHeader
-            items={[...examsItems, { label: t("rooms-title") }]}
-            title={t("rooms-title")}
-          />
-          <PageList>{failure}</PageList>
-        </>
-      )}
-      read={{ args: { examId, slug }, ref: exams.rooms.exam }}
-    >
-      <ExamRoomsContent examId={examId} slug={slug} />
-    </ReadBoundary>
+    <Page height="screen">
+      <ReadBoundary
+        fallback={(failure) => (
+          <>
+            <SchoolHeader
+              items={[...examsItems, { label: t("rooms-title") }]}
+              title={t("rooms-title")}
+            />
+            <PageList>{failure}</PageList>
+          </>
+        )}
+        read={{ args: { examId, slug }, ref: exams.rooms.exam }}
+      >
+        <ExamRoomsContent examId={examId} slug={slug} />
+      </ReadBoundary>
+    </Page>
   );
 }
 
