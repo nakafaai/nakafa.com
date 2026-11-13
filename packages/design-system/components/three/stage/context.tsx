@@ -14,7 +14,7 @@ import type { WebGLRenderer } from "three";
  * draws on the CPU, draws no finish at all, because each full-screen pass
  * there costs a frame many times over.
  */
-export const StageTierSchema = Schema.Literals(["full", "light", "plain"]);
+const StageTierSchema = Schema.Literals(["full", "light", "plain"]);
 
 interface StageProviderProps {
   readonly children: ReactNode;
