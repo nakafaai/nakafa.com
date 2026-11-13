@@ -7,7 +7,7 @@ import {
   notFound,
   useRouter,
 } from "@tanstack/react-router";
-import { Array as Arr, Effect, Option, Schema } from "effect";
+import { Array as Arr, Effect, Match, Option, Schema } from "effect";
 import { type ReactElement, useEffect } from "react";
 import { useLocale, useTranslations } from "use-intl";
 import { ActionLink } from "@/components/state/action";
@@ -149,15 +149,13 @@ export const Route = createFileRoute("/school/$slug")({
     }
     // A visitor's entry paints with its form, and so does the username form that an outsider's card
     // way opens while its account signs out.
-    if (frame.school._tag === "Visitor" || frame.school._tag === "Outsider") {
-      await entry;
-    }
-    if (frame.school._tag === "Outsider") {
-      await TenantOutsider.preload?.();
-    }
-    if (frame.school._tag === "Member") {
-      await (shell ?? SchoolMember.preload?.());
-    }
+    await Match.value(frame.school).pipe(
+      Match.tagsExhaustive({
+        Member: () => shell ?? SchoolMember.preload?.(),
+        Outsider: () => entry.then(() => TenantOutsider.preload?.()),
+        Visitor: () => entry,
+      })
+    );
     await code;
     return { legal: frame.legal, school: frame.school, slug: params.slug };
   },
@@ -219,15 +217,14 @@ function useLiveVisit() {
 function SchoolLayout(): ReactElement {
   const { school } = Route.useRouteContext();
   useLiveVisit();
-  if (school._tag === "Visitor") {
-    return <TenantEntry title={school.title} />;
-  }
-  if (school._tag === "Outsider") {
-    return (
-      <TenantOutsider account={school.account} school={school.profile.name} />
-    );
-  }
-  return <SchoolMember school={school} />;
+  return Match.value(school).pipe(
+    Match.tag("Member", (member) => <SchoolMember school={member} />),
+    Match.tag("Outsider", ({ account, profile }) => (
+      <TenantOutsider account={account} school={profile.name} />
+    )),
+    Match.tag("Visitor", ({ title }) => <TenantEntry title={title} />),
+    Match.exhaustive
+  );
 }
 
 /** The page of a school that the gate refused: no school has the address, or the viewer may not open it. */
