@@ -1,5 +1,6 @@
 import {
   combineShards,
+  HeadSha,
   type ProofResult,
   ShardResultJson,
 } from "@repo/backend/scripts/content/acceptance/result";
@@ -31,6 +32,12 @@ export class ProofError extends Schema.TaggedError<
 
 /** How many machines prove each engine, unless the caller names another count. */
 export const DEFAULT_SHARDS = 3;
+
+/** How many machines prove each engine of a proof narrowed to some specs, such as a rerun on main. */
+const NARROW_SHARDS = 1;
+
+/** The commit status that says whether a head fails anything main does not. */
+export const VERDICT_CONTEXT = "proof/new";
 
 /** Runs the GitHub CLI and returns what it printed, or fails with what it said. */
 export const gh = Effect.fn("proof.gh")(function* (args: readonly string[]) {
@@ -280,7 +287,11 @@ export const githubProver = Layer.effect(
     const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
     return {
       prove: (sha, specs) =>
-        proveOnGithub(sha, specs, DEFAULT_SHARDS).pipe(
+        proveOnGithub(
+          sha,
+          specs,
+          specs.length === 0 ? DEFAULT_SHARDS : NARROW_SHARDS
+        ).pipe(
           Effect.map(({ result }) => result),
           Effect.provideService(FileSystem.FileSystem, fs),
           Effect.provideService(
@@ -291,3 +302,47 @@ export const githubProver = Layer.effect(
     };
   })
 );
+
+/** The exact head of main now. */
+export const mainHead = gh([
+  "api",
+  `repos/${REPOSITORY}/commits/main`,
+  "--jq",
+  ".sha",
+]).pipe(
+  Effect.map((text) => text.trim()),
+  Effect.flatMap(Schema.decodeEffect(HeadSha)),
+  Effect.catchTag("SchemaError", () =>
+    Effect.fail(new ProofError({ message: "GitHub named no main head." }))
+  )
+);
+
+/**
+ * Posts the verdict of a head against main: success when it fails nothing that
+ * main does not, which the landing train reads beside the run's own statuses.
+ */
+export const postVerdict = Effect.fn("proof.postVerdict")(function* (
+  sha: string,
+  url: string,
+  fresh: readonly string[],
+  shared: readonly string[],
+  main: string
+) {
+  const description =
+    fresh.length > 0
+      ? `${fresh.length} failing specs that main ${main.slice(0, 10)} passes`
+      : `No new failure; ${shared.length} fail on main ${main.slice(0, 10)} too`;
+  yield* gh([
+    "api",
+    "--silent",
+    `repos/${REPOSITORY}/statuses/${sha}`,
+    "-f",
+    `state=${fresh.length > 0 ? "failure" : "success"}`,
+    "-f",
+    `context=${VERDICT_CONTEXT}`,
+    "-f",
+    `target_url=${url}`,
+    "-f",
+    `description=${description}`,
+  ]);
+});

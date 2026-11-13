@@ -177,7 +177,7 @@ describe("proof shard", () => {
         });
         expect(calls).toHaveLength(PROOF_SUITES.length);
         expect(calls[0]).toBe(
-          "bunx --no-install playwright test --shard=2/3 --pass-with-no-tests --reporter=line,json e2e/chat/send.browser.ts"
+          "bunx --no-install playwright test --shard=2/3 --pass-with-no-tests --retries=1 --reporter=line,json e2e/chat/send.browser.ts"
         );
         expect(
           yield* fs

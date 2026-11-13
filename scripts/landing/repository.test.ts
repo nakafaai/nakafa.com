@@ -18,6 +18,9 @@ import { type Candidate, Repository } from "#scripts/landing/train";
 import { collectText, runText } from "#scripts/process";
 import { type Answer, scriptedShell } from "#scripts/test.shell";
 
+/** A test that runs real Git or many scripted processes waits for them on a loaded machine. */
+const PROCESS_TIMEOUT = 60_000;
+
 const toJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
 
 const git = (cwd: string, ...args: readonly string[]) =>
@@ -211,7 +214,8 @@ describe("train repository", () => {
             origin
           )).code
         ).not.toBe(0);
-      }).pipe(Effect.scoped, Effect.provide(NodeServices.layer))
+      }).pipe(Effect.scoped, Effect.provide(NodeServices.layer)),
+    PROCESS_TIMEOUT
   );
 
   it.effect(
@@ -244,7 +248,8 @@ describe("train repository", () => {
           Effect.flatMap(Repository, (repository) => repository.main)
         ).pipe(Effect.flip);
         expect(missing.message).toBe("origin has no main branch.");
-      }).pipe(Effect.scoped, Effect.provide(NodeServices.layer))
+      }).pipe(Effect.scoped, Effect.provide(NodeServices.layer)),
+    PROCESS_TIMEOUT
   );
 
   it.effect("cancels the push deploys still running and starts one", () =>

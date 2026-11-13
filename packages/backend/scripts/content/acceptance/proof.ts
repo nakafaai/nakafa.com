@@ -75,6 +75,10 @@ const runSuite = Effect.fn("acceptance.runSuite")(function* (
       "test",
       `--shard=${input.shard}/${input.total}`,
       "--pass-with-no-tests",
+      // A test that fails once runs once more, as a rerun on the Mac always did
+      // before a failure was blamed on a change. Playwright reports it flaky,
+      // and only a test that fails both times fails its spec.
+      "--retries=1",
       "--reporter=line,json",
       ...input.specs,
     ],

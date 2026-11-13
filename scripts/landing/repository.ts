@@ -18,13 +18,17 @@ import {
   TrainError,
 } from "#scripts/landing/train";
 import { runText } from "#scripts/process";
-import { REPOSITORY } from "#scripts/proof/github";
+import { REPOSITORY, VERDICT_CONTEXT } from "#scripts/proof/github";
 
 /** A full commit SHA, as `git ls-remote` prints one. */
 const COMMIT_SHA = /^[0-9a-f]{40}$/u;
 
-/** The commit status that the proof workflow posts when all three engines pass. */
-const PROOF_CONTEXT = "proof";
+/**
+ * The statuses that prove a head: the run's own summary when all three engines
+ * pass, or the verdict `bun run proof` posts when the head fails nothing main
+ * does not.
+ */
+const PROOF_CONTEXTS = ["proof", VERDICT_CONTEXT];
 
 /** Runs a command and returns how it exited and what it printed. */
 const attempt = (command: string, args: readonly string[], cwd?: string) =>
@@ -104,7 +108,8 @@ const provenHead = Effect.fn("landing.provenHead")(function* (sha: string) {
   ]).pipe(Effect.flatMap(decoded(StatusJson)));
   return Arr.some(
     statuses,
-    (status) => status.context === PROOF_CONTEXT && status.state === "success"
+    (status) =>
+      Arr.contains(PROOF_CONTEXTS, status.context) && status.state === "success"
   );
 });
 

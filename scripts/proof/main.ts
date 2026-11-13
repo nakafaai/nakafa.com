@@ -8,9 +8,13 @@ import { Array as Arr, Effect, Option, Schema } from "effect";
 import { ChildProcess } from "effect/process";
 import { runEntry } from "#scripts/entry";
 import { writeOutput } from "#scripts/output";
+import { failuresOf, makeBaseline } from "#scripts/proof/baseline";
 import {
   DEFAULT_SHARDS,
+  githubProver,
+  mainHead,
   ProofError,
+  postVerdict,
   proveOnGithub,
   type RunTimings,
 } from "#scripts/proof/github";
@@ -105,9 +109,47 @@ export const runProof = Effect.fn("proof.run")(function* (
     input.specs,
     input.shards
   );
-  yield* writeOutput(formatProof(result, timings));
-  return result.passed ? 0 : 1;
+  const main = yield* mainHead;
+  const failures = failuresOf(result);
+  const shared =
+    failures.length === 0 || main === input.sha
+      ? []
+      : yield* makeBaseline(main).pipe(
+          Effect.flatMap((baseline) => baseline.shared(failures)),
+          Effect.provide(githubProver)
+        );
+  const fresh = Arr.filter(
+    failures,
+    (failure) => !Arr.contains(shared, failure)
+  );
+  yield* postVerdict(input.sha, result.url, fresh, shared, main);
+  yield* writeOutput(
+    `${formatProof(result, timings)}${formatVerdict(fresh, shared, main)}`
+  );
+  return fresh.length === 0 ? 0 : 1;
 }, Effect.scoped);
+
+/** The verdict against main: each failure, new or shared with main, then the one line a caller acts on. */
+function formatVerdict(
+  fresh: readonly string[],
+  shared: readonly string[],
+  main: string
+) {
+  return Arr.join(
+    [
+      ...Arr.map(fresh, (failure) => `new ${failure}`),
+      ...Arr.map(
+        shared,
+        (failure) => `on main ${main.slice(0, 10)} too ${failure}`
+      ),
+      fresh.length === 0
+        ? "Verdict: no new failure against main"
+        : `Verdict: ${fresh.length} new failures against main`,
+      "",
+    ],
+    "\n"
+  );
+}
 
 runEntry(
   import.meta.main,

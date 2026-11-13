@@ -1,20 +1,14 @@
 import {
-  type ProofResult,
-  proofFailures,
-  SpecPath,
-} from "@repo/backend/scripts/content/acceptance/result";
-import {
   Array as Arr,
   Context,
   Effect,
   HashSet,
   Option,
-  Order,
   Ref,
   Schema,
 } from "effect";
-import type { ProofError } from "#scripts/proof/github";
-import { Prover } from "#scripts/proof/github";
+import { failuresOf, makeBaseline } from "#scripts/proof/baseline";
+import { type ProofError, Prover } from "#scripts/proof/github";
 
 /** A pull request that may ride the train: its number, the exact head its own proof passed, and its title. */
 export const Candidate = Schema.Struct({
@@ -87,17 +81,6 @@ const TrainReport = Schema.Struct({
 });
 type TrainReport = typeof TrainReport.Type;
 
-/** The failures of a proof that no spec file names, such as a failed build or a machine that never reported. */
-const INCOMPLETE = "proof:incomplete";
-
-/** Every failure of a proof, with one marker when it failed without naming one. */
-const failuresOf = (result: ProofResult): readonly string[] => {
-  const failures = proofFailures(result);
-  return !result.passed && failures.length === 0 ? [INCOMPLETE] : failures;
-};
-
-const isSpec = Schema.is(SpecPath);
-
 /**
  * Lands every pull request whose own proof passed, after one proof of their
  * combination on main. A failing spec that fails on main too belongs to main:
@@ -116,38 +99,10 @@ export const runTrain = Effect.fn("landing.runTrain")(function* (
   const candidates = yield* repository.proven(numbers);
   const accepted = yield* Ref.make<readonly Candidate[]>([]);
   const rejected = yield* Ref.make<readonly Rejection[]>([]);
-  const mainFailing = yield* Ref.make(HashSet.empty<string>());
-  const mainPassing = yield* Ref.make(HashSet.empty<string>());
+  const baseline = yield* makeBaseline(main);
 
   const reject = (candidate: Candidate, reason: string) =>
     Ref.update(rejected, Arr.append({ candidate, reason }));
-
-  /** The failing specs that main fails too, proving main once for each spec it has not yet run. */
-  const onMain = Effect.fn("landing.onMain")(function* (
-    failures: readonly string[]
-  ) {
-    const known = HashSet.union(
-      yield* Ref.get(mainFailing),
-      yield* Ref.get(mainPassing)
-    );
-    const unknown = Arr.filter(
-      Arr.filter(failures, isSpec),
-      (spec) => !HashSet.has(known, spec)
-    );
-    if (unknown.length > 0) {
-      const failing = HashSet.fromIterable(
-        proofFailures(yield* prover.prove(main, unknown))
-      );
-      for (const spec of unknown) {
-        yield* Ref.update(
-          HashSet.has(failing, spec) ? mainFailing : mainPassing,
-          HashSet.add(spec)
-        );
-      }
-    }
-    const failing = yield* Ref.get(mainFailing);
-    return Arr.filter(failures, (failure) => HashSet.has(failing, failure));
-  });
 
   const attempt = (
     batch: readonly Candidate[]
@@ -177,7 +132,7 @@ export const runTrain = Effect.fn("landing.runTrain")(function* (
         return;
       }
       const failures = failuresOf(yield* prover.prove(combination.sha, specs));
-      const known = HashSet.fromIterable(yield* onMain(failures));
+      const known = HashSet.fromIterable(yield* baseline.shared(failures));
       const caused = Arr.filter(
         failures,
         (failure) => !HashSet.has(known, failure)
@@ -218,10 +173,7 @@ export const runTrain = Effect.fn("landing.runTrain")(function* (
         : []
     ),
     rejected: yield* Ref.get(rejected),
-    mainFailures: Arr.sort(
-      Array.from(yield* Ref.get(mainFailing)),
-      Order.String
-    ),
+    mainFailures: yield* baseline.failing,
   };
   return report;
 });

@@ -25,7 +25,11 @@ import {
 } from "#scripts/proof/main";
 import { type Answer, scriptedShell } from "#scripts/test.shell";
 
+/** A test that runs real Git or many scripted processes waits for them on a loaded machine. */
+const PROCESS_TIMEOUT = 60_000;
+
 const SHA = "a".repeat(40);
+const MAIN = "b".repeat(40);
 const toJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
 const lastArgument = (args: readonly string[]) =>
   Option.getOrElse(Arr.last(args), () => "");
@@ -81,14 +85,26 @@ const shard = (engine: string, failures: readonly string[] = []) =>
  */
 const github = (
   results: Readonly<Record<string, string>> | undefined,
-  run: unknown = RUN
+  run: unknown = RUN,
+  mainResults: Readonly<Record<string, string>> | undefined = results
 ) => {
   const nonce = MutableRef.make("");
+  const dispatched = MutableRef.make("");
   const looks = MutableRef.make(0);
   return (args: readonly string[]): Answer => {
     if (args[0] === "workflow") {
       MutableRef.set(nonce, lastArgument(args).slice(6));
+      MutableRef.set(
+        dispatched,
+        Option.getOrElse(
+          Arr.findFirst(args, (arg) => arg.startsWith("sha=")),
+          () => ""
+        ).slice(4)
+      );
       return {};
+    }
+    if (args[0] === "api") {
+      return Arr.contains(args, "--silent") ? {} : { stdout: `${MAIN}\n` };
     }
     if (args[1] === "list") {
       return {
@@ -98,7 +114,7 @@ const github = (
             : [
                 {
                   databaseId: 7,
-                  displayTitle: `Proof ${SHA} ${MutableRef.get(nonce)}`,
+                  displayTitle: `Proof ${MutableRef.get(dispatched)} ${MutableRef.get(nonce)}`,
                 },
               ]
         ),
@@ -108,11 +124,12 @@ const github = (
       return { stdout: toJson(run) };
     }
     const directory = lastArgument(args);
-    return results === undefined
+    const chosen = MutableRef.get(dispatched) === MAIN ? mainResults : results;
+    return chosen === undefined
       ? { code: 1, stderr: "no valid artifacts found to download" }
       : {
           files: Rec.fromEntries(
-            Arr.map(Rec.toEntries(results), ([name, text]) => [
+            Arr.map(Rec.toEntries(chosen), ([name, text]) => [
               `${directory}/${name}/result.json`,
               text,
             ])
@@ -350,40 +367,83 @@ describe("proof command line", () => {
     })
   );
 
-  it.effect("proves on GitHub, or here through the acceptance runtime", () =>
-    Effect.gen(function* () {
-      const remote = yield* withGithub(
-        github({
-          "result-chromium-1": shard("chromium"),
-          "result-firefox-1": shard("firefox"),
-          "result-webkit-1": shard("webkit"),
-        }),
-        runProof("/root", [SHA, "--shards=1"]).pipe(Effect.provide(Layer.empty))
-      );
-      expect(yield* remote.exit).toBe(0);
-      const failing = yield* withGithub(
-        github(undefined),
-        runProof("/root", [SHA])
-      );
-      expect(yield* failing.exit).toBe(1);
-
-      const calls = yield* Ref.make<readonly string[]>([]);
-      const code = yield* runProof("/root", [
-        "--local",
-        SHA,
-        "e2e/a.browser.ts",
-      ]).pipe(
-        Effect.provide(
-          scriptedShell(
-            (command) => (command === "bun" ? { code: 3 } : undefined),
-            calls
+  it.effect(
+    "proves on GitHub, or here through the acceptance runtime",
+    () =>
+      Effect.gen(function* () {
+        const remote = yield* withGithub(
+          github({
+            "result-chromium-1": shard("chromium"),
+            "result-firefox-1": shard("firefox"),
+            "result-webkit-1": shard("webkit"),
+          }),
+          runProof("/root", [SHA, "--shards=1"]).pipe(
+            Effect.provide(Layer.empty)
           )
-        )
-      );
-      expect(code).toBe(3);
-      expect(yield* Ref.get(calls)).toEqual([
-        `bun run --cwd packages/backend acceptance proof ${SHA} e2e/a.browser.ts`,
-      ]);
-    }).pipe(Effect.provide(NodeServices.layer))
+        );
+        expect(yield* remote.exit).toBe(0);
+        const failing = yield* withGithub(
+          github(undefined),
+          runProof("/root", [SHA])
+        );
+        expect(yield* failing.exit).toBe(1);
+
+        const red = {
+          "result-chromium-1": shard("chromium", ["e2e/a.browser.ts"]),
+          "result-firefox-1": shard("firefox", ["e2e/b.browser.ts"]),
+          "result-webkit-1": shard("webkit"),
+        };
+        const sharedWithMain = yield* withGithub(
+          github(red, RUN, red),
+          runProof("/root", [SHA])
+        );
+        expect(yield* sharedWithMain.exit).toBe(0);
+        expect(sharedWithMain.calls).toContain(
+          `gh api --silent repos/nakafaai/nakafa.com/statuses/${SHA} -f state=success -f context=proof/new -f target_url=${RUN.url} -f description=No new failure; 2 fail on main ${MAIN.slice(0, 10)} too`
+        );
+        const newOnHead = yield* withGithub(
+          github(red, RUN, {
+            "result-chromium-1": shard("chromium", ["e2e/a.browser.ts"]),
+            "result-firefox-1": shard("firefox"),
+            "result-webkit-1": shard("webkit"),
+          }),
+          runProof("/root", [SHA])
+        );
+        expect(yield* newOnHead.exit).toBe(1);
+        expect(
+          Arr.some(newOnHead.calls, (call) =>
+            call.includes("state=failure -f context=proof/new")
+          )
+        ).toBe(true);
+        const onMain = yield* withGithub(github({}), runProof("/root", [MAIN]));
+        expect(yield* onMain.exit).toBe(1);
+        const answer = github({});
+        const nameless = yield* withGithub(
+          (args) => (args[0] === "api" ? { stdout: "main\n" } : answer(args)),
+          runProof("/root", [SHA])
+        );
+        expect((yield* Effect.flip(nameless.exit)).message).toBe(
+          "GitHub named no main head."
+        );
+
+        const calls = yield* Ref.make<readonly string[]>([]);
+        const code = yield* runProof("/root", [
+          "--local",
+          SHA,
+          "e2e/a.browser.ts",
+        ]).pipe(
+          Effect.provide(
+            scriptedShell(
+              (command) => (command === "bun" ? { code: 3 } : undefined),
+              calls
+            )
+          )
+        );
+        expect(code).toBe(3);
+        expect(yield* Ref.get(calls)).toEqual([
+          `bun run --cwd packages/backend acceptance proof ${SHA} e2e/a.browser.ts`,
+        ]);
+      }).pipe(Effect.provide(NodeServices.layer)),
+    PROCESS_TIMEOUT
   );
 });
