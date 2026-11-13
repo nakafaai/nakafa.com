@@ -3,20 +3,15 @@ import {
   isCallExpression,
   isConditionalExpression,
   isIdentifier,
-  isJsxAttribute,
-  isJsxElement,
-  isJsxExpression,
-  isJsxSelfClosingElement,
   isStringLiteralLikeNode,
   type JsxAttributes,
   type Node,
   type SourceFile,
 } from "tsrs/ast";
-import { nodesBelow, tagText } from "#scripts/check/drilling";
-import { COMPONENT_SET_DIRECTORIES } from "#scripts/check/exports";
+import { nodesBelow } from "#scripts/check/drilling";
+import { attributeValue, judgesMarkup, opening } from "#scripts/check/jsx";
 import { children } from "#scripts/check/source";
 
-const JSX_MODULE_PATTERN = /\.tsx$/u;
 /**
  * A menu reads as header, body and footer: its label, its main actions, then a separator and Archive and Delete
  * last. Each popup of items is read on its own, a table row's `RowItems` included, and a submenu is its own menu.
@@ -40,36 +35,6 @@ const MenuPart = Schema.Literals(["separator", "main", "archive", "delete"]);
 const ARCHIVE_ICON_PATTERN = /^Archive\d*Icon$/u;
 const ARCHIVE_KEY_PATTERN = /(?:^|-)archive$/u;
 const DESTRUCTIVE_VARIANT = "destructive";
-
-/** The tag and attributes of an element that a node opens, or none for any other node. */
-function opening(node: Node) {
-  if (isJsxElement(node)) {
-    return Option.some({
-      attributes: node.openingElement.attributes,
-      tag: tagText(node.openingElement.tagName),
-    });
-  }
-  return isJsxSelfClosingElement(node)
-    ? Option.some({ attributes: node.attributes, tag: tagText(node.tagName) })
-    : Option.none();
-}
-
-/** The expression an attribute holds in braces, or its quoted text, by the attribute's name. */
-function attributeValue(attributes: JsxAttributes, name: string) {
-  return Arr.findFirst(attributes.properties, (property) =>
-    isJsxAttribute(property) &&
-    isIdentifier(property.name) &&
-    property.name.text === name &&
-    property.initializer !== undefined
-      ? Option.some<Node>(
-          isJsxExpression(property.initializer) &&
-            property.initializer.expression !== undefined
-            ? property.initializer.expression
-            : property.initializer
-        )
-      : Option.none()
-  );
-}
 
 /** Where one item stands: Delete when it is destructive, Archive when it archives, a main action otherwise. */
 function itemPart(item: Node, attributes: JsxAttributes): typeof MenuPart.Type {
@@ -201,12 +166,7 @@ function orderFindings(file: string, parts: readonly (typeof MenuPart.Type)[]) {
  * shape.
  */
 export function inspectMenuOrder(file: string, sourceFile: SourceFile) {
-  if (
-    !JSX_MODULE_PATTERN.test(file) ||
-    Arr.some(COMPONENT_SET_DIRECTORIES, (directory) =>
-      file.startsWith(directory)
-    )
-  ) {
+  if (!judgesMarkup(file)) {
     return [];
   }
   return Arr.flatMap(nodesBelow(sourceFile), (node) =>
