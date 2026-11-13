@@ -57,8 +57,27 @@ export const addSessionCookie = Effect.fn("NakafaE2E.addSessionCookie")(
       ])
     );
     const session = new URL("/api/auth/get-session", url);
+    const before = yield* Effect.promise(() => context.cookies(url));
     const response = yield* Effect.promise(() =>
       context.request.get(session.href)
+    );
+    const after = yield* Effect.promise(() => context.cookies(url));
+    const body = yield* Effect.promise(() => response.text());
+    const shape = (cookies: typeof before) =>
+      cookies
+        .map(
+          (c) =>
+            `${c.name}@${c.domain}${c.path}${c.secure ? "+secure" : ""}${c.httpOnly ? "+http" : ""} exp=${Math.round(c.expires)} len=${c.value.length}`
+        )
+        .join(", ");
+    yield* Effect.sync(() =>
+      console.log(
+        `DEBUG-SIGNIN ${url}\n  before: ${shape(before)}\n  set-cookie: ${response
+          .headersArray()
+          .filter((h) => h.name.toLowerCase() === "set-cookie")
+          .map((h) => h.value.replace(/=[^;]*/u, "=<v>"))
+          .join(" || ")}\n  body: ${body.slice(0, 40).replace(/"token":"[^"]*"/gu, "token")}\n  after: ${shape(after)}`
+      )
     );
     yield* Effect.sync(() =>
       expect(

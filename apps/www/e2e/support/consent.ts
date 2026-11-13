@@ -81,8 +81,17 @@ const describePage = Effect.fn("NakafaE2E.describeUsageDataPage")(function* (
   const text = yield* Effect.promise(() =>
     page.evaluate(() => document.body.innerText)
   );
+  const debug = yield* Effect.promise(() =>
+    page.evaluate(() =>
+      `doc-cookies [${document.cookie
+        .split(";")
+        .map((pair) => pair.trim().split("=")[0])
+        .join(",")}] signed-in-attr ${document.documentElement.getAttribute("data-signed-in")}`
+    )
+  );
+  const jar = yield* Effect.promise(() => page.context().cookies(page.url()));
 
-  return `Page ${page.url()}, signed in ${changes.signedIn}, learner read ${changes.hasAnswered(CURRENT_USER)}, choice read ${changes.hasAnswered(CURRENT_CHOICE)}, text "${pipe(text, Str.replaceAll(/\s+/gu, " "), Str.trim, Str.slice(0, 300))}".`;
+  return `Page ${page.url()}, signed in ${changes.signedIn}, learner read ${changes.hasAnswered(CURRENT_USER)}, choice read ${changes.hasAnswered(CURRENT_CHOICE)}, text "${pipe(text, Str.replaceAll(/\s+/gu, " "), Str.trim, Str.slice(0, 300))}". DEBUG ${debug} jar [${jar.map((c) => `${c.name}@${c.domain}${c.secure ? "+secure" : ""}${c.httpOnly ? "+http" : ""}`).join(",")}]`;
 });
 
 /** What the usage-data prompt calls its buttons, in each language of the site. */
