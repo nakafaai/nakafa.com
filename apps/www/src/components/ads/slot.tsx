@@ -5,7 +5,6 @@ import { untilNearScreen } from "@repo/design-system/lib/screen";
 import { untilPageRead } from "@repo/design-system/lib/settle";
 import { Effect, Fiber } from "effect";
 import { Suspense, useEffect, useRef, useState } from "react";
-import { AdSpace } from "@/components/ads/space";
 import type { AdUnit } from "@/lib/ads/account";
 
 /**
@@ -30,10 +29,11 @@ const NEAR_SCREEN = "100%";
 
 /**
  * The place of one ad frame between two sections of a lesson or an article. The
- * page's HTML holds only the frame's empty room, so a crawler reads the content
- * alone and the frame moves nothing when it comes. Once the page has its reader
- * (ADR 0039) and the place is within a screen of the view, it loads the
- * audience, which decides whether this reader sees a frame, and the frame.
+ * page's HTML holds the place empty and without height, so the sections keep
+ * the spacing they have without it and a crawler reads the content alone. Once
+ * the page has its reader (ADR 0039) and the place is within a screen of the
+ * view, it loads the audience, which decides whether this reader may see a
+ * frame, and the frame, which shows only once AdSense fills it.
  */
 export function AdSlot({ unit }: { unit: AdUnit }) {
   const place = useRef<HTMLDivElement>(null);
@@ -55,16 +55,14 @@ export function AdSlot({ unit }: { unit: AdUnit }) {
   }, []);
 
   return (
-    <div data-ad-slot={unit} ref={place}>
+    <div className="relative" data-ad-slot={unit} ref={place}>
       {isOpen ? (
-        <Suspense fallback={<AdSpace />}>
+        <Suspense fallback={null}>
           <AdAudience>
             <AdMount unit={unit} />
           </AdAudience>
         </Suspense>
-      ) : (
-        <AdSpace />
-      )}
+      ) : null}
     </div>
   );
 }
