@@ -32,6 +32,7 @@ import {
   ParabolicMovementAnalysisLab,
   ParabolicMovementLab,
 } from "@/lib/content/renderer/client/physics/parabolic";
+import { TickerTapeLab } from "@/lib/content/renderer/client/physics/ticker";
 import { VectorConceptLab } from "@/lib/content/renderer/client/physics/vector";
 import {
   AverageVelocitySpeedLab,
@@ -109,6 +110,10 @@ export const physicsRenderers = [
   {
     name: physicsComponentNames.stoppingDistanceLab,
     component: StoppingDistanceLab,
+  },
+  {
+    name: physicsComponentNames.tickerTapeLab,
+    component: TickerTapeLab,
   },
   {
     name: physicsComponentNames.uniformCircularMotionLab,

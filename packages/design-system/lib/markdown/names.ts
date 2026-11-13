@@ -153,6 +153,7 @@ export const physicsComponentNames = {
   reactionTimeLab: "ReactionTimeLab",
   relativeMovementLab: "RelativeMovementLab",
   stoppingDistanceLab: "StoppingDistanceLab",
+  tickerTapeLab: "TickerTapeLab",
   uniformCircularMotionLab: "UniformCircularMotionLab",
   uniformLinearMotionLab: "UniformLinearMotionLab",
   vectorConceptLab: "VectorConceptLab",
