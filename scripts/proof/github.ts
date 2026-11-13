@@ -16,6 +16,7 @@ import {
   Layer,
   Option,
   Order,
+  Ref,
   Schedule,
   Schema,
   String as Str,
@@ -70,14 +71,13 @@ const ghOnce = Effect.fn("proof.ghOnce")(function* (args: readonly string[]) {
 /**
  * Runs the GitHub CLI and returns what it printed, or fails with what it said.
  * A call refused for the rate limit waits a minute and tries again, for as long
- * as the hourly limit takes to reset, so a long proof outlives a busy hour.
+ * as the limit stays spent, so a proof waits out any number of busy hours.
  */
 export const gh = (args: readonly string[]) =>
   ghOnce(args).pipe(
     Effect.retry({
       while: (error) => error.limited === true,
       schedule: Schedule.spaced("1 minute"),
-      times: 65,
     })
   );
 
@@ -195,18 +195,91 @@ const findRun = Effect.fn("proof.findRun")(function* (title: string) {
   );
 });
 
+/** The statuses GitHub keeps on one commit, read through GraphQL, whose budget is apart from REST's. */
+const STATUS_QUERY =
+  "query($owner:String!,$name:String!,$oid:GitObjectID!){repository(owner:$owner,name:$name){object(oid:$oid){... on Commit{status{contexts{context state targetUrl}}}}}}";
+
+const StatusAnswerJson = Schema.fromJsonString(
+  Schema.Struct({
+    data: Schema.Struct({
+      repository: Schema.Struct({
+        object: Schema.NullOr(
+          Schema.Struct({
+            status: Schema.NullOr(
+              Schema.Struct({
+                contexts: Schema.Array(
+                  Schema.Struct({
+                    context: Schema.String,
+                    state: Schema.String,
+                    targetUrl: Schema.NullOr(Schema.String),
+                  })
+                ),
+              })
+            ),
+          })
+        ),
+      }),
+    }),
+  })
+);
+
+/** Whether run `id` has posted its final `proof` status on the head it proves. */
+const posted = Effect.fn("proof.posted")(function* (sha: string, id: number) {
+  const answer = yield* gh([
+    "api",
+    "graphql",
+    "-f",
+    `query=${STATUS_QUERY}`,
+    "-f",
+    "owner=nakafaai",
+    "-f",
+    "name=nakafa.com",
+    "-f",
+    `oid=${sha}`,
+  ]).pipe(Effect.flatMap(Schema.decodeEffect(StatusAnswerJson)));
+  const contexts = answer.data.repository.object?.status?.contexts ?? [];
+  return Arr.some(
+    contexts,
+    (status) =>
+      status.context === "proof" &&
+      status.state !== "PENDING" &&
+      (status.targetUrl ?? "").endsWith(`/runs/${id}`)
+  );
+});
+
+/** How many GraphQL looks pass between two REST reads of the run itself. */
+const LOOKS_PER_RUN_READ = 5;
+
 /**
- * Reads one run once it completes. While it runs, only its status is read, once
- * every two minutes: one request, so many waiting proofs stay well inside the
- * rate limit that every session shares.
+ * Reads one run once it completes. While it runs, the waiter looks every two
+ * minutes for its final `proof` status on the head through GraphQL, so waiting
+ * proofs spend nothing of the REST limit that every session shares; every fifth
+ * look it reads the run itself, which ends the wait for a run cancelled before
+ * it posted anything.
  */
-const awaitRun = Effect.fn("proof.awaitRun")(function* (id: number) {
+const awaitRun = Effect.fn("proof.awaitRun")(function* (
+  id: number,
+  sha: string
+) {
   const view = (fields: string) =>
     gh(["run", "view", String(id), "--repo", REPOSITORY, "--json", fields]);
-  yield* view("status").pipe(
-    Effect.flatMap(Schema.decodeEffect(RunStatusJson)),
+  const looks = yield* Ref.make(0);
+  const done = Effect.gen(function* () {
+    if (yield* posted(sha, id)) {
+      return true;
+    }
+    const look = yield* Ref.updateAndGet(looks, (count) => count + 1);
+    if (look % LOOKS_PER_RUN_READ !== 0) {
+      return false;
+    }
+    const run = yield* view("status").pipe(
+      Effect.flatMap(Schema.decodeEffect(RunStatusJson))
+    );
+    return run.status === "completed";
+  });
+  yield* done.pipe(
     Effect.repeat({
-      until: (run) => run.status === "completed",
+      until: (finished) => finished,
       schedule: Schedule.spaced("2 minutes"),
     })
   );
@@ -247,6 +320,26 @@ const readShards = Effect.fn("proof.readShards")(function* (id: number) {
 
 /** The head that a proof run's name carries: `Proof <sha> <nonce>`. */
 const PROOF_TITLE = /^Proof (?<sha>[0-9a-f]{40}) /u;
+
+/**
+ * Runs Git in this checkout and returns its exit code. A question Git answers by
+ * its exit code, such as whether one commit is an ancestor of another, says so;
+ * any other command that fails fails the proof.
+ */
+const runGit = Effect.fn("proof.runGit")(function* (
+  args: readonly string[],
+  answersByCode: boolean
+) {
+  const output = yield* runText("git", args).pipe(
+    Effect.mapError(() => new ProofError({ message: "Git could not start." }))
+  );
+  if (output.code !== 0 && !answersByCode) {
+    return yield* new ProofError({
+      message: `git ${Arr.join(Arr.take(args, 1), " ")} failed: ${output.stderr.trim()}`,
+    });
+  }
+  return output.code;
+});
 
 /**
  * Cancels every queued proof run whose head is no longer worth proving: not the
@@ -297,12 +390,21 @@ export const sweepSuperseded = Effect.fn("proof.sweepSuperseded")(function* () {
     "--json",
     "databaseId,displayTitle",
   ]).pipe(Effect.flatMap(Schema.decodeEffect(RunListJson)));
-  const stale = Arr.filter(queued, (run) =>
+  // A proof of a commit on main, such as a baseline a verdict compares with, is
+  // never superseded, whatever main's head is now.
+  yield* runGit(["fetch", "--quiet", "origin", "main"], false);
+  const stale = yield* Effect.filter(queued, (run) =>
     Option.match(
       Option.fromNullishOr(PROOF_TITLE.exec(run.displayTitle)?.groups?.sha),
       {
-        onNone: () => false,
-        onSome: (sha) => !HashSet.has(keep, sha),
+        onNone: () => Effect.succeed(false),
+        onSome: (sha) =>
+          HashSet.has(keep, sha)
+            ? Effect.succeed(false)
+            : runGit(
+                ["merge-base", "--is-ancestor", sha, "origin/main"],
+                true
+              ).pipe(Effect.map((code) => code !== 0)),
       }
     )
   );
@@ -345,7 +447,7 @@ export const proveOnGithub = Effect.fn("proof.proveOnGithub")(
     const id = yield* findRun(`Proof ${sha} ${nonce}`).pipe(
       Effect.retry({ schedule: Schedule.spaced("5 seconds"), times: 24 })
     );
-    const run = yield* awaitRun(id);
+    const run = yield* awaitRun(id, sha);
     const results = yield* readShards(id).pipe(
       Effect.mapError(
         (cause) =>

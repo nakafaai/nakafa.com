@@ -60,6 +60,15 @@ export class Repository extends Context.Service<
     readonly proven: (
       numbers: readonly number[]
     ) => Effect.Effect<readonly Candidate[], TrainError>;
+    /**
+     * Every open pull request that may ride a batch, whatever its own gate and
+     * proof say: each stack whole, bottom-up, oldest stack first.
+     */
+    readonly ready: (
+      numbers: readonly number[]
+    ) => Effect.Effect<readonly Candidate[], TrainError>;
+    /** Gates one exact head on the free runners and answers whether every part passed. */
+    readonly gate: (sha: string) => Effect.Effect<boolean, TrainError>;
     /** The exact head of main now. */
     readonly main: Effect.Effect<string, TrainError>;
     /** Merges the heads onto the base in order, by SHA, and publishes the result for a proof. */
@@ -84,6 +93,9 @@ const TrainReport = Schema.Struct({
 });
 type TrainReport = typeof TrainReport.Type;
 
+/** The failure of a combination whose gate failed, which no spec on main can share. */
+const GATE_FAILURE = "gate:combination";
+
 /**
  * The specs a combination is proven on: those the caller names and those its
  * pull requests add or change. None at all proves every suite, which a batch of
@@ -99,21 +111,26 @@ const proofSpecs = (
   );
 
 /**
- * Lands every pull request whose own proof passed, after one proof of their
- * combination on main. A failing spec that fails on main too belongs to main:
- * the train reports it and ignores it. Any other failure splits the batch in
- * halves, so the passing half lands and the failing pull request is named.
- * Each half is proven on top of what the train already accepted, so what
- * lands is always one proven combination. Every head is an exact SHA.
+ * Lands pull requests after one gate and one proof of their combination on
+ * main: those whose own gate and proof passed, or with `batch` every ready one,
+ * each stack whole. A failing spec that fails on main too belongs to main: the
+ * train reports it and ignores it. Any other failure, a failed gate included,
+ * splits the batch in halves, so the passing half lands and the failing pull
+ * request is named. Each half is proven on top of what the train already
+ * accepted, so what lands is always one gated and proven combination, and each
+ * pull request lands by its exact head.
  */
 export const runTrain = Effect.fn("landing.runTrain")(function* (
   numbers: readonly number[],
-  specs: readonly string[]
+  specs: readonly string[],
+  batch: boolean
 ) {
   const repository = yield* Repository;
   const prover = yield* Prover;
   const main = yield* repository.main;
-  const candidates = yield* repository.proven(numbers);
+  const candidates = yield* batch
+    ? repository.ready(numbers)
+    : repository.proven(numbers);
   const accepted = yield* Ref.make<readonly Candidate[]>([]);
   const rejected = yield* Ref.make<readonly Rejection[]>([]);
   const baseline = yield* makeBaseline(main);
@@ -148,12 +165,19 @@ export const runTrain = Effect.fn("landing.runTrain")(function* (
       if (riding.length === 0) {
         return;
       }
-      const failures = failuresOf(
-        yield* prover.prove(
-          combination.sha,
-          proofSpecs(specs, [...before, ...riding])
-        )
+      // One gate and one proof of the combination, side by side: it holds every
+      // head merged with main, which is what lands.
+      const [proof, gated] = yield* Effect.all(
+        [
+          prover.prove(
+            combination.sha,
+            proofSpecs(specs, [...before, ...riding])
+          ),
+          repository.gate(combination.sha),
+        ],
+        { concurrency: 2 }
       );
+      const failures = [...failuresOf(proof), ...(gated ? [] : [GATE_FAILURE])];
       const known = HashSet.fromIterable(yield* baseline.shared(failures));
       const caused = Arr.filter(
         failures,

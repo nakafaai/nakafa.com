@@ -85,13 +85,40 @@ const download = (
         ),
       };
 
+/** A GraphQL answer with these `proof` statuses on the head, or with no status at all. */
+export const statusAnswer = (
+  proofs:
+    | readonly { readonly state: string; readonly targetUrl: string }[]
+    | null
+) =>
+  toJson({
+    data: {
+      repository: {
+        object: {
+          status:
+            proofs === null
+              ? null
+              : {
+                  contexts: Arr.map(proofs, (proof) => ({
+                    context: "proof",
+                    ...proof,
+                  })),
+                },
+        },
+      },
+    },
+  });
+
 /** What the calls around a proof answer: the sweep's lists, the head of main and the statuses posted. */
 const housekeeping = (args: readonly string[]): Answer | undefined => {
-  if (args[0] === "pr" || args[1] === "cancel") {
+  if (args[0] === "pr" || args[0] === "fetch" || args[1] === "cancel") {
     return {};
   }
   if (Arr.contains(args, "--status")) {
     return { stdout: "[]" };
+  }
+  if (args[1] === "graphql") {
+    return { stdout: statusAnswer([{ state: "SUCCESS", targetUrl: RUN.url }]) };
   }
   if (args[0] === "api") {
     return Arr.contains(args, "--silent") ? {} : { stdout: `${MAIN}\n` };
