@@ -1,5 +1,6 @@
 import type { Interaction } from "@nakafa/aksara-contracts/assessment/interaction";
 import type { ExamResponse } from "@repo/backend/confect/assessment/response";
+import { Verdict } from "@repo/backend/confect/assessment/verdict";
 import { Array as Arr, Option, Schema } from "effect";
 
 /**
@@ -13,6 +14,27 @@ export const PlayerCellModel = Schema.Struct({
   key: Schema.String,
 });
 export type PlayerCellModel = typeof PlayerCellModel.Type;
+
+/**
+ * How a finished paper marks one question: its grade's verdict (`Verdict`), answered when the reader may not
+ * see its grade, and unanswered.
+ */
+export const PlayerVerdict = Schema.Union([
+  Verdict,
+  Schema.Literals(["answered", "unanswered"]),
+]);
+export type PlayerVerdict = typeof PlayerVerdict.Type;
+
+/**
+ * What a finished paper's navigator shows of one question: its key, its verdict, and whether the page shows
+ * the question, which a number of a question it does not show cannot open.
+ */
+export const PlayerReviewCellModel = Schema.Struct({
+  key: Schema.String,
+  shown: Schema.Boolean,
+  verdict: PlayerVerdict,
+});
+export type PlayerReviewCellModel = typeof PlayerReviewCellModel.Type;
 
 /**
  * What the player knows of one question: enough to mark it in the navigator, to flag it, and to pick an option of

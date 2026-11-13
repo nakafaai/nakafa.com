@@ -6,7 +6,7 @@ import type {
   retainedSetResultValidator,
 } from "@repo/backend/confect/tryouts/attemptPage/spec";
 import { useNavigate, useRouter, useRouterState } from "@tanstack/react-router";
-import { Effect, Option } from "effect";
+import { Effect, Option, Struct } from "effect";
 import { useEffect, useMemo, useState } from "react";
 import { useLocale } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
@@ -63,7 +63,7 @@ export function useKeptLearnerRead<Value>(read: LearnerRead<Value>) {
 function attemptOf(search: TryoutAttemptSearch) {
   return Option.getOrUndefined(
     Option.flatMapNullishOr(
-      readAddressIntent(search),
+      readAddressIntent(Struct.pick(search, ["attemptId", "view"])),
       (value) => value.attemptId
     )
   );
@@ -72,8 +72,10 @@ function attemptOf(search: TryoutAttemptSearch) {
 /** The player view a URL names, if it names a valid one. */
 function viewOfAddress(search: TryoutAttemptSearch) {
   return Option.getOrUndefined(
-    Option.flatMap(readAddressIntent(search), ({ view }) =>
-      view.kind === "valid" ? Option.some(view.mode) : Option.none()
+    Option.flatMap(
+      readAddressIntent(Struct.pick(search, ["attemptId", "view"])),
+      ({ view }) =>
+        view.kind === "valid" ? Option.some(view.mode) : Option.none()
     )
   );
 }
@@ -134,7 +136,9 @@ function useLearnerGate(input: {
   const locale = useLocale();
   const isLoading = useConvexAuth((state) => state.isLoading);
   const isAuthenticated = useConvexAuth((state) => state.isAuthenticated);
-  const intent = readAddressIntent(input.search);
+  const intent = readAddressIntent(
+    Struct.pick(input.search, ["attemptId", "view"])
+  );
   const attemptId = attemptOf(input.search);
 
   return {
