@@ -186,7 +186,7 @@ export function PageActions({
         title={t("remove-title")}
       >
         <ResponsiveDialogSubject icon={TaskEdit01Icon}>
-          {t("question", { number })}
+          {common("question", { number })}
         </ResponsiveDialogSubject>
       </ResponsiveDialog>
     </>

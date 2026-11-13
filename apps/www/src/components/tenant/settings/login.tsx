@@ -36,6 +36,7 @@ export function LoginRenameDialog({
   setOpen: (open: boolean) => void;
 }) {
   const t = useTranslations("SchoolSettings");
+  const tCommon = useTranslations("Common");
   const { slug } = useTenant();
   const rename = useMutation(identity.logins.rename).withOptimisticUpdate(
     renameLoginChange
@@ -69,7 +70,7 @@ export function LoginRenameDialog({
     <ResponsiveDialog
       action={
         <Button disabled={!canSave} onClick={save} type="button">
-          {t("login-rename-save")}
+          {tCommon("save")}
         </Button>
       }
       description={t("login-rename-description")}
@@ -108,7 +109,7 @@ export function LoginNameField({
         aria-invalid={problem}
         id={id}
         onChange={(event) => onChange(event.target.value)}
-        placeholder={t("card-login-name-placeholder")}
+        placeholder={t("card-login-name")}
         value={value}
       />
       <FieldDescription>{t("student-login-rule")}</FieldDescription>

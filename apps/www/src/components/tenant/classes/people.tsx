@@ -118,12 +118,13 @@ function PeopleBody() {
  */
 function usePersonColumns() {
   const t = useTranslations("Classroom");
+  const tCommon = useTranslations("Common");
   const { can } = useClassScope();
 
   return [
     personColumns.text((person) => person.name, {
       cell: (info) => <TableName>{info.getValue()}</TableName>,
-      header: t("people-name"),
+      header: tCommon("name"),
       id: "name",
     }),
     ...(Arr.contains(can, "task.manage")
@@ -132,7 +133,7 @@ function usePersonColumns() {
             cell: (info) => (
               <span className="text-muted-foreground">{info.getValue()}</span>
             ),
-            header: t("people-email"),
+            header: tCommon("email"),
             id: "email",
           }),
         ]
@@ -141,14 +142,14 @@ function usePersonColumns() {
       cell: (info) => (
         <TableStatus
           {...KIND_LOOKS[info.getValue()]}
-          label={t(`people-${info.getValue()}`)}
+          label={t(`people.${info.getValue()}`)}
         />
       ),
-      header: t("people-role"),
+      header: tCommon("role"),
       id: "kind",
       options: Arr.map(["teacher", "student"] as const, (kind) => ({
         icon: KIND_LOOKS[kind].icon,
-        label: t(`people-${kind}`),
+        label: t(`people.${kind}`),
         value: kind,
       })),
     }),
@@ -159,7 +160,7 @@ function usePersonColumns() {
           label={t(`people-${info.getValue()}`)}
         />
       ),
-      header: t("people-status"),
+      header: tCommon("state"),
       id: "joined",
       options: Arr.map(["joined", "waiting"] as const, (joined) => ({
         icon: JOIN_LOOKS[joined].icon,

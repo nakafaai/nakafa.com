@@ -67,6 +67,7 @@ export function TenantPalette({
   open: boolean;
 }) {
   const t = useTranslations("School");
+  const tCommon = useTranslations("Common");
 
   return (
     <CommandDialog onOpenChange={onOpenChange} open={open}>
@@ -74,7 +75,7 @@ export function TenantPalette({
         description={t("search-description")}
         initialFocus
         portalProps={{ keepMounted: true }}
-        title={t("search")}
+        title={tCommon("search")}
       >
         <TenantPaletteCommand onOpened={() => onOpenChange(false)} />
       </CommandDialogPopup>
@@ -186,7 +187,7 @@ function usePaletteGroups(): readonly PaletteGroup[] {
     slug,
   } = useTenant();
   const classes = useMyClasses();
-  const t = useTranslations("School");
+  const tCommon = useTranslations("Common");
   const tExams = useTranslations("Exams");
   const tGrades = useTranslations("SchoolGrades");
   const tGraduation = useTranslations("SchoolGraduation");
@@ -197,7 +198,7 @@ function usePaletteGroups(): readonly PaletteGroup[] {
     {
       icon: { hugeicon: Home01Icon },
       key: "home",
-      label: t("home"),
+      label: tCommon("home"),
       place: undefined,
       target: { from: LOCALE_ROUTE, params: { slug }, to: "/school/$slug" },
     },
@@ -247,7 +248,7 @@ function usePaletteGroups(): readonly PaletteGroup[] {
           {
             icon: { hugeicon: Certificate01Icon },
             key: "reports",
-            label: tReports("title"),
+            label: tCommon("report-cards"),
             place: undefined,
             target: {
               from: LOCALE_ROUTE,
@@ -293,8 +294,8 @@ function usePaletteGroups(): readonly PaletteGroup[] {
       (section): PaletteItem => ({
         icon: { hugeicon: settingsSectionIcons[section.labelKey] },
         key: `settings:${section.labelKey}`,
-        label: tSettings(section.labelKey),
-        place: tSettings(group.key),
+        label: tSettings(`section.${section.labelKey}`),
+        place: tSettings(`group.${group.key}`),
         target: section.target,
       })
     )
@@ -302,9 +303,9 @@ function usePaletteGroups(): readonly PaletteGroup[] {
 
   return Arr.filter(
     [
-      { items: pages, value: t("pages") },
-      { items: classItems, value: t("classes") },
-      { items: settingsItems, value: tSettings("manage-settings") },
+      { items: pages, value: tCommon("pages") },
+      { items: classItems, value: tCommon("classes") },
+      { items: settingsItems, value: tCommon("settings") },
     ],
     (group) => group.items.length > 0
   );

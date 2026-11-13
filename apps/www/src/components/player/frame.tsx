@@ -21,7 +21,7 @@ export function PlayerMain({
   children: ReactNode;
   navigator: ReactNode;
 }) {
-  const t = useTranslations("Player");
+  const tCommon = useTranslations("Common");
 
   return (
     <div className={cn(pageBoxVariants(), "flex-1")}>
@@ -35,7 +35,12 @@ export function PlayerMain({
         {children}
       </div>
       {navigator === null ? null : (
-        <PaneSide from="lg" group="player" label={t("navigator")} row={false}>
+        <PaneSide
+          from="lg"
+          group="player"
+          label={tCommon("exam-questions")}
+          row={false}
+        >
           {navigator}
         </PaneSide>
       )}

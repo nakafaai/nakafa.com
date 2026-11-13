@@ -42,12 +42,13 @@ const DEMO_EXAM = {
  */
 export function EditorDemo() {
   const t = useTranslations("SchoolSite");
+  const tCommon = useTranslations("Common");
   const [client] = useState(
     () =>
       new DemoConvexClient(
         createDemoBackend(
           demoExam({
-            answer: t("demo-exam-answer"),
+            answer: tCommon("answer"),
             essay: t.raw("demo-exam-essay"),
             explanation: t.raw("demo-exam-explanation"),
             numeric: t.raw("demo-exam-numeric"),
@@ -91,7 +92,7 @@ export function EditorDemo() {
 
 /** The demo school the editor belongs to, with a teacher's access to its exams. */
 function DemoSchool({ children }: { children: ReactNode }) {
-  const t = useTranslations("SchoolSite");
+  const t = useTranslations("Common");
 
   return (
     <TenantContext
@@ -104,7 +105,7 @@ function DemoSchool({ children }: { children: ReactNode }) {
         home: { canCreate: false, canWatch: false, choices: [] },
         logo: undefined,
         mascot: schoolMascot(DEMO_SLUG),
-        name: t("breadcrumb"),
+        name: t("school"),
         reach: [],
         role: Option.some("teacher"),
         slug: DEMO_EXAM.slug,

@@ -82,7 +82,7 @@ const retriesTheLink = Effect.fn("NakafaE2E.retriesTheLink")(function* (
 
     // The server still fails, and its answers are held while Retry asks again.
     // The answer is a failure again, so Retry is enabled for the next press.
-    const retry = dialog.getByRole("button", { name: en.Ai.retry });
+    const retry = dialog.getByRole("button", { name: en.Common.retry });
     owner.changes.hold();
     await retry.click();
     if (scenario.pending) {

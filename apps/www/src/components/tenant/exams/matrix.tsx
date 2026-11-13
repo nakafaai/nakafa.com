@@ -109,7 +109,7 @@ export function TableSheet({ table }: { readonly table: Table }) {
         }))}
         disabled
         label={table.label}
-        statementLabel={t("statement-placeholder")}
+        statementLabel={t("placeholder.statement")}
         statements={Arr.map(table.statements, (statement, index) => ({
           id: statement.id,
           label: (
@@ -122,7 +122,7 @@ export function TableSheet({ table }: { readonly table: Table }) {
               <LineWords>
                 <ExamDocument
                   label={t("statement-of", { name: index + 1, number })}
-                  placeholder={t("statement-placeholder")}
+                  placeholder={t("placeholder.statement")}
                   size="line"
                 />
               </LineWords>

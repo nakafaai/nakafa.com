@@ -228,9 +228,10 @@ const answerColumns = tableColumns<AnswerRow>();
  */
 function useVerdictChoices() {
   const t = useTranslations("Exams");
+  const tCommon = useTranslations("Common");
 
   return [
-    { icon: UserGroupIcon, label: t("filter-all"), value: "all" as const },
+    { icon: UserGroupIcon, label: tCommon("all"), value: "all" as const },
     ...Arr.map(Verdict.literals, (verdict) => ({
       icon: VERDICT_LOOKS[verdict].icon,
       label: t(verdictKeys[verdict]),
@@ -261,6 +262,7 @@ function AnswerList({
   readonly results: readonly AnswerRow[];
 }) {
   const t = useTranslations("Exams");
+  const tCommon = useTranslations("Common");
   const { canGrade } = useResultsPaper();
   const verdictChoices = useVerdictChoices();
 
@@ -269,7 +271,7 @@ function AnswerList({
       <EmptyState
         description={t("results-no-answers")}
         scene={<EmptyNina act="reading" />}
-        title={t("results-answers")}
+        title={tCommon("answers")}
       />
     );
   }
@@ -284,7 +286,7 @@ function AnswerList({
           answerColumns.text(
             (answer) => responseText(question, answer.response),
             {
-              header: t("results-answers"),
+              header: tCommon("answers"),
               id: "response",
             }
           ),
@@ -295,7 +297,7 @@ function AnswerList({
               ) : (
                 info.getValue()
               ),
-            header: t("results-points"),
+            header: tCommon("score-points"),
             id: "points",
           }),
           answerColumns.choice((answer) => answer.verdict, {
@@ -306,7 +308,7 @@ function AnswerList({
                 tone={VERDICT_LOOKS[info.getValue()].tone}
               />
             ),
-            header: t("results-status"),
+            header: tCommon("state"),
             id: "verdict",
             options: verdictChoices,
           }),
@@ -357,7 +359,7 @@ export function QuestionsSheet({
   const current = Arr.get(questions, selected);
   const move = (index: number) => setPlace({ moved: true, selected: index });
   const items = Arr.map(questions, (question) => ({
-    label: t("question", { number: question.number }),
+    label: common("question", { number: question.number }),
     value: question.id,
   }));
 
@@ -366,7 +368,7 @@ export function QuestionsSheet({
       <SheetContent className="sm:max-w-3xl">
         <SheetHeader className="flex-row items-center gap-3 pe-12">
           <HugeIcons className="size-5 shrink-0" icon={ChartHistogramIcon} />
-          <SheetTitle>{t("questions")}</SheetTitle>
+          <SheetTitle>{common("questions")}</SheetTitle>
         </SheetHeader>
         {Option.match(current, {
           onNone: () => null,

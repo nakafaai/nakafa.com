@@ -13,7 +13,7 @@ import {
  */
 export function Pricing() {
   const t = useTranslations("Landing");
-  const tPricing = useTranslations("Pricing");
+  const tCommon = useTranslations("Common");
 
   return (
     <section aria-labelledby="pricing-heading" className="scroll-mt-28">
@@ -37,7 +37,7 @@ export function Pricing() {
           proPrice={
             <PricingPrice
               Price={StaticPrice}
-              period={tPricing("pro-period")}
+              period={tCommon("plan-month")}
               plan="pro"
             />
           }

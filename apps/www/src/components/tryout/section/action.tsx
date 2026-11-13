@@ -118,14 +118,14 @@ function TryoutReturnAction({
     "activeAttempt" | "returnAddress"
   >;
 }) {
-  const tTryouts = useTranslations("Tryouts");
+  const tCommon = useTranslations("Common");
   return (
     <TryoutPageLink
       className={cn(buttonVariants(), "w-full sm:w-auto")}
       {...value.returnAddress}
     >
       <HugeIcons className="size-4" icon={ArrowLeft02Icon} />
-      {tTryouts("back-to-set-cta")}
+      {tCommon("back")}
     </TryoutPageLink>
   );
 }

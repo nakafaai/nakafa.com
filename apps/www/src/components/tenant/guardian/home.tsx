@@ -99,7 +99,7 @@ export function GuardianHome() {
             </TablePageBody>
           </PanesList>
           {QueryResult.isSuccess(children) ? (
-            <PanesDetail label={t("child-detail")}>
+            <PanesDetail label={t("child")}>
               <GuardianChild items={children.value} />
             </PanesDetail>
           ) : null}
@@ -131,32 +131,36 @@ function GuardianChildren() {
     }),
     childColumns.text((child) => child.student.email ?? "", {
       cell: (info) => <TableText>{info.getValue()}</TableText>,
-      header: t("email"),
+      header: common("email"),
       id: "email",
     }),
     childColumns.values((child) => child.status, {
       cell: (info) => (
         <TableStatus
           icon={LINK_STATUS_LOOKS[info.getValue()].icon}
-          label={t(`status-${info.getValue()}`)}
+          label={t(`status-label.${info.getValue()}`)}
           tone={LINK_STATUS_LOOKS[info.getValue()].tone}
         />
       ),
-      header: t("status"),
+      header: common("state"),
       id: "status",
       options: Arr.map(LinkStatus.literals, (status) => ({
         icon: LINK_STATUS_LOOKS[status].icon,
-        label: t(`status-${status}`),
+        label: t(`status-label.${status}`),
         value: status,
       })),
     }),
     childColumns.values((child) => (child.staffCheck ? "school" : "nisn"), {
-      cell: (info) => t(`check-${info.getValue()}`),
+      cell: (info) => t(`check-label.${info.getValue()}`),
       header: t("check"),
       id: "check",
       options: [
-        { icon: IdentityCardIcon, label: t("check-nisn"), value: "nisn" },
-        { icon: Building03Icon, label: t("check-school"), value: "school" },
+        { icon: IdentityCardIcon, label: t("check-label.nisn"), value: "nisn" },
+        {
+          icon: Building03Icon,
+          label: t("check-label.school"),
+          value: "school",
+        },
       ],
     }),
     childColumns.menu(() => (
@@ -395,8 +399,11 @@ const gradeColumns = tableColumns<ChildGrade>();
 /** The child's released grades in a plain table, or one sentence while none is released. */
 function GuardianGradeTable({ grades }: { grades: readonly ChildGrade[] }) {
   const t = useTranslations("SchoolGuardians");
+  const tCommon = useTranslations("Common");
   if (Arr.isReadonlyArrayEmpty(grades)) {
-    return <p className="text-muted-foreground text-sm">{t("grades-empty")}</p>;
+    return (
+      <p className="text-muted-foreground text-sm">{tCommon("own-empty")}</p>
+    );
   }
   return (
     <TableFiltersProvider>
@@ -405,11 +412,11 @@ function GuardianGradeTable({ grades }: { grades: readonly ChildGrade[] }) {
           columns={[
             gradeColumns.text((grade) => grade.className, {
               cell: (info) => <span dir="auto">{info.getValue()}</span>,
-              header: t("grade-class"),
+              header: tCommon("class"),
               id: "class",
             }),
             gradeColumns.number((grade) => grade.value, {
-              header: t("grade-value"),
+              header: tCommon("grade"),
               id: "value",
             }),
             gradeColumns.text(

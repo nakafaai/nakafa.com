@@ -60,6 +60,7 @@ export function SchoolInsight() {
 /** A student's page: their standing in one tab, and the practice they choose to share in the other. */
 function StudentInsight() {
   const t = useTranslations("SchoolInsight");
+  const tCommon = useTranslations("Common");
 
   return (
     <PageFrame width="page">
@@ -68,7 +69,7 @@ function StudentInsight() {
         <TabsList aria-label={t("tabs-label")} className={pageRowVariants()}>
           <TabsTab value="mastery">
             <HugeIcons icon={Target02Icon} />
-            {t("mastery")}
+            {tCommon("mastery")}
           </TabsTab>
           <TabsTab value="practice">
             <HugeIcons icon={Share08Icon} />
@@ -157,8 +158,11 @@ function TeacherInsight() {
               onValueChange={(value) => setPicked(value)}
               value={chosen.value.id}
             >
-              <SelectTrigger aria-label={t("class")} className="w-32 sm:w-56">
-                <SelectValue placeholder={t("class")} />
+              <SelectTrigger
+                aria-label={common("class")}
+                className="w-32 sm:w-56"
+              >
+                <SelectValue placeholder={common("class")} />
               </SelectTrigger>
               <SelectContent label={common("menu-class")}>
                 {Arr.map(items, (item) => (
@@ -206,6 +210,7 @@ function TeacherInsight() {
 /** What a viewer with no class does first: an admin opens the classrooms, and a teacher asks one. */
 function NoClass() {
   const t = useTranslations("SchoolInsight");
+  const tCommon = useTranslations("Common");
   const { canManage, slug } = useTenant();
   const leads = useLeadsSchool();
 
@@ -218,7 +223,7 @@ function NoClass() {
             params={{ slug }}
             to="/school/$slug/settings/classes"
           >
-            {t("no-class-action")}
+            {tCommon("open-classrooms")}
           </Link>
         ) : undefined
       }

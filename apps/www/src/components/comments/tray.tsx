@@ -48,6 +48,7 @@ function TrayItem({
   photo: typeof TrayPhoto.Type;
 }) {
   const t = useTranslations("Comments");
+  const tCommon = useTranslations("Common");
   const removePhotos = useCommentDraft((draft) => draft.removePhotos);
   const withdraw = useMutation(comments.files.withdraw);
   const name = t("photo", { number: index + 1 });
@@ -86,7 +87,7 @@ function TrayItem({
         className="absolute end-0.5 top-0.5 rounded-full"
         onClick={remove}
         size="icon-sm"
-        tooltip={t("photo-remove", { name })}
+        tooltip={tCommon("media-remove", { name })}
         type="button"
         variant="secondary"
       >

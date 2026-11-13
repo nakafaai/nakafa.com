@@ -42,7 +42,7 @@ export function MemoryControl() {
   return (
     <CardSection
       description={auth("memory-description")}
-      title={auth("memory")}
+      title={auth("section.memory")}
     >
       <CardContent>
         <div className="flex items-center justify-between gap-4">
@@ -94,7 +94,7 @@ export function MemoryControl() {
         title={t("clear-title")}
       >
         <ResponsiveDialogSubject icon={AiBrain01Icon}>
-          {auth("memory")}
+          {auth("section.memory")}
         </ResponsiveDialogSubject>
       </ResponsiveDialog>
     </CardSection>

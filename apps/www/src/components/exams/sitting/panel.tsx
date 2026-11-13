@@ -57,12 +57,12 @@ const SIGNAL_PAGE_SIZE = 20;
 /** The copy key of each state of an attempt, as the panel names it. */
 const stateLabels: Record<
   DashboardAttempt["state"],
-  "state-closing" | "state-in-progress" | "state-locked" | "state-submitted"
+  "state.closing" | "state.in-progress" | "state.locked" | "state.submitted"
 > = {
-  closing: "state-closing",
-  inProgress: "state-in-progress",
-  locked: "state-locked",
-  submitted: "state-submitted",
+  closing: "state.closing",
+  inProgress: "state.in-progress",
+  locked: "state.locked",
+  submitted: "state.submitted",
 };
 
 /** One signal of a student's screen, as the proctor's panel reads it. */

@@ -42,6 +42,7 @@ export function UpgradePlanCard() {
   const locale = useLocale();
   const t = useTranslations("Auth");
   const tPricing = useTranslations("Pricing");
+  const tCommon = useTranslations("Common");
   const credits = getPlanCreditConfig("pro").amount;
 
   const handleUpgrade = () => {
@@ -58,7 +59,7 @@ export function UpgradePlanCard() {
   return (
     <CardSection
       description={tPricing("pro-description")}
-      title={tPricing("pro-title")}
+      title={tCommon("pro")}
     >
       <CardContent className="grid gap-6">
         <div className="grid gap-1">
@@ -71,7 +72,7 @@ export function UpgradePlanCard() {
               </CurrencyBranch>
             ))}
             <span className="text-muted-foreground">
-              {tPricing("pro-period")}
+              {tCommon("plan-month")}
             </span>
           </div>
           <PricingYearly />

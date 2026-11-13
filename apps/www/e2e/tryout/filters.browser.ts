@@ -10,10 +10,10 @@ import { waitUntilTakenOver } from "@/e2e/support/window";
 const TRACK_PATH = "/en/try-out/indonesia/snbt/2027/utbk";
 const HEADS = {
   duration: en.Tryouts["set-column-duration"],
-  name: en.Tryouts["set-column-name"],
-  questions: en.Tryouts["set-column-questions"],
+  name: en.Common.name,
+  questions: en.Common["exam-questions"],
   score: en.Tryouts["set-column-score"],
-  status: en.Tryouts["set-column-status"],
+  status: en.Common.state,
 };
 
 /**

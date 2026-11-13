@@ -34,6 +34,8 @@ const Posted = Schema.Struct({ key: Schema.String, text: Schema.String });
  */
 export function ForumChat() {
   const t = useTranslations("Classroom");
+  const tCommon = useTranslations("Common");
+  const tEmoji = useTranslations("Emoji");
   const [text, setText] = useState("");
   const [posted, setPosted] = useState<readonly (typeof Posted.Type)[]>([]);
 
@@ -94,7 +96,7 @@ export function ForumChat() {
                   <InputGroupButton
                     className="rounded-full"
                     size="icon"
-                    tooltip={t("emoji-open")}
+                    tooltip={tEmoji("open")}
                     variant="ghost"
                   />
                 }
@@ -104,7 +106,7 @@ export function ForumChat() {
               className="rounded-full"
               disabled={text.trim() === ""}
               size="icon"
-              tooltip={t("send-message")}
+              tooltip={tCommon("send")}
               type="submit"
               variant="secondary"
             >

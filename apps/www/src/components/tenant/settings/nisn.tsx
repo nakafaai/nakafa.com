@@ -34,6 +34,7 @@ export function RosterEntryDialog({
   setOpen: (open: boolean) => void;
 }) {
   const t = useTranslations("SchoolSettings");
+  const tCommon = useTranslations("Common");
   const { slug } = useTenant();
   const id = useId();
   const entry = useQuery(
@@ -70,7 +71,7 @@ export function RosterEntryDialog({
           onClick={submit}
           type="button"
         >
-          {t("roster-entry-save")}
+          {tCommon("save")}
         </Button>
       }
       description={t("roster-entry-description")}
@@ -80,7 +81,7 @@ export function RosterEntryDialog({
     >
       <FieldGroup>
         <Field>
-          <FieldLabel htmlFor={`${id}-nisn`}>{t("roster-nisn")}</FieldLabel>
+          <FieldLabel htmlFor={`${id}-nisn`}>{tCommon("nisn")}</FieldLabel>
           <Input
             disabled={Option.isNone(loaded)}
             id={`${id}-nisn`}

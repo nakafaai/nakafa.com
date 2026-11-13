@@ -175,17 +175,17 @@ export function OpenSchoolDialog({
           onClick={submit}
           type="button"
         >
-          {t("open")}
+          {common("school-open")}
         </Button>
       }
       description={t("open-description")}
       open={open}
       setOpen={setOpen}
-      title={t("open")}
+      title={common("school-open")}
     >
       <FieldGroup>
         <Field>
-          <FieldLabel htmlFor={`${id}-name`}>{t("name")}</FieldLabel>
+          <FieldLabel htmlFor={`${id}-name`}>{common("school")}</FieldLabel>
           <Input
             id={`${id}-name`}
             onChange={(event) =>
@@ -194,12 +194,12 @@ export function OpenSchoolDialog({
                 slug: suggestSlug(event.target.value),
               })
             }
-            placeholder={t("name-placeholder")}
+            placeholder={common("sma-harapan-bangsa")}
             value={form.name}
           />
         </Field>
         <Field>
-          <FieldLabel htmlFor={`${id}-slug`}>{t("address")}</FieldLabel>
+          <FieldLabel htmlFor={`${id}-slug`}>{common("address")}</FieldLabel>
           <Input
             id={`${id}-slug`}
             onChange={(event) => set({ slug: typedSlug(event.target.value) })}
@@ -213,7 +213,7 @@ export function OpenSchoolDialog({
             label: t(`kind.${value}`),
             value,
           }))}
-          label={t("kind-label")}
+          label={common("type")}
           menu={common("menu-type")}
           onChange={(kind) => set({ kind })}
           value={form.kind}
@@ -224,7 +224,7 @@ export function OpenSchoolDialog({
             label: tStart(`country.${value}`),
             value,
           }))}
-          label={t("country")}
+          label={common("country")}
           menu={common("menu-country")}
           onChange={(country) => set({ country })}
           value={form.country}
@@ -235,7 +235,7 @@ export function OpenSchoolDialog({
             label: tStart(`level.${value}.title`),
             value,
           }))}
-          label={t("level")}
+          label={common("level")}
           menu={common("menu-level")}
           onChange={(level) => set({ level })}
           value={form.level}
@@ -245,7 +245,7 @@ export function OpenSchoolDialog({
           form={form}
           label={t("owner")}
           onChange={(owner) => set({ owner })}
-          placeholder={t("owner-placeholder")}
+          placeholder={common("ayu-lestari")}
         />
         <OpenTextField
           field="email"

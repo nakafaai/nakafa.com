@@ -20,12 +20,12 @@ const HOME_URL = /\/en\/home$/u;
 
 /** The sections a learner presses in turn, a library among them, and back from it. */
 const SECTIONS = [
-  app.Auth.learning,
-  app.Auth.billing,
-  app.Auth.memory,
-  app.Auth.connectors,
-  app.Auth.account,
-  app.Auth.connectors,
+  app.Auth.section.learning,
+  app.Auth.section.billing,
+  app.Auth.section.memory,
+  app.Auth.section.connectors,
+  app.Auth.section.account,
+  app.Auth.section.connectors,
 ] as const;
 
 /** One link of the settings sidebar, by its exact name. */
@@ -57,7 +57,7 @@ test("a press between settings sections keeps the section it leaves whole until 
       yield* Effect.promise(() => finishOnboarding(page));
       yield* openObservedRoute(page, appRoutes.settings);
       yield* Effect.promise(() =>
-        expect(title(page, app.Auth.account)).toBeAttached()
+        expect(title(page, app.Auth.section.account)).toBeAttached()
       );
       yield* holdPageData(page);
 
@@ -75,7 +75,7 @@ test("a press between settings sections keeps the section it leaves whole until 
       yield* expectPressKeepsPage(
         page,
         Effect.promise(() =>
-          sidebarLink(page, app.Auth["back-to-nakafa"]).click()
+          sidebarLink(page, app.Common["back-to-nakafa"]).click()
         ),
         Effect.promise(async () => {
           await expect(page).toHaveURL(HOME_URL);

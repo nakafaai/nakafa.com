@@ -20,6 +20,7 @@ import { useMessage } from "@/components/ai/message/context";
 
 export function AiChatMessageCredits() {
   const t = useTranslations("Ai");
+  const tCommon = useTranslations("Common");
 
   const turn = useMessage((state) => state.turn);
   const role = useMessage((state) => state.message.role);
@@ -113,7 +114,7 @@ export function AiChatMessageCredits() {
                   <div className="bg-secondary text-secondary-foreground flex items-center justify-between rounded-sm p-2 text-sm">
                     <div className="flex items-center gap-2">
                       <HugeIcons className="size-4" icon={Summation01Icon} />
-                      <span>{t("total-tokens")}</span>
+                      <span>{tCommon("total")}</span>
                     </div>
                     <span className="tabular-nums">
                       {tokens.total.toLocaleString()}

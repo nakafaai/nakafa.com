@@ -9,13 +9,9 @@ import {
 } from "effect";
 import {
   isObjectLiteralExpression,
-  isPropertyAssignment,
-  isPropertyNameLiteral,
   isStringLiteral,
   type Node,
   type ObjectLiteralExpression,
-  type PropertyAssignment,
-  type PropertyNameLiteral,
   type SourceFile,
 } from "tsrs/ast";
 import { RepositoryReadError } from "#scripts/check/files";
@@ -24,6 +20,7 @@ import {
   parseSources,
   type RepositorySource,
 } from "#scripts/check/source";
+import { isNamedProperty, repeatedWords } from "#scripts/check/words";
 
 /** The dictionaries, standalone ones included: every JSON file below the internationalization dictionaries. */
 const DICTIONARY_FILE_PATTERN =
@@ -74,16 +71,6 @@ const RepeatedKey = Schema.Struct({
   keyPath: Schema.String,
   line: Schema.Int,
 });
-
-/**
- * Whether a property names its key with a literal, such as `"Exams": {}`. The
- * text of a literal is its decoded value, so `"Exams"` names `Exams`.
- */
-function isNamedProperty(
-  node: Node
-): node is PropertyAssignment & { readonly name: PropertyNameLiteral } {
-  return isPropertyAssignment(node) && isPropertyNameLiteral(node.name);
-}
 
 /**
  * Wraps a dictionary in parentheses, so that the native parser reads it as one
@@ -228,7 +215,8 @@ function formalFindings(file: string, sourceFile: SourceFile) {
  * merge that adds the same object twice would drop one of them with no error.
  * It also reports a dropdown's label that holds more than one word, since a label
  * names what is chosen in one word in every language, an empty list's words
- * that run past one sentence, and a value that speaks formally.
+ * that run past one sentence, a value that speaks formally, and a word that two
+ * keys hold in every locale (`words.ts`).
  */
 export const dictionaryFindings = Effect.fn(
   "RepositoryPolicy.dictionaryFindings"
@@ -239,7 +227,7 @@ export const dictionaryFindings = Effect.fn(
       sourceText: asExpression(sourceText),
     }))
   );
-  return Arr.flatMap(parsed.modules, ({ file, sourceFile }) =>
+  const fileFindings = Arr.flatMap(parsed.modules, ({ file, sourceFile }) =>
     Arr.flatten([
       formalFindings(file, sourceFile),
       Arr.map(
@@ -259,6 +247,7 @@ export const dictionaryFindings = Effect.fn(
       ),
     ])
   );
+  return Arr.appendAll(fileFindings, repeatedWords(parsed.modules));
 }, Effect.scoped);
 
 /**

@@ -29,7 +29,7 @@ export function openComposer(page: Page) {
 async function send(page: Page, field: Locator, text: string) {
   await field.fill(text);
   await page
-    .getByRole("button", { name: app.Comments.send, exact: true })
+    .getByRole("button", { name: app.Common.send, exact: true })
     .last()
     .click();
   await expect(commentRow(page, text)).toBeVisible({

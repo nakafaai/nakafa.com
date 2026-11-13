@@ -9,10 +9,11 @@ import { useTranslations } from "use-intl";
  */
 export function useDocumentLabels() {
   const t = useTranslations("Editor");
+  const tCommon = useTranslations("Common");
   return useMemo(() => {
     const bullets = t("bullets");
     const codeBlock = t("code-block");
-    const equation = t("equation");
+    const equation = tCommon("equation");
     const formula = t("formula");
     const heading1 = t("heading-1");
     const heading2 = t("heading-2");
@@ -41,26 +42,26 @@ export function useDocumentLabels() {
         addDescription: t("image-add-description"),
         alt: t("image-alt"),
         altHint: t("image-alt-hint"),
-        cancel: t("image-cancel"),
+        cancel: tCommon("cancel"),
         delete: t("image-delete"),
         edit: t("image-edit"),
         editDescription: t("image-edit-description"),
-        save: t("image-save"),
+        save: tCommon("save"),
       },
       formulaEdit: {
         formula,
         invalid: t("formula-invalid"),
         keyboard: t("formula-keyboard"),
         keys: {
-          chemistry: t("formula-chemistry"),
-          delete: t("formula-delete"),
-          functions: t("formula-functions"),
-          greek: t("formula-greek"),
-          left: t("formula-left"),
-          numbers: t("formula-numbers"),
-          physics: t("formula-physics"),
-          right: t("formula-right"),
-          symbols: t("formula-symbols"),
+          chemistry: t("formula-key.chemistry"),
+          delete: t("formula-key.delete"),
+          functions: t("formula-key.functions"),
+          greek: t("formula-key.greek"),
+          left: t("formula-key.left"),
+          numbers: t("formula-key.numbers"),
+          physics: t("formula-key.physics"),
+          right: t("formula-key.right"),
+          symbols: t("formula-key.symbols"),
         },
         latex: t("latex"),
         open: t("formula-edit"),
@@ -72,7 +73,7 @@ export function useDocumentLabels() {
         arabic: t("arabic"),
         bold: t("bold"),
         bullets,
-        code: t("code"),
+        code: tCommon("code"),
         codeBlock,
         columnAfter: t("column-after"),
         columnBefore: t("column-before"),
@@ -84,13 +85,13 @@ export function useDocumentLabels() {
         heading3,
         image: t("image"),
         italic: t("italic"),
-        link: t("link"),
+        link: tCommon("link"),
         linkInvalid: t("link-invalid"),
         linkPlaceholder: t("link-placeholder"),
-        more: t("more"),
+        more: tCommon("more"),
         numbers,
         quote,
-        redo: t("redo"),
+        redo: tCommon("redo"),
         rowAfter: t("row-after"),
         rowBefore: t("row-before"),
         rowDelete: t("row-delete"),
@@ -102,8 +103,8 @@ export function useDocumentLabels() {
         tableDelete: t("table-delete"),
         text,
         underline: t("underline"),
-        undo: t("undo"),
+        undo: tCommon("undo"),
       },
     };
-  }, [t]);
+  }, [t, tCommon]);
 }

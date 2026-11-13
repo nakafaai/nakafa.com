@@ -57,11 +57,11 @@ export const Route = createFileRoute("/$locale/_marketing/school/")({
         locale: params.locale,
         namespaces: ["Common", "SchoolSite"],
       }),
-      // The words of the School screens the sections draw as the app does: the forum, the editor's
-      // toolbar and the exam editor. Only this page reads them; the player's are the marketing pages'.
+      // The words of the School screens the sections draw as the app does: the forum and its emoji
+      // chooser, the editor's toolbar and the exam editor. Only this page reads them; the player's are the marketing pages'.
       readStaticData(readRouteMessages, {
         locale: params.locale,
-        namespaces: ["Classroom", "Editor", "Exams"],
+        namespaces: ["Classroom", "Editor", "Emoji", "Exams"],
       }),
     ]);
     const t = createTranslator({
@@ -75,13 +75,13 @@ export const Route = createFileRoute("/$locale/_marketing/school/")({
       namespace: "Common",
     });
     return {
-      breadcrumb: { home: tCommon("home"), school: t("breadcrumb") },
+      breadcrumb: { home: tCommon("home"), school: tCommon("school") },
       description: t("metadata-description"),
       faqs: Arr.map(
         schoolLandingQuestions,
         (key): MarketingFaqItem => ({
-          answer: t(`faq-${key}-answer`),
-          question: t(`faq-${key}-question`),
+          answer: t(`faq.${key}.answer`),
+          question: t(`faq.${key}.question`),
         })
       ),
       inApp,

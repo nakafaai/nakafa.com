@@ -84,7 +84,7 @@ function AcceptedRow({
             event.currentTarget.blur();
           }
         }}
-        placeholder={t("answer-placeholder")}
+        placeholder={t("placeholder.answer")}
         ref={onRemove === null ? focusOnMount : undefined}
         value={draft ?? text}
       />

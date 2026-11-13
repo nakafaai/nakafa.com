@@ -157,7 +157,7 @@ function CompareLine({ row }: { row: CompareRow }) {
         className="py-3.5 pr-4 text-left text-sm font-normal text-pretty md:text-base"
         scope="row"
       >
-        {t(`row-${row}`)}
+        {t(`row.${row}`)}
       </th>
       {Arr.map(SchoolTierKey.literals, (tier) => (
         <td className={planCellVariants({ tier })} key={tier}>
@@ -181,7 +181,7 @@ function CompareGroup({ group }: { group: (typeof COMPARE_GROUPS)[number] }) {
           scope="rowgroup"
         >
           <span className="block text-lg font-medium tracking-tight">
-            {t(`group-${group.group}`)}
+            {t(`group.${group.group}`)}
           </span>
           <span className="text-muted-foreground block text-sm text-pretty">
             {t(`group-${group.group}-text`)}
@@ -204,7 +204,7 @@ function PlanHead({ tier }: { tier: SchoolTierKey }) {
       className="px-3 py-3 text-center text-base font-medium tracking-tight"
       scope="col"
     >
-      {t(`plan-${tier}`)}
+      {t(`plan.${tier}`)}
     </th>
   );
 }
@@ -251,7 +251,7 @@ export function SchoolCompare() {
             >
               {Arr.map(SchoolTierKey.literals, (tier) => (
                 <ToggleGroupItem key={tier} value={tier}>
-                  {t(`plan-${tier}`)}
+                  {t(`plan.${tier}`)}
                 </ToggleGroupItem>
               ))}
             </ToggleGroup>

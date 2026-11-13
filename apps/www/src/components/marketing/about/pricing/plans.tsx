@@ -55,7 +55,7 @@ function PricingFeature({
  * root picks the one that shows, as the header's call to action does.
  */
 function FreePlanAction() {
-  const t = useTranslations("Pricing");
+  const tCommon = useTranslations("Common");
 
   return (
     <>
@@ -70,7 +70,7 @@ function FreePlanAction() {
           to="/$locale/auth"
         >
           <HugeIcons icon={ArrowUpRight01Icon} />
-          {t("free-cta")}
+          {tCommon("start-learning")}
         </Link>
       </span>
       <span className="contents" data-account="member">
@@ -81,7 +81,7 @@ function FreePlanAction() {
           })}
           to="/$locale/home"
         >
-          {t("free-cta")}
+          {tCommon("start-learning")}
         </Link>
       </span>
     </>
@@ -102,6 +102,7 @@ export function PricingCards({
   proPrice,
 }: PricingPlanCardsProps) {
   const t = useTranslations("Pricing");
+  const tCommon = useTranslations("Common");
   const PlanHeading = headingLevel;
   const credits = getPlanCreditConfig("pro").amount;
 
@@ -151,7 +152,7 @@ export function PricingCards({
         >
           <CardHeader>
             <PlanHeading className="text-xl font-medium tracking-tight">
-              {t("pro-title")}
+              {tCommon("pro")}
             </PlanHeading>
             <p className="text-muted-foreground">{t("pro-description")}</p>
           </CardHeader>

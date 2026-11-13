@@ -54,7 +54,7 @@ test("a learner's post draws its Markdown as Nina's answers do", async ({
 
         const writing = changes.sent;
         await composerOf(page).fill(MARKDOWN);
-        await page.getByRole("button", { name: app.Posts.post }).click();
+        await page.getByRole("button", { name: app.Common.post }).click();
         const post = rowsOf(page).first();
         await expect(post).toContainText("Satu baris saja.");
         await saved(changes, writing);

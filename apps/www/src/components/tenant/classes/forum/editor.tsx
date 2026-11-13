@@ -74,7 +74,7 @@ export function MessageEditor({
           {common("cancel")}
         </Button>
         <Button type="submit" variant="secondary">
-          {t("message-save")}
+          {common("save")}
         </Button>
       </div>
     </form>

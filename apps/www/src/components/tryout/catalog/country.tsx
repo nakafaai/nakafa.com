@@ -31,7 +31,7 @@ export function TryoutCountryPageClient({
     readonly exams: readonly CountryExamCard[];
   };
 }) {
-  const tTryouts = useTranslations("Tryouts");
+  const tCommon = useTranslations("Common");
   if (page.exams.length === 0) {
     return <ComingSoon />;
   }
@@ -46,7 +46,7 @@ export function TryoutCountryPageClient({
   );
 
   return (
-    <CatalogActionLabelContext value={tTryouts("open-exam-cta")}>
+    <CatalogActionLabelContext value={tCommon("view-options")}>
       <div className="grid grid-cols-1 gap-4 pt-6 pb-24 sm:grid-cols-2">
         {Arr.map(Arr.zip(page.exams, visuals), ([exam, visual], index) => (
           <CatalogCard

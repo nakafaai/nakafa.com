@@ -118,7 +118,7 @@ function Reactions({
 
 /** The thread under the teacher's answer: who replied and how many, as the forum sums a discussion up. */
 function ThreadSummary() {
-  const t = useTranslations("SchoolSite");
+  const tCommon = useTranslations("Common");
   const locale = useLocale();
 
   return (
@@ -137,7 +137,7 @@ function ThreadSummary() {
       <ItemContent className="min-w-0">
         <ItemTitle className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
           <span className="font-semibold">
-            {t("demo-forum-replies", { count: DEMO_REPLIERS.length })}
+            {tCommon("replies", { count: DEMO_REPLIERS.length })}
           </span>
           <span className="text-muted-foreground text-xs font-normal">
             {demoTime(locale, 10)}

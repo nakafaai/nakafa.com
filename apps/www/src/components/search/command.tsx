@@ -306,7 +306,7 @@ function useDefaultSearchGroups(
   articleNavigation: readonly ArticleNavigationItem[]
 ): SearchCommandGroup[] {
   const tSubject = useTranslations("Subject");
-  const tArticles = useTranslations("Articles");
+  const tCommon = useTranslations("Common");
   const tHoly = useTranslations("Holy");
   const locale = useLocale();
 
@@ -343,10 +343,10 @@ function useDefaultSearchGroups(
           label: item.title,
           target: articleCategoryTarget(item.route),
           type: "navigation",
-          value: `${tArticles("articles")} ${item.title}`,
+          value: `${tCommon("articles")} ${item.title}`,
         })
       ),
-      value: tArticles("articles"),
+      value: tCommon("articles"),
     },
     {
       items: Arr.map(holyMenu, (item) => {

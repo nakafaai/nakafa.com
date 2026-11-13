@@ -73,6 +73,7 @@ function FailureActions({
   retry: () => void;
 }) {
   const t = useTranslations("Ai");
+  const tCommon = useTranslations("Common");
   const authNavigation = useCurrentAuthNavigation();
   return (
     <>
@@ -83,7 +84,7 @@ function FailureActions({
           size="sm"
           variant="outline"
         >
-          {t("retry")}
+          {tCommon("retry")}
         </Button>
       ) : null}
       {action === "credits" ? (

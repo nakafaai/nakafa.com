@@ -26,7 +26,7 @@ export function TryoutReviewQuestionShell({
   children,
   questionOrder,
 }: TryoutQuestionShellProps & { readonly action?: ReactNode }) {
-  const tPlayer = useTranslations("Player");
+  const tCommon = useTranslations("Common");
   const ids = readQuestionIds(questionOrder);
 
   return (
@@ -34,7 +34,7 @@ export function TryoutReviewQuestionShell({
       <article aria-labelledby={ids.title} id={ids.article}>
         <PlayerQuestionHeader number={questionOrder}>
           <ButtonGroup
-            aria-label={tPlayer("question", { number: questionOrder })}
+            aria-label={tCommon("question", { number: questionOrder })}
             className="shrink-0"
           >
             {action}

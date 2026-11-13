@@ -58,6 +58,7 @@ export function SchoolPlacementAdd({
   status: Cohort["status"] | undefined;
 }) {
   const t = useTranslations("SchoolSettings");
+  const tCommon = useTranslations("Common");
   const id = useId();
   const place = useMutation(tenancy.placements.place).withOptimisticUpdate(
     placeStudentChange
@@ -91,7 +92,7 @@ export function SchoolPlacementAdd({
   return (
     <>
       <SchoolHeaderAdd
-        label={t("placement-add")}
+        label={t("student-add")}
         onClick={() => setIsOpen(true)}
       />
       <ResponsiveDialog
@@ -104,19 +105,19 @@ export function SchoolPlacementAdd({
             onClick={submit}
             type="button"
           >
-            {t("placement-add")}
+            {t("student-add")}
           </Button>
         }
         description={t("placement-add-footer")}
         open={isOpen}
         setOpen={setIsOpen}
-        title={t("placement-add")}
+        title={t("student-add")}
       >
         <FieldGroup>
           {refusal === null ? null : <DialogRefusal copy={refusal} />}
           <Field>
             <FieldLabel htmlFor={`${id}-student`}>
-              {t("placement-student")}
+              {tCommon("student")}
             </FieldLabel>
             <SchoolStudentPicker
               cohortId={status === "active" ? cohortId : undefined}
@@ -181,13 +182,13 @@ export function SchoolPlacementMove({
           icon={Move01Icon}
           onClick={() => dialogs.show("move")}
         >
-          {t("placement-move")}
+          {common("move")}
         </DropdownMenuItem>
         <DropdownMenuItem
           icon={IdCardIcon}
           onClick={() => dialogs.show("entry")}
         >
-          {t("roster-entry")}
+          {common("nisn")}
         </DropdownMenuItem>
       </RowItems>
       {dialogs.kind === "entry" ? (
@@ -201,13 +202,13 @@ export function SchoolPlacementMove({
       <ResponsiveDialog
         action={
           <Button disabled={target === null} onClick={submit} type="button">
-            {t("placement-move-save")}
+            {common("move")}
           </Button>
         }
         description={t("placement-move-footer")}
         open={dialogs.isOpen("move")}
         setOpen={dialogs.setOpen}
-        title={t("placement-move")}
+        title={common("move")}
       >
         <FieldGroup>
           <SelectField
@@ -222,7 +223,7 @@ export function SchoolPlacementMove({
                 )
               )
             }
-            placeholder={t("placement-move-placeholder")}
+            placeholder={t("class-cohort-placeholder")}
             value={target}
           />
         </FieldGroup>

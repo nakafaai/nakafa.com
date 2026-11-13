@@ -45,6 +45,7 @@ export function SchoolHomeroomCard({
   slug: TenantSlug;
 }) {
   const t = useTranslations("SchoolSettings");
+  const tCommon = useTranslations("Common");
   const id = useId();
   const assign = useMutation(tenancy.assignments.assign).withOptimisticUpdate(
     assignHomeroomChange
@@ -88,7 +89,7 @@ export function SchoolHomeroomCard({
         <FieldGroup>
           <Field>
             <FieldLabel htmlFor={`${id}-teacher`}>
-              {t("homeroom-teacher")}
+              {t("class-teacher")}
             </FieldLabel>
             {cohort !== undefined && homeroom === null && !isArchived ? (
               <SchoolTeacherPicker
@@ -119,7 +120,7 @@ export function SchoolHomeroomCard({
               type="button"
               variant="outline"
             >
-              {t("homeroom-remove")}
+              {tCommon("remove")}
             </Button>
             <Button
               disabled={
@@ -132,7 +133,7 @@ export function SchoolHomeroomCard({
               type="button"
               variant="outline"
             >
-              {t("homeroom-save")}
+              {tCommon("save")}
             </Button>
           </CardSectionActions>
         )}

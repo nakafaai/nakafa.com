@@ -76,6 +76,7 @@ export function StudentExams() {
 /** The student's sittings in the School table, or the empty state while the student has none. */
 function StudentExamsTable() {
   const t = useTranslations("Exams");
+  const tCommon = useTranslations("Common");
   const locale = useLocale();
   const { slug } = useTenant();
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
@@ -111,7 +112,7 @@ function StudentExamsTable() {
           </TargetLink>
         </TableTitle>
       ),
-      header: t("mine-exam"),
+      header: tCommon("exam"),
       id: "exam",
     }),
     sittingColumns.text((sitting) => sitting.room, {
@@ -138,7 +139,7 @@ function StudentExamsTable() {
           tone={STATUS_LOOKS[info.getValue()].tone}
         />
       ),
-      header: t("mine-status"),
+      header: tCommon("state"),
       id: "status",
       options: Arr.map(SittingStatus.literals, (status) => ({
         icon: STATUS_LOOKS[status].icon,

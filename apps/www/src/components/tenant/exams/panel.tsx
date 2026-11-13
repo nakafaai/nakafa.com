@@ -16,6 +16,7 @@ import { useActiveQuestion } from "@/components/tenant/exams/provider";
  */
 export function ExamPanel() {
   const t = useTranslations("Exams");
+  const tCommon = useTranslations("Common");
   const active = useActiveQuestion();
 
   return (
@@ -23,7 +24,7 @@ export function ExamPanel() {
       <PaneHeader
         description={Option.match(active, {
           onNone: () => undefined,
-          onSome: (page) => t("question", { number: page.index + 1 }),
+          onSome: (page) => tCommon("question", { number: page.index + 1 }),
         })}
         title={t("teacher-layer")}
       />

@@ -106,6 +106,7 @@ function MediaDialog({
   readonly onClose: () => void;
 }) {
   const t = useTranslations("Exams");
+  const tCommon = useTranslations("Common");
   const id = useId();
   const [alt, setAlt] = useState("");
   const [file, setFile] = useState<File | null>(null);
@@ -131,7 +132,7 @@ function MediaDialog({
             setOpen(false);
           }}
         >
-          {t("media-save")}
+          {tCommon("add")}
         </Button>
       }
       description={t(
@@ -201,6 +202,7 @@ export function MediaField({
   readonly question: Question;
 }) {
   const t = useTranslations("Exams");
+  const tCommon = useTranslations("Common");
   const { exam, slug } = useExam();
   const [adding, setAdding] = useState<MediaKind | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -252,7 +254,7 @@ export function MediaField({
                   })
                 }
                 size="icon-sm"
-                tooltip={t("media-remove", { name: item.alt })}
+                tooltip={tCommon("media-remove", { name: item.alt })}
                 type="button"
                 variant="ghost"
               >

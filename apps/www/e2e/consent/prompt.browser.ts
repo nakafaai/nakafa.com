@@ -283,8 +283,8 @@ const verifyActionsAtLargeText = Effect.fn(
   yield* Effect.sync(() => {
     expect(rootSize).toBe("32px");
     expect(Arr.map(actions, ({ label }) => label)).toEqual([
-      en.AnalyticsConsent.decline,
-      en.AnalyticsConsent.allow,
+      en.Common.decline,
+      en.Common.allow,
     ]);
     for (const action of actions) {
       expect(action.inside).toBe(true);
@@ -295,13 +295,13 @@ const verifyActionsAtLargeText = Effect.fn(
     await expect(
       prompt.getByRole("button", {
         exact: true,
-        name: en.AnalyticsConsent.decline,
+        name: en.Common.decline,
       })
     ).toBeVisible();
     await expect(
       prompt.getByRole("button", {
         exact: true,
-        name: en.AnalyticsConsent.allow,
+        name: en.Common.allow,
       })
     ).toBeVisible();
   });
@@ -317,8 +317,8 @@ const verifyActionsOnOneRow = Effect.fn(
 
   yield* Effect.sync(() => {
     expect(Arr.map(actions, ({ label }) => label)).toEqual([
-      en.AnalyticsConsent.decline,
-      en.AnalyticsConsent.allow,
+      en.Common.decline,
+      en.Common.allow,
     ]);
     for (const action of actions) {
       expect(action.inside).toBe(true);
@@ -362,8 +362,8 @@ const verifyActionsShareRow = Effect.fn(
 
   yield* Effect.sync(() => {
     expect(Arr.map(actions, ({ label }) => label)).toEqual([
-      en.AnalyticsConsent.decline,
-      en.AnalyticsConsent.allow,
+      en.Common.decline,
+      en.Common.allow,
     ]);
     for (const action of actions) {
       expect(action.inside).toBe(true);

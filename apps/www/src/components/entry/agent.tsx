@@ -23,6 +23,7 @@ export function AgentConsent({
   readonly redirect: string | null;
 }) {
   const t = useTranslations("Auth");
+  const tCommon = useTranslations("Common");
   const [pending, startTransition] = useTransition();
   const [failed, setFailed] = useState(false);
   const answer = (accept: boolean) =>
@@ -66,7 +67,7 @@ export function AgentConsent({
           {t("agent-deny")}
         </Button>
         <Button disabled={pending} onClick={() => answer(true)}>
-          {t("agent-allow")}
+          {tCommon("allow")}
         </Button>
       </div>
     </div>

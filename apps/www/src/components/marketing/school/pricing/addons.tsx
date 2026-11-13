@@ -32,6 +32,7 @@ const ADD_ON_ICONS = {
  */
 function SchoolAddOn({ addOn }: { addOn: SchoolAddOnKey }) {
   const t = useTranslations("SchoolSite");
+  const tCommon = useTranslations("Common");
   const locale = useLocale();
   const item = schoolAddOns[addOn];
 
@@ -59,7 +60,7 @@ function SchoolAddOn({ addOn }: { addOn: SchoolAddOnKey }) {
             <SchoolAmount amounts={item.price} />
           </span>
           <span className="text-muted-foreground">
-            {item.recurring ? t("plan-month") : t("addon-once")}
+            {item.recurring ? tCommon("plan-month") : t("addon-once")}
           </span>
         </p>
         <p className="text-muted-foreground mt-2 text-pretty md:mt-0 md:px-(--card-spacing)">

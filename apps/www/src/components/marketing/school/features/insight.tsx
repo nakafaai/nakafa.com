@@ -48,6 +48,7 @@ const studentColumns = tableColumns<DemoStudent>();
  */
 function useDemoColumns() {
   const t = useTranslations("SchoolSite");
+  const tCommon = useTranslations("Common");
 
   return [
     studentColumns.text((row) => row.name, {
@@ -58,36 +59,36 @@ function useDemoColumns() {
       id: "student",
     }),
     studentColumns.number((row) => row.skills, {
-      header: t("demo-head-skills"),
+      header: tCommon("skills"),
       id: "skills",
     }),
     studentColumns.number((row) => row.mastery, {
-      header: t("demo-head-mastery"),
+      header: tCommon("mastery"),
       id: "mastery",
     }),
     studentColumns.values((row) => row.narrative, {
       cell: (info) => (
         <TableStatus
           {...NARRATIVE_LOOKS[info.row.original.narrative]}
-          label={t(`demo-narrative-${info.row.original.narrative}`)}
+          label={t(`demo-narrative.${info.row.original.narrative}`)}
         />
       ),
-      header: t("demo-head-narrative"),
+      header: tCommon("narrative"),
       id: "narrative",
       options: [
         {
           icon: NoteEditIcon,
-          label: t("demo-narrative-none"),
+          label: t("demo-narrative.none"),
           value: "none",
         },
         {
           icon: Note01Icon,
-          label: t("demo-narrative-saved"),
+          label: t("demo-narrative.saved"),
           value: "saved",
         },
         {
           icon: CheckmarkCircle02Icon,
-          label: t("demo-narrative-shared"),
+          label: t("demo-narrative.shared"),
           value: "shared",
         },
       ],

@@ -45,7 +45,7 @@ const composerOf = (page: Page) =>
 
 /** The composer's Post button. */
 const postButtonOf = (page: Page) =>
-  page.getByRole("button", { name: app.Posts.post });
+  page.getByRole("button", { name: app.Common.post });
 
 /**
  * Types `text` and waits until Post turns on, which it does once the live list
@@ -93,7 +93,7 @@ for (const viewport of VIEWPORTS) {
             // The post shows at once, before the server has saved it.
             const before = changes.sent;
             await composerOf(page).fill(POST);
-            await page.getByRole("button", { name: app.Posts.post }).click();
+            await page.getByRole("button", { name: app.Common.post }).click();
             await expect(postOf(page, POST)).toBeVisible();
             await expect(rowsOf(page).nth(0)).toContainText(POST);
             await expect(rowsOf(page).nth(1)).toContainText(OLDER);

@@ -197,7 +197,6 @@ export function TryoutExamSelector({
   options: readonly TryoutExamSelectorOption[];
 }) {
   const common = useTranslations("Common");
-  const tTryouts = useTranslations("Tryouts");
   const looks = getTileLooks(
     Arr.map(options, (option) =>
       Tuple.make(getTryoutExamIcons(option.examKey), option.examKey)
@@ -214,7 +213,7 @@ export function TryoutExamSelector({
     <TryoutCatalogChoice
       current={Arr.findFirst(entries, ({ value }) => value === currentValue)}
       entries={entries}
-      label={tTryouts("exam-selector-label")}
+      label={common("exam")}
       menuLabel={common("menu-exam")}
     />
   );

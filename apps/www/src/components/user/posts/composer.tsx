@@ -138,6 +138,7 @@ function PostComposerFields() {
   }
   const { disabled, profile } = composer;
   const t = useTranslations("Posts");
+  const tCommon = useTranslations("Common");
   const text = usePostDraft((draft) => draft.text);
   const setText = usePostDraft((draft) => draft.setText);
   const field = useEarlyTyping(text, setText);
@@ -166,7 +167,7 @@ function PostComposerFields() {
           size="sm"
           type="submit"
         >
-          {t("post")}
+          {tCommon("post")}
         </Button>
       </div>
     </>

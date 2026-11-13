@@ -65,12 +65,12 @@ function CohortFailure({ children }: { children: ReactNode }) {
       <SchoolHeader
         items={[
           {
-            label: t(section.group.key),
+            label: t(`group.${section.group.key}`),
             target: section.group.target,
           },
-          { label: t(section.labelKey) },
+          { label: t(`section.${section.labelKey}`) },
         ]}
-        title={t(section.labelKey)}
+        title={t(`section.${section.labelKey}`)}
       />
       <TablePageBody>{children}</TablePageBody>
     </PageFrame>
@@ -95,12 +95,12 @@ function CohortUnavailable() {
       <SchoolHeader
         items={[
           {
-            label: t(section.group.key),
+            label: t(`group.${section.group.key}`),
             target: section.group.target,
           },
-          { label: t(section.labelKey) },
+          { label: t(`section.${section.labelKey}`) },
         ]}
-        title={t(section.labelKey)}
+        title={t(`section.${section.labelKey}`)}
       />
       <TablePageBody>
         <EmptyState
@@ -109,7 +109,7 @@ function CohortUnavailable() {
               className={buttonVariants({ variant: "outline" })}
               target={section.target}
             >
-              {t(section.labelKey)}
+              {t(`section.${section.labelKey}`)}
             </TargetLink>
           }
           description={t("cohort-unavailable-description")}
@@ -159,18 +159,18 @@ function SchoolCohortPage({
         <SchoolHeader
           items={[
             {
-              label: t(section.group.key),
+              label: t(`group.${section.group.key}`),
               target: section.group.target,
             },
             {
-              label: t(section.labelKey),
+              label: t(`section.${section.labelKey}`),
               target: section.target,
             },
             { label: detail === undefined ? "" : detail.name },
           ]}
           {...(detail === undefined ? {} : { title: detail.name })}
         >
-          <TableSearch placeholder={t("cohort-members-search")} />
+          <TableSearch placeholder={t("logins-search")} />
           {/* An archived cohort takes no one new, so it offers no Add student. */}
           {detail?.status === "archived" ? null : (
             <WithAction action="cohort.manage">

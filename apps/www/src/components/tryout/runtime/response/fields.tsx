@@ -61,7 +61,7 @@ function SingleChoiceFields({
   choice: Choice;
   value: TryoutResponseFieldsProps["value"];
 }) {
-  const t = useTranslations("Player");
+  const tCommon = useTranslations("Common");
   const { id, locked, onChange, response } = value;
   const selected = Option.getOrElse(
     Arr.head(chosenOptions(response ?? [])),
@@ -72,7 +72,7 @@ function SingleChoiceFields({
   return (
     <fieldset className="min-w-0 border-0 p-0">
       <legend className="sr-only" id={labelId}>
-        {t("answer")}
+        {tCommon("answer")}
       </legend>
       <RadioGroup
         aria-labelledby={labelId}
@@ -110,7 +110,7 @@ function MultipleChoiceFields({
   choice: Choice;
   value: TryoutResponseFieldsProps["value"];
 }) {
-  const t = useTranslations("Player");
+  const tCommon = useTranslations("Common");
   const { id, locked, onChange, response } = value;
   const chosen = chosenOptions(response ?? []);
   const parts = choice.options;
@@ -119,7 +119,7 @@ function MultipleChoiceFields({
       className="grid min-w-0 grid-cols-1 gap-2 border-0 p-0 md:grid-cols-2"
       dir={partDirection(parts)}
     >
-      <legend className="sr-only">{t("answer")}</legend>
+      <legend className="sr-only">{tCommon("answer")}</legend>
       {Arr.map(choice.options, (option, index) => (
         <ChoiceCheck
           appearance={revealedAppearance(value.answer, option.id)}

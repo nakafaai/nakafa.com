@@ -13,7 +13,6 @@ export function NotificationsHeader({
   /** The inbox's actions. */
   children: ReactNode;
 }) {
-  const t = useTranslations("Notifications");
   const tCommon = useTranslations("Common");
 
   return (
@@ -22,8 +21,8 @@ export function NotificationsHeader({
         action: children,
         home: HOME_TARGET,
         homeLabel: tCommon("home"),
-        items: [{ label: t("title") }],
-        title: t("title"),
+        items: [{ label: tCommon("notifications") }],
+        title: tCommon("notifications"),
       }}
     />
   );

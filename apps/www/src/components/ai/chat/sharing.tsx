@@ -300,7 +300,7 @@ function ChatShareAction({
  * the design system.
  */
 function ChatShareRetry() {
-  const t = useTranslations("Ai");
+  const tCommon = useTranslations("Common");
   const { isPending, onRetry } = useChatRetry();
 
   return (
@@ -310,7 +310,7 @@ function ChatShareRetry() {
       onClick={onRetry}
     >
       <Spinner aria-hidden="true" icon={Refresh03Icon} isLoading={isPending} />
-      {t("retry")}
+      {tCommon("retry")}
     </Button>
   );
 }

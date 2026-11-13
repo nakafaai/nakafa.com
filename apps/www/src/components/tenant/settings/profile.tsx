@@ -90,6 +90,7 @@ function SchoolProfileCard({
 }) {
   const { slug } = useTenant();
   const t = useTranslations("SchoolSettings");
+  const tCommon = useTranslations("Common");
   const fileInput = useRef<HTMLInputElement>(null);
   const [isRemoving, setIsRemoving] = useState(false);
   const [preview, setPreview] = useState<string | undefined>(undefined);
@@ -207,7 +208,7 @@ function SchoolProfileCard({
         <ResponsiveDialog
           action={
             <Button onClick={takeLogoOff} type="button" variant="destructive">
-              {t("logo-remove-confirm")}
+              {t("logo-remove")}
             </Button>
           }
           description={t("logo-remove-description")}
@@ -222,11 +223,11 @@ function SchoolProfileCard({
       </CardSection>
       <CardSection
         description={t("address-description")}
-        title={t("address-title")}
+        title={tCommon("school-address")}
       >
         <CardContent>
           <Input
-            aria-label={t("address-title")}
+            aria-label={tCommon("school-address")}
             className="max-w-sm"
             placeholder={t("address-placeholder")}
             readOnly

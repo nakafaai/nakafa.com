@@ -92,7 +92,7 @@ function MessagePhoto({
   return (
     <>
       <button
-        aria-label={t("media-open", { name: photo.name })}
+        aria-label={common("media-open", { name: photo.name })}
         className="bg-muted focus-visible:ring-ring/50 block w-full cursor-pointer overflow-hidden rounded-2xl outline-none focus-visible:ring-3"
         onClick={() => setOpen(true)}
         type="button"
@@ -154,14 +154,14 @@ function MessagePhoto({
 
 /** One document of a message: its name and size, which open it in a new tab. */
 function MessageDocument({ document }: { document: ForumFile }) {
-  const t = useTranslations("Classroom");
+  const tCommon = useTranslations("Common");
   const locale = useLocale();
 
   return (
     <Attachment className={documentCard()}>
       {document.address === null ? null : (
         <AttachmentTrigger
-          aria-label={t("media-open", { name: document.name })}
+          aria-label={tCommon("media-open", { name: document.name })}
           className="rounded-xl"
           render={
             <a

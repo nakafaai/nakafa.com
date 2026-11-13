@@ -70,6 +70,7 @@ export function RosterFileChoice({
   onRows: (rows: readonly (typeof ReadRow.Type)[]) => void;
 }) {
   const t = useTranslations("SchoolRoster");
+  const tCommon = useTranslations("Common");
   const input = useRef<HTMLInputElement>(null);
   const [isReading, startReading] = useTransition();
 
@@ -109,7 +110,7 @@ export function RosterFileChoice({
         type="button"
       >
         {isReading ? <Spinner isLoading /> : <HugeIcons icon={Upload01Icon} />}
-        <span className="max-sm:sr-only">{t("import")}</span>
+        <span className="max-sm:sr-only">{tCommon("import")}</span>
       </Button>
     </>
   );

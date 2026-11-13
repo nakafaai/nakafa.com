@@ -19,7 +19,9 @@ import { readStaticData } from "@/lib/static/data";
  * screens read it from here too. ComingSoon is the body of a lesson, an article,
  * a curriculum page or a try-out catalog that has no content yet. DataTable is the
  * try-out catalog's table, and Error is a 3D visual that fails to draw. Ads is
- * the ad frame of a lesson or an article and its founder's note.
+ * the ad frame of a lesson or an article and its founder's note. Comments,
+ * Editor and Emoji are a lesson's or an article's comments: the composer's
+ * toolbar and its emoji chooser.
  */
 const MAIN_NAMESPACES = [
   ...SHELL_MESSAGE_NAMESPACES,
@@ -27,6 +29,8 @@ const MAIN_NAMESPACES = [
   "ComingSoon",
   "Comments",
   "DataTable",
+  "Editor",
+  "Emoji",
   "Error",
   "Player",
   "Posts",

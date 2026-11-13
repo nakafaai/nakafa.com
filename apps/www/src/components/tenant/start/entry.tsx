@@ -82,6 +82,7 @@ function SignInFirst() {
  */
 function SchoolJoin({ guardian }: { guardian: boolean }) {
   const t = useTranslations("SchoolStart");
+  const tCommon = useTranslations("Common");
   const locale = useCurrentLocale();
   const id = useId();
   const [typed, setTyped] = useState("");
@@ -113,7 +114,7 @@ function SchoolJoin({ guardian }: { guardian: boolean }) {
       </div>
       <form className="flex flex-col gap-6" noValidate onSubmit={submit}>
         <Field data-invalid={isInvalid}>
-          <FieldLabel htmlFor={id}>{t("entry-field")}</FieldLabel>
+          <FieldLabel htmlFor={id}>{tCommon("school-address")}</FieldLabel>
           <Input
             aria-invalid={isInvalid}
             autoCapitalize="none"
@@ -142,7 +143,7 @@ function SchoolJoin({ guardian }: { guardian: boolean }) {
             render={<Link params={{ locale }} to="/$locale/school/new" />}
             variant="outline"
           >
-            {t("entry-open")}
+            {tCommon("open-school")}
           </Button>
         </div>
       </form>

@@ -113,6 +113,7 @@ function ExamListRows({
   saving: readonly ListedExam["id"][];
 }) {
   const t = useTranslations("Exams");
+  const tCommon = useTranslations("Common");
   const formatZone = useFormatTimeZone();
   const format = useFormatter();
   const tenant = useTenant();
@@ -163,7 +164,7 @@ function ExamListRows({
     }),
     examColumns.values((exam) => placeOf(exam.scope), {
       cell: (info) => <span dir="auto">{placeName(info.getValue())}</span>,
-      header: t("unit"),
+      header: tCommon("unit"),
       id: "unit",
       options: Arr.zipWith(
         places,
@@ -177,7 +178,7 @@ function ExamListRows({
     }),
     examColumns.number((exam) => exam.questionCount, {
       cell: (info) => <span className="tabular-nums">{info.getValue()}</span>,
-      header: t("questions-column"),
+      header: tCommon("questions"),
       id: "questions",
     }),
     examColumns.days((exam) => exam.createdAt, {
@@ -226,6 +227,7 @@ function ExamListRows({
 function NoExamEmpty() {
   const tenant = useTenant();
   const t = useTranslations("Exams");
+  const tCommon = useTranslations("Common");
 
   if (!tenant.canOpenExams) {
     return (
@@ -254,7 +256,7 @@ function NoExamEmpty() {
             params={{ slug: tenant.slug }}
             to="/school/$slug/settings/units"
           >
-            {t("no-unit-action")}
+            {tCommon("open-units")}
           </Link>
         ) : undefined
       }

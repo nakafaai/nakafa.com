@@ -21,6 +21,7 @@ import { usePlayer } from "@/components/player/provider";
  */
 export function PlayerSheet({ children }: { children: ReactNode }) {
   const t = useTranslations("Player");
+  const tCommon = useTranslations("Common");
   const overlay = usePlayer((state) => state.overlay);
   const waiting = usePlayer((state) => state.pending !== null);
   const open = usePlayer((state) => state.open);
@@ -46,7 +47,7 @@ export function PlayerSheet({ children }: { children: ReactNode }) {
         }
       >
         <DrawerHeader>
-          <DrawerTitle>{t("navigator")}</DrawerTitle>
+          <DrawerTitle>{tCommon("exam-questions")}</DrawerTitle>
           <DrawerDescription>{t("navigator-description")}</DrawerDescription>
         </DrawerHeader>
         <DrawerPanel className={cn(monospace, "grid gap-4")} ref={body}>

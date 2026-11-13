@@ -51,7 +51,6 @@ export function LibraryEditDialog({
 }) {
   const common = useTranslations("Common");
   const t = useTranslations("Classroom");
-  const settings = useTranslations("SchoolSettings");
   const { classId, slug } = useClassScope();
   const id = useId();
   const edit = useMutation(classroom.library.edit).withOptimisticUpdate(
@@ -109,7 +108,7 @@ export function LibraryEditDialog({
     <ResponsiveDialog
       action={
         <Button disabled={!canSave} onClick={save} type="button">
-          {settings("save")}
+          {common("save")}
         </Button>
       }
       description={t("library-edit-description")}
@@ -121,7 +120,7 @@ export function LibraryEditDialog({
         {isLink ? (
           <Field>
             <FieldLabel htmlFor={`${id}-address`}>
-              {t("library-address")}
+              {common("address")}
             </FieldLabel>
             <Input
               autoComplete="url"
@@ -135,7 +134,7 @@ export function LibraryEditDialog({
           </Field>
         ) : null}
         <Field>
-          <FieldLabel htmlFor={`${id}-title`}>{t("library-title")}</FieldLabel>
+          <FieldLabel htmlFor={`${id}-title`}>{common("title")}</FieldLabel>
           <Input
             dir="auto"
             id={`${id}-title`}

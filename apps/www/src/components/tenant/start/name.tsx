@@ -69,6 +69,7 @@ function useAddressCheck(slug: string) {
  */
 export function StartNameQuestion() {
   const t = useTranslations("SchoolStart");
+  const tCommon = useTranslations("Common");
   const name = useTypedName((state) => state.name);
   const slug = useTypedName((state) => state.slug);
   const setName = useTypedName((state) => state.setName);
@@ -110,13 +111,13 @@ export function StartNameQuestion() {
             id={nameId}
             maxLength={START_NAME_LIMIT}
             onChange={(event) => setName(event.target.value)}
-            placeholder={t("name-placeholder")}
+            placeholder={tCommon("harapan-bangsa")}
             value={name}
           />
         </Field>
         <Field>
           <FieldLabel htmlFor={slugId} id={slugLabelId}>
-            {t("address-label")}
+            {tCommon("address")}
           </FieldLabel>
           <div className="relative">
             <input

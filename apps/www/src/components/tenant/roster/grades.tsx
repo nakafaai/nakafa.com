@@ -72,7 +72,7 @@ function RosterGradeCohorts() {
   if (QueryResult.isSuccess(period) && period.value === null) {
     return (
       <DropdownMenuItem disabled icon={Calendar03Icon}>
-        {t("export-grades-no-period")}
+        {t("no-period")}
       </DropdownMenuItem>
     );
   }

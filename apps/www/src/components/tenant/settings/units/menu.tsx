@@ -67,7 +67,7 @@ export function UnitMenu({ unit }: { unit: Unit }) {
               )
             }
           >
-            {t("unit-restore")}
+            {common("restore")}
           </DropdownMenuItem>
         ) : (
           <>
@@ -83,7 +83,7 @@ export function UnitMenu({ unit }: { unit: Unit }) {
               onClick={() => dialogs.show("archive")}
               variant="destructive"
             >
-              {t("unit-archive")}
+              {common("archive")}
             </DropdownMenuItem>
           </>
         )}
@@ -99,7 +99,7 @@ export function UnitMenu({ unit }: { unit: Unit }) {
       <ResponsiveDialog
         action={
           <Button onClick={archiveUnit} type="button" variant="destructive">
-            {t("unit-archive-confirm")}
+            {common("archive")}
           </Button>
         }
         description={t("unit-archive-description")}

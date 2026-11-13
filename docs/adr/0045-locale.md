@@ -28,9 +28,13 @@ D4. `scripts/check/formats.ts` refuses, outside those two modules, tests and Pla
 
 D5. One shape is written one way everywhere. A try-out's history writes its moments in School's `dateTime`; an article card writes its day in the reader's language, as the byline does; the home page's lesson reads its decimal mark from the locale's own numbers.
 
+D6. A word lives under one key. On main c12780fc0a the app dictionaries held 3,832 strings per locale, and 211 top-level words were identical in all four locales under 590 keys. A word that two namespaces share now lives once in Common, which every page loads, and a word that one namespace repeated keeps one key there. Words that code reads by a domain value (a status, a kind, a section, a feature, a FAQ entry) are maps: nested objects such as `SchoolSettings.class.active` or `Landing.faq.credits.question`, read as ``t(`class.${status}`)``, so a map names every value of its domain even where another key holds the same word. A ternary between two keys becomes two literal reads. The dictionaries now hold 3,538 strings per locale (99 new words in Common, 393 copies gone), at parity in en, id, de and ms. `scripts/check/words.ts` refuses, at each copy, a top-level word that two keys hold in every locale; a dropdown's `menu-` label stays with `scripts/check/menus.ts`, and the standalone dictionaries load apart, so neither is compared.
+
 ## Consequences
 
 - A new locale needs its dictionaries, their imports in `messages.ts` and its time zone in `locale.ts`; every format follows from the platform.
 - A new shape is one entry in `FORMATS`, which every page and the backend then share.
 - `lib/i18n/date.ts`, `school/time.ts`, `user/age.ts`, `memory/time.ts`, `lib/marketing/decimal.ts`, `formatBillingDate`, `formatBillingDay`, `formatCount`, `formatStorage`, `spaceLetterSymbol` and the design system's `MATH_NUMBER_OPTIONS` and `TRIG_NUMBER_OPTIONS` are gone.
 - German moments in the try-out history now read `06.10.2026, 15:30`, and article cards no longer write English months on Indonesian, German or Malay pages.
+- A new word goes to Common when another namespace already holds it; `bun run check:tests` names the key to read instead. A new value of a domain map is one entry in its nested object.
+- The School root loads `Subject`, whose subject names the class form's placeholder reads.

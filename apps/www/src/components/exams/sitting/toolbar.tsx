@@ -22,6 +22,7 @@ import { pageRowVariants } from "@/components/shared/content/width";
  */
 export function SittingFilterRow() {
   const t = useTranslations("Exams");
+  const tCommon = useTranslations("Common");
   const filter = useSittingStore((state) => state.filter);
   const chooseFilter = useSittingStore((state) => state.chooseFilter);
 
@@ -38,7 +39,7 @@ export function SittingFilterRow() {
       <TabsList aria-label={t("filter-label")} className={pageRowVariants()}>
         <TabsTab value="all">
           <HugeIcons aria-hidden="true" icon={UserGroupIcon} />
-          {t("filter-all")}
+          {tCommon("all")}
         </TabsTab>
         <TabsTab value="needsAttention">
           <HugeIcons aria-hidden="true" icon={Alert02Icon} />

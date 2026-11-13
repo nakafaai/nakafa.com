@@ -88,11 +88,12 @@ function SchoolPoliciesBody() {
  */
 function SchoolStudentsPolicy({ policies }: { policies: SchoolPolicies }) {
   const t = useTranslations("SchoolSettings");
+  const tCommon = useTranslations("Common");
 
   return (
     <CardSection
       description={t("policy-students-description")}
-      title={t("policy-students")}
+      title={tCommon("pupils")}
     >
       <CardContent>
         <FieldGroup>
@@ -243,6 +244,7 @@ function SchoolNinaCreditsPolicy({ current }: { current: number }) {
 function SchoolDomainsPolicy({ policies }: { policies: SchoolPolicies }) {
   const { slug } = useTenant();
   const t = useTranslations("SchoolSettings");
+  const tCommon = useTranslations("Common");
   const setPolicy = useMutation(
     tenancy.settings.setPolicy
   ).withOptimisticUpdate(setPolicyChange);
@@ -303,7 +305,7 @@ function SchoolDomainsPolicy({ policies }: { policies: SchoolPolicies }) {
             size="sm"
             type="button"
           >
-            {t("save")}
+            {tCommon("save")}
           </Button>
         </CardSectionActions>
       </CardSectionFooter>

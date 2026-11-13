@@ -54,14 +54,14 @@ export const Route = createFileRoute("/$locale/_marketing/pricing")({
     return {
       breadcrumb: {
         home: tCommon("home"),
-        pricing: t("breadcrumb"),
+        pricing: tCommon("pricing"),
       },
       description: t("metadata-description"),
       faqs: Arr.map(
         pricingFaqNumbers,
         (number): MarketingFaqItem => ({
-          answer: t(`a${number}`, { cost: NINA_RESPONSE_CREDITS }),
-          question: t(`q${number}`),
+          answer: t(`faq.${number}.answer`, { cost: NINA_RESPONSE_CREDITS }),
+          question: t(`faq.${number}.question`),
         })
       ),
       title: t("metadata-title"),
@@ -121,7 +121,7 @@ export const Route = createFileRoute("/$locale/_marketing/pricing")({
 /** The headline above the two plans. */
 function PricingPagePlans() {
   const t = useTranslations("Landing");
-  const tPricing = useTranslations("Pricing");
+  const tCommon = useTranslations("Common");
   return (
     <section
       aria-labelledby="pricing-heading"
@@ -142,7 +142,7 @@ function PricingPagePlans() {
           proPrice={
             <PricingPrice
               Price={StaticPrice}
-              period={tPricing("pro-period")}
+              period={tCommon("plan-month")}
               plan="pro"
             />
           }

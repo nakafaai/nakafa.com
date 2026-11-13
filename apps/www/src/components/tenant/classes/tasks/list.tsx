@@ -104,6 +104,7 @@ export function TaskList() {
 /** The header and the table of the class's tasks, which read the standing the page's filters chose. */
 function TaskListBody() {
   const t = useTranslations("Classroom");
+  const tCommon = useTranslations("Common");
   const { can, classId, slug } = useClassScope();
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
   const chosen = useTableFilters((state) => state.chosen);
@@ -171,7 +172,7 @@ function TaskListBody() {
                       },
                       {
                         icon: Archive02Icon,
-                        label: t("task-archived"),
+                        label: tCommon("archived"),
                         value: "archived",
                       },
                     ]}
@@ -209,6 +210,7 @@ function TaskListBody() {
  */
 function useTaskColumns(categories: readonly string[]) {
   const t = useTranslations("Classroom");
+  const tCommon = useTranslations("Common");
   const timeZone = useClockZone();
   const format = useFormatter();
   const { can } = useClassScope();
@@ -217,7 +219,7 @@ function useTaskColumns(categories: readonly string[]) {
   return [
     taskColumns.text((task) => task.title, {
       cell: (info) => <TaskTitle task={info.row.original} />,
-      header: t("task-title"),
+      header: tCommon("title"),
       id: "title",
     }),
     taskColumns.values((task) => task.category ?? "", {
@@ -236,7 +238,7 @@ function useTaskColumns(categories: readonly string[]) {
           {format.dateTime(info.getValue(), "dateTime", { timeZone })}
         </span>
       ),
-      header: t("task-deadline"),
+      header: tCommon("deadline"),
       id: "deadline",
       timeZone: () => timeZone,
     }),
@@ -248,7 +250,7 @@ function useTaskColumns(categories: readonly string[]) {
               <TaskStanding task={info.row.original} />
             </span>
           ),
-          header: t("task-status"),
+          header: tCommon("status"),
           id: "standing",
           options: standingChoices,
         })
@@ -258,7 +260,7 @@ function useTaskColumns(categories: readonly string[]) {
               <TaskStanding task={info.row.original} />
             </span>
           ),
-          header: t("task-status"),
+          header: tCommon("status"),
           id: "handedIn",
         }),
     taskColumns.menu((info) => <TaskRowMenu task={info.row.original} />),
@@ -272,7 +274,7 @@ function useTaskColumns(categories: readonly string[]) {
 function useStandingChoices() {
   const t = useTranslations("Classroom");
   const labels = {
-    handedIn: t("task-handed-in"),
+    handedIn: t("task-submissions"),
     late: t("task-handed-in-late"),
     open: t("task-not-handed-in"),
     scored: t("task-standing-scored"),

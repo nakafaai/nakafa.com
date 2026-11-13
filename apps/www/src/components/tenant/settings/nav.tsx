@@ -81,7 +81,7 @@ export function SchoolSettingsNav() {
 function SchoolSettingsNavGroup({ group }: { group: SchoolSettingsGroup }) {
   const leafPath = useLeafRoutePath();
   const t = useTranslations("SchoolSettings");
-  const label = t(group.key);
+  const label = t(`group.${group.key}`);
   const holdsPage = Arr.some(group.sections, (section) =>
     ownsLeafPath(section, leafPath)
   );
@@ -127,7 +127,7 @@ function SchoolSettingsNavItem({
 }) {
   const leafPath = useLeafRoutePath();
   const t = useTranslations("SchoolSettings");
-  const label = t(section.labelKey);
+  const label = t(`section.${section.labelKey}`);
 
   return (
     <SidebarMenuItem>
@@ -158,7 +158,7 @@ function SchoolSettingsNavSubItem({
         isActive={ownsLeafPath(section, leafPath)}
         render={<TargetLink target={section.target} />}
       >
-        <span>{t(section.labelKey)}</span>
+        <span>{t(`section.${section.labelKey}`)}</span>
       </SidebarMenuSubButton>
     </SidebarMenuSubItem>
   );

@@ -101,8 +101,8 @@ export const Route = createFileRoute("/$locale/_marketing/")({
         "accuracy",
       ] as const,
       (key) => ({
-        answer: tHome(`faq-${key}-answer`, { cost: NINA_RESPONSE_CREDITS }),
-        question: tHome(`faq-${key}-question`),
+        answer: tHome(`faq.${key}.answer`, { cost: NINA_RESPONSE_CREDITS }),
+        question: tHome(`faq.${key}.question`),
       })
     );
 

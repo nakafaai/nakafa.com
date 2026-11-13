@@ -31,6 +31,7 @@ export function ProOfferDialog({
   offers: readonly ProOffer[] | null;
 }) {
   const t = useTranslations("Pricing");
+  const tCommon = useTranslations("Common");
   const [picked, setPicked] = useState<ProOffer["offer"] | null>(null);
   // The list stays while the dialog animates out, so its body never empties in the last frames.
   const [listed, setListed] = useState<readonly ProOffer[]>(offers ?? []);
@@ -58,7 +59,7 @@ export function ProOfferDialog({
           type="button"
         >
           <HugeIcons icon={Wallet01Icon} />
-          {t("offer-continue")}
+          {tCommon("continue")}
         </Button>
       }
       description={t(
@@ -94,6 +95,7 @@ export function ProOfferDialog({
 /** One offer: its name and price on one line, and how it is paid on the next. */
 function ProOfferOption({ offer }: { offer: ProOffer }) {
   const t = useTranslations("Pricing");
+  const tCommon = useTranslations("Common");
   const isPass = offer.interval === "pass";
 
   return (
@@ -104,7 +106,7 @@ function ProOfferOption({ offer }: { offer: ProOffer }) {
           <span>
             {isPass
               ? t("offer-pass", { months: offer.months })
-              : t("offer-monthly")}
+              : tCommon("monthly")}
           </span>
           <span className="whitespace-nowrap tabular-nums">
             {formatMinorAmount(offer.amount, offer.currency)}

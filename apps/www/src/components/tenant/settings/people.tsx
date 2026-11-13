@@ -322,7 +322,7 @@ function PersonSelect({
         label={common("menu-person")}
         maxLength={SEARCH_LIMIT}
         onEnd={onEnd}
-        placeholder={t("person-search")}
+        placeholder={t("roles-search")}
         waiting={waiting}
       >
         {(person) => (

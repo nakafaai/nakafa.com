@@ -83,6 +83,7 @@ export function SchoolOwnGrades() {
 /** The table of the viewer's grades, or the sentence of a viewer who has none released yet. */
 function OwnGradeTable() {
   const t = useTranslations("SchoolGrades");
+  const tCommon = useTranslations("Common");
   const { slug } = useTenant();
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
   const grades = useQuery(records.grades.own, isSettled ? { slug } : "skip");
@@ -100,7 +101,7 @@ function OwnGradeTable() {
           <span dir="auto">{info.getValue()}</span>
         </TableTitle>
       ),
-      header: t("own-class"),
+      header: tCommon("class"),
       id: "class",
     }),
     gradeColumns.values((grade) => grade.period, {
@@ -110,13 +111,13 @@ function OwnGradeTable() {
     }),
     gradeColumns.number((grade) => grade.value, {
       cell: (info) => <span className="tabular-nums">{info.getValue()}</span>,
-      header: t("value"),
+      header: tCommon("grade"),
       id: "value",
     }),
     gradeColumns.values((grade) => grade.band ?? NO_BAND, {
       cell: (info) =>
         info.getValue() === NO_BAND ? null : <span>{info.getValue()}</span>,
-      header: t("own-band"),
+      header: tCommon("band"),
       id: "band",
       options: Arr.map(namedOptions(bands, BAND_ICONS), (option) =>
         option.value === NO_BAND
@@ -132,7 +133,7 @@ function OwnGradeTable() {
           tone={KKTP_LOOKS[info.getValue()].tone}
         />
       ),
-      header: t("kktp"),
+      header: tCommon("kktp"),
       id: "kktp",
       options: Arr.map(KktpStatus.literals, (kktp) => ({
         icon: KKTP_LOOKS[kktp].icon,
@@ -146,7 +147,7 @@ function OwnGradeTable() {
           icon={Certificate01Icon}
           render={<Link params={{ slug }} to="/school/$slug/cards" />}
         >
-          {t("own-open-cards")}
+          {tCommon("report-cards")}
         </DropdownMenuItem>
       </RowItems>
     )),
@@ -160,7 +161,7 @@ function OwnGradeTable() {
         <EmptyState
           description={t("own-empty-description")}
           scene={<EmptyNina act="writing" />}
-          title={t("own-empty")}
+          title={tCommon("own-empty")}
         />
       }
       loading={!QueryResult.isSuccess(grades)}

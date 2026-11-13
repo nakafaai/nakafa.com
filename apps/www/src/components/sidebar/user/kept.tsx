@@ -83,7 +83,7 @@ export function KeptAccount() {
  * inert, so a press waits for the live row, which draws the same face.
  */
 function KeptAccountRow() {
-  const t = useTranslations("Auth");
+  const tCommon = useTranslations("Common");
   return (
     <li className="contents" data-kept-account inert>
       <ul className="contents">
@@ -99,8 +99,8 @@ function KeptAccountRow() {
               avatar={<KeptAvatar />}
               description={
                 <>
-                  <span data-kept-plan-part="free">{t("plan-free")}</span>
-                  <span data-kept-plan-part="pro">{t("plan-pro")}</span>
+                  <span data-kept-plan-part="free">{tCommon("free")}</span>
+                  <span data-kept-plan-part="pro">{tCommon("pro")}</span>
                 </>
               }
               name={<span className="before:content-(--kept-account-name)" />}

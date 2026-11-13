@@ -54,6 +54,7 @@ export function TenantGuardianSignIn() {
 /** The form under the provider of `TenantGuardianSignIn`, one step at a time. */
 function GuardianSignInForm() {
   const t = useTranslations("SchoolGuardians");
+  const tCommon = useTranslations("Common");
   const slug = schoolRoute.useParams({ select: (params) => params.slug });
   const locale = Schema.decodeOption(ActiveAppLocaleCodeSchema)(useLocale());
   const id = useId();
@@ -189,7 +190,7 @@ function GuardianSignInForm() {
             icon={form._tag === "email" ? MailSend01Icon : Login03Icon}
             isLoading={isPending}
           />
-          {form._tag === "email" ? t("send-code") : t("sign-in")}
+          {form._tag === "email" ? t("send-code") : tCommon("sign-in")}
         </Button>
         {form._tag === "email" ? null : (
           <>
@@ -200,7 +201,7 @@ function GuardianSignInForm() {
               variant="ghost"
             >
               <HugeIcons icon={MailSend01Icon} />
-              {t("resend-code")}
+              {tCommon("send-again")}
             </Button>
             <Button
               disabled={isPending}

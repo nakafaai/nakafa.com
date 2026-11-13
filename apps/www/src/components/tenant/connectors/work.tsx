@@ -48,7 +48,7 @@ export function SchoolHolder() {
     <TableStatus
       band
       icon={UserIcon}
-      label={t("holder-personal")}
+      label={t("holder.personal")}
       tone="neutral"
     />
   );
@@ -56,7 +56,7 @@ export function SchoolHolder() {
 
 /** The exams a connected Forms feeds, for a viewer who may open them. */
 export function ServiceExams() {
-  const t = useTranslations("Connectors");
+  const tCommon = useTranslations("Common");
   const { service, state } = useService();
   const { canOpenExams, slug } = useTenant();
 
@@ -72,7 +72,7 @@ export function ServiceExams() {
 
   return (
     <Link {...schoolExamsTarget(slug)} className={buttonVariants()}>
-      {t("open-exams")}
+      {tCommon("open-exams")}
       <HugeIcons icon={ArrowRight01Icon} />
     </Link>
   );

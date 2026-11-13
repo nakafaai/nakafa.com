@@ -33,7 +33,7 @@ export function TryoutPageHeader({
   const tCommon = useTranslations("Common");
   const path: readonly BreadcrumbHeaderItem[] = [
     {
-      label: tCommon("try-out-short"),
+      label: tCommon("try-out"),
       target: TRYOUT_TARGET,
     },
     ...items,

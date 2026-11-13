@@ -197,8 +197,14 @@ const readSetText = Effect.fn("www.llms.tryout.set")(function* (
   locale: Locale,
   publicPath: string
 ) {
-  const [page, tTryouts] = yield* Effect.all(
-    [readTryoutSetPage(locale, publicPath), readWords(locale)],
+  const [page, tTryouts, tCommon] = yield* Effect.all(
+    [
+      readTryoutSetPage(locale, publicPath),
+      readWords(locale),
+      Effect.promise(() =>
+        readServerTranslator({ locale, namespace: "Common" })
+      ),
+    ],
     { concurrency: "unbounded" }
   );
   if (!page) {
@@ -218,7 +224,7 @@ const readSetText = Effect.fn("www.llms.tryout.set")(function* (
       const minutes = tTryouts("set-duration-minutes", {
         minutes: section.timeLimitSeconds / 60,
       });
-      return `- ${section.title}: ${section.questionCount} ${tTryouts("part-questions-label")}, ${minutes}`;
+      return `- ${section.title}: ${section.questionCount} ${tCommon("exam-questions")}, ${minutes}`;
     })
   );
 });

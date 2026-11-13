@@ -115,6 +115,7 @@ export function ParentRequests({
   linkId: GenericId.GenericId<"guardianLinks">;
 }) {
   const t = useTranslations("SchoolGuardians");
+  const tCommon = useTranslations("Common");
   const { slug } = useTenant();
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
   const kindOptions = useKindOptions();
@@ -155,7 +156,7 @@ export function ParentRequests({
                 }),
                 parentColumns.values((request) => request.state, {
                   cell: (info) => t(`request-state-${info.getValue()}`),
-                  header: t("request-state"),
+                  header: tCommon("state"),
                   id: "state",
                   options: Arr.map(
                     Rec.toEntries(REQUEST_STATE_ICONS),
@@ -223,7 +224,7 @@ function AskDialog({
             }
             type="button"
           >
-            {t("request-send")}
+            {common("send")}
           </Button>
         }
         description={t("request-description")}
@@ -278,6 +279,7 @@ export function WaitingRequests({
   requests: readonly WaitingRequest[];
 }) {
   const t = useTranslations("SchoolGuardians");
+  const tCommon = useTranslations("Common");
   const { slug } = useTenant();
   const answer = useMutation(guardians.requests.answer);
   const kindOptions = useKindOptions();
@@ -315,7 +317,7 @@ export function WaitingRequests({
         columns={[
           waitingColumns.text((request) => request.student, {
             cell: (info) => <span dir="auto">{info.getValue()}</span>,
-            header: t("request-student"),
+            header: tCommon("student"),
             id: "student",
           }),
           waitingColumns.values((request) => request.kind, {
@@ -351,7 +353,7 @@ export function WaitingRequests({
                 onClick={() => decide(info.row.original, "declined")}
                 variant="destructive"
               >
-                {t("request-decline")}
+                {tCommon("decline")}
               </DropdownMenuItem>
             </RowItems>
           )),

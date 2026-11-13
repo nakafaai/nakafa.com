@@ -37,6 +37,7 @@ export function MoveDialog({
   setOpen: (open: boolean) => void;
 }) {
   const t = useTranslations("Classroom");
+  const tCommon = useTranslations("Common");
   const folders = useFolderList();
   const [chosen, setChosen] = useState<Destination>(current);
   const shown = Arr.filter(
@@ -67,7 +68,7 @@ export function MoveDialog({
           onClick={() => onMove(chosen)}
           type="button"
         >
-          {t("library-move")}
+          {tCommon("move")}
         </Button>
       }
       description={t("library-move-description")}

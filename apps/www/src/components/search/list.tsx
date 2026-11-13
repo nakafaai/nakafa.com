@@ -44,6 +44,7 @@ export function SearchResults({
   error,
 }: Props) {
   const t = useTranslations("Utils");
+  const tCommon = useTranslations("Common");
   const sectionLabels = useSearchSectionLabels();
 
   if (isError) {
@@ -78,7 +79,7 @@ export function SearchResults({
   return (
     <ResultsQueryContext value={query}>
       <section
-        aria-label={t("search-results")}
+        aria-label={tCommon("search-results")}
         className="flex flex-col gap-3 rounded-xl border py-4 shadow-sm"
       >
         {Arr.map(groups, (group, index) => (

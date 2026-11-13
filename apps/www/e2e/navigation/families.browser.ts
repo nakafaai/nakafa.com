@@ -70,7 +70,7 @@ const WALK: readonly Step[] = [
     path: /\/en\/chat$/u,
   },
   {
-    control: (page) => accountItem(page, app.Notifications.title),
+    control: (page) => accountItem(page, app.Common.notifications),
     path: /\/en\/notifications$/u,
   },
   {
@@ -78,11 +78,11 @@ const WALK: readonly Step[] = [
     path: /\/en\/(?:user\/|@)[^/]+$/u,
   },
   {
-    control: (page) => accountItem(page, app.Auth.settings),
+    control: (page) => accountItem(page, app.Common.settings),
     path: /\/en\/user\/settings$/u,
   },
   {
-    control: async (page) => sidebarLink(page, app.Auth["back-to-nakafa"]),
+    control: async (page) => sidebarLink(page, app.Common["back-to-nakafa"]),
     path: /\/en\/(?:user\/|@)[^/]+$/u,
   },
 ];

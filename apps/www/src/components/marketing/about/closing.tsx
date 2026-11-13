@@ -15,6 +15,7 @@ import { EXACT_ACTIVE_OPTIONS } from "@/lib/routing/tree";
  */
 export function Closing() {
   const t = useTranslations("Landing");
+  const tCommon = useTranslations("Common");
   const topics: Arr.NonEmptyReadonlyArray<string> = [
     t("closing-topic-0"),
     t("closing-topic-1"),
@@ -32,7 +33,7 @@ export function Closing() {
             className={buttonVariants({ size: "lg", variant: "secondary" })}
             to="/$locale/curricula"
           >
-            {t("hero-start")}
+            {tCommon("start-learning")}
           </Link>
           <Link
             activeOptions={EXACT_ACTIVE_OPTIONS}

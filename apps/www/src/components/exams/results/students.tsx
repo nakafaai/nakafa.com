@@ -42,13 +42,13 @@ const STUDENT_PAGE_SIZE = 50;
 
 /** The copy key of each state of an attempt. */
 const stateKeys = {
-  closing: "state-closing",
-  inProgress: "state-in-progress",
-  locked: "state-locked",
-  submitted: "state-submitted",
+  closing: "state.closing",
+  inProgress: "state.in-progress",
+  locked: "state.locked",
+  submitted: "state.submitted",
 } satisfies Record<
   (typeof StudentRowSchema.Type)["state"],
-  "state-closing" | "state-in-progress" | "state-locked" | "state-submitted"
+  "state.closing" | "state.in-progress" | "state.locked" | "state.submitted"
 >;
 
 /**
@@ -139,13 +139,13 @@ function StudentRowMenu({
 }: {
   readonly attemptId: (typeof StudentRowSchema.Type)["attemptId"];
 }) {
-  const t = useTranslations("Exams");
+  const tCommon = useTranslations("Common");
   const show = usePanes((state) => state.show);
 
   return (
     <RowItems>
       <DropdownMenuItem icon={ViewIcon} onClick={() => show(attemptId)}>
-        {t("results-answers")}
+        {tCommon("answers")}
       </DropdownMenuItem>
     </RowItems>
   );
@@ -160,9 +160,10 @@ const studentColumns = tableColumns<typeof StudentRowSchema.Type>();
  */
 function useStatusChoices() {
   const t = useTranslations("Exams");
+  const tCommon = useTranslations("Common");
 
   return [
-    { icon: UserGroupIcon, label: t("filter-all"), value: "all" as const },
+    { icon: UserGroupIcon, label: tCommon("all"), value: "all" as const },
     ...Arr.map(AttemptState.literals, (state) => ({
       icon: STATE_LOOKS[state].icon,
       label: t(stateKeys[state]),
@@ -174,6 +175,7 @@ function useStatusChoices() {
 /** The columns of the students' table: each student's state, score, counts and the time they finished. */
 function useStudentColumns() {
   const t = useTranslations("Exams");
+  const tCommon = useTranslations("Common");
   const { timeZone, total } = useResultsPaper();
   const format = useFormatter();
   const statusChoices = useStatusChoices();
@@ -192,7 +194,7 @@ function useStudentColumns() {
           tone={STATE_LOOKS[info.getValue()].tone}
         />
       ),
-      header: t("results-status"),
+      header: tCommon("state"),
       id: "status",
       options: statusChoices,
     }),

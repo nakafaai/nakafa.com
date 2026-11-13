@@ -271,7 +271,7 @@ export function MessageMenu({
           initial={discussion.title}
           isValid={Schema.is(DiscussionTitleText)}
           key={dialogs.key}
-          label={t("discussion-title")}
+          label={common("title")}
           onSave={(title) =>
             startTransition(() =>
               runSchoolWrite(

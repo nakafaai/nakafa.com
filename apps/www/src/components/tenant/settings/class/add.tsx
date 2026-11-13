@@ -53,6 +53,8 @@ export function SchoolClassAdd({
   slug: TenantSlug;
 }) {
   const t = useTranslations("SchoolSettings");
+  const tCommon = useTranslations("Common");
+  const tSubject = useTranslations("Subject");
   const id = useId();
   const create = useMutation(classroom.classes.create).withOptimisticUpdate(
     createClassChange
@@ -125,12 +127,12 @@ export function SchoolClassAdd({
           {sd ? null : (
             <Field>
               <FieldLabel htmlFor={`${id}-subject`}>
-                {t("class-subject")}
+                {tCommon("school-subject")}
               </FieldLabel>
               <Input
                 id={`${id}-subject`}
                 onChange={(event) => setSubject(event.target.value)}
-                placeholder={t("class-subject-placeholder")}
+                placeholder={tSubject("physics")}
                 value={subject}
               />
             </Field>

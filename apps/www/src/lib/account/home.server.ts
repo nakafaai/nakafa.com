@@ -186,10 +186,10 @@ export const notificationsScreenHandler = accountHandler(
       );
       const now = yield* Clock.currentTimeMillis;
       const messages = yield* messagesFor(locale);
-      const t = createTranslator({
+      const tCommon = createTranslator({
         locale,
         messages,
-        namespace: "Notifications",
+        namespace: "Common",
       });
       const meta = createTranslator({
         locale,
@@ -201,7 +201,7 @@ export const notificationsScreenHandler = accountHandler(
         description: meta("description"),
         indexable: false,
         locale,
-        title: t("title"),
+        title: tCommon("notifications"),
       };
       return { first, now, seo };
     })

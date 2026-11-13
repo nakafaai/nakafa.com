@@ -105,7 +105,7 @@ function FamilyRow({ link }: { link: FamilyItem }) {
       </div>
       <TableStatus
         icon={look.icon}
-        label={t(`status-${link.status}`)}
+        label={t(`status-label.${link.status}`)}
         tone={look.tone}
       />
     </li>

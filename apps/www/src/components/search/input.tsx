@@ -17,6 +17,7 @@ const searchRoute = getRouteApi("/$locale/_main/_app/search");
 
 export function InputSearch() {
   const t = useTranslations("Utils");
+  const tCommon = useTranslations("Common");
   const setQuery = useSearch((state) => state.setQuery);
   const navigate = searchRoute.useNavigate();
 
@@ -62,7 +63,7 @@ export function InputSearch() {
             <InputGroupButton
               onClick={() => setValue("")}
               size="icon-sm"
-              tooltip={t("clear-search")}
+              tooltip={tCommon("clear-search")}
             >
               <HugeIcons className="size-4" icon={Cancel01Icon} />
             </InputGroupButton>

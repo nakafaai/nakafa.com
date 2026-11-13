@@ -135,6 +135,7 @@ function GradingTable({
   versions: readonly SchemeVersion[];
 }) {
   const t = useTranslations("SchoolSettings");
+  const tCommon = useTranslations("Common");
   const formatZone = useFormatTimeZone();
   const format = useFormatter();
 
@@ -166,7 +167,7 @@ function GradingTable({
     }),
     versionColumns.number((row) => row.kktp, {
       cell: (info) => <span className="tabular-nums">{info.getValue()}</span>,
-      header: t("grading-kktp"),
+      header: tCommon("kktp"),
       id: "kktp",
     }),
     versionColumns.text(
@@ -209,7 +210,7 @@ function GradingTable({
             tone={VERSION_LOOKS[info.getValue()].tone}
           />
         ),
-        header: t("grading-status"),
+        header: tCommon("state"),
         id: "status",
         options: Arr.map(VersionStatus.literals, (status) => ({
           icon: VERSION_LOOKS[status].icon,
@@ -244,6 +245,7 @@ function GradingTable({
  */
 function SchemeVersionMenu({ version }: { version: SchemeVersion }) {
   const t = useTranslations("SchoolSettings");
+  const tCommon = useTranslations("Common");
   const { reach, slug } = useTenant();
   const remove = useMutation(records.schemes.remove).withOptimisticUpdate(
     removeSchemeChange
@@ -260,7 +262,7 @@ function SchemeVersionMenu({ version }: { version: SchemeVersion }) {
           icon={PencilEdit02Icon}
           onClick={() => dialogs.show("edit")}
         >
-          {t("grading-edit")}
+          {tCommon("edit")}
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem
@@ -268,7 +270,7 @@ function SchemeVersionMenu({ version }: { version: SchemeVersion }) {
           onClick={() => dialogs.show("remove")}
           variant="destructive"
         >
-          {t("grading-remove")}
+          {tCommon("delete")}
         </DropdownMenuItem>
       </RowItems>
       {dialogs.kind === "edit" ? (
@@ -287,7 +289,7 @@ function SchemeVersionMenu({ version }: { version: SchemeVersion }) {
             }}
             variant="destructive"
           >
-            {t("grading-remove")}
+            {tCommon("delete")}
           </Button>
         }
         description={t("grading-remove-description")}
@@ -297,7 +299,7 @@ function SchemeVersionMenu({ version }: { version: SchemeVersion }) {
       >
         <ResponsiveDialogSubject
           icon={Calendar03Icon}
-        >{`${t("grading-kktp")} ${version.kktp}`}</ResponsiveDialogSubject>
+        >{`${tCommon("kktp")} ${version.kktp}`}</ResponsiveDialogSubject>
       </ResponsiveDialog>
     </>
   );

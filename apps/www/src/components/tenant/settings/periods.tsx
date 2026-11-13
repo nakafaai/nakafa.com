@@ -155,6 +155,7 @@ function SchoolPeriodsContent() {
 function SchoolPeriodTable({ unitId }: { unitId: UnitId }) {
   const { slug } = useTenant();
   const t = useTranslations("SchoolSettings");
+  const tCommon = useTranslations("Common");
   const format = useFormatter();
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
   const pagination = usePaginatedQuery(
@@ -170,7 +171,7 @@ function SchoolPeriodTable({ unitId }: { unitId: UnitId }) {
       cell: (info) => (
         <TableTitle icon={Calendar03Icon}>{info.getValue()}</TableTitle>
       ),
-      header: t("period-name"),
+      header: tCommon("name"),
       id: "name",
     }),
     periodColumns.days((period) => dayMoment(period.start), {
@@ -189,15 +190,15 @@ function SchoolPeriodTable({ unitId }: { unitId: UnitId }) {
       cell: (info) => (
         <TableStatus
           icon={PERIOD_STATUS_LOOKS[info.getValue()].icon}
-          label={t(`period-${info.getValue()}`)}
+          label={t(`period.${info.getValue()}`)}
           tone={PERIOD_STATUS_LOOKS[info.getValue()].tone}
         />
       ),
-      header: t("period-status"),
+      header: tCommon("state"),
       id: "status",
       options: Arr.map(PeriodStatus.literals, (status) => ({
         icon: PERIOD_STATUS_LOOKS[status].icon,
-        label: t(`period-${status}`),
+        label: t(`period.${status}`),
         value: status,
       })),
     }),

@@ -36,12 +36,17 @@ export const settingsScreenHandler = accountHandler(
         messages: yield* messagesFor(locale),
         namespace: "Auth",
       });
+      const tCommon = createTranslator({
+        locale,
+        messages: yield* messagesFor(locale),
+        namespace: "Common",
+      });
       const seo: ScreenSeo = {
         canonicalPath: `/${locale}`,
         description: t("settings-description"),
         indexable: false,
         locale,
-        title: t("settings"),
+        title: tCommon("settings"),
       };
       return { account, seo };
     })
@@ -81,7 +86,7 @@ export const learningScreenHandler = accountHandler(
         description: t("learning-description"),
         indexable: false,
         locale,
-        title: t("learning"),
+        title: t("section.learning"),
       };
       return { account, preference, programs, seo };
     })
@@ -120,7 +125,7 @@ export const memoryScreenHandler = accountHandler(
         description: t("memory-description"),
         indexable: false,
         locale,
-        title: t("memory"),
+        title: t("section.memory"),
       };
       return { first, now, paused: state.paused, seo };
     })
@@ -154,7 +159,7 @@ export const connectorsScreenHandler = accountHandler(
         description: t("connectors-description"),
         indexable: false,
         locale,
-        title: t("connectors"),
+        title: t("section.connectors"),
       };
       return { first, offered, seo };
     })

@@ -159,7 +159,7 @@ export function UnitEditDialog({
     <ResponsiveDialog
       action={
         <Button disabled={!canSave} onClick={save} type="button">
-          {t("unit-save")}
+          {common("save")}
         </Button>
       }
       description={t("unit-edit-description")}

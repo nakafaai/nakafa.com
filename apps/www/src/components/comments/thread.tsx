@@ -85,6 +85,7 @@ function ThreadToggle({
   shown: boolean;
 }) {
   const t = useTranslations("Comments");
+  const tCommon = useTranslations("Common");
   const toggle = useCommentDraft((draft) => draft.toggleThread);
   const expanded = useCommentDraft((draft) =>
     HashSet.has(draft.expanded, comment._id)
@@ -102,9 +103,9 @@ function ThreadToggle({
         variant="ghost"
       >
         <HugeIcons icon={expanded ? ArrowUp01Icon : ArrowDown01Icon} />
-        {t(expanded ? "replies-hide" : "replies", {
-          count: comment.replyCount,
-        })}
+        {expanded
+          ? t("replies-hide", { count: comment.replyCount })
+          : tCommon("replies", { count: comment.replyCount })}
       </Button>
     </div>
   );

@@ -42,6 +42,7 @@ export function NinaTranscript() {
   const order = useChat((state) => state.turn?.order);
   const { canLoadMore, loadMore, messages } = useChatFeed();
   const t = useTranslations("Ai");
+  const tCommon = useTranslations("Common");
 
   // Answers render after the transcript, so their math would otherwise find
   // its fonts missing and reflow the text around it once they arrive.
@@ -60,7 +61,7 @@ export function NinaTranscript() {
   return (
     <Primitive.Provider autoScroll={busy} defaultScrollPosition="last-anchor">
       <MessageScroller className="flex-1">
-        <MessageScrollerViewport aria-label={t("messages")}>
+        <MessageScrollerViewport aria-label={tCommon("messages")}>
           <MessageScrollerContent
             aria-busy={busy}
             className={cn(pageRowVariants(), "py-6")}

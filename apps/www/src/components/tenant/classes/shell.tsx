@@ -191,7 +191,7 @@ function useClassRoot(classSlug: string, slug: TenantSlug) {
     classSlug,
     forum: t("tabs-forum"),
     grades: t("tabs-grades"),
-    library: t("tabs-library"),
+    library: t("library-top"),
     name,
     people: t("tabs-people"),
     slug,

@@ -47,12 +47,12 @@ export function StartPrompt({
   className?: string;
   prompt: ReturnType<typeof useStartChat>["prompt"];
 }) {
-  const t = useTranslations("Ai");
+  const tCommon = useTranslations("Common");
 
   return (
     <Primitive.Provider autoScroll defaultScrollPosition="last-anchor">
       <MessageScroller className="flex-1">
-        <MessageScrollerViewport aria-label={t("messages")}>
+        <MessageScrollerViewport aria-label={tCommon("messages")}>
           <MessageScrollerContent className={className}>
             {prompt ? (
               <>
