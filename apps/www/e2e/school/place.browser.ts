@@ -17,6 +17,9 @@ const SCREENS = [
 /** The summary row of a thread of thirty replies. */
 const THIRTY_REPLIES = /^30 replies/u;
 
+/** Longer than the read mark waits for the view to stay still, with its write, on a loaded runner. */
+const READ_MILLISECONDS = 3000;
+
 /** Longer than the place waits for the view to stay still before it keeps it. */
 const SETTLE_MILLISECONDS = 900;
 
@@ -95,12 +98,13 @@ for (const viewport of SCREENS) {
       page.getByText("Pesan 120", { exact: true })
     ).not.toBeInViewport();
 
-    // The reader goes to the newest message, which reads the chat, then scrolls back into its history.
+    // The reader goes to the newest message, which reads the chat once the view stays still, then scrolls back into
+    // its history.
     await page
       .getByRole("button", { name: "Go to the newest message" })
       .click();
     await expect(page.getByText("Pesan 120", { exact: true })).toBeInViewport();
-    await page.waitForTimeout(SETTLE_MILLISECONDS);
+    await page.waitForTimeout(READ_MILLISECONDS);
     await scrollUp(scroller, 1800);
     await page.waitForTimeout(SETTLE_MILLISECONDS);
     const left = await standing(scroller);

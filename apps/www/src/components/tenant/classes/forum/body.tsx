@@ -1,7 +1,7 @@
 import type { Ref } from "@confect/core";
 import type { Id } from "@repo/backend/confect/_generated/id";
 import type classroom from "@repo/backend/confect/_generated/refs/classroom";
-import { Array as Arr, Option } from "effect";
+import { Array as Arr, Option, Order } from "effect";
 import { useState } from "react";
 import { Panes, PanesList, PanesProvider } from "@/components/shared/panes";
 import { ForumChannel } from "@/components/tenant/classes/forum/channel";
@@ -111,7 +111,11 @@ export function ForumBody({
     );
   }
   const reaching = useOpening((state) => state.reaching);
-  const chats = Arr.dedupe(Arr.appendAll(kept, Option.toArray(reaching)));
+  // Drawn in one order whatever was opened last, so showing another chat moves none of them in the page.
+  const chats = Arr.sort(
+    Arr.dedupe(Arr.appendAll(kept, Option.toArray(reaching))),
+    Order.String
+  );
 
   return (
     <OpenRootContext

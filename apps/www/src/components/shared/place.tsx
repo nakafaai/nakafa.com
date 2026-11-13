@@ -83,10 +83,18 @@ export function KeepPlace({
     Effect.runFork(keepPlace(chat, placeIn(view)));
   }, KEEP_DELAY_MILLISECONDS);
 
+  // The scroller takes its own first position when its first messages land, which a list that mounts empty, as Nina's
+  // does, learns in a mutation observer's microtask after this effect: a later microtask brings the kept place back
+  // after that position and before the first paint.
   useLayoutEffect(() => {
-    Option.map(opening, (place) =>
-      scrollToMessage(place.id, { align: "start", scrollMargin: place.offset })
-    );
+    queueMicrotask(() => {
+      Option.map(opening, (place) =>
+        scrollToMessage(place.id, {
+          align: "start",
+          scrollMargin: place.offset,
+        })
+      );
+    });
   }, [opening, scrollToMessage]);
 
   useEffect(() => {
