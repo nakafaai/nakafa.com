@@ -189,8 +189,27 @@ function readPopup(popups: string) {
         ? [label.textContent.trim()]
         : ["Account"]
     ),
+    // A field's label that breaks onto a second line, which a popup's width must always leave room for.
+    broken: Array.from(
+      popup.querySelectorAll<HTMLElement>('[data-slot="field-label"]')
+    ).filter(
+      (label) =>
+        label.getBoundingClientRect().height >
+        Number.parseFloat(getComputedStyle(label).lineHeight) * 1.5
+    ).length,
     slot: popup.getAttribute("data-slot") ?? "",
-    wide: popup.scrollWidth - popup.clientWidth > 1,
+    // The popup, or a body that scrolls inside it, that is wider than its frame and lets the reader scroll sideways.
+    // A body that clips sideways (overflow-x hidden) scrolls down only.
+    wide: [
+      popup,
+      ...popup.querySelectorAll<HTMLElement>(
+        '[data-slot="scroll-area-viewport"]'
+      ),
+    ].some(
+      (box) =>
+        box.scrollWidth - box.clientWidth > 1 &&
+        getComputedStyle(box).overflowX !== "hidden"
+    ),
   };
 }
 
@@ -201,6 +220,7 @@ const expectWhole = (
 ) => {
   expect.soft(popup.inside, `${label}: stands inside the screen`).toBe(true);
   expect.soft(popup.wide, `${label}: never scrolls sideways`).toBe(false);
+  expect.soft(popup.broken, `${label}: breaks no field label`).toBe(0);
   if (popup.slot === "sheet-popup") {
     expect.soft(popup.footer, `${label}: has a footer`).toBe(true);
   }

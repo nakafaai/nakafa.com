@@ -216,7 +216,7 @@ function DrawerPanel({
     return (
       <div
         className={cn(
-          "flex min-h-0 min-w-0 flex-1 flex-col gap-6 p-4",
+          "flex min-h-0 min-w-0 flex-1 flex-col gap-4 p-4",
           className
         )}
         data-slot="drawer-panel"
@@ -225,9 +225,13 @@ function DrawerPanel({
     );
   }
   return (
-    <ScrollArea className="min-h-0 flex-1 touch-auto" scrollFade>
+    <ScrollArea
+      axis="vertical"
+      className="min-h-0 flex-1 touch-auto"
+      scrollFade
+    >
       <div
-        className={cn("flex min-w-0 flex-col gap-6 p-4", className)}
+        className={cn("flex min-w-0 flex-col gap-4 p-4", className)}
         data-slot="drawer-panel"
         {...props}
       />

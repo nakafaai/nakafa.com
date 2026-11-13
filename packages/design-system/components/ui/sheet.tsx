@@ -141,12 +141,19 @@ function SheetFooter({ className, ...props }: React.ComponentProps<"div">) {
   );
 }
 
-/** The body of a sheet, which scrolls between its header and its footer. What it holds keeps its edges and stands apart. */
+/**
+ * The body of a sheet, which scrolls down between its header and its footer and never sideways. What it holds fits
+ * its width, and its parts stand one gap apart.
+ */
 function SheetPanel({ className, ...props }: React.ComponentProps<"div">) {
   return (
-    <ScrollArea className="min-h-0 flex-1 touch-auto" scrollFade>
+    <ScrollArea
+      axis="vertical"
+      className="min-h-0 flex-1 touch-auto"
+      scrollFade
+    >
       <div
-        className={cn("flex min-w-0 flex-col gap-6 p-4", className)}
+        className={cn("flex min-w-0 flex-col gap-4 p-4", className)}
         data-slot="sheet-panel"
         {...props}
       />

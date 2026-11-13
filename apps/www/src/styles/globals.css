@@ -123,7 +123,7 @@
       animation: rise-in var(--ease-out) both;
       animation-timeline: view();
       animation-range: entry var(--rise-delay, 0%) entry
-        calc(var(--rise-delay, 0%) + 60%);
+        calc(var(--rise-delay, 0%) + 40%);
     }
   }
 }
