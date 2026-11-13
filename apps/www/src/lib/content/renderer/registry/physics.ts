@@ -47,7 +47,23 @@ import { TrainPassengerRelativeLab } from "@/lib/content/renderer/client/physics
 import { SpeedTrapInstantSpeedLab } from "@/lib/content/renderer/client/physics/trap";
 import { CarTripSecantSlopeLab } from "@/lib/content/renderer/client/physics/trip";
 import { FeatherCoinVacuumLab } from "@/lib/content/renderer/client/physics/vacuum";
-import { VectorConceptLab } from "@/lib/content/renderer/client/physics/vector";
+import {
+  AircraftCrosswindLab,
+  DoorHingeTorqueLab,
+  DroneDisplacementLab,
+  ForceTableResultantLab,
+  KiteStringTensionLab,
+  OrienteeringMapVectorLab,
+  RampBlockComponentLab,
+  ShipBearingComponentLab,
+  SledPullWorkLab,
+  SolarPanelFluxLab,
+  TugOfWarForceLab,
+  TugboatResultantLab,
+  VectorConceptLab,
+  WindMapVectorLab,
+  WrenchTorqueLab,
+} from "@/lib/content/renderer/client/physics/vector";
 import {
   AverageVelocitySpeedLab,
   InstantaneousVelocitySpeedLab,
@@ -218,5 +234,61 @@ export const physicsRenderers = [
   {
     name: physicsComponentNames.satelliteOrbitCircularLab,
     component: SatelliteOrbitCircularLab,
+  },
+  {
+    name: physicsComponentNames.aircraftCrosswindLab,
+    component: AircraftCrosswindLab,
+  },
+  {
+    name: physicsComponentNames.doorHingeTorqueLab,
+    component: DoorHingeTorqueLab,
+  },
+  {
+    name: physicsComponentNames.droneDisplacementLab,
+    component: DroneDisplacementLab,
+  },
+  {
+    name: physicsComponentNames.forceTableResultantLab,
+    component: ForceTableResultantLab,
+  },
+  {
+    name: physicsComponentNames.kiteStringTensionLab,
+    component: KiteStringTensionLab,
+  },
+  {
+    name: physicsComponentNames.orienteeringMapVectorLab,
+    component: OrienteeringMapVectorLab,
+  },
+  {
+    name: physicsComponentNames.rampBlockComponentLab,
+    component: RampBlockComponentLab,
+  },
+  {
+    name: physicsComponentNames.shipBearingComponentLab,
+    component: ShipBearingComponentLab,
+  },
+  {
+    name: physicsComponentNames.sledPullWorkLab,
+    component: SledPullWorkLab,
+  },
+  {
+    name: physicsComponentNames.solarPanelFluxLab,
+    component: SolarPanelFluxLab,
+  },
+  {
+    name: physicsComponentNames.tugboatResultantLab,
+    component: TugboatResultantLab,
+  },
+  {
+    name: physicsComponentNames.tugOfWarForceLab,
+    component: TugOfWarForceLab,
+  },
+  {
+    name: physicsComponentNames.windMapVectorLab,
+    component: WindMapVectorLab,
+  },
+  {
+    name: physicsComponentNames.wrenchTorqueLab,
+    component: WrenchTorqueLab,
   },
 ] satisfies readonly RendererImplementation[];
