@@ -267,8 +267,12 @@ function drawOwls(sketch: p5, count: number, height: number, year: number) {
   Arr.forEach(Arr.range(0, Math.max(0, count - 1)), (owl) => {
     const angle =
       year * (1.2 + hashUnit(owl, 4)) + hashUnit(owl, 5) * Math.PI * 2;
-    const cx = hashUnit(owl, 6) * sketch.width;
-    const cy = hashUnit(owl, 7) * height;
+    // Each owl circles 30 px wide around a centre kept far enough inside the
+    // field that its wings never cross onto the graph or off the canvas.
+    const margin = 30 + 22 * size;
+    const cx =
+      margin + hashUnit(owl, 6) * Math.max(0, sketch.width - margin * 2);
+    const cy = margin + hashUnit(owl, 7) * Math.max(0, height - margin * 2);
     const x = cx + Math.cos(angle) * 30;
     const y = cy + Math.sin(angle) * 22;
     const heading = angle + Math.PI / 2;
@@ -352,9 +356,19 @@ function drawHistory(sketch: p5, field: Field, today: number, top: number) {
   const x = (year: number) => left + ((right - left) * year) / YEARS;
   const y = (count: number) => bottom - ((bottom - top - 12) * count) / most;
   sketch.noFill();
-  sketch.strokeWeight(2);
+  // The whole run shows faintly across the band; the years so far draw over it.
   Arr.forEach(["prey", "predators"] as const, (kind) => {
+    const faint = sketch.color(HERD_COLORS[kind]);
+    faint.setAlpha(70);
+    sketch.stroke(faint);
+    sketch.strokeWeight(1.5);
+    sketch.beginShape();
+    Arr.forEach(field.history, (herd, index) => {
+      sketch.vertex(x(index * EVERY), y(herd[kind]));
+    });
+    sketch.endShape();
     sketch.stroke(HERD_COLORS[kind]);
+    sketch.strokeWeight(2.5);
     sketch.beginShape();
     Arr.forEach(
       Arr.take(field.history, Math.round(today / EVERY) + 1),

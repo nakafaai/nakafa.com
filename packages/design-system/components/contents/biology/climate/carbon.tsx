@@ -90,6 +90,7 @@ export function CarbonBudgetLab({
     readonly forest?: string;
     readonly level: ReactNode;
     readonly peak?: ReactNode;
+    readonly perYear?: string;
     readonly rate?: ReactNode;
     readonly regions?: Readonly<Record<Region, ReactNode>>;
     readonly rise?: ReactNode;
@@ -219,7 +220,15 @@ export function CarbonBudgetLab({
             />
             <VisualFactTabular
               label={labels.rate}
-              value={<InlineMath math={quantity(recordRate(year), ppm, 2)} />}
+              value={
+                <InlineMath
+                  math={quantity(
+                    recordRate(year),
+                    `\\text{ ppm/${labels.perYear ?? ""}}`,
+                    2
+                  )}
+                />
+              }
             />
             <VisualFactTabular
               label={labels.above}
