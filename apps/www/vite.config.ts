@@ -12,6 +12,7 @@ import react, { reactCompilerPreset } from "@vitejs/plugin-react";
 import rsc from "@vitejs/plugin-rsc";
 import { Result, Schema } from "effect";
 import { defineConfig, type Plugin, type PluginOption } from "vite";
+import { ENVIRONMENT_OUTPUTS } from "#www/output.config";
 import {
   deferStaticPageScripts,
   standalonePages,
@@ -397,15 +398,7 @@ export default defineConfig(async ({ command, isPreview }) => {
       assetsInlineLimit: (filePath: string) =>
         FONT_FILE_PATTERN.test(filePath) ? false : undefined,
     },
-    environments: {
-      // Workers Logs maps stack traces without the embedded sources, and the
-      // upload refuses more than 60 MiB of maps: the sources were 47 of 65 MiB.
-      [workerSettings.viteEnvironments.entry]: {
-        build: {
-          rolldownOptions: { output: { sourcemapExcludeSources: true } },
-        },
-      },
-    },
+    environments: ENVIRONMENT_OUTPUTS,
     resolve: {
       // `@nakafa/aksara-contracts` ships its signature verifiers under the `node`
       // condition only. Workers resolve them by file, since the `workerd` condition
