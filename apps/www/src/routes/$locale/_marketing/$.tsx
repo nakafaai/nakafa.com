@@ -52,8 +52,8 @@ export const Route = createFileRoute("/$locale/_marketing/$")({
             image: LEGAL_PAGE_IMAGE,
             locale: params.locale,
             path: canonicalPath,
-            trail: [
-              { name: COMPANY_IDENTITY.brandName, path: `/${params.locale}` },
+            trails: [
+              [{ name: COMPANY_IDENTITY.brandName, path: `/${params.locale}` }],
             ],
           }),
         ],

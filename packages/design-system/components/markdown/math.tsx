@@ -1,6 +1,7 @@
 import { DrawnInlineMath } from "@repo/design-system/components/markdown/drawn";
 import { MathFontPreload } from "@repo/design-system/components/markdown/fonts";
 import { readMathFonts } from "@repo/design-system/lib/markdown/fonts";
+import { closeMathCopyToSnippets } from "@repo/design-system/lib/markdown/snippet";
 import {
   MATH_ERROR_COLOR,
   mathBlockVariants,
@@ -46,7 +47,7 @@ function KatexMarkup({
         <MathFontPreload fonts={fonts} />
         <div
           // biome-ignore lint/security/noDangerouslySetInnerHtml: KaTeX generates safe HTML while trust remains disabled.
-          dangerouslySetInnerHTML={{ __html: html }}
+          dangerouslySetInnerHTML={{ __html: closeMathCopyToSnippets(html) }}
           data-testid="katex"
         />
       </>

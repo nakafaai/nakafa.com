@@ -107,12 +107,15 @@ function contentSeoError(href: string, surface: string) {
 
 const decodeJsonText = Schema.decodeUnknownEffect(JsonTextSchema);
 
-/** Selects the page's own document among the site-wide JSON-LD scripts. */
+/** Selects the page's own document among the site-wide JSON-LD scripts: its Article and one breadcrumb per trail. */
 const isArticleDocument = Schema.is(
-  Schema.Tuple([
-    Schema.Struct({ "@type": Schema.Literal("Article") }),
-    Schema.Unknown,
-  ])
+  Schema.TupleWithRest(
+    Schema.Tuple([
+      Schema.Struct({ "@type": Schema.Literal("Article") }),
+      Schema.Unknown,
+    ]),
+    [Schema.Unknown]
+  )
 );
 
 /** Reads the page's one article document and holds it to the published contract. */
@@ -148,13 +151,14 @@ const readArticleJsonLd = Effect.fn("NakafaE2E.readArticleJsonLd")(function* (
 /** Proves the page's structured data names this page as its reader sees it. */
 const expectArticleJsonLd = Effect.fn("NakafaE2E.expectArticleJsonLd")(
   function* (page: Page, route: LocalizedContentRoute, served: ServerDocument) {
-    const [article, breadcrumb] = yield* readArticleJsonLd(served, route.href);
+    const [article, ...breadcrumbs] = yield* readArticleJsonLd(
+      served,
+      route.href
+    );
     // The headline must name the page as its reader sees it.
     const heading = yield* Effect.promise(() =>
       page.getByRole("heading", { level: 1 }).textContent()
     );
-    const [home] = breadcrumb.itemListElement;
-    const current = Option.getOrUndefined(Arr.last(breadcrumb.itemListElement));
     yield* Effect.sync(() => {
       expect(article.url).toBe(`${APP_ORIGIN}${route.href}`);
       expect(article.headline).toBe(heading);
@@ -162,8 +166,15 @@ const expectArticleJsonLd = Effect.fn("NakafaE2E.expectArticleJsonLd")(
       expect(article.image).toBe(served.image);
       expect(article.inLanguage).toBe(route.locale);
       expect(served.language).toBe(route.locale);
-      expect(home?.item).toBe(`${APP_ORIGIN}/${route.locale}`);
-      expect(current?.name).toBe(heading);
+      // Every trail starts at the locale's home and ends at the page.
+      expect(
+        Arr.map(breadcrumbs, ({ itemListElement }) => [
+          Option.getOrUndefined(Arr.head(itemListElement))?.item,
+          Option.getOrUndefined(Arr.last(itemListElement))?.name,
+        ])
+      ).toStrictEqual(
+        Arr.map(breadcrumbs, () => [`${APP_ORIGIN}/${route.locale}`, heading])
+      );
     });
     return article;
   }

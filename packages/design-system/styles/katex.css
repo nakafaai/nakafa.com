@@ -12,3 +12,36 @@
   -webkit-text-stroke-width: 0;
   text-shadow: none;
 }
+
+/*
+ * A formula inside a line of text (`mathInlineVariants`). KaTeX cuts the formula
+ * after each relation and binary operator on its outer level, and each piece is
+ * one `.katex-base`. The pieces are the boxes of the line, so the text after a
+ * formula continues after its last piece. A piece wider than the column scrolls
+ * sideways in its own box, which is `inline-flex` because an `inline-block` with
+ * `overflow` takes its bottom edge as its baseline. The padding and the negative
+ * margin cancel for layout and leave the ink of a root or an underbrace room,
+ * which `overflow` would otherwise clip. Its widest is the column plus that
+ * padding: a box that may only be as wide as the column would lose the padding's
+ * width from its text wherever the column is as wide as the formula, as a table
+ * cell is. The strut KaTeX puts in each piece to hold the formula's height and
+ * depth is taken out of flow, so a piece keeps the baseline and the line height
+ * of the text around it. One class names it all: a lesson draws hundreds of
+ * formulas, and the same rules spelled as utilities on each one weighed a quarter
+ * of a megabyte of its HTML and as much again in its hydration data.
+ */
+@utility math-inline {
+  & .katex-html > .katex-base {
+    display: inline-flex !important;
+    align-items: baseline;
+    max-width: calc(100% + 0.5rem);
+    padding: calc(var(--spacing) * 1);
+    margin: calc(var(--spacing) * -1);
+    overflow-x: auto;
+    overflow-y: hidden;
+  }
+
+  & .katex-html > .katex-base > .katex-strut {
+    position: absolute;
+  }
+}

@@ -80,18 +80,23 @@ const BreadcrumbListSchema = Schema.Struct({
 });
 
 /**
- * One JSON-LD document for a published article page: its Article and the
- * breadcrumb trail that ends at the same canonical URL.
+ * One JSON-LD document for a published article page: its Article and one
+ * breadcrumb trail for each path that reaches the page, each ending at the same
+ * canonical URL. Google reads several trails of one page.
+ *
+ * @see https://developers.google.com/search/docs/appearance/structured-data/breadcrumb#example
  */
-export const ArticleJsonLdSchema = Schema.Tuple([
-  ArticleSchema,
-  BreadcrumbListSchema,
-]).check(
+export const ArticleJsonLdSchema = Schema.TupleWithRest(
+  Schema.Tuple([ArticleSchema, BreadcrumbListSchema]),
+  [BreadcrumbListSchema]
+).check(
   Schema.makeFilter(
-    ([article, breadcrumb]) =>
-      Option.exists(
-        Arr.last(breadcrumb.itemListElement),
-        (item) => item.item === article.url
+    ([article, ...breadcrumbs]) =>
+      Arr.every(breadcrumbs, (breadcrumb) =>
+        Option.exists(
+          Arr.last(breadcrumb.itemListElement),
+          (item) => item.item === article.url
+        )
       ),
     { message: "Expected the breadcrumb to end at the article URL." }
   )
@@ -114,8 +119,11 @@ const ArticleJsonLdInputSchema = Schema.Struct({
   locale: ActiveAppLocaleCodeSchema,
   /** Canonical localized path of the page, such as `/id/materi/...`. */
   path: Schema.String,
-  /** Visible ancestors from the site root; the page itself ends the trail. */
-  trail: Schema.Array(ArticleCrumbSchema),
+  /**
+   * Visible ancestors from the site root, one list for each path that reaches the
+   * page, such as each curriculum that places a lesson. The page ends every trail.
+   */
+  trails: Schema.NonEmptyArray(Schema.Array(ArticleCrumbSchema)),
 });
 
 /** Signed content fields that describe one published article page. */
@@ -149,13 +157,26 @@ export function makeArticleJsonLd(input: ArticleJsonLdInput): ArticleJsonLd {
     name,
     url: authorUrl,
   }));
-  const crumbs = [...input.trail, { name: input.headline, path: input.path }];
   const publisher = {
     "@type": "EducationalOrganization" as const,
     "@id": ORGANIZATION_ID,
     name: COMPANY_IDENTITY.brandName,
     url: COMPANY_IDENTITY.url,
   };
+  const page = { name: input.headline, path: input.path };
+  const toBreadcrumb = (
+    trail: ArticleJsonLdInput["trails"][number]
+  ): typeof BreadcrumbListSchema.Type => ({
+    "@context": SCHEMA_ORG,
+    "@type": "BreadcrumbList" as const,
+    itemListElement: Arr.map([...trail, page], (crumb, index) => ({
+      "@type": "ListItem" as const,
+      position: index + 1,
+      name: crumb.name,
+      item: toSiteUrl(crumb.path),
+    })),
+  });
+  const [firstTrail, ...otherTrails] = input.trails;
 
   return [
     {
@@ -181,16 +202,8 @@ export function makeArticleJsonLd(input: ArticleJsonLdInput): ArticleJsonLd {
           : [firstAuthor, ...otherAuthors],
       publisher,
     },
-    {
-      "@context": SCHEMA_ORG,
-      "@type": "BreadcrumbList",
-      itemListElement: Arr.map(crumbs, (crumb, index) => ({
-        "@type": "ListItem",
-        position: index + 1,
-        name: crumb.name,
-        item: toSiteUrl(crumb.path),
-      })),
-    },
+    toBreadcrumb(firstTrail),
+    ...Arr.map(otherTrails, toBreadcrumb),
   ];
 }
 
