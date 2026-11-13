@@ -11,7 +11,7 @@ import {
   PanesProvider,
   usePanes,
 } from "@/components/shared/panes";
-import { TryoutResultOpener } from "@/components/tryout/review/result";
+import { TryoutPaneOpener } from "@/components/tryout/review/result";
 
 /**
  * A finished attempt of a set of parts: the parts in the page's frame, and the attempt's numbers in the
@@ -62,11 +62,17 @@ export function TryoutPartsResult({
 
 /** Opens the numbers of a set of parts in their sheet. */
 export function TryoutPartsOpener({ score }: { score: TryoutScoreResult }) {
+  const t = useTranslations("Tryouts");
   const showSheet = usePanes((state) => state.showSheet);
 
   return (
-    <TryoutResultOpener
-      correct={score.totalCorrect}
+    <TryoutPaneOpener
+      count={score.totalCorrect}
+      label={t("result-short")}
+      name={t("result-open", {
+        correct: score.totalCorrect,
+        total: score.totalQuestions,
+      })}
       onOpen={showSheet}
       total={score.totalQuestions}
     />

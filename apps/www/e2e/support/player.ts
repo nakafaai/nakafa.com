@@ -276,6 +276,39 @@ export const expectView = Effect.fn("NakafaE2E.expectPlayerView")(function* (
   );
 });
 
+/** The narrowest width that is not a phone's, where a player opens with the list rather than one question. */
+const LIST_WIDTH = 768;
+
+/**
+ * The view a player opens with when neither the address nor a saved view names one (D6): one question at a time on
+ * a phone, the list anywhere wider.
+ */
+export const openingView = (page: Page): PlayerView =>
+  Option.match(Option.fromNullishOr(page.viewportSize()), {
+    onNone: () => "List",
+    onSome: ({ width }) => (width < LIST_WIDTH ? "One question" : "List"),
+  });
+
+/** The view a learner switches to from another: the list from one question, and one question from the list. */
+export const otherView = (view: PlayerView): PlayerView =>
+  view === "List" ? "One question" : "List";
+
+/**
+ * Shows the list in a player that just opened: a desktop opens with it, and a phone, which opens one question at a
+ * time, chooses it.
+ */
+export const showList = Effect.fn("NakafaE2E.showPlayerList")(function* (
+  page: Page,
+  hasTouch: boolean
+) {
+  const opening = openingView(page);
+  yield* expectView(page, opening);
+  if (opening === "One question") {
+    yield* chooseView(page, hasTouch, "List");
+    yield* expectView(page, "List");
+  }
+});
+
 /**
  * The name of a choice option by its text: a screen reader says the option's letter first, in the script
  * its set chose, then its text.

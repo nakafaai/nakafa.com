@@ -293,6 +293,39 @@ describe("contentRelease/snapshot/retention", () => {
         ).toBe(false);
       })
   );
+  it.effect(
+    "protects an assessment snapshot while a practice session names it",
+    () =>
+      Effect.gen(function* () {
+        const world = yield* tryoutWorld();
+        const practiced = `sha256:${"5".repeat(64)}`;
+        expect(
+          yield* world.run(isSnapshotReferenced("assessment", practiced))
+        ).toBe(false);
+        yield* Effect.promise(() =>
+          world.t.mutation((ctx) =>
+            ctx.db.insert("practiceSessions", {
+              appLocale: "id",
+              assessmentSnapshotId: practiced,
+              countryKey: "indonesia",
+              examKey: "snbt",
+              lastActivityAt: TRYOUT_NOW,
+              paper: { hash: practiced, id: "paper-1" },
+              questionCount: 1,
+              releaseId: "release-1",
+              sectionKey: "section-a",
+              setKey: "set-1",
+              startedAt: TRYOUT_NOW,
+              trackKey: "2027",
+              userId: world.userId,
+            })
+          )
+        );
+        expect(
+          yield* world.run(isSnapshotReferenced("assessment", practiced))
+        ).toBe(true);
+      })
+  );
   it("still protects the base snapshot of an ordinary active release", async () => {
     const t = convexTest(schema, convexModules);
     const baseSnapshotId = `sha256:${"6".repeat(64)}`;

@@ -12428,6 +12428,156 @@ export declare const api: {
       >;
     };
   };
+  practice: {
+    sessions: {
+      check: FunctionReference<
+        "mutation",
+        "public",
+        {
+          questionId: Id<"practiceQuestions">;
+          response:
+            | Array<string>
+            | { text: string }
+            | { pairs: Array<{ source: string; target: string }> }
+            | { cells: Array<{ column: string; statement: string }> };
+        },
+        { verdict: "correct" | "incorrect" | "partial" | "pending" }
+      >;
+      content: FunctionReference<
+        "query",
+        "public",
+        {
+          locale: "en" | "id" | "de" | "ms";
+          sessionId: Id<"practiceSessions">;
+        },
+        Array<{
+          body: string;
+          questionId: Id<"practiceQuestions">;
+          versionHash: string;
+        }>
+      >;
+      explain: FunctionReference<
+        "query",
+        "public",
+        {
+          locale: "en" | "id" | "de" | "ms";
+          questionId: Id<"practiceQuestions">;
+        },
+        {
+          explanation?: any;
+          key:
+            | { correct: Array<string>; interaction: string; kind: "choice" }
+            | {
+                answers: Array<{ column: string; statement: string }>;
+                interaction: string;
+                kind: "matrix";
+              }
+            | {
+                interaction: string;
+                kind: "match";
+                pairs: Array<{ source: string; target: string }>;
+              }
+            | { interaction: string; kind: "order"; sequence: Array<string> }
+            | { correct: string; interaction: string; kind: "inlineChoice" }
+            | {
+                accepted: {
+                  acceptedAnswers: Array<string>;
+                  collapseWhitespace: boolean;
+                  ignoreCase: boolean;
+                  kind: "text";
+                };
+                interaction: string;
+                kind: "textEntry";
+              }
+            | {
+                interaction: string;
+                kind: "numericEntry";
+                tolerance?: { kind: "absolute" | "relative"; value: string };
+                value: string;
+              }
+            | { expression: string; interaction: string; kind: "mathEntry" }
+            | { correct: Array<string>; interaction: string; kind: "hotspot" }
+            | {
+                interaction: string;
+                kind: "gapMatch";
+                pairs: Array<{ choice: string; gap: string }>;
+              }
+            | {
+                interaction: string;
+                kind: "graphPoint";
+                target:
+                  | { kind: "points"; points: Array<{ x: number; y: number }> }
+                  | {
+                      kind: "lines";
+                      lines: Array<{
+                        through: Array<
+                          { x: number; y: number } | { x: number; y: number }
+                        >;
+                      }>;
+                    };
+                tolerance: number;
+              }
+            | {
+                criteria: Array<{
+                  criterion: string;
+                  levels: Array<{ descriptor: string; level: string }>;
+                }>;
+                interaction: string;
+                kind: "extendedText";
+              };
+        } | null
+      >;
+      open: FunctionReference<
+        "mutation",
+        "public",
+        {
+          countryKey: string;
+          examKey: string;
+          locale: "en" | "id" | "de" | "ms";
+          sectionKey: string;
+          setKey: string;
+          trackKey: string;
+        },
+        { sessionId: Id<"practiceSessions"> }
+      >;
+      restart: FunctionReference<
+        "mutation",
+        "public",
+        { sessionId: Id<"practiceSessions"> },
+        { sessionId: Id<"practiceSessions"> }
+      >;
+      state: FunctionReference<
+        "query",
+        "public",
+        {
+          countryKey: string;
+          examKey: string;
+          locale: "en" | "id" | "de" | "ms";
+          sectionKey: string;
+          setKey: string;
+          trackKey: string;
+        },
+        {
+          questions: Array<{
+            answer: {
+              checkedAt: number;
+              grade:
+                | { category: number; ceiling: number; status: "scored" }
+                | { ceiling: number; status: "pending" };
+              response:
+                | Array<string>
+                | { text: string }
+                | { pairs: Array<{ source: string; target: string }> }
+                | { cells: Array<{ column: string; statement: string }> };
+            } | null;
+            questionId: Id<"practiceQuestions">;
+            questionOrder: number;
+          }>;
+          sessionId: Id<"practiceSessions">;
+        } | null
+      >;
+    };
+  };
   records: {
     checks: {
       report: FunctionReference<

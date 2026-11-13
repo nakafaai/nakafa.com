@@ -2595,8 +2595,18 @@
     "time-limit-label": "Batas waktu",
     "result-short": "Hasil",
     "result-open": "Buka hasil kamu, {correct} dari {total} benar",
-    "review-controls": "Percobaan dan tampilan",
+    "attempt-controls": "Pilihan percobaan",
     "verdict": "{state, select, correct {Benar} incorrect {Salah} partial {Sebagian benar} pending {Menunggu dinilai} other {Belum dijawab}}",
+    "practice-cta": "Latihan",
+    "practice-title": "Latihan: {title}",
+    "practice-pane": "Latihanmu",
+    "practice-description": "Soal yang sudah kamu cek dan hasil tiap soal.",
+    "practice-footer": "Mulai lagi untuk menghapus semua cek.",
+    "practice-restart": "Mulai lagi",
+    "practice-checked-label": "Dicek",
+    "practice-check": "Cek",
+    "practice-open": "Buka latihanmu, {checked} dari {total} dicek",
+    "practice-short": "Latihan",
     "menu-history": "Riwayat",
     "attempt-menu-search-placeholder": "Cari percobaan...",
     "attempt-menu-empty": "Tidak ada percobaan yang cocok.",
@@ -2979,6 +2989,10 @@
     "saved-description": "Cari, ubah, atau hapus yang Nina simpan."
   },
   "Toast": {
+    "practice-failed": {
+      "title": "Latihanmu tidak diperbarui.",
+      "description": "Periksa koneksimu lalu coba lagi."
+    },
     "offline-move": {
       "title": "Kamu sedang offline.",
       "description": "Sambungkan lagi untuk membuka halaman ini."

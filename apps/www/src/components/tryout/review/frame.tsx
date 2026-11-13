@@ -21,7 +21,6 @@ import {
   TryoutExplainedContext,
   TryoutReviewContext,
 } from "@/components/tryout/review/context";
-import { readsWhole } from "@/components/tryout/review/model";
 import {
   TryoutResult,
   TryoutResultFooter,
@@ -36,8 +35,8 @@ import { useKeptFinished } from "@/components/tryout/set/name";
  * A finished attempt's page, in the player that ran it: its header, the questions it reviews in the list or
  * one at a time, the result in the pane at the screen's right from the large breakpoint, and the footer with
  * previous, next and, below that breakpoint, the result's sheet. The address names the current question, so
- * a reload opens it again. Every reader moves through every question and sees how each went; whether the
- * reader may read every key and explanation (`whole`) decides only what each question opens.
+ * a reload opens it again. Every reader moves through every question and sees how each went; what each
+ * question opens beyond that depends on whether its key reached the reader.
  *
  * The page read sends the bodies with the runtime, so a question without its body is a broken read, which
  * the route's error boundary shows with Retry and reports, never a review without its questions.
@@ -64,11 +63,10 @@ export function TryoutReviewFrame({
   const t = useTranslations("Tryouts");
   const bodies = use(TryoutContentContext)?.bodies ?? [];
   const joined = Result.getOrThrow(joinTryoutBodies(bodies, runtime.questions));
-  const whole = readsWhole(Arr.map(joined, ({ body }) => body));
   const [explained] = useState(createExplainedStore);
 
   return (
-    <TryoutReviewContext value={{ joined, limit, runtime, score, whole }}>
+    <TryoutReviewContext value={{ joined, limit, runtime, score }}>
       <TryoutExplainedContext value={explained}>
         <PlayerProvider
           address
@@ -108,11 +106,11 @@ export function TryoutReviewFrame({
 }
 
 /**
- * The view of a review's questions, for a page header that a review and the section page share: it shows in a
- * review's frame, and nowhere else, since only a review has questions to lay out.
+ * The header's second control, for a header that a review and the section page share: the view of the
+ * questions in a review's frame, since only a review has questions to lay out, and `outside` anywhere else.
  */
-export function TryoutReviewView() {
-  return use(TryoutReviewContext) === null ? null : <PlayerViewSwitch />;
+export function TryoutReviewView({ outside }: { outside: ReactNode }) {
+  return use(TryoutReviewContext) === null ? outside : <PlayerViewSwitch />;
 }
 
 /**
