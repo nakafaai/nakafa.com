@@ -90,7 +90,7 @@ function DialogContent({
             className={cn(
               "data-closed:fade-out-0 data-closed:zoom-out-98 data-open:fade-in-0 data-open:zoom-in-98 bg-popover text-popover-foreground duration-surface motion-safe:data-closed:animate-out motion-safe:data-open:animate-in relative row-start-2 flex max-h-[min(90dvh,900px)] min-h-0 w-full max-w-[calc(100%-2rem)] flex-col overflow-hidden rounded-xl border text-sm shadow-lg/5 ease-out outline-none has-[[data-popup-hold]]:pointer-events-none has-[[data-popup-hold]]:opacity-0",
               size === "default" && "sm:max-w-md",
-              size === "wide" && "sm:max-w-7xl",
+              size === "wide" && "h-[min(90dvh,900px)] sm:max-w-7xl",
               bottomStickOnMobile &&
                 "max-sm:data-closed:slide-out-to-bottom-4 max-sm:data-open:slide-in-from-bottom-4 max-sm:max-w-none max-sm:origin-bottom max-sm:rounded-t-xl max-sm:rounded-b-none max-sm:border-x-0 max-sm:border-b-0",
               className
@@ -152,14 +152,32 @@ function DialogFooter({
   );
 }
 
-/** The body of a dialog. What it holds keeps its edges and stands apart, as a form's fields do. */
+/**
+ * The body of a dialog. What it holds keeps its edges and stands apart, as a form's fields do. A `fill` body
+ * does not scroll: it gives its height to what it holds, such as a diagram that scrolls on its own, so the
+ * dialog never holds a scroll inside a scroll.
+ */
 function DialogPanel({
   className,
+  fill = false,
   scrollFade = true,
   ...props
 }: ComponentProps<"div"> & {
+  fill?: boolean;
   scrollFade?: boolean;
 }) {
+  if (fill) {
+    return (
+      <div
+        className={cn(
+          "flex min-h-0 min-w-0 flex-1 flex-col gap-6 p-6",
+          className
+        )}
+        data-slot="dialog-panel"
+        {...props}
+      />
+    );
+  }
   return (
     <ScrollArea className="min-h-0 flex-1 touch-auto" scrollFade={scrollFade}>
       <div
