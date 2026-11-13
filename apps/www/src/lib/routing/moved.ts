@@ -41,6 +41,25 @@ const BARE_ADDRESSES: readonly MovedAddress[] = [
   },
 ];
 
+/**
+ * Retired pages that Search Console still showed with impressions on 13 November
+ * 2026, each answered by the live page that took over its job: the old TKA
+ * practice index by the TKA try-out, and the old grade 11 subject index by the
+ * Kurikulum Merdeka class 11 page. Each one redirects exactly; nothing under it does.
+ */
+const SHOWN_ADDRESSES: readonly MovedAddress[] = [
+  {
+    destination: "/id/try-out/indonesia/tka",
+    permanent: true,
+    source: "/id/latihan/tka",
+  },
+  {
+    destination: "/en/curriculum/merdeka/class-11",
+    permanent: true,
+    source: "/en/subject/high-school/11",
+  },
+];
+
 /** The addresses that moved under a locale. Only these paths redirect: an open `/:locale/settings` would also catch a valid `/user/settings`. */
 const LOCALIZED_ADDRESSES: readonly MovedAddress[] = [
   { destination: "/:locale", permanent: true, source: "/about" },
@@ -65,12 +84,12 @@ function toRedirect(
 
 /**
  * The redirect of an address that the product moved, or none. A bare address
- * matches the bare table; a path whose first segment is an active locale matches
- * the localized table under that locale.
+ * or a retired page that search still shows matches its exact path; a path whose
+ * first segment is an active locale matches the localized table under that locale.
  */
 export function readMovedRedirect(url: URL): Option.Option<MovedRedirect> {
   const bare = Arr.findFirst(
-    BARE_ADDRESSES,
+    Arr.appendAll(BARE_ADDRESSES, SHOWN_ADDRESSES),
     ({ source }) => source === url.pathname
   );
   if (Option.isSome(bare)) {
