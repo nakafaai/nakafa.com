@@ -1,4 +1,3 @@
-import { useMeasure } from "@repo/design-system/components/contents/physics/canvas/measure";
 import {
   fade,
   gradientRect,
@@ -8,6 +7,7 @@ import {
   vignette,
   withShadow,
 } from "@repo/design-system/components/contents/physics/canvas/paint";
+import { useFixed } from "@repo/design-system/components/contents/physics/measurement/digits";
 import {
   brassStops,
   paintTicks,
@@ -344,7 +344,7 @@ export function VernierCaliperLab({
   width: initialWidth = 18.4,
 }: VernierCaliperLabProps) {
   const [width, setWidth] = useState(initialWidth);
-  const measure = useMeasure();
+  const fixed = useFixed();
   const { line, main, reading } = vernierReading(width);
 
   return (

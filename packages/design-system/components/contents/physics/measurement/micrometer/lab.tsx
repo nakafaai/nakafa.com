@@ -1,4 +1,3 @@
-import { useMeasure } from "@repo/design-system/components/contents/physics/canvas/measure";
 import {
   fade,
   gradientRect,
@@ -8,6 +7,7 @@ import {
   vignette,
   withShadow,
 } from "@repo/design-system/components/contents/physics/canvas/paint";
+import { useFixed } from "@repo/design-system/components/contents/physics/measurement/digits";
 import {
   micrometerReading,
   SCREW_RANGE,
@@ -382,7 +382,7 @@ export function MicrometerScrewLab({
   title,
 }: MicrometerScrewLabProps) {
   const [thickness, setThickness] = useState(initialThickness);
-  const measure = useMeasure();
+  const fixed = useFixed();
   const { division, reading, sleeve } = micrometerReading(thickness);
 
   return (
