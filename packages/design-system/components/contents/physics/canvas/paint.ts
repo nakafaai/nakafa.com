@@ -126,12 +126,15 @@ export function withShadow(
     paint();
     return;
   }
-  drawing.save();
+  // p5 caches the fill and stroke it last set; its push and pop save and
+  // restore that cache with the context, where a bare save and restore would
+  // leave the cache naming a color the context no longer has.
+  sketch.push();
   drawing.shadowBlur = shadow.blur;
   drawing.shadowColor = shadow.color;
   drawing.shadowOffsetY = shadow.drop;
   paint();
-  drawing.restore();
+  sketch.pop();
 }
 
 /**
@@ -144,10 +147,10 @@ export function outOfFocus(sketch: p5, blur: number, paint: () => void) {
     paint();
     return;
   }
-  drawing.save();
+  sketch.push();
   drawing.filter = `blur(${blur}px)`;
   paint();
-  drawing.restore();
+  sketch.pop();
 }
 
 /**
