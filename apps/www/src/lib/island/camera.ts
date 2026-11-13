@@ -24,15 +24,21 @@ export const DISTANCE = { far: 120, near: 10 } as const;
 /** The lowest and highest tilt, from almost level to almost straight down. */
 export const PITCH = { high: 1.35, low: 0.32 } as const;
 
+/** The cells across the opening view frames: the village and its shore, whatever the footprint. */
+const FRAMED = 34;
+
 /**
  * The camera an island of this footprint side opens with, on a screen of this
- * aspect (width over height): its whole island in view from the south-east,
- * farther back on a narrow screen so the island fits across it.
+ * aspect (width over height): its village in view from the south-east,
+ * farther back on a narrow screen so the village fits across it.
  */
 export function openingOrbit(size: number, aspect: number): Orbit {
   const across = Math.atan(Math.tan(FIELD_OF_VIEW / 2) * Math.min(1, aspect));
   return {
-    distance: Math.min(DISTANCE.far, (size * 0.62) / Math.tan(across) + 6),
+    distance: Math.min(
+      DISTANCE.far,
+      (Math.min(size, FRAMED) * 0.62) / Math.tan(across) + 6
+    ),
     pitch: 0.72,
     target: [SPAN / 2, SEA_LEVEL + 1, SPAN / 2],
     yaw: Math.PI / 4,

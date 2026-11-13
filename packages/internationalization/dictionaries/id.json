@@ -4652,6 +4652,13 @@
     "next": "{stars} Bintang lagi ke level {level}",
     "top": "Semua blok sudah terbuka",
     "play": "Main",
-    "mute": "Matikan suara"
+    "mute": "Matikan suara",
+    "items": "Siap pasang",
+    "blocks": "Balok",
+    "item-house": "Pondok",
+    "item-tree": "Pohon",
+    "item-well": "Sumur",
+    "item-lamp": "Tiang lampu",
+    "notice-room": "Di sini nggak muat. Coba tempat yang datar dan lapang."
   }
 }

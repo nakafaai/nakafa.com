@@ -9,7 +9,7 @@ import { unitOf } from "@/lib/island/noise";
  * the water inside the world. `uv` is the atlas point the floor takes its color from.
  */
 export function seaRing(y: number, uv: readonly [number, number], sky: number) {
-  const far = 600;
+  const far = 3000;
   const quads = [
     [-far, -far, SPAN + far, 0],
     [-far, SPAN, SPAN + far, SPAN + far],

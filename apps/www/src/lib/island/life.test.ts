@@ -11,6 +11,7 @@ import {
   wander,
 } from "@/lib/island/life";
 import { STRIDE } from "@/lib/island/mesh";
+import { SCALE } from "@/lib/island/scale";
 import { terrainOf } from "@/lib/island/terrain";
 import { cellOf, emptyCells, SEA_LEVEL } from "@/lib/island/world";
 
@@ -24,11 +25,14 @@ describe("island/life", () => {
     expect(groundOf(cells, 5, 5)).toEqual(Option.none());
   });
 
-  it("lets hens stand on open ground and ducks on the sea, nowhere else", () => {
+  it("lets hens stand on open ground, ducks on the sea and villagers on paths, nowhere else", () => {
     const cells = emptyCells();
     cells[cellOf(4, 9, 4)] = idOf("grass");
     cells[cellOf(6, 7, 6)] = idOf("water");
     cells[cellOf(8, 9, 8)] = idOf("planks");
+    cells[cellOf(10, 9, 10)] = idOf("path");
+    expect(suitsOf("cat", cells, 10.5, 10.5)).toBe(true);
+    expect(suitsOf("bear", cells, 4.5, 4.5)).toBe(false);
     expect(suitsOf("hen", cells, 4.5, 4.5)).toBe(true);
     expect(suitsOf("hen", cells, 6.5, 6.5)).toBe(false);
     expect(suitsOf("duck", cells, 6.5, 6.5)).toBe(true);
@@ -36,15 +40,18 @@ describe("island/life", () => {
     expect(suitsOf("duck", cells, 20.5, 20.5)).toBe(false);
   });
 
-  it("opens a game with three hens on the island and two ducks on the water", () => {
-    const cells = terrainOf(11, 32);
-    const herd = herdOf(cells, 11, 32);
+  it("opens a game with three hens on the island, two ducks on the water and three villagers on the paths", () => {
+    const cells = terrainOf(11, 44);
+    const herd = herdOf(cells, 11, 44);
     expect(Arr.map(herd, (animal) => animal.kind)).toEqual([
       "hen",
       "hen",
       "hen",
       "duck",
       "duck",
+      "cat",
+      "rabbit",
+      "bear",
     ]);
     expect(
       Arr.every(herd, (animal) =>
@@ -54,8 +61,8 @@ describe("island/life", () => {
   });
 
   it("rests, walks toward its goal, and picks a new goal that suits it once there", () => {
-    const cells = terrainOf(11, 32);
-    const [hen] = herdOf(cells, 11, 32);
+    const cells = terrainOf(11, 44);
+    const [hen] = herdOf(cells, 11, 44);
     const resting = wander(cells, { ...hen, rest: 1 }, 11, 0, 0.4);
     expect(resting.rest).toBeCloseTo(0.6);
     expect(wander(cells, { ...hen, rest: 0.2 }, 11, 0, 0.4).rest).toBe(0);
@@ -70,26 +77,33 @@ describe("island/life", () => {
   });
 
   it("draws each animal as one quad facing the camera, stepping, bobbing, and mirrored when it walks left", () => {
-    const cells = terrainOf(11, 32);
-    const herd = herdOf(cells, 11, 32);
+    const cells = terrainOf(11, 44);
+    const herd = herdOf(cells, 11, 44);
     const walking = Arr.map(herd, (animal, index) =>
       index === 0 ? { ...animal, tx: animal.x - 2 } : animal
     );
-    const quads = herdQuads(cells, walking, 32, 0, 1 / 6);
-    expect(quads.indices).toHaveLength((herd.length + 1) * 6);
-    expect(quads.vertices).toHaveLength((herd.length + 1) * 4 * STRIDE);
+    const quads = herdQuads(cells, walking, 44, 0, 1 / 6);
+    // Five fowl of one quad each, three villagers of two, and Nina.
+    expect(quads.indices).toHaveLength(12 * 6);
+    expect(quads.vertices).toHaveLength(12 * 4 * STRIDE);
+    const bottom = (quad: number) => quads.vertices[quad * 4 * STRIDE + 1];
+    const top = (quad: number) => quads.vertices[(quad * 4 + 2) * STRIDE + 1];
+    // A villager's body and head stack two blocks tall; a hen stands half a block over her ground.
+    expect(top(6) - bottom(5)).toBeCloseTo(SCALE.person);
+    expect(bottom(6)).toBeCloseTo(top(5));
+    expect((top(0) - bottom(0)) * (13 / 16)).toBeCloseTo(SCALE.fowl);
     const duckBase = quads.vertices[3 * 4 * STRIDE + 1];
     expect(duckBase).toBeLessThan(SEA_LEVEL);
-    const still = herdQuads(cells, herd, 32, 0, 0);
+    const still = herdQuads(cells, herd, 44, 0, 0);
     expect(still.vertices[3]).not.toBe(quads.vertices[3]);
     const nowhere = herdQuads(
       emptyCells(),
       [{ ...herd[0], x: 2.5, z: 2.5 }],
-      32,
+      44,
       0,
       0
     );
-    expect(nowhere.vertices[1]).toBeCloseTo(SEA_LEVEL - 0.15);
+    expect(nowhere.vertices[1]).toBeCloseTo(SEA_LEVEL - 0.02);
   });
 
   it("swims Nina around the island past its footprint, facing along her loop, flat on the sea and beating her tail", () => {
@@ -97,8 +111,8 @@ describe("island/life", () => {
     for (const time of [0, 7, 19, 40, 83]) {
       const nina = ninaAt(32, time);
       const reach = Math.hypot(nina.x - middle, nina.z - middle);
-      expect(reach).toBeGreaterThan(16 + 2.7);
-      expect(reach).toBeLessThan(16 + 5.3);
+      expect(reach).toBeGreaterThan(16 + 0.7);
+      expect(reach).toBeLessThan(16 + 3.3);
       const later = ninaAt(32, time + 0.01);
       expect(Math.atan2(later.z - nina.z, later.x - nina.x)).toBeCloseTo(
         nina.heading,

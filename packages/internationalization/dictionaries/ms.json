@@ -4652,6 +4652,13 @@
     "next": "{stars} Bintang lagi ke tahap {level}",
     "top": "Semua blok sudah dibuka",
     "play": "Main",
-    "mute": "Matikan bunyi"
+    "mute": "Matikan bunyi",
+    "items": "Siap pasang",
+    "blocks": "Blok",
+    "item-house": "Pondok",
+    "item-tree": "Pokok",
+    "item-well": "Perigi",
+    "item-lamp": "Tiang lampu",
+    "notice-room": "Tak muat di sini. Cuba tempat yang rata dan lapang."
   }
 }

@@ -11,12 +11,10 @@ layout(location = 2) in float aShade;
 layout(location = 3) in float aSky;
 layout(location = 4) in float aGlow;
 uniform mat4 uViewProjection;
-uniform vec3 uEye;
 out vec2 vUv;
 out float vShade;
 out float vSky;
 out float vGlow;
-out float vDistance;
 out vec3 vWorld;
 void main() {
   vUv = aUv;
@@ -24,7 +22,6 @@ void main() {
   vSky = aSky;
   vGlow = aGlow;
   vWorld = aPosition;
-  vDistance = distance(aPosition, uEye);
   gl_Position = uViewProjection * vec4(aPosition, 1.0);
 }`;
 
@@ -40,11 +37,11 @@ uniform float uAlpha;
 uniform float uTime;
 uniform vec2 uWaterTile;
 uniform float uWater;
+uniform vec3 uEye;
 in vec2 vUv;
 in float vShade;
 in float vSky;
 in float vGlow;
-in float vDistance;
 in vec3 vWorld;
 out vec4 color;
 float hashOf(vec2 cell) {
@@ -77,7 +74,8 @@ void main() {
   vec3 light = uAmbient * (0.55 + 0.45 * vShade) + uSun * vShade * vSky * (1.0 - 0.4 * cloudOf(vWorld.xz));
   light = max(light, uLamp * vGlow * vGlow * vShade);
   light = floor(light * 12.0 + 0.5) / 12.0;
-  float fog = smoothstep(uFogRange.x, uFogRange.y, vDistance);
+  // Measured per pixel: the sea is a few huge quads, and a distance blended between their far corners would fog all of it.
+  float fog = smoothstep(uFogRange.x, uFogRange.y, distance(vWorld, uEye));
   color = vec4(mix(texel.rgb * light, uFog, fog), uAlpha);
 }`;
 

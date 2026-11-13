@@ -3,8 +3,10 @@
 import {
   ArrowLeft01Icon,
   BookOpen01Icon,
+  Moon02Icon,
   PickaxeIcon,
   Redo02Icon,
+  Sun03Icon,
   Undo02Icon,
   VolumeHighIcon,
   VolumeOffIcon,
@@ -146,9 +148,30 @@ function History() {
   );
 }
 
+/** Two digits of the clock. */
+function twoDigits(value: number) {
+  return String(value).padStart(2, "0");
+}
+
+/** The learner's time of day, which the world's sky follows (ADR 0047, D8), with the sun by day and the moon by night. */
+function Clock() {
+  const minute = useGame((state) => state.minute);
+  const hours = Math.floor(minute / 60);
+  const time = `${twoDigits(hours)}:${twoDigits(minute % 60)}`;
+  return (
+    <p className="flex items-center gap-1.5">
+      <HugeIcons
+        className="size-4 text-[#7a4a26]"
+        icon={hours >= 6 && hours < 18 ? Sun03Icon : Moon02Icon}
+      />
+      <time dateTime={time}>{time}</time>
+    </p>
+  );
+}
+
 /**
- * The island's name, its level, and how far the learner's Stars have come
- * toward the next level (ADR 0047, D7), as a pixel bar.
+ * The time of day, the island's level, and how far the learner's Stars have
+ * come toward the next level (ADR 0047, D7), as a pixel bar.
  */
 function Progress() {
   const t = useTranslations("Island");
@@ -157,10 +180,11 @@ function Progress() {
   const share = next === undefined ? 1 : (lifetime - from) / (next - from);
   return (
     <div className="flex min-w-32 flex-col gap-1 pr-1">
-      <h1 className="flex items-baseline justify-between gap-2 text-sm font-semibold">
-        {t("title")}
-        <span className="text-sm text-[#7a4a26]">{t("level", { level })}</span>
-      </h1>
+      <h1 className="sr-only">{t("title")}</h1>
+      <div className="flex items-center justify-between gap-3 text-sm font-semibold">
+        <Clock />
+        <span className="text-[#7a4a26]">{t("level", { level })}</span>
+      </div>
       <div className="h-2 border border-[#4a2c17] bg-[#e9c992]">
         <div
           className="h-full bg-[#e6b93a] shadow-[inset_0_-2px_0_#c6911f]"
