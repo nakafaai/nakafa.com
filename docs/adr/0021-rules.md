@@ -342,6 +342,21 @@ reference, a type that the router generates. A new Schema is for a real contract
 an exported shape, a shape that two places use, or the row type of an authored
 table. A browser module never gains a run-time import only to name a type.
 
+### Charts keep a maximum height
+
+The owner's rule of 13 November 2026: a chart has a maximum height. A chart
+keeps its aspect as it widens, so a square chart on a wide screen grows taller
+than the window and its axis leaves the screen. The container that every
+EvilCharts chart draws in caps its own height, so `scripts/check/charts.ts`
+judges two places: in `evilcharts/ui/chart.tsx`, the root of `ChartContainer`
+(`data-slot="chart"`) keeps a `max-h-` class; elsewhere, an `Evil*Chart` or a
+`ChartContainer` may lower the cap to a smaller step of the scale, such as
+`max-h-80`, and never writes `max-h-none`, a step above 96, or a value of its
+own, after any variant. `ChartContainer` hands its `maxHeight` prop to a
+`div`, which does not read it, so the cap is a class.
+
+
+
 ### Sealed message readers
 
 `sealed` reports each read of stored Nina messages and files that a module
