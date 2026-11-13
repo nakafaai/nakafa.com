@@ -72,7 +72,6 @@ describe("acceptance class teacher", () => {
           where: [{ field: "email", value: classTeacherAddress("acc-1") }],
         });
         expect(backend.argsOf("tenancy/seed:user")).toEqual({
-          authId: "user-1",
         });
         expect(backend.argsOf("tenancy/claims:run")).toEqual({
           cursor: null,

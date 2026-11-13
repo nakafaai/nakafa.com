@@ -41,7 +41,6 @@ describe("synthetic acceptance operator", () => {
         );
 
         expect(backend.argsOf("tenancy/seed:user")).toEqual({
-          authId: "user-1",
         });
         expect(backend.argsOf("operators/staff:grant")).toEqual({
           userId: "app-1",

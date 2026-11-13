@@ -63,7 +63,6 @@ describe("acceptance owner", () => {
           where: [{ field: "email", value: ownerAddress("acc-1") }],
         });
         expect(backend.argsOf("tenancy/seed:user")).toEqual({
-          authId: "user-1",
         });
         expect(backend.argsOf("tenancy/claims:run")).toEqual({
           cursor: null,
