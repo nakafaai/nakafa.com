@@ -13,7 +13,7 @@ import ms from "@repo/internationalization/dictionaries/ms.json" with {
   type: "json",
 };
 import { Array as Arr, Record as Rec, Schema } from "effect";
-import { demoExam } from "@/components/marketing/school/editor/exam";
+import { demoExam } from "@/components/marketing/school/demo/exam";
 
 /** The demo's sentences in one language, as the landing reads them from the dictionary. */
 const textsOf = (site: typeof en.SchoolSite) => ({
@@ -104,8 +104,7 @@ describe("the School landing's demo exam", () => {
 
     expect(inlineOf(documents.seedrubric1)).toEqual([]);
     expect(inlineOf(documents.seedprompt3)).toEqual([
-      { text: "Explain ", type: "text" },
-      { text: ".", type: "text" },
+      { text: "Explain .", type: "text" },
     ]);
   });
 });

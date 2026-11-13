@@ -139,9 +139,10 @@ export const Route = createFileRoute("/$locale/_marketing/school/")({
 });
 
 /**
- * The School landing: its hero, one screen for each thing a school runs on it,
- * each with the real School screen beside or under its words, its questions,
- * and the closing question. Every section after the hero loads its code as it
+ * The School landing: its hero, the class's chat, the class's drive, tasks and
+ * insight under one switch, the exam editor, the player with every type of
+ * question, the school year under one switch, its questions and the closing
+ * question, each part drawn with the School's own screens. Every section after the hero loads its code as it
  * nears, and the toys come on a wide screen once the page has its reader.
  */
 function SchoolLanding() {
@@ -157,11 +158,8 @@ function SchoolLanding() {
         <LaterSection code={schoolSections.forum}>
           {(SchoolForum) => <SchoolForum />}
         </LaterSection>
-        <LaterSection code={schoolSections.library}>
-          {(SchoolLibrary) => <SchoolLibrary />}
-        </LaterSection>
-        <LaterSection code={schoolSections.tasks}>
-          {(SchoolTasks) => <SchoolTasks />}
+        <LaterSection code={schoolSections.class}>
+          {(SchoolClass) => <SchoolClass />}
         </LaterSection>
         <LaterSection code={schoolSections.exams}>
           {(SchoolExams) => <SchoolExams />}
@@ -169,17 +167,8 @@ function SchoolLanding() {
         <LaterSection code={schoolSections.player}>
           {(SchoolPlayer) => <SchoolPlayer />}
         </LaterSection>
-        <LaterSection code={schoolSections.reports}>
-          {(SchoolReports) => <SchoolReports />}
-        </LaterSection>
-        <LaterSection code={schoolSections.insight}>
-          {(SchoolInsight) => <SchoolInsight />}
-        </LaterSection>
-        <LaterSection code={schoolSections.graduation}>
-          {(SchoolGraduation) => <SchoolGraduation />}
-        </LaterSection>
-        <LaterSection code={schoolSections.parents}>
-          {(SchoolParents) => <SchoolParents />}
+        <LaterSection code={schoolSections.year}>
+          {(SchoolYear) => <SchoolYear />}
         </LaterSection>
         <LaterSection code={schoolSections.faq}>
           {(SchoolFaq) => (
