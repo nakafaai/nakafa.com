@@ -2,8 +2,8 @@ import { createContext, type ReactNode, use, useState } from "react";
 import { createStore, type ExtractState, useStore } from "zustand";
 import { combine } from "zustand/middleware";
 
-/** A reaction lab opens on its products, so its still frame shows the outcome. */
-const initialProgress = { progress: 1 };
+/** A reaction lab opens on its reactants, with the faint products ahead of them. */
+const initialProgress = { progress: 0 };
 
 /** Creates one reaction lab's progress: how far its run has gone, 0 to 1. */
 function createProgressStore() {

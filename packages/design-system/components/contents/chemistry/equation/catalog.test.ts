@@ -59,6 +59,7 @@ describe("reaction catalog", () => {
 
   it("works out the atom economy of the wanted product", () => {
     expect(atomEconomy("ethene-hydration")).toEqual(Option.some(100));
+    expect(atomEconomy("carbon-monoxide-methanol")).toEqual(Option.some(100));
     expect(economyTex("ethanol-dehydration", indonesian)).toEqual(
       Option.some("\\dfrac{28}{46} \\times 100\\% = 60{,}9\\%")
     );
