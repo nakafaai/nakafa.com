@@ -33,7 +33,9 @@ const cardSectionFooterVariants = cva(
   }
 );
 
-const cardSectionHintVariants = cva("me-auto max-w-xl flex-1 text-sm", {
+// The sentence grows into the row's free width from a floor of 10rem: actions that would leave it less move to their
+// own line under it, so two buttons on a phone never fold the sentence into a column of single words.
+const cardSectionHintVariants = cva("me-auto max-w-xl grow basis-40 text-sm", {
   defaultVariants: {
     tone: "muted",
   },

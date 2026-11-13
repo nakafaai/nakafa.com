@@ -125,21 +125,22 @@ function SchoolAuditBody() {
     { initialNumItems: PAGE_SIZE }
   );
 
+  // The change names the row, so it leads; who made it stands beside it on a phone, and when scrolls under the menu.
   const columns = [
-    entryColumns.days((entry) => entry.at, {
-      cell: (info) => <SchoolDateTime at={info.getValue()} />,
-      header: t("audit-when"),
-      id: "when",
-      timeZone: () => Option.getOrElse(timeZone, formatZone),
+    entryColumns.text(words.change, {
+      header: t("audit-change"),
+      id: "change",
     }),
     entryColumns.values(words.actor, {
       header: t("audit-who"),
       id: "who",
       options: actors,
     }),
-    entryColumns.text(words.change, {
-      header: t("audit-change"),
-      id: "change",
+    entryColumns.days((entry) => entry.at, {
+      cell: (info) => <SchoolDateTime at={info.getValue()} />,
+      header: t("audit-when"),
+      id: "when",
+      timeZone: () => Option.getOrElse(timeZone, formatZone),
     }),
     entryColumns.menu((info) => <AuditEntryMenu entry={info.row.original} />),
   ];

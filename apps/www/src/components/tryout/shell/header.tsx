@@ -14,7 +14,10 @@ import {
   PageHeader,
   PageTitle,
 } from "@/components/shared/page/header";
-import { pageRowVariants } from "@/components/shared/page/width";
+import {
+  pageRhythmVariants,
+  pageRowVariants,
+} from "@/components/shared/page/width";
 import { HOME_TARGET, TRYOUT_TARGET } from "@/lib/routing/target";
 
 /**
@@ -98,7 +101,11 @@ export function TryoutPage({ children }: { children: ReactNode }) {
 export function TryoutPageBody({ children }: { children: ReactNode }) {
   return (
     <div
-      className={cn(pageRowVariants(), "flex flex-1 flex-col space-y-6 py-6")}
+      className={cn(
+        pageRowVariants(),
+        pageRhythmVariants(),
+        "flex flex-1 flex-col space-y-6"
+      )}
     >
       {children}
     </div>

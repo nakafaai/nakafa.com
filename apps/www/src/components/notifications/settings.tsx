@@ -34,10 +34,10 @@ import { useTranslations } from "use-intl";
 import { ChoiceContext } from "@/components/notifications/choice";
 import { preferenceChoicesOf } from "@/components/notifications/preferences";
 import { PushOffer } from "@/components/notifications/push";
+import { ListCard } from "@/components/shared/page/body";
 import { PageHeaderLabel } from "@/components/shared/page/header";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
-import { TableFrame } from "@/components/shared/table/inset";
 import { RowItems } from "@/components/shared/table/menu";
 import { TableFiltersProvider } from "@/components/shared/table/toolbar";
 
@@ -121,7 +121,7 @@ export function PreferenceTable({
 
   return (
     <TableFiltersProvider>
-      <TableFrame>
+      <ListCard>
         <DataTable
           columns={[
             preferenceColumns.text(({ kind }) => t(`kind-${kind}`), {
@@ -147,7 +147,7 @@ export function PreferenceTable({
           plain
           rowId={({ kind }) => kind}
         />
-      </TableFrame>
+      </ListCard>
     </TableFiltersProvider>
   );
 }
