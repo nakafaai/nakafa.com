@@ -32,6 +32,7 @@ import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { P5Sketch } from "@repo/design-system/components/visual/sketch";
 import { getColor } from "@repo/design-system/lib/color";
+import { MATERIAL } from "@repo/design-system/lib/material";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr, Schema } from "effect";
 import type p5 from "p5";
@@ -52,11 +53,9 @@ const BlockFrame = Schema.Struct({ material: MaterialSchema });
 /** Each material's base color: pine, aluminium, brass. */
 function materialColor(material: typeof MaterialSchema.Type) {
   if (material === "pine") {
-    return mix(PLOT_COLORS.amber, PLOT_COLORS.orange, 0.35);
+    return MATERIAL.pine;
   }
-  return material === "brass"
-    ? mix(PLOT_COLORS.amber, getColor("WHITE"), 0.1)
-    : getColor("SLATE", 300);
+  return material === "brass" ? MATERIAL.brass : MATERIAL.aluminium;
 }
 
 /** Positions of the scale and the block for one canvas size. */
@@ -76,7 +75,7 @@ function paintRoom(sketch: p5) {
     [1, getColor("NEUTRAL", 800)],
   ]);
   spotlight(sketch, { x: width * 0.45, y: height * 0.2 }, width * 0.6, {
-    color: mix(PLOT_COLORS.amber, getColor("WHITE"), 0.85),
+    color: MATERIAL.lampLight,
     strength: 0.3,
   });
 }
@@ -138,7 +137,7 @@ function paintScale(
   });
   const needle =
     -Math.PI / 2 - DIAL_SWEEP / 2 + (grams / DIAL_FULL) * DIAL_SWEEP;
-  sketch.stroke(PLOT_COLORS.pink);
+  sketch.stroke(MATERIAL.dialNeedle);
   sketch.strokeWeight(2.5);
   sketch.line(
     dial.x,

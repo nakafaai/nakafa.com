@@ -34,6 +34,7 @@ import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { P5Sketch } from "@repo/design-system/components/visual/sketch";
 import { getColor } from "@repo/design-system/lib/color";
+import { MATERIAL } from "@repo/design-system/lib/material";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr, Schema } from "effect";
 import type p5 from "p5";
@@ -139,7 +140,7 @@ function paintPan(sketch: p5, place: ReturnType<typeof layout>, grams: number) {
   });
   const needle =
     -Math.PI / 2 - (Math.PI * 5) / 6 + (grams / 100) * ((Math.PI * 5) / 3);
-  sketch.stroke(PLOT_COLORS.pink);
+  sketch.stroke(MATERIAL.dialNeedle);
   sketch.strokeWeight(2.5);
   sketch.line(
     dial.x,

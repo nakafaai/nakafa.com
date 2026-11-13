@@ -34,6 +34,7 @@ import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { P5Sketch } from "@repo/design-system/components/visual/sketch";
 import { getColor } from "@repo/design-system/lib/color";
+import { MATERIAL } from "@repo/design-system/lib/material";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr, Schema } from "effect";
 import type p5 from "p5";
@@ -64,7 +65,7 @@ const FieldFrame = Schema.Struct({ objective: ObjectiveSchema });
  */
 function paintHair(sketch: p5, x: number, width: number, field: number) {
   const { height } = sketch;
-  const brown = mix(PLOT_COLORS.orange, getColor("STONE", 600), 0.55);
+  const brown = MATERIAL.hair;
   gradientRect(
     sketch,
     { height, width, x: x - width / 2, y: 0 },
@@ -144,11 +145,14 @@ function fieldProgram(sketch: p5, read: () => typeof FieldFrame.Type) {
         center.y,
         field
       );
-      light.addColorStop(0, mix(PLOT_COLORS.amber, getColor("WHITE"), 0.9));
-      light.addColorStop(0.75, mix(PLOT_COLORS.amber, getColor("WHITE"), 0.72));
+      light.addColorStop(0, MATERIAL.microscopeLight);
+      light.addColorStop(
+        0.75,
+        mix(MATERIAL.microscopeLight, MATERIAL.lampLight, 0.6)
+      );
       light.addColorStop(
         1,
-        mix(PLOT_COLORS.amber, getColor("STONE", 600), 0.5)
+        mix(MATERIAL.lampLight, getColor("STONE", 600), 0.55)
       );
       drawing.fillStyle = light;
       drawing.fillRect(
@@ -159,7 +163,9 @@ function fieldProgram(sketch: p5, read: () => typeof FieldFrame.Type) {
       );
     }
     outOfFocus(sketch, field * 0.03, () => {
-      sketch.fill(fade(mix(PLOT_COLORS.amber, getColor("BLACK"), 0.5), 0.35));
+      sketch.fill(
+        fade(mix(MATERIAL.hair, MATERIAL.microscopeLight, 0.4), 0.35)
+      );
       Arr.forEach(SPECKS, ([x, y, size]) => {
         sketch.circle(
           center.x + x * field,

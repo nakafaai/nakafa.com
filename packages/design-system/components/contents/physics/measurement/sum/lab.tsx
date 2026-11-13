@@ -35,6 +35,7 @@ import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { P5Sketch } from "@repo/design-system/components/visual/sketch";
 import { getColor } from "@repo/design-system/lib/color";
+import { MATERIAL } from "@repo/design-system/lib/material";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr, Schema } from "effect";
 import type p5 from "p5";
@@ -52,7 +53,7 @@ const SumFrame = Schema.Struct({ tool: CopperToolSchema });
 
 /** The gradient of a copper rod lit from above. */
 function copperStops() {
-  const copper = mix(PLOT_COLORS.orange, PLOT_COLORS.pink, 0.2);
+  const copper = MATERIAL.copper;
   return [
     [0, mix(copper, getColor("WHITE"), 0.5)],
     [0.25, copper],

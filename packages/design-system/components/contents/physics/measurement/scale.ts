@@ -1,5 +1,6 @@
 import { mix } from "@repo/design-system/components/contents/physics/canvas/paint";
 import { getColor } from "@repo/design-system/lib/color";
+import { MATERIAL } from "@repo/design-system/lib/material";
 import type p5 from "p5";
 
 /**
@@ -64,8 +65,8 @@ export function paintTicks(sketch: p5, ticks: Ticks) {
  * darker band where it turns away, and a soft reflection of the bench.
  */
 export function steelStops(shade = 0) {
-  const light = mix(getColor("SLATE", 200), getColor("SLATE", 600), shade);
-  const dark = mix(getColor("SLATE", 600), getColor("ZINC", 900), shade);
+  const light = mix(MATERIAL.chrome, MATERIAL.castIron, shade);
+  const dark = mix(MATERIAL.castIron, getColor("ZINC", 900), shade);
   return [
     [0, mix(light, getColor("WHITE"), 0.55)],
     [0.18, light],

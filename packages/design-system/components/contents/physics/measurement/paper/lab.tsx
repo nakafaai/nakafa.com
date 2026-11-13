@@ -34,6 +34,7 @@ import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { P5Sketch } from "@repo/design-system/components/visual/sketch";
 import { getColor } from "@repo/design-system/lib/color";
+import { MATERIAL } from "@repo/design-system/lib/material";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr, Schema } from "effect";
 import type p5 from "p5";
@@ -75,7 +76,7 @@ function paintRoom(sketch: p5, place: ReturnType<typeof layout>) {
     [1, getColor("NEUTRAL", 800)],
   ]);
   spotlight(sketch, { x: width * 0.25, y: height * 0.3 }, width * 0.5, {
-    color: mix(PLOT_COLORS.amber, getColor("WHITE"), 0.85),
+    color: MATERIAL.lampLight,
     strength: 0.3,
   });
   gradientRect(
@@ -97,7 +98,7 @@ function paintStack(
   const tall = stackHeight * place.millimetre;
   const top = place.base - tall;
   const depth = sketch.height * 0.05;
-  const paper = mix(getColor("SLATE", 50), PLOT_COLORS.amber, 0.06);
+  const paper = MATERIAL.paper;
   withShadow(
     sketch,
     { blur: 20, color: fade(getColor("BLACK"), 0.55), drop: 8 },
@@ -219,7 +220,7 @@ function paintLens(
     ]
   );
   const paperRight = place.lensLeft + place.lens * 0.62;
-  const paper = mix(getColor("SLATE", 50), PLOT_COLORS.amber, 0.06);
+  const paper = MATERIAL.paper;
   const top = toY(stackHeight);
   gradientRect(
     sketch,
