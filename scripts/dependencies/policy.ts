@@ -227,6 +227,11 @@ export const DEPENDENCY_HOLDS: readonly DependencyHold[] = [
   },
   { approved: "catalog:", dependency: "@vitest/ui", minimumDeclarations: 1 },
   {
+    approved: "0.0.70",
+    dependency: "convex-test",
+    minimumDeclarations: 1,
+  },
+  {
     approved: "0.67.5",
     dependency: "@effect/tsgo",
     minimumDeclarations: 1,

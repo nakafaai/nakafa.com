@@ -102,6 +102,11 @@ export const REGISTRY_REVIEWS = [
     "The adapter stays on 0.12.6, the last release that admits Better Auth 1.6. 0.13.0 peers better-auth >=1.7.16 and refuses compound unique indexes, which @better-auth/oauth-provider declares, so the agent sign-in cannot move with it (see better-auth@latest). 0.12.7 also rewrites x-forwarded-host on every auth request to an exact trusted origin or CONVEX_SITE_URL, while the school hosts reach Better Auth through the x-forwarded-host that the web app's auth proxy sends (confect/auth/host.ts, ADR 0026); a move sends x-better-auth-forwarded-host instead and trusts the exact origin of each request. Checked 7 November 2026.",
   ],
   [
+    "convex-test@latest",
+    "0.0.71",
+    "The backend suites stay on 0.0.70. 0.0.71 rejects a document over 1 MiB on insert, patch and replace, as Convex does, and fixes getFunctionMetadata visibility. Three content release tests build 2 to 8 MiB rows to reach page ceilings: the proof page's first row (one document, so it cannot pass PROOF_PAGE_BYTES), the artifact proof batch (reachable only across many rows of at most 1 MiB), and the rollback page's first record (two artifacts and two projections, within about 1 KB of MAX_ROLLBACK_PAGE_BYTES at Convex's limit). The move rewrites those tests with documents Convex accepts and removes the branches the limit makes unreachable, in the content release module. Checked 13 November 2026.",
+  ],
+  [
     "@types/node@26",
     "26.6.6",
     "The root, API and MCP manifests declare the Node 26 types (#1872): the scripts and tooling run on Node 26, and the API and MCP Workers run on workerd. The backend declares no Node types, so its Node actions on node.nodeVersion 24 (packages/backend/convex.json) gain no Node 26 API from this.",

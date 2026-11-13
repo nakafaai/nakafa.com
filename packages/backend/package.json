@@ -95,7 +95,7 @@
     "@types/react": "catalog:",
     "@vitest/coverage-istanbul": "catalog:",
     "auth": "1.6.34",
-    "convex-test": "0.0.71",
+    "convex-test": "0.0.70",
     "tsrs": "catalog:",
     "vite": "catalog:",
     "vitest": "catalog:"
