@@ -120,7 +120,7 @@ export function GramStainLab({
         className={threeSceneFrameVariants()}
         render={<section />}
       >
-        <ScienceStage setting="studio" reach={60}>
+        <ScienceStage reach={60} setting="studio">
           <Suspense fallback={null}>
             <GramScene step={step} />
           </Suspense>

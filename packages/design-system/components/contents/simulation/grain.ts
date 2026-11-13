@@ -13,7 +13,8 @@
 export function hashUnit(x: number, y: number) {
   const first = Math.sin(x * 127.1 + y * 311.7) * 43_758.545_312_3;
   const second =
-    Math.sin((first - Math.floor(first)) * 269.5 + x * 183.3) * 43_758.545_312_3;
+    Math.sin((first - Math.floor(first)) * 269.5 + x * 183.3) *
+    43_758.545_312_3;
   return second - Math.floor(second);
 }
 

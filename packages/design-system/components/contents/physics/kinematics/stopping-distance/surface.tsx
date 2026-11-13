@@ -1,6 +1,7 @@
 import { useFrame } from "@react-three/fiber";
 import { FollowCamera } from "@repo/design-system/components/contents/physics/kinematics/follow";
 import {
+  DistancePosts,
   ROAD,
   Road,
   SkidMarks,
@@ -47,7 +48,8 @@ import {
 } from "@repo/design-system/components/visual/card";
 import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
-import { Array as Arr } from "effect";
+import { MATERIAL } from "@repo/design-system/lib/material";
+import { Array as Arr, Schema } from "effect";
 import {
   type ReactNode,
   Suspense,
@@ -56,7 +58,6 @@ import {
   useRef,
   useState,
 } from "react";
-import { MATERIAL } from "@repo/design-system/lib/material";
 
 /** The speed every surface is tested from: 20 m/s, 72 km/h. */
 const SPEED = 20;
@@ -67,6 +68,12 @@ const LEAD_IN = 1.6;
 /** The camera rides 5.5 m behind, 2.1 m up and 8.5 m beside the car. */
 const CAMERA_OFFSET = [-5.5, 2.1, 8.5] as const;
 
+/** The colour and strength of the marks locked tyres leave. */
+const SkidLookSchema = Schema.Struct({
+  color: Schema.String,
+  opacity: Schema.Finite,
+});
+
 /** The marks locked tyres leave on each surface. */
 const SKID = {
   dry: { color: MATERIAL.skidRubber, opacity: 0.85 },
@@ -74,7 +81,7 @@ const SKID = {
   ice: { color: MATERIAL.icePolish, opacity: 0.45 },
   snow: { color: MATERIAL.snowTrack, opacity: 0.7 },
   wet: { color: MATERIAL.skidRubber, opacity: 0.5 },
-} satisfies Record<Surface, { color: string; opacity: number }>;
+} satisfies Record<Surface, typeof SkidLookSchema.Type>;
 
 /**
  * A car at 20 m/s locks its wheels at the white line on the road surface the
@@ -139,7 +146,7 @@ export function BrakingSurfaceLab({
         className={threeSceneFrameVariants()}
         render={<section />}
       >
-        <ScienceStage setting="field" reach={30}>
+        <ScienceStage reach={30} setting="field">
           <Suspense fallback={null}>
             <SurfaceScene stop={stop} surface={surface} />
           </Suspense>
@@ -229,12 +236,8 @@ function SurfaceScene({
         minDistance={6}
         offset={CAMERA_OFFSET}
       />
-      <Road
-        from={-300}
-        posts={postsFor(distance)}
-        surface={surface}
-        to={distance + 600}
-      />
+      <Road from={-300} surface={surface} to={distance + 600} />
+      <DistancePosts posts={postsFor(distance)} />
       <group position={[0, 0, ROAD.lane]}>
         <Sedan color={MATERIAL.carPaint} ref={car} />
       </group>

@@ -5,7 +5,9 @@ import {
   hashUnit,
 } from "@repo/design-system/components/contents/simulation/grain";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
-import { Array as Arr } from "effect";
+import { getColor } from "@repo/design-system/lib/color";
+import { MATERIAL } from "@repo/design-system/lib/material";
+import { Array as Arr, Schema } from "effect";
 import {
   type ReactNode,
   type Ref,
@@ -15,8 +17,6 @@ import {
   useRef,
 } from "react";
 import { DataTexture, type Group, RepeatWrapping, SRGBColorSpace } from "three";
-import { MATERIAL } from "@repo/design-system/lib/material";
-import { getColor } from "@repo/design-system/lib/color";
 
 /**
  * A two-lane road at real scale, in metres: lanes of 3.5 m, a kerb, a
@@ -36,17 +36,27 @@ export const ROAD = {
   side: -1,
 } as const;
 
+/** How a road surface looks: its gloss, its base colour, its grain and its roughness. */
+const SurfaceLookSchema = Schema.Struct({
+  clearcoat: Schema.Finite,
+  color: Schema.String,
+  grain: Schema.Finite,
+  roughness: Schema.Finite,
+});
+
 /** How each surface looks: its base colour, its gloss and its grain. */
 const SURFACE_LOOK = {
   dry: { clearcoat: 0, color: MATERIAL.asphalt, grain: 0.5, roughness: 0.88 },
   gravel: { clearcoat: 0, color: MATERIAL.gravel, grain: 0.9, roughness: 1 },
   ice: { clearcoat: 1, color: MATERIAL.ice, grain: 0.18, roughness: 0.06 },
   snow: { clearcoat: 0, color: MATERIAL.snow, grain: 0.28, roughness: 0.82 },
-  wet: { clearcoat: 0.85, color: MATERIAL.wetAsphalt, grain: 0.42, roughness: 0.2 },
-} satisfies Record<
-  Surface,
-  { clearcoat: number; color: string; grain: number; roughness: number }
->;
+  wet: {
+    clearcoat: 0.85,
+    color: MATERIAL.wetAsphalt,
+    grain: 0.42,
+    roughness: 0.2,
+  },
+} satisfies Record<Surface, typeof SurfaceLookSchema.Type>;
 
 /** Grain texels per side; one tile of grain covers four metres of road. */
 const GRAIN_SIZE = 256;
@@ -109,16 +119,14 @@ function useGrain(surface: Surface, length: number) {
 
 /**
  * The road, its markings, its kerb and pavement, and the roadside, from
- * `from` to `to` metres along it. `posts` lists the distance posts to draw.
+ * `from` to `to` metres along it. A lab adds its own `DistancePosts`.
  */
 export function Road({
   from,
-  posts,
   surface,
   to,
 }: {
   readonly from: number;
-  readonly posts: readonly number[];
   readonly surface: Surface;
   readonly to: number;
 }) {
@@ -192,13 +200,16 @@ export function Road({
         receiveShadow
       >
         <boxGeometry args={[length, 0.04, ROAD.pavement]} />
-        <meshStandardMaterial color={MATERIAL.pavement} map={color} roughness={0.95} />
+        <meshStandardMaterial
+          color={MATERIAL.pavement}
+          map={color}
+          roughness={0.95}
+        />
       </mesh>
       <Grass middle={middle} />
 
       <Trees positions={trees} />
       <Lamps positions={lamps} />
-      <DistancePosts posts={posts} />
     </group>
   );
 }
@@ -226,7 +237,11 @@ function Grass({ middle }: { readonly middle: number }) {
       rotation={[-Math.PI / 2, 0, 0]}
     >
       <planeGeometry args={[GROUND, GROUND]} />
-      <meshStandardMaterial color={MATERIAL.grass} map={texture} roughness={1} />
+      <meshStandardMaterial
+        color={MATERIAL.grass}
+        map={texture}
+        roughness={1}
+      />
     </mesh>
   );
 }
@@ -252,7 +267,12 @@ function RoadPaint({
 const CROWN_LUMPS = 11;
 
 /** Leaf greens of a tropical roadside tree, sunlit to shaded. */
-const LEAVES = [MATERIAL.foliageShade, MATERIAL.foliage, MATERIAL.foliageDark, MATERIAL.foliageLight] as const;
+const LEAVES = [
+  MATERIAL.foliageShade,
+  MATERIAL.foliage,
+  MATERIAL.foliageDark,
+  MATERIAL.foliageLight,
+] as const;
 
 /**
  * The lumps of one crown: a broad, flattened dome of leafy clusters, as a
@@ -312,14 +332,22 @@ function Lamps({ positions }: { readonly positions: readonly number[] }) {
     <group>
       <Instances castShadow limit={Math.max(1, positions.length)}>
         <cylinderGeometry args={[0.06, 0.09, 7, 10]} />
-        <meshStandardMaterial color={MATERIAL.lampPost} metalness={0.8} roughness={0.4} />
+        <meshStandardMaterial
+          color={MATERIAL.lampPost}
+          metalness={0.8}
+          roughness={0.4}
+        />
         {Arr.map(positions, (x) => (
           <Instance key={x} position={[x, 3.5, z]} />
         ))}
       </Instances>
       <Instances castShadow limit={Math.max(1, positions.length)}>
         <boxGeometry args={[0.12, 0.08, 1.6]} />
-        <meshStandardMaterial color={MATERIAL.lampPost} metalness={0.8} roughness={0.4} />
+        <meshStandardMaterial
+          color={MATERIAL.lampPost}
+          metalness={0.8}
+          roughness={0.4}
+        />
         {Arr.map(positions, (x) => (
           <Instance key={x} position={[x, 6.95, z - ROAD.side * 0.75]} />
         ))}
@@ -329,7 +357,11 @@ function Lamps({ positions }: { readonly positions: readonly number[] }) {
 }
 
 /** Distance posts at the kerb, each labelled with its distance from the hazard. */
-function DistancePosts({ posts }: { readonly posts: readonly number[] }) {
+export function DistancePosts({
+  posts,
+}: {
+  readonly posts: readonly number[];
+}) {
   const z = ROAD.side * (ROAD.halfWidth + 0.35);
   return (
     <group>

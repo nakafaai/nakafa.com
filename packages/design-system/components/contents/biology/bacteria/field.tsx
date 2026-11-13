@@ -1,8 +1,8 @@
 import { OrthographicCamera } from "@react-three/drei";
 import { useThree } from "@react-three/fiber";
+import { MATERIAL } from "@repo/design-system/lib/material";
 import { type ReactNode, useEffect, useMemo } from "react";
 import { DataTexture } from "three";
-import { MATERIAL } from "@repo/design-system/lib/material";
 
 /**
  * The circle of light a learner sees through a microscope's eyepiece, about
@@ -10,7 +10,7 @@ import { MATERIAL } from "@repo/design-system/lib/material";
  * the field, and the dark of the tube around it. The scene's units are
  * micrometres, with the slide in the x–z plane and the camera looking down.
  */
-export const FIELD_RADIUS = 60;
+const FIELD_RADIUS = 60;
 
 /** How the light falls off toward the rim of the field, from the centre out. */
 function createVignette() {
@@ -62,7 +62,11 @@ export function MicroscopeField({
       </mesh>
       <mesh position={[0, -0.5, 0]} rotation={[-Math.PI / 2, 0, 0]}>
         <circleGeometry args={[FIELD_RADIUS, 96]} />
-        <meshBasicMaterial color={MATERIAL.microscopeLight} map={vignette} toneMapped={false} />
+        <meshBasicMaterial
+          color={MATERIAL.microscopeLight}
+          map={vignette}
+          toneMapped={false}
+        />
       </mesh>
       {children}
     </>

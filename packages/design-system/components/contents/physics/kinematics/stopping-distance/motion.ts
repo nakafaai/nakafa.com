@@ -6,7 +6,7 @@ import { Schema } from "effect";
  * until it stands still. Every stopping simulation of the lesson draws from
  * this one model: d = v·t_r + v²/(2b).
  */
-export const StopSchema = Schema.Struct({
+const StopSchema = Schema.Struct({
   deceleration: Schema.Finite.check(Schema.isGreaterThan(0)),
   reaction: Schema.Finite.check(Schema.isGreaterThanOrEqualTo(0)),
   speed: Schema.Finite.check(Schema.isGreaterThanOrEqualTo(0)),

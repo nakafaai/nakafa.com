@@ -33,6 +33,7 @@ import {
 } from "@repo/design-system/components/visual/card";
 import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
+import { MATERIAL } from "@repo/design-system/lib/material";
 import { Array as Arr } from "effect";
 import {
   type ReactNode,
@@ -49,7 +50,6 @@ import {
   type Mesh,
   MeshPhysicalMaterial,
 } from "three";
-import { MATERIAL } from "@repo/design-system/lib/material";
 
 /** The pour takes three seconds; the cloud then settles for five. */
 const POUR = 3;
@@ -103,7 +103,7 @@ export function PrecipitateLab({
         className={threeSceneFrameVariants()}
         render={<section />}
       >
-        <ScienceStage setting="lab" floor={0} reach={0.6}>
+        <ScienceStage floor={0} reach={0.6} setting="lab">
           <Suspense fallback={null}>
             <CameraControls
               cameraPosition={[0.22, 0.3, 0.52]}
@@ -142,7 +142,13 @@ export function PrecipitateLab({
 }
 
 /** A beaker's liquid: a cylinder whose height the scene sets each frame. */
-function Liquid({ children, ref }: { readonly children: ReactNode; readonly ref: Ref<Mesh> }) {
+function Liquid({
+  children,
+  ref,
+}: {
+  readonly children: ReactNode;
+  readonly ref: Ref<Mesh>;
+}) {
   return (
     <mesh ref={ref}>
       <cylinderGeometry args={[0.0235, 0.0235, 1, 32]} />
@@ -234,7 +240,10 @@ function CloudScene({ total }: { readonly total: number }) {
           </Liquid>
           <Instances limit={SPECKS} ref={specks}>
             <icosahedronGeometry args={[0.0011, 0]} />
-            <meshStandardMaterial color={MATERIAL.precipitate} roughness={0.9} />
+            <meshStandardMaterial
+              color={MATERIAL.precipitate}
+              roughness={0.9}
+            />
             {Arr.map(Arr.range(1, SPECKS), (index) => (
               <Instance key={index} />
             ))}

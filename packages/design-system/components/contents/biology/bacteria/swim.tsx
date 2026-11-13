@@ -19,6 +19,8 @@ import {
 import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { P5Sketch } from "@repo/design-system/components/visual/sketch";
+import { getColor } from "@repo/design-system/lib/color";
+import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr, Schema } from "effect";
 import type p5 from "p5";
 import { type ReactNode, useState } from "react";
@@ -31,6 +33,10 @@ const TIME_LAPSE = 4;
 
 /** How many recent positions each trail keeps. */
 const TRAIL = 900;
+
+/** The cell that senses sugar is teal; the cell without receptors is grey. */
+const SENSING = PLOT_COLORS.teal;
+const MUTANT = getColor("GRAY");
 
 /** The two cells start side by side, 100 µm left of the middle. */
 const START_X = -100;
@@ -184,10 +190,10 @@ function swimProgram(
     ];
 
     drawDish(sketch, toScreen);
-    drawTrail(sketch, trails[0], toScreen, [22, 128, 92]);
-    drawTrail(sketch, trails[1], toScreen, [120, 120, 128]);
-    drawCell(sketch, cells[0], toScreen, [22, 128, 92], seconds);
-    drawCell(sketch, cells[1], toScreen, [110, 110, 118], seconds);
+    drawTrail(sketch, trails[0], toScreen, SENSING);
+    drawTrail(sketch, trails[1], toScreen, MUTANT);
+    drawCell(sketch, cells[0], toScreen, SENSING, seconds);
+    drawCell(sketch, cells[1], toScreen, MUTANT, seconds);
 
     if (seconds - reported > 0.5 || seconds < reported) {
       reported = seconds;
@@ -227,11 +233,13 @@ function drawTrail(
   sketch: p5,
   trail: readonly (readonly [number, number])[],
   toScreen: (x: number, y: number) => readonly [number, number],
-  rgb: readonly [number, number, number]
+  hex: string
 ) {
+  const ink = sketch.color(hex);
+  ink.setAlpha(150);
   sketch.noFill();
   sketch.strokeWeight(1.2);
-  sketch.stroke(rgb[0], rgb[1], rgb[2], 150);
+  sketch.stroke(ink);
   sketch.beginShape();
   Arr.forEach(trail, ([x, y]) => {
     const [sx, sy] = toScreen(x, y);
@@ -248,7 +256,7 @@ function drawCell(
   sketch: p5,
   cell: Swimmer,
   toScreen: (x: number, y: number) => readonly [number, number],
-  rgb: readonly [number, number, number],
+  hex: string,
   seconds: number
 ) {
   const [x, y] = toScreen(cell.x, cell.y);
@@ -256,8 +264,10 @@ function drawCell(
   sketch.push();
   sketch.translate(x, y);
   sketch.rotate(cell.heading);
+  const flagella = sketch.color(hex);
+  flagella.setAlpha(200);
   sketch.noFill();
-  sketch.stroke(rgb[0], rgb[1], rgb[2], 200);
+  sketch.stroke(flagella);
   sketch.strokeWeight(Math.max(1, size * 0.12));
   sketch.beginShape();
   Arr.forEach(Arr.range(0, 16), (step) => {
@@ -268,7 +278,7 @@ function drawCell(
   });
   sketch.endShape();
   sketch.noStroke();
-  sketch.fill(rgb[0], rgb[1], rgb[2]);
+  sketch.fill(hex);
   sketch.rectMode(sketch.CENTER);
   sketch.rect(0, 0, size * 2, size, size / 2);
   sketch.pop();

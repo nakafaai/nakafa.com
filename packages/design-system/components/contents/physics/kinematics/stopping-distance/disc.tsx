@@ -45,6 +45,7 @@ import {
 } from "@repo/design-system/components/visual/card";
 import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
+import { MATERIAL } from "@repo/design-system/lib/material";
 import { Array as Arr, Option, Record as Rec } from "effect";
 import {
   type ReactNode,
@@ -60,7 +61,6 @@ import {
   MeshStandardMaterial,
   SRGBColorSpace,
 } from "three";
-import { MATERIAL } from "@repo/design-system/lib/material";
 
 /** The speeds the learner can brake from, as in the lesson's table. */
 const SPEEDS = [10, 20, 30] as const;
@@ -131,7 +131,6 @@ export function BrakeHeatLab({
           <Button
             aria-pressed={thermal}
             onClick={() => setThermal((shown) => !shown)}
-            variant="outline"
           >
             <HugeIcons icon={TemperatureIcon} />
             {labels.thermal}
@@ -144,7 +143,7 @@ export function BrakeHeatLab({
         className={threeSceneFrameVariants()}
         render={<section />}
       >
-        <ScienceStage setting="studio" reach={1.5}>
+        <ScienceStage reach={1.5} setting="studio">
           <Suspense fallback={null}>
             <CameraControls
               cameraPosition={[0.75, 0.42, 1.05]}
@@ -194,9 +193,24 @@ export function BrakeHeatLab({
 
 /** The parts the thermal camera paints, with their daylight look. */
 const PARTS = {
-  caliper: { color: MATERIAL.caliper, metalness: 0.2, roughness: 0.35, warming: 0.35 },
-  disc: { color: MATERIAL.castIron, metalness: 0.9, roughness: 0.42, warming: 1 },
-  rim: { color: MATERIAL.rimBright, metalness: 1, roughness: 0.2, warming: 0.12 },
+  caliper: {
+    color: MATERIAL.caliper,
+    metalness: 0.2,
+    roughness: 0.35,
+    warming: 0.35,
+  },
+  disc: {
+    color: MATERIAL.castIron,
+    metalness: 0.9,
+    roughness: 0.42,
+    warming: 1,
+  },
+  rim: {
+    color: MATERIAL.rimBright,
+    metalness: 1,
+    roughness: 0.2,
+    warming: 0.12,
+  },
   tyre: { color: MATERIAL.tyre, metalness: 0, roughness: 0.92, warming: 0.04 },
 } as const;
 

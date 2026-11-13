@@ -5,16 +5,16 @@ import { Array as Arr, Option, pipe, Schema } from "effect";
  * brake discs of 8 kg that share the heat equally. A real car sends more of
  * the work to its front brakes; equal sharing keeps one number per stop.
  */
-export const CAR_MASS = 1200;
-export const DISC_MASS = 8;
-export const DISC_COUNT = 4;
+const CAR_MASS = 1200;
+const DISC_MASS = 8;
+const DISC_COUNT = 4;
 
 /**
  * The specific heat capacity of iron at 25 °C, 0.449 J/(g·K), from the CRC
  * Handbook of Chemistry and Physics ("Heat Capacity of the Elements at
  * 25 °C"); grey cast iron discs sit close to it.
  */
-export const IRON_HEAT_CAPACITY = 449;
+const IRON_HEAT_CAPACITY = 449;
 
 /** The air and the discs before the stop, in °C: a warm tropical day. */
 export const START_TEMPERATURE = 30;

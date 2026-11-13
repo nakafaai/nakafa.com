@@ -23,10 +23,10 @@ import {
 } from "@repo/design-system/components/visual/card";
 import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
+import { MATERIAL } from "@repo/design-system/lib/material";
 import { Array as Arr } from "effect";
 import { type ReactNode, Suspense, useEffect, useRef, useState } from "react";
 import type { InstancedMesh } from "three";
-import { MATERIAL } from "@repo/design-system/lib/material";
 
 /** Two hours: six doublings, sixty-four cells. */
 const MINUTES = 120;
@@ -117,7 +117,7 @@ export function BinaryFissionLab({
         className={threeSceneFrameVariants()}
         render={<section />}
       >
-        <ScienceStage setting="studio" reach={60}>
+        <ScienceStage reach={60} setting="studio">
           <Suspense fallback={null}>
             <FissionScene minutes={minutes} onMinutes={setMinutes} />
           </Suspense>
