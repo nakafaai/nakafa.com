@@ -1,9 +1,9 @@
 import { useThree } from "@react-three/fiber";
 import { toggleColumns } from "@repo/design-system/components/contents/chemistry/columns";
 import {
-  balanceTex,
-  economyTex,
-  equationTex,
+  balanceLines,
+  economyLines,
+  equationLines,
   getReaction,
   massBalanceTex,
   moleculeCountTex,
@@ -19,6 +19,7 @@ import {
   ReactionProvider,
   useReactionState,
 } from "@repo/design-system/components/contents/chemistry/equation/store";
+import { MathLines } from "@repo/design-system/components/contents/chemistry/lines";
 import {
   MATH_NUMBER_OPTIONS,
   mathNumber,
@@ -198,11 +199,11 @@ function ReactionCard({
         <VisualCardFacts>
           <VisualFact
             label={labels.equation}
-            value={<InlineMath math={equationTex(shown)} />}
+            value={<MathLines lines={equationLines(shown)} />}
           />
           <VisualFact
             label={labels.atoms}
-            value={<InlineMath math={balanceTex(shown)} />}
+            value={<MathLines lines={balanceLines(shown)} />}
           />
           <VisualFact
             label={labels.mass}
@@ -211,9 +212,9 @@ function ReactionCard({
           {reading === "economy" ? (
             <VisualFact
               label={labels.economy}
-              value={Option.match(economyTex(shown, number), {
+              value={Option.match(economyLines(shown, number), {
                 onNone: () => null,
-                onSome: (tex) => <InlineMath math={tex} />,
+                onSome: (lines) => <MathLines lines={lines} />,
               })}
             />
           ) : (
