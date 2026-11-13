@@ -69,6 +69,18 @@ export const productAnalyticsEventValidator = Schema.Union([
     }),
   }),
   Schema.Struct({
+    // A running try-out's reminder left: the email (in one of its two wordings) or the inbox row with its push. A
+    // return within two hours, read as the learner's next try-out event, measures each wording.
+    name: Schema.Literal("tryout reminder sent"),
+    properties: Schema.Struct({
+      channel: Schema.Literals(["email", "inbox"]),
+      exam_key: tryoutRouteKeyValidator,
+      hours_left: Schema.Finite,
+      set_key: tryoutRouteKeyValidator,
+      variant: Schema.optionalKey(Schema.Literals(["a", "b"])),
+    }),
+  }),
+  Schema.Struct({
     name: Schema.Literal("tryout paywall viewed"),
     properties: Schema.Struct({
       source: tryoutPaywallSourceValidator,
