@@ -15439,6 +15439,7 @@ export declare const api: {
             };
             groups: Array<{
               description?: string;
+              entryPath: string;
               groupKey: string;
               publicPath: string;
               title: string;
@@ -15478,6 +15479,7 @@ export declare const api: {
             };
             groups: Array<{
               description?: string;
+              entryPath: string;
               groupKey: string;
               publicPath: string;
               title: string;
@@ -15675,6 +15677,7 @@ export declare const api: {
             };
             groups: Array<{
               description?: string;
+              entryPath: string;
               groupKey: string;
               publicPath: string;
               title: string;
