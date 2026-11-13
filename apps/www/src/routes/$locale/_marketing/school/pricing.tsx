@@ -12,8 +12,8 @@ import { FaqAccordion } from "@/components/marketing/about/faq/accordion";
 import { DeferredSchoolToys } from "@/components/marketing/school/deferred";
 import {
   openSchoolPricing,
-  schoolSections,
-} from "@/components/marketing/school/later";
+  pricingSections,
+} from "@/components/marketing/school/pricing/later";
 import { SchoolPlans } from "@/components/marketing/school/pricing/plans";
 import { PageField } from "@/components/marketing/shared/field";
 import { LaterSection } from "@/components/marketing/shared/later";
@@ -174,23 +174,23 @@ function SchoolPricing() {
       <div className="relative grid grid-cols-1">
         <SchoolPricingPlans />
         <DeferredSchoolToys page="pricing" />
-        <LaterSection code={schoolSections.compare}>
+        <LaterSection code={pricingSections.compare}>
           {(SchoolCompare) => <SchoolCompare />}
         </LaterSection>
-        <LaterSection code={schoolSections.calculator}>
+        <LaterSection code={pricingSections.calculator}>
           {(SchoolCalculator) => <SchoolCalculator />}
         </LaterSection>
-        <LaterSection code={schoolSections.addons}>
+        <LaterSection code={pricingSections.addons}>
           {(SchoolAddOns) => <SchoolAddOns />}
         </LaterSection>
-        <LaterSection code={schoolSections.faq}>
+        <LaterSection code={pricingSections.faq}>
           {(SchoolFaq) => (
             <SchoolFaq>
               <FaqAccordion faqs={faqs} openFirst />
             </SchoolFaq>
           )}
         </LaterSection>
-        <LaterSection code={schoolSections.closing}>
+        <LaterSection code={pricingSections.closing}>
           {(SchoolClosing) => <SchoolClosing />}
         </LaterSection>
       </div>
