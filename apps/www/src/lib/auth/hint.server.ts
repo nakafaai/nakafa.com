@@ -1,5 +1,5 @@
 import { AUTH_REFRESH_COOKIE } from "@convex-dev/auth/ssr";
-import { Array as Arr, Option, String as Str } from "effect";
+import { Array as Arr, Option, Result, String as Str } from "effect";
 import {
   expiredHintCookie,
   hintScopeFor,
@@ -11,8 +11,8 @@ const nameAndValue = (setCookie: string) => {
   const pair = Str.split(setCookie, ";")[0] ?? "";
   const at = pair.indexOf("=");
   return at < 0
-    ? Option.none()
-    : Option.some({
+    ? Result.failVoid
+    : Result.succeed({
         name: Str.trim(pair.slice(0, at)),
         value: Str.trim(pair.slice(at + 1)),
       });
@@ -34,11 +34,7 @@ const readSessionWrite = (response: Response, prefix: string) =>
  * it wrote, so a static page knows at once whether to start the live session.
  * An answer that wrote no session cookie keeps the hint as it is.
  */
-export function withSessionHint(
-  response: Response,
-  site: URL,
-  prefix: string
-) {
+export function withSessionHint(response: Response, site: URL, prefix: string) {
   const write = readSessionWrite(response, prefix);
   if (Option.isNone(write)) {
     return response;

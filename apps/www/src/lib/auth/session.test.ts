@@ -1,179 +1,100 @@
 import { describe, expect, it } from "@effect/vitest";
-import { Effect } from "effect";
+import { Array as Arr, Effect, Schema } from "effect";
+import { Base64Url } from "effect/encoding";
 import {
+  AuthSession,
   followAuthSession,
   holdSession,
   previewAuthSession,
-  readAuthSession,
+  readClientSession,
   releaseSession,
 } from "@/lib/auth/session";
 
-const signedIn = {
-  session: { id: "session-1", token: "token", userId: "user-1" },
-  user: { email: "learner@example.com", id: "user-1", name: "Learner" },
-};
+/** The JSON text of one body. */
+const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
 
-describe("Better Auth session", () => {
-  it("reads the session Better Auth starts with as pending", () => {
-    expect(
-      readAuthSession({
-        data: null,
-        error: null,
-        isPending: true,
-        isRefetching: false,
-      })
-    ).toStrictEqual({
-      hasError: false,
-      isPending: true,
-      sessionId: null,
-      userId: null,
-    });
-  });
+/** An access token of `session-1`. */
+const TOKEN = Arr.join(
+  [
+    Base64Url.encode(encodeJson({ alg: "ES256" })),
+    Base64Url.encode(encodeJson({ exp: 4_102_444_800, sub: "session-1" })),
+    "signature",
+  ],
+  "."
+);
 
-  it("reads a settled visitor without a session as signed out", () => {
-    expect(
-      readAuthSession({ data: null, error: null, isPending: false })
-    ).toStrictEqual(previewAuthSession);
-  });
+const ADA = { sessionId: "session-1", userId: "user-1" };
 
-  it("keeps only the session and user ids of a signed-in learner", () => {
-    expect(
-      readAuthSession({ data: signedIn, error: null, isPending: false })
-    ).toStrictEqual({
-      hasError: false,
-      isPending: false,
-      sessionId: "session-1",
-      userId: "user-1",
-    });
-  });
-
-  it("keeps the last session through a failed refresh and marks the error", () => {
-    expect(
-      readAuthSession({
-        data: signedIn,
-        error: { status: 500, statusText: "Internal Server Error" },
-        isPending: false,
-      })
-    ).toStrictEqual({
-      hasError: true,
-      isPending: false,
-      sessionId: "session-1",
-      userId: "user-1",
-    });
-  });
-
-  it.each([
-    [{ message: "Failed to fetch" }],
-    [{ status: 500, statusText: "Internal Server Error" }],
-    [{ status: 503, statusText: "Service Unavailable" }],
-  ])("keeps a first read that failed without an answer pending", (error) => {
-    expect(
-      readAuthSession({ data: null, error, isPending: false })
-    ).toStrictEqual({
-      hasError: true,
-      isPending: true,
-      sessionId: null,
-      userId: null,
-    });
-  });
-
-  it("reads a 401 as signed out, as Better Auth does", () => {
-    expect(
-      readAuthSession({
-        data: null,
-        error: { status: 401, statusText: "Unauthorized" },
-        isPending: false,
-      })
-    ).toStrictEqual({
-      hasError: true,
-      isPending: false,
-      sessionId: null,
-      userId: null,
-    });
-  });
-
-  it.each([
-    undefined,
-    { data: { session: {} }, error: null, isPending: false },
-    { data: null, error: null },
-  ])(
-    "reads a value outside the session contract as a failed request",
-    (value) => {
-      expect(readAuthSession(value)).toStrictEqual({
-        hasError: true,
-        isPending: false,
-        sessionId: null,
-        userId: null,
-      });
-    }
-  );
+const signedIn = AuthSession.make({
+  hasError: false,
+  isPending: false,
+  sessionId: "session-1",
+  userId: "user-1",
 });
 
-describe("Following Better Auth's session", () => {
-  const refetch = {
-    data: null,
-    error: null,
-    isPending: true,
-    isRefetching: true,
-  };
+const pending = AuthSession.make({
+  hasError: false,
+  isPending: true,
+  sessionId: null,
+  userId: null,
+});
 
-  it("keeps a settled signed-out session while Better Auth refetches it", () => {
-    expect(followAuthSession(previewAuthSession, refetch)).toBe(
+describe("readClientSession", () => {
+  it("reads the session the token names, with the account its answer named", () => {
+    expect(
+      readClientSession(
+        { hasError: false, isLoading: false, token: TOKEN },
+        ADA
+      )
+    ).toEqual(signedIn);
+  });
+
+  it("names no account that an answer gave for another session", () => {
+    expect(
+      readClientSession(
+        { hasError: false, isLoading: false, token: TOKEN },
+        { sessionId: "other", userId: "user-2" }
+      ).userId
+    ).toBeNull();
+    expect(
+      readClientSession(
+        { hasError: false, isLoading: false, token: TOKEN },
+        null
+      ).userId
+    ).toBeNull();
+  });
+
+  it("reads a client without a readable token as no session, pending while it loads", () => {
+    expect(
+      readClientSession({ hasError: false, isLoading: true, token: null }, ADA)
+    ).toEqual(pending);
+    expect(
+      readClientSession(
+        { hasError: true, isLoading: false, token: "not-a-token" },
+        ADA
+      )
+    ).toEqual({ ...previewAuthSession, hasError: true });
+  });
+});
+
+describe("followAuthSession", () => {
+  it("takes the session the client settles on", () => {
+    expect(followAuthSession(pending, signedIn)).toBe(signedIn);
+    expect(followAuthSession(signedIn, previewAuthSession)).toBe(
       previewAuthSession
     );
   });
 
-  it("keeps a settled signed-out session through a refetch that fails without an answer", () => {
-    expect(
-      followAuthSession(previewAuthSession, {
-        data: null,
-        error: new TypeError("Failed to fetch"),
-        isPending: false,
-        isRefetching: false,
-      })
-    ).toBe(previewAuthSession);
-  });
+  it("keeps the session readers see through a failed read, marked with the error", () => {
+    const failed = { ...previewAuthSession, hasError: true };
 
-  it("stays pending through a first request that fails without an answer", () => {
-    expect(
-      followAuthSession(
-        readAuthSession({
-          data: null,
-          error: null,
-          isPending: true,
-          isRefetching: false,
-        }),
-        {
-          data: null,
-          error: { status: 503, statusText: "Service Unavailable" },
-          isPending: false,
-          isRefetching: false,
-        }
-      )
-    ).toStrictEqual({
+    expect(followAuthSession(signedIn, failed)).toEqual({
+      ...signedIn,
       hasError: true,
-      isPending: true,
-      sessionId: null,
-      userId: null,
     });
-  });
-
-  it("stays pending through the first request of an unsettled session", () => {
-    expect(
-      followAuthSession(
-        readAuthSession({
-          data: null,
-          error: null,
-          isPending: true,
-          isRefetching: false,
-        }),
-        refetch
-      )
-    ).toStrictEqual({
-      hasError: false,
-      isPending: true,
-      sessionId: null,
-      userId: null,
+    expect(followAuthSession(pending, failed)).toEqual({
+      ...pending,
+      hasError: true,
     });
   });
 
@@ -181,38 +102,13 @@ describe("Following Better Auth's session", () => {
     "keeps the session readers see while the page signs out, and follows again once the sign-out failed",
     () =>
       Effect.gen(function* () {
-        const shown = readAuthSession({
-          data: signedIn,
-          error: null,
-          isPending: false,
-        });
-        const signedOut = { data: null, error: null, isPending: false };
-
         yield* holdSession();
-        expect(followAuthSession(shown, signedOut)).toBe(shown);
+        expect(followAuthSession(signedIn, previewAuthSession)).toBe(signedIn);
+
         yield* releaseSession();
-        expect(followAuthSession(shown, signedOut)).toStrictEqual({
-          hasError: false,
-          isPending: false,
-          sessionId: null,
-          userId: null,
-        });
+        expect(followAuthSession(signedIn, previewAuthSession)).toBe(
+          previewAuthSession
+        );
       })
   );
-
-  it("takes the session the refetch answers with", () => {
-    expect(
-      followAuthSession(previewAuthSession, {
-        data: signedIn,
-        error: null,
-        isPending: false,
-        isRefetching: false,
-      })
-    ).toStrictEqual({
-      hasError: false,
-      isPending: false,
-      sessionId: "session-1",
-      userId: "user-1",
-    });
-  });
 });

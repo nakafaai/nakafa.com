@@ -63,12 +63,7 @@ const jsonOf = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
 
 /** A Convex token of the session `session-ayu`, whose claims the decision reads and does not verify. */
 const AYU_TOKEN = `header.${Base64Url.encode(
-  jsonOf({
-    exp: 1_800_000_000,
-    name: "Ayu",
-    sessionId: "session-ayu",
-    sub: "user-ayu",
-  })
+  jsonOf({ exp: 1_800_000_000, sub: "session-ayu" })
 )}.signature`;
 
 /** The school host whose refresh route the presence of these tests reads. */
@@ -172,7 +167,7 @@ describe("readBrowserSchoolFrame", () => {
     "names the session that the token belongs to, so a kept frame is kept for it",
     () =>
       Effect.gen(function* () {
-        fetcher.mockResolvedValueOnce(Response.json({ token: AYU_TOKEN }));
+        fetcher.mockResolvedValueOnce(Response.json({ tokens: { accessToken: AYU_TOKEN, userId: "user-ayu" } }));
 
         expect((yield* decide("en")).sessionId).toBe("session-ayu");
       })
@@ -207,7 +202,7 @@ describe("readBrowserSchoolFrame", () => {
               ? Effect.succeed(member)
               : Effect.fail(new SchoolReadFailed({ cause: "profile" }))
         );
-        fetcher.mockResolvedValueOnce(Response.json({ token: AYU_TOKEN }));
+        fetcher.mockResolvedValueOnce(Response.json({ tokens: { accessToken: AYU_TOKEN, userId: "user-ayu" } }));
 
         expect(yield* decide("en", false)).toEqual({
           legal: null,

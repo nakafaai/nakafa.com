@@ -39,9 +39,7 @@ const endSession = Effect.fn("www.auth.endSession")(
     );
     yield* client
       .execute(
-        HttpClientRequest.post(
-          new URL(SIGN_OUT_ROUTE, window.location.origin)
-        ).pipe(HttpClientRequest.bodyJson({}))
+        HttpClientRequest.post(new URL(SIGN_OUT_ROUTE, window.location.origin))
       )
       .pipe(Effect.mapError(() => new SignOutFailed()));
   },

@@ -121,9 +121,7 @@ const sendUntilAnswered = Effect.fn("www.auth.sendUntilAnswered")(function* (
 export const readBrowserSession = Effect.fn("www.auth.readBrowserSession")(
   function* (origin: string) {
     return yield* sendUntilAnswered(
-      HttpClientRequest.post(new URL(REFRESH_PATH, origin)).pipe(
-        HttpClientRequest.bodyJson({})
-      ),
+      HttpClientRequest.post(new URL(REFRESH_PATH, origin)),
       retryBrowserTransport
     );
   }

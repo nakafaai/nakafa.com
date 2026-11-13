@@ -10,18 +10,19 @@ const jsonOf = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
 const tokenOf = (claims: unknown) =>
   `header.${Base64Url.encode(jsonOf(claims))}.signature`;
 
-const CLAIMS = {
-  exp: 1_800_000_000,
-  name: "Ayu",
-  sessionId: "session-ayu",
-  sub: "user-ayu",
-};
+const CLAIMS = { exp: 1_800_000_000, sub: "session-ayu" };
 
 describe("readTokenClaims", () => {
-  it.effect("reads the session, the user and the expiry a token names", () =>
-    Effect.sync(() => {
-      expect(readTokenClaims(tokenOf(CLAIMS))).toEqual(Option.some(CLAIMS));
-    })
+  it.effect(
+    "reads the session and the expiry a token names, and no other claim",
+    () =>
+      Effect.sync(() => {
+        expect(
+          readTokenClaims(
+            tokenOf({ ...CLAIMS, iss: "https://example.convex.site" })
+          )
+        ).toEqual(Option.some(CLAIMS));
+      })
   );
 
   it.effect(
@@ -30,7 +31,7 @@ describe("readTokenClaims", () => {
       Effect.sync(() => {
         expect(readTokenClaims("no-dots")).toEqual(Option.none());
         expect(readTokenClaims("header.@@@.signature")).toEqual(Option.none());
-        expect(readTokenClaims(tokenOf({ sub: "user-ayu" }))).toEqual(
+        expect(readTokenClaims(tokenOf({ sub: "session-ayu" }))).toEqual(
           Option.none()
         );
       })

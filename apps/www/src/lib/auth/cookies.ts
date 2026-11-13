@@ -4,7 +4,7 @@ import {
   type AuthCookieOptions,
 } from "@convex-dev/auth/ssr";
 import { MAIN_DOMAIN } from "@repo/site/domains";
-import { Array as Arr, Option, String as Str } from "effect";
+import { Array as Arr, Result, String as Str } from "effect";
 
 /**
  * The prefix of the auth cookies of a site that production's cookies reach and
@@ -29,12 +29,15 @@ export function siteAuthCookies(site: URL) {
   return { options, prefix: shadowed ? SHADOWED_PREFIX : "" };
 }
 
-/** One `name=value` pair of a Cookie header, split at its first `=`. */
+/** One `name=value` pair of a Cookie header, split at its first `=`; a text without one is no pair. */
 const splitPair = (pair: string) => {
   const at = pair.indexOf("=");
   return at < 0
-    ? Option.none()
-    : Option.some([Str.trim(pair.slice(0, at)), pair.slice(at + 1)] as const);
+    ? Result.failVoid
+    : Result.succeed([
+        Str.trim(pair.slice(0, at)),
+        pair.slice(at + 1),
+      ] as const);
 };
 
 /**
@@ -46,15 +49,15 @@ export function inboundCookieHeader(header: string, prefix: string) {
   if (prefix === "") {
     return header;
   }
-  const pairs = Arr.filterMap(Str.split(header, ";"), (pair) => splitPair(pair));
+  const pairs = Arr.filterMap(Str.split(header, ";"), splitPair);
   const kept = Arr.filterMap(pairs, ([name, value]) => {
     if (Arr.contains(AUTH_COOKIES, name)) {
-      return Option.none();
+      return Result.failVoid;
     }
     const unprefixed = Str.startsWith(prefix)(name)
       ? name.slice(prefix.length)
       : name;
-    return Option.some(`${unprefixed}=${value}`);
+    return Result.succeed(`${unprefixed}=${value}`);
   });
   return Arr.join(kept, "; ");
 }
@@ -75,7 +78,11 @@ export function outboundSetCookie(value: string, prefix: string) {
  */
 export function hasSessionCookie(request: Request, site: URL) {
   const name = `${siteAuthCookies(site).prefix}${AUTH_REFRESH_COOKIE}`;
-  return Arr.some(Str.split(request.headers.get("cookie") ?? "", ";"), (pair) =>
-    Option.exists(splitPair(pair), ([key, value]) => key === name && value !== "")
+  return Arr.some(
+    Arr.filterMap(
+      Str.split(request.headers.get("cookie") ?? "", ";"),
+      splitPair
+    ),
+    ([key, value]) => key === name && value !== ""
   );
 }

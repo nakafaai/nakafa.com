@@ -77,8 +77,15 @@ export const releaseSession = Effect.fn("www.auth.releaseSession")(
 /**
  * Follows the client's session from the session readers already see. While the
  * page signs its account out, readers keep the session they see
- * (`holdSession`).
+ * (`holdSession`). A read that failed keeps the session they see too, marked
+ * with the error, so an outage never reads as signed out and a first read that
+ * failed stays pending.
  */
 export function followAuthSession(previous: AuthSession, next: AuthSession) {
-  return MutableRef.get(signingOut) ? previous : next;
+  if (MutableRef.get(signingOut)) {
+    return previous;
+  }
+  return next.hasError
+    ? AuthSession.make({ ...previous, hasError: true })
+    : next;
 }

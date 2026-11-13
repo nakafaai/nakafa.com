@@ -68,7 +68,7 @@ describe("the session the browser last had", () => {
   );
 
   it.effect(
-    "forgets it, the account row and the school frame kept for it once Better Auth settles on signed out",
+    "forgets it, the account row and the school frame kept for it once the session settles on signed out",
     () =>
       Effect.gen(function* () {
         yield* saveKnownSession(signedIn);
@@ -101,7 +101,7 @@ describe("the session the browser last had", () => {
     Effect.gen(function* () {
       yield* expectSession();
       expect(yield* loadKnownSession()).not.toBeNull();
-      // The sign-in was given up: Better Auth settles on signed out.
+      // The sign-in was given up: the session settles on signed out.
       yield* saveKnownSession(signedOut);
       expect(yield* loadKnownSession()).toBeNull();
     })

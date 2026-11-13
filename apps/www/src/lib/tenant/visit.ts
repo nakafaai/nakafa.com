@@ -96,7 +96,7 @@ export const readBrowserVisit = Effect.fn("www.tenant.readBrowserVisit")(
       legal: null,
       school,
       sessionId: Option.getOrNull(
-        Option.map(readTokenClaims(held), (claims) => claims.sessionId)
+        Option.map(readTokenClaims(held), (claims) => claims.sub)
       ),
     };
   }
