@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it } from "@effect/vitest";
 import {
   getPowerPreference,
   isMobileDevice,
+  isSoftwareRenderer,
 } from "@repo/design-system/lib/device";
 
 const IPHONE_USER_AGENT =
@@ -142,5 +143,24 @@ describe("getPowerPreference", () => {
     setNavigatorState(userAgent, cores);
 
     expect(getPowerPreference()).toBe(expected);
+  });
+});
+
+describe("isSoftwareRenderer", () => {
+  it.each([
+    "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+    "llvmpipe (LLVM 15.0.7, 256 bits)",
+    "Microsoft Basic Render Driver",
+    "Software Rasterizer",
+  ])("finds the CPU rasterizer in %s", (renderer) => {
+    expect(isSoftwareRenderer(renderer)).toBe(true);
+  });
+
+  it.each([
+    "ANGLE (Apple, ANGLE Metal Renderer: Apple M3, Unspecified Version)",
+    "Adreno (TM) 740",
+    "Mali-G78",
+  ])("leaves the GPU %s alone", (renderer) => {
+    expect(isSoftwareRenderer(renderer)).toBe(false);
   });
 });

@@ -66,10 +66,10 @@ function Photo({
   readonly file: "field" | "lab";
   readonly turn: number;
 }) {
-  const { phone } = useStage();
+  const { tier } = useStage();
   const dark = useDark();
   const texture = useEnvironment({
-    files: `/environments/${phone ? "phone" : "desktop"}/${file}.exr`,
+    files: `/environments/${tier === "full" ? "desktop" : "phone"}/${file}.exr`,
   });
   const shown = dark ? backdrop * DARK_BACKDROP : backdrop;
   const haze = useMemo(
@@ -114,10 +114,10 @@ function Sun({
   readonly direction: readonly [number, number, number];
   readonly intensity: number;
 }) {
-  const { phone, reach } = useStage();
+  const { reach, tier } = useStage();
   const [x, y, z] = direction;
   const distance = SUN_DISTANCE * reach;
-  const mapSize = phone ? 1024 : 2048;
+  const mapSize = tier === "full" ? 2048 : 1024;
 
   return (
     <directionalLight
@@ -132,7 +132,7 @@ function Sun({
       shadow-mapSize-height={mapSize}
       shadow-mapSize-width={mapSize}
       shadow-normalBias={0.02}
-      shadow-radius={phone ? 2 : 4}
+      shadow-radius={tier === "full" ? 4 : 2}
     />
   );
 }
@@ -220,7 +220,7 @@ export function SkySetting() {
  * dark theme paints the backdrop one shade lighter than the tone it shows.
  */
 export function StudioSetting() {
-  const { phone } = useStage();
+  const { tier } = useStage();
   const dark = useDark();
   const backdrop = dark ? getColor("NEUTRAL", 700) : getColor("ZINC", 100);
 
@@ -231,7 +231,7 @@ export function StudioSetting() {
         <Environment
           environmentIntensity={1}
           environmentRotation={[0, STUDIO_TURN, 0]}
-          files={`/environments/${phone ? "phone" : "desktop"}/studio.exr`}
+          files={`/environments/${tier === "full" ? "desktop" : "phone"}/studio.exr`}
         />
       </Suspense>
       <Sun direction={STUDIO_SUN} intensity={1.4} />
@@ -245,7 +245,7 @@ export function StudioSetting() {
  * backdrop that stays dark in both themes, as space does.
  */
 export function SpaceSetting() {
-  const { phone } = useStage();
+  const { tier } = useStage();
 
   return (
     <>
@@ -253,7 +253,7 @@ export function SpaceSetting() {
       <Suspense fallback={null}>
         <Environment
           environmentIntensity={0.15}
-          files={`/environments/${phone ? "phone" : "desktop"}/studio.exr`}
+          files={`/environments/${tier === "full" ? "desktop" : "phone"}/studio.exr`}
         />
       </Suspense>
       <Sun direction={STUDIO_SUN} intensity={3.2} />

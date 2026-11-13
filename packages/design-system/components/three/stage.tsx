@@ -10,6 +10,7 @@ import {
   StudioSetting,
 } from "@repo/design-system/components/three/stage/settings";
 import type { ReactNode } from "react";
+import { NeutralToneMapping } from "three";
 
 /** How far a lab reaches from its middle when it names no reach, in scene units. */
 const DEFAULT_REACH = 5;
@@ -28,7 +29,8 @@ const SETTINGS = {
  * teaching laboratory, an open field, the open sky, open space, or a photo
  * studio. The place lights the lab, stands behind it, and sets where its key
  * light and shadows fall, and every lab is drawn through the same
- * photographic finish. A lab never draws a backdrop of its own.
+ * photographic finish. A lab never draws a backdrop of its own. The canvas
+ * tone maps with PBR Neutral, which the finish takes over while it draws.
  * A lab with a floor names its height, and an unseen ground then catches its
  * shadows.
  *
@@ -53,7 +55,7 @@ export function ScienceStage({
   const Setting = SETTINGS[setting];
 
   return (
-    <ThreeCanvas frameloop={frameloop}>
+    <ThreeCanvas frameloop={frameloop} toneMapping={NeutralToneMapping}>
       <StageProvider floor={floor} reach={reach}>
         <Setting />
         <Ground />

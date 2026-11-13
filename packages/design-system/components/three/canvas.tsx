@@ -33,6 +33,7 @@ import {
   useState,
   useSyncExternalStore,
 } from "react";
+import type { ToneMapping } from "three";
 import { useTranslations } from "use-intl";
 
 function ErrorFallback({
@@ -145,6 +146,8 @@ function subscribeToInert(onChange: () => void) {
  *
  * @param children - React Three.js children to render
  * @param frameloop - Frame update strategy ("always" | "demand")
+ * @param toneMapping - How the canvas maps light to screen colors, ACES unless
+ * a stage names another
  * @param props - Additional CanvasProps passed to @react-three/fiber Canvas
  *
  * @returns JSX element with WebGL detection and error handling
@@ -153,10 +156,12 @@ function ThreeCanvasComponent({
   children,
   className,
   frameloop = "demand",
+  toneMapping,
   ...props
 }: {
   children: ReactNode;
   frameloop?: "always" | "demand";
+  toneMapping?: ToneMapping;
 } & Omit<CanvasProps, "camera" | "gl" | "orthographic">) {
   const powerPreference = getPowerPreference();
   const { entry, ref } = useIntersection<HTMLDivElement>({
@@ -209,6 +214,7 @@ function ThreeCanvasComponent({
               antialias: true,
               powerPreference,
               alpha: true,
+              toneMapping,
             }}
             performance={{
               min: 0.8,

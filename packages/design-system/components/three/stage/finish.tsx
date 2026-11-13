@@ -61,34 +61,43 @@ function Lens() {
  * darkens the creases and contacts the key light cannot reach; on a desktop a
  * shallow depth of field softens what lies beyond the lab and bloom lets
  * glowing parts glow, above twice the brightness of a lit white surface so a
- * white ball in sunlight stays a ball. Khronos PBR Neutral tone mapping keeps every authored
- * color true below its highlights and rolls the highlights off softly, a
- * light grade adds contrast and color, and a vignette draws the eye in.
+ * white ball in sunlight stays a ball. Khronos PBR Neutral tone mapping keeps
+ * every authored color true below its highlights and rolls the highlights off
+ * softly, a light grade adds contrast and color, and a vignette draws the eye
+ * in.
  *
  * A phone skips the depth of field and the bloom and computes the occlusion
  * at half resolution, and its high pixel density stands in for multisampling.
+ * A renderer that draws on the CPU gets no finish: the canvas tone maps with
+ * PBR Neutral itself, so colors match the finished stage.
  */
 export function Finish() {
-  const { phone, reach } = useStage();
+  const { reach, tier } = useStage();
+
+  if (tier === "plain") {
+    return null;
+  }
+
+  const full = tier === "full";
 
   return (
-    <EffectComposer multisampling={phone ? 0 : 4}>
+    <EffectComposer multisampling={full ? 4 : 0}>
       <N8AO
         aoRadius={0.2 * reach}
         distanceFalloff={1}
-        halfRes={phone}
+        halfRes={!full}
         intensity={2.5}
-        quality={phone ? "performance" : "medium"}
+        quality={full ? "medium" : "performance"}
       />
-      {phone ? null : <Lens />}
-      {phone ? null : (
+      {full ? <Lens /> : null}
+      {full ? (
         <Bloom
           intensity={0.5}
           luminanceSmoothing={0.2}
           luminanceThreshold={2}
           mipmapBlur
         />
-      )}
+      ) : null}
       <ToneMapping mode={ToneMappingMode.NEUTRAL} />
       <HueSaturation saturation={0.08} />
       <BrightnessContrast contrast={0.06} />
