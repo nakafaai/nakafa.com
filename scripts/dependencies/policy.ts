@@ -41,7 +41,7 @@ export const EFFECT_COHORT_OVERRIDES = [
   "@effect/platform-node-shared",
 ] as const;
 /** The tsrs release that the pinned @effect/tsgo patches, which every manifest takes from the catalog. */
-export const TSRS_VERSION = "0.23.0-ts7.1.0-beta";
+export const TSRS_VERSION = "0.24.0-ts7.1.0-beta";
 /** The Vitest runner, coverage, and UI packages move as one catalog cohort. */
 export const VITEST_COHORT_VERSION = "5.1.0";
 /**
@@ -227,7 +227,7 @@ export const DEPENDENCY_HOLDS: readonly DependencyHold[] = [
   },
   { approved: "catalog:", dependency: "@vitest/ui", minimumDeclarations: 1 },
   {
-    approved: "0.67.5",
+    approved: "0.68.1",
     dependency: "@effect/tsgo",
     minimumDeclarations: 1,
   },

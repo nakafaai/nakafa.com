@@ -22,7 +22,7 @@ import {
   snapshotStore,
 } from "@repo/backend/scripts/content/acceptance/snapshot";
 import { runBuildCommand } from "@repo/backend/scripts/content/acceptance/terminal";
-import { Console, Effect, Exit, FileSystem, Option } from "effect";
+import { Console, Effect, FileSystem, Option } from "effect";
 
 /**
  * Creates one signed local acceptance database without touching a cloud
@@ -53,9 +53,8 @@ export const prepareAcceptance = Effect.fn("acceptance.prepare")(function* (
     yield* Effect.log(`Prepared the runtime ${key} and saved it to ${store}.`);
   }).pipe(
     Effect.scoped,
-    Effect.onExit((exit) =>
-      Exit.isFailure(exit) ? releaseLocalRuntime(reservation) : Effect.void
-    )
+    // A release that fails after a failed prepare is a defect beside that failure.
+    Effect.onError(() => releaseLocalRuntime(reservation).pipe(Effect.orDie))
   );
 });
 
