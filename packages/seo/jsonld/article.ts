@@ -164,7 +164,9 @@ export function makeArticleJsonLd(input: ArticleJsonLdInput): ArticleJsonLd {
     url: COMPANY_IDENTITY.url,
   };
   const page = { name: input.headline, path: input.path };
-  const toBreadcrumb = (trail: ArticleJsonLdInput["trails"][number]) => ({
+  const toBreadcrumb = (
+    trail: ArticleJsonLdInput["trails"][number]
+  ): typeof BreadcrumbListSchema.Type => ({
     "@context": SCHEMA_ORG,
     "@type": "BreadcrumbList" as const,
     itemListElement: Arr.map([...trail, page], (crumb, index) => ({

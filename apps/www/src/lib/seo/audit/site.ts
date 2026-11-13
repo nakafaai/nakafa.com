@@ -9,7 +9,7 @@ import {
 } from "#www/src/lib/seo/audit/page";
 
 /** One page that the build wrote, by its path, with what a crawler reads in it. */
-export const BuiltPage = Schema.Struct({
+const BuiltPage = Schema.Struct({
   facts: PageFacts,
   path: Schema.String,
 });
