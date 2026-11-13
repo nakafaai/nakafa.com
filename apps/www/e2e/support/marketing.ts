@@ -62,11 +62,13 @@ export const readFirstContributor = Effect.fn(
 /** Reads the structural budgets and ID integrity of the rendered homepage. */
 export const measureMarketingPage = Effect.fn("NakafaE2E.measureMarketingPage")(
   function* (page: Page) {
+    // The page's own HTML, which a build fixes, and not the elements that scripts add on their own time.
+    const html = yield* Effect.promise(() =>
+      page.request.get(page.url()).then((response) => response.text())
+    );
     const measurements = yield* Effect.promise(() =>
-      page.evaluate(async () => {
-        // The elements of the page's own HTML, which a build fixes, and not those that scripts add on their own time.
-        const html = await (await fetch(location.href)).text();
-        const served = new DOMParser().parseFromString(html, "text/html");
+      page.evaluate((text) => {
+        const served = new DOMParser().parseFromString(text, "text/html");
         const community = document.querySelector("#community");
         const ids = [...document.querySelectorAll("[id]")].map(({ id }) => id);
         const duplicateIds = [
@@ -106,7 +108,7 @@ export const measureMarketingPage = Effect.fn("NakafaE2E.measureMarketingPage")(
             ),
           ],
         };
-      })
+      }, html)
     );
 
     if (!measurements.communityPresent) {
