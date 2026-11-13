@@ -8,7 +8,7 @@ const RENDERER =
   "apps/www/src/lib/content/renderer/client/base/visual/render.tsx";
 const PAGE = "apps/www/src/components/home/header.tsx";
 const COLOR_RULE =
-  "color a plotted mark with PLOT_COLORS from @repo/design-system/lib/plot and a neutral surface with getColor from @repo/design-system/lib/color, instead of a color written in place or a theme chart token";
+  "color a plotted mark with PLOT_COLORS from @repo/design-system/lib/plot, a neutral surface with getColor from @repo/design-system/lib/color, and a real material such as asphalt, glass or a reagent with MATERIAL from @repo/design-system/lib/material, instead of a color written in place or a theme chart token";
 
 /** Inspects one module with the color policy alone. */
 function inspect(sourceText: string, file = VISUAL) {
