@@ -68,7 +68,10 @@ export function readFirstLoad(
     );
     return Arr.isReadonlyArrayNonEmpty(fresh)
       ? reach(
-          pipe(fresh, Arr.reduce(reached, HashSet.add)),
+          pipe(
+            fresh,
+            Arr.reduce(reached, (set, href) => HashSet.add(set, href))
+          ),
           Arr.flatMap(fresh, importsOf)
         )
       : reached;
