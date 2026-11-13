@@ -191,7 +191,7 @@ export function Sedan({
 
   return (
     <group ref={car}>
-      <mesh castShadow geometry={body} material={paint} receiveShadow></mesh>
+      <mesh castShadow geometry={body} material={paint} receiveShadow />
       <mesh castShadow geometry={cabin}>
         <meshPhysicalMaterial
           clearcoat={1}
