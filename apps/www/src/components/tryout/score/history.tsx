@@ -107,9 +107,9 @@ function TryoutAttemptPlace() {
   const label = useKeptPageAttempt();
   return (
     <Button
-      className="data-empty:hidden"
       data-attempt-picker=""
-      data-empty={label === undefined ? "" : undefined}
+      // Hidden by its attribute, so the group's next part keeps its rounded start until the place shows.
+      hidden={label === undefined}
       inert
       type="button"
       variant="outline"

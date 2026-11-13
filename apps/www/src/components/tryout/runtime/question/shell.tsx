@@ -10,28 +10,50 @@ import {
 } from "@repo/design-system/components/ui/collapsible";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Separator } from "@repo/design-system/components/ui/separator";
+import { HashSet } from "effect";
 import type { ReactNode } from "react";
 import { useTranslations } from "use-intl";
 import { readQuestionIds } from "@/components/player/ids";
-import { PlayerQuestionHeader } from "@/components/player/question";
+import {
+  PlayerQuestion,
+  PlayerQuestionHeader,
+} from "@/components/player/question";
+import { useTryoutExplained } from "@/components/tryout/review/result";
 
 interface TryoutQuestionShellProps {
   readonly children: ReactNode;
   readonly questionOrder: number;
 }
 
-/** Composes one immutable review question with optional question actions. */
+/**
+ * Composes one finished question of the review's player with its actions: shown in the list or alone, as
+ * the view decides, with its explanation open as the review's store holds it, so its own button and the
+ * result's footer open and close the same one.
+ */
 export function TryoutReviewQuestionShell({
   action,
   children,
+  questionKey,
   questionOrder,
-}: TryoutQuestionShellProps & { readonly action?: ReactNode }) {
+}: TryoutQuestionShellProps & {
+  readonly action?: ReactNode;
+  /** The key that the player and the store name this question by. */
+  readonly questionKey: string;
+}) {
   const tPlayer = useTranslations("Player");
   const ids = readQuestionIds(questionOrder);
+  const open = useTryoutExplained((state) =>
+    HashSet.has(state.open, questionKey)
+  );
+  const toggle = useTryoutExplained((state) => state.toggle);
 
   return (
-    <Collapsible>
-      <article aria-labelledby={ids.title} id={ids.article}>
+    <PlayerQuestion
+      id={ids.article}
+      labelledBy={ids.title}
+      questionKey={questionKey}
+    >
+      <Collapsible onOpenChange={() => toggle(questionKey)} open={open}>
         <PlayerQuestionHeader number={questionOrder}>
           <ButtonGroup
             aria-label={tPlayer("question", { number: questionOrder })}
@@ -42,8 +64,8 @@ export function TryoutReviewQuestionShell({
           </ButtonGroup>
         </PlayerQuestionHeader>
         {children}
-      </article>
-    </Collapsible>
+      </Collapsible>
+    </PlayerQuestion>
   );
 }
 

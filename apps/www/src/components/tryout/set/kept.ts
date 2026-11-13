@@ -186,7 +186,7 @@ export const KEPT_ATTEMPT_SCRIPT = Arr.join(
     "    if (typeof label !== 'string' || !names || names[location.pathname] !== 'restart-cta') return;",
     "    var place = document.currentScript.parentElement;",
     "    place.querySelector('[data-label]').setAttribute('data-label', label);",
-    "    place.removeAttribute('data-empty');",
+    "    place.removeAttribute('hidden');",
     "  } catch (error) {}",
     "})();",
   ],

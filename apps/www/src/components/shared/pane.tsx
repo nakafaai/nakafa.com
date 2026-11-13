@@ -8,12 +8,13 @@ import {
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ScrollArea } from "@repo/design-system/components/ui/scroll-area";
 import { TableRow } from "@repo/design-system/components/ui/table";
-import { cva } from "class-variance-authority";
+import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "cn";
 import { Option } from "effect";
-import type { ReactNode } from "react";
+import { type ReactNode, type Ref, use } from "react";
 import { useTranslations } from "use-intl";
-import { usePaneMode, usePanes } from "@/components/shared/panes";
+import { usePanes } from "@/components/shared/panes";
+import { PaneModeContext } from "@/components/shared/panes/mode";
 import { pressesRow } from "@/components/shared/row";
 import { tableCardVariants } from "@/components/shared/table/card";
 
@@ -42,7 +43,7 @@ export function PaneHeader({
   title: string;
 }) {
   const t = useTranslations("Common");
-  const { close, place } = usePaneMode();
+  const { close, place } = use(PaneModeContext);
 
   if (place === "sheet") {
     return (
@@ -113,9 +114,20 @@ export function PaneHeader({
  * the pane and in the phone's sheet: both headers end on a rule, so the body's first field needs the room above it,
  * and its focus ring stays inside the scrolling box.
  */
-export function PaneBody({ children }: { children: ReactNode }) {
+export function PaneBody({
+  children,
+  viewportRef,
+}: {
+  children: ReactNode;
+  /** The scrolling element, for a body that keeps something of its own in view, as the player's navigator does. */
+  viewportRef?: Ref<HTMLDivElement>;
+}) {
   return (
-    <ScrollArea className="flex-1">
+    <ScrollArea
+      className="flex-1"
+      viewportClassName="relative"
+      viewportRef={viewportRef}
+    >
       <div className="px-(--pane-end,1rem) py-4">{children}</div>
     </ScrollArea>
   );
@@ -183,9 +195,30 @@ export function PaneFact({
   );
 }
 
-/** The facts of the open row, one under another. */
-export function PaneFacts({ children }: { children: ReactNode }) {
-  return <dl className="flex flex-col gap-4">{children}</dl>;
+/**
+ * The facts of a detail: one under another, or, for short values such as a result's numbers, two to a row once
+ * the pane is wide enough that every label keeps one line, and one under another below that.
+ */
+const paneFactsVariants = cva("gap-4", {
+  defaultVariants: { layout: "stack" },
+  variants: {
+    layout: {
+      grid: "grid tabular-nums @xs:grid-cols-2",
+      stack: "flex flex-col",
+    },
+  },
+});
+
+/** The facts of the open row, one under another, or two to a row when `layout` is `grid`. */
+export function PaneFacts({
+  children,
+  layout,
+}: VariantProps<typeof paneFactsVariants> & { children: ReactNode }) {
+  return (
+    <div className="@container">
+      <dl className={paneFactsVariants({ layout })}>{children}</dl>
+    </div>
+  );
 }
 
 /**

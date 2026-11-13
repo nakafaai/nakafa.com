@@ -98,18 +98,14 @@ export function TryoutSetPageClient({
     <TryoutContentContext value={{ bodies: content }}>
       <TryoutSetPageContext value={{ page, pending, restartTarget, route }}>
         <TryoutStartProvider>
-          {binding !== null && isTryoutStateLive(binding.initialState) ? (
+          {binding === null ? (
+            <ResolvedTryoutSetPage binding={null} finish={null} state={null}>
+              {children}
+            </ResolvedTryoutSetPage>
+          ) : (
             <LiveTryoutSetPage binding={binding} key={binding.attemptId}>
               {children}
             </LiveTryoutSetPage>
-          ) : (
-            <ResolvedTryoutSetPage
-              binding={binding}
-              finish={null}
-              state={binding?.initialState ?? null}
-            >
-              {children}
-            </ResolvedTryoutSetPage>
           )}
         </TryoutStartProvider>
       </TryoutSetPageContext>
@@ -117,7 +113,12 @@ export function TryoutSetPageClient({
   );
 }
 
-/** Owns one active subscription and skips it after a terminal update. */
+/**
+ * Owns the page of one attempt, from its first frame for as long as the attempt is on screen. While the attempt
+ * runs, it follows it with its own subscription, which it skips after a terminal update; once the page's read holds
+ * the ended attempt, the page shows that read, which stays current. The page never swaps its tree when the attempt
+ * ends, so the review that follows keeps its state, such as an open result sheet, when the page's read catches up.
+ */
 function LiveTryoutSetPage({
   binding,
   children,
@@ -129,18 +130,19 @@ function LiveTryoutSetPage({
   const isLoading = useConvexAuth((auth) => auth.isLoading);
   const locale = useLocale();
   const [terminalState, setTerminalState] = useState<SetState | undefined>();
+  // Nothing follows an attempt that ended here, or one the page's read already holds as ended.
+  const following =
+    isTryoutStateLive(binding.initialState) && terminalState === undefined;
   // An unauthenticated response during hydration is not a terminal attempt.
   const liveState = useQuery(
     tryouts.queries.runtime.getSetAttemptState,
-    !isLoading && terminalState === undefined
-      ? { attemptId: binding.attemptId, locale }
-      : "skip"
+    !isLoading && following ? { attemptId: binding.attemptId, locale } : "skip"
   );
 
   const live = useLastValue(liveState);
 
   if (
-    terminalState === undefined &&
+    following &&
     QueryResult.isSuccess(liveState) &&
     !isTryoutStateLive(liveState.value)
   ) {
@@ -152,6 +154,11 @@ function LiveTryoutSetPage({
   let state: SetState = Option.getOrElse(live, () => binding.initialState);
   if (terminalState !== undefined) {
     state = terminalState;
+  }
+  // Once the page's read holds the ended attempt, the page shows that read, so a later change such as its
+  // score still reaches the review; until then an attempt that ended here shows its last live answer.
+  if (!isTryoutStateLive(binding.initialState)) {
+    state = binding.initialState;
   }
   // The finish holds the running state, so it reads the state before any early exit.
   const returnAddress = {
@@ -192,7 +199,7 @@ function ResolvedTryoutSetPage({
   finish,
   state,
 }: Pick<TryoutSetPageClientProps, "binding" | "children"> & {
-  /** The finish of a live attempt; a page without a live attempt has none. */
+  /** The finish of the attempt the page is bound to; a page bound to none has none. */
   finish: TryoutFinish | null;
   state: SetState;
 }) {
@@ -252,7 +259,9 @@ function ResolvedTryoutSetPage({
           value={{
             entrySection,
             now,
-            player: finish && binding ? { finish, mode: binding.mode } : null,
+            // A page without an attempt runs and reviews nothing, so its view is never read.
+            finish: binding ? finish : null,
+            mode: binding?.mode ?? "list",
             runtime,
             view,
           }}
@@ -294,7 +303,10 @@ function TryoutInternalSet({
   value: {
     entrySection: SetEntrySection;
     now: number;
-    player: { finish: TryoutFinish; mode: PlayerMode } | null;
+    /** The finish of the attempt the page is bound to; a page bound to none has none. */
+    finish: TryoutFinish | null;
+    /** The view the browser resolved for a page bound to an attempt, for its player and its review. */
+    mode: PlayerMode;
     runtime: LoadedRuntime | null;
     view: TryoutSetOverviewProps["value"];
   };
@@ -310,7 +322,8 @@ function TryoutInternalSet({
       value={{
         ...value.view,
         entrySection: value.entrySection,
-        player: value.player,
+        finish: value.finish,
+        mode: value.mode,
         runtimeState,
       }}
     >

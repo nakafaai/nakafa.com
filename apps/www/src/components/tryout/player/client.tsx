@@ -45,7 +45,8 @@ import type { TryoutSectionRuntime } from "@/components/tryout/runtime/types";
  * Runs one try-out section in the shared player: the header with back, the
  * title, the timer, and Finish; the questions beside the navigator; and the
  * footer with previous, the flag, the navigator opener below the large
- * breakpoint, and next. The header, the navigator, and the footer render from
+ * breakpoint, and next. The address names the current question, so a reload
+ * opens it again. The header, the navigator, and the footer render from
  * the live runtime at once; only the question bodies wait for their document
  * reader.
  */
@@ -85,6 +86,7 @@ export function TryoutPlayer({
 
   return (
     <PlayerProvider
+      address
       keys={Arr.map(questions, (question) => question.key)}
       mode={mode}
     >
