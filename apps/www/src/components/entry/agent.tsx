@@ -9,7 +9,11 @@ import { getRouteApi, useNavigate } from "@tanstack/react-router";
 import { Effect, Match, Result } from "effect";
 import { useState, useTransition } from "react";
 import { useTranslations } from "use-intl";
-import { type AgentRequest, agentAnswerAddress } from "@/lib/auth/consent";
+import {
+  type AgentRequest,
+  agentAnswerAddress,
+  agentHost,
+} from "@/lib/auth/consent";
 import { useCurrentAuthNavigation } from "@/lib/auth/location";
 
 const agentRoute = getRouteApi("/$locale/_entry/agent");
@@ -108,7 +112,7 @@ function AgentQuestion({
         </h1>
         <p className="text-muted-foreground">{t("agent-description")}</p>
         <p className="text-muted-foreground">
-          {t("agent-address", { host: new URL(request.redirect_uri).host })}
+          {t("agent-address", { host: agentHost(request) })}
         </p>
         {failure === null ? null : (
           <p className="text-destructive" role="alert">

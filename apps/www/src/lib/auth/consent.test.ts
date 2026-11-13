@@ -2,7 +2,11 @@
 
 import { describe, expect, it } from "@effect/vitest";
 import { Option } from "effect";
-import { agentAnswerAddress, readAgentRequest } from "@/lib/auth/consent";
+import {
+  agentAnswerAddress,
+  agentHost,
+  readAgentRequest,
+} from "@/lib/auth/consent";
 
 /** An agent's request as an MCP client sends it to the consent page. */
 const REQUEST = {
@@ -47,6 +51,10 @@ describe("readAgentRequest", () => {
 
 describe("agentAnswerAddress", () => {
   const request = Option.getOrThrow(readAgentRequest(REQUEST));
+
+  it("names the host that the answer goes to", () => {
+    expect(agentHost(request)).toBe("127.0.0.1:33418");
+  });
 
   it("returns the code and the state on the agent's own address", () => {
     const address = new URL(
