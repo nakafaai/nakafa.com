@@ -69,6 +69,35 @@ export const shard = (engine: string, failures: readonly string[] = []) =>
  * A GitHub CLI that names the dispatched run after the nonce it was given, lists
  * it only on the second look, and downloads these shard results.
  */
+/** The shard results a download writes into the directory it was given. */
+const download = (
+  directory: string,
+  chosen: Readonly<Record<string, string>> | undefined
+): Answer =>
+  chosen === undefined
+    ? { code: 1, stderr: "no valid artifacts found to download" }
+    : {
+        files: Rec.fromEntries(
+          Arr.map(Rec.toEntries(chosen), ([name, text]) => [
+            `${directory}/${name}/result.json`,
+            text,
+          ])
+        ),
+      };
+
+/** What the calls around a proof answer: the sweep's lists, the head of main and the statuses posted. */
+const housekeeping = (args: readonly string[]): Answer | undefined => {
+  if (args[0] === "pr" || args[1] === "cancel") {
+    return {};
+  }
+  if (Arr.contains(args, "--status")) {
+    return { stdout: "[]" };
+  }
+  if (args[0] === "api") {
+    return Arr.contains(args, "--silent") ? {} : { stdout: `${MAIN}\n` };
+  }
+};
+
 export const github = (
   results: Readonly<Record<string, string>> | undefined,
   run: unknown = RUN,
@@ -77,55 +106,46 @@ export const github = (
   const nonce = MutableRef.make("");
   const dispatched = MutableRef.make("");
   const looks = MutableRef.make(0);
+  const dispatch = (args: readonly string[]): Answer => {
+    MutableRef.set(nonce, lastArgument(args).slice(6));
+    MutableRef.set(
+      dispatched,
+      Option.getOrThrow(
+        Arr.findFirst(args, (arg) => arg.startsWith("sha="))
+      ).slice(4)
+    );
+    return {};
+  };
+  const list = (): Answer => ({
+    stdout: toJson(
+      MutableRef.getAndIncrement(looks) === 0
+        ? []
+        : [
+            {
+              databaseId: 7,
+              displayTitle: `Proof ${MutableRef.get(dispatched)} ${MutableRef.get(nonce)}`,
+            },
+          ]
+    ),
+  });
   return (args: readonly string[]): Answer => {
     if (args[0] === "workflow") {
-      MutableRef.set(nonce, lastArgument(args).slice(6));
-      MutableRef.set(
-        dispatched,
-        Option.getOrThrow(
-          Arr.findFirst(args, (arg) => arg.startsWith("sha="))
-        ).slice(4)
-      );
-      return {};
+      return dispatch(args);
     }
-    if (args[0] === "pr" || args[1] === "cancel") {
-      return {};
-    }
-    if (Arr.contains(args, "--status")) {
-      return { stdout: "[]" };
-    }
-    if (args[0] === "api") {
-      return Arr.contains(args, "--silent") ? {} : { stdout: `${MAIN}\n` };
+    const kept = housekeeping(args);
+    if (kept !== undefined) {
+      return kept;
     }
     if (args[1] === "list") {
-      return {
-        stdout: toJson(
-          MutableRef.getAndIncrement(looks) === 0
-            ? []
-            : [
-                {
-                  databaseId: 7,
-                  displayTitle: `Proof ${MutableRef.get(dispatched)} ${MutableRef.get(nonce)}`,
-                },
-              ]
-        ),
-      };
+      return list();
     }
     if (args[1] === "view") {
       return { stdout: toJson(run) };
     }
-    const directory = lastArgument(args);
-    const chosen = MutableRef.get(dispatched) === MAIN ? mainResults : results;
-    return chosen === undefined
-      ? { code: 1, stderr: "no valid artifacts found to download" }
-      : {
-          files: Rec.fromEntries(
-            Arr.map(Rec.toEntries(chosen), ([name, text]) => [
-              `${directory}/${name}/result.json`,
-              text,
-            ])
-          ),
-        };
+    return download(
+      lastArgument(args),
+      MutableRef.get(dispatched) === MAIN ? mainResults : results
+    );
   };
 };
 
