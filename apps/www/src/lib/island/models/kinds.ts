@@ -14,8 +14,8 @@ export type BodyKind = typeof BodyKind.Type;
 /** A body's faces, built once a game. */
 export function bodyFaces(kind: BodyKind) {
   return Match.value(kind).pipe(
-    Match.when(Schema.is(Folk), folkFaces),
-    Match.when(Schema.is(Stock), stockFaces),
+    Match.when(Match.is(...Folk.literals), (folk) => folkFaces(folk)),
+    Match.when(Match.is(...Stock.literals), (stock) => stockFaces(stock)),
     Match.orElse(whaleFaces)
   );
 }

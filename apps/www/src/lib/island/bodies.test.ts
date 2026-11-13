@@ -2,6 +2,7 @@
 import { describe, expect, it } from "@effect/vitest";
 import { idOf } from "@repo/backend/confect/island/blocks";
 import { SPAN } from "@repo/backend/confect/island/world";
+import { Array as Arr, Option } from "effect";
 import { BODY_STRIDE, bodiesOf, whaleAt } from "@/lib/island/bodies";
 import type { Animal } from "@/lib/island/life";
 import { cellOf, emptyCells, SEA_LEVEL } from "@/lib/island/world";
@@ -30,15 +31,20 @@ describe("island/bodies", () => {
       ],
       0
     );
-    const [cx, cy, cz, cyaw, cbob] = Array.from(bodies.cow);
+    const of = (kind: string) =>
+      Arr.findFirst(bodies, ([own]) => own === kind).pipe(
+        Option.map(([, places]) => Array.from(places)),
+        Option.getOrElse(() => [])
+      );
+    const [cx, cy, cz, cyaw, cbob] = of("cow");
     expect([cx, cy, cz]).toEqual([4.5, 9, 4.5]);
     expect(cyaw).toBeCloseTo(Math.PI / 2);
     expect(cbob).toBeGreaterThan(0);
-    expect(bodies.duck[1]).toBeCloseTo(SEA_LEVEL - 0.2);
-    expect(bodies.duck[4]).toBe(0);
-    expect(bodies.hen[1]).toBe(SEA_LEVEL);
-    expect(bodies.cat).toHaveLength(0);
-    expect(bodies.whale).toHaveLength(BODY_STRIDE);
+    expect(of("duck")[1]).toBeCloseTo(SEA_LEVEL - 0.2);
+    expect(of("duck")[4]).toBe(0);
+    expect(of("hen")[1]).toBe(SEA_LEVEL);
+    expect(of("cat")).toHaveLength(0);
+    expect(of("whale")).toHaveLength(BODY_STRIDE);
   });
 
   it("swims the whale round the island in deep water, its back rising and sinking at the sea's face, facing its way", () => {

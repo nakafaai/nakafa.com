@@ -1,5 +1,5 @@
 import { SPAN } from "@repo/backend/confect/island/world";
-import { Array as Arr, Option, Record as Rec } from "effect";
+import { Array as Arr, Option } from "effect";
 import { type Animal, groundOf } from "@/lib/island/life";
 import { KIND, LOOK } from "@/lib/island/look";
 import { BodyKind } from "@/lib/island/models/kinds";
@@ -58,21 +58,19 @@ function animalBody(cells: Cells, animal: Animal) {
 /**
  * Every body to draw at `time` seconds, by kind (ADR 0047, D21): each animal
  * of the herd and the learner's fox on its own ground, facing where it goes,
- * and the whale on its round. Each kind's bodies come as one run of numbers,
- * `BODY_STRIDE` a body, for the painter to draw them all at once.
+ * and the whale on its round. Each kind comes with its bodies as one run of
+ * numbers, `BODY_STRIDE` a body, for the painter to draw them all at once.
  */
 export function bodiesOf(cells: Cells, herd: readonly Animal[], time: number) {
   const whale = whaleAt(time);
-  return Rec.fromEntries(
-    Arr.map(BodyKind.literals, (kind) => {
-      const own =
-        kind === "whale"
-          ? [[whale.x, whale.y, whale.z, whale.yaw, 0]]
-          : Arr.map(
-              Arr.filter(herd, (animal) => animal.kind === kind),
-              (animal) => animalBody(cells, animal)
-            );
-      return [kind, Float32Array.from(Arr.flatten(own))] as const;
-    })
-  );
+  return Arr.map(BodyKind.literals, (kind) => {
+    const own =
+      kind === "whale"
+        ? [[whale.x, whale.y, whale.z, whale.yaw, 0]]
+        : Arr.map(
+            Arr.filter(herd, (animal) => animal.kind === kind),
+            (animal) => animalBody(cells, animal)
+          );
+    return [kind, Float32Array.from(Arr.flatten(own))] as const;
+  });
 }
