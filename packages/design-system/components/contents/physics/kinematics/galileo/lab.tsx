@@ -158,7 +158,7 @@ function RampScene({ angle }: { readonly angle: RampAngle }) {
       <Ramp angle={angle} />
       {Arr.map(places, (place, index) => (
         <Bell
-          key={index}
+          key={place.x}
           place={place}
           ref={(material) => {
             bells.current[index] = material;
