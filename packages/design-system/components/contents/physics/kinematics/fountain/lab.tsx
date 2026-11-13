@@ -213,6 +213,8 @@ function fountainProgram(sketch: p5, read: () => FountainFrame) {
 }
 
 interface HoseJetProjectileLabProps {
+  /** The nozzle angle the card starts at, in degrees. */
+  angle?: JetAngle;
   description: ReactNode;
   labels: {
     chooseAngle: string;
@@ -233,12 +235,13 @@ interface HoseJetProjectileLabProps {
  * same spot, and the vertical jet climbs highest but lands at the nozzle.
  */
 export function HoseJetProjectileLab({
+  angle: initialAngle = 45,
   description,
   labels,
   speed,
   title,
 }: HoseJetProjectileLabProps) {
-  const [angle, setAngle] = useState<JetAngle>(45);
+  const [angle, setAngle] = useState<JetAngle>(initialAngle);
   const quantity = useQuantity();
   const shape = jetShape(speed, angle);
   const isAngle = Schema.is(JetAngleSchema);

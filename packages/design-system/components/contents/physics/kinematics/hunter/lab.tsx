@@ -234,6 +234,8 @@ interface FallingTargetAimLabProps {
     speedName: string;
     viewLabel: string;
   };
+  /** The launch speed the card starts at, in m/s, from 5 to 16. */
+  speed?: number;
   title: ReactNode;
 }
 
@@ -246,9 +248,10 @@ interface FallingTargetAimLabProps {
 export function FallingTargetAimLab({
   description,
   labels,
+  speed: initialSpeed = 10,
   title,
 }: FallingTargetAimLabProps) {
-  const [speed, setSpeed] = useState(10);
+  const [speed, setSpeed] = useState(initialSpeed);
   const quantity = useQuantity();
   const outcome = aimOutcome(speed);
 
