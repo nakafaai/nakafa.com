@@ -90,6 +90,11 @@ describe("cropFigure", () => {
           right: 500,
           top: 0,
         }).pipe(Effect.flip);
+        const getContext = HTMLCanvasElement.prototype.getContext;
+        Object.defineProperty(HTMLCanvasElement.prototype, "getContext", {
+          configurable: true,
+          value: () => ({ drawImage: vi.fn() }),
+        });
         const encode = vi
           .spyOn(HTMLCanvasElement.prototype, "toBlob")
           .mockImplementation((done) => done(null));
@@ -99,6 +104,10 @@ describe("cropFigure", () => {
           right: 500,
           top: 0,
         }).pipe(Effect.flip);
+        Object.defineProperty(HTMLCanvasElement.prototype, "getContext", {
+          configurable: true,
+          value: getContext,
+        });
         expect([speck._tag, broken._tag, unencoded._tag]).toEqual([
           "FigureUncut",
           "FigureUncut",
