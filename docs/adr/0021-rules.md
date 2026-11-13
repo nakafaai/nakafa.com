@@ -304,6 +304,27 @@ engine owns when its steps start.
 tests and framework configuration, by `new-promise`. The rule counts only while
 `Promise` is the global binding, read by name or through a global object.
 
+### Rules that follow components across modules
+
+The owner's rule of 13 November 2026 that tables are full-page only holds for
+what a page renders, and a page composes its table from components of other
+modules. So the check reads the component graph of the judged modules
+(`scripts/check/components.ts`): the components each module declares, and the
+component an element's tag names, the module's own or one it imports by name,
+also through `lazy(() => import(...))`. A specifier resolves by the app's `@/`
+alias, the `@repo/` packages and relative paths; a package outside the
+repository names no component. A check reads the graph again until what it
+learns stops changing.
+
+**A table is the whole body of its page or pane** (`scripts/check/tables.ts`).
+A `DataTable` stands in `ListCard`, which `PageList` and `PaneFill` draw, so a
+table never stands in a form, a section or a dialog of its own. A component
+holds a card when it places its `children` inside one, such as
+`SettingsTablePage`, also as one branch of a condition or of `&&`, `||` and
+`??`. A component that draws a table outside a card passes the
+table to whatever renders it, and the check reports the table at the component
+no element renders, such as a route's page, where the chain starts.
+
 ### Data shapes written inline
 
 `data-type` also reports an object type written inline where a data shape is
