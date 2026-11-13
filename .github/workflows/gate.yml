@@ -1,0 +1,145 @@
+# Runs the static half of a head's verification (AGENTS.md, Deployment) on
+# GitHub's free public-repository runners, on demand, for the sessions and the
+# landing train that call `bun run gate <sha>`: the typechecks with the committed
+# bindings unchanged, every unit suite at its per-file 100% coverage gate, the
+# source and policy checks with Ultracite, React Doctor for the head's React
+# changes against main, and the dependency audit, in parallel parts.
+#
+# Each part posts `gate/<part>` on the head and the report posts `gate`, which the
+# landing train requires beside the proof. It is a tool, not a required check: no
+# ruleset names it. It reads no secret, publishes nothing and touches no Convex or
+# Cloudflare deployment (docs/adr/0048-proof.md, Gate).
+name: Gate
+run-name: Gate ${{ inputs.sha }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      sha:
+        description: The exact 40-character head to gate
+        required: true
+        type: string
+
+# No concurrency group: a cancelled run would still post its parts as failed over
+# a newer run's, and `bun run gate` reads only statuses posted after it dispatched.
+permissions: {}
+
+# The typechecks and the www suites validate the app's environment while they load
+# its config; these inert loopback values are the ones AGENTS.md names, never a
+# deployment's.
+env:
+  CONVEX_SITE_URL: http://127.0.0.1:3211
+  CONVEX_URL: http://127.0.0.1:3210
+  SITE_URL: http://localhost:3000
+  VITE_CONVEX_SITE_URL: http://127.0.0.1:3211
+  VITE_CONVEX_URL: http://127.0.0.1:3210
+  VITE_SITE_URL: http://localhost:3000
+
+jobs:
+  check:
+    name: ${{ matrix.part }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    permissions:
+      contents: read
+      statuses: write
+    strategy:
+      fail-fast: false
+      matrix:
+        part: [ typecheck, backend, www, workspaces, policy ]
+    env:
+      GH_TOKEN: ${{ github.token }}
+      PART: ${{ matrix.part }}
+      SHA: ${{ inputs.sha }}
+      URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+    steps:
+      - name: Mark the part pending
+        run: |
+          [[ "$SHA" =~ ^[0-9a-f]{40}$ ]] || { echo "sha must be a full lower-case commit SHA." >&2; exit 1; }
+          gh api --silent "repos/$GITHUB_REPOSITORY/statuses/$SHA" \
+            -f state=pending -f context="gate/$PART" -f target_url="$URL" -f description="Gating"
+
+      # Coverage counts the files changed since origin/main, and React Doctor
+      # compares the head with main, so every part reads the whole history.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Install dependencies
+        uses: ./.github/actions/install
+
+      # The CAS engine's typecheck, lint and tests run its Python tools through uv.
+      - name: Set up uv for the CAS engine
+        if: matrix.part != 'backend' && matrix.part != 'www'
+        uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          version: "0.13.6"
+          # The default glob walks every folder, node_modules included, for 3.5 minutes.
+          cache-dependency-glob: apps/cas/uv.lock
+
+      # The policy part runs all three of its commands, so one failure never hides another.
+      - name: Run ${{ matrix.part }}
+        id: part
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          case "$PART" in
+            typecheck)
+              # The Effect-patched compiler fails on suggestions without the word
+              # "error", so the exit code is the verdict.
+              bun run turbo run typecheck --continue=dependencies-successful
+              # A head whose committed bindings differ from what its code generates is not ready.
+              git status --porcelain -- packages/backend/confect/_generated packages/backend/convex/_generated
+              test -z "$(git status --porcelain -- packages/backend/confect/_generated packages/backend/convex/_generated)"
+              ;;
+            backend) bun run turbo run test --filter=@repo/backend ;;
+            www) bun run turbo run test --filter=www ;;
+            workspaces)
+              bun run test:scripts
+              bun run turbo run test --filter='!@repo/backend' --filter='!www'
+              ;;
+            policy)
+              failed=0
+              bun run lint || failed=1
+              bun run doctor --verbose --scope changed --base origin/main --blocking warning || failed=1
+              bun run security:audit || failed=1
+              exit "$failed"
+              ;;
+            *) echo "Unknown part $PART." >&2; exit 1 ;;
+          esac
+
+      - name: Post the part
+        if: always()
+        env:
+          OUTCOME: ${{ steps.part.outcome }}
+        run: |
+          [[ "$SHA" =~ ^[0-9a-f]{40}$ ]] || exit 1
+          state=failure
+          [ "$OUTCOME" = success ] && state=success
+          gh api --silent "repos/$GITHUB_REPOSITORY/statuses/$SHA" \
+            -f state="$state" -f context="gate/$PART" -f target_url="$URL" -f description="${OUTCOME:-did not run}"
+
+  report:
+    name: Report
+    needs: check
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      statuses: write
+    steps:
+      - name: Post the gate
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RESULT: ${{ needs.check.result }}
+          SHA: ${{ inputs.sha }}
+          URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          [[ "$SHA" =~ ^[0-9a-f]{40}$ ]] || exit 1
+          state=failure
+          [ "$RESULT" = success ] && state=success
+          gh api --silent "repos/$GITHUB_REPOSITORY/statuses/$SHA" \
+            -f state="$state" -f context=gate -f target_url="$URL" \
+            -f description="Typechecks, unit suites, policy, Doctor and audit: $state"

@@ -52,9 +52,9 @@ export const GITHUB_ACTION_REVIEWS = Schema.decodeSync(
     action: "actions/checkout",
     approvedSha: "3d3c42e5aac5ba805825da76410c181273ba90b1",
     expectedTag: "v7.0.1",
-    expectedUsages: 4,
+    expectedUsages: 5,
     reason:
-      "Checkout is pinned to the latest reviewed stable release. The CLI publication and the deploy workflow each check out the commit, and the proof workflow checks out the proven head without credentials in its build and spec jobs.",
+      "Checkout is pinned to the latest reviewed stable release. The CLI publication and the deploy workflow each check out the commit, the proof workflow checks out the proven head without credentials in its build and spec jobs, and the gate workflow checks out the gated head without credentials on each part's machine.",
   },
   {
     action: "oven-sh/setup-bun",
@@ -73,9 +73,9 @@ export const GITHUB_ACTION_REVIEWS = Schema.decodeSync(
       version: "0.13.6",
     },
     expectedTag: "v10.3.3",
-    expectedUsages: 1,
+    expectedUsages: 2,
     reason:
-      "The CAS engine's Python dependencies are vendored with uv for the Pyodide runtime, so the deploy job installs the pinned uv release before the stack deploys. Its cache key reads only the CAS lockfile, because the default glob walks every folder, node_modules included, for 3.5 minutes.",
+      "The CAS engine's Python dependencies are vendored with uv for the Pyodide runtime, so the deploy job installs the pinned uv release before the stack deploys, and the gate workflow installs it for the engine's typecheck, lint and tests. Its cache key reads only the CAS lockfile, because the default glob walks every folder, node_modules included, for 3.5 minutes.",
   },
   {
     action: "actions/cache/restore",
