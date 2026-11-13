@@ -359,6 +359,7 @@ function start(
 
   const tick = (now: number) => {
     frame = requestAnimationFrame(tick);
+    input.tend(now);
     const moving =
       Math.abs(goal.yaw - orbit.yaw) > 1e-3 ||
       Math.abs(goal.distance - orbit.distance) > 1e-2 ||
@@ -433,7 +434,7 @@ function start(
     walkTo([last[0] + dx, last[1] + dz]);
   };
 
-  const unbind = bindInput(canvas, store, {
+  const input = bindInput(canvas, store, {
     camera: () => ({ goal, orbit }),
     drag: showCursor,
     hover: (point) => {
@@ -459,7 +460,7 @@ function start(
     cancelAnimationFrame(frame);
     resize.disconnect();
     unsubscribe();
-    unbind();
+    input.release();
     painter.release();
   };
 }
