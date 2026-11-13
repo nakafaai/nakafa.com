@@ -19,6 +19,7 @@ import {
 import { MetalMaterial } from "@repo/design-system/components/three/physical";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { useVisualScene } from "@repo/design-system/components/visual/card";
+import { getColor } from "@repo/design-system/lib/color";
 import { useTheme } from "@repo/design-system/providers/theme";
 import { Array as Arr, Option, type Result } from "effect";
 import { createRef, type ReactNode, type RefObject, useMemo, useRef } from "react";
@@ -158,11 +159,11 @@ function ReactionArrow() {
     <group rotation={[0, 0, -Math.PI / 2]}>
       <mesh castShadow position={[0, -0.15, 0]}>
         <cylinderGeometry args={[0.06, 0.06, 1.1, 24]} />
-        <MetalMaterial color="#9aa3ad" />
+        <MetalMaterial color={getColor("SLATE", 400)} />
       </mesh>
       <mesh castShadow position={[0, 0.55, 0]}>
         <coneGeometry args={[0.18, 0.42, 32]} />
-        <MetalMaterial color="#9aa3ad" />
+        <MetalMaterial color={getColor("SLATE", 400)} />
       </mesh>
     </group>
   );

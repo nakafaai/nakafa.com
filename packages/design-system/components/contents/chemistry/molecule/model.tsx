@@ -25,10 +25,10 @@ const ATOM_SCALE = { ball: 0.22, fill: 1 } as const satisfies Record<
 >;
 
 /** The radius of one stick of a bond, in scene units. */
-const STICK = 0.07;
+const STICK = 0.085;
 
 /** How far apart the sticks of a double or triple bond stand. */
-const STICK_GAP = 0.17;
+const STICK_GAP = 0.2;
 
 /** An atom's drawn radius in scene units. */
 export function atomRadius(element: ElementSymbol, style: ModelStyle) {

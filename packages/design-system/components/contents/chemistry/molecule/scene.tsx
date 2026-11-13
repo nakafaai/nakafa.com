@@ -136,7 +136,6 @@ export function MoleculeScene({
           fontSize="compact"
           gap={atomRadius(atom.element, style) + 0.12}
           key={`label-${index}-${atom.element}`}
-          occlude
           position={atom.position}
         >
           <InlineMath math={`\\mathrm{${atom.element}}`} />
