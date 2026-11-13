@@ -69,7 +69,7 @@ export function IslandStage({ size }: { size: number }) {
         if (canvas === null) {
           return;
         }
-        const painter = createPainter(canvas);
+        const painter = createPainter(canvas, store.getState().season);
         if (Option.isNone(painter)) {
           setFailed(true);
           return;

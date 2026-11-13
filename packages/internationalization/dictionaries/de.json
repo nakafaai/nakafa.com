@@ -4659,6 +4659,12 @@
     "item-tree": "Baum",
     "item-well": "Brunnen",
     "item-lamp": "Laterne",
-    "notice-room": "Hier ist kein Platz dafür. Probier eine flache, freie Stelle."
+    "notice-room": "Hier ist kein Platz dafür. Probier eine flache, freie Stelle.",
+    "season-spring": "Frühling",
+    "season-summer": "Sommer",
+    "season-autumn": "Herbst",
+    "season-winter": "Winter",
+    "season-wet": "Regenzeit",
+    "season-dry": "Trockenzeit"
   }
 }

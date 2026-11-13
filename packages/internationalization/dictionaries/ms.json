@@ -4659,6 +4659,12 @@
     "item-tree": "Pokok",
     "item-well": "Perigi",
     "item-lamp": "Tiang lampu",
-    "notice-room": "Tak muat di sini. Cuba tempat yang rata dan lapang."
+    "notice-room": "Tak muat di sini. Cuba tempat yang rata dan lapang.",
+    "season-spring": "Musim bunga",
+    "season-summer": "Musim panas",
+    "season-autumn": "Musim luruh",
+    "season-winter": "Musim sejuk",
+    "season-wet": "Musim hujan",
+    "season-dry": "Musim kemarau"
   }
 }

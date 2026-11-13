@@ -4659,6 +4659,12 @@
     "item-tree": "Tree",
     "item-well": "Well",
     "item-lamp": "Lamp post",
-    "notice-room": "No room for that here. Try a flat, open spot."
+    "notice-room": "No room for that here. Try a flat, open spot.",
+    "season-spring": "Spring",
+    "season-summer": "Summer",
+    "season-autumn": "Autumn",
+    "season-winter": "Winter",
+    "season-wet": "Wet season",
+    "season-dry": "Dry season"
   }
 }
