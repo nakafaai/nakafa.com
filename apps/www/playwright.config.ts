@@ -1,4 +1,10 @@
-import { defineConfig, devices, type Project } from "@playwright/test";
+import {
+  defineConfig,
+  devices,
+  type PlaywrightTestOptions,
+  type PlaywrightWorkerOptions,
+  type Project,
+} from "@playwright/test";
 import { acceptanceOrigin } from "@repo/backend/scripts/content/acceptance/origin";
 import {
   Array as Arr,
@@ -72,10 +78,6 @@ const LEARNER_TESTS = [
 // Nina's chats, on their page and in the sheet.
 const CHAT_TESTS = ["**/chat/**/*.browser.ts", "**/nina/**/*.browser.ts"];
 
-// A diagram's card and dialog, which each engine sizes and scrolls in its own
-// way, so the chat suite runs them in WebKit and Firefox too.
-const ENGINE_CHAT_TESTS = ["**/chat/diagram.browser.ts"];
-
 // Every School page, role and worst case, which the browsers suites run again in
 // Firefox, desktop Safari, an Android phone and an iPhone, after Chromium's run
 // in the runtime suite: a school must work on every device its people bring.
@@ -136,9 +138,47 @@ const BEHAVIOUR_SCHOOL_TESTS = Arr.map(
   (name) => `**/school/${name}.browser.ts`
 );
 
-// The visual cards take the whole screen through the Fullscreen API on desktop,
-// Android, and iPad, and cover the viewport on iPhone, in Safari too.
-const WEBKIT_TESTS = ["**/visual/cards.browser.ts"];
+// The specs that read what only Chromium's DevTools protocol reports: route
+// JavaScript sizes, box models, layout shift entries and placeholder fits. The
+// Firefox and WebKit projects of each UI suite run every other spec.
+const CHROMIUM_TESTS = [
+  "**/budget/javascript.browser.ts",
+  "**/consent/preferences.browser.ts",
+  "**/quran/flow.browser.ts",
+  "**/quran/typeface.browser.ts",
+  "**/school/edges.browser.ts",
+  "**/settings/panel.browser.ts",
+];
+
+/** What a project of this config sets: everything but its name and dependencies. */
+type ProjectShape = Omit<
+  Project<PlaywrightTestOptions, PlaywrightWorkerOptions>,
+  "dependencies" | "name"
+>;
+
+/** The engines that every UI suite runs in, which a proof job selects one of. */
+const ENGINES = ["chromium", "firefox", "webkit"] as const;
+type Engine = (typeof ENGINES)[number];
+
+/**
+ * One UI project in Firefox or WebKit: the Chromium project's selection without
+ * the Chromium-only specs, and without the School pages, which the browsers
+ * suite already runs in every engine and device.
+ */
+function inEngine(
+  project: ProjectShape,
+  engine: Exclude<Engine, "chromium">
+): ProjectShape {
+  return {
+    ...project,
+    testIgnore: [
+      ...Arr.ensure(project.testIgnore ?? []),
+      ...CHROMIUM_TESTS,
+      SCHOOL_TESTS,
+    ],
+    use: { ...project.use, browserName: engine },
+  };
+}
 
 // The School pages of the timing specs, which the browser timing suite runs in
 // the other four browsers.
@@ -186,39 +226,33 @@ function parallelWorkers(value: string | undefined): number {
 // Each project as it runs. No project depends on another: Playwright skips a
 // project whose dependency had one failure, and runs a dependency whole when
 // one file is filtered, so suites order nothing and share nothing.
+const RUNTIME_PROJECT = {
+  testIgnore: [
+    ...CHAT_TESTS,
+    ...LEARNER_TESTS,
+    ...VISUAL_TESTS,
+    ...TIMING_TESTS,
+  ],
+};
+const LEARNER_PROJECT = { testIgnore: TIMING_TESTS, testMatch: LEARNER_TESTS };
+const CHAT_PROJECT = { testIgnore: TIMING_TESTS, testMatch: CHAT_TESTS };
+// The visual cards take the whole screen through the Fullscreen API on desktop,
+// Android, and iPad, and cover the viewport on iPhone, in Safari too.
+const VISUAL_PROJECT = { testIgnore: TIMING_TESTS, testMatch: VISUAL_TESTS };
+
 const PROJECTS = {
-  "shared-runtime": {
-    testIgnore: [
-      ...CHAT_TESTS,
-      ...LEARNER_TESTS,
-      ...VISUAL_TESTS,
-      ...TIMING_TESTS,
-    ],
-  },
-  learner: {
-    testIgnore: TIMING_TESTS,
-    testMatch: LEARNER_TESTS,
-  },
-  chat: {
-    testIgnore: TIMING_TESTS,
-    testMatch: CHAT_TESTS,
-  },
-  "chat-webkit": {
-    testMatch: ENGINE_CHAT_TESTS,
-    use: devices["Desktop Safari"],
-  },
-  "chat-firefox": {
-    testMatch: ENGINE_CHAT_TESTS,
-    use: devices["Desktop Firefox"],
-  },
-  visual: {
-    testIgnore: TIMING_TESTS,
-    testMatch: VISUAL_TESTS,
-  },
-  webkit: {
-    testMatch: WEBKIT_TESTS,
-    use: { browserName: "webkit" },
-  },
+  "shared-runtime": RUNTIME_PROJECT,
+  "shared-runtime-firefox": inEngine(RUNTIME_PROJECT, "firefox"),
+  "shared-runtime-webkit": inEngine(RUNTIME_PROJECT, "webkit"),
+  learner: LEARNER_PROJECT,
+  "learner-firefox": inEngine(LEARNER_PROJECT, "firefox"),
+  "learner-webkit": inEngine(LEARNER_PROJECT, "webkit"),
+  chat: CHAT_PROJECT,
+  "chat-firefox": inEngine(CHAT_PROJECT, "firefox"),
+  "chat-webkit": inEngine(CHAT_PROJECT, "webkit"),
+  visual: VISUAL_PROJECT,
+  "visual-firefox": inEngine(VISUAL_PROJECT, "firefox"),
+  "visual-webkit": inEngine(VISUAL_PROJECT, "webkit"),
   "school-firefox": {
     testIgnore: [
       ...CHROMIUM_SCHOOL_TESTS,
@@ -283,7 +317,7 @@ const PROJECTS = {
     use: devices["iPhone 15"],
     workers: 1,
   },
-} satisfies Record<string, Omit<Project, "dependencies" | "name">>;
+} satisfies Record<string, ProjectShape>;
 
 type ProjectName = keyof typeof PROJECTS;
 
@@ -294,13 +328,23 @@ type ProjectName = keyof typeof PROJECTS;
 // suite it needs, then the timing suites. Measured on 8 November on one worker:
 // runtime 602 tests in 174 minutes, chat 200 tests in about 25.
 const SUITES = {
-  runtime: { projects: ["shared-runtime"], timing: false },
-  learner: { projects: ["learner"], timing: false },
-  chat: {
-    projects: ["chat", "chat-webkit", "chat-firefox"],
+  runtime: {
+    projects: [
+      "shared-runtime",
+      "shared-runtime-firefox",
+      "shared-runtime-webkit",
+    ],
     timing: false,
   },
-  visual: { projects: ["visual", "webkit"], timing: false },
+  learner: {
+    projects: ["learner", "learner-firefox", "learner-webkit"],
+    timing: false,
+  },
+  chat: { projects: ["chat", "chat-firefox", "chat-webkit"], timing: false },
+  visual: {
+    projects: ["visual", "visual-firefox", "visual-webkit"],
+    timing: false,
+  },
   browsers: {
     projects: [
       "school-firefox",
@@ -331,6 +375,38 @@ function isSuiteName(value: string): value is SuiteName {
   return Arr.some(Rec.keys(SUITES), (name) => name === value);
 }
 
+function isEngine(value: string): value is Engine {
+  return Arr.some(ENGINES, (engine) => engine === value);
+}
+
+/** The engine that a project runs in: its browser, its device's, or Chromium. */
+function projectEngine(name: ProjectName): string {
+  const project: ProjectShape = PROJECTS[name];
+  return (
+    project.use?.browserName ?? project.use?.defaultBrowserType ?? "chromium"
+  );
+}
+
+/**
+ * The projects of the engine that PLAYWRIGHT_ENGINE names, or every project when
+ * it names none. A proof job runs one engine, so the three engines of a suite
+ * run side by side on separate machines.
+ */
+function inSelectedEngine(
+  projects: readonly ProjectName[],
+  engine: string | undefined
+): readonly ProjectName[] {
+  if (engine === undefined) {
+    return projects;
+  }
+  if (!isEngine(engine)) {
+    throw new Error(
+      `PLAYWRIGHT_ENGINE must be one of ${Arr.join(ENGINES, ", ")}; received "${engine}".`
+    );
+  }
+  return Arr.filter(projects, (name) => projectEngine(name) === engine);
+}
+
 /**
  * The projects and the worker count of the selected suite. Without a selection
  * every project runs at once on the parallel count, which suits a run of one
@@ -341,9 +417,13 @@ function selectedRun(suite: string | undefined): {
   readonly workers: number;
 } {
   const parallel = parallelWorkers(process.env.PLAYWRIGHT_WORKERS);
+  const engine = process.env.PLAYWRIGHT_ENGINE;
   if (suite === undefined) {
     return {
-      projects: Arr.flatMap(Rec.values(SUITES), (one) => one.projects),
+      projects: inSelectedEngine(
+        Arr.flatMap(Rec.values(SUITES), (one) => one.projects),
+        engine
+      ),
       workers: parallel,
     };
   }
@@ -353,7 +433,10 @@ function selectedRun(suite: string | undefined): {
     );
   }
   const { projects, timing } = SUITES[suite];
-  return { projects, workers: timing ? 1 : parallel };
+  return {
+    projects: inSelectedEngine(projects, engine),
+    workers: timing ? 1 : parallel,
+  };
 }
 
 const RUN = selectedRun(process.env.PLAYWRIGHT_SUITE);
