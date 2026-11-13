@@ -241,11 +241,11 @@ function seaPlaces(cells: Cells, wild: Wild, size: number, time: number) {
   const [c, s] = [Math.cos(yaw), Math.sin(yaw)];
   const half = length / 4;
   // One that swims alone keeps to its loop; a shoal spreads round it.
-  const school =
+  const school: ReturnType<typeof schoolOf> =
     species.family === "fish"
       ? schoolOf(shoalOf(length), length, wild.index * 131)
       : [{ at: [0, 0, 0], lag: 0.5 }];
-  return Arr.filterMap(school, (fish) => {
+  return Arr.filterMap(school, (fish): Result.Result<number[], void> => {
     const [ox, oy, oz] = fish.at;
     const x = at.x + ox * c + oz * s;
     const z = at.z - ox * s + oz * c;
