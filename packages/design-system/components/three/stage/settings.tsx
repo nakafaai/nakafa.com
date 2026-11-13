@@ -1,9 +1,12 @@
-import { Environment, Lightformer, Sky } from "@react-three/drei";
+import { Environment, Sky, useEnvironment } from "@react-three/drei";
 import { useStage } from "@repo/design-system/components/three/stage/context";
+import { horizonColor } from "@repo/design-system/components/three/stage/horizon";
+import { Panels } from "@repo/design-system/components/three/stage/panels";
 import { getColor } from "@repo/design-system/lib/color";
 import { getThemeAppearance } from "@repo/design-system/lib/theme/registry";
 import { useTheme } from "@repo/design-system/providers/theme";
-import { Suspense } from "react";
+import { Suspense, useMemo } from "react";
+import { type ColorRepresentation, DataTexture } from "three";
 
 /**
  * Each setting turns its photo so the photo's brightest light falls where the
@@ -43,59 +46,11 @@ function useDark() {
 }
 
 /**
- * The light of a photo studio, built from glowing panels around an empty
- * scene and baked once into the environment map. Nothing is downloaded, so it
- * lights a lab at once while the setting's own file loads: a wide box
- * overhead, two long strips that draw highlights along glass and metal, a
- * front panel that opens the shadows, and a dim floor bounce.
- */
-function Panels() {
-  return (
-    <Environment environmentIntensity={0.85} frames={1} resolution={256}>
-      <Lightformer
-        form="rect"
-        intensity={2.2}
-        position={[0, 7, 0]}
-        rotation-x={Math.PI / 2}
-        scale={[14, 14, 1]}
-      />
-      <Lightformer
-        form="rect"
-        intensity={1.4}
-        position={[-7, 2.5, 0]}
-        rotation-y={Math.PI / 2}
-        scale={[18, 1.4, 1]}
-      />
-      <Lightformer
-        form="rect"
-        intensity={1.4}
-        position={[7, 2.5, 0]}
-        rotation-y={-Math.PI / 2}
-        scale={[18, 1.4, 1]}
-      />
-      <Lightformer
-        form="rect"
-        intensity={0.9}
-        position={[0, 2.5, 9]}
-        scale={[12, 5, 1]}
-      />
-      <Lightformer
-        form="rect"
-        intensity={0.3}
-        position={[0, -5, 0]}
-        rotation-x={-Math.PI / 2}
-        scale={[24, 24, 1]}
-      />
-    </Environment>
-  );
-}
-
-/**
  * A photographed place that both lights the lab and stands behind it, blurred
  * as a lens focused on the lab would blur it. The backdrop is exposed apart
  * from the light, as a photographer exposes for the subject, and dims in the
- * dark theme. A phone loads the half-size file, which it decodes in a quarter
- * of the time.
+ * dark theme, and distant ground fades into the tone of its horizon. A phone
+ * loads the half-size file, which it decodes in a quarter of the time.
  */
 function Photo({
   backdrop,
@@ -112,19 +67,37 @@ function Photo({
 }) {
   const { phone } = useStage();
   const dark = useDark();
+  const texture = useEnvironment({
+    files: `/environments/${phone ? "phone" : "desktop"}/${file}.exr`,
+  });
+  const shown = dark ? backdrop * DARK_BACKDROP : backdrop;
+  const haze = useMemo(
+    () =>
+      texture instanceof DataTexture &&
+      texture.image.data instanceof Uint16Array
+        ? horizonColor(
+            texture.image.data,
+            texture.image.width,
+            texture.image.height,
+            shown
+          )
+        : undefined,
+    [shown, texture]
+  );
 
   return (
-    <Suspense fallback={<Panels />}>
+    <>
       <Environment
         background
         backgroundBlurriness={blur}
-        backgroundIntensity={dark ? backdrop * DARK_BACKDROP : backdrop}
+        backgroundIntensity={shown}
         backgroundRotation={[0, turn, 0]}
         environmentIntensity={exposure}
         environmentRotation={[0, turn, 0]}
-        files={`/environments/${phone ? "phone" : "desktop"}/${file}.exr`}
+        map={texture}
       />
-    </Suspense>
+      {haze === undefined ? null : <Haze color={haze} />}
+    </>
   );
 }
 
@@ -134,11 +107,9 @@ function Photo({
  * on a phone.
  */
 function Sun({
-  color,
   direction,
   intensity,
 }: {
-  readonly color: string;
   readonly direction: readonly [number, number, number];
   readonly intensity: number;
 }) {
@@ -150,7 +121,6 @@ function Sun({
   return (
     <directionalLight
       castShadow
-      color={color}
       intensity={intensity}
       position={[x * distance, y * distance, z * distance]}
       shadow-bias={-0.0006}
@@ -167,7 +137,7 @@ function Sun({
 }
 
 /** Fades distant ground into the tone of the backdrop's horizon. */
-function Haze({ color }: { readonly color: string }) {
+function Haze({ color }: { readonly color: ColorRepresentation }) {
   const { reach } = useStage();
 
   return <fog args={[color, FOG_NEAR * reach, FOG_FAR * reach]} attach="fog" />;
@@ -175,38 +145,36 @@ function Haze({ color }: { readonly color: string }) {
 
 /** A teaching laboratory with benches and tall windows. */
 export function LabSetting() {
-  const dark = useDark();
-
   return (
     <>
-      <Photo
-        backdrop={3}
-        blur={0.18}
-        exposure={1.5}
-        file="lab"
-        turn={LAB_TURN}
-      />
-      <Sun color="#ffffff" direction={LAB_SUN} intensity={1.5} />
-      <Haze color={dark ? "#606853" : "#949f80"} />
+      <Suspense fallback={<Panels />}>
+        <Photo
+          backdrop={3}
+          blur={0.18}
+          exposure={1.5}
+          file="lab"
+          turn={LAB_TURN}
+        />
+      </Suspense>
+      <Sun direction={LAB_SUN} intensity={1.5} />
     </>
   );
 }
 
 /** An open meadow in afternoon sun, for anything that moves outdoors. */
 export function FieldSetting() {
-  const dark = useDark();
-
   return (
     <>
-      <Photo
-        backdrop={2.2}
-        blur={0.2}
-        exposure={1.8}
-        file="field"
-        turn={FIELD_TURN}
-      />
-      <Sun color="#fff1df" direction={FIELD_SUN} intensity={2.6} />
-      <Haze color={dark ? "#596351" : "#89977d"} />
+      <Suspense fallback={<Panels />}>
+        <Photo
+          backdrop={2.2}
+          blur={0.2}
+          exposure={1.8}
+          file="field"
+          turn={FIELD_TURN}
+        />
+      </Suspense>
+      <Sun direction={FIELD_SUN} intensity={2.6} />
     </>
   );
 }
@@ -238,7 +206,7 @@ export function SkySetting() {
           turbidity={4.2}
         />
       </Environment>
-      <Sun color="#fff4e6" direction={SKY_SUN} intensity={2.4} />
+      <Sun direction={SKY_SUN} intensity={2.4} />
     </>
   );
 }
@@ -253,7 +221,7 @@ export function SkySetting() {
 export function StudioSetting() {
   const { phone } = useStage();
   const dark = useDark();
-  const backdrop = dark ? getColor("NEUTRAL", 700) : getColor("NEUTRAL", 100);
+  const backdrop = dark ? getColor("NEUTRAL", 700) : getColor("ZINC", 100);
 
   return (
     <>
@@ -265,7 +233,7 @@ export function StudioSetting() {
           files={`/environments/${phone ? "phone" : "desktop"}/studio.exr`}
         />
       </Suspense>
-      <Sun color="#ffffff" direction={STUDIO_SUN} intensity={1.4} />
+      <Sun direction={STUDIO_SUN} intensity={1.4} />
       <Haze color={backdrop} />
     </>
   );
@@ -287,7 +255,7 @@ export function SpaceSetting() {
           files={`/environments/${phone ? "phone" : "desktop"}/studio.exr`}
         />
       </Suspense>
-      <Sun color="#ffffff" direction={STUDIO_SUN} intensity={3.2} />
+      <Sun direction={STUDIO_SUN} intensity={3.2} />
     </>
   );
 }
