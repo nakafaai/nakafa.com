@@ -21,5 +21,7 @@ interface Window {
     callback: (data: unknown, success: boolean) => void
   ) => void;
   adsbygoogle?: GoogleQueue;
+  /** Google Analytics' command queue, which reads the `arguments` of each call. */
+  dataLayer?: IArguments[];
   googlefc?: { callbackQueue?: GoogleQueue };
 }

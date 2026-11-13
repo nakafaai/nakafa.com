@@ -4223,7 +4223,7 @@
     "title": "Data penggunaan",
     "prompt-description": "Berkongsi butiran adalah pilihan.",
     "prompt-footer": "Kamu boleh menukarnya kemudian.",
-    "description": "Nakafa mengira lawatan tanpa kuki, dan dengan persetujuan kamu ia turut melihat ciri yang kamu gunakan, bukan skrin kamu.",
+    "description": "Nakafa mengira lawatan tanpa kuki. Dengan persetujuan kamu, ia turut melihat ciri yang kamu gunakan dan mengira lawatan dengan Google Analytics, bukan skrin kamu.",
     "allow": "Benarkan",
     "decline": "Tolak",
     "manage": "Data penggunaan",

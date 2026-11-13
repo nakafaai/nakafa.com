@@ -4223,7 +4223,7 @@
     "title": "Nutzungsdaten",
     "prompt-description": "Details zu teilen ist freiwillig.",
     "prompt-footer": "Du kannst das später ändern.",
-    "description": "Nakafa zählt Besuche ohne Cookies und sieht mit deiner Zustimmung auch, welche Funktionen du nutzt, nie deinen Bildschirm.",
+    "description": "Nakafa zählt Besuche ohne Cookies. Mit deiner Zustimmung sieht es auch, welche Funktionen du nutzt, und zählt Besuche mit Google Analytics, nie deinen Bildschirm.",
     "allow": "Erlauben",
     "decline": "Ablehnen",
     "manage": "Nutzungsdaten",
