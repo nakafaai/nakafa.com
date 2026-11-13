@@ -13,7 +13,7 @@ import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 const PROMPT = "What is the slope of a line?";
 const TITLE = "The slope of a line";
 /** The session route, which the test answers late after the reload. */
-const SESSION_READ = "**/api/auth/get-session**";
+const SESSION_READ = "**/api/auth/refresh**";
 /** How long the session read waits before it answers. */
 const SESSION_DELAY = Duration.seconds(4);
 /** How soon the open chat's composer must show once the sheet opens, well inside the delay. */

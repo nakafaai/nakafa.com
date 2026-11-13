@@ -62,11 +62,12 @@ const Answer = Schema.Union([
     status: Schema.Literal("error"),
   }),
 ]);
-const Token = Schema.Struct({ token: Schema.String });
+const Token = Schema.Struct({
+  tokens: Schema.Struct({ accessToken: Schema.String }),
+});
 const CurrentUser = Schema.Struct({
   appUser: Schema.Struct({
     _id: Schema.String,
-    authId: Schema.String,
     username: Schema.String,
   }),
 });
@@ -99,9 +100,15 @@ export const learnerOf = Effect.fn("NakafaE2E.learnerOf")(function* (
   origin: string
 ) {
   const request = page.context().request;
-  const { token } = yield* Effect.promise(async () =>
-    (await request.get(`${baseURL}/api/auth/convex/token`)).json()
+  const { tokens } = yield* Effect.promise(async () =>
+    (
+      await request.post(`${baseURL}/api/auth/refresh`, {
+        data: {},
+        headers: { origin: new URL(baseURL).origin },
+      })
+    ).json()
   ).pipe(Effect.flatMap(Schema.decodeUnknownEffect(Token)));
+  const token = tokens.accessToken;
 
   /**
    * Calls one function of the backend as the learner and returns the value it
@@ -227,8 +234,6 @@ export const learnerOf = Effect.fn("NakafaE2E.learnerOf")(function* (
         )
       );
     }),
-    /** The Better Auth id of the learner's account, which the acceptance command names. */
-    authId: appUser.authId,
     /** The id of the learner's account in the app. */
     userId: appUser._id,
     /** The username of the learner, which their profile address names. */

@@ -14,7 +14,7 @@ import {
 
 const PROMPT = "Why is the derivative of sine the cosine?";
 const TITLE = "The derivative of sine";
-const SESSION_READ = "/api/auth/get-session";
+const SESSION_READ = "/api/auth/refresh";
 const SIGN_IN = /\/en\/auth/u;
 const NEW_CHAT = "New chat";
 const TRAILING_A = /A$/u;

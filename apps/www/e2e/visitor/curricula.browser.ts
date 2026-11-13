@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 import { Effect, MutableList } from "effect";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 
-const SESSION_READ = "/api/auth/get-session";
+const SESSION_READ = "/api/auth/refresh";
 /** The canonical catalog path: the plural spelling answers with a redirect to it. */
 const CURRICULA_PATH = "/en/curriculum";
 const CHOOSE_LEVEL = /Choose a level/u;

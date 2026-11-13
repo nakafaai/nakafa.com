@@ -67,3 +67,15 @@ export function outboundSetCookie(value: string, prefix: string) {
   const name = Str.trim(value.slice(0, value.indexOf("=")));
   return Arr.contains(AUTH_COOKIES, name) ? `${prefix}${value}` : value;
 }
+
+/**
+ * Whether a request carries this site's session: its refresh cookie, under the
+ * site's own name. The cookie proves nothing by itself; a reader that needs the
+ * session reads it (`session.server`).
+ */
+export function hasSessionCookie(request: Request, site: URL) {
+  const name = `${siteAuthCookies(site).prefix}${AUTH_REFRESH_COOKIE}`;
+  return Arr.some(Str.split(request.headers.get("cookie") ?? "", ";"), (pair) =>
+    Option.exists(splitPair(pair), ([key, value]) => key === name && value !== "")
+  );
+}

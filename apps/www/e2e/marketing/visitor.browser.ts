@@ -21,7 +21,7 @@ test("an anonymous home load shows Nina's composer and the usage-data prompt, op
     MutableList.append(sockets, socket.url());
   });
   page.on("request", (request) => {
-    if (request.url().includes("/api/auth/get-session")) {
+    if (request.url().includes("/api/auth/refresh")) {
       MutableList.append(sessionReads, request.url());
     }
   });
