@@ -37,7 +37,8 @@ export function spotHeight(plate: number) {
  * The largest plate voltage the beam clears the plates at: above it the beam
  * strikes a plate before it leaves them, where y = d / 2 at x = L.
  */
-export const PLATE_LIMIT = (2 * TUBE.gap ** 2 * ANODE_VOLTAGE) / TUBE.plates ** 2;
+export const PLATE_LIMIT =
+  (2 * TUBE.gap ** 2 * ANODE_VOLTAGE) / TUBE.plates ** 2;
 
 /** The beam's path as points (x, y) in centimetres, from the anode to the screen. */
 export function beamPath(plate: number, samples: number) {

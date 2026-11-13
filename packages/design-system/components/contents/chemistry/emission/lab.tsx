@@ -52,7 +52,7 @@ const VISIBLE = { end: 750, start: 380 } as const;
 const STRIP = 9;
 
 /** The words an emission lab reads from its lesson. */
-type EmissionLabels = {
+interface EmissionLabels {
   /** The name of the toggle that chooses a fall, for assistive technology. */
   readonly choose: string;
   /** The readout of the photon's energy. */
@@ -65,10 +65,13 @@ type EmissionLabels = {
   readonly view: string;
   /** The readout of the photon's wavelength. */
   readonly wavelength: ReactNode;
-};
+}
 
 /** One fall the lesson offers, from an upper level to a lower one. */
-type Fall = { readonly from: number; readonly to: number };
+interface Fall {
+  readonly from: number;
+  readonly to: number;
+}
 
 /**
  * Bohr's hydrogen atom: the electron circles on an orbit whose radius grows
@@ -175,7 +178,11 @@ export function BohrEmissionLab({
         <VisualCardFacts>
           <VisualFact
             label={labels.transition}
-            value={<InlineMath math={`n = ${shown.from} \\rightarrow n = ${shown.to}`} />}
+            value={
+              <InlineMath
+                math={`n = ${shown.from} \\rightarrow n = ${shown.to}`}
+              />
+            }
           />
           <VisualFact
             label={labels.wavelength}
@@ -272,15 +279,23 @@ function BohrAtom({ fall }: { readonly fall: Fall }) {
         <mesh key={level}>
           <torusGeometry args={[BOHR * orbitRadius(level), 0.012, 8, 160]} />
           <meshStandardMaterial
-            color={getColor("SLATE", level === fall.from || level === fall.to ? 200 : 600)}
+            color={getColor(
+              "SLATE",
+              level === fall.from || level === fall.to ? 200 : 600
+            )}
             emissive={getColor("SLATE", 400)}
-            emissiveIntensity={level === fall.from || level === fall.to ? 0.6 : 0.1}
+            emissiveIntensity={
+              level === fall.from || level === fall.to ? 0.6 : 0.1
+            }
           />
         </mesh>
       ))}
       <mesh ref={electron}>
         <sphereGeometry args={[0.11, 20, 14]} />
-        <meshBasicMaterial color={new Color(getColor("SLATE", 200)).multiplyScalar(2)} toneMapped={false} />
+        <meshBasicMaterial
+          color={new Color(getColor("SLATE", 200)).multiplyScalar(2)}
+          toneMapped={false}
+        />
       </mesh>
       <group ref={photon}>
         <Line color={color} lineWidth={2.4} points={wave} toneMapped={false} />
@@ -306,13 +321,19 @@ function SpectrumStrip({
     return { color: photonColor(nanometres).multiplyScalar(0.18), nanometres };
   });
   const place = (nanometres: number) =>
-    ((nanometres - VISIBLE.start) / (VISIBLE.end - VISIBLE.start) - 0.5) * STRIP;
+    ((nanometres - VISIBLE.start) / (VISIBLE.end - VISIBLE.start) - 0.5) *
+    STRIP;
 
   return (
     <group position={[0, -6.4, 0]}>
       {Arr.map(slices, (slice) => (
-        <mesh key={slice.nanometres} position={[place(slice.nanometres + 2.5), 0, 0]}>
-          <boxGeometry args={[(STRIP * 5) / (VISIBLE.end - VISIBLE.start), 0.5, 0.05]} />
+        <mesh
+          key={slice.nanometres}
+          position={[place(slice.nanometres + 2.5), 0, 0]}
+        >
+          <boxGeometry
+            args={[(STRIP * 5) / (VISIBLE.end - VISIBLE.start), 0.5, 0.05]}
+          />
           <meshBasicMaterial color={slice.color} toneMapped={false} />
         </mesh>
       ))}
@@ -326,7 +347,10 @@ function SpectrumStrip({
                 position={[place(nanometres), 0, 0.03]}
               >
                 <boxGeometry args={[0.05, current ? 0.9 : 0.5, 0.05]} />
-                <meshBasicMaterial color={photonColor(nanometres)} toneMapped={false} />
+                <meshBasicMaterial
+                  color={photonColor(nanometres)}
+                  toneMapped={false}
+                />
               </mesh>,
             ]
           : [];

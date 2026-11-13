@@ -17,13 +17,19 @@ import {
   FixedBond,
   placeBond,
 } from "@repo/design-system/components/contents/chemistry/molecule/model";
-import { MetalMaterial } from "@repo/design-system/components/three/physical";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
+import { MetalMaterial } from "@repo/design-system/components/three/physical";
 import { useVisualScene } from "@repo/design-system/components/visual/card";
 import { getColor } from "@repo/design-system/lib/color";
 import { useTheme } from "@repo/design-system/providers/theme";
 import { Array as Arr, Option, type Result } from "effect";
-import { createRef, type ReactNode, type RefObject, useMemo, useRef } from "react";
+import {
+  createRef,
+  type ReactNode,
+  type RefObject,
+  useMemo,
+  useRef,
+} from "react";
 import type { Group, Mesh } from "three";
 
 /** A reaction laid out for the lab. */
@@ -112,7 +118,12 @@ export function ReactionScene({
       ref.current?.position.set(position[0], position[1], position[2]);
     }
     const strengths = bondStrengths(progress);
-    placeBonds(layout.reactantBonds, reactantRefs, positions, strengths.reactants);
+    placeBonds(
+      layout.reactantBonds,
+      reactantRefs,
+      positions,
+      strengths.reactants
+    );
     placeBonds(layout.productBonds, productRefs, positions, strengths.products);
   });
 
@@ -121,10 +132,10 @@ export function ReactionScene({
 
   return (
     <group>
-      {Arr.map(Arr.zip(layout.particles, atomRefs), ([particle, ref], index) => (
+      {Arr.map(Arr.zip(layout.particles, atomRefs), ([particle, ref]) => (
         <AtomBall
           element={particle.element}
-          key={`particle-${index}-${particle.element}`}
+          key={`particle-${particle.reactant}`}
           position={particle.start}
           ref={ref}
           style="ball"
@@ -148,10 +159,18 @@ export function ReactionScene({
       ))}
       <ReactionGhosts layout={layout} />
       <ReactionArrow />
-      <ThreeLabel color={colors.text} fontSize="compact" position={[-sideX, labelY, 0]}>
+      <ThreeLabel
+        color={colors.text}
+        fontSize="compact"
+        position={[-sideX, labelY, 0]}
+      >
         {reactants}
       </ThreeLabel>
-      <ThreeLabel color={colors.text} fontSize="compact" position={[sideX, labelY, 0]}>
+      <ThreeLabel
+        color={colors.text}
+        fontSize="compact"
+        position={[sideX, labelY, 0]}
+      >
         {products}
       </ThreeLabel>
     </group>
@@ -180,10 +199,10 @@ function ReactionGhosts({ layout }: { readonly layout: ReactionLayout }) {
     <group>
       {Arr.map(sides, (side) => (
         <group key={side.key}>
-          {Arr.map(layout.particles, (particle, index) => (
+          {Arr.map(layout.particles, (particle) => (
             <AtomBall
               element={particle.element}
-              key={`${side.key}-${index}`}
+              key={`${side.key}-${particle.reactant}`}
               opacity={GHOST}
               position={side.place(particle)}
               style="ball"

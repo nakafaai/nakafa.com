@@ -82,8 +82,9 @@ describe("molecule catalog", () => {
     expect(angle("ethene", 2, 0, 3)).toBeCloseTo(117.4, 6);
     expect(angle("sulfur-trioxide", 2, 0, 3)).toBeCloseTo(120, 6);
     expect(
-      Arr.every(molecule("ethene").atoms, (atom) =>
-        Math.abs(atom.position[2]) < 1e-9
+      Arr.every(
+        molecule("ethene").atoms,
+        (atom) => Math.abs(atom.position[2]) < 1e-9
       )
     ).toBe(true);
   });

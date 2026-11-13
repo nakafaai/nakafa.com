@@ -55,8 +55,12 @@ describe("molecule geometry", () => {
     );
     const [first, second, third, fourth] = built.positions;
 
-    expect(measureAngle(first ?? [0, 0, 0], second ?? [0, 0, 0], third ?? [0, 0, 0])).toBeCloseTo(180, 9);
-    expect(measureAngle(second ?? [0, 0, 0], third ?? [0, 0, 0], fourth ?? [0, 0, 0])).toBeCloseTo(90, 9);
+    expect(
+      measureAngle(first ?? [0, 0, 0], second ?? [0, 0, 0], third ?? [0, 0, 0])
+    ).toBeCloseTo(180, 9);
+    expect(
+      measureAngle(second ?? [0, 0, 0], third ?? [0, 0, 0], fourth ?? [0, 0, 0])
+    ).toBeCloseTo(90, 9);
   });
 
   it("twists an atom off a straight chain that runs across the first bond", () => {

@@ -69,18 +69,18 @@ const IMPACTS = Arr.flatMap(Arr.range(0, PATHS_PER_SIDE), (step) => {
 });
 
 /** The words a scattering lab reads from its lesson. */
-type ScatteringLabels = {
+interface ScatteringLabels {
   /** The readout of the closest a head-on alpha comes. */
   readonly approach: ReactNode;
   /** The name of the energy slider and its readout. */
   readonly energy: string;
-  /** The readout of how many times wider the atom is than its nucleus. */
-  readonly ratio: ReactNode;
   /** The readout of the radius of the gold nucleus. */
   readonly nucleus: ReactNode;
+  /** The readout of how many times wider the atom is than its nucleus. */
+  readonly ratio: ReactNode;
   /** What the scene shows, for assistive technology. */
   readonly view: string;
-};
+}
 
 /**
  * Rutherford's gold foil, seen at the scale of one nucleus: alpha particles
@@ -152,20 +152,22 @@ export function RutherfordScatteringLab({
         <VisualCardFacts>
           <VisualFact
             label={labels.energy}
-            value={<InlineMath math={`E = ${number(energy, 1)}\\ \\mathrm{MeV}`} />}
+            value={
+              <InlineMath math={`E = ${number(energy, 1)}\\ \\mathrm{MeV}`} />
+            }
           />
           <VisualFact
             label={labels.approach}
             value={
-              <InlineMath
-                math={`d = ${number(approach, 1)}\\ \\mathrm{fm}`}
-              />
+              <InlineMath math={`d = ${number(approach, 1)}\\ \\mathrm{fm}`} />
             }
           />
           <VisualFact
             label={labels.nucleus}
             value={
-              <InlineMath math={`R \\approx ${number(GOLD_NUCLEUS, 0)}\\ \\mathrm{fm}`} />
+              <InlineMath
+                math={`R \\approx ${number(GOLD_NUCLEUS, 0)}\\ \\mathrm{fm}`}
+              />
             }
           />
           <VisualFact
@@ -198,15 +200,20 @@ function ScatteringScene({ approach }: { readonly approach: number }) {
           return [];
         }
         const lengths = cumulativeLengths(path);
-        return [{
-          impact,
-          lengths,
-          path,
-          points: Arr.map(path, ([x, y]) => [x / FEMTOMETRES, y / FEMTOMETRES, 0] as const),
-          ref: createRef<Mesh>(),
-          // Each alpha starts at its own place, so they do not fly in a line.
-          travelled: { distance: index * 17 },
-        }];
+        return [
+          {
+            impact,
+            lengths,
+            path,
+            points: Arr.map(
+              path,
+              ([x, y]) => [x / FEMTOMETRES, y / FEMTOMETRES, 0] as const
+            ),
+            ref: createRef<Mesh>(),
+            // Each alpha starts at its own place, so they do not fly in a line.
+            travelled: { distance: index * 17 },
+          },
+        ];
       }),
     [approach]
   );
@@ -215,10 +222,17 @@ function ScatteringScene({ approach }: { readonly approach: number }) {
   useFrame((_, seconds) => {
     for (const flight of flights) {
       const total = Option.getOrElse(Arr.last(flight.lengths), constant(0));
-      const [x, y] = pointAlong(flight.path, flight.lengths, flight.travelled.distance);
+      const [x, y] = pointAlong(
+        flight.path,
+        flight.lengths,
+        flight.travelled.distance
+      );
       flight.ref.current?.position.set(x / FEMTOMETRES, y / FEMTOMETRES, 0);
       if (playing && total > 0) {
-        const step = SPEED * alphaSpeed(Math.hypot(x, y), approach) * Math.min(seconds, 0.1);
+        const step =
+          SPEED *
+          alphaSpeed(Math.hypot(x, y), approach) *
+          Math.min(seconds, 0.1);
         flight.travelled.distance = (flight.travelled.distance + step) % total;
       }
     }

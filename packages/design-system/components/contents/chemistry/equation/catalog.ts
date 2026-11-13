@@ -208,10 +208,7 @@ export function sideAtoms(terms: readonly Term[]) {
 }
 
 /** How many atoms of `element` a side holds, none when it holds none. */
-function countOf(
-  atoms: ReturnType<typeof sideAtoms>,
-  element: ElementSymbol
-) {
+function countOf(atoms: ReturnType<typeof sideAtoms>, element: ElementSymbol) {
   return Option.getOrElse(
     Option.map(
       Arr.findFirst(atoms, ([each]) => each === element),
@@ -283,8 +280,7 @@ export function economyTex(id: ReactionId, format: MathNumber) {
     Option.all([Arr.head(products), atomEconomy(id)]),
     ([[molecule, coefficient], economy]) => {
       const product = format(relativeMass(molecule));
-      const top =
-        coefficient === 1 ? product : `${coefficient}(${product})`;
+      const top = coefficient === 1 ? product : `${coefficient}(${product})`;
       return `\\dfrac{${top}}{${format(sideMass(reactants))}} \\times 100\\% = ${format(economy)}\\%`;
     }
   );

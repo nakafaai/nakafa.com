@@ -6,8 +6,8 @@ import {
   type Bond,
   dot,
   length,
-  type Point,
   PICOMETRES_PER_UNIT,
+  type Point,
   scale,
   subtract,
 } from "@repo/design-system/components/contents/chemistry/molecule/geometry";
@@ -117,8 +117,8 @@ export function AtomBall({
         clearcoat={0.8}
         clearcoatRoughness={0.14}
         color={ELEMENTS[element].color}
-        metalness={0}
         depthWrite={opacity === 1}
+        metalness={0}
         opacity={opacity}
         roughness={0.34}
         transparent={opacity < 1}

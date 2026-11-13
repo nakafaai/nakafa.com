@@ -44,7 +44,7 @@ import { type ReactNode, Suspense, useState } from "react";
 import { useFormatter } from "use-intl";
 
 /** The words a molecule lab reads from its lesson. */
-type MoleculeLabels = {
+interface MoleculeLabels {
   /** The readout of the atoms in the molecule. */
   readonly atoms: ReactNode;
   /** The name of the toggle that chooses a molecule, for assistive technology. */
@@ -59,7 +59,7 @@ type MoleculeLabels = {
   readonly shape: ReactNode;
   /** What the scene shows, for assistive technology. */
   readonly view: string;
-};
+}
 
 /**
  * A molecule lab: the real shape of each molecule the lesson names, built from
@@ -90,11 +90,10 @@ export function MoleculeShapeLab({
   );
   const [chosen, setChosen] = useState<MoleculeId | undefined>(undefined);
   const [style, setStyle] = useState<ModelStyle>("ball");
-  const entry =
-    Arr.findFirst(offered, (each) => each.id === chosen).pipe(
-      Option.orElse(() => Arr.head(offered)),
-      Option.getOrUndefined
-    );
+  const entry = Arr.findFirst(offered, (each) => each.id === chosen).pipe(
+    Option.orElse(() => Arr.head(offered)),
+    Option.getOrUndefined
+  );
   const molecule =
     entry === undefined ? undefined : readMolecule(getMolecule(entry.id));
 

@@ -53,7 +53,7 @@ const DRIFT = 4;
 const FLOOR = -3;
 
 /** The words a cathode-ray lab reads from its lesson. */
-type CathodeLabels = {
+interface CathodeLabels {
   /** The readout of the voltage that speeds the electrons up. */
   readonly anode: ReactNode;
   /** The readout of the electric field between the plates. */
@@ -64,7 +64,7 @@ type CathodeLabels = {
   readonly spot: ReactNode;
   /** What the scene shows, for assistive technology. */
   readonly view: string;
-};
+}
 
 /**
  * Thomson's cathode-ray tube at real size: electrons leave the hot cathode,
@@ -134,11 +134,17 @@ export function CathodeRayLab({
         <VisualCardFacts>
           <VisualFact
             label={labels.anode}
-            value={<InlineMath math={`V_a = ${number(ANODE_VOLTAGE, 0)}\\ \\mathrm{V}`} />}
+            value={
+              <InlineMath
+                math={`V_a = ${number(ANODE_VOLTAGE, 0)}\\ \\mathrm{V}`}
+              />
+            }
           />
           <VisualFact
             label={labels.plates}
-            value={<InlineMath math={`V_p = ${number(plate, 0)}\\ \\mathrm{V}`} />}
+            value={
+              <InlineMath math={`V_p = ${number(plate, 0)}\\ \\mathrm{V}`} />
+            }
           />
           <VisualFact
             label={labels.field}
@@ -150,7 +156,11 @@ export function CathodeRayLab({
           />
           <VisualFact
             label={labels.spot}
-            value={<InlineMath math={`y = ${number(spotHeight(plate), 2)}\\ \\mathrm{cm}`} />}
+            value={
+              <InlineMath
+                math={`y = ${number(spotHeight(plate), 2)}\\ \\mathrm{cm}`}
+              />
+            }
           />
         </VisualCardFacts>
       </VisualCardFooter>
@@ -196,7 +206,10 @@ function CathodeTube({ plate }: { readonly plate: number }) {
 
   return (
     <group>
-      <mesh position={[(CATHODE_X - 1 + 6) / 2, 0, 0]} rotation={[0, 0, Math.PI / 2]}>
+      <mesh
+        position={[(CATHODE_X - 1 + 6) / 2, 0, 0]}
+        rotation={[0, 0, Math.PI / 2]}
+      >
         <cylinderGeometry args={[0.95, 0.95, 6 - CATHODE_X + 1, 48, 1, true]} />
         <GlassMaterial color={getColor("SLATE", 200)} />
       </mesh>
@@ -212,7 +225,10 @@ function CathodeTube({ plate }: { readonly plate: number }) {
           side={DoubleSide}
         />
       </mesh>
-      <mesh position={[end - 0.01, spotHeight(plate), 0]} scale={[0.04, 0.22, 0.22]}>
+      <mesh
+        position={[end - 0.01, spotHeight(plate), 0]}
+        scale={[0.04, 0.22, 0.22]}
+      >
         <sphereGeometry args={[1, 24, 16]} />
         <meshBasicMaterial color={glow} toneMapped={false} />
       </mesh>
@@ -236,14 +252,21 @@ function CathodeTube({ plate }: { readonly plate: number }) {
         ] as const,
         (each) => (
           <group key={each.y}>
-            <mesh castShadow position={[TUBE.plates / 2, each.y + Math.sign(each.y) * 0.03, 0]}>
+            <mesh
+              castShadow
+              position={[TUBE.plates / 2, each.y + Math.sign(each.y) * 0.03, 0]}
+            >
               <boxGeometry args={[TUBE.plates, 0.06, 1.3]} />
               <MetalMaterial color={getColor("SLATE", 400)} roughness={0.25} />
             </mesh>
             <ThreeLabel
               color={getColor("SLATE", 800)}
               fontSize="compact"
-              position={[TUBE.plates / 2, each.y + Math.sign(each.y) * 0.45, 0.7]}
+              position={[
+                TUBE.plates / 2,
+                each.y + Math.sign(each.y) * 0.45,
+                0.7,
+              ]}
             >
               <InlineMath math={each.sign} />
             </ThreeLabel>
@@ -274,7 +297,10 @@ function CathodeStand() {
       ))}
       <mesh castShadow position={[4.75, FLOOR + 0.12, -0.2]} receiveShadow>
         <boxGeometry args={[11, 0.24, 2.4]} />
-        <meshStandardMaterial color={getColor("NEUTRAL", 800)} roughness={0.6} />
+        <meshStandardMaterial
+          color={getColor("NEUTRAL", 800)}
+          roughness={0.6}
+        />
       </mesh>
     </group>
   );

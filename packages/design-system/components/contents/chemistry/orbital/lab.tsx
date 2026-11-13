@@ -44,7 +44,9 @@ const CANDIDATES = { desktop: 320_000, phone: 110_000 } as const;
 const GLOW = 1.8;
 
 /** The words an orbital lab reads from its lesson. */
-type OrbitalLabels = {
+interface OrbitalLabels {
+  /** The readout of the planes and cones where the cloud vanishes. */
+  readonly angular: ReactNode;
   /** The name of the toggle that chooses an orbital, for assistive technology. */
   readonly choose: string;
   /** The readout of the quantum numbers. */
@@ -53,11 +55,9 @@ type OrbitalLabels = {
   readonly orbital: ReactNode;
   /** The readout of the spheres where the cloud vanishes. */
   readonly radial: ReactNode;
-  /** The readout of the planes and cones where the cloud vanishes. */
-  readonly angular: ReactNode;
   /** What the scene shows, for assistive technology. */
   readonly view: string;
-};
+}
 
 /**
  * An orbital lab: the electron cloud of a hydrogen orbital, thousands of
@@ -147,7 +147,10 @@ export function OrbitalCloudLab({
 
       <VisualCardFooter>
         <VisualCardFacts>
-          <VisualFact label={labels.orbital} value={<InlineMath math={tex} />} />
+          <VisualFact
+            label={labels.orbital}
+            value={<InlineMath math={tex} />}
+          />
           <VisualFact
             label={labels.numbers}
             value={<InlineMath math={`n = ${n},\\ \\ell = ${l}`} />}
@@ -194,11 +197,7 @@ function OrbitalCloud({ id }: { readonly id: OrbitalId }) {
 
   return (
     <group>
-      <Points
-        colors={geometry.colors}
-        key={id}
-        positions={geometry.positions}
-      >
+      <Points colors={geometry.colors} key={id} positions={geometry.positions}>
         <PointMaterial
           depthWrite={false}
           opacity={0.75}

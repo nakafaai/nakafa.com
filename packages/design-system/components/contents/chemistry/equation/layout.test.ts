@@ -4,9 +4,7 @@ import {
   ReactionIdSchema,
 } from "@repo/design-system/components/contents/chemistry/equation/catalog";
 import { layoutReaction } from "@repo/design-system/components/contents/chemistry/equation/layout";
-import {
-  getMolecule,
-} from "@repo/design-system/components/contents/chemistry/molecule/catalog";
+import { getMolecule } from "@repo/design-system/components/contents/chemistry/molecule/catalog";
 import { measureDistance } from "@repo/design-system/components/contents/chemistry/molecule/geometry";
 import { Array as Arr, Result } from "effect";
 
@@ -25,14 +23,19 @@ describe("reaction layout", () => {
   it("keeps each atom its element and pairs every product atom once", () => {
     for (const id of ReactionIdSchema.literals) {
       const layout = Result.getOrThrow(layoutReaction(getReaction(id)));
-      const products = Arr.map(layout.particles, (particle) => particle.product);
+      const products = Arr.map(
+        layout.particles,
+        (particle) => particle.product
+      );
 
       expect(Arr.dedupe(products)).toHaveLength(layout.particles.length);
     }
   });
 
   it("keeps the measured bond lengths of the reactants and the products", () => {
-    const layout = Result.getOrThrow(layoutReaction(getReaction("water-synthesis")));
+    const layout = Result.getOrThrow(
+      layoutReaction(getReaction("water-synthesis"))
+    );
     const water = Result.getOrThrow(getMolecule("water"));
     const hydrogen = Result.getOrThrow(getMolecule("hydrogen"));
 

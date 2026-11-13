@@ -19,9 +19,7 @@ function indonesian(value: number) {
 
 describe("molecule facts", () => {
   it("lists the atoms of a molecule with their counts", () => {
-    expect(compositionTex("water")).toBe(
-      "2\\,\\mathrm{H},\\ 1\\,\\mathrm{O}"
-    );
+    expect(compositionTex("water")).toBe("2\\,\\mathrm{H},\\ 1\\,\\mathrm{O}");
   });
 
   it("sums the relative molecular mass from each element", () => {

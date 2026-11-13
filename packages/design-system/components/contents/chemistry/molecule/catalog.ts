@@ -7,7 +7,7 @@ import {
   buildMolecule,
   type Placement,
 } from "@repo/design-system/components/contents/chemistry/molecule/geometry";
-import { Array as Arr, Option, Result, Schema } from "effect";
+import { Array as Arr, Result, Schema } from "effect";
 
 /** Every molecule the molecule and reaction labs can draw. */
 export const MoleculeIdSchema = Schema.Literals([

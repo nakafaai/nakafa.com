@@ -2,12 +2,12 @@ import { describe, expect, it } from "@effect/vitest";
 import {
   alphaPath,
   alphaSpeed,
-  cumulativeLengths,
-  pointAlong,
   closestApproach,
+  cumulativeLengths,
   deflection,
   GOLD_CHARGE,
   GOLD_NUCLEUS,
+  pointAlong,
 } from "@repo/design-system/components/contents/chemistry/scattering/coulomb";
 import { Array as Arr } from "effect";
 

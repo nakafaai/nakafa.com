@@ -88,12 +88,7 @@ export function MoleculeScene({
   useFrame((state) => {
     const seconds = playing ? state.clock.elapsedTime : 0;
     const positions = Arr.map(molecule.atoms, (atom, index) =>
-      vibrate(
-        atom.position,
-        ELEMENTS[atom.element].mass,
-        seconds,
-        index * 0.9
-      )
+      vibrate(atom.position, ELEMENTS[atom.element].mass, seconds, index * 0.9)
     );
     for (const [ref, position] of Arr.zip(atomRefs, positions)) {
       ref.current?.position.set(position[0], position[1], position[2]);
@@ -111,10 +106,10 @@ export function MoleculeScene({
 
   return (
     <group>
-      {Arr.map(Arr.zip(molecule.atoms, atomRefs), ([atom, ref], index) => (
+      {Arr.map(Arr.zip(molecule.atoms, atomRefs), ([atom, ref]) => (
         <AtomBall
           element={atom.element}
-          key={`atom-${index}-${atom.element}`}
+          key={`atom-${atom.element}-${atom.position[0]},${atom.position[1]},${atom.position[2]}`}
           position={atom.position}
           ref={ref}
           style={style}
@@ -130,13 +125,13 @@ export function MoleculeScene({
             />
           ))
         : null}
-      {Arr.map(molecule.atoms, (atom, index) => (
+      {Arr.map(molecule.atoms, (atom) => (
         <ThreeLabel
           anchorY="bottom"
           color={colors.text}
           fontSize="compact"
           gap={atomRadius(atom.element, style) + 0.06}
-          key={`label-${index}-${atom.element}`}
+          key={`label-${atom.element}-${atom.position[0]},${atom.position[1]},${atom.position[2]}`}
           position={atom.position}
         >
           <InlineMath math={`\\mathrm{${atom.element}}`} />

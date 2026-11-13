@@ -184,11 +184,12 @@ export function layoutReaction(reaction: ReturnType<typeof getReaction>) {
     const fromProducts = ordered(products);
     let pairs: readonly Particle[] = [];
     for (const atom of ordered(reactants)) {
+      const taken = pairs;
       const partner = Arr.findFirst(
         fromProducts,
         (candidate) =>
           candidate.element === atom.element &&
-          !Arr.some(pairs, (pair) => pair.product === candidate.index)
+          !Arr.some(taken, (pair) => pair.product === candidate.index)
       );
       if (Option.isNone(partner)) {
         return yield* Result.fail(new ReactionBalanceError());

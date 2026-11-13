@@ -1,3 +1,4 @@
+import { useThree } from "@react-three/fiber";
 import {
   balanceTex,
   economyTex,
@@ -21,7 +22,6 @@ import {
   MATH_NUMBER_OPTIONS,
   mathNumber,
 } from "@repo/design-system/components/contents/mathematics/number";
-import { useThree } from "@react-three/fiber";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { CameraControls } from "@repo/design-system/components/three/camera/controls";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene";
@@ -47,16 +47,16 @@ import { type ReactNode, Suspense, useState } from "react";
 import { useFormatter } from "use-intl";
 
 /** One reaction a lesson offers: its catalog id, toggle face, and spoken name. */
-type ReactionChoice = {
+interface ReactionChoice {
   readonly id: ReactionId;
   /** The name of the reaction, for assistive technology. */
   readonly name: string;
   /** What its toggle shows, such as the product's formula. */
   readonly tab: ReactNode;
-};
+}
 
 /** The words a reaction lab reads from its lesson. */
-type ReactionLabels = {
+interface ReactionLabels {
   /** The readout of the atoms of each element on both sides. */
   readonly atoms: ReactNode;
   /** The name of the toggle that chooses a reaction, for assistive technology. */
@@ -77,7 +77,7 @@ type ReactionLabels = {
   readonly reactants: ReactNode;
   /** What the scene shows, for assistive technology. */
   readonly view: string;
-};
+}
 
 /**
  * A reaction lab: the balanced reaction run atom by atom, from the reactant
