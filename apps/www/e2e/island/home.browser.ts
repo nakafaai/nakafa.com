@@ -13,7 +13,7 @@ import { desktopViewport, touchViewport } from "@/e2e/support/viewport";
 const GAME_PATH = /\/en\/island$/u;
 
 for (const viewport of [desktopViewport, touchViewport]) {
-  test(`opens a new learner's home on their island and week, and enters the game on the ${viewport.name} screen`, async ({
+  test(`opens a new learner's home with their streak and world pane, and enters the game from the world on the ${viewport.name} screen`, async ({
     baseURL,
     browser,
   }, testInfo) => {
@@ -31,12 +31,25 @@ for (const viewport of [desktopViewport, touchViewport]) {
         page,
         Effect.promise(async () => {
           await page.goto("/en");
-          await expect(
-            page.getByRole("heading", { name: en.Home["week-title"] })
-          ).toBeVisible();
+          // The body: the streak and the lessons to pick up again; the tile grids are gone.
           await expect(page.getByText("Start a run today")).toBeVisible();
-          // The tile grids are gone: only the greeting, the island and the week remain.
+          await expect(
+            page.getByRole("heading", { name: en.Home.continue })
+          ).toBeVisible();
           await expect(page.getByText("Trending")).toHaveCount(0);
+          // The world pane stands open on a wide screen; on a phone Your world opens its sheet.
+          const toggle = page.getByRole("button", {
+            name: en.Island["world-title"],
+          });
+          if ((await toggle.getAttribute("aria-pressed")) !== "true") {
+            await toggle.click();
+          }
+          await expect(
+            page.getByText(en.Island["badges-title"], { exact: true })
+          ).toBeVisible();
+          await expect(
+            page.getByText(en.Island["leaders-title"], { exact: true })
+          ).toBeVisible();
           const world = page.getByRole("link", { name: en.Island.play });
           await expect(world).toBeVisible();
           await world.hover();
