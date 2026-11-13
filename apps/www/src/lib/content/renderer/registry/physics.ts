@@ -14,7 +14,29 @@ import {
   DisplacementDistanceLab,
   StoppingDistanceLab,
 } from "@/lib/content/renderer/client/physics/distance";
-import { WindEnergyConversionLab } from "@/lib/content/renderer/client/physics/energy";
+import {
+  BiogasDigesterLab,
+  EnergyFlowLossLab,
+  FlashlightEfficiencyLab,
+  FuelCombustionCarbonLab,
+  GeothermalLoopLab,
+  GreenhouseLayerLab,
+  GridLoadCurveLab,
+  HoistWorkLab,
+  HydroDamLab,
+  KettleHeatingLab,
+  MicrohydroLab,
+  PendulumEnergyLab,
+  SolarBatteryStorageLab,
+  SolarPanelAngleLab,
+  SolarPanelHeatLab,
+  SolarRoofPaybackLab,
+  SteamPlantCycleLab,
+  WaveBuoyPowerLab,
+  WeightLampEnergyLab,
+  WindEnergyConversionLab,
+  WindRotorLab,
+} from "@/lib/content/renderer/client/physics/energy";
 import { HoseJetProjectileLab } from "@/lib/content/renderer/client/physics/fountain";
 import { GalileoInclineBellsLab } from "@/lib/content/renderer/client/physics/galileo";
 import { FallingTargetAimLab } from "@/lib/content/renderer/client/physics/hunter";
@@ -60,22 +82,6 @@ import type { RendererImplementation } from "@/lib/content/renderer/selection";
 /** Every physics visual, which any lesson in any domain may use. */
 export const physicsRenderers = [
   {
-    name: physicsComponentNames.brakeHeatLab,
-    component: BrakeHeatLab,
-  },
-  {
-    name: physicsComponentNames.brakingSurfaceLab,
-    component: BrakingSurfaceLab,
-  },
-  {
-    name: physicsComponentNames.followingDistanceLab,
-    component: FollowingDistanceLab,
-  },
-  {
-    name: physicsComponentNames.reactionTimeLab,
-    component: ReactionTimeLab,
-  },
-  {
     name: physicsComponentNames.accelerationGraphCard,
     component: AccelerationGraphCard,
   },
@@ -88,6 +94,30 @@ export const physicsRenderers = [
     component: AverageVelocitySpeedLab,
   },
   {
+    name: physicsComponentNames.bicycleWheelSpeedLab,
+    component: BicycleWheelSpeedLab,
+  },
+  {
+    name: physicsComponentNames.biogasDigesterLab,
+    component: BiogasDigesterLab,
+  },
+  {
+    name: physicsComponentNames.brakeHeatLab,
+    component: BrakeHeatLab,
+  },
+  {
+    name: physicsComponentNames.brakingSurfaceLab,
+    component: BrakingSurfaceLab,
+  },
+  {
+    name: physicsComponentNames.carTripSecantSlopeLab,
+    component: CarTripSecantSlopeLab,
+  },
+  {
+    name: physicsComponentNames.cityWalkDisplacementLab,
+    component: CityWalkDisplacementLab,
+  },
+  {
     name: physicsComponentNames.dimensionLab,
     component: DimensionLab,
   },
@@ -96,12 +126,72 @@ export const physicsRenderers = [
     component: DisplacementDistanceLab,
   },
   {
+    name: physicsComponentNames.energyFlowLossLab,
+    component: EnergyFlowLossLab,
+  },
+  {
+    name: physicsComponentNames.fallingTargetAimLab,
+    component: FallingTargetAimLab,
+  },
+  {
+    name: physicsComponentNames.featherCoinVacuumLab,
+    component: FeatherCoinVacuumLab,
+  },
+  {
+    name: physicsComponentNames.flashlightEfficiencyLab,
+    component: FlashlightEfficiencyLab,
+  },
+  {
+    name: physicsComponentNames.followingDistanceLab,
+    component: FollowingDistanceLab,
+  },
+  {
+    name: physicsComponentNames.fuelCombustionCarbonLab,
+    component: FuelCombustionCarbonLab,
+  },
+  {
+    name: physicsComponentNames.galileoInclineBellsLab,
+    component: GalileoInclineBellsLab,
+  },
+  {
+    name: physicsComponentNames.geothermalLoopLab,
+    component: GeothermalLoopLab,
+  },
+  {
+    name: physicsComponentNames.greenhouseLayerLab,
+    component: GreenhouseLayerLab,
+  },
+  {
+    name: physicsComponentNames.gridLoadCurveLab,
+    component: GridLoadCurveLab,
+  },
+  {
+    name: physicsComponentNames.hoistWorkLab,
+    component: HoistWorkLab,
+  },
+  {
+    name: physicsComponentNames.hoseJetProjectileLab,
+    component: HoseJetProjectileLab,
+  },
+  {
+    name: physicsComponentNames.hydroDamLab,
+    component: HydroDamLab,
+  },
+  {
     name: physicsComponentNames.instantaneousVelocitySpeedLab,
     component: InstantaneousVelocitySpeedLab,
   },
   {
+    name: physicsComponentNames.kettleHeatingLab,
+    component: KettleHeatingLab,
+  },
+  {
     name: physicsComponentNames.measurementToolsLab,
     component: MeasurementToolsLab,
+  },
+  {
+    name: physicsComponentNames.microhydroLab,
+    component: MicrohydroLab,
   },
   {
     name: physicsComponentNames.nonUniformLinearMotionGraphCard,
@@ -120,16 +210,80 @@ export const physicsRenderers = [
     component: ParabolicMovementLab,
   },
   {
+    name: physicsComponentNames.pendulumEnergyLab,
+    component: PendulumEnergyLab,
+  },
+  {
+    name: physicsComponentNames.rainDriveRelativeVelocityLab,
+    component: RainDriveRelativeVelocityLab,
+  },
+  {
+    name: physicsComponentNames.reactionTimeLab,
+    component: ReactionTimeLab,
+  },
+  {
     name: physicsComponentNames.relativeMovementLab,
     component: RelativeMovementLab,
+  },
+  {
+    name: physicsComponentNames.riverBoatCrossingLab,
+    component: RiverBoatCrossingLab,
+  },
+  {
+    name: physicsComponentNames.runningTrackDisplacementLab,
+    component: RunningTrackDisplacementLab,
+  },
+  {
+    name: physicsComponentNames.satelliteOrbitCircularLab,
+    component: SatelliteOrbitCircularLab,
+  },
+  {
+    name: physicsComponentNames.solarBatteryStorageLab,
+    component: SolarBatteryStorageLab,
+  },
+  {
+    name: physicsComponentNames.solarPanelAngleLab,
+    component: SolarPanelAngleLab,
+  },
+  {
+    name: physicsComponentNames.solarPanelHeatLab,
+    component: SolarPanelHeatLab,
+  },
+  {
+    name: physicsComponentNames.solarRoofPaybackLab,
+    component: SolarRoofPaybackLab,
+  },
+  {
+    name: physicsComponentNames.speedTrapInstantSpeedLab,
+    component: SpeedTrapInstantSpeedLab,
+  },
+  {
+    name: physicsComponentNames.steamPlantCycleLab,
+    component: SteamPlantCycleLab,
   },
   {
     name: physicsComponentNames.stoppingDistanceLab,
     component: StoppingDistanceLab,
   },
   {
+    name: physicsComponentNames.streetOriginPositionLab,
+    component: StreetOriginPositionLab,
+  },
+  {
+    name: physicsComponentNames.stringWhirlReleaseLab,
+    component: StringWhirlReleaseLab,
+  },
+  {
+    name: physicsComponentNames.strobePhotoMotionLab,
+    component: StrobePhotoMotionLab,
+  },
+  {
     name: physicsComponentNames.tickerTapeMotionLab,
     component: TickerTapeMotionLab,
+  },
+  {
+    name: physicsComponentNames.trainPassengerRelativeLab,
+    component: TrainPassengerRelativeLab,
   },
   {
     name: physicsComponentNames.uniformCircularMotionLab,
@@ -152,71 +306,19 @@ export const physicsRenderers = [
     component: VerticalMovementLab,
   },
   {
+    name: physicsComponentNames.waveBuoyPowerLab,
+    component: WaveBuoyPowerLab,
+  },
+  {
+    name: physicsComponentNames.weightLampEnergyLab,
+    component: WeightLampEnergyLab,
+  },
+  {
     name: physicsComponentNames.windEnergyConversionLab,
     component: WindEnergyConversionLab,
   },
   {
-    name: physicsComponentNames.carTripSecantSlopeLab,
-    component: CarTripSecantSlopeLab,
-  },
-  {
-    name: physicsComponentNames.speedTrapInstantSpeedLab,
-    component: SpeedTrapInstantSpeedLab,
-  },
-  {
-    name: physicsComponentNames.streetOriginPositionLab,
-    component: StreetOriginPositionLab,
-  },
-  {
-    name: physicsComponentNames.strobePhotoMotionLab,
-    component: StrobePhotoMotionLab,
-  },
-  {
-    name: physicsComponentNames.cityWalkDisplacementLab,
-    component: CityWalkDisplacementLab,
-  },
-  {
-    name: physicsComponentNames.runningTrackDisplacementLab,
-    component: RunningTrackDisplacementLab,
-  },
-  {
-    name: physicsComponentNames.bicycleWheelSpeedLab,
-    component: BicycleWheelSpeedLab,
-  },
-  {
-    name: physicsComponentNames.riverBoatCrossingLab,
-    component: RiverBoatCrossingLab,
-  },
-  {
-    name: physicsComponentNames.rainDriveRelativeVelocityLab,
-    component: RainDriveRelativeVelocityLab,
-  },
-  {
-    name: physicsComponentNames.stringWhirlReleaseLab,
-    component: StringWhirlReleaseLab,
-  },
-  {
-    name: physicsComponentNames.fallingTargetAimLab,
-    component: FallingTargetAimLab,
-  },
-  {
-    name: physicsComponentNames.featherCoinVacuumLab,
-    component: FeatherCoinVacuumLab,
-  },
-  {
-    name: physicsComponentNames.galileoInclineBellsLab,
-    component: GalileoInclineBellsLab,
-  },
-  {
-    name: physicsComponentNames.hoseJetProjectileLab,
-    component: HoseJetProjectileLab,
-  },
-  {
-    name: physicsComponentNames.trainPassengerRelativeLab,
-    component: TrainPassengerRelativeLab,
-  },
-  {
-    name: physicsComponentNames.satelliteOrbitCircularLab,
-    component: SatelliteOrbitCircularLab,
+    name: physicsComponentNames.windRotorLab,
+    component: WindRotorLab,
   },
 ] satisfies readonly RendererImplementation[];
