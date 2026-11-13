@@ -1,5 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
-import { Effect } from "effect";
+import { Effect, Logger, MutableList } from "effect";
 import { IntlError, IntlErrorCode } from "use-intl";
 import { MessageFailure, reportMessage } from "@/lib/i18n/failure";
 
@@ -21,9 +21,22 @@ describe("reportMessage", () => {
       })
   );
 
-  it.effect("logs the failure and lets production render on", () =>
-    Effect.gen(function* () {
-      yield* reportMessage(false, missing);
-    })
-  );
+  it.effect("logs the failure and lets production render on", () => {
+    const messages = MutableList.make<unknown>();
+    return Effect.gen(function* () {
+      yield* reportMessage(false, missing).pipe(
+        Effect.provide(
+          Logger.layer([
+            Logger.make(({ message }) => {
+              MutableList.append(messages, message);
+            }),
+          ])
+        )
+      );
+
+      expect(MutableList.toArray(messages)).toStrictEqual([
+        [expect.objectContaining({ code: IntlErrorCode.MISSING_MESSAGE })],
+      ]);
+    });
+  });
 });
