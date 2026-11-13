@@ -53,6 +53,8 @@ for (const viewport of [desktopViewport, touchViewport]) {
               await expectRevision(page, 4);
               await page.getByRole("button", { name: en.Island.book }).click();
               const book = page.getByRole("dialog", { name: en.Island.book });
+              // The book opens on its ready-made items; the blocks are a shelf of their own.
+              await book.getByRole("tab", { name: en.Island.blocks }).click();
               await expect(
                 book.getByRole("button", { name: en.Island["block-flowers"] })
               ).toBeEnabled();
@@ -75,6 +77,7 @@ for (const viewport of [desktopViewport, touchViewport]) {
               ).toHaveAttribute("aria-pressed", "true");
               // A ready-made tree goes in whole with one press, and a cottage stays locked until level 3.
               await page.getByRole("button", { name: en.Island.book }).click();
+              await book.getByRole("tab", { name: en.Island.items }).click();
               await expect(
                 book.getByRole("button", { name: "Opens at level 3" }).first()
               ).toBeDisabled();
