@@ -399,6 +399,7 @@
     "student-score": "{points} of {total} points",
     "student-results-footer": "Your teacher releases the results after the sitting closes.",
     "student-answer": "Your answer: <typed>{answer}</typed>",
+    "student-answer-label": "Your answer:",
     "student-answers": "Your answers",
     "student-results-released": "Your teacher released these results.",
     "schedule": "Schedule",
@@ -3175,6 +3176,9 @@
     },
     "memory-too-long": {
       "title": "That text is too long for a memory."
+    },
+    "essay-too-long": {
+      "title": "That text is too long for an answer."
     },
     "interpretation-error": {
       "title": "Could not load this interpretation.",
