@@ -70,8 +70,8 @@ jobs:
       SPECS: ${{ inputs.specs }}
       GATE: ${{ inputs.gate }}
       PROOF: ${{ inputs.proof }}
-      # A single head typechecks and tests the workspaces it changes against main
-      # and their dependents; a train batch and main run every workspace.
+      # A head or a train batch typechecks and tests the workspaces it changes
+      # against main and their dependents; `full` runs every workspace.
       AFFECTED: ${{ !inputs.full && '--affected' || '' }}
       TURBO_SCM_BASE: origin/main
       URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}

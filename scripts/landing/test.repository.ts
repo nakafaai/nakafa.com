@@ -57,7 +57,13 @@ export const origins = Effect.fn("RepositoryTest.origins")(function* () {
         "origin",
         `${sha}:refs/pull/${number}/head`
       );
-      return { number, sha, title: `Change ${number}`, specs: [] };
+      return {
+        number,
+        stack: number,
+        sha,
+        title: `Change ${number}`,
+        specs: [],
+      };
     })
   );
   return { origin, work, main, heads };
@@ -105,6 +111,7 @@ export const statusOf = (path: string) => {
 
 export const CANDIDATE: Candidate = {
   number: 42,
+  stack: 42,
   sha: "e".repeat(40),
   title: "Land me",
   specs: [],
