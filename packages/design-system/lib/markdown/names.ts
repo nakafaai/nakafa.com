@@ -142,7 +142,7 @@ export const physicsComponentNames = {
   bicycleWheelSpeedLab: "BicycleWheelSpeedLab",
   brakeHeatLab: "BrakeHeatLab",
   brakingSurfaceLab: "BrakingSurfaceLab",
-  carTripAverageVelocityLab: "CarTripAverageVelocityLab",
+  carTripSecantSlopeLab: "CarTripSecantSlopeLab",
   cityWalkDisplacementLab: "CityWalkDisplacementLab",
   dimensionLab: "DimensionLab",
   displacementDistanceLab: "DisplacementDistanceLab",

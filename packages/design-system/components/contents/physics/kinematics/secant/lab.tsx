@@ -24,12 +24,14 @@ import {
   roadX,
 } from "@repo/design-system/components/contents/physics/canvas/scene";
 import {
-  averageOver,
+  changeOver,
   type Trip,
+  type TripGraph,
   tripDuration,
   tripIntervals,
   tripReach,
   tripState,
+  tripValue,
 } from "@repo/design-system/components/contents/physics/kinematics/secant/trip";
 import { useQuantity } from "@repo/design-system/components/contents/simulation/quantity";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
@@ -62,14 +64,17 @@ const HOLD_SECONDS = 1.5;
 
 /** What the sketch reads on every frame: the trip and the chosen interval. */
 interface SecantFrame {
+  readonly graph: TripGraph;
   readonly interval: readonly [number, number];
   readonly trip: Trip;
 }
 
 /** The road band above and the graph below, for one canvas size. */
-function layout(sketch: p5, trip: Trip) {
+function layout(sketch: p5, trip: Trip, plotted: TripGraph) {
   const { height, width } = sketch;
   const reach = tripReach(trip);
+  const values = tripReach(trip, plotted);
+  const valueSpan = Math.max(values.highest - values.lowest, 1);
   const span = Math.max(reach.highest - reach.lowest, 1);
   const margin = width * 0.08;
   const road: Road = {
@@ -79,7 +84,7 @@ function layout(sketch: p5, trip: Trip) {
     surface: height * 0.36,
     top: 0,
   };
-  const pad = span * 0.08;
+  const pad = valueSpan * 0.08;
   const graph: Graph = {
     box: {
       height: height * 0.46,
@@ -88,9 +93,9 @@ function layout(sketch: p5, trip: Trip) {
       y: height * 0.48,
     },
     time: [0, tripDuration(trip)],
-    value: [reach.lowest - pad, reach.highest + pad],
+    value: [values.lowest - pad, values.highest + pad],
   };
-  return { graph, road, span };
+  return { graph, road, span, valueSpan };
 }
 
 /** The spacing of the distance posts for a road of `span` metres, so about ten stand along it. */
@@ -137,7 +142,7 @@ function secantProgram(sketch: p5, read: () => SecantFrame) {
     sketch.createCanvas(1, 1);
   };
   sketch.draw = () => {
-    const { interval, trip } = read();
+    const { graph: plotted, interval, trip } = read();
     const duration = tripDuration(trip);
     if (sketch.isLooping()) {
       time = advanceRun(time, sketch.deltaTime / 1000, {
@@ -149,7 +154,7 @@ function secantProgram(sketch: p5, read: () => SecantFrame) {
       time = duration;
     }
     const now = shownTime(time, duration);
-    const { graph, road, span } = layout(sketch, trip);
+    const { graph, road, span, valueSpan } = layout(sketch, trip, plotted);
     sketch.background(getColor("ZINC", 950));
     paintLandscape(sketch, road);
     const step = postStep(span);
@@ -171,33 +176,38 @@ function secantProgram(sketch: p5, read: () => SecantFrame) {
       rear: roadX(road, state.position) - carLength / 2,
     });
 
-    paintGraph(sketch, graph, { time: duration > 12 ? 2 : 1, value: step });
-    const position = (moment: number) => tripState(trip, moment).position;
-    paintCurve(sketch, graph, position, {
+    paintGraph(sketch, graph, {
+      time: duration > 12 ? 2 : 1,
+      value: plotted === "position" ? step : postStep(valueSpan * 5) / 5,
+    });
+    const curve = (moment: number) => tripValue(trip, plotted, moment);
+    const first = tripValue(trip, plotted, start);
+    const last = tripValue(trip, plotted, end);
+    paintCurve(sketch, graph, curve, {
       color: fade(getColor("SLATE", 300), 0.35),
       until: duration,
       weight: 2,
     });
-    paintCurve(sketch, graph, position, {
+    paintCurve(sketch, graph, curve, {
       color: PLOT_COLORS.orange,
       until: now,
       weight: 3,
     });
-    const { velocity } = averageOver(trip, interval);
-    paintSlopeLine(sketch, graph, { time: start, value: from }, velocity, {
+    const { rate } = changeOver(trip, plotted, interval);
+    paintSlopeLine(sketch, graph, { time: start, value: first }, rate, {
       color: fade(PLOT_COLORS.amber, 0.6),
       weight: 1.5,
     });
     dashed(
       sketch,
-      { x: graphX(graph, start), y: graphY(graph, from) },
-      { x: graphX(graph, end), y: graphY(graph, from) },
+      { x: graphX(graph, start), y: graphY(graph, first) },
+      { x: graphX(graph, end), y: graphY(graph, first) },
       { color: PLOT_COLORS.teal, dash: 4, weight: 2 }
     );
     dashed(
       sketch,
-      { x: graphX(graph, end), y: graphY(graph, from) },
-      { x: graphX(graph, end), y: graphY(graph, to) },
+      { x: graphX(graph, end), y: graphY(graph, first) },
+      { x: graphX(graph, end), y: graphY(graph, last) },
       { color: PLOT_COLORS.violet, dash: 4, weight: 2 }
     );
     sketch.push();
@@ -205,35 +215,44 @@ function secantProgram(sketch: p5, read: () => SecantFrame) {
     sketch.strokeWeight(3);
     sketch.line(
       graphX(graph, start),
-      graphY(graph, from),
+      graphY(graph, first),
       graphX(graph, end),
-      graphY(graph, to)
+      graphY(graph, last)
     );
     sketch.pop();
     paintGraphDot(
       sketch,
       graph,
-      { time: start, value: from },
+      { time: start, value: first },
       PLOT_COLORS.teal
     );
-    paintGraphDot(sketch, graph, { time: end, value: to }, PLOT_COLORS.violet);
     paintGraphDot(
       sketch,
       graph,
-      { time: now, value: state.position },
+      { time: end, value: last },
+      PLOT_COLORS.violet
+    );
+    paintGraphDot(
+      sketch,
+      graph,
+      { time: now, value: curve(now) },
       PLOT_COLORS.orange
     );
     vignette(sketch, 0.3);
   };
 }
 
-interface CarTripAverageVelocityLabProps {
+interface CarTripSecantSlopeLabProps {
   description: ReactNode;
+  /** The graph drawn under the road: position, whose secant slope is the average velocity, or velocity, whose secant slope is the average acceleration. */
+  graph?: TripGraph;
   labels: {
-    averageVelocity: ReactNode;
+    /** The change over the interval: displacement on a position graph, change of velocity on a velocity graph. */
+    change: ReactNode;
     chooseInterval: string;
-    displacement: ReactNode;
     elapsed: ReactNode;
+    /** The secant slope: average velocity, or average acceleration. */
+    rate: ReactNode;
     viewLabel: string;
   };
   title: ReactNode;
@@ -242,22 +261,38 @@ interface CarTripAverageVelocityLabProps {
 }
 
 /**
- * A car drives a trip along a straight road while its position-time graph
- * draws below. The learner picks a time interval: flags mark where the car
- * was at its two ends, and the secant between those two points on the graph
- * has the average velocity as its slope.
+ * A car drives a trip along a straight road while its position-time or
+ * velocity-time graph draws below. The learner picks a time interval: flags
+ * mark where the car was at its two ends, and the secant between those two
+ * points on the graph has the average velocity, or on a velocity graph the
+ * average acceleration, as its slope.
  */
-export function CarTripAverageVelocityLab({
+export function CarTripSecantSlopeLab({
   description,
+  graph = "position",
   labels,
   title,
   trip = "commute",
-}: CarTripAverageVelocityLabProps) {
+}: CarTripSecantSlopeLabProps) {
   const intervals = tripIntervals(trip);
   const [chosen, setChosen] = useState(intervals.length - 1);
   const interval = intervals[chosen] ?? intervals[0];
   const measure = useQuantity();
-  const average = averageOver(trip, interval);
+  const average = changeOver(trip, graph, interval);
+  const symbols =
+    graph === "position"
+      ? {
+          change: "\\Delta x",
+          changeUnit: "\\text{ m}",
+          rate: "\\bar{v}",
+          rateUnit: "\\text{ m/s}",
+        }
+      : {
+          change: "\\Delta v",
+          changeUnit: "\\text{ m/s}",
+          rate: "\\bar{a}",
+          rateUnit: "\\text{ m/s}^2",
+        };
 
   return (
     <VisualCard>
@@ -287,17 +322,17 @@ export function CarTripAverageVelocityLab({
         <P5Sketch
           label={labels.viewLabel}
           program={secantProgram}
-          state={{ interval, trip }}
+          state={{ graph, interval, trip }}
         />
       </VisualCardBody>
       <VisualCardSceneActions />
       <VisualCardFooter>
         <VisualCardFacts>
           <VisualFactTabular
-            label={labels.displacement}
+            label={labels.change}
             value={
               <InlineMath
-                math={`\\Delta x=${measure(average.displacement, "\\text{ m}", 1)}`}
+                math={`${symbols.change}=${measure(average.change, symbols.changeUnit, 1)}`}
               />
             }
           />
@@ -310,10 +345,10 @@ export function CarTripAverageVelocityLab({
             }
           />
           <VisualFactTabular
-            label={labels.averageVelocity}
+            label={labels.rate}
             value={
               <InlineMath
-                math={`\\bar{v}=${measure(average.velocity, "\\text{ m/s}", 2)}`}
+                math={`${symbols.rate}=${measure(average.rate, symbols.rateUnit, 2)}`}
               />
             }
           />

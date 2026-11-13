@@ -3,10 +3,10 @@
 import { lazy } from "@repo/design-system/lib/lazy";
 import { withHydrationBoundary } from "@/lib/content/renderer/client/boundary";
 
-export const CarTripAverageVelocityLab = withHydrationBoundary(
+export const CarTripSecantSlopeLab = withHydrationBoundary(
   lazy(() =>
     import(
       "@repo/design-system/components/contents/physics/kinematics/secant/lab"
-    ).then((module) => ({ default: module.CarTripAverageVelocityLab }))
+    ).then((module) => ({ default: module.CarTripSecantSlopeLab }))
   )
 );

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "@effect/vitest";
 import {
   averageOver,
+  changeOver,
   tripDuration,
   tripIntervals,
   tripReach,
@@ -58,5 +59,26 @@ describe("tripDuration and tripReach", () => {
     expect(tripDuration("commute")).toBe(20);
     expect(tripReach("commute")).toEqual({ highest: 110, lowest: 0 });
     expect(tripReach("return").highest).toBeCloseTo(15);
+  });
+});
+
+describe("changeOver", () => {
+  it("reads average acceleration as the secant slope of the velocity graph", () => {
+    expect(changeOver("commute", "velocity", [0, 4])).toEqual({
+      change: 10,
+      elapsed: 4,
+      rate: 2.5,
+    });
+    expect(changeOver("commute", "velocity", [10, 16]).rate).toBeCloseTo(
+      -10 / 6
+    );
+    expect(changeOver("commute", "position", [0, 20]).rate).toBe(5.5);
+  });
+
+  it("ranges the velocity graph from rest to cruising speed", () => {
+    expect(tripReach("commute", "velocity")).toEqual({
+      highest: 10,
+      lowest: 0,
+    });
   });
 });

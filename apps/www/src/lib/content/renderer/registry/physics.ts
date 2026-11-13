@@ -41,7 +41,7 @@ import { StrobePhotoMotionLab } from "@/lib/content/renderer/client/physics/stro
 import { TickerTapeMotionLab } from "@/lib/content/renderer/client/physics/ticker";
 import { RunningTrackDisplacementLab } from "@/lib/content/renderer/client/physics/track";
 import { SpeedTrapInstantSpeedLab } from "@/lib/content/renderer/client/physics/trap";
-import { CarTripAverageVelocityLab } from "@/lib/content/renderer/client/physics/trip";
+import { CarTripSecantSlopeLab } from "@/lib/content/renderer/client/physics/trip";
 import { VectorConceptLab } from "@/lib/content/renderer/client/physics/vector";
 import {
   AverageVelocitySpeedLab,
@@ -151,8 +151,8 @@ export const physicsRenderers = [
     component: WindEnergyConversionLab,
   },
   {
-    name: physicsComponentNames.carTripAverageVelocityLab,
-    component: CarTripAverageVelocityLab,
+    name: physicsComponentNames.carTripSecantSlopeLab,
+    component: CarTripSecantSlopeLab,
   },
   {
     name: physicsComponentNames.speedTrapInstantSpeedLab,

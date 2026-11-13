@@ -107,11 +107,35 @@ export function averageOver(
   return { displacement, elapsed, velocity: displacement / elapsed };
 }
 
-/** The lowest and highest positions a trip reaches, for the graph's range. */
-export function tripReach(trip: Trip) {
-  const samples = Arr.makeBy(
-    201,
-    (index) => tripState(trip, (tripDuration(trip) * index) / 200).position
+/** The graphs a trip can draw: position against time, or velocity against time. */
+export const TripGraphSchema = Schema.Literals(["position", "velocity"]);
+export type TripGraph = typeof TripGraphSchema.Type;
+
+/** The quantity a graph plots at `time`. */
+export function tripValue(trip: Trip, graph: TripGraph, time: number) {
+  const state = tripState(trip, time);
+  return graph === "position" ? state.position : state.velocity;
+}
+
+/**
+ * The change of the plotted quantity over one interval and its rate: the
+ * displacement and average velocity on a position graph, the change of
+ * velocity and average acceleration on a velocity graph. Either way it is
+ * the slope of the secant between the interval's two points.
+ */
+export function changeOver(
+  trip: Trip,
+  graph: TripGraph,
+  [start, end]: readonly [number, number]
+) {
+  const change = tripValue(trip, graph, end) - tripValue(trip, graph, start);
+  return { change, elapsed: end - start, rate: change / (end - start) };
+}
+
+/** The lowest and highest values a graph of the trip reaches, for its range. */
+export function tripReach(trip: Trip, graph: TripGraph = "position") {
+  const samples = Arr.makeBy(201, (index) =>
+    tripValue(trip, graph, (tripDuration(trip) * index) / 200)
   );
   return { highest: Math.max(...samples), lowest: Math.min(...samples) };
 }
