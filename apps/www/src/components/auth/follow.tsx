@@ -6,32 +6,33 @@ import {
   useSignedInHint,
 } from "@/components/auth/session";
 import { clientEnv } from "@/env.public";
-import { readAuthClient } from "@/lib/auth/client";
-import { followAuthSession, readAuthSession } from "@/lib/auth/session";
+import { followClientSession } from "@/lib/auth/client";
+import { followAuthSession, previewAuthSession } from "@/lib/auth/session";
+import { readConvexClient } from "@/lib/convex/client";
 
 /**
- * Follows Better Auth's session atom in a store created once per provider.
+ * Follows Convex Auth's session in a store created once per provider.
  *
  * The session resolves after hydration, and React client-renders a streamed
  * Suspense boundary that is still pending when an ancestor context changes,
  * discarding the HTML the server sent. The context therefore carries only the
  * store; readers subscribe with `useStore`, whose server snapshot is the
- * pending session the server rendered. A settled session stays settled while
- * Better Auth refetches it.
+ * pending session the server rendered.
  * https://react.dev/reference/react/useSyncExternalStore#adding-support-for-server-rendering
  */
-function BetterAuthSessionProvider({ children }: { children: ReactNode }) {
-  const session = readAuthClient().$store.atoms.session;
+function ClientSessionProvider({ children }: { children: ReactNode }) {
   const [store] = useState(() =>
-    createStore(() => readAuthSession(session.value))
+    createStore(() => ({ ...previewAuthSession, isPending: true }))
   );
 
   useEffect(
     () =>
-      session.subscribe((value) => {
+      followClientSession(
+        readConvexClient(clientEnv.VITE_CONVEX_URL)
+      ).subscribe((value) => {
         store.setState((previous) => followAuthSession(previous, value), true);
       }),
-    [session, store]
+    [store]
   );
   useSignedInHint(store);
 
@@ -43,5 +44,5 @@ export function AuthSessionProvider({ children }: { children: ReactNode }) {
   if (clientEnv.VITE_AKSARA_PREVIEW_CHILD === "true") {
     return <SignedOutSessionProvider>{children}</SignedOutSessionProvider>;
   }
-  return <BetterAuthSessionProvider>{children}</BetterAuthSessionProvider>;
+  return <ClientSessionProvider>{children}</ClientSessionProvider>;
 }

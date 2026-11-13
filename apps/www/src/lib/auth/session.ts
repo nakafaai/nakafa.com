@@ -1,20 +1,10 @@
-import { Effect, MutableRef, Option, Predicate, Schema } from "effect";
-
-/** The Better Auth route that reports the session of the cookie a request sends. */
-export const SESSION_PATH = "/api/auth/get-session";
+import { Effect, MutableRef, Option, Schema } from "effect";
+import { readTokenClaims } from "@/lib/auth/claims";
 
 /**
- * The Better Auth route that issues the Convex token of the session a request's
- * cookie names, at the helper's default base path.
- */
-export const TOKEN_PATH = "/api/auth/convex/token";
-
-/**
- * The Better Auth session as Nakafa reads it.
- *
- * `hasError` marks a session request Better Auth could not complete; it keeps
- * the last known session ids, as Better Auth does for a failed refresh. A failed
- * request that knew no session stays pending (`readAuthSession`).
+ * The page's session as Nakafa reads it: whether Convex Auth's client is still
+ * loading it, and the session and the account it names. `hasError` marks a
+ * session read that could not complete.
  */
 export const AuthSession = Schema.Struct({
   hasError: Schema.Boolean,
@@ -25,23 +15,6 @@ export const AuthSession = Schema.Struct({
 
 export type AuthSession = typeof AuthSession.Type;
 
-/**
- * The value of Better Auth's session atom, which `authClient.useSession()`
- * returns. Only the fields Nakafa reads are decoded.
- */
-const BetterAuthSession = Schema.Struct({
-  data: Schema.NullOr(
-    Schema.Struct({
-      session: Schema.Struct({ id: Schema.String }),
-      user: Schema.Struct({ id: Schema.String }),
-    })
-  ),
-  error: Schema.Unknown,
-  isPending: Schema.Boolean,
-});
-
-const decodeBetterAuthSession = Schema.decodeUnknownOption(BetterAuthSession);
-
 /** A signed-out session that never asks the backend, for authoring previews. */
 export const previewAuthSession = AuthSession.make({
   hasError: false,
@@ -50,52 +23,33 @@ export const previewAuthSession = AuthSession.make({
   userId: null,
 });
 
-/** Better Auth's answer that the cookie holds no session, the one failure it settles as signed out. */
-const UnauthorizedAnswer = Schema.Struct({ status: Schema.Literal(401) });
-
-const isUnauthorizedAnswer = Schema.is(UnauthorizedAnswer);
-
 /**
- * Reads one value of Better Auth's session atom.
- *
- * A failed request that knew no session, a network failure or a 5xx on a page's
- * first read, said nothing about the session, so it stays pending: Better Auth
- * itself keeps its last session for every failure but a 401, and a reader that
- * took it as signed out would read the school or the account without a token and
- * flash an error until the next answer. A 401 is signed out.
- *
- * A value outside Better Auth's session contract reads as a failed session
- * request, so readers treat it like any other unavailable session.
+ * Reads the state of Convex Auth's client (`AuthClient`) as the page's session.
+ * The access token names the session; the account comes from the latest answer
+ * of a sign-in or a refresh (`sessionUser`).
  */
-export function readAuthSession(value: unknown) {
-  return decodeBetterAuthSession(value).pipe(
-    Option.match({
-      onNone: () =>
-        AuthSession.make({
-          hasError: true,
-          isPending: false,
-          sessionId: null,
-          userId: null,
-        }),
-      onSome: ({ data, error, isPending }) =>
-        AuthSession.make({
-          hasError: Predicate.isNotNullish(error),
-          isPending:
-            isPending ||
-            (data === null &&
-              Predicate.isNotNullish(error) &&
-              !isUnauthorizedAnswer(error)),
-          sessionId: data?.session.id ?? null,
-          userId: data?.user.id ?? null,
-        }),
-    })
+export function readClientSession(
+  state: { readonly isLoading: boolean; readonly token: string | null },
+  userId: string | null
+) {
+  const sessionId = Option.getOrNull(
+    Option.map(
+      Option.flatMap(Option.fromNullOr(state.token), readTokenClaims),
+      ({ sub }) => sub
+    )
   );
+  return AuthSession.make({
+    hasError: false,
+    isPending: state.isLoading,
+    sessionId,
+    userId: sessionId === null ? null : userId,
+  });
 }
 
 /**
  * Whether the page signs its account out. A page that signs out leaves by
  * loading another document, so its readers keep the session they saw until it
- * goes: following Better Auth to signed out first would read every surface as a
+ * goes: following the client to signed out first would read every surface as a
  * visitor's for that moment, with a sign-in card where the learner's chat was.
  * Convex keeps answering the page's queries until then, because a query trusts
  * the token it holds.
@@ -107,7 +61,7 @@ export const holdSession = Effect.fn("www.auth.holdSession")(function* () {
   yield* Effect.sync(() => MutableRef.set(signingOut, true));
 });
 
-/** Follows Better Auth again, because the sign-out did not happen. */
+/** Follows the client again, because the sign-out did not happen. */
 export const releaseSession = Effect.fn("www.auth.releaseSession")(
   function* () {
     yield* Effect.sync(() => MutableRef.set(signingOut, false));
@@ -115,21 +69,10 @@ export const releaseSession = Effect.fn("www.auth.releaseSession")(
 );
 
 /**
- * Follows Better Auth's session atom from the session readers already see.
- *
- * Once the session has settled, a value that says nothing about it keeps that
- * session, so readers never fall back to loading: Better Auth marks a session it
- * holds no data for pending again while it refetches it, on every return to the
- * tab, and a refetch that fails without an answer reads as pending too. While
- * the page signs its account out, readers keep the session they see
+ * Follows the client's session from the session readers already see. While the
+ * page signs its account out, readers keep the session they see
  * (`holdSession`).
  */
-export function followAuthSession(previous: AuthSession, value: unknown) {
-  if (MutableRef.get(signingOut)) {
-    return previous;
-  }
-  const next = readAuthSession(value);
-  return !previous.isPending && next.isPending && next.sessionId === null
-    ? previous
-    : next;
+export function followAuthSession(previous: AuthSession, next: AuthSession) {
+  return MutableRef.get(signingOut) ? previous : next;
 }

@@ -13,6 +13,7 @@ import {
   outboundSetCookie,
   siteAuthCookies,
 } from "@/lib/auth/cookies";
+import { withSessionHint } from "@/lib/auth/hint.server";
 import { CONVEX_URL } from "@/lib/server/runtime";
 
 /** Convex Auth's session functions, which the refresh and sign-out routes call. */
@@ -58,12 +59,14 @@ const withPrefix =
  * Convex Auth's sign-in, refresh and sign-out routes of this site, which keep
  * the refresh token in an httpOnly cookie and hand the browser only the access
  * token. The cookies cover the whole production domain, so every school host
- * shares the session (ADR 0026).
+ * shares the session (ADR 0026), and each answer that starts or ends a session
+ * sets the signed-in hint to match.
  * https://docs.convex.dev/auth/convex-auth/ssr-nextjs/setup
  */
 export const readAuthRoutes = Effect.fn("www.auth.routes")(function* () {
   const convexUrl = yield* CONVEX_URL;
-  const { options, prefix } = siteAuthCookies(new URL(siteUrlKeys().SITE_URL));
+  const site = new URL(siteUrlKeys().SITE_URL);
+  const { options, prefix } = siteAuthCookies(site);
   const routes = setupConvexAuthServer({
     convexUrl,
     cookieOptions: options,
@@ -71,12 +74,17 @@ export const readAuthRoutes = Effect.fn("www.auth.routes")(function* () {
     signIn: signIns,
     signOut,
   });
-  if (prefix === "") {
-    return routes;
-  }
+  const serve =
+    (handler: RequestHandler): RequestHandler =>
+    async (request) =>
+      withSessionHint(
+        await (prefix === "" ? handler : withPrefix(prefix, handler))(request),
+        site,
+        prefix
+      );
   return {
-    convexProxyHandler: withPrefix(prefix, routes.convexProxyHandler),
-    refreshHandler: withPrefix(prefix, routes.refreshHandler),
-    signOutHandler: withPrefix(prefix, routes.signOutHandler),
+    convexProxyHandler: serve(routes.convexProxyHandler),
+    refreshHandler: serve(routes.refreshHandler),
+    signOutHandler: serve(routes.signOutHandler),
   };
 });

@@ -12,13 +12,16 @@ import { FetchClient } from "@repo/utilities/http/client";
 import { ConvexHttpClient } from "convex/browser";
 import type { ConvexReactClient } from "convex/react";
 import { makeFunctionReference } from "convex/server";
-import { Effect, Predicate, Schema } from "effect";
+import { Effect, Option, Predicate, Schema } from "effect";
 import {
   HttpClient,
   HttpClientRequest,
   HttpClientResponse,
 } from "effect/http";
 import { createStore } from "zustand/vanilla";
+import { readTokenClaims } from "@/lib/auth/claims";
+import { SESSION_USER_KEY } from "@/lib/auth/keys";
+import { type AuthSession, readClientSession } from "@/lib/auth/session";
 
 /** The web app's Convex Auth routes (`routes/api/auth`), which keep the refresh token in a cookie. */
 const SIGN_IN_ROUTE = "/api/auth/signin";
@@ -35,17 +38,59 @@ const SessionAnswer = Schema.Struct({
 /** A sign-in's answer that made a session, whose user the session store keeps. */
 const SignedIn = Schema.Struct({
   status: Schema.Literal("complete"),
-  tokens: Schema.Struct({ userId: Schema.String }),
+  tokens: Schema.Struct({ accessToken: Schema.String, userId: Schema.String }),
 });
 
+/** The account of one session, as a sign-in's or a refresh's answer names it. */
+const SessionUser = Schema.Struct({
+  sessionId: Schema.String,
+  userId: Schema.String,
+});
+
+/** The account the browser stored for its last session, or none when storage holds none or refuses. */
+const loadSessionUser = () =>
+  Effect.runSync(
+    Effect.try(() => window.localStorage.getItem(SESSION_USER_KEY)).pipe(
+      Effect.map((text) =>
+        Option.getOrNull(
+          Option.flatMap(
+            Option.fromNullOr(text),
+            Schema.decodeOption(Schema.fromJsonString(SessionUser))
+          )
+        )
+      ),
+      Effect.orElseSucceed(() => null)
+    )
+  );
+
 /**
- * The account of the page's session, as the latest sign-in or refresh named
- * it: Convex Auth's access token names only the session, and its answers name
- * the user. One store for the page, created on first use.
+ * The account of the page's session: Convex Auth's access token names only the
+ * session, and the answers of a sign-in or a refresh name the account. One store
+ * for the page, which starts from the account the browser stored.
  */
-export const sessionUser = createStore<{ readonly userId: string | null }>(
-  () => ({ userId: null })
-);
+export const sessionUser = createStore<{
+  readonly user: typeof SessionUser.Type | null;
+}>(() => ({ user: typeof window === "undefined" ? null : loadSessionUser() }));
+
+/** Keeps the account an answer named, for this page and the next one. */
+function rememberSessionUser(accessToken: string, userId: string) {
+  const sessionId = Option.getOrNull(
+    Option.map(readTokenClaims(accessToken), ({ sub }) => sub)
+  );
+  if (sessionId === null) {
+    return;
+  }
+  const user = SessionUser.make({ sessionId, userId });
+  sessionUser.setState({ user });
+  Effect.runSync(
+    Effect.try(() =>
+      window.localStorage.setItem(
+        SESSION_USER_KEY,
+        Schema.encodeSync(Schema.fromJsonString(SessionUser))(user)
+      )
+    ).pipe(Effect.ignore)
+  );
+}
 
 /**
  * Posts to one of the auth routes and reads its answer. An answer that cannot
@@ -65,7 +110,9 @@ const postAuth = Effect.fn("www.auth.post")(
         Effect.map(({ tokens }) => tokens),
         Effect.orElseSucceed(() => null)
       );
-    sessionUser.setState({ userId: answer?.userId ?? null });
+    if (answer !== null) {
+      rememberSessionUser(answer.accessToken, answer.userId);
+    }
     const response: AuthSessionResponse = { tokens: answer };
     return response;
   },
@@ -108,8 +155,11 @@ function createAuthClient(convex: ConvexReactClient) {
             .mutation(fn, args)
             .then((answer) => {
               const signedIn = Schema.decodeUnknownOption(SignedIn)(answer);
-              if (signedIn._tag === "Some") {
-                sessionUser.setState({ userId: signedIn.value.tokens.userId });
+              if (Option.isSome(signedIn)) {
+                rememberSessionUser(
+                  signedIn.value.tokens.accessToken,
+                  signedIn.value.tokens.userId
+                );
               }
               return answer;
             }),
@@ -226,7 +276,7 @@ export const signInSchoolLogin = Effect.fn("www.auth.school")(function* (
   if (answer.status !== "complete") {
     return false;
   }
-  sessionUser.setState({ userId: answer.tokens.userId });
+  rememberSessionUser(answer.tokens.accessToken, answer.tokens.userId);
   yield* Effect.promise(() => client.setSession(answer.tokens));
   return true;
 });
@@ -238,3 +288,70 @@ export const signOutSession = Effect.fn("www.auth.signOut")(function* (
   const client = yield* readAuthClient(convex);
   yield* Effect.promise(() => client.signOut());
 });
+
+/** A session the page's readers follow: it reports each change to a listener until the listener is unsubscribed. */
+export interface SessionFeed {
+  readonly subscribe: (listener: (session: AuthSession) => void) => () => void;
+}
+
+/**
+ * The page's session as Convex Auth's client settles it, for the session
+ * stores to follow. A page whose browser holds no access token asks the
+ * refresh route once, which answers from the refresh cookie, and reads as
+ * pending until it answers, so a signed-in page never flashes signed out.
+ */
+export function followClientSession(convex: ConvexReactClient): SessionFeed {
+  return {
+    subscribe: (listener) => {
+      let closed = false;
+      let release = () => undefined;
+      Effect.runFork(
+        readAuthClient(convex).pipe(
+          Effect.tap((client) =>
+            Effect.sync(() => {
+              if (closed) {
+                return;
+              }
+              let primed = client.getAccessToken() !== null;
+              const emit = () => {
+                const snapshot = client.getSnapshot();
+                const user = sessionUser.getState().user;
+                const session = readClientSession(
+                  {
+                    isLoading: snapshot.isLoading || !primed,
+                    token: snapshot.token,
+                  },
+                  null
+                );
+                listener(
+                  user !== null && user.sessionId === session.sessionId
+                    ? { ...session, userId: user.userId }
+                    : session
+                );
+              };
+              const offClient = client.subscribe(emit);
+              const offUser = sessionUser.subscribe(emit);
+              release = () => {
+                offClient();
+                offUser();
+              };
+              emit();
+              if (!primed) {
+                client
+                  .fetchAccessToken({ forceRefreshToken: true })
+                  .finally(() => {
+                    primed = true;
+                    emit();
+                  });
+              }
+            })
+          )
+        )
+      );
+      return () => {
+        closed = true;
+        release();
+      };
+    },
+  };
+}
