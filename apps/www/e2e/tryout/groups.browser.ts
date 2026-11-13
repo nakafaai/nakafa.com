@@ -16,6 +16,14 @@ const EXAM_CARD = /^View options /u;
 const SUBJECT_CARD = /^View sets /u;
 /** The country's design, which only its own page's metadata names. */
 const GERMANY_DESIGN = /\/open-graph\/tryout\/germany\/en-index\.png$/u;
+/** TU Darmstadt's Studienkolleg's mark, the Aufnahmeprüfung card's image, as a card draws it. */
+const DARMSTADT_MARK =
+  "/open-graph/tryout/germany/en-entrance-examination.webp";
+/** The Darmstadt Mathematics test's own design, which its page shares. */
+const DARMSTADT_MATHEMATICS =
+  /\/open-graph\/tryout\/germany\/entrance-examination\/en-tu-darmstadt-mathematics\.png$/u;
+/** A size an image declares, in whole pixels. */
+const PIXELS = /^\d+$/u;
 /** The class of a filled control, which no header control wears. */
 const FILLED = /bg-primary/u;
 /** The phone widths at which a set's name, status and menu read whole. */
@@ -107,26 +115,31 @@ test("reaches every exam's set table in at most two clicks from its country", as
 
 /**
  * A card wears only its own entity's design: SNBT and TKA their exam art, and
- * the Aufnahmeprüfung, which has none yet, the tile of its own icon, a
- * background and an icon with no text, since the card's title names it. A
- * country's design stands in its page's metadata alone.
+ * the Aufnahmeprüfung TU Darmstadt's Studienkolleg's mark, each a self-hosted
+ * image with its size set and no text over it. A country's design stands in its
+ * page's metadata alone, and the Darmstadt Mathematics test shares its own.
  */
-test("draws each exam card with its own design or the tile of its icon", async ({
-  page,
-}) => {
+test("draws each exam card with its own design", async ({ page }) => {
   await visit(page, INDONESIA);
   await expect(page.locator("main img")).toHaveCount(2);
   await expect(page.locator('main [data-slot="tile"]')).toHaveCount(0);
 
   await visit(page, GERMANY);
-  const tile = page.locator('main [data-slot="tile"]');
-  await expect(page.locator("main img")).toHaveCount(0);
-  await expect(tile).toHaveCount(1);
-  await expect(tile.locator('[data-slot="tile-icon"]')).toBeVisible();
-  await expect(tile).toHaveText("");
+  const mark = page.locator("main img");
+  await expect(mark).toHaveCount(1);
+  await expect(mark).toHaveAttribute("src", DARMSTADT_MARK);
+  await expect(mark).toHaveAttribute("width", PIXELS);
+  await expect(mark).toHaveAttribute("height", PIXELS);
+  await expect(page.locator('main [data-slot="tile"]')).toHaveCount(0);
   await expect(page.locator('meta[property="og:image"]')).toHaveAttribute(
     "content",
     GERMANY_DESIGN
+  );
+
+  await visit(page, DARMSTADT);
+  await expect(page.locator('meta[property="og:image"]')).toHaveAttribute(
+    "content",
+    DARMSTADT_MATHEMATICS
   );
 });
 
