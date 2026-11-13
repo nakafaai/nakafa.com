@@ -13,6 +13,7 @@
     "doctor": "bunx react-doctor@0.9.18",
     "google-index": "bun scripts/google.ts",
     "index-now": "bun scripts/indexnow.ts",
+    "quran:faces": "bun scripts/quran.ts",
     "renderer:manifest": "bun --conditions=import --conditions=react-server scripts/content/renderer.ts",
     "start": "portless run --name nakafa vite preview",
     "test": "vitest run",

@@ -18,10 +18,26 @@ import { Data, MutableHashMap, MutableHashSet, Option, Schema } from "effect";
 import type { DemoBackend } from "@/components/marketing/school/editor/backend";
 
 /**
- * The address the demo client names. Its connection is never opened: every read and change the editor makes is
- * answered here, so the address only satisfies the client's constructor.
+ * The address the demo client names. Its connection is never opened: every read and change the editor makes, and
+ * every read of the connection, is answered here, so the address only satisfies the client's constructor.
  */
 const DEMO_ADDRESS = "https://demo.nakafa.invalid";
+
+/**
+ * The demo's connection, as the School's screens read it: open, with nothing in flight, since the demo's server
+ * answers every call in the page. The client answers it from memory, because reading the base client's connection
+ * opens its socket.
+ */
+const DEMO_CONNECTION: ReturnType<ConvexReactClient["connectionState"]> = {
+  connectionCount: 1,
+  connectionRetries: 0,
+  hasEverConnected: true,
+  hasInflightRequests: false,
+  inflightActions: 0,
+  inflightMutations: 0,
+  isWebSocketConnected: true,
+  timeOfOldestInflightRequest: null,
+};
 
 /** A read's key: its function's name and its arguments as JSON text. */
 const ArgsText = Schema.fromJsonString(Schema.Unknown);
@@ -55,6 +71,7 @@ export class DemoConvexClient extends ConvexReactClient {
   readonly #backend: DemoBackend;
   readonly #listeners = MutableHashSet.empty<() => void>();
   readonly #answers = MutableHashMap.empty<string, Option.Option<Answer>>();
+  readonly #connection = DEMO_CONNECTION;
 
   constructor(backend: DemoBackend) {
     super(DEMO_ADDRESS, { logger: false });
@@ -187,5 +204,18 @@ export class DemoConvexClient extends ConvexReactClient {
   ): Promise<FunctionReturnType<Action>> {
     const [sent] = args;
     return this.#call(action, sent ?? {});
+  }
+
+  /** The demo's connection, open and idle, read without the socket that the base client would open for it. */
+  override connectionState() {
+    return this.#connection;
+  }
+
+  /** Tells `callback` the demo's connection once. It never changes, so there is nothing to unsubscribe from. */
+  override subscribeToConnectionState(
+    callback: (state: ReturnType<ConvexReactClient["connectionState"]>) => void
+  ) {
+    callback(this.#connection);
+    return () => undefined;
   }
 }
