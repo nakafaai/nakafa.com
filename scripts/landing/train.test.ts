@@ -67,10 +67,6 @@ const world = (options: {
       proven: (numbers) => named(options.pulls, numbers),
       ready: (numbers) =>
         named([...options.pulls, ...(options.waiting ?? [])], numbers),
-      gate: (sha) =>
-        record(`gate ${sha}`).pipe(
-          Effect.as(!(options.gateFails?.(numbersOf(sha)) ?? false))
-        ),
       main: Effect.succeed(MAIN),
       combine: (base, heads) =>
         Effect.gen(function* () {
@@ -110,20 +106,30 @@ const world = (options: {
         ),
       deploy: record("deploy"),
     });
-    const prover = Layer.succeed(Prover, {
-      prove: (sha, specs) =>
-        record(`prove ${sha} ${Arr.join(specs, " ")}`.trim()).pipe(
-          Effect.as(
-            sha === MAIN
-              ? proof(
-                  sha,
-                  Arr.filter(options.mainFails ?? [], (spec) =>
-                    Arr.contains(specs, spec)
-                  )
+    const prove = (sha: string, specs: readonly string[]) =>
+      record(`prove ${sha} ${Arr.join(specs, " ")}`.trim()).pipe(
+        Effect.as(
+          sha === MAIN
+            ? proof(
+                sha,
+                Arr.filter(options.mainFails ?? [], (spec) =>
+                  Arr.contains(specs, spec)
                 )
-              : proof(sha, options.fails(numbersOf(sha)))
-          )
-        ),
+              )
+            : proof(sha, options.fails(numbersOf(sha)))
+        )
+      );
+    const prover = Layer.succeed(Prover, {
+      prove,
+      verify: (sha, specs) =>
+        Effect.gen(function* () {
+          const result = yield* prove(sha, specs);
+          yield* record(`gate ${sha}`);
+          return {
+            result,
+            gated: !(options.gateFails?.(numbersOf(sha)) ?? false),
+          };
+        }),
     });
     return { layer: Layer.merge(repository, prover), log };
   });
@@ -247,10 +253,11 @@ describe("landing train", () => {
         const failing = Layer.merge(
           broken.layer,
           Layer.succeed(Prover, {
-            prove: (sha) =>
+            prove: (sha) => Effect.succeed(proof(sha, [])),
+            verify: (sha) =>
               Effect.succeed({
-                ...proof(sha, []),
-                passed: false,
+                result: { ...proof(sha, []), passed: false },
+                gated: true,
               }),
           })
         );
