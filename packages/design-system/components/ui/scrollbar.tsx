@@ -23,7 +23,10 @@ const ThumbDrag = Schema.Struct({
  * while the page moves, and lets the thumb drag the page and the track jump it. The page keeps its own scrolling,
  * by wheel, keys, find and anchors; only its native bar is hidden. The bar writes the DOM directly, so it renders
  * nothing: the page's and the window's heights are read only when either changes, and a scroll reads its offset
- * once in the next frame and moves the thumb. The returned function unwires it.
+ * once in the next frame and moves the thumb. A change of height is read in that frame too, never inside the
+ * resize observer's callback: there the read forces a layout, which in WebKit sizes the sections that
+ * `content-visibility` skipped, so the body changes height while its own change is being delivered and the
+ * browser reports a ResizeObserver loop. The returned function unwires it.
  */
 function wirePageScrollbar(track: HTMLDivElement) {
   const thumb = track.firstElementChild;
@@ -33,6 +36,7 @@ function wirePageScrollbar(track: HTMLDivElement) {
   const root = document.documentElement;
   let frame = 0;
   let hide = 0;
+  let stale = true;
   let drag = Option.none<typeof ThumbDrag.Type>();
   let size = { length: 0, room: 0, travel: 0 };
 
@@ -48,6 +52,10 @@ function wirePageScrollbar(track: HTMLDivElement) {
 
   const place = () => {
     frame = 0;
+    if (stale) {
+      stale = false;
+      measure();
+    }
     const offset =
       size.travel > 0 ? (root.scrollTop / size.travel) * size.room : 0;
     thumb.style.transform = `translateY(${offset}px)`;
@@ -60,8 +68,9 @@ function wirePageScrollbar(track: HTMLDivElement) {
     }
   };
 
+  /** Reads the heights again in the next frame, with the thumb's place. */
   const resized = () => {
-    measure();
+    stale = true;
     schedule();
   };
 
