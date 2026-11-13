@@ -1,6 +1,7 @@
+import { HEIGHT, SPAN } from "@repo/backend/confect/island/world";
 import { Array as Arr, Option } from "effect";
 import { KIND, LOOK } from "@/lib/island/look";
-import { blockAt, type Cells, HEIGHT, SPAN } from "@/lib/island/world";
+import { blockAt, type Cells } from "@/lib/island/world";
 
 /** A point or a direction in the world. */
 type Vector = readonly [number, number, number];

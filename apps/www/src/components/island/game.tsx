@@ -1,12 +1,19 @@
 "use client";
 
 import { BLOCK_KEYS, isOpen } from "@repo/backend/confect/island/blocks";
+import type { Edit } from "@repo/backend/confect/island/world";
 import { Array as Arr } from "effect";
 import { useState } from "react";
 import { IslandHud } from "@/components/island/hud";
 import { IslandStage } from "@/components/island/stage";
-import { createGameStore, GameStoreContext } from "@/components/island/store";
+import {
+  createGameStore,
+  GameStoreContext,
+  type Progress,
+} from "@/components/island/store";
+import { IslandSync } from "@/components/island/sync";
 import { terrainOf } from "@/lib/island/terrain";
+import { cellOf } from "@/lib/island/world";
 
 /** The hotbar a game opens with: the first nine blocks the island's level opens. */
 function firstHotbar(level: number) {
@@ -16,30 +23,53 @@ function firstHotbar(level: number) {
   );
 }
 
+/** The learner's world: the terrain their seed and footprint grow, with every cell they changed laid over it. */
+function worldOf(seed: number, size: number, edits: readonly Edit[]) {
+  const cells = terrainOf(seed, size);
+  for (const edit of edits) {
+    cells[cellOf(edit.x, edit.y, edit.z)] = edit.block;
+  }
+  return cells;
+}
+
 /**
- * The island game on the whole screen (ADR 0047): the world generated from the
- * island's seed and footprint, the stage that draws and plays it, and the HUD
- * over it. Its code loads only when the learner enters.
+ * The island game on the whole screen (ADR 0047): the learner's world, the
+ * stage that draws and plays it, the HUD over it, and the sync that keeps the
+ * server's copy in step. Its code loads only when the learner enters.
  */
 export default function IslandGame({
+  edits,
   level,
   onLeave,
+  progress,
   seed,
   size,
+  version,
 }: {
+  edits: readonly Edit[];
   level: number;
   onLeave: () => void;
+  progress: Progress;
   seed: number;
   size: number;
+  version: number;
 }) {
   const [store] = useState(() =>
-    createGameStore(terrainOf(seed, size), firstHotbar(level), level, onLeave)
+    createGameStore({
+      cells: worldOf(seed, size, edits),
+      hotbar: firstHotbar(level),
+      leave: onLeave,
+      level,
+      progress,
+      version,
+    })
   );
   return (
     <GameStoreContext value={store}>
       <div className="fixed inset-0 overflow-hidden bg-[#5aa7e6]">
         <IslandStage size={size} />
         <IslandHud />
+        <IslandSync />
       </div>
     </GameStoreContext>
   );

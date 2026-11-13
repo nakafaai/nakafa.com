@@ -1,10 +1,12 @@
 // @vitest-environment node
+
 import { describe, expect, it } from "@effect/vitest";
 import { idOf } from "@repo/backend/confect/island/blocks";
+import { SPAN } from "@repo/backend/confect/island/world";
 import { Array as Arr, MutableHashSet } from "effect";
 import { lightingOf, meshChunk, STRIDE, skylineOf } from "@/lib/island/mesh";
 import { terrainOf } from "@/lib/island/terrain";
-import { cellOf, emptyCells, SPAN } from "@/lib/island/world";
+import { cellOf, emptyCells } from "@/lib/island/world";
 
 /** The number of quads in a draw list. */
 const quadsOf = (list: ReturnType<typeof meshChunk>["solid"]) =>

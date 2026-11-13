@@ -1,5 +1,6 @@
+import { HEIGHT, SPAN } from "@repo/backend/confect/island/world";
 import { Schema } from "effect";
-import { HEIGHT, SEA_LEVEL, SPAN } from "@/lib/island/world";
+import { SEA_LEVEL } from "@/lib/island/world";
 
 /**
  * The orbiting camera (ADR 0047, D5): the point it looks at, how far it is

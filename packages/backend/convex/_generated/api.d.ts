@@ -10647,79 +10647,16 @@ export declare const api: {
   };
   island: {
     mutations: {
-      edit: FunctionReference<
+      build: FunctionReference<
         "mutation",
         "public",
         {
-          operations: Array<
-            | {
-                _tag: "place";
-                at: { x: number; y: number; z: number };
-                item:
-                  | "house"
-                  | "tree"
-                  | "pond"
-                  | "grass"
-                  | "soil"
-                  | "stone"
-                  | "sand"
-                  | "planks"
-                  | "brick"
-                  | "glass"
-                  | "tile"
-                  | "slate"
-                  | "flowers"
-                  | "bush"
-                  | "rock"
-                  | "lamp";
-                rotation: number;
-                stage: number;
-              }
-            | {
-                _tag: "move";
-                from: { x: number; y: number; z: number };
-                rotation: number;
-                to: { x: number; y: number; z: number };
-              }
-            | { _tag: "remove"; at: { x: number; y: number; z: number } }
-            | { _tag: "upgrade"; at: { x: number; y: number; z: number } }
-            | { _tag: "downgrade"; at: { x: number; y: number; z: number } }
-          >;
+          edits: Array<{ block: number; x: number; y: number; z: number }>;
           version: number;
         },
         { version: number }
       >;
-      harvest: FunctionReference<
-        "mutation",
-        "public",
-        { at: { x: number; y: number; z: number }; version: number },
-        { version: number }
-      >;
-      keepSnapshot: FunctionReference<
-        "mutation",
-        "public",
-        { fileId: Id<"bucketFiles"> },
-        null
-      >;
       open: FunctionReference<"mutation", "public", { timeZone: string }, null>;
-      reserveSnapshot: FunctionReference<
-        "mutation",
-        "public",
-        { byteSize: number },
-        { address: string; fileId: Id<"bucketFiles"> }
-      >;
-      share: FunctionReference<
-        "mutation",
-        "public",
-        { visibility: "private" | "link" | "public" },
-        null
-      >;
-      water: FunctionReference<
-        "mutation",
-        "public",
-        { version: number },
-        { version: number }
-      >;
     };
     queries: {
       own: FunctionReference<
@@ -10737,42 +10674,9 @@ export declare const api: {
               | "chemistry"
               | "biology";
           }>;
-          layout: ArrayBuffer;
-          learned?: string;
-          level: number;
           lifetime: number;
-          materials: { petals: number; wood: number };
-          size: number;
-          stars: number;
-          timeZone: string;
           version: number;
-          visibility: "private" | "link" | "public";
-          watered?: string;
-        } | null
-      >;
-      visit: FunctionReference<
-        "query",
-        "public",
-        { username: string },
-        {
-          badges: Array<{
-            at: number;
-            badge:
-              | "explorer"
-              | "fighter"
-              | "mathematics"
-              | "physics"
-              | "chemistry"
-              | "biology";
-          }>;
-          layout: ArrayBuffer;
-          level: number;
-          mascot: string;
-          name: string;
-          size: number;
-          snapshot?: string;
-          timeZone: string;
-          username: string;
+          world: ArrayBuffer;
         } | null
       >;
     };

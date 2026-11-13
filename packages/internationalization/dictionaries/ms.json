@@ -4646,6 +4646,10 @@
     "block-wool": "Bulu biri-biri",
     "block-bookshelf": "Rak buku",
     "block-marble": "Marmar",
-    "block-gold": "Emas"
+    "block-gold": "Emas",
+    "notice-refused": "Perubahan itu tak tersimpan, jadi pulau kamu kembali seperti tadi.",
+    "notice-stale": "Pulau kamu berubah di tempat lain, jadi ia dimuat semula.",
+    "next": "{stars} Bintang lagi ke tahap {level}",
+    "top": "Semua blok sudah dibuka"
   }
 }
