@@ -82,6 +82,7 @@ export const loader = () => readRouteMessages({ namespaces: (MAIN_NAMESPACES) })
 import type { Typed } from "@/components/typed";
 import { Canvas } from "@repo/design-system/components/canvas";
 export const lazy = () => import("@/components/emoji/panel");
+export const any = (path: string) => import(path);
 export const Route = [Writer, Canvas];
 `
   ),
@@ -139,7 +140,7 @@ export function Menu() {
             ),
             source(
               sections,
-              'export const SECTIONS = ["Marketing.pricing", `Marketing.faq`, `Ads.${"slot"}`, `Comments.${1}x`, "plain.text", "Unknown.key"];\n'
+              `export const SECTIONS = ["Marketing.pricing", \`Marketing.faq\`, \`Ads.\${"slot"}\`, \`Comments.\${1}x\`, "plain.text", "Unknown.key"];\n`
             ),
           ],
           NAMESPACES,

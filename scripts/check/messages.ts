@@ -31,6 +31,8 @@ const STANDALONE_DICTIONARY =
   "packages/internationalization/dictionaries/standalone/en.json";
 /** A segment separator in a flat route file name: a dot outside the brackets that escape one. */
 const FLAT_SEPARATOR = /\.(?![^[]*\])/u;
+/** The extension of a route file, which no path segment carries. */
+const ROUTE_EXTENSION = /\.tsx$/u;
 const RULE =
   "add the namespace to the list this route loads, or render the module under a route that loads it";
 /** The one module that draws use-intl's provider, with the report that fails a strict build on a missing message. */
@@ -44,6 +46,28 @@ const Dictionary = Schema.fromJsonString(
   Schema.Record(Schema.String, Schema.Unknown)
 );
 
+/** The modules a route renders, in the order a breadth-first walk meets them: what they load, other routes excepted. */
+function reachable(facts: HashMap.HashMap<string, Facts>, route: string) {
+  const pending = MutableList.make<string>();
+  MutableList.append(pending, route);
+  const seen = MutableHashMap.make([route, true] as const);
+  const order = MutableList.make<string>();
+  for (
+    let file = MutableList.take(pending);
+    file !== MutableList.Empty;
+    file = MutableList.take(pending)
+  ) {
+    MutableList.append(order, file);
+    for (const target of HashMap.getUnsafe(facts, file).imports) {
+      if (!(MutableHashMap.has(seen, target) || ROUTE_PATTERN.test(target))) {
+        MutableHashMap.set(seen, target, true);
+        MutableList.append(pending, target);
+      }
+    }
+  }
+  return MutableList.takeAll(order);
+}
+
 /**
  * One route's walk: the namespaces its modules load, and each namespace they read with the nearest module that reads
  * it. A translator without a namespace reads the keys that the walked modules spell, as `"Marketing.pricing"` does. A
@@ -54,56 +78,45 @@ function walk(
   standalone: HashSet.HashSet<string>,
   route: string
 ) {
-  const pending = MutableList.make<string>();
-  MutableList.append(pending, route);
-  const seen = MutableHashMap.make([route, true] as const);
-  const loads = MutableHashMap.empty<string, true>();
-  const readers = MutableHashMap.empty<string, string>();
-  const keys = MutableList.make<string>();
-  const read = (name: string, file: string) => {
-    if (!MutableHashMap.has(readers, name)) {
-      MutableHashMap.set(readers, name, file);
+  const modules = Arr.map(reachable(facts, route), (file) =>
+    Tuple.make(file, HashMap.getUnsafe(facts, file))
+  );
+  const loads = HashSet.fromIterable(
+    Arr.flatMap(modules, ([file, module]) =>
+      Arr.flatMap(module.lists, (list) => listNames(facts, file, list))
+    )
+  );
+  const reads = Arr.flatMap(modules, ([file, module]) =>
+    Arr.filterMap(module.reads, (name) =>
+      module.standalone && HashSet.has(standalone, name)
+        ? Result.failVoid
+        : Result.succeed(Tuple.make(name, file))
+    )
+  );
+  const keyed = Option.match(
+    Arr.findFirst(modules, ([, module]) => module.bare),
+    {
+      onNone: () => [],
+      onSome: ([reader]) =>
+        Arr.flatMap(modules, ([, module]) =>
+          Arr.map(module.keys, (name) => Tuple.make(name, reader))
+        ),
     }
-  };
-  let bare = Option.none<string>();
-  for (
-    let file = MutableList.take(pending);
-    file !== MutableList.Empty;
-    file = MutableList.take(pending)
-  ) {
-    const module = HashMap.getUnsafe(facts, file);
-    for (const name of Arr.flatMap(module.lists, (list) =>
-      listNames(facts, file, list)
-    )) {
-      MutableHashMap.set(loads, name, true);
-    }
-    for (const name of module.reads) {
-      if (!(module.standalone && HashSet.has(standalone, name))) {
-        read(name, file);
-      }
-    }
-    MutableList.appendAll(keys, module.keys);
-    bare = module.bare && Option.isNone(bare) ? Option.some(file) : bare;
-    for (const target of module.imports) {
-      if (!(MutableHashMap.has(seen, target) || ROUTE_PATTERN.test(target))) {
-        MutableHashMap.set(seen, target, true);
-        MutableList.append(pending, target);
-      }
-    }
-  }
-  for (const reader of Option.toArray(bare)) {
-    for (const name of MutableList.takeAll(keys)) {
-      read(name, reader);
-    }
-  }
-  return { loads: HashSet.fromIterable(MutableHashMap.keys(loads)), readers };
+  );
+  const readers = Arr.reduce(
+    Arr.appendAll(reads, keyed),
+    HashMap.empty<string, string>(),
+    (found, [name, reader]) =>
+      HashMap.has(found, name) ? found : HashMap.set(found, name, reader)
+  );
+  return { loads, readers };
 }
 
 /** The layouts above a route, outermost first: the root, then each path prefix's own file or its folder's `route.tsx`. */
 function layouts(routes: HashSet.HashSet<string>, route: string) {
   const segments = Arr.flatMap(
     Str.split(
-      Str.replace(/\.tsx$/u, "")(route.slice(ROUTES_FOLDER.length)),
+      Str.replace(ROUTE_EXTENSION, "")(route.slice(ROUTES_FOLDER.length)),
       "/"
     ),
     (segment) => Str.split(segment, FLAT_SEPARATOR)

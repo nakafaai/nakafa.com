@@ -8,6 +8,7 @@ import {
   Tuple,
 } from "effect";
 import {
+  type CallExpression,
   type Expression,
   isArrayLiteralExpression,
   isAsExpression,
@@ -124,14 +125,17 @@ function loadedSpecifiers(sourceFile: SourceFile, nodes: readonly Node[]) {
 }
 
 /** Whether a node calls the function of that name, as `useTranslations("Common")` does. */
-const calls = (node: Node, name: string) =>
+const calls = (node: Node, name: string): node is CallExpression =>
   isCallExpression(node) &&
   isIdentifier(node.expression) &&
   node.expression.text === name;
 
-/** The first argument of a call, or none for any other node. */
-const firstArgument = (node: Node) =>
-  isCallExpression(node) ? Arr.head(node.arguments) : Option.none();
+/** Whether a node calls `useTranslations`, the hook that reads one namespace. */
+const translates = (node: Node): node is CallExpression =>
+  calls(node, "useTranslations");
+
+/** The first argument of a call. */
+const firstArgument = (node: CallExpression) => Arr.head(node.arguments);
 
 /** What one module does with messages, read from its syntax. */
 export function moduleFacts(
@@ -141,9 +145,7 @@ export function moduleFacts(
   namespaces: HashSet.HashSet<string>
 ): Facts {
   const nodes = descendants(sourceFile);
-  const translators = Arr.filter(nodes, (node) =>
-    calls(node, "useTranslations")
-  );
+  const translators = Arr.filter(nodes, translates);
   return {
     bare: Arr.some(translators, (node) => Option.isNone(firstArgument(node))),
     imports: Arr.filterMap(loadedSpecifiers(sourceFile, nodes), (specifier) =>
