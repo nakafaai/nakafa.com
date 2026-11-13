@@ -169,7 +169,7 @@ export function ReactionTimeLab({
             }
           }}
           onPointerDown={(event) => press(event.timeStamp)}
-          variant={pressing ? "default" : "secondary"}
+          variant="secondary"
         >
           {pressing ? labels.brake : labels.start}
         </Button>
