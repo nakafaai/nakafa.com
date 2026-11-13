@@ -12,6 +12,7 @@ import {
   BOBS,
   BobSchema,
   bobRadius,
+  GRAVITY,
   pendulumPeriod,
   STRING_RANGE,
 } from "@repo/design-system/components/contents/physics/measurement/pendulum/period";
@@ -172,6 +173,7 @@ interface PendulumPeriodLabProps {
   description: ReactNode;
   labels: {
     check: ReactNode;
+    gravity: ReactNode;
     length: string;
     masses: ReactNode;
     period: ReactNode;
@@ -235,6 +237,12 @@ export function PendulumPeriodLab({
               <InlineMath
                 math={`${fixed(BOBS.wood.mass * 1000, "\\text{ g}", 0)};\\ ${fixed(BOBS.brass.mass * 1000, "\\text{ g}", 0)};\\ ${fixed(BOBS.lead.mass * 1000, "\\text{ g}", 0)}`}
               />
+            }
+          />
+          <VisualFactTabular
+            label={labels.gravity}
+            value={
+              <InlineMath math={`g=${fixed(GRAVITY, "\\text{ m/s}^2", 2)}`} />
             }
           />
           <VisualFactTabular

@@ -279,6 +279,7 @@ interface DensityMeasurementLabProps {
   labels: {
     chooseMaterial: string;
     density: ReactNode;
+    densitySi: ReactNode;
     mass: ReactNode;
     materials: Record<typeof MaterialSchema.Type, ReactNode>;
     sides: ReactNode;
@@ -359,9 +360,13 @@ export function DensityMeasurementLab({
             label={labels.density}
             value={
               <InlineMath
-                math={`\\rho=\\frac{m}{V}=${fixed(density, "\\text{ g/cm}^3", 2)}=${fixed(densitySi, "\\text{ kg/m}^3", 0)}`}
+                math={`\\rho=\\frac{m}{V}=${fixed(density, "\\text{ g/cm}^3", 2)}`}
               />
             }
+          />
+          <VisualFactTabular
+            label={labels.densitySi}
+            value={<InlineMath math={fixed(densitySi, "\\text{ kg/m}^3", 0)} />}
           />
         </VisualCardFacts>
       </VisualCardFooter>
