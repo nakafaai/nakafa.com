@@ -37,7 +37,7 @@ const TryoutExamSelectorOptionSchema = Schema.Struct({
   value: publicTryoutExamValidator.fields.publicPath,
 });
 
-export type TryoutExamSelectorOption =
+type TryoutExamSelectorOption =
   typeof TryoutExamSelectorOptionSchema.Type;
 
 /** One group of the group selector: its value is the group's path, and choosing it lands on the group's entry. */
@@ -48,7 +48,7 @@ const TryoutGroupSelectorOptionSchema = Schema.Struct({
   value: publicTryoutGroupChoiceValidator.fields.publicPath,
 });
 
-export type TryoutGroupSelectorOption =
+type TryoutGroupSelectorOption =
   typeof TryoutGroupSelectorOptionSchema.Type;
 
 /** One track of a group, a sibling its crumb offers: its value is the track's path, where choosing it lands. */
@@ -58,7 +58,7 @@ const TryoutTrackOptionSchema = Schema.Struct({
   value: publicTryoutTrackValidator.fields.publicPath,
 });
 
-export type TryoutTrackOption = typeof TryoutTrackOptionSchema.Type;
+type TryoutTrackOption = typeof TryoutTrackOptionSchema.Type;
 
 /** Projects active country rows into localized selector options. */
 export function buildTryoutCountryOptions(

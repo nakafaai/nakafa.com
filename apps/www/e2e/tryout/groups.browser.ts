@@ -1,6 +1,5 @@
 import { expect, type Page, test } from "@playwright/test";
 import { groupHref, trackHref } from "@/e2e/support/tryout";
-import { waitUntilTakenOver } from "@/e2e/support/window";
 
 /** Indonesia's page, which holds SNBT and TKA. */
 const INDONESIA = "/en/try-out/indonesia";
@@ -16,8 +15,6 @@ const EXAM_CARD = /^View options /u;
 const SUBJECT_CARD = /^View sets /u;
 /** The country's design, which only its own page's metadata names. */
 const GERMANY_DESIGN = /\/open-graph\/tryout\/germany\/en-index\.png$/u;
-/** The class of a filled control, which no header control wears. */
-const FILLED = /bg-primary/u;
 /** The phone widths at which a set's name, status and menu read whole. */
 const PHONE_WIDTHS = [320, 360, 390, 430] as const;
 
@@ -43,8 +40,8 @@ function cardPaths(page: Page, name: RegExp) {
 
 /**
  * Every page belongs to one country: the address of Try out opens the
- * locale's own country, and a country's page shows its own exams alone, with
- * the country selector in its header.
+ * locale's own country, and a country's page shows its own exams alone, while
+ * its crumb opens the other countries.
  */
 for (const [locale, country] of [
   ["en", INDONESIA],
@@ -65,21 +62,25 @@ for (const [locale, country] of [
   });
 }
 
-for (const [href, exams] of [
-  [INDONESIA, [trackHref, TKA_GRADE]],
-  [GERMANY, [DARMSTADT]],
+for (const [href, exams, country] of [
+  [INDONESIA, [trackHref, TKA_GRADE], "Indonesia"],
+  [GERMANY, [DARMSTADT], "Germany"],
 ] as const) {
-  test(`${href} shows its own exams alone, beside its country selector`, async ({
+  test(`${href} shows its own exams alone, and its crumb opens every country`, async ({
     page,
   }) => {
     await visit(page, href);
 
     expect(await cardPaths(page, EXAM_CARD)).toEqual(exams);
+    await page
+      .getByRole("navigation", { name: "breadcrumb" })
+      .getByRole("button", { name: country })
+      .click();
+    const menu = page.getByRole("menu", { name: "Country" });
+    await expect(menu.getByRole("menuitemradio")).toHaveCount(2);
     await expect(
-      page
-        .locator('[data-slot="page-header"]')
-        .getByRole("combobox", { name: "Country" })
-    ).toBeVisible();
+      menu.getByRole("menuitemradio", { name: country })
+    ).toHaveAttribute("aria-current", "page");
   });
 }
 
@@ -131,41 +132,60 @@ test("draws each exam card with its own design or the tile of its icon", async (
 });
 
 /**
- * The header's controls are outline buttons, never a filled one: the exam and,
- * where the learner picks it, their grade or Studienkolleg.
+ * The owner's rule (13 Nov): the breadcrumb is a try-out page's navigation, as
+ * Google Drive's path is, so the header holds no control on its right. Each
+ * page names its own place last: the grade a learner picks, the Studienkolleg,
+ * and the test.
  */
-for (const [href, names] of [
-  [trackHref, ["Exam"]],
-  [TKA_GRADE, ["Exam", "Grade"]],
-  [DARMSTADT, ["Exam", "Institution"]],
+for (const [href, own] of [
+  [trackHref, "UTBK"],
+  [TKA_GRADE, "Senior High School"],
+  [DARMSTADT, "Mathematics"],
 ] as const) {
-  test(`${href} keeps outline controls in its header`, async ({ page }) => {
+  test(`${href} keeps its header to the path`, async ({ page }) => {
     await visit(page, href);
     const header = page.locator('[data-slot="page-header"]');
 
-    await expect(header.getByRole("combobox")).toHaveCount(names.length);
-    for (const name of names) {
-      const control = header.getByRole("combobox", { name });
-      await expect(control).toBeVisible();
-      await expect(control).not.toHaveClass(FILLED);
-    }
+    await expect(header.getByRole("combobox")).toHaveCount(0);
+    await expect(
+      header
+        .getByRole("navigation", { name: "breadcrumb" })
+        .getByRole("link", { name: own })
+    ).toHaveAttribute("aria-current", "page");
   });
 }
 
-test("a group's menu lists its exam's groups, each with its icon", async ({
-  page,
-}) => {
-  await visit(page, TKA_GRADE);
-  const trigger = page
-    .locator('[data-slot="page-header"]')
-    .getByRole("combobox", { name: "Grade" });
-  await waitUntilTakenOver(trigger);
-  await trigger.click();
-  const option = page.getByRole("option", { name: "Senior High School" });
+/**
+ * The exam's crumb opens every exam of the country, each with its icon, at
+ * every width: in the row on a wide screen, and on a phone, whose row keeps
+ * the page's own name, from the path's menu.
+ */
+for (const width of [390, 1440]) {
+  test(`the exam's crumb opens every exam at ${width} px`, async ({ page }) => {
+    await page.setViewportSize({ height: 844, width });
+    await visit(page, TKA_GRADE);
+    const path = page.getByRole("navigation", { name: "breadcrumb" });
+    if (width < 640) {
+      await path.getByRole("button", { name: "More" }).click();
+      await page
+        .getByRole("menu", { name: "Pages" })
+        .getByRole("menuitem", { name: "TKA" })
+        .click();
+    } else {
+      await path.getByRole("button", { name: "TKA" }).click();
+    }
+    const menu = page.getByRole("menu", { name: "Exam" });
+    const own = menu.getByRole("menuitemradio", { name: "TKA" });
 
-  await expect(page.getByRole("option")).toHaveCount(1);
-  await expect(option.locator("svg").first()).toBeVisible();
-});
+    await expect(menu.getByRole("menuitemradio")).toHaveCount(2);
+    await expect(own).toHaveAttribute("aria-current", "page");
+    for (const option of await menu.getByRole("menuitemradio").all()) {
+      await expect(option.locator("svg").first()).toBeVisible();
+    }
+    await menu.getByRole("menuitemradio", { name: "SNBT" }).click();
+    await expect(page).toHaveURL(new RegExp(`${trackHref}$`, "u"));
+  });
+}
 
 /**
  * On a phone a set's name, its status and its menu read whole, without
