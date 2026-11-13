@@ -144,17 +144,19 @@ export function SidebarMenuButton({
     return null;
   }
 
-  if (!tooltip) {
+  // The tooltip names a folded item, so it exists only while the sidebar is folded on a wide
+  // screen. An open sidebar mounts none: a tooltip, even disabled, is a tree of components and
+  // providers that every page would hydrate for each item, and an open tooltip, shown or not,
+  // takes the Escape a page listens for.
+  if (!tooltip || state !== "collapsed" || isMobile) {
     return button;
   }
 
   const tooltipProps =
     typeof tooltip === "string" ? { children: tooltip } : tooltip;
 
-  // The tooltip names a folded item. While the sidebar is open it stays disabled, not merely
-  // hidden: an open tooltip, shown or not, takes the Escape a page listens for.
   return (
-    <Tooltip disabled={state !== "collapsed" || isMobile}>
+    <Tooltip>
       <TooltipTrigger render={button} />
       <TooltipContent align="center" side="right" {...tooltipProps} />
     </Tooltip>
