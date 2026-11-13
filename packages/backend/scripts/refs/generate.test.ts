@@ -2,6 +2,7 @@ import { type GroupSpec, Spec } from "@confect/core";
 import { layer as nodeServicesLayer } from "@effect/platform-node/NodeServices";
 import { describe, expect, expectTypeOf, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
+import acceptanceInternal from "@repo/backend/confect/_generated/refs/acceptance.server";
 import access from "@repo/backend/confect/_generated/refs/access";
 import analyticsInternal from "@repo/backend/confect/_generated/refs/analytics.server";
 import auth from "@repo/backend/confect/_generated/refs/auth";
@@ -59,7 +60,6 @@ import triggersInternal from "@repo/backend/confect/_generated/refs/triggers.ser
 import tryouts from "@repo/backend/confect/_generated/refs/tryouts";
 import tryoutsInternal from "@repo/backend/confect/_generated/refs/tryouts.server";
 import users from "@repo/backend/confect/_generated/refs/users";
-import usersInternal from "@repo/backend/confect/_generated/refs/users.server";
 import vaultInternal from "@repo/backend/confect/_generated/refs/vault.server";
 import spec from "@repo/backend/confect/_generated/spec";
 import { generateRefs } from "@repo/backend/scripts/refs/generate";
@@ -162,6 +162,7 @@ const domainModules = {
 };
 /** The per-domain internal refs modules, which only the server reads, keyed by domain. */
 const internalModules = {
+  acceptance: acceptanceInternal,
   analytics: analyticsInternal,
   auth: authInternal,
   billing: billingInternal,
@@ -190,7 +191,6 @@ const internalModules = {
   tenancy: tenancyInternal,
   triggers: triggersInternal,
   tryouts: tryoutsInternal,
-  users: usersInternal,
   vault: vaultInternal,
 };
 
