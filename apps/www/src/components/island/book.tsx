@@ -5,6 +5,7 @@ import {
   BucketIcon,
   Cancel01Icon,
   CubeIcon,
+  FishingHookIcon,
   House03Icon,
   LanternIcon,
   Medal01Icon,
@@ -158,13 +159,21 @@ function BlockEntry({ block }: { block: BlockKey }) {
   );
 }
 
-/** One animal of the field guide: its picture and its name. */
+/** One animal of the field guide: its picture and its name, with a hook on the ones the learner caught today. */
 function SpeciesEntry({ index }: { index: number }) {
   const t = useTranslations("Island");
+  const caught = useGame((state) => Arr.contains(state.catches, index));
   return (
     <li className={entryVariants({ state: "guide" })}>
-      <span className="size-10">
+      <span className="relative size-10">
         <SpeciesIcon index={index} />
+        {caught ? (
+          <HugeIcons
+            aria-label={t("rod")}
+            className="absolute -right-1 -bottom-1 size-4 text-[#2c6ec2]"
+            icon={FishingHookIcon}
+          />
+        ) : null}
       </span>
       <span className="text-sm leading-tight text-balance hyphens-auto">
         {t(`animal-${SPECIES[index].key}`)}

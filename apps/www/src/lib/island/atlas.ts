@@ -41,6 +41,7 @@ import {
 } from "@/lib/island/tiles/nature";
 import { type Pixels, TILE } from "@/lib/island/tiles/paint";
 import { emptyShape, markBody, paintShape } from "@/lib/island/tiles/shape";
+import { bobberTile } from "@/lib/island/tiles/tools";
 
 /** Every tile the island draws, in atlas order (ADR 0047, D4). */
 export const TILE_NAMES = [
@@ -84,6 +85,7 @@ export const TILE_NAMES = [
   "foxTop",
   "foxBottom",
   "foxStep",
+  "bobber",
 ] as const;
 
 /** The name of one tile of the atlas. */
@@ -132,6 +134,7 @@ const PAINTERS = {
   foxTop: () => folkTopTile("fox"),
   foxBottom: () => folkBottomTile("fox", false),
   foxStep: () => folkBottomTile("fox", true),
+  bobber: bobberTile,
 } satisfies Record<TileName, (seed: number) => Pixels>;
 
 /** Tiles along one side of the atlas: room for every block, sprite and species. */

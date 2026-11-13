@@ -4962,6 +4962,11 @@
     "plants": "Pflanzen",
     "walk": "Laufen",
     "notice-path": "Dahin führt kein Weg. Probier eine Stelle, die dein Fuchs erreicht.",
-    "search": "Suchen"
+    "search": "Suchen",
+    "rod": "Angel",
+    "notice-far": "Wirf in das Wasser nahe deinem Fuchs.",
+    "notice-bite": "Ein Biss! Jetzt tippen!",
+    "notice-escaped": "Er ist entwischt. Wirf noch mal!",
+    "caught": "Du hast einen Fang: {name}!"
   }
 }
