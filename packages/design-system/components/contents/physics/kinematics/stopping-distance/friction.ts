@@ -1,13 +1,7 @@
 import { Array as Arr, Schema } from "effect";
 
 /** The road surfaces a learner can brake on. */
-export const SurfaceSchema = Schema.Literals([
-  "dry",
-  "wet",
-  "gravel",
-  "snow",
-  "ice",
-]);
+const SurfaceSchema = Schema.Literals(["dry", "wet", "gravel", "snow", "ice"]);
 export type Surface = typeof SurfaceSchema.Type;
 
 /** Every surface, in the order the toolbar lists them. */

@@ -1,3 +1,5 @@
+import { getColor } from "@repo/design-system/lib/color";
+import { MATERIAL } from "@repo/design-system/lib/material";
 import { Array as Arr } from "effect";
 import {
   type Ref,
@@ -10,12 +12,11 @@ import {
   DataTexture,
   ExtrudeGeometry,
   type Group,
+  MeshPhysicalMaterial,
   MeshStandardMaterial,
   Shape,
   Vector2,
 } from "three";
-import { MATERIAL } from "@repo/design-system/lib/material";
-import { getColor } from "@repo/design-system/lib/color";
 
 /**
  * A four-door sedan at real size, in metres, facing +x with its origin on the
@@ -139,6 +140,18 @@ export function Sedan({
 }) {
   const car = useRef<Group>(null);
   const wheels = useRef<Group[]>([]);
+  // Deep, clear-coated automotive paint over a lightly metallic base.
+  const paint = useMemo(
+    () =>
+      new MeshPhysicalMaterial({
+        clearcoat: 1,
+        clearcoatRoughness: 0.05,
+        color,
+        metalness: 0.4,
+        roughness: 0.34,
+      }),
+    [color]
+  );
   const tail = useMemo(
     () =>
       new MeshStandardMaterial({
@@ -160,8 +173,9 @@ export function Sedan({
       body.dispose();
       cabin.dispose();
       tail.dispose();
+      paint.dispose();
     },
-    [body, cabin, tail]
+    [body, cabin, paint, tail]
   );
 
   useImperativeHandle(ref, () => ({
@@ -177,9 +191,7 @@ export function Sedan({
 
   return (
     <group ref={car}>
-      <mesh castShadow geometry={body} receiveShadow>
-        <CarPaint color={color} />
-      </mesh>
+      <mesh castShadow geometry={body} material={paint} receiveShadow></mesh>
       <mesh castShadow geometry={cabin}>
         <meshPhysicalMaterial
           clearcoat={1}
@@ -191,13 +203,11 @@ export function Sedan({
         />
       </mesh>
       <GroundShadow />
-      <mesh castShadow position={[-0.2, 1.425, 0]}>
+      <mesh castShadow material={paint} position={[-0.2, 1.425, 0]}>
         <boxGeometry args={[1.0, 0.05, CABIN_DEPTH * 0.86]} />
-        <CarPaint color={color} />
       </mesh>
-      <mesh position={[-0.22, 1.19, 0]}>
+      <mesh material={paint} position={[-0.22, 1.19, 0]}>
         <boxGeometry args={[0.09, 0.44, CABIN_DEPTH * 0.96]} />
-        <CarPaint color={color} />
       </mesh>
 
       {Arr.map([1, -1] as const, (side) => (
@@ -214,9 +224,11 @@ export function Sedan({
           <mesh material={tail} position={[-2.3, 0.81, side * 0.62]}>
             <boxGeometry args={[0.08, 0.12, 0.4]} />
           </mesh>
-          <mesh position={[0.98, 1.04, side * (SEDAN.width / 2 + 0.04)]}>
+          <mesh
+            material={paint}
+            position={[0.98, 1.04, side * (SEDAN.width / 2 + 0.04)]}
+          >
             <boxGeometry args={[0.18, 0.1, 0.12]} />
-            <CarPaint color={color} />
           </mesh>
         </group>
       ))}
@@ -298,19 +310,6 @@ function createShadowTexture() {
   return texture;
 }
 
-/** Deep, clear-coated automotive paint over a lightly metallic base. */
-function CarPaint({ color }: { readonly color: string }) {
-  return (
-    <meshPhysicalMaterial
-      clearcoat={1}
-      clearcoatRoughness={0.05}
-      color={color}
-      metalness={0.4}
-      roughness={0.34}
-    />
-  );
-}
-
 /** A tyre on a five-spoke alloy rim, turned so its face looks outward. */
 function Wheel({ side }: { readonly side: 1 | -1 }) {
   return (
@@ -321,7 +320,11 @@ function Wheel({ side }: { readonly side: 1 | -1 }) {
       </mesh>
       <mesh>
         <cylinderGeometry args={[0.215, 0.215, 0.16, 40]} />
-        <meshStandardMaterial color={MATERIAL.rimDark} metalness={0.9} roughness={0.4} />
+        <meshStandardMaterial
+          color={MATERIAL.rimDark}
+          metalness={0.9}
+          roughness={0.4}
+        />
       </mesh>
       {Arr.map(Arr.range(0, 4), (spoke) => (
         <group key={spoke} rotation={[0, (spoke * 2 * Math.PI) / 5, 0]}>
@@ -337,7 +340,11 @@ function Wheel({ side }: { readonly side: 1 | -1 }) {
       ))}
       <mesh position={[0, -0.1, 0]}>
         <cylinderGeometry args={[0.045, 0.045, 0.03, 20]} />
-        <meshStandardMaterial color={MATERIAL.chrome} metalness={1} roughness={0.2} />
+        <meshStandardMaterial
+          color={MATERIAL.chrome}
+          metalness={1}
+          roughness={0.2}
+        />
       </mesh>
     </group>
   );

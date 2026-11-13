@@ -1,6 +1,7 @@
 import { useFrame } from "@react-three/fiber";
 import { FollowCamera } from "@repo/design-system/components/contents/physics/kinematics/follow";
 import {
+  DistancePosts,
   ROAD,
   Road,
 } from "@repo/design-system/components/contents/physics/kinematics/road";
@@ -40,6 +41,7 @@ import {
 } from "@repo/design-system/components/visual/card";
 import { VisualFactIndicator } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
+import { MATERIAL } from "@repo/design-system/lib/material";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr, Option } from "effect";
 import {
@@ -50,7 +52,6 @@ import {
   useRef,
   useState,
 } from "react";
-import { MATERIAL } from "@repo/design-system/lib/material";
 
 /** The speeds of the lesson's table, in m/s. */
 const SPEEDS = [10, 20, 30] as const;
@@ -128,7 +129,7 @@ export function StoppingDistanceLab({
         className={threeSceneFrameVariants()}
         render={<section />}
       >
-        <ScienceStage setting="field" reach={40}>
+        <ScienceStage reach={40} setting="field">
           <Suspense fallback={null}>
             <StopScene stop={stop} />
           </Suspense>
@@ -236,14 +237,12 @@ function StopScene({ stop }: { readonly stop: Stop }) {
         minDistance={6}
         offset={CAMERA_OFFSET}
       />
-      <Road
-        from={-300}
+      <Road from={-300} surface="dry" to={600} />
+      <DistancePosts
         posts={Arr.appendAll(
           Arr.map(Arr.range(1, 6), (index) => index * 10),
           Arr.map(Arr.range(4, 6), (index) => index * 20)
         )}
-        surface="dry"
-        to={600}
       />
       <Stretch color={REACTION_COLOR} from={0} to={reactionEnd} />
       <Stretch color={BRAKING_COLOR} from={reactionEnd} to={end} />

@@ -41,6 +41,7 @@ import {
   VisualCardHeader,
 } from "@repo/design-system/components/visual/card";
 import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
+import { MATERIAL } from "@repo/design-system/lib/material";
 import { Array as Arr, Effect, Option, Random } from "effect";
 import {
   type KeyboardEvent,
@@ -51,7 +52,6 @@ import {
   useState,
 } from "react";
 import type { Group } from "three";
-import { MATERIAL } from "@repo/design-system/lib/material";
 
 /** Both cars cruise at 20 m/s, 72 km/h, two seconds apart. */
 const SPEED = 20;
@@ -142,7 +142,7 @@ export function ReactionTimeLab({
         className={threeSceneFrameVariants()}
         render={<section />}
       >
-        <ScienceStage setting="field" reach={40}>
+        <ScienceStage reach={40} setting="field">
           <Suspense fallback={null}>
             <ReactionScene
               onSettled={() => setPhase("done")}
@@ -308,7 +308,7 @@ function ReactionScene({
   return (
     <>
       <SimulationTicker running={running} />
-      <Road from={-40} posts={[]} surface="dry" to={GAP + 400} />
+      <Road from={-40} surface="dry" to={GAP + 400} />
       <group position={[0, 0, ROAD.lane]}>
         <Sedan color={MATERIAL.carPaintDark} ref={lead} />
         <group ref={rig}>

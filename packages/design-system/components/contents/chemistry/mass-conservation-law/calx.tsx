@@ -30,6 +30,7 @@ import {
 } from "@repo/design-system/components/visual/card";
 import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
+import { MATERIAL } from "@repo/design-system/lib/material";
 import { Array as Arr } from "effect";
 import {
   type ReactNode,
@@ -47,7 +48,6 @@ import {
   TubeGeometry,
   Vector3,
 } from "three";
-import { MATERIAL } from "@repo/design-system/lib/material";
 
 /** The bell jar's inner radius, in metres. */
 const JAR_RADIUS = 0.06;
@@ -120,7 +120,7 @@ export function LavoisierCalxLab({
         className={threeSceneFrameVariants()}
         render={<section />}
       >
-        <ScienceStage setting="lab" floor={0} reach={0.7}>
+        <ScienceStage floor={0} reach={0.7} setting="lab">
           <Suspense fallback={null}>
             <CameraControls
               cameraPosition={[0.1, 0.42, 0.95]}

@@ -38,11 +38,11 @@ import {
 } from "@repo/design-system/components/visual/card";
 import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
+import { getColor } from "@repo/design-system/lib/color";
+import { MATERIAL } from "@repo/design-system/lib/material";
 import { Array as Arr, Schema } from "effect";
 import { type ReactNode, Suspense, useRef, useState } from "react";
 import type { Group, InstancedMesh, Mesh, Object3D } from "three";
-import { MATERIAL } from "@repo/design-system/lib/material";
-import { getColor } from "@repo/design-system/lib/color";
 
 /** Whether the flask stays open to the air or is closed with a stopper. */
 const SealSchema = Schema.Literals(["open", "closed"]);
@@ -122,7 +122,7 @@ export function FizzBalanceLab({
         className={threeSceneFrameVariants()}
         render={<section />}
       >
-        <ScienceStage setting="lab" floor={0} reach={0.6}>
+        <ScienceStage floor={0} reach={0.6} setting="lab">
           <Suspense fallback={null}>
             <CameraControls
               cameraPosition={[0.32, 0.36, 0.62]}

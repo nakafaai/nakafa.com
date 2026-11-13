@@ -5,6 +5,7 @@ import {
   LiquidMaterial,
   MetalMaterial,
 } from "@repo/design-system/components/three/physical";
+import { MATERIAL } from "@repo/design-system/lib/material";
 import { Array as Arr } from "effect";
 import {
   type ReactNode,
@@ -14,8 +15,6 @@ import {
   useRef,
 } from "react";
 import { Vector2 } from "three";
-import { MATERIAL } from "@repo/design-system/lib/material";
-import { getColor } from "@repo/design-system/lib/color";
 
 /**
  * A school chemistry bench at real size, in metres: a dark epoxy worktop 0.9 m
@@ -65,7 +64,11 @@ export function LabBench({ width = 2.4 }: { readonly width?: number }) {
 }
 
 /** Amber, clear and green reagent glass. */
-const BOTTLE_GLASS = [MATERIAL.bottleAmber, MATERIAL.bottleClear, MATERIAL.bottleGreen] as const;
+const BOTTLE_GLASS = [
+  MATERIAL.bottleAmber,
+  MATERIAL.bottleClear,
+  MATERIAL.bottleGreen,
+] as const;
 
 /** A reagent bottle's outline, turned around its axis: body, shoulder, neck. */
 const BOTTLE_PROFILE = Arr.map(

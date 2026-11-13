@@ -8,7 +8,7 @@ export const WAIT_MIN = 1.5;
 export const WAIT_MAX = 4;
 
 /** A press faster than this cannot be a reaction to the light, only a guess. */
-export const ANTICIPATION_LIMIT = 0.1;
+const ANTICIPATION_LIMIT = 0.1;
 
 /** The trials a learner's average keeps, newest last. */
 export const TRIAL_LIMIT = 5;
@@ -19,7 +19,7 @@ export const TRIAL_LIMIT = 5;
  * `lightsAt` is when the lights first reached the screen, on the page's
  * clock in seconds; `reaction` is the learner's reaction time once known.
  */
-export const TrialSchema = Schema.Struct({
+const TrialSchema = Schema.Struct({
   lightsAt: Schema.Option(Schema.Finite),
   reaction: Schema.Option(Schema.Finite),
   time: Schema.Finite,
@@ -28,20 +28,15 @@ export const TrialSchema = Schema.Struct({
 export type Trial = typeof TrialSchema.Type;
 
 /** Where the test stands: ready to start, driving, braked too early, or done. */
-export const PhaseSchema = Schema.Literals([
-  "ready",
-  "driving",
-  "early",
-  "done",
-]);
+const PhaseSchema = Schema.Literals(["ready", "driving", "early", "done"]);
 export type Phase = typeof PhaseSchema.Type;
 
 /** What one press during a trial means. */
-export const PressSchema = Schema.Union([
+const PressSchema = Schema.Union([
   Schema.TaggedStruct("early", {}),
   Schema.TaggedStruct("reaction", { seconds: Schema.Finite }),
 ]);
-export type Press = typeof PressSchema.Type;
+type Press = typeof PressSchema.Type;
 
 /**
  * The wait before the brake lights, drawn from `unit`, a uniform random

@@ -1,6 +1,7 @@
 import { useFrame } from "@react-three/fiber";
 import { FollowCamera } from "@repo/design-system/components/contents/physics/kinematics/follow";
 import {
+  DistancePosts,
   ROAD,
   Road,
 } from "@repo/design-system/components/contents/physics/kinematics/road";
@@ -46,6 +47,7 @@ import {
 } from "@repo/design-system/components/visual/card";
 import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
+import { MATERIAL } from "@repo/design-system/lib/material";
 import { Array as Arr, Option } from "effect";
 import {
   type ReactNode,
@@ -55,7 +57,6 @@ import {
   useRef,
   useState,
 } from "react";
-import { MATERIAL } from "@repo/design-system/lib/material";
 
 /** Both cars cruise at 25 m/s, 90 km/h, as on a toll road. */
 const SPEED = 25;
@@ -158,7 +159,7 @@ export function FollowingDistanceLab({
         className={threeSceneFrameVariants()}
         render={<section />}
       >
-        <ScienceStage setting="field" reach={60}>
+        <ScienceStage reach={60} setting="field">
           <Suspense fallback={null}>
             <FollowingScene follow={follow} />
           </Suspense>
@@ -264,12 +265,8 @@ function FollowingScene({ follow }: { readonly follow: Follow }) {
         minDistance={10}
         offset={CAMERA_OFFSET}
       />
-      <Road
-        from={-300}
-        posts={Arr.map(Arr.range(1, 14), (index) => index * 10)}
-        surface="dry"
-        to={offset + 600}
-      />
+      <Road from={-300} surface="dry" to={offset + 600} />
+      <DistancePosts posts={Arr.map(Arr.range(1, 14), (index) => index * 10)} />
       <group position={[0, 0, ROAD.lane]}>
         <Sedan color={MATERIAL.carPaintDark} ref={lead} />
         <Sedan color={MATERIAL.carPaint} ref={rear} />

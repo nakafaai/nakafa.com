@@ -1,5 +1,5 @@
-import { Schema } from "effect";
 import { MATERIAL } from "@repo/design-system/lib/material";
+import { Schema } from "effect";
 
 /**
  * The steps of a Gram stain, in order: the smear before staining, crystal
@@ -17,7 +17,7 @@ export const StainStepSchema = Schema.Literals([
 export type StainStep = typeof StainStepSchema.Type;
 
 /** Gram-positive walls keep the violet; Gram-negative walls lose it to alcohol. */
-export const GramSchema = Schema.Literals(["positive", "negative"]);
+const GramSchema = Schema.Literals(["positive", "negative"]);
 export type Gram = typeof GramSchema.Type;
 
 /** The colour a cell shows under the microscope after each step. */
@@ -49,7 +49,7 @@ export function stainOf(gram: Gram, step: StainStep) {
 }
 
 /** The colour a learner names for a cell under the microscope. */
-export const HueSchema = Schema.Literals(["clear", "purple", "pink"]);
+const HueSchema = Schema.Literals(["clear", "purple", "pink"]);
 export type Hue = typeof HueSchema.Type;
 
 /** The colour a learner sees on a cell with a `gram` wall after `step`. */
@@ -121,7 +121,7 @@ export const TUMBLE_TURN = (68 * Math.PI) / 180;
  * is, which way it heads, whether it is tumbling, how long the current run or
  * tumble has left, and how many runs it has made, which seeds its next turn.
  */
-export const SwimmerSchema = Schema.Struct({
+const SwimmerSchema = Schema.Struct({
   heading: Schema.Finite,
   left: Schema.Finite,
   runs: Schema.Int,

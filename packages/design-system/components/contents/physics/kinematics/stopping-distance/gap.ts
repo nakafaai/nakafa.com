@@ -12,7 +12,7 @@ import { Option, Schema } from "effect";
  * reaction time, then brakes just as hard. The gap between them is a time
  * gap (the "two-second rule"), so at speed v it is v·h metres of road.
  */
-export const FollowSchema = Schema.Struct({
+const FollowSchema = Schema.Struct({
   deceleration: Schema.Finite.check(Schema.isGreaterThan(0)),
   headway: Schema.Finite.check(Schema.isGreaterThan(0)),
   reaction: Schema.Finite.check(Schema.isGreaterThanOrEqualTo(0)),

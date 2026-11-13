@@ -1,7 +1,7 @@
 import { Array as Arr, Number as Num, Schema } from "effect";
 
 /** The elements the mass-conservation labs need. */
-export const ElementSchema = Schema.Literals([
+const ElementSchema = Schema.Literals([
   "Ag",
   "C",
   "Cl",
@@ -12,7 +12,7 @@ export const ElementSchema = Schema.Literals([
   "Na",
   "O",
 ]);
-export type Element = typeof ElementSchema.Type;
+type Element = typeof ElementSchema.Type;
 
 /**
  * Standard atomic weights in g/mol, as the abridged values of the IUPAC
@@ -32,10 +32,10 @@ const ATOMIC_WEIGHT = {
 } satisfies Record<Element, number>;
 
 /** A formula as each element with the count of its atoms, such as NaHCO₃. */
-export const FormulaSchema = Schema.Array(
+const FormulaSchema = Schema.Array(
   Schema.Tuple([ElementSchema, Schema.Int.check(Schema.isGreaterThan(0))])
 );
-export type Formula = typeof FormulaSchema.Type;
+type Formula = typeof FormulaSchema.Type;
 
 /** The molar mass of a formula in g/mol: the sum of its atoms' weights. */
 export function molarMass(formula: Formula) {

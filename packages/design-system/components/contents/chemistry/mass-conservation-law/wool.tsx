@@ -31,6 +31,7 @@ import {
 } from "@repo/design-system/components/visual/card";
 import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
+import { MATERIAL } from "@repo/design-system/lib/material";
 import { Array as Arr, Schema } from "effect";
 import {
   type ReactNode,
@@ -50,7 +51,6 @@ import {
   Vector3,
 } from "three";
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
-import { MATERIAL } from "@repo/design-system/lib/material";
 
 /** Whether the wool burns in the open air or inside a sealed jar of air. */
 const SealSchema = Schema.Literals(["open", "closed"]);
@@ -127,7 +127,7 @@ export function SteelWoolLab({
         className={threeSceneFrameVariants()}
         render={<section />}
       >
-        <ScienceStage setting="lab" floor={0} reach={0.6}>
+        <ScienceStage floor={0} reach={0.6} setting="lab">
           <Suspense fallback={null}>
             <CameraControls
               cameraPosition={[0.26, 0.3, 0.5]}
@@ -293,7 +293,11 @@ function WoolScene({ seal }: { readonly seal: Seal }) {
         </mesh>
         <mesh position={[0, 0.05, 0]}>
           <boxGeometry args={[0.02, 0.004, 0.012]} />
-          <meshStandardMaterial color={MATERIAL.batteryTerminal} metalness={1} roughness={0.3} />
+          <meshStandardMaterial
+            color={MATERIAL.batteryTerminal}
+            metalness={1}
+            roughness={0.3}
+          />
         </mesh>
       </group>
     </>

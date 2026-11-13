@@ -33,10 +33,10 @@ import {
 } from "@repo/design-system/components/visual/card";
 import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
+import { getColor } from "@repo/design-system/lib/color";
+import { MATERIAL } from "@repo/design-system/lib/material";
 import { type ReactNode, Suspense, useEffect, useRef, useState } from "react";
 import type { Group, Mesh, MeshPhysicalMaterial } from "three";
-import { MATERIAL } from "@repo/design-system/lib/material";
-import { getColor } from "@repo/design-system/lib/color";
 
 /** Eight hours in the yoghurt maker. */
 const HOURS = 8;
@@ -99,7 +99,6 @@ export function YogurtLab({
           <Button
             aria-pressed={tilted}
             onClick={() => setTilted((shown) => !shown)}
-            variant="outline"
           >
             {labels.tilt}
           </Button>
@@ -111,7 +110,7 @@ export function YogurtLab({
         className={threeSceneFrameVariants()}
         render={<section />}
       >
-        <ScienceStage setting="lab" floor={0} reach={0.6}>
+        <ScienceStage floor={0} reach={0.6} setting="lab">
           <Suspense fallback={null}>
             <CameraControls
               cameraPosition={[0.2, 0.32, 0.55]}
