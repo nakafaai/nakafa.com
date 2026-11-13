@@ -1,4 +1,5 @@
-import { Array as Arr, Result, Schema } from "effect";
+import { Array as Arr, HashSet, Result, Schema } from "effect";
+import { type BuiltChunk, readFirstLoad } from "#www/src/lib/static/chunks";
 
 /** Every link that preloads a JavaScript module. */
 export const MODULE_PRELOAD = /<link\b[^>]*\brel="modulepreload"[^>]*>/gu;
@@ -118,10 +119,13 @@ const STATIC_SCRIPTS_LOADER = `(function (scripts) {
  * after the first paint. A module that the page preloads twice keeps the attributes
  * of its first link, as the browser does. The router's dehydrated manifest stops
  * naming the preloads, so the head that React hydrates adds no second link for a
- * module that the loader has already started.
+ * module that the loader has already started. The loader starts only what the
+ * first paint runs (`readFirstLoad`): the chunks of a route's error and not-found
+ * components load when the router shows them.
  */
 export function deferStaticScripts(
-  html: string
+  html: string,
+  chunks: readonly BuiltChunk[]
 ): Result.Result<string, StaticScriptsUnreadable> {
   const entries = Arr.fromIterable(html.matchAll(ENTRY_SCRIPT));
   const [entry] = entries;
@@ -155,11 +159,19 @@ export function deferStaticScripts(
       (error) => new StaticScriptsUnreadable({ reason: error.message })
     ),
     Result.map((scripts) => {
+      const preloads = Arr.dedupeWith(
+        scripts.preloads,
+        (first, second) => first.href === second.href
+      );
+      const firstLoad = readFirstLoad(
+        scripts.entry,
+        Arr.map(preloads, (preload) => preload.href),
+        chunks
+      );
       const unique = {
         entry: scripts.entry,
-        preloads: Arr.dedupeWith(
-          scripts.preloads,
-          (first, second) => first.href === second.href
+        preloads: Arr.filter(preloads, (preload) =>
+          HashSet.has(firstLoad, preload.href)
         ),
       };
       const loader = `<script>${STATIC_SCRIPTS_LOADER}(${Schema.encodeSync(StaticScriptsJson)(unique)});</script>`;

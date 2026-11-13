@@ -8,7 +8,7 @@ import {
 import { basename, dirname, join } from "node:path";
 import { DEFAULT_LOCALE, LOCALES } from "@repo/internationalization/src/locale";
 import { FetchClient } from "@repo/utilities/http/client";
-import { Effect, Option, Result, Schema } from "effect";
+import { Array as Arr, Effect, Option, Record, Result, Schema } from "effect";
 import { HttpClient } from "effect/http";
 import { toJSONAsync } from "seroval";
 import type { Plugin } from "vite";
@@ -19,6 +19,7 @@ import {
   staticDataPath,
   toStaticFile,
 } from "#www/src/lib/static/calls";
+import { type BuiltChunk, readParts } from "#www/src/lib/static/chunks";
 import { composeSchoolEntry, readSchoolEntry } from "#www/src/lib/static/entry";
 import {
   notFoundOutputPath,
@@ -241,31 +242,62 @@ export const writeStaticAnswers = (pages: readonly string[]): Plugin => ({
 
 /**
  * Defers the scripts of every prerendered page until the page has painted (see
- * `deferStaticScripts`). It runs after the static answers, which close each page.
+ * `deferStaticScripts`), and starts only what the page's first paint runs. The
+ * first plugin records every chunk of the client build (its address, its static
+ * imports and the route parts it holds) as the client build writes it; the second
+ * runs after the static answers, which close each page, in the same process. A
+ * build that recorded no chunk fails, since every page would then preload the
+ * chunks it never runs.
  */
-export const deferStaticPageScripts = (pages: readonly string[]): Plugin => ({
-  apply: "build",
-  enforce: "post",
-  buildApp: {
-    order: "post",
-    handler: (builder) => {
-      const outDir = builder.environments.client.config.build.outDir;
-      for (const path of pages) {
-        const file = join(outDir, path, "index.html");
-        const deferred = Result.getOrThrowWith(
-          deferStaticScripts(readFileSync(file, "utf8")),
-          (error) =>
-            new Error(
-              `The prerendered page ${path} cannot defer its scripts: ${error.reason}`
-            )
+export const deferStaticPageScripts = (pages: readonly string[]): Plugin[] => {
+  let chunks: readonly BuiltChunk[] = [];
+  return [
+    {
+      apply: "build",
+      applyToEnvironment: (environment) => environment.name === "client",
+      generateBundle: (_, bundle) => {
+        chunks = Arr.flatMap(Record.values(bundle), (output) =>
+          output.type === "chunk"
+            ? [
+                {
+                  href: `/${output.fileName}`,
+                  imports: Arr.map(output.imports, (file) => `/${file}`),
+                  parts: readParts(output.moduleIds),
+                },
+              ]
+            : []
         );
-        writeFileSync(file, deferred);
-      }
-      return Promise.resolve();
+      },
+      name: "www:record-client-chunks",
     },
-  },
-  name: "www:defer-static-scripts",
-});
+    {
+      apply: "build",
+      enforce: "post",
+      buildApp: {
+        order: "post",
+        handler: (builder) => {
+          const outDir = builder.environments.client.config.build.outDir;
+          if (pages.length > 0 && chunks.length === 0) {
+            throw new Error("The client build recorded no chunk to defer.");
+          }
+          for (const path of pages) {
+            const file = join(outDir, path, "index.html");
+            const deferred = Result.getOrThrowWith(
+              deferStaticScripts(readFileSync(file, "utf8"), chunks),
+              (error) =>
+                new Error(
+                  `The prerendered page ${path} cannot defer its scripts: ${error.reason}`
+                )
+            );
+            writeFileSync(file, deferred);
+          }
+          return Promise.resolve();
+        },
+      },
+      name: "www:defer-static-scripts",
+    },
+  ];
+};
 
 /** Verifies the prerendered pages against the list that the build was given. */
 export const verifyPrerenderedPages = (pages: readonly string[]): Plugin => ({
