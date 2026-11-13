@@ -1,16 +1,21 @@
-# Proves one exact head on GitHub-hosted runners, on demand, for the sessions and
-# the landing train that call `bun run proof`. It is a tool, not a required check:
-# no ruleset names it, and nothing waits for it to merge (docs/adr/0048-proof.md).
+# Verifies one exact head on GitHub's free public-repository runners, on demand,
+# for the sessions and the landing train (AGENTS.md, Deployment): the gate (the
+# typechecks with the committed bindings unchanged, every unit suite at its
+# per-file 100% coverage gate, the source and policy checks with Ultracite, React
+# Doctor for the head's React changes against main, and the dependency audit),
+# then the proof (a production build served by the local production server over
+# the local Convex backend binary, with the inert acceptance environment, and the
+# chosen specs in Chromium, Firefox and WebKit).
 #
-# A proof is a production build of the head, served by the local production
-# server over the local Convex backend binary, with the inert environment of the
-# acceptance runtime. It reads no secret and touches no Convex or Cloudflare
-# deployment, and the public repository's standard runners cost nothing.
+# It is ONE job. Every `needs` stage of a workflow waits in the account's free
+# runner queue again from the back, which turned 14 minutes of work into three
+# hours, so the head installs once, gates, builds once and proves on the machine
+# it already holds. It posts every status from inside the job: `gate/<part>` and
+# `gate` when the gate ends, `proof/<engine>` and `proof` when the specs end.
 #
-# One job prepares and builds once. Its prepared runtime is cached by the key the
-# acceptance runtime computes, and its build is handed to the spec machines: one
-# per shard of each engine, each with its own backend and ports. The report job
-# posts one commit status per engine on the head and one summary status.
+# It is a tool, not a required check: no ruleset names it. It reads no secret,
+# publishes nothing and touches no Convex or Cloudflare deployment
+# (docs/adr/0048-proof.md).
 name: Proof
 run-name: Proof ${{ inputs.sha }} ${{ inputs.nonce }}
 
@@ -18,7 +23,7 @@ on:
   workflow_dispatch:
     inputs:
       sha:
-        description: The exact 40-character head to prove
+        description: The exact 40-character head to verify
         required: true
         type: string
       specs:
@@ -26,85 +31,161 @@ on:
         required: false
         default: ""
         type: string
-      shards:
-        description: Machines per engine; a narrowed proof on 1 runs all three engines on one machine
+      gate:
+        description: Run the gate
         required: false
-        default: "3"
-        type: string
+        default: true
+        type: boolean
+      proof:
+        description: Build and run the specs
+        required: false
+        default: true
+        type: boolean
+      full:
+        description: Typecheck and test every workspace, not only those the head changes against main
+        required: false
+        default: false
+        type: boolean
       nonce:
         description: Names this run, so the caller that dispatched it finds it
         required: false
         default: ""
         type: string
 
-# No concurrency group: a group named by the specs outgrows GitHub's limit on a
-# group name with a long selection, and every dispatch of `bun run proof` is its
-# own proof, named by its nonce.
+# No concurrency group: a cancelled run would still post its statuses as failed
+# over a newer run's, and a group named by the specs outgrows GitHub's limit.
 permissions: {}
 
 jobs:
-  build:
-    name: Build
+  verify:
+    name: Verify
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 350
     permissions:
       contents: read
       statuses: write
-    outputs:
-      sha: ${{ steps.inputs.outputs.sha }}
-      specs: ${{ steps.inputs.outputs.specs }}
-      machines: ${{ steps.inputs.outputs.machines }}
-      total: ${{ steps.inputs.outputs.total }}
-      key: ${{ steps.key.outputs.key }}
+    env:
+      GH_TOKEN: ${{ github.token }}
+      SHA: ${{ inputs.sha }}
+      SPECS: ${{ inputs.specs }}
+      GATE: ${{ inputs.gate }}
+      PROOF: ${{ inputs.proof }}
+      # A single head typechecks and tests the workspaces it changes against main
+      # and their dependents; a train batch and main run every workspace.
+      AFFECTED: ${{ !inputs.full && '--affected' || '' }}
+      TURBO_SCM_BASE: origin/main
+      URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      # The landing train's tests write commits, as the train does on the Mac, so
+      # the runner names an author the way the Mac's Git configuration does.
+      GIT_AUTHOR_EMAIL: 41898282+github-actions[bot]@users.noreply.github.com
+      GIT_AUTHOR_NAME: github-actions[bot]
+      GIT_COMMITTER_EMAIL: 41898282+github-actions[bot]@users.noreply.github.com
+      GIT_COMMITTER_NAME: github-actions[bot]
     steps:
-      - name: Read the inputs
-        id: inputs
-        env:
-          INPUT_SHA: ${{ inputs.sha }}
-          INPUT_SPECS: ${{ inputs.specs }}
-          INPUT_SHARDS: ${{ inputs.shards }}
-        run: |
-          [[ "$INPUT_SHA" =~ ^[0-9a-f]{40}$ ]] || { echo "sha must be a full lower-case commit SHA." >&2; exit 1; }
-          [[ "$INPUT_SPECS" =~ ^(e2e/[A-Za-z0-9/_.-]+\.browser\.ts( |$))*$ ]] || { echo "specs must be spec files under apps/www." >&2; exit 1; }
-          [[ "$INPUT_SHARDS" =~ ^[1-6]$ ]] || { echo "shards must be 1 to 6." >&2; exit 1; }
-          # A narrowed proof on one shard runs the three engines one after another on
-          # one machine: its specs take a minute or two an engine, and each machine
-          # spends about three on setup, so the shared 20 jobs prove more heads.
-          if [ -n "$INPUT_SPECS" ] && [ "$INPUT_SHARDS" = 1 ]; then
-            machines='[{"engines":"chromium firefox webkit","shard":1}]'
-          else
-            machines=$(jq -cn --argjson n "$INPUT_SHARDS" \
-              '[("chromium","firefox","webkit") as $e | range(1; $n + 1) as $s | {engines: $e, shard: $s}]')
-          fi
-          {
-            echo "sha=$INPUT_SHA"
-            echo "specs=$INPUT_SPECS"
-            echo "total=$INPUT_SHARDS"
-            echo "machines=$machines"
-          } >> "$GITHUB_OUTPUT"
-
       - name: Mark the head pending
-        env:
-          GH_TOKEN: ${{ github.token }}
-          SHA: ${{ steps.inputs.outputs.sha }}
-          URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
-          for context in proof proof/chromium proof/firefox proof/webkit; do
+          [[ "$SHA" =~ ^[0-9a-f]{40}$ ]] || { echo "sha must be a full lower-case commit SHA." >&2; exit 1; }
+          [[ "$SPECS" =~ ^(e2e/[A-Za-z0-9/_.-]+\.browser\.ts( |$))*$ ]] || { echo "specs must be spec files under apps/www." >&2; exit 1; }
+          contexts=()
+          [ "$GATE" = true ] && contexts+=(gate gate/static gate/www gate/backend)
+          [ "$PROOF" = true ] && contexts+=(proof proof/chromium proof/firefox proof/webkit)
+          for context in "${contexts[@]}"; do
             gh api --silent "repos/$GITHUB_REPOSITORY/statuses/$SHA" \
-              -f state=pending -f context="$context" -f target_url="$URL" -f description="Proving"
+              -f state=pending -f context="$context" -f target_url="$URL" -f description="Verifying"
           done
 
+      # Coverage counts the files changed since origin/main, and React Doctor
+      # compares the head with main, so the job reads the whole history.
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ steps.inputs.outputs.sha }}
+          ref: ${{ inputs.sha }}
+          fetch-depth: 0
           persist-credentials: false
 
       - name: Install dependencies
         uses: ./.github/actions/install
 
-      # Convex runs "use node" actions on the Node major that convex.json names, which
-      # the acceptance runtime finds through Homebrew, as on the Mac.
+      # The browsers install while the gate runs. The apt timeout lets a silent
+      # mirror fall back in ten seconds instead of thirty a file.
+      - name: Start the browser install
+        if: inputs.proof
+        run: |
+          echo 'Acquire::http::Timeout "10"; Acquire::https::Timeout "10";' \
+            | sudo tee /etc/apt/apt.conf.d/99-mirror-timeout > /dev/null
+          (cd apps/www && setsid bash -c "bunx --no-install playwright install --with-deps chromium firefox webkit; echo \$? > '$RUNNER_TEMP/browsers.exit'" \
+            > "$RUNNER_TEMP/browsers.log" 2>&1 &)
+
+      # The CAS engine's typecheck, lint and tests run its Python tools through uv.
+      - name: Set up uv for the CAS engine
+        if: inputs.gate
+        uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          version: "0.13.6"
+          # The default glob walks every folder, node_modules included, for 3.5 minutes.
+          cache-dependency-glob: apps/cas/uv.lock
+
+      # Every gate step runs every command, so one failure never hides another.
+      # The www typecheck validates its environment while it loads its config: it
+      # takes the inert loopback addresses AGENTS.md names, never a deployment's.
+      - name: Gate static
+        id: static
+        if: inputs.gate
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          failed=0
+          # The Effect-patched compiler fails on suggestions without the word
+          # "error", so the exit code is the verdict.
+          CONVEX_URL=http://127.0.0.1:3210 CONVEX_SITE_URL=http://127.0.0.1:3211 \
+            bun run turbo run typecheck --continue=dependencies-successful ${AFFECTED:+"$AFFECTED"} || failed=1
+          # A head whose committed bindings differ from what its code generates is not ready.
+          git status --porcelain -- packages/backend/confect/_generated packages/backend/convex/_generated
+          test -z "$(git status --porcelain -- packages/backend/confect/_generated packages/backend/convex/_generated)" || failed=1
+          bun run lint || failed=1
+          bun run doctor --verbose --scope changed --base origin/main --blocking warning || failed=1
+          bun run security:audit || failed=1
+          bun run test:scripts || failed=1
+          # One suite at a time: a runner has 4 cores, and the suites time some of
+          # their tests, so each takes the whole machine as it does on the Mac.
+          bun run turbo run test --concurrency=1 --filter='!@repo/backend' --filter='!www' ${AFFECTED:+"$AFFECTED"} || failed=1
+          exit "$failed"
+
+      - name: Gate www
+        id: www
+        if: always() && inputs.gate && steps.static.outcome != 'skipped'
+        run: bun run turbo run test --filter=www ${AFFECTED:+"$AFFECTED"}
+
+      - name: Gate backend
+        id: backend
+        if: always() && inputs.gate && steps.static.outcome != 'skipped'
+        run: bun run turbo run test --filter=@repo/backend ${AFFECTED:+"$AFFECTED"}
+
+      - name: Post the gate
+        if: always() && inputs.gate
+        env:
+          STATIC: ${{ steps.static.outcome }}
+          WWW: ${{ steps.www.outcome }}
+          BACKEND: ${{ steps.backend.outcome }}
+        run: |
+          post() {
+            gh api --silent "repos/$GITHUB_REPOSITORY/statuses/$SHA" \
+              -f state="$2" -f context="$1" -f target_url="$URL" -f description="$3"
+          }
+          all=success
+          for part in static www backend; do
+            name=${part^^}
+            outcome=${!name}
+            state=failure
+            [ "$outcome" = success ] && state=success
+            [ "$state" = success ] || all=failure
+            post "gate/$part" "$state" "${outcome:-did not run}"
+          done
+          post gate "$all" "Typechecks, unit suites, policy, Doctor and audit: $all"
+
+      # Convex runs "use node" actions on the Node major that convex.json names,
+      # which the acceptance runtime finds through Homebrew, as on the Mac.
       - name: Install Node for Convex actions
+        if: always() && inputs.proof
         env:
           HOMEBREW_NO_AUTO_UPDATE: "1"
           HOMEBREW_NO_INSTALL_CLEANUP: "1"
@@ -113,10 +194,12 @@ jobs:
           /home/linuxbrew/.linuxbrew/bin/brew install --quiet "node@$(jq -r .node.nodeVersion packages/backend/convex.json)"
 
       - name: Generate bindings
+        if: always() && inputs.proof
         run: bun run --cwd packages/backend codegen
 
       - name: Name the prepared runtime
         id: key
+        if: always() && inputs.proof
         run: |
           key="$(bun run --cwd packages/backend acceptance key | grep -E '^[0-9a-f]{64}$' | tail -1)"
           [ -n "$key" ] || { echo "This head predates the proof runner: merge main into it." >&2; exit 1; }
@@ -125,6 +208,7 @@ jobs:
 
       - name: Restore the prepared runtime
         id: restore
+        if: always() && inputs.proof && steps.key.outcome == 'success'
         uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           key: prepared-${{ steps.key.outputs.key }}
@@ -133,10 +217,12 @@ jobs:
             ~/.cache/convex/binaries
 
       - name: Prepare
+        id: prepare
+        if: always() && inputs.proof && steps.key.outcome == 'success'
         run: bun run --cwd packages/backend acceptance prepare
 
       - name: Save the prepared runtime
-        if: steps.restore.outputs.cache-hit != 'true'
+        if: always() && inputs.proof && steps.prepare.outcome == 'success' && steps.restore.outputs.cache-hit != 'true'
         uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           key: prepared-${{ steps.key.outputs.key }}
@@ -145,97 +231,23 @@ jobs:
             ~/.cache/convex/binaries
 
       - name: Build
+        id: build
+        if: always() && inputs.proof && steps.prepare.outcome == 'success'
         env:
           TURBO_CONCURRENCY: "2"
         run: bun run --cwd packages/backend acceptance build
 
       # A head whose committed bindings differ from what its own code generates is not ready.
       - name: Verify generated bindings
+        id: bindings
+        if: always() && inputs.proof && steps.build.outcome == 'success'
         run: |
           git status --porcelain -- packages/backend/confect/_generated packages/backend/convex/_generated
           test -z "$(git status --porcelain -- packages/backend/confect/_generated packages/backend/convex/_generated)"
 
-      - name: Hand the build to the spec machines
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
-        with:
-          name: build
-          path: apps/www/dist
-          include-hidden-files: true
-          if-no-files-found: error
-          compression-level: 1
-          retention-days: 1
-
-  specs:
-    name: Specs ${{ matrix.engines }} ${{ matrix.shard }}
-    needs: build
-    runs-on: ubuntu-latest
-    timeout-minutes: 240
-    permissions:
-      contents: read
-    strategy:
-      fail-fast: false
-      matrix:
-        include: ${{ fromJSON(needs.build.outputs.machines) }}
-    env:
-      ENGINES: ${{ matrix.engines }}
-      SHARD: ${{ matrix.shard }}
-      TOTAL: ${{ needs.build.outputs.total }}
-      SPECS: ${{ needs.build.outputs.specs }}
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          ref: ${{ needs.build.outputs.sha }}
-          persist-credentials: false
-
-      - name: Install dependencies
-        uses: ./.github/actions/install
-
-      # The browser installs while the runtime restores and starts. The apt timeout
-      # lets a silent mirror fall back in ten seconds instead of thirty a file.
-      - name: Start the browser install
-        run: |
-          echo 'Acquire::http::Timeout "10"; Acquire::https::Timeout "10";' \
-            | sudo tee /etc/apt/apt.conf.d/99-mirror-timeout > /dev/null
-          (cd apps/www && setsid bash -c "bunx --no-install playwright install --with-deps $ENGINES; echo \$? > '$RUNNER_TEMP/browsers.exit'" \
-            > "$RUNNER_TEMP/browsers.log" 2>&1 &)
-
-      - name: Install Node for Convex actions
-        env:
-          HOMEBREW_NO_AUTO_UPDATE: "1"
-          HOMEBREW_NO_INSTALL_CLEANUP: "1"
-        run: |
-          echo /home/linuxbrew/.linuxbrew/bin >> "$GITHUB_PATH"
-          /home/linuxbrew/.linuxbrew/bin/brew install --quiet "node@$(jq -r .node.nodeVersion packages/backend/convex.json)"
-
-      # The build job proved the committed bindings current, so this machine uses
-      # them as they are, and its key must be the one the build job saved under.
-      - name: Name the prepared runtime
-        env:
-          KEY: ${{ needs.build.outputs.key }}
-        run: |
-          key="$(bun run --cwd packages/backend acceptance key | grep -E '^[0-9a-f]{64}$' | tail -1)"
-          [ "$key" = "$KEY" ] || { echo "This machine computes the key $key, not $KEY." >&2; exit 1; }
-          echo "ACCEPTANCE_SNAPSHOTS=$RUNNER_TEMP/snapshots" >> "$GITHUB_ENV"
-
-      - name: Restore the prepared runtime
-        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        with:
-          key: prepared-${{ needs.build.outputs.key }}
-          path: |
-            ${{ runner.temp }}/snapshots
-            ~/.cache/convex/binaries
-          fail-on-cache-miss: "true"
-
-      - name: Prepare
-        run: bun run --cwd packages/backend acceptance prepare
-
-      - name: Receive the build
-        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
-        with:
-          name: build
-          path: apps/www/dist
-
       - name: Start
+        id: start
+        if: always() && inputs.proof && steps.bindings.outcome == 'success'
         run: |
           setsid bun run --cwd packages/backend acceptance start > "$RUNNER_TEMP/start.log" 2>&1 &
           for _ in $(seq 1 150); do
@@ -245,7 +257,9 @@ jobs:
           tail -50 "$RUNNER_TEMP/start.log"
           exit 1
 
-      - name: Wait for the browser
+      - name: Wait for the browsers
+        id: browsers
+        if: always() && inputs.proof && steps.start.outcome == 'success'
         run: |
           for _ in $(seq 1 300); do
             if [ -s "$RUNNER_TEMP/browsers.exit" ]; then
@@ -257,101 +271,60 @@ jobs:
           tail -50 "$RUNNER_TEMP/browsers.log"
           exit 1
 
+      # Each engine writes its result whatever its specs do; a failing spec then fails this step.
       - name: Run specs
-        # The shard writes its result whatever the specs do; a failing spec then fails this step.
+        id: specs
+        if: always() && inputs.proof && steps.browsers.outcome == 'success'
         run: |
           status=0
-          for engine in $ENGINES; do
+          for engine in chromium firefox webkit; do
             # shellcheck disable=SC2086
-            bun run --cwd packages/backend acceptance shard "$engine" "$SHARD" "$TOTAL" "$RUNNER_TEMP/result/$engine" $SPECS || status=1
+            bun run --cwd packages/backend acceptance shard "$engine" 1 1 "$RUNNER_TEMP/result/$engine" $SPECS || status=1
             jq -e .passed "$RUNNER_TEMP/result/$engine/result.json" > /dev/null || status=1
           done
           exit $status
 
-      # One result per engine, as the report and `bun run proof` read them.
-      - name: Report Chromium
-        if: always() && contains(matrix.engines, 'chromium')
+      - name: Keep the results
+        if: always() && inputs.proof
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: result-chromium-${{ matrix.shard }}
-          path: ${{ runner.temp }}/result/chromium
-          if-no-files-found: ignore
-          retention-days: 7
-
-      - name: Report Firefox
-        if: always() && contains(matrix.engines, 'firefox')
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
-        with:
-          name: result-firefox-${{ matrix.shard }}
-          path: ${{ runner.temp }}/result/firefox
-          if-no-files-found: ignore
-          retention-days: 7
-
-      - name: Report WebKit
-        if: always() && contains(matrix.engines, 'webkit')
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
-        with:
-          name: result-webkit-${{ matrix.shard }}
-          path: ${{ runner.temp }}/result/webkit
+          name: results
+          path: ${{ runner.temp }}/result
           if-no-files-found: ignore
           retention-days: 7
 
       - name: Keep the traces of failures
-        if: always()
+        if: always() && inputs.proof
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: traces-${{ strategy.job-index }}
+          name: traces
+          # Playwright writes into .cache, which the action skips unless told.
+          include-hidden-files: true
           path: |
             .cache/playwright/www
             ${{ runner.temp }}/start.log
           if-no-files-found: ignore
           retention-days: 3
 
-  report:
-    name: Report
-    needs: [ build, specs ]
-    if: always()
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    permissions:
-      statuses: write
-    steps:
-      - name: Collect the shards
-        if: needs.build.result == 'success'
-        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
-        with:
-          pattern: result-*
-          path: results
-
-      # An engine passes only when every shard reported and passed; the summary
-      # passes only when all three engines do. bun run proof reads the same results.
-      - name: Post the statuses
-        env:
-          GH_TOKEN: ${{ github.token }}
-          BUILD: ${{ needs.build.result }}
-          SHA: ${{ needs.build.outputs.sha }}
-          TOTAL: ${{ needs.build.outputs.total }}
-          URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      # An engine passes only when it reported and passed; the summary passes only
+      # when all three do. It is the last step, so a caller that sees `proof`
+      # finds the results uploaded. `bun run proof` reads the same results.
+      - name: Post the proof
+        if: always() && inputs.proof
         run: |
-          [[ "$SHA" =~ ^[0-9a-f]{40}$ ]] || exit 1
-          shopt -s nullglob
-          files=(results/*/result.json)
-          all=success
           post() {
             gh api --silent "repos/$GITHUB_REPOSITORY/statuses/$SHA" \
               -f state="$2" -f context="$1" -f target_url="$URL" -f description="$3"
           }
+          all=success
           for engine in chromium firefox webkit; do
-            if [ "$BUILD" != success ]; then
-              state=failure; description="The build failed"
+            file="$RUNNER_TEMP/result/$engine/result.json"
+            if [ ! -s "$file" ]; then
+              state=failure; description="No result: the build or the start failed"
+            elif [ "$(jq -r .passed "$file")" = true ]; then
+              state=success; description="Every spec passed"
             else
-              read -r reported passed failures < <(cat "${files[@]}" /dev/null | jq -rs --arg e "$engine" \
-                '[.[] | select(.engine == $e)] | "\(map(.shard) | unique | length) \(all(.passed)) \(map(.failures[]) | unique | length)"')
-              if [ "$reported" = "$TOTAL" ] && [ "$passed" = true ]; then
-                state=success; description="$TOTAL of $TOTAL shards passed"
-              else
-                state=failure; description="$reported of $TOTAL shards reported, $failures failing specs"
-              fi
+              state=failure; description="$(jq -r '.failures | length' "$file") failing specs"
             fi
             [ "$state" = success ] || all=failure
             post "proof/$engine" "$state" "$description"
