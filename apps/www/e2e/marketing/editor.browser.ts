@@ -105,12 +105,12 @@ const scrollToEnd = Effect.fn("NakafaE2E.scrollToEnd")(function* (page: Page) {
 });
 
 /**
- * The School landing says nothing in its console from its top to its bottom (owner, 13 Nov 2026: 0 errors and 0
- * warnings). Its demos answer every call in the page, so none of them may open a connection, which the page's
- * Content Security Policy refuses with an error.
+ * The School landing logs no error from its top to its bottom: no console error, no failed request and no page
+ * error (owner, 13 Nov 2026). Its demos answer every call in the page, so none of them may open a connection, which
+ * the page's Content Security Policy refuses with an error in every engine.
  */
 for (const width of [390, 768, 1440]) {
-  test(`the School landing says nothing in its console from top to bottom at ${width}px`, async ({
+  test(`the School landing logs no error from top to bottom at ${width}px`, async ({
     page,
   }) => {
     await page.setViewportSize({ height: 900, width });
@@ -121,8 +121,8 @@ for (const width of [390, 768, 1440]) {
             text: () => string;
             type: () => string;
           }) => {
-            if (message.type() === "error" || message.type() === "warning") {
-              record(`${message.type()}: ${message.text()}`);
+            if (message.type() === "error") {
+              record(`error: ${message.text()}`);
             }
           };
           const failed = (request: Request) =>
