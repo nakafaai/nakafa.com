@@ -54,12 +54,13 @@ export function outlookOf(scenario: Scenario) {
 
 /**
  * The village in the card: a beach that climbs 1 m every 20 m inland, and
- * houses whose floors stand these heights in metres above today's high tide.
+ * houses whose floors stand these heights in metres above today's high tide,
+ * behind a sea wall whose crest stands 2.5 m above it when one is built.
  */
 export const VILLAGE = {
   floors: [0.4, 0.6, 0.8, 1, 1.3, 1.6, 2, 2.5],
   slope: 1 / 20,
-  wall: 1.5,
+  wall: 2.5,
 } as const;
 
 /** The rate of rise in `year`'s period of the record, in metres a year. */

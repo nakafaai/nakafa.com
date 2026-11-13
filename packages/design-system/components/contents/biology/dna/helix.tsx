@@ -71,11 +71,13 @@ const COPY_SECONDS = 10;
  * grooves. With a `variant`, the reader switches between two sequences and
  * the changed bases glow; with `copy`, a slider opens the helix from one end
  * and new nucleotides pair with both parents, as in replication. An RNA
- * genome stands as one strand until it is copied.
+ * genome stands as one strand until it is copied; with `genome`, the footer
+ * compares the stretch shown with the whole genome's length in bases.
  */
 export function DnaHelixLab({
   copy = false,
   description,
+  genome,
   labels,
   nucleic = "dna",
   sequence,
@@ -84,6 +86,7 @@ export function DnaHelixLab({
 }: {
   readonly copy?: boolean;
   readonly description: ReactNode;
+  readonly genome?: number;
   readonly labels: {
     readonly choose?: string;
     readonly copied?: ReactNode;
@@ -91,6 +94,8 @@ export function DnaHelixLab({
     readonly differences?: ReactNode;
     readonly gc?: ReactNode;
     readonly identity?: ReactNode;
+    readonly share?: ReactNode;
+    readonly whole?: ReactNode;
     readonly length: ReactNode;
     readonly span: ReactNode;
     readonly strands?: Readonly<{ first: ReactNode; second: ReactNode }>;
@@ -194,12 +199,19 @@ export function DnaHelixLab({
             label={labels.length}
             value={<InlineMath math={quantity(count, "", 0)} />}
           />
-          <VisualFactTabular
-            label={labels.span}
-            value={
-              <InlineMath math={quantity(spanOf(count), "\\text{ nm}", 1)} />
-            }
-          />
+          {genome === undefined ? (
+            <VisualFactTabular
+              label={labels.span}
+              value={
+                <InlineMath math={quantity(spanOf(count), "\\text{ nm}", 1)} />
+              }
+            />
+          ) : (
+            <VisualFactTabular
+              label={labels.whole}
+              value={<InlineMath math={quantity(genome, "", 0)} />}
+            />
+          )}
           {variant !== undefined && (
             <>
               <VisualFactTabular
@@ -238,10 +250,21 @@ export function DnaHelixLab({
           )}
           {variant === undefined && !copy && (
             <>
-              <VisualFactTabular
-                label={labels.turns}
-                value={<InlineMath math={quantity(turnsOf(count), "", 1)} />}
-              />
+              {genome === undefined ? (
+                <VisualFactTabular
+                  label={labels.turns}
+                  value={<InlineMath math={quantity(turnsOf(count), "", 1)} />}
+                />
+              ) : (
+                <VisualFactTabular
+                  label={labels.share}
+                  value={
+                    <InlineMath
+                      math={quantity((count / genome) * 100, "\\%", 2)}
+                    />
+                  }
+                />
+              )}
               <VisualFactTabular
                 label={labels.gc}
                 value={

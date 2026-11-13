@@ -124,7 +124,7 @@ export function TideGauge() {
   );
 }
 
-/** A concrete sea wall along the coast, its crest 1.5 m above today's high tide. */
+/** A concrete sea wall along the coast, its crest 2.5 m above today's high tide. */
 export function SeaWall() {
   const x = 4;
   const base = groundAt(x) - 0.6;

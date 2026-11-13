@@ -56,7 +56,8 @@ describe("the village", () => {
     expect(level).toBe(1.25);
     expect(floodedCount(level, VILLAGE.floors, 0)).toBe(4);
     expect(floodedCount(level, VILLAGE.floors, VILLAGE.wall)).toBe(0);
-    expect(floodedCount(2.1, VILLAGE.floors, VILLAGE.wall)).toBe(7);
+    expect(floodedCount(2.1, VILLAGE.floors, VILLAGE.wall)).toBe(0);
+    expect(floodedCount(2.6, VILLAGE.floors, VILLAGE.wall)).toBe(8);
   });
 });
 
