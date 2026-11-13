@@ -219,12 +219,14 @@ export function ExamCanvas({
   return (
     // The canvas scrolls in its scroll area's viewport, under an overlay bar that takes no room, so the
     // pages keep their width on every system. The viewport is what the canvas ref, its listeners, the
-    // reveal, the footer's moves and the pages' windowing read.
+    // reveal, the footer's moves and the pages' windowing read. The scroll area draws its root as a
+    // presentation, so the section names its role again to be the named region of the pages.
     <ScrollArea
       aria-label={t("pages-label")}
       className="bg-muted/40 min-w-0 flex-1"
       onViewportScroll={syncPage}
       render={<section />}
+      role="region"
       viewportClassName="relative"
       viewportRef={canvas}
     >
