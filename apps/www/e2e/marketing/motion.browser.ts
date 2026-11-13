@@ -1,15 +1,25 @@
 import { expect, type Locator, type Page, test } from "@playwright/test";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 import { withBrowserContext } from "@/e2e/support/context";
 import { withObservedPageErrors } from "@/e2e/support/observe";
+import { waitForFrames } from "@/e2e/support/quiet";
 import { openRoute } from "@/e2e/support/route";
 import { desktopViewport, viewportSize } from "@/e2e/support/viewport";
 
 /** How far one step of a reader's scroll moves the page while a shape is sought. */
 const REVEAL_STEP = 600;
 
-/** How long the page may be scrolled before a shape must stand on it. */
-const REVEAL_MILLISECONDS = 30_000;
+/** The most steps of one pass down the page. */
+const REVEAL_STEPS = 60;
+
+/** The frames after a step by which the page's observers have answered and its toys stand in place. */
+const REVEAL_FRAMES = 3;
+
+/** How many times the reader goes down the whole page before a shape must stand on it. */
+const REVEAL_PASSES = 3;
+
+/** How long the page may take to add a shape once the reader has moved it. */
+const ATTACH_MILLISECONDS = 30_000;
 
 /** The fractions of the page's height that the reader scrolls to, top to bottom. */
 const SCROLL_POSITIONS = [0, 0.25, 0.5, 0.75, 1];
@@ -43,33 +53,33 @@ function movesOnlyOnScreen(shape: Locator) {
 }
 
 /**
- * Scrolls down the page a screen at a time from the top until `shape` is visible, as a reader's scroll brings it,
- * starting again from the top at the end of the page, since a toy comes only once the page has its reader.
+ * Brings `shape` on screen as a reader does: the page first moves once, which is the reading that wakes its toys, and
+ * waits until the shape is in the page. Then the reader goes down the page from the top a step at a time and looks
+ * once the page has drawn each step, since a toy shows only when the part beside it is drawn. A pass reads no clock,
+ * so a loaded machine only takes longer.
  */
 async function revealByScrolling(page: Page, shape: Locator) {
-  await page.evaluate(() => window.scrollTo(0, 0));
-  await expect
-    .poll(
-      async () => {
-        if (await shape.isVisible()) {
-          return true;
-        }
-        // A reader who reaches the end of the page before the toys came starts again from the top.
-        const atEnd = await page.evaluate(
-          () =>
-            window.scrollY + window.innerHeight >=
-            document.documentElement.scrollHeight - 2
-        );
-        if (atEnd) {
-          await page.evaluate(() => window.scrollTo(0, 0));
-          return false;
-        }
-        await page.mouse.wheel(0, REVEAL_STEP);
-        return false;
-      },
-      { timeout: REVEAL_MILLISECONDS }
-    )
-    .toBe(true);
+  await page.evaluate((step) => window.scrollBy(0, step), REVEAL_STEP);
+  await expect(shape).toBeAttached({ timeout: ATTACH_MILLISECONDS });
+  for (const _pass of Arr.range(1, REVEAL_PASSES)) {
+    await page.evaluate(() => window.scrollTo(0, 0));
+    for (const _step of Arr.range(1, REVEAL_STEPS)) {
+      await waitForFrames(page, REVEAL_FRAMES);
+      if (await shape.isVisible()) {
+        return;
+      }
+      const atEnd = await page.evaluate(
+        () =>
+          window.scrollY + window.innerHeight >=
+          document.documentElement.scrollHeight - 2
+      );
+      if (atEnd) {
+        break;
+      }
+      await page.evaluate((step) => window.scrollBy(0, step), REVEAL_STEP);
+    }
+  }
+  await expect(shape).toBeVisible({ timeout: 0 });
 }
 
 /** Scrolls to a fraction of the page's scrollable height. */

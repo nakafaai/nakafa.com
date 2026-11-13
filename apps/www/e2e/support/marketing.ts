@@ -63,7 +63,10 @@ export const readFirstContributor = Effect.fn(
 export const measureMarketingPage = Effect.fn("NakafaE2E.measureMarketingPage")(
   function* (page: Page) {
     const measurements = yield* Effect.promise(() =>
-      page.evaluate(() => {
+      page.evaluate(async () => {
+        // The elements of the page's own HTML, which a build fixes, and not those that scripts add on their own time.
+        const html = await (await fetch(location.href)).text();
+        const served = new DOMParser().parseFromString(html, "text/html");
         const community = document.querySelector("#community");
         const ids = [...document.querySelectorAll("[id]")].map(({ id }) => id);
         const duplicateIds = [
@@ -93,7 +96,7 @@ export const measureMarketingPage = Effect.fn("NakafaE2E.measureMarketingPage")(
             : -1,
           communityPresent: community !== null,
           duplicateIds: duplicateIds.sort(),
-          homepageDescendants: document.body.querySelectorAll("*").length,
+          homepageDescendants: served.body.querySelectorAll("*").length,
           missingFragmentReferences: [
             ...new Set(
               fragmentReferences.filter(

@@ -51,10 +51,13 @@ const COMMUNITY_MAX_HTML_BYTES = Math.ceil(
 );
 
 /**
- * The homepage ceiling: the body held 3,079 elements at every target viewport
- * on the production build of commit 4eed1d1a95 on 17 October 2026, because the
- * lesson window draws all four cards in one grid cell and mounts only the open
- * lab. Six percent over 3,079 is 3,264.
+ * The homepage ceiling, counted in the page's own HTML, which one build fixes: a
+ * count of the live page also held whatever its scripts had added by then, so it
+ * moved between runs of one build (3,275 once against 3,264 on 9 November 2026).
+ * The body held 3,079 elements on the production build of commit 4eed1d1a95 on
+ * 17 October 2026, because the lesson window draws all four cards in one grid
+ * cell and mounts only the open lab, and its HTML held 3,139 on production on 13
+ * November 2026. Six percent over 3,079 is 3,264.
  */
 const HOMEPAGE_MAX_DESCENDANTS = 3264;
 
