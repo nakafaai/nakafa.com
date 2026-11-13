@@ -3,16 +3,12 @@ import { Button } from "@repo/design-system/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { languages } from "@repo/internationalization/data/lang";
 import { cn } from "cn";
-import { Array as Arr } from "effect";
-import { type Locale, useLocale, useTranslations } from "use-intl";
-import { ActiveBadge } from "@/components/shared/active";
-import { useLocalizedRouteSwitch } from "@/lib/routing/locale/client";
+import { useTranslations } from "use-intl";
+import { RouteLanguageItems } from "@/components/shared/language";
 
 /**
  * Switches the current marketing route between supported Nakafa locales.
@@ -21,14 +17,7 @@ import { useLocalizedRouteSwitch } from "@/lib/routing/locale/client";
  * the footer preserves the full preference label.
  */
 export function Language({ compact = false }: { compact?: boolean }) {
-  const { isPending, replace } = useLocalizedRouteSwitch();
-  const currentLocale = useLocale();
   const t = useTranslations("Common");
-
-  /** Replaces the current route with the selected locale. */
-  function handleChangeLocale(locale: Locale) {
-    replace(locale);
-  }
 
   return (
     <DropdownMenu>
@@ -48,20 +37,7 @@ export function Language({ compact = false }: { compact?: boolean }) {
         className="w-max max-w-[calc(100vw-2rem)]"
         label={t("menu-language")}
       >
-        {Arr.map(languages, (language) => (
-          <DropdownMenuItem
-            disabled={isPending}
-            icon={TranslateIcon}
-            key={language.value}
-            onClick={(event) => {
-              event.stopPropagation();
-              handleChangeLocale(language.value);
-            }}
-          >
-            <span className="truncate">{language.label}</span>
-            <ActiveBadge isActive={currentLocale === language.value} />
-          </DropdownMenuItem>
-        ))}
+        <RouteLanguageItems />
       </DropdownMenuContent>
     </DropdownMenu>
   );
