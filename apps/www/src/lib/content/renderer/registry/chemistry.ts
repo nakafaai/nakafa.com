@@ -16,16 +16,16 @@ import {
   MultipleProportionsLab,
 } from "@/lib/content/renderer/client/chemistry/laws";
 import {
+  MoleculeShapeLab,
+  ReactionBalanceLab,
+} from "@/lib/content/renderer/client/chemistry/molecule";
+import {
   IonLab,
   IsotopeLab,
   MatterParticleReaderLab,
   SubatomicParticlePropertiesLab,
   SubatomicParticlesLab,
 } from "@/lib/content/renderer/client/chemistry/particles";
-import {
-  MoleculeShapeLab,
-  ReactionBalanceLab,
-} from "@/lib/content/renderer/client/chemistry/molecule";
 import {
   ModernPeriodicTableLab,
   PeriodicPropertiesLab,
