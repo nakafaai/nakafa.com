@@ -6,6 +6,7 @@ import {
 import {
   buildMolecule,
   type Placement,
+  PlacementSchema,
 } from "@repo/design-system/components/contents/chemistry/molecule/geometry";
 import { Array as Arr, Result, Schema } from "effect";
 
@@ -41,6 +42,13 @@ export type MoleculeId = typeof MoleculeIdSchema.Type;
 export const AngleSchema = Schema.Struct({
   arms: Schema.Tuple([Schema.Int, Schema.Int]),
   vertex: Schema.Int,
+});
+
+/** One catalog molecule: its teaching angle, formula and Z-matrix. */
+const MoleculeSourceSchema = Schema.Struct({
+  angle: Schema.optional(AngleSchema),
+  formula: Schema.String,
+  placements: Schema.Array(PlacementSchema),
 });
 
 /**
@@ -392,14 +400,7 @@ const SOURCES = {
     formula: "\\mathrm{H_2O}",
     placements: triatomic("O", ["H", "H"], [95.8, 95.8], [1, 1], 104.5),
   },
-} satisfies Record<
-  MoleculeId,
-  {
-    readonly angle?: typeof AngleSchema.Type;
-    readonly formula: string;
-    readonly placements: readonly Placement[];
-  }
->;
+} satisfies Record<MoleculeId, typeof MoleculeSourceSchema.Type>;
 
 /** The molecular formula of one molecule in TeX, such as "\\mathrm{H_2O}". */
 export function moleculeFormula(id: MoleculeId) {

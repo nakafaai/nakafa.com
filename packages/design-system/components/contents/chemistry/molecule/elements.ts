@@ -44,7 +44,7 @@ const ElementPropertiesSchema = Schema.Struct({
   /** The van der Waals radius in picometres (Bondi 1964, Alvarez 2013). */
   radius: Schema.Finite,
 });
-export type ElementProperties = typeof ElementPropertiesSchema.Type;
+type ElementProperties = typeof ElementPropertiesSchema.Type;
 
 /**
  * Every element's model color, radii, and relative atomic mass. Carbon is

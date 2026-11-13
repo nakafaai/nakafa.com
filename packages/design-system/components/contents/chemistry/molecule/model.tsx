@@ -39,7 +39,7 @@ export function atomRadius(element: ElementSymbol, style: ModelStyle) {
  * The sideways offsets of the sticks of one bond: one stick for a single bond,
  * two for a double, and three for a triple, side by side in one plane.
  */
-export function stickOffsets(order: Bond["order"]) {
+function stickOffsets(order: Bond["order"]) {
   const span = (order - 1) * STICK_GAP;
   return Arr.map(Arr.range(0, order - 1), (stick) =>
     order === 1 ? 0 : -span / 2 + stick * STICK_GAP
@@ -47,7 +47,7 @@ export function stickOffsets(order: Bond["order"]) {
 }
 
 /** The atom a bond starts from and the atom it ends at. */
-export type BondEnds = readonly [Point, Point];
+type BondEnds = readonly [Point, Point];
 
 /**
  * A direction square to the bond `axis`, chosen in the plane that faces the
@@ -130,21 +130,35 @@ export function AtomBall({
 /**
  * One bond as sticks in a unit group that `placeBond` stands between its
  * atoms: each stick is two halves, each in the color of the atom it meets,
- * as a model kit's sticks are drawn in chemistry books.
+ * as a model kit's sticks are drawn in chemistry books. A moving bond takes
+ * the `ref` its scene places every frame; a bond that never moves names its
+ * `ends` and is stood between them once, as the faint outline of a molecule
+ * before or after a reaction.
  */
 export function BondSticks({
   elements,
+  ends,
   opacity = 1,
   order,
   ref,
 }: {
   readonly elements: readonly [ElementSymbol, ElementSymbol];
+  readonly ends?: BondEnds;
   readonly opacity?: number;
   readonly order: Bond["order"];
-  readonly ref: RefObject<Group | null>;
+  readonly ref?: RefObject<Group | null>;
 }) {
+  const own = useRef<Group>(null);
+  const group = ref ?? own;
+
+  useLayoutEffect(() => {
+    if (ends !== undefined && group.current !== null) {
+      placeBond(group.current, ends);
+    }
+  }, [ends, group]);
+
   return (
-    <group ref={ref}>
+    <group ref={group}>
       {Arr.map(stickOffsets(order), (offset) => (
         <group key={offset} position={[offset, 0, 0]}>
           {Arr.map([0, 1] as const, (half) => (
@@ -164,36 +178,5 @@ export function BondSticks({
         </group>
       ))}
     </group>
-  );
-}
-
-/**
- * A bond that never moves, stood between its atoms once when it mounts, as
- * the faint outline of a molecule before or after a reaction.
- */
-export function FixedBond({
-  bond,
-  ends,
-  opacity,
-}: {
-  readonly bond: Bond;
-  readonly ends: BondEnds;
-  readonly opacity: number;
-}) {
-  const ref = useRef<Group>(null);
-
-  useLayoutEffect(() => {
-    if (ref.current !== null) {
-      placeBond(ref.current, ends);
-    }
-  }, [ends]);
-
-  return (
-    <BondSticks
-      elements={bond.elements}
-      opacity={opacity}
-      order={bond.order}
-      ref={ref}
-    />
   );
 }

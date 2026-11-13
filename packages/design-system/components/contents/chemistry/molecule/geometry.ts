@@ -179,7 +179,8 @@ function placeAtom(
 
 /** The point halfway through every atom, which a molecule turns about. */
 export function centroid(points: readonly Point[]): Point {
-  const total = Arr.reduce(points, [0, 0, 0] as Point, add);
+  const origin: Point = [0, 0, 0];
+  const total = Arr.reduce(points, origin, add);
   return scale(total, 1 / Math.max(1, points.length));
 }
 

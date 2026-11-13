@@ -14,7 +14,6 @@ import type {
 import {
   AtomBall,
   BondSticks,
-  FixedBond,
   placeBond,
 } from "@repo/design-system/components/contents/chemistry/molecule/model";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
@@ -217,11 +216,12 @@ function ReactionGhosts({ layout }: { readonly layout: ReactionLayout }) {
               {
                 onNone: () => [],
                 onSome: (ends) => [
-                  <FixedBond
-                    bond={bond}
+                  <BondSticks
+                    elements={bond.elements}
                     ends={ends}
                     key={`${side.key}-${bond.from}-${bond.to}`}
                     opacity={GHOST}
+                    order={bond.order}
                   />,
                 ],
               }

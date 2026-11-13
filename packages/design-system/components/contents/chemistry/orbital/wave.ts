@@ -120,7 +120,7 @@ const CloudPointSchema = Schema.Struct({
   phase: Schema.Literals([-1, 1]),
   position: Schema.Tuple([Schema.Finite, Schema.Finite, Schema.Finite]),
 });
-export type CloudPoint = typeof CloudPointSchema.Type;
+type CloudPoint = typeof CloudPointSchema.Type;
 
 /**
  * Samples an orbital's probability cloud, |psi|^2, by rejection from evenly

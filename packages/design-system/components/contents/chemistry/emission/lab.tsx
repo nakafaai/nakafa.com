@@ -32,7 +32,7 @@ import {
 import { VisualFact } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { getColor } from "@repo/design-system/lib/color";
-import { Array as Arr, Option } from "effect";
+import { Array as Arr, Option, Schema } from "effect";
 import { type ReactNode, Suspense, useRef, useState } from "react";
 import { Color, type Group, type Mesh } from "three";
 import { useFormatter } from "use-intl";
@@ -69,10 +69,8 @@ interface EmissionLabels {
 }
 
 /** One fall the lesson offers, from an upper level to a lower one. */
-interface Fall {
-  readonly from: number;
-  readonly to: number;
-}
+const FallSchema = Schema.Struct({ from: Schema.Int, to: Schema.Int });
+type Fall = typeof FallSchema.Type;
 
 /**
  * Bohr's hydrogen atom: the electron circles on an orbit whose radius grows
