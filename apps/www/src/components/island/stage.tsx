@@ -2,6 +2,7 @@
 
 import { keyOf } from "@repo/backend/confect/island/blocks";
 import { SPAN } from "@repo/backend/confect/island/world";
+import { createFramePace } from "@repo/design-system/lib/pace";
 import {
   Array as Arr,
   DateTime,
@@ -29,6 +30,7 @@ import {
 } from "@/lib/island/camera";
 import { hoeOf, ripeningOf, sownOf, waterOf } from "@/lib/island/farming";
 import type { Point } from "@/lib/island/gesture";
+import { islesMesh } from "@/lib/island/isles";
 import { itemPlanOf, turnOf } from "@/lib/island/items";
 import { type Animal, flatQuads, herdOf, wander } from "@/lib/island/life";
 import { changedChunks, glowOf } from "@/lib/island/light";
@@ -37,6 +39,7 @@ import { lightingOf, meshChunk } from "@/lib/island/mesh";
 import { pathOf } from "@/lib/island/path";
 import { planOf } from "@/lib/island/plan";
 import { castRay } from "@/lib/island/ray";
+import { touches } from "@/lib/island/room";
 import { hourOf, lightOf } from "@/lib/island/sky";
 import { roam, wildOf, wildVertices } from "@/lib/island/wild";
 import { type Cells, CHUNKS, SEA_LEVEL } from "@/lib/island/world";
@@ -121,6 +124,7 @@ function start(
     }
     needsDraw = true;
   };
+  painter.isles(islesMesh(store.getState().seed));
   remesh(Arr.makeBy(CHUNKS * CHUNKS, (index) => index));
 
   /** Shows the cursor of the hand the learner holds, or a grabbing hand while they drag the world. */
@@ -276,6 +280,17 @@ function start(
   };
 
   /** Moves the fox along its route for `dt` seconds, keeps the camera on it, and answers the cell it heads for. */
+  /** The learner's fox as an animal at (x, z), heading for (tx, tz), for the checks that keep bodies apart. */
+  const foxAt = (x: number, z: number, tx = x, tz = z): Animal => ({
+    kind: "fox",
+    rest: 1,
+    steps: 0,
+    tx,
+    tz,
+    x,
+    z,
+  });
+
   const stepWalker = (dt: number) => {
     const next = Arr.head(route);
     Option.map(next, ([cx, cz]) => {
@@ -283,13 +298,24 @@ function start(
       const dz = cz + 0.5 - walker.z;
       const distance = Math.hypot(dx, dz);
       const reach = WALK_SPEED * dt;
-      walker =
+      const stepTo =
         distance <= reach
           ? { x: cx + 0.5, z: cz + 0.5 }
           : {
               x: walker.x + (dx / distance) * reach,
               z: walker.z + (dz / distance) * reach,
             };
+      // The fox waits for an animal in its way instead of walking through it (D22).
+      const stepped = foxAt(stepTo.x, stepTo.z, cx + 0.5, cz + 0.5);
+      const nearer = (animal: Animal) =>
+        Math.hypot(stepTo.x - animal.x, stepTo.z - animal.z) <
+        Math.hypot(walker.x - animal.x, walker.z - animal.z);
+      if (
+        Arr.some(herd, (animal) => nearer(animal) && touches(stepped, animal))
+      ) {
+        return;
+      }
+      walker = stepTo;
       if (distance <= reach) {
         route = Arr.drop(route, 1);
       }
@@ -314,14 +340,9 @@ function start(
       ),
       () => [walker.x, walker.z] as const
     );
-    const fox: Animal = {
-      kind: "fox",
+    const fox = {
+      ...foxAt(walker.x, walker.z, facing[0], facing[1]),
       rest: route.length > 0 ? 0 : 1,
-      steps: 0,
-      tx: facing[0],
-      tz: facing[1],
-      x: walker.x,
-      z: walker.z,
     };
     painter.bodies(bodiesOf(cells, Arr.append(herd, fox), seconds));
     painter.herd(
@@ -339,6 +360,10 @@ function start(
   /** The cell a hovering mouse would change, outlined before it presses (D5). */
   let aim: Option.Option<readonly [number, number, number]> = Option.none();
 
+  // The world moving by itself, its water and its wandering life, keeps to its
+  // share of the thread on a slow phone (ADR 0047, D26); the learner's own
+  // moves still draw at once.
+  const pace = createFramePace();
   const tick = (now: number) => {
     frame = requestAnimationFrame(tick);
     const moving =
@@ -353,7 +378,8 @@ function start(
     const { weather } = store.getState();
     const falling =
       weather === "rain" || weather === "storm" || weather === "snow";
-    const waterDue = now - lastWater > (falling ? 33 : 66);
+    const waterDue =
+      now - lastWater > (falling ? 33 : 66) && pace.isDue(now);
     if (
       !(needsDraw || waterDue || route.length > 0 || rod.active()) ||
       document.hidden
@@ -365,8 +391,9 @@ function start(
     const dt = lastLife === 0 ? 0 : Math.min(0.25, (now - lastLife) / 1000);
     lastLife = now;
     const { cells, seed } = store.getState();
+    const everyone = Arr.append(herd, foxAt(walker.x, walker.z));
     herd = Arr.map(herd, (animal, index) =>
-      wander(cells, animal, seed, index, dt)
+      wander(cells, animal, seed, index, dt, everyone)
     );
     wild = Arr.map(wild, (creature) => roam(cells, creature, seed, dt));
     const next = stepWalker(dt);
@@ -386,6 +413,7 @@ function start(
     painter.draw(orbit, lightOf(hour, weather), now / 1000, weather, aim);
     canvas.dataset.drawn = "true";
     canvas.dataset.weather = weather;
+    pace.rest(now, performance.now());
   };
   frame = requestAnimationFrame(tick);
 
