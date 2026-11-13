@@ -2,6 +2,7 @@ import { Line } from "@react-three/drei";
 import { FixedArrow } from "@repo/design-system/components/contents/physics/vector/solid/arrow";
 import { Rod } from "@repo/design-system/components/contents/physics/vector/solid/rod";
 import { Hull } from "@repo/design-system/components/contents/physics/vector/tugboat/hull";
+import { Sea } from "@repo/design-system/components/contents/physics/vector/tugboat/sea";
 import {
   type Tugs,
   towResultant,
@@ -71,7 +72,7 @@ function Ship() {
   );
 }
 
-/** A harbour tug: a short red and white hull with a high wheelhouse, facing along its cable. */
+/** A harbour tug: a short red hull with a white wheelhouse, facing along its cable, and the white wash its propeller throws astern. */
 function Tug({ heading }: { readonly heading: number }) {
   const at = fromBow(CABLE, heading, 0.1);
   return (
@@ -85,6 +86,22 @@ function Tug({ heading }: { readonly heading: number }) {
           length={1.8}
         />
       </group>
+      {Arr.map([0, 1, 2], (step) => (
+        <mesh
+          key={step}
+          position={[-1.1 - step * 0.45, -0.02, 0]}
+          rotation={[-Math.PI / 2, 0, 0]}
+          scale={[1 + step * 0.5, 0.35 + step * 0.18, 1]}
+        >
+          <circleGeometry args={[0.3, 24]} />
+          <meshStandardMaterial
+            color={MATERIAL.foam}
+            opacity={0.55 - step * 0.15}
+            roughness={0.9}
+            transparent
+          />
+        </mesh>
+      ))}
       <mesh castShadow position={[0.2, 0.5, 0]}>
         <boxGeometry args={[0.6, 0.5, 0.55]} />
         <meshStandardMaterial color={MATERIAL.deckWhite} roughness={0.5} />
@@ -153,18 +170,7 @@ export function TugboatScene({
 
   return (
     <group>
-      <mesh
-        position={[0, -0.05, 0]}
-        receiveShadow
-        rotation={[-Math.PI / 2, 0, 0]}
-      >
-        <planeGeometry args={[160, 160]} />
-        <meshStandardMaterial
-          color={MATERIAL.water}
-          metalness={0.2}
-          roughness={0.18}
-        />
-      </mesh>
+      <Sea />
       <Ship />
       <Tug heading={half} />
       <Tug heading={-half} />
