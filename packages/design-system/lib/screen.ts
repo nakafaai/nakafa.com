@@ -20,29 +20,3 @@ export const untilNearScreen = (element: Element, margin: string) =>
     watcher.observe(element);
     return Effect.sync(() => watcher.disconnect());
   });
-
-/**
- * Completes once an element stands wholly under the screen: a box that appears
- * or goes there moves nothing the reader sees. The browser reports the element's
- * place as soon as it is watched, so an element already under the screen
- * completes at once, and one on the screen or above it completes when the reader
- * scrolls it back under. The watcher stops when the wait completes or is
- * interrupted.
- */
-export const untilBelowScreen = (element: Element) =>
-  Effect.callback<void>((resume) => {
-    const watcher = new IntersectionObserver((entries) => {
-      if (
-        Arr.some(
-          entries,
-          ({ boundingClientRect, isIntersecting }) =>
-            !isIntersecting && boundingClientRect.top >= window.innerHeight
-        )
-      ) {
-        watcher.disconnect();
-        resume(Effect.void);
-      }
-    });
-    watcher.observe(element);
-    return Effect.sync(() => watcher.disconnect());
-  });
