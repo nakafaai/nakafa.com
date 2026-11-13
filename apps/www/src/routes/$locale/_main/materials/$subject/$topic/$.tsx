@@ -1,5 +1,4 @@
 import { readNamespaceSegment } from "@repo/contents/route/surface";
-import { getHeadings } from "@repo/contents/toc";
 import { LocalizedPath } from "@repo/internationalization/src/alternates";
 import { loadLocaleMessages } from "@repo/internationalization/src/messages";
 import { toCanonicalPath } from "@repo/internationalization/src/rewrite";
@@ -135,7 +134,7 @@ const readMaterial = createServerFn({ method: "GET" })
               : null,
             headMetadata: toMaterialMetadataCopy({ metadata: route.metadata }),
             body: published.body,
-            headings: getHeadings(published.rawMdx),
+            headings: published.headings,
             labels: {
               home: tCommon("home"),
               onThisPage: tCommon("on-this-page"),
