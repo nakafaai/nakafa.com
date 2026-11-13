@@ -205,22 +205,23 @@ describe("billing/events", () => {
   });
 
   it("links an unknown Polar customer to the user its external ID names, then applies the delivery", async () => {
-    polarGateway.getCustomer.mockReset();
-    polarGateway.getCustomer.mockReturnValue(
-      Effect.succeed(
-        polarCustomerFixture("cust_event_link", "auth-event-link", "ID")
-      )
-    );
     const t = createBillingTestConvex();
-    const eventId = await t.run(async (ctx) => {
-      await ctx.db.insert("users", {
+    const userId = await t.run((ctx) =>
+      ctx.db.insert("users", {
         credits: 0,
         creditsResetAt: NOW,
         email: "event-link@example.com",
         mascot: MASCOT_CODE,
         name: "Event Link",
         plan: "free",
-      });
+      })
+    );
+    // The customer's external ID is the account's own id.
+    polarGateway.getCustomer.mockReset();
+    polarGateway.getCustomer.mockReturnValue(
+      Effect.succeed(polarCustomerFixture("cust_event_link", userId, "ID"))
+    );
+    const eventId = await t.run(async (ctx) => {
       const recorded = await runInMutation(
         ctx,
         recordEvent(

@@ -51,10 +51,14 @@ describe("auth/grant/authorize", () => {
       clientId,
       codeChallenge: await challengeOf(VERIFIER),
       codeHash: await Effect.runPromise(sha256Hex(code)),
-      expiresAt: NOW + Duration.toMillis(CODE_LIFETIME),
       redirectUri: REDIRECT,
       userId: learner.userId,
     });
+    // The code lives `CODE_LIFETIME` from the moment it was given, a moment
+    // after the setup's commit.
+    expect(
+      (stored?.expiresAt ?? 0) - Duration.toMillis(CODE_LIFETIME)
+    ).toBeGreaterThanOrEqual(NOW);
     expect(JSON.stringify(stored)).not.toContain(code);
   });
 

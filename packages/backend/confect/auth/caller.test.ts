@@ -37,7 +37,11 @@ afterEach(() => {
 
 type Accessor = Pick<ReturnType<typeof createConvexTestWithAuth>, "mutation">;
 
-/** Reads the caller in one transaction as `accessor`, after `prepare` ran on its context. */
+/**
+ * Reads the caller in one transaction as `accessor`, after `prepare` ran on its
+ * context, and answers it as plain data: the ids it resolved, or the typed
+ * failure's tag, code and message, which is all a caller ever sees of it.
+ */
 function callerOf(
   accessor: Accessor,
   prepare: (ctx: MutationCtx) => void = () => undefined
@@ -47,7 +51,15 @@ function callerOf(
     return Effect.runPromise(
       readCaller(ctx).pipe(
         Effect.provide(mutationLayer(confectSchema, ctx)),
-        Effect.result
+        Effect.match({
+          onFailure: ({ _tag, code, message }) => ({
+            failure: { _tag, code, message },
+          }),
+          onSuccess: ({ appUser, userId }) => ({
+            appUser: appUser?._id ?? null,
+            userId: userId ?? null,
+          }),
+        })
       )
     );
   });
@@ -70,20 +82,20 @@ async function grantOf(
 }
 
 const AUTH_READ_FAILED = {
-  _tag: "Failure",
-  failure: expect.objectContaining({
+  failure: {
     _tag: "AuthReadError",
     code: "AUTH_READ_FAILED",
-  }),
+    message: "Unable to read authentication state.",
+  },
 };
+
+/** A caller that resolves to nobody. */
+const NOBODY = { appUser: null, userId: null };
 
 describe("auth/caller", () => {
   it("answers nobody for a caller without a token", async () => {
     const t = createConvexTestWithAuth();
-    await expect(callerOf(t)).resolves.toMatchObject({
-      _tag: "Success",
-      success: { appUser: null, userId: undefined },
-    });
+    await expect(callerOf(t)).resolves.toEqual(NOBODY);
   });
 
   it("resolves a live session to its user, and an ended one to nobody at once", async () => {
@@ -92,22 +104,16 @@ describe("auth/caller", () => {
       seedAuthenticatedUser(ctx, { now: NOW, suffix: "session" })
     );
     const signedIn = t.withIdentity({ subject: learner.sessionId });
-    await expect(callerOf(signedIn)).resolves.toMatchObject({
-      _tag: "Success",
-      success: {
-        appUser: { _id: learner.userId, name: "User session" },
-        userId: learner.userId,
-      },
+    await expect(callerOf(signedIn)).resolves.toEqual({
+      appUser: learner.userId,
+      userId: learner.userId,
     });
     await t.mutation((ctx) =>
       ctx.runMutation(components.auth.public.revokeSessions, {
         sessionIds: [learner.sessionId],
       })
     );
-    await expect(callerOf(signedIn)).resolves.toMatchObject({
-      _tag: "Success",
-      success: { appUser: null, userId: undefined },
-    });
+    await expect(callerOf(signedIn)).resolves.toEqual(NOBODY);
   });
 
   it("answers the user without a row when the session's account row is gone", async () => {
@@ -118,10 +124,7 @@ describe("auth/caller", () => {
     await t.mutation((ctx) => ctx.db.delete("users", learner.userId));
     await expect(
       callerOf(t.withIdentity({ subject: learner.sessionId }))
-    ).resolves.toMatchObject({
-      _tag: "Success",
-      success: { appUser: null, userId: learner.userId },
-    });
+    ).resolves.toEqual({ appUser: null, userId: learner.userId });
   });
 
   it("resolves an agent's token through its grant, and a revoked or malformed one to nobody", async () => {
@@ -132,21 +135,15 @@ describe("auth/caller", () => {
     );
     const grantId = await grantOf(t, learner.userId);
     const agent = t.withIdentity({ issuer, subject: grantId });
-    await expect(callerOf(agent)).resolves.toMatchObject({
-      _tag: "Success",
-      success: { appUser: { _id: learner.userId }, userId: learner.userId },
+    await expect(callerOf(agent)).resolves.toEqual({
+      appUser: learner.userId,
+      userId: learner.userId,
     });
     await t.mutation((ctx) => ctx.db.delete("agentGrants", grantId));
-    await expect(callerOf(agent)).resolves.toMatchObject({
-      _tag: "Success",
-      success: { appUser: null, userId: undefined },
-    });
+    await expect(callerOf(agent)).resolves.toEqual(NOBODY);
     await expect(
       callerOf(t.withIdentity({ issuer, subject: "not-a-grant" }))
-    ).resolves.toMatchObject({
-      _tag: "Success",
-      success: { appUser: null, userId: undefined },
-    });
+    ).resolves.toEqual(NOBODY);
   });
 
   it("refuses with a typed, sanitized error when the session store cannot be read", async () => {
@@ -155,9 +152,9 @@ describe("auth/caller", () => {
       seedAuthenticatedUser(ctx, { now: NOW, suffix: "store-down" })
     );
     authServer.failNext = true;
-    const result = await callerOf(t.withIdentity({ subject: learner.sessionId }));
-    expect(result).toMatchObject(AUTH_READ_FAILED);
-    expect(JSON.stringify(result)).not.toContain("private session store");
+    await expect(
+      callerOf(t.withIdentity({ subject: learner.sessionId }))
+    ).resolves.toEqual(AUTH_READ_FAILED);
   });
 
   it("refuses when the deployment's address is unknown, since no issuer can be told apart", async () => {
@@ -168,7 +165,7 @@ describe("auth/caller", () => {
     vi.stubEnv("CONVEX_CLOUD_URL", undefined);
     await expect(
       callerOf(t.withIdentity({ subject: learner.sessionId }))
-    ).resolves.toMatchObject(AUTH_READ_FAILED);
+    ).resolves.toEqual(AUTH_READ_FAILED);
   });
 
   it("refuses when a grant or an account row cannot be read", async () => {
@@ -188,9 +185,9 @@ describe("auth/caller", () => {
         }),
         failRead
       )
-    ).resolves.toMatchObject(AUTH_READ_FAILED);
+    ).resolves.toEqual(AUTH_READ_FAILED);
     await expect(
       callerOf(t.withIdentity({ subject: learner.sessionId }), failRead)
-    ).resolves.toMatchObject(AUTH_READ_FAILED);
+    ).resolves.toEqual(AUTH_READ_FAILED);
   });
 });

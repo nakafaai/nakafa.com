@@ -74,9 +74,9 @@ describe("auth/deletion/request", () => {
         })
       )
     ).resolves.toBeNull();
-    await expect(
-      t.query((ctx) => ctx.db.get("users", owner.userId))
-    ).resolves.toMatchObject({ deletedAt: NOW });
+    // convex-test runs a mutation after the setup that committed before it.
+    const deleted = await t.query((ctx) => ctx.db.get("users", owner.userId));
+    expect(deleted?.deletedAt).toBeGreaterThanOrEqual(NOW);
     // The ended session resolves to nobody at once, and the finalize step waits.
     await expect(
       signedIn.query(api.auth.queries.getCurrentUser, {})

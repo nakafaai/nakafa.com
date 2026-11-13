@@ -78,7 +78,7 @@ describe("auth/grant/exchange code", () => {
     expect(rows.grants).toEqual([
       expect.objectContaining({
         clientId,
-        refreshedAt: NOW,
+        refreshedAt: expect.any(Number),
         userId: learner.userId,
       }),
     ]);
@@ -124,7 +124,8 @@ describe("auth/grant/exchange code", () => {
     const other =
       "otherAgent" in change ? await registerTestAgent(t, "Other") : clientId;
     if ("late" in change) {
-      vi.setSystemTime(NOW + Duration.toMillis(CODE_LIFETIME));
+      // Past the lifetime of a code given a moment after the setup.
+      vi.setSystemTime(NOW + Duration.toMillis(CODE_LIFETIME) + 1000);
     }
     if ("deleted" in change) {
       await t.mutation((ctx) =>
@@ -203,7 +204,7 @@ describe("auth/grant/exchange refresh", () => {
     const issued = await letAgentIn(t, learner.sessionId, clientId);
     assert(issued.outcome === "issued", "Expected tokens.");
     if (cause === "expired") {
-      vi.setSystemTime(NOW + Duration.toMillis(GRANT_LIFETIME));
+      vi.setSystemTime(NOW + Duration.toMillis(GRANT_LIFETIME) + 1000);
     } else {
       await t.mutation((ctx) =>
         ctx.db.patch("users", learner.userId, { deletedAt: NOW })
