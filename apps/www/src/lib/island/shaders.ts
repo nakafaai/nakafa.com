@@ -45,7 +45,8 @@ in float vShade;
 in float vSky;
 in float vGlow;
 in vec3 vWorld;
-out vec4 color;
+layout(location = 0) out vec4 color;
+layout(location = 1) out vec4 surface;
 float hashOf(vec2 cell) {
   return fract(sin(dot(cell, vec2(127.1, 311.7))) * 43758.5453);
 }
@@ -79,23 +80,30 @@ void main() {
   // Measured per pixel: the sea is a few huge quads, and a distance blended between their far corners would fog all of it.
   float fog = smoothstep(uFogRange.x, uFogRange.y, distance(vWorld, uEye));
   color = vec4(mix(texel.rgb * light, uFog, fog), uAlpha);
+  // The face's own direction, from how the world moves across this pixel, for the edge pass (D20).
+  surface = vec4(normalize(cross(dFdx(vWorld), dFdy(vWorld))) * 0.5 + 0.5, 1.0);
 }`;
 
-/** The sky program: one triangle over the whole screen, from the zenith's color to the horizon's. */
-export const SKY_VERTEX = `#version 300 es
+/** One triangle over the whole frame, for the passes that paint every pixel. */
+const FULL_FRAME = `#version 300 es
+out vec2 vUv;
 out float vHeight;
 void main() {
   vec2 corner = vec2(float((gl_VertexID & 1) << 2) - 1.0, float((gl_VertexID & 2) << 1) - 1.0);
-  vHeight = corner.y * 0.5 + 0.5;
+  vUv = corner * 0.5 + 0.5;
+  vHeight = vUv.y;
   gl_Position = vec4(corner, 1.0, 1.0);
 }`;
+
+/** The sky program: one triangle over the whole screen, from the zenith's color to the horizon's. */
+export const SKY_VERTEX = FULL_FRAME;
 
 export const SKY_FRAGMENT = `#version 300 es
 precision mediump float;
 uniform vec3 uZenith;
 uniform vec3 uHorizon;
 in float vHeight;
-out vec4 color;
+layout(location = 0) out vec4 color;
 void main() {
   float t = clamp(vHeight * 1.4 - 0.2, 0.0, 1.0);
   color = vec4(mix(uHorizon, uZenith, floor(t * 10.0) / 10.0), 1.0);
@@ -156,4 +164,68 @@ uniform vec4 uColor;
 out vec4 color;
 void main() {
   color = uColor;
+}`;
+
+/**
+ * The edge pass (ADR 0047, D20): it reads the frame's colors, the direction of
+ * each pixel's face and its depth, and draws a dark outline one art pixel wide
+ * on the near side of every silhouette and a light line along every edge where
+ * a top meets a side, so each body reads at a glance from any angle. Nothing
+ * under the sea's surface is edged. A depth
+ * step counts as an edge only past what the face's own slant explains, so a
+ * long slope seen edge-on stays clean.
+ */
+export const EDGE_VERTEX = FULL_FRAME;
+
+export const EDGE_FRAGMENT = `#version 300 es
+precision highp float;
+uniform sampler2D uColor;
+uniform sampler2D uSurface;
+uniform sampler2D uDepth;
+uniform vec2 uTexel;
+uniform vec2 uClip;
+uniform vec3 uAhead;
+uniform mat4 uInverse;
+uniform float uSea;
+in vec2 vUv;
+out vec4 color;
+float depthAt(vec2 at) {
+  float z = texture(uDepth, at).r * 2.0 - 1.0;
+  return (2.0 * uClip.x * uClip.y) / (uClip.y + uClip.x - z * (uClip.y - uClip.x));
+}
+vec3 normalAt(vec2 at) {
+  return texture(uSurface, at).xyz * 2.0 - 1.0;
+}
+void main() {
+  vec4 base = texture(uColor, vUv);
+  if (texture(uDepth, vUv).r >= 1.0) {
+    color = base;
+    return;
+  }
+  // Under the sea the water already softens every edge, and the sea floor's own seams must not show through.
+  vec4 world = uInverse * vec4(vUv * 2.0 - 1.0, texture(uDepth, vUv).r * 2.0 - 1.0, 1.0);
+  if (world.y / world.w < uSea) {
+    color = base;
+    return;
+  }
+  float depth = depthAt(vUv);
+  vec3 normal = normalAt(vUv);
+  float step = 0.2 + depth * 0.014 / max(0.2, abs(dot(normal, uAhead)));
+  float outline = 0.0;
+  float crease = 0.0;
+  vec2 sides[4] = vec2[4](vec2(1.0, 0.0), vec2(-1.0, 0.0), vec2(0.0, 1.0), vec2(0.0, -1.0));
+  for (int index = 0; index < 4; index++) {
+    vec2 at = vUv + sides[index] * uTexel;
+    float beside = depthAt(at);
+    if (beside - depth > step) {
+      outline = 1.0;
+    } else if (abs(beside - depth) < step) {
+      vec3 other = normalAt(at);
+      if (dot(normal, other) < 0.8 && normal.y > other.y + 0.3) {
+        crease = 1.0;
+      }
+    }
+  }
+  vec3 lit = base.rgb * (1.0 - 0.5 * outline);
+  color = vec4(mix(lit, min(lit * 1.25 + 0.03, vec3(1.0)), crease * (1.0 - outline)), 1.0);
 }`;
