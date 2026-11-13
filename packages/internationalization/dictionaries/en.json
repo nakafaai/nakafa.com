@@ -1489,7 +1489,6 @@
     "attach-add": "Add a photo, a document or a poll",
     "attach-photo": "Photo",
     "attach-poll": "Poll",
-    "emoji-open": "Add an emoji",
     "reaction-add": "React",
     "reaction-label": "{emoji}, {count}",
     "reply-thread": "Reply in thread",
@@ -1498,8 +1497,6 @@
     "thread-title": "Thread",
     "thread-empty": "No reply yet",
     "thread-last": "Last reply {time}",
-    "emoji-search": "Search emoji",
-    "emoji-categories": "Emoji categories",
     "media-description": "The photo at its full size.",
     "media-download": "Download",
     "poll-title": "New poll",
@@ -1569,16 +1566,6 @@
       "document": "Document",
       "image": "Photo",
       "poll": "Poll"
-    },
-    "emoji": {
-      "activities": "Activities",
-      "food": "Food and drink",
-      "nature": "Animals and nature",
-      "objects": "Objects",
-      "people": "People and gestures",
-      "smileys": "Smileys",
-      "symbols": "Symbols",
-      "travel": "Places and travel"
     },
     "library-kind": {
       "folder": "Folder",
@@ -2775,6 +2762,19 @@
       "right": "Move right",
       "symbols": "Symbols"
     }
+  },
+  "Emoji": {
+    "open": "Add an emoji",
+    "search": "Search emoji",
+    "categories": "Emoji categories",
+    "smileys": "Smileys",
+    "people": "People and gestures",
+    "nature": "Animals and nature",
+    "food": "Food and drink",
+    "activities": "Activities",
+    "travel": "Places and travel",
+    "objects": "Objects",
+    "symbols": "Symbols"
   },
   "Memory": {
     "remember": "Let Nina save and use memories",

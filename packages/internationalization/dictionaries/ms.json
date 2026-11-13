@@ -1489,7 +1489,6 @@
     "attach-add": "Tambah foto, dokumen atau undian",
     "attach-photo": "Foto",
     "attach-poll": "Undian",
-    "emoji-open": "Tambah emoji",
     "reaction-add": "Beri reaksi",
     "reaction-label": "{emoji}, {count}",
     "reply-thread": "Balas dalam bebenang",
@@ -1498,8 +1497,6 @@
     "thread-title": "Bebenang",
     "thread-empty": "Belum ada balasan",
     "thread-last": "Balasan terakhir {time}",
-    "emoji-search": "Cari emoji",
-    "emoji-categories": "Kategori emoji",
     "media-description": "Foto dalam saiz penuh.",
     "media-download": "Muat turun",
     "poll-title": "Undian baharu",
@@ -1569,16 +1566,6 @@
       "document": "Dokumen",
       "image": "Foto",
       "poll": "Undian"
-    },
-    "emoji": {
-      "activities": "Aktiviti",
-      "food": "Makanan dan minuman",
-      "nature": "Haiwan dan alam",
-      "objects": "Objek",
-      "people": "Orang dan gerak isyarat",
-      "smileys": "Senyuman",
-      "symbols": "Simbol",
-      "travel": "Tempat dan perjalanan"
     },
     "library-kind": {
       "folder": "Folder",
@@ -2775,6 +2762,19 @@
       "right": "Alih ke kanan",
       "symbols": "Simbol"
     }
+  },
+  "Emoji": {
+    "open": "Tambah emoji",
+    "search": "Cari emoji",
+    "categories": "Kategori emoji",
+    "smileys": "Senyuman",
+    "people": "Orang dan gerak isyarat",
+    "nature": "Haiwan dan alam",
+    "food": "Makanan dan minuman",
+    "activities": "Aktiviti",
+    "travel": "Tempat dan perjalanan",
+    "objects": "Objek",
+    "symbols": "Simbol"
   },
   "Memory": {
     "remember": "Benarkan Nina menyimpan dan menggunakan memori",

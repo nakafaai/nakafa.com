@@ -54,7 +54,7 @@ export function EmojiPanel({
   glyphs: readonly (typeof EmojiEntry.Type)[];
   onPick: (emoji: string) => void;
 }) {
-  const t = useTranslations("Classroom");
+  const t = useTranslations("Emoji");
   const common = useTranslations("Common");
   const locale = useLocale();
   const id = useId();
@@ -68,7 +68,7 @@ export function EmojiPanel({
     (section) => ({
       emojis: section.emojis,
       key: section.category,
-      label: t(`emoji.${section.category}`),
+      label: t(section.category),
     })
   );
   const found = matchEmoji(emojis, query);
@@ -125,12 +125,12 @@ export function EmojiPanel({
             setQuery(next);
             setActive(0);
           }}
-          placeholder={t("emoji-search")}
+          placeholder={t("search")}
           value={query}
         />
       </div>
       <div
-        aria-label={t("emoji-categories")}
+        aria-label={t("categories")}
         className="grid grid-cols-8 justify-items-center border-b px-1 pb-2"
         role="toolbar"
       >
@@ -253,8 +253,8 @@ function CategoryTab({
   current: boolean;
   onPress: () => void;
 }) {
-  const t = useTranslations("Classroom");
-  const label = t(`emoji.${category}`);
+  const t = useTranslations("Emoji");
+  const label = t(category);
 
   return (
     <Button
