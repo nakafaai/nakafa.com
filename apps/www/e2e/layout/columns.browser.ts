@@ -42,16 +42,19 @@ const verifyContentColumn = Effect.fn("NakafaE2E.verifyContentColumn")(
       expect(page.locator(BODY).first()).toBeVisible()
     );
     const widths = yield* Effect.promise(() =>
-      page.evaluate((body) => ({
-        column: Math.round(
-          document.querySelector(body)?.getBoundingClientRect().width ?? 0
-        ),
-        shell: Math.round(
-          document
-            .querySelector('main[data-slot="sidebar-inset"]')
-            ?.getBoundingClientRect().width ?? 0
-        ),
-      }), BODY)
+      page.evaluate(
+        (body) => ({
+          column: Math.round(
+            document.querySelector(body)?.getBoundingClientRect().width ?? 0
+          ),
+          shell: Math.round(
+            document
+              .querySelector('main[data-slot="sidebar-inset"]')
+              ?.getBoundingClientRect().width ?? 0
+          ),
+        }),
+        BODY
+      )
     );
 
     yield* Effect.sync(() =>
