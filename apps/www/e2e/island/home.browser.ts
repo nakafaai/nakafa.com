@@ -30,7 +30,8 @@ for (const viewport of [desktopViewport, touchViewport]) {
       withObservedPageErrors(
         page,
         Effect.promise(async () => {
-          await page.goto("/en");
+          // The signed-in home lives at its own path; /en is the landing every visitor sees.
+          await page.goto("/en/home");
           await expect(
             page.getByRole("heading", { name: en.Home["week-title"] })
           ).toBeVisible();
