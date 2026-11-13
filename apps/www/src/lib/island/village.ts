@@ -16,7 +16,8 @@ const FLOOR = GROUND + 1;
 
 const PATH = idOf("path");
 const DIRT = idOf("dirt");
-const FLOWERS = idOf("flowers");
+/** The crops of the village garden, a row each. */
+const CROPS = [idOf("rice"), idOf("corn"), idOf("cabbage"), idOf("chili")];
 const LOG = idOf("log");
 
 /** Paves the ground of every cell from (x0, z0) to (x1, z1), inclusive. */
@@ -55,7 +56,7 @@ export function layVillage(cells: Cells) {
     pave(cells, [house.x, house.stub[0]], [house.x, house.stub[1]], PATH);
     stampItem(cells, "house", [house.x, FLOOR, house.z], house.turn);
   }
-  // A garden south-west of the square: tilled rows of flowers inside a low log fence.
+  // A garden south-west of the square: tilled rows of crops inside a low log fence.
   const garden = {
     from: [MIDDLE - 10, MIDDLE + 4],
     to: [MIDDLE - 4, MIDDLE + 9],
@@ -63,7 +64,8 @@ export function layVillage(cells: Cells) {
   pave(cells, garden.from, garden.to, DIRT);
   for (let z = garden.from[1] + 1; z <= garden.to[1]; z += 2) {
     for (let x = garden.from[0] + 1; x < garden.to[0]; x += 1) {
-      cells[cellOf(x, FLOOR, z)] = FLOWERS;
+      cells[cellOf(x, FLOOR, z)] =
+        CROPS[((z - garden.from[1] - 1) / 2) % CROPS.length];
     }
   }
   const gate = MIDDLE - 7;
