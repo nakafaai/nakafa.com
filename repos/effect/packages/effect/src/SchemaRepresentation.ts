@@ -1996,6 +1996,19 @@ export const SemVerRangeReviver: DeclarationReviver<null> = makeFixedDeclaration
 )
 
 /**
+ * Reviver for persisted {@link Schema.Rational} declarations.
+ *
+ * @see {@link Schema.Rational} for the corresponding schema
+ * @stability unstable
+ * @category schemas
+ * @since 4.1.3
+ */
+export const RationalReviver: DeclarationReviver<null> = makeFixedDeclarationReviver(
+  "effect/schema/Rational",
+  Schema.Rational
+)
+
+/**
  * Reviver for persisted `File` declarations.
  *
  * **When to use**
@@ -2413,6 +2426,19 @@ export const MutableJsonReviver: DeclarationReviver<null> = makeFixedDeclaration
   Schema.MutableJson
 )
 
+interface FromJsonSchemaExperimentalOptions {
+  /**
+   * Closes objects with declared properties when every contributing object schema omits `additionalProperties`.
+   * Closing happens after composition is normalized, preserving inherited fields.
+   * Explicit additional-property declarations and free-form objects are preserved.
+   * Closed objects strip excess keys by default; use `onExcessProperty: "error"` to reject them.
+   *
+   * @default false
+   * @stability experimental
+   */
+  readonly closeObjects?: boolean | undefined
+}
+
 /**
  * Options for importing JSON Schema Draft 2020-12 documents.
  *
@@ -2446,7 +2472,7 @@ export const MutableJsonReviver: DeclarationReviver<null> = makeFixedDeclaration
  * @category models
  * @since 4.0.0
  */
-export interface FromJsonSchemaOptions {
+export interface FromJsonSchemaOptions extends FromJsonSchemaExperimentalOptions {
   readonly onEnter?: ((schema: JsonSchema.JsonSchema) => JsonSchema.JsonSchema) | undefined
   /**
    * Controls how reached JSON Schema regular expression patterns are imported.
@@ -3201,7 +3227,8 @@ export function fromRepresentations(
  *   conditional keywords and `minContains` / `maxContains` without `contains` have no validation effect and are ignored.
  * - Objects and arrays used as `const` values or `enum` members are rejected. Only strings, numbers, booleans, and null
  *   are supported.
- * - Intersections of overlapping unions are limited to disjoint root-type partitions and finite primitive `anyOf`
+ * - Intersections of overlapping unions are limited to alternatives separated by root types or required literal
+ *   properties, and finite primitive `anyOf`
  *   literal sets, which may also be duplicated across branches. Other union intersections, including cases that would
  *   duplicate any other nested choice, are rejected.
  * - Unknown extension keywords are ignored and their semantics are not enforced.
@@ -3251,7 +3278,8 @@ export function fromJsonSchemaDocument(
  *   extension keywords are ignored and their semantics are not enforced.
  * - Objects and arrays used as `const` values or `enum` members are rejected. Only strings, numbers, booleans, and null
  *   are supported.
- * - Intersections of overlapping unions are limited to disjoint root-type partitions and finite primitive `anyOf`
+ * - Intersections of overlapping unions are limited to alternatives separated by root types or required literal
+ *   properties, and finite primitive `anyOf`
  *   literal sets, which may also be duplicated across branches. Other union intersections, including cases that would
  *   duplicate any other nested choice, are rejected.
  * - Only local references to top-level definitions in the form `#/$defs/<escaped-token>` are supported, optionally

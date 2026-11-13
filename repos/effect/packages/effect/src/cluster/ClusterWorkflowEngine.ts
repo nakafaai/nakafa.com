@@ -441,12 +441,7 @@ export const make = Effect.gen(function*() {
 
       return requestId
     },
-    Effect.retry({
-      while: (e) => e._tag === "PersistenceError",
-      times: 3,
-      schedule: Schedule.exponential(250)
-    }),
-    Effect.orDie
+    retryPersistenceBounded
   )
 
   const engine = WorkflowEngine.makeUnsafe({
@@ -710,7 +705,9 @@ export const make = Effect.gen(function*() {
             { discard }
           )
         ),
-        Effect.orDie,
+        // A failed save inside a workflow would be stored as its result. Top-level
+        // calls still fail, so their callers are not blocked during an outage.
+        parent ? retryPersistence : Effect.orDie,
         Effect.scoped
       )
     },
@@ -847,12 +844,8 @@ export const make = Effect.gen(function*() {
           // It was processed after the first read, so its reply is stored now.
           return Option.map(yield* replyForRequestId(requestId.value), deferredReplyExit)
         })),
-        Effect.retry({
-          while: (e) => e._tag === "PersistenceError",
-          times: 3,
-          schedule: Schedule.exponential(250)
-        }),
-        Effect.orDie
+        // Uninterruptible exit cleanup reads the interrupt signal, so bound its retries.
+        deferred.name === InterruptSignal.name ? retryPersistenceBounded : retryPersistence
       ),
 
     deferredDone: Effect.fnUntraced(
@@ -924,11 +917,17 @@ const retryPolicy = Schedule.min([
 ])
 
 // A transient storage failure must not become the workflow result. Activity,
-// clock and deferred requests are saved under a primary key, so a retry after
-// a lost acknowledgement is deduplicated instead of stored twice.
+// clock, deferred and child run requests are saved under a primary key, so a
+// retry after a lost acknowledgement is deduplicated instead of stored twice.
 const retryPersistence = <A, E extends { readonly _tag: string }, R>(effect: Effect.Effect<A, E, R>) =>
   effect.pipe(
     Effect.retry({ schedule: retryPolicy, while: (e) => e._tag === "PersistenceError" }),
+    Effect.orDie
+  )
+
+const retryPersistenceBounded = <A, E extends { readonly _tag: string }, R>(effect: Effect.Effect<A, E, R>) =>
+  effect.pipe(
+    Effect.retry({ times: 3, schedule: Schedule.exponential(250), while: (e) => e._tag === "PersistenceError" }),
     Effect.orDie
   )
 

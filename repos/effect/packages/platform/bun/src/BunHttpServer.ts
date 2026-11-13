@@ -119,6 +119,13 @@ export type WebSocketOptions =
  * and `Effect` timeouts in your handlers or middleware. An explicit value is
  * passed to Bun unchanged.
  *
+ * On shutdown the server waits up to `gracefulShutdownTimeout` (default 20
+ * seconds) for in-flight requests, then interrupts the remaining request
+ * fibers. `disablePreemptiveShutdown: true` skips the wait and interrupts
+ * them immediately. Handlers run uninterruptibly unless wrapped in
+ * `Effect.interruptible` or served by interruptible `HttpRouter` routes, so a
+ * client disconnect does not stop them and shutdown waits for them to finish.
+ *
  * **Gotchas**
  *
  * Without an idle timeout, Bun also keeps idle keep-alive connections and
@@ -159,7 +166,10 @@ export const make = Effect.fnUntraced(
     const handlerStack: Array<(request: Request, server: BunServer<WebSocketContext>) => Response | Promise<Response>> =
       [
         function(_request, _server) {
-          return new Response("not found", { status: 404 })
+          return new Response("service unavailable", {
+            status: 503,
+            headers: { "cache-control": "no-store", "retry-after": "1" }
+          })
         }
       ]
     const server = Bun.serve<WebSocketContext, R>({
@@ -194,7 +204,7 @@ export const make = Effect.fnUntraced(
     )
     const preemptiveShutdown = options.disablePreemptiveShutdown ? Effect.void : Effect.timeoutOrElse(shutdown, {
       duration: options.gracefulShutdownTimeout ?? Duration.seconds(20),
-      orElse: () => Effect.void
+      orElse: () => Effect.promise(() => server.stop(true))
     })
 
     yield* Scope.addFinalizer(scope, shutdown)
@@ -220,6 +230,14 @@ export const make = Effect.fnUntraced(
             if (upgradedSources.has(bunRequest.source)) return upgradedResponse
           }), middleware)
 
+        // Join the serve scope before the first step. A body can start and exit while
+        // the handler is still running synchronously, and the request scope then
+        // closes when the request finishes, so closing the serve scope must await it.
+        const ownedHttpEffect = Effect.uninterruptible(Effect.withFiber((fiber) => {
+          Fiber.runIn(fiber, scope)
+          return httpEffect
+        }))
+
         function handler(request: Request, server: BunServer<WebSocketContext>) {
           if (request.method === "CONNECT") {
             return Promise.resolve(new Response(null, { status: 501 }))
@@ -230,7 +248,7 @@ export const make = Effect.fnUntraced(
               ServerRequest.HttpServerRequest,
               new BunServerRequest(request, resolve, removeHost(request.url), server, compressionThreshold)
             )
-            const fiber = Fiber.runIn(Effect.runForkWith(context)(httpEffect), scope)
+            const fiber = Effect.runForkWith(context)(ownedHttpEffect)
             request.signal.addEventListener("abort", () => {
               // Bun aborts the signal when an upgraded WebSocket closes, which is not a client abort.
               if (upgradedSources.has(request)) return
@@ -542,9 +560,10 @@ class BunServerRequest extends Inspectable.Class implements ServerRequest.HttpSe
   }
 
   get stream(): Stream.Stream<Uint8Array, Error.HttpServerError> {
-    return this.source.body
+    const body = this.source.body
+    return body
       ? BunStream.fromReadableStream({
-        evaluate: () => this.source.body ?? emptyReadbleStream,
+        evaluate: () => body,
         onError: (cause) =>
           new Error.HttpServerError({
             reason: new Error.RequestParseError({
@@ -553,14 +572,7 @@ class BunServerRequest extends Inspectable.Class implements ServerRequest.HttpSe
             })
           })
       })
-      : Stream.fail(
-        new Error.HttpServerError({
-          reason: new Error.RequestParseError({
-            request: this,
-            description: "can not create stream from empty body"
-          })
-        })
-      )
+      : Stream.empty
   }
 
   private textEffect: Effect.Effect<string, Error.HttpServerError> | undefined
@@ -800,13 +812,6 @@ class BunServerRequest extends Inspectable.Class implements ServerRequest.HttpSe
 
 const closeCode = (exit: Exit.Exit<unknown, unknown>): number =>
   Exit.isSuccess(exit) ? 1000 : Cause.hasInterruptsOnly(exit.cause) ? 1001 : 1011
-
-const emptyReadbleStream = new ReadableStream({
-  start(controller) {
-    controller.enqueue(new Uint8Array())
-    controller.close()
-  }
-})
 
 const removeHost = (url: string) => {
   if (url[0] === "/") {
