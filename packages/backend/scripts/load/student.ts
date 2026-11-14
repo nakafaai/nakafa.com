@@ -92,7 +92,8 @@ const keepPresent = Effect.fn("load.student.present")(function* (
   yield* timed("mutation:beat", send(wire, beat, { ...seat, session })).pipe(
     Effect.result,
     Effect.repeat(Schedule.spaced(PRESENCE_INTERVAL)),
-    Effect.forkScoped
+    // The first beat leaves before the tab does anything else, so a tab that closes at once was still present.
+    Effect.forkScoped({ startImmediately: true })
   );
 });
 
