@@ -9,7 +9,7 @@ import {
   type Verdict,
 } from "#scripts/gate/github";
 import { writeOutput } from "#scripts/output";
-import { gh, REPOSITORY } from "#scripts/proof/github";
+import { gh, REPOSITORY } from "#scripts/proof/client";
 
 const USAGE = "Usage: bun run gate <sha>";
 
@@ -49,9 +49,10 @@ export function formatGate(sha: string, verdict: Verdict) {
 }
 
 /**
- * Gates one head on GitHub's runners: dispatches the gate workflow, then reads
- * the head's statuses until the run posts its verdict, and exits 0 only when
- * every part passed.
+ * Gates one head on GitHub's runners: dispatches the one verification job
+ * without its browsers, over the workspaces the head changes, then reads the
+ * head's statuses until the run posts its gate, and exits 0 only when every part
+ * passed.
  */
 export const runGate = Effect.fn("gate.run")(function* (
   argv: readonly string[]
@@ -61,13 +62,15 @@ export const runGate = Effect.fn("gate.run")(function* (
   yield* gh([
     "workflow",
     "run",
-    "gate.yml",
+    "proof.yml",
     "--repo",
     REPOSITORY,
     "--ref",
     "main",
     "-f",
     `sha=${sha}`,
+    "-f",
+    "proof=false",
   ]).pipe(
     Effect.mapError((error) => new GateError({ message: error.message }))
   );

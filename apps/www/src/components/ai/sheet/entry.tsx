@@ -11,7 +11,8 @@ import { useAi } from "@/components/ai/context";
 const FIRST_INTERACTION = ["keydown", "pointerdown", "scroll"] as const;
 
 /**
- * Renders the sticky Nina entry button for the current page. It is part of
+ * Renders the sticky Nina entry button for the current page: a bar docked to
+ * the bottom of a phone's page, and a floating button from a tablet. It is part of
  * the page's HTML, and the sheet behind it is warmed before the press: once
  * the reader first interacts with the page, and again on intent. A press
  * before React takes the page over opens the sheet once React mounts the
@@ -56,18 +57,20 @@ export function SheetEntry({ contextTitle = "" }: { contextTitle?: string }) {
 
   const press = useEarlyPress<HTMLButtonElement>(handleOpen);
 
-  // The strip spans the page's width, so only its button takes a press: a
-  // control beside the button, such as a comment's Post, stays pressable.
+  // On a phone the strip is a bar docked to the bottom of the page, on the page's own surface with a line above it
+  // and the home indicator's room below, so the text scrolls under a whole edge and the button never lies on a
+  // heading. From a tablet the button floats, and the strip spans the page's width, so only the button takes a
+  // press: a control beside it, such as a comment's Post, stays pressable.
   return (
     <aside
-      className="group/entry pointer-events-none sticky right-0 bottom-0 left-0 z-50 px-6 pb-6 transition-[opacity,translate] duration-300 ease-out data-open:translate-y-50 data-open:opacity-0 motion-reduce:transition-none"
+      className="group/entry max-sm:bg-background sticky right-0 bottom-0 left-0 z-50 transition-[opacity,translate] duration-300 ease-out data-open:translate-y-50 data-open:opacity-0 motion-reduce:transition-none max-sm:border-t max-sm:px-4 max-sm:pt-3 max-sm:pb-[calc(env(safe-area-inset-bottom,0px)+--spacing(3))] sm:pointer-events-none sm:px-6 sm:pb-6"
       data-open={open ? "" : undefined}
       inert={open}
     >
       <div className="mx-auto sm:max-w-xs">
         <Button
           {...press}
-          className="pointer-events-auto w-full justify-between transition-transform duration-200 group-data-open/entry:pointer-events-none hover:scale-105"
+          className="pointer-events-auto w-full justify-between transition-transform duration-200 group-data-open/entry:pointer-events-none sm:hover:scale-105"
           onFocus={warm}
           onMouseEnter={warm}
           onPointerDown={warm}

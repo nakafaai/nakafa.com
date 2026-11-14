@@ -1,4 +1,6 @@
+import { ScrollArea as ScrollAreaPrimitive } from "@base-ui/react/scroll-area";
 import { Tabs as TabsPrimitive } from "@base-ui/react/tabs";
+import { scrollFadeVariants } from "@repo/design-system/lib/scrollbar";
 import { cn } from "cn";
 import type React from "react";
 
@@ -6,7 +8,7 @@ import type React from "react";
  * The one tab bar of the product, a page's second header row, a pane's or a dialog's alike. The current tab reads in the
  * text color, the others stay muted, and one underline over the bar's line slides between them, in light and dark. A
  * tab has no side padding, so its text, its underline and the row's gutter stand on one edge. Route tabs pass a `Link`
- * through `render`. A narrow screen scrolls the bar within itself, never the page.
+ * through `render`. A narrow screen scrolls the bar within itself, never the page, and the edge that hides more tabs fades.
  */
 export function Tabs({
   className,
@@ -28,23 +30,25 @@ export function TabsList({
 }: TabsPrimitive.List.Props): React.ReactElement {
   return (
     // The line under the bar stands outside its scroller, so the current tab's underline covers it.
-    <div className="w-full shrink-0 border-b">
-      <TabsPrimitive.List
+    <ScrollAreaPrimitive.Root className="w-full shrink-0 border-b">
+      {/* The bar is the scroll viewport itself, so an edge with more tabs behind it fades and a reader sees the bar moves. */}
+      <ScrollAreaPrimitive.Viewport
         className={cn(
           // The underline waits for the page's scripts, so until it shows the current tab draws its own in the same place.
-          "relative -mb-px flex h-12 w-full gap-6 overflow-x-auto [&:not(:has(>[data-slot=tab-indicator]:not([hidden])))]:[--tab-active-line:var(--foreground)]",
+          "focus-visible:ring-ring relative -mb-px flex h-12 w-full gap-6 outline-none focus-visible:ring-2 focus-visible:ring-inset [&:not(:has(>[data-slot=tab-indicator]:not([hidden])))]:[--tab-active-line:var(--foreground)]",
+          scrollFadeVariants({ start: true }),
           className
         )}
         data-slot="tabs-list"
-        {...props}
+        render={<TabsPrimitive.List {...props} />}
       >
         {children}
         <TabsPrimitive.Indicator
           className="bg-foreground absolute bottom-0 left-0 z-10 h-0.5 w-(--active-tab-width) translate-x-(--active-tab-left) transition-[width,translate] duration-200 ease-in-out motion-reduce:transition-none"
           data-slot="tab-indicator"
         />
-      </TabsPrimitive.List>
-    </div>
+      </ScrollAreaPrimitive.Viewport>
+    </ScrollAreaPrimitive.Root>
   );
 }
 
