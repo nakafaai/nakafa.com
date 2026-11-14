@@ -1,4 +1,5 @@
 import { expect, type Page, test } from "@playwright/test";
+import { Array as Arr, MutableList } from "effect";
 import { waitUntilTakenOver } from "@/e2e/support/window";
 
 /** The pages a visitor most often lands on from another site: the home page and the School landing. */
@@ -34,10 +35,10 @@ for (const path of LANDINGS) {
   test(`a visitor's first load of ${path} stores nothing in the browser and logs no warning`, async ({
     page,
   }) => {
-    const warnings: string[] = [];
+    const warnings = MutableList.make<string>();
     page.on("console", (message) => {
       if (message.type() === "warning" || message.type() === "error") {
-        warnings.push(message.text());
+        MutableList.append(warnings, message.text());
       }
     });
     await page.addInitScript(countStorageWrites);
@@ -46,6 +47,10 @@ for (const path of LANDINGS) {
     await page.waitForTimeout(SETTLE_MILLISECONDS);
 
     expect(await storedKeys(page)).toEqual([]);
-    expect(warnings.filter((text) => BOUNCE_TRACKER.test(text))).toEqual([]);
+    expect(
+      Arr.filter(MutableList.toArray(warnings), (text) =>
+        BOUNCE_TRACKER.test(text)
+      )
+    ).toEqual([]);
   });
 }
