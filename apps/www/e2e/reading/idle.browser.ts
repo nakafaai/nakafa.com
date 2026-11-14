@@ -5,8 +5,10 @@ import { pinnedRoutes } from "@/e2e/support/corpus";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
-/** Nina, where a lesson whose comments are empty shows her, at the bottom of the lesson. */
-const NINA = 'footer:has(#comments) [data-slot="empty-icon"] svg';
+/** Nina's place, where a lesson whose comments are empty shows her, at the bottom of the lesson. */
+const PLACE = 'footer:has(#comments) [data-slot="empty-icon"]';
+/** Her picture in that place: the still one a server drew, then the one her life draws in its stead. */
+const NINA = `${PLACE} svg`;
 
 /** How long the reader does nothing while the page is measured. */
 const IDLE = Duration.seconds(3);
@@ -19,15 +21,24 @@ const IDLE = Duration.seconds(3);
  */
 const IDLE_SHARE = 0.5;
 
-/** Counts each change of Nina's picture from now, under `nakafaNinaMoves`. */
+/**
+ * Counts each change of Nina's picture from now, under `nakafaNinaMoves`. It watches her place, not the picture in it:
+ * her still picture stays until the page has its reader and her life has loaded, and her life then draws a picture of
+ * its own in the same place, so a watch on the first picture would count nothing once it is gone. Only a change inside
+ * a picture counts, so the handover itself is no move.
+ */
 function watchNina(selector: string) {
   const moves = { count: 0 };
   Reflect.set(window, "nakafaNinaMoves", moves);
-  const figure = document.querySelector(selector);
-  if (figure !== null) {
+  const place = document.querySelector(selector);
+  if (place !== null) {
     new MutationObserver((records) => {
-      moves.count += records.length;
-    }).observe(figure, { attributes: true, subtree: true });
+      for (const record of records) {
+        if (record.target instanceof SVGElement) {
+          moves.count += 1;
+        }
+      }
+    }).observe(place, { attributes: true, subtree: true });
   }
 }
 
@@ -82,7 +93,7 @@ test.describe("an idle lesson on a phone", () => {
             await expect(page.locator(NINA)).toBeVisible({
               timeout: readinessTimeoutMilliseconds,
             });
-            await page.evaluate(watchNina, NINA);
+            await page.evaluate(watchNina, PLACE);
             // Her life starts once the page has settled.
             await expect
               .poll(() => page.evaluate(readMoves), {
