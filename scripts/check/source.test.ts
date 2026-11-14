@@ -2,12 +2,12 @@ import { afterEach, assert, describe, it } from "@effect/vitest";
 import { Array as Arr, Effect } from "effect";
 import { isIdentifier, type SourceFile, SyntaxKind } from "tsrs/ast";
 import { API, Checker, Program, Snapshot } from "tsrs/sync";
-import { apiMethods } from "#scripts/check/fixture";
 import {
   descendants,
   parseSources,
   type RepositorySource,
 } from "#scripts/check/source";
+import { apiMethods } from "#scripts/check/test.fixture";
 
 const FILE = "packages/example/src/program.ts";
 const VIEW = "apps/www/src/components/example.tsx";

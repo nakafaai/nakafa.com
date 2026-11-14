@@ -5,8 +5,6 @@ import { lazy } from "@repo/design-system/lib/lazy";
 import { ClientOnly } from "@tanstack/react-router";
 import { Suspense } from "react";
 import { loadSearchCommandModule } from "@/components/search/command/module";
-import { ArticleNavigationContext } from "@/components/search/navigation";
-import type { ArticleNavigationItem } from "@/lib/content/article/navigation";
 import { useSearch } from "@/lib/search/context";
 
 const LazySearchCommand = lazy(() =>
@@ -21,11 +19,7 @@ const LazySearchCommand = lazy(() =>
  * code. The palette stays mounted while closed, so the press that opens it reveals
  * a body that is already there.
  */
-export function DeferredSearchCommand({
-  articleNavigation,
-}: {
-  articleNavigation: readonly ArticleNavigationItem[];
-}) {
+export function DeferredSearchCommand() {
   const activated = useSearch((state) => state.activated);
   const setOpen = useSearch((state) => state.setOpen);
 
@@ -39,12 +33,10 @@ export function DeferredSearchCommand({
   }
 
   return (
-    <ArticleNavigationContext value={articleNavigation}>
-      <Suspense fallback={null}>
-        <ClientOnly fallback={null}>
-          <LazySearchCommand />
-        </ClientOnly>
-      </Suspense>
-    </ArticleNavigationContext>
+    <Suspense fallback={null}>
+      <ClientOnly fallback={null}>
+        <LazySearchCommand />
+      </ClientOnly>
+    </Suspense>
   );
 }

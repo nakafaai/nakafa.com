@@ -22,21 +22,6 @@ export const CONTENT_ANALYTICS_HEADROOM = {
   scheduledFunctionArgsBytes: 2048,
 } as const satisfies Record<keyof TransactionMetrics, number>;
 
-/** Capacity retained after the final group for lease and scheduler writes. */
-export const CONTENT_ANALYTICS_FINALIZATION_RESERVE = {
-  bytesRead: 64 * 1024,
-  bytesWritten: 256 * 1024,
-  databaseQueries: 8,
-  documentsRead: 8,
-  documentsWritten: 32,
-  fileReadBytes: 0,
-  fileWriteBytes: 0,
-  filesRead: 0,
-  filesWritten: 0,
-  functionsScheduled: 1,
-  scheduledFunctionArgsBytes: 1024,
-} as const satisfies Record<keyof TransactionMetrics, number>;
-
 /** Stops the drain unless every transaction resource retains its reserve. A zero reserve needs no check. */
 export function hasContentAnalyticsHeadroom(metrics: TransactionMetrics) {
   return Arr.every(

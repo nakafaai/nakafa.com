@@ -1,6 +1,6 @@
 import { QueryResult, useMutation, useQuery } from "@confect/react";
 import { Globe02Icon } from "@hugeicons/core-free-icons";
-import { ActiveAppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
+import type { ActiveAppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import { type UnitLevel, UnitName } from "@repo/backend/confect/tenancy/schema";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
@@ -29,12 +29,9 @@ import {
 } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
-import {
-  languageItems,
-  timeZoneItems,
-} from "@/components/tenant/settings/choices";
+import { LanguageField } from "@/components/shared/language";
+import { timeZoneItems } from "@/components/tenant/settings/choices";
 import { addUnitChange } from "@/components/tenant/settings/mutation";
-import { SelectField } from "@/components/tenant/settings/select";
 import type { Unit } from "@/components/tenant/settings/state";
 import {
   UnitLevelField,
@@ -199,18 +196,9 @@ function SchoolUnitCreateForm({
             </SelectContent>
           </Select>
         </Field>
-        <SelectField
-          items={languageItems}
+        <LanguageField
           label={t("unit-page-language")}
-          menu={common("menu-language")}
-          onChoose={(next) => {
-            const chosen = Schema.decodeUnknownOption(
-              ActiveAppLocaleCodeSchema
-            )(next);
-            if (Option.isSome(chosen)) {
-              setLanguageChoice(chosen.value);
-            }
-          }}
+          onChoose={setLanguageChoice}
           value={contentLanguage}
         />
       </FieldGroup>

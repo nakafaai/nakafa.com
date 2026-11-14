@@ -2,7 +2,7 @@ import { describe, expect, it } from "@effect/vitest";
 import { Animal, DESIGNS } from "@repo/mascot/animal";
 import { encode, type Mascot } from "@repo/mascot/code";
 import { contrast } from "@repo/mascot/ground";
-import { cast, forSeed, gallery } from "@repo/mascot/seed";
+import { cast, forSeed } from "@repo/mascot/seed";
 import { Array as Arr } from "effect";
 
 /** Whether the animal of a mascot stands out from its ground. */
@@ -89,22 +89,6 @@ describe("mascot/seed", () => {
       expect(
         Arr.filter(cast("home", 65), (mascot) => !standsOut(mascot))
       ).toEqual([]);
-    });
-  });
-
-  describe("gallery", () => {
-    it("shows each animal once, in the order of the animals", () => {
-      expect(Arr.map(gallery(), ({ animal }) => animal)).toEqual(
-        Animal.literals
-      );
-    });
-
-    it("gives the same gallery every time", () => {
-      expect(gallery()).toEqual(gallery());
-    });
-
-    it("stands every animal out from its ground", () => {
-      expect(Arr.filter(gallery(), (mascot) => !standsOut(mascot))).toEqual([]);
     });
   });
 });

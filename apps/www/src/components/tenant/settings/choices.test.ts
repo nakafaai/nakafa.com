@@ -4,7 +4,6 @@ import {
   chosenGrade,
   countryChoices,
   gradeItemsOf,
-  languageItems,
   timeZoneItems,
 } from "@/components/tenant/settings/choices";
 
@@ -31,15 +30,6 @@ describe("components/tenant/settings/choices", () => {
       label: "Asia/Jakarta",
       value: "Asia/Jakarta",
     });
-  });
-
-  it("offers each page language of the platform under its label", () => {
-    expect(languageItems).toContainEqual(
-      expect.objectContaining({ value: "id" })
-    );
-    expect(Arr.every(languageItems, (item) => item.label.length > 0)).toBe(
-      true
-    );
   });
 
   it("offers a cohort the school years of its unit's level, from the lowest to the highest", () => {
