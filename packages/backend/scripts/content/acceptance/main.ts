@@ -3,6 +3,7 @@ import { runMain } from "@effect/platform-node/NodeRuntime";
 import { layer } from "@effect/platform-node/NodeServices";
 import {
   buildMode,
+  keyMode,
   prepareMode,
   startMode,
 } from "@repo/backend/scripts/content/acceptance/build";
@@ -22,6 +23,10 @@ import type { AcceptanceMode } from "@repo/backend/scripts/content/acceptance/mo
 import { operatorMode } from "@repo/backend/scripts/content/acceptance/operator";
 import { ownerMode } from "@repo/backend/scripts/content/acceptance/owner";
 import { profileMode } from "@repo/backend/scripts/content/acceptance/profile";
+import {
+  proofMode,
+  shardMode,
+} from "@repo/backend/scripts/content/acceptance/proof";
 import { schoolMode } from "@repo/backend/scripts/content/acceptance/school";
 import { sittingMode } from "@repo/backend/scripts/content/acceptance/sitting";
 import { studentMode } from "@repo/backend/scripts/content/acceptance/student";
@@ -48,9 +53,12 @@ import {
  */
 export const acceptanceModes: readonly AcceptanceMode[] = [
   prepareMode,
+  keyMode,
   buildMode,
   startMode,
   cleanMode,
+  shardMode,
+  proofMode,
   learnerMode,
   operatorMode,
   schoolMode,

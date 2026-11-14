@@ -1,8 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
-import {
-  untilBelowScreen,
-  untilNearScreen,
-} from "@repo/design-system/lib/screen";
+import { untilNearScreen } from "@repo/design-system/lib/screen";
 import { Array as Arr, Effect, Fiber } from "effect";
 
 let observers: ObserverStub[] = [];
@@ -78,41 +75,16 @@ describe("waiting on an element's place on the screen", () => {
       })
   );
 
-  it.effect(
-    "completes only once the element stands wholly under the screen",
-    () =>
-      Effect.gen(function* () {
-        const waiting = yield* Effect.forkChild(
-          untilBelowScreen(document.createElement("div"))
-        );
-        yield* Effect.yieldNow;
-
-        // On the screen, then above it: neither lets a box appear.
-        report(true, 400);
-        report(false, -300);
-        yield* Effect.yieldNow;
-        expect(waiting.pollUnsafe()).toBeUndefined();
-
-        report(false, 800);
-        yield* Fiber.join(waiting);
-        expect(observers[0]?.disconnected).toBe(true);
-      })
-  );
-
-  it.effect("stops both watchers when their wait is interrupted", () =>
+  it.effect("stops the watcher when its wait is interrupted", () =>
     Effect.gen(function* () {
-      const element = document.createElement("div");
-      const near = yield* Effect.forkChild(untilNearScreen(element, "50%"));
-      const below = yield* Effect.forkChild(untilBelowScreen(element));
+      const near = yield* Effect.forkChild(
+        untilNearScreen(document.createElement("div"), "50%")
+      );
       yield* Effect.yieldNow;
 
       yield* Fiber.interrupt(near);
-      yield* Fiber.interrupt(below);
 
-      expect(Arr.map(observers, ({ disconnected }) => disconnected)).toEqual([
-        true,
-        true,
-      ]);
+      expect(observers[0]?.disconnected).toBe(true);
     })
   );
 });

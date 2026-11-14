@@ -11,13 +11,13 @@ export type MermaidRenderConfig = Omit<
   | "suppressErrorRendering"
 >;
 
-/** Expected client failure while loading, configuring, or rendering Mermaid. */
+/** Expected failure while loading, configuring, parsing, or rendering Mermaid. */
 export class MermaidRenderError extends Schema.TaggedError<
   MermaidRenderError,
   { readonly brand: unique symbol }
 >()("MermaidRenderError", {
   cause: Schema.Unknown,
-  operation: Schema.Literals(["initialize", "render"]),
+  operation: Schema.Literals(["initialize", "parse", "render"]),
 }) {}
 
 /**
@@ -107,3 +107,18 @@ export const renderMermaid = Effect.fn("designSystem.mermaid.render")(
     });
   }
 );
+
+/**
+ * Parses one chart with the Mermaid and the settings that draw it, without
+ * drawing it. The static build runs it over every diagram of the release, so a
+ * chart this cannot parse fails the build instead of reaching a reader.
+ */
+export const parseMermaid = Effect.fn("designSystem.mermaid.parse")(function* (
+  chart: string
+) {
+  const mermaid = yield* initializeMermaid({});
+  yield* Effect.tryPromise({
+    try: () => mermaid.parse(chart),
+    catch: (cause) => new MermaidRenderError({ cause, operation: "parse" }),
+  });
+});

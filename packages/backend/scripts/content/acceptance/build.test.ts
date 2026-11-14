@@ -3,6 +3,7 @@ import { TrustedKeySchema } from "@nakafa/aksara-contracts/signature/trusted";
 import type { withAnalyticsSink } from "@repo/backend/scripts/content/acceptance/analytics";
 import {
   buildMode,
+  keyMode,
   prepareAcceptance,
   prepareMode,
   runAcceptance,
@@ -14,6 +15,7 @@ import type { withLocalBackend } from "@repo/backend/scripts/content/acceptance/
 import { nodePlatform } from "@repo/backend/test/platform";
 import { FetchClient } from "@repo/utilities/http/client";
 import { ConfigProvider, Effect, Exit, Layer, MutableList } from "effect";
+import { TestConsole } from "effect/testing";
 
 /** What a program run under the acceptance backend or analytics sink can fail with. */
 type AcceptanceError = Effect.Error<ReturnType<typeof runAcceptance>>;
@@ -27,6 +29,10 @@ const mocks = vi.hoisted(() => ({
   backend: vi.fn<typeof withLocalBackend<void, AcceptanceError, never>>(),
   command: vi.fn(),
   publish: vi.fn(),
+  renderer: vi.fn(),
+  key: vi.fn(),
+  restore: vi.fn(),
+  save: vi.fn(),
   sink: vi.fn<typeof withAnalyticsSink<void, AcceptanceError, never>>(),
 }));
 vi.mock("@repo/backend/scripts/content/acceptance/analytics", () => ({
@@ -51,7 +57,16 @@ vi.mock("@repo/backend/scripts/content/acceptance/process", async (load) => ({
   withLocalBackend: mocks.backend,
 }));
 vi.mock("@repo/backend/scripts/content/acceptance/publication", () => ({
+  exportRenderer: mocks.renderer,
   publishAcceptanceSource: mocks.publish,
+}));
+vi.mock("@repo/backend/scripts/content/acceptance/snapshot", async (load) => ({
+  ...(await load<
+    typeof import("@repo/backend/scripts/content/acceptance/snapshot")
+  >()),
+  preparedKey: mocks.key,
+  restorePrepared: mocks.restore,
+  savePrepared: mocks.save,
 }));
 vi.mock("@repo/backend/scripts/content/acceptance/terminal", () => ({
   runBuildCommand: mocks.command,
@@ -82,11 +97,17 @@ const reservation = {
   directoryInode: runtime.directoryInode,
 };
 
+const RENDERER = "/test/.cache/acceptance/renderer.json";
+const KEY = "a".repeat(64);
+const STORE = "/test/snapshots";
+
 // No test reads the shell's ACCEPTANCE_PORT: each one names the port it runs with.
 const services = Layer.mergeAll(
   nodePlatform,
   FetchClient,
-  ConfigProvider.layer(ConfigProvider.fromEnvRecord({}))
+  ConfigProvider.layer(
+    ConfigProvider.fromEnvRecord({ ACCEPTANCE_SNAPSHOTS: STORE })
+  )
 );
 
 /** Runs a program with one ACCEPTANCE_PORT, as the shell would name it. */
@@ -105,7 +126,11 @@ layer(services)("signed acceptance lifecycle", (it) => {
     mocks.reserve.mockReturnValue(Effect.succeed(reservation));
     mocks.initialize.mockReturnValue(Effect.succeed(runtime));
     mocks.reservedRuntime.mockReturnValue(Effect.succeedSome(runtime));
+    mocks.renderer.mockReturnValue(Effect.succeed(RENDERER));
+    mocks.key.mockReturnValue(Effect.succeed(KEY));
+    mocks.restore.mockReturnValue(Effect.succeedNone);
     for (const mock of [
+      mocks.save,
       mocks.lease,
       mocks.release,
       mocks.command,
@@ -123,14 +148,65 @@ layer(services)("signed acceptance lifecycle", (it) => {
     () =>
       Effect.gen(function* () {
         yield* prepareAcceptance("/test");
-        expect(mocks.publish).toHaveBeenCalledWith("/test", runtime);
+        expect(mocks.renderer).toHaveBeenCalledWith("/test", runtime.directory);
+        expect(mocks.key).toHaveBeenCalledWith(
+          "/test",
+          RENDERER,
+          "http://localhost:3000"
+        );
+        expect(mocks.restore).toHaveBeenCalledWith(
+          STORE,
+          KEY,
+          "/test",
+          reservation
+        );
+        expect(mocks.publish).toHaveBeenCalledWith(runtime, RENDERER);
+        expect(mocks.save).toHaveBeenCalledWith(STORE, KEY, runtime);
         expect(mocks.backend).toHaveBeenCalledOnce();
         expect(mocks.release).not.toHaveBeenCalled();
         expect(mocks.command).not.toHaveBeenCalled();
       })
   );
 
-  for (const phase of ["lease", "initialize", "backend", "publish"] as const) {
+  it.effect(
+    "restores the saved runtime of an unchanged key and prepares nothing",
+    () =>
+      Effect.gen(function* () {
+        mocks.restore.mockReturnValue(Effect.succeedSome(runtime));
+        yield* prepareAcceptance("/test");
+        expect(mocks.initialize).not.toHaveBeenCalled();
+        expect(mocks.backend).not.toHaveBeenCalled();
+        expect(mocks.publish).not.toHaveBeenCalled();
+        expect(mocks.save).not.toHaveBeenCalled();
+        expect(mocks.release).not.toHaveBeenCalled();
+      })
+  );
+
+  it.effect("prints the key that prepare would restore or save", () =>
+    Effect.gen(function* () {
+      const lines = yield* Effect.gen(function* () {
+        yield* keyMode.run("/test").pipe(Effect.scoped);
+        return yield* TestConsole.logLines;
+      }).pipe(Effect.provide(TestConsole.layer));
+      expect(lines).toContain(KEY);
+      expect(mocks.renderer).toHaveBeenCalledWith(
+        "/test",
+        expect.stringContaining("acceptance-key-")
+      );
+      expect(mocks.reserve).not.toHaveBeenCalled();
+    })
+  );
+
+  for (const phase of [
+    "lease",
+    "renderer",
+    "key",
+    "restore",
+    "initialize",
+    "backend",
+    "publish",
+    "save",
+  ] as const) {
     it.effect(`releases its reservation when ${phase} fails`, () =>
       Effect.gen(function* () {
         const failure = acceptanceRuntimeError(`test ${phase} failure`);
@@ -309,7 +385,7 @@ layer(services)("signed acceptance lifecycle", (it) => {
   it.effect("runs the prepare mode for the repository root", () =>
     Effect.gen(function* () {
       yield* prepareMode.run("/test");
-      expect(mocks.publish).toHaveBeenCalledWith("/test", runtime);
+      expect(mocks.publish).toHaveBeenCalledWith(runtime, RENDERER);
     })
   );
 

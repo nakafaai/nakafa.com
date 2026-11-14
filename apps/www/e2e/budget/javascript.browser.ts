@@ -13,6 +13,9 @@ import { appRoutes } from "@/e2e/support/route";
 // but never the sections under its first screen (ADR 0039 D3). Measured on the
 // Start build of 8 November 2026 (production build, 1440 by 900, three uncached
 // runs, all equal). Each limit keeps the ~6% margin over its measurement.
+// The Quran and Memory decoded limits were measured again on 13 November 2026,
+// when the build began copying small shared chunks into their users (ADR 0039
+// D9 holds both measurements and the trade).
 
 // 897,759 encoded / 2,532,335 decoded: 758,203 at first paint, and the warmed
 // links on screen.
@@ -25,9 +28,10 @@ const PRICING_MAX_ENCODED_BYTES = 726_000;
 const PRICING_MAX_DECODED_BYTES = 2_038_000;
 
 // 833,187 encoded / 2,306,088 decoded: 730,190 at first paint, the always-on
-// analytics baseline included.
+// analytics baseline included. With the copied chunks: 822,414 encoded /
+// 2,456,884 decoded.
 const QURAN_MAX_ENCODED_BYTES = 884_000;
-const QURAN_MAX_DECODED_BYTES = 2_445_000;
+const QURAN_MAX_DECODED_BYTES = 2_605_000;
 
 // 567,013 encoded / 1,619,294 decoded, all at first paint with the animal pool
 // a wide screen loads; it warms nothing. Since the Start migration every first
@@ -37,15 +41,23 @@ const AUTH_MAX_ENCODED_BYTES = 602_000;
 const AUTH_MAX_DECODED_BYTES = 1_717_000;
 
 // The Memory page, signed in, warms its settings tabs: 1,049,988 encoded /
-// 2,944,185 decoded, measured on the Start build of 8 November 2026.
+// 2,944,185 decoded, measured on the Start build of 8 November 2026. With the
+// copied chunks: 1,049,197 encoded / 3,156,362 decoded.
 const MEMORY_MAX_ENCODED_BYTES = 1_113_000;
-const MEMORY_MAX_DECODED_BYTES = 3_121_000;
+const MEMORY_MAX_DECODED_BYTES = 3_346_000;
 
 // A lesson, whose first visual card is near enough to the first screen to load
 // its 3D scene: 1,127,084 encoded / 3,343,730 decoded, 1,017,722 before its
 // warmed neighbours.
 const LESSON_MAX_ENCODED_BYTES = 1_195_000;
 const LESSON_MAX_DECODED_BYTES = 3_545_000;
+
+// Google renders a page in a browser that loads about 250 of its resources and
+// fails every later one, so a page over that count never starts for Google and
+// AdSense reads the site as down (`BOOT_SCRIPT_LIMIT` in src/lib/static/scripts.ts
+// holds the measurement). A route's whole graph, its warmed links included,
+// leaves the rest of that count to its stylesheets, fonts, images and ads.
+const ROUTE_MAX_SCRIPTS = 120;
 
 const routeBudgets = [
   {
@@ -114,6 +126,10 @@ for (const budget of routeBudgets) {
     );
 
     expect(measurement.worst.resourceCount).toBeGreaterThan(0);
+    expect(
+      measurement.worst.resourceCount,
+      measurementEvidence
+    ).toBeLessThanOrEqual(ROUTE_MAX_SCRIPTS);
     expect(
       measurement.worst.encodedBodySize,
       measurementEvidence

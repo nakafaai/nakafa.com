@@ -9,6 +9,7 @@ import {
   decodeModeArguments,
 } from "@repo/backend/scripts/content/acceptance/mode";
 import { encodeJsonText } from "@repo/utilities/json";
+import { randomUuid } from "@repo/utilities/uuid";
 import {
   Array as Arr,
   Clock,
@@ -26,10 +27,19 @@ const XenditPurchase = Schema.Literals(["pass", "plan"]);
 const Prepared = Schema.Struct({ accountId: Schema.String });
 const Recorded = Schema.Struct({ eventId: Schema.String });
 
-/** One Xendit webhook body for an event, as Xendit posts it. */
-function deliveryOf(event: string, data: object, now: number) {
+/**
+ * One Xendit webhook body for an event of one pay session, as Xendit posts it. Its key names the session, as
+ * Xendit's own delivery ID names one delivery, so the inbox takes two seeds as two deliveries however close in
+ * time they run, and a step repeated for the same session as the retry it is.
+ */
+function deliveryOf(
+  event: string,
+  data: object,
+  sessionId: string,
+  now: number
+) {
   return {
-    key: `acceptance:${event}:${now}`,
+    key: `acceptance:${event}:${sessionId}`,
     payload: encodeJsonText({
       business_id: "acceptance",
       created: DateTime.formatIso(DateTime.makeUnsafe(now)),
@@ -57,6 +67,7 @@ function deliveryOfPaid(sessionId: string, now: number, saved: boolean) {
       session_type: "PAY",
       status: "COMPLETED",
     },
+    sessionId,
     now
   );
 }
@@ -78,7 +89,8 @@ export const seedXendit = Effect.fn("contentAcceptance.seedXendit")(function* (
     convex.run(operation, { args, path });
   const now = yield* Clock.currentTimeMillis;
   const offer = purchase === "pass" ? "pro.pass.1" : "pro.monthly";
-  const sessionId = `ps_acceptance_${now}`;
+  // A pay session of its own: browser tests seed in parallel, so two seeds can start in the same millisecond.
+  const sessionId = `ps_acceptance_${yield* randomUuid}`;
   const { accountId } = yield* run(
     "xendit prepare",
     "billing/xendit/checkout:prepare",

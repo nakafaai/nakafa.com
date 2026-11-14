@@ -59,6 +59,14 @@ suite on a local production build, the unit suites at 100% per-file coverage,
 the typechecks, `bun run check:tests`, Ultracite, and React Doctor. A pull request
 merges by squash once that verification passes, as `AGENTS.md` describes.
 
+## Amendment: An On-Demand Proof Runner, 9 November 2026
+
+ADR 0048 brings GitHub Actions back as a tool, never a required check: sessions
+dispatch `.github/workflows/proof.yml` through `bun run proof` to prove an exact
+head on free public-repository runners, in parallel, at the same bar, and the
+landing train lands what passed. The local verification above still owns the
+typechecks, unit suites, policy checks and React Doctor.
+
 ## References
 
 - [Confect React clients](https://confect.dev/v10/clients/react)

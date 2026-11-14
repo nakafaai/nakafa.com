@@ -22,6 +22,7 @@ const MATH_SYMBOL_PATTERN = /[=^_{}<>≤≥√∞±×÷∑∫]/u;
 const MATH_OPERATOR_PATTERN = /(?:\d|\p{L})\s*(?:[+\-*/=<>])\s*(?:\d|\p{L})/u;
 const SINGLE_VARIABLE_PATTERN = /^[A-Za-z](?:[_^][A-Za-z0-9{}]+)?$/u;
 const MERMAID_FLOWCHART_DECLARATION_REGEX = /^(?:flowchart|graph)\b/u;
+const UNESCAPED_QUOTE_REGEX = /(?<!\\)"/gu;
 
 /**
  * Reads diagram copy from a markdown code fence info string. A field the fence
@@ -73,14 +74,31 @@ function normalizeFlowchartLabels(chart: string) {
     .replace(MERMAID_ROUND_LABEL_REGEX, replaceFlowchartLabel);
 }
 
+/**
+ * Reads whether a position sits inside a quoted label: an odd number of
+ * unescaped double quotes stands before it on its line.
+ */
+function isQuoted(text: string, offset: number) {
+  const lineStart = text.lastIndexOf("\n", offset - 1) + 1;
+  const quotes = text.slice(lineStart, offset).match(UNESCAPED_QUOTE_REGEX);
+  return (quotes?.length ?? 0) % 2 === 1;
+}
+
 function replaceFlowchartLabel(
-  _match: string,
+  match: string,
   prefix: string,
   id: string,
   open: string,
   label: string,
-  close: string
+  close: string,
+  offset: number,
+  text: string
 ) {
+  // Text inside a quoted label is the label's words, such as `E(C)` in
+  // `A["C with E(C) = 28"]`, never a node of its own.
+  if (isQuoted(text, offset)) {
+    return match;
+  }
   return `${prefix}${id}${open}"${normalizeMermaidLabel(label)}"${close}`;
 }
 

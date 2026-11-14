@@ -11,19 +11,46 @@ import {
 import type { AcceptanceMode } from "@repo/backend/scripts/content/acceptance/mode";
 import { acceptanceOrigin } from "@repo/backend/scripts/content/acceptance/origin";
 import { withLocalBackend } from "@repo/backend/scripts/content/acceptance/process";
-import { publishAcceptanceSource } from "@repo/backend/scripts/content/acceptance/publication";
+import {
+  exportRenderer,
+  publishAcceptanceSource,
+} from "@repo/backend/scripts/content/acceptance/publication";
+import {
+  preparedKey,
+  restorePrepared,
+  savePrepared,
+  snapshotStore,
+} from "@repo/backend/scripts/content/acceptance/snapshot";
 import { runBuildCommand } from "@repo/backend/scripts/content/acceptance/terminal";
-import { Effect, Exit, Option } from "effect";
+import { Console, Effect, Exit, FileSystem, Option } from "effect";
 
-/** Creates one signed local acceptance database without touching a cloud deployment. */
+/**
+ * Creates one signed local acceptance database without touching a cloud
+ * deployment. A store that already holds the prepared runtime of this
+ * checkout's key restores it; otherwise prepare creates it and saves it there.
+ */
 export const prepareAcceptance = Effect.fn("acceptance.prepare")(function* (
   root: string
 ) {
   const reservation = yield* reserveLocalRuntime(root);
   return yield* Effect.gen(function* () {
     yield* leaseLocalRuntime(root);
+    const renderer = yield* exportRenderer(root, reservation.directory);
+    const key = yield* preparedKey(root, renderer, yield* acceptanceOrigin);
+    const store = yield* snapshotStore;
+    const restored = yield* restorePrepared(store, key, root, reservation);
+    if (Option.isSome(restored)) {
+      return yield* Effect.log(
+        `Restored the prepared runtime ${key} from ${store}.`
+      );
+    }
     const runtime = yield* initializeLocalRuntime(root);
-    yield* withLocalBackend(runtime, publishAcceptanceSource(root, runtime));
+    yield* withLocalBackend(
+      runtime,
+      publishAcceptanceSource(runtime, renderer)
+    );
+    yield* savePrepared(store, key, runtime);
+    yield* Effect.log(`Prepared the runtime ${key} and saved it to ${store}.`);
   }).pipe(
     Effect.scoped,
     Effect.onExit((exit) =>
@@ -115,6 +142,25 @@ export const prepareMode = {
   mode: "prepare",
   usage: "prepare",
   run: prepareAcceptance,
+} satisfies AcceptanceMode;
+
+/**
+ * The key mode: prints the key of the prepared runtime that this checkout would
+ * create, which a CI job names its cache by before prepare restores it.
+ */
+export const keyMode = {
+  mode: "key",
+  usage: "key",
+  run: Effect.fn("contentAcceptance.runKey")(function* (root: string) {
+    const fs = yield* FileSystem.FileSystem;
+    const directory = yield* fs.makeTempDirectoryScoped({
+      prefix: "acceptance-key-",
+    });
+    const renderer = yield* exportRenderer(root, directory);
+    yield* Console.log(
+      yield* preparedKey(root, renderer, yield* acceptanceOrigin)
+    );
+  }),
 } satisfies AcceptanceMode;
 
 /** The build mode: builds the app against the owned local backend, with the arguments after its word. */

@@ -182,7 +182,7 @@ test("a Xendit subscriber cancels the plan in the settings, and it ends with its
         await expect(receipts.getByText("Pro subscription")).toBeVisible();
         await receipts.getByRole("button", { name: "Close" }).last().click();
         await expect(receipts).toBeHidden();
-        const cancel = page.getByRole("button", { name: "Cancel" });
+        const cancel = page.getByRole("button", { name: "Cancel Pro" });
         await waitUntilTakenOver(cancel);
         await cancel.click();
         const dialog = page.getByRole("dialog", { name: "Cancel Pro?" });
@@ -191,9 +191,7 @@ test("a Xendit subscriber cancels the plan in the settings, and it ends with its
         ).toBeVisible();
         await pictureDialog(page, "cancel");
         await page.setViewportSize({ height: 900, width: 1440 });
-        await dialog
-          .getByRole("button", { name: "Cancel", exact: true })
-          .click();
+        await dialog.getByRole("button", { name: "Cancel Pro" }).click();
         await expect(page.getByText("No more charges.")).toBeVisible();
         await expect(page.getByText("Ends on")).toBeVisible();
         await picture(page, "ending");
