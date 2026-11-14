@@ -1,6 +1,7 @@
 import {
   type CatalogRow,
   CatalogRowSchema,
+  SetLevelSchema,
 } from "@nakafa/aksara-contracts/assessment/catalog";
 import { ItemExplanationSchema } from "@nakafa/aksara-contracts/assessment/explanation";
 import {
@@ -410,6 +411,10 @@ function makeCatalog(
               ? { internalEntrySectionKey: track.sections[0] }
               : {}),
             kind: "set",
+            level: Arr.getUnsafe(
+              SetLevelSchema.literals,
+              setIndex % SetLevelSchema.literals.length
+            ),
             order: setIndex + 1,
             paper: set.paper,
             publicPath: setPath,
