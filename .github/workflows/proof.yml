@@ -276,16 +276,19 @@ jobs:
         id: specs
         if: always() && inputs.proof && steps.browsers.outcome == 'success'
         env:
-          # A runner has no GPU and no display. Headless Firefox draws WebGL
-          # through the system's GL, so Mesa draws it on the CPU, on a surface
-          # that needs no display. Chromium and WebKit bring their own.
-          LIBGL_ALWAYS_SOFTWARE: "1"
-          EGL_PLATFORM: surfaceless
+          # A runner has no GPU and no display, and headless Firefox finds no
+          # GL driver there. It runs with a window on a virtual display, where
+          # Mesa draws WebGL on the CPU. Chromium and WebKit bring their own.
+          PLAYWRIGHT_FIREFOX_HEADED: "1"
         run: |
           status=0
           for engine in chromium firefox webkit; do
+            display=()
+            if [ "$engine" = firefox ]; then
+              display=(xvfb-run --auto-servernum --server-args="-screen 0 1920x1080x24")
+            fi
             # shellcheck disable=SC2086
-            bun run --cwd packages/backend acceptance shard "$engine" 1 1 "$RUNNER_TEMP/result/$engine" $SPECS || status=1
+            "${display[@]}" bun run --cwd packages/backend acceptance shard "$engine" 1 1 "$RUNNER_TEMP/result/$engine" $SPECS || status=1
             jq -e .passed "$RUNNER_TEMP/result/$engine/result.json" > /dev/null || status=1
           done
           exit $status
