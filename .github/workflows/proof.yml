@@ -106,16 +106,13 @@ jobs:
         uses: ./.github/actions/install
 
       # The browsers install while the gate runs. The apt timeout lets a silent
-      # mirror fall back in ten seconds instead of thirty a file. Firefox draws
-      # WebGL through the system's GL, which a runner has no driver for, so Mesa's
-      # software driver is installed after the browsers: without it every Firefox
-      # canvas fails with FEATURE_FAILURE_WEBGL_EXHAUSTED_DRIVERS.
+      # mirror fall back in ten seconds instead of thirty a file.
       - name: Start the browser install
         if: inputs.proof
         run: |
           echo 'Acquire::http::Timeout "10"; Acquire::https::Timeout "10";' \
             | sudo tee /etc/apt/apt.conf.d/99-mirror-timeout > /dev/null
-          (cd apps/www && setsid bash -c "bunx --no-install playwright install --with-deps chromium firefox webkit && sudo apt-get install -y --no-install-recommends libegl1 libgl1-mesa-dri; echo \$? > '$RUNNER_TEMP/browsers.exit'" \
+          (cd apps/www && setsid bash -c "bunx --no-install playwright install --with-deps chromium firefox webkit; echo \$? > '$RUNNER_TEMP/browsers.exit'" \
             > "$RUNNER_TEMP/browsers.log" 2>&1 &)
 
       # The CAS engine's typecheck, lint and tests run its Python tools through uv.
@@ -279,8 +276,11 @@ jobs:
         id: specs
         if: always() && inputs.proof && steps.browsers.outcome == 'success'
         env:
-          # Mesa draws on the CPU: the runner has no GPU for it to probe.
+          # A runner has no GPU and no display. Headless Firefox draws WebGL
+          # through the system's GL, so Mesa draws it on the CPU, on a surface
+          # that needs no display. Chromium and WebKit bring their own.
           LIBGL_ALWAYS_SOFTWARE: "1"
+          EGL_PLATFORM: surfaceless
         run: |
           status=0
           for engine in chromium firefox webkit; do

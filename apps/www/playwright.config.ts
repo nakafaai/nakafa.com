@@ -162,7 +162,12 @@ type ProjectShape = Omit<
  * Every Firefox project forces it on, as Chromium and WebKit already render it.
  */
 const FIREFOX_USE = {
-  launchOptions: { firefoxUserPrefs: { "webgl.force-enabled": true } },
+  launchOptions: {
+    firefoxUserPrefs: {
+      "gfx.x11-egl.force-enabled": true,
+      "webgl.force-enabled": true,
+    },
+  },
 };
 
 /** The engines that every UI suite runs in, which a proof job selects one of. */
