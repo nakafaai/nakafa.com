@@ -172,13 +172,13 @@ describe("mascot/draw", () => {
     expect(wrong).toEqual([]);
   });
 
-  it("marks no eye of an animal that sleeps, except the panda and the civet, whose eyes stay open on their dark patches", () => {
+  it("marks no eye of an animal that sleeps, except the panda, whose eyes stay open on their dark patches", () => {
     const awake = Arr.filter(
       Animal.literals,
       (animal) =>
         marked([draw(mascotOf(`${animal}.0.243e66.center.asleep`))]).length > 0
     );
-    expect(awake).toEqual(["panda", "civet"]);
+    expect(awake).toEqual(["panda"]);
   });
 
   it.effect(

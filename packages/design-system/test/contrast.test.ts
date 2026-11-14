@@ -2,13 +2,6 @@
 
 import { NodeFileSystem } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
-import {
-  getWcagContrast,
-  NON_TEXT_ROLE_PAIRS,
-  STANDALONE_TEXT_ROLE_PAIRS,
-  STATUS_COLOR_FAMILIES,
-  TEXT_ROLE_PAIRS,
-} from "@repo/design-system/lib/theme/contrast";
 import { themes } from "@repo/design-system/lib/theme/registry";
 import {
   createThemeProfiles,
@@ -19,6 +12,13 @@ import {
   readThemeStyleSources,
   SEMANTIC_COLOR_TOKENS,
 } from "@repo/design-system/test/contract";
+import {
+  getWcagContrast,
+  NON_TEXT_ROLE_PAIRS,
+  STANDALONE_TEXT_ROLE_PAIRS,
+  STATUS_COLOR_FAMILIES,
+  TEXT_ROLE_PAIRS,
+} from "@repo/design-system/test/contrast";
 import Color from "colorjs.io";
 import {
   Array as Arr,
