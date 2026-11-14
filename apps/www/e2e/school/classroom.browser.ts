@@ -255,7 +255,7 @@ test("the selects of New task open with a one-word label and an icon on every op
       for (const choice of [
         { field: "Late work", label: "Lateness" },
         { field: "Questions", label: "Question" },
-        { field: "Who gets it", label: "Recipients" },
+        { field: "Who gets it", label: "Audience" },
       ]) {
         await dialog.getByRole("combobox", { name: choice.field }).click();
         const list = page.getByRole("listbox");

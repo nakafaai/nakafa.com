@@ -14,6 +14,7 @@ import {
   takeMoves,
 } from "@/e2e/support/flicker";
 import { readRawKeys } from "@/e2e/support/keys";
+import { LEFT_BEHIND } from "@/e2e/support/observe";
 import { readTallRows } from "@/e2e/support/wraps";
 
 /** The most pages one walk opens, past the routes a school has, so a walk always ends. */
@@ -24,9 +25,6 @@ const PRESS_MILLISECONDS = 620;
 
 /** How long a press waits for a control the page may have taken away. */
 const PRESS_TIMEOUT_MILLISECONDS = 2000;
-
-/** WebKit's words for a request the page left behind as it moved on, which fails nothing a reader sees. */
-export const LEFT_BEHIND = /due to access control checks/u;
 
 /** A Convex ID in an address, so a walk opens one page of each kind. */
 const DOCUMENT_ID = /^[0-9a-z]{31,37}$/u;
