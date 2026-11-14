@@ -102,6 +102,11 @@ export const REGISTRY_REVIEWS = [
     "The adapter stays on 0.12.6, the last release that admits Better Auth 1.6. 0.13.0 peers better-auth >=1.7.16 and refuses compound unique indexes, which @better-auth/oauth-provider declares, so the agent sign-in cannot move with it (see better-auth@latest). 0.12.7 also rewrites x-forwarded-host on every auth request to an exact trusted origin or CONVEX_SITE_URL, while the school hosts reach Better Auth through the x-forwarded-host that the web app's auth proxy sends (confect/auth/host.ts, ADR 0026); a move sends x-better-auth-forwarded-host instead and trusts the exact origin of each request. Checked 7 November 2026.",
   ],
   [
+    "@react-three/fiber@latest",
+    "9.8.2",
+    "Fiber stays on 9.8.2, the latest release. Fiber 9 builds every Canvas root with the THREE.Clock that three r183 deprecated, so each canvas logs one console notice, which apps/www/e2e/support/scene.ts allows as that exact line. No dependency patch removes it, because scripts/check/patches.ts refuses every patch. Fiber 10 removes the Clock (pmndrs/react-three-fiber#3741) and exists only as alpha and canary. When @latest moves to 10: adopt it, move the labs from state.clock to the timer, and delete the allowance in scene.ts. Checked 14 November 2026.",
+  ],
+  [
     "@types/node@26",
     "26.6.6",
     "The root, API and MCP manifests declare the Node 26 types (#1872): the scripts and tooling run on Node 26, and the API and MCP Workers run on workerd. The backend declares no Node types, so its Node actions on node.nodeVersion 24 (packages/backend/convex.json) gain no Node 26 API from this.",

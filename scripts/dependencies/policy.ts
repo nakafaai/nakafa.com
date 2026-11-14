@@ -253,6 +253,11 @@ export const DEPENDENCY_HOLDS: readonly DependencyHold[] = [
     minimumDeclarations: 1,
   },
   {
+    approved: "9.8.2",
+    dependency: "@react-three/fiber",
+    minimumDeclarations: 1,
+  },
+  {
     approved: CONTRACT_PACKAGE_VERSION,
     declarationPaths: [
       "apps/www/package.json",

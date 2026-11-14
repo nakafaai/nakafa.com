@@ -16,6 +16,9 @@ import { revealTimeoutMilliseconds } from "@/e2e/support/timeout";
  * Fiber 9 constructs the THREE.Clock that three.js r183 deprecated in every
  * Canvas root. Fiber 10 removes it:
  * https://github.com/pmndrs/react-three-fiber/issues/3741
+ * The hold on `@react-three/fiber` in `scripts/dependencies/reviews.ts` owns
+ * this allowance: `bun run bump-deps` reports fiber 10 when it becomes the
+ * latest release, and adopting it deletes the Clock line below.
  */
 const KNOWN_SCENE_DIAGNOSTICS = [
   /^\[\.WebGL-0x[\da-f]+\]GL Driver Message \(OpenGL, Performance, \w+, High\): GPU stall due to ReadPixels(?: \(this message will no longer repeat\))?$/u,
