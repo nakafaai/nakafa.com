@@ -115,14 +115,17 @@ const pickerListVariants = cva("", {
   },
 });
 
-const pickerItemVariants = cva("group/picker-item text-sm sm:text-sm", {
-  variants: {
-    surface: {
-      drawer: "min-h-11 py-2 sm:min-h-11",
-      popover: "min-h-8 py-1.5 sm:min-h-8",
+const pickerItemVariants = cva(
+  "group/picker-item icon-first-line text-sm sm:text-sm",
+  {
+    variants: {
+      surface: {
+        drawer: "min-h-11 py-3 sm:min-h-11",
+        popover: "min-h-8 py-1.5 sm:min-h-8",
+      },
     },
-  },
-});
+  }
+);
 
 /**
  * One searchable choice among many: a trigger, and the list it opens with a search field at its top. On a wide

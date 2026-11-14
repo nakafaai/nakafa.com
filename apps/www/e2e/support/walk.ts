@@ -13,6 +13,7 @@ import {
   takeFlickers,
   takeMoves,
 } from "@/e2e/support/flicker";
+import { readFloats } from "@/e2e/support/floats";
 import { readRawKeys } from "@/e2e/support/keys";
 import { readTallRows } from "@/e2e/support/wraps";
 
@@ -366,6 +367,12 @@ export const walkSchool = async (
       .soft(
         await page.evaluate(readTallRows),
         `${shape}: keeps rows on one line`
+      )
+      .toEqual([]);
+    expect
+      .soft(
+        await page.evaluate(readFloats),
+        `${shape}: stands each icon on its first line`
       )
       .toEqual([]);
     expect

@@ -487,6 +487,20 @@
   }
 }
 
+/* A bare icon beside the words of a row stands on the first line of those
+ * words: at the row's top, moved down by half of what a line is taller than
+ * the icon. Beside one line that is the row's middle, so nothing moves;
+ * beside two lines the icon no longer floats between them. An icon in a tile
+ * is no bare icon: the tile is as tall as the lines and stays in the middle.
+ * The row's padding, not a least height, must give it its height, or one line
+ * would sit lower than its icon. */
+@utility icon-first-line {
+  & > svg {
+    align-self: flex-start;
+    translate: 0 calc((1lh - 100%) / 2);
+  }
+}
+
 /* Nina's answers step their headings down so the order of her thinking shows:
  * 22px for level one, 19px for level two, 17px for level three, and the size
  * of the answer from level four. A heading element sets its own leading,

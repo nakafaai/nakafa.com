@@ -4,6 +4,7 @@ import en from "@repo/internationalization/dictionaries/en.json" with {
 };
 import { MutableList } from "effect";
 import { LESSON_PATH } from "@/e2e/support/chat";
+import { readFloats } from "@/e2e/support/floats";
 
 /** The search button of the sidebar, in English. */
 const SEARCH = "Search content...";
@@ -61,6 +62,8 @@ test("the shell's palette suggests from the page and finds a subject through a t
   await palette.getByRole("combobox").fill("mathematcs");
   const first = palette.getByRole("option").first();
   await expect(first).toContainText("Mathematics");
+  // A row with the pages above it under its title takes two lines, and its icon stands on the first.
+  expect(await page.evaluate(readFloats)).toEqual([]);
   await expect(
     palette.getByText(en.Utils["search-group-curricula"], { exact: true })
   ).toBeVisible();
