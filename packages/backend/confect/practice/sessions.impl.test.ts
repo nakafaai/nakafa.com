@@ -146,7 +146,7 @@ describe("practice/sessions", () => {
               )
               .collect();
             await Promise.all(
-              rows.map((row) => ctx.db.delete("assessmentRows", row._id))
+              Arr.map(rows, (row) => ctx.db.delete("assessmentRows", row._id))
             );
           })
         );
