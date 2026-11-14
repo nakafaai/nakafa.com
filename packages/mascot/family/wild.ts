@@ -5,6 +5,7 @@ import {
   type Design,
   ellipse,
   eyes,
+  faded,
   figure,
   head,
   line,
@@ -25,22 +26,35 @@ export const wild = {
     ],
     draw: (kit) =>
       figure(
-        both((side) =>
+        // Short straight horns, ringed at the base, lean back from the brow.
+        both((side) => [
           blob(
-            [100 + side * 18, 56, 100 + side * 30, 54, 100 + side * 40, 14],
+            [100 + side * 16, 56, 100 + side * 32, 54, 100 + side * 44, 10],
             kit.second,
-            8
-          )
-        ),
-        both((side) =>
-          ellipse(100 + side * 62, 82, 18, 9, kit.body, side * -18)
-        ),
-        torso(kit.body),
-        head(kit.body, 54, 52, 98),
-        both((side) => ellipse(100 + side * 34, 116, 9, 6, kit.second)),
-        ellipse(100, 126, 24, 16, kit.second),
-        eyes(kit, 26, 94),
-        both((side) => ellipse(100 + side * 8, 126, 2.8, 3.6, kit.ink))
+            9
+          ),
+          faded(0.2, [
+            line(`M${100 + side * 20},46 L${100 + side * 34},44`, kit.ink, 3),
+            line(`M${100 + side * 25},34 L${100 + side * 37},32`, kit.ink, 3),
+          ]),
+        ]),
+        both((side) => [
+          ellipse(100 + side * 60, 84, 20, 10, kit.body, side * -16),
+          ellipse(100 + side * 60, 85, 12, 5, kit.second, side * -16),
+        ]),
+        torso(kit.body, 54),
+        // The pale crescent across the throat.
+        path("M62,150 Q100,182 138,150 Q100,168 62,150 Z", kit.second),
+        line("M62,150 Q100,176 138,150", kit.second, 9),
+        head(kit.body, 52, 52, 98),
+        // A darker brow, pale cheek spots, and the broad wet nose of a buffalo.
+        faded(0.14, [ellipse(100, 62, 30, 14, kit.ink)]),
+        both((side) => ellipse(100 + side * 36, 114, 8, 6, kit.second)),
+        ellipse(100, 126, 28, 19, kit.second),
+        ellipse(100, 120, 15, 9, kit.ink),
+        both((side) => ellipse(100 + side * 6, 120, 2.6, 3, kit.second)),
+        line("M90,136 Q100,142 110,136", kit.ink, 2.8),
+        eyes(kit, 26, 92)
       ),
   },
   deer: {
@@ -200,19 +214,40 @@ export const wild = {
     ],
     draw: (kit) =>
       figure(
-        both((side) =>
-          blob(
-            [100 + side * 44, 62, 100 + side * 52, 36, 100 + side * 30, 54],
-            kit.body,
-            10
-          )
-        ),
+        // Tube ears, open to the front.
+        both((side) => [
+          ellipse(100 + side * 46, 48, 14, 22, kit.body, side * 22),
+          ellipse(100 + side * 46, 50, 7, 13, "#f4c7cf", side * 22),
+        ]),
         torso(kit.body, 60),
-        head(kit.body, 60, 54, 100),
-        blob([90, 116, 110, 116, 100, 78], kit.second, 8),
-        blob([94, 80, 106, 80, 100, 62], kit.second, 6),
-        eyes(kit, 34, 96),
-        both((side) => ellipse(100 + side * 14, 132, 3.4, 4.2, kit.ink))
+        faded(0.14, [line("M52,168 Q100,184 148,168", kit.ink, 5)]),
+        head(kit.body, 56, 48, 90),
+        // The wide square lip under the head.
+        path(
+          "M50,112 C50,96 150,96 150,112 L152,136 C152,152 130,160 100,160 C70,160 48,152 48,136 Z",
+          kit.body
+        ),
+        faded(0.1, [
+          path(
+            "M50,112 C50,96 150,96 150,112 L152,136 C152,152 130,160 100,160 C70,160 48,152 48,136 Z",
+            kit.ink
+          ),
+        ]),
+        eyes(kit, 34, 84),
+        both((side) => ellipse(100 + side * 30, 134, 4, 5, kit.ink)),
+        line("M78,148 Q100,156 122,148", kit.ink, 3.4),
+        // The small horn behind, then the great horn in front of it.
+        blob([92, 74, 108, 74, 100, 52], kit.second, 8),
+        path(
+          "M80,124 C82,96 90,62 106,34 C112,64 118,98 120,124 C110,134 90,134 80,124 Z",
+          kit.second
+        ),
+        faded(0.16, [
+          path(
+            "M80,124 C81,116 82,110 84,104 C96,110 106,110 117,104 C118,110 119,116 120,124 C110,134 90,134 80,124 Z",
+            kit.ink
+          ),
+        ])
       ),
   },
   elephant: {
