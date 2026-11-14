@@ -132,7 +132,30 @@ describe("practice/sessions", () => {
         );
         expect(
           yield* world.learner.query(explain, { locale: "id", questionId: two })
-        ).toMatchObject({ key: { kind: "choice" } });
+        ).toMatchObject({
+          explanation: expect.anything(),
+          key: { kind: "choice" },
+        });
+        // A question whose explanation the release does not hold reads its key alone.
+        yield* Effect.promise(() =>
+          world.t.mutation(async (ctx) => {
+            const rows = await ctx.db
+              .query("assessmentRows")
+              .withIndex("by_kind_and_versionHash_and_language", (index) =>
+                index.eq("kind", "explanation")
+              )
+              .collect();
+            await Promise.all(
+              rows.map((row) => ctx.db.delete("assessmentRows", row._id))
+            );
+          })
+        );
+        const bare = yield* world.learner.query(explain, {
+          locale: "id",
+          questionId: two,
+        });
+        expect(bare).toMatchObject({ key: { kind: "choice" } });
+        expect(bare).not.toHaveProperty("explanation");
       })
   );
 

@@ -1,7 +1,13 @@
 import { describe, expect, it } from "@effect/vitest";
-import { Option } from "effect";
+import { Function as Fn, Option } from "effect";
 import { openSetSamples, samplesCode } from "@/components/tryout/set/code";
 import { TryoutSetSamples } from "@/components/tryout/set/samples";
+
+// The samples' component stands in for its code: the real one loads the question's parts, which a browser run
+// proves, and whose plain modules a unit run would load without calling.
+vi.mock("@/components/tryout/set/samples", () => ({
+  TryoutSetSamples: Fn.constNull,
+}));
 
 describe("openSetSamples", () => {
   it("loads the samples' code and keeps it, so the set's boundary draws them at once", async () => {
