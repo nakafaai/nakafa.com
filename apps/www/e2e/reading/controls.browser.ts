@@ -288,12 +288,23 @@ const verifyReadingHeader = Effect.fn("NakafaE2E.verifyReadingHeader")(
     yield* Effect.promise(() => expect(openIn).toBeFocused());
     yield* Effect.promise(() => page.keyboard.press("Escape"));
     yield* Effect.promise(() => expect(more).toBeFocused());
-    const clipboardPermissions =
-      page.context().browser()?.browserType().name() === "webkit"
-        ? ["clipboard-read"]
-        : ["clipboard-read", "clipboard-write"];
+    // What the page hands the clipboard, read in every engine: only Chromium can grant a test the right to read the
+    // system clipboard back, so the page's clipboard keeps what it is given.
     yield* Effect.promise(() =>
-      page.context().grantPermissions(clipboardPermissions)
+      page.evaluate(() => {
+        const kept = { text: "" };
+        Object.assign(window, { copied: kept });
+        navigator.clipboard.writeText = async (text) => {
+          kept.text = text;
+        };
+        navigator.clipboard.write = async (items) => {
+          for (const item of items) {
+            if (item.types.includes("text/plain")) {
+              kept.text = await (await item.getType("text/plain")).text();
+            }
+          }
+        };
+      })
     );
     yield* Effect.promise(() => more.click());
     yield* Effect.promise(() =>
@@ -305,7 +316,14 @@ const verifyReadingHeader = Effect.fn("NakafaE2E.verifyReadingHeader")(
       })
     );
     const copiedContent = yield* Effect.promise(() =>
-      page.evaluate(() => navigator.clipboard.readText())
+      page.evaluate(() =>
+        "copied" in window &&
+        typeof window.copied === "object" &&
+        window.copied !== null &&
+        "text" in window.copied
+          ? String(window.copied.text)
+          : ""
+      )
     );
     yield* Effect.sync(() => expect(copiedContent).toContain(titleText));
     yield* Effect.promise(() => more.click());
