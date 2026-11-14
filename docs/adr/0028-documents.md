@@ -67,7 +67,7 @@ nothing refers to.
   audited change (ADR 0016). The steps of a draft are not, because a draft is its
   own record.
 - The server validates every snapshot and every published document with the
-  Schema of the contract. `Node.fromJSON` of prosemirror-model 1.25.12 does not
+  Schema of the contract. `Node.fromJSON` of prosemirror-model 1.25.13 does not
   check content, and `Node.check()` does, so a document that parses is not a
   document that is valid.
 - An announcement is owned by its class post (ADR 0025). The document records
