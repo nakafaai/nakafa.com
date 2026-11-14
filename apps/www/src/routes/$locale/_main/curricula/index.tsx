@@ -20,7 +20,7 @@ import { PUBLIC_CONTENT_HEADERS } from "@/lib/content/delivery";
 import { getAksaraTreeUrl } from "@/lib/content/repository";
 import {
   getCurriculumIndexSocialImage,
-  resolveCurriculumCatalogArtwork,
+  resolveCurriculumArtwork,
 } from "@/lib/curriculum/artwork";
 import { getCurriculumLooks } from "@/lib/curriculum/look";
 import { readRuntimeCurriculumCatalog } from "@/lib/curriculum/model";
@@ -61,10 +61,7 @@ const readCurriculumIndex = createServerFn({ method: "GET" })
     const indexHref = getCurriculumIndexHref(locale);
     const routes = Arr.map(catalog.entries, ({ route }) => route);
     const visuals = getCurriculumLooks(routes, (route) =>
-      resolveCurriculumCatalogArtwork(locale, {
-        kind: "program",
-        programKey: route.programKey,
-      })
+      resolveCurriculumArtwork(locale, route)
     );
 
     return {

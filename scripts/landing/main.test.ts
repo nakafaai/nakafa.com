@@ -1,8 +1,8 @@
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Layer, Ref, Stdio } from "effect";
-import { capture, makeCapture } from "#scripts/capture";
 import { parseTrainArguments, runTrainCli } from "#scripts/landing/main";
+import { capture, makeCapture } from "#scripts/test.capture";
 import { scriptedShell } from "#scripts/test.shell";
 
 const MAIN = "9".repeat(40);

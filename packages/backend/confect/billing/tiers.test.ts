@@ -1,6 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
 import {
-  cheapestSchoolTier,
   schoolMonthlyAfterDiscount,
   schoolPeriodTotal,
   schoolQuote,
@@ -47,18 +46,5 @@ describe("billing/tiers", () => {
       schoolQuote({ added: 550, currency: "IDR", period: 1, tier: "max" })
         .monthly
     ).toBe(16_735_000);
-  });
-
-  it("picks the plan that holds a number of accounts for less", () => {
-    expect(cheapestSchoolTier(1050, "IDR")).toStrictEqual({
-      added: 550,
-      monthly: 16_735_000,
-      tier: "max",
-    });
-    expect(cheapestSchoolTier(80, "USD")).toStrictEqual({
-      added: 0,
-      monthly: 10_900,
-      tier: "pro",
-    });
   });
 });

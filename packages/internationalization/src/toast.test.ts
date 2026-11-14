@@ -19,17 +19,28 @@ import { loadLocaleMessages } from "@repo/internationalization/src/messages";
 import {
   characterCount,
   lineCount,
-  overlongToastCopy,
   overlongToastParts,
   TOAST_DESCRIPTION_LINE_CHARACTERS,
   TOAST_DESCRIPTION_LINES,
   TOAST_TITLE_LINE_CHARACTERS,
   TOAST_TITLE_LINES,
-  type ToastCopyText,
+  type ToastCopyTextSchema,
+} from "@repo/internationalization/src/test.toast";
+import {
   ToastValueKeySchema,
   ToastValuesSchema,
 } from "@repo/internationalization/src/toast";
 import { Array as Arr, Record as Rec, Schema } from "effect";
+
+/** The text of one toast copy, as the dictionary holds it. */
+type ToastCopyText = typeof ToastCopyTextSchema.Type;
+
+/** Every part of a toast namespace that takes too many lines, named by the key of its copy. */
+function overlongToastCopy(copies: Readonly<Record<string, ToastCopyText>>) {
+  return Arr.flatMap(Rec.toEntries(copies), ([key, copy]) =>
+    Arr.map(overlongToastParts(copy), (overlong) => ({ ...overlong, key }))
+  );
+}
 
 /**
  * The toast copy of every declared locale. Keyed by the declared locales, so a

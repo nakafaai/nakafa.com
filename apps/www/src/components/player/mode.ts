@@ -27,7 +27,7 @@ const PlayerModeParamSchema = Schema.Union([
 ]);
 
 /** Classified view search parameter of one server request. */
-export type PlayerModeParam = typeof PlayerModeParamSchema.Type;
+type PlayerModeParam = typeof PlayerModeParamSchema.Type;
 
 /** Classifies the optional view parameter; a repeated or unknown value is invalid. */
 export function readPlayerModeParam(
