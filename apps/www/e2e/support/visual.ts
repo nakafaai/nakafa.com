@@ -181,15 +181,45 @@ export const revealMenuItem = Effect.fn("NakafaE2E.revealVisualMenuItem")(
   }
 );
 
-/** Reads where the card's slot and the lesson around it sit in the page. */
+/**
+ * Reads where the card's slot and the lesson around it sit in the page, and
+ * the viewport they are laid out in.
+ */
 export function readPlacement(card: Locator) {
   return card.evaluate(
     (element, visualCard) => ({
       article: element.closest("article")?.getBoundingClientRect().height,
       scrollY: window.scrollY,
       slot: element.closest(visualCard)?.getBoundingClientRect().toJSON(),
+      viewport: { height: window.innerHeight, width: window.innerWidth },
     }),
     VISUAL_CARD
+  );
+}
+
+/**
+ * Expects the page behind a card that fills the screen to keep its layout and
+ * the card's slot, also where the root's scrollbar gutters closed: nothing the
+ * page does may move them. Only the browser can resize the viewport, as a
+ * desktop window grows to its screen for the Fullscreen API, and the page then
+ * lays out at that size like any resized window. So a new viewport is allowed
+ * only while an element is full screen, and the card's return to its slot is
+ * checked exactly in every case.
+ */
+export async function expectPlacementKept(
+  card: Locator,
+  placement: Awaited<ReturnType<typeof readPlacement>>
+) {
+  const current = await readPlacement(card);
+  const resized =
+    current.viewport.width !== placement.viewport.width ||
+    current.viewport.height !== placement.viewport.height;
+  if (!resized) {
+    expect(current).toEqual(placement);
+    return;
+  }
+  expect(await card.evaluate(() => document.fullscreenElement !== null)).toBe(
+    true
   );
 }
 
