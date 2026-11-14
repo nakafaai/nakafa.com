@@ -42,7 +42,7 @@ const TKA_SUBJECTS = [
  * The longest list of tiles that the corpus holds, counted from the source
  * trees of the Aksara corpus (`packages/corpus/curriculum`) and not from
  * memory: the classes 1 to 8 of the Merdeka curriculum. Classes 9 to 12 draw
- * reviewed artwork, which takes no tile (`CURRICULUM_ARTWORK_BY_IDENTITY`), so
+ * their grade artwork (`grade/class-9` to `grade/class-12`), which takes no tile, so
  * the root of that curriculum lists twelve cards and eight tiles once every
  * class is published; today the corpus publishes only the three classes that
  * hold lessons. The other lists are shorter: seven sections in a UTBK-SNBT set,
