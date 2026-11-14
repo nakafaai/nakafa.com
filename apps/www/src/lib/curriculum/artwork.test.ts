@@ -38,15 +38,16 @@ function gradeRoute(
   };
 }
 
-/** A route of one level that teaches one subject. */
+/** A route of one level that teaches one subject, under its own node key. */
 function subjectRoute(
   domain: string,
-  level: "course" | "lesson" | "subject" | "topic" | "unit" = "subject"
+  level: "course" | "lesson" | "subject" | "topic" | "unit" = "subject",
+  nodeKey = `form-4-${domain}`
 ): ArtworkRoute {
   return {
     level,
     materialDomain: MaterialDomainSchema.make(domain),
-    nodeKey: `form-4-${domain}`,
+    nodeKey,
     programKey: LearningProgramKeySchema.make("kssm"),
   };
 }
@@ -85,6 +86,30 @@ describe("curriculum artwork", () => {
       ).toBe(`/open-graph/subject/${locale}-science.png`);
     }
   );
+
+  it("names a subject by its own node before the subject it shares with a sibling", () => {
+    const additional = subjectRoute(
+      "mathematics",
+      "subject",
+      "secondary-additional-mathematics"
+    );
+
+    expect(resolveCurriculumArtwork("en", additional)).toBe(
+      "/open-graph/subject/en-secondary-additional-mathematics.png"
+    );
+    expect(resolveCurriculumArtwork("de", additional)).toBe(
+      "/open-graph/subject/de-secondary-additional-mathematics.png"
+    );
+    expect(resolveCurriculumArtwork("id", additional)).toBe(
+      "/open-graph/subject/en-secondary-additional-mathematics.png"
+    );
+    expect(
+      resolveCurriculumArtwork(
+        "de",
+        subjectRoute("mathematics", "subject", "secondary-mathematics")
+      )
+    ).toBe("/open-graph/subject/de-mathematics.png");
+  });
 
   it.each(["unit", "topic", "lesson"] as const)(
     "names no artwork for a %s, which is a part of its subject",
@@ -153,8 +178,11 @@ describe("curriculum artwork", () => {
       const unreached = [
         ...Arr.filter(
           inventoryNames("subject"),
-          (domain) =>
-            resolveCurriculumArtwork(locale, subjectRoute(domain)) === undefined
+          (name) =>
+            resolveCurriculumArtwork(
+              locale,
+              subjectRoute("geography", "subject", name)
+            ) === undefined
         ),
         ...Arr.filter(
           inventoryNames("grade"),
