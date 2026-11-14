@@ -9,14 +9,7 @@ import { sessionCookie, TokenFailed } from "@repo/backend/scripts/load/token";
 import { localConvexDouble } from "@repo/backend/test/acceptance";
 import { nodePlatform } from "@repo/backend/test/platform";
 import { FetchClient } from "@repo/utilities/http/client";
-import {
-  Array as Arr,
-  Effect,
-  Fiber,
-  FileSystem,
-  Layer,
-  MutableRef,
-} from "effect";
+import { Effect, Fiber, FileSystem, Layer, MutableRef } from "effect";
 import { TestClock } from "effect/testing";
 
 const mocks = vi.hoisted(() => ({
@@ -208,12 +201,13 @@ describe("load command", () => {
           mocks.open.mock.calls[0]?.[1];
         const signedOut = yield* Effect.gen(function* () {
           const fiber = yield* Effect.forkChild(token);
-          // Each retry sleeps only once the attempt before it failed, so the clock moves one wait at a time.
-          yield* Effect.forEach(
-            Arr.range(1, 6),
-            () =>
-              Effect.andThen(Effect.yieldNow, TestClock.adjust("4 seconds")),
-            { discard: true }
+          // A retry sleeps only once the attempt before it failed, however long that takes on a busy
+          // machine, so the clock moves one wait at a time until the retries are spent.
+          yield* Effect.andThen(
+            Effect.yieldNow,
+            TestClock.adjust("4 seconds")
+          ).pipe(
+            Effect.repeat({ until: () => fiber.pollUnsafe() !== undefined })
           );
           const settled = yield* Fiber.join(fiber);
           return { samples: yield* (yield* Recorder).samples, token: settled };
