@@ -52,6 +52,7 @@ import { inspectRefsSource } from "#scripts/check/refs";
 import { inspectSdkReach } from "#scripts/check/sdk";
 import { inspectSealedSource } from "#scripts/check/sealed";
 import { inspectSectionSource } from "#scripts/check/sections";
+import { inspectSelectorSource } from "#scripts/check/selectors";
 import { inspectCohortPins, inspectSharedFiles } from "#scripts/check/shared";
 import { inspectStylesheet } from "#scripts/check/sheets";
 import { inspectModuleSize } from "#scripts/check/size";
@@ -125,6 +126,7 @@ const inspectSources = Effect.fn("RepositoryPolicy.inspectSources")(function* (
         inspectPickerSource(file, sourceFile),
         inspectNativeControls(file, sourceFile),
         inspectStateSource(file, sourceFile),
+        inspectSelectorSource(file, sourceFile),
         inspectRefsSource(file, sourceFile),
         inspectSealedSource(file, sourceFile),
         inspectSectionSource(file, sourceFile),

@@ -1,9 +1,5 @@
 import { QueryResult, useMutation } from "@confect/react";
-import { TranslateIcon } from "@hugeicons/core-free-icons";
-import {
-  ACTIVE_APP_LOCALE_CODES,
-  ActiveAppLocaleCodeSchema,
-} from "@nakafa/aksara-contracts/locale";
+import { ActiveAppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import {
   Email,
@@ -26,27 +22,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@repo/design-system/components/ui/select";
-import { languages } from "@repo/internationalization/data/lang";
 import { Array as Arr, Option, Schema } from "effect";
 import { useId, useState, useTransition } from "react";
 import { useTranslations } from "use-intl";
+import { LanguageField } from "@/components/shared/language";
 import { useTenant, useViewerQuery } from "@/components/tenant/context";
 import { SchoolHeaderAdd } from "@/components/tenant/header";
 import { roleIcon } from "@/components/tenant/roles";
 import { addMemberChange } from "@/components/tenant/settings/accounts";
 import { cardOffered } from "@/components/tenant/settings/offer";
 import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
-
-/** The languages an invite may be written in: the active ones of the app. */
-const localeItems = Arr.map(
-  Arr.filter(languages, (language) =>
-    Arr.contains(ACTIVE_APP_LOCALE_CODES, language.value)
-  ),
-  (language) => ({
-    label: language.label,
-    value: language.value,
-  })
-);
 
 /** The roles an invite gives, each with the label the school shows for it. */
 type InvitedRoleValue = typeof InvitedRole.Type;
@@ -226,36 +211,11 @@ function SchoolInviteDialog({
             </SelectContent>
           </Select>
         </Field>
-        <Field>
-          <FieldLabel htmlFor={`${id}-locale`}>{t("invite-locale")}</FieldLabel>
-          <Select
-            items={localeItems}
-            onValueChange={(value) => {
-              const chosen = Schema.decodeUnknownOption(
-                ActiveAppLocaleCodeSchema
-              )(value);
-              if (Option.isSome(chosen)) {
-                setChosenLocale(chosen.value);
-              }
-            }}
-            value={Option.getOrUndefined(parsedLocale)}
-          >
-            <SelectTrigger className="w-full" id={`${id}-locale`}>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent label={common("menu-language")}>
-              {Arr.map(localeItems, (item) => (
-                <SelectItem
-                  icon={TranslateIcon}
-                  key={item.value}
-                  value={item.value}
-                >
-                  {item.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </Field>
+        <LanguageField
+          label={t("invite-locale")}
+          onChoose={setChosenLocale}
+          value={Option.getOrNull(parsedLocale)}
+        />
       </FieldGroup>
     </ResponsiveDialog>
   );
