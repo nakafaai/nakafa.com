@@ -2,7 +2,7 @@ import {
   ACTIVE_APP_LOCALE_CODES,
   ENGLISH_APP_LOCALE_CODE,
 } from "@nakafa/aksara-contracts/locale";
-import { Array as Arr, Option } from "effect";
+import { Array as Arr, Option, Record as Rec } from "effect";
 import type { Locale } from "use-intl";
 import { getOgUrl } from "@/lib/seo/social";
 

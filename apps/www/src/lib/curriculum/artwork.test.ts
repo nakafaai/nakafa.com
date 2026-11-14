@@ -5,13 +5,13 @@ import { PublicPathSchema } from "@nakafa/aksara-contracts/ids";
 import { ACTIVE_APP_LOCALE_CODES } from "@nakafa/aksara-contracts/locale";
 import { MaterialDomainSchema } from "@nakafa/aksara-contracts/material/domain";
 import { LearningProgramKeySchema } from "@nakafa/aksara-contracts/program/spec";
-import { Array as Arr } from "effect";
+import { Array as Arr, Record as Rec } from "effect";
 import {
   getCurriculumIndexSocialImage,
   getCurriculumRouteSocialImage,
   resolveCurriculumArtwork,
 } from "@/lib/curriculum/artwork";
-import { listStaticArtworkPaths } from "@/lib/og/artwork";
+import { artworkSources } from "@/lib/og/artwork";
 import { testProgramClass, testProgramRoot } from "@/test/published/program";
 
 /** The facts of a curriculum route that its artwork reads. */
@@ -51,21 +51,18 @@ function subjectRoute(
   };
 }
 
-/** A file of the static inventory, with its directory and the name after its locale. */
-const INVENTORY_FILE =
-  /^\/open-graph\/(?<directory>[a-z]+)\/[a-z]{2}-(?<name>.+)\.png$/u;
+/** An artwork of the inventory, as its directory and its name, such as `subject/chemistry`. */
+const INVENTORY_NAME = /^(?<directory>[a-z]+)\/(?<name>.+)$/u;
 
 /** The artwork names of the inventory under one directory, such as `subject`. */
 function inventoryNames(directory: string) {
-  return Arr.dedupe(
-    Arr.flatMap(listStaticArtworkPaths(), (file) => {
-      const groups = INVENTORY_FILE.exec(file)?.groups;
+  return Arr.flatMap(Rec.keys(artworkSources), (identity) => {
+    const groups = INVENTORY_NAME.exec(identity)?.groups;
 
-      return groups?.directory === directory && groups.name !== undefined
-        ? [groups.name]
-        : [];
-    })
-  );
+    return groups?.directory === directory && groups.name !== undefined
+      ? [groups.name]
+      : [];
+  });
 }
 
 describe("curriculum artwork", () => {
