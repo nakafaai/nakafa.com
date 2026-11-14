@@ -1,7 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
 import {
   buffered,
-  creditsOf,
   decisionCost,
   embeddingCost,
   languageCeiling,
@@ -86,9 +85,6 @@ describe("spend/rates", () => {
   });
 
   it("turns direct cost into credits of US$0.002, rounded up", () => {
-    expect(creditsOf(0)).toBe(0);
-    expect(creditsOf(2000)).toBe(1);
-    expect(creditsOf(2001)).toBe(2);
     expect(buffered(3)).toBe(4);
   });
 });

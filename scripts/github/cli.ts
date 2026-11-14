@@ -123,13 +123,6 @@ const FORBIDDEN_PROVENANCE = [
 ] as const;
 const SHELL_COMMENT = /(?<before>^|[ \t])#.*$/u;
 
-export class CliWorkflowPolicyError extends Schema.TaggedError<
-  CliWorkflowPolicyError,
-  { readonly brand: unique symbol }
->()("CliWorkflowPolicyError", {
-  problems: Schema.NonEmptyArray(Schema.String),
-}) {}
-
 function executableSource(run: string | undefined) {
   return pipe(
     (run ?? "").split("\n"),
@@ -407,16 +400,4 @@ export const validateCliWorkflow = Effect.fn("GithubCli.validate")(function* (
     ),
     yield* trustedVerifyProblems(verify),
   ]);
-});
-
-export const verifyCliWorkflow = Effect.fn("GithubCli.verify")(function* (
-  source: string
-) {
-  const problems = yield* validateCliWorkflow(source);
-  const [first, ...rest] = problems;
-  if (first) {
-    return yield* new CliWorkflowPolicyError({
-      problems: [first, ...rest],
-    });
-  }
 });

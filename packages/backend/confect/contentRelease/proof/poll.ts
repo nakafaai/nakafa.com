@@ -49,10 +49,6 @@ export class ProofPollCoordinator extends Context.Service<
   }
 >()("@repo/backend/confect/contentRelease/proof/poll/ProofPollCoordinator") {}
 
-/** The Workflow coordinator's shape, which a test runtime replaces with a fake. */
-export type ProofPollCoordinatorService = Context.Service.Shape<
-  typeof ProofPollCoordinator
->;
 export const ProofPollCoordinatorLive = Layer.effect(
   ProofPollCoordinator,
   Effect.gen(function* () {

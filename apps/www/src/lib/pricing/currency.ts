@@ -90,14 +90,6 @@ export function currencyForCountry(
   return getProMonthlyPricing(countryCode).currency;
 }
 
-/** The currency of a browser time zone, or the dollar price for a zone that is not mapped. */
-export function currencyForTimeZone(timeZone: string): PricingCurrency {
-  return Option.getOrElse(
-    Rec.get(CURRENCY_BY_TIME_ZONE, timeZone),
-    () => FALLBACK_CURRENCY
-  );
-}
-
 /**
  * The currency of the prices a page shows, which the inline script set on the
  * root element before the first paint: the dollar price when it set none. The
