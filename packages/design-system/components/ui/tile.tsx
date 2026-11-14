@@ -6,11 +6,11 @@ import { cn } from "cn";
 import type { ComponentProps } from "react";
 
 const tileVariants = cva(
-  "group/tile flex items-center justify-center text-white",
+  "group/tile text-paper flex items-center justify-center",
   {
     variants: {
       variant: {
-        row: "size-10 shrink-0 rounded-md ring-1 ring-black/10 ring-inset dark:ring-white/10",
+        row: "ring-foreground/10 size-10 shrink-0 rounded-md ring-1 ring-inset",
         card: "w-full",
       },
     },
@@ -22,7 +22,7 @@ const tileVariants = cva(
 
 /**
  * The tile of one lesson, material, or try-out: a ground made from its seed,
- * and one white icon. `row` is the 40px rounded square that leads a list row.
+ * and one icon in the paper white of every theme. `row` is the 40px rounded square that leads a list row.
  * `card` takes the full width of a catalog card, and its height comes from the
  * caller. The same seed always gives the same tile, so a seed must be a key
  * that does not change with language or edits, such as an id or a path. Tiles
@@ -53,7 +53,7 @@ function Tile({
 }
 
 /**
- * The white icon of a tile, 16px on a `row` tile and 24px on a `card` tile.
+ * The icon of a tile, in the paper white that every theme shares, 16px on a `row` tile and 24px on a `card` tile.
  * The contrast test of `getTileGradient` measures the 16px icon on the 40px tile.
  */
 function TileIcon({ icon }: { icon: IconSvgElement }) {

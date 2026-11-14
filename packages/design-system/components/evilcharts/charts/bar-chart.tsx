@@ -311,7 +311,7 @@ export function EvilBarChart<
           {...chartProps}
         >
           {backgroundVariant && <ChartBackground variant={backgroundVariant} />}
-          <ReferenceLine color="white" />
+          <ReferenceLine />
           {children}
           {isLoading && (
             <LoadingBar barRadius={DEFAULT_BAR_RADIUS} chartId={chartId} />

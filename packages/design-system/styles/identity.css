@@ -11,6 +11,15 @@
   --color-pop-cream: #fff4cc;
 }
 
+/* The paper and the ink that stay the same in every theme: the white ground a third party's mark, a
+ * favicon or a printed sheet is drawn on and the icon of a content tile is drawn in, and the black of
+ * print and of the scrim behind a dialog, a sheet or a drawer. A surface of the page itself never uses
+ * them: it takes the theme's own tokens. */
+@theme static {
+  --color-paper: oklch(1 0 0);
+  --color-ink: oklch(0 0 0);
+}
+
 /* Each thing does one small thing by itself. The names are the `motion` of a
  * mark (@repo/mascot/thing/mark), and ui/thing.tsx applies them only to people
  * who have not asked for less motion. */

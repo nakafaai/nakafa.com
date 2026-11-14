@@ -87,8 +87,8 @@ function Medal({
             fillOpacity="0.72"
           />
         </svg>
-        {/* The medal's face is white in every theme, so every logo reads on it. */}
-        <span className="-mt-3 grid size-16 place-items-center rounded-full bg-white ring-1 ring-black/10 dark:ring-white/10">
+        {/* The medal's face is the paper white of every theme, so every logo reads on it. */}
+        <span className="bg-paper ring-foreground/10 -mt-3 grid size-16 place-items-center rounded-full ring-1">
           <Image
             alt=""
             className="size-10 object-contain"

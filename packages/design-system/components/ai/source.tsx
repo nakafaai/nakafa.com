@@ -194,7 +194,7 @@ function SourceIcon({ src }: { src: string }) {
     <span
       className={cn(
         "mt-1 flex size-4 shrink-0 overflow-hidden rounded-sm",
-        failed ? "text-muted-foreground" : "bg-white"
+        failed ? "text-muted-foreground" : "bg-paper"
       )}
       data-slot="source-icon"
     >

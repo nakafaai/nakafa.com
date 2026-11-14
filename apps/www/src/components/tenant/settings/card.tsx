@@ -142,7 +142,7 @@ export function SchoolCardDialog({
 function SchoolCardSheet({ children }: { children: ReactNode }) {
   return (
     <div
-      className="hidden w-[85.6mm] bg-white p-[4mm] text-black print:block"
+      className="bg-paper text-ink hidden w-[85.6mm] p-[4mm] print:block"
       data-school-card-sheet=""
     >
       <style>{PRINT_ONLY_SHEET}</style>
