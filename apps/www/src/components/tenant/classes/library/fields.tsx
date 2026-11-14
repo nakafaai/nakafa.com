@@ -14,11 +14,6 @@ import {
   FieldTitle,
 } from "@repo/design-system/components/ui/field";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@repo/design-system/components/ui/tooltip";
 import { SITE_ORIGIN } from "@repo/seo/origin";
 import { cn } from "cn";
 import { type ReactNode, useId, useState } from "react";
@@ -100,21 +95,14 @@ export function ChosenFile({
       <span className="min-w-0 flex-1 wrap-anywhere" dir="auto">
         {name}
       </span>
-      <Tooltip>
-        <TooltipTrigger
-          render={
-            <Button
-              onClick={onClear}
-              size="icon-sm"
-              tooltip={t("library-file-clear")}
-              variant="ghost"
-            />
-          }
-        >
-          <HugeIcons aria-hidden="true" icon={Cancel01Icon} />
-        </TooltipTrigger>
-        <TooltipContent side="bottom">{t("library-file-clear")}</TooltipContent>
-      </Tooltip>
+      <Button
+        onClick={onClear}
+        size="icon-sm"
+        tooltip={t("library-file-clear")}
+        variant="ghost"
+      >
+        <HugeIcons aria-hidden="true" icon={Cancel01Icon} />
+      </Button>
     </div>
   );
 }

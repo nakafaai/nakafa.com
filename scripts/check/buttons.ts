@@ -124,7 +124,8 @@ function untippedIconLinks(node: Node): readonly Node[] {
  * Reports a button that does not look and read like a Nakafa button. A button that holds an icon alone takes an
  * icon size, whose type requires the tooltip that names it, whether it holds the icon itself or a trigger renders it
  * around the icon. A button keeps to the design system's size scale, so no class sets a height under the small
- * button's. A link drawn as an icon button cannot carry a tooltip of its own, so a TooltipTrigger renders it. The
+ * button's. A link drawn as an icon button cannot carry a tooltip of its own, so a TooltipTrigger renders it, and a
+ * button that has its tooltip is never rendered by a TooltipTrigger too, which would open two tooltips at once. The
  * component sets that a registry ships keep their upstream shape.
  */
 export function inspectButtonSource(file: string, sourceFile: SourceFile) {
@@ -149,7 +150,23 @@ export function inspectButtonSource(file: string, sourceFile: SourceFile) {
           Option.exists(classText(attributes), (classes) =>
             SMALL_HEIGHT_PATTERN.test(classes)
           );
+        const doubled =
+          tag === TOOLTIP_TRIGGER_TAG &&
+          Arr.some(nodesBelow(node), (below) =>
+            Option.exists(
+              opening(below),
+              (held) =>
+                held.tag !== undefined &&
+                HashSet.has(BUTTON_TAGS, held.tag) &&
+                Option.isSome(attributeValue(held.attributes, "tooltip"))
+            )
+          );
         return Arr.flatten([
+          doubled
+            ? [
+                `${file}: a TooltipTrigger renders a button that has a tooltip of its own, so two tooltips open at once. Keep the button's tooltip and drop the Tooltip around it; a name fuller than the tooltip goes in the button's aria-label.`,
+              ]
+            : [],
           bareIcon
             ? [
                 `${file}: a button holds an icon alone without a tooltip. An icon button takes size="icon" or size="icon-sm" and the tooltip that names its action.`,

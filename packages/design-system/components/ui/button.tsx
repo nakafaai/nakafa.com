@@ -34,7 +34,10 @@ function Button({
           NonNullable<VariantProps<typeof buttonVariantsClassName>["size"]>,
           `icon${string}`
         >;
-        /** The action of the icon in words, shown on hover and focus and read as the button's name. */
+        /**
+         * The action of the icon in words, shown on hover and focus and read as the button's name, unless the button
+         * gives a fuller name of its own in `aria-label`, such as the row the action is for.
+         */
         tooltip: string;
       }
     | {
@@ -66,9 +69,9 @@ function Button({
       <TooltipTrigger
         render={
           <ButtonPrimitive
+            aria-label={tooltip}
             data-slot="button"
             {...props}
-            aria-label={tooltip}
             className={classes}
           />
         }

@@ -9,11 +9,6 @@ import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ScrollArea } from "@repo/design-system/components/ui/scroll-area";
 import { Slider } from "@repo/design-system/components/ui/slider";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@repo/design-system/components/ui/tooltip";
 import { elementById } from "@repo/design-system/lib/element";
 import { Array as Arr, Data, Effect, Option } from "effect";
 import { type RefObject, useState, useSyncExternalStore } from "react";
@@ -231,42 +226,28 @@ export function ExamFooter({ canvas, onZoom }: ExamFooterProps) {
               />
             </>
           )}
-          <Tooltip>
-            <TooltipTrigger
-              render={
-                <Button
-                  aria-pressed={grid}
-                  onClick={toggleGrid}
-                  size="icon-sm"
-                  tooltip={t("grid")}
-                  type="button"
-                  variant="ghost"
-                />
-              }
-            >
-              <HugeIcons aria-hidden="true" icon={GridViewIcon} />
-            </TooltipTrigger>
-            <TooltipContent>{t("grid")}</TooltipContent>
-          </Tooltip>
-          <Tooltip>
-            <TooltipTrigger
-              render={
-                <Button
-                  aria-pressed={fullscreen}
-                  className="@max-sm/bar:hidden"
-                  disabled={!canFullscreen}
-                  onClick={toggleFullscreen}
-                  size="icon-sm"
-                  tooltip={t("fullscreen")}
-                  type="button"
-                  variant="ghost"
-                />
-              }
-            >
-              <HugeIcons aria-hidden="true" icon={FullScreenIcon} />
-            </TooltipTrigger>
-            <TooltipContent>{t("fullscreen")}</TooltipContent>
-          </Tooltip>
+          <Button
+            aria-pressed={grid}
+            onClick={toggleGrid}
+            size="icon-sm"
+            tooltip={t("grid")}
+            type="button"
+            variant="ghost"
+          >
+            <HugeIcons aria-hidden="true" icon={GridViewIcon} />
+          </Button>
+          <Button
+            aria-pressed={fullscreen}
+            className="@max-sm/bar:hidden"
+            disabled={!canFullscreen}
+            onClick={toggleFullscreen}
+            size="icon-sm"
+            tooltip={t("fullscreen")}
+            type="button"
+            variant="ghost"
+          >
+            <HugeIcons aria-hidden="true" icon={FullScreenIcon} />
+          </Button>
         </div>
       </div>
     </footer>

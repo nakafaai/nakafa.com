@@ -6,6 +6,7 @@ import { parseSources } from "#scripts/check/source";
 const VIEW = "apps/www/src/components/example.tsx";
 const BARE = `${VIEW}: a button holds an icon alone without a tooltip. An icon button takes size="icon" or size="icon-sm" and the tooltip that names its action.`;
 const SMALL = `${VIEW}: a button sets a height under the small button's. Buttons keep to the design system's size scale: use size="sm" or size="icon-sm", never a smaller class.`;
+const DOUBLED = `${VIEW}: a TooltipTrigger renders a button that has a tooltip of its own, so two tooltips open at once. Keep the button's tooltip and drop the Tooltip around it; a name fuller than the tooltip goes in the button's aria-label.`;
 const LINK = `${VIEW}: a link drawn as an icon button has no tooltip. Render it from a TooltipTrigger with a TooltipContent that names where it goes.`;
 
 /** Inspects one module with the button policy alone. */
@@ -120,6 +121,40 @@ export function Links() {
   );
 }`),
           [LINK]
+        );
+      })
+  );
+
+  it.effect(
+    "rejects a button with its own tooltip that a TooltipTrigger renders too",
+    () =>
+      Effect.gen(function* () {
+        assert.deepStrictEqual(
+          yield* inspect(`
+export function Row() {
+  return (
+    <>
+      <Tooltip>
+        <TooltipTrigger
+          render={
+            <DropdownMenuTrigger render={<Button size="icon" tooltip={t("more")} />}>
+              <HugeIcons icon={MoreHorizontalIcon} />
+            </DropdownMenuTrigger>
+          }
+        />
+        <TooltipContent>{t("more")}</TooltipContent>
+      </Tooltip>
+      <Tooltip>
+        <TooltipTrigger render={<Button size="sm" />}>{t("save")}</TooltipTrigger>
+        <TooltipContent>{t("hint")}</TooltipContent>
+      </Tooltip>
+      <DropdownMenuTrigger render={<Button size="icon" tooltip={t("more")} />}>
+        <HugeIcons icon={MoreHorizontalIcon} />
+      </DropdownMenuTrigger>
+    </>
+  );
+}`),
+          [DOUBLED]
         );
       })
   );

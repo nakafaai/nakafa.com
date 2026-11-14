@@ -17,11 +17,6 @@ import {
 } from "@repo/design-system/components/ui/card";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@repo/design-system/components/ui/tooltip";
 import { STATUS_BADGES } from "@repo/design-system/lib/status";
 import { cva } from "class-variance-authority";
 import { Array as Arr, Option, Schema } from "effect";
@@ -183,26 +178,19 @@ function ConnectAction() {
   });
 
   return (
-    <Tooltip>
-      <TooltipTrigger
-        render={
-          <Button
-            disabled={isConnecting}
-            onClick={() => startConnecting(() => connect(service.connector))}
-            size="icon-sm"
-            tooltip={label}
-            type="button"
-            variant="outline"
-          >
-            <Spinner
-              icon={again ? RefreshIcon : Add01Icon}
-              isLoading={isConnecting}
-            />
-          </Button>
-        }
+    <Button
+      disabled={isConnecting}
+      onClick={() => startConnecting(() => connect(service.connector))}
+      size="icon-sm"
+      tooltip={label}
+      type="button"
+      variant="outline"
+    >
+      <Spinner
+        icon={again ? RefreshIcon : Add01Icon}
+        isLoading={isConnecting}
       />
-      <TooltipContent>{label}</TooltipContent>
-    </Tooltip>
+    </Button>
   );
 }
 
