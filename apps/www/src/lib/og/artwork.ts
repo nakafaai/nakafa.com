@@ -46,6 +46,7 @@ const artworkSources = {
   "tryout/indonesia/snbt/mathematical-reasoning": ALL_ARTWORK_LOCALES,
   "tryout/indonesia/snbt/quantitative-knowledge": ALL_ARTWORK_LOCALES,
   "tryout/indonesia/tka": ENGLISH_ARTWORK,
+  "tryout/indonesia/tka/advanced-mathematics": ALL_ARTWORK_LOCALES,
   "tryout/indonesia/tka/compulsory-mathematics": ALL_ARTWORK_LOCALES,
   "tryout/indonesia/tka/english-language": ALL_ARTWORK_LOCALES,
   "tryout/indonesia/tka/indonesian-language": ALL_ARTWORK_LOCALES,

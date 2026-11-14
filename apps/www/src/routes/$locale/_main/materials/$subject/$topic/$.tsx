@@ -1,5 +1,4 @@
 import { readNamespaceSegment } from "@repo/contents/route/surface";
-import { getHeadings } from "@repo/contents/toc";
 import { LocalizedPath } from "@repo/internationalization/src/alternates";
 import { loadLocaleMessages } from "@repo/internationalization/src/messages";
 import { toCanonicalPath } from "@repo/internationalization/src/rewrite";
@@ -51,7 +50,7 @@ import {
 import {
   orderPlacements,
   readPlacementAlignments,
-  readPlacementTrail,
+  readPlacementTrails,
 } from "@/lib/content/material/placement";
 import { getMaterialPublication } from "@/lib/content/material/publication";
 import { outcome } from "@/lib/content/outcome";
@@ -60,7 +59,6 @@ import { getAksaraUrl } from "@/lib/content/repository";
 import { getLlmsMarkdownPath } from "@/lib/llms/format";
 import { getLocaleOrThrow } from "@/lib/routing/locale/address";
 import { createResolvedRouteAlternates } from "@/lib/seo/alternates";
-import { createBreadcrumbItems } from "@/lib/seo/breadcrumbs";
 import { createSeoHead, toHeadAlternates, toRouterHead } from "@/lib/seo/head";
 import { getOgUrl } from "@/lib/seo/social";
 import { serverHandler } from "@/lib/server/fn";
@@ -128,9 +126,6 @@ const readMaterial = createServerFn({ method: "GET" })
             alternates: toHeadAlternates(
               createResolvedRouteAlternates(route, model.alternates)
             ),
-            breadcrumbs: createBreadcrumbItems(locale, [
-              { name: tCommon("home"), path: "" },
-            ]),
             canonicalPath: canonicalPath.value,
             content: published.sourceRevision ? undefined : published.rawMdx,
             contentId: route.graph.assetId,
@@ -139,7 +134,7 @@ const readMaterial = createServerFn({ method: "GET" })
               : null,
             headMetadata: toMaterialMetadataCopy({ metadata: route.metadata }),
             body: published.body,
-            headings: getHeadings(published.rawMdx),
+            headings: published.headings,
             labels: {
               home: tCommon("home"),
               onThisPage: tCommon("on-this-page"),
@@ -223,7 +218,7 @@ export const Route = createFileRoute(
       image: getOgUrl(locale, route.publicPath),
       locale,
       path: route.href,
-      trail: readPlacementTrail(locale, loaderData.labels.home, placements),
+      trails: readPlacementTrails(locale, loaderData.labels.home, placements),
     };
     return toRouterHead(
       createSeoHead({

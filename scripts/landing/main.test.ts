@@ -15,12 +15,17 @@ describe("train command line", () => {
           "12",
           "--specs=e2e/a.browser.ts,e2e/b.browser.ts",
           "7",
+          "--batch",
         ])
       ).toEqual({
+        batch: true,
+        red: false,
         numbers: [12, 7],
         specs: ["e2e/a.browser.ts", "e2e/b.browser.ts"],
       });
       expect(yield* parseTrainArguments([])).toEqual({
+        batch: false,
+        red: false,
         numbers: [],
         specs: [],
       });

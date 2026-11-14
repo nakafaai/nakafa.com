@@ -1,39 +1,49 @@
+import type {
+  ContentTreeChild,
+  ContentTreeElement,
+} from "@nakafa/aksara-contracts/tree";
 import { createHeadingId, createHeadingLabel } from "@repo/math/heading";
-import { Array as Arr, Schema } from "effect";
+import { Array as Arr, Option, Predicate, Record as Rec, Schema } from "effect";
+
+/** The heading tags of a content tree, each with the level it names. */
+const HEADING_LEVELS: Record<string, number> = {
+  h1: 1,
+  h2: 2,
+  h3: 3,
+  h4: 4,
+  h5: 5,
+  h6: 6,
+};
 
 /**
- * Extracts heading hierarchy from markdown content.
- * Parses markdown headings (h1-h6) and builds a nested structure for TOC generation.
- * Removes code blocks before parsing to avoid false matches.
- *
- * @param content - Raw markdown content
- * @returns Array of parsed headings with nested children
- *
- * @example
- * ```ts
- * const headings = getHeadings("# Introduction\\n## Getting Started");
- * // Returns: [{ label: "Introduction", href: "#introduction", children: [...] }]
- * ```
+ * The words of one node as a reader sees them: its text, and the source of each
+ * formula, which stands in a component's `math` prop instead of its children.
  */
-export function getHeadings(content: string): ParsedHeading[] {
-  const cleanedContent = content
-    .replace(/<CodeBlock[\s\S]*?\/>/gmu, "")
-    .replace(/```[\s\S]*?```/gu, "")
-    .replace(/~~~[\s\S]*?~~~/gu, "");
+function textOf(child: ContentTreeChild): string {
+  if (Predicate.isString(child)) {
+    return child;
+  }
+  const { math } = child.props;
+  if (Predicate.isString(math)) {
+    return math;
+  }
+  return Arr.join(Arr.map(child.children, textOf), "");
+}
 
-  const markdownHeadingRegex = /^\s*(?<marks>#{1,6})(?:\s+(?<text>.*))?$/gmu;
-  const entries = Arr.map(
-    Arr.fromIterable(cleanedContent.matchAll(markdownHeadingRegex)),
-    (match) => {
-      const text = match[2]?.trim() ?? "";
-      return {
-        href: `#${createHeadingId(text)}`,
-        label: createHeadingLabel(text),
-        level: match[1].length,
-      };
-    }
+/**
+ * The anchor of one heading of a content tree, or none for any other element:
+ * the id its author gave, or the id of the words it shows. The renderer gives
+ * each heading this id, and the outline links to it, so the two never differ.
+ */
+export function headingIdOf(
+  element: ContentTreeElement
+): Option.Option<string> {
+  return Rec.get(HEADING_LEVELS, element.name).pipe(
+    Option.map(() => {
+      const { id } = element.props;
+      return Predicate.isString(id) ? id : createHeadingId(textOf(element));
+    })
   );
-  return nestHeadings(entries);
 }
 
 /** A heading in document order, before its children are nested under it. */
@@ -44,6 +54,34 @@ const HeadingEntrySchema = Schema.Struct({
 });
 
 type HeadingEntry = typeof HeadingEntrySchema.Type;
+
+/** Every heading under one node, in the order the page draws them. */
+function headingEntries(child: ContentTreeChild): HeadingEntry[] {
+  if (Predicate.isString(child)) {
+    return [];
+  }
+  return Option.match(
+    Option.all({
+      id: headingIdOf(child),
+      level: Rec.get(HEADING_LEVELS, child.name),
+    }),
+    {
+      onNone: () => Arr.flatMap(child.children, headingEntries),
+      onSome: ({ id, level }) => [
+        { href: `#${id}`, label: createHeadingLabel(textOf(child)), level },
+      ],
+    }
+  );
+}
+
+/**
+ * The outline of one signed content tree: each heading the page draws, with the
+ * anchor the renderer gives it, nested under the nearest heading of a higher
+ * level before it.
+ */
+export function contentOutline(tree: ContentTreeElement): ParsedHeading[] {
+  return nestHeadings(headingEntries(tree));
+}
 
 /**
  * Nests each entry under the nearest earlier entry with a smaller level. An
@@ -79,26 +117,6 @@ function siblingStarts(entries: readonly HeadingEntry[]) {
   );
 }
 
-/**
- * Extracts all heading IDs from a parsed heading hierarchy.
- * Uses a depth-first traversal to collect all heading slugs including nested children.
- *
- * @param headings - Array of parsed headings with potential nested children
- * @returns Array of heading slugs/IDs
- *
- * @example
- * ```ts
- * const ids = extractAllHeadingIds(headings);
- * // Returns: ["introduction", "getting-started", "installation"]
- * ```
- */
-export function extractAllHeadingIds(headings: ParsedHeading[]): string[] {
-  return Arr.flatMap(headings, (heading) => [
-    createHeadingId(heading.label),
-    ...extractAllHeadingIds(heading.children),
-  ]);
-}
-
 export const ParsedHeadingSchema = Schema.Struct({
   children: Schema.Array(
     Schema.suspend((): Schema.Codec<ParsedHeading> => ParsedHeadingSchema)
@@ -111,6 +129,7 @@ type ParsedHeadingFields = typeof ParsedHeadingSchema.Type;
 
 /**
  * One heading in the table of contents. The interface only names the recursive
- * shape; every field is derived from `ParsedHeadingSchema`.
+ * shape; every field is derived from `ParsedHeadingSchema`. Its `href` is the
+ * one source of the heading's id: the outline links to it and watches it.
  */
 export interface ParsedHeading extends ParsedHeadingFields {}

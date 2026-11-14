@@ -133,6 +133,32 @@ describe("public URL migration redirects", () => {
         expect(readNakafaRuntimeQueryMock).not.toHaveBeenCalled();
       })
   );
+  it.effect(
+    "redirects a lesson under the earlier senior-high-school spelling of its level",
+    () =>
+      Effect.gen(function* () {
+        readSubjectSuccessorMock.mockReturnValueOnce(
+          Effect.succeedSome(
+            "materi/matematika/vektor-dan-operasinya/vektor-dan-sistem-koordinat"
+          )
+        );
+        const redirect = yield* readPublicUrlMigrationRedirect({
+          hasAttemptCapability: false,
+          method: "GET",
+          pathname:
+            "/id/subject/senior-high-school/10/mathematics/vector-operations/vector-coordinate-system",
+        });
+        expect(redirect).toEqual({
+          destination:
+            "/id/materi/matematika/vektor-dan-operasinya/vektor-dan-sistem-koordinat",
+          status: 308,
+        });
+        expect(readSubjectSuccessorMock).toHaveBeenCalledWith(
+          "id",
+          "material/lesson/mathematics/vector-operations/vector-coordinate-system"
+        );
+      })
+  );
   it.effect.each([
     {
       appLocale: "id",

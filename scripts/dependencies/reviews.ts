@@ -108,8 +108,8 @@ export const REGISTRY_REVIEWS = [
   ],
   [
     "node@26",
-    "26.13.0",
-    "Node 26 is the Active LTS line since 28 October 2026, and the tooling, CI and devEngines run it. Convex Node actions stay on 24 until a dev deployment proves 26.",
+    "26.13.1",
+    "Node 26 is the Active LTS line since 28 October 2026, and the tooling, CI and devEngines run it. 26.13.1 is the security release of 10 November 2026: nine high CVEs in HTTP/2, TLS and HTTP, with undici 8.12.4 and llhttp 9.4.4. Convex Node actions stay on 24 until a dev deployment proves 26.",
   ],
   [
     "react-doctor@latest",

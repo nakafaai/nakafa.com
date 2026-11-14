@@ -2,7 +2,7 @@ import { COMPANY_IDENTITY } from "@repo/seo/company";
 import {
   makeBreadcrumbNodes,
   makeFaqPageNode,
-  makeProductNode,
+  makePlanNode,
 } from "@repo/seo/jsonld/node";
 import { createFileRoute } from "@tanstack/react-router";
 import { Array as Arr } from "effect";
@@ -109,7 +109,7 @@ export const Route = createFileRoute("/$locale/_marketing/school/pricing")({
               url,
             }),
             ...Arr.map(schoolProductOffers, (product) =>
-              makeProductNode({
+              makePlanNode({
                 description: loaderData.description,
                 image: new URL(image, COMPANY_IDENTITY.url).href,
                 name: product.name,
