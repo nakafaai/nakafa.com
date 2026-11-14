@@ -10,7 +10,7 @@ import {
   String as Str,
 } from "effect";
 import { runText } from "#scripts/process";
-import { REPOSITORY } from "#scripts/proof/github";
+import { REPOSITORY } from "#scripts/proof/client";
 
 /** A gate that could not run, or whose verdict could not be read. */
 export class GateError extends Schema.TaggedError<
