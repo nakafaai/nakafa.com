@@ -130,6 +130,12 @@ export function readSchoolSlug(request: Request, siteHostname: string) {
  * answered. A host that the shared cookie does not reach keeps its own cookie,
  * so a session that cookie holds there still works.
  *
+ * A site on a one-label domain such as `localhost` gets no expiry. That domain
+ * names one host, and a browser keeps a cookie with that Domain and a host-only
+ * one under one key, so no older cookie stands beside the shared one. An expiry
+ * there removes the session itself in WebKit, whatever its place among the
+ * response's cookies.
+ *
  * Returns `undefined` when the response leaves the session cookie alone.
  */
 export function expireHostOnlySessionCookie(
@@ -144,7 +150,9 @@ export function expireHostOnlySessionCookie(
     readonly name: string;
   }
 ) {
-  if (!sharedCookieReaches(hostname, cookieDomain)) {
+  if (
+    !(cookieDomain.includes(".") && sharedCookieReaches(hostname, cookieDomain))
+  ) {
     return;
   }
   const setCookies = response.headers.getSetCookie();
@@ -155,9 +163,8 @@ export function expireHostOnlySessionCookie(
   const secure = name.startsWith("__Secure-") ? "; Secure" : "";
   const headers = new Headers(response.headers);
   headers.delete("set-cookie");
-  // A browser applies a response's cookies in order. The expiry comes first, so
-  // when the browser stores both cookies as one cookie, as Chromium does for
-  // localhost, the shared cookie that follows is the one that remains.
+  // A browser applies a response's cookies in order, so the expiry comes first
+  // and the shared cookie that follows is the one that remains.
   headers.append(
     "set-cookie",
     `${name}=; Max-Age=0; Path=/; HttpOnly; SameSite=Lax${secure}`
