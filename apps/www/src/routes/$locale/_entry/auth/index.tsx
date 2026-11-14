@@ -1,4 +1,5 @@
 import { Nina } from "@repo/design-system/components/ui/nina";
+import { makeBreadcrumbNodes } from "@repo/seo/jsonld/node";
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import { Schema } from "effect";
 import { useTranslations } from "use-intl";
@@ -15,6 +16,7 @@ import { readAuthLegalFn } from "@/lib/auth/legal.functions";
 import { TextSearchParam } from "@/lib/entry/search";
 import { readRouteMessages } from "@/lib/i18n/messages.functions";
 import { getAppSocialArtwork } from "@/lib/og/app";
+import { createBreadcrumbItems } from "@/lib/seo/breadcrumbs";
 import { createSeoHead, toRouterHead } from "@/lib/seo/head";
 import { readStaticData } from "@/lib/static/data";
 
@@ -25,7 +27,8 @@ const AuthSearch = Schema.Struct({
 });
 
 /**
- * The sign-in page names itself and takes the root description. The build
+ * The sign-in page names itself, says what signing in keeps, and stands under
+ * home in its breadcrumb. The build
  * prerenders it, so its loader reads the static answers and every visitor opens the
  * static page. A signed-in visitor never sees it: a move between pages passes the
  * gate, which sends them on to the page the intent names, or home, before the loader
@@ -48,14 +51,14 @@ export const Route = createFileRoute("/$locale/_entry/auth/")({
     const [messages, legal] = await Promise.all([
       readStaticData(readRouteMessages, {
         locale: params.locale,
-        namespaces: ["Auth", "Metadata"],
+        namespaces: ["Auth", "Common"],
       }),
       readStaticData(readAuthLegalFn, { locale: params.locale }),
     ]);
-    const t = createTranslator({
+    const tCommon = createTranslator({
       locale: params.locale,
       messages,
-      namespace: "Metadata",
+      namespace: "Common",
     });
     const tAuth = createTranslator({
       locale: params.locale,
@@ -63,7 +66,8 @@ export const Route = createFileRoute("/$locale/_entry/auth/")({
       namespace: "Auth",
     });
     return {
-      description: t("description"),
+      description: tAuth("login-cta-description"),
+      home: tCommon("home"),
       legal,
       title: tAuth("sign-in-title"),
     };
@@ -82,7 +86,12 @@ export const Route = createFileRoute("/$locale/_entry/auth/")({
               publicPath: "",
             }),
             indexable: true,
-            jsonLd: [],
+            jsonLd: makeBreadcrumbNodes(
+              createBreadcrumbItems(params.locale, [
+                { name: loaderData.home, path: "" },
+                { name: loaderData.title, path: "/auth" },
+              ])
+            ),
             locale: params.locale,
             parts: [],
             type: "website",

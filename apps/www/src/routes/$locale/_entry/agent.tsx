@@ -3,7 +3,6 @@ import { Schema } from "effect";
 import { AgentConsent } from "@/components/entry/agent";
 import { EntryShellBody, EntryShellHeader } from "@/components/entry/shell";
 import { ThemePicker } from "@/components/shared/theme/picker";
-import { readAuthClient } from "@/lib/auth/client";
 
 /** The authorization that Better Auth holds while a person answers. */
 const AgentSearch = Schema.Struct({
@@ -27,6 +26,9 @@ export const Route = createFileRoute("/$locale/_entry/agent")({
   loaderDeps: ({ search }) => ({ clientId: search.client_id }),
   ssr: false,
   loader: async ({ deps }) => {
+    // A loader sits in the first JavaScript of every page, so the auth client
+    // loads here, when an agent asks.
+    const { readAuthClient } = await import("@/lib/auth/client");
     const { data } = await readAuthClient().$fetch("/agent/client", {
       query: { client_id: deps.clientId },
     });

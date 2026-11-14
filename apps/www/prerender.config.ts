@@ -13,6 +13,8 @@ import { HttpClient } from "effect/http";
 import { toJSONAsync } from "seroval";
 import type { Plugin } from "vite";
 import { SHELL_PATH, schoolEntryPath } from "#www/src/lib/routing/shell";
+import { readPageFacts } from "#www/src/lib/seo/audit/html";
+import { auditSite } from "#www/src/lib/seo/audit/site";
 import {
   readStaticCalls,
   type StaticCall,
@@ -100,6 +102,40 @@ function assertPrerenderedPages(
   if (problems.length > 0) {
     throw new Error(
       `The prerendered pages are not the listed set:\n${problems.join("\n")}`
+    );
+  }
+}
+
+/** One address that a sitemap file lists. */
+const SITEMAP_LOCATION = /<loc>(?<location>[^<]*)<\/loc>/gu;
+
+/**
+ * Throws unless every listed page keeps the search contract (`auditSite`): its
+ * head, its structured data and its links to the other pages. It reads only what
+ * each page's facts need, page by page, so the build never holds every page at once.
+ */
+function assertSearchContract(
+  clientOutputDirectory: string,
+  pages: readonly string[]
+) {
+  const sitemapDirectory = join(clientOutputDirectory, "sitemap");
+  const sitemapPaths = readdirSync(sitemapDirectory).flatMap((file) =>
+    [
+      ...readFileSync(join(sitemapDirectory, file), "utf8").matchAll(
+        SITEMAP_LOCATION
+      ),
+    ].map((found) => new URL(found.groups?.location ?? "").pathname)
+  );
+  const built = pages.map((path) => ({
+    facts: readPageFacts(
+      readFileSync(join(clientOutputDirectory, path, "index.html"), "utf8")
+    ),
+    path,
+  }));
+  const problems = auditSite(built, sitemapPaths);
+  if (problems.length > 0) {
+    throw new Error(
+      `The prerendered pages break the search contract:\n${problems.join("\n")}`
     );
   }
 }
@@ -276,12 +312,16 @@ export const verifyPrerenderedPages = (pages: readonly string[]): Plugin => ({
   buildApp: {
     order: "post",
     handler: (builder) =>
-      Promise.resolve(
+      Promise.resolve().then(() => {
         assertPrerenderedPages(
           builder.environments.client.config.build.outDir,
           pages
-        )
-      ),
+        );
+        assertSearchContract(
+          builder.environments.client.config.build.outDir,
+          pages
+        );
+      }),
   },
   name: "www:verify-prerendered-pages",
 });
