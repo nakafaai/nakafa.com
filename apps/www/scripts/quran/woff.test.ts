@@ -4,7 +4,8 @@ import { brotliCompressSync, brotliDecompressSync } from "node:zlib";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { Array as Arr, Effect, FileSystem, Path, Schema } from "effect";
-import { readFaceMetrics, writeFaceMetrics } from "@/scripts/quran/woff";
+import { readFaceMetrics } from "@/scripts/quran/test.woff";
+import { writeFaceMetrics } from "@/scripts/quran/woff";
 
 const PUBLISHED = { ascent: 1815, descent: -634, lineGap: 0 };
 const BALANCED = { ascent: 848, descent: -451, lineGap: 0 };

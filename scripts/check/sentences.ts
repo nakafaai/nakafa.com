@@ -1,16 +1,15 @@
-import { Schema } from "effect";
+import { HashSet, pipe, String as Str } from "effect";
 
 /**
- * The messages that the one-sentence rule covers: each card description, card
- * footer sentence, dialog description, empty-state description, failure message
- * and answer of a question list. A message is listed by the component that
- * renders it, and its key is the dotted path of its dictionary entry, such as
- * `Memory.empty-description` or `Ai.failures.unknown`. In id, en and de each
+ * The messages that take one sentence: each card description, card footer
+ * sentence, dialog description, empty-state description, failure message and
+ * answer of a question list. A message is listed by the component that renders
+ * it, and its key is the dotted path of its dictionary entry, such as
+ * `Memory.empty-description` or `Ai.failures.unknown`. In every dictionary each
  * listed message is one concise sentence, and a question ends with a question
- * mark. Titles, headings and metadata are not listed. `sentences.test.ts` checks
- * every key in every locale.
+ * mark. Titles, headings and metadata are not listed.
  */
-export const SentenceKeySchema = Schema.Literals([
+export const SENTENCE_KEYS = HashSet.make(
   "Ai.chat-failed-description",
   "Ai.chat-unavailable",
   "Ai.delete-chat-description",
@@ -138,5 +137,29 @@ export const SentenceKeySchema = Schema.Literals([
   "Tryouts.restart-dialog-description",
   "Tryouts.restart-entry-dialog-description",
   "Tryouts.start-dialog-description",
-  "Tryouts.start-entry-dialog-description",
-]);
+  "Tryouts.start-entry-dialog-description"
+);
+
+/** A sentence ends with a period, a question mark or an exclamation mark, optionally followed by a closing quote. */
+const SENTENCE_END = /[.?!]["'”’»]?$/u;
+
+/** A second sentence starts where a period, question mark or exclamation mark is followed by a space and a capital letter. */
+const SENTENCE_START = /[.?!] \p{Lu}/u;
+
+/** An ICU argument such as `{address}`, including one level of nested arguments such as plural forms. */
+const ICU_ARGUMENT = /\{(?:[^{}]|\{[^{}]*\})*\}/gu;
+
+/** Math between two dollar signs. */
+const MATH = /\$[^$]*\$/gu;
+
+/** Whether a second sentence starts inside a message. The inside of an ICU argument and of math does not count. */
+export function holdsSecondSentence(text: string) {
+  return SENTENCE_START.test(
+    pipe(text, Str.replaceAll(ICU_ARGUMENT, ""), Str.replaceAll(MATH, ""))
+  );
+}
+
+/** Whether a message is one sentence: it ends with a sentence end, and no second sentence starts inside it. */
+export function isOneSentence(text: string) {
+  return SENTENCE_END.test(text) && !holdsSecondSentence(text);
+}
