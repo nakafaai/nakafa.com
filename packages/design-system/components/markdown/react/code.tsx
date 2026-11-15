@@ -10,7 +10,10 @@ import {
   type ReactMarkdownComponents,
   readMarkdownNodeText,
 } from "@repo/design-system/components/markdown/react/node";
-import { readMermaidMetadata } from "@repo/design-system/lib/markdown/mermaid";
+import {
+  normalizeMermaidChart,
+  readMermaidMetadata,
+} from "@repo/design-system/lib/markdown/mermaid";
 import { blockGapVariants, codeVariants } from "@repo/design-system/lib/prose";
 import { Array as Arr, Option } from "effect";
 
@@ -60,7 +63,7 @@ export const reactCodeComponents: ReactMarkdownComponents = {
 
       return (
         <MermaidMdx
-          chart={code}
+          chart={normalizeMermaidChart(code)}
           className={className}
           description={metadata.description}
           title={metadata.title}

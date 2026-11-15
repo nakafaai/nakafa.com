@@ -5,7 +5,7 @@ import {
   type PeriodHold,
   PeriodInUse,
 } from "@repo/backend/confect/tenancy/errors";
-import { type ToastCopy, toast } from "@repo/design-system/lib/toast/notify";
+import type { ToastCopy } from "@repo/design-system/lib/toast/notify";
 import { Option, Predicate, Record as Rec, Schema } from "effect";
 import { REFUSAL_COPY } from "@/components/tenant/refusal/tags";
 
@@ -143,7 +143,3 @@ export function refusalCopy(error: unknown): ToastCopy {
     ? Option.getOrElse(Rec.get(REFUSAL_COPY, error._tag), () => ACTION_ERROR)
     : ACTION_ERROR;
 }
-
-/** Says why a School action failed, in the toast every School action uses: the refusal's own copy, or the action error. */
-export const toastRefusal = (error?: unknown) =>
-  toast.error(refusalCopy(error));

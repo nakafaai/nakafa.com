@@ -36,7 +36,7 @@ import { PUBLIC_CONTENT_HEADERS } from "@/lib/content/delivery";
 import { getAksaraTreeUrl } from "@/lib/content/repository";
 import {
   getCurriculumRouteSocialImage,
-  resolveCurriculumCatalogArtwork,
+  resolveCurriculumArtwork,
 } from "@/lib/curriculum/artwork";
 import { readMaterialCardChapters } from "@/lib/curriculum/chapters";
 import { getCurriculumLooks } from "@/lib/curriculum/look";
@@ -112,11 +112,7 @@ const readCurriculumRoute = createServerFn({ method: "GET" })
         const homeLabel = tCommon("home");
         const subjectLabel = tCommon("subject");
         const childVisuals = getCurriculumLooks(model.childRoutes, (child) =>
-          resolveCurriculumCatalogArtwork(locale, {
-            kind: "route",
-            nodeKey: child.nodeKey,
-            programKey: child.programKey,
-          })
+          resolveCurriculumArtwork(locale, child)
         );
 
         return {

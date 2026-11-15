@@ -4,9 +4,12 @@ import {
   both,
   type Design,
   ellipse,
+  eye,
   eyes,
+  faded,
   figure,
   head,
+  kindAt,
   line,
   PEARL,
   path,
@@ -83,12 +86,32 @@ export const bird = {
     ],
     draw: (kit) =>
       figure(
-        line("M100,46 Q96,28 110,26", kit.body, 8),
-        torso(kit.body, 58),
-        head(kit.body, 56, 52, 98),
-        ellipse(100, 114, 27, 13, kit.second),
-        line("M80,114 Q100,121 120,114", kit.ink, 3.4),
-        eyes(kit, 24, 90)
+        // Two curled feathers at the crown.
+        line("M98,50 C92,34 100,22 112,24", kit.body, 9),
+        line("M106,50 C108,38 118,34 126,40", kit.body, 7),
+        // The folded wings, a tone under the body.
+        both((side) => [
+          ellipse(100 + side * 50, 172, 20, 34, kit.body, side * 14),
+          faded(0.12, [
+            ellipse(100 + side * 50, 172, 20, 34, kit.ink, side * 14),
+          ]),
+        ]),
+        torso(kit.body, 46),
+        faded(0.6, [belly(PEARL, 26, 150)]),
+        head(kit.body, 52, 50, 92),
+        // The bill: the wide upper half, and the lower half under its line.
+        path(
+          "M66,112 C66,96 82,96 100,100 C118,96 134,96 134,112 C134,126 120,134 100,134 C80,134 66,126 66,112 Z",
+          kit.second
+        ),
+        faded(0.16, [
+          path(
+            "M70,118 C84,124 116,124 130,118 C126,128 116,134 100,134 C84,134 74,128 70,118 Z",
+            kit.ink
+          ),
+        ]),
+        both((side) => ellipse(100 + side * 8, 108, 2, 2.6, kit.ink)),
+        eyes(kit, 24, 82)
       ),
   },
   cockatoo: {
@@ -119,16 +142,39 @@ export const bird = {
     ],
     draw: (kit) =>
       figure(
-        torso(kit.body, 58),
-        head(kit.body, 56, 52, 96),
-        ellipse(100, 98, 42, 36, kit.second),
-        belly(kit.second, 30, 152),
-        eyes(kit, 28, 90),
-        path(
-          "M80,104 C84,96 116,96 120,104 C119,130 108,152 100,156 C92,152 81,130 80,104 Z",
-          "#f2a33a"
+        torso(kit.body, 54),
+        belly(kit.second, 30, 150),
+        head(kit.body, 52, 50, 100),
+        // The bare ring around each eye, so the eyes read on the dark head.
+        both((side) =>
+          ellipse(100 + side * 30 + kit.look, 96, 15, 16, kit.second)
         ),
-        path("M86,98 C88,80 112,80 114,98 Z", "#ee8a4c")
+        both((side) =>
+          eye(
+            kindAt(kit.eyes, side),
+            100 + side * 30 + kit.look,
+            96,
+            6.4,
+            kit.ink
+          )
+        ),
+        // The casque rides on the bill and turns up at its tip.
+        path(
+          "M82,96 C78,66 86,42 108,34 C120,30 130,34 132,42 C122,42 116,50 116,62 C118,76 118,88 118,96 Z",
+          "#ee8a4c"
+        ),
+        // The bill, wide at the face and bending down to its point.
+        path(
+          "M76,96 C84,88 116,88 124,96 C126,128 116,160 100,174 C84,160 74,128 76,96 Z",
+          "#f7c94f"
+        ),
+        faded(0.5, [
+          path(
+            "M84,100 C90,96 104,96 108,100 C108,122 104,142 100,154 C92,140 84,122 84,100 Z",
+            PEARL
+          ),
+        ]),
+        line("M78,112 Q100,120 122,112", "#ee8a4c", 3)
       ),
   },
   eagle: {
@@ -177,19 +223,29 @@ export const bird = {
     ],
     draw: (kit) =>
       figure(
-        both((side) =>
-          ellipse(100 + side * 40, 184, 28, 38, kit.body, side * -14)
-        ),
-        torso(kit.body, 40),
-        ellipse(100, 150, 21, 58, kit.body),
-        head(kit.body, 44, 42, 84),
-        eyes(kit, 23, 78, 5.4),
+        // The folded wing, a tone under the body, behind the neck.
+        ellipse(124, 190, 58, 36, kit.body, -8),
+        faded(0.14, [
+          path(
+            "M92,176 C116,160 158,164 176,186 C150,180 118,182 92,176 Z",
+            kit.ink
+          ),
+          path(
+            "M100,192 C122,180 154,182 170,198 C146,196 122,196 100,192 Z",
+            kit.ink
+          ),
+        ]),
+        // The long neck bends in an S up to the head.
+        line("M112,196 C150,168 62,152 92,104", kit.body, 26),
+        ellipse(92, 82, 40, 38, kit.body),
+        eyes(kit, 21, 74, 5.4),
+        // The bill is bent in the middle, and its tip is dark.
         path(
-          "M85,92 C90,84 110,84 115,92 C115,112 108,130 100,134 C92,130 85,112 85,92 Z",
+          "M76,88 C84,80 104,80 110,90 C116,104 114,118 104,130 C98,136 90,134 88,126 C92,114 82,104 76,88 Z",
           kit.second
         ),
         path(
-          "M89,114 C96,119 104,119 111,114 C109,125 104,131 100,134 C96,131 91,125 89,114 Z",
+          "M96,110 C104,114 110,110 113,104 C114,114 110,124 104,130 C98,136 90,134 88,126 C92,122 95,116 96,110 Z",
           kit.ink
         )
       ),
@@ -233,13 +289,43 @@ export const bird = {
     ],
     draw: (kit) =>
       figure(
-        torso(kit.body, 62),
-        ellipse(100, 150, 24, 52, kit.second),
-        both((side) => ellipse(100 + side * 8, 152, 6.4, 15, "#ee6a5a")),
-        blob([88, 60, 100, 20, 112, 60], "#c9a27e", 10),
-        head(kit.second, 42, 44, 96),
-        eyes(kit, 18, 90, 5.4),
-        blob([92, 104, 108, 104, 100, 123], "#3b4252", 5)
+        // The shaggy black body, its feathers ending in tufts.
+        path(
+          "M22,200 C22,160 56,134 100,134 C144,134 178,160 178,200 Z",
+          kit.body
+        ),
+        both((side) => [
+          blob(
+            [100 + side * 58, 150, 100 + side * 84, 152, 100 + side * 74, 172],
+            kit.body,
+            8
+          ),
+          blob(
+            [100 + side * 70, 166, 100 + side * 92, 176, 100 + side * 78, 190],
+            kit.body,
+            8
+          ),
+        ]),
+        // The bare blue neck, and the two red wattles at its front.
+        path(
+          "M78,200 C78,170 80,140 84,116 L116,116 C120,140 122,170 122,200 Z",
+          kit.second
+        ),
+        both((side) =>
+          ellipse(100 + side * 8, 150, 7, 17, "#ee6a5a", side * -6)
+        ),
+        // The casque, a tall blade over the brow.
+        path("M84,66 C82,40 92,18 106,12 C116,24 120,46 116,66 Z", "#c9a27e"),
+        faded(0.16, [
+          path(
+            "M84,66 C83,58 84,50 86,42 C96,48 106,48 118,42 C119,50 118,58 116,66 Z",
+            kit.ink
+          ),
+        ]),
+        head(kit.second, 42, 42, 92),
+        eyes(kit, 18, 86, 5.4),
+        blob([91, 100, 109, 100, 100, 122], "#3b4252", 6),
+        faded(0.35, [line("M94,104 L106,104", PEARL, 2.4)])
       ),
   },
 } satisfies Record<string, Design>;

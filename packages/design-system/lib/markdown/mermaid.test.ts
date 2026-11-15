@@ -95,6 +95,14 @@ E --> F("Rounded label")`);
     );
   });
 
+  it("leaves parentheses and brackets inside a quoted label as its words", () => {
+    const chart = `flowchart LR
+  A["C with E(C) = 28"] -->|"times 1.8"| B["1.8C with E = 50.4"]
+  B -->|"plus 32"| C["F = 1.8C + 32 with E(F) = 82.4"]`;
+
+    expect(normalizeMermaidChart(chart)).toBe(chart);
+  });
+
   it("converts Markdown math inside quoted labels to Mermaid math", () => {
     const chart = String.raw`graph TD
 A["Glukosa - \\(C_6H_{12}O_6\\)"]`;

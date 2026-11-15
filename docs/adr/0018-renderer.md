@@ -27,6 +27,13 @@ signed and are in no publication, and the last point below says how they render.
   current implementation and component set. There are no component or
   renderer contract version fields, dual registries, or compatibility
   adapters for additive props.
+- A `Mermaid` chart renders exactly as Aksara signed it, with no rewriting: the
+  design system's `normalizeMermaidChart` repairs only a model's chart in a
+  chat answer. One Mermaid version parses every chart twice before a reader
+  sees it: the Aksara compiler refuses a chart it cannot parse, with its file,
+  line and message, and the static build of every release fails on one. The
+  Aksara dependency hold pins the version nakafa.com's design system draws with,
+  and both move to a new release in one step, nakafa.com first.
 - Assessment items, the try-out and school exam items of ADR 0031, are not MDX
   code. Their body is an assessment document: a structured tree of paragraphs,
   headings, lists, tables, math written in LaTeX with MathML, and figures. A

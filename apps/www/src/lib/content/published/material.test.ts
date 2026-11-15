@@ -19,9 +19,10 @@ import {
 } from "@repo/backend/test/content/proof";
 import { Effect, Option } from "effect";
 import { ContentExecutionError } from "@/lib/content/published/errors";
+import { readCurrentPublishedContent } from "@/lib/content/published/exchange";
 import {
-  readPublishedMaterial,
-  readRenderedMaterial,
+  decodeMaterialData,
+  renderMaterialArtifact,
 } from "@/lib/content/published/material";
 import {
   previewProjection as projection,
@@ -44,6 +45,19 @@ const makeFound = Effect.fn("test.www.publishedMaterial.found")(function* () {
     activeReleaseId: release.manifest.releaseId,
     artifact: yield* testSignedArtifact("mathematics", {
       contentKey: projection.contentKey,
+      contentTree: {
+        $node: "element",
+        children: [
+          {
+            $node: "element",
+            children: ["Material delivery evidence"],
+            name: "h2",
+            props: {},
+          },
+        ],
+        name: "fragment",
+        props: {},
+      },
       rawMdx: "## Material delivery evidence\n\nThe signed material source.",
     }),
     delivery: "public",
@@ -100,14 +114,33 @@ beforeEach(() => {
   bodyMock.mockReset().mockReturnValue(Effect.succeed("cached-material-body"));
 });
 
+/** Reads one material the way its publication does: the signed exchange, then the material decode. */
+const readMaterial = Effect.fn("test.www.publishedMaterial.read")(function* (
+  materialInput: Parameters<typeof readCurrentPublishedContent>[0]
+) {
+  return yield* decodeMaterialData(
+    yield* readCurrentPublishedContent(materialInput),
+    materialInput
+  );
+});
+
 describe("published material delivery", () => {
   it.effect("keeps current source evidence with its signed rendered body", () =>
     Effect.gen(function* () {
       const found = yield* makeFound();
-      expect(yield* readRenderedMaterial(input)).toEqual({
+      expect(
+        yield* readMaterial(input).pipe(Effect.flatMap(renderMaterialArtifact))
+      ).toEqual({
         activeReleaseId: found.activeReleaseId,
         artifactHash: found.artifact.artifactHash,
         body: "cached-material-body",
+        headings: [
+          {
+            children: [],
+            href: "#material-delivery-evidence",
+            label: "Material delivery evidence",
+          },
+        ],
         metadata: projection.metadata,
         projection,
         rawMdx: found.artifact.payload.rawMdx,
@@ -152,7 +185,7 @@ describe("published material delivery", () => {
         })
       );
 
-      expect(yield* readPublishedMaterial(input)).toEqual({
+      expect(yield* readMaterial(input)).toEqual({
         activeReleaseId: rollback.manifest.releaseId,
         artifact: found.artifact,
         metadata: projection.metadata,
@@ -175,7 +208,10 @@ describe("published material delivery", () => {
         );
 
         expect(
-          yield* readRenderedMaterial(input).pipe(Effect.flip)
+          yield* readMaterial(input).pipe(
+            Effect.flatMap(renderMaterialArtifact),
+            Effect.flip
+          )
         ).toMatchObject({
           _tag: "PublishedProjectionError",
           appLocale: input.appLocale,
@@ -193,7 +229,10 @@ describe("published material delivery", () => {
     (request) =>
       Effect.gen(function* () {
         expect(
-          yield* readRenderedMaterial(request).pipe(Effect.flip)
+          yield* readMaterial(request).pipe(
+            Effect.flatMap(renderMaterialArtifact),
+            Effect.flip
+          )
         ).toMatchObject({
           _tag: "PublishedProjectionError",
           appLocale: request.appLocale,
@@ -210,9 +249,12 @@ describe("published material delivery", () => {
       });
       readMock.mockReturnValueOnce(Effect.fail(failure));
 
-      expect(yield* readRenderedMaterial(input).pipe(Effect.flip)).toBe(
-        failure
-      );
+      expect(
+        yield* readMaterial(input).pipe(
+          Effect.flatMap(renderMaterialArtifact),
+          Effect.flip
+        )
+      ).toBe(failure);
       expect(bodyMock).not.toHaveBeenCalled();
     })
   );
@@ -226,9 +268,12 @@ describe("published material delivery", () => {
       });
       bodyMock.mockReturnValueOnce(Effect.fail(failure));
 
-      expect(yield* readRenderedMaterial(input).pipe(Effect.flip)).toBe(
-        failure
-      );
+      expect(
+        yield* readMaterial(input).pipe(
+          Effect.flatMap(renderMaterialArtifact),
+          Effect.flip
+        )
+      ).toBe(failure);
       expect(readMock).toHaveBeenCalledOnce();
     })
   );

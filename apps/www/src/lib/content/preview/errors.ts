@@ -35,28 +35,6 @@ export class PreviewIntegrityError extends Schema.TaggedError<
     "artifact",
   ]),
 }) {}
-/** The selected changed document is still compiling and cannot fall back. */
-export class PreviewPendingError extends Schema.TaggedError<
-  PreviewPendingError,
-  { readonly brand: unique symbol }
->()("PreviewPendingError", {
-  revision: Schema.Finite.pipe(
-    Schema.check(Schema.isInt()),
-    Schema.check(Schema.isGreaterThan(0))
-  ),
-}) {}
-/** The selected changed document failed compilation and cannot fall back. */
-export class PreviewCompileError extends Schema.TaggedError<
-  PreviewCompileError,
-  { readonly brand: unique symbol }
->()("PreviewCompileError", {
-  code: Schema.String,
-  message: Schema.String,
-  revision: Schema.Finite.pipe(
-    Schema.check(Schema.isInt()),
-    Schema.check(Schema.isGreaterThan(0))
-  ),
-}) {}
 /** No local provider is configured for this development process. */
 export class PreviewUnavailableError extends Schema.TaggedError<
   PreviewUnavailableError,

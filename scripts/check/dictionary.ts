@@ -2,6 +2,7 @@ import {
   Array as Arr,
   Effect,
   FileSystem,
+  HashSet,
   Option,
   Path,
   Schema,
@@ -19,6 +20,11 @@ import {
   type SourceFile,
 } from "tsrs/ast";
 import { RepositoryReadError } from "#scripts/check/files";
+import {
+  holdsSecondSentence,
+  isOneSentence,
+  SENTENCE_KEYS,
+} from "#scripts/check/sentences";
 import {
   children,
   parseSources,
@@ -40,9 +46,6 @@ const ONE_WORD_PATTERN = /^\S+$/u;
  * key of this family never holds a second sentence after the first one ends.
  */
 const EMPTY_KEY_PATTERN = /(?:^|-)empty$/u;
-const SECOND_SENTENCE_PATTERN = /[.!?]\s+\S/u;
-/** Any key: a rule of this family reads every value of a dictionary. */
-const ANY_KEY_PATTERN = /^/u;
 /** The language of a dictionary, the name of its file, such as `de` in `standalone/de.json`. */
 const LANGUAGE_PATTERN = /(?<language>[^/]+)\.json$/u;
 
@@ -147,22 +150,41 @@ function repeatedKeys(
   );
 }
 
-/** A family of keys, and the test that a value of the family fails. */
+/** A family of keys, named by a key and its dotted path, and the test that a value of the family fails. */
 interface ValueRule {
-  readonly key: RegExp;
+  readonly covers: (key: string, keyPath: string) => boolean;
   readonly strays: (value: string) => boolean;
 }
 
 /** A dropdown's label holds one word. */
 const MENU_RULE: ValueRule = {
-  key: MENU_KEY_PATTERN,
+  covers: (key) => MENU_KEY_PATTERN.test(key),
   strays: (value) => !ONE_WORD_PATTERN.test(value),
 };
 
 /** What an empty list says holds one sentence at most. */
 const EMPTY_RULE: ValueRule = {
-  key: EMPTY_KEY_PATTERN,
-  strays: (value) => SECOND_SENTENCE_PATTERN.test(value),
+  covers: (key) => EMPTY_KEY_PATTERN.test(key),
+  strays: holdsSecondSentence,
+};
+
+/** A listed message (see `SENTENCE_KEYS`) is one sentence that ends with a period, a question mark or an exclamation mark. */
+function sentenceRule(listed: HashSet.HashSet<string>): ValueRule {
+  return {
+    covers: (_key, keyPath) => HashSet.has(listed, keyPath),
+    strays: (value) => !isOneSentence(value),
+  };
+}
+
+/** The namespace of a dotted key path: its first key, such as `Memory` in `Memory.empty-description`. */
+function namespaceOf(keyPath: string) {
+  return Arr.headNonEmpty(Str.split(keyPath, "."));
+}
+
+/** Every value: a rule of this family reads all of a dictionary. */
+const EVERY_VALUE: ValueRule = {
+  covers: () => true,
+  strays: () => true,
 };
 
 /**
@@ -179,7 +201,7 @@ function strayValues(
   const valuePath = named ? Arr.append(path, node.name.text) : path;
   const stray =
     named &&
-    rule.key.test(node.name.text) &&
+    rule.covers(node.name.text, Arr.join(valuePath, ".")) &&
     isStringLiteral(node.initializer) &&
     rule.strays(node.initializer.text)
       ? [
@@ -212,7 +234,7 @@ function formalFindings(file: string, sourceFile: SourceFile) {
       const { fix, pattern } = FORMAL_WORDS[code];
       return Arr.map(
         strayValues(sourceFile, sourceFile, [], {
-          key: ANY_KEY_PATTERN,
+          covers: () => true,
           strays: (value) => pattern.test(value),
         }),
         ({ keyPath, line }) =>
@@ -228,18 +250,43 @@ function formalFindings(file: string, sourceFile: SourceFile) {
  * merge that adds the same object twice would drop one of them with no error.
  * It also reports a dropdown's label that holds more than one word, since a label
  * names what is chosen in one word in every language, an empty list's words
- * that run past one sentence, and a value that speaks formally.
+ * that run past one sentence, a value that speaks formally, a `listed` message
+ * that is not one sentence, and a `listed` key that no dictionary holds although
+ * one holds its namespace.
  */
 export const dictionaryFindings = Effect.fn(
   "RepositoryPolicy.dictionaryFindings"
-)(function* (sources: readonly (typeof RepositorySource.Type)[]) {
+)(function* (
+  sources: readonly (typeof RepositorySource.Type)[],
+  listed: HashSet.HashSet<string>
+) {
   const parsed = yield* parseSources(
     Arr.map(sources, ({ file, sourceText }) => ({
       file,
       sourceText: asExpression(sourceText),
     }))
   );
-  return Arr.flatMap(parsed.modules, ({ file, sourceFile }) =>
+  const held = HashSet.fromIterable(
+    Arr.flatMap(parsed.modules, ({ sourceFile }) =>
+      Arr.map(
+        strayValues(sourceFile, sourceFile, [], EVERY_VALUE),
+        ({ keyPath }) => keyPath
+      )
+    )
+  );
+  // A dictionary that holds a namespace judges the listed keys of it, so a
+  // repository without that namespace has nothing to report.
+  const namespaces = HashSet.map(held, (keyPath) => namespaceOf(keyPath));
+  const unheld = Arr.map(
+    Arr.filter(
+      Arr.fromIterable(listed),
+      (key) =>
+        HashSet.has(namespaces, namespaceOf(key)) && !HashSet.has(held, key)
+    ),
+    (key) =>
+      `scripts/check/sentences.ts: ${key} names no message in any dictionary: drop it from SENTENCE_KEYS, or add the message.`
+  );
+  const perFile = Arr.flatMap(parsed.modules, ({ file, sourceFile }) =>
     Arr.flatten([
       formalFindings(file, sourceFile),
       Arr.map(
@@ -257,8 +304,14 @@ export const dictionaryFindings = Effect.fn(
         ({ keyPath, line }) =>
           `${file}:${line}: ${keyPath} says what an empty list holds, which takes one sentence: join or cut it to one sentence.`
       ),
+      Arr.map(
+        strayValues(sourceFile, sourceFile, [], sentenceRule(listed)),
+        ({ keyPath, line }) =>
+          `${file}:${line}: ${keyPath} is a description, footer, failure or answer, which takes one sentence: write it as one sentence that ends with a period, a question mark or an exclamation mark.`
+      ),
     ])
   );
+  return Arr.appendAll(perFile, unheld);
 }, Effect.scoped);
 
 /**
@@ -292,5 +345,5 @@ export const inspectDictionaries = Effect.fn(
       })
     )
   );
-  return yield* dictionaryFindings(sources);
+  return yield* dictionaryFindings(sources, SENTENCE_KEYS);
 });

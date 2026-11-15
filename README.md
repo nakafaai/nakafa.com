@@ -18,7 +18,7 @@ authored content source or publication path.
 
 `package.json` is the toolchain source of truth:
 
-- Node.js 26.13.0, and the Node major that `packages/backend/convex.json` names
+- Node.js 26.13.1, and the Node major that `packages/backend/convex.json` names
   for Convex "use node" actions, installed with `brew install node@<major>`. The
   local acceptance backend finds it through Homebrew, so no shell puts it first.
 - Bun 1.4.4

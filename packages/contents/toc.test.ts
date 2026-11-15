@@ -1,188 +1,202 @@
 import { describe, expect, it } from "@effect/vitest";
-import type { ParsedHeading } from "@repo/contents/toc";
+import type {
+  ContentTreeChild,
+  ContentTreeElement,
+  ContentTreeProps,
+} from "@nakafa/aksara-contracts/tree";
 import {
-  extractAllHeadingIds,
-  getHeadings,
+  contentOutline,
+  headingIdOf,
   ParsedHeadingSchema,
 } from "@repo/contents/toc";
-import { Array as Arr, Schema } from "effect";
+import { Array as Arr, Option, Schema } from "effect";
 
-describe("getHeadings", () => {
-  it.each([
-    "",
-    "   \n\n   ",
-    "Plain text\nwithout headings",
-    "#Missing space",
-    "####### Unsupported level",
-  ])("ignores content without supported headings: %j", (content) => {
-    expect(getHeadings(content)).toEqual([]);
+/** One element of a content tree, as the signed artifact holds it. */
+function node(
+  name: string,
+  children: readonly ContentTreeChild[] = [],
+  props: ContentTreeProps = {}
+): ContentTreeElement {
+  return { $node: "element", children, name, props };
+}
+
+/** A page of the given nodes, under the fragment that a signed tree starts with. */
+const page = (...children: readonly ContentTreeChild[]) =>
+  node("fragment", children);
+
+/** The headings of a page from level marks and words, such as `["h2", "Child"]`. */
+const headings = (...marks: readonly (readonly [string, string])[]) =>
+  page(...Arr.map(marks, ([tag, words]) => node(tag, [words])));
+
+describe("headingIdOf", () => {
+  it("gives no anchor to an element that is not a heading", () => {
+    expect(headingIdOf(node("p", ["Words"]))).toEqual(Option.none());
   });
 
-  it.each([
-    ["# Main Heading", "Main Heading", "#main-heading"],
-    ["   #   Multiple   Spaces   ", "Multiple   Spaces", "#multiple-spaces"],
-    ["#\tTab Heading", "Tab Heading", "#tab-heading"],
-    ["#", "", "#"],
-    ["#      ", "", "#"],
-    ["# 12345", "12345", "#12345"],
-    ['## <InlineMath math="x^2" />', "x^2", "#x^2"],
-  ])("keeps renderer labels and anchors for %j", (content, label, href) => {
-    expect(getHeadings(content)).toEqual([{ label, href, children: [] }]);
+  it("anchors a heading at the words the reader sees, formulas by their source", () => {
+    const heading = node("h2", [
+      "Area of ",
+      node("strong", ["a"]),
+      " ",
+      node("InlineMath", [], { math: "\\pi r^2" }),
+    ]);
+
+    expect(headingIdOf(heading)).toEqual(Option.some("area-of-a-pi-r^2"));
   });
 
-  it.each([
-    "Heading with café 日本語 مرحبا",
-    "Heading 🎉 with emoji 🚀",
-    "Heading with **bold** and *italic*",
-    "Heading with [link](https://example.com)",
-    "Heading with `code`",
-    "E = mc² and ∑ ∫ ∞",
-    "Heading [with] {brackets} (parentheses)",
-    "A".repeat(1000),
-  ])("preserves authored heading text: %j", (label) => {
-    expect(getHeadings(`# ${label}`)[0].label).toBe(label);
+  it("keeps the anchor the author gave a heading", () => {
+    expect(headingIdOf(node("h3", ["Words"], { id: "custom-anchor" }))).toEqual(
+      Option.some("custom-anchor")
+    );
+  });
+});
+
+describe("contentOutline", () => {
+  it("is empty for a page without headings", () => {
+    expect(contentOutline(page("Text", node("p", ["More"])))).toEqual([]);
   });
 
-  it.each([
-    "```javascript\n# Fake\nconst x = 1;\n```",
-    "~~~typescript\n# Fake\n~~~",
-    '<CodeBlock code="# Fake" />',
-    '```javascript\nconst str = "`not a heading`";\n# Fake\n```',
-  ])("omits code examples from the hierarchy: %j", (example) => {
-    const headings = getHeadings(`# Real\n\n${example}\n\n## Child`);
-    expect(headings).toEqual([
-      {
-        label: "Real",
-        href: "#real",
-        children: [{ label: "Child", href: "#child", children: [] }],
-      },
+  it("lists the headings inside other elements in the order the page draws them", () => {
+    const tree = page(
+      node("p", ["Intro"]),
+      node("section", [node("h2", ["Inside"]), node("p", ["Body"])]),
+      node("h2", [node("em", ["After"])])
+    );
+
+    expect(contentOutline(tree)).toEqual([
+      { children: [], href: "#inside", label: "Inside" },
+      { children: [], href: "#after", label: "After" },
     ]);
   });
 
-  it("preserves siblings, skipped levels and root order without stale ancestors", () => {
-    const headings = getHeadings(
-      "# First\n## Child\n### Grandchild\n## Sibling\n#### Deep\n# Second\n### Fresh\n# Third"
+  it("labels a heading with its words and links the anchor the renderer gives it", () => {
+    const tree = page(
+      node("h2", ["Heading with ", node("strong", ["bold"]), " words"]),
+      node("h2", [node("InlineMath", [], { math: "\\alpha" })]),
+      node("h2", ["Authored"], { id: "own" })
     );
-    expect(headings).toEqual([
+
+    expect(contentOutline(tree)).toEqual([
       {
-        label: "First",
-        href: "#first",
+        children: [],
+        href: "#heading-with-bold-words",
+        label: "Heading with bold words",
+      },
+      { children: [], href: "#alpha", label: "alpha" },
+      { children: [], href: "#own", label: "Authored" },
+    ]);
+  });
+
+  it("nests siblings and skipped levels without stale ancestors", () => {
+    const outline = contentOutline(
+      headings(
+        ["h1", "First"],
+        ["h2", "Child"],
+        ["h3", "Grandchild"],
+        ["h2", "Sibling"],
+        ["h4", "Deep"],
+        ["h1", "Second"],
+        ["h3", "Fresh"],
+        ["h1", "Third"]
+      )
+    );
+
+    expect(outline).toEqual([
+      {
         children: [
           {
-            label: "Child",
-            href: "#child",
             children: [
-              { label: "Grandchild", href: "#grandchild", children: [] },
+              { children: [], href: "#grandchild", label: "Grandchild" },
             ],
+            href: "#child",
+            label: "Child",
           },
           {
-            label: "Sibling",
+            children: [{ children: [], href: "#deep", label: "Deep" }],
             href: "#sibling",
-            children: [{ label: "Deep", href: "#deep", children: [] }],
+            label: "Sibling",
           },
         ],
+        href: "#first",
+        label: "First",
       },
       {
-        label: "Second",
+        children: [{ children: [], href: "#fresh", label: "Fresh" }],
         href: "#second",
-        children: [{ label: "Fresh", href: "#fresh", children: [] }],
+        label: "Second",
       },
-      { label: "Third", href: "#third", children: [] },
+      { children: [], href: "#third", label: "Third" },
     ]);
   });
 
   it("supports all six levels and returns to a new root", () => {
-    const headings = getHeadings(
-      "# L1\n## L2\n### L3\n#### L4\n##### L5\n###### L6\n# Next"
+    const outline = contentOutline(
+      headings(
+        ["h1", "L1"],
+        ["h2", "L2"],
+        ["h3", "L3"],
+        ["h4", "L4"],
+        ["h5", "L5"],
+        ["h6", "L6"],
+        ["h1", "Next"]
+      )
     );
-    const deepest =
-      headings[0].children[0].children[0].children[0].children[0].children[0];
-    expect(deepest).toEqual({ label: "L6", href: "#l6", children: [] });
-    expect(headings[1]).toEqual({ label: "Next", href: "#next", children: [] });
-    expect(extractAllHeadingIds(headings)).toEqual([
-      "l1",
-      "l2",
-      "l3",
-      "l4",
-      "l5",
-      "l6",
-      "next",
-    ]);
+
+    expect(
+      outline[0].children[0].children[0].children[0].children[0].children[0]
+    ).toEqual({ children: [], href: "#l6", label: "L6" });
+    expect(outline[1]).toEqual({ children: [], href: "#next", label: "Next" });
   });
 
   it("places orphan headings at the root and binds descendants to the current branch", () => {
-    const headings = getHeadings(
-      "###### Orphan\n### Section\n##### Child\n## New\n#### Fresh"
+    const outline = contentOutline(
+      headings(
+        ["h6", "Orphan"],
+        ["h3", "Section"],
+        ["h5", "Child"],
+        ["h2", "New"],
+        ["h4", "Fresh"]
+      )
     );
-    expect(Arr.map(headings, ({ label }) => label)).toEqual([
+
+    expect(Arr.map(outline, ({ label }) => label)).toEqual([
       "Orphan",
       "Section",
       "New",
     ]);
-    expect(headings[0].children).toEqual([]);
-    expect(Arr.map(headings[1].children, ({ label }) => label)).toEqual([
+    expect(outline[0].children).toEqual([]);
+    expect(Arr.map(outline[1].children, ({ label }) => label)).toEqual([
       "Child",
     ]);
-    expect(Arr.map(headings[2].children, ({ label }) => label)).toEqual([
+    expect(Arr.map(outline[2].children, ({ label }) => label)).toEqual([
       "Fresh",
     ]);
   });
 
-  it("preserves duplicate labels and mixed line endings", () => {
-    const headings = getHeadings(
-      "# Duplicate\n## Duplicate\r\n### Duplicate\n\n# End"
+  it("keeps duplicate headings, each with the anchor its words give", () => {
+    const outline = contentOutline(
+      headings(["h1", "Duplicate"], ["h2", "Duplicate"], ["h1", "End"])
     );
-    expect(extractAllHeadingIds(headings)).toEqual([
-      "duplicate",
-      "duplicate",
-      "duplicate",
-      "end",
-    ]);
-    expect(headings[0].children[0].children[0].label).toBe("Duplicate");
-  });
-});
 
-describe("extractAllHeadingIds", () => {
-  it("returns an empty list for an empty table of contents", () => {
-    expect(extractAllHeadingIds([])).toEqual([]);
-  });
-
-  it("uses renderer IDs and preserves depth-first order without mutating the hierarchy", () => {
-    const headings: ParsedHeading[] = [
+    expect(outline).toEqual([
       {
-        label: "Root One",
-        href: "#root-one",
-        children: [
-          { label: "C++ & Java", href: "#custom-anchor", children: [] },
-          {
-            label: "API v2.0",
-            href: "#api-v2.0",
-            children: [{ label: "", href: "#", children: [] }],
-          },
-        ],
+        children: [{ children: [], href: "#duplicate", label: "Duplicate" }],
+        href: "#duplicate",
+        label: "Duplicate",
       },
-      { label: "Root Two", href: "#root-two", children: [] },
-    ];
-    const before = structuredClone(headings);
-    expect(extractAllHeadingIds(headings)).toEqual([
-      "root-one",
-      "c++-&-java",
-      "api-v2.0",
-      "",
-      "root-two",
+      { children: [], href: "#end", label: "End" },
     ]);
-    expect(headings).toEqual(before);
   });
 });
 
 describe("ParsedHeadingSchema", () => {
-  const decodeHeadings = Schema.decodeUnknownSync(
-    Schema.Array(ParsedHeadingSchema)
-  );
+  it("describes the nested headings that contentOutline returns", () => {
+    const outline = contentOutline(
+      headings(["h1", "Main"], ["h2", "Child"], ["h3", "Leaf"])
+    );
 
-  it("describes the nested headings that getHeadings returns", () => {
-    const headings = getHeadings("# Main\n## Child\n### Leaf");
-
-    expect(decodeHeadings(headings)).toEqual(headings);
+    expect(
+      Schema.decodeSync(Schema.Array(ParsedHeadingSchema))(outline)
+    ).toEqual(outline);
   });
 });
