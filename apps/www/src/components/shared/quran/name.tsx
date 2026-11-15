@@ -1,10 +1,11 @@
+import type { ReactNode } from "react";
 /** A surah's transliterated name with its Arabic name beside it, in the Quran's face. */
 export function QuranSurahName({
   arabic,
   title,
 }: {
   arabic: string;
-  title: string;
+  title: ReactNode;
 }) {
   return (
     <>

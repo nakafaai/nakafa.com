@@ -12,7 +12,7 @@ export function ContentTitle({
   title,
 }: {
   children: ReactNode;
-  title: string;
+  title: ReactNode;
 }) {
   return (
     <header className="relative py-20">

@@ -37,12 +37,12 @@ export function PlayerHeaderEnd({ children }: { children: ReactNode }) {
  * its direction follows its own script, so a title in Arabic reads right to
  * left beside the interface's own direction.
  */
-export function PlayerTitle({ children }: { children: string }) {
+export function PlayerTitle({ children }: { children: ReactNode }) {
   return (
     <h1
       className="min-w-0 flex-1 truncate text-base font-medium"
       dir="auto"
-      title={children}
+      title={typeof children === "string" ? children : undefined}
     >
       {children}
     </h1>

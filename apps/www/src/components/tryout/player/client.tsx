@@ -7,7 +7,7 @@ import {
 } from "@repo/design-system/components/ui/tooltip";
 import { buttonVariants } from "@repo/design-system/lib/button";
 import { Array as Arr } from "effect";
-import { Suspense, use } from "react";
+import { type ReactNode, Suspense, use } from "react";
 import { useTranslations } from "use-intl";
 import { PlayerFinish } from "@/components/player/finish";
 import { PlayerFlag } from "@/components/player/flag";
@@ -63,7 +63,7 @@ export function TryoutPlayer({
     TryoutRuntimeState<TryoutSectionRuntime>,
     { kind: "active" | "pending" }
   >;
-  title: string;
+  title: ReactNode;
 }) {
   const { runtime } = state;
   // Answers and finishing are closed because time ran out.

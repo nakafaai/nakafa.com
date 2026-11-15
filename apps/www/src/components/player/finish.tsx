@@ -5,6 +5,7 @@ import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-d
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { useEarlyPress } from "@repo/design-system/hooks/press";
 import { Array as Arr } from "effect";
+import type { ReactNode } from "react";
 import { useTranslations } from "use-intl";
 import type { PlayerCellModel } from "@/components/player/model";
 import { PlayerGrid } from "@/components/player/navigator/grid";
@@ -31,7 +32,7 @@ export function PlayerFinish({
   questions,
   title,
 }: {
-  description: string;
+  description: ReactNode;
   /** The text of the button and of the confirmation. */
   label: string;
   /** Finishing is closed because time ran out. */
@@ -41,7 +42,7 @@ export function PlayerFinish({
   pending: boolean;
   /** Every question, as the navigator marks it, in the frozen order. */
   questions: readonly PlayerCellModel[];
-  title: string;
+  title: ReactNode;
 }) {
   const t = useTranslations("Player");
   const overlay = usePlayer((state) => state.overlay);

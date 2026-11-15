@@ -85,7 +85,7 @@ export function CardSection({
 }: Omit<ComponentProps<typeof Card>, "title"> &
   VariantProps<typeof cardSectionVariants> & {
     /** What the section is for, in one concise sentence of commas and periods. */
-    description: string;
+    description: ReactNode;
     /** The section's name. */
     title: ReactNode;
   }) {

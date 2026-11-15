@@ -41,7 +41,7 @@ export function SchoolHeader({
   /** The path after the school's home, the page itself last; empty on the school's home. */
   items: readonly BreadcrumbHeaderItem[];
   /** The page's heading, unless the page's body draws its own. */
-  title?: string;
+  title?: ReactNode;
 }) {
   return (
     <PageHeader {...(title === undefined ? {} : { title })}>

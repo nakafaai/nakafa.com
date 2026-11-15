@@ -10,7 +10,7 @@ import {
   FieldLabel,
 } from "@repo/design-system/components/ui/field";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { useId, useState } from "react";
+import { type ReactNode, useId, useState } from "react";
 import { useTranslations } from "use-intl";
 
 /**
@@ -30,7 +30,7 @@ export function ImportFileField({
 }: {
   /** The kinds of file the field takes. */
   accept: string;
-  description: string;
+  description: ReactNode;
   /** The words in the area that takes the file. */
   drop: string;
   file: File | null;

@@ -25,7 +25,7 @@ import {
 } from "@repo/design-system/components/ui/responsive-dialog";
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { Schema } from "effect";
-import { startTransition, useId, useState } from "react";
+import { type ReactNode, startTransition, useId, useState } from "react";
 import { useTranslations } from "use-intl";
 import { useDialogs } from "@/components/shared/dialogs";
 import { ConfirmRowMenu } from "@/components/shared/table/confirm";
@@ -241,14 +241,14 @@ export function PeriodDialog({
   setOpen,
   title,
 }: {
-  description: string;
+  description: ReactNode;
   /** Where the dialog starts: empty for a new period, the period itself for an edit. */
   fields: PeriodFields;
   onSave: (fields: PeriodFields) => void;
   open: boolean;
   saveLabel: string;
   setOpen: (open: boolean) => void;
-  title: string;
+  title: ReactNode;
 }) {
   const t = useTranslations("SchoolSettings");
   const id = useId();

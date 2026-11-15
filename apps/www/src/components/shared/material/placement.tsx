@@ -138,8 +138,8 @@ export function MaterialBreadcrumb() {
 
 /** The outline's link to the lesson, carrying its verified placement. */
 export function MaterialHeading(heading: {
-  description: string;
-  title: string;
+  description: ReactNode;
+  title: ReactNode;
 }) {
   const { navigation, page } = useMaterialNavigation();
   return (

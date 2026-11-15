@@ -81,7 +81,7 @@ export function TryoutPlayerOpening({
   /** The timer in the header's centre, at the section's whole time limit. */
   children: ReactNode;
   questionCount: number;
-  title: string;
+  title: ReactNode;
 }) {
   const tCommon = useTranslations("Common");
   const tTryouts = useTranslations("Tryouts");

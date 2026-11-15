@@ -31,7 +31,7 @@ export function MoleculePanel({
   title,
 }: {
   molecules: readonly Molecule[];
-  title: string;
+  title: ReactNode;
 }) {
   return (
     <section className="flex min-h-36 flex-col items-center justify-center gap-4 p-3 text-center">

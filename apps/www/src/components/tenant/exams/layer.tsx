@@ -395,7 +395,7 @@ function NoteField({
   title,
 }: {
   children: ReactNode;
-  title: string;
+  title: ReactNode;
 }) {
   return (
     <Field>

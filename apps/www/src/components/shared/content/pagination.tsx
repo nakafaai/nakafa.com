@@ -5,6 +5,7 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { buttonVariants } from "@repo/design-system/lib/button";
 import { cn } from "cn";
 import { Option } from "effect";
+import type { ReactNode } from "react";
 import { useTranslations } from "use-intl";
 import { pageRowVariants } from "@/components/shared/page/width";
 import { TargetLink } from "@/lib/routing/link";
@@ -31,7 +32,7 @@ function PaginationItem({
 }: {
   context?: string | undefined;
   publicPath: string;
-  title: string;
+  title: ReactNode;
   label: string;
   icon: IconSvgElement;
   className?: string;
@@ -60,7 +61,11 @@ function PaginationItem({
       </div>
     ),
     onSome: (target) => (
-      <TargetLink className={itemClassName} target={target} title={title}>
+      <TargetLink
+        className={itemClassName}
+        target={target}
+        title={typeof title === "string" ? title : undefined}
+      >
         <PaginationLabel
           icon={icon}
           iconPosition={iconPosition}
@@ -82,7 +87,7 @@ function PaginationLabel({
   icon: IconSvgElement;
   iconPosition: "left" | "right";
   label: string;
-  title: string;
+  title: ReactNode;
 }) {
   return (
     <>
