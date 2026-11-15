@@ -99,6 +99,12 @@
   /* A pane's width, which a drag of its edge sets, so the page narrows beside it from the first paint. */
   --pane-width: 420px;
   --surah-header-height: 4rem;
+  /*
+   * One screen of a marketing page under its header, never taller than 57.5rem (920 px), the window of a large
+   * desktop. A crawler renders a page in a window as tall as the page, where a part sized by the window alone would
+   * grow with the page without end, so every part and its stand-in height read this (`marketing/shared`).
+   */
+  --marketing-screen: min(calc(100svh - 4rem), 57.5rem);
 }
 
 /*
@@ -131,15 +137,16 @@
 /*
  * The box of a part under the first screen of a long page (`LaterSection`, ADR
  * 0039). The browser skips its style, layout and paint until the reader nears it,
- * and holds one screen for it until then; it is the only box that skips, so the
- * part inside keeps its own style. A jump to a part, by a loaded `#part` address
- * (`:target`) or by a navigation to a hash (`[data-jump]`, which `followHashJumps`
- * marks), first lays out every box from the top down to the part's own, so the
- * one scroll lands on real heights with the part's scroll margin. The boxes below
- * it stay skipped, and nothing is laid out before a jump.
+ * and holds one screen for it until then, bounded as every part is
+ * (`--marketing-screen`); it is the only box that skips, so the part inside keeps
+ * its own style. A jump to a part, by a loaded `#part` address (`:target`) or by a
+ * navigation to a hash (`[data-jump]`, which `followHashJumps` marks), first lays
+ * out every box from the top down to the part's own, so the one scroll lands on
+ * real heights with the part's scroll margin. The boxes below it stay skipped, and
+ * nothing is laid out before a jump.
  */
 @utility later-section {
-  contain-intrinsic-size: auto none auto 100lvh;
+  contain-intrinsic-size: auto none auto var(--marketing-screen);
   content-visibility: auto;
 
   &:has(:target, [data-jump]),
