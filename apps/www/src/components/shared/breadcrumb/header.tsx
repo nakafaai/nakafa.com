@@ -231,6 +231,7 @@ function BreadcrumbHeaderSegment({
           className={cn("shrink-0", className, separatorClassName)}
         />
         <BreadcrumbSiblingsSegment
+          current={item.target === undefined}
           label={item.label}
           siblings={item.siblings}
           {...(className === undefined ? {} : { className })}
