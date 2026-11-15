@@ -80,3 +80,11 @@ Train 5 of 15 November verified 34 pull requests in one run. Its gate took 30 mi
 3. **Results.** Each engine uploads `results-<engine>` and `traces-<engine>`. `bun run proof` and the train download every `results-*` artifact of the run, and an engine whose build failed uploads none and counts as failed.
 4. **Phases.** A run's phases are read across its jobs: each phase runs from the first of its steps to start to the last to end, and the queue runs from the dispatch to the first job that started. A job that a dispatch turned off, such as the gate of a baseline, counts for nothing.
 5. **Sharing the runners.** One verification now takes four of the account's 20 jobs, so the train verifies at most four stacks of a red batch at once, 16 jobs, and leaves the rest to Aksara's gates, the sessions' gates and the deploy.
+
+## Amendment: Batch Entry On Today's Main, 15 November 2026
+
+No pull request landed on nakafa.com for more than 10 hours after #2504 (23:45 CET, 14 November). Batch mode admitted every open pull request that was no draft, whatever its own gate said (`scripts/landing/train.ts`, `Repository.ready`), so a batch carried heads that failed on their own or that were gated on an older main, and each such head failed the combination and cost a bisect. Measured over the proof runs of 13 to 15 November (238 completed runs on pull request heads, read from `gh run list` and each run's steps): the gate failed on 34% of the 198 distinct heads it checked, and 73% of the 89 heads that ran specs failed one, most of them specs that fail on main too.
+
+1. **Entry.** A stack joins a batch only when its top's own `gate` passed on a head that contains main's tip, so that gate ran on today's main, and the top carries every member below it. Its own proof is not asked for, since the batch proves the combination.
+2. **Why the gate moves to each head.** A head gated on an older main costs one gate of its own, and those gates run side by side, up to the account's 20 concurrent jobs. A head that breaks a batch costs a bisect, one verification after another, each round a full gate and proof of a smaller combination.
+3. **Keeping heads fresh.** After every landing, the heads in the queue no longer contain main. Each waiting head merges main and gates again before it rides; until the queue does this by itself, the owning session does it.
