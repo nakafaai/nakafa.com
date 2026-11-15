@@ -47,6 +47,34 @@ describe("landing train", () => {
   );
 
   it.effect(
+    "proves only the smoke spec when no pull request changes what the product runs, and every suite when one does",
+    () =>
+      Effect.gen(function* () {
+        const scripts = yield* world({
+          pulls: [
+            { ...pull(1), runtime: false },
+            { ...pull(2), runtime: false },
+          ],
+          fails: () => [],
+        });
+        yield* runTrain([], [], false, false).pipe(
+          Effect.provide(scripts.layer)
+        );
+        expect(yield* Ref.get(scripts.log)).toContain(
+          "prove merge:1,2 e2e/quran/landing.browser.ts"
+        );
+        const product = yield* world({
+          pulls: [{ ...pull(1), runtime: false }, pull(2)],
+          fails: () => [],
+        });
+        yield* runTrain([], [], false, false).pipe(
+          Effect.provide(product.layer)
+        );
+        expect(yield* Ref.get(product.log)).toContain("prove merge:1,2");
+      })
+  );
+
+  it.effect(
     "ignores a spec that fails on main too and reports it for main",
     () =>
       Effect.gen(function* () {
