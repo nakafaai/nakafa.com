@@ -85,6 +85,38 @@ for (const viewport of targetViewports) {
         (context) =>
           Effect.gen(function* () {
             const page = yield* Effect.promise(() => context.newPage());
+            // PROBE: records the observers whose callbacks ran just before a loop error.
+            yield* Effect.promise(() =>
+              page.addInitScript(() => {
+                const Native = window.ResizeObserver;
+                const fired: { t: number; origin: string; targets: string[] }[] = [];
+                window.ResizeObserver = class extends Native {
+                  constructor(callback: ResizeObserverCallback) {
+                    const origin = (new Error().stack ?? "").split("\n").slice(1, 7).join(" | ");
+                    super((entries, observer) => {
+                      fired.push({
+                        t: performance.now(),
+                        origin,
+                        targets: entries.map((entry) => `${entry.target.tagName}.${String(entry.target.getAttribute("class") ?? "").slice(0, 80)} [${entry.target.getAttribute("data-slot") ?? ""}] h=${Math.round(entry.contentRect.height)}`),
+                      });
+                      if (fired.length > 300) fired.shift();
+                      callback(entries, observer);
+                    });
+                  }
+                };
+                window.addEventListener("error", (event) => {
+                  if (String(event.message).includes("ResizeObserver loop")) {
+                    const now = performance.now();
+                    console.log(`RO-LOOP ${JSON.stringify(fired.filter((one) => now - one.t < 100))}`);
+                  }
+                });
+              })
+            );
+            page.on("console", (message) => {
+              if (message.text().startsWith("RO-LOOP")) {
+                console.log(message.text());
+              }
+            });
             yield* withObservedPageErrors(
               page,
               Effect.gen(function* () {
@@ -96,6 +128,16 @@ for (const viewport of targetViewports) {
 
                 // Fast wheel bursts down the page and back up.
                 yield* Effect.promise(async () => {
+                  for (const _round of Arr.makeBy(5, () => 0)) {
+                  for (const delta of Arr.makeBy(12, () => 1600)) {
+                    await page.mouse.wheel(0, delta);
+                  }
+                  await waitForScrollRest(page);
+                  for (const delta of Arr.makeBy(12, () => -1600)) {
+                    await page.mouse.wheel(0, delta);
+                  }
+                  await waitForScrollRest(page);
+                  }
                   for (const delta of Arr.makeBy(12, () => 1600)) {
                     await page.mouse.wheel(0, delta);
                   }
