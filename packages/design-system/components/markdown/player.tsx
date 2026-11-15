@@ -62,8 +62,8 @@ export function YoutubePlayer({ label, sealed = false, videoId }: Props) {
         src={`https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`}
         width={480}
       />
-      <span className="absolute inset-0 grid place-items-center bg-black/10 transition-colors group-hover:bg-black/20">
-        <span className="grid size-16 place-items-center rounded-full bg-black/70 text-white transition-transform group-hover:scale-105">
+      <span className="bg-ink/10 group-hover:bg-ink/20 absolute inset-0 grid place-items-center transition-colors">
+        <span className="bg-primary text-primary-foreground grid size-16 place-items-center rounded-full transition-transform group-hover:scale-105">
           <HugeIcons icon={PlayIcon} />
         </span>
       </span>

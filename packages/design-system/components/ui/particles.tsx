@@ -10,17 +10,10 @@ import { useStableMutableValue } from "@repo/design-system/hooks/stable";
 import { TAILWIND_MEDIA_QUERIES } from "@repo/design-system/lib/breakpoints";
 import { createFramePace } from "@repo/design-system/lib/pace";
 import { createSeededRandom } from "@repo/design-system/lib/random";
-import { getThemeAppearance } from "@repo/design-system/lib/theme/registry";
 import { useTheme } from "@repo/design-system/providers/theme";
 import { cn } from "cn";
 import { Array as Arr, MutableList, Schema } from "effect";
-import {
-  useCallback,
-  useEffect,
-  useLayoutEffect,
-  useMemo,
-  useRef,
-} from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef } from "react";
 
 const MIN_PARTICLE_SIZE = 1;
 const MAX_PARTICLE_SIZE = 3;
@@ -129,6 +122,12 @@ function isOutsideCanvas(circle: Circle, width: number, height: number) {
 }
 
 /**
+ * The ink of every particle: the canvas's own text colour, which is the theme's foreground. A canvas
+ * reads `currentColor` from its element each time the fill is set, so every theme draws in its own ink.
+ */
+const PARTICLE_INK = "currentColor";
+
+/**
  * Renders the responsive particle canvas used as a subtle interactive backdrop.
  */
 export function Particles({
@@ -171,11 +170,6 @@ export function Particles({
 
   const rng = useStableMutableValue(() =>
     createSeededRandom(quantity, staticity, ease)
-  );
-
-  const isThemeDark = useMemo(
-    () => getThemeAppearance(resolvedTheme) === "dark",
-    [resolvedTheme]
   );
 
   // A new size keeps every particle where it was, in proportion to the field, so
@@ -227,9 +221,6 @@ export function Particles({
     };
   }, [rng]);
 
-  // Every circle of a frame shares one colour; each circle sets only its alpha.
-  const fillColor = isThemeDark ? "oklch(0.985 0 0)" : "oklch(0.145 0 0)";
-
   const drawCircle = useCallback(
     (circle: Circle) => {
       if (context.current) {
@@ -253,9 +244,9 @@ export function Particles({
         canvasSize.current.w,
         canvasSize.current.h
       );
-      context.current.fillStyle = fillColor;
+      context.current.fillStyle = PARTICLE_INK;
     }
-  }, [fillColor]);
+  }, []);
 
   const drawParticles = useCallback(
     (showImmediately: boolean) => {
@@ -296,6 +287,16 @@ export function Particles({
     },
     [clearContext, drawCircle, drawParticles, resizeCanvas]
   );
+
+  // A field that stands still, as for a reader who asked for less motion, is drawn once, so a new
+  // theme draws it again in that theme's ink.
+  const drawnTheme = useRef(resolvedTheme);
+  useEffect(() => {
+    if (drawnTheme.current !== resolvedTheme) {
+      drawnTheme.current = resolvedTheme;
+      initCanvas(true);
+    }
+  }, [initCanvas, resolvedTheme]);
 
   const onMouseMove = useCallback(() => {
     if (canvasRef.current) {
@@ -448,7 +449,11 @@ export function Particles({
 
   return (
     <div aria-hidden="true" className={cn(className)} ref={containerRef}>
-      <canvas ref={canvasRef} />
+      <canvas
+        className="text-foreground"
+        data-particle-field=""
+        ref={canvasRef}
+      />
     </div>
   );
 }

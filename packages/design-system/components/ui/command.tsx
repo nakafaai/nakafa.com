@@ -107,7 +107,7 @@ function CommandDialogBackdrop({
       className={cn(
         // The palette opens from the keyboard, so it appears and leaves at
         // once: an action from the keyboard is never animated.
-        "fixed inset-0 z-50 bg-black/32 backdrop-blur-sm",
+        "bg-ink/32 fixed inset-0 z-50 backdrop-blur-sm",
         className
       )}
       data-slot="command-dialog-backdrop"

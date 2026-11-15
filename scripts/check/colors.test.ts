@@ -1,6 +1,9 @@
 import { assert, describe, it } from "@effect/vitest";
 import { Array as Arr, Effect } from "effect";
-import { inspectColorSource } from "#scripts/check/colors";
+import {
+  inspectChromeColorSource,
+  inspectColorSource,
+} from "#scripts/check/colors";
 import { parseSources } from "#scripts/check/source";
 
 const VISUAL = "packages/design-system/components/contents/physics/lab.tsx";
@@ -97,5 +100,129 @@ const anchor = "#section";`),
         []
       );
     })
+  );
+});
+
+const CHROME_RULE =
+  "paint chrome with the theme's tokens, such as bg-background, text-foreground and bg-primary, or with an identity token of packages/design-system/styles/identity.css for a ground or an ink that every theme shares, instead of a color written in place";
+const DIALOG = "packages/design-system/components/ui/dialog.tsx";
+const CHART =
+  "packages/design-system/components/evilcharts/charts/bar/paint.tsx";
+
+/** Inspects one module with the chrome color policy alone. */
+function inspectChrome(sourceText: string, file = PAGE) {
+  return Effect.scoped(
+    Effect.map(parseSources([{ file, sourceText }]), ({ modules }) =>
+      Arr.flatMap(modules, (parsed) =>
+        inspectChromeColorSource(parsed.file, parsed.sourceFile)
+      )
+    )
+  );
+}
+
+describe("Chrome color policy", () => {
+  it.effect(
+    "rejects a hex value, a color function, and a palette, white or black class in chrome",
+    () =>
+      Effect.gen(function* () {
+        assert.deepStrictEqual(
+          yield* inspectChrome(`
+const hero = "bg-[#0f172a] p-4";
+const glow = { boxShadow: "0 0 8px rgba(0, 0, 0, 0.2)" };
+const ink = \`oklch(0.2 0.02 260)\`;
+const badge = "rounded bg-amber-500";
+const scrim = "fixed inset-0 bg-black/30";
+const label = "text-white";`),
+          Arr.replicate(`${PAGE}: ${CHROME_RULE}.`, 6)
+        );
+      })
+  );
+
+  it.effect(
+    "rejects white or black as a whole paint value and inside a gradient",
+    () =>
+      Effect.gen(function* () {
+        assert.deepStrictEqual(
+          yield* inspectChrome(
+            `
+const fill = "white";
+const fade = "linear-gradient(to bottom, black, transparent)";`,
+            DIALOG
+          ),
+          Arr.replicate(`${DIALOG}: ${CHROME_RULE}.`, 2)
+        );
+      })
+  );
+
+  it.effect(
+    "accepts theme tokens, identity tokens, a token mixed or derived, and text that is no color",
+    () =>
+      Effect.gen(function* () {
+        assert.deepStrictEqual(
+          yield* inspectChrome(`
+const card = "bg-card text-card-foreground ring-foreground/10";
+const scrim = "bg-ink/30 text-paper";
+const tint = "bg-[color-mix(in_oklch,var(--primary)_5%,var(--background))]";
+const lift = "oklch(from var(--primary) calc(l + 0.1) c h)";
+const wrap = "whitespace-nowrap";
+const anchor = "#faq";
+const issue = "nakafaai/nakafa.com#2423";
+const entity = "&#169;";
+const paint = "currentColor";`),
+          []
+        );
+      })
+  );
+
+  it.effect(
+    "accepts an attribute selector that names a library's default paint",
+    () =>
+      Effect.gen(function* () {
+        assert.deepStrictEqual(
+          yield* inspectChrome(
+            `const grid = "[&_line[stroke='#ccc']]:stroke-border/50";`,
+            DIALOG
+          ),
+          []
+        );
+      })
+  );
+
+  it.effect(
+    "lets a mask say white and black, and judges any other color there",
+    () =>
+      Effect.gen(function* () {
+        assert.deepStrictEqual(
+          yield* inspectChrome(
+            `
+const shown = "white";
+const hidden = "black";
+const mask = "linear-gradient(white 0 0) content-box";
+const mark = "#2563eb";`,
+            CHART
+          ),
+          [`${CHART}: ${CHROME_RULE}.`]
+        );
+      })
+  );
+
+  it.effect(
+    "leaves another owner's paint, lesson visuals and tests alone",
+    () =>
+      Effect.gen(function* () {
+        for (const file of [
+          "packages/design-system/components/logos/brand.tsx",
+          "apps/www/src/components/shared/flag.tsx",
+          "apps/www/src/components/shared/qr/image.tsx",
+          VISUAL,
+          "packages/design-system/components/ui/dialog.test.ts",
+          "packages/design-system/lib/tile.ts",
+        ]) {
+          assert.deepStrictEqual(
+            yield* inspectChrome(`const paint = "#ff0000";`, file),
+            []
+          );
+        }
+      })
   );
 });
