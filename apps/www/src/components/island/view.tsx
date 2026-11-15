@@ -8,6 +8,7 @@ import { openingOrbit, turnOrbit } from "@/lib/island/camera";
 import { herdQuads } from "@/lib/island/life";
 import { glowOf } from "@/lib/island/light";
 import { lightingOf, meshChunk } from "@/lib/island/mesh";
+import { seasonNow } from "@/lib/island/season";
 import { hourOf, lightOf } from "@/lib/island/sky";
 import { worldOf } from "@/lib/island/terrain";
 import { CHUNKS } from "@/lib/island/world";
@@ -100,7 +101,7 @@ export default function IslandView({
         if (canvas === null) {
           return;
         }
-        return Option.match(createPainter(canvas), {
+        return Option.match(createPainter(canvas, seasonNow()), {
           onNone: () => undefined,
           onSome: (painter) =>
             tour(canvas, painter, worldOf(seed, size, edits), size),

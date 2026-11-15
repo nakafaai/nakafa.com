@@ -18,6 +18,7 @@ import {
 import { eyeOf, type Orbit } from "@/lib/island/camera";
 import { viewProjectionOf } from "@/lib/island/matrix";
 import type { meshChunk } from "@/lib/island/mesh";
+import { repaintFor, type Season } from "@/lib/island/season";
 import {
   CHUNK_FRAGMENT,
   CHUNK_VERTEX,
@@ -39,10 +40,11 @@ function artPixelOf(width: number, height: number) {
 /**
  * The island's WebGL2 painter (ADR 0047, D2): it holds every chunk's buffers,
  * draws the sky, the solid pass and the water pass into a small framebuffer,
- * and enlarges it to the screen with nearest sampling. None when the browser
+ * and enlarges it to the screen with nearest sampling. Its atlas is painted
+ * for the learner's season. None when the browser
  * has no WebGL2.
  */
-export function createPainter(canvas: HTMLCanvasElement) {
+export function createPainter(canvas: HTMLCanvasElement, season: Season) {
   const found = canvas.getContext("webgl2", {
     alpha: false,
     antialias: false,
@@ -73,7 +75,7 @@ export function createPainter(canvas: HTMLCanvasElement) {
         0,
         gl.RGBA,
         gl.UNSIGNED_BYTE,
-        atlasPixels()
+        repaintFor(atlasPixels(), season)
       );
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
