@@ -15,7 +15,7 @@ import { useHasPanes } from "@/components/shared/page/panes";
 import { pressesRow } from "@/components/shared/row";
 import {
   columnAlign,
-  phoneColumn,
+  narrowColumn,
   placeOf,
 } from "@/components/shared/table/align";
 import { tableBoxVariants } from "@/components/shared/table/card";
@@ -247,7 +247,7 @@ function DataTableCell<TData extends RowData>({
     <TableCell
       className={cn(
         columnAlign({ align: placeOf(index, meta?.align) }),
-        phoneColumn({ phone: meta?.phone })
+        narrowColumn({ narrow: meta?.narrow })
       )}
     >
       {meta?.align === "menu" ? (

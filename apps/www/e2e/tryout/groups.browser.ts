@@ -23,8 +23,8 @@ const DARMSTADT_MATHEMATICS =
   /\/open-graph\/tryout\/germany\/entrance-examination\/en-tu-darmstadt-mathematics\.png$/u;
 /** A size an image declares, in whole pixels. */
 const PIXELS = /^\d+$/u;
-/** The phone widths at which a set's name, status and menu read whole. */
-const PHONE_WIDTHS = [320, 360, 390, 430] as const;
+/** The widths at which the set table reads whole: phones, tablets, and a laptop whose sidebar narrows the card. */
+const TABLE_WIDTHS = [320, 360, 390, 430, 640, 768, 1024, 1280] as const;
 
 /**
  * Opens a page and lets it finish loading before a test leaves it. In Firefox
@@ -201,14 +201,15 @@ for (const width of [390, 1440]) {
 }
 
 /**
- * On a phone a set's name, its status and its menu read whole, without
- * scrolling sideways: the card does not scroll, and every box drawn inside it
- * stays within its edges. The boxes are measured, not each element's scroll
+ * At every width the set table reads whole, without scrolling sideways: the
+ * card does not scroll, and every box drawn inside it stays within its edges.
+ * A phone's card shows a set's name, its status and its menu, and a wider one
+ * every column, its score never cut by the menu's column. The boxes are measured, not each element's scroll
  * size, because a visually hidden label is 1 px wide and reports its whole text
  * as overflow in every engine.
  */
-for (const width of PHONE_WIDTHS) {
-  test(`the set table fits a ${width} px phone`, async ({ page }) => {
+for (const width of TABLE_WIDTHS) {
+  test(`the set table fits a ${width} px screen`, async ({ page }) => {
     await page.setViewportSize({ height: 800, width });
     await visit(page, trackHref);
     const card = page.locator('[data-slot="table-card"]');

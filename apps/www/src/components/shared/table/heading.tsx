@@ -51,7 +51,7 @@ export function DataTableHead<TData extends RowData>({
   const {
     align,
     filter,
-    phone,
+    narrow,
     title = "",
     wide,
   } = column.columnDef.meta ?? {};
@@ -76,7 +76,7 @@ export function DataTableHead<TData extends RowData>({
           () => index
         )
       )}
-      phone={phone}
+      narrow={narrow}
       place={place}
       sorted={column.getCanSort() ? column.getIsSorted() || "none" : undefined}
       width={wide === true ? "wide" : filter.kind}
