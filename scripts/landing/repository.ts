@@ -37,10 +37,11 @@ const SPEC_FILE = /^apps\/www\/(?<spec>e2e\/.+\.browser\.ts)$/u;
 /** A file the product runs: under `apps` or `packages`, outside the browser specs, and no Markdown. */
 const RUNTIME_FILE = /^(?:apps|packages)\/(?!www\/e2e\/)(?!.*\.md$)/u;
 
-/** A pull request as a candidate of the train, with its stack, the spec files it adds or changes, and whether it changes what the product runs. */
-const candidateOf = ({ pull, stack }: Rider): Candidate => ({
+/** A pull request as a candidate of the train, with its stack, the head below it, the spec files it adds or changes, and whether it changes what the product runs. */
+const candidateOf = ({ pull, stack, below }: Rider): Candidate => ({
   number: pull.number,
   stack,
+  below,
   sha: pull.headRefOid,
   title: pull.title,
   specs: Arr.filterMap(pull.files, ({ path }) =>

@@ -10,6 +10,7 @@ export const pull = (number: number, stack = number): Candidate => ({
   sha: String(number).repeat(40).slice(0, 40),
   title: `Change ${number}`,
   specs: [],
+  below: "",
   runtime: true,
 });
 

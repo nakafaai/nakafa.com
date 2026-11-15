@@ -27,6 +27,8 @@ export const Candidate = Schema.Struct({
   title: Schema.String,
   /** The spec files the pull request adds or changes, which its combination is proven on. */
   specs: Schema.Array(Schema.String),
+  /** The head of the stack member below it, which its proof ran on top of; empty for a pull request on main. */
+  below: Schema.String,
   /** Whether it changes a file the product runs, under `apps` or `packages`, beyond specs and docs. */
   runtime: Schema.Boolean,
 });
