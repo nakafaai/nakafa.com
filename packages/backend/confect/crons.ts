@@ -1,3 +1,4 @@
+// Timing probe: this head touches one file of the workspace it measures.
 import { CronJob, CronJobs } from "@confect/server";
 import authInternal from "@repo/backend/confect/_generated/refs/auth.server";
 import billingInternal from "@repo/backend/confect/_generated/refs/billing.server";
