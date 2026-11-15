@@ -6,7 +6,7 @@ import { github, MAIN, toJson, withGithub } from "#scripts/proof/test.github";
 
 describe("superseded proof runs", () => {
   it.effect(
-    "cancels the queued runs of heads no pull request or main holds",
+    "cancels the queued runs of heads no pull request, merge group or main holds",
     () =>
       Effect.gen(function* () {
         const open = "1".repeat(40);
@@ -14,9 +14,14 @@ describe("superseded proof runs", () => {
         const refused = "4".repeat(40);
         // A baseline of a commit main has since moved past.
         const onMain = "5".repeat(40);
+        // A baseline of the head of a merge group the queue still holds.
+        const grouped = "6".repeat(40);
         const { exit, calls } = yield* withGithub((args) => {
           if (args[0] === "pr") {
             return { stdout: `${open}\n` };
+          }
+          if (args[1]?.includes("gh-readonly-queue")) {
+            return { stdout: `${grouped}\n` };
           }
           if (args[0] === "api") {
             return { stdout: `${MAIN}\n` };
@@ -43,6 +48,7 @@ describe("superseded proof runs", () => {
               { databaseId: 14, displayTitle: `Proof ${refused} e` },
               { databaseId: 15, displayTitle: `Gate ${gone} f` },
               { databaseId: 16, displayTitle: `Proof ${onMain} g` },
+              { databaseId: 17, displayTitle: `Proof ${grouped} h` },
             ]),
           };
         }, sweepSuperseded());

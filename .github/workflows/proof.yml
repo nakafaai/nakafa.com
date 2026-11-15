@@ -11,7 +11,10 @@
 # On"). A pull request runs the gate alone, and the gate's verdict is `verify`.
 # A merge group runs the gate and the three engines over the specs its diff
 # selects (scripts/proof/select.ts), and the job that finishes last posts
-# `verify` from the gate and the three engine statuses. `workflow_dispatch`
+# `verify` from the gate and the three engine statuses through
+# .github/actions/verdict, which proves a failing spec on the group's base and
+# sets aside what the base fails too ("A Merge Group Sets Aside What Its Base
+# Fails"). `workflow_dispatch`
 # serves `bun run gate`, whose gate also posts `verify`, `bun run proof`, and a
 # merge group rehearsal that names its `base`.
 #
@@ -97,6 +100,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 120
     permissions:
+      # A group's verdict, which this job posts when it finishes last, proves
+      # the failing specs on the base through a dispatched run of this workflow.
+      actions: write
       contents: read
       statuses: write
     env:
@@ -191,20 +197,16 @@ jobs:
             post "gate/$part" "$state" "${outcome:-did not run}"
           done
           post gate "$all" "Typechecks, unit suites, policy, Doctor and audit: $all"
-          if [ "$VERIFY" = gate ]; then
-            description="Gate failed"
-            [ "$all" = success ] && description="Gate passed; the merge queue proves the browsers"
-            post verify "$all" "$description"
-          fi
-          [ "$VERIFY" = group ] || exit 0
-          # The last of the gate and the three engines to post its own status
-          # finds all four final and posts `verify`.
-          states="$(gh api "repos/$GITHUB_REPOSITORY/commits/$SHA/status?per_page=100" --jq \
-            "[.statuses[] | select(.target_url == \"$URL\" and (.context | test(\"^(gate|proof/(chromium|firefox|webkit))\$\"))) | .state]")"
-          [ "$(jq 'map(select(. != "pending")) | length' <<< "$states")" = 4 ] || exit 0
-          verdict=failure
-          [ "$(jq 'all(. == "success")' <<< "$states")" = true ] && verdict=success
-          post verify "$verdict" "Gate, Chromium, Firefox and WebKit: $verdict"
+          [ "$VERIFY" = gate ] || exit 0
+          description="Gate failed"
+          [ "$all" = success ] && description="Gate passed; the merge queue proves the browsers"
+          post verify "$all" "$description"
+
+      # The last of the gate and the three engines to post its own status finds
+      # all four final and posts `verify`.
+      - name: Post the group's verdict
+        if: always() && env.VERIFY == 'group'
+        uses: ./.github/actions/verdict
 
   proof:
     name: Proof ${{ matrix.engine }}
@@ -217,6 +219,8 @@ jobs:
       matrix:
         engine: [ chromium, firefox, webkit ]
     permissions:
+      # As for the gate: the engine that finishes last posts the group's verdict.
+      actions: write
       contents: read
       statuses: write
     env:
@@ -385,8 +389,8 @@ jobs:
           if-no-files-found: ignore
           retention-days: 3
 
-      # An engine passes only when it reported and passed. It is the last step,
-      # so a caller that sees `proof` finds every engine's result uploaded. The
+      # An engine passes only when it reported and passed. It follows the
+      # uploads, so a caller that sees `proof` finds every engine's result. The
       # engine that finds all three engine statuses of this run final posts
       # `proof`, which passes only when all three do; each engine posts its own
       # status before it reads the others, so the last to finish always sees
@@ -414,12 +418,7 @@ jobs:
           all=failure
           [ "$(jq 'all(. == "success")' <<< "$states")" = true ] && all=success
           post proof "$all" "Chromium, Firefox and WebKit: $all"
-          [ "$VERIFY" = group ] || exit 0
-          # The last of the gate and the three engines to post its own status
-          # finds all four final and posts `verify`.
-          states="$(gh api "repos/$GITHUB_REPOSITORY/commits/$SHA/status?per_page=100" --jq \
-            "[.statuses[] | select(.target_url == \"$URL\" and (.context | test(\"^(gate|proof/(chromium|firefox|webkit))\$\"))) | .state]")"
-          [ "$(jq 'map(select(. != "pending")) | length' <<< "$states")" = 4 ] || exit 0
-          verdict=failure
-          [ "$(jq 'all(. == "success")' <<< "$states")" = true ] && verdict=success
-          post verify "$verdict" "Gate, Chromium, Firefox and WebKit: $verdict"
+
+      - name: Post the group's verdict
+        if: always() && env.VERIFY == 'group'
+        uses: ./.github/actions/verdict

@@ -126,8 +126,9 @@ export const GITHUB_ACTION_REVIEWS = Schema.decodeSync(
     action: "actions/download-artifact",
     approvedSha: "9000827ccba6bdab643e8b6fd33ac0654aef8333",
     expectedTag: "v8.0.2",
-    expectedUsages: 3,
-    reason: "CLI publishing and verification download separated artifacts.",
+    expectedUsages: 4,
+    reason:
+      "CLI publishing and verification download separated artifacts, and a merge group's verdict downloads its engines' results to prove their failing specs on its base.",
   },
   {
     action: "actions/setup-node",
