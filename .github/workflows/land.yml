@@ -1,0 +1,74 @@
+# Lands the next small batch of the queue (ADR 0048, "The Landing Queue"): one
+# train per run, at most five pull requests, each stack whole, whose top's own
+# gate passed on a head that contains main. The train proves the combination on
+# the four-job proof, lands each green group by its exact head, and dispatches
+# the production deploy itself, because a merge made with GITHUB_TOKEN starts no
+# push workflow. It runs on a schedule and on demand, one run at a time, and
+# exits when its batch has landed or been set aside, so no session and no Mac
+# keeps a landing alive.
+name: Land
+run-name: Land ${{ inputs.prs }}
+
+on:
+  schedule:
+    - cron: "11,41 * * * *"
+  workflow_dispatch:
+    inputs:
+      prs:
+        description: Pull request numbers to consider, separated by spaces; empty considers the whole queue
+        required: false
+        default: ""
+        type: string
+      specs:
+        description: Extra spec files under apps/www, separated by commas
+        required: false
+        default: ""
+        type: string
+
+# One train at a time: a newer run waits for the running one instead of
+# landing the same pull requests beside it.
+concurrency:
+  group: land
+  cancel-in-progress: false
+
+permissions: {}
+
+jobs:
+  land:
+    name: Land
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    permissions:
+      actions: write
+      contents: write
+      pull-requests: write
+      statuses: read
+    env:
+      GH_TOKEN: ${{ github.token }}
+      PRS: ${{ inputs.prs }}
+      SPECS: ${{ inputs.specs }}
+      # The train writes the merge commits of each combination.
+      GIT_AUTHOR_EMAIL: 41898282+github-actions[bot]@users.noreply.github.com
+      GIT_AUTHOR_NAME: github-actions[bot]
+      GIT_COMMITTER_EMAIL: 41898282+github-actions[bot]@users.noreply.github.com
+      GIT_COMMITTER_NAME: github-actions[bot]
+    steps:
+      - name: Check the inputs
+        run: |
+          [[ "$PRS" =~ ^([0-9]+( |$))*$ ]] || { echo "prs must be pull request numbers." >&2; exit 1; }
+          [[ "$SPECS" =~ ^(e2e/[A-Za-z0-9/_.-]+\.browser\.ts(,|$))*$ ]] || { echo "specs must be spec files under apps/www." >&2; exit 1; }
+
+      # The train merges heads with git merge-tree and pushes each combination
+      # for the proof runner, so it needs the history and the token's push.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Install dependencies
+        uses: ./.github/actions/install
+
+      - name: Land the next batch
+        run: |
+          # shellcheck disable=SC2086
+          bun run train --batch $PRS ${SPECS:+"--specs=$SPECS"}
