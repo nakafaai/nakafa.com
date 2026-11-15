@@ -2,6 +2,7 @@ import { BlockKey, idOf, opensAt } from "@repo/backend/confect/island/blocks";
 import { footprintOf } from "@repo/backend/confect/island/world";
 import { Array as Arr, Order, Result, Schema } from "effect";
 import type { Edit } from "@/lib/island/edits";
+import { KIND, LOOK } from "@/lib/island/look";
 import { SCALE } from "@/lib/island/scale";
 import { type Cells, cellOf, isInside } from "@/lib/island/world";
 
@@ -199,12 +200,11 @@ const ItemRefused = Schema.Literals(["outside", "room", "ground"]);
 type ItemRefused = typeof ItemRefused.Type;
 
 const AIR = 0;
-const FLOWERS = idOf("flowers");
 const WATER = idOf("water");
 
 /**
  * The edits that build an item with its ground row on `anchor` (ADR 0047, D10):
- * every part stays inside the footprint, fills only air or flowers, and the
+ * every part stays inside the footprint, fills only air or plants, and the
  * ground row stands on solid blocks, so nothing floats or cuts into the world.
  */
 export function itemPlanOf(
@@ -236,7 +236,7 @@ export function itemPlanOf(
   }
   const blocked = Arr.some(placed, ({ x, y, z }) => {
     const there = cells[cellOf(x, y, z)];
-    return there !== AIR && there !== FLOWERS;
+    return there !== AIR && LOOK.kinds[there] !== KIND.cross;
   });
   if (blocked) {
     return Result.fail<ItemRefused>("room");
@@ -246,7 +246,7 @@ export function itemPlanOf(
       return false;
     }
     const below = cells[cellOf(x, y - 1, z)];
-    return below === AIR || below === WATER || below === FLOWERS;
+    return below === AIR || below === WATER || LOOK.kinds[below] === KIND.cross;
   });
   if (floating) {
     return Result.fail<ItemRefused>("ground");
