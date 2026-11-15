@@ -4,6 +4,7 @@ import { footprintOf } from "@repo/backend/confect/island/world";
 import {
   Array as Arr,
   DateTime,
+  HashSet,
   MutableHashMap,
   Option,
   Record as Rec,
@@ -33,6 +34,7 @@ import {
   pinchOf,
   wheelZoomOf,
 } from "@/lib/island/gesture";
+import { changedChunks, glowOf } from "@/lib/island/light";
 import { rayThrough } from "@/lib/island/matrix";
 import { lightingOf, meshChunk } from "@/lib/island/mesh";
 import { castRay } from "@/lib/island/ray";
@@ -99,9 +101,10 @@ function start(
   const footprint = footprintOf(size);
   const presses = MutableHashMap.empty<number, Press>();
 
+  let glow = glowOf(store.getState().cells);
   const remesh = (chunks: Iterable<number>) => {
     const { cells } = store.getState();
-    const lighting = lightingOf(cells);
+    const lighting = lightingOf(cells, glow);
     for (const index of chunks) {
       painter.upload(
         index,
@@ -114,8 +117,15 @@ function start(
 
   const unsubscribe = store.subscribe((state, previous) => {
     if (state.revision !== previous.revision) {
-      remesh(store.getState().takeDirty());
+      // A changed block can move light far past its own chunk, so every chunk whose light moved is meshed again too.
+      const relit = glowOf(state.cells);
+      const moved = changedChunks(glow, relit);
+      glow = relit;
+      remesh(HashSet.union(store.getState().takeDirty(), moved));
       canvas.dataset.revision = String(state.revision);
+    }
+    if (state.weather !== previous.weather) {
+      needsDraw = true;
     }
   });
 
@@ -168,14 +178,18 @@ function start(
       orbit = easeOrbit(orbit, goal, 0.25);
       needsDraw = true;
     }
-    const waterDue = now - lastWater > 66;
+    const { weather } = store.getState();
+    const falling =
+      weather === "rain" || weather === "storm" || weather === "snow";
+    const waterDue = now - lastWater > (falling ? 33 : 66);
     if (!(needsDraw || waterDue) || document.hidden) {
       return;
     }
     lastWater = now;
     needsDraw = false;
-    painter.draw(orbit, lightOf(localHour(), "clear"), now / 1000);
+    painter.draw(orbit, lightOf(localHour(), weather), now / 1000, weather);
     canvas.dataset.drawn = "true";
+    canvas.dataset.weather = weather;
   };
   frame = requestAnimationFrame(tick);
 

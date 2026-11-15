@@ -12,6 +12,7 @@ import {
   type Progress,
 } from "@/components/island/store";
 import { IslandSync } from "@/components/island/sync";
+import { IslandWeather } from "@/components/island/weather";
 import { terrainOf } from "@/lib/island/terrain";
 import { cellOf } from "@/lib/island/world";
 
@@ -70,6 +71,7 @@ export default function IslandGame({
         <IslandStage size={size} />
         <IslandHud />
         <IslandSync />
+        <IslandWeather />
       </div>
     </GameStoreContext>
   );
