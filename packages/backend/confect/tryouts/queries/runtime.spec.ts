@@ -1,4 +1,5 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
+import { ContentLanguageSchema } from "@nakafa/aksara-contracts/locale";
 import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
 import { AuthFailure } from "@repo/backend/confect/auth/spec";
 import { ReleaseError } from "@repo/backend/confect/contentRelease/error";
@@ -50,5 +51,16 @@ export default GroupSpec.make()
           TryoutResponseIntegrityError,
           ReleaseError,
         ]),
+    }).middleware(Session)
+  )
+  .addFunction(
+    FunctionSpec.publicQuery({
+      name: "getWorkingLanguage",
+      args: () => ({
+        countryKey: tryoutRouteKeyValidator,
+        examKey: tryoutRouteKeyValidator,
+      }),
+      returns: () => Schema.NullOr(ContentLanguageSchema),
+      error: () => Schema.Union([AuthFailure, TryoutRuntimeErrorWire]),
     }).middleware(Session)
   );

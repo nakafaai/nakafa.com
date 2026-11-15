@@ -1,6 +1,9 @@
 import type { CatalogRow } from "@nakafa/aksara-contracts/assessment/catalog";
 import { ItemVersionSchema } from "@nakafa/aksara-contracts/assessment/item";
-import { ItemKeySchema } from "@nakafa/aksara-contracts/assessment/key";
+import {
+  type InteractionKey,
+  ItemKeySchema,
+} from "@nakafa/aksara-contracts/assessment/key";
 import type { Paper } from "@nakafa/aksara-contracts/assessment/paper";
 import type { ExamProfile } from "@nakafa/aksara-contracts/assessment/profile";
 import type { Docs } from "@repo/backend/confect/_generated/docs";
@@ -15,6 +18,16 @@ export type FrozenPlacement = Omit<
   Docs["tryoutAttemptPlacements"],
   "_creationTime" | "_id" | "clearedVersion" | "tryoutAttemptId"
 >;
+
+/** The versions of one place in its section's languages, as a paper names them. */
+type PaperPlace = Paper["sections"][number]["placements"][number];
+
+/** The key's answer for a text entry: the texts a learner may type. */
+type TextAnswer = Extract<InteractionKey, { kind: "textEntry" }>;
+
+/** Whether a key's answer is a text entry's. */
+const isTextAnswer = (answer: InteractionKey): answer is TextAnswer =>
+  answer.kind === "textEntry";
 
 /**
  * A snapshot cannot be frozen into an attempt: a section of the profile has no section in the paper
@@ -36,7 +49,7 @@ class TryoutFreezeError extends Schema.TaggedError<
   message: Schema.String,
 }) {}
 
-/** One item version of the paper with its key, as the snapshot holds them by the version's hash. */
+/** One item version of the paper with its key, as the snapshot holds them by the version's hash, one per language of a place. */
 export const PlacedItem = Schema.Struct({
   key: ItemKeySchema,
   version: ItemVersionSchema,
@@ -44,16 +57,69 @@ export const PlacedItem = Schema.Struct({
 export type PlacedItem = typeof PlacedItem.Type;
 
 /**
- * Freezes one place: the version's one interaction, the key's answer for it, and its rule, the
- * version's override for the interaction, else the profile's default for its kind. The player and the
- * grader read one interaction per question, as School's do.
+ * The key's answer for one interaction across every language version of its item. The contract holds
+ * the versions of a place to one structure and one key, apart from the texts a learner may type, so the
+ * first version's answer serves, with every version's accepted texts for a text entry. A learner who
+ * switches language mid-section is then graded the same, whichever language they typed in.
+ */
+function unionAnswer(
+  first: InteractionKey,
+  answers: readonly InteractionKey[]
+): InteractionKey {
+  if (first.kind !== "textEntry") {
+    return first;
+  }
+  const texts = Arr.flatMap(answers, (answer) =>
+    isTextAnswer(answer) ? answer.accepted.acceptedAnswers : []
+  );
+  return {
+    ...first,
+    accepted: {
+      ...first.accepted,
+      acceptedAnswers: [
+        ...first.accepted.acceptedAnswers,
+        ...Arr.filter(
+          Arr.dedupe(texts),
+          (text) => !Arr.contains(first.accepted.acceptedAnswers, text)
+        ),
+      ],
+    },
+  };
+}
+
+/** Reads the item version and key of one language of a place, failing when the snapshot holds none. */
+const placedItemOf = Effect.fn("tryouts.start.placedItemOf")(function* (
+  items: HashMap.HashMap<string, PlacedItem>,
+  hash: string,
+  paperId: string
+) {
+  const item = HashMap.get(items, hash);
+  if (Option.isNone(item)) {
+    return yield* new TryoutFreezeError({
+      code: "TRYOUT_ITEM_MISSING",
+      message: `The snapshot holds no item version ${hash} for the paper ${paperId}.`,
+    });
+  }
+  return item.value;
+});
+
+/**
+ * Freezes one place: its family and its version in each language of its section, the structure of its
+ * one interaction, the key's answer for it across every version (`unionAnswer`), and its rule, the
+ * version's override for the interaction, else the profile's default for its kind. Every version of a
+ * place shares the first's structure, scoring, and key, which the contract checks at publication, so
+ * the first decides them. The player and the grader read one interaction per question, as School's do.
  */
 const freezePlace = Effect.fn("tryouts.start.freezePlace")(function* (
   profile: ExamProfile,
-  item: PlacedItem,
-  place: { readonly questionOrder: number; readonly sectionKey: string }
+  items: readonly [PlacedItem, ...PlacedItem[]],
+  place: {
+    readonly questionOrder: number;
+    readonly sectionKey: string;
+    readonly versions: PaperPlace["versions"];
+  }
 ) {
-  const { key, version } = item;
+  const { key, version } = Arr.headNonEmpty(items);
   if (version.interactions.length !== 1) {
     return yield* new TryoutFreezeError({
       code: "TRYOUT_ITEM_SHAPE",
@@ -94,21 +160,29 @@ const freezePlace = Effect.fn("tryouts.start.freezePlace")(function* (
       message: `No rule scores the ${interaction.kind} of item version ${version.hash}.`,
     });
   }
+  const answers = Arr.flatMap(items, (item) =>
+    Arr.filter(
+      item.key.answers,
+      (candidate) => candidate.interaction === interaction.id
+    )
+  );
   return {
-    ...(yield* encodePlacedQuestion({ interaction, key: answer.value })),
-    deliveryLanguage: version.deliveryLanguage,
+    ...(yield* encodePlacedQuestion({
+      interaction,
+      key: unionAnswer(answer.value, answers),
+    })),
     family: version.family,
     questionOrder: place.questionOrder,
     rule: rule.value,
     sectionKey: place.sectionKey,
-    versionHash: version.hash,
+    versions: place.versions,
   } satisfies FrozenPlacement;
 });
 
 /**
  * Freezes a set into the sections and places of one attempt. The sections follow the profile's
- * order; each takes its order and public path from its catalog row, its question count from the
- * paper's places, and its time limit from the profile's template. Each section numbers its questions
+ * order; each takes its order and public path from its catalog row, its question count and languages
+ * from the paper, and its time limit from the profile's template. Each section numbers its questions
  * from 1 in the paper's order, as an exam numbers each of its sections.
  */
 export const freezeAttempt = Effect.fn("tryouts.start.freezeAttempt")(
@@ -141,18 +215,19 @@ export const freezeAttempt = Effect.fn("tryouts.start.freezeAttempt")(
           paperSection.value.placements,
           (place, index) =>
             Effect.gen(function* () {
-              // A learner starts a place in its section's first language.
-              const { hash } = Arr.headNonEmpty(place.versions);
-              const item = HashMap.get(items, hash);
-              if (Option.isNone(item)) {
-                return yield* new TryoutFreezeError({
-                  code: "TRYOUT_ITEM_MISSING",
-                  message: `The snapshot holds no item version ${hash} for the paper ${source.paper.id}.`,
-                });
-              }
-              return yield* freezePlace(source.profile, item.value, {
+              const [first, ...rest] = place.versions;
+              const head = yield* placedItemOf(
+                items,
+                first.hash,
+                source.paper.id
+              );
+              const tail = yield* Effect.forEach(rest, ({ hash }) =>
+                placedItemOf(items, hash, source.paper.id)
+              );
+              return yield* freezePlace(source.profile, [head, ...tail], {
                 questionOrder: index + 1,
                 sectionKey: template.id,
+                versions: place.versions,
               });
             })
         );
@@ -160,6 +235,7 @@ export const freezeAttempt = Effect.fn("tryouts.start.freezeAttempt")(
           ...(catalogSection.value.publicPath === undefined
             ? {}
             : { publicPath: catalogSection.value.publicPath }),
+          languages: [...paperSection.value.languages],
           questionCount: paperSection.value.placements.length,
           sectionKey: template.id,
           sectionOrder: catalogSection.value.order,

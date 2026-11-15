@@ -215,7 +215,11 @@ function TryoutReviewSeats({
   const t = useTranslations("Player");
   const value = use(TryoutContentContext);
   const joined = Result.getOrThrow(
-    joinTryoutBodies(value?.bodies ?? [], runtime.questions)
+    joinTryoutBodies(
+      value?.bodies ?? [],
+      runtime.questions,
+      runtime.section.questionLanguage
+    )
   );
   const shown = Arr.takeWhile(joined, ({ body }) => body.key !== undefined);
   return (

@@ -14,7 +14,9 @@ unused access-campaign storage. Amended on 2026-10-02 to give responses one
 module outside try-out, with short answers, rubrics, stored outcomes, question
 worth, and penalized scoring. Amended on 2026-10-13 to admit answers and
 section finishes through the live-attempt gate (ADR 0013), and to run a section
-in one player with two views.
+in one player with two views. Amended on 2026-11-15 to let a learner read a
+section's questions in any of its languages and switch while it runs, with
+grading that reads no language.
 
 ## Context
 
@@ -67,11 +69,20 @@ an attempt or select the language of an exam question. Progress and history use
 the learner, country, exam, track, and set, so changing the interface language
 keeps the same attempt and result.
 
-Aksara owns each section's real exam language. SNBT and TKA questions follow
-their Indonesian exam contract; a section assessing English keeps its English
-source. Germany's future exams use their German source regardless of interface
-language. Explanations remain localized independently. A retained attempt keeps
-the signed questions and scoring specification with which it started.
+Aksara owns each section's question languages: a paper section lists them in
+order, and each place holds a version in every one (contracts 7.0.0). SNBT and
+TKA questions follow their Indonesian exam contract, a section assessing English
+keeps its English source, Germany's exams use their German source, and SPM
+science sections carry Malay and English. The learner, never the interface
+language, chooses which one to read: on the section page before its clock
+starts, preselected with their working language for the exam (remembered per
+learner, country, and exam in `learningPreferences`, else the section's first
+language), and again at any time in the running section or its review. The
+section attempt keeps the choice (`questionLanguage`), a look at one question in
+the other language stays in the browser, and a start reads the set's catalog row
+in the app locale only for routes and names, since every locale's row names the
+same paper. Explanations remain localized independently. A retained attempt
+keeps the signed questions and scoring specification with which it started.
 
 The current `de` locale denotes German for Germany, as identified by the
 application's `DE` country metadata. Future Austrian and Swiss editions need
@@ -124,10 +135,12 @@ optimistic updates, and rendering share them; Effect programs lift their typed
 codes. Try-out keeps attempt and placement integrity in `tryouts/response`.
 
 Choice and category answers are correct or incorrect. A short answer is graded
-only through the contract's `matchesAnswerKey` and `readNumberAnswer` in the
-question's delivery language, which `freeze` stores in the spec: a comma
-decimal in Indonesian and German, a dot in English, and fractions only when the
-key accepts them. A numeric key decides the answer. A text answer that matches
+only through the contract's `matchesAnswerKey` and `readNumberAnswer`, which
+read no language: a number is read in any script with a dot or a comma as its
+decimal point, and fractions only when the key accepts them. A place freezes
+the structure of its interaction without words and one key, whose text entry
+accepts the typed answers of every language version of the place, so a learner
+who switches language is graded the same. A numeric key decides the answer. A text answer that matches
 no accepted answer stays `pending` until the grader judges text variants. A
 rubric earns the upper level of each final-answer criterion whose typed final
 answer matches its key; a written response leaves its judged criteria, and so

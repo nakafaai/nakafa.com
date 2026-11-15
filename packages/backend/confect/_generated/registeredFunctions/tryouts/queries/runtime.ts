@@ -9,4 +9,5 @@ const definitions = ConvexFunctionDefinitions.buildForGroup<typeof import("../..
 export default {
 ["getSetAttemptState"]: RegisteredConvexFunction.register({ ...definitions["getSetAttemptState"], handler: forward(definitions["getSetAttemptState"].handler) }),
 ["getSectionAttemptState"]: RegisteredConvexFunction.register({ ...definitions["getSectionAttemptState"], handler: forward(definitions["getSectionAttemptState"].handler) }),
+["getWorkingLanguage"]: RegisteredConvexFunction.register({ ...definitions["getWorkingLanguage"], handler: forward(definitions["getWorkingLanguage"].handler) }),
 } as RegisteredFunctions.RegisteredFunctionsForGroupSpec<typeof import("../../../../tryouts/queries/runtime.spec")["default"]>;

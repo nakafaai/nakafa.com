@@ -1,3 +1,4 @@
+import type { ContentLanguage } from "@nakafa/aksara-contracts/locale";
 import type { Docs } from "@repo/backend/confect/_generated/docs";
 import tryoutsInternal from "@repo/backend/confect/_generated/refs/tryouts.server";
 import {
@@ -5,13 +6,20 @@ import {
   DatabaseWriter,
   Scheduler,
 } from "@repo/backend/confect/_generated/services";
+import { captureProductEvent } from "@repo/backend/confect/analytics/capture";
 import { TryoutAttemptStateError } from "@repo/backend/confect/tryouts/attempt";
+import {
+  chooseStartLanguage,
+  rememberWorkingLanguage,
+  requireSectionLanguage,
+} from "@repo/backend/confect/tryouts/language";
 import { loadAttemptSections } from "@repo/backend/confect/tryouts/runtime/attempt/sections";
 import {
   TryoutRuntimeError,
   toTryoutRuntimeError,
 } from "@repo/backend/confect/tryouts/runtime/error";
 import { finalizeSectionAttempt } from "@repo/backend/confect/tryouts/runtime/finish";
+import { readOwnedAttemptById } from "@repo/backend/confect/tryouts/runtime/lookup";
 import { requireSection } from "@repo/backend/confect/tryouts/runtime/placement";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { Array as Arr, Duration, Effect, flow, Schema } from "effect";
@@ -42,13 +50,17 @@ export const requireEntrySection = Effect.fn(
 
 /**
  * Starts one section attempt and its timer inside an attempt the gate admitted
- * (`tryoutGate.startSection`), which checked its owner, state, and deadline.
+ * (`tryoutGate.startSection`), which checked its owner, state, and deadline. The section shows its
+ * questions in the language the learner confirmed on its page, else in their working language for the
+ * exam, else in its first (`chooseStartLanguage`). A section that already runs keeps the language saved
+ * on it.
  */
 export const startSectionAttempt = Effect.fn(
   "tryouts.runtime.startSectionAttempt"
 )(function* (args: {
   attempt: TryoutAttempt;
   now: number;
+  questionLanguage: ContentLanguage | undefined;
   sectionKey: string;
 }) {
   const scheduler = yield* Scheduler;
@@ -74,6 +86,12 @@ export const startSectionAttempt = Effect.fn(
   }
   yield* requireNoParallelSectionTimer(args);
   const frozen = yield* requireSection(args.attempt, args.sectionKey);
+  const questionLanguage = yield* chooseStartLanguage({
+    attempt: args.attempt,
+    chosen: args.questionLanguage,
+    languages: frozen.languages,
+    now: args.now,
+  });
   const expiresAt = Math.min(
     args.now + frozen.timeLimitSeconds * 1000,
     args.attempt.expiresAt
@@ -87,6 +105,7 @@ export const startSectionAttempt = Effect.fn(
       endReason: null,
       expiresAt,
       lastActivityAt: args.now,
+      questionLanguage,
       sectionKey: frozen.sectionKey,
       sectionOrder: frozen.sectionOrder,
       startedAt: args.now,
@@ -112,6 +131,64 @@ export const startSectionAttempt = Effect.fn(
     )
     .pipe(Effect.catchDefect(flow(toTryoutRuntimeError, Effect.fail)));
   return startSectionResult;
+});
+
+/**
+ * Switches the language one section of the learner's attempt shows its questions in, while it runs or
+ * in its review, and remembers it as their working language for the exam. Answers, flags, and the clock
+ * stay as they are, since a grade reads no language. A section the attempt holds no row for yet, or
+ * whose questions are not written in the language, refuses the switch.
+ */
+export const chooseSectionLanguage = Effect.fn(
+  "tryouts.runtime.chooseSectionLanguage"
+)(function* (args: {
+  attemptId: Id<"tryoutAttempts">;
+  language: ContentLanguage;
+  now: number;
+  sectionKey: string;
+  userId: Id<"users">;
+}) {
+  const attempt = yield* readOwnedAttemptById(args.attemptId, args.userId);
+  const section = attempt
+    ? yield* loadSectionAttempt({
+        attemptId: attempt._id,
+        sectionKey: args.sectionKey,
+      })
+    : null;
+  if (!(attempt && section)) {
+    return yield* new TryoutAttemptStateError({
+      code: "TRYOUT_SECTION_NOT_FOUND",
+      message: "Try-out section is not part of this attempt.",
+    });
+  }
+  const frozen = yield* requireSection(attempt, args.sectionKey);
+  yield* requireSectionLanguage(frozen.languages, args.language);
+  if (section.questionLanguage !== args.language) {
+    yield* (yield* DatabaseWriter)
+      .table("tryoutSectionAttempts")
+      .patch(section._id, { questionLanguage: args.language })
+      .pipe(Effect.mapError(toTryoutRuntimeError));
+    yield* captureProductEvent({
+      distinctId: args.userId,
+      event: {
+        name: "tryout question language changed",
+        properties: {
+          country_key: attempt.countryKey,
+          exam_key: attempt.examKey,
+          from: section.questionLanguage,
+          section_key: section.sectionKey,
+          to: args.language,
+        },
+      },
+      timestamp: args.now,
+    });
+  }
+  yield* rememberWorkingLanguage({
+    exam: attempt,
+    language: args.language,
+    now: args.now,
+    userId: args.userId,
+  });
 });
 
 /** Loads one existing section attempt by its stable section key. */

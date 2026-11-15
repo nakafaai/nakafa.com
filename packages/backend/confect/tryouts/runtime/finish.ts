@@ -1,5 +1,6 @@
 import type { Docs } from "@repo/backend/confect/_generated/docs";
 import { DatabaseWriter } from "@repo/backend/confect/_generated/services";
+import { chooseStartLanguage } from "@repo/backend/confect/tryouts/language";
 import { grantFinishAwards } from "@repo/backend/confect/tryouts/runtime/award";
 import {
   readSectionCompletion,
@@ -32,7 +33,10 @@ type TryoutSectionAttempt = Docs["tryoutSectionAttempts"];
 type TryoutEndReason = NonNullable<TryoutAttempt["endReason"]>;
 type TryoutSection = TryoutAttempt["sections"][number];
 
-/** Creates an expired section attempt for a section the user never opened. */
+/**
+ * Creates an expired section attempt for a section the user never opened. Its review opens on the
+ * learner's working language for the exam, else on the section's first language.
+ */
 const createExpiredSectionAttempt = Effect.fn(
   "tryouts.runtime.createExpiredSectionAttempt"
 )(function* (args: {
@@ -51,6 +55,12 @@ const createExpiredSectionAttempt = Effect.fn(
     totalQuestions: args.frozen.questionCount,
   });
   const sectionScore = yield* getSectionScoreSnapshot(score);
+  const questionLanguage = yield* chooseStartLanguage({
+    attempt: args.attempt,
+    chosen: undefined,
+    languages: args.frozen.languages,
+    now: args.now,
+  });
   yield* writer
     .table("tryoutSectionAttempts")
     .insert({
@@ -60,6 +70,7 @@ const createExpiredSectionAttempt = Effect.fn(
       endReason: "time-expired",
       expiresAt: args.attempt.expiresAt,
       lastActivityAt: args.now,
+      questionLanguage,
       sectionKey: args.frozen.sectionKey,
       sectionOrder: args.frozen.sectionOrder,
       score: sectionScore,

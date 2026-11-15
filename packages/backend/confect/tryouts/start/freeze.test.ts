@@ -34,6 +34,7 @@ describe("tryouts/start/freeze", () => {
         );
         expect(sections).toEqual([
           {
+            languages: ["id"],
             publicPath: "try-out/indonesia/snbt/2027/utbk/set-1-id/section-a",
             questionCount: 2,
             sectionKey: "section-a",
@@ -41,6 +42,7 @@ describe("tryouts/start/freeze", () => {
             timeLimitSeconds: 600,
           },
           {
+            languages: ["id"],
             publicPath: "try-out/indonesia/snbt/2027/utbk/set-1-id/section-b",
             questionCount: 1,
             sectionKey: "section-b",
@@ -62,26 +64,115 @@ describe("tryouts/start/freeze", () => {
   );
 
   it.effect(
-    "freezes each place's version, interaction, key answer, and the profile's default rule for its kind",
+    "freezes each place's version in every language of its section, the structure of its interaction without words, its key answer, and the profile's default rule",
     () =>
       Effect.gen(function* () {
-        const snapshot = yield* makeAssessmentSnapshot();
-        const { placements } = yield* freezeAttempt(sourceOf(snapshot));
-        const [first] = snapshot.items;
+        const snapshot = yield* makeAssessmentSnapshot({
+          languages: ["ms", "en"],
+        });
+        const { placements, sections } = yield* freezeAttempt(
+          sourceOf(snapshot)
+        );
+        const [malay, english] = snapshot.items;
         const [placed] = placements;
-        assert(first && placed);
+        assert(malay && english && placed);
+        expect(Arr.map(sections, ({ languages }) => languages)).toEqual([
+          ["ms", "en"],
+          ["ms", "en"],
+        ]);
         expect(placed).toMatchObject({
-          deliveryLanguage: "id",
-          family: first.version.family,
+          family: malay.version.family,
           questionOrder: 1,
           sectionKey: "section-a",
-          versionHash: first.version.hash,
+          versions: [
+            { hash: malay.version.hash, language: "ms" },
+            { hash: english.version.hash, language: "en" },
+          ],
         });
         expect(yield* readPlacedQuestion(placed)).toEqual({
-          interaction: first.version.interactions[0],
-          key: first.key.answers[0],
+          interaction: {
+            id: "choice",
+            kind: "choice",
+            maxChoices: 1,
+            minChoices: 0,
+            options: [
+              { id: "option-1" },
+              { id: "option-2" },
+              { id: "option-3" },
+              { id: "option-4" },
+            ],
+            shuffle: false,
+          },
+          key: malay.key.answers[0],
           rule: { kind: "allOrNothing" },
         });
+        expect(placed.interactionJson).not.toContain("label");
+      })
+  );
+
+  it.effect(
+    "accepts the typed answers of every language of a place, so a switch never changes a grade",
+    () =>
+      Effect.gen(function* () {
+        const snapshot = yield* makeAssessmentSnapshot({
+          languages: ["ms", "en"],
+        });
+        const source = sourceOf(snapshot);
+        const textIn = (accepted: readonly [string, ...string[]]) => ({
+          accepted: {
+            acceptedAnswers: accepted,
+            collapseWhitespace: true,
+            ignoreCase: true,
+            kind: "text" as const,
+          },
+          interaction: "choice",
+          kind: "textEntry" as const,
+        });
+        const typed = {
+          id: "choice",
+          kind: "textEntry",
+          label: "Jawapan",
+        } as const;
+        const accepted: readonly (readonly [string, ...string[]])[] = [
+          ["tiga", "3"],
+          ["three", "3"],
+        ];
+        const items = Arr.map(source.items, (item, index) =>
+          index < 2
+            ? {
+                key: {
+                  ...item.key,
+                  answers: Arr.of(textIn(accepted[index] ?? ["3"])),
+                },
+                version: {
+                  ...item.version,
+                  interactions: Arr.of(typed),
+                  scoring: [
+                    {
+                      interaction: "choice",
+                      rule: { kind: "allOrNothing" as const },
+                    },
+                  ],
+                },
+              }
+            : item
+        );
+        const { placements } = yield* freezeAttempt({ ...source, items });
+        const [placed] = placements;
+        assert(placed);
+        expect((yield* readPlacedQuestion(placed)).key).toEqual(
+          textIn(["tiga", "3", "three"])
+        );
+        // A version whose answer is no text entry adds no text to the first's.
+        const mixed = Arr.map(items, (item, index) =>
+          index === 1 ? (source.items[1] ?? item) : item
+        );
+        const [alone] = (yield* freezeAttempt({ ...source, items: mixed }))
+          .placements;
+        assert(alone);
+        expect((yield* readPlacedQuestion(alone)).key).toEqual(
+          textIn(["tiga", "3"])
+        );
       })
   );
 
@@ -93,6 +184,7 @@ describe("tryouts/start/freeze", () => {
         const { sections } = yield* freezeAttempt(sourceOf(snapshot));
         expect(sections).toEqual([
           {
+            languages: ["id"],
             questionCount: 2,
             sectionKey: "section-a",
             sectionOrder: 1,

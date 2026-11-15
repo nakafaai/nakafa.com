@@ -12,7 +12,10 @@ import {
   type Version,
 } from "@repo/backend/confect/assessment/gate/rules";
 import { Answerable } from "@repo/backend/confect/assessment/gate/store";
-import type { SectionTarget } from "@repo/backend/confect/tryouts/mutations/sections.spec";
+import type {
+  SectionStart,
+  SectionTarget,
+} from "@repo/backend/confect/tryouts/mutations/sections.spec";
 import {
   toTryoutFailure,
   toTryoutStale,
@@ -356,7 +359,7 @@ export const tryoutGate = {
    * and the entry section of a new one.
    */
   startSection: Effect.fn("tryouts.gate.startSection")(
-    function* (owner: Id<"users">, target: SectionTarget) {
+    function* (owner: Id<"users">, target: SectionStart) {
       const { live, now } = yield* gate.admit(
         rules.start,
         owner,
@@ -366,6 +369,7 @@ export const tryoutGate = {
       return yield* startSectionAttempt({
         attempt: live,
         now,
+        questionLanguage: target.questionLanguage,
         sectionKey: target.sectionKey,
       });
     },

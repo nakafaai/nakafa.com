@@ -26,7 +26,9 @@ export function projectTryoutQuestions(input: {
   const interactions = HashMap.fromIterable(
     Arr.map(
       input.bodies,
-      (body) => [body.placementId, body.interaction] as const
+      // Every language of a question holds the same options, so a digit picks from the first.
+      (body) =>
+        [body.placementId, Arr.headNonEmpty(body.versions).interaction] as const
     )
   );
   return projectQuestions({

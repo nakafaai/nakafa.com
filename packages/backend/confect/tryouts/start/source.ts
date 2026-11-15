@@ -37,9 +37,11 @@ export const TryoutStartSource = Schema.Struct({
 export type TryoutStartSource = typeof TryoutStartSource.Type;
 
 /**
- * Loads what one attempt starts from in the active snapshot: the set in the learner's app locale with
- * its sections, the paper it names and the profile the paper follows, each checked against the hash
- * that names it, and the item version and key of every place. `active` is the release the learner
+ * Loads what one attempt starts from in the active snapshot: the set's catalog row and its sections,
+ * the paper it names and the profile the paper follows, each checked against the hash that names it,
+ * and the item version and key of every language of every place. Every locale's row of a set names the
+ * same paper, so the app locale only gives the attempt its routes and names, never its question
+ * language, which the learner chooses for each section (ADR 0003). `active` is the release the learner
  * sees, so a start always freezes the snapshot that release selected.
  */
 export const loadTryoutStartSource = Effect.fn(
@@ -64,9 +66,9 @@ export const loadTryoutStartSource = Effect.fn(
   const paper = yield* readPaper(active.snapshotId, set.paper);
   const profile = yield* readProfile(active.snapshotId, paper.paper.profile);
   const items = yield* Effect.forEach(
-    // A learner starts each place in its section's first language.
+    // A place freezes every language of its section, so a learner may switch in the section.
     Arr.flatMap(paper.paper.sections, ({ placements }) =>
-      Arr.map(placements, ({ versions }) => Arr.headNonEmpty(versions))
+      Arr.flatMap(placements, ({ versions }) => versions)
     ),
     ({ hash }) =>
       Effect.all({ key: readItemKey(hash), version: readItemVersion(hash) })

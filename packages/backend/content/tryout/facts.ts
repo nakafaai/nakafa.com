@@ -1,6 +1,7 @@
 import type { CatalogRow } from "@nakafa/aksara-contracts/assessment/catalog";
 import type { Paper } from "@nakafa/aksara-contracts/assessment/paper";
 import type { ExamProfile } from "@nakafa/aksara-contracts/assessment/profile";
+import { ContentLanguageSchema } from "@nakafa/aksara-contracts/locale";
 import { releaseFail } from "@repo/backend/confect/contentRelease/error";
 import { tryoutSetIdentityOf } from "@repo/backend/confect/tryouts/route";
 import { readPaper, readProfile } from "@repo/backend/confect/tryouts/rows";
@@ -11,13 +12,15 @@ type CatalogSet = Extract<CatalogRow, { kind: "set" }>;
 
 /**
  * What a set's catalog rows leave to its paper and profile: its question count, the kind of score it
- * reports, and each section's question count and time limit, in the profile's order.
+ * reports, and each section's question count, question languages, and time limit, in the profile's
+ * order.
  */
 export const SetFacts = Schema.Struct({
   questionCount: Schema.Finite,
   scoringStrategy: tryoutScoringStrategyValidator,
   sections: Schema.Array(
     Schema.Struct({
+      languages: Schema.NonEmptyArray(ContentLanguageSchema),
       questionCount: Schema.Finite,
       sectionKey: Schema.String,
       timeLimitSeconds: Schema.Finite,
@@ -43,8 +46,9 @@ const factsOf = Effect.fn("tryout.facts.factsOf")(function* (
             "CONTENT_RELEASE_INTEGRITY",
             `Paper ${paper.id} places no section ${template.id} of its profile.`
           ),
-        onSome: ({ placements }) =>
+        onSome: ({ languages, placements }) =>
           Effect.succeed({
+            languages,
             questionCount: placements.length,
             sectionKey: template.id,
             timeLimitSeconds: template.seconds,

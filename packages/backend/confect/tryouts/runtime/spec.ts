@@ -5,6 +5,7 @@ import {
 import { InteractionSchema } from "@nakafa/aksara-contracts/assessment/interaction";
 import { InteractionKeySchema } from "@nakafa/aksara-contracts/assessment/key";
 import { Sha256HashSchema } from "@nakafa/aksara-contracts/ids";
+import { ContentLanguageSchema } from "@nakafa/aksara-contracts/locale";
 import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
 import { EndReason } from "@repo/backend/confect/assessment/gate/end";
 import { Version } from "@repo/backend/confect/assessment/gate/rules";
@@ -20,6 +21,10 @@ const tryoutCurrentSectionValidator = Schema.Struct({
   completedAt: Schema.Union([Schema.Finite, Schema.Null]),
   endReason: Schema.Union([EndReason, Schema.Null]),
   expiresAt: Schema.Finite,
+  /** The languages the section's questions are written in, the first being the one a learner starts in. */
+  languages: Schema.NonEmptyArray(ContentLanguageSchema),
+  /** The language the learner reads the section's questions in, which they may switch at any time. */
+  questionLanguage: ContentLanguageSchema,
   score: Schema.Union([tryoutScoreResultValidator, Schema.Null]),
   sectionKey: tryoutRouteKeyValidator,
   startedAt: Schema.Finite,
@@ -70,10 +75,11 @@ export const tryoutRuntimeStateValidator = Schema.Struct({
   runtime: Schema.Union([Schema.Null, tryoutSectionRuntimeValidator]),
 });
 /**
- * One question of a section as the learner reads it: the prompt of its item version, its one
- * interaction, and the document of the shared reading it was written against. After its section
- * finishes, a learner entitled to the answers also receives the key's answer for the interaction and
- * the explanation in the app locale, when the version has one.
+ * One question of a section as the learner reads it in one language: the prompt of that language's item
+ * version, its one interaction with its labels, and the document of the shared reading it was written
+ * against. After its section finishes, a learner entitled to the answers also receives the key's answer
+ * for the interaction, which accepts the typed answers of every language, and that version's
+ * explanation in the app locale, when it has one.
  */
 export const TryoutQuestionBodySchema = Schema.Struct({
   explanation: Schema.optionalKey(ContentDocumentSchema),
@@ -92,11 +98,22 @@ export const TryoutQuestionBodyText = Schema.fromJsonString(
   TryoutQuestionBodySchema
 );
 
-/** One question body on the wire: its placement, its item version, and the body as JSON text. */
+/**
+ * One question on the wire: its placement and its body in each language of its section, in the
+ * section's order, each with its item version and the body as JSON text. A page carries every language
+ * once, so a learner who switches reads the other at once.
+ */
 const tryoutQuestionContentValidator = Schema.Struct({
-  body: Schema.String,
   placementId: IdSchema("tryoutAttemptPlacements"),
-  versionHash: Sha256HashSchema,
+  versions: Schema.mutable(
+    Schema.NonEmptyArray(
+      Schema.Struct({
+        body: Schema.String,
+        hash: Sha256HashSchema,
+        language: ContentLanguageSchema,
+      })
+    )
+  ),
 });
 
 /** The questions of one section that a learner may read now, in question order; none when it may read none. */

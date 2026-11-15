@@ -2,7 +2,6 @@ import type { Interaction } from "@nakafa/aksara-contracts/assessment/interactio
 import type { InteractionKey } from "@nakafa/aksara-contracts/assessment/key";
 import {
   canonicalDecimal,
-  type NumericEntry,
   type NumericKey,
   numericKeyFits,
 } from "@repo/backend/confect/assessment/number";
@@ -25,6 +24,9 @@ export const NumberSetting = Schema.Struct({
   value: Schema.String,
 });
 export type NumberSetting = typeof NumberSetting.Type;
+
+/** A numeric entry of a School question, with the unit shown beside the student's field. */
+type NumericEntry = Extract<Interaction, { kind: "numericEntry" }>;
 
 /** Whether an interaction is a numeric entry. */
 const isNumericEntry = (answer: Interaction): answer is NumericEntry =>

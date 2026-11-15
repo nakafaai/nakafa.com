@@ -55,8 +55,8 @@ describe("locale-neutral attempt ownership", () => {
             kind: "retained",
           });
           assert.ok(page?.kind === "retained", "Expected the retained page.");
-          const bodies = yield* Effect.forEach(page.content, ({ body }) =>
-            Schema.decodeEffect(TryoutQuestionBodyText)(body)
+          const bodies = yield* Effect.forEach(page.content, ({ versions }) =>
+            Schema.decodeEffect(TryoutQuestionBodyText)(versions[0].body)
           );
           expect(bodies).toMatchObject(
             Arr.map([1, 2], (order) => ({

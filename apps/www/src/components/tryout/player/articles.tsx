@@ -37,7 +37,11 @@ export function TryoutArticles({
   // The page read sends the bodies with the runtime, so a question without its body is a broken read
   // for the route's error boundary, never a player without its questions.
   const joined = Result.getOrThrow(
-    joinTryoutBodies(value.bodies ?? [], runtime.questions)
+    joinTryoutBodies(
+      value.bodies ?? [],
+      runtime.questions,
+      runtime.section.questionLanguage
+    )
   );
 
   return (

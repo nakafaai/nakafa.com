@@ -8,14 +8,12 @@ import type {
 import { formatFocusAnswer } from "@repo/backend/confect/nina/prompt/focus";
 import { NinaTurnError } from "@repo/backend/confect/nina/turns.spec";
 import { isCorrectGrade } from "@repo/backend/confect/tryouts/response/answer";
-import {
-  readExplanation,
-  readItemVersion,
-} from "@repo/backend/confect/tryouts/rows";
+import { readExplanation } from "@repo/backend/confect/tryouts/rows";
 import { readTryoutSectionContentAccess } from "@repo/backend/confect/tryouts/runtime/content";
 import { toTryoutRuntimeError } from "@repo/backend/confect/tryouts/runtime/error";
 import { readOwnedAttemptById } from "@repo/backend/confect/tryouts/runtime/lookup";
 import { readPlacedQuestion } from "@repo/backend/confect/tryouts/runtime/question";
+import { placeVersion } from "@repo/backend/confect/tryouts/runtime/version";
 import type { Locale } from "@repo/contents/content";
 import { documentMarkdown } from "@repo/contents/llms/document";
 import { Effect, Option } from "effect";
@@ -68,8 +66,10 @@ function resultOf(
 }
 
 /**
- * Reads the focused question, its explanation in the learner's locale, and the learner's answer, as
- * the text the prompt quotes. A version without an explanation in that locale quotes none.
+ * Reads the focused question in the language its section shows, the explanation of that version in the
+ * learner's locale, and the learner's answer, as the text the prompt quotes. A look at one question in
+ * the other language stays in the browser, so Nina reads the language the section is set to. A version
+ * without an explanation in that locale quotes none.
  */
 export const readQuestionFocus = Effect.fn("nina.focus.read")(function* (
   focus: NinaFocus,
@@ -80,11 +80,11 @@ export const readQuestionFocus = Effect.fn("nina.focus.read")(function* (
   if (Option.isNone(entitled)) {
     return null;
   }
-  const { placement } = entitled.value;
-  const [version, question, explanation, response] = yield* Effect.all([
-    readItemVersion(placement.versionHash),
+  const { placement, section } = entitled.value;
+  const version = yield* placeVersion(placement, section.questionLanguage);
+  const [question, explanation, response] = yield* Effect.all([
     readPlacedQuestion(placement),
-    readExplanation(placement.versionHash, locale),
+    readExplanation(version.hash, locale),
     (yield* DatabaseReader)
       .table("tryoutResponses")
       .get("by_placementId", placement._id)
@@ -94,13 +94,17 @@ export const readQuestionFocus = Effect.fn("nina.focus.read")(function* (
       ),
   ]);
   return {
-    answer: formatFocusAnswer(question, response?.response ?? null),
+    // The answer section quotes the options in the language the question is read in.
+    answer: formatFocusAnswer(
+      { interaction: version.interaction, key: question.key },
+      response?.response ?? null
+    ),
     explanation: Option.match(explanation, {
       onNone: () => "",
       onSome: documentMarkdown,
     }),
     question: documentMarkdown(version.prompt),
-    questionLanguage: placement.deliveryLanguage,
+    questionLanguage: version.language,
     questionOrder: placement.questionOrder,
     result: resultOf(response),
   } satisfies NinaFocusSource;
@@ -137,5 +141,7 @@ const readEntitledPlacement = Effect.fn("nina.focus.placement")(function* (
     return Option.none();
   }
   const access = yield* readTryoutSectionContentAccess(attempt, section.status);
-  return access.answers ? Option.some({ attempt, placement }) : Option.none();
+  return access.answers
+    ? Option.some({ attempt, placement, section })
+    : Option.none();
 });

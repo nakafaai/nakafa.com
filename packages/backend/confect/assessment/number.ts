@@ -4,12 +4,12 @@ import {
   NumberKeySchema,
   readNumberAnswer,
 } from "@nakafa/aksara-contracts/assessment/answer";
-import type { Interaction } from "@nakafa/aksara-contracts/assessment/interaction";
 import type { InteractionKey } from "@nakafa/aksara-contracts/assessment/key";
+import type { GradedInteraction } from "@repo/backend/confect/assessment/structure";
 import { BigDecimal, Option, Schema } from "effect";
 
 /** A numeric entry: a number the learner types, which its key holds the value of. */
-export type NumericEntry = Extract<Interaction, { kind: "numericEntry" }>;
+export type NumericEntry = Extract<GradedInteraction, { kind: "numericEntry" }>;
 
 /** The key of a numeric entry: its value and, when the teacher allows one, how far an answer may stray from it. */
 export type NumericKey = Extract<InteractionKey, { kind: "numericEntry" }>;

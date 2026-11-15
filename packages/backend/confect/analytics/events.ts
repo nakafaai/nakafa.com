@@ -1,3 +1,5 @@
+import { ItemFamilyIdSchema } from "@nakafa/aksara-contracts/assessment/identity";
+import { ContentLanguageSchema } from "@nakafa/aksara-contracts/locale";
 import { BillingOfferRailSchema } from "@repo/backend/confect/billing/catalog";
 import {
   checkoutLocaleValidator,
@@ -50,9 +52,31 @@ export const productAnalyticsEventValidator = Schema.Union([
       country_key: tryoutRouteKeyValidator,
       exam_key: tryoutRouteKeyValidator,
       locale: appLocaleValidator,
+      /** The learner's working language for the exam once the start settles, absent before any choice. */
+      question_language: Schema.optionalKey(ContentLanguageSchema),
       score_status: tryoutScoreStatusValidator,
       set_key: tryoutRouteKeyValidator,
       track_key: tryoutRouteKeyValidator,
+    }),
+  }),
+  Schema.Struct({
+    name: Schema.Literal("tryout question language changed"),
+    properties: Schema.Struct({
+      country_key: tryoutRouteKeyValidator,
+      exam_key: tryoutRouteKeyValidator,
+      from: ContentLanguageSchema,
+      section_key: tryoutRouteKeyValidator,
+      to: ContentLanguageSchema,
+    }),
+  }),
+  Schema.Struct({
+    name: Schema.Literal("tryout question looked at in other language"),
+    properties: Schema.Struct({
+      country_key: tryoutRouteKeyValidator,
+      exam_key: tryoutRouteKeyValidator,
+      from: ContentLanguageSchema,
+      item_family: ItemFamilyIdSchema,
+      to: ContentLanguageSchema,
     }),
   }),
   Schema.Struct({

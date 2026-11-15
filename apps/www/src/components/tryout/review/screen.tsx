@@ -51,7 +51,11 @@ export function TryoutAttemptReview({
   }
   const { attemptId } = binding;
   const joined = Result.getOrThrow(
-    joinTryoutBodies(value?.bodies ?? [], runtime.questions)
+    joinTryoutBodies(
+      value?.bodies ?? [],
+      runtime.questions,
+      runtime.section.questionLanguage
+    )
   );
   const answered = Arr.takeWhile(joined, ({ body }) => body.key !== undefined);
   if (answered.length < joined.length) {
