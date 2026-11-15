@@ -6,7 +6,6 @@ import {
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuItem,
   DropdownMenuSub,
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
@@ -19,14 +18,11 @@ import {
 } from "@repo/design-system/components/ui/sidebar-menu";
 import { lazy } from "@repo/design-system/lib/lazy";
 import { useSidebar } from "@repo/design-system/lib/sidebar/context";
-import { languages } from "@repo/internationalization/data/lang";
 import { ClientOnly } from "@tanstack/react-router";
-import { Array as Arr } from "effect";
 import { Suspense } from "react";
-import { type Locale, useLocale, useTranslations } from "use-intl";
-import { ActiveBadge } from "@/components/shared/active";
+import { useTranslations } from "use-intl";
+import { RouteLanguageItems } from "@/components/shared/language";
 import { selectMenuSide } from "@/components/sidebar/menu/side";
-import { useLocalizedRouteSwitch } from "@/lib/routing/locale/client";
 
 /**
  * Loads the theme submenu when the account menu opens. Its list carries one
@@ -37,33 +33,6 @@ const ThemeSubmenuContent = lazy(() =>
     default: module.ThemeSubmenuContent,
   }))
 );
-
-/** Renders the nested language submenu and delegates route projection to the shared switcher seam. */
-function LanguageMenuItems() {
-  const { isPending, replace } = useLocalizedRouteSwitch();
-  const currentLocale = useLocale();
-
-  /** Replaces the current route with the selected locale. */
-  function handleChangeLocale(locale: Locale) {
-    replace(locale);
-  }
-
-  return (
-    <>
-      {Arr.map(languages, (language) => (
-        <DropdownMenuItem
-          disabled={isPending}
-          icon={TranslateIcon}
-          key={language.value}
-          onClick={() => handleChangeLocale(language.value)}
-        >
-          <span className="truncate">{language.label}</span>
-          <ActiveBadge isActive={currentLocale === language.value} />
-        </DropdownMenuItem>
-      ))}
-    </>
-  );
-}
 
 /** Renders the shared language capability as a hoverable guest sidebar menu. */
 export function GuestLanguageMenu() {
@@ -95,7 +64,7 @@ export function GuestLanguageMenu() {
           side={side}
           sideOffset={4}
         >
-          <LanguageMenuItems />
+          <RouteLanguageItems />
         </DropdownMenuContent>
       </DropdownMenu>
     </SidebarMenuItem>
@@ -117,7 +86,7 @@ export function SidebarLanguageSubmenu() {
         label={t("menu-language")}
         side={side}
       >
-        <LanguageMenuItems />
+        <RouteLanguageItems />
       </DropdownMenuSubContent>
     </DropdownMenuSub>
   );

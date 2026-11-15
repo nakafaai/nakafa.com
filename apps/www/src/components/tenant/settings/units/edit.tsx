@@ -1,6 +1,6 @@
 import { useMutation } from "@confect/react";
 import { Globe02Icon } from "@hugeicons/core-free-icons";
-import { ActiveAppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
+import type { ActiveAppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import {
   Npsn,
@@ -15,14 +15,12 @@ import {
 } from "@repo/design-system/components/ui/field";
 import { Input } from "@repo/design-system/components/ui/input";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
-import { Array as Arr, Option, Schema } from "effect";
+import { Array as Arr, Schema } from "effect";
 import { startTransition, useId, useState } from "react";
 import { useTranslations } from "use-intl";
+import { LanguageField } from "@/components/shared/language";
 import { useTenant } from "@/components/tenant/context";
-import {
-  languageItems,
-  timeZoneItems,
-} from "@/components/tenant/settings/choices";
+import { timeZoneItems } from "@/components/tenant/settings/choices";
 import {
   editUnitChange,
   setNpsnChange,
@@ -184,18 +182,9 @@ export function UnitEditDialog({
           onChoose={setTimeZone}
           value={timeZone}
         />
-        <SelectField
-          items={languageItems}
+        <LanguageField
           label={t("unit-page-language")}
-          menu={common("menu-language")}
-          onChoose={(next) => {
-            const chosen = Schema.decodeUnknownOption(
-              ActiveAppLocaleCodeSchema
-            )(next);
-            if (Option.isSome(chosen)) {
-              setContentLanguage(chosen.value);
-            }
-          }}
+          onChoose={setContentLanguage}
           value={contentLanguage}
         />
         <Field>

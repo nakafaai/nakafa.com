@@ -12,7 +12,8 @@ import {
   MAX_BATCH_BYTES,
   MAX_BATCH_STEPS,
 } from "@repo/backend/confect/editor/size";
-import { encodeStep, type Step } from "@repo/backend/confect/editor/step";
+import type { Step } from "@repo/backend/confect/editor/step";
+import { encodeStep } from "@repo/backend/test/editor";
 import { nested } from "@repo/backend/test/editor/nodes";
 import { encodeJsonText } from "@repo/utilities/json";
 import { utf8Bytes } from "@repo/utilities/text";

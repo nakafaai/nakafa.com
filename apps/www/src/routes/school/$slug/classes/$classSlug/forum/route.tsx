@@ -31,10 +31,11 @@ const ForumSearch = Schema.Struct({
  */
 export const Route = createFileRoute("/school/$slug/classes/$classSlug/forum")({
   validateSearch: Schema.toStandardSchemaV1(ForumSearch),
-  ...guardSchoolPage({
+  beforeLoad: guardSchoolPage({
     reads: (params: { readonly classSlug: string }) =>
       Option.all({ classAddress: readClassAddress(params.classSlug) }),
   }),
+  notFoundComponent: SchoolPageNotFound,
   component: SchoolClassForumPage,
 });
 

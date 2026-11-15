@@ -1,6 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import {
-  CONTENT_ANALYTICS_FINALIZATION_RESERVE,
   CONTENT_ANALYTICS_GROUP_SIZE,
   CONTENT_ANALYTICS_HEADROOM,
 } from "@repo/backend/confect/contents/analytics/budget";
@@ -20,6 +19,21 @@ import { testMaterialGraph } from "@repo/backend/test/content/material";
 import type { TransactionMetrics } from "convex/server";
 import { convexTest, type TestConvex } from "convex-test";
 import { Array as Arr, Record as Rec } from "effect";
+
+/** Capacity retained after the final group for lease and scheduler writes. */
+const CONTENT_ANALYTICS_FINALIZATION_RESERVE = {
+  bytesRead: 64 * 1024,
+  bytesWritten: 256 * 1024,
+  databaseQueries: 8,
+  documentsRead: 8,
+  documentsWritten: 32,
+  fileReadBytes: 0,
+  fileWriteBytes: 0,
+  filesRead: 0,
+  filesWritten: 0,
+  functionsScheduled: 1,
+  scheduledFunctionArgsBytes: 1024,
+} as const satisfies Record<keyof TransactionMetrics, number>;
 
 const NOW = Date.parse("2026-01-08T12:00:00.000Z");
 const SIGNAL_DAY = getPopularitySignalDay(NOW);
