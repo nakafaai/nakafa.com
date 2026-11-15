@@ -12,7 +12,10 @@ import {
   isShown,
 } from "@/components/connectors/directory";
 import { CATEGORY_FILTER } from "@/components/connectors/filter";
-import { pageGutterVariants } from "@/components/shared/page/width";
+import {
+  pageGutterVariants,
+  pageRhythmVariants,
+} from "@/components/shared/page/width";
 import { chosenOne } from "@/components/shared/table/filter";
 import {
   TableSearch,
@@ -71,7 +74,9 @@ export function ServiceList({
 
   return (
     <ScrollArea className="min-h-0 flex-1">
-      <div className={cn(pageGutterVariants(), "@container py-4")}>
+      <div
+        className={cn(pageGutterVariants(), pageRhythmVariants(), "@container")}
+      >
         <div className="grid auto-rows-fr gap-4 @xl:grid-cols-2">
           {Arr.map(shown, (entry) => (
             <ServiceCard entry={entry} key={entry.service.key} />

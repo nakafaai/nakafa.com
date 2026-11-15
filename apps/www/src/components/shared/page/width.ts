@@ -34,6 +34,13 @@ export const pageBoxVariants = cva("mx-auto w-full max-w-(--page-width)");
  */
 export const pageGutterVariants = cva("px-4 sm:px-6");
 
+/**
+ * The page's one rhythm: the room between its header, or the tab row under it, and its body's first block, and the
+ * same room under the body's last block. Every body reads it, a stack of sections, a list's card, a state or a grid of
+ * cards, so no two pages of a family start their body at a different height and a press between them moves nothing.
+ */
+export const pageRhythmVariants = cva("py-6");
+
 /** One row of a page, its header's, its tab row's or its body's: the page's width and gutter, centred. */
 export const pageRowVariants = cva(
   `mx-auto w-full max-w-(--page-width) ${pageGutterVariants()}`

@@ -35,9 +35,9 @@ import { Array as Arr, Record as Rec, Schema } from "effect";
 import { useOptimistic, useState, useTransition } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
+import { ListCard } from "@/components/shared/page/body";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
-import { TableFrame } from "@/components/shared/table/inset";
 import { RowItems } from "@/components/shared/table/menu";
 import { TableFiltersProvider } from "@/components/shared/table/toolbar";
 import { useTenant } from "@/components/tenant/context";
@@ -131,7 +131,7 @@ export function ParentRequests({
       {QueryResult.isSuccess(requests) &&
       !Arr.isReadonlyArrayEmpty(requests.value) ? (
         <TableFiltersProvider>
-          <TableFrame>
+          <ListCard>
             <DataTable
               columns={[
                 parentColumns.values((request) => request.kind, {
@@ -174,7 +174,7 @@ export function ParentRequests({
               plain
               rowId={(request) => request.id}
             />
-          </TableFrame>
+          </ListCard>
         </TableFiltersProvider>
       ) : null}
       <AskDialog linkId={linkId} />

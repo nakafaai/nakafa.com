@@ -4,10 +4,10 @@ import type { MissingStudent } from "@repo/backend/confect/classroom/tasks/schem
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { Array as Arr } from "effect";
 import { useTranslations } from "use-intl";
+import { ListCard } from "@/components/shared/page/body";
 import { reloadPage } from "@/components/shared/reload";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
-import { TableFrame } from "@/components/shared/table/inset";
 import { RowCopy } from "@/components/shared/table/menu";
 import { LoadFailure } from "@/components/state/failure";
 import { useClassScope } from "@/components/tenant/classes/scope";
@@ -53,7 +53,7 @@ export function TaskMissingTable({ task }: { task: ClassTask }) {
   return (
     <section className="flex flex-col gap-3">
       <h2 className="text-sm font-medium">{t("task-missing")}</h2>
-      <TableFrame>
+      <ListCard>
         <DataTable
           columns={[
             missingColumns.text((student) => student.name, {
@@ -74,7 +74,7 @@ export function TaskMissingTable({ task }: { task: ClassTask }) {
           rowId={(student) => student.id}
           search="name"
         />
-      </TableFrame>
+      </ListCard>
       {loadMore === null ? null : <Intersection onIntersect={loadMore} />}
     </section>
   );

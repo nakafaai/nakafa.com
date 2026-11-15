@@ -24,10 +24,10 @@ import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-d
 import { Array as Arr, Option, Schema } from "effect";
 import { useState } from "react";
 import { useTranslations } from "use-intl";
+import { ListCard } from "@/components/shared/page/body";
 import { reloadPage } from "@/components/shared/reload";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
-import { TableFrame } from "@/components/shared/table/inset";
 import { RowItems } from "@/components/shared/table/menu";
 import { TableEnd } from "@/components/shared/table/pages";
 import { TableName } from "@/components/shared/table/title";
@@ -93,7 +93,7 @@ export function TaskWorkTable({ task }: { task: ClassTask }) {
 
   return (
     <>
-      <TableFrame>
+      <ListCard>
         <DataTable
           columns={[
             workColumns.text((work) => work.person.name, {
@@ -139,7 +139,7 @@ export function TaskWorkTable({ task }: { task: ClassTask }) {
           plain
           rowId={(work) => work.id}
         />
-      </TableFrame>
+      </ListCard>
       {loadMore === null ? null : <TableEnd onLoad={loadMore} />}
     </>
   );
