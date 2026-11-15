@@ -20,6 +20,21 @@ const PRERENDERED = Arr.join(
   ""
 );
 
+/** The client build of that page: the entry, React, and a route chunk that the entry imports. */
+const CHUNKS = [
+  {
+    href: "/assets/index-c3.js",
+    imports: ["/assets/react-a1.js"],
+    parts: [],
+  },
+  { href: "/assets/react-a1.js", imports: [], parts: [] },
+  {
+    href: "/assets/shared~route-b2.js",
+    imports: ["/assets/react-a1.js"],
+    parts: ["component"],
+  },
+];
+
 /** The data that the loader at the end of the body is called with. */
 const LOADER_DATA = /\}\)\((?<data>\{.*\})\);<\/script><\/body>/u;
 
@@ -45,7 +60,7 @@ function readLoaderData(html: string) {
 
 describe("lib/static/scripts", () => {
   it("moves the module preloads and the entry into one loader at the end of the body", () => {
-    const deferred = Result.getOrThrow(deferStaticScripts(PRERENDERED));
+    const deferred = Result.getOrThrow(deferStaticScripts(PRERENDERED, CHUNKS));
 
     expect(deferred).not.toContain('rel="modulepreload"');
     expect(deferred).not.toContain('src="/assets/index-c3.js"');
@@ -72,19 +87,49 @@ describe("lib/static/scripts", () => {
     });
   });
 
+  it("leaves the chunk of a route's not-found component to the router", () => {
+    const notFound = PRERENDERED.replace(
+      "</head>",
+      '<link rel="modulepreload" href="/assets/missing-d4.js" crossorigin=""/></head>'
+    );
+    const deferred = Result.getOrThrow(
+      deferStaticScripts(notFound, [
+        ...CHUNKS,
+        {
+          href: "/assets/missing-d4.js",
+          imports: [],
+          parts: ["notFoundComponent"],
+        },
+      ])
+    );
+
+    expect(
+      Arr.map(
+        Option.getOrThrow(readLoaderData(deferred)).preloads,
+        (preload) => preload.href
+      )
+    ).toEqual(["/assets/react-a1.js", "/assets/shared~route-b2.js"]);
+  });
+
   it("refuses a page without exactly one entry script", () => {
     const entry =
       '<script type="module" async="" src="/assets/index-c3.js"></script>';
     const withoutEntry = PRERENDERED.replace(entry, "");
     const withTwoEntries = PRERENDERED.replace(entry, `${entry}${entry}`);
 
-    expect(Result.isFailure(deferStaticScripts(withoutEntry))).toBe(true);
-    expect(Result.isFailure(deferStaticScripts(withTwoEntries))).toBe(true);
+    expect(Result.isFailure(deferStaticScripts(withoutEntry, CHUNKS))).toBe(
+      true
+    );
+    expect(Result.isFailure(deferStaticScripts(withTwoEntries, CHUNKS))).toBe(
+      true
+    );
   });
 
   it("refuses a page without a single body", () => {
     expect(
-      Result.isFailure(deferStaticScripts(PRERENDERED.replace("</body>", "")))
+      Result.isFailure(
+        deferStaticScripts(PRERENDERED.replace("</body>", ""), CHUNKS)
+      )
     ).toBe(true);
   });
 
@@ -101,9 +146,16 @@ describe("lib/static/scripts", () => {
           ""
         )}</head>`
       );
-    // The page itself boots react-a1, shared~route-b2 and the entry index-c3.
-    const atLimit = deferStaticScripts(withPreloads(BOOT_SCRIPT_LIMIT - 3));
-    const overLimit = deferStaticScripts(withPreloads(BOOT_SCRIPT_LIMIT - 2));
+    // The page itself boots react-a1, shared~route-b2 and the entry index-c3; the
+    // build recorded no chunk for the added parts, so each of them stays.
+    const atLimit = deferStaticScripts(
+      withPreloads(BOOT_SCRIPT_LIMIT - 3),
+      CHUNKS
+    );
+    const overLimit = deferStaticScripts(
+      withPreloads(BOOT_SCRIPT_LIMIT - 2),
+      CHUNKS
+    );
 
     expect(Result.isSuccess(atLimit)).toBe(true);
     expect(
@@ -120,6 +172,6 @@ describe("lib/static/scripts", () => {
       "https://example.com/route.js"
     );
 
-    expect(Result.isFailure(deferStaticScripts(foreign))).toBe(true);
+    expect(Result.isFailure(deferStaticScripts(foreign, CHUNKS))).toBe(true);
   });
 });
