@@ -192,7 +192,7 @@ export function LibraryTrash() {
         empty={
           <EmptyState
             description={t("library-trash-empty-description")}
-            scene={<EmptyNina act="reading" />}
+            scene={<EmptyNina act="sweeping" />}
             title={t("library-trash-empty")}
           />
         }

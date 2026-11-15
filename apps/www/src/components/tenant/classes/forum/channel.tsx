@@ -229,7 +229,7 @@ function ChannelMessages({
       <div className="flex flex-1 items-center justify-center">
         <EmptyState
           description={t("messages-empty-description")}
-          scene={<EmptyNina act="typing" />}
+          scene={<EmptyNina act="chatting" />}
           title={t("messages-empty")}
         />
       </div>

@@ -20,8 +20,10 @@ import {
 
 /** Nine seconds in steps of 0.07: every act comes round more than once. */
 const MOMENTS = Arr.makeBy(129, (i) => i * 0.07);
-/** The check looks at 13 acts at 129 moments each, which the coverage run slows down. */
-const JOINTS_TIMEOUT = 60_000;
+/** The check looks at every act at 129 moments each, which the coverage run and a busy machine slow down. */
+const JOINTS_TIMEOUT = 600_000;
+/** Every picture of every act is drawn and hashed, which takes seconds once the acts number in the thirties. */
+const DIGESTS_TIMEOUT = 60_000;
 /** Across the width of an arm at its cut: from one edge to the other. */
 const CUT_SPREAD = [-0.85, -0.45, 0, 0.45, 0.85];
 /** How far inside a limb the root is looked at, and how far before its cut. */
@@ -164,7 +166,8 @@ describe("the drawing of Nina", () => {
           const digests = yield* Effect.forEach(options, digestOf);
           expect(Arr.join(digests, " "), id).toBe(DIGESTS[id]);
         }
-      })
+      }),
+    DIGESTS_TIMEOUT
   );
 
   it("stands at ease, facing right, in the middle of the window, when she is asked for nothing else", () => {

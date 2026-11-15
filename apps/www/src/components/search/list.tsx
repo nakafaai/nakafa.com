@@ -64,7 +64,7 @@ export function SearchResults({
   if (results.length === 0 && query) {
     return (
       <EmptyState
-        scene={<EmptyNina act="searching" />}
+        scene={<EmptyNina act="fishing" />}
         title={t("search-not-found")}
       />
     );

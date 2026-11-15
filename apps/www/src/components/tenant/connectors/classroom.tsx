@@ -159,7 +159,7 @@ function CourseTable({ preview }: { preview: Preview }) {
     return (
       <EmptyState
         description={t("courses-no-class")}
-        scene={<EmptyNina act="pointing" />}
+        scene={<EmptyNina act="plugging" />}
         title={t("courses-no-class-title")}
       />
     );
