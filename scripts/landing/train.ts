@@ -66,8 +66,10 @@ export class Repository extends Context.Service<
       numbers: readonly number[]
     ) => Effect.Effect<readonly Candidate[], TrainError>;
     /**
-     * Every open pull request that may ride a batch, whatever its own gate and
-     * proof say: each stack whole, bottom-up, oldest stack first.
+     * Every open pull request that may ride a batch: each stack whole,
+     * bottom-up, oldest stack first, whose top's own gate passed on a head that
+     * contains main's tip and carries the members below it. Its own proof is
+     * not asked for, since the batch proves the combination.
      */
     readonly ready: (
       numbers: readonly number[]
@@ -126,8 +128,8 @@ const proofSpecs = (
 
 /**
  * Lands pull requests after one gate and one proof of their combination on
- * main: those whose own gate and proof passed, or with `batch` every ready one,
- * each stack whole. A failing spec that fails on main too belongs to main: the
+ * main: those whose own gate and proof passed, or with `batch` every stack
+ * whose top's own gate passed on a head that contains main, each stack whole. A failing spec that fails on main too belongs to main: the
  * train reports it and ignores it. Any other failure, a failed gate included,
  * splits the batch. A batch of several stacks verifies every stack on its own,
  * side by side, so a split costs one wait in the runner queue, not one for each
