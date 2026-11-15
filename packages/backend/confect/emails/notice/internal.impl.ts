@@ -11,7 +11,12 @@ import {
 import { EMAIL_FROM, sendMail } from "@repo/backend/confect/emails/client";
 import { resolveLegalLinks } from "@repo/backend/confect/emails/legal";
 import spec from "@repo/backend/confect/emails/notice/internal.spec";
+import {
+  unsubscribePage,
+  unsubscribePost,
+} from "@repo/backend/confect/emails/unsubscribe/token";
 import { isLoginAddress } from "@repo/backend/confect/identity/address";
+import { switchedOff } from "@repo/backend/confect/notifications/switched";
 import { readSiteUrl } from "@repo/backend/confect/site/config";
 import { schoolAddress } from "@repo/backend/confect/tenancy/address";
 import { publicationLayer } from "@repo/backend/content/publication/confect";
@@ -19,10 +24,10 @@ import { readPageCatalog } from "@repo/backend/content/publication/page";
 import { Array as Arr, Effect, Layer, Option } from "effect";
 
 /**
- * What the notice of one announcement says, and the addresses of its recipients:
- * the class's address on the school's host, in the language of the class's unit,
- * and the account address of each recipient who holds an account with a real
- * address. A removed announcement says nothing, so nothing is sent.
+ * What the notice of one announcement says to each recipient who holds an account
+ * with a real address and keeps this kind's email on: the class's address on the
+ * school's host, in the language of the class's unit, and the recipient's own
+ * unsubscribe page. A removed announcement says nothing, so nothing is sent.
  */
 const readInput = FunctionImpl.make(
   databaseSchema,
@@ -56,32 +61,45 @@ const readInput = FunctionImpl.make(
       siteUrl
     );
     const school = yield* schoolAddress(siteUrl, tenant.slug);
+    const input = {
+      classUrl: new URL(`/classes/${klass.slug}`, school).href,
+      locale: unit.contentLanguage,
+      privacyPolicyUrl: links.privacyPolicyUrl,
+      termsOfServiceUrl: links.termsOfServiceUrl,
+    };
     const addresses = yield* Effect.forEach(recipients, (personId) =>
       Effect.gen(function* () {
         const person = yield* reader.table("tenantPeople").get(personId);
-        if (person.account.state !== "claimed") {
+        if (
+          person.account.state !== "claimed" ||
+          Option.isSome(
+            yield* switchedOff(personId, "classAnnouncement", "email")
+          )
+        ) {
           return Option.none();
         }
         const user = yield* reader.table("users").get(person.account.userId);
-        return isLoginAddress(user.email)
-          ? Option.none()
-          : Option.some({ email: user.email, personId });
+        if (isLoginAddress(user.email)) {
+          return Option.none();
+        }
+        const unsubscribeUrl = yield* unsubscribePage(
+          { _tag: "Person", personId, tenantId: tenant._id },
+          unit.contentLanguage
+        );
+        return Option.some({
+          email: user.email,
+          input: { ...input, unsubscribeUrl },
+          personId,
+        });
       }).pipe(Effect.orDie)
     );
-    return {
-      addresses: Arr.getSomes(addresses),
-      input: {
-        classUrl: new URL(`/classes/${klass.slug}`, school).href,
-        locale: unit.contentLanguage,
-        privacyPolicyUrl: links.privacyPolicyUrl,
-        termsOfServiceUrl: links.termsOfServiceUrl,
-      },
-    };
+    return { addresses: Arr.getSomes(addresses), tenantId: tenant._id };
   })
 );
 
 /**
- * Hands the rendered notice to the mail provider, one message to each address.
+ * Hands the rendered notices to the mail provider, one message to each address,
+ * with its recipient's one-click unsubscribe.
  * The announcement and the recipient are the idempotency key, so a repeated run
  * sends each recipient one message.
  */
@@ -90,20 +108,28 @@ const enqueue = FunctionImpl.make(
   spec,
   "enqueue",
   Effect.fn("emails.notice.enqueue")(function* ({
-    addresses,
+    messages,
     postId,
-    ...message
+    tenantId,
   }) {
     const ctx = yield* MutationCtx;
     yield* Effect.forEach(
-      addresses,
-      (address) =>
-        sendMail(ctx, {
-          ...message,
-          from: EMAIL_FROM,
-          idempotencyKey: `notice-email/${postId}/${address.personId}`,
-          to: address.email,
-        }).pipe(Effect.orDie),
+      messages,
+      ({ email, personId, ...message }) =>
+        Effect.flatMap(
+          unsubscribePost({ _tag: "Person", personId, tenantId }),
+          (unsubscribe) =>
+            sendMail(
+              ctx,
+              {
+                ...message,
+                from: EMAIL_FROM,
+                idempotencyKey: `notice-email/${postId}/${personId}`,
+                to: email,
+              },
+              unsubscribe
+            )
+        ).pipe(Effect.orDie),
       { discard: true }
     );
     return null;
@@ -112,7 +138,7 @@ const enqueue = FunctionImpl.make(
 
 /**
  * Sends the notice of one announcement to one batch of its recipients: it reads
- * what to say, renders it once in the Node runtime, and hands it over. Email is a
+ * what to say, renders each recipient's in one Node action, and hands them over. Email is a
  * notice and the inbox holds the announcement either way, so a failed render
  * fails this action, which Convex does not repeat, and sends nothing.
  */
@@ -131,14 +157,17 @@ const send = FunctionImpl.make(
     if (found === null || Arr.isReadonlyArrayEmpty(found.addresses)) {
       return null;
     }
-    const message = yield* runAction(
-      emailsInternal.notice.delivery.render,
-      found.input
-    ).pipe(Effect.orDie);
+    const rendered = yield* runAction(emailsInternal.notice.delivery.render, {
+      inputs: Arr.map(found.addresses, ({ input }) => input),
+    }).pipe(Effect.orDie);
     yield* runMutation(emailsInternal.notice.internal.enqueue, {
-      ...message,
-      addresses: found.addresses,
+      messages: Arr.zipWith(
+        found.addresses,
+        rendered,
+        ({ email, personId }, message) => ({ ...message, email, personId })
+      ),
       postId,
+      tenantId: found.tenantId,
     }).pipe(Effect.orDie);
     return null;
   })

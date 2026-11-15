@@ -123,6 +123,8 @@ const ROOT_RULES: { readonly [Root in ApplicationRoot]: RootRule } = {
   school: (segments) =>
     Arr.contains(MAIN_HOST_SCHOOL_PAGES, Arr.join(segments, "/")),
   search: isRootPage,
+  // The page an email's unsubscribe link opens, which reads its token from the query.
+  unsubscribe: isRootPage,
   user: isUserPath,
   // The public check of a report card's QR code names one hash below `verify`.
   verify: (segments) => segments.length === 1,

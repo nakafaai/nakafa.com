@@ -32,6 +32,7 @@ export const deliverPassReminderProgram = Effect.fn("billing.reminder.deliver")(
       locale: input.locale,
       privacyPolicyUrl: input.privacyPolicyUrl,
       termsOfServiceUrl: input.termsOfServiceUrl,
+      unsubscribeUrl: input.unsubscribeUrl,
     });
     yield* enqueue(message);
     return null;

@@ -24,6 +24,7 @@ import contentsInternal from "@repo/backend/confect/_generated/refs/contents.ser
 import creditsInternal from "@repo/backend/confect/_generated/refs/credits.server";
 import editor from "@repo/backend/confect/_generated/refs/editor";
 import editorInternal from "@repo/backend/confect/_generated/refs/editor.server";
+import emails from "@repo/backend/confect/_generated/refs/emails";
 import emailsInternal from "@repo/backend/confect/_generated/refs/emails.server";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import examsInternal from "@repo/backend/confect/_generated/refs/exams.server";
@@ -142,6 +143,7 @@ const domainModules = {
   contentRelease,
   contents,
   editor,
+  emails,
   exams,
   guardians,
   identity,

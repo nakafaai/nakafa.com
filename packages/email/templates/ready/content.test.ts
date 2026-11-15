@@ -50,6 +50,7 @@ describe("account-ready content", () => {
           locale: "en",
           privacyPolicyUrl: "https://nakafa.com/en/privacy-policy",
           termsOfServiceUrl: "https://nakafa.com/en/terms-of-service",
+          unsubscribeUrl: "https://nakafa.com/en/unsubscribe?token=signed",
         });
 
         assert.strictEqual(input.continueUrl, continueUrl);
@@ -71,6 +72,7 @@ describe("account-ready content", () => {
           locale: "en",
           privacyPolicyUrl: "https://nakafa.com/en/privacy-policy",
           termsOfServiceUrl: "https://nakafa.com/en/terms-of-service",
+          unsubscribeUrl: "https://nakafa.com/en/unsubscribe?token=signed",
         }).pipe(Effect.flip);
 
         assert.ok(failure.message.includes("continueUrl"));

@@ -33,13 +33,15 @@ const namesLoginAddress = (message: SendEmailOptions) =>
   );
 
 /**
- * Hands one message to the mail provider, and refuses a message that names a
- * login address in any recipient field. Every Nakafa sender goes through here,
- * so no path can mail a placeholder.
+ * Hands one message to the mail provider with its one-click unsubscribe (RFC 8058): `List-Unsubscribe` names the
+ * address a mail client posts to, and `List-Unsubscribe-Post` says one post is enough. It refuses a message that
+ * names a login address in any recipient field. Every Nakafa sender goes through here, so no path can mail a
+ * placeholder, and no message leaves without its unsubscribe.
  */
 export const sendMail = Effect.fn("emails.client.send")(function* (
   ctx: MutationCtx,
-  message: SendEmailOptions
+  message: SendEmailOptions,
+  unsubscribe: { readonly post: string }
 ) {
   if (namesLoginAddress(message)) {
     return yield* new LoginAddressRefused({
@@ -47,5 +49,13 @@ export const sendMail = Effect.fn("emails.client.send")(function* (
       message: "A school login address never receives mail.",
     });
   }
-  return yield* Effect.promise(() => resend.sendEmail(ctx, message));
+  return yield* Effect.promise(() =>
+    resend.sendEmail(ctx, {
+      ...message,
+      headers: [
+        { name: "List-Unsubscribe", value: `<${unsubscribe.post}>` },
+        { name: "List-Unsubscribe-Post", value: "List-Unsubscribe=One-Click" },
+      ],
+    })
+  );
 });

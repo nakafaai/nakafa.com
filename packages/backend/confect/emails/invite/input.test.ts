@@ -45,6 +45,9 @@ describe("emails/invite/input", () => {
           privacyPolicyUrl: `http://localhost:3000/${locale}/privacy-${locale}`,
           signInUrl: "http://nf.localhost:3000/",
           termsOfServiceUrl: `http://localhost:3000/${locale}/terms-${locale}`,
+          unsubscribeUrl: expect.stringContaining(
+            `http://localhost:3000/${locale}/unsubscribe?token=`
+          ),
         });
       })
   );

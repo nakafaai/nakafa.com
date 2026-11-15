@@ -23,6 +23,7 @@ export const InviteEmailInputSchema = Schema.Struct({
   privacyPolicyUrl: EmailUrlSchema,
   signInUrl: EmailUrlSchema,
   termsOfServiceUrl: EmailUrlSchema,
+  unsubscribeUrl: EmailUrlSchema,
 });
 export type InviteEmailInput = typeof InviteEmailInputSchema.Type;
 const InviteEmailCopySchema = Schema.Struct({

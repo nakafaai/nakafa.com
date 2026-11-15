@@ -41,6 +41,7 @@ const FAMILIES = [
   {
     load: () => import("@repo/backend/confect/routes/hooks"),
     routes: [
+      { pathPrefix: "/email/" },
       { pathPrefix: "/polar/" },
       { pathPrefix: "/resend/" },
       { pathPrefix: "/xendit/" },

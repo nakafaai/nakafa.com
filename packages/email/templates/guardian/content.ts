@@ -6,6 +6,7 @@ import {
   EMAIL_SENDER,
 } from "@repo/email/brand";
 import { legalLabels } from "@repo/email/legal";
+import { EmailUrlSchema } from "@repo/email/url";
 import { SITE_ORIGIN } from "@repo/seo/origin";
 import { Array as Arr, pipe, Schema, String as Str } from "effect";
 
@@ -17,6 +18,7 @@ import { Array as Arr, pipe, Schema, String as Str } from "effect";
 export const GuardianCodeEmailInput = Schema.Struct({
   code: Schema.String.check(Schema.isPattern(/^\d{6}$/u)),
   locale: ActiveAppLocaleCodeSchema,
+  unsubscribeUrl: EmailUrlSchema,
 });
 
 const guardianCodeCopy = {
@@ -68,7 +70,7 @@ const footerLink = (href: string, label: string) =>
  * The subject, plain text, and HTML of a guardian's sign-in email, in the one
  * layout of every Nakafa email: the mark, the subject, the message with the
  * code, and the footer with the reason, the sender, its address, the contact
- * address, and the legal links. It is written without React, because the code
+ * address, the legal links, and the unsubscribe link. It is written without React, because the code
  * is sent from the mutation that draws it, a code never travels through a
  * scheduled job's stored arguments, and the layout's Tailwind renders only
  * asynchronously. The words are fixed copy and the code holds digits only, so
@@ -87,6 +89,7 @@ export function guardianCodeEmail(input: typeof GuardianCodeEmailInput.Type) {
       copy.ignore,
       copy.reason,
       `${EMAIL_SENDER.name}\n${EMAIL_SENDER.address}\n${EMAIL_SENDER.contact}`,
+      `${legal.unsubscribe}: ${input.unsubscribeUrl}`,
     ],
     "\n\n"
   );
@@ -113,6 +116,7 @@ export function guardianCodeEmail(input: typeof GuardianCodeEmailInput.Type) {
         `${footerLink(privacy, legal.privacyPolicy)}&nbsp;&nbsp;&nbsp;&nbsp;${footerLink(terms, legal.termsOfService)}`,
         12
       ),
+      footerLine(footerLink(input.unsubscribeUrl, legal.unsubscribe), 12),
       "</td></tr></table></td></tr></table></body></html>",
     ],
     ""

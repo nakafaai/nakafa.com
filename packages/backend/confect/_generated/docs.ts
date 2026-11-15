@@ -81,6 +81,7 @@ export type EditorClientsDoc = Document.Document<typeof schemaDefinition, "edito
 export type EditorDocumentsDoc = Document.Document<typeof schemaDefinition, "editorDocuments">;
 export type EditorSnapshotsDoc = Document.Document<typeof schemaDefinition, "editorSnapshots">;
 export type EditorStepsDoc = Document.Document<typeof schemaDefinition, "editorSteps">;
+export type EmailSuppressionsDoc = Document.Document<typeof schemaDefinition, "emailSuppressions">;
 export type ExamAnswersDoc = Document.Document<typeof schemaDefinition, "examAnswers">;
 export type ExamAssetsDoc = Document.Document<typeof schemaDefinition, "examAssets">;
 export type ExamAttemptsDoc = Document.Document<typeof schemaDefinition, "examAttempts">;
@@ -265,6 +266,7 @@ export interface Docs {
   editorDocuments: EditorDocumentsDoc;
   editorSnapshots: EditorSnapshotsDoc;
   editorSteps: EditorStepsDoc;
+  emailSuppressions: EmailSuppressionsDoc;
   examAnswers: ExamAnswersDoc;
   examAssets: ExamAssetsDoc;
   examAttempts: ExamAttemptsDoc;

@@ -20,8 +20,8 @@ import {
  * The one layout of every Nakafa email, light and dark: the header with the
  * mark, the body with the subject as its heading, one message, and one
  * button, and the footer with the reason the reader got it, the sender, its
- * address, the contact address, and the two legal links. The body is also the
- * preview line.
+ * address, the contact address, the two legal links, and the unsubscribe link,
+ * which opens a page where the reader confirms. The body is also the preview line.
  */
 export function Layout({
   copy,
@@ -29,6 +29,7 @@ export function Layout({
   locale,
   privacyPolicyUrl,
   termsOfServiceUrl,
+  unsubscribeUrl,
 }: {
   copy: {
     body: string;
@@ -37,11 +38,13 @@ export function Layout({
     privacyPolicy: string;
     subject: string;
     termsOfService: string;
+    unsubscribe: string;
   };
   ctaUrl: string;
   locale: ActiveAppLocaleCode;
   privacyPolicyUrl: string;
   termsOfServiceUrl: string;
+  unsubscribeUrl: string;
 }) {
   return (
     <Html dir="ltr" lang={locale}>
@@ -129,6 +132,16 @@ export function Layout({
                   target="_blank"
                 >
                   {copy.termsOfService}
+                </Link>
+              </Text>
+              <Text className="m-0 mt-3 text-xs leading-5">
+                <Link
+                  className="text-muted-foreground dark:text-muted-foreground-dark underline"
+                  href={unsubscribeUrl}
+                  rel="noopener noreferrer"
+                  target="_blank"
+                >
+                  {copy.unsubscribe}
                 </Link>
               </Text>
             </Section>

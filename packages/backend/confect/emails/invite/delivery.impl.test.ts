@@ -16,6 +16,7 @@ const input = (locale: ActiveAppLocaleCode) => ({
   privacyPolicyUrl: `https://nakafa.com/${locale}/privacy`,
   signInUrl: "https://nf.nakafa.com/",
   termsOfServiceUrl: `https://nakafa.com/${locale}/terms`,
+  unsubscribeUrl: `https://nakafa.com/${locale}/unsubscribe?token=signed`,
 });
 
 describe("emails/invite/delivery", () => {
