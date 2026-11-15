@@ -63,6 +63,7 @@ export const origins = Effect.fn("RepositoryTest.origins")(function* () {
         sha,
         title: `Change ${number}`,
         specs: [],
+        below: "",
       };
     })
   );
@@ -120,6 +121,7 @@ export const CANDIDATE: Candidate = {
   sha: "e".repeat(40),
   title: "Land me",
   specs: [],
+  below: "",
 };
 
 /** A pull request view as `gh pr view` prints it. */
