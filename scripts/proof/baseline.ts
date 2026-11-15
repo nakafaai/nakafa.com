@@ -59,3 +59,25 @@ export const makeBaseline = Effect.fn("proof.makeBaseline")(function* (
 
   return { shared };
 });
+
+/** The verdict against main: each failure, new or shared with main, then the one line a caller acts on. */
+export function formatVerdict(
+  fresh: readonly string[],
+  shared: readonly string[],
+  main: string
+) {
+  return Arr.join(
+    [
+      ...Arr.map(fresh, (failure) => `new ${failure}`),
+      ...Arr.map(
+        shared,
+        (failure) => `on main ${main.slice(0, 10)} too ${failure}`
+      ),
+      fresh.length === 0
+        ? "Verdict: no new failure against main"
+        : `Verdict: ${fresh.length} new failures against main`,
+      "",
+    ],
+    "\n"
+  );
+}

@@ -8,7 +8,11 @@ import { Array as Arr, Effect, Option, Schema } from "effect";
 import { ChildProcess } from "effect/process";
 import { runEntry } from "#scripts/entry";
 import { writeOutput } from "#scripts/output";
-import { failuresOf, makeBaseline } from "#scripts/proof/baseline";
+import {
+  failuresOf,
+  formatVerdict,
+  makeBaseline,
+} from "#scripts/proof/baseline";
 import { mainHead, ProofError } from "#scripts/proof/client";
 import {
   githubProver,
@@ -130,28 +134,6 @@ export const runProof = Effect.fn("proof.run")(function* (
   );
   return fresh.length === 0 && gatePassed ? 0 : 1;
 }, Effect.scoped);
-
-/** The verdict against main: each failure, new or shared with main, then the one line a caller acts on. */
-function formatVerdict(
-  fresh: readonly string[],
-  shared: readonly string[],
-  main: string
-) {
-  return Arr.join(
-    [
-      ...Arr.map(fresh, (failure) => `new ${failure}`),
-      ...Arr.map(
-        shared,
-        (failure) => `on main ${main.slice(0, 10)} too ${failure}`
-      ),
-      fresh.length === 0
-        ? "Verdict: no new failure against main"
-        : `Verdict: ${fresh.length} new failures against main`,
-      "",
-    ],
-    "\n"
-  );
-}
 
 runEntry(
   import.meta.main,
