@@ -95,3 +95,11 @@ The proof runs with no retries and a 120-second test timeout (`apps/www/playwrig
 
 1. **Run again first.** Before a combination splits, every failing spec that main does not fail runs once more, alone, on the same combination. A spec that passes is recorded as a flake with the combination it flaked on, and rejects nothing; a spec that fails again stays a failure and the batch splits as before. A failed gate or a proof that named no spec never runs again.
 2. **Never hidden.** The train's report names each flake, so it gets an owner and a due time on the tracker. No spec is skipped, deleted, or retried inside Playwright for it.
+
+## Amendment: Freshen Keeps A Stack On Main, 15 November 2026
+
+The entry rule needs each stack's top to contain main, and every landing moves main. Bringing a stack up to it by hand meant merging main into the bottom, then each member into the one above, in a checkout: on 15 November a member that took main alone broke its stack's chain and the train found no rider, and a loop that switched branches ran in the checkout where a train was running.
+
+1. **One command.** `bun run freshen <pr...>` (`scripts/landing/freshen.ts`) takes every open stack that holds a named pull request, drafts included, and walks it bottom-up. A member that already contains the head below it (main, for the bottom) stays; any other gets a merge commit of that head, built with `git merge-tree --write-tree` and `git commit-tree`, and pushed as a fast-forward of its branch. A member two stacks share is merged once. The top's new head is gated.
+2. **No working tree.** Nothing is checked out, reset or stashed, so freshen can run beside a train and never touches a person's changes. A push that is not a fast-forward fails, so a branch someone moved meanwhile is never overwritten.
+3. **A conflict stops its stack.** The report names the member and the files; a person merges the head below into it once, and freshen runs again from there. The members below it are already fresh.
