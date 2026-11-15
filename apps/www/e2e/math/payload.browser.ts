@@ -8,7 +8,8 @@ import { paginationNavigation, SUBJECT_LINK } from "@/e2e/support/selector";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
 /** The scripts of a page that carry the router's data, the server component trees included. */
-const STREAM_PART = /<script data-tsr-stream-part="">([\s\S]*?)<\/script>/gu;
+const STREAM_PART =
+  /<script data-tsr-stream-part="">(?<part>[\s\S]*?)<\/script>/gu;
 
 /** The TeX of every formula the page's article draws, in order, as KaTeX's MathML copy names it. */
 const drawnTex = () =>
@@ -50,8 +51,10 @@ const verifyLoadedLesson = Effect.fn("NakafaE2E.verifyLoadedMathLesson")(
     );
     const data = Arr.filterMap(
       Arr.fromIterable(html.matchAll(STREAM_PART)),
-      ([, part]) =>
-        part === undefined ? Result.failVoid : Result.succeed(part)
+      (match) =>
+        match.groups?.part === undefined
+          ? Result.failVoid
+          : Result.succeed(match.groups.part)
     );
     yield* openLesson(page, pinnedRoutes.inverse.en);
     const tex = yield* Effect.promise(() => page.evaluate(drawnTex));
