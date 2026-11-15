@@ -3,14 +3,6 @@
 import { lazy } from "@repo/design-system/lib/lazy";
 import { withHydrationBoundary } from "@/lib/content/renderer/client/boundary";
 
-export const Inequality = withHydrationBoundary(
-  lazy(() =>
-    import(
-      "@repo/design-system/components/contents/mathematics/inequality"
-    ).then((module) => ({ default: module.Inequality }))
-  )
-);
-
 export const LineEquation = withHydrationBoundary(
   lazy(() =>
     import(
