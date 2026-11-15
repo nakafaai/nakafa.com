@@ -1,6 +1,3 @@
-import type { Locale } from "@repo/internationalization/src/locale";
-import { PATHNAMES } from "@repo/internationalization/src/pathnames";
-import { Array as Arr } from "effect";
 import { CURRICULUM_NAVIGATION_ICONS } from "@/lib/curriculum/icons";
 
 /**
@@ -47,15 +44,3 @@ export const subjectMenu = [
     ],
   },
 ] as const;
-
-type SubjectMenuItem = (typeof subjectMenu)[number]["items"][number];
-
-/**
- * The localized public URL of a subject menu row, such as
- * `/curriculum/merdeka/class-11`. The route map spells the curriculum segment,
- * and the row spells its program and page in each locale.
- */
-export function getSubjectMenuHref(item: SubjectMenuItem, locale: Locale) {
-  const curriculum = PATHNAMES["/curricula"][locale];
-  return `${curriculum}/${item.curriculum}/${Arr.join(item.path[locale], "/")}`;
-}
