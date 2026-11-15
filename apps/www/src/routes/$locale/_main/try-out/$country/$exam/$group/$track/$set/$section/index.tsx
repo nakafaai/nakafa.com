@@ -7,8 +7,8 @@ import { AppNotFound } from "@/components/state/app";
 import {
   TryoutPractice,
   TryoutPracticeSession,
+  useTryoutPracticing,
 } from "@/components/tryout/practice/deferred";
-import { useTryoutPracticing } from "@/components/tryout/practice/link";
 import { TryoutAttemptReview } from "@/components/tryout/review/deferred";
 import { readTryoutSectionFn } from "@/components/tryout/route/attempt.functions";
 import { createTryoutHead } from "@/components/tryout/route/head";

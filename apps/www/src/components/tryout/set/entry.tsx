@@ -10,7 +10,6 @@ import {
   TryoutPlayerOpening,
   TryoutRunningPlayer,
 } from "@/components/tryout/player/opening";
-import { TryoutPracticeLink } from "@/components/tryout/practice/link";
 import {
   TryoutFinishedPlace,
   TryoutReviewFrame,
@@ -105,9 +104,7 @@ export function TryoutSetEntry({ children, value }: TryoutSetEntryProps) {
 
   return (
     <TryoutPage>
-      <TryoutEntryHeader value={value}>
-        <TryoutPracticeLink publicPath={value.currentPath} />
-      </TryoutEntryHeader>
+      <TryoutEntryHeader value={value} />
       <TryoutPageBody>
         <TryoutSectionSummary
           value={{
@@ -125,16 +122,16 @@ export function TryoutSetEntry({ children, value }: TryoutSetEntryProps) {
 }
 
 /**
- * The set's header: its path and title, the attempt picker beside the page's second control in one group of
- * outlined buttons (the practice, or the view of a review's questions), and the try-out's action, so the
- * header holds the primary action and one group.
+ * The set's header: its path and title, the attempt picker beside the view of a review's questions in one group
+ * of outlined buttons, and the try-out's action, whose dialog also opens the practice, so the header holds the
+ * primary action and one group.
  */
 function TryoutEntryHeader({
   children,
   value,
 }: {
-  /** The page's second control, beside the picker. */
-  children: ReactNode;
+  /** The view of a review's questions, beside the picker. */
+  children?: ReactNode;
   value: TryoutSetEntryProps["value"];
 }) {
   const t = useTranslations("Tryouts");

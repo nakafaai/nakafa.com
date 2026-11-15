@@ -27,7 +27,7 @@ test.describe("Practice beside the try-out", () => {
   test.describe.configure({ timeout: 240_000 });
   test.use({ viewport: viewportSize(desktopViewport) });
 
-  test("opens from the set's header with no clock, checks a question at once, keeps it through a reload, and starts again", async ({
+  test("opens from the start's dialog with no clock, checks a question at once, keeps it through a reload, and starts again", async ({
     baseURL,
     page,
   }) => {
@@ -37,15 +37,25 @@ test.describe("Practice beside the try-out", () => {
         yield* Effect.promise(() =>
           page.goto(entrySetHref, { waitUntil: "commit" })
         );
-        const practice = page
+        // The start's dialog asks how to take the set; Practice opens it with no clock.
+        const start = page
           .locator("main")
-          .getByRole("link", { name: "Practice" });
+          .getByRole("button", { exact: true, name: "Start" });
         yield* Effect.promise(() =>
-          expect(practice).toBeVisible({
+          expect(start).toBeEnabled({
             timeout: readinessTimeoutMilliseconds,
           })
         );
-        yield* activate(practice, false);
+        yield* activate(start, false);
+        const dialog = page.getByRole("dialog");
+        yield* activate(
+          dialog.getByRole("button", { exact: true, name: "Practice" }),
+          false
+        );
+        yield* activate(
+          dialog.getByRole("link", { exact: true, name: "Start practice" }),
+          false
+        );
         const first = questionArticle(page, 1);
         const check = first.getByRole("button", {
           exact: true,
