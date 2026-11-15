@@ -64,6 +64,7 @@ import { openRepositoryCompiler, parseSources } from "#scripts/check/source";
 import { inspectTables } from "#scripts/check/tables";
 import { inspectTailwindSource } from "#scripts/check/tailwind";
 import { inspectToastSource } from "#scripts/check/toasts";
+import { inspectVisualSource } from "#scripts/check/visuals";
 import { runEntry } from "#scripts/entry";
 import { writeError, writeOutput } from "#scripts/output";
 
@@ -138,6 +139,7 @@ const inspectSources = Effect.fn("RepositoryPolicy.inspectSources")(function* (
         inspectRefsSource(file, sourceFile),
         inspectSealedSource(file, sourceFile),
         inspectSectionSource(file, sourceFile),
+        inspectVisualSource(file, sourceFile),
         inspectModuleSize(file, sourceFile),
       ])
     ),
