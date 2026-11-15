@@ -2,7 +2,10 @@ import { PaginationOptions as PaginationOptionsSchema } from "@confect/core/Pagi
 import { PaginationResult as PaginationResultSchema } from "@confect/core/PaginationResult";
 import { ActiveAppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
 import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
-import { publicTryoutSetValidator } from "@repo/backend/confect/tryouts/queries/model";
+import {
+  publicTryoutSectionValidator,
+  publicTryoutSetValidator,
+} from "@repo/backend/confect/tryouts/queries/model";
 import { tryoutRouteKeyValidator } from "@repo/backend/confect/tryouts/route";
 import {
   setFilterValidator,
@@ -28,12 +31,19 @@ export const runningAttemptValidator = Schema.Struct({
   attemptId: IdSchema("tryoutAttempts"),
   publicPath: Schema.String,
 });
+/**
+ * One set of a track as its table and its pane show it: the set, the learner's progress, the section a start
+ * enters, and the sections a visitor sees, so the pane names its parts and starts it without reading the set
+ * page.
+ */
 const trackSetValidator = Schema.Struct({
   ...publicTryoutSetValidator.fields,
   attemptStatus: Schema.Union([Schema.Null, tryoutStatusValidator]),
   durationSeconds: Schema.Finite,
+  entrySection: publicTryoutSectionValidator,
   publishedScore: Schema.Union([Schema.Finite, Schema.Null]),
   runningAttempt: Schema.Union([Schema.Null, runningAttemptValidator]),
+  sections: Schema.Array(publicTryoutSectionValidator),
 });
 export const trackSetPageValidator = Schema.Struct({
   ...PaginationResultSchema(trackSetValidator).fields,

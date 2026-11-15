@@ -297,6 +297,10 @@ test("guest auth link preserves a dynamic query and hash for native actions", as
           expect(page).toHaveURL(new URL(intent, page.url()).toString())
         );
 
+        // The pointer that reached the link preloaded the sign-in page. A reload
+        // cancels the reads still on their way, and WebKit throws each one as an
+        // uncaught error, so the reload waits until the preload has read them.
+        yield* Effect.promise(() => page.waitForLoadState("networkidle"));
         yield* Effect.promise(() =>
           page.reload({ waitUntil: "domcontentloaded" })
         );
@@ -388,14 +392,18 @@ test("guest reaches authentication only when starting a public tryout", async ({
         yield* Effect.promise(() =>
           expect(set).toHaveAttribute("href", setHref)
         );
-        // The row opens its set through its own handler, which the track page
-        // only has once React takes the row over.
+        // The row opens its set beside the table through its own handler, which the
+        // track page only has once React takes the row over. A set the visitor has not
+        // started keeps the address on the track.
         yield* Effect.promise(() => waitUntilTakenOver(setRow));
         yield* Effect.promise(() => setRow.click());
         yield* Effect.promise(() =>
-          expect(page).toHaveURL(new URL(setHref, page.url()).toString(), {
-            timeout: readinessTimeoutMilliseconds,
-          })
+          expect(
+            page.getByRole("heading", { exact: true, name: "Set 1" })
+          ).toBeVisible({ timeout: readinessTimeoutMilliseconds })
+        );
+        yield* Effect.promise(() =>
+          expect(page).toHaveURL(new URL(trackHref, page.url()).toString())
         );
 
         const start = page.getByRole("button", {
