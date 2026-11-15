@@ -71,7 +71,7 @@ const secondsOf = (from: DateTime.DateTime, to: DateTime.DateTime) =>
 /** The steps of the gate, which pass only when every one of them does. */
 const GATE_STEPS = ["Gate static", "Gate www", "Gate backend"];
 
-/** The jobs of a run that ran: the gate job and one job per engine, less the part a dispatch turned off. */
+/** The jobs of a run that ran: the gate job and the proof's machines, less the part a dispatch turned off. */
 const jobsOf = (run: RunView) =>
   Arr.filter(run.jobs, (job) => job.conclusion !== "skipped");
 
@@ -254,7 +254,7 @@ const awaitRun = Effect.fn("proof.awaitRun")(function* (
 
 /**
  * The result of each engine that a completed run uploaded, one artifact per
- * engine job, which the CLI writes into a folder named after the artifact; an
+ * engine, which the CLI writes into a folder named after the artifact; an
  * engine whose build failed uploaded none.
  */
 const readResults = Effect.fn("proof.readResults")(function* (id: number) {
