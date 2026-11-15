@@ -5,6 +5,7 @@ import {
   BookOpen01Icon,
   CactusIcon,
   CloudAngledRainIcon,
+  FishingRodIcon,
   FlowerIcon,
   FootprintsIcon,
   Leaf01Icon,
@@ -24,9 +25,10 @@ import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
 import { useTranslations } from "use-intl";
 import { IslandBook } from "@/components/island/book";
-import { BlockIcon } from "@/components/island/icon";
+import { BlockIcon, SpeciesIcon } from "@/components/island/icon";
 import { panelVariants } from "@/components/island/panel";
 import { useGame } from "@/components/island/store";
+import { SPECIES } from "@/lib/island/fauna/species";
 import { writeMuted } from "@/lib/island/settings";
 
 /** One square of the hotbar or the HUD's buttons, lit when it is held. */
@@ -97,6 +99,13 @@ function Hotbar() {
         onPress={() => setTool("walk")}
       >
         <HugeIcons className="size-6" icon={FootprintsIcon} />
+      </HudButton>
+      <HudButton
+        held={tool === "fish"}
+        label={t("rod")}
+        onPress={() => setTool("fish")}
+      >
+        <HugeIcons className="size-6" icon={FishingRodIcon} />
       </HudButton>
       {Arr.map(
         Arr.makeBy(hotbar.length, (number) => number),
@@ -236,6 +245,34 @@ function Progress() {
   );
 }
 
+/** A fish the learner just caught, its picture and its name, gone after a few seconds (ADR 0047, D15). */
+function Catch() {
+  const t = useTranslations("Island");
+  const caught = useGame((state) => state.caught);
+  const clearCaught = useGame((state) => state.clearCaught);
+  return caught === null ? null : (
+    <p
+      className={panelVariants({
+        className:
+          "pointer-events-auto mx-auto flex max-w-sm items-center gap-2 px-3 py-2 text-sm font-semibold",
+      })}
+      ref={(node) => {
+        if (node === null) {
+          return;
+        }
+        const timer = window.setTimeout(clearCaught, NOTICE_MS);
+        return () => window.clearTimeout(timer);
+      }}
+      role="status"
+    >
+      <span className="size-10 shrink-0">
+        <SpeciesIcon index={caught} />
+      </span>
+      {t("caught", { name: t(`animal-${SPECIES[caught].key}`) })}
+    </p>
+  );
+}
+
 /** How long a notice stays before it fades. */
 const NOTICE_MS = 4000;
 
@@ -289,6 +326,7 @@ export function IslandHud() {
         <History />
       </header>
       <Notice />
+      <Catch />
       <footer className="mt-auto flex justify-center">
         <Hotbar />
       </footer>

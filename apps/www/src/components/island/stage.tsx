@@ -1,5 +1,6 @@
 "use client";
 
+import { idOf } from "@repo/backend/confect/island/blocks";
 import { SPAN } from "@repo/backend/confect/island/world";
 import { Array as Arr, DateTime, HashSet, Option, Result } from "effect";
 import { use, useState } from "react";
@@ -11,12 +12,21 @@ import {
   GameStoreContext,
   heldOf,
 } from "@/components/island/store";
+import { SLOTS } from "@/lib/island/atlas";
 import {
   clampOrbit,
   easeOrbit,
   type Orbit,
   openingOrbit,
 } from "@/lib/island/camera";
+import {
+  BITE,
+  type Cast,
+  castOf,
+  catchOf,
+  dipOf,
+  reelOf,
+} from "@/lib/island/fishing";
 import type { Point } from "@/lib/island/gesture";
 import { itemPlanOf, turnOf } from "@/lib/island/items";
 import { type Animal, herdOf, herdQuads, wander } from "@/lib/island/life";
@@ -27,7 +37,7 @@ import { pathOf } from "@/lib/island/path";
 import { planOf } from "@/lib/island/plan";
 import { castRay } from "@/lib/island/ray";
 import { hourOf, lightOf } from "@/lib/island/sky";
-import { roam, wildOf, wildVertices } from "@/lib/island/wild";
+import { roam, standingQuad, wildOf, wildVertices } from "@/lib/island/wild";
 import { CHUNKS, SEA_LEVEL } from "@/lib/island/world";
 
 /**
@@ -65,6 +75,9 @@ export function IslandStage({ size }: { size: number }) {
     />
   );
 }
+
+/** The water block, where a line is cast. */
+const WATER_BLOCK = idOf("water");
 
 /** How fast the learner's fox walks, in cells a second. */
 const WALK_SPEED = 3.2;
@@ -160,6 +173,45 @@ function start(
     );
   };
 
+  // A line in the water (ADR 0047, D15): a float until a fish bites and the learner reels in.
+  let cast = Option.none<Cast>();
+  let casts = 0;
+  let warned = false;
+
+  /** Casts into the water a press hit, or reels in the line already out. */
+  const fish = (point: Point) => {
+    const state = store.getState();
+    const now = performance.now() / 1000;
+    needsDraw = true;
+    if (Option.isSome(cast)) {
+      if (reelOf(cast.value, now) === "caught") {
+        state.setNotice(null);
+        state.addCatch(catchOf(state.seed, casts));
+      } else {
+        state.setNotice("escaped");
+      }
+      cast = Option.none();
+      return;
+    }
+    Option.map(hitAt(point), (hit) => {
+      if (hit.block !== WATER_BLOCK) {
+        state.setNotice("far");
+        return;
+      }
+      Result.match(
+        castOf([walker.x, walker.z], hit.hit, state.seed, casts, now),
+        {
+          onFailure: () => state.setNotice("far"),
+          onSuccess: (line) => {
+            cast = Option.some(line);
+            casts += 1;
+            warned = false;
+          },
+        }
+      );
+    });
+  };
+
   /** Sends the fox along the shortest way to a column, or says no way leads there. */
   const walkTo = (column: readonly [number, number]) => {
     Option.match(
@@ -186,6 +238,10 @@ function start(
   const act = (point: Point, remove: boolean) => {
     const state = store.getState();
     aim = Option.none();
+    if (state.tool === "fish" && !remove) {
+      fish(point);
+      return;
+    }
     if (state.tool === "walk" && !remove) {
       Option.map(hitAt(point), (hit) => walkTo([hit.hit[0], hit.hit[2]]));
       return;
@@ -230,7 +286,10 @@ function start(
     const falling =
       weather === "rain" || weather === "storm" || weather === "snow";
     const waterDue = now - lastWater > (falling ? 33 : 66);
-    if (!(needsDraw || waterDue || route.length > 0) || document.hidden) {
+    if (
+      !(needsDraw || waterDue || route.length > 0 || Option.isSome(cast)) ||
+      document.hidden
+    ) {
       return;
     }
     lastWater = now;
@@ -263,18 +322,39 @@ function start(
       canvas.dataset.player = `${Math.floor(walker.x)},${Math.floor(walker.z)}`;
     });
     canvas.dataset.walking = route.length > 0 ? "true" : "false";
+    Option.map(cast, (line) => {
+      const seconds = now / 1000;
+      if (seconds >= line.bite && !warned) {
+        warned = true;
+        store.getState().setNotice("bite");
+      }
+      if (seconds > line.bite + BITE) {
+        cast = Option.none();
+        store.getState().setNotice("escaped");
+      }
+    });
+    canvas.dataset.fishing = Option.isSome(cast) ? "true" : "false";
+    const float = Option.match(cast, {
+      onNone: () => [],
+      onSome: (line) =>
+        standingQuad(
+          SLOTS.bobber,
+          [line.x, line.y - 0.3 + dipOf(line, now / 1000), line.z],
+          0.5,
+          orbit.yaw
+        ),
+    });
+    // The fox faces where it walks, or its float while it fishes.
+    const facing = Option.orElse(
+      Option.map(next, ([cx, cz]) => [cx + 0.5, cz + 0.5] as const),
+      () => Option.map(cast, (line) => [line.x, line.z] as const)
+    );
     const fox: Animal = {
       kind: "fox",
       rest: route.length > 0 ? 0 : 1,
       steps: 0,
-      tx: Option.match(next, {
-        onNone: () => walker.x,
-        onSome: ([cx]) => cx + 0.5,
-      }),
-      tz: Option.match(next, {
-        onNone: () => walker.z,
-        onSome: ([, cz]) => cz + 0.5,
-      }),
+      tx: Option.getOrElse(facing, () => [walker.x, walker.z] as const)[0],
+      tz: Option.getOrElse(facing, () => [walker.x, walker.z] as const)[1],
       x: walker.x,
       z: walker.z,
     };
@@ -285,7 +365,10 @@ function start(
         size,
         orbit.yaw,
         now / 1000,
-        wildVertices(cells, wild, size, orbit.yaw, now / 1000)
+        Arr.appendAll(
+          wildVertices(cells, wild, size, orbit.yaw, now / 1000),
+          float
+        )
       )
     );
     const hour = hourOf(DateTime.nowUnsafe(), DateTime.zoneMakeLocal());

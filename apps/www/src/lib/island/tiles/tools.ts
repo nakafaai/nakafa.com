@@ -7,6 +7,8 @@ const LEGEND: Readonly<Record<string, Ink>> = {
   m: ["metal", 3],
   o: ["ink", 0],
   p: ["wool", 2],
+  r: ["roof", 2],
+  s: ["plaster", 3],
   w: ["wood", 2],
 };
 
@@ -77,6 +79,56 @@ export function feetTile() {
       ".........o.o.o..",
       "................",
       "................",
+      "................",
+      "................",
+      "................",
+    ],
+    LEGEND
+  );
+}
+
+/** A fishing rod, its tip at the top right where the line leaves it. */
+export function rodTile() {
+  return rowsTile(
+    [
+      "..............oo",
+      ".............owo",
+      "............owo.",
+      "...........owo..",
+      "..........owo...",
+      ".........owo....",
+      "........owo.....",
+      ".......owo......",
+      "......owo.......",
+      ".....obbo.......",
+      "....obbbo.......",
+      "...obbbo........",
+      "..obbbo.........",
+      "..oooo..........",
+      "................",
+      "................",
+    ],
+    LEGEND
+  );
+}
+
+/** A float on the water: red over white, small enough to bob on a wave. */
+export function bobberTile() {
+  return rowsTile(
+    [
+      "................",
+      "................",
+      "................",
+      "................",
+      ".......oo.......",
+      ".......oo.......",
+      "......orro......",
+      ".....orrrro.....",
+      ".....orrrro.....",
+      ".....osssso.....",
+      ".....osssso.....",
+      "......osso......",
+      ".......oo.......",
       "................",
       "................",
       "................",

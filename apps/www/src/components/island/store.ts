@@ -10,10 +10,17 @@ import type { Weather } from "@/lib/island/sky";
 import type { Cells } from "@/lib/island/world";
 
 /** The hand the learner plays with: one block placed per tap, a ready-made item, the pickaxe that removes a block, or their own feet. */
-export type Tool = "place" | "item" | "remove" | "walk";
+export type Tool = "place" | "item" | "remove" | "walk" | "fish";
 
 /** What the game tells the learner: a build the server refused, edits another device made first, or an item with no room where it was pressed. */
-export type Notice = "path" | "refused" | "room" | "stale";
+export type Notice =
+  | "bite"
+  | "escaped"
+  | "far"
+  | "path"
+  | "refused"
+  | "room"
+  | "stale";
 
 /** The shelves of the block book: ready-made items, plants, blocks, and the field guide of animals. */
 export const Shelf = Schema.Literals(["items", "plants", "blocks", "animals"]);
@@ -39,14 +46,22 @@ const HISTORY = 64;
  * readers that draw it.
  */
 interface GameStore {
+  /** Adds a catch, which the HUD shows and the field guide marks. */
+  addCatch: (species: number) => void;
   /** Writes edits into the world as one step the learner can undo. */
   apply: (edits: readonly Edit[]) => void;
   /** Puts a block into a hotbar slot. */
   assign: (slot: number, key: BlockKey) => void;
   book: boolean;
+  /** The species the learner caught today, by their place in the catalog, the latest last. */
+  catches: readonly number[];
+  /** The catch the HUD shows now, none once it faded. */
+  caught: number | null;
   cells: Cells;
   /** Holds a hotbar slot, and the block in it. */
   choose: (slot: number) => void;
+  /** Lets the catch the HUD shows fade. */
+  clearCaught: () => void;
   /** The chunks whose meshes no longer match the world. */
   dirty: HashSet.HashSet<number>;
   future: readonly (readonly Edit[])[];
@@ -160,6 +175,14 @@ export function createGameStore(setup: GameSetup) {
       choose: (slot) => set({ slot, tool: "place" }),
       dirty: HashSet.empty(),
       future: [],
+      addCatch: (species) =>
+        set((state) => ({
+          catches: Arr.append(state.catches, species),
+          caught: species,
+        })),
+      catches: [],
+      caught: null,
+      clearCaught: () => set({ caught: null }),
       hold: (item) => set({ book: false, item, tool: "item" }),
       item: "house",
       minute: 0,
