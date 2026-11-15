@@ -7,7 +7,11 @@ import {
 import type { AccessDenied } from "@repo/backend/confect/access/errors";
 import { type Batch, encodeBatch } from "@repo/backend/confect/editor/batch";
 import { STEP_KEEP_DELAY } from "@repo/backend/confect/editor/prune";
-import { encodeStep, type Step } from "@repo/backend/confect/editor/step";
+import {
+  type Step,
+  StepTextSchema,
+  UncheckedStepSchema,
+} from "@repo/backend/confect/editor/step";
 import { nestBlockquotes, paragraphOf } from "@repo/backend/test/editor/nodes";
 import {
   grantRole,
@@ -17,6 +21,17 @@ import {
 } from "@repo/backend/test/tenancy";
 import { encodeJsonText, JsonTextSchema } from "@repo/utilities/json";
 import { Array as Arr, Duration, Effect, Schema } from "effect";
+
+/**
+ * Writes a step as its JSON text. The depth of the slice is checked on the typed
+ * input before the encoder walks it, so a deep slice fails as a schema issue.
+ */
+export const encodeStep = Effect.fn("editor.step.encode")(function* (
+  step: Step
+) {
+  yield* Schema.decodeEffect(UncheckedStepSchema)(step);
+  return yield* Schema.encodeEffect(StepTextSchema)(step);
+});
 
 /** The school's address in every call of the editor tests. */
 export const nf = slugOf("nf");

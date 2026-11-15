@@ -156,6 +156,15 @@ type ProjectShape = Omit<
   "dependencies" | "name"
 >;
 
+/**
+ * Firefox on a machine without a GPU, such as a proof runner, blocks WebGL by
+ * default, so a scene that needs WebGL2 would fall back there and nowhere else.
+ * Every Firefox project forces it on, as Chromium and WebKit already render it.
+ */
+const FIREFOX_USE = {
+  launchOptions: { firefoxUserPrefs: { "webgl.force-enabled": true } },
+};
+
 /** The engines that every UI suite runs in, which a proof job selects one of. */
 const ENGINES = ["chromium", "firefox", "webkit"] as const;
 type Engine = (typeof ENGINES)[number];
@@ -176,7 +185,11 @@ function inEngine(
       ...CHROMIUM_TESTS,
       SCHOOL_TESTS,
     ],
-    use: { ...project.use, browserName: engine },
+    use: {
+      ...project.use,
+      browserName: engine,
+      ...(engine === "firefox" ? FIREFOX_USE : {}),
+    },
   };
 }
 
@@ -260,7 +273,7 @@ const PROJECTS = {
       ...TIMING_TESTS,
     ],
     testMatch: SCHOOL_TESTS,
-    use: devices["Desktop Firefox"],
+    use: { ...devices["Desktop Firefox"], ...FIREFOX_USE },
   },
   "school-safari": {
     testIgnore: [
@@ -297,7 +310,7 @@ const PROJECTS = {
   "school-timing-firefox": {
     testIgnore: CHROMIUM_SCHOOL_TESTS,
     testMatch: SCHOOL_TIMING_TESTS,
-    use: devices["Desktop Firefox"],
+    use: { ...devices["Desktop Firefox"], ...FIREFOX_USE },
     workers: 1,
   },
   "school-timing-safari": {

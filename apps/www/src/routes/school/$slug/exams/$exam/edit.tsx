@@ -3,6 +3,7 @@ import { Option } from "effect";
 import type { ReactElement } from "react";
 import { canOpenExams } from "@/components/tenant/exams/access";
 import { ExamEditor } from "@/components/tenant/exams/editor";
+import { SchoolPageNotFound } from "@/components/tenant/notfound";
 import { guardSchoolPage } from "@/lib/tenant/guard";
 import { readExamId } from "@/lib/tenant/params";
 
@@ -11,11 +12,12 @@ import { readExamId } from "@/lib/tenant/params";
  * address to an exam is not found for every viewer.
  */
 export const Route = createFileRoute("/school/$slug/exams/$exam/edit")({
-  ...guardSchoolPage({
+  beforeLoad: guardSchoolPage({
     opens: canOpenExams,
     reads: (params: { readonly exam: string }) =>
       Option.all({ examId: readExamId(params.exam) }),
   }),
+  notFoundComponent: SchoolPageNotFound,
   component: SchoolExamEditPage,
 });
 

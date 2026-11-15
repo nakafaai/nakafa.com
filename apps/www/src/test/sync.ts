@@ -1,10 +1,11 @@
 import { type Batch, decodeBatch } from "@repo/backend/confect/editor/batch";
 import { foldSteps, snapshotNode } from "@repo/backend/confect/editor/fold";
-import { decodeStep, encodeStep } from "@repo/backend/confect/editor/step";
+import { decodeStep } from "@repo/backend/confect/editor/step";
 import type {
   SinceReply,
   SubmitReply,
 } from "@repo/backend/confect/editor/view";
+import { encodeStep } from "@repo/backend/test/editor";
 import { encodeJsonText } from "@repo/utilities/json";
 import { type Node, Schema as ProseSchema } from "@tiptap/pm/model";
 import { EditorState } from "@tiptap/pm/state";

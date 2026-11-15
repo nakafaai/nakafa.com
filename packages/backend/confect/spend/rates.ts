@@ -1,4 +1,3 @@
-import { CREDIT_UNIT_MICRO_USD } from "@repo/backend/confect/credits/constants";
 import { languageModel } from "@repo/backend/confect/gateway/model";
 import type { Purpose } from "@repo/backend/confect/gateway/purpose";
 import { Schema } from "effect";
@@ -198,9 +197,4 @@ export function searchCost(results: number) {
 /** What one Firecrawl page read costs, with the estimate margin. */
 export function scrapeCost() {
   return buffered(rates.firecrawl.scrapeCredits * rates.firecrawl.credit);
-}
-
-/** The credits `microUsd` of direct AI cost is worth: one credit per US$0.002, rounded up. */
-export function creditsOf(microUsd: number) {
-  return Math.ceil(microUsd / CREDIT_UNIT_MICRO_USD);
 }

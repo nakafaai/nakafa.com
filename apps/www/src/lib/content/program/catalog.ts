@@ -7,7 +7,6 @@ import {
   ProgramTranslationSchema,
 } from "@nakafa/aksara-contracts/program/spec";
 import contentRelease from "@repo/backend/confect/_generated/refs/contentRelease";
-import { PROGRAM_FEATURED_SUBJECT_LIMIT } from "@repo/backend/confect/contentRelease/program/limits";
 import { Array as Arr, Effect, Option, Schema } from "effect";
 import type { Locale } from "use-intl";
 import {
@@ -101,46 +100,3 @@ const PublishedProgramCatalogSchema = Schema.Struct({
 
 /** Complete bounded program catalog used by root curriculum navigation. */
 type PublishedProgramCatalog = typeof PublishedProgramCatalogSchema.Type;
-
-/**
- * Reads the authenticated featured subjects, one route per subject, for the
- * About feature list. The content store holds the query result once for each
- * release and locale.
- */
-export const readPublishedProgramSubjects = Effect.fn(
-  "NakafaProgram.readPublishedSubjects"
-)(function* (locale: Locale) {
-  const appLocale = AppLocaleSchema.make(locale);
-  const result = yield* querySnapshotContentStore(
-    "program",
-    contentRelease.program.subjects,
-    {
-      appLocale,
-    }
-  );
-  if (
-    !result.managed ||
-    result.routeJson.length > PROGRAM_FEATURED_SUBJECT_LIMIT
-  ) {
-    return yield* new PublishedProjectionError({
-      appLocale,
-      publicPath: "curricula",
-    });
-  }
-  return yield* Effect.forEach(result.routeJson, (source) =>
-    Effect.gen(function* () {
-      const route = yield* decodeCurriculumJson(source, locale, "curricula");
-      if (
-        route.appLocale !== appLocale ||
-        route.level !== "subject" ||
-        !route.sitemap
-      ) {
-        return yield* new PublishedProjectionError({
-          appLocale,
-          publicPath: route.publicPath,
-        });
-      }
-      return route;
-    })
-  );
-});

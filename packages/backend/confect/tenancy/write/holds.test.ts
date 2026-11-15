@@ -1,14 +1,14 @@
 import { GenericId } from "@confect/core";
 import { DatabaseSchema } from "@confect/server";
 import { describe, expect, it } from "@effect/vitest";
+import type { TableNames } from "@repo/backend/confect/_generated/id";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import { DatabaseWriter } from "@repo/backend/confect/_generated/services";
+import type { Reference } from "@repo/backend/confect/tenancy/hold";
 import { PROMOTION_SCAN } from "@repo/backend/confect/tenancy/promotion/hold";
 import {
   cohortHold,
   cohortHolders,
-  coveredReferences,
-  keptTables,
   periodHold,
   periodHolders,
 } from "@repo/backend/confect/tenancy/write/holds";
@@ -28,6 +28,24 @@ import {
   Record as Rec,
   type SchemaAST,
 } from "effect";
+
+/**
+ * Period fields that no read needs, each beside the reference that covers it: the row's period is always the period of
+ * the cohort or class it belongs to, and that cohort or class holds the period while the row holds it.
+ */
+/**
+ * Tables whose references may outlive their subject by design: the journal keeps every removal it records (ADR 0041),
+ * and an inbox row reads its subject when it is opened and shows nothing of one that is gone (ADR 0027).
+ */
+const keptTables: readonly TableNames[] = ["journalEntries", "notifications"];
+
+const coveredReferences: Readonly<Record<Reference, Reference>> = {
+  "classTeachers.periodId": "classes.periodId",
+  "graduationLetters.periodId": "tenantCohorts.periodId",
+  "reportCards.periodId": "tenantCohorts.periodId",
+  "tenantAssignments.periodId": "tenantCohorts.periodId",
+  "tenantCohortMembers.periodId": "tenantCohorts.periodId",
+};
 
 const SUBJECTS = ["tenantCohorts", "tenantPeriods"];
 

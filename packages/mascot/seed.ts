@@ -74,23 +74,3 @@ export function cast(seed: string, count: number, skip = 0) {
   });
   return Arr.take(Arr.drop(all, skip), count);
 }
-
-/** One mascot per animal, in the order of the animals, for a gallery. */
-export function gallery() {
-  return Arr.map(Animal.literals, (animal) => {
-    const grounds = groundsOf(animal, 0);
-    return Mascot.make({
-      animal,
-      eyes: "open",
-      ground: Arr.getUnsafe(
-        grounds,
-        hashed(`${animal}#ground`) % grounds.length
-      ),
-      palette: 0,
-      pose: Arr.getUnsafe(
-        POSE_ORDER,
-        hashed(`${animal}#pose`) % POSE_ORDER.length
-      ),
-    });
-  });
-}
