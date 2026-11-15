@@ -29,6 +29,7 @@ import {
 } from "@/lib/island/camera";
 import { hoeOf, ripeningOf, sownOf, waterOf } from "@/lib/island/farming";
 import type { Point } from "@/lib/island/gesture";
+import { islesMesh } from "@/lib/island/isles";
 import { itemPlanOf, turnOf } from "@/lib/island/items";
 import { type Animal, flatQuads, herdOf, wander } from "@/lib/island/life";
 import { changedChunks, glowOf } from "@/lib/island/light";
@@ -122,6 +123,7 @@ function start(
     }
     needsDraw = true;
   };
+  painter.isles(islesMesh(store.getState().seed));
   remesh(Arr.makeBy(CHUNKS * CHUNKS, (index) => index));
 
   /** Shows the cursor of the hand the learner holds, or a grabbing hand while they drag the world. */

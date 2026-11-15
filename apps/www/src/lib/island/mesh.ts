@@ -20,7 +20,7 @@ const SHADE = { bottom: 0.55, top: 1, x: 0.8, z: 0.68 } as const;
 const OCCLUSION = [0.5, 0.68, 0.84, 1] as const;
 
 /** A face's normal and its two edges, in the order that winds it counter-clockwise from outside. */
-const FACES = [
+export const FACES = [
   { n: [1, 0, 0], shade: SHADE.x, u: [0, 0, -1], v: [0, 1, 0], side: true },
   { n: [-1, 0, 0], shade: SHADE.x, u: [0, 0, 1], v: [0, 1, 0], side: true },
   { n: [0, 0, 1], shade: SHADE.z, u: [1, 0, 0], v: [0, 1, 0], side: true },
