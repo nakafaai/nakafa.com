@@ -71,7 +71,7 @@ function BacterialSelectParts({
 }) {
   return (
     <>
-      <SelectTrigger aria-label={label} size="sm">
+      <SelectTrigger aria-label={label}>
         <HugeIcons className="text-muted-foreground" icon={icon} />
         <SelectValue labels={Arr.map(items, (item) => item.label)} />
       </SelectTrigger>
