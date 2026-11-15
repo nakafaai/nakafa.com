@@ -1,5 +1,6 @@
 import type { Ref } from "@confect/core";
 import {
+  type PaginatedQueryItem,
   PaginatedQueryResult,
   QueryResult,
   usePaginatedQuery,
@@ -15,7 +16,8 @@ import {
 } from "@repo/design-system/components/ui/sidebar-menu";
 import type { Mascot } from "@repo/mascot/code";
 import { useMatchRoute } from "@tanstack/react-router";
-import { Array as Arr } from "effect";
+import { Array as Arr, MutableHashMap, Option } from "effect";
+import { createContext, type ReactNode, use, useEffect, useState } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { markOf, withMarks } from "@/components/tenant/classes/marks";
@@ -24,10 +26,43 @@ import { useTenant, useViewerQuery } from "@/components/tenant/context";
 import { TenantSidebarGroup } from "@/components/tenant/group";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { isDenied } from "@/components/tenant/refusal";
+import { type PreloadedPage, readFirstPage } from "@/lib/data/paginated";
 import { Link } from "@/lib/routing/link";
 
 /** How many of a unit's classes the sidebar loads at a time, as the reader scrolls to them. */
 const PAGE_SIZE = 25;
+
+/**
+ * The classes the school sidebar last drew for each period it lists. The sidebar draws its groups twice, beside the
+ * page on a wide screen and in a sheet on a phone, and the sheet mounts its copy as it opens, when a new paginated
+ * read of a unit's classes holds no rows yet. The copy beside the page stays mounted, hidden on a phone, and keeps
+ * the classes it drew here, so the sheet's copy draws them in its first frame while its own read arrives with the
+ * same rows: the phone's sidebar opens whole, with no group added under the reader's eyes.
+ */
+const DrawnClassesContext = createContext<MutableHashMap.MutableHashMap<
+  string,
+  PreloadedPage<PaginatedQueryItem<typeof classroom.classes.list>>
+> | null>(null);
+
+/** Holds the classes the school sidebar drew, around both of its copies. */
+export function DrawnClasses({ children }: { children: ReactNode }) {
+  const [drawn] = useState(() =>
+    MutableHashMap.empty<
+      string,
+      PreloadedPage<PaginatedQueryItem<typeof classroom.classes.list>>
+    >()
+  );
+  return <DrawnClassesContext value={drawn}>{children}</DrawnClassesContext>;
+}
+
+/** Reads the classes the sidebar drew. It throws outside the school's frame, which always provides them. */
+function useDrawnClasses() {
+  const drawn = use(DrawnClassesContext);
+  if (drawn === null) {
+    throw new Error("useDrawnClasses must be used within DrawnClasses");
+  }
+  return drawn;
+}
 
 /**
  * The Classes group of the school sidebar: one entry per class the viewer teaches or
@@ -102,6 +137,50 @@ function TenantSchoolClasses() {
 }
 
 /**
+ * The active period of a unit and its classes, a page at a time. Until the read has its first page, the classes the
+ * sidebar last drew for the period stand in, and each page the read holds is kept for the copy that mounts next.
+ */
+function useUnitClasses(
+  unitId: Ref.Returns<typeof tenancy.viewer.get>["units"][number]["id"]
+) {
+  const { slug } = useTenant();
+  const drawn = useDrawnClasses();
+  const isSettled = useConvexAuth((auth) => !auth.isLoading);
+  const period = useQuery(
+    tenancy.cohorts.activePeriod,
+    isSettled ? { slug, unitId } : "skip"
+  );
+  const periodId = QueryResult.isSuccess(period) ? period.value : null;
+  const live = usePaginatedQuery(
+    classroom.classes.list,
+    periodId === null ? "skip" : { periodId, slug },
+    { initialNumItems: PAGE_SIZE }
+  );
+
+  useEffect(() => {
+    if (
+      periodId === null ||
+      PaginatedQueryResult.isLoadingFirstPage(live) ||
+      PaginatedQueryResult.isFailure(live)
+    ) {
+      return;
+    }
+    MutableHashMap.set(drawn, periodId, {
+      isDone: PaginatedQueryResult.isExhausted(live),
+      page: live.results,
+    });
+  }, [drawn, live, periodId]);
+
+  return {
+    pagination: readFirstPage(
+      live,
+      periodId === null ? Option.none() : MutableHashMap.get(drawn, periodId)
+    ),
+    period,
+  };
+}
+
+/**
  * The active classes of a unit's active period that the viewer does not already find under their
  * own, a page at a time. A unit the viewer does not lead refuses the list, so it draws nothing, and
  * so does a unit with no active period.
@@ -111,19 +190,8 @@ function TenantUnitClasses({
 }: {
   unit: Ref.Returns<typeof tenancy.viewer.get>["units"][number];
 }) {
-  const { slug } = useTenant();
   const mine = useMyClasses();
-  const isSettled = useConvexAuth((auth) => !auth.isLoading);
-  const period = useQuery(
-    tenancy.cohorts.activePeriod,
-    isSettled ? { slug, unitId: unit.id } : "skip"
-  );
-  const periodId = QueryResult.isSuccess(period) ? period.value : null;
-  const pagination = usePaginatedQuery(
-    classroom.classes.list,
-    periodId === null ? "skip" : { periodId, slug },
-    { initialNumItems: PAGE_SIZE }
-  );
+  const { pagination, period } = useUnitClasses(unit.id);
 
   if (QueryResult.isFailure(period)) {
     if (isDenied(period.error)) {
