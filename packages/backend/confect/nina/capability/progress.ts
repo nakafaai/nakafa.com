@@ -38,9 +38,23 @@ const CUT_SHORT =
 const STEP_LIMIT =
   "This run reached its step limit before it finished. Use only what it states, tell the learner what it could not cover, and do not invent the rest.";
 
-/** What a card that never finished shows instead: failed, and why. */
+/**
+ * What Nina reads when a run broke on a defect. The log keeps the cause, and
+ * neither Nina nor the learner sees it: the AI SDK sends a failed tool's error
+ * text to the client as the model received it.
+ */
+const BROKE =
+  "This failed before it finished. Use only the evidence already available, tell the learner what this attempt could not verify, and do not invent content or claim that anything is absent or does not exist.";
+
+/** What a card still loading shows when its run was cut at its deadline: failed, and why. */
 const ABANDONED = {
   error: "It took too long to finish.",
+  status: "error",
+} as const;
+
+/** What a card still loading shows when its run broke on a defect. */
+const BROKEN = {
+  error: "It failed before it finished.",
   status: "error",
 } as const;
 
@@ -110,17 +124,30 @@ export function streamCapability<E, R>(
             text: "",
           });
         });
+        const end = (ending: typeof ABANDONED | typeof BROKEN) =>
+          Arr.forEach(Arr.fromIterable(artifacts), ([key, artifact]) =>
+            MutableHashMap.set(artifacts, key, abandon(artifact, ending))
+          );
         const timedOut = Effect.gen(function* () {
           yield* Effect.logWarning("Nina capability ran out of time", {
             capability,
           });
-          Arr.forEach(Arr.fromIterable(artifacts), ([key, artifact]) =>
-            MutableHashMap.set(artifacts, key, abandon(artifact))
-          );
+          end(ABANDONED);
           return { outcome: "failed" as const, text: TIMED_OUT };
+        });
+        const broke = Effect.fn("nina.capability.broke")(function* (
+          defect: unknown
+        ) {
+          yield* Effect.logError("Nina capability broke", {
+            capability,
+            defect,
+          });
+          end(BROKEN);
+          return { outcome: "failed" as const, text: BROKE };
         });
 
         yield* boundCapability(run(publish), timedOut).pipe(
+          Effect.catchDefect(broke),
           Effect.tap(({ text, outcome }) => {
             const cards = Arr.fromIterable(MutableHashMap.values(artifacts));
             const settled = settleOutcome(outcome, cards, capability);
@@ -163,26 +190,29 @@ function keyOf(artifact: CapabilityArtifact) {
 }
 
 /**
- * Ends a card that was still loading when its run was cut: it shows as failed,
- * and every card that already settled stays as it is.
+ * Ends a card that was still loading when its run was cut or broke: it shows
+ * as failed, and every card that already settled stays as it is.
  */
-function abandon(artifact: CapabilityArtifact): CapabilityArtifact {
+function abandon(
+  artifact: CapabilityArtifact,
+  ending: typeof ABANDONED | typeof BROKEN
+): CapabilityArtifact {
   if (artifact.type === "data-math") {
     return artifact.data.status === "loading"
-      ? { ...artifact, data: { ...artifact.data, ...ABANDONED } }
+      ? { ...artifact, data: { ...artifact.data, ...ending } }
       : artifact;
   }
   if (artifact.type === "data-nakafa") {
     return artifact.data.status === "loading"
-      ? { ...artifact, data: { ...artifact.data, ...ABANDONED } }
+      ? { ...artifact, data: { ...artifact.data, ...ending } }
       : artifact;
   }
   if (artifact.type === "data-scrape-url") {
     return artifact.data.status === "loading"
-      ? { ...artifact, data: { ...artifact.data, ...ABANDONED } }
+      ? { ...artifact, data: { ...artifact.data, ...ending } }
       : artifact;
   }
   return artifact.data.status === "loading"
-    ? { ...artifact, data: { ...artifact.data, ...ABANDONED } }
+    ? { ...artifact, data: { ...artifact.data, ...ending } }
     : artifact;
 }

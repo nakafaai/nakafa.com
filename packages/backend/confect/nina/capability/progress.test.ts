@@ -376,3 +376,49 @@ it.effect("does not cut a run that ends within its deadline", () =>
     );
   })
 );
+
+it.effect(
+  "settles a run that breaks on a defect as failed, ends its loading cards, and logs the defect without handing it to Nina",
+  () =>
+    Effect.gen(function* () {
+      const logged = MutableRef.make<readonly unknown[]>([]);
+      const snapshots = yield* streamCapability(
+        (publish) =>
+          Effect.forEach([...unfinished, ...settled], publish).pipe(
+            Effect.andThen(Effect.die(new Error("provider key rejected")))
+          ),
+        options
+      ).pipe(
+        Stream.runCollect,
+        inNewChatStep,
+        Effect.provide(
+          Logger.layer([
+            Logger.formatStructured.pipe(
+              Logger.map(({ message }) =>
+                MutableRef.update(logged, Arr.append(message))
+              )
+            ),
+          ])
+        )
+      );
+      const final = yield* Schema.decodeEffect(CapabilityOutputSchema)(
+        Option.getOrThrow(Arr.last(snapshots))
+      );
+      expect(final.outcome).toBe("partial");
+      expect(final.text).toContain("failed before it finished");
+      expect(final.text).not.toContain("provider key rejected");
+      expect(Arr.drop(final.artifacts, unfinished.length)).toEqual(settled);
+      Arr.forEach(Arr.take(final.artifacts, unfinished.length), (card) =>
+        expect(card.data).toMatchObject({
+          error: "It failed before it finished.",
+          status: "error",
+        })
+      );
+      expect(MutableRef.get(logged)).toEqual([
+        [
+          "Nina capability broke",
+          expect.objectContaining({ capability: "deepResearch" }),
+        ],
+      ]);
+    })
+);
