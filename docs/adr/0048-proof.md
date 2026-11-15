@@ -255,3 +255,17 @@ A group's specs come from its diff to its base (point 2 of "The Merge Queue Is S
 
 A merge group's gate measures `--affected` against its `base_sha` (and a rehearsal against its `base`): the workspaces its own pull requests change and their dependents, on the group's whole tree. Each group ahead proves its own changes on the same tree minus the later entries, so a workspace this group does not change holds the code those groups proved. A pull request and a dispatched gate still measure against main. Backend coverage keeps counting the files changed since main whenever its suite runs.
 
+
+## Amendment: The Backend Suite In Shards, 16 November 2026
+
+The gate ran its three parts one after another in one job, and the backend suite, 1,074 test files and 7,781 tests, set its pace: 10 to 14 minutes after static (3 to 4) and www (3 to 4). No file dominates it (the slowest takes 10 seconds, and the tests' own time is a third of the run); importing each file's modules and its setup take the rest, file by file. Measured on one runner, one after another (run 43767878264): two workers, the configuration's half of four cores, 844 seconds; four workers 677; four workers on threads 606; half the files on four workers 354. A runner's four cores are saturated at two workers, and a shard scales with its share of the files.
+
+### Decision
+
+1. **Three shards beside the gate.** The `backend` job runs the suite in three shards on three runners at once (`--shard=<n>/3`, every core of each), while the gate job runs static and www. A shard writes its results and its coverage as a Vitest blob and checks no threshold, since a file's tests may stand in another shard.
+2. **One coverage gate on the merged shards.** The `coverage` job merges the three blobs (`vitest run --merge-reports`) and checks every changed file at 100% per file on the merged coverage, as one run did. Fewer blobs than shards fails it; no blob at all is a head that changes nothing the backend reads. It posts `gate/backend`.
+3. **The last part posts the gate.** The gate job posts `gate/static` and `gate/www`; whichever of it and the coverage job finishes last finds the three parts final and posts `gate`, and `verify` for a pull request (`.github/actions/gate`), then runs the group's verdict as before. Each job posts its part before it reads, so the later reader always finds all three.
+
+### Consequences
+
+The backend part takes about one shard and a merge, some 5 minutes, inside the 6 to 8 of static and www, so a gate takes about as long as those two. A verification holds up to four more jobs for those minutes, three shards and then the coverage job, of the account's twenty (see "The ceiling of free runners"); the runner minutes stay about the same, plus each extra job's install of some 30 seconds.

@@ -173,39 +173,151 @@ jobs:
         if: always() && steps.static.outcome != 'skipped'
         run: bun run turbo run test --filter=www ${AFFECTED:+"$AFFECTED"}
 
-      - name: Gate backend
-        id: backend
-        if: always() && steps.static.outcome != 'skipped'
-        run: bun run turbo run test --filter=@repo/backend ${AFFECTED:+"$AFFECTED"}
-
-      - name: Post the gate
+      # The backend suite runs in the backend jobs beside this one, and its
+      # coverage job posts `gate/backend`.
+      - name: Post the gate's parts
         if: always()
         env:
           STATIC: ${{ steps.static.outcome }}
           WWW: ${{ steps.www.outcome }}
-          BACKEND: ${{ steps.backend.outcome }}
         run: |
-          post() {
-            gh api --silent "repos/$GITHUB_REPOSITORY/statuses/$SHA" \
-              -f state="$2" -f context="$1" -f target_url="$URL" -f description="$3"
-          }
-          all=success
-          for part in static www backend; do
+          for part in static www; do
             name=${part^^}
             outcome=${!name}
             state=failure
             [ "$outcome" = success ] && state=success
-            [ "$state" = success ] || all=failure
-            post "gate/$part" "$state" "${outcome:-did not run}"
+            gh api --silent "repos/$GITHUB_REPOSITORY/statuses/$SHA" \
+              -f state="$state" -f context="gate/$part" -f target_url="$URL" -f description="${outcome:-did not run}"
           done
-          post gate "$all" "Typechecks, unit suites, policy, Doctor and audit: $all"
-          [ "$VERIFY" = gate ] || exit 0
-          description="Gate failed"
-          [ "$all" = success ] && description="Gate passed; the merge queue proves the browsers"
-          post verify "$all" "$description"
+
+      - name: Post the gate
+        if: always()
+        uses: ./.github/actions/gate
 
       # The last of the gate and the three engines to post its own status finds
       # all four final and posts `verify`.
+      - name: Post the group's verdict
+        if: always() && env.VERIFY == 'group'
+        uses: ./.github/actions/verdict
+
+  backend:
+    # The backend suite, about 1,070 test files, runs in three shards on three
+    # runners beside the gate, so it leaves the gate's critical path: one runner
+    # took 10 to 14 minutes, and a fourth core saved a fifth of that.
+    name: Backend
+    if: (github.event_name == 'pull_request' && !github.event.pull_request.draft) || github.event_name == 'merge_group' || inputs.gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    strategy:
+      # Every shard reports, so the coverage job merges or names each one.
+      fail-fast: false
+      matrix:
+        shard: [ 1, 2, 3 ]
+    permissions:
+      contents: read
+    env:
+      AFFECTED: ${{ !inputs.full && '--affected' || '' }}
+      TURBO_SCM_BASE: ${{ github.event.merge_group.base_sha || inputs.base || 'origin/main' }}
+    steps:
+      # Coverage counts the files changed since origin/main, so the job reads the whole history.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ env.SHA }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Install dependencies
+        uses: ./.github/actions/install
+
+      # A shard writes its results and its coverage as a blob and checks no
+      # threshold, since a file's tests may stand in another shard; the coverage
+      # job checks the merged coverage. Nothing else runs on this runner, so the
+      # suite takes every core. A head that changes nothing the backend reads
+      # runs nothing and writes no blob.
+      - name: Test one shard
+        env:
+          SHARD: ${{ matrix.shard }}/${{ strategy.job-total }}
+        run: |
+          bun run turbo run test --filter=@repo/backend ${AFFECTED:+"$AFFECTED"} -- \
+            --shard="$SHARD" --reporter=blob --maxWorkers=100% \
+            --coverage.thresholds.100=false --coverage.thresholds.perFile=false
+
+      - name: Keep the shard's blob
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: backend-${{ matrix.shard }}
+          include-hidden-files: true
+          path: packages/backend/.vitest/blob
+          if-no-files-found: ignore
+          retention-days: 1
+
+  coverage:
+    # Merges the backend shards and checks every changed file at 100% on the
+    # merged coverage, then posts `gate/backend` and, when it finishes last,
+    # `gate` and the verdict.
+    name: Backend coverage
+    needs: backend
+    if: always() && needs.backend.result != 'skipped'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      # As for the gate: the job that finishes last posts the group's verdict.
+      actions: write
+      contents: read
+      statuses: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ env.SHA }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Install dependencies
+        uses: ./.github/actions/install
+
+      - name: Download the shards' blobs
+        continue-on-error: true
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          pattern: backend-*
+          merge-multiple: true
+          path: packages/backend/.vitest/blob
+
+      # Every shard writes a blob, named `blob-<shard>-<shards>.json`, or none
+      # does when the head changes nothing the backend reads. Fewer blobs than
+      # the shards their names count is a shard that never reported.
+      - name: Merge the shards
+        id: merge
+        working-directory: packages/backend
+        env:
+          SHARDS: ${{ needs.backend.result }}
+        run: |
+          blobs=$(find .vitest/blob -name 'blob-*.json' 2>/dev/null | wc -l)
+          if [ "$blobs" -eq 0 ] && [ "$SHARDS" = success ]; then
+            echo "The head changes nothing the backend suite reads."
+            exit 0
+          fi
+          total=$(find .vitest/blob -name 'blob-*.json' 2>/dev/null | sed -E 's/.*blob-[0-9]+-([0-9]+)\.json$/\1/' | sort -u)
+          [ -n "$total" ] && [ "$blobs" = "$total" ] || { echo "$blobs blobs for shards counted as ${total:-none}." >&2; exit 1; }
+          bunx vitest run --merge-reports
+
+      - name: Post the backend part
+        if: always()
+        env:
+          OUTCOME: ${{ steps.merge.outcome }}
+        run: |
+          state=failure
+          [ "$OUTCOME" = success ] && state=success
+          gh api --silent "repos/$GITHUB_REPOSITORY/statuses/$SHA" \
+            -f state="$state" -f context=gate/backend -f target_url="$URL" -f description="${OUTCOME:-did not run}"
+
+      - name: Post the gate
+        if: always()
+        uses: ./.github/actions/gate
+
       - name: Post the group's verdict
         if: always() && env.VERIFY == 'group'
         uses: ./.github/actions/verdict

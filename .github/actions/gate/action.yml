@@ -1,0 +1,27 @@
+name: Post the gate
+description: >-
+  Posts `gate` once this run's three parts, `gate/static`, `gate/www` and `gate/backend`, are final, so the job that
+  finishes last posts it: the gate job posts the first two parts and the backend coverage job the third
+  (docs/adr/0048-proof.md, "The Backend Suite In Shards"). Each job posts its own part before it reads, so the later
+  reader finds all three. For a pull request or a dispatch without the browsers it posts `verify` too. The calling
+  job holds a token that may post statuses.
+runs:
+  using: composite
+  steps:
+    - name: Post the gate when its parts are final
+      shell: bash
+      run: |
+        post() {
+          gh api --silent "repos/$GITHUB_REPOSITORY/statuses/$SHA" \
+            -f state="$2" -f context="$1" -f target_url="$URL" -f description="$3"
+        }
+        parts="$(gh api "repos/$GITHUB_REPOSITORY/commits/$SHA/status?per_page=100" --jq \
+          "[.statuses[] | select(.target_url == \"$URL\" and (.context | test(\"^gate/(static|www|backend)\$\"))) | .state]")"
+        [ "$(jq 'map(select(. != "pending")) | length' <<< "$parts")" = 3 ] || exit 0
+        all=failure
+        [ "$(jq 'all(. == "success")' <<< "$parts")" = true ] && all=success
+        post gate "$all" "Typechecks, unit suites, policy, Doctor and audit: $all"
+        [ "$VERIFY" = gate ] || exit 0
+        description="Gate failed"
+        [ "$all" = success ] && description="Gate passed; the merge queue proves the browsers"
+        post verify "$all" "$description"
