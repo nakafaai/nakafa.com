@@ -11,7 +11,9 @@ import { formatProof } from "#scripts/proof/main";
 import {
   GATE_JOB,
   github,
+  MAIN,
   PROCESS_TIMEOUT,
+  REUSABLE,
   RUN,
   SHA,
   shard,
@@ -20,6 +22,9 @@ import {
   toJson,
   withGithub,
 } from "#scripts/proof/test.github";
+
+/** The nonce of a proof of the specs alone: their key, then a fresh suffix. */
+const BASE_NONCE = /-f nonce=(?<key>base-[0-9a-f]{16})-[0-9a-f]{8}$/u;
 
 describe("GitHub proof runner", () => {
   it.effect(
@@ -101,6 +106,67 @@ describe("GitHub proof runner", () => {
           Arr.some(calls, (call) =>
             call.includes("-f gate=false -f full=false")
           )
+        ).toBe(true);
+      }).pipe(Effect.provide(NodeServices.layer))
+  );
+
+  it.effect(
+    "names a proof of the specs alone by its head and specs, and reads a run of them that another caller started",
+    () =>
+      Effect.gen(function* () {
+        const green = {
+          chromium: shard("chromium"),
+          firefox: shard("firefox"),
+          webkit: shard("webkit"),
+        };
+        const first = yield* withGithub(
+          github(green),
+          proveOnGithub(MAIN, ["e2e/b.browser.ts", "e2e/a.browser.ts"], {
+            gate: false,
+            full: false,
+          })
+        );
+        yield* first.exit;
+        const dispatch = Option.getOrThrow(
+          Arr.findFirst(first.calls, (call) =>
+            call.startsWith("gh workflow run")
+          )
+        );
+        const key = Option.getOrThrow(
+          Option.fromNullishOr(BASE_NONCE.exec(dispatch)?.groups?.key)
+        );
+        // The same specs in another order find that run: a cancelled one
+        // proves nothing and is passed over, a running one is awaited.
+        const listed = github(green);
+        const second = yield* withGithub(
+          (args) =>
+            Arr.contains(args, REUSABLE)
+              ? {
+                  stdout: toJson([
+                    {
+                      databaseId: 8,
+                      displayTitle: `Proof ${MAIN} ${key}-cafebabe`,
+                      conclusion: "cancelled",
+                    },
+                    {
+                      databaseId: 9,
+                      displayTitle: `Proof ${MAIN} ${key}-deadbeef`,
+                      conclusion: "",
+                    },
+                  ]),
+                }
+              : listed(args),
+          proveOnGithub(MAIN, ["e2e/a.browser.ts", "e2e/b.browser.ts"], {
+            gate: false,
+            full: false,
+          })
+        );
+        expect((yield* second.exit).result.passed).toBe(true);
+        expect(
+          Arr.some(second.calls, (call) => call.startsWith("gh workflow run"))
+        ).toBe(false);
+        expect(
+          Arr.some(second.calls, (call) => call.startsWith("gh run view 9 "))
         ).toBe(true);
       }).pipe(Effect.provide(NodeServices.layer))
   );

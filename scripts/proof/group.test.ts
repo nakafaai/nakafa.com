@@ -36,18 +36,14 @@ const verify = (calls: readonly string[]) =>
   Arr.filter(calls, (call) => call.includes("context=verify"));
 
 describe("merge group verdict", () => {
-  it.effect("reads the group's base, head, results and run", () =>
+  it.effect("reads the group's head, results and run", () =>
     Effect.gen(function* () {
-      expect(
-        yield* parseGroupArguments([MAIN, SHA, "/tmp/results", URL])
-      ).toEqual({ base: MAIN, head: SHA, results: "/tmp/results", url: URL });
-      for (const argv of [
-        [],
-        [MAIN],
-        [MAIN, SHA],
-        [MAIN, SHA, "/tmp"],
-        [MAIN, "main", "/tmp", URL],
-      ]) {
+      expect(yield* parseGroupArguments([SHA, "/tmp/results", URL])).toEqual({
+        head: SHA,
+        results: "/tmp/results",
+        url: URL,
+      });
+      for (const argv of [[], [SHA], [SHA, "/tmp"], ["main", "/tmp", URL]]) {
         expect(
           (yield* Effect.flip(parseGroupArguments(argv))).message
         ).toContain("Usage: node scripts/proof/group.ts");
@@ -56,7 +52,7 @@ describe("merge group verdict", () => {
   );
 
   it.effect(
-    "sets aside what the base fails too, and fails on what only the group fails",
+    "sets aside what main's head fails too, and fails on what only the group fails",
     () =>
       Effect.gen(function* () {
         const red = yield* downloaded({
@@ -70,10 +66,10 @@ describe("merge group verdict", () => {
             firefox: shard("firefox", ["e2e/b.browser.ts"]),
             webkit: shard("webkit"),
           }),
-          judgeGroup([MAIN, SHA, red, URL])
+          judgeGroup([SHA, red, URL])
         );
         yield* shared.exit;
-        // The base proves only the failing specs, in all three engines.
+        // Main's head proves only the failing specs, in all three engines.
         expect(
           Arr.some(shared.calls, (call) =>
             call.includes(
@@ -91,7 +87,7 @@ describe("merge group verdict", () => {
             firefox: shard("firefox"),
             webkit: shard("webkit"),
           }),
-          judgeGroup([MAIN, SHA, red, URL])
+          judgeGroup([SHA, red, URL])
         );
         yield* fresh.exit;
         expect(verify(fresh.calls)).toEqual([
@@ -102,14 +98,14 @@ describe("merge group verdict", () => {
   );
 
   it.effect(
-    "fails an engine that never reported without proving the base, and passes results that all passed",
+    "fails an engine that never reported without proving main, and passes results that all passed",
     () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const empty = `${yield* fs.makeTempDirectoryScoped({ prefix: "group-" })}/none`;
         const silent = yield* withGithub(
           github(undefined),
-          judgeGroup([MAIN, SHA, empty, URL])
+          judgeGroup([SHA, empty, URL])
         );
         yield* silent.exit;
         expect(
@@ -126,7 +122,7 @@ describe("merge group verdict", () => {
         });
         const passed = yield* withGithub(
           github(undefined),
-          judgeGroup([MAIN, SHA, green, URL])
+          judgeGroup([SHA, green, URL])
         );
         yield* passed.exit;
         expect(

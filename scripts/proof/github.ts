@@ -3,6 +3,7 @@ import {
   type ProofResult,
   ShardResultJson,
 } from "@repo/backend/scripts/content/acceptance/result";
+import { sha256Hex } from "@repo/utilities/digest";
 import { randomUuid } from "@repo/utilities/uuid";
 import {
   Array as Arr,
@@ -13,6 +14,7 @@ import {
   FileSystem,
   Layer,
   Option,
+  Order,
   Predicate,
   Ref,
   Schedule,
@@ -287,37 +289,124 @@ const readResults = Effect.fn("proof.readResults")(function* (id: number) {
 /** What one run verifies: the gate, every workspace or only those the head changes, or neither. */
 const Scope = Schema.Struct({ gate: Schema.Boolean, full: Schema.Boolean });
 
+/** What `gh run list --json databaseId,displayTitle,conclusion` prints: a run in progress has no conclusion yet. */
+const ConcludedRunListJson = Schema.fromJsonString(
+  Schema.Array(
+    Schema.Struct({
+      conclusion: Schema.String,
+      databaseId: Schema.Int,
+      displayTitle: Schema.String,
+    })
+  )
+);
+
+/**
+ * The name a proof of a head on its specs alone carries: the head, then `base-`
+ * and the first 16 hexadecimal digits of the SHA-256 of its spec files in path
+ * order, so every caller that proves the same head on the same specs, such as
+ * the merge groups that fail on main's reds, finds the one run.
+ */
+const proofPrefix = Effect.fn("proof.proofPrefix")(function* (
+  sha: string,
+  specs: readonly string[]
+) {
+  const digest = yield* sha256Hex(Arr.join(Arr.sort(specs, Order.String), " "));
+  return `Proof ${sha} base-${digest.slice(0, 16)}`;
+});
+
+/**
+ * A run that proves the same head on the same specs, finished or still running,
+ * to read instead of dispatching another: a cancelled run proves nothing, so it
+ * is passed over.
+ */
+const findReusableRun = Effect.fn("proof.findReusableRun")(function* (
+  prefix: string
+) {
+  const runs = yield* gh([
+    "run",
+    "list",
+    "--repo",
+    REPOSITORY,
+    "--workflow",
+    "proof.yml",
+    "--event",
+    "workflow_dispatch",
+    "--limit",
+    "50",
+    "--json",
+    "databaseId,displayTitle,conclusion",
+  ]).pipe(Effect.flatMap(Schema.decodeEffect(ConcludedRunListJson)));
+  return Option.map(
+    Arr.findFirst(
+      runs,
+      (run) =>
+        run.displayTitle.startsWith(prefix) && run.conclusion !== "cancelled"
+    ),
+    (run) => run.databaseId
+  );
+});
+
+/**
+ * Dispatches one proof run and finds it by the nonce it was given: a fresh one,
+ * after the specs' prefix for a proof of the specs alone, so a later run never
+ * takes a cancelled one's name.
+ */
+const dispatchProof = Effect.fn("proof.dispatchProof")(function* (
+  sha: string,
+  specs: readonly string[],
+  scope: typeof Scope.Type,
+  prefix: Option.Option<string>
+) {
+  yield* sweepSuperseded();
+  const uuid = yield* randomUuid;
+  const title = Option.match(prefix, {
+    onNone: () => `Proof ${sha} ${uuid}`,
+    onSome: (name) => `${name}-${uuid.slice(0, 8)}`,
+  });
+  const nonce = title.slice(`Proof ${sha} `.length);
+  yield* gh([
+    "workflow",
+    "run",
+    "proof.yml",
+    "--repo",
+    REPOSITORY,
+    "--ref",
+    "main",
+    "-f",
+    `sha=${sha}`,
+    "-f",
+    `specs=${Arr.join(specs, " ")}`,
+    "-f",
+    `gate=${scope.gate}`,
+    "-f",
+    `full=${scope.full}`,
+    "-f",
+    `nonce=${nonce}`,
+  ]);
+  return yield* findRun(title).pipe(
+    Effect.retry({ schedule: Schedule.spaced("5 seconds"), times: 24 })
+  );
+});
+
 /**
  * Verifies one head on GitHub's runners in one run: dispatches the proof
  * workflow, waits for its run and reads what it reported. The verdicts are the
- * ones the run posts as commit statuses on the head.
+ * ones the run posts as commit statuses on the head. A proof of the specs alone
+ * (no gate) is named by its head and its specs (`proofPrefix`) and first looks
+ * for such a run, finished or running, so main's failing specs are proven once
+ * per main commit however many merge groups fail on them.
  */
 export const proveOnGithub = Effect.fn("proof.proveOnGithub")(
   function* (sha: string, specs: readonly string[], scope: typeof Scope.Type) {
-    yield* sweepSuperseded();
-    const nonce = yield* randomUuid;
-    yield* gh([
-      "workflow",
-      "run",
-      "proof.yml",
-      "--repo",
-      REPOSITORY,
-      "--ref",
-      "main",
-      "-f",
-      `sha=${sha}`,
-      "-f",
-      `specs=${Arr.join(specs, " ")}`,
-      "-f",
-      `gate=${scope.gate}`,
-      "-f",
-      `full=${scope.full}`,
-      "-f",
-      `nonce=${nonce}`,
-    ]);
-    const id = yield* findRun(`Proof ${sha} ${nonce}`).pipe(
-      Effect.retry({ schedule: Schedule.spaced("5 seconds"), times: 24 })
-    );
+    const prefix = scope.gate
+      ? Option.none<string>()
+      : Option.some(yield* proofPrefix(sha, specs));
+    const reused = Option.isSome(prefix)
+      ? yield* findReusableRun(prefix.value)
+      : Option.none<number>();
+    const id = Option.isSome(reused)
+      ? reused.value
+      : yield* dispatchProof(sha, specs, scope, prefix);
     const run = yield* awaitRun(id, sha);
     const results = yield* readResults(id).pipe(
       Effect.mapError(

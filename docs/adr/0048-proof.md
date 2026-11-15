@@ -255,3 +255,12 @@ A group's specs come from its diff to its base (point 2 of "The Merge Queue Is S
 
 A merge group's gate measures `--affected` against its `base_sha` (and a rehearsal against its `base`): the workspaces its own pull requests change and their dependents, on the group's whole tree. Each group ahead proves its own changes on the same tree minus the later entries, so a workspace this group does not change holds the code those groups proved. A pull request and a dispatched gate still measure against main. Backend coverage keeps counting the files changed since main whenever its suite runs.
 
+## Amendment: Every Group Judges Against Main's Head, 15 November 2026
+
+A group whose engines failed proved its failing specs on its own `base_sha` (point 1 of "A Merge Group Sets Aside What Its Base Fails"). Every group but the first has the head of the group ahead as its base, so four groups that failed on the same red specs of main dispatched four base proofs, each a build, a prepare and the specs in three engines, about 17 minutes while runners are free, and each held three more of the 20 jobs the account shares. On 15 November from 22:17 the groups of #2475 and #2520 each waited on such a proof while the queue behind them stood still.
+
+### Decision
+
+1. **Main's head.** `scripts/proof/group.ts` proves a group's failing specs on main's head when it judges, not on the group's base, and the status names that commit. Every group in the queue then judges against the same commit until the next entry lands.
+2. **One run per head and specs.** A proof of specs alone, without the gate, is named `Proof <sha> base-<key>-<suffix>`: the key is the first 16 hexadecimal digits of the SHA-256 of its spec files in path order, and the suffix is fresh. Before dispatching, `proveOnGithub` reads the latest 50 dispatched runs and awaits or reads one whose name starts with `Proof <sha> base-<key>`, finished or running, and passes over a cancelled one. The first group to fail on main's reds pays for the proof, and the others read it.
+3. **What this gives up.** A group judged while an entry ahead of it fixes one of main's reds, and that itself breaks the spec again, has the spec set aside although its base passed it. Main then fails the spec as it did before the fix, the case point 4 of the earlier amendment leaves to the lane that owns the folder; the queue stops paying a base proof per group for it.
