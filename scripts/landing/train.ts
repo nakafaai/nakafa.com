@@ -27,6 +27,8 @@ export const Candidate = Schema.Struct({
   title: Schema.String,
   /** The spec files the pull request adds or changes, which its combination is proven on. */
   specs: Schema.Array(Schema.String),
+  /** Whether it changes a file the product runs, under `apps` or `packages`, beyond specs and docs. */
+  runtime: Schema.Boolean,
 });
 export type Candidate = typeof Candidate.Type;
 
@@ -127,18 +129,31 @@ const SPLIT_JOBS = 4;
 const RED_BATCH = "batch:red";
 
 /**
+ * The one spec a combination that changes nothing the product runs is proven
+ * on, such as a change to the landing scripts, a workflow or the docs: a fast
+ * page that passes in all three engines on main (run 43699251319).
+ */
+const SMOKE_SPEC = "e2e/quran/landing.browser.ts";
+
+/**
  * The specs a combination is proven on: those the caller names and those its
- * pull requests add or change. None at all proves every suite, which a batch of
- * changes that touch no spec needs.
+ * pull requests add or change. A combination that names none proves every
+ * suite when a pull request changes a file the product runs, and only the
+ * smoke spec when none does, since the gate already checks scripts and docs.
  */
 const proofSpecs = (
   specs: readonly string[],
   heads: readonly Candidate[]
-): readonly string[] =>
-  Arr.sort(
+): readonly string[] => {
+  const named = Arr.sort(
     Arr.dedupe([...specs, ...Arr.flatMap(heads, (head) => head.specs)]),
     Order.String
   );
+  if (named.length > 0 || Arr.some(heads, (head) => head.runtime)) {
+    return named;
+  }
+  return [SMOKE_SPEC];
+};
 
 /**
  * The most pull requests one batch carries (ADR 0048, "The Landing Queue"): at a

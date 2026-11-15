@@ -34,7 +34,10 @@ import { VERDICT_CONTEXT } from "#scripts/proof/github";
 /** A spec file of the browser suites, as a path in the repository; its group is the path under `apps/www`. */
 const SPEC_FILE = /^apps\/www\/(?<spec>e2e\/.+\.browser\.ts)$/u;
 
-/** A pull request as a candidate of the train, with its stack and the spec files it adds or changes. */
+/** A file the product runs: under `apps` or `packages`, outside the browser specs, and no Markdown. */
+const RUNTIME_FILE = /^(?:apps|packages)\/(?!www\/e2e\/)(?!.*\.md$)/u;
+
+/** A pull request as a candidate of the train, with its stack, the spec files it adds or changes, and whether it changes what the product runs. */
 const candidateOf = ({ pull, stack }: Rider): Candidate => ({
   number: pull.number,
   stack,
@@ -46,6 +49,7 @@ const candidateOf = ({ pull, stack }: Rider): Candidate => ({
       onSome: Result.succeed,
     })
   ),
+  runtime: Arr.some(pull.files, ({ path }) => RUNTIME_FILE.test(path)),
 });
 
 /** A full commit SHA, as `git ls-remote` prints one. */

@@ -10,6 +10,7 @@ export const pull = (number: number, stack = number): Candidate => ({
   sha: String(number).repeat(40).slice(0, 40),
   title: `Change ${number}`,
   specs: [],
+  runtime: true,
 });
 
 /** A proof that fails these specs in Chromium, or passes when there are none. */
