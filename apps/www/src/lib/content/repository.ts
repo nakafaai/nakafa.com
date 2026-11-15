@@ -15,12 +15,6 @@ export function getGithubUrl({
   return `https://github.com${GITHUB_URL}${ref}${withLeadingSlash(path)}` as const;
 }
 
-/** Builds one raw Nakafa source URL from the current main branch. */
-export function getRawGithubUrl(path: string) {
-  const cleanPath = withLeadingSlash(path);
-  return `https://raw.githubusercontent.com${GITHUB_URL}/refs/heads/main${cleanPath}` as const;
-}
-
 /** Builds one immutable Aksara source browser URL at an exact Git commit. */
 export function getAksaraUrl({
   path,

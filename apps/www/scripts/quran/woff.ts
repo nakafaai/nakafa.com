@@ -141,7 +141,7 @@ const readDirectory = (bytes: Uint8Array, count: number) =>
  * with a metadata or private block, or a collection, is refused, since no face
  * this app serves has one.
  */
-const readParts = (font: Uint8Array) =>
+export const readParts = (font: Uint8Array) =>
   Effect.gen(function* () {
     if (font.length < HEADER_SIZE) {
       return yield* refused("the header is cut");
@@ -190,16 +190,6 @@ const readParts = (font: Uint8Array) =>
     };
   });
 
-/** Reads the three metrics stored at an offset of the stream. */
-const metricsAt = (stream: Uint8Array, at: number): VerticalMetrics => {
-  const view = viewOf(stream);
-  return {
-    ascent: view.getInt16(at),
-    descent: view.getInt16(at + 2),
-    lineGap: view.getInt16(at + 4),
-  };
-};
-
 /** Writes the three metrics at an offset of the stream. */
 const writeMetricsAt = (
   stream: Uint8Array,
@@ -211,21 +201,6 @@ const writeMetricsAt = (
   view.setInt16(at + 2, metrics.descent);
   view.setInt16(at + 4, metrics.lineGap);
 };
-
-/**
- * The vertical metrics a WOFF2 face gives a line box: `hhea`, which Apple's
- * platforms and most engines read, and the OS/2 typographic fields, which an
- * engine reads wherever the face sets USE_TYPO_METRICS, as Amiri Quran does.
- */
-export const readFaceMetrics = Effect.fn("scripts.quran.woff.readFaceMetrics")(
-  function* (font: Uint8Array) {
-    const parts = yield* readParts(font);
-    return {
-      hhea: metricsAt(parts.stream, parts.hhea),
-      typo: metricsAt(parts.stream, parts.typo),
-    };
-  }
-);
 
 /**
  * The same WOFF2 face with these vertical metrics in `hhea` and in OS/2, and

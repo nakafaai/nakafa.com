@@ -16,9 +16,8 @@ import {
   type SourceFile,
 } from "tsrs/ast";
 import { nodesBelow, tagText } from "#scripts/check/drilling";
-import { COMPONENT_SET_DIRECTORIES } from "#scripts/check/exports";
+import { judgesMarkup } from "#scripts/check/jsx";
 
-const JSX_MODULE_PATTERN = /\.tsx$/u;
 /**
  * The popups of a dropdown: a menu, a submenu, a select's list and a picker's list. Each requires its `label`, the one
  * word that names what is chosen, and reads it from a key of the `menu-` family, which the dictionary check holds to
@@ -125,12 +124,7 @@ function drawsButton(node: Node) {
  * registry ships keep their upstream shape.
  */
 export function inspectMenuSource(file: string, sourceFile: SourceFile) {
-  if (
-    !JSX_MODULE_PATTERN.test(file) ||
-    Arr.some(COMPONENT_SET_DIRECTORIES, (directory) =>
-      file.startsWith(directory)
-    )
-  ) {
+  if (!judgesMarkup(file)) {
     return [];
   }
   const nodes = nodesBelow(sourceFile);

@@ -7,18 +7,26 @@ import { LESSON_PATH } from "@/e2e/support/chat";
 
 /** The search button of the sidebar, in English. */
 const SEARCH = "Search content...";
-/**
- * The first subject group the command menu lists before a query, in English:
- * the subject menu holds the high school grades only.
- */
-const SUBJECT_GROUP = en.Subject["high-school"];
 
 /**
- * The search command of the learning shell names the subjects in its first
- * groups. The shell loads the subject messages with its own, so the menu shows
- * every label and the page reports no missing message.
+ * How long a lesson may take to hydrate. WebKit and Firefox take longer than
+ * Chromium on a loaded machine, and a press before hydration is lost.
  */
-test("the shell's search command lists the subjects with their names", async ({
+const HYDRATED_WITHIN = 15_000;
+
+/** The last row of a query, which searches inside every lesson. */
+const FULL_SEARCH = /Search lessons for "mathematcs"/u;
+
+/** A curriculum page, where the subject the typo found lives. */
+const CURRICULUM_PAGE = /\/en\/curriculum\//u;
+
+/**
+ * The palette opens on the subjects around the lesson on screen and each
+ * family's way in, read from the static index, and a query with a typo finds
+ * the subject first, with its path. Every label is a message the shell loads,
+ * so the page reports no missing message.
+ */
+test("the shell's palette suggests from the page and finds a subject through a typo", async ({
   page,
 }) => {
   const missing = MutableList.make<string>();
@@ -32,17 +40,37 @@ test("the shell's search command lists the subjects with their names", async ({
   const search = page.getByRole("button", { name: SEARCH }).first();
   await expect(search).toBeVisible();
   await expect
-    .poll(() =>
-      search.evaluate((node) =>
-        Object.keys(node).some((key) => key.startsWith("__reactProps$"))
-      )
+    .poll(
+      () =>
+        search.evaluate((node) =>
+          Object.keys(node).some((key) => key.startsWith("__reactProps$"))
+        ),
+      { timeout: HYDRATED_WITHIN }
     )
     .toBe(true);
   await search.click();
 
+  const palette = page.getByRole("dialog", { name: "Search" });
   await expect(
-    page.getByRole("dialog").getByText(SUBJECT_GROUP, { exact: true })
+    palette.getByText(en.Utils["search-near"], { exact: true })
   ).toBeVisible();
+  await expect(
+    palette.getByText(en.Utils["search-explore"], { exact: true })
+  ).toBeVisible();
+
+  await palette.getByRole("combobox").fill("mathematcs");
+  const first = palette.getByRole("option").first();
+  await expect(first).toContainText("Mathematics");
+  await expect(
+    palette.getByText(en.Utils["search-group-curricula"], { exact: true })
+  ).toBeVisible();
+  await expect(
+    palette.getByRole("option", { name: FULL_SEARCH })
+  ).toBeVisible();
+
+  await page.keyboard.press("Enter");
+  await expect(palette).toBeHidden();
+  await expect(page).toHaveURL(CURRICULUM_PAGE);
   expect(MutableList.toArray(missing)).toEqual([]);
 });
 
@@ -58,10 +86,12 @@ test("a row picked in the phone's search opens with the sidebar out of the way",
   const trigger = page.getByRole("button", { name: "Toggle Sidebar" }).first();
   await expect(trigger).toBeVisible();
   await expect
-    .poll(() =>
-      trigger.evaluate((node) =>
-        Object.keys(node).some((key) => key.startsWith("__reactProps$"))
-      )
+    .poll(
+      () =>
+        trigger.evaluate((node) =>
+          Object.keys(node).some((key) => key.startsWith("__reactProps$"))
+        ),
+      { timeout: HYDRATED_WITHIN }
     )
     .toBe(true);
   await trigger.click();

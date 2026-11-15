@@ -8,7 +8,7 @@
  */
 
 import { BillingCurrency } from "@repo/backend/confect/billing/catalog";
-import { Array as Arr, Schema } from "effect";
+import { Schema } from "effect";
 
 /** The School plans, from the free trial up. Every plan holds every feature. */
 export const SchoolTierKey = Schema.Literals(["free", "pro", "max"]);
@@ -191,29 +191,4 @@ export function schoolQuote({
       plan.storageMegabytes + added * schoolAccount.storageMegabytes,
     total: schoolPeriodTotal(monthly, period),
   };
-}
-
-/**
- * The paid plan that holds a number of accounts for the lowest monthly price,
- * with the accounts added to it: a school of 1,050 accounts pays less on Max with
- * 550 added than on Pro with 950. A number at or below a plan's own accounts adds
- * none.
- */
-export function cheapestSchoolTier(
-  accounts: number,
-  currency: BillingCurrency
-) {
-  const quotes = Arr.map(SchoolPaidTierKey.literals, (tier) => {
-    const added = Math.max(0, accounts - schoolTiers[tier].accounts);
-    return {
-      added,
-      monthly: schoolQuote({ added, currency, period: 1, tier }).monthly,
-      tier,
-    };
-  });
-  return Arr.reduce(
-    Arr.tailNonEmpty(quotes),
-    Arr.headNonEmpty(quotes),
-    (best, quote) => (quote.monthly < best.monthly ? quote : best)
-  );
 }

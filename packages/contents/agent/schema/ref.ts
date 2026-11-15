@@ -200,7 +200,6 @@ export const NakafaAgentContentSummarySchema =
   )
     .mapFields(Struct.map(Schema.mutableKey), { unsafePreserveChecks: true })
     .annotate({ description: "Searchable Nakafa content summary." });
-export type NakafaAgentSection = typeof NakafaAgentSectionSchema.Type;
 export type NakafaAgentContentRef = typeof NakafaAgentContentRefSchema.Type;
 export type NakafaAgentReadableContentRef =
   typeof NakafaAgentReadableContentRefSchema.Type;

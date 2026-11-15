@@ -4,41 +4,31 @@ import { Array as Arr, Effect, Layer, Ref } from "effect";
 import { parseProofArguments, runProof } from "#scripts/proof/main";
 import {
   github,
+  JOB,
   MAIN,
   PROCESS_TIMEOUT,
   RUN,
   SHA,
   shard,
+  step,
   withGithub,
 } from "#scripts/proof/test.github";
 import { scriptedShell } from "#scripts/test.shell";
 
 describe("proof command line", () => {
-  it.effect("reads where, which head, which specs and how many machines", () =>
+  it.effect("reads where, which head and which specs", () =>
     Effect.gen(function* () {
-      expect(
-        yield* parseProofArguments([SHA, "e2e/a.browser.ts", "--shards=2"])
-      ).toEqual({
+      expect(yield* parseProofArguments([SHA, "e2e/a.browser.ts"])).toEqual({
         local: false,
-        shards: 2,
         sha: SHA,
         specs: ["e2e/a.browser.ts"],
       });
       expect(yield* parseProofArguments(["--local", SHA])).toEqual({
         local: true,
-        shards: 3,
         sha: SHA,
         specs: [],
       });
-      expect(
-        (yield* parseProofArguments([SHA, "e2e/a.browser.ts"])).shards
-      ).toBe(1);
-      for (const argv of [
-        [],
-        ["main"],
-        [SHA, "--shards=9"],
-        [SHA, "src/a.ts"],
-      ]) {
+      for (const argv of [[], ["main"], [SHA, "src/a.ts"]]) {
         expect(
           (yield* Effect.flip(parseProofArguments(argv))).message
         ).toContain("Usage: bun run proof");
@@ -50,17 +40,35 @@ describe("proof command line", () => {
     "proves on GitHub, or here through the acceptance runtime",
     () =>
       Effect.gen(function* () {
+        const green = {
+          chromium: shard("chromium"),
+          firefox: shard("firefox"),
+          webkit: shard("webkit"),
+        };
         const remote = yield* withGithub(
-          github({
-            "result-chromium-1": shard("chromium"),
-            "result-firefox-1": shard("firefox"),
-            "result-webkit-1": shard("webkit"),
-          }),
-          runProof("/root", [SHA, "--shards=1"]).pipe(
-            Effect.provide(Layer.empty)
-          )
+          github(green),
+          runProof("/root", [SHA]).pipe(Effect.provide(Layer.empty))
         );
         expect(yield* remote.exit).toBe(0);
+        expect(
+          Arr.some(remote.calls, (call) =>
+            call.includes(`-f sha=${SHA} -f specs= -f gate=true -f full=false`)
+          )
+        ).toBe(true);
+        // A head whose gate failed is not ready, whatever its browsers say.
+        const ungated = yield* withGithub(
+          github(green, {
+            ...RUN,
+            jobs: [
+              {
+                ...JOB,
+                steps: [step("Gate static", 5, 12, "failure"), ...JOB.steps],
+              },
+            ],
+          }),
+          runProof("/root", [SHA])
+        );
+        expect(yield* ungated.exit).toBe(1);
         const failing = yield* withGithub(
           github(undefined),
           runProof("/root", [SHA])
@@ -68,9 +76,9 @@ describe("proof command line", () => {
         expect(yield* failing.exit).toBe(1);
 
         const red = {
-          "result-chromium-1": shard("chromium", ["e2e/a.browser.ts"]),
-          "result-firefox-1": shard("firefox", ["e2e/b.browser.ts"]),
-          "result-webkit-1": shard("webkit"),
+          chromium: shard("chromium", ["e2e/a.browser.ts"]),
+          firefox: shard("firefox", ["e2e/b.browser.ts"]),
+          webkit: shard("webkit"),
         };
         const sharedWithMain = yield* withGithub(
           github(red, RUN, red),
@@ -82,9 +90,9 @@ describe("proof command line", () => {
         );
         const newOnHead = yield* withGithub(
           github(red, RUN, {
-            "result-chromium-1": shard("chromium", ["e2e/a.browser.ts"]),
-            "result-firefox-1": shard("firefox"),
-            "result-webkit-1": shard("webkit"),
+            chromium: shard("chromium", ["e2e/a.browser.ts"]),
+            firefox: shard("firefox"),
+            webkit: shard("webkit"),
           }),
           runProof("/root", [SHA])
         );
@@ -101,11 +109,11 @@ describe("proof command line", () => {
         ).toBe(false);
         const greenMain = yield* withGithub(
           github({
-            "result-chromium-1": shard("chromium"),
-            "result-firefox-1": shard("firefox"),
-            "result-webkit-1": shard("webkit"),
+            chromium: shard("chromium"),
+            firefox: shard("firefox"),
+            webkit: shard("webkit"),
           }),
-          runProof("/root", [MAIN, "--shards=1"])
+          runProof("/root", [MAIN])
         );
         expect(yield* greenMain.exit).toBe(0);
         const answer = github({});

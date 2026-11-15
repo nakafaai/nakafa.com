@@ -6,8 +6,11 @@ import {
   ellipse,
   eye,
   eyes,
+  faded,
   figure,
   head,
+  kindAt,
+  line,
   nose,
   PEARL,
   path,
@@ -188,20 +191,45 @@ export const carnivore = {
     ],
     draw: (kit) =>
       figure(
-        roundEars(kit.body, kit.ink, 46, 54, 16),
-        torso(kit.body),
-        head(kit.body),
-        ellipse(100, 66, 6, 16, kit.second),
+        roundEars(kit.body, "#f4c7cf", 44, 50, 15),
+        torso(kit.body, 52),
+        belly(kit.second, 26, 156),
+        // Rows of spots down both flanks.
+        faded(0.55, [
+          ...both((side) => [
+            ellipse(100 + side * 40, 150, 6, 5, kit.ink),
+            ellipse(100 + side * 46, 170, 6.4, 5.4, kit.ink),
+            ellipse(100 + side * 36, 186, 6, 5, kit.ink),
+          ]),
+        ]),
+        // The head narrows to a long snout.
+        path(
+          "M44,86 C44,56 70,42 100,42 C130,42 156,56 156,86 C156,110 126,152 100,152 C74,152 44,110 44,86 Z",
+          kit.body
+        ),
+        // The mask: a dark band through the eyes, a pale blaze, and a pale spot under each eye.
         both((side) =>
-          ellipse(100 + side * 28, 96, 23, 15, kit.ink, side * 18)
+          path(
+            `M${100 + side * 6},84 C${100 + side * 20},70 ${100 + side * 46},72 ${100 + side * 54},88 C${100 + side * 44},104 ${100 + side * 22},112 ${100 + side * 8},104 Z`,
+            kit.ink
+          )
+        ),
+        ellipse(100, 70, 7, 20, kit.second),
+        both((side) =>
+          ellipse(100 + side * 34, 112, 9, 6, kit.second, side * -24)
         ),
         both((side) =>
-          eye("open", 100 + side * 26 + kit.look, 96, 5, kit.second)
+          eye(
+            kindAt(kit.eyes, side),
+            100 + side * 28 + kit.look,
+            90,
+            5.4,
+            kit.second
+          )
         ),
-        ellipse(100, 120, 22, 17, kit.second),
-        belly(kit.second),
-        nose(114, 6.4, 4.8, kit.ink),
-        smile(123, 7, 6, kit.ink)
+        ellipse(100, 128, 19, 22, kit.second),
+        nose(120, 7, 5, "#ec9ab0"),
+        line("M100,125 L100,132 M92,131 Q100,140 108,131", kit.ink, 2.8)
       ),
   },
   raccoon: {
