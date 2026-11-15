@@ -1,4 +1,5 @@
 import {
+  belly,
   blob,
   both,
   type Design,
@@ -55,18 +56,59 @@ export const marine = {
     ],
     draw: (kit) =>
       figure(
+        // The flippers reach out from under the shell.
+        both((side) =>
+          ellipse(100 + side * 78, 176, 22, 12, kit.body, side * -28)
+        ),
+        // The shell: a dome with a darker rim and its plates.
         path(
-          "M14,200 C14,150 50,112 100,112 C150,112 186,150 186,200 Z",
+          "M16,200 C16,146 52,106 100,106 C148,106 184,146 184,200 Z",
           kit.second
         ),
-        faded(0.3, [
-          ...both((side) => ellipse(100 + side * 52, 170, 16, 18, kit.body)),
-          ellipse(100, 164, 16, 18, kit.body),
+        faded(0.2, [
+          line(
+            "M24,196 C28,150 58,114 100,114 C142,114 172,150 176,196",
+            kit.ink,
+            7
+          ),
+          ...both((side) => [
+            blob(
+              [
+                100 + side * 44,
+                142,
+                100 + side * 62,
+                152,
+                100 + side * 60,
+                172,
+                100 + side * 42,
+                178,
+                100 + side * 30,
+                160,
+              ],
+              kit.ink,
+              5
+            ),
+            blob(
+              [
+                100 + side * 50,
+                188,
+                100 + side * 66,
+                192,
+                100 + side * 64,
+                208,
+                100 + side * 44,
+                208,
+              ],
+              kit.ink,
+              5
+            ),
+          ]),
         ]),
         path(
           "M70,200 C70,176 76,150 84,134 L116,134 C124,150 130,176 130,200 Z",
           kit.body
         ),
+        faded(0.4, [belly(PEARL, 20, 160)]),
         head(kit.body, 46, 44, 92),
         eyes(kit, 22, 88),
         smile(102, 14, 10, kit.ink)
@@ -74,24 +116,49 @@ export const marine = {
   },
   octopus: {
     colors: [
-      ["#f5a48e", "#f6c3a6"],
-      ["#dcd3f4", PEARL],
-      ["#ec9ab0", "#f4c7cf"],
+      ["#f5a48e", "#fbe3d4"],
+      ["#dcd3f4", "#a999e6"],
+      ["#ec9ab0", "#fde4ea"],
     ],
     draw: (kit) =>
       figure(
-        Arr.map([28, 64, 100, 136, 172], (at) =>
-          path(
-            `M${at - 20},200 L${at - 20},150 C${at - 20},136 ${at + 20},136 ${at + 20},150 L${at + 20},200 Z`,
-            kit.body
-          )
+        // The two back arms curl up beside the mantle and show their pale undersides.
+        both((side) => [
+          line(
+            `M${100 + side * 36},150 C${100 + side * 80},160 ${100 + side * 92},128 ${100 + side * 74},116`,
+            kit.body,
+            24
+          ),
+          line(
+            `M${100 + side * 82},146 C${100 + side * 88},134 ${100 + side * 84},122 ${100 + side * 74},116`,
+            kit.second,
+            9
+          ),
+        ]),
+        path(
+          "M42,100 C42,50 66,20 100,20 C134,20 158,50 158,100 C158,132 138,154 100,154 C62,154 42,132 42,100 Z",
+          kit.body
         ),
-        ellipse(100, 94, 64, 60, kit.body),
-        Arr.map([28, 64, 100, 136, 172], (at) =>
-          ellipse(at, 180, 5.6, 5.6, kit.second)
-        ),
-        eyes(kit, 24, 98),
-        smile(112, 10, 9, kit.ink)
+        faded(0.5, [ellipse(72, 54, 13, 8, PEARL, -38)]),
+        // The front arms hang down, each with a row of suckers.
+        Arr.flatMap([58, 100, 142], (at) => [
+          line(
+            `M${at},140 C${at},162 ${at + (at - 100) * 0.16},182 ${at + (at - 100) * 0.3},206`,
+            kit.body,
+            30
+          ),
+          ...Arr.map([168, 186], (y) =>
+            ellipse(
+              at + (at - 100) * ((y - 140) / 220),
+              y,
+              4.6,
+              4.6,
+              kit.second
+            )
+          ),
+        ]),
+        eyes(kit, 22, 106),
+        smile(120, 9, 8, kit.ink)
       ),
   },
   jellyfish: {

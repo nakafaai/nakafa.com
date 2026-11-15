@@ -1,5 +1,5 @@
 import { LocalClock } from "@repo/backend/confect/notifications/clock";
-import { Array as Arr, Option, Schema } from "effect";
+import { Array as Arr, type Option, Schema } from "effect";
 
 /**
  * A kind of notice, one row of the channel table of ADR 0027. A kind is keyed by
@@ -223,18 +223,6 @@ export const routeOf = (
     NOTICE_RULES[kind].routes,
     (route) => route.relation === relation
   );
-
-/**
- * The people of `people` who receive a notice of `kind`: those whose relation
- * has a route for that kind. Each person keeps the fields the caller gave.
- */
-export const recipientsOf = <
-  Person extends { readonly relation: typeof Relation.Type },
->(
-  kind: typeof NoticeKind.Type,
-  people: readonly Person[]
-): readonly Person[] =>
-  Arr.filter(people, (person) => Option.isSome(routeOf(kind, person.relation)));
 
 /**
  * Whether a person may switch a channel of a kind off. The inbox is never

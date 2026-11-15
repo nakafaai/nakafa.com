@@ -1,9 +1,6 @@
-import type { Effect } from "effect";
+import { Effect } from "effect";
 import { hasSignedInHint } from "@/lib/auth/hint";
-import {
-  readBrowserSessionToken,
-  type SessionTokenUnavailable,
-} from "@/lib/auth/token";
+import type { SessionTokenUnavailable } from "@/lib/auth/token";
 
 /**
  * The browser's one reader of sign-in. It takes the document's cookie and the
@@ -14,6 +11,10 @@ import {
  * the token route of its own origin, which answers `undefined` for a visitor.
  * The server reads the session itself
  * (`sessionFn`), or the session cookie of the request (`readSessionCookie`).
+ *
+ * A route's `beforeLoad` calls this, and the route tree is in the first JavaScript
+ * of every page, so the token reader and Effect's HTTP client load only when the
+ * token is read.
  */
 export function readBrowserPresence(
   cookie: string,
@@ -24,7 +25,11 @@ export function readBrowserPresence(
 } {
   return {
     signedIn: hasSignedInHint(cookie),
-    token: readBrowserSessionToken(origin),
+    token: Effect.promise(() => import("@/lib/auth/token")).pipe(
+      Effect.flatMap(({ readBrowserSessionToken }) =>
+        readBrowserSessionToken(origin)
+      )
+    ),
   };
 }
 

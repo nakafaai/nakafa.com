@@ -30,7 +30,7 @@ const lesson = {
   image: "/id/og/materi/matematika/transformasi-fungsi/rotasi/image.png",
   locale: "id",
   path: "/id/materi/matematika/transformasi-fungsi/rotasi",
-  trail: [{ name: "Beranda", path: "/id" }],
+  trails: [[{ name: "Beranda", path: "/id" }]],
 } satisfies ArticleJsonLdInput;
 
 const lessonUrl =
@@ -100,10 +100,12 @@ describe("article JSON-LD", () => {
       headline: "Regional Elections Turmoil",
       locale: "en",
       path: "/en/articles/politics/regional-elections-turmoil",
-      trail: [
-        { name: "Home", path: "/en" },
-        { name: "Articles", path: "/en/articles" },
-        { name: "Politics", path: "/en/articles/politics" },
+      trails: [
+        [
+          { name: "Home", path: "/en" },
+          { name: "Articles", path: "/en/articles" },
+          { name: "Politics", path: "/en/articles/politics" },
+        ],
       ],
     });
 
@@ -132,6 +134,32 @@ describe("article JSON-LD", () => {
         name: "Regional Elections Turmoil",
         item: "https://nakafa.com/en/articles/politics/regional-elections-turmoil",
       },
+    ]);
+  });
+
+  it("names one breadcrumb for each path that reaches the page, every one ending at it", () => {
+    const document = makeArticleJsonLd({
+      ...lesson,
+      trails: [
+        [
+          { name: "Beranda", path: "/id" },
+          { name: "Kurikulum Merdeka", path: "/id/kurikulum/merdeka" },
+        ],
+        [
+          { name: "Beranda", path: "/id" },
+          { name: "KSSM Malaysia", path: "/id/kurikulum/kssm" },
+        ],
+      ],
+    });
+    const [, ...breadcrumbs] = readPublishedJsonLd(document);
+
+    expect(
+      Arr.map(breadcrumbs, (breadcrumb) =>
+        Arr.map(breadcrumb.itemListElement, (item) => item.name)
+      )
+    ).toStrictEqual([
+      ["Beranda", "Kurikulum Merdeka", "Rotasi"],
+      ["Beranda", "KSSM Malaysia", "Rotasi"],
     ]);
   });
 
@@ -171,11 +199,7 @@ describe("article JSON-LD", () => {
   });
 
   it.each<
-    readonly [
-      string,
-      (document: ArticleJsonLd) => readonly [unknown, unknown],
-      string,
-    ]
+    readonly [string, (document: ArticleJsonLd) => readonly unknown[], string]
   >([
     [
       "a type Google no longer documents",
@@ -249,6 +273,21 @@ describe("article JSON-LD", () => {
       "a breadcrumb that ends at another page",
       ([article, breadcrumb]) => [
         article,
+        {
+          ...breadcrumb,
+          itemListElement: Arr.map(breadcrumb.itemListElement, (item) => ({
+            ...item,
+            item: "https://nakafa.com/id",
+          })),
+        },
+      ],
+      "Expected the breadcrumb to end at the article URL.",
+    ],
+    [
+      "a second breadcrumb that ends at another page",
+      ([article, breadcrumb]) => [
+        article,
+        breadcrumb,
         {
           ...breadcrumb,
           itemListElement: Arr.map(breadcrumb.itemListElement, (item) => ({

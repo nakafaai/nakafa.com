@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { activateUntilVisible } from "@/e2e/support/input";
 import { withObservedPageErrors } from "@/e2e/support/observe";
@@ -52,6 +52,49 @@ test("the language menu replaces the route in the chosen locale in place", async
         yield* Effect.promise(() =>
           expect(page.locator("html")).toHaveAttribute("lang", "de")
         );
+      })
+    )
+  );
+});
+
+/**
+ * Every language of the menu shows the flag of its own country, so no two
+ * options draw the same mark and a reader finds their language at a glance.
+ */
+test("the language menu shows each language with its own country's flag", async ({
+  page,
+}) => {
+  await Effect.runPromise(
+    withObservedPageErrors(
+      page,
+      Effect.gen(function* () {
+        yield* seedAnalyticsConsent(page, "denied");
+        yield* Effect.promise(() =>
+          page.goto("/en/search", { waitUntil: "domcontentloaded" })
+        );
+        const languageButton = page
+          .locator('[data-sidebar="sidebar"]:visible')
+          .getByRole("button", { exact: true, name: "Language" });
+        const english = page.getByRole("menuitem", {
+          exact: true,
+          name: "English",
+        });
+        yield* activateUntilVisible(
+          languageButton,
+          english,
+          readinessTimeoutMilliseconds
+        );
+        const marks = yield* Effect.promise(() =>
+          page
+            .getByRole("menuitem")
+            .evaluateAll((items) =>
+              items.map((item) => item.querySelector("svg")?.outerHTML ?? "")
+            )
+        );
+        yield* Effect.sync(() => {
+          expect(marks.length).toBeGreaterThan(1);
+          expect(Arr.dedupe(marks)).toHaveLength(marks.length);
+        });
       })
     )
   );

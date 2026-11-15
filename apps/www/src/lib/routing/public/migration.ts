@@ -9,10 +9,16 @@ import { readSubjectSuccessor } from "@/lib/routing/public/subject.server";
 import { readTryoutRedirect } from "@/lib/routing/public/tryout";
 
 const PREVIOUS_SUBJECT_NAMESPACE = "subject";
+/**
+ * The levels that named a retired subject lesson. `senior-high-school/10` is an
+ * earlier spelling of `high-school/10` that Search Console still showed with
+ * impressions on 13 November 2026.
+ */
 const PREVIOUS_MATERIAL_LEVELS = HashSet.make(
   "high-school/10",
   "high-school/11",
   "high-school/12",
+  "senior-high-school/10",
   "university/bachelor"
 );
 const REDIRECTABLE_METHODS = HashSet.make("GET", "HEAD");

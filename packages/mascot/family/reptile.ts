@@ -27,23 +27,48 @@ export const reptile = {
     ],
     draw: (kit) =>
       figure(
-        torso(kit.body, 58),
-        head(kit.body, 66, 44, 104),
-        line(
-          "M100,128 L100,146 M100,146 L92,158 M100,146 L108,158",
-          kit.second,
-          6
-        ),
-        faded(0.22, [
-          ...both((side) => [
-            ellipse(100 + side * 14, 60, 5, 4, kit.ink),
-            ellipse(100 + side * 30, 68, 4, 3.4, kit.ink),
-          ]),
-          ellipse(100, 56, 5, 4, kit.ink),
+        torso(kit.body, 54),
+        faded(0.5, [belly(PEARL, 30, 156)]),
+        // The loose skin of the neck, in two folds.
+        faded(0.16, [
+          line("M62,150 Q100,166 138,150", kit.ink, 5),
+          line("M58,170 Q100,186 142,170", kit.ink, 5),
         ]),
-        eyes(kit, 36, 96),
-        both((side) => ellipse(100 + side * 8, 112, 2.4, 2.4, kit.ink)),
-        line("M70,126 Q100,136 130,126", kit.ink, 4.4)
+        // A flat head, widest at the jaw.
+        path(
+          "M46,90 C46,62 70,50 100,50 C130,50 154,62 154,90 C158,104 164,112 164,122 C164,138 136,146 100,146 C64,146 36,138 36,122 C36,112 42,104 46,90 Z",
+          kit.body
+        ),
+        // Scales over the brow, and a heavy ridge over each eye.
+        faded(0.2, [
+          ...Arr.map(
+            [
+              [100, 60],
+              [84, 64],
+              [116, 64],
+              [92, 74],
+              [108, 74],
+              [100, 86],
+            ],
+            ([x, y]) => ellipse(x, y, 5, 4, kit.ink)
+          ),
+          ...both((side) =>
+            line(
+              `M${100 + side * 24},80 Q${100 + side * 40},70 ${100 + side * 52},82`,
+              kit.ink,
+              5
+            )
+          ),
+        ]),
+        eyes(kit, 38, 94, 5.8),
+        both((side) => ellipse(100 + side * 9, 108, 2.6, 3, kit.ink)),
+        // The long mouth, and the forked tongue tasting the air.
+        line("M48,122 Q100,138 152,122", kit.ink, 4.2),
+        line(
+          "M100,131 L100,158 M100,158 L90,172 M100,158 L110,172",
+          kit.second,
+          6.5
+        )
       ),
   },
   crocodile: {

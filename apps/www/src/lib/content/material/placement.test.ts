@@ -11,7 +11,7 @@ import {
   orderPlacements,
   placementHint,
   readPlacementAlignments,
-  readPlacementTrail,
+  readPlacementTrails,
 } from "@/lib/content/material/placement";
 
 const place = (nodeKey: string): MaterialPlacement => ({
@@ -63,22 +63,32 @@ describe("lesson places in search", () => {
     );
   });
 
-  it("walks home down the first place's curriculum pages", () => {
+  it("walks home down each place's curriculum pages, one trail per place", () => {
     expect(
-      readPlacementTrail("en", "Home", [placeIn("merdeka"), placeIn("other")])
+      readPlacementTrails("en", "Home", [placeIn("merdeka"), placeIn("other")])
     ).toStrictEqual([
-      { name: "Home", path: "/en" },
-      { name: "Curriculum merdeka", path: "/en/curriculum/merdeka" },
-      {
-        name: "Mathematics",
-        path: "/en/curriculum/merdeka/class-11/mathematics",
-      },
+      [
+        { name: "Home", path: "/en" },
+        { name: "Curriculum merdeka", path: "/en/curriculum/merdeka" },
+        {
+          name: "Mathematics",
+          path: "/en/curriculum/merdeka/class-11/mathematics",
+        },
+      ],
+      [
+        { name: "Home", path: "/en" },
+        { name: "Curriculum other", path: "/en/curriculum/other" },
+        {
+          name: "Mathematics",
+          path: "/en/curriculum/other/class-11/mathematics",
+        },
+      ],
     ]);
   });
 
   it("stands at home for a lesson that no curriculum places", () => {
-    expect(readPlacementTrail("en", "Home", [])).toStrictEqual([
-      { name: "Home", path: "/en" },
+    expect(readPlacementTrails("en", "Home", [])).toStrictEqual([
+      [{ name: "Home", path: "/en" }],
     ]);
   });
 

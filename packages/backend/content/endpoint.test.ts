@@ -1,6 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
 import {
-  PROTECTED_CONTENT_RUNTIME_PATH,
   PUBLIC_CONTENT_RUNTIME_BATCH_PATH,
   PUBLIC_CONTENT_RUNTIME_PATH,
 } from "@repo/backend/content/endpoint";
@@ -10,14 +9,6 @@ describe("public content runtime endpoints", () => {
     expect(PUBLIC_CONTENT_RUNTIME_PATH).toBe("/internal/content/runtime");
     expect(PUBLIC_CONTENT_RUNTIME_BATCH_PATH).toBe(
       "/internal/content/runtime/batch"
-    );
-  });
-});
-
-describe("protected content runtime endpoints", () => {
-  it("owns one unversioned contract", () => {
-    expect(PROTECTED_CONTENT_RUNTIME_PATH).toBe(
-      "/internal/content/runtime/protected"
     );
   });
 });
