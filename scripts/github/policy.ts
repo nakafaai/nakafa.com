@@ -54,7 +54,7 @@ export const GITHUB_ACTION_REVIEWS = Schema.decodeSync(
     expectedTag: "v7.0.1",
     expectedUsages: 4,
     reason:
-      "Checkout is pinned to the latest reviewed stable release. The CLI publication and the deploy workflow each check out the commit, and the proof workflow checks out the verified head without credentials twice: its gate job with the whole history, and its engine job, which the matrix runs once per engine.",
+      "Checkout is pinned to the latest reviewed stable release. The CLI publication and the deploy workflow each check out the commit, and the proof workflow checks out the verified head (a pull request's, a merge group's or a dispatched one) without credentials twice: its gate job with the whole history, and its engine job, which the matrix runs once per engine.",
   },
   {
     action: "oven-sh/setup-bun",

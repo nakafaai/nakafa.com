@@ -43,7 +43,10 @@ const runGit = Effect.fn("proof.runGit")(function* (
  * head of an open pull request, not main's head, and not the tip of a train
  * branch. A head that a newer push replaced, or that merged, would otherwise
  * hold one of the 20 jobs that every proof and gate of the account shares.
- * Runs that already started keep going. Returns how many it cancelled.
+ * Runs that already started keep going, and so does every run a pull request
+ * or a merge group started: GitHub's merge queue waits on a merge group's run,
+ * and a pull request's own concurrency group cancels its superseded runs.
+ * Returns how many it cancelled.
  */
 export const sweepSuperseded = Effect.fn("proof.sweepSuperseded")(function* () {
   const lines = (text: string) =>
@@ -80,6 +83,8 @@ export const sweepSuperseded = Effect.fn("proof.sweepSuperseded")(function* () {
     REPOSITORY,
     "--workflow",
     "proof.yml",
+    "--event",
+    "workflow_dispatch",
     "--status",
     "queued",
     "--limit",

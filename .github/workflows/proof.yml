@@ -1,29 +1,39 @@
-# Verifies one exact head on GitHub's free public-repository runners, on demand,
-# for the sessions and the landing train (AGENTS.md, Deployment): the gate (the
-# typechecks with the committed bindings unchanged, every unit suite at its
-# per-file 100% coverage gate, the source and policy checks with Ultracite, React
-# Doctor for the head's React changes against main, and the dependency audit),
-# and the proof (a production build served by the local production server over
-# the local Convex backend binary, with the inert acceptance environment, and the
-# chosen specs in Chromium, Firefox and WebKit).
+# Verifies one exact head on GitHub's free public-repository runners (AGENTS.md,
+# Deployment): the gate (the typechecks with the committed bindings unchanged,
+# every unit suite at its per-file 100% coverage gate, the source and policy
+# checks with Ultracite, React Doctor for the head's React changes against main,
+# and the dependency audit), and the proof (a production build served by the
+# local production server over the local Convex backend binary, with the inert
+# acceptance environment, and the chosen specs in Chromium, Firefox and WebKit).
+#
+# GitHub's merge queue requires one commit status, `verify`, and this workflow
+# posts it at two depths (docs/adr/0048-proof.md, "The Merge Queue Is Switched
+# On"). A pull request runs the gate alone, and the gate's verdict is `verify`.
+# A merge group runs the gate and the three engines over the specs its diff
+# selects (scripts/proof/select.ts), and the job that finishes last posts
+# `verify` from the gate and the three engine statuses. `workflow_dispatch`
+# serves `bun run gate`, whose gate also posts `verify`, `bun run proof`, the
+# train, and a merge group rehearsal that names its `base`.
 #
 # Four jobs side by side and no `needs`: the gate, and one job per engine that
 # installs, builds and proves on its own machine. Every `needs` stage waits in
 # the account's free runner queue again from the back, which turned 14 minutes
-# of work into three hours, while jobs without one leave the queue together. The
-# engines used to run one after another on one machine, which put a train of 34
-# pull requests past the 350-minute limit with no verdict. Each job posts its
-# own statuses: the gate `gate/<part>` and `gate`, each engine `proof/<engine>`,
-# and the engine that finishes last `proof`, read from the three engine statuses
-# of this run.
+# of work into three hours, while jobs without one leave the queue together.
+# Each job posts its own statuses: the gate `gate/<part>` and `gate`, each
+# engine `proof/<engine>`, and the engine that finishes last `proof`, read from
+# the three engine statuses of this run.
 #
-# It is a tool, not a required check: no ruleset names it. It reads no secret,
-# publishes nothing and touches no Convex or Cloudflare deployment
-# (docs/adr/0048-proof.md).
+# It reads no secret, publishes nothing and touches no Convex or Cloudflare
+# deployment. A pull request from a fork gets a read-only token, so its run
+# posts no status and it cannot enter the queue.
 name: Proof
-run-name: Proof ${{ inputs.sha }} ${{ inputs.nonce }}
+run-name: Proof ${{ inputs.sha || github.event.pull_request.head.sha || github.event.merge_group.head_sha }} ${{ inputs.nonce }}
 
 on:
+  pull_request:
+    types: [ opened, synchronize, reopened, ready_for_review ]
+  merge_group:
+    types: [ checks_requested ]
   workflow_dispatch:
     inputs:
       sha:
@@ -50,20 +60,40 @@ on:
         required: false
         default: false
         type: boolean
+      base:
+        description: Verify as a merge group on this base, selecting the specs from its diff to the head and posting verify
+        required: false
+        default: ""
+        type: string
       nonce:
         description: Names this run, so the caller that dispatched it finds it
         required: false
         default: ""
         type: string
 
-# No concurrency group: a cancelled run would still post its statuses as failed
-# over a newer run's, and a group named by the specs outgrows GitHub's limit.
+# A push to a pull request cancels the run of the head it replaced, whose
+# statuses name that older head only. Every other run has a group of its own,
+# so a merge group or a dispatch is never cancelled by a later one.
+concurrency:
+  group: ${{ github.event_name == 'pull_request' && format('proof-pull-{0}', github.event.pull_request.number) || format('proof-run-{0}', github.run_id) }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 permissions: {}
+
+env:
+  SHA: ${{ inputs.sha || github.event.pull_request.head.sha || github.event.merge_group.head_sha }}
+  BASE: ${{ github.event.merge_group.base_sha || inputs.base }}
+  # Who posts `verify`: `gate`, the gate alone (a pull request or a dispatch
+  # without the browsers); `group`, the last of the gate and the three engines
+  # (a merge group or its rehearsal); empty, nobody (a proof or a baseline).
+  VERIFY: ${{ (github.event_name == 'merge_group' || inputs.base != '') && 'group' || (github.event_name == 'pull_request' || !inputs.proof) && 'gate' || '' }}
+  URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
 
 jobs:
   gate:
     name: Gate
-    if: inputs.gate
+    # A draft runs nothing until it is marked ready for review.
+    if: (github.event_name == 'pull_request' && !github.event.pull_request.draft) || github.event_name == 'merge_group' || inputs.gate
     runs-on: ubuntu-latest
     timeout-minutes: 120
     permissions:
@@ -71,12 +101,10 @@ jobs:
       statuses: write
     env:
       GH_TOKEN: ${{ github.token }}
-      SHA: ${{ inputs.sha }}
       # A head or a train batch typechecks and tests the workspaces it changes
       # against main and their dependents; `full` runs every workspace.
       AFFECTED: ${{ !inputs.full && '--affected' || '' }}
       TURBO_SCM_BASE: origin/main
-      URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
       # The landing train's tests write commits, as the train does on the Mac, so
       # the runner names an author the way the Mac's Git configuration does.
       GIT_AUTHOR_EMAIL: 41898282+github-actions[bot]@users.noreply.github.com
@@ -87,7 +115,9 @@ jobs:
       - name: Mark the gate pending
         run: |
           [[ "$SHA" =~ ^[0-9a-f]{40}$ ]] || { echo "sha must be a full lower-case commit SHA." >&2; exit 1; }
-          for context in gate gate/static gate/www gate/backend; do
+          contexts=(gate gate/static gate/www gate/backend)
+          [ -z "$VERIFY" ] || contexts+=(verify)
+          for context in "${contexts[@]}"; do
             gh api --silent "repos/$GITHUB_REPOSITORY/statuses/$SHA" \
               -f state=pending -f context="$context" -f target_url="$URL" -f description="Verifying"
           done
@@ -96,7 +126,7 @@ jobs:
       # compares the head with main, so the job reads the whole history.
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ inputs.sha }}
+          ref: ${{ env.SHA }}
           fetch-depth: 0
           persist-credentials: false
 
@@ -167,10 +197,24 @@ jobs:
             post "gate/$part" "$state" "${outcome:-did not run}"
           done
           post gate "$all" "Typechecks, unit suites, policy, Doctor and audit: $all"
+          if [ "$VERIFY" = gate ]; then
+            description="Gate failed"
+            [ "$all" = success ] && description="Gate passed; the merge queue proves the browsers"
+            post verify "$all" "$description"
+          fi
+          [ "$VERIFY" = group ] || exit 0
+          # The last of the gate and the three engines to post its own status
+          # finds all four final and posts `verify`.
+          states="$(gh api "repos/$GITHUB_REPOSITORY/commits/$SHA/status?per_page=100" --jq \
+            "[.statuses[] | select(.target_url == \"$URL\" and (.context | test(\"^(gate|proof/(chromium|firefox|webkit))\$\"))) | .state]")"
+          [ "$(jq 'map(select(. != "pending")) | length' <<< "$states")" = 4 ] || exit 0
+          verdict=failure
+          [ "$(jq 'all(. == "success")' <<< "$states")" = true ] && verdict=success
+          post verify "$verdict" "Gate, Chromium, Firefox and WebKit: $verdict"
 
   proof:
     name: Proof ${{ matrix.engine }}
-    if: inputs.proof
+    if: github.event_name == 'merge_group' || inputs.proof
     runs-on: ubuntu-latest
     timeout-minutes: 350
     strategy:
@@ -183,27 +227,42 @@ jobs:
       statuses: write
     env:
       GH_TOKEN: ${{ github.token }}
-      SHA: ${{ inputs.sha }}
-      SPECS: ${{ inputs.specs }}
       ENGINE: ${{ matrix.engine }}
-      URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
     steps:
       - name: Mark the engine pending
         run: |
           [[ "$SHA" =~ ^[0-9a-f]{40}$ ]] || { echo "sha must be a full lower-case commit SHA." >&2; exit 1; }
-          [[ "$SPECS" =~ ^(e2e/[A-Za-z0-9/_.-]+\.browser\.ts( |$))*$ ]] || { echo "specs must be spec files under apps/www." >&2; exit 1; }
-          for context in proof "proof/$ENGINE"; do
+          contexts=(proof "proof/$ENGINE")
+          [ "$VERIFY" != group ] || contexts+=(verify)
+          for context in "${contexts[@]}"; do
             gh api --silent "repos/$GITHUB_REPOSITORY/statuses/$SHA" \
               -f state=pending -f context="$context" -f target_url="$URL" -f description="Verifying"
           done
 
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ inputs.sha }}
+          ref: ${{ env.SHA }}
           persist-credentials: false
 
       - name: Install dependencies
         uses: ./.github/actions/install
+
+      # A merge group proves the specs its diff selects: those it changes, the
+      # folders its app source paths name, and the smoke spec. A dispatch proves
+      # the specs it names, or every suite.
+      - name: Select the specs
+        env:
+          NAMED: ${{ inputs.specs }}
+        run: |
+          specs="$NAMED"
+          if [ -n "$BASE" ]; then
+            [[ "$BASE" =~ ^[0-9a-f]{40}$ ]] || { echo "base must be a full lower-case commit SHA." >&2; exit 1; }
+            git fetch --quiet --no-tags --depth=1 origin "$BASE"
+            specs="$(node scripts/proof/select.ts "$BASE" "$SHA")"
+          fi
+          [[ "$specs" =~ ^(e2e/[A-Za-z0-9/_.-]+\.browser\.ts( |$))*$ ]] || { echo "specs must be spec files under apps/www." >&2; exit 1; }
+          echo "SPECS=$specs" >> "$GITHUB_ENV"
+          echo "Specs: ${specs:-every suite}"
 
       # The engine installs while the runtime prepares and builds. The apt timeout
       # lets a silent mirror fall back in ten seconds instead of thirty a file.
@@ -361,3 +420,12 @@ jobs:
           all=failure
           [ "$(jq 'all(. == "success")' <<< "$states")" = true ] && all=success
           post proof "$all" "Chromium, Firefox and WebKit: $all"
+          [ "$VERIFY" = group ] || exit 0
+          # The last of the gate and the three engines to post its own status
+          # finds all four final and posts `verify`.
+          states="$(gh api "repos/$GITHUB_REPOSITORY/commits/$SHA/status?per_page=100" --jq \
+            "[.statuses[] | select(.target_url == \"$URL\" and (.context | test(\"^(gate|proof/(chromium|firefox|webkit))\$\"))) | .state]")"
+          [ "$(jq 'map(select(. != "pending")) | length' <<< "$states")" = 4 ] || exit 0
+          verdict=failure
+          [ "$(jq 'all(. == "success")' <<< "$states")" = true ] && verdict=success
+          post verify "$verdict" "Gate, Chromium, Firefox and WebKit: $verdict"
