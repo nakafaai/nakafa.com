@@ -1,7 +1,7 @@
 name: Post the gate
 description: >-
   Posts `gate` once this run's three parts, `gate/static`, `gate/www` and `gate/backend`, are final, so the job that
-  finishes last posts it: the gate job posts the first two parts and the backend coverage job the third
+  finishes last posts it: the gate job posts the first two parts and the last backend shard the third
   (docs/adr/0048-proof.md, "The Backend Suite In Shards"). Each job posts its own part before it reads, so the later
   reader finds all three. For a pull request or a dispatch without the browsers it posts `verify` too. The calling
   job holds a token that may post statuses.
