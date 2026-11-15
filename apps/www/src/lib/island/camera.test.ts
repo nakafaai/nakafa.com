@@ -18,7 +18,7 @@ import {
 
 describe("island/camera", () => {
   it("opens over the middle of the island, farther for a wider one", () => {
-    const small = openingOrbit(16, 1.5);
+    const small = openingOrbit(10, 1.5);
     expect(small.target).toEqual([SPAN / 2, 9, SPAN / 2]);
     expect(openingOrbit(64, 1.5).distance).toBeGreaterThan(small.distance);
     expect(openingOrbit(16, 0.5).distance).toBeGreaterThan(small.distance);

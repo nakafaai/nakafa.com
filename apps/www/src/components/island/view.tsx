@@ -4,8 +4,9 @@ import type { Edit } from "@repo/backend/confect/island/world";
 import { createFramePace } from "@repo/design-system/lib/pace";
 import { Array as Arr, DateTime, Option } from "effect";
 import { createPainter, type Painter } from "@/components/island/draw";
+import { bodiesOf } from "@/lib/island/bodies";
 import { openingOrbit, turnOrbit } from "@/lib/island/camera";
-import { herdQuads } from "@/lib/island/life";
+import { flatQuads } from "@/lib/island/life";
 import { glowOf } from "@/lib/island/light";
 import { lightingOf, meshChunk } from "@/lib/island/mesh";
 import { seasonNow } from "@/lib/island/season";
@@ -45,7 +46,8 @@ function tour(
     }
     orbit = turnOrbit(orbit, last === 0 ? 0 : ((now - last) / 1000) * TOUR);
     last = now;
-    painter.herd(herdQuads(world, [], size, orbit.yaw, now / 1000));
+    painter.bodies(bodiesOf(world, [], now / 1000));
+    painter.herd(flatQuads(size, now / 1000));
     const hour = hourOf(DateTime.nowUnsafe(), DateTime.zoneMakeLocal());
     painter.draw(
       orbit,

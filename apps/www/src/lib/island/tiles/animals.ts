@@ -16,64 +16,6 @@ const LEGEND: Readonly<Record<string, Ink>> = {
   w: ["plaster", 3],
 };
 
-/** A hen's body, head held up, facing east; her legs change with each step. */
-const HEN = [
-  "................",
-  "................",
-  "................",
-  ".........rr.....",
-  "........rwwr....",
-  "........wwkwo...",
-  "........wwwwoo..",
-  "...W....wwww....",
-  "..WWwwwwwwww....",
-  "..WWwwwwwwww....",
-  "...WWwwwwwwW....",
-  "....WWwwwwW.....",
-  ".....WWWWW......",
-] as const;
-
-/** A duck floating, facing east, its green head over a brown body. */
-const DUCK = [
-  "................",
-  "................",
-  "................",
-  "................",
-  "................",
-  ".........ggg....",
-  "........gggkgo..",
-  "........ggggoo..",
-  ".........gg.....",
-  "...bb...bbb.....",
-  "..bBbbbbbbbb....",
-  "..bBBbbbbbbbb...",
-  "...BBBbbbbbB....",
-  "....BBBBBBB.....",
-  "................",
-  "................",
-] as const;
-
-/** A hen mid-stride, legs apart. */
-export function henTile() {
-  return rowsTile(
-    [...HEN, "......O..O......", "......O..O......", ".....OO.OO......"],
-    LEGEND
-  );
-}
-
-/** A hen's other stride, legs crossed under her. */
-export function henStepTile() {
-  return rowsTile(
-    [...HEN, ".......O.O......", "......O...O.....", ".....OO..OO....."],
-    LEGEND
-  );
-}
-
-/** A duck on the water. */
-export function duckTile() {
-  return rowsTile(DUCK, LEGEND);
-}
-
 /** Nina's left side seen from above, her hammer head to the east: one end of the hammer and a fin. */
 const NINA_LEFT = [
   "................",
