@@ -17,6 +17,7 @@ import type {
   TryoutSetRow,
   TryoutSetStatusFilter,
 } from "@/components/tryout/catalog/table/types";
+import { TryoutLevelBadge, useLevelChoices } from "@/components/tryout/level";
 import { statusLook } from "@/components/tryout/progress";
 import { TryoutPageLink } from "@/components/tryout/route/link";
 import type { TryoutPageAddress } from "@/components/tryout/route/path";
@@ -61,20 +62,28 @@ function useStatusChoices() {
 }
 
 /**
- * The columns of a track's sets: the name, which opens the set, the learner's status, which the server filters by, the
- * questions, the minutes and the score. The server sorts the track by the name and the figures; the heads of text and
- * figures keep the sets the table has read. A learner's progress marks carry `data-progress`, so the rows every visitor
+ * The columns of a track's sets: the name, which opens the set, its measured level and the learner's status, which the
+ * server filters by, the questions, the minutes and the score. The server sorts the track by the name, the level, from
+ * easy up to cooked, and the figures; the heads of text and figures keep the sets the table has read. A learner's progress marks carry `data-progress`, so the rows every visitor
  * reads can hide them under a signed-in hint.
  */
 export function useTryoutSetColumns() {
   const t = useTranslations("Tryouts");
   const statusChoices = useStatusChoices();
+  const levelChoices = useLevelChoices();
 
   return [
     setColumns.text((row) => row.title, {
       cell: (info) => <TryoutSetName row={info.row.original} />,
       header: t("set-column-name"),
       id: "title",
+    }),
+    setColumns.choice((row) => row.level, {
+      cell: (info) => <TryoutLevelBadge level={info.row.original.level} />,
+      header: t("set-column-level"),
+      id: "level",
+      options: levelChoices,
+      sort: { asc: t("level-sort-easiest"), desc: t("level-sort-hardest") },
     }),
     setColumns.choice((row) => row.attemptStatus ?? "not-started", {
       cell: (info) => (

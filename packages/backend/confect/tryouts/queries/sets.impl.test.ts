@@ -29,11 +29,13 @@ const list = tryouts.queries.sets.list;
 /** The list arguments of the fixture track: every set in authored order, up to `numItems`. */
 const listArgs = (
   overrides: Partial<
-    Pick<ListArgs, "filter" | "locale" | "sort"> & ListArgs["paginationOpts"]
+    Pick<ListArgs, "filter" | "level" | "locale" | "sort"> &
+      ListArgs["paginationOpts"]
   > = {}
 ) => ({
   ...FIXTURE_TRACK,
   filter: overrides.filter ?? "all",
+  level: overrides.level ?? "all",
   locale: overrides.locale ?? "id",
   paginationOpts: {
     cursor: overrides.cursor ?? null,
@@ -201,6 +203,7 @@ describe("tryouts/queries/sets", () => {
                 sectionKey: "section-a",
                 visibility: "visible",
               },
+              level: "easy",
               publishedScore: null,
               questionCount: 3,
               runningAttempt: null,
@@ -220,7 +223,7 @@ describe("tryouts/queries/sets", () => {
               setKey: "set-1",
               visibleSectionCount: 2,
             },
-            { setKey: "set-2" },
+            { level: "medium", setKey: "set-2" },
           ],
           snapshotId: world.snapshotId,
           viewerId: null,
@@ -264,6 +267,33 @@ describe("tryouts/queries/sets", () => {
             keysOf(yield* world.learner.query(list, listArgs({ filter })))
           ).toEqual(keys);
         }
+        // The sets climb a level each, easy, medium, hard: a level keeps its set, alone or with a status.
+        for (const [level, keys] of [
+          ["easy", ["set-1"]],
+          ["medium", ["set-2"]],
+          ["hard", ["set-3"]],
+          ["cooked", []],
+        ] as const) {
+          expect(
+            keysOf(yield* world.learner.query(list, listArgs({ level })))
+          ).toEqual(keys);
+        }
+        expect(
+          keysOf(
+            yield* world.learner.query(
+              list,
+              listArgs({ filter: "not-started", level: "hard" })
+            )
+          )
+        ).toEqual(["set-3"]);
+        expect(
+          keysOf(
+            yield* world.learner.query(
+              list,
+              listArgs({ filter: "not-started", level: "easy" })
+            )
+          )
+        ).toEqual([]);
         for (const [sort, keys] of [
           [
             { direction: "desc", field: "publishedScore" },
@@ -283,6 +313,9 @@ describe("tryouts/queries/sets", () => {
             ["set-1", "set-2", "set-3"],
           ],
           [{ direction: "asc", field: "title" }, ["set-1", "set-2", "set-3"]],
+          // The sets climb from easy to hard, so the hardest leads when the level descends.
+          [{ direction: "asc", field: "level" }, ["set-1", "set-2", "set-3"]],
+          [{ direction: "desc", field: "level" }, ["set-3", "set-2", "set-1"]],
         ] as const) {
           expect(
             keysOf(yield* world.learner.query(list, listArgs({ sort })))

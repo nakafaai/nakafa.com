@@ -99,8 +99,22 @@ function HeadControl<TData extends RowData>({
 
   return Match.value(filter).pipe(
     Match.discriminatorsExhaustive("kind")({
-      choice: ({ options }) => (
-        <ColumnChoice column={id} options={options} title={title} />
+      choice: ({ options, sort }) => (
+        <ColumnChoice
+          column={id}
+          options={options}
+          sort={
+            sort === undefined
+              ? undefined
+              : {
+                  onSort: (descending) =>
+                    header.column.toggleSorting(descending),
+                  sorted: header.column.getIsSorted() || "none",
+                  words: sort,
+                }
+          }
+          title={title}
+        />
       ),
       days: () => (
         <SortingHead header={header} kind="days" name={children}>

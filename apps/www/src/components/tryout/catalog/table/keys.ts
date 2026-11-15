@@ -16,6 +16,7 @@ export function selectionKey(args: TryoutSetRequest) {
     args.locale,
     args.trackKey,
     args.filter,
+    args.level,
     args.sort.field,
     args.sort.direction,
   ]);

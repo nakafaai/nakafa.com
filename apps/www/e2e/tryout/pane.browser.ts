@@ -10,6 +10,14 @@ import { waitUntilTakenOver } from "@/e2e/support/window";
 
 const TRACK_PATH = "/en/try-out/indonesia/snbt/2027/utbk";
 
+/** The four levels a set can measure at, as the table and the pane name them. */
+const LEVELS = [
+  en.Tryouts["level-easy"],
+  en.Tryouts["level-medium"],
+  en.Tryouts["level-hard"],
+  en.Tryouts["level-cooked"],
+];
+
 /**
  * Opens the track as a visitor who already answered the usage-data prompt, whose card would otherwise stand over
  * the pane's footer in the corner of the screen.
@@ -43,7 +51,7 @@ async function rowName(row: Locator) {
 
 /**
  * The owner's sketch of the pane: a press on the row of a set nobody has started opens the set beside the table, with
- * its name, its parts and Start, and marks the row while it stays open. The name's link opens it too, Escape closes
+ * its name, its parts, and its level beside Start, and marks the row while it stays open. The name's link opens it too, Escape closes
  * it, and a visitor's Start goes to sign in and comes back to the set.
  */
 test.describe("The set pane beside a track's table", () => {
@@ -68,6 +76,13 @@ test.describe("The set pane beside a track's table", () => {
       pane.getByRole("heading", { exact: true, name: await rowName(first) })
     ).toBeVisible();
     await expect(first).toHaveAttribute("data-state", "selected");
+    // The set's measured level stands at the start of the pane's footer, never in its title.
+    const cell = await first.getByRole("cell").nth(1).textContent();
+    const level = cell?.trim() ?? "";
+    expect(LEVELS).toContain(level);
+    await expect(
+      pane.locator("footer").getByText(level, { exact: true })
+    ).toBeVisible();
     // The set's parts stand in the set page's own list, each row a link to its part, with no heading above them.
     await expect(pane.getByRole("link").first()).toBeVisible();
     await expect(

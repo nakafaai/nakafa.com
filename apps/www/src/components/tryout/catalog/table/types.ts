@@ -3,6 +3,7 @@ import type tryouts from "@repo/backend/confect/_generated/refs/tryouts";
 import {
   setDirectionValidator,
   setFilterValidator,
+  setLevelFilterValidator,
   setSortValidator,
 } from "@repo/backend/confect/tryouts/sets/query";
 import { Schema } from "effect";
@@ -17,13 +18,15 @@ export type TryoutSetPage = Ref.Returns<SetListQuery>;
 export type TryoutSetRow = TryoutSetPage["page"][number];
 export type TryoutSetSort = TryoutSetListArgs["sort"];
 export type TryoutSetStatusFilter = TryoutSetListArgs["filter"];
+export type TryoutSetLevelFilter = TryoutSetListArgs["level"];
 
 /** The set list request of a track, without the window of rows it reads. */
 export type TryoutSetRequest = Omit<TryoutSetListArgs, "paginationOpts">;
 
-/** One change of the catalog's URL selection: its status filter, its sort field or its direction. */
+/** One change of the catalog's URL selection: its status filter, its level filter, its sort field or its direction. */
 export const TryoutSetSelectionChange = Schema.Struct({
   direction: Schema.optionalKey(setDirectionValidator),
+  level: Schema.optionalKey(setLevelFilterValidator),
   sort: Schema.optionalKey(setSortValidator.fields.field),
   status: Schema.optionalKey(setFilterValidator),
 });

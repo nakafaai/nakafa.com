@@ -9,6 +9,7 @@ const args: TryoutSetListArgs = {
   countryKey: "id",
   examKey: "utbk",
   filter: "all",
+  level: "all",
   locale: "id",
   paginationOpts: { cursor: null, numItems: 25 },
   sort: { direction: "asc", field: "order" },
@@ -16,10 +17,13 @@ const args: TryoutSetListArgs = {
 };
 
 describe("try-out set list keys", () => {
-  it("identifies a selection by its filter and sort, not by its window", () => {
+  it("identifies a selection by its filter, level and sort, not by its window", () => {
     const { paginationOpts: _window, ...selection } = args;
     expect(selectionKey(selection)).toBe(selectionKey(args));
     expect(selectionKey({ ...selection, filter: "expired" })).not.toBe(
+      selectionKey(args)
+    );
+    expect(selectionKey({ ...selection, level: "cooked" })).not.toBe(
       selectionKey(args)
     );
   });

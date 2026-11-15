@@ -56,6 +56,7 @@ export function visitorReadInput(request: TryoutSetRequest, numItems: number) {
     numItems,
     search: {
       direction: request.sort.direction,
+      level: request.level,
       sort: request.sort.field,
       status: request.filter,
     },

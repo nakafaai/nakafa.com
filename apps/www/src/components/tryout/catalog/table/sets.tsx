@@ -61,6 +61,7 @@ export function TryoutSetTable({ bootstrap }: TryoutSetTableProps) {
     countryKey: bootstrap.args.countryKey,
     examKey: bootstrap.args.examKey,
     filter: selection.status,
+    level: selection.level,
     locale: bootstrap.args.locale,
     sort: { direction: selection.direction, field: selection.sort },
     trackKey: bootstrap.args.trackKey,
@@ -77,7 +78,9 @@ export function TryoutSetTable({ bootstrap }: TryoutSetTableProps) {
     <TryoutSetTableContext
       value={{
         filter: request.filter,
+        level: request.level,
         onFilter: (filter) => select({ status: filter }),
+        onLevel: (level) => select({ level }),
         onSort: (sort) =>
           select({ direction: sort.direction, sort: sort.field }),
         sort: request.sort,

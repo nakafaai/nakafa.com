@@ -259,6 +259,7 @@ describe("readTryoutGroupRoute", () => {
 /** The default catalog query of a track page. */
 const TRACK_SEARCH = {
   direction: "asc",
+  level: "all",
   sort: "order",
   status: "all",
 } satisfies CatalogQuery;
@@ -361,6 +362,7 @@ describe("readTryoutTrackRoute", () => {
 describe("readTryoutTrackSetList", () => {
   const search = {
     direction: "asc",
+    level: "all",
     sort: "title",
     status: "all",
   } satisfies CatalogQuery;

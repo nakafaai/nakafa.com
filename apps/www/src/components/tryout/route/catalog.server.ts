@@ -259,6 +259,7 @@ export const readTryoutTrackSetList = Effect.fn(
     countryKey: input.track.countryKey,
     examKey: input.track.examKey,
     filter: input.search.status,
+    level: input.search.level,
     locale: input.locale,
     paginationOpts: {
       cursor: null,

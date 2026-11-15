@@ -75,6 +75,32 @@ describe("the columns of a table", () => {
     ).toMatchObject({ enableSorting: false, filterFn: "anyOf" });
   });
 
+  it("lets a column of chosen values sort the rows only when it names both ways", () => {
+    const sort = { asc: "Easiest", desc: "Hardest" };
+
+    expect(
+      columns.choice((row) => row.status, {
+        header: "Status",
+        id: "status",
+        options,
+      })
+    ).toMatchObject({
+      enableSorting: false,
+      meta: { filter: { kind: "choice", options } },
+    });
+    expect(
+      columns.choice((row) => row.status, {
+        header: "Level",
+        id: "level",
+        options,
+        sort,
+      })
+    ).toMatchObject({
+      enableSorting: true,
+      meta: { filter: { kind: "choice", options, sort } },
+    });
+  });
+
   it("keeps a column's place and its cell", () => {
     const cell = () => "drawn";
 

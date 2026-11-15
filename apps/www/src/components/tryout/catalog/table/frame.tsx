@@ -1,5 +1,6 @@
 import {
   setFilterValidator,
+  setLevelFilterValidator,
   setSortValidator,
 } from "@repo/backend/confect/tryouts/sets/query";
 import { Option, Schema } from "effect";
@@ -14,14 +15,15 @@ import { isUnstartedSet } from "@/components/tryout/catalog/table/started";
 import type { TryoutSetData } from "@/components/tryout/catalog/table/types";
 
 /**
- * The discovery table of a track: a `DataTable` the server sorts, filters by status and reads a window at a time. A
+ * The discovery table of a track: a `DataTable` the server sorts, filters by status and by level and reads a window at a time. A
  * visitor's and a learner's table render this same frame, so the two variants keep one layout. The address holds the
- * status and the sort, the heads of the name and the figures keep the sets the table has read, and the next window
+ * status, the level and the sort, the heads of the name and the figures keep the sets the table has read, and the next window
  * loads as the end of the rows comes into view, so a filter reaches the whole track. The status line says when the
  * rows are updating, offline, or could not update.
  */
 export function TryoutSetFrame({ data }: { data: TryoutSetData }) {
-  const { filter, onFilter, onSort, sort } = useTryoutSetTable();
+  const { filter, level, onFilter, onLevel, onSort, sort } =
+    useTryoutSetTable();
   const t = useTranslations("Tryouts");
   const columns = useTryoutSetColumns();
   const status = Option.match(
@@ -52,12 +54,18 @@ export function TryoutSetFrame({ data }: { data: TryoutSetData }) {
               opens={isUnstartedSet}
               rowId={(row) => row.publicPath}
               server={{
-                choose: (_column, value) => {
+                choose: (column, value) => {
+                  if (column === "level") {
+                    if (Schema.is(setLevelFilterValidator)(value)) {
+                      onLevel(value);
+                    }
+                    return;
+                  }
                   if (Schema.is(setFilterValidator)(value)) {
                     onFilter(value);
                   }
                 },
-                chosen: { status: filter },
+                chosen: { level, status: filter },
                 more: canLoadMore ? Option.some(data.loadMore) : Option.none(),
                 onSort: (column, descending) => {
                   if (Schema.is(setSortValidator.fields.field)(column)) {
@@ -67,7 +75,7 @@ export function TryoutSetFrame({ data }: { data: TryoutSetData }) {
                     });
                   }
                 },
-                snapshot: `${filter}:${sort.field}:${sort.direction}:${data.snapshotId ?? ""}`,
+                snapshot: `${filter}:${level}:${sort.field}:${sort.direction}:${data.snapshotId ?? ""}`,
                 sort:
                   sort.field === "order"
                     ? Option.none()

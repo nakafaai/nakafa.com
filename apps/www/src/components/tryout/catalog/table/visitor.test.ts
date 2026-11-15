@@ -23,6 +23,7 @@ const request: TryoutSetRequest = {
   countryKey: "id",
   examKey: "utbk",
   filter: "all",
+  level: "all",
   locale: "id",
   sort: { direction: "asc", field: "order" },
   trackKey: "saintek",
@@ -201,7 +202,7 @@ describe("visitor set list state", () => {
     expect(visitorReadInput(request, 75)).toStrictEqual({
       locale: "id",
       numItems: 75,
-      search: { direction: "asc", sort: "order", status: "all" },
+      search: { direction: "asc", level: "all", sort: "order", status: "all" },
       track: { countryKey: "id", examKey: "utbk", trackKey: "saintek" },
     });
   });

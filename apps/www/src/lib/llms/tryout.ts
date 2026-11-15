@@ -172,6 +172,7 @@ const readTrackText = Effect.fn("www.llms.tryout.track")(function* (
     countryKey: page.country.countryKey,
     examKey: page.exam.examKey,
     filter: CATALOG_QUERY_DEFAULTS.status,
+    level: CATALOG_QUERY_DEFAULTS.level,
     locale,
     sort: {
       direction: CATALOG_QUERY_DEFAULTS.direction,

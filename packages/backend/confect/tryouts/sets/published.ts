@@ -12,6 +12,7 @@ import {
   type PublishedSetRow,
   paginatePublishedSets,
 } from "@repo/backend/confect/tryouts/sets/page";
+import { setLevelRank } from "@repo/backend/confect/tryouts/sets/query";
 import type {
   ListArgs,
   TrackIdentity,
@@ -68,7 +69,11 @@ export const listPublishedSets = Effect.fn("tryouts.sets.listPublished")(
       };
     }
     const filter = args.filter;
-    const filtered = Arr.filter(joined, ({ progress }) => {
+    const level = args.level;
+    const filtered = Arr.filter(joined, ({ progress, set }) => {
+      if (level !== "all" && set.level !== level) {
+        return false;
+      }
       if (filter === "all") {
         return true;
       }
@@ -263,6 +268,15 @@ function sortJoinedSets(
     Match.when(
       "order",
       () => (left, right) => directed(authoredOrder(left, right), left, right)
+    ),
+    Match.when(
+      "level",
+      () => (left, right) =>
+        directed(
+          setLevelRank(left.set.level) - setLevelRank(right.set.level),
+          left,
+          right
+        )
     ),
     Match.when("publishedScore", () => (left, right) => {
       const leftScore = left.progress?.publishedScore ?? null;
