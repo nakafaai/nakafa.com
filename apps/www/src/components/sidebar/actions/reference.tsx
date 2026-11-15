@@ -64,7 +64,7 @@ export function ReferenceButton({ references }: Props) {
             </SheetHeader>
 
             <div className="flex flex-1 flex-col overflow-hidden">
-              <ScrollArea className="h-full">
+              <ScrollArea axis="vertical" className="h-full">
                 <ul data-slot="reference-list">
                   {Arr.map(references, (reference, index) => {
                     const url = reference.url

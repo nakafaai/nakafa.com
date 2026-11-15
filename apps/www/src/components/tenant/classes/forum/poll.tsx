@@ -300,7 +300,7 @@ export function NewPoll({
             </Button>
           ) : null}
         </Field>
-        <Field className="flex-row items-center justify-between gap-4">
+        <Field orientation="horizontal">
           <FieldLabel htmlFor={`${id}-multiple`}>
             {t("poll-multiple")}
           </FieldLabel>
