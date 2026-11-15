@@ -272,7 +272,7 @@ function rodProgram(sketch: p5, read: () => typeof RodFrame.Type) {
 }
 
 interface SignificantZerosLabProps {
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   labels: {
     chooseTool: string;
     chooseUnit: string;
@@ -284,7 +284,7 @@ interface SignificantZerosLabProps {
     tools: Record<typeof RodToolSchema.Type, ReactNode>;
     viewLabel: string;
   };
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
 }
 
 /** The unit symbol of a reading, as KaTeX. */

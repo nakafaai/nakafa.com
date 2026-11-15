@@ -275,7 +275,7 @@ function damProgram(sketch: p5, read: () => DamFrame) {
 }
 
 interface HydroDamLabProps {
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   /** The head the dam holds first, in metres. */
   head?: number;
   labels: {
@@ -288,7 +288,7 @@ interface HydroDamLabProps {
     speed: ReactNode;
     viewLabel: string;
   };
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
 }
 
 /**

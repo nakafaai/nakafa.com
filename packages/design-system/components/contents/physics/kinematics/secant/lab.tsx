@@ -246,7 +246,7 @@ function secantProgram(sketch: p5, read: () => SecantFrame) {
 }
 
 interface CarTripSecantSlopeLabProps {
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   /** The graph drawn under the road: position, whose secant slope is the average velocity, or velocity, whose secant slope is the average acceleration. */
   graph?: TripGraph;
   labels: {
@@ -258,7 +258,7 @@ interface CarTripSecantSlopeLabProps {
     rate: ReactNode;
     viewLabel: string;
   };
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
   /** The trip the car drives. */
   trip?: Trip;
 }

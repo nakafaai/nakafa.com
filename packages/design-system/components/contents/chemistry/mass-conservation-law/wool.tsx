@@ -83,7 +83,7 @@ export function SteelWoolLab({
   labels,
   title,
 }: {
-  readonly description: ReactNode;
+  readonly description: NonNullable<ReactNode>;
   readonly labels: {
     readonly chooseSeal: string;
     readonly oxygenJoined: ReactNode;
@@ -92,7 +92,7 @@ export function SteelWoolLab({
     readonly seals: Readonly<Record<Seal, string>>;
     readonly viewLabel: string;
   };
-  readonly title: ReactNode;
+  readonly title: NonNullable<ReactNode>;
 }) {
   const [seal, setSeal] = useState<Seal>("open");
   const quantity = useQuantity();

@@ -17,17 +17,17 @@ import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
 
 interface Props {
-  /** What the stages compare, read under the title. */
-  description?: ReactNode;
+  /** What the stages compare, under the title; the contract still leaves it optional. */
+  description?: NonNullable<ReactNode>;
   labels: {
     delivery: ReactNode;
     election: ReactNode;
     selection: ReactNode;
   };
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
 }
 
-/** Renders the governance-stage comparison used by the nepotism article. */
+/** Renders the governance-stage comparison used by the nepotism article, with what each stage asks the reader to see. */
 export function Stage({ description, title, labels }: Props) {
   const stages = [
     { step: 1, title: labels.selection },

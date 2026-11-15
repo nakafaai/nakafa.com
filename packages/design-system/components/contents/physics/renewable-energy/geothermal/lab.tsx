@@ -26,7 +26,7 @@ import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { type ReactNode, Suspense, useState } from "react";
 
 interface GeothermalLoopLabProps {
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   labels: {
     electric: ReactNode;
     heat: ReactNode;
@@ -37,7 +37,7 @@ interface GeothermalLoopLabProps {
   };
   /** The reservoir's temperature at first, in degrees Celsius. */
   reservoir?: number;
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
 }
 
 /**

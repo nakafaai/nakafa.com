@@ -269,7 +269,7 @@ function storageProgram(sketch: p5, read: () => StorageFrame) {
 }
 
 interface SolarBatteryStorageLabProps {
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   labels: {
     chooseSize: string;
     demand: ReactNode;
@@ -280,7 +280,7 @@ interface SolarBatteryStorageLabProps {
   };
   /** The battery's size at first, in kilowatt-hours. */
   size?: (typeof BATTERY_SIZES)[number];
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
 }
 
 /**

@@ -279,7 +279,7 @@ function kettleProgram(sketch: p5, read: () => KettleFrame) {
 }
 
 interface KettleHeatingLabProps {
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   /** How full the kettle starts. */
   fill?: Fill;
   labels: {
@@ -290,7 +290,7 @@ interface KettleHeatingLabProps {
     time: ReactNode;
     viewLabel: string;
   };
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
 }
 
 /**

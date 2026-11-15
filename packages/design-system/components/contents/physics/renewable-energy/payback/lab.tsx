@@ -222,7 +222,7 @@ function paybackProgram(sketch: p5, read: () => PaybackFrame) {
 }
 
 interface SolarRoofPaybackLabProps {
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   labels: {
     invested: ReactNode;
     lifetime: ReactNode;
@@ -231,7 +231,7 @@ interface SolarRoofPaybackLabProps {
     yearly: ReactNode;
     yieldControl: string;
   };
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
   /** The yearly yield per kWp at first, in kilowatt-hours. */
   yieldPerPeak?: number;
 }

@@ -223,7 +223,7 @@ function trapProgram(sketch: p5, read: () => TrapFrame) {
 }
 
 interface SpeedTrapInstantSpeedLabProps {
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   labels: {
     averageSpeed: ReactNode;
     chooseGap: string;
@@ -232,7 +232,7 @@ interface SpeedTrapInstantSpeedLabProps {
     instantSpeed: ReactNode;
     viewLabel: string;
   };
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
 }
 
 /**

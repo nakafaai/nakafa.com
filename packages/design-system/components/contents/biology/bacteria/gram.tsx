@@ -78,7 +78,7 @@ export function GramStainLab({
   labels,
   title,
 }: {
-  readonly description: ReactNode;
+  readonly description: NonNullable<ReactNode>;
   readonly labels: {
     readonly chooseStep: string;
     readonly hues: Readonly<Record<Hue, ReactNode>>;
@@ -87,7 +87,7 @@ export function GramStainLab({
     readonly steps: Readonly<Record<StainStep, string>>;
     readonly viewLabel: string;
   };
-  readonly title: ReactNode;
+  readonly title: NonNullable<ReactNode>;
 }) {
   const [step, setStep] = useState<StainStep>("safranin");
 

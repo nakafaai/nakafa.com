@@ -252,7 +252,7 @@ function hoistProgram(sketch: p5, read: () => HoistFrame) {
 }
 
 interface HoistWorkLabProps {
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   labels: {
     chooseMotor: string;
     energy: ReactNode;
@@ -264,7 +264,7 @@ interface HoistWorkLabProps {
   };
   /** The motor the hoist runs on first. */
   motor?: Motor;
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
 }
 
 /**

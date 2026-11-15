@@ -67,7 +67,7 @@ export function AntibodyNeutralizeLab({
   mode,
   title,
 }: {
-  readonly description: ReactNode;
+  readonly description: NonNullable<ReactNode>;
   readonly labels: {
     readonly blocked: ReactNode;
     readonly chance: ReactNode;
@@ -82,7 +82,7 @@ export function AntibodyNeutralizeLab({
     readonly viewLabel: string;
   };
   readonly mode: "days" | "vaccine";
-  readonly title: ReactNode;
+  readonly title: NonNullable<ReactNode>;
 }) {
   const [vaccinated, setVaccinated] = useState(true);
   const [day, setDay] = useState(14);

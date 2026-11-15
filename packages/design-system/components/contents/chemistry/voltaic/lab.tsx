@@ -76,12 +76,12 @@ export function ChemicalCellLab({
   showProducts = false,
   title,
 }: {
-  readonly description: ReactNode;
+  readonly description: NonNullable<ReactNode>;
   readonly electrons?: number;
   readonly labels: ChemicalCellLabels;
   readonly metals: readonly [Metal, Metal];
   readonly showProducts?: boolean;
-  readonly title: ReactNode;
+  readonly title: NonNullable<ReactNode>;
 }) {
   const format = useFormatter();
   const number = (value: number) => mathNumber(format.number(value, READING));

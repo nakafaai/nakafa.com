@@ -76,7 +76,7 @@ export function CarbonBudgetLab({
   mode,
   title,
 }: {
-  readonly description: ReactNode;
+  readonly description: NonNullable<ReactNode>;
   readonly labels: {
     readonly above?: ReactNode;
     readonly chooseRegions?: string;
@@ -94,7 +94,7 @@ export function CarbonBudgetLab({
     readonly year?: string;
   };
   readonly mode: "cooperate" | "mitigate" | "record";
-  readonly title: ReactNode;
+  readonly title: NonNullable<ReactNode>;
 }) {
   const [year, setYear] = useState<number>(RECORD_SPAN.last);
   const [joined, setJoined] = useState<readonly Region[]>([]);

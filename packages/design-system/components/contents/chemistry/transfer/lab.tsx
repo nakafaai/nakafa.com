@@ -94,10 +94,10 @@ export function IonFormationLab({
   pairs,
   title,
 }: {
-  readonly description: ReactNode;
+  readonly description: NonNullable<ReactNode>;
   readonly labels: TransferLabels;
   readonly pairs: readonly PairId[];
-  readonly title: ReactNode;
+  readonly title: NonNullable<ReactNode>;
 }) {
   const format = useFormatter();
   const offered = Arr.filter(pairs, (id) => Schema.is(PairIdSchema)(id));

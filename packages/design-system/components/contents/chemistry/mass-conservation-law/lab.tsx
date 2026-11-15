@@ -37,7 +37,7 @@ import { useTranslations } from "use-intl";
 const NARROW_CANVAS_ASPECT_RATIO = 1.22;
 
 export interface MassConservationLabProps {
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   labels: {
     after: string;
     before: string;
@@ -57,7 +57,7 @@ export interface MassConservationLabProps {
     reactionView: string;
     systemLabel: string;
   };
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
 }
 
 export function MassConservationLab({

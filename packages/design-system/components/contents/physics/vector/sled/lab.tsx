@@ -25,7 +25,7 @@ import { type ReactNode, Suspense, useMemo, useState } from "react";
 interface SledPullWorkLabProps {
   /** The rope angle above the snow the card starts at, in degrees. */
   angle: number;
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   /** The distance the sled is pulled, in metres. */
   distance: number;
   /** The pull along the rope, in newtons. */
@@ -41,7 +41,7 @@ interface SledPullWorkLabProps {
   };
   /** The mass of the sled and its load, in kilograms. */
   mass: number;
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
 }
 
 /**

@@ -67,7 +67,7 @@ export function CellCutawayLab({
   title,
 }: {
   readonly cells: readonly CellKind[];
-  readonly description: ReactNode;
+  readonly description: NonNullable<ReactNode>;
   readonly labels: {
     readonly choose: string;
     readonly cells: Readonly<Partial<Record<CellKind, ReactNode>>>;
@@ -86,7 +86,7 @@ export function CellCutawayLab({
     readonly viewLabel: string;
     readonly wall: ReactNode;
   };
-  readonly title: ReactNode;
+  readonly title: NonNullable<ReactNode>;
 }) {
   const [kind, setKind] = useState<CellKind>(cells[0] ?? "animal");
   const [minutes, setMinutes] = useState(BUD_MINUTES * 0.7);

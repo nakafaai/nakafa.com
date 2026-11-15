@@ -29,8 +29,8 @@ interface Props {
     name: string;
     value: number;
   })[];
-  description: ReactNode;
-  title: ReactNode;
+  description: NonNullable<ReactNode>;
+  title: NonNullable<ReactNode>;
   /** Drawn as SVG text on the axis, so it stays a plain string. */
   yAxisLabel: string;
 }

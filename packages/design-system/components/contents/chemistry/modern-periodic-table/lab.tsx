@@ -36,7 +36,7 @@ import { useFormatter, useTranslations } from "use-intl";
 import { useStore } from "zustand";
 
 export interface ModernPeriodicTableLabProps {
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   labels: {
     atomicNumber: string;
     categoryNames: Record<PeriodicElementCategoryId, string>;
@@ -56,7 +56,7 @@ export interface ModernPeriodicTableLabProps {
     seriesNames: Record<PeriodicSeriesRowKey, string>;
     tableLabel: string;
   };
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
 }
 
 /**

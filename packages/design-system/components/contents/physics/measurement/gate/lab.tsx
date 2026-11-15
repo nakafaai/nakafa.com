@@ -344,7 +344,7 @@ function gateProgram(sketch: p5, read: () => typeof GateFrame.Type) {
 }
 
 interface LightGateSpeedLabProps {
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   /** How far apart the gates first stand, in metres. */
   distance?: number;
   labels: {
@@ -353,7 +353,7 @@ interface LightGateSpeedLabProps {
     time: ReactNode;
     viewLabel: string;
   };
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
 }
 
 /**

@@ -327,7 +327,7 @@ function eyeProgram(sketch: p5, read: () => typeof EyeFrame.Type) {
 }
 
 interface ParallaxReadingLabProps {
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   labels: {
     error: ReactNode;
     eye: string;
@@ -337,7 +337,7 @@ interface ParallaxReadingLabProps {
   };
   /** How far above the meniscus the eye starts, in centimetres. */
   offset?: number;
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
 }
 
 /**

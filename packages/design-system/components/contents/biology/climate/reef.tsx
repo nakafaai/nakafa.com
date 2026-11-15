@@ -73,7 +73,7 @@ export function CoralBleachLab({
   labels,
   title,
 }: {
-  readonly description: ReactNode;
+  readonly description: NonNullable<ReactNode>;
   readonly labels: {
     readonly alert: ReactNode;
     readonly alerts: Readonly<Record<Alert, ReactNode>>;
@@ -83,7 +83,7 @@ export function CoralBleachLab({
     readonly viewLabel: string;
     readonly weeks: string;
   };
-  readonly title: ReactNode;
+  readonly title: NonNullable<ReactNode>;
 }) {
   const [temperature, setTemperature] = useState(29.5);
   const [weeks, setWeeks] = useState(4);

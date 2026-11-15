@@ -96,11 +96,11 @@ export function RutherfordScatteringLab({
   labels,
   title,
 }: {
-  readonly description: ReactNode;
+  readonly description: NonNullable<ReactNode>;
   /** The alpha energy the slider starts at, in MeV: 5.3 for polonium, 7.7 for radium C. */
   readonly energy?: number;
   readonly labels: ScatteringLabels;
-  readonly title: ReactNode;
+  readonly title: NonNullable<ReactNode>;
 }) {
   const format = useFormatter();
   const [energy, setEnergy] = useState<number>(

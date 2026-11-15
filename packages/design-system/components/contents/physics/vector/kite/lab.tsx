@@ -160,7 +160,7 @@ function KiteScene({
 interface KiteStringTensionLabProps {
   /** The string's angle from the vertical the card starts at, in degrees. */
   angle: number;
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   labels: {
     across: ReactNode;
     angle: ReactNode;
@@ -172,7 +172,7 @@ interface KiteStringTensionLabProps {
   length: number;
   /** The string's tension, in newtons. */
   tension: number;
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
 }
 
 /**

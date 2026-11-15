@@ -30,7 +30,7 @@ import { Array as Arr, Schema } from "effect";
 import { type ReactNode, Suspense, useMemo, useState } from "react";
 
 interface DroneDisplacementLabProps {
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   /** Numbers the learner multiplies the flight plan by, when the card offers that choice. */
   factors?: readonly number[];
   /** The flight plan: legs in metres east, north and up. */
@@ -42,7 +42,7 @@ interface DroneDisplacementLabProps {
     size: ReactNode;
     viewLabel: string;
   };
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
   /** Whether the pad shows the unit vectors east, north and up. */
   units?: boolean;
 }

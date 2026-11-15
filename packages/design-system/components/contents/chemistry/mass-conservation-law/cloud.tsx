@@ -81,14 +81,14 @@ export function PrecipitateLab({
   labels,
   title,
 }: {
-  readonly description: ReactNode;
+  readonly description: NonNullable<ReactNode>;
   readonly labels: {
     readonly precipitate: ReactNode;
     readonly readingAfter: ReactNode;
     readonly readingBefore: ReactNode;
     readonly viewLabel: string;
   };
-  readonly title: ReactNode;
+  readonly title: NonNullable<ReactNode>;
 }) {
   const quantity = useQuantity();
   const total =

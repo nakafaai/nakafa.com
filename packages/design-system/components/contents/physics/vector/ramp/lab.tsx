@@ -26,7 +26,7 @@ import { type ReactNode, Suspense, useMemo, useState } from "react";
 interface RampBlockComponentLabProps {
   /** The ramp angle the card starts at, in degrees. */
   angle: number;
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   /** A distance down the slope, in metres; when given, the card reads the work the weight does over it. */
   distance?: number;
   /** The static friction coefficient between block and plank. */
@@ -42,7 +42,7 @@ interface RampBlockComponentLabProps {
   };
   /** The mass of the block, in kilograms. */
   mass: number;
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
 }
 
 /**

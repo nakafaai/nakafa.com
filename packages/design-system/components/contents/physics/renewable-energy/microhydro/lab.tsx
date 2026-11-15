@@ -217,7 +217,7 @@ function microhydroProgram(sketch: p5, read: () => MicrohydroFrame) {
 }
 
 interface MicrohydroLabProps {
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   /** The flow at first, in litres per second. */
   flow?: number;
   /** The head at first, in metres. */
@@ -229,7 +229,7 @@ interface MicrohydroLabProps {
     power: ReactNode;
     viewLabel: string;
   };
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
 }
 
 /**

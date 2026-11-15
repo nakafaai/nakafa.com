@@ -348,7 +348,7 @@ function stackProgram(sketch: p5, read: () => typeof StackFrame.Type) {
 }
 
 interface PaperStackLabProps {
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   labels: {
     chooseStack: string;
     figures: ReactNode;
@@ -356,7 +356,7 @@ interface PaperStackLabProps {
     sheet: ReactNode;
     viewLabel: string;
   };
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
 }
 
 /**

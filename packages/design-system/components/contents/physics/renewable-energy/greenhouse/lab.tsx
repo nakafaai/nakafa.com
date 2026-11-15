@@ -166,7 +166,7 @@ function greenhouseProgram(sketch: p5, read: () => GreenhouseFrame) {
 interface GreenhouseLayerLabProps {
   /** The share of infrared the layer absorbs at first. */
   absorptance?: number;
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   labels: {
     absorptanceControl: string;
     back: ReactNode;
@@ -176,7 +176,7 @@ interface GreenhouseLayerLabProps {
     sunlight: ReactNode;
     viewLabel: string;
   };
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
 }
 
 /**

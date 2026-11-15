@@ -217,15 +217,17 @@ function VisualCard({ className, ref, ...props }: ComponentProps<typeof Card>) {
 }
 
 /**
- * The visual's title and, when it has one, its description. A visual without a
- * title draws no header, because the page around it already names the visual.
+ * The visual's title and its description: the card says what it shows and what to look for, whatever page it stands
+ * on. A figure whose contract still leaves its description optional shows its title alone when a document gives
+ * none, with no empty line in its place, and one whose contract leaves its title optional draws no header when a
+ * document gives none, until the contract requires both.
  */
 function VisualCardHeader({
   description,
   title,
 }: {
-  description?: ReactNode;
-  title?: ReactNode;
+  description?: NonNullable<ReactNode> | undefined;
+  title?: NonNullable<ReactNode> | undefined;
 }) {
   if (title === undefined) {
     return null;

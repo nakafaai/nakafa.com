@@ -275,7 +275,7 @@ function blockProgram(sketch: p5, read: () => typeof BlockFrame.Type) {
 }
 
 interface DensityMeasurementLabProps {
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   labels: {
     chooseMaterial: string;
     density: ReactNode;
@@ -286,7 +286,7 @@ interface DensityMeasurementLabProps {
     viewLabel: string;
     volume: ReactNode;
   };
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
 }
 
 /**

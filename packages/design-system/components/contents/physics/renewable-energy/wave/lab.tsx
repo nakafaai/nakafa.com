@@ -182,7 +182,7 @@ function waveProgram(sketch: p5, read: () => WaveFrame) {
 }
 
 interface WaveBuoyPowerLabProps {
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   labels: {
     chooseSea: string;
     height: ReactNode;
@@ -194,7 +194,7 @@ interface WaveBuoyPowerLabProps {
   };
   /** The sea state first shown. */
   sea?: Sea;
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
 }
 
 /**

@@ -30,7 +30,7 @@ import { useTranslations } from "use-intl";
 import { useStore } from "zustand";
 
 interface ElectronConfigurationLabProps {
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   labels: {
     atomicNumber: string;
     chooseAtom: string;
@@ -45,7 +45,7 @@ interface ElectronConfigurationLabProps {
       }
     >;
   };
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
 }
 
 /**

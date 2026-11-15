@@ -80,13 +80,13 @@ export function MoleculeShapeLab({
   molecules,
   title,
 }: {
-  readonly description: ReactNode;
+  readonly description: NonNullable<ReactNode>;
   readonly labels: MoleculeLabels;
   readonly molecules: readonly {
     readonly id: MoleculeId;
     readonly name: string;
   }[];
-  readonly title: ReactNode;
+  readonly title: NonNullable<ReactNode>;
 }) {
   const format = useFormatter();
   const offered = Arr.filter(molecules, (entry) =>

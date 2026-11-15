@@ -188,7 +188,7 @@ interface WrenchTorqueLabProps {
   angle: number;
   /** The grip's distance from the nut, in metres. */
   arm: number;
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   /** The force of the hand, in newtons. */
   force: number;
   labels: {
@@ -198,7 +198,7 @@ interface WrenchTorqueLabProps {
     torque: ReactNode;
     viewLabel: string;
   };
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
 }
 
 /**

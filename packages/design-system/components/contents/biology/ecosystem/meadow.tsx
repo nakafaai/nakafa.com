@@ -63,7 +63,7 @@ export function PredatorPreyLab({
   title,
 }: {
   readonly capacity?: number;
-  readonly description: ReactNode;
+  readonly description: NonNullable<ReactNode>;
   readonly labels: {
     readonly peak: ReactNode;
     readonly predators: ReactNode;
@@ -72,7 +72,7 @@ export function PredatorPreyLab({
     readonly viewLabel: string;
     readonly year: ReactNode;
   };
-  readonly title: ReactNode;
+  readonly title: NonNullable<ReactNode>;
 }) {
   const [owls, setOwls] = useState(10);
   const [year, setYear] = useState(YEARS);

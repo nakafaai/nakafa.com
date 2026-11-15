@@ -319,7 +319,7 @@ function caliperProgram(sketch: p5, read: () => typeof CaliperFrame.Type) {
 }
 
 interface VernierCaliperLabProps {
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   labels: {
     centimetres: ReactNode;
     line: ReactNode;
@@ -328,7 +328,7 @@ interface VernierCaliperLabProps {
     viewLabel: string;
     width: string;
   };
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
   /** The width of the object the caliper first holds, in millimetres. */
   width?: number;
 }

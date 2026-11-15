@@ -203,7 +203,7 @@ function flowProgram(sketch: p5, read: () => FlowFrame) {
 }
 
 interface EnergyFlowLossLabProps {
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   labels: {
     choosePlant: string;
     efficiency: ReactNode;
@@ -215,7 +215,7 @@ interface EnergyFlowLossLabProps {
   };
   /** The plant whose chain is drawn first. */
   plant?: Plant;
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
 }
 
 /**

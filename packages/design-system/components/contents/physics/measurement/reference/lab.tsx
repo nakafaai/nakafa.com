@@ -366,7 +366,7 @@ function deskProgram(sketch: p5, read: () => typeof DeskFrame.Type) {
 }
 
 interface CommonReferenceLabProps {
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   labels: {
     chooseReference: string;
     count: ReactNode;
@@ -375,7 +375,7 @@ interface CommonReferenceLabProps {
     references: Record<typeof ReferenceSchema.Type, ReactNode>;
     viewLabel: string;
   };
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
 }
 
 /**

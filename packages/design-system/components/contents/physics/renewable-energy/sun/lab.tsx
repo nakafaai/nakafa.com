@@ -167,7 +167,7 @@ function sunProgram(sketch: p5, read: () => SunFrame) {
 }
 
 interface SolarPanelAngleLabProps {
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   labels: {
     incidence: ReactNode;
     irradiance: ReactNode;
@@ -180,7 +180,7 @@ interface SolarPanelAngleLabProps {
   sun?: number;
   /** The panel's tilt at first, in degrees. */
   tilt?: number;
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
 }
 
 /**

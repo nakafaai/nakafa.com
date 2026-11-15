@@ -44,7 +44,10 @@ export function FunctionChart({
   mode,
   title,
   description,
-}: Exponential & { title: ReactNode; description: ReactNode }) {
+}: Exponential & {
+  title: NonNullable<ReactNode>;
+  description: NonNullable<ReactNode>;
+}) {
   const formatter = useFormatter();
   const formatNumber = (value: number) =>
     formatter.number(value, {

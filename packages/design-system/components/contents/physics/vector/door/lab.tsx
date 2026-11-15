@@ -170,7 +170,7 @@ interface DoorHingeTorqueLabProps {
   angle: number;
   /** The distance of the hand from the hinge the card starts at, in metres. */
   arm: number;
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   /** The push, in newtons. */
   force: number;
   labels: {
@@ -184,7 +184,7 @@ interface DoorHingeTorqueLabProps {
   };
   /** The mass of the door, in kilograms. */
   mass: number;
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
   /** The width of the door, in metres. */
   width: number;
 }

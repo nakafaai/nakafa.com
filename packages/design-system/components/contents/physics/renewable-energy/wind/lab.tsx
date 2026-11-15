@@ -225,7 +225,7 @@ function windProgram(sketch: p5, read: () => WindFrame) {
 }
 
 interface WindRotorLabProps {
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   labels: {
     chooseSite: string;
     daily: ReactNode;
@@ -237,7 +237,7 @@ interface WindRotorLabProps {
   };
   /** The site the turbine stands at first. */
   site?: Site;
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
 }
 
 /**

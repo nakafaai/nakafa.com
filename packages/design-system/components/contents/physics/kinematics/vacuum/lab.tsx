@@ -147,7 +147,7 @@ function FallScene({ air }: { readonly air: TubeAir }) {
 }
 
 interface FeatherCoinVacuumLabProps {
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   labels: {
     airs: Record<TubeAir, ReactNode>;
     chooseAir: string;
@@ -156,7 +156,7 @@ interface FeatherCoinVacuumLabProps {
     featherTime: ReactNode;
     viewLabel: string;
   };
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
 }
 
 /**

@@ -55,7 +55,7 @@ const SCENE_REACH =
   VELOCITY_SPEED_SCENE.laneLength / 2 + VELOCITY_SPEED_SCENE.laneWidth;
 
 interface VelocitySpeedLabProps {
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   labels: {
     chooseCase: string;
     factLabels: {
@@ -67,7 +67,7 @@ interface VelocitySpeedLabProps {
     modeLabels: Record<VelocitySpeedCaseId, ReactNode>;
     viewLabel: string;
   };
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
 }
 
 export function VelocitySpeedLab({

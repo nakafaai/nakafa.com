@@ -76,9 +76,9 @@ export function RadioactiveDecayLab({
   labels,
   title,
 }: {
-  readonly description: ReactNode;
+  readonly description: NonNullable<ReactNode>;
   readonly labels: DecayLabels;
-  readonly title: ReactNode;
+  readonly title: NonNullable<ReactNode>;
 }) {
   const format = useFormatter();
   const [years, setYears] = useState(CARBON_HALF_LIFE);

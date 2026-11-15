@@ -301,7 +301,7 @@ function originProgram(sketch: p5, read: () => OriginFrame) {
 }
 
 interface StreetOriginPositionLabProps {
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   labels: {
     change: ReactNode;
     chooseOrigin: string;
@@ -310,7 +310,7 @@ interface StreetOriginPositionLabProps {
     start: ReactNode;
     viewLabel: string;
   };
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
 }
 
 /**

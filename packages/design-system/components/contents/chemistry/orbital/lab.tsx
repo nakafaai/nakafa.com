@@ -89,10 +89,10 @@ export function OrbitalCloudLab({
   orbitals,
   title,
 }: {
-  readonly description: ReactNode;
+  readonly description: NonNullable<ReactNode>;
   readonly labels: OrbitalLabels;
   readonly orbitals: readonly OrbitalId[];
-  readonly title: ReactNode;
+  readonly title: NonNullable<ReactNode>;
 }) {
   const offered = Arr.filter(orbitals, (id) => Schema.is(OrbitalIdSchema)(id));
   const [chosen, setChosen] = useState<OrbitalId | undefined>(undefined);

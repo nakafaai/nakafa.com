@@ -25,7 +25,7 @@ import { type ReactNode, Suspense, useMemo, useState } from "react";
 interface TugboatResultantLabProps {
   /** The angle between the cables the card starts at, in degrees. */
   between: number;
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   /** The pull of the first tug, in kN. */
   first: number;
   labels: {
@@ -38,7 +38,7 @@ interface TugboatResultantLabProps {
   };
   /** The pull of the second tug, in kN. */
   second: number;
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
 }
 
 /**

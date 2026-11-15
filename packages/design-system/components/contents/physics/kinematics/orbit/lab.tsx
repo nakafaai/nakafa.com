@@ -178,7 +178,7 @@ function orbitProgram(sketch: p5, read: () => OrbitFrame) {
 }
 
 interface SatelliteOrbitCircularLabProps {
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   labels: {
     acceleration: ReactNode;
     chooseOrbit: string;
@@ -188,7 +188,7 @@ interface SatelliteOrbitCircularLabProps {
     speed: ReactNode;
     viewLabel: string;
   };
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
 }
 
 /**

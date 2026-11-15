@@ -84,7 +84,7 @@ function useGreenhouseGasLevel() {
 }
 
 interface GreenhouseEffectLabProps {
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   labels: {
     gasControl: string;
     heatFlow: ReactNode;
@@ -93,7 +93,7 @@ interface GreenhouseEffectLabProps {
     meaningLabel: string;
     viewLabel: string;
   };
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
 }
 
 export function GreenhouseEffectLab(props: GreenhouseEffectLabProps) {

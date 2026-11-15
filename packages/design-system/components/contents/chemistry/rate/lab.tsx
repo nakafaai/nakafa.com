@@ -63,14 +63,14 @@ export function GasRateLab({
   showCurves = false,
   title,
 }: {
-  readonly description: ReactNode;
+  readonly description: NonNullable<ReactNode>;
   readonly labels: RateLabels;
   readonly runs: Arr.NonEmptyReadonlyArray<{
     readonly amount: number;
     readonly solid: Solid;
   }>;
   readonly showCurves?: boolean;
-  readonly title: ReactNode;
+  readonly title: NonNullable<ReactNode>;
 }) {
   const [time, setTime] = useState(TIME_SPAN * 0.25);
   const format = useFormatter();

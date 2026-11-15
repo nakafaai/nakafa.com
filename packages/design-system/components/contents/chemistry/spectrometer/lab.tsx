@@ -110,10 +110,10 @@ export function MassSpectrometerLab({
   samples,
   title,
 }: {
-  readonly description: ReactNode;
+  readonly description: NonNullable<ReactNode>;
   readonly labels: SpectrometerLabels;
   readonly samples: readonly SampleId[];
-  readonly title: ReactNode;
+  readonly title: NonNullable<ReactNode>;
 }) {
   const format = useFormatter();
   const offered = Arr.filter(samples, (id) => Schema.is(SampleIdSchema)(id));

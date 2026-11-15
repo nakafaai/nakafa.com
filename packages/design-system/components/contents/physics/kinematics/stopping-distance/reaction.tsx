@@ -81,7 +81,7 @@ export function ReactionTimeLab({
   labels,
   title,
 }: {
-  readonly description: ReactNode;
+  readonly description: NonNullable<ReactNode>;
   readonly labels: {
     readonly average: ReactNode;
     readonly best: ReactNode;
@@ -92,7 +92,7 @@ export function ReactionTimeLab({
     readonly start: string;
     readonly viewLabel: string;
   };
-  readonly title: ReactNode;
+  readonly title: NonNullable<ReactNode>;
 }) {
   const [phase, setPhase] = useState<Phase>("ready");
   const [trials, setTrials] = useState<readonly number[]>([]);

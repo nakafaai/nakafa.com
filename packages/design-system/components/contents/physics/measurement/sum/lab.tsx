@@ -239,7 +239,7 @@ function sumProgram(sketch: p5, read: () => typeof SumFrame.Type) {
 }
 
 interface DecimalSumLabProps {
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   labels: {
     chooseTool: string;
     copper: ReactNode;
@@ -249,7 +249,7 @@ interface DecimalSumLabProps {
     tools: Record<typeof CopperToolSchema.Type, ReactNode>;
     viewLabel: string;
   };
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
 }
 
 /**

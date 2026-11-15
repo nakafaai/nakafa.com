@@ -216,7 +216,7 @@ function fountainProgram(sketch: p5, read: () => FountainFrame) {
 interface HoseJetProjectileLabProps {
   /** The nozzle angle the card starts at, in degrees. */
   angle?: JetAngle;
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   labels: {
     chooseAngle: string;
     flight: ReactNode;
@@ -226,7 +226,7 @@ interface HoseJetProjectileLabProps {
   };
   /** The speed the water leaves the nozzle at, in m/s. */
   speed: number;
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
 }
 
 /**

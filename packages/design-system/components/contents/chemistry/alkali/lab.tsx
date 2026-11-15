@@ -127,10 +127,10 @@ export function AlkaliWaterLab({
   metals,
   title,
 }: {
-  readonly description: ReactNode;
+  readonly description: NonNullable<ReactNode>;
   readonly labels: AlkaliLabels;
   readonly metals: readonly MetalId[];
-  readonly title: ReactNode;
+  readonly title: NonNullable<ReactNode>;
 }) {
   const format = useFormatter();
   const offered = Arr.filter(metals, (id) => Schema.is(MetalIdSchema)(id));

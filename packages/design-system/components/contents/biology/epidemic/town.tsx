@@ -74,7 +74,7 @@ export function EpidemicSpreadLab({
   routes = ["air"],
   title,
 }: {
-  readonly description: ReactNode;
+  readonly description: NonNullable<ReactNode>;
   readonly labels: {
     readonly chooseRoute?: string;
     readonly distancing?: string;
@@ -92,7 +92,7 @@ export function EpidemicSpreadLab({
   };
   readonly measures: readonly (typeof MEASURES)[number][];
   readonly routes?: readonly Route[];
-  readonly title: ReactNode;
+  readonly title: NonNullable<ReactNode>;
 }) {
   const [values, setValues] = useState<Measures>({
     distancing: 0,

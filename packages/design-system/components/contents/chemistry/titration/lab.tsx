@@ -86,11 +86,11 @@ export function TitrationLab({
     readonly solute: Analyte;
     readonly volume: number;
   };
-  readonly description: ReactNode;
+  readonly description: NonNullable<ReactNode>;
   readonly indicator: Indicator;
   readonly labels: TitrationLabels;
   readonly showEndPoint?: boolean;
-  readonly title: ReactNode;
+  readonly title: NonNullable<ReactNode>;
   readonly titrant: {
     readonly concentration: number;
     readonly solute: Titrant;

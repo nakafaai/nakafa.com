@@ -216,7 +216,7 @@ function lampProgram(sketch: p5, read: () => LampFrame) {
 interface WeightLampEnergyLabProps {
   /** How slowly the bag sinks first. */
   descent?: Descent;
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   labels: {
     chooseDescent: string;
     drop: ReactNode;
@@ -226,7 +226,7 @@ interface WeightLampEnergyLabProps {
     time: ReactNode;
     viewLabel: string;
   };
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
 }
 
 /**

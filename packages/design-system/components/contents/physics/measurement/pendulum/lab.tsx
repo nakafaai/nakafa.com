@@ -170,7 +170,7 @@ function swingProgram(sketch: p5, read: () => typeof SwingFrame.Type) {
 }
 
 interface PendulumPeriodLabProps {
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   labels: {
     check: ReactNode;
     gravity: ReactNode;
@@ -181,7 +181,7 @@ interface PendulumPeriodLabProps {
   };
   /** The strings' length at first, in metres. */
   length?: number;
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
 }
 
 /**

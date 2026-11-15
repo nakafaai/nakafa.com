@@ -12,8 +12,11 @@ import {
   catalogRenderers,
 } from "@/lib/content/renderer/catalog";
 
-/** The props a document may give each catalog component, its rich slots drawn as React nodes. */
-type DocumentProps = ReturnType<typeof visualCatalog<ReactNode>>;
+/**
+ * The props a document may give each catalog component. The renderer draws every rich slot as an element
+ * (`mapRichProps`), never as nothing, so a slot is a React node that is never null.
+ */
+type DocumentProps = ReturnType<typeof visualCatalog<NonNullable<ReactNode>>>;
 
 /**
  * The name of a figure whose renderer would refuse props its Schema accepts:

@@ -143,7 +143,7 @@ function markProgram(sketch: p5, read: () => MapFrame) {
 }
 
 interface OrienteeringMapVectorLabProps {
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   labels: {
     angle: ReactNode;
     chooseView: string;
@@ -155,7 +155,7 @@ interface OrienteeringMapVectorLabProps {
   };
   /** The checkpoints A, B and C, in metres east and north of the start O. */
   marks: Marks;
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
   /** The views the card offers, in order; every view when left out. */
   views?: readonly View[];
 }

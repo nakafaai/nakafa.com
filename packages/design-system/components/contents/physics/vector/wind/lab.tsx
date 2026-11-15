@@ -122,7 +122,7 @@ function breezeProgram(sketch: p5, read: () => BreezeFrame) {
 interface WindMapVectorLabProps {
   /** The angle the wind starts blowing toward, in degrees counterclockwise from east. */
   angle: number;
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   labels: {
     angle: ReactNode;
     angleName: string;
@@ -134,7 +134,7 @@ interface WindMapVectorLabProps {
   };
   /** The wind speed it starts with, in m/s. */
   speed: number;
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
 }
 
 /**

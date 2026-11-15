@@ -42,7 +42,7 @@ import { useStore } from "zustand";
 const NARROW_CANVAS_ASPECT_RATIO = 1.35;
 
 export interface ReactionCharacteristicsLabProps {
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   labels: {
     after: string;
     before: string;
@@ -62,7 +62,7 @@ export interface ReactionCharacteristicsLabProps {
     observationLabel: string;
     transition: string;
   };
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
 }
 
 /**

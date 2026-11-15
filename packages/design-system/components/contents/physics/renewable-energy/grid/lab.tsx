@@ -191,7 +191,7 @@ function gridProgram(sketch: p5, read: () => GridFrame) {
 }
 
 interface GridLoadCurveLabProps {
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   labels: {
     capacity: ReactNode;
     chooseSchedule: string;
@@ -203,7 +203,7 @@ interface GridLoadCurveLabProps {
   };
   /** When the village cooks at first. */
   schedule?: Schedule;
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
 }
 
 /**

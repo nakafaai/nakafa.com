@@ -358,7 +358,7 @@ function gaugeProgram(sketch: p5, read: () => typeof GaugeFrame.Type) {
 }
 
 interface MicrometerScrewLabProps {
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   labels: {
     division: ReactNode;
     reading: ReactNode;
@@ -368,7 +368,7 @@ interface MicrometerScrewLabProps {
   };
   /** The size of the ball the gauge first holds, in millimetres. */
   thickness?: number;
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
 }
 
 /**

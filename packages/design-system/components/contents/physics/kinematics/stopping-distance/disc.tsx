@@ -98,7 +98,7 @@ export function BrakeHeatLab({
   labels,
   title,
 }: {
-  readonly description: ReactNode;
+  readonly description: NonNullable<ReactNode>;
   readonly labels: {
     readonly chooseSpeed: string;
     readonly discTemperature: ReactNode;
@@ -107,7 +107,7 @@ export function BrakeHeatLab({
     readonly thermal: string;
     readonly viewLabel: string;
   };
-  readonly title: ReactNode;
+  readonly title: NonNullable<ReactNode>;
 }) {
   const [speed, setSpeed] = useState<(typeof SPEEDS)[number]>(20);
   const [thermal, setThermal] = useState(false);

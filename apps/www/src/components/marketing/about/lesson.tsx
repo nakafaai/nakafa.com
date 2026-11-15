@@ -45,22 +45,38 @@ export function Lesson({ locale }: { readonly locale: Locale }) {
   );
   // Each card and its lab read their labels from the same builder, so the card and the lab agree.
   const placeholders: Record<LessonId, ReactNode> = {
-    atom: <AtomPlaceholder labels={getAtomLabels(t)} />,
-    cell: <CellPlaceholder labels={getCellLabels(t)} />,
+    atom: (
+      <AtomPlaceholder
+        description={t("lab.atom.description")}
+        labels={getAtomLabels(t)}
+        title={t("lab.atom.title")}
+      />
+    ),
+    cell: (
+      <CellPlaceholder
+        description={t("lab.bacteria.description")}
+        labels={getCellLabels(t)}
+        title={t("lab.bacteria.title")}
+      />
+    ),
     circle: (
       <CirclePlaceholder
+        description={t("lab.circle.description")}
         formatNumber={(value) => numberFormat.format(value)}
         labels={{
           onAxis: tCommon("on-axis"),
           quadrant: tCommon("quadrant"),
           radian: tCommon("radian"),
         }}
+        title={t("lab.circle.title")}
       />
     ),
     projectile: (
       <ProjectilePlaceholder
         decimalSeparator={decimalSeparator}
+        description={t("lab.projectile.description")}
         labels={getProjectileLabels(t)}
+        title={t("lab.projectile.title")}
       />
     ),
   };
