@@ -14,6 +14,7 @@ import { Result, Schema } from "effect";
 import { defineConfig, type Plugin, type PluginOption } from "vite";
 import { ENVIRONMENT_OUTPUTS } from "#www/output.config";
 import {
+  bindPrerenderHost,
   deferStaticPageScripts,
   standalonePages,
   verifyPrerenderedPages,
@@ -477,6 +478,7 @@ export default defineConfig(async ({ command, isPreview }) => {
       writeRobotsFile,
       serveRobotsFile,
       writeStaticArtifacts,
+      bindPrerenderHost,
       writeStaticAnswers(prerenderedPages),
       deferStaticPageScripts(prerenderedPages),
       writeStandalonePages(prerenderedPages),
