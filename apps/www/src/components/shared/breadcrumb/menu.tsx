@@ -17,6 +17,7 @@ import { useState } from "react";
 import { useTranslations } from "use-intl";
 import { BreadcrumbAnchor } from "@/components/shared/breadcrumb/anchor";
 import type { BreadcrumbHeaderItem } from "@/components/shared/breadcrumb/header";
+import { BreadcrumbSiblingsSub } from "@/components/shared/breadcrumb/siblings";
 
 /**
  * Renders folded breadcrumb items inside an ellipsis menu. The menu keeps its size, so
@@ -68,7 +69,7 @@ export function BreadcrumbMenu({
 
 /**
  * Renders one collapsed breadcrumb menu item, which closes its menu when chosen and carries its icon, as
- * every menu item does. A segment without a link is the page itself, which names itself beside the menu,
+ * every menu item does. A folded crumb with siblings opens them in a submenu. A segment without a link is the page itself, which names itself beside the menu,
  * so the menu holds no row that cannot be pressed.
  */
 function BreadcrumbMenuItem({
@@ -80,6 +81,9 @@ function BreadcrumbMenuItem({
 }) {
   const label = item.menuLabel ?? item.label;
 
+  if (item.siblings !== undefined) {
+    return <BreadcrumbSiblingsSub label={label} siblings={item.siblings} />;
+  }
   if (item.target === undefined) {
     return null;
   }

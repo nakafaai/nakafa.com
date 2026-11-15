@@ -1,8 +1,8 @@
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Layer, Ref, Stdio } from "effect";
-import { capture, makeCapture } from "#scripts/capture";
 import { parseTrainArguments, runTrainCli } from "#scripts/landing/main";
+import { capture, makeCapture } from "#scripts/test.capture";
 import { scriptedShell } from "#scripts/test.shell";
 
 const MAIN = "9".repeat(40);
@@ -19,11 +19,13 @@ describe("train command line", () => {
         ])
       ).toEqual({
         batch: true,
+        red: false,
         numbers: [12, 7],
         specs: ["e2e/a.browser.ts", "e2e/b.browser.ts"],
       });
       expect(yield* parseTrainArguments([])).toEqual({
         batch: false,
+        red: false,
         numbers: [],
         specs: [],
       });

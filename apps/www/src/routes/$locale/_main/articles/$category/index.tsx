@@ -10,8 +10,10 @@ import { createServerFn } from "@tanstack/react-start";
 import { Array as Arr, Effect, Match, Option, Schema } from "effect";
 import { useTranslations } from "use-intl";
 import { createTranslator } from "use-intl/core";
+import { getArticleCategoryIcons } from "@/components/articles/category";
 import { ArticleNext } from "@/components/articles/next";
 import { BreadcrumbHeader } from "@/components/shared/breadcrumb/header";
+import { crumbSiblings } from "@/components/shared/breadcrumb/pages";
 import { CardArticle } from "@/components/shared/card/article";
 import { ContainerList } from "@/components/shared/card/list";
 import { FooterContent } from "@/components/shared/content/footer";
@@ -22,6 +24,7 @@ import {
   type ArticlePageCursor,
 } from "@/lib/content/article/catalog";
 import {
+  readPublishedArticleCategories,
   readPublishedArticleCategory,
   readPublishedCategoryAlternates,
   readPublishedCategoryPage,
@@ -36,7 +39,11 @@ import { PUBLIC_CONTENT_HEADERS } from "@/lib/content/delivery";
 import { outcome } from "@/lib/content/outcome";
 import { getAksaraTreeUrl } from "@/lib/content/repository";
 import { getLocaleOrThrow } from "@/lib/routing/locale/address";
-import { ARTICLES_TARGET, HOME_TARGET } from "@/lib/routing/target";
+import {
+  ARTICLES_TARGET,
+  articleCategoryTarget,
+  HOME_TARGET,
+} from "@/lib/routing/target";
 import { createResolvedRouteAlternates } from "@/lib/seo/alternates";
 import { createBreadcrumbItems } from "@/lib/seo/breadcrumbs";
 import { createSeoHead, toHeadAlternates, toRouterHead } from "@/lib/seo/head";
@@ -117,6 +124,7 @@ const readArticleCategory = createServerFn({ method: "GET" })
           namespace: "Articles",
         });
         const categoryPath = `/articles/${model.route}`;
+        const { categories } = yield* readPublishedArticleCategories(locale);
         const alternates = yield* readPublishedCategoryAlternates(model);
         const breadcrumbs = createBreadcrumbItems(locale, [
           { name: tCommon("home"), path: "" },
@@ -135,6 +143,11 @@ const readArticleCategory = createServerFn({ method: "GET" })
             ),
             articles: catalog.articles,
             breadcrumbs,
+            categories: Arr.map(categories, ({ category, route, title }) => ({
+              category,
+              route,
+              title,
+            })),
             category: model.category,
             categoryPath,
             description: tArticles("category-description", {
@@ -235,7 +248,22 @@ function ArticleCategoryPage() {
           homeLabel: tCommon("home"),
           items: [
             { label: t("articles"), target: ARTICLES_TARGET },
-            { label: page.label },
+            {
+              label: page.label,
+              siblings: crumbSiblings({
+                label: tCommon("menu-categories"),
+                options: Arr.zipWith(
+                  page.categories,
+                  getArticleCategoryIcons(page.categories),
+                  ({ route, title }, icon) => ({
+                    current: route === page.routeSlug,
+                    icon,
+                    label: title,
+                    target: articleCategoryTarget(route),
+                  })
+                ),
+              }),
+            },
           ],
           title: page.label,
         }}

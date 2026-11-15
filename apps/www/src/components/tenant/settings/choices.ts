@@ -16,7 +16,6 @@ import {
   RulerIcon,
   School01Icon,
   SchoolIcon,
-  TranslateIcon,
   User02Icon,
   UserAccountIcon,
   UserCheck01Icon,
@@ -33,7 +32,6 @@ import { CountryCodeSchema } from "@nakafa/aksara-contracts/country";
 import { CohortGrade } from "@repo/backend/confect/tenancy/cohort";
 import { gradesOf } from "@repo/backend/confect/tenancy/grades";
 import type { UnitLevel } from "@repo/backend/confect/tenancy/schema";
-import { languages } from "@repo/internationalization/data/lang";
 import { countries } from "country-flag-icons";
 import {
   Array as Arr,
@@ -75,13 +73,6 @@ export function countryChoices(locale: string) {
     )
   );
 }
-
-/** The page languages a unit may choose, from the platform's list of languages, each named in itself. */
-export const languageItems = Arr.map(languages, (language) => ({
-  icon: TranslateIcon,
-  label: language.label,
-  value: language.value,
-}));
 
 /** The school years a cohort of a unit of this level may hold (`gradesOf`), as the grade choices of its dialogs. */
 export const gradeItemsOf = (level: typeof UnitLevel.Type) =>

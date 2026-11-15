@@ -15,6 +15,9 @@ import {
   Schema,
 } from "effect";
 import { FetchHttpClient } from "effect/http";
+import { loadSubmissionHistory } from "@/scripts/indexing/history";
+import { runIndexNow } from "@/scripts/indexing/indexnow/run";
+import { INDEXNOW_KEY, INDEXNOW_KEY_LOCATION } from "@/scripts/indexing/paths";
 import {
   answer,
   indexingPaths,
@@ -24,10 +27,7 @@ import {
   runToEnd,
   runToFailure,
   urlsOf,
-} from "@/scripts/indexing/fixture";
-import { loadSubmissionHistory } from "@/scripts/indexing/history";
-import { runIndexNow } from "@/scripts/indexing/indexnow/run";
-import { INDEXNOW_KEY, INDEXNOW_KEY_LOCATION } from "@/scripts/indexing/paths";
+} from "@/scripts/indexing/test.fixture";
 
 const sitemapMocks = vi.hoisted(() => ({
   getSitemapEntries: vi.fn(),

@@ -11,6 +11,7 @@ import {
   isAccelerationCaseId,
 } from "@repo/design-system/components/contents/physics/kinematics/acceleration/data";
 import { AccelerationGraph } from "@repo/design-system/components/contents/physics/kinematics/acceleration/graph";
+import { InlineMath } from "@repo/design-system/components/markdown/math";
 import {
   ToggleGroup,
   ToggleGroupItem,
@@ -19,10 +20,13 @@ import {
   VisualCard,
   VisualCardActions,
   VisualCardBody,
+  VisualCardFacts,
+  VisualCardFooter,
   VisualCardFullscreen,
   VisualCardHeader,
   VisualCardToolbar,
 } from "@repo/design-system/components/visual/card";
+import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
 import { useState } from "react";
@@ -78,6 +82,26 @@ export function AccelerationGraphCard({
         <VisualCardActions>
           <VisualCardFullscreen />
         </VisualCardActions>
+        <VisualCardFooter>
+          <VisualCardFacts>
+            <VisualFactTabular
+              label={labels.velocityAxis}
+              value={
+                <InlineMath
+                  math={`${selectedCase.v0} \\to ${selectedCase.v1}`}
+                />
+              }
+            />
+            <VisualFactTabular
+              label={labels.timeAxis}
+              value={
+                <InlineMath
+                  math={`${selectedCase.t0} \\to ${selectedCase.t1}`}
+                />
+              }
+            />
+          </VisualCardFacts>
+        </VisualCardFooter>
       </VisualCard>
     </AccelerationLabelsProvider>
   );
