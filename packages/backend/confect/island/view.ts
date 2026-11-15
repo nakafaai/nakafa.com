@@ -25,3 +25,22 @@ export function toOwnIsland(island: Docs["islands"]) {
     world: island.world,
   };
 }
+
+/** One day of the learner's week: what they learned and the Stars it gave. */
+const WeekDay = Schema.Struct({
+  day: Schema.String,
+  lessons: Schema.Int,
+  sections: Schema.Int,
+  sets: Schema.Int,
+  stars: Schema.Finite,
+});
+
+/**
+ * The learner's week as the home page tracks it: the seven days of this week
+ * in their zone, Monday first, their run of days in a row, and today.
+ */
+export const Week = Schema.Struct({
+  days: Schema.Array(WeekDay),
+  streak: Schema.Int,
+  today: Schema.String,
+});

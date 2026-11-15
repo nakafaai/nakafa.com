@@ -3,7 +3,7 @@
 import { describe, expect, it } from "@effect/vitest";
 import { idOf } from "@repo/backend/confect/island/blocks";
 import { SPAN } from "@repo/backend/confect/island/world";
-import { columnOf, terrainOf } from "@/lib/island/terrain";
+import { columnOf, terrainOf, worldOf } from "@/lib/island/terrain";
 import { blockAt, SEA_LEVEL } from "@/lib/island/world";
 
 /** How many cells of the world hold this block. */
@@ -45,5 +45,15 @@ describe("island/terrain", () => {
     const far = columnOf(3, 24, 32, 1);
     expect(near.land || near.top >= far.top).toBe(true);
     expect(far).toEqual({ land: false, top: SEA_LEVEL - 5 });
+  });
+
+  it("lays the learner's edits over the terrain, emptied cells included", () => {
+    const middle = SPAN / 2;
+    const cells = worldOf(11, 24, [
+      { block: idOf("planks"), x: middle, y: SEA_LEVEL + 1, z: middle },
+      { block: 0, x: middle, y: SEA_LEVEL, z: middle },
+    ]);
+    expect(blockAt(cells, middle, SEA_LEVEL + 1, middle)).toBe(idOf("planks"));
+    expect(blockAt(cells, middle, SEA_LEVEL, middle)).toBe(0);
   });
 });

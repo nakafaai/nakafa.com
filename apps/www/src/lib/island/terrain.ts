@@ -1,4 +1,5 @@
 import { idOf } from "@repo/backend/confect/island/blocks";
+import type { Edit } from "@repo/backend/confect/island/world";
 import { SPAN } from "@repo/backend/confect/island/world";
 import { smoothOf, unitOf } from "@/lib/island/noise";
 import {
@@ -182,4 +183,13 @@ function isClearForTree(
     }
   }
   return true;
+}
+
+/** A learner's world: the terrain their seed and footprint grow, with every cell they changed laid over it. */
+export function worldOf(seed: number, size: number, edits: readonly Edit[]) {
+  const cells = terrainOf(seed, size);
+  for (const edit of edits) {
+    cells[cellOf(edit.x, edit.y, edit.z)] = edit.block;
+  }
+  return cells;
 }

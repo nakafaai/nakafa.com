@@ -13,8 +13,7 @@ import {
 } from "@/components/island/store";
 import { IslandSync } from "@/components/island/sync";
 import { IslandWeather } from "@/components/island/weather";
-import { terrainOf } from "@/lib/island/terrain";
-import { cellOf } from "@/lib/island/world";
+import { worldOf } from "@/lib/island/terrain";
 
 /** The hotbar a game opens with: the first nine blocks the island's level opens. */
 function firstHotbar(level: number) {
@@ -22,15 +21,6 @@ function firstHotbar(level: number) {
     Arr.filter(BLOCK_KEYS, (block) => isOpen(block, level)),
     9
   );
-}
-
-/** The learner's world: the terrain their seed and footprint grow, with every cell they changed laid over it. */
-function worldOf(seed: number, size: number, edits: readonly Edit[]) {
-  const cells = terrainOf(seed, size);
-  for (const edit of edits) {
-    cells[cellOf(edit.x, edit.y, edit.z)] = edit.block;
-  }
-  return cells;
 }
 
 /**

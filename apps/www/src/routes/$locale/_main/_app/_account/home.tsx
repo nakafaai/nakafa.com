@@ -1,9 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { cn } from "cn";
-import { Option } from "effect";
+import { Array as Arr, Option } from "effect";
 import { HomeHeader } from "@/components/home/header";
-import { HomeContinueLearning } from "@/components/home/recent";
-import { HomeTrending } from "@/components/home/trending";
+import { HomeWeek } from "@/components/home/week";
+import { HomeWorld } from "@/components/home/world";
 import { pageRowVariants } from "@/components/shared/content/width";
 import { signedInHead } from "@/lib/account/head";
 import { homeScreenFn } from "@/lib/account/home.functions";
@@ -15,17 +15,21 @@ export const Route = createFileRoute("/$locale/_main/_app/_account/home")({
   component: HomePage,
 });
 
+/** The signed-in home: the greeting, the learner's island, and their week. */
 function HomePage() {
-  const { name, recentLooks, recentRows, trending, trendingLooks } =
-    Route.useLoaderData();
+  const { island, name, recent, recentLooks, week } = Route.useLoaderData();
 
   return (
     <div className="relative min-h-[calc(100svh-4rem)] lg:min-h-svh">
       <div className={cn(pageRowVariants(), "py-24")}>
-        <div className="relative flex flex-col gap-12">
+        <div className="relative flex flex-col gap-8">
           <HomeHeader name={Option.fromUndefinedOr(name)} />
-          <HomeContinueLearning looks={recentLooks} subjects={recentRows} />
-          <HomeTrending looks={trendingLooks} subjects={trending} />
+          <HomeWorld island={island} />
+          <HomeWeek
+            look={Option.getOrUndefined(Arr.head(recentLooks))}
+            recent={Option.getOrUndefined(Arr.head(recent))}
+            week={week}
+          />
         </div>
       </div>
     </div>
