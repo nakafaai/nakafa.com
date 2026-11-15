@@ -27,9 +27,7 @@ const PublicRouteSurfaceSchema = Schema.Struct({
   routeSlugs: PublicRouteSlugMapSchema,
 });
 export type PublicRouteSurface = SchemaType<typeof PublicRouteSurfaceSchema>;
-const publicRouteSurfaceInput: readonly SchemaEncoded<
-  typeof PublicRouteSurfaceSchema
->[] = [
+const publicRouteSurfaceInput = [
   {
     appSegment: "curricula",
     key: "curriculum",
@@ -60,7 +58,13 @@ const publicRouteSurfaceInput: readonly SchemaEncoded<
       ms: "try-out",
     },
   },
-];
+] as const satisfies readonly SchemaEncoded<typeof PublicRouteSurfaceSchema>[];
+/**
+ * The route folder of each public surface. The router serves a surface below
+ * this segment, and its localized namespace is the address a reader sees.
+ */
+export type PublicRouteAppSegment =
+  (typeof publicRouteSurfaceInput)[number]["appSegment"];
 export const PUBLIC_ROUTE_SURFACES = Schema.decodeSync(
   Schema.Array(PublicRouteSurfaceSchema)
 )(publicRouteSurfaceInput);

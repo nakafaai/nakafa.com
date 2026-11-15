@@ -2,6 +2,7 @@
 
 import { ScrollArea as ScrollAreaPrimitive } from "@base-ui/react/scroll-area";
 import {
+  scrollFadeVariants,
   scrollThumbVariants,
   scrollTrackVariants,
 } from "@repo/design-system/lib/scrollbar";
@@ -50,10 +51,7 @@ function ScrollArea({
       <ScrollAreaPrimitive.Viewport
         className={cn(
           "focus-visible:ring-ring focus-visible:ring-offset-background min-h-0 flex-1 rounded-[inherit] transition-shadow outline-none focus-visible:ring-2 focus-visible:ring-offset-1 data-has-overflow-x:overscroll-x-contain data-has-overflow-y:overscroll-y-contain",
-          scrollFade &&
-            "mask-r-from-[calc(100%-min(var(--fade-size),var(--scroll-area-overflow-x-end)))] mask-b-from-[calc(100%-min(var(--fade-size),var(--scroll-area-overflow-y-end)))] [--fade-size:1.5rem]",
-          scrollFade === true &&
-            "mask-t-from-[calc(100%-min(var(--fade-size),var(--scroll-area-overflow-y-start)))] mask-l-from-[calc(100%-min(var(--fade-size),var(--scroll-area-overflow-x-start)))]",
+          scrollFade && scrollFadeVariants({ start: scrollFade === true }),
           axis === "vertical" && "overflow-x-hidden!",
           viewportClassName
         )}
