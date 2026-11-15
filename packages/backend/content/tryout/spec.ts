@@ -3,14 +3,18 @@ import { appLocaleValidator } from "@repo/backend/confect/contentRelease/spec";
 import { Schema } from "effect";
 
 /**
- * The question the landing demonstrates, as the JSON text of a question body
+ * The question the landing demonstrates in one locale, as the JSON text of a question body
  * (`TryoutQuestionBodyText`): its prompt, its one interaction, the key's answer the demonstration
- * reveals, and the reading it was written against.
+ * reveals, and the reading it was written against. A locale whose catalog serves no set has none.
  */
-export const featuredTryoutValidator = Schema.Struct({
-  body: Schema.String,
-  versionHash: Sha256HashSchema,
-});
+export const featuredTryoutValidator = Schema.Union([
+  Schema.Struct({
+    body: Schema.String,
+    kind: Schema.Literal("question"),
+    versionHash: Sha256HashSchema,
+  }),
+  Schema.Struct({ kind: Schema.Literal("none") }),
+]);
 export const tryoutMetadataArgsValidator = {
   appLocale: appLocaleValidator,
   kind: Schema.Literals([

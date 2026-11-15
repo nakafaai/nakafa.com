@@ -1,7 +1,14 @@
 // @vitest-environment node
 
 import { HttpClient } from "@confect/js";
-import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
+import {
+  afterEach,
+  assert,
+  beforeEach,
+  describe,
+  expect,
+  it,
+} from "@effect/vitest";
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import refs from "@repo/backend/confect/_generated/refs";
 import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
@@ -234,29 +241,31 @@ describe("immutable try-out application catalog", () => {
     "decodes the featured question's body with its interaction and key",
     () =>
       Effect.gen(function* () {
-        const world = yield* tryoutWorld({
-          firstSectionKey: "quantitative-knowledge",
-        });
+        const world = yield* tryoutWorld();
         fetchQueryMock.mockImplementation(world.visitor.query);
 
         const featured = yield* readFeaturedTryout("id");
 
-        expect(featured.prompt.type).toBe("doc");
-        expect(featured.interaction.id).toBe(featured.key?.interaction);
+        assert.ok(featured.kind === "question", "Expected a question.");
+        expect(featured.body.prompt.type).toBe("doc");
+        expect(featured.body.interaction.id).toBe(
+          featured.body.key?.interaction
+        );
       })
   );
-  it.effect("shows no country in a locale no set is written in", () =>
-    Effect.gen(function* () {
-      const world = yield* tryoutWorld();
-      fetchQueryMock.mockImplementation(world.visitor.query);
-      expect(yield* readTryoutHubPage("ms")).toMatchObject({ countries: [] });
-    })
+  it.effect(
+    "shows no country and no featured question in a locale no set is written in",
+    () =>
+      Effect.gen(function* () {
+        const world = yield* tryoutWorld();
+        fetchQueryMock.mockImplementation(world.visitor.query);
+        expect(yield* readTryoutHubPage("ms")).toMatchObject({ countries: [] });
+        expect(yield* readFeaturedTryout("ms")).toEqual({ kind: "none" });
+      })
   );
   it.effect("asks Convex for the featured question once for each release", () =>
     Effect.gen(function* () {
-      const world = yield* tryoutWorld({
-        firstSectionKey: "quantitative-knowledge",
-      });
+      const world = yield* tryoutWorld();
       fetchQueryMock.mockImplementation(world.visitor.query);
 
       const first = yield* readFeaturedTryout("id");

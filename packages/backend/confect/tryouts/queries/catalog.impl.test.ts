@@ -274,16 +274,15 @@ describe("tryouts/queries/catalog", () => {
   );
 
   it.effect(
-    "demonstrates the landing's question with its key and reading, and refuses a release without it",
+    "demonstrates the landing's question with its key, and none once the locale serves no set",
     () =>
       Effect.gen(function* () {
-        const featured = yield* tryoutWorld({
-          firstSectionKey: "quantitative-knowledge",
-        });
-        const question = yield* featured.visitor.query(
+        const world = yield* tryoutWorld();
+        const question = yield* world.visitor.query(
           catalog.getFeaturedQuestion,
           { appLocale: "en" }
         );
+        assert.ok(question.kind === "question", "Expected a question.");
         expect(
           yield* Schema.decodeEffect(TryoutQuestionBodyText)(question.body)
         ).toMatchObject({
@@ -291,25 +290,16 @@ describe("tryouts/queries/catalog", () => {
           key: { correct: ["option-2"], kind: "choice" },
           prompt: { type: "doc" },
         });
-        const missing = yield* tryoutWorld();
-        expect(
-          yield* missing.visitor
-            .query(catalog.getFeaturedQuestion, { appLocale: "id" })
-            .pipe(Effect.flip)
-        ).toMatchObject({
-          code: "CONTENT_RELEASE_INTEGRITY",
-          message: expect.stringContaining("featured section"),
-        });
         yield* tamperCatalog(
-          missing,
+          world,
           { ...KEYS, appLocale: "id", kind: "set", setKey: "set-1" },
           "delete"
         );
         expect(
-          yield* missing.visitor
-            .query(catalog.getFeaturedQuestion, { appLocale: "id" })
-            .pipe(Effect.flip)
-        ).toMatchObject({ message: expect.stringContaining("featured set") });
+          yield* world.visitor.query(catalog.getFeaturedQuestion, {
+            appLocale: "id",
+          })
+        ).toEqual({ kind: "none" });
       })
   );
 
