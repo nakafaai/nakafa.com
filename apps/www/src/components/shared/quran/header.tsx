@@ -52,10 +52,15 @@ export function QuranSurahHeader({
       />
       <PageActions>
         {search}
+        {/* The page's actions and its outline, which leaves from the xl width for the sidebar, are one group, so the
+            header holds two pills: the search and this group. */}
         <ButtonGroup aria-label={tCommon("content-actions")}>
           {actions}
+          <PanelSheetTrigger
+            icon={Menu02Icon}
+            label={tCommon("on-this-page")}
+          />
         </ButtonGroup>
-        <PanelSheetTrigger icon={Menu02Icon} label={tCommon("on-this-page")} />
       </PageActions>
     </PageHeader>
   );
