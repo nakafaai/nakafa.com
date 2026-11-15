@@ -421,14 +421,12 @@ jobs:
             if [ "$engine" = firefox ]; then
               display=(xvfb-run --auto-servernum --server-args="-screen 0 1920x1080x24")
             fi
-            echo "::group::$engine"
             # shellcheck disable=SC2086
-            "${display[@]}" bun run --cwd packages/backend acceptance shard "$engine" 1 1 "$RUNNER_TEMP/result/$engine" $SPECS || status=1
-            echo "::endgroup::"
-            if [ -d .cache/playwright/www ]; then
-              mkdir -p "$RUNNER_TEMP/traces"
-              mv .cache/playwright/www "$RUNNER_TEMP/traces/$engine"
-            fi
+            ( PLAYWRIGHT_WORKERS=1 "${display[@]}" bun run --cwd packages/backend acceptance shard "$engine" 1 1 "$RUNNER_TEMP/result/$engine" $SPECS > "$RUNNER_TEMP/$engine.log" 2>&1 ) &
+          done
+          wait || true
+          for engine in $ENGINES; do
+            echo "::group::$engine"; cat "$RUNNER_TEMP/$engine.log"; echo "::endgroup::"
             jq -e .passed "$RUNNER_TEMP/result/$engine/result.json" > /dev/null || status=1
           done
           exit "$status"

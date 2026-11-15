@@ -80,6 +80,7 @@ const runSuite = Effect.fn("acceptance.runSuite")(function* (
       // and only a test that fails both times fails its spec.
       "--retries=1",
       "--reporter=line,json",
+      `--output=${input.output}/artifacts`,
       ...input.specs,
     ],
     {
