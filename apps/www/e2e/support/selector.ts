@@ -64,6 +64,8 @@ export const NINA_SECTION = "#nina";
 export const VISUAL_CARD = '[data-slot="visual-card"]';
 /** The toolbar of a visual card: the controls that change what the visual shows. */
 export const VISUAL_CARD_TOOLBAR = '[data-slot="visual-card-toolbar"]';
+/** The values table of a visual card, the band under a function chart that lists its points. */
+export const VISUAL_CARD_TABLE = '[data-slot="visual-card-table"]';
 /** The footer band of a visual card, which holds its readouts, legends and notes. */
 export const VISUAL_CARD_FOOTER = '[data-slot="visual-card-footer"]';
 /** The place of Nina on a full-page state, which holds her and the things beside her. */
