@@ -34,10 +34,14 @@ import { VERDICT_CONTEXT } from "#scripts/proof/github";
 /** A spec file of the browser suites, as a path in the repository; its group is the path under `apps/www`. */
 const SPEC_FILE = /^apps\/www\/(?<spec>e2e\/.+\.browser\.ts)$/u;
 
-/** A pull request as a candidate of the train, with its stack and the spec files it adds or changes. */
-const candidateOf = ({ pull, stack }: Rider): Candidate => ({
+/** A file the product runs: under `apps` or `packages`, outside the browser specs, and no Markdown. */
+const RUNTIME_FILE = /^(?:apps|packages)\/(?!www\/e2e\/)(?!.*\.md$)/u;
+
+/** A pull request as a candidate of the train, with its stack, the head below it, the spec files it adds or changes, and whether it changes what the product runs. */
+const candidateOf = ({ pull, stack, below }: Rider): Candidate => ({
   number: pull.number,
   stack,
+  below,
   sha: pull.headRefOid,
   title: pull.title,
   specs: Arr.filterMap(pull.files, ({ path }) =>
@@ -46,6 +50,7 @@ const candidateOf = ({ pull, stack }: Rider): Candidate => ({
       onSome: Result.succeed,
     })
   ),
+  runtime: Arr.some(pull.files, ({ path }) => RUNTIME_FILE.test(path)),
 });
 
 /** A full commit SHA, as `git ls-remote` prints one. */
@@ -72,21 +77,26 @@ const DeployRunsJson = Schema.fromJsonString(
   Schema.Array(Schema.Struct({ databaseId: Schema.Int, status: Schema.String }))
 );
 
-/**
- * Whether a head may ride: its static gate passed and its browser proof passed,
- * both on that exact head.
- */
-const provenHead = Effect.fn("landing.provenHead")(function* (sha: string) {
+/** Which of these commit status contexts passed on one exact head. */
+const passedOn = Effect.fn("landing.passedOn")(function* (sha: string) {
   const { statuses } = yield* gh([
     "api",
     `repos/${REPOSITORY}/commits/${sha}/status`,
   ]).pipe(Effect.flatMap(decoded(StatusJson)));
-  const passed = (contexts: readonly string[]) =>
+  return (contexts: readonly string[]) =>
     Arr.some(
       statuses,
       (status) =>
         Arr.contains(contexts, status.context) && status.state === "success"
     );
+});
+
+/**
+ * Whether a head may ride: its static gate passed and its browser proof passed,
+ * both on that exact head.
+ */
+const provenHead = Effect.fn("landing.provenHead")(function* (sha: string) {
+  const passed = yield* passedOn(sha);
   return passed([GATE_CONTEXT]) && passed(PROOF_CONTEXTS);
 });
 
@@ -164,6 +174,41 @@ export const githubRepository = (root: string) =>
           );
         });
 
+      /** The exact head of main on origin. */
+      const mainHead = git(["ls-remote", "origin", "refs/heads/main"]).pipe(
+        Effect.map((line) => Arr.headNonEmpty(Str.split(line, "\t"))),
+        Effect.filterOrFail(
+          (sha) => COMMIT_SHA.test(sha),
+          () => new TrainError({ message: "origin has no main branch." })
+        )
+      );
+
+      /**
+       * Whether a stack may join a batch: its top's own gate passed on a head
+       * that contains main's tip, so that gate ran on today's main, and the top
+       * carries every member below it. A head gated on an older main costs one
+       * gate of its own, side by side with every other, while a batch it breaks
+       * costs a bisect, one verification after another.
+       */
+      const entering = (stack: Arr.NonEmptyReadonlyArray<Pull>, tip: string) =>
+        Effect.gen(function* () {
+          const top = Arr.lastNonEmpty(stack);
+          const passed = yield* passedOn(top.headRefOid);
+          if (!passed([GATE_CONTEXT])) {
+            return false;
+          }
+          const fresh = yield* attempt(
+            "git",
+            ["merge-base", "--is-ancestor", tip, top.headRefOid],
+            root
+          );
+          if (fresh.code !== 0) {
+            return false;
+          }
+          const below = Arr.dropRight(stack, 1);
+          return (yield* carried(top, below)).length === below.length;
+        });
+
       /** The open pull requests that are no draft. */
       const openPulls = gh([
         "pr",
@@ -231,28 +276,30 @@ export const githubRepository = (root: string) =>
           ),
         ready: (numbers) =>
           provide(
-            openPulls.pipe(
-              Effect.map((pulls) =>
-                Arr.map(
-                  Arr.filter(
-                    landingOrder(Arr.flatMap(stacksOf(pulls), ridersOf)),
-                    ({ pull }) =>
-                      numbers.length === 0 || Arr.contains(numbers, pull.number)
-                  ),
-                  candidateOf
-                )
-              )
-            )
+            Effect.gen(function* () {
+              const pulls = yield* openPulls;
+              const tip = yield* mainHead;
+              yield* git([
+                "fetch",
+                "--quiet",
+                "origin",
+                "refs/heads/main",
+                ...Arr.map(pulls, (pull) => `refs/pull/${pull.number}/head`),
+              ]);
+              const stacks = yield* Effect.filter(stacksOf(pulls), (stack) =>
+                entering(stack, tip)
+              );
+              return Arr.map(
+                Arr.filter(
+                  landingOrder(Arr.flatMap(stacks, ridersOf)),
+                  ({ pull }) =>
+                    numbers.length === 0 || Arr.contains(numbers, pull.number)
+                ),
+                candidateOf
+              );
+            })
           ),
-        main: provide(
-          git(["ls-remote", "origin", "refs/heads/main"]).pipe(
-            Effect.map((line) => Arr.headNonEmpty(Str.split(line, "\t"))),
-            Effect.filterOrFail(
-              (sha) => COMMIT_SHA.test(sha),
-              () => new TrainError({ message: "origin has no main branch." })
-            )
-          )
-        ),
+        main: provide(mainHead),
         combine: (base, heads) =>
           provide(
             Effect.gen(function* () {

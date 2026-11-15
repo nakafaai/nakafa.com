@@ -1,4 +1,8 @@
 import {
+  proofFailures,
+  SpecPath,
+} from "@repo/backend/scripts/content/acceptance/result";
+import {
   Array as Arr,
   Context,
   Effect,
@@ -23,6 +27,10 @@ export const Candidate = Schema.Struct({
   title: Schema.String,
   /** The spec files the pull request adds or changes, which its combination is proven on. */
   specs: Schema.Array(Schema.String),
+  /** The head of the stack member below it, which its proof ran on top of; empty for a pull request on main. */
+  below: Schema.String,
+  /** Whether it changes a file the product runs, under `apps` or `packages`, beyond specs and docs. */
+  runtime: Schema.Boolean,
 });
 export type Candidate = typeof Candidate.Type;
 
@@ -66,8 +74,10 @@ export class Repository extends Context.Service<
       numbers: readonly number[]
     ) => Effect.Effect<readonly Candidate[], TrainError>;
     /**
-     * Every open pull request that may ride a batch, whatever its own gate and
-     * proof say: each stack whole, bottom-up, oldest stack first.
+     * Every open pull request that may ride a batch: each stack whole,
+     * bottom-up, oldest stack first, whose top's own gate passed on a head that
+     * contains main's tip and carries the members below it. Its own proof is
+     * not asked for, since the batch proves the combination.
      */
     readonly ready: (
       numbers: readonly number[]
@@ -86,14 +96,24 @@ export class Repository extends Context.Service<
   }
 >()("nakafa/scripts/landing/train/Repository") {}
 
-/** What one train did. Main's failures are specs that fail on main too, which it ignored. */
+/** A spec that failed on a combination and passed when it ran again alone on the same one. */
+const Flake = Schema.Struct({ spec: Schema.String, sha: Schema.String });
+
+/**
+ * What one train did. Main's failures are specs that fail on main too, which it
+ * ignored; flakes are specs that failed once and passed again on the same
+ * combination, which it recorded and let ride.
+ */
 const TrainReport = Schema.Struct({
   main: Schema.String,
   landed: Schema.Array(Candidate),
   skipped: Schema.Array(Rejection),
   rejected: Schema.Array(Rejection),
   mainFailures: Schema.Array(Schema.String),
+  flaky: Schema.Array(Flake),
 });
+
+const isSpec = Schema.is(SpecPath);
 type TrainReport = typeof TrainReport.Type;
 
 /** The failure of a combination whose gate failed, which no spec on main can share. */
@@ -101,33 +121,79 @@ const GATE_FAILURE = "gate:combination";
 
 /**
  * How many stacks of a red batch the train verifies at once. The account runs
- * about 20 jobs at a time across both repositories, and an Aksara gate takes
- * several of them, so the train leaves the rest to Aksara's gates and the deploy.
+ * about 20 jobs at a time across both repositories, and each verification takes
+ * four of them, the gate and one job per engine, so four stacks take 16 and
+ * leave the rest to Aksara's gates, the sessions' gates and the deploy.
  */
-const SPLIT_JOBS = 8;
+const SPLIT_JOBS = 4;
 
 /** The failure of a batch that an earlier train already verified red. */
 const RED_BATCH = "batch:red";
 
 /**
+ * The one spec a combination that changes nothing the product runs is proven
+ * on, such as a change to the landing scripts, a workflow or the docs: a fast
+ * page that passes in all three engines on main (run 43699251319).
+ */
+const SMOKE_SPEC = "e2e/quran/landing.browser.ts";
+
+/**
  * The specs a combination is proven on: those the caller names and those its
- * pull requests add or change. None at all proves every suite, which a batch of
- * changes that touch no spec needs.
+ * pull requests add or change. A combination that names none proves every
+ * suite when a pull request changes a file the product runs, and only the
+ * smoke spec when none does, since the gate already checks scripts and docs.
  */
 const proofSpecs = (
   specs: readonly string[],
   heads: readonly Candidate[]
-): readonly string[] =>
-  Arr.sort(
+): readonly string[] => {
+  const named = Arr.sort(
     Arr.dedupe([...specs, ...Arr.flatMap(heads, (head) => head.specs)]),
     Order.String
   );
+  if (named.length > 0 || Arr.some(heads, (head) => head.runtime)) {
+    return named;
+  }
+  return [SMOKE_SPEC];
+};
+
+/**
+ * The most pull requests one batch carries (ADR 0048, "The Landing Queue"): at a
+ * failure rate of one in ten per pull request, five pass together more often
+ * than not, while 13 pass a quarter of the time.
+ */
+const BATCH_LIMIT = 5;
+
+/**
+ * The pull requests one batch takes, in landing order: whole stacks while the
+ * batch stays within the limit, filling it with later stacks that still fit;
+ * a first stack longer than the limit rides alone.
+ */
+const batchOf = (candidates: readonly Candidate[]): readonly Candidate[] =>
+  Arr.match(candidates, {
+    onEmpty: () => Arr.empty<Candidate>(),
+    onNonEmpty: (all) => {
+      const [first, ...rest] = Arr.groupWith(
+        all,
+        (one, other) => one.stack === other.stack
+      );
+      return Arr.reduce(
+        rest,
+        Arr.fromIterable<Candidate>(first),
+        (taken, stack) =>
+          taken.length + stack.length <= BATCH_LIMIT
+            ? Arr.appendAll(taken, stack)
+            : taken
+      );
+    },
+  });
 
 /**
  * Lands pull requests after one gate and one proof of their combination on
- * main: those whose own gate and proof passed, or with `batch` every ready one,
- * each stack whole. A failing spec that fails on main too belongs to main: the
- * train reports it and ignores it. Any other failure, a failed gate included,
+ * main: those whose own gate and proof passed, or with `batch` at most five,
+ * each stack whole, whose top's own gate passed on a head that contains main.
+ * A failing spec that fails on main too belongs to main: the train reports it
+ * and ignores it. Any other failure, a failed gate included,
  * splits the batch. A batch of several stacks verifies every stack on its own,
  * side by side, so a split costs one wait in the runner queue, not one for each
  * half; the stacks that passed are verified together once more, and a failing
@@ -144,12 +210,35 @@ export const runTrain = Effect.fn("landing.runTrain")(function* (
   const repository = yield* Repository;
   const prover = yield* Prover;
   const main = yield* repository.main;
-  const candidates = yield* batch
-    ? repository.ready(numbers)
-    : repository.proven(numbers);
+  const candidates = batch
+    ? batchOf(yield* repository.ready(numbers))
+    : yield* repository.proven(numbers);
   const accepted = yield* Ref.make<readonly Candidate[]>([]);
   const landings = yield* Ref.make<readonly Landing[]>([]);
   const rejected = yield* Ref.make<readonly Rejection[]>([]);
+  const flakes = yield* Ref.make<readonly (typeof Flake.Type)[]>([]);
+
+  /**
+   * The failing specs that pass when they run again alone on the same
+   * combination: flaky, so they are recorded with the combination they flaked
+   * on and reject nothing, while every one that fails again stays a failure. A
+   * failed gate or a proof that named no spec never runs again. No spec is
+   * skipped or deleted for it; the report names each flake for its owner.
+   */
+  const flakyOf = (sha: string, failures: readonly string[]) =>
+    Effect.gen(function* () {
+      const specs = Arr.filter(failures, isSpec);
+      if (specs.length === 0) {
+        return Arr.empty<string>();
+      }
+      const again = proofFailures(yield* prover.prove(sha, specs));
+      const flaky = Arr.filter(specs, (spec) => !Arr.contains(again, spec));
+      yield* Ref.update(
+        flakes,
+        Arr.appendAll(Arr.map(flaky, (spec) => ({ spec, sha })))
+      );
+      return flaky;
+    });
   const baseline = yield* makeBaseline(main);
   // Stacks verified side by side ask main about their failures one at a time,
   // so main proves each spec once.
@@ -182,7 +271,7 @@ export const runTrain = Effect.fn("landing.runTrain")(function* (
     });
 
   /**
-   * Verifies heads on main above what the train accepted, in one job. Answers
+   * Verifies heads on main above what the train accepted, in one run. Answers
    * the heads that conflicted, the heads that rode, and the failures that main
    * does not share.
    */
@@ -221,9 +310,14 @@ export const runTrain = Effect.fn("landing.runTrain")(function* (
       const known = HashSet.fromIterable(
         yield* asking.withPermit(baseline.shared(failures))
       );
+      const fresh = Arr.filter(
+        failures,
+        (failure) => !HashSet.has(known, failure)
+      );
+      const flaky = yield* flakyOf(combination.sha, fresh);
       return {
         ...verdict,
-        caused: Arr.filter(failures, (failure) => !HashSet.has(known, failure)),
+        caused: Arr.filter(fresh, (failure) => !Arr.contains(flaky, failure)),
       };
     });
 
@@ -338,6 +432,7 @@ export const runTrain = Effect.fn("landing.runTrain")(function* (
     ),
     rejected: yield* Ref.get(rejected),
     mainFailures: yield* baseline.failing,
+    flaky: yield* Ref.get(flakes),
   };
   return report;
 });
@@ -357,6 +452,11 @@ export function formatTrain(report: TrainReport) {
         line("rejected", candidate, reason)
       ),
       ...Arr.map(report.mainFailures, (spec) => `main fails ${spec}`),
+      ...Arr.map(
+        report.flaky,
+        ({ spec, sha }) =>
+          `flaky ${spec} on ${sha.slice(0, 10)}: failed, then passed when it ran again alone`
+      ),
       Option.match(Arr.head(report.landed), {
         onNone: () => "nothing landed, no deploy",
         onSome: () => "each landed group deployed",

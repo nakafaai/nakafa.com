@@ -10,6 +10,8 @@ export const pull = (number: number, stack = number): Candidate => ({
   sha: String(number).repeat(40).slice(0, 40),
   title: `Change ${number}`,
   specs: [],
+  below: "",
+  runtime: true,
 });
 
 /** A proof that fails these specs in Chromium, or passes when there are none. */
@@ -57,6 +59,7 @@ export const world = (options: {
   readonly mainFails?: readonly string[];
   readonly conflicts?: readonly number[];
   readonly skips?: readonly number[];
+  readonly flaky?: readonly string[];
 }) =>
   Effect.gen(function* () {
     const log = yield* Ref.make<readonly string[]>([]);
@@ -104,19 +107,26 @@ export const world = (options: {
         ),
       deploy: record("deploy"),
     });
+    const proved = yield* Ref.make<readonly string[]>([]);
+    // A flaky spec fails on a combination's first proof only.
     const prove = (sha: string, specs: readonly string[]) =>
-      record(`prove ${sha} ${Arr.join(specs, " ")}`.trim()).pipe(
-        Effect.as(
-          sha === MAIN
-            ? proof(
-                sha,
-                Arr.filter(options.mainFails ?? [], (spec) =>
-                  Arr.contains(specs, spec)
-                )
-              )
-            : proof(sha, options.fails(numbersOf(sha)))
-        )
-      );
+      Effect.gen(function* () {
+        yield* record(`prove ${sha} ${Arr.join(specs, " ")}`.trim());
+        if (sha === MAIN) {
+          return proof(
+            sha,
+            Arr.filter(options.mainFails ?? [], (spec) =>
+              Arr.contains(specs, spec)
+            )
+          );
+        }
+        const first = !Arr.contains(yield* Ref.get(proved), sha);
+        yield* Ref.update(proved, Arr.append(sha));
+        return proof(sha, [
+          ...options.fails(numbersOf(sha)),
+          ...(first ? (options.flaky ?? []) : []),
+        ]);
+      });
     const prover = Layer.succeed(Prover, {
       prove,
       verify: (sha, specs) =>

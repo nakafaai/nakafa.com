@@ -70,3 +70,66 @@ Measured on 13 November, the queue's topology, not the work, set the time to lan
 6. **Scope of a train run.** A train combination is gated over the workspaces it changes against main, like a single head: its diff against main holds every head it merges, so the affected workspaces and their dependents are all it can break. `bun run train --batch --red` starts a batch that an earlier round already verified red at its split, so a restarted train does not spend a queue wait to learn it again.
 7. **Sharing the runners.** The train verifies at most 8 stacks at once, so Aksara's gates and the deploy keep runners. A train or baseline run cancelled from outside, such as one a session moved back in the queue, is dispatched again, at most three times, instead of being read as a failure.
 8. **Landing as it goes.** A green group lands at once, by each exact head, and deploys, instead of waiting for the train to finish every split; only what landed joins the base of the next verification, so a head that moved or that GitHub refused never hides in a later combination.
+
+## Amendment: The Engines Side By Side, 15 November 2026
+
+Train 5 of 15 November verified 34 pull requests in one run. Its gate took 30 minutes and its build 8, and then Chromium, Firefox and WebKit ran the specs one after another on the same machine until the job reached its 350-minute limit at 07:19 CET, with no verdict and nothing landed. The work of the three engines is independent, and only the order made it long. On the same night 16 proof runs dispatched within one minute all started at once, so jobs that need no other job leave the queue together. What the measurement of 13 November punished was the `needs` stage, which queues again from the back.
+
+1. **Four jobs, no `needs`.** `.github/workflows/proof.yml` runs the gate in one job and each engine in a job of its own, all four dispatched together. Each engine job installs, prepares, builds and proves on its own machine. The three builds cost machine minutes that the free runners do not bill, and the specs take the time of the slowest engine instead of the sum of all three.
+2. **Statuses.** The gate job posts `gate/<part>` and `gate` as before. Each engine job posts `proof/<engine>` and then reads this run's three engine statuses on the head, and the engine that finds all three final posts `proof`. Each engine posts its own status before it reads the others, so the last to finish always sees them all and `proof` stays the last status a run posts.
+3. **Results.** Each engine uploads `results-<engine>` and `traces-<engine>`. `bun run proof` and the train download every `results-*` artifact of the run, and an engine whose build failed uploads none and counts as failed.
+4. **Phases.** A run's phases are read across its jobs: each phase runs from the first of its steps to start to the last to end, and the queue runs from the dispatch to the first job that started. A job that a dispatch turned off, such as the gate of a baseline, counts for nothing.
+5. **Sharing the runners.** One verification now takes four of the account's 20 jobs, so the train verifies at most four stacks of a red batch at once, 16 jobs, and leaves the rest to Aksara's gates, the sessions' gates and the deploy.
+
+## Amendment: Batch Entry On Today's Main, 15 November 2026
+
+No pull request landed on nakafa.com for more than 10 hours after #2504 (23:45 CET, 14 November). Batch mode admitted every open pull request that was no draft, whatever its own gate said (`scripts/landing/train.ts`, `Repository.ready`), so a batch carried heads that failed on their own or that were gated on an older main, and each such head failed the combination and cost a bisect. Measured over the proof runs of 13 to 15 November (238 completed runs on pull request heads, read from `gh run list` and each run's steps): the gate failed on 34% of the 198 distinct heads it checked, and 73% of the 89 heads that ran specs failed one, most of them specs that fail on main too.
+
+1. **Entry.** A stack joins a batch only when its top's own `gate` passed on a head that contains main's tip, so that gate ran on today's main, and the top carries every member below it. Its own proof is not asked for, since the batch proves the combination.
+2. **Why the gate moves to each head.** A head gated on an older main costs one gate of its own, and those gates run side by side, up to the account's 20 concurrent jobs. A head that breaks a batch costs a bisect, one verification after another, each round a full gate and proof of a smaller combination.
+3. **Keeping heads fresh.** After every landing, the heads in the queue no longer contain main. Each waiting head merges main and gates again before it rides; until the queue does this by itself, the owning session does it.
+
+## Amendment: A Flake Is Run Again Before A Batch Splits, 15 November 2026
+
+The proof runs with no retries and a 120-second test timeout (`apps/www/playwright.config.ts`), so one timing miss in a batch of five fails the whole combination, and the bisect that follows costs a verification per round. Playwright calls a test that fails and then passes on a retry "flaky" (playwright.dev/docs/test-retries, read 15 November 2026); Bors splits a failed batch to find its culprit (github.com/bors-ng/bors-ng).
+
+1. **Run again first.** Before a combination splits, every failing spec that main does not fail runs once more, alone, on the same combination. A spec that passes is recorded as a flake with the combination it flaked on, and rejects nothing; a spec that fails again stays a failure and the batch splits as before. A failed gate or a proof that named no spec never runs again.
+2. **Never hidden.** The train's report names each flake, so it gets an owner and a due time on the tracker. No spec is skipped, deleted, or retried inside Playwright for it.
+
+## Amendment: The Landing Queue, 15 November 2026
+
+The queue grows with the speed of the work: 108 open pull requests that are no draft on 15 November, against 15 landed on 14 November and one in the 12 hours that followed. Measured over 13 to 15 November (references in the takeover tracker's `ops/research/references.md`): 400 proof runs, of which 146 were cancelled; a completed run took 27 minutes at the median and 50 at the 90th percentile; the gate failed on 34% of the distinct heads it checked. With independent failures at a rate p per pull request, a batch of n passes with probability (1 - p)^n (a derivation, not a sourced claim): at p = 0.1, five pass 59% of the time, 13 pass 25%, 34 pass 3%.
+
+### Decision
+
+1. **Build on the train, not a vendor queue.** The comparison below scores GitHub's merge queue, Mergify, Graphite and Trunk against the train. The train already lands stacks whole by exact head, compares failures with main, splits a red batch by stack and lands green groups as it goes; what it lacked is speed, entry discipline and a rule for flakes.
+2. **Small batches.** A batch holds at most five pull requests, a stack whole when it fits and in chunks of at most five from the bottom when it does not. Five is the size that passes more often than not at p = 0.1; it is revised from each week's measured p.
+3. **Fresh entry.** A stack enters only when its top's own gate passed on a head that contains main (amendment "Batch Entry On Today's Main").
+4. **Engines side by side.** The gate and each engine are jobs of their own (amendment "The Engines Side By Side"); an engine whose specs run longer than about 20 minutes is sharded across more jobs of its own.
+5. **Flakes run again before a split** (amendment "A Flake Is Run Again Before A Batch Splits").
+6. **Speculative pipelining, bounded.** While batch N verifies, batch N+1 verifies on top of main plus N, as Zuul's dependent pipeline does (zuul-ci.org/docs/zuul/latest/gating.html); when N fails, every batch built on it is discarded and verified again on what did land. The depth is bounded by the account's 20 concurrent jobs: four jobs per verification, four kept for Aksara's gates, the sessions' gates and the deploy, so at most four verifications at once.
+7. **A queue that runs itself.** The queue becomes a GitHub Actions workflow that advances one step per run and exits: it reads the queue, merges main into the heads that need it, dispatches their gates, forms the next batch, dispatches its verification, lands a green batch and starts the deploy. It runs on a schedule and on `workflow_dispatch`, with the deploy app's installation token, because events made with `GITHUB_TOKEN` start no other workflow (docs.github.com/en/actions/concepts/security/github_token). No step waits inside a session or on the Mac.
+8. **Specs from the change, a full proof after.** A batch proves the specs its pull requests change plus the suites of the routes they touch; a scheduled full proof of main runs after landings, as predictive test selection pairs a selected run before merge with complete runs after (arxiv.org/abs/1810.05286).
+9. **Main stays green.** When the full proof of main or a deploy turns red, the queue opens the culprit's revert at once and lands it first.
+10. **Rollback.** A broken Worker returns to its previous version with `wrangler rollback` (the last 100 versions; bindings and storage are not changed: developers.cloudflare.com/workers/configuration/versions-and-deployments/rollbacks/) while the revert lands; Alchemy itself rolls back only by deploying the previous code again (alchemy.run/cloudflare/compute/gradual-deployments). Convex cannot roll back functions and its backups restore data only, wiping what is there (docs.convex.dev/cli, docs.convex.dev/database/backup-restore), so a broken backend rolls forward through the revert. The procedure is tested on staging before it is needed.
+11. **Faster gates.** Typecheck and unit-test tasks may restore a cache keyed by Turborepo's exact input hash; a prefix-restored cache stays rejected, and the signed www build is never cached (`AGENTS.md`).
+
+### Build or buy
+
+| | GitHub merge queue | Mergify | Graphite | Trunk | The train |
+| --- | --- | --- | --- | --- | --- |
+| Stacks as a unit | not stated in its docs | yes, at most 20 deep (our island stack is 41) | yes | public preview | yes, whole or in chunks |
+| Batching and failure | groups 1 to 100; a failing PR is removed and the rest rebuilt | batch size with splits | private beta | not stated | batches with split by stack and halves |
+| Checks | required checks on `merge_group` (rejected above for the wait they bring) | each queued PR gets its own CI run | not stated | not stated | gate on each head, one proof per batch |
+| Cost for this public repository | free | free for open source | paid team plan | routed to sales | free |
+| Code we maintain | workflow triggers | a config file and a ruleset bypass | none | none | `scripts/landing` |
+
+GitHub's merge queue would bring back required checks, which this ADR rejected because they made merges wait on the runner queue, and its documentation does not cover stacked pull requests. Mergify would fit at no cost but caps a stack at 20 and runs CI for each queued pull request on our runners. Graphite is paid, Trunk's terms for a public repository are not published, and Bors-NG is archived. The train keeps stacks whole, costs nothing, and its gaps are closed by the points above.
+
+### The ceiling of free runners
+
+Twenty concurrent jobs, four per verification and four kept in reserve, give four verifications at once. With batches of at most five and a verification of about 30 minutes (the gate's 25 beside a build of 10 and sharded specs of 20), the queue lands at most 40 pull requests an hour when every batch passes, and fewer as p rises. When the median time from ready to merged stays above two hours for a week, or jobs wait in GitHub's queue more than 15 minutes, the next step is decided then: fewer specs per batch through selection, or a measured case for paid runners, which this repository does not use today.
+
+## Amendment: A Batch That Changes Nothing The Product Runs Proves One Spec, 15 November 2026
+
+A combination whose pull requests name no spec proved every suite, even when they changed only the landing scripts, a workflow or the docs, which the gate already checks. The first step of selecting specs from the change (amendment "The Landing Queue", point 8): a pull request changes what the product runs when it changes a file under `apps` or `packages` outside the browser specs and Markdown. A combination that names no spec proves every suite when one of its pull requests changes what the product runs, and only `e2e/quran/landing.browser.ts` when none does: a fast page that passed in all three engines on main (run 43699251319).

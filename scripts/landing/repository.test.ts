@@ -85,14 +85,30 @@ describe("train repository", () => {
               all: yield* repository.proven([]),
               named: yield* repository.proven([9]),
               ready: yield* repository.ready([]),
-              chosen: yield* repository.ready([7]),
+              chosen: yield* repository.ready([6]),
+              ungated: yield* repository.ready([7]),
             };
-          })
+          }),
+          // Main's tip is f; every head but c contains it.
+          (args) => {
+            if (args[0] === "ls-remote") {
+              return { stdout: `${"f".repeat(40)}\trefs/heads/main\n` };
+            }
+            if (args[0] === "merge-base") {
+              return { code: args[3] === "c".repeat(40) ? 1 : 0 };
+            }
+            return args[0] === "fetch" ? { stdout: "" } : undefined;
+          }
         );
         expect(Arr.map(value.all, (one) => one.number)).toEqual([4, 9]);
-        // A batch takes every open pull request that is no draft, proven or not.
-        expect(Arr.map(value.ready, (one) => one.number)).toEqual([4, 6, 7, 9]);
-        expect(Arr.map(value.chosen, (one) => one.number)).toEqual([7]);
+        // #9 changes apps/www/src, which the product runs; #4 changes nothing.
+        expect(Arr.map(value.all, (one) => one.runtime)).toEqual([false, true]);
+        // A batch takes a stack whose own gate passed on a head that contains
+        // main, its proof unasked: not #9, gated on an older main, nor #7,
+        // whose gate has not passed.
+        expect(Arr.map(value.ready, (one) => one.number)).toEqual([4, 6]);
+        expect(Arr.map(value.chosen, (one) => one.number)).toEqual([6]);
+        expect(value.ungated).toEqual([]);
         expect(Arr.map(value.named, (one) => one.number)).toEqual([9]);
         expect(Arr.map(value.named, (one) => one.specs)).toEqual([
           ["e2e/c/one.browser.ts"],

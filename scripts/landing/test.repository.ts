@@ -63,13 +63,18 @@ export const origins = Effect.fn("RepositoryTest.origins")(function* () {
         sha,
         title: `Change ${number}`,
         specs: [],
+        below: "",
+        runtime: true,
       };
     })
   );
   return { origin, work, main, heads };
 });
 
-/** Runs a program against the repository of `root`, with gh answered by `script`. */
+/**
+ * Runs a program against the repository of `root`, with gh answered by
+ * `script` and Git by `gitScript`, which runs real Git where it answers nothing.
+ */
 export const withRepository = <A, E>(
   root: string,
   script: (args: readonly string[]) => Answer | undefined,
@@ -77,12 +82,14 @@ export const withRepository = <A, E>(
     A,
     E,
     Repository | ChildProcessSpawner.ChildProcessSpawner
-  >
+  >,
+  gitScript: (args: readonly string[]) => Answer | undefined = () => undefined
 ) =>
   Effect.gen(function* () {
     const calls = yield* Ref.make<readonly string[]>([]);
+    // The repository runs only gh and Git.
     const shell = scriptedShell(
-      (command, args) => (command === "gh" ? script(args) : undefined),
+      (command, args) => (command === "gh" ? script(args) : gitScript(args)),
       calls
     );
     const value = yield* program.pipe(
@@ -115,6 +122,8 @@ export const CANDIDATE: Candidate = {
   sha: "e".repeat(40),
   title: "Land me",
   specs: [],
+  below: "",
+  runtime: true,
 };
 
 /** A pull request view as `gh pr view` prints it. */

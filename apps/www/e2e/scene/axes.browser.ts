@@ -5,8 +5,8 @@ import { withObservedPageErrors } from "@/e2e/support/observe";
 import { openRoute } from "@/e2e/support/route";
 import { revealLineScene } from "@/e2e/support/scene";
 import {
-  LINE_SCENE,
-  lineSceneCards,
+  MATH_SCENE,
+  mathSceneCards,
   paginationNavigation,
   SUBJECT_LINK,
 } from "@/e2e/support/selector";
@@ -32,8 +32,8 @@ const mountAxisLabels = Effect.fn("NakafaE2E.mountAxisLabels")(function* (
   page: Page
 ) {
   yield* openRoute(page, pinnedRoutes.material.en, "denied");
-  const card = lineSceneCards(page).first();
-  const scene = card.locator(LINE_SCENE);
+  const card = mathSceneCards(page).first();
+  const scene = card.locator(MATH_SCENE);
   yield* revealLineScene(card);
   yield* Effect.promise(() =>
     expect(async () => {
