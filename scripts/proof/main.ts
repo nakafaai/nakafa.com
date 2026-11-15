@@ -72,7 +72,7 @@ export function formatProof(
 }
 
 /**
- * Verifies one head in one job, its gate over the workspaces it changes and its
+ * Verifies one head in one run, its gate over the workspaces it changes and its
  * proof, and prints both, exiting 0 only when the gate passed and the head fails
  * nothing that main does not. `--local` proves it on this machine through the
  * acceptance runtime, the adapter for debugging, which a session runs through

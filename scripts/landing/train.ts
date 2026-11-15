@@ -101,10 +101,11 @@ const GATE_FAILURE = "gate:combination";
 
 /**
  * How many stacks of a red batch the train verifies at once. The account runs
- * about 20 jobs at a time across both repositories, and an Aksara gate takes
- * several of them, so the train leaves the rest to Aksara's gates and the deploy.
+ * about 20 jobs at a time across both repositories, and each verification takes
+ * four of them, the gate and one job per engine, so four stacks take 16 and
+ * leave the rest to Aksara's gates, the sessions' gates and the deploy.
  */
-const SPLIT_JOBS = 8;
+const SPLIT_JOBS = 4;
 
 /** The failure of a batch that an earlier train already verified red. */
 const RED_BATCH = "batch:red";
@@ -182,7 +183,7 @@ export const runTrain = Effect.fn("landing.runTrain")(function* (
     });
 
   /**
-   * Verifies heads on main above what the train accepted, in one job. Answers
+   * Verifies heads on main above what the train accepted, in one run. Answers
    * the heads that conflicted, the heads that rode, and the failures that main
    * does not share.
    */
