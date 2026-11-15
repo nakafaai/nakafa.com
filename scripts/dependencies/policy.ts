@@ -169,7 +169,7 @@ function exactCohortHolds(
 
 /**
  * Eight transitive overrides in the root `package.json` hold a version for a reason
- * that no manifest states. `seroval` 1.7.10 and `seroval-plugins` 1.7.8 are one copy each
+ * that no manifest states. `seroval` 1.8.1 and `seroval-plugins` 1.8.0 are one copy each
  * for TanStack Start's serializer, its web plugins, and the prerender
  * (`apps/www/prerender.config.ts`): the TanStack packages declare `^1.6.7`, and Bun
  * kept their nested 1.6.8 copies, which GHSA-9wx9-5pv9-3349 and GHSA-f86p-h4j2-7qgj
