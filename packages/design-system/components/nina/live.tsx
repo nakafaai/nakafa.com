@@ -252,7 +252,7 @@ function Alive() {
       }
       holding.current = seen.holds;
       waited = 0;
-      pace.rest(startedAt, performance.now());
+      pace.rest(startedAt);
     };
     frame.read(measure, true);
     frame.render(advance, true);
