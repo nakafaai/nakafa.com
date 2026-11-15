@@ -1,4 +1,4 @@
-import { expect, type Page, test } from "@playwright/test";
+import { expect, type Locator, type Page, test } from "@playwright/test";
 import { Array as Arr, Effect, Option } from "effect";
 import {
   createSchool,
@@ -16,6 +16,22 @@ const topOf = async (page: Page, text: string) =>
     )
   ).y;
 
+/**
+ * Scrolls the message list up by 1500 pixels as a person does: on a touch screen a touch moves and the list follows
+ * it, and elsewhere the wheel turns over it.
+ */
+async function scrollUp(page: Page, log: Locator, hasTouch: boolean) {
+  if (!hasTouch) {
+    await log.hover();
+    await page.mouse.wheel(0, -1500);
+    return;
+  }
+  await log.dispatchEvent("touchmove");
+  await log.evaluate((element) =>
+    element.scrollBy({ behavior: "instant", top: -1500 })
+  );
+}
+
 for (const viewport of [
   { height: 844, width: 390 },
   { height: 900, width: 1440 },
@@ -23,6 +39,7 @@ for (const viewport of [
   test(`a channel opens at the first unread message, follows the newest edge only from the bottom, keeps its place while older history loads, and jumps to a message, at ${viewport.width} px`, async ({
     browser,
     baseURL,
+    hasTouch,
   }) => {
     const school = await Effect.runPromise(createSchool());
     const address = (path: string) =>
@@ -65,7 +82,9 @@ for (const viewport of [
     expect(Math.abs((await topOf(page, "Pesan 31")) - before)).toBeLessThan(2);
 
     // Older history loads upward without moving the message the reader looks at. The reader
-    // scrolls with the wheel, as a person does, since a scroll by the page itself is not theirs.
+    // scrolls as a person does on their device, with a touch that moves the list on a touch screen
+    // and with the wheel elsewhere, since the message scroller takes a scroll after either as theirs
+    // and a scroll by the page itself as not. A phone's browser has no wheel to turn.
     // The page records where the oldest loaded message stood at the last scroll before the older
     // page arrived, and where it stands once that page is in place.
     const log = page.getByRole("region", { name: "Messages" });
@@ -102,9 +121,8 @@ for (const viewport of [
         }).observe(content, { childList: true });
       }
     });
-    await log.hover();
     await expect(async () => {
-      await page.mouse.wheel(0, -1500);
+      await scrollUp(page, log, hasTouch);
       await expect(page.getByText("Pesan 20", { exact: true })).toBeAttached({
         timeout: 1000,
       });

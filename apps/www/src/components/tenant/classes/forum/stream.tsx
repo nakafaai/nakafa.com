@@ -240,7 +240,10 @@ function ReadTracker({
 
 /**
  * Brings the message the address names into view once, in the middle of the view. While it is not
- * loaded and older pages remain, the next older page loads.
+ * loaded and older pages remain, the next older page loads. The jump waits a frame after the page
+ * that brought the message: the scroller puts the message that stood first in view back where it
+ * stood once its observer sees the prepended rows, and React may run this effect before that
+ * observer, when the restore would undo a jump made at once.
  */
 function JumpTo({
   jump,
@@ -263,9 +266,12 @@ function JumpTo({
       return;
     }
     if (Option.isSome(target)) {
-      scrollToMessage(target.value.clientKey, { align: "center" });
-      done.current = true;
-      return;
+      const key = target.value.clientKey;
+      const frame = requestAnimationFrame(() => {
+        scrollToMessage(key, { align: "center" });
+        done.current = true;
+      });
+      return () => cancelAnimationFrame(frame);
     }
     if (loadOlder !== undefined && asked.current !== messages.length) {
       asked.current = messages.length;
