@@ -4970,6 +4970,8 @@
     "block-taro": "Taro",
     "block-monstera": "Monstera",
     "block-papaya": "Papayapflanze",
-    "plants": "Pflanzen"
+    "plants": "Pflanzen",
+    "walk": "Laufen",
+    "notice-path": "Dahin führt kein Weg. Probier eine Stelle, die dein Fuchs erreicht."
   }
 }

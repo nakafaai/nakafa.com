@@ -8,11 +8,11 @@ import type { Season } from "@/lib/island/season";
 import type { Weather } from "@/lib/island/sky";
 import type { Cells } from "@/lib/island/world";
 
-/** The hand the learner builds with: one block placed per tap, a ready-made item, or the pickaxe that removes a block. */
-export type Tool = "place" | "item" | "remove";
+/** The hand the learner plays with: one block placed per tap, a ready-made item, the pickaxe that removes a block, or their own feet. */
+export type Tool = "place" | "item" | "remove" | "walk";
 
 /** What the game tells the learner: a build the server refused, edits another device made first, or an item with no room where it was pressed. */
-export type Notice = "refused" | "room" | "stale";
+export type Notice = "path" | "refused" | "room" | "stale";
 
 /** The learner's lifetime Stars between the level they reached and the next one. */
 export const Progress = Schema.Struct({

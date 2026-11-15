@@ -6,6 +6,7 @@ import {
   CactusIcon,
   CloudAngledRainIcon,
   FlowerIcon,
+  FootprintsIcon,
   Leaf01Icon,
   Moon02Icon,
   PickaxeIcon,
@@ -73,7 +74,7 @@ function HudButton({
   );
 }
 
-/** The hotbar: nine blocks, the pickaxe and the block book, along the bottom of the screen. */
+/** The hotbar: the learner's feet, nine blocks, the pickaxe and the block book, along the bottom of the screen. */
 function Hotbar() {
   const t = useTranslations("Island");
   const hotbar = useGame((state) => state.hotbar);
@@ -90,6 +91,13 @@ function Hotbar() {
           "pointer-events-auto flex max-w-full gap-1 overflow-x-auto p-1.5 [scrollbar-width:none]",
       })}
     >
+      <HudButton
+        held={tool === "walk"}
+        label={t("walk")}
+        onPress={() => setTool("walk")}
+      >
+        <HugeIcons className="size-6" icon={FootprintsIcon} />
+      </HudButton>
       {Arr.map(
         Arr.makeBy(hotbar.length, (number) => number),
         (number) => (
