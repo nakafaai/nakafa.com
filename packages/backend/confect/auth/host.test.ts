@@ -198,14 +198,28 @@ describe("host-only session expiry", () => {
     });
 
     const expired = expireHostOnlySessionCookie(response, {
-      cookieDomain: "localhost",
-      hostname: "localhost",
+      cookieDomain: "nakafa.test",
+      hostname: "nakafa.test",
       name: PLAIN_NAME,
     });
 
     expect(expired?.headers.getSetCookie()).toContain(
       `${PLAIN_NAME}=; Max-Age=0; Path=/; HttpOnly; SameSite=Lax`
     );
+  });
+
+  it("adds no expiry on a one-label site, where the shared cookie and a host-only one are one cookie", () => {
+    const response = new Response(null, {
+      headers: { "set-cookie": `${PLAIN_NAME}=token; Domain=localhost` },
+    });
+
+    expect(
+      expireHostOnlySessionCookie(response, {
+        cookieDomain: "localhost",
+        hostname: "localhost",
+        name: PLAIN_NAME,
+      })
+    ).toBeUndefined();
   });
 
   it("expires the host-only cookie of a school host under a registrable domain", () => {
@@ -297,21 +311,23 @@ describe("host-only session handler", () => {
       () =>
         Promise.resolve(
           new Response(null, {
-            headers: { "set-cookie": `${PLAIN_NAME}=token; Domain=localhost` },
+            headers: {
+              "set-cookie": `${PLAIN_NAME}=token; Domain=nakafa.test`,
+            },
           })
         ),
-      new URL("http://localhost:3000")
+      new URL("http://nakafa.test:3000")
     );
 
     const response = await handler(
-      new Request("http://localhost:3400/api/auth/get-session", {
-        headers: { "x-forwarded-host": "localhost:3400" },
+      new Request("http://nakafa.test:3400/api/auth/get-session", {
+        headers: { "x-forwarded-host": "nakafa.test:3400" },
       })
     );
 
     expect(response.headers.getSetCookie()).toEqual([
       `${PLAIN_NAME}=; Max-Age=0; Path=/; HttpOnly; SameSite=Lax`,
-      `${PLAIN_NAME}=token; Domain=localhost`,
+      `${PLAIN_NAME}=token; Domain=nakafa.test`,
     ]);
   });
 

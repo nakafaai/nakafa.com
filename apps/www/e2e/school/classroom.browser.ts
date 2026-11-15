@@ -70,17 +70,23 @@ const overflowOf = (page: Page) =>
         };
       }
     );
-    // The header holds the path, a search, and two buttons at most, none of them in a group.
+    // The header holds the path and two controls at most: a button standing alone, or one group of the
+    // actions that belong together, as the library's search and New folder do.
     const header = document.querySelector('header[data-slot="page-header"]');
-    const buttons = Array.from(
+    const alone = Array.from(
       header?.querySelectorAll('[data-slot="button"]') ?? []
-    ).filter((button) => button.closest("nav") === null);
+    ).filter(
+      (button) =>
+        button.closest("nav") === null &&
+        button.closest('[data-slot="button-group"]') === null
+    );
+    const groups =
+      header?.querySelectorAll('[data-slot="button-group"]').length ?? 0;
     return {
       body: Math.max(0, ...past),
-      buttons: buttons.length,
       cards,
-      groups:
-        header?.querySelectorAll('[data-slot="button-group"]').length ?? 0,
+      controls: alone.length + groups,
+      groups,
       parts: parts.length,
       sideways:
         document.documentElement.scrollWidth -
@@ -128,14 +134,11 @@ test("every class tab keeps its body inside the header's frame, its table in a c
         const measured = await overflowOf(page);
         const label = `${tab.name} at ${width} px in ${scheme}`;
         expect(
-          {
-            body: measured.body,
-            groups: measured.groups,
-            sideways: measured.sideways,
-          },
+          { body: measured.body, sideways: measured.sideways },
           label
-        ).toEqual({ body: 0, groups: 0, sideways: 0 });
-        expect(measured.buttons, label).toBeLessThanOrEqual(2);
+        ).toEqual({ body: 0, sideways: 0 });
+        expect(measured.controls, label).toBeLessThanOrEqual(2);
+        expect(measured.groups, label).toBeLessThanOrEqual(1);
         for (const card of measured.cards) {
           expect(card.border, label).toBeGreaterThanOrEqual(1);
           expect(card.bottom, label).toBeLessThanOrEqual(0);
@@ -251,8 +254,8 @@ test("the selects of New task open with a one-word label and an icon on every op
       const dialog = page.getByRole("dialog");
       for (const choice of [
         { field: "Late work", label: "Lateness" },
-        { field: "Questions", label: "Questions" },
-        { field: "Who gets it", label: "Recipients" },
+        { field: "Questions", label: "Question" },
+        { field: "Who gets it", label: "Audience" },
       ]) {
         await dialog.getByRole("combobox", { name: choice.field }).click();
         const list = page.getByRole("listbox");

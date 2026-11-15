@@ -4,6 +4,7 @@ import {
   expectNoOverflow,
   readCumulativeLayoutShift,
 } from "@/e2e/support/layout";
+import { LEFT_BEHIND } from "@/e2e/support/observe";
 import {
   createSchool,
   grantStudent,
@@ -13,7 +14,6 @@ import {
   signInTeacher,
 } from "@/e2e/support/school";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
-import { LEFT_BEHIND } from "@/e2e/support/walk";
 
 /** What a School page draws once it has read its data: an empty state, a table, a card, or a feed's row. */
 const DRAWN =

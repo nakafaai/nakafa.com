@@ -26,7 +26,16 @@ export const withObservedEvents = Effect.fn("NakafaE2E.withObservedEvents")(
   }
 );
 
-/** Observes uncaught browser errors for the complete page use program. */
+/**
+ * WebKit's words for a request the page left behind as it moved on: it reports each one as an uncaught
+ * error, where Chromium and Firefox drop it in silence. It fails nothing a reader sees.
+ */
+export const LEFT_BEHIND = /due to access control checks/u;
+
+/**
+ * Observes uncaught browser errors for the complete page use program. A request a navigation left
+ * behind is no error of the page (`LEFT_BEHIND`).
+ */
 export const withObservedPageErrors = Effect.fn(
   "NakafaE2E.withObservedPageErrors"
 )(function* <A, E, R>(
@@ -35,7 +44,11 @@ export const withObservedPageErrors = Effect.fn(
 ): Effect.fn.Return<A, E, R> {
   return yield* withObservedEvents(
     (record) => {
-      const listener = (error: Error) => record(String(error));
+      const listener = (error: Error) => {
+        if (!LEFT_BEHIND.test(error.message)) {
+          record(String(error));
+        }
+      };
       page.on("pageerror", listener);
       return () => page.off("pageerror", listener);
     },
