@@ -60,7 +60,7 @@ export function UserSettingsPayments() {
         </CardSectionActions>
       </CardSectionFooter>
       <Sheet onOpenChange={setIsOpen} open={isOpen}>
-        <SheetContent className="w-full max-w-none sm:max-w-2xl">
+        <SheetContent className="w-full max-w-none" size="lg">
           <SheetHeader>
             <SheetTitle>{t("payments")}</SheetTitle>
             <SheetDescription>{t("payments-description")}</SheetDescription>

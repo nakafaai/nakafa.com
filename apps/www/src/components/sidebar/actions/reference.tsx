@@ -54,7 +54,7 @@ export function ReferenceButton({ references }: Props) {
       </SidebarMenuItem>
 
       <Sheet modal={false} onOpenChange={set} open={open}>
-        <SheetContent className="w-full sm:max-w-xl">
+        <SheetContent className="w-full" size="md">
           <div className="flex h-full flex-col">
             <SheetHeader>
               <SheetTitle className="text-xl">

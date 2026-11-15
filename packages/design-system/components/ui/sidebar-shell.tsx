@@ -76,6 +76,7 @@ export function Sidebar({
             }
           }}
           side={side}
+          size="xs"
         >
           <SheetHeader className="sr-only">
             <SheetTitle>{label}</SheetTitle>

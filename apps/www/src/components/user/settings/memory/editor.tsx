@@ -1,4 +1,5 @@
 import { useMediaQuery } from "@mantine/hooks";
+import { ResizeEdge } from "@repo/design-system/components/ui/resizable";
 import {
   Sheet,
   SheetContent,
@@ -10,7 +11,6 @@ import { Function as Fn } from "effect";
 import { useLayoutEffect, useState, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import { useTranslations } from "use-intl";
-import { PaneEdge } from "@/components/shared/page/panes/edge";
 import { MemoryDocument } from "@/components/user/settings/memory/document";
 import {
   MEMORY_ADD_ID,
@@ -209,7 +209,7 @@ function MemoryEditorPanel({
         "--memory-list-room": `${LIST_ROOM}rem`,
       }}
     >
-      <PaneEdge resizer={resizerProps} />
+      <ResizeEdge resizer={resizerProps} />
     </aside>,
     panel
   );

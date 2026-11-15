@@ -24,7 +24,8 @@ test.use({
  * The learner drags the edge of Nina's sheet with the mouse. The sheet is fixed
  * to the right edge of the page, which is where the page ends and the
  * scrollbar begins, so its edge lands where the pointer is, and not the width
- * of the scrollbar away from it. The memory panel's resizer is the same hook.
+ * of the scrollbar away from it. Every sheet and the memory panel resize by the
+ * same edge and hook.
  */
 const verifyDrag = Effect.fn("NakafaE2E.verifyNinaSheetDrag")(function* (
   page: Page
@@ -40,8 +41,15 @@ const verifyDrag = Effect.fn("NakafaE2E.verifyNinaSheetDrag")(function* (
       () => window.innerWidth - document.documentElement.clientWidth
     )
   );
-  const edge = yield* Effect.promise(() =>
-    sheet.getByRole("button", { name: "Change width" }).boundingBox()
+  const separator = sheet.getByRole("separator", { name: "Change width" });
+  const edge = yield* Effect.promise(() => separator.boundingBox());
+  // The edge is the page pane's: its grip in the middle, and no colour of its own on hover.
+  const resting = yield* Effect.promise(() =>
+    separator.evaluate((line) => getComputedStyle(line).backgroundColor)
+  );
+  yield* Effect.promise(() => separator.hover());
+  yield* Effect.promise(() =>
+    expect(separator).toHaveCSS("background-color", resting)
   );
 
   // A page with no scrollbar of its own would prove nothing.
