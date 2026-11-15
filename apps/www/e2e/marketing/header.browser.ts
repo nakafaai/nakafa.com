@@ -197,9 +197,24 @@ test.describe("the header's sections at desktop", () => {
               .click()
           );
           const popup = page.locator('[data-slot="navigation-menu-popup"]');
+          page.on("console", (m) => { if (m.text().startsWith("POPPROBE")) console.log(m.text()); });
+          page.on("framenavigated", (f) => console.log(`POPPROBE framenavigated ${f.url()}`));
+          yield* Effect.promise(() => page.evaluate(() => {
+            const d = (t: EventTarget | null) => t instanceof Element ? `${t.tagName}[${t.getAttribute("data-slot") ?? ""}] ${(t.textContent ?? "").trim().slice(0, 24)}` : String(t);
+            for (const type of ["pointerdown", "pointerup", "click", "pointerenter", "pointerleave"]) {
+              document.addEventListener(type, (e) => { if (type.startsWith("pointere") || type.startsWith("pointerl")) { if (!(e.target instanceof Element) || !e.target.closest("[data-slot^=navigation-menu]")) return; } const p = e as PointerEvent; console.log(`POPPROBE ${type} ${Math.round(performance.now())} at ${Math.round(p.clientX)},${Math.round(p.clientY)} target=${d(e.target)} prevented=${e.defaultPrevented}`); }, true);
+            }
+            (window as unknown as { navigation?: EventTarget }).navigation?.addEventListener("navigate", (e) => console.log(`POPPROBE navigate ${(e as Event & { destination: { url: string } }).destination.url} ${Math.round(performance.now())}`));
+            const link = [...document.querySelectorAll('[data-slot="navigation-menu-popup"] a')].find((a) => a.textContent?.includes("Pricing"));
+            let frames = 0; const start = performance.now();
+            const look = () => { frames += 1; const r = link?.getBoundingClientRect(); if (frames % 10 === 1) console.log(`POPPROBE frame ${frames} t=${Math.round(performance.now() - start)} link=${r ? `${Math.round(r.x)},${Math.round(r.y)},${Math.round(r.width)}` : "none"} popupCount=${document.querySelectorAll('[data-slot="navigation-menu-popup"]').length} vis=${document.visibilityState}`); if (performance.now() - start < 3000) requestAnimationFrame(look); };
+            requestAnimationFrame(look);
+          }));
           yield* Effect.promise(() =>
             popup.getByRole("link", { name: "Pricing" }).click()
           );
+          yield* Effect.promise(() => page.waitForTimeout(1500));
+          console.log(`POPPROBE after click url=${page.url()}`);
           yield* Effect.promise(() => expect(page).toHaveURL(SCHOOL_PRICING));
           yield* Effect.promise(() => expect(popup).toHaveCount(0));
         })
