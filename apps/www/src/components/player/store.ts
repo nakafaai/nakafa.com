@@ -34,6 +34,12 @@ const PlayerStateSchema = Schema.Struct({
   /** The question that the footer and the keys act on. */
   current: Schema.NullOr(Schema.String),
   jump: Schema.NullOr(PlayerJumpSchema),
+  /**
+   * Whether the last overlay closed onto a question the learner chose in it. That question takes the focus, so the
+   * overlay must not hand it back to where it opened, however its close and the reveal interleave. The next overlay
+   * to open clears it.
+   */
+  landed: Schema.Boolean,
   /** The frozen order of the questions of the attempt. */
   keys: Schema.Array(Schema.String),
   mode: PlayerModeSchema,
@@ -42,6 +48,11 @@ const PlayerStateSchema = Schema.Struct({
   pending: Schema.NullOr(Schema.String),
   /** Whether a jump or a focus holds `current` until the page moves away from its anchor. */
   pinned: Schema.Boolean,
+  /**
+   * Whether the player shows a finished paper to read, with nothing to answer, flag or finish: the last
+   * question then leads nowhere, where a running paper's leads to its finish.
+   */
+  review: Schema.Boolean,
   /** The view the server knows: the one it resolved, or the last one it saved. */
   saved: PlayerModeSchema,
 });
@@ -108,13 +119,14 @@ function jumpTo(previous: PlayerJump | null, key: string): PlayerJump {
 export function createPlayerStore(input: {
   keys: readonly string[];
   mode: PlayerMode;
+  review?: boolean;
 }) {
   return createStore<PlayerStore>()((set, get) => {
     /** Reveals a question now, or once the open overlay has finished closing. */
     function reveal(key: string) {
       const { jump, overlay } = get();
       if (overlay !== "none") {
-        set({ overlay: "none", pending: key });
+        set({ landed: true, overlay: "none", pending: key });
         return;
       }
       set({ jump: jumpTo(jump, key) });
@@ -157,6 +169,7 @@ export function createPlayerStore(input: {
       },
       jump: null,
       keys: input.keys,
+      landed: false,
       mode: input.mode,
       moved: (position) =>
         set((state) =>
@@ -169,10 +182,11 @@ export function createPlayerStore(input: {
         ),
       observe: (key) =>
         set((state) => (state.pinned ? state : { current: key })),
-      open: (overlay) => set({ overlay }),
+      open: (overlay) => set({ landed: false, overlay }),
       overlay: "none",
       pending: null,
       pinned: false,
+      review: input.review ?? false,
       saved: input.mode,
       settle: () => {
         const { jump, pending } = get();

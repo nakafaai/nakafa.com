@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
+import type { AddressRouter } from "@/components/player/address";
 import { rememberPlayerMode } from "@/components/player/remember";
 
 const mocks = vi.hoisted(() => ({ report: vi.fn(), save: vi.fn() }));
@@ -16,6 +17,9 @@ vi.mock("@/lib/analytics/client", async () => {
   };
 });
 
+const navigate = vi.fn<AddressRouter["navigate"]>(() => Promise.resolve());
+const router = { navigate };
+
 describe("rememberPlayerMode", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -26,7 +30,7 @@ describe("rememberPlayerMode", () => {
     Effect.gen(function* () {
       mocks.save.mockResolvedValue(undefined);
 
-      const saved = yield* rememberPlayerMode("single");
+      const saved = yield* rememberPlayerMode(router, "single");
 
       expect(saved).toBe(true);
       expect(mocks.save).toHaveBeenCalledExactlyOnceWith({ data: "single" });
@@ -45,12 +49,35 @@ describe("rememberPlayerMode", () => {
           "/section?attemptId=attempt-id&view=list#question-3"
         );
 
-        yield* rememberPlayerMode("single");
+        yield* rememberPlayerMode(router, "single");
 
-        expect(window.location.search).toBe(
-          "?attemptId=attempt-id&view=single"
+        expect(navigate).toHaveBeenCalledExactlyOnceWith(
+          expect.objectContaining({
+            href: "/section?attemptId=attempt-id&view=single#question-3",
+          })
         );
-        expect(window.location.hash).toBe("#question-3");
+      })
+  );
+
+  it.effect(
+    "reports an address it could not write, and the view stays saved",
+    () =>
+      Effect.gen(function* () {
+        mocks.save.mockResolvedValue(undefined);
+        navigate.mockRejectedValueOnce(new Error("navigation failed"));
+        window.history.replaceState(
+          null,
+          "",
+          "/section?attemptId=attempt-id&view=list"
+        );
+
+        const saved = yield* rememberPlayerMode(router, "single");
+
+        expect(saved).toBe(true);
+        expect(mocks.report).toHaveBeenCalledExactlyOnceWith(
+          expect.anything(),
+          { source: "player-address" }
+        );
       })
   );
 
@@ -58,9 +85,9 @@ describe("rememberPlayerMode", () => {
     Effect.gen(function* () {
       mocks.save.mockResolvedValue(undefined);
 
-      yield* rememberPlayerMode("single");
+      yield* rememberPlayerMode(router, "single");
 
-      expect(window.location.search).toBe("?attemptId=attempt-id");
+      expect(navigate).not.toHaveBeenCalled();
     })
   );
 
@@ -75,14 +102,14 @@ describe("rememberPlayerMode", () => {
           "/section?attemptId=attempt-id&view=list"
         );
 
-        const saved = yield* rememberPlayerMode("single");
+        const saved = yield* rememberPlayerMode(router, "single");
 
         expect(saved).toBe(false);
         expect(mocks.report).toHaveBeenCalledExactlyOnceWith(
           expect.anything(),
           { source: "player-view" }
         );
-        expect(window.location.search).toBe("?attemptId=attempt-id&view=list");
+        expect(navigate).not.toHaveBeenCalled();
       })
   );
 });

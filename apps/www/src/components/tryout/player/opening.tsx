@@ -28,7 +28,10 @@ import {
 import { PlayerGrid } from "@/components/player/navigator/grid";
 import { PlayerLegend } from "@/components/player/navigator/legend";
 import { PlayerSheet } from "@/components/player/navigator/sheet";
-import { PlayerSidebar } from "@/components/player/navigator/sidebar";
+import {
+  PlayerNavigatorHeader,
+  PlayerSidebar,
+} from "@/components/player/navigator/sidebar";
 import { PlayerProvider } from "@/components/player/provider";
 import { ConvexIsland } from "@/components/providers/island";
 import { OfflineNote } from "@/components/shared/offline";
@@ -131,7 +134,9 @@ export function TryoutPlayerOpening({
         </PlayerHeader>
         <PlayerMain
           navigator={
-            <PlayerSidebar questions={questions}>
+            <PlayerSidebar
+              header={<PlayerNavigatorHeader questions={questions} />}
+            >
               <PlayerGrid questions={questions} />
               <PlayerLegend />
             </PlayerSidebar>

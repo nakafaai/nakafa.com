@@ -1,6 +1,7 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
 import { Id } from "@repo/backend/confect/_generated/id";
 import { AccessDenied } from "@repo/backend/confect/access/errors";
+import { Verdict } from "@repo/backend/confect/assessment/verdict";
 import { ResultAccess } from "@repo/backend/confect/exams/results/access";
 import {
   AnswerRow,
@@ -16,10 +17,7 @@ import {
   ResultNotFound,
   SittingNotClosed,
 } from "@repo/backend/confect/exams/results/errors";
-import {
-  GradePoints,
-  Verdict,
-} from "@repo/backend/confect/exams/results/schema";
+import { GradePoints } from "@repo/backend/confect/exams/results/schema";
 import {
   NotInSitting,
   QuestionNotInExam,

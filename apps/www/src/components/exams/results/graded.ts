@@ -1,9 +1,9 @@
+import { gradeVerdict } from "@repo/backend/confect/assessment/verdict";
 import type {
   AnswerRow,
   AttemptResult,
   StudentRow,
 } from "@repo/backend/confect/exams/results/contract";
-import { gradeVerdict } from "@repo/backend/confect/exams/results/schema";
 import { Array as Arr, Number as Num, Option, String as Str } from "effect";
 
 /**

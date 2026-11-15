@@ -93,7 +93,10 @@ export function StartTryoutButton(props: StartTryoutButtonProps) {
     <ConvexIsland
       fallback={
         <TryoutStartSignInButton request={props.request}>
-          <TryoutActionName name={tryoutActionNameOf(props.attempt)} pending />
+          <TryoutActionName
+            keptAt={setAddressOf(props.request)}
+            name={tryoutActionNameOf(props.attempt)}
+          />
         </TryoutStartSignInButton>
       }
       keepsPress
@@ -103,14 +106,19 @@ export function StartTryoutButton(props: StartTryoutButtonProps) {
   );
 }
 
+/** The address of the set's own page, which its action's kept name is read and kept by. */
+function setAddressOf(request: StartTryoutRequest) {
+  return `/${request.locale}${getTryoutPublicPathHref(request.setPath)}`;
+}
+
 /**
- * The name this browser last read for the page it is on, for the moment the live action mounts and its
- * read has not answered. It reads the document, so only the live action asks, and storage the page
- * cannot read keeps nothing.
+ * The name this browser last read for the set at `address`, for the moment the live action mounts and
+ * its read has not answered. It reads the browser's storage, so only the live action asks, and storage
+ * the page cannot read keeps nothing.
  */
-function readPageName() {
+function readSetName(address: string) {
   return Effect.runSync(
-    readKeptName(window.location.pathname).pipe(
+    readKeptName(address).pipe(
       Effect.provide(keptStorage),
       Effect.orElseSucceed(() => Option.none())
     )
@@ -203,7 +211,8 @@ function TryoutStartAction({ attempt, request }: StartTryoutButtonProps) {
   const convex = useConvex();
   const now = useNow(false);
   const [dialogOpen, dialog] = useDisclosure(false);
-  const [keptName] = useState(readPageName);
+  const address = setAddressOf(request);
+  const [keptName] = useState(() => readSetName(address));
   const activeAttempt = attempt?.status === "in-progress";
   const finishedAttempt = Boolean(attempt && !activeAttempt);
   const directEntry = Boolean(request.entrySectionKey);
@@ -311,10 +320,7 @@ function TryoutStartAction({ attempt, request }: StartTryoutButtonProps) {
       onFailure: Effect.sync(() => setPhase("idle")),
       onSuccess: (result) =>
         // The attempt runs from here on, whichever page the learner next loads the set from.
-        keepActionName(
-          `/${request.locale}${getTryoutPublicPathHref(request.setPath)}`,
-          "continue-cta"
-        ).pipe(
+        keepActionName(address, "continue-cta").pipe(
           Effect.andThen(
             Effect.sync(() => {
               const destination = {
@@ -354,12 +360,16 @@ function TryoutStartAction({ attempt, request }: StartTryoutButtonProps) {
       <Button inert={started} onClick={answerStart}>
         <Spinner icon={Rocket01Icon} isLoading={started || pressed} />
         <TryoutActionName
+          keptAt={
+            attempt === undefined && Option.isNone(keptName)
+              ? address
+              : undefined
+          }
           name={
             attempt === undefined
               ? Option.getOrElse(keptName, () => tryoutActionNameOf(attempt))
               : tryoutActionNameOf(attempt)
           }
-          pending={attempt === undefined && Option.isNone(keptName)}
         />
       </Button>
       <TryoutStartDialog

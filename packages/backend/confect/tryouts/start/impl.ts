@@ -19,9 +19,9 @@ import {
   type StartAttemptResult,
   startAttemptArgsValidator,
 } from "@repo/backend/confect/tryouts/start/spec";
-import { Array as Arr, Effect, Option, Schema } from "effect";
+import { TRYOUT_ATTEMPT_WINDOW } from "@repo/backend/confect/tryouts/window";
+import { Array as Arr, Duration, Effect, Option, Schema } from "effect";
 
-const ATTEMPT_DURATION_MS = 3 * 24 * 60 * 60 * 1000;
 type TryoutAttempt = Docs["tryoutAttempts"];
 const startTryoutAttemptInputSchema = Schema.Struct({
   args: startAttemptArgsValidator,
@@ -183,7 +183,7 @@ const requireAttemptAccess = Effect.fn("tryouts.start.requireAttemptAccess")(
       return included;
     }
     return {
-      accessEndsAt: input.now + ATTEMPT_DURATION_MS,
+      accessEndsAt: input.now + Duration.toMillis(TRYOUT_ATTEMPT_WINDOW),
       accessSourceKind: tryoutAttemptAccessSourceKindFree,
       countsForCompetition: false,
     } satisfies AttemptAccessFields;

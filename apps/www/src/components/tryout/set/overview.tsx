@@ -1,11 +1,10 @@
-import { useTranslations } from "use-intl";
-import { PaneHeader } from "@/components/shared/page/pane";
+import { Option } from "effect";
+import { TryoutFinishedPlace } from "@/components/tryout/review/frame";
 import {
-  TryoutFinishedFacts,
-  TryoutFinishedPanel,
-  TryoutFinishedPanes,
-  TryoutFinishedPlace,
-} from "@/components/tryout/review/panes";
+  TryoutPartsOpener,
+  TryoutPartsResult,
+} from "@/components/tryout/review/parts";
+import { TryoutResultFacts } from "@/components/tryout/review/result";
 import { TryoutCountdown } from "@/components/tryout/runtime/countdown";
 import { TryoutAttemptPicker } from "@/components/tryout/score/history";
 import { TryoutSetAction } from "@/components/tryout/set/action";
@@ -46,7 +45,6 @@ export interface TryoutSetOverviewProps {
  * above its parts.
  */
 export function TryoutSetOverview({ value }: TryoutSetOverviewProps) {
-  const t = useTranslations("Tryouts");
   return (
     <TryoutPage>
       <TryoutSetPageHeader
@@ -74,33 +72,25 @@ export function TryoutSetOverview({ value }: TryoutSetOverviewProps) {
         />
       </TryoutSetPageHeader>
       {value.actionAttempt?.score ? (
-        <TryoutFinishedPanes
-          panel={
-            <>
-              <PaneHeader
-                description={value.page.set.title}
-                title={t("finished-panel")}
-              />
-              <TryoutFinishedPanel runtime={null}>
-                <TryoutFinishedFacts score={value.actionAttempt.score} />
-              </TryoutFinishedPanel>
-            </>
+        <TryoutPartsResult
+          facts={
+            <TryoutResultFacts
+              limit={Option.none()}
+              score={value.actionAttempt.score}
+              used={Option.none()}
+            />
           }
+          opener={<TryoutPartsOpener score={value.actionAttempt.score} />}
         >
           <TryoutSetParts value={value} />
-        </TryoutFinishedPanes>
+        </TryoutPartsResult>
       ) : (
         <TryoutPageBody>
           {value.activeAttempt ? (
             <TryoutCountdown expiresAt={value.activeAttempt.expiresAt} />
           ) : null}
           <TryoutSetParts value={value} />
-          <TryoutFinishedPlace pending={value.actionAttempt === undefined}>
-            <PaneHeader
-              description={value.page.set.title}
-              title={t("finished-panel")}
-            />
-          </TryoutFinishedPlace>
+          <TryoutFinishedPlace pending={value.actionAttempt === undefined} />
         </TryoutPageBody>
       )}
     </TryoutPage>

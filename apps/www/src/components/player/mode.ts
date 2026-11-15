@@ -55,8 +55,8 @@ export function resolvePlayerMode(input: {
 }
 
 /**
- * Resolves the view in the browser, for a page that renders only there, such as a
- * school sitting: the address first, then the view the learner saved, then the list.
+ * Resolves the view in the browser, where every player renders: the address first, then the view the
+ * learner saved, then the list.
  */
 export function readBrowserPlayerMode(param: PlayerModeParam): PlayerMode {
   const cookie = readCookie(

@@ -120,12 +120,26 @@ const verifyFlags = Effect.fn("NakafaE2E.verifyPlayerFlags")(function* (
 
   // The flags are the server's, so a reload shows them once the page is React's again.
   // The press shows the flag before the server has it, and a reload drops a change still
-  // on its way, so the reload waits until the server answered every change.
+  // on its way, so the reload waits until the server answered every change, and until the
+  // address names the current question, which the player writes once it stays put.
   yield* Effect.promise(() => saved(changes, sentBefore));
+  yield* Effect.promise(() =>
+    page.waitForURL((url) => url.searchParams.get("question") === "2", {
+      timeout: readinessTimeoutMilliseconds,
+    })
+  );
   yield* Effect.promise(() => page.reload({ waitUntil: "commit" }));
   yield* Effect.promise(() =>
     waitUntilTakenOver(page.getByRole("button", { exact: true, name: "Flag" }))
   );
+  // The reload opens the question the address names. The player binds its keys before it draws that question,
+  // and a key pressed in between, as a slow engine leaves time for, reaches no player yet.
+  yield* Effect.promise(() =>
+    expect(questionArticle(page, 2)).toBeVisible({
+      timeout: readinessTimeoutMilliseconds,
+    })
+  );
+  yield* Effect.promise(() => expect(questionArticle(page, 1)).toBeHidden());
   yield* expectCell(
     page,
     hasTouch,

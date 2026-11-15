@@ -1,4 +1,3 @@
-import { ScrollArea } from "@repo/design-system/components/ui/scroll-area";
 import { Array as Arr } from "effect";
 import { type ReactNode, useEffect, useRef } from "react";
 import { useTranslations } from "use-intl";
@@ -6,23 +5,30 @@ import type { PlayerCellModel } from "@/components/player/model";
 import { keepVisible } from "@/components/player/navigator/scroll";
 import { PlayerShortcuts } from "@/components/player/navigator/shortcuts";
 import { usePlayer } from "@/components/player/provider";
-import { PaneHeader } from "@/components/shared/page/pane";
+import {
+  PaneBody,
+  PaneFooter,
+  PaneHeader,
+} from "@/components/shared/page/pane";
 
 /**
  * The navigator in its pane beside the questions from the large breakpoint: the
  * numbers, then the keys, in a column as wide as its pane that stays under the
  * header while the questions scroll, and scrolls by itself to keep the current
- * number in view. The page never moves for it. Its header counts the answered questions under its title.
+ * number in view. The page never moves for it. A running paper's header counts the answered questions under
+ * its title, and a finished paper names the pane for its result and closes it on a footer.
  */
 export function PlayerSidebar({
   children,
-  questions,
+  footer,
+  header,
 }: {
   children: ReactNode;
-  /** The questions the grid shows, whose answered ones the header counts. */
-  questions: readonly PlayerCellModel[];
+  /** What the pane says and offers under its body, such as a result's legend and its one action. */
+  footer?: ReactNode;
+  /** The pane's header: the navigator's while a paper runs (`PlayerNavigatorHeader`), a result's own after. */
+  header: ReactNode;
 }) {
-  const t = useTranslations("Player");
   const current = usePlayer((state) => state.current);
   const column = useRef<HTMLDivElement>(null);
 
@@ -42,26 +48,38 @@ export function PlayerSidebar({
   }, [current]);
 
   return (
-    // The pane holds the column. It scrolls in the scroll area's viewport, under an overlay bar that takes no room;
-    // the viewport is what keeps the current number in view.
+    // The pane holds the column, with the header, body and footer every pane has. Its body scrolls under an
+    // overlay bar that takes no room, and its viewport is what keeps the current number in view.
     <div
       className="hidden h-full min-h-0 w-full min-w-0 flex-col lg:flex"
       data-player-sidebar=""
     >
-      <PaneHeader
-        description={t("navigator-answered", {
-          answered: Arr.filter(questions, (question) => question.answered)
-            .length,
-          total: questions.length,
-        })}
-        title={t("navigator")}
-      />
-      <ScrollArea viewportClassName="relative" viewportRef={column}>
-        <div className="flex flex-col gap-4 px-6 py-4">
+      {header}
+      <PaneBody viewportRef={column}>
+        <div className="flex flex-col gap-4">
           {children}
           <PlayerShortcuts />
         </div>
-      </ScrollArea>
+      </PaneBody>
+      {footer === undefined ? null : <PaneFooter>{footer}</PaneFooter>}
     </div>
+  );
+}
+
+/** The navigator's header while a paper runs: its name, and how many of the paper's questions are answered. */
+export function PlayerNavigatorHeader({
+  questions,
+}: {
+  questions: readonly PlayerCellModel[];
+}) {
+  const t = useTranslations("Player");
+  return (
+    <PaneHeader
+      description={t("navigator-answered", {
+        answered: Arr.filter(questions, (question) => question.answered).length,
+        total: questions.length,
+      })}
+      title={t("navigator")}
+    />
   );
 }
