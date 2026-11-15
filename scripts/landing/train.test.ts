@@ -70,6 +70,46 @@ describe("landing train", () => {
   );
 
   it.effect(
+    "takes at most five pull requests into a batch, whole stacks in landing order, and a longer first stack alone",
+    () =>
+      Effect.gen(function* () {
+        const small = yield* world({
+          pulls: [
+            pull(1, 1),
+            pull(2, 1),
+            pull(3, 3),
+            pull(4, 3),
+            pull(5, 5),
+            pull(6, 6),
+          ],
+          fails: () => [],
+        });
+        const report = yield* runTrain([], [], true, false).pipe(
+          Effect.provide(small.layer)
+        );
+        expect(Arr.map(report.landed, (one) => one.number)).toEqual([
+          1, 2, 3, 4, 5,
+        ]);
+        expect(yield* Ref.get(small.log)).toContain("combine 0 1,2,3,4,5");
+        const long = yield* world({
+          pulls: [...Arr.makeBy(6, (index) => pull(index + 1, 1)), pull(7, 7)],
+          fails: () => [],
+        });
+        const alone = yield* runTrain([], [], true, false).pipe(
+          Effect.provide(long.layer)
+        );
+        expect(Arr.map(alone.landed, (one) => one.number)).toEqual([
+          1, 2, 3, 4, 5, 6,
+        ]);
+        const empty = yield* world({ pulls: [], fails: () => [] });
+        const none = yield* runTrain([], [], true, false).pipe(
+          Effect.provide(empty.layer)
+        );
+        expect(none.landed).toEqual([]);
+      })
+  );
+
+  it.effect(
     "lets a spec ride that fails once and passes again alone on the same combination, and reports it as flaky",
     () =>
       Effect.gen(function* () {
