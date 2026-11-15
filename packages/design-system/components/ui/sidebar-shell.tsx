@@ -4,13 +4,12 @@ import type { Button as ButtonPrimitive } from "@base-ui/react/button";
 
 import { PanelLeftIcon } from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from "@repo/design-system/components/ui/sheet";
+  Drawer,
+  DrawerContent,
+  DrawerTitle,
+} from "@repo/design-system/components/ui/drawer";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { useMissedPress } from "@repo/design-system/hooks/press";
 import { useSidebar } from "@repo/design-system/lib/sidebar/context";
 import { cn } from "cn";
@@ -58,15 +57,21 @@ export function Sidebar({
 
   return (
     <>
-      <Sheet onOpenChange={setOpenMobile} open={openMobile}>
-        <SheetContent
-          className="bg-sidebar text-sidebar-foreground w-72 p-0 [&>button]:hidden"
+      {/* A phone's sidebar is a drawer from its side, as every drawer is: its handle at the edge facing the page, a
+          swipe or a press outside closes it, and it draws no close button. */}
+      <Drawer
+        onOpenChange={setOpenMobile}
+        open={openMobile}
+        swipeDirection={side}
+      >
+        <DrawerContent
+          className="bg-sidebar text-sidebar-foreground [--drawer-bleed-background:var(--color-sidebar)]"
           data-mobile="true"
           data-sidebar="sidebar"
           data-slot="sidebar"
           onClick={(event) => {
-            // A link pressed in the phone sidebar opens its page in this tab, so the sheet steps
-            // aside for it; a press that opens another tab leaves the sheet where it is.
+            // A link pressed in the phone sidebar opens its page in this tab, so the drawer steps
+            // aside for it; a press that opens another tab leaves the drawer where it is.
             if (
               event.target instanceof Element &&
               event.target.closest("a[href]") !== null &&
@@ -75,15 +80,11 @@ export function Sidebar({
               setOpenMobile(false);
             }
           }}
-          side={side}
-          size="xs"
         >
-          <SheetHeader className="sr-only">
-            <SheetTitle>{label}</SheetTitle>
-          </SheetHeader>
+          <DrawerTitle className="sr-only">{label}</DrawerTitle>
           <div className="flex h-full w-full flex-col">{children}</div>
-        </SheetContent>
-      </Sheet>
+        </DrawerContent>
+      </Drawer>
 
       <div
         className={cn(
