@@ -64,6 +64,7 @@ export const origins = Effect.fn("RepositoryTest.origins")(function* () {
         title: `Change ${number}`,
         specs: [],
         below: "",
+        runtime: true,
       };
     })
   );
@@ -122,6 +123,7 @@ export const CANDIDATE: Candidate = {
   title: "Land me",
   specs: [],
   below: "",
+  runtime: true,
 };
 
 /** A pull request view as `gh pr view` prints it. */
