@@ -11,6 +11,7 @@ export const pull = (number: number, stack = number): Candidate => ({
   title: `Change ${number}`,
   specs: [],
   below: "",
+  runtime: true,
 });
 
 /** A proof that fails these specs in Chromium, or passes when there are none. */

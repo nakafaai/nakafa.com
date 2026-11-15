@@ -129,3 +129,7 @@ GitHub's merge queue would bring back required checks, which this ADR rejected b
 ### The ceiling of free runners
 
 Twenty concurrent jobs, four per verification and four kept in reserve, give four verifications at once. With batches of at most five and a verification of about 30 minutes (the gate's 25 beside a build of 10 and sharded specs of 20), the queue lands at most 40 pull requests an hour when every batch passes, and fewer as p rises. When the median time from ready to merged stays above two hours for a week, or jobs wait in GitHub's queue more than 15 minutes, the next step is decided then: fewer specs per batch through selection, or a measured case for paid runners, which this repository does not use today.
+
+## Amendment: A Batch That Changes Nothing The Product Runs Proves One Spec, 15 November 2026
+
+A combination whose pull requests name no spec proved every suite, even when they changed only the landing scripts, a workflow or the docs, which the gate already checks. The first step of selecting specs from the change (amendment "The Landing Queue", point 8): a pull request changes what the product runs when it changes a file under `apps` or `packages` outside the browser specs and Markdown. A combination that names no spec proves every suite when one of its pull requests changes what the product runs, and only `e2e/quran/landing.browser.ts` when none does: a fast page that passed in all three engines on main (run 43699251319).
