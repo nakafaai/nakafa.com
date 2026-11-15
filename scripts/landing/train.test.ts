@@ -112,12 +112,19 @@ describe("landing train", () => {
           ],
           fails: () => [],
         });
-        const report = yield* runTrain([], [], true, false).pipe(
-          Effect.provide(small.layer)
-        );
+        // Named, #9 is not open and #6 waits for the next batch: both say so.
+        const report = yield* runTrain(
+          [1, 2, 3, 4, 5, 6, 9],
+          [],
+          true,
+          false
+        ).pipe(Effect.provide(small.layer));
         expect(Arr.map(report.landed, (one) => one.number)).toEqual([
           1, 2, 3, 4, 5,
         ]);
+        expect(formatTrain(report)).toContain(
+          "refused #9: it is not open, or it is a draft\nrefused #6: the batch is full: it rides the next one"
+        );
         expect(yield* Ref.get(small.log)).toContain("combine 0 1,2,3,4,5");
         const long = yield* world({
           pulls: [...Arr.makeBy(6, (index) => pull(index + 1, 1)), pull(7, 7)],
@@ -134,21 +141,6 @@ describe("landing train", () => {
           Effect.provide(empty.layer)
         );
         expect(none.landed).toEqual([]);
-        // A named pull request that a full batch leaves out, or that the
-        // repository cannot seat, is reported with what to do about it.
-        const named = yield* runTrain(
-          [1, 2, 3, 4, 5, 6, 9],
-          [],
-          true,
-          false
-        ).pipe(Effect.provide(small.layer));
-        expect(named.refused).toEqual([
-          { number: 9, reason: "it is not open, or it is a draft" },
-          { number: 6, reason: "the batch is full: it rides the next one" },
-        ]);
-        expect(formatTrain(named)).toContain(
-          "refused #6: the batch is full: it rides the next one"
-        );
       })
   );
 

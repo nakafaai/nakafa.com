@@ -36,7 +36,7 @@ export const Candidate = Schema.Struct({
 export type Candidate = typeof Candidate.Type;
 
 /** A named pull request the train did not seat, and what to do about it, so a train that takes nothing says why. */
-export const Refusal = Schema.Struct({
+const Refusal = Schema.Struct({
   number: Schema.Int,
   reason: Schema.String,
 });
