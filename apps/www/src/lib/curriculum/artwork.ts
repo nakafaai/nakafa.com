@@ -1,6 +1,6 @@
 import type { CurriculumRoute } from "@nakafa/aksara-contracts/program/curriculum";
 import type { LearningProgramKey } from "@nakafa/aksara-contracts/program/spec";
-import { Match, Option } from "effect";
+import { Array as Arr, Match, Option } from "effect";
 import type { Locale } from "use-intl";
 import { resolveNamedArtwork, resolveSocialArtwork } from "@/lib/og/artwork";
 import { getOgUrl } from "@/lib/seo/social";
@@ -13,24 +13,27 @@ type CurriculumArtworkRoute = Pick<
 type CurriculumSocialImageRoute = Pick<CurriculumRoute, "level" | "publicPath">;
 
 /**
- * The artwork name of what a curriculum route is: a program root names its
- * program, a class or a stage its own node, and a subject or a course the
- * subject its lessons teach. A unit, a topic or a lesson is a part of a
- * subject, not the subject, so it names none. Every curriculum reaches its
- * artwork this way, and a design added under one of these names reaches every
- * route it fits without a list to keep.
+ * The artwork names of what a curriculum route is, the nearest first: a program
+ * root names its program, a class or a stage its own node, and a subject or a
+ * course its own node, then the subject its lessons teach. So a subject with a
+ * design of its own, such as Additional Mathematics, draws it, and its sibling
+ * keeps the design of the subject they share. A unit, a topic or a lesson is a
+ * part of a subject, not the subject, so it names none. Every curriculum
+ * reaches its artwork this way, and a design added under one of these names
+ * reaches every route it fits without a list to keep.
  */
-function artworkIdentityOf(route: CurriculumArtworkRoute) {
+function artworkNamesOf(route: CurriculumArtworkRoute) {
   return Match.value(route.level).pipe(
-    Match.when("track", () => Option.some(`curriculum/${route.programKey}`)),
-    Match.whenOr("class", "stage", () => Option.some(`grade/${route.nodeKey}`)),
-    Match.whenOr("subject", "course", () =>
-      Option.map(
-        Option.fromUndefinedOr(route.materialDomain),
+    Match.when("track", () => [`curriculum/${route.programKey}`]),
+    Match.whenOr("class", "stage", () => [`grade/${route.nodeKey}`]),
+    Match.whenOr("subject", "course", () => [
+      `subject/${route.nodeKey}`,
+      ...Arr.map(
+        Arr.fromOption(Option.fromUndefinedOr(route.materialDomain)),
         (domain) => `subject/${domain}`
-      )
-    ),
-    Match.orElse(() => Option.none<string>())
+      ),
+    ]),
+    Match.orElse(() => Arr.empty<string>())
   );
 }
 
@@ -43,8 +46,8 @@ export function resolveCurriculumArtwork(
   route: CurriculumArtworkRoute
 ) {
   return Option.getOrUndefined(
-    Option.flatMap(artworkIdentityOf(route), (identity) =>
-      resolveNamedArtwork(identity, locale)
+    Arr.findFirst(artworkNamesOf(route), (name) =>
+      resolveNamedArtwork(name, locale)
     )
   );
 }
