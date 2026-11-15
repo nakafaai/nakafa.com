@@ -95,3 +95,37 @@ The proof runs with no retries and a 120-second test timeout (`apps/www/playwrig
 
 1. **Run again first.** Before a combination splits, every failing spec that main does not fail runs once more, alone, on the same combination. A spec that passes is recorded as a flake with the combination it flaked on, and rejects nothing; a spec that fails again stays a failure and the batch splits as before. A failed gate or a proof that named no spec never runs again.
 2. **Never hidden.** The train's report names each flake, so it gets an owner and a due time on the tracker. No spec is skipped, deleted, or retried inside Playwright for it.
+
+## Amendment: The Landing Queue, 15 November 2026
+
+The queue grows with the speed of the work: 108 open pull requests that are no draft on 15 November, against 15 landed on 14 November and one in the 12 hours that followed. Measured over 13 to 15 November (references in the takeover tracker's `ops/research/references.md`): 400 proof runs, of which 146 were cancelled; a completed run took 27 minutes at the median and 50 at the 90th percentile; the gate failed on 34% of the distinct heads it checked. With independent failures at a rate p per pull request, a batch of n passes with probability (1 - p)^n (a derivation, not a sourced claim): at p = 0.1, five pass 59% of the time, 13 pass 25%, 34 pass 3%.
+
+### Decision
+
+1. **Build on the train, not a vendor queue.** The comparison below scores GitHub's merge queue, Mergify, Graphite and Trunk against the train. The train already lands stacks whole by exact head, compares failures with main, splits a red batch by stack and lands green groups as it goes; what it lacked is speed, entry discipline and a rule for flakes.
+2. **Small batches.** A batch holds at most five pull requests, a stack whole when it fits and in chunks of at most five from the bottom when it does not. Five is the size that passes more often than not at p = 0.1; it is revised from each week's measured p.
+3. **Fresh entry.** A stack enters only when its top's own gate passed on a head that contains main (amendment "Batch Entry On Today's Main").
+4. **Engines side by side.** The gate and each engine are jobs of their own (amendment "The Engines Side By Side"); an engine whose specs run longer than about 20 minutes is sharded across more jobs of its own.
+5. **Flakes run again before a split** (amendment "A Flake Is Run Again Before A Batch Splits").
+6. **Speculative pipelining, bounded.** While batch N verifies, batch N+1 verifies on top of main plus N, as Zuul's dependent pipeline does (zuul-ci.org/docs/zuul/latest/gating.html); when N fails, every batch built on it is discarded and verified again on what did land. The depth is bounded by the account's 20 concurrent jobs: four jobs per verification, four kept for Aksara's gates, the sessions' gates and the deploy, so at most four verifications at once.
+7. **A queue that runs itself.** The queue becomes a GitHub Actions workflow that advances one step per run and exits: it reads the queue, merges main into the heads that need it, dispatches their gates, forms the next batch, dispatches its verification, lands a green batch and starts the deploy. It runs on a schedule and on `workflow_dispatch`, with the deploy app's installation token, because events made with `GITHUB_TOKEN` start no other workflow (docs.github.com/en/actions/concepts/security/github_token). No step waits inside a session or on the Mac.
+8. **Specs from the change, a full proof after.** A batch proves the specs its pull requests change plus the suites of the routes they touch; a scheduled full proof of main runs after landings, as predictive test selection pairs a selected run before merge with complete runs after (arxiv.org/abs/1810.05286).
+9. **Main stays green.** When the full proof of main or a deploy turns red, the queue opens the culprit's revert at once and lands it first.
+10. **Rollback.** A broken Worker returns to its previous version with `wrangler rollback` (the last 100 versions; bindings and storage are not changed: developers.cloudflare.com/workers/configuration/versions-and-deployments/rollbacks/) while the revert lands; Alchemy itself rolls back only by deploying the previous code again (alchemy.run/cloudflare/compute/gradual-deployments). Convex cannot roll back functions and its backups restore data only, wiping what is there (docs.convex.dev/cli, docs.convex.dev/database/backup-restore), so a broken backend rolls forward through the revert. The procedure is tested on staging before it is needed.
+11. **Faster gates.** Typecheck and unit-test tasks may restore a cache keyed by Turborepo's exact input hash; a prefix-restored cache stays rejected, and the signed www build is never cached (`AGENTS.md`).
+
+### Build or buy
+
+| | GitHub merge queue | Mergify | Graphite | Trunk | The train |
+| --- | --- | --- | --- | --- | --- |
+| Stacks as a unit | not stated in its docs | yes, at most 20 deep (our island stack is 41) | yes | public preview | yes, whole or in chunks |
+| Batching and failure | groups 1 to 100; a failing PR is removed and the rest rebuilt | batch size with splits | private beta | not stated | batches with split by stack and halves |
+| Checks | required checks on `merge_group` (rejected above for the wait they bring) | each queued PR gets its own CI run | not stated | not stated | gate on each head, one proof per batch |
+| Cost for this public repository | free | free for open source | paid team plan | routed to sales | free |
+| Code we maintain | workflow triggers | a config file and a ruleset bypass | none | none | `scripts/landing` |
+
+GitHub's merge queue would bring back required checks, which this ADR rejected because they made merges wait on the runner queue, and its documentation does not cover stacked pull requests. Mergify would fit at no cost but caps a stack at 20 and runs CI for each queued pull request on our runners. Graphite is paid, Trunk's terms for a public repository are not published, and Bors-NG is archived. The train keeps stacks whole, costs nothing, and its gaps are closed by the points above.
+
+### The ceiling of free runners
+
+Twenty concurrent jobs, four per verification and four kept in reserve, give four verifications at once. With batches of at most five and a verification of about 30 minutes (the gate's 25 beside a build of 10 and sharded specs of 20), the queue lands at most 40 pull requests an hour when every batch passes, and fewer as p rises. When the median time from ready to merged stays above two hours for a week, or jobs wait in GitHub's queue more than 15 minutes, the next step is decided then: fewer specs per batch through selection, or a measured case for paid runners, which this repository does not use today.
