@@ -1,4 +1,8 @@
 import {
+  proofFailures,
+  SpecPath,
+} from "@repo/backend/scripts/content/acceptance/result";
+import {
   Array as Arr,
   Context,
   Effect,
@@ -88,14 +92,24 @@ export class Repository extends Context.Service<
   }
 >()("nakafa/scripts/landing/train/Repository") {}
 
-/** What one train did. Main's failures are specs that fail on main too, which it ignored. */
+/** A spec that failed on a combination and passed when it ran again alone on the same one. */
+const Flake = Schema.Struct({ spec: Schema.String, sha: Schema.String });
+
+/**
+ * What one train did. Main's failures are specs that fail on main too, which it
+ * ignored; flakes are specs that failed once and passed again on the same
+ * combination, which it recorded and let ride.
+ */
 const TrainReport = Schema.Struct({
   main: Schema.String,
   landed: Schema.Array(Candidate),
   skipped: Schema.Array(Rejection),
   rejected: Schema.Array(Rejection),
   mainFailures: Schema.Array(Schema.String),
+  flaky: Schema.Array(Flake),
 });
+
+const isSpec = Schema.is(SpecPath);
 type TrainReport = typeof TrainReport.Type;
 
 /** The failure of a combination whose gate failed, which no spec on main can share. */
@@ -153,6 +167,29 @@ export const runTrain = Effect.fn("landing.runTrain")(function* (
   const accepted = yield* Ref.make<readonly Candidate[]>([]);
   const landings = yield* Ref.make<readonly Landing[]>([]);
   const rejected = yield* Ref.make<readonly Rejection[]>([]);
+  const flakes = yield* Ref.make<readonly (typeof Flake.Type)[]>([]);
+
+  /**
+   * The failing specs that pass when they run again alone on the same
+   * combination: flaky, so they are recorded with the combination they flaked
+   * on and reject nothing, while every one that fails again stays a failure. A
+   * failed gate or a proof that named no spec never runs again. No spec is
+   * skipped or deleted for it; the report names each flake for its owner.
+   */
+  const flakyOf = (sha: string, failures: readonly string[]) =>
+    Effect.gen(function* () {
+      const specs = Arr.filter(failures, isSpec);
+      if (specs.length === 0) {
+        return Arr.empty<string>();
+      }
+      const again = proofFailures(yield* prover.prove(sha, specs));
+      const flaky = Arr.filter(specs, (spec) => !Arr.contains(again, spec));
+      yield* Ref.update(
+        flakes,
+        Arr.appendAll(Arr.map(flaky, (spec) => ({ spec, sha })))
+      );
+      return flaky;
+    });
   const baseline = yield* makeBaseline(main);
   // Stacks verified side by side ask main about their failures one at a time,
   // so main proves each spec once.
@@ -224,9 +261,14 @@ export const runTrain = Effect.fn("landing.runTrain")(function* (
       const known = HashSet.fromIterable(
         yield* asking.withPermit(baseline.shared(failures))
       );
+      const fresh = Arr.filter(
+        failures,
+        (failure) => !HashSet.has(known, failure)
+      );
+      const flaky = yield* flakyOf(combination.sha, fresh);
       return {
         ...verdict,
-        caused: Arr.filter(failures, (failure) => !HashSet.has(known, failure)),
+        caused: Arr.filter(fresh, (failure) => !Arr.contains(flaky, failure)),
       };
     });
 
@@ -341,6 +383,7 @@ export const runTrain = Effect.fn("landing.runTrain")(function* (
     ),
     rejected: yield* Ref.get(rejected),
     mainFailures: yield* baseline.failing,
+    flaky: yield* Ref.get(flakes),
   };
   return report;
 });
@@ -360,6 +403,11 @@ export function formatTrain(report: TrainReport) {
         line("rejected", candidate, reason)
       ),
       ...Arr.map(report.mainFailures, (spec) => `main fails ${spec}`),
+      ...Arr.map(
+        report.flaky,
+        ({ spec, sha }) =>
+          `flaky ${spec} on ${sha.slice(0, 10)}: failed, then passed when it ran again alone`
+      ),
       Option.match(Arr.head(report.landed), {
         onNone: () => "nothing landed, no deploy",
         onSome: () => "each landed group deployed",
