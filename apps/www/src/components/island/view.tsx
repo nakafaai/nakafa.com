@@ -5,6 +5,7 @@ import { createFramePace } from "@repo/design-system/lib/pace";
 import { Array as Arr, DateTime, Option } from "effect";
 import { createPainter, type Painter } from "@/components/island/draw";
 import { openingOrbit, turnOrbit } from "@/lib/island/camera";
+import { herdQuads } from "@/lib/island/life";
 import { glowOf } from "@/lib/island/light";
 import { lightingOf, meshChunk } from "@/lib/island/mesh";
 import { hourOf, lightOf } from "@/lib/island/sky";
@@ -43,8 +44,15 @@ function tour(
     }
     orbit = turnOrbit(orbit, last === 0 ? 0 : ((now - last) / 1000) * TOUR);
     last = now;
+    painter.herd(herdQuads(world, [], size, orbit.yaw, now / 1000));
     const hour = hourOf(DateTime.nowUnsafe(), DateTime.zoneMakeLocal());
-    painter.draw(orbit, lightOf(hour, "clear"), now / 1000, "clear");
+    painter.draw(
+      orbit,
+      lightOf(hour, "clear"),
+      now / 1000,
+      "clear",
+      Option.none()
+    );
     canvas.dataset.drawn = "true";
     pace.rest(now, performance.now());
   };

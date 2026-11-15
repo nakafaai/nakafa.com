@@ -3,7 +3,7 @@
  * compiles them once; nothing here runs in JavaScript.
  */
 
-/** The chunk program: atlas pixels lit by the sun, the sky over them and the lamps beside them, fading into fog. */
+/** The chunk program: atlas pixels lit by the sun, shaded where a cloud passes, lit by the sky over them and the lamps beside them, fading into fog. */
 export const CHUNK_VERTEX = `#version 300 es
 layout(location = 0) in vec3 aPosition;
 layout(location = 1) in vec2 aUv;
@@ -47,6 +47,25 @@ in float vGlow;
 in float vDistance;
 in vec3 vWorld;
 out vec4 color;
+float hashOf(vec2 cell) {
+  return fract(sin(dot(cell, vec2(127.1, 311.7))) * 43758.5453);
+}
+float noiseOf(vec2 place) {
+  vec2 cell = floor(place);
+  vec2 part = fract(place);
+  part = part * part * (3.0 - 2.0 * part);
+  return mix(
+    mix(hashOf(cell), hashOf(cell + vec2(1.0, 0.0)), part.x),
+    mix(hashOf(cell + vec2(0.0, 1.0)), hashOf(cell + vec2(1.0, 1.0)), part.x),
+    part.y
+  );
+}
+// The shadow of the clouds drifting over the island, cut into whole art pixels.
+float cloudOf(vec2 place) {
+  vec2 pixel = floor((place + vec2(uTime * 0.7, uTime * 0.3)) * 4.0) / 4.0;
+  float cover = noiseOf(pixel / 15.0) * 0.7 + noiseOf(pixel / 6.0) * 0.3;
+  return step(0.6, cover);
+}
 void main() {
   vec2 uv = vUv;
   if (uWater > 0.5) {
@@ -55,7 +74,7 @@ void main() {
   }
   vec4 texel = texture(uAtlas, uv);
   if (texel.a < 0.5) discard;
-  vec3 light = uAmbient * (0.55 + 0.45 * vShade) + uSun * vShade * vSky;
+  vec3 light = uAmbient * (0.55 + 0.45 * vShade) + uSun * vShade * vSky * (1.0 - 0.4 * cloudOf(vWorld.xz));
   light = max(light, uLamp * vGlow * vGlow * vShade);
   light = floor(light * 12.0 + 0.5) / 12.0;
   float fog = smoothstep(uFogRange.x, uFogRange.y, vDistance);
@@ -111,6 +130,23 @@ void main() {
 }`;
 
 export const WEATHER_FRAGMENT = `#version 300 es
+precision mediump float;
+uniform vec4 uColor;
+out vec4 color;
+void main() {
+  color = uColor;
+}`;
+
+/** The outline program: the twelve edges of the cell a press would change, drawn over everything. */
+export const OUTLINE_VERTEX = `#version 300 es
+layout(location = 0) in vec3 aCorner;
+uniform mat4 uViewProjection;
+uniform vec3 uCell;
+void main() {
+  gl_Position = uViewProjection * vec4(uCell - 0.01 + aCorner * 1.02, 1.0);
+}`;
+
+export const OUTLINE_FRAGMENT = `#version 300 es
 precision mediump float;
 uniform vec4 uColor;
 out vec4 color;

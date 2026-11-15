@@ -5,6 +5,7 @@ import type { Edit } from "@repo/backend/confect/island/world";
 import { Array as Arr } from "effect";
 import { useState } from "react";
 import { IslandHud } from "@/components/island/hud";
+import { IslandSound } from "@/components/island/sound";
 import { IslandStage } from "@/components/island/stage";
 import {
   createGameStore,
@@ -13,6 +14,7 @@ import {
 } from "@/components/island/store";
 import { IslandSync } from "@/components/island/sync";
 import { IslandWeather } from "@/components/island/weather";
+import { readMuted } from "@/lib/island/settings";
 import { worldOf } from "@/lib/island/terrain";
 
 /** The hotbar a game opens with: the first nine blocks the island's level opens. */
@@ -51,7 +53,9 @@ export default function IslandGame({
       hotbar: firstHotbar(level),
       leave: onLeave,
       level,
+      muted: readMuted(),
       progress,
+      seed,
       version,
     })
   );
@@ -61,6 +65,7 @@ export default function IslandGame({
         <IslandStage size={size} />
         <IslandHud />
         <IslandSync />
+        <IslandSound />
         <IslandWeather />
       </div>
     </GameStoreContext>

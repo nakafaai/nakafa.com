@@ -30,13 +30,13 @@ export function IslandBook() {
       <section
         aria-label={t("book")}
         className={panelVariants({
-          className: "flex max-h-full w-full max-w-md flex-col gap-3 p-4",
+          className: "flex max-h-full w-full max-w-lg flex-col gap-3 p-4",
         })}
       >
         <header className="flex items-start justify-between gap-3">
           <div className="flex flex-col gap-1">
             <h2 className="font-semibold">{t("book")}</h2>
-            <p className="text-xs text-[#6b4426]">
+            <p className="text-sm text-[#6b4426]">
               {t("earn", {
                 lesson: AWARD_RULES.lesson.stars,
                 section: AWARD_RULES.section.stars,
@@ -54,7 +54,7 @@ export function IslandBook() {
             <HugeIcons className="size-5" icon={Cancel01Icon} />
           </button>
         </header>
-        <ul className="grid grid-cols-4 gap-2 overflow-y-auto sm:grid-cols-5">
+        <ul className="grid grid-cols-3 gap-2 overflow-y-auto sm:grid-cols-4">
           {Arr.map(BLOCK_KEYS, (block) => (
             <li key={block}>
               <button
@@ -81,7 +81,7 @@ export function IslandBook() {
                     />
                   )}
                 </span>
-                <span className="text-[10px] leading-tight">
+                <span className="text-sm leading-tight text-balance hyphens-auto">
                   {isOpen(block, level)
                     ? t(`block-${block}`)
                     : t("level", { level: opensAt(block) })}

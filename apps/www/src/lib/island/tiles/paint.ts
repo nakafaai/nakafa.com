@@ -1,3 +1,4 @@
+import { Array as Arr, Option, Record as Rec } from "effect";
 import { unitOf } from "@/lib/island/noise";
 import { colorOf, type Ramp, type Tone } from "@/lib/island/palette";
 
@@ -123,4 +124,26 @@ export function cellsOf(seed: number, count: number) {
     }
     return { edge: second - nearest, owner };
   };
+}
+
+/** One sprite pixel's color: a tone of a ramp. */
+export type Ink = readonly [Ramp, Tone];
+
+/**
+ * Paints a sprite drawn as rows of characters: each character names a tone in
+ * the legend, and any other character stays clear.
+ */
+export function rowsTile(
+  rows: readonly string[],
+  legend: Readonly<Record<string, Ink>>
+) {
+  const pixels = blankTile();
+  Arr.forEach(rows, (row, y) => {
+    Arr.forEach(row.split(""), (character, x) => {
+      Option.map(Rec.get(legend, character), ([ramp, tone]) =>
+        put(pixels, x, y, ramp, tone)
+      );
+    });
+  });
+  return pixels;
 }
