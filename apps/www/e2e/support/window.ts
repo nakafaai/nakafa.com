@@ -4,7 +4,12 @@ import { LAST_SERVER, NEWEST } from "@/e2e/support/list";
 import { MEMORY_PATH, memoryRow } from "@/e2e/support/memory";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
-/** Where one row of the list stands in the document, or none when it is not in the page. */
+/**
+ * Where one row of the list stands in the document, or none when it is not in
+ * the page. Firefox adds the scroll offset in floating point, so a row that has
+ * not moved can differ in its fifth decimal after a scroll: each place is kept
+ * to a hundredth of a pixel, here and in `drawsInPlace`.
+ */
 const placeOf = (page: Page, text: string) =>
   page.evaluate((needle) => {
     const row = [...document.querySelectorAll("main ul > li")].find((item) =>
@@ -17,10 +22,13 @@ const placeOf = (page: Page, text: string) =>
     return {
       height: box.height,
       left: box.left,
-      top: box.top + window.scrollY,
+      top: Math.round((box.top + window.scrollY) * 100) / 100,
       width: box.width,
     };
   }, text);
+
+/** How Firefox opens a note of its own in the page's console. */
+const FIREFOX_NOTE = "[JavaScript Warning:";
 
 /** How many rows of the page hold more than the height they are given. */
 const overflowingRows = (page: Page) =>
@@ -88,6 +96,11 @@ export const drawsInPlace = Effect.fn("NakafaE2E.drawsInPlace")(function* (
   yield* Effect.promise(async () => {
     const said = MutableList.make<string>();
     const listen = (message: { text: () => string; type: () => string }) => {
+      // Firefox adds its own notes on the page's performance, such as a scroll
+      // that moves an element, as warnings that no code of the page wrote.
+      if (message.text().startsWith(FIREFOX_NOTE)) {
+        return;
+      }
       if (message.type() === "error" || message.type() === "warning") {
         MutableList.append(said, `${message.type()}: ${message.text()}`);
       }
@@ -107,7 +120,7 @@ export const drawsInPlace = Effect.fn("NakafaE2E.drawsInPlace")(function* (
           return {
             height: box.height,
             left: box.left,
-            top: box.top + window.scrollY,
+            top: Math.round((box.top + window.scrollY) * 100) / 100,
             width: box.width,
           };
         };

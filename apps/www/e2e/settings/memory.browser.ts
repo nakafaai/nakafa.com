@@ -367,7 +367,9 @@ const formatBehindMore = Effect.fn("NakafaE2E.formatBehindMore")(function* (
     await saved(changes, before);
 
     // A control that acts at once closes the groups, and the caret is back in
-    // the text.
+    // the text. An applied link leaves the caret after it, so the words are
+    // selected again before the control acts on them.
+    await page.keyboard.press("ControlOrMeta+a");
     await more.click();
     await strike.click();
     await expect(strike).toHaveCount(0);

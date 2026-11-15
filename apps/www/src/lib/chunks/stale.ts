@@ -1,8 +1,4 @@
-import {
-  GOING_ATTRIBUTE,
-  GOING_LEAVE,
-  GOING_RELOAD,
-} from "@repo/design-system/lib/lazy";
+import { GOING_ATTRIBUTE, GOING_RELOAD } from "@repo/design-system/lib/lazy";
 import { Array as Arr, Clock, Duration, Effect, Option, Schema } from "effect";
 
 /**
@@ -41,88 +37,19 @@ export function isStaleChunkError(error: unknown): error is Error {
 }
 
 /** The start of the storage key that marks the reload of one address. */
-const RELOAD_MARK = "nakafa:stale-chunk:";
+export const RELOAD_MARK = "nakafa:stale-chunk:";
 
 /**
  * How long the reload of an address holds back another. A chunk still missing
  * once its reload has loaded the current deploy shows its error instead of
  * reloading again, and the next deploy, minutes later, reloads the tab again.
  */
-const RELOAD_HOLD = Duration.minutes(1);
+export const RELOAD_HOLD = Duration.minutes(1);
 
 /** The storage key that marks the reload of one address. */
 function markOf(address: string) {
   return `${RELOAD_MARK}${address}`;
 }
-
-/**
- * Reloads a tab that outlived a deploy, from the head, before any script can
- * fail. A press that loads a module on intent reaches no error boundary, so
- * `useRouteFailure` never sees it. The build's preload helper reports every
- * failed import here. The script marks the address with the time and reloads,
- * and an address reloads once within `RELOAD_HOLD` between the script and that
- * hook, so a chunk that is really gone reaches its error. The failure itself
- * goes on to its import as the browser threw it: cancelling it would hand the
- * import an empty module, which no caller can read. While the page goes, the
- * root element says so (`GOING_ATTRIBUTE`), and `readChunk` holds such a failure
- * until the page is gone. A browser without a network keeps its page: the chunk
- * is out of reach, not gone, and a reload would swap the page for the browser's
- * offline screen. Firefox and Safari also fail a page's running imports the
- * moment the tab starts to leave it, and a reload then would cancel the
- * navigation, so a tab that is leaving never reloads. `beforeunload` is the only
- * signal that comes before those failures, and it costs a page Firefox's
- * back-forward cache. A prompt of the page can keep it after `beforeunload`, so
- * the next press, or the page's return from that cache, shows that it stayed: it
- * ends the leave, and a reload that never happened gives its mark back.
- */
-export const STALE_CHUNK_SCRIPT = `(function () {
-  var root = document.documentElement;
-  var hold = ${Duration.toMillis(RELOAD_HOLD)};
-  function markOf() {
-    return "${RELOAD_MARK}" + location.pathname;
-  }
-  function stay() {
-    var going = root.getAttribute("${GOING_ATTRIBUTE}");
-    if (going === null) {
-      return;
-    }
-    root.removeAttribute("${GOING_ATTRIBUTE}");
-    if (going === "${GOING_RELOAD}") {
-      try {
-        sessionStorage.removeItem(markOf());
-      } catch (error) {}
-    }
-  }
-  window.addEventListener("beforeunload", function () {
-    if (root.getAttribute("${GOING_ATTRIBUTE}") === null) {
-      root.setAttribute("${GOING_ATTRIBUTE}", "${GOING_LEAVE}");
-    }
-  });
-  window.addEventListener("pageshow", stay);
-  window.addEventListener("pointerdown", stay, true);
-  window.addEventListener("keydown", stay, true);
-  window.addEventListener("vite:preloadError", function () {
-    if (root.getAttribute("${GOING_ATTRIBUTE}") !== null) {
-      return;
-    }
-    if (navigator.onLine === false) {
-      return;
-    }
-    try {
-      var now = Date.now();
-      var marked = sessionStorage.getItem(markOf());
-      var age = now - Number(marked);
-      if (marked !== null && age >= 0 && age < hold) {
-        return;
-      }
-      sessionStorage.setItem(markOf(), String(now));
-    } catch (error) {
-      return;
-    }
-    root.setAttribute("${GOING_ATTRIBUTE}", "${GOING_RELOAD}");
-    location.reload();
-  });
-})();`;
 
 /**
  * Reloads the page and says so on its root element first, so `readChunk` holds the

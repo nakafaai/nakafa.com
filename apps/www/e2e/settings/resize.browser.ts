@@ -1,5 +1,5 @@
 import { expect, type Page, test } from "@playwright/test";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 import { live } from "@/e2e/support/changes";
 import { EMPTY, memoryRow, opened, openMemoryPage } from "@/e2e/support/memory";
 import { withObservedPageErrors } from "@/e2e/support/observe";
@@ -13,14 +13,30 @@ const POINTER = 760;
 // The browser draws classic scrollbars, as Windows and Linux do. The page hides
 // every native bar and draws its own overlay (PageScrollbar), so none takes room
 // even here. The root scroller would show one only when the page overflows the
-// window, so verifyDrag writes memories until the page overflows.
-test.use({
-  launchOptions: {
-    args: ["--disable-features=OverlayScrollbar"],
-    ignoreDefaultArgs: ["--hide-scrollbars"],
-  },
-  viewport: { height: 500, width: 1280 },
+// window, so verifyDrag writes memories until the page overflows. Chromium takes
+// the classic bars from its flags; Firefox and WebKit refuse those flags and
+// draw the bars the system gives them.
+const classicTest = test.extend({
+  launchOptions: [
+    async ({ browserName, launchOptions }, use) => {
+      if (browserName !== "chromium") {
+        await use(launchOptions);
+        return;
+      }
+      await use({
+        ...launchOptions,
+        args: Arr.append(
+          launchOptions.args ?? [],
+          "--disable-features=OverlayScrollbar"
+        ),
+        ignoreDefaultArgs: ["--hide-scrollbars"],
+      });
+    },
+    { scope: "worker" },
+  ],
 });
+
+classicTest.use({ viewport: { height: 500, width: 1280 } });
 
 /** Whether the page is taller than the window, so its root scroller shows a scrollbar. */
 const pageOverflows = (page: Page) =>
@@ -85,15 +101,21 @@ const verifyDrag = Effect.fn("NakafaE2E.verifyDrag")(function* (
   ).toBe(POINTER);
 });
 
-test.describe("Memory panel dragged while the system draws classic scrollbars", () => {
-  test("lands its edge under the pointer", async ({ baseURL, page }) => {
-    await Effect.runPromise(
-      withObservedPageErrors(
-        page,
-        Effect.fromNullishOr(baseURL).pipe(
-          Effect.flatMap((origin) => verifyDrag(page, origin))
-        )
-      )
+classicTest.describe(
+  "Memory panel dragged while the system draws classic scrollbars",
+  () => {
+    classicTest(
+      "lands its edge under the pointer",
+      async ({ baseURL, page }) => {
+        await Effect.runPromise(
+          withObservedPageErrors(
+            page,
+            Effect.fromNullishOr(baseURL).pipe(
+              Effect.flatMap((origin) => verifyDrag(page, origin))
+            )
+          )
+        );
+      }
     );
-  });
-});
+  }
+);

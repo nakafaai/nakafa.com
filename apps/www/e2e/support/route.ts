@@ -122,7 +122,7 @@ export function holdChunkHolding(
  * page shows what it draws while the code is on its way. Call it once the page
  * has loaded: a chunk that the page loads with it would wait for the release.
  * With `containing`, only a chunk whose code holds that text waits, and every
- * other chunk loads at once.
+ * other chunk loads at once, so the hold may start before a load.
  */
 export const holdChunks = Effect.fn("NakafaE2E.holdChunks")(function* (
   page: Page,
