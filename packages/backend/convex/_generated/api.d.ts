@@ -2885,7 +2885,7 @@ export declare const api: {
         "public",
         { category: "analytics" },
         {
-          currentNoticeVersion: "privacy-2026-08-22";
+          currentNoticeVersion: "privacy-2026-11-13";
           decision:
             | null
             | {
@@ -2893,14 +2893,20 @@ export declare const api: {
                 decidedAt: number;
                 granted: boolean;
                 mechanism: "privacy-controls";
-                noticeVersion: "privacy-2026-08-22" | "privacy-2026-08-21";
+                noticeVersion:
+                  | "privacy-2026-11-13"
+                  | "privacy-2026-08-22"
+                  | "privacy-2026-08-21";
               }
             | {
                 category: "analytics";
                 decidedAt: number;
                 granted: false;
                 mechanism: "browser-privacy-signal";
-                noticeVersion: "privacy-2026-08-22" | "privacy-2026-08-21";
+                noticeVersion:
+                  | "privacy-2026-11-13"
+                  | "privacy-2026-08-22"
+                  | "privacy-2026-08-21";
               };
         }
       >;
@@ -2913,13 +2919,13 @@ export declare const api: {
                 category: "analytics";
                 granted: boolean;
                 mechanism: "privacy-controls";
-                noticeVersion: "privacy-2026-08-22";
+                noticeVersion: "privacy-2026-11-13";
               }
             | {
                 category: "analytics";
                 granted: false;
                 mechanism: "browser-privacy-signal";
-                noticeVersion: "privacy-2026-08-22";
+                noticeVersion: "privacy-2026-11-13";
               };
           expectedUserId: Id<"users">;
         },
@@ -2928,14 +2934,20 @@ export declare const api: {
             decidedAt: number;
             granted: boolean;
             mechanism: "privacy-controls";
-            noticeVersion: "privacy-2026-08-22" | "privacy-2026-08-21";
+            noticeVersion:
+              | "privacy-2026-11-13"
+              | "privacy-2026-08-22"
+              | "privacy-2026-08-21";
           }
         | {
             category: "analytics";
             decidedAt: number;
             granted: false;
             mechanism: "browser-privacy-signal";
-            noticeVersion: "privacy-2026-08-22" | "privacy-2026-08-21";
+            noticeVersion:
+              | "privacy-2026-11-13"
+              | "privacy-2026-08-22"
+              | "privacy-2026-08-21";
           }
       >;
     };
