@@ -12,6 +12,7 @@ import {
   openChatPage,
   runOnPage,
 } from "@/e2e/support/chat";
+import { PROFILE_PAGE } from "@/e2e/support/selector";
 import { ACCESS_TITLE } from "@/e2e/support/share";
 import { inTheSheet, promptWith } from "@/e2e/support/sheet";
 import { shownTexts, watchTexts } from "@/e2e/support/shown";
@@ -23,7 +24,9 @@ const DELETED_ELSEWHERE = en.Toast["chat-deleted"].title;
 
 /** A chat's row on the learner's chats page, which holds a link over the whole row. */
 const rowOf = (page: Page, chatId: string) =>
-  page.locator(`${CHAT_PAGE} a[href="/en/chat/${chatId}"]`).locator("xpath=..");
+  page
+    .locator(`${PROFILE_PAGE} a[href="/en/chat/${chatId}"]`)
+    .locator("xpath=..");
 
 /** A chat's row in the sidebar beside a chat page. */
 const sidebarRowOf = (page: Page, chatId: string) =>
