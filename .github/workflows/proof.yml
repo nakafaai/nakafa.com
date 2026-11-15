@@ -178,6 +178,21 @@ jobs:
         if: always() && steps.static.outcome != 'skipped'
         run: bun run turbo run test --filter=@repo/backend ${AFFECTED:+"$AFFECTED"}
 
+      - name: Measure backend at four workers
+        if: always()
+        working-directory: packages/backend
+        run: nproc; free -g; time bunx vitest run --maxWorkers=4 --reporter=dot 2>&1 | tail -8
+
+      - name: Measure backend at four threads
+        if: always()
+        working-directory: packages/backend
+        run: time bunx vitest run --maxWorkers=4 --pool=threads --reporter=dot 2>&1 | tail -8
+
+      - name: Measure one half shard at four workers
+        if: always()
+        working-directory: packages/backend
+        run: time bunx vitest run --maxWorkers=4 --shard=1/2 --reporter=dot 2>&1 | tail -8
+
       - name: Post the gate
         if: always()
         env:
