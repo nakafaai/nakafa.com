@@ -374,6 +374,22 @@ jobs:
           ref: ${{ env.SHA }}
           persist-credentials: false
 
+      # Convex runs "use node" actions on the Node major that convex.json names,
+      # which the acceptance runtime finds through CONVEX_NODE_BIN. It installs
+      # before the workspace's Node, which then comes first on the PATH.
+      - name: Name Node for Convex actions
+        id: convex
+        run: echo "node=$(jq -r .node.nodeVersion packages/backend/convex.json)" >> "$GITHUB_OUTPUT"
+
+      - name: Install Node for Convex actions
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: ${{ steps.convex.outputs.node }}
+          package-manager-cache: false
+
+      - name: Point the runtime at Node for Convex actions
+        run: echo "CONVEX_NODE_BIN=$(dirname "$(command -v node)")" >> "$GITHUB_ENV"
+
       - name: Install dependencies
         uses: ./.github/actions/install
 
@@ -438,16 +454,6 @@ jobs:
           SCRIPT
           (setsid bash -c "bash '$RUNNER_TEMP/browsers.sh'; echo \$? > '$RUNNER_TEMP/browsers.exit'" \
             > "$RUNNER_TEMP/browsers.log" 2>&1 &)
-
-      # Convex runs "use node" actions on the Node major that convex.json names,
-      # which the acceptance runtime finds through Homebrew, as on the Mac.
-      - name: Install Node for Convex actions
-        env:
-          HOMEBREW_NO_AUTO_UPDATE: "1"
-          HOMEBREW_NO_INSTALL_CLEANUP: "1"
-        run: |
-          echo /home/linuxbrew/.linuxbrew/bin >> "$GITHUB_PATH"
-          /home/linuxbrew/.linuxbrew/bin/brew install --quiet "node@$(jq -r .node.nodeVersion packages/backend/convex.json)"
 
       - name: Generate bindings
         run: bun run --cwd packages/backend codegen

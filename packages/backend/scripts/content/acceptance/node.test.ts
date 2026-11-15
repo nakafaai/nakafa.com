@@ -5,7 +5,7 @@ import {
   resolveConvexNodeBin,
 } from "@repo/backend/scripts/content/acceptance/node";
 import { installConvexNode } from "@repo/backend/test/acceptance";
-import { Effect, FileSystem, MutableList } from "effect";
+import { ConfigProvider, Effect, FileSystem, MutableList } from "effect";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
 
 /** A temporary backend directory whose `convex.json` names Node 24, with that Node installed under a prefix. */
@@ -36,6 +36,13 @@ const brewAs = Effect.fn("NodeTest.brewAs")(function* (
   return { asked, service };
 });
 
+/** The environment a resolution reads, so the shell's own never decides a test. */
+const environment = (values: Record<string, string>) =>
+  Effect.provideService(
+    ConfigProvider.ConfigProvider,
+    ConfigProvider.fromUnknown(values)
+  );
+
 /** A `brew --prefix` that prints `prefix`. */
 const printing = (prefix: string) => () =>
   ChildProcess.make("sh", ["-c", 'printf "%s\\n" "$0"', prefix], {
@@ -60,7 +67,8 @@ describe("Node of the local Convex backend", () => {
           Effect.provideService(
             ChildProcessSpawner.ChildProcessSpawner,
             brew.service
-          )
+          ),
+          environment({})
         );
         expect(bin).toBe(`${prefix}/bin`);
         expect(MutableList.toArray(brew.asked)).toEqual([
@@ -96,6 +104,7 @@ describe("Node of the local Convex backend", () => {
               ChildProcessSpawner.ChildProcessSpawner,
               brew.service
             ),
+            environment({}),
             Effect.flip
           );
           expect(failure).toMatchObject({
@@ -103,6 +112,40 @@ describe("Node of the local Convex backend", () => {
             message: expect.stringContaining("run `brew install node@24`"),
           });
         }
+      }).pipe(Effect.scoped, Effect.provide(nodeServicesLayer))
+  );
+
+  it.live(
+    "answers the directory CONVEX_NODE_BIN names, without asking Homebrew",
+    () =>
+      Effect.gen(function* () {
+        const { directory, prefix } = yield* backend;
+        const brew = yield* brewAs(printing(`${directory}/elsewhere`));
+        const bin = yield* resolveConvexNodeBin(directory).pipe(
+          Effect.provideService(
+            ChildProcessSpawner.ChildProcessSpawner,
+            brew.service
+          ),
+          environment({ CONVEX_NODE_BIN: `${prefix}/bin` })
+        );
+        expect(bin).toBe(`${prefix}/bin`);
+        expect(MutableList.toArray(brew.asked)).toEqual([]);
+      }).pipe(Effect.scoped, Effect.provide(nodeServicesLayer))
+  );
+
+  it.live(
+    "fails at once when CONVEX_NODE_BIN names a directory without node",
+    () =>
+      Effect.gen(function* () {
+        const { directory } = yield* backend;
+        const missing = yield* resolveConvexNodeBin(directory).pipe(
+          environment({ CONVEX_NODE_BIN: `${directory}/empty` }),
+          Effect.flip
+        );
+        expect(missing).toMatchObject({
+          _tag: "AcceptanceRuntimeError",
+          message: expect.stringContaining("holds no node"),
+        });
       }).pipe(Effect.scoped, Effect.provide(nodeServicesLayer))
   );
 });

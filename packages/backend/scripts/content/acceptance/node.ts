@@ -1,5 +1,5 @@
 import { acceptanceRuntimeError } from "@repo/backend/scripts/content/acceptance/error";
-import { Effect, FileSystem, Option, Schema, Stream } from "effect";
+import { Config, Effect, FileSystem, Option, Schema, Stream } from "effect";
 import { ChildProcess } from "effect/process";
 
 /**
@@ -49,18 +49,38 @@ const brewPrefix = Effect.fn("contentAcceptance.brewPrefix")(
 );
 
 /**
+ * The `bin` directory of that Node where a machine installed it without
+ * Homebrew, as a proof job does through setup-node with the major that
+ * convex.json names.
+ */
+const ConfiguredNodeBin = Config.option(
+  Config.NonEmptyString("CONVEX_NODE_BIN")
+);
+
+/**
  * The `bin` directory of the Node that a backend's "use node" actions need. The
  * local Convex backend runs those actions with the first `node` on its PATH, and
  * with any other major it never finishes starting
  * (`DeploymentNotConfiguredForNodeActions`), so the runtime puts this directory
- * first. A machine without that Node fails at once with the command that installs
- * it, instead of a start that waits forever.
+ * first. It is the one CONVEX_NODE_BIN names, or else Homebrew's. A machine
+ * without that Node fails at once with the command that installs it, instead of
+ * a start that waits forever.
  */
 export const resolveConvexNodeBin = Effect.fn(
   "contentAcceptance.resolveConvexNodeBin"
 )(function* (backend: string) {
   const fs = yield* FileSystem.FileSystem;
   const major = yield* readConvexNodeMajor(backend);
+  // An unset or blank CONVEX_NODE_BIN reads as none, so the read cannot fail.
+  const configured = yield* ConfiguredNodeBin.pipe(Effect.orDie);
+  if (Option.isSome(configured)) {
+    if (!(yield* fs.exists(`${configured.value}/node`))) {
+      return yield* acceptanceRuntimeError(
+        `CONVEX_NODE_BIN names ${configured.value}, which holds no node for Convex's Node ${major} actions.`
+      );
+    }
+    return configured.value;
+  }
   const formula = `node@${major}`;
   const missing = acceptanceRuntimeError(
     `Convex runs "use node" actions on Node ${major} (convex.json), and no Node ${major} is installed: run \`brew install ${formula}\`.`
