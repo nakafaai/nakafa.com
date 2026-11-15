@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  ArrowUp01Icon,
   BookOpen01Icon,
   BucketIcon,
   Cancel01Icon,
@@ -28,12 +29,13 @@ import { AWARD_RULES } from "@repo/backend/confect/island/schema";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { SearchField } from "@repo/design-system/components/ui/search";
 import { cva } from "class-variance-authority";
-import { Array as Arr } from "effect";
+import { Array as Arr, Option, Result } from "effect";
 import { useTranslations } from "use-intl";
 import { BlockIcon, SpeciesIcon } from "@/components/island/icon";
 import { panelVariants } from "@/components/island/panel";
 import { type Shelf, useGame } from "@/components/island/store";
 import { SPECIES } from "@/lib/island/fauna/species";
+import { nextTierOf, tierOpensAt, upgradeOf } from "@/lib/island/home";
 import { ITEM_KEYS, itemOpensAt } from "@/lib/island/items";
 import { isPlant } from "@/lib/island/look";
 
@@ -125,6 +127,75 @@ function ItemEntry({ item }: { item: (typeof ITEM_KEYS)[number] }) {
   );
 }
 
+/**
+ * The learner's home at the top of the items (ADR 0047, D17): what it grows
+ * into next and a press to build it, the level that opens it, or that it is
+ * already the finest it can be.
+ */
+function HomeEntry() {
+  const t = useTranslations("Island");
+  const level = useGame((state) => state.level);
+  const cells = useGame((state) => state.cells);
+  // The world changes in place; its revision tells this entry to read it again.
+  useGame((state) => state.revision);
+  const apply = useGame((state) => state.apply);
+  const setBook = useGame((state) => state.setBook);
+  const setNotice = useGame((state) => state.setNotice);
+  return Option.match(nextTierOf(cells), {
+    onNone: () => (
+      <li className={entryVariants({ state: "guide" })}>
+        <span className="grid size-10 place-items-center text-[#4a2c17]">
+          <HugeIcons className="size-8" icon={House03Icon} />
+        </span>
+        <span className="text-sm leading-tight text-balance">
+          {t("home-top")}
+        </span>
+      </li>
+    ),
+    onSome: ({ name, tier }) => {
+      const open = tierOpensAt(tier) <= level;
+      return (
+        <li>
+          <button
+            aria-label={
+              open
+                ? t("upgrade", { name: t(`home-${name}`) })
+                : t("locked", { level: tierOpensAt(tier) })
+            }
+            className={entryVariants({ state: open ? "open" : "locked" })}
+            disabled={!open}
+            onClick={() =>
+              Result.match(upgradeOf(cells, level), {
+                onFailure: () => setNotice("room"),
+                onSuccess: ({ edits }) => {
+                  apply(edits);
+                  setBook(false);
+                },
+              })
+            }
+            title={t(`home-${name}`)}
+            type="button"
+          >
+            <span className="relative grid size-10 place-items-center text-[#4a2c17]">
+              <HugeIcons className="size-8" icon={House03Icon} />
+              <HugeIcons
+                className="absolute -top-1 -right-1 size-4 text-[#c6911f]"
+                icon={ArrowUp01Icon}
+              />
+              {open ? null : <Lock />}
+            </span>
+            <span className="text-sm leading-tight text-balance hyphens-auto">
+              {open
+                ? t(`home-${name}`)
+                : t("level", { level: tierOpensAt(tier) })}
+            </span>
+          </button>
+        </li>
+      );
+    },
+  });
+}
+
 /** One block or plant: open ones go into the held slot of the hotbar, locked ones show the level that opens them. */
 function BlockEntry({ block }: { block: BlockKey }) {
   const t = useTranslations("Island");
@@ -196,6 +267,7 @@ function ShelfGrid() {
   if (shelf === "items") {
     return (
       <ul className={shelfVariants()}>
+        {query === "" ? <HomeEntry /> : null}
         {Arr.map(
           Arr.filter(ITEM_KEYS, (item) => matches(t(`item-${item}`), query)),
           (item) => (
