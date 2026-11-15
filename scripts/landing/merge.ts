@@ -46,9 +46,28 @@ const viewPull = Effect.fn("landing.viewPull")(function* (number: number) {
  * merged.
  */
 /**
+ * A change as Git prints it, less what differs when the same change is replayed
+ * onto a newer base: the blob ids of its `index` lines and the line numbers and
+ * context of its hunk headers, as `git patch-id` compares two changes.
+ */
+const changeOf = (diff: string) =>
+  Arr.join(
+    Arr.map(
+      Arr.filter(Str.split(diff, "\n"), (line) => !line.startsWith("index ")),
+      (line) => (line.startsWith("@@") ? "@@" : line)
+    ),
+    "\n"
+  );
+
+/**
  * The head a pull request may land at: the head the train proved, or the head
  * GitHub rebased it to after the pull request below it in a stack landed, when
- * that head holds exactly the proven head's change on today's main.
+ * that head holds exactly the proven head's change on today's main. A member of
+ * a stack holds it when its rebased head contains main and changes main as the
+ * proven head changed the member below it, which also holds when two members
+ * edit the same lines, where merging main with the proven head conflicts. A
+ * pull request on main holds it when merging main with the proven head gives
+ * the rebased head's tree.
  */
 const landableHead = Effect.fn("landing.landableHead")(function* (
   root: string,
@@ -67,6 +86,21 @@ const landableHead = Effect.fn("landing.landableHead")(function* (
     `refs/pull/${candidate.number}/head`,
   ]);
   const main = (yield* git(["rev-parse", "origin/main"])).trim();
+  if (candidate.below !== "") {
+    const onMain = yield* attempt(
+      "git",
+      ["merge-base", "--is-ancestor", main, head],
+      root
+    );
+    if (onMain.code !== 0) {
+      return Option.none<string>();
+    }
+    const proven = yield* git(["diff", candidate.below, candidate.sha]);
+    const replayed = yield* git(["diff", main, head]);
+    return changeOf(proven) === changeOf(replayed)
+      ? Option.some(head)
+      : Option.none<string>();
+  }
   const merged = yield* attempt(
     "git",
     ["merge-tree", "--write-tree", main, candidate.sha],
