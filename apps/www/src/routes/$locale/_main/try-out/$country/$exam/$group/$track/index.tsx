@@ -5,25 +5,18 @@ import {
   stripSearchParams,
 } from "@tanstack/react-router";
 import { createIsomorphicFn } from "@tanstack/react-start";
-import { Option, Schema } from "effect";
-import { BreadcrumbHeader } from "@/components/shared/breadcrumb/header";
+import { Schema } from "effect";
 import { Page } from "@/components/shared/page/frame";
-import { TryoutCatalogChoices } from "@/components/tryout/catalog/choice";
-import {
-  TryoutExamSelector,
-  TryoutGroupSelector,
-} from "@/components/tryout/catalog/selector";
 import {
   CATALOG_QUERY_DEFAULTS,
   CatalogQuery,
   catalogLoaderDeps,
 } from "@/components/tryout/catalog/table/query";
 import { TryoutSetTable } from "@/components/tryout/catalog/table/sets";
+import { TryoutTrailHeader } from "@/components/tryout/catalog/trail";
 import { readTryoutTrackFn } from "@/components/tryout/route/catalog.functions";
 import { createTryoutHead } from "@/components/tryout/route/head";
-import { getTryoutCrumbTarget } from "@/components/tryout/route/path";
 import { hasSignedInHint } from "@/lib/auth/hint";
-import { HOME_TARGET } from "@/lib/routing/target";
 import { readStaticData } from "@/lib/static/data";
 
 /**
@@ -86,46 +79,10 @@ function TryoutTrackPage() {
   const route = Route.useLoaderData();
   return (
     <Page height="screen">
-      <BreadcrumbHeader
-        value={{
-          action: (
-            <TryoutCatalogChoices>
-              <TryoutExamSelector
-                currentValue={route.page.exam.publicPath}
-                options={route.examOptions}
-              />
-              {route.groupOptions.length > 0 ? (
-                <TryoutGroupSelector
-                  axis={route.page.exam.groupAxis}
-                  currentValue={route.page.group.publicPath}
-                  options={route.groupOptions}
-                />
-              ) : null}
-            </TryoutCatalogChoices>
-          ),
-          home: HOME_TARGET,
-          homeLabel: route.labels.home,
-          items: [
-            {
-              label: route.labels.tryOut,
-              menuLabel: route.labels.tryOutShort,
-              target: Option.getOrUndefined(
-                getTryoutCrumbTarget(route.countryPath)
-              ),
-            },
-            {
-              label: route.examCrumb.label,
-              target:
-                route.examCrumb.path === undefined
-                  ? undefined
-                  : Option.getOrUndefined(
-                      getTryoutCrumbTarget(route.examCrumb.path)
-                    ),
-            },
-            { label: route.page.track.title },
-          ],
-          title: route.page.track.title,
-        }}
+      <TryoutTrailHeader
+        labels={route.labels}
+        title={route.page.track.title}
+        trail={route.trail}
       />
       <TryoutSetTable
         bootstrap={route.list}

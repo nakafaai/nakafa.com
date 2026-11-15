@@ -41,8 +41,6 @@ type TryoutRouteHead = typeof TryoutRouteHeadSchema.Type;
 /** The catalog labels that one try-out page names, read in its locale. */
 const TryoutRouteLabelsSchema = Schema.Struct({
   home: Schema.String,
-  tryOut: Schema.String,
-  tryOutShort: Schema.String,
 });
 type TryoutRouteLabels = typeof TryoutRouteLabelsSchema.Type;
 
@@ -186,8 +184,6 @@ export const readTryoutRouteLabels = Effect.fn("www.tryout.route.readLabels")(
     );
     return {
       home: tCommon("home"),
-      tryOut: tCommon("try-out"),
-      tryOutShort: tCommon("try-out-short"),
     } satisfies TryoutRouteLabels;
   }
 );

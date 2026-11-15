@@ -1,15 +1,7 @@
-import type { Ref } from "@confect/core";
-import type tryouts from "@repo/backend/confect/_generated/refs/tryouts";
 import type { Locale } from "@repo/internationalization/src/locale";
 import { readServerTranslator } from "@repo/internationalization/src/translator";
 import { Array as Arr, Effect, Option } from "effect";
-import {
-  buildTryoutCountryOptions,
-  buildTryoutExamOptions,
-  buildTryoutGroupOptions,
-  offersGroupChoice,
-  readLocaleCountry,
-} from "@/components/tryout/catalog/options";
+import { readLocaleCountry } from "@/components/tryout/catalog/options";
 import {
   readTryoutCountryPage,
   readTryoutGroupPage,
@@ -25,6 +17,10 @@ import {
 } from "@/components/tryout/route/metadata.server";
 import { getTryoutPublicPath } from "@/components/tryout/route/path";
 import type { TrackListRequestSchema } from "@/components/tryout/route/search";
+import {
+  buildCountryTrail,
+  buildTryoutTrail,
+} from "@/components/tryout/route/trail";
 import { serverHandler } from "@/lib/server/fn";
 import {
   getTryoutCountryPageArtwork,
@@ -70,7 +66,7 @@ export const readTryoutHubRoute = Effect.fn("www.tryout.route.readHub")(
 export const readTryoutCountryRoute = Effect.fn("www.tryout.route.readCountry")(
   function* (input: { readonly country: string; readonly locale: Locale }) {
     const countryPath = getTryoutPublicPath({ country: input.country });
-    const [page, hub, head, labels, tTryouts] = yield* Effect.all(
+    const [page, hub, head, labels] = yield* Effect.all(
       [
         readTryoutCountryPage(input.locale, countryPath),
         readTryoutHubPage(input.locale),
@@ -80,9 +76,6 @@ export const readTryoutCountryRoute = Effect.fn("www.tryout.route.readCountry")(
           publicPath: countryPath,
         }),
         readTryoutRouteLabels(input.locale),
-        Effect.promise(() =>
-          readServerTranslator({ locale: input.locale, namespace: "Tryouts" })
-        ),
       ],
       { concurrency: "unbounded" }
     );
@@ -93,8 +86,6 @@ export const readTryoutCountryRoute = Effect.fn("www.tryout.route.readCountry")(
       withExamArtwork(input.locale, page.value.country.countryKey, exam)
     );
     return {
-      countryOptions: buildTryoutCountryOptions(hub.countries),
-      countryPath,
       exams,
       head: {
         ...head.value,
@@ -107,47 +98,13 @@ export const readTryoutCountryRoute = Effect.fn("www.tryout.route.readCountry")(
       },
       kind: "found" as const,
       labels,
-      selectorLabel: tTryouts("country-selector-label"),
+      title: page.value.country.title,
+      trail: buildCountryTrail(hub.countries, countryPath),
     };
   }
 );
 
-/**
- * The header of a group or a track page: the group choice, beside the exam
- * choice, when the exam offers one, and the exam's name in the breadcrumb.
- * Without a choice the crumb names the group as well, as in SNBT 2027. The
- * crumb links to the group's track cards only when the group has some.
- */
-function readCatalogHeader(
-  page: Pick<
-    NonNullable<Ref.Returns<typeof tryouts.queries.catalog.getGroupPage>>,
-    "exam" | "group" | "groups"
-  >
-) {
-  const offered = offersGroupChoice(page.exam.groupAxis, page.groups);
-  const own = Arr.findFirst(
-    page.groups,
-    (group) => group.publicPath === page.group.publicPath
-  );
-  const cards = Option.filter(
-    own,
-    (group) => group.entryPath === group.publicPath
-  );
-  return {
-    examCrumb: {
-      label: offered
-        ? page.exam.title
-        : `${page.exam.title} ${page.group.title}`,
-      ...Option.match(cards, {
-        onNone: () => ({}),
-        onSome: (group) => ({ path: group.publicPath }),
-      }),
-    },
-    groupOptions: offered ? buildTryoutGroupOptions(page.groups) : [],
-  };
-}
-
-/** A group page: its tracks, and the exam and group selectors of its header. */
+/** A group page: its tracks, and the trail of its header. */
 export const readTryoutGroupRoute = Effect.fn("www.tryout.route.readGroup")(
   function* (input: {
     readonly country: string;
@@ -161,10 +118,11 @@ export const readTryoutGroupRoute = Effect.fn("www.tryout.route.readGroup")(
       group: input.group,
     });
     const countryPath = getTryoutPublicPath({ country: input.country });
-    const [page, countryPage, head, labels, tTryouts] = yield* Effect.all(
+    const [page, countryPage, hub, head, labels, tTryouts] = yield* Effect.all(
       [
         readTryoutGroupPage(input.locale, groupPath),
         readTryoutCountryPage(input.locale, countryPath),
+        readTryoutHubPage(input.locale),
         readTryoutRouteHead({
           kind: "group",
           locale: input.locale,
@@ -190,24 +148,26 @@ export const readTryoutGroupRoute = Effect.fn("www.tryout.route.readGroup")(
     }
     // A group's own name is a year, a grade or a Kolleg, so the page names its exam too.
     const name = `${page.exam.title} ${page.group.title}`;
-    const header = readCatalogHeader(page);
     return {
-      countryPath,
-      examOptions: buildTryoutExamOptions(countryPage.value.exams),
-      groupOptions: header.groupOptions,
       head: {
         ...head.value,
         title: tTryouts("search-title", { name }),
       },
       kind: "found" as const,
       labels,
-      name: header.examCrumb.label,
       page,
+      title: name,
+      trail: buildTryoutTrail({
+        countries: hub.countries,
+        countryPath,
+        exams: countryPage.value.exams,
+        page,
+      }),
     };
   }
 );
 
-/** A track page: its title and the exam and group selectors. Its set list is read after it. */
+/** A track page: its title and the trail of its header, with its group's tracks. Its set list is read after it. */
 export const readTryoutTrackRoute = Effect.fn("www.tryout.route.readTrack")(
   function* (input: {
     readonly country: string;
@@ -223,24 +183,32 @@ export const readTryoutTrackRoute = Effect.fn("www.tryout.route.readTrack")(
       group: input.group,
       track: input.track,
     });
+    const groupPath = getTryoutPublicPath({
+      country: input.country,
+      exam: input.exam,
+      group: input.group,
+    });
     const countryPath = getTryoutPublicPath({ country: input.country });
-    const [page, countryPage, head, labels, tTryouts] = yield* Effect.all(
-      [
-        readTryoutTrackPage(input.locale, trackPath),
-        readTryoutCountryPage(input.locale, countryPath),
-        readTryoutRouteHead({
-          kind: "track",
-          locale: input.locale,
-          publicPath: trackPath,
-        }),
-        readTryoutRouteLabels(input.locale),
-        Effect.promise(() =>
-          readServerTranslator({ locale: input.locale, namespace: "Tryouts" })
-        ),
-      ],
-      { concurrency: "unbounded" }
-    );
-    if (!page || Option.isNone(countryPage) || Option.isNone(head)) {
+    const [page, group, countryPage, hub, head, labels, tTryouts] =
+      yield* Effect.all(
+        [
+          readTryoutTrackPage(input.locale, trackPath),
+          readTryoutGroupPage(input.locale, groupPath),
+          readTryoutCountryPage(input.locale, countryPath),
+          readTryoutHubPage(input.locale),
+          readTryoutRouteHead({
+            kind: "track",
+            locale: input.locale,
+            publicPath: trackPath,
+          }),
+          readTryoutRouteLabels(input.locale),
+          Effect.promise(() =>
+            readServerTranslator({ locale: input.locale, namespace: "Tryouts" })
+          ),
+        ],
+        { concurrency: "unbounded" }
+      );
+    if (!(page && group) || Option.isNone(countryPage) || Option.isNone(head)) {
       return { kind: "notFound" as const };
     }
     // The set list needs the track's keys, so it follows the page here, on the
@@ -256,12 +224,7 @@ export const readTryoutTrackRoute = Effect.fn("www.tryout.route.readTrack")(
     });
     // A track's own name is a subject or a test, so the page names its exam and group too.
     const exam = `${page.exam.title} ${page.group.title} ${page.track.title}`;
-    const header = readCatalogHeader(page);
     return {
-      countryPath,
-      examCrumb: header.examCrumb,
-      examOptions: buildTryoutExamOptions(countryPage.value.exams),
-      groupOptions: header.groupOptions,
       head: {
         ...head.value,
         description:
@@ -280,6 +243,13 @@ export const readTryoutTrackRoute = Effect.fn("www.tryout.route.readTrack")(
       labels,
       list,
       page,
+      trail: buildTryoutTrail({
+        countries: hub.countries,
+        countryPath,
+        exams: countryPage.value.exams,
+        page: { ...page, tracks: group.tracks },
+        trackPath,
+      }),
     };
   }
 );
