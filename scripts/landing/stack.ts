@@ -65,6 +65,8 @@ export const Rider = Schema.Struct({
   pull: Pull,
   depth: Schema.Int,
   stack: Schema.Int,
+  /** The head of the member below it, empty for the one on main. */
+  below: Schema.String,
 });
 export type Rider = typeof Rider.Type;
 
@@ -91,4 +93,8 @@ export const ridersOf = (stack: Arr.NonEmptyReadonlyArray<Pull>) =>
     pull,
     depth,
     stack: Arr.headNonEmpty(stack).number,
+    below: Option.match(Arr.get(stack, depth - 1), {
+      onNone: () => "",
+      onSome: (member) => member.headRefOid,
+    }),
   }));
