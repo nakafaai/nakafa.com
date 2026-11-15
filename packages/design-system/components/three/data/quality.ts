@@ -31,13 +31,6 @@ export const GRAPH_POINT_SEGMENTS = 16;
 export const GRAPH_ARROW_SEGMENTS = 24;
 
 /**
- * Caps generated boundary guide density for inequality surfaces.
- *
- * @see https://threejs.org/docs/pages/Line2.html
- */
-export const GRAPH_BOUNDARY_SEGMENTS = 96;
-
-/**
  * Samples sparse curves smoothly and keeps dense content near its source detail.
  *
  * `Curve.getPoints(divisions)` returns `divisions + 1` points, so dense

@@ -3,8 +3,8 @@ import { describe, expect, it } from "@effect/vitest";
 import { Array as Arr, Effect, Layer, Ref } from "effect";
 import { parseProofArguments, runProof } from "#scripts/proof/main";
 import {
+  GATE_JOB,
   github,
-  JOB,
   MAIN,
   PROCESS_TIMEOUT,
   RUN,
@@ -61,8 +61,11 @@ describe("proof command line", () => {
             ...RUN,
             jobs: [
               {
-                ...JOB,
-                steps: [step("Gate static", 5, 12, "failure"), ...JOB.steps],
+                ...GATE_JOB,
+                steps: [
+                  step("Gate static", 5, 12, "failure"),
+                  ...GATE_JOB.steps,
+                ],
               },
             ],
           }),
