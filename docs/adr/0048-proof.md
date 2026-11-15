@@ -140,4 +140,3 @@ After a stack member lands as one squashed commit, GitHub rebases the member abo
 
 1. **The train merges it.** When GitHub reports a stack member conflicting at its proven head, the train builds the member's merge with main itself (`scripts/landing/merge.ts`): the member's own tree when it already is main plus the member's proven change, otherwise the tree `git merge-tree` builds. It pushes that merge to the member's branch with two parents, the member's head and main, and lands it once GitHub reports it mergeable.
 2. **Only the proven tree.** Either tree serves only when it changes main exactly as the proof changed the member below it, by the same comparison the replay check uses. A merge that conflicts, repeats a block or loses a change both sides made is never pushed; the member waits for a proof of its own.
-
