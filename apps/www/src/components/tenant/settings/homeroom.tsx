@@ -2,19 +2,16 @@ import { useMutation } from "@confect/react";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Button } from "@repo/design-system/components/ui/button";
-import { CardContent } from "@repo/design-system/components/ui/card";
 import {
   Field,
   FieldGroup,
   FieldLabel,
 } from "@repo/design-system/components/ui/field";
-import { startTransition, useId, useState } from "react";
+import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
+import { Array as Arr, Option } from "effect";
+import { startTransition, use, useId, useState } from "react";
 import { useTranslations } from "use-intl";
-import {
-  CardSection,
-  CardSectionActions,
-  CardSectionFooter,
-} from "@/components/shared/card/section";
+import { CohortOverviewContext } from "@/components/tenant/settings/cohort/holds";
 import {
   assignHomeroomChange,
   unassignHomeroomChange,
@@ -27,25 +24,20 @@ import type { CohortDetail } from "@/components/tenant/settings/state";
 import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 
 /**
- * The homeroom teacher of a cohort, as one card of the settings column above the cohort's
- * students. While the cohort has none, the card picks a teacher and saves them; once it has
- * one, the card shows the teacher and removes them. Remove and Save stay in the footer in every
- * state with the same words, each disabled while it has nothing to do, so the action a click
- * lands on never turns into another while the change shows at once. An archived cohort shows its
- * teacher and offers no change. Before the cohort is read, the card is its frame: the title, the
- * field's label, an empty line in the field's place and both actions disabled. The teacher's line
- * and the picker take one height, so nothing below moves when the cohort answers.
+ * The dialog of a cohort's homeroom teacher, which the cohort's row menu opens, so the cohort's page holds its students'
+ * list alone. It shows the teacher, and its one action removes them, or, while the cohort has none, picks a teacher and
+ * saves them; an archived cohort shows its teacher and offers no change. The change shows at once.
  */
-export function SchoolHomeroomCard({
+export function HomeroomDialog({
   cohort,
   slug,
 }: {
-  /** The cohort, or undefined while it is read. */
-  cohort: CohortDetail | undefined;
+  cohort: Pick<CohortDetail, "id" | "status">;
   slug: TenantSlug;
 }) {
   const t = useTranslations("SchoolSettings");
   const id = useId();
+  const [open, setOpen] = useState(true);
   const assign = useMutation(tenancy.assignments.assign).withOptimisticUpdate(
     assignHomeroomChange
   );
@@ -53,90 +45,106 @@ export function SchoolHomeroomCard({
     tenancy.assignments.unassign
   ).withOptimisticUpdate(unassignHomeroomChange);
   const [teacherId, setTeacherId] = useState<PersonId | undefined>(undefined);
-  const isArchived = cohort?.status === "archived";
-  const homeroom = cohort?.homeroom ?? null;
+  const isArchived = cohort.status === "archived";
+  // The cohorts table that opens this dialog holds every cohort's overview, its homeroom teacher among them.
+  const homeroom = Option.getOrNull(
+    Option.flatMapNullishOr(
+      Arr.findFirst(
+        use(CohortOverviewContext) ?? [],
+        (row) => row.id === cohort.id
+      ),
+      (row) => row.homeroom
+    )
+  );
 
   const save = () => {
-    if (cohort === undefined || teacherId === undefined) {
+    if (teacherId === undefined) {
       return;
     }
+    setOpen(false);
     startTransition(() =>
       runSchoolWrite(
         schoolCall(() =>
           assign({ cohortId: cohort.id, personId: teacherId, slug })
-        ),
-        { onSaved: () => setTeacherId(undefined) }
+        )
       )
     );
   };
 
   const remove = () => {
-    if (cohort === undefined) {
-      return;
-    }
+    setOpen(false);
     startTransition(() =>
       runSchoolWrite(schoolCall(() => unassign({ cohortId: cohort.id, slug })))
     );
   };
 
   return (
-    <CardSection
-      description={t("homeroom-description")}
+    <ResponsiveDialog
+      action={
+        isArchived ? undefined : (
+          <HomeroomAction
+            canSave={teacherId !== undefined}
+            onRemove={remove}
+            onSave={save}
+            teacherSet={homeroom !== null}
+          />
+        )
+      }
+      description={t(isArchived ? "homeroom-archived" : "homeroom-description")}
+      open={open}
+      setOpen={setOpen}
       title={t("homeroom-title")}
     >
-      <CardContent>
-        <FieldGroup>
-          <Field>
-            <FieldLabel htmlFor={`${id}-teacher`}>
-              {t("homeroom-teacher")}
-            </FieldLabel>
-            {cohort !== undefined && homeroom === null && !isArchived ? (
-              <SchoolTeacherPicker
-                cohortId={cohort.id}
-                id={`${id}-teacher`}
-                onChoose={setTeacherId}
-                personId={teacherId}
-              />
-            ) : (
-              <p className="flex min-h-9 items-center" id={`${id}-teacher`}>
-                {cohort === undefined
-                  ? null
-                  : (homeroom?.name ?? t("homeroom-none"))}
-              </p>
-            )}
-          </Field>
-        </FieldGroup>
-      </CardContent>
-      <CardSectionFooter
-        hint={t(isArchived ? "homeroom-archived" : "homeroom-footer")}
-      >
-        {isArchived ? null : (
-          <CardSectionActions>
-            <Button
-              disabled={homeroom === null}
-              onClick={remove}
-              size="sm"
-              type="button"
-              variant="outline"
-            >
-              {t("homeroom-remove")}
-            </Button>
-            <Button
-              disabled={
-                cohort === undefined ||
-                homeroom !== null ||
-                teacherId === undefined
-              }
-              onClick={save}
-              size="sm"
-              type="button"
-              variant="outline"
-            >
-              {t("homeroom-save")}
-            </Button>
-          </CardSectionActions>
-        )}
-      </CardSectionFooter>
-    </CardSection>
+      <FieldGroup>
+        <Field>
+          <FieldLabel htmlFor={`${id}-teacher`}>
+            {t("homeroom-teacher")}
+          </FieldLabel>
+          {homeroom === null && !isArchived ? (
+            <SchoolTeacherPicker
+              cohortId={cohort.id}
+              id={`${id}-teacher`}
+              onChoose={setTeacherId}
+              personId={teacherId}
+            />
+          ) : (
+            <p className="flex min-h-9 items-center" id={`${id}-teacher`}>
+              {homeroom ?? t("homeroom-none")}
+            </p>
+          )}
+        </Field>
+      </FieldGroup>
+    </ResponsiveDialog>
+  );
+}
+
+/**
+ * The homeroom dialog's one action: Remove while the cohort has a teacher, or Save, which waits until a teacher is
+ * chosen.
+ */
+function HomeroomAction({
+  canSave,
+  onRemove,
+  onSave,
+  teacherSet,
+}: {
+  canSave: boolean;
+  onRemove: () => void;
+  onSave: () => void;
+  /** Whether the cohort has a homeroom teacher now. */
+  teacherSet: boolean;
+}) {
+  const t = useTranslations("SchoolSettings");
+  if (teacherSet) {
+    return (
+      <Button onClick={onRemove} type="button" variant="destructive">
+        {t("homeroom-remove")}
+      </Button>
+    );
+  }
+  return (
+    <Button disabled={!canSave} onClick={onSave} type="button">
+      {t("homeroom-save")}
+    </Button>
   );
 }

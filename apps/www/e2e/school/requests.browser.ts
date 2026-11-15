@@ -65,6 +65,8 @@ test("a verified parent asks the school office, Staff approves, and the parent r
   await child.getByRole("button", { name: "Check" }).click();
   await expect(child).toHaveAttribute("data-child", "verified");
 
+  // The child's pane is one list, its grades or its requests; Ask the school stands in its footer beside the requests.
+  await child.getByRole("button", { exact: true, name: "Requests" }).click();
   const ask = child.getByRole("button", { name: "Ask the school" });
   await waitUntilTakenOver(ask);
   await ask.click();

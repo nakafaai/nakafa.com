@@ -1,9 +1,10 @@
-import type { Ref } from "@confect/core";
 import { QueryResult, useMutation, useQuery } from "@confect/react";
 import {
   Building03Icon,
+  ChartBarLineIcon,
   CheckmarkBadge01Icon,
   IdentityCardIcon,
+  MailSend01Icon,
   StudentIcon,
   UserRemove01Icon,
   ViewIcon,
@@ -17,7 +18,6 @@ import {
   FieldError,
   FieldLabel,
 } from "@repo/design-system/components/ui/field";
-import { PopupHold } from "@repo/design-system/components/ui/hold";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Input } from "@repo/design-system/components/ui/input";
 import {
@@ -27,9 +27,10 @@ import {
 import { Array as Arr, Option } from "effect";
 import { useId, useState, useTransition } from "react";
 import { useTranslations } from "use-intl";
-import { ListCard, PageList } from "@/components/shared/page/body";
+import { PageList } from "@/components/shared/page/body";
 import {
   PaneBody,
+  PaneFill,
   PaneFooter,
   PaneHeader,
   PaneOpen,
@@ -44,10 +45,11 @@ import {
 import { reloadPage } from "@/components/shared/reload";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
-import { RowCopy, RowItems, RowOpen } from "@/components/shared/table/menu";
+import { RowItems, RowOpen } from "@/components/shared/table/menu";
 import { TableStatus } from "@/components/shared/table/status";
 import { TableText } from "@/components/shared/table/text";
 import { TableFiltersProvider } from "@/components/shared/table/toolbar";
+import { TableViews } from "@/components/shared/table/views";
 import { EmptyState } from "@/components/state/empty";
 import { LoadFailure } from "@/components/state/failure";
 import { EmptyNina } from "@/components/state/nina";
@@ -56,14 +58,15 @@ import {
   type ChildItem,
   withdrawChange,
 } from "@/components/tenant/guardian/change";
-import { ParentRequests } from "@/components/tenant/guardian/requests";
+import { GuardianGrades } from "@/components/tenant/guardian/grades";
+import {
+  AskDialog,
+  ParentRequests,
+} from "@/components/tenant/guardian/requests";
 import { LINK_STATUS_LOOKS } from "@/components/tenant/guardian/status";
 import { SchoolHeader } from "@/components/tenant/header";
 import { isLostAccess } from "@/components/tenant/refusal";
 import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
-
-/** One released grade of a child, as the parent home shows it. */
-type ChildGrade = Ref.Returns<typeof guardians.family.grades>[number];
 
 /** The columns of the children table. */
 const childColumns = tableColumns<ChildItem>();
@@ -214,12 +217,7 @@ function GuardianChild({ items }: { items: readonly ChildItem[] }) {
           </>
         ) : null}
         {found.status === "verified" ? (
-          <>
-            <GuardianGrades child={found} />
-            <PaneBody>
-              <ParentRequests linkId={found.linkId} />
-            </PaneBody>
-          </>
+          <GuardianVerified child={found} />
         ) : null}
         {found.status !== "pending" && found.status !== "verified" ? (
           <PaneBody>
@@ -296,42 +294,48 @@ function GuardianConfirm({ child }: { child: ChildItem }) {
   );
 }
 
-/** The released grades of a child of a verified link, and the way to withdraw consent. */
-function GuardianGrades({ child }: { child: ChildItem }) {
-  const { slug } = useTenant();
-  const grades = useQuery(guardians.family.grades, {
-    linkId: child.linkId,
-    slug,
-  });
-  const narratives = useQuery(guardians.family.narratives, {
-    linkId: child.linkId,
-    slug,
-  });
+/**
+ * A child of a verified link: one list, the released grades or what the parent asked the school, one view at a time,
+ * so the pane's body is one table in its card. The footer asks the school while the requests show, and withdraws
+ * consent.
+ */
+function GuardianVerified({ child }: { child: ChildItem }) {
+  const t = useTranslations("SchoolGuardians");
+  const [view, setView] = useState<"grades" | "requests">("grades");
 
   return (
     <>
-      <PaneBody>
-        {QueryResult.isFailure(grades) ? (
-          <LoadFailure onRetry={reloadPage} />
-        ) : null}
-        {QueryResult.isSuccess(grades) ? (
-          <GuardianGradeTable grades={grades.value} />
-        ) : null}
-        {QueryResult.isLoading(grades) ? <PopupHold /> : null}
-        {QueryResult.isSuccess(narratives)
-          ? Arr.map(narratives.value, (narrative) => (
-              <div className="flex flex-col gap-1" key={narrative.id}>
-                <p className="text-sm font-medium" dir="auto">
-                  {narrative.className}
-                </p>
-                <p className="text-sm whitespace-pre-wrap" dir="auto">
-                  {narrative.text}
-                </p>
-              </div>
-            ))
-          : null}
-      </PaneBody>
+      <TableFiltersProvider>
+        <PaneFill
+          views={
+            <TableViews
+              label={t("child-views")}
+              onChoose={setView}
+              view={view}
+              views={[
+                {
+                  icon: ChartBarLineIcon,
+                  label: t("view-grades"),
+                  value: "grades",
+                },
+                {
+                  icon: MailSend01Icon,
+                  label: t("view-requests"),
+                  value: "requests",
+                },
+              ]}
+            />
+          }
+        >
+          {view === "grades" ? (
+            <GuardianGrades linkId={child.linkId} />
+          ) : (
+            <ParentRequests linkId={child.linkId} />
+          )}
+        </PaneFill>
+      </TableFiltersProvider>
       <PaneFooter>
+        {view === "requests" ? <AskDialog linkId={child.linkId} /> : null}
         <GuardianWithdraw child={child} />
       </PaneFooter>
     </>
@@ -386,45 +390,5 @@ function GuardianWithdraw({ child }: { child: ChildItem }) {
         </ResponsiveDialogSubject>
       </ResponsiveDialog>
     </>
-  );
-}
-
-/** The columns of a child's grades. */
-const gradeColumns = tableColumns<ChildGrade>();
-
-/** The child's released grades in a plain table, or one sentence while none is released. */
-function GuardianGradeTable({ grades }: { grades: readonly ChildGrade[] }) {
-  const t = useTranslations("SchoolGuardians");
-  if (Arr.isReadonlyArrayEmpty(grades)) {
-    return <p className="text-muted-foreground text-sm">{t("grades-empty")}</p>;
-  }
-  return (
-    <TableFiltersProvider>
-      <ListCard>
-        <DataTable
-          columns={[
-            gradeColumns.text((grade) => grade.className, {
-              cell: (info) => <span dir="auto">{info.getValue()}</span>,
-              header: t("grade-class"),
-              id: "class",
-            }),
-            gradeColumns.number((grade) => grade.value, {
-              header: t("grade-value"),
-              id: "value",
-            }),
-            gradeColumns.text(
-              (grade) => grade.band ?? t(`kktp-${grade.kktp}`),
-              { header: t("grade-note"), id: "note" }
-            ),
-            gradeColumns.menu((info) => (
-              <RowCopy value={info.row.original.className} />
-            )),
-          ]}
-          data={grades}
-          plain
-          rowId={(grade) => grade.id}
-        />
-      </ListCard>
-    </TableFiltersProvider>
   );
 }

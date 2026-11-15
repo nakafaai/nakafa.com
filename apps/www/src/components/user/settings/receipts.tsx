@@ -158,12 +158,10 @@ function ReceiptsTable({ payments }: { payments: readonly Receipt[] }) {
   ];
 
   return (
-    <div className="bg-card flex min-h-0 flex-1 flex-col">
-      <DataTable
-        columns={columns}
-        data={payments}
-        rowId={(payment) => payment.id}
-      />
-    </div>
+    <DataTable
+      columns={columns}
+      data={payments}
+      rowId={(payment) => payment.id}
+    />
   );
 }

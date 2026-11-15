@@ -1,6 +1,7 @@
 import { expect, type Page, test } from "@playwright/test";
 import { Effect, Option, String as Str } from "effect";
 import { saved, trackChanges } from "@/e2e/support/changes";
+import { assignHomeroom } from "@/e2e/support/homeroom";
 import {
   createSchool,
   grantStudent,
@@ -66,11 +67,8 @@ test("a homeroom teacher writes and hands in a report card, the Owner approves i
   await placeDialog.getByRole("combobox", { name: "Student" }).click();
   await settings.getByRole("option", { name: "Acceptance Learner" }).click();
   await placeDialog.getByRole("button", { name: "Add student" }).click();
-  await settings.getByRole("combobox", { name: "Teacher" }).click();
-  await settings
-    .getByRole("option", { name: "Acceptance Class Teacher" })
-    .click();
-  await settings.getByRole("button", { exact: true, name: "Save" }).click();
+  await settings.goto(address("/settings/cohorts"));
+  await assignHomeroom(settings, "X-1", "Acceptance Class Teacher");
 
   // The subject teacher releases the learner's grade, which the report shows.
   const page = await teacher.newPage();
