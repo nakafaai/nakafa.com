@@ -1,6 +1,7 @@
 import {
-  BlockMath,
   InlineMath,
+  MathBlockFrame,
+  MathMarkup,
 } from "@repo/design-system/components/markdown/math";
 import {
   MarkdownCodeBlock,
@@ -50,11 +51,9 @@ export const reactCodeComponents: ReactMarkdownComponents = {
 
     if (language === "math") {
       return (
-        <BlockMath
-          className={blockGapVariants({ className })}
-          data-nakafa="math-block"
-          math={code}
-        />
+        <MathBlockFrame className={blockGapVariants({ className })}>
+          <MathMarkup displayMode={true} math={code} />
+        </MathBlockFrame>
       );
     }
 

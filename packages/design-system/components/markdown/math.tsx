@@ -1,63 +1,44 @@
-import { DrawnInlineMath } from "@repo/design-system/components/markdown/drawn";
-import { MathFontPreload } from "@repo/design-system/components/markdown/fonts";
-import { readMathFonts } from "@repo/design-system/lib/markdown/fonts";
-import { closeMathCopyToSnippets } from "@repo/design-system/lib/markdown/snippet";
 import {
-  MATH_ERROR_COLOR,
+  DrawnBlockMath,
+  DrawnInlineMath,
+} from "@repo/design-system/components/markdown/drawn";
+import { MathFontPreload } from "@repo/design-system/components/markdown/fonts";
+import { drawMath } from "@repo/design-system/lib/markdown/draw";
+import { readMathFonts } from "@repo/design-system/lib/markdown/fonts";
+import {
   mathBlockVariants,
   mathScrollVariants,
 } from "@repo/design-system/lib/prose";
 import { cn } from "cn";
-import katex from "katex";
-import type { HTMLAttributes } from "react";
+import type { HTMLAttributes, ReactNode } from "react";
 
-type MathComponentProps =
+/** A formula as MDX writes it: its TeX in `math` or as its text. */
+export type MathComponentProps =
   | {
       readonly children?: never;
-      readonly errorColor?: string;
       readonly math: string;
     }
   | {
       readonly children: string;
-      readonly errorColor?: string;
       readonly math?: never;
     };
 
-type KatexMarkupProps = MathComponentProps & {
+type MathMarkupProps = MathComponentProps & {
   readonly displayMode: boolean;
 };
 
-function KatexMarkup({
-  children,
-  displayMode,
-  errorColor = MATH_ERROR_COLOR,
-  math,
-}: KatexMarkupProps) {
-  const html = katex.renderToString(math ?? children, {
-    displayMode,
-    errorColor,
-    throwOnError: false,
-    trust: false,
-  });
-  const fonts = readMathFonts(html);
-
-  if (displayMode) {
-    return (
-      <>
-        <MathFontPreload fonts={fonts} />
-        <div
-          // biome-ignore lint/security/noDangerouslySetInnerHtml: KaTeX generates safe HTML while trust remains disabled.
-          dangerouslySetInnerHTML={{ __html: closeMathCopyToSnippets(html) }}
-          data-testid="katex"
-        />
-      </>
-    );
-  }
+/** One formula's KaTeX markup with the faces it draws with, outside any card. */
+export function MathMarkup({ children, displayMode, math }: MathMarkupProps) {
+  const html = drawMath(math ?? children, displayMode);
 
   return (
     <>
-      <MathFontPreload fonts={fonts} />
-      <DrawnInlineMath html={html} />
+      <MathFontPreload fonts={readMathFonts(html)} />
+      {displayMode ? (
+        <DrawnBlockMath html={html} />
+      ) : (
+        <DrawnInlineMath html={html} />
+      )}
     </>
   );
 }
@@ -97,10 +78,22 @@ export function MathContainer({
  * MathContainer uses the data-math-block presence marker to style adjacent
  * rows without coupling the stack to implementation-specific class names.
  */
-export function BlockMath({
+export function BlockMath(props: MathComponentProps) {
+  return (
+    <MathBlockFrame>
+      <MathMarkup displayMode={true} {...props} />
+    </MathBlockFrame>
+  );
+}
+
+/** The card of one block formula, around the formula it scrolls. */
+export function MathBlockFrame({
+  children,
   className,
-  ...props
-}: MathComponentProps & { className?: string }) {
+}: {
+  readonly children: ReactNode;
+  readonly className?: string | undefined;
+}) {
   // Empty string keeps this as a presence marker instead of data-math-block="true".
   return (
     <div
@@ -109,7 +102,7 @@ export function BlockMath({
       data-math-block=""
     >
       <div className={mathScrollVariants()} data-slot="math-scroll">
-        <KatexMarkup displayMode={true} {...props} />
+        {children}
       </div>
     </div>
   );
@@ -117,5 +110,5 @@ export function BlockMath({
 
 /** Renders one inline KaTeX expression, drawn through `DrawnInlineMath`. */
 export function InlineMath(props: MathComponentProps) {
-  return <KatexMarkup displayMode={false} {...props} />;
+  return <MathMarkup displayMode={false} {...props} />;
 }

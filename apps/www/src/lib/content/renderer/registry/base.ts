@@ -1,9 +1,5 @@
 import { AgentContext } from "@repo/design-system/components/markdown/agent";
-import {
-  BlockMath,
-  InlineMath,
-  MathContainer,
-} from "@repo/design-system/components/markdown/math";
+import { MathContainer } from "@repo/design-system/components/markdown/math";
 import {
   ContentBlock,
   ContentGrid,
@@ -14,6 +10,10 @@ import { baseComponentNames } from "@repo/design-system/lib/markdown/names";
 import { MermaidMdx, Youtube } from "@/lib/content/renderer/client/base/media";
 import { MathVisual } from "@/lib/content/renderer/client/base/visual/math";
 import { CodeBlockServer } from "@/lib/content/renderer/code.server";
+import {
+  BlockFormula,
+  InlineFormula,
+} from "@/lib/content/renderer/formula.server";
 import type { RendererImplementation } from "@/lib/content/renderer/selection";
 
 /** Statically registered implementations for signed base custom components. */
@@ -24,7 +24,7 @@ export const baseRenderers = [
   },
   {
     name: baseComponentNames.blockMath,
-    component: BlockMath,
+    component: BlockFormula,
   },
   {
     name: baseComponentNames.codeBlock,
@@ -48,7 +48,7 @@ export const baseRenderers = [
   },
   {
     name: baseComponentNames.inlineMath,
-    component: InlineMath,
+    component: InlineFormula,
   },
   {
     name: baseComponentNames.mathContainer,
