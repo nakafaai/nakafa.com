@@ -6,8 +6,9 @@ import type { Mark } from "@repo/mascot/nina/mark";
 import type { Options } from "@repo/mascot/nina/options";
 import type { Place } from "@repo/mascot/nina/point";
 import { armLeft, type Pose, REST } from "@repo/mascot/nina/pose";
-import { CASES, DIGESTS, digestOf } from "@repo/mascot/nina/test.fixture";
+import { CASES, digestOf, pinOf } from "@repo/mascot/nina/test.fixture";
 import { hitter, outlineOf } from "@repo/mascot/nina/test.hit";
+import { DIGESTS } from "@repo/mascot/nina/test.pin";
 import { rect, type Shape } from "@repo/mascot/shape";
 import {
   Array as Arr,
@@ -150,21 +151,25 @@ describe("the drawing of Nina", () => {
     );
   });
 
-  it("pins a different picture for every case", () => {
-    const digests = Arr.flatMap(Rec.values(DIGESTS), (digest) =>
-      digest.split(" ")
-    );
-    expect(Arr.dedupe(digests)).toHaveLength(digests.length);
-    expect(digests).toHaveLength(Arr.length(Arr.flatten(Rec.values(CASES))));
-  });
+  it.effect(
+    "draws a different picture for every case",
+    () =>
+      Effect.gen(function* () {
+        const digests = yield* Effect.forEach(
+          Arr.flatten(Rec.values(CASES)),
+          digestOf
+        );
+        expect(Arr.dedupe(digests)).toHaveLength(digests.length);
+      }),
+    DIGESTS_TIMEOUT
+  );
 
   it.effect(
     "draws what it drew when it was proven equal, for every act, face, lean and side",
     () =>
       Effect.gen(function* () {
-        for (const [id, options] of Rec.toEntries(CASES)) {
-          const digests = yield* Effect.forEach(options, digestOf);
-          expect(Arr.join(digests, " "), id).toBe(DIGESTS[id]);
+        for (const [id, group] of Rec.toEntries(CASES)) {
+          expect(yield* pinOf(group), id).toBe(DIGESTS[id]);
         }
       }),
     DIGESTS_TIMEOUT
