@@ -72,11 +72,12 @@ const verifyLoadedLesson = Effect.fn("NakafaE2E.verifyLoadedMathLesson")(
 
 /**
  * A lesson reached by a client navigation draws its formulas in the browser,
- * whole in its first frame, since the navigation loads KaTeX before it shows the
- * page. They are that lesson's own formulas, as a load of it draws them, never
- * the markup the last lesson left in the same places. The router moves the
- * address before it commits the next page, so the check reads the formulas once
- * the router has resolved the target, never the last lesson still on screen.
+ * each one whole as it mounts, since the navigation loads KaTeX before it shows
+ * the page. They are that lesson's own formulas, as a load of it draws them,
+ * never the markup the last lesson left in the same places. A move draws a long
+ * body a few blocks a frame (`ContentBlocks`), and the router moves the address
+ * before it commits the next page, so the check reads the formulas until the
+ * whole lesson stands, never the last lesson or the first blocks alone.
  */
 const verifyNavigatedLesson = Effect.fn("NakafaE2E.verifyNavigatedMathLesson")(
   function* (page: Page) {
@@ -87,33 +88,25 @@ const verifyNavigatedLesson = Effect.fn("NakafaE2E.verifyNavigatedMathLesson")(
       expect(target).toBeTruthy();
       expect(target).not.toBe(pinnedRoutes.inverse.en);
     });
-    yield* Effect.promise(async () => {
-      await previous.click();
-      await page.waitForFunction(
-        (path) => {
-          const router = window.__TSR_ROUTER__;
-          return (
-            router?.state.status === "idle" &&
-            router.state.resolvedLocation?.pathname === path
-          );
-        },
-        target,
-        { timeout: readinessTimeoutMilliseconds }
-      );
-      await expect(page.locator("article .katex").first()).toBeVisible();
-    });
-    const navigated = yield* Effect.promise(() => page.evaluate(drawnTex));
-    const empty = yield* Effect.promise(() => page.evaluate(emptyFormulas));
 
     const loaded = yield* Effect.promise(() => page.context().newPage());
-    yield* openLesson(loaded, new URL(page.url()).pathname);
+    yield* openLesson(loaded, target ?? "");
     const drawn = yield* Effect.promise(() => loaded.evaluate(drawnTex));
     yield* Effect.promise(() => loaded.close());
 
+    yield* Effect.promise(async () => {
+      await previous.click();
+      await expect
+        .poll(() => page.evaluate(drawnTex), {
+          timeout: readinessTimeoutMilliseconds,
+        })
+        .toEqual(drawn);
+    });
+    const empty = yield* Effect.promise(() => page.evaluate(emptyFormulas));
+
     yield* Effect.sync(() => {
+      expect(drawn.length).toBeGreaterThan(0);
       expect(empty).toBe(0);
-      expect(navigated.length).toBeGreaterThan(0);
-      expect(navigated).toEqual(drawn);
     });
   }
 );
