@@ -42,7 +42,7 @@ const ArtworkRoleSchema = Schema.Literals(["entity", "page"]);
 
 /** One reviewed design: its installed identity, its role, and the owner's source file for each locale. */
 const TryoutArtworkSchema = Schema.Struct({
-  drawn: Schema.Record(Schema.String, Schema.Int),
+  drawn: Schema.Record(Schema.String, Schema.String),
   identity: Schema.String,
   role: ArtworkRoleSchema,
 });
@@ -51,69 +51,81 @@ const TryoutArtworkSchema = Schema.Struct({
  * The owner's try-out designs, each recorded once with the one entity or page
  * it was drawn for, keyed by the stable keys of that entity, never its
  * localized slugs. `drawn` names the file of each locale in the owner's
- * source folder (`opengraph-nakafa/tryout/<number>.webp`). A country's design
- * is that country page's social image alone. An entity that has no design of
- * its own, such as the Aufnahmeprüfung or its Mathematics, borrows none: its
- * card draws the tile of its own icon.
+ * source folder, `opengraph-nakafa/<drawn>.webp`. A country's design is that
+ * country page's social image alone. An entity that has no design of its own
+ * borrows none: its card draws the tile of its own icon.
  */
 const TRYOUT_ARTWORK = {
   "country/germany": {
-    drawn: { en: 102 },
+    drawn: { en: "tryout/102" },
     identity: "tryout/germany/index",
     role: "page",
   },
   "country/indonesia": {
-    drawn: { en: 101 },
+    drawn: { en: "tryout/101" },
     identity: "tryout/indonesia/index",
     role: "page",
   },
+  // The Aufnahmeprüfung the catalog holds is TU Darmstadt's Studienkolleg's,
+  // so its card wears that Studienkolleg's mark, and its Mathematics test
+  // wears its own design. Their words are their names, which no locale translates.
+  "exam/germany/entrance-examination": {
+    drawn: { en: "tryout/139" },
+    identity: "tryout/germany/entrance-examination",
+    role: "entity",
+  },
   "exam/indonesia/snbt": {
-    drawn: { en: 88 },
+    drawn: { en: "tryout/88" },
     identity: "tryout/indonesia/snbt",
     role: "entity",
   },
   "exam/indonesia/tka": {
-    drawn: { en: 89 },
+    drawn: { en: "tryout/89" },
     identity: "tryout/indonesia/tka",
     role: "entity",
   },
   "section/indonesia/snbt/general-reasoning": {
-    drawn: { de: 39, en: 38, id: 37 },
+    drawn: { de: "tryout/39", en: "tryout/38", id: "tryout/37" },
     identity: "tryout/indonesia/snbt/general-reasoning",
     role: "page",
   },
   "section/indonesia/snbt/mathematical-reasoning": {
-    drawn: { de: 48, en: 47, id: 46 },
+    drawn: { de: "tryout/48", en: "tryout/47", id: "tryout/46" },
     identity: "tryout/indonesia/snbt/mathematical-reasoning",
     role: "page",
   },
   "section/indonesia/snbt/quantitative-knowledge": {
-    drawn: { de: 51, en: 50, id: 49 },
+    drawn: { de: "tryout/51", en: "tryout/50", id: "tryout/49" },
     identity: "tryout/indonesia/snbt/quantitative-knowledge",
     role: "page",
   },
+  "track/germany/entrance-examination/tu-darmstadt-mathematics": {
+    drawn: { en: "mata pelajaran/142" },
+    identity: "tryout/germany/entrance-examination/tu-darmstadt-mathematics",
+    role: "entity",
+  },
   "track/indonesia/snbt/2027": {
-    drawn: { en: 91 },
+    drawn: { en: "tryout/91" },
     identity: "tryout/indonesia/2027",
     role: "entity",
   },
   "track/indonesia/tka/advanced-mathematics": {
-    drawn: { de: 114, en: 113, id: 112 },
+    drawn: { de: "tryout/114", en: "tryout/113", id: "tryout/112" },
     identity: "tryout/indonesia/tka/advanced-mathematics",
     role: "entity",
   },
   "track/indonesia/tka/compulsory-mathematics": {
-    drawn: { de: 111, en: 110, id: 109 },
+    drawn: { de: "tryout/111", en: "tryout/110", id: "tryout/109" },
     identity: "tryout/indonesia/tka/compulsory-mathematics",
     role: "entity",
   },
   "track/indonesia/tka/english-language": {
-    drawn: { de: 105, en: 104, id: 103 },
+    drawn: { de: "tryout/105", en: "tryout/104", id: "tryout/103" },
     identity: "tryout/indonesia/tka/english-language",
     role: "entity",
   },
   "track/indonesia/tka/indonesian-language": {
-    drawn: { de: 108, en: 107, id: 106 },
+    drawn: { de: "tryout/108", en: "tryout/107", id: "tryout/106" },
     identity: "tryout/indonesia/tka/indonesian-language",
     role: "entity",
   },
