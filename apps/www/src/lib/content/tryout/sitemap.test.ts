@@ -2,7 +2,7 @@
 
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
-import { fixtureSetPath } from "@repo/backend/test/assessment/snapshot";
+import { fixtureSetPath } from "@repo/backend/test/assessment/catalog";
 import { client } from "@repo/backend/test/client";
 import { tryoutWorld } from "@repo/backend/test/tryout/world";
 import { Effect, Layer } from "effect";
@@ -81,12 +81,12 @@ describe("published try-out sitemap", () => {
         const set = fixtureSetPath("set-1", locale);
         expect(yield* readPublishedTryoutSitemapCount(locale)).toEqual({
           pageCount: 1,
-          routeCount: 6,
+          routeCount: 5,
         });
         expect(yield* readPublishedTryoutSitemap(locale, 0)).toEqual({
           paths: [
+            // The year holds one track, which a link to it opens: no page of its own.
             `try-out/indonesia-${locale}`,
-            `try-out/indonesia/snbt/2027-${locale}`,
             `try-out/indonesia/snbt/2027/utbk-${locale}`,
             set,
             `${set}/section-a`,

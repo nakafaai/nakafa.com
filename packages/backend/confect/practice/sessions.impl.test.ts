@@ -1,7 +1,7 @@
 import { assert, describe, expect, it } from "@effect/vitest";
 import practice from "@repo/backend/confect/_generated/refs/practice";
 import { seedAuthenticatedUser } from "@repo/backend/confect/test.helpers";
-import { FIXTURE_TRACK } from "@repo/backend/test/assessment/snapshot";
+import { FIXTURE_TRACK } from "@repo/backend/test/assessment/catalog";
 import { client } from "@repo/backend/test/client";
 import { TRYOUT_NOW, tryoutWorld } from "@repo/backend/test/tryout/world";
 import { Array as Arr, Effect } from "effect";

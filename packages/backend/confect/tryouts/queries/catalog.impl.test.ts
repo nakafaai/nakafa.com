@@ -163,6 +163,7 @@ describe("tryouts/queries/catalog", () => {
                 publicPath: "try-out/indonesia/snbt/2027/utbk/set-1-de",
               },
             ],
+            page: true,
             publicPath: SET_PATH,
             socialImageIdentity: null,
             title: "Try-out",
@@ -176,6 +177,7 @@ describe("tryouts/queries/catalog", () => {
           })
         ).toMatchObject({
           route: {
+            page: false,
             socialImageIdentity: { countryKey: "indonesia", examKey: "snbt" },
           },
         });
@@ -192,6 +194,7 @@ describe("tryouts/queries/catalog", () => {
               { appLocale: "id", publicPath: "try-out/indonesia/snbt/2027-id" },
               { appLocale: "de", publicPath: "try-out/indonesia/snbt/2027-de" },
             ],
+            page: false,
             socialImageIdentity: { countryKey: "indonesia", examKey: "snbt" },
           },
         });
@@ -209,6 +212,7 @@ describe("tryouts/queries/catalog", () => {
               { appLocale: "de", publicPath: "try-out/indonesia-de" },
             ],
             description: "Try-out Indonesia",
+            page: true,
           },
         });
         expect(

@@ -9,7 +9,7 @@ import { observeShell } from "@/e2e/support/shell";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import {
   arriveLocked,
-  openHub,
+  openCountry,
   openSetPane,
   openTrack,
   setHref,
@@ -175,7 +175,7 @@ export const runFirstSection = Effect.fn("NakafaE2E.runFirstSection")(
     yield* seedAnalyticsConsent(page, "denied");
     yield* signInLearner(page.context(), baseURL);
     yield* observeShell(page);
-    yield* openHub(page);
+    yield* openCountry(page);
     yield* pressDecline(page, hasTouch);
     yield* openTrack(page, hasTouch);
 

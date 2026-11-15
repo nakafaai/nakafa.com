@@ -2,8 +2,11 @@ import { releaseFail } from "@repo/backend/confect/contentRelease/error";
 import type { PublishedCatalog } from "@repo/backend/content/tryout/catalog";
 import {
   indexPublishedCatalog,
+  type PublishedCatalogIndex,
   readPublishedExamGroups,
+  readPublishedGroupEntry,
   readPublishedGroupParents,
+  readPublishedGroupTracks,
   readPublishedTrackParents,
   sortCatalogRows,
 } from "@repo/backend/content/tryout/hierarchy";
@@ -14,6 +17,46 @@ import {
   toPublicTrack,
 } from "@repo/backend/content/tryout/node";
 import { Array as Arr, Effect, Option } from "effect";
+
+type CatalogCountryRow = PublishedCatalogIndex["countries"][number];
+type CatalogGroupRow = PublishedCatalogIndex["groups"][number];
+
+/**
+ * Reads the exams of one country in order, each with its entry: where its card
+ * links, its first group's entry. An exam without a group is a broken snapshot.
+ */
+const readCountryExams = Effect.fn("tryouts.catalog.readCountryExams")(
+  function* (index: PublishedCatalogIndex, country: CatalogCountryRow) {
+    const exams = sortCatalogRows(
+      Arr.filter(index.exams, (row) => row.countryKey === country.countryKey)
+    );
+    return yield* Effect.forEach(exams, (exam) =>
+      Option.match(Arr.head(readPublishedExamGroups(index, exam)), {
+        onNone: () =>
+          releaseFail(
+            "CONTENT_RELEASE_INTEGRITY",
+            "A try-out exam has no group."
+          ),
+        onSome: (group) =>
+          Effect.succeed({
+            ...toPublicExam(exam),
+            entryPath: readPublishedGroupEntry(index, group),
+          }),
+      })
+    );
+  }
+);
+
+/** Lists the groups a page's selector offers, each with the entry choosing it lands on. */
+function toGroupChoices(
+  index: PublishedCatalogIndex,
+  groups: readonly CatalogGroupRow[]
+) {
+  return Arr.map(groups, (group) => ({
+    ...toPublicGroup(group),
+    entryPath: readPublishedGroupEntry(index, group),
+  }));
+}
 
 /** Reads the localized country-first hub of one catalog, with each country's exam count. */
 export const readPublishedHubPage = Effect.fn(
@@ -31,11 +74,7 @@ export const readPublishedHubPage = Effect.fn(
   };
 });
 
-/**
- * Reads one country page of one catalog, none when no country holds the path. Each exam names
- * its entry, the path of its first group, where a link to the exam lands. An exam without a group
- * is a broken snapshot.
- */
+/** Reads one country page of one catalog with its exams and their entries, none when no country holds the path. */
 export const readPublishedCountryPage = Effect.fn(
   "tryouts.catalog.readPublishedCountryPage"
 )(function* (catalog: PublishedCatalog, publicPath: string) {
@@ -47,28 +86,9 @@ export const readPublishedCountryPage = Effect.fn(
   if (Option.isNone(country)) {
     return null;
   }
-  const exams = sortCatalogRows(
-    Arr.filter(
-      index.exams,
-      (row) => row.countryKey === country.value.countryKey
-    )
-  );
   return {
     country: toPublicCountry(country.value),
-    exams: yield* Effect.forEach(exams, (exam) =>
-      Option.match(Arr.head(readPublishedExamGroups(index, exam)), {
-        onNone: () =>
-          releaseFail(
-            "CONTENT_RELEASE_INTEGRITY",
-            "A try-out exam has no group."
-          ),
-        onSome: (group) =>
-          Effect.succeed({
-            ...toPublicExam(exam),
-            entryPath: group.publicPath,
-          }),
-      })
-    ),
+    exams: yield* readCountryExams(index, country.value),
   };
 });
 
@@ -88,13 +108,13 @@ export const readPublishedExamPage = Effect.fn(
   return {
     country: toPublicCountry(parents.country),
     exam: toPublicExam(parents.exam),
-    groups: Arr.map(parents.groups, toPublicGroup),
+    groups: toGroupChoices(index, parents.groups),
   };
 });
 
 /**
- * Reads one group page of one catalog: its exam's groups, which the group selector offers, and its
- * own tracks in order. None when no group holds the path.
+ * Reads one group page of one catalog: its exam's groups, which the group selector offers with
+ * their entries, and its own tracks in order. None when no group holds the path.
  */
 export const readPublishedGroupPage = Effect.fn(
   "tryouts.catalog.readPublishedGroupPage"
@@ -108,21 +128,15 @@ export const readPublishedGroupPage = Effect.fn(
     return null;
   }
   const parents = yield* readPublishedGroupParents(index, group.value);
-  const tracks = sortCatalogRows(
-    Arr.filter(
-      index.tracks,
-      (row) =>
-        row.countryKey === group.value.countryKey &&
-        row.examKey === group.value.examKey &&
-        row.groupKey === group.value.groupKey
-    )
-  );
   return {
     country: toPublicCountry(parents.country),
     exam: toPublicExam(parents.exam),
     group: toPublicGroup(group.value),
-    groups: Arr.map(parents.groups, toPublicGroup),
-    tracks: Arr.map(tracks, toPublicTrack),
+    groups: toGroupChoices(index, parents.groups),
+    tracks: Arr.map(
+      readPublishedGroupTracks(index, group.value),
+      toPublicTrack
+    ),
   };
 });
 
@@ -143,7 +157,7 @@ export const readPublishedTrackPage = Effect.fn(
     country: toPublicCountry(parents.country),
     exam: toPublicExam(parents.exam),
     group: toPublicGroup(parents.group),
-    groups: Arr.map(parents.groups, toPublicGroup),
+    groups: toGroupChoices(index, parents.groups),
     track: toPublicTrack(track.value),
   };
 });

@@ -53,9 +53,10 @@ const ANCESTOR_KINDS = ["country", "exam", "group", "track", "set"] as const;
 const OWN_SEGMENTS = 2;
 
 /**
- * The breadcrumb that a search result shows for a route: home, the hub, then each
- * ancestor by the title the catalog publishes, down to the route itself. An exam has
- * no page of its own, so its title leads the crumb of its group, as `SNBT 2027`.
+ * The breadcrumb that a search result shows for a route: home, then each ancestor that is a page of its own, by the
+ * title the catalog publishes, down to the route itself. A level a link never lands on is no crumb (the hub, which
+ * opens a country, an exam, and a group of one track, as the sitemap leaves them out): its title leads the next
+ * crumb, as `SNBT 2027 UTBK`, so every crumb names an indexable page and the visible path matches.
  */
 const readTryoutBreadcrumbs = Effect.fn("www.tryout.route.readBreadcrumbs")(
   function* (input: {
@@ -75,39 +76,32 @@ const readTryoutBreadcrumbs = Effect.fn("www.tryout.route.readBreadcrumbs")(
           publicPath: Arr.join(Arr.take(segments, index + OWN_SEGMENTS), "/"),
         })
     );
-    const nodes = Arr.zipWith(ANCESTOR_KINDS, ancestors, (kind, { route }) => ({
-      kind,
-      route,
-    }));
-    // An exam has no page of its own, so its title leads the crumb of its group.
-    const examLead = Option.getOrElse(
-      Arr.head(
-        Arr.flatMap(nodes, ({ kind, route }) =>
-          kind === "exam" && route ? [`${route.title} `] : []
-        )
-      ),
-      () => ""
-    );
-    const leadOf = (kind: string | undefined) =>
-      kind === "group" ? examLead : "";
-    const crumbs = Arr.flatMap(nodes, ({ kind, route }) =>
-      !route || kind === "exam"
-        ? []
-        : [
-            {
-              name: `${leadOf(kind)}${route.title}`,
-              path: `/${route.publicPath}`,
-            },
-          ]
+    const trail = Arr.reduce(
+      ancestors,
+      { crumbs: Arr.empty<{ name: string; path: string }>(), lead: "" },
+      (walked, { route }) => {
+        if (!route) {
+          return walked;
+        }
+        if (!route.page) {
+          return {
+            crumbs: walked.crumbs,
+            lead: `${walked.lead}${route.title} `,
+          };
+        }
+        return {
+          crumbs: Arr.append(walked.crumbs, {
+            name: `${walked.lead}${route.title}`,
+            path: `/${route.publicPath}`,
+          }),
+          lead: "",
+        };
+      }
     );
     return createBreadcrumbItems(input.locale, [
       { name: labels.home, path: "" },
-      { name: labels.tryOut, path: "/try-out" },
-      ...crumbs,
-      {
-        name: `${leadOf(ANCESTOR_KINDS[ancestors.length])}${input.title}`,
-        path: `/${input.publicPath}`,
-      },
+      ...trail.crumbs,
+      { name: `${trail.lead}${input.title}`, path: `/${input.publicPath}` },
     ]);
   }
 );

@@ -4,7 +4,7 @@ import tryouts from "@repo/backend/confect/_generated/refs/tryouts";
 import {
   FIXTURE_TRACK,
   fixtureSetPath,
-} from "@repo/backend/test/assessment/snapshot";
+} from "@repo/backend/test/assessment/catalog";
 import {
   TRYOUT_NOW,
   type TryoutWorld,

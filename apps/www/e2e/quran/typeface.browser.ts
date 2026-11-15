@@ -25,7 +25,7 @@ const verifyQuranTypefaceScope = Effect.fn(
     Effect.gen(function* () {
       // The desktop sidebar links to the Quran. Intent over that link preloads
       // the Quran route, and the preload must not load the Quran typeface here.
-      const href = appRoutes.tryout;
+      const href = `${appRoutes.tryout}/indonesia`;
       yield* Effect.promise(() =>
         page.goto(href, { waitUntil: "domcontentloaded" })
       );

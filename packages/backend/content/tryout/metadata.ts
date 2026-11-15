@@ -6,6 +6,11 @@ import {
   readCatalogNode,
   readCatalogRow,
 } from "@repo/backend/confect/tryouts/catalog/rows";
+import { loadTryoutCatalog } from "@repo/backend/content/tryout/catalog";
+import {
+  indexPublishedCatalog,
+  isPublishedLanding,
+} from "@repo/backend/content/tryout/hierarchy";
 import type {
   tryoutLocalizedPathArgsValidator,
   tryoutMetadataArgsValidator,
@@ -64,6 +69,27 @@ const readAlternate = Effect.fn("tryouts.catalog.readMetadataAlternate")(
  * Reads one public route of the active release with its localized counterparts, none when no row of
  * the asked kind holds the path.
  */
+/**
+ * Whether a link lands on a route's own page, as the sitemap lists pages: an exam never, since a link to it opens
+ * its entry; a group only when it is its own entry (`isPublishedLanding`); every other route always. The
+ * breadcrumb names only these, so a crumb never leads to an address that is no page.
+ */
+const readRoutePage = Effect.fn("tryouts.catalog.readRoutePage")(function* (
+  appLocale: AppLocaleCode,
+  row: CatalogRow
+) {
+  if (row.kind === "exam") {
+    return false;
+  }
+  if (row.kind !== "group") {
+    return true;
+  }
+  const index = yield* indexPublishedCatalog(
+    yield* loadTryoutCatalog(appLocale)
+  );
+  return isPublishedLanding(index, row);
+});
+
 export const readTryoutMetadata = Effect.fn("tryouts.catalog.readMetadata")(
   function* (input: TryoutMetadataInput) {
     const { snapshotId } = yield* loadActiveAssessment();
@@ -93,6 +119,7 @@ export const readTryoutMetadata = Effect.fn("tryouts.catalog.readMetadata")(
         ...(row.description === undefined
           ? {}
           : { description: row.description }),
+        page: yield* readRoutePage(input.appLocale, row),
         publicPath: input.publicPath,
         // An exam and its groups share the exam's artwork.
         socialImageIdentity:

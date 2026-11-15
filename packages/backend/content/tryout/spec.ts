@@ -60,6 +60,8 @@ export const tryoutMetadataReturnValidator = Schema.Struct({
     Schema.Struct({
       alternates: Schema.mutable(Schema.Array(tryoutAlternateValidator)),
       description: Schema.optionalKey(Schema.String),
+      /** Whether a link lands on this route's own page; the breadcrumb names only pages. */
+      page: Schema.Boolean,
       publicPath: Schema.String,
       socialImageIdentity: Schema.Union([
         Schema.Null,

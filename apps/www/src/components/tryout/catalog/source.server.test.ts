@@ -12,7 +12,7 @@ import {
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import refs from "@repo/backend/confect/_generated/refs";
 import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
-import { FIXTURE_REVISION } from "@repo/backend/test/assessment/snapshot";
+import { FIXTURE_REVISION } from "@repo/backend/test/assessment/catalog";
 import { client } from "@repo/backend/test/client";
 import { tryoutWorld } from "@repo/backend/test/tryout/world";
 import { Array as Arr, Effect, Layer, Option } from "effect";
@@ -154,7 +154,8 @@ describe("immutable try-out application catalog", () => {
         });
         expect(Option.getOrThrow(pages[1])).toMatchObject({
           country: { publicPath: COUNTRY(locale) },
-          exams: [{ entryPath: GROUP(locale), publicPath: EXAM(locale) }],
+          // The year holds one track, so a link to the exam opens its set table.
+          exams: [{ entryPath: TRACK(locale), publicPath: EXAM(locale) }],
         });
         expect(pages[2]).toMatchObject({
           exam: { publicPath: EXAM(locale) },

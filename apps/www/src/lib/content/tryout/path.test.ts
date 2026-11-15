@@ -1,7 +1,7 @@
 // @vitest-environment node
 
 import { beforeEach, describe, expect, it } from "@effect/vitest";
-import { fixtureSetPath } from "@repo/backend/test/assessment/snapshot";
+import { fixtureSetPath } from "@repo/backend/test/assessment/catalog";
 import { tryoutWorld } from "@repo/backend/test/tryout/world";
 import { Effect, Layer } from "effect";
 import { readPublishedTryoutLocalizedPath } from "@/lib/content/tryout/path";

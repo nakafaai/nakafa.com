@@ -106,6 +106,29 @@ describe("try-out URLs from before the groups", () => {
     })
   );
 
+  it.effect(
+    "enters an exam, and a group with one track, at that track's set table, for now",
+    () =>
+      Effect.gen(function* () {
+        expect(yield* readGroupRedirect(`/id/${SNBT}`)).toEqual({
+          destination: `/id/${SNBT_TRACK}`,
+          status: 307,
+        });
+        expect(yield* readGroupRedirect(`/id/${SNBT_YEAR}`)).toEqual({
+          destination: `/id/${SNBT_TRACK}`,
+          status: 307,
+        });
+        expect(yield* readGroupRedirect(`/id/${TKA_GRADE}`)).toBeNull();
+      })
+  );
+
+  it.effect("leaves a live group alone when its exam is gone", () =>
+    Effect.gen(function* () {
+      serveTryoutCatalog(mocks, { ...CATALOG, exams: [] });
+      expect(yield* readGroupRedirect(`/id/${TKA_GRADE}`)).toBeNull();
+    })
+  );
+
   it.effect("leaves an exam without a group on its 404", () =>
     Effect.gen(function* () {
       serveTryoutCatalog(mocks, {

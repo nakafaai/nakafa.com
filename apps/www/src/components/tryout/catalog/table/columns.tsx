@@ -64,8 +64,10 @@ function useStatusChoices() {
 /**
  * The columns of a track's sets: the name, which opens the set, its measured level and the learner's status, which the
  * server filters by, the questions, the minutes and the score. The server sorts the track by the name, the level, from
- * easy up to cooked, and the figures; the heads of text and figures keep the sets the table has read. A learner's progress marks carry `data-progress`, so the rows every visitor
- * reads can hide them under a signed-in hint.
+ * easy up to cooked, and the figures; the heads of text and figures keep the sets the table has read. A learner's
+ * progress marks carry `data-progress`, so the rows every visitor reads can hide them under a signed-in hint. On a phone
+ * the name and the status shrink to what they hold and the level and the figures step aside, since the set's pane names
+ * its level, so a set's name, its status and its menu read whole from 320 px without scrolling sideways.
  */
 export function useTryoutSetColumns() {
   const t = useTranslations("Tryouts");
@@ -77,6 +79,7 @@ export function useTryoutSetColumns() {
       cell: (info) => <TryoutSetName row={info.row.original} />,
       header: t("set-column-name"),
       id: "title",
+      phone: "fit",
     }),
     setColumns.choice((row) => row.level, {
       cell: (info) => <TryoutLevelBadge level={info.row.original.level} />,
@@ -84,6 +87,7 @@ export function useTryoutSetColumns() {
       id: "level",
       options: levelChoices,
       sort: { asc: t("level-sort-easiest"), desc: t("level-sort-hardest") },
+      phone: "hidden",
     }),
     setColumns.choice((row) => row.attemptStatus ?? "not-started", {
       cell: (info) => (
@@ -94,20 +98,24 @@ export function useTryoutSetColumns() {
       header: t("set-column-status"),
       id: "status",
       options: statusChoices,
+      phone: "fit",
     }),
     setColumns.number((row) => row.questionCount, {
       header: t("set-column-questions"),
       id: "questionCount",
+      phone: "hidden",
     }),
     setColumns.number((row) => row.durationSeconds / SECONDS_IN_MINUTE, {
       cell: (info) => t("set-duration-minutes", { minutes: info.getValue() }),
       header: t("set-column-duration"),
       id: "durationSeconds",
+      phone: "hidden",
     }),
     setColumns.number((row) => row.publishedScore, {
       cell: (info) => <span data-progress>{info.getValue()}</span>,
       header: t("set-column-score"),
       id: "publishedScore",
+      phone: "hidden",
     }),
     setColumns.menu(() => <TryoutSetMenu />),
   ];

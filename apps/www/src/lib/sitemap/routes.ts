@@ -22,7 +22,6 @@ import { pinSitemapRelease } from "@/lib/sitemap/pin";
 
 const curriculaRoute = "/curricula";
 const quranRootRoute = "/quran";
-const tryoutRootRoute = "/try-out";
 
 /** Static top-level routes in canonical lexical order. */
 export const baseRoutes: readonly string[] = [
@@ -35,7 +34,6 @@ export const baseRoutes: readonly string[] = [
   "/school",
   "/school/pricing",
   "/search",
-  tryoutRootRoute,
 ];
 
 /** Dates routes by their snapshot family, and leaves them undated when it has no date. */
@@ -55,9 +53,6 @@ function dateRoutes<Route>(
 function readBaseRouteDate(path: string, dates: SitemapDates) {
   if (path === curriculaRoute) {
     return dates.program;
-  }
-  if (path === tryoutRootRoute) {
-    return dates.assessment;
   }
   return path === quranRootRoute ? dates.quran : null;
 }
