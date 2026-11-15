@@ -13,6 +13,7 @@ import {
   FileSystem,
   Layer,
   Option,
+  Predicate,
   Ref,
   Schedule,
   Schema,
@@ -54,23 +55,29 @@ const RunStatusJson = Schema.fromJsonString(
   Schema.Struct({ status: Schema.String })
 );
 
-/** Seconds between two moments that GitHub reports, or none when one is missing. */
-const secondsBetween = (start: string | null, end: string | null) =>
-  Option.gen(function* () {
-    const from = yield* DateTime.make(start ?? "");
-    const to = yield* DateTime.make(end ?? "");
-    return Math.round(Duration.toSeconds(DateTime.distance(from, to)));
-  });
+/** Moments that GitHub reports, or none when one is missing or there are none. */
+const momentsOf = (stamps: readonly (string | null)[]) =>
+  Option.flatMap(
+    Option.all(Arr.map(stamps, (stamp) => DateTime.make(stamp ?? ""))),
+    Arr.match({
+      onEmpty: () => Option.none(),
+      onNonEmpty: (moments) => Option.some(moments),
+    })
+  );
+
+/** Whole seconds from one moment to another. */
+const secondsOf = (from: DateTime.DateTime, to: DateTime.DateTime) =>
+  Math.round(Duration.toSeconds(DateTime.distance(from, to)));
 
 /** The steps of the gate, which pass only when every one of them does. */
 const GATE_STEPS = ["Gate static", "Gate www", "Gate backend"];
 
-/** The steps of a run's one job, or none when it never started one. */
-const stepsOf = (run: RunView) =>
-  Option.match(Arr.head(run.jobs), {
-    onNone: () => Arr.empty<typeof Step.Type>(),
-    onSome: (job) => job.steps,
-  });
+/** The jobs of a run that ran: the gate job and one job per engine, less the part a dispatch turned off. */
+const jobsOf = (run: RunView) =>
+  Arr.filter(run.jobs, (job) => job.conclusion !== "skipped");
+
+/** The steps of every job of a run that ran. */
+const stepsOf = (run: RunView) => Arr.flatMap(jobsOf(run), (job) => job.steps);
 
 /** Whether the run's gate passed, or none when it did not gate. */
 function gateOf(run: RunView) {
@@ -84,26 +91,35 @@ function gateOf(run: RunView) {
   });
 }
 
-/** The phases of a run in seconds, read from its one job's steps. */
+/**
+ * The phases of a run in seconds, read from the steps of all its jobs. The
+ * engines run side by side, so a phase runs from the first of its steps to
+ * start to the last to end, and a phase that any job left unfinished has none.
+ * The queue runs from the dispatch to the first job that started.
+ */
 export function runTimings(run: RunView) {
   const steps = stepsOf(run);
   const duration = (names: readonly string[]) => {
     const spans = Arr.filter(steps, (step) => Arr.contains(names, step.name));
-    return Option.flatMap(Arr.head(spans), (first) =>
-      Option.flatMap(Arr.last(spans), (last) =>
-        secondsBetween(first.startedAt, last.completedAt)
-      )
-    );
+    return Option.gen(function* () {
+      const starts = yield* momentsOf(Arr.map(spans, (span) => span.startedAt));
+      const ends = yield* momentsOf(Arr.map(spans, (span) => span.completedAt));
+      return secondsOf(
+        Arr.min(starts, DateTime.Order),
+        Arr.max(ends, DateTime.Order)
+      );
+    });
   };
+  const created = DateTime.make(run.createdAt);
+  const started = Arr.filter(
+    Arr.map(jobsOf(run), (job) => job.startedAt),
+    Predicate.isNotNull
+  );
   return {
-    queue: secondsBetween(
-      run.createdAt,
-      Option.getOrNull(
-        Option.flatMap(Arr.head(run.jobs), (job) =>
-          Option.fromNullishOr(job.startedAt)
-        )
-      )
-    ),
+    queue: Option.gen(function* () {
+      const first = Arr.min(yield* momentsOf(started), DateTime.Order);
+      return secondsOf(yield* created, first);
+    }),
     gate: duration(GATE_STEPS),
     prepare: duration(["Prepare"]),
     restored: Option.map(
@@ -112,7 +128,9 @@ export function runTimings(run: RunView) {
     ),
     build: duration(["Build"]),
     specs: duration(["Run specs"]),
-    total: secondsBetween(run.createdAt, run.updatedAt),
+    total: Option.gen(function* () {
+      return secondsOf(yield* created, yield* DateTime.make(run.updatedAt));
+    }),
   };
 }
 export type RunTimings = ReturnType<typeof runTimings>;
@@ -235,7 +253,11 @@ const awaitRun = Effect.fn("proof.awaitRun")(function* (
   );
 });
 
-/** The result of each engine that a completed run uploaded; a run whose build failed has none. */
+/**
+ * The result of each engine that a completed run uploaded, one artifact per
+ * engine job, which the CLI writes into a folder named after the artifact; an
+ * engine whose build failed uploaded none.
+ */
 const readResults = Effect.fn("proof.readResults")(function* (id: number) {
   const fs = yield* FileSystem.FileSystem;
   const directory = yield* fs.makeTempDirectoryScoped({ prefix: "proof-" });
@@ -245,8 +267,8 @@ const readResults = Effect.fn("proof.readResults")(function* (id: number) {
     String(id),
     "--repo",
     REPOSITORY,
-    "--name",
-    "results",
+    "--pattern",
+    "results-*",
     "--dir",
     directory,
   ]).pipe(
@@ -269,7 +291,7 @@ const readResults = Effect.fn("proof.readResults")(function* (id: number) {
 const Scope = Schema.Struct({ gate: Schema.Boolean, full: Schema.Boolean });
 
 /**
- * Verifies one head on GitHub's runners in one job: dispatches the proof
+ * Verifies one head on GitHub's runners in one run: dispatches the proof
  * workflow, waits for its run and reads what it reported. The verdicts are the
  * ones the run posts as commit statuses on the head.
  */
@@ -336,7 +358,7 @@ const Verification = Schema.Struct({
 /**
  * The seam every caller of a proof uses: prove one exact head in the browsers,
  * narrowed to some spec files or not, or verify it whole, gate and proof in one
- * job, and answer one verdict per engine.
+ * run, and answer one verdict per engine.
  */
 export class Prover extends Context.Service<
   Prover,
