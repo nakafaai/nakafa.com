@@ -23,7 +23,19 @@ vi.mock("@repo/backend/confect/gateway/live", async () => ({
 
 const run = Ref.getFunctionReference(refs.internal.contents.sections.build.run);
 
-beforeEach(() => vi.useFakeTimers());
+// The build's four embedding requests take turns at the meter, and Effect wakes
+// a fiber whose turn came with setImmediate, so that timer stays real.
+beforeEach(() =>
+  vi.useFakeTimers({
+    toFake: [
+      "Date",
+      "setTimeout",
+      "clearTimeout",
+      "setInterval",
+      "clearInterval",
+    ],
+  })
+);
 afterEach(() => {
   deployment.mockReset();
   provider.embeddingModel.mockReset();
