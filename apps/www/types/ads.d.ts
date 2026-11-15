@@ -22,6 +22,6 @@ interface Window {
   ) => void;
   adsbygoogle?: GoogleQueue;
   /** Google Analytics' command queue, which reads the `arguments` of each call. */
-  dataLayer?: IArguments[];
+  dataLayer?: GoogleQueue;
   googlefc?: { callbackQueue?: GoogleQueue };
 }

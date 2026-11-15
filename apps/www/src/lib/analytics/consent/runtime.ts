@@ -24,6 +24,11 @@ import {
 } from "@/lib/analytics/consent/state";
 
 /**
+ * Google's consent message and Google Analytics, which only production loads.
+ * The import stands outside the hook, where React Compiler can read it.
+ */
+const loadGoogle = () => import("@/lib/analytics/google");
+/**
  * Owns the baseline-to-granted runtime alignment for one consent state.
  *
  * The baseline loads once the page has its reader, so the SDK does not compete
@@ -100,9 +105,7 @@ export function useAnalyticsRuntimeAlignment({
       location.hostname === MAIN_DOMAIN
         ? Effect.runFork(
             untilPageRead.pipe(
-              Effect.andThen(
-                Effect.promise(() => import("@/lib/analytics/google"))
-              ),
+              Effect.andThen(Effect.promise(loadGoogle)),
               Effect.andThen(({ startGoogleAnalytics, stopGoogleAnalytics }) =>
                 Effect.all(
                   [

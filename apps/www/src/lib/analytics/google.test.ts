@@ -1,14 +1,22 @@
 import { afterEach, describe, expect, it } from "@effect/vitest";
-import { Array as Arr, Effect, Option } from "effect";
+import { Array as Arr, Effect, Option, Predicate } from "effect";
 import {
   GOOGLE_ANALYTICS_ID,
   startGoogleAnalytics,
   stopGoogleAnalytics,
 } from "@/lib/analytics/google";
 
+/** The queue as the page fills it before Google's library takes it over: each call's own arguments. */
+function queued(): readonly unknown[] {
+  const queue: unknown = window.dataLayer;
+  return Arr.isArray(queue) ? queue : [];
+}
+
 /** The commands handed to Google Analytics, each as the list of its arguments. */
 function commands() {
-  return Arr.map(window.dataLayer ?? [], (entry) => Arr.fromIterable(entry));
+  return Arr.map(queued(), (entry) =>
+    Predicate.isIterable(entry) ? Arr.fromIterable(entry) : [entry]
+  );
 }
 
 /** The Google Analytics scripts of the document. */
@@ -54,7 +62,7 @@ describe("Google Analytics", () => {
         ["consent", "update", { analytics_storage: "granted" }],
       ]);
       // gtag.js reads only arguments objects from its queue, never arrays.
-      expect(Object.prototype.toString.call(window.dataLayer?.[0])).toBe(
+      expect(Object.prototype.toString.call(queued()[0])).toBe(
         "[object Arguments]"
       );
     })

@@ -1,5 +1,5 @@
 import { MAIN_DOMAIN } from "@repo/site/domains";
-import { DateTime, Effect } from "effect";
+import { Array as Arr, DateTime, Effect } from "effect";
 
 /** Nakafa's Google Analytics web stream, of property a307729543p433708734. */
 export const GOOGLE_ANALYTICS_ID = "G-F0WTB42EQM";
@@ -23,13 +23,19 @@ export const GOOGLE_ANALYTICS_POLICY_SOURCES = {
 /** The cookies that Google Analytics sets for the stream, which a withdrawal deletes. */
 const COOKIES = ["_ga", `_ga_${GOOGLE_ANALYTICS_ID.replace("G-", "")}`];
 
+/** Google Analytics' command queue, started as an array until its library takes it over. */
+function commandQueue(): GoogleQueue {
+  const queue = window.dataLayer ?? Arr.empty<object>();
+  window.dataLayer = queue;
+  return queue;
+}
+
 /**
  * Hands one command to Google Analytics. Its library reads only `arguments`
  * objects from `dataLayer`, never arrays, so this pushes the call's own.
  */
 function gtag(..._command: readonly unknown[]) {
-  window.dataLayer ??= [];
-  window.dataLayer.push(arguments);
+  commandQueue().push(arguments);
 }
 
 /**
