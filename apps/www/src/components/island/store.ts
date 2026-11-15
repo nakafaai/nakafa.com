@@ -3,6 +3,7 @@ import { Array as Arr, HashSet, Schema } from "effect";
 import { createContext, use } from "react";
 import { createStore, useStore } from "zustand";
 import { applyEdits, type Edit, inverseOf } from "@/lib/island/edits";
+import { settleOf } from "@/lib/island/gravity";
 import type { ItemKey } from "@/lib/island/items";
 import type { Season } from "@/lib/island/season";
 import type { Weather } from "@/lib/island/sky";
@@ -137,10 +138,14 @@ export function createGameStore(setup: GameSetup) {
         if (edits.length === 0) {
           return;
         }
-        write(edits);
+        // The world settles at once (D14): what settles joins the change as one step, written once, which undo takes back whole.
+        const { cells } = get();
+        applyEdits(cells, edits);
+        const step = Arr.appendAll(edits, settleOf(cells, edits));
+        write(step);
         set((state) => ({
           future: [],
-          past: Arr.takeRight(Arr.append(state.past, edits), HISTORY),
+          past: Arr.takeRight(Arr.append(state.past, step), HISTORY),
         }));
       },
       assign: (slot, key) =>
