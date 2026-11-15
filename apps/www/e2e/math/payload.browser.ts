@@ -74,7 +74,9 @@ const verifyLoadedLesson = Effect.fn("NakafaE2E.verifyLoadedMathLesson")(
  * A lesson reached by a client navigation draws its formulas in the browser,
  * whole in its first frame, since the navigation loads KaTeX before it shows the
  * page. They are that lesson's own formulas, as a load of it draws them, never
- * the markup the last lesson left in the same places.
+ * the markup the last lesson left in the same places. The router moves the
+ * address before it commits the next page, so the check reads the formulas once
+ * the router has resolved the target, never the last lesson still on screen.
  */
 const verifyNavigatedLesson = Effect.fn("NakafaE2E.verifyNavigatedMathLesson")(
   function* (page: Page) {
@@ -87,7 +89,17 @@ const verifyNavigatedLesson = Effect.fn("NakafaE2E.verifyNavigatedMathLesson")(
     });
     yield* Effect.promise(async () => {
       await previous.click();
-      await page.waitForURL((url) => url.pathname === target);
+      await page.waitForFunction(
+        (path) => {
+          const router = window.__TSR_ROUTER__;
+          return (
+            router?.state.status === "idle" &&
+            router.state.resolvedLocation?.pathname === path
+          );
+        },
+        target,
+        { timeout: readinessTimeoutMilliseconds }
+      );
       await expect(page.locator("article .katex").first()).toBeVisible();
     });
     const navigated = yield* Effect.promise(() => page.evaluate(drawnTex));
