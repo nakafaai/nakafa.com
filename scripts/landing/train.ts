@@ -143,10 +143,42 @@ const proofSpecs = (
   );
 
 /**
+ * The most pull requests one batch carries (ADR 0048, "The Landing Queue"): at a
+ * failure rate of one in ten per pull request, five pass together more often
+ * than not, while 13 pass a quarter of the time.
+ */
+const BATCH_LIMIT = 5;
+
+/**
+ * The pull requests one batch takes, in landing order: whole stacks while the
+ * batch stays within the limit, filling it with later stacks that still fit;
+ * a first stack longer than the limit rides alone.
+ */
+const batchOf = (candidates: readonly Candidate[]): readonly Candidate[] =>
+  Arr.match(candidates, {
+    onEmpty: () => Arr.empty<Candidate>(),
+    onNonEmpty: (all) => {
+      const [first, ...rest] = Arr.groupWith(
+        all,
+        (one, other) => one.stack === other.stack
+      );
+      return Arr.reduce(
+        rest,
+        Arr.fromIterable<Candidate>(first),
+        (taken, stack) =>
+          taken.length + stack.length <= BATCH_LIMIT
+            ? Arr.appendAll(taken, stack)
+            : taken
+      );
+    },
+  });
+
+/**
  * Lands pull requests after one gate and one proof of their combination on
- * main: those whose own gate and proof passed, or with `batch` every stack
- * whose top's own gate passed on a head that contains main, each stack whole. A failing spec that fails on main too belongs to main: the
- * train reports it and ignores it. Any other failure, a failed gate included,
+ * main: those whose own gate and proof passed, or with `batch` at most five,
+ * each stack whole, whose top's own gate passed on a head that contains main.
+ * A failing spec that fails on main too belongs to main: the train reports it
+ * and ignores it. Any other failure, a failed gate included,
  * splits the batch. A batch of several stacks verifies every stack on its own,
  * side by side, so a split costs one wait in the runner queue, not one for each
  * half; the stacks that passed are verified together once more, and a failing
@@ -163,9 +195,9 @@ export const runTrain = Effect.fn("landing.runTrain")(function* (
   const repository = yield* Repository;
   const prover = yield* Prover;
   const main = yield* repository.main;
-  const candidates = yield* batch
-    ? repository.ready(numbers)
-    : repository.proven(numbers);
+  const candidates = batch
+    ? batchOf(yield* repository.ready(numbers))
+    : yield* repository.proven(numbers);
   const accepted = yield* Ref.make<readonly Candidate[]>([]);
   const landings = yield* Ref.make<readonly Landing[]>([]);
   const rejected = yield* Ref.make<readonly Rejection[]>([]);
