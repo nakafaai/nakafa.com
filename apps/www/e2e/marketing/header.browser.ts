@@ -2,7 +2,10 @@ import { expect, type Page, test } from "@playwright/test";
 import { Array as Arr, Effect } from "effect";
 import { withBrowserContext } from "@/e2e/support/context";
 import { movePointerTo } from "@/e2e/support/input";
-import { loadMarketingPage } from "@/e2e/support/marketing";
+import {
+  loadMarketingPage,
+  openedHeaderSection,
+} from "@/e2e/support/marketing";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { waitForScrollRest } from "@/e2e/support/quiet";
 import { openRoute } from "@/e2e/support/route";
@@ -196,7 +199,7 @@ test.describe("the header's sections at desktop", () => {
               .getByRole("button", { name: "School" })
               .click()
           );
-          const popup = page.locator('[data-slot="navigation-menu-popup"]');
+          const popup = yield* openedHeaderSection(page);
           yield* Effect.promise(() =>
             popup.getByRole("link", { name: "Pricing" }).click()
           );
