@@ -45,6 +45,7 @@ import { AccountMenu } from "@/components/sidebar/menu/account";
 import { useMenuWarm } from "@/components/sidebar/menu/warm";
 import { SidebarToggle } from "@/components/sidebar/toggle";
 import { TenantAccountItems } from "@/components/tenant/account";
+import { DrawnClasses } from "@/components/tenant/classes/nav";
 import {
   TenantContext,
   type TenantValue,
@@ -279,23 +280,25 @@ function TenantFrame({ children }: { children: ReactNode }) {
             <TenantSearchPalette />
             {/* Hidden rather than unmounted, so the learner's open or closed choice returns with it. */}
             <div className="contents group-data-locked/sidebar-wrapper:hidden">
-              <Sidebar
-                collapsible="icon"
-                label={tCommon("sidebar")}
-                side={side}
-              >
-                <SidebarHeader className="border-b">
-                  <SidebarMenu>
-                    <TenantSwitcher />
-                  </SidebarMenu>
-                  <TenantSearchMenu />
-                </SidebarHeader>
-                <SidebarContent>
-                  <TenantNavigation />
-                </SidebarContent>
-                <SidebarToggle />
-                <TenantAccount />
-              </Sidebar>
+              <DrawnClasses>
+                <Sidebar
+                  collapsible="icon"
+                  label={tCommon("sidebar")}
+                  side={side}
+                >
+                  <SidebarHeader className="border-b">
+                    <SidebarMenu>
+                      <TenantSwitcher />
+                    </SidebarMenu>
+                    <TenantSearchMenu />
+                  </SidebarHeader>
+                  <SidebarContent>
+                    <TenantNavigation />
+                  </SidebarContent>
+                  <SidebarToggle />
+                  <TenantAccount />
+                </Sidebar>
+              </DrawnClasses>
             </div>
             <SidebarInset className="[--app-header-top:0rem]">
               {children}
