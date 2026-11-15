@@ -247,3 +247,11 @@ The first groups whose diffs reach many folders failed on specs that main fails 
 3. **Status check timeout: 150 minutes.** A group that proves every suite took up to 80 minutes, and a base proof adds a build and the failing specs, about 25 minutes while runners are free.
 4. **What main fails stays work.** A spec set aside is main's defect, never a reason to skip, retry or weaken it: the lane that owns its folder makes main pass it, and each fix narrows what a verdict sets aside.
 
+## Amendment: A Merge Group's Gate Tests Its Own Change, 15 November 2026
+
+A group's specs come from its diff to its base (point 2 of "The Merge Queue Is Switched On"), but its gate measured the affected workspaces against main, so each group tested again every workspace the entries ahead of it changed. The backend suite, about 1,056 test files and some 20 minutes on a runner, ran in almost every group, because some entry ahead touched the backend or a package it depends on, and the queue's throughput fell to the length of that suite.
+
+### Decision
+
+A merge group's gate measures `--affected` against its `base_sha` (and a rehearsal against its `base`): the workspaces its own pull requests change and their dependents, on the group's whole tree. Each group ahead proves its own changes on the same tree minus the later entries, so a workspace this group does not change holds the code those groups proved. A pull request and a dispatched gate still measure against main. Backend coverage keeps counting the files changed since main whenever its suite runs.
+
