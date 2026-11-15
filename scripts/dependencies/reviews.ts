@@ -53,8 +53,8 @@ export const REGISTRY_REVIEWS = [
   ],
   [
     "@effect/tsgo@latest",
-    "0.67.5",
-    "Compiler patching moves with tsrs and Effect, and every rule is decided in packages/typescript-config/base.json, which Aksara's rule block matches (docs/adr/0021-rules.md). 0.67.5 is the adopted release: it patches tsrs 0.23.0-ts7.1.0-beta, which replaces the TypeScript package, and base.json decides the twelve rules that 0.64 to 0.67 add. Checked 7 November 2026.",
+    "0.68.1",
+    "Compiler patching moves with tsrs and Effect, and every rule is decided in packages/typescript-config/base.json, which Aksara's rule block matches (docs/adr/0021-rules.md). 0.68.1 is the adopted release: it patches tsrs 0.24.0-ts7.1.0-beta (its upstream.json), which replaces the TypeScript package, and base.json decides onExitFailureToOnError, the one rule 0.68 adds. Checked 13 November 2026.",
   ],
   [
     "vitest@latest",
@@ -78,8 +78,8 @@ export const REGISTRY_REVIEWS = [
   ],
   [
     "tsrs@latest",
-    "0.23.0-ts7.1.0-beta",
-    "tsrs is the Rust port of the TypeScript 7.1 checker, pinned exactly to the release @effect/tsgo 0.67.5 patches. Every typecheck, the language server, and the source check's compiler API run on it. A new release lands with the @effect/tsgo release that supports it. Checked 7 November 2026.",
+    "0.25.0-ts7.1.0-beta",
+    "tsrs is the Rust port of the TypeScript 7.1 checker, pinned exactly to 0.24.0-ts7.1.0-beta, the release @effect/tsgo 0.68.1 patches. Every typecheck, the language server, and the source check's compiler API run on it. 0.25.0 adds concurrent headless lint and a Windows ARM64 package with the same checker; only tsgo's main branch patches it, so it lands with the @effect/tsgo release that supports it. Checked 13 November 2026.",
   ],
   [
     "ai@latest",
