@@ -101,6 +101,8 @@ describe("train repository", () => {
           }
         );
         expect(Arr.map(value.all, (one) => one.number)).toEqual([4, 9]);
+        // #9 changes apps/www/src, which the product runs; #4 changes nothing.
+        expect(Arr.map(value.all, (one) => one.runtime)).toEqual([false, true]);
         // A batch takes a stack whose own gate passed on a head that contains
         // main, its proof unasked: not #9, gated on an older main, nor #7,
         // whose gate has not passed.
