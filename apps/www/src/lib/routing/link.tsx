@@ -17,6 +17,7 @@ import {
   useMatches,
   useParams,
   useRouter,
+  useRouterState,
 } from "@tanstack/react-router";
 import { Array as Arr, Option } from "effect";
 import type { ComponentProps } from "react";
@@ -97,11 +98,17 @@ export function useRouteMatched(
  * section without a layout route of its own, such as the Quran and its surahs,
  * holds its pages by address alone, which the matches of `useRouteMatched` do not
  * show, and the params keep one article category from claiming another's pages.
+ * While a press loads the next page, the next address decides, so the mark moves
+ * with the press. It reads the router's whole state: a selector over the location
+ * alone ran once at the press, against the page being left, and never again once
+ * the next page resolved, so the section left behind stayed marked.
  */
 export function useSectionMatched(target: LinkTarget) {
   const router = useRouter();
-  return useLocation({
-    select: () => router.matchRoute(target, { fuzzy: true }) !== false,
+  return useRouterState({
+    select: (state) =>
+      router.matchRoute(target, { fuzzy: true, pending: state.isLoading }) !==
+      false,
   });
 }
 
