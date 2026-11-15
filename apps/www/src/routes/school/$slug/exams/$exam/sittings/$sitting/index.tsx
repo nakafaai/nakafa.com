@@ -6,6 +6,7 @@ import {
   SittingDashboard,
 } from "@/components/exams/sitting/dashboard";
 import { dashboardSearch } from "@/components/exams/sitting/search";
+import { SchoolPageNotFound } from "@/components/tenant/notfound";
 import { guardSchoolPage } from "@/lib/tenant/guard";
 import { readExamId, readSittingId } from "@/lib/tenant/params";
 
@@ -17,13 +18,14 @@ export const Route = createFileRoute(
   "/school/$slug/exams/$exam/sittings/$sitting/"
 )({
   validateSearch: dashboardSearch,
-  ...guardSchoolPage({
+  beforeLoad: guardSchoolPage({
     reads: (params: { readonly exam: string; readonly sitting: string }) =>
       Option.all({
         examId: readExamId(params.exam),
         sittingId: readSittingId(params.sitting),
       }),
   }),
+  notFoundComponent: SchoolPageNotFound,
   component: SittingDashboardPage,
 });
 

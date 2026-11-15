@@ -64,24 +64,28 @@ export function orderPlacements(
 }
 
 /**
- * The breadcrumb that a search result shows for a lesson: home, then the path of its
- * first place. The path names curriculum pages, because the subject has no page of
- * its own, and the lesson that ends the trail is the builder's to add.
+ * The breadcrumb trails of a lesson, one for each curriculum place that holds it, in
+ * the order the page lists them: home, then that place's curriculum pages. A lesson
+ * that no curriculum places stands at home. The page draws every place's trail, so
+ * its structured data names each one.
  */
-export function readPlacementTrail(
+export function readPlacementTrails(
   locale: Locale,
   home: string,
   placements: readonly MaterialPlacement[]
 ) {
-  const path = Option.match(Arr.head(placements), {
-    onNone: () => [],
-    onSome: ({ trail }) =>
-      Arr.map(trail, ({ label, publicPath }) => ({
-        name: label,
-        path: `/${locale}/${publicPath}`,
-      })),
+  const root = { name: home, path: `/${locale}` };
+  return Arr.match(placements, {
+    onEmpty: () => Arr.of([root]),
+    onNonEmpty: (places) =>
+      Arr.map(places, ({ trail }) => [
+        root,
+        ...Arr.map(trail, ({ label, publicPath }) => ({
+          name: label,
+          path: `/${locale}/${publicPath}`,
+        })),
+      ]),
   });
-  return [{ name: home, path: `/${locale}` }, ...path];
 }
 
 /** What a lesson teaches in each curriculum: the curriculum, its unit, and the unit's address. */

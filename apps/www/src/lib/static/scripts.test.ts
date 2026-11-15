@@ -1,6 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
 import { Array as Arr, Option, Result, Schema } from "effect";
-import { deferStaticScripts } from "@/lib/static/scripts";
+import { BOOT_SCRIPT_LIMIT, deferStaticScripts } from "@/lib/static/scripts";
 
 /** A prerendered page as TanStack writes it: module preloads in the head, the hydration scripts and the entry in the body. */
 const PRERENDERED = Arr.join(
@@ -131,6 +131,39 @@ describe("lib/static/scripts", () => {
         deferStaticScripts(PRERENDERED.replace("</body>", ""), CHUNKS)
       )
     ).toBe(true);
+  });
+
+  it("boots at most the limit of scripts, its entry and repeated preloads counted once", () => {
+    const withPreloads = (count: number) =>
+      PRERENDERED.replace(
+        "</head>",
+        `${Arr.join(
+          Arr.makeBy(
+            count,
+            (index) =>
+              `<link rel="modulepreload" href="/assets/part-${index}.js" crossorigin=""/>`
+          ),
+          ""
+        )}</head>`
+      );
+    // The page itself boots react-a1, shared~route-b2 and the entry index-c3; the
+    // build recorded no chunk for the added parts, so each of them stays.
+    const atLimit = deferStaticScripts(
+      withPreloads(BOOT_SCRIPT_LIMIT - 3),
+      CHUNKS
+    );
+    const overLimit = deferStaticScripts(
+      withPreloads(BOOT_SCRIPT_LIMIT - 2),
+      CHUNKS
+    );
+
+    expect(Result.isSuccess(atLimit)).toBe(true);
+    expect(
+      Result.match(overLimit, {
+        onFailure: (error) => error._tag,
+        onSuccess: () => "deferred",
+      })
+    ).toBe("StaticScriptsOverLimit");
   });
 
   it("refuses a script outside the built assets", () => {

@@ -4,6 +4,7 @@ import {
   ellipse,
   eye,
   eyes,
+  faded,
   figure,
   head,
   kindAt,
@@ -139,24 +140,44 @@ export const bug = {
     ],
     draw: (kit) =>
       figure(
-        Arr.flatMap(Arr.range(0, 3), (index) =>
-          both((side) =>
-            line(
-              `M${100 + side * 40},${118 + index * 14} Q${100 + side * (76 + index * 4)},${84 + index * 18} ${100 + side * (94 - index * 2)},${122 + index * 24}`,
-              kit.body,
-              7.5
+        // The thread it hangs from.
+        faded(0.7, [line("M100,0 L100,70", PEARL, 3)]),
+        // Eight legs, each bent at a knee above its foot.
+        Arr.flatMap(
+          [
+            [64, 126, 32, 66, 16, 100],
+            [62, 138, 24, 108, 8, 142],
+            [64, 150, 28, 148, 14, 184],
+            [70, 160, 44, 184, 36, 212],
+          ],
+          ([hipX, hipY, kneeX, kneeY, footX, footY]) =>
+            both((side) =>
+              line(
+                `M${100 + side * (100 - hipX)},${hipY} L${100 + side * (100 - kneeX)},${kneeY} L${100 + side * (100 - footX)},${footY}`,
+                kit.body,
+                8.5
+              )
             )
+        ),
+        // The round abdomen with its mark, then the head in front of it.
+        ellipse(100, 170, 50, 46, kit.body),
+        path("M100,150 L114,172 L100,196 L86,172 Z", kit.second),
+        ellipse(100, 108, 46, 42, kit.body),
+        both((side) => [
+          ellipse(100 + side * 18 + kit.look, 104, 14, 15, kit.second),
+          ellipse(100 + side * 30, 80, 5, 5, kit.second),
+          ellipse(100 + side * 12, 74, 3.6, 3.6, kit.second),
+        ]),
+        both((side) =>
+          eye(
+            kindAt(kit.eyes, side),
+            100 + side * 18 + kit.look,
+            104,
+            6,
+            kit.ink
           )
         ),
-        ellipse(100, 166, 56, 52, kit.body),
-        ellipse(100, 172, 15, 20, kit.second),
-        ellipse(100, 106, 46, 42, kit.body),
-        both((side) => [
-          ellipse(100 + side * 18, 102, 13.5, 14.5, kit.second),
-          ellipse(100 + side * 31, 80, 4.6, 4.6, kit.second),
-        ]),
-        eyes(kit, 18, 102, 5.6),
-        smile(121, 8, 6, kit.ink)
+        smile(124, 8, 6, kit.ink)
       ),
   },
   snail: {

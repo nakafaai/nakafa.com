@@ -9,7 +9,6 @@ import { ContentVerificationKeyResolver } from "@nakafa/aksara-contracts/signatu
 import confectSchema from "@repo/backend/confect/_generated/schema";
 import {
   ProofPollCoordinator,
-  type ProofPollCoordinatorService,
   pollProgram,
 } from "@repo/backend/confect/contentRelease/proof/poll";
 import {
@@ -56,7 +55,12 @@ import {
 } from "@repo/backend/test/runtime/head";
 import { parse } from "convex-helpers/validators";
 import type { TestConvex } from "convex-test";
-import { Data, Effect, Schema } from "effect";
+import { type Context, Data, Effect, Schema } from "effect";
+
+/** The private proof poll coordinator, as a test provides it. */
+type ProofPollCoordinatorService = Context.Service.Shape<
+  typeof ProofPollCoordinator
+>;
 
 const stageItems = internal.contentRelease.items.stageItemBatch;
 const stageArtifacts = internal.contentRelease.artifacts.stageArtifactBatch;

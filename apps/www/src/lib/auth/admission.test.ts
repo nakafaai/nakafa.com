@@ -5,12 +5,10 @@ import { getTestInstance } from "better-auth/test";
 import { Array as Arr, Effect, Option, Schema } from "effect";
 import {
   getPostAuthDestination,
-  getPostAuthIntentSource,
   getPostAuthOnboardingHref,
   getPostAuthProviderErrorHref,
   getPostAuthProviderRetrySearch,
   getPostAuthSignInHref,
-  getPostAuthSignInHrefForLocation,
   getPostAuthSignInTarget,
   getSignedInHref,
   isPostAuthProviderError,
@@ -44,31 +42,6 @@ describe("post-auth admission", () => {
     );
   });
 
-  it("preserves a trusted browser location as one exact intent source", () => {
-    expect(
-      getPostAuthIntentSource("/search", "?q=geometry&page=2", "#comments")
-    ).toBe("/search?q=geometry&page=2#comments");
-    expect(getPostAuthIntentSource("/search", "q=geometry", "comments")).toBe(
-      "/search?q=geometry#comments"
-    );
-    expect(getPostAuthIntentSource("/search", "")).toBe("/search");
-  });
-
-  it("builds hash-preserving auth entry from a synthetic location snapshot", () => {
-    expect(
-      getPostAuthSignInHrefForLocation(
-        {
-          hash: "#comments",
-          pathname: "/id/search",
-          search: "?q=geometry&page=2",
-        },
-        "id"
-      )
-    ).toBe(
-      "/auth?redirect=%2Fid%2Fsearch%3Fq%3Dgeometry%26page%3D2%23comments"
-    );
-  });
-
   it("never carries a share token into an auth route, whichever helper builds it", () => {
     // 43 URL-safe characters, the shape of a share token.
     const token = "abcdefghijklmnopqrstuvwxyz0123456789-_ABCDE";
@@ -80,12 +53,6 @@ describe("post-auth admission", () => {
       kind: "resume",
       locale: "en",
     });
-    expect(
-      getPostAuthSignInHrefForLocation(
-        { hash: `#share=${token}`, pathname: "/en/chat/chat-id", search: "" },
-        "en"
-      )
-    ).toBe("/auth?redirect=%2Fen%2Fchat%2Fchat-id");
     for (const href of [
       getPostAuthSignInHref(resume),
       getPostAuthOnboardingHref(source, "en"),

@@ -2,7 +2,6 @@ import { describe, expect, it } from "@effect/vitest";
 import {
   creditsCharged,
   creditsForCost,
-  freeDailyBudgetCredits,
   getPlanCreditConfig,
 } from "@repo/backend/confect/credits/constants";
 
@@ -24,11 +23,6 @@ describe("credits/constants", () => {
     expect(creditsForCost(0.002)).toBe(1);
     expect(creditsForCost(0.1)).toBe(50);
     expect(creditsForCost(0.34)).toBe(50);
-  });
-
-  it("shares five percent of last month's net revenue over thirty days as free credits", () => {
-    expect(freeDailyBudgetCredits(0)).toBe(0);
-    expect(freeDailyBudgetCredits(1000)).toBe(833);
   });
 
   it("prices a summed float cost by whole micro-dollars, so a float never rounds up a credit", () => {

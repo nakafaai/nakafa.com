@@ -16,7 +16,6 @@ import {
 import { HttpClient, HttpClientResponse } from "effect/http";
 import { ChildProcessSpawner } from "effect/process";
 import { TestClock } from "effect/testing";
-import { capture, makeCapture } from "#scripts/capture";
 import {
   bumpDependencies,
   outdatedNames,
@@ -29,6 +28,7 @@ import {
   type GithubActionReleaseReview,
   githubActionReleaseReviews,
 } from "#scripts/github/release";
+import { capture, makeCapture } from "#scripts/test.capture";
 
 type CommandResult = Effect.Success<ReturnType<typeof runBun>>;
 
