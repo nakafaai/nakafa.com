@@ -67,6 +67,13 @@ head on free public-repository runners, in parallel, at the same bar, and the
 landing train lands what passed. The local verification above still owns the
 typechecks, unit suites, policy checks and React Doctor.
 
+## Amendment: The Merge Queue Requires One Check, 15 November 2026
+
+ADR 0048, "The Merge Queue Is Switched On", reverses "never a required check"
+for one status: GitHub's merge queue lands every pull request on `verify`, which
+`proof.yml` posts from the gate on a pull request and from the gate and three
+engines on a merge group. The train is deleted.
+
 ## References
 
 - [Confect React clients](https://confect.dev/v10/clients/react)

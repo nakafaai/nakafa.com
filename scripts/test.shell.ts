@@ -4,6 +4,7 @@ import {
   Effect,
   FileSystem,
   Layer,
+  Option,
   Record as Rec,
   Ref,
   Schema,
@@ -34,42 +35,52 @@ export function scriptedShell(
     Effect.gen(function* () {
       const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
       const files = yield* FileSystem.FileSystem;
+      // A piped command, or one the script leaves unanswered, runs for real.
       return ChildProcessSpawner.make((command) =>
-        Effect.gen(function* () {
-          if (!ChildProcess.isStandardCommand(command)) {
-            return yield* spawner.spawn(command);
+        Option.match(
+          Option.flatMap(
+            Option.liftPredicate(command, ChildProcess.isStandardCommand),
+            (standard) => {
+              const args = Arr.map(standard.args, String);
+              return Option.map(
+                Option.fromNullishOr(script(standard.command, args)),
+                (answer) => ({
+                  answer,
+                  line: Arr.join([standard.command, ...args], " "),
+                })
+              );
+            }
+          ),
+          {
+            onNone: () => spawner.spawn(command),
+            onSome: ({ answer, line }) =>
+              Effect.gen(function* () {
+                yield* Ref.update(calls, Arr.append(line));
+                for (const [path, text] of Rec.toEntries(answer.files ?? {})) {
+                  yield* files.makeDirectory(
+                    path.slice(0, path.lastIndexOf("/")),
+                    { recursive: true }
+                  );
+                  yield* files.writeFileString(path, text);
+                }
+                if (answer.missing === true) {
+                  return yield* spawner.spawn(
+                    ChildProcess.make("/nonexistent/scripted/command")
+                  );
+                }
+                return yield* spawner.spawn(
+                  ChildProcess.make("sh", [
+                    "-c",
+                    'printf "%s" "$1"; printf "%s" "$2" >&2; exit "$3"',
+                    "sh",
+                    answer.stdout ?? "",
+                    answer.stderr ?? "",
+                    String(answer.code ?? 0),
+                  ])
+                );
+              }),
           }
-          const args = Arr.map(command.args, String);
-          const answer = script(command.command, args);
-          if (answer === undefined) {
-            return yield* spawner.spawn(command);
-          }
-          yield* Ref.update(
-            calls,
-            Arr.append(Arr.join([command.command, ...args], " "))
-          );
-          for (const [path, text] of Rec.toEntries(answer.files ?? {})) {
-            yield* files.makeDirectory(path.slice(0, path.lastIndexOf("/")), {
-              recursive: true,
-            });
-            yield* files.writeFileString(path, text);
-          }
-          if (answer.missing === true) {
-            return yield* spawner.spawn(
-              ChildProcess.make("/nonexistent/scripted/command")
-            );
-          }
-          return yield* spawner.spawn(
-            ChildProcess.make("sh", [
-              "-c",
-              'printf "%s" "$1"; printf "%s" "$2" >&2; exit "$3"',
-              "sh",
-              answer.stdout ?? "",
-              answer.stderr ?? "",
-              String(answer.code ?? 0),
-            ])
-          );
-        })
+        )
       );
     })
   ).pipe(Layer.provide(NodeServices.layer));

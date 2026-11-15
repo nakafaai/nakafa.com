@@ -88,9 +88,6 @@ describe("proof command line", () => {
           runProof("/root", [SHA])
         );
         expect(yield* sharedWithMain.exit).toBe(0);
-        expect(sharedWithMain.calls).toContain(
-          `gh api --silent repos/nakafaai/nakafa.com/statuses/${SHA} -f state=success -f context=proof/new -f target_url=${RUN.url} -f description=No new failure; 2 fail on main ${MAIN.slice(0, 10)} too`
-        );
         const newOnHead = yield* withGithub(
           github(red, RUN, {
             chromium: shard("chromium", ["e2e/a.browser.ts"]),
@@ -100,16 +97,8 @@ describe("proof command line", () => {
           runProof("/root", [SHA])
         );
         expect(yield* newOnHead.exit).toBe(1);
-        expect(
-          Arr.some(newOnHead.calls, (call) =>
-            call.includes("state=failure -f context=proof/new")
-          )
-        ).toBe(true);
         const onMain = yield* withGithub(github({}), runProof("/root", [MAIN]));
         expect(yield* onMain.exit).toBe(1);
-        expect(
-          Arr.some(onMain.calls, (call) => call.includes("context=proof/new"))
-        ).toBe(false);
         const greenMain = yield* withGithub(
           github({
             chromium: shard("chromium"),

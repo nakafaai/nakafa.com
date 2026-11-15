@@ -12,7 +12,6 @@ import { failuresOf, makeBaseline } from "#scripts/proof/baseline";
 import { mainHead, ProofError } from "#scripts/proof/client";
 import {
   githubProver,
-  postVerdict,
   proveOnGithub,
   type RunTimings,
 } from "#scripts/proof/github";
@@ -126,7 +125,6 @@ export const runProof = Effect.fn("proof.run")(function* (
     failures,
     (failure) => !Arr.contains(shared, failure)
   );
-  yield* postVerdict(input.sha, result.url, fresh, shared, main);
   yield* writeOutput(
     `${formatProof(result, gated, timings)}${formatVerdict(fresh, shared, main)}`
   );

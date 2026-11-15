@@ -90,7 +90,6 @@
     "test:scripts": "bun run typecheck:scripts && vitest run --config scripts/vitest.config.mts",
     "test:ui": "turbo run test:ui",
     "test:watch": "turbo run test:watch",
-    "train": "node scripts/landing/main.ts",
     "typecheck:scripts": "tsrs --project scripts/tsconfig.json --noEmit",
     "version-packages": "changeset version"
   },

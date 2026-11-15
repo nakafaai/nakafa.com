@@ -3,7 +3,7 @@ import {
   proofFailures,
   SpecPath,
 } from "@repo/backend/scripts/content/acceptance/result";
-import { Array as Arr, Effect, HashSet, Order, Ref, Schema } from "effect";
+import { Array as Arr, Effect, HashSet, Ref, Schema } from "effect";
 import { Prover } from "#scripts/proof/github";
 
 /** The failure of a proof that names no spec file, such as a failed build or a machine that never reported. */
@@ -57,12 +57,5 @@ export const makeBaseline = Effect.fn("proof.makeBaseline")(function* (
     return Arr.filter(failures, (failure) => HashSet.has(now, failure));
   });
 
-  return {
-    main,
-    shared,
-    /** Every spec this baseline found failing on main, in path order. */
-    failing: Ref.get(failing).pipe(
-      Effect.map((specs) => Arr.sort(Array.from(specs), Order.String))
-    ),
-  };
+  return { shared };
 });

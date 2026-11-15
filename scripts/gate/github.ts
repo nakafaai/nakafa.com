@@ -19,7 +19,7 @@ export class GateError extends Schema.TaggedError<
 >()("GateError", { message: Schema.String }) {}
 
 /** The summary status the gate workflow posts on a head; each part posts `gate/<part>`. */
-export const GATE_CONTEXT = "gate";
+const GATE_CONTEXT = "gate";
 
 /**
  * How long a waiting gate sleeps between two looks. A look is one GraphQL

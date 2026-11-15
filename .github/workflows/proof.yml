@@ -12,8 +12,8 @@
 # A merge group runs the gate and the three engines over the specs its diff
 # selects (scripts/proof/select.ts), and the job that finishes last posts
 # `verify` from the gate and the three engine statuses. `workflow_dispatch`
-# serves `bun run gate`, whose gate also posts `verify`, `bun run proof`, the
-# train, and a merge group rehearsal that names its `base`.
+# serves `bun run gate`, whose gate also posts `verify`, `bun run proof`, and a
+# merge group rehearsal that names its `base`.
 #
 # Four jobs side by side and no `needs`: the gate, and one job per engine that
 # installs, builds and proves on its own machine. Every `needs` stage waits in
@@ -101,16 +101,10 @@ jobs:
       statuses: write
     env:
       GH_TOKEN: ${{ github.token }}
-      # A head or a train batch typechecks and tests the workspaces it changes
+      # A head or a merge group typechecks and tests the workspaces it changes
       # against main and their dependents; `full` runs every workspace.
       AFFECTED: ${{ !inputs.full && '--affected' || '' }}
       TURBO_SCM_BASE: origin/main
-      # The landing train's tests write commits, as the train does on the Mac, so
-      # the runner names an author the way the Mac's Git configuration does.
-      GIT_AUTHOR_EMAIL: 41898282+github-actions[bot]@users.noreply.github.com
-      GIT_AUTHOR_NAME: github-actions[bot]
-      GIT_COMMITTER_EMAIL: 41898282+github-actions[bot]@users.noreply.github.com
-      GIT_COMMITTER_NAME: github-actions[bot]
     steps:
       - name: Mark the gate pending
         run: |

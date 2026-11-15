@@ -20,13 +20,9 @@ export function collectText(
  */
 export const runText = Effect.fn("RepositoryPolicy.runText")(function* (
   command: string,
-  args: readonly string[],
-  cwd?: string
+  args: readonly string[]
 ) {
-  const child = yield* ChildProcess.make(command, args, {
-    ...(cwd === undefined ? {} : { cwd }),
-    stdin: "ignore",
-  });
+  const child = yield* ChildProcess.make(command, args, { stdin: "ignore" });
   const [code, stdout, stderr] = yield* Effect.all(
     [child.exitCode, collectText(child.stdout), collectText(child.stderr)],
     { concurrency: "unbounded" }

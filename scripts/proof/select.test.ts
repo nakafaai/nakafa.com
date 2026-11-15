@@ -1,12 +1,7 @@
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { Array as Arr, Effect, Ref } from "effect";
-import {
-  RUNTIME_FILE,
-  SMOKE_SPEC,
-  selectGroup,
-  selectSpecs,
-} from "#scripts/proof/select";
+import { SMOKE_SPEC, selectGroup, selectSpecs } from "#scripts/proof/select";
 import { MAIN, PROCESS_TIMEOUT, SHA } from "#scripts/proof/test.github";
 import { type Answer, scriptedShell } from "#scripts/test.shell";
 
@@ -21,9 +16,16 @@ const PRESENT = [
 
 describe("merge group specs", () => {
   it("proves the smoke spec alone for a change to nothing the product runs", () => {
-    const changed = ["scripts/landing/train.ts", "docs/adr/0048-proof.md"];
-    expect(Arr.some(changed, (path) => RUNTIME_FILE.test(path))).toBe(false);
-    expect(selectSpecs(changed, PRESENT)).toEqual([SMOKE_SPEC]);
+    expect(
+      selectSpecs(
+        [
+          "scripts/proof/select.ts",
+          "docs/adr/0048-proof.md",
+          "apps/www/README.md",
+        ],
+        PRESENT
+      )
+    ).toEqual([SMOKE_SPEC]);
   });
 
   it("adds the spec files a group changes that its head still holds", () => {
@@ -63,7 +65,7 @@ describe("merge group specs", () => {
 describe("selecting a merge group's specs", () => {
   const select = (
     argv: readonly string[],
-    answer: (args: readonly string[]) => Answer
+    answer: (args: readonly string[]) => Answer | undefined
   ) =>
     Effect.gen(function* () {
       const calls = yield* Ref.make<readonly string[]>([]);
@@ -93,6 +95,23 @@ describe("selecting a merge group's specs", () => {
           `git diff --name-only --no-renames ${MAIN} ${SHA}`,
           `git ls-tree -r --name-only ${SHA} -- apps/www/e2e`,
         ]);
+      }).pipe(Effect.provide(NodeServices.layer)),
+    PROCESS_TIMEOUT
+  );
+
+  it.effect(
+    "reads a real diff and tree with Git, here #2563 against its parent on main",
+    () =>
+      Effect.gen(function* () {
+        const { exit, calls } = yield* select(
+          [
+            "023dfd91e25f6c8391258a669f90daf57b83bafd",
+            "5442d613c37a043b8550cf9d61825682b9f741c3",
+          ],
+          () => undefined
+        );
+        expect(exit._tag).toBe("Success");
+        expect(calls).toEqual([]);
       }).pipe(Effect.provide(NodeServices.layer)),
     PROCESS_TIMEOUT
   );

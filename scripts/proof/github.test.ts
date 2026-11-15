@@ -106,7 +106,7 @@ describe("GitHub proof runner", () => {
   );
 
   it.effect(
-    "verifies a combination whole in one job, and a gate that did not pass or run fails it",
+    "reads the gate from its steps: a gate that did not pass or run is no pass",
     () =>
       Effect.gen(function* () {
         const green = {
@@ -114,21 +114,19 @@ describe("GitHub proof runner", () => {
           firefox: shard("firefox"),
           webkit: shard("webkit"),
         };
-        const verify = (run: unknown) =>
+        const proveRun = (run: unknown) =>
           withGithub(
             github(green, run),
-            Effect.flatMap(Prover, (prover) => prover.verify(SHA, [])).pipe(
-              Effect.provide(githubProver)
-            )
+            proveOnGithub(SHA, [], { gate: true, full: false })
           );
-        const passed = yield* verify(RUN);
-        expect((yield* passed.exit).gated).toBe(true);
+        const passed = yield* proveRun(RUN);
+        expect((yield* passed.exit).gated).toEqual(Option.some(true));
         expect(
           Arr.some(passed.calls, (call) =>
             call.includes("-f gate=true -f full=false")
           )
         ).toBe(true);
-        const failed = yield* verify({
+        const failed = yield* proveRun({
           ...RUN,
           jobs: [
             {
@@ -137,10 +135,10 @@ describe("GitHub proof runner", () => {
             },
           ],
         });
-        expect((yield* failed.exit).gated).toBe(false);
-        const never = yield* verify({ ...RUN, jobs: [] });
+        expect((yield* failed.exit).gated).toEqual(Option.some(false));
+        const never = yield* proveRun({ ...RUN, jobs: [] });
         const unread = yield* never.exit;
-        expect(unread.gated).toBe(false);
+        expect(unread.gated).toEqual(Option.none());
         expect(unread.result.passed).toBe(true);
       }).pipe(Effect.provide(NodeServices.layer)),
     PROCESS_TIMEOUT
@@ -163,11 +161,11 @@ describe("GitHub proof runner", () => {
             MutableRef.getAndIncrement(views) === 0
               ? { stdout: toJson({ ...RUN, conclusion: "cancelled" }) }
               : answer(args),
-          Effect.flatMap(Prover, (prover) => prover.verify(SHA, [])).pipe(
+          Effect.flatMap(Prover, (prover) => prover.prove(SHA, [])).pipe(
             Effect.provide(githubProver)
           )
         );
-        expect((yield* exit).gated).toBe(true);
+        expect((yield* exit).passed).toBe(true);
         expect(
           Arr.filter(calls, (call) => call.startsWith("gh workflow run"))
         ).toHaveLength(2);
