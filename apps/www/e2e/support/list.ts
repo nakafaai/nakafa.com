@@ -7,6 +7,7 @@ import {
   saved,
 } from "@/e2e/support/changes";
 import { EMPTY, editorOf, opened } from "@/e2e/support/memory";
+import { escapeProbe } from "@/e2e/support/probe";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
 /** How many memories the long list holds: three more than the first page loads. */
@@ -50,8 +51,7 @@ export const writeMemory = Effect.fn("NakafaE2E.writeMemory")(function* (
     await page.getByRole("button", { name: "Add memory" }).click();
     await opened(page, "");
     await page.keyboard.type(text);
-    await editor.press("Escape");
-    await expect(editor).toHaveCount(0);
+    await escapeProbe(page, editor);
   });
 });
 

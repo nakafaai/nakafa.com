@@ -72,7 +72,7 @@ const verifyShortList = Effect.fn("NakafaE2E.verifyShortList")(function* (
   });
 });
 
-for (const width of [390, 1440]) {
+for (const width of [390, 391, 392, 393, 394]) {
   test.describe(`Memory list shorter than a page at ${width}px`, () => {
     test.use({ viewport: { height: 900, width } });
 

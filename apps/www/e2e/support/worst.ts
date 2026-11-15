@@ -10,6 +10,7 @@ import {
 } from "@/e2e/support/memory";
 import { CARD } from "@/e2e/support/selector";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
+import { escapeProbe } from "@/e2e/support/probe";
 import { firstRow } from "@/e2e/support/window";
 
 /** The title of a memory in its editor. */
@@ -114,8 +115,7 @@ export const writeWorst = Effect.fn("NakafaE2E.writeWorst")(function* (
       }
       await page.getByRole("button", { exact: true, name: "Divider" }).click();
     }
-    await editor.press("Escape");
-    await expect(editor).toHaveCount(0);
+    await escapeProbe(page, editor);
     await saved(changes, before);
   });
 });

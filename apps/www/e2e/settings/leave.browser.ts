@@ -405,7 +405,7 @@ const verifySituations = Effect.fn("NakafaE2E.verifySituations")(function* (
   });
 });
 
-for (const width of [320, 1440]) {
+for (const width of [320, 321, 322, 323, 324]) {
   test.describe(`Memory situations at ${width}px`, () => {
     test.use({ viewport: { height: 900, width } });
 
