@@ -1,3 +1,4 @@
+// Timing probe: this head touches one file of the workspace it measures.
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { createRouter } from "@tanstack/react-router";
 import type { NotFoundPage } from "@/lib/routing/missing";
