@@ -56,14 +56,22 @@ function pageOf(notification: SchoolNotification): Option.Option<URL> {
 
 /**
  * The address a row opens: a reply opens its comment on the page that shows it, in
- * the reader's language, through the address that finds that page, and a school's
- * row opens its page on the school's own host. A reply that is gone opens nothing.
+ * the reader's language, through the address that finds that page, a try-out's
+ * reminder opens its set, where the running attempt resumes, and a school's row
+ * opens its page on the school's own host. A reply or an attempt that is gone opens
+ * nothing.
  */
 export function addressOf(notification: ListNotification, locale: string) {
   if (notification.changeType === "comment.replied") {
     return notification.actor === null
       ? undefined
       : `/${locale}/comment/${notification.commentId}`;
+  }
+  if (notification.changeType === "tryout.reminder") {
+    const { set } = notification;
+    return set === null
+      ? undefined
+      : `/${locale}/try-out/${set.countryKey}/${set.examKey}/${set.trackKey}/${set.setKey}`;
   }
   return Option.getOrUndefined(
     Option.map(pageOf(notification), (url) => url.href)

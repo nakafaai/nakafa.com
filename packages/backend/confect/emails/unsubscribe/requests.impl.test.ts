@@ -55,7 +55,10 @@ describe("emails/unsubscribe/requests", () => {
         const switches = yield* fixture.run(emailSwitches);
         expect(
           Arr.map(switches, ({ channel, kind }) => ({ channel, kind }))
-        ).toEqual([{ channel: "email", kind: "commentReply" }]);
+        ).toEqual([
+          { channel: "email", kind: "commentReply" },
+          { channel: "email", kind: "tryoutReminder" },
+        ]);
       })
   );
 

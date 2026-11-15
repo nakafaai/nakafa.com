@@ -25,6 +25,7 @@ const SENTENCES = {
     "exam.reminder": "Eine Prüfung deines Kindes steht bevor.",
     "grade.released": "Eine neue Note wurde freigegeben.",
     "comment.replied": "Jemand hat auf deinen Kommentar geantwortet.",
+    "tryout.reminder": "Dein Probetest endet in einer Stunde.",
   },
   en: {
     "announcement.posted": "There is a new announcement in your class.",
@@ -37,6 +38,7 @@ const SENTENCES = {
     "exam.reminder": "Your child has an exam coming up.",
     "grade.released": "A new grade has been released.",
     "comment.replied": "Someone replied to your comment.",
+    "tryout.reminder": "Your try-out ends in an hour.",
   },
   id: {
     "announcement.posted": "Ada pengumuman baru di kelasmu.",
@@ -49,6 +51,7 @@ const SENTENCES = {
     "exam.reminder": "Anakmu akan mengikuti ujian.",
     "grade.released": "Ada nilai baru yang dirilis.",
     "comment.replied": "Ada yang membalas komentarmu.",
+    "tryout.reminder": "Try out kamu berakhir satu jam lagi.",
   },
   ms: {
     "announcement.posted": "Ada pengumuman baharu dalam kelas kamu.",
@@ -62,6 +65,7 @@ const SENTENCES = {
     "exam.reminder": "Anak kamu akan menduduki peperiksaan.",
     "grade.released": "Markah baharu telah dikeluarkan.",
     "comment.replied": "Seseorang telah membalas komen kamu.",
+    "tryout.reminder": "Percubaan kamu tamat dalam sejam.",
   },
 } satisfies Record<
   typeof AppLocaleCodeSchema.Type,

@@ -12,6 +12,7 @@ import { captureProductEvent } from "@repo/backend/confect/analytics/capture";
 import { tryoutGate } from "@repo/backend/confect/tryouts/gate";
 import { readWorkingLanguage } from "@repo/backend/confect/tryouts/language";
 import { writeTryoutSetProgress } from "@repo/backend/confect/tryouts/progress/write";
+import { scheduleReminders } from "@repo/backend/confect/tryouts/reminders/timing";
 import { createAttemptPlacements } from "@repo/backend/confect/tryouts/runtime/placement";
 import type { TryoutSection } from "@repo/backend/confect/tryouts/runtime/schema";
 import {
@@ -155,6 +156,11 @@ const persistAttemptStart = Effect.fn("tryouts.start.persistAttemptStart")(
         }
       )
       .pipe(Effect.catchDefect(flow(toTryoutStartError, Effect.fail)));
+    yield* scheduleReminders({
+      attemptId: attempt._id,
+      expiresAt: attempt.expiresAt,
+      setTitle: input.source.set.title,
+    }).pipe(Effect.catchDefect(flow(toTryoutStartError, Effect.fail)));
     const working = yield* readWorkingLanguage(attempt.userId, attempt);
     yield* captureProductEvent({
       distinctId: input.userId,

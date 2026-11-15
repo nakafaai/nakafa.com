@@ -38,4 +38,10 @@ describe("notifications/topic", () => {
     expect(inTopic("comment.replied", "comments")).toBe(true);
     expect(inTopic("comment.replied", "school")).toBe(false);
   });
+
+  it("files a try-out's reminder under try-out and not under school or comments", () => {
+    expect(inTopic("tryout.reminder", "tryouts")).toBe(true);
+    expect(inTopic("tryout.reminder", "school")).toBe(false);
+    expect(inTopic("tryout.reminder", "comments")).toBe(false);
+  });
 });

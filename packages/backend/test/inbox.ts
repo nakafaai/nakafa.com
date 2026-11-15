@@ -5,7 +5,10 @@ import {
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
 import { noteInvite } from "@repo/backend/confect/notifications/inbox";
-import { isSchoolRow } from "@repo/backend/confect/notifications/schema";
+import {
+  AccountChange,
+  isSchoolRow,
+} from "@repo/backend/confect/notifications/schema";
 import { NEW_TENANT_POLICIES } from "@repo/backend/confect/tenancy/policy";
 import { Email } from "@repo/backend/confect/tenancy/schema";
 import {
@@ -169,8 +172,12 @@ export const schoolViews = <Row extends { readonly changeType: string }>(
 ) =>
   Arr.filter(
     rows,
-    (row): row is Exclude<Row, { readonly changeType: "comment.replied" }> =>
-      row.changeType !== "comment.replied"
+    (
+      row
+    ): row is Exclude<
+      Row,
+      { readonly changeType: "comment.replied" | "tryout.reminder" }
+    > => !Schema.is(AccountChange)(row.changeType)
   );
 
 /** Every journal cursor of the inbox, oldest first. */

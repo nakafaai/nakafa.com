@@ -1,5 +1,6 @@
 import { QueryResult, useMutation, useQuery } from "@confect/react";
 import notifications from "@repo/backend/confect/_generated/refs/notifications";
+import { ACCOUNT_RELATIONS } from "@repo/backend/confect/notifications/rules";
 import { useConvexAuth } from "@/components/auth/convex";
 import { ChoiceContext } from "@/components/notifications/choice";
 import {
@@ -38,7 +39,10 @@ function AccountChoices() {
           : null
       }
     >
-      <PreferenceTable off={isRead ? off.value : []} relation="commenter" />
+      <PreferenceTable
+        off={isRead ? off.value : []}
+        relations={ACCOUNT_RELATIONS}
+      />
     </ChoiceContext>
   );
 }

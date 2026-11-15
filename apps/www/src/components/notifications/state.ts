@@ -8,11 +8,20 @@ export type ListNotification = Ref.Returns<
   typeof notifications.inbox.list
 >["page"][number];
 
-/** An inbox row that a school holds, not one of the account itself. */
-export type SchoolNotification = Exclude<
+/** An inbox row of the account itself: a reply to its comment, or a reminder of its running try-out. */
+type AccountNotification = Extract<
   ListNotification,
-  { readonly changeType: "comment.replied" }
+  { readonly changeType: "comment.replied" | "tryout.reminder" }
 >;
+
+/** An inbox row that a school holds, not one of the account itself. */
+export type SchoolNotification = Exclude<ListNotification, AccountNotification>;
+
+/** Whether an inbox row is the account's own rather than a school's. */
+const isAccountNotification = (
+  row: ListNotification
+): row is AccountNotification =>
+  row.changeType === "comment.replied" || row.changeType === "tryout.reminder";
 
 /**
  * The row with this id, read at the given moment. A row that is read already keeps
@@ -43,7 +52,7 @@ export function markPageRead(
   return Arr.map(page, (row) =>
     row.readAt === undefined &&
     (slug === undefined ||
-      (row.changeType !== "comment.replied" && row.tenant.slug === slug))
+      (!isAccountNotification(row) && row.tenant.slug === slug))
       ? { ...row, readAt }
       : row
   );
