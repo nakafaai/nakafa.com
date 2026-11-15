@@ -36,13 +36,24 @@ const numbersOf = (sha: string) =>
     Number
   );
 
-/** The named pull requests of a list, or all of them when none is named. */
+/**
+ * The named pull requests of a list, or all of them when none is named, and
+ * each named one the list does not hold, refused as not open.
+ */
 const named = (pulls: readonly Candidate[], numbers: readonly number[]) =>
-  Effect.succeed(
-    numbers.length === 0
-      ? pulls
-      : Arr.filter(pulls, (one) => Arr.contains(numbers, one.number))
-  );
+  Effect.succeed({
+    candidates:
+      numbers.length === 0
+        ? pulls
+        : Arr.filter(pulls, (one) => Arr.contains(numbers, one.number)),
+    refused: Arr.map(
+      Arr.filter(
+        numbers,
+        (number) => !Arr.some(pulls, (one) => one.number === number)
+      ),
+      (number) => ({ number, reason: "it is not open, or it is a draft" })
+    ),
+  });
 
 /**
  * A repository and a prover where each combination's SHA names the pull

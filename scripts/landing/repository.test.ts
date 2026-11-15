@@ -87,6 +87,8 @@ describe("train repository", () => {
               ready: yield* repository.ready([]),
               chosen: yield* repository.ready([6]),
               ungated: yield* repository.ready([7]),
+              refused: yield* repository.ready([7, 9, 5, 8]),
+              unproven: yield* repository.proven([6]),
             };
           }),
           // Main's tip is f; every head but c contains it.
@@ -100,19 +102,108 @@ describe("train repository", () => {
             return args[0] === "fetch" ? { stdout: "" } : undefined;
           }
         );
-        expect(Arr.map(value.all, (one) => one.number)).toEqual([4, 9]);
+        const numbers = (seats: typeof value.all) =>
+          Arr.map(seats.candidates, (one) => one.number);
+        expect(numbers(value.all)).toEqual([4, 9]);
         // #9 changes apps/www/src, which the product runs; #4 changes nothing.
-        expect(Arr.map(value.all, (one) => one.runtime)).toEqual([false, true]);
+        expect(Arr.map(value.all.candidates, (one) => one.runtime)).toEqual([
+          false,
+          true,
+        ]);
         // A batch takes a stack whose own gate passed on a head that contains
         // main, its proof unasked: not #9, gated on an older main, nor #7,
         // whose gate has not passed.
-        expect(Arr.map(value.ready, (one) => one.number)).toEqual([4, 6]);
-        expect(Arr.map(value.chosen, (one) => one.number)).toEqual([6]);
-        expect(value.ungated).toEqual([]);
-        expect(Arr.map(value.named, (one) => one.number)).toEqual([9]);
-        expect(Arr.map(value.named, (one) => one.specs)).toEqual([
+        expect(numbers(value.ready)).toEqual([4, 6]);
+        expect(value.ready.refused).toEqual([]);
+        expect(numbers(value.chosen)).toEqual([6]);
+        expect(numbers(value.named)).toEqual([9]);
+        expect(Arr.map(value.named.candidates, (one) => one.specs)).toEqual([
           ["e2e/c/one.browser.ts"],
         ]);
+        // A named pull request the train cannot seat says why, and what to run.
+        expect(value.ungated.candidates).toEqual([]);
+        expect(value.refused.refused).toEqual([
+          {
+            number: 7,
+            reason: `#7, the top of its stack, has no passed gate on eeeeeeeeee: run bun run gate ${"e".repeat(40)}`,
+          },
+          {
+            number: 9,
+            reason:
+              "#9, the top of its stack, does not contain main ffffffffff: run bun run freshen 9",
+          },
+          { number: 5, reason: "it is not open, or it is a draft" },
+          { number: 8, reason: "it is not open, or it is a draft" },
+        ]);
+        expect(value.unproven.refused).toEqual([
+          {
+            number: 6,
+            reason:
+              "its own gate and proof have not both passed on its head, or on a head above it that carries it",
+          },
+        ]);
+      }).pipe(Effect.provide(NodeServices.layer))
+  );
+
+  it.effect(
+    "names why a named pull request found no seat: a stack whose top does not carry the member below, or a branch no open pull request holds",
+    () =>
+      Effect.gen(function* () {
+        const listed = (number: number, base: string, head: string) => ({
+          number,
+          headRefOid: head.repeat(40),
+          headRefName: `branch-${number}`,
+          baseRefName: base,
+          title: `Change ${number}`,
+          isDraft: false,
+          files: [],
+        });
+        const { value } = yield* withRepository(
+          "/root",
+          (args) =>
+            args[0] === "pr"
+              ? {
+                  stdout: toJson([
+                    listed(11, "main", "1"),
+                    listed(12, "branch-11", "2"),
+                    listed(10, "branch-gone", "3"),
+                  ]),
+                }
+              : { stdout: STATUS("success") },
+          Effect.gen(function* () {
+            const repository = yield* Repository;
+            return {
+              ready: yield* repository.ready([12, 10]),
+              proven: yield* repository.proven([10]),
+            };
+          }),
+          // Every head contains main, but #12 does not carry #11's head.
+          (args) => {
+            if (args[0] === "ls-remote") {
+              return { stdout: `${"f".repeat(40)}\trefs/heads/main\n` };
+            }
+            if (args[0] === "merge-base") {
+              return { code: args[2] === "1".repeat(40) ? 1 : 0 };
+            }
+            return args[0] === "fetch" ? { stdout: "" } : undefined;
+          }
+        );
+        const orphan = {
+          number: 10,
+          reason: "it targets branch-gone, which no open pull request holds",
+        };
+        expect(value.ready).toEqual({
+          candidates: [],
+          refused: [
+            {
+              number: 12,
+              reason:
+                "#12 does not carry every member below it: run bun run freshen 12",
+            },
+            orphan,
+          ],
+        });
+        expect(value.proven.refused).toEqual([orphan]);
       }).pipe(Effect.provide(NodeServices.layer))
   );
 
@@ -281,7 +372,9 @@ describe("train repository", () => {
           },
           Effect.flatMap(Repository, (repository) => repository.proven([]))
         );
-        expect(Arr.map(value, (one) => [one.number, one.specs])).toEqual([
+        expect(
+          Arr.map(value.candidates, (one) => [one.number, one.specs])
+        ).toEqual([
           [1, []],
           [4, ["e2e/four.browser.ts"]],
           [5, []],

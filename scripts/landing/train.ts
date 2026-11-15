@@ -11,6 +11,7 @@ import {
   Order,
   Record as Rec,
   Ref,
+  Result,
   Schema,
   Semaphore,
 } from "effect";
@@ -33,6 +34,19 @@ export const Candidate = Schema.Struct({
   runtime: Schema.Boolean,
 });
 export type Candidate = typeof Candidate.Type;
+
+/** A named pull request the train did not seat, and what to do about it, so a train that takes nothing says why. */
+export const Refusal = Schema.Struct({
+  number: Schema.Int,
+  reason: Schema.String,
+});
+
+/** The pull requests a train may take, and each named one it may not. */
+export const Seats = Schema.Struct({
+  candidates: Schema.Array(Candidate),
+  refused: Schema.Array(Refusal),
+});
+export type Seats = typeof Seats.Type;
 
 /** A train that could not read, combine or land its pull requests. */
 export class TrainError extends Schema.TaggedError<
@@ -72,7 +86,7 @@ export class Repository extends Context.Service<
     /** Open pull requests whose own proof passed on their current head, in number order. */
     readonly proven: (
       numbers: readonly number[]
-    ) => Effect.Effect<readonly Candidate[], TrainError>;
+    ) => Effect.Effect<Seats, TrainError>;
     /**
      * Every open pull request that may ride a batch: each stack whole,
      * bottom-up, oldest stack first, whose top's own gate passed on a head that
@@ -81,7 +95,7 @@ export class Repository extends Context.Service<
      */
     readonly ready: (
       numbers: readonly number[]
-    ) => Effect.Effect<readonly Candidate[], TrainError>;
+    ) => Effect.Effect<Seats, TrainError>;
     /** The exact head of main now. */
     readonly main: Effect.Effect<string, TrainError>;
     /** Merges the heads onto the base in order, by SHA, and publishes the result for a proof. */
@@ -109,6 +123,7 @@ const TrainReport = Schema.Struct({
   landed: Schema.Array(Candidate),
   skipped: Schema.Array(Rejection),
   rejected: Schema.Array(Rejection),
+  refused: Schema.Array(Refusal),
   mainFailures: Schema.Array(Schema.String),
   flaky: Schema.Array(Flake),
 });
@@ -210,9 +225,20 @@ export const runTrain = Effect.fn("landing.runTrain")(function* (
   const repository = yield* Repository;
   const prover = yield* Prover;
   const main = yield* repository.main;
-  const candidates = batch
-    ? batchOf(yield* repository.ready(numbers))
+  const seats = batch
+    ? yield* repository.ready(numbers)
     : yield* repository.proven(numbers);
+  const candidates = batch ? batchOf(seats.candidates) : seats.candidates;
+  // A named pull request that a full batch leaves out rides the next one.
+  const waiting = Arr.filterMap(seats.candidates, (candidate) =>
+    Arr.contains(numbers, candidate.number) &&
+    !Arr.some(candidates, (one) => one.number === candidate.number)
+      ? Result.succeed({
+          number: candidate.number,
+          reason: "the batch is full: it rides the next one",
+        })
+      : Result.failVoid
+  );
   const accepted = yield* Ref.make<readonly Candidate[]>([]);
   const landings = yield* Ref.make<readonly Landing[]>([]);
   const rejected = yield* Ref.make<readonly Rejection[]>([]);
@@ -431,6 +457,7 @@ export const runTrain = Effect.fn("landing.runTrain")(function* (
         : []
     ),
     rejected: yield* Ref.get(rejected),
+    refused: Arr.appendAll(seats.refused, waiting),
     mainFailures: yield* baseline.failing,
     flaky: yield* Ref.get(flakes),
   };
@@ -450,6 +477,10 @@ export function formatTrain(report: TrainReport) {
       ),
       ...Arr.map(report.rejected, ({ candidate, reason }) =>
         line("rejected", candidate, reason)
+      ),
+      ...Arr.map(
+        report.refused,
+        ({ number, reason }) => `refused #${number}: ${reason}`
       ),
       ...Arr.map(report.mainFailures, (spec) => `main fails ${spec}`),
       ...Arr.map(

@@ -26,6 +26,7 @@ import {
   type Candidate,
   type Combination,
   Repository,
+  type Seats,
   TrainError,
 } from "#scripts/landing/train";
 import { REPOSITORY } from "#scripts/proof/client";
@@ -52,6 +53,47 @@ const candidateOf = ({ pull, stack, below }: Rider): Candidate => ({
   ),
   runtime: Arr.some(pull.files, ({ path }) => RUNTIME_FILE.test(path)),
 });
+
+/**
+ * The seats of a train: the candidates it may take among the named pull
+ * requests (every one when none is named), and each named one it may not, with
+ * what to do about it. `reasonOf` says why a pull request in a stack was left
+ * out; one that is not open, is a draft, or targets a branch no open pull
+ * request holds is named as such.
+ */
+const seatsOf = (
+  numbers: readonly number[],
+  pulls: readonly Pull[],
+  riders: readonly Rider[],
+  reasonOf: (number: number) => Option.Option<string>
+): Seats => {
+  const candidates = Arr.map(
+    Arr.filter(
+      riders,
+      ({ pull }) => numbers.length === 0 || Arr.contains(numbers, pull.number)
+    ),
+    candidateOf
+  );
+  const refused = Arr.filterMap(numbers, (number) => {
+    if (Arr.some(candidates, (candidate) => candidate.number === number)) {
+      return Result.failVoid;
+    }
+    const reason = Option.match(
+      Arr.findFirst(pulls, (pull) => pull.number === number),
+      {
+        onNone: () => "it is not open, or it is a draft",
+        onSome: (pull) =>
+          Option.getOrElse(
+            reasonOf(number),
+            () =>
+              `it targets ${pull.baseRefName}, which no open pull request holds`
+          ),
+      }
+    );
+    return Result.succeed({ number, reason });
+  });
+  return { candidates, refused };
+};
 
 /** A full commit SHA, as `git ls-remote` prints one. */
 const COMMIT_SHA = /^[0-9a-f]{40}$/u;
@@ -190,12 +232,14 @@ export const githubRepository = (root: string) =>
        * gate of its own, side by side with every other, while a batch it breaks
        * costs a bisect, one verification after another.
        */
-      const entering = (stack: Arr.NonEmptyReadonlyArray<Pull>, tip: string) =>
+      const refusalOf = (stack: Arr.NonEmptyReadonlyArray<Pull>, tip: string) =>
         Effect.gen(function* () {
           const top = Arr.lastNonEmpty(stack);
           const passed = yield* passedOn(top.headRefOid);
           if (!passed([GATE_CONTEXT])) {
-            return false;
+            return Option.some(
+              `#${top.number}, the top of its stack, has no passed gate on ${top.headRefOid.slice(0, 10)}: run bun run gate ${top.headRefOid}`
+            );
           }
           const fresh = yield* attempt(
             "git",
@@ -203,10 +247,16 @@ export const githubRepository = (root: string) =>
             root
           );
           if (fresh.code !== 0) {
-            return false;
+            return Option.some(
+              `#${top.number}, the top of its stack, does not contain main ${tip.slice(0, 10)}: run bun run freshen ${top.number}`
+            );
           }
           const below = Arr.dropRight(stack, 1);
-          return (yield* carried(top, below)).length === below.length;
+          return (yield* carried(top, below)).length === below.length
+            ? Option.none<string>()
+            : Option.some(
+                `#${top.number} does not carry every member below it: run bun run freshen ${top.number}`
+              );
         });
 
       /** The open pull requests that are no draft. */
@@ -264,13 +314,18 @@ export const githubRepository = (root: string) =>
                   }
                 )
               );
-              return Arr.map(
-                Arr.filter(
-                  landingOrder(Arr.flatten(riding)),
-                  ({ pull }) =>
-                    numbers.length === 0 || Arr.contains(numbers, pull.number)
-                ),
-                candidateOf
+              const inStack = (number: number) =>
+                Arr.some(Arr.flatten(stacks), (pull) => pull.number === number);
+              return seatsOf(
+                numbers,
+                pulls,
+                landingOrder(Arr.flatten(riding)),
+                (number) =>
+                  inStack(number)
+                    ? Option.some(
+                        "its own gate and proof have not both passed on its head, or on a head above it that carries it"
+                      )
+                    : Option.none()
               );
             })
           ),
@@ -286,16 +341,25 @@ export const githubRepository = (root: string) =>
                 "refs/heads/main",
                 ...Arr.map(pulls, (pull) => `refs/pull/${pull.number}/head`),
               ]);
-              const stacks = yield* Effect.filter(stacksOf(pulls), (stack) =>
-                entering(stack, tip)
+              const verdicts = yield* Effect.forEach(stacksOf(pulls), (stack) =>
+                refusalOf(stack, tip).pipe(
+                  Effect.map((refusal) => ({ stack, refusal }))
+                )
               );
-              return Arr.map(
-                Arr.filter(
-                  landingOrder(Arr.flatMap(stacks, ridersOf)),
-                  ({ pull }) =>
-                    numbers.length === 0 || Arr.contains(numbers, pull.number)
-                ),
-                candidateOf
+              const entered = Arr.filterMap(verdicts, ({ refusal, stack }) =>
+                Option.isNone(refusal) ? Result.succeed(stack) : Result.failVoid
+              );
+              return seatsOf(
+                numbers,
+                pulls,
+                landingOrder(Arr.flatMap(entered, ridersOf)),
+                (number) =>
+                  Arr.findFirst(verdicts, ({ refusal, stack }) =>
+                    Option.isSome(refusal) &&
+                    Arr.some(stack, (pull) => pull.number === number)
+                      ? Option.some(refusal.value)
+                      : Option.none()
+                  )
               );
             })
           ),

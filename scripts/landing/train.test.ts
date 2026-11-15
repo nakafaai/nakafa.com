@@ -134,6 +134,21 @@ describe("landing train", () => {
           Effect.provide(empty.layer)
         );
         expect(none.landed).toEqual([]);
+        // A named pull request that a full batch leaves out, or that the
+        // repository cannot seat, is reported with what to do about it.
+        const named = yield* runTrain(
+          [1, 2, 3, 4, 5, 6, 9],
+          [],
+          true,
+          false
+        ).pipe(Effect.provide(small.layer));
+        expect(named.refused).toEqual([
+          { number: 9, reason: "it is not open, or it is a draft" },
+          { number: 6, reason: "the batch is full: it rides the next one" },
+        ]);
+        expect(formatTrain(named)).toContain(
+          "refused #6: the batch is full: it rides the next one"
+        );
       })
   );
 
