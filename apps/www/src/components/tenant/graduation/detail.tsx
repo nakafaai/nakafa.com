@@ -18,8 +18,8 @@ import {
   PaneFill,
   PaneFooter,
   PaneHeader,
-} from "@/components/shared/pane";
-import { usePanes } from "@/components/shared/panes";
+} from "@/components/shared/page/pane";
+import { usePanes } from "@/components/shared/page/panes";
 import { columnAlign } from "@/components/shared/table/align";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";

@@ -10,7 +10,7 @@ import { Function as Fn } from "effect";
 import { useLayoutEffect, useState, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import { useTranslations } from "use-intl";
-import { PaneEdge } from "@/components/shared/panes/edge";
+import { PaneEdge } from "@/components/shared/page/panes/edge";
 import { MemoryDocument } from "@/components/user/settings/memory/document";
 import {
   MEMORY_ADD_ID,

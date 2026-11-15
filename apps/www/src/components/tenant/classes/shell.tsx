@@ -14,7 +14,7 @@ import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { PageStack } from "@/components/shared/page/body";
 import { Page } from "@/components/shared/page/frame";
-import { PanesProvider } from "@/components/shared/panes";
+import { PanesProvider } from "@/components/shared/page/panes";
 import { TableFiltersProvider } from "@/components/shared/table/toolbar";
 import { CHANNEL_PAGE_SIZE } from "@/components/tenant/classes/channels";
 import { ForumBody } from "@/components/tenant/classes/forum/body";

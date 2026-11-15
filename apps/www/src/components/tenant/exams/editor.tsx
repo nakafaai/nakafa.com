@@ -13,7 +13,11 @@ import {
 } from "react";
 import { createStore, useStore } from "zustand";
 import { useConvexAuth } from "@/components/auth/convex";
-import { Panes, PanesList, PanesProvider } from "@/components/shared/panes";
+import {
+  Panes,
+  PanesList,
+  PanesProvider,
+} from "@/components/shared/page/panes";
 import { ExamCanvas } from "@/components/tenant/exams/canvas";
 import { CreatedExamsContext } from "@/components/tenant/exams/created";
 import { ExamFooter } from "@/components/tenant/exams/footer";

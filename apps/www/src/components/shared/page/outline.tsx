@@ -17,7 +17,7 @@ import { SidebarToggle } from "@/components/sidebar/toggle";
 import { PublicPathLink } from "@/lib/routing/public/link";
 
 /** The outline panel: its heading slot, the outline, and the page's actions. */
-type SidebarRightProps = {
+type PageOutlineProps = {
   children: ReactNode;
   footer: ReactNode;
   header?: ReactNode;
@@ -28,7 +28,7 @@ type SidebarRightProps = {
  * to the page through the router. A border closes it, as the footer's border opens
  * the actions, so the panel reads as header, outline and footer.
  */
-export function SidebarRightHeader({
+export function PageOutlineHeader({
   description,
   descriptionLanguage,
   title,
@@ -64,7 +64,7 @@ export function SidebarRightHeader({
 }
 
 /** Frames the page actions composed below the outline. */
-export function SidebarRightFooter({ children }: { children: ReactNode }) {
+export function PageOutlineFooter({ children }: { children: ReactNode }) {
   return (
     <SidebarFooter className="border-t">
       <SidebarMenu>{children}</SidebarMenu>
@@ -73,7 +73,7 @@ export function SidebarRightFooter({ children }: { children: ReactNode }) {
 }
 
 /** Shares outline state with controls composed anywhere within the page. */
-export function SidebarRightProvider({ children }: { children: ReactNode }) {
+export function PageOutlineProvider({ children }: { children: ReactNode }) {
   return (
     <SidebarProvider
       className="duration-surface min-w-0 transition-[padding-right] motion-reduce:transition-none xl:pr-64 xl:has-[[data-side=right][data-sidebar-state=collapsed]]:pr-12"
@@ -91,12 +91,12 @@ export function SidebarRightProvider({ children }: { children: ReactNode }) {
  * the page it folds into a rail with its page actions and its own toggle at its
  * foot, which opens it again, so the page header holds no toggle there.
  */
-export function SidebarRightPanel({
+export function PageOutline({
   children,
   footer,
   header,
   ...props
-}: SidebarRightProps) {
+}: PageOutlineProps) {
   const tCommon = useTranslations("Common");
 
   return (

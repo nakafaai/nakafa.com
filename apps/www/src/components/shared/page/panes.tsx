@@ -18,9 +18,9 @@ import {
   PanesGroupContext,
   PanesGroupProvider,
   SizedPane,
-} from "@/components/shared/panes/row";
-import { PaneSide } from "@/components/shared/panes/side";
-import { PaneStartContext } from "@/components/shared/panes/start";
+} from "@/components/shared/page/panes/row";
+import { PaneSide } from "@/components/shared/page/panes/side";
+import { PaneStartContext } from "@/components/shared/page/panes/start";
 import { isTyping } from "@/components/shared/typing";
 
 /** From which width two panes stand side by side: tablet for a list, laptop for the exam editor, wide for a chat's discussion. */
@@ -330,7 +330,7 @@ export function PanesList({
  * A page whose own selection holds the open row passes `open` and `onClose`, and its detail closes
  * like a row's. The detail draws in one place at a time.
  */
-export function PanesDetail({
+export function PagePane({
   alwaysOn = false,
   children,
   label,

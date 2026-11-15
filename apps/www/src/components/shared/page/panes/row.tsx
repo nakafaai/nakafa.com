@@ -11,7 +11,7 @@ import {
   use,
   useState,
 } from "react";
-import { PaneStartContext } from "@/components/shared/panes/start";
+import { PaneStartContext } from "@/components/shared/page/panes/start";
 
 /** The share of a group's width each sized pane took when a person last moved its handle, by the pane's ID. */
 const PaneSizes = Schema.Record(Schema.String, Schema.Finite);

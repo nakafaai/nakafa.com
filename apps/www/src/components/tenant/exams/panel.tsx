@@ -3,8 +3,8 @@ import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Option } from "effect";
 import { useTranslations } from "use-intl";
-import { PaneBody, PaneHeader } from "@/components/shared/pane";
-import { PanesDetail, PaneTarget, usePanes } from "@/components/shared/panes";
+import { PaneBody, PaneHeader } from "@/components/shared/page/pane";
+import { PagePane, PaneTarget, usePanes } from "@/components/shared/page/panes";
 import { useActiveQuestion } from "@/components/tenant/exams/provider";
 
 /**
@@ -19,7 +19,7 @@ export function ExamPanel() {
   const active = useActiveQuestion();
 
   return (
-    <PanesDetail alwaysOn label={t("teacher-layer")}>
+    <PagePane alwaysOn label={t("teacher-layer")}>
       <PaneHeader
         description={Option.match(active, {
           onNone: () => undefined,
@@ -30,7 +30,7 @@ export function ExamPanel() {
       <PaneBody>
         <PaneTarget />
       </PaneBody>
-    </PanesDetail>
+    </PagePane>
   );
 }
 

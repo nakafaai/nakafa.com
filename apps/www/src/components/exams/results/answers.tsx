@@ -12,8 +12,8 @@ import {
 } from "@/components/exams/results/context";
 import { GradeField } from "@/components/exams/results/grade";
 import { responseText, verdictKeys } from "@/components/exams/results/model";
-import { PaneBody, PaneHeader } from "@/components/shared/pane";
-import { PanesDetail, usePanes } from "@/components/shared/panes";
+import { PaneBody, PaneHeader } from "@/components/shared/page/pane";
+import { PagePane, usePanes } from "@/components/shared/page/panes";
 
 /** Reads the attempt that the open row names. */
 const readAttemptId = Schema.decodeUnknownOption(Id("examAttempts"));
@@ -143,9 +143,9 @@ export function StudentAnswersPanel() {
   const t = useTranslations("Exams");
 
   return (
-    <PanesDetail label={t("results-student-answers")}>
+    <PagePane label={t("results-student-answers")}>
       <OpenAttempt />
-    </PanesDetail>
+    </PagePane>
   );
 }
 
