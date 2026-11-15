@@ -126,6 +126,7 @@ const inspectSources = Effect.fn("RepositoryPolicy.inspectSources")(function* (
         inspectButtonSource(file, sourceFile),
         inspectIconSource(file, sourceFile),
         inspectDialogSource(file, sourceFile),
+        inspectIconSource(file, sourceFile),
         inspectPickerSource(file, sourceFile),
         inspectNativeControls(file, sourceFile),
         inspectStateSource(file, sourceFile),

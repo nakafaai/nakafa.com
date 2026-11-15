@@ -68,11 +68,13 @@ test("the proctor shows the room's QR code and token, and a changed token comes 
     0,
     { timeout: readinessTimeoutMilliseconds }
   );
-  // The footer's Close, beside the header's own close icon.
-  await changed
-    .locator('[data-slot="dialog-footer"]')
-    .getByRole("button", { name: "Close", exact: true })
-    .click();
+  // The header's close icon is the one way out: no footer repeats it.
+  await expect(
+    changed
+      .locator('[data-slot="dialog-footer"]')
+      .getByRole("button", { name: "Close", exact: true })
+  ).toHaveCount(0);
+  await changed.getByRole("button", { name: "Close", exact: true }).click();
   await expect(changed).toHaveCount(0);
   await proctorContext.close();
 });

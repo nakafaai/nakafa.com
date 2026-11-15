@@ -143,7 +143,7 @@ test("the editor imports a Word file into the open exam from its header menu, as
   ).toBeDisabled();
   await chooseFile();
   await expect(importDialog.getByText("Bab 2.docx")).toBeVisible();
-  await importDialog.getByRole("button", { name: "Cancel" }).click();
+  await page.keyboard.press("Escape");
   await expect(importDialog).toBeHidden();
   await openImport();
   await expect(

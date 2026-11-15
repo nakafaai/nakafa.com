@@ -186,10 +186,10 @@ test("a teacher publishes a task from an exam, a student does it in the exam pla
   await menu
     .getByRole("menuitem", { exact: true, name: "Delete task" })
     .click();
-  // The confirmation's body shows the task it deletes, and its footer holds Cancel and the action.
+  // The confirmation's body shows the task it deletes, and its footer holds the action alone: the close is the way out.
   const confirm = tasks.getByRole("dialog", { name: "Delete this task" });
   await expect(confirm.getByText("Ulangan Harian")).toBeVisible();
-  await expect(confirm.getByRole("button", { name: "Cancel" })).toBeVisible();
+  await expect(confirm.getByRole("button", { name: "Cancel" })).toHaveCount(0);
   await tasks.screenshot({ path: info.outputPath("homework-delete.png") });
   await confirm.getByRole("button", { name: "Delete task" }).click();
   await expect(tasks.getByText("No task yet")).toBeVisible({

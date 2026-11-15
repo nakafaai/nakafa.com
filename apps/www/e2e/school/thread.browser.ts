@@ -229,7 +229,7 @@ for (const viewport of SCREENS) {
     const hide = page.getByRole("dialog", { name: "Hide this message" });
     await expect(hide.getByText("Pesan 6")).toBeVisible();
     await shot("hide");
-    await hide.getByRole("button", { name: "Cancel" }).click();
+    await page.keyboard.press("Escape");
     await expect(hide).toBeHidden();
     await sixth.hover();
     await sixth.getByRole("button", { name: "React" }).click();
@@ -253,8 +253,9 @@ for (const viewport of SCREENS) {
       page.getByRole("heading", { exact: true, level: 2, name: "Thread" })
     ).toBeVisible();
     if (viewport.width >= BESIDE_FROM) {
-      // The message whose thread stands open keeps its selected look.
+      // The message whose thread stands open keeps its selected look, and its chat stays the open one in the list.
       await expect(fifth).toHaveAttribute("data-selected", "");
+      await expect(page.locator('li[data-open="true"]')).toHaveCount(1);
     }
     expect(await removedMessages(page)).toBe(0);
     await shot("open");

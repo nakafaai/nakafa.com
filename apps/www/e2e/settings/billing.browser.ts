@@ -65,7 +65,7 @@ test("a learner in Indonesia chooses the monthly plan or a pass, each in rupiah"
         }
         await expect(dialog.getByText("Rp 229.000")).toBeVisible();
         await pictureDialog(page, "offers");
-        await dialog.getByRole("button", { name: "Cancel" }).click();
+        await page.keyboard.press("Escape");
         await expect(dialog).toBeHidden();
       });
     })
@@ -147,7 +147,7 @@ test("a pass holder sees when the pass ends, finds the receipt in Payments, and 
         await expect(receipts.getByText("Pro pass")).toBeVisible();
         await expect(receipts.getByText("Rp 79.000")).toBeVisible();
         await pictureDialog(page, "payments");
-        await receipts.getByRole("button", { name: "Close" }).last().click();
+        await page.keyboard.press("Escape");
         await expect(receipts).toBeHidden();
         const extend = page.getByRole("button", { name: "Extend" });
         await waitUntilTakenOver(extend);
@@ -180,7 +180,7 @@ test("a Xendit subscriber cancels the plan in the settings, and it ends with its
         await payments.click();
         const receipts = page.getByRole("dialog", { name: "Payments" });
         await expect(receipts.getByText("Pro subscription")).toBeVisible();
-        await receipts.getByRole("button", { name: "Close" }).last().click();
+        await page.keyboard.press("Escape");
         await expect(receipts).toBeHidden();
         const cancel = page.getByRole("button", { name: "Cancel Pro" });
         await waitUntilTakenOver(cancel);

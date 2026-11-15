@@ -8,6 +8,7 @@ import {
   StarsIcon,
 } from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
+import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -62,7 +63,8 @@ export function AiSheetHeader({ expanded, onResizeToggle }: Props) {
           <span>Nina</span>
         </SheetTitle>
 
-        <div className="flex items-center gap-2">
+        {/* The header's icon buttons touch, as one ghost group, so they read as one row of tools. */}
+        <ButtonGroup aria-label={t("Ai.chat-actions")} variant="ghost">
           <HistorySlot />
           <DropdownMenu>
             <DropdownMenuTrigger
@@ -71,7 +73,6 @@ export function AiSheetHeader({ expanded, onResizeToggle }: Props) {
                   className={activeChatId ? undefined : "hidden sm:inline-flex"}
                   size="icon-sm"
                   tooltip={t("Common.more-actions")}
-                  variant="ghost"
                 >
                   <HugeIcons icon={MoreHorizontalIcon} />
                 </Button>
@@ -103,11 +104,10 @@ export function AiSheetHeader({ expanded, onResizeToggle }: Props) {
             onClick={() => setOpen(false)}
             size="icon-sm"
             tooltip={t("Common.close")}
-            variant="ghost"
           >
             <HugeIcons icon={Cancel01Icon} />
           </Button>
-        </div>
+        </ButtonGroup>
       </div>
       <SheetDescription className="sr-only">
         {t("Ai.sheet-description")}
@@ -144,7 +144,6 @@ function HistorySlot() {
                 onPointerDown={() => setWarmed(true)}
                 size="icon-sm"
                 tooltip={t("chat-history")}
-                variant="ghost"
               >
                 <HugeIcons icon={ChatSearch01Icon} />
               </Button>

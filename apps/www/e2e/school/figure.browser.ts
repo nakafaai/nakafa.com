@@ -126,7 +126,7 @@ test("a teacher places a lab of the lesson catalog in a question, edits it, and 
   await expect(
     dialog.getByRole("textbox", { exact: true, name: "Tab" })
   ).toHaveValue("Kapsid");
-  await dialog.getByRole("button", { name: "Cancel" }).click();
+  await page.keyboard.press("Escape");
   await expect(dialog).toHaveCount(0);
 
   // The student's sitting opens in a page of its own, so the scripts it loads are its own.
