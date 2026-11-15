@@ -88,3 +88,10 @@ No pull request landed on nakafa.com for more than 10 hours after #2504 (23:45 C
 1. **Entry.** A stack joins a batch only when its top's own `gate` passed on a head that contains main's tip, so that gate ran on today's main, and the top carries every member below it. Its own proof is not asked for, since the batch proves the combination.
 2. **Why the gate moves to each head.** A head gated on an older main costs one gate of its own, and those gates run side by side, up to the account's 20 concurrent jobs. A head that breaks a batch costs a bisect, one verification after another, each round a full gate and proof of a smaller combination.
 3. **Keeping heads fresh.** After every landing, the heads in the queue no longer contain main. Each waiting head merges main and gates again before it rides; until the queue does this by itself, the owning session does it.
+
+## Amendment: A Flake Is Run Again Before A Batch Splits, 15 November 2026
+
+The proof runs with no retries and a 120-second test timeout (`apps/www/playwright.config.ts`), so one timing miss in a batch of five fails the whole combination, and the bisect that follows costs a verification per round. Playwright calls a test that fails and then passes on a retry "flaky" (playwright.dev/docs/test-retries, read 15 November 2026); Bors splits a failed batch to find its culprit (github.com/bors-ng/bors-ng).
+
+1. **Run again first.** Before a combination splits, every failing spec that main does not fail runs once more, alone, on the same combination. A spec that passes is recorded as a flake with the combination it flaked on, and rejects nothing; a spec that fails again stays a failure and the batch splits as before. A failed gate or a proof that named no spec never runs again.
+2. **Never hidden.** The train's report names each flake, so it gets an owner and a due time on the tracker. No spec is skipped, deleted, or retried inside Playwright for it.
