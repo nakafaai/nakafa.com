@@ -26,7 +26,7 @@ function UserLayout() {
   const { isOwner, profile } = Route.useLoaderData();
   return (
     <ErrorBoundary fallback={null}>
-      <main
+      <div
         className={cn(
           pageRowVariants(),
           "relative flex min-h-[calc(100svh-4rem)] flex-col pt-6 pb-24 lg:min-h-svh lg:pt-12"
@@ -35,7 +35,7 @@ function UserLayout() {
         <UserHeader isOwner={isOwner} profile={profile} />
         <UserTabs isOwner={isOwner} username={profile.username} />
         <Outlet />
-      </main>
+      </div>
     </ErrorBoundary>
   );
 }

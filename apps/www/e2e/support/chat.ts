@@ -21,6 +21,9 @@ export const LESSON_PATH =
   "/en/subjects/mathematics/function-composition-inverse-function/function-concept";
 /** How many chats one page of a list loads. */
 export const PAGE = CHAT_LIST_PAGE_SIZE;
+/** A chat page inside the app shell's `<main>`: the conversation and its sidebar. */
+export const CHAT_PAGE = 'main [data-slot="chat"]';
+
 /**
  * The part of a chat page that holds the conversation, beside the sidebar. The
  * new chat page and the page of the chat it opens share it, and the page the
@@ -28,7 +31,7 @@ export const PAGE = CHAT_LIST_PAGE_SIZE;
  * `promptWith` counts only the bubbles a reader can see, so the left page
  * never counts.
  */
-export const onThePage = (page: Page) => page.locator("main main");
+export const onThePage = (page: Page) => page.locator(CHAT_PAGE);
 /** The address of a chat that a page moves to once its first prompt is admitted. */
 export const OPENED_CHAT = /\/en\/chat\/[a-z0-9]+$/u;
 /**

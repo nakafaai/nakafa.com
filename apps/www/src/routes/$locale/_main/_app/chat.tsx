@@ -22,7 +22,10 @@ export const Route = createFileRoute("/$locale/_main/_app/chat")({
 function ChatLayout() {
   const { first } = Route.useLoaderData();
   return (
-    <main className="h-[calc(100svh-var(--app-header-top,4rem))] lg:h-svh">
+    <div
+      className="h-[calc(100svh-var(--app-header-top,4rem))] lg:h-svh"
+      data-slot="chat"
+    >
       <SidebarProvider
         className="h-full min-h-0"
         cookieName="sidebar_state:ai-chat"
@@ -36,6 +39,6 @@ function ChatLayout() {
         </div>
         <AiChatSidebar first={Option.fromUndefinedOr(first)} />
       </SidebarProvider>
-    </main>
+    </div>
   );
 }

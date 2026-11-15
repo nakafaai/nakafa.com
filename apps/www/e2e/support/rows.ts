@@ -1,4 +1,5 @@
 import type { Locator, Page } from "@playwright/test";
+import { CHAT_PAGE } from "@/e2e/support/chat";
 
 /**
  * The chats of the list in the sidebar beside a chat page. A phone has a second
@@ -28,7 +29,7 @@ export const historyRows = (page: Page) =>
 
 /** The chats of the chats page of a learner. */
 export const pageRows = (page: Page) =>
-  page.locator('main main a[href^="/en/chat/"]');
+  page.locator(`${CHAT_PAGE} a[href^="/en/chat/"]`);
 
 /**
  * Waits until what holds the first row of a list has stopped animating, such

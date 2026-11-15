@@ -8,7 +8,12 @@ import app from "@repo/internationalization/dictionaries/en.json" with {
   type: "json",
 };
 import { Array as Arr, Effect, MutableList } from "effect";
-import { LESSON_PATH, openChatPage, runOnPage } from "@/e2e/support/chat";
+import {
+  LESSON_PATH,
+  onThePage,
+  openChatPage,
+  runOnPage,
+} from "@/e2e/support/chat";
 import { withBrowserContext } from "@/e2e/support/context";
 import { signInLearner } from "@/e2e/support/learner";
 import { withObservedPageErrors } from "@/e2e/support/observe";
@@ -152,7 +157,7 @@ const signsOutOfAChat = Effect.fn("NakafaE2E.signsOutOfAChat")(function* (
   yield* Effect.promise(async () => {
     await page.goto(`/en/chat/${chat.chatId}`);
     await expect(
-      promptWith(page.locator("main main"), "A chat to sign out of")
+      promptWith(onThePage(page), "A chat to sign out of")
     ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
     const shown = await watchUntilLeaving(page, [ACCESS_TITLE]);
     // The home page answers a moment late, so the page that signed out stays
