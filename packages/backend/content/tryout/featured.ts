@@ -6,18 +6,10 @@ import {
   catalogNodeIdentity,
   readCatalogEntries,
 } from "@repo/backend/confect/tryouts/catalog/rows";
-import { readItemKey, readPaper } from "@repo/backend/confect/tryouts/rows";
-import { TryoutQuestionBodyText } from "@repo/backend/confect/tryouts/runtime/spec";
+import { readPaper } from "@repo/backend/confect/tryouts/rows";
 import { placeVersion } from "@repo/backend/confect/tryouts/runtime/version";
-import {
-  Array as Arr,
-  Effect,
-  HashMap,
-  Option,
-  Order,
-  Result,
-  Schema,
-} from "effect";
+import { readKeyedQuestion } from "@repo/backend/content/tryout/question";
+import { Array as Arr, Effect, HashMap, Option, Order, Result } from "effect";
 
 type CatalogSet = Extract<CatalogRow, { kind: "set" }>;
 type CatalogTrack = Extract<CatalogRow, { kind: "track" }>;
@@ -141,25 +133,7 @@ export const readFeaturedTryout = Effect.fn("tryouts.catalog.readFeatured")(
       // The language was read from the place's own versions.
       Effect.catchTag("TryoutRuntimeError", Effect.die)
     );
-    const key = yield* readItemKey(version.hash);
-    const answer = Arr.findFirst(
-      key.answers,
-      (candidate) => candidate.interaction === version.interaction.id
-    );
-    if (Option.isNone(answer)) {
-      return yield* missingFeatured("answer");
-    }
-    const body = yield* Schema.encodeEffect(TryoutQuestionBodyText)({
-      interaction: version.interaction,
-      key: answer.value,
-      prompt: version.prompt,
-      ...(Option.isSome(version.stimulus)
-        ? { stimulus: version.stimulus.value }
-        : {}),
-    }).pipe(
-      // Every part was decoded by the contract, so it encodes.
-      Effect.orDie
-    );
-    return { body, kind: "question", versionHash: version.hash } as const;
+    const question = yield* readKeyedQuestion(version, Option.none());
+    return { ...question, kind: "question" } as const;
   }
 );

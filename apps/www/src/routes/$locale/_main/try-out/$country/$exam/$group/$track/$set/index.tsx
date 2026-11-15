@@ -21,6 +21,7 @@ import {
 import { TryoutAttemptSearch } from "@/components/tryout/route/search";
 import { TryoutPressProvider } from "@/components/tryout/runtime/start";
 import { TryoutSetPageClient } from "@/components/tryout/set/client";
+import { openSetSamples } from "@/components/tryout/set/code";
 import { TryoutPage } from "@/components/tryout/shell/header";
 import { readStaticData } from "@/lib/static/data";
 
@@ -38,6 +39,13 @@ export const Route = createFileRoute(
   "/$locale/_main/try-out/$country/$exam/$group/$track/$set/"
 )({
   validateSearch: Schema.toStandardSchemaV1(TryoutAttemptSearch),
+  // A warm of a link to this page is a preload: it takes the page's code and data, never the samples a reader
+  // reaches by scrolling, which a navigation opens here before the page commits.
+  beforeLoad: async ({ preload }) => {
+    if (!preload) {
+      await openSetSamples();
+    }
+  },
   loader: async ({ params }) => {
     const route = await readStaticData(readTryoutSetFn, {
       country: params.country,
