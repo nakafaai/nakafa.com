@@ -33,12 +33,35 @@ import { deferStaticScripts } from "#www/src/lib/static/scripts";
 import { THEME_PREPAINT_SCRIPT } from "#www/src/lib/theme/prepaint";
 
 /*
- * The build steps that run after TanStack has prerendered the public pages: the
- * static answers that the browser reads on a navigation, the deferred scripts of
- * each page, the static not-found page of each locale, then the check that the
- * output holds exactly the listed pages.
+ * The build steps around TanStack's prerender of the public pages: the address
+ * of the preview servers the build reads its pages from, then, after TanStack has
+ * prerendered them, the static answers that the browser reads on a navigation,
+ * the deferred scripts of each page, the static not-found page of each locale,
+ * and the check that the output holds exactly the listed pages.
  * `vite.config.ts` adds them in that order.
  */
+
+/**
+ * The address of every preview server that the build fetches its own pages from.
+ * A server that listens at `localhost` binds only its first address, ::1, and the
+ * fetching Node races ::1 and 127.0.0.1 on a 250 ms timer. A prerender that holds
+ * the event loop past the timer then fails with ETIMEDOUT on ::1 and ECONNREFUSED
+ * on 127.0.0.1. A literal address leaves Node one address and no race.
+ */
+const PRERENDER_HOST = "127.0.0.1";
+
+/**
+ * Binds TanStack's prerender preview server to `PRERENDER_HOST`. TanStack starts
+ * that server from this config with TSS_PRERENDERING set, then crawls the address
+ * the server resolves, which no prerender option names.
+ */
+export const bindPrerenderHost: Plugin = {
+  config: () =>
+    process.env.TSS_PRERENDERING === "true"
+      ? { preview: { host: PRERENDER_HOST } }
+      : undefined,
+  name: "www:bind-prerender-host",
+};
 
 /**
  * The marker that React writes where a Suspense boundary failed on the server, so
@@ -254,7 +277,7 @@ export const writeStaticAnswers = (pages: readonly string[]): Plugin => ({
       const { preview } = await import("vite");
       const server = await preview({
         configFile,
-        preview: { open: false, port: 0 },
+        preview: { host: PRERENDER_HOST, open: false, port: 0 },
       });
       try {
         const origin = server.resolvedUrls?.local[0];
