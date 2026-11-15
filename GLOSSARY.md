@@ -7,6 +7,8 @@ This glossary records stable domain terms used by Nakafa code and PR review. It 
 - **Page**: One screen of the app or of School, read as a header, a body and an optional footer, at one width: the reading column or the page width of a working surface. Try-out, exam sitting, School and the reading pages share it.
 - **Page header**: The one row at the top of a page: the sidebar's trigger on a phone, the path or the title, an optional centre, and at most two actions.
 - **Page body**: What the page is for, never wider than its header: a reading flow, a stack of sections, one list in a full-height card, or one state in the middle.
+- **Reading page**: A lesson or an article. Its header holds the path to its parent and the reading controls; its body opens with its title block. A surah is not one: the Quran names a surah in its header.
+- **Title block**: The one visible heading that opens a reading page, with its byline under it. A reading page names itself only there, never in its path.
 - **Pane**: A surface at the right edge of the screen, from the window's top to its bottom, beside which the whole page narrows; a bottom sheet on a phone. A detail pane exists only while something is open.
 - **Outline**: The pane of a reading page that lists its headings, always beside the page on a wide screen.
 
