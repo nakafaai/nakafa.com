@@ -51,8 +51,8 @@ describe("article JSON-LD", () => {
         isAccessibleForFree: true,
         license:
           "https://github.com/nakafaai/aksara/blob/main/CONTENT_LICENSE.md",
-        datePublished: "2025-05-26",
-        dateModified: "2026-09-23",
+        datePublished: "2025-05-26T00:00:00.000Z",
+        dateModified: "2026-09-23T00:00:00.000Z",
         author: [
           {
             "@type": "Person",
@@ -236,10 +236,18 @@ describe("article JSON-LD", () => {
     [
       "a modification date before publication",
       ([article, breadcrumb]) => [
-        { ...article, dateModified: "2025-05-01" },
+        { ...article, dateModified: "2025-05-01T00:00:00.000Z" },
         breadcrumb,
       ],
       "Expected dateModified to be later than datePublished.",
+    ],
+    [
+      "a date without its time",
+      ([article, breadcrumb]) => [
+        { ...article, datePublished: "2025-05-26" },
+        breadcrumb,
+      ],
+      "Expected a string matching the RegExp",
     ],
     [
       "a breadcrumb that skips a position",
@@ -310,8 +318,8 @@ describe("makeLearningResourceNode", () => {
     expect(makeLearningResourceNode(lesson, [])).toMatchObject({
       "@type": "LearningResource",
       author: [{ "@type": "Person", name: "Nabil Akbarazzima Fatih" }],
-      dateModified: "2026-09-23",
-      datePublished: "2025-05-26",
+      dateModified: "2026-09-23T00:00:00.000Z",
+      datePublished: "2025-05-26T00:00:00.000Z",
       description: lesson.description,
       inLanguage: "id",
       isAccessibleForFree: true,

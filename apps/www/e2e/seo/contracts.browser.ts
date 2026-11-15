@@ -1,12 +1,13 @@
-import type { PublicationDates } from "@nakafa/aksara-contracts/date";
 import {
   type ActiveAppLocaleCode,
   ActiveAppLocaleCodeSchema,
 } from "@nakafa/aksara-contracts/locale";
 import { expect, type Page, test } from "@playwright/test";
+import type { ArticleJsonLd } from "@repo/seo/jsonld/article";
 import { JsonTextSchema } from "@repo/utilities/json";
 import {
   Array as Arr,
+  DateTime,
   Effect,
   Option,
   Record as Rec,
@@ -180,12 +181,16 @@ const expectArticleJsonLd = Effect.fn("NakafaE2E.expectArticleJsonLd")(
   }
 );
 
+/** The UTC day a structured DateTime starts, the date the byline shows. */
+const toUtcDay = (dateTime: string) =>
+  DateTime.formatIsoDateUtc(DateTime.makeUnsafe(dateTime));
+
 /** Proves one page's visible dates match its structured data. */
 const expectTruthfulDates = Effect.fn("NakafaE2E.expectTruthfulDates")(
   function* (
     page: Page,
     route: LocalizedContentRoute,
-    structuredDates: PublicationDates
+    article: ArticleJsonLd[0]
   ) {
     // The byline stays visible; pending streamed copies do not.
     const dateBlock = page
@@ -210,15 +215,16 @@ const expectTruthfulDates = Effect.fn("NakafaE2E.expectTruthfulDates")(
     );
     const blockText = yield* Effect.promise(() => dateBlock.textContent());
     const labels = dateLabels[route.locale];
-    const neverUpdated =
-      structuredDates.dateModified === undefined ||
-      structuredDates.dateModified === structuredDates.datePublished;
+    const published = toUtcDay(article.datePublished);
+    const modified =
+      article.dateModified === undefined
+        ? published
+        : toUtcDay(article.dateModified);
+    const neverUpdated = modified === published;
     yield* Effect.sync(() => {
       expect(blockText).toContain(labels.published);
       expect(timeDates).toEqual(
-        neverUpdated
-          ? [structuredDates.datePublished]
-          : [structuredDates.datePublished, structuredDates.dateModified]
+        neverUpdated ? [published] : [published, modified]
       );
       if (neverUpdated) {
         expect(blockText).not.toContain(labels.updated);
