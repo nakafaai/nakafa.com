@@ -35,9 +35,10 @@ import { VERDICT_CONTEXT } from "#scripts/proof/github";
 const SPEC_FILE = /^apps\/www\/(?<spec>e2e\/.+\.browser\.ts)$/u;
 
 /** A pull request as a candidate of the train, with its stack and the spec files it adds or changes. */
-const candidateOf = ({ pull, stack }: Rider): Candidate => ({
+const candidateOf = ({ pull, stack, below }: Rider): Candidate => ({
   number: pull.number,
   stack,
+  below,
   sha: pull.headRefOid,
   title: pull.title,
   specs: Arr.filterMap(pull.files, ({ path }) =>

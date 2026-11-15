@@ -172,6 +172,84 @@ describe("train landing", () => {
   );
 
   it.effect(
+    "lands a stack member GitHub replayed onto main after the one below landed, even when both edit the same lines",
+    () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const { work, main } = yield* origins();
+        const identity = [
+          "-c",
+          "user.name=Train",
+          "-c",
+          "user.email=train@test",
+        ];
+        const commit = Effect.fn(function* (
+          parent: string,
+          text: string,
+          message: string
+        ) {
+          yield* git(work, "checkout", "--quiet", "--detach", parent);
+          yield* fs.writeFileString(`${work}/readme.md`, text);
+          yield* git(work, "add", "readme.md");
+          yield* git(work, ...identity, "commit", "--quiet", "-m", message);
+          return yield* git(work, "rev-parse", "HEAD");
+        });
+        // #1 appends a line and #2, on top of it, appends another.
+        const below = yield* commit(main, "base\na\n", "one");
+        const proven = yield* commit(below, "base\na\nb\n", "two");
+        // #1 lands as one squashed commit, and GitHub replays #2 onto it.
+        const landed = yield* commit(main, "base\na\n", "one, squashed");
+        yield* git(
+          work,
+          "push",
+          "--quiet",
+          "origin",
+          `${landed}:refs/heads/main`
+        );
+        const replayed = yield* commit(landed, "base\na\nb\n", "two, replayed");
+        const altered = yield* commit(
+          landed,
+          "base\na\nb\nc\n",
+          "two, changed"
+        );
+        const landAt = (head: string) =>
+          Effect.gen(function* () {
+            yield* git(
+              work,
+              "push",
+              "--quiet",
+              "origin",
+              `+${head}:refs/pull/2/head`
+            );
+            return yield* withRepository(
+              work,
+              (args) => (args[1] === "view" ? view({ headRefOid: head }) : {}),
+              Effect.flatMap(Repository, (repository) =>
+                repository.land({
+                  ...CANDIDATE,
+                  number: 2,
+                  sha: proven,
+                  below,
+                })
+              )
+            );
+          });
+        expect((yield* landAt(replayed)).value._tag).toBe("landed");
+        // A head that changes more than it was proven with, or that does not
+        // stand on today's main, waits for a proof of its own.
+        for (const head of [altered, proven]) {
+          expect(
+            (yield* landAt(head === proven ? below : head)).value
+          ).toMatchObject({
+            _tag: "skipped",
+            reason: "its head moved after its proof: prove the new head",
+          });
+        }
+      }).pipe(Effect.scoped, Effect.provide(NodeServices.layer)),
+    PROCESS_TIMEOUT
+  );
+
+  it.effect(
     "lands a stacked pull request through the asynchronous merge",
     () =>
       Effect.gen(function* () {
