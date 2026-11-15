@@ -39,7 +39,7 @@ const reachBeyond = (row: Locator, selector: string) =>
     return { found: past.length, furthest: Math.max(...past) };
   }, selector);
 
-/** The header of a code block holds a language of eighteen characters and both controls. */
+/** The header of a code block holds a language of thirty-one characters, longer than a phone's header leaves it, and both controls. */
 const keepsCodeControlsInside = async (page: Page) => {
   const code = await drawnRow(page, CODE.answer);
 

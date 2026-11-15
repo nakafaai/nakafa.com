@@ -159,7 +159,7 @@ export const ANSWER = {
     "## الاشتقاق\n\nالجدول يلخص القاعدة.\n\n| الدالة | المشتقة |\n| --- | --- |\n| قوة | نقص الأس |",
   arabicLoose:
     "الخطوات:\n\n1. حدد الدالة المطلوبة.\n\n2. طبق قاعدة القوة.\n\n3. بسّط النتيجة.",
-  code: `Berikut contoh komponennya.\n\n\`\`\`javascriptreactjsx\n${LONG_CODE_LINE}\nexport const Kartu = () => <div className={className}>Halo</div>;\n\`\`\``,
+  code: `Berikut contoh komponennya.\n\n\`\`\`javascriptreactjsxtypescriptmdx\n${LONG_CODE_LINE}\nexport const Kartu = () => <div className={className}>Halo</div>;\n\`\`\``,
   diagram: `Alurnya seperti ini.\n\n\`\`\`mermaid title="${DIAGRAM_TITLE}" description="${DIAGRAM_DESCRIPTION}"\nflowchart TD\n  A[Mulai] --> B[Isi formulir pendaftaran]\n  B --> C{Data lengkap?}\n  C -- Tidak --> B\n  C -- Ya --> D[Unggah dokumen]\n  D --> E[Bayar biaya pendaftaran]\n  E --> F{Pembayaran valid?}\n  F -- Tidak --> E\n  F -- Ya --> G[Verifikasi panitia]\n  G --> H[Tes seleksi]\n  H --> I[Pengumuman hasil]\n  I --> J[Daftar ulang]\n  J --> K[Selesai]\n  K --> L[Arsip]\n\`\`\``,
   diagramPlain:
     "Alurnya seperti ini.\n\n```mermaid\nflowchart TD\n  A[Mulai] --> B[Selesai]\n```",
