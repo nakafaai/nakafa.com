@@ -1,5 +1,6 @@
 "use client";
 
+import { footprintOf } from "@repo/backend/confect/island/world";
 import {
   Array as Arr,
   DateTime,
@@ -36,7 +37,7 @@ import { rayThrough } from "@/lib/island/matrix";
 import { lightingOf, meshChunk } from "@/lib/island/mesh";
 import { castRay } from "@/lib/island/ray";
 import { lightOf } from "@/lib/island/sky";
-import { CHUNKS, cellOf, footprintOf, isInside } from "@/lib/island/world";
+import { CHUNKS, cellOf, isInside } from "@/lib/island/world";
 
 /** The hour of the learner's own clock, from 0 to 24. */
 function localHour() {

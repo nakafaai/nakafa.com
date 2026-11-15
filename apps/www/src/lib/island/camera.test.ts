@@ -1,5 +1,7 @@
 // @vitest-environment node
+
 import { describe, expect, it } from "@effect/vitest";
+import { SPAN } from "@repo/backend/confect/island/world";
 import {
   clampOrbit,
   DISTANCE,
@@ -11,7 +13,6 @@ import {
   turnOrbit,
   zoomOrbit,
 } from "@/lib/island/camera";
-import { SPAN } from "@/lib/island/world";
 
 describe("island/camera", () => {
   it("opens over the middle of the island, farther for a wider one", () => {

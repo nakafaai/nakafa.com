@@ -71,42 +71,12 @@ export const Duplicate = Schema.TaggedStruct("duplicate", {});
 /** A grant refused by the day's count for its kind or the day's Stars. */
 export const Capped = Schema.TaggedStruct("capped", {});
 
-/** Who may visit an island: only its owner, anyone with its link, or everyone. */
-export const Visibility = Schema.Literals(["private", "link", "public"]);
-
 /**
- * An edit made against an older layout than the island holds, which another tab
- * or device changed meanwhile (ADR 0042, D4). The browser reloads the island and
- * the owner tries again.
+ * A build made against older edits than the island holds, which another tab or
+ * device changed meanwhile (ADR 0047, D6). The browser reloads the island and
+ * the learner goes on from there.
  */
 export class IslandStale extends Schema.TaggedError<
   IslandStale,
   { readonly brand: unique symbol }
 >()("IslandStale", { version: Schema.Int }) {}
-
-/**
- * Why the garden refused a watering or a harvest (ADR 0042, D13): the owner has
- * not learned today, already watered today, has no plant there or anywhere,
- * nothing stands there, or the plant has not grown to its last stage.
- */
-export class FarmRefused extends Schema.TaggedError<
-  FarmRefused,
-  { readonly brand: unique symbol }
->()("FarmRefused", {
-  reason: Schema.Literals([
-    "barren",
-    "missing",
-    "unlearned",
-    "unripe",
-    "watered",
-  ]),
-}) {}
-
-/**
- * A snapshot the island refused (ADR 0042, D20): a picture over its byte
- * limit, or a file that is not an upload this island reserved.
- */
-export class SnapshotRefused extends Schema.TaggedError<
-  SnapshotRefused,
-  { readonly brand: unique symbol }
->()("SnapshotRefused", { reason: Schema.Literals(["file", "size"]) }) {}

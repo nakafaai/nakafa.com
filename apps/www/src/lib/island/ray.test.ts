@@ -1,9 +1,11 @@
 // @vitest-environment node
+
 import { describe, expect, it } from "@effect/vitest";
 import { idOf } from "@repo/backend/confect/island/blocks";
+import { HEIGHT, SPAN } from "@repo/backend/confect/island/world";
 import { Option } from "effect";
 import { castRay, clipToWorld } from "@/lib/island/ray";
-import { cellOf, emptyCells, HEIGHT, SPAN } from "@/lib/island/world";
+import { cellOf, emptyCells } from "@/lib/island/world";
 
 /** A world with one stone at (10, 5, 10) and water at (20, 3, 20). */
 function world() {
