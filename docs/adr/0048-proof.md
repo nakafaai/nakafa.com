@@ -133,3 +133,11 @@ Twenty concurrent jobs, four per verification and four kept in reserve, give fou
 ## Amendment: A Batch That Changes Nothing The Product Runs Proves One Spec, 15 November 2026
 
 A combination whose pull requests name no spec proved every suite, even when they changed only the landing scripts, a workflow or the docs, which the gate already checks. The first step of selecting specs from the change (amendment "The Landing Queue", point 8): a pull request changes what the product runs when it changes a file under `apps` or `packages` outside the browser specs and Markdown. A combination that names no spec proves every suite when one of its pull requests changes what the product runs, and only `e2e/quran/landing.browser.ts` when none does: a fast page that passed in all three engines on main (run 43699251319).
+
+## Amendment: A Stack Member GitHub Cannot Replay, 15 November 2026
+
+After a stack member lands as one squashed commit, GitHub rebases the member above it onto main. A member whose history holds merges (main merged in, or the member below merged up) cannot be replayed that way, and GitHub reports it conflicting: on 15 November #2556 waited for a hand merge after #2554 and #2555 landed, and that merge kept two copies of a block both sides had added, which only its gate caught.
+
+1. **The train merges it.** When GitHub reports a stack member conflicting at its proven head, the train builds the member's merge with main itself (`scripts/landing/merge.ts`): the member's own tree when it already is main plus the member's proven change, otherwise the tree `git merge-tree` builds. It pushes that merge to the member's branch with two parents, the member's head and main, and lands it once GitHub reports it mergeable.
+2. **Only the proven tree.** Either tree serves only when it changes main exactly as the proof changed the member below it, by the same comparison the replay check uses. A merge that conflicts, repeats a block or loses a change both sides made is never pushed; the member waits for a proof of its own.
+

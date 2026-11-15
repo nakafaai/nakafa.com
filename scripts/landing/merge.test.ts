@@ -38,7 +38,11 @@ describe("train landing", () => {
           `gh pr merge 42 --repo nakafaai/nakafa.com --squash --match-head-commit ${CANDIDATE.sha} --subject Land me (#42)`
         );
         const reasons = yield* Effect.forEach(
-          [view({ state: "MERGED" }), view({ mergeable: "CONFLICTING" })],
+          [
+            view({ state: "MERGED" }),
+            view({ mergeable: "CONFLICTING" }),
+            view({ mergeable: "BLOCKED" }),
+          ],
           (answer) =>
             land((args) => (args[1] === "view" ? answer : {})).pipe(
               Effect.map(({ value }) =>
@@ -57,6 +61,7 @@ describe("train landing", () => {
         ]).toEqual([
           "already merged",
           "GitHub reports it conflicting",
+          "GitHub reports it blocked",
           "Pull request is in clean status",
         ]);
       }).pipe(Effect.provide(NodeServices.layer))
@@ -243,6 +248,111 @@ describe("train landing", () => {
           ).toMatchObject({
             _tag: "skipped",
             reason: "its head moved after its proof: prove the new head",
+          });
+        }
+      }).pipe(Effect.scoped, Effect.provide(NodeServices.layer)),
+    PROCESS_TIMEOUT
+  );
+
+  it.effect(
+    "merges main into a stack member GitHub cannot replay, and lands it only when that merge is main plus its proven change",
+    () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const { work, origin, main } = yield* origins();
+        yield* git(work, "config", "user.name", "Train");
+        yield* git(work, "config", "user.email", "train@test");
+        const commit = Effect.fn(function* (
+          parent: string,
+          file: string,
+          text: string
+        ) {
+          yield* git(work, "checkout", "--quiet", "--detach", parent);
+          yield* fs.writeFileString(`${work}/${file}`, text);
+          yield* git(work, "add", file);
+          yield* git(work, "commit", "--quiet", "-m", file);
+          return yield* git(work, "rev-parse", "HEAD");
+        });
+        const push = (sha: string, ref: string) =>
+          git(work, "push", "--quiet", "--force", "origin", `${sha}:${ref}`);
+        // #1 adds one.md and #2, on top of it, two.md; #1 then lands squashed.
+        const below = yield* commit(main, "one.md", "one\n");
+        const proven = yield* commit(below, "two.md", "two\n");
+        const landed = yield* commit(main, "one.md", "one\n");
+        yield* push(landed, "refs/heads/main");
+        // Lands #2 while GitHub reports its proven head conflicting; once the
+        // train pushes a merge, GitHub reports that head as `after`.
+        const landOnce = (after: string) =>
+          Effect.gen(function* () {
+            yield* push(proven, "refs/heads/branch-2");
+            yield* push(proven, "refs/pull/2/head");
+            const pushed = MutableRef.make("");
+            const result = yield* withRepository(
+              work,
+              (args) => {
+                if (args[1] !== "view") {
+                  return {};
+                }
+                const moved = MutableRef.get(pushed) !== "";
+                return view({
+                  headRefOid: moved ? MutableRef.get(pushed) : proven,
+                  mergeable: moved ? after : "CONFLICTING",
+                  headRefName: "branch-2",
+                });
+              },
+              Effect.flatMap(Repository, (repository) =>
+                repository.land({ ...CANDIDATE, number: 2, sha: proven, below })
+              ),
+              (args) => {
+                const target = args[3] ?? "";
+                if (
+                  args[0] === "push" &&
+                  target.endsWith(":refs/heads/branch-2")
+                ) {
+                  MutableRef.set(
+                    pushed,
+                    Arr.headNonEmpty(Str.split(target, ":"))
+                  );
+                }
+              }
+            );
+            return { ...result, pushed: MutableRef.get(pushed) };
+          });
+        const tree = (sha: string) => git(origin, "rev-parse", `${sha}^{tree}`);
+        // Main holds just #1's change: #2's own tree is main plus its change.
+        const own = yield* landOnce("MERGEABLE");
+        expect(own.value._tag).toBe("landed");
+        expect(own.calls).toContain(
+          `gh pr merge 2 --repo nakafaai/nakafa.com --squash --match-head-commit ${own.pushed} --subject Land me (#2)`
+        );
+        expect(yield* tree(own.pushed)).toBe(yield* tree(proven));
+        expect(
+          yield* git(origin, "log", "-1", "--format=%P %s", own.pushed)
+        ).toBe(`${proven} ${landed} Merge main into branch-2`);
+        // GitHub may still refuse the pushed merge: it waits.
+        const refused = yield* landOnce("CONFLICTING");
+        expect(refused.value).toMatchObject({
+          _tag: "skipped",
+          reason: "GitHub reports it conflicting",
+        });
+        // Main moves on: the merge Git builds is main plus #2's change.
+        const later = yield* commit(landed, "later.md", "later\n");
+        yield* push(later, "refs/heads/main");
+        const built = yield* landOnce("MERGEABLE");
+        expect(built.value._tag).toBe("landed");
+        expect(yield* git(origin, "ls-tree", "--name-only", built.pushed)).toBe(
+          "later.md\none.md\nreadme.md\ntwo.md"
+        );
+        // A merge that conflicts, or that loses #2's change because main made
+        // it too, is never pushed.
+        for (const text of ["other\n", "two\n"]) {
+          const clash = yield* commit(later, "two.md", text);
+          yield* push(clash, "refs/heads/main");
+          const skipped = yield* landOnce("MERGEABLE");
+          expect(skipped.pushed).toBe("");
+          expect(skipped.value).toMatchObject({
+            _tag: "skipped",
+            reason: "GitHub reports it conflicting",
           });
         }
       }).pipe(Effect.scoped, Effect.provide(NodeServices.layer)),

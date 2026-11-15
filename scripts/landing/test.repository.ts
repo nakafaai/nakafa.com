@@ -133,6 +133,7 @@ export const view = (overrides: Record<string, string> = {}) => ({
     headRefOid: CANDIDATE.sha,
     mergeable: "MERGEABLE",
     baseRefName: "main",
+    headRefName: "branch-42",
     ...overrides,
   }),
 });

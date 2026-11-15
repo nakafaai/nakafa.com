@@ -16,6 +16,7 @@ const PullViewJson = Schema.fromJsonString(
     headRefOid: Schema.String,
     mergeable: Schema.String,
     baseRefName: Schema.String,
+    headRefName: Schema.String,
   })
 );
 
@@ -28,7 +29,7 @@ const viewPull = Effect.fn("landing.viewPull")(function* (number: number) {
     "--repo",
     REPOSITORY,
     "--json",
-    "state,headRefOid,mergeable,baseRefName",
+    "state,headRefOid,mergeable,baseRefName,headRefName",
   ]).pipe(
     Effect.flatMap(decoded(PullViewJson)),
     Effect.repeat({
@@ -113,6 +114,101 @@ const landableHead = Effect.fn("landing.landableHead")(function* (
     : Option.none<string>();
 });
 
+/**
+ * A stack member that GitHub reports conflicting after the member below it
+ * landed: its history holds merges that GitHub's rebase cannot repeat onto the
+ * squashed commit. The train builds the member's merge with main itself and
+ * pushes it to the member's branch only when that merge changes main exactly as
+ * the proof changed the member below it, so the tree that lands is the tree the
+ * combination proved. The member's own tree serves when it already is main plus
+ * that change; otherwise `git merge-tree` builds one, and a merge that repeats
+ * or loses a change the two sides both made is refused.
+ */
+const rebuiltHead = Effect.fn("landing.rebuiltHead")(function* (
+  root: string,
+  candidate: Candidate,
+  head: string,
+  branch: string
+) {
+  const git = (args: readonly string[]) =>
+    run("git", args, root).pipe(Effect.map(Str.trim));
+  yield* git([
+    "fetch",
+    "--quiet",
+    "origin",
+    "main",
+    `refs/pull/${candidate.number}/head`,
+  ]);
+  const main = yield* git(["rev-parse", "origin/main"]);
+  const proven = changeOf(yield* git(["diff", candidate.below, candidate.sha]));
+  const exact = (tree: string) =>
+    git(["diff", main, tree]).pipe(
+      Effect.map((diff) => changeOf(diff) === proven)
+    );
+  const own = yield* git(["rev-parse", `${head}^{tree}`]);
+  const merged = yield* attempt(
+    "git",
+    ["merge-tree", "--write-tree", main, head],
+    root
+  );
+  const built = Arr.headNonEmpty(Str.split(merged.stdout, "\n"));
+  const tree = yield* Effect.findFirst(
+    merged.code === 0 ? [own, built] : [own],
+    exact
+  );
+  if (Option.isNone(tree)) {
+    return Option.none<string>();
+  }
+  const rebuilt = yield* git([
+    "commit-tree",
+    tree.value,
+    "-p",
+    head,
+    "-p",
+    main,
+    "-m",
+    `Merge main into ${branch}`,
+  ]);
+  yield* git(["push", "--quiet", "origin", `${rebuilt}:refs/heads/${branch}`]);
+  return Option.some(rebuilt);
+});
+
+/**
+ * The head a pull request lands at once GitHub can merge it: the landable head
+ * when GitHub reports it mergeable, or, for a stack member GitHub reports
+ * conflicting, the merge with main the train built and GitHub then found
+ * mergeable. Anything else waits.
+ */
+const readyHead = Effect.fn("landing.readyHead")(function* (
+  root: string,
+  candidate: Candidate,
+  view: typeof PullViewJson.Type,
+  head: string
+) {
+  if (view.mergeable === "MERGEABLE") {
+    return Option.some(head);
+  }
+  if (view.mergeable !== "CONFLICTING" || candidate.below === "") {
+    return Option.none<string>();
+  }
+  const rebuilt = yield* rebuiltHead(root, candidate, head, view.headRefName);
+  if (Option.isNone(rebuilt)) {
+    return Option.none<string>();
+  }
+  // GitHub computes whether the pushed merge merges before it may land.
+  const moved = yield* viewPull(candidate.number).pipe(
+    Effect.repeat({
+      until: (pull) =>
+        pull.headRefOid === rebuilt.value && pull.mergeable !== "UNKNOWN",
+      schedule: Schedule.spaced("5 seconds"),
+      times: 24,
+    })
+  );
+  return moved.headRefOid === rebuilt.value && moved.mergeable === "MERGEABLE"
+    ? rebuilt
+    : Option.none<string>();
+});
+
 export const landPull = Effect.fn("landing.landPull")(function* (
   root: string,
   candidate: Candidate
@@ -141,10 +237,11 @@ export const landPull = Effect.fn("landing.landPull")(function* (
   if (Option.isNone(landable)) {
     return skip("its head moved after its proof: prove the new head");
   }
-  const head = landable.value;
-  if (view.mergeable !== "MERGEABLE") {
+  const ready = yield* readyHead(root, candidate, view, landable.value);
+  if (Option.isNone(ready)) {
     return skip(`GitHub reports it ${view.mergeable.toLowerCase()}`);
   }
+  const head = ready.value;
   const subject = `${candidate.title} (#${candidate.number})`;
   const merge = yield* attempt("gh", [
     "pr",
