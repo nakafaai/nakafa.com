@@ -86,16 +86,14 @@ export function EmptyState({
   frame?: NonNullable<VariantProps<typeof emptyStateVariants>["frame"]>;
   /** `alert` for a read that failed, so assistive technology says it at once. */
   role?: "alert";
-  /** Nina doing what fits the place, or the figure of a whole page's state. */
-  scene?: ReactNode;
+  /** Nina doing what fits the place, or the figure of a whole page's state: no state is words alone. */
+  scene: ReactNode;
   title: ReactNode;
 }) {
   return (
     <Empty className={emptyStateVariants({ frame })} role={role}>
       <EmptyHeader className={emptyHeaderVariants({ frame })}>
-        {scene === undefined ? null : (
-          <EmptyScene frame={frame}>{scene}</EmptyScene>
-        )}
+        <EmptyScene frame={frame}>{scene}</EmptyScene>
         <EmptyTitle className={emptyTitleVariants({ frame })}>
           {title}
         </EmptyTitle>

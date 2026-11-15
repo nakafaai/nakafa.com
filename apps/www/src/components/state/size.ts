@@ -1,6 +1,9 @@
 /** Her width on a full-page state, in pixels. */
 export const NINA_SIZE = 176;
 
+/** Her width in a framed empty state (`EmptyNina`), in pixels. */
+export const EMPTY_NINA_SIZE = 96;
+
 /** The side of each thing that lies beside her. */
 export const THING_SIZE = 48;
 

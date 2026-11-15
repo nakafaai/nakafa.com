@@ -25,6 +25,8 @@ import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { RowCopy } from "@/components/shared/table/menu";
 import { TableFiltersProvider } from "@/components/shared/table/toolbar";
+import { EmptyState } from "@/components/state/empty";
+import { EmptyNina } from "@/components/state/nina";
 import type { GraduationLine } from "@/components/tenant/graduation/sheet";
 import { checkAddress } from "@/components/tenant/reports/check";
 
@@ -71,9 +73,10 @@ export function GraduationLineDetail({
         <PaneBody>
           <div className="flex flex-col gap-6">
             <GraduationFacts line={found} />
-            <p className="text-muted-foreground text-sm">
-              {t("transcript-empty")}
-            </p>
+            <EmptyState
+              scene={<EmptyNina act="graduating" />}
+              title={t("transcript-empty")}
+            />
           </div>
         </PaneBody>
       ) : (

@@ -28,7 +28,9 @@ import { useConvexAuth } from "@/components/auth/convex";
 import { reloadPage } from "@/components/shared/reload";
 import { TableEnd } from "@/components/shared/table/pages";
 import { type StatusLook, TableStatus } from "@/components/shared/table/status";
+import { EmptyState } from "@/components/state/empty";
 import { LoadFailure } from "@/components/state/failure";
+import { EmptyNina } from "@/components/state/nina";
 import { useTenant } from "@/components/tenant/context";
 import { resendDeliveryChange } from "@/components/tenant/settings/mutation";
 import { SchoolDateTime } from "@/components/tenant/settings/time";
@@ -143,9 +145,10 @@ function DeliveryList({ webhook }: { webhook: Webhook }) {
   }
   if (Arr.isReadonlyArrayEmpty(pagination.results)) {
     return (
-      <p className="text-muted-foreground p-4 text-sm">
-        {t("webhook-deliveries-empty")}
-      </p>
+      <EmptyState
+        scene={<EmptyNina act="ringing" />}
+        title={t("webhook-deliveries-empty")}
+      />
     );
   }
   return (
