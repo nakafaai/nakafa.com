@@ -9,8 +9,8 @@ import {
 } from "#scripts/proof/github";
 import { formatProof } from "#scripts/proof/main";
 import {
+  GATE_JOB,
   github,
-  JOB,
   PROCESS_TIMEOUT,
   RUN,
   SHA,
@@ -23,7 +23,7 @@ import {
 
 describe("GitHub proof runner", () => {
   it.effect(
-    "dispatches one job, finds and awaits its run, and reads its gate, results and phases",
+    "dispatches one run, finds and awaits it, and reads its gate, results and phases across its jobs",
     () =>
       Effect.gen(function* () {
         const { exit, calls } = yield* withGithub(
@@ -44,10 +44,10 @@ describe("GitHub proof runner", () => {
         expect(timings).toEqual({
           queue: Option.some(5),
           gate: Option.some(11),
-          prepare: Option.some(4),
+          prepare: Option.some(6),
           restored: Option.some(true),
-          build: Option.some(18),
-          specs: Option.some(10),
+          build: Option.some(20),
+          specs: Option.some(21),
           total: Option.some(50),
         });
         expect(
@@ -71,7 +71,7 @@ describe("GitHub proof runner", () => {
               "chromium passed",
               "firefox  failed\n  e2e/a.browser.ts",
               "webkit   passed",
-              "queue 5s, gate 11s, prepare 4s (restored), build 18s, specs 10s, total 50s",
+              "queue 5s, gate 11s, prepare 6s (restored), build 20s, specs 21s, total 50s",
               "",
             ],
             "\n"
@@ -132,8 +132,8 @@ describe("GitHub proof runner", () => {
           ...RUN,
           jobs: [
             {
-              ...JOB,
-              steps: [step("Gate www", 12, 14, "failure"), ...JOB.steps],
+              ...GATE_JOB,
+              steps: [step("Gate www", 12, 14, "failure"), ...GATE_JOB.steps],
             },
           ],
         });
@@ -247,7 +247,7 @@ describe("GitHub proof runner", () => {
         ...RUN,
         jobs: [
           {
-            ...JOB,
+            ...GATE_JOB,
             conclusion: "cancelled",
             startedAt: null,
             steps: [
@@ -268,6 +268,28 @@ describe("GitHub proof runner", () => {
       total: Option.some(50),
     });
     expect(runTimings({ ...RUN, jobs: [] }).queue).toEqual(Option.none());
+    // A proof alone skips the gate job, which then counts for no phase, and a
+    // phase that one engine left unfinished has none while the others finished.
+    const [, chromium, firefox, webkit] = RUN.jobs;
+    const alone = runTimings({
+      ...RUN,
+      jobs: [
+        { ...GATE_JOB, conclusion: "skipped", steps: [] },
+        chromium,
+        firefox,
+        {
+          ...webkit,
+          conclusion: "cancelled",
+          steps: Arr.map(webkit.steps, (one) =>
+            one.name === "Run specs" ? { ...one, completedAt: null } : one
+          ),
+        },
+      ],
+    });
+    expect(alone.queue).toEqual(Option.some(5));
+    expect(alone.gate).toEqual(Option.none());
+    expect(alone.build).toEqual(Option.some(20));
+    expect(alone.specs).toEqual(Option.none());
     const passed = {
       sha: SHA,
       url: "local",
@@ -284,7 +306,7 @@ describe("GitHub proof runner", () => {
         restored: Option.some(false),
         queue: Option.none(),
       })
-    ).toContain("queue -, gate 11s, prepare 4s (prepared)");
+    ).toContain("queue -, gate 11s, prepare 6s (prepared)");
     expect(
       formatProof(passed, Option.some(false), {
         ...runTimings(RUN),
@@ -296,7 +318,7 @@ describe("GitHub proof runner", () => {
         ...runTimings(RUN),
         restored: Option.none(),
       })
-    ).toContain("prepare 4s, build");
+    ).toContain("prepare 6s, build");
   });
 });
 

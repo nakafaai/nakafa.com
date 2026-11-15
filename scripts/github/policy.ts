@@ -52,9 +52,9 @@ export const GITHUB_ACTION_REVIEWS = Schema.decodeSync(
     action: "actions/checkout",
     approvedSha: "3d3c42e5aac5ba805825da76410c181273ba90b1",
     expectedTag: "v7.0.1",
-    expectedUsages: 3,
+    expectedUsages: 4,
     reason:
-      "Checkout is pinned to the latest reviewed stable release. The CLI publication and the deploy workflow each check out the commit, and the proof workflow's one job checks out the verified head with its whole history and without credentials.",
+      "Checkout is pinned to the latest reviewed stable release. The CLI publication and the deploy workflow each check out the commit, and the proof workflow checks out the verified head without credentials twice: its gate job with the whole history, and its engine job, which the matrix runs once per engine.",
   },
   {
     action: "oven-sh/setup-bun",

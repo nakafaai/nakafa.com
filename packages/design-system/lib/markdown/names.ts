@@ -114,16 +114,10 @@ export const mathematicsComponentNames = {
   functionExplorationVirusChart: "FunctionExplorationVirusChart",
   functionMachine: "FunctionMachine",
   histogramChart: "HistogramChart",
-  inequality: "Inequality",
   inverseFunctionIllustration: "InverseFunctionIllustration",
-  lineEquation: "LineEquation",
-  numberLine: "NumberLine",
   quadraticEquationReadingRoomProblem: "QuadraticEquationReadingRoomProblem",
   scatterDiagram: "ScatterDiagram",
   sequenceConceptTableChairsAnimation: "SequenceConceptTableChairsAnimation",
-  triangle: "Triangle",
-  unitCircle: "UnitCircle",
-  vectorChart: "VectorChart",
 } as const;
 
 /** Rich component names of the physics visuals; every lesson domain may use them. */
