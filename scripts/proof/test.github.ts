@@ -122,7 +122,7 @@ export const statusAnswer = (
     },
   });
 
-/** What the calls around a proof answer: the sweep's lists, the head of main and the statuses posted. */
+/** What the calls around a proof answer: the sweep's lists, the head of main and the statuses read. */
 const housekeeping = (args: readonly string[]): Answer | undefined => {
   if (args[0] === "pr" || args[0] === "fetch" || args[1] === "cancel") {
     return {};
@@ -134,7 +134,7 @@ const housekeeping = (args: readonly string[]): Answer | undefined => {
     return { stdout: statusAnswer([{ state: "SUCCESS", targetUrl: RUN.url }]) };
   }
   if (args[0] === "api") {
-    return Arr.contains(args, "--silent") ? {} : { stdout: `${MAIN}\n` };
+    return { stdout: `${MAIN}\n` };
   }
 };
 

@@ -189,10 +189,10 @@ The amendment "Stacks Stay Linear, And GitHub's Merge Queue Lands Them" decided 
    | `merge_group` | the gate and the three engines, side by side | the last of the four to finish, from the gate and the three engine statuses of its run | "Gate, Chromium, Firefox and WebKit: success" or "failure" |
    | `workflow_dispatch` without the browsers (`bun run gate`) | the gate | the gate | as for a pull request |
    | `workflow_dispatch` with `base` (a merge group rehearsal) | the gate and the three engines | as for a merge group | as for a merge group |
-   | `workflow_dispatch` with the browsers and no `base` (`bun run proof`, a baseline, the train) | as asked | nobody | none |
+   | `workflow_dispatch` with the browsers and no `base` (`bun run proof`, a baseline) | as asked | nobody | none |
 
-   A commit status, not a job's check run, because one name must come from whichever of four jobs ends last: a fifth job that `needs` them would wait in the account's runner queue again from the back (amendment "One Job Per Head"). Each job posts its own status before it reads the others, so the last to finish sees all four, as `proof` is posted already. The gate, engine and summary statuses `gate/<part>`, `gate`, `proof/<engine>` and `proof` stay until the train is deleted.
-2. **Specs from the group's diff.** `scripts/proof/select.ts` owns which specs a merge group proves, from `git diff --name-only base_sha head_sha`: every spec file it changes that its head still holds, every spec in an `apps/www/e2e` folder whose name is a path segment of a changed file under `apps/www/src` (the file named without its extension), and the smoke spec `e2e/quran/landing.browser.ts` always. A group that changes nothing the product runs reaches no folder, so it proves its own spec files and the smoke spec. The module also owns `SPEC_FILE`, `RUNTIME_FILE` and `SMOKE_SPEC`, which the train reads until it is deleted. Selection proves fewer specs than every suite; a full proof of main after landings (amendment "The Landing Queue", point 8) is what catches the rest, and nothing schedules it yet.
+   A commit status, not a job's check run, because one name must come from whichever of four jobs ends last: a fifth job that `needs` them would wait in the account's runner queue again from the back (amendment "One Job Per Head"). Each job posts its own status before it reads the others, so the last to finish sees all four, as `proof` is posted already. The gate, engine and summary statuses `gate/<part>`, `gate`, `proof/<engine>` and `proof` stay: `verify` is read from them, and `bun run gate` and `bun run proof` wait on them.
+2. **Specs from the group's diff.** `scripts/proof/select.ts` owns which specs a merge group proves, from `git diff --name-only base_sha head_sha`: every spec file it changes that its head still holds, every spec in an `apps/www/e2e` folder whose name is a path segment of a changed file under `apps/www/src` (the file named without its extension), and the smoke spec `e2e/quran/landing.browser.ts` always. A group that changes nothing the product runs reaches no folder, so it proves its own spec files and the smoke spec. Selection proves fewer specs than every suite; a full proof of main after landings (amendment "The Landing Queue", point 8) is what catches the rest, and nothing schedules it yet.
 3. **Concurrency.** A push to a pull request cancels the run of the head it replaced, whose statuses name only that older head. A merge group's run and every dispatch have a group of their own, so a later push never cancels them, and `scripts/proof/sweep.ts` cancels only dispatched runs.
 4. **Pull requests already open.** A pull request gets `verify` on its next push, when it is marked ready, when it is reopened, or from `bun run gate <sha>` on its head. The queue admits a pull request only when `verify` passed on its head.
 5. **Forks.** A pull request from a fork runs with a read-only token, so its run posts no status and it cannot enter the queue; its code reads no secret either way.
@@ -203,23 +203,35 @@ The amendment "Stacks Stay Linear, And GitHub's Merge Queue Lands Them" decided 
 
 Main sets it once the workflow above is on `main`; no session changes repository settings.
 
-| Setting | Value |
-| --- | --- |
-| Target | the default branch, `main` (the queue "cannot be enabled with branch protection rules that use wildcard characters") |
-| Require a pull request before merging | on, as today |
-| Require status checks to pass | `verify`, expected source GitHub Actions, so no personal token can post it by hand |
-| Require branches to be up to date before merging | off: the queue tests each group on the latest main and "does not require a pull request author to update their pull request branch" |
-| Require merge queue | on |
-| Merge method | squash |
-| Build concurrency | 3 |
-| Minimum group size | 1 |
-| Maximum group size | 5 |
-| Wait time to meet minimum group size | 5 minutes |
-| Status check timeout | 90 minutes: a completed proof run took 27 minutes at the median and 50 at the 90th percentile (amendment "The Landing Queue") |
-| Only merge non-failing pull requests | on |
+| Setting | Value | Ruleset API (`rules[]`) |
+| --- | --- | --- |
+| Target | the default branch, `main` (the queue "cannot be enabled with branch protection rules that use wildcard characters") | `conditions.ref_name.include: ["~DEFAULT_BRANCH"]` |
+| Require a pull request before merging | on, as today | `pull_request` |
+| Require status checks to pass | `verify` | `required_status_checks`: `required_status_checks: [{ context: "verify" }]` |
+| Require branches to be up to date before merging | off: the queue tests each group on the latest main and "does not require a pull request author to update their pull request branch" | `strict_required_status_checks_policy: false` |
+| Require merge queue | on | `merge_queue` |
+| Merge method | squash | `merge_method: "SQUASH"` |
+| Only merge non-failing pull requests | on | `grouping_strategy: "ALLGREEN"` |
+| Build concurrency | 3 | `max_entries_to_build: 3` |
+| Minimum group size | 1 | `min_entries_to_merge: 1` |
+| Maximum group size | 5 | `max_entries_to_merge: 5` |
+| Wait time to meet minimum group size | 5 minutes | `min_entries_to_merge_wait_minutes: 5` |
+| Status check timeout | 90 minutes: a completed proof run took 27 minutes at the median and 50 at the 90th percentile (amendment "The Landing Queue") | `check_response_timeout_minutes: 90` |
+
+`verify` names no expected source, so any token with write access to the repository may post it; a session never posts it by hand.
+
+A `merge_group` run's `GITHUB_SHA` is the "SHA of the merge group" (docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows), so it runs the workflow file that group's head holds. This change and the stack below it land on `main` before the ruleset is switched: a group built on an older main would run a `proof.yml` that posts no `verify`, and wait out the status check timeout.
 
 ### Consequences
 
 - A pull request is merged by adding it to the queue once `verify` passed on its exact head: `gh pr merge <number> --match-head-commit <sha>`, or `merge-async` on a stack's top, which queues every member below. A head whose `verify` has not passed is not added, because `gh pr merge` then turns on auto-merge, which stays off.
 - The rehearsal (`workflow_dispatch` with `base`) is how a change to this workflow proves the merge group path before main switches the ruleset, since only the queue sends `merge_group`.
-- The second change deletes what the queue replaces: the train's batching, splitting, flake rerun, landing and deploy dispatch in `scripts/landing`, `bun run train`, and the `gate` and `proof` statuses once nothing reads them.
+- The second change deletes what the queue replaces (amendment "The Train Is Deleted").
+
+## Amendment: The Train Is Deleted, 15 November 2026
+
+The merge queue landed its first group on the ruleset of the amendment "The Merge Queue Is Switched On", so the train's code goes in one change, as the amendment "Stacks Stay Linear" decided (point 7), with no second path kept.
+
+1. **Deleted.** `scripts/landing` (batching, splitting by stack and halves, the flake rerun, landing by exact head, the deploy dispatch and their tests) and `bun run train`. The amendments above that describe the train stay as the record of why the queue replaced it.
+2. **Deleted with it, because only the train read them.** The `proof/new` status that `bun run proof` posted, the prover's `verify` (a gate and proof in one run of a combination), the baseline's list of what main fails, the sweep's keep of train branch tips, and the Git author the gate job set for the train's tests.
+3. **Kept.** `bun run gate <sha>`, which admits a head by posting `verify`, and `bun run proof <sha> [spec...]`, which proves any head in the browsers and compares its failures with main for a session. `scripts/proof/select.ts` keeps `SMOKE_SPEC` and the spec rule beside the merge group selection it serves.

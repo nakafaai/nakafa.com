@@ -6,11 +6,10 @@ import { github, MAIN, toJson, withGithub } from "#scripts/proof/test.github";
 
 describe("superseded proof runs", () => {
   it.effect(
-    "cancels the queued runs of heads no pull request, train or main holds",
+    "cancels the queued runs of heads no pull request or main holds",
     () =>
       Effect.gen(function* () {
         const open = "1".repeat(40);
-        const train = "2".repeat(40);
         const gone = "3".repeat(40);
         const refused = "4".repeat(40);
         // A baseline of a commit main has since moved past.
@@ -20,11 +19,7 @@ describe("superseded proof runs", () => {
             return { stdout: `${open}\n` };
           }
           if (args[0] === "api") {
-            return {
-              stdout: Arr.some(args, (arg) => arg.includes("matching-refs"))
-                ? `${train}\n`
-                : `${MAIN}\n`,
-            };
+            return { stdout: `${MAIN}\n` };
           }
           if (args[0] === "fetch") {
             return {};
@@ -43,7 +38,6 @@ describe("superseded proof runs", () => {
           return {
             stdout: toJson([
               { databaseId: 10, displayTitle: `Proof ${open} a` },
-              { databaseId: 11, displayTitle: `Proof ${train} b` },
               { databaseId: 12, displayTitle: `Proof ${MAIN} c` },
               { databaseId: 13, displayTitle: `Proof ${gone} d` },
               { databaseId: 14, displayTitle: `Proof ${refused} e` },

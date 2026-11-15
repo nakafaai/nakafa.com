@@ -20,12 +20,9 @@ import { ProofError } from "#scripts/proof/client";
 /** A spec file of the browser suites, as a path in the repository; its group is the path under `apps/www`. */
 const SPEC_FILE = /^apps\/www\/(?<spec>e2e\/.+\.browser\.ts)$/u;
 
-/** A file the product runs: under `apps` or `packages`, outside the browser specs, and no Markdown. */
-export const RUNTIME_FILE = /^(?:apps|packages)\/(?!www\/e2e\/)(?!.*\.md$)/u;
-
 /**
  * The one spec every merge group proves, and the only one a change to nothing
- * the product runs is proven on, such as the landing scripts, a workflow or the
+ * the product runs is proven on, such as the proof scripts, a workflow or the
  * docs: a fast page that passes in all three engines on main (run 43699251319).
  */
 export const SMOKE_SPEC = "e2e/quran/landing.browser.ts";
@@ -39,7 +36,7 @@ const EXTENSION = /\.[^.]+$/u;
 const USAGE = "Usage: node scripts/proof/select.ts <base sha> <head sha>";
 
 /** The spec files among repository paths, as paths under `apps/www`. */
-export const specsOf = (paths: readonly string[]) =>
+const specsOf = (paths: readonly string[]) =>
   Arr.filterMap(paths, (path) =>
     Option.match(Option.fromNullishOr(SPEC_FILE.exec(path)?.groups?.spec), {
       onNone: () => Result.failVoid,

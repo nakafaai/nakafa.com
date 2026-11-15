@@ -40,8 +40,7 @@ const runGit = Effect.fn("proof.runGit")(function* (
 
 /**
  * Cancels every queued proof run whose head is no longer worth proving: not the
- * head of an open pull request, not main's head, and not the tip of a train
- * branch. A head that a newer push replaced, or that merged, would otherwise
+ * head of an open pull request and not main's head. A head that a newer push replaced, or that merged, would otherwise
  * hold one of the 20 jobs that every proof and gate of the account shares.
  * Runs that already started keep going, and so does every run a pull request
  * or a merge group started: GitHub's merge queue waits on a merge group's run,
@@ -65,17 +64,7 @@ export const sweepSuperseded = Effect.fn("proof.sweepSuperseded")(function* () {
     "--jq",
     ".[].headRefOid",
   ]);
-  const trains = yield* gh([
-    "api",
-    `repos/${REPOSITORY}/git/matching-refs/heads/nabil/train-`,
-    "--jq",
-    ".[].object.sha",
-  ]);
-  const keep = HashSet.fromIterable([
-    ...lines(heads),
-    ...lines(trains),
-    yield* mainHead,
-  ]);
+  const keep = HashSet.fromIterable([...lines(heads), yield* mainHead]);
   const queued = yield* gh([
     "run",
     "list",

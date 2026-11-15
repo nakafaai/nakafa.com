@@ -1,6 +1,6 @@
 import {
   combineShards,
-  ProofResult,
+  type ProofResult,
   ShardResultJson,
 } from "@repo/backend/scripts/content/acceptance/result";
 import { randomUuid } from "@repo/utilities/uuid";
@@ -22,9 +22,6 @@ import { ChildProcessSpawner } from "effect/process";
 import { runText } from "#scripts/process";
 import { gh, ProofError, REPOSITORY, RunListJson } from "#scripts/proof/client";
 import { sweepSuperseded } from "#scripts/proof/sweep";
-
-/** The commit status that says whether a head fails anything main does not. */
-export const VERDICT_CONTEXT = "proof/new";
 
 const Step = Schema.Struct({
   name: Schema.String,
@@ -349,16 +346,10 @@ export const proveOnGithub = Effect.fn("proof.proveOnGithub")(
 /** How many times the prover dispatches a run again after it was cancelled from outside. */
 const REDISPATCHES = 3;
 
-/** A combination's gate and proof, read from the one run that verified it. */
-const Verification = Schema.Struct({
-  gated: Schema.Boolean,
-  result: ProofResult,
-});
-
 /**
- * The seam every caller of a proof uses: prove one exact head in the browsers,
- * narrowed to some spec files or not, or verify it whole, gate and proof in one
- * run, and answer one verdict per engine.
+ * The seam a baseline proves main through: prove one exact head in the
+ * browsers, narrowed to some spec files or not, and answer one verdict per
+ * engine.
  */
 export class Prover extends Context.Service<
   Prover,
@@ -367,80 +358,33 @@ export class Prover extends Context.Service<
       sha: string,
       specs: readonly string[]
     ) => Effect.Effect<ProofResult, ProofError>;
-    readonly verify: (
-      sha: string,
-      specs: readonly string[]
-    ) => Effect.Effect<typeof Verification.Type, ProofError>;
   }
 >()("nakafa/scripts/proof/github/Prover") {}
 
 /**
- * The prover that runs every proof on GitHub's runners: a proof alone, such as
- * main's baseline, skips the gate, and a verification gates the workspaces the
- * combination changes against main, which holds every head it merges.
+ * The prover that runs every proof on GitHub's runners without the gate. A run
+ * cancelled from outside, such as one a session moved back in the runner
+ * queue, is dispatched again instead of read as a failure.
  */
 export const githubProver = Layer.effect(
   Prover,
   Effect.gen(function* () {
     const fs = yield* FileSystem.FileSystem;
     const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
-    // A run cancelled from outside, such as one a session moved back in the
-    // runner queue, is dispatched again instead of read as a failure.
-    const run = (
-      sha: string,
-      specs: readonly string[],
-      scope: typeof Scope.Type
-    ) =>
-      proveOnGithub(sha, specs, scope).pipe(
-        Effect.repeat({
-          until: (outcome) => !outcome.cancelled,
-          times: REDISPATCHES,
-        }),
-        Effect.provideService(FileSystem.FileSystem, fs),
-        Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner)
-      );
     return {
       prove: (sha, specs) =>
-        run(sha, specs, { gate: false, full: false }).pipe(
-          Effect.map(({ result }) => result)
-        ),
-      verify: (sha, specs) =>
-        run(sha, specs, { gate: true, full: false }).pipe(
-          Effect.map(({ result, gated }) => ({
-            result,
-            gated: Option.getOrElse(gated, () => false),
-          }))
+        proveOnGithub(sha, specs, { gate: false, full: false }).pipe(
+          Effect.repeat({
+            until: (outcome) => !outcome.cancelled,
+            times: REDISPATCHES,
+          }),
+          Effect.map(({ result }) => result),
+          Effect.provideService(FileSystem.FileSystem, fs),
+          Effect.provideService(
+            ChildProcessSpawner.ChildProcessSpawner,
+            spawner
+          )
         ),
     };
   })
 );
-
-/**
- * Posts the verdict of a head against main: success when it fails nothing that
- * main does not, which the landing train reads beside the run's own statuses.
- */
-export const postVerdict = Effect.fn("proof.postVerdict")(function* (
-  sha: string,
-  url: string,
-  fresh: readonly string[],
-  shared: readonly string[],
-  main: string
-) {
-  const description =
-    fresh.length > 0
-      ? `${fresh.length} failing specs that main ${main.slice(0, 10)} passes`
-      : `No new failure; ${shared.length} fail on main ${main.slice(0, 10)} too`;
-  yield* gh([
-    "api",
-    "--silent",
-    `repos/${REPOSITORY}/statuses/${sha}`,
-    "-f",
-    `state=${fresh.length > 0 ? "failure" : "success"}`,
-    "-f",
-    `context=${VERDICT_CONTEXT}`,
-    "-f",
-    `target_url=${url}`,
-    "-f",
-    `description=${description}`,
-  ]);
-});
