@@ -14,7 +14,6 @@ describe("drawMath", () => {
 
   it("draws a formula it cannot read in the error color instead of throwing", () => {
     expect(drawMath("\\frac{", false)).toContain(MATH_ERROR_COLOR);
-    expect(drawMath("\\frac{", false, "#123456")).toContain("#123456");
   });
 
   it("keeps trust off, so a formula cannot write a link", () => {

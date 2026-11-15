@@ -30,11 +30,9 @@ const Drawing = lazy(() =>
  */
 function FormulaMarkup({
   display,
-  errorColor,
   math,
 }: {
   readonly display: boolean;
-  readonly errorColor?: string | undefined;
   readonly math: string;
 }) {
   const hydrated = useHydrated();
@@ -48,7 +46,7 @@ function FormulaMarkup({
   if (Option.contains(served, math)) {
     return display ? <DrawnBlockMath html="" /> : <DrawnInlineMath html="" />;
   }
-  return <Drawing display={display} errorColor={errorColor} math={math} />;
+  return <Drawing display={display} math={math} />;
 }
 
 export const FormulaDrawing = Object.assign(FormulaMarkup, {

@@ -19,16 +19,13 @@ import { FormulaDrawing } from "@/lib/content/renderer/client/base/formula";
 function Formula({
   children,
   display,
-  errorColor,
   math,
 }: MathComponentProps & { readonly display: boolean }) {
   const tex = math ?? children;
   return (
     <>
-      <MathFontPreload
-        fonts={readMathFonts(drawMath(tex, display, errorColor))}
-      />
-      <FormulaDrawing display={display} errorColor={errorColor} math={tex} />
+      <MathFontPreload fonts={readMathFonts(drawMath(tex, display))} />
+      <FormulaDrawing display={display} math={tex} />
     </>
   );
 }

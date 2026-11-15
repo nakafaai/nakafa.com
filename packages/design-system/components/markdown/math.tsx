@@ -16,26 +16,20 @@ import type { HTMLAttributes, ReactNode } from "react";
 export type MathComponentProps =
   | {
       readonly children?: never;
-      readonly errorColor?: string;
       readonly math: string;
     }
   | {
       readonly children: string;
-      readonly errorColor?: string;
       readonly math?: never;
     };
 
-type KatexMarkupProps = MathComponentProps & {
+type MathMarkupProps = MathComponentProps & {
   readonly displayMode: boolean;
 };
 
-function KatexMarkup({
-  children,
-  displayMode,
-  errorColor,
-  math,
-}: KatexMarkupProps) {
-  const html = drawMath(math ?? children, displayMode, errorColor);
+/** One formula's KaTeX markup with the faces it draws with, outside any card. */
+export function MathMarkup({ children, displayMode, math }: MathMarkupProps) {
+  const html = drawMath(math ?? children, displayMode);
 
   return (
     <>
@@ -84,13 +78,10 @@ export function MathContainer({
  * MathContainer uses the data-math-block presence marker to style adjacent
  * rows without coupling the stack to implementation-specific class names.
  */
-export function BlockMath({
-  className,
-  ...props
-}: MathComponentProps & { className?: string }) {
+export function BlockMath(props: MathComponentProps) {
   return (
-    <MathBlockFrame className={className}>
-      <KatexMarkup displayMode={true} {...props} />
+    <MathBlockFrame>
+      <MathMarkup displayMode={true} {...props} />
     </MathBlockFrame>
   );
 }
@@ -119,5 +110,5 @@ export function MathBlockFrame({
 
 /** Renders one inline KaTeX expression, drawn through `DrawnInlineMath`. */
 export function InlineMath(props: MathComponentProps) {
-  return <KatexMarkup displayMode={false} {...props} />;
+  return <MathMarkup displayMode={false} {...props} />;
 }
