@@ -4664,7 +4664,7 @@
     "top": "Every block is open",
     "play": "Play",
     "mute": "Mute sound",
-    "items": "Ready-made",
+    "items": "Items",
     "blocks": "Blocks",
     "item-house": "Cottage",
     "item-tree": "Tree",
@@ -4972,6 +4972,7 @@
     "block-papaya": "Papaya plant",
     "plants": "Plants",
     "walk": "Walk",
-    "notice-path": "No way leads there. Try a spot your fox can reach."
+    "notice-path": "No way leads there. Try a spot your fox can reach.",
+    "search": "Search"
   }
 }

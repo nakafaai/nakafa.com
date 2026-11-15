@@ -14,6 +14,10 @@ export type Tool = "place" | "item" | "remove" | "walk";
 /** What the game tells the learner: a build the server refused, edits another device made first, or an item with no room where it was pressed. */
 export type Notice = "path" | "refused" | "room" | "stale";
 
+/** The shelves of the block book: ready-made items, plants, blocks, and the field guide of animals. */
+export const Shelf = Schema.Literals(["items", "plants", "blocks", "animals"]);
+export type Shelf = typeof Shelf.Type;
+
 /** The learner's lifetime Stars between the level they reached and the next one. */
 export const Progress = Schema.Struct({
   from: Schema.Finite,
@@ -65,6 +69,8 @@ interface GameStore {
   pending: readonly Edit[];
   /** The learner's lifetime Stars, the Stars that opened this level, and those that open the next, none at the last. */
   progress: Progress;
+  /** What the book's search looks for, empty for everything. */
+  query: string;
   redo: () => void;
   revision: number;
   /**
@@ -80,10 +86,14 @@ interface GameStore {
   setMinute: (minute: number) => void;
   setMuted: (muted: boolean) => void;
   setNotice: (notice: Notice | null) => void;
+  setQuery: (query: string) => void;
+  setShelf: (shelf: Shelf) => void;
   setTool: (tool: Tool) => void;
   /** Records that the server took the first `count` pending edits, now at `version`. */
   settle: (count: number, version: number) => void;
   setWeather: (weather: Weather) => void;
+  /** The book's open shelf. */
+  shelf: Shelf;
   slot: number;
   /** Hands the chunks to mesh to the stage and forgets them. */
   takeDirty: () => HashSet.HashSet<number>;
@@ -148,6 +158,8 @@ export function createGameStore(setup: GameSetup) {
       hold: (item) => set({ book: false, item, tool: "item" }),
       item: "house",
       minute: 0,
+      query: "",
+      shelf: "items",
       notice: null,
       past: [],
       pending: [],
@@ -165,6 +177,8 @@ export function createGameStore(setup: GameSetup) {
       revision: 0,
       setBook: (book) => set({ book }),
       setMinute: (minute) => set({ minute }),
+      setQuery: (query) => set({ query }),
+      setShelf: (shelf) => set({ query: "", shelf }),
       setMuted: (muted) => set({ muted }),
       setNotice: (notice) => set({ notice }),
       setWeather: (weather) => set({ weather }),
