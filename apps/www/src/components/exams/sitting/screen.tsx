@@ -8,6 +8,7 @@ import {
   NO_RESPONSE,
   typedText,
 } from "@repo/backend/confect/assessment/response";
+import { DeferredLearnerText } from "@repo/design-system/components/markdown/deferred";
 import { JsonTextSchema } from "@repo/utilities/json";
 import { Function as Fn, Option, Schema } from "effect";
 import { useId, useMemo } from "react";
@@ -85,14 +86,10 @@ export function StudentScreen({
           />
         ) : null}
         {Option.isSome(written) ? (
-          <p
-            className="rounded-md border p-3 text-sm whitespace-pre-wrap"
-            dir="auto"
-          >
-            {typedText(response) === ""
-              ? t("student-no-answer")
-              : typedText(response)}
-          </p>
+          <ScreenWritten
+            essay={written.value.kind === "extendedText"}
+            text={typedText(response)}
+          />
         ) : null}
         {Option.isSome(pairing) ? (
           <SittingPairs
@@ -111,5 +108,27 @@ export function StudentScreen({
         ) : null}
       </section>
     </PaperLockProvider>
+  );
+}
+
+/**
+ * What the student wrote: an essay drawn with its formulas and lists, as the results draw it, and a short answer or a
+ * number as the student typed it. A blank answer says so.
+ */
+function ScreenWritten({ essay, text }: { essay: boolean; text: string }) {
+  const t = useTranslations("Exams");
+  if (text === "") {
+    return (
+      <p className="rounded-md border p-3 text-sm">{t("student-no-answer")}</p>
+    );
+  }
+  return essay ? (
+    <div className="rounded-md border p-3">
+      <DeferredLearnerText>{text}</DeferredLearnerText>
+    </div>
+  ) : (
+    <p className="rounded-md border p-3 text-sm whitespace-pre-wrap" dir="auto">
+      {text}
+    </p>
   );
 }

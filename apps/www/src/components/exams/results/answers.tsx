@@ -1,7 +1,9 @@
 import { QueryResult, useQuery } from "@confect/react";
 import { Id } from "@repo/backend/confect/_generated/id";
 import exams from "@repo/backend/confect/_generated/refs/exams";
+import { isTextResponse } from "@repo/backend/confect/assessment/response";
 import type { AttemptResult } from "@repo/backend/confect/exams/results/contract";
+import { DeferredLearnerText } from "@repo/design-system/components/markdown/deferred";
 import { PopupHold } from "@repo/design-system/components/ui/hold";
 import { Array as Arr, Number as Num, Option, Schema } from "effect";
 import { useTranslations } from "use-intl";
@@ -42,9 +44,14 @@ function AnswerItem({
           {t(verdictKeys[question.verdict])}
         </span>
       </div>
-      <p className="text-sm whitespace-pre-wrap" dir="auto">
-        {shown === "" ? t("student-no-answer") : shown}
-      </p>
+      {isTextResponse(question.response) && shown !== "" ? (
+        // A written answer is the student's own Markdown, an essay with its formulas and lists included.
+        <DeferredLearnerText>{shown}</DeferredLearnerText>
+      ) : (
+        <p className="text-sm whitespace-pre-wrap" dir="auto">
+          {shown === "" ? t("student-no-answer") : shown}
+        </p>
+      )}
       <div className="flex items-center justify-between gap-4 text-sm">
         <span className="text-muted-foreground">{t("results-points")}</span>
         {canGrade ? (

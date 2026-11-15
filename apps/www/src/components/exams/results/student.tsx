@@ -1,8 +1,10 @@
 import type { GenericId } from "@confect/core";
 import { QueryResult, useQuery } from "@confect/react";
 import exams from "@repo/backend/confect/_generated/refs/exams";
+import { isTextResponse } from "@repo/backend/confect/assessment/response";
 import type { StudentResult } from "@repo/backend/confect/exams/results/contract";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
+import { DeferredLearnerText } from "@repo/design-system/components/markdown/deferred";
 import { Array as Arr, Number as Num } from "effect";
 import { useTranslations } from "use-intl";
 import { useSessionSettled } from "@/components/exams/results/context";
@@ -14,7 +16,9 @@ import { ReadBoundary } from "@/components/tenant/read/boundary";
 /**
  * The letters of the options that a student chose, the text the student typed, or the pairs the
  * student made, or a line that says the question was left unanswered. The answer keeps its own
- * direction and its line breaks inside the sentence, so an Arabic essay reads as it was typed.
+ * direction and its line breaks inside the sentence, so an Arabic answer reads as it was typed. A
+ * written answer is the student's own Markdown, drawn under its label with its formulas and lists,
+ * as an essay was written.
  */
 function AnswerLine({
   question,
@@ -25,6 +29,16 @@ function AnswerLine({
   const shown = responseText(question, question.response);
   if (shown === "") {
     return t("student-no-answer");
+  }
+  if (isTextResponse(question.response)) {
+    return (
+      <>
+        {t("student-answer-label")}
+        <DeferredLearnerText className="text-foreground">
+          {shown}
+        </DeferredLearnerText>
+      </>
+    );
   }
   return t.rich("student-answer", {
     answer: shown,
@@ -46,9 +60,9 @@ function AnswerItem({
         <span>{t("question", { number: question.number })}</span>
         <span>{t(verdictKeys[question.verdict])}</span>
       </div>
-      <span className="text-muted-foreground">
+      <div className="text-muted-foreground">
         <AnswerLine question={question} />
-      </span>
+      </div>
     </li>
   );
 }

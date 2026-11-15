@@ -13,7 +13,10 @@ import { waitUntilTakenOver } from "@/e2e/support/window";
 /** The Arabic word the student types from the keypad, letter by letter: kataba, he wrote. */
 const WORD = ["ك", "ت", "ب"] as const;
 
-test("a student writes an Arabic answer from the sitting's Arabic keypad, and the field reads right to left", async ({
+/** The name of the footer button that opens the question navigator on a phone. */
+const OPENER = /^Open the question navigator, /u;
+
+test("a student writes an essay with an Arabic word from the keypad and a formula from the exam editor's formula editor", async ({
   baseURL,
   browser,
 }) => {
@@ -45,7 +48,19 @@ test("a student writes an Arabic answer from the sitting's Arabic keypad, and th
   );
   await student.getByPlaceholder("Enter the token").fill(sitting.token);
   await student.getByRole("button", { name: "Enter sitting" }).click();
-  const navigator = student.getByRole("complementary", { name: "Questions" });
+  // The navigator stands beside the paper from the large breakpoint; a phone opens it from the footer as a sheet.
+  const sidebar = student.getByRole("complementary", { name: "Questions" });
+  const opener = student.getByRole("button", { name: OPENER });
+  await expect(sidebar.or(opener)).toBeVisible({
+    timeout: readinessTimeoutMilliseconds,
+  });
+  const phone = await opener.isVisible();
+  if (phone) {
+    await opener.click();
+  }
+  const navigator = phone
+    ? student.getByRole("dialog", { name: "Questions" })
+    : sidebar;
   await navigator
     .getByRole("button", { exact: true, name: "Question 3, unanswered" })
     .click();
@@ -61,13 +76,27 @@ test("a student writes an Arabic answer from the sitting's Arabic keypad, and th
   for (const letter of WORD) {
     await keypad.getByRole("button", { exact: true, name: letter }).click();
   }
-  await expect(essay).toHaveValue(Arr.join(WORD, ""));
+  await expect(essay).toHaveText(Arr.join(WORD, ""));
   await expect(essay).toBeFocused();
-  // The field follows the direction of the words written in it.
-  await expect(essay).toHaveAttribute("dir", "auto");
-  expect(await essay.evaluate((field) => field.matches(":dir(rtl)"))).toBe(
-    true
-  );
+  // A paragraph follows the direction of the words written in it.
+  expect(
+    await essay
+      .locator("p")
+      .first()
+      .evaluate((paragraph) => paragraph.matches(":dir(rtl)"))
+  ).toBe(true);
+
+  // A formula opens the exam editor's formula editor at once, and stands in the essay as KaTeX draws it.
+  await question.getByRole("button", { name: "Arabic keyboard" }).click();
+  await expect(keypad).toBeHidden();
+  await question.getByRole("button", { exact: true, name: "Formula" }).click();
+  await student.getByRole("button", { exact: true, name: "LaTeX" }).click();
+  await student.getByRole("textbox", { name: "LaTeX" }).fill("x^2");
+  // A press outside the formula editor saves the formula.
+  await question.getByRole("heading").first().click();
+  await expect(
+    essay.locator('[data-formula="inline"] .katex').first()
+  ).toBeVisible();
 
   // The typed answer is the student's own: it is kept once the student leaves the field.
   await student.keyboard.press("Escape");
