@@ -2,11 +2,14 @@ import { assert, describe, expect, it } from "@effect/vitest";
 import type { AssessmentRowSchema } from "@nakafa/aksara-contracts/assessment/snapshot";
 import tryouts from "@repo/backend/confect/_generated/refs/tryouts";
 import { TryoutQuestionBodyText } from "@repo/backend/confect/tryouts/runtime/spec";
-import { LANDING_FEATURED_TRYOUT } from "@repo/backend/content/tryout/featured";
+import { LANDING_FEATURED_TRYOUTS } from "@repo/backend/content/tryout/featured";
 import { tryoutWorld } from "@repo/backend/test/tryout/world";
 import { Array as Arr, Effect, Option, Schema } from "effect";
 
 type AssessmentRow = typeof AssessmentRowSchema.Type;
+
+/** The first set the landing may demonstrate, which the fixture publishes. */
+const [LANDING_FEATURED_TRYOUT] = LANDING_FEATURED_TRYOUTS;
 
 const { getFeaturedQuestion } = tryouts.queries.catalog;
 

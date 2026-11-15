@@ -10,16 +10,29 @@ import {
   readStimulus,
 } from "@repo/backend/confect/tryouts/rows";
 import { TryoutQuestionBodyText } from "@repo/backend/confect/tryouts/runtime/spec";
-import { Array as Arr, Effect, Option, Schema } from "effect";
+import { Array as Arr, Effect, Option, Result, Schema } from "effect";
 
-/** The authored question the landing page demonstrates: the first place of one SNBT section. */
-export const LANDING_FEATURED_TRYOUT = {
-  countryKey: "indonesia",
-  examKey: "snbt",
-  sectionKey: "quantitative-knowledge",
-  setKey: "set-1",
-  trackKey: "2027",
-} as const;
+/**
+ * The authored questions the landing page may demonstrate, in order: the first place of one section
+ * of a set. Each set serves only the locales it is explained in, so a locale demonstrates the first
+ * set it serves: SNBT where it is explained, and SPM Fizik, written in Malay, where it is not.
+ */
+export const LANDING_FEATURED_TRYOUTS = [
+  {
+    countryKey: "indonesia",
+    examKey: "snbt",
+    sectionKey: "quantitative-knowledge",
+    setKey: "set-1",
+    trackKey: "2027",
+  },
+  {
+    countryKey: "malaysia",
+    examKey: "spm",
+    sectionKey: "physics",
+    setKey: "set-1",
+    trackKey: "physics",
+  },
+] as const;
 
 /** Fails when the active release does not publish the landing's question. */
 function missingFeatured(part: string) {
@@ -36,23 +49,25 @@ function missingFeatured(part: string) {
  */
 export const readFeaturedTryout = Effect.fn("tryouts.catalog.readFeatured")(
   function* (locale: AppLocaleCode) {
-    const target = LANDING_FEATURED_TRYOUT;
     const { snapshotId } = yield* loadActiveAssessment();
-    const found = yield* readCatalogSet(
-      snapshotId,
-      tryoutSetIdentityOf(target),
-      locale
+    const found = yield* Effect.findFirstFilter(
+      LANDING_FEATURED_TRYOUTS,
+      (target) =>
+        Effect.map(
+          readCatalogSet(snapshotId, tryoutSetIdentityOf(target), locale),
+          (set) =>
+            Result.fromOption(
+              Option.map(set, (value) => ({ ...value, target })),
+              () => target
+            )
+        )
     );
     if (Option.isNone(found)) {
       return yield* missingFeatured("set");
     }
-    const { sections, set } = found.value;
+    const { sections, set, target } = found.value;
     if (
-      !Arr.some(
-        sections,
-        ({ sectionKey, visibility }) =>
-          sectionKey === target.sectionKey && visibility === "visible"
-      )
+      !Arr.some(sections, ({ sectionKey }) => sectionKey === target.sectionKey)
     ) {
       return yield* missingFeatured("section");
     }
