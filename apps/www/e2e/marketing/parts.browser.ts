@@ -53,7 +53,16 @@ for (const viewport of [
             for (let top = 0; top < height; top += viewport.height * 0.8) {
               await scrollTo(page, top);
             }
-            await page.locator("#community h2").scrollIntoViewIfNeeded();
+            // The window scrolls to where the part stands. WebKit scrolls to no
+            // element inside a part it skips, which lays out none of its content.
+            await scrollTo(
+              page,
+              await page
+                .locator("#community")
+                .evaluate(
+                  (part) => part.getBoundingClientRect().top + window.scrollY
+                )
+            );
             await expect.poll(() => isDrawn(page, "community")).toBe(true);
           });
           expect(yield* readCumulativeLayoutShift(page)).toBe(0);
