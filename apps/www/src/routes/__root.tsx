@@ -34,7 +34,7 @@ import { Stage } from "@/components/state/stage";
 import { AD_ACCOUNT_META } from "@/lib/ads/account";
 import { ANALYTICS_CONSENT_BOOTSTRAP_SCRIPT } from "@/lib/analytics/consent/bootstrap";
 import { signedInHintScript } from "@/lib/auth/hint";
-import { STALE_CHUNK_SCRIPT } from "@/lib/chunks/stale";
+import { STALE_CHUNK_SCRIPT } from "@/lib/chunks/script";
 import { PLACEMENT_PREPAINT_SCRIPT } from "@/lib/content/material/prepaint";
 import { readPreviewRefreshFn } from "@/lib/content/preview/refresh.functions";
 import { readStandaloneMessages } from "@/lib/i18n/standalone";

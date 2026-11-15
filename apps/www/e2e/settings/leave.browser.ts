@@ -275,33 +275,40 @@ const verifyPaste = Effect.fn("NakafaE2E.verifyPaste")(function* (
 
   yield* startsEmpty(page, changes);
   yield* Effect.promise(async () => {
-    const copy = (text: string) =>
-      page.evaluate((words) => navigator.clipboard.writeText(words), text);
+    // Firefox and WebKit grant no page the system clipboard, so the paste
+    // carries its words itself, as a paste event reaches the editor.
+    const paste = (text: string) =>
+      page.evaluate((words) => {
+        const clipboardData = new DataTransfer();
+        clipboardData.setData("text/plain", words);
+        // Firefox and WebKit drop `clipboardData` from the constructor, so the event carries it itself.
+        const event = new ClipboardEvent("paste", {
+          bubbles: true,
+          cancelable: true,
+        });
+        Object.defineProperty(event, "clipboardData", { value: clipboardData });
+        document.activeElement?.dispatchEvent(event);
+      }, text);
 
     await page.getByRole("button", { name: "Add memory" }).click();
     await opened(page, "");
     await page.keyboard.insertText("x".repeat(1990));
     await expect(page.getByText("1,990 / 2,000")).toBeVisible();
 
-    // The clipboard reaches the editor: a paste that fits is inserted.
-    await copy("zz");
-    await page.keyboard.press("ControlOrMeta+v");
+    // A paste that fits is inserted.
+    await paste("zz");
     await expect(page.getByText("1,992 / 2,000")).toBeVisible();
     await expect(page.locator(TOAST)).toHaveCount(0);
 
     // A paste that passes the limit is refused with a message.
-    await copy("y".repeat(2500));
-    await page.keyboard.press("ControlOrMeta+v");
+    await paste("y".repeat(2500));
     await expect(page.locator(TOAST).getByText(NOTICE)).toBeVisible();
     await expect(page.getByText("1,992 / 2,000")).toBeVisible();
   });
 });
 
 test.describe("Memory editor with a paste that does not fit", () => {
-  test.use({
-    permissions: ["clipboard-read", "clipboard-write"],
-    viewport: { height: 900, width: 1440 },
-  });
+  test.use({ viewport: { height: 900, width: 1440 } });
 
   test("tells the learner why nothing was inserted", async ({
     baseURL,

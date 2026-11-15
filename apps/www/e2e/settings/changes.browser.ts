@@ -1,5 +1,5 @@
 import { expect, type Page, test } from "@playwright/test";
-import { Effect } from "effect";
+import { DateTime, Effect } from "effect";
 import { type Changes, live, reloadUntil, saved } from "@/e2e/support/changes";
 import { writeMemory } from "@/e2e/support/list";
 import {
@@ -171,12 +171,19 @@ const verifyRowDeleteWithEditor = Effect.fn("NakafaE2E.verifyRowDelete")(
       await row.getByText(KEPT).click();
       await opened(page, KEPT);
 
-      // The pointer stays on the row, so the delete is one press away.
+      // The pointer stays on the row, so the delete is one press away. The
+      // page's clock, which has flowed as time does since the page opened,
+      // stands still from the letter to the confirmed delete, so the editor's
+      // pause before a save cannot end first on a slow machine.
       const before = changes.sent;
       const remove = row.getByRole("button", { name: "Delete memory" });
+      await page.clock.pauseAt(
+        DateTime.toEpochMillis(DateTime.nowUnsafe()) + 100
+      );
       await page.keyboard.type("!");
       await remove.click();
       await confirmDelete(page);
+      await page.clock.resume();
       await expect(editorOf(page)).toHaveCount(0);
       await expect(row).toHaveCount(0);
       await saved(changes, before);

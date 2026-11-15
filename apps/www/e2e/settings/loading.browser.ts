@@ -5,11 +5,13 @@ import { runOnPage } from "@/e2e/support/chat";
 import { writeMemory } from "@/e2e/support/list";
 import {
   editorOf,
+  MEMORY_PATH,
   memoryRow,
   nameOf,
   openMemoryPage,
   panelOf,
 } from "@/e2e/support/memory";
+import { withObservedPageErrors } from "@/e2e/support/observe";
 import { holdChunks } from "@/e2e/support/route";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { waitUntilTakenOver } from "@/e2e/support/window";
@@ -106,6 +108,47 @@ const showsSavedWordsWhileLoading = Effect.fn(
 });
 
 /**
+ * Opens the Memory page of the same learner in a new browser context, with the
+ * editor's code held until the `release` it returns runs, and waits until the
+ * page's own code can take a press on the row named `name`. The page that wrote
+ * the memory loaded the editor's code already, and WebKit serves a chunk it
+ * holds without asking any route, so only a context with an empty cache fetches
+ * the code where the hold can stop it. The hold starts before the page loads:
+ * a pointer over a memory or the Add button starts loading the editor's code.
+ * The context closes with the scope.
+ */
+const openUncached = Effect.fn("NakafaE2E.memoryOpenUncached")(function* (
+  page: Page,
+  name: string
+) {
+  const browser = yield* Effect.fromNullishOr(page.context().browser());
+  const storageState = yield* Effect.promise(() =>
+    page.context().storageState()
+  );
+  const context = yield* Effect.acquireRelease(
+    Effect.promise(() =>
+      browser.newContext({
+        storageState,
+        viewport: page.viewportSize(),
+      })
+    ),
+    (opened) => Effect.promise(() => opened.close())
+  );
+  const fresh = yield* Effect.promise(() => context.newPage());
+  const release = yield* holdChunks(fresh, {
+    containing: EDITOR_CODE_MARKER,
+  });
+  yield* Effect.promise(async () => {
+    await fresh.goto(MEMORY_PATH);
+    await expect(memoryRow(fresh, name)).toBeVisible({
+      timeout: readinessTimeoutMilliseconds,
+    });
+    await waitUntilTakenOver(nameOf(fresh, name));
+  });
+  return { fresh, release };
+});
+
+/**
  * Formatted words keep their place: the heading, the bulleted item and the bold
  * word stand where the editor puts them, so the editor takes their place without
  * moving any of them.
@@ -115,41 +158,36 @@ const keepsFormattedWords = Effect.fn("NakafaE2E.memoryKeepsFormattedWords")(
     const changes = yield* openMemoryPage(page, baseURL);
     const before = changes.sent;
     yield* writeMemory(page, FORMATTED);
+    yield* Effect.promise(() => saved(changes, before));
 
-    yield* Effect.promise(async () => {
-      await saved(changes, before);
-      await reloadUntil(page, () =>
-        expect(memoryRow(page, PLAN)).toBeVisible({ timeout: 3000 })
-      );
-      await waitUntilTakenOver(nameOf(page, PLAN));
-    });
+    // The editor's code waits, and the preview's code loads on the press.
+    const { fresh, release } = yield* openUncached(page, PLAN);
 
-    // The editor's code waits here, and the preview's code loads on the press.
-    const release = yield* holdChunks(page, {
-      containing: EDITOR_CODE_MARKER,
-    });
+    yield* withObservedPageErrors(
+      fresh,
+      Effect.promise(async () => {
+        await nameOf(fresh, PLAN).click();
 
-    yield* Effect.promise(async () => {
-      await nameOf(page, PLAN).click();
+        const placed = formattedWordsOf(fresh);
+        await expect(placed.heading).toBeVisible({
+          timeout: readinessTimeoutMilliseconds,
+        });
+        await expect(editorOf(fresh)).toHaveCount(0);
+        const placedAt = await placesOf(placed);
 
-      const placed = formattedWordsOf(page);
-      await expect(placed.heading).toBeVisible({
-        timeout: readinessTimeoutMilliseconds,
-      });
-      await expect(editorOf(page)).toHaveCount(0);
-      const placedAt = await placesOf(placed);
+        await release();
+        await expect(editorOf(fresh).locator("strong")).toHaveText("Bread", {
+          timeout: readinessTimeoutMilliseconds,
+        });
+        const settledAt = await placesOf(formattedWordsOf(fresh));
 
-      await release();
-      await expect(editorOf(page).locator("strong")).toHaveText("Bread", {
-        timeout: readinessTimeoutMilliseconds,
-      });
-      const settledAt = await placesOf(formattedWordsOf(page));
-
-      expectSamePlace(settledAt.bold, placedAt.bold);
-      expectSamePlace(settledAt.heading, placedAt.heading);
-      expectSamePlace(settledAt.item, placedAt.item);
-    });
-  }
+        expectSamePlace(settledAt.bold, placedAt.bold);
+        expectSamePlace(settledAt.heading, placedAt.heading);
+        expectSamePlace(settledAt.item, placedAt.item);
+      })
+    );
+  },
+  Effect.scoped
 );
 
 /**
@@ -164,45 +202,42 @@ const keepsTheTaskCheck = Effect.fn("NakafaE2E.memoryKeepsTaskCheck")(
     const changes = yield* openMemoryPage(page, baseURL);
     const before = changes.sent;
     yield* writeMemory(page, TASK);
+    yield* Effect.promise(() => saved(changes, before));
 
-    yield* Effect.promise(async () => {
-      await saved(changes, before);
-      await reloadUntil(page, () =>
-        expect(memoryRow(page, MILK)).toBeVisible({ timeout: 3000 })
-      );
-      await waitUntilTakenOver(nameOf(page, MILK));
-    });
+    // The editor's code waits, and the preview's code loads on the press.
+    const { fresh, release } = yield* openUncached(page, MILK);
 
-    // The editor's code waits here, and the preview's code loads on the press.
-    const release = yield* holdChunks(page, {
-      containing: EDITOR_CODE_MARKER,
-    });
+    yield* withObservedPageErrors(
+      fresh,
+      Effect.promise(async () => {
+        await nameOf(fresh, MILK).click();
 
-    yield* Effect.promise(async () => {
-      await nameOf(page, MILK).click();
+        const box = panelOf(fresh).getByRole("checkbox", { name: MILK });
+        await expect(box).toBeVisible({
+          timeout: readinessTimeoutMilliseconds,
+        });
+        await expect(box).toHaveAttribute("data-slot", "checkbox");
+        await expect(box).not.toBeChecked();
+        await box.click();
+        await expect(box).not.toBeChecked();
+        await expect(editorOf(fresh)).toHaveCount(0);
 
-      const box = panelOf(page).getByRole("checkbox", { name: MILK });
-      await expect(box).toBeVisible({ timeout: readinessTimeoutMilliseconds });
-      await expect(box).toHaveAttribute("data-slot", "checkbox");
-      await expect(box).not.toBeChecked();
-      await box.click();
-      await expect(box).not.toBeChecked();
-      await expect(editorOf(page)).toHaveCount(0);
-
-      await release();
-      await expect(editorOf(page)).toContainText(MILK, {
-        timeout: readinessTimeoutMilliseconds,
-      });
-      const task = editorOf(page).getByRole("checkbox", { name: MILK });
-      await expect(task).toHaveAttribute("data-slot", "checkbox");
-      await expect(task).not.toBeChecked();
-      await task.click();
-      await expect(task).toBeChecked();
-      await expect(
-        editorOf(page).locator('[data-type="taskItem"]')
-      ).toHaveAttribute("data-checked", "true");
-    });
-  }
+        await release();
+        await expect(editorOf(fresh)).toContainText(MILK, {
+          timeout: readinessTimeoutMilliseconds,
+        });
+        const task = editorOf(fresh).getByRole("checkbox", { name: MILK });
+        await expect(task).toHaveAttribute("data-slot", "checkbox");
+        await expect(task).not.toBeChecked();
+        await task.click();
+        await expect(task).toBeChecked();
+        await expect(
+          editorOf(fresh).locator('[data-type="taskItem"]')
+        ).toHaveAttribute("data-checked", "true");
+      })
+    );
+  },
+  Effect.scoped
 );
 
 /**
