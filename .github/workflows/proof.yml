@@ -295,9 +295,18 @@ jobs:
 
       # The engine writes its result whatever its specs do; a failing spec then fails this step.
       - name: Run specs
+        env:
+          # A runner has no GPU and no display, and headless Firefox finds no
+          # GL driver there. It runs with a window on a virtual display, where
+          # Mesa draws WebGL on the CPU. Chromium and WebKit bring their own.
+          PLAYWRIGHT_FIREFOX_HEADED: "1"
         run: |
+          display=()
+          if [ "$ENGINE" = firefox ]; then
+            display=(xvfb-run --auto-servernum --server-args="-screen 0 1920x1080x24")
+          fi
           # shellcheck disable=SC2086
-          bun run --cwd packages/backend acceptance shard "$ENGINE" 1 1 "$RUNNER_TEMP/result" $SPECS || status=1
+          "${display[@]}" bun run --cwd packages/backend acceptance shard "$ENGINE" 1 1 "$RUNNER_TEMP/result" $SPECS || status=1
           jq -e .passed "$RUNNER_TEMP/result/result.json" > /dev/null && exit "${status:-0}"
           exit 1
 

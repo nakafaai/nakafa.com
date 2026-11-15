@@ -22,6 +22,7 @@ import {
   BACTERIA_SCENE,
   expectLabStill,
   expectNoPageShift,
+  expectPlacementKept,
   expectReturned,
   hideFullscreenApi,
   hidePopoverApi,
@@ -126,9 +127,7 @@ const presentLab = Effect.fn("NakafaE2E.presentVisualLab")(function* (
       });
     // The scene takes the height the screen frees for it.
     expect(await readSceneHeight(card)).toBeGreaterThan(inlineScene);
-    // The page behind keeps its layout and the card's slot while the card
-    // fills the screen, also where the root's scrollbar gutters closed.
-    expect(await readPlacement(card)).toEqual(placement);
+    await expectPlacementKept(card, placement);
     // A press on the scene focuses the page around the card, which keeps it.
     await card.locator(BACTERIA_SCENE).click();
     await expect(action).toHaveAttribute("aria-pressed", "true");
@@ -185,7 +184,7 @@ const presentChart = Effect.fn("NakafaE2E.presentVisualChart")(function* (
     await expect
       .poll(async () => (await surface.boundingBox())?.height ?? 0)
       .toBeGreaterThan(inline?.height ?? 0);
-    expect(await readPlacement(card)).toEqual(placement);
+    await expectPlacementKept(card, placement);
   });
 
   yield* Effect.promise(() => action.click());
@@ -247,7 +246,7 @@ const presentScene = Effect.fn("NakafaE2E.presentVisualScene")(function* (
         );
       })
       .toBe(true);
-    expect(await readPlacement(card)).toEqual(placement);
+    await expectPlacementKept(card, placement);
     // A portrait phone keeps the scene's sides: every label stays in view.
     expect(labels).toBeGreaterThan(0);
     await expect
