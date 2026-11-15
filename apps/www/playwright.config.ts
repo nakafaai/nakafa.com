@@ -461,7 +461,7 @@ const RUN = selectedRun(process.env.PLAYWRIGHT_SUITE);
  * failure asks: `PLAYWRIGHT_RECORD=1 bunx playwright test <file>`.
  */
 const RECORDING =
-  process.env.PLAYWRIGHT_RECORD === "1" ? "retain-on-failure" : "off";
+  "retain-on-failure";
 
 export default defineConfig({
   expect: {
