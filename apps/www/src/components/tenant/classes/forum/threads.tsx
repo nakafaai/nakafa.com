@@ -172,7 +172,7 @@ function ThreadList({
   return Arr.isReadonlyArrayEmpty(rows) ? (
     <EmptyState
       frame="table"
-      scene={<EmptyNina act="thinking" />}
+      scene={<EmptyNina act="voting" />}
       title={table("no-results")}
     />
   ) : (

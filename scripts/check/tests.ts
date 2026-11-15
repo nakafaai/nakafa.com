@@ -49,6 +49,7 @@ import { manifestEntries, nameViolations } from "#scripts/check/names";
 import { inspectMenuOrder } from "#scripts/check/order";
 import { inspectPickerSource } from "#scripts/check/pickers";
 import { pluginRuleNames } from "#scripts/check/plugin";
+import { inspectPoses } from "#scripts/check/poses";
 import { inspectReactSource, inspectStateSource } from "#scripts/check/react";
 import { inspectRefsSource } from "#scripts/check/refs";
 import { inspectScrollSource } from "#scripts/check/scroll";
@@ -143,6 +144,7 @@ const inspectSources = Effect.fn("RepositoryPolicy.inspectSources")(function* (
     inspectExports(parsed.modules, otherModules, unjudged),
     inspectTables(parsed.modules),
     yield* classFindings(parsed),
+    inspectPoses(parsed.modules),
   ]);
 }, Effect.scoped);
 
