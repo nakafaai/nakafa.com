@@ -118,7 +118,7 @@ function ActivityTrigger() {
     >
       <Spinner
         aria-hidden="true"
-        className="mt-0.5 size-4"
+        className="mt-0.5"
         icon={problem ? Sad02Icon : icon}
         isLoading={state === "running"}
       />

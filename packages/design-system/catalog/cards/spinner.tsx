@@ -12,7 +12,7 @@ export const card = {
 export function Preview() {
   return (
     <div className="flex items-center gap-6 p-6">
-      <Spinner aria-label="Loading" className="size-4" />
+      <Spinner aria-label="Loading" />
       <Button disabled>
         <Spinner aria-label="Saving" />
         Saving

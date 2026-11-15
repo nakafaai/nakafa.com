@@ -178,7 +178,7 @@ function ReasoningSummary() {
   return (
     <>
       <span className={lineMark()}>
-        <Spinner className="size-4" icon={BrainIcon} isLoading={isStreaming} />
+        <Spinner icon={BrainIcon} isLoading={isStreaming} />
       </span>
       <ThinkingMessage />
       {hasContent ? (

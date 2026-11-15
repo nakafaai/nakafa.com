@@ -87,7 +87,7 @@ function StartSectionControl({
 }) {
   return (
     <Button inert={inert} onClick={onStart} type="button">
-      <Spinner className="size-4" icon={Rocket01Icon} isLoading={inert} />
+      <Spinner icon={Rocket01Icon} isLoading={inert} />
       <TryoutActionName name="start-cta" />
     </Button>
   );
