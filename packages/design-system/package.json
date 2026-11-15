@@ -34,7 +34,7 @@
     "@shikijs/transformers": "^4.6.0",
     "@tanstack/react-router": "catalog:",
     "@tiptap/core": "3.33.1",
-    "@tiptap/extension-file-handler": "3.33.1",
+    "@tiptap/extension-file-handler": "3.34.0",
     "@tiptap/extension-highlight": "3.33.1",
     "@tiptap/extension-list": "3.33.1",
     "@tiptap/extension-underline": "3.33.1",
@@ -65,7 +65,7 @@
     "react-dom": "catalog:",
     "react-error-boundary": "^6.1.6",
     "react-markdown": "^10.1.0",
-    "react-resizable-panels": "4.22.0",
+    "react-resizable-panels": "4.23.0",
     "react-textarea-autosize": "^8.5.9",
     "recharts": "^3.10.1",
     "rehype-harden": "^1.1.9",
@@ -92,7 +92,7 @@
     "@types/react-dom": "catalog:",
     "@types/three": "0.187.0",
     "@vitest/coverage-istanbul": "catalog:",
-    "postcss": "8.5.32",
+    "postcss": "8.5.33",
     "vite": "catalog:",
     "vitest": "catalog:"
   }

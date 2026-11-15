@@ -20,6 +20,7 @@ import {
   Order,
   pipe,
   Predicate,
+  Rational,
   Redacted,
   Result,
   Schema,
@@ -2280,6 +2281,23 @@ Expected a value between -2147483648 and 2147483647`
         "a",
         `Expected BigDecimal`
       )
+    })
+
+    it("RationalFromString", async () => {
+      const asserts = new TestSchema.Asserts(Schema.RationalFromString)
+      if (verifyGeneration) asserts.arbitrary().verifyGeneration()
+
+      const decoding = asserts.decoding()
+      await decoding.succeed("6/5", Rational.makeUnsafe(6n, 5n))
+      await decoding.succeed("-4/-6", Rational.makeUnsafe(2n, 3n))
+      await decoding.succeed("3", Rational.fromBigInt(3n))
+      await decoding.fail("1/0", "Expected a valid Rational string")
+      await decoding.fail("1.5", "Expected a valid Rational string")
+
+      const encoding = asserts.encoding()
+      await encoding.succeed(Rational.makeUnsafe(6n, 5n), "6/5")
+      await encoding.succeed(Rational.fromBigInt(0n), "0/1")
+      await encoding.fail("6/5", "Expected Rational")
     })
 
     it("TimeZoneNamedFromString", async () => {
@@ -5375,6 +5393,7 @@ Expected a value between -2147483648 and 2147483647`
 
     const decoding = asserts.decoding()
     await decoding.succeed("Zm9vYmFy", "foobar")
+    await decoding.succeed("77u/cmVwb3J0", "\uFEFFreport")
     await decoding.fail("Zm9vY", "Expected a valid Base64 string")
     await decoding.fail("Zm9vYmF-", "Expected a valid Base64 string")
     await decoding.fail("=Zm9vYmF", "Expected a valid Base64 string")
@@ -5389,6 +5408,7 @@ Expected a value between -2147483648 and 2147483647`
 
     const decoding = asserts.decoding()
     await decoding.succeed("Zm9vYmFy", "foobar")
+    await decoding.succeed("77u_cmVwb3J0", "\uFEFFreport")
     await decoding.fail("Zm9vY", "Expected a valid Base64Url string")
     await decoding.succeed("Pj8-ZD_Dnw", ">?>d?\u00DF")
     await decoding.fail("Pj8/ZD+Dnw", "Expected a valid Base64Url string")
@@ -5404,6 +5424,7 @@ Expected a value between -2147483648 and 2147483647`
 
     const decoding = asserts.decoding()
     await decoding.succeed("67", "g")
+    await decoding.succeed("efbbbf7265706f7274", "\uFEFFreport")
     await decoding.fail("0", "Expected a valid hexadecimal string")
     await decoding.fail("zd4aa", "Expected a valid hexadecimal string")
     await decoding.fail("0\x01", "Expected a valid hexadecimal string")
@@ -6004,6 +6025,18 @@ Expected a value between -2147483648 and 2147483647`
 
     const encoding = asserts.encoding()
     await encoding.succeed(BigDecimal.fromStringUnsafe("123.45"))
+  })
+
+  it("Rational", async () => {
+    const asserts = new TestSchema.Asserts(Schema.Rational)
+    if (verifyGeneration) asserts.arbitrary().verifyGeneration()
+
+    await asserts.decoding().succeed(Rational.makeUnsafe(1n, 3n))
+    await asserts.decoding().fail(BigDecimal.fromBigInt(1n), "Expected Rational")
+
+    const json = new TestSchema.Asserts(Schema.toCodecJson(Schema.Rational))
+    await json.decoding().succeed("1/3", Rational.makeUnsafe(1n, 3n))
+    await json.encoding().succeed(Rational.makeUnsafe(1n, 3n), "1/3")
   })
 
   describe("BigDecimal checks", () => {

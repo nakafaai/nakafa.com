@@ -23,10 +23,21 @@ import {
   Tracer
 } from "effect"
 import * as HttpClient from "effect/http/HttpClient"
+import * as HttpClientError from "effect/http/HttpClientError"
 import * as HttpClientRequest from "effect/http/HttpClientRequest"
 import * as HttpClientResponse from "effect/http/HttpClientResponse"
 import * as HttpEffect from "effect/http/HttpEffect"
-import { Rpc, RpcClient, RpcGroup, RpcMessage, RpcSchema, RpcSerialization, RpcServer, RpcTest } from "effect/rpc"
+import {
+  Rpc,
+  RpcClient,
+  RpcGroup,
+  RpcMessage,
+  RpcMiddleware,
+  RpcSchema,
+  RpcSerialization,
+  RpcServer,
+  RpcTest
+} from "effect/rpc"
 import { RpcClientDefect, RpcClientError } from "effect/rpc/RpcClientError"
 import * as Socket from "effect/socket/Socket"
 import { TestClock } from "effect/testing"
@@ -189,6 +200,16 @@ const assertEmptyResponseFailsRequest = Effect.fnUntraced(function*(
   assert.strictEqual(error.reason._tag, "RpcClientDefect")
   assert.strictEqual(error.reason.message, "Received empty HTTP response from RPC server")
 })
+
+class Unauthorized extends Schema.TaggedError<Unauthorized>()("Unauthorized", {}) {}
+class Auth extends RpcMiddleware.Service<Auth>()("RpcClientTest/Auth", { error: Unauthorized }) {}
+
+// None of these RPCs declare `Unauthorized`; it comes from the middleware.
+const AuthGroup = RpcGroup.make(
+  Rpc.make("Get", { success: Schema.String }),
+  Rpc.make("Events", { success: Schema.String, stream: true }),
+  Rpc.make("EventsQueue", { success: Schema.String, stream: true })
+).middleware(Auth)
 
 describe("RpcClient", () => {
   it.effect("does not fail a new request started synchronously during connection defect delivery", () =>
@@ -867,6 +888,26 @@ describe("RpcClient", () => {
   it.effect("fails request on empty HTTP response for framed serialization", () =>
     assertEmptyResponseFailsRequest(RpcSerialization.layerNdjson, ""))
 
+  it.effect("includes the HTTP failure in the error message", () =>
+    Effect.gen(function*() {
+      const httpClient = HttpClient.make((request) =>
+        Effect.fail(
+          new HttpClientError.HttpClientError({
+            reason: new HttpClientError.TransportError({ request, description: "connect ECONNREFUSED" })
+          })
+        )
+      )
+      const client = yield* RpcClient.make(TestGroup).pipe(
+        Effect.provide(makeProtocolLayerWithClient(RpcSerialization.layerJson, httpClient))
+      )
+
+      const error = yield* client.Ping().pipe(Effect.flip)
+
+      assert.instanceOf(error, RpcClientError)
+      assert.strictEqual(error.reason._tag, "HttpError")
+      assert.strictEqual(error.message, "HttpError: Transport: connect ECONNREFUSED (POST http://localhost/rpc/)")
+    }))
+
   it.effect("sends a discarded call to a worker as a request and waits for its Exit", () =>
     Effect.gen(function*() {
       const sent: Array<unknown> = []
@@ -1531,4 +1572,43 @@ describe("RpcClient", () => {
         }
       }))
   })
+
+  it.effect("handlers fail with middleware errors over the wire", () =>
+    Effect.gen(function*() {
+      const layer = AuthGroup.toLayer({
+        Get: () => Effect.fail(new Unauthorized()),
+        Events: () => Stream.make("a").pipe(Stream.concat(Stream.fail(new Unauthorized()))),
+        EventsQueue: Effect.fnUntraced(function*() {
+          const queue = yield* Queue.unbounded<string, Unauthorized | Cause.Done>()
+          yield* Queue.offer(queue, "a")
+          yield* Queue.fail(queue, new Unauthorized())
+          return queue
+        })
+      }).pipe(
+        Layer.merge(Layer.succeed(Auth, (effect) => effect)),
+        Layer.merge(RpcSerialization.layerJson)
+      )
+      const handler = HttpEffect.toWebHandler(yield* RpcServer.toHttpEffect(AuthGroup).pipe(Effect.provide(layer)))
+      const httpClient = HttpClient.make((request) =>
+        Effect.gen(function*() {
+          const webRequest = yield* Effect.orDie(HttpClientRequest.toWeb(request))
+          const response = yield* Effect.promise(() => handler(webRequest))
+          return HttpClientResponse.fromWeb(request, response)
+        })
+      )
+      const client = yield* RpcClient.make(AuthGroup).pipe(
+        Effect.provide(makeProtocolLayerWithClient(RpcSerialization.layerJson, httpClient))
+      )
+
+      assert.instanceOf(yield* Effect.flip(client.Get()), Unauthorized)
+      for (const events of [client.Events(), client.EventsQueue()]) {
+        const received: Array<string> = []
+        const error = yield* events.pipe(
+          Stream.runForEach((value) => Effect.sync(() => received.push(value))),
+          Effect.flip
+        )
+        assert.deepStrictEqual(received, ["a"])
+        assert.instanceOf(error, Unauthorized)
+      }
+    }))
 })

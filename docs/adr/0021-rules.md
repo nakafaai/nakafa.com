@@ -96,10 +96,11 @@ typecheck targets on 7 November 2026.
 | `provideMergeAllToArray` | off | Stays off, as upstream ships it. `Effect.provide(Layer.mergeAll(...))` and an array of layers build the same layer, and 30 sites name the merged layer on purpose |
 | `yieldInCallArgument` | off | Stays off, as upstream ships it. Its 4,686 sites are mostly `assert.deepStrictEqual(yield* run(...), expected)` in tests, where a `const` per assertion adds a name and no clarity |
 
-### Compiler rules that `@effect/tsgo` 0.68 adds
+### Compiler rules that `@effect/tsgo` 0.68 and 0.69 add
 
-`@effect/tsgo` 0.68.1 patches tsrs 0.24.0-ts7.1.0-beta and adds one rule.
-`packages/typescript-config/base.json` decides it, in the same way in both
+`@effect/tsgo` 0.68.1 patched tsrs 0.24.0-ts7.1.0-beta and added one rule; 0.69.0,
+the adopted release, patches tsrs 0.25.0-ts7.1.0-beta and adds one more.
+`packages/typescript-config/base.json` decides both, in the same way in both
 repositories. Three existing rules, `provideLayerSucceedToProvideService`,
 `provideMergeAllToArray` and `timeoutCatchTagToTimeoutOrElse`, now also report
 explicitly typed calls, which keeps their decisions above.
@@ -107,6 +108,7 @@ explicitly typed calls, which keeps their decisions above.
 | Rule | Decision | Owner, or the reason it stays off |
 | --- | --- | --- |
 | `onExitFailureToOnError` | error | Fixed at its source: an `Effect.onExit` callback that acts only on a failure, with `Effect.void` on the other side, becomes `Effect.onError` (3 sites) |
+| `missingConcurrencyOption` | off | Stays off, as upstream ships it. It asks every `Effect.all` and `Effect.forEach` to name its concurrency. About 1,000 of the 1,240 calls here run in order on purpose, most of them writes inside one Convex mutation and steps of a test, where `{ concurrency: 1 }` on each would add a line and say nothing the call does not already mean; the 211 that run side by side already name theirs |
 
 ### Schema error brands
 

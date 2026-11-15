@@ -71,7 +71,7 @@
     "convex-helpers": "0.1.135",
     "dedent": "^1.7.2",
     "effect": "catalog:",
-    "parse-domain": "^8.4.1",
+    "parse-domain": "8.4.2",
     "prosemirror-model": "1.25.13",
     "prosemirror-transform": "1.12.5",
     "react": "catalog:",

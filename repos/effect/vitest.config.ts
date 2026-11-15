@@ -111,6 +111,7 @@ export default defineConfig({
           ]
           : undefined
       ),
+      ...project("@effect/ai-amazon-bedrock", "packages/ai/amazon-bedrock"),
       ...project("@effect/ai-anthropic", "packages/ai/anthropic"),
       ...project("@effect/ai-cloudflare", "packages/ai/cloudflare"),
       ...project("@effect/ai-openai", "packages/ai/openai"),
@@ -152,6 +153,11 @@ export default defineConfig({
         }
       }),
       ...project("@effect/platform-bun", "packages/platform/bun", isBun),
+      ...project("@effect/platform-cloudflare", "packages/platform/cloudflare", !isDeno, {
+        test: {
+          setupFiles: [path.join(import.meta.dirname, "packages/platform/cloudflare/vitest.setup.ts")]
+        }
+      }),
       ...project("@effect/platform-deno", "packages/platform/deno", isDeno),
       ...project("@effect/platform-node", "packages/platform/node", isNode),
       ...project(

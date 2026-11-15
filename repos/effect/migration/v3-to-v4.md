@@ -4,7 +4,7 @@
 
 Base: `cab7f2e3493e4a3dceda27cb1b6d28c4599cb939` (`cab7f2e3493e4a3dceda27cb1b6d28c4599cb939`)
 
-Head: `origin/main` (`b41529e2ea04dff5fb1f68ef8044d42b75ba141e`)
+Head: `HEAD` (`c8f79a591af295fc75f3eacc4c4b8e304b6dfc64`)
 
 This file is generated from the API diff and `migration/annotations/*.yaml`.
 
@@ -3592,6 +3592,8 @@ effect/rpc/Utils (barrel: effect/rpc)
 
 - `Generated.SubmitToolOutputsRunRequest` -> `Generated.SubmitToolOutputsRunRequest`: Still generated in v4 from the current OpenAI specification; re-check the schema's Type/Encoded shape because the generated definition changed.
 
+- `Generated.Summary` -> `Generated.SummaryTextContent`: Reasoning summary parts are generated as SummaryTextContent. It is a Schema.Struct rather than a class, so type must be supplied as "summary\_text" instead of defaulting in a constructor.
+
 - `Generated.SummaryTextContent` -> `Generated.SummaryTextContent`: Still generated in v4 from the current OpenAI specification; re-check the schema's Type/Encoded shape because the generated definition changed.
 
 - `Generated.SummaryTextContentType` -> `none`: Removed when the OpenAI specification client was regenerated; use the current Generated or OpenAiSchema request/response schema for the relevant endpoint instead of this old snapshot helper.
@@ -4524,7 +4526,7 @@ effect/rpc/Utils (barrel: effect/rpc)
 
 - `Generated.OpenAIResponsesTruncation` -> `Generated.OpenAIResponsesTruncation`: Still generated in v4 from the current OpenRouter specification; re-check the schema's Type/Encoded shape because the generated definition changed.
 
-- `Generated.OpenAIResponsesUsage` -> `Generated.OpenAIResponsesUsage`: Still generated in v4 from the current OpenRouter specification; re-check the schema's Type/Encoded shape because the generated definition changed.
+- `Generated.OpenAIResponsesUsage` -> `none`: The standalone schema export was removed. For the usage object type, use `NonNullable<Generated.OpenResponsesResult["usage"]>` to exclude `undefined`.
 
 - `Generated.OpenResponsesEasyInputMessage` -> `none`: Removed when the OpenRouter specification client was regenerated; use the current Generated request/response schema for the relevant endpoint instead of this old snapshot helper.
 
@@ -4748,7 +4750,7 @@ effect/rpc/Utils (barrel: effect/rpc)
 
 - `Generated.ResponseTextConfigVerbosity` -> `none`: Removed when the OpenRouter specification client was regenerated; use the current Generated request/response schema for the relevant endpoint instead of this old snapshot helper.
 
-- `Generated.ResponsesErrorField` -> `Generated.ResponsesErrorField`: Still generated in v4 from the current OpenRouter specification; re-check the schema's Type/Encoded shape because the generated definition changed.
+- `Generated.ResponsesErrorField` -> `none`: The standalone schema export was removed. For the error object type, use `NonNullable<Generated.OpenResponsesResult["error"]>` to exclude `null`.
 
 - `Generated.ResponsesErrorFieldCode` -> `none`: Removed when the OpenRouter specification client was regenerated; use the current Generated request/response schema for the relevant endpoint instead of this old snapshot helper.
 
@@ -5005,6 +5007,8 @@ effect/rpc/Utils (barrel: effect/rpc)
 - `Prompt.FilePartEncoded` -> `Prompt.FilePartEncoded`: Moved to effect/ai/Prompt; update the module import. data additionally accepts the tagged { \_tag: "Uint8Array", base64 } and { \_tag: "URL", href } forms, which the schema now produces when encoding byte arrays and URLs.
 
 - `Prompt.FromJson` -> `Schema.fromJsonString(Prompt.Prompt)`: The module-specific JSON schema was removed. Compose the general v4 JSON-string codec with the public Prompt codec.
+
+- `Prompt.Message` -> `Prompt.Message`: Use the Message type and codec from effect/ai/Prompt for model conversation messages. AgUiSchema.Message describes AG-UI wire messages and is not a replacement for Prompt.Message.
 
 - `Prompt.MessageContentFromString` -> `Prompt.ContentFromString`: Renamed in effect/ai/Prompt. It still decodes a string to a non-empty array containing one TextPart and encodes the first part's text.
 
@@ -6492,9 +6496,13 @@ effect/rpc/Utils (barrel: effect/rpc)
 
 - `Undici.Dispatcher.DispatchOptions` -> `undici.Dispatcher.DispatchOptions`: Import the same namespace type; Undici 8 removes throwOnError, adds typeOfService, and handles redirects through composed interceptors.
 
+- `Undici.Dispatcher.HttpMethod` -> `undici.Dispatcher.HttpMethod`: Import the upstream Dispatcher namespace type. Undici 8 accepts custom method strings as well as the standard methods; do not treat HttpMethod as a closed union for exhaustive matching.
+
 - `Undici.Dispatcher.RequestOptions` -> `undici.Dispatcher.RequestOptions`: Import the same namespace type; Undici 8 removes maxRedirections and redirectionLimitReached, so compose a redirect interceptor when needed.
 
 - `Undici.Dispatcher.UpgradeOptions` -> `undici.Dispatcher.UpgradeOptions`: Import the same namespace type; Undici 8 removes maxRedirections and redirectionLimitReached.
+
+- `Undici.FormData` -> `undici.FormData`: Import the upstream FormData constructor directly. It remains the multipart form-data implementation; append and set accept values with an optional filename, and get returns a string or File, or null for a missing key.
 
 - `Undici.H2CClient` -> `undici.H2CClient`: Import the upstream cleartext HTTP/2 client directly; callbacks follow Undici 8's handler API.
 
@@ -6925,6 +6933,8 @@ effect/rpc/Utils (barrel: effect/rpc)
 - `HttpApiMiddleware.Tag` -> `effect/http-api/HttpApiMiddleware#Service`: Renamed and redesigned; use error, requires, provides, clientError, and requiredForClient configuration.
 
 - `HttpApiMiddleware.TagClass` -> `effect/http-api/HttpApiMiddleware#ServiceClass`: Renamed class type with the new two-stage type configuration and wrapping service shape.
+
+- `HttpApiMiddleware.TagClass.Base` -> `effect/http-api/HttpApiMiddleware#ServiceClass`: The shared base interface was folded into ServiceClass; there is no separate public base interface.
 
 - `HttpApiMiddleware.TagClass.BaseSecurity` -> `effect/http-api/HttpApiMiddleware#ServiceClass`: Security is conditional metadata on ServiceClass; there is no separate public base interface.
 
@@ -7886,6 +7896,8 @@ effect/rpc/Utils (barrel: effect/rpc)
 
 - `RpcMiddleware.TagClass` -> `effect/rpc/RpcMiddleware#ServiceClass`: Renamed class type for the v4 Context.Service-based middleware declaration.
 
+- `RpcMiddleware.TagClass.Base` -> `effect/rpc/RpcMiddleware#ServiceClass`: The shared base interface was folded into ServiceClass; there is no separate public base interface.
+
 - `RpcMiddleware.TagClass.Failure` -> `effect/rpc/RpcMiddleware#Error`: Failure terminology became error; apply the extractor to the middleware ID.
 
 - `RpcMiddleware.TagClass.FailureContext` -> `effect/rpc/RpcMiddleware#ErrorServicesEncode / ErrorServicesDecode`: The single schema context split into server encoding and client decoding services.
@@ -7974,7 +7986,7 @@ effect/rpc/Utils (barrel: effect/rpc)
 
 ### `@effect/sql-clickhouse/ClickhouseClient`
 
-- `ClickhouseClient.ClickhouseClient` -> `@effect/sql-clickhouse/ClickhouseClient#ClickhouseClient`: Retained; the service value is now a Context.Service rather than a GenericTag.
+- `ClickhouseClient.ClickhouseClient` -> `@effect/sql-clickhouse/ClickhouseClient#ClickhouseClient`: Retained; the service value is now a Context.Service rather than a GenericTag. The ClickhouseClient interface no longer extends SqlClient.SqlClient. Yielding the service still gives ClickhouseClient & SqlClient, but an effect that requires ClickhouseClient no longer type-checks against a SqlClient requirement annotation, and a SqlClient-only layer no longer satisfies ClickhouseClient. Annotate a layer chosen between drivers as Layer.Layer\<SqlClient.SqlClient, E\>.
 
 - `ClickhouseClient.currentClickhouseSettings` -> `@effect/sql-clickhouse/ClickhouseClient#ClickhouseSettings`: Renamed and changed from FiberRef to Context.Reference; prefer client.withClickhouseSettings or provide the reference as a service.
 
@@ -7987,6 +7999,8 @@ effect/rpc/Utils (barrel: effect/rpc)
 - `ClickhouseMigrator.MigrationError` -> `@effect/sql-clickhouse/ClickhouseMigrator#MigrationError`: Retained via effect/sql/Migrator; migrate reason and its lowercase values to kind with PascalCase values.
 
 ### `@effect/sql-d1/D1Client`
+
+- `D1Client.D1Client` -> `@effect/sql-d1/D1Client#D1Client`: Retained; the service value is now a Context.Service, and v4 adds batch for atomic D1 batches. The D1Client interface no longer extends SqlClient.SqlClient. Yielding the service still gives D1Client & SqlClient, but an effect that requires D1Client no longer type-checks against a SqlClient requirement annotation, and a SqlClient-only layer no longer satisfies D1Client. Annotate a layer chosen between drivers as Layer.Layer\<SqlClient.SqlClient, E\>.
 
 - `D1Client.D1ClientConfig` -> `@effect/sql-d1/D1Client#D1ClientConfig`: Retained; prepareCacheTTL now uses Duration.Input.
 
@@ -8026,9 +8040,13 @@ effect/rpc/Utils (barrel: effect/rpc)
 
 - `Sqlite.makeWithConfig` -> `matching drizzle-orm Effect SQLite module#makeWithDefaults`: The generic constructor was removed; select the concrete backend and use makeWithDefaults(config), or make(config) with explicit services.
 
+### `@effect/sql-libsql/LibsqlClient`
+
+- `LibsqlClient.LibsqlClient` -> `@effect/sql-libsql/LibsqlClient#LibsqlClient`: Retained; the service value is now a Context.Service. The LibsqlClient interface no longer extends SqlClient.SqlClient. Yielding the service still gives LibsqlClient & SqlClient, but an effect that requires LibsqlClient no longer type-checks against a SqlClient requirement annotation, and a SqlClient-only layer no longer satisfies LibsqlClient. Annotate a layer chosen between drivers as Layer.Layer\<SqlClient.SqlClient, E\>.
+
 ### `@effect/sql-mssql/MssqlClient`
 
-- `MssqlClient.MssqlClient` -> `@effect/sql-mssql/MssqlClient#MssqlClient`: Retained; the service value is now a Context.Service rather than a GenericTag.
+- `MssqlClient.MssqlClient` -> `@effect/sql-mssql/MssqlClient#MssqlClient`: Retained; the service value is now a Context.Service rather than a GenericTag. The MssqlClient interface no longer extends SqlClient.SqlClient. Yielding the service still gives MssqlClient & SqlClient, but an effect that requires MssqlClient no longer type-checks against a SqlClient requirement annotation, and a SqlClient-only layer no longer satisfies MssqlClient. Annotate a layer chosen between drivers as Layer.Layer\<SqlClient.SqlClient, E\>.
 
 - `MssqlClient.MssqlClientConfig` -> `@effect/sql-mssql/MssqlClient#MssqlClientConfig`: Retained; durations use Duration.Input, parameterTypes is keyed by Statement.PrimitiveKind, and v4 adds retry and timeout options.
 
@@ -8046,11 +8064,13 @@ effect/rpc/Utils (barrel: effect/rpc)
 
 ### `@effect/sql-mysql2/MysqlClient`
 
+- `MysqlClient.MysqlClient` -> `@effect/sql-mysql2/MysqlClient#MysqlClient`: Retained; the service value is now a Context.Service. The MysqlClient interface no longer extends SqlClient.SqlClient. Yielding the service still gives MysqlClient & SqlClient, but an effect that requires MysqlClient no longer type-checks against a SqlClient requirement annotation, and a SqlClient-only layer no longer satisfies MysqlClient. Annotate a layer chosen between drivers as Layer.Layer\<SqlClient.SqlClient, E\>.
+
 - `MysqlClient.MysqlClientConfig` -> `@effect/sql-mysql2/MysqlClient#MysqlClientConfig`: Retained; connectionTTL uses Duration.Input and v4 adds disablePreparedStatements.
 
 ### `@effect/sql-pg/PgClient`
 
-- `PgClient.PgClient` -> `@effect/sql-pg/PgClient#PgClient`: Retained; the service value is now a Context.Service. The listen method returns a scoped Effect acquiring a Queue.Dequeue\<PgConnection.Notification, SqlError\>; consume it with Queue operations or Stream.fromQueue and read each notification's payload. Connection failures after registration fail the queue with the original SqlError; scope closure interrupts consumers.
+- `PgClient.PgClient` -> `@effect/sql-pg/PgClient#PgClient`: Retained; the service value is now a Context.Service. The listen method returns a scoped Effect acquiring a Queue.Dequeue\<PgConnection.Notification, SqlError\>; consume it with Queue operations or Stream.fromQueue and read each notification's payload. Connection failures after registration fail the queue with the original SqlError; scope closure interrupts consumers. The PgClient interface no longer extends SqlClient.SqlClient. Yielding the service still gives PgClient & SqlClient, but an effect that requires PgClient no longer type-checks against a SqlClient requirement annotation, and a SqlClient-only layer no longer satisfies PgClient. Annotate a layer chosen between drivers as Layer.Layer\<SqlClient.SqlClient, E\>.
 
 - `PgClient.PgClientConfig` -> `@effect/sql-pg/PgClient#PgClientConfig / PgPoolConfig`: Use PgClientConfig for base settings and PgPoolConfig for make/layer; pool sizing, idle timeout, and connection TTL moved to PgPoolConfig. v3 connectTimeout also bounded waits for a free pooled connection through node-pg; v4 connectTimeout covers only opening a connection, so set acquireTimeout to fail with ConnectionError when the pool stays exhausted. The types option takes a PgTypes.Registry rather than node-pg custom types. Timestamp and timestamptz results (including array elements) are Date values with millisecond precision; infinity, -infinity, and out-of-range values become invalid Dates. Numeric readers can use getTime() or register numeric codecs. Date parameters bind as timestamptz; use PgTypes.timestamp(value) to preserve UTC fields when writing a timestamp column instead of applying the session TimeZone.
 
@@ -8062,7 +8082,7 @@ effect/rpc/Utils (barrel: effect/rpc)
 
 ### `@effect/sql-sqlite-bun/SqliteClient`
 
-- `SqliteClient.SqliteClient` -> `@effect/sql-sqlite-bun/SqliteClient#SqliteClient`: Retained; the service value is now a Context.Service.
+- `SqliteClient.SqliteClient` -> `@effect/sql-sqlite-bun/SqliteClient#SqliteClient`: Retained; the service value is now a Context.Service. The SqliteClient interface no longer extends SqlClient.SqlClient. Yielding the service still gives SqliteClient & SqlClient, but an effect that requires SqliteClient no longer type-checks against a SqlClient requirement annotation, and a SqlClient-only layer no longer satisfies SqliteClient. Annotate a layer chosen between drivers as Layer.Layer\<SqlClient.SqlClient, E\>.
 
 - `SqliteClient.layer` -> `SqliteClient.layer`: The layer now has a SqlError error channel for database opening and initialization failures. Handle setup failures, or use Layer.orDie when they should remain fatal.
 
@@ -8072,11 +8092,13 @@ effect/rpc/Utils (barrel: effect/rpc)
 
 ### `@effect/sql-sqlite-do/SqliteClient`
 
+- `SqliteClient.SqliteClient` -> `@effect/sql-sqlite-do/SqliteClient#SqliteClient`: Retained; the service value is now a Context.Service. The SqliteClient interface no longer extends SqlClient.SqlClient. Yielding the service still gives SqliteClient & SqlClient, but an effect that requires SqliteClient no longer type-checks against a SqlClient requirement annotation, and a SqlClient-only layer no longer satisfies SqliteClient. Annotate a layer chosen between drivers as Layer.Layer\<SqlClient.SqlClient, E\>.
+
 - `SqliteClient.SqliteClientConfig` -> `@effect/sql-sqlite-do/SqliteClient#SqliteClientConfig`: Retained; db is optional and storage may be supplied, but one of db or storage is required at runtime.
 
 ### `@effect/sql-sqlite-node/SqliteClient`
 
-- `SqliteClient.SqliteClient` -> `@effect/sql-sqlite-node/SqliteClient#SqliteClient`: Retained on node:sqlite, but the byte-export member was removed; use backup(destination) for file backup.
+- `SqliteClient.SqliteClient` -> `@effect/sql-sqlite-node/SqliteClient#SqliteClient`: Retained on node:sqlite, but the byte-export member was removed; use backup(destination) for file backup. The SqliteClient interface no longer extends SqlClient.SqlClient. Yielding the service still gives SqliteClient & SqlClient, but an effect that requires SqliteClient no longer type-checks against a SqlClient requirement annotation, and a SqlClient-only layer no longer satisfies SqliteClient. Annotate a layer chosen between drivers as Layer.Layer\<SqlClient.SqlClient, E\>.
 
 - `SqliteClient.SqliteClientConfig` -> `@effect/sql-sqlite-node/SqliteClient#SqliteClientConfig`: Retained; prepareCacheTTL now uses Duration.Input.
 
@@ -8088,6 +8110,8 @@ effect/rpc/Utils (barrel: effect/rpc)
 
 ### `@effect/sql-sqlite-react-native/SqliteClient`
 
+- `SqliteClient.SqliteClient` -> `@effect/sql-sqlite-react-native/SqliteClient#SqliteClient`: Retained; the service value is now a Context.Service. The SqliteClient interface no longer extends SqlClient.SqlClient. Yielding the service still gives SqliteClient & SqlClient, but an effect that requires SqliteClient no longer type-checks against a SqlClient requirement annotation, and a SqlClient-only layer no longer satisfies SqliteClient. Annotate a layer chosen between drivers as Layer.Layer\<SqlClient.SqlClient, E\>.
+
 - `SqliteClient.asyncQuery` -> `@effect/sql-sqlite-react-native/SqliteClient#AsyncQuery`: Renamed and changed from FiberRef to Context.Reference; prefer withAsyncQuery or provide AsyncQuery as a service.
 
 ### `@effect/sql-sqlite-wasm/OpfsWorker`
@@ -8096,9 +8120,13 @@ effect/rpc/Utils (barrel: effect/rpc)
 
 ### `@effect/sql-sqlite-wasm/SqliteClient`
 
-- `SqliteClient.SqliteClient` -> `@effect/sql-sqlite-wasm/SqliteClient#SqliteClient`: Retained with the same export/import surface; the service value is now a Context.Service.
+- `SqliteClient.SqliteClient` -> `@effect/sql-sqlite-wasm/SqliteClient#SqliteClient`: Retained with the same export/import surface; the service value is now a Context.Service. The SqliteClient interface no longer extends SqlClient.SqlClient. Yielding the service still gives SqliteClient & SqlClient, but an effect that requires SqliteClient no longer type-checks against a SqlClient requirement annotation, and a SqlClient-only layer no longer satisfies SqliteClient. Annotate a layer chosen between drivers as Layer.Layer\<SqlClient.SqlClient, E\>.
 
 - `SqliteClient.currentTransferables` -> `@effect/sql-sqlite-wasm/SqliteClient#Transferables`: Renamed and changed from FiberRef to Context.Reference; prefer withTransferables or provide Transferables as a service.
+
+### `@effect/sql/Migrator`
+
+- `Migrator.make` -> `effect/sql/Migrator#make`: Moved with the same curried make({ dumpSchema })(options) pattern.
 
 ### `@effect/sql/Model`
 
@@ -8128,7 +8156,7 @@ effect/rpc/Utils (barrel: effect/rpc)
 
 - `SqlClient.SafeIntegers` -> `effect/sql/SqlClient#SafeIntegers`: Moved and changed from a Reference subclass to a Context.Reference value; provide it as a service.
 
-- `SqlClient.SqlClient` -> `effect/sql/SqlClient#SqlClient`: Moved into core Effect. Custom service implementations must expose driver and afterCommit; SqlClient.make supplies both. driver identifies the driver independently of its SQL dialect. afterCommit registers effects to run after the outermost successful commit and connection release attempt, discarding rolled-back work. withTransaction now also defers contextual Reactivity.invalidate and mutation invalidations until that commit. Transactions bypassing makeWithTransaction, such as sqlite-do transactions, run callbacks and invalidations immediately.
+- `SqlClient.SqlClient` -> `effect/sql/SqlClient#SqlClient`: Moved into core Effect. Custom service implementations must expose driver and afterCommit; SqlClient.make supplies both. driver identifies the driver independently of its SQL dialect. afterCommit registers effects to run after the outermost successful commit and connection release attempt, discarding rolled-back work. withTransaction now also defers contextual Reactivity.invalidate and mutation invalidations until that commit. Transactions bypassing makeWithTransaction, such as sqlite-do transactions, run callbacks and invalidations immediately. Driver-specific client interfaces should extend SqlClient.Base rather than SqlClient, so providing a generic SqlClient does not also remove the driver requirement.
 
 - `SqlClient.SqlClient.MakeOptions` -> `effect/sql/SqlClient#SqlClient.MakeOptions`: Moved; driver is now required and conventionally names the driver package without @effect/sql-, for example pg or pglite. Rename reactiveMailbox to reactiveQueue; transactionService is optional.
 
@@ -8188,9 +8216,9 @@ effect/rpc/Utils (barrel: effect/rpc)
 
 - `Statement.Constructor` -> `effect/sql/Statement#Constructor`: Moved to core Effect. sql.updateValues now escapes its alias as an identifier without applying name transforms; pass a bare alias such as "data" rather than pre-quoted SQL, and quote mixed-case PostgreSQL aliases where the query references them. sql.insert and sql.updateValues now require a non-empty array of rows; narrow array inputs with Array.isReadonlyArrayNonEmpty first.
 
-- `Statement.Fragment`: TODO: needs guidance
+- `Statement.Fragment` -> `effect/sql/Statement#Fragment`: Moved with the same segments field, but the brand key is now Statement.FragmentTypeId and its value is the symbol itself rather than a function. Build fragments with the sql template or Statement.fragment and check them with Statement.isFragment; sql interpolation binds unbranded objects as parameters.
 
-- `Statement.FragmentId` -> `none`: The v4 fragment brand is private; use Fragment, fragment, and isFragment instead of direct type-id access.
+- `Statement.FragmentId` -> `effect/sql/Statement#FragmentTypeId`: Renamed to FragmentTypeId, now with a different Symbol.for key. Fragment values store the symbol itself under this key instead of a function; prefer Statement.isFragment for runtime checks.
 
 - `Statement.Statement` -> `effect/sql/Statement#Statement`: Moved; the nested Transformer type is now top-level and its callback receives Fiber.Fiber rather than FiberRefs.FiberRefs.
 
@@ -13981,6 +14009,18 @@ Schema.toFormatter(schema)
 
 - `STM.mergeAll` -> `Effect.reduce`: Reduce the input Effects sequentially and combine each produced value with the accumulator.
 
+#### `STM.negate`
+
+**Replacement:** `Effect.map`
+
+STM values are now ordinary Effects and there is no negate combinator; map the boolean with Boolean.not. Run the complete transaction with Effect.tx.
+
+**Example**
+
+```ts
+Effect.map(self, Boolean.not)
+```
+
 - `STM.none` -> `Effect.matchEffect + Option.match`: Recreate the Option success/error shuffle explicitly; no dedicated helper remains.
 
 - `STM.option` -> `Effect.option`: The combinator keeps its name, but STM values are now ordinary Effects. Run the complete transaction with Effect.tx. V4 Tx operations return ordinary Effects; compose multiple operations under one outer Effect.tx to keep them atomic.
@@ -14317,7 +14357,7 @@ Schema.toFormatter(schema)
 
 - `Schema.Annotations.GenericSchema` -> `none`: The v3 helper/protocol type was removed by the v4 Schema model rewrite. Use the public v4 constructor and infer its result types instead.
 
-- `Schema.Annotations.Schema` -> `none`: The v3 helper/protocol type was removed by the v4 Schema model rewrite. Use the public v4 constructor and infer its result types instead.
+- `Schema.Annotations.Schema` -> `none`: The v3 helper/protocol type was removed by the v4 Schema model rewrite. Schema.annotate accepts any string key, so the removed concurrency, batching, and parseOptions keys still type-check but are ignored at runtime. Pass concurrency and other parse options at runtime through SchemaAST.ParseOptions when creating or calling a parser; requests from sibling children share a batch only when that concurrency lets them be pending together, although requests started concurrently inside a transformation or by other fibers can still batch.
 
 - `Schema.Any` -> `Schema.Any`: The API remains public in v4, but its type/value declaration was consolidated; use the v4 declaration and update inferred types/signature as needed.
 
@@ -15213,9 +15253,9 @@ Schema.toFormatter(schema)
 
 - `SchemaAST.ArbitraryAnnotationId` -> `Schema.Annotations.ToArbitrary`: Symbol annotation IDs were removed. Declarations use the toCodecArbitrary annotation; filters use arbitraryConstraint.
 
-- `SchemaAST.BatchingAnnotation` -> `none`: Per-schema batching annotations were removed. They have no direct replacement. ParseOptions.concurrency controls product child parsing only; configure request batching separately.
+- `SchemaAST.BatchingAnnotation` -> `none`: Per-schema batching annotations were removed and have no direct replacement; Schema.annotate accepts the key but ignores it. A RequestResolver batches requests that are pending when its delay ends, so pass concurrency in runtime ParseOptions to let requests from sibling children share a batch. With sequential parsing, the default, children that each await one request send them in separate batches; requests started concurrently inside a transformation, or by other fibers using the same resolver, can still share a batch. Bound batch sizes with the resolver (for example RequestResolver.batchN), not with the parse option.
 
-- `SchemaAST.BatchingAnnotationId` -> `none`: Symbol annotation IDs were removed and batching is no longer a schema annotation.
+- `SchemaAST.BatchingAnnotationId` -> `none`: Symbol annotation IDs were removed and batching is no longer a schema annotation. Requests from sibling children share a batch only when ParseOptions.concurrency lets them be pending together; requests started concurrently inside a transformation or by other fibers can still batch.
 
 - `SchemaAST.BigIntKeyword` -> `SchemaAST.BigInt`: The v4 SchemaAST redesign renamed this primitive, collection, or guard while preserving its role.
 
@@ -15385,7 +15425,7 @@ Schema.toFormatter(schema)
 
 - `SchemaAST.getAnnotation` -> `SchemaAST.resolveAt`: Resolve string-keyed annotations with resolveAt, or use resolveIdentifier, resolveTitle, and resolveDescription.
 
-- `SchemaAST.getBatchingAnnotation` -> `none`: Batching annotations were removed. ParseOptions.concurrency controls product child parsing only; configure request batching separately.
+- `SchemaAST.getBatchingAnnotation` -> `none`: Batching annotations were removed. Requests from sibling children share a batch only when ParseOptions.concurrency lets them be pending together; with sequential parsing, children that each await one request send them in separate batches. Requests started concurrently inside a transformation or by other fibers using the same resolver can still batch.
 
 - `SchemaAST.getBrandAnnotation` -> `none`: Runtime brand inspection was removed because Schema.brand is type-only and does not store brand metadata in the AST.
 

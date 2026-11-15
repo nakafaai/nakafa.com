@@ -67,7 +67,7 @@ function validInput(): PolicyInput {
       scripts:
         index === 0
           ? {
-              doctor: "bunx react-doctor@0.9.18",
+              doctor: "bunx react-doctor@0.9.23",
             }
           : undefined,
     },
@@ -285,7 +285,7 @@ describe("dependency policy validation", () => {
           scripts: { doctor: "bunx react-doctor@0.9.5" },
         })),
       problem:
-        "apps/www/package.json script doctor is bunx react-doctor@0.9.5; approved bunx react-doctor@0.9.18.",
+        "apps/www/package.json script doctor is bunx react-doctor@0.9.5; approved bunx react-doctor@0.9.23.",
     },
     {
       name: "a missing reviewed script",
@@ -295,7 +295,7 @@ describe("dependency policy validation", () => {
           scripts: undefined,
         })),
       problem:
-        "apps/www/package.json script doctor is missing; approved bunx react-doctor@0.9.18.",
+        "apps/www/package.json script doctor is missing; approved bunx react-doctor@0.9.23.",
     },
     {
       name: "an Effect catalog drift",

@@ -5,6 +5,7 @@
   "references": [
     { "path": "ai-docs" },
     { "path": "packages/effect" },
+    { "path": "packages/ai/amazon-bedrock" },
     { "path": "packages/ai/anthropic" },
     { "path": "packages/ai/cloudflare" },
     { "path": "packages/ai/openai-compat" },
@@ -17,6 +18,7 @@
     { "path": "packages/opentelemetry" },
     { "path": "packages/platform/browser" },
     { "path": "packages/platform/bun" },
+    { "path": "packages/platform/cloudflare" },
     { "path": "packages/platform/deno" },
     { "path": "packages/platform/node" },
     { "path": "packages/platform/node-shared" },

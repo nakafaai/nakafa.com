@@ -91,9 +91,15 @@ export const make = Effect.fnUntraced(function*(
 ) {
   const scope = yield* Effect.scope
   type Handler = (request: Request, info: Deno.ServeHandlerInfo<Deno.NetAddr | Deno.UnixAddr>) => Promise<Response>
-  const notFound: Handler = (_request, _info) => Promise.resolve(new Response("not found", { status: 404 }))
-  const handlerStack: Array<Handler> = [notFound]
-  let currentHandler = notFound
+  const unavailable: Handler = (_request, _info) =>
+    Promise.resolve(
+      new Response("service unavailable", {
+        status: 503,
+        headers: { "cache-control": "no-store", "retry-after": "1" }
+      })
+    )
+  const handlerStack: Array<Handler> = [unavailable]
+  let currentHandler = unavailable
   const {
     disablePreemptiveShutdown,
     gracefulShutdownTimeout,
@@ -150,6 +156,14 @@ export const make = Effect.fnUntraced(function*(
         })
       }, middleware)
 
+      // Join the serve scope before the first step. A body can start and exit while
+      // the handler is still running synchronously, and the request scope then
+      // closes when the request finishes, so closing the serve scope must await it.
+      const ownedHttpEffect = Effect.uninterruptible(Effect.withFiber((fiber) => {
+        Fiber.runIn(fiber, scope)
+        return httpEffect
+      }))
+
       function handler(
         request: Request,
         info: Deno.ServeHandlerInfo<Deno.NetAddr | Deno.UnixAddr>
@@ -160,7 +174,7 @@ export const make = Effect.fnUntraced(function*(
             ServerRequest.HttpServerRequest,
             new DenoServerRequest(request, info.remoteAddr, resolve, removeHost(request.url), websocket)
           )
-          const fiber = Fiber.runIn(Effect.runForkWith(context)(httpEffect), scope)
+          const fiber = Effect.runForkWith(context)(ownedHttpEffect)
           request.signal.addEventListener("abort", () => {
             fiber.interruptUnsafe(parent.id, Error.ClientAbort.annotation)
           }, { once: true })
@@ -170,7 +184,7 @@ export const make = Effect.fnUntraced(function*(
       yield* Scope.addFinalizerExit(serveScope, () => {
         const index = handlerStack.lastIndexOf(handler)
         if (index !== -1) handlerStack.splice(index, 1)
-        currentHandler = handlerStack[handlerStack.length - 1] ?? notFound
+        currentHandler = handlerStack[handlerStack.length - 1]
         return preemptiveShutdown
       })
       handlerStack.push(handler)
@@ -423,22 +437,16 @@ class DenoServerRequest extends Inspectable.Class implements ServerRequest.HttpS
   }
 
   get stream(): Stream.Stream<Uint8Array, Error.HttpServerError> {
-    return this.source.body
+    const body = this.source.body
+    return body
       ? Stream.fromReadableStream({
-        evaluate: () => this.source.body ?? emptyReadableStream,
+        evaluate: () => body,
         onError: (cause) =>
           new Error.HttpServerError({
             reason: new Error.RequestParseError({ request: this, cause })
           })
       })
-      : Stream.fail(
-        new Error.HttpServerError({
-          reason: new Error.RequestParseError({
-            request: this,
-            description: "can not create stream from empty body"
-          })
-        })
-      )
+      : Stream.empty
   }
 
   private textEffect: Effect.Effect<string, Error.HttpServerError> | undefined
@@ -643,13 +651,6 @@ const cancelResponseBody = (body: HttpBody.HttpBody): Effect.Effect<void> => {
 const cancelStreamUnsafe = (stream: ReadableStream): void => {
   void stream.cancel().catch(constVoid)
 }
-
-const emptyReadableStream = new ReadableStream<Uint8Array>({
-  start(controller) {
-    controller.enqueue(new Uint8Array())
-    controller.close()
-  }
-})
 
 const authorityPattern = /^[^:/?#]+:\/\/([^/?#]*)/
 const urlAuthority = (url: string): string | undefined => authorityPattern.exec(url)?.[1]
