@@ -9,7 +9,9 @@ import {
   ANONYMOUS_ANALYTICS_CONSENT_STORAGE_KEY,
   CONSENT_NOTICE_VERSIONS,
 } from "@repo/analytics/consent";
+import { MAIN_DOMAIN } from "@repo/site/domains";
 import { Effect, Option, Schema } from "effect";
+import { CONSENT_OWNER_ATTRIBUTE } from "@/lib/ads/consent";
 import { reportClientException } from "@/lib/analytics/client";
 import type { BrowserPrivacySignal } from "@/lib/analytics/consent/signal";
 import { KNOWN_SESSION_KEY } from "@/lib/auth/keys";
@@ -172,6 +174,11 @@ export const ANALYTICS_CONSENT_BOOTSTRAP_SCRIPT = `(function () {
     });
     if (mark !== null) {
       document.documentElement.setAttribute(${literal(ANALYTICS_CONSENT_ROOT_ATTRIBUTE)}, mark);
+    }
+    // On production Google's consent message decides first which prompt the visitor
+    // answers, so Nakafa's prompt waits until it does (CONSENT_OWNER_ATTRIBUTE).
+    if (location.hostname === ${literal(MAIN_DOMAIN)}) {
+      document.documentElement.setAttribute(${literal(CONSENT_OWNER_ATTRIBUTE)}, "pending");
     }
   } catch (error) {
     // Deliberate silent exception: this script runs before the app modules load

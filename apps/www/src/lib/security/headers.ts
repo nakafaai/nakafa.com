@@ -8,6 +8,7 @@ import {
 import { AGENT_DISCOVERY_HEADERS } from "@repo/site/discovery";
 import { Array as Arr, Option, Result, Schema } from "effect";
 import { AD_POLICY_SOURCES } from "#www/src/lib/ads/account";
+import { GOOGLE_ANALYTICS_POLICY_SOURCES } from "#www/src/lib/analytics/google";
 
 const WwwHeaderSchema = Schema.Struct({
   key: Schema.String,
@@ -67,13 +68,17 @@ export function createWwwHeaders(origins: WwwHeaderOrigins): WwwHeader[] {
         ...convexOrigins,
         new URL(origins.posthogProxyHost).origin,
         ...AD_POLICY_SOURCES.connect,
+        ...GOOGLE_ANALYTICS_POLICY_SOURCES.connect,
       ],
       additionalFrameSources: AD_POLICY_SOURCES.frame,
       additionalImageSources: Arr.filter(
         [...convexOrigins, ...standIn],
         (source) => source.startsWith("http:")
       ),
-      additionalScriptSources: AD_POLICY_SOURCES.script,
+      additionalScriptSources: [
+        ...AD_POLICY_SOURCES.script,
+        ...GOOGLE_ANALYTICS_POLICY_SOURCES.script,
+      ],
     }),
     ...AGENT_DISCOVERY_HEADERS,
     { key: "tdm-reservation", value: "1" },

@@ -10,14 +10,24 @@ import {
   suspendBrowserAnalyticsIdentity,
 } from "@repo/analytics/posthog/browser";
 import { untilPageRead } from "@repo/design-system/lib/settle";
+import { MAIN_DOMAIN } from "@repo/site/domains";
 import { Effect, Fiber, type Option, Schedule } from "effect";
 import { useEffect } from "react";
+import {
+  startConsentMessage,
+  untilGoogleAllowsAnalytics,
+} from "@/lib/ads/consent";
 import {
   type AccountConsentDecision,
   type BrowserAnalyticsUser,
   createBrowserAnalyticsIdentity,
 } from "@/lib/analytics/consent/state";
 
+/**
+ * Google's consent message and Google Analytics, which only production loads.
+ * The import stands outside the hook, where React Compiler can read it.
+ */
+const loadGoogle = () => import("@/lib/analytics/google");
 /**
  * Owns the baseline-to-granted runtime alignment for one consent state.
  *
@@ -88,8 +98,36 @@ export function useAnalyticsRuntimeAlignment({
       )
     );
 
+    // Google's consent message and Google Analytics run on production only, after
+    // the page has its reader: the message on every page, and Google Analytics once
+    // Nakafa's consent and Google's both allow it. A denial stops it.
+    const googleFiber =
+      location.hostname === MAIN_DOMAIN
+        ? Effect.runFork(
+            untilPageRead.pipe(
+              Effect.andThen(Effect.promise(loadGoogle)),
+              Effect.andThen(({ startGoogleAnalytics, stopGoogleAnalytics }) =>
+                Effect.all(
+                  [
+                    startConsentMessage,
+                    analyticsIdentity
+                      ? untilGoogleAllowsAnalytics.pipe(
+                          Effect.andThen(startGoogleAnalytics)
+                        )
+                      : stopGoogleAnalytics,
+                  ],
+                  { concurrency: "unbounded", discard: true }
+                )
+              )
+            )
+          )
+        : null;
+
     return () => {
       Effect.runFork(Fiber.interrupt(runtimeFiber));
+      if (googleFiber) {
+        Effect.runFork(Fiber.interrupt(googleFiber));
+      }
       suspendBrowserAnalyticsIdentity();
     };
   }, [
