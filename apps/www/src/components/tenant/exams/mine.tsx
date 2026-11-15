@@ -14,6 +14,7 @@ import { useLocale, useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { forgetSubmittedKept } from "@/components/exams/sitting/forget";
 import { PageList } from "@/components/shared/page/body";
+import { Page } from "@/components/shared/page/frame";
 import { reloadPage } from "@/components/shared/reload";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
@@ -63,12 +64,14 @@ export function StudentExams() {
 
   return (
     <TableFiltersProvider>
-      <SchoolHeader items={[{ label: t("title") }]} title={t("title")}>
-        <TableSearch placeholder={t("exams-search")} />
-      </SchoolHeader>
-      <PageList>
-        <StudentExamsTable />
-      </PageList>
+      <Page height="screen">
+        <SchoolHeader items={[{ label: t("title") }]} title={t("title")}>
+          <TableSearch placeholder={t("exams-search")} />
+        </SchoolHeader>
+        <PageList>
+          <StudentExamsTable />
+        </PageList>
+      </Page>
     </TableFiltersProvider>
   );
 }

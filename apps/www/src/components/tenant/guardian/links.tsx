@@ -15,6 +15,7 @@ import { createContext, type ReactNode, useState } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { PageList } from "@/components/shared/page/body";
+import { Page } from "@/components/shared/page/frame";
 import {
   PaneBody,
   PaneFact,
@@ -88,18 +89,20 @@ export function GuardianLinksSettings() {
   return (
     <TableFiltersProvider>
       <PanesProvider>
-        <SchoolSettingsHeader>
-          <TableSearch placeholder={t("links-search")} />
-          <WithAction action="guardian.link">
-            <Button onClick={() => setIsStarting(true)} type="button">
-              <HugeIcons icon={Link01Icon} />
-              <span className="@max-sm/header:sr-only">{t("link-add")}</span>
-            </Button>
-          </WithAction>
-        </SchoolSettingsHeader>
-        <ReadBoundary fallback={(failure) => <PageList>{failure}</PageList>}>
-          <GuardianLinksBody />
-        </ReadBoundary>
+        <Page height="screen" width="column">
+          <SchoolSettingsHeader>
+            <TableSearch placeholder={t("links-search")} />
+            <WithAction action="guardian.link">
+              <Button onClick={() => setIsStarting(true)} type="button">
+                <HugeIcons icon={Link01Icon} />
+                <span className="@max-sm/header:sr-only">{t("link-add")}</span>
+              </Button>
+            </WithAction>
+          </SchoolSettingsHeader>
+          <ReadBoundary fallback={(failure) => <PageList>{failure}</PageList>}>
+            <GuardianLinksBody />
+          </ReadBoundary>
+        </Page>
         <GuardianLinkStartDialog open={isStarting} setOpen={setIsStarting} />
       </PanesProvider>
     </TableFiltersProvider>

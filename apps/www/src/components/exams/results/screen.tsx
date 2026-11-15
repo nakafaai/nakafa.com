@@ -29,7 +29,8 @@ import { QuestionsSheet } from "@/components/exams/results/questions";
 import { ReleaseAction } from "@/components/exams/results/release";
 import { StudentsTable } from "@/components/exams/results/students";
 import type { BreadcrumbHeaderItem } from "@/components/shared/breadcrumb/header";
-import { PageList } from "@/components/shared/page/body";
+import { PageList, PageStack } from "@/components/shared/page/body";
+import { Page } from "@/components/shared/page/frame";
 import {
   Panes,
   PanesList,
@@ -74,19 +75,21 @@ export function SittingResults({
   const scope = useMemo(() => ({ sittingId, slug }), [sittingId, slug]);
 
   return (
-    <ReadBoundary
-      fallback={(failure) => (
-        <>
-          <ExamsCrumbHeader />
-          <div className="p-4 md:p-6">{failure}</div>
-        </>
-      )}
-      read={{ args: scope, ref: exams.results.results.overview }}
-    >
-      <ResultsPageContext value={{ examId }}>
-        <SittingResultsContent scope={scope} />
-      </ResultsPageContext>
-    </ReadBoundary>
+    <Page height="screen">
+      <ReadBoundary
+        fallback={(failure) => (
+          <>
+            <ExamsCrumbHeader />
+            <PageStack>{failure}</PageStack>
+          </>
+        )}
+        read={{ args: scope, ref: exams.results.results.overview }}
+      >
+        <ResultsPageContext value={{ examId }}>
+          <SittingResultsContent scope={scope} />
+        </ResultsPageContext>
+      </ReadBoundary>
+    </Page>
   );
 }
 

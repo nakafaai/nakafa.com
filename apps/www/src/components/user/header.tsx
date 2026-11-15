@@ -1,19 +1,25 @@
 import { PencilEdit02Icon } from "@hugeicons/core-free-icons";
-import { DeferredLearnerText } from "@repo/design-system/components/markdown/deferred";
+import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { PersonAvatar } from "@repo/design-system/components/ui/person";
 import { buttonVariants } from "@repo/design-system/lib/button";
 import { useTranslations } from "use-intl";
+import { BreadcrumbHeaderPath } from "@/components/shared/breadcrumb/header";
+import {
+  PageActions,
+  PageHeader,
+  PageHeaderLabel,
+} from "@/components/shared/page/header";
 import { ShareProfileButton } from "@/components/user/share";
 import type { PublicProfile } from "@/lib/profile/public";
 import { Link } from "@/lib/routing/link";
+import { HOME_TARGET } from "@/lib/routing/target";
 import { EXACT_ACTIVE_OPTIONS } from "@/lib/routing/tree";
 
 /**
- * The header of a profile: the name and the address on the left, the picture on
- * the right, the bio under them, and one row of buttons. The owner edits the
- * profile, and everyone shares a profile that is public; a school member's profile,
- * which only its owner opens, has no Share.
+ * The header of a profile: the path home, and the profile's actions in one group at its end. The owner edits the
+ * profile, and everyone shares a profile that is public; a school member's profile, which only its owner opens, has
+ * no Share. The body draws the profile's name as its heading (`UserIntro`), so the path ends at its parent, as a
+ * reading page's does.
  */
 export function UserHeader({
   isOwner,
@@ -23,47 +29,34 @@ export function UserHeader({
   profile: PublicProfile;
 }) {
   const t = useTranslations("Auth");
+  const tCommon = useTranslations("Common");
 
   return (
-    <section className="grid gap-4 pb-6">
-      <header className="flex items-start justify-between gap-4">
-        <div className="grid min-w-0 gap-1">
-          <h1 className="text-2xl font-semibold text-balance wrap-anywhere sm:text-3xl">
-            {profile.name}
-          </h1>
-          <p className="text-muted-foreground truncate text-base">
-            @{profile.username}
-          </p>
-        </div>
-        <PersonAvatar
-          className="size-14 shrink-0 md:size-21"
-          mascot={profile.mascot}
-          photo={profile.image}
-        />
-      </header>
-      {profile.bio ? (
-        <DeferredLearnerText className="text-base">
-          {profile.bio}
-        </DeferredLearnerText>
+    <PageHeader>
+      <BreadcrumbHeaderPath
+        home={HOME_TARGET}
+        homeLabel={tCommon("home")}
+        items={[]}
+      />
+      {isOwner || profile.shareable ? (
+        <PageActions>
+          <ButtonGroup>
+            {isOwner ? (
+              <Link
+                activeOptions={EXACT_ACTIVE_OPTIONS}
+                className={buttonVariants({ variant: "outline" })}
+                to="/$locale/user/settings"
+              >
+                <HugeIcons icon={PencilEdit02Icon} />
+                <PageHeaderLabel>{t("edit-profile")}</PageHeaderLabel>
+              </Link>
+            ) : null}
+            {profile.shareable ? (
+              <ShareProfileButton username={profile.username} />
+            ) : null}
+          </ButtonGroup>
+        </PageActions>
       ) : null}
-      <div className="flex items-center gap-2">
-        {isOwner && (
-          <Link
-            activeOptions={EXACT_ACTIVE_OPTIONS}
-            className={buttonVariants({
-              className: "flex-1",
-              variant: "outline",
-            })}
-            to="/$locale/user/settings"
-          >
-            <HugeIcons icon={PencilEdit02Icon} />
-            {t("edit-profile")}
-          </Link>
-        )}
-        {profile.shareable ? (
-          <ShareProfileButton username={profile.username} />
-        ) : null}
-      </div>
-    </section>
+    </PageHeader>
   );
 }
