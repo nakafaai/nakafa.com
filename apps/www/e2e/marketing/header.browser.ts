@@ -109,16 +109,28 @@ for (const viewport of targetViewports) {
                 yield* expectHeaderDrawn(page);
 
                 // Pricing and back, then forward again, through the browser's history.
+                // A reader leaves a page once it has loaded: WebKit fails, in the
+                // next page, the modules a page was still loading when it was left,
+                // and the page then reloads to load them again.
+                yield* Effect.promise(() =>
+                  page.waitForLoadState("networkidle")
+                );
                 yield* Effect.promise(() => page.goto("/en/pricing"));
                 yield* Effect.promise(() =>
                   expect(heading).not.toHaveText(home ?? "")
                 );
                 yield* expectHeaderDrawn(page);
+                yield* Effect.promise(() =>
+                  page.waitForLoadState("networkidle")
+                );
                 yield* Effect.promise(() => page.goBack());
                 yield* Effect.promise(() =>
                   expect(heading).toHaveText(home ?? "")
                 );
                 yield* expectHeaderDrawn(page);
+                yield* Effect.promise(() =>
+                  page.waitForLoadState("networkidle")
+                );
                 yield* Effect.promise(() => page.goForward());
                 yield* Effect.promise(() =>
                   expect(heading).not.toHaveText(home ?? "")
