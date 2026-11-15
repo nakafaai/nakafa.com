@@ -285,11 +285,7 @@ function CourseClass({
             {t("course-unlinked")}
           </DropdownMenuRadioItem>
           {Arr.map(preview.classes, (klass) => (
-            <DropdownMenuRadioItem
-              icon={Mortarboard01Icon}
-              key={klass.id}
-              value={klass.id}
-            >
+            <DropdownMenuRadioItem key={klass.id} plain value={klass.id}>
               {klass.name}
             </DropdownMenuRadioItem>
           ))}

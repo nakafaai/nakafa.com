@@ -77,7 +77,7 @@ function BacterialSelectParts({
       </SelectTrigger>
       <SelectContent label={menu}>
         {Arr.map(items, (item) => (
-          <SelectItem icon={icon} key={item.value} value={item.value}>
+          <SelectItem key={item.value} plain value={item.value}>
             {item.label}
           </SelectItem>
         ))}

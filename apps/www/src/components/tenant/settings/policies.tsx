@@ -1,5 +1,4 @@
 import { QueryResult, useMutation } from "@confect/react";
-import { Coins01Icon } from "@hugeicons/core-free-icons";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import {
   DEFAULT_NINA_DAILY_CREDITS,
@@ -225,7 +224,7 @@ function SchoolNinaCreditsPolicy({ current }: { current: number }) {
         </SelectTrigger>
         <SelectContent label={common("menu-credits")}>
           {Arr.map(items, (item) => (
-            <SelectItem icon={Coins01Icon} key={item.value} value={item.value}>
+            <SelectItem key={item.value} plain value={item.value}>
               {item.label}
             </SelectItem>
           ))}

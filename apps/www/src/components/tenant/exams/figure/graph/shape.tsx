@@ -234,11 +234,7 @@ export function ShapeCard({ shape }: { readonly shape: ShapeDraft }) {
             </SelectTrigger>
             <SelectContent label={editor("menu-style")}>
               {Arr.map(MathAppearanceSchema.literals, (value) => (
-                <SelectItem
-                  icon={SHAPE_ICON[shape.kind]}
-                  key={value}
-                  value={value}
-                >
+                <SelectItem key={value} plain value={value}>
                   {t(STYLE_NAME[value])}
                 </SelectItem>
               ))}

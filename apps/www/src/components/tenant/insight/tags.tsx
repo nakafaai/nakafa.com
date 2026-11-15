@@ -1,6 +1,6 @@
 import type { GenericId } from "@confect/core";
 import { QueryResult, useMutation, useQuery } from "@confect/react";
-import { Tag01Icon, TaskEdit01Icon } from "@hugeicons/core-free-icons";
+import { Tag01Icon } from "@hugeicons/core-free-icons";
 import { Id } from "@repo/backend/confect/_generated/id";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import insight from "@repo/backend/confect/_generated/refs/insight";
@@ -112,11 +112,7 @@ export function QuestionTags() {
                 </SelectTrigger>
                 <SelectContent label={common("menu-exam")}>
                   {Arr.map(items, (item) => (
-                    <SelectItem
-                      icon={TaskEdit01Icon}
-                      key={item.value}
-                      value={item.value}
-                    >
+                    <SelectItem key={item.value} plain value={item.value}>
                       {item.label}
                     </SelectItem>
                   ))}
