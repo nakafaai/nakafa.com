@@ -59,6 +59,13 @@ describe("superseded proof runs", () => {
           "gh run cancel 13 --repo nakafaai/nakafa.com",
           "gh run cancel 14 --repo nakafaai/nakafa.com",
         ]);
+        // Only dispatched runs are swept: a merge group's run is the one GitHub's
+        // merge queue waits on, whatever head it names.
+        expect(
+          Arr.filter(calls, (call) => call.startsWith("gh run list"))
+        ).toEqual([
+          "gh run list --repo nakafaai/nakafa.com --workflow proof.yml --event workflow_dispatch --status queued --limit 200 --json databaseId,displayTitle",
+        ]);
       }).pipe(Effect.provide(NodeServices.layer))
   );
 });

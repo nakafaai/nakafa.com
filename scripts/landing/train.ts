@@ -17,6 +17,7 @@ import {
 import { failuresOf, makeBaseline } from "#scripts/proof/baseline";
 import type { ProofError } from "#scripts/proof/client";
 import { Prover } from "#scripts/proof/github";
+import { SMOKE_SPEC } from "#scripts/proof/select";
 
 /** A pull request that may ride the train: its number, the exact head its own proof passed, and its title. */
 export const Candidate = Schema.Struct({
@@ -129,13 +130,6 @@ const SPLIT_JOBS = 4;
 
 /** The failure of a batch that an earlier train already verified red. */
 const RED_BATCH = "batch:red";
-
-/**
- * The one spec a combination that changes nothing the product runs is proven
- * on, such as a change to the landing scripts, a workflow or the docs: a fast
- * page that passes in all three engines on main (run 43699251319).
- */
-const SMOKE_SPEC = "e2e/quran/landing.browser.ts";
 
 /**
  * The specs a combination is proven on: those the caller names and those its

@@ -5,7 +5,6 @@ import {
   Layer,
   Option,
   Ref,
-  Result,
   Schema,
   Scope,
   String as Str,
@@ -30,12 +29,7 @@ import {
 } from "#scripts/landing/train";
 import { REPOSITORY } from "#scripts/proof/client";
 import { VERDICT_CONTEXT } from "#scripts/proof/github";
-
-/** A spec file of the browser suites, as a path in the repository; its group is the path under `apps/www`. */
-const SPEC_FILE = /^apps\/www\/(?<spec>e2e\/.+\.browser\.ts)$/u;
-
-/** A file the product runs: under `apps` or `packages`, outside the browser specs, and no Markdown. */
-const RUNTIME_FILE = /^(?:apps|packages)\/(?!www\/e2e\/)(?!.*\.md$)/u;
+import { RUNTIME_FILE, specsOf } from "#scripts/proof/select";
 
 /** A pull request as a candidate of the train, with its stack, the head below it, the spec files it adds or changes, and whether it changes what the product runs. */
 const candidateOf = ({ pull, stack, below }: Rider): Candidate => ({
@@ -44,12 +38,7 @@ const candidateOf = ({ pull, stack, below }: Rider): Candidate => ({
   below,
   sha: pull.headRefOid,
   title: pull.title,
-  specs: Arr.filterMap(pull.files, ({ path }) =>
-    Option.match(Option.fromNullishOr(SPEC_FILE.exec(path)?.groups?.spec), {
-      onNone: () => Result.failVoid,
-      onSome: Result.succeed,
-    })
-  ),
+  specs: specsOf(Arr.map(pull.files, ({ path }) => path)),
   runtime: Arr.some(pull.files, ({ path }) => RUNTIME_FILE.test(path)),
 });
 

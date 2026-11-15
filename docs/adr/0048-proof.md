@@ -170,3 +170,56 @@ The amendment "The Landing Queue" rejected GitHub's merge queue partly because "
 
 GitHub's queue is the platform's own, documented for stacks, free here, and leaves the least code to maintain. Mergify would cap stacks at 20 and add a vendor; Trunk's terms for a public repository are not published.
 
+
+## Amendment: The Merge Queue Is Switched On, 15 November 2026
+
+The amendment "Stacks Stay Linear, And GitHub's Merge Queue Lands Them" decided that GitHub's merge queue replaces the train behind one required check with two depths. This amendment records the workflow that reports it and the exact ruleset main switches on. GitHub's pages, read on 15 November 2026:
+
+- The queue runs a workflow only through its own event: "You must use the `merge_group` event to trigger your GitHub Actions workflow when a pull request is added to a merge queue" (docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/configuring-pull-request-merges/managing-a-merge-queue).
+- A group is built "with the latest version of the `base_branch`" and the entries ahead of it (same page), and its `base_sha` is "The SHA of the merge group's parent commit" (the `merge_group` payload schema, github.com/octokit/webhooks, `payload-schemas/api.github.com/merge_group/checks_requested.schema.json`). With a build concurrency above one, a group's parent is the head of the group ahead, so its diff holds its own pull requests only, and each group ahead proves its own.
+- "Required status checks can be checks or statuses", and a ruleset may "select an app as the expected source of status updates" (docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-rulesets/available-rules-for-rulesets).
+
+### Decision
+
+1. **One commit status, `verify`, posted at two depths by `.github/workflows/proof.yml`.**
+
+   | Event | Jobs | Who posts `verify` | Description |
+   | --- | --- | --- | --- |
+   | `pull_request` (opened, synchronize, reopened, ready for review; a draft runs nothing) | the gate | the gate | "Gate passed; the merge queue proves the browsers", or "Gate failed" |
+   | `merge_group` | the gate and the three engines, side by side | the last of the four to finish, from the gate and the three engine statuses of its run | "Gate, Chromium, Firefox and WebKit: success" or "failure" |
+   | `workflow_dispatch` without the browsers (`bun run gate`) | the gate | the gate | as for a pull request |
+   | `workflow_dispatch` with `base` (a merge group rehearsal) | the gate and the three engines | as for a merge group | as for a merge group |
+   | `workflow_dispatch` with the browsers and no `base` (`bun run proof`, a baseline, the train) | as asked | nobody | none |
+
+   A commit status, not a job's check run, because one name must come from whichever of four jobs ends last: a fifth job that `needs` them would wait in the account's runner queue again from the back (amendment "One Job Per Head"). Each job posts its own status before it reads the others, so the last to finish sees all four, as `proof` is posted already. The gate, engine and summary statuses `gate/<part>`, `gate`, `proof/<engine>` and `proof` stay until the train is deleted.
+2. **Specs from the group's diff.** `scripts/proof/select.ts` owns which specs a merge group proves, from `git diff --name-only base_sha head_sha`: every spec file it changes that its head still holds, every spec in an `apps/www/e2e` folder whose name is a path segment of a changed file under `apps/www/src` (the file named without its extension), and the smoke spec `e2e/quran/landing.browser.ts` always. A group that changes nothing the product runs reaches no folder, so it proves its own spec files and the smoke spec. The module also owns `SPEC_FILE`, `RUNTIME_FILE` and `SMOKE_SPEC`, which the train reads until it is deleted. Selection proves fewer specs than every suite; a full proof of main after landings (amendment "The Landing Queue", point 8) is what catches the rest, and nothing schedules it yet.
+3. **Concurrency.** A push to a pull request cancels the run of the head it replaced, whose statuses name only that older head. A merge group's run and every dispatch have a group of their own, so a later push never cancels them, and `scripts/proof/sweep.ts` cancels only dispatched runs.
+4. **Pull requests already open.** A pull request gets `verify` on its next push, when it is marked ready, when it is reopened, or from `bun run gate <sha>` on its head. The queue admits a pull request only when `verify` passed on its head.
+5. **Forks.** A pull request from a fork runs with a read-only token, so its run posts no status and it cannot enter the queue; its code reads no secret either way.
+6. **Deploys.** The queue merges by pushing to main, and `deploy.yml` runs on that push. Its concurrency group keeps one deploy running and one waiting, so a burst of merged groups deploys the newest main once more, and nothing dispatches a deploy.
+7. **Runners.** A merge group takes four of the account's 20 concurrent jobs; a build concurrency of 3 takes 12, which leaves room for pull request gates, Aksara and the deploy.
+
+### The ruleset on `main`
+
+Main sets it once the workflow above is on `main`; no session changes repository settings.
+
+| Setting | Value |
+| --- | --- |
+| Target | the default branch, `main` (the queue "cannot be enabled with branch protection rules that use wildcard characters") |
+| Require a pull request before merging | on, as today |
+| Require status checks to pass | `verify`, expected source GitHub Actions, so no personal token can post it by hand |
+| Require branches to be up to date before merging | off: the queue tests each group on the latest main and "does not require a pull request author to update their pull request branch" |
+| Require merge queue | on |
+| Merge method | squash |
+| Build concurrency | 3 |
+| Minimum group size | 1 |
+| Maximum group size | 5 |
+| Wait time to meet minimum group size | 5 minutes |
+| Status check timeout | 90 minutes: a completed proof run took 27 minutes at the median and 50 at the 90th percentile (amendment "The Landing Queue") |
+| Only merge non-failing pull requests | on |
+
+### Consequences
+
+- A pull request is merged by adding it to the queue once `verify` passed on its exact head: `gh pr merge <number> --match-head-commit <sha>`, or `merge-async` on a stack's top, which queues every member below. A head whose `verify` has not passed is not added, because `gh pr merge` then turns on auto-merge, which stays off.
+- The rehearsal (`workflow_dispatch` with `base`) is how a change to this workflow proves the merge group path before main switches the ruleset, since only the queue sends `merge_group`.
+- The second change deletes what the queue replaces: the train's batching, splitting, flake rerun, landing and deploy dispatch in `scripts/landing`, `bun run train`, and the `gate` and `proof` statuses once nothing reads them.
