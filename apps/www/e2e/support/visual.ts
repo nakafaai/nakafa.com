@@ -9,7 +9,7 @@ import {
 } from "@/e2e/support/layout";
 import {
   CARD,
-  LINE_SCENE,
+  MATH_SCENE,
   VISUAL_CARD,
   VISUAL_CARD_TOOLBAR,
 } from "@/e2e/support/selector";
@@ -136,11 +136,11 @@ export const revealScene = Effect.fn("NakafaE2E.revealVisualScene")(function* (
   page: Page,
   index = 0
 ) {
-  const card = yield* revealCard(page, LINE_SCENE, index);
-  const canvas = card.locator(`${LINE_SCENE} canvas`);
+  const card = yield* revealCard(page, MATH_SCENE, index);
+  const canvas = card.locator(`${MATH_SCENE} canvas`);
   yield* Effect.promise(() =>
     expect(async () => {
-      await scrollToElement(card.locator(LINE_SCENE), "start");
+      await scrollToElement(card.locator(MATH_SCENE), "start");
       expect(await canvas.isVisible()).toBe(true);
     }).toPass({ timeout: revealTimeoutMilliseconds })
   );
@@ -181,15 +181,45 @@ export const revealMenuItem = Effect.fn("NakafaE2E.revealVisualMenuItem")(
   }
 );
 
-/** Reads where the card's slot and the lesson around it sit in the page. */
+/**
+ * Reads where the card's slot and the lesson around it sit in the page, and
+ * the viewport they are laid out in.
+ */
 export function readPlacement(card: Locator) {
   return card.evaluate(
     (element, visualCard) => ({
       article: element.closest("article")?.getBoundingClientRect().height,
       scrollY: window.scrollY,
       slot: element.closest(visualCard)?.getBoundingClientRect().toJSON(),
+      viewport: { height: window.innerHeight, width: window.innerWidth },
     }),
     VISUAL_CARD
+  );
+}
+
+/**
+ * Expects the page behind a card that fills the screen to keep its layout and
+ * the card's slot, also where the root's scrollbar gutters closed: nothing the
+ * page does may move them. Only the browser can resize the viewport, as a
+ * desktop window grows to its screen for the Fullscreen API, and the page then
+ * lays out at that size like any resized window. So a new viewport is allowed
+ * only while an element is full screen, and the card's return to its slot is
+ * checked exactly in every case.
+ */
+export async function expectPlacementKept(
+  card: Locator,
+  placement: Awaited<ReturnType<typeof readPlacement>>
+) {
+  const current = await readPlacement(card);
+  const resized =
+    current.viewport.width !== placement.viewport.width ||
+    current.viewport.height !== placement.viewport.height;
+  if (!resized) {
+    expect(current).toEqual(placement);
+    return;
+  }
+  expect(await card.evaluate(() => document.fullscreenElement !== null)).toBe(
+    true
   );
 }
 

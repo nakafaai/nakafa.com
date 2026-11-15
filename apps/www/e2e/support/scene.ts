@@ -1,7 +1,7 @@
 import { expect, type Locator } from "@playwright/test";
 import { Array as Arr, Effect } from "effect";
 import { waitForStableCanvas } from "@/e2e/support/canvas";
-import { LINE_SCENE } from "@/e2e/support/selector";
+import { MATH_SCENE } from "@/e2e/support/selector";
 import { revealTimeoutMilliseconds } from "@/e2e/support/timeout";
 
 /**
@@ -29,7 +29,7 @@ export const isKnownSceneDiagnostic = (text: string) =>
 /** Reveals one line-scene card and waits for its canvas to settle. */
 export const revealLineScene = Effect.fn("NakafaE2E.revealLineScene")(
   function* (card: Locator) {
-    const scene = card.locator(LINE_SCENE);
+    const scene = card.locator(MATH_SCENE);
     const canvas = scene.locator("canvas");
     // Reveal the content-visibility card before scrolling its deferred scene.
     yield* Effect.promise(() =>

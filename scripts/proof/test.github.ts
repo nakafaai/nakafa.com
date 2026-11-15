@@ -33,31 +33,46 @@ export const step = (
   completedAt: at(to),
 });
 
-/** The one job of a run: its gate passed, its build restored the prepared runtime. */
-export const JOB = {
-  name: "Verify",
+/** The gate job of a run, which passed. */
+export const GATE_JOB = {
+  name: "Gate",
   conclusion: "success",
   startedAt: at(5),
-  completedAt: at(49),
+  completedAt: at(16),
   steps: [
     step("Gate static", 5, 12),
     step("Gate www", 12, 14),
     step("Gate backend", 14, 16),
-    step("Prepare", 16, 20),
-    step("Save the prepared runtime", 20, 20, "skipped"),
-    step("Build", 20, 38),
-    step("Run specs", 38, 48),
   ],
 };
 
-/** A completed run of that job. */
+/** One engine's job, which started at `from`, restored the prepared runtime and proved for `specs` seconds. */
+const engineJob = (engine: string, from: number, specs: number) => ({
+  name: `Proof ${engine}`,
+  conclusion: "success",
+  startedAt: at(from),
+  completedAt: at(from + 22 + specs),
+  steps: [
+    step("Prepare", from, from + 4),
+    step("Save the prepared runtime", from + 4, from + 4, "skipped"),
+    step("Build", from + 4, from + 22),
+    step("Run specs", from + 22, from + 22 + specs),
+  ],
+});
+
+/** A completed run: the gate beside one job per engine, each on its own machine. */
 export const RUN = {
   status: "completed",
   conclusion: "success",
   url: "https://github.com/nakafaai/nakafa.com/actions/runs/7",
   createdAt: at(0),
   updatedAt: at(50),
-  jobs: [JOB],
+  jobs: [
+    GATE_JOB,
+    engineJob("chromium", 6, 12),
+    engineJob("firefox", 5, 10),
+    engineJob("webkit", 7, 19),
+  ],
 };
 
 export const shard = (engine: string, failures: readonly string[] = []) =>
