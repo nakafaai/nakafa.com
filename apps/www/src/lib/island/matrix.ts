@@ -148,7 +148,7 @@ export function invert(m: Matrix): Matrix {
 
 /** The camera's projection and view in one matrix, for a screen of this aspect. */
 export function viewProjectionOf(orbit: Orbit, aspect: number) {
-  const projection = perspective(FIELD_OF_VIEW, aspect, 0.5, 400);
+  const projection = perspective(FIELD_OF_VIEW, aspect, 0.5, 3000);
   return multiply(projection, lookAt(eyeOf(orbit), orbit.target));
 }
 

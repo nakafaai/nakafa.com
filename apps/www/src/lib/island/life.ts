@@ -1,22 +1,28 @@
 import { idOf } from "@repo/backend/confect/island/blocks";
 import { footprintOf, HEIGHT, SPAN } from "@repo/backend/confect/island/world";
 import { Array as Arr, Option, Order, Schema } from "effect";
-import { ATLAS_TILES, SLOTS, type TileName } from "@/lib/island/atlas";
+import { ATLAS_TILES, SLOTS, TileName } from "@/lib/island/atlas";
 import { KIND, LOOK } from "@/lib/island/look";
-import { STRIDE } from "@/lib/island/mesh";
 import { unitOf } from "@/lib/island/noise";
+import { SCALE } from "@/lib/island/scale";
+import { TILE } from "@/lib/island/tiles/paint";
 import { blockAt, type Cells, SEA_LEVEL } from "@/lib/island/world";
 
 const WATER = idOf("water");
-const WALKABLE = [idOf("grass"), idOf("dirt"), idOf("sand"), idOf("path")];
+const PATH = idOf("path");
+const WALKABLE = [idOf("grass"), idOf("dirt"), idOf("sand"), PATH];
+
+/** The villagers who walk the village's paths (ADR 0047, D10). */
+const FOLK = ["cat", "rabbit", "bear"] as const;
 
 /**
- * One animal of the island (ADR 0047, D8): a hen that walks the ground or a
- * duck that swims the water, where it stands and where it is going, how many
- * steps it has taken, and how long it still rests before it goes on.
+ * One creature of the island (ADR 0047, D8 and D10): a hen that walks the
+ * ground, a duck that swims the water, or a villager who walks the paths;
+ * where it stands and where it is going, how many steps it has taken, and how
+ * long it still rests before it goes on.
  */
 const Animal = Schema.Struct({
-  kind: Schema.Literals(["hen", "duck"]),
+  kind: Schema.Literals(["hen", "duck", ...FOLK]),
   rest: Schema.Finite,
   steps: Schema.Int,
   tx: Schema.Finite,
@@ -35,7 +41,7 @@ export function groundOf(cells: Cells, x: number, z: number) {
   return Option.map(top, (y) => ({ block: blockAt(cells, x, y, z), y }));
 }
 
-/** Whether an animal of this kind can stand in a column: a hen on open ground, a duck on the sea. */
+/** Whether a creature of this kind can stand in a column: a hen on open ground, a duck on the sea, a villager on a path. */
 export function suitsOf(
   kind: Animal["kind"],
   cells: Cells,
@@ -44,12 +50,16 @@ export function suitsOf(
 ) {
   return Option.exists(
     groundOf(cells, Math.floor(x), Math.floor(z)),
-    ({ block }) =>
-      kind === "duck" ? block === WATER : Arr.contains(WALKABLE, block)
+    ({ block }) => {
+      if (kind === "duck") {
+        return block === WATER;
+      }
+      return kind === "hen" ? Arr.contains(WALKABLE, block) : block === PATH;
+    }
   );
 }
 
-/** The hens and ducks a new game opens with: three hens on the island and two ducks off its shore. */
+/** The creatures a new game opens with: three hens on the island, two ducks off its shore, and a cat, a rabbit and a bear on the village paths. */
 export function herdOf(cells: Cells, seed: number, size: number) {
   const footprint = footprintOf(size);
   const columns = Arr.sort(
@@ -65,29 +75,38 @@ export function herdOf(cells: Cells, seed: number, size: number) {
       unitOf(seed + 9, x, 0, z)
     )
   );
-  const pick = (kind: Animal["kind"], count: number) =>
-    Arr.map(
-      Arr.take(
-        Arr.filter(columns, ({ x, z }) =>
-          suitsOf(kind, cells, x + 0.5, z + 0.5)
-        ),
-        count
-      ),
-      ({ x, z }): Animal => ({
-        kind,
-        rest: 0,
-        steps: 0,
-        tx: x + 0.5,
-        tz: z + 0.5,
-        x: x + 0.5,
-        z: z + 0.5,
-      })
+  const placed = (kind: Animal["kind"], x: number, z: number): Animal => ({
+    kind,
+    rest: 0,
+    steps: 0,
+    tx: x + 0.5,
+    tz: z + 0.5,
+    x: x + 0.5,
+    z: z + 0.5,
+  });
+  const suiting = (kind: Animal["kind"], count: number) =>
+    Arr.take(
+      Arr.filter(columns, ({ x, z }) => suitsOf(kind, cells, x + 0.5, z + 0.5)),
+      count
     );
-  return Arr.appendAll(pick("hen", 3), pick("duck", 2));
+  const pick = (kind: Animal["kind"], count: number) =>
+    Arr.map(suiting(kind, count), ({ x, z }) => placed(kind, x, z));
+  const folk = Arr.zipWith(
+    FOLK,
+    suiting("cat", FOLK.length),
+    (kind, { x, z }) => placed(kind, x, z)
+  );
+  return Arr.appendAll(Arr.appendAll(pick("hen", 3), pick("duck", 2)), folk);
 }
 
 /** How fast each kind moves, in cells a second. */
-const SPEED = { duck: 0.6, hen: 1.1 } as const;
+const SPEED = {
+  bear: 0.9,
+  cat: 1.2,
+  duck: 0.6,
+  hen: 1.1,
+  rabbit: 1.3,
+} as const;
 
 /**
  * One animal after `dt` seconds: resting, walking toward its goal, or, once
@@ -143,16 +162,8 @@ function spriteUv(name: TileName, u: number, v: number, flip: boolean) {
   ] as const;
 }
 
-/** The hen's frame: mid-stride or standing. */
-function spriteOfHen(stride: boolean): TileName {
-  return stride ? "henStep" : "hen";
-}
-
 /** How fast Nina swims her loop, in cells a second. */
 const NINA_SPEED = 1.5;
-
-/** Nina's length on the water, in cells. */
-const NINA_LENGTH = 2.6;
 
 /**
  * Where Nina, the hammerhead (ADR 0047, D8), swims at `time`: a loop around
@@ -160,7 +171,7 @@ const NINA_LENGTH = 2.6;
  * little, and the way she faces along it.
  */
 export function ninaAt(size: number, time: number) {
-  const radius = size / 2 + 4;
+  const radius = size / 2 + 2;
   const angle = (time * NINA_SPEED) / radius;
   const reach = radius + Math.sin(angle * 5) * 1.2;
   const outward = Math.cos(angle * 5) * 6;
@@ -188,8 +199,8 @@ function ninaVertices(size: number, time: number) {
       [0, 0],
     ] as const,
     ([u, v]) => {
-      const along = (u - 0.5) * NINA_LENGTH;
-      const across = (v - 0.5) * NINA_LENGTH;
+      const along = (u - 0.5) * SCALE.nina;
+      const across = (v - 0.5) * SCALE.nina;
       const [tu, tv] = spriteUv(name, u, v, false);
       return [
         nina.x + ahead[0] * along - ahead[1] * across,
@@ -205,11 +216,98 @@ function ninaVertices(size: number, time: number) {
   );
 }
 
+/** One upright sprite: a tile, where its feet stand, how tall it is drawn in blocks, and whether it is mirrored. */
+const Sprite = Schema.Struct({
+  flip: Schema.Boolean,
+  name: TileName,
+  size: Schema.Finite,
+  x: Schema.Finite,
+  y: Schema.Finite,
+  z: Schema.Finite,
+});
+type Sprite = typeof Sprite.Type;
+
+/** How many of a fowl's tile rows its body fills, so it is drawn at its real height. */
+const FOWL_ROWS = { duck: 9, hen: 13 } as const;
+
 /**
- * The island's life as quads in the chunk program's vertex layout: each
- * animal of the herd faces the camera turned by `yaw` (a hen stands on her
- * ground and steps as she walks, a duck floats on the sea and bobs, and each
- * faces the way it moves), and Nina lies flat on the sea, swimming her loop.
+ * The sprites one creature is drawn as: a hen or a duck as one tile at its
+ * real height, a villager as a head tile over a body tile, two blocks tall,
+ * stepping as they walk. Each faces the way it moves.
+ */
+function spritesOf(
+  cells: Cells,
+  animal: Animal,
+  index: number,
+  right: readonly [number, number, number],
+  time: number
+): readonly Sprite[] {
+  const flip =
+    (animal.tx - animal.x) * right[0] + (animal.tz - animal.z) * right[2] < 0;
+  const stride = animal.rest === 0 && Math.floor(time * 6) % 2 === 1;
+  const ground = Option.match(
+    groundOf(cells, Math.floor(animal.x), Math.floor(animal.z)),
+    {
+      onNone: () => SEA_LEVEL,
+      onSome: ({ y }) => y + 1,
+    }
+  );
+  const at = { flip, x: animal.x, z: animal.z };
+  if (animal.kind === "duck") {
+    const size = (SCALE.fowl * TILE) / FOWL_ROWS.duck;
+    const bob = Math.sin(time * 2 + index) * 0.04;
+    return [
+      { ...at, name: "duck", size, y: SEA_LEVEL - 0.15 - size * 0.55 + bob },
+    ];
+  }
+  if (animal.kind === "hen") {
+    const size = (SCALE.fowl * TILE) / FOWL_ROWS.hen;
+    return [
+      { ...at, name: stride ? "henStep" : "hen", size, y: ground - 0.02 },
+    ];
+  }
+  const half = SCALE.person / 2;
+  return [
+    {
+      ...at,
+      name: `${animal.kind}${stride ? "Step" : "Bottom"}`,
+      size: half,
+      y: ground,
+    },
+    { ...at, name: `${animal.kind}Top`, size: half, y: ground + half },
+  ];
+}
+
+/** A sprite's four corners as a quad that faces the camera, standing on its feet. */
+function billboardOf(sprite: Sprite, right: readonly [number, number, number]) {
+  return Arr.flatMap(
+    [
+      [0, 1],
+      [1, 1],
+      [1, 0],
+      [0, 0],
+    ] as const,
+    ([u, v]) => {
+      const side = (u - 0.5) * sprite.size;
+      const [tu, tv] = spriteUv(sprite.name, u, v, sprite.flip);
+      return [
+        sprite.x + right[0] * side,
+        sprite.y + (1 - v) * sprite.size,
+        sprite.z + right[2] * side,
+        tu,
+        tv,
+        1,
+        1,
+        0,
+      ];
+    }
+  );
+}
+
+/**
+ * The island's life as quads in the chunk program's vertex layout: every
+ * creature's sprites facing the camera turned by `yaw`, then Nina lying flat
+ * on the sea, swimming her loop.
  */
 export function herdQuads(
   cells: Cells,
@@ -219,57 +317,20 @@ export function herdQuads(
   time: number
 ) {
   const right = [Math.cos(yaw), 0, -Math.sin(yaw)] as const;
-  const vertices = new Float32Array((herd.length + 1) * 4 * STRIDE);
+  const sprites = Arr.flatMap(herd, (animal, index) =>
+    spritesOf(cells, animal, index, right, time)
+  );
+  const vertices = new Float32Array(
+    Arr.appendAll(
+      Arr.flatMap(sprites, (sprite) => billboardOf(sprite, right)),
+      ninaVertices(size, time)
+    )
+  );
   const indices = new Uint32Array(
     Arr.flatMap(
-      Arr.makeBy(herd.length + 1, (quad) => quad),
+      Arr.makeBy(sprites.length + 1, (quad) => quad),
       (quad) => Arr.map([0, 1, 2, 0, 2, 3], (value) => value + quad * 4)
     )
   );
-  vertices.set(ninaVertices(size, time), herd.length * 4 * STRIDE);
-  Arr.forEach(herd, (animal, index) => {
-    const duck = animal.kind === "duck";
-    const ground = Option.match(
-      groundOf(cells, Math.floor(animal.x), Math.floor(animal.z)),
-      {
-        onNone: () => SEA_LEVEL,
-        onSome: ({ y }) => y + 1,
-      }
-    );
-    const base = duck
-      ? SEA_LEVEL - 0.45 + Math.sin(time * 2 + index) * 0.04
-      : ground - 0.15;
-    // A sprite is drawn a little over a cell tall, so an animal reads among the blocks.
-    const scale = duck ? 1.2 : 1.4;
-    const stride = animal.rest === 0 && Math.floor(time * 6) % 2 === 1;
-    const name: TileName = duck ? "duck" : spriteOfHen(stride);
-    const flip =
-      (animal.tx - animal.x) * right[0] + (animal.tz - animal.z) * right[2] < 0;
-    Arr.forEach(
-      [
-        [0, 1],
-        [1, 1],
-        [1, 0],
-        [0, 0],
-      ] as const,
-      ([u, v], corner) => {
-        const side = (u - 0.5) * scale;
-        const [tu, tv] = spriteUv(name, u, v, flip);
-        vertices.set(
-          [
-            animal.x + right[0] * side,
-            base + (1 - v) * scale,
-            animal.z + right[2] * side,
-            tu,
-            tv,
-            1,
-            1,
-            0,
-          ],
-          (index * 4 + corner) * STRIDE
-        );
-      }
-    );
-  });
   return { indices, vertices };
 }
