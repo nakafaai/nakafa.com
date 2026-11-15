@@ -42,7 +42,7 @@ async function rowName(row: Locator) {
 }
 
 /**
- * The owner's sketch IMG_1029: a press on the row of a set nobody has started opens the set beside the table, with
+ * The owner's sketch of the pane: a press on the row of a set nobody has started opens the set beside the table, with
  * its name, its parts and Start, and marks the row while it stays open. The name's link opens it too, Escape closes
  * it, and a visitor's Start goes to sign in and comes back to the set.
  */
@@ -68,9 +68,8 @@ test.describe("The set pane beside a track's table", () => {
       pane.getByRole("heading", { exact: true, name: await rowName(first) })
     ).toBeVisible();
     await expect(first).toHaveAttribute("data-state", "selected");
-    await expect(
-      pane.getByRole("heading", { name: en.Tryouts["set-pane-parts"] })
-    ).toBeVisible();
+    // The set's parts stand in the set page's own list, each row a link to its part, with no heading above them.
+    await expect(pane.getByRole("link").first()).toBeVisible();
     await expect(
       pane.getByRole("button", { exact: true, name: en.Tryouts["start-cta"] })
     ).toBeVisible();
