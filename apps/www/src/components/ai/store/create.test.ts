@@ -5,24 +5,14 @@ import {
 } from "@repo/backend/client/nina/uploads";
 import { Id } from "@repo/backend/confect/_generated/id";
 import { encodeJsonText } from "@repo/utilities/json";
-import {
-  Array as Arr,
-  DateTime,
-  Duration,
-  Option,
-  Record as Rec,
-  Schema,
-} from "effect";
+import { Array as Arr, DateTime, Duration, Option, Schema } from "effect";
 import { createAiStore } from "@/components/ai/store/create";
 
 const STORAGE_KEY = "nakafa-ai";
-const StoredAiState = Schema.fromJsonString(
-  Schema.Struct({
-    state: Schema.Record(Schema.String, Schema.Unknown),
-    version: Schema.Finite,
-  })
-);
 const chatId = Schema.decodeUnknownSync(Id("chats"))("chat_1");
+/** What the browser keeps of the store at a version of its shape: the open chat and nothing else. */
+const keptAt = (version: number) =>
+  encodeJsonText({ state: { activeChatId: chatId }, version });
 const otherChatId = Schema.decodeUnknownSync(Id("chats"))("chat_2");
 const uploadNamed = Schema.decodeUnknownSync(Id("ninaUploads"));
 const firstUpload = uploadNamed("upload_1");
@@ -423,11 +413,8 @@ describe("ai/store/create", () => {
       open: true,
       text: "Half typed",
     });
-    // A reload does not open the chat of the last learner either.
-    const stored = Schema.decodeUnknownSync(StoredAiState)(
-      localStorage.getItem(STORAGE_KEY)
-    );
-    expect(stored.state.activeChatId).toBeNull();
+    // A reload does not open the chat of the last learner either: the browser keeps nothing.
+    expect(localStorage.getItem(STORAGE_KEY)).toBeNull();
   });
 
   it("starts every composer over with a new key, and leaves the text alone", () => {
@@ -462,20 +449,31 @@ describe("ai/store/create", () => {
     store.getState().setActiveChatId(chatId);
     store.getState().setText("Not persisted");
 
-    const stored = Schema.decodeUnknownSync(StoredAiState)(
-      localStorage.getItem(STORAGE_KEY)
-    );
-    expect(stored.version).toBe(1);
-    expect(Rec.keys(stored.state)).toEqual(["activeChatId"]);
-    expect(stored.state.activeChatId).toBe(chatId);
+    expect(localStorage.getItem(STORAGE_KEY)).toBe(keptAt(1));
     expect(sessionStorage.getItem(STORAGE_KEY)).toBeNull();
   });
 
+  it("writes nothing to the browser while no chat is open, whatever the page sets as it loads, and the open chat once", () => {
+    const written = vi.spyOn(Storage.prototype, "setItem");
+    const store = createAiStore();
+
+    store.getState().adoptDraftOwner(undefined);
+    store.getState().setContextTitle("Algebra");
+    store.getState().warm();
+    store.getState().setOpen(true);
+    store.getState().setActiveChatId(null);
+    expect(written).not.toHaveBeenCalled();
+    expect(localStorage.getItem(STORAGE_KEY)).toBeNull();
+
+    // The open chat is written when it opens, not again on each change of the rest of the store.
+    store.getState().setActiveChatId(chatId);
+    store.getState().setContextTitle("Geometry");
+    store.getState().setOpen(false);
+    expect(written).toHaveBeenCalledTimes(1);
+  });
+
   it("restores the persisted chat when the store is created", () => {
-    localStorage.setItem(
-      STORAGE_KEY,
-      encodeJsonText({ state: { activeChatId: chatId }, version: 1 })
-    );
+    localStorage.setItem(STORAGE_KEY, keptAt(1));
 
     const store = createAiStore();
 
@@ -487,10 +485,7 @@ describe("ai/store/create", () => {
 
   it("ignores persisted state from another version", () => {
     vi.spyOn(console, "error").mockImplementation(() => undefined);
-    localStorage.setItem(
-      STORAGE_KEY,
-      encodeJsonText({ state: { activeChatId: chatId }, version: 0 })
-    );
+    localStorage.setItem(STORAGE_KEY, keptAt(0));
 
     const store = createAiStore();
 
