@@ -73,6 +73,7 @@ export function ColumnHead({
   menu = "center",
   narrow,
   place,
+  size,
   sorted,
   width,
 }: {
@@ -82,6 +83,8 @@ export function ColumnHead({
   /** How the column stands in a narrow table (`narrowColumn`). */
   narrow?: VariantProps<typeof narrowColumn>["narrow"];
   place: VariantProps<typeof columnAlign>["align"];
+  /** The column's width as a length, for a column sized by what it holds (`choiceWidth`), in place of `width`. */
+  size?: string | undefined;
   /** How the column sorts the rows, for a head that sorts them. */
   sorted?: keyof typeof sortNames | undefined;
   /** What sets the column's width, for a table whose rows may arrive after its heads. */
@@ -96,6 +99,7 @@ export function ColumnHead({
         narrowColumn({ narrow })
       )}
       scope="col"
+      style={size === undefined ? undefined : { minWidth: size, width: size }}
     >
       <HeadMenuContext value={menu}>{children}</HeadMenuContext>
     </TableHead>

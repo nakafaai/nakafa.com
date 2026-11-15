@@ -1,5 +1,5 @@
 import { cva } from "class-variance-authority";
-import { Schema } from "effect";
+import { Array as Arr, Schema } from "effect";
 import { createContext } from "react";
 
 /** Where a column head's button stands in its cell. */
@@ -67,7 +67,6 @@ export const columnAlign = cva("in-[thead]:bg-muted", {
 export const headWidth = cva("", {
   variants: {
     width: {
-      choice: "w-36 min-w-36 sm:w-48 sm:min-w-48",
       days: "w-52 min-w-52",
       menu: "min-w-12",
       number: "w-28 min-w-28",
@@ -78,22 +77,35 @@ export const headWidth = cva("", {
   },
 });
 
+/** How a column stands in a narrow table: shrunk to what it holds, or stepped aside below one of two widths. */
+export const NarrowColumn = Schema.Literals(["fit", "hidden", "secondary"]);
+
 /**
  * How a column stands in a narrow table, for a table whose rows must read whole without scrolling sideways. The
  * table's own box is measured (`tableBoxVariants` names it as a container), never the window: a card beside an open
  * pane or the sidebar is narrow on a wide screen too. A column that `fit`s gives up its floor and shrinks to what it
- * holds while the box is under 56rem, which every column of a five-column list still fits; a `hidden` one steps
- * aside while the box is under 42rem, where only the name, the status and the menu fit. A column that names neither
- * keeps its width at every size.
+ * holds while the box is under 56rem; a `secondary` one, a figure the row's pane repeats, steps aside under 56rem, so
+ * a seven-column list reads whole beside a pane; a `hidden` one steps aside while the box is under 42rem, where only
+ * the name, the status and the menu fit. A column that names none keeps its width at every size.
  */
 export const narrowColumn = cva("", {
   variants: {
     narrow: {
       fit: "@max-4xl/table:w-auto @max-4xl/table:min-w-0",
       hidden: "@max-2xl/table:hidden",
+      secondary: "@max-4xl/table:hidden",
     },
   },
 });
+
+/**
+ * The width of a column of one known value: as wide as its longest value's badge or its head's name, whichever is
+ * longer, so a short value such as a level never holds the room of a long one, and the column keeps its width before
+ * its rows arrive. A character counts as `1ch`, a little more than a letter of the table's type, and `3.5rem` holds the
+ * badge's icon and padding beside the cell's own, so no value is cut.
+ */
+export const choiceWidth = (title: string, labels: readonly string[]) =>
+  `calc(${Math.max(title.length, ...Arr.map(labels, (label) => label.length))}ch + 3.5rem)`;
 
 /** Where a head's button stands at each place of its column: over a column's figures, and in the middle over a menu. */
 export const headPlace = {
