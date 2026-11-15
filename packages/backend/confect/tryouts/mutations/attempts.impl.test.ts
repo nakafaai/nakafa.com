@@ -6,6 +6,7 @@ import {
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
 import { catalogNodeIdentity } from "@repo/backend/confect/tryouts/catalog/rows";
+import { TRYOUT_ATTEMPT_WINDOW } from "@repo/backend/confect/tryouts/window";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import {
   insertPolarAccount,
@@ -18,12 +19,12 @@ import {
   type TryoutWorld,
   tryoutWorld,
 } from "@repo/backend/test/tryout/world";
-import { Array as Arr, Effect, Schema } from "effect";
+import { Array as Arr, Duration, Effect, Schema } from "effect";
 
 /** English, as a content language. */
 const ENGLISH = Schema.decodeSync(ContentLanguageSchema)("en");
 
-const DAY = 86_400_000;
+const ATTEMPT_END = TRYOUT_NOW + Duration.toMillis(TRYOUT_ATTEMPT_WINDOW);
 
 /** Reads one attempt with its places, section attempts, progress, and scheduled expiry. */
 const readStart = (world: TryoutWorld, attemptId: Id<"tryoutAttempts">) =>
@@ -64,7 +65,7 @@ describe("tryouts/mutations/attempts", () => {
           appLocale: "id",
           assessmentSnapshotId: world.snapshotId,
           attemptNumber: 1,
-          expiresAt: TRYOUT_NOW + 3 * DAY,
+          expiresAt: ATTEMPT_END,
           paper: { id: "test-paper-set-1" },
           profile: { id: "test-profile" },
           scoreStatus: "official",
@@ -129,10 +130,10 @@ describe("tryouts/mutations/attempts", () => {
             args: [
               {
                 attemptId: started.attemptId,
-                expiresAt: TRYOUT_NOW + 3 * DAY,
+                expiresAt: ATTEMPT_END,
               },
             ],
-            scheduledTime: TRYOUT_NOW + 3 * DAY,
+            scheduledTime: ATTEMPT_END,
           })
         );
       })
@@ -407,7 +408,7 @@ describe("tryouts/mutations/attempts", () => {
         accessEndsAt: periodEnd,
         accessSourceKind: "subscription",
         accessSubscriptionId: subscriptionId,
-        expiresAt: TRYOUT_NOW + 3 * DAY,
+        expiresAt: ATTEMPT_END,
       });
     })
   );

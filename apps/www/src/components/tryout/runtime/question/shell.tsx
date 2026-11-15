@@ -26,17 +26,20 @@ interface TryoutQuestionShellProps {
 }
 
 /**
- * Composes one finished question of the review's player with its actions: shown in the list or alone, as
- * the view decides, with its explanation open as the review's store holds it, so its own button and the
- * result's footer open and close the same one.
+ * Composes one finished question of the review's player: its number, how it went, and its actions, shown in
+ * the list or alone as the view decides, with its explanation open as the review's store holds it, so its
+ * own button and the result's footer open and close the same one.
  */
 export function TryoutReviewQuestionShell({
   action,
   children,
+  mark,
   questionKey,
   questionOrder,
 }: TryoutQuestionShellProps & {
   readonly action?: ReactNode;
+  /** How the question went, beside its number. */
+  readonly mark: ReactNode;
   /** The key that the player and the store name this question by. */
   readonly questionKey: string;
 }) {
@@ -55,6 +58,7 @@ export function TryoutReviewQuestionShell({
     >
       <Collapsible onOpenChange={() => toggle(questionKey)} open={open}>
         <PlayerQuestionHeader number={questionOrder}>
+          {mark}
           <ButtonGroup
             aria-label={tPlayer("question", { number: questionOrder })}
             className="shrink-0"
@@ -66,25 +70,6 @@ export function TryoutReviewQuestionShell({
         {children}
       </Collapsible>
     </PlayerQuestion>
-  );
-}
-
-/** Composes one locked review question with its explanation area held open. */
-export function TryoutLockedQuestionShell({
-  children,
-  questionOrder,
-}: TryoutQuestionShellProps) {
-  const ids = readQuestionIds(questionOrder);
-
-  return (
-    <Collapsible defaultOpen disabled>
-      <article aria-labelledby={ids.title} id={ids.article}>
-        <PlayerQuestionHeader number={questionOrder}>
-          <TryoutExplanationTrigger />
-        </PlayerQuestionHeader>
-        {children}
-      </article>
-    </Collapsible>
   );
 }
 
