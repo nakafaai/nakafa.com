@@ -189,6 +189,37 @@ const batchOf = (candidates: readonly Candidate[]): readonly Candidate[] =>
   });
 
 /**
+ * The most pull requests one batch carries (ADR 0048, "The Landing Queue"): at a
+ * failure rate of one in ten per pull request, five pass together more often
+ * than not, while 13 pass a quarter of the time.
+ */
+const BATCH_LIMIT = 5;
+
+/**
+ * The pull requests one batch takes, in landing order: whole stacks while the
+ * batch stays within the limit, filling it with later stacks that still fit;
+ * a first stack longer than the limit rides alone.
+ */
+const batchOf = (candidates: readonly Candidate[]): readonly Candidate[] =>
+  Arr.match(candidates, {
+    onEmpty: () => Arr.empty<Candidate>(),
+    onNonEmpty: (all) => {
+      const [first, ...rest] = Arr.groupWith(
+        all,
+        (one, other) => one.stack === other.stack
+      );
+      return Arr.reduce(
+        rest,
+        Arr.fromIterable<Candidate>(first),
+        (taken, stack) =>
+          taken.length + stack.length <= BATCH_LIMIT
+            ? Arr.appendAll(taken, stack)
+            : taken
+      );
+    },
+  });
+
+/**
  * Lands pull requests after one gate and one proof of their combination on
  * main: those whose own gate and proof passed, or with `batch` at most five,
  * each stack whole, whose top's own gate passed on a head that contains main.
