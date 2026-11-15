@@ -86,6 +86,25 @@ for (const viewport of targetViewports) {
         (context) =>
           Effect.gen(function* () {
             const page = yield* Effect.promise(() => context.newPage());
+            page.on("console", (m) => { if (m.text().startsWith("ROPROBE")) console.log(m.text()); });
+            yield* Effect.promise(() => page.addInitScript(() => {
+              const Native = window.ResizeObserver;
+              const recent: string[] = [];
+              const desc = (el: Element) => `${el.tagName}#${el.id}.${String(el.className).slice(0, 60)}[${el.getAttribute("data-slot") ?? ""}]`;
+              window.ResizeObserver = class extends Native {
+                constructor(cb: ResizeObserverCallback) {
+                  const site = (new Error().stack ?? "").split("\n").slice(1, 5).map((l) => l.trim().slice(0, 100)).join(" < ");
+                  super((entries, observer) => {
+                    recent.push(`${Math.round(performance.now())} ${location.pathname} ${site} :: ${entries.map((e) => `${desc(e.target)} h=${Math.round(e.contentRect.height)} w=${Math.round(e.contentRect.width)}`).join(", ")}`);
+                    if (recent.length > 16) recent.shift();
+                    cb(entries, observer);
+                  });
+                }
+              };
+              addEventListener("error", (e) => {
+                if (String(e.message).includes("ResizeObserver")) console.log(`ROPROBE loop at ${Math.round(performance.now())} ${location.pathname}\n  ${recent.join("\n  ")}`);
+              });
+            }));
             yield* withObservedPageErrors(
               page,
               Effect.gen(function* () {
