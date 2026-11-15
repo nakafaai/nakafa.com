@@ -31,7 +31,7 @@ export function QuranSurahCatalog({
     return (
       <EmptyState
         description={t("search-surah-none-description")}
-        scene={<EmptyNina act="searching" />}
+        scene={<EmptyNina act="leafing" />}
         title={t("search-surah-none")}
       />
     );

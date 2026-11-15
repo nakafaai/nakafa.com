@@ -155,7 +155,7 @@ function OwnReportTable() {
       empty={
         <EmptyState
           description={t("own-empty-description")}
-          scene={<EmptyNina act="relaxed" />}
+          scene={<EmptyNina act="unfolding" />}
           title={t("own-empty")}
         />
       }

@@ -262,7 +262,7 @@ function RosterImportEmpty({
     return (
       <EmptyState
         description={t("no-period-description")}
-        scene={<EmptyNina act="pointing" />}
+        scene={<EmptyNina act="tagging" />}
         title={t("no-period")}
       />
     );
@@ -272,7 +272,7 @@ function RosterImportEmpty({
       description={t(
         problem === undefined ? "empty-description" : `file-${problem}`
       )}
-      scene={<EmptyNina act={problem === undefined ? "reading" : "pointing"} />}
+      scene={<EmptyNina act={problem === undefined ? "feeding" : "tagging"} />}
       title={t(problem === undefined ? "empty" : "file-refused")}
     />
   );

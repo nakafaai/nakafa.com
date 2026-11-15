@@ -125,7 +125,7 @@ export function SchoolGrantTable() {
         empty={
           <EmptyState
             description={t("roles-grants-description")}
-            scene={<EmptyNina act="juggling" />}
+            scene={<EmptyNina act="hatting" />}
             title={t("roles-empty")}
           />
         }

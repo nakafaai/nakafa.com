@@ -76,7 +76,7 @@ export function ReportLineDetail({ lines }: { lines: readonly ReportLine[] }) {
       {found.report === null ? (
         <PaneBody>
           <EmptyState
-            scene={<EmptyNina act="stamping" />}
+            scene={<EmptyNina act="tallying" />}
             title={t("report-empty")}
           />
         </PaneBody>
@@ -113,7 +113,7 @@ function ReportDetailBody({ reportId }: { reportId: Id<"reportCards"> }) {
         <div className="flex flex-col gap-6">
           <ReportFacts report={report} />
           <EmptyState
-            scene={<EmptyNina act="counting" />}
+            scene={<EmptyNina act="tallying" />}
             title={t("subjects-empty")}
           />
         </div>

@@ -152,7 +152,7 @@ export function SchoolParents() {
   return (
     <FeatureRow id="parents" layout="wide">
       <SchoolFeatureText feature="parents">
-        <Nina act="waving" label="" size={88} whole />
+        <Nina act="strolling" label="" size={88} whole />
       </SchoolFeatureText>
       <FeatureProduct>
         <div className="rise-on-scroll relative mx-auto max-w-3xl pt-24 [--rise-delay:15%] sm:pt-32">

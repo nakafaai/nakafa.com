@@ -25,7 +25,7 @@ export function ChatFailure({ kind }: { kind: "access" | "retry" }) {
           </Unauthenticated>
         }
         description={t("chat-unavailable")}
-        scene={<EmptyNina act="guarding" />}
+        scene={<EmptyNina act="ticketing" />}
         title={t("private-chat-error")}
       />
     );
@@ -35,7 +35,7 @@ export function ChatFailure({ kind }: { kind: "access" | "retry" }) {
     <EmptyState
       action={<ChatRetryButton />}
       description={t("chat-failed-description")}
-      scene={<EmptyNina act="typing" />}
+      scene={<EmptyNina act="rebooting" />}
       title={t("chat-failed")}
     />
   );

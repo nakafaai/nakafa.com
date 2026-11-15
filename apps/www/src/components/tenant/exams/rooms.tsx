@@ -391,13 +391,13 @@ function RoomsTable({
                 ) : undefined
               }
               description={t("rooms-empty-description")}
-              scene={<EmptyNina act="pointing" />}
+              scene={<EmptyNina act="arranging" />}
               title={t("rooms-empty")}
             />
           ) : (
             <EmptyState
               description={t("rooms-filter-empty-description")}
-              scene={<EmptyNina act="searching" />}
+              scene={<EmptyNina act="peeking" />}
               title={t("rooms-filter-empty")}
             />
           )

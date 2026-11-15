@@ -92,7 +92,7 @@ function PeopleBody() {
         {empty ? (
           <EmptyState
             description={t("people-empty-description")}
-            scene={<EmptyNina act="typing" />}
+            scene={<EmptyNina act="hooking" />}
             title={t("people-empty")}
           />
         ) : null}

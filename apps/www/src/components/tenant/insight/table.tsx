@@ -181,7 +181,7 @@ export function ClassInsightTabs({
                       </Link>
                     }
                     description={t("class-empty-description")}
-                    scene={<EmptyNina act="pointing" />}
+                    scene={<EmptyNina act="timing" />}
                     title={t("class-empty")}
                   />
                 }
@@ -294,7 +294,7 @@ function ClassStudents({
               ) : undefined
             }
             description={t("students-empty-description")}
-            scene={<EmptyNina act="pointing" />}
+            scene={<EmptyNina act="timing" />}
             title={t("students-empty")}
           />
         }

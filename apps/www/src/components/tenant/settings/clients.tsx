@@ -203,7 +203,7 @@ function SchoolClientTable() {
         empty={
           <EmptyState
             description={t("client-add-description")}
-            scene={<EmptyNina act="typing" />}
+            scene={<EmptyNina act="carding" />}
             title={t("clients-empty")}
           />
         }

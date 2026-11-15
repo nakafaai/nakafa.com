@@ -61,7 +61,7 @@ export function SchoolCohortTable({
     return (
       <EmptyState
         description={t("cohorts-description")}
-        scene={<EmptyNina act="writing" />}
+        scene={<EmptyNina act="ruling" />}
         title={t("cohorts-empty")}
       />
     );

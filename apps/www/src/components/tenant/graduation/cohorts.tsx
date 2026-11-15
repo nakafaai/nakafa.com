@@ -110,7 +110,7 @@ export function GraduationCohorts({ slug }: { slug: TenantSlug }) {
           Arr.isReadonlyArrayEmpty(loaded) ? (
             <EmptyState
               description={t("cohorts-empty-description")}
-              scene={<EmptyNina act="pointing" />}
+              scene={<EmptyNina act="rolling" />}
               title={t("cohorts-empty")}
             />
           ) : null}

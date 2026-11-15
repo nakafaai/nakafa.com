@@ -9,8 +9,8 @@ import { FIGURE_GAP, NINA_SIZE, THING_SIZE } from "@/components/state/size";
  * her too. No thing appears in two of them.
  */
 const SCENES = {
-  broken: { act: "typing", things: ["coffee", "bulb"] },
-  missing: { act: "searching", things: ["letter", "plane"] },
+  broken: { act: "mending", things: ["coffee", "bulb"] },
+  missing: { act: "wandering", things: ["letter", "plane"] },
 } as const;
 
 /**

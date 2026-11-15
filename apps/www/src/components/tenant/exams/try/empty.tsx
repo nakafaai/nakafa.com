@@ -29,7 +29,7 @@ export function ExamTryEmpty({ examId }: { examId: Id<"exams"> }) {
           </Link>
         }
         description={t("try-empty-description")}
-        scene={<EmptyNina act="writing" />}
+        scene={<EmptyNina act="shuffling" />}
         title={t("try-empty-title")}
       />
     </PageState>

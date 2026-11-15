@@ -25,69 +25,49 @@ export function UnsubscribePage({ token }: { token: string | undefined }) {
   const [shown, showAnswer] = useOptimistic(answer);
   const [pending, startTransition] = useTransition();
 
-  if (shown === "invalid") {
-    return (
-      <EntryShellBody>
-        <Nina act="searching" label="" size={96} whole />
-        <div className="flex flex-col items-center gap-2 text-center">
-          <h1 className="text-xl font-semibold">{t("invalid-title")}</h1>
-          <p className="text-muted-foreground">{t("invalid-description")}</p>
-        </div>
-      </EntryShellBody>
-    );
-  }
-  if (shown === "done") {
-    return (
-      <EntryShellBody>
-        <Nina act="waving" label="" size={96} whole />
-        <div className="flex flex-col items-center gap-2 text-center">
-          <h1 className="text-xl font-semibold">{t("done-title")}</h1>
-          <p className="text-muted-foreground">{t("done-description")}</p>
-        </div>
-      </EntryShellBody>
-    );
-  }
   return (
     <EntryShellBody>
-      <Nina act="reading" label="" size={96} whole />
+      <Nina act="waving" label="" size={96} whole />
       <div className="flex flex-col items-center gap-2 text-center">
-        <h1 className="text-xl font-semibold">{t("ask-title")}</h1>
-        <p className="text-muted-foreground">{t("ask-description")}</p>
+        <h1 className="text-xl font-semibold">{t(`${shown}-title`)}</h1>
+        <p className="text-muted-foreground">{t(`${shown}-description`)}</p>
       </div>
-      <Button
-        disabled={pending}
-        onClick={() =>
-          startTransition(async () => {
-            showAnswer("done");
-            const next = await Effect.runPromise(
-              Effect.tryPromise(() => confirm({ token: token ?? "" })).pipe(
-                Effect.flatMap(Effect.fromResult),
-                Effect.as("done" as const),
-                Effect.catchTag("UnsubscribeTokenInvalid", () =>
-                  Effect.succeed("invalid" as const)
-                ),
-                Effect.catch(() =>
-                  Effect.sync(() => {
-                    toast.error(
-                      {
-                        description: "failure-connection.description",
-                        title: "failure-connection.title",
-                      },
-                      { position: "bottom-center" }
-                    );
-                    return "ask" as const;
-                  })
+      {shown === "ask" ? (
+        <Button
+          disabled={pending}
+          onClick={() =>
+            startTransition(async () => {
+              showAnswer("done");
+              const next = await Effect.runPromise(
+                Effect.tryPromise(() => confirm({ token: token ?? "" })).pipe(
+                  Effect.flatMap(Effect.fromResult),
+                  Effect.as("done" as const),
+                  Effect.catchTag("UnsubscribeTokenInvalid", () =>
+                    Effect.succeed("invalid" as const)
+                  ),
+                  Effect.catch(() =>
+                    Effect.sync(() => {
+                      toast.error(
+                        {
+                          description: "failure-connection.description",
+                          title: "failure-connection.title",
+                        },
+                        { position: "bottom-center" }
+                      );
+                      return "ask" as const;
+                    })
+                  )
                 )
-              )
-            );
-            setAnswer(next);
-          })
-        }
-        type="button"
-      >
-        <Spinner icon={MailRemove01Icon} isLoading={pending} />
-        {t("confirm")}
-      </Button>
+              );
+              setAnswer(next);
+            })
+          }
+          type="button"
+        >
+          <Spinner icon={MailRemove01Icon} isLoading={pending} />
+          {t("confirm")}
+        </Button>
+      ) : null}
     </EntryShellBody>
   );
 }

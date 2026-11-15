@@ -192,7 +192,7 @@ export function SchoolForum() {
   return (
     <FeatureRow id="forum" layout="wide">
       <SchoolFeatureText feature="forum">
-        <Nina act="typing" label="" size={88} whole />
+        <Nina act="chatting" label="" size={88} whole />
       </SchoolFeatureText>
       <FeatureProduct>
         <RoomProvider>

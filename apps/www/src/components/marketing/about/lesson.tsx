@@ -92,7 +92,7 @@ export function Lesson({ locale }: { readonly locale: Locale }) {
     <FeatureRow id={LESSON_SECTION_ID}>
       <FeatureText>
         <span className="inline-block" id={NINA_SLOT.lesson}>
-          <Nina act="waving" label="" size={88} whole />
+          <Nina act="painting" label="" size={88} whole />
         </span>
         <FeatureTitle>{t("lesson-title")}</FeatureTitle>
         <FeatureLead>{t("lesson-lead")}</FeatureLead>

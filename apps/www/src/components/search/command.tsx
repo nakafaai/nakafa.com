@@ -1,10 +1,8 @@
-import { InformationCircleIcon } from "@hugeicons/core-free-icons";
 import {
   Command,
   CommandCollection,
   CommandDialog,
   CommandDialogPopup,
-  CommandEmpty,
   CommandGroup,
   CommandGroupLabel,
   CommandInput,
@@ -12,10 +10,9 @@ import {
   CommandList,
   CommandPanel,
 } from "@repo/design-system/components/ui/command";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { useRequired } from "@repo/design-system/hooks/required";
 import { useNavigate } from "@tanstack/react-router";
-import { Effect, Option, Result } from "effect";
+import { Array as Arr, Effect, Option, Result } from "effect";
 import {
   createContext,
   type ReactNode,
@@ -35,6 +32,8 @@ import {
   SearchRow,
   usePaletteGroups,
 } from "@/components/search/rows";
+import { EmptyState } from "@/components/state/empty";
+import { EmptyNina } from "@/components/state/nina";
 import { SEARCH_TARGET } from "@/lib/routing/target";
 import { useSearch } from "@/lib/search/context";
 import type { SearchEntry } from "@/lib/search/entry";
@@ -167,7 +166,11 @@ function SearchPalette() {
         placeholder={t("search-placeholder")}
       />
       <CommandPanel>
-        <SearchState />
+        {Result.isFailure(answer) ||
+        (searched.trim() !== "" &&
+          Arr.every(groups, (group) => group.key === "full")) ? (
+          <SearchMissed />
+        ) : null}
         <CommandList>
           {(group: PaletteGroup) => (
             <CommandGroup items={group.items} key={group.key}>
@@ -194,20 +197,20 @@ function SearchPalette() {
 }
 
 /**
- * What the panel says when the index could not be read. A query always keeps its
- * last row, the full search, so even then a query still leads somewhere.
+ * What the panel says when a query finds nothing, or the index could not be read: Nina shrugs over it, and the
+ * full search stays under her as the row that still leads somewhere.
  */
-function SearchState() {
+function SearchMissed() {
   const answer = useIndexAnswer();
   const t = useTranslations("Utils");
+  const failed = Result.isFailure(answer);
+
   return (
-    <CommandEmpty className="text-muted-foreground text-center text-sm not-empty:flex not-empty:flex-col not-empty:items-center not-empty:justify-center not-empty:gap-2 not-empty:p-7.5">
-      {Result.isFailure(answer) && (
-        <>
-          <HugeIcons icon={InformationCircleIcon} />
-          <p>{t("search-unavailable")}</p>
-        </>
-      )}
-    </CommandEmpty>
+    <EmptyState
+      frame="table"
+      {...(failed ? { role: "alert" as const } : {})}
+      scene={<EmptyNina act="shrugging" />}
+      title={t(failed ? "search-unavailable" : "search-not-found")}
+    />
   );
 }

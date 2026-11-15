@@ -123,7 +123,7 @@ export function MemoryDesk({ facts }: MemoryDeskProps) {
             )}
           </BubbleContent>
         </Bubble>
-        <Nina act="writing" label="" size={260} whole />
+        <Nina act="pinning" label="" size={260} whole />
       </div>
       {/* Every notebook has its place from the start, so the row keeps its width
           and a notebook that drops in never moves the ones before it. */}

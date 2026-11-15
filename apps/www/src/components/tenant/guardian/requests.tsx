@@ -169,7 +169,7 @@ export function ParentRequests({
       empty={
         <EmptyState
           description={t("requests-empty-description")}
-          scene={<EmptyNina act="writing" />}
+          scene={<EmptyNina act="emptying" />}
           title={t("requests-empty")}
         />
       }

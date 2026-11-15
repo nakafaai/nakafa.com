@@ -219,7 +219,7 @@ function ReportStudentsEmpty() {
   return (
     <EmptyState
       description={t("students-empty-description")}
-      scene={<EmptyNina act="reading" />}
+      scene={<EmptyNina act="stacking" />}
       title={t("students-empty")}
     />
   );

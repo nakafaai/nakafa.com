@@ -46,7 +46,7 @@ export function Hero() {
           </TargetLink>
         </div>
         <div className="mt-6" id={HERO_NINA_ID}>
-          <Nina act="reading" label="" size={240} whole />
+          <Nina act="answering" label="" size={240} whole />
         </div>
       </div>
     </section>

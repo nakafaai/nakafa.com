@@ -152,7 +152,7 @@ function SchoolAuditBody() {
         empty={
           <EmptyState
             description={t("audit-description")}
-            scene={<EmptyNina act="reading" />}
+            scene={<EmptyNina act="tracking" />}
             title={t("audit-empty")}
           />
         }

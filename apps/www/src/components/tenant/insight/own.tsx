@@ -79,7 +79,7 @@ export function OwnMastery() {
               </Link>
             }
             description={t("empty-description")}
-            scene={<EmptyNina act="waving" />}
+            scene={<EmptyNina act="measuring" />}
             title={t("empty")}
           />
         }

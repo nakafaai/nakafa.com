@@ -81,7 +81,7 @@ export function ChannelRows({
       {Arr.isReadonlyArrayEmpty(rows) ? (
         <EmptyState
           frame="table"
-          scene={<EmptyNina act="searching" />}
+          scene={<EmptyNina act="listening" />}
           title={table("no-results")}
         />
       ) : (

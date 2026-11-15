@@ -145,7 +145,7 @@ function GradingTable({
         description={t("grading-empty-description", {
           kktp: DEFAULT_GRADING_SCHEME.kktp,
         })}
-        scene={<EmptyNina act="thinking" />}
+        scene={<EmptyNina act="weighing" />}
         title={t("grading-empty")}
       />
     );

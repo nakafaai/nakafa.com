@@ -146,7 +146,7 @@ function DeliveryList({ webhook }: { webhook: Webhook }) {
   if (Arr.isReadonlyArrayEmpty(pagination.results)) {
     return (
       <EmptyState
-        scene={<EmptyNina act="ringing" />}
+        scene={<EmptyNina act="delivering" />}
         title={t("webhook-deliveries-empty")}
       />
     );

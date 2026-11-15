@@ -64,7 +64,7 @@ function NewChatWelcome() {
   return (
     <MessageScrollerItem className="flex flex-1" messageId="welcome">
       <EmptyState
-        scene={<EmptyNina act="cheering" />}
+        scene={<EmptyNina act="dreaming" />}
         title={t("new-chat-title")}
       />
     </MessageScrollerItem>

@@ -255,7 +255,7 @@ export function HomeToyLayer() {
       <NinaToy act="reading" size={240} slot={HERO_NINA_ID} />
       <NinaToy act="waving" size={88} slot={NINA_SLOT.lesson} />
       <NinaToy act="typing" size={88} slot={NINA_SLOT.nina} />
-      <NinaToy act="pointing" size={200} slot={NINA_SLOT.curricula} />
+      <NinaToy act="unrolling" size={200} slot={NINA_SLOT.curricula} />
       <NinaToy act="juggling" size={240} slot={NINA_SLOT.closing} />
     </ToyOverlay>
   );

@@ -87,14 +87,14 @@ export function SchoolToys() {
   return (
     <ToyOverlay placements={PLACEMENTS}>
       <NinaToy act="teaching" size={240} slot={SCHOOL_NINA_ID} />
-      <NinaToy act="typing" size={88} slot="forum-nina" />
+      <NinaToy act="chatting" size={88} slot="forum-nina" />
       <NinaToy act="reading" size={88} slot="library-nina" />
       <NinaToy act="carrying" size={88} slot="tasks-nina" />
-      <NinaToy act="thinking" size={88} slot="exams-nina" />
+      <NinaToy act="dealing" size={88} slot="exams-nina" />
       <NinaToy act="writing" size={88} slot="player-nina" />
       <NinaToy act="stamping" size={88} slot="reports-nina" />
-      <NinaToy act="searching" size={88} slot="insight-nina" />
-      <NinaToy act="waving" size={88} slot="parents-nina" />
+      <NinaToy act="scouting" size={88} slot="insight-nina" />
+      <NinaToy act="strolling" size={88} slot="parents-nina" />
       <NinaToy act="graduating" size={88} slot="year-nina" />
     </ToyOverlay>
   );

@@ -179,7 +179,7 @@ function GuardianChildren() {
       empty={
         <EmptyState
           description={t("home-empty-description")}
-          scene={<EmptyNina act="waving" />}
+          scene={<EmptyNina act="framing" />}
           title={t("home-empty")}
         />
       }

@@ -149,7 +149,7 @@ function ChatList() {
       {empty ? (
         <EmptyState
           description={t("channels-empty-description")}
-          scene={<EmptyNina act="typing" />}
+          scene={<EmptyNina act="phoning" />}
           title={t("channels-empty")}
         />
       ) : (

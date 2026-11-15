@@ -301,7 +301,7 @@ export function StudentsTable() {
         empty={
           <EmptyState
             description={t(filtering ? "filter-empty" : "results-empty")}
-            scene={<EmptyNina act="reading" />}
+            scene={<EmptyNina act="calling" />}
             title={t(filtering ? "results-no-match" : "results-empty-title")}
           />
         }

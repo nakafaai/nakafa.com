@@ -25,7 +25,7 @@ export function NoActiveUnit() {
         </Link>
       }
       description={t("no-unit-description")}
-      scene={<EmptyNina act="pointing" />}
+      scene={<EmptyNina act="building" />}
       title={t("no-unit-title")}
     />
   );
