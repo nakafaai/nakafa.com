@@ -5,7 +5,7 @@ import { metered, meterOf } from "@repo/backend/confect/spend/meter";
 import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
 import { MASCOT_CODE } from "@repo/backend/test/mascot";
 import { recordingMeter } from "@repo/backend/test/spend";
-import { Array as Arr, Effect, Fiber, Layer } from "effect";
+import { Array as Arr, Effect, Fiber, Layer, MutableRef } from "effect";
 
 /** When the test learner's credits were last reset. */
 const NOW = Date.UTC(2026, 10, 7, 10);
@@ -101,5 +101,58 @@ describe("spend/meter", () => {
     expect(
       Arr.map(rows, ({ calls, held, spent }) => ({ calls, held, spent }))
     ).toEqual([{ calls: 2, held: 0, spent: 775_000 }]);
+  });
+
+  it("writes one escrow at a time while an action's calls run at once, so they never retry against each other", async () => {
+    const t = createConvexTestWithBetterAuth();
+    const userId = await t.run((ctx) =>
+      ctx.db.insert("users", {
+        authId: "auth-turns",
+        credits: 0,
+        creditsResetAt: NOW,
+        email: "turns@example.com",
+        mascot: MASCOT_CODE,
+        name: "Turns",
+        plan: "free",
+      })
+    );
+    const most = await t.action((ctx) =>
+      Effect.runPromise(
+        Effect.gen(function* () {
+          const open = MutableRef.make(0);
+          const peak = MutableRef.make(0);
+          const counted: typeof ctx = {
+            ...ctx,
+            runMutation: async (mutation, ...args) => {
+              MutableRef.update(open, (count) => count + 1);
+              MutableRef.update(peak, (count) =>
+                Math.max(count, MutableRef.get(open))
+              );
+              const result = await ctx.runMutation(mutation, ...args);
+              MutableRef.update(open, (count) => count - 1);
+              return result;
+            },
+          };
+          yield* Effect.forEach(
+            Arr.range(1, 4),
+            () => metered("chat", 1000, Effect.yieldNow, () => 500),
+            { concurrency: "unbounded" }
+          ).pipe(
+            Effect.provide(
+              Layer.provide(
+                meterOf({ kind: "learner", userId }),
+                RegisteredFunction.actionLayer(confectSchema, counted)
+              )
+            )
+          );
+          return MutableRef.get(peak);
+        })
+      )
+    );
+    expect(most).toBe(1);
+    const rows = await t.run((ctx) => ctx.db.query("vendorSpend").collect());
+    expect(
+      Arr.map(rows, ({ calls, held, spent }) => ({ calls, held, spent }))
+    ).toEqual([{ calls: 4, held: 0, spent: 2000 }]);
   });
 });
