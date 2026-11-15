@@ -3,10 +3,10 @@ import { Effect, Fiber, Result } from "effect";
 import { FetchHttpClient } from "effect/http";
 import { TestClock } from "effect/testing";
 import {
-  OpenContentCopyError,
   readOpenContentCopySource,
   writeOpenContentCopy,
 } from "@/components/shared/content/copy";
+import { OpenContentCopyError } from "@/components/shared/content/error";
 
 const SOURCE_PATH = "/en/subjects/mathematics/analytic-geometry/hyperbola.md";
 type CopySource = Parameters<typeof readOpenContentCopySource>[0];

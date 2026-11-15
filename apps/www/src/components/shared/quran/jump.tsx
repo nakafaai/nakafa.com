@@ -12,7 +12,7 @@ import { useTranslations } from "use-intl";
 import {
   QuranSurahSearchField,
   QuranSurahSearchIcon,
-} from "@/components/shared/quran/find";
+} from "@/components/shared/quran/search";
 import { QuranSurahNumber } from "@/components/shared/quran/surah";
 import { QuranSurahsContext } from "@/components/shared/quran/surahs";
 import { type QuranIndexSurah, searchSurahs } from "@/lib/content/quran/search";

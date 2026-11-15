@@ -1,5 +1,6 @@
 import "@tanstack/react-start/server-only";
 
+import { isServerExceptionReportingEnabled } from "@repo/analytics/gate";
 import { keys } from "@repo/analytics/keys";
 import {
   createOperationalException,
@@ -7,7 +8,6 @@ import {
   type OperationalExceptionProperties,
   operationalRequestProperties,
 } from "@repo/analytics/posthog/exception";
-import { isServerExceptionReportingEnabled } from "@repo/analytics/reporting";
 import { Effect, Option, Schema } from "effect";
 import { PostHog } from "posthog-node";
 

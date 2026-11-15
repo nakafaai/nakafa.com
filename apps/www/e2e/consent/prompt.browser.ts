@@ -15,13 +15,12 @@ import {
   PROMPT_DESCRIPTION,
   seedAnalyticsConsent,
   seedRawStorage,
-  stopAppCode,
 } from "@/e2e/support/consent";
 import { withBrowserContext } from "@/e2e/support/context";
 import { pinnedRoutes } from "@/e2e/support/corpus";
 import { readFooterActions, setLargeText } from "@/e2e/support/footer";
 import { withObservedPageErrors } from "@/e2e/support/observe";
-import { APP_CHUNK_PATH } from "@/e2e/support/route";
+import { APP_CHUNK_PATH, stopAppCode } from "@/e2e/support/route";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { compactViewport } from "@/e2e/support/viewport";
 
