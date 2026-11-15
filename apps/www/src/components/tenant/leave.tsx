@@ -14,11 +14,6 @@ import {
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@repo/design-system/components/ui/tooltip";
 import { useRouter } from "@tanstack/react-router";
 import { useTransition } from "react";
 import { useTranslations } from "use-intl";
@@ -51,26 +46,17 @@ export function TenantOutsiderActions({
           {t("outsider-card")}
         </Button>
         <DropdownMenu>
-          <Tooltip>
-            <TooltipTrigger
-              render={
-                <DropdownMenuTrigger
-                  render={
-                    <Button
-                      aria-busy={isChecking || undefined}
-                      size="icon"
-                      tooltip={common("more-actions")}
-                    />
-                  }
-                >
-                  <Spinner icon={ArrowDown01Icon} isLoading={isChecking} />
-                </DropdownMenuTrigger>
-              }
-            />
-            <TooltipContent side="bottom">
-              {common("more-actions")}
-            </TooltipContent>
-          </Tooltip>
+          <DropdownMenuTrigger
+            render={
+              <Button
+                aria-busy={isChecking || undefined}
+                size="icon"
+                tooltip={common("more-actions")}
+              />
+            }
+          >
+            <Spinner icon={ArrowDown01Icon} isLoading={isChecking} />
+          </DropdownMenuTrigger>
           <DropdownMenuContent
             align="end"
             className="w-60"

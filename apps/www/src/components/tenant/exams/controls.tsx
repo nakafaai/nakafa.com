@@ -21,11 +21,6 @@ import {
   ResponsiveDialog,
   ResponsiveDialogSubject,
 } from "@repo/design-system/components/ui/responsive-dialog";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@repo/design-system/components/ui/tooltip";
 import { type ComponentProps, useState } from "react";
 import { useTranslations } from "use-intl";
 import { useQuestionActions } from "@/components/tenant/exams/actions";
@@ -211,23 +206,17 @@ function PageAction({
   onClick: () => void;
 }) {
   return (
-    <Tooltip>
-      <TooltipTrigger
-        render={
-          <Button
-            disabled={disabled}
-            onClick={onClick}
-            size="icon-sm"
-            tooltip={label}
-            type="button"
-            variant="ghost"
-          />
-        }
-      >
-        <HugeIcons aria-hidden="true" icon={icon} />
-      </TooltipTrigger>
-      <TooltipContent>{hint}</TooltipContent>
-    </Tooltip>
+    <Button
+      aria-label={label}
+      disabled={disabled}
+      onClick={onClick}
+      size="icon-sm"
+      tooltip={hint}
+      type="button"
+      variant="ghost"
+    >
+      <HugeIcons aria-hidden="true" icon={icon} />
+    </Button>
   );
 }
 
@@ -245,22 +234,16 @@ export function QuestionGrip({
 }) {
   const t = useTranslations("Exams");
   return (
-    <Tooltip>
-      <TooltipTrigger
-        render={
-          <Button
-            className="cursor-grab touch-none active:cursor-grabbing"
-            data-grip={questionId}
-            size="icon-sm"
-            tooltip={t("reorder-of", { number })}
-            type="button"
-            variant="ghost"
-          />
-        }
-      >
-        <HugeIcons aria-hidden="true" icon={DragDropVerticalIcon} />
-      </TooltipTrigger>
-      <TooltipContent>{t("reorder")}</TooltipContent>
-    </Tooltip>
+    <Button
+      aria-label={t("reorder-of", { number })}
+      className="cursor-grab touch-none active:cursor-grabbing"
+      data-grip={questionId}
+      size="icon-sm"
+      tooltip={t("reorder")}
+      type="button"
+      variant="ghost"
+    >
+      <HugeIcons aria-hidden="true" icon={DragDropVerticalIcon} />
+    </Button>
   );
 }

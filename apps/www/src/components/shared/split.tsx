@@ -2,11 +2,6 @@ import { ArrowDown01Icon } from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
 import { DropdownMenuTrigger } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@repo/design-system/components/ui/tooltip";
 import { useTranslations } from "use-intl";
 
 /**
@@ -18,23 +13,16 @@ export function SplitMenuTrigger() {
   const common = useTranslations("Common");
 
   return (
-    <Tooltip>
-      <TooltipTrigger
-        render={
-          <DropdownMenuTrigger
-            render={
-              <Button
-                size="icon"
-                tooltip={common("more-actions")}
-                variant="outline"
-              />
-            }
-          >
-            <HugeIcons aria-hidden="true" icon={ArrowDown01Icon} />
-          </DropdownMenuTrigger>
-        }
-      />
-      <TooltipContent side="bottom">{common("more-actions")}</TooltipContent>
-    </Tooltip>
+    <DropdownMenuTrigger
+      render={
+        <Button
+          size="icon"
+          tooltip={common("more-actions")}
+          variant="outline"
+        />
+      }
+    >
+      <HugeIcons aria-hidden="true" icon={ArrowDown01Icon} />
+    </DropdownMenuTrigger>
   );
 }
