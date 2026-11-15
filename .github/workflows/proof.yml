@@ -213,7 +213,9 @@ jobs:
           post verify "$verdict" "Gate, Chromium, Firefox and WebKit: $verdict"
 
   proof:
-    name: Proof ${{ matrix.engine }}
+    # A fixed name: GitHub appends the engine, Proof (chromium), and a job the event skips reads Proof instead of
+    # the unexpanded expression, as a pull request showed it (owner, 15 Nov 2026).
+    name: Proof
     if: github.event_name == 'merge_group' || inputs.proof
     runs-on: ubuntu-latest
     timeout-minutes: 350
