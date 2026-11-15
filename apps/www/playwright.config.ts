@@ -160,8 +160,13 @@ type ProjectShape = Omit<
  * Firefox on a machine without a GPU, such as a proof runner, blocks WebGL by
  * default, so a scene that needs WebGL2 would fall back there and nowhere else.
  * Every Firefox project forces it on, as Chromium and WebKit already render it.
+ *
+ * Headless Firefox on Linux finds no GL driver at all, forced or not, so the
+ * proof runs it with a window on a virtual display (PLAYWRIGHT_FIREFOX_HEADED),
+ * where Mesa draws WebGL on the CPU.
  */
 const FIREFOX_USE = {
+  headless: process.env.PLAYWRIGHT_FIREFOX_HEADED !== "1",
   launchOptions: { firefoxUserPrefs: { "webgl.force-enabled": true } },
 };
 
