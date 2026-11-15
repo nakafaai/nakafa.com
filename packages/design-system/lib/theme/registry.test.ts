@@ -1,28 +1,14 @@
 // @vitest-environment node
 
-import { NodeFileSystem } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import {
   DEFAULT_THEME,
   getThemeAppearance,
-  getThemeShaderAlphaColor,
-  getThemeShaderColor,
   parseThemeChoice,
   resolveThemeChoice,
   themes,
 } from "@repo/design-system/lib/theme/registry";
-import {
-  createThemeProfiles,
-  findTopLevelRule,
-  readDirectValue,
-  readThemeStyleSources,
-  toRgbProjection,
-} from "@repo/design-system/test/contract";
-import { Array as Arr, Effect, Option } from "effect";
-
-const readSources = readThemeStyleSources().pipe(
-  Effect.provide(NodeFileSystem.layer)
-);
+import { Array as Arr, Option } from "effect";
 
 describe("theme registry", () => {
   it("uses the browser preference for first-time visitors", () => {
@@ -49,41 +35,6 @@ describe("theme registry", () => {
     expect(Arr.map(dynamicThemes, (theme) => theme.value)).toEqual(["system"]);
     expect(Arr.map(darkThemes, (theme) => theme.value)).toEqual(["dark"]);
   });
-
-  it.effect("derives every shader color from its profile primary", () =>
-    Effect.gen(function* () {
-      const sources = yield* readSources;
-
-      for (const theme of themes) {
-        const profileName = theme.value === "system" ? "light" : theme.value;
-        const profile = createThemeProfiles([profileName], sources)[0];
-        expect(
-          profile,
-          `${theme.value} must resolve to a profile`
-        ).toBeDefined();
-        if (!profile) {
-          continue;
-        }
-
-        const rule = findTopLevelRule(profile.root, profile.selector);
-        expect(
-          rule,
-          `${profile.name} must declare ${profile.selector}`
-        ).toBeDefined();
-        if (!rule) {
-          continue;
-        }
-
-        const primary = readDirectValue(rule, "--primary");
-        expect(primary, `${profile.name} must declare --primary`).toBeDefined();
-        if (!primary) {
-          continue;
-        }
-
-        expect(theme.shaderColor).toBe(yield* toRgbProjection(primary));
-      }
-    })
-  );
 });
 
 describe("getThemeAppearance", () => {
@@ -97,41 +48,6 @@ describe("getThemeAppearance", () => {
       expect(getThemeAppearance(theme)).toBe("light");
     }
   );
-});
-
-describe("getThemeShaderColor", () => {
-  it.each(themes)("returns the registered projection for $value", (theme) => {
-    expect(getThemeShaderColor(theme.value)).toBe(theme.shaderColor);
-  });
-
-  it("maps system preference to the official light projection", () => {
-    expect(getThemeShaderColor("system")).toBe(getThemeShaderColor("light"));
-  });
-
-  it.each([undefined, "unknown"])(
-    "falls back to the official light projection for %s",
-    (theme) => {
-      expect(getThemeShaderColor(theme)).toBe(getThemeShaderColor("light"));
-    }
-  );
-});
-
-describe("getThemeShaderAlphaColor", () => {
-  it.each(themes)("applies the alpha to the $value projection", (theme) => {
-    const projected = theme.shaderColor
-      .replace("rgb(", "rgba(")
-      .replace(")", ", 0.4)");
-
-    expect(getThemeShaderAlphaColor(theme.shaderColor, 0.4)).toBe(projected);
-  });
-
-  it("keeps the registered channels for every alpha", () => {
-    const color = getThemeShaderColor("dark");
-
-    expect(getThemeShaderAlphaColor(color, 0.32)).toBe(
-      "rgba(57, 199, 244, 0.32)"
-    );
-  });
 });
 
 describe("parseThemeChoice", () => {

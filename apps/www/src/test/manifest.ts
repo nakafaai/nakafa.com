@@ -22,7 +22,6 @@ import {
 import { MaterialPreviewDocumentSchema } from "@nakafa/aksara-contracts/preview/document";
 import {
   LOCAL_PREVIEW_FORMAT,
-  PreviewFailedSchema,
   PreviewPendingSchema,
   PreviewReadySchema,
 } from "@nakafa/aksara-contracts/preview/spec";
@@ -33,12 +32,9 @@ import {
 } from "@nakafa/aksara-contracts/projection/material";
 import { Effect, Redacted, Schema } from "effect";
 import type { PreviewConfig } from "@/lib/content/preview/config";
-import type { MaterialPreviewInput } from "@/lib/content/preview/material";
 
 /** Test-only renderer hash distinct from the active Nakafa manifest. */
-export const previewManifestHash = Sha256HashSchema.make(
-  `sha256:${"a".repeat(64)}`
-);
+const previewManifestHash = Sha256HashSchema.make(`sha256:${"a".repeat(64)}`);
 /** Test-only identity for the generic signed-wire artifact fixture. */
 export const previewArtifactHash = Sha256HashSchema.make(
   `sha256:${"b".repeat(64)}`
@@ -47,10 +43,10 @@ const sourceHash = Sha256HashSchema.make(`sha256:${"c".repeat(64)}`);
 const configHash = Sha256HashSchema.make(`sha256:${"d".repeat(64)}`);
 
 /** Ephemeral key identity used only by local preview tests. */
-export const previewKeyId = SigningKeyIdSchema.make("local-preview");
+const previewKeyId = SigningKeyIdSchema.make("local-preview");
 
 /** Derives the exact graph identity for one real material lesson fixture. */
-export function makeMaterialGraph(
+function makeMaterialGraph(
   domain: string,
   topic: string,
   section: string,
@@ -219,15 +215,13 @@ export const previewSourcePath = CorpusSourcePathSchema.make(
 );
 
 /** Exact material document selected by every local preview test fixture. */
-export const previewDocument = Schema.decodeSync(MaterialPreviewDocumentSchema)(
-  {
-    delivery: "public",
-    family: "material",
-    rendererDomain: "mathematics",
-    route: previewRoute,
-    sourcePath: previewSourcePath,
-  }
-);
+const previewDocument = Schema.decodeSync(MaterialPreviewDocumentSchema)({
+  delivery: "public",
+  family: "material",
+  rendererDomain: "mathematics",
+  route: previewRoute,
+  sourcePath: previewSourcePath,
+});
 
 /** Complete loopback configuration with redacted test-only credentials. */
 export const previewConfig: PreviewConfig = {
@@ -239,20 +233,8 @@ export const previewConfig: PreviewConfig = {
   token: Redacted.make("test-token"),
 };
 
-/** Builds the real Function Concept route input for one physical registry. */
-export function makePreviewInput(): MaterialPreviewInput {
-  return {
-    params: {
-      lesson: ["function-concept"],
-      locale: previewRoute.appLocale,
-      subject: "mathematics",
-      topic: "function-composition-inverse-function",
-    },
-  };
-}
-
 /** Empty MDX source used only to exercise preview protocol wiring. */
-export const previewWireMdx = "";
+const previewWireMdx = "";
 
 /** Signed-wire sample that deliberately does not claim educational fidelity. */
 export const previewWireArtifact = SignedContentArtifactSchema.make({
@@ -281,13 +263,13 @@ export const previewWireArtifact = SignedContentArtifactSchema.make({
 });
 
 /** Exact Git evidence shape served by the test-only provider. */
-export const previewRepositories = {
+const previewRepositories = {
   aksara: { dirty: true, sha: GitCommitShaSchema.make("a".repeat(40)) },
   nakafa: { dirty: true, sha: GitCommitShaSchema.make("b".repeat(40)) },
 };
 
 /** Creates one ready manifest for a caller-provided renderer contract. */
-export function makeReadyManifest(rendererManifestHash: Sha256Hash) {
+function makeReadyManifest(rendererManifestHash: Sha256Hash) {
   const manifest = Schema.decodeSync(PreviewReadySchema)(
     {
       artifacts: [
@@ -318,22 +300,6 @@ export function makePendingManifest() {
       repositories: previewRepositories,
       revision: 1,
       status: "pending",
-    },
-    { onExcessProperty: "error" }
-  );
-  return { ...manifest, document: previewDocument };
-}
-
-/** Creates one sanitized compiler failure without an older artifact. */
-export function makeFailedManifest() {
-  const manifest = Schema.decodeSync(PreviewFailedSchema)(
-    {
-      document: makeReadyManifest(previewManifestHash).document,
-      failure: { code: "MDX_PARSE", message: "Compilation failed." },
-      format: LOCAL_PREVIEW_FORMAT,
-      repositories: previewRepositories,
-      revision: 1,
-      status: "failed",
     },
     { onExcessProperty: "error" }
   );

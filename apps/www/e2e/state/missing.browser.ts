@@ -9,13 +9,13 @@ import id from "@repo/internationalization/dictionaries/standalone/id.json" with
   type: "json",
 };
 import { Effect } from "effect";
-import { FIGURE_WIDTH } from "@/components/state/size";
 import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { waitForCommittedAppRouter } from "@/e2e/support/navigation/readiness";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import {
   expectState,
   expectThings,
+  FIGURE_WIDTH,
   giveRoom,
   holdWebFont,
 } from "@/e2e/support/state";

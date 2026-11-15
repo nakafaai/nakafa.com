@@ -6,6 +6,7 @@ import { isReservedUsername } from "@repo/backend/confect/users/reserved";
 import { readUsername } from "@repo/backend/confect/users/username";
 import { APPLICATION_ROUTE_ROOTS } from "@repo/contents/route/root";
 import { PUBLIC_ROUTE_SURFACES } from "@repo/contents/route/surface";
+import { SITE_ORIGIN } from "@repo/seo/origin";
 import {
   Array as Arr,
   Effect,
@@ -20,44 +21,63 @@ import {
   isApplicationRouteRoot,
   isReservedPagePath,
 } from "@/lib/ownership/route";
+import { routeRewrite } from "@/lib/routing/rewrite";
 
 /** The extension of a route file, which names no segment. */
 const ROUTE_FILE_EXTENSION = /\.tsx$/u;
+/** The locale that every sample address is written in, which the public path leaves out. */
+const LOCALE_PREFIX_PATTERN = /^\/en\/?/u;
 
 /**
- * The first path segment of a route file below the locale, as the router names it: pathless layouts (`_main`),
+ * The path segments of a route file below the locale, as the router names them: pathless layouts (`_main`),
  * index and layout files leave no segment, and a flat file name such as `verify.$hash` names its segments with dots.
  */
-function routeRootOf(file: string) {
-  return Arr.head(
-    Arr.filter(
-      Arr.flatMap(
-        Str.split(Str.replace(ROUTE_FILE_EXTENSION, "")(file), "/"),
-        Str.split(".")
-      ),
-      (segment) =>
-        !(
-          Str.startsWith("_")(segment) ||
-          segment === "index" ||
-          segment === "route"
-        )
-    )
+function routeSegmentsOf(file: string) {
+  return Arr.filter(
+    Arr.flatMap(
+      Str.split(Str.replace(ROUTE_FILE_EXTENSION, "")(file), "/"),
+      Str.split(".")
+    ),
+    (segment) =>
+      !(
+        Str.startsWith("_")(segment) ||
+        segment === "index" ||
+        segment === "route"
+      )
   );
 }
+
+/**
+ * The public address of one route below the locale: each parameter takes a
+ * sample value that a username, an id, a hash and a slug all accept, and the
+ * router's output rewrite writes it as the browser shows it.
+ */
+function addressOf(segments: readonly string[]) {
+  const sample = Arr.map(segments, (segment) =>
+    Str.startsWith("$")(segment) ? "nabil" : segment
+  );
+  const { pathname } = routeRewrite.output({
+    url: new URL(Arr.join(Arr.prepend(sample, "en"), "/"), SITE_ORIGIN),
+  });
+  return Str.replace(LOCALE_PREFIX_PATTERN, "")(pathname);
+}
+
+/** Reads every route file below the locale, by its path relative to the locale's folder. */
+const readRouteFiles = Effect.gen(function* () {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const files = yield* fs.readDirectory(path.resolve("src/routes/$locale"), {
+    recursive: true,
+  });
+  return Arr.filter(files, (file) => ROUTE_FILE_EXTENSION.test(file));
+});
 
 describe("public route ownership", () => {
   it.effect(
     "owns the first segment of every route below the locale, so no route answers as a missing page",
     () =>
       Effect.gen(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        const path = yield* Path.Path;
-        const files = yield* fs.readDirectory(
-          path.resolve("src/routes/$locale"),
-          {
-            recursive: true,
-          }
-        );
+        const files = yield* readRouteFiles;
         const owned = HashSet.union(
           APPLICATION_ROUTE_ROOTS,
           HashSet.fromIterable(
@@ -66,10 +86,7 @@ describe("public route ownership", () => {
         );
         const roots = Arr.dedupe(
           Arr.getSomes(
-            Arr.map(
-              Arr.filter(files, (file) => Str.endsWith(".tsx")(file)),
-              routeRootOf
-            )
+            Arr.map(files, (file) => Arr.head(routeSegmentsOf(file)))
           )
         );
         // A route parameter at the root, such as the authored pages' splat, owns no segment of its own.
@@ -78,6 +95,33 @@ describe("public route ownership", () => {
         expect(
           Arr.filter(named, (root) => !HashSet.has(owned, root)),
           "declare the root in @repo/contents/route/root"
+        ).toEqual([]);
+      }).pipe(Effect.provide(NodeServices.layer))
+  );
+
+  it.effect(
+    "accepts a page of every route that the router serves below the locale, so no route answers a hard 404",
+    () =>
+      Effect.gen(function* () {
+        const files = yield* readRouteFiles;
+        // A layout and an index name the same address, which is judged once.
+        const addresses = Arr.dedupe(
+          Arr.map(files, (file) => addressOf(routeSegmentsOf(file)))
+        );
+        // The locale's index, and the root splat that serves a signed Page, name no application root.
+        const served = Arr.filter(
+          addresses,
+          (address) => !(address === "" || address === "nabil")
+        );
+        expect(served).toEqual(
+          expect.arrayContaining(["agent", "verify/nabil", "@nabil/chat"])
+        );
+        expect(
+          Arr.filter(
+            served,
+            (address) => !isApplicationRoutePath("en", address)
+          ),
+          "give the route's root a rule in ROOT_RULES"
         ).toEqual([]);
       }).pipe(Effect.provide(NodeServices.layer))
   );

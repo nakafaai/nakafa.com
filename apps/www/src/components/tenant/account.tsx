@@ -14,13 +14,12 @@ import {
   DropdownMenuSubTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { useSidebar } from "@repo/design-system/lib/sidebar/context";
-import { languages } from "@repo/internationalization/data/lang";
 import { SITE_ORIGIN } from "@repo/seo/origin";
 import { useRouter } from "@tanstack/react-router";
-import { Array as Arr, Effect, Option } from "effect";
+import { Effect, Option } from "effect";
 import { startTransition } from "react";
 import { useLocale, useTranslations } from "use-intl";
-import { ActiveBadge } from "@/components/shared/active";
+import { LanguageItems } from "@/components/shared/language";
 import {
   CommunityMenuItem,
   LearnMoreSubmenu,
@@ -144,7 +143,6 @@ export function TenantAccountItems({
  */
 function TenantLanguageSubmenu() {
   const t = useTranslations("Common");
-  const locale = useLocale();
   const router = useRouter();
   const side = useSidebar(selectMenuSide);
 
@@ -158,16 +156,7 @@ function TenantLanguageSubmenu() {
         label={t("menu-language")}
         side={side}
       >
-        {Arr.map(languages, (language) => (
-          <DropdownMenuItem
-            icon={TranslateIcon}
-            key={language.value}
-            onClick={() => changeLanguage(language.value, router)}
-          >
-            <span className="truncate">{language.label}</span>
-            <ActiveBadge isActive={locale === language.value} />
-          </DropdownMenuItem>
-        ))}
+        <LanguageItems onPick={(next) => changeLanguage(next, router)} />
       </DropdownMenuSubContent>
     </DropdownMenuSub>
   );

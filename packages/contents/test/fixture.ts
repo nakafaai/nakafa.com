@@ -5,13 +5,16 @@ import { createNakafaContentRefFromGraphProjection } from "@repo/contents/agent/
 import type {
   NakafaAgentContentRef,
   NakafaAgentReadableContentRef,
-  NakafaAgentSection,
+  NakafaAgentSectionSchema,
 } from "@repo/contents/agent/schema/ref";
 import { NakafaAgentReadableContentRefSchema } from "@repo/contents/agent/schema/ref";
 import type { Locale } from "@repo/contents/content";
 import { Effect, Option, Schema } from "effect";
 
-type ReadableAgentSection = Exclude<NakafaAgentSection, "tryout">;
+type ReadableAgentSection = Exclude<
+  typeof NakafaAgentSectionSchema.Type,
+  "tryout"
+>;
 
 /** Reads a trusted graph content reference for tests and static fixtures. */
 export function readNakafaContentRefFixture(
@@ -22,12 +25,12 @@ export function readNakafaContentRefFixture(
 export function readNakafaContentRefFixture(
   locale: Locale,
   route: string,
-  section: NakafaAgentSection
+  section: typeof NakafaAgentSectionSchema.Type
 ): NakafaAgentContentRef;
 export function readNakafaContentRefFixture(
   locale: Locale,
   route: string,
-  section: NakafaAgentSection
+  section: typeof NakafaAgentSectionSchema.Type
 ): NakafaAgentContentRef {
   const routeSegments = route.split("/");
   const identity = Effect.runSync(

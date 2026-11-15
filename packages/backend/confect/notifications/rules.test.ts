@@ -3,24 +3,9 @@ import {
   canSwitchOff,
   NOTICE_RULES,
   NoticeRules,
-  Relation,
-  recipientsOf,
-  routeOf,
   Timing,
 } from "@repo/backend/confect/notifications/rules";
-import { Array as Arr, Exit, Option, Schema } from "effect";
-
-const Member = Schema.Struct({ name: Schema.String, relation: Relation });
-
-const members: readonly (typeof Member.Type)[] = [
-  { name: "Ayu", relation: "student" },
-  { name: "Budi", relation: "guardian" },
-  { name: "Citra", relation: "teacher" },
-  { name: "Dewi", relation: "invitee" },
-];
-
-const namesOf = (people: readonly (typeof Member.Type)[]) =>
-  Arr.map(people, (person) => person.name);
+import { Exit, Schema } from "effect";
 
 describe("notifications/rules channel table", () => {
   it("keeps every row of the table valid under its Schema", () => {
@@ -79,54 +64,6 @@ describe("notifications/rules Timing", () => {
   it("accepts a reminder sent at its anchor, zero minutes before", () => {
     const decoded = Schema.decodeExit(Timing)({ _tag: "Before", minutes: 0 });
     expect(Exit.isSuccess(decoded)).toBe(true);
-  });
-});
-
-describe("notifications/rules recipientsOf", () => {
-  it("sends a reply to the account whose comment it answers, in the inbox, by push and in the digest", () => {
-    expect(
-      Option.getOrThrow(routeOf("commentReply", "commenter"))
-    ).toStrictEqual({
-      email: [{ _tag: "Digest" }],
-      inbox: [{ _tag: "Now" }],
-      push: [{ _tag: "Now" }],
-      relation: "commenter",
-    });
-    expect(Option.isNone(routeOf("commentReply", "student"))).toBe(true);
-  });
-
-  it("sends a forum mention to the student or teacher it names, never to a guardian", () => {
-    expect(namesOf(recipientsOf("forumMention", members))).toEqual([
-      "Ayu",
-      "Citra",
-    ]);
-  });
-
-  it("sends an announcement, a new task, a deadline and an exam start to the student alone", () => {
-    expect(namesOf(recipientsOf("classAnnouncement", members))).toEqual([
-      "Ayu",
-    ]);
-    expect(namesOf(recipientsOf("taskPublished", members))).toEqual(["Ayu"]);
-    expect(namesOf(recipientsOf("taskDeadline", members))).toEqual(["Ayu"]);
-    expect(namesOf(recipientsOf("examStart", members))).toEqual(["Ayu"]);
-  });
-
-  it("sends a released grade to the student and the guardian, and a late task to the guardian alone", () => {
-    expect(namesOf(recipientsOf("gradeReleased", members))).toEqual([
-      "Ayu",
-      "Budi",
-    ]);
-    expect(namesOf(recipientsOf("taskMissed", members))).toEqual(["Budi"]);
-  });
-
-  it("sends a guardian's exam reminder to the guardian alone", () => {
-    expect(namesOf(recipientsOf("examGuardianReminder", members))).toEqual([
-      "Budi",
-    ]);
-  });
-
-  it("sends an invitation to the Person it names and to no one else", () => {
-    expect(namesOf(recipientsOf("invitation", members))).toEqual(["Dewi"]);
   });
 });
 

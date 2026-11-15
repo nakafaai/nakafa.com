@@ -87,16 +87,6 @@ export function creditsCharged(
   return Math.min(hold, creditsForCost(cost));
 }
 
-/** The shared daily budget of free answers: 5% of last month's net product revenue, divided by 30, in credits. */
-const FREE_BUDGET_SHARE = 0.05;
-
-/** Free credits shared by every free account on one day, from last month's net product revenue in dollars. */
-export function freeDailyBudgetCredits(lastMonthNetRevenueUsd: number): number {
-  return Math.floor(
-    (FREE_BUDGET_SHARE * lastMonthNetRevenueUsd) / 30 / CREDIT_UNIT_USD
-  );
-}
-
 /** Credits one top-up pack grants, bought as one Polar order. */
 export const TOP_UP_PACK_CREDITS = 1000;
 
