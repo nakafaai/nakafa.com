@@ -133,3 +133,40 @@ Twenty concurrent jobs, four per verification and four kept in reserve, give fou
 ## Amendment: A Batch That Changes Nothing The Product Runs Proves One Spec, 15 November 2026
 
 A combination whose pull requests name no spec proved every suite, even when they changed only the landing scripts, a workflow or the docs, which the gate already checks. The first step of selecting specs from the change (amendment "The Landing Queue", point 8): a pull request changes what the product runs when it changes a file under `apps` or `packages` outside the browser specs and Markdown. A combination that names no spec proves every suite when one of its pull requests changes what the product runs, and only `e2e/quran/landing.browser.ts` when none does: a fast page that passed in all three engines on main (run 43699251319).
+
+## Amendment: Stacks Stay Linear, And GitHub's Merge Queue Lands Them, 15 November 2026
+
+Almost every pull request in this repository sits in a GitHub stack, and the day's landing failures all came from one cause: branches took main by a merge commit. #2552's head moved after its proof, the chain of #2554 to #2556 broke when main was merged into each member alone, #2556 could not be replayed and kept a duplicated block, and #2557 and #2560 grew to work around histories GitHub cannot rebase. GitHub's stacked pull request documentation, read in full on 15 November (every claim, its page and a quote are in the takeover tracker's `ops/research/stacks.md` and `references.md`), says why:
+
+- A stack merges only with "a linear history between its branches"; history is lost "when the trunk moves ahead", and the merge box then offers "Rebase stack".
+- Main enters a stack by cascading rebase only: `gh stack rebase`, `gh stack sync`, or the server-side "Rebase stack". No page supports merging main into a stack branch.
+- When the bottom merges, "the remaining branches are automatically rebased" onto the base, so their heads change.
+- `merge-async` is "the required API for merging stacked pull requests"; on a member it takes "all open downstack PRs", atomically. "Stacks support all three merge methods."
+- "Stacks fully support merge queues": members are queued in order, an ejected member takes those above it out, and a merge group may grow by "up to 50 percent" to keep a stack whole.
+- GitHub's merge queue tests each group "with the latest version of the base_branch" plus the pull requests ahead, and "does not require a pull request author to update their pull request branch". It is available in any public repository owned by an organization, at no cost.
+
+The amendment "The Landing Queue" rejected GitHub's merge queue partly because "its documentation does not cover stacked pull requests". That was wrong, and with it the case for building our own queue falls.
+
+### Decision
+
+1. **A stack takes main by rebase, never by a merge commit.** `gh stack rebase` (or `gh stack sync`) and a push; a stack that already holds merges is rebuilt once as one linear commit per member, each tree proven equal to the tree it is meant to carry (`git merge-tree --write-tree`, `git rev-parse <commit>^{tree}`). A single pull request on main follows the same rule. A branch is updated only when `git merge-tree` against main reports a conflict, never because main moved.
+2. **"Proven" means the same tree.** A member GitHub rebased carries a new SHA but, when nothing else landed, the tree that was verified; whatever checks a head compares trees, in one way, not one patch per case.
+3. **A verified stack lands from its top in one step.** One `merge-async` on the topmost member to land (squash), or the merge queue taking the stack in order. Never member by member.
+4. **Stack only what depends on an open pull request, at most five deep, and never as a tree.** A stack is one chain; work that branches waits until the shared base lands, then stacks on main. Longer work lands its bottom five first. The island stack (38 deep) and the tree under #2338 are cut into chains of five.
+5. **GitHub's merge queue replaces the train.** The queue already does what the train was growing into: it admits a pull request on its own required check, tests each group on main plus the groups ahead (speculative pipelining by build concurrency), removes a failing pull request and rebuilds the rest, keeps stacks whole, and runs without a session. Settings: squash; group size at most 5; build concurrency 3 (four jobs per group, within the account's 20 with room for pull request gates and Aksara); "Only merge non-failing pull requests" on.
+6. **One required check, two depths.** `proof.yml` runs on `pull_request` and `merge_group` and reports one check: on a pull request the gate; on a merge group the gate and the three engines over the specs the group changes (a group that changes nothing the product runs proves the smoke spec). The ruleset on main requires the merge queue and that check.
+7. **Deleted with the switch.** The train's batching, splitting, flake rerun, landing and deploy dispatch (`scripts/landing`), its schedule (#2558) and the rebuilt-merge workaround (#2560) go in the change that turns the queue on; nothing keeps a second path. `freshen` (#2559) is not landed: it merged main into stack branches.
+8. **Until the switch** the train still lands single pull requests and linear stacks, a stack from its top, and admits a head on its own gate and a clean `git merge-tree` against main, without a fresh gate after every landing.
+
+### Build or buy, for stacks
+
+| | GitHub merge queue | Mergify | Trunk | The train |
+| --- | --- | --- | --- | --- |
+| Native GitHub stacks | "Stacks fully support merge queues" | yes, "Maximum stack depth: 20" | public preview (vendors.md) | yes, with workarounds for merges in branches |
+| Speculative groups | build concurrency 1 to 100 | "Up to 128" parallel checks | parallel mode | to build |
+| Up-to-date branches required | no | not stated | not stated | yes, since #2551 |
+| Cost for this public repository | free | free for open source | not published | free |
+| Code and services we maintain | one workflow trigger, one ruleset | a vendor app, a config, a ruleset bypass | a vendor app | `scripts/landing` |
+
+GitHub's queue is the platform's own, documented for stacks, free here, and leaves the least code to maintain. Mergify would cap stacks at 20 and add a vendor; Trunk's terms for a public repository are not published.
+
