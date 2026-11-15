@@ -133,10 +133,10 @@ const TIPTAP_DECLARATIONS: readonly (readonly [string, readonly string[]])[] = [
   ],
 ];
 /**
- * Confect moves with the Effect cohort: 10.5.0 admits only effect ~4.1.0. The
+ * Confect moves with the Effect cohort: 10.6.0 admits only effect ~4.1.0. The
  * catalog holds `@confect/core`, and each manifest pins the rest exactly.
  */
-const CONFECT_COHORT_VERSION = "10.5.0";
+const CONFECT_COHORT_VERSION = "10.6.0";
 /** The Confect packages each manifest pins: the web app's client and the backend's server, CLI and tests. */
 const CONFECT_DECLARATIONS: readonly (readonly [string, readonly string[]])[] =
   [
@@ -178,7 +178,7 @@ function exactCohortHolds(
  * backend's step folding share: Bun kept the packages' nested copies when the backend
  * moved (transform 1.12.2 at 1.12.4, model 1.25.12 at 1.25.13), and a node or step made
  * by one copy fails `instanceof` checks against the other. `convex-helpers`
- * 0.1.133 keeps one copy for every Convex component: @convex-dev/aggregate 0.3.4 pins
+ * 0.1.135 keeps one copy for every Convex component: @convex-dev/aggregate 0.3.4 pins
  * 0.1.128 exactly, the Agent and Workflow peers need ^0.1.127, and the Workpool peer
  * needs ^0.1.94, so one copy satisfies every range. `lodash` 4.18.1 replaces the
  * 4.17.21 that chevrotain 10.5.0 pins exactly, which GHSA-f23m-r3pf-42rh,
@@ -226,6 +226,11 @@ export const DEPENDENCY_HOLDS: readonly DependencyHold[] = [
     minimumDeclarations: 1,
   },
   { approved: "catalog:", dependency: "@vitest/ui", minimumDeclarations: 1 },
+  {
+    approved: "0.0.70",
+    dependency: "convex-test",
+    minimumDeclarations: 1,
+  },
   {
     approved: "0.67.5",
     dependency: "@effect/tsgo",
