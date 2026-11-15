@@ -1,13 +1,17 @@
 import { Array as Arr, HashMap, Option, Result, String as Str } from "effect";
 import {
   isArrowFunction,
+  isBlock,
   isCallExpression,
   isFunctionDeclaration,
   isFunctionExpression,
   isIdentifier,
   isImportDeclaration,
+  isMethodDeclaration,
   isNamedImports,
+  isParenthesizedExpression,
   isPropertyAccessExpression,
+  isReturnStatement,
   isStringLiteral,
   isVariableStatement,
   type Node,
@@ -16,6 +20,7 @@ import {
 } from "tsrs/ast";
 import { nodesBelow } from "#scripts/check/drilling";
 import { judgesMarkup } from "#scripts/check/jsx";
+import { children } from "#scripts/check/source";
 
 /** A parsed module, by its repository path. */
 interface Module {
@@ -175,6 +180,43 @@ function lazyNames(module: Module) {
           });
         })
       : []
+  );
+}
+
+/** What a function returns, its own returns only: a function written inside it returns for itself. */
+function returnsOf(node: Node): readonly Node[] {
+  return Arr.flatMap(children(node), (child) => {
+    if (
+      isArrowFunction(child) ||
+      isFunctionExpression(child) ||
+      isFunctionDeclaration(child) ||
+      isMethodDeclaration(child)
+    ) {
+      return [];
+    }
+    if (isReturnStatement(child)) {
+      return child.expression === undefined ? [] : [child.expression];
+    }
+    return returnsOf(child);
+  });
+}
+
+/** The elements a component renders at its root: what it returns, out of parentheses, `null` left out. */
+export function rootsOf(component: Component) {
+  const { body } = component;
+  const returned =
+    (isArrowFunction(body) ||
+      isFunctionExpression(body) ||
+      isFunctionDeclaration(body)) &&
+    body.body !== undefined &&
+    !isBlock(body.body)
+      ? [body.body]
+      : returnsOf(body);
+  return Arr.filter(
+    Arr.map(returned, (node) =>
+      isParenthesizedExpression(node) ? node.expression : node
+    ),
+    (node) => node.kind !== SyntaxKind.NullKeyword
   );
 }
 
