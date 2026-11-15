@@ -37,6 +37,9 @@ type CatalogSet = Extract<CatalogRow, { readonly kind: "set" }>;
 /** The app locales every fixture row is written in. */
 const FIXTURE_LOCALES: readonly AppLocaleCode[] = ["id", "en", "de"];
 
+/** The locales the fixture catalog serves, in contract order. */
+const FIXTURE_APP_LOCALES = ["en", "id", "de"] as const;
+
 /** The source revision of every fixture catalog row: an authored date, as the contract keeps a catalog revision. */
 export const FIXTURE_REVISION = "2026-10-02";
 
@@ -47,7 +50,7 @@ export const FIXTURE_TRACK = {
   trackKey: "2027",
 };
 
-const LOCALIZED = { de: "Prüfung", en: "Exam", id: "Ujian" };
+const LOCALIZED = { de: "Prüfung", en: "Exam", id: "Ujian", ms: "Peperiksaan" };
 
 /** One paragraph of text, the label or body of a fixture document. */
 const paragraph = (text: string) => ({
@@ -281,9 +284,15 @@ export const makeAssessmentSnapshot = Effect.fn(
           id: `test-paper-${setKey}`,
           profile: { hash: profileHash, id: profile.id },
           sections: Arr.map(sections, (section) => ({
+            languages: ["id"],
             placements: Arr.map(
               Arr.filter(items, (item) => item.section === section.id),
-              ({ version }) => ({ family: version.family, hash: version.hash })
+              ({ version }) => ({
+                family: version.family,
+                versions: [
+                  { hash: version.hash, language: version.deliveryLanguage },
+                ],
+              })
             ),
             section: section.id,
           })),
@@ -354,6 +363,8 @@ function makeCatalog(
 ): CatalogRow[] {
   const base = {
     appLocale,
+    // The fixture's sets are not written in Malay, so no node of its catalog serves it.
+    appLocales: FIXTURE_APP_LOCALES,
     // Aksara writes the commit of the source tree, which the web links to.
     sourceRevision: FIXTURE_REVISION,
     title: "Try-out",

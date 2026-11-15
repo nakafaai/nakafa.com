@@ -66,7 +66,7 @@ export const testArticleProjection = makeTestArticleProjection();
 
 /** Builds one localized route counterpart for the stable test article. */
 function makeTestArticleCounterpart(
-  appLocale: "de" | "en" | "id",
+  appLocale: "de" | "en" | "id" | "ms",
   categoryRouteSlugValue: string,
   articleRouteSlugValue: string
 ) {
@@ -98,6 +98,11 @@ export const testArticleDeProjection = makeTestArticleCounterpart(
   "de",
   "politik",
   "turbulenzen-vor-regionalwahlen"
+);
+export const testArticleMsProjection = makeTestArticleCounterpart(
+  "ms",
+  "politik",
+  "kemelut-pilkada-2024"
 );
 
 /** Source path corresponding exactly to the technical article fixture. */

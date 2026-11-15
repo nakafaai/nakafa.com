@@ -78,6 +78,17 @@ const quranLocaleContracts = {
     ],
     translationNotesLabel: "Catatan terjemahan",
   },
+  ms: {
+    bibliographyLabel: "Bibliografi",
+    hasEmbeddedTafsir: false,
+    hasTranslationNotes: true,
+    locale: "ms",
+    meanings: [
+      { locale: "ms", text: "Lembu Betina" },
+      { locale: "en", text: "The Cow" },
+    ],
+    translationNotesLabel: "Nota terjemahan",
+  },
 } satisfies QuranLocaleContracts;
 type QuranLocaleCase = (typeof quranLocaleContracts)[ActiveAppLocaleCode];
 

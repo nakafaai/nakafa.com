@@ -8,6 +8,7 @@ import {
 import {
   testArticleDeProjection,
   testArticleIdProjection,
+  testArticleMsProjection,
   testArticleProjection,
 } from "@/test/published/article";
 
@@ -21,6 +22,7 @@ describe("createLocalizedAlternates", () => {
         de: "/de/articles/politics/example",
         en: "/en/articles/politics/example",
         id: "/id/articles/politics/example",
+        ms: "/ms/articles/politics/example",
         "x-default": "/en/articles/politics/example",
       },
     });
@@ -35,6 +37,7 @@ describe("createLocalizedAlternates", () => {
         de: "/de/articles/politics/example",
         en: "/en/articles/politics/example",
         id: "/id/articles/politics/example",
+        ms: "/ms/articles/politics/example",
         "x-default": "/en/articles/politics/example",
       },
     });
@@ -49,6 +52,7 @@ describe("createLocalizedAlternates", () => {
         de: "/de",
         en: "/en",
         id: "/id",
+        ms: "/ms",
         "x-default": "/en",
       },
     });
@@ -63,6 +67,7 @@ describe("createLocalizedAlternates", () => {
         de: "/de/privacy-policy",
         en: "/en/privacy-policy",
         id: "/id/privacy-policy",
+        ms: "/ms/privacy-policy",
         "x-default": "/en/privacy-policy",
       },
     });
@@ -77,6 +82,7 @@ describe("createLocalizedAlternates", () => {
         de: "/de/robots.txt",
         en: "/en/robots.txt",
         id: "/id/robots.txt",
+        ms: "/ms/robots.txt",
         "x-default": "/en/robots.txt",
       },
     });
@@ -139,11 +145,13 @@ describe("createLocalizedAlternates", () => {
       testArticleProjection,
       testArticleIdProjection,
       testArticleDeProjection,
+      testArticleMsProjection,
     ];
     const expectedLanguages = {
       de: `/${testArticleDeProjection.appLocale}/${testArticleDeProjection.publicPath}`,
       en: `/${testArticleProjection.appLocale}/${testArticleProjection.publicPath}`,
       id: `/${testArticleIdProjection.appLocale}/${testArticleIdProjection.publicPath}`,
+      ms: `/${testArticleMsProjection.appLocale}/${testArticleMsProjection.publicPath}`,
       "x-default": `/${testArticleProjection.appLocale}/${testArticleProjection.publicPath}`,
     };
 
@@ -152,17 +160,5 @@ describe("createLocalizedAlternates", () => {
         createResolvedRouteAlternates(counterpart, counterparts).languages
       ).toEqual(expectedLanguages);
     }
-  });
-
-  it("names no alternate for a counterpart in a locale Nakafa does not serve yet", () => {
-    expect(
-      createResolvedRouteAlternates(testArticleProjection, [
-        testArticleProjection,
-        { appLocale: "ms", publicPath: testArticleProjection.publicPath },
-      ]).languages
-    ).toEqual({
-      en: `/${testArticleProjection.appLocale}/${testArticleProjection.publicPath}`,
-      "x-default": `/${testArticleProjection.appLocale}/${testArticleProjection.publicPath}`,
-    });
   });
 });

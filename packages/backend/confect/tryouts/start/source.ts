@@ -64,7 +64,10 @@ export const loadTryoutStartSource = Effect.fn(
   const paper = yield* readPaper(active.snapshotId, set.paper);
   const profile = yield* readProfile(active.snapshotId, paper.paper.profile);
   const items = yield* Effect.forEach(
-    Arr.flatMap(paper.paper.sections, ({ placements }) => placements),
+    // A learner starts each place in its section's first language.
+    Arr.flatMap(paper.paper.sections, ({ placements }) =>
+      Arr.map(placements, ({ versions }) => Arr.headNonEmpty(versions))
+    ),
     ({ hash }) =>
       Effect.all({ key: readItemKey(hash), version: readItemVersion(hash) })
   );

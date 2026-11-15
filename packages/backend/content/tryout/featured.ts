@@ -62,7 +62,11 @@ export const readFeaturedTryout = Effect.fn("tryouts.catalog.readFeatured")(
         paper.sections,
         ({ section }) => section === target.sectionKey
       ),
-      ({ placements }) => Arr.head(placements)
+      // The featured question shows its section's first language.
+      ({ placements }) =>
+        Option.map(Arr.head(placements), ({ versions }) =>
+          Arr.headNonEmpty(versions)
+        )
     );
     if (Option.isNone(place)) {
       return yield* missingFeatured("question");

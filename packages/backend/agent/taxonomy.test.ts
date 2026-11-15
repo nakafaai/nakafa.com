@@ -142,7 +142,7 @@ describe("agent/taxonomy", () => {
       );
     })
   );
-  it.effect.each([undefined, "en", "id", "de"] satisfies (
+  it.effect.each([undefined, "en", "id", "de", "ms"] satisfies (
     | ActiveAppLocaleCode
     | undefined
   )[])(
@@ -180,6 +180,10 @@ describe("agent/taxonomy", () => {
                   count: 123,
                   locale: "de",
                 },
+                {
+                  count: 123,
+                  locale: "ms",
+                },
               ],
               default_locale: "en",
               locale: locale ?? "en",
@@ -210,7 +214,7 @@ describe("agent/taxonomy", () => {
               ),
               ([, args]) => args
             );
-            expect(taxonomyLocales).toHaveLength(3);
+            expect(taxonomyLocales).toHaveLength(4);
             expect(taxonomyLocales).toContainEqual({
               appLocale: locale ?? "en",
             });

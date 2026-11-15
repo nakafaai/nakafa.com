@@ -105,6 +105,7 @@ describe("section Quran passages", () => {
       ["en", "quran/1", "quran"],
       ["id", "quran/1", "quran"],
       ["de", "quran/1", "quran"],
+      ["ms", "quran/1", "quran"],
     ]);
     expect(
       Arr.map(
@@ -119,6 +120,8 @@ describe("section Quran passages", () => {
       "id verse-7 1/2",
       "de verse-1 0/2",
       "de verse-7 1/2",
+      "ms verse-1 0/2",
+      "ms verse-7 1/2",
     ]);
     const indonesian = Option.getOrThrow(
       Arr.findFirst(result.documents, ({ appLocale }) => appLocale === "id")
@@ -305,7 +308,7 @@ describe("section build of the Quran", () => {
       position: { missing: 0, phase: "quran", surah: 2 },
       releaseId: TEST_RELEASE_ID,
     });
-    const passages = (verses / chunk) * 3;
+    const passages = (verses / chunk) * 4;
     expect(result).toMatchObject({
       embedded: passages,
       next: {
@@ -317,7 +320,7 @@ describe("section build of the Quran", () => {
     });
     expect(model.doEmbedCalls).toHaveLength(passages);
     expect(await rows()).toHaveLength(passages);
-    expect(await sources()).toHaveLength(3);
+    expect(await sources()).toHaveLength(4);
   });
 
   it("builds the active release when a manual start names no release", async () => {
@@ -394,17 +397,17 @@ describe("section build of the Quran", () => {
       position: { missing: 0, phase: "quran", surah: 1 },
       releaseId: TEST_RELEASE_ID,
     });
-    // Surah 1 has six sections, and the model refuses every one of them.
+    // Surah 1 has eight sections, and the model refuses every one of them.
     assert.ok(first.next, "Expected the next surah.");
     expect(first.next.position).toEqual({
-      missing: 6,
+      missing: 8,
       phase: "quran",
       surah: 2,
     });
     const second = await run(first.next);
-    // Surah 2 has three sections, which the model refuses too, so the count goes on.
+    // Surah 2 has four sections, which the model refuses too, so the count goes on.
     expect(second.next?.position).toEqual({
-      missing: 9,
+      missing: 12,
       phase: "quran",
       surah: 3,
     });

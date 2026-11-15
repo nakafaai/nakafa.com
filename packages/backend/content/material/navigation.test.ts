@@ -98,7 +98,7 @@ describe("material navigation reuse", () => {
         )
       );
       // The lesson names its body's head; the artifact is read by its hash apart.
-      expect(current.metrics.databaseQueries.used).toBe(11);
+      expect(current.metrics.databaseQueries.used).toBe(14);
       expect(group.metrics.databaseQueries.used).toBe(3 + 2 * siblingCount);
       const other = await target.query(api.contentRelease.material.lesson, {
         appLocale: "en",

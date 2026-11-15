@@ -249,7 +249,7 @@ export const PROMPT_CASES: readonly McpCase[] = [
           error: {
             code: -32_602,
             message:
-              'Invalid arguments for prompt nakafa_quran_reference: Expected "en" | "id" | "de"\n  at ["locale"]',
+              'Invalid arguments for prompt nakafa_quran_reference: Expected "en" | "id" | "de" | "ms"\n  at ["locale"]',
           },
         },
       },

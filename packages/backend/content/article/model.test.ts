@@ -39,6 +39,11 @@ const localizedRoutes = [
     article: "artikel-route",
     category: "politik",
   },
+  {
+    appLocale: "ms",
+    article: "laluan-artikel",
+    category: "politik",
+  },
 ] as const;
 
 /** Builds one locale-owned route for a shared source article identity. */
@@ -213,7 +218,7 @@ describe("contentRelease/article/model", () => {
             }
           );
           expect(result).toMatchObject({
-            activeAppLocales: ["en", "id", "de"],
+            activeAppLocales: ["en", "id", "de", "ms"],
             activeReleaseId: expect.any(String),
           });
           expect(decodeProjection(result.projectionJson ?? "")).toEqual(
@@ -232,6 +237,10 @@ describe("contentRelease/article/model", () => {
               {
                 appLocale: "de",
                 publicPath: localizedArticle(2).publicPath,
+              },
+              {
+                appLocale: "ms",
+                publicPath: localizedArticle(3).publicPath,
               },
             ]
           );

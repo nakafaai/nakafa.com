@@ -43,6 +43,7 @@ describe("page head", () => {
       { hreflang: "en", href: "https://nakafa.com/en/subjects/aljabar" },
       { hreflang: "id", href: "https://nakafa.com/id/materi/aljabar" },
       { hreflang: "de", href: "https://nakafa.com/de/faecher/aljabar" },
+      { hreflang: "ms", href: "https://nakafa.com/ms/subjek/aljabar" },
       { hreflang: "x-default", href: "https://nakafa.com/en/subjects/aljabar" },
     ]);
   });
@@ -153,7 +154,13 @@ describe("router head", () => {
     });
     expect(
       Arr.map(Arr.drop(routed.links, 1), (link) => link.rel)
-    ).toStrictEqual(["alternate", "alternate", "alternate", "alternate"]);
+    ).toStrictEqual([
+      "alternate",
+      "alternate",
+      "alternate",
+      "alternate",
+      "alternate",
+    ]);
     expect(Arr.take(routed.meta, 3)).toStrictEqual([
       { title: "Aljabar Dasar - Matematika - Nakafa" },
       { content: "Pengantar aljabar dasar.", name: "description" },

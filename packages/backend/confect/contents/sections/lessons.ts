@@ -14,8 +14,7 @@ import type {
   lessonValidator,
 } from "@repo/backend/confect/contents/sections/schema";
 import { holdsVersion } from "@repo/backend/confect/contents/sections/source";
-import { localeValidator } from "@repo/backend/confect/lib/validators/contents";
-import { Array as Arr, Effect, Option, Schema } from "effect";
+import { Array as Arr, Effect, Option } from "effect";
 
 type SearchOwner = NonNullable<
   Effect.Success<ReturnType<typeof loadSearchOwner>>
@@ -33,11 +32,7 @@ const readLesson = Effect.fn("contents.sections.readLesson")(function* (
   row: Docs["contentIndex"],
   owner: SearchOwner
 ) {
-  // Sections answer search in the locales Nakafa serves, so a lesson of a declared locale it does not serve yet is passed over until it is.
   const { appLocale } = row;
-  if (!Schema.is(localeValidator)(appLocale)) {
-    return Option.none<typeof lessonValidator.Type>();
-  }
   const resolved = yield* resolveSearchProjection(row, owner);
   if (!resolved.artifactHash) {
     return yield* releaseFail(

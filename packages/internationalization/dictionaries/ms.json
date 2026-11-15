@@ -3187,7 +3187,7 @@
     },
     "failure-attachment-size": {
       "title": "Dokumen terlalu besar.",
-      "description": "Jumlah dokumen dalam satu mesej paling banyak {size, number} MiB."
+      "description": "Jumlah dokumen dalam satu mesej paling banyak {size, number} MiB."
     },
     "failure-authentication": {
       "title": "Sesi kamu tidak dapat disahkan.",
@@ -3821,7 +3821,7 @@
       "type": "Bukan fail yang disokong",
       "empty": "Fail kosong",
       "size": "Melebihi had saiz",
-      "count": "Melebihi had {count, number} fail"
+      "count": "Melebihi had {count, number} fail"
     },
     "ask-nina": "Tanya Nina",
     "text-placeholder": "Tanya Nina apa sahaja...",

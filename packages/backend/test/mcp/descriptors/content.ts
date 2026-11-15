@@ -31,7 +31,7 @@ export const NAKAFA_GET_CONTENT_TOOL = {
           lensId: { type: "string" },
           locale: {
             type: "string",
-            enum: ["en", "id", "de"],
+            enum: ["en", "id", "de", "ms"],
             description: "Locale of the referenced content.",
           },
           route: { type: "string" },

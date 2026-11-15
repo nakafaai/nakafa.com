@@ -114,6 +114,7 @@ describe("generateFallbackMetadata", () => {
               de: "Die Eröffnende",
               en: "The Opening",
               id: "Pembuka",
+              ms: "Pembukaan",
             },
             transliteration: "Al-Fatihah",
           },

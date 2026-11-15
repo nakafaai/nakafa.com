@@ -81,6 +81,11 @@ export const testPublishedProgram = LearningProgramSchema.make({
       publicSlug: "merdeka",
       title: "Kurikulum Merdeka",
     },
+    {
+      appLocale: AppLocaleSchema.make("ms"),
+      publicSlug: "merdeka",
+      title: "Kurikulum Merdeka",
+    },
   ],
   version: { label: "Indonesia" },
 });
@@ -224,6 +229,29 @@ const germanSubject = CurriculumRouteSchema.make({
   title: "Mathematik",
 });
 
+const malayRoot = CurriculumRouteSchema.make({
+  ...englishRoot,
+  appLocale: AppLocaleSchema.make("ms"),
+  publicPath: PublicPathSchema.make("kurikulum/merdeka"),
+});
+
+const malayClass = CurriculumRouteSchema.make({
+  ...englishClass,
+  displayGroupTitle: "Menengah Atas (SMA)",
+  appLocale: AppLocaleSchema.make("ms"),
+  parentPath: malayRoot.publicPath,
+  publicPath: PublicPathSchema.make("kurikulum/merdeka/kelas-11"),
+  title: "Kelas 11",
+});
+
+const malaySubject = CurriculumRouteSchema.make({
+  ...englishSubject,
+  appLocale: AppLocaleSchema.make("ms"),
+  parentPath: malayClass.publicPath,
+  publicPath: PublicPathSchema.make("kurikulum/merdeka/kelas-11/matematik"),
+  title: "Matematik",
+});
+
 /** Complete localized curriculum fixture used by authenticated snapshot tests. */
 export const testPublishedCurriculumRoutes = [
   englishRoot,
@@ -237,6 +265,9 @@ export const testPublishedCurriculumRoutes = [
   germanRoot,
   germanClass,
   germanSubject,
+  malayRoot,
+  malayClass,
+  malaySubject,
 ];
 
 /** Reads one explicit signed-contract route fixture by localized public path. */

@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { LOCALES } from "@repo/internationalization/src/locale";
 import { pinnedRoutes } from "@/e2e/support/corpus";
 import { lineSceneCards, VISUAL_CARD_FOOTER } from "@/e2e/support/selector";
 
@@ -6,14 +7,14 @@ import { lineSceneCards, VISUAL_CARD_FOOTER } from "@/e2e/support/selector";
 const KATEX_RUNTIME = /\/assets\/katex-[\w-]+\.js/u;
 
 /** The interval separator of each locale's readouts, as `intervalSeparator` writes it. */
-const separators = { de: "; ", en: ", ", id: "; " } as const;
+const separators = { de: "; ", en: ", ", id: "; ", ms: ", " } as const;
 
 /**
  * A lesson's line cards draw their readouts on the server, in the lesson's
  * locale, as the lesson body draws its formulas: the page arrives with every
  * card's readouts typeset and preloads no math runtime for them.
  */
-for (const locale of ["de", "en", "id"] as const) {
+for (const locale of LOCALES) {
   test(`a ${locale} lesson's line cards arrive with typeset readouts and preload no math runtime`, async ({
     page,
   }) => {

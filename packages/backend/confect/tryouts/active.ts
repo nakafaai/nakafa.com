@@ -3,16 +3,15 @@ import { releaseFail } from "@repo/backend/confect/contentRelease/error";
 import { Effect, Option } from "effect";
 
 /**
- * Finds the active release's assessment snapshot, which a start freezes and the catalog pages read,
- * with the app locales it is written in; none before any release activates one. It is the engine's
+ * Finds the active release's assessment snapshot, which a start freezes and the catalog pages read;
+ * none before any release activates one. It is the engine's
  * one read of the active release, and ingress owns the reader it calls.
  */
 export const findActiveAssessment = Effect.fn("tryouts.findActiveAssessment")(
   function* () {
     return Option.map(
       yield* findActiveAssessmentSnapshot(),
-      ({ activeAppLocales, releaseId, snapshotId }) => ({
-        activeAppLocales,
+      ({ releaseId, snapshotId }) => ({
         releaseId,
         snapshotId,
       })

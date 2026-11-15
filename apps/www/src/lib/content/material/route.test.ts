@@ -13,6 +13,7 @@ import { makeMaterialRuntimeSource } from "@/test/content/material";
 import {
   previewDeProjection,
   previewIdProjection,
+  previewMsProjection,
   previewNextProjection,
   previewProjection,
   previewSourcePath,
@@ -77,7 +78,12 @@ function foundModel(overrides?: {
     alternateJson:
       overrides?.alternateJson ??
       Arr.map(
-        [previewProjection, previewIdProjection, previewDeProjection],
+        [
+          previewProjection,
+          previewIdProjection,
+          previewDeProjection,
+          previewMsProjection,
+        ],
         canonicalizeMaterialProjection
       ),
     projectionJson:
@@ -128,7 +134,7 @@ describe("published material route", () => {
           projection,
           rendererDomain: "mathematics",
         });
-        expect(route.alternates).toHaveLength(3);
+        expect(route.alternates).toHaveLength(4);
         expect(route.siblings).toHaveLength(2);
         expect(
           yield* readPublishedMaterialRoute("en", "subjects/missing")
@@ -155,6 +161,7 @@ describe("published material route", () => {
             previewProjection,
             previewIdProjection,
             previewDeProjection,
+            previewMsProjection,
           ],
           projection: previewProjection,
           rendererDomain: "mathematics",

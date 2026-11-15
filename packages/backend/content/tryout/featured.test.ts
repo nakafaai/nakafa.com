@@ -23,7 +23,8 @@ const featuredHash = (rows: readonly AssessmentRow[]) => {
             row.paper.sections,
             ({ section }) => section === LANDING_FEATURED_TRYOUT.sectionKey
           ),
-          ({ placements }) => Arr.headNonEmpty(placements).hash
+          ({ placements }) =>
+            Arr.headNonEmpty(Arr.headNonEmpty(placements).versions).hash
         )
       : Option.none()
   );

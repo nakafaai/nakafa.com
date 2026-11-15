@@ -8,6 +8,13 @@ import { getOgUrl } from "@/lib/seo/social";
 
 const ALL_ARTWORK_LOCALES = ACTIVE_APP_LOCALE_CODES;
 const ENGLISH_ARTWORK = [ENGLISH_APP_LOCALE_CODE] as const;
+/**
+ * A design whose Indonesian lettering is not Malaysian Malay, such as
+ * `Matematika` for `Matematik`, until the Malay lettering is drawn. A design
+ * whose lettering reads the same in both, such as `tanya Nina`, has its Malay
+ * file.
+ */
+const WITHOUT_MALAY_ARTWORK = ["en", "id", "de"] as const;
 
 /**
  * Reviewed public artwork grouped by stable, language-neutral identity, each with
@@ -37,21 +44,21 @@ export const artworkSources = {
   "quran/index": ENGLISH_ARTWORK,
   "subject/biology": ALL_ARTWORK_LOCALES,
   "subject/chemistry": ALL_ARTWORK_LOCALES,
-  "subject/mathematics": ALL_ARTWORK_LOCALES,
-  "subject/physics": ALL_ARTWORK_LOCALES,
+  "subject/mathematics": WITHOUT_MALAY_ARTWORK,
+  "subject/physics": WITHOUT_MALAY_ARTWORK,
   "subject/science": ALL_ARTWORK_LOCALES,
   "tryout/germany/index": ENGLISH_ARTWORK,
   "tryout/index": ["en", "de"],
   "tryout/indonesia/2027": ENGLISH_ARTWORK,
   "tryout/indonesia/index": ENGLISH_ARTWORK,
   "tryout/indonesia/snbt": ENGLISH_ARTWORK,
-  "tryout/indonesia/snbt/general-reasoning": ALL_ARTWORK_LOCALES,
-  "tryout/indonesia/snbt/mathematical-reasoning": ALL_ARTWORK_LOCALES,
+  "tryout/indonesia/snbt/general-reasoning": WITHOUT_MALAY_ARTWORK,
+  "tryout/indonesia/snbt/mathematical-reasoning": WITHOUT_MALAY_ARTWORK,
   "tryout/indonesia/snbt/quantitative-knowledge": ALL_ARTWORK_LOCALES,
   "tryout/indonesia/tka": ENGLISH_ARTWORK,
-  "tryout/indonesia/tka/advanced-mathematics": ALL_ARTWORK_LOCALES,
-  "tryout/indonesia/tka/compulsory-mathematics": ALL_ARTWORK_LOCALES,
-  "tryout/indonesia/tka/english-language": ALL_ARTWORK_LOCALES,
+  "tryout/indonesia/tka/advanced-mathematics": WITHOUT_MALAY_ARTWORK,
+  "tryout/indonesia/tka/compulsory-mathematics": WITHOUT_MALAY_ARTWORK,
+  "tryout/indonesia/tka/english-language": WITHOUT_MALAY_ARTWORK,
   "tryout/indonesia/tka/indonesian-language": ALL_ARTWORK_LOCALES,
 } as const satisfies Readonly<Record<string, readonly ["en", ...Locale[]]>>;
 

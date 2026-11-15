@@ -8,7 +8,10 @@ export const NAKAFA_GET_TAXONOMY_TOOL = {
     $defs: {},
     properties: {
       locale: {
-        anyOf: [{ type: "string", enum: ["en", "id", "de"] }, { type: "null" }],
+        anyOf: [
+          { type: "string", enum: ["en", "id", "de", "ms"] },
+          { type: "null" },
+        ],
       },
     },
     additionalProperties: true,
@@ -52,7 +55,7 @@ export const NAKAFA_GET_TAXONOMY_TOOL = {
                 },
                 locale: {
                   type: "string",
-                  enum: ["en", "id", "de"],
+                  enum: ["en", "id", "de", "ms"],
                   description: "Locale for this count.",
                 },
               },
@@ -63,7 +66,7 @@ export const NAKAFA_GET_TAXONOMY_TOOL = {
           },
           default_locale: {
             type: "string",
-            enum: ["en", "id", "de"],
+            enum: ["en", "id", "de", "ms"],
             description: "Default Nakafa locale.",
           },
           endpoints: {
@@ -132,12 +135,12 @@ export const NAKAFA_GET_TAXONOMY_TOOL = {
           },
           locale: {
             type: "string",
-            enum: ["en", "id", "de"],
+            enum: ["en", "id", "de", "ms"],
             description: "Locale used for this taxonomy response.",
           },
           locales: {
             type: "array",
-            items: { type: "string", enum: ["en", "id", "de"] },
+            items: { type: "string", enum: ["en", "id", "de", "ms"] },
             description: "Supported content locales.",
           },
           quran: {

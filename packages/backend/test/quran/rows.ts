@@ -10,6 +10,7 @@ import {
   ENGLISH_APP_LOCALE_CODE,
   GERMAN_APP_LOCALE_CODE,
   INDONESIAN_APP_LOCALE_CODE,
+  MALAY_APP_LOCALE_CODE,
   makeAppLocale,
 } from "@nakafa/aksara-contracts/locale";
 import {
@@ -115,6 +116,12 @@ function readTechnicalQuranLocaleSources(appLocale: ActiveAppLocaleCode) {
       quranTranslationSourceId(INDONESIAN_APP_LOCALE_CODE)
     );
   }
+  if (appLocale === MALAY_APP_LOCALE_CODE) {
+    return projectQuranLocaleSources(
+      appLocale,
+      quranTranslationSourceId(MALAY_APP_LOCALE_CODE)
+    );
+  }
   return projectQuranLocaleSources(
     appLocale,
     quranTranslationSourceId(GERMAN_APP_LOCALE_CODE)
@@ -131,6 +138,9 @@ export function makeQuranLocaleSources(
 export function makeQuranLocaleSources(
   appLocale: "de"
 ): Extract<QuranLocaleSources, { translation: { id: "quranenc-german" } }>;
+export function makeQuranLocaleSources(
+  appLocale: "ms"
+): Extract<QuranLocaleSources, { translation: { id: "quranenc-malay" } }>;
 export function makeQuranLocaleSources(
   appLocale: ActiveAppLocaleCode
 ): QuranLocaleSources;
@@ -158,6 +168,15 @@ function projectQuranTafsir(appLocale: ActiveAppLocaleCode) {
       source: makeExternalSource(access.sourceId, access.appLocale),
     };
   }
+  if (appLocale === MALAY_APP_LOCALE_CODE) {
+    const access = quranTafsirAccessByLocale[MALAY_APP_LOCALE_CODE];
+    return {
+      appLocale: access.appLocale,
+      kind: access.kind,
+      notice: access.notice,
+      source: makeExternalSource(access.sourceId, access.appLocale),
+    };
+  }
   const access = quranTafsirAccessByLocale[GERMAN_APP_LOCALE_CODE];
   return {
     appLocale: access.appLocale,
@@ -173,9 +192,9 @@ type QuranTafsirProjection = ReturnType<typeof projectQuranTafsir>;
 export function makeQuranTafsirProjection(
   appLocale: "id"
 ): Extract<QuranTafsirProjection, { readonly kind: "embedded" }>;
-/** Builds one exact link-only English or German Tafsir access projection. */
+/** Builds one exact link-only English, German, or Malay Tafsir access projection. */
 export function makeQuranTafsirProjection(
-  appLocale: "de" | "en"
+  appLocale: "de" | "en" | "ms"
 ): Extract<QuranTafsirProjection, { readonly kind: "external" }>;
 /** Builds one exact Tafsir access projection for a dynamic app locale. */
 export function makeQuranTafsirProjection(
@@ -203,6 +222,12 @@ const quranTafsirAccessByLocale = {
     kind: "embedded",
     notice: "Catatan teknis tafsir Indonesia.",
     sourceId: quranTafsirSourceId("id"),
+  },
+  ms: {
+    appLocale: makeAppLocale("ms"),
+    kind: "external",
+    notice: "Catatan teknikal tafsir bahasa Melayu.",
+    sourceId: quranTafsirSourceId("ms"),
   },
 } satisfies Record<ActiveAppLocaleCode, QuranTafsirAccess>;
 
@@ -264,6 +289,7 @@ export function makeQuranMeaning(surahNumber: number) {
     de: `Technische Bedeutung ${surahNumber}`,
     en: `Technical meaning ${surahNumber}`,
     id: `Arti teknis ${surahNumber}`,
+    ms: `Maksud teknikal ${surahNumber}`,
   } as const;
 }
 
@@ -330,6 +356,13 @@ function makeQuranVerse(
         value: {
           footnotes: translationFootnotes.de ?? "",
           text: translationText.de ?? `Technische Übersetzung ${inSurah}`,
+        },
+      },
+      {
+        appLocale: "ms",
+        value: {
+          footnotes: translationFootnotes.ms ?? "",
+          text: translationText.ms ?? `Terjemahan teknikal ${inSurah}`,
         },
       },
     ],

@@ -1,6 +1,7 @@
 import { assert, describe, expect, it } from "@effect/vitest";
 import tryouts from "@repo/backend/confect/_generated/refs/tryouts";
 import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
+import type { CatalogNodeKeys } from "@repo/backend/confect/tryouts/catalog/rows";
 import { catalogNodeIdentity } from "@repo/backend/confect/tryouts/catalog/rows";
 import { TryoutQuestionBodyText } from "@repo/backend/confect/tryouts/runtime/spec";
 import { client } from "@repo/backend/test/client";
@@ -223,32 +224,52 @@ describe("tryouts/queries/catalog", () => {
             publicPath: `${SET_PATH}/section-a`,
           })
         ).toBeNull();
-        expect(
-          yield* world.visitor.query(catalog.getLocalizedPath, {
+        /** Resolves one Indonesian path into German. */
+        const german = (publicPath: string) =>
+          world.visitor.query(catalog.getLocalizedPath, {
             currentAppLocale: "id",
-            publicPath: `${SET_PATH}/section-a`,
+            publicPath,
             targetAppLocale: "de",
-          })
-        ).toBe("try-out/indonesia/snbt/2027/utbk/set-1-de/section-a");
-        expect(
-          yield* world.visitor.query(catalog.getLocalizedPath, {
-            currentAppLocale: "id",
-            publicPath: "try-out/nowhere",
-            targetAppLocale: "de",
-          })
-        ).toBeNull();
-        yield* tamperCatalog(
-          world,
-          { ...KEYS, appLocale: "de", kind: "set", setKey: "set-1" },
-          "delete"
+          });
+        /** Deletes the German row of one node. */
+        const dropGerman = (keys: Omit<CatalogNodeKeys, "appLocale">) =>
+          tamperCatalog(world, { ...keys, appLocale: "de" }, "delete");
+        expect(yield* german(`${SET_PATH}/section-a`)).toBe(
+          "try-out/indonesia/snbt/2027/utbk/set-1-de/section-a"
         );
-        expect(
-          yield* world.visitor.query(catalog.getLocalizedPath, {
-            currentAppLocale: "id",
-            publicPath: SET_PATH,
-            targetAppLocale: "de",
-          })
-        ).toBeNull();
+        expect(yield* german("try-out/nowhere")).toBeNull();
+        // A node the target locale does not serve leads to the nearest page above it that it does.
+        yield* dropGerman({
+          ...KEYS,
+          kind: "section",
+          sectionKey: "section-a",
+          setKey: "set-1",
+        });
+        expect(yield* german(`${SET_PATH}/section-a`)).toBe(
+          "try-out/indonesia/snbt/2027/utbk/set-1-de"
+        );
+        yield* dropGerman({
+          countryKey: "indonesia",
+          examKey: "snbt",
+          kind: "exam",
+        });
+        expect(yield* german("try-out/indonesia/snbt-id")).toBe(
+          "try-out/indonesia-de"
+        );
+        yield* dropGerman({ ...KEYS, kind: "set", setKey: "set-1" });
+        expect(yield* german(SET_PATH)).toBe(
+          "try-out/indonesia/snbt/2027/utbk-de"
+        );
+        yield* dropGerman({ ...KEYS, kind: "track" });
+        yield* dropGerman({
+          countryKey: "indonesia",
+          examKey: "snbt",
+          groupKey: "2027",
+          kind: "group",
+        });
+        yield* dropGerman({ countryKey: "indonesia", kind: "country" });
+        // With no page of the node left in that locale, the try-out hub is where it lands.
+        expect(yield* german(SET_PATH)).toBe("try-out");
       })
   );
 

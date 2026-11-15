@@ -10,6 +10,7 @@ describe("published Quran meaning selection", () => {
       de: "Die Kuh",
       en: "The Cow",
       id: "Sapi",
+      ms: "Lembu Betina",
     } as const;
 
     expect(selectQuranMeaning(meaning, "de")).toEqual({
@@ -24,6 +25,10 @@ describe("published Quran meaning selection", () => {
       appLocale: "id",
       text: "Sapi",
     });
+    expect(selectQuranMeaning(meaning, "ms")).toEqual({
+      appLocale: "ms",
+      text: "Lembu Betina",
+    });
   });
 
   it("formats every reviewed meaning without a fallback annotation", () => {
@@ -31,10 +36,12 @@ describe("published Quran meaning selection", () => {
       de: "Die Kuh",
       en: "The Cow",
       id: "Sapi",
+      ms: "Lembu Betina",
     } as const;
 
     expect(formatQuranMeaning(meaning, "de")).toBe("Die Kuh");
     expect(formatQuranMeaning(meaning, "en")).toBe("The Cow");
     expect(formatQuranMeaning(meaning, "id")).toBe("Sapi");
+    expect(formatQuranMeaning(meaning, "ms")).toBe("Lembu Betina");
   });
 });

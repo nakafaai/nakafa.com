@@ -17,6 +17,7 @@ import {
   makeTestArticleProjection,
   testArticleDeProjection,
   testArticleIdProjection,
+  testArticleMsProjection,
   testArticleProjection,
 } from "@/test/published/article";
 import { resetTestRuntimeCache } from "@/test/store";
@@ -75,6 +76,7 @@ function foundModel(overrides?: {
           testArticleProjection,
           testArticleIdProjection,
           testArticleDeProjection,
+          testArticleMsProjection,
         ],
         canonicalizeArticleProjection
       ),
@@ -106,7 +108,7 @@ describe("published article route", () => {
           activeReleaseId: fixture.state.activeReleaseId,
           projection,
         });
-        expect(route.alternates).toHaveLength(3);
+        expect(route.alternates).toHaveLength(4);
         expect(
           yield* readPublishedArticleRoute("de", "articles/politik/missing")
         ).toEqual({
@@ -120,6 +122,7 @@ describe("published article route", () => {
     testArticleProjection,
     testArticleIdProjection,
     testArticleDeProjection,
+    testArticleMsProjection,
   ])(
     "decodes one complete $appLocale route and reciprocal locale set",
     (projection) =>
@@ -141,6 +144,7 @@ describe("published article route", () => {
             testArticleProjection,
             testArticleIdProjection,
             testArticleDeProjection,
+            testArticleMsProjection,
           ],
           projection,
         });

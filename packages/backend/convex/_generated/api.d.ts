@@ -201,7 +201,7 @@ export declare const api: {
           "action",
           "public",
           {
-            locale: "en" | "id" | "de";
+            locale: "en" | "id" | "de" | "ms";
             offer: "school.seat.month" | "school.seat.year";
             slug: string;
           },
@@ -279,13 +279,13 @@ export declare const api: {
       download: FunctionReference<
         "action",
         "public",
-        { locale: "en" | "id" | "de"; paymentId: Id<"billingPayments"> },
+        { locale: "en" | "id" | "de" | "ms"; paymentId: Id<"billingPayments"> },
         { base64: string; name: string }
       >;
       school: FunctionReference<
         "action",
         "public",
-        { locale: "en" | "id" | "de"; number: string; slug: string },
+        { locale: "en" | "id" | "de" | "ms"; number: string; slug: string },
         { base64: string; name: string }
       >;
     };
@@ -293,13 +293,13 @@ export declare const api: {
       invoice: FunctionReference<
         "query",
         "public",
-        { locale: "en" | "id" | "de"; number: string; slug: string },
+        { locale: "en" | "id" | "de" | "ms"; number: string; slug: string },
         {
           buyer: { email: string | null; name: string };
           dueOn: string | null;
           issuedOn: string;
           lines: Array<{ amount: string; description: string }>;
-          locale: "en" | "id" | "de";
+          locale: "en" | "id" | "de" | "ms";
           number: string;
           paidWith: string | null;
           status: "open" | "paid" | "void";
@@ -365,7 +365,7 @@ export declare const api: {
         "public",
         {
           currency: "EUR" | "IDR" | "MYR" | "USD";
-          locale: "en" | "id" | "de";
+          locale: "en" | "id" | "de" | "ms";
           offer: "pro.monthly" | "pro.pass.1" | "pro.pass.3" | "pro.pass.12";
           successUrl: string;
         },
@@ -382,7 +382,7 @@ export declare const api: {
         "public",
         {
           currency: "EUR" | "IDR" | "MYR" | "USD";
-          locale: "en" | "id" | "de";
+          locale: "en" | "id" | "de" | "ms";
           successUrl: string;
         },
         { url: string }
@@ -3478,7 +3478,7 @@ export declare const api: {
             name: {
               arabic: string;
               sourceMeaning:
-                | { de: string; en: string; id: string }
+                | { de: string; en: string; id: string; ms: string }
                 | { appLocale: "en"; text: string };
               transliteration: string;
             };
@@ -3503,7 +3503,7 @@ export declare const api: {
             name: {
               arabic: string;
               sourceMeaning:
-                | { de: string; en: string; id: string }
+                | { de: string; en: string; id: string; ms: string }
                 | { appLocale: "en"; text: string };
               transliteration: string;
             };
@@ -3667,12 +3667,62 @@ export declare const api: {
                   version: string;
                 };
               }
+            | {
+                arabic: {
+                  artifact: {
+                    byteCount: number;
+                    digest: string;
+                    fileCount: number;
+                  };
+                  id: "tanzil-text";
+                  kind: "embedded";
+                  label: string;
+                  notice: string;
+                  publisher: string;
+                  retrievedAt: string;
+                  sourceUrl: string;
+                  terms: {
+                    artifact: {
+                      byteCount: number;
+                      digest: string;
+                      fileCount: number;
+                    };
+                    url: string;
+                  };
+                  updateUrl: string;
+                  version: string;
+                };
+                translation: {
+                  artifact: {
+                    byteCount: number;
+                    digest: string;
+                    fileCount: number;
+                  };
+                  id: "quranenc-malay";
+                  kind: "embedded";
+                  label: string;
+                  notice: string;
+                  publisher: string;
+                  retrievedAt: string;
+                  sourceUrl: string;
+                  terms: {
+                    artifact: {
+                      byteCount: number;
+                      digest: string;
+                      fileCount: number;
+                    };
+                    url: string;
+                  };
+                  updateUrl: string;
+                  version: string;
+                };
+              }
             | null;
           surah: {
             name: {
               arabic: string;
               sourceMeaning:
-                | { de: string; en: string; id: string }
+                | { de: string; en: string; id: string; ms: string }
                 | { appLocale: "en"; text: string };
               transliteration: string;
             };
@@ -3732,6 +3782,23 @@ export declare const api: {
                 notice: string;
                 source: {
                   id: "mokhtasar-german";
+                  kind: "external";
+                  label: string;
+                  notice: string;
+                  publisher: string;
+                  retrievedAt: string;
+                  sourceUrl: string;
+                  terms: { access: "link-only"; url: string };
+                  updateUrl: string;
+                  version: string;
+                };
+              }
+            | {
+                appLocale: "ms";
+                kind: "external";
+                notice: string;
+                source: {
+                  id: "mokhtasar-indonesian";
                   kind: "external";
                   label: string;
                   notice: string;
@@ -3948,6 +4015,56 @@ export declare const api: {
                   version: string;
                 };
               }
+            | {
+                arabic: {
+                  artifact: {
+                    byteCount: number;
+                    digest: string;
+                    fileCount: number;
+                  };
+                  id: "tanzil-text";
+                  kind: "embedded";
+                  label: string;
+                  notice: string;
+                  publisher: string;
+                  retrievedAt: string;
+                  sourceUrl: string;
+                  terms: {
+                    artifact: {
+                      byteCount: number;
+                      digest: string;
+                      fileCount: number;
+                    };
+                    url: string;
+                  };
+                  updateUrl: string;
+                  version: string;
+                };
+                translation: {
+                  artifact: {
+                    byteCount: number;
+                    digest: string;
+                    fileCount: number;
+                  };
+                  id: "quranenc-malay";
+                  kind: "embedded";
+                  label: string;
+                  notice: string;
+                  publisher: string;
+                  retrievedAt: string;
+                  sourceUrl: string;
+                  terms: {
+                    artifact: {
+                      byteCount: number;
+                      digest: string;
+                      fileCount: number;
+                    };
+                    url: string;
+                  };
+                  updateUrl: string;
+                  version: string;
+                };
+              }
             | null;
           surahJson: string | null;
           tafsirAccess:
@@ -4003,6 +4120,23 @@ export declare const api: {
                 notice: string;
                 source: {
                   id: "mokhtasar-german";
+                  kind: "external";
+                  label: string;
+                  notice: string;
+                  publisher: string;
+                  retrievedAt: string;
+                  sourceUrl: string;
+                  terms: { access: "link-only"; url: string };
+                  updateUrl: string;
+                  version: string;
+                };
+              }
+            | {
+                appLocale: "ms";
+                kind: "external";
+                notice: string;
+                source: {
+                  id: "mokhtasar-indonesian";
                   kind: "external";
                   label: string;
                   notice: string;
@@ -4202,12 +4336,62 @@ export declare const api: {
                   version: string;
                 };
               }
+            | {
+                arabic: {
+                  artifact: {
+                    byteCount: number;
+                    digest: string;
+                    fileCount: number;
+                  };
+                  id: "tanzil-text";
+                  kind: "embedded";
+                  label: string;
+                  notice: string;
+                  publisher: string;
+                  retrievedAt: string;
+                  sourceUrl: string;
+                  terms: {
+                    artifact: {
+                      byteCount: number;
+                      digest: string;
+                      fileCount: number;
+                    };
+                    url: string;
+                  };
+                  updateUrl: string;
+                  version: string;
+                };
+                translation: {
+                  artifact: {
+                    byteCount: number;
+                    digest: string;
+                    fileCount: number;
+                  };
+                  id: "quranenc-malay";
+                  kind: "embedded";
+                  label: string;
+                  notice: string;
+                  publisher: string;
+                  retrievedAt: string;
+                  sourceUrl: string;
+                  terms: {
+                    artifact: {
+                      byteCount: number;
+                      digest: string;
+                      fileCount: number;
+                    };
+                    url: string;
+                  };
+                  updateUrl: string;
+                  version: string;
+                };
+              }
             | null;
           surah: {
             name: {
               arabic: string;
               sourceMeaning:
-                | { de: string; en: string; id: string }
+                | { de: string; en: string; id: string; ms: string }
                 | { appLocale: "en"; text: string };
               transliteration: string;
             };
@@ -4268,6 +4452,23 @@ export declare const api: {
                 notice: string;
                 source: {
                   id: "mokhtasar-german";
+                  kind: "external";
+                  label: string;
+                  notice: string;
+                  publisher: string;
+                  retrievedAt: string;
+                  sourceUrl: string;
+                  terms: { access: "link-only"; url: string };
+                  updateUrl: string;
+                  version: string;
+                };
+              }
+            | {
+                appLocale: "ms";
+                kind: "external";
+                notice: string;
+                source: {
+                  id: "mokhtasar-indonesian";
                   kind: "external";
                   label: string;
                   notice: string;
@@ -4401,6 +4602,23 @@ export declare const api: {
                   version: string;
                 };
               }
+            | {
+                appLocale: "ms";
+                kind: "external";
+                notice: string;
+                source: {
+                  id: "mokhtasar-indonesian";
+                  kind: "external";
+                  label: string;
+                  notice: string;
+                  publisher: string;
+                  retrievedAt: string;
+                  sourceUrl: string;
+                  terms: { access: "link-only"; url: string };
+                  updateUrl: string;
+                  version: string;
+                };
+              }
             | null;
           verseNumber: number;
         }
@@ -4414,7 +4632,7 @@ export declare const api: {
           input:
             | { contentId: string; kind: "content" }
             | {
-                appLocale: "en" | "id" | "de";
+                appLocale: "en" | "id" | "de" | "ms";
                 kind: "route";
                 publicPath: string;
               };
@@ -4427,7 +4645,7 @@ export declare const api: {
           description: string;
           learningObjectId: string;
           lensId: string;
-          locale: "en" | "id" | "de";
+          locale: "en" | "id" | "de" | "ms";
           markdown_url?: string;
           route: string;
           section: "articles" | "material" | "tryout" | "quran";
@@ -4531,7 +4749,11 @@ export declare const api: {
         finishLesson: FunctionReference<
           "mutation",
           "public",
-          { contentId: string; locale: "en" | "id" | "de"; publicPath: string },
+          {
+            contentId: string;
+            locale: "en" | "id" | "de" | "ms";
+            publicPath: string;
+          },
           | {
               _tag: "granted";
               badges: Array<
@@ -4559,7 +4781,7 @@ export declare const api: {
               programKey?: string;
             };
             deviceId?: string;
-            locale: "en" | "id" | "de";
+            locale: "en" | "id" | "de" | "ms";
             publicPath: string;
             section: "articles" | "material";
           },
@@ -4572,7 +4794,7 @@ export declare const api: {
         getRecentlyViewed: FunctionReference<
           "query",
           "public",
-          { limit?: number; locale: "en" | "id" | "de" },
+          { limit?: number; locale: "en" | "id" | "de" | "ms" },
           Array<{
             alignmentId: string;
             assetId: string;
@@ -4584,7 +4806,7 @@ export declare const api: {
             lastViewedAt: number;
             learningObjectId: string;
             lensId: string;
-            locale: "en" | "id" | "de";
+            locale: "en" | "id" | "de" | "ms";
             markdown_url?: string;
             materialDomain: string;
             route: string;
@@ -4600,7 +4822,7 @@ export declare const api: {
           "public",
           {
             limit: number;
-            locale: "en" | "id" | "de";
+            locale: "en" | "id" | "de" | "ms";
             offset: number;
             queries?: Array<string>;
             section?: "articles" | "material" | "tryout" | "quran";
@@ -4617,7 +4839,7 @@ export declare const api: {
               excerpt: string;
               learningObjectId: string;
               lensId: string;
-              locale: "en" | "id" | "de";
+              locale: "en" | "id" | "de" | "ms";
               markdown_url?: string;
               route: string;
               section: "articles" | "material" | "tryout" | "quran";
@@ -4634,7 +4856,7 @@ export declare const api: {
         getTrendingSubjects: FunctionReference<
           "query",
           "public",
-          { locale: "en" | "id" | "de" },
+          { locale: "en" | "id" | "de" | "ms" },
           Array<{
             alignmentId: string;
             assetId: string;
@@ -4645,7 +4867,7 @@ export declare const api: {
             href: string;
             learningObjectId: string;
             lensId: string;
-            locale: "en" | "id" | "de";
+            locale: "en" | "id" | "de" | "ms";
             markdown_url?: string;
             materialDomain: string;
             route: string;
@@ -9357,7 +9579,7 @@ export declare const api: {
         {
           deviceId: string;
           email: string;
-          locale: "en" | "id" | "de";
+          locale: "en" | "id" | "de" | "ms";
           slug: string;
         },
         { expiresAt: number }
@@ -11151,7 +11373,7 @@ export declare const api: {
                 }
               | { type: "unit.created" }
               | {
-                  contentLanguage: "en" | "id" | "de";
+                  contentLanguage: "en" | "id" | "de" | "ms";
                   timeZone: string;
                   type: "unit.locale.set";
                 }
@@ -11224,7 +11446,10 @@ export declare const api: {
       setPreferredCurriculum: FunctionReference<
         "mutation",
         "public",
-        { locale: "en" | "id" | "de"; preferredCurriculumProgramKey: string },
+        {
+          locale: "en" | "id" | "de" | "ms";
+          preferredCurriculumProgramKey: string;
+        },
         null | {
           preferredCurriculumProgramKey: string;
           program: {
@@ -11238,7 +11463,10 @@ export declare const api: {
       setPreferredTryoutCountry: FunctionReference<
         "mutation",
         "public",
-        { locale: "en" | "id" | "de"; preferredTryoutCountryKey: string },
+        {
+          locale: "en" | "id" | "de" | "ms";
+          preferredTryoutCountryKey: string;
+        },
         null | {
           country: {
             countryCode: string;
@@ -11254,7 +11482,7 @@ export declare const api: {
       getCurrent: FunctionReference<
         "query",
         "public",
-        { locale: "en" | "id" | "de" },
+        { locale: "en" | "id" | "de" | "ms" },
         null | {
           preferredCurriculumProgramKey: string;
           program: {
@@ -11268,7 +11496,7 @@ export declare const api: {
       getCurrentTryout: FunctionReference<
         "query",
         "public",
-        { locale: "en" | "id" | "de" },
+        { locale: "en" | "id" | "de" | "ms" },
         null | {
           country: {
             countryCode: string;
@@ -11282,7 +11510,7 @@ export declare const api: {
       listCurriculumPrograms: FunctionReference<
         "query",
         "public",
-        { locale: "en" | "id" | "de" },
+        { locale: "en" | "id" | "de" | "ms" },
         Array<{
           countryCode?: string;
           key: string;
@@ -11596,7 +11824,7 @@ export declare const api: {
                     kind: "tryout-question";
                     placementId: Id<"tryoutAttemptPlacements">;
                   };
-                  locale: "en" | "id" | "de";
+                  locale: "en" | "id" | "de" | "ms";
                   materialContextHint?: string;
                   slug: string;
                 };
@@ -11611,7 +11839,7 @@ export declare const api: {
                     kind: "tryout-question";
                     placementId: Id<"tryoutAttemptPlacements">;
                   };
-                  locale: "en" | "id" | "de";
+                  locale: "en" | "id" | "de" | "ms";
                   materialContextHint?: string;
                   slug: string;
                 };
@@ -11993,7 +12221,7 @@ export declare const api: {
           destination:
             | { kind: "curriculum-program"; publicSlug: string }
             | { kind: "tryout" };
-          locale: "en" | "id" | "de";
+          locale: "en" | "id" | "de" | "ms";
         }
       >;
       saveAnswer: FunctionReference<
@@ -12121,7 +12349,7 @@ export declare const api: {
           owner: { email: string; name: string };
           slug: string;
           units: Array<{
-            contentLanguage: "en" | "id" | "de";
+            contentLanguage: "en" | "id" | "de" | "ms";
             level:
               | "paud"
               | "sd"
@@ -12182,7 +12410,7 @@ export declare const api: {
         "mutation",
         "public",
         {
-          locale: "en" | "id" | "de";
+          locale: "en" | "id" | "de" | "ms";
           owner: { email: string; name: string };
           tenantId: Id<"tenants">;
         },
@@ -13203,7 +13431,7 @@ export declare const api: {
         "public",
         {
           email: string;
-          locale: "en" | "id" | "de";
+          locale: "en" | "id" | "de" | "ms";
           personId: Id<"tenantPeople">;
           slug: string;
         },
@@ -13279,7 +13507,7 @@ export declare const api: {
         {
           email: string;
           inviteId: Id<"tenantInvites">;
-          locale: "en" | "id" | "de";
+          locale: "en" | "id" | "de" | "ms";
           slug: string;
         },
         {
@@ -13310,7 +13538,7 @@ export declare const api: {
         "public",
         {
           inviteId: Id<"tenantInvites">;
-          locale: "en" | "id" | "de";
+          locale: "en" | "id" | "de" | "ms";
           slug: string;
         },
         {
@@ -14305,7 +14533,7 @@ export declare const api: {
         "public",
         {
           email: string;
-          locale: "en" | "id" | "de";
+          locale: "en" | "id" | "de" | "ms";
           name: string;
           role: "admin" | "teacher";
           slug: string;
@@ -14546,7 +14774,7 @@ export declare const api: {
         "mutation",
         "public",
         {
-          contentLanguage: "en" | "id" | "de";
+          contentLanguage: "en" | "id" | "de" | "ms";
           level:
             | "paud"
             | "sd"
@@ -14567,7 +14795,7 @@ export declare const api: {
           timeZone: string;
         },
         {
-          contentLanguage: "en" | "id" | "de";
+          contentLanguage: "en" | "id" | "de" | "ms";
           id: Id<"tenantUnits">;
           level:
             | "paud"
@@ -14637,7 +14865,7 @@ export declare const api: {
         "public",
         { slug: string },
         Array<{
-          contentLanguage: "en" | "id" | "de";
+          contentLanguage: "en" | "id" | "de" | "ms";
           id: Id<"tenantUnits">;
           level:
             | "paud"
@@ -14664,12 +14892,12 @@ export declare const api: {
         "mutation",
         "public",
         {
-          contentLanguage: "en" | "id" | "de";
+          contentLanguage: "en" | "id" | "de" | "ms";
           slug: string;
           timeZone: string;
           unitId: Id<"tenantUnits">;
         },
-        { contentLanguage: "en" | "id" | "de"; timeZone: string }
+        { contentLanguage: "en" | "id" | "de" | "ms"; timeZone: string }
       >;
       setNpsn: FunctionReference<
         "mutation",
@@ -14746,7 +14974,7 @@ export declare const api: {
           };
           units: Array<{
             can: Array<string>;
-            contentLanguage: "en" | "id" | "de";
+            contentLanguage: "en" | "id" | "de" | "ms";
             id: Id<"tenantUnits">;
             level:
               | "paud"
@@ -15931,7 +16159,7 @@ export declare const api: {
             examKey: string;
             filter:
               "all" | "not-started" | "in-progress" | "completed" | "expired";
-            locale: "en" | "id" | "de";
+            locale: "en" | "id" | "de" | "ms";
             paginationOpts: {
               cursor: string | null;
               endCursor?: string | null;
@@ -16376,7 +16604,7 @@ export declare const internal: {
                   is_new_view: boolean;
                   learning_object_id: string;
                   lens_id: string;
-                  locale: "en" | "id" | "de";
+                  locale: "en" | "id" | "de" | "ms";
                   route: string;
                 };
               }
@@ -16443,7 +16671,7 @@ export declare const internal: {
                 properties: {
                   checkout_locale: "de" | "en" | "en" | "id";
                   customer_ip_available: boolean;
-                  locale: "en" | "id" | "de";
+                  locale: "en" | "id" | "de" | "ms";
                   product_count: number;
                   product_id: string;
                   rail: "polar" | "xendit";
@@ -16593,7 +16821,7 @@ export declare const internal: {
           dueOn: string | null;
           issuedOn: string;
           lines: Array<{ amount: string; description: string }>;
-          locale: "en" | "id" | "de";
+          locale: "en" | "id" | "de" | "ms";
           number: string;
           paidWith: string | null;
           status: "open" | "paid" | "void";
@@ -16660,7 +16888,7 @@ export declare const internal: {
         "query",
         "internal",
         {
-          locale: "en" | "id" | "de";
+          locale: "en" | "id" | "de" | "ms";
           paymentId: Id<"billingPayments">;
           userId: Id<"users">;
         },
@@ -16669,7 +16897,7 @@ export declare const internal: {
           dueOn: string | null;
           issuedOn: string;
           lines: Array<{ amount: string; description: string }>;
-          locale: "en" | "id" | "de";
+          locale: "en" | "id" | "de" | "ms";
           number: string;
           paidWith: string | null;
           status: "open" | "paid" | "void";
@@ -16695,7 +16923,7 @@ export declare const internal: {
         deliver: FunctionReference<
           "action",
           "internal",
-          { grantId: Id<"billingGrants">; locale: "en" | "id" | "de" },
+          { grantId: Id<"billingGrants">; locale: "en" | "id" | "de" | "ms" },
           null
         >;
       };
@@ -16714,11 +16942,11 @@ export declare const internal: {
         readInput: FunctionReference<
           "query",
           "internal",
-          { grantId: Id<"billingGrants">; locale: "en" | "id" | "de" },
+          { grantId: Id<"billingGrants">; locale: "en" | "id" | "de" | "ms" },
           {
             endsAt: number;
             extendUrl: string;
-            locale: "en" | "id" | "de";
+            locale: "en" | "id" | "de" | "ms";
             privacyPolicyUrl: string;
             termsOfServiceUrl: string;
           } | null
@@ -16765,7 +16993,7 @@ export declare const internal: {
                     is_new_view: boolean;
                     learning_object_id: string;
                     lens_id: string;
-                    locale: "en" | "id" | "de";
+                    locale: "en" | "id" | "de" | "ms";
                     route: string;
                   };
                 }
@@ -16835,7 +17063,7 @@ export declare const internal: {
                   properties: {
                     checkout_locale: "de" | "en" | "en" | "id";
                     customer_ip_available: boolean;
-                    locale: "en" | "id" | "de";
+                    locale: "en" | "id" | "de" | "ms";
                     product_count: number;
                     product_id: string;
                     rail: "polar" | "xendit";
@@ -16856,7 +17084,7 @@ export declare const internal: {
                     previous_plan: "free" | "pro";
                   };
                 };
-            locale: "en" | "id" | "de";
+            locale: "en" | "id" | "de" | "ms";
             offer:
               | "pro.monthly"
               | "pro.pass.1"
@@ -16926,7 +17154,7 @@ export declare const internal: {
           "action",
           "internal",
           {
-            locale: "en" | "id" | "de";
+            locale: "en" | "id" | "de" | "ms";
             subscriptionId: Id<"billingSubscriptions">;
           },
           null
@@ -17044,7 +17272,7 @@ export declare const internal: {
             classId: Id<"classes">;
             className: string;
             history: Array<{ author: string; text: string }>;
-            locale: "en" | "id" | "de";
+            locale: "en" | "id" | "de" | "ms";
             question: string;
           } | null
         >;
@@ -17205,7 +17433,7 @@ export declare const internal: {
         "internal",
         {
           email: string;
-          locale: "en" | "id" | "de";
+          locale: "en" | "id" | "de" | "ms";
           name: string;
           slug: string;
           subject: string;
@@ -18268,7 +18496,7 @@ export declare const internal: {
             input:
               | { contentId: string; kind: "content" }
               | {
-                  appLocale: "en" | "id" | "de";
+                  appLocale: "en" | "id" | "de" | "ms";
                   kind: "route";
                   publicPath: string;
                 };
@@ -18283,7 +18511,7 @@ export declare const internal: {
                 description: string;
                 learningObjectId: string;
                 lensId: string;
-                locale: "en" | "id" | "de";
+                locale: "en" | "id" | "de" | "ms";
                 markdown_url?: string;
                 route: string;
                 section: "articles" | "material" | "tryout" | "quran";
@@ -18469,12 +18697,62 @@ export declare const internal: {
                         version: string;
                       };
                     }
+                  | {
+                      arabic: {
+                        artifact: {
+                          byteCount: number;
+                          digest: string;
+                          fileCount: number;
+                        };
+                        id: "tanzil-text";
+                        kind: "embedded";
+                        label: string;
+                        notice: string;
+                        publisher: string;
+                        retrievedAt: string;
+                        sourceUrl: string;
+                        terms: {
+                          artifact: {
+                            byteCount: number;
+                            digest: string;
+                            fileCount: number;
+                          };
+                          url: string;
+                        };
+                        updateUrl: string;
+                        version: string;
+                      };
+                      translation: {
+                        artifact: {
+                          byteCount: number;
+                          digest: string;
+                          fileCount: number;
+                        };
+                        id: "quranenc-malay";
+                        kind: "embedded";
+                        label: string;
+                        notice: string;
+                        publisher: string;
+                        retrievedAt: string;
+                        sourceUrl: string;
+                        terms: {
+                          artifact: {
+                            byteCount: number;
+                            digest: string;
+                            fileCount: number;
+                          };
+                          url: string;
+                        };
+                        updateUrl: string;
+                        version: string;
+                      };
+                    }
                   | null;
                 surah: {
                   name: {
                     arabic: string;
                     sourceMeaning:
-                      | { de: string; en: string; id: string }
+                      | { de: string; en: string; id: string; ms: string }
                       | { appLocale: "en"; text: string };
                     transliteration: string;
                   };
@@ -18546,6 +18824,23 @@ export declare const internal: {
                         version: string;
                       };
                     }
+                  | {
+                      appLocale: "ms";
+                      kind: "external";
+                      notice: string;
+                      source: {
+                        id: "mokhtasar-indonesian";
+                        kind: "external";
+                        label: string;
+                        notice: string;
+                        publisher: string;
+                        retrievedAt: string;
+                        sourceUrl: string;
+                        terms: { access: "link-only"; url: string };
+                        updateUrl: string;
+                        version: string;
+                      };
+                    }
                   | null;
                 toVerse: number;
                 verses: Array<{
@@ -18572,7 +18867,7 @@ export declare const internal: {
                 description: string;
                 learningObjectId: string;
                 lensId: string;
-                locale: "en" | "id" | "de";
+                locale: "en" | "id" | "de" | "ms";
                 markdown_url?: string;
                 route: string;
                 section: "articles" | "material" | "tryout" | "quran";
@@ -18991,7 +19286,7 @@ export declare const internal: {
           {
             ids: Array<Id<"contentSections">>;
             limit: number;
-            locale: "en" | "id" | "de";
+            locale: "en" | "id" | "de" | "ms";
             query: string;
             section?: "articles" | "material" | "tryout" | "quran";
           },
@@ -18999,7 +19294,7 @@ export declare const internal: {
           | {
               hits: Array<{
                 anchor: string;
-                appLocale: "en" | "id" | "de";
+                appLocale: "en" | "id" | "de" | "ms";
                 contentKey: string;
                 excerpt: string;
                 headingPath: Array<string>;
@@ -19012,7 +19307,7 @@ export declare const internal: {
                   description: string;
                   learningObjectId: string;
                   lensId: string;
-                  locale: "en" | "id" | "de";
+                  locale: "en" | "id" | "de" | "ms";
                   markdown_url?: string;
                   route: string;
                   section: "articles" | "material" | "tryout" | "quran";
@@ -19039,7 +19334,7 @@ export declare const internal: {
           | {
               kind: "page";
               lessons: Array<{
-                appLocale: "en" | "id" | "de";
+                appLocale: "en" | "id" | "de" | "ms";
                 contentKey: string;
                 publicPath: string;
                 rawMdx: string;
@@ -19071,7 +19366,7 @@ export declare const internal: {
             releaseId: string;
             sections: Array<{
               anchor: string;
-              appLocale: "en" | "id" | "de";
+              appLocale: "en" | "id" | "de" | "ms";
               contentKey: string;
               count: number;
               embedding?: Array<number>;
@@ -19084,7 +19379,7 @@ export declare const internal: {
               text: string;
             }>;
             source: {
-              appLocale: "en" | "id" | "de";
+              appLocale: "en" | "id" | "de" | "ms";
               contentKey: string;
               section: "articles" | "material" | "tryout" | "quran";
               version: string;
@@ -19102,7 +19397,7 @@ export declare const internal: {
           "query",
           "internal",
           {
-            appLocale: "en" | "id" | "de";
+            appLocale: "en" | "id" | "de" | "ms";
             contentKey: string;
             hashes: Array<string>;
             model: string;
@@ -19117,12 +19412,12 @@ export declare const internal: {
           | { kind: "done"; releaseId: string; unchanged: number }
           | {
               documents: Array<{
-                appLocale: "en" | "id" | "de";
+                appLocale: "en" | "id" | "de" | "ms";
                 contentKey: string;
                 section: "articles" | "material" | "tryout" | "quran";
                 sections: Array<{
                   anchor: string;
-                  appLocale: "en" | "id" | "de";
+                  appLocale: "en" | "id" | "de" | "ms";
                   contentKey: string;
                   count: number;
                   excerpt: string;
@@ -19215,7 +19510,7 @@ export declare const internal: {
               count: number;
             }>;
             inboxUrl: string;
-            locale: "en" | "id" | "de";
+            locale: "en" | "id" | "de" | "ms";
             privacyPolicyUrl: string;
             termsOfServiceUrl: string;
           },
@@ -19242,7 +19537,7 @@ export declare const internal: {
                 count: number;
               }>;
               inboxUrl: string;
-              locale: "en" | "id" | "de";
+              locale: "en" | "id" | "de" | "ms";
               privacyPolicyUrl: string;
               termsOfServiceUrl: string;
             };
@@ -19272,7 +19567,7 @@ export declare const internal: {
           "action",
           "internal",
           {
-            locale: "en" | "id" | "de";
+            locale: "en" | "id" | "de" | "ms";
             organisation: string;
             privacyPolicyUrl: string;
             signInUrl: string;
@@ -19297,9 +19592,9 @@ export declare const internal: {
         readInput: FunctionReference<
           "query",
           "internal",
-          { inviteId: Id<"tenantInvites">; locale: "en" | "id" | "de" },
+          { inviteId: Id<"tenantInvites">; locale: "en" | "id" | "de" | "ms" },
           {
-            locale: "en" | "id" | "de";
+            locale: "en" | "id" | "de" | "ms";
             organisation: string;
             privacyPolicyUrl: string;
             signInUrl: string;
@@ -19314,7 +19609,7 @@ export declare const internal: {
           {
             args?: {
               inviteId: Id<"tenantInvites">;
-              locale: "en" | "id" | "de";
+              locale: "en" | "id" | "de" | "ms";
               requestedAt: number;
             };
             context?: any;
@@ -19355,7 +19650,7 @@ export declare const internal: {
           "internal",
           {
             classUrl: string;
-            locale: "en" | "id" | "de";
+            locale: "en" | "id" | "de" | "ms";
             privacyPolicyUrl: string;
             termsOfServiceUrl: string;
           },
@@ -19386,7 +19681,7 @@ export declare const internal: {
             addresses: Array<{ email: string; personId: Id<"tenantPeople"> }>;
             input: {
               classUrl: string;
-              locale: "en" | "id" | "de";
+              locale: "en" | "id" | "de" | "ms";
               privacyPolicyUrl: string;
               termsOfServiceUrl: string;
             };
@@ -19438,7 +19733,7 @@ export declare const internal: {
           { intentId: Id<"welcomeEmailIntents"> },
           null | {
             continueUrl: string;
-            locale: "en" | "id" | "de";
+            locale: "en" | "id" | "de" | "ms";
             privacyPolicyUrl: string;
             termsOfServiceUrl: string;
           }
@@ -19699,7 +19994,7 @@ export declare const internal: {
             | { kind: "learner"; userId: Id<"users"> }
             | { kind: "nakafa" };
           kktp: number;
-          locale: "en" | "id" | "de";
+          locale: "en" | "id" | "de" | "ms";
           skills: Array<{
             competency: string;
             earned: number;
@@ -20131,7 +20426,7 @@ export declare const internal: {
             lots?: Array<{ credits: number; lotId: Id<"creditLots"> }>;
             order: number;
             page: {
-              locale: "en" | "id" | "de";
+              locale: "en" | "id" | "de" | "ms";
               needsFetch: boolean;
               nina: {
                 focus?: {
@@ -20143,7 +20438,7 @@ export declare const internal: {
                 };
                 learning: {
                   assetId?: string;
-                  locale: "en" | "id" | "de";
+                  locale: "en" | "id" | "de" | "ms";
                   materialKey?: string;
                   section?: string;
                   slug: string;
@@ -20223,7 +20518,7 @@ export declare const internal: {
             history?: { tokens: number; turns: number; unread?: number };
             order: number;
             page?: {
-              locale: "en" | "id" | "de";
+              locale: "en" | "id" | "de" | "ms";
               needsFetch: boolean;
               nina: {
                 focus?: {
@@ -20235,7 +20530,7 @@ export declare const internal: {
                 };
                 learning: {
                   assetId?: string;
-                  locale: "en" | "id" | "de";
+                  locale: "en" | "id" | "de" | "ms";
                   materialKey?: string;
                   section?: string;
                   slug: string;
@@ -20352,7 +20647,7 @@ export declare const internal: {
             lots?: Array<{ credits: number; lotId: Id<"creditLots"> }>;
             order: number;
             page: {
-              locale: "en" | "id" | "de";
+              locale: "en" | "id" | "de" | "ms";
               needsFetch: boolean;
               nina: {
                 focus?: {
@@ -20364,7 +20659,7 @@ export declare const internal: {
                 };
                 learning: {
                   assetId?: string;
-                  locale: "en" | "id" | "de";
+                  locale: "en" | "id" | "de" | "ms";
                   materialKey?: string;
                   section?: string;
                   slug: string;
@@ -20444,7 +20739,7 @@ export declare const internal: {
             history?: { tokens: number; turns: number; unread?: number };
             order: number;
             page?: {
-              locale: "en" | "id" | "de";
+              locale: "en" | "id" | "de" | "ms";
               needsFetch: boolean;
               nina: {
                 focus?: {
@@ -20456,7 +20751,7 @@ export declare const internal: {
                 };
                 learning: {
                   assetId?: string;
-                  locale: "en" | "id" | "de";
+                  locale: "en" | "id" | "de" | "ms";
                   materialKey?: string;
                   section?: string;
                   slug: string;
@@ -21127,7 +21422,7 @@ export declare const internal: {
           decision: string;
           hash: string;
           head: string;
-          locale: "en" | "id" | "de";
+          locale: "en" | "id" | "de" | "ms";
           nip?: string;
           nisn: string;
           npsn: string;
@@ -21156,7 +21451,7 @@ export declare const internal: {
           approvedAt: number;
           cohort: string;
           hash: string;
-          locale: "en" | "id" | "de";
+          locale: "en" | "id" | "de" | "ms";
           note: string;
           period: string;
           school: string;
@@ -21269,7 +21564,7 @@ export declare const internal: {
         "internal",
         {
           email: string;
-          locale: "en" | "id" | "de";
+          locale: "en" | "id" | "de" | "ms";
           name: string;
           slug: string;
         },
@@ -21292,7 +21587,7 @@ export declare const internal: {
           owner: { email: string; name: string };
           slug: string;
           units: Array<{
-            contentLanguage: "en" | "id" | "de";
+            contentLanguage: "en" | "id" | "de" | "ms";
             level:
               | "paud"
               | "sd"
@@ -21345,7 +21640,7 @@ export declare const internal: {
         "internal",
         {
           email: string;
-          locale: "en" | "id" | "de";
+          locale: "en" | "id" | "de" | "ms";
           name: string;
           slug: string;
         },

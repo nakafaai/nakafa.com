@@ -7,6 +7,7 @@ describe("alternate links", () => {
       { hreflang: "en", href: "https://nakafa.com/en/curriculum" },
       { hreflang: "id", href: "https://nakafa.com/id/kurikulum" },
       { hreflang: "de", href: "https://nakafa.com/de/lehrplaene" },
+      { hreflang: "ms", href: "https://nakafa.com/ms/kurikulum" },
       { hreflang: "x-default", href: "https://nakafa.com/en/curriculum" },
     ]);
   });
@@ -16,6 +17,7 @@ describe("alternate links", () => {
       { hreflang: "en", href: "https://nakafa.com/en/subjects/matematika" },
       { hreflang: "id", href: "https://nakafa.com/id/materi/matematika" },
       { hreflang: "de", href: "https://nakafa.com/de/faecher/matematika" },
+      { hreflang: "ms", href: "https://nakafa.com/ms/subjek/matematika" },
       {
         hreflang: "x-default",
         href: "https://nakafa.com/en/subjects/matematika",

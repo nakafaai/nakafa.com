@@ -2,10 +2,7 @@
 
 import { HttpClient } from "@confect/js";
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
-import {
-  ACTIVE_APP_LOCALE_CODES,
-  AppLocaleSchema,
-} from "@nakafa/aksara-contracts/locale";
+import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import refs from "@repo/backend/confect/_generated/refs";
 import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
 import { FIXTURE_REVISION } from "@repo/backend/test/assessment/snapshot";
@@ -76,6 +73,9 @@ beforeEach(() => {
   fetchQueryMock.mockReset();
 });
 
+/** The locales the fixture's one set is written in: no node of it serves Malay. */
+const SERVED_LOCALES = ["en", "id", "de"] as const;
+
 describe("immutable try-out application catalog", () => {
   it.effect(
     "reaches Convex once for each catalog page and its metadata in a release",
@@ -123,7 +123,7 @@ describe("immutable try-out application catalog", () => {
         }
       })
   );
-  it.effect.each(ACTIVE_APP_LOCALE_CODES)(
+  it.effect.each(SERVED_LOCALES)(
     "serves the complete %s hierarchy and route metadata",
     (locale) =>
       Effect.gen(function* () {
@@ -244,6 +244,13 @@ describe("immutable try-out application catalog", () => {
         expect(featured.prompt.type).toBe("doc");
         expect(featured.interaction.id).toBe(featured.key?.interaction);
       })
+  );
+  it.effect("shows no country in a locale no set is written in", () =>
+    Effect.gen(function* () {
+      const world = yield* tryoutWorld();
+      fetchQueryMock.mockImplementation(world.visitor.query);
+      expect(yield* readTryoutHubPage("ms")).toMatchObject({ countries: [] });
+    })
   );
   it.effect("asks Convex for the featured question once for each release", () =>
     Effect.gen(function* () {

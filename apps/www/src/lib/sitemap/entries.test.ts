@@ -88,6 +88,7 @@ const SEARCH_ALTERNATES = [
   { hreflang: "en", href: "https://nakafa.com/en/search" },
   { hreflang: "id", href: "https://nakafa.com/id/search" },
   { hreflang: "de", href: "https://nakafa.com/de/search" },
+  { hreflang: "ms", href: "https://nakafa.com/ms/search" },
   { hreflang: "x-default", href: "https://nakafa.com/en/search" },
 ];
 
@@ -217,6 +218,7 @@ describe("sitemap entries", () => {
         "https://nakafa.com/en/search",
         "https://nakafa.com/id/search",
         "https://nakafa.com/de/search",
+        "https://nakafa.com/ms/search",
       ]);
       expect(Arr.map(entries, (entry) => entry.alternates)).toEqual(
         Arr.map(entries, () => SEARCH_ALTERNATES)
@@ -241,12 +243,14 @@ describe("sitemap entries", () => {
           "https://nakafa.com/en/curriculum",
           "https://nakafa.com/id/kurikulum",
           "https://nakafa.com/de/lehrplaene",
+          "https://nakafa.com/ms/kurikulum",
         ]);
         // Each alternate is the URL of the same route in its own locale.
         expect(entries[0]?.alternates).toEqual([
           { hreflang: "en", href: "https://nakafa.com/en/curriculum" },
           { hreflang: "id", href: "https://nakafa.com/id/kurikulum" },
           { hreflang: "de", href: "https://nakafa.com/de/lehrplaene" },
+          { hreflang: "ms", href: "https://nakafa.com/ms/kurikulum" },
           { hreflang: "x-default", href: "https://nakafa.com/en/curriculum" },
         ]);
       })

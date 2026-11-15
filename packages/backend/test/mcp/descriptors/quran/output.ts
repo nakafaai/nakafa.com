@@ -24,8 +24,8 @@ function meaningIn(locale: string) {
 /**
  * The facts that differ between the locales, each a literal of the signed
  * content. The golden pins them so that a change in what the server sends
- * fails. An English answer carries English meaning only. A German or Indonesian
- * answer carries its own meaning or the English meaning.
+ * fails. An English answer carries English meaning only. A German, Indonesian,
+ * or Malay answer carries its own meaning or the English meaning.
  */
 const LOCALE_FACTS = {
   en: {
@@ -50,6 +50,15 @@ const LOCALE_FACTS = {
     meaning: { anyOf: [meaningIn("id"), meaningIn("en")] },
     translationId: "quranenc-indonesian",
     tafsir: embeddedTafsirAccess("id", "quranenc-tafsir"),
+  },
+  ms: {
+    meaning: { anyOf: [meaningIn("ms"), meaningIn("en")] },
+    translationId: "quranenc-malay",
+    tafsir: externalTafsirAccess(
+      "ms",
+      "mokhtasar-indonesian",
+      "Signed link-only Malay Tafsir access."
+    ),
   },
 };
 

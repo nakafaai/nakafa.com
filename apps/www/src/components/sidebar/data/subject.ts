@@ -20,6 +20,7 @@ export const subjectMenu = [
           de: ["klasse-10"],
           en: ["class-10"],
           id: ["kelas-10"],
+          ms: ["kelas-10"],
         },
       },
       {
@@ -31,6 +32,7 @@ export const subjectMenu = [
           de: ["klasse-11"],
           en: ["class-11"],
           id: ["kelas-11"],
+          ms: ["kelas-11"],
         },
       },
       {
@@ -42,6 +44,7 @@ export const subjectMenu = [
           de: ["klasse-12"],
           en: ["class-12"],
           id: ["kelas-12"],
+          ms: ["kelas-12"],
         },
       },
     ],

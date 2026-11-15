@@ -48,6 +48,8 @@ describe("locale negotiation", () => {
 
   it.each([
     ["de-DE,de;q=0.9", "de"],
+    ["ms-MY,ms;q=0.9,en;q=0.8", "ms"],
+    ["zh-MY, ms;q=0.9, id;q=0.8", "ms"],
     ["ID-ID,en;q=0.8", "id"],
     ["en;q=0.5, id;q=0.9", "id"],
     ["id;q=0, de;q=0.1", "de"],
