@@ -5,6 +5,7 @@ import {
   type Design,
   ellipse,
   eyes,
+  faded,
   figure,
   head,
   line,
@@ -142,51 +143,85 @@ export const farm = {
     ],
     draw: (kit) =>
       figure(
-        both((side) =>
+        // Ridged horns sweep up and back.
+        both((side) => [
           line(
-            `M${100 + side * 22},58 Q${100 + side * 30},28 ${100 + side * 54},24`,
+            `M${100 + side * 20},54 C${100 + side * 24},26 ${100 + side * 46},14 ${100 + side * 62},22`,
             kit.second,
-            10
-          )
+            13
+          ),
+          ...Arr.map([0.3, 0.55, 0.8], (at) =>
+            faded(0.22, [
+              ellipse(
+                100 + side * (22 + at * 32),
+                46 - at * 30,
+                2.2,
+                7,
+                kit.ink,
+                side * (20 + at * 50)
+              ),
+            ])
+          ),
+        ]),
+        // Leaf ears stand out sideways.
+        both((side) => [
+          ellipse(100 + side * 58, 84, 24, 11, kit.body, side * 16),
+          ellipse(100 + side * 58, 85, 15, 5.6, "#f4c7cf", side * 16),
+        ]),
+        torso(kit.body, 46),
+        // The beard under the chin.
+        blob([88, 142, 112, 142, 100, 172], kit.second, 8),
+        // A long face, narrower at the muzzle.
+        path(
+          "M56,84 C56,54 76,40 100,40 C124,40 144,54 144,84 C144,112 130,150 100,150 C70,150 56,112 56,84 Z",
+          kit.body
         ),
-        both((side) =>
-          ellipse(100 + side * 62, 92, 21, 9, kit.body, side * 16)
-        ),
-        torso(kit.body),
-        blob([90, 146, 110, 146, 100, 172], kit.second, 8),
-        head(kit.body, 52, 54, 98),
-        ellipse(100, 124, 22, 17, "#f4c7cf"),
-        eyes(kit, 26, 94),
-        both((side) => ellipse(100 + side * 6, 120, 2.2, 3, kit.ink)),
-        smile(128, 7, 5, kit.ink)
+        faded(0.5, [ellipse(100, 128, 24, 19, kit.second)]),
+        eyes(kit, 24, 88),
+        path("M92,118 L108,118 L100,127 Z", kit.ink),
+        line("M100,127 L100,132 M91,131 Q100,141 109,131", kit.ink, 2.8)
       ),
   },
   alpaca: {
     colors: [
-      ["#f4e6ce", PEARL],
+      ["#f4e6ce", "#c9a27e"],
       ["#c9a27e", "#f4e6ce"],
       [PEARL, "#f4c7cf"],
     ],
     draw: (kit) =>
       figure(
+        // Spear ears.
         both((side) => [
-          ellipse(100 + side * 34, 48, 10, 24, kit.body, side * 22),
-          ellipse(100 + side * 34, 50, 4.6, 15, kit.second, side * 22),
+          blob(
+            [100 + side * 24, 44, 100 + side * 36, 6, 100 + side * 46, 44],
+            kit.body,
+            10
+          ),
+          blob(
+            [100 + side * 31, 40, 100 + side * 36, 20, 100 + side * 41, 40],
+            "#f4c7cf",
+            4
+          ),
         ]),
-        torso(kit.body, 50),
-        both((side) => [
-          ellipse(100 + side * 30, 156, 24, 24, kit.body),
-          ellipse(100 + side * 44, 184, 24, 24, kit.body),
-        ]),
-        ellipse(100, 150, 30, 56, kit.body),
-        head(kit.body, 44, 46, 96),
-        ellipse(100, 50, 28, 20, kit.body),
-        ellipse(78, 60, 18, 16, kit.body),
-        ellipse(122, 60, 18, 16, kit.body),
-        ellipse(100, 114, 23, 19, kit.second),
-        eyes(kit, 21, 92, 5.4),
-        nose(107, 5.4, 3.8, kit.ink),
-        line("M100,110 V117 M92,119 Q100,126 108,119", kit.ink, 3.6)
+        // The long woolly neck, a column of curls narrower than the head.
+        Arr.flatMap([204, 180, 156, 132], (y, row) =>
+          both((side) =>
+            ellipse(100 + side * (20 - row * 1.5), y, 24, 20, kit.body)
+          )
+        ),
+        // The topknot, three curls over the brow.
+        ellipse(82, 44, 19, 17, kit.body),
+        ellipse(118, 44, 19, 17, kit.body),
+        ellipse(100, 34, 21, 19, kit.body),
+        head(kit.body, 44, 42, 82),
+        both((side) => ellipse(100 + side * 42, 88, 13, 18, kit.body)),
+        // The small face in the wool.
+        ellipse(100, 90, 32, 31, kit.second),
+        faded(0.55, [ellipse(100, 90, 32, 31, PEARL)]),
+        ellipse(100, 104, 19, 14, PEARL),
+        eyes(kit, 17, 84, 5.6),
+        path("M94,98 L106,98 L100,104 Z", kit.ink),
+        line("M100,104 L100,107 M93,107 Q100,114 107,107", kit.ink, 2.6)
       ),
   },
 } satisfies Record<string, Design>;

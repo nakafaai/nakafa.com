@@ -36,7 +36,7 @@ export function AppShell({
       header={
         <>
           <Header />
-          <DeferredSearchCommand articleNavigation={articleNavigation} />
+          <DeferredSearchCommand />
           <AiSheet />
         </>
       }

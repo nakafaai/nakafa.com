@@ -4,7 +4,7 @@ import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, FileSystem, Path } from "effect";
 import { LINE_FACES, writeLineFaces } from "@/scripts/quran/line";
-import { readFaceMetrics } from "@/scripts/quran/woff";
+import { readFaceMetrics } from "@/scripts/quran/test.woff";
 
 /** The line faces' metrics, in hhea and in OS/2 alike. */
 const BALANCED = { ascent: 848, descent: -451, lineGap: 0 };

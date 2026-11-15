@@ -12,9 +12,6 @@ export const LESSONS_PER_STEP = 6;
 /** Bytes of search rows one build step may scan while it lists its lessons. */
 export const LESSON_PAGE_BYTES = 1024 * 1024;
 
-/** Sections that one embedding batch holds. */
-export const EMBED_BATCH_SIZE = 64;
-
 /**
  * Embedding requests that a batch keeps open at once. The gateway refuses a
  * request of several texts for `gemini-embedding-2` with status 404: on 25

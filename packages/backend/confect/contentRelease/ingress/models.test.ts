@@ -6,7 +6,6 @@ import { afterEach, assert, describe, expect, it } from "@effect/vitest";
 import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
 import {
   ModelBuildCoordinator,
-  type ModelBuildCoordinatorService,
   type ModelBuildWaitPolicy,
   modelBuildCoordinatorLayer,
   waitForModelBuild,
@@ -27,6 +26,7 @@ import { testRendererJson } from "@repo/backend/test/content/release";
 import { convexTest } from "convex-test";
 import {
   Array as Arr,
+  type Context,
   Data,
   Duration,
   Effect,
@@ -35,6 +35,11 @@ import {
   MutableRef,
 } from "effect";
 import { TestClock } from "effect/testing";
+
+/** Service shape of the private model-build coordinator. */
+type ModelBuildCoordinatorService = Context.Service.Shape<
+  typeof ModelBuildCoordinator
+>;
 
 const releaseId = ReleaseIdSchema.make("release-model-waiter");
 afterEach(() => vi.useRealTimers());
