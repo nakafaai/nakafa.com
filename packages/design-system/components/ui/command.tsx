@@ -346,7 +346,7 @@ function CommandItem({
   return (
     <AutocompleteItem
       className={cn(
-        "min-h-11! w-full overflow-hidden rounded-md px-3 py-2.5! text-sm! sm:min-h-11! sm:py-2.5! [&_svg:not([class*='size-'])]:size-4!",
+        "icon-first-line min-h-11! w-full overflow-hidden rounded-md px-3 py-3! text-sm! sm:min-h-11! sm:py-3! [&_svg:not([class*='size-'])]:size-4!",
         className
       )}
       data-slot="command-item"
