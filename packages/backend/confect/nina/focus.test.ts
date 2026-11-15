@@ -15,8 +15,15 @@ const readReference = Ref.getFunctionReference(refs.internal.nina.focus.read);
 const OTHER_LEARNER_SEEDED_AT = Date.UTC(2026, 8, 27, 12);
 
 describe("Nina question focus", () => {
-  it("freezes a Pro learner's finished question", async () => {
+  it("freezes a learner's finished question, Pro or free (D1)", async () => {
     const f = await createFocusTest();
+    await f.expectExit(
+      resolveQuestionFocus(f.focus, f.identity.userId),
+      (exit) => expect(exit).toEqual(Exit.succeed(f.frozen))
+    );
+    await f.t.mutation((ctx) =>
+      ctx.db.patch("users", f.identity.userId, { plan: "free" })
+    );
     await f.expectExit(
       resolveQuestionFocus(f.focus, f.identity.userId),
       (exit) => expect(exit).toEqual(Exit.succeed(f.frozen))
@@ -26,7 +33,6 @@ describe("Nina question focus", () => {
   it.each([
     "another learner",
     "an unfinished section",
-    "the free plan",
     "a missing section",
     "a missing placement",
   ] as const)("rejects a question owned by %s", async (state) => {
@@ -44,8 +50,6 @@ describe("Nina question focus", () => {
         await ctx.db.patch("tryoutSectionAttempts", f.seed.sectionId, {
           status: "in-progress",
         });
-      } else if (state === "the free plan") {
-        await ctx.db.patch("users", f.identity.userId, { plan: "free" });
       } else if (state === "a missing section") {
         await ctx.db.delete("tryoutSectionAttempts", f.seed.sectionId);
       } else {
@@ -71,7 +75,7 @@ describe("Nina question focus", () => {
     );
   });
 
-  it("keeps a conversation's question only while the review stays entitled", async () => {
+  it("keeps a conversation's question only while its section stays finished", async () => {
     const f = await createFocusTest();
     const retain = (
       focus: NinaFocus | undefined,
@@ -83,7 +87,9 @@ describe("Nina question focus", () => {
     await retain(undefined, undefined);
     await retain(f.frozen, f.frozen);
     await f.t.mutation((ctx) =>
-      ctx.db.patch("users", f.identity.userId, { plan: "free" })
+      ctx.db.patch("tryoutSectionAttempts", f.seed.sectionId, {
+        status: "in-progress",
+      })
     );
     await retain(f.frozen, undefined);
   });
@@ -133,7 +139,9 @@ describe("Nina question focus", () => {
       );
     }
     await f.t.mutation((ctx) =>
-      ctx.db.patch("users", f.identity.userId, { plan: "free" })
+      ctx.db.patch("tryoutSectionAttempts", f.seed.sectionId, {
+        status: "in-progress",
+      })
     );
     await read((exit) => expect(exit).toEqual(Exit.succeed(null)));
   });

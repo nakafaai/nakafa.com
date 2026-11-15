@@ -10,8 +10,7 @@ import type {
 
 /**
  * What a finished attempt's review computes as it renders, which its header, its questions, its result and
- * its footer read: each question with its body, whether the reader may read them whole, the section's
- * runtime and limit, and the score it shows. A finished attempt no longer changes, so the value holds.
+ * its footer read: each question with its body, the section's runtime and limit, and the score it shows. A finished attempt no longer changes, so the value holds.
  */
 export const TryoutReviewContext = createContext<{
   readonly joined: readonly {
@@ -21,7 +20,6 @@ export const TryoutReviewContext = createContext<{
   readonly limit: Option.Option<number>;
   readonly runtime: TryoutSectionRuntime;
   readonly score: TryoutScoreResult;
-  readonly whole: boolean;
 } | null>(null);
 
 /**

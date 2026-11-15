@@ -47,6 +47,7 @@ import operators from "@repo/backend/confect/_generated/refs/operators";
 import operatorsInternal from "@repo/backend/confect/_generated/refs/operators.server";
 import posts from "@repo/backend/confect/_generated/refs/posts";
 import postsInternal from "@repo/backend/confect/_generated/refs/posts.server";
+import practice from "@repo/backend/confect/_generated/refs/practice";
 import privacyInternal from "@repo/backend/confect/_generated/refs/privacy.server";
 import records from "@repo/backend/confect/_generated/refs/records";
 import recordsInternal from "@repo/backend/confect/_generated/refs/records.server";
@@ -154,6 +155,7 @@ const domainModules = {
   onboarding,
   operators,
   posts,
+  practice,
   records,
   roster,
   tenancy,

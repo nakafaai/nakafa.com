@@ -10,6 +10,7 @@ import {
   TryoutPlayerOpening,
   TryoutRunningPlayer,
 } from "@/components/tryout/player/opening";
+import { TryoutPracticeLink } from "@/components/tryout/practice/link";
 import {
   TryoutFinishedPlace,
   TryoutReviewFrame,
@@ -102,7 +103,9 @@ export function TryoutSetEntry({ children, value }: TryoutSetEntryProps) {
 
   return (
     <TryoutPage>
-      <TryoutEntryHeader value={value} />
+      <TryoutEntryHeader value={value}>
+        <TryoutPracticeLink publicPath={value.currentPath} />
+      </TryoutEntryHeader>
       <TryoutPageBody>
         <TryoutSectionSummary
           value={{
@@ -118,16 +121,16 @@ export function TryoutSetEntry({ children, value }: TryoutSetEntryProps) {
 }
 
 /**
- * The set's header: its path and title, the attempt picker, and the action. A review adds the view of its
- * questions, which joins the picker in one group of outlined buttons, so the header holds the primary
- * action and one group, never three buttons.
+ * The set's header: its path and title, the attempt picker beside the page's second control in one group of
+ * outlined buttons (the practice, or the view of a review's questions), and the try-out's action, so the
+ * header holds the primary action and one group.
  */
 function TryoutEntryHeader({
   children,
   value,
 }: {
-  /** What the page adds beside the picker, such as the view of a review's questions. */
-  children?: ReactNode;
+  /** The page's second control, beside the picker. */
+  children: ReactNode;
   value: TryoutSetEntryProps["value"];
 }) {
   const t = useTranslations("Tryouts");
@@ -137,22 +140,14 @@ function TryoutEntryHeader({
       page={value.page}
       returnPath={value.returnPath}
     >
-      {children === undefined ? (
+      <ButtonGroup aria-label={t("attempt-controls")}>
         <TryoutAttemptPicker
           attempt={value.actionAttempt}
           locale={value.route.locale}
           set={value.page.set}
         />
-      ) : (
-        <ButtonGroup aria-label={t("review-controls")}>
-          <TryoutAttemptPicker
-            attempt={value.actionAttempt}
-            locale={value.route.locale}
-            set={value.page.set}
-          />
-          {children}
-        </ButtonGroup>
-      )}
+        {children}
+      </ButtonGroup>
       <TryoutEntryAction value={value} />
     </TryoutSetPageHeader>
   );

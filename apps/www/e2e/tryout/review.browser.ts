@@ -306,9 +306,10 @@ test.describe("The review of a finished try-out", () => {
           await expect(
             questionArticle(page, 3).getByRole("checkbox", { name: CORRECT })
           ).toHaveCount(0);
+          // Every learner may ask Nina about a question, for their Nina credits.
           await expect(
             articles.getByRole("button", { exact: true, name: "Ask Nina" })
-          ).toHaveCount(0);
+          ).toHaveCount(QUESTIONS);
         });
         yield* activate(
           questionArticle(page, 3).getByRole("button", {

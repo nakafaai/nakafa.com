@@ -7,6 +7,7 @@ import {
   chooseView,
   expectView,
   finishSection,
+  openingView,
   openSurface,
   questionArticle,
   runFirstSection,
@@ -79,7 +80,7 @@ const verifyFlags = Effect.fn("NakafaE2E.verifyPlayerFlags")(function* (
 ) {
   const changes = yield* trackChanges(page, []);
   yield* runFirstSection(page, hasTouch, baseURL);
-  yield* expectView(page, "List");
+  yield* expectView(page, openingView(page));
   yield* chooseView(page, hasTouch, "One question");
   yield* expectView(page, "One question");
   const flag = page.getByRole("button", { exact: true, name: "Flag" });

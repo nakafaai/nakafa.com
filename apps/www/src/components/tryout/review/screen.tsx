@@ -28,14 +28,15 @@ import { TryoutReviewedFields } from "@/components/tryout/runtime/response/revie
  * how it went, which every reader sees, as a score is free. The backend sends a question's key and
  * explanation only to a reader who may read them, a Pro learner or anyone on the section's free samples,
  * so such a question marks the answer against its key and opens its explanation, and any other question
- * opens the Pro offer in its explanation's place. Nina answers about a question for a Pro learner.
+ * opens the Pro offer in its explanation's place. Nina answers about any question, for the learner's Nina
+ * credits.
  */
 export function TryoutAttemptReview({
   binding,
 }: {
   readonly binding: { readonly attemptId: Id<"tryoutAttempts"> } | null;
 }) {
-  const { joined, whole } = useTryoutReview();
+  const { joined } = useTryoutReview();
   if (binding === null) {
     return null;
   }
@@ -46,13 +47,11 @@ export function TryoutAttemptReview({
         {Arr.map(joined, ({ body, question }) => (
           <TryoutReviewQuestionShell
             action={
-              whole ? (
-                <TryoutAskButton
-                  attemptId={binding.attemptId}
-                  placementId={question.placementId}
-                  questionOrder={question.questionOrder}
-                />
-              ) : null
+              <TryoutAskButton
+                attemptId={binding.attemptId}
+                placementId={question.placementId}
+                questionOrder={question.questionOrder}
+              />
             }
             key={question.placementId}
             mark={<TryoutVerdictBadge verdict={verdictOfQuestion(question)} />}
