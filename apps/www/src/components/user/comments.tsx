@@ -14,7 +14,7 @@ import { useLocale, useTranslations } from "use-intl";
 import { CommentsProvider } from "@/components/comments/provider";
 import { CommentRow } from "@/components/comments/row";
 import { ConvexIsland } from "@/components/providers/island";
-import { DataFailure } from "@/components/shared/failure";
+import { DataFailure } from "@/components/state/failure";
 import { FeedCount, FeedEmpty, FeedNotice } from "@/components/user/feed";
 import { useVisitorList } from "@/components/user/paging";
 import { visitorListView } from "@/components/user/visitor";

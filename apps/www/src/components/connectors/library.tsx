@@ -12,7 +12,7 @@ import {
   isShown,
 } from "@/components/connectors/directory";
 import { CATEGORY_FILTER } from "@/components/connectors/filter";
-import { pageGutterVariants } from "@/components/shared/content/width";
+import { pageGutterVariants } from "@/components/shared/page/width";
 import { chosenOne } from "@/components/shared/table/filter";
 import {
   TableSearch,

@@ -12,7 +12,7 @@ import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
-import { TableNote } from "@/components/shared/table/frame";
+import { TableNote } from "@/components/shared/table/inset";
 import { RowCopy } from "@/components/shared/table/menu";
 import { TableTitle } from "@/components/shared/table/title";
 import { EmptyState } from "@/components/state/empty";

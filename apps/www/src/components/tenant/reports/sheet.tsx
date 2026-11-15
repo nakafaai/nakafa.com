@@ -18,6 +18,7 @@ import { Array as Arr, Option, Record as Rec } from "effect";
 import { useState } from "react";
 import { useLocale, useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
+import { PageList } from "@/components/shared/page/body";
 import { PaneOpen } from "@/components/shared/pane";
 import {
   Panes,
@@ -28,7 +29,6 @@ import {
 import { useFormatTimeZone } from "@/components/shared/table/calendar";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
-import { TablePageBody } from "@/components/shared/table/frame";
 import { RowCopy, RowItems } from "@/components/shared/table/menu";
 import { TablePages } from "@/components/shared/table/pages";
 import { type StatusLook, TableStatus } from "@/components/shared/table/status";
@@ -190,7 +190,7 @@ function CohortReportsBody() {
   return (
     <Panes id="reports">
       <PanesList>
-        <TablePageBody>
+        <PageList>
           <TablePages pageSize={PAGE_SIZE} pagination={pagination}>
             <DataTable
               columns={columns}
@@ -200,7 +200,7 @@ function CohortReportsBody() {
               search="student"
             />
           </TablePages>
-        </TablePageBody>
+        </PageList>
       </PanesList>
       <PanesDetail label={t("detail")}>
         <ReportLineDetail lines={pagination.results} />

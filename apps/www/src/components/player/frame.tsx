@@ -5,7 +5,7 @@ import {
   pageBoxVariants,
   pageGutterVariants,
   readingMeasureVariants,
-} from "@/components/shared/content/width";
+} from "@/components/shared/page/width";
 import { PaneSide } from "@/components/shared/panes/side";
 
 /**

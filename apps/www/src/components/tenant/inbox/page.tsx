@@ -17,8 +17,9 @@ import { NotificationsList } from "@/components/notifications/list";
 import { MarkAllRead } from "@/components/notifications/read";
 import { InboxTabs } from "@/components/notifications/tabs";
 import { SchoolInboxTopic } from "@/components/notifications/topic";
-import { HeaderLabel } from "@/components/shared/breadcrumb/frame";
-import { LayoutContent, PageFrame } from "@/components/shared/content/frame";
+import { PageStack } from "@/components/shared/page/body";
+import { Page } from "@/components/shared/page/frame";
+import { PageHeaderLabel } from "@/components/shared/page/header";
 import { useTenant } from "@/components/tenant/context";
 import { SchoolHeader } from "@/components/tenant/header";
 import { SchoolPreferences } from "@/components/tenant/inbox/preferences";
@@ -36,7 +37,7 @@ export function SchoolNotifications({ all }: { all: boolean }) {
   const clock = useAgeClock(DateTime.toEpochMillis(DateTime.nowUnsafe()));
 
   return (
-    <PageFrame width="column">
+    <Page width="column">
       <SchoolHeader items={[{ label: t("title") }]} title={t("title")}>
         {/* The school choice and the page's two buttons are one group of equal parts, ready and final from the first paint. */}
         <ButtonGroup>
@@ -46,18 +47,18 @@ export function SchoolNotifications({ all }: { all: boolean }) {
         </ButtonGroup>
       </SchoolHeader>
       <InboxTabs topics={SchoolInboxTopic.literals} />
-      <LayoutContent className="flex w-full flex-col py-6">
+      <PageStack>
         <NotificationsClockContext value={clock}>
           <NotificationsList first={Option.none()} scope={scope} />
         </NotificationsClockContext>
-      </LayoutContent>
-    </PageFrame>
+      </PageStack>
+    </Page>
   );
 }
 
 /**
  * The header's choice of schools: this school's rows, or every school's, kept in the page's address. Its button shows
- * the chosen school's icon and folds its words in a narrow header (`HeaderLabel`), as the header's buttons beside it
+ * the chosen school's icon and folds its words in a narrow header (`PageHeaderLabel`), as the header's buttons beside it
  * do, so the three stand as equal parts of one group on a phone. The menu opens with its one-word label, and each
  * choice shows its icon.
  */
@@ -85,7 +86,7 @@ function InboxFilter({ all }: { all: boolean }) {
         render={
           <Button aria-label={common("menu-schools")}>
             <HugeIcons icon={chosen.icon} />
-            <HeaderLabel>{chosen.label}</HeaderLabel>
+            <PageHeaderLabel>{chosen.label}</PageHeaderLabel>
           </Button>
         }
       />

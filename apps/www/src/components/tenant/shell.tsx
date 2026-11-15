@@ -28,6 +28,7 @@ import {
   SidebarMenuItem,
 } from "@repo/design-system/components/ui/sidebar-menu";
 import { SidebarProvider } from "@repo/design-system/components/ui/sidebar-provider";
+import { SidebarScope } from "@repo/design-system/components/ui/sidebar-scope";
 import {
   Sidebar,
   SidebarInset,
@@ -67,7 +68,6 @@ import { signOutSchoolAccount } from "@/components/tenant/signout";
 import { Link, useRouteMatched } from "@/lib/routing/link";
 import { EXACT_ACTIVE_OPTIONS } from "@/lib/routing/tree";
 import { SearchContextProvider } from "@/lib/search/context";
-
 import type { SchoolViewer } from "@/lib/tenant/frame";
 
 /**
@@ -301,7 +301,7 @@ function TenantFrame({ children }: { children: ReactNode }) {
               </DrawnClasses>
             </div>
             <SidebarInset className="[--app-header-top:0rem]">
-              {children}
+              <SidebarScope>{children}</SidebarScope>
             </SidebarInset>
           </SidebarProvider>
         </SearchContextProvider>

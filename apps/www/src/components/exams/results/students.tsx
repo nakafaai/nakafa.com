@@ -19,7 +19,6 @@ import {
   useResultsScope,
   useSessionSettled,
 } from "@/components/exams/results/context";
-import { DataFailure } from "@/components/shared/failure";
 import { usePanes } from "@/components/shared/panes";
 import { reloadPage } from "@/components/shared/reload";
 import { tableColumns } from "@/components/shared/table/columns";
@@ -33,6 +32,7 @@ import {
   useTableFilters,
 } from "@/components/shared/table/toolbar";
 import { EmptyState } from "@/components/state/empty";
+import { DataFailure } from "@/components/state/failure";
 import { EmptyNina } from "@/components/state/nina";
 import { isLostAccess } from "@/components/tenant/refusal";
 import { useKeptRows } from "@/lib/data/kept";

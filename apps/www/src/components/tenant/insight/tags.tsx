@@ -30,7 +30,7 @@ import { Array as Arr, Option, Schema } from "effect";
 import { useId, useState, useTransition } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
-import { HeaderLabel } from "@/components/shared/breadcrumb/frame";
+import { PageHeaderLabel } from "@/components/shared/page/header";
 import { useTenant } from "@/components/tenant/context";
 import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 import { Link } from "@/lib/routing/link";
@@ -75,7 +75,7 @@ export function QuestionTags() {
         type="button"
       >
         <HugeIcons icon={Tag01Icon} />
-        <HeaderLabel>{t("tags")}</HeaderLabel>
+        <PageHeaderLabel>{t("tags")}</PageHeaderLabel>
       </Button>
       <ResponsiveDialog
         action={

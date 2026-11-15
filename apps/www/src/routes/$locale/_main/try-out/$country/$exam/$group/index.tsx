@@ -2,8 +2,7 @@ import { makeBreadcrumbNodes } from "@repo/seo/jsonld/node";
 import { createFileRoute, notFound } from "@tanstack/react-router";
 import { Option } from "effect";
 import { BreadcrumbHeader } from "@/components/shared/breadcrumb/header";
-import { LayoutMaterialContent } from "@/components/shared/material/content";
-import { LayoutMaterial } from "@/components/shared/material/frame";
+import { Page } from "@/components/shared/page/frame";
 import { TryoutCatalogChoices } from "@/components/tryout/catalog/choice";
 import { TryoutGroupPageClient } from "@/components/tryout/catalog/group";
 import {
@@ -57,40 +56,38 @@ function TryoutGroupPage() {
   const { locale } = Route.useParams();
   const route = Route.useLoaderData();
   return (
-    <LayoutMaterial>
-      <LayoutMaterialContent>
-        <BreadcrumbHeader
-          value={{
-            action: (
-              <TryoutCatalogChoices>
-                <TryoutExamSelector
-                  currentValue={route.page.exam.publicPath}
-                  options={route.examOptions}
-                />
-                <TryoutGroupSelector
-                  axis={route.page.exam.groupAxis}
-                  currentValue={route.page.group.publicPath}
-                  options={route.groupOptions}
-                />
-              </TryoutCatalogChoices>
-            ),
-            home: HOME_TARGET,
-            homeLabel: route.labels.home,
-            items: [
-              {
-                label: route.labels.tryOut,
-                menuLabel: route.labels.tryOutShort,
-                target: Option.getOrUndefined(
-                  getTryoutCrumbTarget(route.countryPath)
-                ),
-              },
-              { label: route.name },
-            ],
-            title: route.name,
-          }}
-        />
-        <TryoutGroupPageClient locale={locale} page={route.page} />
-      </LayoutMaterialContent>
-    </LayoutMaterial>
+    <Page>
+      <BreadcrumbHeader
+        value={{
+          action: (
+            <TryoutCatalogChoices>
+              <TryoutExamSelector
+                currentValue={route.page.exam.publicPath}
+                options={route.examOptions}
+              />
+              <TryoutGroupSelector
+                axis={route.page.exam.groupAxis}
+                currentValue={route.page.group.publicPath}
+                options={route.groupOptions}
+              />
+            </TryoutCatalogChoices>
+          ),
+          home: HOME_TARGET,
+          homeLabel: route.labels.home,
+          items: [
+            {
+              label: route.labels.tryOut,
+              menuLabel: route.labels.tryOutShort,
+              target: Option.getOrUndefined(
+                getTryoutCrumbTarget(route.countryPath)
+              ),
+            },
+            { label: route.name },
+          ],
+          title: route.name,
+        }}
+      />
+      <TryoutGroupPageClient locale={locale} page={route.page} />
+    </Page>
   );
 }

@@ -4,8 +4,8 @@ import {
 } from "@repo/backend/confect/tryouts/sets/query";
 import { Option, Schema } from "effect";
 import { useTranslations } from "use-intl";
+import { PageList } from "@/components/shared/page/body";
 import { DataTable } from "@/components/shared/table/data";
-import { TablePageBody } from "@/components/shared/table/frame";
 import { useTryoutSetColumns } from "@/components/tryout/catalog/table/columns";
 import { useTryoutSetTable } from "@/components/tryout/catalog/table/selection";
 import type { TryoutSetData } from "@/components/tryout/catalog/table/types";
@@ -33,7 +33,7 @@ export function TryoutSetFrame({ data }: { data: TryoutSetData }) {
     data.hasMore && !data.busy && !data.error && !data.offline;
 
   return (
-    <TablePageBody>
+    <PageList>
       {/* The rows every visitor reads hide a learner's progress marks under a signed-in hint. */}
       <div
         className="contents"
@@ -75,6 +75,6 @@ export function TryoutSetFrame({ data }: { data: TryoutSetData }) {
       <span aria-live="polite" className="sr-only" role="status">
         {status}
       </span>
-    </TablePageBody>
+    </PageList>
   );
 }

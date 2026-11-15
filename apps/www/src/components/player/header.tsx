@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { PlayerViewSwitch } from "@/components/player/view";
-import { BreadcrumbHeaderFrame } from "@/components/shared/breadcrumb/frame";
+import { PageHeader } from "@/components/shared/page/header";
 
 /**
  * Keeps the player's header in one row across the page's frame,
@@ -11,11 +11,7 @@ import { BreadcrumbHeaderFrame } from "@/components/shared/breadcrumb/frame";
  * keeps its place when a header has no timer.
  */
 export function PlayerHeader({ children }: { children: ReactNode }) {
-  return (
-    <BreadcrumbHeaderFrame contentClassName="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] gap-2">
-      {children}
-    </BreadcrumbHeaderFrame>
-  );
+  return <PageHeader>{children}</PageHeader>;
 }
 
 /** The start of the header: the way back and the title. */

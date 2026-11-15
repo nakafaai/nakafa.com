@@ -16,7 +16,7 @@ import {
 import { useLocale, useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { ConvexIsland } from "@/components/providers/island";
-import { DataFailure } from "@/components/shared/failure";
+import { DataFailure } from "@/components/state/failure";
 import { useAgeClock } from "@/components/user/ages";
 import { FeedEmpty, FeedNotice } from "@/components/user/feed";
 import { useVisitorList } from "@/components/user/paging";

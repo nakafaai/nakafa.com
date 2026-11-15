@@ -1,6 +1,5 @@
 import { createFileRoute, Outlet } from "@tanstack/react-router";
-import { LayoutMaterialContent } from "@/components/shared/material/content";
-import { LayoutMaterial } from "@/components/shared/material/frame";
+import { Page } from "@/components/shared/page/frame";
 import { SETTINGS_PANEL_ID } from "@/components/user/settings/panel";
 
 /**
@@ -18,11 +17,11 @@ export const Route = createFileRoute(
 
 function SettingsLayout() {
   return (
-    <LayoutMaterial>
-      <LayoutMaterialContent>
+    <div className="flex">
+      <Page>
         <Outlet />
-      </LayoutMaterialContent>
+      </Page>
       <div className="contents" id={SETTINGS_PANEL_ID} />
-    </LayoutMaterial>
+    </div>
   );
 }

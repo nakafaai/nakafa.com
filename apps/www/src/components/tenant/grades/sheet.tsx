@@ -25,6 +25,7 @@ import { Array as Arr, Number as Num, Option, Schema } from "effect";
 import { createContext, use, useState, useTransition } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
+import { PageList } from "@/components/shared/page/body";
 import {
   PaneBody,
   PaneFact,
@@ -42,7 +43,6 @@ import {
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { namedOptions } from "@/components/shared/table/filter";
-import { TablePageBody } from "@/components/shared/table/frame";
 import { RowCopy, RowItems } from "@/components/shared/table/menu";
 import { TablePages } from "@/components/shared/table/pages";
 import { type StatusLook, TableStatus } from "@/components/shared/table/status";
@@ -203,7 +203,7 @@ export function ClassGradebook({
     >
       <Panes id="grades">
         <PanesList>
-          <TablePageBody>
+          <PageList>
             <TablePages pageSize={GRADEBOOK_PAGE_SIZE} pagination={pagination}>
               <DataTable
                 columns={columns}
@@ -220,7 +220,7 @@ export function ClassGradebook({
                 search="student"
               />
             </TablePages>
-          </TablePageBody>
+          </PageList>
         </PanesList>
         <PanesDetail label={t("detail")}>
           {isRead ? <GradeLineDetail lines={pagination.results} /> : null}

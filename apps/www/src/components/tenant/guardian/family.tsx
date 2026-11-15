@@ -15,8 +15,8 @@ import { Array as Arr, Option, Schema, String as Str } from "effect";
 import { useId, useState, useTransition } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
+import { PageList } from "@/components/shared/page/body";
 import { reloadPage } from "@/components/shared/reload";
-import { TablePageBody } from "@/components/shared/table/frame";
 import { TableStatus } from "@/components/shared/table/status";
 import { EmptyState } from "@/components/state/empty";
 import { LoadFailure } from "@/components/state/failure";
@@ -46,9 +46,9 @@ export function StudentFamily() {
           {t("family-invite")}
         </Button>
       </SchoolHeader>
-      <TablePageBody>
+      <PageList>
         <FamilyList />
-      </TablePageBody>
+      </PageList>
       <ParentInviteDialog open={isInviting} setOpen={setIsInviting} />
     </>
   );

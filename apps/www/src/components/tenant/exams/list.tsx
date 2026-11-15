@@ -12,11 +12,11 @@ import { useState } from "react";
 import { useFormatter, useTranslations } from "use-intl";
 import { useStore } from "zustand";
 import { useConvexAuth } from "@/components/auth/convex";
+import { PageList } from "@/components/shared/page/body";
 import { useFormatTimeZone } from "@/components/shared/table/calendar";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { namedOptions } from "@/components/shared/table/filter";
-import { TablePageBody } from "@/components/shared/table/frame";
 import { RowItems, RowOpen } from "@/components/shared/table/menu";
 import { TablePages } from "@/components/shared/table/pages";
 import { TableTitle } from "@/components/shared/table/title";
@@ -87,11 +87,11 @@ export function ExamList({ slug }: { slug: TenantSlug }) {
             />
           ) : null}
         </SchoolHeader>
-        <TablePageBody>
+        <PageList>
           <TablePages pageSize={EXAM_PAGE_SIZE} pagination={pagination}>
             <ExamListRows exams={pagination.results} saving={saving} />
           </TablePages>
-        </TablePageBody>
+        </PageList>
       </TableFiltersProvider>
     </ExamDraftsProvider>
   );

@@ -12,7 +12,8 @@ import { Array as Arr, Option, Schema } from "effect";
 import { createContext, use } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
-import { LayoutContent, PageFrame } from "@/components/shared/content/frame";
+import { PageStack } from "@/components/shared/page/body";
+import { Page } from "@/components/shared/page/frame";
 import { PanesProvider } from "@/components/shared/panes";
 import { TableFiltersProvider } from "@/components/shared/table/toolbar";
 import { CHANNEL_PAGE_SIZE } from "@/components/tenant/classes/channels";
@@ -78,10 +79,10 @@ export function ClassShell({
   return (
     <ReadBoundary
       fallback={(failure) => (
-        <PageFrame width="column">
+        <Page width="column">
           <SchoolHeader items={[]} />
-          <LayoutContent className="py-6">{failure}</LayoutContent>
-        </PageFrame>
+          <PageStack>{failure}</PageStack>
+        </Page>
       )}
       read={{ args: { classSlug, slug }, ref: classroom.classes.resolve }}
     >
@@ -381,11 +382,11 @@ function ClassBody({ klass }: { klass: Resolved }) {
 /** The state of a class that the viewer may not read, with one way back to the school's home. */
 function ClassMissing() {
   return (
-    <PageFrame width="column">
+    <Page width="column">
       <SchoolHeader items={[]} />
-      <LayoutContent className="flex w-full flex-col gap-6 py-6">
+      <PageStack>
         <ClassMissingBody />
-      </LayoutContent>
-    </PageFrame>
+      </PageStack>
+    </Page>
   );
 }

@@ -4,11 +4,8 @@ import { createFileRoute, notFound, useRouter } from "@tanstack/react-router";
 import { SheetEntry } from "@/components/ai/sheet/entry";
 import { AiMenuItem } from "@/components/ai/sheet/menu";
 import { OpenContent } from "@/components/shared/content/actions";
-import { LayoutContent } from "@/components/shared/content/frame";
 import { PaginationContent } from "@/components/shared/content/pagination";
 import { FragmentLanding } from "@/components/shared/fragment";
-import { LayoutMaterialContent } from "@/components/shared/material/content";
-import { LayoutMaterial } from "@/components/shared/material/frame";
 import {
   SidebarRightFooter,
   SidebarRightHeader,
@@ -16,6 +13,8 @@ import {
   SidebarRightProvider,
 } from "@/components/shared/outline/panel";
 import { SidebarTree } from "@/components/shared/outline/tree";
+import { PageStack } from "@/components/shared/page/body";
+import { Page } from "@/components/shared/page/frame";
 import { QuranBismillah } from "@/components/shared/quran/bismillah";
 import { QuranSurahFind } from "@/components/shared/quran/find";
 import { QuranSurahHeader } from "@/components/shared/quran/header";
@@ -108,84 +107,82 @@ function QuranSurahPage() {
   }
 
   return (
-    <LayoutMaterial>
-      <SidebarRightProvider>
-        <LayoutMaterialContent>
-          <QuranSurahsContext value={page.surahs}>
-            <QuranSurahHeader
-              actions={
-                <OpenContent
-                  copySourceUrl={page.copySourceUrl}
-                  slug={`/${page.locale}/quran/${page.surah}`}
-                >
-                  <AiMenuItem contextTitle={page.title} />
-                </OpenContent>
-              }
-              arabic={page.arabic}
-              meaning={page.meaning.text}
-              meaningLanguage={page.meaning.appLocale}
-              quranLabel={labels.quran}
-              search={<QuranSurahFind key={page.surahNumber} />}
-              title={page.title}
-            />
-          </QuranSurahsContext>
-          <LayoutContent className="pt-6">
-            <QuranVersesProvider
-              interpretationLabel={page.interpretationLabel}
-              surahTitle={page.title}
-              tafsirAccess={page.tafsirAccess}
-              translationNotesLabel={page.translationNotesLabel}
-            >
-              {page.preBismillah.kind === "shown" ? (
-                <QuranBismillah bismillah={page.preBismillah.value} />
-              ) : null}
-              {page.tafsirAccess.kind === "embedded" ? (
-                <QuranInterpretationControls
-                  appLocale={page.tafsirAccess.appLocale}
-                  errorMessage={{
-                    description: "interpretation-error.description",
-                    title: "interpretation-error.title",
-                  }}
-                  label={page.interpretationLabel}
-                  recoverSnapshot={recoverSnapshot}
-                  refreshingMessage={{
-                    description: "interpretation-refreshing.description",
-                    title: "interpretation-refreshing.title",
-                  }}
-                  snapshotId={page.snapshotId}
-                  surahNumber={page.surahNumber}
-                >
-                  <QuranVerseList items={page.verseItems} />
-                </QuranInterpretationControls>
-              ) : (
+    <SidebarRightProvider>
+      <Page>
+        <QuranSurahsContext value={page.surahs}>
+          <QuranSurahHeader
+            actions={
+              <OpenContent
+                copySourceUrl={page.copySourceUrl}
+                slug={`/${page.locale}/quran/${page.surah}`}
+              >
+                <AiMenuItem contextTitle={page.title} />
+              </OpenContent>
+            }
+            arabic={page.arabic}
+            meaning={page.meaning.text}
+            meaningLanguage={page.meaning.appLocale}
+            quranLabel={labels.quran}
+            search={<QuranSurahFind key={page.surahNumber} />}
+            title={page.title}
+          />
+        </QuranSurahsContext>
+        <PageStack>
+          <QuranVersesProvider
+            interpretationLabel={page.interpretationLabel}
+            surahTitle={page.title}
+            tafsirAccess={page.tafsirAccess}
+            translationNotesLabel={page.translationNotesLabel}
+          >
+            {page.preBismillah.kind === "shown" ? (
+              <QuranBismillah bismillah={page.preBismillah.value} />
+            ) : null}
+            {page.tafsirAccess.kind === "embedded" ? (
+              <QuranInterpretationControls
+                appLocale={page.tafsirAccess.appLocale}
+                errorMessage={{
+                  description: "interpretation-error.description",
+                  title: "interpretation-error.title",
+                }}
+                label={page.interpretationLabel}
+                recoverSnapshot={recoverSnapshot}
+                refreshingMessage={{
+                  description: "interpretation-refreshing.description",
+                  title: "interpretation-refreshing.title",
+                }}
+                snapshotId={page.snapshotId}
+                surahNumber={page.surahNumber}
+              >
                 <QuranVerseList items={page.verseItems} />
-              )}
-              <FragmentLanding />
-            </QuranVersesProvider>
-          </LayoutContent>
-          <PaginationContent pagination={page.pagination} />
-          <SheetEntry key={`assistant:${page.surah}`} />
-        </LayoutMaterialContent>
-        <SidebarRightPanel
-          footer={
-            <SidebarRightFooter>
-              <ReferenceButton references={page.references} />
-              <ReportButton />
-              <ShareButton />
-            </SidebarRightFooter>
-          }
-          header={
-            <SidebarRightHeader
-              description={page.meaning.text}
-              descriptionLanguage={page.meaning.appLocale}
-              publicPath={`quran/${page.surah}`}
-              title={page.title}
-            />
-          }
-        >
-          <SidebarTree data={page.headings} title={labels.verse} />
-        </SidebarRightPanel>
-      </SidebarRightProvider>
-    </LayoutMaterial>
+              </QuranInterpretationControls>
+            ) : (
+              <QuranVerseList items={page.verseItems} />
+            )}
+            <FragmentLanding />
+          </QuranVersesProvider>
+        </PageStack>
+        <PaginationContent pagination={page.pagination} />
+        <SheetEntry key={`assistant:${page.surah}`} />
+      </Page>
+      <SidebarRightPanel
+        footer={
+          <SidebarRightFooter>
+            <ReferenceButton references={page.references} />
+            <ReportButton />
+            <ShareButton />
+          </SidebarRightFooter>
+        }
+        header={
+          <SidebarRightHeader
+            description={page.meaning.text}
+            descriptionLanguage={page.meaning.appLocale}
+            publicPath={`quran/${page.surah}`}
+            title={page.title}
+          />
+        }
+      >
+        <SidebarTree data={page.headings} title={labels.verse} />
+      </SidebarRightPanel>
+    </SidebarRightProvider>
   );
 }

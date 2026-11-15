@@ -6,9 +6,9 @@ import { cn } from "cn";
 import type { ReactNode } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
-import { PageFrame } from "@/components/shared/content/frame";
-import { pageRowVariants } from "@/components/shared/content/width";
-import { TablePageBody } from "@/components/shared/table/frame";
+import { PageList } from "@/components/shared/page/body";
+import { Page } from "@/components/shared/page/frame";
+import { pageRowVariants } from "@/components/shared/page/width";
 import {
   TableFiltersProvider,
   TableSearch,
@@ -61,7 +61,7 @@ function CohortFailure({ children }: { children: ReactNode }) {
   );
 
   return (
-    <PageFrame width="column">
+    <Page width="column">
       <SchoolHeader
         items={[
           {
@@ -72,8 +72,8 @@ function CohortFailure({ children }: { children: ReactNode }) {
         ]}
         title={t(section.labelKey)}
       />
-      <TablePageBody>{children}</TablePageBody>
-    </PageFrame>
+      <PageList>{children}</PageList>
+    </Page>
   );
 }
 
@@ -91,7 +91,7 @@ function CohortUnavailable() {
   );
 
   return (
-    <PageFrame width="column">
+    <Page width="column">
       <SchoolHeader
         items={[
           {
@@ -102,7 +102,7 @@ function CohortUnavailable() {
         ]}
         title={t(section.labelKey)}
       />
-      <TablePageBody>
+      <PageList>
         <EmptyState
           action={
             <TargetLink
@@ -116,8 +116,8 @@ function CohortUnavailable() {
           scene={<EmptyNina act="pointing" />}
           title={t("cohort-unavailable")}
         />
-      </TablePageBody>
-    </PageFrame>
+      </PageList>
+    </Page>
   );
 }
 
@@ -155,7 +155,7 @@ function SchoolCohortPage({
 
   return (
     <TableFiltersProvider>
-      <PageFrame width="column">
+      <Page width="column">
         <SchoolHeader
           items={[
             {
@@ -187,7 +187,7 @@ function SchoolCohortPage({
             <SchoolHomeroomCard cohort={detail} slug={slug} />
           </WithAction>
         </div>
-        <TablePageBody>
+        <PageList>
           {detail === undefined ? null : (
             <ReadBoundary>
               <SchoolCohortMembers
@@ -197,8 +197,8 @@ function SchoolCohortPage({
               />
             </ReadBoundary>
           )}
-        </TablePageBody>
-      </PageFrame>
+        </PageList>
+      </Page>
     </TableFiltersProvider>
   );
 }

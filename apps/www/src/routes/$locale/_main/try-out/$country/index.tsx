@@ -1,11 +1,10 @@
 import { makeBreadcrumbNodes } from "@repo/seo/jsonld/node";
 import { createFileRoute, notFound } from "@tanstack/react-router";
 import { BreadcrumbHeader } from "@/components/shared/breadcrumb/header";
-import { FooterContent } from "@/components/shared/content/footer";
-import { LayoutContent } from "@/components/shared/content/frame";
 import { RefContent } from "@/components/shared/content/references";
-import { LayoutMaterialContent } from "@/components/shared/material/content";
-import { LayoutMaterial } from "@/components/shared/material/frame";
+import { PageBody } from "@/components/shared/page/body";
+import { PageFooter } from "@/components/shared/page/footer";
+import { Page } from "@/components/shared/page/frame";
 import { TryoutCountryPageClient } from "@/components/tryout/catalog/country";
 import { TryoutCountrySelector } from "@/components/tryout/catalog/selector";
 import { readTryoutCountryFn } from "@/components/tryout/route/catalog.functions";
@@ -46,31 +45,29 @@ export const Route = createFileRoute("/$locale/_main/try-out/$country/")({
 function TryoutCountryPage() {
   const route = Route.useLoaderData();
   return (
-    <LayoutMaterial>
-      <LayoutMaterialContent>
-        <BreadcrumbHeader
-          value={{
-            action:
-              route.countryOptions.length > 0 ? (
-                <TryoutCountrySelector
-                  currentValue={route.countryPath}
-                  label={route.selectorLabel}
-                  options={route.countryOptions}
-                />
-              ) : undefined,
-            home: HOME_TARGET,
-            homeLabel: route.labels.home,
-            items: [{ label: route.labels.tryOut }],
-            title: route.labels.tryOut,
-          }}
-        />
-        <LayoutContent>
-          <TryoutCountryPageClient page={{ exams: route.exams }} />
-        </LayoutContent>
-        <FooterContent>
-          <RefContent />
-        </FooterContent>
-      </LayoutMaterialContent>
-    </LayoutMaterial>
+    <Page>
+      <BreadcrumbHeader
+        value={{
+          action:
+            route.countryOptions.length > 0 ? (
+              <TryoutCountrySelector
+                currentValue={route.countryPath}
+                label={route.selectorLabel}
+                options={route.countryOptions}
+              />
+            ) : undefined,
+          home: HOME_TARGET,
+          homeLabel: route.labels.home,
+          items: [{ label: route.labels.tryOut }],
+          title: route.labels.tryOut,
+        }}
+      />
+      <PageBody>
+        <TryoutCountryPageClient page={{ exams: route.exams }} />
+      </PageBody>
+      <PageFooter>
+        <RefContent />
+      </PageFooter>
+    </Page>
   );
 }

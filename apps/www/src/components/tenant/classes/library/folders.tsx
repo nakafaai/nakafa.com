@@ -21,8 +21,8 @@ import { randomUuid } from "@repo/utilities/uuid";
 import { Clock, Effect, Schema, String as Str } from "effect";
 import { type FormEvent, type ReactNode, useId, useState } from "react";
 import { useTranslations } from "use-intl";
-import { HeaderLabel } from "@/components/shared/breadcrumb/frame";
 import { useDialogs } from "@/components/shared/dialogs";
+import { PageHeaderLabel } from "@/components/shared/page/header";
 import { RowItems } from "@/components/shared/table/menu";
 import {
   addLibraryFolder,
@@ -168,7 +168,7 @@ export function NewFolder() {
             className="@2xl/header:hidden"
             icon={FolderAddIcon}
           />
-          <HeaderLabel>{t("library-new-folder")}</HeaderLabel>
+          <PageHeaderLabel>{t("library-new-folder")}</PageHeaderLabel>
         </TooltipTrigger>
         <TooltipContent side="bottom">{t("library-new-folder")}</TooltipContent>
       </Tooltip>

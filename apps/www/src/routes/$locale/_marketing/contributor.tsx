@@ -1,4 +1,3 @@
-import { LoveKoreanFingerIcon } from "@hugeicons/core-free-icons";
 import { COMPANY_IDENTITY } from "@repo/seo/company";
 import {
   makeBreadcrumbNodes,
@@ -8,9 +7,10 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Array as Arr, Predicate } from "effect";
 import { useTranslations } from "use-intl";
 import { createTranslator } from "use-intl/core";
+import { ContentTitle } from "@/components/content/title";
 import { ContributorGallery } from "@/components/contributor/gallery";
-import { LayoutContent, PageFrame } from "@/components/shared/content/frame";
-import { HeaderContent } from "@/components/shared/content/header";
+import { PageStack } from "@/components/shared/page/body";
+import { Page } from "@/components/shared/page/frame";
 import { contributors } from "@/lib/data/contributor";
 import { readRouteMessages } from "@/lib/i18n/messages.functions";
 import { getAppSocialArtwork } from "@/lib/og/app";
@@ -90,17 +90,13 @@ export const Route = createFileRoute("/$locale/_marketing/contributor")({
 function ContributorPage() {
   const t = useTranslations("Contributor");
   return (
-    <>
-      <HeaderContent
-        description={t("description")}
-        icon={LoveKoreanFingerIcon}
-        title={t("title")}
-      />
-      <PageFrame width="column">
-        <LayoutContent className="w-full pb-20">
-          <ContributorGallery contributors={contributors} />
-        </LayoutContent>
-      </PageFrame>
-    </>
+    <Page width="column">
+      <ContentTitle title={t("title")}>
+        <p className="text-muted-foreground">{t("description")}</p>
+      </ContentTitle>
+      <PageStack>
+        <ContributorGallery contributors={contributors} />
+      </PageStack>
+    </Page>
   );
 }

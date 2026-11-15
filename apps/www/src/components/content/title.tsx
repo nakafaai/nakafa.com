@@ -1,6 +1,6 @@
 import { cn } from "cn";
 import type { ReactNode } from "react";
-import { pageRowVariants } from "@/components/shared/content/width";
+import { pageRowVariants } from "@/components/shared/page/width";
 
 /** Gives a lesson one left-aligned reading title and what stands under it. */
 export function ContentTitle({
