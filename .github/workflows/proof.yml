@@ -107,10 +107,12 @@ jobs:
       statuses: write
     env:
       GH_TOKEN: ${{ github.token }}
-      # A head or a merge group typechecks and tests the workspaces it changes
-      # against main and their dependents; `full` runs every workspace.
+      # A head typechecks and tests the workspaces it changes against main and
+      # their dependents, and a merge group those its own pull requests change
+      # against its base (main, or the head of the group ahead, which proves
+      # its own); `full` runs every workspace.
       AFFECTED: ${{ !inputs.full && '--affected' || '' }}
-      TURBO_SCM_BASE: origin/main
+      TURBO_SCM_BASE: ${{ github.event.merge_group.base_sha || inputs.base || 'origin/main' }}
     steps:
       - name: Mark the gate pending
         run: |
