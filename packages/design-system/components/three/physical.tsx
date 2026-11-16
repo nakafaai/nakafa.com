@@ -7,7 +7,9 @@
  * coat over a transparent surface keeps the reflections that sell the glass.
  */
 
-import { DoubleSide } from "three";
+import { useStage } from "@repo/design-system/components/three/stage/context";
+import { useEffect, useMemo } from "react";
+import { DoubleSide, MeshPhysicalMaterial } from "three";
 
 /** Clear lab glass: thin, glossy, and tinted only by the color it is given. */
 export function GlassMaterial({
@@ -67,4 +69,52 @@ export function MetalMaterial({
   return (
     <meshPhysicalMaterial color={color} metalness={1} roughness={roughness} />
   );
+}
+
+/** The refractive index of borosilicate 3.3 laboratory glass (Schott Duran, n_d). */
+const BOROSILICATE_IOR = 1.473;
+
+/**
+ * The glass of a vessel whose wall a reader looks through, such as a
+ * discharge tube or a flask held up to the eye: on a desktop it transmits
+ * and refracts the scene behind it through a wall `thickness` deep, tinted
+ * the faint green of thick glass toward its edges, which costs one more
+ * render of the scene only while the frame changes. A phone keeps the
+ * transparent clear-coated glass every other part of a lab uses.
+ */
+export function VesselGlassMaterial({
+  color,
+  thickness,
+  tint,
+}: {
+  readonly color: string;
+  readonly thickness: number;
+  readonly tint: string;
+}) {
+  const { tier } = useStage();
+  const material = useMemo(
+    () =>
+      new MeshPhysicalMaterial({
+        attenuationColor: tint,
+        attenuationDistance: thickness * 40,
+        clearcoat: 1,
+        clearcoatRoughness: 0.03,
+        color,
+        ior: BOROSILICATE_IOR,
+        metalness: 0,
+        roughness: 0.03,
+        side: DoubleSide,
+        thickness,
+        transmission: 1,
+      }),
+    [color, thickness, tint]
+  );
+
+  useEffect(() => () => material.dispose(), [material]);
+
+  if (tier !== "full") {
+    return <GlassMaterial color={color} />;
+  }
+
+  return <primitive attach="material" object={material} />;
 }

@@ -9,14 +9,15 @@ import {
   type SampleId,
   SampleIdSchema,
 } from "@repo/design-system/components/contents/chemistry/spectrometer/isotopes";
+import {
+  Detector,
+  IonSource,
+  SectorMagnet,
+} from "@repo/design-system/components/contents/chemistry/spectrometer/magnet";
 import { spreadLabels } from "@repo/design-system/components/contents/chemistry/spectrometer/placement";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { CameraControls } from "@repo/design-system/components/three/camera/controls";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
-import {
-  GlassMaterial,
-  MetalMaterial,
-} from "@repo/design-system/components/three/physical";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene";
 import { ScienceStage } from "@repo/design-system/components/three/stage";
 import {
@@ -65,6 +66,9 @@ const LABEL_FRONT = 1;
 
 /** How far round the magnet's rim, from the detector side, its pole marks stand. */
 const POLE_ANGLE = (35 * Math.PI) / 180;
+
+/** How far in front of the magnet's entrance the ion source's accelerating plates stand. */
+const SOURCE = 0.9;
 
 /** How long an ion takes around its half circle while the card plays, in seconds. */
 const FLIGHT = 2.4;
@@ -314,35 +318,18 @@ function Spectrometer({
 
   return (
     <group position={[-widest, 0, widest / 2]}>
-      <mesh castShadow position={[-0.1, 0.3, 1.2]}>
-        <boxGeometry args={[0.9, 0.7, 1.6]} />
-        <MetalMaterial color={getColor("SLATE", 600)} />
-      </mesh>
+      <IonSource at={SOURCE} />
       <Line
-        color={getColor("SLATE", 400)}
-        lineWidth={2}
+        color={beams[0]?.color ?? getColor("SLATE", 400)}
+        lineWidth={2.2}
         points={[
-          [0, 0.3, 0.4],
+          [0, 0.3, SOURCE],
           [0, 0.3, 0],
         ]}
         toneMapped={false}
       />
-      <mesh
-        position={[widest, 0.02, 0]}
-        receiveShadow
-        rotation={[-Math.PI / 2, 0, 0]}
-      >
-        <circleGeometry args={[widest + 0.9, 64, 0, Math.PI]} />
-        <MetalMaterial color={getColor("NEUTRAL", 800)} roughness={0.5} />
-      </mesh>
-      <mesh position={[widest, 0.62, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-        <circleGeometry args={[widest + 0.9, 64, 0, Math.PI]} />
-        <GlassMaterial color={getColor("SLATE", 300)} opacity={0.12} />
-      </mesh>
-      <mesh position={[widest, 0.15, 0.25]} receiveShadow>
-        <boxGeometry args={[2 * widest + 1.4, 0.3, 0.3]} />
-        <MetalMaterial color={getColor("SLATE", 400)} />
-      </mesh>
+      <SectorMagnet centre={widest} radius={widest + 0.9} />
+      <Detector from={-0.4} to={2 * widest + 0.9} />
       {Arr.map(beams, (beam) => (
         <group key={beam.isotope.number}>
           <Line
@@ -404,7 +391,7 @@ function Spectrometer({
         color={getColor("SLATE", 400)}
         fontSize="compact"
         gap={0.15}
-        position={[pole[0], 0.62, pole[1]]}
+        position={[pole[0], 0.72, pole[1]]}
       >
         {south}
       </ThreeLabel>
@@ -413,7 +400,7 @@ function Spectrometer({
         color={getColor("SLATE", 400)}
         fontSize="compact"
         gap={0.15}
-        position={[pole[0], 0.02, pole[1]]}
+        position={[pole[0], -0.02, pole[1]]}
       >
         {north}
       </ThreeLabel>
@@ -428,7 +415,7 @@ function SpectrometerCamera() {
   const distance = narrow ? 30 : 22;
   return (
     <CameraControls
-      cameraPosition={[0, distance * 0.8, distance * 0.6]}
+      cameraPosition={[distance * 0.12, distance * 0.52, distance * 0.82]}
       cameraTarget={[0, 0.5, 0]}
       fov={40}
       maxDistance={distance * 1.8}

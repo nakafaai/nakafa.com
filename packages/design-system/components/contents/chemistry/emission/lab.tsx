@@ -2,6 +2,10 @@ import { Line } from "@react-three/drei";
 import { useFrame, useThree } from "@react-three/fiber";
 import { toggleColumns } from "@repo/design-system/components/contents/chemistry/columns";
 import {
+  DischargeTube,
+  SpectroscopeView,
+} from "@repo/design-system/components/contents/chemistry/emission/spectroscope";
+import {
   frequency,
   orbitRadius,
   photonEnergy,
@@ -45,12 +49,6 @@ const TOP_LEVEL = 6;
 
 /** How long one fall and its photon take while the card plays, in seconds. */
 const CYCLE = 6;
-
-/** The ends of the visible spectrum the strip spans, in nanometres. */
-const VISIBLE = { end: 750, start: 380 } as const;
-
-/** How wide the spectrum strip stands, in scene units. */
-const STRIP = 9;
 
 /** The words an emission lab reads from its lesson. */
 interface EmissionLabels {
@@ -166,7 +164,12 @@ export function BohrEmissionLab({
           <Suspense>
             <EmissionCamera />
             <BohrAtom fall={shown} key={key(shown)} />
-            <SpectrumStrip falls={offered} shown={shown} />
+            <group position={[0, -6.4, 0]}>
+              <SpectroscopeView from={shown.from} to={shown.to} />
+            </group>
+            <group position={[-6.6, -2.2, 0]} rotation={[0, 0, 0.12]}>
+              <DischargeTube />
+            </group>
           </Suspense>
         </ScienceStage>
       </VisualCardBody>
@@ -303,61 +306,6 @@ function BohrAtom({ fall }: { readonly fall: Fall }) {
   );
 }
 
-/**
- * The visible spectrum as a strip of thin slices, each in its own color, with
- * a bright line at every offered fall that lands in it and a taller one at the
- * fall shown.
- */
-function SpectrumStrip({
-  falls,
-  shown,
-}: {
-  readonly falls: readonly Fall[];
-  readonly shown: Fall;
-}) {
-  const slices = Arr.map(Arr.range(0, 73), (slice) => {
-    const nanometres = VISIBLE.start + slice * 5;
-    return { color: photonColor(nanometres).multiplyScalar(0.18), nanometres };
-  });
-  const place = (nanometres: number) =>
-    ((nanometres - VISIBLE.start) / (VISIBLE.end - VISIBLE.start) - 0.5) *
-    STRIP;
-
-  return (
-    <group position={[0, -6.4, 0]}>
-      {Arr.map(slices, (slice) => (
-        <mesh
-          key={slice.nanometres}
-          position={[place(slice.nanometres + 2.5), 0, 0]}
-        >
-          <boxGeometry
-            args={[(STRIP * 5) / (VISIBLE.end - VISIBLE.start), 0.5, 0.05]}
-          />
-          <meshBasicMaterial color={slice.color} toneMapped={false} />
-        </mesh>
-      ))}
-      {Arr.flatMap(falls, (fall) => {
-        const nanometres = wavelength(fall.from, fall.to);
-        const current = fall.from === shown.from && fall.to === shown.to;
-        return Option.isSome(visibleColor(nanometres))
-          ? [
-              <mesh
-                key={`${fall.from}-${fall.to}`}
-                position={[place(nanometres), 0, 0.03]}
-              >
-                <boxGeometry args={[0.05, current ? 0.9 : 0.5, 0.05]} />
-                <meshBasicMaterial
-                  color={photonColor(nanometres)}
-                  toneMapped={false}
-                />
-              </mesh>,
-            ]
-          : [];
-      })}
-    </group>
-  );
-}
-
 /** Faces the atom and its spectrum, farther back on a narrow card. */
 function EmissionCamera() {
   const size = useThree((state) => state.size);
@@ -366,7 +314,7 @@ function EmissionCamera() {
   return (
     <CameraControls
       cameraPosition={[1.5, 1.5, distance]}
-      cameraTarget={[0.8, -1, 0]}
+      cameraTarget={[0.4, -1.6, 0]}
       fov={40}
       maxDistance={distance * 1.8}
       minDistance={3}
