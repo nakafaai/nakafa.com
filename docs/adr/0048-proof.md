@@ -264,3 +264,14 @@ A group whose engines failed proved its failing specs on its own `base_sha` (poi
 1. **Main's head.** `scripts/proof/group.ts` proves a group's failing specs on main's head when it judges, not on the group's base, and the status names that commit. Every group in the queue then judges against the same commit until the next entry lands.
 2. **One run per head and specs.** A proof of specs alone, without the gate, is named `Proof <sha> base-<key>-<suffix>`: the key is the first 16 hexadecimal digits of the SHA-256 of its spec files in path order, and the suffix is fresh. Before dispatching, `proveOnGithub` reads the latest 50 dispatched runs and awaits or reads one whose name starts with `Proof <sha> base-<key>`, finished or running, and passes over a cancelled one. The first group to fail on main's reds pays for the proof, and the others read it.
 3. **What this gives up.** A group judged while an entry ahead of it fixes one of main's reds, and that itself breaks the spec again, has the spec set aside although its base passed it. Main then fails the spec as it did before the fix, the case point 4 of the earlier amendment leaves to the lane that owns the folder; the queue stops paying a base proof per group for it.
+
+## Amendment: The Queue Waits Six Hours And Builds Four Groups, 16 November 2026
+
+Chunk 1 (#2338, #2340, #2370, #2410 and #2472, a linked stack that touches shared folders) selected every suite, and its group ran the specs in three engines for 3 hours 45 minutes on 16 November: about 40 specs that main fails, each run again after its 120-second timeout, pushed the run past the 150-minute status check timeout of point 3 of "A Merge Group Sets Aside What Its Base Fails". The queue then removes the group for a missing `verify`, although nothing failed. Between 01:12 and 04:00 UTC no group landed.
+
+### Decision
+
+1. **Status check timeout: 360 minutes.** It covers a group that selects every suite, with its base proof, while the account's runners are busy. `check_response_timeout_minutes: 360` in ruleset 19504599, set 16 November at 03:00 UTC.
+2. **Build concurrency: 4.** Four groups take 16 of the account's 20 concurrent jobs, and the pull request gates and Aksara take the rest. `max_entries_to_build: 4`.
+3. **A large group goes last.** Groups merge in queue order, so a group that selects every suite holds every group behind it until its run ends. Main orders the queue by the size of each entry's selection (`scripts/proof/select.ts`), smallest first, and moves an entry whose selection reaches most suites behind the rest.
+4. **The timeout comes back down** once an engine whose specs run longer than about 20 minutes is sharded across more jobs, as point 4 of "The Landing Queue" decided, and once main fails no spec, so a group's longest run is again its slowest shard.
