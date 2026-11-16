@@ -116,6 +116,8 @@ export const MATERIAL = {
   pencilWood: "#e0c095",
   pencilYellow: "#e5b52a",
   pine: "#d9b37c",
+  platinum: "#d3d5d8",
+  silver: "#c4c8cc",
   statusLed: "#3ddc84",
   tapeYellow: "#efc12f",
   trolleyPaint: "#2c5d8f",
@@ -123,6 +125,7 @@ export const MATERIAL = {
   // Reagents, products and specimens.
   bakingSoda: "#fbfbf8",
   calx: "#b3261e",
+  copperSulfate: "#4c93c9",
   cellBody: "#c9b48d",
   cellUnstained: "#e9e4dc",
   crystalViolet: "#5b2f96",

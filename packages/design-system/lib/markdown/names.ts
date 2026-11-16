@@ -79,6 +79,7 @@ export const chemistryComponentNames = {
   combiningVolumesLab: "CombiningVolumesLab",
   constantCompositionLab: "ConstantCompositionLab",
   daltonEvidenceLab: "DaltonEvidenceLab",
+  electrolysisLab: "ElectrolysisLab",
   electronConfigurationLab: "ElectronConfigurationLab",
   fizzBalanceLab: "FizzBalanceLab",
   ionFormationLab: "IonFormationLab",

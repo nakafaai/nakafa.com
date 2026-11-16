@@ -5,6 +5,7 @@ import {
   AtomSymbolLab,
   DaltonEvidenceLab,
 } from "@/lib/content/renderer/client/chemistry/atom";
+import { ElectrolysisLab } from "@/lib/content/renderer/client/chemistry/electrochemistry";
 import {
   FizzBalanceLab,
   LavoisierCalxLab,
@@ -119,6 +120,10 @@ export const chemistryRenderers = [
   {
     name: chemistryComponentNames.daltonEvidenceLab,
     component: DaltonEvidenceLab,
+  },
+  {
+    name: chemistryComponentNames.electrolysisLab,
+    component: ElectrolysisLab,
   },
   {
     name: chemistryComponentNames.electronConfigurationLab,
