@@ -1,33 +1,23 @@
-import { useFrame, useLoader } from "@react-three/fiber";
+import { useFrame } from "@react-three/fiber";
 import {
   PROJECTILE_SCENE,
   type ProjectileMotionState,
 } from "@repo/design-system/components/contents/physics/kinematics/parabolic-movement-analysis/data";
+import { Sea } from "@repo/design-system/components/three/stage/sea";
 import { getColor } from "@repo/design-system/lib/color";
-import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr } from "effect";
-import { useEffect, useMemo, useRef } from "react";
-import {
-  DoubleSide,
-  type Mesh,
-  PlaneGeometry,
-  RepeatWrapping,
-  TextureLoader,
-  Vector3,
-} from "three";
-import { Water } from "three/examples/jsm/objects/Water.js";
+import { useRef } from "react";
+import type { Mesh } from "three";
 
-const WATER_NORMALS_PATH = "/models/physics/kinematics/water/waternormals.jpg";
+/** The height of the sea the islands stand in. */
+const SEA_LEVEL = -0.12;
 
 const OCEAN_COLORS = {
   particle: getColor("WHITE"),
-  sun: getColor("WHITE"),
-  water: PLOT_COLORS.teal,
 } as const;
 
 const WIND_PARTICLE_COUNT = 36;
 const OCEAN_SIDE_MARGIN = 120;
-const OCEAN_WIDTH = 180;
 const WIND_PARTICLES = Array.from(
   { length: WIND_PARTICLE_COUNT },
   (_, index) => {
@@ -47,12 +37,11 @@ const WIND_PARTICLES = Array.from(
 
 export function Ocean({ motion }: { motion: ProjectileMotionState }) {
   const length = motion.rangeWorld + OCEAN_SIDE_MARGIN * 2;
-  const width = OCEAN_WIDTH;
   const centerX = PROJECTILE_SCENE.launchOffset[0] + motion.rangeWorld / 2;
 
   return (
     <group>
-      <ReflectiveWater centerX={centerX} length={length} width={width} />
+      <Sea level={SEA_LEVEL} />
       <group>
         {Arr.map(WIND_PARTICLES, (particle) => (
           <WindParticle
@@ -65,56 +54,6 @@ export function Ocean({ motion }: { motion: ProjectileMotionState }) {
       </group>
     </group>
   );
-}
-
-function ReflectiveWater({
-  centerX,
-  length,
-  width,
-}: {
-  centerX: number;
-  length: number;
-  width: number;
-}) {
-  const waterNormals = useLoader(TextureLoader, WATER_NORMALS_PATH);
-  const water = useMemo(() => {
-    waterNormals.wrapS = RepeatWrapping;
-    waterNormals.wrapT = RepeatWrapping;
-    waterNormals.needsUpdate = true;
-
-    const geometry = new PlaneGeometry(length, width, 1, 1);
-    const instance = new Water(geometry, {
-      alpha: 0.96,
-      distortionScale: 3.2,
-      side: DoubleSide,
-      sunColor: OCEAN_COLORS.sun,
-      sunDirection: new Vector3(0.32, 0.72, 0.42).normalize(),
-      textureHeight: 512,
-      textureWidth: 512,
-      waterColor: OCEAN_COLORS.water,
-      waterNormals,
-    });
-
-    instance.position.set(centerX, -0.12, 0);
-    instance.receiveShadow = true;
-    instance.rotation.x = -Math.PI / 2;
-
-    return instance;
-  }, [centerX, length, waterNormals, width]);
-
-  useEffect(
-    () => () => {
-      water.geometry.dispose();
-      water.material.dispose();
-    },
-    [water]
-  );
-
-  useFrame((_, delta) => {
-    water.material.uniforms.time.value += delta * 0.55;
-  });
-
-  return <primitive object={water} />;
 }
 
 function WindParticle({

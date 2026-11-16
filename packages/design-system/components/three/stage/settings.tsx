@@ -27,6 +27,15 @@ const FIELD_SUN = [0.533, 0.5, 0.682] as const;
 const SKY_SUN = [0.505, 0.574, 0.645] as const;
 const STUDIO_SUN = [0.423, 0.725, 0.544] as const;
 
+/** Where the sun of each setting stands, which the key light and the glint on water share. */
+export const SETTING_SUNS = {
+  field: FIELD_SUN,
+  lab: LAB_SUN,
+  sky: SKY_SUN,
+  space: STUDIO_SUN,
+  studio: STUDIO_SUN,
+};
+
 /** How far the key light stands from the lab's middle, in reaches. */
 const SUN_DISTANCE = 1.66;
 

@@ -21,6 +21,7 @@ import { CameraControls } from "@repo/design-system/components/three/camera/cont
 import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene";
 import { ScienceStage } from "@repo/design-system/components/three/stage";
+import { Road } from "@repo/design-system/components/three/stage/road";
 import {
   ToggleGroup,
   ToggleGroupItem,
@@ -40,9 +41,8 @@ import { type ReactNode, Suspense, useMemo, useRef, useState } from "react";
 import type { Group } from "three";
 
 const PAUSE_SECONDS = 0.8;
-const LANE_Y = -0.03;
-/** Thickness of the lane slab, whose top the car drives on. */
-const LANE_HEIGHT = 0.08;
+/** The height of the road the car drives on. */
+const ROAD_Y = 0.01;
 const CAR_Y = 0.02;
 const GUIDE_Y = 0.065;
 const DISTANCE_GUIDE_Z = -0.46;
@@ -137,8 +137,9 @@ export function VelocitySpeedLab({
         render={<section />}
       >
         <ScienceStage
-          floor={LANE_Y + LANE_HEIGHT / 2}
+          floor={ROAD_Y}
           frameloop="always"
+          ground="grass"
           reach={SCENE_REACH}
           setting="field"
         >
@@ -152,9 +153,11 @@ export function VelocitySpeedLab({
               fov={VELOCITY_SPEED_CAMERA.fov}
             />
             <group>
-              <CameraBounds exclude>
-                <Road />
-              </CameraBounds>
+              <Road
+                dash={VELOCITY_SPEED_SCENE.stripeLength}
+                spacing={VELOCITY_SPEED_SCENE.stripeSpacing}
+                width={VELOCITY_SPEED_SCENE.laneWidth}
+              />
               <group>
                 <DistanceGuide motion={motion} />
                 <DisplacementGuide motion={motion} />
@@ -183,52 +186,6 @@ export function VelocitySpeedLab({
         </VisualCardFacts>
       </VisualCardFooter>
     </VisualCard>
-  );
-}
-
-function Road() {
-  const stripeCount = Math.ceil(
-    VELOCITY_SPEED_SCENE.laneLength / VELOCITY_SPEED_SCENE.stripeSpacing
-  );
-  const stripeSpacing = VELOCITY_SPEED_SCENE.laneLength / stripeCount;
-  const stripePositions = Array.from(
-    { length: stripeCount },
-    (_, index) =>
-      -VELOCITY_SPEED_SCENE.laneLength / 2 + stripeSpacing * (index + 0.5)
-  );
-
-  return (
-    <group>
-      <mesh position={[0, LANE_Y, 0]} receiveShadow>
-        <boxGeometry
-          args={[
-            VELOCITY_SPEED_SCENE.laneLength,
-            LANE_HEIGHT,
-            VELOCITY_SPEED_SCENE.laneWidth,
-          ]}
-        />
-        <meshStandardMaterial
-          color={VELOCITY_SPEED_COLORS.lane}
-          roughness={0.72}
-        />
-      </mesh>
-
-      {Arr.map(stripePositions, (x) => (
-        <mesh key={x} position={[x, 0.035, 0]}>
-          <boxGeometry
-            args={[
-              VELOCITY_SPEED_SCENE.stripeLength,
-              0.018,
-              VELOCITY_SPEED_SCENE.stripeWidth,
-            ]}
-          />
-          <meshStandardMaterial
-            color={VELOCITY_SPEED_COLORS.stripe}
-            roughness={0.58}
-          />
-        </mesh>
-      ))}
-    </group>
   );
 }
 

@@ -69,8 +69,6 @@ export const VELOCITY_SPEED_COLORS = {
   coneBody: PLOT_COLORS.orange,
   displacementGuide: PLOT_COLORS.violet,
   distanceGuide: PLOT_COLORS.teal,
-  lane: getColor("SLATE", 800),
-  stripe: getColor("SLATE", 50),
 } as const;
 
 const MOTION_CONFIGS: Record<VelocitySpeedCaseId, MotionConfig> = {

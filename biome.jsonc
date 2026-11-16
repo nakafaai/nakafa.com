@@ -217,8 +217,14 @@
               "level": "error",
               "options": {
                 "ignore": [
+                  "alphaMap",
+                  "alphaTest",
+                  "aoMap",
+                  "aoMapIntensity",
                   "args",
                   "attach",
+                  "bumpMap",
+                  "bumpScale",
                   "castShadow",
                   "clearcoat",
                   "clearcoatRoughness",
