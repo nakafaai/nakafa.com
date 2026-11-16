@@ -26,6 +26,7 @@ import type { islesMesh } from "@/lib/island/isles";
 import { CLIP, viewProjectionOf } from "@/lib/island/matrix";
 import type { meshChunk } from "@/lib/island/mesh";
 import { mipsOf } from "@/lib/island/mips";
+import { RUNGS } from "@/lib/island/quality";
 import { repaintFor, type Season } from "@/lib/island/season";
 import {
   BODY_FRAGMENT,
@@ -124,8 +125,12 @@ export function createPainter(canvas: HTMLCanvasElement, season: Season) {
       const target = createFrame(gl, canvas);
       const chunks = Arr.makeBy(CHUNKS * CHUNKS, () => ({
         solid: Option.none<ReturnType<typeof uploadList>>(),
+        tufts: Option.none<ReturnType<typeof uploadList>>(),
         water: Option.none<ReturnType<typeof uploadList>>(),
       }));
+      // What the quality ladder lets the painter draw (D44), and whether the shadow map was last left empty.
+      let rung: (typeof RUNGS)[number] = RUNGS[0];
+      let emptied = false;
       const sea = uploadList(gl, seaRing(SEA_LEVEL - 0.125, [0, 0], 1));
       // What tops each column: where a drop stops and which ground the blocks blend (D39).
       const columns = uploadMap(gl, SPAN, 2);
@@ -240,7 +245,7 @@ export function createPainter(canvas: HTMLCanvasElement, season: Season) {
       };
 
       /** Draws one pass of every chunk's lists. */
-      const drawLists = (pass: "solid" | "water") => {
+      const drawLists = (pass: "solid" | "tufts" | "water") => {
         for (const chunk of chunks) {
           Option.map(chunk[pass], (list) => {
             gl.bindVertexArray(list.vao);
@@ -302,6 +307,9 @@ export function createPainter(canvas: HTMLCanvasElement, season: Season) {
           gl.drawElements(gl.TRIANGLES, list.count, gl.UNSIGNED_INT, 0);
         });
         gl.disable(gl.CULL_FACE);
+        if (rung.tufts) {
+          drawLists("tufts");
+        }
         gl.bindVertexArray(herd.vao);
         gl.drawElements(gl.TRIANGLES, herd.count(), gl.UNSIGNED_INT, 0);
         drawBodies(orbit, light, time, sky, camera, sun);
@@ -361,16 +369,13 @@ export function createPainter(canvas: HTMLCanvasElement, season: Season) {
         /** Replaces one chunk's buffers with its new mesh. */
         upload(index: number, mesh: ReturnType<typeof meshChunk>) {
           const slot = chunks[index];
-          Option.map(slot.solid, (list) => list.release());
-          Option.map(slot.water, (list) => list.release());
-          slot.solid =
-            mesh.solid.indices.length > 0
-              ? Option.some(uploadList(gl, mesh.solid))
-              : Option.none();
-          slot.water =
-            mesh.water.indices.length > 0
-              ? Option.some(uploadList(gl, mesh.water))
-              : Option.none();
+          for (const pass of ["solid", "tufts", "water"] as const) {
+            Option.map(slot[pass], (list) => list.release());
+            slot[pass] =
+              mesh[pass].indices.length > 0
+                ? Option.some(uploadList(gl, mesh[pass]))
+                : Option.none();
+          }
         },
         /** Draws one frame: the sky, every chunk, the water, then the falling weather, enlarged to the canvas. */
         draw(
@@ -389,10 +394,13 @@ export function createPainter(canvas: HTMLCanvasElement, season: Season) {
           const snapped = snapOrbit(orbit, target.rows);
           // The sun's shadow map first, from its own view of what the camera sees (D43).
           const sun = sunViewOf(snapped.orbit, light.toward);
-          shadow.cast(
-            sun.matrix,
-            SHADOW,
-            () => {
+          // Below the ladder's shadow rung the map is left empty once, so every face reads as lit.
+          if (rung.shadows || !emptied) {
+            emptied = !rung.shadows;
+            shadow.cast(sun.matrix, SHADOW, () => {
+              if (!rung.shadows) {
+                return;
+              }
               gl.activeTexture(gl.TEXTURE0);
               gl.bindTexture(gl.TEXTURE_2D, atlas);
               drawLists("solid");
@@ -400,12 +408,10 @@ export function createPainter(canvas: HTMLCanvasElement, season: Season) {
                 gl.bindVertexArray(list.vao);
                 gl.drawElements(gl.TRIANGLES, list.count, gl.UNSIGNED_INT, 0);
               });
-            },
-            () => {
               startBodies(sun.matrix, time, sky);
               bodies.draw();
-            }
-          );
+            });
+          }
           gl.bindFramebuffer(gl.FRAMEBUFFER, target.frame);
           gl.viewport(0, 0, target.width, target.height);
           const camera = viewProjectionOf(
@@ -430,10 +436,16 @@ export function createPainter(canvas: HTMLCanvasElement, season: Season) {
           gl.bindVertexArray(null);
           target.enlarge(light.horizon, snapped.shift);
         },
+        /** Sets what the painter draws from the quality ladder's rung (D44). */
+        quality(next: (typeof RUNGS)[number]) {
+          rung = next;
+          emptied = false;
+        },
         /** Lets the GPU go of everything the painter held. */
         release() {
           for (const chunk of chunks) {
             Option.map(chunk.solid, (list) => list.release());
+            Option.map(chunk.tufts, (list) => list.release());
             Option.map(chunk.water, (list) => list.release());
           }
           sea.release();

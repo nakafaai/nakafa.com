@@ -38,6 +38,7 @@ const SEE_THROUGH = [
   "carrotSprout",
   "cassavaSprout",
   "sweetPotatoSprout",
+  "tuft",
 ];
 
 describe("island/atlas", () => {
@@ -53,7 +54,7 @@ describe("island/atlas", () => {
     }
   });
 
-  it("paints solid tiles edge to edge, and leaves glass, flowers, animals and villagers see-through", () => {
+  it("paints solid tiles edge to edge, and leaves glass, flowers, tufts, animals and villagers see-through", () => {
     for (const name of TILE_NAMES) {
       const clear = clearOf(tilePixels(name));
       if (Arr.contains(SEE_THROUGH, name)) {

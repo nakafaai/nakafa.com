@@ -1,5 +1,6 @@
 import { ATLAS_TILES, SLOTS } from "@/lib/island/atlas";
 import { GROUND_GLSL } from "@/lib/island/ground";
+import { FOLIAGE } from "@/lib/island/mesh";
 import { TOON_GLSL } from "@/lib/island/toon";
 import { WATER_GLSL } from "@/lib/island/water";
 import { WIND_GLSL } from "@/lib/island/wind";
@@ -136,6 +137,11 @@ void main() {
     paint *= 1.0 + 0.1 * step(0.55, windField(art, 1.0));
   }
   vec3 face = normalize(cross(dFdx(vWorld), dFdy(vWorld)));
+  if (uWater < 0.5 && ground < 0.5) {
+    // Each face of each block a shade lighter or darker than its neighbours (D44), so a wall of one block never reads as one flat sheet.
+    vec3 cell = floor(vWorld - face * 0.01);
+    paint *= 1.0 + 0.05 * (hashOf(cell.xz + cell.y * 17.0 + face.xz * 3.1 + face.y * 7.3) - 0.5);
+  }
   if (uWater < 0.5) {
     // What the weather left (D33), only where the sky reaches: wet ground darkens and cools, the tops of things more than their sides.
     float open = smoothstep(0.6, 0.95, vSky);
@@ -156,8 +162,10 @@ void main() {
     alpha = water.a;
   }
   // The sun reaches a face only where nothing stands between them, and a cloud passing over dims it; the sky over a face lets it in at all.
-  float lit = sunlitAt(vWorld, face) * vSky * (1.0 - 0.4 * cloudOf(vWorld.xz));
-  vec3 light = toonLight(uAmbient, uSun, face, lit, 0.55 + 0.45 * vShade);
+  // A plant's or a tuft's thin plane takes the light from above, like the ground it grows on (D44).
+  vec3 lighted = abs(vShade - ${FOLIAGE.toFixed(2)}) < 0.001 ? vec3(0.0, 1.0, 0.0) : face;
+  float lit = sunlitAt(vWorld, lighted) * vSky * (1.0 - 0.4 * cloudOf(vWorld.xz));
+  vec3 light = toonLight(uAmbient, uSun, lighted, lit, 0.55 + 0.45 * vShade);
   light = max(light, uLamp * vGlow * vGlow * vShade);
   // Under the sea the light fades with depth, and the swell's caustics play over the floor in whole art pixels.
   float under = uSea - vWorld.y;
@@ -175,7 +183,9 @@ void main() {
   shown = mix(shown, vec3(1.0, 0.8, 0.46) * (0.82 + 0.18 * home), emit);
   color = vec4(mix(shown, skyRow(gl_FragCoord.y / uRows), fog), mix(alpha, 1.0, foam));
   // The face's own direction, from how the world moves across this pixel, for the edge pass (D20).
-  surface = vec4(face * 0.5 + 0.5, 1.0);
+  // Which part this pixel belongs to (D44): each tile its own, so the edge pass rules a line where two materials meet on one plane; the ground blends, so it has none.
+  float part = ground > 0.5 ? 0.0 : (mod(slot * 37.0, 254.0) + 1.0) / 255.0;
+  surface = vec4(face * 0.5 + 0.5, part);
 }`;
 
 /** One triangle over the whole frame, for the passes that paint every pixel. */
@@ -265,6 +275,8 @@ void main() {
   float step = 0.2 + depth * 0.014 / max(0.2, abs(dot(normal, uAhead)));
   float outline = 0.0;
   float crease = 0.0;
+  float seam = 0.0;
+  float part = texture(uSurface, vUv).a;
   vec2 sides[4] = vec2[4](vec2(1.0, 0.0), vec2(-1.0, 0.0), vec2(0.0, 1.0), vec2(0.0, -1.0));
   for (int index = 0; index < 4; index++) {
     vec2 at = vUv + sides[index] * uTexel;
@@ -276,9 +288,14 @@ void main() {
       if (dot(normal, other) < 0.8 && normal.y > other.y + 0.3) {
         crease = 1.0;
       }
+      // Where two parts meet on one plane, the line falls on the lower one's side only, one art pixel wide.
+      float otherPart = texture(uSurface, at).a;
+      if (part > 0.0 && otherPart > 0.0 && part < otherPart - 0.002 && dot(normal, other) > 0.8) {
+        seam = 1.0;
+      }
     }
   }
-  vec3 lit = base.rgb * (1.0 - 0.5 * outline);
+  vec3 lit = base.rgb * (1.0 - 0.5 * outline) * (1.0 - 0.22 * seam * (1.0 - outline));
   color = vec4(mix(lit, min(lit * 1.25 + 0.03, vec3(1.0)), crease * (1.0 - outline)), 1.0);
 }`;
 
@@ -302,7 +319,9 @@ ${WIND_GLSL}
 out vec3 vColor;
 out vec3 vNormal;
 out vec3 vWorld;
+out vec3 vLocal;
 void main() {
+  vLocal = aPosition;
   float c = cos(aPlace.w);
   float s = sin(aPlace.w);
   vec3 local = aPosition;
@@ -332,8 +351,12 @@ ${TOON_GLSL}
 in vec3 vColor;
 in vec3 vNormal;
 in vec3 vWorld;
+in vec3 vLocal;
 layout(location = 0) out vec4 color;
 layout(location = 1) out vec4 surface;
+float hashOf(vec3 cell) {
+  return fract(sin(dot(cell, vec3(127.1, 311.7, 74.7))) * 43758.5453);
+}
 void main() {
   vec3 normal = normalize(vNormal);
   if (uSeen > 0.5) {
@@ -345,8 +368,12 @@ void main() {
   vec3 light = toonLight(uAmbient, uSun, normal, sunlitAt(vWorld, normal), 0.62 + 0.38 * max(normal.y, 0.0));
   light = floor(light * 8.0 + 0.5) / 8.0;
   float fog = smoothstep(uFogRange.x, uFogRange.y, distance(vWorld, uEye));
-  color = vec4(mix(vColor * light, skyRow(gl_FragCoord.y / uRows), fog), 1.0);
-  surface = vec4(normal * 0.5 + 0.5, 1.0);
+  // A speckle held to the body's own art pixels (D44), a tone up or down on one in five, so a hide or a coat is never a flat fill and never crawls as the body walks.
+  float grain = hashOf(floor(vLocal * 16.0));
+  vec3 paint = vColor * (1.0 + 0.08 * (step(0.82, grain) - step(grain, 0.18)));
+  color = vec4(mix(paint * light, skyRow(gl_FragCoord.y / uRows), fog), 1.0);
+  // Each colored part its own, so the edge pass rules a line between an eye and a face, a wing and a body (D44).
+  surface = vec4(normal * 0.5 + 0.5, 0.5 + 0.49 * fract(dot(vColor, vec3(17.13, 59.71, 113.37))));
 }`;
 
 /**

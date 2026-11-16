@@ -1,4 +1,5 @@
 import { unitOf } from "@/lib/island/noise";
+import type { Tone } from "@/lib/island/palette";
 import {
   blankTile,
   cellsOf,
@@ -183,6 +184,36 @@ export function flowersTile() {
       put(pixels, stem + dx, top + 1 + dy, petal, dx < 0 || dy < 0 ? 3 : 1);
     }
     put(pixels, stem, top + 1, petal === "petal" ? "bloom" : "petal", 2);
+  }
+  return pixels;
+}
+
+/** The tone of a blade's pixel `rise` up from its root: the meadow's own tone low down, a tone lighter in its upper half, lightest at its tip. */
+function bladeTone(rise: number, tall: number): Tone {
+  if (rise === tall - 1) {
+    return 3;
+  }
+  return rise >= tall / 2 ? 3 : 2;
+}
+
+/**
+ * A tuft of grass (ADR 0047, D44): six to eight blades rising from the
+ * tile's foot, each three to seven pixels tall and leaning a pixel or two,
+ * in the meadow's own tones, lighter toward the tip, so the season paints
+ * them with it. It stands on a grass top as a small cross.
+ */
+export function tuftTile(seed: number) {
+  const pixels = blankTile();
+  const blades = 6 + Math.floor(unitOf(seed, 0, 9) * 3);
+  for (let blade = 0; blade < blades; blade += 1) {
+    const root = 2 + Math.floor(unitOf(seed, blade, 1) * (TILE - 4));
+    const tall = 3 + Math.floor(unitOf(seed, blade, 2) * 5);
+    const lean = unitOf(seed, blade, 3) < 0.5 ? -1 : 1;
+    for (let rise = 0; rise < tall; rise += 1) {
+      const x = root + (rise >= tall - 2 ? lean : 0);
+      const tone = bladeTone(rise, tall);
+      put(pixels, x, TILE - 1 - rise, "grass", tone);
+    }
   }
   return pixels;
 }

@@ -1,9 +1,10 @@
-import { idOf } from "@repo/backend/confect/island/blocks";
+import { AIR, idOf } from "@repo/backend/confect/island/blocks";
 import { HEIGHT, SPAN } from "@repo/backend/confect/island/world";
 import { Array as Arr } from "effect";
-import { ATLAS_TILES } from "@/lib/island/atlas";
+import { ATLAS_TILES, SLOTS } from "@/lib/island/atlas";
 import { groundOf, groundTopSlot, skylineOf } from "@/lib/island/ground";
 import { KIND, LOOK } from "@/lib/island/look";
+import { unitOf } from "@/lib/island/noise";
 import { isPlantBlock } from "@/lib/island/plants";
 import {
   blockAt,
@@ -21,6 +22,20 @@ import {
 export const STRIDE = 9;
 
 const LEAVES = idOf("leaves");
+const GRASS = idOf("grass");
+
+/** The seed the tufts are scattered from, the same on every island, so a meadow's tufts never move with its world. */
+const TUFTS = 44;
+
+/** The share of grass tops under open air that grow a tuft. */
+const TUFTED = 0.4;
+
+/**
+ * The occlusion a cross carries at every corner (ADR 0047, D44), which no
+ * cube corner has: the chunk program reads it to light a plant or a tuft
+ * from above, like the ground it grows on, instead of by its own thin plane.
+ */
+export const FOLIAGE = 0.9;
 
 /** How bright a corner is with 0 to 3 open neighbours around it (ambient occlusion). */
 const OCCLUSION = [0.5, 0.68, 0.84, 1] as const;
@@ -294,15 +309,14 @@ function addCube(
   }
 }
 
-/** Adds a crossed plant: two planes through the cell, each drawn from both sides. */
+/** Adds a cross of the tile in `slot`: two planes through the cell, each drawn from both sides. */
 function addCross(
   list: ReturnType<typeof drawList>,
   lighting: Lighting,
   cell: readonly [number, number, number],
-  block: number
+  slot: number
 ) {
   const [x, y, z] = cell;
-  const slot = LOOK.sides[block];
   const sky = skyAt(lighting, x, y, z);
   const glow = glowAt(lighting, x, y, z);
   for (const [ax, az, bx, bz] of [
@@ -319,7 +333,7 @@ function addCross(
         z + az + (bz - az) * a,
         tu,
         tv,
-        0.9,
+        FOLIAGE,
         sky,
         glow,
         b,
@@ -347,16 +361,39 @@ function addCell(
     return;
   }
   if (kind === KIND.cross) {
-    addCross(solid, lighting, cell, block);
+    addCross(solid, lighting, cell, LOOK.sides[block]);
     return;
   }
   addCube(kind === KIND.liquid ? water : solid, cells, lighting, cell, block);
 }
 
 /**
+ * Adds a tuft of grass on a grass top under open air (ADR 0047, D44), on
+ * about two in five of them as the tufts' own seed picks, a small cross in the air
+ * cell above the top that the wind takes at its tips.
+ */
+function addTuft(
+  list: ReturnType<typeof drawList>,
+  cells: Cells,
+  lighting: Lighting,
+  cell: readonly [number, number, number]
+) {
+  const [x, y, z] = cell;
+  const tufted = unitOf(TUFTS, x, y, z) < TUFTED;
+  if (cells[cellOf(x, y, z)] !== GRASS || !tufted) {
+    return;
+  }
+  if (!isInside(x, y + 1, z) || blockAt(cells, x, y + 1, z) !== AIR) {
+    return;
+  }
+  addCross(list, lighting, [x, y + 1, z], SLOTS.tuft);
+}
+
+/**
  * The meshes of one chunk (ADR 0047, D3): `solid` holds every opaque, cutout
  * and plant face, drawn first with depth; `water` holds the liquid faces,
- * drawn after with blending.
+ * drawn after with blending; `tufts` holds the grass tufts (D44), which the
+ * painter leaves out on a slow device.
  */
 export function meshChunk(
   cells: Cells,
@@ -366,12 +403,14 @@ export function meshChunk(
 ) {
   const solid = drawList();
   const water = drawList();
+  const tufts = drawList();
   for (let y = 0; y < HEIGHT; y += 1) {
     for (let z = chunkZ * CHUNK; z < (chunkZ + 1) * CHUNK; z += 1) {
       for (let x = chunkX * CHUNK; x < (chunkX + 1) * CHUNK; x += 1) {
         addCell(solid, water, cells, lighting, [x, y, z]);
+        addTuft(tufts, cells, lighting, [x, y, z]);
       }
     }
   }
-  return { solid: solid.take(), water: water.take() };
+  return { solid: solid.take(), tufts: tufts.take(), water: water.take() };
 }
