@@ -457,9 +457,8 @@ jobs:
           (setsid bash -c "bash '$RUNNER_TEMP/browsers.sh'; echo \$? > '$RUNNER_TEMP/browsers.exit'" \
             > "$RUNNER_TEMP/browsers.log" 2>&1 &)
 
-      - name: Generate bindings
-        run: bun run --cwd packages/backend codegen
-
+      # The proof reads the committed bindings, which the gate regenerates and
+      # compares on the same head.
       - name: Name the prepared runtime
         id: key
         run: |
@@ -497,12 +496,6 @@ jobs:
         env:
           TURBO_CONCURRENCY: "2"
         run: bun run --cwd packages/backend acceptance build
-
-      # A head whose committed bindings differ from what its own code generates is not ready.
-      - name: Verify generated bindings
-        run: |
-          git status --porcelain -- packages/backend/confect/_generated packages/backend/convex/_generated
-          test -z "$(git status --porcelain -- packages/backend/confect/_generated packages/backend/convex/_generated)"
 
       - name: Start
         run: |
