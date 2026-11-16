@@ -1,6 +1,7 @@
 import { useClipboard } from "@mantine/hooks";
 import { Button } from "@repo/design-system/components/ui/button";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
+import type { ReactNode } from "react";
 import { useTranslations } from "use-intl";
 
 /** One value the reader copies, under its name. */
@@ -26,11 +27,11 @@ export function SchoolSecretDialog({
   secret,
   title,
 }: {
-  description: string;
+  description: ReactNode;
   identifier?: string | undefined;
   onClose: () => void;
   secret: string | undefined;
-  title: string;
+  title: ReactNode;
 }) {
   const t = useTranslations("SchoolSettings");
   const clipboard = useClipboard({ timeout: 1500 });

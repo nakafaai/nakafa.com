@@ -35,7 +35,7 @@ export function TryoutPageHeader({
   /** The page's actions, at the end of the header. */
   children?: ReactNode;
   items: readonly BreadcrumbHeaderItem[];
-  title: string;
+  title: ReactNode;
 }) {
   const tCommon = useTranslations("Common");
   const path: readonly BreadcrumbHeaderItem[] = [

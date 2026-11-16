@@ -10,7 +10,7 @@ import { SchoolHeader } from "@/components/tenant/header";
 const ClassHeaderContext = createContext<{
   items: readonly BreadcrumbHeaderItem[];
   tab: (typeof ClassView.Type)["_tag"];
-  title: string;
+  title: ReactNode;
 } | null>(null);
 
 /** Gives the view of a resolved class page the path, the title, and the current tab that its header shows. */
@@ -23,7 +23,7 @@ export function ClassHeaderProvider({
   children: ReactNode;
   items: readonly BreadcrumbHeaderItem[];
   tab: (typeof ClassView.Type)["_tag"];
-  title: string;
+  title: ReactNode;
 }) {
   return (
     <ClassHeaderContext value={{ items, tab, title }}>

@@ -239,7 +239,7 @@ function ParticleCard({
   labels: IonLabProps["labels"];
   notation: string;
   stage: string;
-  title: string;
+  title: ReactNode;
 }) {
   return (
     <section

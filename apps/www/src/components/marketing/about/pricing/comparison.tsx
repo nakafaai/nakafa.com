@@ -20,7 +20,7 @@ function Comparison({
 }: {
   note: string;
   picture: ReactNode;
-  title: string;
+  title: ReactNode;
 }) {
   return (
     <div className="grid content-start justify-items-center gap-2 text-center">

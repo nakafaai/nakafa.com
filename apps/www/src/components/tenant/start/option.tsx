@@ -1,6 +1,7 @@
 import type { IconSvgElement } from "@hugeicons/react";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { QuestionnaireChoiceDescription } from "@repo/design-system/components/ui/questionnaire";
+import type { ReactNode } from "react";
 import {
   CountryFlagIcon,
   type RegionCountryCode,
@@ -18,9 +19,9 @@ export function StartOption({
   title,
 }: {
   country?: RegionCountryCode;
-  description?: string;
+  description?: ReactNode;
   icon?: IconSvgElement;
-  title: string;
+  title: ReactNode;
 }) {
   return (
     <span className="flex min-w-0 items-start gap-3">
@@ -51,8 +52,8 @@ export function StartLevelOption({
   description,
   title,
 }: {
-  description: string;
-  title: string;
+  description: ReactNode;
+  title: ReactNode;
 }) {
   return (
     <span className="flex min-w-0 items-baseline gap-3">

@@ -36,18 +36,23 @@ export function PageOutlineHeader({
 }: {
   /** The curriculum hint that the link to the page carries, when the reader came from one. */
   context?: string | undefined;
-  description: string;
+  description: ReactNode;
   descriptionLanguage?: string;
   /** The signed public path of the page the header names, which the router opens. */
   publicPath: string;
-  title: string;
+  title: ReactNode;
 }) {
   return (
     <SidebarHeader className="border-b group-data-[collapsible=icon]:hidden">
       <SidebarMenu>
         <SidebarMenuItem>
           <SidebarMenuButton
-            render={<PublicPathLink {...link} title={title} />}
+            render={
+              <PublicPathLink
+                {...link}
+                title={typeof title === "string" ? title : undefined}
+              />
+            }
             size="lg"
           >
             <div className="grid flex-1 text-left text-sm leading-tight">

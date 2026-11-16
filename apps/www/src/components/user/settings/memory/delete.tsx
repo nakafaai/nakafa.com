@@ -4,7 +4,7 @@ import {
   ResponsiveDialog,
   ResponsiveDialogSubject,
 } from "@repo/design-system/components/ui/responsive-dialog";
-import type { ComponentProps } from "react";
+import type { ComponentProps, ReactNode } from "react";
 import { useTranslations } from "use-intl";
 
 /**
@@ -21,7 +21,7 @@ export function MemoryDeleteDialog({
   title,
 }: {
   /** The memory's title, which the question shows as what goes. */
-  title: string;
+  title: ReactNode;
   finalFocus?: ComponentProps<typeof ResponsiveDialog>["finalFocus"];
   onConfirm: () => void;
   onOpenChange: (open: boolean) => void;

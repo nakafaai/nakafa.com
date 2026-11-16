@@ -177,7 +177,7 @@ function SetupGroup({
   title,
 }: {
   children: ReactNode;
-  title: string;
+  title: ReactNode;
 }) {
   return (
     <section className="flex flex-col gap-3">
@@ -219,8 +219,8 @@ function SetupText({
   description,
   title,
 }: {
-  description: string;
-  title: string;
+  description: ReactNode;
+  title: ReactNode;
 }) {
   return (
     <ItemContent>

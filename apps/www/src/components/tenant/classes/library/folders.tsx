@@ -57,13 +57,13 @@ function FolderNameDialog({
   title,
 }: {
   action: string;
-  description: string;
+  description: ReactNode;
   /** The name the dialog opens with, empty for a new folder. */
   named: string;
   onName: (name: string) => void;
   open: boolean;
   setOpen: (open: boolean) => void;
-  title: string;
+  title: ReactNode;
 }) {
   const t = useTranslations("Classroom");
   const id = useId();

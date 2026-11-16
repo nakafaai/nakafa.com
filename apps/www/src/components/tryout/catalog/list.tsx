@@ -20,11 +20,11 @@ interface TryoutListProps {
   rows: readonly {
     address: TryoutPageAddress;
     current?: boolean;
-    description?: string;
+    description?: ReactNode;
     key: string;
     meta?: ReactNode;
     status?: TryoutStatusValue;
-    title: string;
+    title: ReactNode;
     visual: TileLook;
   }[];
 }
@@ -116,7 +116,7 @@ function TryoutRowMeta({ meta }: { meta: ReactNode }) {
 function TryoutRowDescription({
   description,
 }: {
-  description: string | undefined;
+  description: ReactNode | undefined;
 }) {
   if (!description) {
     return null;

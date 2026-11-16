@@ -60,7 +60,7 @@ interface BreadcrumbHeaderProps {
     home: LinkTarget;
     homeLabel: string;
     items: readonly BreadcrumbHeaderItem[];
-    title: string;
+    title: ReactNode;
   };
 }
 

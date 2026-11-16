@@ -32,7 +32,7 @@ import { revealOffset } from "@/components/shared/outline/reading";
 
 interface Props {
   data: ParsedHeading[];
-  title?: string;
+  title?: ReactNode;
 }
 
 /** The element that scrolls an outline in its panel. */
@@ -185,7 +185,7 @@ function SidebarTreeGroup({
   title,
 }: {
   children: ReactNode;
-  title: string;
+  title: ReactNode;
 }) {
   return (
     <SidebarGroup>

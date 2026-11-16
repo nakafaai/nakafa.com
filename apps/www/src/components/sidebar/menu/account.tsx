@@ -52,7 +52,7 @@ export function AccountMenu({
   };
   children: ReactNode;
   /** The second line of the account button, such as a plan or a role. Left out, the button has one line. */
-  description?: string | undefined;
+  description?: ReactNode | undefined;
   /** The name on the account button: the school person's name in a school, the account's name on the main site. */
   name: string;
   /**

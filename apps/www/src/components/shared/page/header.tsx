@@ -33,7 +33,7 @@ export function PageHeader({
 }: {
   children: ReactNode;
   /** The page's heading, unless the page's body draws its own. */
-  title?: string;
+  title?: ReactNode;
 }) {
   const tCommon = useTranslations("Common");
 
@@ -82,13 +82,13 @@ export function PageTitle({
   title,
 }: {
   children: ReactNode;
-  title: string;
+  title: ReactNode;
 }) {
   return (
     <h1
       className="min-w-0 truncate text-base font-medium md:max-w-xs md:text-center"
       data-slot="page-title"
-      title={title}
+      title={typeof title === "string" ? title : undefined}
     >
       {children}
     </h1>
