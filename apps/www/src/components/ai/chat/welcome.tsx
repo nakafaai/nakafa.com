@@ -1,5 +1,10 @@
 import { Particles } from "@repo/design-system/components/ui/particles";
-import { useNavigate } from "@tanstack/react-router";
+import {
+  trimPathRight,
+  useLocation,
+  useMatch,
+  useNavigate,
+} from "@tanstack/react-router";
 import { cn } from "cn";
 import type { ReactNode } from "react";
 import { ChatHeader } from "@/components/ai/chat/header";
@@ -18,13 +23,23 @@ import { chatTarget } from "@/lib/routing/target";
  * conversation layout once a prompt is on its way. A finished admission opens the chat's own page. A send or an
  * attach pressed while the session loads waits for the composer that follows, since the server draws this page and
  * its composer before the session starts.
+ *
+ * The page counts as shown while the router's location is still its own. A learner who leaves for another page has
+ * left from the moment that navigation starts, while the page still draws until the next one has loaded, so an
+ * admission that settles meanwhile tells them once instead of opening its chat over the page they picked.
  */
 export function ChatNew({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
+  const location = useLocation({ select: (current) => current.pathname });
+  const own = useMatch({ strict: false, select: (match) => match.pathname });
 
   return (
     <NewChat
-      admission={{ onComplete: (chatId) => navigate(chatTarget(chatId)) }}
+      admission={{
+        onComplete: (chatId) => navigate(chatTarget(chatId)),
+        // The page's own path keeps the trailing slash of its index route.
+        shown: trimPathRight(location) === trimPathRight(own),
+      }}
       holds
     >
       <NewChatLayout>{children}</NewChatLayout>
