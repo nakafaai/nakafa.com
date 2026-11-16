@@ -6,7 +6,7 @@ import { SPECIES } from "@/lib/island/fauna/species";
 import { groundOf } from "@/lib/island/life";
 import { STRIDE } from "@/lib/island/mesh";
 import { terrainOf } from "@/lib/island/terrain";
-import { roam, wildOf, wildVertices } from "@/lib/island/wild";
+import { roam, standingQuad, wildOf, wildVertices } from "@/lib/island/wild";
 import { SEA_LEVEL } from "@/lib/island/world";
 
 const DAY = 20_400;
@@ -111,5 +111,15 @@ describe("island/wild", () => {
     const dug = new Uint8Array(cells.length);
     const vertices = wildVertices(dug, [walker.value], 52, 0.7, 12);
     expect(vertices[1]).toBeCloseTo(SEA_LEVEL);
+  });
+  it("stands a float upright facing the camera, its foot on the water and as tall as it is wide", () => {
+    const quad = standingQuad(0, [10, SEA_LEVEL, 20], 0.5, 0);
+    const corner = (index: number) =>
+      Arr.take(Arr.drop(quad, index * STRIDE), 3);
+    expect(quad).toHaveLength(4 * STRIDE);
+    expect(corner(0)).toEqual([9.75, SEA_LEVEL, 20]);
+    expect(corner(2)).toEqual([10.25, SEA_LEVEL + 0.5, 20]);
+    const turned = standingQuad(0, [10, SEA_LEVEL, 20], 0.5, Math.PI / 2);
+    expect(Arr.drop(turned, 2)[0]).toBeCloseTo(20.25);
   });
 });

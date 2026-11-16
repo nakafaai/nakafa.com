@@ -71,6 +71,8 @@
   --color-island-rule-dark: #a9865a;
   /* The search field's ground. */
   --color-island-page-light: #fbf1da;
+  /* The hook on a fish the learner has caught. */
+  --color-island-water: #2c6ec2;
 }
 
 /* Each thing does one small thing by itself. The names are the `motion` of a
