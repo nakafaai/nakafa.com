@@ -139,10 +139,11 @@ export const Route = createFileRoute("/$locale/_marketing/school/")({
 });
 
 /**
- * The School landing: its hero, one screen for each thing a school runs on it,
- * each with the real School screen beside or under its words, its questions,
- * and the closing question. Every section after the hero loads its code as it
- * nears, and the toys come on a wide screen once the page has its reader.
+ * The School landing: its hero, then one part for each thing a school does on Nakafa, in the order a school year
+ * meets them: tasks, the exam editor, the exam player, report cards, insight, parents and the year itself, then its
+ * questions and the closing question. Every part opens with Nina and its words and shows the School's own screens or
+ * one picture that plays by itself. Every part after the hero loads its code as it nears, and the toys come on a wide
+ * screen once the page has its reader.
  */
 function SchoolLanding() {
   const { faqs } = Route.useLoaderData();
@@ -154,12 +155,6 @@ function SchoolLanding() {
       <div className="relative grid grid-cols-1">
         <SchoolHero />
         <DeferredSchoolToys page="landing" />
-        <LaterSection code={schoolSections.forum}>
-          {(SchoolForum) => <SchoolForum />}
-        </LaterSection>
-        <LaterSection code={schoolSections.library}>
-          {(SchoolLibrary) => <SchoolLibrary />}
-        </LaterSection>
         <LaterSection code={schoolSections.tasks}>
           {(SchoolTasks) => <SchoolTasks />}
         </LaterSection>
@@ -175,11 +170,11 @@ function SchoolLanding() {
         <LaterSection code={schoolSections.insight}>
           {(SchoolInsight) => <SchoolInsight />}
         </LaterSection>
-        <LaterSection code={schoolSections.graduation}>
-          {(SchoolGraduation) => <SchoolGraduation />}
-        </LaterSection>
         <LaterSection code={schoolSections.parents}>
           {(SchoolParents) => <SchoolParents />}
+        </LaterSection>
+        <LaterSection code={schoolSections.year}>
+          {(SchoolYear) => <SchoolYear />}
         </LaterSection>
         <LaterSection code={schoolSections.faq}>
           {(SchoolFaq) => (

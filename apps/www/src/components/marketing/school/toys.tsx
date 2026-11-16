@@ -29,8 +29,8 @@ const HERO_SPOTS = [
 
 /**
  * The toys of the School landing: six animals around the hero's title, and a
- * small herd with its things where each centred part begins, every thing one a
- * school keeps. The animals come after the people of the demos in one cast, so
+ * small herd with its things where each part begins, every thing one a school
+ * keeps and none of them twice. The animals come after the people of the demos in one cast, so
  * no animal appears twice on the page.
  */
 const PLACEMENTS: readonly ToyPlacement[] = [
@@ -39,12 +39,15 @@ const PLACEMENTS: readonly ToyPlacement[] = [
     picture: <ToyAnimal herd={SCHOOL_TOY_HERD} index={index} />,
     place: within("hero", { dx: -28, dy: -28, minWidth, x, y }),
   })),
-  ...gap("library", 0.5, SCHOOL_TOY_HERD, [6, 7], ["backpack", "book"]),
+  ...gap("tasks", 0.5, SCHOOL_TOY_HERD, [6, 7], ["backpack", "book"]),
   ...gap("exams", 0.5, SCHOOL_TOY_HERD, [8, 9], ["hourglass", "calculator"]),
-  ...gap("insight", 0.5, SCHOOL_TOY_HERD, [16, 17], ["glasses", "bulb"]),
-  ...gap("graduation", 0.5, SCHOOL_TOY_HERD, [10, 11], ["cap", "trophy"]),
-  ...gap("faq", 0.5, SCHOOL_TOY_HERD, [12, 13], ["bubble", "magnifier"]),
-  ...gap("closing", 0.5, SCHOOL_TOY_HERD, [14, 15], ["medal", "flag"]),
+  ...gap("player", 0.5, SCHOOL_TOY_HERD, [10, 11], ["glasses", "pencil"]),
+  ...gap("reports", 0.5, SCHOOL_TOY_HERD, [12, 13], ["letter", "clip"]),
+  ...gap("insight", 0.5, SCHOOL_TOY_HERD, [14, 15], ["magnifier", "ruler"]),
+  ...gap("parents", 0.5, SCHOOL_TOY_HERD, [16, 17], ["bubble", "coffee"]),
+  ...gap("year", 0.5, SCHOOL_TOY_HERD, [18, 19], ["cap", "calendar"]),
+  ...gap("faq", 0.5, SCHOOL_TOY_HERD, [20, 21], ["globe", "highlighter"]),
+  ...gap("closing", 0.5, SCHOOL_TOY_HERD, [22, 23], ["medal", "flag"]),
 ];
 
 /**
@@ -82,14 +85,13 @@ export function SchoolToys() {
   return (
     <ToyOverlay placements={PLACEMENTS}>
       <NinaToy act="teaching" size={240} slot={SCHOOL_NINA_ID} />
-      <NinaToy act="typing" size={88} slot="forum-nina" />
-      <NinaToy act="carrying" size={88} slot="library-nina" />
-      <NinaToy act="writing" size={88} slot="tasks-nina" />
+      <NinaToy act="carrying" size={88} slot="tasks-nina" />
       <NinaToy act="thinking" size={88} slot="exams-nina" />
+      <NinaToy act="writing" size={88} slot="player-nina" />
       <NinaToy act="stamping" size={88} slot="reports-nina" />
       <NinaToy act="searching" size={88} slot="insight-nina" />
-      <NinaToy act="graduating" size={88} slot="graduation-nina" />
       <NinaToy act="waving" size={88} slot="parents-nina" />
+      <NinaToy act="graduating" size={88} slot="year-nina" />
     </ToyOverlay>
   );
 }

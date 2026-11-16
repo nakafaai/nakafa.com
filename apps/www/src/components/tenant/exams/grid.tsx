@@ -31,6 +31,7 @@ import {
   useEditorView,
   useExam,
 } from "@/components/tenant/exams/provider";
+import { thumbPress } from "@/components/tenant/exams/thumb";
 import { TileKey, tileAfter } from "@/components/tenant/exams/view";
 
 /** Whether a key moves between the tiles. */
@@ -38,7 +39,7 @@ const isTileKey = Schema.is(TileKey);
 
 /** The frame of one tile, which shows the question chosen on the canvas and the tile a drag would drop on. */
 const tileFrame = cva(
-  "bg-background hover:border-foreground/20 focus-visible:ring-ring/50 relative block aspect-4/3 w-full overflow-hidden rounded-lg border outline-none focus-visible:ring-3",
+  "bg-background hover:border-foreground/20 focus-visible:ring-ring/50 has-[:focus-visible]:ring-ring/50 relative block aspect-4/3 w-full overflow-hidden rounded-lg border outline-none focus-visible:ring-3 has-[:focus-visible]:ring-3",
   {
     defaultVariants: { current: false, target: false },
     variants: {
@@ -98,41 +99,44 @@ function GridTile({
 
   return (
     <li className="grid gap-2">
-      <button
-        aria-current={current ? "true" : undefined}
-        className={tileFrame({ current, target })}
-        data-tile={index}
-        draggable={editable && saved}
-        onClick={() => open(question.id)}
-        onDragEnd={() => setTarget(false)}
-        onDragLeave={() => setTarget(false)}
-        onDragOver={(event) => {
-          if (editable) {
-            event.preventDefault();
-            setTarget(true);
-          }
-        }}
-        onDragStart={(event) => {
-          event.dataTransfer.effectAllowed = "move";
-          onDragStart(question.id);
-        }}
-        onDrop={(event) => {
-          event.preventDefault();
-          setTarget(false);
-          onDrop(index);
-        }}
-        onKeyDown={(event) => onKey(event, index)}
-        type="button"
-      >
-        <span className="sr-only">
-          {t("open-question", { number })}
-          {Option.match(questionGap(question), {
-            onNone: () => null,
-            onSome: (gap) => ` ${t(gap === "empty" ? "empty-part" : "no-key")}`,
-          })}
-        </span>
+      <div className={tileFrame({ current, target })}>
         <QuestionPreview open={current} question={question} saved={saved} />
-      </button>
+        <button
+          aria-current={current ? "true" : undefined}
+          className={thumbPress()}
+          data-tile={index}
+          draggable={editable && saved}
+          onClick={() => open(question.id)}
+          onDragEnd={() => setTarget(false)}
+          onDragLeave={() => setTarget(false)}
+          onDragOver={(event) => {
+            if (editable) {
+              event.preventDefault();
+              setTarget(true);
+            }
+          }}
+          onDragStart={(event) => {
+            event.dataTransfer.effectAllowed = "move";
+            onDragStart(question.id);
+          }}
+          onDrop={(event) => {
+            event.preventDefault();
+            setTarget(false);
+            onDrop(index);
+          }}
+          onKeyDown={(event) => onKey(event, index)}
+          type="button"
+        >
+          <span className="sr-only">
+            {t("open-question", { number })}
+            {Option.match(questionGap(question), {
+              onNone: () => null,
+              onSome: (gap) =>
+                ` ${t(gap === "empty" ? "empty-part" : "no-key")}`,
+            })}
+          </span>
+        </button>
+      </div>
       <div className="flex items-center gap-2 text-sm">
         {editable ? (
           <Checkbox

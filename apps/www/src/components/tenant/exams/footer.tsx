@@ -26,7 +26,7 @@ import {
   useExamSelection,
   useExamZoom,
 } from "@/components/tenant/exams/provider";
-import { pageThumb } from "@/components/tenant/exams/thumb";
+import { pageThumb, thumbPress } from "@/components/tenant/exams/thumb";
 import {
   drawnZoom,
   sliderPosition,
@@ -270,20 +270,22 @@ function PageThumb({
   const saved = !isPlaceholderId(question.prompt);
 
   return (
-    <button
-      aria-current={selected ? "true" : undefined}
-      className={pageThumb()}
-      onClick={onPick}
-      type="button"
-    >
-      <span className="sr-only">
-        {t("question", { number })}
-        {Option.match(questionGap(question), {
-          onNone: () => null,
-          onSome: (gap) => ` ${t(gap === "empty" ? "empty-part" : "no-key")}`,
-        })}
-      </span>
+    <div className={pageThumb()}>
       <QuestionPreview open={selected} question={question} saved={saved} />
-    </button>
+      <button
+        aria-current={selected ? "true" : undefined}
+        className={thumbPress()}
+        onClick={onPick}
+        type="button"
+      >
+        <span className="sr-only">
+          {t("question", { number })}
+          {Option.match(questionGap(question), {
+            onNone: () => null,
+            onSome: (gap) => ` ${t(gap === "empty" ? "empty-part" : "no-key")}`,
+          })}
+        </span>
+      </button>
+    </div>
   );
 }

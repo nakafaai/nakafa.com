@@ -11,10 +11,11 @@ import {
 import { buttonVariants } from "@repo/design-system/lib/button";
 import { isComposingKey } from "@repo/utilities/composition";
 import { Function as Fn, Option } from "effect";
-import { type ComponentProps, type ReactNode, useState } from "react";
+import { type ComponentProps, type ReactNode, use, useState } from "react";
 import { useTranslations } from "use-intl";
 import { OfflineNote } from "@/components/shared/offline";
 import { useTenant } from "@/components/tenant/context";
+import { ExamFrameContext } from "@/components/tenant/exams/framed";
 import { ExamMenu, ExamMenuFrame } from "@/components/tenant/exams/menu";
 import { renameUpdate } from "@/components/tenant/exams/optimistic";
 import { ExamPresence } from "@/components/tenant/exams/presence";
@@ -125,10 +126,17 @@ function ExamHeaderRow({ children }: { children: ReactNode }) {
   );
 }
 
-/** The link back to the school's exams, an icon named in its tooltip. */
+/**
+ * The link back to the school's exams, an icon named in its tooltip. An editor in a frame outside a school has no
+ * exams page behind it, so it draws none.
+ */
 function BackToExams() {
   const t = useTranslations("Exams");
   const { slug } = useTenant();
+
+  if (use(ExamFrameContext) !== null) {
+    return null;
+  }
 
   return (
     <Tooltip>

@@ -1,3 +1,5 @@
+import { DESIGNS } from "@repo/mascot/animal";
+import { Mascot } from "@repo/mascot/code";
 import { cast } from "@repo/mascot/seed";
 import { Array as Arr } from "effect";
 
@@ -5,10 +7,10 @@ import { Array as Arr } from "effect";
 const SCHOOL_SEED = "nakafa-school";
 
 /** How many places of the cast the landing's demos take, each person at a place of their own. */
-const SCHOOL_PEOPLE = 21;
+const SCHOOL_PEOPLE = 10;
 
-/** How many animals the landing's toys take: six around the hero's title, and two where each of six centred parts begins. */
-const SCHOOL_TOYS = 18;
+/** How many animals the landing's toys take: six around the hero's title, and two where each of its nine later parts begins. */
+const SCHOOL_TOYS = 24;
 
 /**
  * The animals of the School landing, from one cast: the people of its demos
@@ -36,22 +38,26 @@ function person(name: string, place: number) {
   return { mascot: Arr.getUnsafe(SCHOOL_CAST, place), name };
 }
 
-/** The teacher of the demo class, who answers in its forum. */
-export const DEMO_TEACHER = person("Rina", 0);
+/** The four students of the class that Nina gives a task, in the order they sit. */
+export const DEMO_CLASS = Arr.take(SCHOOL_CAST, 4);
 
-/** The student who asks in the forum. */
-export const DEMO_ASKER = person("Dimas", 1);
-
-/** The animals of the forum thread's replies, shown together. */
-export const DEMO_REPLIERS = Arr.take(Arr.drop(SCHOOL_CAST, 2), 3);
+/** The four students whose mastery the insight follows. */
+export const DEMO_LEARNERS = Arr.take(Arr.drop(SCHOOL_CAST, 4), 4);
 
 /** The student whose report card the school signs. */
 export const DEMO_REPORTED = person("Sari", 8);
 
-/** The animals of each cohort that moves up a grade, three of them each. */
-export const DEMO_COHORTS = Arr.map([11, 14, 17], (start) =>
-  Arr.take(Arr.drop(SCHOOL_CAST, start), 3)
-);
-
 /** The child whose parent follows the school. */
-export const DEMO_CHILD = person("Ayu", 20);
+export const DEMO_CHILD = person("Ayu", 9);
+
+/**
+ * The child's parent: the same animal in the next of its palettes, so the two
+ * read as one family and still as two people.
+ */
+export const DEMO_PARENT = Mascot.make({
+  ...DEMO_CHILD.mascot,
+  eyes: "smile",
+  palette:
+    (DEMO_CHILD.mascot.palette + 1) %
+    DESIGNS[DEMO_CHILD.mascot.animal].colors.length,
+});

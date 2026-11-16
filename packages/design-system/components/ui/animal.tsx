@@ -1,6 +1,6 @@
 import { Picture } from "@repo/design-system/components/ui/picture";
 import type { Mascot } from "@repo/mascot/code";
-import { CANVAS, draw } from "@repo/mascot/draw";
+import { CANVAS, draw, stand } from "@repo/mascot/draw";
 import { Array as Arr } from "effect";
 
 interface Props {
@@ -39,6 +39,31 @@ export function Animal({ mascot }: Props) {
       data-look=""
       marked={marked}
       shapes={Arr.of(draw(mascot))}
+    />
+  );
+}
+
+/**
+ * The animal of one person standing free at a width in pixels, on no ground
+ * and in no circle: a character of the page, not a profile picture. Its body
+ * runs to the bottom of its box, so the caller stands it behind an edge, a
+ * desk or the top of a card, that cuts it. Its eyes follow the pointer like
+ * every face.
+ */
+export function AnimalFigure({
+  className,
+  mascot,
+}: {
+  className?: string;
+  mascot: typeof Mascot.Type;
+}) {
+  return (
+    <Picture
+      box={BOX}
+      className={className}
+      data-look=""
+      marked={marked}
+      shapes={Arr.of(stand(mascot))}
     />
   );
 }

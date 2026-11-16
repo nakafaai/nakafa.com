@@ -4,12 +4,12 @@ import en from "@repo/internationalization/dictionaries/en.json" with {
 };
 import { makeFunctionReference } from "convex/server";
 import { Effect, MutableRef } from "effect";
-import { createDemoBackend } from "@/components/marketing/school/editor/backend";
+import { createDemoBackend } from "@/components/marketing/school/demo/backend";
 import {
   DemoConvexClient,
   DemoUnavailable,
-} from "@/components/marketing/school/editor/client";
-import { demoExam } from "@/components/marketing/school/editor/exam";
+} from "@/components/marketing/school/demo/client";
+import { demoExam } from "@/components/marketing/school/demo/exam";
 
 /** The exam's read, by the name the editor's hooks call it. */
 const OPEN = makeFunctionReference<"query">("exams/exams:open");

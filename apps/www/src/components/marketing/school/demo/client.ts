@@ -15,7 +15,7 @@ import {
   type OptionalRestArgs,
 } from "convex/server";
 import { Data, MutableHashMap, MutableHashSet, Option, Schema } from "effect";
-import type { DemoBackend } from "@/components/marketing/school/editor/backend";
+import type { DemoBackend } from "@/components/marketing/school/demo/backend";
 
 /**
  * The address the demo client names. Its connection is never opened: every read and change the editor makes, and
