@@ -1,6 +1,7 @@
 import { captureException } from "@repo/analytics/posthog/capture";
 import { readPageGoing } from "@repo/design-system/lib/lazy";
 import type { Locale } from "@repo/internationalization/src/locale";
+import { readStandaloneMessages } from "@repo/internationalization/src/messages";
 import { SITE_ORIGIN } from "@repo/seo/origin";
 import { Effect } from "effect";
 import { useEffect, useState } from "react";
@@ -15,7 +16,6 @@ import {
   reloadForStaleChunk,
   reloadPage,
 } from "@/lib/chunks/stale";
-import { readStandaloneMessages } from "@/lib/i18n/standalone";
 
 /**
  * The not-found state of one locale, with its home and search links. It reads the

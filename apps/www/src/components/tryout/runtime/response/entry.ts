@@ -7,7 +7,7 @@ import {
   NO_RESPONSE,
   typedText,
 } from "@repo/backend/confect/assessment/response";
-import { Array as Arr, Match, Option, pipe, String as Str } from "effect";
+import { Match, Option, pipe, String as Str } from "effect";
 
 /** A question the learner answers by typing: a short answer, or a number with its unit, as SNBT sets them. */
 export type Entry = Extract<
@@ -23,14 +23,9 @@ export const isEntry = (interaction: Interaction): interaction is Entry =>
 export const entryResponse = (typed: string): ExamResponse | null =>
   Str.isNonEmpty(Str.trim(typed)) ? { text: typed } : null;
 
-/** The decimal point of a locale's numbers: a comma in Indonesian and German, a period in English. */
-export const decimalOf = (locale: string) =>
-  pipe(
-    new Intl.NumberFormat(locale).formatToParts(1.5),
-    Arr.filter((part) => part.type === "decimal"),
-    Arr.map((part) => part.value),
-    Arr.join("")
-  );
+/** The decimal point of a locale's numbers, read from how its formatter writes 1.5: a comma in Indonesian and German, a period in English. */
+export const decimalOf = (number: (value: number, format: "math") => string) =>
+  pipe(number(1.5, "math"), Str.replace(/\d/gu, ""));
 
 /**
  * A typed answer under its key, as the review marks it: the learner's text, whether it earns the key by the rule

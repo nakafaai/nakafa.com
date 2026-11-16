@@ -8,10 +8,7 @@ import {
   rockSalt,
 } from "@repo/design-system/components/contents/chemistry/lattice/crystal";
 import { ELEMENTS } from "@repo/design-system/components/contents/chemistry/molecule/elements";
-import {
-  MATH_NUMBER_OPTIONS,
-  mathNumber,
-} from "@repo/design-system/components/contents/mathematics/number";
+import { mathNumber } from "@repo/design-system/components/contents/mathematics/number";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { CameraControls } from "@repo/design-system/components/three/camera/controls";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene";
@@ -117,8 +114,7 @@ export function IonLatticeLab({
   const crystal = getCrystal(shown);
   const sites = rockSalt(cells);
   const { anions, cations } = countIons(sites);
-  const number = (value: number) =>
-    mathNumber(format.number(value, MATH_NUMBER_OPTIONS));
+  const number = (value: number) => mathNumber(format.number(value, "math"));
 
   return (
     <VisualCard>

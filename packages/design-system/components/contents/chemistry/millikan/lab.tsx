@@ -75,11 +75,11 @@ export function MillikanOilDropLab({
   const [voltage, setVoltage] = useState(500);
   const charge = chargeToHover(voltage);
   const [mantissa, exponent] = format
-    .number(charge, { maximumFractionDigits: 2, notation: "scientific" })
+    .number(charge, "math", { notation: "scientific" })
     .split("E");
   const decimal = (value: number, digits: number) =>
     format
-      .number(value, { maximumFractionDigits: digits, useGrouping: false })
+      .number(value, "math", { maximumFractionDigits: digits })
       .replaceAll(",", "{,}");
 
   return (

@@ -21,6 +21,7 @@ import {
   ToggleGroupItem,
 } from "@repo/design-system/components/ui/toggle-group";
 import { buttonVariants } from "@repo/design-system/lib/button";
+import { formatBytes } from "@repo/internationalization/src/formats";
 import { Array as Arr, Option, Record as Rec } from "effect";
 import { type ReactNode, useId, useState } from "react";
 import { useFormatter, useLocale, useTranslations } from "use-intl";
@@ -32,7 +33,6 @@ import {
   FeatureText,
   FeatureTitle,
 } from "@/components/marketing/shared/feature";
-import { formatStorage } from "@/lib/pricing/school";
 
 /** The fewest accounts a school adds, and the shortcuts that add more at once. */
 const FEWEST_ADDED = 1;
@@ -100,7 +100,10 @@ export function SchoolCalculator() {
         <FeatureLead>
           {t("calculator-lead", {
             credits: schoolAccount.credits,
-            size: formatStorage(schoolAccount.storageMegabytes, locale),
+            size: formatBytes(
+              schoolAccount.storageMegabytes * 1_000_000,
+              locale
+            ),
           })}
         </FeatureLead>
       </FeatureText>
@@ -188,7 +191,7 @@ export function SchoolCalculator() {
             {format.number(idr.credits)}
           </CalculatorFigure>
           <CalculatorFigure label={t("calculator-storage")}>
-            {formatStorage(idr.storageMegabytes, locale)}
+            {formatBytes(idr.storageMegabytes * 1_000_000, locale)}
           </CalculatorFigure>
           <CalculatorFigure label={t("calculator-monthly")}>
             <SchoolAmount

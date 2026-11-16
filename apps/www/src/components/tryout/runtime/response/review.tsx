@@ -18,7 +18,7 @@ import {
   MarkedLine,
 } from "@repo/design-system/components/ui/line";
 import { Array as Arr, Option } from "effect";
-import { useFormatter, useLocale, useTranslations } from "use-intl";
+import { useFormatter, useTranslations } from "use-intl";
 import { ChoiceReviewed } from "@/components/player/choice";
 import { ChoiceTable } from "@/components/player/table";
 import {
@@ -147,7 +147,7 @@ function TryoutReviewedEntry({
   const player = useTranslations("Player");
   const format = useFormatter();
   const review = reviewEntry({
-    decimal: decimalOf(useLocale()),
+    decimal: decimalOf(format.number),
     entry,
     key: answer,
     response,
@@ -174,7 +174,7 @@ function TryoutReviewedEntry({
           </LineMark>
           <LineWords dir="auto">
             <span className="sr-only">{t("correct-answer")}: </span>
-            {format.list(review.accepted, { type: "disjunction" })}
+            {format.list(review.accepted, "or")}
           </LineWords>
         </MarkedLine>
       )}

@@ -6,7 +6,7 @@
     "target": "ESNext",
     "lib": ["ES2022", "dom", "ESNext.Array", "DOM.Iterable"],
     "allowSyntheticDefaultImports": true,
-    "types": ["node", "vitest/globals"],
+    "types": ["@repo/internationalization/i18n.d.ts", "node", "vitest/globals"],
     "paths": {
       "@/*": ["./*"],
       "@repo/*": ["../../packages/*"]

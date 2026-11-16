@@ -18,10 +18,7 @@ import {
   moleculeReach,
   readMolecule,
 } from "@repo/design-system/components/contents/chemistry/molecule/scene";
-import {
-  MATH_NUMBER_OPTIONS,
-  mathNumber,
-} from "@repo/design-system/components/contents/mathematics/number";
+import { mathNumber } from "@repo/design-system/components/contents/mathematics/number";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene";
 import { ScienceStage } from "@repo/design-system/components/three/stage";
@@ -107,9 +104,7 @@ export function MoleculeShapeLab({
   const shown = entry.id;
 
   const number = (value: number) =>
-    mathNumber(
-      format.number(value, { ...MATH_NUMBER_OPTIONS, maximumFractionDigits: 1 })
-    );
+    mathNumber(format.number(value, "math", { maximumFractionDigits: 1 }));
 
   function choose(value: string) {
     if (Schema.is(MoleculeIdSchema)(value)) {

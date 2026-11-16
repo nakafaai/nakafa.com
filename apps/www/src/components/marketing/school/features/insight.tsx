@@ -260,10 +260,10 @@ function ClassMastery() {
               className="col-start-1 row-start-1 opacity-0"
               data-score="before"
             >
-              {format.number(MEAN.before, { style: "percent" })}
+              {format.number(MEAN.before, "percent")}
             </span>
             <span className="col-start-1 row-start-1" data-score="after">
-              {format.number(MEAN.after, { style: "percent" })}
+              {format.number(MEAN.after, "percent")}
             </span>
           </span>
         </div>

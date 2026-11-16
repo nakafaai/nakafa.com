@@ -47,7 +47,7 @@ function TimeSelect({
   const items = Arr.map(timeSlots(step, value), (time) => ({
     label: format.dateTime(
       DateTime.toDateUtc(DateTime.makeUnsafe(`1970-01-01T${time}:00.000Z`)),
-      { hour: "2-digit", minute: "2-digit", timeZone: "UTC" }
+      "clock"
     ),
     value: time,
   }));

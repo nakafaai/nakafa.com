@@ -7,9 +7,6 @@ import {
   cancelPlanChange,
   creditFooterKey,
   creditPeriodKey,
-  formatBillingDate,
-  formatBillingDay,
-  formatCount,
   formatMinorAmount,
   planStateOf,
   providerNameOf,
@@ -139,29 +136,6 @@ describe("billing/plan", () => {
   it("names the payment provider of each rail", () => {
     expect(providerNameOf("polar")).toBe("Polar");
     expect(providerNameOf("xendit")).toBe("Xendit");
-  });
-
-  it("writes the Jakarta day in the words of the locale, so a late UTC moment reads the next day", () => {
-    expect(formatBillingDate(Date.UTC(2026, 10, 1, 23, 30), "en")).toBe(
-      "November 2, 2026"
-    );
-    expect(formatBillingDate(Date.UTC(2026, 9, 31, 16, 59), "de")).toBe(
-      "31. Oktober 2026"
-    );
-  });
-
-  it("writes the Jakarta day in short words for a narrow column", () => {
-    expect(formatBillingDay(Date.UTC(2026, 10, 1, 23, 30), "en")).toBe(
-      "Nov 2, 2026"
-    );
-    expect(formatBillingDay(Date.UTC(2026, 9, 31, 16, 59), "id")).toBe(
-      "31 Okt 2026"
-    );
-  });
-
-  it("writes a count in the digits of the locale", () => {
-    expect(formatCount(1000, "en")).toBe("1,000");
-    expect(formatCount(1000, "id")).toBe("1.000");
   });
 
   it("measures the share of the allowance used, in whole percent", () => {

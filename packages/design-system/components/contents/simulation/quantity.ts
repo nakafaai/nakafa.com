@@ -20,10 +20,7 @@ export function useQuantity() {
   const format = useFormatter();
   return (value: number, unit: string, digits = 1) =>
     `${mathNumber(
-      format.number(value, {
-        maximumFractionDigits: digits,
-        useGrouping: false,
-      })
+      format.number(value, "math", { maximumFractionDigits: digits })
     )}${unit}`;
 }
 
@@ -35,9 +32,8 @@ export function useQuantity() {
 export function useReading() {
   const format = useFormatter();
   return (value: number, digits: number) =>
-    format.number(value, {
+    format.number(value, "math", {
       maximumFractionDigits: digits,
       minimumFractionDigits: digits,
-      useGrouping: false,
     });
 }

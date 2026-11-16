@@ -128,7 +128,7 @@ function MoreEditors({ editors }: { editors: readonly Editor[] }) {
   const format = useFormatter();
   const names = format.list(
     Arr.map(editors, (editor) => editor.name),
-    { type: "conjunction" }
+    "and"
   );
 
   return (

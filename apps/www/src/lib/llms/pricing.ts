@@ -2,6 +2,7 @@ import {
   getPlanCreditConfig,
   NINA_RESPONSE_CREDITS,
 } from "@repo/backend/confect/credits/constants";
+import { formatterOf } from "@repo/internationalization/src/formats";
 import { loadLocaleMessages } from "@repo/internationalization/src/messages";
 import { Array as Arr, Effect } from "effect";
 import { createTranslator, type Locale } from "use-intl/core";
@@ -15,10 +16,6 @@ import { proPricing } from "@/lib/pricing/monthly";
 export function isPricingLlmsRoute(cleanSlug: string) {
   return cleanSlug === "pricing";
 }
-
-/** Joins a plan's prices as alternatives, in the reader's language. */
-const joinPrices = (locale: Locale, prices: readonly string[]) =>
-  new Intl.ListFormat(locale, { type: "disjunction" }).format(prices);
 
 /** Renders the localized pricing page as agent-readable Markdown. */
 export const getPricingLlmsText = Effect.fn("www.llms.pricing.text")(function* (
@@ -61,14 +58,16 @@ export const getPricingLlmsText = Effect.fn("www.llms.pricing.text")(function* (
       ...Arr.map(proPlanFeatures, (key) => `- ${plans(key, { credits })}`),
       page("price-line", {
         free: plans("free-title"),
-        monthly: joinPrices(
-          locale,
-          Arr.map(proPricing, ({ format, price }) => format(price.amount))
+        monthly: formatterOf(locale).list(
+          Arr.map(proPricing, ({ format, price }) => format(price.amount)),
+          "or"
         ),
         pro: plans("pro-title"),
-        yearly: joinPrices(
-          locale,
-          Arr.map(proPricing, ({ format, price }) => format(price.yearlyAmount))
+        yearly: formatterOf(locale).list(
+          Arr.map(proPricing, ({ format, price }) =>
+            format(price.yearlyAmount)
+          ),
+          "or"
         ),
       }),
       page("checkout-line", { url }),

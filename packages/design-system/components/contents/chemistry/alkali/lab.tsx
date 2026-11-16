@@ -10,10 +10,7 @@ import {
   stillMoment,
 } from "@repo/design-system/components/contents/chemistry/alkali/metals";
 import { toggleColumns } from "@repo/design-system/components/contents/chemistry/columns";
-import {
-  MATH_NUMBER_OPTIONS,
-  mathNumber,
-} from "@repo/design-system/components/contents/mathematics/number";
+import { mathNumber } from "@repo/design-system/components/contents/mathematics/number";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { CameraControls } from "@repo/design-system/components/three/camera/controls";
 import {
@@ -146,12 +143,7 @@ export function AlkaliWaterLab({
 
   const metal = getMetal(shown);
   const number = (value: number, digits: number) =>
-    mathNumber(
-      format.number(value, {
-        ...MATH_NUMBER_OPTIONS,
-        maximumFractionDigits: digits,
-      })
-    );
+    mathNumber(format.number(value, "math", { maximumFractionDigits: digits }));
 
   return (
     <VisualCard>

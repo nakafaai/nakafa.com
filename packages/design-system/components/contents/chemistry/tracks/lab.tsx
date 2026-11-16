@@ -81,13 +81,13 @@ export function ParticleTrackLab({
   const [field, setField] = useState(0.0005);
   const science = (value: number) => {
     const [mantissa, exponent] = format
-      .number(value, { maximumFractionDigits: 2, notation: "scientific" })
+      .number(value, "math", { notation: "scientific" })
       .split("E");
     return `${(mantissa ?? "").replaceAll(",", "{,}")} \\times 10^{${exponent ?? ""}}`;
   };
   const decimal = (value: number, digits: number) =>
     format
-      .number(value, { maximumFractionDigits: digits, useGrouping: false })
+      .number(value, "math", { maximumFractionDigits: digits })
       .replaceAll(",", "{,}");
 
   return (

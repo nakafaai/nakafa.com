@@ -4,13 +4,13 @@ import { DeferredLearnerText } from "@repo/design-system/components/markdown/def
 import { useRequired } from "@repo/design-system/hooks/required";
 import { lazy } from "@repo/design-system/lib/lazy";
 import { toast } from "@repo/design-system/lib/toast/notify";
+import { formatAge } from "@repo/internationalization/src/formats";
 import { ClientOnly } from "@tanstack/react-router";
 import { Effect, HashSet } from "effect";
 import { createContext, Suspense } from "react";
 import { useLocale } from "use-intl";
 import { ConvexIsland, SignedInIsland } from "@/components/providers/island";
 import { MoreMenu } from "@/components/shared/more";
-import { formatAge } from "@/components/user/age";
 import {
   FeedActions,
   FeedAge,

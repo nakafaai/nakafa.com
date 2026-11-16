@@ -4,7 +4,7 @@ import {
   intervalOf,
   intervalSeparator,
 } from "@repo/design-system/components/contents/mathematics/interval";
-import { MATH_NUMBER_OPTIONS } from "@repo/design-system/components/contents/mathematics/number";
+
 import {
   ActiveDot,
   Dot,
@@ -58,8 +58,7 @@ function ScatterFacts({
   const format = useFormatter();
   const locale = useLocale();
   const separator = intervalSeparator(locale);
-  const formatNumber = (value: number) =>
-    format.number(value, MATH_NUMBER_OPTIONS);
+  const formatNumber = (value: number) => format.number(value, "math");
   const xs = Arr.map(points, (point) => point.x);
   const ys = Arr.map(points, (point) => point.y);
 
@@ -67,7 +66,7 @@ function ScatterFacts({
     <VisualCardFacts>
       <VisualFact
         label={t("points")}
-        value={format.number(points.length, MATH_NUMBER_OPTIONS)}
+        value={format.number(points.length, "math")}
       />
       <VisualFact
         label={<InlineMath math="x" />}

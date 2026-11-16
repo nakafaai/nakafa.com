@@ -147,4 +147,4 @@ The first rule is live. The other two are targets.
 | Signed Aksara profile for Indonesia | Planned, program wave A |
 | The four locale settings stored on the organisation and the school | Live. The interface language stays in the `NAKAFA_LOCALE` cookie |
 | Text direction through one helper | Live. `textDirection` in `packages/internationalization/src/direction.ts` gives the direction. The root layout, `apps/www/src/[locale]/layout.tsx`, sets `dir` on `<html>` and passes it to `DesignSystemProvider`, which renders the `DirectionProvider` of Base UI |
-| School time through one formatter | Built. `formatSchoolTime` in `packages/internationalization/src/school/time.ts`. No screen uses it yet |
+| School time through one formatter | Live. `formatSchoolTime` in `packages/internationalization/src/formats.ts` (ADR 0045) writes a school's own zone; `apps/www/src/components/tenant/settings/clock.ts` reads it for the School rows |

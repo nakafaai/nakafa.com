@@ -1,6 +1,7 @@
 import { describe, expect, it } from "@effect/vitest";
 import type { Interaction } from "@nakafa/aksara-contracts/assessment/interaction";
 import type { InteractionKey } from "@nakafa/aksara-contracts/assessment/key";
+import { formatterOf } from "@repo/internationalization/src/formats";
 import {
   decimalOf,
   type Entry,
@@ -67,9 +68,9 @@ describe("tryout/runtime/response/entry", () => {
   });
 
   it("writes a number with the decimal point of the learner's language", () => {
-    expect(decimalOf("id")).toBe(",");
-    expect(decimalOf("de")).toBe(",");
-    expect(decimalOf("en")).toBe(".");
+    expect(decimalOf(formatterOf("id").number)).toBe(",");
+    expect(decimalOf(formatterOf("de").number)).toBe(",");
+    expect(decimalOf(formatterOf("en").number)).toBe(".");
   });
 
   it("marks a short answer by the key's accepted answers, wrong when none matches and open while blank", () => {

@@ -160,7 +160,7 @@ function ShelfFiles() {
         <ShelfLabel
           icon={Pdf02Icon}
           kind={t("demo-kind-pdf")}
-          meta={format.number(240, { style: "unit", unit: "kilobyte" })}
+          meta={format.number(240, "kilobyte")}
         >
           <FileName name={t("demo-library-worksheet")} />
         </ShelfLabel>
@@ -172,7 +172,7 @@ function ShelfFiles() {
         <ShelfLabel
           icon={Pdf02Icon}
           kind={t("demo-kind-pdf")}
-          meta={format.number(96, { style: "unit", unit: "kilobyte" })}
+          meta={format.number(96, "kilobyte")}
         >
           <FileName name={t("demo-library-summary")} />
         </ShelfLabel>
@@ -184,7 +184,7 @@ function ShelfFiles() {
         <ShelfLabel
           icon={Image01Icon}
           kind={t("demo-kind-image")}
-          meta={format.number(1.2, { style: "unit", unit: "megabyte" })}
+          meta={format.number(1.2, "megabyte")}
         >
           <FileName name={t("demo-library-graph")} />
         </ShelfLabel>
@@ -221,7 +221,7 @@ function ShelfFiles() {
           <ShelfLabel
             icon={Link04Icon}
             kind={t("demo-kind-video")}
-            meta={format.number(4, { style: "unit", unit: "minute" })}
+            meta={format.number(4, "minute")}
           >
             <FileName name={t("demo-library-video")} />
           </ShelfLabel>

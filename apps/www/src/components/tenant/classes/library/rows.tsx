@@ -11,7 +11,7 @@ import { Id } from "@repo/backend/confect/_generated/id";
 import classroom from "@repo/backend/confect/_generated/refs/classroom";
 import { DropdownMenuItem } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { Array as Arr, DateTime, Match, Option, Schema } from "effect";
+import { Array as Arr, Match, Option, Schema } from "effect";
 import { useFormatter, useTranslations } from "use-intl";
 import { useFormatTimeZone } from "@/components/shared/table/calendar";
 import { tableColumns } from "@/components/shared/table/columns";
@@ -182,10 +182,7 @@ export function LibraryRows({
     libraryColumns.days((row) => shownOf(row).createdAt, {
       cell: (info) => (
         <span className="text-muted-foreground tabular-nums">
-          {format.dateTime(
-            DateTime.toDateUtc(DateTime.makeUnsafe(info.getValue())),
-            { dateStyle: "medium" }
-          )}
+          {format.dateTime(info.getValue(), "date")}
         </span>
       ),
       header: t("library-added"),
