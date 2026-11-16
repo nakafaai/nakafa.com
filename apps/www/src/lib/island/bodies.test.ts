@@ -3,13 +3,7 @@ import { describe, expect, it } from "@effect/vitest";
 import { idOf } from "@repo/backend/confect/island/blocks";
 import { SPAN } from "@repo/backend/confect/island/world";
 import { Array as Arr, Option, Order } from "effect";
-import {
-  BODY_STRIDE,
-  bodiesOf,
-  NO_SHADOW,
-  seaBodies,
-  whaleAt,
-} from "@/lib/island/bodies";
+import { BODY_STRIDE, bodiesOf, seaBodies, whaleAt } from "@/lib/island/bodies";
 import { islesOf } from "@/lib/island/isles";
 import type { Animal } from "@/lib/island/life";
 import { bodyFaces } from "@/lib/island/models/kinds";
@@ -49,8 +43,8 @@ describe("island/bodies", () => {
         Option.map(([, places]) => Array.from(places)),
         Option.getOrElse(() => [])
       );
-    const [cx, cy, cz, cyaw, cbob, cground] = of("cow");
-    expect([cx, cy, cz, cground]).toEqual([4.5, 9, 4.5, 9]);
+    const [cx, cy, cz, cyaw, cbob] = of("cow");
+    expect([cx, cy, cz]).toEqual([4.5, 9, 4.5]);
     expect(cyaw).toBeCloseTo(Math.PI / 2);
     expect(cbob).toBeGreaterThan(0);
     expect(of("duck")[1]).toBeCloseTo(SEA_LEVEL - 0.2);
@@ -58,7 +52,6 @@ describe("island/bodies", () => {
     expect(of("hen")[1]).toBe(SEA_LEVEL);
     expect(of("cat")).toHaveLength(0);
     expect(of("whale")).toHaveLength(BODY_STRIDE);
-    expect(of("whale")[5]).toBe(NO_SHADOW);
   });
 
   it("swims the whale round the island in deep water, its back rising and sinking at the sea's face, facing its way", () => {
@@ -87,7 +80,6 @@ describe("island/bodies", () => {
     const lanes = Arr.flatMap(seaBodies(7, 30), ([model, places]) => {
       expect(model._tag).toBe("swimmer");
       return Arr.map(Arr.chunksOf(Array.from(places), BODY_STRIDE), (body) => {
-        expect(body[5]).toBe(NO_SHADOW);
         const lane = Math.hypot(body[0] - middle, body[2] - middle);
         const reach = across(swimmerFaces(model.kind), lane);
         return { inner: lane - reach, outer: lane + reach };

@@ -11,7 +11,9 @@ import {
   uploadMoving,
   uploadOutline,
 } from "@/components/island/buffers";
+import { createEdges } from "@/components/island/edges";
 import { createFrame } from "@/components/island/frame";
+import { createShadow } from "@/components/island/shadow";
 import { createGale } from "@/components/island/wind";
 import {
   ATLAS_SIZE,
@@ -21,7 +23,7 @@ import {
 } from "@/lib/island/atlas";
 import { eyeOf, type Orbit, snapOrbit } from "@/lib/island/camera";
 import type { islesMesh } from "@/lib/island/isles";
-import { CLIP, invert, viewProjectionOf } from "@/lib/island/matrix";
+import { CLIP, viewProjectionOf } from "@/lib/island/matrix";
 import type { meshChunk } from "@/lib/island/mesh";
 import { mipsOf } from "@/lib/island/mips";
 import { repaintFor, type Season } from "@/lib/island/season";
@@ -30,24 +32,29 @@ import {
   BODY_VERTEX,
   CHUNK_FRAGMENT,
   CHUNK_VERTEX,
-  EDGE_FRAGMENT,
-  EDGE_VERTEX,
   OUTLINE_FRAGMENT,
   OUTLINE_VERTEX,
   SKY_FRAGMENT,
   SKY_VERTEX,
 } from "@/lib/island/shaders";
-import { SHORE_FROM, SHORE_SIDE } from "@/lib/island/shore";
 import type { Light, Weather } from "@/lib/island/sky";
 import { flashed, flashOf } from "@/lib/island/storm";
+import { sunViewOf } from "@/lib/island/sun";
+import { DEEP } from "@/lib/island/terrain";
 import { TILE } from "@/lib/island/tiles/paint";
 import { CHUNKS, SEA_LEVEL } from "@/lib/island/world";
 
 /** The learner's own fox, the one body seen through what stands in front of it. */
 const FOX = { _tag: "body", kind: "fox" } as const;
 
-/** The texture unit the column map takes while the blocks are drawn: the atlas holds 0, the shore 1, the wind's lean map 2. */
+/** The texture unit the column map takes while the blocks are drawn: the atlas holds 0, the depth under the water 1, the wind's lean map 2. */
 const COLUMNS = 3;
+
+/** The texture unit the sun's shadow map takes (D43). */
+const SHADOW = 4;
+
+/** The depth under the water, which the water pass reads (D43). */
+const SEABED = 1;
 
 /**
  * The island's WebGL2 painter (ADR 0047, D2): it holds every chunk's buffers,
@@ -73,10 +80,18 @@ export function createPainter(canvas: HTMLCanvasElement, season: Season) {
       programOf(gl, CHUNK_VERTEX, CHUNK_FRAGMENT),
       programOf(gl, SKY_VERTEX, SKY_FRAGMENT),
       programOf(gl, OUTLINE_VERTEX, OUTLINE_FRAGMENT),
-      programOf(gl, EDGE_VERTEX, EDGE_FRAGMENT),
+      createEdges(gl),
       programOf(gl, BODY_VERTEX, BODY_FRAGMENT),
+      createShadow(gl),
     ]),
-    ([chunkProgram, skyProgram, outlineProgram, edgeProgram, bodyProgram]) => {
+    ([
+      chunkProgram,
+      skyProgram,
+      outlineProgram,
+      edges,
+      bodyProgram,
+      shadow,
+    ]) => {
       const atlas = gl.createTexture();
       gl.bindTexture(gl.TEXTURE_2D, atlas);
       // Each tile's own smaller levels (D20): a far face shows its color, not the noise of its pixels.
@@ -112,7 +127,6 @@ export function createPainter(canvas: HTMLCanvasElement, season: Season) {
         water: Option.none<ReturnType<typeof uploadList>>(),
       }));
       const sea = uploadList(gl, seaRing(SEA_LEVEL - 0.125, [0, 0], 1));
-      const shore = uploadMap(gl, SHORE_SIDE, 1);
       // What tops each column: where a drop stops and which ground the blocks blend (D39).
       const columns = uploadMap(gl, SPAN, 2);
       const gale = createGale(gl);
@@ -128,7 +142,7 @@ export function createPainter(canvas: HTMLCanvasElement, season: Season) {
       const floor = uploadList(
         gl,
         seaRing(
-          SEA_LEVEL - 5,
+          SEA_LEVEL - DEEP,
           [
             ((sandSlot % ATLAS_TILES) + 0.5) / ATLAS_TILES,
             (Math.floor(sandSlot / ATLAS_TILES) + 0.5) / ATLAS_TILES,
@@ -153,6 +167,18 @@ export function createPainter(canvas: HTMLCanvasElement, season: Season) {
         Math.floor(waterSlot / ATLAS_TILES),
       ] as const;
 
+      /** Gives a program the sun's view of the world, the light's direction and the shadow map (D43). */
+      const shine = (
+        at: (name: string) => WebGLUniformLocation | null,
+        light: Light,
+        sun: ReturnType<typeof sunViewOf>
+      ) => {
+        gl.uniformMatrix4fv(at("uSunView"), false, sun.matrix);
+        gl.uniform3fv(at("uToward"), light.toward);
+        gl.uniform1f(at("uShadowTexel"), sun.texel);
+        gl.uniform1i(at("uShadowMap"), SHADOW);
+      };
+
       /** Draws the sky over the whole frame, from the horizon's color to the zenith's. */
       const drawSky = (light: Light) => {
         gl.disable(gl.DEPTH_TEST);
@@ -163,22 +189,29 @@ export function createPainter(canvas: HTMLCanvasElement, season: Season) {
         gl.drawArrays(gl.TRIANGLES, 0, 3);
       };
 
-      /**
-       * Draws every true 3D body (D21): first each one's shadow, a dark disc
-       * pressed onto the ground that writes no depth and no edges, then the
-       * bodies themselves, lit flat and edged like the blocks.
-       */
-      const drawBodies = (
-        orbit: Orbit,
-        light: Light,
+      /** Gives the body program the clock and the wind, and the view `camera` it draws from (D21). */
+      const startBodies = (
+        camera: Float32Array,
         time: number,
-        sky: Weather,
-        camera: Float32Array
+        sky: Weather
       ) => {
         activate(gl, bodyProgram);
         gl.uniformMatrix4fv(bodyUniform("uViewProjection"), false, camera);
         gl.uniform1f(bodyUniform("uTime"), time);
         gale.blow(bodyUniform, time, sky);
+      };
+
+      /** Draws every true 3D body (D21), lit in the blocks' toon bands and edged like them, its shadow in the sun's shadow map (D43). */
+      const drawBodies = (
+        orbit: Orbit,
+        light: Light,
+        time: number,
+        sky: Weather,
+        camera: Float32Array,
+        sun: ReturnType<typeof sunViewOf>
+      ) => {
+        startBodies(camera, time, sky);
+        shine(bodyUniform, light, sun);
         gl.uniform3fv(bodyUniform("uSun"), light.sun);
         gl.uniform3fv(bodyUniform("uAmbient"), light.ambient);
         gl.uniform3fv(bodyUniform("uZenith"), light.zenith);
@@ -190,17 +223,7 @@ export function createPainter(canvas: HTMLCanvasElement, season: Season) {
           orbit.distance + 160
         );
         gl.uniform3fv(bodyUniform("uEye"), eyeOf(orbit));
-        gl.enable(gl.BLEND);
-        gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
-        gl.depthMask(false);
-        gl.drawBuffers([gl.COLOR_ATTACHMENT0, gl.NONE]);
-        gl.uniform1f(bodyUniform("uShadow"), 1);
-        bodies.draw();
-        gl.disable(gl.BLEND);
-        gl.depthMask(true);
-        gl.drawBuffers([gl.COLOR_ATTACHMENT0, gl.COLOR_ATTACHMENT1]);
         gl.enable(gl.CULL_FACE);
-        gl.uniform1f(bodyUniform("uShadow"), 0);
         bodies.draw(FOX);
         // The learner's fox shows through what stands in front of it as a dithered outline of itself, then draws over that wherever it is in sight (D38).
         gl.depthMask(false);
@@ -232,7 +255,8 @@ export function createPainter(canvas: HTMLCanvasElement, season: Season) {
         light: Light,
         time: number,
         sky: Weather,
-        camera: Float32Array
+        camera: Float32Array,
+        sun: ReturnType<typeof sunViewOf>
       ) => {
         gl.enable(gl.DEPTH_TEST);
         gl.clear(gl.DEPTH_BUFFER_BIT);
@@ -257,15 +281,19 @@ export function createPainter(canvas: HTMLCanvasElement, season: Season) {
         gl.bindTexture(gl.TEXTURE_2D, atlas);
         gl.uniform1i(uniform("uAtlas"), 0);
         // The edge pass leaves the frame's own faces on unit 1, which this pass must not read while it draws them.
-        shore.bind(1);
-        gl.uniform1i(uniform("uShore"), 1);
-        gl.uniform2f(uniform("uShoreBox"), SHORE_FROM, SHORE_SIDE);
+        gl.activeTexture(gl.TEXTURE0 + SEABED);
+        gl.bindTexture(gl.TEXTURE_2D, target.seabed);
+        gl.activeTexture(gl.TEXTURE0);
+        gl.uniform1i(uniform("uSeabed"), SEABED);
+        gl.uniform2f(uniform("uClip"), CLIP.near, CLIP.far);
+        gl.uniform1f(uniform("uSea"), SEA_LEVEL);
+        shadow.bind(SHADOW);
+        shine(uniform, light, sun);
         columns.bind(COLUMNS);
         gl.uniform1i(uniform("uColumns"), COLUMNS);
         gale.blow(uniform, time, sky);
         air.cover(uniform);
         gl.uniform1f(uniform("uWater"), 0);
-        gl.uniform1f(uniform("uAlpha"), 1);
         gl.bindVertexArray(floor.vao);
         gl.drawElements(gl.TRIANGLES, floor.count, gl.UNSIGNED_INT, 0);
         drawLists("solid");
@@ -276,7 +304,9 @@ export function createPainter(canvas: HTMLCanvasElement, season: Season) {
         gl.disable(gl.CULL_FACE);
         gl.bindVertexArray(herd.vao);
         gl.drawElements(gl.TRIANGLES, herd.count(), gl.UNSIGNED_INT, 0);
-        drawBodies(orbit, light, time, sky, camera);
+        drawBodies(orbit, light, time, sky, camera, sun);
+        // The water reads how much of it lies under each pixel from the depth the solid pass left (D43).
+        target.keepSeabed();
         activate(gl, chunkProgram);
         gl.enable(gl.BLEND);
         gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
@@ -285,7 +315,6 @@ export function createPainter(canvas: HTMLCanvasElement, season: Season) {
         // Water tints what lies under it but keeps those faces' edges (D20).
         gl.drawBuffers([gl.COLOR_ATTACHMENT0, gl.NONE]);
         gl.uniform1f(uniform("uWater"), 1);
-        gl.uniform1f(uniform("uAlpha"), 0.9);
 
         drawLists("water");
         gl.bindVertexArray(sea.vao);
@@ -304,50 +333,6 @@ export function createPainter(canvas: HTMLCanvasElement, season: Season) {
         gl.uniform4f(outlineUniform("uColor"), 1, 0.96, 0.8, 0.95);
         gl.bindVertexArray(outline.vao);
         gl.drawArrays(gl.LINES, 0, outline.count);
-      };
-
-      const edgeUniform = (name: string) =>
-        gl.getUniformLocation(edgeProgram, name);
-
-      /** Paints the edged frame from the scene's colors, faces and depth (D20). */
-      const drawEdges = (orbit: Orbit, camera: Float32Array) => {
-        gl.bindFramebuffer(gl.FRAMEBUFFER, target.final);
-        gl.disable(gl.DEPTH_TEST);
-        gl.disable(gl.BLEND);
-        activate(gl, edgeProgram);
-        Arr.forEach(
-          [target.color, target.surface, target.depth],
-          (texture, unit) => {
-            gl.activeTexture(gl.TEXTURE0 + unit);
-            gl.bindTexture(gl.TEXTURE_2D, texture);
-          }
-        );
-        gl.uniform1i(edgeUniform("uColor"), 0);
-        gl.uniform1i(edgeUniform("uSurface"), 1);
-        gl.uniform1i(edgeUniform("uDepth"), 2);
-        gl.uniform2f(
-          edgeUniform("uTexel"),
-          1 / target.width,
-          1 / target.height
-        );
-        gl.uniform2f(edgeUniform("uClip"), CLIP.near, CLIP.far);
-        gl.uniformMatrix4fv(edgeUniform("uInverse"), false, invert(camera));
-        gl.uniform1f(edgeUniform("uSea"), SEA_LEVEL - 0.2);
-        const eye = eyeOf(orbit);
-        const ahead = [
-          eye[0] - orbit.target[0],
-          eye[1] - orbit.target[1],
-          eye[2] - orbit.target[2],
-        ] as const;
-        const length = Math.hypot(ahead[0], ahead[1], ahead[2]);
-        gl.uniform3f(
-          edgeUniform("uAhead"),
-          ahead[0] / length,
-          ahead[1] / length,
-          ahead[2] / length
-        );
-        gl.drawArrays(gl.TRIANGLES, 0, 3);
-        gl.activeTexture(gl.TEXTURE0);
       };
 
       return Option.some({
@@ -369,10 +354,6 @@ export function createPainter(canvas: HTMLCanvasElement, season: Season) {
         scenery: air.scenery,
         /** Replaces the column map: where a drop stops and which ground each top blends (D39). */
         columns: columns.write,
-        /** Replaces the map of where land meets the sea, which the water draws its surf from (D28). */
-        shore(map: Uint8Array) {
-          shore.write(map);
-        },
         /** Replaces where every true 3D body stands this frame (D21). */
         bodies(next: Parameters<typeof bodies.write>[0]) {
           bodies.write(next);
@@ -406,6 +387,25 @@ export function createPainter(canvas: HTMLCanvasElement, season: Season) {
           gale.step(time, sky);
           air.step(time, sky);
           const snapped = snapOrbit(orbit, target.rows);
+          // The sun's shadow map first, from its own view of what the camera sees (D43).
+          const sun = sunViewOf(snapped.orbit, light.toward);
+          shadow.cast(
+            sun.matrix,
+            SHADOW,
+            () => {
+              gl.activeTexture(gl.TEXTURE0);
+              gl.bindTexture(gl.TEXTURE_2D, atlas);
+              drawLists("solid");
+              Option.map(isles, (list) => {
+                gl.bindVertexArray(list.vao);
+                gl.drawElements(gl.TRIANGLES, list.count, gl.UNSIGNED_INT, 0);
+              });
+            },
+            () => {
+              startBodies(sun.matrix, time, sky);
+              bodies.draw();
+            }
+          );
           gl.bindFramebuffer(gl.FRAMEBUFFER, target.frame);
           gl.viewport(0, 0, target.width, target.height);
           const camera = viewProjectionOf(
@@ -417,9 +417,9 @@ export function createPainter(canvas: HTMLCanvasElement, season: Season) {
           drawSky(light);
           gl.drawBuffers([gl.COLOR_ATTACHMENT0, gl.COLOR_ATTACHMENT1]);
           gl.clearBufferfv(gl.COLOR, 1, [0.5, 1, 0.5, 0]);
-          drawWorld(snapped.orbit, light, time, sky, camera);
+          drawWorld(snapped.orbit, light, time, sky, camera, sun);
           gl.depthMask(true);
-          drawEdges(snapped.orbit, camera);
+          edges.draw(target, snapped.orbit, camera);
           gl.bindFramebuffer(gl.FRAMEBUFFER, target.overlay);
           gl.enable(gl.DEPTH_TEST);
           gl.enable(gl.BLEND);
@@ -437,7 +437,8 @@ export function createPainter(canvas: HTMLCanvasElement, season: Season) {
             Option.map(chunk.water, (list) => list.release());
           }
           sea.release();
-          shore.release();
+          shadow.release();
+          edges.release();
           columns.release();
           gale.release();
           Option.map(isles, (list) => list.release());

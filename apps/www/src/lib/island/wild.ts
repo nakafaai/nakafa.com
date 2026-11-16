@@ -1,7 +1,6 @@
 import { idOf } from "@repo/backend/confect/island/blocks";
 import { footprintOf, SPAN } from "@repo/backend/confect/island/world";
 import { Array as Arr, Option, Order, Result, Schema } from "effect";
-import { NO_SHADOW } from "@/lib/island/bodies";
 import { SPECIES } from "@/lib/island/fauna/species";
 import { groundOf } from "@/lib/island/life";
 import { KIND, LOOK } from "@/lib/island/look";
@@ -236,7 +235,7 @@ function seaPlaces(cells: Cells, wild: Wild, size: number, time: number) {
   const at = loopOf(wild, "sea", size, time);
   const yaw = yawOf(at.heading);
   if (species.family === "waterbird") {
-    return [[at.x, SEA_LEVEL - 0.2, at.z, yaw, 0, NO_SHADOW]];
+    return [[at.x, SEA_LEVEL - 0.2, at.z, yaw, 0]];
   }
   const [c, s] = [Math.cos(yaw), Math.sin(yaw)];
   const half = length / 4;
@@ -263,21 +262,14 @@ function seaPlaces(cells: Cells, wild: Wild, size: number, time: number) {
       species.family === "crab"
         ? Option.getOrElse(floor, () => at.y)
         : Math.min(high, Math.max(low, at.y + oy));
-    return Result.succeed([
-      x,
-      y,
-      z,
-      yaw + (fish.lag - 0.5) * 0.3,
-      0,
-      NO_SHADOW,
-    ]);
+    return Result.succeed([x, y, z, yaw + (fish.lag - 0.5) * 0.3, 0]);
   });
 }
 
 /**
  * A walker, a flyer or a flower visitor as one body: a walker on its ground
- * facing its goal, bobbing while it walks, its shadow at its feet; a flyer on
- * its loop facing its way, its shadow on the ground below, none over water.
+ * facing its goal, bobbing while it walks; a flyer on its loop facing its
+ * way.
  */
 function creaturePlaces(
   cells: Cells,
@@ -300,20 +292,11 @@ function creaturePlaces(
         wild.z,
         moving ? Math.atan2(dx, dz) : wild.phase,
         moving && wild.rest <= 0 ? 0.04 : 0,
-        ground,
       ],
     ];
   }
   const at = loopOf(wild, home, size, time);
-  const shadow = Option.match(
-    groundOf(cells, Math.floor(at.x), Math.floor(at.z)),
-    {
-      onNone: () => NO_SHADOW,
-      onSome: ({ block, y }) =>
-        LOOK.kinds[block] === KIND.liquid ? NO_SHADOW : y + 1,
-    }
-  );
-  return [[at.x, at.y, at.z, yawOf(at.heading), 0, shadow]];
+  return [[at.x, at.y, at.z, yawOf(at.heading), 0]];
 }
 
 /**

@@ -2,6 +2,7 @@ import { idOf } from "@repo/backend/confect/island/blocks";
 import { PLANT_KEYS } from "@repo/backend/confect/island/flora";
 import type { Edit } from "@repo/backend/confect/island/world";
 import { SPAN } from "@repo/backend/confect/island/world";
+import { Array as Arr, Option } from "effect";
 import { WILD_PLANTS } from "@/lib/island/flora/plants";
 import { smoothOf, unitOf } from "@/lib/island/noise";
 import { layVillage, VILLAGE } from "@/lib/island/village";
@@ -45,6 +46,23 @@ function isPond(seed: number, x: number, z: number) {
 /** The island's shore: its radius is half its side less `inset`, and its edge wobbles from `least` of that radius to `least + wobble`. */
 const SHORE = { inset: 1.5, least: 0.8, wobble: 0.28 } as const;
 
+/**
+ * The sea floor's terraces (ADR 0047, D43), by how many cells out from the
+ * shore each reaches: a wide shoal a block deep, a shelf two deep, a step down
+ * to four, and past them the deep, so the water's depth reads in clear bands.
+ */
+const SHELVES = [
+  { depth: 1, until: 3 },
+  { depth: 2, until: 7 },
+  { depth: 4, until: 9 },
+] as const;
+
+/** How many blocks under the sea the deep floor lies, past the last shelf. */
+export const DEEP = 6;
+
+/** The land's terraces: flat steps a block high and several cells wide, at most `TERRACES` above the sea. */
+const TERRACES = 3;
+
 /** The farthest an island of this side's land reaches from its middle, in cells: past it, every column is sea. */
 export function shoreOf(size: number) {
   return (size / 2 - SHORE.inset) * (SHORE.least + SHORE.wobble);
@@ -53,8 +71,9 @@ export function shoreOf(size: number) {
 /**
  * The column at (x, z): the top cell of its ground and whether that ground is
  * land above the water. The island is a rounded patch whose edge wobbles with
- * noise, with a pond in its meadow at least three cells from the sea; the sea
- * floor slopes down away from it.
+ * noise, with a pond in its meadow at least three cells from the sea; its
+ * hills rise in terraces and the sea floor steps down away from it in
+ * shelves.
  */
 export function columnOf(seed: number, size: number, x: number, z: number) {
   const distance = Math.hypot(x + 0.5 - MIDDLE, z + 0.5 - MIDDLE);
@@ -65,12 +84,19 @@ export function columnOf(seed: number, size: number, x: number, z: number) {
     return { land: false, top: SEA_LEVEL - 2 };
   }
   if (distance < edge) {
+    // Broad, slow hills cut into whole steps, lowered toward the beach, so the land climbs in clean terraces instead of single bumps.
     const inland = Math.min(1, (edge - distance) / 4);
-    const hills = smoothOf(seed + 1, x, z, 7) * 2 * inland;
-    const flat = distance < MEADOW ? 0 : hills;
-    return { land: true, top: SEA_LEVEL + Math.floor(flat) };
+    const hills = Math.min(
+      TERRACES,
+      Math.floor(smoothOf(seed + 1, x, z, 12) * (TERRACES + 0.6) * inland)
+    );
+    return { land: true, top: SEA_LEVEL + (distance < MEADOW ? 0 : hills) };
   }
-  const depth = Math.min(5, 1 + Math.floor((distance - edge) / 2));
+  const out = distance - edge;
+  const depth = Option.match(
+    Arr.findFirst(SHELVES, (step) => out < step.until),
+    { onNone: () => DEEP, onSome: (step) => step.depth }
+  );
   return { land: false, top: SEA_LEVEL - depth };
 }
 

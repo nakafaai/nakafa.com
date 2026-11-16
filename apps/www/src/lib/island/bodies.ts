@@ -8,16 +8,13 @@ import { unitOf } from "@/lib/island/noise";
 import { type Cells, SEA_LEVEL } from "@/lib/island/world";
 
 /**
- * Numbers per drawn body: its place, the way it faces, how it moves where it
- * stands, and the height of the ground its shadow falls on. How it moves is
- * above zero for an animal, how high it bobs as it walks, and below zero for
- * a plant, minus one over its height in blocks, which is how far up it the
- * wind takes hold (ADR 0047, D32).
+ * Numbers per drawn body: its place, the way it faces, and how it moves where
+ * it stands. How it moves is above zero for an animal, how high it bobs as it
+ * walks, and below zero for a plant, minus one over its height in blocks,
+ * which is how far up it the wind takes hold (ADR 0047, D32). The sun's
+ * shadow map casts every body's shadow (D43).
  */
-export const BODY_STRIDE = 6;
-
-/** The shadow ground of a body that casts none: one in the water or over it. */
-export const NO_SHADOW = -1;
+export const BODY_STRIDE = 5;
 
 /** How far the whale swims from the island's middle, in cells: in deep water past the day's sea visitors, its flippers clear of them. */
 const WHALE_ROUND = SPAN / 2 + 14;
@@ -69,7 +66,7 @@ function standingAt(cells: Cells, x: number, z: number) {
   });
 }
 
-/** One animal as a drawn body: on its ground, facing its goal, bobbing while it walks, its shadow at its feet. */
+/** One animal as a drawn body: on its ground, facing its goal, bobbing while it walks. */
 function animalBody(cells: Cells, animal: Animal) {
   const [dx, dz] = [animal.tx - animal.x, animal.tz - animal.z];
   const heading = Math.hypot(dx, dz) > 0.05;
@@ -84,7 +81,6 @@ function animalBody(cells: Cells, animal: Animal) {
       ? Math.atan2(dx, dz)
       : (animal.x * 7.3 + animal.z * 3.1) % (2 * Math.PI),
     walking ? 0.06 : 0,
-    y,
   ];
 }
 
@@ -100,7 +96,7 @@ export function bodiesOf(cells: Cells, herd: readonly Animal[], time: number) {
   return Arr.map(BodyKind.literals, (kind) => {
     const own =
       kind === "whale"
-        ? [[whale.x, whale.y, whale.z, whale.yaw, 0, NO_SHADOW]]
+        ? [[whale.x, whale.y, whale.z, whale.yaw, 0]]
         : Arr.map(
             Arr.filter(herd, (animal) => animal.kind === kind),
             (animal) => animalBody(cells, animal)
@@ -115,7 +111,7 @@ export function bodiesOf(cells: Cells, herd: readonly Animal[], time: number) {
  * D24): every kind on its own round from a start the island's seed picks,
  * each member of a pod a little across and behind the one before, facing the
  * way it swims. A dolphin now and then leaps clear of the sea; the others
- * keep under it and cast no shadow.
+ * keep under it.
  */
 export function seaBodies(seed: number, time: number) {
   return Arr.map(Swimmer.literals, (kind, order) => {
@@ -135,7 +131,6 @@ export function seaBodies(seed: number, time: number) {
         SPAN / 2 + Math.sin(angle) * lane,
         Math.atan2(-Math.sin(angle), Math.cos(angle)),
         0,
-        NO_SHADOW,
       ];
     });
     const model = { _tag: "swimmer", kind } as const;

@@ -27,7 +27,7 @@ describe("island/mesh", () => {
     expect(pair.solid.vertices.length).toBe(10 * 4 * STRIDE);
   });
 
-  it("darkens the corners a neighbour crowds, and shades the bottom darker than the top", () => {
+  it("darkens the corners a neighbour crowds, and leaves the light's direction to the sun", () => {
     const cells = emptyCells();
     cells[cellOf(5, 10, 5)] = idOf("stone");
     cells[cellOf(6, 11, 5)] = idOf("stone");
@@ -35,8 +35,12 @@ describe("island/mesh", () => {
     const shades = Arr.makeBy(vertices.length / STRIDE, (vertex) =>
       Math.round(vertices[vertex * STRIDE + 5] * 100)
     );
-    expect(Math.min(...shades)).toBeLessThan(55);
+    expect(Math.min(...shades)).toBeLessThan(100);
     expect(Math.max(...shades)).toBe(100);
+    // A face is as bright as its corners' occlusion lets it; which way it faces is the sun's to light (D43).
+    expect(
+      Arr.every(shades, (shade) => Arr.contains([50, 68, 84, 100], shade))
+    ).toBe(true);
   });
 
   it("lets the wind take a crown by how far each corner is from wood, and never tears it", () => {

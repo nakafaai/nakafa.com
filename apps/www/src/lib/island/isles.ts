@@ -114,7 +114,7 @@ function faceOf(
         origin[2] + face.u[2] * a + face.v[2] * b,
         u,
         v,
-        face.shade,
+        1,
         1,
         0,
         0,

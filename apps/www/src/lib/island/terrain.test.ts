@@ -5,7 +5,13 @@ import { idOf } from "@repo/backend/confect/island/blocks";
 import { PLANT_KEYS } from "@repo/backend/confect/island/flora";
 import { SPAN } from "@repo/backend/confect/island/world";
 import { Array as Arr } from "effect";
-import { columnOf, shoreOf, terrainOf, worldOf } from "@/lib/island/terrain";
+import {
+  columnOf,
+  DEEP,
+  shoreOf,
+  terrainOf,
+  worldOf,
+} from "@/lib/island/terrain";
 import { blockAt, SEA_LEVEL } from "@/lib/island/world";
 
 /** How many cells of the world hold this block. */
@@ -70,11 +76,42 @@ describe("island/terrain", () => {
     expect(terrainOf(5, 44)).toEqual(small);
   });
 
-  it("slopes the sea floor down away from the island", () => {
+  it("steps the sea floor down away from the island in shelves, to the deep", () => {
     const near = columnOf(3, 44, 32, 32 - 13);
     const far = columnOf(3, 44, 32, 1);
     expect(near.land || near.top >= far.top).toBe(true);
-    expect(far).toEqual({ land: false, top: SEA_LEVEL - 5 });
+    expect(far).toEqual({ land: false, top: SEA_LEVEL - DEEP });
+    const floors = Arr.dedupe(
+      Arr.flatMap(
+        Arr.makeBy(SPAN / 2, (z) => z),
+        (z) => {
+          const column = columnOf(3, 44, SPAN / 2, z);
+          return column.land ? [] : [column.top];
+        }
+      )
+    );
+    expect(floors).toEqual([
+      SEA_LEVEL - DEEP,
+      SEA_LEVEL - 4,
+      SEA_LEVEL - 2,
+      SEA_LEVEL - 1,
+    ]);
+  });
+
+  it("raises the hills beyond the meadow in whole terraces, never more than three above the sea", () => {
+    const tops = Arr.flatMap(
+      Arr.makeBy(SPAN, (x) => x),
+      (x) =>
+        Arr.flatMap(
+          Arr.makeBy(SPAN, (z) => z),
+          (z) => {
+            const column = columnOf(9, 64, x, z);
+            return column.land ? [column.top - SEA_LEVEL] : [];
+          }
+        )
+    );
+    expect(Math.max(...tops)).toBeLessThanOrEqual(3);
+    expect(Arr.dedupe(tops).length).toBeGreaterThanOrEqual(3);
   });
 
   it("keeps every island's land inside its shore, with deep water a few cells past it", () => {
@@ -93,8 +130,8 @@ describe("island/terrain", () => {
         if (column.land) {
           expect(away).toBeLessThanOrEqual(shoreOf(size));
         }
-        if (away >= shoreOf(size) + 4) {
-          expect(column.top).toBeLessThanOrEqual(SEA_LEVEL - 3);
+        if (away >= shoreOf(size) + 8) {
+          expect(column.top).toBeLessThanOrEqual(SEA_LEVEL - 4);
         }
       }
     }

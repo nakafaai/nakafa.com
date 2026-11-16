@@ -253,9 +253,8 @@ export function uploadMoving(gl: WebGL2RenderingContext, capacity: number) {
 
 /**
  * A map of the ground on the GPU, one or two bytes a texel, read smoothly:
- * the shore map (D28), so the surf bends round a coast instead of stepping
- * along its cells, the lean map (D32), so neighbouring trees lean alike, and
- * the column map (D39), two bytes a column that the shaders fetch whole.
+ * the lean map (D32), so neighbouring trees lean alike, and the column map
+ * (D39), two bytes a column that the shaders fetch whole.
  * `write` replaces it, `bind` puts it on a texture unit.
  */
 export function uploadMap(
