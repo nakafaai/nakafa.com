@@ -153,9 +153,9 @@ function DialogFooter({
 }
 
 /**
- * The body of a dialog. What it holds keeps its edges and stands apart, as a form's fields do. A `fill` body
- * does not scroll: it gives its height to what it holds, such as a diagram that scrolls on its own, so the
- * dialog never holds a scroll inside a scroll.
+ * The body of a dialog, which scrolls down and never sideways: what it holds fits its width, and its parts stand one
+ * gap apart, as a form's fields do. A `fill` body does not scroll: it gives its height to what it holds, such as a
+ * diagram that scrolls on its own, so the dialog never holds a scroll inside a scroll.
  */
 function DialogPanel({
   className,
@@ -170,7 +170,7 @@ function DialogPanel({
     return (
       <div
         className={cn(
-          "flex min-h-0 min-w-0 flex-1 flex-col gap-6 p-6",
+          "flex min-h-0 min-w-0 flex-1 flex-col gap-4 p-6",
           className
         )}
         data-slot="dialog-panel"
@@ -179,9 +179,13 @@ function DialogPanel({
     );
   }
   return (
-    <ScrollArea className="min-h-0 flex-1 touch-auto" scrollFade={scrollFade}>
+    <ScrollArea
+      axis="vertical"
+      className="min-h-0 flex-1 touch-auto"
+      scrollFade={scrollFade}
+    >
       <div
-        className={cn("flex min-w-0 flex-col gap-6 p-6", className)}
+        className={cn("flex min-w-0 flex-col gap-4 p-6", className)}
         data-slot="dialog-panel"
         {...props}
       />

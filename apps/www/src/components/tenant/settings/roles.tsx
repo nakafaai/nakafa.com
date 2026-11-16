@@ -93,7 +93,7 @@ function SchoolRoleGuide({
           <SheetTitle>{t("roles-overview")}</SheetTitle>
           <SheetDescription>{t("roles-overview-description")}</SheetDescription>
         </SheetHeader>
-        <ScrollArea className="flex-1">
+        <ScrollArea axis="vertical" className="flex-1">
           <ul className="flex flex-col gap-5 p-4">
             {Arr.map(BuiltinRole.literals, (role) => (
               <li className="flex flex-col items-start gap-1.5" key={role}>
