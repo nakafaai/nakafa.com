@@ -70,6 +70,32 @@ export const homeSections = {
 };
 
 /**
+ * The sections under the first screen of the pricing page, each one's code on its
+ * own, as on the home page (ADR 0039). The plans and their comparison hydrate with
+ * the page; the schools and the questions wait here.
+ */
+export const pricingSections = {
+  faq: laterCode(() =>
+    import("@/components/marketing/about/faq/landing").then(
+      (module) => module.Faq
+    )
+  ),
+  schools: laterCode(() =>
+    import("@/components/marketing/about/schools").then(
+      (module) => module.Schools
+    )
+  ),
+};
+
+/** Loads the code of the pricing page's later sections, as `openHomeSections` does for the home page. */
+export function openPricingSections() {
+  return Promise.all([
+    openLaterCode(pricingSections.faq),
+    openLaterCode(pricingSections.schools),
+  ]);
+}
+
+/**
  * Loads every section's code. The home route opens them before a load that renders
  * the page whole, on the server and on a client navigation, so the page commits
  * with its sections and no boundary waits on screen. The first document never runs

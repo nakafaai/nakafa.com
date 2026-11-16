@@ -32,7 +32,7 @@ export function lessonWindow(page: Page) {
 
 /**
  * Brings the lesson window to the screen, ready for a press. The lesson section
- * is drawn only as the reader nears it (`content-auto-section`), so a scroll to
+ * is drawn only as the reader nears it (`LaterSection`), so a scroll to
  * the window measured before the section drew lands short of it once the section
  * takes its own height. The section comes into reach first, the window is
  * scrolled to once it has drawn, and the window's buttons are React's before a

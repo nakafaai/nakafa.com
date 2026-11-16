@@ -10,7 +10,10 @@ import { Array as Arr } from "effect";
 import { useTranslations } from "use-intl";
 import { createTranslator } from "use-intl/core";
 import { FaqAccordion } from "@/components/marketing/about/faq/accordion";
-import { Faq } from "@/components/marketing/about/faq/landing";
+import {
+  openPricingSections,
+  pricingSections,
+} from "@/components/marketing/about/later";
 import { PricingButton } from "@/components/marketing/about/pricing/button";
 import { PricingComparison } from "@/components/marketing/about/pricing/comparison";
 import { DeferredPricingToys } from "@/components/marketing/about/pricing/deferred";
@@ -19,9 +22,9 @@ import {
   PricingPrice,
   StaticPrice,
 } from "@/components/marketing/about/pricing/price";
-import { Schools } from "@/components/marketing/about/schools";
 import { PRICING_CLASS_HERD } from "@/components/marketing/about/toys/herd";
 import { PageField } from "@/components/marketing/shared/field";
+import { LaterSection } from "@/components/marketing/shared/later";
 import { readRouteMessages } from "@/lib/i18n/messages.functions";
 import { type MarketingFaqItem, pricingFaqNumbers } from "@/lib/marketing/faq";
 import { getAppSocialArtwork } from "@/lib/og/app";
@@ -36,6 +39,13 @@ import { readStaticData } from "@/lib/static/data";
  * breadcrumb labels, so the first HTML and the head hold the same structured data.
  */
 export const Route = createFileRoute("/$locale/_marketing/pricing")({
+  // A warm of a link to this page is a preload: it takes the page's code and data, never the sections a reader
+  // reaches by scrolling, which a navigation opens here before the page commits.
+  beforeLoad: async ({ preload }) => {
+    if (!preload) {
+      await openPricingSections();
+    }
+  },
   loader: async ({ params }) => {
     const messages = await readStaticData(readRouteMessages, {
       locale: params.locale,
@@ -163,10 +173,16 @@ function PricingPage() {
         <PricingPagePlans />
         <DeferredPricingToys />
         <PricingComparison />
-        <Schools herd={PRICING_CLASS_HERD} />
-        <Faq>
-          <FaqAccordion faqs={faqs} openFirst />
-        </Faq>
+        <LaterSection code={pricingSections.schools}>
+          {(Schools) => <Schools herd={PRICING_CLASS_HERD} />}
+        </LaterSection>
+        <LaterSection code={pricingSections.faq}>
+          {(Faq) => (
+            <Faq>
+              <FaqAccordion faqs={faqs} openFirst />
+            </Faq>
+          )}
+        </LaterSection>
       </div>
     </>
   );

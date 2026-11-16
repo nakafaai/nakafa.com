@@ -41,7 +41,11 @@ function LaterBody<Props extends object>({
  * hydrates it at the lowest priority, in small slices, so a phone never pays for a
  * part of the page that the reader has not reached. The browser also skips the
  * layout of a section far from the screen, and holds the height of one screen for
- * it until then. That skipping also clips the box at its padding edge, so the box
+ * it until then (`later-section`, which also lays out every box down to a jump's
+ * target before the scroll). This box is the only one that skips: inside a second
+ * skipped box WebKit's `scrollIntoView` does not scroll to an element of the
+ * section, and Firefox and WebKit lose the section's scroll margin. That skipping
+ * also clips the box at its padding edge, so the box
  * reaches a little past its section, with the same margin taken back, and a ring or
  * a shadow on the section's last line stays whole. The boundary sits under a box that
  * holds no state, so nothing that changes here reaches the section's HTML while it
@@ -83,10 +87,7 @@ export function LaterSection<Props extends object>({
   }, [code]);
 
   return (
-    <div
-      className="-my-2 py-2 [contain-intrinsic-block-size:auto_100lvh] [content-visibility:auto]"
-      ref={box}
-    >
+    <div className="later-section -my-2 py-2" ref={box}>
       <Suspense fallback={null}>
         <LaterBody code={code}>{children}</LaterBody>
       </Suspense>

@@ -7,7 +7,7 @@ import { scrollThroughPage } from "@/e2e/support/scroll";
 import { waitUntilTakenOver } from "@/e2e/support/window";
 
 /** The box of each section under the first screen (`LaterSection`), whose HTML waits for its code until a reader nears it. */
-const LATER_SECTION = '[class*="[content-visibility:auto]"]';
+const LATER_SECTION = ".later-section";
 
 /** The pages every visitor reads in each language, one for each shell and each list of records. */
 const PAGES = {
