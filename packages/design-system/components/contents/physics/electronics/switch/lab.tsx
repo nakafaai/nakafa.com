@@ -133,7 +133,7 @@ function switchProgram(sketch: p5, read: () => SwitchFrame) {
 }
 
 interface TransistorSwitchLabProps {
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   labels: {
     base: ReactNode;
     ldr: ReactNode;
@@ -150,7 +150,7 @@ interface TransistorSwitchLabProps {
   supply: number;
   /** The base voltage at which the transistor switches on, in volts. */
   threshold: number;
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
 }
 
 /**

@@ -179,7 +179,7 @@ function iceProgram(sketch: p5, read: () => IceFrame) {
 }
 
 interface IceMeltingLabProps {
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   /** The mass of ice at its melting point, in grams. */
   iceMass: number;
   labels: {
@@ -192,7 +192,7 @@ interface IceMeltingLabProps {
   latentHeat: number;
   /** The specific heat capacity of water, in J kg⁻¹ °C⁻¹. */
   specificHeat: number;
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
   /** The mass of warm water, in grams. */
   waterMass: number;
   /** The starting temperature of the water, in degrees Celsius. */

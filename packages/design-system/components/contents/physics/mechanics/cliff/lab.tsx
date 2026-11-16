@@ -154,7 +154,7 @@ function cliffProgram(sketch: p5, read: () => CliffFrame) {
 interface CliffThrowLabProps {
   /** How long after A's throw B is released, in seconds. */
   delay: number;
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   /** The gravitational acceleration, in m s⁻². */
   gravity: number;
   /** The height of the cliff edge above the sea, in metres. */
@@ -167,7 +167,7 @@ interface CliffThrowLabProps {
   };
   /** The speed ball A is thrown straight up at, in m s⁻¹. */
   speed: number;
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
 }
 
 /**

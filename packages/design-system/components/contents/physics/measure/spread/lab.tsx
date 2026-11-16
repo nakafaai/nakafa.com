@@ -151,7 +151,7 @@ function spreadProgram(sketch: p5, read: () => SpreadFrame) {
 interface ReadingSpreadLabProps {
   /** The actual value the students measure, in centimetres. */
   actual: number;
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   labels: {
     mean: ReactNode;
     offset: ReactNode;
@@ -164,7 +164,7 @@ interface ReadingSpreadLabProps {
     readonly name: string;
     readonly readings: readonly [number, ...number[]];
   }[];
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
 }
 
 /**

@@ -155,7 +155,7 @@ function bulbProgram(sketch: p5, read: () => BulbFrame) {
 }
 
 interface BulbNetworkLabProps {
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   /** The e.m.f. of the battery, which has negligible internal resistance, in volts. */
   emf: number;
   /** The resistances, in ohms, of the bulbs in parallel; the last one is the bulb that can break. */
@@ -168,7 +168,7 @@ interface BulbNetworkLabProps {
   };
   /** The resistance of the bulb in series with the group, in ohms. */
   series: number;
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
 }
 
 /**

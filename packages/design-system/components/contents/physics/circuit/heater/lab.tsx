@@ -116,7 +116,7 @@ function heaterProgram(sketch: p5, read: () => HeaterFrame) {
 }
 
 interface HeaterSupplyLabProps {
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   /** How long the heater runs, in hours. */
   hours: number;
   labels: {
@@ -133,7 +133,7 @@ interface HeaterSupplyLabProps {
   ratedVoltage: number;
   /** The supply voltage the lab starts at, in volts. */
   supplyVoltage: number;
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
 }
 
 /**

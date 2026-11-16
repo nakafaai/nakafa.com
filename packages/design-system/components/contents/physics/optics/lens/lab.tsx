@@ -133,7 +133,7 @@ function lensProgram(sketch: p5, read: () => LensFrame) {
 }
 
 interface ConvexLensLabProps {
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   /** The focal length of the lens, in centimetres. */
   focal: number;
   labels: {
@@ -152,7 +152,7 @@ interface ConvexLensLabProps {
   object: number;
   /** Object distances, in centimetres, that the toolbar offers one tap away. */
   presets?: readonly number[];
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
 }
 
 /**

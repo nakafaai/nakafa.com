@@ -158,7 +158,7 @@ function manometerProgram(sketch: p5, read: () => ManometerFrame) {
 interface ManometerLabProps {
   /** The atmospheric pressure, in cm of the reference liquid. */
   atmosphere: number;
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   /** How much lower the liquid stands on the gas side at the start, in centimetres. */
   difference: number;
   labels: {
@@ -172,7 +172,7 @@ interface ManometerLabProps {
   liquidDensity: number;
   /** The density of the liquid the pressures are measured in, such as mercury, in g cm⁻³. */
   referenceDensity: number;
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
 }
 
 /**

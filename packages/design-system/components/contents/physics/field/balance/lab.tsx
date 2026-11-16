@@ -152,7 +152,7 @@ function balanceProgram(sketch: p5, read: () => BalanceFrame) {
 }
 
 interface CurrentBalanceLabProps {
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   /** The magnetic flux density, in teslas. */
   field: number;
   labels: {
@@ -167,7 +167,7 @@ interface CurrentBalanceLabProps {
   length: number;
   /** The mass of the wire, in grams. */
   mass: number;
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
 }
 
 /**

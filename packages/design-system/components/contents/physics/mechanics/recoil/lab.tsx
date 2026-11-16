@@ -139,7 +139,7 @@ function recoilProgram(sketch: p5, read: () => RecoilFrame) {
 interface RecoilLabProps {
   /** The mass of the bullet, in grams. */
   bulletMass: number;
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   labels: {
     energy: ReactNode;
     force: ReactNode;
@@ -153,7 +153,7 @@ interface RecoilLabProps {
   speed: number;
   /** The distance over which the shoulder stops the rifle, in centimetres. */
   stop: number;
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
 }
 
 /**

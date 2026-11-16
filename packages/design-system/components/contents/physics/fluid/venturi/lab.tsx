@@ -183,7 +183,7 @@ function venturiProgram(sketch: p5, read: () => VenturiFrame) {
 }
 
 interface VenturiTubeLabProps {
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   labels: {
     drop: ReactNode;
     faster: ReactNode;
@@ -195,7 +195,7 @@ interface VenturiTubeLabProps {
   narrow: number;
   /** The water speed in the wide section the lab starts at, in m s⁻¹. */
   speed: number;
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
   /** The diameter of the wide section, in centimetres. */
   wide: number;
 }

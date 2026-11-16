@@ -192,7 +192,7 @@ function counterProgram(sketch: p5, read: () => CounterFrame) {
 interface HalfLifeCounterLabProps {
   /** The background count rate, in counts per minute. */
   background: number;
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   /** The first recorded count rate, background included, in counts per minute. */
   first: number;
   labels: {
@@ -205,7 +205,7 @@ interface HalfLifeCounterLabProps {
   later: number;
   /** The time between the two readings, in hours. */
   time: number;
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
 }
 
 /**

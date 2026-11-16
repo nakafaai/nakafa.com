@@ -133,7 +133,7 @@ function inclineProgram(sketch: p5, read: () => InclineFrame) {
 interface InclineSlideLabProps {
   /** The plane's angle to the horizontal, in degrees. */
   angle: number;
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   /** The friction on the block, in newtons. */
   friction: number;
   /** The gravitational field strength, in N kg⁻¹. */
@@ -148,7 +148,7 @@ interface InclineSlideLabProps {
   mass: number;
   /** The block's speed up the plane when it is released, in m s⁻¹. */
   speed: number;
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
 }
 
 /**

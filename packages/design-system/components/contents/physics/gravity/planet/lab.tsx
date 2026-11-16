@@ -119,7 +119,7 @@ function Times({ value }: { readonly value: number }) {
 }
 
 interface PlanetCompareLabProps {
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   labels: {
     earthName: string;
     escape: ReactNode;
@@ -133,7 +133,7 @@ interface PlanetCompareLabProps {
   mass: number;
   /** The planet's radius, in Earth radii. */
   radius: number;
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
 }
 
 /**

@@ -208,7 +208,7 @@ function tankProgram(sketch: p5, read: () => TankFrame) {
 interface RippleTankLabProps {
   /** The wave speed in the deep water, in centimetres per second. */
   deepSpeed: number;
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   /** The angle of incidence the wave starts at, in degrees. */
   incidence: number;
   labels: {
@@ -221,7 +221,7 @@ interface RippleTankLabProps {
   };
   /** The wave speed in the shallow water, in centimetres per second. */
   shallowSpeed: number;
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
   /** The wavelength in the deep water, in centimetres. */
   wavelength: number;
 }

@@ -195,7 +195,7 @@ function areaProgram(sketch: p5, read: () => AreaFrame) {
 }
 
 interface MotionAreaLabProps {
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   labels: {
     displacement: ReactNode;
     distance: ReactNode;
@@ -205,7 +205,7 @@ interface MotionAreaLabProps {
   start: number;
   /** Each stretch of the motion: its duration in seconds and the velocity it ends at, in m s⁻¹, changing steadily. */
   stretches: readonly { readonly duration: number; readonly end: number }[];
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
 }
 
 /**

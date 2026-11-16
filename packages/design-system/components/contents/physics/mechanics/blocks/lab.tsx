@@ -122,7 +122,7 @@ function blocksProgram(sketch: p5, read: () => BlocksFrame) {
 interface ConnectedBlocksLabProps {
   /** The mass of the back block, in kilograms. */
   back: number;
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   /** The friction on the back block, in newtons. */
   friction: number;
   /** The mass of the front block, in kilograms. */
@@ -136,7 +136,7 @@ interface ConnectedBlocksLabProps {
   };
   /** The pull on the front block, in newtons. */
   pull: number;
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
 }
 
 /**

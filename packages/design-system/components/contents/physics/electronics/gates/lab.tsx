@@ -243,7 +243,7 @@ function gatesProgram(sketch: p5, read: () => GatesFrame) {
 }
 
 interface LogicGateLabProps {
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   /** The gate P the trainer starts with. */
   gate: Gate;
   labels: {
@@ -258,7 +258,7 @@ interface LogicGateLabProps {
     readonly c: number;
     readonly q: number;
   }[];
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
 }
 
 /**

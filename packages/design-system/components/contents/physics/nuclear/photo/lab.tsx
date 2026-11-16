@@ -148,7 +148,7 @@ function photoProgram(sketch: p5, read: () => PhotoFrame) {
 interface PhotoelectricLabProps {
   /** The elementary charge, in coulombs, which turns joules into electronvolts. */
   charge: number;
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   labels: {
     energy: ReactNode;
     intensity: ReactNode;
@@ -163,7 +163,7 @@ interface PhotoelectricLabProps {
   lightSpeed: number;
   /** Planck's constant, in J s. */
   planck: number;
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
   /** The wavelength of the light the lab starts with, in nanometres. */
   wavelength: number;
   /** The work function of the metal, in electronvolts. */

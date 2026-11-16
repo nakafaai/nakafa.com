@@ -207,7 +207,7 @@ function fissionProgram(sketch: p5, read: () => FissionFrame) {
 }
 
 interface FissionLabProps {
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   /** The masses of the two fission fragments, in atomic mass units. */
   fragments: readonly [number, number];
   labels: {
@@ -224,7 +224,7 @@ interface FissionLabProps {
   parent: number;
   /** How many neutrons the fission releases. */
   released: number;
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
   /** One atomic mass unit, in kilograms. */
   unit: number;
 }

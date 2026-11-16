@@ -165,7 +165,7 @@ function gasProgram(sketch: p5, read: () => GasFrame) {
 }
 
 interface GasPistonLabProps {
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   /** The temperature the gas is heated to, in degrees Celsius. */
   finalTemperature: number;
   labels: {
@@ -180,7 +180,7 @@ interface GasPistonLabProps {
   pressure: number;
   /** The starting temperature of the gas, in degrees Celsius. */
   temperature: number;
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
   /** The final volume as a fraction of the starting volume. */
   volumeRatio: number;
 }

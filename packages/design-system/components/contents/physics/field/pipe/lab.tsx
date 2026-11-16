@@ -156,14 +156,14 @@ function pipeProgram(sketch: p5, read: () => PipeFrame) {
 }
 
 interface MagnetPipeLabProps {
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   labels: {
     copper: ReactNode;
     plastic: ReactNode;
     slit: ReactNode;
     viewLabel: string;
   };
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
 }
 
 /**

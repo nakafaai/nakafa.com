@@ -218,7 +218,7 @@ function depthProgram(sketch: p5, read: () => DepthFrame) {
 }
 
 interface ApparentDepthLabProps {
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   labels: {
     apparent: ReactNode;
     image: ReactNode;
@@ -229,7 +229,7 @@ interface ApparentDepthLabProps {
   };
   /** The liquids in the container, from the top layer down. */
   layers: Arr.NonEmptyReadonlyArray<PouredLayer>;
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
 }
 
 /**

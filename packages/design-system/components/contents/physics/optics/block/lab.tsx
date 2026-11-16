@@ -291,7 +291,7 @@ function blockProgram(sketch: p5, read: () => BlockFrame) {
 }
 
 interface GlassBlockLabProps {
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   /** The angle of incidence the ray starts at on the top face, in degrees. */
   incidence: number;
   /** The refractive index of the glass. */
@@ -307,7 +307,7 @@ interface GlassBlockLabProps {
     refraction: ReactNode;
     viewLabel: string;
   };
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
 }
 
 /**

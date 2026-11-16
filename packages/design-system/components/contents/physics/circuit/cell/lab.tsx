@@ -228,7 +228,7 @@ function cellProgram(sketch: p5, read: () => CellFrame) {
 }
 
 interface InternalResistanceLabProps {
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   labels: {
     current: ReactNode;
     emf: ReactNode;
@@ -243,7 +243,7 @@ interface InternalResistanceLabProps {
     { readonly resistance: number; readonly voltage: number },
     ...{ readonly resistance: number; readonly voltage: number }[],
   ];
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
   /** A further resistance, in ohms, whose current the readings let you predict. */
   trial: number;
 }

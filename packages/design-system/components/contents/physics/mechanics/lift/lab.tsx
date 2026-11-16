@@ -179,7 +179,7 @@ function liftProgram(sketch: p5, read: () => LiftFrame) {
 }
 
 interface LiftScaleLabProps {
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   /** The gravitational field strength, in N kg⁻¹. */
   gravity: number;
   labels: {
@@ -193,7 +193,7 @@ interface LiftScaleLabProps {
   mass: number;
   /** The scale reading the item gives, in newtons. */
   reading: number;
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
 }
 
 /**

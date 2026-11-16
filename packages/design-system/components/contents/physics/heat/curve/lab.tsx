@@ -204,7 +204,7 @@ function curveProgram(sketch: p5, read: () => CurveFrame) {
 }
 
 interface HeatingCurveLabProps {
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   /** The temperature the liquid reaches, in degrees Celsius. */
   finalTemperature: number;
   labels: {
@@ -220,7 +220,7 @@ interface HeatingCurveLabProps {
   meltingPoint: number;
   /** How long the solid takes to melt, in minutes. */
   meltMinutes: number;
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
   /** How long the liquid takes to warm from the melting point to the final temperature, in minutes. */
   warmMinutes: number;
 }

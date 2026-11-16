@@ -167,7 +167,7 @@ function echoProgram(sketch: p5, read: () => EchoFrame) {
 interface EchoLabProps {
   /** The boat's speed toward the cliff, in metres per second. */
   boatSpeed: number;
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   /** The time from the horn to the echo, in seconds. */
   echoTime: number;
   labels: {
@@ -179,7 +179,7 @@ interface EchoLabProps {
   };
   /** The speed of sound in air, in metres per second. */
   soundSpeed: number;
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
 }
 
 /**

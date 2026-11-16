@@ -227,7 +227,7 @@ function telescopeProgram(sketch: p5, read: () => TelescopeFrame) {
 }
 
 interface TelescopeLabProps {
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   /** The power of the eyepiece the lab starts with, in dioptres. */
   eyepiecePower: number;
   labels: {
@@ -240,7 +240,7 @@ interface TelescopeLabProps {
   };
   /** The power of the objective lens, in dioptres. */
   objectivePower: number;
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
 }
 
 /**

@@ -210,7 +210,7 @@ function transformerProgram(sketch: p5, read: () => TransformerFrame) {
 }
 
 interface TransformerLabProps {
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   /** The transformer's efficiency, from 0 to 1. */
   efficiency: number;
   labels: {
@@ -226,7 +226,7 @@ interface TransformerLabProps {
   primaryVoltage: number;
   /** The secondary voltage, in volts. */
   secondaryVoltage: number;
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
 }
 
 /**

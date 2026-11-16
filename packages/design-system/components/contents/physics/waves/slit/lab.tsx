@@ -217,7 +217,7 @@ function slitProgram(sketch: p5, read: () => SlitFrame) {
 }
 
 interface DoubleSlitLabProps {
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   /** The distance from the slits to the screen the lab starts at, in metres. */
   distance: number;
   labels: {
@@ -233,7 +233,7 @@ interface DoubleSlitLabProps {
   separation: number;
   /** A distance along the screen, in millimetres, from one bright fringe to another, whose fringes the lab counts. */
   span?: number;
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
   /** The wavelength of the light, in nanometres. */
   wavelength: number;
 }

@@ -114,7 +114,7 @@ interface BulletBlockLabProps {
   blockMass: number;
   /** The mass of the bullet, in grams. */
   bulletMass: number;
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   /** The friction between the block and the floor, in newtons. */
   friction: number;
   labels: {
@@ -126,7 +126,7 @@ interface BulletBlockLabProps {
   };
   /** The bullet's speed, in m s⁻¹. */
   speed: number;
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
 }
 
 /**

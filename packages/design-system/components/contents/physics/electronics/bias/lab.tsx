@@ -184,7 +184,7 @@ interface TransistorBiasLabProps {
   collector: number;
   /** The collector supply voltage, in volts. */
   collectorSupply: number;
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   /** The collector current over the base current. */
   gain: number;
   labels: {
@@ -197,7 +197,7 @@ interface TransistorBiasLabProps {
   };
   /** The base-emitter voltage, in volts. */
   threshold: number;
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
 }
 
 /**

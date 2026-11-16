@@ -160,7 +160,7 @@ function springProgram(sketch: p5, read: () => SpringFrame) {
 }
 
 interface SpringChainLabProps {
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   labels: {
     load: ReactNode;
     loadName: string;
@@ -173,7 +173,7 @@ interface SpringChainLabProps {
   load: number;
   /** The spring constant of each identical spring, in N m⁻¹. */
   stiffness: number;
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
 }
 
 /**

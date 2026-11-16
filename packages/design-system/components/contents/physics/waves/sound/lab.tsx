@@ -134,7 +134,7 @@ function soundProgram(sketch: p5, read: () => SoundFrame) {
 }
 
 interface SpeakerInterferenceLabProps {
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   /** The distance from the loudspeakers to the line the student walks, in metres. */
   distance: number;
   /** The frequency the signal generator starts at, in hertz. */
@@ -150,7 +150,7 @@ interface SpeakerInterferenceLabProps {
   separation: number;
   /** The speed of sound in air, in metres per second. */
   speed: number;
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
 }
 
 /**

@@ -220,7 +220,7 @@ function pendulumProgram(sketch: p5, read: () => PendulumFrame) {
 }
 
 interface PendulumGraphLabProps {
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   /** The gradient of the T² against l graph, in s² m⁻¹. */
   gradient: number;
   labels: {
@@ -233,7 +233,7 @@ interface PendulumGraphLabProps {
   };
   /** The radius of the bob, in metres. */
   radius: number;
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
 }
 
 /**

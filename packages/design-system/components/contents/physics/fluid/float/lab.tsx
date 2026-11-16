@@ -120,7 +120,7 @@ function floatProgram(sketch: p5, read: () => FloatFrame) {
 interface FloatingBlockLabProps {
   /** The density of the second liquid, in g cm⁻³, with water at 1.0. */
   density: number;
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   labels: {
     above: ReactNode;
     liquid: string;
@@ -128,7 +128,7 @@ interface FloatingBlockLabProps {
     under: ReactNode;
     viewLabel: string;
   };
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
   /** The volume of the block below the water surface, in cm³. */
   underWater: number;
   /** The volume of the block, in cm³. */

@@ -137,7 +137,7 @@ function orbitProgram(sketch: p5, read: () => OrbitFrame) {
 }
 
 interface OrbitRadiusLabProps {
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   /** The known satellite's height above the surface, in Earth radii. */
   knownHeight: number;
   /** The known satellite's period, in hours. */
@@ -152,7 +152,7 @@ interface OrbitRadiusLabProps {
   };
   /** The other satellite's height above the surface, in Earth radii. */
   otherHeight: number;
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
 }
 
 /**

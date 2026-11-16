@@ -161,7 +161,7 @@ function jackProgram(sketch: p5, read: () => JackFrame) {
 }
 
 interface HydraulicJackLabProps {
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   /** The force pushing down on the small piston, in newtons. */
   force: number;
   labels: {
@@ -179,7 +179,7 @@ interface HydraulicJackLabProps {
   smallArea: number;
   /** How far the small piston is pushed down, in centimetres. */
   stroke: number;
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
 }
 
 /**

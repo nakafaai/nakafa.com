@@ -154,7 +154,7 @@ function wireProgram(sketch: p5, read: () => WireFrame) {
 }
 
 interface WireResistanceLabProps {
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   /** How many times the first wire's diameter the second wire starts at. */
   diameterRatio: number;
   labels: {
@@ -168,7 +168,7 @@ interface WireResistanceLabProps {
   };
   /** How many times the first wire's length the second wire starts at. */
   lengthRatio: number;
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
 }
 
 /**
