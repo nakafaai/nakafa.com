@@ -356,3 +356,28 @@ Chunk 1 (#2338, #2340, #2370, #2410 and #2472, a linked stack that touches share
 2. **One window at a time.** `visual-firefox` runs one worker when headed, so no window covers another. One display per worker would need a worker fixture that starts, addresses and stops an Xvfb of its own for each Firefox it launches; one worker needs one line of configuration.
 3. **No WebGL outside the visual project.** WebGL draws only in the content visuals (`packages/design-system/components/three` and `components/contents`). The one spec outside the visual project that waited on a scene's canvas, `e2e/seo/contracts.browser.ts`, now checks only that the served lesson ships its scenes without a canvas; `e2e/scene/lines.browser.ts` reveals every scene of the same lesson in the visual project. A new spec that needs a WebGL scene belongs to the visual project.
 
+
+## Amendment: Each Check Runs Once, 16 November 2026
+
+Some checks ran twice on the same change. A pull request often got a dispatched browser proof of its specs before it entered the queue, and its merge group proved the same specs again. A merge group also ran React Doctor, which compares the head with main and so reviewed every entry ahead of it again, and the dependency audit, which reads live advisories and could stop the queue for nothing an entry in it changed.
+
+### Decision
+
+1. **Specs run in the merge group alone.** A pull request gets no browser proof before it enters the queue. Its group proves the specs its diff selects (point 2 of "The Merge Queue Is Switched On"), the one run that sees the code beside main and the entries ahead. `bun run proof` stays for reproducing a failure.
+2. **Doctor and the audit judge the pull request alone.** A merge group's gate skips both. Its typechecks, lint, scripts suite and unit suites still run.
+3. **The gate runs on both, on different trees.** A pull request's gate proves its head against main, so a broken entry never enters the queue, where its failure would rebuild every group behind it. Its group's gate proves the same workspaces on the tree with main and the entries ahead, which no earlier run saw. A result carried from the pull request into its group would hit only for a workspace that neither main nor the entries ahead changed since, which rarely holds for `apps/www`, and it would risk the stale pass that point 4 of "The Proof's Setup And Main's Caches" names, so none is carried.
+
+### Consequences
+
+A spec that fails is found in the queue, and its entry leaves while the groups behind it rebuild: the cost that a proof of every entry before the queue paid every time.
+
+## Amendment: Ready Pull Requests Land Directly, 16 November 2026
+
+On 16 November the queue merged a handful of pull requests an hour while about 150 waited, because each group's failure (main's red chat specs, a base proof that GitHub never started) rebuilt every group behind it. The owner decided at 12:00 UTC that a ready pull request merges straight into main.
+
+### Decision
+
+1. **Ready.** A pull request is ready when `verify` passed on its exact head, its head merges cleanly with main (`git merge-tree`), and no review thread is open. A stack member whose head GitHub restacked onto main after the member below it merged counts as ready when its own commits carry the patch-ids of a head that passed `verify`.
+2. **Direct.** The ruleset lets the repository admin role bypass it for pull request merges (`bypass_mode: pull_request`). A ready pull request merges by squash through the asynchronous merge with `bypass_rules`, pinned to its head, which GitHub allows for the bottom-most unmerged member of a stack, so a chain merges from its bottom.
+3. **Main is proven once per batch.** After a batch of direct merges, one dispatched proof of every suite runs on main's head, and a regression is fixed forward at its owner. The specs of a single pull request run nowhere else, so this proof is not a repeat.
+4. **The queue stays configured.** Its rule, the gate's Doctor and audit skip in a group and the selection by diff stand for a pull request that goes through it.

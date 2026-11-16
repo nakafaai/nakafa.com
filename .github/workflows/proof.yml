@@ -18,6 +18,9 @@
 # serves `bun run gate`, whose gate also posts `verify`, `bun run proof`, and a
 # merge group rehearsal that names its `base`.
 #
+# Each check runs once where it can fail ("Each Check Runs Once"): the specs in
+# the merge group alone, React Doctor and the audit on the pull request alone.
+#
 # Jobs side by side and no `needs`: the gate, and up to four proof jobs per
 # engine. Each proof job selects the run's specs first: a selection of at most
 # ten specs installs, prepares and builds once on the first Chromium job, which
@@ -184,8 +187,14 @@ jobs:
           bun run lint || failed=1
           # A package that reaches a workspace its tag denies (`boundaries` in turbo.json) is not ready.
           bun run boundaries || failed=1
-          bun run doctor --verbose --scope changed --base origin/main --blocking warning || failed=1
-          bun run security:audit || failed=1
+          # Doctor reviews the head's own React changes against main, and the
+          # audit reads live advisories, so both judge a pull request alone: in
+          # a merge group Doctor would review the entries ahead again, and a new
+          # advisory would stop the queue for nothing an entry in it changed.
+          if [ "$VERIFY" != group ]; then
+            bun run doctor --verbose --scope changed --base origin/main --blocking warning || failed=1
+            bun run security:audit || failed=1
+          fi
           bun run test:scripts || failed=1
           # One suite at a time: a runner has 4 cores, and the suites time some of
           # their tests, so each takes the whole machine as it does on the Mac.
@@ -861,7 +870,9 @@ jobs:
       - name: Download the browsers
         if: steps.browsers.outputs.cache-hit != 'true'
         working-directory: apps/www
-        run: bunx --no-install playwright install $ENGINES
+        run: |
+          read -ra engines <<< "$ENGINES"
+          bunx --no-install playwright install "${engines[@]}"
 
       - name: Save the browsers
         if: steps.browsers.outputs.cache-hit != 'true'
