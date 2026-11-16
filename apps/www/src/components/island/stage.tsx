@@ -1,7 +1,6 @@
 "use client";
 
 import { keyOf } from "@repo/backend/confect/island/blocks";
-import { SPAN } from "@repo/backend/confect/island/world";
 import { useRequired } from "@repo/design-system/hooks/required";
 import { createFramePace } from "@repo/design-system/lib/pace";
 import {
@@ -14,6 +13,7 @@ import {
 } from "effect";
 import { useState } from "react";
 import { createPainter, type Painter } from "@/components/island/draw";
+import { createFox } from "@/components/island/fox";
 import { bindInput } from "@/components/island/input";
 import { cursorOf } from "@/components/island/picture";
 import { createRod } from "@/components/island/rod";
@@ -34,16 +34,14 @@ import type { Point } from "@/lib/island/gesture";
 import { columnsOf } from "@/lib/island/ground";
 import { islesMesh } from "@/lib/island/isles";
 import { itemPlanOf, turnOf } from "@/lib/island/items";
-import { type Animal, flatQuads, herdOf, wander } from "@/lib/island/life";
+import { flatQuads, herdOf, wander } from "@/lib/island/life";
 import { changedChunks, glowOf } from "@/lib/island/light";
 import { rayThrough } from "@/lib/island/matrix";
 import { lightingOf, meshChunk } from "@/lib/island/mesh";
 import { firefliesOf } from "@/lib/island/night";
-import { pathOf } from "@/lib/island/path";
 import { planOf } from "@/lib/island/plan";
 import { plantBodies } from "@/lib/island/plants";
 import { castRay } from "@/lib/island/ray";
-import { touches } from "@/lib/island/room";
 import { shoreOf } from "@/lib/island/shore";
 import { hourOf, lightOf } from "@/lib/island/sky";
 import { chimneysOf } from "@/lib/island/smoke";
@@ -83,9 +81,6 @@ export function IslandStage({ size }: { size: number }) {
   );
 }
 
-/** How fast the learner's fox walks, in cells a second. */
-const WALK_SPEED = 3.2;
-
 /** Runs the game on one canvas until the returned cleanup stops it. */
 function start(
   canvas: HTMLCanvasElement,
@@ -114,10 +109,7 @@ function start(
     Math.floor(DateTime.toEpochMillis(DateTime.nowUnsafe()) / 86_400_000)
   );
   let lastLife = 0;
-  // The learner's own fox (ADR 0047, D12): it starts on the village square and walks where the learner sends it.
-  let walker = { x: SPAN / 2 + 0.5, z: SPAN / 2 + 2.5 };
-  let route: readonly (readonly [number, number])[] = [];
-  canvas.dataset.player = `${Math.floor(walker.x)},${Math.floor(walker.z)}`;
+  const fox = createFox(store, canvas);
   const remesh = (chunks: Iterable<number>) => {
     const { cells } = store.getState();
     const lighting = lightingOf(cells, glow);
@@ -227,24 +219,6 @@ function start(
     });
   };
 
-  /** Sends the fox along the shortest way to a column, or says no way leads there. */
-  const walkTo = (column: readonly [number, number]) => {
-    Option.match(
-      pathOf(
-        store.getState().cells,
-        [Math.floor(walker.x), Math.floor(walker.z)],
-        column
-      ),
-      {
-        onNone: () => store.getState().setNotice("path"),
-        onSome: (found) => {
-          route = found;
-          needsDraw = true;
-        },
-      }
-    );
-  };
-
   /**
    * Builds or digs at a point of the screen. With an item in hand it builds the
    * whole item there, its front to the camera, as one step undo takes back, or
@@ -259,11 +233,13 @@ function start(
     }
     if (state.tool === "fish" && !remove) {
       needsDraw = true;
-      rod.press(hitAt(point), [walker.x, walker.z]);
+      rod.press(hitAt(point), [fox.at().x, fox.at().z]);
       return;
     }
     if (state.tool === "walk" && !remove) {
-      Option.map(hitAt(point), (hit) => walkTo([hit.hit[0], hit.hit[2]]));
+      Option.map(hitAt(point), (hit) => {
+        needsDraw = fox.walkTo([hit.hit[0], hit.hit[2]]) || needsDraw;
+      });
       return;
     }
     if (state.tool === "item" && !remove) {
@@ -302,53 +278,6 @@ function start(
     store.getState().grow(ripeningOf(store.getState().cells, sprouts, seconds));
   };
 
-  /** Moves the fox along its route for `dt` seconds, keeps the camera on it, and answers the cell it heads for. */
-  /** The learner's fox as an animal at (x, z), heading for (tx, tz), for the checks that keep bodies apart. */
-  const foxAt = (x: number, z: number, tx = x, tz = z): Animal => ({
-    kind: "fox",
-    rest: 1,
-    steps: 0,
-    tx,
-    tz,
-    x,
-    z,
-  });
-
-  const stepWalker = (dt: number) => {
-    const next = Arr.head(route);
-    Option.map(next, ([cx, cz]) => {
-      const dx = cx + 0.5 - walker.x;
-      const dz = cz + 0.5 - walker.z;
-      const distance = Math.hypot(dx, dz);
-      const reach = WALK_SPEED * dt;
-      const stepTo =
-        distance <= reach
-          ? { x: cx + 0.5, z: cz + 0.5 }
-          : {
-              x: walker.x + (dx / distance) * reach,
-              z: walker.z + (dz / distance) * reach,
-            };
-      // The fox waits for an animal in its way instead of walking through it (D22).
-      const stepped = foxAt(stepTo.x, stepTo.z, cx + 0.5, cz + 0.5);
-      const nearer = (animal: Animal) =>
-        Math.hypot(stepTo.x - animal.x, stepTo.z - animal.z) <
-        Math.hypot(walker.x - animal.x, walker.z - animal.z);
-      if (
-        Arr.some(herd, (animal) => nearer(animal) && touches(stepped, animal))
-      ) {
-        return;
-      }
-      walker = stepTo;
-      if (distance <= reach) {
-        route = Arr.drop(route, 1);
-      }
-      // The camera keeps the walking fox in view.
-      goal = { ...goal, target: [walker.x, SEA_LEVEL + 1, walker.z] };
-      canvas.dataset.player = `${Math.floor(walker.x)},${Math.floor(walker.z)}`;
-    });
-    return next;
-  };
-
   /** Hands the painter every creature this frame as true 3D bodies: the herd and the fox facing its way or its float (D21), the open sea's swimmers (D24), the wild visitors and the plants (D25); then Nina and the float, still flat. */
   const drawLife = (
     cells: Cells,
@@ -361,14 +290,14 @@ function start(
         Option.map(next, ([cx, cz]) => [cx + 0.5, cz + 0.5] as const),
         rod.float
       ),
-      () => [walker.x, walker.z] as const
+      () => [fox.at().x, fox.at().z] as const
     );
-    const fox = {
-      ...foxAt(walker.x, walker.z, facing[0], facing[1]),
-      rest: route.length > 0 ? 0 : 1,
-    };
     painter.bodies([
-      ...bodiesOf(cells, Arr.append(herd, fox), seconds),
+      ...bodiesOf(
+        cells,
+        Arr.append(herd, fox.animal(facing[0], facing[1])),
+        seconds
+      ),
       ...seaBodies(store.getState().seed, seconds),
       ...wildBodies(cells, wild, size, seconds),
       ...plants,
@@ -405,7 +334,7 @@ function start(
     const { weather } = store.getState();
     const waterDue = ambientDue(now);
     if (
-      !(needsDraw || waterDue || route.length > 0 || rod.active()) ||
+      !(needsDraw || waterDue || fox.walking() || rod.active()) ||
       document.hidden
     ) {
       return;
@@ -415,13 +344,16 @@ function start(
     const dt = lastLife === 0 ? 0 : Math.min(0.25, (now - lastLife) / 1000);
     lastLife = now;
     const { cells, seed } = store.getState();
-    const everyone = Arr.append(herd, foxAt(walker.x, walker.z));
+    const everyone = Arr.append(herd, fox.animal());
     herd = Arr.map(herd, (animal, index) =>
       wander(cells, animal, seed, index, dt, everyone)
     );
     wild = Arr.map(wild, (creature) => roam(cells, creature, seed, dt));
-    const next = stepWalker(dt);
-    canvas.dataset.walking = route.length > 0 ? "true" : "false";
+    const { moved, next } = fox.advance(dt, herd);
+    if (moved) {
+      // The camera keeps the walking fox in view.
+      goal = { ...goal, target: [fox.at().x, SEA_LEVEL + 1, fox.at().z] };
+    }
     if (now - lastGrowth > 2000) {
       lastGrowth = now;
       growCrops(now / 1000);
@@ -449,23 +381,6 @@ function start(
   });
   resize.observe(canvas);
 
-  /** Walks the fox one cell, right (`across`) or away from the camera (`ahead` negative), as the camera faces. */
-  const step = (across: number, ahead: number) => {
-    const quarter = turnOf(orbit.yaw);
-    const [dx, dz] = [
-      [across, ahead],
-      [ahead, -across],
-      [-across, -ahead],
-      [-ahead, across],
-    ][quarter];
-    const last = Arr.last(route).pipe(
-      Option.getOrElse(
-        () => [Math.floor(walker.x), Math.floor(walker.z)] as const
-      )
-    );
-    walkTo([last[0] + dx, last[1] + dz]);
-  };
-
   const input = bindInput(canvas, store, {
     camera: () => ({ goal, orbit }),
     drag: showCursor,
@@ -485,7 +400,9 @@ function start(
       needsDraw = true;
     },
     press: act,
-    step,
+    step: (across, ahead) => {
+      needsDraw = fox.step(across, ahead, orbit.yaw) || needsDraw;
+    },
   });
 
   return () => {
