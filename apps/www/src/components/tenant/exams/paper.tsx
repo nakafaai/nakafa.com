@@ -13,7 +13,7 @@ import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { usePaperText } from "@/components/player/held";
 import { LinesProvider } from "@/components/player/lines/board";
-import { PanePortal } from "@/components/shared/panes";
+import { PanePortal } from "@/components/shared/page/panes";
 import { isChoice } from "@/components/tenant/exams/answer";
 import { ChoiceSheet } from "@/components/tenant/exams/choice";
 import { MatchColumn } from "@/components/tenant/exams/columns";

@@ -29,8 +29,8 @@ import {
   PaneFill,
   PaneFooter,
   PaneHeader,
-} from "@/components/shared/pane";
-import { usePanes } from "@/components/shared/panes";
+} from "@/components/shared/page/pane";
+import { usePanes } from "@/components/shared/page/panes";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { RowCopy } from "@/components/shared/table/menu";

@@ -13,7 +13,7 @@ import { ResponsiveDialogSubject } from "@repo/design-system/components/ui/respo
 import { Array as Arr, Option } from "effect";
 import { useState } from "react";
 import { useTranslations } from "use-intl";
-import { usePanes } from "@/components/shared/panes";
+import { usePanes } from "@/components/shared/page/panes";
 import { ConfirmRowMenu } from "@/components/shared/table/confirm";
 import { RowItems, RowOpen } from "@/components/shared/table/menu";
 import { useClassScope } from "@/components/tenant/classes/scope";

@@ -86,7 +86,7 @@ function useSettingsReturn(): Option.Option<string> {
  * read before settings, or to `home` when settings was the first page. Escape
  * leaves the same way, unless a field holds the key, an open popup closed with
  * it, which marks the press as handled before it reaches the window, or a row
- * stands open beside the list, which closes first (`PanesDetail`).
+ * stands open beside the list, which closes first (`PagePane`).
  */
 export function SettingsBack({
   home,

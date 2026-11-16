@@ -10,7 +10,7 @@ import { useTranslations } from "use-intl";
 import { useStore } from "zustand";
 import { BreadcrumbHeaderPath } from "@/components/shared/breadcrumb/header";
 import { PaginationContent } from "@/components/shared/content/pagination";
-import { SidebarRightHeader } from "@/components/shared/outline/panel";
+import { PageOutlineHeader } from "@/components/shared/page/outline";
 import {
   type MaterialNavigationPage,
   type MaterialPlacement,
@@ -147,7 +147,7 @@ export function MaterialHeading(heading: {
 }) {
   const { navigation, page } = useMaterialNavigation();
   return (
-    <SidebarRightHeader
+    <PageOutlineHeader
       {...heading}
       context={navigation.currentContext}
       publicPath={page.route.publicPath}

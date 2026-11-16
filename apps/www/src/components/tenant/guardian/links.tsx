@@ -21,14 +21,14 @@ import {
   PaneFooter,
   PaneHeader,
   PaneOpen,
-} from "@/components/shared/pane";
+} from "@/components/shared/page/pane";
 import {
+  PagePane,
   Panes,
-  PanesDetail,
   PanesList,
   PanesProvider,
   usePanes,
-} from "@/components/shared/panes";
+} from "@/components/shared/page/panes";
 import { reloadPage } from "@/components/shared/reload";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
@@ -269,9 +269,9 @@ function LinksFrame({
     <LinksContext value={links}>
       <Panes id="links">
         <PanesList>{children}</PanesList>
-        <PanesDetail label={t("link-detail")}>
+        <PagePane label={t("link-detail")}>
           <GuardianLinkDetail />
-        </PanesDetail>
+        </PagePane>
       </Panes>
     </LinksContext>
   );

@@ -35,8 +35,8 @@ import {
   PaneFacts,
   PaneFooter,
   PaneHeader,
-} from "@/components/shared/pane";
-import { usePanes } from "@/components/shared/panes";
+} from "@/components/shared/page/pane";
+import { usePanes } from "@/components/shared/page/panes";
 import { reloadPage } from "@/components/shared/reload";
 import {
   TableFiltersProvider,

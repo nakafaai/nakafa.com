@@ -4,7 +4,7 @@ import { useTranslations } from "use-intl";
 import { keepVisible } from "@/components/player/navigator/scroll";
 import { PlayerShortcuts } from "@/components/player/navigator/shortcuts";
 import { usePlayer } from "@/components/player/provider";
-import { PaneHeader } from "@/components/shared/pane";
+import { PaneHeader } from "@/components/shared/page/pane";
 
 /**
  * The navigator in its pane beside the questions from the large breakpoint: the
