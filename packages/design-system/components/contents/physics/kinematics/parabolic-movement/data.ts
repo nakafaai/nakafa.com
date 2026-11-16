@@ -31,8 +31,6 @@ export const PARABOLIC_SCENE = {
   cameraPosition: PARABOLIC_CAMERA_POSITION,
   cameraTarget: PARABOLIC_CAMERA_TARGET,
   ghostCount: 7,
-  groundPadding: 1.9,
-  groundWidth: 3,
   launcherLength: 0.58,
 
   pauseSeconds: 0.9,

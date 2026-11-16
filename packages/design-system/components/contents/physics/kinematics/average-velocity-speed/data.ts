@@ -78,7 +78,7 @@ export const AVERAGE_VELOCITY_SPEED_SCENE = {
 } as const;
 
 export const AVERAGE_VELOCITY_SPEED_CAMERA = {
-  cameraPosition: [4.8, 5.4, 7.2],
+  cameraPosition: [3.6, 2.2, 5.4],
   cameraTarget: [0, 0.16, -0.05],
   fov: 40,
 } as const;
@@ -89,8 +89,6 @@ export const AVERAGE_VELOCITY_SPEED_COLORS = {
   distance: PLOT_COLORS.teal,
   displacement: PLOT_COLORS.violet,
   ghost: getColor("WHITE"),
-  platform: getColor("SLATE", 50),
-  platformEdge: PLOT_COLORS.amber,
   rail: getColor("SLATE", 600),
   route: PLOT_COLORS.teal,
   start: PLOT_COLORS.amber,

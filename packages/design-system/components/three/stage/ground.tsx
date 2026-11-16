@@ -47,14 +47,16 @@ export function Ground() {
   return (
     <>
       {ground === undefined ? <Catcher /> : <Terrain kind={ground} />}
-      <ContactShadows
-        blur={2.4}
-        far={reach / 2}
-        opacity={0.38}
-        position={[0, floor + 0.012, 0]}
-        resolution={512}
-        scale={2 * reach}
-      />
+      <CameraBounds exclude>
+        <ContactShadows
+          blur={2.4}
+          far={reach / 2}
+          opacity={0.38}
+          position={[0, floor + 0.012, 0]}
+          resolution={512}
+          scale={2 * reach}
+        />
+      </CameraBounds>
     </>
   );
 }

@@ -18,14 +18,14 @@ const TRACK_RADIUS = 4;
 
 export const UNIFORM_CIRCULAR_MOTION_SCENE = {
   carScale: 0.84,
-  innerRadius: 3.45,
-  laneMarkerCount: 18,
-  outerRadius: 4.55,
+  dashLength: 0.46,
+  dashSpacing: (2 * Math.PI * TRACK_RADIUS) / 18,
   radius: TRACK_RADIUS,
+  trackWidth: 1.1,
 } as const;
 
 export const UNIFORM_CIRCULAR_MOTION_CAMERA = {
-  cameraPosition: [6.1, 8.6, 7.2],
+  cameraPosition: [5.3, 4.1, 10],
   cameraTarget: [0, 0, 0],
 } satisfies Record<string, readonly [number, number, number]>;
 

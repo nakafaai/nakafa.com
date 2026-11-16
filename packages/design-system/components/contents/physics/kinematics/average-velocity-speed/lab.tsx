@@ -53,6 +53,9 @@ interface AverageVelocitySpeedLabProps {
   title: ReactNode;
 }
 
+/** How far the longest track reaches from the lab's middle, in scene units. */
+const TRACK_REACH = 3.6;
+
 export function AverageVelocitySpeedLab({
   decimalSeparator,
   title,
@@ -137,7 +140,13 @@ export function AverageVelocitySpeedLab({
         className={threeSceneFrameVariants()}
         render={<section />}
       >
-        <ScienceStage frameloop="always" setting="field">
+        <ScienceStage
+          floor={0}
+          frameloop="always"
+          ground="concrete"
+          reach={TRACK_REACH}
+          setting="lab"
+        >
           <AverageMotionStage>
             <AverageMotionScene motion={motion} />
           </AverageMotionStage>
