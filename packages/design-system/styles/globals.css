@@ -103,53 +103,53 @@
 :root {
   /* The page ground. */
   --background: oklch(1 0 0);
-  /* Text and icons on the page ground. */
+  /* Text and icons on `background`. */
   --foreground: oklch(0.21033 0.00586 285.89);
   /* The ground of a card or a section. */
   --card: oklch(1 0 0);
-  /* Text on a card. */
+  /* Text on `card`. */
   --card-foreground: oklch(0.13706 0.03597 258.53);
   /* The ground of a floating surface: a menu, a popover, a tooltip. */
   --popover: oklch(1 0 0);
-  /* Text on a floating surface. */
+  /* Text on `popover`. */
   --popover-foreground: oklch(0.13706 0.03597 258.53);
-  /* The brand ink, navy in light and sky in dark: the page's one primary action, links and headline marks. */
+  /* The brand ink, navy in light and sky in dark: the page's one main action, links and headline marks. Its text is `primary-foreground`. */
   --primary: oklch(0.28693 0.0744 261.92);
-  /* Text and icons on the primary fill. */
+  /* Text and icons on `primary`. */
   --primary-foreground: oklch(0.98383 0.00348 247.86);
-  /* The primary's swap partner, a fill for supporting actions and selected states, never text. */
+  /* The swap partner of the brand ink, a fill for supporting actions and selected states, never text. Its text is `secondary-foreground`. */
   --secondary: oklch(0.77498 0.1318 224.26);
-  /* Text and icons on the secondary fill. */
+  /* Text and icons on `secondary`. */
   --secondary-foreground: oklch(0.21033 0.00586 285.89);
   /* A quiet fill: code, tables, blockquotes, skeletons and tab tracks. */
   --muted: oklch(0.96844 0.00682 247.9);
-  /* Secondary text and idle icons on the neutral grounds. */
+  /* Quieter text and idle icons on `background`, `card`, `popover` and `muted`. */
   --muted-foreground: oklch(0.5125 0.04071 257.44);
-  /* The hover and focus fill of a row, an item or a ghost button. Some themes make it bold. */
+  /* The hover and focus fill of a row, an item or a ghost button. Some themes make it bold. Its text is `accent-foreground`. */
   --accent: oklch(0.92682 0.01559 248);
-  /* Everything on an accent fill, marks and icons included. */
+  /* Everything on `accent`, marks and icons included. */
   --accent-foreground: oklch(0.20792 0.03991 265.73);
-  /* Errors, a wrong chosen answer and an action that deletes. */
+  /* Errors, a wrong chosen answer and an action that deletes. Its text is `destructive-foreground`. */
   --destructive: oklch(0.56 0.21808 17.703);
-  /* Text and icons on the destructive fill. */
+  /* Text and icons on `destructive`. */
   --destructive-foreground: oklch(0.98383 0.00348 247.86);
-  /* A correct answer or a met requirement, always with a word or an icon. */
+  /* A correct answer or a met requirement, always with a word or an icon. Its text is `success-foreground`. */
   --success: oklch(0.765 0.115 174);
-  /* Text and icons on the success fill. */
+  /* Text and icons on `success`. */
   --success-foreground: oklch(0.13706 0.03597 258.53);
-  /* The emphasis marker and warnings, always with a word or an icon. */
+  /* The emphasis marker and warnings, always with a word or an icon. Its text is `warning-foreground`. */
   --warning: oklch(0.825 0.135 83);
-  /* Text and icons on the warning fill. */
+  /* Text and icons on `warning`. */
   --warning-foreground: oklch(0.13706 0.03597 258.53);
-  /* Info toasts and neutral notices, always with a word or an icon. */
+  /* Neutral notices and info toasts, always with a word or an icon. Its text is `info-foreground`. */
   --info: oklch(0.755 0.125 230);
-  /* Text and icons on the info fill. */
+  /* Text and icons on `info`. */
   --info-foreground: oklch(0.13706 0.03597 258.53);
-  /* Hairlines between parts. Subtle by design. */
+  /* Hairlines between parts. Subtle by design, never text. */
   --border: oklch(0.88 0.012 252.84);
-  /* The edge of a field. Subtle by design; a field reads by its placeholder and focus ring. */
+  /* The edge of a field. Subtle by design; a field reads by its placeholder and focus outline. */
   --input: oklch(0.86 0.012 252.84);
-  /* The focus ring. */
+  /* The focus outline, 3:1 at least against `background`, `card` and `popover`. */
   --ring: oklch(0.28693 0.0744 261.92);
   /* The first chart series. */
   --chart-1: oklch(0.28693 0.0744 261.92);
@@ -161,21 +161,21 @@
   --chart-4: oklch(0.6625 0.13622 82.951);
   /* The fifth chart series. */
   --chart-5: oklch(0.64475 0.11554 181.92);
-  /* The sidebar ground. */
+  /* The ground of the app's navigation at the left edge. */
   --sidebar: oklch(0.96844 0.00682 247.9);
-  /* Text and icons in the sidebar. */
+  /* Text and icons on `sidebar`. */
   --sidebar-foreground: oklch(0.21033 0.00586 285.89);
-  /* The active marker in the sidebar. */
+  /* The active marker of the navigation. Its text is `sidebar-primary-foreground`. */
   --sidebar-primary: oklch(0.28693 0.0744 261.92);
-  /* Text on the sidebar's primary fill. */
+  /* Text and icons on `sidebar-primary`. */
   --sidebar-primary-foreground: oklch(0.98383 0.00348 247.86);
-  /* The hovered or current sidebar row. */
+  /* The fill of the hovered or current navigation row. Its text is `sidebar-accent-foreground`. */
   --sidebar-accent: oklch(1 0 0);
-  /* Text and icons on a hovered or current sidebar row. */
+  /* Text and icons on `sidebar-accent`. */
   --sidebar-accent-foreground: oklch(0.21033 0.00586 285.89);
-  /* Hairlines in the sidebar. */
+  /* Hairlines of the navigation. Subtle by design, never text. */
   --sidebar-border: oklch(0.88 0.012 252.84);
-  /* The focus ring in the sidebar. */
+  /* The focus outline in the navigation, 3:1 at least against `sidebar`. */
   --sidebar-ring: oklch(0.28693 0.0744 261.92);
   /* The base radius every rounded shape derives from. Some themes change it. */
   --radius: 1rem;
