@@ -189,11 +189,8 @@ describe("tryouts/queries/catalog", () => {
           })
         ).toMatchObject({
           route: {
-            alternates: [
-              { appLocale: "en", publicPath: "try-out/indonesia/snbt/2027-en" },
-              { appLocale: "id", publicPath: "try-out/indonesia/snbt/2027-id" },
-              { appLocale: "de", publicPath: "try-out/indonesia/snbt/2027-de" },
-            ],
+            // A group with one track is no page in any locale, so it names no counterpart.
+            alternates: [],
             page: false,
             socialImageIdentity: { countryKey: "indonesia", examKey: "snbt" },
           },
