@@ -1,17 +1,29 @@
 "use client";
 
 import { useRequired } from "@repo/design-system/hooks/required";
-import { Array as Arr, Option } from "effect";
+import { Array as Arr, DateTime, Option } from "effect";
 import { type GameStoreApi, GameStoreContext } from "@/components/island/store";
-import { fallOf } from "@/lib/island/sky";
+import { callOf, voicesOf } from "@/lib/island/chorus";
+import { unitOf } from "@/lib/island/noise";
+import { fallOf, hourOf } from "@/lib/island/sky";
 import { thundersBetween } from "@/lib/island/storm";
+import { gustAt, WIND_FORCE } from "@/lib/island/wind";
 
 /** How often the storm's next thunders are looked up, and how far ahead they are scheduled, in seconds. */
 const THUNDER_LOOK = 1;
 const THUNDER_AHEAD = 2;
 
-/** How loud the sea and the rain are under the cues. */
-const AMBIENCE = { rain: 0.05, sea: 0.035 } as const;
+/** How loud the sea, the rain, the wind, a bird and the crickets are under the cues. */
+const AMBIENCE = {
+  bird: 0.05,
+  crickets: 0.012,
+  rain: 0.05,
+  sea: 0.035,
+  wind: 0.045,
+} as const;
+
+/** Where the wind is heard from: the middle of the learner's island. */
+const EAR = 32;
 
 /** Two seconds of white noise, the stuff waves, rain and digging are made of. */
 function noiseOf(audio: AudioContext) {
@@ -49,7 +61,8 @@ function bed(
 /**
  * The island's sound (ADR 0047, D8), synthesized in Web Audio with no file: a
  * wooden knock when a block is placed, a gritty crunch when one is dug, the sea
- * rolling under everything, rain when it rains, and thunder after a storm's
+ * rolling under everything, a wind that rises with each gust, birds by day and
+ * crickets by night (D37), rain when it rains, and thunder after a storm's
  * lightning, late by the distance it crossed. It starts at the learner's
  * first press, as browsers ask, and follows the game's switch.
  */
@@ -138,17 +151,81 @@ function startSound(store: GameStoreApi) {
     source.stop(at + roll.length + 0.1);
   };
 
+  /** One bird's call at an audio time: each note a short sine sweep with a soft attack. */
+  const sing = (at: number, seed: number, loud: number) => {
+    Arr.forEach(callOf(seed), (note) => {
+      const tone = audio.createOscillator();
+      const gain = audio.createGain();
+      tone.type = "sine";
+      tone.frequency.setValueAtTime(note.from, at + note.at);
+      tone.frequency.exponentialRampToValueAtTime(
+        note.to,
+        at + note.at + note.length
+      );
+      gain.gain.setValueAtTime(0.0001, at + note.at);
+      gain.gain.exponentialRampToValueAtTime(loud, at + note.at + 0.015);
+      gain.gain.exponentialRampToValueAtTime(
+        0.0001,
+        at + note.at + note.length
+      );
+      tone.connect(gain).connect(master);
+      tone.start(at + note.at);
+      tone.stop(at + note.at + note.length + 0.02);
+    });
+  };
+
+  // The wind blows louder as a gust's front crosses the island (D32); the crickets are a high trill pulsed in groups.
+  const wind = bed(audio, noise, "bandpass", 480, master);
+  const crickets = audio.createOscillator();
+  const trill = audio.createOscillator();
+  const pulse = audio.createGain();
+  const chirping = audio.createGain();
+  crickets.frequency.value = 4600;
+  trill.type = "square";
+  trill.frequency.value = 14;
+  pulse.gain.value = 0;
+  chirping.gain.value = 0;
+  trill.connect(pulse.gain);
+  crickets.connect(pulse).connect(chirping).connect(master);
+  crickets.start();
+  trill.start();
+
   // The thunders come from the same strikes the painter flashes, on the same clock (D33).
   let heardUntil = performance.now() / 1000;
   const listen = () => {
     const now = performance.now() / 1000;
     const until = now + THUNDER_AHEAD;
-    if (store.getState().weather === "storm") {
+    const { weather } = store.getState();
+    if (weather === "storm") {
       Arr.forEach(thundersBetween(heardUntil, until), (roll) =>
         thunder(audio.currentTime + Math.max(0, roll.at - now), roll)
       );
     }
     heardUntil = until;
+    const hour = hourOf(DateTime.nowUnsafe(), DateTime.zoneMakeLocal());
+    const voices = voicesOf(hour, weather);
+    const gust = gustAt(EAR, EAR, now) * WIND_FORCE[weather];
+    wind.gain.setTargetAtTime(
+      AMBIENCE.wind * (0.25 + gust),
+      audio.currentTime,
+      0.6
+    );
+    // The crickets swell and pause every few seconds, as a field of them does.
+    const swell = 0.6 + 0.4 * Math.sin(now * 0.9);
+    chirping.gain.setTargetAtTime(
+      AMBIENCE.crickets * voices.crickets * swell,
+      audio.currentTime,
+      0.4
+    );
+    // A bird calls now and then, more often at dawn: the second decides, so every learner hears the same morning.
+    const second = Math.floor(now);
+    if (unitOf(61, second) < voices.birds * 0.3) {
+      sing(
+        audio.currentTime + unitOf(61, second, 1) * 0.8,
+        second,
+        AMBIENCE.bird * (0.5 + 0.5 * voices.birds)
+      );
+    }
   };
   const listening = window.setInterval(listen, THUNDER_LOOK * 1000);
 
