@@ -1,5 +1,5 @@
 import { expect, type Page, test } from "@playwright/test";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 import {
   createSchool,
   hostAddress,
@@ -16,16 +16,17 @@ const WIDTHS = [1920, 1440, 768, 390, 320] as const;
 const SCHEMES = ["light", "dark"] as const;
 
 /**
- * Every tab of the class `signInClassTeacher` seeds, by its name, with the part its body stands on once
+ * Every tab of the class `signInClassTeacher` seeds, by its name, with the groups its header holds and the part its body stands on once
  * it has drawn: the forum's row of panes, a list's table card, or nothing the frame measures.
  */
 const TABS = [
-  { name: "Home", part: null },
-  { name: "Forum", part: "resizable-panel-group" },
-  { name: "Library", part: "table-card" },
-  { name: "Tasks", part: "table-card" },
-  { name: "People", part: "table-card" },
-  { name: "Grades", part: "table-card" },
+  { groups: 0, name: "Home", part: null },
+  { groups: 0, name: "Forum", part: "resizable-panel-group" },
+  // The library's search and New folder read as one group, so a phone's header holds two controls.
+  { groups: 1, name: "Library", part: "table-card" },
+  { groups: 0, name: "Tasks", part: "table-card" },
+  { groups: 0, name: "People", part: "table-card" },
+  { groups: 0, name: "Grades", part: "table-card" },
 ] as const;
 
 /** The address of the class's home, which its sidebar entry opens. */
@@ -82,8 +83,16 @@ const overflowOf = (page: Page) =>
     );
     const groups =
       header?.querySelectorAll('[data-slot="button-group"]').length ?? 0;
+    // The first row of the body, a list's views or its table card, stands the body's one padding under the tab row.
+    const first = document.querySelector(
+      'main [data-slot="toggle-group"], main [data-slot="table-card"]'
+    );
     return {
       body: Math.max(0, ...past),
+      offset:
+        first === null || frame === undefined
+          ? null
+          : Math.round(first.getBoundingClientRect().top - frame.bottom),
       cards,
       controls: alone.length + groups,
       groups,
@@ -94,7 +103,7 @@ const overflowOf = (page: Page) =>
     };
   });
 
-test("every class tab keeps its body inside the header's frame, its table in a card that closes on the screen, two header buttons at most, and no sideways scroll, at 1920, 1440, 768, 390 and 320 px, light and dark", async ({
+test("every class tab keeps its body inside the header's frame, its first body row at one offset under the tabs, its table in a card that closes on the screen, two header buttons at most, and no sideways scroll, at 1920, 1440, 768, 390 and 320 px, light and dark", async ({
   baseURL,
   browser,
 }, info) => {
@@ -116,6 +125,7 @@ test("every class tab keeps its body inside the header's frame, its table in a c
     await page.emulateMedia({ colorScheme: scheme });
     for (const width of WIDTHS) {
       await page.setViewportSize({ height: 900, width });
+      let offsets: readonly number[] = [];
       for (const tab of TABS) {
         await tabs.getByRole("tab", { name: tab.name }).click();
         await expect(
@@ -138,13 +148,21 @@ test("every class tab keeps its body inside the header's frame, its table in a c
           label
         ).toEqual({ body: 0, sideways: 0 });
         expect(measured.controls, label).toBeLessThanOrEqual(2);
-        expect(measured.groups, label).toBeLessThanOrEqual(1);
+        expect(measured.groups, label).toBe(tab.groups);
+        // The forum's panes start under the tabs by design; every other tab's first row shares one offset.
+        if (tab.name !== "Forum" && measured.offset !== null) {
+          offsets = Arr.append(offsets, measured.offset);
+        }
         for (const card of measured.cards) {
           expect(card.border, label).toBeGreaterThanOrEqual(1);
           expect(card.bottom, label).toBeLessThanOrEqual(0);
           expect(card.table, label).toBeLessThanOrEqual(0);
         }
       }
+      expect(
+        Arr.dedupe(offsets),
+        `the first body row under the tabs at ${width} px in ${scheme}`
+      ).toHaveLength(1);
     }
   }
   await context.close();
@@ -275,7 +293,7 @@ test("the selects of New task open with a one-word label and an icon on every op
         await page.keyboard.press("Escape");
         await expect(list).toBeHidden();
       }
-      await dialog.getByRole("button", { name: "Cancel" }).click();
+      await page.keyboard.press("Escape");
       await expect(dialog).toBeHidden();
     }
   }

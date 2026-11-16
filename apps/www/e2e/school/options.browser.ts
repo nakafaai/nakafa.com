@@ -142,7 +142,7 @@ test("a teacher's empty options never reach a student, the schedule names them, 
     body: await page.screenshot(),
     contentType: "image/png",
   });
-  await scheduling.getByRole("button", { name: "Cancel" }).click();
+  await page.keyboard.press("Escape");
 
   // The student's paper holds the two written options and nothing for C and D.
   const trying = await context.newPage();

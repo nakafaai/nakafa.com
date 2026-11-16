@@ -87,11 +87,7 @@ export function QuestionTags() {
             >
               {t("exams-action")}
             </Link>
-          ) : (
-            <Button onClick={() => setOpen(false)} type="button">
-              {t("tags-done")}
-            </Button>
-          )
+          ) : undefined
         }
         description={t("tags-description")}
         open={open}
