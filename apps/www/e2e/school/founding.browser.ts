@@ -55,7 +55,7 @@ for (const viewport of VIEWPORTS) {
 
     // Each size names the plan suggested for it before the founder chooses.
     await expect(
-      page.getByText("Free trial for 30 days, up to 20 accounts.")
+      page.getByText("Free for 30 days, up to 20 accounts.")
     ).toBeVisible();
     await expect(
       page.getByText("Pro or Max, every role counted as one account.")
