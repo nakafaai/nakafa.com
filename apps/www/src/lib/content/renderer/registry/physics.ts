@@ -15,6 +15,9 @@ import {
   StoppingDistanceLab,
 } from "@/lib/content/renderer/client/physics/distance";
 import { WindEnergyConversionLab } from "@/lib/content/renderer/client/physics/energy";
+import { HoseJetProjectileLab } from "@/lib/content/renderer/client/physics/fountain";
+import { GalileoInclineBellsLab } from "@/lib/content/renderer/client/physics/galileo";
+import { FallingTargetAimLab } from "@/lib/content/renderer/client/physics/hunter";
 import {
   NonUniformLinearMotionGraphCard,
   NonUniformLinearMotionLab,
@@ -28,16 +31,30 @@ import {
   RelativeMovementLab,
   VerticalMovementLab,
 } from "@/lib/content/renderer/client/physics/movement";
+import { SatelliteOrbitCircularLab } from "@/lib/content/renderer/client/physics/orbit";
 import {
   ParabolicMovementAnalysisLab,
   ParabolicMovementLab,
 } from "@/lib/content/renderer/client/physics/parabolic";
+import { RainDriveRelativeVelocityLab } from "@/lib/content/renderer/client/physics/rain";
+import { RiverBoatCrossingLab } from "@/lib/content/renderer/client/physics/river";
+import { StringWhirlReleaseLab } from "@/lib/content/renderer/client/physics/sling";
+import { StreetOriginPositionLab } from "@/lib/content/renderer/client/physics/street";
+import { StrobePhotoMotionLab } from "@/lib/content/renderer/client/physics/strobe";
+import { TickerTapeMotionLab } from "@/lib/content/renderer/client/physics/ticker";
+import { RunningTrackDisplacementLab } from "@/lib/content/renderer/client/physics/track";
+import { TrainPassengerRelativeLab } from "@/lib/content/renderer/client/physics/train";
+import { SpeedTrapInstantSpeedLab } from "@/lib/content/renderer/client/physics/trap";
+import { CarTripSecantSlopeLab } from "@/lib/content/renderer/client/physics/trip";
+import { FeatherCoinVacuumLab } from "@/lib/content/renderer/client/physics/vacuum";
 import { VectorConceptLab } from "@/lib/content/renderer/client/physics/vector";
 import {
   AverageVelocitySpeedLab,
   InstantaneousVelocitySpeedLab,
   VelocitySpeedLab,
 } from "@/lib/content/renderer/client/physics/velocity";
+import { CityWalkDisplacementLab } from "@/lib/content/renderer/client/physics/walk";
+import { BicycleWheelSpeedLab } from "@/lib/content/renderer/client/physics/wheel";
 import type { RendererImplementation } from "@/lib/content/renderer/selection";
 
 /** Every physics visual, which any lesson in any domain may use. */
@@ -111,6 +128,10 @@ export const physicsRenderers = [
     component: StoppingDistanceLab,
   },
   {
+    name: physicsComponentNames.tickerTapeMotionLab,
+    component: TickerTapeMotionLab,
+  },
+  {
     name: physicsComponentNames.uniformCircularMotionLab,
     component: UniformCircularMotionLab,
   },
@@ -133,5 +154,69 @@ export const physicsRenderers = [
   {
     name: physicsComponentNames.windEnergyConversionLab,
     component: WindEnergyConversionLab,
+  },
+  {
+    name: physicsComponentNames.carTripSecantSlopeLab,
+    component: CarTripSecantSlopeLab,
+  },
+  {
+    name: physicsComponentNames.speedTrapInstantSpeedLab,
+    component: SpeedTrapInstantSpeedLab,
+  },
+  {
+    name: physicsComponentNames.streetOriginPositionLab,
+    component: StreetOriginPositionLab,
+  },
+  {
+    name: physicsComponentNames.strobePhotoMotionLab,
+    component: StrobePhotoMotionLab,
+  },
+  {
+    name: physicsComponentNames.cityWalkDisplacementLab,
+    component: CityWalkDisplacementLab,
+  },
+  {
+    name: physicsComponentNames.runningTrackDisplacementLab,
+    component: RunningTrackDisplacementLab,
+  },
+  {
+    name: physicsComponentNames.bicycleWheelSpeedLab,
+    component: BicycleWheelSpeedLab,
+  },
+  {
+    name: physicsComponentNames.riverBoatCrossingLab,
+    component: RiverBoatCrossingLab,
+  },
+  {
+    name: physicsComponentNames.rainDriveRelativeVelocityLab,
+    component: RainDriveRelativeVelocityLab,
+  },
+  {
+    name: physicsComponentNames.stringWhirlReleaseLab,
+    component: StringWhirlReleaseLab,
+  },
+  {
+    name: physicsComponentNames.fallingTargetAimLab,
+    component: FallingTargetAimLab,
+  },
+  {
+    name: physicsComponentNames.featherCoinVacuumLab,
+    component: FeatherCoinVacuumLab,
+  },
+  {
+    name: physicsComponentNames.galileoInclineBellsLab,
+    component: GalileoInclineBellsLab,
+  },
+  {
+    name: physicsComponentNames.hoseJetProjectileLab,
+    component: HoseJetProjectileLab,
+  },
+  {
+    name: physicsComponentNames.trainPassengerRelativeLab,
+    component: TrainPassengerRelativeLab,
+  },
+  {
+    name: physicsComponentNames.satelliteOrbitCircularLab,
+    component: SatelliteOrbitCircularLab,
   },
 ] satisfies readonly RendererImplementation[];
