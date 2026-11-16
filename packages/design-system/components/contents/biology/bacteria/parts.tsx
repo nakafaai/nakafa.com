@@ -80,7 +80,7 @@ export function BacillusBacteriumModel({
         ? Arr.map(FLAGELLA, ({ normal, position }, index) => (
             <Flagellum
               direction={[-1.6, normal[1] * 0.5, normal[2] * 0.5]}
-              key={position.join()}
+              key={Arr.join(Arr.map(position, String), ",")}
               length={1.5}
               origin={position}
               phase={index * 1.3}
@@ -214,7 +214,7 @@ export function CoccusClusterModel({ scale = 1 }: { scale?: number }) {
     <group scale={scale}>
       {Arr.map(cells, (position, index) => (
         <group
-          key={position.join()}
+          key={Arr.join(Arr.map(position, String), ",")}
           position={position}
           rotation={[index, index * 0.7, 0]}
         >
