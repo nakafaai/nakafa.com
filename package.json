@@ -33,7 +33,7 @@
       "@types/react-dom": "19.3.0",
       "@vitest/coverage-istanbul": "5.1.0",
       "@vitest/ui": "5.1.0",
-      "ai": "7.0.164",
+      "ai": "7.0.172",
       "alchemy": "2.0.0-beta.85",
       "class-variance-authority": "^0.7.1",
       "cn": "0.5.2",

@@ -83,8 +83,8 @@ export const REGISTRY_REVIEWS = [
   ],
   [
     "ai@latest",
-    "7.0.164",
-    "AI SDK packages move as one reviewed cohort. 7.0.164 is the latest release and the adopted one: @convex-dev/agent 0.7.9 peers ai ^7.0.129, and the gateway module (confect/gateway) typechecks against it. Checked 7 November 2026.",
+    "7.0.172",
+    "AI SDK packages move as one reviewed cohort. 7.0.172 is the latest release and the adopted one: @convex-dev/agent 0.7.9 peers ai ^7.0.129, the gateway provider 0.3.0 peers ^7.0.105, and the gateway module (confect/gateway) typechecks against it. From 7.0.171 a failed tool's error text reaches the client as the model received it, and the agent offers no redactToolErrors, so a Nina capability that breaks on a defect settles as a failure whose text names no cause (confect/nina/capability/progress.ts). Checked 13 November 2026.",
   ],
   [
     "@convex-dev/ai-sdk-provider@latest",
