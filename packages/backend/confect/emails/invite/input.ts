@@ -2,6 +2,7 @@ import type { GenericId } from "@confect/core";
 import type { ActiveAppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { resolveLegalLinks } from "@repo/backend/confect/emails/legal";
+import { unsubscribePage } from "@repo/backend/confect/emails/unsubscribe/token";
 import { readSiteUrl } from "@repo/backend/confect/site/config";
 import { schoolAddress } from "@repo/backend/confect/tenancy/address";
 import { publicationLayer } from "@repo/backend/content/publication/confect";
@@ -10,8 +11,8 @@ import { Effect } from "effect";
 
 /**
  * What an invitation says: the organisation that invited, the address of its own
- * host where the invited address signs in, and the legal links of the email's
- * language from the signed Pages. It names no person. An invite that was revoked
+ * host where the invited address signs in, the legal links of the email's
+ * language from the signed Pages, and the address's unsubscribe page. It names no person. An invite that was revoked
  * or has expired reads as nothing, so nothing is sent. The send step checks the
  * term again, because the workflow runs after this read.
  */
@@ -43,5 +44,9 @@ export const readInviteInput = Effect.fn("emails.invite.readInput")(function* (
     privacyPolicyUrl: links.privacyPolicyUrl,
     signInUrl: yield* schoolAddress(siteUrl, tenant.slug),
     termsOfServiceUrl: links.termsOfServiceUrl,
+    unsubscribeUrl: yield* unsubscribePage(
+      { _tag: "Address", address: invite.channel.email },
+      locale
+    ),
   };
 });

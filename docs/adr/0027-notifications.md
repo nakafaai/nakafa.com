@@ -330,6 +330,16 @@ sitting does not show.
   tokens never enter an email.
 - Each send has an idempotency key for the notification and the recipient, as the
   welcome email has one (`idempotencyKey` in `emails/welcome/internal.ts`).
+- Every email can be unsubscribed (8 November 2026). Its footer links a page
+  (`/{locale}/unsubscribe`) where the reader confirms with a press, and `sendMail`
+  sends the one-click headers of RFC 8058, which post to `/email/unsubscribe` on
+  the Convex site. Both carry a token that names the recipient, an account, a
+  Person, or an address, signed under the server secret with its own purpose label
+  (`emails/unsubscribe/token.ts`). Confirming switches the email of every kind the
+  recipient can switch off, as their settings do, so turning a switch on there is
+  the way back; an address that holds neither is kept in `emailSuppressions`,
+  which the invitation's sender reads. Mail the reader asks for, a guardian's
+  code, and notices of their own payment still arrive.
 - WhatsApp is the next channel and follows the same rules. It is planned.
 
 ## Decided With The First Build (26 October 2026)

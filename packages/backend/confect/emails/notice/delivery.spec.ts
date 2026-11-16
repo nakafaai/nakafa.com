@@ -6,17 +6,22 @@ import {
 } from "@repo/email/templates/notice/contract";
 import { Schema } from "effect";
 
-/** Renders a notice email in the Node runtime, where the email package runs. */
+/**
+ * Renders the notice emails of one batch in the Node runtime, where the email package runs: one for each recipient,
+ * in their order, since each carries its own unsubscribe link.
+ */
 export default GroupSpec.makeNode().addFunction(
   FunctionSpec.internalNodeAction({
     name: "render",
-    args: () => NoticeEmailInputSchema.fields,
+    args: () => ({ inputs: Schema.Array(NoticeEmailInputSchema) }),
     returns: () =>
-      Schema.Struct({
-        html: Schema.String,
-        subject: Schema.String,
-        text: Schema.String,
-      }),
+      Schema.Array(
+        Schema.Struct({
+          html: Schema.String,
+          subject: Schema.String,
+          text: Schema.String,
+        })
+      ),
     error: () => Schema.Union([NoticeEmailInputError, NoticeEmailRenderError]),
   })
 );

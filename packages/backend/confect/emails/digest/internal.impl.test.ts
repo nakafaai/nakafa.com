@@ -84,6 +84,15 @@ describe("emails/digest/internal", () => {
           ],
           inboxUrl: "http://nf.localhost:3000/notifications",
           locale: "id",
+          unsubscribeUrl: expect.stringContaining(
+            "http://localhost:3000/id/unsubscribe?token="
+          ),
+        });
+        // The mail names its Person, so its unsubscribe switches that Person's email off.
+        expect(mails[0]?.recipient).toEqual({
+          _tag: "Person",
+          personId: student,
+          tenantId: fixture.tenants.nf,
         });
         expect(yield* waiting(fixture)).toEqual([]);
         expect(yield* fixture.internal.mutation(digest.claim, {})).toEqual([]);
@@ -271,6 +280,18 @@ describe("emails/digest/internal", () => {
       yield* fixture.internal.action(digest.send, {});
       expect(send).toHaveBeenCalledTimes(1);
       expect(send.mock.calls[0]?.[1]).toMatchObject({
+        headers: [
+          {
+            name: "List-Unsubscribe",
+            value: expect.stringContaining(
+              "https://example.convex.site/email/unsubscribe?token="
+            ),
+          },
+          {
+            name: "List-Unsubscribe-Post",
+            value: "List-Unsubscribe=One-Click",
+          },
+        ],
         subject: "Ujianmu segera dimulai.",
       });
       expect(Arr.isReadonlyArrayEmpty(yield* waiting(fixture))).toBe(true);

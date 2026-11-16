@@ -18,13 +18,21 @@ const passEndingEmailPreviewInput = {
   locale: "en",
   privacyPolicyUrl: new URL("/en/privacy-policy", SITE_ORIGIN).href,
   termsOfServiceUrl: new URL("/en/terms-of-service", SITE_ORIGIN).href,
+  unsubscribeUrl: new URL("/en/unsubscribe?token=preview", SITE_ORIGIN).href,
 } satisfies PassEndingEmailInput;
 
 /** Renders the reminder that a learner's Pro pass ends soon, for one supported locale. */
 function PassEndingEmail(
   input: PassEndingEmailInput = passEndingEmailPreviewInput
 ) {
-  const { endsOn, extendUrl, locale, privacyPolicyUrl, termsOfServiceUrl } = {
+  const {
+    endsOn,
+    extendUrl,
+    locale,
+    privacyPolicyUrl,
+    termsOfServiceUrl,
+    unsubscribeUrl,
+  } = {
     ...passEndingEmailPreviewInput,
     ...input,
   };
@@ -35,6 +43,7 @@ function PassEndingEmail(
       locale={locale}
       privacyPolicyUrl={privacyPolicyUrl}
       termsOfServiceUrl={termsOfServiceUrl}
+      unsubscribeUrl={unsubscribeUrl}
     />
   );
 }

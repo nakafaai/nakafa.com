@@ -32,6 +32,14 @@ export const Relation = Schema.Literals([
   "commenter",
 ]);
 
+/**
+ * The relations of a notice that no school holds, whose switches an account keeps rather than a Person: the account
+ * whose comment was answered.
+ */
+export const ACCOUNT_RELATIONS: readonly (typeof Relation.Type)[] = [
+  "commenter",
+];
+
 /** A channel that reaches a person: the inbox row, a push, or an email. */
 export const Channel = Schema.Literals(["inbox", "push", "email"]);
 

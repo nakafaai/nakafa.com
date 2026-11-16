@@ -81,6 +81,7 @@ import editorClients from "./tables/editorClients";
 import editorDocuments from "./tables/editorDocuments";
 import editorSnapshots from "./tables/editorSnapshots";
 import editorSteps from "./tables/editorSteps";
+import emailSuppressions from "./tables/emailSuppressions";
 import examAnswers from "./tables/examAnswers";
 import examAssets from "./tables/examAssets";
 import examAttempts from "./tables/examAttempts";
@@ -265,6 +266,7 @@ export default $defineSchema({
   editorDocuments: $Table.tableDefinition(editorDocuments),
   editorSnapshots: $Table.tableDefinition(editorSnapshots),
   editorSteps: $Table.tableDefinition(editorSteps),
+  emailSuppressions: $Table.tableDefinition(emailSuppressions),
   examAnswers: $Table.tableDefinition(examAnswers),
   examAssets: $Table.tableDefinition(examAssets),
   examAttempts: $Table.tableDefinition(examAttempts),

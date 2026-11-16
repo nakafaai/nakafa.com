@@ -56,6 +56,7 @@ const messageNamespaceFlags = {
   SEO: true,
   Toast: true,
   Tryouts: true,
+  Unsubscribe: true,
   Utils: true,
   Videos: true,
   Weather: true,

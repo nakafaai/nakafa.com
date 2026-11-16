@@ -9,6 +9,7 @@ const links = {
   privacyPolicyUrl: "https://nakafa.com/en/privacy-policy",
   signInUrl: "https://harapan.nakafa.com/",
   termsOfServiceUrl: "https://nakafa.com/en/terms-of-service",
+  unsubscribeUrl: "https://nakafa.com/en/unsubscribe?token=signed",
 };
 
 describe("invitation content", () => {

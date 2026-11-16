@@ -37,5 +37,6 @@ export const welcomeIntentInputValidator = Schema.Union([
     locale: ActiveAppLocaleCodeSchema,
     privacyPolicyUrl: Schema.String,
     termsOfServiceUrl: Schema.String,
+    unsubscribeUrl: Schema.String,
   }),
 ]);

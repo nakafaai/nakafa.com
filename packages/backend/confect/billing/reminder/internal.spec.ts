@@ -12,6 +12,7 @@ export const PassReminderInput = Schema.Struct({
   locale: ActiveAppLocaleCodeSchema,
   privacyPolicyUrl: Schema.String,
   termsOfServiceUrl: Schema.String,
+  unsubscribeUrl: Schema.String,
 });
 
 /** The read and the send of one pass reminder, around the render in the Node runtime. */

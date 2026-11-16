@@ -23,6 +23,7 @@ export const PassEndingEmailInputSchema = Schema.Struct({
   locale: ActiveAppLocaleCodeSchema,
   privacyPolicyUrl: EmailUrlSchema,
   termsOfServiceUrl: EmailUrlSchema,
+  unsubscribeUrl: EmailUrlSchema,
 });
 export type PassEndingEmailInput = typeof PassEndingEmailInputSchema.Type;
 const PassEndingEmailCopySchema = Schema.Struct({

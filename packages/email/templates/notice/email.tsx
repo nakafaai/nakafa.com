@@ -21,11 +21,18 @@ const noticeEmailPreviewInput = {
   locale: "en",
   privacyPolicyUrl: new URL("/en/privacy-policy", SITE_ORIGIN).href,
   termsOfServiceUrl: new URL("/en/terms-of-service", SITE_ORIGIN).href,
+  unsubscribeUrl: new URL("/en/unsubscribe?token=preview", SITE_ORIGIN).href,
 } satisfies NoticeEmailInput;
 
 /** Renders the notice of a new class announcement for one supported locale. */
 function NoticeEmail(input: NoticeEmailInput = noticeEmailPreviewInput) {
-  const { classUrl, locale, privacyPolicyUrl, termsOfServiceUrl } = {
+  const {
+    classUrl,
+    locale,
+    privacyPolicyUrl,
+    termsOfServiceUrl,
+    unsubscribeUrl,
+  } = {
     ...noticeEmailPreviewInput,
     ...input,
   };
@@ -36,6 +43,7 @@ function NoticeEmail(input: NoticeEmailInput = noticeEmailPreviewInput) {
       locale={locale}
       privacyPolicyUrl={privacyPolicyUrl}
       termsOfServiceUrl={termsOfServiceUrl}
+      unsubscribeUrl={unsubscribeUrl}
     />
   );
 }
