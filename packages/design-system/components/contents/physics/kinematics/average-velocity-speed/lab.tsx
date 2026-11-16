@@ -137,7 +137,7 @@ export function AverageVelocitySpeedLab({
         className={threeSceneFrameVariants()}
         render={<section />}
       >
-        <ScienceStage frameloop="always">
+        <ScienceStage frameloop="always" setting="field">
           <AverageMotionStage>
             <AverageMotionScene motion={motion} />
           </AverageMotionStage>

@@ -140,6 +140,7 @@ export function VelocitySpeedLab({
           floor={LANE_Y + LANE_HEIGHT / 2}
           frameloop="always"
           reach={SCENE_REACH}
+          setting="field"
         >
           <Suspense>
             <CameraControls

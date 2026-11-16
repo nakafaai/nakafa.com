@@ -159,7 +159,7 @@ export function MethaneCombustionEquationLab({
         className={threeSceneFrameVariants()}
         render={<section />}
       >
-        <ScienceStage frameloop="always">
+        <ScienceStage frameloop="always" setting="lab">
           <Suspense>
             <CombustionCamera />
             <CombustionScene colors={colors} labels={labels} />

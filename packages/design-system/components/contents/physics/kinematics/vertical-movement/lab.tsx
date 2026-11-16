@@ -100,7 +100,7 @@ export function VerticalMovementLab({
         className={threeSceneFrameVariants()}
         render={<section />}
       >
-        <ScienceStage floor={0} frameloop="always">
+        <ScienceStage floor={0} frameloop="always" setting="field">
           <Suspense>
             <CameraControls
               cameraPosition={CAMERA_POSITION}

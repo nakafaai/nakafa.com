@@ -112,7 +112,7 @@ export function StoppingDistanceLab({
         className={threeSceneFrameVariants()}
         render={<section />}
       >
-        <ScienceStage frameloop="always">
+        <ScienceStage frameloop="always" setting="field">
           <Suspense>
             <StoppingDistanceCamera />
             <StoppingDistanceScene motion={motion} />
