@@ -56,6 +56,13 @@ describe("island/mesh", () => {
     expect(MutableHashSet.has(heights, 5.875)).toBe(true);
   });
 
+  it("draws no wall of water at the world's edge, where the open sea goes on", () => {
+    const cells = emptyCells();
+    cells[cellOf(0, 4, 5)] = idOf("water");
+    // Top, east, north, south and bottom show; the west face would stand on the edge.
+    expect(quadsOf(meshChunk(cells, lightingOf(cells), 0, 0).water)).toBe(5);
+  });
+
   it("draws a plant as two crossed planes seen from both sides, and glass beside glass with no face between", () => {
     const cells = emptyCells();
     cells[cellOf(2, 9, 2)] = idOf("flowers");

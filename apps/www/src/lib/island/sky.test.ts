@@ -1,6 +1,7 @@
 // @vitest-environment node
 import { describe, expect, it } from "@effect/vitest";
-import { lightOf } from "@/lib/island/sky";
+import { Option } from "effect";
+import { fallOf, lightOf, weatherOf } from "@/lib/island/sky";
 
 /** How bright a color is. */
 const brightness = (color: readonly number[]) => color[0] + color[1] + color[2];
@@ -35,5 +36,28 @@ describe("island/sky", () => {
     expect(brightness(lightOf(12, "snow").sun)).toBeLessThan(
       brightness(clear.sun)
     );
+  });
+
+  it("reads the weather from the route's icon code, day or night", () => {
+    expect(weatherOf("01d")).toBe("clear");
+    expect(weatherOf("01n")).toBe("clear");
+    expect(weatherOf("03d")).toBe("clouds");
+    expect(weatherOf("50n")).toBe("clouds");
+    expect(weatherOf("09d")).toBe("rain");
+    expect(weatherOf("10n")).toBe("rain");
+    expect(weatherOf("11d")).toBe("storm");
+    expect(weatherOf("13d")).toBe("snow");
+  });
+
+  it("lets rain and storms fall as streaks and snow as slow flakes, and nothing from a dry sky", () => {
+    expect(Option.isNone(fallOf("clear"))).toBe(true);
+    expect(Option.isNone(fallOf("clouds"))).toBe(true);
+    const rain = Option.getOrNull(fallOf("rain"));
+    const storm = Option.getOrNull(fallOf("storm"));
+    const snow = Option.getOrNull(fallOf("snow"));
+    expect(rain?.flakes).toBe(false);
+    expect(storm?.speed).toBeGreaterThan(rain?.speed ?? 0);
+    expect(snow?.flakes).toBe(true);
+    expect(snow?.speed).toBeLessThan(rain?.speed ?? 0);
   });
 });
