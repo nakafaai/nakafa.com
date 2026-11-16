@@ -191,11 +191,13 @@ jobs:
       # The backend suite runs in the backend shards beside this one, and the
       # last of them posts `gate/backend`.
       - name: Post the gate's parts
+        id: parts
         if: always()
         env:
           STATIC: ${{ steps.static.outcome }}
           WWW: ${{ steps.www.outcome }}
         run: |
+          echo "known<<EOF" >> "$GITHUB_OUTPUT"
           for part in static www; do
             name=${part^^}
             outcome=${!name}
@@ -203,17 +205,24 @@ jobs:
             [ "$outcome" = success ] && state=success
             gh api --silent "repos/$GITHUB_REPOSITORY/statuses/$SHA" \
               -f state="$state" -f context="gate/$part" -f target_url="$URL" -f description="${outcome:-did not run}"
+            echo "gate/$part=$state" >> "$GITHUB_OUTPUT"
           done
+          echo "EOF" >> "$GITHUB_OUTPUT"
 
       - name: Post the gate
+        id: gate
         if: always()
         uses: ./.github/actions/gate
+        with:
+          known: ${{ steps.parts.outputs.known }}
 
       # The last of the gate and the three engines to post its own status finds
       # all four final and posts `verify`.
       - name: Post the group's verdict
         if: always() && env.VERIFY == 'group'
         uses: ./.github/actions/verdict
+        with:
+          known: ${{ steps.gate.outputs.state && format('gate={0}', steps.gate.outputs.state) || '' }}
 
   backend:
     # The backend suite, about 1,070 test files, runs in three shards on three
@@ -282,8 +291,11 @@ jobs:
             -f state=success -f context=gate/backend -f target_url="$URL" -f description="The head changes nothing the backend suite reads"
 
       - name: Post the gate
+        id: idle
         if: steps.affected.outputs.tasks == '0' && matrix.shard == 1
         uses: ./.github/actions/gate
+        with:
+          known: gate/backend=success
 
       # A shard writes its results and its coverage as a blob and checks no
       # threshold, since a file's tests may stand in another shard; the last
@@ -310,7 +322,7 @@ jobs:
       # Each shard posts its own status after its blob is kept, then reads the
       # others', so the later reader finds all three final and merges.
       - name: Post the shard
-        id: last
+        id: own
         if: always() && steps.affected.outputs.tasks != '0'
         env:
           OUTCOME: ${{ steps.shard.outcome }}
@@ -319,9 +331,21 @@ jobs:
           [ "$OUTCOME" = success ] && state=success
           gh api --silent "repos/$GITHUB_REPOSITORY/statuses/$SHA" \
             -f state="$state" -f context="gate/backend-$SHARD" -f target_url="$URL" -f description="${OUTCOME:-did not run}"
-          final="$(gh api "repos/$GITHUB_REPOSITORY/commits/$SHA/status?per_page=100" --jq \
-            "[.statuses[] | select(.target_url == \"$URL\" and (.context | test(\"^gate/backend-[0-9]+\$\")) and .state != \"pending\")] | length")"
-          [ "$final" = "$SHARDS" ] && echo "merge=true" >> "$GITHUB_OUTPUT" || true
+          echo "known=gate/backend-$SHARD=$state" >> "$GITHUB_OUTPUT"
+
+      - name: Read the shards
+        id: shards
+        if: always() && steps.affected.outputs.tasks != '0'
+        uses: ./.github/actions/statuses
+        with:
+          pattern: ^gate/backend-[0-9]+$
+          count: ${{ strategy.job-total }}
+          known: ${{ steps.own.outputs.known }}
+
+      - name: Decide whether this shard merges
+        id: last
+        if: always() && steps.shards.outputs.final == 'true'
+        run: echo "merge=true" >> "$GITHUB_OUTPUT"
 
       - name: Download the shards' blobs
         if: always() && steps.last.outputs.merge == 'true'
@@ -343,6 +367,7 @@ jobs:
           bunx vitest run --merge-reports
 
       - name: Post the backend part
+        id: backend
         if: always() && steps.last.outputs.merge == 'true'
         env:
           OUTCOME: ${{ steps.merge.outcome }}
@@ -351,14 +376,20 @@ jobs:
           [ "$OUTCOME" = success ] && state=success
           gh api --silent "repos/$GITHUB_REPOSITORY/statuses/$SHA" \
             -f state="$state" -f context=gate/backend -f target_url="$URL" -f description="${OUTCOME:-did not run}"
+          echo "known=gate/backend=$state" >> "$GITHUB_OUTPUT"
 
       - name: Post the gate
+        id: merged
         if: always() && steps.last.outputs.merge == 'true'
         uses: ./.github/actions/gate
+        with:
+          known: ${{ steps.backend.outputs.known }}
 
       - name: Post the group's verdict
         if: always() && env.VERIFY == 'group' && (steps.last.outputs.merge == 'true' || (steps.affected.outputs.tasks == '0' && matrix.shard == 1))
         uses: ./.github/actions/verdict
+        with:
+          known: ${{ (steps.merged.outputs.state || steps.idle.outputs.state) && format('gate={0}', steps.merged.outputs.state || steps.idle.outputs.state) || '' }}
 
   proof:
     # A fixed name: GitHub appends the matrix entry, Proof (chromium, firefox, webkit), and a job the event skips
@@ -628,6 +659,7 @@ jobs:
       # engines' statuses before it reads the others, so the last to finish
       # always sees them all. `bun run proof` reads the same results.
       - name: Post the proof
+        id: proof
         if: always()
         run: |
           post() {
@@ -645,17 +677,35 @@ jobs:
             fi
             post "proof/$engine" "$state" "$description"
             echo "| $engine | $state | $description |" >> "$GITHUB_STEP_SUMMARY"
+            echo "proof/$engine=$state" >> "$GITHUB_OUTPUT.known"
           done
-          states="$(gh api "repos/$GITHUB_REPOSITORY/commits/$SHA/status?per_page=100" --jq \
-            "[.statuses[] | select(.target_url == \"$URL\" and (.context | test(\"^proof/(chromium|firefox|webkit)\$\"))) | .state]")"
-          [ "$(jq 'map(select(. != "pending")) | length' <<< "$states")" = 3 ] || exit 0
+          { echo "known<<EOF"; cat "$GITHUB_OUTPUT.known"; echo "EOF"; } >> "$GITHUB_OUTPUT"
+          rm "$GITHUB_OUTPUT.known"
+
+      - name: Read the engines
+        id: engines
+        if: always()
+        uses: ./.github/actions/statuses
+        with:
+          pattern: ^proof/(chromium|firefox|webkit)$
+          count: 3
+          known: ${{ steps.proof.outputs.known }}
+
+      - name: Post the engines' verdict
+        if: always() && steps.engines.outputs.final == 'true'
+        env:
+          STATES: ${{ steps.engines.outputs.states }}
+        run: |
           all=failure
-          [ "$(jq 'all(. == "success")' <<< "$states")" = true ] && all=success
-          post proof "$all" "Chromium, Firefox and WebKit: $all"
+          [ "$(jq 'all(.[]; . == "success")' <<< "$STATES")" = true ] && all=success
+          gh api --silent "repos/$GITHUB_REPOSITORY/statuses/$SHA" \
+            -f state="$all" -f context=proof -f target_url="$URL" -f description="Chromium, Firefox and WebKit: $all"
 
       - name: Post the group's verdict
         if: always() && env.VERIFY == 'group'
         uses: ./.github/actions/verdict
+        with:
+          known: ${{ steps.proof.outputs.known }}
 
   # Prepares main's runtime and downloads the browsers once per push to main, and
   # saves both in main's scope, so a merge group whose head changes no backend

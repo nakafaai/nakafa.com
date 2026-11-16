@@ -6,24 +6,38 @@ description: >-
   the engines' results and proves the failing specs on main's head (`scripts/proof/group.ts`), reading a proof of the
   same specs on that commit that another group already started, which fails the group only on what main passes. The
   calling job checks out the head, installs the workspace and holds a token that may post statuses, read this run's
-  artifacts and dispatch the proof workflow.
+  artifacts and dispatch the proof workflow. The caller passes the statuses it just posted as `known`, and the read
+  waits briefly for the others' (`.github/actions/statuses`).
+inputs:
+  known:
+    description: The statuses the calling job just posted, one `context=state` per line
+    required: false
+    default: ""
 runs:
   using: composite
   steps:
     - name: Read the four statuses
+      id: statuses
+      uses: ./.github/actions/statuses
+      with:
+        pattern: ^(gate|proof/(chromium|firefox|webkit))$
+        count: 4
+        known: ${{ inputs.known }}
+
+    - name: Decide from the four statuses
       id: read
+      if: steps.statuses.outputs.final == 'true'
       shell: bash
+      env:
+        STATES: ${{ steps.statuses.outputs.states }}
       run: |
         post() {
           gh api --silent "repos/$GITHUB_REPOSITORY/statuses/$SHA" \
             -f state="$1" -f context=verify -f target_url="$URL" -f description="$2"
         }
-        statuses="$(gh api "repos/$GITHUB_REPOSITORY/commits/$SHA/status?per_page=100" --jq \
-          "[.statuses[] | select(.target_url == \"$URL\" and (.context | test(\"^(gate|proof/(chromium|firefox|webkit))\$\"))) | {context, state}]")"
-        [ "$(jq 'map(select(.state != "pending")) | length' <<< "$statuses")" = 4 ] || exit 0
-        if [ "$(jq 'all(.state == "success")' <<< "$statuses")" = true ]; then
+        if [ "$(jq 'all(.[]; . == "success")' <<< "$STATES")" = true ]; then
           post success "Gate, Chromium, Firefox and WebKit: success"
-        elif [ "$(jq -r '.[] | select(.context == "gate") | .state' <<< "$statuses")" != success ]; then
+        elif [ "$(jq -r '.gate' <<< "$STATES")" != success ]; then
           post failure "Gate failed"
         else
           echo "judge=true" >> "$GITHUB_OUTPUT"
