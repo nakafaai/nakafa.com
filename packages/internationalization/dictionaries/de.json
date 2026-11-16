@@ -545,8 +545,6 @@
     "cause-both-false": "Aussage und Begründung sind falsch",
     "template-short": "Kurzantwort",
     "template-numeric": "Zahlenantwort",
-    "short-placeholder": "Antwort eingeben",
-    "number-placeholder": "Zahl eingeben",
     "number-key": "Richtige Zahl",
     "number-value-placeholder": "0,75",
     "number-tolerance-placeholder": "0,01",
@@ -569,7 +567,6 @@
     "accepted-add": "Antwort hinzufügen",
     "accepted-hint": "Groß- und Kleinschreibung und Leerzeichen zählen nicht, andere Antworten warten auf dich.",
     "template-essay": "Aufsatz",
-    "essay-placeholder": "Antwort schreiben",
     "grade-of": "Punkte von {name}",
     "template-match": "Zuordnung",
     "statement-of": "Frage {number}, Aussage {name}",
@@ -2591,7 +2588,12 @@
     "menu-parts": "Fächer",
     "parts-empty": "Kein Fach passt dazu.",
     "parts-search": "Fach suchen",
-    "time": "Restzeit"
+    "time": "Restzeit",
+    "placeholder": {
+      "essay": "Antwort schreiben",
+      "number": "Zahl eingeben",
+      "short": "Antwort eingeben"
+    }
   },
   "Utils": {
     "search-bar-placeholder": "Inhalte durchsuchen...",

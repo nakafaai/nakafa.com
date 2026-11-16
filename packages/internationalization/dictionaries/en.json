@@ -545,8 +545,6 @@
     "cause-both-false": "The statement and the reason are false",
     "template-short": "Short answer",
     "template-numeric": "Numeric answer",
-    "short-placeholder": "Type your answer",
-    "number-placeholder": "Type a number",
     "number-key": "Correct number",
     "number-value-placeholder": "0.75",
     "number-tolerance-placeholder": "0.01",
@@ -569,7 +567,6 @@
     "accepted-add": "Add answer",
     "accepted-hint": "Case and extra spaces do not count, and other answers wait for you.",
     "template-essay": "Essay",
-    "essay-placeholder": "Write your answer",
     "grade-of": "Points of {name}",
     "template-match": "Matching",
     "statement-of": "Question {number}, statement {name}",
@@ -2591,7 +2588,12 @@
     "menu-parts": "Subjects",
     "parts-empty": "No subject matches that.",
     "parts-search": "Find a subject",
-    "time": "Time left"
+    "time": "Time left",
+    "placeholder": {
+      "essay": "Write your answer",
+      "number": "Type a number",
+      "short": "Type your answer"
+    }
   },
   "Utils": {
     "search-bar-placeholder": "Search content...",

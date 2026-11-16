@@ -37,7 +37,8 @@ export function SectionDoor({
   item: Item;
   sentence: string;
 }) {
-  const t = useTranslations(item.labelNamespace);
+  const tAi = useTranslations("Ai");
+  const tCommon = useTranslations("Common");
   return (
     <TargetLink
       className="group hover:bg-accent hover:text-accent-foreground flex items-start gap-3 p-4 transition-colors ease-out"
@@ -47,7 +48,11 @@ export function SectionDoor({
         <TileIcon icon={item.icon} />
       </Tile>
       <div className="-mt-1 flex min-w-0 flex-1 flex-col gap-0.5">
-        <h3 className="truncate">{t(item.labelKey)}</h3>
+        <h3 className="truncate">
+          {item.labelNamespace === "Ai"
+            ? tAi(item.labelKey)
+            : tCommon(item.labelKey)}
+        </h3>
         <span className="text-muted-foreground group-hover:text-accent-foreground truncate text-sm">
           {sentence}
         </span>

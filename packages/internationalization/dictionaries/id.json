@@ -545,8 +545,6 @@
     "cause-both-false": "Pernyataan dan alasan salah",
     "template-short": "Isian singkat",
     "template-numeric": "Jawaban angka",
-    "short-placeholder": "Ketik jawabanmu",
-    "number-placeholder": "Ketik angka",
     "number-key": "Angka yang benar",
     "number-value-placeholder": "0,75",
     "number-tolerance-placeholder": "0,01",
@@ -569,7 +567,6 @@
     "accepted-add": "Tambah jawaban",
     "accepted-hint": "Huruf besar dan spasi berlebih tidak dihitung, jawaban lain menunggu kamu.",
     "template-essay": "Uraian",
-    "essay-placeholder": "Tulis jawabanmu",
     "grade-of": "Poin {name}",
     "template-match": "Menjodohkan",
     "statement-of": "Soal {number}, pernyataan {name}",
@@ -2591,7 +2588,12 @@
     "menu-parts": "Subtes",
     "parts-empty": "Nggak ada subtes yang cocok.",
     "parts-search": "Cari subtes",
-    "time": "Sisa waktu"
+    "time": "Sisa waktu",
+    "placeholder": {
+      "essay": "Tulis jawabanmu",
+      "number": "Ketik angka",
+      "short": "Ketik jawabanmu"
+    }
   },
   "Utils": {
     "search-bar-placeholder": "Cari konten...",

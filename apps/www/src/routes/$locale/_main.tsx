@@ -2,12 +2,13 @@ import { monospace } from "@repo/design-system/lib/monospace";
 import { localeTimeZone } from "@repo/internationalization/src/locale";
 import { createFileRoute, getRouteApi, Outlet } from "@tanstack/react-router";
 import { cn } from "cn";
-import { IntlProvider } from "use-intl";
+
 import { PageProviders } from "@/components/providers/page";
 import { SharedProviders } from "@/components/providers/shared";
 import { pageFrameVariants } from "@/components/shared/page/width";
 import { AppShell } from "@/components/sidebar/shell";
 import { readRouteMessages } from "@/lib/i18n/messages.functions";
+import { MessagesProvider } from "@/lib/i18n/provider";
 import { SHELL_MESSAGE_NAMESPACES } from "@/lib/i18n/shell";
 import { readMarketingShellFn } from "@/lib/marketing/shell.functions";
 import { readStaticData } from "@/lib/static/data";
@@ -72,7 +73,7 @@ function MainLayout() {
     Route.useLoaderData();
   const localeData = localeRoute.useLoaderData();
   return (
-    <IntlProvider
+    <MessagesProvider
       locale={locale}
       messages={{ ...localeData.messages, ...messages }}
       now={localeData.now}
@@ -94,6 +95,6 @@ function MainLayout() {
           </SharedProviders>
         </TryoutEntryProvider>
       </PageProviders>
-    </IntlProvider>
+    </MessagesProvider>
   );
 }

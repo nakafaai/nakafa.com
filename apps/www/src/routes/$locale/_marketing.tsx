@@ -1,17 +1,19 @@
 import { createFileRoute, getRouteApi, Outlet } from "@tanstack/react-router";
-import { IntlProvider } from "use-intl";
+
 import { Footer } from "@/components/marketing/shared/footer";
 import { Header } from "@/components/marketing/shared/header";
 import { PageProviders } from "@/components/providers/page";
 import { SharedProviders } from "@/components/providers/shared";
 import { readRouteMessages } from "@/lib/i18n/messages.functions";
+import { MessagesProvider } from "@/lib/i18n/provider";
 import { readMarketingShellFn } from "@/lib/marketing/shell.functions";
 import { readStaticData } from "@/lib/static/data";
 import { TryoutEntryProvider } from "@/lib/tryout/entry";
 
 /**
  * The messages of the marketing pages that the locale route does not carry. The
- * Common, State and Toast messages come from the locale route, once.
+ * Common, State and Toast messages come from the locale route, once. Editor is the
+ * Arabic keypad of a featured try-out's written answer.
  */
 const MARKETING_NAMESPACES = [
   "About",
@@ -19,6 +21,7 @@ const MARKETING_NAMESPACES = [
   "AnalyticsConsent",
   "Contributor",
   "DataTable",
+  "Editor",
   "Error",
   "Faq",
   "Holy",
@@ -66,7 +69,10 @@ function MarketingLayout() {
   const { messages, pageNavigation, tryoutEntry } = Route.useLoaderData();
   const { messages: shellMessages } = localeRoute.useLoaderData();
   return (
-    <IntlProvider locale={locale} messages={{ ...shellMessages, ...messages }}>
+    <MessagesProvider
+      locale={locale}
+      messages={{ ...shellMessages, ...messages }}
+    >
       <PageProviders pageNavigation={pageNavigation}>
         <TryoutEntryProvider entryPath={tryoutEntry}>
           <SharedProviders>
@@ -81,6 +87,6 @@ function MarketingLayout() {
           </SharedProviders>
         </TryoutEntryProvider>
       </PageProviders>
-    </IntlProvider>
+    </MessagesProvider>
   );
 }

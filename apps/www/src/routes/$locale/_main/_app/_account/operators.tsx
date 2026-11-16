@@ -1,8 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { IntlProvider, useMessages } from "use-intl";
+import { useMessages } from "use-intl";
 import { createTranslator } from "use-intl/core";
 import { OperatorConsole } from "@/components/operators/console";
 import { Page } from "@/components/shared/page/frame";
+import { MessagesProvider } from "@/lib/i18n/provider";
 import { readRenderedRouteMessages } from "@/lib/i18n/rendered";
 import { createPrivateSeoHead, toRouterHead } from "@/lib/seo/head";
 
@@ -45,10 +46,10 @@ function OperatorsPage() {
   const { messages } = Route.useLoaderData();
   const shell = useMessages();
   return (
-    <IntlProvider locale={locale} messages={{ ...shell, ...messages }}>
+    <MessagesProvider locale={locale} messages={{ ...shell, ...messages }}>
       <Page>
         <OperatorConsole />
       </Page>
-    </IntlProvider>
+    </MessagesProvider>
   );
 }

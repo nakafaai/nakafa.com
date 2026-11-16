@@ -47,7 +47,7 @@ export function SittingEssayEditor(
   >
 ) {
   const { AnswerEditor } = use(loadAnswerEditor());
-  const t = useTranslations("Exams");
+  const t = useTranslations("Player");
   const labels = useAnswerLabels();
   const locked = usePaperLocked();
 
@@ -58,7 +58,7 @@ export function SittingEssayEditor(
       limit={ESSAY_RESPONSE_MAX}
       locked={locked}
       onRefuse={() => toast.error({ title: "essay-too-long.title" })}
-      placeholder={t("essay-placeholder")}
+      placeholder={t("placeholder.essay")}
     />
   );
 }
