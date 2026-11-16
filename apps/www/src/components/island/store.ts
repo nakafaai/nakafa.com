@@ -8,6 +8,7 @@ import { settleOf } from "@/lib/island/gravity";
 import type { ItemKey } from "@/lib/island/items";
 import type { Season } from "@/lib/island/season";
 import type { Weather } from "@/lib/island/sky";
+import type { Footing } from "@/lib/island/steps";
 import type { Cells } from "@/lib/island/world";
 
 /** The hand the learner plays with: one block placed per tap, a ready-made item, the pickaxe that removes a block, or their own feet. */
@@ -78,6 +79,8 @@ interface GameStore {
   clearHarvest: () => void;
   /** The chunks whose meshes no longer match the world. */
   dirty: HashSet.HashSet<number>;
+  /** What the fox's last footstep landed on (D40). */
+  footing: Footing;
   future: readonly (readonly Edit[])[];
   /** Writes what grew by itself (D16): sent to the server, but no step undo takes back. */
   grow: (edits: readonly Edit[]) => void;
@@ -131,9 +134,13 @@ interface GameStore {
   /** The book's open shelf. */
   shelf: Shelf;
   slot: number;
+  /** How many footsteps the fox took, which the sound answers one by one (D40). */
+  steps: number;
   /** Hands the chunks to mesh to the stage and forgets them. */
   takeDirty: () => HashSet.HashSet<number>;
   tool: Tool;
+  /** Records one footstep of the fox on a footing. */
+  tread: (footing: Footing) => void;
   undo: () => void;
   /** The version of the edits the server holds, which the next batch builds on. */
   version: number;
@@ -196,6 +203,7 @@ export function createGameStore(setup: GameSetup) {
       book: false,
       choose: (slot) => set({ slot, tool: "place" }),
       dirty: HashSet.empty(),
+      footing: "grass",
       future: [],
       addCatch: (species) =>
         set((state) => ({
@@ -259,6 +267,8 @@ export function createGameStore(setup: GameSetup) {
           version: settled,
         })),
       slot: 0,
+      steps: 0,
+      tread: (footing) => set((state) => ({ footing, steps: state.steps + 1 })),
       takeDirty: () => {
         const { dirty } = get();
         set({ dirty: HashSet.empty() });

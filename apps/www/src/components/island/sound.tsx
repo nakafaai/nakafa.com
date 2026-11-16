@@ -3,6 +3,7 @@
 import { useRequired } from "@repo/design-system/hooks/required";
 import { Array as Arr, DateTime, Option } from "effect";
 import { type GameStoreApi, GameStoreContext } from "@/components/island/store";
+import { createTread } from "@/components/island/tread";
 import { callOf, voicesOf } from "@/lib/island/chorus";
 import { unitOf } from "@/lib/island/noise";
 import { fallOf, hourOf } from "@/lib/island/sky";
@@ -62,8 +63,9 @@ function bed(
  * The island's sound (ADR 0047, D8), synthesized in Web Audio with no file: a
  * wooden knock when a block is placed, a gritty crunch when one is dug, the sea
  * rolling under everything, a wind that rises with each gust, birds by day and
- * crickets by night (D37), rain when it rains, and thunder after a storm's
- * lightning, late by the distance it crossed. It starts at the learner's
+ * crickets by night (D37), rain when it rains, thunder after a storm's
+ * lightning, late by the distance it crossed, and the fox's footsteps on
+ * whatever it walks over (D40). It starts at the learner's
  * first press, as browsers ask, and follows the game's switch.
  */
 function startSound(store: GameStoreApi) {
@@ -71,6 +73,7 @@ function startSound(store: GameStoreApi) {
   const master = audio.createGain();
   master.connect(audio.destination);
   const noise = noiseOf(audio);
+  const tread = createTread(audio, noise, master);
   const sea = bed(audio, noise, "lowpass", 420, master);
   const rain = bed(audio, noise, "highpass", 2200, master);
   const swell = audio.createOscillator();
@@ -233,6 +236,9 @@ function startSound(store: GameStoreApi) {
   const unsubscribe = store.subscribe((state, previous) => {
     if (state.muted !== previous.muted || state.weather !== previous.weather) {
       settle();
+    }
+    if (state.steps > previous.steps && !state.muted) {
+      tread(state.footing);
     }
     if (state.pending.length > previous.pending.length && !state.muted) {
       Option.map(Arr.last(state.pending), (edit) =>
