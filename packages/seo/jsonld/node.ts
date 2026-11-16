@@ -65,6 +65,17 @@ const SurahInput = Schema.Struct({
   url: Schema.String,
 });
 
+const PracticeTestInput = Schema.Struct({
+  description: Schema.String,
+  /** The exam the set prepares for, such as SNBT 2027 UTBK. */
+  exam: Schema.String,
+  inLanguage: Schema.String,
+  name: Schema.String,
+  /** The time the set allows, the sum of its sections' limits. */
+  timeLimitSeconds: Schema.Finite,
+  url: Schema.String,
+});
+
 const ContributorsInput = Schema.Struct({
   description: Schema.String,
   inLanguage: Schema.String,
@@ -199,6 +210,31 @@ export function makeSurahNode(input: typeof SurahInput.Type) {
       name: input.bookName,
       url: input.bookUrl,
     },
+  };
+}
+
+/**
+ * One try-out set as a learning resource: a practice test for its exam, free to
+ * take, in the page's language, with the time its sections allow. It names no
+ * question and no answer, so the answer key never stands in the page's source,
+ * and Google shows no rich result for it; an answer service reads what it is.
+ *
+ * @see https://schema.org/LearningResource
+ */
+export function makePracticeTestNode(input: typeof PracticeTestInput.Type) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "LearningResource",
+    name: input.name,
+    description: input.description,
+    url: input.url,
+    inLanguage: input.inLanguage,
+    learningResourceType: "practice test",
+    educationalUse: "assessment",
+    isAccessibleForFree: true,
+    timeRequired: `PT${Math.round(input.timeLimitSeconds / 60)}M`,
+    about: { "@type": "Thing", name: input.exam },
+    provider: ORGANIZATION_REFERENCE,
   };
 }
 

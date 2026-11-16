@@ -8,6 +8,7 @@ import {
   makeEducationalOrganizationNode,
   makeFaqPageNode,
   makePlanNode,
+  makePracticeTestNode,
   makeSurahNode,
   makeWebsiteNode,
 } from "@repo/seo/jsonld/node";
@@ -257,6 +258,34 @@ describe("makeWebsiteNode", () => {
       },
       publisher: { "@id": ORGANIZATION_ID },
       url: COMPANY_IDENTITY.url,
+    });
+  });
+});
+
+describe("makePracticeTestNode", () => {
+  it("names a try-out set as a free practice test for its exam, with the time it allows and no answer", () => {
+    const node = makePracticeTestNode({
+      description: "Seven sections at the real exam's bar.",
+      exam: "SNBT 2027 UTBK",
+      inLanguage: "id",
+      name: "Try Out SNBT 2027 UTBK Set 1 Gratis",
+      timeLimitSeconds: 11_700,
+      url: "https://nakafa.com/id/try-out/indonesia/snbt/2027/utbk/set-1",
+    });
+
+    expect(node).toStrictEqual({
+      "@context": "https://schema.org",
+      "@type": "LearningResource",
+      about: { "@type": "Thing", name: "SNBT 2027 UTBK" },
+      description: "Seven sections at the real exam's bar.",
+      educationalUse: "assessment",
+      inLanguage: "id",
+      isAccessibleForFree: true,
+      learningResourceType: "practice test",
+      name: "Try Out SNBT 2027 UTBK Set 1 Gratis",
+      provider: { "@id": "https://nakafa.com/#organization" },
+      timeRequired: "PT195M",
+      url: "https://nakafa.com/id/try-out/indonesia/snbt/2027/utbk/set-1",
     });
   });
 });
