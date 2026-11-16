@@ -20,7 +20,13 @@ import { FLOWERS } from "@/lib/island/models/flowers";
 import { GREENS } from "@/lib/island/models/greens";
 import { PLANT_HEIGHTS } from "@/lib/island/models/heights";
 import { LENGTHS } from "@/lib/island/models/lengths";
-import { boundsOf, type Face, meters } from "@/lib/island/models/parts";
+import {
+  boundsOf,
+  type Face,
+  meters,
+  type Rig,
+  rigged,
+} from "@/lib/island/models/parts";
 import { primate } from "@/lib/island/models/primates";
 import { frog, lizard, snake } from "@/lib/island/models/reptiles";
 import { scaled, tint } from "@/lib/island/models/solids";
@@ -104,6 +110,21 @@ function measureOf(faces: readonly Face[], measure: (typeof MEASURES)[Family]) {
 }
 
 /**
+ * How a swimming family's whole body moves (ADR 0047, D48), from the bend
+ * share the research on fish swimming sets out: a fish sways in about one
+ * wavelength, its rear half doing most of the work; an eel or a snake bends
+ * along all of itself in a wavelength and a half; a ray beats its wide disc up
+ * and down from its middle. Families not named here move by their own parts,
+ * or not at all.
+ */
+const SWIMS: Partial<Record<Family, Rig>> = {
+  eel: { mode: "sway", phase: 0, pivot: 0, rate: 5, reach: 0.09, waves: 1.5 },
+  fish: { mode: "sway", phase: 0, pivot: 0, rate: 11, reach: 0.08, waves: 0.9 },
+  ray: { mode: "flap", phase: 0, pivot: 0.08, rate: 3.5, reach: 0.3, waves: 0 },
+  snake: { mode: "sway", phase: 0, pivot: 0, rate: 4, reach: 0.06, waves: 1.5 },
+};
+
+/**
  * One species of the catalog as a true 3D model at its real size, in blocks
  * (ADR 0047, D21 and D25), facing +z, standing on the origin (swimmers
  * centered on it). A farm animal is the herd's own model, so the world has one
@@ -117,7 +138,9 @@ export function speciesFaces(index: number): readonly Face[] {
   if (Schema.is(Stock)(species.key)) {
     return stockFaces(species.key);
   }
-  const unit = BUILDERS[species.family](species, coatOf(species));
+  const built = BUILDERS[species.family](species, coatOf(species));
+  const swim = SWIMS[species.family];
+  const unit = swim === undefined ? built : rigged(built, swim);
   const size = Option.match(HashMap.get(LENGTHS, species.key), {
     onNone: () => species.height,
     onSome: meters,

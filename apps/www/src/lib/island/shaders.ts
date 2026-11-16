@@ -302,7 +302,8 @@ void main() {
 /**
  * The body program (ADR 0047, D21): every true 3D model of one kind at once,
  * each body placed, turned to face its way and bobbing as it walks from its
- * own numbers. Faces are lit by the sun in the blocks' toon bands where the
+ * own numbers, its parts swimming, striding and flapping by the motion baked
+ * into its corners (D48). Faces are lit by the sun in the blocks' toon bands where the
  * shadow map lets it reach, and write their direction for the edge pass, so
  * every body is outlined as crisply as a house. Drawn from the sun's own view,
  * the same program casts each body's shadow into the shadow map (D43).
@@ -313,6 +314,7 @@ layout(location = 1) in vec3 aNormal;
 layout(location = 2) in vec3 aColor;
 layout(location = 3) in vec4 aPlace;
 layout(location = 4) in float aMove;
+layout(location = 5) in vec4 aRig;
 uniform mat4 uViewProjection;
 uniform float uTime;
 ${WIND_GLSL}
@@ -325,6 +327,14 @@ void main() {
   float c = cos(aPlace.w);
   float s = sin(aPlace.w);
   vec3 local = aPosition;
+  // The body's own motion (D48): a swim wave across or up and down it, a leg or an arm striding while it walks, a wing or a flipper flapping, each body a little out of step with its neighbours.
+  float beat = aRig.x * sin(uTime * aRig.z + aRig.y + aPlace.x * 1.7 + aPlace.z * 0.9);
+  float walking = step(0.001, aMove);
+  local += aRig.w < 0.5 ? vec3(0.0)
+    : aRig.w < 1.5 ? vec3(beat, 0.0, 0.0)
+    : aRig.w < 2.5 ? vec3(0.0, beat, 0.0)
+    : aRig.w < 3.5 ? vec3(0.0, 0.0, beat * walking)
+    : vec3(0.0, beat, 0.0);
   vec3 turned = vec3(local.x * c + local.z * s, local.y, -local.x * s + local.z * c);
   vec3 place = aPlace.xyz + turned;
   if (aMove < 0.0) {

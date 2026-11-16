@@ -1,7 +1,13 @@
 import { Array as Arr } from "effect";
 import type { Coat, Species } from "@/lib/island/models/coat";
 import { eyesOf } from "@/lib/island/models/features";
-import { type Face, mirrored, type Vec } from "@/lib/island/models/parts";
+import {
+  type Face,
+  mirrored,
+  type Rig,
+  rigged,
+  type Vec,
+} from "@/lib/island/models/parts";
 import { ball, type Ring, rod, slab, tube } from "@/lib/island/models/solids";
 
 /** How a fish's body departs from the common torpedo: taller, rounder, or with long fins. */
@@ -156,7 +162,29 @@ export function turtle(species: Species, coat: Coat): readonly Face[] {
           coat.accent
         )
       : rod([0.3, 0.12, z], [0.3, 0, z], [0.07, 0.06], coat.accent, 4);
-  const limbs = [...limb(0.22, 1), ...limb(-0.25, 0.5)];
+  // A sea turtle's flippers rise and fall from the shell's rim, the hind pair a quarter of a beat behind; a tortoise's legs stride (D48).
+  const motion = (phase: number): Rig =>
+    sea
+      ? {
+          mode: "flap",
+          phase,
+          pivot: 0.28,
+          rate: 3,
+          reach: 0.45,
+          waves: 0,
+        }
+      : {
+          mode: "stride",
+          phase,
+          pivot: 0.12,
+          rate: 4,
+          reach: 0.4,
+          waves: 0,
+        };
+  const limbs = [
+    ...rigged(limb(0.22, 1), motion(0)),
+    ...rigged(limb(-0.25, 0.5), motion(Math.PI / 2)),
+  ];
   return [
     ...ball([0, 0.13, 0], [0.33, 0.06, 0.4], coat.belly, 2, 8),
     ...ball([0, 0.17, 0], [0.36, 0.17, 0.42], coat.hide, 3, 8),

@@ -1,7 +1,12 @@
 // @vitest-environment node
 import { describe, expect, it } from "@effect/vitest";
 import { Array as Arr, HashMap, Option } from "effect";
-import { type Face, normalOf, type Vec } from "@/lib/island/models/parts";
+import {
+  type Face,
+  normalOf,
+  rigged,
+  type Vec,
+} from "@/lib/island/models/parts";
 import {
   ball,
   moved,
@@ -179,5 +184,38 @@ describe("island/models/solids", () => {
       normalOf(fin[0].corners)
     );
     expect(tint("roof", 0)).toEqual([0x7a / 255, 0x28 / 255, 0x28 / 255]);
+  });
+
+  it("carries a moving part's pivot with it when the part is grown or moved", () => {
+    const leg = rigged(
+      slab(
+        [
+          [0, 0, 0],
+          [0, 1, 0],
+          [0, 1, 1],
+        ],
+        0.1,
+        [1, 1, 1]
+      ),
+      {
+        mode: "stride",
+        phase: 0,
+        pivot: 1,
+        rate: 8,
+        reach: 0.4,
+        waves: 0,
+      }
+    );
+    expect(scaled(leg, 2)[0].rig?.pivot).toBe(2);
+    expect(moved(leg, [0, 3, 0])[0].rig?.pivot).toBe(4);
+    const wing = rigged(leg, {
+      mode: "flap",
+      phase: 0,
+      pivot: 1,
+      rate: 3,
+      reach: 0.4,
+      waves: 0,
+    });
+    expect(moved(wing, [0, 3, 0])[0].rig?.pivot).toBe(1);
   });
 });

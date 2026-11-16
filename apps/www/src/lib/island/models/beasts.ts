@@ -7,7 +7,12 @@ import {
   hornsOf,
   tailOf,
 } from "@/lib/island/models/features";
-import { type Face, mirrored, type Vec } from "@/lib/island/models/parts";
+import {
+  type Face,
+  mirrored,
+  rigged,
+  type Vec,
+} from "@/lib/island/models/parts";
 import { ball, type Ring, rod, slab, tube } from "@/lib/island/models/solids";
 
 const Size = Schema.Struct({
@@ -50,11 +55,16 @@ const PROFILE = [
   [1, 0.58],
 ] as const;
 
-/** One leg from the body down to the ground, its foot a hoof when the plan says so. */
+/**
+ * One leg from the body down to the ground, its foot a hoof when the plan
+ * says so, striding from the hip while the animal walks (D48): a hind leg a
+ * quarter of a cycle after the foreleg on its side, as a walking four-legged
+ * animal sets its feet down one at a time.
+ */
 function legOf(at: Vec, top: number, plan: Plan, coat: Coat) {
   const [x, , z] = at;
   const thick = plan.leg;
-  return tube(
+  const leg = tube(
     [
       { at: [x, top, z], high: thick * 1.25, wide: thick * 1.2 },
       { at: [x, top * 0.14, z], high: thick * 0.75, wide: thick * 0.75 },
@@ -63,6 +73,14 @@ function legOf(at: Vec, top: number, plan: Plan, coat: Coat) {
     (spot) => (plan.hoofs && spot.segment === 1 ? coat.dark : coat.leg),
     4
   );
+  return rigged(leg, {
+    mode: "stride",
+    phase: z > 0 ? 0 : Math.PI / 2,
+    pivot: top,
+    rate: 9,
+    reach: 0.4,
+    waves: 0,
+  });
 }
 
 /**

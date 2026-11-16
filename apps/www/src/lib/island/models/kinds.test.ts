@@ -9,7 +9,12 @@ import {
   modelKey,
 } from "@/lib/island/models/kinds";
 import { swimmerFaces } from "@/lib/island/models/ocean";
-import { boundsOf, flatten, meters } from "@/lib/island/models/parts";
+import {
+  boundsOf,
+  flatten,
+  MODEL_STRIDE,
+  meters,
+} from "@/lib/island/models/parts";
 import { SCALE } from "@/lib/island/scale";
 
 /** A body's measure in meters along one axis. */
@@ -44,7 +49,7 @@ describe("island/models/kinds", () => {
 
   it("draws every body as whole triangles", () => {
     for (const kind of BodyKind.literals) {
-      expect(flatten(bodyFaces(kind)).length % (3 * 9)).toBe(0);
+      expect(flatten(bodyFaces(kind)).length % (3 * MODEL_STRIDE)).toBe(0);
     }
   });
 

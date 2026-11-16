@@ -5,6 +5,7 @@ import {
   meters as m,
   mirrored,
   rgb,
+  rigged,
   tipped,
 } from "@/lib/island/models/parts";
 
@@ -116,21 +117,45 @@ function tailOf(kind: Folk, fur: number, chest: number) {
  * A person of the island at real scale, 1.8 m to the top of the head (two
  * blocks), standing on the origin and facing +z: legs in trousers, a shirt,
  * arms, a big friendly head with a muzzle, eyes and nose, and the folk's own
- * ears and tail. Cozy proportions: the head is a quarter of the height, so a
+ * ears and tail; the legs and arms swing in turn as the person walks (D48). Cozy proportions: the head is a quarter of the height, so a
  * face reads from the camera's distance.
  */
 export function folkFaces(kind: Folk): readonly Face[] {
   const look = LOOKS[kind];
   const fur = rgb(look.fur);
+  // A leg strides from the hip and the arm on its side swings from the shoulder the other way, as a person walks (D48).
+  const legs = rigged(
+    [
+      ...box(
+        [m(0.04), 0, m(-0.09)],
+        [m(0.17), m(0.62), m(0.09)],
+        rgb(look.legs)
+      ),
+      ...box([m(0.04), 0, m(-0.08)], [m(0.18), m(0.08), m(0.14)], INK),
+    ],
+    { mode: "stride", phase: 0, pivot: m(0.62), rate: 8, reach: 0.45, waves: 0 }
+  );
+  const arm = rigged(
+    [
+      ...box(
+        [m(0.26), m(0.7), m(-0.07)],
+        [m(0.36), m(1.14), m(0.07)],
+        rgb(look.shirt)
+      ),
+      ...box([m(0.26), m(0.6), m(-0.06)], [m(0.35), m(0.7), m(0.06)], fur),
+    ],
+    {
+      mode: "stride",
+      phase: Math.PI,
+      pivot: m(1.14),
+      rate: 8,
+      reach: 0.4,
+      waves: 0,
+    }
+  );
   const half = [
-    ...box([m(0.04), 0, m(-0.09)], [m(0.17), m(0.62), m(0.09)], rgb(look.legs)),
-    ...box([m(0.04), 0, m(-0.08)], [m(0.18), m(0.08), m(0.14)], INK),
-    ...box(
-      [m(0.26), m(0.7), m(-0.07)],
-      [m(0.36), m(1.14), m(0.07)],
-      rgb(look.shirt)
-    ),
-    ...box([m(0.26), m(0.6), m(-0.06)], [m(0.35), m(0.7), m(0.06)], fur),
+    ...legs,
+    ...arm,
     ...earOf(kind, look.fur, look.chest),
     ...box([m(0.07), m(1.4), m(0.235)], [m(0.13), m(1.48), m(0.245)], INK),
   ];
