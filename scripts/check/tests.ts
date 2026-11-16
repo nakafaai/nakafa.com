@@ -6,6 +6,7 @@ import {
   Path,
   String as Str,
 } from "effect";
+import { inspectHeaderActions } from "#scripts/check/actions";
 import { arrayFindings, isProjectConfig } from "#scripts/check/arrays";
 import { inspectButtonSource } from "#scripts/check/buttons";
 import { inspectChartSource } from "#scripts/check/charts";
@@ -153,6 +154,7 @@ const inspectSources = Effect.fn("RepositoryPolicy.inspectSources")(function* (
       ])
     ),
     inspectExports(parsed.modules, otherModules, unjudged),
+    inspectHeaderActions(parsed.modules),
     inspectTables(parsed.modules),
     yield* classFindings(parsed),
     inspectPoses(parsed.modules),
