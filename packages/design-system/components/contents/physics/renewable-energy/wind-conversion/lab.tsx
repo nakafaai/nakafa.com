@@ -4,6 +4,7 @@ import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { CameraControls } from "@repo/design-system/components/three/camera/controls";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene";
 import { ScienceStage } from "@repo/design-system/components/three/stage";
+import { SurfaceMaterial } from "@repo/design-system/components/three/surface/material";
 import { Slider } from "@repo/design-system/components/ui/slider";
 import {
   VisualCard,
@@ -15,14 +16,12 @@ import {
 } from "@repo/design-system/components/visual/card";
 import { VisualFact } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
-import { getColor } from "@repo/design-system/lib/color";
+import { MATERIAL } from "@repo/design-system/lib/material";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
-import { getThemeAppearance } from "@repo/design-system/lib/theme/registry";
-import { useTheme } from "@repo/design-system/providers/theme";
 import { Array as Arr } from "effect";
 import type { ReactNode, RefObject } from "react";
-import { Suspense, useMemo, useRef, useState } from "react";
-import type { Group } from "three";
+import { Suspense, useEffect, useMemo, useRef, useState } from "react";
+import { ExtrudeGeometry, type Group, Shape } from "three";
 
 const MIN_WIND_SPEED = 3;
 const MAX_WIND_SPEED = 12;
@@ -65,8 +64,7 @@ export function WindEnergyConversionLab({
   title,
 }: WindEnergyConversionLabProps) {
   const [windSpeed, setWindSpeed] = useState(DEFAULT_WIND_SPEED);
-  const resolvedTheme = useTheme((state) => state.resolvedTheme);
-  const colors = getWindSceneColors(resolvedTheme);
+  const colors = getWindSceneColors();
 
   function handleSpeedChange(nextValue: number) {
     setWindSpeed(nextValue);
@@ -157,7 +155,7 @@ function WindConversionScene({
           />
         ))}
       </group>
-      <WindTurbine colors={colors} rotorRef={rotorRef} />
+      <WindTurbine rotorRef={rotorRef} />
     </group>
   );
 }
@@ -232,68 +230,148 @@ function WindGust({
   );
 }
 
-function WindTurbine({
-  colors,
-  rotorRef,
-}: {
-  colors: ReturnType<typeof getWindSceneColors>;
-  rotorRef: RefObject<Group | null>;
-}) {
+/** The blade's chord from root to tip, as a share of its length and in scene units: widest a fifth of the way out, as a modern blade is. */
+const CHORD = [
+  [0, 0.05],
+  [0.08, 0.06],
+  [0.2, 0.11],
+  [0.45, 0.085],
+  [0.75, 0.055],
+  [1, 0.018],
+] as const;
+
+/** The blade's length from the hub's face to its tip, in scene units. */
+const BLADE = 1.02;
+
+/** The blade's planform: a straight leading edge and a trailing edge that follows the chord. */
+function bladeShape() {
+  const shape = new Shape();
+  shape.moveTo(0, 0);
+  Arr.forEach(CHORD, ([along]) => {
+    shape.lineTo(-0.015 * along, along * BLADE);
+  });
+  Arr.forEach(Arr.reverse(CHORD), ([along, chord]) => {
+    shape.lineTo(chord, along * BLADE);
+  });
+  shape.closePath();
+  return shape;
+}
+
+/** The tower's flanges, where its rolled sections are bolted together. */
+const FLANGES = [-0.05, 0.45, 0.9] as const;
+
+/**
+ * A three-bladed utility turbine of real proportions: a tapered white
+ * tubular tower with bolted flanges and a door at its foot on a concrete
+ * plinth, a streamlined nacelle with its cooler and anemometer mast, a
+ * pointed spinner, and blades with a real chord, widest near the root,
+ * pitched into the wind.
+ */
+function WindTurbine({ rotorRef }: { rotorRef: RefObject<Group | null> }) {
+  const blade = useMemo(
+    () =>
+      new ExtrudeGeometry(bladeShape(), {
+        bevelEnabled: true,
+        bevelSegments: 3,
+        bevelSize: 0.008,
+        bevelThickness: 0.008,
+        curveSegments: 4,
+        depth: 0.006,
+      }),
+    []
+  );
+  useEffect(() => () => blade.dispose(), [blade]);
+
   return (
     <group>
-      <mesh castShadow position={[0, 0.42, 0]}>
-        <cylinderGeometry args={[0.065, 0.12, 1.62, 36]} />
-        <meshStandardMaterial
-          color={colors.tower}
-          metalness={0.18}
-          roughness={0.42}
-        />
+      <mesh castShadow position={[0, 0.42, 0]} receiveShadow>
+        <cylinderGeometry args={[0.048, 0.075, 1.62, 40]} />
+        <SurfaceMaterial color={MATERIAL.turbineWhite} surface="paint" />
       </mesh>
-      <mesh castShadow position={[0, -0.42, 0]} receiveShadow>
-        <cylinderGeometry args={[0.24, 0.34, 0.18, 40]} />
-        <meshStandardMaterial color={colors.foundation} roughness={0.52} />
-      </mesh>
+      {Arr.map(FLANGES, (y) => (
+        <mesh key={y} position={[0, y, 0]} rotation={[Math.PI / 2, 0, 0]}>
+          <torusGeometry
+            args={[0.075 - ((y + 0.39) / 1.62) * 0.027, 0.004, 6, 40]}
+          />
+          <SurfaceMaterial color={MATERIAL.turbineWhite} surface="paint" />
+        </mesh>
+      ))}
       <RoundedBox
-        args={[0.74, 0.3, 0.38]}
-        castShadow
-        position={[0.3, 1.23, -0.02]}
-        radius={0.06}
-        smoothness={4}
+        args={[0.05, 0.11, 0.03]}
+        position={[0, -0.27, 0.067]}
+        radius={0.01}
+        smoothness={2}
       >
-        <meshStandardMaterial
-          color={colors.nacelle}
-          metalness={0.08}
-          roughness={0.38}
-        />
+        <SurfaceMaterial color={MATERIAL.hub} surface="paint" />
       </RoundedBox>
+      <mesh castShadow position={[0, -0.42, 0]} receiveShadow>
+        <cylinderGeometry args={[0.2, 0.24, 0.18, 48]} />
+        <SurfaceMaterial color={MATERIAL.concrete} surface="concrete" />
+      </mesh>
+
+      <group position={[0.2, 1.25, -0.02]}>
+        <mesh castShadow rotation={[0, 0, Math.PI / 2]}>
+          <capsuleGeometry args={[0.12, 0.5, 8, 24]} />
+          <SurfaceMaterial color={MATERIAL.turbineWhite} surface="paint" />
+        </mesh>
+        <RoundedBox
+          args={[0.2, 0.06, 0.16]}
+          castShadow
+          position={[0.2, 0.13, 0]}
+          radius={0.02}
+          smoothness={2}
+        >
+          <SurfaceMaterial color={MATERIAL.turbineWhite} surface="paint" />
+        </RoundedBox>
+        <mesh castShadow position={[0.32, 0.22, 0]}>
+          <cylinderGeometry args={[0.004, 0.004, 0.16, 6]} />
+          <SurfaceMaterial
+            color={MATERIAL.hub}
+            metalness={1}
+            surface="brushed"
+          />
+        </mesh>
+      </group>
       <mesh
         castShadow
-        position={[-0.03, 1.23, 0.16]}
+        position={[-0.02, 1.25, 0.12]}
         rotation={[Math.PI / 2, 0, 0]}
       >
-        <cylinderGeometry args={[0.06, 0.075, 0.22, 32]} />
-        <meshStandardMaterial
-          color={colors.hub}
-          metalness={0.16}
-          roughness={0.34}
-        />
+        <cylinderGeometry args={[0.07, 0.11, 0.14, 32]} />
+        <SurfaceMaterial color={MATERIAL.turbineWhite} surface="paint" />
       </mesh>
-      <group position={[-0.08, 1.23, 0.26]}>
+      <group position={[-0.08, 1.25, 0.26]}>
         <group ref={rotorRef}>
           {Arr.map([0, 1, 2], (bladeIndex) => (
-            <WindBlade
-              color={colors.blade}
+            <group
               key={bladeIndex}
-              rotation={(bladeIndex * Math.PI * 2) / 3}
-            />
+              rotation={[0, 0, (bladeIndex * Math.PI * 2) / 3]}
+            >
+              <mesh
+                castShadow
+                geometry={blade}
+                position={[0, 0.08, 0]}
+                rotation={[0, 0.18, 0]}
+              >
+                <SurfaceMaterial
+                  color={MATERIAL.turbineWhite}
+                  surface="plastic"
+                />
+              </mesh>
+              <mesh castShadow position={[0, 0.08, 0]}>
+                <cylinderGeometry args={[0.035, 0.04, 0.12, 18]} />
+                <SurfaceMaterial
+                  color={MATERIAL.turbineWhite}
+                  surface="plastic"
+                />
+              </mesh>
+            </group>
           ))}
-          <mesh castShadow>
-            <sphereGeometry args={[0.13, 32, 20]} />
-            <meshStandardMaterial
-              color={colors.hub}
-              metalness={0.18}
-              roughness={0.34}
+          <mesh castShadow rotation={[Math.PI / 2, 0, 0]} scale={[1, 1.5, 1]}>
+            <sphereGeometry
+              args={[0.1, 32, 20, 0, Math.PI * 2, 0, Math.PI / 2]}
             />
+            <SurfaceMaterial color={MATERIAL.turbineWhite} surface="plastic" />
           </mesh>
         </group>
       </group>
@@ -301,30 +379,6 @@ function WindTurbine({
   );
 }
 
-function WindBlade({ color, rotation }: { color: string; rotation: number }) {
-  return (
-    <group rotation={[0, 0, rotation]}>
-      <mesh castShadow position={[0, 0.52, 0]} scale={[0.54, 1, 0.16]}>
-        <cylinderGeometry args={[0.025, 0.08, 0.95, 18]} />
-        <meshStandardMaterial color={color} metalness={0.04} roughness={0.24} />
-      </mesh>
-      <mesh castShadow position={[0, 0.12, 0]}>
-        <cylinderGeometry args={[0.045, 0.058, 0.18, 18]} />
-        <meshStandardMaterial color={color} metalness={0.05} roughness={0.26} />
-      </mesh>
-    </group>
-  );
-}
-
-function getWindSceneColors(theme: string | undefined) {
-  const dark = getThemeAppearance(theme) === "dark";
-
-  return {
-    blade: dark ? getColor("GRAY", 200) : getColor("SLATE", 50),
-    foundation: dark ? getColor("SLATE", 600) : getColor("SLATE", 300),
-    hub: dark ? getColor("SLATE", 300) : PLOT_COLORS.slate,
-    nacelle: dark ? getColor("SLATE", 300) : getColor("SLATE", 200),
-    tower: dark ? getColor("SLATE", 300) : getColor("GRAY", 300),
-    wind: PLOT_COLORS.teal,
-  };
+function getWindSceneColors() {
+  return { wind: PLOT_COLORS.teal };
 }
