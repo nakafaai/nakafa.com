@@ -4,19 +4,26 @@ import { idOf } from "@repo/backend/confect/island/blocks";
 import { SPAN } from "@repo/backend/confect/island/world";
 import { Array as Arr, Option } from "effect";
 import { isleGround, islesOf } from "@/lib/island/isles";
-import { SHORE_FROM, SHORE_SIDE, shoreOf } from "@/lib/island/shore";
+import {
+  SHORE_FROM,
+  SHORE_REACH,
+  SHORE_SIDE,
+  shoreOf,
+} from "@/lib/island/shore";
 import { cellOf, emptyCells, SEA_LEVEL } from "@/lib/island/world";
 
-/** How near land the map says the world column (x, z) is. */
-function nearAt(map: Uint8Array, x: number, z: number) {
-  return map[(z - SHORE_FROM) * SHORE_SIDE + (x - SHORE_FROM)];
+/** How far the map says the nearest land is from the world column (x, z), in cells, to the byte's own step. */
+function farAt(map: Uint8Array, x: number, z: number) {
+  return (
+    (map[(z - SHORE_FROM) * SHORE_SIDE + (x - SHORE_FROM)] / 255) * SHORE_REACH
+  );
 }
 
 describe("island/shore", () => {
   it("covers the learner's island and every isle of the ring", () => {
-    // The surf reaches three cells out, and every stamp must stay inside the map.
-    expect(SHORE_FROM).toBeLessThan(-3);
-    expect(SHORE_FROM + SHORE_SIDE).toBeGreaterThan(SPAN + 3);
+    // The waves reach sixteen cells out, and the learner's island lies that far inside the map.
+    expect(SHORE_FROM).toBeLessThan(-SHORE_REACH);
+    expect(SHORE_FROM + SHORE_SIDE).toBeGreaterThan(SPAN + SHORE_REACH);
     for (const isle of islesOf(7)) {
       expect(isle.x - isle.radius * 1.2).toBeGreaterThan(SHORE_FROM + 4);
       expect(isle.x + isle.radius * 1.2).toBeLessThan(
@@ -29,16 +36,35 @@ describe("island/shore", () => {
     }
   });
 
-  it("is full on a column that fills the layer under the surface, fades over the water round it, and is empty in open sea", () => {
+  it("measures the true distance to the nearest land, from 0 on land to the reach and past it in open sea", () => {
     const cells = emptyCells();
     cells[cellOf(20, SEA_LEVEL - 1, 30)] = idOf("sand");
     const map = shoreOf(cells, 7, false);
     expect(map).toHaveLength(SHORE_SIDE * SHORE_SIDE);
-    expect(nearAt(map, 20, 30)).toBe(255);
-    expect(nearAt(map, 21, 30)).toBe(191);
-    expect(nearAt(map, 23, 30)).toBe(64);
-    expect(nearAt(map, 24, 30)).toBe(0);
-    expect(nearAt(map, 40, 40)).toBe(0);
+    const step = SHORE_REACH / 255;
+    expect(farAt(map, 20, 30)).toBe(0);
+    expect(farAt(map, 21, 30)).toBeCloseTo(1, 1);
+    expect(farAt(map, 23, 34)).toBeCloseTo(5, 1);
+    // Along a diagonal it is the straight line, not the steps along the grid.
+    expect(Math.abs(farAt(map, 26, 36) - Math.hypot(6, 6))).toBeLessThan(step);
+    expect(farAt(map, 20 + SHORE_REACH + 3, 30)).toBe(SHORE_REACH);
+    expect(farAt(map, 120, 120)).toBe(SHORE_REACH);
+  });
+
+  it("follows a bay: the water inside a cove lies nearer land than the open sea beside it", () => {
+    const cells = emptyCells();
+    // A U of sand opening south: the cove at (30, 30) lies two cells from its walls.
+    for (const x of [28, 32]) {
+      for (const z of [26, 27, 28, 29, 30, 31, 32]) {
+        cells[cellOf(x, SEA_LEVEL - 1, z)] = idOf("sand");
+      }
+    }
+    for (const x of [28, 29, 30, 31, 32]) {
+      cells[cellOf(x, SEA_LEVEL - 1, 26)] = idOf("sand");
+    }
+    const map = shoreOf(cells, 7, false);
+    expect(farAt(map, 30, 30)).toBeCloseTo(2, 1);
+    expect(farAt(map, 37, 30)).toBeCloseTo(5, 1);
   });
 
   it("takes water and a block under the surface for sea, not for land", () => {
@@ -48,18 +74,19 @@ describe("island/shore", () => {
     expect(
       Arr.every(
         Arr.fromIterable(shoreOf(cells, 7, false)),
-        (near) => near === 0
+        (far) => far === 255
       )
     ).toBe(true);
   });
 
-  it("keeps the nearness of land that reaches the map's own edge inside the map", () => {
+  it("marks land that reaches the world's own edge", () => {
     const cells = emptyCells();
     cells[cellOf(0, SEA_LEVEL - 1, 0)] = idOf("sand");
     cells[cellOf(SPAN - 1, SEA_LEVEL - 1, SPAN - 1)] = idOf("sand");
     const map = shoreOf(cells, 7, false);
-    expect(nearAt(map, 0, 0)).toBe(255);
-    expect(nearAt(map, SPAN - 1, SPAN - 1)).toBe(255);
+    expect(farAt(map, 0, 0)).toBe(0);
+    expect(farAt(map, SPAN - 1, SPAN - 1)).toBe(0);
+    expect(farAt(map, -1, 0)).toBeCloseTo(1, 1);
   });
 
   it("marks the dry ground of the ring's isles only when the ring is asked for", () => {
@@ -80,8 +107,8 @@ describe("island/shore", () => {
     const ringed = shoreOf(emptyCells(), 7, true);
     const alone = shoreOf(emptyCells(), 7, false);
     for (const [x, z] of dry) {
-      expect(nearAt(ringed, x, z)).toBe(255);
-      expect(nearAt(alone, x, z)).toBe(0);
+      expect(farAt(ringed, x, z)).toBe(0);
+      expect(farAt(alone, x, z)).toBe(SHORE_REACH);
     }
   });
 });
