@@ -10,6 +10,7 @@ import {
   keepPlacement,
   orderPlacements,
   placementHint,
+  readLeadSubject,
   readPlacementAlignments,
   readPlacementTrails,
 } from "@/lib/content/material/placement";
@@ -162,5 +163,35 @@ describe("lesson placement", () => {
 
     keepPlacement(store, Option.none());
     expect(store.getState().placement).toEqual(Option.none());
+  });
+});
+
+describe("lesson title", () => {
+  it("names the subject and level of the lead place, and none for a trail without a level or a lesson with no place", () => {
+    const leveled: MaterialPlacement = {
+      ...placeIn("merdeka"),
+      trail: [
+        {
+          label: "Kurikulum Merdeka",
+          publicPath: PublicPathSchema.make("kurikulum/merdeka"),
+        },
+        {
+          label: "Kelas 12",
+          publicPath: PublicPathSchema.make("kurikulum/merdeka/kelas-12"),
+        },
+        {
+          label: "Matematika",
+          publicPath: PublicPathSchema.make(
+            "kurikulum/merdeka/kelas-12/matematika"
+          ),
+        },
+      ],
+    };
+
+    expect(readLeadSubject([leveled, placeIn("cambridge")])).toStrictEqual(
+      Option.some("Matematika Kelas 12")
+    );
+    expect(readLeadSubject([placeIn("merdeka")])).toStrictEqual(Option.none());
+    expect(readLeadSubject([])).toStrictEqual(Option.none());
   });
 });
