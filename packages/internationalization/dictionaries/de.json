@@ -2364,7 +2364,8 @@
     "menu-view": "Ansicht",
     "menu-sort": "Sortieren",
     "save": "Speichern",
-    "menu-visual": "Visualisierung"
+    "menu-visual": "Visualisierung",
+    "resize": "Breite ändern"
   },
   "LearningPrograms": {
     "metadata-title": "Mit Nakafa lernen",
@@ -4074,9 +4075,6 @@
     "suggestion-summary": "Kernaussagen zusammenfassen",
     "suggestion-summary-prompt": "Fasse {title} zu den wichtigsten Gedanken zusammen, die ich mir merken sollte.",
     "new-chat": "Neuer Chat",
-    "resize": "Breite ändern",
-    "wider": "Breiter machen",
-    "narrower": "Schmaler machen",
     "sheet-description": "Frag Nina, die KI-Tutorin von Nakafa, zu dem, was du gerade lernst.",
     "chats": "Chats",
     "search-chats": "Chats durchsuchen...",

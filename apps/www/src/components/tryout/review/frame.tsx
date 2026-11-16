@@ -1,4 +1,5 @@
 import type { TryoutScoreResult } from "@repo/backend/confect/tryouts/score";
+import { ResizeEdge } from "@repo/design-system/components/ui/resizable";
 import { cn } from "cn";
 import { Array as Arr, type Option, Result } from "effect";
 import { type ComponentProps, type ReactNode, use, useState } from "react";
@@ -12,7 +13,6 @@ import { PlayerSidebar } from "@/components/player/navigator/sidebar";
 import { PlayerProvider } from "@/components/player/provider";
 import { PlayerViewSwitch } from "@/components/player/view";
 import { PaneHeader } from "@/components/shared/page/pane";
-import { PaneEdge } from "@/components/shared/page/panes/edge";
 import { paneSideVariants } from "@/components/shared/page/panes/side";
 import { joinTryoutBodies } from "@/components/tryout/content/body";
 import { TryoutContentContext } from "@/components/tryout/content/context";
@@ -144,7 +144,7 @@ export function TryoutFinishedPlace({ pending }: { pending: boolean }) {
       data-pane-side={finished ? "lg" : undefined}
       inert
     >
-      <PaneEdge resizer={STILL_EDGE} />
+      <ResizeEdge resizer={STILL_EDGE} />
       <PaneHeader
         description={t("finished-panel-description")}
         title={t("finished-panel")}
@@ -159,7 +159,7 @@ export function TryoutFinishedPlace({ pending }: { pending: boolean }) {
 }
 
 /** The edge a place draws, which no press moves: the pane that replaces it carries the live one. */
-const STILL_EDGE: ComponentProps<typeof PaneEdge>["resizer"] = {
+const STILL_EDGE: ComponentProps<typeof ResizeEdge>["resizer"] = {
   "aria-orientation": "vertical",
   "aria-valuemax": 768,
   "aria-valuemin": 320,

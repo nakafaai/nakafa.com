@@ -2364,7 +2364,8 @@
     "menu-view": "Paparan",
     "menu-sort": "Susun",
     "save": "Simpan",
-    "menu-visual": "Visual"
+    "menu-visual": "Visual",
+    "resize": "Tukar lebar"
   },
   "LearningPrograms": {
     "metadata-title": "Mula belajar dengan Nakafa",
@@ -4074,9 +4075,6 @@
     "suggestion-summary": "Dapatkan perkara utama",
     "suggestion-summary-prompt": "Ringkaskan {title} kepada idea utama yang perlu saya ingat.",
     "new-chat": "Sembang baharu",
-    "resize": "Tukar lebar",
-    "wider": "Lebarkan",
-    "narrower": "Sempitkan",
     "sheet-description": "Tanya Nina, tutor AI Nakafa, tentang apa yang sedang kamu pelajari.",
     "chats": "Sembang",
     "search-chats": "Cari sembang kamu...",

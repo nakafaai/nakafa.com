@@ -73,7 +73,7 @@ export function SchoolInvoicesCard({
         </CardSectionActions>
       </CardSectionFooter>
       <Sheet onOpenChange={setIsOpen} open={isOpen}>
-        <SheetContent className="w-full max-w-none sm:max-w-3xl">
+        <SheetContent className="w-full max-w-none" size="xl">
           <SheetHeader>
             <SheetTitle>{t("billing-invoices")}</SheetTitle>
             <SheetDescription>
