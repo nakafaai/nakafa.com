@@ -43,6 +43,7 @@ import {
   MutationCtx,
   MutationRunner,
 } from "@repo/backend/confect/_generated/services";
+import { prepareSnapshotStage } from "@repo/backend/confect/contentRelease/snapshot/prepare";
 import { encodeSnapshotJson } from "@repo/backend/confect/contentRelease/wire";
 import type {
   MutationCtx as ConvexMutationCtx,
@@ -247,20 +248,40 @@ export const stageProgramSnapshot = Effect.fn("TestProgram.stageSnapshot")(
         snapshotJson: data.manifestJson,
       }
     );
+    const stored = yield* Effect.promise(async () => ({
+      releaseJson:
+        (
+          await ctx.db
+            .query("contentReleases")
+            .withIndex("by_releaseId", (q) =>
+              q.eq("releaseId", TEST_RELEASE_ID)
+            )
+            .unique()
+        )?.releaseJson ?? "",
+      snapshotJson: data.manifestJson,
+    }));
     for (
       let firstIndex = 0, batchIndex = 0;
-      firstIndex < data.rowJson.length;
+      firstIndex < data.rows.length;
       firstIndex += batchSize, batchIndex += 1
     ) {
-      yield* mutate(
-        refs.internal.contentRelease.snapshot.batch.stageSnapshotBatch,
+      const rows = Arr.take(Arr.drop(data.rows, firstIndex), batchSize);
+      if (!Arr.isReadonlyArrayNonEmpty(rows)) {
+        return;
+      }
+      const args = yield* prepareSnapshotStage(
         {
           batchIndex,
           family: "program",
           releaseId: TEST_RELEASE_ID,
-          rowJson: Arr.take(Arr.drop(data.rowJson, firstIndex), batchSize),
+          rows,
           snapshotId: data.snapshotId,
-        }
+        },
+        stored
+      );
+      yield* mutate(
+        refs.internal.contentRelease.snapshot.batch.stageSnapshotBatch,
+        args
       );
     }
   }

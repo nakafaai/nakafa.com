@@ -21,7 +21,6 @@ import {
   PROGRAM_ANCESTOR_LIMIT,
   PROGRAM_RELATED_LIMIT,
 } from "@repo/backend/confect/contentRelease/program/limits";
-import { stageProgramRow } from "@repo/backend/confect/contentRelease/snapshot/program";
 import { Confect, confectLayer } from "@repo/backend/confect/test.setup";
 import { makeMaterialProjection } from "@repo/backend/test/content/material";
 import {
@@ -29,6 +28,7 @@ import {
   makeProgramSnapshotData,
   makeTechnicalProgram,
 } from "@repo/backend/test/program/snapshot";
+import { stageTestRow } from "@repo/backend/test/snapshot/stage";
 import { Array as Arr, Effect, Option } from "effect";
 
 const root = "curriculum/technical-program-1";
@@ -77,10 +77,10 @@ const stageRoutes = Effect.fn("program.model.test.stageRoutes")(function* (
         family: "program",
         record,
       } as const;
-      return stageProgramRow(
+      return stageTestRow(
         snapshotId,
         index + 100,
-        source.record,
+        source,
         canonicalizeContentSnapshotRow(source)
       );
     },

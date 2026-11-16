@@ -1,6 +1,5 @@
 import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
-import { stageProgramRow } from "@repo/backend/confect/contentRelease/snapshot/program";
 import { Confect, confectLayer } from "@repo/backend/confect/test.setup";
 import {
   testEmptyManifest,
@@ -9,6 +8,7 @@ import {
 import { makeRuntimeSource } from "@repo/backend/test/content/publication";
 import { testPublicationScope } from "@repo/backend/test/content/release";
 import { makeProgramSnapshotData } from "@repo/backend/test/program/snapshot";
+import { stageTestRow } from "@repo/backend/test/snapshot/stage";
 import { encodeJsonText } from "@repo/utilities/json";
 import { Effect, MutableHashMap } from "effect";
 
@@ -22,12 +22,7 @@ export const makeProgramRuntimeSource = Effect.fn(
     Effect.forEach(
       data.rows,
       (row, index) =>
-        stageProgramRow(
-          data.snapshotId,
-          index,
-          row.record,
-          encodeJsonText(row)
-        ),
+        stageTestRow(data.snapshotId, index, row, encodeJsonText(row)),
       { discard: true }
     )
   );

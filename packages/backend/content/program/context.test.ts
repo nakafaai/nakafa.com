@@ -18,7 +18,6 @@ import {
 } from "@nakafa/aksara-contracts/release/snapshot/data";
 import refs from "@repo/backend/confect/_generated/refs";
 import { QueryRunner } from "@repo/backend/confect/_generated/services";
-import { stageProgramRow } from "@repo/backend/confect/contentRelease/snapshot/program";
 import { Confect, confectLayer } from "@repo/backend/confect/test.setup";
 import { programLayer } from "@repo/backend/content/program/confect";
 import {
@@ -32,6 +31,7 @@ import {
   makeProgramSnapshotData,
   type ProgramSnapshotData,
 } from "@repo/backend/test/program/snapshot";
+import { stageTestRow } from "@repo/backend/test/snapshot/stage";
 import { Effect } from "effect";
 
 const PROGRAM_KEY = LearningProgramKeySchema.make("technical-program-1");
@@ -150,10 +150,10 @@ const stageRoutes = Effect.fn("test.stageProgramContextRoutes")(function* (
           record,
         } satisfies ContentSnapshotRow;
         const rowJson = canonicalizeContentSnapshotRow(source);
-        yield* stageProgramRow(
+        yield* stageTestRow(
           data.snapshotId,
           data.rowJson.length + offset,
-          source.record,
+          source,
           rowJson
         );
       }),

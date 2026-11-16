@@ -1,8 +1,8 @@
 import { mutationLayer } from "@confect/server/RegisteredConvexFunction";
 import { assert, describe, expect, it } from "@effect/vitest";
 import {
+  type ContentSnapshotRow,
   canonicalizeContentSnapshotRow,
-  contentSnapshotId,
 } from "@nakafa/aksara-contracts/release/snapshot/data";
 import {
   inheritContentSnapshots,
@@ -10,7 +10,6 @@ import {
 } from "@nakafa/aksara-contracts/release/snapshot/spec";
 import { MAX_SNAPSHOT_BATCH_COUNT } from "@nakafa/aksara-contracts/transport/limits";
 import confectSchema from "@repo/backend/confect/_generated/schema";
-import { stageProgramRow } from "@repo/backend/confect/contentRelease/snapshot/program";
 import { encodeSnapshotJson } from "@repo/backend/confect/contentRelease/wire";
 import { convexModules } from "@repo/backend/confect/test.setup";
 import schema from "@repo/backend/convex/schema";
@@ -21,7 +20,7 @@ import {
 import { insertTestRelease } from "@repo/backend/test/content/stage";
 import {
   makeProgramSnapshotData,
-  makeTechnicalProgram,
+  type ProgramSnapshotData,
   readProgramStage,
   stageProgramSnapshot,
 } from "@repo/backend/test/program/snapshot";
@@ -34,63 +33,90 @@ import {
   TEST_STAGE_SNAPSHOT,
   TEST_STAGE_SNAPSHOT_BATCH,
 } from "@repo/backend/test/snapshot/routes";
+import {
+  stageTestRow,
+  testSnapshotBatchArgs,
+} from "@repo/backend/test/snapshot/stage";
 import { convexTest } from "convex-test";
-import { Array as Arr, Effect, Struct } from "effect";
+import { Array as Arr, Effect, Result, Struct } from "effect";
+
+/** Stores the technical program release and its manifest, without rows. */
+const stageProgramManifest = Effect.fn("test.snapshotBatch.programManifest")(
+  function* (
+    data: ProgramSnapshotData,
+    options: Parameters<typeof insertTestRelease>[1] = {}
+  ) {
+    const t = convexTest(schema, convexModules);
+    yield* Effect.promise(() =>
+      t.mutation((ctx) =>
+        insertTestRelease(ctx, { ...options, snapshots: data.snapshots })
+      )
+    );
+    yield* Effect.promise(() =>
+      t.mutation(TEST_STAGE_SNAPSHOT, {
+        releaseId: TEST_RELEASE_ID,
+        snapshotJson: data.manifestJson,
+      })
+    );
+    return t;
+  }
+);
+
+/** Prepares one program batch against the manifests the deployment stores. */
+const programArgs = Effect.fn("test.snapshotBatch.programArgs")(function* (
+  t: Effect.Success<ReturnType<typeof stageProgramManifest>>,
+  data: ProgramSnapshotData,
+  batchIndex = 0,
+  rows: readonly ContentSnapshotRow[] = data.rows
+) {
+  if (!Arr.isReadonlyArrayNonEmpty(rows)) {
+    return yield* Effect.die(new Error("Expected program rows."));
+  }
+  return yield* testSnapshotBatchArgs(t, {
+    batchIndex,
+    family: "program",
+    releaseId: TEST_RELEASE_ID,
+    rows,
+    snapshotId: data.snapshotId,
+  });
+});
 
 describe("contentRelease/snapshot/batch", () => {
-  it.live.each(["manifest", "ledger"] as const)(
-    "rejects corrupted %s identity without changing staged rows or counters",
-    (corruption) =>
+  it.live(
+    "rejects a ledger row of another snapshot without changing staged rows or counters",
+    () =>
       Effect.gen(function* () {
         const runtimeServices = yield* Effect.context<never>();
         const data = yield* makeProgramSnapshotData();
-        const changed = yield* makeProgramSnapshotData([
-          makeTechnicalProgram(3),
-        ]);
-        yield* Effect.promise(async () => {
-          const t = convexTest(schema, convexModules);
-          await t.mutation((ctx) =>
+        const t = convexTest(schema, convexModules);
+        yield* Effect.promise(() =>
+          t.mutation((ctx) =>
             Effect.runPromiseWith(runtimeServices)(
               stageProgramSnapshot(data).pipe(
                 Effect.provide(mutationLayer(confectSchema, ctx))
               )
             )
-          );
-          await t.mutation(async (ctx) => {
-            if (corruption === "manifest") {
-              const snapshot = await ctx.db.query("contentSnapshots").unique();
-              assert(snapshot);
-              await ctx.db.patch(snapshot._id, {
-                snapshotJson: changed.manifestJson,
-              });
-            } else {
-              const batch = await ctx.db.query("snapshotBatches").unique();
-              assert(batch);
-              await ctx.db.patch(batch._id, {
-                snapshotId: changed.snapshotId,
-              });
-            }
-          });
-          const read = () => t.query(readProgramStage);
-          const before = await read();
-          await expect(
-            t.mutation(TEST_STAGE_SNAPSHOT_BATCH, {
-              batchIndex: 0,
-              family: "program",
-              releaseId: TEST_RELEASE_ID,
-              rowJson: data.rowJson,
-              snapshotId: data.snapshotId,
-            })
+          )
+        );
+        yield* Effect.promise(() =>
+          t.mutation(async (ctx) => {
+            const batch = await ctx.db.query("snapshotBatches").unique();
+            assert(batch);
+            await ctx.db.patch(batch._id, { snapshotId: TEST_DIGEST });
+          })
+        );
+        const args = yield* programArgs(t, data);
+        const before = yield* Effect.promise(() => t.query(readProgramStage));
+        yield* Effect.promise(() =>
+          expect(
+            t.mutation(TEST_STAGE_SNAPSHOT_BATCH, args)
           ).rejects.toMatchObject({
-            data: {
-              code:
-                corruption === "manifest"
-                  ? "CONTENT_RELEASE_INTEGRITY"
-                  : "CONTENT_RELEASE_CONFLICT",
-            },
-          });
-          expect(await read()).toEqual(before);
-        });
+            data: { code: "CONTENT_RELEASE_CONFLICT" },
+          })
+        );
+        expect(yield* Effect.promise(() => t.query(readProgramStage))).toEqual(
+          before
+        );
       })
   );
   it.live.each(["quran", "assessment"] as const)(
@@ -100,17 +126,19 @@ describe("contentRelease/snapshot/batch", () => {
         const assessment = yield* makeAssessmentTestSnapshot();
         const manifest =
           family === "quran" ? yield* makeQuranSnapshot() : assessment.manifest;
-        const snapshotId = contentSnapshotId(manifest);
-        const rows =
+        const snapshotId = manifest.manifest.snapshotId;
+        const rows: readonly ContentSnapshotRow[] =
           family === "quran"
             ? [yield* makeQuranSnapshotRow(snapshotId)]
             : Arr.take(assessment.rows, MAX_SNAPSHOT_BATCH_COUNT);
+        if (!Arr.isReadonlyArrayNonEmpty(rows)) {
+          return yield* Effect.die(new Error("Expected snapshot rows."));
+        }
         const t = convexTest(schema, convexModules);
         yield* Effect.promise(() =>
           t.mutation((ctx) =>
             insertTestRelease(ctx, {
               itemCount: 0,
-              upsertCount: 0,
               projectionCount: 0,
               routeCount: 0,
               snapshots: {
@@ -122,6 +150,7 @@ describe("contentRelease/snapshot/batch", () => {
                   rowDigest: TEST_DIGEST,
                 }),
               },
+              upsertCount: 0,
             })
           )
         );
@@ -131,35 +160,29 @@ describe("contentRelease/snapshot/batch", () => {
             snapshotJson: encodeSnapshotJson(manifest),
           })
         );
-        const args = {
+        const args = yield* testSnapshotBatchArgs(t, {
           batchIndex: 0,
           family,
           releaseId: TEST_RELEASE_ID,
-          rowJson: Arr.map(rows, canonicalizeContentSnapshotRow),
+          rows,
           snapshotId,
-        };
-        expect(
-          yield* Effect.promise(() =>
-            t.mutation(TEST_STAGE_SNAPSHOT_BATCH, args)
-          )
-        ).toMatchObject({
-          created: rows.length,
-          unchanged: 0,
         });
         expect(
           yield* Effect.promise(() =>
             t.mutation(TEST_STAGE_SNAPSHOT_BATCH, args)
           )
-        ).toMatchObject({
-          created: 0,
-          unchanged: rows.length,
-        });
+        ).toMatchObject({ created: rows.length, unchanged: 0 });
+        expect(
+          yield* Effect.promise(() =>
+            t.mutation(TEST_STAGE_SNAPSHOT_BATCH, args)
+          )
+        ).toMatchObject({ created: 0, unchanged: rows.length });
         const state = yield* Effect.promise(() =>
           t.query(async (ctx) => ({
+            assessmentRows: await ctx.db.query("assessmentRows").collect(),
             batches: await ctx.db.query("snapshotBatches").collect(),
             quranRows: await ctx.db.query("quranRows").collect(),
             quranSearch: await ctx.db.query("quranSearch").collect(),
-            assessmentRows: await ctx.db.query("assessmentRows").collect(),
             release: await ctx.db.query("contentReleases").unique(),
           }))
         );
@@ -180,29 +203,10 @@ describe("contentRelease/snapshot/batch", () => {
     (batchIndex) =>
       Effect.gen(function* () {
         const data = yield* makeProgramSnapshotData();
-        const t = convexTest(schema, convexModules);
+        const t = yield* stageProgramManifest(data);
+        const first = yield* programArgs(t, data, 0, Arr.take(data.rows, 1));
         yield* Effect.promise(() =>
-          t.mutation((ctx) =>
-            insertTestRelease(ctx, {
-              snapshots: data.snapshots,
-            })
-          )
-        );
-        yield* Effect.promise(() =>
-          t.mutation(TEST_STAGE_SNAPSHOT, {
-            releaseId: TEST_RELEASE_ID,
-            snapshotJson: data.manifestJson,
-          })
-        );
-        const args = {
-          batchIndex: 0,
-          family: "program" as const,
-          releaseId: TEST_RELEASE_ID,
-          rowJson: Arr.take(data.rowJson, 1),
-          snapshotId: data.snapshotId,
-        };
-        yield* Effect.promise(() =>
-          t.mutation(TEST_STAGE_SNAPSHOT_BATCH, args)
+          t.mutation(TEST_STAGE_SNAPSHOT_BATCH, first)
         );
         yield* Effect.promise(() =>
           t.mutation(async (ctx) => {
@@ -214,16 +218,17 @@ describe("contentRelease/snapshot/batch", () => {
             );
           })
         );
+        const args = yield* programArgs(
+          t,
+          data,
+          batchIndex,
+          Arr.take(data.rows, 1)
+        );
         yield* Effect.promise(() =>
           expect(
-            t.mutation(TEST_STAGE_SNAPSHOT_BATCH, {
-              ...args,
-              batchIndex,
-            })
+            t.mutation(TEST_STAGE_SNAPSHOT_BATCH, args)
           ).rejects.toMatchObject({
-            data: {
-              code: "CONTENT_RELEASE_INTEGRITY",
-            },
+            data: { code: "CONTENT_RELEASE_INTEGRITY" },
           })
         );
         const state = yield* Effect.promise(() =>
@@ -247,14 +252,14 @@ describe("contentRelease/snapshot/batch", () => {
         const data = yield* makeProgramSnapshotData();
         const t = convexTest(schema, convexModules);
         const first = data.rows[0];
-        assert(first && first.family === "program");
+        assert(first);
         yield* Effect.promise(() =>
           t.mutation((ctx) =>
             Effect.runPromiseWith(runtimeServices)(
-              stageProgramRow(
+              stageTestRow(
                 data.snapshotId,
                 0,
-                first.record,
+                first,
                 canonicalizeContentSnapshotRow(first)
               ).pipe(Effect.provide(mutationLayer(confectSchema, ctx)))
             )
@@ -269,22 +274,15 @@ describe("contentRelease/snapshot/batch", () => {
             )
           )
         );
+        const args = yield* programArgs(t, data);
         yield* Effect.promise(() =>
-          expect(
-            t.mutation(TEST_STAGE_SNAPSHOT_BATCH, {
-              batchIndex: 0,
-              family: "program",
-              releaseId: TEST_RELEASE_ID,
-              rowJson: data.rowJson,
-              snapshotId: data.snapshotId,
-            })
-          ).resolves.toEqual({
+          expect(t.mutation(TEST_STAGE_SNAPSHOT_BATCH, args)).resolves.toEqual({
             batchIndex: 0,
             created: 0,
             family: "program",
             releaseId: TEST_RELEASE_ID,
             snapshotId: data.snapshotId,
-            unchanged: data.rowJson.length,
+            unchanged: data.rows.length,
           })
         );
         const stored = yield* Effect.promise(() =>
@@ -299,199 +297,152 @@ describe("contentRelease/snapshot/batch", () => {
           data.rows,
           ({ record }) => record.kind === "program"
         ).length;
-        const curriculumCount = Arr.filter(
-          data.rows,
-          ({ record }) => record.kind === "curriculum"
-        ).length;
         expect(stored.batches).toHaveLength(1);
         expect(stored.programs).toHaveLength(programCount);
-        expect(stored.curriculum).toHaveLength(curriculumCount);
+        expect(stored.curriculum).toHaveLength(data.rows.length - programCount);
         expect(stored.release).toMatchObject({
           stagedSnapshotBatches: 1,
-          stagedSnapshotRows: data.rowJson.length,
+          stagedSnapshotRows: data.rows.length,
         });
       })
   );
-  it.live("requires the signed manifest and contiguous family batches", () =>
+  it.live("requires the stored manifest and contiguous family batches", () =>
     Effect.gen(function* () {
       const data = yield* makeProgramSnapshotData();
-      const missing = convexTest(schema, convexModules);
+      const missing = yield* stageProgramManifest(data);
+      const args = yield* programArgs(missing, data);
       yield* Effect.promise(() =>
-        missing.mutation((ctx) =>
-          insertTestRelease(ctx, {
-            snapshots: data.snapshots,
-          })
-        )
-      );
-      yield* Effect.promise(() =>
-        expect(
-          missing.mutation(TEST_STAGE_SNAPSHOT_BATCH, {
-            batchIndex: 0,
-            family: "program",
-            releaseId: TEST_RELEASE_ID,
-            rowJson: data.rowJson,
-            snapshotId: data.snapshotId,
-          })
-        ).rejects.toMatchObject({
-          data: {
-            code: "CONTENT_RELEASE_MISSING",
-          },
-        })
-      );
-      const gap = convexTest(schema, convexModules);
-      yield* Effect.promise(() =>
-        gap.mutation((ctx) =>
-          insertTestRelease(ctx, {
-            snapshots: data.snapshots,
-          })
-        )
-      );
-      yield* Effect.promise(() =>
-        gap.mutation(TEST_STAGE_SNAPSHOT, {
-          releaseId: TEST_RELEASE_ID,
-          snapshotJson: data.manifestJson,
+        missing.mutation(async (ctx) => {
+          const snapshot = await ctx.db.query("contentSnapshots").unique();
+          assert(snapshot);
+          await ctx.db.delete(snapshot._id);
         })
       );
       yield* Effect.promise(() =>
         expect(
-          gap.mutation(TEST_STAGE_SNAPSHOT_BATCH, {
-            batchIndex: 1,
-            family: "program",
-            releaseId: TEST_RELEASE_ID,
-            rowJson: data.rowJson,
-            snapshotId: data.snapshotId,
-          })
+          missing.mutation(TEST_STAGE_SNAPSHOT_BATCH, args)
         ).rejects.toMatchObject({
-          data: {
-            code: "CONTENT_RELEASE_CONFLICT",
-          },
+          data: { code: "CONTENT_RELEASE_MISSING" },
+        })
+      );
+      const gap = yield* stageProgramManifest(data);
+      const later = yield* programArgs(gap, data, 1);
+      yield* Effect.promise(() =>
+        expect(
+          gap.mutation(TEST_STAGE_SNAPSHOT_BATCH, later)
+        ).rejects.toMatchObject({
+          data: { code: "CONTENT_RELEASE_CONFLICT" },
         })
       );
     })
   );
-  it.live(
-    "rejects changed retries, count overflow, and cross-family rows",
-    () =>
+  it.live("rejects changed retries and batches beyond the signed counts", () =>
+    Effect.gen(function* () {
+      const data = yield* makeProgramSnapshotData();
+      const t = yield* stageProgramManifest(data);
+      const args = yield* programArgs(t, data);
+      yield* Effect.promise(() => t.mutation(TEST_STAGE_SNAPSHOT_BATCH, args));
+      const changed = yield* programArgs(t, data, 0, Arr.reverse(data.rows));
+      const overflow = yield* programArgs(t, data, 1, Arr.take(data.rows, 1));
+      yield* Effect.promise(() =>
+        expect(
+          t.mutation(TEST_STAGE_SNAPSHOT_BATCH, changed)
+        ).rejects.toMatchObject({
+          data: { code: "CONTENT_RELEASE_CONFLICT" },
+        })
+      );
+      yield* Effect.promise(() =>
+        expect(
+          t.mutation(TEST_STAGE_SNAPSHOT_BATCH, overflow)
+        ).rejects.toMatchObject({
+          data: { code: "CONTENT_RELEASE_INTEGRITY" },
+        })
+      );
+      const fresh = yield* stageProgramManifest(data);
+      const total = yield* programArgs(fresh, data);
+      yield* Effect.promise(() =>
+        expect(
+          fresh.mutation(TEST_STAGE_SNAPSHOT_BATCH, {
+            ...total,
+            totalRows: total.rows.length - 1,
+          })
+        ).rejects.toMatchObject({
+          data: { code: "CONTENT_RELEASE_INTEGRITY" },
+        })
+      );
+    })
+  );
+  it.live.each([{ status: "verifying" }, { abortingAt: 1 }] as const)(
+    "rejects rows once the release stops staging (%o)",
+    (options) =>
       Effect.gen(function* () {
-        const runtimeServices = yield* Effect.context<never>();
         const data = yield* makeProgramSnapshotData();
-        const [firstRow] = data.rowJson;
-        assert(firstRow, "Expected one program snapshot row.");
-        const changed = convexTest(schema, convexModules);
+        const t = yield* stageProgramManifest(data);
+        const args = yield* programArgs(t, data);
         yield* Effect.promise(() =>
-          changed.mutation((ctx) =>
-            Effect.runPromiseWith(runtimeServices)(
-              stageProgramSnapshot(data).pipe(
-                Effect.provide(mutationLayer(confectSchema, ctx))
-              )
-            )
-          )
-        );
-        yield* Effect.promise(() =>
-          expect(
-            changed.mutation(TEST_STAGE_SNAPSHOT_BATCH, {
-              batchIndex: 0,
-              family: "program",
-              releaseId: TEST_RELEASE_ID,
-              rowJson: Arr.reverse(data.rowJson),
-              snapshotId: data.snapshotId,
-            })
-          ).rejects.toMatchObject({
-            data: {
-              code: "CONTENT_RELEASE_CONFLICT",
-            },
+          t.mutation(async (ctx) => {
+            const release = await ctx.db.query("contentReleases").unique();
+            assert(release);
+            await ctx.db.patch(release._id, options);
           })
         );
         yield* Effect.promise(() =>
           expect(
-            changed.mutation(TEST_STAGE_SNAPSHOT_BATCH, {
-              batchIndex: 1,
-              family: "program",
-              releaseId: TEST_RELEASE_ID,
-              rowJson: [firstRow],
-              snapshotId: data.snapshotId,
-            })
+            t.mutation(TEST_STAGE_SNAPSHOT_BATCH, args)
           ).rejects.toMatchObject({
-            data: {
-              code: "CONTENT_RELEASE_INTEGRITY",
-            },
-          })
-        );
-        const wrongFamily = convexTest(schema, convexModules);
-        yield* Effect.promise(() =>
-          wrongFamily.mutation((ctx) =>
-            insertTestRelease(ctx, {
-              snapshots: data.snapshots,
-            })
-          )
-        );
-        yield* Effect.promise(() =>
-          expect(
-            wrongFamily.mutation(TEST_STAGE_SNAPSHOT_BATCH, {
-              batchIndex: 0,
-              family: "quran",
-              releaseId: TEST_RELEASE_ID,
-              rowJson: data.rowJson,
-              snapshotId: data.snapshotId,
-            })
-          ).rejects.toMatchObject({
-            data: {
-              code: "CONTENT_RELEASE_INTEGRITY",
-            },
+            data: { code: "CONTENT_RELEASE_STATE" },
           })
         );
       })
   );
-  it.live("rejects empty batches and releases that stopped staging", () =>
+  it.live("rejects rows prepared against another signed manifest", () =>
     Effect.gen(function* () {
       const data = yield* makeProgramSnapshotData();
-      const empty = convexTest(schema, convexModules);
-      yield* Effect.promise(() =>
-        empty.mutation((ctx) =>
-          insertTestRelease(ctx, {
-            snapshots: data.snapshots,
-          })
-        )
-      );
+      const t = yield* stageProgramManifest(data);
+      const args = yield* programArgs(t, data);
       yield* Effect.promise(() =>
         expect(
-          empty.mutation(TEST_STAGE_SNAPSHOT_BATCH, {
-            batchIndex: 0,
-            family: "program",
-            releaseId: TEST_RELEASE_ID,
-            rowJson: [],
-            snapshotId: data.snapshotId,
+          t.mutation(TEST_STAGE_SNAPSHOT_BATCH, {
+            ...args,
+            manifestHash: TEST_DIGEST,
           })
         ).rejects.toMatchObject({
-          data: {
-            code: "CONTENT_RELEASE_LIMIT",
-          },
+          data: { code: "CONTENT_RELEASE_STATE" },
         })
       );
-      const closed = convexTest(schema, convexModules);
-      yield* Effect.promise(() =>
-        closed.mutation((ctx) =>
-          insertTestRelease(ctx, {
-            snapshots: data.snapshots,
-            status: "verifying",
-          })
+      expect(
+        yield* Effect.promise(() =>
+          t.run((ctx) => ctx.db.query("snapshotBatches").collect())
         )
-      );
-      yield* Effect.promise(() =>
-        expect(
-          closed.mutation(TEST_STAGE_SNAPSHOT_BATCH, {
-            batchIndex: 0,
-            family: "program",
-            releaseId: TEST_RELEASE_ID,
-            rowJson: data.rowJson,
-            snapshotId: data.snapshotId,
-          })
-        ).rejects.toMatchObject({
-          data: {
-            code: "CONTENT_RELEASE_STATE",
-          },
-        })
-      );
+      ).toEqual([]);
     })
+  );
+  it.live(
+    "stores prepared rows without decoding them, so a row slow to decode costs the mutation nothing",
+    () =>
+      Effect.gen(function* () {
+        const data = yield* makeProgramSnapshotData();
+        const t = yield* stageProgramManifest(data);
+        const args = yield* programArgs(t, data);
+        const rows = Arr.filterMap(args.rows, (row) =>
+          row.kind === "program"
+            ? Result.succeed({
+                document: { ...row.document, rowJson: "not a signed row" },
+                kind: row.kind,
+              })
+            : Result.failVoid
+        );
+        expect(
+          yield* Effect.promise(() =>
+            t.mutation(TEST_STAGE_SNAPSHOT_BATCH, { ...args, rows })
+          )
+        ).toMatchObject({ created: rows.length, unchanged: 0 });
+        const stored = yield* Effect.promise(() =>
+          t.run((ctx) => ctx.db.query("programCatalog").collect())
+        );
+        expect(Arr.map(stored, ({ rowJson }) => rowJson)).toEqual(
+          Arr.map(rows, () => "not a signed row")
+        );
+      })
   );
 });

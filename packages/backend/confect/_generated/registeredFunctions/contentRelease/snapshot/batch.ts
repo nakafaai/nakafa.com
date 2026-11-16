@@ -7,5 +7,6 @@ const forward = <Ctx, Args, Returns>(handler: (ctx: Ctx, args: Args) => Promise<
 const definitions = ConvexFunctionDefinitions.buildForGroup<typeof import("../../../../contentRelease/snapshot/batch.spec")["default"]>(databaseSchema, groupLayer);
 
 export default {
+["context"]: RegisteredConvexFunction.register({ ...definitions["context"], handler: forward(definitions["context"].handler) }),
 ["stageSnapshotBatch"]: RegisteredConvexFunction.register({ ...definitions["stageSnapshotBatch"], handler: forward(definitions["stageSnapshotBatch"].handler) }),
 } as RegisteredFunctions.RegisteredFunctionsForGroupSpec<typeof import("../../../../contentRelease/snapshot/batch.spec")["default"]>;
