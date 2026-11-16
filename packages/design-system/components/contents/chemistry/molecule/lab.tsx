@@ -44,6 +44,9 @@ import { Array as Arr, Option, Schema } from "effect";
 import { type ReactNode, Suspense, useState } from "react";
 import { useFormatter } from "use-intl";
 
+/** How far under its lowest atom the floor a molecule casts its shadow on lies. */
+const FLOOR_GAP = 0.4;
+
 /** The words a molecule lab reads from its lesson. */
 interface MoleculeLabels {
   /** The readout of the atoms in the molecule. */
@@ -154,6 +157,7 @@ export function MoleculeShapeLab({
         render={<section />}
       >
         <ScienceStage
+          floor={-moleculeReach(molecule, style) - FLOOR_GAP}
           reach={moleculeReach(molecule, style) + 1}
           setting="studio"
         >

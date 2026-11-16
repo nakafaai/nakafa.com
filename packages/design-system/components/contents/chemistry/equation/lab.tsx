@@ -14,6 +14,7 @@ import { layoutReaction } from "@repo/design-system/components/contents/chemistr
 import {
   type ReactionLayout,
   ReactionScene,
+  reactionFloor,
 } from "@repo/design-system/components/contents/chemistry/equation/scene";
 import {
   ReactionProvider,
@@ -147,31 +148,29 @@ function ReactionCard({
       <VisualCardHeader description={description} title={title} />
 
       <VisualCardToolbar>
+        {offered.length > 1 ? (
+          <ToggleGroup
+            aria-label={labels.choose}
+            gridColumns={toggleColumns(offered.length)}
+            onValueChange={choose}
+            type="single"
+            value={shown}
+            variant="outline"
+          >
+            {Arr.map(offered, (each) => (
+              <ToggleGroupItem
+                aria-label={each.name}
+                key={each.id}
+                value={each.id}
+              >
+                {each.tab}
+              </ToggleGroupItem>
+            ))}
+          </ToggleGroup>
+        ) : null}
         <div className="flex w-full flex-col gap-3">
-          {offered.length > 1 ? (
-            <ToggleGroup
-              aria-label={labels.choose}
-              gridColumns={toggleColumns(offered.length)}
-              onValueChange={choose}
-              type="single"
-              value={shown}
-              variant="outline"
-            >
-              {Arr.map(offered, (each) => (
-                <ToggleGroupItem
-                  aria-label={each.name}
-                  key={each.id}
-                  value={each.id}
-                >
-                  {each.tab}
-                </ToggleGroupItem>
-              ))}
-            </ToggleGroup>
-          ) : null}
-          <div className="flex flex-col gap-3">
-            <span className="text-sm">{labels.progress}</span>
-            <ReactionSlider label={labels.progress} />
-          </div>
+          <span className="text-sm">{labels.progress}</span>
+          <ReactionSlider label={labels.progress} />
         </div>
       </VisualCardToolbar>
 
@@ -180,7 +179,11 @@ function ReactionCard({
         className={threeSceneFrameVariants()}
         render={<section />}
       >
-        <ScienceStage reach={layout.span / 2 + 1} setting="studio">
+        <ScienceStage
+          floor={reactionFloor(layout)}
+          reach={layout.span / 2 + 1}
+          setting="studio"
+        >
           <Suspense>
             <ReactionCamera layout={layout} />
             <ReactionScene

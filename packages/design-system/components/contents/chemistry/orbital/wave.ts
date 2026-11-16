@@ -1,4 +1,4 @@
-import { Array as Arr, Schema } from "effect";
+import { Array as Arr, Order, Schema } from "effect";
 
 /**
  * The orbitals of the hydrogen atom an orbital lab can draw. Each is a real
@@ -146,4 +146,42 @@ export function sampleCloud(id: OrbitalId, candidates: number) {
       ? [{ phase: point.wave < 0 ? -1 : 1, position: point.position }]
       : []
   );
+}
+
+/**
+ * The wave function on an evenly spaced cube of `resolution` points a side
+ * across the orbital's reach, x fastest, then y, then z, the order and spacing
+ * of a marching-cubes field: point `i` of an axis stands at
+ * `-reach + i * 2 * reach / resolution`.
+ */
+export function waveGrid(id: OrbitalId, resolution: number) {
+  const reach = orbitalReach(id);
+  const step = (2 * reach) / resolution;
+  const at = (index: number) => -reach + index * step;
+  return Arr.makeBy(resolution ** 3, (index) =>
+    waveAt(
+      id,
+      at(index % resolution),
+      at(Math.floor(index / resolution) % resolution),
+      at(Math.floor(index / resolution ** 2))
+    )
+  );
+}
+
+/**
+ * The density |psi|^2 on the surface that holds `share` of the electron's
+ * probability, the boundary surface chemistry books draw an orbital with:
+ * the densest grid points are summed until they hold that share, and the
+ * last one's density is the surface's level. The running sums only grow, so
+ * the sums still short of the share count the points before that one.
+ */
+export function boundaryDensity(wave: readonly number[], share: number) {
+  const densities = Arr.sort(
+    Arr.map(wave, (value) => value * value),
+    Order.flip(Order.Number)
+  );
+  const total = Arr.reduce(densities, 0, (sum, density) => sum + density);
+  const held = Arr.scan(densities, 0, (sum, density) => sum + density);
+  const short = Arr.filter(held, (sum) => sum < share * total).length;
+  return Arr.getUnsafe(densities, Math.max(0, short - 1));
 }

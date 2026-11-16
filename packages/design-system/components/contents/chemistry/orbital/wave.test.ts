@@ -1,13 +1,15 @@
 import { describe, expect, it } from "@effect/vitest";
 import {
+  boundaryDensity,
   halton,
   orbitalNumbers,
   orbitalReach,
   radialNodes,
   sampleCloud,
   waveAt,
+  waveGrid,
 } from "@repo/design-system/components/contents/chemistry/orbital/wave";
-import { Array as Arr } from "effect";
+import { Array as Arr, Option } from "effect";
 
 describe("orbital wave functions", () => {
   it("counts the radial nodes of each orbital as n - l - 1", () => {
@@ -57,5 +59,27 @@ describe("orbital wave functions", () => {
     const lobes = sampleCloud("2pz", 4000);
     expect(Arr.some(lobes, (point) => point.phase === -1)).toBe(true);
     expect(Arr.some(lobes, (point) => point.phase === 1)).toBe(true);
+  });
+
+  it("draws the 1s boundary surface where 90% of the electron's probability lies inside", () => {
+    const level = boundaryDensity(waveGrid("1s", 40), 0.9);
+    const outward = Arr.findFirst(
+      Arr.makeBy(400, (step) => step / 100),
+      (r) => {
+        const wave = waveAt("1s", r, 0, 0);
+        return wave * wave < level;
+      }
+    );
+    // The 90% radius of hydrogen's 1s orbital is 2.66 Bohr radii; the grid's
+    // cube holds a little more than the sphere of its reach, so the surface
+    // falls just inside that radius.
+    expect(Option.getOrThrow(outward)).toBeGreaterThan(2.3);
+    expect(Option.getOrThrow(outward)).toBeLessThan(2.8);
+  });
+
+  it("finds the level of the densest share of a field", () => {
+    expect(boundaryDensity([3, -2, 1, 0], 0.5)).toBe(9);
+    expect(boundaryDensity([3, -2, 1, 0], 0.9)).toBe(4);
+    expect(boundaryDensity([0, 0], 0.9)).toBe(0);
   });
 });

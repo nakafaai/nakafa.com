@@ -18,17 +18,21 @@ import { type Group, Matrix4, type Mesh, Vector3 } from "three";
 /** How a molecule is drawn: atoms on sticks, or atoms at their true size. */
 export type ModelStyle = "ball" | "fill";
 
-/** The part of its van der Waals radius an atom keeps in each style. */
-const ATOM_SCALE = { ball: 0.22, fill: 1 } as const satisfies Record<
+/**
+ * The part of its van der Waals radius an atom keeps in each style: a quarter
+ * on sticks, as PyMOL's ball-and-stick preset draws it, and the whole radius
+ * when the atoms fill their space.
+ */
+const ATOM_SCALE = { ball: 0.25, fill: 1 } as const satisfies Record<
   ModelStyle,
   number
 >;
 
-/** The radius of one stick of a bond, in scene units. */
-const STICK = 0.085;
+/** The radius of one stick of a bond, 10 pm, as PyMOL's ball-and-stick preset draws it. */
+const STICK = 0.1;
 
-/** How far apart the sticks of a double or triple bond stand. */
-const STICK_GAP = 0.2;
+/** How far apart the sticks of a double or triple bond stand, 25 pm. */
+const STICK_GAP = 0.25;
 
 /** An atom's drawn radius in scene units. */
 export function atomRadius(element: ElementSymbol, style: ModelStyle) {
@@ -94,7 +98,11 @@ export function placeBond(group: Group, [from, to]: BondEnds) {
   group.scale.set(1, span, 1);
 }
 
-/** One glossy atom, drawn the way a polished model-kit ball reflects a room. */
+/**
+ * One atom, drawn as molecular software renders it: a smooth sphere in its
+ * CPK color with a soft specular highlight, whose contacts the stage's
+ * ambient occlusion darkens.
+ */
 export function AtomBall({
   element,
   opacity = 1,
@@ -114,13 +122,13 @@ export function AtomBall({
     <mesh castShadow position={position} ref={ref ?? null} scale={radius}>
       <sphereGeometry args={[1, 48, 32]} />
       <meshPhysicalMaterial
-        clearcoat={0.8}
-        clearcoatRoughness={0.14}
+        clearcoat={0.5}
+        clearcoatRoughness={0.12}
         color={ELEMENTS[element].color}
         depthWrite={opacity === 1}
         metalness={0}
         opacity={opacity}
-        roughness={0.34}
+        roughness={0.3}
         transparent={opacity < 1}
       />
     </mesh>
@@ -130,7 +138,7 @@ export function AtomBall({
 /**
  * One bond as sticks in a unit group that `placeBond` stands between its
  * atoms: each stick is two halves, each in the color of the atom it meets,
- * as a model kit's sticks are drawn in chemistry books. A moving bond takes
+ * as molecular software and chemistry books draw them. A moving bond takes
  * the `ref` its scene places every frame; a bond that never moves names its
  * `ends` and is stood between them once, as the faint outline of a molecule
  * before or after a reaction.
@@ -163,14 +171,15 @@ export function BondSticks({
         <group key={offset} position={[offset, 0, 0]}>
           {Arr.map([0, 1] as const, (half) => (
             <mesh castShadow key={half} position={[0, 0.25 + half * 0.5, 0]}>
-              <cylinderGeometry args={[STICK, STICK, 0.5, 20, 1]} />
+              <cylinderGeometry args={[STICK, STICK, 0.5, 24, 1]} />
               <meshPhysicalMaterial
-                clearcoat={0.6}
-                clearcoatRoughness={0.2}
+                clearcoat={0.5}
+                clearcoatRoughness={0.12}
                 color={ELEMENTS[elements[half]].color}
                 depthWrite={opacity === 1}
+                metalness={0}
                 opacity={opacity}
-                roughness={0.4}
+                roughness={0.3}
                 transparent={opacity < 1}
               />
             </mesh>

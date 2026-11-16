@@ -1,5 +1,4 @@
-import { getColor } from "@repo/design-system/lib/color";
-import { PLOT_COLORS } from "@repo/design-system/lib/plot";
+import { MATERIAL } from "@repo/design-system/lib/material";
 import { Schema } from "effect";
 
 /**
@@ -48,168 +47,168 @@ const ElementPropertiesSchema = Schema.Struct({
 type ElementProperties = typeof ElementPropertiesSchema.Type;
 
 /**
- * Every element's model color, radii, and relative atomic mass. Carbon is
- * graphite and hydrogen white, as in a teaching model kit; the other elements
- * take the plot palette the chemistry labs share (oxygen teal, nitrogen
- * violet), which keeps red, green, and blue for the axes.
+ * Every element's model color, radii, and relative atomic mass. The colors are
+ * the CPK convention as Jmol draws it (hydrogen white, carbon grey, oxygen red,
+ * nitrogen blue, chlorine green), so a molecule or a crystal looks as it does
+ * in a chemistry book's renders and in molecular software.
  */
 export const ELEMENTS = {
   H: {
-    color: getColor("ZINC", 100),
+    color: MATERIAL.cpkHydrogen,
     covalent: 31,
     mass: 1,
     number: 1,
     radius: 120,
   },
   He: {
-    color: getColor("SLATE", 200),
+    color: MATERIAL.cpkHelium,
     covalent: 28,
     mass: 4,
     number: 2,
     radius: 140,
   },
   Li: {
-    color: getColor("STONE", 600),
+    color: MATERIAL.cpkLithium,
     covalent: 128,
     mass: 7,
     number: 3,
     radius: 182,
   },
   C: {
-    color: getColor("NEUTRAL", 800),
+    color: MATERIAL.cpkCarbon,
     covalent: 76,
     mass: 12,
     number: 6,
     radius: 170,
   },
   N: {
-    color: PLOT_COLORS.violet,
+    color: MATERIAL.cpkNitrogen,
     covalent: 71,
     mass: 14,
     number: 7,
     radius: 155,
   },
   O: {
-    color: PLOT_COLORS.teal,
+    color: MATERIAL.cpkOxygen,
     covalent: 66,
     mass: 16,
     number: 8,
     radius: 152,
   },
   F: {
-    color: PLOT_COLORS.pink,
+    color: MATERIAL.cpkFluorine,
     covalent: 57,
     mass: 19,
     number: 9,
     radius: 147,
   },
   Ne: {
-    color: getColor("SLATE", 300),
+    color: MATERIAL.cpkNeon,
     covalent: 58,
     mass: 20,
     number: 10,
     radius: 154,
   },
   Na: {
-    color: PLOT_COLORS.fuchsia,
+    color: MATERIAL.cpkSodium,
     covalent: 166,
     mass: 23,
     number: 11,
     radius: 227,
   },
   Mg: {
-    color: getColor("GRAY", 300),
+    color: MATERIAL.cpkMagnesium,
     covalent: 141,
     mass: 24,
     number: 12,
     radius: 173,
   },
   Al: {
-    color: getColor("SLATE", 400),
+    color: MATERIAL.cpkAluminium,
     covalent: 121,
     mass: 27,
     number: 13,
     radius: 184,
   },
   S: {
-    color: PLOT_COLORS.amber,
+    color: MATERIAL.cpkSulfur,
     covalent: 105,
     mass: 32,
     number: 16,
     radius: 180,
   },
   Cl: {
-    color: PLOT_COLORS.orange,
+    color: MATERIAL.cpkChlorine,
     covalent: 102,
     mass: 35.5,
     number: 17,
     radius: 175,
   },
   Ar: {
-    color: getColor("SLATE", 400),
+    color: MATERIAL.cpkArgon,
     covalent: 106,
     mass: 40,
     number: 18,
     radius: 188,
   },
   K: {
-    color: PLOT_COLORS.pink,
+    color: MATERIAL.cpkPotassium,
     covalent: 203,
     mass: 39,
     number: 19,
     radius: 275,
   },
   Ca: {
-    color: getColor("NEUTRAL", 300),
+    color: MATERIAL.cpkCalcium,
     covalent: 176,
     mass: 40,
     number: 20,
     radius: 231,
   },
   Fe: {
-    color: getColor("STONE", 600),
+    color: MATERIAL.cpkIron,
     covalent: 132,
     mass: 56,
     number: 26,
     radius: 204,
   },
   Cu: {
-    color: PLOT_COLORS.orange,
+    color: MATERIAL.cpkCopper,
     covalent: 132,
     mass: 63.5,
     number: 29,
     radius: 140,
   },
   Zn: {
-    color: getColor("SLATE", 600),
+    color: MATERIAL.cpkZinc,
     covalent: 122,
     mass: 65,
     number: 30,
     radius: 139,
   },
   Br: {
-    color: PLOT_COLORS.pink,
+    color: MATERIAL.cpkBromine,
     covalent: 120,
     mass: 80,
     number: 35,
     radius: 185,
   },
   Sr: {
-    color: getColor("GRAY", 300),
+    color: MATERIAL.cpkStrontium,
     covalent: 195,
     mass: 88,
     number: 38,
     radius: 249,
   },
   Ag: {
-    color: getColor("SLATE", 200),
+    color: MATERIAL.cpkSilver,
     covalent: 145,
     mass: 108,
     number: 47,
     radius: 172,
   },
   Ba: {
-    color: getColor("GRAY", 700),
+    color: MATERIAL.cpkBarium,
     covalent: 215,
     mass: 137,
     number: 56,
