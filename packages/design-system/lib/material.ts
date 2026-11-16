@@ -314,6 +314,13 @@ export const MATERIAL = {
   tmvCoat: "#a6b287",
   viralEnvelope: "#d2ab82",
 
+  // Rhizopus mould on tempeh.
+  bananaLeaf: "#4f6a3a",
+  enzyme: "#d9b45a",
+  hypha: "#f4f1e9",
+  sporangium: "#33302d",
+  sporangiumYoung: "#e6e0d0",
+
   // A coast, a reef tank and a meadow floor.
   coralBleached: "#f4f1ea",
   coralHealthy: "#6e6437",
@@ -328,6 +335,7 @@ export const MATERIAL = {
   owlWing: "#c49a5a",
   owlWingTip: "#8f6e45",
   soybean: "#e9d6a4",
+  soybeanEdge: "#c8ab70",
   soybeanFace: "#f3e6c2",
   seawater: "#2f6f7e",
   seawaterDeep: "#1d4c5c",

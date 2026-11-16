@@ -1,8 +1,6 @@
 import { Line } from "@react-three/drei";
 import type { BiologyScenePoint } from "@repo/design-system/components/contents/biology/data";
 import { Array as Arr } from "effect";
-import { useMemo } from "react";
-import { CatmullRomCurve3, Vector3 } from "three";
 
 const NUCLEIC_ACID_STEP_COUNT = 36;
 const NUCLEIC_ACID_BASE_PAIR_COUNT = 12;
@@ -102,43 +100,6 @@ export function DnaDoubleHelix({
         radius={markerRadius}
       />
     </group>
-  );
-}
-
-/**
- * Builds connected organic curves as real geometry when a line would look like
- * an unfinished sketch.
- */
-export function BiologyTube({
-  color,
-  opacity = 1,
-  points,
-  radius,
-  segments = 32,
-}: {
-  color: string;
-  opacity?: number;
-  points: readonly BiologyScenePoint[];
-  radius: number;
-  segments?: number;
-}) {
-  const curve = useMemo(
-    () =>
-      new CatmullRomCurve3(Arr.map(points, (point) => new Vector3(...point))),
-    [points]
-  );
-
-  return (
-    <mesh>
-      <tubeGeometry args={[curve, segments, radius, 8, false]} />
-      <meshStandardMaterial
-        color={color}
-        depthWrite={opacity >= 1}
-        opacity={opacity}
-        roughness={0.78}
-        transparent={opacity < 1}
-      />
-    </mesh>
   );
 }
 

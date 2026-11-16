@@ -1,15 +1,31 @@
 import { BiologyCallouts } from "@repo/design-system/components/contents/biology/callouts";
-import { useBiologyColors } from "@repo/design-system/components/contents/biology/context";
-import type { BiologyScenePoint } from "@repo/design-system/components/contents/biology/data";
+import {
+  Instances,
+  type Placement,
+} from "@repo/design-system/components/contents/biology/instances";
 import {
   BiologyLabFrame,
   type BiologyLabProps,
   type BiologySceneProps,
 } from "@repo/design-system/components/contents/biology/lab";
 import { FloatingGroup } from "@repo/design-system/components/contents/biology/motion";
-import { BiologyTube } from "@repo/design-system/components/contents/biology/parts";
+import {
+  BEANS,
+  type Branch,
+  myceliumOf,
+  rhizoidsOf,
+  surfaceAt,
+  TRAY,
+} from "@repo/design-system/components/contents/biology/mould/mycelium";
+import { useBumpySphere } from "@repo/design-system/components/contents/biology/surface";
+import { spikeAnchor } from "@repo/design-system/components/contents/biology/virus/binding";
+import { hashUnit } from "@repo/design-system/components/contents/simulation/grain";
 import type { NarrowCameraPose } from "@repo/design-system/lib/geometry/camera";
+import { MATERIAL } from "@repo/design-system/lib/material";
 import { Array as Arr } from "effect";
+import { useEffect, useMemo } from "react";
+import { CatmullRomCurve3, TubeGeometry, Vector3 } from "three";
+import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 
 const FUNGI_VIEW = {
   cameraPosition: [2.25, 1.7, 3.05],
@@ -17,96 +33,61 @@ const FUNGI_VIEW = {
   narrowCameraPosition: [2.78, 2.1, 3.85],
 } satisfies NarrowCameraPose;
 
-const AERIAL_HYPHA_POINTS = [
-  [0.16, 0.02, 0],
-  [0.18, 0.34, 0.04],
-  [0.1, 0.68, 0.14],
-  [0.18, 0.96, 0.2],
-] satisfies BiologyScenePoint[];
-
-const HYPHA_PATHS = [
+/**
+ * The sporangiophores rising from the mycelium: where each stands, how tall
+ * it grows, how it leans, and whether its sporangium has ripened black.
+ */
+const STALKS = Arr.map(
   [
-    "main",
-    [
-      [-1.34, -0.02, 0.05],
-      [-0.9, 0.02, 0.02],
-      [-0.45, 0.04, 0.08],
-      [0.05, 0.02, 0],
-      [0.5, 0.05, -0.08],
-      [1.1, 0.02, -0.02],
-    ],
-  ],
-  [
-    "front",
-    [
-      [-0.5, 0.04, 0.08],
-      [-0.66, 0.13, 0.48],
-      [-0.92, 0.19, 0.8],
-    ],
-  ],
-  [
-    "back",
-    [
-      [0.1, 0.02, 0],
-      [-0.04, 0.12, -0.4],
-      [-0.3, 0.18, -0.72],
-    ],
-  ],
-  [
-    "right",
-    [
-      [0.48, 0.05, -0.08],
-      [0.72, 0.16, 0.26],
-      [1.1, 0.24, 0.5],
-    ],
-  ],
-  ["aerial", AERIAL_HYPHA_POINTS],
-] satisfies readonly [string, readonly BiologyScenePoint[]][];
+    { height: 0.96, lean: 0.06, ripe: true, x: 0.16, z: 0.12 },
+    { height: 0.74, lean: -0.08, ripe: true, x: -0.2, z: -0.04 },
+    { height: 0.8, lean: 0.1, ripe: true, x: 0.62, z: -0.34 },
+    { height: 0.56, lean: -0.04, ripe: false, x: 0.02, z: 0.34 },
+  ] as const,
+  (stalk, index) => {
+    const foot = [stalk.x, surfaceAt(stalk.x, stalk.z), stalk.z] as const;
+    const top = [
+      stalk.x + stalk.lean,
+      foot[1] + stalk.height,
+      stalk.z + stalk.lean * 0.5,
+    ] as const;
+    return { foot, index, ripe: stalk.ripe, top };
+  }
+);
 
-const SUBSTRATE_GRAINS = [
-  { id: "soy-1", position: [-1.05, -0.22, -0.32], scale: [0.36, 0.18, 0.28] },
-  { id: "soy-2", position: [-0.58, -0.24, 0.28], scale: [0.34, 0.17, 0.3] },
-  { id: "soy-3", position: [-0.12, -0.25, -0.18], scale: [0.42, 0.16, 0.27] },
-  { id: "soy-4", position: [0.36, -0.22, 0.24], scale: [0.38, 0.18, 0.26] },
-  { id: "soy-5", position: [0.86, -0.24, -0.2], scale: [0.34, 0.16, 0.3] },
-] as const;
+/** The main sporangium, which the spore label points at. */
+const MAIN = STALKS[0]?.top ?? [0, 1, 0];
 
-const SEPTA_POINTS = [
-  [-0.78, 0.03, 0.04],
-  [-0.18, 0.04, 0.05],
-  [0.42, 0.04, -0.06],
-  [0.17, 0.58, 0.1],
-] satisfies BiologyScenePoint[];
-
-const SPORE_POINTS = [
-  [0, 1.12, 0.18],
-  [0.16, 1.18, 0.28],
-  [0.32, 1.08, 0.18],
-  [0.2, 1, 0.04],
-  [0.04, 1.04, 0.36],
-] satisfies BiologyScenePoint[];
+/** The sporangium's radius: about 100 µm across on a stalk about 1 mm tall. */
+const SPORANGIUM = 0.075;
 
 const CALLOUT_TARGETS = [
   {
     fontSize: "marker",
     id: "hypha",
     labelPosition: [-1.18, 0.48, 0.56],
-    target: [-0.76, 0.04, 0.04],
+    target: [-0.76, surfaceAt(-0.76, 0.04) + 0.012, 0.04],
   },
   {
     fontSize: "marker",
     id: "spore",
-    labelPosition: [0.58, 1.36, 0.52],
-    target: [0.16, 1.18, 0.28],
+    labelPosition: [0.62, 1.1, 0.52],
+    target: [MAIN[0], MAIN[1] + SPORANGIUM, MAIN[2]],
   },
   {
     fontSize: "marker",
     id: "enzyme",
     labelPosition: [-0.78, 0.22, -0.6],
-    target: [-0.36, -0.08, -0.18],
+    target: [-0.36, surfaceAt(-0.36, -0.18) + 0.01, -0.18],
   },
 ] as const;
 
+/**
+ * Shows Rhizopus growing on split soybeans as tempeh is made: a white,
+ * coenocytic mycelium spreading over the beans and bridging the gaps, a film
+ * of digestive enzyme where its hyphae press on a bean, and sporangiophores
+ * standing up on rhizoid tufts, each crowned with a sporangium full of spores.
+ */
 export function FungiMyceliumLab(props: BiologyLabProps) {
   return (
     <BiologyLabFrame scene={FungiMyceliumScene} view={FUNGI_VIEW} {...props} />
@@ -114,71 +95,51 @@ export function FungiMyceliumLab(props: BiologyLabProps) {
 }
 
 function FungiMyceliumScene({ item }: BiologySceneProps) {
-  const colors = useBiologyColors();
-
   return (
     <group rotation={[-0.1, -0.34, 0.04]} scale={1.25}>
-      <Substrate color={colors.grain} />
-      <EnzymeDroplets color={colors.decomposer} />
-      <HyphaNetwork coreColor={colors.decomposer} wallColor={colors.skyLight} />
-      <SporeHead color={colors.spore} stemColor={colors.decomposer} />
+      <Beans />
+      <Mycelium />
+      <Enzymes />
+      <Sporangiophores />
       <BiologyCallouts callouts={item.callouts} targets={CALLOUT_TARGETS} />
     </group>
   );
 }
 
-function Substrate({ color }: { color: string }) {
+/** Split cooked soybeans on a banana leaf, as tempeh is wrapped: each cotyledon a low, waxy dome, its surface never quite smooth. */
+function Beans() {
+  const dome = useBumpySphere(1, 3, 0.04);
   return (
     <group>
-      {Arr.map(SUBSTRATE_GRAINS, (grain) => (
-        <mesh key={grain.id} position={grain.position} scale={grain.scale}>
-          <sphereGeometry args={[1, 28, 18]} />
-          <meshStandardMaterial color={color} roughness={0.92} />
-        </mesh>
-      ))}
-    </group>
-  );
-}
-
-function HyphaNetwork({
-  coreColor,
-  wallColor,
-}: {
-  coreColor: string;
-  wallColor: string;
-}) {
-  return (
-    <group>
-      {Arr.map(HYPHA_PATHS, ([id, points]) => (
-        <group key={id}>
-          <BiologyTube
-            color={wallColor}
-            opacity={0.84}
-            points={points}
-            radius={0.05}
-            segments={42}
-          />
-          <BiologyTube
-            color={coreColor}
-            opacity={0.9}
-            points={points}
-            radius={0.026}
-            segments={42}
-          />
-        </group>
-      ))}
-      {Arr.map(SEPTA_POINTS, (point) => (
+      <mesh
+        position={[0, TRAY, 0]}
+        receiveShadow
+        rotation={[-Math.PI / 2, 0, 0]}
+        scale={[1.5, 1.05, 1]}
+      >
+        <circleGeometry args={[1, 72]} />
+        <meshPhysicalMaterial
+          clearcoat={0.6}
+          clearcoatRoughness={0.3}
+          color={MATERIAL.bananaLeaf}
+          roughness={0.5}
+        />
+      </mesh>
+      {Arr.map(BEANS, (bean) => (
         <mesh
-          key={Arr.join(Arr.map(point, String), "-")}
-          position={point}
-          scale={[1, 0.34, 1]}
+          castShadow
+          geometry={dome}
+          key={`${bean.x},${bean.z}`}
+          position={[bean.x, TRAY, bean.z]}
+          receiveShadow
+          rotation={[0, -bean.turn, 0]}
+          scale={[bean.length, bean.height, bean.width]}
         >
-          <sphereGeometry args={[0.052, 14, 10]} />
-          <meshStandardMaterial
-            color={wallColor}
-            opacity={0.78}
-            roughness={0.7}
-            transparent
+          <meshPhysicalMaterial
+            clearcoat={0.25}
+            clearcoatRoughness={0.6}
+            color={MATERIAL.soybean}
+            roughness={0.62}
           />
         </mesh>
       ))}
@@ -186,54 +147,165 @@ function HyphaNetwork({
   );
 }
 
-const ENZYME_DROPLETS = [
-  [-0.46, -0.09, -0.22],
-  [-0.36, -0.08, -0.18],
-  [-0.22, -0.08, -0.12],
-  [0.04, -0.08, 0.16],
-  [0.22, -0.08, 0.22],
-] satisfies BiologyScenePoint[];
-
-function EnzymeDroplets({ color }: { color: string }) {
-  return (
-    <group>
-      {Arr.map(ENZYME_DROPLETS, (position) => (
-        <mesh
-          key={Arr.join(Arr.map(position, String), "-")}
-          position={position}
-        >
-          <sphereGeometry args={[0.026, 12, 8]} />
-          <meshStandardMaterial
-            color={color}
-            emissive={color}
-            emissiveIntensity={0.18}
-            roughness={0.54}
-          />
-        </mesh>
-      ))}
-    </group>
+/** Tubes along centre lines, merged into one geometry so the whole web costs a single draw call. */
+function useTubes(paths: readonly Branch[]) {
+  const geometry = useMemo(
+    () =>
+      mergeGeometries(
+        Arr.map(
+          paths,
+          ({ points, radius }) =>
+            new TubeGeometry(
+              new CatmullRomCurve3(
+                Arr.map(points, (point) => new Vector3(...point))
+              ),
+              points.length * 4,
+              radius,
+              5,
+              false
+            )
+        )
+      ),
+    [paths]
   );
+  useEffect(() => () => geometry.dispose(), [geometry]);
+  return geometry;
 }
 
-function SporeHead({ color, stemColor }: { color: string; stemColor: string }) {
+/** The mycelium: some 300 branching hyphae from fourteen germinated spores. */
+function Mycelium() {
+  const paths = useMemo(() => myceliumOf(14, 3, 5), []);
+  const web = useTubes(paths);
   return (
-    <group>
-      <BiologyTube
-        color={stemColor}
-        opacity={0.92}
-        points={AERIAL_HYPHA_POINTS}
-        radius={0.025}
-        segments={38}
+    <mesh castShadow geometry={web} receiveShadow>
+      <meshPhysicalMaterial
+        clearcoat={0.4}
+        clearcoatRoughness={0.4}
+        color={MATERIAL.hypha}
+        roughness={0.45}
       />
-      {Arr.map(SPORE_POINTS, (point, index) => (
-        <FloatingGroup
-          key={Arr.join(Arr.map(point, String), "-")}
-          phase={index * 0.44}
-          travel={0.035}
-        >
-          <mesh position={point}>
-            <sphereGeometry args={[0.072, 18, 12]} />
-            <meshStandardMaterial color={color} roughness={0.68} />
+    </mesh>
+  );
+}
+
+/**
+ * The enzymes the hyphae pour onto a bean: a glistening film of tiny
+ * droplets where the bean is being digested outside the fungus.
+ */
+function Enzymes() {
+  const drops = useMemo(
+    () =>
+      Arr.map(Arr.range(0, 59), (index) => {
+        const x = -0.36 + (hashUnit(index, 3) - 0.5) * 0.3;
+        const z = -0.18 + (hashUnit(index, 4) - 0.5) * 0.24;
+        const size = 0.01 + hashUnit(index, 5) * 0.014;
+        return {
+          position: [x, surfaceAt(x, z) + size * 0.4, z] as const,
+          scale: [size, size * 0.6, size] as const,
+        };
+      }),
+    []
+  );
+  return (
+    <Instances placements={drops}>
+      <sphereGeometry args={[1, 12, 8]} />
+      <meshPhysicalMaterial
+        clearcoat={1}
+        clearcoatRoughness={0.05}
+        color={MATERIAL.enzyme}
+        opacity={0.75}
+        roughness={0.1}
+        transparent
+      />
+    </Instances>
+  );
+}
+
+/** Spores packed on a sporangium's surface, as grains on its wall. */
+const GRAINS = Arr.map(Arr.range(0, 89), (index) => spikeAnchor(index, 90));
+
+/**
+ * The sporangiophores: unbranched stalks standing on tufts of rhizoids, each
+ * crowned with a round sporangium, black and grainy with spores once ripe,
+ * and a few spores drifting from the tallest.
+ */
+function Sporangiophores() {
+  const paths = useMemo(
+    () => [
+      ...Arr.map(STALKS, ({ foot, top }) => ({
+        points: [
+          foot,
+          [
+            (foot[0] * 2 + top[0]) / 3,
+            foot[1] + (top[1] - foot[1]) * 0.35,
+            (foot[2] * 2 + top[2]) / 3,
+          ] as const,
+          top,
+        ],
+        radius: 0.012,
+      })),
+      ...Arr.flatMap(STALKS, ({ foot, index }) =>
+        Arr.map(rhizoidsOf(foot, 6, index), (points) => ({
+          points,
+          radius: 0.006,
+        }))
+      ),
+    ],
+    []
+  );
+  const stalks = useTubes(paths);
+  const sporangium = useBumpySphere(SPORANGIUM, 7, 0.06);
+  const grains = useMemo(() => {
+    const ripe = Arr.filter(STALKS, (stalk) => stalk.ripe);
+    return Arr.flatten(
+      Arr.map(ripe, ({ top }) =>
+        Arr.map(
+          GRAINS,
+          (direction): Placement => ({
+            position: [
+              top[0] + direction[0] * SPORANGIUM,
+              top[1] + direction[1] * SPORANGIUM,
+              top[2] + direction[2] * SPORANGIUM,
+            ],
+          })
+        )
+      )
+    );
+  }, []);
+  return (
+    <group>
+      <mesh castShadow geometry={stalks}>
+        <meshPhysicalMaterial
+          clearcoat={0.4}
+          color={MATERIAL.hypha}
+          roughness={0.45}
+        />
+      </mesh>
+      {Arr.map(STALKS, ({ index, ripe, top }) => (
+        <mesh castShadow geometry={sporangium} key={index} position={top}>
+          <meshPhysicalMaterial
+            clearcoat={0.3}
+            color={ripe ? MATERIAL.sporangium : MATERIAL.sporangiumYoung}
+            roughness={0.7}
+          />
+        </mesh>
+      ))}
+      <Instances placements={grains}>
+        <icosahedronGeometry args={[0.009, 0]} />
+        <meshStandardMaterial color={MATERIAL.sporangium} roughness={0.8} />
+      </Instances>
+      {Arr.map(Arr.range(0, 4), (index) => (
+        <FloatingGroup key={index} phase={index * 0.44} travel={0.035}>
+          <mesh
+            position={[
+              MAIN[0] + 0.12 + index * 0.05,
+              MAIN[1] - 0.04 + hashUnit(index, 9) * 0.12,
+              MAIN[2] + (hashUnit(index, 8) - 0.5) * 0.2,
+            ]}
+            scale={[1, 0.8, 1]}
+          >
+            <sphereGeometry args={[0.012, 10, 8]} />
+            <meshStandardMaterial color={MATERIAL.sporangium} roughness={0.8} />
           </mesh>
         </FloatingGroup>
       ))}

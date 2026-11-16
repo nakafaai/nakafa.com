@@ -22,7 +22,6 @@ import {
 import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { P5Sketch } from "@repo/design-system/components/visual/sketch";
-import { getColor } from "@repo/design-system/lib/color";
 import { MATERIAL } from "@repo/design-system/lib/material";
 import { Array as Arr, Schema } from "effect";
 import type p5 from "p5";
@@ -210,19 +209,12 @@ function trayProgram(sketch: p5, read: () => Tray) {
     const x = (mm: number) => sketch.width / 2 + mm * scale;
     const y = (mm: number) => sketch.height / 2 + mm * scale;
 
-    sketch.background(MATERIAL.leafLitterDark);
+    sketch.background(MATERIAL.bananaLeaf);
+    drawVeins(sketch);
     drawBeans(sketch, x, y, scale);
-    sketch.stroke(getColor("SLATE", 50));
-    sketch.strokeWeight(Math.max(0.6, scale * 0.06));
-    sketch.noFill();
-    sketch.beginShape(sketch.LINES);
-    Arr.forEach(segments, ([x0, y0, x1, y1]) => {
-      sketch.vertex(x(x0), y(y0));
-      sketch.vertex(x(x1), y(y1));
-    });
-    sketch.endShape();
-    const felt = sketch.color(getColor("SLATE", 50));
-    felt.setAlpha(170 * coverOf(segments, COVER_CELLS) ** 2);
+    drawHyphae(sketch, segments, x, y, scale);
+    const felt = sketch.color(MATERIAL.hypha);
+    felt.setAlpha(150 * coverOf(segments, COVER_CELLS) ** 2);
     sketch.noStroke();
     sketch.fill(felt);
     sketch.rect(x(-TEMPEH.size / 2), y(-TEMPEH.size / 2), size, size);
@@ -233,6 +225,63 @@ function trayProgram(sketch: p5, read: () => Tray) {
       tray.report(rounded);
     }
   };
+}
+
+/** The 2D context the sketch draws with, for the gradients, shadows and blur p5 does not name. */
+function contextOf(sketch: p5) {
+  const context = sketch.drawingContext;
+  return context instanceof CanvasRenderingContext2D ? context : undefined;
+}
+
+/** The banana leaf the beans ferment on: fine parallel veins running across it. */
+function drawVeins(sketch: p5) {
+  const vein = sketch.color(MATERIAL.leafLitterDark);
+  vein.setAlpha(40);
+  sketch.stroke(vein);
+  sketch.strokeWeight(1);
+  const gap = Math.max(6, sketch.width / 90);
+  Arr.forEach(
+    Arr.range(0, Math.ceil((sketch.width + sketch.height) / gap)),
+    (line) => {
+      const start = line * gap - sketch.height;
+      sketch.line(start, sketch.height, start + sketch.height * 0.5, 0);
+    }
+  );
+}
+
+/**
+ * The hyphae laid so far: a soft, blurred halo of cottony threads under the
+ * crisp white threads themselves, as aerial mycelium looks under a lens.
+ */
+function drawHyphae(
+  sketch: p5,
+  segments: readonly Segment[],
+  x: (mm: number) => number,
+  y: (mm: number) => number,
+  scale: number
+) {
+  const context = contextOf(sketch);
+  const trace = (weight: number, alpha: number) => {
+    const thread = sketch.color(MATERIAL.hypha);
+    thread.setAlpha(alpha);
+    sketch.stroke(thread);
+    sketch.strokeWeight(weight);
+    sketch.noFill();
+    sketch.beginShape(sketch.LINES);
+    Arr.forEach(segments, ([x0, y0, x1, y1]) => {
+      sketch.vertex(x(x0), y(y0));
+      sketch.vertex(x(x1), y(y1));
+    });
+    sketch.endShape();
+  };
+  if (context !== undefined) {
+    context.filter = `blur(${Math.max(1, scale * 0.3)}px)`;
+  }
+  trace(Math.max(2, scale * 0.4), 70);
+  if (context !== undefined) {
+    context.filter = "none";
+  }
+  trace(Math.max(0.5, scale * 0.05), 230);
 }
 
 /**
@@ -263,15 +312,40 @@ function drawBeans(
     sketch.push();
     sketch.translate(x(cx), y(cy));
     sketch.rotate((hashUnit(bean, 3) - 0.5) * 0.24 + (bean % 2) * Math.PI);
-    sketch.stroke(MATERIAL.leafLitter);
-    sketch.strokeWeight(Math.max(0.5, 0.12 * scale));
-    sketch.fill(MATERIAL.soybean);
-    sketch.ellipse(0, 0, 5.4 * scale, 4.2 * scale);
+    const context = contextOf(sketch);
     sketch.noStroke();
-    sketch.fill(MATERIAL.soybeanFace);
-    sketch.ellipse(0.2 * scale, -0.2 * scale, 4.2 * scale, 3 * scale);
+    sketch.fill(MATERIAL.soybean);
+    if (context !== undefined) {
+      const shade = context.createRadialGradient(
+        0.6 * scale,
+        -0.8 * scale,
+        0.2 * scale,
+        0,
+        0,
+        2.9 * scale
+      );
+      shade.addColorStop(0, MATERIAL.soybeanFace);
+      shade.addColorStop(0.6, MATERIAL.soybean);
+      shade.addColorStop(1, MATERIAL.soybeanEdge);
+      context.fillStyle = shade;
+      context.shadowBlur = scale * 0.8;
+      const shadow = sketch.color(MATERIAL.leafLitterDark);
+      shadow.setAlpha(110);
+      context.shadowColor = shadow.toString();
+      context.shadowOffsetY = scale * 0.25;
+    }
+    sketch.ellipse(0, 0, 5.4 * scale, 4.2 * scale);
+    if (context !== undefined) {
+      context.shadowBlur = 0;
+      context.shadowOffsetY = 0;
+    }
+    sketch.stroke(MATERIAL.soybeanEdge);
+    sketch.strokeWeight(Math.max(0.4, 0.06 * scale));
+    sketch.noFill();
+    sketch.arc(-0.3 * scale, 0, 3.6 * scale, 2.6 * scale, -0.9, 0.9);
+    sketch.noStroke();
     sketch.fill(MATERIAL.leafLitter);
-    sketch.ellipse(-2.1 * scale, 0, 0.7 * scale, 1.1 * scale);
+    sketch.ellipse(-2.15 * scale, 0, 0.5 * scale, 0.9 * scale);
     sketch.pop();
   });
 }
