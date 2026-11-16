@@ -61,7 +61,13 @@ function NavigationMenuItem({
   );
 }
 
-/** A section's trigger: a ghost button with a chevron that turns while its section is open. */
+/**
+ * A section's trigger: a ghost button with a chevron that turns while its section is open. While a
+ * section opened by hover is open, Base UI's safe polygon turns off pointer events on the list that
+ * holds the triggers, so the way to the popup hovers nothing on the way. A navigation bar is a row of
+ * triggers, as a menubar is, where Base UI blocks none, so each trigger keeps them: the pointer moves
+ * from one section's trigger to the next, as it does across a menubar.
+ */
 function NavigationMenuTrigger({
   children,
   className,
@@ -71,7 +77,7 @@ function NavigationMenuTrigger({
     <NavigationMenuPrimitive.Trigger
       className={cn(
         buttonVariants({ variant: "ghost" }),
-        "group/navigation-menu-trigger data-popup-open:bg-muted gap-1",
+        "group/navigation-menu-trigger data-popup-open:bg-muted pointer-events-auto gap-1",
         className
       )}
       data-slot="navigation-menu-trigger"
