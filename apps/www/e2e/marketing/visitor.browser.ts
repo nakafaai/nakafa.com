@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { Effect, MutableList } from "effect";
 import { withObservedPageErrors } from "@/e2e/support/observe";
+import { stepTo } from "@/e2e/support/scroll";
 
 const SIGN_IN_PATH = /\/en\/auth/u;
 
@@ -55,9 +56,11 @@ test("an anonymous home load shows Nina's composer and the usage-data prompt, op
           expect(MutableList.toArray(sessionReads)).toStrictEqual([])
         );
 
-        yield* Effect.promise(() =>
-          page.getByRole("button", { name: "Attach files" }).click()
-        );
+        // The composer of Nina's section lies below the first screen, so the
+        // visitor scrolls down to its attach button before pressing it.
+        const attach = page.getByRole("button", { name: "Attach files" });
+        yield* stepTo(page, attach);
+        yield* Effect.promise(() => attach.click());
         yield* Effect.promise(() => expect(page).toHaveURL(SIGN_IN_PATH));
       })
     )
