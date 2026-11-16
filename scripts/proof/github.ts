@@ -397,6 +397,9 @@ const dispatchProof = Effect.fn("proof.dispatchProof")(function* (
     `gate=${scope.gate}`,
     "-f",
     `full=${scope.full}`,
+    // A base proof (`proofPrefix`) retries nothing, so main keeps its flaky specs.
+    "-f",
+    `retries=${Option.isNone(prefix)}`,
     "-f",
     `nonce=${nonce}`,
   ]);
@@ -434,7 +437,7 @@ export const proveOnGithub = Effect.fn("proof.proveOnGithub")(
       )
     );
     return {
-      result: combineShards(sha, run.url, 1, results),
+      result: combineShards(sha, run.url, results),
       gated: gateOf(run),
       timings: runTimings(run),
       cancelled: run.conclusion === "cancelled",

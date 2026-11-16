@@ -18,6 +18,7 @@ import {
 } from "@repo/backend/scripts/content/acceptance/result";
 import {
   Array as Arr,
+  Config,
   Console,
   Effect,
   Fiber,
@@ -45,6 +46,21 @@ export const PROOF_SUITES = [
   "browser-timing",
 ] as const;
 
+/**
+ * How many times a failing test runs again. One by default, as a rerun on the
+ * Mac always did before a failure was blamed on a change: Playwright reports a
+ * test that passes the second time flaky, and only a test that fails both times
+ * fails its spec. A merge group's proof of its base sets it to 0, because that
+ * proof asks whether main fails a spec at all, and a retry would hide a flaky
+ * one that the group then blames on its own change.
+ */
+const retries = Config.Int("ACCEPTANCE_RETRIES").pipe(
+  Config.withDefault(1),
+  Effect.mapError(() =>
+    acceptanceRuntimeError("ACCEPTANCE_RETRIES must name a whole number.")
+  )
+);
+
 /** What one machine proves: one engine, one shard of every suite, the specs it may narrow to, and where it reports. */
 const Shard = Schema.Struct({
   engine: Engine,
@@ -67,6 +83,7 @@ const runSuite = Effect.fn("acceptance.runSuite")(function* (
 ) {
   const fs = yield* FileSystem.FileSystem;
   const report = `${input.output}/${suite}.json`;
+  const again = yield* retries;
   const child = yield* ChildProcess.make(
     "bunx",
     [
@@ -75,10 +92,7 @@ const runSuite = Effect.fn("acceptance.runSuite")(function* (
       "test",
       `--shard=${input.shard}/${input.total}`,
       "--pass-with-no-tests",
-      // A test that fails once runs once more, as a rerun on the Mac always did
-      // before a failure was blamed on a change. Playwright reports it flaky,
-      // and only a test that fails both times fails its spec.
-      "--retries=1",
+      `--retries=${again}`,
       "--reporter=line,json",
       ...input.specs,
     ],
@@ -120,6 +134,7 @@ export const runShard = Effect.fn("acceptance.runShard")(function* (
   const result = {
     engine: input.engine,
     shard: input.shard,
+    total: input.total,
     passed: failed.length === 0,
     failures: failed,
   };
@@ -264,7 +279,7 @@ export const proveHere = Effect.fn("acceptance.proveHere")(function* (
       })
     );
     yield* Fiber.interrupt(server);
-    return combineShards(sha, "local", 1, shards);
+    return combineShards(sha, "local", shards);
   }).pipe(
     Effect.scoped,
     Effect.ensuring(

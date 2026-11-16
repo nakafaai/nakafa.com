@@ -71,7 +71,6 @@ export const judgeGroup = Effect.fn("proof.judgeGroup")(function* (
   const result = combineShards(
     input.head,
     input.url,
-    1,
     yield* readResults(input.results)
   );
   const failures = failuresOf(result);

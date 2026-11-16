@@ -168,6 +168,7 @@ describe("proof shard", () => {
         expect(value).toEqual({
           engine: "firefox",
           shard: 2,
+          total: 3,
           passed: false,
           failures: [
             "e2e/chat/send.browser.ts",
@@ -184,6 +185,54 @@ describe("proof shard", () => {
             .readFileString(`${output}/result.json`)
             .pipe(Effect.flatMap(Schema.decodeEffect(ShardResultJson)))
         ).toEqual(value);
+      }).pipe(Effect.scoped, Effect.provide(nodePlatform))
+  );
+
+  it.effect(
+    "runs a failing test no second time when retries are off, and refuses a count that is no number",
+    () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const output = yield* fs.makeTempDirectoryScoped();
+        const { calls } = yield* withProcesses(
+          runShard("/root", {
+            engine: "chromium",
+            shard: 1,
+            total: 1,
+            specs: [],
+            output,
+          }),
+          () => passing
+        ).pipe(
+          Effect.provide(
+            ConfigProvider.layer(
+              ConfigProvider.fromEnvRecord({ ACCEPTANCE_RETRIES: "0" })
+            )
+          )
+        );
+        expect(calls[0]).toBe(
+          "bunx --no-install playwright test --shard=1/1 --pass-with-no-tests --retries=0 --reporter=line,json"
+        );
+        const refused = yield* withProcesses(
+          runShard("/root", {
+            engine: "chromium",
+            shard: 1,
+            total: 1,
+            specs: [],
+            output,
+          }),
+          () => passing
+        ).pipe(
+          Effect.provide(
+            ConfigProvider.layer(
+              ConfigProvider.fromEnvRecord({ ACCEPTANCE_RETRIES: "once" })
+            )
+          ),
+          Effect.flip
+        );
+        expect(refused.message).toBe(
+          "ACCEPTANCE_RETRIES must name a whole number."
+        );
       }).pipe(Effect.scoped, Effect.provide(nodePlatform))
   );
 

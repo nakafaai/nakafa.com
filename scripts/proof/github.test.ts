@@ -61,7 +61,7 @@ describe("GitHub proof runner", () => {
           Option.some(
             expect.stringMatching(
               new RegExp(
-                `^gh workflow run proof.yml --repo nakafaai/nakafa.com --ref main -f sha=${SHA} -f specs=e2e/a.browser.ts -f gate=true -f full=false -f nonce=[0-9a-f-]{36}$`,
+                `^gh workflow run proof.yml --repo nakafaai/nakafa.com --ref main -f sha=${SHA} -f specs=e2e/a.browser.ts -f gate=true -f full=false -f retries=true -f nonce=[0-9a-f-]{36}$`,
                 "u"
               )
             )
@@ -101,10 +101,11 @@ describe("GitHub proof runner", () => {
           passed: false,
           failures: [],
         });
-        // A proof alone, such as main's baseline, skips the gate.
+        // A proof alone, such as main's baseline, skips the gate and retries
+        // no failing test, so a flaky spec on main stays a failure of main.
         expect(
           Arr.some(calls, (call) =>
-            call.includes("-f gate=false -f full=false")
+            call.includes("-f gate=false -f full=false -f retries=false")
           )
         ).toBe(true);
       }).pipe(Effect.provide(NodeServices.layer))

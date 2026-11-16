@@ -18,16 +18,19 @@
 # serves `bun run gate`, whose gate also posts `verify`, `bun run proof`, and a
 # merge group rehearsal that names its `base`.
 #
-# Jobs side by side and no `needs`: the gate, and one proof job per engine.
-# Each proof job selects the run's specs first: a selection of at most ten specs
-# installs, prepares and builds once on the Chromium job, which runs the three
-# engines one after another while the other two end, and a larger selection, or
-# every suite, runs each engine on its own machine. Every `needs`
-# stage waits in the account's free runner queue again from the back, which
-# turned 14 minutes of work into three hours, while jobs without one leave the
-# queue together. Each job posts its own statuses: the gate `gate/<part>` and
-# `gate`, the proof `proof/<engine>` for each engine it ran, and the job that
-# finds all three engine statuses of this run final `proof`.
+# Jobs side by side and no `needs`: the gate, and up to four proof jobs per
+# engine. Each proof job selects the run's specs first: a selection of at most
+# ten specs installs, prepares and builds once on the first Chromium job, which
+# runs the three engines one after another; one of at most 80 runs each engine
+# on its own machine; a larger one, or every suite, splits each engine into up
+# to four shards on machines of their own; every job its selection needs no
+# machine for ends there. Every `needs` stage waits in the account's free runner
+# queue again from the back, which turned 14 minutes of work into three hours,
+# while jobs without one leave the queue together. Each job posts its own
+# statuses: the gate `gate/<part>` and `gate`, the proof `proof/<engine>/<shard>`
+# for a sharded engine, `proof/<engine>` from the job that finds all of an
+# engine's shards final, and `proof` from the job that finds all three engine
+# statuses of this run final.
 #
 # A push to main runs only the warming job, which saves main's prepared runtime
 # and the browsers in main's scope, the only one a merge group can restore from.
@@ -73,6 +76,11 @@ on:
         description: Typecheck and test every workspace, not only those the head changes against main
         required: false
         default: false
+        type: boolean
+      retries:
+        description: Run a failing test once more before it fails its spec
+        required: false
+        default: true
         type: boolean
       base:
         description: Verify as a merge group on this base, selecting the specs from its diff to the head and posting verify
@@ -399,12 +407,18 @@ jobs:
       # One machine's failure never stops another, so every engine reports.
       fail-fast: false
       matrix:
-        # One entry per engine. Each selects its specs first, in seconds: a
-        # selection of at most ONE_MACHINE_SPECS runs on the Chromium entry's one
-        # build in all three engines, one after another, and the other two
-        # entries end there; a larger one, or every suite, runs each engine on its
-        # own machine, side by side.
+        # Up to four machines per engine. Each entry selects its specs first, in
+        # seconds, and the entries its selection needs no machine for end there:
+        # a selection of at most ONE_MACHINE_SPECS runs on the first Chromium
+        # entry's one build in all three engines, one after another; one of at
+        # most SHARD_SPECS runs each engine on its first entry, side by side; a
+        # larger one, or every suite, splits each engine into one shard per
+        # SHARD_SPECS specs, at most four. Twelve entries, the gate and the three
+        # backend shards ask for 16 of the account's 20 free runners at once, so
+        # every job leaves the queue together; an entry that ends holds its runner
+        # for its install alone, about a minute.
         engine: [ chromium, firefox, webkit ]
+        shard: [ 1, 2, 3, 4 ]
     permissions:
       # As for the gate: the job that finishes last posts the group's verdict.
       actions: write
@@ -413,6 +427,9 @@ jobs:
     env:
       GH_TOKEN: ${{ github.token }}
       ENGINE: ${{ matrix.engine }}
+      SHARD: ${{ matrix.shard }}
+      # A merge group's proof of its base retries no failing test (scripts/proof/github.ts, dispatchProof).
+      ACCEPTANCE_RETRIES: ${{ github.event_name == 'workflow_dispatch' && !inputs.retries && '0' || '1' }}
       # The most specs that one machine runs in all three engines. A spec takes an
       # engine about 25 seconds on these runners (the median of 60 engine jobs on
       # 15 and 16 November 2026), and a machine's install, prepare, build and start
@@ -420,6 +437,11 @@ jobs:
       # machine (2 x 10 x 25 s, about 8 minutes) passes the build that a machine of
       # their own repeats, so they run side by side instead.
       ONE_MACHINE_SPECS: "10"
+      # The most specs that one machine runs in one engine. Above it, the
+      # engine's specs split into shards of about this many: 80 specs take an
+      # engine about 33 minutes, and a machine of its own adds 7 to 14 minutes of
+      # setup, so a second shard pays once the first would run past about 40.
+      SHARD_SPECS: "80"
     steps:
       - name: Check the head
         run: '[[ "$SHA" =~ ^[0-9a-f]{40}$ ]] || { echo "sha must be a full lower-case commit SHA." >&2; exit 1; }'
@@ -463,19 +485,30 @@ jobs:
             specs="$(node scripts/proof/select.ts "$BASE" "$SHA")"
           fi
           [[ "$specs" =~ ^(e2e/[A-Za-z0-9/_.-]+\.browser\.ts( |$))*$ ]] || { echo "specs must be spec files under apps/www." >&2; exit 1; }
-          echo "SPECS=$specs" >> "$GITHUB_ENV"
           echo "Specs: ${specs:-every suite}"
-          # The engines this machine runs: all three on the Chromium entry for a
-          # small selection, none on the other two, and its own for a large one.
+          # The engines this machine runs and each engine's number of shards:
+          # all three on the first Chromium entry for a small selection, its own
+          # engine on the first entry for a middle one, and its own engine's
+          # shard for a large one or every suite, whose entries past the
+          # engine's shards run nothing.
           count="$(wc -w <<< "$specs")"
           engines="$ENGINE"
-          if [ -n "$specs" ] && [ "$count" -le "$ONE_MACHINE_SPECS" ]; then
-            engines=""
-            [ "$ENGINE" != chromium ] || engines="chromium firefox webkit"
+          total=1
+          if [ -z "$specs" ] || [ "$count" -gt "$SHARD_SPECS" ]; then
+            total=4
+            [ -z "$specs" ] || total=$(( (count + SHARD_SPECS - 1) / SHARD_SPECS ))
+            [ "$total" -le 4 ] || total=4
+          elif [ "$count" -le "$ONE_MACHINE_SPECS" ]; then
+            [ "$ENGINE" = chromium ] && engines="chromium firefox webkit" || engines=""
           fi
-          echo "ENGINES=$engines" >> "$GITHUB_ENV"
-          echo "ENGINES_KEY=${engines// /-}" >> "$GITHUB_ENV"
-          echo "${count} specs: this machine runs ${engines:-no engine}"
+          [ "$SHARD" -le "$total" ] || engines=""
+          {
+            echo "SPECS=$specs"
+            echo "ENGINES=$engines"
+            echo "ENGINES_KEY=${engines// /-}"
+            echo "TOTAL=$total"
+          } >> "$GITHUB_ENV"
+          echo "${count} specs: this machine runs ${engines:-no engine}, shard ${SHARD} of ${total}"
 
       - name: Mark the engines pending
         if: env.ENGINES != ''
@@ -490,7 +523,10 @@ jobs:
             return 1
           }
           contexts=(proof)
-          for engine in $ENGINES; do contexts+=("proof/$engine"); done
+          for engine in $ENGINES; do
+            contexts+=("proof/$engine")
+            [ "$TOTAL" = 1 ] || contexts+=("proof/$engine/$SHARD")
+          done
           [ "$VERIFY" != group ] || contexts+=(verify)
           for context in "${contexts[@]}"; do
             retry gh api --silent "repos/$GITHUB_REPOSITORY/statuses/$SHA" \
@@ -640,7 +676,7 @@ jobs:
             fi
             echo "::group::$engine"
             # shellcheck disable=SC2086
-            "${display[@]}" bun run --cwd packages/backend acceptance shard "$engine" 1 1 "$RUNNER_TEMP/result/$engine" $SPECS || status=1
+            "${display[@]}" bun run --cwd packages/backend acceptance shard "$engine" "$SHARD" "$TOTAL" "$RUNNER_TEMP/result/$engine" $SPECS || status=1
             echo "::endgroup::"
             if [ -d .cache/playwright/www ]; then
               mkdir -p "$RUNNER_TEMP/traces"
@@ -650,13 +686,14 @@ jobs:
           done
           exit "$status"
 
-      # One artifact per engine, `results-<engine>`, whichever machine ran it:
-      # `bun run proof` and the group's verdict read every `results-*` the same way.
+      # One artifact per engine's shard, `results-<engine>-<shard>`, whichever
+      # machine ran it: `bun run proof` and the group's verdict read every
+      # `results-*` the same way, and each result names its shard and total.
       - name: Keep the Chromium result
         if: always() && env.ENGINES != '' && contains(env.ENGINES, 'chromium')
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: results-chromium
+          name: results-chromium-${{ env.SHARD }}
           path: ${{ runner.temp }}/result/chromium
           if-no-files-found: ignore
           retention-days: 7
@@ -665,7 +702,7 @@ jobs:
         if: always() && env.ENGINES != '' && contains(env.ENGINES, 'firefox')
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: results-firefox
+          name: results-firefox-${{ env.SHARD }}
           path: ${{ runner.temp }}/result/firefox
           if-no-files-found: ignore
           retention-days: 7
@@ -674,7 +711,7 @@ jobs:
         if: always() && env.ENGINES != '' && contains(env.ENGINES, 'webkit')
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: results-webkit
+          name: results-webkit-${{ env.SHARD }}
           path: ${{ runner.temp }}/result/webkit
           if-no-files-found: ignore
           retention-days: 7
@@ -683,7 +720,7 @@ jobs:
         if: always() && env.ENGINES != ''
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: traces-${{ env.ENGINES_KEY }}
+          name: traces-${{ env.ENGINES_KEY }}-${{ env.SHARD }}
           path: |
             ${{ runner.temp }}/traces
             ${{ runner.temp }}/start.log
@@ -692,11 +729,14 @@ jobs:
           retention-days: 3
 
       # An engine passes only when it reported and passed. It follows the
-      # uploads, so a caller that sees `proof` finds every engine's result. The
-      # job that finds all three engine statuses of this run final posts
-      # `proof`, which passes only when all three do; each job posts its own
-      # engines' statuses before it reads the others, so the last to finish
-      # always sees them all. `bun run proof` reads the same results.
+      # uploads, so a caller that sees `proof` finds every engine's result. A
+      # sharded engine's machines each post `proof/<engine>/<shard>`, and the one
+      # that finds all of its engine's shards final posts `proof/<engine>`, which
+      # passes only when every shard does. The job that finds all three engine
+      # statuses of this run final posts `proof`, which passes only when all
+      # three do. Each job posts its own statuses before it reads the others, so
+      # the last to finish always sees them all. `bun run proof` reads the same
+      # results.
       - name: Post the proof
         # A selection that failed posts its own engine's failure, so no status waits.
         if: always() && (env.ENGINES != '' || steps.select.outcome != 'success')
@@ -714,6 +754,11 @@ jobs:
             retry gh api --silent "repos/$GITHUB_REPOSITORY/statuses/$SHA" \
               -f state="$2" -f context="$1" -f target_url="$URL" -f description="$3"
           }
+          # The final states of this run's statuses whose context matches the pattern.
+          final() {
+            retry gh api "repos/$GITHUB_REPOSITORY/commits/$SHA/status?per_page=100" --jq \
+              "[.statuses[] | select(.target_url == \"$URL\" and (.context | test(\"$1\"))) | .state]"
+          }
           for engine in ${ENGINES:-$ENGINE}; do
             file="$RUNNER_TEMP/result/$engine/result.json"
             if [ ! -s "$file" ]; then
@@ -723,11 +768,19 @@ jobs:
             else
               state=failure; description="$(jq -r '.failures | length' "$file") failing specs"
             fi
-            post "proof/$engine" "$state" "$description"
-            echo "| $engine | $state | $description |" >> "$GITHUB_STEP_SUMMARY"
+            echo "| $engine | ${SHARD}/${TOTAL:-1} | $state | $description |" >> "$GITHUB_STEP_SUMMARY"
+            if [ "${TOTAL:-1}" = 1 ]; then
+              post "proof/$engine" "$state" "$description"
+              continue
+            fi
+            post "proof/$engine/$SHARD" "$state" "$description"
+            shards="$(final "^proof/$engine/[0-9]+\$")"
+            [ "$(jq 'map(select(. != "pending")) | length' <<< "$shards")" = "$TOTAL" ] || continue
+            state=failure
+            [ "$(jq 'all(. == "success")' <<< "$shards")" = true ] && state=success
+            post "proof/$engine" "$state" "$TOTAL shards: $state"
           done
-          states="$(retry gh api "repos/$GITHUB_REPOSITORY/commits/$SHA/status?per_page=100" --jq \
-            "[.statuses[] | select(.target_url == \"$URL\" and (.context | test(\"^proof/(chromium|firefox|webkit)\$\"))) | .state]")"
+          states="$(final "^proof/(chromium|firefox|webkit)\$")"
           [ "$(jq 'map(select(. != "pending")) | length' <<< "$states")" = 3 ] || exit 0
           all=failure
           [ "$(jq 'all(. == "success")' <<< "$states")" = true ] && all=success

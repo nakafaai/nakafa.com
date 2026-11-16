@@ -76,7 +76,13 @@ export const RUN = {
 };
 
 export const shard = (engine: string, failures: readonly string[] = []) =>
-  toJson({ engine, shard: 1, passed: failures.length === 0, failures });
+  toJson({
+    engine,
+    shard: 1,
+    total: 1,
+    passed: failures.length === 0,
+    failures,
+  });
 
 /** The result of each engine that a download writes into the directory it was given. */
 const download = (
