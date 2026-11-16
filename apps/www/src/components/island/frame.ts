@@ -1,9 +1,5 @@
 import { Array as Arr } from "effect";
-
-/** The art pixel for a screen: a whole number of device pixels, so its short side spans about 270 art pixels. */
-function artPixelOf(width: number, height: number) {
-  return Math.max(1, Math.round(Math.min(width, height) / 270));
-}
+import { artPixelFor } from "@/lib/island/camera";
 
 /**
  * The art pixels the frame reaches past each edge of the screen: the camera's
@@ -28,9 +24,19 @@ export function createFrame(
   gl: WebGL2RenderingContext,
   canvas: HTMLCanvasElement
 ) {
-  /** Sizes the small frame to the canvas, in whole art pixels. */
-  function resize() {
-    const pixel = artPixelOf(canvas.width, canvas.height);
+  /**
+   * Sizes the small frame to the canvas in whole art pixels, the art pixel
+   * as fine as the ground `distance` blocks away needs (D47), or the screen's
+   * own when `coarse`.
+   */
+  function resize(distance: number, coarse: boolean) {
+    const pixel = artPixelFor(
+      canvas.width,
+      canvas.height,
+      distance,
+      target.pixel,
+      coarse
+    );
     // The screen's height in art pixels, which the camera's grid reads, and the share the frame's taller view adds to it.
     target.pixel = pixel;
     target.rows = Math.max(1, canvas.height / pixel);

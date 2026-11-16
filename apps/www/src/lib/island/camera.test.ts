@@ -4,6 +4,7 @@ import { describe, expect, it } from "@effect/vitest";
 import { SPAN } from "@repo/backend/confect/island/world";
 import { Array as Arr } from "effect";
 import {
+  artPixelFor,
   clampOrbit,
   DISTANCE,
   easeOrbit,
@@ -168,5 +169,21 @@ describe("island/camera", () => {
     expect(a[1]).toBeCloseTo(b[1], 6);
     expect(a[2]).toBeCloseTo(b[2], 6);
     expect(zoomToward(orbit, point, 1000).distance).toBe(DISTANCE.far);
+  });
+
+  it("draws a texel at the target at least one art pixel wide at every zoom, never coarser than the screen's art pixel", () => {
+    // A 1440 by 900 screen at twice its pixels: its own art pixel is seven device pixels.
+    expect(artPixelFor(2880, 1800, 12, 7, false)).toBe(7);
+    const opening = artPixelFor(2880, 1800, 60, 7, false);
+    expect(opening).toBeLessThan(7);
+    expect(artPixelFor(2880, 1800, 170, opening, false)).toBe(1);
+    expect(artPixelFor(2880, 1800, 170, 1, true)).toBe(7);
+  });
+
+  it("holds the art pixel while a zoom rests near an edge, and changes it once the texel crosses it", () => {
+    // At 60 blocks a texel covers about 3.3 device pixels.
+    expect(artPixelFor(2880, 1800, 60, 3, false)).toBe(3);
+    expect(artPixelFor(2880, 1800, 64, 3, false)).toBe(3);
+    expect(artPixelFor(2880, 1800, 80, 3, false)).toBe(2);
   });
 });

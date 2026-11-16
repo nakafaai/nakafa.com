@@ -1,5 +1,6 @@
 import { HEIGHT, SPAN } from "@repo/backend/confect/island/world";
 import { Schema } from "effect";
+import { TILE } from "@/lib/island/tiles/paint";
 import { SEA_LEVEL } from "@/lib/island/world";
 
 /**
@@ -218,4 +219,36 @@ export function snapOrbit(unsnapped: Orbit, rows: number) {
     },
     shift: [dx, dy] as const,
   };
+}
+
+/** The share a texel's size must cross past the art pixel's edge before the art pixel changes, so a zoom resting on an edge does not flicker between two. */
+const SETTLE = 0.12;
+
+/**
+ * The art pixel, in device pixels, for a canvas `width` by `height` seeing
+ * the ground `distance` blocks away (ADR 0047, D47): as many device pixels as
+ * one texel of a block at the camera's target covers, so every texel there is
+ * at least one art pixel and nothing averages into mush however far the
+ * camera pulls back. It is never coarser than the screen's own art pixel,
+ * its short side over 270, nor finer than one device pixel; `coarse` keeps
+ * that screen art pixel at every zoom, the quality ladder's lowest rung. It
+ * changes from `previous` only once the texel crosses an edge by `SETTLE`.
+ */
+export function artPixelFor(
+  width: number,
+  height: number,
+  distance: number,
+  previous: number,
+  coarse: boolean
+) {
+  const screen = Math.max(1, Math.round(Math.min(width, height) / 270));
+  if (coarse) {
+    return screen;
+  }
+  const block = height / (2 * distance * Math.tan(FIELD_OF_VIEW / 2));
+  const texel = block / TILE;
+  const settled =
+    texel >= previous * (1 - SETTLE) && texel < (previous + 1) * (1 + SETTLE);
+  const pixel = settled ? previous : Math.floor(texel);
+  return Math.max(1, Math.min(screen, pixel));
 }

@@ -388,7 +388,7 @@ export function createPainter(canvas: HTMLCanvasElement, season: Season) {
           // A storm's lightning lights the sky and the shade for an instant (D33).
           const light =
             sky === "storm" ? flashed(daylight, flashOf(time)) : daylight;
-          target.resize();
+          target.resize(orbit.distance, rung.coarse);
           gale.step(time, sky);
           air.step(time, sky);
           const snapped = snapOrbit(orbit, target.rows);

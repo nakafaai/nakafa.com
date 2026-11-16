@@ -15,18 +15,25 @@ describe("island/quality", () => {
   it("keeps the full picture on a device that holds sixty frames a second", () => {
     const steady = after(TOP_RUNG, 1 / 60, 600);
     expect(steady.rung).toBe(0);
-    expect(RUNGS[steady.rung]).toEqual({ shadows: true, tufts: true });
+    expect(RUNGS[steady.rung]).toEqual({
+      coarse: false,
+      shadows: true,
+      tufts: true,
+    });
   });
 
-  it("steps down a rung after two seconds over budget, then another, and stays on the lowest", () => {
+  it("steps down a rung after two seconds over budget, rung by rung, and stays on the lowest", () => {
     const first = after(TOP_RUNG, 1 / 25, 70);
     expect(first.rung).toBe(1);
     expect(RUNGS[first.rung].tufts).toBe(false);
     const second = after(first, 1 / 25, 70);
     expect(second.rung).toBe(2);
     expect(RUNGS[second.rung].shadows).toBe(false);
-    expect(after(second, 1 / 25, 200).rung).toBe(2);
-    expect(after(second, 1 / 60, 600).rung).toBe(2);
+    const third = after(second, 1 / 25, 70);
+    expect(third.rung).toBe(3);
+    expect(RUNGS[third.rung].coarse).toBe(true);
+    expect(after(third, 1 / 25, 200).rung).toBe(3);
+    expect(after(third, 1 / 60, 600).rung).toBe(3);
   });
 
   it("forgives a short stall and says nothing of a frame after a pause", () => {
