@@ -16,7 +16,10 @@ import {
 } from "@/components/shared/page/panes";
 import { PaneEdge } from "@/components/shared/page/panes/edge";
 import { paneSideVariants } from "@/components/shared/page/panes/side";
-import { pageRowVariants } from "@/components/shared/page/width";
+import {
+  pageRhythmVariants,
+  pageRowVariants,
+} from "@/components/shared/page/width";
 import { joinTryoutBodies } from "@/components/tryout/content/body";
 import { TryoutContentContext } from "@/components/tryout/content/context";
 import type { TryoutSectionRuntime } from "@/components/tryout/runtime/types";
@@ -41,7 +44,9 @@ export function TryoutFinishedPanes({
     <PanesProvider wideFrom="lg">
       <Panes id="tryout-finished">
         <PanesList>
-          <div className={cn(pageRowVariants(), "space-y-6 py-6")}>
+          <div
+            className={cn(pageRowVariants(), pageRhythmVariants(), "space-y-6")}
+          >
             <TryoutFinishedOpen />
             {children}
           </div>

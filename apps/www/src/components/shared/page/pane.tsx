@@ -9,13 +9,12 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ScrollArea } from "@repo/design-system/components/ui/scroll-area";
 import { TableRow } from "@repo/design-system/components/ui/table";
 import { cva } from "class-variance-authority";
-import { cn } from "cn";
 import { Option } from "effect";
 import type { ReactNode } from "react";
 import { useTranslations } from "use-intl";
+import { ListCard } from "@/components/shared/page/body";
 import { usePaneMode, usePanes } from "@/components/shared/page/panes";
 import { pressesRow } from "@/components/shared/row";
-import { tableCardVariants } from "@/components/shared/table/card";
 
 /** The phone's header: centred under the swipe handle, or a row from the start with a detail's icon. */
 const sheetHeaderVariants = cva("", {
@@ -122,10 +121,9 @@ export function PaneBody({ children }: { children: ReactNode }) {
 }
 
 /**
- * A detail's body that one thing fills from edge to edge, with no padding of its own: a table, which scrolls inside it
- * with its heads in view and closes on its last row (`tableCardVariants`), or an empty state in its middle. What the
- * table belongs to, such as the open row's facts, stands above it at a body's padding (`head`), on a rule that the
- * table's heads meet, so the table still runs from edge to edge under it.
+ * A detail's body that one list fills: its table in the list's card (`ListCard`), at the body's padding, filling the
+ * height the pane leaves and scrolling inside the card with its heads in view, or an empty state in the card's middle.
+ * What the table belongs to, such as the open row's facts, stands above the card (`head`).
  */
 export function PaneFill({
   children,
@@ -137,18 +135,11 @@ export function PaneFill({
 }) {
   return (
     <div
-      className={cn(
-        tableCardVariants(),
-        "bg-card flex min-h-0 flex-1 flex-col overflow-y-auto"
-      )}
+      className="flex min-h-0 flex-1 flex-col gap-4 px-(--pane-end,1rem) py-4"
       data-slot="pane-fill"
     >
-      {head === undefined ? null : (
-        <div className="shrink-0 border-b px-(--pane-end,1rem) py-4">
-          {head}
-        </div>
-      )}
-      {children}
+      {head === undefined ? null : <div className="shrink-0">{head}</div>}
+      <ListCard>{children}</ListCard>
     </div>
   );
 }

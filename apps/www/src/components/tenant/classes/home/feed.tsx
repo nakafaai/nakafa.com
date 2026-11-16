@@ -3,7 +3,10 @@ import { ScrollArea } from "@repo/design-system/components/ui/scroll-area";
 import { cn } from "cn";
 import { type ReactNode, useState } from "react";
 import { useTranslations } from "use-intl";
-import { pageRowVariants } from "@/components/shared/page/width";
+import {
+  pageRhythmVariants,
+  pageRowVariants,
+} from "@/components/shared/page/width";
 import { TableViews } from "@/components/shared/table/views";
 import { ClassHeader } from "@/components/tenant/classes/header";
 import { ClassHome } from "@/components/tenant/classes/home/board";
@@ -57,7 +60,13 @@ export function HomeFeed({ publishes }: { publishes: boolean }) {
 function ClassScroll({ children }: { children: ReactNode }) {
   return (
     <ScrollArea className="flex-1" viewportClassName="flex flex-col">
-      <div className={cn(pageRowVariants(), "flex flex-1 flex-col gap-6 py-6")}>
+      <div
+        className={cn(
+          pageRowVariants(),
+          pageRhythmVariants(),
+          "flex flex-1 flex-col gap-6"
+        )}
+      >
         {children}
       </div>
     </ScrollArea>
