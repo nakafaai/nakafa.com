@@ -15,6 +15,7 @@ import {
 } from "@nakafa/aksara-contracts/math/formula/plane";
 import { spaceFormulaGeometry } from "@nakafa/aksara-contracts/math/formula/space";
 import { Array as Arr, Option, Result, Schema } from "effect";
+import { joinRegionFill } from "@/lib/content/renderer/client/base/visual/fill";
 import type {
   PlaneObject,
   PlaneVisual,
@@ -159,7 +160,9 @@ function shapesOf(
           points: Arr.map(edge.points, project),
           strict: edge.strict,
         })),
-        fill: Arr.map(geometry.fill, (shape) => Arr.map(shape, project)),
+        fill: Arr.map(joinRegionFill(geometry.fill), (shape) =>
+          Arr.map(shape, project)
+        ),
         kind: "region" as const,
       },
     ];
