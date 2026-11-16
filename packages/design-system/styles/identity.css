@@ -63,6 +63,10 @@
   --color-island-gold: #e6b93a;
   /* A star, and the bar's inner shadow. */
   --color-island-gold-dark: #c6911f;
+  /* A guide card and a counter in the book. */
+  --color-island-page: #f3dfb6;
+  /* The frame of a guide card and a counter. */
+  --color-island-rule: #c9a46c;
 }
 
 /* Each thing does one small thing by itself. The names are the `motion` of a

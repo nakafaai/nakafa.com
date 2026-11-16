@@ -1,3 +1,4 @@
+import { PLANT_KEYS, PLANTS } from "@repo/backend/confect/island/flora";
 import { Array as Arr, Schema } from "effect";
 
 /**
@@ -5,7 +6,7 @@ import { Array as Arr, Schema } from "effect";
  * it by, and the level of the island that opens it for building. Stored edits
  * name blocks by id, so an id is never reused or changed; 0 is air.
  */
-const CATALOG = {
+const BUILT = {
   grass: { id: 1, opens: 1 },
   dirt: { id: 2, opens: 1 },
   sand: { id: 3, opens: 1 },
@@ -29,6 +30,8 @@ const CATALOG = {
   gold: { id: 21, opens: 6 },
 } as const;
 
+const CATALOG = { ...BUILT, ...PLANTS };
+
 export const BlockKey = Schema.Literals([
   "grass",
   "dirt",
@@ -51,6 +54,7 @@ export const BlockKey = Schema.Literals([
   "bookshelf",
   "marble",
   "gold",
+  ...PLANT_KEYS,
 ]);
 export type BlockKey = typeof BlockKey.Type;
 

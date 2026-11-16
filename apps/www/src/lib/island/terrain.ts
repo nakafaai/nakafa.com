@@ -1,6 +1,8 @@
 import { idOf } from "@repo/backend/confect/island/blocks";
+import { PLANT_KEYS } from "@repo/backend/confect/island/flora";
 import type { Edit } from "@repo/backend/confect/island/world";
 import { SPAN } from "@repo/backend/confect/island/world";
+import { WILD_PLANTS } from "@/lib/island/flora/plants";
 import { smoothOf, unitOf } from "@/lib/island/noise";
 import { layVillage, VILLAGE } from "@/lib/island/village";
 import {
@@ -129,7 +131,12 @@ function plantAt(
   if (roll < 0.022 && isClearForTree(meadows, cells, x, top, z)) {
     growTree(cells, seed, x, top, z);
   } else if (roll > 0.9 && blockAt(cells, x, top + 1, z) === 0) {
-    cells[cellOf(x, top + 1, z)] = FLOWERS;
+    // Most meadow blooms are wild species; a few stay the plain flowers block.
+    const pick = unitOf(seed + 8, x, 1, z);
+    cells[cellOf(x, top + 1, z)] =
+      pick < 0.2
+        ? FLOWERS
+        : idOf(PLANT_KEYS[WILD_PLANTS[Math.floor(pick * WILD_PLANTS.length)]]);
   }
 }
 
