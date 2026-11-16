@@ -269,6 +269,30 @@ const workerIsNoBrowser: Plugin = {
     id === WORKER_ESM_ENV_BROWSER ? "export default false;" : undefined,
 };
 
+/**
+ * Mermaid draws a diagram only in the browser: the component renders it after
+ * mount, and the static runner, which parses every diagram of the release,
+ * imports it from Node (`NODE_IMPORTS`). The Worker never runs it, yet its
+ * dynamic import put Mermaid, ELK and Cytoscape, about 12 MiB, into the Worker,
+ * whose script Cloudflare caps at 64 MiB. The Worker environments resolve it to
+ * a module that refuses to load, so a stray server call fails as a typed
+ * `MermaidRenderError` instead of shipping the library.
+ */
+const MERMAID = "mermaid";
+const WORKER_MERMAID = "\0www:mermaid";
+
+const workerDrawsNoDiagram: Plugin = {
+  name: "www:worker-draws-no-diagram",
+  enforce: "pre",
+  applyToEnvironment: (environment) =>
+    !STATIC_RUNNER && WORKER_ENVIRONMENTS.includes(environment.name),
+  resolveId: (source) => (source === MERMAID ? WORKER_MERMAID : undefined),
+  load: (id) =>
+    id === WORKER_MERMAID
+      ? 'throw new Error("Mermaid draws in the browser, never in the Worker.");'
+      : undefined,
+};
+
 /** The Node built-in specifiers, which have no browser build. */
 const NODE_BUILTIN_SPECIFIER = /^node:/u;
 
@@ -411,6 +435,7 @@ export default defineConfig(async ({ command, isPreview }) => {
       babel({ presets: [reactCompilerPreset()] }),
       bundleCommonJsReactPeers,
       workerIsNoBrowser,
+      workerDrawsNoDiagram,
       writeHeadersFile,
       readPreviewHeaders,
       writeRobotsFile,
