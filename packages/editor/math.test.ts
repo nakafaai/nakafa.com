@@ -2,8 +2,18 @@
 
 import { describe, expect, it } from "@effect/vitest";
 import { documentExtensions } from "@repo/editor/document";
-import { NEW_FORMULA } from "@repo/editor/math";
-import { Editor, findChildren } from "@tiptap/core";
+import {
+  formulaTokenizer,
+  NEW_FORMULA,
+  parseFormula,
+  renderBlockFormula,
+  renderInlineFormula,
+} from "@repo/editor/math";
+import {
+  Editor,
+  findChildren,
+  type MarkdownLexerConfiguration,
+} from "@tiptap/core";
 import { Array as Arr, Option } from "effect";
 
 /** A headless editor of a document with the given HTML, as the exam editor holds one. */
@@ -137,5 +147,69 @@ describe("toggleFormula", () => {
     expect(Arr.map(blockFormulas(block), ({ node }) => node.attrs)).toEqual([
       { latex: "z" },
     ]);
+  });
+});
+
+/** A lexer the tokenizers never call: a formula holds no Markdown of its own. */
+const NO_LEXER: MarkdownLexerConfiguration = {
+  blockTokens: () => [],
+  inlineTokens: () => [],
+};
+
+describe("formula Markdown", () => {
+  it("reads an inline formula between two pairs of dollars, and finds where one starts", () => {
+    const inline = formulaTokenizer("mathInline");
+    expect(inline.level).toBe("inline");
+    expect(typeof inline.start === "function" && inline.start("a $$x$$")).toBe(
+      2
+    );
+    expect(inline.tokenize("$$ x^2 $$ lalu", [], NO_LEXER)).toEqual({
+      latex: "x^2",
+      raw: "$$ x^2 $$",
+      type: "mathInline",
+    });
+  });
+
+  it("reads a math fence on a line of its own as a block formula", () => {
+    const block = formulaTokenizer("mathBlock");
+    expect(block.level).toBe("block");
+    expect(
+      block.tokenize("```math\n\\frac{a}{b}\n```\nsisa", [], NO_LEXER)
+    ).toEqual({
+      latex: "\\frac{a}{b}",
+      raw: "```math\n\\frac{a}{b}\n```\n",
+      type: "mathBlock",
+    });
+  });
+
+  it("reads no formula from blank LaTeX or from text that holds none", () => {
+    const inline = formulaTokenizer("mathInline");
+    expect(inline.tokenize("$$ $$", [], NO_LEXER)).toBeUndefined();
+    expect(inline.tokenize("harga $5", [], NO_LEXER)).toBeUndefined();
+  });
+
+  it("makes a token its node, and writes each node as the Markdown its tokenizer reads", () => {
+    expect(
+      parseFormula("mathInline")({ latex: "x", type: "mathInline" })
+    ).toEqual({
+      attrs: { latex: "x" },
+      type: "mathInline",
+    });
+    const inline = renderInlineFormula({
+      attrs: { latex: "x^2" },
+      type: "mathInline",
+    });
+    const block = renderBlockFormula({
+      attrs: { latex: "\\sqrt{2}" },
+      type: "mathBlock",
+    });
+    expect(inline).toBe("$$x^2$$");
+    expect(block).toBe("```math\n\\sqrt{2}\n```");
+    expect(
+      formulaTokenizer("mathInline").tokenize(inline, [], NO_LEXER)
+    ).toMatchObject({ latex: "x^2" });
+    expect(
+      formulaTokenizer("mathBlock").tokenize(block, [], NO_LEXER)
+    ).toMatchObject({ latex: "\\sqrt{2}" });
   });
 });

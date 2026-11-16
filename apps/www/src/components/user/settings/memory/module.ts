@@ -1,23 +1,5 @@
 import { Effect } from "effect";
-
-/**
- * Makes a load share one promise while it is in flight and once it has
- * succeeded. A failed load is forgotten, so the next request loads the module
- * again. React's `lazy` keeps a failed import for the life of the page, so the
- * editor's code is loaded through this instead.
- */
-export function memoizeLoad<T>(load: () => Promise<T>): () => Promise<T> {
-  let loading: Promise<T> | undefined;
-
-  return () => {
-    loading ??= load().catch((error: unknown) => {
-      loading = undefined;
-      return Promise.reject(error);
-    });
-
-    return loading;
-  };
-}
+import { memoizeLoad } from "@/lib/chunks/load";
 
 /** Loads the rich editor at its dynamic boundary. */
 export const loadRichEditorModule = memoizeLoad(

@@ -407,6 +407,7 @@
     "student-score": "{points} dari {total} poin",
     "student-results-footer": "Gurumu merilis hasil setelah sesi ditutup.",
     "student-answer": "Jawabanmu: <typed>{answer}</typed>",
+    "student-answer-label": "Jawabanmu:",
     "student-answers": "Jawabanmu",
     "student-results-released": "Gurumu sudah merilis hasil ini.",
     "schedule": "Jadwalkan",
@@ -3242,6 +3243,9 @@
     },
     "memory-too-long": {
       "title": "Teks terlalu panjang untuk memori."
+    },
+    "essay-too-long": {
+      "title": "Teks terlalu panjang untuk jawaban."
     },
     "interpretation-error": {
       "title": "Tafsir ayat ini belum bisa dimuat.",
