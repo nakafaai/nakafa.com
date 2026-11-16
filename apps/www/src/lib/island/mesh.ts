@@ -2,6 +2,7 @@ import { HEIGHT, SPAN } from "@repo/backend/confect/island/world";
 import { Array as Arr } from "effect";
 import { ATLAS_TILES } from "@/lib/island/atlas";
 import { KIND, LOOK } from "@/lib/island/look";
+import { isPlantBlock } from "@/lib/island/plants";
 import {
   blockAt,
   type Cells,
@@ -299,6 +300,30 @@ function addCross(
 }
 
 /**
+ * Adds one cell's faces: a liquid's to `water`, a block's or a sprout's to
+ * `solid`, and none for air or a plant of the catalog, which is drawn as its
+ * own model (ADR 0047, D25).
+ */
+function addCell(
+  solid: ReturnType<typeof drawList>,
+  water: ReturnType<typeof drawList>,
+  cells: Cells,
+  lighting: Lighting,
+  cell: readonly [number, number, number]
+) {
+  const block = cells[cellOf(cell[0], cell[1], cell[2])];
+  const kind = LOOK.kinds[block];
+  if (kind === KIND.air || isPlantBlock(block)) {
+    return;
+  }
+  if (kind === KIND.cross) {
+    addCross(solid, lighting, cell, block);
+    return;
+  }
+  addCube(kind === KIND.liquid ? water : solid, cells, lighting, cell, block);
+}
+
+/**
  * The meshes of one chunk (ADR 0047, D3): `solid` holds every opaque, cutout
  * and plant face, drawn first with depth; `water` holds the liquid faces,
  * drawn after with blending.
@@ -314,22 +339,7 @@ export function meshChunk(
   for (let y = 0; y < HEIGHT; y += 1) {
     for (let z = chunkZ * CHUNK; z < (chunkZ + 1) * CHUNK; z += 1) {
       for (let x = chunkX * CHUNK; x < (chunkX + 1) * CHUNK; x += 1) {
-        const block = cells[cellOf(x, y, z)];
-        const kind = LOOK.kinds[block];
-        if (kind === KIND.air) {
-          continue;
-        }
-        if (kind === KIND.cross) {
-          addCross(solid, lighting, [x, y, z], block);
-        } else {
-          addCube(
-            kind === KIND.liquid ? water : solid,
-            cells,
-            lighting,
-            [x, y, z],
-            block
-          );
-        }
+        addCell(solid, water, cells, lighting, [x, y, z]);
       }
     }
   }

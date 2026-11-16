@@ -1,7 +1,7 @@
 // @vitest-environment node
 import { describe, expect, it } from "@effect/vitest";
 import { Array as Arr } from "effect";
-import { speciesFaces } from "@/lib/island/models/catalog";
+import { plantFaces, speciesFaces } from "@/lib/island/models/catalog";
 import {
   BodyKind,
   bodyFaces,
@@ -53,16 +53,19 @@ describe("island/models/kinds", () => {
       { _tag: "body", kind: "cow" },
       { _tag: "species", index: 3 },
       { _tag: "swimmer", kind: "orca" },
+      { _tag: "plant", index: 0 },
     ] as const;
     expect(Arr.map(models, modelFaces)).toEqual([
       bodyFaces("cow"),
       speciesFaces(3),
       swimmerFaces("orca"),
+      plantFaces(0),
     ]);
     expect(Arr.map(models, modelKey)).toEqual([
       "body-cow",
       "species-3",
       "swimmer-orca",
+      "plant-0",
     ]);
   });
 });

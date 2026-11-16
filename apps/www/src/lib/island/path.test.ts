@@ -20,8 +20,10 @@ describe("island/path", () => {
   it("stands a person over the highest floor with room for two blocks, among plants, never on water or off the world", () => {
     const cells = floor();
     expect(standOf(cells, 10, 10)).toEqual(Option.some(9));
-    cells[cellOf(11, 9, 10)] = idOf("rose");
+    cells[cellOf(11, 9, 10)] = idOf("tulip");
     expect(standOf(cells, 11, 10)).toEqual(Option.some(9));
+    cells[cellOf(11, 9, 11)] = idOf("rose");
+    expect(standOf(cells, 11, 11)).toEqual(Option.none());
     cells[cellOf(12, 10, 10)] = idOf("planks");
     expect(standOf(cells, 12, 10)).toEqual(Option.some(11));
     cells[cellOf(13, 9, 10)] = idOf("water");

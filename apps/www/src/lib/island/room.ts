@@ -4,6 +4,7 @@ import type { Animal } from "@/lib/island/life";
 import { KIND, LOOK } from "@/lib/island/look";
 import { BodyKind, bodyFaces } from "@/lib/island/models/kinds";
 import { boundsOf } from "@/lib/island/models/parts";
+import { isPassable } from "@/lib/island/plants";
 import { blockAt, type Cells } from "@/lib/island/world";
 
 /** How much of the world a body takes (ADR 0047, D22): half its width, half its length, and its height, in blocks. */
@@ -57,7 +58,7 @@ export function floorOf(cells: Cells, x: number, z: number) {
   return Option.none();
 }
 
-/** Whether a column is free from `floor` up for `height` blocks: air or plants, nothing a body would pass through. */
+/** Whether a column is free from `floor` up for `height` blocks: air or plants low enough to push aside, nothing a body would pass through. */
 function openAbove(
   cells: Cells,
   x: number,
@@ -67,10 +68,7 @@ function openAbove(
 ) {
   return Arr.every(
     Arr.makeBy(Math.ceil(height), (step) => floor + step),
-    (y) => {
-      const kind = LOOK.kinds[blockAt(cells, Math.floor(x), y, Math.floor(z))];
-      return kind === KIND.air || kind === KIND.cross;
-    }
+    (y) => isPassable(blockAt(cells, Math.floor(x), y, Math.floor(z)))
   );
 }
 
@@ -79,7 +77,7 @@ function openAbove(
  * of its footprint, its half width around, stands on the same floor as its
  * middle, with room above for its whole height, and that floor is `floor`
  * when one is given, so a walker never climbs a step or a wall. A plant under
- * a leg is pushed aside; a wall, a step or a roof is not.
+ * a knee is pushed aside; a taller plant, a wall, a step or a roof is not.
  */
 export function roomOf(
   cells: Cells,
