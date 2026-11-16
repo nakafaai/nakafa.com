@@ -24,13 +24,14 @@ export function AccountButtonFace({
   return (
     <>
       {avatar}
-      <div className="grid min-w-0 flex-1 text-left text-sm leading-tight">
+      {/* The menu's mark stands on the name's line, never between the name and the role. */}
+      <div className="grid min-w-0 flex-1 grid-cols-[minmax(0,1fr)_auto] items-center gap-x-2 text-left text-sm leading-tight">
         <span className="truncate">{name}</span>
+        <HugeIcons icon={MoreVerticalIcon} />
         {description === undefined ? null : (
           <SidebarMenuDescription>{description}</SidebarMenuDescription>
         )}
       </div>
-      <HugeIcons className="ml-auto" icon={MoreVerticalIcon} />
     </>
   );
 }
