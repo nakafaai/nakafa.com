@@ -217,14 +217,14 @@ for (const viewport of WIDTHS) {
       .click();
     await expect(picture).toHaveCount(0);
 
-    // The Arabic keypad types its letters at the caret, and the figure control opens its kinds.
+    // The Arabic keypad types its letters at the caret, and the figure control opens the figure's dialog.
     await prompt.locator("p").last().click();
     await pressTool(page, "Arabic keyboard");
     await page.locator('[data-slot="arabic-keypad"] button').first().click();
     await page.keyboard.press("Escape");
     await expect(prompt).toContainText(ARABIC);
     await pressTool(page, "Figure");
-    await expect(page.getByRole("menuitem", { name: "Graph" })).toBeVisible();
+    await expect(page.getByRole("dialog", { name: "Figure" })).toBeVisible();
     await page.keyboard.press("Escape");
 
     // Everything the controls made is saved: the editor opened again reads the same question. It opens
