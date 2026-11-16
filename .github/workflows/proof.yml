@@ -441,7 +441,7 @@ jobs:
       # engine's specs split into shards of about this many: 80 specs take an
       # engine about 33 minutes, and a machine of its own adds 7 to 14 minutes of
       # setup, so a second shard pays once the first would run past about 40.
-      SHARD_SPECS: "80"
+      SHARD_SPECS: "8"
     steps:
       - name: Check the head
         run: '[[ "$SHA" =~ ^[0-9a-f]{40}$ ]] || { echo "sha must be a full lower-case commit SHA." >&2; exit 1; }'
