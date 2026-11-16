@@ -134,6 +134,10 @@ const visualBandVariants = cva(
       kind: {
         // Rows of controls or buttons: as tall as a button and its breath.
         controls: "flex flex-wrap items-center gap-2 py-3",
+        // The visual's own controls: a choice made of joined buttons spans the
+        // band, its options sharing the width, as the grid-column groups do.
+        toolbar:
+          "flex flex-wrap items-center gap-2 py-3 [&>[data-slot=button-group]]:w-full [&>[data-slot=button-group]>*]:flex-1 [&>[data-slot=toggle-group]]:w-full [&>[data-slot=toggle-group]:not([data-grid-columns]):not([data-orientation=vertical])>*]:flex-1",
         // Text: the card's own spacing above and below.
         text: "flex flex-col gap-3 py-(--card-spacing) text-sm",
       },
@@ -239,12 +243,13 @@ function VisualCardHeader({
 
 /**
  * The visual's own controls, in one band above it: sliders, choices, toggles
- * and the inputs that change what the visual shows. They wrap on a narrow card.
+ * and the inputs that change what the visual shows. They wrap on a narrow card,
+ * and a group of joined buttons or toggles spans the whole band.
  */
 function VisualCardToolbar(props: Omit<ComponentProps<"div">, "className">) {
   return (
     <div
-      className={visualBandVariants({ kind: "controls" })}
+      className={visualBandVariants({ kind: "toolbar" })}
       data-slot="visual-card-toolbar"
       {...props}
     />
