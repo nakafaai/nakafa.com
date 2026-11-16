@@ -86,6 +86,8 @@ function toRedirect(
  * The redirect of an address that the product moved, or none. A bare address
  * or a retired page that search still shows matches its exact path; a path whose
  * first segment is an active locale matches the localized table under that locale.
+ * A path that names its locale twice, as a relative link once wrote `/de/de/…`,
+ * moves to the same path with the locale once.
  */
 export function readMovedRedirect(url: URL): Option.Option<MovedRedirect> {
   const bare = Arr.findFirst(
@@ -101,6 +103,12 @@ export function readMovedRedirect(url: URL): Option.Option<MovedRedirect> {
     return Option.none();
   }
   const path = `/${Arr.join(rest, "/")}`;
+  if (rest[0] === locale.value) {
+    return Option.some({
+      location: `/${locale.value}/${Arr.join(Arr.drop(rest, 1), "/")}${url.search}`,
+      status: 308,
+    });
+  }
   return Option.map(
     Arr.findFirst(LOCALIZED_ADDRESSES, ({ source }) => source === path),
     (address) => toRedirect(address, locale.value, url.search)

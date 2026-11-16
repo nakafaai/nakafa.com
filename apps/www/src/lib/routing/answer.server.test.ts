@@ -3,7 +3,14 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { Data, Effect, Option } from "effect";
 import { answerRequest } from "@/lib/routing/answer.server";
-import type { RouterHandler } from "@/lib/routing/routed.server";
+import {
+  answer,
+  ORIGIN,
+  routedNotFound,
+  routedRequest,
+  router,
+  served,
+} from "@/lib/routing/test.answer";
 
 /** A failure that one of the readers of the server entry reports. */
 class ReaderFailure extends Data.TaggedError("ReaderFailure") {}
@@ -91,57 +98,6 @@ vi.mock("@tanstack/react-start/server", () => ({
   handleStartError: () => new Response("Start error", { status: 500 }),
 }));
 
-const ORIGIN = "https://nakafa.com";
-
-/** A router that answers the HTML page, and records each request it receives. */
-function router() {
-  return vi.fn<RouterHandler>(() =>
-    Promise.resolve(
-      new Response("<html>page</html>", {
-        headers: { "Content-Type": "text/html; charset=utf-8" },
-      })
-    )
-  );
-}
-
-/** Answers one request through the entry's decisions, with the given router. */
-function answer(
-  address: string,
-  options: { readonly headers?: Record<string, string> } = {},
-  handle = router()
-) {
-  return answerRequest(
-    new Request(`${ORIGIN}${address}`, {
-      headers: new Headers(options.headers),
-    }),
-    handle
-  );
-}
-
-/** Answers one request and returns the answer with the router that received it. */
-function served(
-  address: string,
-  options: { readonly headers?: Record<string, string> } = {}
-) {
-  const handle = router();
-  return Effect.map(answer(address, options, handle), (response) => ({
-    handle,
-    response,
-  }));
-}
-
-/** The request that the router received in its single call. */
-function routedRequest(handle: ReturnType<typeof router>) {
-  const [request] = handle.mock.calls[0] ?? [];
-  return request;
-}
-
-/** The not-found page that the router received with its single call, if any. */
-function routedNotFound(handle: ReturnType<typeof router>) {
-  const [, notFound] = handle.mock.calls[0] ?? [];
-  return notFound;
-}
-
 beforeEach(() => {
   release.hasStaticRelease = true;
   assets.fetch.mockReset();
@@ -212,16 +168,38 @@ describe("decisions before the router", () => {
   );
 
   it.effect(
-    "answers a removed address that no Worker route renders with the static not-found page",
+    "answers a removed address and a retired family with 410 Gone, and moves a locale-less one that has a successor in one hop",
     () =>
       Effect.gen(function* () {
-        retired.read.mockReturnValue(Effect.succeed(true));
+        retired.read.mockImplementation(({ pathname }) =>
+          Effect.succeed(pathname === "/en/tryout/old")
+        );
+        migration.read.mockImplementation(({ pathname }) =>
+          Effect.succeed(
+            pathname === "/en/subject/high-school/12/mathematics/x/y"
+              ? { destination: "/en/subjects/mathematics/x/y", status: 308 }
+              : null
+          )
+        );
         assets.fetch.mockResolvedValue(new Response("<h1>Not found</h1>"));
+        for (const address of [
+          "/en/tryout/old",
+          "/id/latihan/snbt/penalaran-matematika/tryout-2026/set-6/soal-2",
+          "/exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-2/4",
+          "/sitemap/material_id_f29.xml",
+        ]) {
+          const { handle, response } = yield* served(address);
+          expect(response.status, address).toBe(410);
+          expect(handle).not.toHaveBeenCalled();
+        }
 
-        const { handle, response } = yield* served("/en/tryout/old");
-
-        expect(response.status).toBe(404);
-        expect(handle).not.toHaveBeenCalled();
+        const moved = yield* answer("/subject/high-school/12/mathematics/x/y", {
+          headers: { "Accept-Language": "en-US" },
+        });
+        expect(moved.status).toBe(307);
+        expect(moved.headers.get("location")).toBe(
+          "/en/subjects/mathematics/x/y"
+        );
       })
   );
 
