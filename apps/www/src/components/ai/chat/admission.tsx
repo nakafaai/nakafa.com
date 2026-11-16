@@ -191,7 +191,6 @@ export function useChatAdmission({
     // No async transition holds the admission. React makes every transition that
     // starts while one is pending wait for its end, the navigation to another
     // chat included, so the learner could not leave until the answer came back.
-    // The text goes first: if the store refuses the write, no prompt is left on its way.
     setText("");
     setPrompt({ text: draft.text, files: draft.files ?? [] });
     if (!gate.pending) {
