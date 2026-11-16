@@ -51,6 +51,7 @@ import { inspectPickerSource } from "#scripts/check/pickers";
 import { pluginRuleNames } from "#scripts/check/plugin";
 import { inspectReactSource, inspectStateSource } from "#scripts/check/react";
 import { inspectRefsSource } from "#scripts/check/refs";
+import { inspectScrollSource } from "#scripts/check/scroll";
 import { inspectSdkReach } from "#scripts/check/sdk";
 import { inspectSealedSource } from "#scripts/check/sealed";
 import { inspectSectionSource } from "#scripts/check/sections";
@@ -129,6 +130,7 @@ const inspectSources = Effect.fn("RepositoryPolicy.inspectSources")(function* (
         inspectIconSource(file, sourceFile),
         inspectPickerSource(file, sourceFile),
         inspectNativeControls(file, sourceFile),
+        inspectScrollSource(file, sourceFile),
         inspectStateSource(file, sourceFile),
         inspectSelectorSource(file, sourceFile),
         inspectRefsSource(file, sourceFile),
