@@ -22,6 +22,7 @@ import { CameraControls } from "@repo/design-system/components/three/camera/cont
 import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene";
 import { ScienceStage } from "@repo/design-system/components/three/stage";
+import { Track } from "@repo/design-system/components/three/stage/track";
 import {
   ToggleGroup,
   ToggleGroupItem,
@@ -36,16 +37,18 @@ import {
 } from "@repo/design-system/components/visual/card";
 import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
-import { getColor } from "@repo/design-system/lib/color";
 import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
 import { Suspense, useMemo, useRef, useState } from "react";
-import { DoubleSide, type Group } from "three";
+import type { Group } from "three";
 
 /** How far the lab reaches from its middle, which its shadows cover. */
 const SCENE_REACH =
-  UNIFORM_CIRCULAR_MOTION_SCENE.outerRadius +
+  UNIFORM_CIRCULAR_MOTION_SCENE.radius +
+  UNIFORM_CIRCULAR_MOTION_SCENE.trackWidth / 2 +
   UNIFORM_CIRCULAR_MOTION_SCENE.carScale;
+/** The height of the track the car drives on. */
+const TRACK_Y = 0.01;
 
 interface UniformCircularMotionLabProps {
   decimalSeparator?: DecimalSeparator;
@@ -110,11 +113,22 @@ export function UniformCircularMotionLab({
         className={threeSceneFrameVariants()}
         render={<section />}
       >
-        <ScienceStage frameloop="always" reach={SCENE_REACH}>
+        <ScienceStage
+          floor={TRACK_Y}
+          frameloop="always"
+          ground="grass"
+          reach={SCENE_REACH}
+          setting="field"
+        >
           <Suspense>
             <CircularMotionCamera />
             <group>
-              <CircularTrack />
+              <Track
+                dash={UNIFORM_CIRCULAR_MOTION_SCENE.dashLength}
+                radius={UNIFORM_CIRCULAR_MOTION_SCENE.radius}
+                spacing={UNIFORM_CIRCULAR_MOTION_SCENE.dashSpacing}
+                width={UNIFORM_CIRCULAR_MOTION_SCENE.trackWidth}
+              />
               <CircularCar motion={motion} />
             </group>
           </Suspense>
@@ -172,45 +186,6 @@ function CircularMotionCamera() {
       fov={43}
       framing="content"
     />
-  );
-}
-
-function CircularTrack() {
-  const {
-    innerRadius,
-    laneMarkerCount,
-    outerRadius,
-    radius: trackRadius,
-  } = UNIFORM_CIRCULAR_MOTION_SCENE;
-  const markerPositions = Array.from({ length: laneMarkerCount }, (_, index) =>
-    getPointOnCircle((index / laneMarkerCount) * Math.PI * 2, trackRadius)
-  );
-
-  return (
-    <group>
-      <mesh receiveShadow rotation={[-Math.PI / 2, 0, 0]}>
-        <ringGeometry args={[innerRadius, outerRadius, 128]} />
-        <meshStandardMaterial
-          color={getColor("SLATE", 700)}
-          roughness={0.74}
-          side={DoubleSide}
-        />
-      </mesh>
-
-      {Arr.map(markerPositions, ({ angle, x, z }) => (
-        <mesh
-          key={`${x}-${z}`}
-          position={[x, 0.035, z]}
-          rotation={[0, -angle - Math.PI / 2, 0]}
-        >
-          <boxGeometry args={[0.46, 0.018, 0.07]} />
-          <meshStandardMaterial
-            color={getColor("SLATE", 50)}
-            roughness={0.58}
-          />
-        </mesh>
-      ))}
-    </group>
   );
 }
 

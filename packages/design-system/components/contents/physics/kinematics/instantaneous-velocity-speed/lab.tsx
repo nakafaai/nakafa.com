@@ -23,6 +23,7 @@ import { CameraControls } from "@repo/design-system/components/three/camera/cont
 import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene";
 import { ScienceStage } from "@repo/design-system/components/three/stage";
+import { Road } from "@repo/design-system/components/three/stage/road";
 import {
   ToggleGroup,
   ToggleGroupItem,
@@ -42,9 +43,8 @@ import type { ReactNode } from "react";
 import { Suspense, useMemo, useRef, useState } from "react";
 import type { Group } from "three";
 
-const ROAD_Y = -0.03;
-/** Thickness of the road slab, whose top the car drives on. */
-const ROAD_HEIGHT = 0.08;
+/** The height of the road the car drives on. */
+const ROAD_Y = 0.01;
 
 interface InstantaneousVelocitySpeedLabProps {
   description: ReactNode;
@@ -124,7 +124,12 @@ export function InstantaneousVelocitySpeedLab({
         className={threeSceneFrameVariants()}
         render={<section />}
       >
-        <ScienceStage floor={ROAD_Y + ROAD_HEIGHT / 2} frameloop="always">
+        <ScienceStage
+          floor={ROAD_Y}
+          frameloop="always"
+          ground="grass"
+          setting="field"
+        >
           <Suspense>
             <CameraControls
               cameraPosition={INSTANTANEOUS_SPEED_CAMERA.cameraPosition}
@@ -163,51 +168,13 @@ function InstantaneousVelocitySpeedScene({
 }) {
   return (
     <group>
-      <CameraBounds exclude>
-        <Road roadLength={motion.roadLength} />
-      </CameraBounds>
+      <Road
+        dash={INSTANTANEOUS_SPEED_SCENE.stripeLength}
+        spacing={INSTANTANEOUS_SPEED_SCENE.stripeSpacing}
+        width={INSTANTANEOUS_SPEED_SCENE.roadWidth}
+      />
       <MeasurementPoint x={motion.measurementX} />
       <AnimatedCar motion={motion} />
-    </group>
-  );
-}
-
-function Road({ roadLength }: { roadLength: number }) {
-  const stripeCount = Math.ceil(
-    roadLength / INSTANTANEOUS_SPEED_SCENE.stripeSpacing
-  );
-  const stripePositions = Array.from({ length: stripeCount }, (_, index) => {
-    const spacing = roadLength / stripeCount;
-    return -roadLength / 2 + spacing * index + spacing * 0.5;
-  });
-
-  return (
-    <group>
-      <mesh position={[0, ROAD_Y, 0]} receiveShadow>
-        <boxGeometry
-          args={[roadLength, ROAD_HEIGHT, INSTANTANEOUS_SPEED_SCENE.roadWidth]}
-        />
-        <meshStandardMaterial
-          color={INSTANTANEOUS_SPEED_COLORS.road}
-          roughness={0.72}
-        />
-      </mesh>
-
-      {Arr.map(stripePositions, (x) => (
-        <mesh key={x} position={[x, 0.035, 0]}>
-          <boxGeometry
-            args={[
-              INSTANTANEOUS_SPEED_SCENE.stripeLength,
-              0.018,
-              INSTANTANEOUS_SPEED_SCENE.stripeWidth,
-            ]}
-          />
-          <meshStandardMaterial
-            color={INSTANTANEOUS_SPEED_COLORS.stripe}
-            roughness={0.58}
-          />
-        </mesh>
-      ))}
     </group>
   );
 }

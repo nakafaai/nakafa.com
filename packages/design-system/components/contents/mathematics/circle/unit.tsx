@@ -23,7 +23,6 @@ import {
   VisualCardBody,
   VisualCardFacts,
   VisualCardFooter,
-  VisualCardHeader,
   VisualCardToolbar,
 } from "@repo/design-system/components/visual/card";
 import { VisualFact } from "@repo/design-system/components/visual/fact";
@@ -68,14 +67,6 @@ interface CardProps {
     | undefined;
   /** The name of the scene for assistive technology. */
   viewLabel?: string | undefined;
-}
-
-interface Props {
-  angle?: number | undefined;
-  description: ReactNode;
-  title: ReactNode;
-  /** Exact trigonometric values as fractions (e.g., "5/13", "12/13", "5/12") */
-  trigValues?: CardProps["trigValues"];
 }
 
 /** The configuration of one unit-circle card, shared by its scene, its controls and its values. */
@@ -142,30 +133,6 @@ export function UnitCircleCard({
   return (
     <UnitCircleProvider config={config}>
       <UnitCircleFrame>{header}</UnitCircleFrame>
-    </UnitCircleProvider>
-  );
-}
-
-/** The unit circle of a lesson page, with the title and description of its lesson. */
-export function UnitCircle({
-  title,
-  description,
-  angle = UNIT_CIRCLE_DEFAULT_ANGLE,
-  trigValues,
-}: Props) {
-  const config = {
-    angle,
-    live: true,
-    onAngleChange: undefined,
-    trigValues,
-    viewLabel: undefined,
-  };
-
-  return (
-    <UnitCircleProvider config={config}>
-      <UnitCircleFrame>
-        <VisualCardHeader description={description} title={title} />
-      </UnitCircleFrame>
     </UnitCircleProvider>
   );
 }

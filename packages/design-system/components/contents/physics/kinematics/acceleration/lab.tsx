@@ -116,7 +116,7 @@ export function AccelerationLab({
         className={threeSceneFrameVariants()}
         render={<section />}
       >
-        <ScienceStage frameloop="always">
+        <ScienceStage frameloop="always" setting="space">
           <Suspense>
             <CameraControls
               cameraPosition={ACCELERATION_LAB_SCENE.cameraPosition}

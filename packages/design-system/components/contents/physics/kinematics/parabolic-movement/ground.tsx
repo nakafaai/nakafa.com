@@ -7,37 +7,21 @@ import {
   type VectorTuple,
 } from "@repo/design-system/components/contents/physics/kinematics/parabolic-movement/data";
 import { getColor } from "@repo/design-system/lib/color";
-import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Vector3 } from "three";
 
 const GROUND_COLORS = {
-  ground: getColor("SLATE", 50),
-  groundEdge: PLOT_COLORS.amber,
   landingMat: getColor("SLATE", 200),
   launcherBase: getColor("SLATE", 600),
   launcherRail: getColor("SLATE", 700),
 };
 
-/** The ground the ball flies over, its edges, the landing mat and the launch ramp. */
+/** What stands on the range the ball flies over: the landing mat and the launch ramp. */
 export function ProjectileRange() {
   const motion = useParabolicMotion();
-  const groundLength = getGroundLength(motion.rangeWorld);
   const end = getProjectilePoint(motion, motion.flightTime);
 
   return (
     <group>
-      <mesh position={[0, -0.04, 0]} receiveShadow>
-        <boxGeometry args={[groundLength, 0.08, PARABOLIC_SCENE.groundWidth]} />
-        <meshStandardMaterial color={GROUND_COLORS.ground} roughness={0.82} />
-      </mesh>
-      <mesh position={[0, 0.02, -PARABOLIC_SCENE.groundWidth / 2]}>
-        <boxGeometry args={[groundLength, 0.04, 0.07]} />
-        <meshStandardMaterial color={GROUND_COLORS.groundEdge} />
-      </mesh>
-      <mesh position={[0, 0.02, PARABOLIC_SCENE.groundWidth / 2]}>
-        <boxGeometry args={[groundLength, 0.04, 0.07]} />
-        <meshStandardMaterial color={GROUND_COLORS.groundEdge} />
-      </mesh>
       <mesh position={[end.x, 0.03, 0]} receiveShadow>
         <boxGeometry args={[0.85, 0.05, 1.1]} />
         <meshStandardMaterial
@@ -115,10 +99,6 @@ function getLaunchRampPose(motion: ParabolicMotionState) {
     center: centerTuple,
     length,
   };
-}
-
-function getGroundLength(rangeWorld: number) {
-  return rangeWorld + PARABOLIC_SCENE.groundPadding;
 }
 
 /** Keeps the launch rail above the ground while preserving the launch angle. */

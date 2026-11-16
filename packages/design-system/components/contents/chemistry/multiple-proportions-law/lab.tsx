@@ -114,7 +114,7 @@ export function MultipleProportionsLab({
         className={threeSceneFrameVariants()}
         render={<section />}
       >
-        <ScienceStage frameloop="always">
+        <ScienceStage frameloop="always" setting="lab">
           <Suspense>
             <MultipleProportionsCameraControls />
             <MultipleProportionsSceneColorsProvider colors={sceneColors}>

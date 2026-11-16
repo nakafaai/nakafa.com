@@ -1,5 +1,4 @@
 import { lerp } from "@repo/design-system/components/contents/physics/kinematics/lerp";
-import { getColor } from "@repo/design-system/lib/color";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr } from "effect";
 
@@ -15,12 +14,9 @@ export const UNIFORM_LINEAR_MOTION_SCENE = {
   carScale: 0.62,
   durationSeconds: 5,
   positionStepSeconds: 1,
-  roadContextMultiplier: 8,
-  roadMinimumLength: 70,
   roadWidth: 1.8,
   stripeLength: 0.42,
   stripeSpacing: 1.5,
-  stripeWidth: 0.06,
   worldScale: 0.2,
 } as const;
 
@@ -32,8 +28,6 @@ export const UNIFORM_LINEAR_MOTION_CAMERA = {
 export const UNIFORM_LINEAR_MOTION_COLORS = {
   car: PLOT_COLORS.orange,
   positionMark: PLOT_COLORS.teal,
-  road: getColor("GRAY", 800),
-  stripe: getColor("SLATE", 50),
   track: PLOT_COLORS.teal,
 } as const;
 
@@ -60,12 +54,10 @@ export function getUniformLinearMotionState(speed: UniformLinearMotionSpeed) {
       x: lerp(startX, endX, progress),
     };
   });
-  const roadLength = getRoadLength(traveledDistance);
 
   return {
     duration,
     endX,
-    roadLength,
     samples,
     speed,
     startX,
@@ -81,16 +73,4 @@ export function isUniformLinearMotionSpeed(
   value: number
 ): value is UniformLinearMotionSpeed {
   return Arr.some(UNIFORM_LINEAR_MOTION_SPEEDS, (speed) => speed === value);
-}
-
-function getRoadLength(distanceMeters: number) {
-  const distanceLength =
-    distanceMeters * UNIFORM_LINEAR_MOTION_SCENE.worldScale;
-  const contextualLength =
-    distanceLength * UNIFORM_LINEAR_MOTION_SCENE.roadContextMultiplier;
-
-  return Math.max(
-    UNIFORM_LINEAR_MOTION_SCENE.roadMinimumLength,
-    contextualLength
-  );
 }

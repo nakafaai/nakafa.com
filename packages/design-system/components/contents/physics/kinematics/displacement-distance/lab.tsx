@@ -12,7 +12,6 @@ import {
   getDisplacementDistanceView,
   getRouteSampleAtProgress,
   isDisplacementDistanceCaseId,
-  type RouteSegment,
 } from "@repo/design-system/components/contents/physics/kinematics/displacement-distance/data";
 import { formatKeptZeroMeterMath } from "@repo/design-system/components/contents/physics/kinematics/math";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
@@ -20,6 +19,7 @@ import { CameraControls } from "@repo/design-system/components/three/camera/cont
 import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene";
 import { ScienceStage } from "@repo/design-system/components/three/stage";
+import { Route } from "@repo/design-system/components/three/stage/route";
 import {
   ToggleGroup,
   ToggleGroupItem,
@@ -34,7 +34,6 @@ import {
 } from "@repo/design-system/components/visual/card";
 import { VisualFactIndicator } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
-import { getColor } from "@repo/design-system/lib/color";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
@@ -44,6 +43,8 @@ import { type Group, Vector3 } from "three";
 const ROUTE_COLOR = PLOT_COLORS.teal;
 const DISPLACEMENT_COLOR = PLOT_COLORS.violet;
 const CAR_COLOR = PLOT_COLORS.orange;
+/** The height of the road the car drives on. */
+const ROAD_Y = 0.02;
 const END_PAUSE_SECONDS = 0.9;
 const MIN_TRAVEL_SECONDS = 4.8;
 const TRAVEL_SECONDS_PER_METER = 0.56;
@@ -108,7 +109,12 @@ export function DisplacementDistanceLab({
         className={threeSceneFrameVariants()}
         render={<section />}
       >
-        <ScienceStage frameloop="always">
+        <ScienceStage
+          floor={ROAD_Y}
+          frameloop="always"
+          ground="grass"
+          setting="field"
+        >
           <Suspense>
             <DisplacementDistanceCamera view={view} />
             <DisplacementDistanceScene motion={motion} />
@@ -179,9 +185,19 @@ function DisplacementDistanceScene({
 }: {
   motion: DisplacementDistanceState;
 }) {
+  const places = useMemo(
+    () => Arr.map(motion.route, (point) => [point.x, point.z] as const),
+    [motion.route]
+  );
+
   return (
     <group>
-      <RouteRoad segments={motion.segments} />
+      <Route
+        dash={DISPLACEMENT_DISTANCE_SCENE.stripeLength}
+        places={places}
+        spacing={DISPLACEMENT_DISTANCE_SCENE.stripeSpacing}
+        width={DISPLACEMENT_DISTANCE_SCENE.roadWidth}
+      />
       <RouteLines motion={motion} />
       <StartEndMarkers motion={motion} />
       <AnimatedCar motion={motion} />
@@ -240,63 +256,6 @@ function AnimatedCar({ motion }: { motion: DisplacementDistanceState }) {
         />
       </group>
     </CameraBounds>
-  );
-}
-
-function RouteRoad({ segments }: { segments: RouteSegment[] }) {
-  return (
-    <group>
-      {Arr.map(segments, (segment) => (
-        <RoadSegment
-          key={`${segment.start.x}-${segment.start.z}-${segment.end.x}-${segment.end.z}`}
-          segment={segment}
-        />
-      ))}
-    </group>
-  );
-}
-
-function RoadSegment({ segment }: { segment: RouteSegment }) {
-  const roadLength =
-    segment.length + DISPLACEMENT_DISTANCE_SCENE.roadOverhang * 2;
-  const stripeCount = Math.max(
-    1,
-    Math.floor(roadLength / DISPLACEMENT_DISTANCE_SCENE.stripeSpacing)
-  );
-  const stripeSpacing = roadLength / stripeCount;
-  const stripePositions = Array.from(
-    { length: stripeCount },
-    (_, index) => -roadLength / 2 + stripeSpacing * (index + 0.5)
-  );
-
-  return (
-    <group
-      position={[segment.center.x, -0.02, segment.center.z]}
-      rotation={[0, -segment.angle, 0]}
-    >
-      <mesh receiveShadow>
-        <boxGeometry
-          args={[roadLength, 0.08, DISPLACEMENT_DISTANCE_SCENE.roadWidth]}
-        />
-        <meshStandardMaterial color={getColor("SLATE", 700)} roughness={0.74} />
-      </mesh>
-
-      {Arr.map(stripePositions, (x) => (
-        <mesh key={x} position={[x, 0.055, 0]}>
-          <boxGeometry
-            args={[
-              DISPLACEMENT_DISTANCE_SCENE.stripeLength,
-              0.018,
-              DISPLACEMENT_DISTANCE_SCENE.stripeWidth,
-            ]}
-          />
-          <meshStandardMaterial
-            color={getColor("SLATE", 50)}
-            roughness={0.58}
-          />
-        </mesh>
-      ))}
-    </group>
   );
 }
 

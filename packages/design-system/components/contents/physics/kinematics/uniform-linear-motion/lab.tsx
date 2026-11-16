@@ -22,6 +22,7 @@ import { CameraControls } from "@repo/design-system/components/three/camera/cont
 import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene";
 import { ScienceStage } from "@repo/design-system/components/three/stage";
+import { Road } from "@repo/design-system/components/three/stage/road";
 import {
   ToggleGroup,
   ToggleGroupItem,
@@ -41,9 +42,8 @@ import { type ReactNode, Suspense, useMemo, useRef, useState } from "react";
 import type { Group } from "three";
 
 const PAUSE_SECONDS = 0.8;
-const ROAD_Y = -0.02;
-/** Thickness of the road slab, whose top the car drives on. */
-const ROAD_HEIGHT = 0.08;
+/** The height of the road the car drives on. */
+const ROAD_Y = 0.02;
 const POSITION_MARK_Y = 0.08;
 const TRACK_Z = UNIFORM_LINEAR_MOTION_SCENE.roadWidth * 0.22;
 
@@ -131,7 +131,12 @@ export function UniformLinearMotionLab({
         className={threeSceneFrameVariants()}
         render={<section />}
       >
-        <ScienceStage floor={ROAD_Y + ROAD_HEIGHT / 2} frameloop="always">
+        <ScienceStage
+          floor={ROAD_Y}
+          frameloop="always"
+          ground="grass"
+          setting="field"
+        >
           <Suspense>
             <CameraControls
               cameraPosition={UNIFORM_LINEAR_MOTION_CAMERA.cameraPosition}
@@ -171,9 +176,11 @@ function UniformLinearMotionScene({
 }) {
   return (
     <group>
-      <CameraBounds exclude>
-        <Road roadLength={motion.roadLength} />
-      </CameraBounds>
+      <Road
+        dash={UNIFORM_LINEAR_MOTION_SCENE.stripeLength}
+        spacing={UNIFORM_LINEAR_MOTION_SCENE.stripeSpacing}
+        width={UNIFORM_LINEAR_MOTION_SCENE.roadWidth}
+      />
       <mesh position={[motion.trackCenterX, 0.045, TRACK_Z]}>
         <boxGeometry args={[motion.trackLength, 0.03, 0.08]} />
         <meshStandardMaterial
@@ -238,50 +245,6 @@ function AnimatedCar({ motion }: { motion: UniformLinearMotionState }) {
         />
       </group>
     </CameraBounds>
-  );
-}
-
-function Road({ roadLength }: { roadLength: number }) {
-  const stripeCount = Math.ceil(
-    roadLength / UNIFORM_LINEAR_MOTION_SCENE.stripeSpacing
-  );
-  const stripePositions = Array.from({ length: stripeCount }, (_, index) => {
-    const spacing = roadLength / stripeCount;
-    return -roadLength / 2 + spacing * index + spacing * 0.5;
-  });
-
-  return (
-    <group>
-      <mesh position={[0, ROAD_Y, 0]} receiveShadow>
-        <boxGeometry
-          args={[
-            roadLength,
-            ROAD_HEIGHT,
-            UNIFORM_LINEAR_MOTION_SCENE.roadWidth,
-          ]}
-        />
-        <meshStandardMaterial
-          color={UNIFORM_LINEAR_MOTION_COLORS.road}
-          roughness={0.72}
-        />
-      </mesh>
-
-      {Arr.map(stripePositions, (x) => (
-        <mesh key={x} position={[x, 0.035, 0]}>
-          <boxGeometry
-            args={[
-              UNIFORM_LINEAR_MOTION_SCENE.stripeLength,
-              0.018,
-              UNIFORM_LINEAR_MOTION_SCENE.stripeWidth,
-            ]}
-          />
-          <meshStandardMaterial
-            color={UNIFORM_LINEAR_MOTION_COLORS.stripe}
-            roughness={0.58}
-          />
-        </mesh>
-      ))}
-    </group>
   );
 }
 

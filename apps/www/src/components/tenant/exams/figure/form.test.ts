@@ -122,11 +122,11 @@ describe("figure forms", () => {
 
 describe("new figures", () => {
   it("start each required prop at its own start and leave optional ones out", () => {
-    expect(emptyDraft("UnitCircle")).toEqual({
+    expect(emptyDraft("FunctionMachine")).toEqual({
       alt: "",
       caption: "",
-      component: "UnitCircle",
-      props: { description: undefined, title: undefined },
+      component: "FunctionMachine",
+      props: { description: undefined, inputLabel: "", title: undefined },
     });
     expect(
       initialValue({
@@ -210,32 +210,32 @@ describe("setAt", () => {
 
 describe("figureOf", () => {
   it("builds a figure its catalog schema accepts, or names what it refuses", () => {
-    const empty = emptyDraft("UnitCircle");
+    const empty = emptyDraft("FunctionMachine");
     const filled = {
       ...empty,
-      alt: " An angle of thirty degrees ",
+      alt: " A machine that doubles its input ",
       caption: "Angle $A$",
       props: {
-        angle: 30,
-        description: richOfText("Thirty degrees."),
-        title: richOfText("Angle"),
+        description: richOfText("Doubles the input."),
+        inputLabel: "x",
+        title: richOfText("Machine"),
       },
     };
     const built = figureOf(filled);
 
     expect(Result.isFailure(figureOf(empty))).toBe(true);
     expect(Result.getOrThrow(built)).toEqual({
-      alt: "An angle of thirty degrees",
+      alt: "A machine that doubles its input",
       caption: [
         { text: "Angle ", type: "text" },
         { attrs: { latex: "A" }, type: "mathInline" },
       ],
-      component: "UnitCircle",
+      component: "FunctionMachine",
       props: filled.props,
     });
     expect(draftOf(Result.getOrThrow(built))).toEqual({
       ...filled,
-      alt: "An angle of thirty degrees",
+      alt: "A machine that doubles its input",
     });
     expect(
       draftOf({ ...Result.getOrThrow(built), caption: null }).caption

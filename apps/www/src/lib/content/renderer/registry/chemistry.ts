@@ -6,6 +6,12 @@ import {
   DaltonEvidenceLab,
 } from "@/lib/content/renderer/client/chemistry/atom";
 import {
+  FizzBalanceLab,
+  LavoisierCalxLab,
+  PrecipitateLab,
+  SteelWoolLab,
+} from "@/lib/content/renderer/client/chemistry/balance";
+import {
   ElectronConfigurationLab,
   ValenceElectronLab,
 } from "@/lib/content/renderer/client/chemistry/electron";
@@ -15,6 +21,16 @@ import {
   MassConservationLab,
   MultipleProportionsLab,
 } from "@/lib/content/renderer/client/chemistry/laws";
+import {
+  BohrEmissionLab,
+  CathodeRayLab,
+  OrbitalCloudLab,
+  RutherfordScatteringLab,
+} from "@/lib/content/renderer/client/chemistry/model";
+import {
+  MoleculeShapeLab,
+  ReactionBalanceLab,
+} from "@/lib/content/renderer/client/chemistry/molecule";
 import {
   IonLab,
   IsotopeLab,
@@ -31,10 +47,39 @@ import {
   ChemicalReactionTypesLab,
   MethaneCombustionEquationLab,
 } from "@/lib/content/renderer/client/chemistry/reaction";
+import {
+  AlkaliWaterLab,
+  IonFormationLab,
+  IonLatticeLab,
+  MassSpectrometerLab,
+  MillikanOilDropLab,
+  ParticleTrackLab,
+  RadioactiveDecayLab,
+} from "@/lib/content/renderer/client/chemistry/structure";
 import type { RendererImplementation } from "@/lib/content/renderer/selection";
 
 /** Every chemistry visual, which any lesson in any domain may use. */
 export const chemistryRenderers = [
+  {
+    name: chemistryComponentNames.fizzBalanceLab,
+    component: FizzBalanceLab,
+  },
+  {
+    name: chemistryComponentNames.lavoisierCalxLab,
+    component: LavoisierCalxLab,
+  },
+  {
+    name: chemistryComponentNames.precipitateLab,
+    component: PrecipitateLab,
+  },
+  {
+    name: chemistryComponentNames.steelWoolLab,
+    component: SteelWoolLab,
+  },
+  {
+    name: chemistryComponentNames.alkaliWaterLab,
+    component: AlkaliWaterLab,
+  },
   {
     name: chemistryComponentNames.ancientAtomLab,
     component: AncientAtomLab,
@@ -46,6 +91,14 @@ export const chemistryRenderers = [
   {
     name: chemistryComponentNames.atomSymbolLab,
     component: AtomSymbolLab,
+  },
+  {
+    name: chemistryComponentNames.bohrEmissionLab,
+    component: BohrEmissionLab,
+  },
+  {
+    name: chemistryComponentNames.cathodeRayLab,
+    component: CathodeRayLab,
   },
   {
     name: chemistryComponentNames.chemicalReactionCharacteristicsLab,
@@ -72,8 +125,16 @@ export const chemistryRenderers = [
     component: ElectronConfigurationLab,
   },
   {
+    name: chemistryComponentNames.ionFormationLab,
+    component: IonFormationLab,
+  },
+  {
     name: chemistryComponentNames.ionLab,
     component: IonLab,
+  },
+  {
+    name: chemistryComponentNames.ionLatticeLab,
+    component: IonLatticeLab,
   },
   {
     name: chemistryComponentNames.isotopeLab,
@@ -84,6 +145,10 @@ export const chemistryRenderers = [
     component: MassConservationLab,
   },
   {
+    name: chemistryComponentNames.massSpectrometerLab,
+    component: MassSpectrometerLab,
+  },
+  {
     name: chemistryComponentNames.matterParticleReaderLab,
     component: MatterParticleReaderLab,
   },
@@ -92,16 +157,44 @@ export const chemistryRenderers = [
     component: MethaneCombustionEquationLab,
   },
   {
+    name: chemistryComponentNames.millikanOilDropLab,
+    component: MillikanOilDropLab,
+  },
+  {
     name: chemistryComponentNames.modernPeriodicTableLab,
     component: ModernPeriodicTableLab,
+  },
+  {
+    name: chemistryComponentNames.moleculeShapeLab,
+    component: MoleculeShapeLab,
   },
   {
     name: chemistryComponentNames.multipleProportionsLab,
     component: MultipleProportionsLab,
   },
   {
+    name: chemistryComponentNames.orbitalCloudLab,
+    component: OrbitalCloudLab,
+  },
+  {
+    name: chemistryComponentNames.particleTrackLab,
+    component: ParticleTrackLab,
+  },
+  {
     name: chemistryComponentNames.periodicPropertiesLab,
     component: PeriodicPropertiesLab,
+  },
+  {
+    name: chemistryComponentNames.radioactiveDecayLab,
+    component: RadioactiveDecayLab,
+  },
+  {
+    name: chemistryComponentNames.reactionBalanceLab,
+    component: ReactionBalanceLab,
+  },
+  {
+    name: chemistryComponentNames.rutherfordScatteringLab,
+    component: RutherfordScatteringLab,
   },
   {
     name: chemistryComponentNames.subatomicParticlePropertiesLab,

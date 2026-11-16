@@ -14,7 +14,7 @@ export const REGISTRY_REVIEWS = [
   [
     "effect@latest",
     "4.1.4",
-    "Effect 4.1.4 is the latest release and the adopted cohort (EFFECT_COHORT_VERSION). 4.1.3 and 4.1.4 are patch releases: Rational, CLI completion and validation fixes, cluster workflow retries, a TestClock finalizer fix, and OpenRouter schema regeneration. The contracts follow the cohort: @nakafa/aksara-contracts 7.0.0 peers effect 4.1.2 exactly, and the release that Aksara#624 cuts after this lands peers effect 4.1.4. Checked 16 November 2026.",
+    "Effect 4.1.4 is the latest release and the adopted cohort (EFFECT_COHORT_VERSION). 4.1.3 and 4.1.4 are patch releases: Rational, CLI completion and validation fixes, cluster workflow retries, a TestClock finalizer fix, and OpenRouter schema regeneration. The contracts follow the cohort: @nakafa/aksara-contracts 8.0.0 peers effect 4.1.2 exactly, and the release that Aksara#624 cuts after this lands peers effect 4.1.4. Checked 16 November 2026.",
   ],
   [
     "@effect/platform-node@latest",
@@ -73,8 +73,8 @@ export const REGISTRY_REVIEWS = [
   ],
   [
     "@nakafa/aksara-contracts@latest",
-    "7.0.0",
-    "nakafa.com declares 7.0.0, the newest release, which peers effect 4.1.2 exactly: the contracts lead the Effect cohort. 7.0.0 makes Malay an active locale, lists on each catalog row the locales its sets are explained in, places every language of a try-out section in its paper for the question language toggle, and carries the Visual Catalog figure contract. A release built with it is refused by a backend that still declares 6.5.0, so the backend and the apps adopt it in one step. Checked 15 November 2026.",
+    "8.0.0",
+    "nakafa.com declares 8.0.0, the newest release, which peers effect 4.1.2 exactly: the contracts lead the Effect cohort. 7.1.0 added the 100 labs of the science stack to the Visual Catalog, and 8.0.0 removes LineEquation, NumberLine and UnitCircle, which MathVisual replaces and no document used. Every catalog figure renders in lessons and try-outs through one renderer, whose registry equals the catalog. Checked 16 November 2026.",
   ],
   [
     "tsrs@latest",

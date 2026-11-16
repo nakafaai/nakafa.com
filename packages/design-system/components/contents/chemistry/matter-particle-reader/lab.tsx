@@ -117,7 +117,7 @@ export function MatterParticleReaderLab({
         className={threeSceneFrameVariants()}
         render={<section />}
       >
-        <ScienceStage frameloop="always">
+        <ScienceStage frameloop="always" setting="studio">
           <Suspense>
             <MatterParticleCameraControls />
             <MatterParticleSceneColorsProvider colors={sceneColors}>

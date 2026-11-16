@@ -1,13 +1,40 @@
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect, expectTypeOf, it } from "@effect/vitest";
 import {
   FIGURE_NAMES,
+  type FigureName,
   VISUAL_NAMES,
+  type visualCatalog,
 } from "@nakafa/aksara-contracts/visual/catalog";
-import { Array as Arr, Option, Order } from "effect";
+import { Array as Arr, Option, Order, type Types } from "effect";
+import type { ComponentType, ReactNode } from "react";
 import {
   catalogRenderer,
   catalogRenderers,
 } from "@/lib/content/renderer/catalog";
+
+/** The props a document may give each catalog component, its rich slots drawn as React nodes. */
+type DocumentProps = ReturnType<typeof visualCatalog<ReactNode>>;
+
+/**
+ * The name of a figure whose renderer would refuse props its Schema accepts:
+ * the Schema's props do not fit the component's, or the Schema names a prop
+ * the component lacks. The renderer hands each component a value it has just
+ * decoded, so the readonly marks the Schema's encoded type carries do not
+ * count. A markup component takes its children from the tree, so only figures
+ * are held to their props.
+ */
+type Refused<Renderer> = Renderer extends {
+  readonly component: ComponentType<infer Props>;
+  readonly name: infer Name extends FigureName;
+}
+  ? [Types.DeepMutable<DocumentProps[Name]["props"]["Encoded"]>] extends [Props]
+    ? [
+        Exclude<keyof DocumentProps[Name]["props"]["Encoded"], keyof Props>,
+      ] extends [never]
+      ? never
+      : Name
+    : Name
+  : never;
 
 vi.mock("use-intl", () => ({
   /** Keeps registry discovery independent from navigation runtime behavior. */
@@ -26,5 +53,11 @@ describe("catalog renderers", () => {
       expect(Option.isSome(catalogRenderer(name))).toBe(true);
     }
     expect(Option.isNone(catalogRenderer("Widget"))).toBe(true);
+  });
+
+  it("accept every prop a figure's Schema accepts, and no prop it lacks", () => {
+    expectTypeOf<
+      Refused<(typeof catalogRenderers)[number]>
+    >().toEqualTypeOf<never>();
   });
 });
