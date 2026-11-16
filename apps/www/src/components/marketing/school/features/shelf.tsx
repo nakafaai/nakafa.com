@@ -60,23 +60,12 @@ export function ShelfFolder({
   );
 }
 
-/**
- * One thing the teacher shared, as a card on the shelf: a picture of it, then the icon of its kind, its name, its
- * kind and what tells it apart. `children` is the picture.
- */
+/** One thing the teacher shared, as a card on the shelf: its picture over its label, rising a little after the row before. */
 export function ShelfCard({
   children,
-  icon,
-  kind,
-  meta,
-  name,
   step,
 }: {
   children: ReactNode;
-  icon: Parameters<typeof HugeIcons>[0]["icon"];
-  kind: string;
-  meta: string;
-  name: string;
   step: 1 | 2 | 3;
 }) {
   return (
@@ -87,22 +76,45 @@ export function ShelfCard({
         step,
       })}
     >
-      <div className="bg-muted/50 relative aspect-4/3 overflow-hidden border-b sm:aspect-video">
+      {children}
+    </div>
+  );
+}
+
+/** The picture of a shared thing, drawn as itself, above its label. */
+export function ShelfPicture({ children }: { children: ReactNode }) {
+  return (
+    <div className="bg-muted/50 relative aspect-4/3 overflow-hidden border-b sm:aspect-video">
+      {children}
+    </div>
+  );
+}
+
+/**
+ * The label of a shared thing: the icon of its kind beside its name, which the caller composes, then its kind and what
+ * tells it apart.
+ */
+export function ShelfLabel({
+  children,
+  icon,
+  kind,
+  meta,
+}: {
+  children: ReactNode;
+  icon: Parameters<typeof HugeIcons>[0]["icon"];
+  kind: string;
+  meta: string;
+}) {
+  return (
+    <div className="grid min-w-0 gap-1 p-3">
+      <p className="flex min-w-0 items-center gap-2 text-sm font-medium">
+        <HugeIcons className="text-muted-foreground shrink-0" icon={icon} />
         {children}
-      </div>
-      <div className="grid min-w-0 gap-1 p-3">
-        <p className="flex min-w-0 items-start gap-2 text-sm font-medium">
-          <HugeIcons
-            className="text-muted-foreground mt-0.5 shrink-0"
-            icon={icon}
-          />
-          <span className="line-clamp-2">{name}</span>
-        </p>
-        <p className="text-muted-foreground flex min-w-0 justify-between gap-2 text-xs">
-          <span className="truncate">{kind}</span>
-          <span className="shrink-0 tabular-nums">{meta}</span>
-        </p>
-      </div>
+      </p>
+      <p className="text-muted-foreground flex min-w-0 justify-between gap-2 text-xs">
+        <span className="truncate">{kind}</span>
+        <span className="shrink-0 tabular-nums">{meta}</span>
+      </p>
     </div>
   );
 }

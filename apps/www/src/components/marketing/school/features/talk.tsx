@@ -37,6 +37,7 @@ import { type ReactNode, useState } from "react";
 import { useFormatter, useLocale, useTranslations } from "use-intl";
 import { DEMO_REPLIERS } from "@/components/marketing/school/features/cast";
 import { demoTime } from "@/components/marketing/school/features/clock";
+import { FileName } from "@/components/marketing/school/features/file";
 import { LabGraph } from "@/components/marketing/school/features/graph";
 import {
   documentCard,
@@ -222,7 +223,7 @@ export function DemoFigure() {
       </div>
       <figcaption className="flex min-w-0 items-center gap-2 px-3 py-2 text-sm">
         <HugeIcons className="text-muted-foreground" icon={Image01Icon} />
-        <span className="truncate">{t("demo-library-graph")}</span>
+        <FileName name={t("demo-library-graph")} />
       </figcaption>
     </figure>
   );

@@ -11,11 +11,14 @@ import { PersonAvatar } from "@repo/design-system/components/ui/person";
 import type { AnimationSequence } from "motion";
 import { useFormatter, useTranslations } from "use-intl";
 import { DEMO_TEACHER } from "@/components/marketing/school/features/cast";
+import { FileName } from "@/components/marketing/school/features/file";
 import { LabGraph } from "@/components/marketing/school/features/graph";
 import {
   ShelfCard,
   ShelfFolder,
+  ShelfLabel,
   ShelfLesson,
+  ShelfPicture,
   ShelfQuestion,
   ShelfSheet,
   ShelfVideo,
@@ -150,60 +153,78 @@ function ShelfFiles() {
 
   return (
     <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4">
-      <ShelfCard
-        icon={Pdf02Icon}
-        kind={t("demo-kind-pdf")}
-        meta={format.number(240, { style: "unit", unit: "kilobyte" })}
-        name={t("demo-library-worksheet")}
-        step={1}
-      >
-        <ShelfSheet nina={false} />
+      <ShelfCard step={1}>
+        <ShelfPicture>
+          <ShelfSheet nina={false} />
+        </ShelfPicture>
+        <ShelfLabel
+          icon={Pdf02Icon}
+          kind={t("demo-kind-pdf")}
+          meta={format.number(240, { style: "unit", unit: "kilobyte" })}
+        >
+          <FileName name={t("demo-library-worksheet")} />
+        </ShelfLabel>
       </ShelfCard>
-      <ShelfCard
-        icon={Pdf02Icon}
-        kind={t("demo-kind-pdf")}
-        meta={format.number(96, { style: "unit", unit: "kilobyte" })}
-        name={t("demo-library-summary")}
-        step={2}
-      >
-        <ShelfSheet nina />
+      <ShelfCard step={2}>
+        <ShelfPicture>
+          <ShelfSheet nina />
+        </ShelfPicture>
+        <ShelfLabel
+          icon={Pdf02Icon}
+          kind={t("demo-kind-pdf")}
+          meta={format.number(96, { style: "unit", unit: "kilobyte" })}
+        >
+          <FileName name={t("demo-library-summary")} />
+        </ShelfLabel>
       </ShelfCard>
-      <ShelfCard
-        icon={Image01Icon}
-        kind={t("demo-kind-image")}
-        meta={format.number(1.2, { style: "unit", unit: "megabyte" })}
-        name={t("demo-library-graph")}
-        step={3}
-      >
-        <LabGraph />
+      <ShelfCard step={3}>
+        <ShelfPicture>
+          <LabGraph />
+        </ShelfPicture>
+        <ShelfLabel
+          icon={Image01Icon}
+          kind={t("demo-kind-image")}
+          meta={format.number(1.2, { style: "unit", unit: "megabyte" })}
+        >
+          <FileName name={t("demo-library-graph")} />
+        </ShelfLabel>
       </ShelfCard>
-      <ShelfCard
-        icon={Link04Icon}
-        kind={t("demo-kind-lesson")}
-        meta="nakafa.com"
-        name={t("demo-library-lesson")}
-        step={1}
-      >
-        <ShelfLesson />
+      <ShelfCard step={1}>
+        <ShelfPicture>
+          <ShelfLesson />
+        </ShelfPicture>
+        <ShelfLabel
+          icon={Link04Icon}
+          kind={t("demo-kind-lesson")}
+          meta="nakafa.com"
+        >
+          <FileName name={t("demo-library-lesson")} />
+        </ShelfLabel>
       </ShelfCard>
-      <ShelfCard
-        icon={Link04Icon}
-        kind={t("demo-kind-tryout")}
-        meta={t("demo-library-questions", { count: 10 })}
-        name={t("demo-library-quiz")}
-        step={2}
-      >
-        <ShelfQuestion />
+      <ShelfCard step={2}>
+        <ShelfPicture>
+          <ShelfQuestion />
+        </ShelfPicture>
+        <ShelfLabel
+          icon={Link04Icon}
+          kind={t("demo-kind-tryout")}
+          meta={t("demo-library-questions", { count: 10 })}
+        >
+          <FileName name={t("demo-library-quiz")} />
+        </ShelfLabel>
       </ShelfCard>
       <div className="grid" data-arriving="">
-        <ShelfCard
-          icon={Link04Icon}
-          kind={t("demo-kind-video")}
-          meta={format.number(4, { style: "unit", unit: "minute" })}
-          name={t("demo-library-video")}
-          step={3}
-        >
-          <ShelfVideo fresh={t("demo-library-new")} />
+        <ShelfCard step={3}>
+          <ShelfPicture>
+            <ShelfVideo fresh={t("demo-library-new")} />
+          </ShelfPicture>
+          <ShelfLabel
+            icon={Link04Icon}
+            kind={t("demo-kind-video")}
+            meta={format.number(4, { style: "unit", unit: "minute" })}
+          >
+            <FileName name={t("demo-library-video")} />
+          </ShelfLabel>
         </ShelfCard>
       </div>
     </div>
