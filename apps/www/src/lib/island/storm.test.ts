@@ -52,7 +52,7 @@ describe("island/storm", () => {
     expect(lit.zenith[2]).toBeGreaterThan(light.zenith[2]);
     expect(lit.ambient[0]).toBeGreaterThan(light.ambient[0]);
     expect(lit.sun).toEqual(light.sun);
-    expect(lit.fog).toEqual(lit.horizon);
+    expect(lit.horizon[2]).toBeGreaterThan(light.horizon[2]);
     expect(flashed(light, 0)).toEqual(light);
   });
 

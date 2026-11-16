@@ -180,7 +180,9 @@ export function createPainter(canvas: HTMLCanvasElement, season: Season) {
         gale.blow(bodyUniform, time, sky);
         gl.uniform3fv(bodyUniform("uSun"), light.sun);
         gl.uniform3fv(bodyUniform("uAmbient"), light.ambient);
-        gl.uniform3fv(bodyUniform("uFog"), light.fog);
+        gl.uniform3fv(bodyUniform("uZenith"), light.zenith);
+        gl.uniform3fv(bodyUniform("uHorizon"), light.horizon);
+        gl.uniform1f(bodyUniform("uRows"), target.height);
         gl.uniform2f(
           bodyUniform("uFogRange"),
           orbit.distance + 30,
@@ -229,7 +231,9 @@ export function createPainter(canvas: HTMLCanvasElement, season: Season) {
         gl.uniform3fv(uniform("uSun"), light.sun);
         gl.uniform3fv(uniform("uAmbient"), light.ambient);
         gl.uniform3fv(uniform("uLamp"), light.lamp);
-        gl.uniform3fv(uniform("uFog"), light.fog);
+        gl.uniform3fv(uniform("uZenith"), light.zenith);
+        gl.uniform3fv(uniform("uHorizon"), light.horizon);
+        gl.uniform1f(uniform("uRows"), target.height);
         gl.uniform2f(
           uniform("uFogRange"),
           orbit.distance + 30,

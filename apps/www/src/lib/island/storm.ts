@@ -90,7 +90,6 @@ export function flashed(light: Light, flash: number): Light {
   return {
     ...light,
     ambient: toward(light.ambient, [0.62, 0.64, 0.78], flash * 0.6),
-    fog: horizon,
     horizon,
     zenith: toward(light.zenith, sky, flash * 0.55),
   };

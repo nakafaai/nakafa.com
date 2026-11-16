@@ -13,7 +13,6 @@ describe("island/sky", () => {
     expect(brightness(noon.sun)).toBeGreaterThan(brightness(midnight.sun) * 3);
     expect(brightness(noon.lamp)).toBe(0);
     expect(midnight.lamp[0]).toBeGreaterThan(midnight.lamp[2]);
-    expect(noon.fog).toEqual(noon.horizon);
   });
 
   it("warms the horizon at dusk and wraps the hours around the day", () => {
