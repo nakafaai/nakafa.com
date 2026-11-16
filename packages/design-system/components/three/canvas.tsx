@@ -6,10 +6,13 @@ import {
 } from "@mantine/hooks";
 import { AdaptiveDpr } from "@react-three/drei";
 import {
+  addAfterEffect,
+  addEffect,
   Canvas,
   type CanvasProps,
   useFrame,
   useStore,
+  useThree,
 } from "@react-three/fiber";
 import { CameraFraming } from "@repo/design-system/components/three/camera/framing";
 import { THREE_RENDER_MARGIN } from "@repo/design-system/components/three/data/constants";
@@ -23,11 +26,13 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { buttonVariants } from "@repo/design-system/lib/button";
 import { getPowerPreference } from "@repo/design-system/lib/device";
+import { createFramePace } from "@repo/design-system/lib/pace";
 import { ClientOnly } from "@tanstack/react-router";
 import { cn } from "cn";
 import {
   type ComponentProps,
   type ReactNode,
+  useEffect,
   useLayoutEffect,
   useRef,
   useState,
@@ -117,6 +122,43 @@ function SceneTime() {
 }
 
 /**
+ * Draws a scene that animates by its own clock at the pace `createFramePace` keeps, an eighth of the main thread at
+ * most (ADR 0039 D5). Fiber's own loop draws every frame of the display, so a lab near the first screen held a slow
+ * phone's main thread for as long as the page loaded: on the relative movement lesson, three.js ran 1.6 to 1.8 seconds
+ * of script in a 12x Lighthouse run. The canvas renders on demand instead, and this asks for the next frame only
+ * once the pace says it is due: a fast device still draws every frame, and a slow phone draws a few each second.
+ * Fiber's global effects bracket each frame it renders, so the rest counts the frame's whole cost, its paint
+ * included.
+ */
+function PacedFrames() {
+  const invalidate = useThree((state) => state.invalidate);
+
+  useEffect(() => {
+    const pace = createFramePace();
+    let startedAt = 0;
+    let request = 0;
+    const stopBefore = addEffect(() => {
+      startedAt = performance.now();
+    });
+    const stopAfter = addAfterEffect(() => pace.rest(startedAt));
+    const tick = (now: number) => {
+      if (pace.isDue(now)) {
+        invalidate();
+      }
+      request = requestAnimationFrame(tick);
+    };
+    request = requestAnimationFrame(tick);
+    return () => {
+      cancelAnimationFrame(request);
+      stopBefore();
+      stopAfter();
+    };
+  }, [invalidate]);
+
+  return null;
+}
+
+/**
  * Calls back whenever an element of the page turns inert or interactive
  * again, such as the page behind a visual card shown full screen.
  */
@@ -143,6 +185,8 @@ function subscribeToInert(onChange: () => void) {
  * With reduced motion every canvas renders on demand, whatever loop it asks
  * for: a scene is drawn once, and again only when the reader moves the camera.
  * A scene that animates by its own clock keeps its still pose in that case.
+ * Otherwise such a scene draws at the pace of `PacedFrames`, never on every
+ * frame of the display.
  *
  * @param children - React Three.js children to render
  * @param frameloop - Frame update strategy ("always" | "demand")
@@ -172,7 +216,7 @@ function ThreeCanvasComponent({
   const calm = useReducedMotion(undefined, { getInitialValueInEffect: false });
   // A canvas renders until the observer first places it.
   const nearViewport = entry?.isIntersecting ?? true;
-  const loop = calm ? "demand" : frameloop;
+  const paced = !calm && frameloop === "always";
   const behindInert = useSyncExternalStore(
     subscribeToInert,
     () => Boolean(frame?.closest("[inert]")),
@@ -205,7 +249,7 @@ function ThreeCanvasComponent({
                 <HugeIcons aria-hidden="true" icon={Sad02Icon} />
               </div>
             }
-            frameloop={nearViewport && !behindInert ? loop : "never"}
+            frameloop={nearViewport && !behindInert ? "demand" : "never"}
             gl={{
               antialias: true,
               powerPreference,
@@ -222,6 +266,7 @@ function ThreeCanvasComponent({
           >
             <AdaptiveDpr />
             <SceneTime />
+            {paced && nearViewport && !behindInert ? <PacedFrames /> : null}
             <CameraFraming>{children}</CameraFraming>
           </Canvas>
         </ErrorBoundary>
