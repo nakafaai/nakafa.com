@@ -119,3 +119,18 @@ function readTrailLevel(trail: MaterialPlacement["trail"]) {
     ? {}
     : { level: level.label };
 }
+
+/**
+ * The subject and the level of a lesson's lead place, such as Matematika Kelas 12,
+ * which its title names after the topic, as a learner searches for a lesson of their
+ * grade. Only a trail of three places or more names both, after its curriculum; a
+ * lesson that no curriculum places names none.
+ */
+export function readLeadSubject(placements: readonly MaterialPlacement[]) {
+  return Option.flatMap(Arr.head(placements), ({ trail }) => {
+    const [, level, subject] = trail;
+    return level === undefined || subject === undefined
+      ? Option.none()
+      : Option.some(`${subject.label} ${level.label}`);
+  });
+}

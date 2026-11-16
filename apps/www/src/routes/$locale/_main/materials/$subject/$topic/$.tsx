@@ -48,6 +48,7 @@ import {
 } from "@/lib/content/material/navigation";
 import {
   orderPlacements,
+  readLeadSubject,
   readPlacementAlignments,
   readPlacementTrails,
 } from "@/lib/content/material/placement";
@@ -235,8 +236,13 @@ export const Route = createFileRoute(
           ),
         ],
         locale,
-        // Many lessons share a short name, such as Numbers: the topic tells them apart.
-        parts: [headMetadata.title, route.topicTitle],
+        // Many lessons share a short name, such as Numbers: the topic tells them apart, and the lead place's
+        // subject and level match a search that names the grade; the title budget drops what does not fit.
+        parts: [
+          headMetadata.title,
+          route.topicTitle,
+          Option.getOrUndefined(readLeadSubject(placements)),
+        ],
         type: "article",
       })
     );
