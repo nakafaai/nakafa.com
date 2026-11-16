@@ -203,3 +203,140 @@ export const picked = labels[mode];
     })
   );
 });
+
+describe("if chains over a tag", () => {
+  it.effect(
+    "reports a chain once, at its first if, through else and through the next statement",
+    () =>
+      Effect.gen(function* () {
+        assert.deepStrictEqual(
+          yield* findings(`export function nested(value: Shape) {
+  if (value._tag === "a") {
+    return 1;
+  } else if (value._tag === "b") {
+    return 2;
+  } else if (value._tag === "c") {
+    return 3;
+  }
+  return 0;
+}
+export function sibling(value: Shape) {
+  if (value._tag === "a") {
+    return 1;
+  }
+  if ("b" !== value._tag) {
+    return 2;
+  }
+  if (value._tag == \`c\`) {
+    return 3;
+  }
+  return 0;
+}
+export function negated(state: { readonly result: Shape }) {
+  if (!(state.result._tag === "a" || state.result._tag === "b")) {
+    return 0;
+  }
+  if ((state.result._tag) != "c") {
+    return 1;
+  }
+  return 2;
+}
+`),
+          ["2 tag-chain", "12 tag-chain", "24 tag-chain"]
+        );
+      })
+  );
+
+  it.effect(
+    "reports a chain inside a case clause, a default clause and a namespace",
+    () =>
+      Effect.gen(function* () {
+        assert.deepStrictEqual(
+          yield* findings(`namespace Shapes {
+  if (value._tag === "a") {
+  }
+  if (value._tag === "b") {
+  }
+}
+export function cases(value: Shape, kind: string) {
+  switch (kind) {
+    case "one":
+      if (value._tag === "a") {
+        return 1;
+      }
+      if (value._tag === "b") {
+        return 2;
+      }
+      return 0;
+    default:
+      if (value._tag === "a") {
+        return 1;
+      }
+      if (value._tag === "b") {
+        return 2;
+      }
+      return 0;
+  }
+}
+`),
+          ["2 tag-chain", "8 switch", "10 tag-chain", "18 tag-chain"]
+        );
+      })
+  );
+
+  it.effect(
+    "leaves one if over a tag, ifs over other subjects or properties, and conditions that are not a tag comparison",
+    () =>
+      Effect.gen(function* () {
+        assert.deepStrictEqual(
+          yield* findings(`export function single(value: Shape) {
+  if (value._tag === "a") {
+    return 1;
+  }
+  return value.size;
+}
+export function others(left: Shape, right: Shape) {
+  if (left._tag === "a") {
+    return 1;
+  } else if (right._tag === "a") {
+    return 2;
+  }
+  if (right._tag === "b") {
+    return 3;
+  }
+  if (left.kind === "a") {
+    return 4;
+  }
+  if (left.kind === "b") {
+    return 5;
+  }
+  if (left._tag === "c" && ready) {
+    return 6;
+  }
+  if (left._tag === kind) {
+    return 7;
+  }
+  if (left._tag > "d") {
+    return 8;
+  }
+  if (left["_tag"] === "e") {
+    return 9;
+  }
+  if (ready) {
+    return 10;
+  }
+  return 0;
+}
+const value = check() ? (() => {
+  if (shape._tag === "a") {
+    return 1;
+  }
+  return 0;
+})() : 0;
+for (const shape of shapes) if (shape._tag === "a") break;
+`),
+          []
+        );
+      })
+  );
+});

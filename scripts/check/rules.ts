@@ -31,6 +31,7 @@ export const Rule = Schema.Literals([
   "random",
   "react-lazy",
   "switch",
+  "tag-chain",
   "throw",
   "timer",
   "try-catch",
@@ -165,6 +166,11 @@ export const RULES = {
   switch: {
     message:
       "match on the value with Match from effect, such as Match.value with Match.tags, Match.discriminators, or Match.when, instead of a switch statement.",
+    scope: "every",
+  },
+  "tag-chain": {
+    message:
+      "match on the tag with Match.tags, Match.tag, or Match.tagsExhaustive from effect, or with the match of Result, Option, or Exit for their own tags, instead of a chain of if statements over the same subject's _tag.",
     scope: "every",
   },
   throw: {
