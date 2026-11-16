@@ -3,9 +3,15 @@
 import {
   ArrowLeft01Icon,
   BookOpen01Icon,
+  CactusIcon,
+  CloudAngledRainIcon,
+  FlowerIcon,
+  Leaf01Icon,
   Moon02Icon,
   PickaxeIcon,
   Redo02Icon,
+  SnowIcon,
+  Sun01Icon,
   Sun03Icon,
   Undo02Icon,
   VolumeHighIcon,
@@ -150,9 +156,24 @@ function twoDigits(value: number) {
   return String(value).padStart(2, "0");
 }
 
-/** The learner's time of day, which the world's sky follows (ADR 0047, D8), with the sun by day and the moon by night. */
+/** The icon of each season beside the clock. */
+const SEASON_ICONS = {
+  autumn: Leaf01Icon,
+  dry: CactusIcon,
+  spring: FlowerIcon,
+  summer: Sun01Icon,
+  wet: CloudAngledRainIcon,
+  winter: SnowIcon,
+} as const;
+
+/**
+ * The learner's time of day, which the world's sky follows (ADR 0047, D8), with
+ * the sun by day and the moon by night, and the season the world is painted for.
+ */
 function Clock() {
+  const t = useTranslations("Island");
   const minute = useGame((state) => state.minute);
+  const season = useGame((state) => state.season);
   const hours = Math.floor(minute / 60);
   const time = `${twoDigits(hours)}:${twoDigits(minute % 60)}`;
   return (
@@ -162,6 +183,8 @@ function Clock() {
         icon={hours >= 6 && hours < 18 ? Sun03Icon : Moon02Icon}
       />
       <time dateTime={time}>{time}</time>
+      <HugeIcons className="text-island-wood" icon={SEASON_ICONS[season]} />
+      <span className="sr-only">{t(`season-${season}`)}</span>
     </p>
   );
 }
