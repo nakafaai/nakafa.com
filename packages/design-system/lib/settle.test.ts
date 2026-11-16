@@ -150,11 +150,6 @@ describe("waiting for the page to settle", () => {
         const { untilPageRead: untilFreshPageRead } = yield* Effect.promise(
           () => import("@repo/design-system/lib/settle")
         );
-        const activation = { hasBeenActive: false };
-        Object.defineProperty(navigator, "userActivation", {
-          configurable: true,
-          value: activation,
-        });
 
         const waiting = yield* Effect.forkChild(untilFreshPageRead);
         yield* Effect.yieldNow;
@@ -163,8 +158,31 @@ describe("waiting for the page to settle", () => {
         yield* Fiber.interrupt(waiting);
 
         // The press that opens a sheet happened before the sheet's picture listened.
-        activation.hasBeenActive = true;
+        window.dispatchEvent(new Event("pointerdown"));
         yield* untilFreshPageRead;
+      })
+  );
+
+  it.effect(
+    "waits on a page the browser itself opened as active, since that is no reader",
+    () =>
+      Effect.gen(function* () {
+        stubReadyState("complete");
+        // A fresh module, as a new document that the browser's address bar opened.
+        vi.resetModules();
+        const { untilPageRead: untilFreshPageRead } = yield* Effect.promise(
+          () => import("@repo/design-system/lib/settle")
+        );
+        Object.defineProperty(navigator, "userActivation", {
+          configurable: true,
+          value: { hasBeenActive: true },
+        });
+
+        const waiting = yield* Effect.forkChild(untilFreshPageRead);
+        yield* Effect.yieldNow;
+        yield* Effect.yieldNow;
+        expect(waiting.pollUnsafe()).toBeUndefined();
+        yield* Fiber.interrupt(waiting);
       })
   );
 });
