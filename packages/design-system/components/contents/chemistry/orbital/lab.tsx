@@ -13,6 +13,7 @@ import {
 } from "@repo/design-system/components/contents/chemistry/orbital/wave";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { CameraControls } from "@repo/design-system/components/three/camera/controls";
+import { ORIGIN_COLOR } from "@repo/design-system/components/three/data/constants";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene";
 import { ScienceStage } from "@repo/design-system/components/three/stage";
@@ -339,7 +340,13 @@ function OrbitalAxes({ reach }: { readonly reach: number }) {
             ]}
             transparent
           />
-          <ThreeLabel color={axis.color} fontSize="compact" position={axis.end}>
+          <ThreeLabel
+            color={axis.color}
+            fontSize="compact"
+            outlineColor={ORIGIN_COLOR.DARK}
+            outlineWidth={0.03}
+            position={axis.end}
+          >
             <InlineMath math={axis.name} />
           </ThreeLabel>
         </group>
