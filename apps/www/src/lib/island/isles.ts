@@ -117,6 +117,7 @@ function faceOf(
         face.shade,
         1,
         0,
+        0,
       ];
     }
   );

@@ -1,3 +1,4 @@
+import { idOf } from "@repo/backend/confect/island/blocks";
 import { HEIGHT, SPAN } from "@repo/backend/confect/island/world";
 import { Array as Arr } from "effect";
 import { ATLAS_TILES } from "@/lib/island/atlas";
@@ -11,8 +12,19 @@ import {
   isInside,
 } from "@/lib/island/world";
 
-/** Floats per vertex: position (3), atlas coordinate (2), face shade, sky light, block light. */
-export const STRIDE = 8;
+/**
+ * Floats per vertex: position (3), atlas coordinate (2), face shade, sky
+ * light, block light, and how the wind takes it (ADR 0047, D32): 0 holds it
+ * still, up to 1 lets it go, and `GRASS_TOP` marks the top of a grass block,
+ * which never moves but lightens where a gust passes.
+ */
+export const STRIDE = 9;
+
+/** The wind mark of a grass block's top face. */
+export const GRASS_TOP = -1;
+
+const LEAVES = idOf("leaves");
+const GRASS = idOf("grass");
 
 /** How bright each face is under a sky straight above: top, bottom, east and west, south and north. */
 const SHADE = { bottom: 0.55, top: 1, x: 0.8, z: 0.68 } as const;
@@ -112,6 +124,50 @@ export function skylineOf(cells: Cells) {
 /** Whether a cell darkens the corners of the faces beside it. */
 function occludes(cells: Cells, x: number, y: number, z: number) {
   return LOOK.kinds[blockAt(cells, x, y, z)] === KIND.solid ? 1 : 0;
+}
+
+/** Whether a cell holds what the wind cannot move: wood, ground or a wall, anything but air, leaves, a plant and water. */
+function isRigid(cells: Cells, x: number, y: number, z: number) {
+  const block = blockAt(cells, x, y, z);
+  const kind = LOOK.kinds[block];
+  return block !== LEAVES && (kind === KIND.solid || kind === KIND.cutout);
+}
+
+/**
+ * How freely the wind moves one corner of a leaf block: not at all where it
+ * touches wood or ground, half where such a block lies a cell away, wholly
+ * beyond. It depends on the corner's place alone, so two leaf blocks move
+ * their shared corner alike and a crown never tears.
+ */
+function leafSway(cells: Cells, x: number, y: number, z: number) {
+  let sway = 1;
+  for (let dy = -2; dy <= 1; dy += 1) {
+    for (let dz = -2; dz <= 1; dz += 1) {
+      for (let dx = -2; dx <= 1; dx += 1) {
+        if (!isRigid(cells, x + dx, y + dy, z + dz)) {
+          continue;
+        }
+        if (Math.min(dx, dy, dz) >= -1 && Math.max(dx, dy, dz) <= 0) {
+          return 0;
+        }
+        sway = 0.5;
+      }
+    }
+  }
+  return sway;
+}
+
+/** How the wind takes a corner of a cube's face: a leaf block's by its place, a grass top's by its mark, any other not at all. */
+function cubeSway(
+  cells: Cells,
+  block: number,
+  up: boolean,
+  corner: readonly [number, number, number]
+) {
+  if (block === LEAVES) {
+    return leafSway(cells, corner[0], corner[1], corner[2]);
+  }
+  return block === GRASS && up ? GRASS_TOP : 0;
 }
 
 /** Whether a face of `block` toward `neighbour` can be seen. */
@@ -259,6 +315,7 @@ function addCube(
         face.shade * OCCLUSION[opens[index]],
         sky,
         glow,
+        cubeSway(cells, block, face.n[1] > 0, [px, py, pz]),
       ];
     });
     list.quad(corners, opens[0] + opens[2] < opens[1] + opens[3]);
@@ -293,6 +350,7 @@ function addCross(
         0.9,
         sky,
         glow,
+        b,
       ];
     };
     list.quad([corner(0, 0), corner(1, 0), corner(1, 1), corner(0, 1)], false);

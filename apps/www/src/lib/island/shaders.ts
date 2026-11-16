@@ -1,4 +1,5 @@
 import { ATLAS_TILES } from "@/lib/island/atlas";
+import { WIND_GLSL } from "@/lib/island/wind";
 
 /**
  * The island's GLSL programs (ADR 0047, D2), written for WebGL2. The painter
@@ -12,19 +13,25 @@ layout(location = 1) in vec2 aUv;
 layout(location = 2) in float aShade;
 layout(location = 3) in float aSky;
 layout(location = 4) in float aGlow;
+layout(location = 5) in float aSway;
 uniform mat4 uViewProjection;
+${WIND_GLSL}
 out vec2 vUv;
 out float vShade;
 out float vSky;
 out float vGlow;
+out float vSway;
 out vec3 vWorld;
 void main() {
   vUv = aUv;
   vShade = aShade;
   vSky = aSky;
   vGlow = aGlow;
+  vSway = aSway;
+  // The light and the edges keep to where the block stands; only what is drawn gives to the wind (D32).
   vWorld = aPosition;
-  gl_Position = uViewProjection * vec4(aPosition, 1.0);
+  vec3 place = aSway > 0.0 ? aPosition + windShift(aPosition.xz, aSway) : aPosition;
+  gl_Position = uViewProjection * vec4(place, 1.0);
 }`;
 
 export const CHUNK_FRAGMENT = `#version 300 es
@@ -42,10 +49,12 @@ uniform float uWater;
 uniform sampler2D uShore;
 uniform vec2 uShoreBox;
 uniform vec3 uEye;
+${WIND_GLSL}
 in vec2 vUv;
 in float vShade;
 in float vSky;
 in float vGlow;
+in float vSway;
 in vec3 vWorld;
 layout(location = 0) out vec4 color;
 layout(location = 1) out vec4 surface;
@@ -77,6 +86,10 @@ void main() {
   vec4 texel = texture(uAtlas, uv);
   if (texel.a < 0.5) discard;
   vec3 paint = texel.rgb;
+  if (vSway < -0.5) {
+    // A gust shows on the meadow (D32): the grass under its front turns a tone lighter, in whole art pixels.
+    paint *= 1.0 + 0.1 * step(0.55, windField(floor(vWorld.xz * 16.0) / 16.0, 1.0));
+  }
   float foam = 0.0;
   if (uWater > 0.5) {
     // The sea in whole art pixels (D28): how near land this pixel is, and a slow drift that breaks every line of it.
@@ -264,11 +277,12 @@ layout(location = 0) in vec3 aPosition;
 layout(location = 1) in vec3 aNormal;
 layout(location = 2) in vec3 aColor;
 layout(location = 3) in vec4 aPlace;
-layout(location = 4) in float aBob;
+layout(location = 4) in float aMove;
 layout(location = 5) in float aGround;
 uniform mat4 uViewProjection;
 uniform float uTime;
 uniform float uShadow;
+${WIND_GLSL}
 out vec3 vColor;
 out vec3 vNormal;
 out vec3 vWorld;
@@ -284,7 +298,13 @@ void main() {
   }
   vec3 turned = vec3(local.x * c + local.z * s, local.y, -local.x * s + local.z * c);
   vec3 place = base + turned;
-  place.y += abs(sin(uTime * 9.0 + aPlace.x * 3.1)) * aBob * (1.0 - uShadow);
+  if (aMove < 0.0) {
+    // A plant gives to the wind like a rod held at its foot (D32): hardly at all low down, most at its top, a tall one further than a small one. Its shadow follows on the ground.
+    float height = min(1.0, aPosition.y * -aMove);
+    vec3 shift = windShift(aPlace.xz, height * height * min(1.0, 0.4 - 0.2 / aMove));
+    place += uShadow > 0.5 ? vec3(shift.x, 0.0, shift.z) : shift;
+  }
+  place.y += abs(sin(uTime * 9.0 + aPlace.x * 3.1)) * max(aMove, 0.0) * (1.0 - uShadow);
   vNormal = vec3(aNormal.x * c + aNormal.z * s, aNormal.y, -aNormal.x * s + aNormal.z * c);
   vColor = aColor;
   vWorld = place;

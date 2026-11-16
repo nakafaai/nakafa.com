@@ -7,7 +7,13 @@ import { Swimmer } from "@/lib/island/models/ocean";
 import { unitOf } from "@/lib/island/noise";
 import { type Cells, SEA_LEVEL } from "@/lib/island/world";
 
-/** Numbers per drawn body: its place, the way it faces, how high it bobs as it walks, and the height of the ground its shadow falls on. */
+/**
+ * Numbers per drawn body: its place, the way it faces, how it moves where it
+ * stands, and the height of the ground its shadow falls on. How it moves is
+ * above zero for an animal, how high it bobs as it walks, and below zero for
+ * a plant, minus one over its height in blocks, which is how far up it the
+ * wind takes hold (ADR 0047, D32).
+ */
 export const BODY_STRIDE = 6;
 
 /** The shadow ground of a body that casts none: one in the water or over it. */

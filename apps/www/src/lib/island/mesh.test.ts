@@ -3,8 +3,14 @@
 import { describe, expect, it } from "@effect/vitest";
 import { idOf } from "@repo/backend/confect/island/blocks";
 import { SPAN } from "@repo/backend/confect/island/world";
-import { Array as Arr, MutableHashSet } from "effect";
-import { lightingOf, meshChunk, STRIDE, skylineOf } from "@/lib/island/mesh";
+import { Array as Arr, MutableHashSet, Result } from "effect";
+import {
+  GRASS_TOP,
+  lightingOf,
+  meshChunk,
+  STRIDE,
+  skylineOf,
+} from "@/lib/island/mesh";
 import { terrainOf } from "@/lib/island/terrain";
 import { cellOf, emptyCells } from "@/lib/island/world";
 
@@ -36,6 +42,65 @@ describe("island/mesh", () => {
     );
     expect(Math.min(...shades)).toBeLessThan(55);
     expect(Math.max(...shades)).toBe(100);
+  });
+
+  it("lets the wind take a crown by how far each corner is from wood, and never tears it", () => {
+    const cells = emptyCells();
+    // A trunk of two logs with a crown of leaves over and beside it, four blocks along x.
+    cells[cellOf(5, 9, 5)] = idOf("log");
+    cells[cellOf(5, 10, 5)] = idOf("log");
+    for (const x of [5, 6, 7, 8, 9]) {
+      cells[cellOf(x, 11, 5)] = idOf("leaves");
+    }
+    const { vertices } = meshChunk(cells, lightingOf(cells), 0, 0).solid;
+    /** Every wind weight the corners at one place carry, whichever block and face they belong to. */
+    const swaysAt = (x: number, y: number, z: number) =>
+      Arr.dedupe(
+        Arr.filterMap(
+          Arr.makeBy(vertices.length / STRIDE, (vertex) => vertex * STRIDE),
+          (at) =>
+            vertices[at] === x &&
+            vertices[at + 1] === y &&
+            vertices[at + 2] === z
+              ? Result.succeed(vertices[at + 8])
+              : Result.failVoid
+        )
+      );
+    // Held where the crown sits on the trunk, half free a block out, free beyond.
+    expect(swaysAt(5, 11, 5)).toEqual([0]);
+    expect(swaysAt(6, 11, 5)).toEqual([0]);
+    expect(swaysAt(7, 11, 5)).toEqual([0.5]);
+    expect(swaysAt(7, 12, 5)).toEqual([0.5]);
+    expect(swaysAt(8, 12, 5)).toEqual([1]);
+    expect(swaysAt(10, 12, 6)).toEqual([1]);
+    // The trunk itself never moves.
+    expect(swaysAt(5, 9, 5)).toEqual([0]);
+  });
+
+  it("marks a grass top for the gust's streak, and lets a flower go at its top only", () => {
+    const cells = emptyCells();
+    cells[cellOf(5, 10, 5)] = idOf("grass");
+    cells[cellOf(5, 11, 5)] = idOf("flowers");
+    const { vertices } = meshChunk(cells, lightingOf(cells), 0, 0).solid;
+    const corners = Arr.makeBy(vertices.length / STRIDE, (vertex) => ({
+      sway: vertices[vertex * STRIDE + 8],
+      y: vertices[vertex * STRIDE + 1],
+    }));
+    // The grass's top face is hidden under nothing: a flower lets it show.
+    expect(Arr.filter(corners, ({ sway }) => sway === GRASS_TOP)).toHaveLength(
+      4
+    );
+    expect(
+      Arr.dedupe(
+        Arr.map(
+          Arr.filter(corners, ({ sway }) => sway > 0),
+          ({ y }) => y
+        )
+      )
+    ).toEqual([12]);
+    expect(Arr.some(corners, ({ sway, y }) => y === 10 && sway !== 0)).toBe(
+      false
+    );
   });
 
   it("puts water in its own pass, its open surface sunk below the cell's top", () => {

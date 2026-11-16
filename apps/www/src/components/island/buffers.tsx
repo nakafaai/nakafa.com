@@ -27,7 +27,7 @@ export function seaRing(y: number, uv: readonly [number, number], sky: number) {
     ] as const;
     Arr.forEach(corners, ([x, z], corner) => {
       vertices.set(
-        [x, y, z, uv[0], uv[1], 1, sky, 0],
+        [x, y, z, uv[0], uv[1], 1, sky, 0, 0],
         (index * 4 + corner) * STRIDE
       );
     });
@@ -73,7 +73,7 @@ export function programOf(
     : Option.none();
 }
 
-/** Lays out the bound vertex buffer as the chunk program reads it: position, atlas coordinate, shade, sky light, lamp light. */
+/** Lays out the bound vertex buffer as the chunk program reads it: position, atlas coordinate, shade, sky light, lamp light, wind. */
 function describeVertices(gl: WebGL2RenderingContext) {
   const bytes = STRIDE * 4;
   for (const [location, size, offset] of [
@@ -82,6 +82,7 @@ function describeVertices(gl: WebGL2RenderingContext) {
     [2, 1, 5],
     [3, 1, 6],
     [4, 1, 7],
+    [5, 1, 8],
   ] as const) {
     gl.enableVertexAttribArray(location);
     gl.vertexAttribPointer(location, size, gl.FLOAT, false, bytes, offset * 4);
@@ -251,11 +252,12 @@ export function uploadMoving(gl: WebGL2RenderingContext, capacity: number) {
 }
 
 /**
- * The shore map on the GPU (D28): one byte a column of sea, read smoothly so
- * the surf bends round a coast instead of stepping along its cells. `write`
+ * A map of the ground on the GPU, one byte a texel, read smoothly: the shore
+ * map (D28), so the surf bends round a coast instead of stepping along its
+ * cells, and the lean map (D32), so neighbouring trees lean alike. `write`
  * replaces it, `bind` puts it on a texture unit.
  */
-export function uploadShore(gl: WebGL2RenderingContext, side: number) {
+export function uploadMap(gl: WebGL2RenderingContext, side: number) {
   const texture = gl.createTexture();
   gl.bindTexture(gl.TEXTURE_2D, texture);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
