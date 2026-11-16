@@ -10,17 +10,17 @@ import {
   rodSurfaceSpots,
   surfaceBump,
 } from "@repo/design-system/components/contents/biology/bacteria/cell";
-import { Array as Arr } from "effect";
+import { Array as Arr, Option } from "effect";
 
 describe("bacterial cell geometry", () => {
   it("outlines a rod from one pole tip to the other", () => {
     const profile = rodProfile(0.4, 1.2, 8);
     const [tip] = profile;
-    const end = profile[profile.length - 1];
+    const end = Option.getOrThrow(Arr.last(profile));
 
     expect(tip?.[0]).toBeCloseTo(0, 12);
     expect(tip?.[1]).toBeCloseTo(1, 12);
-    expect(end?.[1]).toBeCloseTo(-1, 12);
+    expect(end[1]).toBeCloseTo(-1, 12);
     expect(Arr.every(profile, ([r]) => r <= 0.4 + 1e-12)).toBe(true);
   });
 

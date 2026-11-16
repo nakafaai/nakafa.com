@@ -264,8 +264,16 @@ export function SpirillumBacteriumModel({ scale = 1 }: { scale?: number }) {
   );
   useEffect(() => () => body.dispose(), [body]);
   const ends = [
-    { direction: [-1, 0.3, 0] as const, origin: path.getPointAt(0).toArray() },
-    { direction: [1, -0.3, 0] as const, origin: path.getPointAt(1).toArray() },
+    {
+      direction: [-1, 0.3, 0] as const,
+      origin: path.getPointAt(0).toArray(),
+      pole: 0,
+    },
+    {
+      direction: [1, -0.3, 0] as const,
+      origin: path.getPointAt(1).toArray(),
+      pole: 1,
+    },
   ];
   return (
     <group scale={scale}>
@@ -281,18 +289,18 @@ export function SpirillumBacteriumModel({ scale = 1 }: { scale?: number }) {
           />
         </mesh>
       ))}
-      {Arr.flatMap(ends, ({ direction, origin }, side) =>
-        Arr.map(Arr.range(0, 2), (index) => (
+      {Arr.flatMap(ends, ({ direction, origin, pole }) =>
+        Arr.map([-1, 0, 1] as const, (spread) => (
           <Flagellum
             direction={[
               direction[0],
-              direction[1] + (index - 1) * 0.35,
-              (index - 1) * 0.3,
+              direction[1] + spread * 0.35,
+              spread * 0.3,
             ]}
-            key={`${side}-${index}`}
+            key={`${pole}${spread}`}
             length={0.9}
             origin={[origin[0] ?? 0, origin[1] ?? 0, origin[2] ?? 0]}
-            phase={index * 2 + side}
+            phase={spread * 2 + pole}
           />
         ))
       )}

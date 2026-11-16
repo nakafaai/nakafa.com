@@ -18,6 +18,7 @@ import {
   type InstancedMesh,
   LatheGeometry,
   Matrix4,
+  MeshPhysicalMaterial,
   type Plane,
   Quaternion,
   Vector2,
@@ -88,19 +89,25 @@ export function EnvelopeMaterial({
   readonly color: string;
   readonly opacity?: number;
 }) {
-  return (
-    <meshPhysicalMaterial
-      clearcoat={0.7}
-      clearcoatRoughness={0.32}
-      clippingPlanes={clip === undefined ? null : [...clip]}
-      color={color}
-      depthWrite={opacity >= 1}
-      opacity={opacity}
-      roughness={0.48}
-      side={clip === undefined ? FrontSide : DoubleSide}
-      transparent={opacity < 1}
-    />
+  // Clipping planes are set on the material object itself, which JSX props
+  // cannot name.
+  const material = useMemo(
+    () =>
+      new MeshPhysicalMaterial({
+        clearcoat: 0.7,
+        clearcoatRoughness: 0.32,
+        clippingPlanes: clip === undefined ? null : [...clip],
+        color,
+        depthWrite: opacity >= 1,
+        opacity,
+        roughness: 0.48,
+        side: clip === undefined ? FrontSide : DoubleSide,
+        transparent: opacity < 1,
+      }),
+    [clip, color, opacity]
   );
+  useEffect(() => () => material.dispose(), [material]);
+  return <primitive attach="material" object={material} />;
 }
 
 /**

@@ -221,7 +221,7 @@ function GramScene({ step }: { readonly step: StainStep }) {
       );
       Arr.forEach(spirals, (spiral) => spiral.dispose());
     },
-    [materials, spirals]
+    [materials, speck, spirals]
   );
 
   useFrame((_, delta) => {
