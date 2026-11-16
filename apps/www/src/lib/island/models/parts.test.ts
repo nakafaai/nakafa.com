@@ -2,6 +2,7 @@
 import { describe, expect, it } from "@effect/vitest";
 import { Array as Arr } from "effect";
 import {
+  boundsOf,
   box,
   flatten,
   loft,
@@ -79,5 +80,10 @@ describe("island/models/parts", () => {
       6
     );
     expect(meters(0.9)).toBeCloseTo(1, 6);
+    expect(boundsOf(box([0, 0, 0], [2, 3, 4], rgb(0)))).toEqual({
+      x: [0, 2],
+      y: [0, 3],
+      z: [0, 4],
+    });
   });
 });

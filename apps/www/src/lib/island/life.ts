@@ -5,6 +5,7 @@ import { SLOTS, slotUv, type TileName } from "@/lib/island/atlas";
 import { KIND, LOOK } from "@/lib/island/look";
 import { STRIDE } from "@/lib/island/mesh";
 import { unitOf } from "@/lib/island/noise";
+import { floorOf, roomOf, touches } from "@/lib/island/room";
 import { SCALE } from "@/lib/island/scale";
 import { blockAt, type Cells, SEA_LEVEL } from "@/lib/island/world";
 
@@ -86,11 +87,29 @@ export function herdOf(cells: Cells, seed: number, size: number) {
     x: x + 0.5,
     z: z + 0.5,
   });
-  const suiting = (kind: Animal["kind"], count: number) =>
-    Arr.take(
-      Arr.filter(columns, ({ x, z }) => suitsOf(kind, cells, x + 0.5, z + 0.5)),
-      count
+  // Each new animal takes a column it fits on, apart from every animal placed before it (D22).
+  let placedSoFar: readonly Animal[] = [];
+  const suiting = (kind: Animal["kind"], count: number) => {
+    const chosen = Arr.reduce(
+      columns,
+      Arr.empty<{ x: number; z: number }>(),
+      (taken, { x, z }) => {
+        if (taken.length >= count) {
+          return taken;
+        }
+        const body = placed(kind, x, z);
+        const fits =
+          suitsOf(kind, cells, x + 0.5, z + 0.5) &&
+          roomOf(cells, kind, x + 0.5, z + 0.5, 0) &&
+          !Arr.some(placedSoFar, (other) => touches(body, other));
+        if (fits) {
+          placedSoFar = Arr.append(placedSoFar, body);
+        }
+        return fits ? Arr.append(taken, { x, z }) : taken;
+      }
     );
+    return chosen;
+  };
   const pick = (kind: Animal["kind"], count: number) =>
     Arr.map(suiting(kind, count), ({ x, z }) => placed(kind, x, z));
   const folk = Arr.zipWith(
@@ -128,7 +147,8 @@ export function wander(
   animal: Animal,
   seed: number,
   index: number,
-  dt: number
+  dt: number,
+  others: readonly Animal[] = []
 ): Animal {
   if (animal.rest > 0) {
     return { ...animal, rest: Math.max(0, animal.rest - dt) };
@@ -138,11 +158,37 @@ export function wander(
   const distance = Math.hypot(dx, dz);
   const reach = SPEED[animal.kind] * dt;
   if (distance > reach) {
-    return {
+    const next = {
       ...animal,
       x: animal.x + (dx / distance) * reach,
       z: animal.z + (dz / distance) * reach,
     };
+    // Nothing walks through a wall or another body (D22): a blocked step stops it, and it picks a new way.
+    const closer = (other: Animal) =>
+      Math.hypot(next.x - other.x, next.z - other.z) <
+      Math.hypot(animal.x - other.x, animal.z - other.z);
+    const blocked =
+      !roomOf(
+        cells,
+        animal.kind,
+        next.x,
+        next.z,
+        Math.atan2(dx, dz),
+        floorOf(cells, animal.x, animal.z)
+      ) ||
+      Arr.some(
+        others,
+        (other) => other !== animal && closer(other) && touches(next, other)
+      );
+    return blocked
+      ? {
+          ...animal,
+          rest: 0.6,
+          steps: animal.steps + 1,
+          tx: animal.x,
+          tz: animal.z,
+        }
+      : next;
   }
   const roll = (channel: number) =>
     unitOf(seed + index * 31, animal.steps, channel);
@@ -150,7 +196,15 @@ export function wander(
     x: animal.tx + (roll(1) - 0.5) * 6,
     z: animal.tz + (roll(2) - 0.5) * 6,
   };
-  const ok = suitsOf(animal.kind, cells, goal.x, goal.z);
+  const ok =
+    suitsOf(animal.kind, cells, goal.x, goal.z) &&
+    roomOf(
+      cells,
+      animal.kind,
+      goal.x,
+      goal.z,
+      Math.atan2(goal.x - animal.tx, goal.z - animal.tz)
+    );
   return {
     ...animal,
     rest: 0.5 + roll(3) * 2.5,
