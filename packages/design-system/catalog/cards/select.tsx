@@ -1,4 +1,3 @@
-import { SchoolIcon } from "@hugeicons/core-free-icons";
 import {
   Select,
   SelectContent,
@@ -22,7 +21,7 @@ export const card = {
   source: "components/ui/select",
 };
 
-/** A short choice: the list opens with its one-word label, and every option shows the icon of its kind. */
+/** A short choice: the list opens with its one-word label, and a list of values, such as grades, marks its options plain. */
 export function Preview() {
   const t = useTranslations("Common");
   return (
@@ -33,7 +32,7 @@ export function Preview() {
         </SelectTrigger>
         <SelectContent label={t("menu-grade")}>
           {Arr.map(grades, (grade) => (
-            <SelectItem icon={SchoolIcon} key={grade.value} value={grade.value}>
+            <SelectItem key={grade.value} plain value={grade.value}>
               {grade.label}
             </SelectItem>
           ))}

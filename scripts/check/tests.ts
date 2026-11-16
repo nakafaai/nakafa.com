@@ -46,6 +46,7 @@ import { inspectGroupSource } from "#scripts/check/groups";
 import { inspectIconSource } from "#scripts/check/icons";
 import { inspectMenuSource } from "#scripts/check/menus";
 import { manifestEntries, nameViolations } from "#scripts/check/names";
+import { inspectOptionSource } from "#scripts/check/options";
 import { inspectMenuOrder } from "#scripts/check/order";
 import { inspectPickerSource } from "#scripts/check/pickers";
 import { pluginRuleNames } from "#scripts/check/plugin";
@@ -126,6 +127,7 @@ const inspectSources = Effect.fn("RepositoryPolicy.inspectSources")(function* (
         inspectDrillingSource(file, sourceFile),
         inspectMenuSource(file, sourceFile),
         inspectMenuOrder(file, sourceFile),
+        inspectOptionSource(file, sourceFile),
         inspectGroupSource(file, sourceFile),
         inspectButtonSource(file, sourceFile),
         inspectIconSource(file, sourceFile),

@@ -2,7 +2,6 @@ import {
   Archive02Icon,
   Delete02Icon,
   Edit02Icon,
-  Globe02Icon,
   LanguageSquareIcon,
   Share08Icon,
 } from "@hugeicons/core-free-icons";
@@ -46,10 +45,10 @@ export function Preview() {
             </DropdownMenuSubTrigger>
             <DropdownMenuSubContent label={t("menu-language")}>
               <DropdownMenuRadioGroup defaultValue="en">
-                <DropdownMenuRadioItem icon={Globe02Icon} value="en">
+                <DropdownMenuRadioItem plain value="en">
                   English
                 </DropdownMenuRadioItem>
-                <DropdownMenuRadioItem icon={Globe02Icon} value="id">
+                <DropdownMenuRadioItem plain value="id">
                   Bahasa Indonesia
                 </DropdownMenuRadioItem>
               </DropdownMenuRadioGroup>
