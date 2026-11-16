@@ -2,25 +2,45 @@ name: Post the gate
 description: >-
   Posts `gate` once this run's three parts, `gate/static`, `gate/www` and `gate/backend`, are final, so the job that
   finishes last posts it: the gate job posts the first two parts and the last backend shard the third
-  (docs/adr/0048-proof.md, "The Backend Suite In Shards"). Each job posts its own part before it reads, so the later
-  reader finds all three. For a pull request or a dispatch without the browsers it posts `verify` too. The calling
-  job holds a token that may post statuses.
+  (docs/adr/0048-proof.md, "The Backend Suite In Shards"). Each job posts its own part before it reads, and passes the
+  states it posted as `known`, so a read that still shows them pending decides from them; the read waits briefly for
+  the others' (`.github/actions/statuses`). For a pull request or a dispatch without the browsers it posts `verify`
+  too. The calling job holds a token that may post statuses.
+inputs:
+  known:
+    description: The parts the calling job just posted, one `context=state` per line
+    required: false
+    default: ""
+outputs:
+  state:
+    description: The state this step posted for `gate`, or empty when a part is still running
+    value: ${{ steps.post.outputs.state }}
 runs:
   using: composite
   steps:
+    - name: Read the gate's parts
+      id: parts
+      uses: ./.github/actions/statuses
+      with:
+        pattern: ^gate/(static|www|backend)$
+        count: 3
+        known: ${{ inputs.known }}
+
     - name: Post the gate when its parts are final
+      id: post
+      if: steps.parts.outputs.final == 'true'
       shell: bash
+      env:
+        PARTS: ${{ steps.parts.outputs.states }}
       run: |
         post() {
           gh api --silent "repos/$GITHUB_REPOSITORY/statuses/$SHA" \
             -f state="$2" -f context="$1" -f target_url="$URL" -f description="$3"
         }
-        parts="$(gh api "repos/$GITHUB_REPOSITORY/commits/$SHA/status?per_page=100" --jq \
-          "[.statuses[] | select(.target_url == \"$URL\" and (.context | test(\"^gate/(static|www|backend)\$\"))) | .state]")"
-        [ "$(jq 'map(select(. != "pending")) | length' <<< "$parts")" = 3 ] || exit 0
         all=failure
-        [ "$(jq 'all(. == "success")' <<< "$parts")" = true ] && all=success
+        [ "$(jq 'all(.[]; . == "success")' <<< "$PARTS")" = true ] && all=success
         post gate "$all" "Typechecks, unit suites, policy, Doctor and audit: $all"
+        echo "state=$all" >> "$GITHUB_OUTPUT"
         [ "$VERIFY" = gate ] || exit 0
         description="Gate failed"
         [ "$all" = success ] && description="Gate passed; the merge queue proves the browsers"

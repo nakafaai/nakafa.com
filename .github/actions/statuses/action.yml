@@ -1,0 +1,48 @@
+name: Read this run's statuses
+description: >-
+  Reads the states of this run's statuses whose context matches `pattern`, with the states the calling job just
+  posted laid over them (`known`, one `context=state` per line), since GitHub's combined status can still show a
+  status posted a moment ago as pending. While fewer than `count` are final it reads again, every five seconds for
+  half a minute, so two jobs that post their last parts in the same second each find the other's. It reports whether
+  all `count` are final and their states; a part still running after that half minute is posted by its own job, which
+  then finds this one's long settled.
+inputs:
+  pattern:
+    description: An anchored jq regular expression over the context names
+    required: true
+  count:
+    description: How many contexts must be final
+    required: true
+  known:
+    description: The states the calling job just posted, one `context=state` per line
+    required: false
+    default: ""
+outputs:
+  final:
+    description: Whether all `count` contexts are final
+    value: ${{ steps.read.outputs.final }}
+  states:
+    description: A JSON object of each context's state
+    value: ${{ steps.read.outputs.states }}
+runs:
+  using: composite
+  steps:
+    - name: Read the statuses until they settle
+      id: read
+      shell: bash
+      env:
+        PATTERN: ${{ inputs.pattern }}
+        COUNT: ${{ inputs.count }}
+        KNOWN: ${{ inputs.known }}
+      run: |
+        known="$(jq -Rn '[inputs | select(test("=")) | capture("^(?<k>[^=]+)=(?<v>.+)$") | {(.k): .v}] | add // {}' <<< "$KNOWN")"
+        for attempt in 1 2 3 4 5 6; do
+          read="$(gh api "repos/$GITHUB_REPOSITORY/commits/$SHA/status?per_page=100" --jq \
+            "[.statuses[] | select(.target_url == \"$URL\" and (.context | test(\"$PATTERN\"))) | {(.context): .state}] | add // {}")"
+          states="$(jq -c --argjson known "$known" '. + $known' <<< "$read")"
+          final="$(jq --argjson count "$COUNT" '[.[] | select(. != "pending")] | length == $count' <<< "$states")"
+          [ "$final" = true ] && break
+          [ "$attempt" = 6 ] || sleep 5
+        done
+        echo "final=$final" >> "$GITHUB_OUTPUT"
+        echo "states=$states" >> "$GITHUB_OUTPUT"
