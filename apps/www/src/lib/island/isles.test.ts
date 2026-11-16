@@ -63,4 +63,18 @@ describe("island/isles", () => {
       expect(reach).toBeGreaterThan(MIDDLE + 10);
     }
   });
+
+  it("grows trees on a wooded isle, taller than any of its hills", () => {
+    const tallest = (seed: number) =>
+      Math.max(
+        ...Arr.map(
+          Arr.chunksOf(Array.from(islesMesh(seed).vertices), STRIDE),
+          (vertex) => vertex[1]
+        )
+      );
+    // Grass grows below stone, which tops the tallest hills, so only a crown of leaves reaches this high.
+    expect(
+      Arr.some([1, 7, 42, 1009], (seed) => tallest(seed) > SEA_LEVEL + 7)
+    ).toBe(true);
+  });
 });

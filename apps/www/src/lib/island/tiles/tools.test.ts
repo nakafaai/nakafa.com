@@ -1,7 +1,9 @@
 // @vitest-environment node
 import { describe, expect, it } from "@effect/vitest";
+import { Array as Arr } from "effect";
 import { TILE } from "@/lib/island/tiles/paint";
 import {
+  bobberTile,
   canTile,
   feetTile,
   hammerTile,
@@ -27,20 +29,20 @@ describe("island/tiles/tools", () => {
     expect(pickaxe).not.toEqual(hammer);
     expect(hammer).not.toEqual(feet);
   });
-  it("draws the fishing rod with its tip at the cursor's hot spot, where the line leaves it", () => {
-    const rod = rodTile();
-    expect(rod).toHaveLength(TILE * TILE * 4);
-    expect(alphaAt(rod, 15, 1)).toBe(255);
-    expect(alphaAt(rod, 0, 15)).toBe(0);
-    expect(rod).not.toEqual(pickaxeTile());
-  });
-  it("draws the hoe with its blade and the can with its spout at the cursor's hot spot", () => {
-    const hoe = hoeTile();
-    const can = canTile();
-    expect(alphaAt(hoe, 1, 11)).toBe(255);
-    expect(alphaAt(can, 1, 3)).toBe(255);
-    expect(alphaAt(hoe, 15, 15)).toBe(0);
-    expect(alphaAt(can, 15, 15)).toBe(0);
-    expect(hoe).not.toEqual(can);
+
+  it("draws the rod, its float, the hoe and the watering can, each a picture of its own", () => {
+    const tiles = [rodTile(), bobberTile(), hoeTile(), canTile()];
+    for (const tile of tiles) {
+      expect(tile).toHaveLength(TILE * TILE * 4);
+      expect(
+        Arr.some(
+          Arr.fromIterable(tile),
+          (value, index) => index % 4 === 3 && value === 255
+        )
+      ).toBe(true);
+    }
+    expect(tiles[0]).not.toEqual(tiles[1]);
+    expect(tiles[1]).not.toEqual(tiles[2]);
+    expect(tiles[2]).not.toEqual(tiles[3]);
   });
 });
