@@ -188,16 +188,16 @@ const ITEMS = {
   well: { origin: { x: 1, z: 1 }, parts: wellParts() },
 };
 
-/**
- * An item's parts turned by `turn` quarter turns around its anchor; a turn of
- * 0 faces its front to +z, and each turn faces it a quarter further toward +x.
- */
-export function partsOf(item: ItemKey, turn: number) {
-  const { origin, parts } = ITEMS[item];
+/** Parts turned by `turn` quarter turns around the part at (`originX`, `originZ`); a turn of 0 faces their front to +z, and each turn a quarter further toward +x. */
+function turned(
+  parts: readonly Part[],
+  [originX, originZ]: readonly [number, number],
+  turn: number
+) {
   const quarter = ((turn % 4) + 4) % 4;
   return Arr.map(parts, (cell) => {
-    const x = cell.x - origin.x;
-    const z = cell.z - origin.z;
+    const x = cell.x - originX;
+    const z = cell.z - originZ;
     const [tx, tz] = [
       [x, z],
       [z, -x],
@@ -206,6 +206,46 @@ export function partsOf(item: ItemKey, turn: number) {
     ][quarter];
     return { ...cell, x: tx, z: tz };
   });
+}
+
+/**
+ * An item's parts turned by `turn` quarter turns around its anchor; a turn of
+ * 0 faces its front to +z, and each turn faces it a quarter further toward +x.
+ */
+export function partsOf(item: ItemKey, turn: number) {
+  const { origin, parts } = ITEMS[item];
+  return turned(parts, [origin.x, origin.z], turn);
+}
+
+/**
+ * The furnishings of a village cottage (ADR 0047, D45), in the house's own
+ * frame and turned with it: a planked floor in place of the ground inside and
+ * under the doorway, a bookshelf and a bed along the back wall, and a table by
+ * the side window with a lantern on it, which lights the room and
+ * glows out of its windows at night. The doorway and the row inside it stay
+ * clear. They belong to the village's own cottages, never to the house the
+ * learner places, so the house opens at the level its walls do.
+ */
+export function furnishingsOf(turn: number) {
+  const floor = Arr.flatMap(
+    Arr.makeBy(SCALE.house.width - 2, (x) => x + 1),
+    (x) =>
+      Arr.makeBy(SCALE.house.depth - 2, (z) => part("planks", x, -1, z + 1))
+  );
+  return turned(
+    [
+      ...floor,
+      part("planks", (SCALE.house.width - 1) / 2, -1, SCALE.house.depth - 1),
+      part("bookshelf", 1, 0, 1),
+      part("bookshelf", 2, 0, 1),
+      part("wool", 5, 0, 1),
+      part("wool", 5, 0, 2),
+      part("planks", 1, 0, 3),
+      part("lantern", 1, 1, 3),
+    ],
+    [ITEMS.house.origin.x, ITEMS.house.origin.z],
+    turn
+  );
 }
 
 /** The level that opens an item: the latest level that opens any of its blocks. */
@@ -300,7 +340,16 @@ export function stampItem(
   anchor: readonly [number, number, number],
   turn: number
 ) {
-  for (const cell of partsOf(item, turn)) {
+  stampParts(cells, partsOf(item, turn), anchor);
+}
+
+/** Writes parts into the world around `anchor`, leaving out any outside it. */
+export function stampParts(
+  cells: Cells,
+  parts: readonly Part[],
+  anchor: readonly [number, number, number]
+) {
+  for (const cell of parts) {
     const x = anchor[0] + cell.x;
     const y = anchor[1] + cell.y;
     const z = anchor[2] + cell.z;
