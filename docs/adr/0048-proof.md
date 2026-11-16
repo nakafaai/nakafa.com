@@ -315,6 +315,15 @@ A group whose engines failed proved its failing specs on its own `base_sha` (poi
 2. **One run per head and specs.** A proof of specs alone, without the gate, is named `Proof <sha> base-<key>-<suffix>`: the key is the first 16 hexadecimal digits of the SHA-256 of its spec files in path order, and the suffix is fresh. Before dispatching, `proveOnGithub` reads the latest 50 dispatched runs and awaits or reads one whose name starts with `Proof <sha> base-<key>`, finished or running, and passes over a cancelled one. The first group to fail on main's reds pays for the proof, and the others read it.
 3. **What this gives up.** A group judged while an entry ahead of it fixes one of main's reds, and that itself breaks the spec again, has the spec set aside although its base passed it. Main then fails the spec as it did before the fix, the case point 4 of the earlier amendment leaves to the lane that owns the folder; the queue stops paying a base proof per group for it.
 
+## Amendment: A Change To The Suites Selects What It Reaches, 16 November 2026
+
+A merge group's specs came from its spec files and the folders its app source paths name (point 2 of "The Merge Queue Is Switched On"), so a change to a support module under `apps/www/e2e/support` or to `apps/www/playwright.config.ts` proved only the smoke spec, although every spec that imports the module, or every spec, runs it. Now that the merge group is the only run of the specs before a landing ("Each Check Runs Once"), such a change landed unproven.
+
+### Decision
+
+1. **Support modules.** A group that changes a support module proves every spec that imports it, directly or through other support modules: `scripts/proof/select.ts` reads the head's `@/e2e/support/<name>` imports with one `git grep` when the diff holds a support module, and follows importers until no round adds one. A unit test beside a support module is not one.
+2. **The config.** A change to the Playwright config proves every spec.
+
 ## Amendment: The Queue Waits Six Hours And Builds Four Groups, 16 November 2026
 
 Chunk 1 (#2338, #2340, #2370, #2410 and #2472, a linked stack that touches shared folders) selected every suite, and its group ran the specs in three engines for 3 hours 45 minutes on 16 November: about 40 specs that main fails, each run again after its 120-second timeout, pushed the run past the 150-minute status check timeout of point 3 of "A Merge Group Sets Aside What Its Base Fails". The queue then removes the group for a missing `verify`, although nothing failed. Between 01:12 and 04:00 UTC no group landed.
