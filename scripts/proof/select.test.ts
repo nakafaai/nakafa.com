@@ -80,7 +80,8 @@ describe("merge group specs", () => {
     ).toEqual([SMOKE_SPEC]);
   });
 
-  it("proves every spec when the Playwright config changes", () => {
+  it("proves every spec when the Playwright config or its suites change", () => {
+    expect(selectSpecs(["apps/www/e2e/suites.ts"], PRESENT)).toHaveLength(5);
     expect(selectSpecs(["apps/www/playwright.config.ts"], PRESENT)).toEqual([
       "e2e/quran/landing.browser.ts",
       "e2e/quran/surah.browser.ts",
