@@ -12,6 +12,7 @@ import {
 import { PROMPT, promptIn } from "@/e2e/support/prompt";
 import { inTheSheet, openSheet } from "@/e2e/support/sheet";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
+import { waitUntilTakenOver } from "@/e2e/support/window";
 
 /** The session read, which these tests answer late so the viewer loads on screen. */
 const SESSION_READ = "**/api/auth/get-session**";
@@ -46,6 +47,10 @@ test.describe("A send pressed before the viewer is known", () => {
         yield* Effect.promise(async () => {
           await page.goto(CHAT_PATH);
           const scope = onThePage(page);
+          // The page loads its client after the load event, and a press before
+          // React takes the composer over reaches no handler. The session read
+          // still answers late, so the send waits for the viewer.
+          await waitUntilTakenOver(composerOf(scope));
           await composerOf(scope).fill(PROMPT);
           await composerOf(scope).press("Enter");
           await expect(page).toHaveURL(OPENED_CHAT, {
