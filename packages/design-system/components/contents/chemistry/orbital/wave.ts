@@ -1,4 +1,4 @@
-import { Array as Arr, Option, Order, Schema } from "effect";
+import { Array as Arr, Order, Schema } from "effect";
 
 /**
  * The orbitals of the hydrogen atom an orbital lab can draw. Each is a real
@@ -172,7 +172,8 @@ export function waveGrid(id: OrbitalId, resolution: number) {
  * The density |psi|^2 on the surface that holds `share` of the electron's
  * probability, the boundary surface chemistry books draw an orbital with:
  * the densest grid points are summed until they hold that share, and the
- * last one's density is the surface's level.
+ * last one's density is the surface's level. The running sums only grow, so
+ * the sums still short of the share count the points before that one.
  */
 export function boundaryDensity(wave: readonly number[], share: number) {
   const densities = Arr.sort(
@@ -181,9 +182,6 @@ export function boundaryDensity(wave: readonly number[], share: number) {
   );
   const total = Arr.reduce(densities, 0, (sum, density) => sum + density);
   const held = Arr.scan(densities, 0, (sum, density) => sum + density);
-  const reached = Arr.findFirstIndex(held, (sum) => sum >= share * total);
-  return Option.match(reached, {
-    onNone: () => 0,
-    onSome: (index) => Arr.getUnsafe(densities, Math.max(0, index - 1)),
-  });
+  const short = Arr.filter(held, (sum) => sum < share * total).length;
+  return Arr.getUnsafe(densities, Math.max(0, short - 1));
 }
