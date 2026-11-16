@@ -3,6 +3,7 @@ import { Effect } from "effect";
 import { withBrowserContext } from "@/e2e/support/context";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { openRoute } from "@/e2e/support/route";
+import { stepTo } from "@/e2e/support/scroll";
 import { desktopViewport, viewportSize } from "@/e2e/support/viewport";
 
 /** The fractions of the page's height that the reader scrolls to, top to bottom. */
@@ -69,15 +70,16 @@ test("home toys and loaders move while they are on screen and hold still out of 
             page,
             Effect.gen(function* () {
               yield* openRoute(page, "/id", "denied");
-              // The closing ball, a stopwatch of the toy layer, and a dot of the crowd's typing bubbles.
+              // A stopwatch of the toy layer, a dot of the crowd's typing bubbles, and the
+              // closing ball, in the order a reader scrolls down to them.
               const shapes = [
-                page.locator("#closing [class*='animate-thing-hop']").first(),
                 page.locator("[class*='animate-thing-tick']").first(),
                 page.locator("#community [class*='typing_1s']").first(),
+                page.locator("#closing [class*='animate-thing-hop']").first(),
               ];
 
               for (const shape of shapes) {
-                yield* Effect.promise(() => shape.scrollIntoViewIfNeeded());
+                yield* stepTo(page, shape);
                 yield* Effect.promise(() =>
                   expect.poll(() => playState(shape)).toBe("running")
                 );
