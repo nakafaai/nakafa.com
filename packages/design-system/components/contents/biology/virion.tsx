@@ -5,8 +5,18 @@ import {
   type BiologyLabProps,
 } from "@repo/design-system/components/contents/biology/lab";
 import type { NarrowCameraPose } from "@repo/design-system/lib/geometry/camera";
+import { MATERIAL } from "@repo/design-system/lib/material";
+import { Array as Arr } from "effect";
 import { useMemo } from "react";
-import { Box3, type Group, Mesh, MeshStandardMaterial, Vector3 } from "three";
+import {
+  Box3,
+  Color,
+  Float32BufferAttribute,
+  type Group,
+  Mesh,
+  MeshPhysicalMaterial,
+  Vector3,
+} from "three";
 
 const SARS_COV_2_VIEW = {
   cameraPosition: [2.06, 1.22, 2.56],
@@ -42,6 +52,27 @@ function SarsCov2VirionModel() {
   return <primitive object={virion} />;
 }
 
+/**
+ * The NIAID model marks its parts with flat false colours: cyan for the lipid
+ * envelope, pale pink for the spikes, and orange for the membrane and
+ * envelope proteins between them. Each vertex is weighed between the three
+ * and repainted in the natural tones the other virus labs use.
+ */
+function natural(red: number, green: number, blue: number) {
+  const envelope = Math.min(1, Math.max(0, (blue - red) * 2.5));
+  const protein =
+    Math.min(1, Math.max(0, (red - green - 0.3) * 3)) * (1 - envelope);
+  const spike = 1 - envelope - protein;
+  const tones = [
+    [new Color(MATERIAL.viralEnvelope), envelope],
+    [new Color(MATERIAL.membraneDimer), protein],
+    [new Color(MATERIAL.spike), spike],
+  ] as const;
+  return Arr.reduce(tones, new Color(0, 0, 0), (sum, [tone, weight]) =>
+    sum.add(tone.clone().multiplyScalar(weight))
+  );
+}
+
 function prepareVirionScene(source: Group) {
   const virion = source.clone(true);
   const bounds = new Box3().setFromObject(virion);
@@ -57,13 +88,22 @@ function prepareVirionScene(source: Group) {
       return;
     }
 
-    child.geometry.computeVertexNormals();
+    const geometry = child.geometry.clone();
+    const marks = geometry.getAttribute("color");
+    const colors = Arr.flatMap(Arr.range(0, marks.count - 1), (index) =>
+      natural(marks.getX(index), marks.getY(index), marks.getZ(index)).toArray()
+    );
+    geometry.setAttribute("color", new Float32BufferAttribute(colors, 3));
+    geometry.computeVertexNormals();
+    child.geometry = geometry;
     child.castShadow = true;
     child.receiveShadow = true;
-    child.material = new MeshStandardMaterial({
-      vertexColors: true,
-      roughness: 0.78,
+    child.material = new MeshPhysicalMaterial({
+      clearcoat: 0.35,
+      clearcoatRoughness: 0.45,
       metalness: 0,
+      roughness: 0.55,
+      vertexColors: true,
     });
   });
 

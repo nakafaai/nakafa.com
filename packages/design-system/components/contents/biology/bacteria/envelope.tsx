@@ -1,4 +1,4 @@
-import { useFrame, useThree } from "@react-three/fiber";
+import { useFrame } from "@react-three/fiber";
 import {
   flagellumPath,
   rodProfile,
@@ -12,14 +12,10 @@ import { useEffect, useLayoutEffect, useMemo, useRef } from "react";
 import {
   type BufferGeometry,
   CatmullRomCurve3,
-  DoubleSide,
-  FrontSide,
   type Group,
   type InstancedMesh,
   LatheGeometry,
   Matrix4,
-  MeshPhysicalMaterial,
-  type Plane,
   Quaternion,
   Vector2,
   Vector3,
@@ -30,17 +26,6 @@ type Point = readonly [number, number, number];
 
 /** How fast a flagellar motor turns its filament while the card plays, in radians a second. */
 const MOTOR_SPEED = 6;
-
-/**
- * Lets materials be clipped by planes, so a cutaway can open a cell. The
- * renderer reads this flag when it compiles a material.
- */
-export function useClipping() {
-  const gl = useThree((state) => state.gl);
-  useEffect(() => {
-    gl.localClippingEnabled = true;
-  }, [gl]);
-}
 
 /**
  * The surface of a rod-shaped cell `length` long with poles of `radius`, its
@@ -73,41 +58,6 @@ export function useRodGeometry(radius: number, length: number, seed: number) {
   }, [length, radius, seed]);
   useEffect(() => () => geometry.dispose(), [geometry]);
   return geometry;
-}
-
-/**
- * The outer envelope of a bacterium: a waxy, slightly translucent membrane
- * and wall that catches a clear-coat highlight, clipped by `clip` when the
- * cell is opened.
- */
-export function EnvelopeMaterial({
-  clip,
-  color,
-  opacity = 1,
-}: {
-  readonly clip: readonly Plane[] | undefined;
-  readonly color: string;
-  readonly opacity?: number;
-}) {
-  // Clipping planes are set on the material object itself, which JSX props
-  // cannot name.
-  const material = useMemo(
-    () =>
-      new MeshPhysicalMaterial({
-        clearcoat: 0.7,
-        clearcoatRoughness: 0.32,
-        clippingPlanes: clip === undefined ? null : [...clip],
-        color,
-        depthWrite: opacity >= 1,
-        opacity,
-        roughness: 0.48,
-        side: clip === undefined ? FrontSide : DoubleSide,
-        transparent: opacity < 1,
-      }),
-    [clip, color, opacity]
-  );
-  useEffect(() => () => material.dispose(), [material]);
-  return <primitive attach="material" object={material} />;
 }
 
 /**

@@ -46,9 +46,6 @@ export const BIOLOGY_DEFAULT_VIEW = {
 /** The item a biology lab opens on, which its static card draws until the reader picks another. */
 export const BIOLOGY_DEFAULT_ITEM_INDEX = 0;
 
-export const BIOLOGY_RING_POINT_COUNT = 12;
-export const BIOLOGY_SMALL_RING_POINT_COUNT = 8;
-
 /**
  * Chooses theme-aware WebGL colors for biology scenes.
  *
@@ -88,37 +85,4 @@ export function getBiologySceneColors(theme?: string): BiologySceneColors {
 export function isBiologyItemIndex(value: string, itemCount: number) {
   const index = Number(value);
   return Number.isInteger(index) && index >= 0 && index < itemCount;
-}
-
-/**
- * Creates evenly distributed points on a sphere for viral particles and cells.
- */
-export function createBiologySpherePoints(count: number, radius: number) {
-  if (count <= 0) {
-    return [];
-  }
-
-  if (count === 1) {
-    return [
-      {
-        id: "sphere-0",
-        position: [0, radius, 0] satisfies BiologyScenePoint,
-      },
-    ];
-  }
-
-  return Array.from({ length: count }, (_, index) => {
-    const y = 1 - (index / (count - 1)) * 2;
-    const ringRadius = Math.sqrt(1 - y * y);
-    const angle = index * Math.PI * (3 - Math.sqrt(5));
-
-    return {
-      id: `sphere-${index}`,
-      position: [
-        Math.cos(angle) * ringRadius * radius,
-        y * radius,
-        Math.sin(angle) * ringRadius * radius,
-      ] satisfies BiologyScenePoint,
-    };
-  });
 }

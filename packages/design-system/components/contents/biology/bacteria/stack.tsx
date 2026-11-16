@@ -1,74 +1,15 @@
+import { Instances } from "@repo/design-system/components/contents/biology/instances";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { MATERIAL } from "@repo/design-system/lib/material";
-import { Array as Arr, Schema } from "effect";
-import { type ReactNode, useLayoutEffect, useMemo, useRef } from "react";
-import {
-  DoubleSide,
-  Euler,
-  type InstancedMesh,
-  Matrix4,
-  Quaternion,
-  Vector3,
-} from "three";
+import { Array as Arr } from "effect";
+import { type ReactNode, useMemo } from "react";
+import { DoubleSide } from "three";
 
 /** How wide and deep each block of envelope is, in scene units. */
 const BLOCK = { depth: 0.5, width: 0.9 } as const;
 
 /** How far apart the lipid heads of a leaflet sit. */
 const HEAD_GAP = 0.04;
-
-/** Three coordinates, a position, a rotation, or a stretch. */
-const TripleSchema = Schema.Tuple([
-  Schema.Finite,
-  Schema.Finite,
-  Schema.Finite,
-]);
-
-/** One instance of an instanced mesh: where it stands, how it turns, and how it stretches. */
-const PlacementSchema = Schema.Struct({
-  position: TripleSchema,
-  rotation: Schema.optionalKey(TripleSchema),
-  scale: Schema.optionalKey(TripleSchema),
-});
-type Placement = typeof PlacementSchema.Type;
-
-/** Draws many copies of one shape at their placements, as a single instanced mesh. */
-function Instances({
-  children,
-  placements,
-}: {
-  readonly children: ReactNode;
-  readonly placements: readonly Placement[];
-}) {
-  const mesh = useRef<InstancedMesh>(null);
-  useLayoutEffect(() => {
-    const target = mesh.current;
-    if (target === null) {
-      return;
-    }
-    const matrix = new Matrix4();
-    const turn = new Quaternion();
-    Arr.forEach(placements, (placement, index) => {
-      turn.setFromEuler(new Euler(...(placement.rotation ?? [0, 0, 0])));
-      matrix.compose(
-        new Vector3(...placement.position),
-        turn,
-        new Vector3(...(placement.scale ?? [1, 1, 1]))
-      );
-      target.setMatrixAt(index, matrix);
-    });
-    target.instanceMatrix.needsUpdate = true;
-  });
-  return (
-    <instancedMesh
-      args={[undefined, undefined, placements.length]}
-      castShadow
-      ref={mesh}
-    >
-      {children}
-    </instancedMesh>
-  );
-}
 
 /** The grid of lipid heads of one leaflet at height `y`. */
 function leafletHeads(y: number) {

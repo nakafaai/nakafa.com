@@ -5,22 +5,29 @@ import {
 } from "@repo/design-system/components/contents/biology/bacteria/cell";
 import {
   CapsuleHalo,
-  EnvelopeMaterial,
   Fimbriae,
   Flagellum,
-  useClipping,
   useRodGeometry,
 } from "@repo/design-system/components/contents/biology/bacteria/envelope";
-import { valueNoise } from "@repo/design-system/components/contents/simulation/grain";
+import {
+  EnvelopeMaterial,
+  useBumpySphere,
+  useClipping,
+} from "@repo/design-system/components/contents/biology/surface";
 import { MATERIAL } from "@repo/design-system/lib/material";
 import { Array as Arr } from "effect";
-import { useEffect, useLayoutEffect, useMemo, useRef } from "react";
+import {
+  type ReactNode,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+} from "react";
 import {
   CatmullRomCurve3,
   type InstancedMesh,
   Matrix4,
   Plane,
-  SphereGeometry,
   TubeGeometry,
   Vector3,
 } from "three";
@@ -55,18 +62,15 @@ export function BacillusBacteriumModel({
   showInterior?: boolean;
   showPili?: boolean;
 }) {
-  useClipping();
-  const body = useRodGeometry(BACILLUS.radius, BACILLUS.length, 1);
-  const clip = showInterior ? CUTAWAY : undefined;
   return (
     <group scale={scale}>
-      <mesh castShadow geometry={body} receiveShadow>
-        <EnvelopeMaterial clip={clip} color={MATERIAL.bacterialEnvelope} />
-      </mesh>
       {showInterior ? (
-        <BacillusInterior />
+        <OpenBacillus>
+          <Nucleoid />
+          <Ribosomes />
+        </OpenBacillus>
       ) : (
-        <CapsuleHalo geometry={body} scale={[1.07, 1.16, 1.16]} />
+        <ClosedBacillus />
       )}
       {showPili ? (
         <Fimbriae
@@ -91,13 +95,46 @@ export function BacillusBacteriumModel({
   );
 }
 
+/** A whole bacillus seen from outside: its bumpy envelope in a faint slime capsule. */
+function ClosedBacillus() {
+  const body = useRodGeometry(BACILLUS.radius, BACILLUS.length, 1);
+  return (
+    <group>
+      <mesh castShadow geometry={body} receiveShadow>
+        <EnvelopeMaterial clip={undefined} color={MATERIAL.bacterialEnvelope} />
+      </mesh>
+      <CapsuleHalo geometry={body} scale={[1.07, 1.16, 1.16]} />
+    </group>
+  );
+}
+
 /**
- * The inside of an opened bacillus: the plasma membrane lining the wall, the
- * nucleoid as a tangled strand in the middle, a small circular plasmid, and
- * ribosomes in their hundreds.
+ * A bacillus with the front half of its envelope cut away, the plasma
+ * membrane lining the wall, and `children` inside it: the nucleoid and
+ * ribosomes of a resting cell, or a phage's work in an infected one.
  */
-function BacillusInterior() {
+export function OpenBacillus({ children }: { readonly children: ReactNode }) {
+  useClipping();
+  const body = useRodGeometry(BACILLUS.radius, BACILLUS.length, 1);
   const membrane = useRodGeometry(BACILLUS.radius * 0.9, BACILLUS.length, 4);
+  return (
+    <group>
+      <mesh castShadow geometry={body} receiveShadow>
+        <EnvelopeMaterial clip={CUTAWAY} color={MATERIAL.bacterialEnvelope} />
+      </mesh>
+      <mesh geometry={membrane}>
+        <EnvelopeMaterial clip={CUTAWAY} color={MATERIAL.plasmaMembrane} />
+      </mesh>
+      {children}
+    </group>
+  );
+}
+
+/**
+ * The nucleoid as a tangled strand in the middle of the cell, with no
+ * nuclear envelope, beside a small circular plasmid.
+ */
+function Nucleoid() {
   const nucleoid = useMemo(
     () =>
       new CatmullRomCurve3(
@@ -125,9 +162,6 @@ function BacillusInterior() {
   );
   return (
     <group>
-      <mesh geometry={membrane}>
-        <EnvelopeMaterial clip={CUTAWAY} color={MATERIAL.plasmaMembrane} />
-      </mesh>
       <mesh>
         <tubeGeometry args={[nucleoid, 900, 0.008, 5, false]} />
         <meshStandardMaterial color={MATERIAL.nucleoid} roughness={0.45} />
@@ -136,13 +170,12 @@ function BacillusInterior() {
         <tubeGeometry args={[plasmid, 64, 0.008, 5, true]} />
         <meshStandardMaterial color={MATERIAL.nucleoid} roughness={0.45} />
       </mesh>
-      <Ribosomes />
     </group>
   );
 }
 
-/** Ribosomes scattered through the back half of the cytoplasm, one instanced mesh of small granules. */
-function Ribosomes() {
+/** Ribosomes in their hundreds through the back half of the cytoplasm, one instanced mesh of small granules. */
+export function Ribosomes() {
   const mesh = useRef<InstancedMesh>(null);
   const points = useMemo(
     () =>
@@ -171,36 +204,13 @@ function Ribosomes() {
   );
 }
 
-/** A sphere bumped by noise, for a coccus whose surface is never quite round. */
-function useBumpySphere(radius: number, seed: number) {
-  const geometry = useMemo(() => {
-    const sphere = new SphereGeometry(radius, 72, 54);
-    const position = sphere.getAttribute("position");
-    const point = new Vector3();
-    for (const index of Arr.range(0, position.count - 1)) {
-      point.fromBufferAttribute(position, index);
-      const lift =
-        1 +
-        0.03 *
-          (valueNoise(point.x * 30 + seed, point.y * 30 + point.z * 17, 64) -
-            0.5);
-      point.multiplyScalar(lift);
-      position.setXYZ(index, point.x, point.y, point.z);
-    }
-    sphere.computeVertexNormals();
-    return sphere;
-  }, [radius, seed]);
-  useEffect(() => () => geometry.dispose(), [geometry]);
-  return geometry;
-}
-
 /**
  * Cocci as Staphylococcus aureus grows them: golden cells about 1 µm across
  * in a grape-like cluster, because each division plane is perpendicular to
  * the last, the young pairs still joined at a pale septum band.
  */
 export function CoccusClusterModel({ scale = 1 }: { scale?: number }) {
-  const cell = useBumpySphere(0.16, 3);
+  const cell = useBumpySphere(0.16, 3, 0.03);
   const cells = [
     [-0.2, 0.1, 0.02],
     [0.08, 0.2, -0.04],
