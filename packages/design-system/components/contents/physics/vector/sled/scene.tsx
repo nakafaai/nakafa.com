@@ -9,12 +9,17 @@ import { SimulationTicker } from "@repo/design-system/components/contents/simula
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import type { CoordinateTuple } from "@repo/design-system/components/three/frame";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
+import {
+  type Placement,
+  Repeat,
+} from "@repo/design-system/components/three/repeat";
+import { SurfaceMaterial } from "@repo/design-system/components/three/surface/material";
 import { useVisualScene } from "@repo/design-system/components/visual/card";
 import { MATERIAL } from "@repo/design-system/lib/material";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr } from "effect";
-import { useRef } from "react";
-import type { Group } from "three";
+import { useEffect, useMemo, useRef } from "react";
+import { ExtrudeGeometry, type Group, Shape } from "three";
 
 /** Metres of arrow per newton of pull. */
 const ARROW_SCALE = 0.02;
@@ -25,50 +30,135 @@ const RUN = 1.8;
 /** How fast the sled moves on screen, in m/s. */
 const PACE = 0.6;
 
-/** Where the rope is tied on the sled's front, from the sled's middle. */
-const HITCH = [0.42, 0.16, 0] as const;
+/** Where the rope is tied on the sled's front crossbar, from the sled's middle. */
+const HITCH = [0.3, 0.12, 0] as const;
 
-/** The plastic sled with its curled front, two runners, and a load of firewood. */
+/** Where the runners stand across the sled, from its middle. */
+const RUNNERS = [-0.19, 0.19] as const;
+
+/** The height of the slatted deck above the snow. */
+const DECK = 0.14;
+
+/**
+ * One runner in profile: a bent ash blade, flat where it rides the snow and
+ * curling up and back into a hook at the front, as a traditional sled's
+ * runner is steamed and bent.
+ */
+function runnerShape(thickness: number) {
+  const shape = new Shape();
+  shape.moveTo(-0.44, 0);
+  shape.lineTo(0.26, 0);
+  shape.bezierCurveTo(0.4, 0, 0.47, 0.06, 0.45, 0.15);
+  shape.bezierCurveTo(0.44, 0.2, 0.38, 0.215, 0.35, 0.19);
+  shape.lineTo(0.35 + thickness * 0.2, 0.19 - thickness);
+  shape.bezierCurveTo(0.39, 0.2 - thickness * 1.2, 0.43, 0.17, 0.42, 0.14);
+  shape.bezierCurveTo(0.43, 0.08, 0.37, thickness, 0.26, thickness);
+  shape.lineTo(-0.44, thickness);
+  shape.closePath();
+  return shape;
+}
+
+/** The steel shoe under a runner's flat, where it meets the snow. */
+const SHOE: readonly Placement[] = Arr.map(RUNNERS, (z) => ({
+  position: [-0.08, 0.004, z],
+}));
+
+/** The knees that carry the deck on the runners, three to a side. */
+const KNEES: readonly Placement[] = Arr.flatMap([-0.32, -0.04, 0.22], (x) =>
+  Arr.map(RUNNERS, (z) => ({ position: [x, 0.08, z] }))
+);
+
+/** The deck's slats, running the sled's length. */
+const SLATS: readonly Placement[] = Arr.makeBy(5, (index) => ({
+  position: [-0.06, DECK, -0.18 + index * 0.09],
+}));
+
+/** The split logs of the load: two on the deck, one nested on top. */
+const LOGS: readonly Placement[] = [
+  { position: [-0.08, DECK + 0.055, -0.065], rotation: [0, 0.05, Math.PI / 2] },
+  { position: [-0.1, DECK + 0.055, 0.065], rotation: [0, -0.04, Math.PI / 2] },
+  { position: [-0.07, DECK + 0.145, 0], rotation: [0, 0.07, Math.PI / 2] },
+];
+
+/**
+ * A traditional wooden runner sled: two bent ash runners shod with steel,
+ * curling up into hooks at the front, knees carrying a deck of five slats,
+ * a crossbar at the front where the rope is tied, and a load of split
+ * firewood with its bark on and its cut ends showing the rings.
+ */
 function Sled() {
+  const runner = useMemo(
+    () =>
+      new ExtrudeGeometry(runnerShape(0.032), {
+        bevelEnabled: true,
+        bevelSegments: 2,
+        bevelSize: 0.004,
+        bevelThickness: 0.004,
+        curveSegments: 20,
+        depth: 0.026,
+      }),
+    []
+  );
+
+  useEffect(() => () => runner.dispose(), [runner]);
+
   return (
     <group>
-      <mesh castShadow position={[0, 0.06, 0]} receiveShadow>
-        <boxGeometry args={[0.85, 0.04, 0.42]} />
-        <meshStandardMaterial color={MATERIAL.sledPlastic} roughness={0.35} />
-      </mesh>
-      <mesh
-        castShadow
-        position={[0.42, 0.11, 0]}
-        rotation={[0, 0, Math.PI / 5]}
-      >
-        <boxGeometry args={[0.14, 0.035, 0.42]} />
-        <meshStandardMaterial color={MATERIAL.sledPlastic} roughness={0.35} />
-      </mesh>
-      {Arr.map([-0.18, 0.18], (z) => (
-        <mesh castShadow key={z} position={[0, 0.025, z]}>
-          <boxGeometry args={[0.82, 0.03, 0.03]} />
-          <meshStandardMaterial
-            color={MATERIAL.chrome}
-            metalness={0.9}
-            roughness={0.3}
+      {Arr.map(RUNNERS, (z) => (
+        <mesh
+          castShadow
+          geometry={runner}
+          key={z}
+          position={[0, 0.006, z - 0.013]}
+          receiveShadow
+        >
+          <SurfaceMaterial
+            color={MATERIAL.ash}
+            repeat={[3, 3]}
+            surface="wood"
           />
         </mesh>
       ))}
-      {Arr.makeBy(6, (index) => (
-        <mesh
-          castShadow
-          key={index}
-          position={[
-            -0.18 + (index % 3) * 0.16,
-            0.12 + Math.floor(index / 3) * 0.085,
-            (index % 2) * 0.04 - 0.02,
-          ]}
-          rotation={[Math.PI / 2, 0, 0.1 * (index - 2)]}
-        >
-          <cylinderGeometry args={[0.045, 0.045, 0.34, 14]} />
-          <meshStandardMaterial color={MATERIAL.bark} roughness={0.95} />
-        </mesh>
-      ))}
+      <Repeat placements={SHOE}>
+        <boxGeometry args={[0.7, 0.008, 0.024]} />
+        <SurfaceMaterial
+          color={MATERIAL.chrome}
+          metalness={1}
+          roughness={0.7}
+          surface="brushed"
+        />
+      </Repeat>
+      <Repeat placements={KNEES}>
+        <boxGeometry args={[0.03, 0.1, 0.024]} />
+        <SurfaceMaterial color={MATERIAL.ash} surface="wood" />
+      </Repeat>
+      <Repeat placements={SLATS}>
+        <boxGeometry args={[0.72, 0.016, 0.07]} />
+        <SurfaceMaterial color={MATERIAL.ash} repeat={[2, 1]} surface="wood" />
+      </Repeat>
+      <mesh castShadow position={[0.3, 0.12, 0]} rotation={[Math.PI / 2, 0, 0]}>
+        <cylinderGeometry args={[0.014, 0.014, 0.44, 12]} />
+        <SurfaceMaterial color={MATERIAL.ash} surface="wood" />
+      </mesh>
+      <Repeat placements={LOGS}>
+        <cylinderGeometry args={[0.05, 0.055, 0.5, 14]} />
+        <SurfaceMaterial
+          attach="material-0"
+          color={MATERIAL.logBark}
+          repeat={[2, 1]}
+          surface="bark"
+        />
+        <SurfaceMaterial
+          attach="material-1"
+          color={MATERIAL.ash}
+          surface="wood"
+        />
+        <SurfaceMaterial
+          attach="material-2"
+          color={MATERIAL.ash}
+          surface="wood"
+        />
+      </Repeat>
     </group>
   );
 }

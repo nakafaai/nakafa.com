@@ -1,3 +1,4 @@
+import { RoundedBox } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
 import {
   type Block,
@@ -5,11 +6,13 @@ import {
   rampForces,
 } from "@repo/design-system/components/contents/physics/vector/ramp/incline";
 import { FixedArrow } from "@repo/design-system/components/contents/physics/vector/solid/arrow";
+import { Bench } from "@repo/design-system/components/contents/physics/vector/solid/bench";
 import { Rod } from "@repo/design-system/components/contents/physics/vector/solid/rod";
 import { SimulationTicker } from "@repo/design-system/components/contents/simulation/ticker";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import type { CoordinateTuple } from "@repo/design-system/components/three/frame";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
+import { SurfaceMaterial } from "@repo/design-system/components/three/surface/material";
 import { useVisualScene } from "@repo/design-system/components/visual/card";
 import { MATERIAL } from "@repo/design-system/lib/material";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
@@ -47,55 +50,73 @@ function onPlank(angle: number, along: number, off: number) {
   ] satisfies CoordinateTuple;
 }
 
-/** The bench slab, the hinged pine plank, and the stand that props up its far end. */
+/**
+ * The hinged plywood plank on the bench, its brass hinge at the foot, and
+ * the retort stand that props up its far end: a painted cast-iron base, a
+ * steel rod, and a boss clamp holding a cross rod under the plank.
+ */
 function Ramp({ angle }: { readonly angle: number }) {
   const turn = (angle * Math.PI) / 180;
   const middle = onPlank(angle, PLANK / 2, -THICK / 2);
   const top = onPlank(angle, PLANK - 0.04, -THICK);
   return (
     <group>
-      <mesh position={[0, -0.02, 0]} receiveShadow>
-        <boxGeometry args={[1.5, 0.04, 0.6]} />
-        <meshStandardMaterial color={MATERIAL.epoxy} roughness={0.55} />
-      </mesh>
+      <Bench />
       <mesh castShadow position={middle} receiveShadow rotation={[0, 0, turn]}>
         <boxGeometry args={[PLANK, THICK, 0.2]} />
-        <meshStandardMaterial color={MATERIAL.pine} roughness={0.75} />
+        <SurfaceMaterial color={MATERIAL.pine} repeat={[3, 1]} surface="wood" />
       </mesh>
       <mesh position={[HINGE[0], 0.006, 0]} rotation={[Math.PI / 2, 0, 0]}>
         <cylinderGeometry args={[0.008, 0.008, 0.22, 16]} />
-        <meshStandardMaterial
-          color={MATERIAL.chrome}
+        <SurfaceMaterial
+          color={MATERIAL.brass}
           metalness={1}
-          roughness={0.25}
+          roughness={0.45}
+          surface="brushed"
         />
       </mesh>
       {top[1] > 0.01 ? (
         <group>
           <Rod
             color={MATERIAL.chrome}
-            from={[top[0], 0, 0.11]}
+            from={[top[0], 0.02, 0.11]}
             metalness={1}
-            radius={0.007}
-            roughness={0.25}
-            to={[top[0], top[1], 0.11]}
+            radius={0.006}
+            surface="brushed"
+            to={[top[0], top[1] + 0.08, 0.11]}
           />
           <Rod
-            color={MATERIAL.castIron}
+            color={MATERIAL.chrome}
             from={[top[0], top[1], 0.11]}
-            metalness={0.6}
-            radius={0.009}
-            roughness={0.4}
-            to={[top[0], top[1], -0.04]}
+            metalness={1}
+            radius={0.0055}
+            surface="brushed"
+            to={[top[0], top[1], -0.06]}
           />
-          <mesh castShadow position={[top[0], 0.008, 0.11]}>
-            <boxGeometry args={[0.16, 0.016, 0.1]} />
-            <meshStandardMaterial
+          <RoundedBox
+            args={[0.03, 0.03, 0.03]}
+            castShadow
+            position={[top[0], top[1], 0.11]}
+            radius={0.004}
+            smoothness={2}
+          >
+            <SurfaceMaterial
               color={MATERIAL.castIron}
-              metalness={0.6}
-              roughness={0.45}
+              metalness={1}
+              roughness={0.6}
+              surface="brushed"
             />
-          </mesh>
+          </RoundedBox>
+          <RoundedBox
+            args={[0.18, 0.018, 0.12]}
+            castShadow
+            position={[top[0], 0.009, 0.11]}
+            radius={0.005}
+            receiveShadow
+            smoothness={2}
+          >
+            <SurfaceMaterial color={MATERIAL.standBlue} surface="paint" />
+          </RoundedBox>
         </group>
       ) : null}
     </group>
@@ -187,10 +208,16 @@ export function RampScene({
       <SimulationTicker running={playing && forces.slips} />
       <Ramp angle={angle} />
       <group position={onPlank(angle, START, BLOCK[1] / 2)} ref={holder}>
-        <mesh castShadow receiveShadow rotation={[0, 0, turn]}>
-          <boxGeometry args={BLOCK} />
-          <meshStandardMaterial color={MATERIAL.oak} roughness={0.7} />
-        </mesh>
+        <RoundedBox
+          args={[...BLOCK]}
+          castShadow
+          radius={0.004}
+          receiveShadow
+          rotation={[0, 0, turn]}
+          smoothness={2}
+        >
+          <SurfaceMaterial color={MATERIAL.oak} surface="wood" />
+        </RoundedBox>
         <Force
           color={PLOT_COLORS.violet}
           math="\vec W"
