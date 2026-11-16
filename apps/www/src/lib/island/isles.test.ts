@@ -65,13 +65,15 @@ describe("island/isles", () => {
   });
 
   it("grows trees on a wooded isle, taller than any of its hills", () => {
-    const tallest = (seed: number) =>
-      Math.max(
-        ...Arr.map(
-          Arr.chunksOf(Array.from(islesMesh(seed).vertices), STRIDE),
-          (vertex) => vertex[1]
-        )
+    // The height of every vertex is read where it lies, one stride apart: an isle has tens of thousands.
+    const tallest = (seed: number) => {
+      const { vertices } = islesMesh(seed);
+      return Arr.reduce(
+        Arr.range(0, vertices.length / STRIDE - 1),
+        0,
+        (top, index) => Math.max(top, vertices[index * STRIDE + 1] ?? 0)
       );
+    };
     // Grass grows below stone, which tops the tallest hills, so only a crown of leaves reaches this high.
     expect(
       Arr.some([1, 7, 42, 1009], (seed) => tallest(seed) > SEA_LEVEL + 7)

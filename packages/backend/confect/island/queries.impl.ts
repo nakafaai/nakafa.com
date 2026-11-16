@@ -4,12 +4,15 @@ import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { getOptionalAppUserForRead } from "@repo/backend/confect/auth/session";
 import { todayOf } from "@repo/backend/confect/island/day";
 import { leadersOf } from "@repo/backend/confect/island/leaders";
+import { growthOf } from "@repo/backend/confect/island/level";
 import spec from "@repo/backend/confect/island/queries.spec";
-import { DAY_GRANTS } from "@repo/backend/confect/island/schema";
+import { DAY_GRANTS, EMPTY_TALLY } from "@repo/backend/confect/island/schema";
 import { findIsland } from "@repo/backend/confect/island/store";
 import { toOwnIsland } from "@repo/backend/confect/island/view";
 import { streakOn, summaryOf, weekOf } from "@repo/backend/confect/island/week";
 import sessionMiddleware from "@repo/backend/confect/middleware/session.impl";
+import { getAppUserByUsername } from "@repo/backend/confect/users/directory";
+import { profileAccess } from "@repo/backend/confect/users/profile";
 import { Effect, Layer, Option } from "effect";
 
 /** The signed-in learner's island, none before their first grant or visit. */
@@ -81,7 +84,37 @@ const leaders = FunctionImpl.make(
   })
 );
 
+/**
+ * The medals of the learner a profile address names, for whoever may open that
+ * profile (`profileAccess`); a name nobody holds and a profile that does not
+ * open both answer nothing. A learner with no island yet has counted nothing.
+ */
+const medals = FunctionImpl.make(
+  databaseSchema,
+  spec,
+  "medals",
+  Effect.fn("island.queries.medals")(function* ({ username }) {
+    const owner = yield* getAppUserByUsername(username);
+    if (!owner) {
+      return null;
+    }
+    const viewer = yield* getOptionalAppUserForRead();
+    const access = yield* profileAccess(owner._id, viewer?.appUser._id ?? null);
+    if (!access.opens) {
+      return null;
+    }
+    return Option.match(yield* findIsland(owner._id), {
+      onNone: () => ({ level: 1, tally: EMPTY_TALLY }),
+      onSome: (island) => ({
+        level: growthOf(island.lifetime).level,
+        tally: island.tally,
+      }),
+    });
+  })
+);
+
 export default GroupImpl.make(databaseSchema, spec).pipe(
+  Layer.provide(medals),
   Layer.provide(own),
   Layer.provide(week),
   Layer.provide(leaders),

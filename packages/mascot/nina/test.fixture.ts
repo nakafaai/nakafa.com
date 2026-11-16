@@ -209,6 +209,10 @@ export const DIGESTS: Readonly<Record<string, string>> = {
     "f13383cbd4a8 1f0385d0c7ff 5322c9aad104 4da705880ebf 56723c82a496 af7dee3c07ef c2723871894c 83040b8db56a",
   "whole.counting.right":
     "c0776210aa9a 199b23968069 1407e8698c35 6597bd4f37bf faf2f710a88e 47c72a423b81 7f11ff5cfc79 c0d3538f1624",
+  "whole.fanning.right":
+    "722f93644c99 9386b8ae2107 4b65d41c7865 da399c10191d 4d8865b63a78 c1960292dd79 18be0a325e32 2d21e0cb3bd4",
+  "whole.fanning.left":
+    "37360103b155 3e4477f09065 42309cd50788 38e23e7e449c 9813137541d3 a6bc9a6daf41 1ec554318ad7 babf7c49035b",
   "whole.graduating.left":
     "1fc64e5b8919 969838c1fef8 69a8e50060f1 323ddbedf6c4 6646af52395f 65b3978c4adc c59003314b9d 3b1844231209",
   "whole.graduating.right":

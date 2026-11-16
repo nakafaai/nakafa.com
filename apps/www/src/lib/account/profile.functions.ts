@@ -40,6 +40,16 @@ export const profileCommentsScreenFn = createServerFn({ method: "GET" })
     return profileCommentsHandler({ data });
   });
 
+/** The Badges tab: the profile's level and tally, and the tab's head. */
+export const profileBadgesScreenFn = createServerFn({ method: "GET" })
+  .validator(Schema.toStandardSchemaV1(ProfileInput))
+  .handler(async ({ data }) => {
+    const { profileBadgesHandler } = await import(
+      "@/lib/account/profile.server"
+    );
+    return profileBadgesHandler({ data });
+  });
+
 /** One more page of a profile's posts, for a visitor who loads more below the rows. */
 export const profilePostsPageFn = createServerFn({ method: "GET" })
   .validator(Schema.toStandardSchemaV1(ProfilePageInput))

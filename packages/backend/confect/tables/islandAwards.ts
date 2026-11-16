@@ -11,12 +11,10 @@ export default Table.make(() =>
     kind: AwardKind,
     /** The Stars granted, at most the kind's and what remained of the day. */
     stars: Schema.Finite,
-    /** The material domain of a lesson grant, which subject badges count. */
+    /** The material domain of a lesson grant, the record of what the island's tally counted. */
     subject: Schema.optionalKey(Schema.String),
     userId: IdSchema("users"),
   })
 )
   .index("by_userId_and_key", ["userId", "key"])
-  .index("by_userId_and_day", ["userId", "day"])
-  .index("by_userId_and_kind", ["userId", "kind"])
-  .index("by_userId_and_subject", ["userId", "subject"]);
+  .index("by_userId_and_day", ["userId", "day"]);

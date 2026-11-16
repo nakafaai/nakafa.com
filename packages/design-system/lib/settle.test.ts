@@ -36,6 +36,7 @@ describe("waiting for the page to settle", () => {
     Reflect.deleteProperty(window, "requestIdleCallback");
     Reflect.deleteProperty(window, "cancelIdleCallback");
     Reflect.deleteProperty(document, "readyState");
+    Reflect.deleteProperty(navigator, "userActivation");
   });
 
   it.effect(
@@ -136,6 +137,34 @@ describe("waiting for the page to settle", () => {
 
         yield* TestClock.adjust("1 second");
         yield* Fiber.join(waiting);
+      })
+  );
+
+  it.effect(
+    "starts at once for a picture that the reader's own press mounted",
+    () =>
+      Effect.gen(function* () {
+        stubReadyState("complete");
+        // A fresh module, as a new document that has not seen its reader yet.
+        vi.resetModules();
+        const { untilPageRead: untilFreshPageRead } = yield* Effect.promise(
+          () => import("@repo/design-system/lib/settle")
+        );
+        const activation = { hasBeenActive: false };
+        Object.defineProperty(navigator, "userActivation", {
+          configurable: true,
+          value: activation,
+        });
+
+        const waiting = yield* Effect.forkChild(untilFreshPageRead);
+        yield* Effect.yieldNow;
+        yield* Effect.yieldNow;
+        expect(waiting.pollUnsafe()).toBeUndefined();
+        yield* Fiber.interrupt(waiting);
+
+        // The press that opens a sheet happened before the sheet's picture listened.
+        activation.hasBeenActive = true;
+        yield* untilFreshPageRead;
       })
   );
 });

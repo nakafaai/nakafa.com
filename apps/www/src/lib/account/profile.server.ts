@@ -4,6 +4,7 @@ import { POST_PAGE_SIZE } from "@repo/backend/client/posts/list";
 import auth from "@repo/backend/confect/_generated/refs/auth";
 import chats from "@repo/backend/confect/_generated/refs/chats";
 import comments from "@repo/backend/confect/_generated/refs/comments";
+import island from "@repo/backend/confect/_generated/refs/island";
 import posts from "@repo/backend/confect/_generated/refs/posts";
 import { notFound } from "@tanstack/react-router";
 import { Clock, Effect, String as Str } from "effect";
@@ -142,6 +143,40 @@ export const profileCommentsHandler = accountHandler(
         title: t("profile"),
       };
       return { author, first, seo, userId: profile._id };
+    })
+);
+
+/**
+ * The Badges tab: the level and the tally every medal of the profile is read
+ * from, and the tab's head. Medals open with the profile, so a profile the
+ * visitor may read always has them.
+ */
+export const profileBadgesHandler = accountHandler(
+  ({ locale, username }: typeof ProfileInput.Type) =>
+    Effect.gen(function* () {
+      const token = yield* readToken();
+      const { profile } = yield* readProfileOrNotFound(username, token);
+      const medals = yield* readRequired(
+        island.queries.medals,
+        { username: profile.username },
+        token
+      );
+      if (medals === null) {
+        return yield* Effect.die(notFound());
+      }
+      const t = createTranslator({
+        locale,
+        messages: yield* messagesFor(locale),
+        namespace: "Auth",
+      });
+      const seo: ScreenSeo = {
+        canonicalPath: `/${locale}${profileHref(Str.toLowerCase(username))}/badges`,
+        description: t("profile-description"),
+        indexable: false,
+        locale,
+        title: t("profile"),
+      };
+      return { medals, seo };
     })
 );
 

@@ -7,5 +7,6 @@ const forward = <Ctx, Args, Returns>(handler: (ctx: Ctx, args: Args) => Promise<
 const definitions = ConvexFunctionDefinitions.buildForGroup<typeof import("../../../../tryouts/queries/history.spec")["default"]>(databaseSchema, groupLayer);
 
 export default {
+["recent"]: RegisteredConvexFunction.register({ ...definitions["recent"], handler: forward(definitions["recent"].handler) }),
 ["bySet"]: RegisteredConvexFunction.register({ ...definitions["bySet"], handler: forward(definitions["bySet"].handler) }),
 } as RegisteredFunctions.RegisteredFunctionsForGroupSpec<typeof import("../../../../tryouts/queries/history.spec")["default"]>;

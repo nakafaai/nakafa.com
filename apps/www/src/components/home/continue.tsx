@@ -1,18 +1,24 @@
 import type { Ref } from "@confect/core";
 import type contents from "@repo/backend/confect/_generated/refs/contents";
-import { Card } from "@repo/design-system/components/ui/card";
 import type { TileLook } from "@repo/design-system/lib/look";
 import { Array as Arr } from "effect";
 import { useTranslations } from "use-intl";
 import { MaterialRow } from "@/components/home/material";
+import { SectionDoor, SectionMore } from "@/components/home/row";
+import { HomeSection } from "@/components/home/section";
+import { getPrimaryNavigationItems } from "@/components/sidebar/data/navigation";
 
 /** How many lessons the home offers to pick up again. */
 const SHOWN = 3;
 
+/** The sidebar's Subjects entry, which this section leads to. */
+const [SUBJECTS] = getPrimaryNavigationItems();
+
 /**
- * Continue learning (the owner's home sketch, 13 Nov): the lessons the
- * learner opened last, each ready to pick up again, or a line saying where
- * they will show.
+ * The home's third section (the owner's home notes, 14 Nov): the lessons the
+ * learner opened last, each ready to pick up again, under the sidebar's own
+ * name for them. A learner who has opened none gets one row that leads to the
+ * subjects in their place.
  */
 export function HomeContinue({
   looks,
@@ -24,23 +30,24 @@ export function HomeContinue({
   >[number][];
 }) {
   const t = useTranslations("Home");
+  const tCommon = useTranslations("Common");
   const rows = Arr.take(Arr.zip(recent, looks), SHOWN);
   return (
-    <section className="flex flex-col gap-3">
-      <h2 className="font-medium">{t("continue")}</h2>
+    <HomeSection
+      action={<SectionMore item={SUBJECTS} />}
+      title={tCommon("subject")}
+    >
       {rows.length === 0 ? (
-        <p className="text-muted-foreground text-sm">{t("continue-empty")}</p>
+        <SectionDoor item={SUBJECTS} sentence={t("subjects-first")} />
       ) : (
-        <Card className="gap-0 divide-y py-0" size="sm">
-          {Arr.map(rows, ([material, look]) => (
-            <MaterialRow
-              key={material.content_id}
-              look={look}
-              material={material}
-            />
-          ))}
-        </Card>
+        Arr.map(rows, ([material, look]) => (
+          <MaterialRow
+            key={material.content_id}
+            look={look}
+            material={material}
+          />
+        ))
       )}
-    </section>
+    </HomeSection>
   );
 }

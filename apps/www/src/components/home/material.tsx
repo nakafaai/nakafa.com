@@ -45,9 +45,9 @@ export function MaterialRow({
         <Tile seed={look.seed} shift={look.shift}>
           <TileIcon icon={look.icon} />
         </Tile>
-        <div className="-mt-1 flex flex-1 flex-col gap-0.5">
-          <h3>{material.title}</h3>
-          <span className="text-muted-foreground group-hover:text-accent-foreground line-clamp-1 text-sm sm:mr-12">
+        <div className="-mt-1 flex min-w-0 flex-1 flex-col gap-0.5">
+          <h3 className="truncate">{material.title}</h3>
+          <span className="text-muted-foreground group-hover:text-accent-foreground truncate text-sm">
             {material.description}
           </span>
         </div>

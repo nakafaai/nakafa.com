@@ -48,7 +48,12 @@ describe("island/award", () => {
         const world = yield* learnerWorld();
         expect(yield* world.grant(lesson("function-concept"))).toEqual({
           _tag: "granted",
-          badges: [],
+          badges: [
+            { name: "days", tier: 1 },
+            { name: "lessons", tier: 1 },
+            { name: "streak", tier: 1 },
+            { name: "mathematics", tier: 1 },
+          ],
           stars: 5,
         });
         expect(yield* world.grant(lesson("function-concept"))).toEqual({
@@ -66,10 +71,17 @@ describe("island/award", () => {
         ]);
         expect(islands).toMatchObject([
           {
-            badges: [],
             learned: "2026-11-08",
             lifetime: 5,
             streak: 1,
+            tally: {
+              days: 1,
+              lessons: 1,
+              sections: 0,
+              sets: 0,
+              streak: 1,
+              subjects: { mathematics: 1 },
+            },
             timeZone: "UTC",
             version: 0,
           },
@@ -154,51 +166,57 @@ describe("island/award", () => {
   );
 
   it.effect(
-    "earns Explorer on the seventh day of ten and Fighter on the tenth set",
+    "names the badge tiers a grant reaches, a day and a run of days once a day",
     () =>
       Effect.gen(function* () {
         const world = yield* learnerWorld();
-        const earned = yield* Effect.forEach(Arr.range(0, 9), (day) => {
+        const reached = yield* Effect.forEach(Arr.range(0, 4), (day) => {
           vi.setSystemTime(NOW + day * DAY);
           return Effect.map(world.grant(set(`set-${day}`)), (outcome) =>
             outcome._tag === "granted" ? outcome.badges : []
           );
         });
-        expect(earned).toEqual([
-          [],
-          [],
-          [],
-          [],
-          [],
-          [],
-          ["explorer"],
-          [],
-          [],
-          ["fighter"],
-        ]);
+        const tiers = (tier: number) => [
+          { name: "days", tier },
+          { name: "sets", tier },
+          { name: "streak", tier },
+        ];
+        expect(reached).toEqual([tiers(1), tiers(2), [], [], tiers(3)]);
+        // A second grant of a day counts its learning, never the day again.
+        expect(yield* world.grant(section("set-4", "one"))).toMatchObject({
+          badges: [{ name: "sections", tier: 1 }],
+        });
+        // A day missed starts the run again and keeps the longest one.
+        vi.setSystemTime(NOW + 6 * DAY);
+        yield* world.grant(set("set-6"));
         const { islands } = yield* world.read();
-        expect(islands[0]?.badges).toEqual([
-          { at: NOW + 6 * DAY, badge: "explorer" },
-          { at: NOW + 9 * DAY, badge: "fighter" },
-        ]);
+        expect(islands[0]).toMatchObject({
+          streak: 1,
+          tally: {
+            days: 6,
+            lessons: 0,
+            sections: 1,
+            sets: 6,
+            streak: 5,
+            subjects: {},
+          },
+        });
       })
   );
 
-  it.effect(
-    "earns a subject badge on the tenth lesson of that subject only",
-    () =>
-      Effect.gen(function* () {
-        const world = yield* learnerWorld();
-        yield* world.grant(lesson("physics-1", "physics"));
-        yield* world.grant(lesson("data-1", "ai-ds"));
-        const badges = yield* Effect.forEach(Arr.range(1, 10), (index) => {
-          vi.setSystemTime(NOW + Math.floor(index / 5) * DAY);
-          return Effect.map(world.grant(lesson(`maths-${index}`)), (outcome) =>
-            outcome._tag === "granted" ? outcome.badges : []
-          );
-        });
-        expect(Arr.flatten(badges)).toEqual(["mathematics"]);
-        expect(badges[9]).toEqual(["mathematics"]);
-      })
+  it.effect("counts a lesson for its own subject only", () =>
+    Effect.gen(function* () {
+      const world = yield* learnerWorld();
+      yield* world.grant(lesson("physics-1", "physics"));
+      yield* world.grant(lesson("data-1", "ai-ds"));
+      expect(yield* world.grant(lesson("physics-2", "physics"))).toMatchObject({
+        badges: [{ name: "physics", tier: 2 }],
+      });
+      const { islands } = yield* world.read();
+      expect(islands[0]?.tally).toMatchObject({
+        lessons: 3,
+        subjects: { "ai-ds": 1, physics: 2 },
+      });
+    })
   );
 });

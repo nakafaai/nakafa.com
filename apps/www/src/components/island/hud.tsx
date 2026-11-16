@@ -228,7 +228,7 @@ function Progress() {
   const t = useTranslations("Island");
   const level = useGame((state) => state.level);
   const { from, lifetime, next } = useGame((state) => state.progress);
-  const share = next === undefined ? 1 : (lifetime - from) / (next - from);
+  const share = (lifetime - from) / (next - from);
   return (
     <div className="flex min-w-32 flex-col gap-1 pr-1">
       <h1 className="sr-only">{t("title")}</h1>
@@ -245,9 +245,7 @@ function Progress() {
         />
       </div>
       <p className="text-island-bark-soft text-sm leading-tight text-balance">
-        {next === undefined
-          ? t("top")
-          : t("next", { level: level + 1, stars: next - lifetime })}
+        {t("next", { level: level + 1, stars: next - lifetime })}
       </p>
     </div>
   );

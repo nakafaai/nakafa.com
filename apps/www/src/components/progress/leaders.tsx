@@ -1,61 +1,50 @@
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@repo/design-system/components/ui/card";
 import { PersonAvatar } from "@repo/design-system/components/ui/person";
 import { cva } from "class-variance-authority";
 import { Array as Arr } from "effect";
-import { useTranslations } from "use-intl";
+import { useFormatter, useTranslations } from "use-intl";
 import { useProgress } from "@/components/progress/context";
+import { PaneSection } from "@/components/progress/section";
 
-/** A row of the leaderboard, marked when it is the viewer's own. */
+/** A row of the leaderboard on one grid: place, animal, name, Stars. The viewer's own row is marked. */
 const rowVariants = cva(
-  "flex items-center gap-3 rounded-lg px-2 py-1.5 text-sm",
-  { variants: { own: { false: "", true: "bg-muted font-medium" } } }
+  "grid h-10 grid-cols-[1.25rem_1.75rem_minmax(0,1fr)_auto] items-center gap-3 rounded-lg px-2 text-sm",
+  {
+    variants: {
+      own: { false: "", true: "bg-accent text-accent-foreground font-medium" },
+    },
+  }
 );
 
 /**
- * The global leaderboard (ADR 0047, D27): the learners with the most Stars,
- * most first, each with their place, mascot, first name, level and Stars, the
- * viewer's own row marked.
+ * The global leaderboard (ADR 0047, D27; the owner's home notes, 14 Nov):
+ * the learners with the most Stars, most first, every row on the same grid so
+ * places, animals, names and Stars each stand in one column.
  */
-export function LeadersCard() {
+export function LeadersSection() {
   const t = useTranslations("Island");
+  const format = useFormatter();
   const { leaders } = useProgress();
+  if (leaders.length === 0) {
+    return null;
+  }
   return (
-    <Card size="sm">
-      <CardHeader>
-        <CardTitle>{t("leaders-title")}</CardTitle>
-        <CardDescription>{t("leaders-description")}</CardDescription>
-      </CardHeader>
-      <CardContent>
-        {leaders.length === 0 ? (
-          <p className="text-muted-foreground text-sm">{t("leaders-empty")}</p>
-        ) : (
-          <ol className="flex flex-col gap-1">
-            {Arr.map(leaders, (leader) => (
-              <li
-                className={rowVariants({ own: leader.own })}
-                key={leader.place}
-              >
-                <span className="text-muted-foreground w-5 text-right tabular-nums">
-                  {leader.place}
-                </span>
-                <PersonAvatar className="size-7" mascot={leader.mascot} />
-                <span className="min-w-0 flex-1 truncate">
-                  {leader.own ? t("you", { name: leader.name }) : leader.name}
-                </span>
-                <span className="text-muted-foreground shrink-0 tabular-nums">
-                  {t("level", { level: leader.level })}
-                </span>
-              </li>
-            ))}
-          </ol>
-        )}
-      </CardContent>
-    </Card>
+    <PaneSection title={t("leaders-title")}>
+      <ol className="-mx-2 flex flex-col">
+        {Arr.map(leaders, (leader) => (
+          <li className={rowVariants({ own: leader.own })} key={leader.place}>
+            <span className="text-end text-xs tabular-nums opacity-70">
+              {leader.place}
+            </span>
+            <PersonAvatar className="size-7" mascot={leader.mascot} />
+            <span className="truncate">
+              {leader.own ? t("you", { name: leader.name }) : leader.name}
+            </span>
+            <span className="text-xs tabular-nums opacity-70">
+              {t("stars", { stars: format.number(leader.lifetime) })}
+            </span>
+          </li>
+        ))}
+      </ol>
+    </PaneSection>
   );
 }

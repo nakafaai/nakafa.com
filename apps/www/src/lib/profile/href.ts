@@ -19,7 +19,7 @@ export const SETTINGS_SEGMENT = "settings";
  * username. Posts is the address itself. The route check, the rewrites and the
  * tabs all read this one list, so a tab added here is routed and shown alike.
  */
-export const ProfileTab = Schema.Literals(["comments", "chat"]);
+export const ProfileTab = Schema.Literals(["comments", "chat", "badges"]);
 
 /** The public address of a profile below the locale, for canonical links and shares. */
 export function profileHref(username: string) {
@@ -35,7 +35,7 @@ export function profileTarget(username: string): LinkTarget {
   } satisfies LinkTarget;
 }
 
-/** The route of one tab of a profile: its chat or its comments. */
+/** The route of one tab of a profile: its chat, its comments or its badges. */
 export function profileTabTarget(
   tab: typeof ProfileTab.Type,
   username: string
@@ -48,6 +48,15 @@ export function profileTabTarget(
           from: LOCALE_ROUTE,
           params: { username },
           to: "/$locale/user/$username/chat",
+        }) satisfies LinkTarget
+    ),
+    Match.when(
+      "badges",
+      () =>
+        ({
+          from: LOCALE_ROUTE,
+          params: { username },
+          to: "/$locale/user/$username/badges",
         }) satisfies LinkTarget
     ),
     Match.when(

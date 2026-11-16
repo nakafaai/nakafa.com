@@ -2,7 +2,7 @@ import {
   DatabaseReader,
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
-import { completedBadges } from "@repo/backend/confect/island/badge";
+import { reachedBadges, tallyAfter } from "@repo/backend/confect/island/badge";
 import { todayOf } from "@repo/backend/confect/island/day";
 import {
   AWARD_RULES,
@@ -16,7 +16,7 @@ import {
 import { ensureIsland } from "@repo/backend/confect/island/store";
 import { streakAfter } from "@repo/backend/confect/island/week";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { Array as Arr, Clock, Effect, Match, Option } from "effect";
+import { Array as Arr, Effect, Match, Option } from "effect";
 
 /** The one key a source holds for good, so the same learning never grants twice. */
 const keyOf = Match.type<AwardSource>().pipe(
@@ -34,7 +34,8 @@ const keyOf = Match.type<AwardSource>().pipe(
  * nothing, so the same learning can still earn on another day. Otherwise the
  * grant writes its ledger row with what remains of the day, at most the kind's
  * Stars, raises the island's lifetime, carries the learner's run of days on,
- * and records the badges it completes. A learner without an island gets one.
+ * and adds to the island's tally, from which it names the badge tiers it
+ * reached (ADR 0047, D30). A learner without an island gets one.
  */
 export const grantAward = Effect.fn("island.grantAward")(function* (
   userId: Id<"users">,
@@ -53,7 +54,6 @@ export const grantAward = Effect.fn("island.grantAward")(function* (
   if (Option.isSome(held)) {
     return Duplicate.make({});
   }
-  const now = yield* Clock.currentTimeMillis;
   const island = yield* ensureIsland(userId);
   const day = yield* todayOf(island.timeZone);
   const today = yield* database
@@ -79,22 +79,19 @@ export const grantAward = Effect.fn("island.grantAward")(function* (
     ...(source._tag === "lesson" ? { subject: source.subject } : {}),
   };
   yield* writer.table("islandAwards").insert(grant).pipe(Effect.orDie);
-  const badges = yield* completedBadges(
-    grant,
-    today.length === 0,
-    Arr.map(island.badges, (earned) => earned.badge)
-  );
+  const streak = streakAfter(island.learned, island.streak ?? 0, day);
+  const tally = tallyAfter(island.tally, source, today.length === 0, streak);
   yield* writer
     .table("islands")
     .patch(island._id, {
-      badges: [
-        ...island.badges,
-        ...Arr.map(badges, (badge) => ({ at: now, badge })),
-      ],
       learned: day,
       lifetime: island.lifetime + grant.stars,
-      streak: streakAfter(island.learned, island.streak ?? 0, day),
+      streak,
+      tally,
     })
     .pipe(Effect.orDie);
-  return Granted.make({ badges, stars: grant.stars });
+  return Granted.make({
+    badges: reachedBadges(island.tally, tally),
+    stars: grant.stars,
+  });
 });

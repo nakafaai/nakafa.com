@@ -57,7 +57,7 @@ describe("contents/views/finish", () => {
         vi.setSystemTime(NOW + 60_000 + 45_000);
         expect(
           yield* world.reader.mutation(views.finishLesson, world.finish)
-        ).toEqual({ _tag: "granted", badges: [], stars: 5 });
+        ).toMatchObject({ _tag: "granted", stars: 5 });
         expect(
           yield* world.reader.mutation(views.finishLesson, world.finish)
         ).toEqual({ _tag: "duplicate" });

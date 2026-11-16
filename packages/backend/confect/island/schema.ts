@@ -42,26 +42,39 @@ export const DAILY_STARS = 150;
 /** The most grants one day can hold: each gives at least one of the day's Stars. */
 export const DAY_GRANTS = DAILY_STARS;
 
-/** The subjects whose finished lessons earn a badge, named as their material domain. */
-export const SubjectBadge = Schema.Literals([
-  "mathematics",
-  "physics",
-  "chemistry",
-  "biology",
-]);
+/**
+ * What an island has counted of its owner's learning (ADR 0047, D30): the days
+ * they learned on, their longest run of days in a row, the lessons, try-out
+ * sections and try-out sets they finished, and the lessons of each subject by
+ * its material domain. Every badge reads one of these counts, so a grant adds
+ * to them and never reads the ledger back.
+ */
+export const Tally = Schema.Struct({
+  days: Schema.Int,
+  lessons: Schema.Int,
+  sections: Schema.Int,
+  sets: Schema.Int,
+  streak: Schema.Int,
+  subjects: Schema.Record(Schema.String, Schema.Int),
+});
 
-/** Every badge an island can earn (ADR 0042, D11). */
-export const Badge = Schema.Literals([
-  "explorer",
-  "fighter",
-  ...SubjectBadge.literals,
-]);
-export type Badge = typeof Badge.Type;
+/** The tally of an island that has counted nothing yet. */
+export const EMPTY_TALLY: typeof Tally.Type = {
+  days: 0,
+  lessons: 0,
+  sections: 0,
+  sets: 0,
+  streak: 0,
+  subjects: {},
+};
 
-/** A badge on an island and the moment it was earned. */
-export const EarnedBadge = Schema.Struct({ at: Schema.Finite, badge: Badge });
+/**
+ * One badge: the count it stands for, named as a kind of learning or as a
+ * subject's material domain, and the tier of it the learner reached, from 1.
+ */
+export const Badge = Schema.Struct({ name: Schema.String, tier: Schema.Int });
 
-/** A grant that wrote its row: the Stars it gave and the badges it completed. */
+/** A grant that wrote its row: the Stars it gave and the badge tiers it reached. */
 export const Granted = Schema.TaggedStruct("granted", {
   badges: Schema.Array(Badge),
   stars: Schema.Finite,

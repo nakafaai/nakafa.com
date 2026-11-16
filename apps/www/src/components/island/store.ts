@@ -40,7 +40,7 @@ export type Shelf = typeof Shelf.Type;
 export const Progress = Schema.Struct({
   from: Schema.Finite,
   lifetime: Schema.Finite,
-  next: Schema.optionalKey(Schema.Finite),
+  next: Schema.Finite,
 });
 export type Progress = typeof Progress.Type;
 
@@ -178,8 +178,10 @@ export function createGameStore(setup: GameSetup) {
         applyEdits(cells, edits);
         const step = Arr.appendAll(edits, settleOf(cells, edits));
         write(step);
+        // A change that went in answers the note about one that did not.
         set((state) => ({
           future: [],
+          notice: null,
           past: Arr.takeRight(Arr.append(state.past, step), HISTORY),
         }));
       },

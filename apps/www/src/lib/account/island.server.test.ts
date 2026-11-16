@@ -112,10 +112,10 @@ describe("islandScreenHandler", () => {
     const screen = await islandScreenHandler({ data: { locale: "en" } });
     expect(screen).toMatchObject({
       edits: [{ block: 5, x: 30, y: 9, z: 30 }],
-      from: 400,
+      from: 250,
       level: 3,
       lifetime: 420,
-      next: 900,
+      next: 450,
       seed: seedOf("users-1"),
       size: 56,
       version: 3,
@@ -127,7 +127,7 @@ describe("islandScreenHandler", () => {
     });
   });
 
-  it("starts a learner with no island yet at the first level, past the last level with none next", async () => {
+  it("starts a learner with no island yet at the first level, and always names a next level", async () => {
     sessionWith(Option.some("token"));
     answerQueries([
       [island.queries.own, null],
@@ -138,7 +138,7 @@ describe("islandScreenHandler", () => {
       edits: [],
       level: 1,
       lifetime: 0,
-      next: 150,
+      next: 100,
       seed: seedOf("island"),
       size: 52,
       version: 0,
@@ -149,6 +149,6 @@ describe("islandScreenHandler", () => {
       [auth.queries.getCurrentUser, account],
     ]);
     const top = await islandScreenHandler({ data: { locale: "en" } });
-    expect(top).toMatchObject({ level: 7, next: undefined, size: 64 });
+    expect(top).toMatchObject({ level: 18, next: 9450, size: 64 });
   });
 });

@@ -1,7 +1,10 @@
 import { Ref } from "@confect/core";
 import { assert, describe, expect, it } from "@effect/vitest";
 import tryouts from "@repo/backend/confect/_generated/refs/tryouts";
-import { FIXTURE_TRACK } from "@repo/backend/test/assessment/snapshot";
+import {
+  FIXTURE_TRACK,
+  fixtureSetPath,
+} from "@repo/backend/test/assessment/snapshot";
 import {
   TRYOUT_NOW,
   type TryoutWorld,
@@ -126,5 +129,61 @@ describe("tryouts/queries/history", () => {
         });
       }
     })
+  );
+
+  it.effect(
+    "lists the sets sat last, newest first and one row a set, by the route of the active release",
+    () =>
+      Effect.gen(function* () {
+        const world = yield* tryoutWorld({ sets: 2 });
+        const [, last] = yield* seedHistory(world, 2);
+        vi.setSystemTime(TRYOUT_NOW + 60_000);
+        const running = yield* world.start({ setKey: "set-2" });
+        yield* world.release({ renamed: true, sets: 2 });
+        const recent = yield* world.learner.query(
+          tryouts.queries.history.recent,
+          {}
+        );
+        expect(recent).toEqual([
+          {
+            attemptId: running.attemptId,
+            publicPath: fixtureSetPath("set-2", "id", true),
+            score: null,
+            status: "in-progress",
+            title: expect.any(String),
+          },
+          {
+            attemptId: last,
+            publicPath: fixtureSetPath("set-1", "id", true),
+            score: 2,
+            status: "completed",
+            title: expect.any(String),
+          },
+        ]);
+      })
+  );
+
+  it.effect(
+    "leaves out a set the active release no longer publishes, and refuses a visitor",
+    () =>
+      Effect.gen(function* () {
+        const world = yield* tryoutWorld();
+        const { attemptId } = yield* world.start();
+        yield* Effect.promise(() =>
+          world.t.mutation(async (ctx) => {
+            await ctx.db.patch("tryoutAttempts", attemptId, {
+              setIdentity: "indonesia/snbt/utbk/retired",
+            });
+          })
+        );
+        expect(
+          yield* world.learner.query(tryouts.queries.history.recent, {})
+        ).toEqual([]);
+        expect(
+          (yield* world.visitor
+            .query(tryouts.queries.history.recent, {})
+            .pipe(Effect.flip))._tag
+        ).toBe("SessionRequired");
+      })
   );
 });

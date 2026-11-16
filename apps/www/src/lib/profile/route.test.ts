@@ -3,7 +3,7 @@ import { Option } from "effect";
 import { isProfileTab, readProfileRoot } from "@/lib/profile/route";
 
 describe("profile address", () => {
-  it.each([[[]], [["comments"]], [["chat"]]])(
+  it.each([[[]], [["comments"]], [["chat"]], [["badges"]]])(
     "names the tab at the segments %j",
     (segments) => {
       expect(isProfileTab(segments)).toBe(true);
