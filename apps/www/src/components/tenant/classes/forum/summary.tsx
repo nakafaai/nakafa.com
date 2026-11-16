@@ -69,7 +69,9 @@ export function ThreadSummary({
   const { classSlug, slug } = useClassScope();
   const { channelId } = useChannelScope();
   const keep = useOpening((state) => state.keep);
+  const reach = useOpening((state) => state.reach);
   const open = useIsOpenRoot(message.clientKey);
+  const thread = { channelId, number: discussion.number, opening: message };
 
   if (isPending(message)) {
     return null;
@@ -78,9 +80,9 @@ export function ThreadSummary({
     <Item
       aria-current={open ? "true" : undefined}
       className="aria-current:bg-muted bg-background w-fit max-w-full flex-nowrap group-data-[align=end]/message:self-end"
-      onClick={() =>
-        keep({ channelId, number: discussion.number, opening: message })
-      }
+      onClick={() => keep(thread)}
+      onFocus={() => reach(thread)}
+      onPointerDown={() => reach(thread)}
       render={
         <TargetLink
           target={schoolClassDiscussionTarget(

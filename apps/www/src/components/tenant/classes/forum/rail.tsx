@@ -31,7 +31,10 @@ import {
   ChannelRows,
 } from "@/components/tenant/classes/channels";
 import { createChannelDrafts } from "@/components/tenant/classes/drafts";
-import { ThreadRows } from "@/components/tenant/classes/forum/threads";
+import {
+  ThreadListsProvider,
+  ThreadRows,
+} from "@/components/tenant/classes/forum/threads";
 import { useClassScope } from "@/components/tenant/classes/scope";
 import { isLostAccess } from "@/components/tenant/refusal";
 
@@ -51,12 +54,15 @@ const CHAT_FILTER = "chat";
  * chat is archived. A chat that the server is still saving shows its name without a link. The next
  * page loads when the end of the list comes into view, so the list has no button. A class with no
  * chat shows the empty state without a search, a failed read shows its own sentence and a retry,
- * never the empty state, and a viewer who lost the school's access is sent to the refused page.
+ * never the empty state, and a viewer who lost the school's access is sent to the refused page. The
+ * class's threads are read with the list, so the Threads filter shows them at once.
  */
 export function ChatRail() {
   return (
     <TableFiltersProvider>
-      <ChatList />
+      <ThreadListsProvider>
+        <ChatList />
+      </ThreadListsProvider>
     </TableFiltersProvider>
   );
 }
