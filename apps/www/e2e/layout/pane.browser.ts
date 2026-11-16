@@ -1,7 +1,6 @@
 import { expect, type Page, test } from "@playwright/test";
 import { Effect } from "effect";
 import { LESSON_PATH } from "@/e2e/support/chat";
-import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { readFrameProblems } from "@/e2e/support/frame";
 import { signInLearner } from "@/e2e/support/learner";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
@@ -56,8 +55,6 @@ test("a lesson's outline stands at the screen's right edge on a desktop, and a p
   for (const viewport of [desktopViewport, touchViewport]) {
     const context = await browser.newContext({ viewport });
     const page = await context.newPage();
-    // The usage-data prompt floats over the page until the visitor answers it, so the visit answers it first.
-    await Effect.runPromise(seedAnalyticsConsent(page, "denied"));
     await page.goto(`${baseURL}${LESSON_PATH}`);
     await expect(page.locator('[data-slot="page-header"]')).toBeVisible({
       timeout: readinessTimeoutMilliseconds,
@@ -81,7 +78,6 @@ test("a connector's detail opens at the screen's right edge on a desktop and as 
     const context = await browser.newContext({ viewport });
     await Effect.runPromise(signInLearner(context, String(baseURL)));
     const page = await context.newPage();
-    await Effect.runPromise(seedAnalyticsConsent(page, "denied"));
     await page.goto(`${baseURL}/en/user/settings/connectors`);
     const open = page.getByRole("button", {
       exact: true,

@@ -1,25 +1,16 @@
 import { RegisteredConvexFunction } from "@confect/server";
-import workflowTest from "@convex-dev/workflow/test";
 import { describe, expect, it } from "@effect/vitest";
 import posthogTest from "@posthog/convex/test";
 import confectSchema from "@repo/backend/confect/_generated/schema";
-import {
-  captureProductEvent,
-  deliverProductAnalyticsProgram,
-  toProductAnalyticsCaptureError,
-} from "@repo/backend/confect/analytics/capture";
-import type { ProductAnalyticsCaptureError } from "@repo/backend/confect/analytics/capture.spec";
-import { seedAnalyticsConsent } from "@repo/backend/confect/test.helpers";
+import { captureProductEvent } from "@repo/backend/confect/analytics/capture";
 import { convexModules } from "@repo/backend/confect/test.setup";
-import { workflow } from "@repo/backend/confect/workflow";
 import { internal } from "@repo/backend/convex/_generated/api";
 import schema from "@repo/backend/convex/schema";
-import { MASCOT_CODE } from "@repo/backend/test/mascot";
 import { JsonTextSchema } from "@repo/utilities/json";
 import { internalActionGeneric } from "convex/server";
 import { v } from "convex/values";
 import { convexTest } from "convex-test";
-import { Effect, Schema } from "effect";
+import { Effect, MutableList, Schema } from "effect";
 
 const NOW = Date.UTC(2026, 3, 2, 12, 0, 0);
 const contentViewProperties = {
@@ -34,37 +25,56 @@ const contentViewProperties = {
   locale: "id",
   route: "articles/example",
 } as const;
+
+/** A content view event, as the view trigger captures it. */
+const contentViewed = {
+  event: { name: "content viewed", properties: contentViewProperties },
+  timestamp: NOW,
+} as const;
+
+/** The arguments PostHog's capture action receives, as Convex validates them. */
+const captureArgs = {
+  disableGeoip: v.boolean(),
+  distinctId: v.string(),
+  event: v.string(),
+  properties: v.optional(v.string()),
+  timestamp: v.optional(v.number()),
+};
+
+/** A test deployment whose PostHog capture action records each call, or fails with `failure`. */
+function deploymentCapturing(failure?: Error) {
+  const t = convexTest(schema, convexModules);
+  const captured = MutableList.make<Record<string, unknown>>();
+  t.registerComponent("posthog", posthogTest.schema, {
+    ...posthogTest.modules,
+    "./component/lib.ts": async () => ({
+      capture: internalActionGeneric({
+        args: captureArgs,
+        returns: v.null(),
+        handler: (_ctx, args) => {
+          if (failure !== undefined) {
+            throw failure;
+          }
+          MutableList.append(captured, args);
+          return null;
+        },
+      }),
+    }),
+  });
+  return { captured, t };
+}
+
 describe("analytics/capture", () => {
   it.effect(
-    "schedules current-consent product delivery with validated payload",
+    "queues an anonymous event whose properties turn PostHog's person profile off",
     () =>
       Effect.gen(function* () {
         const runtimeServices = yield* Effect.context<never>();
         const t = convexTest(schema, convexModules);
         const scheduledJobs = yield* Effect.promise(() =>
           t.mutation(async (ctx) => {
-            const userId = await ctx.db.insert("users", {
-              authId: "analytics-user-auth",
-              credits: 10,
-              creditsResetAt: NOW,
-              email: "analytics@example.com",
-              mascot: MASCOT_CODE,
-              name: "Analytics User",
-              plan: "free",
-            });
-            await seedAnalyticsConsent(ctx, {
-              decidedAt: NOW,
-              userId,
-            });
             await Effect.runPromiseWith(runtimeServices)(
-              captureProductEvent({
-                distinctId: userId,
-                event: {
-                  name: "content viewed",
-                  properties: contentViewProperties,
-                },
-                timestamp: NOW,
-              }).pipe(
+              captureProductEvent(contentViewed).pipe(
                 Effect.provide(
                   RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
                 )
@@ -79,54 +89,30 @@ describe("analytics/capture", () => {
             return jobs;
           })
         );
-        const properties = yield* Schema.encodeEffect(JsonTextSchema)(
-          contentViewProperties
-        ).pipe(Effect.orDie);
+        const properties = yield* Schema.encodeEffect(JsonTextSchema)({
+          ...contentViewProperties,
+          $process_person_profile: false,
+        }).pipe(Effect.orDie);
         expect(scheduledJobs).toEqual([
           expect.objectContaining({
-            args: [
-              expect.objectContaining({
-                event: "content viewed",
-                properties,
-                timestamp: NOW,
-              }),
-            ],
+            args: [{ event: "content viewed", properties, timestamp: NOW }],
             name: expect.stringContaining("deliverProductEvent"),
           }),
         ]);
       })
   );
+
   it.effect("contains optional analytics scheduling failures", () =>
     Effect.gen(function* () {
       const runtimeServices = yield* Effect.context<never>();
       const t = convexTest(schema, convexModules);
       const scheduledJobs = yield* Effect.promise(() =>
         t.mutation(async (ctx) => {
-          const userId = await ctx.db.insert("users", {
-            authId: "analytics-scheduling-failure-auth",
-            credits: 10,
-            creditsResetAt: NOW,
-            email: "analytics-scheduling-failure@example.com",
-            mascot: MASCOT_CODE,
-            name: "Analytics Scheduling Failure",
-            plan: "free",
-          });
-          await seedAnalyticsConsent(ctx, {
-            decidedAt: NOW,
-            userId,
-          });
           const runAfter = vi
             .spyOn(ctx.scheduler, "runAfter")
             .mockRejectedValueOnce(new Error("scheduler unavailable"));
           await Effect.runPromiseWith(runtimeServices)(
-            captureProductEvent({
-              distinctId: userId,
-              event: {
-                name: "content viewed",
-                properties: contentViewProperties,
-              },
-              timestamp: NOW,
-            }).pipe(
+            captureProductEvent(contentViewed).pipe(
               Effect.provide(
                 RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
               )
@@ -139,206 +125,46 @@ describe("analytics/capture", () => {
       expect(scheduledJobs).toEqual([]);
     })
   );
-  it.effect("drops a queued event when deletion starts before delivery", () =>
-    Effect.gen(function* () {
-      const capture = vi.fn(() => Effect.void);
-      const requestErasure = vi.fn(() => Effect.void);
-      yield* deliverProductAnalyticsProgram({
-        capture: Effect.suspend(capture),
-        isUserEligible: Effect.succeed(false),
-        requestErasure: Effect.suspend(requestErasure),
-      });
-      expect(capture).not.toHaveBeenCalled();
-      expect(requestErasure).not.toHaveBeenCalled();
-    })
-  );
-  it.effect("keeps delivered analytics when the user remains active", () =>
-    Effect.gen(function* () {
-      const capture = vi.fn(() => Effect.void);
-      const requestErasure = vi.fn(() => Effect.void);
-      yield* deliverProductAnalyticsProgram({
-        capture: Effect.suspend(capture),
-        isUserEligible: Effect.succeed(true),
-        requestErasure: Effect.suspend(requestErasure),
-      });
-      expect(capture).toHaveBeenCalledOnce();
-      expect(requestErasure).not.toHaveBeenCalled();
-    })
-  );
-  it.effect("durably erases analytics when withdrawal overlaps the send", () =>
-    Effect.gen(function* () {
-      const capture = vi.fn(() => Effect.void);
-      const requestErasure = vi.fn(() => Effect.void);
-      const isUserActive = vi
-        .fn<() => Effect.Effect<boolean, ProductAnalyticsCaptureError>>()
-        .mockReturnValueOnce(Effect.succeed(true))
-        .mockReturnValueOnce(Effect.succeed(false));
-      yield* deliverProductAnalyticsProgram({
-        capture: Effect.suspend(capture),
-        isUserEligible: Effect.suspend(isUserActive),
-        requestErasure: Effect.suspend(requestErasure),
-      });
-      expect(capture).toHaveBeenCalledOnce();
-      expect(requestErasure).toHaveBeenCalledOnce();
-    })
-  );
-  it.effect(
-    "requests erasure after a failed send that overlaps withdrawal",
-    () =>
-      Effect.gen(function* () {
-        const requestErasure = vi.fn(() => Effect.void);
-        const isUserActive = vi
-          .fn<() => Effect.Effect<boolean, ProductAnalyticsCaptureError>>()
-          .mockReturnValueOnce(Effect.succeed(true))
-          .mockReturnValueOnce(Effect.succeed(false));
-        const failure = yield* deliverProductAnalyticsProgram({
-          capture: Effect.fail(
-            toProductAnalyticsCaptureError(new Error("capture uncertain"))
-          ),
-          isUserEligible: Effect.suspend(isUserActive),
-          requestErasure: Effect.suspend(requestErasure),
-        }).pipe(Effect.flip);
-        expect(requestErasure).toHaveBeenCalledOnce();
-        expect(failure).toMatchObject({
-          _tag: "ProductAnalyticsCaptureError",
-          message: "capture uncertain",
-        });
-      })
-  );
-  it.effect(
-    "requests erasure after a send when final eligibility is unknown",
-    () =>
-      Effect.gen(function* () {
-        const requestErasure = vi.fn(() => Effect.void);
-        const isUserActive = vi
-          .fn<() => Effect.Effect<boolean, ProductAnalyticsCaptureError>>()
-          .mockReturnValueOnce(Effect.succeed(true))
-          .mockReturnValueOnce(
-            Effect.fail(
-              toProductAnalyticsCaptureError(
-                new Error("eligibility unavailable")
-              )
-            )
-          );
-        const failure = yield* deliverProductAnalyticsProgram({
-          capture: Effect.void,
-          isUserEligible: Effect.suspend(isUserActive),
-          requestErasure: Effect.suspend(requestErasure),
-        }).pipe(Effect.flip);
-        expect(requestErasure).toHaveBeenCalledOnce();
-        expect(failure).toMatchObject({
-          _tag: "ProductAnalyticsCaptureError",
-          message: "eligibility unavailable",
-        });
-      })
-  );
 });
-it.each(["missing", "deleting"] as const)(
-  "refuses delivery for a %s user",
-  async (condition) => {
-    const t = convexTest(schema, convexModules);
-    const userId = await t.mutation(async (ctx) => {
-      const id = await ctx.db.insert("users", {
-        authId: "eligibility",
-        credits: 0,
-        creditsResetAt: NOW,
-        email: "eligibility@example.com",
-        mascot: MASCOT_CODE,
-        name: "Eligibility",
-        plan: "free",
-      });
-      if (condition === "missing") {
-        await ctx.db.delete("users", id);
-      } else {
-        await ctx.db.patch("users", id, {
-          deletionPreparedAt: NOW,
-        });
-      }
-      return id;
-    });
-    expect(
-      await t.query(internal.analytics.capture.isProductAnalyticsUserEligible, {
-        userId,
-      })
-    ).toBe(false);
-  }
-);
-it.each([false, true])(
-  "durably reconciles withdrawal during actual action delivery, unavailable=%s",
-  async (unavailable) => {
-    const t = convexTest(schema, convexModules);
-    workflowTest.register(t);
-    const userId = await t.mutation(async (ctx) => {
-      const id = await ctx.db.insert("users", {
-        authId: "overlap",
-        credits: 0,
-        creditsResetAt: NOW,
-        email: "overlap@example.com",
-        mascot: MASCOT_CODE,
-        name: "Overlap",
-        plan: "free",
-      });
-      await seedAnalyticsConsent(ctx, {
-        decidedAt: NOW,
-        userId: id,
-      });
-      return id;
-    });
-    let notifyStarted: () => void = () => undefined;
-    let finishCapture: () => void = () => undefined;
-    const started = new Promise<void>((resolve) => {
-      notifyStarted = resolve;
-    });
-    const finished = new Promise<void>((resolve) => {
-      finishCapture = resolve;
-    });
-    t.registerComponent("posthog", posthogTest.schema, {
-      ...posthogTest.modules,
-      "./component/lib.ts": async () => ({
-        capture: internalActionGeneric({
-          args: {
-            disableGeoip: v.boolean(),
-            distinctId: v.string(),
-            event: v.string(),
-            properties: v.optional(v.string()),
-            timestamp: v.optional(v.number()),
-          },
-          returns: v.null(),
-          handler: async () => {
-            notifyStarted();
-            await finished;
-            return null;
-          },
-        }),
-      }),
-    });
-    const start = vi.spyOn(workflow, "start");
-    if (unavailable) {
-      start.mockRejectedValueOnce(new Error("workflow unavailable"));
-    }
-    const delivery = t.action(internal.analytics.capture.deliverProductEvent, {
-      disableGeoip: true,
-      distinctId: userId,
+
+describe("analytics/capture delivery", () => {
+  it("sends each event under a fresh distinct id of its own, without location", async () => {
+    const { captured: deliveries, t } = deploymentCapturing();
+    const delivery = {
+      event: "content viewed",
+      properties: '{"$process_person_profile":false}',
+      timestamp: NOW,
+    };
+
+    await t.action(internal.analytics.capture.deliverProductEvent, delivery);
+    await t.action(internal.analytics.capture.deliverProductEvent, {
       event: "content viewed",
     });
-    await started;
-    await t.mutation((ctx) =>
-      ctx.db.patch("users", userId, {
-        deletionPreparedAt: NOW,
+
+    const captured = MutableList.toArray(deliveries);
+    expect(captured).toEqual([
+      { ...delivery, disableGeoip: true, distinctId: expect.any(String) },
+      {
+        disableGeoip: true,
+        distinctId: expect.any(String),
+        event: "content viewed",
+      },
+    ]);
+    expect(captured[0]?.distinctId).not.toBe(captured[1]?.distinctId);
+  });
+
+  it("reports a PostHog failure as a capture error", async () => {
+    const { t } = deploymentCapturing(new Error("posthog unavailable"));
+
+    await expect(
+      t.action(internal.analytics.capture.deliverProductEvent, {
+        event: "content viewed",
       })
-    );
-    finishCapture();
-    if (unavailable) {
-      await expect(delivery).rejects.toMatchObject({
-        data: {
-          code: "PRODUCT_ANALYTICS_CAPTURE_FAILED",
-          message: expect.stringContaining("workflow unavailable"),
-        },
-      });
-    } else {
-      await expect(delivery).resolves.toBeNull();
-    }
-    expect(start).toHaveBeenCalledOnce();
-    start.mockRestore();
-  }
-);
+    ).rejects.toMatchObject({
+      data: {
+        code: "PRODUCT_ANALYTICS_CAPTURE_FAILED",
+        message: expect.stringContaining("posthog unavailable"),
+      },
+    });
+  });
+});

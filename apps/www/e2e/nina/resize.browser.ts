@@ -1,6 +1,5 @@
 import { expect, type Page, test } from "@playwright/test";
 import { Effect } from "effect";
-import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { waitForSlide } from "@/e2e/support/layout";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { SHEET_POPUP } from "@/e2e/support/selector";
@@ -23,7 +22,6 @@ test.use({
 const verifyDrag = Effect.fn("NakafaE2E.verifyNinaSheetDrag")(function* (
   page: Page
 ) {
-  yield* seedAnalyticsConsent(page, "denied");
   yield* openSheet(page);
 
   const sheet = page.locator(SHEET_POPUP);

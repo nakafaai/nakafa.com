@@ -195,7 +195,6 @@ const start = FunctionImpl.make(
       turnId,
     });
     yield* captureProductEvent({
-      distinctId: appUser._id,
       event: {
         name: "chat message sent",
         properties: { chat_type: chat?.type ?? "study" },

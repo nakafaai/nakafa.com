@@ -6,8 +6,7 @@ import en from "@repo/internationalization/dictionaries/en.json" with {
   type: "json",
 };
 import { Effect, Schema } from "effect";
-import { openChatPage } from "@/e2e/support/chat";
-import type { PromptLocale } from "@/e2e/support/consent";
+import { type ChatLocale, openChatPage } from "@/e2e/support/chat";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
@@ -119,7 +118,7 @@ export const pickFiles = Effect.fn("NakafaE2E.pickFiles")(function* (
 export const openComposer = Effect.fn("NakafaE2E.openComposer")(function* (
   page: Page,
   origin: string,
-  locale: PromptLocale = "en",
+  locale: ChatLocale = "en",
   labels = ENGLISH
 ) {
   yield* openChatPage(page, origin, locale);

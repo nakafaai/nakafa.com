@@ -3,7 +3,6 @@ import en from "@repo/internationalization/dictionaries/en.json" with {
   type: "json",
 };
 import { Effect } from "effect";
-import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { CARD } from "@/e2e/support/selector";
 import { revealTimeoutMilliseconds } from "@/e2e/support/timeout";
@@ -19,7 +18,6 @@ const HOLD_MILLISECONDS = 3000;
 const expectSketchPlays = Effect.fn("NakafaE2E.expectSketchPlays")(function* (
   page: Page
 ) {
-  yield* seedAnalyticsConsent(page, "denied");
   const response = yield* Effect.promise(() =>
     page.goto(EXPONENT_ROUTE, { waitUntil: "domcontentloaded" })
   );

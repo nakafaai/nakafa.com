@@ -1,6 +1,5 @@
 import { expect, type Locator, type Page, test } from "@playwright/test";
 import { Effect } from "effect";
-import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { CARD } from "@/e2e/support/selector";
 import { revealTimeoutMilliseconds } from "@/e2e/support/timeout";
@@ -46,7 +45,6 @@ function readPhantomStrokes(card: Locator) {
 
 const expectPhantomUnstroked = Effect.fn("NakafaE2E.expectPhantomUnstroked")(
   function* (page: Page) {
-    yield* seedAnalyticsConsent(page, "denied");
     const response = yield* Effect.promise(() =>
       page.goto(ELECTRON_CONFIGURATION_ROUTE, {
         waitUntil: "domcontentloaded",

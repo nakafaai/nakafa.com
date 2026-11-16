@@ -4,7 +4,6 @@ import en from "@repo/internationalization/dictionaries/en.json" with {
 };
 import { COMPANY_SOCIAL_PROFILES } from "@repo/seo/profiles";
 import { Effect } from "effect";
-import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { waitUntilTakenOver } from "@/e2e/support/window";
@@ -21,7 +20,6 @@ const SOURCE_ORIGIN = /^https:\/\/github\.com\//u;
  */
 const verifyReferences = Effect.fn("NakafaE2E.verifyCatalogReferences")(
   function* (page: Page) {
-    yield* seedAnalyticsConsent(page, "denied");
     const response = yield* Effect.promise(() =>
       page.goto(CATALOG_PATH, { waitUntil: "domcontentloaded" })
     );

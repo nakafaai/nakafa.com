@@ -2,12 +2,7 @@ import { useTimeout, useWindowEvent } from "@mantine/hooks";
 import { lazy } from "@repo/design-system/lib/lazy";
 import { Effect, Fiber, Option } from "effect";
 import { type ReactNode, Suspense, useEffect, useState } from "react";
-import {
-  PageConsentControls,
-  PageConsentEffects,
-} from "@/components/analytics/consent/mount";
-import { AnalyticsConsentProvider } from "@/components/analytics/consent/provider";
-import { AnalyticsUnavailableProvider } from "@/components/analytics/consent/unavailable";
+import { PageAnalytics } from "@/components/analytics/mount";
 import { AuthSessionContext } from "@/components/auth/context";
 import { useSignedInHint } from "@/components/auth/session";
 import {
@@ -140,19 +135,8 @@ export function PageProviders({
         <ConvexAuthContext value={store}>
           <PageCredentials />
           <PageNavigationProvider navigation={pageNavigation}>
-            {pageNavigation ? (
-              <AnalyticsConsentProvider
-                isPreviewChild={clientEnv.VITE_AKSARA_PREVIEW_CHILD === "true"}
-              >
-                {children}
-                <PageConsentControls />
-                <PageConsentEffects />
-              </AnalyticsConsentProvider>
-            ) : (
-              <AnalyticsUnavailableProvider>
-                {children}
-              </AnalyticsUnavailableProvider>
-            )}
+            {children}
+            {pageNavigation ? <PageAnalytics /> : null}
           </PageNavigationProvider>
           <PageRelease />
           <NavigationWarmth />

@@ -2,8 +2,6 @@ import { expect, type Locator, type Page, test } from "@playwright/test";
 import en from "@repo/internationalization/dictionaries/en.json" with {
   type: "json",
 };
-import { Effect } from "effect";
-import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { desktopViewport, viewportSize } from "@/e2e/support/viewport";
 import { waitUntilTakenOver } from "@/e2e/support/window";
@@ -18,12 +16,8 @@ const LEVELS = [
   en.Tryouts["level-cooked"],
 ];
 
-/**
- * Opens the track as a visitor who already answered the usage-data prompt, whose card would otherwise stand over
- * the pane's footer in the corner of the screen.
- */
+/** Opens the track as a visitor, once the page has loaded. */
 async function openTrack(page: Page) {
-  await Effect.runPromise(seedAnalyticsConsent(page, "denied"));
   await page.goto(TRACK_PATH, { waitUntil: "load" });
 }
 

@@ -1,6 +1,5 @@
 import { expect, test } from "@playwright/test";
 import { Effect, Schema } from "effect";
-import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { pinnedRoutes } from "@/e2e/support/corpus";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
@@ -25,7 +24,6 @@ for (const width of [390, 1440]) {
       withObservedPageErrors(
         page,
         Effect.gen(function* () {
-          yield* seedAnalyticsConsent(page, "denied");
           yield* Effect.promise(() => page.goto(pinnedRoutes.code.en));
           const blocks = page.locator(".content-auto-code");
           yield* Effect.promise(() =>

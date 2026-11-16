@@ -274,7 +274,7 @@ test("the footer theme selector loads its list on demand and applies a theme", a
     withObservedPageErrors(
       page,
       Effect.gen(function* () {
-        yield* openRoute(page, "/en", "denied");
+        yield* openRoute(page, "/en");
 
         const selector = page
           .locator("footer")

@@ -10,7 +10,6 @@ import {
   runPage,
 } from "@/e2e/support/attachment";
 import { runOnPage } from "@/e2e/support/chat";
-import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { pinnedRoutes } from "@/e2e/support/corpus";
 import { waitForSlide } from "@/e2e/support/layout";
 import { signInLearner } from "@/e2e/support/learner";
@@ -138,7 +137,6 @@ for (const screen of SHORT_SCREENS) {
       await runOnPage(page, baseURL, (origin) =>
         Effect.gen(function* () {
           // A visitor's attach button asks for sign-in, so a learner picks the photo.
-          yield* seedAnalyticsConsent(page, "denied");
           yield* signInLearner(page.context(), origin);
           yield* openSheet(page);
           const sheet = page.locator(SHEET_POPUP);
@@ -244,7 +242,6 @@ for (const size of TEXT_SIZES) {
       await runPage(
         page,
         Effect.gen(function* () {
-          yield* seedAnalyticsConsent(page, "denied");
           yield* Effect.promise(async () => {
             await page.goto(pinnedRoutes.exponent.de);
             await page.addStyleTag({

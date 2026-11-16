@@ -1,6 +1,5 @@
 import { type CDPSession, expect, test } from "@playwright/test";
 import { Array as Arr, Duration, Effect, Option } from "effect";
-import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { pinnedRoutes } from "@/e2e/support/corpus";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
@@ -77,7 +76,6 @@ test.describe("an idle lesson on a phone", () => {
       withObservedPageErrors(
         page,
         Effect.gen(function* () {
-          yield* seedAnalyticsConsent(page, "denied");
           const cdp = yield* Effect.promise(() =>
             page.context().newCDPSession(page)
           );

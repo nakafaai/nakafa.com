@@ -1,7 +1,6 @@
 import { expect, type Page, test } from "@playwright/test";
 import { Effect } from "effect";
 import { CHAT_PAGE, runOnPage } from "@/e2e/support/chat";
-import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { withBrowserContext } from "@/e2e/support/context";
 import { signInLearner } from "@/e2e/support/learner";
 import {
@@ -71,7 +70,6 @@ const accountTrigger = (page: Page) =>
  */
 const openSearchAsLearner = Effect.fn("NakafaE2E.openSearchAsLearner")(
   function* (page: Page, origin: string) {
-    yield* seedAnalyticsConsent(page, "denied");
     yield* signInLearner(page.context(), origin);
     yield* Effect.promise(() => page.goto("/en/search"));
     yield* Effect.promise(() => expect(accountTrigger(page)).toBeVisible());
@@ -176,7 +174,6 @@ test("the Nina sheet shows its composer in its first frame", async ({
 }) => {
   await runOnPage(page, baseURL, (origin) =>
     Effect.gen(function* () {
-      yield* seedAnalyticsConsent(page, "denied");
       yield* signInLearner(page.context(), origin);
       yield* Effect.promise(async () => {
         await page.goto("/en/quran/2");
@@ -217,7 +214,6 @@ test("the command palette shows its groups in its first frame", async ({
 }) => {
   await runOnPage(page, baseURL, (origin) =>
     Effect.gen(function* () {
-      yield* seedAnalyticsConsent(page, "denied");
       yield* Effect.promise(() => page.goto(`${origin}/en/search`));
       yield* Effect.promise(async () => {
         const search = page

@@ -1,12 +1,11 @@
 import { mutationLayer } from "@confect/server/RegisteredConvexFunction";
-import { assert, expect } from "@effect/vitest";
+import { assert } from "@effect/vitest";
 import confectSchema from "@repo/backend/confect/_generated/schema";
 import type { LearningContextStorage } from "@repo/backend/confect/contents/context";
 import { getContentAnalyticsPartition } from "@repo/backend/confect/contents/partitions";
 import type { RecordContentViewArgs } from "@repo/backend/confect/contents/views/spec";
 import {
   type createConvexTestWithBetterAuth,
-  seedAnalyticsConsent,
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
@@ -86,10 +85,6 @@ export async function seedMaterialViewer(ctx: MutationCtx, suffix: string) {
     now: CONTENT_VIEW_NOW,
     suffix,
   });
-  await seedAnalyticsConsent(ctx, {
-    decidedAt: CONTENT_VIEW_NOW,
-    userId: user.userId,
-  });
   return { ...user, contentId: material.contentId };
 }
 
@@ -110,19 +105,6 @@ function isContentViewedEventJob(job: { args: readonly unknown[] }) {
   return (
     Predicate.isObject(arg) && Reflect.get(arg, "event") === "content viewed"
   );
-}
-
-/** Reads the product analytics user from a scheduled content-view event. */
-export function getContentViewDistinctId(job: { args: readonly unknown[] }) {
-  const [arg] = job.args;
-  if (!Predicate.isObject(arg)) {
-    expect.fail("Expected scheduled content-view event arguments.");
-  }
-  const distinctId = Reflect.get(arg, "distinctId");
-  if (!Predicate.isString(distinctId)) {
-    expect.fail("Expected scheduled content-view event distinct ID.");
-  }
-  return distinctId;
 }
 
 /** Reads the bounded content-view state owned by one test fixture. */

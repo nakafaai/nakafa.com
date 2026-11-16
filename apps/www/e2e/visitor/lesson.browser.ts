@@ -12,8 +12,7 @@ const SESSION_READ = "/api/auth/get-session";
 /**
  * A visitor's lesson load creates no Convex client. The page opens no WebSocket,
  * sends no Better Auth session read, and throws no error. The lesson still shows,
- * with the usage-data prompt through the anonymous browser path, and the sidebar
- * footer is the visitor's guest card. The first scroll and key press warm Nina's
+ * and the sidebar footer is the visitor's guest card. The first scroll and key press warm Nina's
  * sheet, whose composer renders without a client, so the page still opens no socket
  * and throws no error after the interaction.
  */
@@ -40,9 +39,6 @@ test("a visitor's lesson load and first interaction open no WebSocket, send no s
         );
         yield* Effect.promise(() =>
           expect(page.getByRole("heading", { level: 1 }).first()).toBeVisible()
-        );
-        yield* Effect.promise(() =>
-          expect(page.locator("[data-analytics-consent-prompt]")).toBeVisible()
         );
         yield* Effect.promise(() =>
           expect(page.locator('[data-account="visitor"]').first()).toBeVisible()

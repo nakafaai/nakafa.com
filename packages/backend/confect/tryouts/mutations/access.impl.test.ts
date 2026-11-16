@@ -2,12 +2,10 @@ import { describe, expect, it } from "@effect/vitest";
 import posthogTest from "@posthog/convex/test";
 import {
   createConvexTestWithBetterAuth,
-  seedAnalyticsConsent,
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
-import { tryoutPaywallSourceValidator } from "@repo/backend/confect/tryouts/start/spec";
 import { api } from "@repo/backend/convex/_generated/api";
-import { Schema } from "effect";
+import { encodeJsonText } from "@repo/utilities/json";
 
 const NOW = Date.UTC(2026, 6, 22, 9, 0, 0);
 
@@ -20,10 +18,6 @@ describe("tryouts/mutations/access", () => {
       const seeded = await seedAuthenticatedUser(ctx, {
         now: NOW,
         suffix: "tryout-paywall",
-      });
-      await seedAnalyticsConsent(ctx, {
-        decidedAt: NOW,
-        userId: seeded.userId,
       });
       return seeded;
     });
@@ -46,11 +40,10 @@ describe("tryouts/mutations/access", () => {
         args: [
           expect.objectContaining({
             event: "tryout paywall viewed",
-            properties: Schema.encodeSync(
-              Schema.fromJsonString(
-                Schema.Struct({ source: tryoutPaywallSourceValidator })
-              )
-            )({ source: "review" }),
+            properties: encodeJsonText({
+              source: "review",
+              $process_person_profile: false,
+            }),
           }),
         ],
       }),

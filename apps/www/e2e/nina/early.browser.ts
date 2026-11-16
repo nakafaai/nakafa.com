@@ -1,7 +1,6 @@
 import { expect, type Route, test } from "@playwright/test";
 import { Effect, MutableList, MutableRef } from "effect";
 import { runOnPage } from "@/e2e/support/chat";
-import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { signInLearner } from "@/e2e/support/learner";
 import { NINA_SECTION } from "@/e2e/support/selector";
 import { isTakenOver } from "@/e2e/support/window";
@@ -25,7 +24,6 @@ test("a learner who types and presses attach before React takes the landing page
 }) => {
   await runOnPage(page, baseURL, (origin) =>
     Effect.gen(function* () {
-      yield* seedAnalyticsConsent(page, "denied");
       yield* signInLearner(page.context(), origin);
       const held = MutableList.make<Route>();
       const released = MutableRef.make(false);

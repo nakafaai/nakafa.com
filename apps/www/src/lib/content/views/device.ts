@@ -1,7 +1,7 @@
-import type { AnalyticsConsentState } from "@repo/analytics/consent";
 import type { RecordContentViewArgs } from "@repo/backend/confect/contents/views/spec";
 import { randomUuid } from "@repo/utilities/uuid";
 import { Effect, Option, Schema } from "effect";
+import type { AnalyticsConsent } from "@/lib/analytics/consent";
 
 /** Browser storage key of the identifier that counts one consented device. */
 const contentViewDeviceKey = "nakafa-device-id";
@@ -56,7 +56,7 @@ export function resolveContentViewAttribution({
   status,
 }: {
   readonly isAuthenticated: boolean;
-  readonly status: AnalyticsConsentState["status"];
+  readonly status: AnalyticsConsent["analytics"];
 }): ContentViewAttribution {
   if (status === "pending") {
     return "pending";
@@ -65,13 +65,6 @@ export function resolveContentViewAttribution({
     return isAuthenticated ? "accountDevice" : "device";
   }
   return isAuthenticated ? "account" : "none";
-}
-
-/** Returns whether the identifier may stay stored for one durable consent state. */
-export function isContentViewDeviceRetained(
-  status: AnalyticsConsentState["status"]
-) {
-  return status === "granted" || status === "pending";
 }
 
 const getContentViewDeviceStorage = Effect.fn(

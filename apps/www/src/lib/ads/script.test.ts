@@ -16,33 +16,29 @@ describe("loading the ad script", () => {
   afterEach(() => {
     document.head.replaceChildren();
     Reflect.deleteProperty(window, "adsbygoogle");
-    Reflect.deleteProperty(window, "googlefc");
   });
 
-  it.effect(
-    "adds the account's script once, for non-personalized ads, and follows the consent message",
-    () =>
-      Effect.gen(function* () {
-        const first = yield* Effect.forkChild(loadAdScript);
-        const second = yield* Effect.forkChild(loadAdScript);
-        yield* Effect.yieldNow;
+  it.effect("adds the account's script once, for non-personalized ads", () =>
+    Effect.gen(function* () {
+      const first = yield* Effect.forkChild(loadAdScript);
+      const second = yield* Effect.forkChild(loadAdScript);
+      yield* Effect.yieldNow;
 
-        const script = adScript();
-        // The test setup names Google's address, as every deployment does.
-        expect(script.src).toBe(
-          `https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${AD_CLIENT}`
-        );
-        expect(script.async).toBe(true);
-        expect(script.crossOrigin).toBe("anonymous");
-        expect(document.head.querySelectorAll("script")).toHaveLength(1);
-        expect(window.googlefc?.callbackQueue).toHaveLength(1);
-        expect(window.adsbygoogle?.requestNonPersonalizedAds).toBe(1);
+      const script = adScript();
+      // The test setup names Google's address, as every deployment does.
+      expect(script.src).toBe(
+        `https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${AD_CLIENT}`
+      );
+      expect(script.async).toBe(true);
+      expect(script.crossOrigin).toBe("anonymous");
+      expect(document.head.querySelectorAll("script")).toHaveLength(1);
+      expect(window.adsbygoogle?.requestNonPersonalizedAds).toBe(1);
 
-        script.dispatchEvent(new Event("load"));
-        yield* Fiber.join(first);
-        yield* Fiber.join(second);
-        expect(script.getAttribute("data-outcome")).toBe("loaded");
-      })
+      script.dispatchEvent(new Event("load"));
+      yield* Fiber.join(first);
+      yield* Fiber.join(second);
+      expect(script.getAttribute("data-outcome")).toBe("loaded");
+    })
   );
 
   it.effect("answers a later frame at once from the recorded load", () =>

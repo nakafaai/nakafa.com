@@ -40,7 +40,7 @@ const TAB_SAMPLE_COUNT = 10;
  * the tests compare are read once it is visible.
  */
 const openHome = Effect.fn("NakafaE2E.openHomeLesson")(function* (page: Page) {
-  yield* openRoute(page, "/id", "denied");
+  yield* openRoute(page, "/id");
   yield* Effect.promise(() =>
     expect(lessonWindow(page)).toBeVisible({
       timeout: readinessTimeoutMilliseconds,

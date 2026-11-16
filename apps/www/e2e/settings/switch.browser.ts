@@ -6,7 +6,6 @@ import {
   trackChanges,
 } from "@/e2e/support/changes";
 import { runOnPage } from "@/e2e/support/chat";
-import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { signInLearner } from "@/e2e/support/learner";
 import { LIST_QUERY, MEMORY_PATH } from "@/e2e/support/memory";
 import { isTakenOver } from "@/e2e/support/window";
@@ -26,7 +25,6 @@ const MEMORY_TITLE = /Memory/u;
 const pausesBeforeTheAnswer = Effect.fn("NakafaE2E.memoryPausesBeforeAnswer")(
   function* (page: Page, baseURL: string, refused: boolean) {
     const changes = yield* trackChanges(page, [LIST_QUERY]);
-    yield* seedAnalyticsConsent(page, "denied");
     yield* signInLearner(page.context(), baseURL);
     changes.hold();
     if (refused) {

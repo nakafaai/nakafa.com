@@ -9,7 +9,6 @@ import id from "@repo/internationalization/dictionaries/id.json" with {
   type: "json",
 };
 import { Array as Arr, Effect, MutableList, Option, Schema } from "effect";
-import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { CONVEX_SOCKET } from "@/e2e/support/frames";
 import { activate } from "@/e2e/support/input";
 import { signInLearner } from "@/e2e/support/learner";
@@ -140,7 +139,6 @@ const verifyOnePress = Effect.fn("NakafaE2E.verifyOnePressStart")(function* (
   baseURL: string,
   section: (typeof SECTIONS)[number]
 ) {
-  yield* seedAnalyticsConsent(page, "denied");
   yield* signInLearner(page.context(), baseURL);
   yield* recordStartFrames(page);
   yield* Effect.promise(() => page.goto(section.href, { waitUntil: "commit" }));
@@ -248,7 +246,6 @@ test("a press on the start before the page can act opens the confirmation", asyn
       page,
       Effect.gen(function* () {
         const origin = yield* Effect.fromNullishOr(baseURL);
-        yield* seedAnalyticsConsent(page, "denied");
         yield* signInLearner(page.context(), origin);
         yield* Effect.promise(async () => {
           await page.goto(SET_HREF, { waitUntil: "commit" });
@@ -324,7 +321,6 @@ test("a hard load of a set whose attempt runs never reads Start", async ({
       page,
       Effect.gen(function* () {
         const origin = yield* Effect.fromNullishOr(baseURL);
-        yield* seedAnalyticsConsent(page, "denied");
         yield* signInLearner(page.context(), origin);
         yield* recordActionNames(page, ACTION_NAME);
         yield* Effect.promise(async () => {
@@ -395,7 +391,6 @@ test("a press while the learner read is pending starts the section it brings", a
       page,
       Effect.gen(function* () {
         const origin = yield* Effect.fromNullishOr(baseURL);
-        yield* seedAnalyticsConsent(page, "denied");
         yield* signInLearner(page.context(), origin);
         yield* Effect.promise(async () => {
           await page.goto(SET_HREF, { waitUntil: "commit" });

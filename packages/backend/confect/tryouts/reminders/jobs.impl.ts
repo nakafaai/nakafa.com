@@ -77,7 +77,6 @@ const hour = FunctionImpl.make(
       time._tag === "Now"
     );
     yield* captureProductEvent({
-      distinctId: attempt.value.userId,
       event: {
         name: "tryout reminder sent",
         properties: {
@@ -210,7 +209,6 @@ const enqueueEmail = FunctionImpl.make(
     ).pipe(Effect.orDie);
     yield* spendMailBudget(budget, 1);
     yield* captureProductEvent({
-      distinctId: userId,
       event: {
         name: "tryout reminder sent",
         properties: {

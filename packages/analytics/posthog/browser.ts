@@ -1,10 +1,4 @@
 import {
-  type AnalyticsConsentScope,
-  AnonymousAnalyticsConsentDecidedAtSchema,
-  CONSENT_DECISION_MECHANISMS,
-  CONSENT_NOTICE_VERSIONS,
-} from "@repo/analytics/consent";
-import {
   type BrowserAnalyticsClient,
   publishAnalyticsClient,
   readAnalyticsClient,
@@ -19,22 +13,12 @@ import {
   startPageviewTracking,
 } from "@repo/analytics/posthog/pageview";
 import { postHogPublicKeys } from "@repo/analytics/public";
-import { DateTime, Effect, MutableRef, Schema } from "effect";
+import { Effect, MutableRef, Schema } from "effect";
 
-/** Consent provenance that every granted browser event carries into PostHog. */
-const BrowserAnalyticsConsentProvenanceFields = {
-  consentDecidedAt: AnonymousAnalyticsConsentDecidedAtSchema,
-  consentMechanism: Schema.Literals(CONSENT_DECISION_MECHANISMS),
-  consentNoticeVersion: Schema.Literals(CONSENT_NOTICE_VERSIONS),
-};
-
+/** Who a granted browser's events belong to: an anonymous visitor, or a signed-in account with its plan and role. */
 const BrowserAnalyticsIdentitySchema = Schema.Union([
+  Schema.Struct({ status: Schema.Literal("anonymous") }),
   Schema.Struct({
-    ...BrowserAnalyticsConsentProvenanceFields,
-    status: Schema.Literal("anonymous"),
-  }),
-  Schema.Struct({
-    ...BrowserAnalyticsConsentProvenanceFields,
     plan: Schema.String,
     role: Schema.NullOr(Schema.String),
     status: Schema.Literal("identified"),
@@ -44,6 +28,12 @@ const BrowserAnalyticsIdentitySchema = Schema.Union([
 
 export type BrowserAnalyticsIdentity =
   typeof BrowserAnalyticsIdentitySchema.Type;
+
+/**
+ * What every event carries once Google's consent mode grants analytics storage:
+ * the visitor's coarse location, which a baseline event never resolves.
+ */
+const GRANTED_EVENT_PROPERTIES = { $geoip_disable: false };
 
 const browserAnalyticsLoadFailedCode = "BROWSER_ANALYTICS_LOAD_FAILED";
 const analyticsTier = MutableRef.make<AnalyticsTier>("baseline");
@@ -204,7 +194,7 @@ function synchronizeIdentity(
       client.reset(false);
     }
 
-    client.register(createConsentEventProperties(identity, "anonymous"));
+    client.register(GRANTED_EVENT_PROPERTIES);
     MutableRef.set(identityAuthorization, { status: "anonymous" });
     return;
   }
@@ -218,7 +208,7 @@ function synchronizeIdentity(
     plan: identity.plan,
     ...roleProperties,
   };
-  client.register(createConsentEventProperties(identity, "account"));
+  client.register(GRANTED_EVENT_PROPERTIES);
   MutableRef.set(identityAuthorization, {
     status: "identified",
     userId: identity.userId,
@@ -313,23 +303,6 @@ export const revokeToBaselineAnalytics = Effect.fn(
 /** Revokes identity authorization without touching SDK consent or identity. */
 export function suspendBrowserAnalyticsIdentity() {
   MutableRef.set(identityAuthorization, { status: "unresolved" });
-}
-
-/** Adds the exact affirmative decision provenance to every granted event. */
-function createConsentEventProperties(
-  identity: BrowserAnalyticsIdentity,
-  scope: AnalyticsConsentScope
-) {
-  return {
-    $geoip_disable: false,
-    consent_decided_at: DateTime.formatIso(
-      DateTime.makeUnsafe(identity.consentDecidedAt)
-    ),
-    consent_decision: "granted",
-    consent_mechanism: identity.consentMechanism,
-    consent_notice_version: identity.consentNoticeVersion,
-    consent_scope: scope,
-  };
 }
 
 /** Clears a signed-out account identity without loading the analytics SDK. */

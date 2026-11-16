@@ -1,7 +1,6 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
 import { ProductAnalyticsCaptureError } from "@repo/backend/confect/analytics/capture.spec";
 import { AuthFailure } from "@repo/backend/confect/auth/spec";
-import { ConsentPersistenceError } from "@repo/backend/confect/consents/schema";
 import Session from "@repo/backend/confect/middleware/session.spec";
 import {
   TryoutStartError,
@@ -21,7 +20,6 @@ export default GroupSpec.make().addFunction(
       Schema.Union([
         AuthFailure,
         TryoutStartError,
-        ConsentPersistenceError,
         ProductAnalyticsCaptureError,
       ]),
   }).middleware(Session)

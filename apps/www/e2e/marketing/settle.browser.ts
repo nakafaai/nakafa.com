@@ -1,7 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { Effect, Schema } from "effect";
 import { HERO_NINA_ID } from "@/components/marketing/about/hero/id";
-import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
@@ -47,7 +46,6 @@ test("Nina in the home hero starts moving only after the page has loaded", async
     withObservedPageErrors(
       page,
       Effect.gen(function* () {
-        yield* seedAnalyticsConsent(page, "denied");
         yield* Effect.promise(() =>
           page.addInitScript(watchNina, HERO_NINA_ID)
         );

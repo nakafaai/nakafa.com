@@ -1,6 +1,5 @@
 import { expect, type Page, test } from "@playwright/test";
 import { Effect, Schema } from "effect";
-import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { waitForCommittedAppRouter } from "@/e2e/support/navigation/readiness";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { appRoutes } from "@/e2e/support/route";
@@ -105,7 +104,6 @@ function sampleFlingFrames() {
 const verifySurahFling = Effect.fn("NakafaE2E.verifySurahFling")(function* (
   page: Page
 ) {
-  yield* seedAnalyticsConsent(page, "denied");
   yield* Effect.promise(() => page.goto(appRoutes.quranSurah));
   yield* waitForCommittedAppRouter(
     page,

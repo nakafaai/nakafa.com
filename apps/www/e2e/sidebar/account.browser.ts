@@ -1,6 +1,5 @@
 import { expect, type Page, type Route, test } from "@playwright/test";
 import { Deferred, Effect, MutableList, Schema } from "effect";
-import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { readCumulativeLayoutShift } from "@/e2e/support/layout";
 import { signInLearner } from "@/e2e/support/learner";
 import { withObservedPageErrors } from "@/e2e/support/observe";
@@ -81,7 +80,6 @@ const verifyKeptRow = Effect.fn("NakafaE2E.verifyKeptRow")(function* (
   page: Page,
   baseURL: string
 ) {
-  yield* seedAnalyticsConsent(page, "denied");
   yield* signInLearner(page.context(), baseURL);
   yield* Effect.promise(async () => {
     await page.goto("/en/search");
@@ -135,7 +133,6 @@ const verifyNoKeptRow = Effect.fn("NakafaE2E.verifyNoKeptRow")(function* (
   page: Page,
   baseURL: string
 ) {
-  yield* seedAnalyticsConsent(page, "denied");
   yield* signInLearner(page.context(), baseURL);
   yield* Effect.promise(async () => {
     await page.goto("/en/user/settings");
@@ -158,7 +155,6 @@ const verifyFirstFrame = Effect.fn("NakafaE2E.verifyFirstFrame")(function* (
   page: Page,
   baseURL: string
 ) {
-  yield* seedAnalyticsConsent(page, "denied");
   yield* signInLearner(page.context(), baseURL);
   const live = yield* Effect.promise(async () => {
     await page.goto("/en/search");
@@ -258,7 +254,6 @@ async function openAccountMenu(page: Page, phone: boolean) {
 const verifySchoolsFirstFrame = Effect.fn("NakafaE2E.verifySchoolsFirstFrame")(
   function* (page: Page, baseURL: string, phone: boolean) {
     const school = yield* createSchool();
-    yield* seedAnalyticsConsent(page, "denied");
     yield* inviteLearner({
       address: `learner-${school.slug}@acceptance.example.test`,
       baseURL,
@@ -302,7 +297,6 @@ test("a signed-in screen shows a loader until its scripts arrive", async ({
   await Effect.runPromise(
     Effect.gen(function* () {
       const origin = yield* Effect.fromNullishOr(baseURL);
-      yield* seedAnalyticsConsent(page, "denied");
       yield* signInLearner(page.context(), origin);
       yield* Effect.promise(async () => {
         const held = MutableList.make<Route>();

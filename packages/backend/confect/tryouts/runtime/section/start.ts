@@ -169,7 +169,6 @@ export const chooseSectionLanguage = Effect.fn(
       .patch(section._id, { questionLanguage: args.language })
       .pipe(Effect.mapError(toTryoutRuntimeError));
     yield* captureProductEvent({
-      distinctId: args.userId,
       event: {
         name: "tryout question language changed",
         properties: {

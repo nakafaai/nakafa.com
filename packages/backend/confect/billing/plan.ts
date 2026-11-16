@@ -88,7 +88,6 @@ export const applyPlanChange = Effect.fn("billing.plan.apply")(
     );
     if (isUpgrade) {
       yield* captureProductEvent({
-        distinctId: user._id,
         event: {
           name: "subscription started",
           properties: {
@@ -100,7 +99,6 @@ export const applyPlanChange = Effect.fn("billing.plan.apply")(
       });
     } else if (source.status === "ended") {
       yield* captureProductEvent({
-        distinctId: user._id,
         event: {
           name: "subscription canceled",
           properties: {
@@ -112,7 +110,6 @@ export const applyPlanChange = Effect.fn("billing.plan.apply")(
       });
     }
     yield* captureProductEvent({
-      distinctId: user._id,
       event: {
         name: "plan changed",
         properties: {

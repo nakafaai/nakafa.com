@@ -1,8 +1,6 @@
 import type { Document } from "@confect/server";
 import type schemaDefinition from "./schema";
 
-export type AccountConsentDecisionsDoc = Document.Document<typeof schemaDefinition, "accountConsentDecisions">;
-export type AccountConsentsDoc = Document.Document<typeof schemaDefinition, "accountConsents">;
 export type AccountDeletionAttemptCancellationsDoc = Document.Document<typeof schemaDefinition, "accountDeletionAttemptCancellations">;
 export type AccountDeletionPreparationsDoc = Document.Document<typeof schemaDefinition, "accountDeletionPreparations">;
 export type AccountDeletionReceiptsDoc = Document.Document<typeof schemaDefinition, "accountDeletionReceipts">;
@@ -186,8 +184,6 @@ export type VendorSpendDoc = Document.Document<typeof schemaDefinition, "vendorS
 export type WelcomeEmailIntentsDoc = Document.Document<typeof schemaDefinition, "welcomeEmailIntents">;
 
 export interface Docs {
-  accountConsentDecisions: AccountConsentDecisionsDoc;
-  accountConsents: AccountConsentsDoc;
   accountDeletionAttemptCancellations: AccountDeletionAttemptCancellationsDoc;
   accountDeletionPreparations: AccountDeletionPreparationsDoc;
   accountDeletionReceipts: AccountDeletionReceiptsDoc;

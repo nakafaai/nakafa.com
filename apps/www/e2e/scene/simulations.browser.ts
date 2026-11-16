@@ -1,6 +1,5 @@
 import { expect, type Page, test } from "@playwright/test";
 import { Effect } from "effect";
-import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { CARD } from "@/e2e/support/selector";
 import { revealTimeoutMilliseconds } from "@/e2e/support/timeout";
@@ -32,7 +31,6 @@ const expectSimulations = Effect.fn("NakafaE2E.expectSimulations")(function* (
   page: Page,
   lesson: (typeof LESSONS)[number]
 ) {
-  yield* seedAnalyticsConsent(page, "denied");
   const response = yield* Effect.promise(() =>
     page.goto(lesson.route, { waitUntil: "domcontentloaded" })
   );

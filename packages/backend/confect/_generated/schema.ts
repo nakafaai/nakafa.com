@@ -1,7 +1,5 @@
 import { DatabaseSchema as $DatabaseSchema } from "@confect/server";
 
-import accountConsentDecisions from "./tables/accountConsentDecisions";
-import accountConsents from "./tables/accountConsents";
 import accountDeletionAttemptCancellations from "./tables/accountDeletionAttemptCancellations";
 import accountDeletionPreparations from "./tables/accountDeletionPreparations";
 import accountDeletionReceipts from "./tables/accountDeletionReceipts";
@@ -185,8 +183,6 @@ import vendorSpend from "./tables/vendorSpend";
 import welcomeEmailIntents from "./tables/welcomeEmailIntents";
 
 const databaseSchema: $DatabaseSchema.DatabaseSchema<{
-  readonly accountConsentDecisions: typeof accountConsentDecisions;
-  readonly accountConsents: typeof accountConsents;
   readonly accountDeletionAttemptCancellations: typeof accountDeletionAttemptCancellations;
   readonly accountDeletionPreparations: typeof accountDeletionPreparations;
   readonly accountDeletionReceipts: typeof accountDeletionReceipts;
@@ -369,8 +365,6 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   readonly vendorSpend: typeof vendorSpend;
   readonly welcomeEmailIntents: typeof welcomeEmailIntents;
 }> = $DatabaseSchema.make({
-  accountConsentDecisions,
-  accountConsents,
   accountDeletionAttemptCancellations,
   accountDeletionPreparations,
   accountDeletionReceipts,

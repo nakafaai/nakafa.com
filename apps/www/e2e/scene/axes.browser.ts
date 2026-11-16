@@ -31,7 +31,7 @@ function readAxisNames(scene: Locator) {
 const mountAxisLabels = Effect.fn("NakafaE2E.mountAxisLabels")(function* (
   page: Page
 ) {
-  yield* openRoute(page, pinnedRoutes.material.en, "denied");
+  yield* openRoute(page, pinnedRoutes.material.en);
   const card = mathSceneCards(page).first();
   const scene = card.locator(MATH_SCENE);
   yield* revealLineScene(card);

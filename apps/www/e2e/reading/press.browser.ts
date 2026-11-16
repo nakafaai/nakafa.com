@@ -1,6 +1,5 @@
 import { expect, type Locator, type Page, test } from "@playwright/test";
 import { Effect, Number as Num, Schema } from "effect";
-import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { pinnedRoutes } from "@/e2e/support/corpus";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { waitForQuiet } from "@/e2e/support/quiet";
@@ -143,7 +142,6 @@ for (const width of [390, 1440]) {
             withObservedPageErrors(
               page,
               Effect.gen(function* () {
-                yield* seedAnalyticsConsent(page, "denied");
                 yield* Effect.promise(() => page.addInitScript(recordPress));
                 // A phone four times slower than this machine makes the moment
                 // between the commit and the body long enough to see.

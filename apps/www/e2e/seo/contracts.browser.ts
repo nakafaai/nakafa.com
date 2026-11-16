@@ -14,8 +14,6 @@ import {
   Schedule,
   Schema,
 } from "effect";
-import { trackChanges } from "@/e2e/support/changes";
-import { allowUsageData, usageDataTrigger } from "@/e2e/support/consent";
 import { withBrowserContext } from "@/e2e/support/context";
 import { pinnedRoutes } from "@/e2e/support/corpus";
 import {
@@ -28,7 +26,6 @@ import { waitForCommittedAppRouter } from "@/e2e/support/navigation/readiness";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { MATH_SCENE, mathSceneCards } from "@/e2e/support/selector";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
-import { waitUntilTakenOver } from "@/e2e/support/window";
 
 const APP_ORIGIN = "https://nakafa.com";
 const DOCUMENT_TITLE_PATTERN = /<h1[\s>]/u;
@@ -413,12 +410,12 @@ const waitForRecordedViews = Effect.fn("NakafaE2E.waitForRecordedViews")(
 
 /**
  * Only a signed-in page records a content view: a visitor's page opens no Convex
- * client, so it records nothing (`ActiveContentViewTracker`). Before the learner
- * decides, a view counts for the account alone, with no device identifier
- * (`resolveContentViewAttribution`). The identifier comes with the first view
- * after the grant reaches the server, and every later view keeps it.
+ * client, so it records nothing (`ActiveContentViewTracker`). Google's consent
+ * decides the device identifier (`resolveContentViewAttribution`): a host other
+ * than production runs no consent message and grants analytics at once, so the
+ * first view carries an identifier, and every later view keeps the same one.
  */
-test("a learner's content views store no device identifier until analytics is allowed", async ({
+test("a learner's content views keep one device identifier while analytics is granted", async ({
   baseURL,
   browser,
 }) => {
@@ -435,50 +432,20 @@ test("a learner's content views store no device identifier until analytics is al
         Effect.gen(function* () {
           yield* signInLearner(context, baseURL ?? "");
           const page = yield* Effect.promise(() => context.newPage());
-          const changes = yield* trackChanges(page, []);
           yield* Effect.promise(() => page.clock.install());
           yield* withObservedPageErrors(
             page,
             Effect.gen(function* () {
               yield* openPage(page, pinnedRoutes.article.en);
-              const prompt = page.getByRole("region", { name: "Usage data" });
-              // The open prompt proves consent settled undecided.
-              yield* Effect.promise(() => expect(prompt).toBeVisible());
-              const undecided = yield* waitForRecordedViews(page, 1);
-              yield* Effect.sync(() => expect(undecided.deviceId).toBeNull());
+              const first = yield* waitForRecordedViews(page, 1);
+              yield* Effect.sync(() =>
+                expect(first.deviceId).toMatch(STORED_DEVICE_PATTERN)
+              );
 
-              // The grant reaches the server before the page is left, so the next
-              // page's view is the first one under it.
-              yield* allowUsageData(page, changes);
               yield* openPage(page, pinnedRoutes.material.en);
-              const allowed = yield* waitForRecordedViews(page, 2);
+              const nextPage = yield* waitForRecordedViews(page, 2);
               yield* Effect.sync(() =>
-                expect(allowed.deviceId).toMatch(STORED_DEVICE_PATTERN)
-              );
-
-              yield* openPage(page, pinnedRoutes.exponent.en);
-              const nextPage = yield* waitForRecordedViews(page, 3);
-              yield* Effect.sync(() =>
-                expect(nextPage.deviceId).toBe(allowed.deviceId)
-              );
-
-              // Declining from a page without a content view still clears it.
-              yield* openPage(page, "/en");
-              const preferences = usageDataTrigger(page);
-              yield* Effect.promise(() => waitUntilTakenOver(preferences));
-              yield* Effect.promise(() => preferences.click());
-              yield* Effect.promise(() =>
-                page.getByRole("button", { name: "Decline" }).click()
-              );
-              yield* Effect.promise(() =>
-                expect
-                  .poll(() =>
-                    page.evaluate(
-                      (deviceKey) => localStorage.getItem(deviceKey),
-                      CONTENT_VIEW_DEVICE_KEY
-                    )
-                  )
-                  .toBeNull()
+                expect(nextPage.deviceId).toBe(first.deviceId)
               );
             })
           );

@@ -1,10 +1,5 @@
 import type { ReactNode } from "react";
-import {
-  AccountConsentControls,
-  AccountConsentEffects,
-} from "@/components/analytics/consent/account";
-import { AnalyticsConsentProvider } from "@/components/analytics/consent/provider";
-import { AnalyticsUnavailableProvider } from "@/components/analytics/consent/unavailable";
+import { AccountAnalytics } from "@/components/analytics/island";
 import { ConvexProvider } from "@/components/providers/convex";
 import { clientEnv } from "@/env.public";
 import { PageNavigationProvider } from "@/lib/content/page/context";
@@ -31,19 +26,8 @@ export function AppProviders({
   return (
     <ConvexProvider convexUrl={clientEnv.VITE_CONVEX_URL}>
       <PageNavigationProvider navigation={pageNavigation}>
-        {pageNavigation ? (
-          <AnalyticsConsentProvider
-            isPreviewChild={clientEnv.VITE_AKSARA_PREVIEW_CHILD === "true"}
-          >
-            {children}
-            <AccountConsentControls />
-            <AccountConsentEffects />
-          </AnalyticsConsentProvider>
-        ) : (
-          <AnalyticsUnavailableProvider>
-            {children}
-          </AnalyticsUnavailableProvider>
-        )}
+        {children}
+        {pageNavigation ? <AccountAnalytics /> : null}
       </PageNavigationProvider>
     </ConvexProvider>
   );

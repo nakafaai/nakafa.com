@@ -32,7 +32,6 @@ import {
 } from "@/components/state/localized";
 import { Stage } from "@/components/state/stage";
 import { AD_ACCOUNT_META } from "@/lib/ads/account";
-import { ANALYTICS_CONSENT_BOOTSTRAP_SCRIPT } from "@/lib/analytics/consent/bootstrap";
 import { signedInHintScript } from "@/lib/auth/hint";
 import { STALE_CHUNK_SCRIPT } from "@/lib/chunks/script";
 import { PLACEMENT_PREPAINT_SCRIPT } from "@/lib/content/material/prepaint";
@@ -134,8 +133,8 @@ export const Route = createRootRoute({
  * router renders inside it. Its language and direction follow the not-found page
  * that the server answered, then the locale param of the route on screen, then
  * the language a school page renders in, and the default locale answers a path
- * without one. The pre-paint scripts set the theme, the pricing currency, the
- * signed-in hint and the usage-data mark before the body parses, so nothing on
+ * without one. The pre-paint scripts set the theme, the pricing currency and the
+ * signed-in hint before the body parses, so nothing on
  * the document's root changes once the page is drawn, which would restyle every
  * element, and keep a press that lands before React takes the page over. The theme is mounted here
  * once, for every route below.
@@ -179,12 +178,6 @@ function RootDocument({ children }: { children: ReactNode }) {
         <script
           // biome-ignore lint/security/noDangerouslySetInnerHtml: the script text is built from constants only.
           dangerouslySetInnerHTML={{ __html: KEPT_ACCOUNT_SCRIPT }}
-        />
-        <script
-          // biome-ignore lint/security/noDangerouslySetInnerHtml: the script text is built from constants only.
-          dangerouslySetInnerHTML={{
-            __html: ANALYTICS_CONSENT_BOOTSTRAP_SCRIPT,
-          }}
         />
         <script
           // biome-ignore lint/security/noDangerouslySetInnerHtml: the script text is built from constants only.

@@ -2878,80 +2878,6 @@ export declare const api: {
       >;
     };
   };
-  consents: {
-    current: {
-      get: FunctionReference<
-        "query",
-        "public",
-        { category: "analytics" },
-        {
-          currentNoticeVersion: "privacy-2026-11-13";
-          decision:
-            | null
-            | {
-                category: "analytics";
-                decidedAt: number;
-                granted: boolean;
-                mechanism: "privacy-controls";
-                noticeVersion:
-                  | "privacy-2026-11-13"
-                  | "privacy-2026-08-22"
-                  | "privacy-2026-08-21";
-              }
-            | {
-                category: "analytics";
-                decidedAt: number;
-                granted: false;
-                mechanism: "browser-privacy-signal";
-                noticeVersion:
-                  | "privacy-2026-11-13"
-                  | "privacy-2026-08-22"
-                  | "privacy-2026-08-21";
-              };
-        }
-      >;
-      set: FunctionReference<
-        "mutation",
-        "public",
-        {
-          decision:
-            | {
-                category: "analytics";
-                granted: boolean;
-                mechanism: "privacy-controls";
-                noticeVersion: "privacy-2026-11-13";
-              }
-            | {
-                category: "analytics";
-                granted: false;
-                mechanism: "browser-privacy-signal";
-                noticeVersion: "privacy-2026-11-13";
-              };
-          expectedUserId: Id<"users">;
-        },
-        | {
-            category: "analytics";
-            decidedAt: number;
-            granted: boolean;
-            mechanism: "privacy-controls";
-            noticeVersion:
-              | "privacy-2026-11-13"
-              | "privacy-2026-08-22"
-              | "privacy-2026-08-21";
-          }
-        | {
-            category: "analytics";
-            decidedAt: number;
-            granted: false;
-            mechanism: "browser-privacy-signal";
-            noticeVersion:
-              | "privacy-2026-11-13"
-              | "privacy-2026-08-22"
-              | "privacy-2026-08-21";
-          }
-      >;
-    };
-  };
   contentRelease: {
     article: {
       bucket: FunctionReference<
@@ -16561,6 +16487,7 @@ export declare const api: {
               durationSeconds: number;
               entrySection: {
                 description?: string;
+                languages: Array<string>;
                 publicPath?: string;
                 questionCount: number;
                 sectionKey: string;
@@ -16581,6 +16508,7 @@ export declare const api: {
               sectionCount: number;
               sections: Array<{
                 description?: string;
+                languages: Array<string>;
                 publicPath?: string;
                 questionCount: number;
                 sectionKey: string;
@@ -16680,20 +16608,8 @@ export declare const internal: {
       deliverProductEvent: FunctionReference<
         "action",
         "internal",
-        {
-          disableGeoip: boolean;
-          distinctId: Id<"users">;
-          event: string;
-          properties?: string;
-          timestamp?: number;
-        },
+        { event: string; properties?: string; timestamp?: number },
         null
-      >;
-      isProductAnalyticsUserEligible: FunctionReference<
-        "query",
-        "internal",
-        { userId: Id<"users"> },
-        boolean
       >;
     };
     erasure: {
@@ -16703,29 +16619,6 @@ export declare const internal: {
           "internal",
           { userId: Id<"users"> },
           null
-        >;
-      };
-      workflow: {
-        eraseConsentOverlap: FunctionReference<
-          "mutation",
-          "internal",
-          {
-            args?: { userId: Id<"users"> };
-            context?: any;
-            docs?: "To call a workflow directly, nest its arguments: { args: { ...yourWorkflowArgs } }";
-            generationNumber?: number;
-            onComplete?: string;
-            startAsync?: boolean;
-            workflowId?: string;
-          },
-          | string
-          | {
-              kind: "complete";
-              runResult:
-                | { kind: "success"; returnValue: null }
-                | { error: string; kind: "failed" }
-                | { kind: "canceled" };
-            }
         >;
       };
     };
@@ -20207,7 +20100,7 @@ export declare const internal: {
             context: { inviteId: Id<"tenantInvites"> };
             result:
               | { kind: "success"; returnValue: any }
-              | { error: string; kind: "failed" }
+              | { error: string; errorData?: any; kind: "failed" }
               | { kind: "canceled" };
             workflowId: string;
           },
@@ -21950,17 +21843,17 @@ export declare const internal: {
       cleanupWorkflowStorage: FunctionReference<
         "mutation",
         "internal",
-        { source: "account-deletion" | "consent-overlap"; workflowId: string },
+        { source: "account-deletion"; workflowId: string },
         null
       >;
       handleCleanupComplete: FunctionReference<
         "mutation",
         "internal",
         {
-          context: { source: "account-deletion" | "consent-overlap" };
+          context: { source: "account-deletion" };
           result:
             | { kind: "success"; returnValue: any }
-            | { error: string; kind: "failed" }
+            | { error: string; errorData?: any; kind: "failed" }
             | { kind: "canceled" };
           workflowId: string;
         },
@@ -21969,7 +21862,7 @@ export declare const internal: {
       retryCleanupWorkflow: FunctionReference<
         "mutation",
         "internal",
-        { source: "account-deletion" | "consent-overlap"; workflowId: string },
+        { source: "account-deletion"; workflowId: string },
         null
       >;
     };

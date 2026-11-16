@@ -41,7 +41,7 @@ for (const viewport of [
       withObservedPageErrors(
         page,
         Effect.gen(function* () {
-          yield* openRoute(page, "/id", "denied");
+          yield* openRoute(page, "/id");
           yield* Effect.promise(async () => {
             await page.waitForLoadState("load");
             expect(await isDrawn(page, "community")).toBe(false);

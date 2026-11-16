@@ -163,7 +163,6 @@ const persistAttemptStart = Effect.fn("tryouts.start.persistAttemptStart")(
     }).pipe(Effect.catchDefect(flow(toTryoutStartError, Effect.fail)));
     const working = yield* readWorkingLanguage(attempt.userId, attempt);
     yield* captureProductEvent({
-      distinctId: input.userId,
       event: {
         name: "tryout attempt started",
         properties: {

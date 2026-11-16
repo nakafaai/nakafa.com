@@ -116,7 +116,6 @@ const admit = FunctionImpl.make(
       })
       .pipe(Effect.orDie);
     yield* captureProductEvent({
-      distinctId: args.userId,
       event: args.event,
       timestamp: now,
     });

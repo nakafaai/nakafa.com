@@ -1,5 +1,4 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
-import { ANONYMOUS_ANALYTICS_CONSENT_STORAGE_KEY } from "@repo/analytics/consent";
 import {
   BrowserAnalyticsLoadFailed,
   resetBrowserAnalyticsIdentity,
@@ -7,7 +6,6 @@ import {
 } from "@repo/analytics/posthog/browser";
 import { Effect } from "effect";
 import type { reportClientException } from "@/lib/analytics/client";
-import { AnalyticsConsentStorageFailed } from "@/lib/analytics/consent/storage";
 import {
   AccountSignOutFailed,
   clearAccountBrowserIdentity,
@@ -67,64 +65,48 @@ describe("account browser identity", () => {
     })
   );
 
-  it.effect(
-    "clears account state while preserving the anonymous privacy choice",
-    () =>
-      Effect.gen(function* () {
-        window.localStorage.setItem("nakafa-ai", "test-ai-state");
-        window.localStorage.setItem(
-          "nakafa-content-views",
-          "test-content-view-state"
-        );
-        window.localStorage.setItem("nakafa-device-id", "test-device");
-        window.localStorage.setItem(
-          ANONYMOUS_ANALYTICS_CONSENT_STORAGE_KEY,
-          "anonymous-privacy-choice"
-        );
-        window.localStorage.setItem("unrelated", "preserved");
-        window.sessionStorage.setItem("nakafa-search", "test-search");
-        window.sessionStorage.setItem("unrelated", "preserved");
+  it.effect("clears every account state that Nakafa keeps in the browser", () =>
+    Effect.gen(function* () {
+      window.localStorage.setItem("nakafa-ai", "test-ai-state");
+      window.localStorage.setItem(
+        "nakafa-content-views",
+        "test-content-view-state"
+      );
+      window.localStorage.setItem("nakafa-device-id", "test-device");
+      window.localStorage.setItem("unrelated", "preserved");
+      window.sessionStorage.setItem("nakafa-search", "test-search");
+      window.sessionStorage.setItem("unrelated", "preserved");
 
-        yield* clearAccountBrowserIdentity();
+      yield* clearAccountBrowserIdentity();
 
-        expect(revokeToBaselineAnalytics).not.toHaveBeenCalled();
-        expect(resetBrowserAnalyticsIdentity).toHaveBeenCalledWith(true);
-        expect(window.localStorage.getItem("nakafa-ai")).toBeNull();
-        expect(window.localStorage.getItem("nakafa-content-views")).toBeNull();
-        expect(window.localStorage.getItem("nakafa-device-id")).toBeNull();
-        expect(
-          window.localStorage.getItem(ANONYMOUS_ANALYTICS_CONSENT_STORAGE_KEY)
-        ).toBe("anonymous-privacy-choice");
-        expect(window.localStorage.getItem("unrelated")).toBe("preserved");
-        expect(window.sessionStorage.getItem("nakafa-search")).toBeNull();
-        expect(window.sessionStorage.getItem("unrelated")).toBe("preserved");
-      })
+      expect(revokeToBaselineAnalytics).not.toHaveBeenCalled();
+      expect(resetBrowserAnalyticsIdentity).toHaveBeenCalledWith(true);
+      expect(window.localStorage.getItem("nakafa-ai")).toBeNull();
+      expect(window.localStorage.getItem("nakafa-content-views")).toBeNull();
+      expect(window.localStorage.getItem("nakafa-device-id")).toBeNull();
+      expect(window.localStorage.getItem("unrelated")).toBe("preserved");
+      expect(window.sessionStorage.getItem("nakafa-search")).toBeNull();
+      expect(window.sessionStorage.getItem("unrelated")).toBe("preserved");
+    })
   );
 
   it.effect(
     "revokes analytics before clearing a deleted browser identity",
     () =>
       Effect.gen(function* () {
-        const denyAnonymousAnalytics = vi.fn(() => Effect.void);
         const revokeAnalytics = vi.fn(() => Effect.void);
         const removePersistedAccountState = vi.fn();
         const resetAnalytics = vi.fn();
 
         yield* clearDeletedAccountBrowserIdentity({
-          denyAnonymousAnalytics,
           revokeAnalytics,
           removePersistedAccountState,
           resetAnalytics,
         });
 
-        expect(revokeAnalytics).toHaveBeenCalledOnce();
-        expect(denyAnonymousAnalytics).toHaveBeenCalledOnce();
         expect(removePersistedAccountState).toHaveBeenCalledOnce();
         expect(resetAnalytics).toHaveBeenCalledOnce();
         expect(revokeAnalytics.mock.invocationCallOrder[0]).toBeLessThan(
-          denyAnonymousAnalytics.mock.invocationCallOrder[0] ?? 0
-        );
-        expect(denyAnonymousAnalytics.mock.invocationCallOrder[0]).toBeLessThan(
           resetAnalytics.mock.invocationCallOrder[0] ?? 0
         );
       })
@@ -156,41 +138,14 @@ describe("account browser identity", () => {
   );
 
   it.effect(
-    "reports a failed analytics step after a committed deletion and keeps clearing",
+    "returns analytics to the baseline after a committed deletion",
     () =>
       Effect.gen(function* () {
-        const failure = new AnalyticsConsentStorageFailed({
-          code: "ANALYTICS_CONSENT_STORAGE_FAILED",
-        });
-        const removePersistedAccountState = vi.fn();
-        const resetAnalytics = vi.fn();
+        yield* clearDeletedAccountBrowserIdentity();
 
-        yield* clearDeletedAccountBrowserIdentity({
-          denyAnonymousAnalytics: () => Effect.fail(failure),
-          revokeAnalytics: () => Effect.void,
-          removePersistedAccountState,
-          resetAnalytics,
-        });
-
-        expect(removePersistedAccountState).toHaveBeenCalledOnce();
-        expect(resetAnalytics).toHaveBeenCalledOnce();
-        expect(reportClientExceptionMock).toHaveBeenCalledWith(failure, {
-          operation: "denyAnonymousAnalytics",
-          source: "auth.identityCleanup",
-        });
+        expect(revokeToBaselineAnalytics).toHaveBeenCalledOnce();
+        expect(resetBrowserAnalyticsIdentity).toHaveBeenCalledWith(true);
       })
-  );
-
-  it.effect("denies anonymous analytics after a committed deletion", () =>
-    Effect.gen(function* () {
-      yield* clearDeletedAccountBrowserIdentity();
-
-      expect(revokeToBaselineAnalytics).toHaveBeenCalledOnce();
-      expect(resetBrowserAnalyticsIdentity).toHaveBeenCalledWith(true);
-      expect(
-        window.localStorage.getItem(ANONYMOUS_ANALYTICS_CONSENT_STORAGE_KEY)
-      ).toContain('"decision":"denied"');
-    })
   );
 
   it.effect(
@@ -198,13 +153,6 @@ describe("account browser identity", () => {
     () =>
       Effect.gen(function* () {
         const cleanup = {
-          denyAnonymousAnalytics: vi.fn(() =>
-            Effect.fail(
-              new AnalyticsConsentStorageFailed({
-                code: "ANALYTICS_CONSENT_STORAGE_FAILED",
-              })
-            )
-          ),
           removePersistedAccountState: vi.fn(() => {
             throw new Error("storage unavailable");
           }),
@@ -224,7 +172,6 @@ describe("account browser identity", () => {
         ).toBeUndefined();
         // Every step runs although each one before it failed.
         expect(cleanup.revokeAnalytics).toHaveBeenCalledOnce();
-        expect(cleanup.denyAnonymousAnalytics).toHaveBeenCalledOnce();
         expect(cleanup.resetAnalytics).toHaveBeenCalledOnce();
         expect(cleanup.removePersistedAccountState).toHaveBeenCalledOnce();
       })

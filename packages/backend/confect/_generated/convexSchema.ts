@@ -1,8 +1,6 @@
 import { defineSchema as $defineSchema } from "convex/server";
 import { Table as $Table } from "@confect/server";
 
-import accountConsentDecisions from "./tables/accountConsentDecisions";
-import accountConsents from "./tables/accountConsents";
 import accountDeletionAttemptCancellations from "./tables/accountDeletionAttemptCancellations";
 import accountDeletionPreparations from "./tables/accountDeletionPreparations";
 import accountDeletionReceipts from "./tables/accountDeletionReceipts";
@@ -186,8 +184,6 @@ import vendorSpend from "./tables/vendorSpend";
 import welcomeEmailIntents from "./tables/welcomeEmailIntents";
 
 export default $defineSchema({
-  accountConsentDecisions: $Table.tableDefinition(accountConsentDecisions),
-  accountConsents: $Table.tableDefinition(accountConsents),
   accountDeletionAttemptCancellations: $Table.tableDefinition(accountDeletionAttemptCancellations),
   accountDeletionPreparations: $Table.tableDefinition(accountDeletionPreparations),
   accountDeletionReceipts: $Table.tableDefinition(accountDeletionReceipts),

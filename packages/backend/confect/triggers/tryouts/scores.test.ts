@@ -3,7 +3,6 @@ import { describe, expect, it } from "@effect/vitest";
 import posthogTest from "@posthog/convex/test";
 import confectSchema from "@repo/backend/confect/_generated/schema";
 import { triggers } from "@repo/backend/confect/functions";
-import { seedAnalyticsConsent } from "@repo/backend/confect/test.helpers";
 import { convexModules } from "@repo/backend/confect/test.setup";
 import { tryoutScoresHandler } from "@repo/backend/confect/triggers/tryouts/scores";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
@@ -115,14 +114,10 @@ describe("triggers/tryouts/scores", () => {
       t.query((ctx) => ctx.db.system.query("_scheduled_functions").collect())
     ).resolves.toEqual([]);
   });
-  it("queues one deletion-aware event when a score is first inserted", async () => {
+  it("queues one anonymous event when a score is first inserted", async () => {
     const t = createTryoutScoreTriggerTest();
-    const identity = await t.mutation(async (ctx) => {
-      const { score, userId } = await insertScoreGraph(ctx);
-      await seedAnalyticsConsent(ctx, {
-        decidedAt: NOW,
-        userId,
-      });
+    await t.mutation(async (ctx) => {
+      const { score } = await insertScoreGraph(ctx);
       await Effect.runPromise(
         tryoutScoresHandler({
           id: score._id,
@@ -135,9 +130,6 @@ describe("triggers/tryouts/scores", () => {
           )
         )
       );
-      return {
-        userId,
-      };
     });
     const scheduledJobs = await t.query(async (ctx) =>
       ctx.db.system.query("_scheduled_functions").collect()
@@ -146,7 +138,6 @@ describe("triggers/tryouts/scores", () => {
       expect.objectContaining({
         args: [
           expect.objectContaining({
-            distinctId: identity.userId,
             event: "tryout attempt completed",
             properties: encodeJsonText({
               attempt_number: 2,
@@ -157,6 +148,7 @@ describe("triggers/tryouts/scores", () => {
               set_key: "set-1",
               total_questions: 10,
               track_key: "2027",
+              $process_person_profile: false,
             }),
             timestamp: NOW,
           }),

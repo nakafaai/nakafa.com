@@ -1,6 +1,5 @@
 import { expect, type Request, test } from "@playwright/test";
 import { Effect, MutableList } from "effect";
-import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { pinnedRoutes } from "@/e2e/support/corpus";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { waitForQuiet } from "@/e2e/support/quiet";
@@ -25,7 +24,6 @@ test("a lesson loads its next lesson for a reader who saves data only when they 
     withObservedPageErrors(
       page,
       Effect.gen(function* () {
-        yield* seedAnalyticsConsent(page, "denied");
         yield* Effect.promise(() =>
           page.addInitScript(() => {
             // A connection that asks to save data, which still tells of its changes.

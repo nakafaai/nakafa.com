@@ -1,6 +1,5 @@
 import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
-import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { waitUntilTakenOver } from "@/e2e/support/window";
@@ -24,49 +23,46 @@ test("at 1440px the sidebar folds into a rail of named icons from its own toggle
   await Effect.runPromise(
     withObservedPageErrors(
       page,
-      Effect.andThen(
-        seedAnalyticsConsent(page, "denied"),
-        Effect.promise(async () => {
-          await page.goto("/en/try-out");
-          const sidebar = page.locator('[data-slot="sidebar-container"]');
-          const toggle = sidebar.getByRole("button", {
-            name: "Toggle Sidebar",
-          });
-          await expect(
-            page
-              .locator('[data-slot="page-header"]')
-              .getByRole("button", { name: "Toggle Sidebar" })
-          ).toBeHidden();
-          await waitUntilTakenOver(toggle);
-          await toggle.click();
+      Effect.promise(async () => {
+        await page.goto("/en/try-out");
+        const sidebar = page.locator('[data-slot="sidebar-container"]');
+        const toggle = sidebar.getByRole("button", {
+          name: "Toggle Sidebar",
+        });
+        await expect(
+          page
+            .locator('[data-slot="page-header"]')
+            .getByRole("button", { name: "Toggle Sidebar" })
+        ).toBeHidden();
+        await waitUntilTakenOver(toggle);
+        await toggle.click();
 
-          await expect
-            .poll(async () => (await sidebar.boundingBox())?.width, {
-              timeout: readinessTimeoutMilliseconds,
-            })
-            .toBe(RAIL);
-          const quran = sidebar.getByRole("link", { name: "Quran" });
-          await quran.hover();
-          await expect(
-            page.locator('[data-slot="tooltip-content"]')
-          ).toHaveText("Quran");
-          // The page starts at the rail's edge.
-          const main = await page
-            .locator("main")
-            .first()
-            .evaluate((node) =>
-              Number.parseFloat(getComputedStyle(node).paddingLeft)
-            );
-          expect(main).toBe(RAIL);
+        await expect
+          .poll(async () => (await sidebar.boundingBox())?.width, {
+            timeout: readinessTimeoutMilliseconds,
+          })
+          .toBe(RAIL);
+        const quran = sidebar.getByRole("link", { name: "Quran" });
+        await quran.hover();
+        await expect(page.locator('[data-slot="tooltip-content"]')).toHaveText(
+          "Quran"
+        );
+        // The page starts at the rail's edge.
+        const main = await page
+          .locator("main")
+          .first()
+          .evaluate((node) =>
+            Number.parseFloat(getComputedStyle(node).paddingLeft)
+          );
+        expect(main).toBe(RAIL);
 
-          await quran.click();
-          await expect(page).toHaveURL(QURAN_URL);
-          await toggle.click();
-          await expect
-            .poll(async () => (await sidebar.boundingBox())?.width)
-            .toBeGreaterThan(RAIL);
-        })
-      )
+        await quran.click();
+        await expect(page).toHaveURL(QURAN_URL);
+        await toggle.click();
+        await expect
+          .poll(async () => (await sidebar.boundingBox())?.width)
+          .toBeGreaterThan(RAIL);
+      })
     )
   );
 });

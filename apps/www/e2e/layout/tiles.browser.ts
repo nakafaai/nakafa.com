@@ -1,6 +1,5 @@
 import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
-import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { signInLearner } from "@/e2e/support/learner";
 import { finishOnboarding } from "@/e2e/support/onboarding";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
@@ -22,7 +21,6 @@ test("every home tile stays square at every width", async ({
   const context = await browser.newContext();
   await Effect.runPromise(signInLearner(context, String(baseURL)));
   const page = await context.newPage();
-  await Effect.runPromise(seedAnalyticsConsent(page, "denied"));
   await finishOnboarding(page);
   for (const width of TILE_WIDTHS) {
     await page.setViewportSize({ height: 900, width });

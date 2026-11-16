@@ -1,6 +1,5 @@
 import { expect, type Locator, type Page, test } from "@playwright/test";
 import { Effect } from "effect";
-import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { waitForCommittedAppRouter } from "@/e2e/support/navigation/readiness";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { waitForScrollRest } from "@/e2e/support/quiet";
@@ -68,7 +67,6 @@ const expectPathname = Effect.fn("NakafaE2E.expectPathname")(function* (
  */
 const verifyOutlineHistory = Effect.fn("NakafaE2E.verifyOutlineHistory")(
   function* (page: Page, number: number) {
-    yield* seedAnalyticsConsent(page, "denied");
     yield* Effect.promise(() => page.goto(appRoutes.quranSurah));
     yield* waitForCommittedAppRouter(
       page,

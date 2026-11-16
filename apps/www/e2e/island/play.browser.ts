@@ -36,7 +36,7 @@ for (const viewport of [desktopViewport, touchViewport]) {
     await Effect.runPromise(
       withObservedPageErrors(
         page,
-        openIsland(page, viewport.hasTouch).pipe(
+        openIsland(page).pipe(
           Effect.andThen(pressWorld(page, viewport.hasTouch)),
           Effect.andThen(Effect.promise(() => expectRevision(page, 1))),
           Effect.andThen(

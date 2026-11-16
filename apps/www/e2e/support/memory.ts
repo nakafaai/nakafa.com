@@ -1,7 +1,7 @@
 import { expect, type Page } from "@playwright/test";
 import { Effect } from "effect";
 import { trackChanges } from "@/e2e/support/changes";
-import { declineUsageData, seedAnalyticsConsent } from "@/e2e/support/consent";
+import { viewerKnown } from "@/e2e/support/chat";
 import { signInLearner } from "@/e2e/support/learner";
 import { appRoutes } from "@/e2e/support/route";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
@@ -75,11 +75,10 @@ export const openMemoryPage = Effect.fn("NakafaE2E.openMemoryPage")(function* (
   // editor's own timers (its pause before a save, its search, its undo grouping) instead of waiting it out.
   yield* Effect.promise(() => page.clock.install());
   const changes = yield* trackChanges(page, [LIST_QUERY]);
-  yield* seedAnalyticsConsent(page, "denied");
   yield* signInLearner(page.context(), baseURL);
   yield* Effect.promise(() => page.goto(MEMORY_PATH));
   yield* Effect.promise(() => expect(page).toHaveTitle(MEMORY_TITLE));
-  yield* declineUsageData(page, changes);
+  yield* viewerKnown(changes);
   return changes;
 });
 

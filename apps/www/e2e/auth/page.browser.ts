@@ -2,7 +2,6 @@ import { expect, type Locator, type Page, test } from "@playwright/test";
 import { COVER } from "@repo/design-system/components/pool/cover";
 import { Array as Arr, Effect, MutableList, Schema } from "effect";
 import { expectSignInParts, NINA } from "@/e2e/support/auth";
-import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { waitForFrames } from "@/e2e/support/quiet";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
@@ -193,7 +192,6 @@ const waitForRest = Effect.fn("NakafaE2E.waitForPoolRest")(function* (
 
 /** Opens the sign-in page with analytics consent answered, so no prompt covers it. */
 const openSignIn = Effect.fn("NakafaE2E.openSignIn")(function* (page: Page) {
-  yield* seedAnalyticsConsent(page, "denied");
   yield* Effect.promise(() => page.goto(SIGN_IN));
   yield* expectSignInParts(page);
   yield* Effect.promise(() => expect(page.locator(NINA)).toBeVisible());

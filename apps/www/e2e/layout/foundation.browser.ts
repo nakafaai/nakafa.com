@@ -1,9 +1,5 @@
 import { expect, type Page, test } from "@playwright/test";
 import { Array as Arr, Effect } from "effect";
-import {
-  openConsentPreferences,
-  seedAnalyticsConsent,
-} from "@/e2e/support/consent";
 import { openRoute } from "@/e2e/support/route";
 import { SHEET_POPUP } from "@/e2e/support/selector";
 import { openSheet } from "@/e2e/support/sheet";
@@ -33,9 +29,6 @@ const CHART_MAX_HEIGHT = 384;
 
 /** From this width a side sheet resizes from its edge; a phone's sheet fills the screen. */
 const SHEET_RESIZE_WIDTH = 640;
-
-/** From this width a dialog is a dialog; below it the same content is a drawer. */
-const DIALOG_WIDTH = 768;
 
 /**
  * The standalone pills a page header shows beside its path: each visible button outside a group, and each group as
@@ -87,7 +80,7 @@ for (const scheme of SCHEMES) {
       test("a lesson's header groups its actions, and its visual cards carry a title and a description", async ({
         page,
       }) => {
-        await Effect.runPromise(openRoute(page, LESSON_PATH, "denied"));
+        await Effect.runPromise(openRoute(page, LESSON_PATH));
         const header = page
           .locator('header[data-slot="page-header"] [data-slot="button-group"]')
           .first();
@@ -108,7 +101,7 @@ for (const scheme of SCHEMES) {
         page,
       }) => {
         for (const path of HEADER_PATHS) {
-          await Effect.runPromise(openRoute(page, path, "denied"));
+          await Effect.runPromise(openRoute(page, path));
           await expect(
             page.locator('header[data-slot="page-header"]')
           ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
@@ -118,7 +111,7 @@ for (const scheme of SCHEMES) {
       });
 
       test("every chart stops at its maximum height", async ({ page }) => {
-        await Effect.runPromise(openRoute(page, CHART_PATH, "denied"));
+        await Effect.runPromise(openRoute(page, CHART_PATH));
         await nearEverySection(page);
         const charts = page.locator('[data-slot="chart"]');
         await expect(charts.first()).toBeVisible({
@@ -134,30 +127,10 @@ for (const scheme of SCHEMES) {
         await shoot(page, `chart-${width}-${scheme}`);
       });
 
-      test("a dialog's footer holds its actions alone, with no Cancel or Close", async ({
-        page,
-      }) => {
-        await Effect.runPromise(openRoute(page, "/en", "denied"));
-        const { popup } = await Effect.runPromise(
-          openConsentPreferences(
-            page,
-            width >= DIALOG_WIDTH ? "dialog-content" : "drawer-popup"
-          )
-        );
-        await expect(
-          popup.getByRole("button", { exact: true, name: "Cancel" })
-        ).toHaveCount(0);
-        await shoot(page, `dialog-${width}-${scheme}`);
-      });
-
       test("Nina's sheet resizes from the pane's edge, and its header's icons touch", async ({
         page,
       }) => {
-        // As on every other page here, the visitor has answered the consent banner, which would
-        // otherwise cover the Ask Nina bar docked to the bottom of the page.
-        await Effect.runPromise(
-          Effect.andThen(seedAnalyticsConsent(page, "denied"), openSheet(page))
-        );
+        await Effect.runPromise(openSheet(page));
         const sheet = page.locator(SHEET_POPUP);
         await expect(sheet).toBeVisible({
           timeout: readinessTimeoutMilliseconds,
@@ -171,7 +144,7 @@ for (const scheme of SCHEMES) {
       test("an empty search shows Nina in its empty state", async ({
         page,
       }) => {
-        await Effect.runPromise(openRoute(page, EMPTY_SEARCH_PATH, "denied"));
+        await Effect.runPromise(openRoute(page, EMPTY_SEARCH_PATH));
         const empty = page.locator('main [data-slot="empty"]').first();
         await expect(empty).toBeVisible({
           timeout: readinessTimeoutMilliseconds,

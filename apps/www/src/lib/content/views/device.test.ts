@@ -5,7 +5,6 @@ import {
   ContentViewDeviceStorageFailed,
   clearContentViewDevice,
   ensureContentViewDevice,
-  isContentViewDeviceRetained,
   readContentViewIdentity,
   resolveContentViewAttribution,
 } from "@/lib/content/views/device";
@@ -52,22 +51,15 @@ describe("content-view device attribution", () => {
   });
 
   it("counts an ungranted view for the account and never for the device", () => {
-    for (const status of ["browser-signal", "denied", "prompt"] as const) {
-      expect(
-        resolveContentViewAttribution({ isAuthenticated: true, status })
-      ).toBe("account");
-      expect(
-        resolveContentViewAttribution({ isAuthenticated: false, status })
-      ).toBe("none");
-    }
-  });
-
-  it("retains the identifier only while consent is granted or unresolved", () => {
-    expect(isContentViewDeviceRetained("granted")).toBe(true);
-    expect(isContentViewDeviceRetained("pending")).toBe(true);
-    for (const status of ["browser-signal", "denied", "prompt"] as const) {
-      expect(isContentViewDeviceRetained(status)).toBe(false);
-    }
+    expect(
+      resolveContentViewAttribution({ isAuthenticated: true, status: "denied" })
+    ).toBe("account");
+    expect(
+      resolveContentViewAttribution({
+        isAuthenticated: false,
+        status: "denied",
+      })
+    ).toBe("none");
   });
 });
 

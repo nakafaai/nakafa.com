@@ -49,7 +49,6 @@ export const tryoutScoresHandler = Effect.fn(
     }
     const identity = readAttemptSetIdentity(attempt);
     yield* captureProductEvent({
-      distinctId: score.userId,
       event: {
         name: "tryout attempt completed",
         properties: {

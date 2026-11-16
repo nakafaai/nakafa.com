@@ -2,7 +2,6 @@ import type { Browser, Page } from "@playwright/test";
 import { Effect } from "effect";
 import { type Changes, trackChanges } from "@/e2e/support/changes";
 import { openChatPage } from "@/e2e/support/chat";
-import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { withBrowserContext } from "@/e2e/support/context";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 
@@ -27,7 +26,6 @@ export const withReader = Effect.fn("NakafaE2E.withReader")(function* <A, E, R>(
     Effect.gen(function* () {
       const page = yield* Effect.promise(() => context.newPage());
       const changes = yield* trackChanges(page, []);
-      yield* seedAnalyticsConsent(page, "denied");
       return yield* withObservedPageErrors(page, use(page, changes));
     })
   );

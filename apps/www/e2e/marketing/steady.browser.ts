@@ -1,6 +1,5 @@
 import { expect, type Page, test } from "@playwright/test";
 import { Array as Arr, Effect, Schema } from "effect";
-import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { movePointerTo } from "@/e2e/support/input";
 import {
   readRecordedLayoutShifts,
@@ -182,7 +181,6 @@ for (const viewport of [touchViewport, desktopViewport]) {
         withObservedPageErrors(
           page,
           Effect.gen(function* () {
-            yield* seedAnalyticsConsent(page, "denied");
             yield* Effect.promise(() =>
               page.addInitScript(recordLayoutShifts, {
                 key: SHIFTS,

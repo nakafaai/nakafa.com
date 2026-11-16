@@ -1,6 +1,5 @@
 import { expect, type Locator, type Page, test } from "@playwright/test";
 import { Effect, type MutableList } from "effect";
-import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { activate, press, visibleLink } from "@/e2e/support/input";
 import { pressPreloaded } from "@/e2e/support/navigation/prefetch";
 import { withObservedPageErrors } from "@/e2e/support/observe";
@@ -90,7 +89,6 @@ const verifyTryoutShell = Effect.fn("NakafaE2E.verifyTryoutShell")(function* (
   page: Page,
   hasTouch: boolean
 ) {
-  yield* seedAnalyticsConsent(page, "denied");
   yield* observeShell(page);
   yield* openCountry(page);
   const since = yield* readPageTime(page);
@@ -131,7 +129,6 @@ const verifyTryoutShell = Effect.fn("NakafaE2E.verifyTryoutShell")(function* (
 const verifyPrefetchedHeadings = Effect.fn(
   "NakafaE2E.verifyPrefetchedTryoutHeadings"
 )(function* (page: Page, hasTouch: boolean) {
-  yield* seedAnalyticsConsent(page, "denied");
   // Each press reads the frames that the recorder keeps, so it starts with the page.
   yield* observeShell(page);
   const requested = recordDataRequests(page);

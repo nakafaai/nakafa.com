@@ -11,9 +11,7 @@ export const learningViewsHandler = Effect.fn(
   if (!view?.userId) {
     return;
   }
-  const userId = view.userId;
   yield* captureProductEvent({
-    distinctId: userId,
     event: {
       name: "content viewed",
       properties: {

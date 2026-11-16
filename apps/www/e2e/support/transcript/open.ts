@@ -7,7 +7,6 @@ import {
 import { Effect, MutableRef, Option, Schema } from "effect";
 import { AI_STORAGE_KEY } from "@/components/ai/store/create";
 import { learnerOf } from "@/e2e/support/chat";
-import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { waitForSlide } from "@/e2e/support/layout";
 import { signInLearner } from "@/e2e/support/learner";
 import { withObservedPageErrors } from "@/e2e/support/observe";
@@ -104,7 +103,6 @@ const chatAddress = (locale: string) =>
 export const startTranscript = Effect.fn("NakafaE2E.startTranscript")(
   function* (page: Page, baseURL: string) {
     const shown = MutableRef.make<readonly ServedMessage[]>([]);
-    yield* seedAnalyticsConsent(page, "denied");
     yield* serveIcons(page);
     const served = yield* serveConversation(page, shown, servedChat);
     const cookies = MutableRef.get(session);

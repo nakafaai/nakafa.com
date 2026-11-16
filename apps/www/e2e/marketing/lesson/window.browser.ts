@@ -51,7 +51,7 @@ test("home lesson window opens the next lesson by itself while it is on screen",
           yield* withObservedPageErrors(
             page,
             Effect.gen(function* () {
-              yield* openRoute(page, "/id", "denied");
+              yield* openRoute(page, "/id");
               const lesson = lessonSection(page);
               const selected = lesson
                 .locator('[data-slot="button-group"]')
@@ -102,7 +102,7 @@ test("home lesson window stops turning once the reader picks a lesson", async ({
           yield* withObservedPageErrors(
             page,
             Effect.gen(function* () {
-              yield* openRoute(page, "/id", "denied");
+              yield* openRoute(page, "/id");
               const lesson = lessonSection(page);
               const cell = lesson
                 .locator('[data-slot="button-group"]')
@@ -176,7 +176,7 @@ test("home lesson window keeps the launch the reader picked when the reader retu
           yield* withObservedPageErrors(
             page,
             Effect.gen(function* () {
-              yield* openRoute(page, "/id", "denied");
+              yield* openRoute(page, "/id");
               const lesson = lessonSection(page);
               const tabs = lesson
                 .locator('[data-slot="button-group"]')
@@ -232,7 +232,7 @@ test("home lesson window shows the text and the scene of its open card before it
           yield* withObservedPageErrors(
             page,
             Effect.gen(function* () {
-              yield* openRoute(page, "/id", "denied");
+              yield* openRoute(page, "/id");
               yield* Effect.promise(() => page.waitForLoadState("load"));
               // Less than half of the window is on the screen, so nothing has mounted its lab.
               const share = visibleShare(
@@ -306,7 +306,7 @@ test("home lesson window keeps a focused control on the page while the window is
           yield* withObservedPageErrors(
             page,
             Effect.gen(function* () {
-              yield* openRoute(page, "/id", "denied");
+              yield* openRoute(page, "/id");
               const lesson = lessonSection(page);
               const probe = page.locator(`[${FOCUS_PROBE}]`);
 

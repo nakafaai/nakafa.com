@@ -1,6 +1,5 @@
 import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
-import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { waitUntilTakenOver } from "@/e2e/support/window";
 
@@ -16,7 +15,6 @@ test("back and forward restore each page without reloading the document", async 
     withObservedPageErrors(
       page,
       Effect.gen(function* () {
-        yield* seedAnalyticsConsent(page, "denied");
         yield* Effect.promise(() =>
           page.goto("/en", { waitUntil: "domcontentloaded" })
         );

@@ -4,7 +4,6 @@ import { seedXendit } from "@repo/backend/scripts/content/acceptance/xendit";
 import { Array as Arr, Effect, Schema } from "effect";
 import { runFixture } from "@/e2e/support/acceptance";
 import { openChatPage, runOnPage } from "@/e2e/support/chat";
-import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { pinnedRoutes } from "@/e2e/support/corpus";
 import { revealTimeoutMilliseconds } from "@/e2e/support/timeout";
 
@@ -193,7 +192,6 @@ test("an ad that never comes leaves the page as if it had no frame, at every wid
   await runOnPage(page, baseURL, () =>
     Effect.gen(function* () {
       const requests = yield* Effect.promise(() => stubAdScript(page, ""));
-      yield* seedAnalyticsConsent(page, "denied");
       yield* Effect.promise(async () => {
         await page.addInitScript(recordShifts);
         for (const width of WIDTHS) {
@@ -233,7 +231,6 @@ test("a filled ad comes in a frame of its own height that moves nothing the read
   await runOnPage(page, baseURL, () =>
     Effect.gen(function* () {
       yield* Effect.promise(() => stubAdScript(page, FILLING_SCRIPT));
-      yield* seedAnalyticsConsent(page, "denied");
       yield* Effect.promise(async () => {
         await page.addInitScript(recordShifts);
         for (const width of WIDTHS) {

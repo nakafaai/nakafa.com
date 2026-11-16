@@ -1,7 +1,6 @@
 import { expect, type Page, test } from "@playwright/test";
 import { Effect } from "effect";
 import { CHAT_PATH } from "@/e2e/support/chat";
-import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { pinnedRoutes } from "@/e2e/support/corpus";
 import { signInLearner } from "@/e2e/support/learner";
 import { withObservedPageErrors } from "@/e2e/support/observe";
@@ -91,7 +90,6 @@ test.describe("panels at 1440px", () => {
         withObservedPageErrors(
           page,
           Effect.gen(function* () {
-            yield* seedAnalyticsConsent(page, "denied");
             if (path === CHAT_PATH) {
               const origin = yield* Effect.fromNullishOr(baseURL);
               yield* signInLearner(page.context(), origin);

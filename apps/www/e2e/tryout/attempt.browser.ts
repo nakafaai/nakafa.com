@@ -1,6 +1,5 @@
 import { expect, type Page, test } from "@playwright/test";
 import { Effect, MutableList } from "effect";
-import { pressDecline, seedAnalyticsConsent } from "@/e2e/support/consent";
 import { loadMathFonts } from "@/e2e/support/fonts";
 import { activate, activateAncestor } from "@/e2e/support/input";
 import { signInLearner } from "@/e2e/support/learner";
@@ -67,14 +66,12 @@ const verifyAttemptShell = Effect.fn("NakafaE2E.verifyAttemptShell")(function* (
   hasTouch: boolean,
   baseURL: string
 ) {
-  yield* seedAnalyticsConsent(page, "denied");
   yield* signInLearner(page.context(), baseURL);
   yield* observeShell(page);
   yield* openCountry(page);
   // The page loads again only at the reload below. The attempt starts before
   // it on this connection, and the server runs the changes of a connection in
   // the order they were sent, so it stores this choice first.
-  yield* pressDecline(page, hasTouch);
   yield* openTrack(page, hasTouch);
 
   // Starting from the public set locks the shell only with the attempt's first

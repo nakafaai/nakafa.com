@@ -23,5 +23,9 @@ interface Window {
   adsbygoogle?: GoogleQueue;
   /** Google Analytics' command queue, which reads the `arguments` of each call. */
   dataLayer?: GoogleQueue;
-  googlefc?: { callbackQueue?: GoogleQueue };
+  googlefc?: {
+    callbackQueue?: GoogleQueue;
+    /** Shows the consent message again, so the visitor can change or withdraw their choices. */
+    showRevocationMessage?: () => void;
+  };
 }

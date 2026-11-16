@@ -18,7 +18,7 @@ import { cva } from "class-variance-authority";
 import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
 import { useTranslations } from "use-intl";
-import { PageConsentFooterItem } from "@/components/analytics/consent/mount";
+import { PrivacyChoicesFooterItem } from "@/components/analytics/choices";
 import { FooterAction } from "@/components/marketing/shared/footer/action";
 import { FooterArt } from "@/components/marketing/shared/footer/art";
 import {
@@ -171,7 +171,7 @@ export function Footer({
               ))}
             </div>
             <FooterAction>
-              <PageConsentFooterItem />
+              <PrivacyChoicesFooterItem />
             </FooterAction>
           </div>
         </div>

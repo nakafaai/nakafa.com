@@ -3,11 +3,6 @@ import aggregateTest from "@convex-dev/aggregate/test";
 import presenceTest from "@convex-dev/presence/test";
 import rateLimiterTest from "@convex-dev/rate-limiter/test";
 import posthogTest from "@posthog/convex/test";
-import {
-  ANALYTICS_CONSENT_CATEGORY,
-  ANALYTICS_CONSENT_MECHANISM,
-  ANALYTICS_CONSENT_NOTICE_VERSION,
-} from "@repo/analytics/consent";
 import authSchema from "@repo/backend/components/betterAuth/schema";
 import { components } from "@repo/backend/confect/_generated/components";
 import {
@@ -47,31 +42,6 @@ export function createConvexTestWithBetterAuth() {
   posthogTest.register(t);
   presenceTest.register(t);
   return t;
-}
-
-/** Seeds one analytics decision with matching current and provenance state. */
-export async function seedAnalyticsConsent(
-  ctx: MutationCtx,
-  {
-    decidedAt,
-    granted = true,
-    userId,
-  }: {
-    decidedAt: number;
-    granted?: boolean;
-    userId: Doc<"users">["_id"];
-  }
-) {
-  const decision = {
-    category: ANALYTICS_CONSENT_CATEGORY,
-    decidedAt,
-    granted,
-    mechanism: ANALYTICS_CONSENT_MECHANISM,
-    noticeVersion: ANALYTICS_CONSENT_NOTICE_VERSION,
-    userId,
-  };
-  await ctx.db.insert("accountConsentDecisions", decision);
-  return await ctx.db.insert("accountConsents", decision);
 }
 
 /** Seeds one authenticated Better Auth user and the matching app user row. */

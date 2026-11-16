@@ -86,7 +86,6 @@ const admitCheckout = FunctionImpl.make(
     return yield* admitCheckoutProgram({
       captureEvent: () =>
         captureProductEvent({
-          distinctId: args.userId,
           event: args.event,
           ...(args.timestamp === undefined
             ? {}

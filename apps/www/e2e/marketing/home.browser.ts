@@ -144,7 +144,7 @@ for (const viewport of HOME_VIEWPORTS) {
               yield* withObservedPageErrors(
                 page,
                 Effect.gen(function* () {
-                  yield* openRoute(page, "/id", "denied");
+                  yield* openRoute(page, "/id");
                   yield* Effect.promise(() =>
                     page.waitForLoadState("networkidle")
                   );
@@ -221,7 +221,7 @@ test("home page keeps the hero when the particle field fails to load", async ({
                 page,
                 PARTICLES_MARKER
               );
-              yield* openRoute(page, "/en", "denied");
+              yield* openRoute(page, "/en");
               // The field is decoration: it waits for the page to settle, then for the reader's first gesture, so
               // the pointer moves as a reader's does until the field asks for its code.
               const step = MutableRef.make(0);
@@ -285,7 +285,7 @@ test("home page carries every part in Indonesian, English and German", async ({
             page,
             Effect.forEach(["id", "en", "de"], (locale) =>
               Effect.gen(function* () {
-                yield* openRoute(page, `/${locale}`, "denied");
+                yield* openRoute(page, `/${locale}`);
                 yield* Effect.promise(() =>
                   expect(page.locator("h1")).toBeVisible()
                 );

@@ -1,7 +1,6 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
 import { ProductAnalyticsCaptureError } from "@repo/backend/confect/analytics/capture.spec";
 import { AuthFailure } from "@repo/backend/confect/auth/spec";
-import { ConsentPersistenceError } from "@repo/backend/confect/consents/schema";
 import { ReleaseError } from "@repo/backend/confect/contentRelease/error";
 import Atomic from "@repo/backend/confect/middleware/atomic.spec";
 import Session from "@repo/backend/confect/middleware/session.spec";
@@ -37,7 +36,6 @@ export default GroupSpec.make().addFunction(
         TryoutProgressError,
         TryoutProgressSizeError,
         ReleaseError,
-        ConsentPersistenceError,
         ProductAnalyticsCaptureError,
       ]),
   })

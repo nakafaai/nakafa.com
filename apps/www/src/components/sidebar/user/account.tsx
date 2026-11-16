@@ -18,7 +18,7 @@ import { Effect, Result } from "effect";
 import { Suspense, useEffect } from "react";
 import { useTranslations } from "use-intl";
 import { clearAiDraftText } from "@/components/ai/store/draft";
-import { AnalyticsConsentMenuItem } from "@/components/analytics/consent/menu";
+import { PrivacyChoicesMenuItem } from "@/components/analytics/choices";
 import { useLiveSession } from "@/components/providers/live";
 import { AccountMenu } from "@/components/sidebar/menu/account";
 import {
@@ -149,7 +149,7 @@ export function NavUserAccount({ user }: { user: CurrentUser }) {
           <NakafaAboutMenuItem />
           <CommunityMenuItem />
           <LegalMenuItems />
-          <AnalyticsConsentMenuItem />
+          <PrivacyChoicesMenuItem />
         </LearnMoreSubmenu>
       </DropdownMenuGroup>
     </AccountMenu>

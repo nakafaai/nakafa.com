@@ -12,10 +12,7 @@ import {
   TURN_DEADLINE,
 } from "@repo/backend/confect/nina/deadline";
 import { NinaTurnError } from "@repo/backend/confect/nina/turns.spec";
-import {
-  seedAnalyticsConsent,
-  seedAuthenticatedUser,
-} from "@repo/backend/confect/test.helpers";
+import { seedAuthenticatedUser } from "@repo/backend/confect/test.helpers";
 import { makeBucket, stubBucket } from "@repo/backend/test/bucket";
 import {
   args,
@@ -84,9 +81,6 @@ describe("native Nina admission", () => {
 
   it("charges five credits and reports one consented send", async () => {
     const { t, identity, owner } = await fixture();
-    await t.mutation((ctx) =>
-      seedAnalyticsConsent(ctx, { userId: identity.userId, decidedAt: NOW })
-    );
     await owner.mutation(start, args);
     await owner.mutation(start, args);
     const state = await t.query(async (ctx) => ({
@@ -102,9 +96,11 @@ describe("native Nina admission", () => {
     expect(events).toHaveLength(1);
     expect(events[0]?.args).toEqual([
       expect.objectContaining({
-        distinctId: identity.userId,
         event: "chat message sent",
-        properties: encodeJsonText({ chat_type: "study" }),
+        properties: encodeJsonText({
+          chat_type: "study",
+          $process_person_profile: false,
+        }),
       }),
     ]);
   });

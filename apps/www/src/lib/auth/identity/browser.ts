@@ -1,15 +1,9 @@
 import {
-  ANALYTICS_CONSENT_DENIED,
-  ANONYMOUS_ANALYTICS_CONSENT_STORAGE_KEY,
-  createAnonymousAnalyticsConsent,
-} from "@repo/analytics/consent";
-import {
   resetBrowserAnalyticsIdentity,
   revokeToBaselineAnalytics,
 } from "@repo/analytics/posthog/browser";
-import { Clock, Effect, Schema } from "effect";
+import { Effect, Schema } from "effect";
 import { reportClientException } from "@/lib/analytics/client";
-import { saveAnonymousAnalyticsConsent } from "@/lib/analytics/consent/storage";
 import { readAuthClient } from "@/lib/auth/client";
 import { holdSession, releaseSession } from "@/lib/auth/session";
 
@@ -20,13 +14,6 @@ type SignOutResult = Awaited<
   ReturnType<ReturnType<typeof readAuthClient>["signOut"]>
 >;
 type SignOutRequest = () => Promise<SignOutResult>;
-
-const denyAnonymousAnalytics = Clock.currentTimeMillis.pipe(
-  Effect.map((decidedAt) =>
-    createAnonymousAnalyticsConsent(ANALYTICS_CONSENT_DENIED, decidedAt)
-  ),
-  Effect.flatMap(saveAnonymousAnalyticsConsent)
-);
 
 /** Raised when the current account cannot be signed out safely. */
 export class AccountSignOutFailed extends Schema.TaggedError<
@@ -42,10 +29,7 @@ const defaultBrowserAccountIdentityCleanup = {
       for (let index = storage.length - 1; index >= 0; index -= 1) {
         const storageKey = storage.key(index);
 
-        if (
-          storageKey?.startsWith(accountStorageKeyPrefix) &&
-          storageKey !== ANONYMOUS_ANALYTICS_CONSENT_STORAGE_KEY
-        ) {
+        if (storageKey?.startsWith(accountStorageKeyPrefix)) {
           storage.removeItem(storageKey);
         }
       }
@@ -60,7 +44,6 @@ type BrowserAccountIdentityCleanup =
 
 const defaultDeletedAccountIdentityCleanup = {
   ...defaultBrowserAccountIdentityCleanup,
-  denyAnonymousAnalytics: () => denyAnonymousAnalytics,
   revokeAnalytics: () => revokeToBaselineAnalytics(),
 };
 
@@ -114,14 +97,6 @@ export const clearDeletedAccountBrowserIdentity = Effect.fn(
     Effect.catch((cause) =>
       reportClientException(cause, {
         operation: "revokeAnalytics",
-        source: "auth.identityCleanup",
-      })
-    )
-  );
-  yield* cleanup.denyAnonymousAnalytics().pipe(
-    Effect.catch((cause) =>
-      reportClientException(cause, {
-        operation: "denyAnonymousAnalytics",
         source: "auth.identityCleanup",
       })
     )

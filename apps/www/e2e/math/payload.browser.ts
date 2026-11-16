@@ -1,6 +1,5 @@
 import { expect, type Page, test } from "@playwright/test";
 import { Array as Arr, Effect, Result } from "effect";
-import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { pinnedRoutes } from "@/e2e/support/corpus";
 import { waitForCommittedAppRouter } from "@/e2e/support/navigation/readiness";
 import { withObservedPageErrors } from "@/e2e/support/observe";
@@ -135,12 +134,7 @@ test.describe("Math payload", () => {
     page,
   }) => {
     await Effect.runPromise(
-      withObservedPageErrors(
-        page,
-        seedAnalyticsConsent(page, "denied").pipe(
-          Effect.andThen(verifyLoadedLesson(page))
-        )
-      )
+      withObservedPageErrors(page, verifyLoadedLesson(page))
     );
   });
 
@@ -148,12 +142,7 @@ test.describe("Math payload", () => {
     page,
   }) => {
     await Effect.runPromise(
-      withObservedPageErrors(
-        page,
-        seedAnalyticsConsent(page, "denied").pipe(
-          Effect.andThen(verifyNavigatedLesson(page))
-        )
-      )
+      withObservedPageErrors(page, verifyNavigatedLesson(page))
     );
   });
 });

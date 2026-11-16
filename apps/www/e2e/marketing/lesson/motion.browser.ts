@@ -52,7 +52,7 @@ const expectSceneStill = Effect.fn("NakafaE2E.expectSceneStill")(function* (
 const openReducedLesson = Effect.fn("NakafaE2E.openReducedLesson")(function* (
   page: Page
 ) {
-  yield* openRoute(page, "/id", "denied");
+  yield* openRoute(page, "/id");
   yield* showLessonWindow(page);
 });
 

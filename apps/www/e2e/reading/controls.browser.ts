@@ -3,7 +3,6 @@ import en from "@repo/internationalization/dictionaries/en.json" with {
   type: "json",
 };
 import { Deferred, Effect } from "effect";
-import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { pinnedRoutes } from "@/e2e/support/corpus";
 import { waitForSlide } from "@/e2e/support/layout";
 import { waitForCommittedAppRouter } from "@/e2e/support/navigation/readiness";
@@ -46,7 +45,6 @@ const readSectionHeadingInk = (span: HTMLElement) => {
 /** Verifies the header controls against the real signed reading page. */
 const verifyReadingHeader = Effect.fn("NakafaE2E.verifyReadingHeader")(
   function* (page: Page, href: string, width: number) {
-    yield* seedAnalyticsConsent(page, "denied");
     yield* Effect.promise(() => page.goto(href));
     yield* waitForCommittedAppRouter(
       page,
@@ -350,7 +348,6 @@ test("reading outline replaces an existing fragment", async ({ page }) => {
     withObservedPageErrors(
       page,
       Effect.gen(function* () {
-        yield* seedAnalyticsConsent(page, "denied");
         yield* Effect.promise(() =>
           page.setViewportSize({ width: 1440, height: 900 })
         );
@@ -403,7 +400,6 @@ const verifyReadingControlsHydrateInPlace = Effect.fn(
   "NakafaE2E.verifyReadingControlsHydrateInPlace"
 )(function* (page: Page) {
   const href = pinnedRoutes.material.en;
-  yield* seedAnalyticsConsent(page, "denied");
   // The app's scripts wait until the served page has been read, as they would
   // on a slow device, so React cannot hydrate or replace anything before then.
   const released = yield* Deferred.make<void>();

@@ -158,16 +158,14 @@ const verifyServerContentSurvives = Effect.fn(
   yield* Effect.sync(() =>
     expect(kept, path).toStrictEqual({ article: true, heading: true })
   );
-  // The usage data prompt opens once the session, Convex authentication, and
-  // consent have resolved, the updates that would discard the content if they
-  // reached it before it hydrated. A signed-in learner's prompt also waits for
-  // the account and its consent.
+  // The session and Convex authentication resolve before the network goes
+  // quiet, the updates that would discard the content if they reached it
+  // before it hydrated.
   yield* Effect.promise(() =>
-    expect(page.getByRole("region", { name: "Usage data" })).toBeVisible({
+    page.waitForLoadState("networkidle", {
       timeout: SETTLE_TIMEOUT_MILLISECONDS,
     })
   );
-  yield* Effect.promise(() => page.waitForLoadState("networkidle"));
   yield* Effect.sync(() =>
     expect(MutableRef.get(tokens) > 0, path).toBe(signedIn)
   );

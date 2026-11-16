@@ -130,7 +130,6 @@ export const closeTurn = Effect.fn("nina.settlement.close")(function* (
   }
   if (chat && status !== "cancelled") {
     yield* captureProductEvent({
-      distinctId: turn.userId,
       event:
         status === "complete"
           ? {
