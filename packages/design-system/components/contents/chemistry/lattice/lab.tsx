@@ -125,31 +125,31 @@ export function IonLatticeLab({
       <VisualCardHeader description={description} title={title} />
 
       <VisualCardToolbar>
+        {offered.length > 1 ? (
+          <ToggleGroup
+            aria-label={labels.choose}
+            gridColumns={toggleColumns(offered.length)}
+            onValueChange={(value: string) => {
+              if (Schema.is(CrystalIdSchema)(value)) {
+                setChosen(value);
+              }
+            }}
+            type="single"
+            value={shown}
+            variant="outline"
+          >
+            {Arr.map(offered, (id) => (
+              <ToggleGroupItem
+                aria-label={`${getCrystal(id).cation.symbol}${getCrystal(id).anion.symbol}`}
+                key={id}
+                value={id}
+              >
+                <InlineMath math={getCrystal(id).formula} />
+              </ToggleGroupItem>
+            ))}
+          </ToggleGroup>
+        ) : null}
         <div className="flex w-full flex-col gap-3">
-          {offered.length > 1 ? (
-            <ToggleGroup
-              aria-label={labels.choose}
-              gridColumns={toggleColumns(offered.length)}
-              onValueChange={(value: string) => {
-                if (Schema.is(CrystalIdSchema)(value)) {
-                  setChosen(value);
-                }
-              }}
-              type="single"
-              value={shown}
-              variant="outline"
-            >
-              {Arr.map(offered, (id) => (
-                <ToggleGroupItem
-                  aria-label={`${getCrystal(id).cation.symbol}${getCrystal(id).anion.symbol}`}
-                  key={id}
-                  value={id}
-                >
-                  <InlineMath math={getCrystal(id).formula} />
-                </ToggleGroupItem>
-              ))}
-            </ToggleGroup>
-          ) : null}
           <div className="flex items-center justify-between gap-4 text-sm">
             <span>{labels.cells}</span>
             <span className="shrink-0 tabular-nums">

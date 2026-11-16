@@ -148,31 +148,29 @@ function ReactionCard({
       <VisualCardHeader description={description} title={title} />
 
       <VisualCardToolbar>
+        {offered.length > 1 ? (
+          <ToggleGroup
+            aria-label={labels.choose}
+            gridColumns={toggleColumns(offered.length)}
+            onValueChange={choose}
+            type="single"
+            value={shown}
+            variant="outline"
+          >
+            {Arr.map(offered, (each) => (
+              <ToggleGroupItem
+                aria-label={each.name}
+                key={each.id}
+                value={each.id}
+              >
+                {each.tab}
+              </ToggleGroupItem>
+            ))}
+          </ToggleGroup>
+        ) : null}
         <div className="flex w-full flex-col gap-3">
-          {offered.length > 1 ? (
-            <ToggleGroup
-              aria-label={labels.choose}
-              gridColumns={toggleColumns(offered.length)}
-              onValueChange={choose}
-              type="single"
-              value={shown}
-              variant="outline"
-            >
-              {Arr.map(offered, (each) => (
-                <ToggleGroupItem
-                  aria-label={each.name}
-                  key={each.id}
-                  value={each.id}
-                >
-                  {each.tab}
-                </ToggleGroupItem>
-              ))}
-            </ToggleGroup>
-          ) : null}
-          <div className="flex flex-col gap-3">
-            <span className="text-sm">{labels.progress}</span>
-            <ReactionSlider label={labels.progress} />
-          </div>
+          <span className="text-sm">{labels.progress}</span>
+          <ReactionSlider label={labels.progress} />
         </div>
       </VisualCardToolbar>
 
