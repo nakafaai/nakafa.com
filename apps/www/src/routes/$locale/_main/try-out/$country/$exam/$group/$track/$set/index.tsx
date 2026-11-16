@@ -1,6 +1,10 @@
-import { makeBreadcrumbNodes } from "@repo/seo/jsonld/node";
+import {
+  makeBreadcrumbNodes,
+  makePracticeTestNode,
+} from "@repo/seo/jsonld/node";
+import { SITE_ORIGIN } from "@repo/seo/origin";
 import { createFileRoute, notFound } from "@tanstack/react-router";
-import { Schema } from "effect";
+import { Array as Arr, Number as Num, Schema } from "effect";
 import { ClockProvider } from "@/components/player/now";
 import { ConvexIsland } from "@/components/providers/island";
 import { ShellLockCarry, usePrepaintRelease } from "@/components/sidebar/lock";
@@ -76,7 +80,22 @@ export const Route = createFileRoute(
             match.search.mode === undefined &&
             match.search.question === undefined &&
             match.search.view === undefined,
-          jsonLd: makeBreadcrumbNodes(loaderData.head.breadcrumbs),
+          jsonLd: [
+            ...makeBreadcrumbNodes(loaderData.head.breadcrumbs),
+            makePracticeTestNode({
+              description: loaderData.head.description,
+              exam: `${loaderData.page.exam.title} ${loaderData.page.group.title} ${loaderData.page.track.title}`,
+              inLanguage: params.locale,
+              name: loaderData.head.title,
+              timeLimitSeconds: Num.sumAll(
+                Arr.map(
+                  loaderData.page.sections,
+                  ({ timeLimitSeconds }) => timeLimitSeconds
+                )
+              ),
+              url: new URL(loaderData.head.canonicalPath, SITE_ORIGIN).href,
+            }),
+          ],
           locale: params.locale,
           title: loaderData.head.title,
         }),
