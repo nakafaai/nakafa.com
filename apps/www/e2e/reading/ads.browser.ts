@@ -1,4 +1,5 @@
 import { expect, type Page, test } from "@playwright/test";
+import { AD_SCRIPT_PATH } from "@repo/backend/scripts/content/acceptance/ads";
 import { seedXendit } from "@repo/backend/scripts/content/acceptance/xendit";
 import { Array as Arr, Effect, Schema } from "effect";
 import { runFixture } from "@/e2e/support/acceptance";
@@ -8,12 +9,13 @@ import { pinnedRoutes } from "@/e2e/support/corpus";
 import { revealTimeoutMilliseconds } from "@/e2e/support/timeout";
 
 /**
- * Google's ad script. The tests answer it themselves, so no request leaves the
- * machine: with an empty script AdSense never answers, as while the site waits
- * for review or under an ad blocker, and with `FILLING_SCRIPT` every unit gets
- * an ad of a phone's in-article height.
+ * The ad script, which a proof's build loads from the acceptance runtime's
+ * stand-in (`AD_SCRIPT_PATH`). The tests answer it themselves: with an empty
+ * script AdSense never answers, as while the site waits for review or under an
+ * ad blocker, and with `FILLING_SCRIPT` every unit gets an ad of a phone's
+ * in-article height.
  */
-const AD_SCRIPT = "https://pagead2.googlesyndication.com/**";
+const AD_SCRIPT = `**${AD_SCRIPT_PATH}*`;
 
 /** Puts a 280 px ad in every unit that asks, the way AdSense marks a unit it filled. */
 const FILLING_SCRIPT = `

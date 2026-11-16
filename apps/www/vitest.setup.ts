@@ -3,6 +3,9 @@ process.env.VITE_SITE_URL ??= "https://nakafa.com";
 process.env.VITE_CONVEX_URL ??= "https://example.convex.cloud";
 process.env.VITE_CONVEX_SITE_URL ??= "https://example.convex.site";
 process.env.VITE_POSTHOG_PROXY_HOST ??= "https://t.nakafa.com";
+/** Google's ad script, as every deployment names it. */
+process.env.VITE_AD_SCRIPT_URL ??=
+  "https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js";
 /** The server's own site, whose host names the session cookie's prefix. */
 process.env.SITE_URL ??= "https://nakafa.com";
 

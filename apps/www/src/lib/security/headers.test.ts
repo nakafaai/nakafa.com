@@ -13,6 +13,7 @@ const production = {
   convexSiteUrl: "https://example.convex.site",
   convexUrl: "https://example.convex.cloud",
   posthogProxyHost: "https://t.nakafa.com",
+  adScriptUrl: "https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js",
 };
 
 /** Matches the loopback image origin that a local Convex deployment adds to img-src. */
@@ -52,6 +53,7 @@ describe("createWwwHeaders", () => {
       convexSiteUrl: "http://127.0.0.1:3211",
       convexUrl: "http://127.0.0.1:3210",
       posthogProxyHost: "https://t.nakafa.com",
+      adScriptUrl: production.adScriptUrl,
     });
     const policy = headerValue(headers, "Content-Security-Policy") ?? "";
 
@@ -67,6 +69,7 @@ describe("createWwwHeaders", () => {
       convexSiteUrl: "http://127.0.0.1:3211",
       convexUrl: "http://127.0.0.1:3210",
       posthogProxyHost: "http://127.0.0.1:58341",
+      adScriptUrl: production.adScriptUrl,
     });
     const policy = headerValue(headers, "Content-Security-Policy") ?? "";
     const images = Arr.findFirst(Str.split(policy, "; "), (directive) =>
@@ -77,6 +80,32 @@ describe("createWwwHeaders", () => {
       "http://127.0.0.1:58341"
     );
     expect(Option.getOrElse(images, () => "")).not.toContain("ws://");
+  });
+
+  it("lets a loopback ad script, the acceptance runtime's stand-in, run, and adds nothing for Google's", () => {
+    const scripts = (adScriptUrl: string) =>
+      Option.getOrElse(
+        Arr.findFirst(
+          Str.split(
+            headerValue(
+              createWwwHeaders({ ...production, adScriptUrl }),
+              "Content-Security-Policy"
+            ) ?? "",
+            "; "
+          ),
+          (directive) => directive.startsWith("script-src")
+        ),
+        () => ""
+      );
+
+    expect(scripts("http://127.0.0.1:58341/ads.js")).toContain(
+      "http://127.0.0.1:58341"
+    );
+    expect(scripts("http://127.0.0.1:58341/ads.js")).not.toContain("ws://");
+    expect(scripts(production.adScriptUrl)).toBe(
+      scripts("https://pagead2.googlesyndication.com/other.js")
+    );
+    expect(scripts(production.adScriptUrl)).not.toContain("http://");
   });
 
   it("omits an unset Convex deployment URL", () => {

@@ -1,5 +1,9 @@
 import { describe, expect, it } from "@effect/vitest";
 import {
+  AD_SCRIPT,
+  AD_SCRIPT_PATH,
+} from "@repo/backend/scripts/content/acceptance/ads";
+import {
   reserveAnalyticsOrigin,
   withAnalyticsSink,
 } from "@repo/backend/scripts/content/acceptance/analytics";
@@ -43,6 +47,32 @@ describe("acceptance analytics stand-in", () => {
       expect(replies).toEqual([200, { status: 1 }, "*", 200]);
       expect(yield* isListening(origin)).toBe(false);
     }).pipe(Effect.provide(Layer.mergeAll(FetchClient, nodePlatform)))
+  );
+
+  it.live(
+    "serves the stand-in for Google's ad script, which any origin may load",
+    () =>
+      Effect.gen(function* () {
+        const origin = yield* reserveAnalyticsOrigin();
+
+        const reply = yield* withAnalyticsSink(
+          origin,
+          "/tmp/unused",
+          Effect.gen(function* () {
+            const script = yield* HttpClient.get(
+              `${origin}${AD_SCRIPT_PATH}?client=ca-pub-1`
+            );
+            return [
+              script.status,
+              script.headers["content-type"],
+              script.headers["access-control-allow-origin"],
+              yield* script.text,
+            ];
+          })
+        );
+
+        expect(reply).toEqual([200, "text/javascript", "*", AD_SCRIPT]);
+      }).pipe(Effect.provide(Layer.mergeAll(FetchClient, nodePlatform)))
   );
 
   it.live(

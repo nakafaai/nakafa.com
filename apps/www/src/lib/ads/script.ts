@@ -2,9 +2,18 @@ import { MAIN_DOMAIN } from "@repo/site/domains";
 import { Array as Arr, Effect, Schema } from "effect";
 import { AD_CLIENT } from "@/lib/ads/account";
 import { followConsentMessage } from "@/lib/ads/consent";
+import { adScriptPublicKeys } from "@/lib/ads/public";
 
-/** Google's ad script for the account, which also starts the consent message where a region needs one. */
-export const AD_SCRIPT_SOURCE = `https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${AD_CLIENT}`;
+/**
+ * Google's ad script for the account, which also starts the consent message where
+ * a region needs one. The environment names where it is served: Google in every
+ * deployment, the acceptance runtime's stand-in in a proof.
+ */
+function adScriptSource() {
+  const source = new URL(adScriptPublicKeys().VITE_AD_SCRIPT_URL);
+  source.searchParams.set("client", AD_CLIENT);
+  return source.href;
+}
 
 /** The id of the one ad script of a document. */
 const SCRIPT_ID = "adsbygoogle-script";
@@ -43,7 +52,7 @@ function appendAdScript() {
   script.async = true;
   script.crossOrigin = "anonymous";
   script.id = SCRIPT_ID;
-  script.src = AD_SCRIPT_SOURCE;
+  script.src = adScriptSource();
   script.addEventListener(
     "load",
     () => script.setAttribute(OUTCOME_ATTRIBUTE, "loaded"),

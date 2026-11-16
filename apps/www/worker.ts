@@ -3,6 +3,7 @@ import { agentTrustKeys, convexSiteServerKeys } from "@repo/backend/keys";
 import { previewKeys, publicationKeys, siteUrlKeys } from "@repo/site/keys";
 import { Array as Arr, Record, Redacted } from "effect";
 import { setValues } from "#www/deploy/environment";
+import { adScriptKeys } from "#www/src/lib/ads/keys";
 import { weatherKeys } from "#www/src/lib/weather/keys";
 
 /**
@@ -75,6 +76,7 @@ export const workerEnvironment = () => ({
   ...postHogProxyKeys(),
   ...deploymentKeys(),
   ...weatherKeys(),
+  ...adScriptKeys(),
 });
 
 /**
