@@ -73,7 +73,9 @@ export function readPrerenderedPagePaths(): Promise<readonly string[]> {
         return;
       }
       runner.unref();
-      runner.channel?.unref();
+      // Node keeps the IPC channel referenced apart from the child; Bun's channel has no unref,
+      // and its child unref already lets this process end.
+      runner.channel?.unref?.();
       resolve(
         Schema.decodeSync(PrerenderedPagesJson)(
           readFileSync(message.file, "utf8")
