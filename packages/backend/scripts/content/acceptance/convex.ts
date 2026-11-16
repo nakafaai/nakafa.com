@@ -94,6 +94,15 @@ export const readRows = Effect.fn("contentAcceptance.readRows")(function* <
 });
 
 /**
+ * The endpoint that runs one function. The backend's own functions, which the CLI reads with, such as
+ * `_system/cli/tableData` and `_system/cli/queryImport`, are queries that only `/api/query` finds: the
+ * local backend answers `/api/function` for them with "Could not find function". Every other call goes
+ * to `/api/function`, which runs a query, a mutation or an action of the app or its components.
+ */
+const functionEndpoint = (path: string) =>
+  path.startsWith("_system/") ? "/api/query" : "/api/function";
+
+/**
  * The running local backend of an acceptance runtime, as its admin: one call of
  * a function, and the append of rows to a table, as `convex import --append`
  * writes them, past every function and trigger. A browser test and the command
@@ -228,7 +237,7 @@ export function makeLocalConvex(
     });
     const answered = yield* send(
       operation,
-      postJson("/api/function", authorization, {
+      postJson(functionEndpoint(call.path), authorization, {
         args: call.args,
         componentPath: call.component,
         format: "json",
