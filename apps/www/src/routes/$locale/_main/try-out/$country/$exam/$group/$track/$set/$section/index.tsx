@@ -178,6 +178,7 @@ function TryoutSectionView({
         binding={view.binding}
         content={view.content}
         page={view.page}
+        parts={route.parts}
         pending={learner.kind === "pending"}
         route={route.route}
         setPath={view.setPath}

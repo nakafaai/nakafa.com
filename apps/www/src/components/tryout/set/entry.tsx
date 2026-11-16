@@ -3,13 +3,13 @@ import { Option } from "effect";
 import type { ReactNode } from "react";
 import { useTranslations } from "use-intl";
 import type { PlayerMode } from "@/components/player/mode";
-import { PlayerTimer } from "@/components/player/timer";
-import { PlayerViewSwitch } from "@/components/player/view";
+import { PlayerTimer, PlayerTimerCard } from "@/components/player/timer";
 import type { TryoutFinish } from "@/components/tryout/player/finish";
 import {
   TryoutPlayerOpening,
   TryoutRunningPlayer,
 } from "@/components/tryout/player/opening";
+import { TryoutPaperProvider } from "@/components/tryout/player/paper";
 import {
   TryoutFinishedPlace,
   TryoutReviewFrame,
@@ -23,7 +23,10 @@ import { TryoutAttemptPicker } from "@/components/tryout/score/history";
 import { TryoutSummaryAction } from "@/components/tryout/section/action";
 import { getTryoutFinishedSectionStatus } from "@/components/tryout/section/finished";
 import { TryoutSectionSummary } from "@/components/tryout/section/summary";
-import { TryoutSetPageHeader } from "@/components/tryout/set/header";
+import {
+  TryoutSetPageHeader,
+  useTryoutSetPath,
+} from "@/components/tryout/set/header";
 import { TryoutSetSamplesLater } from "@/components/tryout/set/later";
 import type {
   LoadedRuntime,
@@ -55,6 +58,29 @@ interface TryoutSetEntryProps {
  */
 export function TryoutSetEntry({ children, value }: TryoutSetEntryProps) {
   const opening = useTryoutStartPhase() === "opening";
+  const path = useTryoutSetPath({
+    currentPath: value.currentPath,
+    page: value.page,
+    returnPath: value.returnPath,
+  });
+
+  return (
+    // The set's one section is its paper, so the player's pane offers no sections.
+    <TryoutPaperProvider
+      current={value.entrySection.sectionKey}
+      locked={isTryoutRuntimeRunning(value.runtimeState) || opening}
+      parts={[]}
+      path={path}
+      title={value.page.set.title}
+    >
+      <TryoutSetEntryBody value={value}>{children}</TryoutSetEntryBody>
+    </TryoutPaperProvider>
+  );
+}
+
+/** The set's entry under its paper: the player, its opening frame, the review, or the set page. */
+function TryoutSetEntryBody({ children, value }: TryoutSetEntryProps) {
+  const opening = useTryoutStartPhase() === "opening";
   const state = value.runtimeState;
   if (value.finish && isTryoutRuntimeRunning(state)) {
     return (
@@ -63,7 +89,6 @@ export function TryoutSetEntry({ children, value }: TryoutSetEntryProps) {
           finish={value.finish}
           mode={value.mode}
           state={state}
-          title={value.page.set.title}
         />
       </TryoutPage>
     );
@@ -72,8 +97,10 @@ export function TryoutSetEntry({ children, value }: TryoutSetEntryProps) {
     return (
       <TryoutPage>
         <TryoutPlayerOpening
+          card={
+            <PlayerTimerCard seconds={value.entrySection.timeLimitSeconds} />
+          }
           questionCount={value.entrySection.questionCount}
-          title={value.page.set.title}
         >
           <PlayerTimer seconds={value.entrySection.timeLimitSeconds} />
         </TryoutPlayerOpening>
@@ -86,11 +113,7 @@ export function TryoutSetEntry({ children, value }: TryoutSetEntryProps) {
     return (
       <TryoutPage>
         <TryoutReviewFrame
-          header={
-            <TryoutEntryHeader value={value}>
-              <PlayerViewSwitch />
-            </TryoutEntryHeader>
-          }
+          header={<TryoutEntryHeader value={value} />}
           limit={Option.some(value.entrySection.timeLimitSeconds)}
           mode={value.mode}
           runtime={state.runtime}
@@ -122,18 +145,11 @@ export function TryoutSetEntry({ children, value }: TryoutSetEntryProps) {
 }
 
 /**
- * The set's header: its path and title, the attempt picker beside the view of a review's questions in one group
- * of outlined buttons, and the try-out's action, whose dialog also opens the practice, so the header holds the
- * primary action and one group.
+ * The set's header: its path and title, the attempt picker in a group of outlined buttons, and the try-out's
+ * action, whose dialog also opens the practice, so the header holds the primary action and one group. The view of a
+ * review's questions lives in the pane's footer (`PlayerTools`).
  */
-function TryoutEntryHeader({
-  children,
-  value,
-}: {
-  /** The view of a review's questions, beside the picker. */
-  children?: ReactNode;
-  value: TryoutSetEntryProps["value"];
-}) {
+function TryoutEntryHeader({ value }: { value: TryoutSetEntryProps["value"] }) {
   const t = useTranslations("Tryouts");
   return (
     <TryoutSetPageHeader
@@ -147,7 +163,6 @@ function TryoutEntryHeader({
           locale={value.route.locale}
           set={value.page.set}
         />
-        {children}
       </ButtonGroup>
       <TryoutEntryAction value={value} />
     </TryoutSetPageHeader>

@@ -1,92 +1,66 @@
-import { ArrowLeft01Icon } from "@hugeicons/core-free-icons";
 import type { Id } from "@repo/backend/confect/_generated/id";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@repo/design-system/components/ui/tooltip";
-import { buttonVariants } from "@repo/design-system/lib/button";
 import type { ReactNode } from "react";
 import { useTranslations } from "use-intl";
-import {
-  PlayerHeader,
-  PlayerHeaderEnd,
-  PlayerHeaderStart,
-  PlayerTitle,
-} from "@/components/player/header";
+import { PlayerHeaderEnd } from "@/components/player/header";
 import { OfflineNote } from "@/components/shared/offline";
+import { PageHeader } from "@/components/shared/page/header";
 import { ShellLock } from "@/components/sidebar/lock";
 import { useTenant } from "@/components/tenant/context";
-import { TargetLink } from "@/lib/routing/link";
+import { SchoolPath } from "@/components/tenant/header";
 import {
   schoolExamEditTarget,
-  schoolHomeTarget,
+  schoolExamsTarget,
+  schoolSittingsTarget,
 } from "@/lib/routing/school/target";
 
 /**
- * The header of a paper being answered, the try-out player's own: the way back, the exam's name and, while
- * the connection is gone, that the answers wait, at the start, the time left in the centre when the paper
- * has a deadline, and the view beside the one primary action at the end. It locks the school's frame while
- * the paper is on screen, so the paper takes the whole screen and the school's navigation stays out of
- * sight, as a running try-out does.
+ * The header of a paper being answered, as the try-out player's (`PageHeader`): the paper's path from the
+ * school's home at the start, the time left in the centre when the paper has a deadline, and the one primary action
+ * at the end, beside the note that the answers wait while the connection is gone. A student's paper leads back to the
+ * student's exams; a teacher's try of an exam leads back to the exam's editor, where the try started. It locks the
+ * school's frame while the paper is on screen, so the sidebar steps into its exam mode, as a running try-out's does.
  */
 export function PaperBar({
-  back,
   children,
+  examId,
   timer,
   title,
 }: {
-  /** The way back, at the start of the row (`PaperBack`). */
-  readonly back: ReactNode;
   /** The one primary action, at the end of the row. */
   readonly children?: ReactNode;
+  /** The exam a teacher tries; none for a student's paper. */
+  readonly examId?: Id<"exams">;
   /** The time left, in the centre of the row; none for a paper without a deadline. */
   readonly timer?: ReactNode;
   readonly title: string;
 }) {
+  const t = useTranslations("Exams");
+  const { slug } = useTenant();
+
   return (
     <>
       <ShellLock />
-      <PlayerHeader>
-        <PlayerHeaderStart>
-          {back}
-          <PlayerTitle>{title}</PlayerTitle>
-          <OfflineNote />
-        </PlayerHeaderStart>
+      <PageHeader title={title}>
+        <SchoolPath
+          items={
+            examId === undefined
+              ? [
+                  { label: t("title"), target: schoolSittingsTarget(slug) },
+                  { label: title },
+                ]
+              : [
+                  { label: t("title"), target: schoolExamsTarget(slug) },
+                  { label: title, target: schoolExamEditTarget(slug, examId) },
+                  { label: t("try-action") },
+                ]
+          }
+        />
         {timer}
-        <PlayerHeaderEnd>{children}</PlayerHeaderEnd>
-      </PlayerHeader>
+        <PlayerHeaderEnd>
+          <OfflineNote />
+          {children}
+        </PlayerHeaderEnd>
+      </PageHeader>
     </>
-  );
-}
-
-/**
- * The way back from a paper, as the try-out player's back button: a student's leads to the school home,
- * and a teacher's try of an exam leads back to the exam's editor, where the try started.
- */
-export function PaperBack({ examId }: { readonly examId?: Id<"exams"> }) {
-  const tCommon = useTranslations("Common");
-  const tenant = useTenant();
-
-  return (
-    <Tooltip>
-      <TooltipTrigger
-        render={
-          <TargetLink
-            aria-label={tCommon("back")}
-            className={buttonVariants({ size: "icon", variant: "outline" })}
-            target={
-              examId === undefined
-                ? schoolHomeTarget(tenant.slug)
-                : schoolExamEditTarget(tenant.slug, examId)
-            }
-          >
-            <HugeIcons icon={ArrowLeft01Icon} />
-          </TargetLink>
-        }
-      />
-      <TooltipContent>{tCommon("back")}</TooltipContent>
-    </Tooltip>
   );
 }

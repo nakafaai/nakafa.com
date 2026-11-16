@@ -104,7 +104,12 @@ export function PlayerProvider({
 
   return (
     <StoreContext value={store}>
-      <Page width="column">{children}</Page>
+      <Page width="column">
+        {/* From the large breakpoint a pane that shows the time hides the header's timer (`PlayerTimer`). */}
+        <div className="contents lg:has-[[data-player-time]]:[--player-clock:none]">
+          {children}
+        </div>
+      </Page>
     </StoreContext>
   );
 }

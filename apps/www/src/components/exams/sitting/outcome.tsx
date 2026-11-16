@@ -3,7 +3,7 @@ import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { useTranslations } from "use-intl";
 import { StudentResults } from "@/components/exams/results/student";
 import type { AttemptValue } from "@/components/exams/sitting/attempt";
-import { PaperBack, PaperBar } from "@/components/exams/sitting/bar";
+import { PaperBar } from "@/components/exams/sitting/bar";
 import { SittingBody, SittingNotice } from "@/components/exams/sitting/body";
 import { useSendClosedKept } from "@/components/exams/sitting/kept";
 import { PaperFrame } from "@/components/exams/sitting/recovery";
@@ -50,9 +50,7 @@ export function StudentOutcome({
   });
 
   return (
-    <PaperFrame
-      bar={<PaperBar back={<PaperBack />} title={sitting.examTitle} />}
-    >
+    <PaperFrame bar={<PaperBar title={sitting.examTitle} />}>
       <SittingBody>
         {attempt.state === "submitted" ? (
           <StudentResults sittingId={sitting.id} />

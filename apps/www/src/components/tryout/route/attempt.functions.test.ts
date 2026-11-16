@@ -52,8 +52,9 @@ describe("try-out attempt server functions", () => {
     );
   });
 
-  it("answers one section page at the section's address", async () => {
+  it("answers one section page at the section's address, with its set's sections", async () => {
     mocks.readTryoutSectionPage.mockReturnValueOnce(Effect.void);
+    mocks.readTryoutSetPage.mockReturnValueOnce(Effect.void);
 
     await expect(
       readTryoutSectionHandler({
@@ -63,6 +64,10 @@ describe("try-out attempt server functions", () => {
     expect(mocks.readTryoutSectionPage).toHaveBeenCalledExactlyOnceWith(
       "en",
       "try-out/id/snbt/2027/utbk/set-1/section-1"
+    );
+    expect(mocks.readTryoutSetPage).toHaveBeenCalledExactlyOnceWith(
+      "en",
+      "try-out/id/snbt/2027/utbk/set-1"
     );
   });
 });
