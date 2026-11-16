@@ -12,6 +12,8 @@ import { notFoundPageOf, withContentLanguage } from "@/lib/routing/missing";
 import { readProjectedHtmlRouteRejection } from "@/lib/routing/public/projected";
 import { readSourceBackedHtmlRouteRejection } from "@/lib/routing/public/source";
 import {
+  readGoneAddressLocale,
+  readGoneSuccessorResponse,
   readMainSiteRedirect,
   readMigrationResponse,
   readMovedResponse,
@@ -75,6 +77,23 @@ const answerRejection = Effect.fn("www.routing.answer.rejection")(function* (
     return yield* answerUnmatchedRequest(request);
   }
   return yield* answerNotFound(request, locale, route);
+});
+
+/**
+ * Answers an address that is gone for good with the page of a missing address and
+ * the status 410 Gone, so a crawler drops it faster than a 404.
+ */
+const answerGone = Effect.fn("www.routing.answer.gone")(function* (
+  request: Request,
+  locale: Locale,
+  route: RouterHandler
+) {
+  const missing = yield* answerRejection(request, locale, route);
+  return new Response(missing.body, {
+    headers: missing.headers,
+    status: 410,
+    statusText: "Gone",
+  });
 });
 
 /**
@@ -191,7 +210,7 @@ export const answerRequest = Effect.fn("www.routing.answer.request")(function* (
     Effect.mapError(toUncaughtRequestError)
   );
   if (Option.isSome(removed)) {
-    return yield* answerRejection(request, removed.value, route);
+    return yield* answerGone(request, removed.value, route);
   }
 
   const migrated = yield* readMigrationResponse(request).pipe(
@@ -204,6 +223,18 @@ export const answerRequest = Effect.fn("www.routing.answer.request")(function* (
   const moved = readMovedResponse(request);
   if (Option.isSome(moved)) {
     return moved.value;
+  }
+
+  const goneSuccessor = yield* readGoneSuccessorResponse(request).pipe(
+    Effect.mapError(toUncaughtRequestError)
+  );
+  if (Option.isSome(goneSuccessor)) {
+    return goneSuccessor.value;
+  }
+
+  const gone = readGoneAddressLocale(request);
+  if (Option.isSome(gone)) {
+    return yield* answerGone(request, gone.value, route);
   }
 
   const bare = readBareAddress(request);

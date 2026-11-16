@@ -57,6 +57,35 @@ describe("readMovedRedirect", () => {
     expect(Option.isNone(readAt("/id/latihan/tka/matematika"))).toBe(true);
   });
 
+  it("answers a path that names its locale twice with the same path under it once", () => {
+    expect(
+      readMovedRedirect(
+        new URL(
+          "https://nakafa.com/de/de/faecher/mathematik/funktionen-und-modelle/exponentialfunktion"
+        )
+      )
+    ).toStrictEqual(
+      Option.some({
+        location:
+          "/de/faecher/mathematik/funktionen-und-modelle/exponentialfunktion",
+        status: 308,
+      })
+    );
+    expect(
+      readMovedRedirect(
+        new URL(
+          "https://nakafa.com/en/en/subjects/mathematics/function-transformation/horizontal-translation?x=1"
+        )
+      )
+    ).toStrictEqual(
+      Option.some({
+        location:
+          "/en/subjects/mathematics/function-transformation/horizontal-translation?x=1",
+        status: 308,
+      })
+    );
+  });
+
   it("leaves a current address and an unknown locale to the router", () => {
     expect(Option.isNone(readAt("/en/curriculum"))).toBe(true);
     expect(Option.isNone(readAt("/fr/about"))).toBe(true);

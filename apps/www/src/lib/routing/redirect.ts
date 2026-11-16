@@ -1,3 +1,4 @@
+import { LocaleSchema } from "@repo/internationalization/src/locale";
 import { negotiateLocale } from "@repo/internationalization/src/negotiate";
 import {
   decideRootRedirect,
@@ -8,12 +9,14 @@ import {
 import { isSharedPath } from "@repo/internationalization/src/rewrite";
 import { SITE_ORIGIN } from "@repo/seo/origin";
 import { siteUrlKeys } from "@repo/site/keys";
-import { Effect, Option } from "effect";
+import { Effect, Option, Schema } from "effect";
 import { hasTryoutAttemptCapability } from "@/components/tryout/route/path";
 import { readLlmsMarkdownPathname } from "@/lib/llms/routes";
 import { readMovedRedirect } from "@/lib/routing/moved";
+import { isGoneAddress } from "@/lib/routing/public/gone";
 import { readPublicUrlMigrationRedirect } from "@/lib/routing/public/migration";
 import { readRetiredPublicRoute } from "@/lib/routing/public/retired";
+import { readPathSegments } from "@/lib/routing/public/tryout/route";
 import {
   readHostRole,
   readRequestHostname,
@@ -125,6 +128,60 @@ export const readRemovedAddressNotFound = Effect.fn(
     ? Option.some(negotiateLocale(request.headers))
     : Option.none();
 });
+
+/**
+ * The successor of a locale-less address of a retired family (`isGoneAddress`)
+ * that the migrations redirect in the negotiated locale, as a 307 that varies by
+ * language, so the address moves there in one hop instead of through its localized
+ * spelling. None for any other address.
+ */
+export const readGoneSuccessorResponse = Effect.fn("www.routing.goneSuccessor")(
+  function* (request: Request) {
+    const url = new URL(request.url);
+    const { markdownExtension, pathname } = readLlmsMarkdownPathname(
+      url.pathname
+    );
+    const [first] = readPathSegments(pathname);
+    if (!isGoneAddress(pathname) || Schema.is(LocaleSchema)(first)) {
+      return Option.none();
+    }
+    const migration = yield* readPublicUrlMigrationRedirect({
+      hasAttemptCapability: hasTryoutAttemptCapability(url.searchParams),
+      method: request.method,
+      pathname: `/${negotiateLocale(request.headers)}${pathname}`,
+    });
+    if (migration === null) {
+      return Option.none();
+    }
+    return Option.some(
+      new Response(null, {
+        headers: {
+          location: `${migration.destination}${markdownExtension}${url.search}`,
+          vary: LOCALE_VARY,
+        },
+        status: 307,
+      })
+    );
+  }
+);
+
+/**
+ * The locale of the page that answers an address of a retired family that no page
+ * took over (`isGoneAddress`): the address's own locale, or the negotiated one for
+ * an address without one. The server entry answers it 410 Gone after the
+ * migrations, the moved addresses and the gone successors, so any address with a
+ * successor still moves there.
+ */
+export function readGoneAddressLocale(request: Request) {
+  const { pathname } = readLlmsMarkdownPathname(new URL(request.url).pathname);
+  if (!isGoneAddress(pathname)) {
+    return Option.none();
+  }
+  const [first] = readPathSegments(pathname);
+  return Option.some(
+    Schema.is(LocaleSchema)(first) ? first : negotiateLocale(request.headers)
+  );
+}
 
 /** The Response of one redirect decision: its location, its status, and its Vary field when it has one. */
 function toRedirectResponse(decision: {
