@@ -111,7 +111,7 @@ export function MassConservationLab({
         className={threeSceneFrameVariants()}
         render={<section />}
       >
-        <ScienceStage frameloop="always" setting="lab">
+        <ScienceStage floor={0} frameloop="always" reach={0.8} setting="lab">
           <Suspense>
             <MassConservationCameraControls />
             <MassConservationScene
