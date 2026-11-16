@@ -6,6 +6,8 @@ import contents from "@repo/backend/confect/_generated/refs/contents";
 import island from "@repo/backend/confect/_generated/refs/island";
 import notifications from "@repo/backend/confect/_generated/refs/notifications";
 import onboarding from "@repo/backend/confect/_generated/refs/onboarding";
+import tryouts from "@repo/backend/confect/_generated/refs/tryouts";
+import { EMPTY_TALLY } from "@repo/backend/confect/island/schema";
 import { isRedirect } from "@tanstack/react-router";
 import { Array as Arr, Deferred, Effect, Option } from "effect";
 import {
@@ -116,6 +118,8 @@ describe("homeScreenHandler", () => {
       [contents.queries.recent.getRecentlyViewed, []],
       [island.queries.own, null],
       [island.queries.week, null],
+      [island.queries.leaders, []],
+      [tryouts.queries.history.recent, []],
     ]);
     const cause = await failureOf(
       homeScreenHandler({ data: { locale: "en" } })
@@ -134,6 +138,8 @@ describe("homeScreenHandler", () => {
       [contents.queries.recent.getRecentlyViewed, []],
       [island.queries.own, null],
       [island.queries.week, null],
+      [island.queries.leaders, []],
+      [tryouts.queries.history.recent, []],
     ]);
     const cause = await failureOf(
       homeScreenHandler({ data: { locale: "en" } })
@@ -141,9 +147,16 @@ describe("homeScreenHandler", () => {
     expect(isRedirect(cause)).toBe(true);
   });
 
-  it("answers the home screen with the name, the island, the week and the last lesson", async () => {
+  it("answers the home screen with the name, the island, the week, the last try-outs and the last lesson", async () => {
     sessionWith(Option.some("token"));
     const week = { days: [], streak: 2, today: "2026-11-09" };
+    const attempt = {
+      attemptId: "attempt-1",
+      publicPath: "try-out/indonesia/snbt/2027/set-1",
+      score: null,
+      status: "in-progress",
+      title: "Set 1",
+    };
     answerQueries([
       [
         onboarding.queries.getStatus,
@@ -154,8 +167,13 @@ describe("homeScreenHandler", () => {
         contents.queries.recent.getRecentlyViewed,
         [{ content_id: "math-1", materialDomain: "mathematics" }],
       ],
-      [island.queries.own, { badges: [], lifetime: 30, version: 1, world: [] }],
+      [
+        island.queries.own,
+        { lifetime: 30, tally: EMPTY_TALLY, version: 1, world: [] },
+      ],
       [island.queries.week, week],
+      [island.queries.leaders, []],
+      [tryouts.queries.history.recent, [attempt]],
     ]);
     const screen = await homeScreenHandler({ data: { locale: "en" } });
     expect(screen.name).toBe("Nabil");
@@ -165,9 +183,11 @@ describe("homeScreenHandler", () => {
     expect(screen.recentLooks).toHaveLength(1);
     expect(screen.island).toMatchObject({ level: 1, lifetime: 30, version: 1 });
     expect(screen.week).toEqual(week);
+    expect(screen.attempts).toEqual([attempt]);
+    expect(screen.username).toBe(account.appUser.username);
     expect(mocks.preloadConfectQuery).toHaveBeenCalledWith(
       contents.queries.recent.getRecentlyViewed,
-      { limit: 1, locale: "en" },
+      { limit: 3, locale: "en" },
       "token"
     );
     expect(screen.seo).toMatchObject({
@@ -198,18 +218,24 @@ describe("homeScreenHandler", () => {
     })
   );
 
-  it("answers the home screen with no recent subjects when the server refuses them", async () => {
+  it("answers the home screen with no recent subjects, try-outs or leaderboard when the server refuses them", async () => {
     sessionWith(Option.some("token"));
     mocks.preloadConfectQuery.mockImplementation((ref) => {
       if (ref === onboarding.queries.getStatus) {
         return Effect.succeed({ isAuthenticated: true, isRequired: false });
       }
-      if (ref === contents.queries.recent.getRecentlyViewed) {
+      if (
+        ref === contents.queries.recent.getRecentlyViewed ||
+        ref === island.queries.leaders ||
+        ref === tryouts.queries.history.recent
+      ) {
         return Effect.fail({ _tag: "ReleaseError" });
       }
       return Effect.succeed(account);
     });
     const screen = await homeScreenHandler({ data: { locale: "en" } });
+    expect(screen.attempts).toStrictEqual([]);
+    expect(screen.leaders).toStrictEqual([]);
     expect(screen.recent).toStrictEqual([]);
     expect(screen.recentLooks).toStrictEqual([]);
     expect(screen.name).toBe("Nabil");
@@ -226,6 +252,8 @@ describe("homeScreenHandler", () => {
       [contents.queries.recent.getRecentlyViewed, []],
       [island.queries.own, null],
       [island.queries.week, null],
+      [island.queries.leaders, []],
+      [tryouts.queries.history.recent, []],
     ]);
     const screen = await homeScreenHandler({ data: { locale: "en" } });
     expect(screen.name).toBeUndefined();

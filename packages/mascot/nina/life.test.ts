@@ -67,7 +67,7 @@ function surprised(life: Life, options: Options) {
 
 describe("her life", () => {
   it("takes over from the still picture without a jump, for every set of options", () => {
-    expect(EVERY_OPTIONS).toHaveLength(688);
+    expect(EVERY_OPTIONS).toHaveLength(704);
     for (const options of EVERY_OPTIONS) {
       // A failure names the set of options in the message.
       expect(

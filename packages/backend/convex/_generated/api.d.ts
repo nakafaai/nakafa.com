@@ -4768,14 +4768,7 @@ export declare const api: {
           },
           | {
               _tag: "granted";
-              badges: Array<
-                | "explorer"
-                | "fighter"
-                | "mathematics"
-                | "physics"
-                | "chemistry"
-                | "biology"
-              >;
+              badges: Array<{ name: string; tier: number }>;
               stars: number;
             }
           | { _tag: "duplicate" }
@@ -11034,22 +11027,36 @@ export declare const api: {
           place: number;
         }>
       >;
+      medals: FunctionReference<
+        "query",
+        "public",
+        { username: string },
+        {
+          level: number;
+          tally: {
+            days: number;
+            lessons: number;
+            sections: number;
+            sets: number;
+            streak: number;
+            subjects: Record<string, number>;
+          };
+        } | null
+      >;
       own: FunctionReference<
         "query",
         "public",
         {},
         {
-          badges: Array<{
-            at: number;
-            badge:
-              | "explorer"
-              | "fighter"
-              | "mathematics"
-              | "physics"
-              | "chemistry"
-              | "biology";
-          }>;
           lifetime: number;
+          tally: {
+            days: number;
+            lessons: number;
+            sections: number;
+            sets: number;
+            streak: number;
+            subjects: Record<string, number>;
+          };
           version: number;
           world: ArrayBuffer;
         } | null
@@ -16089,6 +16096,18 @@ export declare const api: {
             pageStatus?: "SplitRecommended" | "SplitRequired" | null;
             splitCursor?: string | null;
           }
+        >;
+        recent: FunctionReference<
+          "query",
+          "public",
+          {},
+          Array<{
+            attemptId: Id<"tryoutAttempts">;
+            publicPath: string;
+            score: number | null;
+            status: "in-progress" | "completed" | "expired";
+            title: string;
+          }>
         >;
       };
       runtime: {

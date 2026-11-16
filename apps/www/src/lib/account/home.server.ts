@@ -7,6 +7,7 @@ import contents from "@repo/backend/confect/_generated/refs/contents";
 import island from "@repo/backend/confect/_generated/refs/island";
 import notifications from "@repo/backend/confect/_generated/refs/notifications";
 import onboarding from "@repo/backend/confect/_generated/refs/onboarding";
+import tryouts from "@repo/backend/confect/_generated/refs/tryouts";
 import { notFound, redirect } from "@tanstack/react-router";
 import { Clock, Effect, Option, Schema } from "effect";
 import { createTranslator } from "use-intl/core";
@@ -24,31 +25,41 @@ import { readOptional, readRequired } from "@/lib/data/read.server";
 import { entryOf } from "@/lib/island/entry";
 
 /**
- * Home: the onboarding gate, the account name, the learner's island and their
- * week, and the last lesson they opened. The gate's status and the page's reads
+ * Home: the onboarding gate, the account name and profile name, the learner's
+ * island and their week, the try-outs they sat last, and the lessons they
+ * opened last. The gate's status and the page's reads
  * go out together, so the screen waits on one Convex round trip.
  */
 export const homeScreenHandler = accountHandler(
   ({ locale }: typeof LocaleInput.Type) =>
     Effect.gen(function* () {
       const token = yield* admitAccount(locale);
-      const [status, messages, account, recentRows, own, week, leaders] =
-        yield* Effect.all(
-          [
-            readRequired(onboarding.queries.getStatus, {}, token),
-            messagesFor(locale),
-            readOptional(auth.queries.getCurrentUser, {}, token),
-            readOptional(
-              contents.queries.recent.getRecentlyViewed,
-              { locale, limit: 3 },
-              token
-            ),
-            readOptional(island.queries.own, {}, token),
-            readOptional(island.queries.week, {}, token),
-            readOptional(island.queries.leaders, {}, token),
-          ],
-          { concurrency: "unbounded" }
-        );
+      const [
+        status,
+        messages,
+        account,
+        recentRows,
+        own,
+        week,
+        leaders,
+        attempts,
+      ] = yield* Effect.all(
+        [
+          readRequired(onboarding.queries.getStatus, {}, token),
+          messagesFor(locale),
+          readOptional(auth.queries.getCurrentUser, {}, token),
+          readOptional(
+            contents.queries.recent.getRecentlyViewed,
+            { locale, limit: 3 },
+            token
+          ),
+          readOptional(island.queries.own, {}, token),
+          readOptional(island.queries.week, {}, token),
+          readOptional(island.queries.leaders, {}, token),
+          readOptional(tryouts.queries.history.recent, {}, token),
+        ],
+        { concurrency: "unbounded" }
+      );
       if (!status.isAuthenticated) {
         return yield* redirectToAuth(locale);
       }
@@ -75,6 +86,7 @@ export const homeScreenHandler = accountHandler(
       };
       const recent = recentRows ?? [];
       return {
+        attempts: attempts ?? [],
         island: entryOf(own, account?.appUser._id),
         leaders: leaders ?? [],
         name: Option.getOrUndefined(
@@ -86,6 +98,7 @@ export const homeScreenHandler = accountHandler(
         recent,
         recentLooks: getMaterialLooks(recent),
         seo,
+        username: account?.appUser.username,
         week: week ?? undefined,
       };
     })

@@ -2,6 +2,7 @@ import {
   DatabaseReader,
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
+import { EMPTY_TALLY } from "@repo/backend/confect/island/schema";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { DateTime, Effect, Option } from "effect";
 
@@ -38,8 +39,8 @@ export const ensureIsland = Effect.fn("island.store.ensure")(function* (
   const islandId = yield* writer
     .table("islands")
     .insert({
-      badges: [],
       lifetime: 0,
+      tally: EMPTY_TALLY,
       timeZone,
       userId,
       version: 0,

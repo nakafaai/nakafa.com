@@ -20,7 +20,7 @@ export const POP = {
 };
 
 /**
- * The colours of paper, metal, and wood that only her things use. `TEXT` is
+ * The colours of paper, metal, and wood that only her things and the medals use. `TEXT` is
  * the colour of the text around a picture, so a line that stands free shows on
  * every ground.
  */
@@ -29,6 +29,7 @@ export const PAPER = "#ffe2a8";
 export const LID = "#c9d4ea";
 export const BASE = "#9fb0d0";
 export const BOARD = "#d9a441";
+export const BRONZE = "#c9743a";
 export const SOFT_PINK = "#ff8fa3";
 export const WHITE = "#ffffff";
 export const TEXT = "currentColor";

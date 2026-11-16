@@ -1,5 +1,10 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
-import { Leader, OwnIsland, Week } from "@repo/backend/confect/island/view";
+import {
+  Leader,
+  Medals,
+  OwnIsland,
+  Week,
+} from "@repo/backend/confect/island/view";
 import Session from "@repo/backend/confect/middleware/session.spec";
 import { Schema } from "effect";
 export default GroupSpec.make()
@@ -22,5 +27,12 @@ export default GroupSpec.make()
       name: "leaders",
       args: () => ({}),
       returns: () => Schema.Array(Leader),
+    }).middleware(Session)
+  )
+  .addFunction(
+    FunctionSpec.publicQuery({
+      name: "medals",
+      args: () => ({ username: Schema.String }),
+      returns: () => Schema.NullOr(Medals),
     }).middleware(Session)
   );

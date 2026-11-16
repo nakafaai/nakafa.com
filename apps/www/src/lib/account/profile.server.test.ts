@@ -5,11 +5,13 @@ import { POST_PAGE_SIZE } from "@repo/backend/client/posts/list";
 import auth from "@repo/backend/confect/_generated/refs/auth";
 import chats from "@repo/backend/confect/_generated/refs/chats";
 import comments from "@repo/backend/confect/_generated/refs/comments";
+import island from "@repo/backend/confect/_generated/refs/island";
 import posts from "@repo/backend/confect/_generated/refs/posts";
 import users from "@repo/backend/confect/_generated/refs/users";
 import { isNotFound } from "@tanstack/react-router";
 import { Array as Arr, Effect, Option } from "effect";
 import {
+  profileBadgesHandler,
   profileChatHandler,
   profileCommentsHandler,
   profileCommentsPageHandler,
@@ -225,6 +227,46 @@ describe("profileCommentsHandler", () => {
       seo: { canonicalPath: "/en/@nabil/comments", indexable: false },
       userId: "users-owner",
     });
+  });
+});
+
+describe("profileBadgesHandler", () => {
+  it("answers the profile's level and tally with the Badges head, and nothing for medals that do not open", async () => {
+    sessionWith(Option.none());
+    const medals = {
+      level: 3,
+      tally: {
+        days: 4,
+        lessons: 9,
+        sections: 0,
+        sets: 0,
+        streak: 2,
+        subjects: { physics: 9 },
+      },
+    };
+    answerQueries([
+      [users.queries.getProfileByUsername, profile],
+      [island.queries.medals, medals],
+    ]);
+    expect(
+      await profileBadgesHandler({ data: { locale: "en", username: "Nabil" } })
+    ).toMatchObject({
+      medals,
+      seo: { canonicalPath: "/en/@nabil/badges", indexable: false },
+    });
+    expect(mocks.preloadConfectQuery).toHaveBeenCalledWith(
+      island.queries.medals,
+      { username: profile.username },
+      undefined
+    );
+    answerQueries([
+      [users.queries.getProfileByUsername, profile],
+      [island.queries.medals, null],
+    ]);
+    const cause = await failureOf(
+      profileBadgesHandler({ data: { locale: "en", username: "nabil" } })
+    );
+    expect(isNotFound(cause)).toBe(true);
   });
 });
 

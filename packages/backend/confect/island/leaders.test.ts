@@ -1,5 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
 import { LEADER_COUNT, leadersOf } from "@repo/backend/confect/island/leaders";
+import { EMPTY_TALLY } from "@repo/backend/confect/island/schema";
 import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
@@ -30,8 +31,8 @@ const leaderWorld = Effect.fn("test.island.leaderWorld")(function* (
           suffix: `leader-${index}`,
         });
         await ctx.db.insert("islands", {
-          badges: [],
           lifetime: learner.lifetime,
+          tally: EMPTY_TALLY,
           timeZone: "UTC",
           userId,
           version: 0,

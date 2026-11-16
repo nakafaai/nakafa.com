@@ -7,6 +7,7 @@ import {
   expectRevision,
   islandStage,
   openIsland,
+  pressOpenGround,
   pressWorld,
 } from "@/e2e/support/island";
 import { signInLearner } from "@/e2e/support/learner";
@@ -87,25 +88,30 @@ for (const viewport of [desktopViewport, touchViewport]) {
               await expect(book).toBeHidden();
             })
           ),
-          Effect.andThen(pressWorld(page, viewport.hasTouch)),
+          // The well stands in the middle of the village, so the tree goes on open ground beside it.
+          Effect.andThen(
+            pressOpenGround(
+              page,
+              viewport.hasTouch,
+              async () =>
+                (await islandStage(page).getAttribute("data-revision")) === "5"
+            )
+          ),
           Effect.andThen(
             Effect.promise(async () => {
               await expectRevision(page, 5);
               // The learner's fox walks where they press with their feet in hand.
               const start = await islandStage(page).getAttribute("data-player");
               await page.getByRole("button", { name: en.Island.walk }).click();
-              const box = await islandStage(page).boundingBox();
-              expect(box).not.toBeNull();
-              if (box !== null) {
-                const x = box.x + box.width * 0.5;
-                const y = box.y + box.height * 0.72;
-                await (viewport.hasTouch
-                  ? page.touchscreen.tap(x, y)
-                  : page.mouse.click(x, y));
-              }
-              await expect(islandStage(page)).not.toHaveAttribute(
-                "data-player",
-                start ?? ""
+              // Below the well stands a cottage's roof, where no fox can go: it walks out to open ground it can reach.
+              await Effect.runPromise(
+                pressOpenGround(
+                  page,
+                  viewport.hasTouch,
+                  async () =>
+                    (await islandStage(page).getAttribute("data-player")) !==
+                    start
+                )
               );
               await expect(islandStage(page)).toHaveAttribute(
                 "data-walking",

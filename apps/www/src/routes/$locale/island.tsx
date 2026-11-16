@@ -77,7 +77,7 @@ function IslandPage() {
             progress={{
               from: screen.from,
               lifetime: screen.lifetime,
-              ...(screen.next === undefined ? {} : { next: screen.next }),
+              next: screen.next,
             }}
             seed={screen.seed}
             size={screen.size}

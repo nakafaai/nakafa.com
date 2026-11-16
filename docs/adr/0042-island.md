@@ -4,7 +4,7 @@
 
 Accepted on 8 November 2026.
 
-Partly withdrawn on 9 November 2026. The owner judged the island not ready for learners: it drew small and still inside the lessons' visual frame, on the home page and on its own pages, instead of being a game with its own screen and art. Every learner-facing part was removed: the renderer, build mode, sound, sharing and visits (D12 and D14 to D20), the home frame and its four earning cards (D21), and the island's routes and words. The data stays as it is: the tables, the Stars ledger and its grants (D1 to D11, D13), so every Star a learner earns keeps counting. The game that replaces the renderer gets its own ADR.
+Partly withdrawn on 9 November 2026. The owner judged the island not ready for learners: it drew small and still inside the lessons' visual frame, on the home page and on its own pages, instead of being a game with its own screen and art. Every learner-facing part was removed: the renderer, build mode, sound, sharing and visits (D12 and D14 to D20), the home frame and its four earning cards (D21), and the island's routes and words. The data stays as it is: the tables, the Stars ledger and its grants (D1 to D11, D13), so every Star a learner earns keeps counting. The game that replaces the renderer gets its own ADR. On 14 November 2026 the level table (D10) and the six badges (D11) were replaced as well, by levels that never end and badges that are tiers of a tally (ADR 0047, D29 and D30).
 
 ## Context
 

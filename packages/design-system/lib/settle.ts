@@ -18,6 +18,17 @@ const READER_GESTURES = [
 /** Whether this document has already had its reader, so a later page starts its decoration at once. */
 const readerSeen = MutableRef.make(false);
 
+/**
+ * Whether the reader already pressed or typed on this document, which the
+ * browser itself remembers. A picture that such a press mounts, as a sheet's
+ * does, missed the gesture, so it reads the browser's record of it.
+ */
+function readerPressed() {
+  return (
+    "userActivation" in navigator && navigator.userActivation.hasBeenActive
+  );
+}
+
 /** Completes once the window's load event has fired. */
 const untilPageLoaded = Effect.suspend(() =>
   document.readyState === "complete"
@@ -67,8 +78,9 @@ const untilGesture = Effect.callback<void>((resume) => {
 });
 
 /**
- * Completes once a settled page has its reader: at the first gesture, or after ten
- * seconds without one, and then at the browser's next idle moment. A phone spends
+ * Completes once a settled page has its reader: at once when they already pressed
+ * something, else at the first gesture, or after ten seconds without one, and then
+ * at the browser's next idle moment. A phone spends
  * those seconds on the page itself, and a picture that moves only for its own sake,
  * such as a page's particles, toys and Nina's life, waits here. A slow phone is still
  * hydrating and fetching a few seconds after the load, so the wait reaches well past
@@ -76,7 +88,7 @@ const untilGesture = Effect.callback<void>((resume) => {
  * particles landed inside the page's own loading and made half its blocking time.
  */
 export const untilPageRead = Effect.suspend(() =>
-  MutableRef.get(readerSeen)
+  MutableRef.get(readerSeen) || readerPressed()
     ? Effect.void
     : untilPageSettled.pipe(
         Effect.andThen(

@@ -1,60 +1,57 @@
 import { PlayIcon, Share08Icon } from "@hugeicons/core-free-icons";
 import { useClipboard } from "@mantine/hooks";
 import { Button } from "@repo/design-system/components/ui/button";
+import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { buttonVariants } from "@repo/design-system/lib/button";
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { SITE_ORIGIN } from "@repo/seo/origin";
 import { Link } from "@tanstack/react-router";
-import { Option } from "effect";
 import { useTranslations } from "use-intl";
-import { BadgesCard } from "@/components/progress/badges";
+import { BadgesSection } from "@/components/progress/badges";
 import { useProgress } from "@/components/progress/context";
-import { LeadersCard } from "@/components/progress/leaders";
+import { LeadersSection } from "@/components/progress/leaders";
+import { LevelMeter } from "@/components/progress/meter";
+import { PaneSection } from "@/components/progress/section";
 import { WorldCard } from "@/components/progress/world";
 import {
   PaneBody,
   PaneFooter,
   PaneHeader,
 } from "@/components/shared/page/pane";
-import { PagePane, usePanes } from "@/components/shared/page/panes";
+import { PagePane } from "@/components/shared/page/panes";
 import { useCurrentLocale } from "@/lib/routing/link";
 
-/** The ID the world pane opens under in the page's panes. */
-export const WORLD_PANE = "world";
-
 /**
- * The learner's world beside the page (the owner's home sketch, 13 Nov): its
- * title and how far the next level is, the world, the badges still to earn,
- * the global leaderboard, and a footer to share it or to open the game. It
- * opens and closes with the header's Your world button.
+ * The learner's world beside the page (the owner's home notes, 14 Nov): its
+ * header reads the island's level over the bar toward the next one, as a game
+ * does; then three parts with a line across the pane between them, the world,
+ * the best medals and the global leaderboard; and a footer to share the world
+ * or open it. On a wide screen it always stands beside the
+ * page, so it draws no close button; on a phone the tracker's Your world
+ * button opens it as a sheet.
  */
 export function WorldPane() {
   const t = useTranslations("Island");
   const { island } = useProgress();
   return (
-    <PagePane label={t("world-title")}>
+    <PagePane alwaysOn label={t("world-title")}>
       <PaneHeader
-        description={
-          island.next === undefined
-            ? t("top")
-            : t("next", {
-                level: island.level + 1,
-                stars: island.next - island.lifetime,
-              })
-        }
-        title={t("world-title")}
+        description={<LevelMeter />}
+        title={t("level", { level: island.level })}
       />
       <PaneBody>
-        <div className="flex flex-col gap-4">
+        <PaneSection title={t("world-title")}>
           <WorldCard />
-          <BadgesCard />
-          <LeadersCard />
-        </div>
+        </PaneSection>
+        <BadgesSection />
+        <LeadersSection />
       </PaneBody>
       <PaneFooter>
-        <WorldShare />
-        <WorldOpen />
+        <ButtonGroup>
+          <WorldShare />
+          <WorldOpen />
+        </ButtonGroup>
       </PaneFooter>
     </PagePane>
   );
@@ -77,7 +74,6 @@ function WorldShare() {
           { position: "bottom-center" }
         );
       }}
-      variant="outline"
     >
       <HugeIcons icon={Share08Icon} />
       {tCommon("share")}
@@ -85,34 +81,18 @@ function WorldShare() {
   );
 }
 
-/** Enters the game, the pane's one primary action. */
+/** Enters the game. It stands with Share in one group at the footer's end, so the two are never far apart. */
 function WorldOpen() {
   const t = useTranslations("Island");
   const locale = useCurrentLocale();
   return (
-    <Link className={buttonVariants()} params={{ locale }} to="/$locale/island">
+    <Link
+      className={buttonVariants({ variant: "outline" })}
+      params={{ locale }}
+      to="/$locale/island"
+    >
       <HugeIcons icon={PlayIcon} />
       {t("open")}
     </Link>
-  );
-}
-
-/**
- * The header's Your world button (the owner's home sketch, 13 Nov): it opens
- * the world pane, or its sheet on a phone, and closes it again.
- */
-export function WorldToggle() {
-  const t = useTranslations("Island");
-  const open = usePanes((state) => Option.isSome(state.open));
-  const show = usePanes((state) => state.show);
-  const close = usePanes((state) => state.close);
-  return (
-    <Button
-      aria-pressed={open}
-      onClick={() => (open ? close() : show(WORLD_PANE))}
-      variant="outline"
-    >
-      {t("world-title")}
-    </Button>
   );
 }

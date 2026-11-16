@@ -1,5 +1,5 @@
 import type { Docs } from "@repo/backend/confect/_generated/docs";
-import { EarnedBadge } from "@repo/backend/confect/island/schema";
+import { Tally } from "@repo/backend/confect/island/schema";
 import { Edits } from "@repo/backend/confect/island/world";
 import { MascotCode } from "@repo/mascot/code";
 import { Schema } from "effect";
@@ -7,21 +7,27 @@ import { Schema } from "effect";
 /**
  * The learner's own island as the game opens it (ADR 0047, D6 and D7): the
  * cells they changed and the version those edits stand at, their lifetime
- * Stars, from which `growthOf` reads the level and the footprint, and the
- * badges they earned.
+ * Stars, from which `growthOf` reads the level and the footprint, and their
+ * tally, from which `countsOf` reads every badge.
  */
 export const OwnIsland = Schema.Struct({
-  badges: Schema.Array(EarnedBadge),
   lifetime: Schema.Finite,
+  tally: Tally,
   version: Schema.Finite,
   world: Edits,
 });
 
+/**
+ * A learner's medals as their profile shows them to whoever may open it (ADR
+ * 0047, D30): their level, and the tally every medal is read from.
+ */
+export const Medals = Schema.Struct({ level: Schema.Int, tally: Tally });
+
 /** Projects the stored island for its owner. */
 export function toOwnIsland(island: Docs["islands"]) {
   return {
-    badges: island.badges,
     lifetime: island.lifetime,
+    tally: island.tally,
     version: island.version,
     world: island.world,
   };

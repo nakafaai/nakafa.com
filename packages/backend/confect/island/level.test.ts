@@ -1,47 +1,40 @@
 import { describe, expect, it } from "@effect/vitest";
-import { growthOf } from "@repo/backend/confect/island/level";
-import { Option } from "effect";
+import { growthOf, opensAt } from "@repo/backend/confect/island/level";
 
 describe("island/level", () => {
-  it("grows the footprint at each level's lifetime Stars", () => {
-    expect(growthOf(0)).toEqual({
-      from: 0,
-      level: 1,
-      next: Option.some(150),
-      size: 52,
-    });
-    expect(growthOf(149)).toEqual({
-      from: 0,
-      level: 1,
-      next: Option.some(150),
-      size: 52,
-    });
-    expect(growthOf(150)).toEqual({
-      from: 150,
-      level: 2,
-      next: Option.some(400),
-      size: 54,
-    });
-    expect(growthOf(3500)).toEqual({
-      from: 3500,
-      level: 6,
-      next: Option.some(6000),
-      size: 62,
+  it("opens a level at its lifetime Stars and grows the footprint with it", () => {
+    expect(growthOf(0)).toEqual({ from: 0, level: 1, next: 100, size: 52 });
+    expect(growthOf(99)).toEqual({ from: 0, level: 1, next: 100, size: 52 });
+    expect(growthOf(100)).toEqual({ from: 100, level: 2, next: 250, size: 54 });
+    expect(growthOf(700)).toEqual({
+      from: 700,
+      level: 5,
+      next: 1000,
+      size: 60,
     });
   });
 
-  it("keeps the widest footprint past the last level, with no next level", () => {
-    expect(growthOf(6000)).toEqual({
-      from: 6000,
-      level: 7,
-      next: Option.none(),
+  it("asks for 50 Stars more each level, eighteen times, then 1,000 for good", () => {
+    expect(opensAt(19) - opensAt(18)).toBe(950);
+    expect(opensAt(20) - opensAt(19)).toBe(1000);
+    expect(opensAt(500) - opensAt(499)).toBe(1000);
+    expect(growthOf(opensAt(19) - 1).level).toBe(18);
+    expect(growthOf(opensAt(19))).toEqual({
+      from: 9450,
+      level: 19,
+      next: 10_450,
       size: 64,
     });
+  });
+
+  it("never runs out of levels, and keeps the footprint at the world's side", () => {
     expect(growthOf(1_000_000)).toEqual({
-      from: 6000,
-      level: 7,
-      next: Option.none(),
+      from: 999_450,
+      level: 1009,
+      next: 1_000_450,
       size: 64,
     });
+    expect(growthOf(opensAt(7)).size).toBe(64);
+    expect(growthOf(opensAt(6)).size).toBe(62);
   });
 });

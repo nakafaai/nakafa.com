@@ -1,12 +1,14 @@
-import { describe, expect, it } from "@effect/vitest";
+import { assert, describe, expect, it } from "@effect/vitest";
 import island from "@repo/backend/confect/_generated/refs/island";
 import { idOf } from "@repo/backend/confect/island/blocks";
+import { EMPTY_TALLY } from "@repo/backend/confect/island/schema";
 import type { Edit } from "@repo/backend/confect/island/world";
 import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
 import { client } from "@repo/backend/test/client";
+import { seedSchoolMember } from "@repo/backend/test/member";
 import { Array as Arr, DateTime, Effect } from "effect";
 
 const NOW = Date.UTC(2026, 10, 8, 3, 0, 0);
@@ -43,8 +45,8 @@ describe("island queries and mutations", () => {
           timeZone: JAKARTA,
         });
         expect(yield* world.owner.query(island.queries.own, {})).toEqual({
-          badges: [],
           lifetime: 0,
+          tally: EMPTY_TALLY,
           version: 0,
           world: [],
         });
@@ -193,6 +195,72 @@ describe("island queries and mutations", () => {
           stars: 20,
         });
         expect(week?.days[0]?.day).toBe("2026-11-02");
+      })
+  );
+
+  it.effect(
+    "reads the leaderboard for anyone, the signed-in learner's own row marked",
+    () =>
+      Effect.gen(function* () {
+        const world = yield* islandWorld();
+        yield* world.owner.mutation(island.mutations.open, {
+          timeZone: JAKARTA,
+        });
+        yield* Effect.promise(() =>
+          world.t.run(async (ctx) => {
+            const row = await ctx.db.query("islands").first();
+            assert.ok(row, "Expected the island its owner opened.");
+            await ctx.db.patch("islands", row._id, { lifetime: 300 });
+          })
+        );
+        expect(
+          yield* world.owner.query(island.queries.leaders, {})
+        ).toMatchObject([{ level: 3, lifetime: 300, own: true, place: 1 }]);
+        expect(
+          yield* client(world.t).query(island.queries.leaders, {})
+        ).toMatchObject([{ lifetime: 300, own: false, place: 1 }]);
+      })
+  );
+
+  it.effect(
+    "shows a learner's medals on their profile to whoever may open it, and nothing for a name nobody holds",
+    () =>
+      Effect.gen(function* () {
+        const world = yield* islandWorld();
+        const visitor = client(world.t);
+        const named = (username: string) =>
+          visitor.query(island.queries.medals, { username });
+        const ownerId = yield* Effect.promise(() =>
+          world.t.run(async (ctx) => {
+            const user = await ctx.db.query("users").first();
+            assert.ok(user, "Expected the seeded learner.");
+            await ctx.db.patch("users", user._id, { username: "ayu" });
+            return user._id;
+          })
+        );
+        expect(yield* named("nobody")).toBeNull();
+        // A learner with no island yet has counted nothing.
+        expect(yield* named("ayu")).toEqual({ level: 1, tally: EMPTY_TALLY });
+        yield* world.owner.mutation(island.mutations.open, {
+          timeZone: JAKARTA,
+        });
+        const tally = { ...EMPTY_TALLY, days: 3, lessons: 7 };
+        yield* Effect.promise(() =>
+          world.t.run(async (ctx) => {
+            const row = await ctx.db.query("islands").first();
+            assert.ok(row, "Expected the island its owner opened.");
+            await ctx.db.patch("islands", row._id, { lifetime: 300, tally });
+          })
+        );
+        expect(yield* named("ayu")).toEqual({ level: 3, tally });
+        // A school member's profile opens for its own account alone (K15).
+        yield* Effect.promise(() =>
+          world.t.mutation((ctx) => seedSchoolMember(ctx, ownerId, NOW))
+        );
+        expect(yield* named("ayu")).toBeNull();
+        expect(
+          yield* world.owner.query(island.queries.medals, { username: "ayu" })
+        ).toEqual({ level: 3, tally });
       })
   );
 });

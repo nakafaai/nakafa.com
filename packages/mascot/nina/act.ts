@@ -1,3 +1,4 @@
+import { fanning } from "@repo/mascot/nina/hearth";
 import { free } from "@repo/mascot/nina/ink";
 import { type Curve, flip } from "@repo/mascot/nina/limb";
 import { at } from "@repo/mascot/nina/point";
@@ -48,6 +49,7 @@ export const ActSchema = Schema.Literals([
   "graduating",
   "ringing",
   "counting",
+  "fanning",
 ]);
 
 /** Doing nothing in particular. */
@@ -200,6 +202,7 @@ export const ACTS = {
   carrying: { pose: carrying, still: 0.4 },
   cheering: { pose: cheering, still: 0.35 },
   counting: { pose: counting, still: 3.1 },
+  fanning: { pose: fanning, still: 0.25 },
   graduating: { pose: graduating, still: 0.4 },
   guarding: { pose: guarding, still: 1.4 },
   hanging: { pose: hanging, still: 0.2 },

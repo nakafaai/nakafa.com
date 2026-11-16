@@ -172,6 +172,22 @@ function matchesProgressAttempt(
   return progress.statusRank === getTryoutStatusRank(progress.status);
 }
 
+/** Reads the learner's newest attempts across every set, newest first, at most `most` of them. */
+export const readNewestAttempts = Effect.fn(
+  "tryouts.runtime.readNewestAttempts"
+)(function* (userId: UserId, most: number) {
+  const database = yield* DatabaseReader;
+  return yield* database
+    .table("tryoutAttempts")
+    .index(
+      "by_userId_and_startedAt",
+      (index) => index.eq("userId", userId),
+      "desc"
+    )
+    .take(most)
+    .pipe(Effect.mapError(toTryoutRuntimeError));
+});
+
 /** Reads one bounded attempt history page through immutable set keys. */
 export const readAttemptHistoryPageBySet = Effect.fn(
   "tryouts.runtime.readAttemptHistoryPageBySet"

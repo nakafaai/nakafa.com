@@ -25,6 +25,11 @@ describe("profile href", () => {
       params: { username: "nabilfatih" },
       to: "/$locale/user/$username/comments",
     });
+    expect(profileTabTarget("badges", "nabilfatih")).toEqual({
+      from: "/$locale",
+      params: { username: "nabilfatih" },
+      to: "/$locale/user/$username/badges",
+    });
   });
 
   it("sends a person to their own chats at the chat tab of their profile", () => {

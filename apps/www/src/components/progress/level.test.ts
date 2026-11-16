@@ -1,0 +1,108 @@
+import { describe, expect, it } from "@effect/vitest";
+import { EMPTY_TALLY } from "@repo/backend/confect/island/schema";
+import { MaterialSchema } from "@repo/contents/taxonomy";
+import { MedalSchema } from "@repo/mascot/medal/name";
+import { Array as Arr } from "effect";
+import {
+  bestOf,
+  levelProgress,
+  medalsOf,
+  wallOf,
+  weekBars,
+} from "@/components/progress/level";
+
+/** One day of a week with these Stars and nothing else counted. */
+function day(date: string, stars: number) {
+  return { day: date, lessons: 0, sections: 0, sets: 0, stars };
+}
+
+describe("progress/level", () => {
+  it("measures the way to the next level from the level reached", () => {
+    expect(levelProgress({ from: 100, lifetime: 175, next: 250 })).toEqual({
+      left: 75,
+      share: 0.5,
+    });
+    expect(levelProgress({ from: 250, lifetime: 250, next: 450 })).toEqual({
+      left: 200,
+      share: 0,
+    });
+  });
+
+  it("shows the five kinds of learning always, and a subject once a lesson of it counts", () => {
+    expect(Arr.map(wallOf(EMPTY_TALLY), (medal) => medal.name)).toEqual([
+      "days",
+      "streak",
+      "lessons",
+      "sections",
+      "sets",
+    ]);
+    const wall = wallOf({
+      ...EMPTY_TALLY,
+      days: 3,
+      lessons: 7,
+      subjects: { mathematics: 5, physics: 2 },
+    });
+    // The earned medals stand first, then the kinds still to earn.
+    expect(wall).toEqual([
+      { count: 3, name: "days", next: 5, share: 1 / 3, tier: 2 },
+      { count: 7, name: "lessons", next: 10, share: 0.4, tier: 3 },
+      { count: 5, name: "mathematics", next: 10, share: 0, tier: 3 },
+      { count: 2, name: "physics", next: 5, share: 0, tier: 2 },
+      { count: 0, name: "streak", next: 1, share: 0, tier: 0 },
+      { count: 0, name: "sections", next: 1, share: 0, tier: 0 },
+      { count: 0, name: "sets", next: 1, share: 0, tier: 0 },
+    ]);
+  });
+
+  it("lists every medal for a profile, and picks the highest tiers for the pane, the larger count first", () => {
+    const tally = {
+      ...EMPTY_TALLY,
+      days: 3,
+      lessons: 7,
+      subjects: { mathematics: 5, physics: 6 },
+    };
+    expect(medalsOf(tally)).toHaveLength(MedalSchema.literals.length);
+    expect(Arr.map(bestOf(wallOf(tally), 3), (medal) => medal.name)).toEqual([
+      "lessons",
+      "physics",
+      "mathematics",
+    ]);
+  });
+
+  it("has a medal for every subject Nakafa presents, so no counted lesson lacks one", () => {
+    expect(MedalSchema.literals).toEqual(
+      expect.arrayContaining([...MaterialSchema.literals])
+    );
+  });
+
+  it("draws each day against the best day of the week, and knows today and the days to come", () => {
+    const week = weekBars(
+      [
+        day("2026-11-09", 10),
+        day("2026-11-10", 40),
+        day("2026-11-11", 0),
+        day("2026-11-12", 0),
+      ],
+      "2026-11-11"
+    );
+    expect(week.stars).toBe(50);
+    expect(week.learnedToday).toBe(false);
+    expect(week.bars).toEqual([
+      { ahead: false, day: "2026-11-09", share: 0.25, stars: 10, today: false },
+      { ahead: false, day: "2026-11-10", share: 1, stars: 40, today: false },
+      { ahead: false, day: "2026-11-11", share: 0, stars: 0, today: true },
+      { ahead: true, day: "2026-11-12", share: 0, stars: 0, today: false },
+    ]);
+  });
+
+  it("counts today once it has Stars, and stands an empty week on a floor of one", () => {
+    expect(weekBars([day("2026-11-11", 5)], "2026-11-11").learnedToday).toBe(
+      true
+    );
+    expect(weekBars([], "2026-11-11")).toEqual({
+      bars: [],
+      learnedToday: false,
+      stars: 0,
+    });
+  });
+});
