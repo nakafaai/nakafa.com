@@ -98,6 +98,7 @@
     "@effect/ai-openrouter": "4.1.4",
     "@effect/platform-node": "4.1.4",
     "@effect/platform-node-shared": "4.1.4",
+    "capnp-es": "0.0.17",
     "convex-helpers": "0.1.135",
     "glob": "14.0.3",
     "lodash": "4.18.1",
