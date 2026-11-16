@@ -1,4 +1,5 @@
 import { Array as Arr, Option } from "effect";
+import { createAir } from "@/components/island/air";
 import { createBodies } from "@/components/island/bodies";
 import {
   activate,
@@ -9,9 +10,7 @@ import {
   uploadMoving,
   uploadOutline,
 } from "@/components/island/buffers";
-import { createFall } from "@/components/island/fall";
 import { createFrame } from "@/components/island/frame";
-import { createSmoke } from "@/components/island/smoke";
 import { createGale } from "@/components/island/wind";
 import {
   ATLAS_SIZE,
@@ -36,10 +35,6 @@ import {
   OUTLINE_VERTEX,
   SKY_FRAGMENT,
   SKY_VERTEX,
-  SMOKE_FRAGMENT,
-  SMOKE_VERTEX,
-  WEATHER_FRAGMENT,
-  WEATHER_VERTEX,
 } from "@/lib/island/shaders";
 import { SHORE_FROM, SHORE_SIDE } from "@/lib/island/shore";
 import type { Light, Weather } from "@/lib/island/sky";
@@ -70,21 +65,11 @@ export function createPainter(canvas: HTMLCanvasElement, season: Season) {
     Option.all([
       programOf(gl, CHUNK_VERTEX, CHUNK_FRAGMENT),
       programOf(gl, SKY_VERTEX, SKY_FRAGMENT),
-      programOf(gl, WEATHER_VERTEX, WEATHER_FRAGMENT),
       programOf(gl, OUTLINE_VERTEX, OUTLINE_FRAGMENT),
       programOf(gl, EDGE_VERTEX, EDGE_FRAGMENT),
       programOf(gl, BODY_VERTEX, BODY_FRAGMENT),
-      programOf(gl, SMOKE_VERTEX, SMOKE_FRAGMENT),
     ]),
-    ([
-      chunkProgram,
-      skyProgram,
-      weatherProgram,
-      outlineProgram,
-      edgeProgram,
-      bodyProgram,
-      smokeProgram,
-    ]) => {
+    ([chunkProgram, skyProgram, outlineProgram, edgeProgram, bodyProgram]) => {
       const atlas = gl.createTexture();
       gl.bindTexture(gl.TEXTURE_2D, atlas);
       // Each tile's own smaller levels (D20): a far face shows its color, not the noise of its pixels.
@@ -125,6 +110,12 @@ export function createPainter(canvas: HTMLCanvasElement, season: Season) {
       const sea = uploadList(gl, seaRing(SEA_LEVEL - 0.125, [0, 0], 1));
       const shore = uploadMap(gl, SHORE_SIDE);
       const gale = createGale(gl);
+      // What moves in the air: the weather, the chimneys' smoke and the fireflies (D33, D36).
+      const airborne = createAir(gl, gale);
+      if (Option.isNone(airborne)) {
+        return Option.none();
+      }
+      const air = airborne.value;
       // The other isles of the archipelago (D23): one static list, set once a game.
       let isles = Option.none<ReturnType<typeof uploadList>>();
       const sandSlot = SLOTS.sand;
@@ -141,8 +132,6 @@ export function createPainter(canvas: HTMLCanvasElement, season: Season) {
       );
       const uniform = (name: string) =>
         gl.getUniformLocation(chunkProgram, name);
-      const fall = createFall(gl, weatherProgram);
-      const smoke = createSmoke(gl, smokeProgram);
       const outline = uploadOutline(gl);
       const herd = uploadMoving(gl, 64);
       const bodies = createBodies(gl);
@@ -255,7 +244,7 @@ export function createPainter(canvas: HTMLCanvasElement, season: Season) {
         gl.uniform1i(uniform("uShore"), 1);
         gl.uniform2f(uniform("uShoreBox"), SHORE_FROM, SHORE_SIDE);
         gale.blow(uniform, time, sky);
-        fall.cover(uniform);
+        air.cover(uniform);
         gl.uniform1f(uniform("uWater"), 0);
         gl.uniform1f(uniform("uAlpha"), 1);
         gl.bindVertexArray(floor.vao);
@@ -393,11 +382,8 @@ export function createPainter(canvas: HTMLCanvasElement, season: Season) {
           Option.map(isles, (list) => list.release());
           isles = Option.some(uploadList(gl, mesh));
         },
-        /** Replaces the map of where a falling drop stops on each column, and where the chimneys smoke (D33). */
-        roof(map: Uint8Array, chimneys: Float32Array) {
-          fall.roof(map);
-          smoke.chimneys(chimneys);
-        },
+        /** Replaces what the blocks decide for the air over them (D33, D36). */
+        scenery: air.scenery,
         /** Replaces the map of where land meets the sea, which the water draws its surf from (D28). */
         shore(map: Uint8Array) {
           shore.write(map);
@@ -433,7 +419,7 @@ export function createPainter(canvas: HTMLCanvasElement, season: Season) {
             sky === "storm" ? flashed(daylight, flashOf(time)) : daylight;
           target.resize();
           gale.step(time, sky);
-          fall.step(time, sky);
+          air.step(time, sky);
           const snapped = snapOrbit(orbit, target.height);
           gl.bindFramebuffer(gl.FRAMEBUFFER, target.frame);
           gl.viewport(0, 0, target.width, target.height);
@@ -452,8 +438,7 @@ export function createPainter(canvas: HTMLCanvasElement, season: Season) {
           gl.enable(gl.DEPTH_TEST);
           gl.enable(gl.BLEND);
           gl.depthMask(false);
-          smoke.draw(camera, time, light, sky, gale);
-          fall.draw(snapped.orbit, time, camera, sky, gale);
+          air.draw(snapped.orbit, time, camera, light, sky);
           Option.map(aim, (cell) => drawOutline(camera, cell));
           gl.depthMask(true);
           gl.bindVertexArray(null);
@@ -469,8 +454,7 @@ export function createPainter(canvas: HTMLCanvasElement, season: Season) {
           shore.release();
           gale.release();
           Option.map(isles, (list) => list.release());
-          fall.release();
-          smoke.release();
+          air.release();
           target.release();
           outline.release();
           herd.release();

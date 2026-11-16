@@ -1,5 +1,4 @@
-import { SPAN } from "@repo/backend/confect/island/world";
-import { ATLAS_TILES } from "@/lib/island/atlas";
+import { ATLAS_TILES, SLOTS } from "@/lib/island/atlas";
 import { SHORE_REACH } from "@/lib/island/shore";
 import { WIND_GLSL } from "@/lib/island/wind";
 
@@ -60,6 +59,7 @@ uniform vec2 uFogRange;
 uniform float uAlpha;
 uniform float uTime;
 uniform vec2 uWaterTile;
+const vec2 GLASS_TILE = vec2(${(SLOTS.glass % ATLAS_TILES).toFixed(1)}, ${Math.floor(SLOTS.glass / ATLAS_TILES).toFixed(1)});
 uniform float uWater;
 uniform sampler2D uShore;
 uniform vec2 uShoreBox;
@@ -102,7 +102,14 @@ void main() {
     uv = (uWaterTile + 0.002 + local * 0.996) / ${ATLAS_TILES.toFixed(1)};
   }
   vec4 texel = texture(uAtlas, uv);
-  if (texel.a < 0.5) discard;
+  // After dusk a window's clear panes glow warm instead of showing through (D36); most homes are lit, a few stay dark.
+  float pane = uWater < 0.5 && all(equal(floor(vUv * ${ATLAS_TILES.toFixed(1)}), GLASS_TILE)) ? 1.0 : 0.0;
+  float home = hashOf(floor(vWorld.xz) + floor(vWorld.y) * 7.0);
+  float emit = 0.0;
+  if (texel.a < 0.5) {
+    if (pane * step(0.3, uLamp.r) * step(home, 0.8) < 0.5) discard;
+    emit = smoothstep(0.3, 0.7, uLamp.r);
+  }
   vec3 paint = texel.rgb;
   if (vSway < -0.5) {
     // A gust shows on the meadow (D32): the grass under its front turns a tone lighter, in whole art pixels.
@@ -148,6 +155,7 @@ void main() {
   // Measured per pixel: the sea is a few huge quads, and a distance blended between their far corners would fog all of it.
   float fog = smoothstep(uFogRange.x, uFogRange.y, distance(vWorld, uEye));
   vec3 lit = mix(paint * light, vec3(0.97, 0.99, 1.0) * min(vec3(1.0), light + 0.12), foam);
+  lit = mix(lit, vec3(1.0, 0.8, 0.46) * (0.82 + 0.18 * home), emit);
   color = vec4(mix(lit, skyRow(gl_FragCoord.y / uRows), fog), mix(uAlpha, 1.0, foam));
   // The face's own direction, from how the world moves across this pixel, for the edge pass (D20).
   surface = vec4(face * 0.5 + 0.5, 1.0);
@@ -174,154 +182,6 @@ in float vHeight;
 layout(location = 0) out vec4 color;
 void main() {
   color = vec4(skyRow(vHeight), 1.0);
-}`;
-
-/**
- * The weather program (ADR 0047, D33): rain as short streaks and snow as
- * flakes, each falling along the wind until it meets the first thing over its
- * column (the roof map, `lib/island/cover.ts`), so a roof keeps the ground
- * under it dry. Each particle is a seed: every cycle it picks where it lands,
- * falls there from the sky over the camera's target, and its place at any
- * moment comes from the time, so nothing is uploaded while it falls. It falls
- * over all the camera sees, however far the camera stands back. The
- * splash pass (`uSplash` 1) draws what a landing drop leaves: two droplets
- * thrown up from ground or a roof, a ring spreading on water.
- */
-export const WEATHER_VERTEX = `#version 300 es
-layout(location = 0) in vec3 aSeed;
-layout(location = 1) in float aTail;
-uniform mat4 uViewProjection;
-uniform vec3 uTarget;
-uniform float uTime;
-uniform float uSpeed;
-uniform float uLength;
-uniform float uSway;
-uniform float uSplash;
-uniform float uSea;
-uniform float uArea;
-uniform float uTop;
-uniform sampler2D uRoof;
-${WIND_GLSL}
-out float vTail;
-out float vRing;
-out float vAge;
-const float SIDE = ${SPAN.toFixed(1)};
-// Seconds a splash stays on ground, and a ring on water.
-const float SPLASH = 0.16;
-const float RING = 0.5;
-// Where a drop that lands at a place stops: the height, and 1 on water.
-vec2 surfaceAt(vec2 at) {
-  vec2 cell = floor(at);
-  if (cell.x < 0.0 || cell.y < 0.0 || cell.x >= SIDE || cell.y >= SIDE) {
-    return vec2(uSea, 1.0);
-  }
-  float code = floor(texelFetch(uRoof, ivec2(cell), 0).r * 255.0 + 0.5);
-  float water = mod(code, 2.0);
-  return vec2(floor(code / 2.0) - 0.125 * water, water);
-}
-void main() {
-  vTail = aTail;
-  vRing = 0.0;
-  vAge = 0.0;
-  float top = uTarget.y + uTop;
-  // One cycle is long enough to fall from the sky to the lowest ground in view.
-  float period = (uTop + 4.0) / uSpeed;
-  float clock = uTime / period + aSeed.z;
-  float cycle = floor(clock);
-  // Each cycle the drop lands somewhere new round the target, at a time of its own within the cycle.
-  vec2 land = uTarget.xz + (fract(aSeed.xy + cycle * vec2(0.6180339, 0.3819660)) - 0.5) * uArea;
-  vec2 surface = surfaceAt(land);
-  float fall = (top - surface.x) / uSpeed;
-  float since = fract(clock) * period - fall;
-  // The wind carries the drop as it falls: a breeze always, and more under a gust's front.
-  vec2 drift = WIND_HEADING * uWindForce * (1.5 + 4.0 * windField(land, 1.0));
-  if (uSplash > 0.5) {
-    float last = surface.y > 0.5 ? RING : SPLASH;
-    if (since < 0.0 || since > last || (surface.y > 0.5 && aTail > 0.5)) {
-      gl_Position = vec4(2.0, 2.0, 2.0, 1.0);
-      return;
-    }
-    vAge = since / last;
-    vRing = surface.y;
-    // Two droplets thrown up and out from where the drop hit, falling back as they go.
-    float side = (aTail - 0.5) * 2.0 * (0.06 + since * 0.9);
-    float up = surface.y > 0.5 ? 0.0 : since * 2.2 - since * since * 9.0;
-    vec3 at = vec3(land.x + side * WIND_HEADING.y, surface.x + 0.04 + up, land.y - side * WIND_HEADING.x);
-    gl_Position = uViewProjection * vec4(at, 1.0);
-    gl_PointSize = surface.y > 0.5 ? 2.0 + 5.0 * vAge : 1.0;
-    return;
-  }
-  if (since >= 0.0) {
-    gl_Position = vec4(2.0, 2.0, 2.0, 1.0);
-    return;
-  }
-  float left = -since;
-  vec3 velocity = vec3(drift.x, -uSpeed, drift.y);
-  vec3 head = vec3(land.x, surface.x, land.y) - velocity * left;
-  head.x += sin(uTime * 0.8 + aSeed.z * 20.0) * uSway;
-  // A streak trails back along the way it came.
-  vec3 position = head - normalize(velocity) * aTail * uLength;
-  gl_Position = uViewProjection * vec4(position, 1.0);
-  gl_PointSize = 2.0;
-}`;
-
-export const WEATHER_FRAGMENT = `#version 300 es
-precision mediump float;
-uniform vec4 uColor;
-in float vTail;
-in float vRing;
-in float vAge;
-out vec4 color;
-void main() {
-  if (vRing > 0.5) {
-    // A ring lying on the water: an ellipse, its inside clear, fading as it spreads.
-    vec2 at = gl_PointCoord - 0.5;
-    at.y *= 2.0;
-    float reach = length(at);
-    if (reach > 0.5 || reach < 0.3) discard;
-    color = vec4(uColor.rgb, uColor.a * (1.0 - vAge));
-    return;
-  }
-  // A drop is brightest at its head and fades along its tail; a splash fades as it falls back.
-  color = vec4(uColor.rgb, min(1.0, uColor.a * (1.0 - vTail * 0.75) * (vAge > 0.0 ? 1.6 : 1.0)) * (1.0 - vAge * 0.6));
-}`;
-
-/**
- * The smoke program (ADR 0047, D33): puffs rising from every chimney, twelve to
- * a chimney, each a soft round blot of whole art pixels that grows as it
- * rises, slows as it cools and leans farther the higher it gets, carried by
- * the one wind of D32. A puff's place comes from the time alone.
- */
-export const SMOKE_VERTEX = `#version 300 es
-layout(location = 0) in vec3 aChimney;
-uniform mat4 uViewProjection;
-${WIND_GLSL}
-out float vAge;
-const float PUFFS = 12.0;
-const float LIFE = 7.0;
-void main() {
-  float seed = fract(sin(dot(aChimney.xz, vec2(12.9898, 78.233))) * 43758.5453);
-  float age = fract(uWind.z / LIFE + float(gl_VertexID) / PUFFS + seed);
-  vAge = age;
-  float rise = 3.6 * sqrt(age);
-  vec2 lean = WIND_HEADING * (0.5 * uWindForce + 2.0 * windField(aChimney.xz, 2.2)) * age * age * 3.0;
-  float sway = sin(age * 7.0 + seed * 20.0) * 0.18 * age;
-  vec3 at = aChimney + vec3(lean.x + sway * WIND_HEADING.y, rise, lean.y - sway * WIND_HEADING.x);
-  gl_Position = uViewProjection * vec4(at, 1.0);
-  gl_PointSize = floor(3.0 + 6.0 * age + 0.5);
-}`;
-
-export const SMOKE_FRAGMENT = `#version 300 es
-precision mediump float;
-uniform vec3 uTint;
-in float vAge;
-out vec4 color;
-void main() {
-  vec2 at = gl_PointCoord - 0.5;
-  if (dot(at, at) > 0.25) discard;
-  // A puff swells in, then thins away as it rises.
-  float alpha = smoothstep(0.0, 0.06, vAge) * (1.0 - vAge * vAge) * 0.75;
-  color = vec4(uTint, alpha);
 }`;
 
 /** The outline program: the twelve edges of the cell a press would change, drawn over everything. */

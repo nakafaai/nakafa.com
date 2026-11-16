@@ -38,6 +38,7 @@ import { type Animal, flatQuads, herdOf, wander } from "@/lib/island/life";
 import { changedChunks, glowOf } from "@/lib/island/light";
 import { rayThrough } from "@/lib/island/matrix";
 import { lightingOf, meshChunk } from "@/lib/island/mesh";
+import { firefliesOf } from "@/lib/island/night";
 import { pathOf } from "@/lib/island/path";
 import { planOf } from "@/lib/island/plan";
 import { plantBodies } from "@/lib/island/plants";
@@ -127,7 +128,11 @@ function start(
       );
     }
     painter.shore(shoreOf(cells, store.getState().seed, true));
-    painter.roof(roofOf(cells), chimneysOf(cells));
+    painter.scenery({
+      chimneys: chimneysOf(cells),
+      fireflies: firefliesOf(cells, store.getState().seed),
+      roof: roofOf(cells),
+    });
     needsDraw = true;
   };
   painter.isles(islesMesh(store.getState().seed));
