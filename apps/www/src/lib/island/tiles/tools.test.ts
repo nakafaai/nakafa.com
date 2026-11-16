@@ -2,8 +2,10 @@
 import { describe, expect, it } from "@effect/vitest";
 import { TILE } from "@/lib/island/tiles/paint";
 import {
+  canTile,
   feetTile,
   hammerTile,
+  hoeTile,
   pickaxeTile,
   rodTile,
 } from "@/lib/island/tiles/tools";
@@ -31,5 +33,14 @@ describe("island/tiles/tools", () => {
     expect(alphaAt(rod, 15, 1)).toBe(255);
     expect(alphaAt(rod, 0, 15)).toBe(0);
     expect(rod).not.toEqual(pickaxeTile());
+  });
+  it("draws the hoe with its blade and the can with its spout at the cursor's hot spot", () => {
+    const hoe = hoeTile();
+    const can = canTile();
+    expect(alphaAt(hoe, 1, 11)).toBe(255);
+    expect(alphaAt(can, 1, 3)).toBe(255);
+    expect(alphaAt(hoe, 15, 15)).toBe(0);
+    expect(alphaAt(can, 15, 15)).toBe(0);
+    expect(hoe).not.toEqual(can);
   });
 });

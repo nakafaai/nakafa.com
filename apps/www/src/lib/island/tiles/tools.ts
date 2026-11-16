@@ -136,3 +136,53 @@ export function bobberTile() {
     LEGEND
   );
 }
+
+/** A hoe, its blade at the bottom left where the cursor's point is. */
+export function hoeTile() {
+  return rowsTile(
+    [
+      "..............oo",
+      ".............owo",
+      "............owo.",
+      "...........owo..",
+      "..........owo...",
+      ".........owo....",
+      "........owo.....",
+      ".......owo......",
+      "......owo.......",
+      ".oooooowo.......",
+      "ommmmmMo........",
+      "oMMMMMMo........",
+      ".ooooooo........",
+      "................",
+      "................",
+      "................",
+    ],
+    LEGEND
+  );
+}
+
+/** A watering can, its spout at the top left where the water leaves it. */
+export function canTile() {
+  return rowsTile(
+    [
+      "................",
+      "................",
+      "oo..............",
+      "omo.....ooooo...",
+      ".omo...ommmmmo..",
+      "..omoooMmmmmMoo.",
+      "...omMMMmmmmMo.o",
+      "....oMMMmmmmMo.o",
+      ".....oMMmmmmMooo",
+      ".....oMMmmmmMo..",
+      ".....oMMmmmmMo..",
+      ".....oMMMMMMMo..",
+      "......ooooooo...",
+      "................",
+      "................",
+      "................",
+    ],
+    LEGEND
+  );
+}
