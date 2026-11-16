@@ -51,7 +51,7 @@ export function IslandBook() {
             title={t("close")}
             type="button"
           >
-            <HugeIcons className="size-5" icon={Cancel01Icon} />
+            <HugeIcons icon={Cancel01Icon} />
           </button>
         </header>
         <ul className="grid grid-cols-3 gap-2 overflow-y-auto sm:grid-cols-4">
@@ -76,7 +76,7 @@ export function IslandBook() {
                   <BlockIcon block={block} />
                   {isOpen(block, level) ? null : (
                     <HugeIcons
-                      className="text-island-bark absolute -right-1 -bottom-1 size-4"
+                      className="text-island-bark absolute -right-1 -bottom-1"
                       icon={SquareLock02Icon}
                     />
                   )}
