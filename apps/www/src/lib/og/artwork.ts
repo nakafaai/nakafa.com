@@ -20,10 +20,13 @@ const WITHOUT_MALAY_ARTWORK = ["en", "id", "de"] as const;
  * Reviewed public artwork grouped by stable, language-neutral identity, each with
  * the locales it has a file for. A design whose words read the same in every
  * language, such as the School's or the Quran's, has one English file, which
- * every locale falls back to.
+ * every locale falls back to. A design whose words belong to one language, such
+ * as the landing's "belajar sampai paham.", has a file for that language alone,
+ * and every other locale keeps its generated image.
  */
 export const artworkSources = {
   "app/ask-nina": ALL_ARTWORK_LOCALES,
+  "app/landing": ["id"],
   "app/pricing": ALL_ARTWORK_LOCALES,
   "app/school": ENGLISH_ARTWORK,
   "curriculum/cambridge-international": ENGLISH_ARTWORK,
@@ -61,29 +64,38 @@ export const artworkSources = {
   "tryout/indonesia/tka/compulsory-mathematics": WITHOUT_MALAY_ARTWORK,
   "tryout/indonesia/tka/english-language": WITHOUT_MALAY_ARTWORK,
   "tryout/indonesia/tka/indonesian-language": ALL_ARTWORK_LOCALES,
-} as const satisfies Readonly<Record<string, readonly ["en", ...Locale[]]>>;
+} as const satisfies Readonly<Record<string, readonly [Locale, ...Locale[]]>>;
 
 export type ArtworkIdentity = keyof typeof artworkSources;
 
 /** The inventory read by any name, so a name that a route makes up finds its artwork or none. */
-const artworkInventory: Readonly<Record<string, readonly ["en", ...Locale[]]>> =
-  artworkSources;
+const artworkInventory: Readonly<
+  Record<string, readonly [Locale, ...Locale[]]>
+> = artworkSources;
 
-/** The file of one identity in the locale, or in English when the locale has none. */
+/**
+ * The file of one identity in the locale, or in English when the locale has none, and none for a design of another
+ * language alone.
+ */
 function pickArtworkPath(
   identity: string,
-  locales: readonly ["en", ...Locale[]],
+  locales: readonly Locale[],
   locale: Locale
 ) {
-  const artworkLocale = Option.getOrElse(
-    Arr.findFirst(locales, (candidate) => candidate === locale),
-    () => locales[0]
+  return Option.map(
+    Option.orElse(
+      Arr.findFirst(locales, (candidate) => candidate === locale),
+      () =>
+        Arr.findFirst(
+          locales,
+          (candidate) => candidate === ENGLISH_APP_LOCALE_CODE
+        )
+    ),
+    (artworkLocale) => getStaticArtworkPath(identity, artworkLocale)
   );
-
-  return getStaticArtworkPath(identity, artworkLocale);
 }
 
-/** Resolves exact locale artwork, then the reviewed English default. */
+/** Resolves exact locale artwork, then the reviewed English default, and none for a design of another language. */
 export function resolveStaticArtwork(
   identity: ArtworkIdentity | undefined,
   locale: Locale
@@ -92,7 +104,9 @@ export function resolveStaticArtwork(
     return;
   }
 
-  return pickArtworkPath(identity, artworkSources[identity], locale);
+  return Option.getOrUndefined(
+    pickArtworkPath(identity, artworkSources[identity], locale)
+  );
 }
 
 /**
@@ -101,7 +115,7 @@ export function resolveStaticArtwork(
  * it yet.
  */
 export function resolveNamedArtwork(identity: string, locale: Locale) {
-  return Option.map(Rec.get(artworkInventory, identity), (locales) =>
+  return Option.flatMap(Rec.get(artworkInventory, identity), (locales) =>
     pickArtworkPath(identity, locales, locale)
   );
 }

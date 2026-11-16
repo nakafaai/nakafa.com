@@ -109,7 +109,7 @@ export const Route = createFileRoute("/$locale/_marketing/")({
           canonicalPath: `/${params.locale}`,
           description: loaderData.description,
           image: getAppSocialArtwork({
-            key: "home",
+            key: "landing",
             locale: params.locale,
             publicPath: "",
           }),
