@@ -6,6 +6,7 @@ import {
   ContentSnapshotKindSchema,
 } from "@nakafa/aksara-contracts/release/snapshot/scope";
 import {
+  type ContentSnapshotSet,
   hasSameContentSnapshots,
   invertContentSnapshots,
 } from "@nakafa/aksara-contracts/release/snapshot/spec";
@@ -55,15 +56,6 @@ const readManifest = Effect.fn("contentRelease.readProofSnapshotManifest")(
   }
 );
 
-/** Creates one replayable canonical replacement-manifest stream. */
-function manifestStream(release: SignedContentRelease) {
-  return Stream.fromIterable(replacementFamilies(release)).pipe(
-    Stream.mapEffect((family) =>
-      readManifest(release.manifest.releaseId, family)
-    )
-  );
-}
-
 /** Creates one replayable family row stream from exact release batch ledgers. */
 function familyRows(releaseId: string, family: ContentSnapshotKind) {
   return Stream.paginate(-1, (afterBatchIndex) =>
@@ -86,12 +78,65 @@ function familyRows(releaseId: string, family: ContentSnapshotKind) {
   ).pipe(Stream.mapEffect(parseStoredJson));
 }
 
-/** Creates one replayable globally ordered structured-row stream. */
-function rowStream(release: SignedContentRelease) {
-  return Stream.fromIterable(replacementFamilies(release)).pipe(
-    Stream.flatMap((family) => familyRows(release.manifest.releaseId, family))
-  );
-}
+/**
+ * Authenticates one replaced family against its own manifest and only its own rows. The contract replays its row
+ * stream once to count and once per manifest, so a stream of every family decoded every row once per family plus
+ * once: a release replacing all three decoded each row four times and outran an action's ten minutes.
+ */
+const verifyFamily = Effect.fn("contentRelease.verifyFamilySnapshot")(
+  function* (
+    release: SignedContentRelease,
+    previous: ContentSnapshotSet | null,
+    family: ContentSnapshotKind
+  ) {
+    const releaseId = release.manifest.releaseId;
+    return yield* verifyContentSnapshots({
+      manifests: Stream.fromEffect(readManifest(releaseId, family)),
+      previousSnapshots: previous,
+      rows: familyRows(releaseId, family),
+    }).pipe(Effect.mapError(contractFailure));
+  }
+);
+
+/**
+ * Authenticates every replaced family, each on its own rows, and joins the proofs: a family takes the state its own
+ * proof derived, and every family no proof replaced keeps the inherited state all proofs share.
+ */
+const verifyFamilies = Effect.fn("contentRelease.verifyFamilySnapshots")(
+  function* (
+    release: SignedContentRelease,
+    previous: ContentSnapshotSet | null
+  ) {
+    const families = replacementFamilies(release);
+    const proofs = yield* Effect.forEach(families, (family) =>
+      verifyFamily(release, previous, family)
+    );
+    if (!Arr.isArrayNonEmpty(proofs)) {
+      return yield* verifyContentSnapshots({
+        manifests: Stream.empty,
+        previousSnapshots: previous,
+        rows: Stream.empty,
+      }).pipe(Effect.mapError(contractFailure));
+    }
+    const proven = Arr.zip(families, proofs);
+    const pick = (family: ContentSnapshotKind) =>
+      Option.match(
+        Arr.findFirst(proven, ([each]) => each === family),
+        {
+          onNone: () => proofs[0].snapshots[family],
+          onSome: ([, proof]) => proof.snapshots[family],
+        }
+      );
+    return {
+      snapshots: {
+        assessment: pick("assessment"),
+        program: pick("program"),
+        quran: pick("quran"),
+      },
+      stagedRows: Arr.reduce(proofs, 0, (sum, proof) => sum + proof.stagedRows),
+    };
+  }
+);
 
 /** Loads the exact signed base snapshot set or the empty genesis identity. */
 const loadPrevious = Effect.fn("contentRelease.loadPreviousSnapshots")(
@@ -147,11 +192,7 @@ export const verifyReleaseSnapshots = Effect.fn(
       stagedRows: 0,
     };
   }
-  const verified = yield* verifyContentSnapshots({
-    manifests: manifestStream(release),
-    previousSnapshots: previous,
-    rows: rowStream(release),
-  }).pipe(Effect.mapError(contractFailure));
+  const verified = yield* verifyFamilies(release, previous);
   if (
     stagedSnapshotRows !== verified.stagedRows ||
     !hasSameContentSnapshots(verified.snapshots, release.manifest.snapshots)

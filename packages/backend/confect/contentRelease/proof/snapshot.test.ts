@@ -53,6 +53,28 @@ const programRelease = Effect.fn("test.contentRelease.programRelease")(
   }
 );
 
+/** Signs the next release, which inherits every snapshot family of its base. */
+const inheritingRelease = Effect.fn("test.contentRelease.inheritingRelease")(
+  function* (base: Effect.Success<ReturnType<typeof programRelease>>) {
+    const snapshots = inheritContentSnapshots(base.manifest.snapshots);
+    const nextEmpty = yield* testEmptyManifest(
+      ReleaseIdSchema.make("release-next")
+    );
+    return yield* testSignedRelease(
+      ContentReleaseManifestSchema.make({
+        ...nextEmpty,
+        baseReleaseId: base.manifest.releaseId,
+        baseManifestHash: base.manifestHash,
+        baseActiveAppLocales: base.manifest.activeAppLocales,
+        baseResultCount: base.manifest.resultCount,
+        baseResultDigest: base.manifest.resultDigest,
+        scope: testPublicationScope({ snapshots }),
+        snapshots,
+      })
+    );
+  }
+);
+
 /** Inserts one completed signed release used as a recovery proof base. */
 function insertCompletedRelease(
   ctx: MutationCtx,
@@ -400,24 +422,7 @@ describe("contentRelease/proof/snapshot", () => {
         const runtimeServices = yield* Effect.context<never>();
         const data = yield* makeProgramSnapshotData();
         const base = yield* programRelease(data, "release-base");
-        const snapshots = inheritContentSnapshots(base.manifest.snapshots);
-        const nextEmpty = yield* testEmptyManifest(
-          ReleaseIdSchema.make("release-next")
-        );
-        const release = yield* testSignedRelease(
-          ContentReleaseManifestSchema.make({
-            ...nextEmpty,
-            baseReleaseId: base.manifest.releaseId,
-            baseManifestHash: base.manifestHash,
-            baseActiveAppLocales: base.manifest.activeAppLocales,
-            baseResultCount: base.manifest.resultCount,
-            baseResultDigest: base.manifest.resultDigest,
-            scope: testPublicationScope({
-              snapshots,
-            }),
-            snapshots,
-          })
-        );
+        const release = yield* inheritingRelease(base);
         const other = yield* programRelease(data, "release-other");
         const t = convexTest(schema, convexModules);
         yield* Effect.promise(() =>
@@ -450,6 +455,35 @@ describe("contentRelease/proof/snapshot", () => {
             code: "CONTENT_RELEASE_STALE_BASE",
           })
         );
+      })
+  );
+  it.live(
+    "proves a candidate that replaces no family with no staged rows",
+    () =>
+      Effect.gen(function* () {
+        const runtimeServices = yield* Effect.context<never>();
+        const data = yield* makeProgramSnapshotData();
+        const base = yield* programRelease(data, "release-base");
+        const release = yield* inheritingRelease(base);
+        const t = convexTest(schema, convexModules);
+        yield* Effect.promise(() =>
+          t.mutation(async (ctx) => {
+            await insertCompletedRelease(ctx, base, data.rowJson.length);
+          })
+        );
+        const verified = yield* Effect.promise(() =>
+          t.action((ctx) =>
+            Effect.runPromiseWith(runtimeServices)(
+              verifyReleaseSnapshots(release, "candidate", 0, 0).pipe(
+                Effect.provide(
+                  RegisteredFunction.actionLayer(confectSchema, ctx)
+                )
+              )
+            )
+          )
+        );
+        expect(verified.stagedRows).toBe(0);
+        expect(verified.snapshots).toStrictEqual(release.manifest.snapshots);
       })
   );
 });
