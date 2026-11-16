@@ -6,6 +6,12 @@ import {
   DaltonEvidenceLab,
 } from "@/lib/content/renderer/client/chemistry/atom";
 import {
+  FizzBalanceLab,
+  LavoisierCalxLab,
+  PrecipitateLab,
+  SteelWoolLab,
+} from "@/lib/content/renderer/client/chemistry/balance";
+import {
   ElectronConfigurationLab,
   ValenceElectronLab,
 } from "@/lib/content/renderer/client/chemistry/electron";
@@ -35,6 +41,22 @@ import type { RendererImplementation } from "@/lib/content/renderer/selection";
 
 /** Every chemistry visual, which any lesson in any domain may use. */
 export const chemistryRenderers = [
+  {
+    name: chemistryComponentNames.fizzBalanceLab,
+    component: FizzBalanceLab,
+  },
+  {
+    name: chemistryComponentNames.lavoisierCalxLab,
+    component: LavoisierCalxLab,
+  },
+  {
+    name: chemistryComponentNames.precipitateLab,
+    component: PrecipitateLab,
+  },
+  {
+    name: chemistryComponentNames.steelWoolLab,
+    component: SteelWoolLab,
+  },
   {
     name: chemistryComponentNames.ancientAtomLab,
     component: AncientAtomLab,

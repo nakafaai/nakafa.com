@@ -3,6 +3,12 @@ import {
   AccelerationGraphCard,
   AccelerationLab,
 } from "@/lib/content/renderer/client/physics/acceleration";
+import {
+  BrakeHeatLab,
+  BrakingSurfaceLab,
+  FollowingDistanceLab,
+  ReactionTimeLab,
+} from "@/lib/content/renderer/client/physics/braking";
 import { UniformCircularMotionLab } from "@/lib/content/renderer/client/physics/circular";
 import {
   DisplacementDistanceLab,
@@ -36,6 +42,22 @@ import type { RendererImplementation } from "@/lib/content/renderer/selection";
 
 /** Every physics visual, which any lesson in any domain may use. */
 export const physicsRenderers = [
+  {
+    name: physicsComponentNames.brakeHeatLab,
+    component: BrakeHeatLab,
+  },
+  {
+    name: physicsComponentNames.brakingSurfaceLab,
+    component: BrakingSurfaceLab,
+  },
+  {
+    name: physicsComponentNames.followingDistanceLab,
+    component: FollowingDistanceLab,
+  },
+  {
+    name: physicsComponentNames.reactionTimeLab,
+    component: ReactionTimeLab,
+  },
   {
     name: physicsComponentNames.accelerationGraphCard,
     component: AccelerationGraphCard,

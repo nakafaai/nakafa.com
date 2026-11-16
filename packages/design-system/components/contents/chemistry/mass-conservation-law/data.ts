@@ -26,9 +26,9 @@ export const MassConservationScenePointSchema = Schema.Tuple([
 type MassConservationScenePoint = typeof MassConservationScenePointSchema.Type;
 
 export const MASS_CONSERVATION_SCENE_VIEW = {
-  cameraPosition: [0, 2.45, 5.6],
-  cameraTarget: [0, -0.1, 0],
-  narrowCameraPosition: [0, 2.7, 5.65],
+  cameraPosition: [0, 0.36, 0.95],
+  cameraTarget: [0, 0.13, 0],
+  narrowCameraPosition: [0, 0.45, 1.2],
 } satisfies Record<string, MassConservationScenePoint>;
 
 export function isMassConservationModeId(
@@ -44,7 +44,6 @@ export function getMassConservationSceneColors(
 
   return {
     arrow: isDarkTheme ? ORIGIN_COLOR.LIGHT : ORIGIN_COLOR.DARK,
-    balance: isDarkTheme ? getColor("ZINC") : PLOT_COLORS.slate,
     cap: PLOT_COLORS.teal,
     escapedGas: PLOT_COLORS.violet,
     glass: getColor("SLATE", 300),

@@ -1,5 +1,9 @@
 import { useFrame } from "@react-three/fiber";
 import {
+  LabBench,
+  Scale,
+} from "@repo/design-system/components/contents/chemistry/bench";
+import {
   type MassConservationModeId,
   type MassConservationSceneColors,
   MassConservationScenePointSchema,
@@ -13,10 +17,10 @@ import { Array as Arr, Schema } from "effect";
 import { createContext, use, useRef } from "react";
 import type { Group, MeshStandardMaterial } from "three";
 
-const BEFORE_X = -1.08;
-const AFTER_X = 1.08;
-const READOUT_Y = -0.94;
-const SCENE_SCALE = 1.32;
+/** The two balances stand 38 cm apart on the bench, in metres. */
+const STATION_X = 0.19;
+/** The particle model is drawn 1.22 units tall; on the pan its jar is 14 cm. */
+const MODEL_SCALE = 0.115;
 const VESSEL_HEIGHT = 1.22;
 const VESSEL_RADIUS = 0.48;
 const PARTICLE_RADIUS = 0.075;
@@ -144,83 +148,56 @@ export function MassConservationScene({
 
   return (
     <MassConservationSceneContext value={colors}>
-      <group position={[0, -0.03, 0]} scale={SCENE_SCALE}>
-        <ThreeLabel
-          color={colors.text}
-          fontSize="compact"
-          position={[BEFORE_X, 1.1, 0.16]}
-        >
-          {labels.before}
-        </ThreeLabel>
-        <ThreeLabel
-          color={colors.text}
-          fontSize="compact"
-          position={[AFTER_X, 1.1, 0.16]}
-        >
-          {labels.after}
-        </ThreeLabel>
-        <ThreeLabel
-          color={colors.text}
-          fontSize="compact"
-          position={[BEFORE_X, READOUT_Y, 0.22]}
-        >
-          {modeLabels.readoutBefore}
-        </ThreeLabel>
-        <ThreeLabel
-          color={colors.text}
-          fontSize="compact"
-          position={[AFTER_X, READOUT_Y, 0.22]}
-        >
-          {modeLabels.readoutAfter}
-        </ThreeLabel>
-        <BalanceStage
-          colors={colors}
-          isOpen={isOpen}
-          phase="before"
-          x={BEFORE_X}
-        />
-
-        <BalanceStage
-          colors={colors}
-          isOpen={isOpen}
-          phase="after"
-          x={AFTER_X}
-        />
-      </group>
+      <LabBench />
+      {Arr.map(
+        [
+          ["before", -STATION_X, labels.before, modeLabels.readoutBefore],
+          ["after", STATION_X, labels.after, modeLabels.readoutAfter],
+        ] as const,
+        ([phase, x, name, reading]) => (
+          <group key={phase} position={[x, 0, 0]}>
+            <Scale reading={reading}>
+              <group
+                position={[0, (VESSEL_HEIGHT / 2 + 0.02) * MODEL_SCALE, 0]}
+                scale={MODEL_SCALE}
+              >
+                <BalanceStage isOpen={isOpen} phase={phase} />
+              </group>
+            </Scale>
+            <ThreeLabel
+              color={colors.text}
+              fontSize="compact"
+              position={[0, 0.27, -0.035]}
+            >
+              {name}
+            </ThreeLabel>
+          </group>
+        )
+      )}
     </MassConservationSceneContext>
   );
 }
 
 function BalanceStage({
-  colors,
   isOpen,
   phase,
-  x,
 }: {
-  colors: MassConservationSceneColors;
   isOpen: boolean;
   phase: ReactionPhase;
-  x: number;
 }) {
   const hasEscapedGas = isOpen && phase === "after";
 
   return (
-    <group position={[x, 0, 0]}>
-      <Vessel closed={!isOpen} colors={colors} />
+    <group>
+      <Vessel closed={!isOpen} />
       <Particles phase={phase} />
-      {hasEscapedGas && <EscapedGas colors={colors} />}
-      <BalanceBase color={colors.balance} />
+      {hasEscapedGas && <EscapedGas />}
     </group>
   );
 }
 
-function Vessel({
-  closed,
-  colors,
-}: {
-  closed: boolean;
-  colors: MassConservationSceneColors;
-}) {
+function Vessel({ closed }: { closed: boolean }) {
+  const colors = useMassConservationScene();
   return (
     <group>
       <mesh castShadow receiveShadow>
@@ -325,7 +302,8 @@ function Particle({ particle }: { particle: ConservationParticle }) {
   );
 }
 
-function EscapedGas({ colors }: { colors: MassConservationSceneColors }) {
+function EscapedGas() {
+  const colors = useMassConservationScene();
   return (
     <group>
       {Arr.map(ESCAPED_GAS_PARTICLES, (particle) => (
@@ -385,20 +363,5 @@ function AnimatedEscapedGas({
         />
       </mesh>
     </CameraBounds>
-  );
-}
-
-function BalanceBase({ color }: { color: string }) {
-  return (
-    <group position={[0, -0.72, 0]}>
-      <mesh castShadow receiveShadow scale={[0.72, 0.06, 0.48]}>
-        <boxGeometry />
-        <meshStandardMaterial color={color} roughness={0.52} />
-      </mesh>
-      <mesh position={[0, -0.1, 0]} scale={[0.42, 0.08, 0.28]}>
-        <boxGeometry />
-        <meshStandardMaterial color={color} roughness={0.48} />
-      </mesh>
-    </group>
   );
 }
