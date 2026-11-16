@@ -1,4 +1,4 @@
-import { useFrame } from "@react-three/fiber";
+import { useFrame, useThree } from "@react-three/fiber";
 import {
   blockedChance,
   boundSpikes,
@@ -15,7 +15,10 @@ import {
 import { SimulationTicker } from "@repo/design-system/components/contents/simulation/ticker";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { CameraControls } from "@repo/design-system/components/three/camera/controls";
-import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene";
+import {
+  isNarrowThreeScene,
+  threeSceneFrameVariants,
+} from "@repo/design-system/components/three/scene";
 import { ScienceStage } from "@repo/design-system/components/three/stage";
 import { Slider } from "@repo/design-system/components/ui/slider";
 import {
@@ -147,13 +150,7 @@ export function AntibodyNeutralizeLab({
       >
         <ScienceStage reach={6} setting="studio">
           <Suspense fallback={null}>
-            <CameraControls
-              cameraPosition={[0, 3.5, 13]}
-              cameraTarget={[0, 0.5, 0]}
-              fov={36}
-              maxDistance={24}
-              minDistance={5}
-            />
+            <DockingCamera />
             <DockingScene virions={virions} />
           </Suspense>
         </ScienceStage>
@@ -186,6 +183,25 @@ export function AntibodyNeutralizeLab({
         </VisualCardFacts>
       </VisualCardFooter>
     </VisualCard>
+  );
+}
+
+/**
+ * The camera on the cell's surface, aimed between the receptors and the
+ * virions so both show whole: farther back on a narrow card, such as a
+ * phone's square frame, so all six virions and their spikes stay in view.
+ */
+function DockingCamera() {
+  const size = useThree((state) => state.size);
+  const narrow = isNarrowThreeScene(size, 1.2);
+  return (
+    <CameraControls
+      cameraPosition={narrow ? [0, 5, 26] : [0, 4.8, 18]}
+      cameraTarget={narrow ? [0, 2.4, 0] : [0, 2.2, 0]}
+      fov={36}
+      maxDistance={34}
+      minDistance={5}
+    />
   );
 }
 

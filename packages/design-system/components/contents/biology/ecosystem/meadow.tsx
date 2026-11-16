@@ -263,25 +263,86 @@ function drawRats(sketch: p5, count: number, height: number, year: number) {
 
 /** Barn owls gliding in wide circles, each over its own shadow. */
 function drawOwls(sketch: p5, count: number, height: number, year: number) {
+  const size = Math.max(0.6, Math.min(sketch.width, height) / 360);
   Arr.forEach(Arr.range(0, Math.max(0, count - 1)), (owl) => {
     const angle =
       year * (1.2 + hashUnit(owl, 4)) + hashUnit(owl, 5) * Math.PI * 2;
-    const cx = hashUnit(owl, 6) * sketch.width;
-    const cy = hashUnit(owl, 7) * height;
+    // Each owl circles 30 px wide around a centre kept far enough inside the
+    // field that its wings never cross onto the graph or off the canvas.
+    const margin = 30 + 22 * size;
+    const cx =
+      margin + hashUnit(owl, 6) * Math.max(0, sketch.width - margin * 2);
+    const cy = margin + hashUnit(owl, 7) * Math.max(0, height - margin * 2);
     const x = cx + Math.cos(angle) * 30;
     const y = cy + Math.sin(angle) * 22;
-    sketch.noStroke();
-    sketch.fill(getColor("ZINC", 900));
-    sketch.ellipse(x + 10, y + 12, 22, 9);
-    sketch.push();
-    sketch.translate(x, y);
-    sketch.rotate(angle + Math.PI / 2);
-    sketch.fill(MATERIAL.stucco);
-    sketch.ellipse(0, 0, 26, 8);
-    sketch.fill(MATERIAL.furFox);
-    sketch.ellipse(0, 0, 9, 12);
-    sketch.pop();
+    const heading = angle + Math.PI / 2;
+    const shade = sketch.color(getColor("ZINC", 900));
+    shade.setAlpha(90);
+    drawOwl(
+      sketch,
+      x + 10 * size,
+      y + 12 * size,
+      heading,
+      size,
+      shade,
+      shade,
+      shade
+    );
+    drawOwl(
+      sketch,
+      x,
+      y,
+      heading,
+      size,
+      sketch.color(MATERIAL.owlWing),
+      sketch.color(MATERIAL.owlWingTip),
+      sketch.color(MATERIAL.owlBack)
+    );
   });
+}
+
+/**
+ * A barn owl seen from above as it glides along `heading`: two long, broad
+ * wings spread wide with darker tips, a pale back and a round head in front.
+ */
+function drawOwl(
+  sketch: p5,
+  x: number,
+  y: number,
+  heading: number,
+  size: number,
+  wing: ReturnType<p5["color"]>,
+  tip: ReturnType<p5["color"]>,
+  back: ReturnType<p5["color"]>
+) {
+  sketch.push();
+  sketch.translate(x, y);
+  sketch.rotate(heading);
+  sketch.scale(size);
+  sketch.noStroke();
+  Arr.forEach([-1, 1], (side) => {
+    sketch.fill(wing);
+    sketch.beginShape();
+    sketch.vertex(3, side * 2);
+    sketch.vertex(1, side * 12);
+    sketch.vertex(-2, side * 21);
+    sketch.vertex(-6, side * 20);
+    sketch.vertex(-5, side * 9);
+    sketch.vertex(-4, side * 2);
+    sketch.endShape();
+    sketch.fill(tip);
+    sketch.beginShape();
+    sketch.vertex(0, side * 16);
+    sketch.vertex(-2, side * 21);
+    sketch.vertex(-6, side * 20);
+    sketch.vertex(-5.5, side * 15);
+    sketch.endShape();
+  });
+  sketch.fill(back);
+  sketch.ellipse(-1, 0, 13, 7);
+  sketch.ellipse(5.5, 0, 6, 6);
+  sketch.triangle(-7, -2, -7, 2, -11, 0);
+  sketch.pop();
 }
 
 /** Both populations over the years so far, under the field. */
@@ -295,9 +356,19 @@ function drawHistory(sketch: p5, field: Field, today: number, top: number) {
   const x = (year: number) => left + ((right - left) * year) / YEARS;
   const y = (count: number) => bottom - ((bottom - top - 12) * count) / most;
   sketch.noFill();
-  sketch.strokeWeight(2);
+  // The whole run shows faintly across the band; the years so far draw over it.
   Arr.forEach(["prey", "predators"] as const, (kind) => {
+    const faint = sketch.color(HERD_COLORS[kind]);
+    faint.setAlpha(70);
+    sketch.stroke(faint);
+    sketch.strokeWeight(1.5);
+    sketch.beginShape();
+    Arr.forEach(field.history, (herd, index) => {
+      sketch.vertex(x(index * EVERY), y(herd[kind]));
+    });
+    sketch.endShape();
     sketch.stroke(HERD_COLORS[kind]);
+    sketch.strokeWeight(2.5);
     sketch.beginShape();
     Arr.forEach(
       Arr.take(field.history, Math.round(today / EVERY) + 1),

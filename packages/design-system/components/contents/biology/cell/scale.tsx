@@ -7,6 +7,7 @@ import {
 } from "@repo/design-system/components/contents/biology/cell/anatomy";
 import { AnimalCell } from "@repo/design-system/components/contents/biology/cell/eukaryote";
 import { BacteriumCell } from "@repo/design-system/components/contents/biology/cell/microbe";
+import { useLabelInk } from "@repo/design-system/components/contents/biology/cell/parts";
 import { Virion } from "@repo/design-system/components/contents/biology/virus/envelope";
 import { useQuantity } from "@repo/design-system/components/contents/simulation/quantity";
 import { SimulationTicker } from "@repo/design-system/components/contents/simulation/ticker";
@@ -27,7 +28,6 @@ import {
 } from "@repo/design-system/components/visual/card";
 import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
-import { getColor } from "@repo/design-system/lib/color";
 import { type ReactNode, Suspense, useEffect, useRef, useState } from "react";
 import type { Group } from "three";
 
@@ -180,8 +180,7 @@ function LineupScene({
     row.current?.position.set(-focusAt(width) * scale, 0, 0);
   });
 
-  const ink = getColor("ZINC", 900);
-  const halo = getColor("SLATE", 50);
+  const ink = useLabelInk();
   // A label shows only while its body is large enough on screen to point at.
   const width = viewWidth(zoom);
 
@@ -201,8 +200,6 @@ function LineupScene({
         <ThreeLabel
           color={ink}
           fontSize="compact"
-          outlineColor={halo}
-          outlineWidth={0.004}
           position={[LINEUP.cell, -11, 0]}
           visible={width >= 12}
         >
@@ -211,8 +208,6 @@ function LineupScene({
         <ThreeLabel
           color={ink}
           fontSize="compact"
-          outlineColor={halo}
-          outlineWidth={0.004}
           position={[LINEUP.bacterium, -0.9, 0]}
           visible={width <= 16 && width >= 1}
         >
@@ -221,8 +216,6 @@ function LineupScene({
         <ThreeLabel
           color={ink}
           fontSize="compact"
-          outlineColor={halo}
-          outlineWidth={0.004}
           position={[LINEUP.virion, -0.09, 0]}
           visible={width <= 1.6}
         >

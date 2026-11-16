@@ -1,5 +1,5 @@
 import { hashUnit } from "@repo/design-system/components/contents/simulation/grain";
-import { Array as Arr, Option, Order, Schema } from "effect";
+import { Array as Arr, Order, Schema } from "effect";
 
 /**
  * The measures a town can take, each as the share of people who take it, from
@@ -112,18 +112,6 @@ export function outbreakOf(measures: Measures, route: Route, days: number) {
 /** The largest infected share on any day of an outbreak. */
 export function peakOf(outbreak: readonly Day[]) {
   return Arr.reduce(outbreak, 0, (peak, day) => Math.max(peak, day.infected));
-}
-
-/** The share of the town ever infected by the end: everyone who left the susceptible. */
-export function everInfectedOf(outbreak: readonly Day[]) {
-  return Option.getOrElse(
-    Option.zipWith(
-      Arr.head(outbreak),
-      Arr.last(outbreak),
-      (first, last) => first.susceptible + first.infected - last.susceptible
-    ),
-    () => 0
-  );
 }
 
 /** One person crossing the square, in metres from its middle. */
