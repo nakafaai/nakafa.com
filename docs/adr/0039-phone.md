@@ -79,6 +79,8 @@ D13. A formula that mounts only in the browser carries the markup the server dre
 
 The lesson's limits hold. The 219 answers whose content draws a formula in a prop grew, by at most 35,158 bytes before compression, the price of drawing a label without KaTeX; a page drawn in the browser still loads KaTeX for the body's formulas when it shows them.
 
+D14. A WebGL scene on a lesson's first screen waits for the reader's first gesture (a scroll, a pointer move, a touch or a key, Tab included; `untilReaderGesture`), and until then its card shows the scene's still, drawn from the same geometry and camera into the page's HTML (`MathPicture`), never a blank frame or a skeleton (16 November 2026).
+
 ## Consequences
 
 Positive: every page loses those recalculations, the home page's first JavaScript no longer holds the sections under its first screen, and decoration leaves the thread to the reader.

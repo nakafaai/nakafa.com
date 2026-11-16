@@ -1,10 +1,10 @@
-import { ScenePlaceholder } from "@repo/design-system/components/three/placeholder";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { lazy } from "@repo/design-system/lib/lazy";
 import { untilReaderGesture } from "@repo/design-system/lib/settle";
 import { ClientOnly } from "@tanstack/react-router";
 import { Effect, Fiber } from "effect";
 import { Suspense, useEffect, useState } from "react";
+import { MathPicture } from "@/lib/content/renderer/client/base/visual/picture";
 import type { MathSceneProps } from "@/lib/content/renderer/client/base/visual/render";
 
 const MathScene = lazy(() =>
@@ -20,9 +20,9 @@ const MathScene = lazy(() =>
  * largest part of a lesson's JavaScript: seven scripts and 1,064,878 decoded
  * bytes of the 4,045,711 the measured lesson loaded, so a lesson whose first
  * visual stands on its first screen no longer loads them before anyone reads
- * it, and a crawler or Lighthouse sees the placeholder. The scene
- * loads inside the body that holds the figure, so the loading frame and the
- * scene share it.
+ * it. Until then the card shows the scene's still (`MathPicture`), which the
+ * server draws, so a crawler, Lighthouse and a reader who never moves see the
+ * true picture, and the scene takes its place in the same frame once loaded.
  */
 export function DeferredMathScene(props: MathSceneProps) {
   const [near, setNear] = useState(false);
@@ -51,13 +51,13 @@ export function DeferredMathScene(props: MathSceneProps) {
         onIntersect={() => setNear(true)}
       />
       {shouldRender ? (
-        <Suspense fallback={<ScenePlaceholder />}>
-          <ClientOnly fallback={<ScenePlaceholder />}>
+        <Suspense fallback={<MathPicture {...props} />}>
+          <ClientOnly fallback={<MathPicture {...props} />}>
             <MathScene {...props} />
           </ClientOnly>
         </Suspense>
       ) : (
-        <ScenePlaceholder />
+        <MathPicture {...props} />
       )}
     </>
   );
