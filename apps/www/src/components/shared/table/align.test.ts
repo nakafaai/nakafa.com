@@ -1,5 +1,9 @@
 import { describe, expect, it } from "@effect/vitest";
-import { menuPlaceOf, placeOf } from "@/components/shared/table/align";
+import {
+  choiceWidth,
+  menuPlaceOf,
+  placeOf,
+} from "@/components/shared/table/align";
 
 describe("menuPlaceOf", () => {
   it("opens the first column's menu at the start, the last's at the end, and the rest centred", () => {
@@ -15,5 +19,15 @@ describe("placeOf", () => {
     expect(placeOf(1, undefined)).toBe("center");
     expect(placeOf(3, "end")).toBe("end");
     expect(placeOf(4, "menu")).toBe("menu");
+  });
+});
+
+describe("choiceWidth", () => {
+  it("sizes a column of known values by its longest value or its head's name, whichever is longer", () => {
+    expect(choiceWidth("Level", ["Easy", "Medium", "Hard"])).toBe(
+      "calc(6ch + 3.5rem)"
+    );
+    expect(choiceWidth("Measured level", ["Easy"])).toBe("calc(14ch + 3.5rem)");
+    expect(choiceWidth("Status", [])).toBe("calc(6ch + 3.5rem)");
   });
 });

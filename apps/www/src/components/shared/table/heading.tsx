@@ -9,6 +9,7 @@ import { Array as Arr, Match, Option } from "effect";
 import type { ComponentProps, ReactNode } from "react";
 import { useTranslations } from "use-intl";
 import {
+  choiceWidth,
   HeadAlignContext,
   headPlace,
   menuPlaceOf,
@@ -64,6 +65,7 @@ export function DataTableHead<TData extends RowData>({
       </ColumnHead>
     );
   }
+  const sizing = columnSizing(filter, title, wide);
   return (
     <ColumnHead
       menu={menuPlaceOf(
@@ -78,8 +80,9 @@ export function DataTableHead<TData extends RowData>({
       )}
       narrow={narrow}
       place={place}
+      size={sizing.size}
       sorted={column.getCanSort() ? column.getIsSorted() || "none" : undefined}
-      width={wide === true ? "wide" : filter.kind}
+      width={sizing.width}
     >
       <HeadAlignContext value={headPlace[place]}>
         <HeadControl filter={filter} header={header} title={title}>
@@ -192,4 +195,27 @@ function SortingHead<TData extends RowData>({
       <HeadReset column={column.id} />
     </HeadPanel>
   );
+}
+
+/**
+ * How wide a column of data stands: a column of one known value as wide as its longest value (`choiceWidth`), a column
+ * of wide cells at the wide width, and every other column at the width of what it holds (`headWidth`).
+ */
+function columnSizing(
+  filter: HeadFilter,
+  title: string,
+  wide: boolean | undefined
+) {
+  if (wide === true) {
+    return { width: "wide" as const };
+  }
+  if (filter.kind === "choice") {
+    return {
+      size: choiceWidth(
+        title,
+        Arr.map(filter.options, (option) => option.label)
+      ),
+    };
+  }
+  return { width: filter.kind };
 }
