@@ -132,10 +132,10 @@ function CommandKey({
 }) {
   return (
     <Button
-      className="h-9"
+      className="w-full"
       onClick={onPress}
       onMouseDown={(event) => event.preventDefault()}
-      size="sm"
+      size="icon"
       tooltip={label}
       type="button"
       variant="outline"
