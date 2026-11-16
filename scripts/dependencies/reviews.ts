@@ -48,8 +48,8 @@ export const REGISTRY_REVIEWS = [
   ],
   [
     "@confect/core@latest",
-    "10.5.0",
-    "Confect moves with the Effect cohort (CONFECT_COHORT_VERSION). 10.5.0 is the latest release and the adopted one: its core, server, client, CLI and test packages admit effect ~4.1.0, which holds 4.1.2.",
+    "10.6.0",
+    "Confect moves with the Effect cohort (CONFECT_COHORT_VERSION). 10.6.0 is the latest release and the adopted one: its core, server, client, CLI and test packages admit effect ~4.1.0, which holds 4.1.2, and its server requires convex 1.48.0 or later and convex-test 0.0.67 or later. It backs first() and take(n) with Convex's native take() and refuses a count that is not a non-negative integer. Checked 13 November 2026.",
   ],
   [
     "@effect/tsgo@latest",
@@ -105,6 +105,11 @@ export const REGISTRY_REVIEWS = [
     "@react-three/fiber@latest",
     "9.8.2",
     "Fiber stays on 9.8.2, the latest release. Fiber 9 builds every Canvas root with the THREE.Clock that three r183 deprecated, so each canvas logs one console notice, which apps/www/e2e/support/scene.ts allows as that exact line. No dependency patch removes it, because scripts/check/patches.ts refuses every patch. Fiber 10 removes the Clock (pmndrs/react-three-fiber#3741) and exists only as alpha and canary. When @latest moves to 10: adopt it, move the labs from state.clock to the timer, and delete the allowance in scene.ts. Checked 14 November 2026.",
+  ],
+  [
+    "convex-test@latest",
+    "0.0.71",
+    "The backend suites stay on 0.0.70. 0.0.71 rejects a document over 1 MiB on insert, patch and replace, as Convex does, and fixes getFunctionMetadata visibility. Three content release tests build 2 to 8 MiB rows to reach page ceilings: the proof page's first row (one document, so it cannot pass PROOF_PAGE_BYTES), the artifact proof batch (reachable only across many rows of at most 1 MiB), and the rollback page's first record (two artifacts and two projections, within about 1 KB of MAX_ROLLBACK_PAGE_BYTES at Convex's limit). The move rewrites those tests with documents Convex accepts and removes the branches the limit makes unreachable, in the content release module. Checked 13 November 2026.",
   ],
   [
     "@types/node@26",
