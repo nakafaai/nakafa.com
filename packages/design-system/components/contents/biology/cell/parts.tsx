@@ -1,4 +1,7 @@
 import { useFrame } from "@react-three/fiber";
+import { ORIGIN_COLOR } from "@repo/design-system/components/three/data/constants";
+import { getThemeAppearance } from "@repo/design-system/lib/theme/registry";
+import { useTheme } from "@repo/design-system/providers/theme";
 import { Array as Arr } from "effect";
 import { type ReactNode, useLayoutEffect, useMemo, useRef } from "react";
 import { DoubleSide, type Group, type InstancedMesh, Object3D } from "three";
@@ -108,4 +111,16 @@ export function Sway({
   });
 
   return <group ref={group}>{children}</group>;
+}
+
+/**
+ * The ink of a label written into a scene: dark on the light theme and light
+ * on the dark one. A label given no outline draws its halo in the card's own
+ * colour, so the pair reads on both themes.
+ */
+export function useLabelInk() {
+  const resolvedTheme = useTheme((state) => state.resolvedTheme);
+  return getThemeAppearance(resolvedTheme) === "dark"
+    ? ORIGIN_COLOR.LIGHT
+    : ORIGIN_COLOR.DARK;
 }

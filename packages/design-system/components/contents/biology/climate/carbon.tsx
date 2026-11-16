@@ -11,6 +11,10 @@ import {
   type Year,
   YearSchema,
 } from "@repo/design-system/components/contents/biology/climate/budget";
+import {
+  CHART_AXES,
+  ChartScale,
+} from "@repo/design-system/components/contents/biology/climate/scale";
 import { useQuantity } from "@repo/design-system/components/contents/simulation/quantity";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { Slider } from "@repo/design-system/components/ui/slider";
@@ -40,7 +44,7 @@ import type p5 from "p5";
 import { type ReactNode, useMemo, useState } from "react";
 
 /** The year pathways run to. */
-const END_YEAR = 2100;
+const END_YEAR: number = CHART_AXES.pathway.last;
 
 /** The tank is empty at 250 ppm and full at 600 ppm. */
 const TANK = { empty: 250, full: 600 } as const;
@@ -81,6 +85,7 @@ export function CarbonBudgetLab({
     readonly forest?: string;
     readonly level: ReactNode;
     readonly peak?: ReactNode;
+    readonly perYear?: string;
     readonly rate?: ReactNode;
     readonly regions?: Readonly<Record<Region, ReactNode>>;
     readonly rise?: ReactNode;
@@ -180,7 +185,10 @@ export function CarbonBudgetLab({
       </VisualCardToolbar>
 
       <VisualCardBody className="bg-card">
-        <P5Sketch label={labels.viewLabel} program={tubProgram} state={tub} />
+        <div className="relative">
+          <P5Sketch label={labels.viewLabel} program={tubProgram} state={tub} />
+          <ChartScale record={mode === "record"} />
+        </div>
       </VisualCardBody>
 
       <VisualCardSceneActions />
@@ -207,7 +215,15 @@ export function CarbonBudgetLab({
             />
             <VisualFactTabular
               label={labels.rate}
-              value={<InlineMath math={quantity(recordRate(year), ppm, 2)} />}
+              value={
+                <InlineMath
+                  math={quantity(
+                    recordRate(year),
+                    `\\text{ ppm/${labels.perYear ?? ""}}`,
+                    2
+                  )}
+                />
+              }
             />
             <VisualFactTabular
               label={labels.above}
@@ -345,10 +361,21 @@ function drawTub(
   const bottom = sketch.height * 0.88;
   const share = (level - TANK.empty) / (TANK.full - TANK.empty);
   const surface = bottom - (bottom - top) * Math.min(1, Math.max(0, share));
+  const ripple = sketch.frameCount / 20;
   sketch.noStroke();
-  sketch.fill(MATERIAL.seawater);
+  sketch.fill(MATERIAL.seawaterDeep);
   sketch.rect(left, surface, width, bottom - surface);
+  sketch.fill(MATERIAL.seawater);
+  sketch.rect(left, surface, width, (bottom - surface) * 0.45);
   sketch.noFill();
+  sketch.stroke(MATERIAL.glass);
+  sketch.strokeWeight(2);
+  sketch.beginShape();
+  Arr.forEach(Arr.range(0, 24), (step) => {
+    const along = left + (width * step) / 24;
+    sketch.vertex(along, surface + Math.sin(step * 0.9 + ripple) * 1.5);
+  });
+  sketch.endShape();
   sketch.stroke(getColor("SLATE", 600));
   sketch.strokeWeight(3);
   sketch.line(left, top, left, bottom);
@@ -367,22 +394,31 @@ function drawTub(
       preindustrial
     );
   });
-  if (!tub.record) {
-    sketch.noStroke();
-    sketch.fill(MATERIAL.seawater);
-    sketch.rect(
-      left + width * 0.2,
-      top - 26,
-      Math.max(2, emitted * 1.6),
-      surface - top + 26
-    );
-    sketch.rect(
-      left + width,
-      bottom - 14,
-      sketch.width * 0.06,
-      Math.max(2, taken * 1.6)
-    );
+  if (tub.record) {
+    return;
   }
+  // The tap pours as wide as the year's emissions; the drain low on the
+  // right wall spills as wide as the year's uptake.
+  const pipe = getColor("SLATE", 600);
+  const spout = left + width * 0.3;
+  sketch.noStroke();
+  sketch.fill(pipe);
+  sketch.rect(left - 6, top - 34, width * 0.3 + 12, 8, 3);
+  sketch.rect(spout - 2, top - 30, 10, 14, 2);
+  sketch.fill(MATERIAL.seawater);
+  const pour = Math.max(2, emitted * 1.2);
+  sketch.rect(spout + 3 - pour / 2, top - 16, pour, surface - top + 16);
+  const drain = left + width;
+  sketch.fill(pipe);
+  sketch.rect(drain, bottom - 14, sketch.width * 0.04, 8, 2);
+  sketch.fill(MATERIAL.seawater);
+  const spill = Math.max(2, taken * 1.2);
+  sketch.rect(
+    drain + sketch.width * 0.04 - spill,
+    bottom - 6,
+    spill,
+    sketch.height - bottom + 6
+  );
 }
 
 /** The CO2 level over the years, with axis ticks, beside the tub. */
@@ -391,10 +427,9 @@ function drawChart(sketch: p5, tub: Tub, drawnTo: number) {
   const right = sketch.width - 16;
   const top = sketch.height * 0.12;
   const bottom = sketch.height * 0.86;
-  const first = tub.record ? RECORD_SPAN.first : BUDGET.startYear;
-  const last = tub.record ? RECORD_SPAN.last : END_YEAR;
-  const low = tub.record ? 300 : 380;
-  const high = tub.record ? 440 : 560;
+  const { first, high, last, low } = tub.record
+    ? CHART_AXES.record
+    : CHART_AXES.pathway;
   const x = (year: number) =>
     left + ((right - left) * (year - first)) / (last - first);
   const y = (ppm: number) =>

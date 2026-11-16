@@ -1,4 +1,4 @@
-import { useFrame } from "@react-three/fiber";
+import { useFrame, useThree } from "@react-three/fiber";
 import {
   BUD_MINUTES,
   type CellKind,
@@ -14,13 +14,19 @@ import {
   BacteriumCell,
   YeastCell,
 } from "@repo/design-system/components/contents/biology/cell/microbe";
-import { Sway } from "@repo/design-system/components/contents/biology/cell/parts";
+import {
+  Sway,
+  useLabelInk,
+} from "@repo/design-system/components/contents/biology/cell/parts";
 import { useQuantity } from "@repo/design-system/components/contents/simulation/quantity";
 import { SimulationTicker } from "@repo/design-system/components/contents/simulation/ticker";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { CameraControls } from "@repo/design-system/components/three/camera/controls";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
-import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene";
+import {
+  isNarrowThreeScene,
+  threeSceneFrameVariants,
+} from "@repo/design-system/components/three/scene";
 import { ScienceStage } from "@repo/design-system/components/three/stage";
 import { Slider } from "@repo/design-system/components/ui/slider";
 import {
@@ -38,7 +44,6 @@ import {
 } from "@repo/design-system/components/visual/card";
 import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
-import { getColor } from "@repo/design-system/lib/color";
 import { Array as Arr, Schema } from "effect";
 import { type ReactNode, Suspense, useEffect, useRef, useState } from "react";
 
@@ -142,13 +147,7 @@ export function CellCutawayLab({
       >
         <ScienceStage floor={-1.3} reach={2.2} setting="studio">
           <Suspense fallback={null}>
-            <CameraControls
-              cameraPosition={[0.6, 1.05, 4.4]}
-              cameraTarget={[0, -0.12, -0.3]}
-              fov={34}
-              maxDistance={7}
-              minDistance={1.6}
-            />
+            <CutawayCamera />
             <CellScene kind={kind} minutes={minutes} onMinutes={setMinutes} />
           </Suspense>
         </ScienceStage>
@@ -176,6 +175,25 @@ export function CellCutawayLab({
 }
 
 /**
+ * The camera on the cut cell: farther back on a narrow card, such as a
+ * phone's square frame, so a budding yeast cell and its bud fit whole.
+ */
+function CutawayCamera() {
+  const size = useThree((state) => state.size);
+  return (
+    <CameraControls
+      cameraPosition={
+        isNarrowThreeScene(size, 1.2) ? [0.8, 1.4, 6.8] : [0.6, 1.05, 4.4]
+      }
+      cameraTarget={[0, -0.12, -0.3]}
+      fov={34}
+      maxDistance={9}
+      minDistance={1.6}
+    />
+  );
+}
+
+/**
  * The cut cell on its stand with a scale bar under it. Played, the cell
  * sways; a yeast cell's clock runs and hands its minutes to the card.
  */
@@ -192,6 +210,7 @@ function CellScene({
   const clock = useRef(minutes);
   const sent = useRef(minutes);
   const quantity = useQuantity();
+  const ink = useLabelInk();
   const length = lengthOf(kind);
   const bar = scaleBar(length);
   const barUnits = (bar / length) * 2 * (kind === "bacterium" ? ROD_SCALE : 1);
@@ -235,15 +254,9 @@ function CellScene({
       <group position={[0, -1.12, 0.1]}>
         <mesh>
           <boxGeometry args={[barUnits, 0.025, 0.025]} />
-          <meshStandardMaterial color={getColor("GRAY", 800)} roughness={0.5} />
+          <meshStandardMaterial color={ink} roughness={0.5} />
         </mesh>
-        <ThreeLabel
-          color={getColor("ZINC", 900)}
-          fontSize="compact"
-          outlineColor={getColor("SLATE", 50)}
-          outlineWidth={0.004}
-          position={[0, -0.09, 0]}
-        >
+        <ThreeLabel color={ink} fontSize="compact" position={[0, -0.09, 0]}>
           <InlineMath math={quantity(bar, "\\,\\mu\\text{m}", 1)} />
         </ThreeLabel>
       </group>

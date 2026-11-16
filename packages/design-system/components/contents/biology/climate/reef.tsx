@@ -9,8 +9,13 @@ import {
   REEF_MMM,
   WINDOW_WEEKS,
 } from "@repo/design-system/components/contents/biology/climate/bleaching";
+import {
+  BrainCoral,
+  BranchingCoral,
+  PlateCoral,
+  Tissue,
+} from "@repo/design-system/components/contents/biology/climate/coral";
 import { LabBench } from "@repo/design-system/components/contents/chemistry/bench";
-import { hashUnit } from "@repo/design-system/components/contents/simulation/grain";
 import {
   useQuantity,
   useReading,
@@ -269,30 +274,16 @@ function TankScene({
           />
           <meshStandardMaterial color={MATERIAL.sand} roughness={1} />
         </mesh>
-        <BranchingCoral
-          color={tissue}
-          position={[-0.13, 0.035, -0.04]}
-          seed={1}
-          tips={tips}
-        />
-        <BranchingCoral
-          color={tissue}
-          position={[0.15, 0.035, 0.05]}
-          seed={2}
-          tips={tips}
-        />
-        <mesh castShadow position={[0.02, 0.07, -0.06]} scale={[1, 0.7, 1]}>
-          <sphereGeometry args={[0.06, 40, 24]} />
-          <meshStandardMaterial color={tissue} roughness={0.85} />
-        </mesh>
-        <mesh
-          castShadow
-          position={[-0.02, 0.06, 0.09]}
-          rotation={[0.1, 0, 0.12]}
-        >
-          <cylinderGeometry args={[0.07, 0.02, 0.012, 32]} />
-          <meshStandardMaterial color={tissue} roughness={0.8} />
-        </mesh>
+        <Tissue value={tissue}>
+          <BranchingCoral
+            position={[-0.13, 0.035, -0.04]}
+            seed={1}
+            tips={tips}
+          />
+          <BranchingCoral position={[0.15, 0.035, 0.05]} seed={2} tips={tips} />
+          <BrainCoral />
+          <PlateCoral />
+        </Tissue>
         <group
           position={[TANK.length / 2 - 0.04, 0.16, -TANK.depth / 2 + 0.03]}
         >
@@ -361,61 +352,4 @@ function TankGlass() {
       ))}
     </group>
   );
-}
-
-/**
- * A branching coral colony like Acropora: a short base, then branches that
- * fork twice, each tipped with a paler growing tip.
- */
-function BranchingCoral({
-  color,
-  position,
-  seed,
-  tips,
-}: {
-  readonly color: Color;
-  readonly position: readonly [number, number, number];
-  readonly seed: number;
-  readonly tips: Color;
-}) {
-  const branches = useMemo(() => branchesOf(seed), [seed]);
-  return (
-    <group position={position}>
-      {Arr.map(branches, ([id, x, y, z, tiltX, tiltZ, length, radius]) => (
-        <group key={id} position={[x, y, z]} rotation={[tiltX, 0, tiltZ]}>
-          <mesh castShadow position={[0, length / 2, 0]}>
-            <cylinderGeometry args={[radius * 0.8, radius, length, 10]} />
-            <meshStandardMaterial color={color} roughness={0.85} />
-          </mesh>
-          <mesh castShadow position={[0, length, 0]}>
-            <sphereGeometry args={[radius * 0.85, 10, 8]} />
-            <meshStandardMaterial color={tips} roughness={0.7} />
-          </mesh>
-        </group>
-      ))}
-    </group>
-  );
-}
-
-/**
- * The branches of colony `seed`: each as its number, its base point, its two tilts, its
- * length and its radius, in metres. Twelve branches fan up from the base at
- * seeded angles and heights.
- */
-function branchesOf(seed: number) {
-  return Arr.map(Arr.range(0, 13), (branch) => {
-    const angle = hashUnit(seed, branch) * Math.PI * 2;
-    const lean = 0.2 + hashUnit(seed + 7, branch) * 0.6;
-    const height = hashUnit(seed + 3, branch) * 0.03;
-    return [
-      branch,
-      Math.cos(angle) * 0.015,
-      height,
-      Math.sin(angle) * 0.015,
-      Math.sin(angle) * lean,
-      -Math.cos(angle) * lean,
-      0.06 + hashUnit(seed + 5, branch) * 0.06,
-      0.007,
-    ] as const;
-  });
 }

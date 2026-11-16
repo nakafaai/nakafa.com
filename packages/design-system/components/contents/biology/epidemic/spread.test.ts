@@ -4,7 +4,6 @@ import { describe, expect, it } from "@effect/vitest";
 import {
   contactFactor,
   crowdOf,
-  everInfectedOf,
   immuneShare,
   nextInfected,
   outbreakOf,
@@ -14,7 +13,7 @@ import {
   SQUARE,
   walk,
 } from "@repo/design-system/components/contents/biology/epidemic/spread";
-import { Array as Arr } from "effect";
+import { Array as Arr, Option } from "effect";
 
 const NONE = { distancing: 0, masks: 0, vaccinated: 0, washing: 0 };
 
@@ -44,18 +43,19 @@ describe("outbreak", () => {
     const outbreak = outbreakOf(NONE, "air", 160);
     expect(outbreak).toHaveLength(161);
     // With R0 = 3 the final size solves 1 - s = 1 - exp(-3 (1 - s)), about 94%.
-    expect(everInfectedOf(outbreak)).toBeCloseTo(0.94, 1);
+    const last = Option.getOrThrow(Arr.last(outbreak));
+    expect(last.recovered + last.infected).toBeCloseTo(0.94, 1);
     expect(peakOf(outbreak)).toBeGreaterThan(0.25);
   });
 
   it("dies out when R is below one", () => {
     const outbreak = outbreakOf({ ...NONE, vaccinated: 1 }, "air", 160);
     expect(peakOf(outbreak)).toBeCloseTo(0.01, 3);
-    expect(everInfectedOf(outbreak)).toBeLessThan(0.05);
+    const last = Option.getOrThrow(Arr.last(outbreak));
+    expect(last.recovered - 0.8 * 0.99).toBeLessThan(0.05);
   });
 
-  it("reads nothing from an empty outbreak", () => {
-    expect(everInfectedOf([])).toBe(0);
+  it("runs at least one day", () => {
     expect(outbreakOf(NONE, "air", 0)).toHaveLength(2);
   });
 });
