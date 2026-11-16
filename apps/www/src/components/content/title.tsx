@@ -25,3 +25,17 @@ export function ContentTitle({
     </header>
   );
 }
+
+/**
+ * The lead line of a reading page, under its heading and before its byline: the
+ * page's own description, which says in one sentence what the page teaches, as a
+ * reader and a search engine meet it first. Two lines at most keep the header to its
+ * title and one line under it; the whole sentence stays in the page.
+ */
+export function ContentLead({ children }: { children: ReactNode }) {
+  return (
+    <p className="text-muted-foreground line-clamp-2 text-lg text-pretty">
+      {children}
+    </p>
+  );
+}
