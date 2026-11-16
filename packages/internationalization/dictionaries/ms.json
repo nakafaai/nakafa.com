@@ -4644,6 +4644,7 @@
     "notice-refused": "Perubahan itu tak tersimpan, jadi pulau kamu kembali seperti tadi.",
     "notice-stale": "Pulau kamu berubah di tempat lain, jadi ia dimuat semula.",
     "next": "{stars} Bintang lagi ke tahap {level}",
-    "top": "Semua blok sudah dibuka"
+    "top": "Semua blok sudah dibuka",
+    "mute": "Matikan bunyi"
   }
 }

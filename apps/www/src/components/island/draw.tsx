@@ -5,6 +5,8 @@ import {
   programOf,
   seaRing,
   uploadList,
+  uploadMoving,
+  uploadOutline,
   uploadWeather,
 } from "@/components/island/buffers";
 import {
@@ -19,6 +21,8 @@ import type { meshChunk } from "@/lib/island/mesh";
 import {
   CHUNK_FRAGMENT,
   CHUNK_VERTEX,
+  OUTLINE_FRAGMENT,
+  OUTLINE_VERTEX,
   SKY_FRAGMENT,
   SKY_VERTEX,
   WEATHER_FRAGMENT,
@@ -55,8 +59,9 @@ export function createPainter(canvas: HTMLCanvasElement) {
       programOf(gl, CHUNK_VERTEX, CHUNK_FRAGMENT),
       programOf(gl, SKY_VERTEX, SKY_FRAGMENT),
       programOf(gl, WEATHER_VERTEX, WEATHER_FRAGMENT),
+      programOf(gl, OUTLINE_VERTEX, OUTLINE_FRAGMENT),
     ]),
-    ([chunkProgram, skyProgram, weatherProgram]) => {
+    ([chunkProgram, skyProgram, weatherProgram, outlineProgram]) => {
       const atlas = gl.createTexture();
       gl.bindTexture(gl.TEXTURE_2D, atlas);
       gl.texImage2D(
@@ -102,6 +107,10 @@ export function createPainter(canvas: HTMLCanvasElement) {
       const uniform = (name: string) =>
         gl.getUniformLocation(chunkProgram, name);
       const weather = uploadWeather(gl);
+      const outline = uploadOutline(gl);
+      const herd = uploadMoving(gl, 32);
+      const outlineUniform = (name: string) =>
+        gl.getUniformLocation(outlineProgram, name);
       const weatherUniform = (name: string) =>
         gl.getUniformLocation(weatherProgram, name);
       const skyUniform = (name: string) =>
@@ -210,6 +219,9 @@ export function createPainter(canvas: HTMLCanvasElement) {
         gl.bindVertexArray(floor.vao);
         gl.drawElements(gl.TRIANGLES, floor.count, gl.UNSIGNED_INT, 0);
         drawLists("solid");
+        gl.disable(gl.CULL_FACE);
+        gl.bindVertexArray(herd.vao);
+        gl.drawElements(gl.TRIANGLES, herd.count(), gl.UNSIGNED_INT, 0);
         gl.enable(gl.BLEND);
         gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
         gl.depthMask(false);
@@ -238,6 +250,20 @@ export function createPainter(canvas: HTMLCanvasElement) {
         gl.uniform4fv(weatherUniform("uColor"), fall.color);
         gl.bindVertexArray(weather.vao);
         gl.drawArrays(fall.flakes ? gl.POINTS : gl.LINES, 0, PARTICLES * 2);
+      };
+
+      /** Outlines the cell a press would change, over everything but the HUD. */
+      const drawOutline = (
+        camera: Float32Array,
+        cell: readonly [number, number, number]
+      ) => {
+        gl.disable(gl.DEPTH_TEST);
+        activate(gl, outlineProgram);
+        gl.uniformMatrix4fv(outlineUniform("uViewProjection"), false, camera);
+        gl.uniform3f(outlineUniform("uCell"), cell[0], cell[1], cell[2]);
+        gl.uniform4f(outlineUniform("uColor"), 1, 0.96, 0.8, 0.95);
+        gl.bindVertexArray(outline.vao);
+        gl.drawArrays(gl.LINES, 0, outline.count);
       };
 
       /** Enlarges the small frame onto the canvas by a whole number, centered on the horizon's color. */
@@ -270,6 +296,13 @@ export function createPainter(canvas: HTMLCanvasElement) {
       };
 
       return Option.some({
+        /** Replaces the quads of the island's animals. */
+        herd(quads: {
+          readonly vertices: Float32Array;
+          readonly indices: Uint32Array;
+        }) {
+          herd.write(quads);
+        },
         /** Replaces one chunk's buffers with its new mesh. */
         upload(index: number, mesh: ReturnType<typeof meshChunk>) {
           const slot = chunks[index];
@@ -285,7 +318,13 @@ export function createPainter(canvas: HTMLCanvasElement) {
               : Option.none();
         },
         /** Draws one frame: the sky, every chunk, the water, then the falling weather, enlarged to the canvas. */
-        draw(orbit: Orbit, light: Light, time: number, sky: Weather) {
+        draw(
+          orbit: Orbit,
+          light: Light,
+          time: number,
+          sky: Weather,
+          aim: Option.Option<readonly [number, number, number]>
+        ) {
           resize();
           gl.bindFramebuffer(gl.FRAMEBUFFER, target.frame);
           gl.viewport(0, 0, target.width, target.height);
@@ -295,6 +334,7 @@ export function createPainter(canvas: HTMLCanvasElement) {
           Option.map(fallOf(sky), (fall) =>
             drawWeather(orbit, time, camera, fall)
           );
+          Option.map(aim, (cell) => drawOutline(camera, cell));
           gl.depthMask(true);
           gl.bindVertexArray(null);
           blit(light);
@@ -307,6 +347,8 @@ export function createPainter(canvas: HTMLCanvasElement) {
           }
           sea.release();
           weather.release();
+          outline.release();
+          herd.release();
           floor.release();
           gl.getExtension("WEBGL_lose_context")?.loseContext();
         },

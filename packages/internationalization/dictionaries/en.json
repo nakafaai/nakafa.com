@@ -4644,6 +4644,7 @@
     "notice-refused": "That change didn't save, so your island is back as it was.",
     "notice-stale": "Your island changed somewhere else, so it's loading again.",
     "next": "{stars} more Stars to level {level}",
-    "top": "Every block is open"
+    "top": "Every block is open",
+    "mute": "Mute sound"
   }
 }
