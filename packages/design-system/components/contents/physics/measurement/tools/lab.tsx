@@ -150,7 +150,7 @@ export function MeasurementToolsLab({
       </VisualCardToolbar>
 
       <VisualCardBody className={threeSceneFrameVariants()}>
-        <ScienceStage frameloop="demand">
+        <ScienceStage frameloop="demand" setting="lab">
           <Suspense>
             <ResponsiveMeasurementCamera viewConfig={viewConfig} />
             <ActiveScene

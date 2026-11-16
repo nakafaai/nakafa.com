@@ -107,7 +107,7 @@ export function NonUniformLinearMotionLab({
         className={threeSceneFrameVariants()}
         render={<section />}
       >
-        <ScienceStage frameloop="always" reach={reach}>
+        <ScienceStage frameloop="always" reach={reach} setting="field">
           <Suspense>
             <CameraControls
               cameraPosition={GLBB_SCENE.cameraPosition}

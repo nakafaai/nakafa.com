@@ -1,4 +1,4 @@
-import { Environment, Sky, useGLTF } from "@react-three/drei";
+import { useGLTF } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
 import {
   getProjectileLoopSample,
@@ -45,7 +45,6 @@ export function PirateProjectileScene({
 }) {
   return (
     <group>
-      <SceneSky />
       <CameraBounds exclude>
         <Ocean motion={motion} />
       </CameraBounds>
@@ -58,21 +57,6 @@ export function PirateProjectileScene({
         <MuzzleBlast motion={motion} />
       </CameraBounds>
     </group>
-  );
-}
-
-function SceneSky() {
-  return (
-    <Environment background="only" frames={1} resolution={128}>
-      <Sky
-        distance={450}
-        mieCoefficient={0.006}
-        mieDirectionalG={0.72}
-        rayleigh={1.2}
-        sunPosition={[8, 5, 6]}
-        turbidity={4.2}
-      />
-    </Environment>
   );
 }
 

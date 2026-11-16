@@ -129,7 +129,7 @@ export function ChemicalReactionTypesLab({
         className={threeSceneFrameVariants()}
         render={<section />}
       >
-        <ScienceStage frameloop="always">
+        <ScienceStage frameloop="always" setting="lab">
           <Suspense>
             <ReactionTypeCameraControls />
             <ChemicalReactionTypeSceneProvider

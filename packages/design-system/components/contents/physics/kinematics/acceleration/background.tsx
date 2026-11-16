@@ -8,7 +8,6 @@ const SPACE_COLORS = {
   atmosphere: PLOT_COLORS.violet,
   planet: PLOT_COLORS.teal,
   rocketDark: getColor("SLATE", 600),
-  space: getColor("ZINC", 950),
   star: getColor("WHITE"),
 };
 const SPACE_ROCK_COUNT = 18;
@@ -21,13 +20,10 @@ const STAR_COUNT = 90;
  */
 export function SpaceBackground({ children }: { children: ReactNode }) {
   return (
-    <>
-      <color args={[SPACE_COLORS.space]} attach="background" />
-      <CameraBounds exclude>
-        <DistantPlanet />
-        {children}
-      </CameraBounds>
-    </>
+    <CameraBounds exclude>
+      <DistantPlanet />
+      {children}
+    </CameraBounds>
   );
 }
 

@@ -55,7 +55,7 @@ export function ModernPeriodicTableCanvas({
       className={threeSceneFrameVariants()}
       render={<section />}
     >
-      <ScienceStage frameloop="demand">
+      <ScienceStage frameloop="demand" setting="studio">
         <Suspense>
           <ModernPeriodicTableRenderSync key={focusId} />
           <ResponsiveModernPeriodicTableCamera />

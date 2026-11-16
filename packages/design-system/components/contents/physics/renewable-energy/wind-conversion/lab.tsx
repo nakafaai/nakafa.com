@@ -96,7 +96,7 @@ export function WindEnergyConversionLab({
         className={threeSceneFrameVariants()}
         render={<section />}
       >
-        <ScienceStage frameloop="always">
+        <ScienceStage frameloop="always" setting="field">
           <Suspense>
             <CameraControls
               cameraPosition={[2.65, 2, 4.7]}

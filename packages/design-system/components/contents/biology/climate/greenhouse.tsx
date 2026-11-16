@@ -136,7 +136,7 @@ export function GreenhouseEffectLab(props: GreenhouseEffectLabProps) {
         className={threeSceneFrameVariants()}
         render={<section />}
       >
-        <ScienceStage frameloop="always">
+        <ScienceStage frameloop="always" setting="space">
           <Suspense>
             <CameraControls
               cameraPosition={[3, 1.7, 4.05]}
