@@ -17,6 +17,7 @@ import {
 import { spreadLabels } from "@repo/design-system/components/contents/chemistry/spectrometer/placement";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { CameraControls } from "@repo/design-system/components/three/camera/controls";
+import { ORIGIN_COLOR } from "@repo/design-system/components/three/data/constants";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene";
 import { ScienceStage } from "@repo/design-system/components/three/stage";
@@ -375,9 +376,11 @@ function Spectrometer({
           />
           <ThreeLabel
             anchorY="top"
-            color={getColor("SLATE", 400)}
+            color={ORIGIN_COLOR.LIGHT}
             fontSize="compact"
             gap={0.1}
+            outlineColor={ORIGIN_COLOR.DARK}
+            outlineWidth={0.06}
             position={[place, 0.3, 0.25 + LABEL_FRONT]}
           >
             <InlineMath
@@ -388,18 +391,22 @@ function Spectrometer({
       ))}
       <ThreeLabel
         anchorY="bottom"
-        color={getColor("SLATE", 400)}
+        color={ORIGIN_COLOR.LIGHT}
         fontSize="compact"
         gap={0.15}
+        outlineColor={ORIGIN_COLOR.DARK}
+        outlineWidth={0.06}
         position={[pole[0], 0.72, pole[1]]}
       >
         {south}
       </ThreeLabel>
       <ThreeLabel
         anchorY="top"
-        color={getColor("SLATE", 400)}
+        color={ORIGIN_COLOR.LIGHT}
         fontSize="compact"
         gap={0.15}
+        outlineColor={ORIGIN_COLOR.DARK}
+        outlineWidth={0.06}
         position={[pole[0], -0.02, pole[1]]}
       >
         {north}

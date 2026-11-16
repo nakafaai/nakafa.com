@@ -4,6 +4,7 @@ import {
   wavelength,
 } from "@repo/design-system/components/contents/chemistry/emission/spectrum";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
+import { ORIGIN_COLOR } from "@repo/design-system/components/three/data/constants";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import {
   MetalMaterial,
@@ -99,9 +100,11 @@ export function SpectroscopeView({
           </mesh>
           <ThreeLabel
             anchorY="top"
-            color={getColor("SLATE", 200)}
+            color={ORIGIN_COLOR.LIGHT}
             fontSize="compact"
             gap={0.05}
+            outlineColor={ORIGIN_COLOR.DARK}
+            outlineWidth={0.06}
             position={[0, -0.1, 0]}
           >
             <InlineMath math={`${nanometres}`} />

@@ -12,6 +12,7 @@ import {
   envelopeRadius,
 } from "@repo/design-system/components/contents/chemistry/cathode/envelope";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
+import { ORIGIN_COLOR } from "@repo/design-system/components/three/data/constants";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import {
   MetalMaterial,
@@ -276,8 +277,10 @@ function Plates({ plate }: { readonly plate: number }) {
               <MetalMaterial color={MATERIAL.aluminium} roughness={0.22} />
             </RoundedBox>
             <ThreeLabel
-              color={getColor("SLATE", 800)}
+              color={ORIGIN_COLOR.LIGHT}
               fontSize="compact"
+              outlineColor={ORIGIN_COLOR.DARK}
+              outlineWidth={0.06}
               position={[
                 TUBE.plates / 2 + 1.2,
                 each.y + Math.sign(each.y) * 0.4,
