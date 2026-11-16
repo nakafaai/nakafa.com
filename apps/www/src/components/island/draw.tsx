@@ -9,19 +9,23 @@ import {
   uploadOutline,
   uploadWeather,
 } from "@/components/island/buffers";
+import { createFrame } from "@/components/island/frame";
 import {
   ATLAS_SIZE,
   ATLAS_TILES,
   atlasPixels,
   SLOTS,
 } from "@/lib/island/atlas";
-import { eyeOf, type Orbit } from "@/lib/island/camera";
-import { viewProjectionOf } from "@/lib/island/matrix";
+import { eyeOf, type Orbit, snapOrbit } from "@/lib/island/camera";
+import { CLIP, invert, viewProjectionOf } from "@/lib/island/matrix";
 import type { meshChunk } from "@/lib/island/mesh";
+import { mipsOf } from "@/lib/island/mips";
 import { repaintFor, type Season } from "@/lib/island/season";
 import {
   CHUNK_FRAGMENT,
   CHUNK_VERTEX,
+  EDGE_FRAGMENT,
+  EDGE_VERTEX,
   OUTLINE_FRAGMENT,
   OUTLINE_VERTEX,
   SKY_FRAGMENT,
@@ -30,12 +34,8 @@ import {
   WEATHER_VERTEX,
 } from "@/lib/island/shaders";
 import { type Fall, fallOf, type Light, type Weather } from "@/lib/island/sky";
+import { TILE } from "@/lib/island/tiles/paint";
 import { CHUNKS, SEA_LEVEL } from "@/lib/island/world";
-
-/** The art pixel for a screen: a whole number of device pixels, so its short side spans about 270 art pixels. */
-function artPixelOf(width: number, height: number) {
-  return Math.max(1, Math.round(Math.min(width, height) / 270));
-}
 
 /**
  * The island's WebGL2 painter (ADR 0047, D2): it holds every chunk's buffers,
@@ -62,33 +62,48 @@ export function createPainter(canvas: HTMLCanvasElement, season: Season) {
       programOf(gl, SKY_VERTEX, SKY_FRAGMENT),
       programOf(gl, WEATHER_VERTEX, WEATHER_FRAGMENT),
       programOf(gl, OUTLINE_VERTEX, OUTLINE_FRAGMENT),
+      programOf(gl, EDGE_VERTEX, EDGE_FRAGMENT),
     ]),
-    ([chunkProgram, skyProgram, weatherProgram, outlineProgram]) => {
+    ([
+      chunkProgram,
+      skyProgram,
+      weatherProgram,
+      outlineProgram,
+      edgeProgram,
+    ]) => {
       const atlas = gl.createTexture();
       gl.bindTexture(gl.TEXTURE_2D, atlas);
-      gl.texImage2D(
-        gl.TEXTURE_2D,
-        0,
-        gl.RGBA,
+      // Each tile's own smaller levels (D20): a far face shows its color, not the noise of its pixels.
+      const levels = mipsOf(
+        repaintFor(atlasPixels(), season),
         ATLAS_SIZE,
-        ATLAS_SIZE,
-        0,
-        gl.RGBA,
-        gl.UNSIGNED_BYTE,
-        repaintFor(atlasPixels(), season)
+        TILE
       );
-      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+      Arr.forEach(levels, (pixels, level) =>
+        gl.texImage2D(
+          gl.TEXTURE_2D,
+          level,
+          gl.RGBA,
+          ATLAS_SIZE / 2 ** level,
+          ATLAS_SIZE / 2 ** level,
+          0,
+          gl.RGBA,
+          gl.UNSIGNED_BYTE,
+          pixels
+        )
+      );
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAX_LEVEL, levels.length - 1);
+      gl.texParameteri(
+        gl.TEXTURE_2D,
+        gl.TEXTURE_MIN_FILTER,
+        gl.NEAREST_MIPMAP_NEAREST
+      );
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
 
-      const target = {
-        color: gl.createTexture(),
-        depth: gl.createRenderbuffer(),
-        frame: gl.createFramebuffer(),
-        height: 1,
-        width: 1,
-      };
+      // The scene's colors, faces and depth, then the frame the edge pass and the weather paint (D20).
+      const target = createFrame(gl, canvas);
       const chunks = Arr.makeBy(CHUNKS * CHUNKS, () => ({
         solid: Option.none<ReturnType<typeof uploadList>>(),
         water: Option.none<ReturnType<typeof uploadList>>(),
@@ -122,52 +137,6 @@ export function createPainter(canvas: HTMLCanvasElement, season: Season) {
         waterSlot % ATLAS_TILES,
         Math.floor(waterSlot / ATLAS_TILES),
       ] as const;
-
-      /** Sizes the small framebuffer to the canvas, in whole art pixels. */
-      const resize = () => {
-        const pixel = artPixelOf(canvas.width, canvas.height);
-        const width = Math.max(1, Math.floor(canvas.width / pixel));
-        const height = Math.max(1, Math.floor(canvas.height / pixel));
-        if (width === target.width && height === target.height) {
-          return;
-        }
-        target.width = width;
-        target.height = height;
-        gl.bindTexture(gl.TEXTURE_2D, target.color);
-        gl.texImage2D(
-          gl.TEXTURE_2D,
-          0,
-          gl.RGBA8,
-          width,
-          height,
-          0,
-          gl.RGBA,
-          gl.UNSIGNED_BYTE,
-          null
-        );
-        gl.bindRenderbuffer(gl.RENDERBUFFER, target.depth);
-        gl.renderbufferStorage(
-          gl.RENDERBUFFER,
-          gl.DEPTH_COMPONENT24,
-          width,
-          height
-        );
-        gl.bindFramebuffer(gl.FRAMEBUFFER, target.frame);
-        gl.framebufferTexture2D(
-          gl.FRAMEBUFFER,
-          gl.COLOR_ATTACHMENT0,
-          gl.TEXTURE_2D,
-          target.color,
-          0
-        );
-        gl.framebufferRenderbuffer(
-          gl.FRAMEBUFFER,
-          gl.DEPTH_ATTACHMENT,
-          gl.RENDERBUFFER,
-          target.depth
-        );
-        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-      };
 
       /** Draws the sky over the whole frame, from the horizon's color to the zenith's. */
       const drawSky = (light: Light) => {
@@ -228,6 +197,8 @@ export function createPainter(canvas: HTMLCanvasElement, season: Season) {
         gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
         gl.depthMask(false);
         gl.disable(gl.CULL_FACE);
+        // Water tints what lies under it but keeps those faces' edges (D20).
+        gl.drawBuffers([gl.COLOR_ATTACHMENT0, gl.NONE]);
         gl.uniform1f(uniform("uWater"), 1);
         gl.uniform1f(uniform("uAlpha"), 0.9);
         drawLists("water");
@@ -272,17 +243,69 @@ export function createPainter(canvas: HTMLCanvasElement, season: Season) {
         gl.drawArrays(gl.LINES, 0, outline.count);
       };
 
-      /** Enlarges the small frame onto the canvas by a whole number, centered on the horizon's color. */
-      const blit = (light: Light) => {
+      const edgeUniform = (name: string) =>
+        gl.getUniformLocation(edgeProgram, name);
+
+      /** Paints the edged frame from the scene's colors, faces and depth (D20). */
+      const drawEdges = (orbit: Orbit, camera: Float32Array) => {
+        gl.bindFramebuffer(gl.FRAMEBUFFER, target.final);
+        gl.disable(gl.DEPTH_TEST);
+        gl.disable(gl.BLEND);
+        activate(gl, edgeProgram);
+        Arr.forEach(
+          [target.color, target.surface, target.depth],
+          (texture, unit) => {
+            gl.activeTexture(gl.TEXTURE0 + unit);
+            gl.bindTexture(gl.TEXTURE_2D, texture);
+          }
+        );
+        gl.uniform1i(edgeUniform("uColor"), 0);
+        gl.uniform1i(edgeUniform("uSurface"), 1);
+        gl.uniform1i(edgeUniform("uDepth"), 2);
+        gl.uniform2f(
+          edgeUniform("uTexel"),
+          1 / target.width,
+          1 / target.height
+        );
+        gl.uniform2f(edgeUniform("uClip"), CLIP.near, CLIP.far);
+        gl.uniformMatrix4fv(edgeUniform("uInverse"), false, invert(camera));
+        gl.uniform1f(edgeUniform("uSea"), SEA_LEVEL - 0.2);
+        const eye = eyeOf(orbit);
+        const ahead = [
+          eye[0] - orbit.target[0],
+          eye[1] - orbit.target[1],
+          eye[2] - orbit.target[2],
+        ] as const;
+        const length = Math.hypot(ahead[0], ahead[1], ahead[2]);
+        gl.uniform3f(
+          edgeUniform("uAhead"),
+          ahead[0] / length,
+          ahead[1] / length,
+          ahead[2] / length
+        );
+        gl.drawArrays(gl.TRIANGLES, 0, 3);
+        gl.activeTexture(gl.TEXTURE0);
+      };
+
+      /**
+       * Enlarges the edged frame onto the canvas by a whole number, centered on
+       * the horizon's color, moved back by the art pixels the camera's snap
+       * rounded away, so a pan glides while the pixels hold still (D20).
+       */
+      const blit = (light: Light, shift: readonly [number, number]) => {
         const scale = Math.max(
           1,
           Math.floor(
             Math.min(canvas.width / target.width, canvas.height / target.height)
           )
         );
-        const left = Math.floor((canvas.width - target.width * scale) / 2);
-        const top = Math.floor((canvas.height - target.height * scale) / 2);
-        gl.bindFramebuffer(gl.READ_FRAMEBUFFER, target.frame);
+        const left =
+          Math.floor((canvas.width - target.width * scale) / 2) +
+          Math.round(shift[0] * scale);
+        const top =
+          Math.floor((canvas.height - target.height * scale) / 2) +
+          Math.round(shift[1] * scale);
+        gl.bindFramebuffer(gl.READ_FRAMEBUFFER, target.final);
         gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, null);
         gl.clearColor(light.horizon[0], light.horizon[1], light.horizon[2], 1);
         gl.clear(gl.COLOR_BUFFER_BIT);
@@ -331,19 +354,32 @@ export function createPainter(canvas: HTMLCanvasElement, season: Season) {
           sky: Weather,
           aim: Option.Option<readonly [number, number, number]>
         ) {
-          resize();
+          target.resize();
+          const snapped = snapOrbit(orbit, target.height);
           gl.bindFramebuffer(gl.FRAMEBUFFER, target.frame);
           gl.viewport(0, 0, target.width, target.height);
-          const camera = viewProjectionOf(orbit, target.width / target.height);
+          const camera = viewProjectionOf(
+            snapped.orbit,
+            target.width / target.height
+          );
+          gl.drawBuffers([gl.COLOR_ATTACHMENT0, gl.NONE]);
           drawSky(light);
-          drawWorld(orbit, light, time, camera);
+          gl.drawBuffers([gl.COLOR_ATTACHMENT0, gl.COLOR_ATTACHMENT1]);
+          gl.clearBufferfv(gl.COLOR, 1, [0.5, 1, 0.5, 0]);
+          drawWorld(snapped.orbit, light, time, camera);
+          gl.depthMask(true);
+          drawEdges(snapped.orbit, camera);
+          gl.bindFramebuffer(gl.FRAMEBUFFER, target.overlay);
+          gl.enable(gl.DEPTH_TEST);
+          gl.enable(gl.BLEND);
+          gl.depthMask(false);
           Option.map(fallOf(sky), (fall) =>
-            drawWeather(orbit, time, camera, fall)
+            drawWeather(snapped.orbit, time, camera, fall)
           );
           Option.map(aim, (cell) => drawOutline(camera, cell));
           gl.depthMask(true);
           gl.bindVertexArray(null);
-          blit(light);
+          blit(light, snapped.shift);
         },
         /** Lets the GPU go of everything the painter held. */
         release() {
@@ -353,6 +389,7 @@ export function createPainter(canvas: HTMLCanvasElement, season: Season) {
           }
           sea.release();
           weather.release();
+          target.release();
           outline.release();
           herd.release();
           floor.release();
