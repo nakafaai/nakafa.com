@@ -108,6 +108,14 @@ export const MATERIAL = {
   glass: "#e6f2f5",
   // The faint green of thick soda or borosilicate glass seen through its edge.
   glassEdge: "#cfe8d6",
+  // A burette's PTFE stopcock key, and the white Schellbach stripe with its
+  // blue centre line printed down the back of its tube.
+  ptfe: "#f1f0ea",
+  // The insulation of a red and a black 4 mm test lead.
+  leadBlack: "#1d1e20",
+  leadRed: "#b8322c",
+  schellbachBlue: "#2f5fb4",
+  schellbachWhite: "#f4f6f7",
   lcd: "#16231b",
   lcdGlow: "#0c2416",
   lcdHalo: "#0d1a12",

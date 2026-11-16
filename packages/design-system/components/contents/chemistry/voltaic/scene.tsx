@@ -1,4 +1,8 @@
-import { LabBench } from "@repo/design-system/components/contents/chemistry/bench";
+import { RoundedBox } from "@react-three/drei";
+import {
+  ColumnLiquid,
+  LabBench,
+} from "@repo/design-system/components/contents/chemistry/bench";
 import {
   BEAKER_RADIUS,
   Beaker,
@@ -23,7 +27,6 @@ import { ORIGIN_COLOR } from "@repo/design-system/components/three/data/constant
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import {
   GlassMaterial,
-  LiquidMaterial,
   MetalMaterial,
 } from "@repo/design-system/components/three/physical";
 import { getColor } from "@repo/design-system/lib/color";
@@ -104,9 +107,26 @@ export function ChemicalCellScene({
       <group position={[0, 0, 0.14]} scale={SCENE_SCALE}>
         {children}
         <SaltBridge />
-        <mesh castShadow position={[0, BATTERY_Y, 0]}>
-          <boxGeometry args={[TERMINAL_OFFSET * 2, 0.36, 0.16]} />
-          <meshStandardMaterial color={MATERIAL.meterBody} roughness={0.5} />
+        <RoundedBox
+          args={[TERMINAL_OFFSET * 2, 0.4, 0.16]}
+          castShadow
+          position={[0, BATTERY_Y, 0]}
+          radius={0.04}
+          smoothness={4}
+        >
+          <meshPhysicalMaterial
+            clearcoat={0.35}
+            color={MATERIAL.meterBody}
+            roughness={0.5}
+          />
+        </RoundedBox>
+        <mesh position={[0, BATTERY_Y + 0.02, 0.081]}>
+          <planeGeometry args={[TERMINAL_OFFSET * 1.4, 0.2]} />
+          <meshStandardMaterial
+            color={MATERIAL.lcd}
+            emissive={MATERIAL.lcdGlow}
+            roughness={0.3}
+          />
         </mesh>
         <ThreeLabel
           color={MATERIAL.meterInk}
@@ -118,7 +138,12 @@ export function ChemicalCellScene({
           {showProducts ? <InlineMath math={reading} /> : voltmeter}
         </ThreeLabel>
         {Arr.map(leads, (lead, index) => (
-          <Lead colors={colors} key={String(index)} lead={lead} />
+          <Lead
+            colors={colors}
+            key={String(index)}
+            lead={lead}
+            sheath={index === 0 ? MATERIAL.leadBlack : MATERIAL.leadRed}
+          />
         ))}
       </group>
     </group>
@@ -144,20 +169,13 @@ export function HalfCell({
   return (
     <group position={[side * APART, 0, 0]}>
       <Beaker colors={getElectrolysisColors()} />
-      <mesh position={[0, LIQUID_HEIGHT / 2 + 0.01, 0]}>
-        <cylinderGeometry
-          args={[
-            BEAKER_RADIUS - 0.012,
-            BEAKER_RADIUS - 0.012,
-            LIQUID_HEIGHT,
-            48,
-          ]}
-        />
-        <LiquidMaterial
-          color={SOLUTION_COLOR[metal]}
-          opacity={metal === "copper" ? 0.5 : 0.28}
-        />
-      </mesh>
+      <ColumnLiquid
+        bottom={0.01}
+        color={SOLUTION_COLOR[metal]}
+        level={LIQUID_HEIGHT + 0.01}
+        opacity={metal === "copper" ? 0.5 : 0.28}
+        radius={BEAKER_RADIUS - 0.012}
+      />
       <group position={[side * (ELECTRODE_X - APART), 0, 0]}>
         <mesh
           castShadow
@@ -213,7 +231,7 @@ function SaltBridge() {
       {Arr.map([-BRIDGE_X, BRIDGE_X], (x) => (
         <mesh key={x} position={[x, 0.3 + leg / 2, 0]}>
           <cylinderGeometry args={[BRIDGE_RADIUS, BRIDGE_RADIUS, leg, 20]} />
-          <GlassMaterial color={MATERIAL.glass} opacity={0.4} />
+          <GlassMaterial color={MATERIAL.glass} />
         </mesh>
       ))}
       <mesh position={[0, BRIDGE_TOP, 0]} rotation={[0, 0, Math.PI / 2]}>
@@ -225,7 +243,7 @@ function SaltBridge() {
             20,
           ]}
         />
-        <GlassMaterial color={MATERIAL.glass} opacity={0.4} />
+        <GlassMaterial color={MATERIAL.glass} />
       </mesh>
     </group>
   );

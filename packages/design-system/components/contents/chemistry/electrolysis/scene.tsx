@@ -1,5 +1,8 @@
 import { useFrame } from "@react-three/fiber";
-import { LabBench } from "@repo/design-system/components/contents/chemistry/bench";
+import {
+  ColumnLiquid,
+  LabBench,
+} from "@repo/design-system/components/contents/chemistry/bench";
 import {
   Battery,
   BEAKER_RADIUS,
@@ -34,11 +37,9 @@ import type { ElectrolysisColors } from "@repo/design-system/components/contents
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
-import {
-  LiquidMaterial,
-  MetalMaterial,
-} from "@repo/design-system/components/three/physical";
+import { MetalMaterial } from "@repo/design-system/components/three/physical";
 import { useRequired } from "@repo/design-system/hooks/required";
+import { MATERIAL } from "@repo/design-system/lib/material";
 import { Array as Arr, Schema } from "effect";
 import { createContext, useRef } from "react";
 import type { Mesh, MeshStandardMaterial } from "three";
@@ -109,7 +110,12 @@ export function ElectrolysisScene({
         ))}
         <Battery colors={colors} label={labels.battery} />
         {Arr.map(circuitLeads(cells.length), (lead, index) => (
-          <Lead colors={colors} key={String(index)} lead={lead} />
+          <Lead
+            colors={colors}
+            key={String(index)}
+            lead={lead}
+            sheath={index === 0 ? MATERIAL.leadRed : MATERIAL.leadBlack}
+          />
         ))}
       </group>
     </ElectrolysisSceneContext>
@@ -126,20 +132,13 @@ function CellModel({ cell }: { readonly cell: Cell }) {
   return (
     <group>
       <Beaker colors={colors} />
-      <mesh position={[0, LIQUID_HEIGHT / 2 + 0.01, 0]}>
-        <cylinderGeometry
-          args={[
-            BEAKER_RADIUS - 0.012,
-            BEAKER_RADIUS - 0.012,
-            LIQUID_HEIGHT,
-            48,
-          ]}
-        />
-        <LiquidMaterial
-          color={tinted ? colors.tintedLiquid : colors.clearLiquid}
-          opacity={tinted ? 0.5 : 0.28}
-        />
-      </mesh>
+      <ColumnLiquid
+        bottom={0.01}
+        color={tinted ? colors.tintedLiquid : colors.clearLiquid}
+        level={LIQUID_HEIGHT + 0.01}
+        opacity={tinted ? 0.5 : 0.28}
+        radius={BEAKER_RADIUS - 0.012}
+      />
       <Electrode cell={cell} reaction={anode} x={-ELECTRODE_OFFSET} />
       <Electrode cell={cell} reaction={cathode} x={ELECTRODE_OFFSET} />
       <ThreeLabel

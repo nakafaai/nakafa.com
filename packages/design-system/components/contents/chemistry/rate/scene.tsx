@@ -2,6 +2,7 @@ import { Line } from "@react-three/drei";
 import {
   Flask,
   FlaskLiquid,
+  GLASS_WALL,
   LabBench,
 } from "@repo/design-system/components/contents/chemistry/bench";
 import {
@@ -13,8 +14,8 @@ import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { ORIGIN_COLOR } from "@repo/design-system/components/three/data/constants";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import {
-  GlassMaterial,
   MetalMaterial,
+  VesselGlassMaterial,
 } from "@repo/design-system/components/three/physical";
 import { MATERIAL } from "@repo/design-system/lib/material";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
@@ -157,7 +158,11 @@ function RunRig({
         <cylinderGeometry
           args={[SYRINGE_RADIUS, SYRINGE_RADIUS, SYRINGE_LENGTH, 24, 1, true]}
         />
-        <GlassMaterial color={MATERIAL.glass} opacity={0.3} />
+        <VesselGlassMaterial
+          color={MATERIAL.glass}
+          thickness={GLASS_WALL}
+          tint={MATERIAL.glassEdge}
+        />
       </mesh>
       <mesh position={[plunger, SYRINGE_Y, 0]} rotation={[0, 0, Math.PI / 2]}>
         <cylinderGeometry
