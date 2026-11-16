@@ -81,6 +81,17 @@ The lesson's limits hold. The 219 answers whose content draws a formula in a pro
 
 D14. A WebGL scene on a lesson's first screen waits for the reader's first gesture (a scroll, a pointer move, a touch or a key, Tab included; `untilReaderGesture`), and until then its card shows the scene's still, drawn from the same geometry and camera into the page's HTML (`MathPicture`), never a blank frame or a skeleton (16 November 2026).
 
+D15. Motion loads with the parts that move (16 November 2026). The root document and `DesignSystemProvider` each wrapped every page in Motion's `MotionConfig` for its reduced-motion policy, and `lib/attribute.ts` read two SVG helpers from the `motion` barrel. Under `strictExecutionOrder` (D9) that one root import kept 198 of motion-dom's 252 modules and 82 of framer-motion's 179 in the boot chunk, drag, layout and scroll included, though no first paint moves anything. Each part that animates a transform now sets the policy itself (the chart's reveal, as the ancient atom and sequence labs already did; the streak reads `useReducedMotion`), the other islands animate only opacity, path length or a scroll-bound style, and `attribute.ts` keeps the 23 SVG names itself. Measured on the production build of `fdb589be51` behind a Brotli proxy, Lighthouse mobile at 12x CPU, median of 5:
+
+| | Before | After |
+| --- | --- | --- |
+| Boot chunk, decoded | 1,304,596 | 1,130,507 |
+| Sign-in first JavaScript, transfer | 490,592 | 435,174 |
+| School landing first JavaScript, transfer | 707,687 | 676,394 |
+| Home, article, Quran, search, transfer | 852,332 / 762,513 / 746,537 / 707,749 | 855,847 / 765,794 / 749,716 / 711,006 |
+
+A page whose links warm a `_main` page (D3) still loads Motion within the window, now as its own chunks, about 3 KB more. Performance scores moved within the run-to-run spread (sign-in 81 to 85 before, 86 after).
+
 ## Consequences
 
 Positive: every page loses those recalculations, the home page's first JavaScript no longer holds the sections under its first screen, and decoration leaves the thread to the reader.

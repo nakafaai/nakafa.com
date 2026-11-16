@@ -9,7 +9,7 @@ import type { EvilBrushVariant } from "@repo/design-system/components/evilcharts
 import type { ChartSeriesCue } from "@repo/design-system/lib/charts/cue";
 import { cn } from "cn";
 import { Result } from "effect";
-import { domAnimation, LazyMotion } from "motion/react";
+import { domAnimation, LazyMotion, MotionConfig } from "motion/react";
 import {
   type ComponentProps,
   type ComponentType,
@@ -96,32 +96,35 @@ function ChartContainer({
   const contextValue = useMemo(() => ({ brush, config }), [brush, config]);
   Result.getOrThrow(validateChartConfigColors(config));
 
+  // The reveal scales the plot in, so a reader who asks for less motion sees it drawn at once.
   return (
-    <LazyMotion features={domAnimation} strict>
-      <ChartContext value={contextValue}>
-        <div
-          className={cn(
-            // A chart never grows past one screen's worth of plot, however wide its card is.
-            "max-h-96 min-h-0 w-full flex-1",
-            "[&_.recharts-cartesian-axis-tick_text]:fill-muted-foreground [&_.recharts-cartesian-grid_line[stroke='#ccc']]:stroke-border/50 [&_.recharts-curve.recharts-tooltip-cursor]:stroke-border [&_.recharts-polar-grid_[stroke='#ccc']]:stroke-border [&_.recharts-radial-bar-background-sector]:fill-muted [&_.recharts-rectangle.recharts-tooltip-cursor]:fill-muted [&_.recharts-reference-line_[stroke='#ccc']]:stroke-border relative flex flex-col justify-center text-xs [&_.recharts-dot[stroke='#fff']]:stroke-transparent [&_.recharts-layer]:outline-hidden [&_.recharts-sector]:outline-hidden [&_.recharts-sector[stroke='#fff']]:stroke-transparent [&_.recharts-surface]:outline-hidden",
-            !footer && "aspect-video",
-            className
-          )}
-          data-chart={chartId}
-          data-slot="chart"
-          {...props}
-        >
-          <ChartStyle config={config} id={chartId} />
-          <ResponsiveContainer
-            className="min-h-0 w-full flex-1"
-            initialDimension={initialDimension}
+    <MotionConfig reducedMotion="user">
+      <LazyMotion features={domAnimation} strict>
+        <ChartContext value={contextValue}>
+          <div
+            className={cn(
+              // A chart never grows past one screen's worth of plot, however wide its card is.
+              "max-h-96 min-h-0 w-full flex-1",
+              "[&_.recharts-cartesian-axis-tick_text]:fill-muted-foreground [&_.recharts-cartesian-grid_line[stroke='#ccc']]:stroke-border/50 [&_.recharts-curve.recharts-tooltip-cursor]:stroke-border [&_.recharts-polar-grid_[stroke='#ccc']]:stroke-border [&_.recharts-radial-bar-background-sector]:fill-muted [&_.recharts-rectangle.recharts-tooltip-cursor]:fill-muted [&_.recharts-reference-line_[stroke='#ccc']]:stroke-border relative flex flex-col justify-center text-xs [&_.recharts-dot[stroke='#fff']]:stroke-transparent [&_.recharts-layer]:outline-hidden [&_.recharts-sector]:outline-hidden [&_.recharts-sector[stroke='#fff']]:stroke-transparent [&_.recharts-surface]:outline-hidden",
+              !footer && "aspect-video",
+              className
+            )}
+            data-chart={chartId}
+            data-slot="chart"
+            {...props}
           >
-            {children}
-          </ResponsiveContainer>
-          {footer}
-        </div>
-      </ChartContext>
-    </LazyMotion>
+            <ChartStyle config={config} id={chartId} />
+            <ResponsiveContainer
+              className="min-h-0 w-full flex-1"
+              initialDimension={initialDimension}
+            >
+              {children}
+            </ResponsiveContainer>
+            {footer}
+          </div>
+        </ChartContext>
+      </LazyMotion>
+    </MotionConfig>
   );
 }
 
