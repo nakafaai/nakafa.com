@@ -1,5 +1,38 @@
 import type { Shape } from "@repo/mascot/shape";
-import { camelCaseAttributes, camelToDash } from "motion";
+import { HashSet } from "effect";
+
+/**
+ * The SVG attributes that the DOM spells in capitals as React does. Motion keeps
+ * the same list, but importing it would load Motion with every drawing.
+ */
+const CAMEL_CASE_ATTRIBUTES = HashSet.make(
+  "baseFrequency",
+  "diffuseConstant",
+  "gradientTransform",
+  "kernelMatrix",
+  "kernelUnitLength",
+  "keySplines",
+  "keyTimes",
+  "lengthAdjust",
+  "limitingConeAngle",
+  "markerHeight",
+  "markerWidth",
+  "numOctaves",
+  "pathLength",
+  "specularConstant",
+  "specularExponent",
+  "startOffset",
+  "stdDeviation",
+  "surfaceScale",
+  "tableValues",
+  "targetX",
+  "targetY",
+  "textLength",
+  "viewBox"
+);
+
+/** A capital letter of a field name, which the DOM spells as a dash and the lower-case letter. */
+const CAPITAL = /[A-Z]/gu;
 
 /**
  * What a shape sets on its element, by the name that React gives the attribute
@@ -25,5 +58,7 @@ export function attributesOf<Mark>(
  * for the few that the DOM spells with capitals too (`pathLength`).
  */
 export function attributeName(field: string) {
-  return camelCaseAttributes.has(field) ? field : camelToDash(field);
+  return HashSet.has(CAMEL_CASE_ATTRIBUTES, field)
+    ? field
+    : field.replace(CAPITAL, (letter) => `-${letter.toLowerCase()}`);
 }
