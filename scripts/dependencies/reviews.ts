@@ -14,7 +14,7 @@ export const REGISTRY_REVIEWS = [
   [
     "effect@latest",
     "4.1.4",
-    "Effect 4.1.4 is the latest release and the adopted cohort (EFFECT_COHORT_VERSION). 4.1.3 and 4.1.4 are patch releases: Rational, CLI completion and validation fixes, cluster workflow retries, a TestClock finalizer fix, and OpenRouter schema regeneration. The contracts follow the cohort: @nakafa/aksara-contracts 8.0.3 peers effect 4.1.4 exactly. Checked 16 November 2026.",
+    "Effect 4.1.4 is the latest release and the adopted cohort (EFFECT_COHORT_VERSION). 4.1.3 and 4.1.4 are patch releases: Rational, CLI completion and validation fixes, cluster workflow retries, a TestClock finalizer fix, and OpenRouter schema regeneration. The contracts follow the cohort: @nakafa/aksara-contracts 8.0.4 peers effect 4.1.4 exactly. Checked 16 November 2026.",
   ],
   [
     "@effect/platform-node@latest",
@@ -73,8 +73,8 @@ export const REGISTRY_REVIEWS = [
   ],
   [
     "@nakafa/aksara-contracts@latest",
-    "8.0.3",
-    "nakafa.com declares 8.0.3, the newest release, which peers effect 4.1.4 exactly, the adopted cohort. 7.1.0 added the 100 labs of the science stack to the Visual Catalog, 8.0.0 removes LineEquation, NumberLine and UnitCircle, which MathVisual replaces and no document used, and 8.0.2 adds ElectrolysisLab, TitrationLab, ChemicalCellLab and GasRateLab and the SPM organic molecules of MoleculeShapeLab, and 8.0.3 sends snapshot rows in batches of at most 512 KiB, so the largest Quran row (369 KiB) still fits one batch and every stageSnapshotBatch mutation stays inside Convex's one second. Every catalog figure renders in lessons and try-outs through one renderer, whose registry equals the catalog. Checked 16 November 2026.",
+    "8.0.4",
+    "nakafa.com declares 8.0.4, the newest release, which peers effect 4.1.4 exactly, the adopted cohort. 7.1.0 added the 100 labs of the science stack to the Visual Catalog, 8.0.0 removes LineEquation, NumberLine and UnitCircle, which MathVisual replaces and no document used, and 8.0.2 adds ElectrolysisLab, TitrationLab, ChemicalCellLab and GasRateLab and the SPM organic molecules of MoleculeShapeLab, and 8.0.3 sends snapshot rows in batches of at most 512 KiB, so the largest Quran row (369 KiB) still fits one batch, and 8.0.4 decides whether a region figure shows without tracing its outline, so decoding a region row costs milliseconds instead of up to 0.8 s and every stageSnapshotBatch mutation stays inside Convex's one second. Every catalog figure renders in lessons and try-outs through one renderer, whose registry equals the catalog. Checked 16 November 2026.",
   ],
   [
     "tsrs@latest",
