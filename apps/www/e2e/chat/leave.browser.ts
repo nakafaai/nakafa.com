@@ -82,7 +82,10 @@ test.describe("A new chat admitted after the learner left, at 1440px", () => {
     await runOnPage(page, baseURL, (origin) =>
       Effect.gen(function* () {
         const { changes, learner } = yield* openChatPage(page, origin);
-        yield* learner.startChat(OTHER.prompt);
+        const other = yield* learner.startChat(OTHER.prompt);
+        // The page's own prompt is admitted only once the other chat's answer
+        // has given the learner's credits back.
+        yield* learner.answered(other.chatId);
         yield* learner.titleNewest([OTHER.title]);
         yield* Effect.promise(() =>
           expect(
@@ -123,7 +126,10 @@ test.describe("A new chat admitted after the learner left, at 1440px", () => {
     await runOnPage(page, baseURL, (origin) =>
       Effect.gen(function* () {
         const { changes, learner } = yield* openChatPage(page, origin);
-        yield* learner.startChat(OTHER.prompt);
+        const other = yield* learner.startChat(OTHER.prompt);
+        // The page's own prompt is admitted only once the other chat's answer
+        // has given the learner's credits back.
+        yield* learner.answered(other.chatId);
         yield* learner.titleNewest([OTHER.title]);
         yield* Effect.promise(() =>
           expect(
@@ -153,7 +159,10 @@ test.describe("A new chat admitted after the learner left, at 1440px", () => {
     await runOnPage(page, baseURL, (origin) =>
       Effect.gen(function* () {
         const { changes, learner } = yield* openChatPage(page, origin);
-        yield* learner.startChat(OTHER.prompt);
+        const other = yield* learner.startChat(OTHER.prompt);
+        // The page's own prompt is admitted only once the other chat's answer
+        // has given the learner's credits back.
+        yield* learner.answered(other.chatId);
         yield* learner.titleNewest([OTHER.title]);
 
         yield* openSheet(page);
@@ -199,7 +208,10 @@ test.describe("A new chat admitted after the learner left, at 1440px", () => {
     await runOnPage(page, baseURL, (origin) =>
       Effect.gen(function* () {
         const { changes, learner } = yield* openChatPage(page, origin);
-        yield* learner.startChat(OTHER.prompt);
+        const other = yield* learner.startChat(OTHER.prompt);
+        // The page's own prompt is admitted only once the other chat's answer
+        // has given the learner's credits back.
+        yield* learner.answered(other.chatId);
         yield* learner.titleNewest([OTHER.title]);
 
         yield* openSheet(page);
@@ -252,7 +264,10 @@ test.describe("A follow-up admitted in a chat, which does not hold the next clic
       Effect.gen(function* () {
         const { changes, learner } = yield* openChatPage(page, origin);
         yield* learner.startChat(OTHER.prompt);
-        yield* learner.startChat(FIRST.prompt);
+        const firstChat = yield* learner.startChat(FIRST.prompt);
+        // The follow-up is admitted only once the first chat's answer has given
+        // the learner's credits back.
+        yield* learner.answered(firstChat.chatId);
         yield* learner.titleNewest([FIRST.title, OTHER.title]);
         yield* Effect.promise(() =>
           expect(

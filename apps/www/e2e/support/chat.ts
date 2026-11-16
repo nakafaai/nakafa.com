@@ -48,6 +48,38 @@ export const SHARE_TOKEN_QUERY = "chats/queries:getShareToken";
 /** What the pages say when a change fails. */
 export const FAILED = "We could not complete this action.";
 
+/** The query the chat page reads its conversation and its newest turn with. */
+const CONVERSATION = "nina/conversation:get";
+
+/** A chat's newest turn as the conversation query answers it: none before the first, or where it stands. */
+const Conversation = Schema.Struct({
+  turn: Schema.NullOr(
+    Schema.Struct({
+      state: Schema.Struct({
+        status: Schema.Literals([
+          "queued",
+          "running",
+          "complete",
+          "failed",
+          "cancelled",
+        ]),
+      }),
+    })
+  ),
+});
+
+/** Whether a chat's newest turn has ended: once it has, its hold of credits is given back. */
+const answerEnded = (conversation: typeof Conversation.Type) =>
+  conversation.turn !== null &&
+  conversation.turn.state.status !== "queued" &&
+  conversation.turn.state.status !== "running";
+
+/** A chat whose answer still ran after the backend was read for it as long as a step waits. */
+class AnswerStillRunning extends Schema.TaggedError<
+  AnswerStillRunning,
+  { readonly brand: unique symbol }
+>()("AnswerStillRunning", { chatId: Schema.String }) {}
+
 /** A call to the backend that did not succeed. */
 class ConvexCallError extends Schema.TaggedError<
   ConvexCallError,
@@ -210,6 +242,26 @@ export const learnerOf = Effect.fn("NakafaE2E.learnerOf")(function* (
         }),
         Effect.flatMap(Schema.decodeUnknownEffect(Receipt))
       );
+    }),
+    /**
+     * Waits until the answer of a chat has ended. A free learner's answer holds
+     * every credit of the day while it runs, and the transaction that ends it
+     * gives the hold back, so a prompt the page sends after this is admitted
+     * instead of refused for want of credits. The local backend ends each answer
+     * at once for want of a model; a busy machine only makes it later.
+     */
+    answered: Effect.fn("NakafaE2E.answered")(function* (chatId: string) {
+      const conversation = yield* call("query", CONVERSATION, { chatId }).pipe(
+        Effect.flatMap(Schema.decodeUnknownEffect(Conversation)),
+        Effect.repeat({
+          schedule: Schedule.spaced("250 millis"),
+          times: 120,
+          until: answerEnded,
+        })
+      );
+      if (!answerEnded(conversation)) {
+        return yield* new AnswerStillRunning({ chatId });
+      }
     }),
     /** Gives the newest chats of the list these titles, the newest first. */
     titleNewest: Effect.fn("NakafaE2E.titleNewest")(function* (
