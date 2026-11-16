@@ -1,5 +1,6 @@
+import { useRequired } from "@repo/design-system/hooks/required";
 import { Schema } from "effect";
-import { createContext, use } from "react";
+import { createContext } from "react";
 
 /** One fenced block of a response: its class, its code and its language. */
 const FenceSourceSchema = Schema.Struct({
@@ -17,10 +18,5 @@ export const FenceSourceContext = createContext<FenceSource | null>(null);
 
 /** Selects the source of the surrounding fenced block. */
 export function useFenceSource() {
-  const source = use(FenceSourceContext);
-  if (source === null) {
-    // A missing provider is a programmer composition error at this React seam.
-    throw new Error("Fenced block parts require FenceSourceContext.");
-  }
-  return source;
+  return useRequired(FenceSourceContext, "useFenceSource");
 }

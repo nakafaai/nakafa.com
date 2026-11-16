@@ -4,15 +4,10 @@ import { POST_PAGE_SIZE } from "@repo/backend/client/posts/list";
 import posts from "@repo/backend/confect/_generated/refs/posts";
 import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundary";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
+import { useRequired } from "@repo/design-system/hooks/required";
 import { useRouter } from "@tanstack/react-router";
 import { Array as Arr, Option } from "effect";
-import {
-  createContext,
-  use,
-  useCallback,
-  useLayoutEffect,
-  useState,
-} from "react";
+import { createContext, useCallback, useLayoutEffect, useState } from "react";
 import { useLocale, useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { ConvexIsland } from "@/components/providers/island";
@@ -116,11 +111,7 @@ const PostsFirstPageContext = createContext<Option.Option<
 
 /** Reads the first page of the list around a variant. */
 function usePostsFirstPage() {
-  const first = use(PostsFirstPageContext);
-  if (first === null) {
-    throw new Error("usePostsFirstPage must be used within UserPosts");
-  }
-  return first;
+  return useRequired(PostsFirstPageContext, "usePostsFirstPage");
 }
 
 /** A visitor's list: the loader's first page, then the next pages the server reads by their cursor. */

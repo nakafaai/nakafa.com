@@ -1,7 +1,8 @@
 import { QueryResult } from "@confect/react";
 import { Id } from "@repo/backend/confect/_generated/id";
+import { useRequired } from "@repo/design-system/hooks/required";
 import { Array as Arr, Option, Schema } from "effect";
-import { createContext, type ReactNode, use, useState } from "react";
+import { createContext, type ReactNode, useState } from "react";
 import { createStore, type StoreApi, useStore } from "zustand";
 import { useViewerQuery } from "@/components/tenant/context";
 import {
@@ -40,13 +41,7 @@ export function RosterUnitProvider({ children }: { children: ReactNode }) {
 
 /** Reads one selected slice of the page's unit choice. */
 function useRosterUnitStore<T>(selector: (state: RosterUnitStore) => T) {
-  const store = use(RosterUnitContext);
-
-  if (store === null) {
-    throw new Error(
-      "useRosterUnitStore must be used within RosterUnitProvider"
-    );
-  }
+  const store = useRequired(RosterUnitContext, "useRosterUnitStore");
 
   return useStore(store, selector);
 }

@@ -2,6 +2,7 @@ import { QueryResult } from "@confect/react";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import type { BuiltinRole } from "@repo/backend/confect/access/schema";
 import type { TenantProfile } from "@repo/backend/confect/tenancy/schema";
+import { useRequired } from "@repo/design-system/hooks/required";
 import type { Option } from "effect";
 import { createContext, use } from "react";
 import { useConvexAuth } from "@/components/auth/convex";
@@ -50,11 +51,8 @@ export const TenantContext = createContext<TenantValue | null>(null);
  * provides it.
  */
 export function useTenant(): TenantValue {
-  const tenant = use(TenantContext);
+  const tenant = useRequired(TenantContext, "useTenant");
   const viewer = useViewerQuery();
-  if (tenant === null) {
-    throw new Error("useTenant must be used within TenantShell");
-  }
   return liveTenant(
     tenant,
     QueryResult.isSuccess(viewer) ? viewer.value.tenant : undefined

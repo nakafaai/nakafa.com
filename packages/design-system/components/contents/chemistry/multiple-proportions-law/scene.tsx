@@ -17,8 +17,9 @@ import { atomSymbol } from "@repo/design-system/components/contents/chemistry/sy
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { getThreeParticleLabelFontSize } from "@repo/design-system/components/three/data/constants";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
+import { useRequired } from "@repo/design-system/hooks/required";
 import { Array as Arr, HashMap, Option } from "effect";
-import { createContext, type ReactNode, use } from "react";
+import { createContext, type ReactNode } from "react";
 
 const FIRST_X = -0.78;
 const SECOND_X = 0.78;
@@ -45,14 +46,10 @@ export function MultipleProportionsSceneColorsProvider({
 
 /** Reads the colors of the surrounding multiple-proportions lab. */
 function useMultipleProportionsSceneColors() {
-  const colors = use(MultipleProportionsSceneColorsContext);
-  if (!colors) {
-    // A missing provider is a programmer composition error at this React seam.
-    throw new Error(
-      "useMultipleProportionsSceneColors must be used within MultipleProportionsSceneColorsProvider"
-    );
-  }
-  return colors;
+  return useRequired(
+    MultipleProportionsSceneColorsContext,
+    "useMultipleProportionsSceneColors"
+  );
 }
 
 export function MultipleProportionsScene({

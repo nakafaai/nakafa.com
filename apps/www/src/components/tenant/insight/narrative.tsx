@@ -6,11 +6,11 @@ import { Button } from "@repo/design-system/components/ui/button";
 import { DropdownMenuItem } from "@repo/design-system/components/ui/dropdown-menu";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { Textarea } from "@repo/design-system/components/ui/textarea";
+import { useRequired } from "@repo/design-system/hooks/required";
 import { Array as Arr, Option } from "effect";
 import {
   createContext,
   type ReactNode,
-  use,
   useOptimistic,
   useState,
   useTransition,
@@ -50,24 +50,14 @@ const NarrativeClassContext =
 
 /** Reads one selected slice of the page's narrative choice. */
 function useNarrativeChoice<T>(selector: (state: NarrativeChoice) => T) {
-  const store = use(NarrativeContext);
-
-  if (store === null) {
-    throw new Error("useNarrativeChoice must be used within NarrativeProvider");
-  }
+  const store = useRequired(NarrativeContext, "useNarrativeChoice");
 
   return useStore(store, selector);
 }
 
 /** Reads the class of the page's narrative dialog. */
 function useNarrativeClass() {
-  const classId = use(NarrativeClassContext);
-
-  if (classId === null) {
-    throw new Error("useNarrativeClass must be used within NarrativeProvider");
-  }
-
-  return classId;
+  return useRequired(NarrativeClassContext, "useNarrativeClass");
 }
 
 /** Gives a class's page its one narrative dialog, which any row of any of its tabs opens, so a long class draws one. */

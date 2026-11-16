@@ -3,7 +3,8 @@ import type {
   ShellModelSceneColors,
   ShellModelShells,
 } from "@repo/design-system/components/contents/chemistry/shell-model/data";
-import { createContext, type ReactNode, use } from "react";
+import { useRequired } from "@repo/design-system/hooks/required";
+import { createContext, type ReactNode } from "react";
 
 interface ShellModelProviderProps {
   children: ReactNode;
@@ -28,10 +29,5 @@ export function ShellModelProvider({
 
 /** Reads the values of the surrounding shell model. */
 export function useShellModel() {
-  const model = use(ShellModelContext);
-  if (!model) {
-    // A missing provider is a programmer composition error at this React seam.
-    throw new Error("useShellModel must be used within ShellModelProvider");
-  }
-  return model;
+  return useRequired(ShellModelContext, "useShellModel");
 }

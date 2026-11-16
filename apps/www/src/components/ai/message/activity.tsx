@@ -16,8 +16,9 @@ import {
 } from "@repo/design-system/components/ui/collapsible";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
+import { useRequired } from "@repo/design-system/hooks/required";
 import { cn } from "cn";
-import { createContext, type ReactNode, use } from "react";
+import { createContext, type ReactNode } from "react";
 import { useTranslations } from "use-intl";
 import type { Invocation } from "@/components/ai/message/invocation";
 import { readLimitCopy } from "@/components/ai/message/limit";
@@ -27,10 +28,7 @@ const ActivityContext = createContext<Invocation | null>(null);
 
 /** Selects one part of the invocation for evidence rendered inside an activity. */
 export function useActivity<T>(selector: (invocation: Invocation) => T) {
-  const value = use(ActivityContext);
-  if (!value) {
-    throw new Error("Activity components must be used within Activity");
-  }
+  const value = useRequired(ActivityContext, "useActivity");
   return selector(value);
 }
 

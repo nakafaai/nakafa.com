@@ -1,14 +1,9 @@
 import type { Ref } from "@confect/core";
 import { useAction } from "@confect/react";
 import connectors from "@repo/backend/confect/_generated/refs/connectors";
+import { useRequired } from "@repo/design-system/hooks/required";
 import { Array as Arr, Effect, Option } from "effect";
-import {
-  createContext,
-  type ReactNode,
-  use,
-  useState,
-  useTransition,
-} from "react";
+import { createContext, type ReactNode, useState, useTransition } from "react";
 import { createStore, type StoreApi, useStore } from "zustand";
 import { useTenant } from "@/components/tenant/context";
 import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
@@ -66,11 +61,7 @@ export function CoursesProvider({ children }: { children: ReactNode }) {
 
 /** Reads one selected slice of the open detail's courses. */
 export function useCourses<T>(selector: (state: CoursesStore) => T) {
-  const store = use(CoursesContext);
-
-  if (store === null) {
-    throw new Error("useCourses must be used within CoursesProvider");
-  }
+  const store = useRequired(CoursesContext, "useCourses");
 
   return useStore(store, selector);
 }

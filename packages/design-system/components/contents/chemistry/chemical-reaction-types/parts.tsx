@@ -12,8 +12,9 @@ import {
   GlassMaterial,
   LiquidMaterial,
 } from "@repo/design-system/components/three/physical";
+import { useRequired } from "@repo/design-system/hooks/required";
 import { Array as Arr } from "effect";
-import { createContext, type ReactNode, use } from "react";
+import { createContext, type ReactNode } from "react";
 
 const BEAKER_RADIUS = 0.36;
 const BEAKER_HEIGHT = 1;
@@ -118,10 +119,7 @@ export function Particle({
   position: ChemicalReactionTypeScenePoint;
 }) {
   const { colors } = useChemicalReactionTypeScene();
-  const element = use(ParticleElementContext);
-  if (element === null) {
-    throw new Error("Particle must be used within ParticleElementContext");
-  }
+  const element = useRequired(ParticleElementContext, "Particle");
   const { color, label, radius } = element;
   return (
     <group position={position}>

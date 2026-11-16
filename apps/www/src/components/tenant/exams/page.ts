@@ -1,6 +1,7 @@
+import { useRequired } from "@repo/design-system/hooks/required";
 import type { Node } from "@tiptap/pm/model";
 import type { Option } from "effect";
-import { createContext, use } from "react";
+import { createContext } from "react";
 import type { QuestionEditing } from "@/components/tenant/exams/edits";
 import type { Question } from "@/components/tenant/exams/optimistic";
 
@@ -27,9 +28,5 @@ export const QuestionPageContext = createContext<{
 
 /** Reads the question of the page around it. It throws outside a page, which always provides it. */
 export function useQuestionPage() {
-  const page = use(QuestionPageContext);
-  if (page === null) {
-    throw new Error("useQuestionPage must be used within ExamPage");
-  }
-  return page;
+  return useRequired(QuestionPageContext, "useQuestionPage");
 }

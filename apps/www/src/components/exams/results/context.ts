@@ -1,7 +1,8 @@
 import { Id } from "@repo/backend/confect/_generated/id";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
+import { useRequired } from "@repo/design-system/hooks/required";
 import { Schema } from "effect";
-import { createContext, use } from "react";
+import { createContext } from "react";
 import { useConvexAuth } from "@/components/auth/convex";
 
 /** The sitting whose results a screen reads, and the school that holds it. */
@@ -20,13 +21,7 @@ export const ResultsScopeContext = createContext<
 
 /** The scope of the results screen that renders the component. */
 export function useResultsScope() {
-  const scope = use(ResultsScopeContext);
-  if (scope === null) {
-    throw new TypeError(
-      "useResultsScope must be used within the results screen"
-    );
-  }
-  return scope;
+  return useRequired(ResultsScopeContext, "useResultsScope");
 }
 
 /**
@@ -49,13 +44,7 @@ export const ResultsPaperContext = createContext<
 
 /** The time zone and the question count of the results screen that renders the component. */
 export function useResultsPaper() {
-  const paper = use(ResultsPaperContext);
-  if (paper === null) {
-    throw new TypeError(
-      "useResultsPaper must be used within the results screen"
-    );
-  }
-  return paper;
+  return useRequired(ResultsPaperContext, "useResultsPaper");
 }
 
 /**

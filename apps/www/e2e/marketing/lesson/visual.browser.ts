@@ -22,12 +22,14 @@ import { desktopViewport, viewportSize } from "@/e2e/support/viewport";
 const LOADING_HOLD_MS = 8000;
 
 /**
- * A marker that only the unit circle's scene module holds: the message of its
- * context. The chunk that holds it is the one held back. A chunk's name will not
- * do: every chunk that loads the scene lists its neighbours' names, so holding
- * one back would hold the lab itself, which draws no spinner.
+ * A marker that only the unit circle's scene module holds: the part name it
+ * passes to `useRequired`, a string literal that minifying keeps, and one the
+ * lab's own context (`useUnitCircle`) does not share. The chunk that holds it is
+ * the one held back. A chunk's name will not do: every chunk
+ * that loads the scene lists its neighbours' names, so holding one back would
+ * hold the lab itself, which draws no spinner.
  */
-const CIRCLE_SCENE_MARKER = "The unit circle scene requires";
+const CIRCLE_SCENE_MARKER = "useUnitCircleScene";
 
 /** The tab of the circle lesson, the second of the window's tabs. */
 const CIRCLE_TAB_INDEX = 1;

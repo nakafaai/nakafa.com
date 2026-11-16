@@ -8,6 +8,7 @@ import { waitForCommittedAppRouter } from "@/e2e/support/navigation/readiness";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { appRoutes } from "@/e2e/support/route";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
+import { waitUntilTakenOver } from "@/e2e/support/window";
 
 /** The rows of the surah list, each a link to its surah. */
 const rows = (page: Page) => page.locator("main ul > li > a");
@@ -47,6 +48,8 @@ test("the Quran index header searches every surah by number, name and meaning", 
         const search = page.getByRole("textbox", {
           name: app.Holy["search-surah"],
         });
+        // React must hold the box before the test types, or WebKit loses the words to the server's markup.
+        yield* Effect.promise(() => waitUntilTakenOver(search));
 
         yield* Effect.promise(async () => {
           for (const words of ["al baqarah", "ALBAQARAH", "البقرة", "Cow"]) {

@@ -1,5 +1,6 @@
 import type { AccelerationLabels } from "@repo/design-system/components/contents/physics/kinematics/acceleration/data";
-import { createContext, type ReactNode, use } from "react";
+import { useRequired } from "@repo/design-system/hooks/required";
+import { createContext, type ReactNode } from "react";
 
 const AccelerationLabelsContext = createContext<AccelerationLabels | null>(
   null
@@ -22,12 +23,5 @@ export function AccelerationLabelsProvider({
 
 /** Reads the labels of the surrounding acceleration card. */
 export function useAccelerationLabels() {
-  const labels = use(AccelerationLabelsContext);
-  if (!labels) {
-    // A missing provider is a programmer composition error at this React seam.
-    throw new Error(
-      "useAccelerationLabels must be used within AccelerationLabelsProvider"
-    );
-  }
-  return labels;
+  return useRequired(AccelerationLabelsContext, "useAccelerationLabels");
 }

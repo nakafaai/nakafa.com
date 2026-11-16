@@ -4,8 +4,9 @@ import { useMutation } from "@confect/react";
 import { captureException } from "@repo/analytics/posthog/capture";
 import contents from "@repo/backend/confect/_generated/refs/contents";
 import type { Locale } from "@repo/backend/confect/lib/validators/contents";
+import { useRequired } from "@repo/design-system/hooks/required";
 import { Array as Arr, Effect, Result } from "effect";
-import { createContext, use, useRef } from "react";
+import { createContext, useRef } from "react";
 import type { Locale as RouteLocale } from "use-intl";
 import { SignedInIsland } from "@/components/providers/island";
 import { isActiveLocale } from "@/lib/i18n/active";
@@ -46,12 +47,9 @@ export function LessonFinish({
 
 /** An empty element at the end of the lesson that finishes it once it is seen. */
 function LessonEnd() {
-  const lesson = use(LessonContext);
+  const lesson = useRequired(LessonContext, "LessonEnd");
   const finishLesson = useMutation(contents.mutations.views.finishLesson);
   const sent = useRef(false);
-  if (lesson === null) {
-    throw new Error("LessonEnd must be used within LessonFinish");
-  }
   return (
     <div
       aria-hidden="true"

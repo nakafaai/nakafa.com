@@ -14,10 +14,11 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@repo/design-system/components/ui/sidebar-menu";
+import { useRequired } from "@repo/design-system/hooks/required";
 import type { Mascot } from "@repo/mascot/code";
 import { useMatchRoute } from "@tanstack/react-router";
 import { Array as Arr, MutableHashMap, Option } from "effect";
-import { createContext, type ReactNode, use, useEffect, useState } from "react";
+import { createContext, type ReactNode, useEffect, useState } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { markOf, withMarks } from "@/components/tenant/classes/marks";
@@ -57,11 +58,7 @@ export function DrawnClasses({ children }: { children: ReactNode }) {
 
 /** Reads the classes the sidebar drew. It throws outside the school's frame, which always provides them. */
 function useDrawnClasses() {
-  const drawn = use(DrawnClassesContext);
-  if (drawn === null) {
-    throw new Error("useDrawnClasses must be used within DrawnClasses");
-  }
-  return drawn;
+  return useRequired(DrawnClassesContext, "useDrawnClasses");
 }
 
 /**

@@ -9,11 +9,11 @@ import {
   DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { useRequired } from "@repo/design-system/hooks/required";
 import {
   type ComponentProps,
   createContext,
   type ReactNode,
-  use,
   useRef,
   useState,
 } from "react";
@@ -29,12 +29,7 @@ const RowMenuContext = createContext<{
 
 /** Reads the menu of the row around a cell. */
 function useRowMenu() {
-  const menu = use(RowMenuContext);
-  if (menu === null) {
-    // Items outside their row's menu are a composition error at this seam.
-    throw new Error("Row items render inside a table's menu column.");
-  }
-  return menu;
+  return useRequired(RowMenuContext, "useRowMenu");
 }
 
 /**

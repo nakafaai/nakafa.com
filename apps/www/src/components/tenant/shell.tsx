@@ -33,12 +33,13 @@ import {
   Sidebar,
   SidebarInset,
 } from "@repo/design-system/components/ui/sidebar-shell";
+import { useRequired } from "@repo/design-system/hooks/required";
 import { lazy } from "@repo/design-system/lib/lazy";
 import { textDirection } from "@repo/internationalization/src/direction";
 import { SITE_ORIGIN } from "@repo/seo/origin";
 import { ClientOnly } from "@tanstack/react-router";
 import { Effect, Option } from "effect";
-import { createContext, type ReactNode, Suspense, use, useState } from "react";
+import { createContext, type ReactNode, Suspense, useState } from "react";
 import { useLocale, useTranslations } from "use-intl";
 import { Authenticated } from "@/components/auth/gate";
 import { ShellLocksContext } from "@/components/sidebar/locks";
@@ -104,11 +105,7 @@ const ViewerAccountContext = createContext<{
 
 /** Reads the viewer's account. It throws outside the shell, which always provides it. */
 function useViewerAccount() {
-  const viewer = use(ViewerAccountContext);
-  if (viewer === null) {
-    throw new Error("useViewerAccount must be used within TenantShell");
-  }
-  return viewer;
+  return useRequired(ViewerAccountContext, "useViewerAccount");
 }
 
 /**

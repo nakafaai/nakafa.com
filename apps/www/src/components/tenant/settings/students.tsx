@@ -33,8 +33,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@repo/design-system/components/ui/select";
+import { useRequired } from "@repo/design-system/hooks/required";
 import { Array as Arr, Option, Schema } from "effect";
-import { createContext, use, useId, useState, useTransition } from "react";
+import { createContext, useId, useState, useTransition } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { useDialogs } from "@/components/shared/dialogs";
@@ -90,11 +91,7 @@ const CardIssueContext = createContext<((card: CardView) => void) | null>(null);
 
 /** Reads what opens an issued card. It throws outside the students page, which always provides it. */
 function useIssueCard() {
-  const issue = use(CardIssueContext);
-  if (issue === null) {
-    throw new Error("useIssueCard must be used within SchoolStudentsSettings");
-  }
-  return issue;
+  return useRequired(CardIssueContext, "useIssueCard");
 }
 
 /**

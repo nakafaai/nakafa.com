@@ -1,7 +1,7 @@
 "use client";
 
+import { useRequired } from "@repo/design-system/hooks/required";
 import { Effect, Fiber, Option } from "effect";
-import { use } from "react";
 import { type GameStoreApi, GameStoreContext } from "@/components/island/store";
 import { weatherOf } from "@/lib/island/sky";
 
@@ -31,10 +31,7 @@ function readWeather(store: GameStoreApi) {
  * (ADR 0047, D8), read once as they enter.
  */
 export function IslandWeather() {
-  const store = use(GameStoreContext);
-  if (store === null) {
-    throw new Error("IslandWeather must be used within the island game");
-  }
+  const store = useRequired(GameStoreContext, "IslandWeather");
   return (
     <span
       hidden

@@ -22,8 +22,9 @@ import {
 } from "@repo/design-system/components/ui/select";
 import { Switch } from "@repo/design-system/components/ui/switch";
 import { Textarea } from "@repo/design-system/components/ui/textarea";
+import { useRequired } from "@repo/design-system/hooks/required";
 import { Array as Arr, Match, Option, Schema } from "effect";
-import { createContext, type ReactNode, use, useId, useState } from "react";
+import { createContext, type ReactNode, useId, useState } from "react";
 import { useTranslations } from "use-intl";
 import { placeNodes } from "@/components/assessment/place";
 import {
@@ -66,11 +67,7 @@ export function FigurePropsProvider({
 
 /** Reads the props being written; a control outside the form has none to read. */
 function useFigureProps() {
-  const value = use(FigurePropsContext);
-  if (value === null) {
-    throw new Error("A figure field must be used within FigurePropsContext");
-  }
-  return value;
+  return useRequired(FigurePropsContext, "useFigureProps");
 }
 
 /** A JSON value written as text, and read back from text. */

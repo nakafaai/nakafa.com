@@ -1,4 +1,5 @@
-import { createContext, use } from "react";
+import { useRequired } from "@repo/design-system/hooks/required";
+import { createContext } from "react";
 import {
   type AnalyticsConsentModel,
   useAnalyticsConsentModel,
@@ -15,13 +16,7 @@ export const AnalyticsConsentContext =
 
 /** Returns the consent store and rejects a missing provider. */
 export function useAnalyticsConsentStore() {
-  const store = use(AnalyticsConsentContext);
-  if (!store) {
-    throw new Error(
-      "useAnalyticsConsent must be used within AnalyticsConsentProvider"
-    );
-  }
-  return store;
+  return useRequired(AnalyticsConsentContext, "useAnalyticsConsentStore");
 }
 
 /**

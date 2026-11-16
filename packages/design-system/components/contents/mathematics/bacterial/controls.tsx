@@ -7,8 +7,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@repo/design-system/components/ui/select";
+import { useRequired } from "@repo/design-system/hooks/required";
 import { Array as Arr, Schema } from "effect";
-import { type ComponentProps, createContext, type ReactNode, use } from "react";
+import { type ComponentProps, createContext, type ReactNode } from "react";
 import { useTranslations } from "use-intl";
 
 const SPEED_STEP = 0.25;
@@ -108,14 +109,7 @@ export function BacterialTimeProvider({
 
 /** Reads the time that the surrounding growth card labels its generations with. */
 function useBacterialTime() {
-  const time = use(BacterialTimeContext);
-  if (!time) {
-    // A missing provider is a programmer composition error at this React seam.
-    throw new Error(
-      "useBacterialTime must be used within BacterialTimeProvider"
-    );
-  }
-  return time;
+  return useRequired(BacterialTimeContext, "useBacterialTime");
 }
 
 /**

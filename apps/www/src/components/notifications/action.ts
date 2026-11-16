@@ -1,8 +1,9 @@
 import { useMutation } from "@confect/react";
 import notifications from "@repo/backend/confect/_generated/refs/notifications";
+import { useRequired } from "@repo/design-system/hooks/required";
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { DateTime, Effect, Match } from "effect";
-import { type MouseEvent, use } from "react";
+import type { MouseEvent } from "react";
 import { useLocale, useTranslations } from "use-intl";
 import { NotificationsClockContext } from "@/components/notifications/clock";
 import { addressOf } from "@/components/notifications/destination";
@@ -14,13 +15,7 @@ import { reportClientException } from "@/lib/analytics/client";
 
 /** The moment the ages of the inbox count from, which the feed's timer moves forward. */
 export function useNotificationsNow() {
-  const clock = use(NotificationsClockContext);
-
-  if (!clock) {
-    throw new Error(
-      "useNotificationsNow must be used within the notifications page"
-    );
-  }
+  const clock = useRequired(NotificationsClockContext, "useNotificationsNow");
 
   return useAgeNow(clock);
 }

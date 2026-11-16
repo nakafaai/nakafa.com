@@ -1,9 +1,10 @@
 import { FileIcon, InformationCircleIcon } from "@hugeicons/core-free-icons";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Separator } from "@repo/design-system/components/ui/separator";
+import { useRequired } from "@repo/design-system/hooks/required";
 import { cn } from "cn";
 import { Array as Arr } from "effect";
-import { createContext, Fragment, type ReactElement, use } from "react";
+import { createContext, Fragment, type ReactElement } from "react";
 import { useTranslations } from "use-intl";
 import { SearchExcerpt } from "@/components/search/excerpt";
 import { useSearchSectionLabels } from "@/components/search/labels";
@@ -28,11 +29,7 @@ const ResultsQueryContext = createContext<string | null>(null);
 
 /** Reads the query whose results the page shows. */
 function useResultsQuery() {
-  const query = use(ResultsQueryContext);
-  if (query === null) {
-    throw new Error("useResultsQuery must be used within SearchResults");
-  }
-  return query;
+  return useRequired(ResultsQueryContext, "useResultsQuery");
 }
 
 /** Renders full-page Convex search states and grouped results. */

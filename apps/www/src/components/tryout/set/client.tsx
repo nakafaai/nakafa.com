@@ -1,8 +1,9 @@
 import { QueryResult, useQuery } from "@confect/react";
 import tryouts from "@repo/backend/confect/_generated/refs/tryouts";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
+import { useRequired } from "@repo/design-system/hooks/required";
 import { Array as Arr, Option } from "effect";
-import { createContext, type ReactNode, use, useState } from "react";
+import { createContext, type ReactNode, useState } from "react";
 import { useLocale } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import type { PlayerMode } from "@/components/player/mode";
@@ -77,11 +78,7 @@ const TryoutSetPageContext = createContext<Pick<
 
 /** Reads the page of the surrounding set client. */
 function useTryoutSetPage() {
-  const value = use(TryoutSetPageContext);
-  if (value === null) {
-    throw new Error("useTryoutSetPage must be used within TryoutSetPageClient");
-  }
-  return value;
+  return useRequired(TryoutSetPageContext, "useTryoutSetPage");
 }
 
 /** Renders one stable page with an active-only mutable subscription. */

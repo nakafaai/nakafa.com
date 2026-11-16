@@ -1,10 +1,11 @@
+import { useRequired } from "@repo/design-system/hooks/required";
 import {
   connectThemeStore,
   createThemeStore,
   type ThemeState,
   type ThemeStore,
 } from "@repo/design-system/lib/theme/store";
-import { createContext, type ReactNode, use, useEffect, useState } from "react";
+import { createContext, type ReactNode, useEffect, useState } from "react";
 import { useStore } from "zustand";
 
 const ThemeContext = createContext<ThemeStore | null>(null);
@@ -27,11 +28,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
 /** Returns the theme store and rejects a missing provider. */
 function useThemeStore(): ThemeStore {
-  const store = use(ThemeContext);
-  if (store === null) {
-    throw new TypeError("useTheme must be used within ThemeProvider");
-  }
-  return store;
+  return useRequired(ThemeContext, "useThemeStore");
 }
 
 /**

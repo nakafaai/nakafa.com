@@ -7,6 +7,7 @@ import comments from "@repo/backend/confect/_generated/refs/comments";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
+import { useRequired } from "@repo/design-system/hooks/required";
 import { buttonVariants } from "@repo/design-system/lib/button";
 import { Array as Arr, Option } from "effect";
 import { createContext, use } from "react";
@@ -75,11 +76,7 @@ const ProfileCommentsContext = createContext<{
 
 /** Reads the profile comments around a variant of the list. */
 function useProfileComments() {
-  const value = use(ProfileCommentsContext);
-  if (value === null) {
-    throw new Error("useProfileComments must be used within UserComments");
-  }
-  return value;
+  return useRequired(ProfileCommentsContext, "useProfileComments");
 }
 
 /** A visitor's comments: the loader's first page, then the next pages the server reads by their cursor. */

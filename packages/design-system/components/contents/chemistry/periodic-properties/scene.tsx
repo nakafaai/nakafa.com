@@ -11,8 +11,9 @@ import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { ArrowHelper } from "@repo/design-system/components/three/arrow";
 import type { ThreeFontSize } from "@repo/design-system/components/three/data/constants";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
+import { useRequired } from "@repo/design-system/hooks/required";
 import { Array as Arr, Option } from "effect";
-import { createContext, type ReactNode, use } from "react";
+import { createContext, type ReactNode } from "react";
 
 const PERIOD_Z = -1.18;
 const PERIOD_STEP = 0.78;
@@ -44,14 +45,10 @@ const PeriodicPropertiesSceneContext = createContext<{
 
 /** Reads the colors, the mode and the value range of the surrounding periodic-properties scene. */
 function usePeriodicPropertiesScene() {
-  const scene = use(PeriodicPropertiesSceneContext);
-  if (!scene) {
-    // A missing provider is a programmer composition error at this React seam.
-    throw new Error(
-      "usePeriodicPropertiesScene must be used within PeriodicPropertiesScene"
-    );
-  }
-  return scene;
+  return useRequired(
+    PeriodicPropertiesSceneContext,
+    "usePeriodicPropertiesScene"
+  );
 }
 
 /**

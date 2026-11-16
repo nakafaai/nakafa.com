@@ -6,6 +6,7 @@ import {
 import { captureException } from "@repo/analytics/posthog/capture";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { useRequired } from "@repo/design-system/hooks/required";
 import { writeCodeToClipboard } from "@repo/design-system/lib/code/clipboard";
 import { getCodeFileExtension } from "@repo/design-system/lib/code/extension";
 import { downloadFile } from "@repo/design-system/lib/files/download";
@@ -15,7 +16,6 @@ import {
   type ComponentProps,
   createContext,
   type ReactNode,
-  use,
   useEffect,
   useRef,
   useState,
@@ -48,10 +48,7 @@ export function CodeBlockSource({
 
 /** Selects one part of the surrounding code sample. */
 function useCodeSource<T>(selector: (source: CodeSource) => T) {
-  const value = use(CodeSourceContext);
-  if (!value) {
-    throw new Error("Code controls must be used within CodeBlockSource.");
-  }
+  const value = useRequired(CodeSourceContext, "useCodeSource");
   return selector(value);
 }
 
