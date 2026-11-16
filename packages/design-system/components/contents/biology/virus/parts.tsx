@@ -1,295 +1,298 @@
+import { Instances } from "@repo/design-system/components/contents/biology/instances";
 import {
-  BIOLOGY_SMALL_RING_POINT_COUNT,
-  type BiologySceneColors,
-  type BiologyScenePoint,
-  createBiologySpherePoints,
-} from "@repo/design-system/components/contents/biology/data";
+  EnvelopeMaterial,
+  useBumpySphere,
+  useClipping,
+  useLocalPlanes,
+} from "@repo/design-system/components/contents/biology/surface";
+import { spikeAnchor } from "@repo/design-system/components/contents/biology/virus/binding";
 import {
-  DnaDoubleHelix,
-  RnaSingleStrand,
-} from "@repo/design-system/components/contents/biology/parts";
+  capsomeres,
+  elongate,
+  helicalSubunits,
+  helixPath,
+  icosahedronFaces,
+} from "@repo/design-system/components/contents/biology/virus/capsid";
+import { MATERIAL } from "@repo/design-system/lib/material";
 import { Array as Arr } from "effect";
-import { useMemo } from "react";
-import { CatmullRomCurve3, Quaternion, Vector3 } from "three";
-
-const VECTOR_UP = new Vector3(0, 1, 0);
-const TAU = Math.PI * 2;
-const HELICAL_CAPSOMERE_COUNT = 64;
-const HELICAL_RIDGE_SAMPLE_COUNT = 72;
-const HELICAL_TURN_COUNT = 5.1;
-const HELICAL_CAPSID_LENGTH = 0.98;
-const HELICAL_CAPSID_RADIUS = 0.16;
-const ADENOVIRUS_CAPSOMERS = createVirusSurfaceAnchors(26, 0.34);
-const ADENOVIRUS_VERTEX_FIBERS = createVirusSurfaceAnchors(8, 0.39);
-const INFLUENZA_SPIKES = createVirusSurfaceAnchors(18, 0.42);
-const INFLUENZA_RIBONUCLEOPROTEINS = [
-  { id: "rna-1", position: [-0.11, 0, 0], rotation: [0.2, 0.8, -0.08] },
-  { id: "rna-2", position: [0.04, 0.02, 0.03], rotation: [-0.1, 0.2, 0.12] },
-  { id: "rna-3", position: [0.15, -0.02, -0.02], rotation: [0.3, -0.45, 0.05] },
-] as const;
-const VIRION_SPIKE_HEADS = [
-  [0, 0, 0],
-  [0.055, 0.014, 0],
-  [-0.028, 0.014, 0.048],
-  [-0.028, 0.014, -0.048],
-] satisfies readonly BiologyScenePoint[];
-const MINI_VIRION_SPIKES = createVirusSurfaceAnchors(
-  BIOLOGY_SMALL_RING_POINT_COUNT,
-  0.24
-);
-const PHAGE_FIBERS = [
-  [
-    [0, -0.42, 0],
-    [-0.24, -0.62, 0.16],
-  ],
-  [
-    [0, -0.42, 0],
-    [0.24, -0.62, 0.16],
-  ],
-  [
-    [0, -0.42, 0],
-    [-0.2, -0.62, -0.16],
-  ],
-  [
-    [0, -0.42, 0],
-    [0.2, -0.62, -0.16],
-  ],
-] satisfies readonly (readonly BiologyScenePoint[])[];
-const HELICAL_CAPSOMERES = createHelicalCapsomeres();
-const HELICAL_RIDGE_POINTS = [
-  { id: "front-ridge", points: createHelicalRidgePoints(0) },
-  { id: "back-ridge", points: createHelicalRidgePoints(Math.PI) },
-] as const;
+import { useEffect, useMemo, useRef } from "react";
+import {
+  BufferGeometry,
+  CatmullRomCurve3,
+  Float32BufferAttribute,
+  type Group,
+  type Plane,
+  Vector3,
+} from "three";
 
 /**
- * Shows a helical virus like tobacco mosaic virus, where capsomeres spiral
- * around a central RNA strand instead of forming a faceted shell.
+ * Tobacco mosaic virus at 1 unit to 100 nm: a rod 18 nm wide whose coat
+ * proteins climb a helix 2.3 nm a turn, 16.3 to a turn. The card shows a
+ * stretch 110 nm long of the 300 nm rod.
  */
-export function HelicalVirusModel({
-  colors,
-  scale = 1,
-}: {
-  colors: Pick<BiologySceneColors, "genome" | "membrane" | "pathogen">;
-  scale?: number;
-}) {
+const TMV = { length: 1.1, perTurn: 16.3, pitch: 0.023, radius: 0.09 } as const;
+
+/** How far the coat is stripped from the rod's right end to show the RNA it wraps. */
+const TMV_BARE = 0.12;
+
+/**
+ * A helical virus such as tobacco mosaic virus: some 800 wedge-shaped coat
+ * proteins wound round a single strand of RNA that follows the same helix
+ * deep in the rod, stripped from one end to show it.
+ */
+export function HelicalVirusModel({ scale = 1 }: { scale?: number }) {
+  const subunits = useMemo(
+    () =>
+      Arr.map(
+        Arr.filter(
+          helicalSubunits(TMV),
+          ({ x }) => x < TMV.length / 2 - TMV_BARE
+        ),
+        ({ angle, x }) => ({
+          position: [
+            x,
+            Math.cos(angle) * TMV.radius * 0.62,
+            Math.sin(angle) * TMV.radius * 0.62,
+          ] as const,
+          scale: [0.0125, 0.034, 0.0125] as const,
+          up: [0, Math.cos(angle), Math.sin(angle)] as const,
+        })
+      ),
+    []
+  );
+  const rna = useMemo(() => {
+    const turns = TMV.length / TMV.pitch;
+    return new CatmullRomCurve3(
+      Arr.map(
+        helixPath({ length: TMV.length, phase: 0, radius: 0.04, turns }),
+        ([x, y, z]) => new Vector3(y, x, z)
+      )
+    );
+  }, []);
   return (
     <group scale={scale}>
-      <mesh rotation={[0, 0, Math.PI / 2]}>
-        <cylinderGeometry
-          args={[
-            HELICAL_CAPSID_RADIUS * 0.88,
-            HELICAL_CAPSID_RADIUS * 0.88,
-            HELICAL_CAPSID_LENGTH,
-            42,
-          ]}
+      <Instances placements={subunits}>
+        <sphereGeometry args={[1, 10, 8]} />
+        <meshPhysicalMaterial
+          clearcoat={0.35}
+          clearcoatRoughness={0.4}
+          color={MATERIAL.tmvCoat}
+          roughness={0.55}
         />
-        <meshStandardMaterial
-          color={colors.membrane}
-          opacity={0.22}
-          roughness={0.8}
-          transparent
-        />
+      </Instances>
+      <mesh castShadow>
+        <tubeGeometry args={[rna, 1600, 0.006, 5, false]} />
+        <meshStandardMaterial color={MATERIAL.nucleicAcid} roughness={0.45} />
       </mesh>
-      <group scale={0.86}>
-        <RnaSingleStrand
-          backboneColor={colors.genome}
-          baseColor={colors.pathogen}
-          length={HELICAL_CAPSID_LENGTH * 0.8}
-          lineWidth={1.5}
-          radius={0.026}
-          turns={HELICAL_TURN_COUNT * 0.78}
-        />
-      </group>
-      {Arr.map(HELICAL_RIDGE_POINTS, (ridge) => (
-        <VirusTube
-          color={colors.pathogen}
-          key={ridge.id}
-          opacity={0.72}
-          points={ridge.points}
-          radius={0.009}
-        />
-      ))}
-      {Arr.map(HELICAL_CAPSOMERES, (capsomere) => (
-        <group
-          key={capsomere.id}
-          position={capsomere.position}
-          quaternion={capsomere.quaternion}
-        >
-          <mesh position={[0, 0.012, 0]} scale={[0.92, 1, 0.82]}>
-            <capsuleGeometry args={[0.026, 0.052, 4, 10]} />
-            <meshStandardMaterial color={colors.membrane} roughness={0.68} />
-          </mesh>
-        </group>
-      ))}
     </group>
   );
 }
 
-/**
- * Shows a polyhedral virus like adenovirus with a faceted capsid and vertex
- * fibers, without implying an outer lipid envelope.
- */
-export function PolyhedralVirusModel({
-  colors,
-  scale = 1,
-}: {
-  colors: Pick<
-    BiologySceneColors,
-    "genome" | "membrane" | "microbe" | "pathogen"
-  >;
-  scale?: number;
-}) {
-  return (
-    <group scale={scale}>
-      <mesh>
-        <icosahedronGeometry args={[0.35, 1]} />
-        <meshStandardMaterial color={colors.membrane} roughness={0.7} />
-      </mesh>
-      <group rotation={[0.3, 0.18, -0.2]} scale={0.34}>
-        <DnaDoubleHelix
-          backboneColor={colors.genome}
-          pairColor={colors.pathogen}
-          pairLineWidth={0.7}
-          radius={0.045}
-          turns={1.2}
-        />
-      </group>
-      {Arr.map(ADENOVIRUS_CAPSOMERS, (anchor) => (
-        <mesh key={anchor.id} position={anchor.position}>
-          <sphereGeometry args={[0.031, 10, 8]} />
-          <meshStandardMaterial color={colors.pathogen} roughness={0.7} />
-        </mesh>
-      ))}
-      {Arr.map(ADENOVIRUS_VERTEX_FIBERS, (anchor) => (
-        <group
-          key={anchor.id}
-          position={anchor.position}
-          quaternion={anchor.quaternion}
-        >
-          <mesh position={[0, 0.1, 0]}>
-            <capsuleGeometry args={[0.012, 0.13, 5, 8]} />
-            <meshStandardMaterial color={colors.microbe} roughness={0.74} />
-          </mesh>
-          <mesh position={[0, 0.18, 0]}>
-            <sphereGeometry args={[0.032, 10, 8]} />
-            <meshStandardMaterial color={colors.microbe} roughness={0.74} />
-          </mesh>
-        </group>
-      ))}
-    </group>
-  );
+/** An icosahedron's flat faces at circumradius 1, stretched along its axis by `extra`. */
+export function useFacetedShell(extra = 0) {
+  const geometry = useMemo(() => {
+    const corners = Arr.flatMap(icosahedronFaces(), (face) =>
+      Arr.flatMap(face, (corner) => elongate(corner, extra))
+    );
+    const shell = new BufferGeometry();
+    shell.setAttribute("position", new Float32BufferAttribute(corners, 3));
+    shell.computeVertexNormals();
+    return shell;
+  }, [extra]);
+  useEffect(() => () => geometry.dispose(), [geometry]);
+  return geometry;
 }
 
 /**
- * Shows an enveloped spherical virus like influenza with a lipid envelope,
- * surface proteins, and several RNA-protein segments inside.
+ * An icosahedral capsid of circumradius `radius`: a faceted protein shell
+ * tiled with hexagonal hexons and, at its twelve vertices, pentagonal
+ * pentons, `frequency` capsomeres along each edge, opened by `clip`.
  */
-export function EnvelopedVirusModel({
-  colors,
-  scale = 1,
+export function IcosahedralCapsid({
+  clip,
+  frequency,
+  radius,
 }: {
-  colors: Pick<
-    BiologySceneColors,
-    "genome" | "host" | "microbe" | "pathogen" | "spore"
-  >;
-  scale?: number;
+  readonly clip: readonly Plane[] | undefined;
+  readonly frequency: number;
+  readonly radius: number;
 }) {
-  return (
-    <group scale={scale}>
-      <mesh>
-        <sphereGeometry args={[0.42, 36, 24]} />
-        <meshStandardMaterial
-          color={colors.host}
-          opacity={0.42}
-          roughness={0.82}
-          transparent
-        />
-      </mesh>
-      <mesh>
-        <sphereGeometry args={[0.3, 28, 18]} />
-        <meshStandardMaterial
-          color={colors.pathogen}
-          opacity={0.22}
-          roughness={0.74}
-          transparent
-        />
-      </mesh>
-      {Arr.map(INFLUENZA_RIBONUCLEOPROTEINS, (strand) => (
-        <group
-          key={strand.id}
-          position={strand.position}
-          rotation={strand.rotation}
-          scale={0.42}
-        >
-          <RnaSingleStrand
-            backboneColor={colors.genome}
-            baseColor={colors.spore}
-            lineWidth={1.8}
-            radius={0.04}
-            turns={1.8}
-          />
-        </group>
-      ))}
-      {Arr.map(INFLUENZA_SPIKES, (anchor) => (
-        <VirusSurfaceSpike
-          anchor={anchor}
-          color={colors.microbe}
-          key={anchor.id}
-        />
-      ))}
-    </group>
-  );
-}
-
-/**
- * Creates radially oriented anchors for envelope spikes.
- */
-export function createVirusSurfaceAnchors(count: number, radius: number) {
-  return Arr.map(createBiologySpherePoints(count, radius), (point) => {
-    const direction = new Vector3(...point.position).normalize();
-
-    return {
-      id: point.id,
+  const shell = useFacetedShell();
+  const size = (radius * 1.0515) / frequency;
+  const spots = useMemo(() => {
+    const placed = Arr.map(capsomeres(frequency), (spot, index) => ({
+      kind: spot.kind,
       position: [
-        direction.x * radius,
-        direction.y * radius,
-        direction.z * radius,
-      ] satisfies BiologyScenePoint,
-      quaternion: new Quaternion().setFromUnitVectors(VECTOR_UP, direction),
+        spot.position[0] * radius + spot.normal[0] * size * 0.1,
+        spot.position[1] * radius + spot.normal[1] * size * 0.1,
+        spot.position[2] * radius + spot.normal[2] * size * 0.1,
+      ] as const,
+      spin: index * 0.37,
+      up: spot.normal,
+    }));
+    return {
+      hexons: Arr.filter(placed, ({ kind }) => kind === "hexon"),
+      pentons: Arr.filter(placed, ({ kind }) => kind === "penton"),
     };
-  });
+  }, [frequency, radius, size]);
+  return (
+    <group>
+      <mesh geometry={shell} receiveShadow scale={radius * 0.96}>
+        <EnvelopeMaterial clip={clip} color={MATERIAL.capsidProtein} wedge />
+      </mesh>
+      <Instances placements={spots.hexons}>
+        <cylinderGeometry args={[size * 0.4, size * 0.48, size * 0.28, 6]} />
+        <EnvelopeMaterial clip={clip} color={MATERIAL.capsidProtein} wedge />
+      </Instances>
+      <Instances placements={spots.pentons}>
+        <cylinderGeometry args={[size * 0.36, size * 0.46, size * 0.32, 5]} />
+        <EnvelopeMaterial clip={clip} color={MATERIAL.penton} wedge />
+      </Instances>
+    </group>
+  );
 }
 
 /**
- * Renders one stalked viral surface protein instead of a decorative dot.
+ * Adenovirus at 1 unit to 250 nm: a capsid about 90 nm across built from 240
+ * hexons and 12 pentons (triangulation number 25), with no envelope, and a
+ * fibre with a knob standing out from every penton.
  */
-export function VirusSurfaceSpike({
-  anchor,
-  color,
-  highlighted = false,
-}: {
-  anchor: ReturnType<typeof createVirusSurfaceAnchors>[number];
-  color: string;
-  highlighted?: boolean;
-}) {
-  const headRadius = highlighted ? 0.058 : 0.046;
-  const stalkRadius = highlighted ? 0.026 : 0.02;
-
+export function PolyhedralVirusModel({ scale = 1 }: { scale?: number }) {
+  const radius = 0.36;
+  const fibres = useMemo(
+    () => Arr.filter(capsomeres(5), ({ kind }) => kind === "penton"),
+    []
+  );
   return (
-    <group position={anchor.position} quaternion={anchor.quaternion}>
-      <mesh position={[0, 0.12, 0]}>
-        <capsuleGeometry args={[stalkRadius, 0.22, 6, 12]} />
-        <meshStandardMaterial color={color} roughness={0.78} />
-      </mesh>
-      <group position={[0, 0.27, 0]}>
-        {Arr.map(VIRION_SPIKE_HEADS, (position) => (
-          <mesh
-            key={Arr.join(Arr.map(position, String), "-")}
-            position={position}
-          >
-            <sphereGeometry args={[headRadius, 12, 10]} />
-            <meshStandardMaterial color={color} roughness={0.72} />
-          </mesh>
+    <group scale={scale}>
+      <IcosahedralCapsid clip={undefined} frequency={5} radius={radius} />
+      <Instances
+        placements={Arr.map(fibres, ({ normal, position }) => ({
+          position: [
+            position[0] * radius + normal[0] * 0.13,
+            position[1] * radius + normal[1] * 0.13,
+            position[2] * radius + normal[2] * 0.13,
+          ] as const,
+          up: normal,
+        }))}
+      >
+        <cylinderGeometry args={[0.006, 0.008, 0.2, 6]} />
+        <meshStandardMaterial color={MATERIAL.adenoFibre} roughness={0.55} />
+      </Instances>
+      <Instances
+        placements={Arr.map(fibres, ({ normal, position }) => ({
+          position: [
+            position[0] * radius + normal[0] * 0.24,
+            position[1] * radius + normal[1] * 0.24,
+            position[2] * radius + normal[2] * 0.24,
+          ] as const,
+          scale: [1, 0.75, 1] as const,
+          up: normal,
+        }))}
+      >
+        <sphereGeometry args={[0.024, 14, 10]} />
+        <meshPhysicalMaterial
+          clearcoat={0.4}
+          color={MATERIAL.adenoFibre}
+          roughness={0.5}
+        />
+      </Instances>
+    </group>
+  );
+}
+
+/** The quarter of the influenza virion facing the reader is cut away to show what it carries. */
+const INFLUENZA_CUT = [
+  [-1, 0, 0],
+  [0, 0, -1],
+] as const;
+
+/** Influenza at 1 unit to 140 nm: an envelope about 100 nm across. */
+const INFLUENZA = { haemagglutinin: 300, neuraminidase: 48, radius: 0.36 };
+
+/**
+ * The eight ribonucleoprotein segments of the influenza genome, standing in
+ * the "7 + 1" bundle seen in cryo-electron tomograms: seven round one, of
+ * lengths that follow the segments' sizes.
+ */
+const SEGMENTS = Arr.map(Arr.range(0, 7), (index) => {
+  const angle = (index / 7) * Math.PI * 2;
+  const around = index === 7 ? 0 : 0.075;
+  return {
+    id: index,
+    length: 0.42 - index * 0.03,
+    position: [
+      Math.cos(angle) * around,
+      0.02,
+      Math.sin(angle) * around,
+    ] as const,
+  };
+});
+
+/**
+ * An enveloped virus such as influenza: a lipid envelope over a layer of
+ * matrix protein, studded with some 300 rod-shaped haemagglutinin trimers
+ * and fewer mushroom-shaped neuraminidase tetramers, about 13 nm tall, with a
+ * quarter cut away to show the eight ribonucleoprotein segments inside.
+ */
+export function EnvelopedVirusModel({ scale = 1 }: { scale?: number }) {
+  useClipping();
+  const body = useRef<Group>(null);
+  const cut = useLocalPlanes(body, INFLUENZA_CUT);
+  const envelope = useBumpySphere(INFLUENZA.radius, 5, 0.025);
+  const spikes = useMemo(() => {
+    const total = INFLUENZA.haemagglutinin + INFLUENZA.neuraminidase;
+    const all = Arr.map(Arr.range(0, total - 1), (index) => ({
+      direction: spikeAnchor(index, total),
+      na: index % 7 === 3,
+    }));
+    const place =
+      (lift: number, flat: boolean) =>
+      ({ direction }: { direction: readonly [number, number, number] }) => ({
+        position: [
+          direction[0] * (INFLUENZA.radius + lift),
+          direction[1] * (INFLUENZA.radius + lift),
+          direction[2] * (INFLUENZA.radius + lift),
+        ] as const,
+        scale: flat ? ([1, 0.55, 1] as const) : ([1, 1, 1] as const),
+        up: direction,
+      });
+    const ha = Arr.filter(all, ({ na }) => !na);
+    const na = Arr.filter(all, ({ na: isNa }) => isNa);
+    return {
+      ha: Arr.map(ha, place(0.035, false)),
+      naHead: Arr.map(na, place(0.07, true)),
+      naStalk: Arr.map(na, place(0.03, false)),
+    };
+  }, []);
+  return (
+    <group scale={scale}>
+      <group ref={body}>
+        <mesh castShadow geometry={envelope} receiveShadow>
+          <EnvelopeMaterial clip={cut} color={MATERIAL.viralEnvelope} wedge />
+        </mesh>
+        <mesh scale={0.93}>
+          <sphereGeometry args={[INFLUENZA.radius, 48, 32]} />
+          <EnvelopeMaterial clip={cut} color={MATERIAL.matrixProtein} wedge />
+        </mesh>
+        <Instances placements={spikes.ha}>
+          <cylinderGeometry args={[0.016, 0.009, 0.07, 7]} />
+          <EnvelopeMaterial clip={cut} color={MATERIAL.haemagglutinin} wedge />
+        </Instances>
+        <Instances placements={spikes.naStalk}>
+          <cylinderGeometry args={[0.004, 0.004, 0.06, 5]} />
+          <EnvelopeMaterial clip={cut} color={MATERIAL.neuraminidase} wedge />
+        </Instances>
+        <Instances placements={spikes.naHead}>
+          <boxGeometry args={[0.034, 0.034, 0.034]} />
+          <EnvelopeMaterial clip={cut} color={MATERIAL.neuraminidase} wedge />
+        </Instances>
+        {Arr.map(SEGMENTS, (segment) => (
+          <Ribonucleoprotein
+            key={segment.id}
+            length={segment.length}
+            position={segment.position}
+          />
         ))}
       </group>
     </group>
@@ -297,170 +300,41 @@ export function VirusSurfaceSpike({
 }
 
 /**
- * Shows an enveloped virion with protruding proteins at small scale.
+ * One ribonucleoprotein segment: RNA wrapped in nucleoprotein, folded back on
+ * itself and twisted into a rod about 12 nm wide.
  */
-export function MiniEnvelopedVirion({
-  colors,
-  scale = 1,
+function Ribonucleoprotein({
+  length,
+  position,
 }: {
-  colors: Pick<BiologySceneColors, "genome" | "host" | "microbe" | "pathogen">;
-  scale?: number;
+  readonly length: number;
+  readonly position: readonly [number, number, number];
 }) {
-  return (
-    <group scale={scale}>
-      <mesh>
-        <sphereGeometry args={[0.2, 24, 16]} />
-        <meshStandardMaterial
-          color={colors.host}
-          opacity={0.32}
-          roughness={0.76}
-          transparent
-        />
-      </mesh>
-      <mesh>
-        <icosahedronGeometry args={[0.13, 1]} />
-        <meshStandardMaterial color={colors.pathogen} roughness={0.72} />
-      </mesh>
-      <group rotation={[0.2, 0.1, -0.4]} scale={0.38}>
-        <RnaSingleStrand
-          backboneColor={colors.genome}
-          baseColor={colors.microbe}
-          lineWidth={2}
-          radius={0.04}
-          turns={1.4}
-        />
-      </group>
-      {Arr.map(MINI_VIRION_SPIKES, (anchor) => (
-        <VirusSurfaceSpike
-          anchor={anchor}
-          color={colors.microbe}
-          key={anchor.id}
-        />
-      ))}
-    </group>
-  );
-}
-
-/**
- * Renders a bacteriophage with head, tail sheath, base plate, and fibers.
- */
-export function BacteriophageModel({
-  colors,
-  scale = 1,
-}: {
-  colors: Pick<BiologySceneColors, "arrow" | "genome" | "pathogen">;
-  scale?: number;
-}) {
-  return (
-    <group scale={scale}>
-      <mesh position={[0, 0.26, 0]}>
-        <icosahedronGeometry args={[0.2, 1]} />
-        <meshStandardMaterial color={colors.pathogen} roughness={0.66} />
-      </mesh>
-      <group position={[0, 0.26, 0]} rotation={[0.18, 0, -0.42]} scale={0.38}>
-        <DnaDoubleHelix
-          backboneColor={colors.genome}
-          pairColor={colors.pathogen}
-          pairLineWidth={0.8}
-          radius={0.045}
-          turns={1.15}
-        />
-      </group>
-      <mesh position={[0, 0.02, 0]}>
-        <cylinderGeometry args={[0.065, 0.065, 0.16, 12]} />
-        <meshStandardMaterial color={colors.arrow} roughness={0.74} />
-      </mesh>
-      <mesh position={[0, -0.2, 0]}>
-        <capsuleGeometry args={[0.052, 0.34, 6, 12]} />
-        <meshStandardMaterial color={colors.pathogen} roughness={0.72} />
-      </mesh>
-      <mesh position={[0, -0.42, 0]}>
-        <cylinderGeometry args={[0.13, 0.1, 0.05, 16]} />
-        <meshStandardMaterial color={colors.arrow} roughness={0.72} />
-      </mesh>
-      {Arr.map(PHAGE_FIBERS, (points) => (
-        <VirusTube
-          color={colors.pathogen}
-          key={Arr.join(
-            Arr.map(points, (point) => Arr.join(Arr.map(point, String), "-")),
-            "|"
-          )}
-          points={points}
-          radius={0.01}
-        />
-      ))}
-    </group>
-  );
-}
-
-/**
- * Samples capsomere positions around a helical capsid.
- */
-function createHelicalCapsomeres() {
-  return Array.from({ length: HELICAL_CAPSOMERE_COUNT }, (_, index) => {
-    const progress = index / (HELICAL_CAPSOMERE_COUNT - 1);
-    const angle = progress * HELICAL_TURN_COUNT * TAU;
-    const x = (progress - 0.5) * HELICAL_CAPSID_LENGTH;
-    const direction = new Vector3(0, Math.cos(angle), Math.sin(angle));
-
-    return {
-      id: `helical-capsomere-${index}`,
-      position: [
-        x,
-        direction.y * HELICAL_CAPSID_RADIUS,
-        direction.z * HELICAL_CAPSID_RADIUS,
-      ] satisfies BiologyScenePoint,
-      quaternion: new Quaternion().setFromUnitVectors(VECTOR_UP, direction),
-    };
-  });
-}
-
-/**
- * Samples visible helical grooves around the rod so the capsid reads as a
- * tobacco-mosaic-like helix instead of scattered beads.
- */
-function createHelicalRidgePoints(phase: number) {
-  return Array.from({ length: HELICAL_RIDGE_SAMPLE_COUNT }, (_, index) => {
-    const progress = index / (HELICAL_RIDGE_SAMPLE_COUNT - 1);
-    const angle = progress * HELICAL_TURN_COUNT * TAU + phase;
-
-    return [
-      (progress - 0.5) * HELICAL_CAPSID_LENGTH,
-      Math.cos(angle) * HELICAL_CAPSID_RADIUS * 1.02,
-      Math.sin(angle) * HELICAL_CAPSID_RADIUS * 1.02,
-    ] satisfies BiologyScenePoint;
-  });
-}
-
-/**
- * Renders a smooth 3D tube for narrow biological fibers.
- */
-export function VirusTube({
-  color,
-  opacity = 1,
-  points,
-  radius,
-}: {
-  color: string;
-  opacity?: number;
-  points: readonly (readonly [number, number, number])[];
-  radius: number;
-}) {
-  const curve = useMemo(
+  const strands = useMemo(
     () =>
-      new CatmullRomCurve3(Arr.map(points, (point) => new Vector3(...point))),
-    [points]
+      Arr.map([0, Math.PI] as const, (phase) => ({
+        curve: new CatmullRomCurve3(
+          Arr.map(
+            helixPath({ length, phase, radius: 0.014, turns: length * 14 }),
+            (point) => new Vector3(...point)
+          )
+        ),
+        phase,
+      })),
+    [length]
   );
-
   return (
-    <mesh>
-      <tubeGeometry args={[curve, 24, radius, 8, false]} />
-      <meshStandardMaterial
-        color={color}
-        opacity={opacity}
-        roughness={0.76}
-        transparent={opacity < 1}
-      />
-    </mesh>
+    <group position={position}>
+      {Arr.map(strands, ({ curve, phase }) => (
+        <mesh castShadow key={phase}>
+          <tubeGeometry args={[curve, 120, 0.011, 6, false]} />
+          <meshPhysicalMaterial
+            clearcoat={0.3}
+            color={MATERIAL.nucleocapsid}
+            roughness={0.5}
+          />
+        </mesh>
+      ))}
+    </group>
   );
 }

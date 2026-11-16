@@ -6,7 +6,6 @@ import { CatmullRomCurve3, Vector3 } from "three";
 
 const NUCLEIC_ACID_STEP_COUNT = 36;
 const NUCLEIC_ACID_BASE_PAIR_COUNT = 12;
-const NUCLEIC_ACID_BASE_TICK_COUNT = 9;
 const NUCLEIC_ACID_MARKER_COUNT = 8;
 const NUCLEIC_ACID_FULL_SEGMENT = [0, 1] as const;
 const TAU = Math.PI * 2;
@@ -100,67 +99,6 @@ export function DnaDoubleHelix({
       <BackboneMarkers
         color={backboneColor}
         points={secondMarkers}
-        radius={markerRadius}
-      />
-    </group>
-  );
-}
-
-/**
- * Renders RNA as one flexible backbone with visible bases on one side.
- */
-export function RnaSingleStrand({
-  backboneColor,
-  baseColor,
-  lineWidth = 2.4,
-  radius = 0.055,
-  turns = 1.7,
-  length = 0.78,
-}: {
-  backboneColor: string;
-  baseColor: string;
-  lineWidth?: number;
-  radius?: number;
-  turns?: number;
-  length?: number;
-}) {
-  const backbone = createNucleicAcidBackbonePoints({
-    length,
-    phase: 0,
-    radius,
-    segment: NUCLEIC_ACID_FULL_SEGMENT,
-    turns,
-  });
-  const baseTicks = createRnaBaseTicks({ length, radius, turns });
-  const markers = createNucleicAcidMarkerPoints({
-    length,
-    phase: 0,
-    radius,
-    segment: NUCLEIC_ACID_FULL_SEGMENT,
-    turns,
-  });
-  const markerRadius = Math.max(0.012, lineWidth * 0.005);
-
-  return (
-    <group>
-      <Line
-        color={backboneColor}
-        lineWidth={lineWidth}
-        points={backbone}
-        toneMapped={false}
-      />
-      {Arr.map(baseTicks, (baseTick) => (
-        <Line
-          color={baseColor}
-          key={baseTick.id}
-          lineWidth={Math.max(1, lineWidth - 1)}
-          points={baseTick.points}
-          toneMapped={false}
-        />
-      ))}
-      <BackboneMarkers
-        color={backboneColor}
-        points={markers}
         radius={markerRadius}
       />
     </group>
@@ -372,42 +310,6 @@ function createNucleicAcidBasePairs({
           turns,
         }),
       ],
-    };
-  });
-}
-
-/**
- * Creates short inward bases on an RNA strand without implying a second strand.
- */
-function createRnaBaseTicks({
-  length,
-  radius,
-  turns,
-}: {
-  length: number;
-  radius: number;
-  turns: number;
-}) {
-  return Array.from({ length: NUCLEIC_ACID_BASE_TICK_COUNT }, (_, index) => {
-    const stepCount = NUCLEIC_ACID_BASE_TICK_COUNT + 2;
-    const outerPoint = createNucleicAcidPoint({
-      index: index + 1,
-      length,
-      phase: 0,
-      radius,
-      segment: NUCLEIC_ACID_FULL_SEGMENT,
-      stepCount,
-      turns,
-    });
-    const innerPoint = [
-      outerPoint[0],
-      outerPoint[1] * 0.32,
-      outerPoint[2] * 0.32,
-    ] satisfies BiologyScenePoint;
-
-    return {
-      id: `rna-base-${index}`,
-      points: [outerPoint, innerPoint],
     };
   });
 }

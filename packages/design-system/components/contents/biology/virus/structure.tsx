@@ -1,41 +1,33 @@
 import { BiologyCallouts } from "@repo/design-system/components/contents/biology/callouts";
-import {
-  useBiologyColors,
-  useBiologyItemSelection,
-} from "@repo/design-system/components/contents/biology/context";
-import {
-  BIOLOGY_RING_POINT_COUNT,
-  createBiologySpherePoints,
-} from "@repo/design-system/components/contents/biology/data";
+import { useBiologyItemSelection } from "@repo/design-system/components/contents/biology/context";
+import { Instances } from "@repo/design-system/components/contents/biology/instances";
 import {
   BiologyLabFrame,
   type BiologyLabProps,
   type BiologySceneProps,
 } from "@repo/design-system/components/contents/biology/lab";
+import { RotatingGroup } from "@repo/design-system/components/contents/biology/motion";
 import {
-  FloatingGroup,
-  PulsingGroup,
-  RotatingGroup,
-} from "@repo/design-system/components/contents/biology/motion";
+  EnvelopeMaterial,
+  useBumpySphere,
+  useClipping,
+  useLocalPlanes,
+} from "@repo/design-system/components/contents/biology/surface";
+import { spikeAnchor } from "@repo/design-system/components/contents/biology/virus/binding";
+import { spoolPath } from "@repo/design-system/components/contents/biology/virus/capsid";
 import {
-  BacteriophageModel,
-  createVirusSurfaceAnchors,
   EnvelopedVirusModel,
   HelicalVirusModel,
+  IcosahedralCapsid,
   PolyhedralVirusModel,
-  VirusSurfaceSpike,
 } from "@repo/design-system/components/contents/biology/virus/parts";
+import { BacteriophageModel } from "@repo/design-system/components/contents/biology/virus/phage";
 import type { NarrowCameraPose } from "@repo/design-system/lib/geometry/camera";
+import { MATERIAL } from "@repo/design-system/lib/material";
 import { Array as Arr } from "effect";
+import { useMemo, useRef } from "react";
+import { CatmullRomCurve3, type Group, Vector3 } from "three";
 
-const CAPSID_POINTS = createBiologySpherePoints(
-  BIOLOGY_RING_POINT_COUNT * 2,
-  0.92
-);
-const ENVELOPE_SPIKES = createVirusSurfaceAnchors(
-  BIOLOGY_RING_POINT_COUNT * 2,
-  1.08
-);
 const VIRION_VIEW = {
   cameraPosition: [2.05, 1.5, 2.85],
   cameraTarget: [0, 0.04, 0],
@@ -79,65 +71,96 @@ export function VirusMorphologyLab(props: BiologyLabProps) {
   );
 }
 
+/** Opened, the quarter of the virion facing the reader is cut away, and stays toward the reader as the model turns. */
+const QUARTER = [
+  [-1, 0, 0],
+  [0, 0, -1],
+] as const;
+
+/** The glycoproteins standing out of the envelope. */
+const GLYCOPROTEINS = Arr.map(Arr.range(0, 299), (index) => {
+  const direction = spikeAnchor(index, 300);
+  return {
+    head: {
+      position: [
+        direction[0] * 1.2,
+        direction[1] * 1.2,
+        direction[2] * 1.2,
+      ] as const,
+      scale: [0.026, 0.045, 0.026] as const,
+      up: direction,
+    },
+    stalk: {
+      position: [
+        direction[0] * 1.14,
+        direction[1] * 1.14,
+        direction[2] * 1.14,
+      ] as const,
+      up: direction,
+    },
+  };
+});
+
 /**
- * Shows that a virion is genetic material packaged in protein, sometimes with an envelope.
+ * Shows that a virion is genetic material packaged in protein, sometimes with
+ * an envelope, on a herpesvirus: double-stranded DNA spooled inside an
+ * icosahedral capsid of 162 capsomeres (triangulation number 16), inside a
+ * lipid envelope studded with glycoproteins. The envelope opens to show the
+ * capsid, and the capsid opens to show the genome.
  */
 function VirusStructureScene() {
-  const colors = useBiologyColors();
+  useClipping();
   const selectedIndex = useBiologyItemSelection((state) => state.selectedIndex);
-  const isCapsidFocus = selectedIndex === 0;
-  const isGenomeFocus = selectedIndex === 1;
-  const isEnvelopeFocus = selectedIndex === 2;
+  const opening = useRef<Group>(null);
+  const planes = useLocalPlanes(opening, QUARTER);
+  const envelope = useBumpySphere(1.1, 2, 0.03);
+  const genome = useMemo(
+    () =>
+      new CatmullRomCurve3(
+        Arr.map(spoolPath(4, 7, 0.6), (point) => new Vector3(...point))
+      ),
+    []
+  );
+  const envelopeClip = selectedIndex === 2 ? undefined : planes;
+  const capsidClip = selectedIndex === 1 ? planes : undefined;
 
   return (
-    <group>
+    <group ref={opening}>
       <RotatingGroup speed={0.08}>
-        <mesh scale={[1.04, 0.96, 1.08]}>
-          <sphereGeometry args={[1.1, 56, 36]} />
-          <meshStandardMaterial
-            color={colors.host}
-            opacity={isEnvelopeFocus ? 0.28 : 0.11}
-            roughness={0.82}
-            transparent
+        <mesh castShadow geometry={envelope} receiveShadow>
+          <EnvelopeMaterial
+            clip={envelopeClip}
+            color={MATERIAL.viralEnvelope}
+            wedge
           />
         </mesh>
-
-        <mesh>
-          <icosahedronGeometry args={[0.86, 2]} />
-          <meshStandardMaterial
-            color={colors.membrane}
-            opacity={isCapsidFocus ? 0.72 : 0.24}
-            roughness={0.72}
-            transparent
-            wireframe={!isCapsidFocus}
+        <Instances placements={Arr.map(GLYCOPROTEINS, ({ stalk }) => stalk)}>
+          <cylinderGeometry args={[0.008, 0.012, 0.1, 6]} />
+          <EnvelopeMaterial
+            clip={envelopeClip}
+            color={MATERIAL.haemagglutinin}
+            wedge
+          />
+        </Instances>
+        <Instances placements={Arr.map(GLYCOPROTEINS, ({ head }) => head)}>
+          <sphereGeometry args={[1, 10, 8]} />
+          <EnvelopeMaterial
+            clip={envelopeClip}
+            color={MATERIAL.haemagglutinin}
+            wedge
+          />
+        </Instances>
+        <IcosahedralCapsid clip={capsidClip} frequency={4} radius={0.8} />
+        <mesh castShadow>
+          <tubeGeometry
+            args={[genome, 2400, selectedIndex === 1 ? 0.022 : 0.016, 6, false]}
+          />
+          <meshPhysicalMaterial
+            clearcoat={0.4}
+            color={MATERIAL.nucleicAcid}
+            roughness={0.45}
           />
         </mesh>
-
-        {Arr.map(CAPSID_POINTS, (point) => (
-          <mesh key={point.id} position={point.position}>
-            <icosahedronGeometry args={[isCapsidFocus ? 0.09 : 0.052, 1]} />
-            <meshStandardMaterial color={colors.pathogen} roughness={0.7} />
-          </mesh>
-        ))}
-
-        <PulsingGroup speed={1.8} strength={isGenomeFocus ? 0.08 : 0.03}>
-          <mesh rotation={[Math.PI / 2, 0, 0]}>
-            <torusKnotGeometry
-              args={[0.45, isGenomeFocus ? 0.055 : 0.03, 96, 8]}
-            />
-            <meshStandardMaterial color={colors.genome} roughness={0.52} />
-          </mesh>
-        </PulsingGroup>
-
-        {Arr.map(ENVELOPE_SPIKES, (anchor, index) => (
-          <FloatingGroup key={anchor.id} phase={index * 0.35} travel={0.035}>
-            <VirusSurfaceSpike
-              anchor={anchor}
-              color={colors.microbe}
-              highlighted={isEnvelopeFocus}
-            />
-          </FloatingGroup>
-        ))}
       </RotatingGroup>
     </group>
   );
@@ -147,21 +170,19 @@ function VirusStructureScene() {
  * Compares the four viral morphologies in two rows, including on narrow screens.
  */
 function VirusMorphologyScene({ item }: BiologySceneProps) {
-  const colors = useBiologyColors();
-
   return (
     <group>
       <group position={[-1.1, 0.95, 0]} rotation={[0.08, -0.24, 0.08]}>
-        <HelicalVirusModel colors={colors} scale={1.04} />
+        <HelicalVirusModel scale={1.35} />
       </group>
       <group position={[1.1, 0.95, 0]} rotation={[0.18, 0.3, -0.08]}>
-        <PolyhedralVirusModel colors={colors} scale={1.02} />
+        <PolyhedralVirusModel scale={1.02} />
       </group>
       <group position={[-1.1, -0.8, 0]} rotation={[0.12, -0.25, 0]}>
-        <EnvelopedVirusModel colors={colors} scale={0.92} />
+        <EnvelopedVirusModel scale={1.2} />
       </group>
-      <group position={[1.1, -0.8, 0]} rotation={[0.12, 0.22, -0.06]}>
-        <BacteriophageModel colors={colors} scale={0.98} />
+      <group position={[1.1, -0.7, 0]} rotation={[0.12, 0.22, -0.06]}>
+        <BacteriophageModel scale={0.98} />
       </group>
       <BiologyCallouts
         callouts={item.callouts}

@@ -1,4 +1,6 @@
 import { useFrame, useThree } from "@react-three/fiber";
+import { Instances } from "@repo/design-system/components/contents/biology/instances";
+import { useBumpySphere } from "@repo/design-system/components/contents/biology/surface";
 import {
   blockedChance,
   boundSpikes,
@@ -246,13 +248,7 @@ function DockingScene({
   return (
     <>
       <SimulationTicker running={playing} />
-      <mesh position={[0, -CELL_RADIUS, 0]} receiveShadow>
-        <sphereGeometry args={[CELL_RADIUS, 96, 48]} />
-        <meshPhysicalMaterial color={MATERIAL.membrane} roughness={0.55} />
-      </mesh>
-      {Arr.map(Arr.range(0, 39), (receptor) => (
-        <Receptor index={receptor} key={receptor} />
-      ))}
+      <CellSurface />
       {Arr.map(virions, ({ bound, id }) => (
         <FallingVirion bound={bound} clock={clock} index={id} key={id} />
       ))}
@@ -260,24 +256,69 @@ function DockingScene({
   );
 }
 
-/** An ACE2 receptor standing on the cell: a stalk with a rounded head. */
-function Receptor({ index }: { readonly index: number }) {
+/** The receptors on the patch of cell surface in view. */
+const RECEPTORS = 40;
+
+/** Where receptor `index` stands on the cell's surface. */
+function receptorSpot(index: number) {
+  return [
+    (hashUnit(index, 7) - 0.5) * 18,
+    (hashUnit(index, 8) - 0.5) * 6,
+  ] as const;
+}
+
+/**
+ * The cell's surface: a lipid membrane bumped by the proteins in it, with
+ * ACE2 receptors standing out of it. Each receptor is a dimer, two elongated
+ * heads about 10 nm long side by side on short stalks, drawn as instanced
+ * meshes so the forty of them cost two draw calls.
+ */
+function CellSurface() {
+  const membrane = useBumpySphere(CELL_RADIUS, 4, 0.0006);
+  const parts = useMemo(() => {
+    const all = Arr.flatMap(Arr.range(0, RECEPTORS - 1), (index) => {
+      const [x, z] = receptorSpot(index);
+      const turn = hashUnit(index, 9) * Math.PI;
+      return Arr.map([-1, 1] as const, (side) => ({
+        side,
+        x: x + Math.cos(turn) * side * 0.055,
+        z: z + Math.sin(turn) * side * 0.055,
+        turn,
+      }));
+    });
+    return {
+      heads: Arr.map(all, ({ side, turn, x, z }) => ({
+        position: [x, 0.27, z] as const,
+        rotation: [0, -turn, side * 0.12] as const,
+        scale: [0.06, 0.12, 0.05] as const,
+      })),
+      stalks: Arr.map(all, ({ x, z }) => ({
+        position: [x, 0.08, z] as const,
+      })),
+    };
+  }, []);
   return (
-    <group
-      position={[
-        (hashUnit(index, 7) - 0.5) * 18,
-        0,
-        (hashUnit(index, 8) - 0.5) * 6,
-      ]}
-    >
-      <mesh castShadow position={[0, 0.12, 0]}>
-        <cylinderGeometry args={[0.04, 0.05, 0.24, 8]} />
-        <meshStandardMaterial color={MATERIAL.receptor} roughness={0.6} />
+    <group>
+      <mesh geometry={membrane} position={[0, -CELL_RADIUS, 0]} receiveShadow>
+        <meshPhysicalMaterial
+          clearcoat={0.4}
+          clearcoatRoughness={0.5}
+          color={MATERIAL.membrane}
+          roughness={0.55}
+        />
       </mesh>
-      <mesh castShadow position={[0, 0.3, 0]} scale={[1, 0.7, 1]}>
-        <sphereGeometry args={[0.1, 12, 10]} />
-        <meshStandardMaterial color={MATERIAL.receptor} roughness={0.5} />
-      </mesh>
+      <Instances placements={parts.stalks}>
+        <cylinderGeometry args={[0.018, 0.024, 0.16, 7]} />
+        <meshStandardMaterial color={MATERIAL.receptor} roughness={0.55} />
+      </Instances>
+      <Instances placements={parts.heads}>
+        <sphereGeometry args={[1, 14, 10]} />
+        <meshPhysicalMaterial
+          clearcoat={0.4}
+          color={MATERIAL.receptor}
+          roughness={0.45}
+        />
+      </Instances>
     </group>
   );
 }

@@ -34,45 +34,6 @@ export function RotatingGroup({
 }
 
 /**
- * Makes a structure gently expand and contract so active biological material
- * reads as alive without needing state updates. With reduced motion the
- * structure keeps its first size.
- */
-export function PulsingGroup({
-  children,
-  phase = 0,
-  speed = 1.4,
-  strength = 0.06,
-}: {
-  children: ReactNode;
-  phase?: number;
-  speed?: number;
-  strength?: number;
-}) {
-  const ref = useRef<Group>(null);
-  const timeRef = useRef(phase);
-  const calm = useReducedMotion(undefined, { getInitialValueInEffect: false });
-
-  useFrame((_, delta) => {
-    if (calm || !ref.current) {
-      return;
-    }
-
-    timeRef.current += delta * speed;
-
-    const scale = 1 + Math.sin(timeRef.current) * strength;
-
-    ref.current.scale.setScalar(scale);
-  });
-
-  return (
-    <CameraBounds motion={{ scale: 1 + Math.abs(strength) }} objectRef={ref}>
-      {children}
-    </CameraBounds>
-  );
-}
-
-/**
  * Moves a nested structure up and down to make spores, droplets, and heat
  * indicators readable as processes instead of frozen icons. With reduced motion
  * the structure stays where it starts.

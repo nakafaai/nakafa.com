@@ -1,20 +1,21 @@
-import { BiologyCallouts } from "@repo/design-system/components/contents/biology/callouts";
 import {
-  useBiologyColors,
-  useBiologyItemSelection,
-} from "@repo/design-system/components/contents/biology/context";
+  OpenBacillus,
+  Ribosomes,
+} from "@repo/design-system/components/contents/biology/bacteria/parts";
+import { BiologyCallouts } from "@repo/design-system/components/contents/biology/callouts";
+import { useBiologyItemSelection } from "@repo/design-system/components/contents/biology/context";
 import {
   BiologyLabFrame,
   type BiologyLabProps,
   type BiologySceneProps,
 } from "@repo/design-system/components/contents/biology/lab";
 import { DnaDoubleHelix } from "@repo/design-system/components/contents/biology/parts";
-import {
-  BacteriophageModel,
-  VirusTube,
-} from "@repo/design-system/components/contents/biology/virus/parts";
+import { BacteriophageModel } from "@repo/design-system/components/contents/biology/virus/phage";
 import type { NarrowCameraPose } from "@repo/design-system/lib/geometry/camera";
+import { MATERIAL } from "@repo/design-system/lib/material";
+import { Array as Arr } from "effect";
 import type { ComponentType } from "react";
+import { CatmullRomCurve3, Vector3 } from "three";
 
 const REPLICATION_SCENE_POSITION = [0, 0.06, 0] as const;
 const REPLICATION_VIEW = {
@@ -27,12 +28,12 @@ const LYTIC_LABEL_TARGETS = [
   {
     id: "host-cell",
     labelPosition: [-1.2, -0.3, 0.78],
-    target: [-0.68, -0.12, 0.34],
+    target: [-1, -0.3, -0.36],
   },
   {
     id: "viral-genome",
     labelPosition: [0.62, -0.46, 0.86],
-    target: [0.08, -0.18, 0.16],
+    target: [0.08, 0.04, -0.12],
   },
 ] as const;
 const LYSOGENIC_LABEL_TARGETS = [
@@ -118,134 +119,96 @@ function VirusReplicationScene({ item }: BiologySceneProps) {
   );
 }
 
+/** The host bacterium, opened, at twice the bacteria labs' scale: about 3.2 long and 1.2 wide. */
+const HOST_SCALE = 2;
+
+/** The phage's DNA on its way from the tail tube into the cytoplasm, coiling as it goes. */
+const INJECTED = new CatmullRomCurve3(
+  Arr.map(
+    [
+      [-0.3, 0.52, 0],
+      [-0.28, 0.36, -0.04],
+      [-0.18, 0.22, -0.1],
+      [-0.02, 0.18, -0.16],
+      [0.08, 0.04, -0.12],
+      [-0.06, -0.08, -0.18],
+      [-0.2, -0.02, -0.22],
+      [-0.12, 0.12, -0.26],
+      [0.04, 0.02, -0.28],
+    ] as const,
+    (point) => new Vector3(...point)
+  )
+);
+
+/** New phages assembling in the back of the cell, in the host's own frame. */
+const PROGENY = [
+  { id: "first", position: [0.32, -0.02, -0.12], rotation: [0.2, 0.4, -0.5] },
+  { id: "second", position: [0.55, 0.06, -0.1], rotation: [-0.3, 1.2, 0.7] },
+  { id: "third", position: [0.12, -0.1, -0.16], rotation: [0.1, 2.2, 1.6] },
+] as const;
+
 /**
- * Shows the full lytic cycle at once so students do not need five separate tabs.
+ * Shows the lytic cycle in one scene: a phage landed on the host, its sheath
+ * contracted and its DNA injected into the cytoplasm, while new phages
+ * assemble in the back of the cell before it bursts.
  */
 function LyticCycle() {
-  const colors = useBiologyColors();
-
   return (
     <group>
-      <HostCell
-        color={colors.host}
-        radius={0.54}
-        scale={[0.92, 1.42, 0.72]}
-        straightLength={1.16}
-      />
-
-      <group position={[-0.18, 0.92, 0.24]} rotation={[0.12, 0.08, -0.08]}>
-        <BacteriophageModel colors={colors} scale={0.9} />
+      <group scale={HOST_SCALE}>
+        <OpenBacillus>
+          <Ribosomes />
+          {Arr.map(PROGENY, ({ id, position, rotation }) => (
+            <group key={id} position={position} rotation={rotation}>
+              <BacteriophageModel scale={0.24} />
+            </group>
+          ))}
+        </OpenBacillus>
       </group>
-
-      <VirusTube
-        color={colors.pathogen}
-        points={[
-          [-0.18, 0.38, 0.24],
-          [-0.12, 0.16, 0.2],
-          [-0.02, -0.08, 0.12],
-        ]}
-        radius={0.018}
-      />
-
-      <group position={[0.1, -0.18, 0.1]} rotation={[0.2, 0.3, -0.72]}>
-        <DnaDoubleHelix
-          backboneColor={colors.genome}
-          length={0.72}
-          lineWidth={3.2}
-          pairColor={colors.muted}
-          pairLineWidth={1}
-          radius={0.046}
-          turns={1.7}
-        />
+      <group position={[-0.3, 0.9, 0]}>
+        <BacteriophageModel landed scale={0.9} />
       </group>
-
-      <NewVirionPreview position={[0.78, -0.12, 0.18]} />
-      <NewVirionPreview position={[1.1, 0.18, -0.16]} />
+      <mesh castShadow>
+        <tubeGeometry args={[INJECTED, 160, 0.012, 6, false]} />
+        <meshStandardMaterial color={MATERIAL.phageGenome} roughness={0.45} />
+      </mesh>
     </group>
   );
 }
 
 /**
- * Shows a viral genome carried quietly with the host genome before activation.
+ * Shows the lysogenic cycle: the phage's genome sits as a prophage inside the
+ * host's chromosome, copied with it at every division until it is induced.
  */
 function LysogenicCycle() {
-  const colors = useBiologyColors();
-
   return (
     <group>
-      <HostCell
-        color={colors.host}
-        radius={0.58}
-        scale={[0.9, 1.45, 0.82]}
-        straightLength={1.28}
-      />
-
+      <group scale={HOST_SCALE}>
+        <OpenBacillus>
+          <Ribosomes />
+        </OpenBacillus>
+      </group>
       <group position={[0, 0.04, 0.18]} rotation={[0.1, 0.28, 0.36]}>
         <DnaDoubleHelix
-          backboneColor={colors.genome}
+          backboneColor={MATERIAL.nucleicAcid}
           length={1.46}
           lineWidth={3.8}
-          pairColor={colors.muted}
+          pairColor={MATERIAL.nucleicAcid}
           pairLineWidth={1.1}
           radius={0.066}
           turns={2.8}
         />
         <DnaDoubleHelix
-          backboneColor={colors.pathogen}
+          backboneColor={MATERIAL.phageGenome}
           length={1.46}
           lineWidth={4.8}
-          pairColor={colors.pathogen}
+          pairColor={MATERIAL.phageGenome}
           pairLineWidth={1.5}
           radius={0.07}
           segment={[0.46, 0.62]}
           turns={2.8}
         />
       </group>
-    </group>
-  );
-}
-
-/**
- * Shows the bacterial host as a transparent cell with a subtle membrane edge.
- */
-function HostCell({
-  color,
-  radius,
-  scale,
-  straightLength,
-}: {
-  color: string;
-  radius: number;
-  scale: readonly [number, number, number];
-  straightLength: number;
-}) {
-  return (
-    <group rotation={[0, 0, Math.PI / 2]} scale={scale}>
-      <mesh>
-        <capsuleGeometry args={[radius, straightLength, 14, 34]} />
-        <meshStandardMaterial color={color} opacity={0.2} transparent />
-      </mesh>
-      <mesh scale={1.02}>
-        <capsuleGeometry args={[radius, straightLength, 14, 34]} />
-        <meshStandardMaterial color={color} opacity={0.08} transparent />
-      </mesh>
-    </group>
-  );
-}
-
-/**
- * Shows newly assembled phage particles inside the host as a secondary cue.
- */
-function NewVirionPreview({
-  position,
-}: {
-  position: readonly [number, number, number];
-}) {
-  const colors = useBiologyColors();
-
-  return (
-    <group position={position} scale={0.34}>
-      <BacteriophageModel colors={colors} />
     </group>
   );
 }
