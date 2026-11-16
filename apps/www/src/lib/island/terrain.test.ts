@@ -2,7 +2,9 @@
 
 import { describe, expect, it } from "@effect/vitest";
 import { idOf } from "@repo/backend/confect/island/blocks";
+import { PLANT_KEYS } from "@repo/backend/confect/island/flora";
 import { SPAN } from "@repo/backend/confect/island/world";
+import { Array as Arr } from "effect";
 import { columnOf, terrainOf, worldOf } from "@/lib/island/terrain";
 import { blockAt, SEA_LEVEL } from "@/lib/island/world";
 
@@ -36,7 +38,8 @@ describe("island/terrain", () => {
     expect(blockAt(cells, door.x, floor + 2, door.z)).toBe(idOf("plaster"));
     expect(blockAt(cells, door.x, SEA_LEVEL, door.z + 1)).toBe(idOf("path"));
     expect(blockAt(cells, door.x - 3, floor, door.z)).toBe(idOf("log"));
-    expect(blockAt(cells, middle - 7, floor, middle + 5)).toBe(idOf("flowers"));
+    expect(blockAt(cells, middle - 7, floor, middle + 5)).toBe(idOf("rice"));
+    expect(blockAt(cells, middle - 7, floor, middle + 7)).toBe(idOf("corn"));
     for (let z = 0; z < SPAN; z += 1) {
       for (let x = 0; x < SPAN; x += 1) {
         const built = blockAt(cells, x, floor, z);
@@ -52,7 +55,10 @@ describe("island/terrain", () => {
     expect(countOf(cells, idOf("sand"))).toBeGreaterThan(0);
     expect(countOf(cells, idOf("log"))).toBeGreaterThan(0);
     expect(countOf(cells, idOf("leaves"))).toBeGreaterThan(0);
-    expect(countOf(cells, idOf("flowers"))).toBeGreaterThan(0);
+    expect(
+      countOf(cells, idOf("flowers")) +
+        Arr.reduce(PLANT_KEYS, 0, (sum, key) => sum + countOf(cells, idOf(key)))
+    ).toBeGreaterThan(0);
   });
 
   it("grows a wider island at a wider footprint, the same from the same seed", () => {

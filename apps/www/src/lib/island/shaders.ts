@@ -1,3 +1,5 @@
+import { ATLAS_TILES } from "@/lib/island/atlas";
+
 /**
  * The island's GLSL programs (ADR 0047, D2), written for WebGL2. The painter
  * compiles them once; nothing here runs in JavaScript.
@@ -67,7 +69,7 @@ void main() {
   vec2 uv = vUv;
   if (uWater > 0.5) {
     vec2 local = fract(vWorld.xz * 0.5 + vec2(uTime * 0.04, uTime * 0.017) + vWorld.y * 0.5);
-    uv = (uWaterTile + 0.002 + local * 0.996) / 8.0;
+    uv = (uWaterTile + 0.002 + local * 0.996) / ${ATLAS_TILES.toFixed(1)};
   }
   vec4 texel = texture(uAtlas, uv);
   if (texel.a < 0.5) discard;

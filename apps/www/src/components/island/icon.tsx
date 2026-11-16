@@ -1,9 +1,15 @@
 "use client";
 
 import type { BlockKey } from "@repo/backend/confect/island/blocks";
-import { MutableHashMap, Option } from "effect";
-import { type TileName, tilePixels } from "@/lib/island/atlas";
-import { looksOf } from "@/lib/island/look";
+import { PLANT_KEYS } from "@repo/backend/confect/island/flora";
+import { Array as Arr, MutableHashMap, Option } from "effect";
+import {
+  plantPixels,
+  speciesPixels,
+  type TileName,
+  tilePixels,
+} from "@/lib/island/atlas";
+import { isPlant, looksOf } from "@/lib/island/look";
 import { TILE } from "@/lib/island/tiles/paint";
 
 /** The side of a block icon in art pixels. */
@@ -11,7 +17,11 @@ const ICON = 26;
 
 /** One tile on its own canvas, every color darkened by `shade`, for the 2D canvas to draw. */
 function tileCanvas(name: TileName, shade: number) {
-  const pixels = tilePixels(name);
+  return pixelsCanvas(tilePixels(name), shade);
+}
+
+/** Pixels of one tile on their own canvas, every color darkened by `shade`. */
+function pixelsCanvas(pixels: Uint8ClampedArray<ArrayBuffer>, shade: number) {
   for (let index = 0; index < pixels.length; index += 4) {
     pixels[index] *= 1 - shade;
     pixels[index + 1] *= 1 - shade;
@@ -39,6 +49,22 @@ function drawIcon(block: BlockKey) {
     return "";
   }
   context.imageSmoothingEnabled = false;
+  if (isPlant(block)) {
+    context.setTransform(1.5, 0, 0, 1.5, 1, 1);
+    context.drawImage(
+      pixelsCanvas(
+        plantPixels(
+          Arr.findFirstIndex(PLANT_KEYS, (key) => key === block).pipe(
+            Option.getOrElse(() => 0)
+          )
+        ),
+        0
+      ),
+      0,
+      0
+    );
+    return canvas.toDataURL();
+  }
   const look = looksOf(block);
   if (look.kind === "cross") {
     context.setTransform(1.5, 0, 0, 1.5, 1, 1);
@@ -76,6 +102,37 @@ export function BlockIcon({ block }: { block: BlockKey }) {
       height={ICON}
       src={iconOf(block)}
       width={ICON}
+    />
+  );
+}
+
+/** Each species' picture as an image address, drawn once a page. */
+const PICTURES = MutableHashMap.empty<number, string>();
+
+/** The address of a species' picture, drawn on first use. */
+function pictureOf(index: number) {
+  return Option.getOrElse(MutableHashMap.get(PICTURES, index), () => {
+    const canvas = document.createElement("canvas");
+    canvas.width = TILE;
+    canvas.height = TILE;
+    canvas
+      .getContext("2d")
+      ?.putImageData(new ImageData(speciesPixels(index), TILE, TILE), 0, 0);
+    const url = canvas.toDataURL();
+    MutableHashMap.set(PICTURES, index, url);
+    return url;
+  });
+}
+
+/** A species as the field guide shows it, the same drawing the world uses, enlarged with whole pixels. */
+export function SpeciesIcon({ index }: { index: number }) {
+  return (
+    <img
+      alt=""
+      className="size-full [image-rendering:pixelated]"
+      height={TILE}
+      src={pictureOf(index)}
+      width={TILE}
     />
   );
 }
