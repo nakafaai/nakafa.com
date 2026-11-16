@@ -41,7 +41,7 @@ describe("School Markdown", () => {
         expect(text).toContain(
           "## Give work, collect it, grade it\n\nEvery hand-in and grade stays with its class."
         );
-        expect(text.match(/^## /gmu)).toHaveLength(7 + 4 + 1);
+        expect(text.match(/^## /gmu)).toHaveLength(9 + 4 + 1);
         expect(text).toContain(`(${BASE_URL}/en/school/new)`);
         expect(text.match(/^### /gmu)).toHaveLength(3 + 5);
       })

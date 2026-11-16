@@ -3,7 +3,11 @@ import { Array as Arr, Effect } from "effect";
 import { loadMarketingPage } from "@/e2e/support/marketing";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { stepTo } from "@/e2e/support/scroll";
-import { desktopViewport, touchViewport } from "@/e2e/support/viewport";
+import {
+  desktopViewport,
+  tabletPortraitViewport,
+  touchViewport,
+} from "@/e2e/support/viewport";
 
 // The School prices show in the currency of the visitor's time zone, and these checks read the
 // rupiah prices, so every test runs in a Jakarta zone, whatever zone the machine is in.
@@ -37,6 +41,8 @@ const MOMENTUM = /6/u;
 
 /** The parts of the School landing under its hero, in the order the page shows them. */
 const PARTS = [
+  "forum",
+  "library",
   "tasks",
   "exams",
   "player",
@@ -152,6 +158,127 @@ const verifySchoolLanding = Effect.fn("NakafaE2E.verifySchoolLanding")(
   }
 );
 
+/** The opacity of the first element a selector names inside a part, as the browser computes it now. */
+const readOpacity = (page: Page, selector: string) =>
+  page.evaluate((target) => {
+    const element = document.querySelector(target);
+    return element === null ? -1 : Number(getComputedStyle(element).opacity);
+  }, selector);
+
+/**
+ * Marks the page once Nina's dots show in the forum, from the next frame on, so a check that reaches the chat after
+ * her reply has landed still knows the dots played.
+ */
+const watchTyping = (page: Page) =>
+  page.evaluate(() => {
+    const look = () => {
+      const dots = document.querySelector("#forum [data-typing]");
+      if (dots !== null && Number(getComputedStyle(dots).opacity) > 0) {
+        document.documentElement.dataset.typingSeen = "";
+        return;
+      }
+      requestAnimationFrame(look);
+    };
+    requestAnimationFrame(look);
+  });
+
+/** Whether the page saw Nina's dots in the forum. */
+const readTypingSeen = (page: Page) =>
+  page.evaluate(
+    () => document.documentElement.dataset.typingSeen !== undefined
+  );
+
+/**
+ * The forum and the library play as a reader meets them, and stay inside the page. Nina's dots breathe in the forum and
+ * her reply lands where they stood; an emoji takes a press, and a message the reader sends lands in the open chat. A
+ * wide screen shows the list of chats beside the chat: its search narrows the list, and a press opens another chat.
+ * The library's video arrives on its shelf, its upload fills and its New badge lands.
+ */
+const verifyForumAndLibrary = Effect.fn("NakafaE2E.verifyForumAndLibrary")(
+  function* (page: Page, wide: boolean) {
+    yield* loadMarketingPage(page, "/en/school");
+    yield* Effect.promise(() => watchTyping(page));
+    const forum = page.locator("#forum");
+    const composer = forum.getByRole("textbox", { name: "Write a message" });
+    yield* stepTo(page, composer);
+    yield* Effect.promise(() =>
+      expect.poll(() => readTypingSeen(page)).toBe(true)
+    );
+    yield* Effect.promise(() =>
+      expect.poll(() => readOpacity(page, "#forum [data-arrive]")).toBe(1)
+    );
+    yield* Effect.promise(() =>
+      expect(
+        forum.getByText("I put a short summary of chapter 3 next to it.", {
+          exact: true,
+        })
+      ).toBeVisible()
+    );
+    yield* Effect.promise(() =>
+      expect(
+        forum.getByText("Momentum worksheet.pdf", { exact: true })
+      ).toBeVisible()
+    );
+    yield* Effect.promise(() =>
+      expect(forum.getByText("3 replies", { exact: true })).toBeVisible()
+    );
+    const thumbs = forum.getByRole("button", { name: "👍, 4" });
+    yield* Effect.promise(() => thumbs.click());
+    yield* Effect.promise(() =>
+      expect(forum.getByRole("button", { name: "👍, 5" })).toHaveAttribute(
+        "aria-pressed",
+        "true"
+      )
+    );
+    yield* Effect.promise(() => composer.fill("Thanks, Ms Rina!"));
+    yield* Effect.promise(() =>
+      forum.getByRole("button", { name: "Send" }).click()
+    );
+    yield* Effect.promise(() =>
+      expect(forum.getByText("Thanks, Ms Rina!")).toBeVisible()
+    );
+    const chats = forum.getByRole("navigation", { name: "Chats" });
+    if (wide) {
+      yield* Effect.promise(() =>
+        chats.getByRole("textbox", { name: "Search chats" }).fill("lab")
+      );
+      yield* Effect.promise(() =>
+        expect(chats.getByRole("listitem")).toHaveCount(1)
+      );
+      yield* Effect.promise(() =>
+        chats.getByRole("button", { name: "lab-groups" }).click()
+      );
+      yield* Effect.promise(() =>
+        expect(
+          forum.getByText("Here's our graph from the cart lab.", {
+            exact: true,
+          })
+        ).toBeVisible()
+      );
+      yield* Effect.promise(() =>
+        expect(forum.getByText("Thanks, Ms Rina!")).toHaveCount(0)
+      );
+    } else {
+      yield* Effect.promise(() => expect(chats).toBeHidden());
+    }
+    const shelf = page
+      .locator("#library")
+      .getByRole("img", { name: "A chapter's shelf in the class library" });
+    // The shelf is taller than a phone's screen, so the page steps to the video that arrives on it.
+    yield* stepTo(page, page.locator("#library [data-arriving]"));
+    yield* Effect.promise(() => expect(shelf).toBeVisible());
+    yield* Effect.promise(() =>
+      expect
+        .poll(() => readOpacity(page, "#library [data-uploading]"))
+        .toBeGreaterThan(0)
+    );
+    yield* Effect.promise(() =>
+      expect.poll(() => readOpacity(page, "#library [data-new]")).toBe(1)
+    );
+    expect(yield* readOverflow(page)).toBeLessThanOrEqual(0);
+  }
+);
+
 const verifySchoolPricing = Effect.fn("NakafaE2E.verifySchoolPricing")(
   function* (page: Page) {
     yield* loadMarketingPage(page, "/id/school/pricing");
@@ -219,6 +346,30 @@ for (const viewport of [desktopViewport, touchViewport]) {
     }) => {
       await Effect.runPromise(
         withObservedPageErrors(page, verifySchoolPricing(page))
+      );
+    });
+  });
+}
+
+for (const viewport of [
+  touchViewport,
+  tabletPortraitViewport,
+  desktopViewport,
+]) {
+  test.describe(`School forum and library at ${viewport.name}`, () => {
+    test.use({
+      hasTouch: viewport.hasTouch,
+      viewport: { height: viewport.height, width: viewport.width },
+    });
+
+    test("the forum and the library play as the reader meets them and keep inside the page", async ({
+      page,
+    }) => {
+      await Effect.runPromise(
+        withObservedPageErrors(
+          page,
+          verifyForumAndLibrary(page, viewport.width >= 768)
+        )
       );
     });
   });

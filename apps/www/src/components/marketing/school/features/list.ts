@@ -2,6 +2,8 @@ import {
   Analytics01Icon,
   Calendar03Icon,
   Certificate01Icon,
+  LibraryIcon,
+  MessageMultiple01Icon,
   StudentIcon,
   Task01Icon,
   TaskEdit01Icon,
@@ -15,6 +17,8 @@ import {
  * for that page.
  */
 export const SCHOOL_FEATURES = [
+  { icon: MessageMultiple01Icon, key: "forum" },
+  { icon: LibraryIcon, key: "library" },
   { icon: Task01Icon, key: "tasks" },
   { icon: TaskEdit01Icon, key: "exams" },
   { icon: StudentIcon, key: "player" },

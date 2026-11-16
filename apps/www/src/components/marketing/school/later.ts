@@ -37,9 +37,19 @@ export const schoolSections = {
       (module) => module.SchoolFaq
     )
   ),
+  forum: laterCode(() =>
+    import("@/components/marketing/school/features/forum").then(
+      (module) => module.SchoolForum
+    )
+  ),
   insight: laterCode(() =>
     import("@/components/marketing/school/features/insight").then(
       (module) => module.SchoolInsight
+    )
+  ),
+  library: laterCode(() =>
+    import("@/components/marketing/school/features/library").then(
+      (module) => module.SchoolLibrary
     )
   ),
   parents: laterCode(() =>
@@ -80,7 +90,9 @@ export function openSchoolLanding() {
     openLaterCode(schoolSections.closing),
     openLaterCode(schoolSections.exams),
     openLaterCode(schoolSections.faq),
+    openLaterCode(schoolSections.forum),
     openLaterCode(schoolSections.insight),
+    openLaterCode(schoolSections.library),
     openLaterCode(schoolSections.parents),
     openLaterCode(schoolSections.player),
     openLaterCode(schoolSections.reports),
