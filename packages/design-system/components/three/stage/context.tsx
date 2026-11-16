@@ -1,4 +1,5 @@
 import { useThree } from "@react-three/fiber";
+import type { GroundSchema } from "@repo/design-system/components/three/stage/grain";
 import {
   isMobileDevice,
   isSoftwareRenderer,
@@ -20,8 +21,12 @@ interface StageProviderProps {
   readonly children: ReactNode;
   /** The height of the floor objects stand on, when the lab has one. */
   readonly floor: number | undefined;
+  /** What the ground is made of, when the lab stands on real ground. */
+  readonly ground: typeof GroundSchema.Type | undefined;
   /** How far the lab reaches from its middle, in scene units. */
   readonly reach: number;
+  /** The unit direction toward the setting's sun. */
+  readonly sun: readonly [x: number, y: number, z: number];
 }
 
 /** What every part of a stage reads: the lab's floor and reach, and its tier. */
@@ -54,11 +59,17 @@ function stageTier(gl: WebGLRenderer): typeof StageTierSchema.Type {
  * renders inside the canvas, which mounts only in the browser, so reading the
  * device and the renderer never reaches streamed server HTML.
  */
-export function StageProvider({ children, floor, reach }: StageProviderProps) {
+export function StageProvider({
+  children,
+  floor,
+  ground,
+  reach,
+  sun,
+}: StageProviderProps) {
   const gl = useThree((state) => state.gl);
   const value = useMemo(
-    () => ({ floor, reach, tier: stageTier(gl) }),
-    [floor, gl, reach]
+    () => ({ floor, ground, reach, sun, tier: stageTier(gl) }),
+    [floor, gl, ground, reach, sun]
   );
 
   return <StageContext value={value}>{children}</StageContext>;
