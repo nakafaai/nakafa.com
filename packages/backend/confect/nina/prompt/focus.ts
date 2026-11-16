@@ -12,6 +12,7 @@ import {
 } from "@repo/backend/confect/assessment/response";
 import type { NinaFocusSource } from "@repo/backend/confect/nina/contract/focus";
 import type { PlacedQuestion } from "@repo/backend/confect/tryouts/runtime/question";
+import type { PlacedQuestionVersion } from "@repo/backend/confect/tryouts/runtime/version";
 import { documentMarkdown } from "@repo/contents/llms/document";
 import { Array as Arr, Option, String as Str } from "effect";
 
@@ -176,12 +177,15 @@ function formatNumericEntry(
 }
 
 /**
- * Formats the focused question's answer section from its frozen interaction and key: a choice's
+ * Formats the focused question's answer section from the interaction of the version the learner reads
+ * and the place's frozen key: a choice's
  * options, a table's statements, a match's pairs, a text entry's accepted answers, or a numeric entry's
  * number, each beside the learner's answer. Any other interaction shows the learner's written answer alone.
  */
 export function formatFocusAnswer(
-  question: PlacedQuestion,
+  // The words come from the version the learner reads, the key from the place.
+  question: Pick<PlacedQuestionVersion, "interaction"> &
+    Pick<PlacedQuestion, "key">,
   response: ExamResponse | null
 ) {
   const answered = response ?? NO_RESPONSE;

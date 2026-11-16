@@ -4,10 +4,9 @@ import tryoutSectionAttemptsTable from "@repo/backend/confect/_generated/tables/
 import { readAttemptDestination } from "@repo/backend/confect/tryouts/runtime/attempt/destination";
 import { readAttemptResume } from "@repo/backend/confect/tryouts/runtime/attempt/sections";
 import { toTryoutRuntimeError } from "@repo/backend/confect/tryouts/runtime/error";
-import {
-  getSectionScoreResult,
-  loadAttemptScoreResult,
-} from "@repo/backend/confect/tryouts/score/result";
+import { requireSection } from "@repo/backend/confect/tryouts/runtime/placement";
+import { readCurrentSection } from "@repo/backend/confect/tryouts/runtime/section/questions";
+import { loadAttemptScoreResult } from "@repo/backend/confect/tryouts/score/result";
 import { Array as Arr, Effect, Option, Schema } from "effect";
 
 const AttemptStateInputSchema = Schema.Struct({
@@ -47,17 +46,10 @@ export const loadAttemptState = Effect.fn("tryouts.attempt.loadState")(
         : null,
       score,
       section: section
-        ? {
-            answeredCount: section.answeredCount,
-            completedAt: section.completedAt,
-            endReason: section.endReason,
-            expiresAt: section.expiresAt,
-            score: yield* getSectionScoreResult(section),
-            sectionKey: section.sectionKey,
-            startedAt: section.startedAt,
-            status: section.status,
-            totalQuestions: section.totalQuestions,
-          }
+        ? yield* readCurrentSection(
+            section,
+            yield* requireSection(attempt, section.sectionKey)
+          )
         : null,
       startedAt: attempt.startedAt,
       status: attempt.status,

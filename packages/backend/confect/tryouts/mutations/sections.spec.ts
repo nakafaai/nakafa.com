@@ -1,4 +1,5 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
+import { ContentLanguageSchema } from "@nakafa/aksara-contracts/locale";
 import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
 import { AuthFailure } from "@repo/backend/confect/auth/spec";
 import Atomic from "@repo/backend/confect/middleware/atomic.spec";
@@ -24,11 +25,35 @@ const sectionTargetValidator = Schema.Struct({
   sectionKey: tryoutRouteKeyValidator,
 });
 export type SectionTarget = typeof sectionTargetValidator.Type;
+
+/**
+ * A start of one section: its target and the question language the learner confirmed on the section
+ * page. A start without one, as a set's own page makes, opens on the learner's working language for
+ * the exam, else on the section's first language.
+ */
+const sectionStartValidator = Schema.Struct({
+  ...sectionTargetValidator.fields,
+  questionLanguage: Schema.optionalKey(ContentLanguageSchema),
+});
+export type SectionStart = typeof sectionStartValidator.Type;
+
+/** A switch of the language one section's questions show in, while it runs or in its review. */
+const languageChoiceValidator = Schema.Struct({
+  ...sectionTargetValidator.fields,
+  language: ContentLanguageSchema,
+});
+
+/** A look at one question in another language of its section, which only analytics counts. */
+const lookValidator = Schema.Struct({
+  from: ContentLanguageSchema,
+  placementId: IdSchema("tryoutAttemptPlacements"),
+  to: ContentLanguageSchema,
+});
 export default GroupSpec.make()
   .addFunction(
     FunctionSpec.publicMutation({
       name: "start",
-      args: () => sectionTargetValidator.fields,
+      args: () => sectionStartValidator.fields,
       returns: () =>
         Schema.Struct({
           kind: Schema.Literal(SECTION_STARTED_RESULT),
@@ -68,4 +93,27 @@ export default GroupSpec.make()
     })
       .middleware(Session)
       .middleware(Atomic)
+  )
+  .addFunction(
+    FunctionSpec.publicMutation({
+      name: "chooseQuestionLanguage",
+      args: () => languageChoiceValidator.fields,
+      returns: () => Schema.Null,
+      error: () =>
+        Schema.Union([
+          TryoutAttemptStateError,
+          AuthFailure,
+          TryoutRuntimeErrorWire,
+        ]),
+    })
+      .middleware(Session)
+      .middleware(Atomic)
+  )
+  .addFunction(
+    FunctionSpec.publicMutation({
+      name: "countQuestionLook",
+      args: () => lookValidator.fields,
+      returns: () => Schema.Null,
+      error: () => Schema.Union([AuthFailure, TryoutRuntimeErrorWire]),
+    }).middleware(Session)
   );

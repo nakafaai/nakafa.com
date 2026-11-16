@@ -3,12 +3,14 @@ import {
   hasUniqueIds,
 } from "@nakafa/aksara-contracts/assessment/identity";
 import type { Interaction } from "@nakafa/aksara-contracts/assessment/interaction";
+
 import type { InteractionKey } from "@nakafa/aksara-contracts/assessment/key";
 import { numericKeyFits } from "@repo/backend/confect/assessment/number";
 import type {
   ExamCell,
   ExamPair,
 } from "@repo/backend/confect/assessment/response";
+import type { GradedInteraction } from "@repo/backend/confect/assessment/structure";
 import { Array as Arr } from "effect";
 
 /**
@@ -17,7 +19,7 @@ import { Array as Arr } from "effect";
  * statement, and a student's response may leave some unpaired.
  */
 export const pairsFit = (
-  match: Extract<Interaction, { kind: "match" }>,
+  match: Extract<GradedInteraction, { kind: "match" }>,
   pairs: readonly ExamPair[]
 ) =>
   hasDistinctIds(Arr.map(pairs, (pair) => pair.source)) &&
@@ -34,7 +36,7 @@ export const pairsFit = (
  * statement is marked twice. A key marks every statement, and a student's response may leave some blank.
  */
 export const cellsFit = (
-  matrix: Extract<Interaction, { kind: "matrix" }>,
+  matrix: Extract<GradedInteraction, { kind: "matrix" }>,
   cells: readonly ExamCell[]
 ) =>
   hasDistinctIds(Arr.map(cells, (cell) => cell.statement)) &&

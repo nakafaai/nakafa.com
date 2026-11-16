@@ -35,8 +35,8 @@ const factsFor = Effect.fn("tryouts.catalog.factsFor")(function* (
 });
 
 /**
- * Projects one section into the public catalog contract, with its question count and time limit from
- * its set's facts. A catalog section that names no section of its set's profile is a broken snapshot.
+ * Projects one section into the public catalog contract, with its question count, question languages,
+ * and time limit from its set's facts. A catalog section that names no section of its set's profile is a broken snapshot.
  */
 export const toPublicPublishedSection = Effect.fn(
   "tryouts.catalog.toPublicPublishedSection"
@@ -53,6 +53,7 @@ export const toPublicPublishedSection = Effect.fn(
   }
   return {
     ...descriptionOf(section),
+    languages: own.value.languages,
     ...(section.publicPath === undefined
       ? {}
       : { publicPath: section.publicPath }),

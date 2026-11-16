@@ -38,8 +38,9 @@ const bodiesOf = (
     | typeof tryoutSetAttemptPageResultValidator.Type
 ) => {
   assert.ok(page && page.kind !== "redirect", "Expected a page with content.");
-  return Effect.forEach(page.content, ({ body }) =>
-    Schema.decodeEffect(TryoutQuestionBodyText)(body)
+  return Effect.forEach(page.content, ({ versions }) =>
+    // The fixture's sections are written in one language.
+    Schema.decodeEffect(TryoutQuestionBodyText)(versions[0].body)
   );
 };
 
@@ -134,6 +135,29 @@ describe("tryouts/attemptPage", () => {
             request: { ...current(), sectionKey: "section-z" },
           })
         ).toBeNull();
+      })
+  );
+
+  it.effect(
+    "carries no bodies for a section that ended while its attempt still runs",
+    () =>
+      Effect.gen(function* () {
+        const world = yield* tryoutWorld();
+        const { attemptId } = yield* world.start();
+        yield* world.startSection(attemptId, "section-a");
+        yield* world.completeSection(attemptId, "section-a");
+        const page = yield* world.learner.query(
+          tryouts.queries.attemptPage.getSection,
+          { request: retained(attemptId, `${SET_PATH}/section-a`) }
+        );
+        expect(page).toMatchObject({
+          content: [],
+          initialState: {
+            attempt: { status: "in-progress" },
+            runtime: null,
+          },
+          kind: "retained",
+        });
       })
   );
 

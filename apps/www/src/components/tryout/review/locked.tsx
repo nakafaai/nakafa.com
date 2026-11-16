@@ -13,7 +13,7 @@ import {
   PricingPrice,
   StaticPrice,
 } from "@/components/marketing/about/pricing/price";
-import type { TryoutBody } from "@/components/tryout/content/body";
+import type { TryoutBodyVersion } from "@/components/tryout/content/body";
 import { TryoutReviewCheckout } from "@/components/tryout/review/upgrade";
 import {
   TryoutExplanationBody,
@@ -38,7 +38,7 @@ export function TryoutReviewLocked({
 }: {
   /** The leading questions with their bodies, keys, and explanations. */
   readonly preview: readonly {
-    readonly body: TryoutBody;
+    readonly body: TryoutBodyVersion;
     readonly question: TryoutRuntimeQuestion;
   }[];
   /** How many questions the section holds. */

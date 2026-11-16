@@ -1,4 +1,5 @@
 import { Table } from "@confect/core";
+import { ContentLanguageSchema } from "@nakafa/aksara-contracts/locale";
 import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
 import { Schema } from "effect";
 export default Table.make(() =>
@@ -14,6 +15,20 @@ export default Table.make(() =>
     ninaMemoryPaused: Schema.optionalKey(Schema.Literal(true)),
     preferredCurriculumProgramKey: Schema.optionalKey(Schema.String),
     preferredTryoutCountryKey: Schema.optionalKey(Schema.String),
+    /**
+     * The language the learner last chose to read each exam's questions in, one entry per country and
+     * exam, written by every explicit choice: on a section page and in a running section. A section
+     * of the exam opens on it when its questions are written in it. Absent means no choice yet.
+     */
+    questionLanguages: Schema.optionalKey(
+      Schema.Array(
+        Schema.Struct({
+          countryKey: Schema.String,
+          examKey: Schema.String,
+          language: ContentLanguageSchema,
+        })
+      )
+    ),
     updatedAt: Schema.Finite,
     userId: IdSchema("users"),
   })

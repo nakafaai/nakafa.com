@@ -1,4 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
+import { ContentLanguageSchema } from "@nakafa/aksara-contracts/locale";
 import { Id } from "@repo/backend/confect/_generated/id";
 import { Schema } from "effect";
 import {
@@ -38,6 +39,8 @@ function makeRuntime(): TryoutSectionRuntime {
       completedAt: null,
       endReason: null,
       expiresAt: NOW + 60_000,
+      languages: [Schema.decodeSync(ContentLanguageSchema)("id")],
+      questionLanguage: Schema.decodeSync(ContentLanguageSchema)("id"),
       score: null,
       sectionKey: "verbal",
       startedAt: NOW - 60_000,

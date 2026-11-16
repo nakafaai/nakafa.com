@@ -70,22 +70,32 @@ const graph = (appLocale: AppLocaleCode, name: string) => ({
 /** How one fixture item asks and what its key holds. */
 type ItemShape = "matrix" | "multiple" | "single";
 
-/** The interaction and key of one fixture item by its shape. */
-const interactionOf = (shape: ItemShape) => {
+/** The words of one fixture text in one language: Indonesian as written, any other language marked with its tag. */
+const wordsIn = (text: string, language: string) =>
+  language === "id" ? text : `${text} (${language})`;
+
+/** The interaction and key of one fixture item by its shape, its words in `language`. */
+const interactionOf = (shape: ItemShape, language: string) => {
   if (shape === "matrix") {
     return {
       interaction: {
         columns: [
-          { id: "column-1", label: paragraph("Benar") },
-          { id: "column-2", label: paragraph("Salah") },
+          { id: "column-1", label: paragraph(wordsIn("Benar", language)) },
+          { id: "column-2", label: paragraph(wordsIn("Salah", language)) },
         ],
         id: "matrix",
         kind: "matrix",
         label: "Jawaban",
         shuffle: false,
         statements: [
-          { id: "statement-1", label: paragraph("Pernyataan satu") },
-          { id: "statement-2", label: paragraph("Pernyataan dua") },
+          {
+            id: "statement-1",
+            label: paragraph(wordsIn("Pernyataan satu", language)),
+          },
+          {
+            id: "statement-2",
+            label: paragraph(wordsIn("Pernyataan dua", language)),
+          },
         ],
       },
       key: {
@@ -107,7 +117,7 @@ const interactionOf = (shape: ItemShape) => {
       minChoices: 0,
       options: Arr.map(["A", "B", "C", "D"], (text, index) => ({
         id: `option-${index + 1}`,
-        label: paragraph(text),
+        label: paragraph(wordsIn(text, language)),
       })),
       shuffle: false,
     },
@@ -119,22 +129,25 @@ const interactionOf = (shape: ItemShape) => {
   };
 };
 
-/** Builds one item version in Indonesian with its key, family, and explanations, each with its hash. */
+/** Builds one item version in `language` with its key and explanations, each with its hash. */
 const makeItem = Effect.fn("test.assessment.makeItem")(function* (
   family: string,
   shape: ItemShape,
-  stimulus: StimulusReference | undefined
+  stimulus: StimulusReference | undefined,
+  language: string
 ) {
-  const { interaction, key } = interactionOf(shape);
+  const { interaction, key } = interactionOf(shape, language);
   const body = yield* Schema.decodeUnknownEffect(ItemVersionBodySchema)({
-    deliveryLanguage: "id",
+    deliveryLanguage: language,
     family,
     ...(stimulus ? { stimulus } : {}),
     interactions: [interaction],
     prompt: {
       content: [
         {
-          content: [{ text: `Soal ${family}`, type: "text" }],
+          content: [
+            { text: wordsIn(`Soal ${family}`, language), type: "text" },
+          ],
           type: "paragraph",
         },
         { attrs: { interaction: interaction.id }, type: "interaction" },
@@ -173,11 +186,13 @@ const SECTIONS = [
   { id: "section-b", items: ["matrix"], seconds: 300 },
 ] as const;
 
-/** The shared reading the table item is written against, in Indonesian. */
-const makeReading = Effect.fn("test.assessment.makeReading")(function* () {
+/** The shared reading the table item is written against, in `language`. */
+const makeReading = Effect.fn("test.assessment.makeReading")(function* (
+  language: string
+) {
   const body = yield* Schema.decodeEffect(StimulusVersionBodySchema)({
-    deliveryLanguage: "id",
-    document: paragraph("Bacaan bersama"),
+    deliveryLanguage: language,
+    document: paragraph(wordsIn("Bacaan bersama", language)),
     id: "test/reading-1",
   });
   return yield* Schema.decodeEffect(StimulusVersionSchema)({
@@ -193,7 +208,9 @@ const makeReading = Effect.fn("test.assessment.makeReading")(function* () {
  * own paper over those items and its catalog from the country to each section in every app locale.
  * `scoring` is the profile's strategy (raw unless given), `entry` makes each set's one section an
  * internal entry, as a direct-entry set holds, `firstSectionKey` names the first section (`section-a`
- * unless given), and `renamed` moves every set route, as a later release that renames them. Every record carries its contract hash.
+ * unless given), `renamed` moves every set route, as a later release that renames them, and `languages`
+ * writes every section in those languages, in that order (Indonesian unless given), each item and the
+ * reading once per language. Every record carries its contract hash.
  */
 export const makeAssessmentSnapshot = Effect.fn(
   "test.assessment.makeAssessmentSnapshot"
@@ -201,6 +218,7 @@ export const makeAssessmentSnapshot = Effect.fn(
   options: {
     readonly entry?: boolean;
     readonly firstSectionKey?: string;
+    readonly languages?: readonly [string, ...string[]];
     readonly renamed?: boolean;
     readonly scoring?: ScoringStrategy;
     readonly sets?: number;
@@ -249,33 +267,41 @@ export const makeAssessmentSnapshot = Effect.fn(
     writeAllowanceSeconds: 5,
   });
   const profileHash = yield* hashExamProfile(profile);
-  const reading = yield* makeReading();
+  const languages = options.languages ?? ["id"];
+  const readings = yield* Effect.forEach(languages, makeReading);
   const items = yield* Effect.forEach(
     Arr.flatMap(sections, (section) =>
-      Arr.map(section.items, (shape, index) => ({
-        family: `${section.id}-item-${index + 1}`,
-        section: section.id,
-        shape,
-      }))
+      Arr.flatMap(section.items, (shape, index) =>
+        Arr.map(languages, (language, at) => ({
+          family: `${section.id}-item-${index + 1}`,
+          language,
+          reading: readings[at],
+          section: section.id,
+          shape,
+        }))
+      )
     ),
-    ({ family, section, shape }) =>
+    ({ family, language, reading, section, shape }) =>
       Effect.map(
         makeItem(
           family,
           shape,
-          shape === "matrix"
+          shape === "matrix" && reading !== undefined
             ? { hash: reading.hash, id: reading.id }
-            : undefined
+            : undefined,
+          language
         ),
         (item) => ({ ...item, section })
       )
   );
-  const stimuli = Arr.some(
+  const stimuli = Arr.filter(readings, (reading) =>
+    Arr.some(items, ({ version }) => version.stimulus?.hash === reading.hash)
+  );
+  /** Each item family once, as its first language's version names it. */
+  const families = Arr.dedupeWith(
     items,
-    ({ version }) => version.stimulus !== undefined
-  )
-    ? [reading]
-    : [];
+    (left, right) => left.family.id === right.family.id
+  );
   const sets = yield* Effect.forEach(
     Arr.makeBy(options.sets ?? 1, (index) => `set-${index + 1}`),
     (setKey) =>
@@ -284,14 +310,18 @@ export const makeAssessmentSnapshot = Effect.fn(
           id: `test-paper-${setKey}`,
           profile: { hash: profileHash, id: profile.id },
           sections: Arr.map(sections, (section) => ({
-            languages: ["id"],
+            languages,
             placements: Arr.map(
-              Arr.filter(items, (item) => item.section === section.id),
-              ({ version }) => ({
-                family: version.family,
-                versions: [
-                  { hash: version.hash, language: version.deliveryLanguage },
-                ],
+              Arr.filter(families, (item) => item.section === section.id),
+              ({ family }) => ({
+                family: family.id,
+                versions: Arr.map(
+                  Arr.filter(items, (item) => item.family.id === family.id),
+                  ({ version }) => ({
+                    hash: version.hash,
+                    language: version.deliveryLanguage,
+                  })
+                ),
               })
             ),
             section: section.id,
@@ -326,7 +356,10 @@ export const makeAssessmentSnapshot = Effect.fn(
       paper,
     })),
     ...Arr.map(stimuli, (version) => ({ kind: "stimulus" as const, version })),
-    ...Arr.map(items, ({ family }) => ({ family, kind: "family" as const })),
+    ...Arr.map(families, ({ family }) => ({
+      family,
+      kind: "family" as const,
+    })),
     ...Arr.map(items, ({ version }) => ({ kind: "item" as const, version })),
     ...Arr.map(items, ({ key }) => ({ key, kind: "key" as const })),
     ...Arr.flatMap(items, ({ explanations }) =>

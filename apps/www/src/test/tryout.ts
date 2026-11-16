@@ -1,7 +1,8 @@
 import { Sha256HashSchema } from "@nakafa/aksara-contracts/ids";
+import { ContentLanguageSchema } from "@nakafa/aksara-contracts/locale";
 import { Id } from "@repo/backend/confect/_generated/id";
 import { TryoutQuestionBodySchema } from "@repo/backend/confect/tryouts/runtime/spec";
-import { Schema } from "effect";
+import { Array as Arr, Schema } from "effect";
 import type { TryoutBody } from "@/components/tryout/content/body";
 import type { TryoutRuntimeQuestion } from "@/components/tryout/runtime/types";
 
@@ -28,27 +29,34 @@ export function makeTryoutQuestion(
 }
 
 /**
- * Builds the body of the question `makeTryoutQuestion(name)` places: a prompt and a choice that takes
- * one of two options, `first` and `second`, decoded as a page decodes a body.
+ * Builds the body of the question `makeTryoutQuestion(name)` places, in each of `languages` (Indonesian
+ * unless given): a prompt and a choice that takes one of two options, `first` and `second`, each with
+ * the language in its words, decoded as a page decodes a body.
  */
-export function makeTryoutBody(name: string): TryoutBody {
+export function makeTryoutBody(
+  name: string,
+  languages: Arr.NonEmptyReadonlyArray<string> = ["id"]
+): TryoutBody {
   return {
-    ...Schema.decodeSync(TryoutQuestionBodySchema)({
-      interaction: {
-        id: "choice",
-        kind: "choice",
-        label: "Answer",
-        maxChoices: 1,
-        minChoices: 1,
-        options: [
-          { id: "first", label: paragraph("First") },
-          { id: "second", label: paragraph("Second") },
-        ],
-        shuffle: false,
-      },
-      prompt: paragraph(`Prompt of ${name}`),
-    }),
     placementId: placementId(name),
-    versionHash: Sha256HashSchema.make(`sha256:${"a".repeat(64)}`),
+    versions: Arr.map(languages, (language) => ({
+      ...Schema.decodeSync(TryoutQuestionBodySchema)({
+        interaction: {
+          id: "choice",
+          kind: "choice",
+          label: "Answer",
+          maxChoices: 1,
+          minChoices: 1,
+          options: [
+            { id: "first", label: paragraph(`First ${language}`) },
+            { id: "second", label: paragraph(`Second ${language}`) },
+          ],
+          shuffle: false,
+        },
+        prompt: paragraph(`Prompt of ${name} in ${language}`),
+      }),
+      hash: Sha256HashSchema.make(`sha256:${"a".repeat(64)}`),
+      language: Schema.decodeSync(ContentLanguageSchema)(language),
+    })),
   };
 }

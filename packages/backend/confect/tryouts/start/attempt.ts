@@ -10,6 +10,7 @@ import irtScaleVersions from "@repo/backend/confect/_generated/tables/irtScaleVe
 import tryoutAttempts from "@repo/backend/confect/_generated/tables/tryoutAttempts";
 import { captureProductEvent } from "@repo/backend/confect/analytics/capture";
 import { tryoutGate } from "@repo/backend/confect/tryouts/gate";
+import { readWorkingLanguage } from "@repo/backend/confect/tryouts/language";
 import { writeTryoutSetProgress } from "@repo/backend/confect/tryouts/progress/write";
 import { createAttemptPlacements } from "@repo/backend/confect/tryouts/runtime/placement";
 import type { TryoutSection } from "@repo/backend/confect/tryouts/runtime/schema";
@@ -22,7 +23,7 @@ import {
   startAttemptArgsValidator,
   toTryoutStartError,
 } from "@repo/backend/confect/tryouts/start/spec";
-import { Duration, Effect, flow, Schema, Struct } from "effect";
+import { Duration, Effect, flow, Option, Schema, Struct } from "effect";
 
 type TryoutAttempt = Docs["tryoutAttempts"];
 type TryoutAttemptInsert = Omit<TryoutAttempt, "_creationTime" | "_id">;
@@ -137,6 +138,9 @@ const persistAttemptStart = Effect.fn("tryouts.start.persistAttemptStart")(
     if (entrySectionKey) {
       yield* tryoutGate.startSection(attempt.userId, {
         attemptId: attempt._id,
+        ...(input.args.entryLanguage === undefined
+          ? {}
+          : { questionLanguage: input.args.entryLanguage }),
         sectionKey: entrySectionKey,
       });
     }
@@ -150,6 +154,7 @@ const persistAttemptStart = Effect.fn("tryouts.start.persistAttemptStart")(
         }
       )
       .pipe(Effect.catchDefect(flow(toTryoutStartError, Effect.fail)));
+    const working = yield* readWorkingLanguage(attempt.userId, attempt);
     yield* captureProductEvent({
       distinctId: input.userId,
       event: {
@@ -160,6 +165,10 @@ const persistAttemptStart = Effect.fn("tryouts.start.persistAttemptStart")(
           country_key: input.args.countryKey,
           exam_key: input.args.examKey,
           locale: input.args.locale,
+          ...Option.match(working, {
+            onNone: () => ({}),
+            onSome: (language) => ({ question_language: language }),
+          }),
           score_status: attempt.scoreStatus,
           set_key: input.args.setKey,
           track_key: input.args.trackKey,

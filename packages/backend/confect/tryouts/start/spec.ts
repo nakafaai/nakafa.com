@@ -1,3 +1,4 @@
+import { ContentLanguageSchema } from "@nakafa/aksara-contracts/locale";
 import type { Docs } from "@repo/backend/confect/_generated/docs";
 import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
 import { appLocaleValidator } from "@repo/backend/confect/contentRelease/spec";
@@ -8,6 +9,8 @@ export const startAttemptArgsValidator = Schema.Struct({
   destinationSectionKey: Schema.optionalKey(tryoutRouteKeyValidator),
   examKey: tryoutRouteKeyValidator,
   entrySectionKey: Schema.optionalKey(tryoutRouteKeyValidator),
+  /** The language the learner confirmed for the entry section on its page, when the start opens one. */
+  entryLanguage: Schema.optionalKey(ContentLanguageSchema),
   locale: appLocaleValidator,
   setKey: tryoutRouteKeyValidator,
   trackKey: tryoutRouteKeyValidator,
@@ -21,8 +24,9 @@ export const startAttemptResultValidator = Schema.Struct({
 });
 export type StartAttemptResult = typeof startAttemptResultValidator.Type;
 export const startAccessArgsValidator = Schema.Struct({
-  ...startAttemptArgsValidator.mapFields(Struct.omit(["entrySectionKey"]))
-    .fields,
+  ...startAttemptArgsValidator.mapFields(
+    Struct.omit(["entryLanguage", "entrySectionKey"])
+  ).fields,
   ...{
     now: Schema.Finite,
   },

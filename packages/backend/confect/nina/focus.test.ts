@@ -153,7 +153,7 @@ describe("Nina question focus", () => {
         .withIndex("by_kind_and_versionHash_and_language", (index) =>
           index
             .eq("kind", "explanation")
-            .eq("versionHash", placement.versionHash)
+            .eq("versionHash", placement.versions[0].hash)
             .eq("language", "en")
         )
         .collect()) {
@@ -183,7 +183,7 @@ describe("Nina question focus", () => {
       for (const row of await ctx.db
         .query("assessmentRows")
         .withIndex("by_kind_and_versionHash_and_language", (index) =>
-          index.eq("kind", "item").eq("versionHash", placement.versionHash)
+          index.eq("kind", "item").eq("versionHash", placement.versions[0].hash)
         )
         .collect()) {
         await ctx.db.delete("assessmentRows", row._id);

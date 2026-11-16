@@ -15076,6 +15076,7 @@ export declare const api: {
           {
             countryKey: string;
             destinationSectionKey?: string;
+            entryLanguage?: string;
             entrySectionKey?: string;
             examKey: string;
             locale: "en" | "id" | "de" | "ms";
@@ -15112,16 +15113,40 @@ export declare const api: {
         >;
       };
       sections: {
+        chooseQuestionLanguage: FunctionReference<
+          "mutation",
+          "public",
+          {
+            attemptId: Id<"tryoutAttempts">;
+            language: string;
+            sectionKey: string;
+          },
+          null
+        >;
         complete: FunctionReference<
           "mutation",
           "public",
           { attemptId: Id<"tryoutAttempts">; sectionKey: string },
           { kind: "completed" }
         >;
+        countQuestionLook: FunctionReference<
+          "mutation",
+          "public",
+          {
+            from: string;
+            placementId: Id<"tryoutAttemptPlacements">;
+            to: string;
+          },
+          null
+        >;
         start: FunctionReference<
           "mutation",
           "public",
-          { attemptId: Id<"tryoutAttempts">; sectionKey: string },
+          {
+            attemptId: Id<"tryoutAttempts">;
+            questionLanguage?: string;
+            sectionKey: string;
+          },
           { kind: "started" }
         >;
       };
@@ -15176,9 +15201,12 @@ export declare const api: {
               activeSetPublicPath: string | null;
               attemptId: Id<"tryoutAttempts">;
               content: Array<{
-                body: string;
                 placementId: Id<"tryoutAttemptPlacements">;
-                versionHash: string;
+                versions: Array<{
+                  body: string;
+                  hash: string;
+                  language: string;
+                }>;
               }>;
               initialState: {
                 attempt: {
@@ -15204,6 +15232,8 @@ export declare const api: {
                     completedAt: number | null;
                     endReason: "submitted" | "time-expired" | null;
                     expiresAt: number;
+                    languages: Array<string>;
+                    questionLanguage: string;
                     score: {
                       publishedScore: number;
                       rawScore: number;
@@ -15255,6 +15285,8 @@ export declare const api: {
                     completedAt: number | null;
                     endReason: "submitted" | "time-expired" | null;
                     expiresAt: number;
+                    languages: Array<string>;
+                    questionLanguage: string;
                     score: {
                       publishedScore: number;
                       rawScore: number;
@@ -15290,6 +15322,7 @@ export declare const api: {
                 };
                 section: {
                   description?: string;
+                  languages: Array<string>;
                   publicPath?: string;
                   questionCount: number;
                   sectionKey: string;
@@ -15349,9 +15382,12 @@ export declare const api: {
           | {
               attemptId: Id<"tryoutAttempts">;
               content: Array<{
-                body: string;
                 placementId: Id<"tryoutAttemptPlacements">;
-                versionHash: string;
+                versions: Array<{
+                  body: string;
+                  hash: string;
+                  language: string;
+                }>;
               }>;
               initialState: {
                 attempt: {
@@ -15377,6 +15413,8 @@ export declare const api: {
                     completedAt: number | null;
                     endReason: "submitted" | "time-expired" | null;
                     expiresAt: number;
+                    languages: Array<string>;
+                    questionLanguage: string;
                     score: {
                       publishedScore: number;
                       rawScore: number;
@@ -15428,6 +15466,8 @@ export declare const api: {
                     completedAt: number | null;
                     endReason: "submitted" | "time-expired" | null;
                     expiresAt: number;
+                    languages: Array<string>;
+                    questionLanguage: string;
                     score: {
                       publishedScore: number;
                       rawScore: number;
@@ -15450,6 +15490,7 @@ export declare const api: {
               page: {
                 entrySection: {
                   description?: string;
+                  languages: Array<string>;
                   publicPath?: string;
                   questionCount: number;
                   sectionKey: string;
@@ -15472,6 +15513,7 @@ export declare const api: {
                 };
                 sections: Array<{
                   description?: string;
+                  languages: Array<string>;
                   publicPath?: string;
                   questionCount: number;
                   sectionKey: string;
@@ -15503,6 +15545,7 @@ export declare const api: {
               restartTarget: {
                 entrySection: {
                   description?: string;
+                  languages: Array<string>;
                   publicPath?: string;
                   questionCount: number;
                   sectionKey: string;
@@ -15516,9 +15559,12 @@ export declare const api: {
           | {
               attemptId: Id<"tryoutAttempts">;
               content: Array<{
-                body: string;
                 placementId: Id<"tryoutAttemptPlacements">;
-                versionHash: string;
+                versions: Array<{
+                  body: string;
+                  hash: string;
+                  language: string;
+                }>;
               }>;
               initialState: {
                 attempt: {
@@ -15544,6 +15590,8 @@ export declare const api: {
                     completedAt: number | null;
                     endReason: "submitted" | "time-expired" | null;
                     expiresAt: number;
+                    languages: Array<string>;
+                    questionLanguage: string;
                     score: {
                       publishedScore: number;
                       rawScore: number;
@@ -15595,6 +15643,8 @@ export declare const api: {
                     completedAt: number | null;
                     endReason: "submitted" | "time-expired" | null;
                     expiresAt: number;
+                    languages: Array<string>;
+                    questionLanguage: string;
                     score: {
                       publishedScore: number;
                       rawScore: number;
@@ -15617,6 +15667,7 @@ export declare const api: {
               page: {
                 entrySection: {
                   description?: string;
+                  languages: Array<string>;
                   publicPath?: string;
                   questionCount: number;
                   sectionKey: string;
@@ -15639,6 +15690,7 @@ export declare const api: {
                 };
                 sections: Array<{
                   description?: string;
+                  languages: Array<string>;
                   publicPath?: string;
                   questionCount: number;
                   sectionKey: string;
@@ -15670,6 +15722,7 @@ export declare const api: {
               restartTarget: {
                 entrySection: {
                   description?: string;
+                  languages: Array<string>;
                   publicPath?: string;
                   questionCount: number;
                   sectionKey: string;
@@ -15850,6 +15903,7 @@ export declare const api: {
             };
             section: {
               description?: string;
+              languages: Array<string>;
               publicPath?: string;
               questionCount: number;
               sectionKey: string;
@@ -15886,6 +15940,7 @@ export declare const api: {
           null | {
             entrySection: {
               description?: string;
+              languages: Array<string>;
               publicPath?: string;
               questionCount: number;
               sectionKey: string;
@@ -15908,6 +15963,7 @@ export declare const api: {
             };
             sections: Array<{
               description?: string;
+              languages: Array<string>;
               publicPath?: string;
               questionCount: number;
               sectionKey: string;
@@ -16055,6 +16111,8 @@ export declare const api: {
                 completedAt: number | null;
                 endReason: "submitted" | "time-expired" | null;
                 expiresAt: number;
+                languages: Array<string>;
+                questionLanguage: string;
                 score: {
                   publishedScore: number;
                   rawScore: number;
@@ -16099,6 +16157,8 @@ export declare const api: {
                 completedAt: number | null;
                 endReason: "submitted" | "time-expired" | null;
                 expiresAt: number;
+                languages: Array<string>;
+                questionLanguage: string;
                 score: {
                   publishedScore: number;
                   rawScore: number;
@@ -16148,6 +16208,8 @@ export declare const api: {
                 completedAt: number | null;
                 endReason: "submitted" | "time-expired" | null;
                 expiresAt: number;
+                languages: Array<string>;
+                questionLanguage: string;
                 score: {
                   publishedScore: number;
                   rawScore: number;
@@ -16192,6 +16254,8 @@ export declare const api: {
                 completedAt: number | null;
                 endReason: "submitted" | "time-expired" | null;
                 expiresAt: number;
+                languages: Array<string>;
+                questionLanguage: string;
                 score: {
                   publishedScore: number;
                   rawScore: number;
@@ -16209,6 +16273,12 @@ export declare const api: {
               };
             };
           }
+        >;
+        getWorkingLanguage: FunctionReference<
+          "query",
+          "public",
+          { countryKey: string; examKey: string },
+          string | null
         >;
       };
       sets: {
@@ -16677,9 +16747,30 @@ export declare const internal: {
                   country_key: string;
                   exam_key: string;
                   locale: "en" | "id" | "de" | "ms";
+                  question_language?: string;
                   score_status: "provisional" | "official";
                   set_key: string;
                   track_key: string;
+                };
+              }
+            | {
+                name: "tryout question language changed";
+                properties: {
+                  country_key: string;
+                  exam_key: string;
+                  from: string;
+                  section_key: string;
+                  to: string;
+                };
+              }
+            | {
+                name: "tryout question looked at in other language";
+                properties: {
+                  country_key: string;
+                  exam_key: string;
+                  from: string;
+                  item_family: string;
+                  to: string;
                 };
               }
             | {
@@ -17066,9 +17157,30 @@ export declare const internal: {
                     country_key: string;
                     exam_key: string;
                     locale: "en" | "id" | "de" | "ms";
+                    question_language?: string;
                     score_status: "provisional" | "official";
                     set_key: string;
                     track_key: string;
+                  };
+                }
+              | {
+                  name: "tryout question language changed";
+                  properties: {
+                    country_key: string;
+                    exam_key: string;
+                    from: string;
+                    section_key: string;
+                    to: string;
+                  };
+                }
+              | {
+                  name: "tryout question looked at in other language";
+                  properties: {
+                    country_key: string;
+                    exam_key: string;
+                    from: string;
+                    item_family: string;
+                    to: string;
                   };
                 }
               | {

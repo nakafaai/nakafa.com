@@ -1,4 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
+import { ContentLanguageSchema } from "@nakafa/aksara-contracts/locale";
 import tryouts from "@repo/backend/confect/_generated/refs/tryouts";
 import {
   createConvexTestWithBetterAuth,
@@ -17,7 +18,10 @@ import {
   type TryoutWorld,
   tryoutWorld,
 } from "@repo/backend/test/tryout/world";
-import { Array as Arr, Effect } from "effect";
+import { Array as Arr, Effect, Schema } from "effect";
+
+/** English, as a content language. */
+const ENGLISH = Schema.decodeSync(ContentLanguageSchema)("en");
 
 const DAY = 86_400_000;
 
@@ -147,6 +151,7 @@ describe("tryouts/mutations/attempts", () => {
         );
         expect(attempt?.sections).toEqual([
           {
+            languages: ["id"],
             questionCount: 2,
             sectionKey: "section-a",
             sectionOrder: 1,
@@ -154,8 +159,36 @@ describe("tryouts/mutations/attempts", () => {
           },
         ]);
         expect(sections).toMatchObject([
-          { sectionKey: "section-a", status: "in-progress", totalQuestions: 2 },
+          {
+            questionLanguage: "id",
+            sectionKey: "section-a",
+            status: "in-progress",
+            totalQuestions: 2,
+          },
         ]);
+      })
+  );
+
+  it.effect(
+    "opens a direct-entry set's section in the language confirmed on its page, and the next start on the remembered one",
+    () =>
+      Effect.gen(function* () {
+        const world = yield* tryoutWorld({
+          entry: true,
+          languages: ["ms", "en"],
+        });
+        const started = yield* world.learner.mutation(
+          tryouts.mutations.attempts.startAttempt,
+          {
+            ...startArgs({ entry: true }),
+            entryLanguage: ENGLISH,
+          }
+        );
+        expect(
+          (yield* readStart(world, started.attemptId)).sections
+        ).toMatchObject([{ questionLanguage: "en", sectionKey: "section-a" }]);
+        const second = yield* world.start({ entry: true, setKey: "set-1" });
+        expect(second).toEqual(started);
       })
   );
 

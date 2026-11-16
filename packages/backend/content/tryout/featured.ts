@@ -6,13 +6,9 @@ import {
   catalogNodeIdentity,
   readCatalogEntries,
 } from "@repo/backend/confect/tryouts/catalog/rows";
-import {
-  readItemKey,
-  readItemVersion,
-  readPaper,
-  readStimulus,
-} from "@repo/backend/confect/tryouts/rows";
+import { readItemKey, readPaper } from "@repo/backend/confect/tryouts/rows";
 import { TryoutQuestionBodyText } from "@repo/backend/confect/tryouts/runtime/spec";
+import { placeVersion } from "@repo/backend/confect/tryouts/runtime/version";
 import {
   Array as Arr,
   Effect,
@@ -118,43 +114,48 @@ export const readFeaturedTryout = Effect.fn("tryouts.catalog.readFeatured")(
     }
     // A paper and its sections are never empty, so every set has a first place.
     const firstPlace = (set: CatalogSet) =>
-      Effect.map(
-        readPaper(snapshotId, set.paper),
-        ({ paper }) =>
-          Arr.headNonEmpty(Arr.headNonEmpty(paper.sections).placements).versions
+      Effect.map(readPaper(snapshotId, set.paper), ({ paper }) =>
+        Arr.headNonEmpty(Arr.headNonEmpty(paper.sections).placements)
       );
     const own = yield* Effect.findFirstFilter(sets, (set) =>
-      Effect.map(firstPlace(set), (versions) =>
+      Effect.map(firstPlace(set), (placement) =>
         Result.fromOption(
-          Arr.findFirst(versions, ({ language }) => language === locale),
+          Option.map(
+            Arr.findFirst(
+              placement.versions,
+              ({ language }) => language === locale
+            ),
+            ({ language }) => ({ language, placement })
+          ),
           () => set
         )
       )
     );
-    const place = Option.isSome(own)
+    const shown = Option.isSome(own)
       ? own.value
-      : Arr.headNonEmpty(yield* firstPlace(Arr.headNonEmpty(sets)));
-    const [version, key] = yield* Effect.all([
-      readItemVersion(place.hash),
-      readItemKey(place.hash),
-    ]);
-    const interaction = Arr.headNonEmpty(version.interactions);
+      : yield* Effect.map(firstPlace(Arr.headNonEmpty(sets)), (placement) => ({
+          language: Arr.headNonEmpty(placement.versions).language,
+          placement,
+        }));
+    const version = yield* placeVersion(shown.placement, shown.language).pipe(
+      // The language was read from the place's own versions.
+      Effect.catchTag("TryoutRuntimeError", Effect.die)
+    );
+    const key = yield* readItemKey(version.hash);
     const answer = Arr.findFirst(
       key.answers,
-      (candidate) => candidate.interaction === interaction.id
+      (candidate) => candidate.interaction === version.interaction.id
     );
     if (Option.isNone(answer)) {
       return yield* missingFeatured("answer");
     }
-    const stimulus =
-      version.stimulus === undefined
-        ? Option.none()
-        : Option.some((yield* readStimulus(version.stimulus.hash)).document);
     const body = yield* Schema.encodeEffect(TryoutQuestionBodyText)({
-      interaction,
+      interaction: version.interaction,
       key: answer.value,
       prompt: version.prompt,
-      ...(Option.isSome(stimulus) ? { stimulus: stimulus.value } : {}),
+      ...(Option.isSome(version.stimulus)
+        ? { stimulus: version.stimulus.value }
+        : {}),
     }).pipe(
       // Every part was decoded by the contract, so it encodes.
       Effect.orDie

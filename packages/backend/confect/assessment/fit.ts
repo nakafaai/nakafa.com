@@ -1,5 +1,4 @@
 import { hasDistinctIds } from "@nakafa/aksara-contracts/assessment/identity";
-import type { Interaction } from "@nakafa/aksara-contracts/assessment/interaction";
 import { cellsFit, pairsFit } from "@repo/backend/confect/assessment/key";
 import {
   type ExamResponse,
@@ -9,10 +8,11 @@ import {
   isTextResponse,
   TEXT_RESPONSE_MAX,
 } from "@repo/backend/confect/assessment/response";
+import type { GradedInteraction } from "@repo/backend/confect/assessment/structure";
 import { Array as Arr, Match, Number as Num } from "effect";
 
 /** A choice, whose response is the options the student chose. */
-type Choice = Extract<Interaction, { readonly kind: "choice" }>;
+type Choice = Extract<GradedInteraction, { readonly kind: "choice" }>;
 
 /**
  * Whether a response fits the choice: each option is one of its options, no option repeats,
@@ -32,7 +32,7 @@ const fitsChoice = (choice: Choice, response: readonly string[]) =>
  * one at a time, so a choice may still be open.
  */
 const fitsChoices = (
-  interactions: readonly Interaction[],
+  interactions: readonly GradedInteraction[],
   response: ExamResponse
 ) => {
   const choices = Arr.filter(
@@ -64,7 +64,7 @@ const fitsChoices = (
  * only when they are all choices (`fitsChoices`), and a question of any other shape takes none.
  */
 export const fitsQuestion = (
-  interactions: readonly Interaction[],
+  interactions: readonly GradedInteraction[],
   response: ExamResponse
 ) => {
   if (interactions.length !== 1) {

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
 import { encodeJsonText } from "@repo/utilities/json";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 import {
   decodeAttemptBodies,
   projectSectionAttempt,
@@ -17,8 +17,17 @@ const keys = {
   trackKey: "2027",
 };
 const SET = "try-out/indonesia/snbt/2027/set-1";
-const { placementId, versionHash, ...body } = makeTryoutBody("question-1");
-const content = [{ body: encodeJsonText(body), placementId, versionHash }];
+const decoded = makeTryoutBody("question-1");
+const content = [
+  {
+    placementId: decoded.placementId,
+    versions: Arr.map(decoded.versions, ({ hash, language, ...body }) => ({
+      body: encodeJsonText(body),
+      hash,
+      language,
+    })),
+  },
+];
 
 describe("the request of a learner's URL", () => {
   it("asks for the attempt the URL names, or else the learner's current one", () => {

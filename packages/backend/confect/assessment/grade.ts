@@ -1,5 +1,4 @@
 import { matchesAnswerKey } from "@nakafa/aksara-contracts/assessment/answer";
-import type { Interaction } from "@nakafa/aksara-contracts/assessment/interaction";
 import type { InteractionKey } from "@nakafa/aksara-contracts/assessment/key";
 import {
   pointsForWrongParts,
@@ -15,6 +14,7 @@ import {
   madePairs,
   markedCells,
 } from "@repo/backend/confect/assessment/response";
+import type { GradedInteraction } from "@repo/backend/confect/assessment/structure";
 import { Array as Arr, Match, Schema } from "effect";
 
 const NonNegativeInt = Schema.Int.check(Schema.isGreaterThanOrEqualTo(0));
@@ -159,7 +159,7 @@ export function grade({
   response,
   rule,
 }: {
-  interaction: Interaction;
+  interaction: GradedInteraction;
   key: InteractionKey | undefined;
   response: ExamResponse;
   rule: ScoringRule;

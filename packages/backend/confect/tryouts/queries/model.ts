@@ -2,6 +2,7 @@ import {
   GroupAxisSchema,
   SectionVisibilitySchema,
 } from "@nakafa/aksara-contracts/assessment/catalog";
+import { ContentLanguageSchema } from "@nakafa/aksara-contracts/locale";
 import { tryoutRouteKeyValidator } from "@repo/backend/confect/tryouts/route";
 import { tryoutScoringStrategyValidator } from "@repo/backend/confect/tryouts/score";
 import { Schema } from "effect";
@@ -56,6 +57,8 @@ export const publicTryoutTrackValidator = Schema.Struct({
 });
 export const publicTryoutSectionValidator = Schema.Struct({
   description: Schema.optionalKey(Schema.String),
+  /** The languages the section's questions are written in, the first being the one a learner starts in. */
+  languages: Schema.NonEmptyArray(ContentLanguageSchema),
   publicPath: Schema.optionalKey(Schema.String),
   questionCount: Schema.Finite,
   sectionKey: tryoutRouteKeyValidator,

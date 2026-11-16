@@ -1,4 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
+import { ContentLanguageSchema } from "@nakafa/aksara-contracts/locale";
 import tryouts from "@repo/backend/confect/_generated/refs/tryouts";
 import { seedAuthenticatedUser } from "@repo/backend/confect/test.helpers";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
@@ -8,9 +9,11 @@ import {
   type TryoutWorld,
   tryoutWorld,
 } from "@repo/backend/test/tryout/world";
-import { Effect } from "effect";
+import { Effect, Schema } from "effect";
 
 const MARKS = { blank: 0, correct: 4, wrong: -1 };
+
+const language = Schema.decodeSync(ContentLanguageSchema);
 
 /** Reads an attempt with its section attempts in order and its score. */
 const readFinished = (world: TryoutWorld, attemptId: Id<"tryoutAttempts">) =>
@@ -262,6 +265,211 @@ describe("tryouts/mutations/sections", () => {
           yield* world.startSection(attemptId, "section-a").pipe(Effect.flip)
         ).toMatchObject({ code: "TRYOUT_ATTEMPT_NOT_ACTIVE" });
         expect((yield* readFinished(world, attemptId)).sections).toEqual([]);
+      })
+  );
+});
+
+/** Reads one section attempt of an attempt and the learner's remembered question languages. */
+const readLanguage = (
+  world: TryoutWorld,
+  attemptId: Id<"tryoutAttempts">,
+  sectionKey: string
+) =>
+  Effect.promise(() =>
+    world.t.query(async (ctx) => ({
+      remembered:
+        (await ctx.db.query("learningPreferences").unique())
+          ?.questionLanguages ?? [],
+      section: await ctx.db
+        .query("tryoutSectionAttempts")
+        .withIndex("by_tryoutAttemptId_and_sectionKey", (query) =>
+          query.eq("tryoutAttemptId", attemptId).eq("sectionKey", sectionKey)
+        )
+        .unique(),
+    }))
+  );
+
+describe("tryouts/mutations/sections question language", () => {
+  it.effect(
+    "starts a section in the language confirmed on its page and remembers it for the exam",
+    () =>
+      Effect.gen(function* () {
+        const world = yield* tryoutWorld({ languages: ["ms", "en"] });
+        const { attemptId } = yield* world.start();
+        yield* world.learner.mutation(tryouts.mutations.sections.start, {
+          attemptId,
+          questionLanguage: language("en"),
+          sectionKey: "section-a",
+        });
+        expect(
+          yield* readLanguage(world, attemptId, "section-a")
+        ).toMatchObject({
+          remembered: [
+            { countryKey: "indonesia", examKey: "snbt", language: "en" },
+          ],
+          section: { questionLanguage: "en" },
+        });
+        expect(
+          yield* world.learner.query(
+            tryouts.queries.runtime.getWorkingLanguage,
+            { countryKey: "indonesia", examKey: "snbt" }
+          )
+        ).toBe("en");
+        yield* world.completeSection(attemptId, "section-a");
+        // The next section of the exam opens on the remembered language without a choice.
+        yield* world.startSection(attemptId, "section-b");
+        expect(
+          (yield* readLanguage(world, attemptId, "section-b")).section
+        ).toMatchObject({ questionLanguage: "en" });
+      })
+  );
+
+  it.effect(
+    "opens a section on its first language before any choice, and refuses a language it is not written in",
+    () =>
+      Effect.gen(function* () {
+        const world = yield* tryoutWorld({ languages: ["ms", "en"] });
+        const { attemptId } = yield* world.start();
+        expect(
+          yield* world.learner.query(
+            tryouts.queries.runtime.getWorkingLanguage,
+            { countryKey: "indonesia", examKey: "snbt" }
+          )
+        ).toBeNull();
+        expect(
+          yield* world.learner
+            .mutation(tryouts.mutations.sections.start, {
+              attemptId,
+              questionLanguage: language("de"),
+              sectionKey: "section-a",
+            })
+            .pipe(Effect.flip)
+        ).toMatchObject({ code: "TRYOUT_QUESTION_LANGUAGE_UNAVAILABLE" });
+        yield* world.startSection(attemptId, "section-a");
+        expect(
+          yield* readLanguage(world, attemptId, "section-a")
+        ).toMatchObject({
+          remembered: [],
+          section: { questionLanguage: "ms" },
+        });
+      })
+  );
+
+  it.effect(
+    "switches a running section's language and its review's, keeping answers, and remembers each switch",
+    () =>
+      Effect.gen(function* () {
+        const world = yield* tryoutWorld({ languages: ["ms", "en"] });
+        const { attemptId } = yield* world.start();
+        yield* world.startSection(attemptId, "section-a");
+        yield* world.answer(attemptId, {
+          order: 1,
+          pick: "correct",
+          section: "section-a",
+        });
+        const choose = (tag: string) =>
+          world.learner.mutation(
+            tryouts.mutations.sections.chooseQuestionLanguage,
+            { attemptId, language: language(tag), sectionKey: "section-a" }
+          );
+        expect(yield* choose("en")).toBeNull();
+        // A choice that changes nothing writes nothing more.
+        expect(yield* choose("en")).toBeNull();
+        const running = yield* readLanguage(world, attemptId, "section-a");
+        expect(running).toMatchObject({
+          remembered: [{ language: "en" }],
+          section: { answeredCount: 1, questionLanguage: "en" },
+        });
+        yield* world.completeSection(attemptId, "section-a");
+        expect(yield* choose("ms")).toBeNull();
+        expect(
+          yield* readLanguage(world, attemptId, "section-a")
+        ).toMatchObject({
+          remembered: [{ language: "ms" }],
+          section: { correctAnswers: 1, questionLanguage: "ms" },
+        });
+        expect(yield* choose("de").pipe(Effect.flip)).toMatchObject({
+          code: "TRYOUT_QUESTION_LANGUAGE_UNAVAILABLE",
+        });
+      })
+  );
+
+  it.effect(
+    "refuses a switch of a section not started yet or of another learner's attempt, and counts a look without saving it",
+    () =>
+      Effect.gen(function* () {
+        const world = yield* tryoutWorld({ languages: ["ms", "en"] });
+        const { attemptId } = yield* world.start();
+        expect(
+          yield* world.learner
+            .mutation(tryouts.mutations.sections.chooseQuestionLanguage, {
+              attemptId,
+              language: language("en"),
+              sectionKey: "section-b",
+            })
+            .pipe(Effect.flip)
+        ).toMatchObject({ code: "TRYOUT_SECTION_NOT_FOUND" });
+        yield* world.startSection(attemptId, "section-a");
+        const other = yield* Effect.promise(() =>
+          world.t.mutation((ctx) =>
+            seedAuthenticatedUser(ctx, { now: TRYOUT_NOW, suffix: "other" })
+          )
+        );
+        const otherLearner = client(
+          world.t.withIdentity({
+            sessionId: other.sessionId,
+            subject: other.authUserId,
+          })
+        );
+        expect(
+          yield* otherLearner
+            .mutation(tryouts.mutations.sections.chooseQuestionLanguage, {
+              attemptId,
+              language: language("en"),
+              sectionKey: "section-a",
+            })
+            .pipe(Effect.flip)
+        ).toMatchObject({ code: "TRYOUT_SECTION_NOT_FOUND" });
+        const placement = yield* Effect.promise(() =>
+          world.t.query((ctx) =>
+            ctx.db.query("tryoutAttemptPlacements").first()
+          )
+        );
+        expect(placement).not.toBeNull();
+        if (placement === null) {
+          return;
+        }
+        const look = {
+          from: language("ms"),
+          placementId: placement._id,
+          to: language("en"),
+        };
+        expect(
+          yield* world.learner.mutation(
+            tryouts.mutations.sections.countQuestionLook,
+            look
+          )
+        ).toBeNull();
+        expect(
+          yield* otherLearner.mutation(
+            tryouts.mutations.sections.countQuestionLook,
+            look
+          )
+        ).toBeNull();
+        yield* Effect.promise(() =>
+          world.t.mutation((ctx) =>
+            ctx.db.delete("tryoutAttemptPlacements", placement._id)
+          )
+        );
+        expect(
+          yield* world.learner.mutation(
+            tryouts.mutations.sections.countQuestionLook,
+            look
+          )
+        ).toBeNull();
+        expect(
+          (yield* readLanguage(world, attemptId, "section-a")).section
+        ).toMatchObject({ questionLanguage: "ms" });
       })
   );
 });

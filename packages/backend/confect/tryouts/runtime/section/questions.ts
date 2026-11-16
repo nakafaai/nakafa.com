@@ -10,28 +10,37 @@ import {
   loadSectionResponseIndex,
   type TryoutResponseIndex,
 } from "@repo/backend/confect/tryouts/runtime/response";
+import type { TryoutSection } from "@repo/backend/confect/tryouts/runtime/schema";
 import { getSectionScoreResult } from "@repo/backend/confect/tryouts/score/result";
 import { Array as Arr, Effect, HashSet, MutableHashMap, Option } from "effect";
 
 type TryoutPlacement = Docs["tryoutAttemptPlacements"];
 type TryoutResponse = Docs["tryoutResponses"];
 
-/** Projects the public state shared by attempt and runtime responses. */
-const readCurrentSection = Effect.fn("tryouts.runtime.readCurrentSection")(
-  function* (section: Docs["tryoutSectionAttempts"]) {
-    return {
-      answeredCount: section.answeredCount,
-      completedAt: section.completedAt,
-      endReason: section.endReason,
-      expiresAt: section.expiresAt,
-      score: yield* getSectionScoreResult(section),
-      sectionKey: section.sectionKey,
-      startedAt: section.startedAt,
-      status: section.status,
-      totalQuestions: section.totalQuestions,
-    };
-  }
-);
+/**
+ * Projects the public state shared by attempt and runtime responses: the section's clock, counters, and
+ * score, the languages its frozen paper section is written in, and the one it shows.
+ */
+export const readCurrentSection = Effect.fn(
+  "tryouts.runtime.readCurrentSection"
+)(function* (
+  section: Docs["tryoutSectionAttempts"],
+  frozen: Pick<TryoutSection, "languages">
+) {
+  return {
+    answeredCount: section.answeredCount,
+    completedAt: section.completedAt,
+    endReason: section.endReason,
+    expiresAt: section.expiresAt,
+    languages: frozen.languages,
+    questionLanguage: section.questionLanguage,
+    score: yield* getSectionScoreResult(section),
+    sectionKey: section.sectionKey,
+    startedAt: section.startedAt,
+    status: section.status,
+    totalQuestions: section.totalQuestions,
+  };
+});
 
 /** Loads one bounded section graph for the exact-attempt runtime contract. */
 const loadSectionRows = Effect.fn("tryouts.runtime.loadSectionRows")(function* (
@@ -45,7 +54,7 @@ const loadSectionRows = Effect.fn("tryouts.runtime.loadSectionRows")(function* (
   const frozen = yield* requireTryoutResponseSection(attempt, section);
   const placements = yield* loadSectionPlacements(attempt, frozen);
   const loaded = yield* loadSectionResponseIndex(attempt, section, placements);
-  const currentSection = yield* readCurrentSection(section);
+  const currentSection = yield* readCurrentSection(section, frozen);
   return {
     access,
     currentSection,
