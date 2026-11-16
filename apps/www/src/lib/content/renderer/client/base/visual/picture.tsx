@@ -74,6 +74,20 @@ export function MathPicture({ labels = EMPTY_LABELS, scene }: MathSceneProps) {
             vectorEffect="non-scaling-stroke"
           />
         ))}
+        {Arr.map(still.areas, (area) => (
+          <path
+            d={Arr.join(
+              Arr.map(
+                area.rings,
+                (ring) => `M${Arr.join(Arr.map(ring, svgPoint), "L")}Z`
+              ),
+              ""
+            )}
+            fill={resolveMathAppearance(area.appearance)}
+            fillOpacity={0.2}
+            key={area.id}
+          />
+        ))}
         {Arr.map(still.strokes, (stroke) =>
           stroke.closed ? (
             <polygon
