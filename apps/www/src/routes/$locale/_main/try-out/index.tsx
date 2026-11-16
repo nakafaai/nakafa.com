@@ -1,11 +1,10 @@
 import { makeBreadcrumbNodes } from "@repo/seo/jsonld/node";
 import { createFileRoute } from "@tanstack/react-router";
 import { BreadcrumbHeader } from "@/components/shared/breadcrumb/header";
-import { FooterContent } from "@/components/shared/content/footer";
-import { LayoutContent } from "@/components/shared/content/frame";
 import { RefContent } from "@/components/shared/content/references";
-import { LayoutMaterialContent } from "@/components/shared/material/content";
-import { LayoutMaterial } from "@/components/shared/material/frame";
+import { PageBody } from "@/components/shared/page/body";
+import { PageFooter } from "@/components/shared/page/footer";
+import { Page } from "@/components/shared/page/frame";
 import { TryoutHubClient } from "@/components/tryout/catalog/hub";
 import { readTryoutHubFn } from "@/components/tryout/route/catalog.functions";
 import { createTryoutHead } from "@/components/tryout/route/head";
@@ -36,23 +35,21 @@ export const Route = createFileRoute("/$locale/_main/try-out/")({
 function TryoutHubPage() {
   const { labels, page } = Route.useLoaderData();
   return (
-    <LayoutMaterial>
-      <LayoutMaterialContent>
-        <BreadcrumbHeader
-          value={{
-            home: HOME_TARGET,
-            homeLabel: labels.home,
-            items: [{ label: labels.tryOut }],
-            title: labels.tryOut,
-          }}
-        />
-        <LayoutContent>
-          <TryoutHubClient page={page} />
-        </LayoutContent>
-        <FooterContent>
-          <RefContent />
-        </FooterContent>
-      </LayoutMaterialContent>
-    </LayoutMaterial>
+    <Page>
+      <BreadcrumbHeader
+        value={{
+          home: HOME_TARGET,
+          homeLabel: labels.home,
+          items: [{ label: labels.tryOut }],
+          title: labels.tryOut,
+        }}
+      />
+      <PageBody>
+        <TryoutHubClient page={page} />
+      </PageBody>
+      <PageFooter>
+        <RefContent />
+      </PageFooter>
+    </Page>
   );
 }

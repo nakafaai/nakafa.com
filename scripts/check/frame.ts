@@ -2,7 +2,7 @@ import { Array as Arr } from "effect";
 import { TEST_PATTERN } from "#scripts/check/kinds";
 
 /** The one module that names a page's widths. */
-const WIDTH_MODULE = "apps/www/src/components/shared/content/width.ts";
+const WIDTH_MODULE = "apps/www/src/components/shared/page/width.ts";
 /** The app's pages, whose header, tab row and body share one frame. */
 const APP_SOURCE = /^apps\/www\/src\//u;
 /** The marketing pages draw no page header, so each section keeps its own width. */
@@ -27,6 +27,6 @@ export function inspectFrameSource(file: string, sourceText: string) {
   }
   return Arr.map([...sourceText.matchAll(PAGE_WIDTH)], (match) => {
     const line = sourceText.slice(0, match.index).split("\n").length;
-    return `${file}:${line}: read the page's frame from shared/content/width.ts instead of ${match[0]}.`;
+    return `${file}:${line}: read the page's frame from shared/page/width.ts instead of ${match[0]}.`;
   });
 }

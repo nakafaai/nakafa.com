@@ -12,12 +12,11 @@ import {
 } from "@repo/design-system/components/ui/item";
 import { Array as Arr, DateTime } from "effect";
 import { useFormatter, useTranslations } from "use-intl";
-import { DataFailure } from "@/components/shared/failure";
 import { reloadPage } from "@/components/shared/reload";
 import { matchesSearch } from "@/components/shared/table/search";
 import { useTableFilters } from "@/components/shared/table/toolbar";
 import { EmptyState } from "@/components/state/empty";
-import { LoadFailure } from "@/components/state/failure";
+import { DataFailure, LoadFailure } from "@/components/state/failure";
 import { EmptyNina } from "@/components/state/nina";
 import { ChannelMenu } from "@/components/tenant/classes/forum/menu";
 import { channelLabel } from "@/components/tenant/classes/label";

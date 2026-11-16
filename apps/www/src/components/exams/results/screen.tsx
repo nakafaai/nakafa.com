@@ -29,8 +29,8 @@ import { QuestionsSheet } from "@/components/exams/results/questions";
 import { ReleaseAction } from "@/components/exams/results/release";
 import { StudentsTable } from "@/components/exams/results/students";
 import type { BreadcrumbHeaderItem } from "@/components/shared/breadcrumb/header";
+import { PageList } from "@/components/shared/page/body";
 import { Panes, PanesList, PanesProvider } from "@/components/shared/panes";
-import { TablePageBody } from "@/components/shared/table/frame";
 import {
   TableFiltersProvider,
   TableSearch,
@@ -200,14 +200,14 @@ function SittingResultsContent({
             />
             <Panes id="results">
               <PanesList>
-                <TablePageBody>
+                <PageList>
                   {canRelease || releasedAt !== null ? null : (
                     <p className="text-muted-foreground border-b px-4 py-3 text-sm">
                       {t("release-wait")}
                     </p>
                   )}
                   <StudentsTable />
-                </TablePageBody>
+                </PageList>
               </PanesList>
               <StudentAnswersPanel />
             </Panes>

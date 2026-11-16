@@ -6,7 +6,7 @@ import { type ComponentProps, type ReactNode, use } from "react";
 import { useTranslations } from "use-intl";
 import { readQuestionIds } from "@/components/player/ids";
 import { splitTime } from "@/components/player/time";
-import { pageRowVariants } from "@/components/shared/content/width";
+import { pageRowVariants } from "@/components/shared/page/width";
 import { PaneBody, PaneHeader } from "@/components/shared/pane";
 import {
   Panes,

@@ -7,37 +7,29 @@ import {
 } from "@repo/design-system/components/ui/breadcrumb";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { SidebarTrigger } from "@repo/design-system/components/ui/sidebar-shell";
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from "@repo/design-system/components/ui/tooltip";
-import { SidebarContext } from "@repo/design-system/lib/sidebar/context";
-import { cn } from "cn";
 import { Array as Arr } from "effect";
-import { type ReactNode, use } from "react";
+import type { ReactNode } from "react";
 import { useTranslations } from "use-intl";
 import { BreadcrumbAnchor } from "@/components/shared/breadcrumb/anchor";
 import {
   type BreadcrumbHeaderItem,
   BreadcrumbHeaderPath,
 } from "@/components/shared/breadcrumb/header";
-import { pageHeaderRowVariants } from "@/components/shared/content/width";
+import { PageActions, PageHeader } from "@/components/shared/page/header";
 import { useTenant } from "@/components/tenant/context";
 import { schoolHomeTarget } from "@/lib/routing/school/target";
 
 /**
- * The one header of a school page, one row high: the sidebar's trigger, the page's path
- * from the school's home, and the page's actions at its end, the page's end-goal action
- * among them. The last item of the path is the page itself. A page whose title is the
- * path's last item passes its title, which only assistive technology reads, because the path already shows
- * it; a page whose body draws its own heading, such as the not-found page, passes no title.
- * On a phone the path folds into one menu beside the page's name, so the page's actions
- * have their room. The bar and its border run the screen's full width, and its row is one
- * row of the page (`pageHeaderRowVariants`), so the path and actions line up with the body's edges
- * at every width, and it stands one control high from the first paint, so actions that arrive later
- * move nothing. The shell draws no header of its own.
+ * The one header of a school page (`PageHeader`): the page's path from the school's home, the page itself last, and
+ * the page's actions at its end, the page's end-goal action among them. A page whose title is the path's last item
+ * passes its title, which only assistive technology reads, because the path already shows it; a page whose body draws
+ * its own heading, such as the not-found page, passes no title. On a phone the path folds into one menu beside the
+ * page's name, so the page's actions have their room.
  */
 export function SchoolHeader({
   children,
@@ -51,49 +43,18 @@ export function SchoolHeader({
   /** The page's heading, unless the page's body draws its own. */
   title?: string;
 }) {
-  const tCommon = useTranslations("Common");
-  const hasSidebar = use(SidebarContext) !== null;
-
   return (
-    <header
-      className="bg-background @container/bar sticky top-0 z-20 flex min-h-16 shrink-0 items-center border-b"
-      data-slot="page-header"
-    >
-      {/* Text at twice its size leaves one line no room, so the actions take a line of their own. */}
-      <div
-        className={cn(
-          pageHeaderRowVariants(),
-          "min-h-12 @max-3xs/bar:flex-wrap @max-3xs/bar:py-2"
-        )}
-      >
-        {/* The exam editor draws no sidebar, so a page that shows in its place, such as its not-found page, has none to toggle. */}
-        {hasSidebar ? (
-          <SidebarTrigger
-            className="size-9 shrink-0 lg:hidden"
-            label={tCommon("toggle-sidebar")}
-            variant="outline"
-          />
-        ) : null}
-        {title === undefined ? null : (
-          <h1 className="sr-only" dir="auto">
-            {title}
-          </h1>
-        )}
-        {/* Text at twice its size leaves the path no room, so it steps aside and takes the row's gap with it. */}
-        <div className="min-w-0 @max-3xs/header:hidden">
-          <SchoolPath
-            items={Arr.map(items, (item, index) =>
-              index === items.length - 1 ? { ...item, target: undefined } : item
-            )}
-          />
-        </div>
-        {children === undefined ? null : (
-          <div className="ms-auto flex shrink-0 items-center gap-2">
-            {children}
-          </div>
-        )}
+    <PageHeader {...(title === undefined ? {} : { title })}>
+      {/* Text at twice its size leaves the path no room, so it steps aside and takes the row's gap with it. */}
+      <div className="min-w-0 @max-3xs/header:hidden">
+        <SchoolPath
+          items={Arr.map(items, (item, index) =>
+            index === items.length - 1 ? { ...item, target: undefined } : item
+          )}
+        />
       </div>
-    </header>
+      {children === undefined ? null : <PageActions>{children}</PageActions>}
+    </PageHeader>
   );
 }
 

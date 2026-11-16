@@ -4,7 +4,7 @@ import { useTranslations } from "use-intl";
 import {
   pageBoxVariants,
   pageGutterVariants,
-} from "@/components/shared/content/width";
+} from "@/components/shared/page/width";
 import { Panes, PanesList, PanesRail } from "@/components/shared/panes";
 import { EmptyState } from "@/components/state/empty";
 import { EmptyNina } from "@/components/state/nina";

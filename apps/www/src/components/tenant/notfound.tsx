@@ -1,6 +1,6 @@
 import type { ReactElement } from "react";
 import { useTranslations } from "use-intl";
-import { LayoutContent } from "@/components/shared/content/frame";
+import { PageState } from "@/components/shared/page/body";
 import { ActionLink } from "@/components/state/action";
 import { SchoolHeader } from "@/components/tenant/header";
 import { TenantMissing } from "@/components/tenant/missing";
@@ -18,7 +18,7 @@ export function SchoolPageNotFound(): ReactElement {
   return (
     <>
       <SchoolHeader items={[{ label: t("title") }]} />
-      <LayoutContent className="flex flex-1 items-center py-6">
+      <PageState>
         <TenantMissing>
           <ActionLink
             href="/"
@@ -26,7 +26,7 @@ export function SchoolPageNotFound(): ReactElement {
             variant="default"
           />
         </TenantMissing>
-      </LayoutContent>
+      </PageState>
     </>
   );
 }

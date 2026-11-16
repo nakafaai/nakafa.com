@@ -4,13 +4,17 @@ import { cn } from "cn";
 import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
 import { useTranslations } from "use-intl";
-import { BreadcrumbHeaderFrame } from "@/components/shared/breadcrumb/frame";
 import {
   BreadcrumbHeaderFold,
   type BreadcrumbHeaderItem,
   BreadcrumbHeaderPath,
 } from "@/components/shared/breadcrumb/header";
-import { pageRowVariants } from "@/components/shared/content/width";
+import {
+  PageActions,
+  PageHeader,
+  PageTitle,
+} from "@/components/shared/page/header";
+import { pageRowVariants } from "@/components/shared/page/width";
 import { HOME_TARGET, TRYOUT_TARGET } from "@/lib/routing/target";
 
 /**
@@ -39,7 +43,7 @@ export function TryoutPageHeader({
     ...items,
   ];
   return (
-    <BreadcrumbHeaderFrame contentClassName="grid grid-cols-[auto_minmax(0,1fr)_auto] gap-x-3 md:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] md:gap-x-4">
+    <PageHeader>
       <div className="min-w-0">
         <BreadcrumbHeaderFold
           className="md:hidden"
@@ -56,10 +60,7 @@ export function TryoutPageHeader({
           />
         </div>
       </div>
-      <h1
-        className="min-w-0 truncate text-base font-medium md:max-w-xs md:text-center"
-        title={title}
-      >
+      <PageTitle title={title}>
         <span className="sr-only">
           {Arr.join(
             Arr.map(path, (item) => item.label),
@@ -67,9 +68,9 @@ export function TryoutPageHeader({
           )}{" "}
         </span>
         {title}
-      </h1>
-      <div className="flex shrink-0 justify-end gap-2">{children}</div>
-    </BreadcrumbHeaderFrame>
+      </PageTitle>
+      <PageActions>{children}</PageActions>
+    </PageHeader>
   );
 }
 

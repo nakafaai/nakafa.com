@@ -12,9 +12,8 @@ import {
   InboxAddressTopic,
   InboxTopic,
 } from "@/components/notifications/topic";
-import { LayoutContent } from "@/components/shared/content/frame";
-import { LayoutMaterialContent } from "@/components/shared/material/content";
-import { LayoutMaterial } from "@/components/shared/material/frame";
+import { PageStack } from "@/components/shared/page/body";
+import { Page } from "@/components/shared/page/frame";
 import { useAgeClock } from "@/components/user/ages";
 import { privateHead } from "@/lib/account/head";
 import { notificationsScreenFn } from "@/lib/account/home.functions";
@@ -45,21 +44,19 @@ function NotificationsPage() {
   const page = Option.fromUndefinedOr(first);
   const clock = useAgeClock(now);
   return (
-    <LayoutMaterial>
-      <LayoutMaterialContent>
-        <NotificationsHeader>
-          <ButtonGroup>
-            <MarkAllRead scope={ACCOUNT_INBOX} />
-            <AccountPreferences />
-          </ButtonGroup>
-        </NotificationsHeader>
-        <InboxTabs topics={InboxTopic.literals} />
-        <LayoutContent className="flex flex-col gap-6 py-6">
-          <NotificationsClockContext value={clock}>
-            <NotificationsList first={page} scope={ACCOUNT_INBOX} />
-          </NotificationsClockContext>
-        </LayoutContent>
-      </LayoutMaterialContent>
-    </LayoutMaterial>
+    <Page>
+      <NotificationsHeader>
+        <ButtonGroup>
+          <MarkAllRead scope={ACCOUNT_INBOX} />
+          <AccountPreferences />
+        </ButtonGroup>
+      </NotificationsHeader>
+      <InboxTabs topics={InboxTopic.literals} />
+      <PageStack>
+        <NotificationsClockContext value={clock}>
+          <NotificationsList first={page} scope={ACCOUNT_INBOX} />
+        </NotificationsClockContext>
+      </PageStack>
+    </Page>
   );
 }

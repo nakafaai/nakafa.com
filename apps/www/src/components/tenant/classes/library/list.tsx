@@ -17,7 +17,7 @@ import { useState } from "react";
 import { useTranslations } from "use-intl";
 import { useStore } from "zustand";
 import { useConvexAuth } from "@/components/auth/convex";
-import { TablePageBody } from "@/components/shared/table/frame";
+import { PageList } from "@/components/shared/page/body";
 import { TablePages } from "@/components/shared/table/pages";
 import {
   TableFiltersProvider,
@@ -106,7 +106,7 @@ export function LibraryList() {
         </ButtonGroup>
         {manages ? <AddToLibrary /> : null}
       </ClassHeader>
-      <TablePageBody
+      <PageList
         views={
           <TableViews
             label={t("library-views")}
@@ -123,7 +123,7 @@ export function LibraryList() {
         {view === "files" ? <LibraryFilesOrFound /> : null}
         {view === "starred" ? <LibraryStarred /> : null}
         {view === "trash" ? <LibraryTrash /> : null}
-      </TablePageBody>
+      </PageList>
     </TableFiltersProvider>
   );
 }

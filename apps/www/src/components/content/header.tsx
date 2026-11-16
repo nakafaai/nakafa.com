@@ -2,7 +2,7 @@ import { Menu02Icon } from "@hugeicons/core-free-icons";
 import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
 import type { ReactNode } from "react";
 import { useTranslations } from "use-intl";
-import { BreadcrumbHeaderFrame } from "@/components/shared/breadcrumb/frame";
+import { PageActions, PageHeader } from "@/components/shared/page/header";
 import { PanelSheetTrigger } from "@/components/sidebar/sheet";
 
 /**
@@ -21,13 +21,12 @@ export function ContentHeader({
 }) {
   const t = useTranslations("Common");
   return (
-    <BreadcrumbHeaderFrame contentClassName="@container">
-      {title === undefined ? null : <h1 className="sr-only">{title}</h1>}
+    <PageHeader {...(title === undefined ? {} : { title })}>
       <div className="min-w-0">{breadcrumb}</div>
-      <div className="flex shrink-0 items-center gap-2">
+      <PageActions>
         <ButtonGroup aria-label={t("content-actions")}>{children}</ButtonGroup>
         <PanelSheetTrigger icon={Menu02Icon} label={t("on-this-page")} />
-      </div>
-    </BreadcrumbHeaderFrame>
+      </PageActions>
+    </PageHeader>
   );
 }

@@ -13,7 +13,7 @@ import { useConvexAuth } from "@/components/auth/convex";
 import {
   pageGutterVariants,
   readingMeasureVariants,
-} from "@/components/shared/content/width";
+} from "@/components/shared/page/width";
 import { reloadPage } from "@/components/shared/reload";
 import { EmptyState } from "@/components/state/empty";
 import { LoadFailure } from "@/components/state/failure";

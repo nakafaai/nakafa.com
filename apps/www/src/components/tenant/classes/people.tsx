@@ -20,10 +20,10 @@ import { Array as Arr } from "effect";
 import type { ComponentProps } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
+import { PageList } from "@/components/shared/page/body";
 import { reloadPage } from "@/components/shared/reload";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
-import { TablePageBody } from "@/components/shared/table/frame";
 import { RowItems } from "@/components/shared/table/menu";
 import { type StatusLook, TableStatus } from "@/components/shared/table/status";
 import { TableName } from "@/components/shared/table/title";
@@ -88,7 +88,7 @@ function PeopleBody() {
       <ClassHeader>
         <TableSearch placeholder={t("people-search")} />
       </ClassHeader>
-      <TablePageBody>
+      <PageList>
         {empty ? (
           <EmptyState
             description={t("people-empty-description")}
@@ -107,7 +107,7 @@ function PeopleBody() {
             search="name"
           />
         ) : null}
-      </TablePageBody>
+      </PageList>
     </>
   );
 }

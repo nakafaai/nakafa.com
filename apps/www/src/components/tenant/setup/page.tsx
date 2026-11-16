@@ -19,7 +19,8 @@ import type { ReactNode } from "react";
 import { useTransition } from "react";
 import { useLocale, useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
-import { LayoutContent, PageFrame } from "@/components/shared/content/frame";
+import { PageStack } from "@/components/shared/page/body";
+import { Page } from "@/components/shared/page/frame";
 import { useTenant, useViewerQuery } from "@/components/tenant/context";
 import { SchoolHeader } from "@/components/tenant/header";
 import { finishSetupChange } from "@/components/tenant/settings/mutation";
@@ -61,7 +62,7 @@ export function SchoolSetup() {
   const exam = Option.exists(done, (found) => found.exam);
 
   return (
-    <PageFrame width="column">
+    <Page width="column">
       <SchoolHeader items={[{ label: t("setup-title") }]}>
         <Button
           disabled={isFinishing}
@@ -89,7 +90,7 @@ export function SchoolSetup() {
           {t("setup-finish")}
         </Button>
       </SchoolHeader>
-      <LayoutContent className="flex w-full flex-col gap-6 py-6">
+      <PageStack>
         <SetupGroup title={t("setup-first")}>
           <SetupStep done={cohorts}>
             <SetupText
@@ -165,8 +166,8 @@ export function SchoolSetup() {
             <SetupOpen to="/school/$slug/settings/policies" />
           </SetupDefault>
         </SetupGroup>
-      </LayoutContent>
-    </PageFrame>
+      </PageStack>
+    </Page>
   );
 }
 

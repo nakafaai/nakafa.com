@@ -13,7 +13,7 @@ import { Array as Arr, Option } from "effect";
 import { createContext, type ReactNode, use, useState } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
-import { DataFailure } from "@/components/shared/failure";
+import { PageList } from "@/components/shared/page/body";
 import {
   PaneBody,
   PaneFact,
@@ -32,7 +32,6 @@ import {
 import { reloadPage } from "@/components/shared/reload";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
-import { TablePageBody } from "@/components/shared/table/frame";
 import { RowCopy } from "@/components/shared/table/menu";
 import { TableStatus } from "@/components/shared/table/status";
 import {
@@ -42,7 +41,7 @@ import {
 } from "@/components/shared/table/toolbar";
 import { TableViews } from "@/components/shared/table/views";
 import { EmptyState } from "@/components/state/empty";
-import { LoadFailure } from "@/components/state/failure";
+import { DataFailure, LoadFailure } from "@/components/state/failure";
 import { EmptyNina } from "@/components/state/nina";
 import { WithAction } from "@/components/tenant/action";
 import { useTenant } from "@/components/tenant/context";
@@ -101,9 +100,7 @@ export function GuardianLinksSettings() {
             </Button>
           </WithAction>
         </SchoolSettingsHeader>
-        <ReadBoundary
-          fallback={(failure) => <TablePageBody>{failure}</TablePageBody>}
-        >
+        <ReadBoundary fallback={(failure) => <PageList>{failure}</PageList>}>
           <GuardianLinksBody />
         </ReadBoundary>
         <GuardianLinkStartDialog open={isStarting} setOpen={setIsStarting} />
@@ -148,14 +145,14 @@ function GuardianLinksBody() {
   if (Option.isNone(kept) || PaginatedQueryResult.isLoadingFirstPage(waiting)) {
     return (
       <LinksFrame links={[]}>
-        <TablePageBody>{null}</TablePageBody>
+        <PageList>{null}</PageList>
       </LinksFrame>
     );
   }
   if (Arr.isReadonlyArrayEmpty(kept.value) && search === "") {
     return (
       <LinksFrame links={kept.value}>
-        <TablePageBody>
+        <PageList>
           {failed ? (
             <LoadFailure onRetry={reloadPage} />
           ) : (
@@ -165,7 +162,7 @@ function GuardianLinksBody() {
               title={t("links-empty")}
             />
           )}
-        </TablePageBody>
+        </PageList>
       </LinksFrame>
     );
   }
@@ -207,7 +204,7 @@ function LinkViews({
   const shown = waits ? view : "links";
 
   return (
-    <TablePageBody
+    <PageList
       views={
         waits ? (
           <TableViews
@@ -231,7 +228,7 @@ function LinkViews({
       }
     >
       {shown === "requests" ? requests : children}
-    </TablePageBody>
+    </PageList>
   );
 }
 

@@ -35,7 +35,7 @@ const verifyQuranLayoutStability = Effect.fn(
 /**
  * The surah list fills its card: the first row's highlight reaches the top
  * edge and the last row's the bottom edge, each with the card's spacing, and
- * the page leaves room below the card.
+ * the page's rhythm stands below the card.
  */
 const verifyQuranIndexEdges = Effect.fn("NakafaE2E.verifyQuranIndexEdges")(
   function* (page: Page) {
@@ -75,8 +75,9 @@ const verifyQuranIndexEdges = Effect.fn("NakafaE2E.verifyQuranIndexEdges")(
         lastSpacing: "24px",
       })
     );
+    // The body ends one rhythm under its card, as every page's body does (ADR 0044).
     yield* Effect.sync(() =>
-      expect(edges.roomBelow).toBeGreaterThanOrEqual(80)
+      expect(edges.roomBelow).toBeGreaterThanOrEqual(24)
     );
   }
 );

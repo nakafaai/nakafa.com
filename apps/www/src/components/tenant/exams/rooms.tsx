@@ -24,12 +24,11 @@ import { Array as Arr, Option, Schema } from "effect";
 import { useLocale, useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import type { BreadcrumbHeaderItem } from "@/components/shared/breadcrumb/header";
-import { DataFailure } from "@/components/shared/failure";
+import { PageList } from "@/components/shared/page/body";
 import { reloadPage } from "@/components/shared/reload";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { chosenOne } from "@/components/shared/table/filter";
-import { TablePageBody } from "@/components/shared/table/frame";
 import { TableEnd } from "@/components/shared/table/pages";
 import { type StatusLook, TableStatus } from "@/components/shared/table/status";
 import { TableTitle } from "@/components/shared/table/title";
@@ -40,7 +39,7 @@ import {
   useTableFilters,
 } from "@/components/shared/table/toolbar";
 import { EmptyState } from "@/components/state/empty";
-import { LoadFailure } from "@/components/state/failure";
+import { DataFailure, LoadFailure } from "@/components/state/failure";
 import { EmptyNina } from "@/components/state/nina";
 import { useTenant } from "@/components/tenant/context";
 import {
@@ -112,7 +111,7 @@ export function ExamRooms({
             items={[...examsItems, { label: t("rooms-title") }]}
             title={t("rooms-title")}
           />
-          <TablePageBody>{failure}</TablePageBody>
+          <PageList>{failure}</PageList>
         </>
       )}
       read={{ args: { examId, slug }, ref: exams.rooms.exam }}
@@ -167,11 +166,11 @@ function ExamRoomsContent({
             items={[...examsItems, { label: t("rooms-title") }]}
             title={t("rooms-title")}
           />
-          <TablePageBody>
+          <PageList>
             <p className="text-muted-foreground p-4 text-sm md:p-6">
               {t("rooms-unavailable")}
             </p>
-          </TablePageBody>
+          </PageList>
         </>
       ),
       onSome: (gone) => (
@@ -180,11 +179,11 @@ function ExamRoomsContent({
             items={[...examsItems, { label: gone.title }]}
             title={gone.title}
           />
-          <TablePageBody>
+          <PageList>
             <p className="text-muted-foreground p-4 text-sm md:p-6">
               <ExamGone />
             </p>
-          </TablePageBody>
+          </PageList>
         </>
       ),
     });
@@ -216,9 +215,9 @@ function ExamRoomsContent({
           </Link>
         ) : null}
       </SchoolHeader>
-      <TablePageBody>
+      <PageList>
         <RoomsTable examId={examId} isSettled={isSettled} slug={slug} />
-      </TablePageBody>
+      </PageList>
     </TableFiltersProvider>
   );
 }

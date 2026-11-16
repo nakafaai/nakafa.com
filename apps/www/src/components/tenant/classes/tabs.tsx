@@ -14,7 +14,7 @@ import {
 } from "@repo/design-system/components/ui/tabs";
 import { Match } from "effect";
 import { useTranslations } from "use-intl";
-import { pageRowVariants } from "@/components/shared/content/width";
+import { pageRowVariants } from "@/components/shared/page/width";
 import type { ClassView } from "@/components/tenant/classes/view";
 import { useTenant } from "@/components/tenant/context";
 import { Link } from "@/lib/routing/link";

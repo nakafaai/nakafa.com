@@ -6,7 +6,7 @@ import {
   type PlayerStore,
   type PlayerStoreApi,
 } from "@/components/player/store";
-import { PageFrame } from "@/components/shared/content/frame";
+import { Page } from "@/components/shared/page/frame";
 
 const StoreContext = createContext<PlayerStoreApi | null>(null);
 
@@ -33,7 +33,7 @@ export function PlayerProvider({
 
   return (
     <StoreContext value={store}>
-      <PageFrame width="column">{children}</PageFrame>
+      <Page width="column">{children}</Page>
     </StoreContext>
   );
 }

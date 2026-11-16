@@ -23,7 +23,7 @@ import { createSittingStore } from "@/components/exams/sitting/store";
 import { SittingFilterRow } from "@/components/exams/sitting/toolbar";
 import { ClockProvider } from "@/components/player/now";
 import type { BreadcrumbHeaderItem } from "@/components/shared/breadcrumb/header";
-import { pageGutterVariants } from "@/components/shared/content/width";
+import { pageGutterVariants } from "@/components/shared/page/width";
 import { Panes, PanesList, PanesProvider } from "@/components/shared/panes";
 import { useTenant } from "@/components/tenant/context";
 import { SchoolHeader } from "@/components/tenant/header";

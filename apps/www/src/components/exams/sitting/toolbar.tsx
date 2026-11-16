@@ -13,7 +13,7 @@ import { Option, Schema } from "effect";
 import { useTranslations } from "use-intl";
 import { useSittingStore } from "@/components/exams/sitting/context";
 import { SittingFilter } from "@/components/exams/sitting/seat";
-import { pageRowVariants } from "@/components/shared/content/width";
+import { pageRowVariants } from "@/components/shared/page/width";
 
 /**
  * The seats' filters, in the tab bar under the room's header: all students, the ones that need

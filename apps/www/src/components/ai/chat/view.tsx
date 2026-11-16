@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import { ChatComposer } from "@/components/ai/chat/composer";
 import { AiChatHeader } from "@/components/ai/chat/header";
 import { NinaTranscript } from "@/components/ai/transcript";
-import { pageRowVariants } from "@/components/shared/content/width";
+import { pageRowVariants } from "@/components/shared/page/width";
 
 /**
  * A chat's page: its header, its transcript, and the composer under them. A

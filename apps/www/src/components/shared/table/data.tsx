@@ -46,7 +46,7 @@ const ROW_LINK = "td:first-child a[href]";
 
 /**
  * A data table, as shadcn builds the table on TanStack Table, and the one way Nakafa draws a list of records: as the
- * whole body of its page (`TablePageBody`), every row at full width from edge to edge of the page's card and a table
+ * whole body of its page (`PageList`), every row at full width from edge to edge of the page's card and a table
  * taller than the card scrolling inside it with its column heads in view, or as a part of a page (`TableFrame`). The
  * page's header row searches it: its search box keeps the rows whose `search` column holds the text. Every column
  * filters from its head by what it holds (`tableColumns`), and a column of text, numbers or moments sorts from there
