@@ -16,8 +16,15 @@ vi.mock("@repo/internationalization/src/translator", () => ({
     Promise.resolve(
       (
         key: string,
-        values?: { readonly exam?: string; readonly set?: string }
-      ) => (values === undefined ? key : `${key} ${values.set}, ${values.exam}`)
+        values?: {
+          readonly count?: number;
+          readonly exam?: string;
+          readonly set?: string;
+        }
+      ) =>
+        values === undefined
+          ? key
+          : `${key} ${values.count} ${values.set}, ${values.exam}`
     ),
 }));
 vi.mock("@/components/tryout/catalog/source.server", () => ({
@@ -55,6 +62,7 @@ const catalogSet = {
     countryKey: "indonesia",
     examKey: "snbt",
     publicPath: SET,
+    questionCount: 160,
     setKey: "set-1",
     title: "Set 1",
     trackKey: "utbk",
@@ -94,8 +102,8 @@ describe("readTryoutSetRoute", () => {
         expect(yield* readTryoutSetRoute(address)).toMatchObject({
           head: {
             ...head,
-            description: "set-metadata-description Set 1, SNBT 2027 UTBK",
-            title: "set-search-title Set 1, SNBT 2027 UTBK",
+            description: "set-metadata-description 160 Set 1, SNBT 2027 UTBK",
+            title: "set-search-title 160 Set 1, SNBT 2027 UTBK",
           },
           kind: "catalog",
           page: catalogSet,

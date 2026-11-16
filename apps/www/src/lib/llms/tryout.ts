@@ -217,7 +217,11 @@ const readSetText = Effect.fn("www.llms.tryout.set")(function* (
     {
       description:
         page.set.description ??
-        tTryouts("set-metadata-description", { exam, set: page.set.title }),
+        tTryouts("set-metadata-description", {
+          count: page.set.questionCount,
+          exam,
+          set: page.set.title,
+        }),
       publicPath: page.set.publicPath,
       title: `${exam} ${page.set.title}`,
     },
