@@ -30,6 +30,7 @@ import {
   findingMessages,
   sortFindings,
 } from "#scripts/check/effect";
+import { inspectEmptySource } from "#scripts/check/empty";
 import {
   declarationDirectories,
   inspectExports,
@@ -136,6 +137,7 @@ const inspectSources = Effect.fn("RepositoryPolicy.inspectSources")(function* (
         inspectDialogSource(file, sourceFile),
         inspectIconSource(file, sourceFile),
         inspectPickerSource(file, sourceFile),
+        inspectEmptySource(file, sourceFile),
         inspectNativeControls(file, sourceFile),
         inspectScrollSource(file, sourceFile),
         inspectStateSource(file, sourceFile),
