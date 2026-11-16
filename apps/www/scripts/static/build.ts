@@ -55,7 +55,8 @@ import { renderSocialImage } from "@/scripts/static/social";
  * every prerendered page that has a source, the search index of every locale, and
  * every social image. Each file
  * carries the bytes that the runtime answered for the same address, so the static
- * assets serve it without a Worker. `run.ts` calls it after the client build.
+ * assets serve it without a Worker. `run.ts` derives what needs no prerendered
+ * page beside the client build, and writes the rest once the prerender is done.
  */
 
 /** The logo that every social image shows, read from the same file the image route bundled. */
@@ -100,13 +101,6 @@ function splitPagePath(page: string) {
   return { cleanSlug: Arr.join(segments, "/"), locale };
 }
 
-/** A page with a Markdown twin, and the title that llms.txt names it by. */
-const MarkdownTwinSchema = Schema.Struct({
-  page: Schema.String,
-  title: Schema.String,
-});
-type MarkdownTwin = typeof MarkdownTwinSchema.Type;
-
 /** The media type that a page's Markdown twin is linked with, which only the build writes. */
 const MARKDOWN_TYPE = 'type="text/markdown"';
 
@@ -115,28 +109,38 @@ function markdownTwinLink(page: string) {
   return `<link rel="alternate" type="text/markdown" href="${page}.md">`;
 }
 
-/**
- * Writes the Markdown twin of one prerendered page, when the page has a source,
- * and links the twin from the page's head. Returns the page when it has a twin.
- */
-const writeMarkdownTwin = Effect.fn("www.static.markdownTwin")(function* (
-  outDir: string,
+/** A page's Markdown twin as the build derives it, before the prerender has written the page it links from. */
+const PreparedTwinSchema = Schema.Struct({
+  page: Schema.String,
+  text: Schema.String,
+  title: Schema.String,
+});
+type PreparedTwin = typeof PreparedTwinSchema.Type;
+
+/** Derives the Markdown twin of one prerendered page, when the page has a source. */
+const readMarkdownTwin = Effect.fn("www.static.markdownTwin")(function* (
   page: string
 ) {
-  const fs = yield* FileSystem.FileSystem;
-  const path = yield* Path.Path;
   const { cleanSlug, locale } = splitPagePath(page);
   const appLocale = yield* Schema.decodeUnknownEffect(
     ActiveAppLocaleCodeSchema
   )(locale);
-  const text = Option.fromNullishOr(
-    yield* getLlmsMarkdownText({ cleanSlug, locale: appLocale })
+  return Option.map(
+    Option.fromNullishOr(
+      yield* getLlmsMarkdownText({ cleanSlug, locale: appLocale })
+    ),
+    (text): PreparedTwin => ({ page, text, title: readTwinTitle(text) })
   );
-  if (Option.isNone(text)) {
-    return Option.none<MarkdownTwin>();
-  }
-  yield* writeArtifact(outDir, `${page.slice(1)}.md`, text.value);
+});
 
+/** Writes one page's Markdown twin and links it from the page's head, which the prerender has written. */
+const linkMarkdownTwin = Effect.fn("www.static.markdownLink")(function* (
+  outDir: string,
+  { page, text }: PreparedTwin
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  yield* writeArtifact(outDir, `${page.slice(1)}.md`, text);
   const htmlFile = path.join(outDir, page.slice(1), "index.html");
   const html = yield* fs.readFileString(htmlFile);
   const parts = html.split("</head>");
@@ -147,7 +151,6 @@ const writeMarkdownTwin = Effect.fn("www.static.markdownTwin")(function* (
     htmlFile,
     `${parts[0]}${markdownTwinLink(page)}</head>${parts[1]}`
   );
-  return Option.some({ page, title: readTwinTitle(text.value) });
 });
 
 /**
@@ -180,7 +183,7 @@ const readPageDiagrams = Effect.fn("www.static.pageDiagrams")(function* (
 });
 
 /** Lists the Markdown twins in llms.txt after the index, each by its title, so one file names every twin. */
-function buildLlmsText(twins: readonly MarkdownTwin[]) {
+function buildLlmsText(twins: readonly PreparedTwin[]) {
   const lines = Arr.map(
     twins,
     ({ page, title }) => `- [${title}](${SITE_ORIGIN}${page}.md)`
@@ -193,7 +196,7 @@ function buildLlmsText(twins: readonly MarkdownTwin[]) {
  * that redirect each locale's retired subject lessons to their successors.
  */
 const readTextArtifacts = Effect.fn("www.static.textArtifacts")(function* (
-  twins: readonly MarkdownTwin[]
+  twins: readonly PreparedTwin[]
 ) {
   const sitemap = yield* readSitemapFiles();
   const subjects = yield* Effect.forEach(
@@ -313,28 +316,45 @@ const readPagePaths = Effect.fn("www.static.pagePathList")(function* (
   return yield* Schema.decodeEffect(PrerenderedPagesJson)(text);
 });
 
-const main = Effect.fn("www.static.build")(function* (
-  outDir: string,
+/**
+ * Derives what the static artifacts hold that needs no prerendered page: the
+ * Markdown twin of every page with a source, and every diagram the twins' bodies
+ * draw, each parsed, so a diagram that cannot be drawn stops the build before it
+ * deploys. The build runs it beside the client build and the prerender.
+ */
+const prepare = Effect.fn("www.static.prepare")(function* (
   pageListFile: string
 ) {
+  const started = yield* Clock.currentTimeMillis;
+  const pages = yield* readPagePaths(pageListFile);
+  const twins = Arr.getSomes(
+    yield* Effect.forEach(pages, readMarkdownTwin, { concurrency: 8 })
+  );
+  const diagrams = Arr.flatten(
+    yield* Effect.forEach(twins, ({ page }) => readPageDiagrams(page), {
+      concurrency: 8,
+    })
+  );
+  yield* checkDiagrams(diagrams);
+  const elapsed = (yield* Clock.currentTimeMillis) - started;
+  return { diagrams: diagrams.length, elapsed, pages, twins };
+});
+type Prepared = Effect.Success<ReturnType<typeof prepare>>;
+
+/** Writes the static artifacts into the client output once the prerender has written its pages. */
+const write = Effect.fn("www.static.build")(function* (
+  outDir: string,
+  { diagrams, elapsed: preparing, pages, twins }: Prepared
+) {
+  const writing = yield* Clock.currentTimeMillis;
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const pages = yield* readPagePaths(pageListFile);
-  const twins = yield* Effect.forEach(
-    pages,
-    (page) => writeMarkdownTwin(outDir, page),
-    { concurrency: 8 }
-  );
-  const twinPages = Arr.getSomes(twins);
+  yield* Effect.forEach(twins, (twin) => linkMarkdownTwin(outDir, twin), {
+    concurrency: 8,
+    discard: true,
+  });
   const searchIndexes = yield* writeSearchIndexes(outDir, pages);
-  // Every diagram the pages draw parses, or the build stops before it deploys.
-  const diagrams = yield* Effect.forEach(
-    twinPages,
-    ({ page }) => readPageDiagrams(page),
-    { concurrency: 8 }
-  );
-  yield* checkDiagrams(Arr.flatten(diagrams));
-  const textArtifacts = yield* readTextArtifacts(twinPages);
+  const textArtifacts = yield* readTextArtifacts(twins);
   yield* Effect.forEach(
     textArtifacts,
     ({ path: file, text }) => writeArtifact(outDir, file, text),
@@ -352,17 +372,20 @@ const main = Effect.fn("www.static.build")(function* (
   const images = Arr.filter(written, Boolean).length;
   const elapsed = (yield* Clock.currentTimeMillis) - started;
   const perThousand = images === 0 ? 0 : (elapsed * 1000) / images;
+  const afterPrerender = (yield* Clock.currentTimeMillis) - writing;
   process.stdout.write(
     Arr.join(
       [
         `static text artifacts: ${textArtifacts.length}`,
-        `markdown twins: ${twinPages.length} of ${pages.length} prerendered pages`,
+        `markdown twins: ${twins.length} of ${pages.length} prerendered pages`,
         `search entries: ${Arr.join(searchIndexes, ", ")}`,
-        `diagrams parsed: ${Arr.flatten(diagrams).length}`,
+        `diagrams parsed: ${diagrams}`,
         `social image sources: ${sources.length}`,
         `social images written: ${images}`,
         `social images skipped (no published copy): ${sources.length - images}`,
         `social image render time: ${elapsed} ms (${perThousand.toFixed(0)} ms per 1,000 images)`,
+        `static artifacts prepared beside the client build: ${preparing} ms`,
+        `static artifacts written after the prerender: ${afterPrerender} ms`,
         "",
       ],
       "\n"
@@ -370,14 +393,19 @@ const main = Effect.fn("www.static.build")(function* (
   );
 });
 
-/** Writes the static artifacts for the prerendered pages in the list into the client output directory. */
-export async function buildStaticArtifacts(
-  outDir: string,
-  pageListFile: string
-) {
+/** Derives the Markdown twins and parses the diagrams of the prerendered pages in the list. */
+export async function prepareStaticArtifacts(pageListFile: string) {
+  readRuntimeConfig();
+  return await Effect.runPromise(
+    prepare(pageListFile).pipe(Effect.provide(NodeServices))
+  );
+}
+
+/** Writes the static artifacts that `prepareStaticArtifacts` derived into the client output directory. */
+export async function writeStaticArtifacts(outDir: string, prepared: Prepared) {
   readRuntimeConfig();
   await Effect.runPromise(
-    main(outDir, pageListFile).pipe(Effect.provide(NodeServices))
+    write(outDir, prepared).pipe(Effect.provide(NodeServices))
   );
 }
 

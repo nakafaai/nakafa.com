@@ -1,14 +1,17 @@
-import { spawn } from "node:child_process";
+import { type ChildProcess, spawn } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { Schema } from "effect";
 import { PrerenderedPagesJson } from "#www/src/lib/static/prerender";
 
 /*
- * The build's two calls to the static runner (`scripts/static/run.ts`), which
- * renders with the app's own modules in Node: the page list before the build, and
- * the static artifacts after the client build. Each runs as its own process, since
- * TanStack reads its page list from the config before the build exists.
+ * The build's static runner (`scripts/static/run.ts build`), which renders with
+ * the app's own modules in Node. One process serves the whole build: it lists the
+ * pages before the build, since TanStack reads its page list from the config
+ * before the build exists; it derives the Markdown twins and parses the diagrams
+ * while the client build and the prerender run; and it writes the static
+ * artifacts once the build asks after the prerender. So the app's modules load
+ * once, and that work waits on nothing the prerender writes.
  */
 
 /**
@@ -24,46 +27,89 @@ const PAGE_LIST_FILE = join(import.meta.dirname, ".cache/static-pages.json");
  */
 const STATIC_RUNNER_ENV = { ...process.env, NAKAFA_STATIC_RUNNER: "1" };
 
-/** Runs one job of the static runner, failing with `failure` and its exit when it does. */
-function runStaticRunner(
-  job: readonly string[],
-  failure: string
-): Promise<void> {
+/** The runner has written the page list to `file`. */
+export const PagesListed = Schema.TaggedStruct("pages", {
+  file: Schema.NonEmptyString,
+});
+
+/** The prerender has written its pages: the runner writes the static artifacts into `outDir`. */
+export const WriteArtifacts = Schema.TaggedStruct("write", {
+  outDir: Schema.NonEmptyString,
+});
+
+/** What the build and its static runner tell each other over the runner's IPC channel. */
+export const RunnerMessage = Schema.Union([PagesListed, WriteArtifacts]);
+
+/** This build's static runner, from the page list until it has written the artifacts. */
+let staticRunner: ChildProcess | undefined;
+
+/**
+ * Reads the public paths that the build prerenders. The static runner writes them
+ * from the active release, so an absent release fails the build here. The runner
+ * then lets this process end without it, until the build asks it for the artifacts.
+ */
+export function readPrerenderedPagePaths(): Promise<readonly string[]> {
   return new Promise((resolve, reject) => {
     const runner = spawn(
       process.execPath,
-      [join(import.meta.dirname, "scripts/static/run.ts"), ...job],
-      { cwd: import.meta.dirname, env: STATIC_RUNNER_ENV, stdio: "inherit" }
+      [
+        join(import.meta.dirname, "scripts/static/run.ts"),
+        "build",
+        PAGE_LIST_FILE,
+      ],
+      {
+        cwd: import.meta.dirname,
+        env: STATIC_RUNNER_ENV,
+        stdio: ["inherit", "inherit", "inherit", "ipc"],
+      }
     );
+    staticRunner = runner;
     runner.on("error", reject);
     runner.on("exit", (code, signal) => {
-      if (code === 0) {
-        resolve();
+      reject(new Error(`The page list failed with exit ${code ?? signal}.`));
+    });
+    runner.on("message", (message) => {
+      if (!Schema.is(PagesListed)(message)) {
         return;
       }
-      reject(new Error(`${failure} failed with exit ${code ?? signal}.`));
+      runner.unref();
+      runner.channel?.unref();
+      resolve(
+        Schema.decodeSync(PrerenderedPagesJson)(
+          readFileSync(message.file, "utf8")
+        )
+      );
     });
   });
 }
 
 /**
- * Reads the public paths that the build prerenders. The static runner writes them
- * from the active release, so an absent release fails the build here.
- */
-export async function readPrerenderedPagePaths(): Promise<readonly string[]> {
-  await runStaticRunner(["pages", PAGE_LIST_FILE], "The page list");
-  return Schema.decodeSync(PrerenderedPagesJson)(
-    readFileSync(PAGE_LIST_FILE, "utf8")
-  );
-}
-
-/**
  * Writes the static artifacts of the release into the client output `outDir`:
- * the sitemap, the feeds and the indexes, and every social image.
+ * the Markdown twins, the sitemap, the feeds and the indexes, and every social
+ * image. The runner that listed the pages writes them and then ends.
  */
 export function writeStaticArtifactFiles(outDir: string): Promise<void> {
-  return runStaticRunner(
-    ["artifacts", outDir, PAGE_LIST_FILE],
-    "The static artifacts"
-  );
+  return new Promise((resolve, reject) => {
+    const runner = staticRunner;
+    if (runner === undefined || runner.exitCode !== null) {
+      reject(
+        new Error(
+          `The static runner ended with exit ${runner?.exitCode ?? "none"} before the static artifacts.`
+        )
+      );
+      return;
+    }
+    runner.ref();
+    runner.channel?.ref();
+    runner.on("exit", (code, signal) => {
+      if (code === 0) {
+        resolve();
+        return;
+      }
+      reject(
+        new Error(`The static artifacts failed with exit ${code ?? signal}.`)
+      );
+    });
+    runner.send(WriteArtifacts.make({ outDir }));
+  });
 }
