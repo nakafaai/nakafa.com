@@ -106,6 +106,8 @@ export const MATERIAL = {
   dish: "#f3f1ec",
   epoxy: "#2a2e33",
   glass: "#e6f2f5",
+  // The faint green of thick soda or borosilicate glass seen through its edge.
+  glassEdge: "#cfe8d6",
   lcd: "#16231b",
   lcdGlow: "#0c2416",
   lcdHalo: "#0d1a12",
@@ -118,6 +120,14 @@ export const MATERIAL = {
   probeSteel: "#c8cdd2",
   stopper: "#3a2c26",
   trough: "#5b6066",
+
+  // A cathode-ray tube: its zinc sulfide screen, the green glow electrons
+  // strike from it, and the violet glow of the trace of gas along the beam.
+  phosphorCoat: "#e3ecd9",
+  phosphorGlow: "#7dff6a",
+  residualGasGlow: "#9c8cff",
+  // The pink glow of hydrogen at low pressure in a spectrum tube.
+  hydrogenGlow: "#ff5fc8",
 
   // Measuring instruments and the things they measure.
   aluminium: "#c3c8cc",
