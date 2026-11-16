@@ -10,8 +10,13 @@ import {
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { desktopViewport } from "@/e2e/support/viewport";
 
-/** A button in the first HTML that takes a press and is not disabled. */
-const LIVE_BUTTON = /<button(?![^>]*\sdisabled)[^>]*\sdata-press=/u;
+/**
+ * A button in the first HTML that takes a press and has no `disabled` attribute. A class such as
+ * `disabled:opacity-50` names a state, not the attribute, so only `disabled` followed by `=`, a space
+ * or the end of the tag counts.
+ */
+const LIVE_BUTTON =
+  /<button(?![^>]*\sdisabled(?:[\s=>]|\/>))[^>]*\sdata-press=/u;
 
 const PRICING_PATH_PATTERN = /\/id\/pricing$/u;
 
@@ -119,16 +124,16 @@ const verifyPricingPage = Effect.fn("NakafaE2E.verifyPricingPage")(function* (
       "manage or cancel Pro in the customer portal"
     )
   );
+  // The header keeps Pricing in the Learn section, which names it the page the reader is on.
   yield* Effect.promise(() =>
-    expect(page.locator('header nav [href="/en/pricing"]')).toHaveText(
-      "Pricing"
-    )
+    page.locator("header").getByRole("button", { name: "Learn" }).click()
   );
+  const pricingLink = page
+    .locator('[data-slot="navigation-menu-popup"]')
+    .locator('[href="/en/pricing"]');
+  yield* Effect.promise(() => expect(pricingLink).toHaveText("Pricing"));
   yield* Effect.promise(() =>
-    expect(page.locator('header nav [href="/en/pricing"]')).toHaveAttribute(
-      "aria-current",
-      "page"
-    )
+    expect(pricingLink).toHaveAttribute("aria-current", "page")
   );
 });
 
@@ -137,7 +142,12 @@ const verifyPricingNavigation = Effect.fn("NakafaE2E.verifyPricingNavigation")(
     yield* expectStablePricingAppShell(page);
     yield* loadMarketingPage(page, "/id");
 
-    const pricingLink = page.locator('header nav [href="/id/pricing"]');
+    yield* Effect.promise(() =>
+      page.locator("header").getByRole("button", { name: "Belajar" }).click()
+    );
+    const pricingLink = page
+      .locator('[data-slot="navigation-menu-popup"]')
+      .locator('[href="/id/pricing"]');
     yield* Effect.promise(() => expect(pricingLink).toHaveText("Harga"));
     yield* Effect.promise(() => pricingLink.click());
     yield* Effect.promise(() =>
@@ -190,10 +200,14 @@ const verifyPricingReducedMotion = Effect.fn(
   "NakafaE2E.verifyPricingReducedMotion"
 )(function* (page: Page) {
   yield* loadMarketingPage(page, "/en/pricing");
+  // The things come with the page's toys once the page has its reader, so a pointer that moves brings them.
+  yield* Effect.promise(() => page.mouse.move(24, 24));
   // A thing moves only through a motion that is on for people who allow it.
   const thing = page.locator('[class*="animate-thing-"]').first();
   yield* Effect.promise(() =>
-    expect(thing).toHaveCSS("animation-name", "none")
+    expect(thing).toHaveCSS("animation-name", "none", {
+      timeout: readinessTimeoutMilliseconds,
+    })
   );
 });
 

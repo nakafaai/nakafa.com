@@ -1,5 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
-import { createScatter, type Place } from "@repo/design-system/lib/toy/scatter";
+import {
+  createScatter,
+  MISSING,
+  type Place,
+  placed as spotAt,
+  WAITING,
+} from "@repo/design-system/lib/toy/scatter";
 import {
   define,
   FRAME,
@@ -7,7 +13,7 @@ import {
   stagePage,
   wait,
 } from "@repo/design-system/test/toy";
-import { Array as Arr, MutableList, Option } from "effect";
+import { Array as Arr, MutableList } from "effect";
 
 /** The page the layer covers: as wide as a test sets, with its corner at (10, 20) in the window. */
 const page = { width: 800 };
@@ -84,7 +90,7 @@ function scatter() {
   return { layer, placed, rest, toy };
 }
 
-const anywhere: Place = () => Option.some({ x: 1, y: 2 });
+const anywhere: Place = () => spotAt({ x: 1, y: 2 });
 
 describe("placing toys", () => {
   it("puts a toy where its place function says, measured from the corner of the layer", () => {
@@ -107,7 +113,7 @@ describe("placing toys", () => {
         top: 200,
         width: 50,
       });
-      return Option.some({
+      return spotAt({
         size: 40.4,
         x: found.left + 4.4,
         y: found.bottom + 0.6,
@@ -143,7 +149,7 @@ describe("placing toys", () => {
     });
     const el = toy((_, box) => {
       const found = box(part);
-      return Option.some({ x: found.left, y: found.top });
+      return spotAt({ x: found.left, y: found.top });
     });
     placed.attach(layer);
     wait(FRAME);
@@ -157,7 +163,7 @@ describe("placing toys", () => {
     define(part, { getBoundingClientRect: rect(60, 70, 30, 40) });
     const el = toy((_, box) => {
       const found = box(part);
-      return Option.some({ x: found.right, y: found.bottom });
+      return spotAt({ x: found.right, y: found.bottom });
     });
     placed.attach(layer);
     wait(FRAME);
@@ -167,10 +173,10 @@ describe("placing toys", () => {
 
   it("keeps a toy inside the layer, so a place near an edge never makes the page scroll sideways", () => {
     const { layer, placed, toy } = scatter();
-    const drawn = toy(() => Option.some({ x: 780, y: 0 }));
+    const drawn = toy(() => spotAt({ x: 780, y: 0 }));
     Object.defineProperty(drawn, "offsetWidth", { get: () => 56 });
-    const sized = toy(() => Option.some({ size: 40, x: 790, y: 0 }));
-    const left = toy(() => Option.some({ x: -12, y: 0 }));
+    const sized = toy(() => spotAt({ size: 40, x: 790, y: 0 }));
+    const left = toy(() => spotAt({ x: -12, y: 0 }));
     placed.attach(layer);
     wait(FRAME);
     expect(drawn.style.left).toBe("744px");
@@ -191,7 +197,7 @@ describe("placing toys", () => {
   it("hides a toy that has no room and shows it again when there is", () => {
     const { layer, placed, toy } = scatter();
     let room = false;
-    const el = toy(() => (room ? Option.some({ x: 5, y: 6 }) : Option.none()));
+    const el = toy(() => (room ? spotAt({ x: 5, y: 6 }) : MISSING));
     placed.attach(layer);
     wait(FRAME);
     expect(el.hidden).toBe(true);
@@ -204,11 +210,11 @@ describe("placing toys", () => {
   it("reads every place before it moves any toy", () => {
     const { layer, placed, toy } = scatter();
     let left = 10;
-    const first = toy(() => Option.some({ x: left, y: 0 }));
+    const first = toy(() => spotAt({ x: left, y: 0 }));
     const seen = MutableList.make<string>();
     toy(() => {
       MutableList.append(seen, first.style.left);
-      return Option.some({ x: 0, y: 0 });
+      return spotAt({ x: 0, y: 0 });
     });
     placed.attach(layer);
     wait(FRAME);
@@ -220,11 +226,50 @@ describe("placing toys", () => {
   });
 });
 
+describe("a part the browser has not drawn yet", () => {
+  it("keeps its toy hidden until its first place, and where it was placed after that", () => {
+    const { layer, placed, toy } = scatter();
+    let answer = WAITING;
+    const el = toy(() => answer);
+    // A toy starts hidden, as `Toy` draws it until its first place.
+    el.hidden = true;
+    placed.attach(layer);
+    wait(FRAME);
+    expect(el.hidden).toBe(true);
+    answer = spotAt({ x: 30, y: 40 });
+    changed();
+    expect(el.hidden).toBe(false);
+    expect(el.style.top).toBe("40px");
+    answer = WAITING;
+    changed();
+    expect(el.hidden).toBe(false);
+    expect(el.style.top).toBe("40px");
+  });
+
+  it("places the toys again when a part starts or stops being drawn, until the layer stops", () => {
+    const { layer, placed, toy } = scatter();
+    const place = vi.fn(anywhere);
+    toy(place);
+    const stop = placed.attach(layer);
+    wait(FRAME);
+    place.mockClear();
+    const part = document.createElement("section");
+    layer.append(part);
+    part.dispatchEvent(new Event("contentvisibilityautostatechange"));
+    wait(FRAME);
+    expect(place).toHaveBeenCalledTimes(1);
+    stop();
+    part.dispatchEvent(new Event("contentvisibilityautostatechange"));
+    wait(FRAME);
+    expect(place).toHaveBeenCalledTimes(1);
+  });
+});
+
 describe("a new width", () => {
   it("sends every toy back to its place, hidden ones too, and only once per width", () => {
     const { layer, placed, rest, toy } = scatter();
     const shown = toy(anywhere);
-    const hidden = toy(() => Option.none());
+    const hidden = toy(() => MISSING);
     placed.attach(layer);
     wait(FRAME);
     // The first width is no change of page.

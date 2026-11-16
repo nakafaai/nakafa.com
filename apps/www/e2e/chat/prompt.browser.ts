@@ -12,6 +12,7 @@ import { LEARNER_TEXT, PASTED } from "@/e2e/support/prose";
 import { MARKDOWN_MARKUP, NINA_SECTION } from "@/e2e/support/selector";
 import { promptWith } from "@/e2e/support/sheet";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
+import { waitUntilTakenOver } from "@/e2e/support/window";
 
 /** What a learner writes first: text that reads as HTML, a product with asterisks and lines of choices, then a pasted set of exercises. */
 const WORDS = `${LEARNER_TEXT.angle}\n${LEARNER_TEXT.product}\n${LEARNER_TEXT.choices}\n${PASTED}`;
@@ -81,7 +82,15 @@ test.describe("A learner's first message at 390px", () => {
         const { changes } = yield* openChatPage(page, origin);
 
         yield* Effect.promise(() => page.goto("/en"));
-        yield* showsWordsAsWritten(page, page.locator(NINA_SECTION), changes);
+        const nina = page.locator(NINA_SECTION);
+        // A reader reaches the part before typing, and React takes its composer
+        // over on the way. An Enter pressed in the composer the server drew
+        // reaches no handler and writes a new line.
+        yield* Effect.promise(async () => {
+          await composerOf(nina).scrollIntoViewIfNeeded();
+          await waitUntilTakenOver(composerOf(nina));
+        });
+        yield* showsWordsAsWritten(page, nina, changes);
       })
     );
   });
