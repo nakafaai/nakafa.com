@@ -1,4 +1,3 @@
-import { spawn } from "node:child_process";
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { join, resolve } from "node:path";
@@ -10,7 +9,7 @@ import tailwindcss from "@tailwindcss/vite";
 import { tanstackStart } from "@tanstack/react-start/plugin/vite";
 import react, { reactCompilerPreset } from "@vitejs/plugin-react";
 import rsc from "@vitejs/plugin-rsc";
-import { Result, Schema } from "effect";
+import { Result } from "effect";
 import { defineConfig, type Plugin, type PluginOption } from "vite";
 import { ENVIRONMENT_OUTPUTS } from "#www/output.config";
 import {
@@ -30,54 +29,14 @@ import {
 import { renderRobotsTxt } from "#www/src/lib/seo/robots";
 import { PRERENDER_HEADER } from "#www/src/lib/static/calls";
 import { STATIC_HEADER_RULES } from "#www/src/lib/static/headers";
-import { PrerenderedPagesJson } from "#www/src/lib/static/prerender";
+import {
+  readPrerenderedPagePaths,
+  writeStaticArtifactFiles,
+} from "#www/static.config";
 import { workerEnvironment, workerSettings } from "#www/worker";
-
-/**
- * The file where the static runner writes the public paths that the build
- * prerenders. TanStack reads its page list from the config before the build runs,
- * so the list is written first, by a separate process.
- */
-const PAGE_LIST_FILE = join(import.meta.dirname, ".cache/static-pages.json");
-
-/**
- * The static runner's environment: this build's own, plus the flag that turns off
- * the Cloudflare plugin in the runner's Vite server (`STATIC_RUNNER` below).
- */
-const STATIC_RUNNER_ENV = { ...process.env, NAKAFA_STATIC_RUNNER: "1" };
 
 /** How many prerender requests run at once. Set, so the build machine's core count never changes the output. */
 const PRERENDER_CONCURRENCY = 8;
-
-/**
- * Reads the public paths that the build prerenders. The static runner writes them
- * from the active release, so an absent release fails the build here.
- */
-function readPrerenderedPagePaths(): Promise<readonly string[]> {
-  return new Promise((resolve, reject) => {
-    const runner = spawn(
-      process.execPath,
-      [
-        join(import.meta.dirname, "scripts/static/run.ts"),
-        "pages",
-        PAGE_LIST_FILE,
-      ],
-      { cwd: import.meta.dirname, env: STATIC_RUNNER_ENV, stdio: "inherit" }
-    );
-    runner.on("error", reject);
-    runner.on("exit", (code, signal) => {
-      if (code !== 0) {
-        reject(new Error(`The page list failed with exit ${code ?? signal}.`));
-        return;
-      }
-      resolve(
-        Schema.decodeSync(PrerenderedPagesJson)(
-          readFileSync(PAGE_LIST_FILE, "utf8")
-        )
-      );
-    });
-  });
-}
 
 /**
  * Writes the `_headers` file of the client output, so the static assets, the
@@ -199,30 +158,7 @@ const writeStaticArtifacts: Plugin = {
   buildApp: {
     order: "post",
     handler: (builder) =>
-      new Promise<void>((resolve, reject) => {
-        const runner = spawn(
-          process.execPath,
-          [
-            join(import.meta.dirname, "scripts/static/run.ts"),
-            "artifacts",
-            builder.environments.client.config.build.outDir,
-            PAGE_LIST_FILE,
-          ],
-          { cwd: import.meta.dirname, env: STATIC_RUNNER_ENV, stdio: "inherit" }
-        );
-        runner.on("error", reject);
-        runner.on("exit", (code, signal) => {
-          if (code === 0) {
-            resolve();
-            return;
-          }
-          reject(
-            new Error(
-              `The static artifacts failed with exit ${code ?? signal}.`
-            )
-          );
-        });
-      }),
+      writeStaticArtifactFiles(builder.environments.client.config.build.outDir),
   },
   name: "www:write-static-artifacts",
 };
