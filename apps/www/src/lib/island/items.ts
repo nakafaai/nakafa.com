@@ -42,8 +42,28 @@ function ringOf(width: number, depth: number) {
   );
 }
 
-/** One cell of a cottage's walls: a log corner, a glass window, white wall, or nothing in the doorway. */
-function wallOf(x: number, y: number, z: number) {
+/**
+ * How a house is built (ADR 0047, D10 and D17): how many storeys, the walls of
+ * its ground storey and of the ones above, and its roof.
+ */
+const Style = Schema.Struct({
+  lower: BlockKey,
+  roof: BlockKey,
+  storeys: Schema.Int,
+  upper: BlockKey,
+});
+type Style = typeof Style.Type;
+
+/** A cottage of one storey with white walls and a red roof. */
+export const COTTAGE: Style = {
+  lower: "plaster",
+  roof: "roof",
+  storeys: 1,
+  upper: "plaster",
+};
+
+/** One cell of a house's walls: a log corner, a glass window, its storey's wall, or nothing in the doorway. */
+function wallOf(x: number, y: number, z: number, style: Style) {
   const { depth, width } = SCALE.house;
   const front = z === depth - 1;
   if (front && x === (width - 1) / 2 && y < SCALE.door) {
@@ -56,34 +76,39 @@ function wallOf(x: number, y: number, z: number) {
   const window = across
     ? x === 1 || x === width - 2
     : z === 2 || z === depth - 3;
-  return Result.succeed(part(y === 1 && window ? "glass" : "plaster", x, y, z));
+  const wall = y < SCALE.storey ? style.lower : style.upper;
+  return Result.succeed(
+    part(y % SCALE.storey === 1 && window ? "glass" : wall, x, y, z)
+  );
 }
 
 /**
- * A cottage facing +z: log corners, white walls with glass windows, a door
- * two blocks high in the middle of its front, a stepped red roof one block
- * over each gable, and a brick chimney.
+ * A house facing +z in a style: log corners, walls with glass windows on every
+ * storey, a door two blocks high in the middle of its front, a stepped roof one
+ * block over each gable, and a brick chimney above it.
  */
-function houseParts() {
+export function houseParts(style: Style) {
   const { depth, width } = SCALE.house;
+  const height = SCALE.storey * style.storeys;
   const walls = Arr.flatMap(
-    Arr.makeBy(SCALE.storey, (y) => y),
-    (y) => Arr.filterMap(ringOf(width, depth), ({ x, z }) => wallOf(x, y, z))
+    Arr.makeBy(height, (y) => y),
+    (y) =>
+      Arr.filterMap(ringOf(width, depth), ({ x, z }) => wallOf(x, y, z, style))
   );
   const steps = depth / 2;
   const roof = Arr.flatMap(
     Arr.makeBy(steps, (step) => step),
     (step) => {
-      const y = SCALE.storey + step;
+      const y = height + step;
       const eaves = Arr.flatMap([step, depth - 1 - step], (z) =>
-        Arr.makeBy(width + 2, (index) => part("roof", index - 1, y, z))
+        Arr.makeBy(width + 2, (index) => part(style.roof, index - 1, y, z))
       );
       const gables = Arr.flatMap(
         Arr.makeBy(
           Math.max(0, depth - 2 - step * 2),
           (index) => step + 1 + index
         ),
-        (z) => [part("plaster", 0, y, z), part("plaster", width - 1, y, z)]
+        (z) => [part(style.upper, 0, y, z), part(style.upper, width - 1, y, z)]
       );
       return Arr.appendAll(eaves, gables);
     }
@@ -92,16 +117,12 @@ function houseParts() {
   const withChimney = Arr.filter(
     roof,
     (cell) =>
-      !(
-        cell.x === chimney.x &&
-        cell.z === chimney.z &&
-        cell.y === SCALE.storey + 1
-      )
+      !(cell.x === chimney.x && cell.z === chimney.z && cell.y === height + 1)
   );
   return Arr.appendAll(
     Arr.appendAll(walls, withChimney),
     Arr.makeBy(SCALE.house.height - SCALE.storey - 1, (index) =>
-      part("brick", chimney.x, SCALE.storey + 1 + index, chimney.z)
+      part("brick", chimney.x, height + 1 + index, chimney.z)
     )
   );
 }
@@ -157,7 +178,7 @@ function lampParts() {
 
 /** Each item's parts, and the cell of them that stands on the anchor. */
 const ITEMS = {
-  house: { origin: { x: 3, z: 3 }, parts: houseParts() },
+  house: { origin: { x: 3, z: 3 }, parts: houseParts(COTTAGE) },
   lamp: { origin: { x: 0, z: 0 }, parts: lampParts() },
   tree: { origin: { x: 0, z: 0 }, parts: treeParts() },
   well: { origin: { x: 1, z: 1 }, parts: wellParts() },
