@@ -3,6 +3,7 @@ import databaseSchema from "@repo/backend/confect/_generated/schema";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { getOptionalAppUserForRead } from "@repo/backend/confect/auth/session";
 import { todayOf } from "@repo/backend/confect/island/day";
+import { leadersOf } from "@repo/backend/confect/island/leaders";
 import spec from "@repo/backend/confect/island/queries.spec";
 import { DAY_GRANTS } from "@repo/backend/confect/island/schema";
 import { findIsland } from "@repo/backend/confect/island/store";
@@ -67,9 +68,23 @@ const week = FunctionImpl.make(
   })
 );
 
+/** The global leaderboard, the viewer's own row marked when they are on it (ADR 0047, D27). */
+const leaders = FunctionImpl.make(
+  databaseSchema,
+  spec,
+  "leaders",
+  Effect.fn("island.queries.leaders")(function* () {
+    const user = yield* getOptionalAppUserForRead();
+    return yield* leadersOf(
+      Option.map(Option.fromNullishOr(user), (found) => found.appUser._id)
+    );
+  })
+);
+
 export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(own),
   Layer.provide(week),
+  Layer.provide(leaders),
   Layer.provide(sessionMiddleware),
   GroupImpl.finalize
 );

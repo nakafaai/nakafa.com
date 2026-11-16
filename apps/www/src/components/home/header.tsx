@@ -12,9 +12,9 @@ export function HomeHeader({ name }: { name: Option.Option<string> }) {
           name: Option.getOrElse(name, () => t("guest")),
         })}
       </p>
-      <h1 className="text-4xl font-medium tracking-tight text-pretty">
+      <h2 className="text-4xl font-medium tracking-tight text-pretty">
         {t("title")}
-      </h1>
+      </h2>
     </div>
   );
 }

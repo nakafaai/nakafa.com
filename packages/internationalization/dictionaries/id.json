@@ -2722,10 +2722,12 @@
     "title": "Mau belajar apa hari ini?",
     "contribute": "Kontribusi",
     "videos": "Video",
-    "trending-subjects": "Materi Populer Minggu Ini",
-    "explore-materials": "Jelajahi Materi",
     "guest": "kamu",
-    "continue-learning": "Lanjutkan Belajar"
+    "week-title": "Minggu kamu",
+    "streak": "{days, plural, =0 {Mulai rangkaian hari ini} other {# hari berturut-turut}}",
+    "week-summary": "{lessons} materi, {sections} bagian try out, {stars} Bintang minggu ini",
+    "continue": "Lanjut belajar",
+    "continue-empty": "Materi yang kamu buka bakal muncul di sini, siap kamu lanjutin."
   },
   "Marketing": {
     "learn": "Belajar",
@@ -4713,6 +4715,7 @@
     "notice-stale": "Pulaumu berubah di tempat lain, jadi dimuat ulang dulu ya.",
     "next": "{stars} Bintang lagi ke level {level}",
     "top": "Semua blok sudah terbuka",
+    "play": "Main",
     "mute": "Matikan suara",
     "items": "Barang",
     "blocks": "Balok",
@@ -5048,6 +5051,27 @@
     "home-cottage": "Pondok",
     "home-house": "Rumah dua lantai",
     "home-manor": "Rumah besar",
-    "upgrade": "Tingkatkan rumahmu jadi {name}"
+    "upgrade": "Tingkatkan rumahmu jadi {name}",
+    "world-title": "Duniamu",
+    "open": "Buka dunia",
+    "badges-title": "Lencana",
+    "badges-count": "{earned} dari {total} udah didapat",
+    "badge-explorer": "Penjelajah",
+    "badge-explorer-hint": "Belajar di 7 dari 10 hari",
+    "badge-fighter": "Pejuang Try-out",
+    "badge-fighter-hint": "Selesaikan 10 set try-out",
+    "badge-mathematics": "Matematika",
+    "badge-mathematics-hint": "Selesaikan 10 materi matematika",
+    "badge-physics": "Fisika",
+    "badge-physics-hint": "Selesaikan 10 materi fisika",
+    "badge-chemistry": "Kimia",
+    "badge-chemistry-hint": "Selesaikan 10 materi kimia",
+    "badge-biology": "Biologi",
+    "badge-biology-hint": "Selesaikan 10 materi biologi",
+    "leaders-title": "Papan peringkat",
+    "leaders-description": "Pelajar dengan Bintang terbanyak di seluruh dunia",
+    "leaders-empty": "Belum ada yang dapat Bintang, jadi posisi teratas masih bisa kamu rebut.",
+    "you": "{name} (kamu)",
+    "share-text": "Aku udah level {level} di pulau Nakafa-ku. Yuk bangun pulaumu juga!"
   }
 }

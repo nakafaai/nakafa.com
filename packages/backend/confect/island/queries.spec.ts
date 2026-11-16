@@ -1,5 +1,5 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
-import { OwnIsland, Week } from "@repo/backend/confect/island/view";
+import { Leader, OwnIsland, Week } from "@repo/backend/confect/island/view";
 import Session from "@repo/backend/confect/middleware/session.spec";
 import { Schema } from "effect";
 export default GroupSpec.make()
@@ -15,5 +15,12 @@ export default GroupSpec.make()
       name: "week",
       args: () => ({}),
       returns: () => Schema.NullOr(Week),
+    }).middleware(Session)
+  )
+  .addFunction(
+    FunctionSpec.publicQuery({
+      name: "leaders",
+      args: () => ({}),
+      returns: () => Schema.Array(Leader),
     }).middleware(Session)
   );
