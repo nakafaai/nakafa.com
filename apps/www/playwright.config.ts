@@ -162,15 +162,20 @@ type ProjectShape = Omit<
  * Firefox on a machine without a GPU, such as a proof runner, blocks WebGL by
  * default, so a scene that needs WebGL2 would fall back there and nowhere else.
  * Every Firefox project forces it on, as Chromium and WebKit already render it.
- *
- * Headless Firefox on Linux finds no GL driver at all, forced or not, so the
- * proof runs it with a window on a virtual display (PLAYWRIGHT_FIREFOX_HEADED),
- * where Mesa draws WebGL on the CPU.
  */
 const FIREFOX_USE = {
-  headless: process.env.PLAYWRIGHT_FIREFOX_HEADED !== "1",
   launchOptions: { firefoxUserPrefs: { "webgl.force-enabled": true } },
 };
+
+/**
+ * Headless Firefox on Linux has no GL driver, so under the proof visual-firefox,
+ * the one Firefox project with WebGL scenes, draws in a window on a virtual
+ * display, one test at a time (ADR 0048, "Headed Firefox For WebGL Alone").
+ */
+const headed = (project: ProjectShape): ProjectShape =>
+  process.env.PLAYWRIGHT_FIREFOX_HEADED === "1"
+    ? { ...project, use: { ...project.use, headless: false }, workers: 1 }
+    : project;
 
 /** The engines that every UI suite runs in, which a proof job selects one of. */
 const ENGINES = ["chromium", "firefox", "webkit"] as const;
@@ -271,7 +276,7 @@ const PROJECTS = {
   "chat-firefox": inEngine(CHAT_PROJECT, "firefox"),
   "chat-webkit": inEngine(CHAT_PROJECT, "webkit"),
   visual: VISUAL_PROJECT,
-  "visual-firefox": inEngine(VISUAL_PROJECT, "firefox"),
+  "visual-firefox": headed(inEngine(VISUAL_PROJECT, "firefox")),
   "visual-webkit": inEngine(VISUAL_PROJECT, "webkit"),
   "school-firefox": {
     testIgnore: [
