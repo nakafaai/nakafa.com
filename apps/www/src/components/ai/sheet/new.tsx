@@ -1,8 +1,3 @@
-import {
-  Empty,
-  EmptyHeader,
-  EmptyTitle,
-} from "@repo/design-system/components/ui/empty";
 import { MessageScrollerItem } from "@repo/design-system/components/ui/scroller";
 import { useTranslations } from "use-intl";
 import {
@@ -13,6 +8,7 @@ import {
 } from "@/components/ai/chat/new";
 import { StartPrompt } from "@/components/ai/chat/start";
 import { useAi } from "@/components/ai/context";
+import { EmptyState } from "@/components/state/empty";
 import { EmptyNina } from "@/components/state/nina";
 
 /**
@@ -67,12 +63,10 @@ function NewChatWelcome() {
 
   return (
     <MessageScrollerItem className="flex flex-1" messageId="welcome">
-      <Empty>
-        <EmptyHeader>
-          <EmptyNina act="cheering" />
-          <EmptyTitle className="text-chat">{t("new-chat-title")}</EmptyTitle>
-        </EmptyHeader>
-      </Empty>
+      <EmptyState
+        scene={<EmptyNina act="cheering" />}
+        title={t("new-chat-title")}
+      />
     </MessageScrollerItem>
   );
 }
