@@ -8,7 +8,7 @@ export const card = {
   name: "ResizablePanelGroup",
   group: "Content",
   height: 240,
-  source: "resizable",
+  source: "components/ui/resizable",
 };
 
 /** The card's live example. */

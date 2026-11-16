@@ -7,7 +7,7 @@ export const card = {
   name: "Bubble",
   group: "Chat",
   height: 220,
-  source: "bubble",
+  source: "components/ui/bubble",
 };
 
 /** The card's live example. */

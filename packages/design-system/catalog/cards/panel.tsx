@@ -16,7 +16,7 @@ export const card = {
   name: "Card",
   group: "Content",
   height: 320,
-  source: "card",
+  source: "components/ui/card",
 };
 
 /** The card's live example. */

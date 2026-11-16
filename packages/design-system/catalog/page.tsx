@@ -1,17 +1,38 @@
-import { ThemeProvider } from "@repo/design-system/providers/theme";
+import { ThemeProvider, useTheme } from "@repo/design-system/providers/theme";
 import messages from "@repo/internationalization/dictionaries/en.json";
 import { Array as Arr, Option } from "effect";
-import type { ComponentType, ReactNode } from "react";
+import { type ComponentType, type ReactNode, useEffect } from "react";
 import { createRoot } from "react-dom/client";
 import { IntlProvider } from "use-intl";
 
 /**
- * The context every Nakafa component may read: the English copy of the product, its locale and the visitor's theme.
- * A design that renders Nakafa components outside a card preview wraps them in `Root` once, at its top.
+ * Keeps the theme the components read on the one the design system page shows. The page marks it on
+ * `<html data-theme>`, and its theme menu changes it while the page is open, so the theme follows the attribute
+ * rather than the system's appearance.
+ */
+function PageTheme() {
+  const setTheme = useTheme((state) => state.setTheme);
+  useEffect(() => {
+    const root = document.documentElement;
+    const follow = () => {
+      setTheme(root.dataset.theme === "dark" ? "dark" : "light");
+    };
+    follow();
+    const observer = new MutationObserver(follow);
+    observer.observe(root, { attributeFilter: ["data-theme"] });
+    return () => observer.disconnect();
+  }, [setTheme]);
+  return null;
+}
+
+/**
+ * The context every Nakafa component may read: the English copy of the product, its locale and the theme the page
+ * shows. A design that renders Nakafa components outside a card preview wraps them in `Root` once, at its top.
  */
 export function Root({ children }: { children: ReactNode }) {
   return (
     <ThemeProvider>
+      <PageTheme />
       <IntlProvider locale="en" messages={messages} timeZone="Asia/Jakarta">
         {children}
       </IntlProvider>

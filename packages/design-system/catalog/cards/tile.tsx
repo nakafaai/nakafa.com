@@ -11,7 +11,7 @@ export const card = {
   name: "Tile",
   group: "Identity",
   height: 210,
-  source: "tile",
+  source: "components/ui/tile",
 };
 
 /** The card's live example. */

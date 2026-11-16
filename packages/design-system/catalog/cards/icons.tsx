@@ -36,7 +36,7 @@ export const card = {
   name: "HugeIcons",
   group: "Content",
   height: 150,
-  source: "huge-icons",
+  source: "components/ui/huge-icons",
 };
 
 /** The card's live example. */

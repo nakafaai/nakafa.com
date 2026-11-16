@@ -4,7 +4,7 @@ export const card = {
   name: "TypingLoader",
   group: "Feedback",
   height: 110,
-  source: "typing-loader",
+  source: "components/ui/typing-loader",
 };
 
 /** The card's live example. */

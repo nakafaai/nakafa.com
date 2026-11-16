@@ -19,12 +19,14 @@ export const shimName = (module: string) =>
 const binding = (index: number) => `card${index}`;
 
 /**
- * The bundle's entry: every `components/ui` module, the card previews, the context a design wraps them in, and the
- * stylesheet. It is generated on each run from the folders, so a new module or card needs no list kept by hand.
+ * The bundle's entry: every `components/ui` module, each other module a card shows under the card's name (a chart's
+ * `XAxis` would otherwise meet another's), the card previews, the context a design wraps them in, and the stylesheet.
+ * It is generated on each run from the folders, so a new module or card needs no list kept by hand.
  */
 export function entryModule(
   modules: readonly string[],
   cards: readonly string[],
+  shown: readonly (readonly [name: string, source: string])[],
   root: string
 ) {
   return Arr.join(
@@ -34,6 +36,10 @@ export function entryModule(
       ...Arr.map(
         modules,
         (module) => `export * from "${root}/components/ui/${module}";`
+      ),
+      ...Arr.map(
+        shown,
+        ([name, source]) => `export * as ${name} from "${root}/${source}";`
       ),
       ...Arr.map(
         cards,

@@ -12,7 +12,7 @@ export const card = {
   name: "Drawing",
   group: "Identity",
   height: 150,
-  source: "drawing",
+  source: "components/ui/drawing",
 };
 
 /** The card's live example. */

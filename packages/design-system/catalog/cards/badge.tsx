@@ -4,7 +4,7 @@ export const card = {
   name: "Badge",
   group: "Content",
   height: 190,
-  source: "badge",
+  source: "components/ui/badge",
 };
 
 /** The card's live example. */

@@ -30,5 +30,5 @@ export const card = {
   name: "TimeSelect",
   group: "Forms",
   height: 120,
-  source: "time",
+  source: "components/ui/time",
 };

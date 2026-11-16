@@ -15,7 +15,7 @@ export const card = {
   name: "Popover",
   group: "Overlays",
   height: 260,
-  source: "popover",
+  source: "components/ui/popover",
 };
 
 /** The card's live example. */

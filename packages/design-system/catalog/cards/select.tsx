@@ -19,7 +19,7 @@ export const card = {
   name: "Select",
   group: "Forms",
   height: 260,
-  source: "select",
+  source: "components/ui/select",
 };
 
 /** A short choice: the list opens with its one-word label, and every option shows the icon of its kind. */

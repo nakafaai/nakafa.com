@@ -8,7 +8,7 @@ export const card = {
   name: "Toaster",
   group: "Feedback",
   height: 300,
-  source: "sonner",
+  source: "components/ui/sonner",
 };
 
 /** Toasts of each kind, kept open: a success, a failure that says what to do, and a notice. */

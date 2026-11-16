@@ -6,7 +6,7 @@ export const card = {
   name: "Tooltip",
   group: "Overlays",
   height: 120,
-  source: "tooltip",
+  source: "components/ui/tooltip",
 };
 
 /** An icon button names its action in words: its `tooltip` shows on hover and focus and is read as its name. */

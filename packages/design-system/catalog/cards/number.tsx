@@ -11,7 +11,7 @@ export const card = {
   name: "NumberField",
   group: "Forms",
   height: 150,
-  source: "number",
+  source: "components/ui/number",
 };
 
 /** The card's live example. */

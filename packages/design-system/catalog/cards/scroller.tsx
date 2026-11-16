@@ -41,7 +41,7 @@ export const card = {
   name: "MessageScroller",
   group: "Chat",
   height: 320,
-  source: "scroller",
+  source: "components/ui/scroller",
 };
 
 /** The card's live example. */

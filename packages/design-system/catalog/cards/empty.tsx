@@ -13,7 +13,7 @@ export const card = {
   name: "Empty",
   group: "Feedback",
   height: 384,
-  source: "empty",
+  source: "components/ui/empty",
 };
 
 /** The card's live example. */

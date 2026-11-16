@@ -26,7 +26,7 @@ export const card = {
   name: "SearchField",
   group: "Forms",
   height: 150,
-  source: "search",
+  source: "components/ui/search",
 };
 
 /** The card's live example. */

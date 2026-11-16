@@ -27,7 +27,11 @@ const globals = `@import "tailwindcss";
 `;
 
 describe("catalogSheet", () => {
-  const sheet = catalogSheet(postcss.parse(globals), "/ds/styles");
+  const sheet = catalogSheet(
+    postcss.parse(globals),
+    "/ds/styles",
+    "/www/public/themes.css"
+  );
 
   it("leaves the colors to the page and keeps the base radius and color scheme", () => {
     expect(sheet).not.toContain("--background");
@@ -50,6 +54,10 @@ describe("catalogSheet", () => {
     expect(sheet).toContain('@source "/ds/styles/../components";');
     expect(sheet).toContain('@source "/ds/styles/../catalog";');
     expect(sheet).not.toContain("../../**");
+  });
+
+  it("brings every named theme's class along", () => {
+    expect(sheet).toContain('@import "/www/public/themes.css";');
   });
 
   it("names Inter and Geist Mono as the page loads them", () => {

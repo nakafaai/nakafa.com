@@ -8,13 +8,20 @@ describe("entryModule", () => {
     const text = entryModule(
       ["badge", "button-group"],
       ["badge", "group"],
+      [["BarChart", "components/evilcharts/charts/bar-chart"]],
       "/ds"
     );
     expect(text).toContain('export * from "/ds/components/ui/badge";');
     expect(text).toContain('export * from "/ds/components/ui/button-group";');
+    expect(text).toContain(
+      'export * as BarChart from "/ds/components/evilcharts/charts/bar-chart";'
+    );
     expect(text).toContain('import * as card1 from "/ds/catalog/cards/group";');
     expect(text).toContain("export const showcase = catalog([card0, card1]);");
     expect(text).toContain('export { Root } from "/ds/catalog/page";');
+    expect(text).toContain(
+      'export * as BarChart from "/ds/components/evilcharts/charts/bar-chart";'
+    );
   });
 });
 

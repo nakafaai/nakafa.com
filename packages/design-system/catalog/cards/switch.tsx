@@ -5,7 +5,7 @@ export const card = {
   name: "Switch",
   group: "Forms",
   height: 200,
-  source: "switch",
+  source: "components/ui/switch",
 };
 
 /** The card's live example. */

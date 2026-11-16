@@ -12,7 +12,7 @@ export const card = {
   name: "Breadcrumb",
   group: "Navigation",
   height: 100,
-  source: "breadcrumb",
+  source: "components/ui/breadcrumb",
 };
 
 /** The card's live example. */

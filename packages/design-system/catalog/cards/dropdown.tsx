@@ -25,7 +25,7 @@ export const card = {
   name: "DropdownMenu",
   group: "Menus",
   height: 300,
-  source: "dropdown-menu",
+  source: "components/ui/dropdown-menu",
 };
 
 /** A menu reads as header, body and footer: its one-word label, its main actions, then Archive and Delete last. */

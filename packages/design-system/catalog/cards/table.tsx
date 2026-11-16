@@ -34,7 +34,7 @@ export const card = {
   name: "Table",
   group: "Content",
   height: 280,
-  source: "table",
+  source: "components/ui/table",
 };
 
 /** The card's live example. */

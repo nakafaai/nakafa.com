@@ -7,7 +7,7 @@ export const card = {
   name: "NumberFormat",
   group: "Content",
   height: 130,
-  source: "number-flow",
+  source: "components/ui/number-flow",
 };
 
 /** The card's live example. */

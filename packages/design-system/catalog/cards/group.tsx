@@ -14,7 +14,7 @@ export const card = {
   name: "ButtonGroup",
   group: "Actions",
   height: 120,
-  source: "button-group",
+  source: "components/ui/button-group",
 };
 
 /** The card's live example. */

@@ -19,7 +19,7 @@ export const card = {
   name: "Attachment",
   group: "Content",
   height: 180,
-  source: "attachment",
+  source: "components/ui/attachment",
 };
 
 /** The card's live example. */

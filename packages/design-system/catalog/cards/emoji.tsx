@@ -9,7 +9,7 @@ export const card = {
   name: "EmojiPicker",
   group: "Forms",
   height: 380,
-  source: "emoji-picker",
+  source: "components/ui/emoji-picker",
 };
 
 /** The card's live example. */

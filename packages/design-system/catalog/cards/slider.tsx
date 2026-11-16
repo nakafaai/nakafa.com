@@ -4,7 +4,7 @@ export const card = {
   name: "Slider",
   group: "Forms",
   height: 110,
-  source: "slider",
+  source: "components/ui/slider",
 };
 
 /** The card's live example. */

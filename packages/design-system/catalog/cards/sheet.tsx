@@ -12,7 +12,7 @@ export const card = {
   name: "Sheet",
   group: "Overlays",
   height: 380,
-  source: "sheet",
+  source: "components/ui/sheet",
 };
 
 /** The card's live example. */

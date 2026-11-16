@@ -10,7 +10,7 @@ export const card = {
   name: "Button",
   group: "Actions",
   height: 120,
-  source: "button",
+  source: "components/ui/button",
 };
 
 /** The page's one primary action, the outlined actions beside it, the quiet and destructive ones, and an icon button. */

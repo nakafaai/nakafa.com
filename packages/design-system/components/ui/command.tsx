@@ -205,6 +205,10 @@ function CommandDialogPopup({
   );
 }
 
+/**
+ * The search palette's list: one field over grouped places, each row with the icon of its kind, opened in a dialog
+ * on a wide screen and a drawer on a phone. Search across the product goes here; a choice among options is a Picker.
+ */
 function Command<ItemValue>({
   autoHighlight = "always",
   keepHighlight = true,
