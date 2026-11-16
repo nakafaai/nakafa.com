@@ -23,7 +23,6 @@ import {
   VisualCardBody,
   VisualCardFacts,
   VisualCardFooter,
-  VisualCardHeader,
   VisualCardToolbar,
 } from "@repo/design-system/components/visual/card";
 import { VisualFact } from "@repo/design-system/components/visual/fact";

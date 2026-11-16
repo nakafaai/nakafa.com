@@ -6,9 +6,7 @@ import {
   HistogramChart,
   ScatterDiagram,
 } from "@/lib/content/renderer/client/mathematics/charts";
-import {
-  QuadraticEquationReadingRoomProblem,
-} from "@/lib/content/renderer/client/mathematics/equation";
+import { QuadraticEquationReadingRoomProblem } from "@/lib/content/renderer/client/mathematics/equation";
 import {
   FunctionAndNonFunctionDiagram,
   FunctionAndNonFunctionRelationVisualizer,

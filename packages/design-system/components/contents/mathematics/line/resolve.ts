@@ -7,10 +7,6 @@ import {
 } from "@repo/design-system/components/contents/mathematics/circle";
 import { createCuboidLines } from "@repo/design-system/components/contents/mathematics/cuboid";
 import {
-  IntervalSchema,
-  intervalOf,
-} from "@repo/design-system/components/contents/mathematics/interval";
-import {
   type CurveBranch,
   CurveError,
   CurveSchema,
@@ -199,30 +195,3 @@ export const resolveLineScene = Effect.fn("line.resolveScene")(function* ({
 export type LineSceneConfig = Effect.Success<
   ReturnType<typeof resolveLineScene>
 >;
-
-/** What a line scene draws: its number of lines, and the interval its points span on each axis. */
-const LineSummarySchema = Schema.Struct({
-  count: Schema.Int,
-  x: IntervalSchema,
-  y: IntervalSchema,
-  z: IntervalSchema,
-});
-
-/** What a line scene draws. */
-type LineSummary = typeof LineSummarySchema.Type;
-
-/** Summarizes the points of resolved lines, or returns none when the lines have no points. */
-export function summarizeLines(
-  lines: readonly ResolvedLine[]
-): Option.Option<LineSummary> {
-  const points = Arr.flatMap(lines, (line) => line.points);
-  if (!Arr.isReadonlyArrayNonEmpty(points)) {
-    return Option.none();
-  }
-  return Option.some({
-    count: lines.length,
-    x: intervalOf(Arr.map(points, (point) => point.x)),
-    y: intervalOf(Arr.map(points, (point) => point.y)),
-    z: intervalOf(Arr.map(points, (point) => point.z)),
-  });
-}
