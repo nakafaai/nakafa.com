@@ -1,7 +1,7 @@
 import { idOf } from "@repo/backend/confect/island/blocks";
 import { SPAN } from "@repo/backend/confect/island/world";
 import { Array as Arr } from "effect";
-import { stampItem } from "@/lib/island/items";
+import { furnishingsOf, stampItem, stampParts } from "@/lib/island/items";
 import { type Cells, cellOf, SEA_LEVEL } from "@/lib/island/world";
 
 /** The middle of the world, where the village's well stands. */
@@ -36,9 +36,9 @@ function pave(
 
 /**
  * The village every world opens with (ADR 0047, D10): a square with a well, two
- * paths crossing it, three cottages with their doors on a path, a fenced garden
- * of flowers, lamp posts that light up at night, and two trees. It is laid
- * over the flat middle of the island, so it never floats or sinks.
+ * paths crossing it, three furnished cottages with their doors on a path
+ * (D45), a fenced garden, lamp posts that light up at night, and two trees.
+ * It is laid over the flat middle of the island, so it never floats or sinks.
  */
 export function layVillage(cells: Cells) {
   const reach = VILLAGE - 1;
@@ -55,6 +55,7 @@ export function layVillage(cells: Cells) {
   for (const house of houses) {
     pave(cells, [house.x, house.stub[0]], [house.x, house.stub[1]], PATH);
     stampItem(cells, "house", [house.x, FLOOR, house.z], house.turn);
+    stampParts(cells, furnishingsOf(house.turn), [house.x, FLOOR, house.z]);
   }
   // A garden south-west of the square: tilled rows of crops inside a low log fence.
   const garden = {

@@ -29,7 +29,7 @@ describe("island/terrain", () => {
     expect(blockAt(cells, 1, SEA_LEVEL, 1)).toBe(0);
   });
 
-  it("opens every world on a finished village: a well, cottages with doors on a path, a garden and lamps, all standing on the ground", () => {
+  it("opens every world on a finished village: a well, furnished cottages with doors on a path, a garden and lamps, all standing on the ground", () => {
     const cells = terrainOf(11, 44);
     const middle = SPAN / 2;
     const floor = SEA_LEVEL + 1;
@@ -44,6 +44,22 @@ describe("island/terrain", () => {
     expect(blockAt(cells, door.x, floor + 2, door.z)).toBe(idOf("plaster"));
     expect(blockAt(cells, door.x, SEA_LEVEL, door.z + 1)).toBe(idOf("path"));
     expect(blockAt(cells, door.x - 3, floor, door.z)).toBe(idOf("log"));
+    // Inside, a bookshelf and a bed along the back wall and a lantern on a table by the side window; the row inside the door stays clear (D45).
+    expect(blockAt(cells, door.x - 2, floor, door.z - 4)).toBe(
+      idOf("bookshelf")
+    );
+    expect(blockAt(cells, door.x + 2, floor, door.z - 4)).toBe(idOf("wool"));
+    expect(blockAt(cells, door.x - 2, floor, door.z - 2)).toBe(idOf("planks"));
+    expect(blockAt(cells, door.x - 2, floor + 1, door.z - 2)).toBe(
+      idOf("lantern")
+    );
+    expect(blockAt(cells, door.x, floor, door.z - 1)).toBe(0);
+    expect(blockAt(cells, door.x, SEA_LEVEL, door.z - 1)).toBe(idOf("planks"));
+    expect(blockAt(cells, door.x, SEA_LEVEL, door.z)).toBe(idOf("planks"));
+    // The cottage south of the square faces back, its furnishings turned with it.
+    expect(blockAt(cells, middle + 9, floor, middle + 8)).toBe(
+      idOf("bookshelf")
+    );
     expect(blockAt(cells, middle - 7, floor, middle + 5)).toBe(idOf("rice"));
     expect(blockAt(cells, middle - 7, floor, middle + 7)).toBe(idOf("corn"));
     for (let z = 0; z < SPAN; z += 1) {
