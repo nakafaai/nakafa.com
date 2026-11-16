@@ -3,6 +3,7 @@ import { Effect, MutableList, Record as Rec } from "effect";
 import { withBrowserContext } from "@/e2e/support/context";
 import { pinnedRoutes } from "@/e2e/support/corpus";
 import { withObservedPageErrors } from "@/e2e/support/observe";
+import { VISUAL_CARD, VISUAL_CARD_TABLE } from "@/e2e/support/selector";
 import { servedTimeoutMilliseconds } from "@/e2e/support/timeout";
 
 const revealChart = Effect.fn("NakafaE2E.revealChart")(function* (
@@ -139,8 +140,11 @@ test("chart articles retain server HTML after caching in every locale", async ({
 /** Verifies hydrated plots and their server tables after each navigation or reload. */
 const expectFunctionCharts = Effect.fn("NakafaE2E.expectFunctionCharts")(
   function* (page: Page) {
+    // A function chart's card holds its values table; the lesson's bar chart has none.
     const charts = page
-      .locator('article [data-slot="chart"]')
+      .locator(`article ${VISUAL_CARD}`)
+      .filter({ has: page.locator(VISUAL_CARD_TABLE) })
+      .locator('[data-slot="chart"]')
       .filter({ visible: true });
     yield* Effect.promise(() => expect(charts).toHaveCount(2));
     for (const chart of yield* Effect.promise(() => charts.all())) {
@@ -151,14 +155,12 @@ const expectFunctionCharts = Effect.fn("NakafaE2E.expectFunctionCharts")(
     );
     // Each values table is its own band: its rows run the card's full width.
     const widths = yield* Effect.promise(() =>
-      page
-        .locator('article [data-slot="visual-card-table"]')
-        .evaluateAll((bands) =>
-          bands.map((band) => ({
-            band: band.getBoundingClientRect().width,
-            row: band.querySelector("tr")?.getBoundingClientRect().width ?? 0,
-          }))
-        )
+      page.locator(`article ${VISUAL_CARD_TABLE}`).evaluateAll((bands) =>
+        bands.map((band) => ({
+          band: band.getBoundingClientRect().width,
+          row: band.querySelector("tr")?.getBoundingClientRect().width ?? 0,
+        }))
+      )
     );
     yield* Effect.sync(() => {
       expect(widths).toHaveLength(2);
