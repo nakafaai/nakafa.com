@@ -23,10 +23,20 @@ export const isCorrectGrade = (graded: Grade) =>
   graded.status === "scored" && graded.category === graded.ceiling;
 
 /**
+ * Settles the grade of a short answer that no accepted answer matches. The shared grader leaves it for a person,
+ * as a School teacher decides it, but no person grades a try-out, so it scores nothing, as a number outside its
+ * tolerance does, and every try-out scores itself when it ends.
+ */
+const settled = (question: PlacedQuestion, graded: Grade): Grade =>
+  graded.status === "pending" && question.interaction.kind === "textEntry"
+    ? { category: 0, ceiling: graded.ceiling, status: "scored" }
+    : graded;
+
+/**
  * Grades one response to a place with the place's frozen interaction, key, and rule
- * (`readPlacedQuestion`). A response that does not fit the interaction (`fitsQuestion`) is refused. It
- * returns a `Result`, not an Effect, so the integrity check re-grades stored answers with the same
- * synchronous step.
+ * (`readPlacedQuestion`), with a short answer that no accepted answer matches scored nothing (`settled`). A
+ * response that does not fit the interaction (`fitsQuestion`) is refused. It returns a `Result`, not an
+ * Effect, so the integrity check re-grades stored answers with the same synchronous step.
  */
 export function gradeAnswer(
   question: PlacedQuestion,
@@ -41,7 +51,7 @@ export function gradeAnswer(
     );
   }
   return Result.succeed({
-    grade: grade({ ...question, response }),
+    grade: settled(question, grade({ ...question, response })),
     response,
   });
 }
