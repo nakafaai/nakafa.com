@@ -1,7 +1,5 @@
 import { RoundedBox } from "@react-three/drei";
 import {
-  OBJECT_COLOR,
-  RULER_COLOR,
   RULER_LENGTH_CM,
   RULER_MAJOR_TICK_COUNT,
   RULER_MINOR_TICK_COUNT,
@@ -11,11 +9,32 @@ import {
 import type { MeasurementSceneProps } from "@repo/design-system/components/contents/physics/measurement/tools/scene";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
+import {
+  type Placement,
+  Repeat,
+} from "@repo/design-system/components/three/repeat";
+import { SurfaceMaterial } from "@repo/design-system/components/three/surface/material";
+import { MATERIAL } from "@repo/design-system/lib/material";
 import { Array as Arr } from "effect";
-import { useMemo } from "react";
+
+/** The etched graduations of the rule: one every two millimetres, and a longer one every centimetre. */
+const MINOR_TICKS: readonly Placement[] = Arr.makeBy(
+  RULER_MINOR_TICK_COUNT,
+  (index) => ({
+    position: [RULER_START_X + index * RULER_STEP_CM, 0.061, -0.38],
+  })
+);
+const MAJOR_TICKS: readonly Placement[] = Arr.makeBy(
+  RULER_MAJOR_TICK_COUNT,
+  (index) => ({
+    position: [RULER_START_X + index, 0.061, -0.31],
+  })
+);
 
 /**
- * Renders a ruler with an object whose length matches the selected reading.
+ * A stainless steel rule, brushed, with its graduations etched in black along
+ * its back edge, tilted toward the reader, and an oak block laid against
+ * that edge whose length is the selected reading.
  */
 export function LengthScene({
   colors,
@@ -25,52 +44,41 @@ export function LengthScene({
   const blockCenterX = RULER_START_X + measurement / 2;
   const blockEndX = RULER_START_X + measurement;
   const readingLabelX = Math.max(blockEndX + 0.35, RULER_START_X + 0.95);
-  const majorTicks = useMemo(
-    () =>
-      Array.from({ length: RULER_MAJOR_TICK_COUNT }, (_, index) => ({
-        id: `major-${index}`,
-        x: RULER_START_X + index,
-      })),
-    []
-  );
-  const minorTicks = useMemo(
-    () =>
-      Array.from({ length: RULER_MINOR_TICK_COUNT }, (_, index) => ({
-        id: `minor-${index}`,
-        x: RULER_START_X + index * RULER_STEP_CM,
-      })),
-    []
-  );
-
   return (
-    <group rotation={[-0.2, 0.05, 0]}>
+    <group rotation={[0.55, 0.05, 0]}>
       <RoundedBox
-        args={[RULER_LENGTH_CM + 0.6, 0.18, 1]}
-        radius={0.05}
+        args={[RULER_LENGTH_CM + 0.6, 0.12, 1]}
+        castShadow
+        radius={0.03}
+        receiveShadow
         smoothness={3}
       >
-        <meshStandardMaterial color={RULER_COLOR} roughness={0.65} />
+        <SurfaceMaterial
+          color={MATERIAL.chrome}
+          metalness={1}
+          repeat={[4, 1]}
+          roughness={0.45}
+          surface="brushed"
+        />
       </RoundedBox>
-
-      {Arr.map(minorTicks, (tick) => (
-        <mesh key={tick.id} position={[tick.x, 0.13, -0.34]}>
-          <boxGeometry args={[0.025, 0.14, 0.04]} />
-          <meshStandardMaterial color={colors.text} />
-        </mesh>
-      ))}
-
-      {Arr.map(majorTicks, (tick) => (
-        <mesh key={tick.id} position={[tick.x, 0.15, -0.27]}>
-          <boxGeometry args={[0.04, 0.22, 0.06]} />
-          <meshStandardMaterial color={colors.text} />
-        </mesh>
-      ))}
+      <Repeat placements={MINOR_TICKS} shadows={false}>
+        <boxGeometry args={[0.018, 0.004, 0.16]} />
+        <meshStandardMaterial color={MATERIAL.tyre} roughness={0.6} />
+      </Repeat>
+      <Repeat placements={MAJOR_TICKS} shadows={false}>
+        <boxGeometry args={[0.03, 0.004, 0.3]} />
+        <meshStandardMaterial color={MATERIAL.tyre} roughness={0.6} />
+      </Repeat>
 
       <RoundedBox
         args={[measurement, 0.42, 0.42]}
-        position={[blockCenterX, 0.42, 0.52]}
+        castShadow
+        position={[blockCenterX, 0.15, -0.72]}
+        radius={0.03}
+        receiveShadow
+        smoothness={3}
       >
-        <meshStandardMaterial color={OBJECT_COLOR} roughness={0.5} />
+        <SurfaceMaterial color={MATERIAL.oak} repeat={[2, 1]} surface="wood" />
       </RoundedBox>
 
       <ThreeLabel

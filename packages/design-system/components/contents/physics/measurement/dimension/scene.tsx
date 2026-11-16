@@ -11,20 +11,35 @@ import {
 } from "@repo/design-system/components/contents/physics/measurement/dimension/data";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
+import {
+  type Placement,
+  Repeat,
+} from "@repo/design-system/components/three/repeat";
+import { SurfaceMaterial } from "@repo/design-system/components/three/surface/material";
+import { MATERIAL } from "@repo/design-system/lib/material";
 import { Array as Arr } from "effect";
-import { DoubleSide } from "three";
 
-const GRAIN_LINES = [-0.42, -0.14, 0.18, 0.46];
-const AREA_LAYER_RENDER_ORDER = 3;
-const DETAIL_RENDER_ORDER = 2;
-const DETAIL_SURFACE_Y = BLOCK_HEIGHT / 2 + 0.08;
-const LENGTH_MARKER_Y = BLOCK_HEIGHT / 2 + 0.18;
-const LENGTH_MARKER_Z = BLOCK_DEPTH / 2 + 0.18;
-const LENGTH_MARKER_RADIUS = 0.035;
-const REFERENCE_BLOCK_RENDER_ORDER = 1;
+/** The tape's graduations: a tick every two centimetres of the scene, longer at each tenth. */
+const TAPE_TICKS: readonly Placement[] = Arr.makeBy(
+  Math.round(BLOCK_WIDTH / 0.1) + 1,
+  (index) => ({
+    position: [
+      -BLOCK_WIDTH / 2 + index * 0.1,
+      0.004,
+      index % 5 === 0 ? 0.03 : 0.05,
+    ],
+    scale: [1, 1, index % 5 === 0 ? 1.6 : 1],
+  })
+);
+
+/** Where the tape lies: along the front edge of the block's top. */
+const TAPE_Y = BLOCK_HEIGHT / 2 + 0.006;
+const TAPE_Z = BLOCK_DEPTH / 2 - 0.1;
 
 /**
- * Renders the selected geometric meaning of a length dimension.
+ * Renders the selected geometric meaning of a length dimension on one real
+ * timber block: a steel tape along an edge for one length factor, the top
+ * face picked out for two, and the whole solid wrapped for three.
  */
 export function DimensionScene({
   colors,
@@ -37,9 +52,17 @@ export function DimensionScene({
 }) {
   return (
     <group rotation={[-0.15, -0.45, 0]}>
-      {modeId !== VOLUME_MODE_ID && <ReferenceBlock colors={colors} />}
+      <RoundedBox
+        args={[BLOCK_WIDTH, BLOCK_HEIGHT, BLOCK_DEPTH]}
+        castShadow
+        radius={0.04}
+        receiveShadow
+        smoothness={4}
+      >
+        <SurfaceMaterial color={MATERIAL.pine} repeat={[2, 1]} surface="wood" />
+      </RoundedBox>
 
-      {modeId === LENGTH_MODE_ID && <LengthLayer colors={colors} />}
+      {modeId === LENGTH_MODE_ID && <Tape />}
       {modeId === AREA_MODE_ID && <AreaLayer colors={colors} />}
       {modeId === VOLUME_MODE_ID && <VolumeLayer colors={colors} />}
 
@@ -55,125 +78,60 @@ export function DimensionScene({
 }
 
 /**
- * Keeps a faint measured solid visible behind length and area overlays.
+ * A steel tape measure pulled out along the front edge of the block: the
+ * yellow blade with its black graduations, the brass hook over the far end,
+ * and the case at the near end.
  */
-function ReferenceBlock({ colors }: { colors: SceneColors }) {
+function Tape() {
   return (
-    <group>
-      <RoundedBox
-        args={[BLOCK_WIDTH, BLOCK_HEIGHT, BLOCK_DEPTH]}
-        radius={0.08}
-        renderOrder={REFERENCE_BLOCK_RENDER_ORDER}
-        smoothness={5}
-      >
-        <meshStandardMaterial
-          color={colors.block}
-          depthWrite={false}
-          opacity={0.14}
-          polygonOffset
-          polygonOffsetFactor={2}
-          polygonOffsetUnits={2}
-          roughness={0.74}
-          transparent
-        />
-      </RoundedBox>
-
-      <MeasurementBlockDetails colors={colors} />
-    </group>
-  );
-}
-
-/**
- * Adds subtle grooves and corner points so the reference solid reads as a real
- * measured block, not as a placeholder cube.
- */
-function MeasurementBlockDetails({ colors }: { colors: SceneColors }) {
-  return (
-    <group>
-      {Arr.map(GRAIN_LINES, (z) => (
-        <mesh
-          key={`grain-${z}`}
-          position={[0, DETAIL_SURFACE_Y, z]}
-          renderOrder={DETAIL_RENDER_ORDER}
-          rotation={[0, 0, Math.PI / 2]}
-        >
-          <cylinderGeometry args={[0.012, 0.012, BLOCK_WIDTH * 0.82, 10]} />
-          <meshStandardMaterial color={colors.blockDetail} roughness={0.72} />
-        </mesh>
-      ))}
-
-      {Arr.map([-1, 1], (xSide) =>
-        Arr.map([-1, 1], (zSide) => (
-          <mesh
-            key={`corner-${xSide}-${zSide}`}
-            position={[
-              (BLOCK_WIDTH / 2 - 0.18) * xSide,
-              DETAIL_SURFACE_Y + 0.015,
-              (BLOCK_DEPTH / 2 - 0.18) * zSide,
-            ]}
-            renderOrder={DETAIL_RENDER_ORDER}
-          >
-            <sphereGeometry args={[0.055, 18, 12]} />
-            <meshStandardMaterial color={colors.blockDetail} roughness={0.65} />
-          </mesh>
-        ))
-      )}
-    </group>
-  );
-}
-
-/**
- * Highlights one edge to represent a single length factor.
- */
-function LengthLayer({ colors }: { colors: SceneColors }) {
-  return (
-    <group>
-      <mesh
-        position={[0, LENGTH_MARKER_Y, LENGTH_MARKER_Z]}
-        rotation={[0, 0, Math.PI / 2]}
-      >
-        <cylinderGeometry
-          args={[LENGTH_MARKER_RADIUS, LENGTH_MARKER_RADIUS, BLOCK_WIDTH, 18]}
-        />
-        <meshStandardMaterial color={colors.edge} roughness={0.42} />
+    <group position={[0, TAPE_Y, TAPE_Z]}>
+      <mesh receiveShadow>
+        <boxGeometry args={[BLOCK_WIDTH + 0.04, 0.008, 0.18]} />
+        <SurfaceMaterial color={MATERIAL.tapeYellow} surface="paint" />
       </mesh>
-
-      {Arr.map([-1, 1], (side) => (
-        <mesh
-          key={`length-cap-${side}`}
-          position={[
-            (BLOCK_WIDTH / 2) * side,
-            LENGTH_MARKER_Y,
-            LENGTH_MARKER_Z,
-          ]}
-        >
-          <sphereGeometry args={[0.09, 24, 16]} />
-          <meshStandardMaterial color={colors.edge} roughness={0.38} />
-        </mesh>
-      ))}
+      <Repeat placements={TAPE_TICKS} shadows={false}>
+        <boxGeometry args={[0.012, 0.002, 0.06]} />
+        <meshStandardMaterial color={MATERIAL.tyre} roughness={0.6} />
+      </Repeat>
+      <mesh castShadow position={[BLOCK_WIDTH / 2 + 0.03, -0.05, 0]}>
+        <boxGeometry args={[0.02, 0.12, 0.18]} />
+        <SurfaceMaterial
+          color={MATERIAL.brass}
+          metalness={1}
+          roughness={0.4}
+          surface="brushed"
+        />
+      </mesh>
+      <RoundedBox
+        args={[0.5, 0.5, 0.24]}
+        castShadow
+        position={[-BLOCK_WIDTH / 2 - 0.28, 0.2, 0]}
+        radius={0.1}
+        smoothness={4}
+      >
+        <SurfaceMaterial color={MATERIAL.tapeYellow} surface="plastic" />
+      </RoundedBox>
     </group>
   );
 }
 
 /**
- * Highlights the top face to represent two length factors.
+ * Picks out the top face to represent two length factors.
  */
 function AreaLayer({ colors }: { colors: SceneColors }) {
   return (
     <mesh
-      position={[0, BLOCK_HEIGHT / 2 + 0.1, 0]}
-      renderOrder={AREA_LAYER_RENDER_ORDER}
+      position={[0, BLOCK_HEIGHT / 2 + 0.004, 0]}
       rotation={[-Math.PI / 2, 0, 0]}
     >
-      <planeGeometry args={[BLOCK_WIDTH, BLOCK_DEPTH]} />
+      <planeGeometry args={[BLOCK_WIDTH - 0.06, BLOCK_DEPTH - 0.06]} />
       <meshStandardMaterial
         color={colors.face}
         depthWrite={false}
-        opacity={0.68}
+        opacity={0.55}
         polygonOffset
         polygonOffsetFactor={-2}
         polygonOffsetUnits={-2}
-        side={DoubleSide}
         transparent
       />
     </mesh>
@@ -181,21 +139,23 @@ function AreaLayer({ colors }: { colors: SceneColors }) {
 }
 
 /**
- * Highlights the whole solid to represent three length factors.
+ * Wraps the whole solid to represent three length factors.
  */
 function VolumeLayer({ colors }: { colors: SceneColors }) {
   return (
-    <group>
-      <RoundedBox
-        args={[BLOCK_WIDTH, BLOCK_HEIGHT, BLOCK_DEPTH]}
-        radius={0.08}
-        renderOrder={REFERENCE_BLOCK_RENDER_ORDER}
-        smoothness={5}
-      >
-        <meshStandardMaterial color={colors.volume} roughness={0.66} />
-      </RoundedBox>
-
-      <MeasurementBlockDetails colors={colors} />
-    </group>
+    <RoundedBox
+      args={[BLOCK_WIDTH + 0.06, BLOCK_HEIGHT + 0.06, BLOCK_DEPTH + 0.06]}
+      radius={0.06}
+      smoothness={4}
+    >
+      <meshPhysicalMaterial
+        clearcoat={1}
+        color={colors.volume}
+        depthWrite={false}
+        opacity={0.2}
+        roughness={0.1}
+        transparent
+      />
+    </RoundedBox>
   );
 }

@@ -1,5 +1,4 @@
 import { ORIGIN_COLOR } from "@repo/design-system/components/three/data/constants";
-import { getColor } from "@repo/design-system/lib/color";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { getThemeAppearance } from "@repo/design-system/lib/theme/registry";
 import { Schema } from "effect";
@@ -71,9 +70,6 @@ export function getDimensionSceneColors(resolvedTheme: string | undefined) {
   const isDarkTheme = getThemeAppearance(resolvedTheme) === "dark";
 
   return {
-    block: isDarkTheme ? getColor("STONE") : PLOT_COLORS.amber,
-    blockDetail: isDarkTheme ? getColor("ZINC") : getColor("STONE"),
-    edge: PLOT_COLORS.orange,
     face: PLOT_COLORS.teal,
     text: isDarkTheme ? ORIGIN_COLOR.LIGHT : ORIGIN_COLOR.DARK,
     volume: PLOT_COLORS.violet,

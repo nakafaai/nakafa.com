@@ -224,6 +224,7 @@ export const MATERIAL = {
   cloudTop: "#f4f6f8",
   craneYellow: "#d9a21f",
   deckGreen: "#56685b",
+  dialWhite: "#f2f0ea",
   concrete: "#9a9893",
   cotton: "#ece6d6",
   deckWhite: "#eeeeea",
