@@ -1,4 +1,3 @@
-import { fileURLToPath } from "node:url";
 import config from "@repo/testing/node";
 import { mergeConfig } from "vitest/config";
 
@@ -7,7 +6,7 @@ export default mergeConfig(config, {
     alias: [
       {
         find: /^@\//u,
-        replacement: fileURLToPath(new URL("./", import.meta.url)),
+        replacement: `${import.meta.dirname}/`,
       },
     ],
   },

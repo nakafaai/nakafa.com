@@ -134,7 +134,7 @@ export const RULES = {
   },
   "node-module": {
     message:
-      "use FileSystem, Path, and ChildProcess from effect with NodeServices from @effect/platform-node, the effect/crypto services (SecureRandom, Digest, Mac, Signature, KeyFormat, Aead) or Web Crypto for random bytes, digests, HMACs, signatures, and keys, Uint8Array with effect/encoding for bytes, ConfigProvider.fromDotEnvContents for .env text, NodeSocketServer and NodeHttpServer from @effect/platform-node for ports and servers, and navigator.hardwareConcurrency for the core count, instead of node:fs, node:path, node:child_process, node:crypto, node:buffer, node:util, node:os, node:net, or node:http.",
+      "use FileSystem, Path, and ChildProcess from effect with NodeServices from @effect/platform-node, the effect/crypto services (SecureRandom, Digest, Mac, Signature, KeyFormat, Aead) or Web Crypto for random bytes, digests, HMACs, signatures, and keys, Uint8Array with effect/encoding for bytes, ConfigProvider.fromDotEnvContents for .env text, NodeSocketServer and NodeHttpServer from @effect/platform-node for ports and servers, navigator.hardwareConcurrency for the core count, import.meta.dirname, import.meta.filename, and Path's fromFileUrl and toFileUrl for file locations, and a Schema.TaggedError (expect in a test) for an assertion, instead of node:fs, node:path, node:child_process, node:crypto, node:buffer, node:util, node:os, node:net, node:http, node:url, or node:assert.",
     scope: "code",
   },
   "object-helper": {

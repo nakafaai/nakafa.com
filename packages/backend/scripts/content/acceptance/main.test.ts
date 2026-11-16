@@ -1,4 +1,3 @@
-import { fileURLToPath } from "node:url";
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import { runAcceptanceCommand } from "@repo/backend/scripts/content/acceptance/command";
 import type { AcceptanceRuntimeError } from "@repo/backend/scripts/content/acceptance/error";
@@ -112,10 +111,7 @@ describe("isolated acceptance CLI", () => {
         });
         const outputPath = `${directory}/output.log`;
         yield* runAcceptanceCommand({
-          args: [
-            fileURLToPath(new URL("./main.ts", import.meta.url)),
-            "unsupported",
-          ],
+          args: [`${import.meta.dirname}/main.ts`, "unsupported"],
           command: process.execPath,
           operation: "Native acceptance CLI",
           stdoutPath: outputPath,

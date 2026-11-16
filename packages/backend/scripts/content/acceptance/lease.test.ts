@@ -1,4 +1,3 @@
-import { fileURLToPath } from "node:url";
 import { layer as nodeServicesLayer } from "@effect/platform-node/NodeServices";
 import { describe, expect, it } from "@effect/vitest";
 import { runAcceptanceCommand } from "@repo/backend/scripts/content/acceptance/command";
@@ -301,11 +300,7 @@ describe("lease of the owned acceptance runtime", () => {
           prefix: "acceptance-terminal-test-",
         });
         const manifest = yield* fs
-          .readFileString(
-            fileURLToPath(
-              new URL("../../../../../package.json", import.meta.url)
-            )
-          )
+          .readFileString(`${import.meta.dirname}/../../../../../package.json`)
           .pipe(
             Effect.flatMap(
               Schema.decodeUnknownEffect(

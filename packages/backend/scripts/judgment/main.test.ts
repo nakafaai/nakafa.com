@@ -1,4 +1,3 @@
-import { fileURLToPath } from "node:url";
 import { Ref } from "@confect/core";
 import { layer as nodeServicesLayer } from "@effect/platform-node/NodeServices";
 import { afterEach, describe, expect, it } from "@effect/vitest";
@@ -45,7 +44,8 @@ vi.mock("@effect/platform-node/NodeRuntime", () => ({
 const DEV = { CONVEX_DEPLOYMENT: "dev:happy-animal-123" };
 
 /** The folder of this package, where the package script runs. */
-const PACKAGE = fileURLToPath(new URL("../..", import.meta.url));
+/** The backend package, two folders above this test. */
+const PACKAGE = `${import.meta.dirname}/../..`;
 
 const originalArgv = process.argv;
 const originalExitCode = process.exitCode;

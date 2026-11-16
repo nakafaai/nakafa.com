@@ -1,4 +1,3 @@
-import { fileURLToPath } from "node:url";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { Array as Arr, Effect, FileSystem, Option } from "effect";
@@ -10,12 +9,13 @@ import {
 } from "#scripts/github/policy";
 import { inspectGithubActionPolicy } from "#scripts/github/source";
 
-const REPOSITORY_ROOT = fileURLToPath(new URL("../..", import.meta.url));
+/** The repository root, two folders above this test. */
+const REPOSITORY_ROOT = `${import.meta.dirname}/../..`;
 const readRepositoryFile = Effect.fn("GithubPolicyTest.readRepositoryFile")(
   function* (relativeUrl: string) {
     const fileSystem = yield* FileSystem.FileSystem;
     return yield* fileSystem.readFileString(
-      fileURLToPath(new URL(relativeUrl, import.meta.url))
+      `${import.meta.dirname}/${relativeUrl}`
     );
   }
 );

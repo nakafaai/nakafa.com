@@ -55,7 +55,7 @@ import { renderSocialImage } from "@/scripts/static/social";
  * every prerendered page that has a source, the search index of every locale, and
  * every social image. Each file
  * carries the bytes that the runtime answered for the same address, so the static
- * assets serve it without a Worker. `run.mjs` calls it after the client build.
+ * assets serve it without a Worker. `run.ts` calls it after the client build.
  */
 
 /** The logo that every social image shows, read from the same file the image route bundled. */

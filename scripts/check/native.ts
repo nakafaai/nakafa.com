@@ -30,11 +30,17 @@ import { unwrapped } from "#scripts/check/wrapper";
  * Effect's `Crypto`; keys, signatures, and HMACs through Web Crypto; bytes
  * through `Uint8Array` and `effect/encoding`; `.env` text through
  * `ConfigProvider`; ports and servers through `NodeSocketServer` and
- * `NodeHttpServer`; and the core count through `navigator.hardwareConcurrency`.
+ * `NodeHttpServer`; the core count through `navigator.hardwareConcurrency`; a
+ * module's own folder and file through `import.meta.dirname` and
+ * `import.meta.filename`, and file URLs through `Path`; and an assertion
+ * through a tagged error, or `expect` in a test. `node:module` stays: its
+ * `createRequire` resolves a package from another workspace, which nothing else
+ * does, and loading a Node module through it is reported on its own.
  * A module counts by its name alone, with or without the `node:` prefix and
  * with any subpath, such as `fs/promises`.
  */
 const NODE_MODULES = HashSet.make(
+  "assert",
   "buffer",
   "child_process",
   "crypto",
@@ -43,6 +49,7 @@ const NODE_MODULES = HashSet.make(
   "net",
   "os",
   "path",
+  "url",
   "util"
 );
 const NODE_PREFIX_PATTERN = /^node:/u;
