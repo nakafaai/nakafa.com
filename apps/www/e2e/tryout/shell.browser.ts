@@ -18,17 +18,17 @@ import {
   intend,
   onPath,
   openHub,
+  openSetPane,
   openTrack,
+  paneSectionLink,
   readSectionHref,
-  sectionLink,
   setHref,
-  settledSection,
   trackHref,
 } from "@/e2e/support/tryout";
 import { tryoutViewports } from "@/e2e/support/viewport";
 
 /**
- * Opens a set or section from a link that the reader showed intent toward, so
+ * Opens a section from a link that the reader showed intent toward, so
  * its heading and its catalog content come from the router's preload. The
  * learner's attempt streams in after the page shows.
  */
@@ -94,10 +94,18 @@ const verifyTryoutShell = Effect.fn("NakafaE2E.verifyTryoutShell")(function* (
   yield* observeShell(page);
   yield* openHub(page);
   const since = yield* readPageTime(page);
-
   yield* openTrack(page, hasTouch);
-  yield* activate(visibleLink(page, setHref, "main"), hasTouch);
-  const section = yield* settledSection(page);
+  yield* Effect.promise(() => waitForQuiet(page));
+  const catalog = yield* readShellObservation(page, since);
+  yield* Effect.sync(() => expectStillShell(catalog, [false]));
+
+  // A set the visitor has not started opens beside the table, and its parts link to their pages. The pane takes
+  // the page's right side at the press, which moves the page's column by design, so the walk is observed again
+  // from the open pane.
+  yield* openSetPane(page, hasTouch);
+  yield* Effect.promise(() => waitForQuiet(page));
+  const fromPane = yield* readPageTime(page);
+  const section = paneSectionLink(page);
   const sectionHref = yield* readSectionHref(section);
   yield* activate(section, hasTouch);
   const start = page.getByRole("button", { exact: true, name: "Start" });
@@ -107,21 +115,18 @@ const verifyTryoutShell = Effect.fn("NakafaE2E.verifyTryoutShell")(function* (
   );
 
   yield* Effect.promise(() => page.goBack({ waitUntil: "commit" }));
-  yield* arrive(page, onPath(setHref), section);
-  yield* Effect.promise(() => page.goBack({ waitUntil: "commit" }));
   yield* arrive(page, onPath(trackHref), visibleLink(page, setHref, "main"));
   // Late streamed content would still move the page, so keep observing until it goes quiet.
   yield* Effect.promise(() => waitForQuiet(page));
 
-  const observation = yield* readShellObservation(page, since);
+  const observation = yield* readShellObservation(page, fromPane);
   yield* Effect.sync(() => expectStillShell(observation, [false]));
 });
 
 /**
- * Opens a set and then one of its sections from links that the reader showed
- * intent toward, so each heading, the set's section list, and the section's
- * question count and time come from the router's preload instead of waiting for
- * the learner's attempt.
+ * Opens a section from its card in the set's pane, a link that the reader showed intent toward, so its heading and
+ * its question count and time come from the router's preload instead of waiting for the learner's attempt. A set
+ * nobody has started opens beside the track's table, so its own page is no step on the way.
  */
 const verifyPrefetchedHeadings = Effect.fn(
   "NakafaE2E.verifyPrefetchedTryoutHeadings"
@@ -132,28 +137,13 @@ const verifyPrefetchedHeadings = Effect.fn(
   const requested = recordDataRequests(page);
   yield* openHub(page);
   yield* openTrack(page, hasTouch);
+  yield* openSetPane(page, hasTouch);
 
-  const setLink = visibleLink(page, setHref, "main");
-  const setTitle = yield* Effect.promise(() =>
-    setLink.locator("[title]").getAttribute("title")
-  ).pipe(Effect.flatMap(Effect.fromNullishOr));
-  yield* openPrefetched(
-    page,
-    setLink,
-    {
-      content: sectionLink(page),
-      hasTouch,
-      pathname: setHref,
-      title: setTitle,
-    },
-    requested
-  );
-
-  const section = yield* settledSection(page);
+  const section = paneSectionLink(page);
   const sectionHref = yield* readSectionHref(section);
   const sectionTitle = yield* Effect.promise(() =>
-    section.locator("h2").innerText()
-  );
+    section.locator("[title]").getAttribute("title")
+  ).pipe(Effect.flatMap(Effect.fromNullishOr));
   yield* openPrefetched(
     page,
     section,
@@ -185,7 +175,7 @@ for (const viewport of tryoutViewports) {
       );
     });
 
-    test("paints set and section catalog views from the prefetch", async ({
+    test("paints a section's catalog view from the prefetch, opened from the set's pane", async ({
       page,
     }) => {
       await Effect.runPromise(

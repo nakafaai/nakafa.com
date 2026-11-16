@@ -15,8 +15,20 @@ const SECTION_HREF_PATTERN =
 /** The shell's lock attribute, which the lock store sets once a page hydrates. */
 export const LOCKED_SHELL = "[data-slot=sidebar-wrapper][data-locked]";
 
+/**
+ * The first section link of the open set's pane, which a set nobody has started opens beside the track's table
+ * (the owner's sketch IMG_1029). A phone shows the pane as a sheet outside the page's main region, so the link is
+ * found anywhere on the page.
+ */
+export function paneSectionLink(page: Page) {
+  return page
+    .locator(`a[href^="${setHref}/"]`)
+    .filter({ visible: true })
+    .first();
+}
+
 /** The first section link that the current set page shows. */
-export function sectionLink(page: Page) {
+function sectionLink(page: Page) {
   return page
     .locator(`main a[href^="${setHref}/"]`)
     .filter({ visible: true })
@@ -148,6 +160,20 @@ export const settledSection = Effect.fn("NakafaE2E.settledTryoutSection")(
     return sectionLink(page);
   }
 );
+
+/**
+ * Opens the first set from the track's table. A set the learner has not started opens beside the table and the
+ * address stays on the track, so this waits for the pane's Start and returns it.
+ */
+export const openSetPane = Effect.fn("NakafaE2E.openTryoutSetPane")(function* (
+  page: Page,
+  hasTouch: boolean
+) {
+  const start = page.getByRole("button", { exact: true, name: "Start" });
+  yield* activate(visibleLink(page, setHref, "main"), hasTouch);
+  yield* arrive(page, onPath(trackHref), start);
+  return start;
+});
 
 /** Reads the href of a set's first section link. */
 export const readSectionHref = Effect.fn("NakafaE2E.readTryoutSectionHref")(

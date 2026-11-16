@@ -2,7 +2,7 @@ import { expect, type Page, test } from "@playwright/test";
 import { Effect, MutableList } from "effect";
 import { pressDecline, seedAnalyticsConsent } from "@/e2e/support/consent";
 import { loadMathFonts } from "@/e2e/support/fonts";
-import { activate, activateAncestor, visibleLink } from "@/e2e/support/input";
+import { activate, activateAncestor } from "@/e2e/support/input";
 import { signInLearner } from "@/e2e/support/learner";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { finishSection, waitForRunningSection } from "@/e2e/support/player";
@@ -77,15 +77,18 @@ const verifyAttemptShell = Effect.fn("NakafaE2E.verifyAttemptShell")(function* (
   yield* pressDecline(page, hasTouch);
   yield* openTrack(page, hasTouch);
 
-  // Starting from the public set locks the shell only with the attempt's
-  // first section.
+  // Starting from the public set locks the shell only with the attempt's first
+  // section. A set nobody has started opens beside the track's table, where the
+  // player suites press its Start, so this walk opens the set's own page by its
+  // address. The section's own Start has the same name.
   const start = page.getByRole("button", { exact: true, name: "Start" });
+  yield* Effect.promise(() => page.goto(setHref, { waitUntil: "commit" }));
+  yield* arrive(page, onPath(setHref), start);
+  yield* Effect.promise(() => waitForQuiet(page));
   yield* observeStep(
     page,
     [false, true],
     Effect.gen(function* () {
-      yield* activate(visibleLink(page, setHref, "main"), hasTouch);
-      yield* arrive(page, onPath(setHref), start);
       yield* Effect.promise(() =>
         expect(start).toBeEnabled({ timeout: readinessTimeoutMilliseconds })
       );

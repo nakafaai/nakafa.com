@@ -6,7 +6,7 @@ import { withObservedPageErrors } from "@/e2e/support/observe";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { isTakenOverNow, waitUntilTakenOver } from "@/e2e/support/window";
 
-/** A track whose table a learner reads live, and the set its first row opens. */
+/** A track whose table a learner reads live, and the set its first row opens beside it. */
 const TRACK_HREF = "/en/try-out/indonesia/snbt/2027/utbk";
 const SET_HREF = `${TRACK_HREF}/set-1`;
 
@@ -18,7 +18,7 @@ const SET_HREF = `${TRACK_HREF}/set-1`;
  * hydrates the table early. The press lands once React holds the page's shell, which
  * comes before the client, and the release once the socket says the client is there.
  */
-test("a press on a row while the page's client arrives opens the set", async ({
+test("a press on a row while the page's client arrives opens the set beside the table", async ({
   baseURL,
   page,
 }) => {
@@ -47,9 +47,11 @@ test("a press on a row while the page's client arrives opens the set", async ({
           await socket;
           await waitUntilTakenOver(link);
           await page.mouse.up();
-          await expect(page).toHaveURL(SET_HREF, {
-            timeout: readinessTimeoutMilliseconds,
-          });
+          // A set the learner has not started opens in the pane, and the address stays on the track.
+          await expect(
+            page.getByRole("heading", { exact: true, name: "Set 1" })
+          ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
+          expect(new URL(page.url()).pathname).toBe(TRACK_HREF);
         });
       })
     )

@@ -2,16 +2,15 @@ import { expect, type Page } from "@playwright/test";
 import { Array as Arr, Effect, Option } from "effect";
 import { pressDecline, seedAnalyticsConsent } from "@/e2e/support/consent";
 import { loadMathFonts } from "@/e2e/support/fonts";
-import { activate, visibleLink } from "@/e2e/support/input";
+import { activate } from "@/e2e/support/input";
 import { signInLearner } from "@/e2e/support/learner";
 import { waitForQuiet } from "@/e2e/support/quiet";
 import { observeShell } from "@/e2e/support/shell";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import {
-  arrive,
   arriveLocked,
-  onPath,
   openHub,
+  openSetPane,
   openTrack,
   setHref,
 } from "@/e2e/support/tryout";
@@ -180,9 +179,8 @@ export const runFirstSection = Effect.fn("NakafaE2E.runFirstSection")(
     yield* pressDecline(page, hasTouch);
     yield* openTrack(page, hasTouch);
 
-    const start = page.getByRole("button", { exact: true, name: "Start" });
-    yield* activate(visibleLink(page, setHref, "main"), hasTouch);
-    yield* arrive(page, onPath(setHref), start);
+    // The set opens beside the track's table, and its pane's Start asks for the mode.
+    const start = yield* openSetPane(page, hasTouch);
     yield* Effect.promise(() =>
       expect(start).toBeEnabled({ timeout: readinessTimeoutMilliseconds })
     );
