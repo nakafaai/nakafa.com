@@ -7,8 +7,8 @@ import {
   runShard,
   shardMode,
 } from "@repo/backend/scripts/content/acceptance/proof";
-import { ShardResultJson } from "@repo/backend/scripts/content/acceptance/result";
 import { nodePlatform } from "@repo/backend/test/platform";
+import { ShardResultJson } from "@repo/testing/proof";
 import {
   Array as Arr,
   ConfigProvider,

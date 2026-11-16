@@ -8,13 +8,19 @@
   },
   "exports": {
     "./node": "./node.ts",
+    "./proof": "./proof.ts",
     "./react": "./react.ts"
   },
   "scripts": {
     "clean": "git clean -xdf .cache .turbo dist node_modules",
+    "test": "vitest run",
     "typecheck": "tsrs --noEmit --emitDeclarationOnly false"
   },
+  "dependencies": {
+    "effect": "catalog:"
+  },
   "devDependencies": {
+    "@effect/vitest": "catalog:",
     "@repo/typescript-config": "workspace:*",
     "@vitejs/plugin-react": "^6.3.0",
     "@vitest/coverage-istanbul": "catalog:",

@@ -2,7 +2,7 @@ import {
   combineShards,
   type ProofResult,
   ShardResultJson,
-} from "@repo/backend/scripts/content/acceptance/result";
+} from "@repo/testing/proof";
 import { sha256Hex } from "@repo/utilities/digest";
 import { randomUuid } from "@repo/utilities/uuid";
 import {

@@ -1,8 +1,4 @@
-import {
-  combineShards,
-  HeadSha,
-  ShardResultJson,
-} from "@repo/backend/scripts/content/acceptance/result";
+import { combineShards, HeadSha, ShardResultJson } from "@repo/testing/proof";
 import { Array as Arr, Effect, FileSystem, Schema } from "effect";
 import { runEntry } from "#scripts/entry";
 import { writeOutput } from "#scripts/output";

@@ -4,7 +4,7 @@ import {
   proofFailures,
   reportFailures,
   type ShardResult,
-} from "@repo/backend/scripts/content/acceptance/result";
+} from "@repo/testing/proof";
 import { Effect, Schema } from "effect";
 
 const SHA = "a".repeat(40);
