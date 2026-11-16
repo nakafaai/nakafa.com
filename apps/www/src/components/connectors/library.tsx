@@ -66,7 +66,7 @@ export function ServiceList({
     return (
       <EmptyState
         description={t("search-none-description")}
-        scene={<EmptyNina act="searching" />}
+        scene={<EmptyNina act="untangling" />}
         title={t("search-none")}
       />
     );

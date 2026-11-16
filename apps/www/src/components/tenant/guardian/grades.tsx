@@ -73,7 +73,7 @@ export function GuardianGrades({
       empty={
         <EmptyState
           description={t("grades-empty-description")}
-          scene={<EmptyNina act="counting" />}
+          scene={<EmptyNina act="gauging" />}
           title={t("grades-empty")}
         />
       }

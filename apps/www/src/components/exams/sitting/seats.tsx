@@ -103,7 +103,7 @@ export function SittingSeats() {
     return (
       <EmptyState
         description={t("seats-empty")}
-        scene={<EmptyNina act="sleeping" />}
+        scene={<EmptyNina act="tidying" />}
         title={t("seats-empty-title")}
       />
     );
@@ -118,7 +118,7 @@ export function SittingSeats() {
     return (
       <EmptyState
         description={t("filter-empty")}
-        scene={<EmptyNina act="searching" />}
+        scene={<EmptyNina act="ushering" />}
         title={t("seats-filter-title")}
       />
     );

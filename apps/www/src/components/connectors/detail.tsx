@@ -41,13 +41,13 @@ const STATE_LOOKS = {
 
 /** What Nina does in the body of a service in each state. */
 const STATE_ACTS = {
-  connected: "relaxed",
-  failed: "searching",
-  locked: "reading",
-  open: "waving",
-  reconnect: "searching",
-  refused: "thinking",
-  soon: "reading",
+  connected: "glowing",
+  failed: "splicing",
+  locked: "queueing",
+  open: "offering",
+  reconnect: "splicing",
+  refused: "halting",
+  soon: "queueing",
 } as const satisfies Record<keyof typeof STATE_LOOKS, typeof ActSchema.Type>;
 
 /**

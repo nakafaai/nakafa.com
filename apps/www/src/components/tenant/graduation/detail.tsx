@@ -74,7 +74,7 @@ export function GraduationLineDetail({
           <div className="flex flex-col gap-6">
             <GraduationFacts line={found} />
             <EmptyState
-              scene={<EmptyNina act="graduating" />}
+              scene={<EmptyNina act="uncapping" />}
               title={t("transcript-empty")}
             />
           </div>

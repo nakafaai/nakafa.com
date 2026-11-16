@@ -79,7 +79,7 @@ function SchoolNewPage() {
       </EntryShellHeader>
       <EntryShellBody>
         <SchoolStart>
-          <Nina act="waving" label="" size={88} whole />
+          <Nina act="opening" label="" size={88} whole />
         </SchoolStart>
       </EntryShellBody>
     </>

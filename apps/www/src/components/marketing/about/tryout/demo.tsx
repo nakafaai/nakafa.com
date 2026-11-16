@@ -4,6 +4,7 @@ import type { InteractionKey } from "@nakafa/aksara-contracts/assessment/key";
 import type { ExamResponse } from "@repo/backend/confect/assessment/response";
 import { Nina } from "@repo/design-system/components/ui/nina";
 import { useRequired } from "@repo/design-system/hooks/required";
+import type { ActSchema } from "@repo/mascot/nina/act";
 import type { MoodSchema } from "@repo/mascot/nina/face";
 import { Schema } from "effect";
 import { createContext, type ReactNode, useEffect, useState } from "react";
@@ -122,15 +123,21 @@ const MOODS = {
 } as const satisfies Record<Outcome, typeof MoodSchema.Type>;
 
 /**
- * Nina beside the row's title, following the demo: she thinks while the
- * question waits, cheers a right answer, and keeps thinking over a wrong one.
+ * Nina beside the row's title, following the demo: she does what fits the page
+ * while the question waits (`act`), rings the bell for a right answer, and goes
+ * on with her act over a wrong one.
  */
-export function TryoutDemoNina() {
+export function TryoutDemoNina({
+  act,
+}: {
+  /** What she does while the question waits, the act of the page that shows the demo. */
+  act: typeof ActSchema.Type;
+}) {
   const outcome = useTryoutDemo((state) => state.outcome);
 
   return (
     <Nina
-      act={outcome === "right" ? "cheering" : "thinking"}
+      act={outcome === "right" ? "dinging" : act}
       label=""
       mood={MOODS[outcome]}
       size={88}

@@ -37,7 +37,7 @@ export function LoadFailure({
       }
       description={t("load-error")}
       role="alert"
-      scene={<EmptyNina act="searching" />}
+      scene={<EmptyNina act="repairing" />}
       title={t("load-error-title")}
     />
   );

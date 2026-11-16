@@ -110,7 +110,7 @@ function CohortUnavailable() {
             </TargetLink>
           }
           description={t("cohort-unavailable-description")}
-          scene={<EmptyNina act="pointing" />}
+          scene={<EmptyNina act="unlocking" />}
           title={t("cohort-unavailable")}
         />
       </PageList>

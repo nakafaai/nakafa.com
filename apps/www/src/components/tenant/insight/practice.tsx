@@ -154,7 +154,7 @@ export function OwnPractice() {
         empty={
           <EmptyState
             description={t("practice-own-empty-description")}
-            scene={<EmptyNina act="relaxed" />}
+            scene={<EmptyNina act="watering" />}
             title={t("practice-empty")}
           />
         }

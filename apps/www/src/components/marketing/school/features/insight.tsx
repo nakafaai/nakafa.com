@@ -292,7 +292,7 @@ export function SchoolInsight() {
   return (
     <FeatureRow id="insight" layout="wide">
       <SchoolFeatureText feature="insight">
-        <Nina act="searching" label="" size={88} whole />
+        <Nina act="scouting" label="" size={88} whole />
       </SchoolFeatureText>
       <FeatureProduct>
         <FlowStage

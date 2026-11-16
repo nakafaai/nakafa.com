@@ -202,7 +202,7 @@ function WorkEmpty({ searched }: { readonly searched: boolean }) {
           ? "task-work-no-match-description"
           : "task-work-empty-description"
       )}
-      scene={<EmptyNina act="reading" />}
+      scene={<EmptyNina act="collecting" />}
       title={t(searched ? "task-work-no-match" : "task-work-empty")}
     />
   );

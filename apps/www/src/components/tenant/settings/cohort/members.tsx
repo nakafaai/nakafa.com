@@ -101,7 +101,7 @@ export function SchoolCohortMembers({
         empty={
           <EmptyState
             description={t("cohort-members-description")}
-            scene={<EmptyNina act="reading" />}
+            scene={<EmptyNina act="seating" />}
             title={t("cohort-members-empty")}
           />
         }

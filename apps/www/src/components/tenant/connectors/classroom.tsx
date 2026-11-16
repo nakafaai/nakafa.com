@@ -150,7 +150,7 @@ function CourseTable({ preview }: { preview: Preview }) {
     return (
       <EmptyState
         description={t("courses-none")}
-        scene={<EmptyNina act="searching" />}
+        scene={<EmptyNina act="knocking" />}
         title={t("courses-none-title")}
       />
     );

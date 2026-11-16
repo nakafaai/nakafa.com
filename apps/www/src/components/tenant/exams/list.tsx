@@ -237,7 +237,7 @@ function NoExamEmpty() {
     return (
       <EmptyState
         description={t("rooms-list-description")}
-        scene={<EmptyNina act="waving" />}
+        scene={<EmptyNina act="sharpening" />}
         title={t("empty")}
       />
     );
@@ -246,7 +246,7 @@ function NoExamEmpty() {
     return (
       <EmptyState
         description={t("create-description")}
-        scene={<EmptyNina act="writing" />}
+        scene={<EmptyNina act="sharpening" />}
         title={t("empty")}
       />
     );
@@ -267,7 +267,7 @@ function NoExamEmpty() {
       description={
         tenant.canManage ? t("no-unit-description") : t("no-unit-member")
       }
-      scene={<EmptyNina act="pointing" />}
+      scene={<EmptyNina act="sharpening" />}
       title={t("empty")}
     />
   );

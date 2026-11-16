@@ -21,7 +21,7 @@ export function Curricula({ children }: { readonly children: ReactNode }) {
         </h2>
         <div className="grid items-center gap-16 md:grid-cols-[auto_minmax(0,1fr)]">
           <div className="hidden md:block" id={NINA_SLOT.curricula}>
-            <Nina act="pointing" label="" size={200} whole />
+            <Nina act="unrolling" label="" size={200} whole />
           </div>
           {children}
         </div>

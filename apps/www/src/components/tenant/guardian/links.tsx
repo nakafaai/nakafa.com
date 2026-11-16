@@ -158,7 +158,7 @@ function GuardianLinksBody() {
           ) : (
             <EmptyState
               description={t("links-empty-description")}
-              scene={<EmptyNina act="typing" />}
+              scene={<EmptyNina act="linking" />}
               title={t("links-empty")}
             />
           )}

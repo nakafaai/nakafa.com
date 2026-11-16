@@ -237,7 +237,7 @@ function SchoolMembersBody() {
         empty={
           <EmptyState
             description={t("members-empty-description")}
-            scene={<EmptyNina act="waving" />}
+            scene={<EmptyNina act="welcoming" />}
             title={t("members-empty")}
           />
         }

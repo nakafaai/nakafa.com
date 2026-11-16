@@ -179,7 +179,7 @@ function SchoolInviteTable({ invites }: { invites: readonly InviteItem[] }) {
       empty={
         <EmptyState
           description={t("invites-footer")}
-          scene={<EmptyNina act="waving" />}
+          scene={<EmptyNina act="folding" />}
           title={t("invites-empty")}
         />
       }

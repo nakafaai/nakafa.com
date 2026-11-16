@@ -191,7 +191,7 @@ function SchoolCohortsOfPeriod({ slug }: { slug: TenantSlug }) {
       <SettingsTablePage actions={<CohortsActions slug={slug} />}>
         <EmptyState
           description={t("cohorts-unavailable-description")}
-          scene={<EmptyNina act="pointing" />}
+          scene={<EmptyNina act="sorting" />}
           title={t("cohorts-unavailable")}
         />
       </SettingsTablePage>
@@ -218,7 +218,7 @@ function SchoolCohortsOfPeriod({ slug }: { slug: TenantSlug }) {
             </Link>
           }
           description={t("cohorts-no-period")}
-          scene={<EmptyNina act="pointing" />}
+          scene={<EmptyNina act="sorting" />}
           title={t("cohorts-no-period-title")}
         />
       </SettingsTablePage>

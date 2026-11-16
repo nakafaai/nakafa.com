@@ -23,7 +23,7 @@ export function Preview() {
       <Empty className="border">
         <EmptyHeader>
           <EmptyMedia>
-            <Nina act="thinking" label="" size={96} whole />
+            <Nina act="bookmarking" label="" size={96} whole />
           </EmptyMedia>
           <EmptyTitle>Start a new chat</EmptyTitle>
           <EmptyDescription>

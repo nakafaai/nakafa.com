@@ -40,7 +40,7 @@ export function AgentConsent({
     });
   return (
     <div className="flex max-w-sm flex-col items-center gap-5 text-center">
-      <Nina act="writing" label="" size={88} whole />
+      <Nina act="introducing" label="" size={88} whole />
       <div className="flex flex-col gap-2">
         <h1 className="text-2xl font-semibold text-balance">
           {t("agent-title", { name: name ?? t("agent-unnamed") })}

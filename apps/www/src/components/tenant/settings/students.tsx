@@ -184,7 +184,7 @@ function SchoolLoginTable() {
         empty={
           <EmptyState
             description={t("logins-footer")}
-            scene={<EmptyNina act="pointing" />}
+            scene={<EmptyNina act="cutting" />}
             title={t("logins-empty")}
           />
         }

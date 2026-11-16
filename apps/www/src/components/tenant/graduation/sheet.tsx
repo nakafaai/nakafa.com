@@ -244,7 +244,7 @@ function GraduationStudentsEmpty() {
   return (
     <EmptyState
       description={t("students-empty-description")}
-      scene={<EmptyNina act="reading" />}
+      scene={<EmptyNina act="brushing" />}
       title={t("students-empty")}
     />
   );

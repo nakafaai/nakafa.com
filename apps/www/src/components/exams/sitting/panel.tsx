@@ -328,7 +328,7 @@ function SignalList({
       {Arr.isReadonlyArrayEmpty(signals.results) && !failed ? (
         <EmptyState
           description={t("signals-empty")}
-          scene={<EmptyNina act="reading" />}
+          scene={<EmptyNina act="invigilating" />}
           title={t("signals-empty-title")}
         />
       ) : null}

@@ -81,7 +81,7 @@ function IntegrityRows() {
     return (
       <EmptyState
         description={t("integrity-empty")}
-        scene={<EmptyNina act="reading" />}
+        scene={<EmptyNina act="scanning" />}
         title={t("integrity-empty-title")}
       />
     );

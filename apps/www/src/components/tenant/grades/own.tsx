@@ -165,7 +165,7 @@ function OwnGradeTable() {
       empty={
         <EmptyState
           description={t("own-empty-description")}
-          scene={<EmptyNina act="writing" />}
+          scene={<EmptyNina act="awaiting" />}
           title={t("own-empty")}
         />
       }

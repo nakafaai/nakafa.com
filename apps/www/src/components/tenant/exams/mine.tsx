@@ -166,7 +166,7 @@ function StudentExamsTable() {
       empty={
         <EmptyState
           description={t("mine-empty-description")}
-          scene={<EmptyNina act="sleeping" />}
+          scene={<EmptyNina act="lounging" />}
           title={t("mine-empty")}
         />
       }

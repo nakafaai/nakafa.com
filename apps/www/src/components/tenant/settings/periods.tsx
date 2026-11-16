@@ -230,7 +230,7 @@ function SchoolPeriodTable({ unitId }: { unitId: UnitId }) {
         empty={
           <EmptyState
             description={t("periods-description")}
-            scene={<EmptyNina act="thinking" />}
+            scene={<EmptyNina act="paging" />}
             title={t("periods-empty")}
           />
         }

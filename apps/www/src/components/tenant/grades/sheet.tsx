@@ -208,7 +208,7 @@ export function ClassGradebook({
                 empty={
                   <EmptyState
                     description={t("empty-description")}
-                    scene={<EmptyNina act="reading" />}
+                    scene={<EmptyNina act="grading" />}
                     title={t("empty")}
                   />
                 }

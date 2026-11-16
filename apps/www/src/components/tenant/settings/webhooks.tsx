@@ -184,7 +184,7 @@ function SchoolWebhookTable() {
         empty={
           <EmptyState
             description={t("webhook-add-description")}
-            scene={<EmptyNina act="typing" />}
+            scene={<EmptyNina act="casting" />}
             title={t("webhooks-empty")}
           />
         }

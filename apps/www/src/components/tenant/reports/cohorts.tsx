@@ -119,7 +119,7 @@ export function ReportCohorts({ slug }: { slug: TenantSlug }) {
           Arr.isReadonlyArrayEmpty(cohorts.value) ? (
             <EmptyState
               description={t("cohorts-empty-description")}
-              scene={<EmptyNina act="pointing" />}
+              scene={<EmptyNina act="binding" />}
               title={t("cohorts-empty")}
             />
           ) : null}

@@ -34,7 +34,7 @@ export function Tryout({ value }: { value: FeaturedBody }) {
     <TryoutDemo>
       <FeatureRow id="tryout">
         <FeatureText>
-          <TryoutDemoNina />
+          <TryoutDemoNina act="thinking" />
           <FeatureTitle>{t("tryout-title")}</FeatureTitle>
           <FeatureLead>{t("tryout-lead")}</FeatureLead>
         </FeatureText>

@@ -161,7 +161,7 @@ function ClassTeacherList({
   if (Arr.isReadonlyArrayEmpty(teachers)) {
     return (
       <EmptyState
-        scene={<EmptyNina act="teaching" />}
+        scene={<EmptyNina act="gifting" />}
         title={t("class-teachers-empty")}
       />
     );

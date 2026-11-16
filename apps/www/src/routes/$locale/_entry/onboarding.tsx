@@ -116,7 +116,7 @@ function OnboardingPage() {
             than the longest question with Nina, Nina steps aside and the
             question stays whole without scrolling. */}
         <div className="[@media(max-height:50rem)]:hidden">
-          <Nina act="writing" label="" size={88} whole />
+          <Nina act="badging" label="" size={88} whole />
         </div>
         <OnboardingQuestionnaire initialProfile={profile} intent={intent} />
       </EntryShellBody>

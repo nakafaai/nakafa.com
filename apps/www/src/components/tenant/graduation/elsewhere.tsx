@@ -46,7 +46,7 @@ export function GraduationElsewhere({ page }: { page: ElsewherePage }) {
               unit: unit.name,
             })
       }
-      scene={<EmptyNina act="pointing" />}
+      scene={<EmptyNina act="robing" />}
       title={t("elsewhere-title", { cohort: cohort.name })}
     />
   );

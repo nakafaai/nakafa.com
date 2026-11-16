@@ -109,7 +109,7 @@ function MemoryEmpty({ empty, whole }: { empty: boolean; whole: boolean }) {
       <EmptyState
         description={empty ? t("empty-description") : undefined}
         frame="table"
-        scene={<EmptyNina act={empty ? "relaxed" : "searching"} />}
+        scene={<EmptyNina act={empty ? "storing" : "knotting"} />}
         title={empty ? t("empty") : t("no-result")}
       />
     </div>

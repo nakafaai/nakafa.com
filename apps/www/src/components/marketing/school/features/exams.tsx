@@ -14,7 +14,7 @@ export function SchoolExams() {
   return (
     <FeatureRow id="exams" layout="wide">
       <SchoolFeatureText feature="exams">
-        <Nina act="thinking" label="" size={88} whole />
+        <Nina act="dealing" label="" size={88} whole />
       </SchoolFeatureText>
       <FeatureProduct>
         <EditorDemo />
