@@ -8,14 +8,11 @@ import { randomUuid } from "@repo/utilities/uuid";
 import {
   Array as Arr,
   Context,
-  DateTime,
-  Duration,
   Effect,
   FileSystem,
   Layer,
   Option,
   Order,
-  Predicate,
   Ref,
   Schedule,
   Schema,
@@ -23,159 +20,14 @@ import {
 import { ChildProcessSpawner } from "effect/process";
 import { runText } from "#scripts/process";
 import { gh, ProofError, REPOSITORY, RunListJson } from "#scripts/proof/client";
+import {
+  gateOf,
+  RUN_FIELDS,
+  RunStatusJson,
+  RunViewJson,
+  runTimings,
+} from "#scripts/proof/run";
 import { sweepSuperseded } from "#scripts/proof/sweep";
-
-const Step = Schema.Struct({
-  name: Schema.String,
-  conclusion: Schema.String,
-  startedAt: Schema.NullOr(Schema.String),
-  completedAt: Schema.NullOr(Schema.String),
-});
-const Job = Schema.Struct({
-  name: Schema.String,
-  conclusion: Schema.String,
-  startedAt: Schema.NullOr(Schema.String),
-  completedAt: Schema.NullOr(Schema.String),
-  steps: Schema.Array(Step),
-});
-/** What `gh run view --json` reports of a proof run. */
-const RunView = Schema.Struct({
-  status: Schema.String,
-  conclusion: Schema.String,
-  url: Schema.String,
-  createdAt: Schema.String,
-  updatedAt: Schema.String,
-  jobs: Schema.Array(Job),
-});
-type RunView = typeof RunView.Type;
-const RunViewJson = Schema.fromJsonString(RunView);
-const RUN_FIELDS = "status,conclusion,url,createdAt,updatedAt,jobs";
-const RunStatusJson = Schema.fromJsonString(
-  Schema.Struct({ status: Schema.String })
-);
-
-/** Moments that GitHub reports, or none when one is missing or there are none. */
-const momentsOf = (stamps: readonly (string | null)[]) =>
-  Option.flatMap(
-    Option.all(Arr.map(stamps, (stamp) => DateTime.make(stamp ?? ""))),
-    Arr.match({
-      onEmpty: () => Option.none(),
-      onNonEmpty: (moments) => Option.some(moments),
-    })
-  );
-
-/** Whole seconds from one moment to another. */
-const secondsOf = (from: DateTime.DateTime, to: DateTime.DateTime) =>
-  Math.round(Duration.toSeconds(DateTime.distance(from, to)));
-
-/** The steps of the gate, which pass only when every one of them does. */
-const GATE_STEPS = ["Gate static", "Gate www", "Gate backend"];
-
-/** The jobs of a run that ran: the gate job and the proof's machines, less the part a dispatch turned off. */
-const jobsOf = (run: RunView) =>
-  Arr.filter(run.jobs, (job) => job.conclusion !== "skipped");
-
-/** The steps of every job of a run that ran. */
-const stepsOf = (run: RunView) => Arr.flatMap(jobsOf(run), (job) => job.steps);
-
-/** Whether the run's gate passed, or none when it did not gate. */
-function gateOf(run: RunView) {
-  const steps = Arr.filter(stepsOf(run), (step) =>
-    Arr.contains(GATE_STEPS, step.name)
-  );
-  return Arr.match(steps, {
-    onEmpty: () => Option.none<boolean>(),
-    onNonEmpty: (all) =>
-      Option.some(Arr.every(all, (step) => step.conclusion === "success")),
-  });
-}
-
-/** Whether a job prepared a runtime: an engine job that a small selection left to the Chromium job skipped it. */
-const prepared = (job: RunView["jobs"][number]) =>
-  Arr.some(
-    job.steps,
-    (step) => step.name === "Prepare" && step.conclusion !== "skipped"
-  );
-
-/**
- * The phases of a run in seconds, read from the steps of all its jobs. The
- * machines run side by side, so a phase runs from the first of its steps to
- * start to the last to end, and a phase that any job left unfinished has none.
- * A step a job skipped, as an engine job does when one machine runs all three
- * engines, counts for no phase. The queue runs from the dispatch to the first
- * job that started.
- */
-export function runTimings(run: RunView) {
-  const steps = stepsOf(run);
-  const duration = (names: readonly string[]) => {
-    const spans = Arr.filter(
-      steps,
-      (step) => step.conclusion !== "skipped" && Arr.contains(names, step.name)
-    );
-    return Option.gen(function* () {
-      const starts = yield* momentsOf(Arr.map(spans, (span) => span.startedAt));
-      const ends = yield* momentsOf(Arr.map(spans, (span) => span.completedAt));
-      return secondsOf(
-        Arr.min(starts, DateTime.Order),
-        Arr.max(ends, DateTime.Order)
-      );
-    });
-  };
-  const created = DateTime.make(run.createdAt);
-  const started = Arr.filter(
-    Arr.map(jobsOf(run), (job) => job.startedAt),
-    Predicate.isNotNull
-  );
-  return {
-    queue: Option.gen(function* () {
-      const first = Arr.min(yield* momentsOf(started), DateTime.Order);
-      return secondsOf(yield* created, first);
-    }),
-    gate: duration(GATE_STEPS),
-    prepare: duration(["Prepare"]),
-    restored: Option.flatMap(Arr.findFirst(jobsOf(run), prepared), (job) =>
-      Option.map(
-        Arr.findFirst(
-          job.steps,
-          (one) => one.name === "Save the prepared runtime"
-        ),
-        (one) => one.conclusion === "skipped"
-      )
-    ),
-    build: duration(["Build"]),
-    specs: duration(["Run specs"]),
-    total: Option.gen(function* () {
-      return secondsOf(yield* created, yield* DateTime.make(run.updatedAt));
-    }),
-  };
-}
-export type RunTimings = ReturnType<typeof runTimings>;
-
-/** Finds the run that one dispatch started, by the nonce in its name. */
-const findRun = Effect.fn("proof.findRun")(function* (title: string) {
-  const runs = yield* gh([
-    "run",
-    "list",
-    "--repo",
-    REPOSITORY,
-    "--workflow",
-    "proof.yml",
-    "--event",
-    "workflow_dispatch",
-    "--limit",
-    "50",
-    "--json",
-    "databaseId,displayTitle",
-  ]).pipe(Effect.flatMap(Schema.decodeEffect(RunListJson)));
-  return yield* Option.match(
-    Arr.findFirst(runs, (run) => run.displayTitle === title),
-    {
-      onNone: () =>
-        Effect.fail(new ProofError({ message: `No run is named ${title}.` })),
-      onSome: (run) => Effect.succeed(run.databaseId),
-    }
-  );
-});
 
 /** The statuses GitHub keeps on one commit, read through GraphQL, whose budget is apart from REST's. */
 const STATUS_QUERY =
@@ -305,6 +157,7 @@ const readResults = Effect.fn("proof.readResults")(function* (id: number) {
 
 /** What one run verifies: the gate, every workspace or only those the head changes, or neither. */
 const Scope = Schema.Struct({ gate: Schema.Boolean, full: Schema.Boolean });
+type Scope = typeof Scope.Type;
 
 /** What `gh run list --json databaseId,displayTitle,conclusion` prints: a run in progress has no conclusion yet. */
 const ConcludedRunListJson = Schema.fromJsonString(
@@ -316,6 +169,22 @@ const ConcludedRunListJson = Schema.fromJsonString(
     })
   )
 );
+
+/** No dispatched run carries this name yet. */
+class RunMissing extends Schema.TaggedError<
+  RunMissing,
+  { readonly brand: unique symbol }
+>()("RunMissing", { title: Schema.String }) {}
+
+/** How many looks, five seconds apart, a dispatch waits for its run to appear. */
+const LOOKS_PER_DISPATCH = 24;
+
+/**
+ * How many times a dispatch whose run never appeared is sent again. GitHub can
+ * accept a dispatch and start no run: on 16 November no run named after #2368's
+ * base proof ever appeared, and the group failed on it.
+ */
+const LOST_DISPATCHES = 2;
 
 /**
  * The name a proof of a head on its specs alone carries: the head, then `base-`
@@ -363,15 +232,40 @@ const findReusableRun = Effect.fn("proof.findReusableRun")(function* (
   );
 });
 
+/** Finds the run that one dispatch started, by the nonce in its name. */
+const findRun = Effect.fn("proof.findRun")(function* (title: string) {
+  const runs = yield* gh([
+    "run",
+    "list",
+    "--repo",
+    REPOSITORY,
+    "--workflow",
+    "proof.yml",
+    "--event",
+    "workflow_dispatch",
+    "--limit",
+    "50",
+    "--json",
+    "databaseId,displayTitle",
+  ]).pipe(Effect.flatMap(Schema.decodeEffect(RunListJson)));
+  return yield* Option.match(
+    Arr.findFirst(runs, (run) => run.displayTitle === title),
+    {
+      onNone: () => Effect.fail(new RunMissing({ title })),
+      onSome: (run) => Effect.succeed(run.databaseId),
+    }
+  );
+});
+
 /**
  * Dispatches one proof run and finds it by the nonce it was given: a fresh one,
  * after the specs' prefix for a proof of the specs alone, so a later run never
  * takes a cancelled one's name.
  */
-const dispatchProof = Effect.fn("proof.dispatchProof")(function* (
+const dispatchOnce = Effect.fn("proof.dispatchOnce")(function* (
   sha: string,
   specs: readonly string[],
-  scope: typeof Scope.Type,
+  scope: Scope,
   prefix: Option.Option<string>
 ) {
   yield* sweepSuperseded();
@@ -397,33 +291,76 @@ const dispatchProof = Effect.fn("proof.dispatchProof")(function* (
     `gate=${scope.gate}`,
     "-f",
     `full=${scope.full}`,
+    // A base proof (`proofPrefix`) retries nothing, so main keeps its flaky specs.
+    "-f",
+    `retries=${Option.isNone(prefix)}`,
     "-f",
     `nonce=${nonce}`,
   ]);
   return yield* findRun(title).pipe(
-    Effect.retry({ schedule: Schedule.spaced("5 seconds"), times: 24 })
+    Effect.retry({
+      schedule: Schedule.spaced("5 seconds"),
+      times: LOOKS_PER_DISPATCH,
+    })
   );
 });
 
 /**
- * Verifies one head on GitHub's runners in one run: dispatches the proof
- * workflow, waits for its run and reads what it reported. The verdicts are the
- * ones the run posts as commit statuses on the head. A proof of the specs alone
- * (no gate) is named by its head and its specs (`proofPrefix`) and first looks
- * for such a run, finished or running, so main's failing specs are proven once
- * per main commit however many merge groups fail on them.
+ * Dispatches a proof run and returns its id. A dispatch whose run never
+ * appeared was lost, so it goes again under a fresh nonce, at most
+ * `LOST_DISPATCHES` times, before the proof fails.
+ */
+const dispatchProof = (
+  sha: string,
+  specs: readonly string[],
+  scope: Scope,
+  prefix: Option.Option<string>
+) =>
+  dispatchOnce(sha, specs, scope, prefix).pipe(
+    Effect.retry({
+      while: (error) => error._tag === "RunMissing",
+      times: LOST_DISPATCHES,
+    }),
+    Effect.catchTag("RunMissing", (missing) =>
+      Effect.fail(
+        new ProofError({
+          message: `No run is named ${missing.title}: ${LOST_DISPATCHES + 1} dispatches started none.`,
+        })
+      )
+    )
+  );
+
+/**
+ * The run that proves one head: a proof of the specs alone (no gate) is named
+ * by its head and its specs (`proofPrefix`) and reads such a run, finished or
+ * running, when one exists, so main's failing specs are proven once per main
+ * commit however many merge groups fail on them; every other proof dispatches
+ * its own run.
+ */
+const startRun = Effect.fn("proof.startRun")(function* (
+  sha: string,
+  specs: readonly string[],
+  scope: Scope
+) {
+  const prefix = scope.gate
+    ? Option.none<string>()
+    : Option.some(yield* proofPrefix(sha, specs));
+  const reused = Option.isSome(prefix)
+    ? yield* findReusableRun(prefix.value)
+    : Option.none<number>();
+  return Option.isSome(reused)
+    ? reused.value
+    : yield* dispatchProof(sha, specs, scope, prefix);
+});
+
+/**
+ * Verifies one head on GitHub's runners in one run: starts or reuses its run
+ * (`startRun`), waits for it and reads what it reported. The verdicts are the
+ * ones the run posts as commit statuses on the head.
  */
 export const proveOnGithub = Effect.fn("proof.proveOnGithub")(
-  function* (sha: string, specs: readonly string[], scope: typeof Scope.Type) {
-    const prefix = scope.gate
-      ? Option.none<string>()
-      : Option.some(yield* proofPrefix(sha, specs));
-    const reused = Option.isSome(prefix)
-      ? yield* findReusableRun(prefix.value)
-      : Option.none<number>();
-    const id = Option.isSome(reused)
-      ? reused.value
-      : yield* dispatchProof(sha, specs, scope, prefix);
+  function* (sha: string, specs: readonly string[], scope: Scope) {
+    const id = yield* startRun(sha, specs, scope);
     const run = yield* awaitRun(id, sha);
     const results = yield* readResults(id).pipe(
       Effect.mapError(
@@ -434,7 +371,7 @@ export const proveOnGithub = Effect.fn("proof.proveOnGithub")(
       )
     );
     return {
-      result: combineShards(sha, run.url, 1, results),
+      result: combineShards(sha, run.url, results),
       gated: gateOf(run),
       timings: runTimings(run),
       cancelled: run.conclusion === "cancelled",

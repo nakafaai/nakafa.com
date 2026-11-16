@@ -52,23 +52,25 @@ describe("proof results", () => {
     })
   );
 
-  it("passes an engine only when every shard reported and passed", () => {
+  it("passes an engine only when every shard it names reported and passed", () => {
     const shard = (
       engine: ShardResult["engine"],
       index: number,
+      total: number,
       failures: readonly string[] = []
     ): ShardResult => ({
       engine,
       shard: index,
+      total,
       passed: failures.length === 0,
       failures,
     });
-    const result = combineShards(SHA, "https://run", 2, [
-      shard("chromium", 1),
-      shard("chromium", 2),
-      shard("firefox", 1, ["e2e/b.browser.ts", "e2e/a.browser.ts"]),
-      shard("firefox", 2, ["e2e/a.browser.ts"]),
-      shard("webkit", 1),
+    const result = combineShards(SHA, "https://run", [
+      shard("chromium", 1, 2),
+      shard("chromium", 2, 2),
+      shard("firefox", 1, 2, ["e2e/b.browser.ts", "e2e/a.browser.ts"]),
+      shard("firefox", 2, 2, ["e2e/a.browser.ts"]),
+      shard("webkit", 1, 2),
     ]);
     expect(result).toEqual({
       sha: SHA,
@@ -87,12 +89,24 @@ describe("proof results", () => {
       "e2e/a.browser.ts",
       "e2e/b.browser.ts",
     ]);
+    // Each engine has the shards its own selection gave it, and an engine whose
+    // machines disagree on their number never passes.
     expect(
-      combineShards(SHA, "local", 1, [
-        shard("chromium", 1),
-        shard("firefox", 1),
-        shard("webkit", 1),
+      combineShards(SHA, "local", [
+        shard("chromium", 1, 1),
+        shard("firefox", 1, 3),
+        shard("firefox", 2, 3),
+        shard("firefox", 3, 3),
+        shard("webkit", 1, 1),
       ]).passed
     ).toBe(true);
+    expect(
+      combineShards(SHA, "local", [
+        shard("chromium", 1, 1),
+        shard("firefox", 1, 1),
+        shard("webkit", 1, 2),
+        shard("webkit", 2, 1),
+      ]).engines.webkit.passed
+    ).toBe(false);
   });
 });
