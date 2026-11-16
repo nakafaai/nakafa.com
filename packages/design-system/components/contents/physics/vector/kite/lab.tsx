@@ -1,6 +1,11 @@
 import { useFrame } from "@react-three/fiber";
 import { LabSlider } from "@repo/design-system/components/contents/physics/canvas/slider";
 import {
+  KITE,
+  sailGeometry,
+  tailGeometry,
+} from "@repo/design-system/components/contents/physics/vector/kite/sail";
+import {
   type Line,
   LineSchema,
   lineParts,
@@ -14,6 +19,8 @@ import { CameraControls } from "@repo/design-system/components/three/camera/cont
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene";
 import { ScienceStage } from "@repo/design-system/components/three/stage";
+import { SurfaceMaterial } from "@repo/design-system/components/three/surface/material";
+import { Strake } from "@repo/design-system/components/three/vessel/strake";
 import {
   useVisualScene,
   VisualCard,
@@ -28,37 +35,114 @@ import { VisualCardSceneActions } from "@repo/design-system/components/visual/sc
 import { MATERIAL } from "@repo/design-system/lib/material";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr, Schema } from "effect";
-import { type ReactNode, Suspense, useMemo, useRef, useState } from "react";
-import type { Group } from "three";
+import {
+  type ReactNode,
+  Suspense,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import { DoubleSide, type Group } from "three";
 
 /** Metres of arrow per newton of tension. */
 const ARROW_SCALE = 0.25;
 
-/** The kite: a diamond of nylon on two spars, with a tail of bows, nose up toward the string. */
-function Kite({ angle }: { readonly angle: number }) {
+/** Where the bridle meets the flying line, in front of the sail's face. */
+const TOW = [0, 0.15, 0.9] as const;
+
+/** The points of the spine the two bridle legs are tied to. */
+const BRIDLE = [
+  [0, KITE.spine * KITE.cross * 0.75, -0.02],
+  [0, -KITE.spine * (1 - KITE.cross) * 0.55, -0.02],
+] as const;
+
+/**
+ * A classic diamond kite of real proportions: a two-tone ripstop sail
+ * bellied by the wind, hemmed all round, on a spine and a spreader bowed
+ * back across it, its two-leg bridle meeting the flying line in front of
+ * the sail, and a ribbon tail streaming from the tail. The tow point is at
+ * the origin.
+ */
+function Kite() {
+  const sail = useMemo(() => sailGeometry(), []);
+  const streamer = useMemo(() => tailGeometry(8, 0.14, 4), []);
+  useEffect(
+    () => () => {
+      sail.dispose();
+      streamer.dispose();
+    },
+    [sail, streamer]
+  );
+  const nose = KITE.spine * KITE.cross;
+  const tail = -KITE.spine * (1 - KITE.cross);
+  const tip = KITE.spreader / 2;
+  const hem = [
+    [0, nose, 0],
+    [-tip, 0, 0],
+    [0, tail, 0],
+    [tip, 0, 0],
+    [0, nose, 0],
+  ] as const;
+  const spreader = [
+    [-tip, 0, -0.03],
+    [0, 0, -0.16],
+    [tip, 0, -0.03],
+  ] as const;
+
   return (
-    <group rotation={[0, 0, (-angle * Math.PI) / 180]}>
-      <mesh castShadow>
-        <cylinderGeometry args={[0.95, 0.95, 0.02, 4, 1]} />
-        <meshStandardMaterial color={MATERIAL.kiteNylon} roughness={0.6} />
+    <group position={[-TOW[0], -TOW[1], -TOW[2]]}>
+      <mesh castShadow geometry={sail} receiveShadow>
+        <SurfaceMaterial
+          attach="material-0"
+          color={MATERIAL.kiteNylon}
+          repeat={[1.5, 1.5]}
+          side={DoubleSide}
+          surface="cloth"
+        />
+        <SurfaceMaterial
+          attach="material-1"
+          color={MATERIAL.kiteNavy}
+          repeat={[1.5, 1.5]}
+          side={DoubleSide}
+          surface="cloth"
+        />
       </mesh>
-      <mesh position={[0, 0.02, 0]}>
-        <boxGeometry args={[1.9, 0.02, 0.04]} />
-        <meshStandardMaterial color={MATERIAL.bark} roughness={0.7} />
-      </mesh>
-      <mesh position={[0, 0.02, 0]}>
-        <boxGeometry args={[0.04, 0.02, 1.9]} />
-        <meshStandardMaterial color={MATERIAL.bark} roughness={0.7} />
-      </mesh>
-      {Arr.makeBy(5, (index) => (
-        <mesh
-          key={index}
-          position={[0.35 * (index % 2) - 0.17, -0.05, 1.2 + index * 0.45]}
-        >
-          <boxGeometry args={[0.3, 0.01, 0.14]} />
-          <meshStandardMaterial color={MATERIAL.deckWhite} roughness={0.7} />
-        </mesh>
+      <Strake
+        color={MATERIAL.tyre}
+        points={hem}
+        radius={0.014}
+        surface="cloth"
+      />
+      <Rod
+        color={MATERIAL.carbonShell}
+        from={[0, nose, -0.03]}
+        radius={0.02}
+        to={[0, tail, -0.03]}
+      />
+      <Strake
+        color={MATERIAL.carbonShell}
+        points={spreader}
+        radius={0.018}
+        surface="plastic"
+      />
+      {Arr.map(BRIDLE, (point) => (
+        <Rod
+          color={MATERIAL.cotton}
+          from={point}
+          key={point[1]}
+          radius={0.006}
+          to={TOW}
+        />
       ))}
+      <mesh castShadow geometry={streamer} position={[0, tail, -0.02]}>
+        <SurfaceMaterial
+          color={MATERIAL.cotton}
+          repeat={[1, 2]}
+          side={DoubleSide}
+          surface="cloth"
+        />
+      </mesh>
     </group>
   );
 }
@@ -97,8 +181,8 @@ function KiteScene({
     <group>
       <SimulationTicker running={playing} />
       <mesh castShadow position={[0, 0.3, 0]}>
-        <cylinderGeometry args={[0.05, 0.03, 0.8, 10]} />
-        <meshStandardMaterial color={MATERIAL.bark} roughness={0.8} />
+        <cylinderGeometry args={[0.045, 0.02, 0.8, 12]} />
+        <SurfaceMaterial color={MATERIAL.ash} repeat={[1, 2]} surface="wood" />
       </mesh>
       <Rod
         color={MATERIAL.cotton}
@@ -107,8 +191,8 @@ function KiteScene({
         to={kite}
       />
       <group position={kite} ref={flier}>
-        <group rotation={[Math.PI / 2, 0, 0]} scale={2.4}>
-          <Kite angle={-angle} />
+        <group rotation={[-0.3, -0.7, (-angle * Math.PI) / 540]} scale={1.4}>
+          <Kite />
         </group>
       </group>
       <FixedArrow

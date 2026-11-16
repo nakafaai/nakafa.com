@@ -1,4 +1,4 @@
-import { Line } from "@react-three/drei";
+import { Line, RoundedBox } from "@react-three/drei";
 import { LabSlider } from "@repo/design-system/components/contents/physics/canvas/slider";
 import {
   type Panel,
@@ -14,6 +14,8 @@ import type { CoordinateTuple } from "@repo/design-system/components/three/frame
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene";
 import { ScienceStage } from "@repo/design-system/components/three/stage";
+import { SurfaceMaterial } from "@repo/design-system/components/three/surface/material";
+import { solarTexture } from "@repo/design-system/components/three/surface/solar";
 import {
   VisualCard,
   VisualCardBody,
@@ -45,6 +47,94 @@ function onPanel(tilt: number, up: number, across: number, off = 0) {
   ] satisfies CoordinateTuple;
 }
 
+/** The cells of a 60-cell module: ten up its long side and six across. */
+const CELLS = [10, 6] as const;
+
+/** The width of the module's aluminium frame, in metres. */
+const FRAME = 0.035;
+
+/**
+ * A 60-cell monocrystalline module of real size, its face up along +y: the
+ * cells under low-iron glass that mirrors the sky, the anodised aluminium
+ * frame round it, the white backsheet under it with its junction box, and
+ * two galvanised rails across its back that the posts carry.
+ */
+function Module() {
+  const cells = useMemo(() => solarTexture(CELLS[0], CELLS[1]), []);
+  return (
+    <group>
+      <mesh
+        position={[0, 0.012, 0]}
+        receiveShadow
+        rotation={[-Math.PI / 2, 0, 0]}
+      >
+        <planeGeometry args={[SIZE[0] - FRAME * 2, SIZE[1] - FRAME * 2]} />
+        <meshPhysicalMaterial
+          clearcoat={0.5}
+          clearcoatRoughness={0.12}
+          map={cells}
+          metalness={0.1}
+          roughness={0.32}
+        />
+      </mesh>
+      <mesh castShadow receiveShadow>
+        <boxGeometry args={[SIZE[0] - FRAME, 0.02, SIZE[1] - FRAME]} />
+        <SurfaceMaterial color={MATERIAL.backsheet} surface="plastic" />
+      </mesh>
+      {Arr.map([-1, 1], (side) => (
+        <group key={side}>
+          <RoundedBox
+            args={[SIZE[0], 0.04, FRAME]}
+            castShadow
+            position={[0, 0.004, side * (SIZE[1] / 2 - FRAME / 2)]}
+            radius={0.006}
+            smoothness={2}
+          >
+            <SurfaceMaterial
+              color={MATERIAL.aluminium}
+              metalness={1}
+              roughness={0.6}
+              surface="brushed"
+            />
+          </RoundedBox>
+          <RoundedBox
+            args={[FRAME, 0.04, SIZE[1]]}
+            castShadow
+            position={[side * (SIZE[0] / 2 - FRAME / 2), 0.004, 0]}
+            radius={0.006}
+            smoothness={2}
+          >
+            <SurfaceMaterial
+              color={MATERIAL.aluminium}
+              metalness={1}
+              roughness={0.6}
+              surface="brushed"
+            />
+          </RoundedBox>
+          <mesh castShadow position={[0, -0.04, side * 0.3]}>
+            <boxGeometry args={[SIZE[0] * 0.9, 0.04, 0.04]} />
+            <SurfaceMaterial
+              color={MATERIAL.galvanised}
+              metalness={1}
+              roughness={0.7}
+              surface="brushed"
+            />
+          </mesh>
+        </group>
+      ))}
+      <RoundedBox
+        args={[0.12, 0.025, 0.1]}
+        castShadow
+        position={[SIZE[0] * 0.32, -0.022, 0]}
+        radius={0.005}
+        smoothness={2}
+      >
+        <SurfaceMaterial color={MATERIAL.carbonShell} surface="plastic" />
+      </RoundedBox>
+    </group>
+  );
+}
+
 /** The panel of cells in its aluminium frame on two posts, its normal (teal) and the direction to the sun (amber), and sunlight arriving. */
 function SolarScene({
   panel,
@@ -57,64 +147,40 @@ function SolarScene({
   const sun = (panel.elevation * Math.PI) / 180;
   const toward = [Math.cos(sun), Math.sin(sun), 0] as const;
   const normal = [Math.sin(turn), Math.cos(turn), 0] satisfies CoordinateTuple;
-  const low = onPanel(tilt, -SIZE[0] / 2 + 0.1, 0, -0.05);
-  const high = onPanel(tilt, SIZE[0] / 2 - 0.1, 0, -0.05);
+  const low = onPanel(tilt, -SIZE[0] / 2 + 0.15, 0, -0.07);
+  const high = onPanel(tilt, SIZE[0] / 2 - 0.15, 0, -0.07);
   const centre = onPanel(tilt, 0, 0, 0.03);
 
   return (
     <group>
       <group position={[0, CENTRE, 0]} rotation={[0, 0, -turn]}>
-        <mesh castShadow receiveShadow rotation={[0, Math.PI / 2, 0]}>
-          <boxGeometry args={[SIZE[1], 0.04, SIZE[0]]} />
-          <meshStandardMaterial
-            color={MATERIAL.aluminium}
-            metalness={0.8}
-            roughness={0.35}
-          />
-        </mesh>
-        <mesh position={[0, 0.021, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-          <planeGeometry args={[SIZE[0] - 0.06, SIZE[1] - 0.06]} />
-          <meshStandardMaterial
-            color={MATERIAL.solarCell}
-            metalness={0.4}
-            roughness={0.12}
-          />
-        </mesh>
-        {Arr.makeBy(9, (index) => (
-          <mesh
-            key={index}
-            position={[
-              -SIZE[0] / 2 + 0.03 + (index + 1) * ((SIZE[0] - 0.06) / 10),
-              0.0215,
-              0,
-            ]}
-          >
-            <boxGeometry args={[0.006, 0.001, SIZE[1] - 0.06]} />
-            <meshStandardMaterial
-              color={MATERIAL.chrome}
-              metalness={1}
-              roughness={0.3}
-            />
-          </mesh>
-        ))}
+        <Module />
       </group>
-      {Arr.map([-0.42, 0.42], (z) => (
+      {Arr.map([-0.3, 0.3], (z) => (
         <group key={z}>
+          {Arr.map([low, high], (top) => (
+            <group key={top[0]}>
+              <Rod
+                color={MATERIAL.galvanised}
+                from={[top[0], 0.12, z]}
+                metalness={1}
+                radius={0.024}
+                surface="brushed"
+                to={[top[0], top[1], z]}
+              />
+              <mesh castShadow position={[top[0], 0.06, z]} receiveShadow>
+                <cylinderGeometry args={[0.1, 0.11, 0.14, 24]} />
+                <SurfaceMaterial color={MATERIAL.concrete} surface="concrete" />
+              </mesh>
+            </group>
+          ))}
           <Rod
-            color={MATERIAL.aluminium}
-            from={[low[0], 0, z]}
-            metalness={0.8}
-            radius={0.025}
-            roughness={0.35}
-            to={[low[0], low[1], z]}
-          />
-          <Rod
-            color={MATERIAL.aluminium}
-            from={[high[0], 0, z]}
-            metalness={0.8}
-            radius={0.025}
-            roughness={0.35}
-            to={[high[0], high[1], z]}
+            color={MATERIAL.galvanised}
+            from={[low[0], 0.16, z]}
+            metalness={1}
+            radius={0.012}
+            surface="brushed"
+            to={[high[0], high[1] * 0.55, z]}
           />
         </group>
       ))}

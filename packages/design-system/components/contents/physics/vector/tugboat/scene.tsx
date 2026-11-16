@@ -1,11 +1,16 @@
 import { Line } from "@react-three/drei";
 import { FixedArrow } from "@repo/design-system/components/contents/physics/vector/solid/arrow";
 import { Rod } from "@repo/design-system/components/contents/physics/vector/solid/rod";
-import { Hull } from "@repo/design-system/components/contents/physics/vector/tugboat/hull";
+import { Ship } from "@repo/design-system/components/contents/physics/vector/tugboat/ship";
 import {
   type Tugs,
   towResultant,
 } from "@repo/design-system/components/contents/physics/vector/tugboat/tow";
+import {
+  TUG_STAPLE,
+  TUG_STAPLE_RISE,
+  Tug,
+} from "@repo/design-system/components/contents/physics/vector/tugboat/tug";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import type { CoordinateTuple } from "@repo/design-system/components/three/frame";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
@@ -15,8 +20,8 @@ import { MATERIAL } from "@repo/design-system/lib/material";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr } from "effect";
 
-/** The ship's bow, where both cables are made fast, in scene units of ten metres. */
-const BOW = [4, 0.6, 0] as const;
+/** The ship's bow, where both cables are made fast at the fairlead, in scene units of ten metres. */
+const BOW = [4, 0.5, 0] as const;
 
 /** The height of the harbour's water. */
 const SEA_LEVEL = -0.05;
@@ -37,82 +42,40 @@ function fromBow(distance: number, heading: number, height: number) {
   ] satisfies CoordinateTuple;
 }
 
-/** A bulk carrier: dark hull with a red boot top, a long deck of hatches, and the bridge aft. */
-function Ship() {
+/** The white wash a tug's thrusters throw astern, spreading and fading behind it. */
+function Wash() {
   return (
     <group>
-      <group position={[0, -0.3, 0]}>
-        <Hull
-          beam={1.3}
-          bow={1.6}
-          color={MATERIAL.hullNavy}
-          height={1}
-          length={8.6}
-        />
-        <Hull
-          beam={1.34}
-          bow={1.62}
-          color={MATERIAL.hullRed}
-          height={0.36}
-          length={8.64}
-        />
-      </group>
-      {Arr.makeBy(6, (index) => (
-        <mesh castShadow key={index} position={[-1.8 + index * 1.05, 0.8, 0]}>
-          <boxGeometry args={[0.8, 0.14, 0.9]} />
-          <meshStandardMaterial color={MATERIAL.hullRed} roughness={0.6} />
-        </mesh>
-      ))}
-      <mesh castShadow position={[-3.3, 1.2, 0]}>
-        <boxGeometry args={[0.9, 1.1, 1.1]} />
-        <meshStandardMaterial color={MATERIAL.deckWhite} roughness={0.5} />
-      </mesh>
-      <mesh position={[-2.86, 1.5, 0]}>
-        <boxGeometry args={[0.02, 0.18, 0.9]} />
-        <meshStandardMaterial color={MATERIAL.tintedGlass} roughness={0.1} />
-      </mesh>
-    </group>
-  );
-}
-
-/** A harbour tug: a short red hull with a white wheelhouse, facing along its cable, and the white wash its propeller throws astern. */
-function Tug({ heading }: { readonly heading: number }) {
-  const at = fromBow(CABLE, heading, 0.1);
-  return (
-    <group position={at} rotation={[0, (heading * Math.PI) / 180, 0]}>
-      <group position={[0, -0.25, 0]}>
-        <Hull
-          beam={0.75}
-          bow={0.55}
-          color={MATERIAL.hullRed}
-          height={0.5}
-          length={1.8}
-        />
-      </group>
       {Arr.map([0, 1, 2], (step) => (
         <mesh
           key={step}
-          position={[-1.1 - step * 0.45, -0.02, 0]}
+          position={[-1.5 - step * 0.5, 0.01, 0]}
           rotation={[-Math.PI / 2, 0, 0]}
-          scale={[1 + step * 0.5, 0.35 + step * 0.18, 1]}
+          scale={[1 + step * 0.6, 0.4 + step * 0.22, 1]}
         >
-          <circleGeometry args={[0.3, 24]} />
+          <circleGeometry args={[0.34, 28]} />
           <meshStandardMaterial
             color={MATERIAL.foam}
-            opacity={0.55 - step * 0.15}
+            depthWrite={false}
+            opacity={0.5 - step * 0.14}
             roughness={0.9}
             transparent
           />
         </mesh>
       ))}
-      <mesh castShadow position={[0.2, 0.5, 0]}>
-        <boxGeometry args={[0.6, 0.5, 0.55]} />
-        <meshStandardMaterial color={MATERIAL.deckWhite} roughness={0.5} />
-      </mesh>
-      <mesh castShadow position={[-0.15, 0.62, 0]}>
-        <cylinderGeometry args={[0.08, 0.08, 0.5, 12]} />
-        <meshStandardMaterial color={MATERIAL.signalHousing} roughness={0.5} />
-      </mesh>
+    </group>
+  );
+}
+
+/** A tug on its cable, facing along it, with its wash astern. */
+function TowingTug({ heading }: { readonly heading: number }) {
+  return (
+    <group
+      position={fromBow(CABLE, heading, SEA_LEVEL)}
+      rotation={[0, (heading * Math.PI) / 180, 0]}
+    >
+      <Tug />
+      <Wash />
     </group>
   );
 }
@@ -174,20 +137,22 @@ export function TugboatScene({
   return (
     <group>
       <Sea level={SEA_LEVEL} swell={1.4} />
-      <Ship />
-      <Tug heading={half} />
-      <Tug heading={-half} />
+      <group position={[0, SEA_LEVEL, 0]}>
+        <Ship />
+      </group>
+      <TowingTug heading={half} />
+      <TowingTug heading={-half} />
       <Rod
         color={MATERIAL.hemp}
-        from={[BOW[0], 0.6, 0]}
-        radius={0.04}
-        to={fromBow(CABLE - 0.8, half, 0.35)}
+        from={[BOW[0], BOW[1], 0]}
+        radius={0.025}
+        to={fromBow(CABLE - TUG_STAPLE, half, SEA_LEVEL + TUG_STAPLE_RISE)}
       />
       <Rod
         color={MATERIAL.hemp}
-        from={[BOW[0], 0.6, 0]}
-        radius={0.04}
-        to={fromBow(CABLE - 0.8, -half, 0.35)}
+        from={[BOW[0], BOW[1], 0]}
+        radius={0.025}
+        to={fromBow(CABLE - TUG_STAPLE, -half, SEA_LEVEL + TUG_STAPLE_RISE)}
       />
       <Pull
         color={PLOT_COLORS.teal}

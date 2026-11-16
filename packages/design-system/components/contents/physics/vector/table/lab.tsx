@@ -13,8 +13,13 @@ import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { CameraControls } from "@repo/design-system/components/three/camera/controls";
 import type { CoordinateTuple } from "@repo/design-system/components/three/frame";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
+import {
+  type Placement,
+  Repeat,
+} from "@repo/design-system/components/three/repeat";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene";
 import { ScienceStage } from "@repo/design-system/components/three/stage";
+import { SurfaceMaterial } from "@repo/design-system/components/three/surface/material";
 import {
   VisualCard,
   VisualCardBody,
@@ -71,62 +76,86 @@ function onTable(radius: number, angle: number, height: number) {
   ] satisfies CoordinateTuple;
 }
 
-/** The round top with its degree ring, the centre pin, and the tripod it stands on. */
+/** The engraved degree ticks round the rim: every fifth degree, longer every thirtieth. */
+function ticks(long: boolean): readonly Placement[] {
+  const degrees = Arr.filter(
+    Arr.makeBy(72, (index) => index * 5),
+    (degree) => (degree % 30 === 0) === long
+  );
+  return Arr.map(degrees, (degree) => ({
+    position: onTable(RADIUS - (long ? 0.016 : 0.01), degree, TOP + 0.0004),
+    rotation: [0, (degree * Math.PI) / 180, 0],
+  }));
+}
+
+/** The long and short degree ticks. */
+const LONG_TICKS = ticks(true);
+const SHORT_TICKS = ticks(false);
+
+/** The three feet of the tripod, each ending in a levelling screw. */
+const FEET = [90, 210, 330] as const;
+
+/**
+ * A floor-standing force table: a brushed aluminium top with an
+ * eased rim and engraved degree ticks, the brass centre pin, a steel column,
+ * and a painted cast-iron tripod on three knurled levelling screws.
+ */
 function Table() {
   return (
     <group>
       <mesh castShadow position={[0, TOP - 0.006, 0]} receiveShadow>
-        <cylinderGeometry args={[RADIUS, RADIUS, 0.012, 96]} />
-        <meshStandardMaterial
-          color={MATERIAL.epoxy}
-          metalness={0.2}
-          roughness={0.55}
+        <cylinderGeometry args={[RADIUS, RADIUS - 0.002, 0.012, 96]} />
+        <SurfaceMaterial
+          color={MATERIAL.aluminium}
+          metalness={1}
+          roughness={0.5}
+          surface="brushed"
         />
       </mesh>
-      {Arr.makeBy(72, (index) => {
-        const long = index % 6 === 0;
-        const at = onTable(
-          RADIUS - (long ? 0.016 : 0.01),
-          index * 5,
-          TOP + 0.0004
-        );
-        return (
-          <mesh
-            key={index}
-            position={at}
-            rotation={[0, (index * 5 * Math.PI) / 180, 0]}
-          >
-            <boxGeometry args={[long ? 0.026 : 0.014, 0.0008, 0.0016]} />
-            <meshStandardMaterial color={MATERIAL.deckWhite} roughness={0.6} />
-          </mesh>
-        );
-      })}
+      <Repeat placements={LONG_TICKS}>
+        <boxGeometry args={[0.03, 0.001, 0.0032]} />
+        <meshStandardMaterial color={MATERIAL.tyre} roughness={0.6} />
+      </Repeat>
+      <Repeat placements={SHORT_TICKS}>
+        <boxGeometry args={[0.016, 0.001, 0.0022]} />
+        <meshStandardMaterial color={MATERIAL.tyre} roughness={0.6} />
+      </Repeat>
       <mesh castShadow position={[0, TOP + 0.012, 0]}>
         <cylinderGeometry args={[0.003, 0.003, 0.024, 12]} />
-        <meshStandardMaterial
-          color={MATERIAL.chrome}
+        <SurfaceMaterial
+          color={MATERIAL.brass}
           metalness={1}
-          roughness={0.2}
+          roughness={0.4}
+          surface="brushed"
         />
       </mesh>
       <mesh castShadow position={[0, TOP / 2, 0]}>
-        <cylinderGeometry args={[0.016, 0.02, TOP, 20]} />
-        <meshStandardMaterial
-          color={MATERIAL.castIron}
-          metalness={0.6}
-          roughness={0.45}
+        <cylinderGeometry args={[0.012, 0.012, TOP, 20]} />
+        <SurfaceMaterial
+          color={MATERIAL.chrome}
+          metalness={1}
+          roughness={0.35}
+          surface="brushed"
         />
       </mesh>
-      {Arr.map([90, 210, 330], (angle) => (
-        <Rod
-          color={MATERIAL.castIron}
-          from={onTable(0.02, angle, 0.12)}
-          key={angle}
-          metalness={0.6}
-          radius={0.012}
-          roughness={0.45}
-          to={onTable(0.26, angle, 0.01)}
-        />
+      <mesh castShadow position={[0, 0.05, 0]}>
+        <cylinderGeometry args={[0.03, 0.04, 0.1, 24]} />
+        <SurfaceMaterial color={MATERIAL.standBlue} surface="paint" />
+      </mesh>
+      {Arr.map(FEET, (angle) => (
+        <group key={angle}>
+          <Rod
+            color={MATERIAL.standBlue}
+            from={onTable(0.02, angle, 0.06)}
+            radius={0.012}
+            surface="paint"
+            to={onTable(0.26, angle, 0.02)}
+          />
+          <mesh castShadow position={onTable(0.26, angle, 0.012)}>
+            <cylinderGeometry args={[0.012, 0.012, 0.024, 16]} />
+            <SurfaceMaterial color={MATERIAL.tyre} surface="rubber" />
+          </mesh>
+        </group>
       ))}
     </group>
   );
@@ -154,10 +183,19 @@ function Pulley({ pull, ring }: { pull: Pull; ring: CoordinateTuple }) {
       >
         <mesh castShadow rotation={[Math.PI / 2, 0, 0]}>
           <cylinderGeometry args={[0.013, 0.013, 0.005, 28]} />
-          <meshStandardMaterial
+          <SurfaceMaterial
             color={MATERIAL.brass}
-            metalness={0.85}
-            roughness={0.3}
+            metalness={1}
+            roughness={0.4}
+            surface="brushed"
+          />
+        </mesh>
+        <mesh rotation={[0, 0, 0]}>
+          <torusGeometry args={[0.013, 0.0012, 8, 32]} />
+          <meshStandardMaterial
+            color={MATERIAL.castIron}
+            metalness={1}
+            roughness={0.5}
           />
         </mesh>
       </group>
@@ -166,11 +204,7 @@ function Pulley({ pull, ring }: { pull: Pull; ring: CoordinateTuple }) {
         position={onTable(RADIUS - 0.004, pull.angle, TOP - 0.02)}
       >
         <boxGeometry args={[0.022, 0.03, 0.022]} />
-        <meshStandardMaterial
-          color={MATERIAL.castIron}
-          metalness={0.5}
-          roughness={0.45}
-        />
+        <SurfaceMaterial color={MATERIAL.standBlue} surface="paint" />
       </mesh>
       {Arr.makeBy(discs, (index) => (
         <mesh
@@ -179,10 +213,11 @@ function Pulley({ pull, ring }: { pull: Pull; ring: CoordinateTuple }) {
           position={[hook[0], hook[1] - 0.012 - index * 0.0085, hook[2]]}
         >
           <cylinderGeometry args={[0.019, 0.019, 0.0075, 28]} />
-          <meshStandardMaterial
+          <SurfaceMaterial
             color={MATERIAL.brass}
-            metalness={0.8}
-            roughness={0.35}
+            metalness={1}
+            roughness={0.45}
+            surface="brushed"
           />
         </mesh>
       ))}

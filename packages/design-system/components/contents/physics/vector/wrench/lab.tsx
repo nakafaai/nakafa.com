@@ -1,3 +1,4 @@
+import { RoundedBox } from "@react-three/drei";
 import { LabSlider } from "@repo/design-system/components/contents/physics/canvas/slider";
 import { FixedArrow } from "@repo/design-system/components/contents/physics/vector/solid/arrow";
 import {
@@ -10,8 +11,13 @@ import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { CameraControls } from "@repo/design-system/components/three/camera/controls";
 import type { CoordinateTuple } from "@repo/design-system/components/three/frame";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
+import {
+  type Placement,
+  Repeat,
+} from "@repo/design-system/components/three/repeat";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene";
 import { ScienceStage } from "@repo/design-system/components/three/stage";
+import { SurfaceMaterial } from "@repo/design-system/components/three/surface/material";
 import {
   VisualCard,
   VisualCardBody,
@@ -25,7 +31,8 @@ import { VisualCardSceneActions } from "@repo/design-system/components/visual/sc
 import { MATERIAL } from "@repo/design-system/lib/material";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr, Schema } from "effect";
-import { type ReactNode, Suspense, useMemo, useState } from "react";
+import { type ReactNode, Suspense, useEffect, useMemo, useState } from "react";
+import { DoubleSide, LatheGeometry, Vector2 } from "three";
 
 /** The height of the wheel's hub above the floor, in metres. */
 const HUB = 0.34;
@@ -36,47 +43,153 @@ const FORCE_SCALE = 0.0011;
 /** Metres of arrow per N·m of torque. */
 const TORQUE_SCALE = 0.0035;
 
-/** The wheel: tyre, steel rim, and five lug nuts around the hub. */
+/** A tyre's section from bead to bead: the sidewalls bulge out to rounded shoulders and a flat tread, in metres from the axle. */
+const TYRE_SECTION = [
+  [0.214, -0.085],
+  [0.24, -0.098],
+  [0.29, -0.102],
+  [0.326, -0.094],
+  [0.342, -0.074],
+  [0.346, -0.04],
+  [0.346, 0.04],
+  [0.342, 0.074],
+  [0.326, 0.094],
+  [0.29, 0.102],
+  [0.24, 0.098],
+  [0.214, 0.085],
+] as const;
+
+/** The three circumferential grooves cut round the tread. */
+const GROOVES = [-0.045, 0, 0.045] as const;
+
+/** The alloy rim's five spokes, from the hub out to the lip. */
+const SPOKES: readonly Placement[] = Arr.makeBy(5, (index) => {
+  const turn = (index / 5) * Math.PI * 2 + Math.PI / 2;
+  return {
+    position: [Math.cos(turn) * 0.135, Math.sin(turn) * 0.135, 0.062],
+    rotation: [0, 0, turn],
+  };
+});
+
+/** The five hexagon lug nuts round the hub. */
+const LUGS: readonly Placement[] = Arr.makeBy(5, (index) => {
+  const turn = (index / 5) * Math.PI * 2 + Math.PI / 2 + Math.PI / 5;
+  return {
+    position: [Math.cos(turn) * 0.1, Math.sin(turn) * 0.1, 0.082],
+    rotation: [Math.PI / 2, 0, 0],
+  };
+});
+
+/**
+ * A car wheel facing +z: a tyre lathed from its section with three grooves
+ * round its tread, a five-spoke alloy rim with its lip and the barrel
+ * behind, the brake disc and red caliper seen between the spokes, the
+ * centre cap, and five hexagon lug nuts.
+ */
 function Wheel() {
+  const tyre = useMemo(
+    () =>
+      new LatheGeometry(
+        Arr.map(TYRE_SECTION, ([radius, depth]) => new Vector2(radius, depth)),
+        96
+      ),
+    []
+  );
+  useEffect(() => () => tyre.dispose(), [tyre]);
+
   return (
     <group position={[0, HUB, 0]}>
-      <mesh castShadow>
-        <torusGeometry args={[0.27, 0.075, 24, 72]} />
-        <meshStandardMaterial color={MATERIAL.tyre} roughness={0.9} />
-      </mesh>
-      <mesh castShadow rotation={[Math.PI / 2, 0, 0]}>
-        <cylinderGeometry args={[0.215, 0.215, 0.14, 64]} />
-        <meshStandardMaterial
-          color={MATERIAL.rimBright}
-          metalness={0.85}
-          roughness={0.3}
+      <mesh
+        castShadow
+        geometry={tyre}
+        receiveShadow
+        rotation={[Math.PI / 2, 0, 0]}
+      >
+        <SurfaceMaterial
+          color={MATERIAL.tyre}
+          repeat={[24, 1]}
+          surface="rubber"
         />
       </mesh>
-      <mesh position={[0, 0, 0.072]} rotation={[Math.PI / 2, 0, 0]}>
-        <cylinderGeometry args={[0.07, 0.07, 0.01, 32]} />
-        <meshStandardMaterial
+      {Arr.map(GROOVES, (depth) => (
+        <mesh key={depth} position={[0, 0, depth]}>
+          <torusGeometry args={[0.3462, 0.0045, 6, 96]} />
+          <meshStandardMaterial color={MATERIAL.skidRubber} roughness={1} />
+        </mesh>
+      ))}
+      <mesh rotation={[Math.PI / 2, 0, 0]}>
+        <cylinderGeometry args={[0.212, 0.212, 0.17, 64, 1, true]} />
+        <SurfaceMaterial
           color={MATERIAL.hub}
-          metalness={0.8}
-          roughness={0.35}
+          metalness={1}
+          roughness={0.6}
+          side={DoubleSide}
+          surface="brushed"
         />
       </mesh>
-      {Arr.makeBy(5, (index) => {
-        const turn = (index / 5) * Math.PI * 2 + Math.PI / 2;
-        return (
-          <mesh
-            key={index}
-            position={[Math.cos(turn) * 0.1, Math.sin(turn) * 0.1, 0.085]}
-            rotation={[Math.PI / 2, 0, 0]}
-          >
-            <cylinderGeometry args={[0.016, 0.016, 0.025, 6]} />
-            <meshStandardMaterial
-              color={MATERIAL.chrome}
-              metalness={1}
-              roughness={0.25}
-            />
-          </mesh>
-        );
-      })}
+      <mesh position={[0, 0, 0.068]}>
+        <torusGeometry args={[0.206, 0.012, 12, 96]} />
+        <SurfaceMaterial
+          color={MATERIAL.rimBright}
+          metalness={1}
+          roughness={0.35}
+          surface="brushed"
+        />
+      </mesh>
+      <Repeat placements={SPOKES}>
+        <boxGeometry args={[0.15, 0.034, 0.02]} />
+        <SurfaceMaterial
+          color={MATERIAL.rimBright}
+          metalness={1}
+          roughness={0.55}
+          surface="brushed"
+        />
+      </Repeat>
+      <mesh position={[0, 0, 0.066]} rotation={[Math.PI / 2, 0, 0]}>
+        <cylinderGeometry args={[0.075, 0.08, 0.025, 48]} />
+        <SurfaceMaterial
+          color={MATERIAL.rimBright}
+          metalness={1}
+          roughness={0.35}
+          surface="brushed"
+        />
+      </mesh>
+      <mesh position={[0, 0, 0.082]} rotation={[Math.PI / 2, 0, 0]}>
+        <cylinderGeometry args={[0.03, 0.032, 0.012, 32]} />
+        <SurfaceMaterial
+          color={MATERIAL.hub}
+          metalness={1}
+          roughness={0.4}
+          surface="brushed"
+        />
+      </mesh>
+      <mesh position={[0, 0, -0.01]} rotation={[Math.PI / 2, 0, 0]}>
+        <cylinderGeometry args={[0.165, 0.165, 0.022, 64]} />
+        <SurfaceMaterial
+          color={MATERIAL.castIron}
+          metalness={1}
+          roughness={0.55}
+          surface="brushed"
+        />
+      </mesh>
+      <RoundedBox
+        args={[0.09, 0.07, 0.05]}
+        position={[0.12, -0.08, 0.005]}
+        radius={0.01}
+        rotation={[0, 0, 0.6]}
+        smoothness={2}
+      >
+        <SurfaceMaterial color={MATERIAL.caliper} surface="paint" />
+      </RoundedBox>
+      <Repeat placements={LUGS}>
+        <cylinderGeometry args={[0.014, 0.014, 0.022, 6]} />
+        <SurfaceMaterial
+          color={MATERIAL.chrome}
+          metalness={1}
+          roughness={0.3}
+          surface="brushed"
+        />
+      </Repeat>
     </group>
   );
 }
@@ -102,30 +215,51 @@ function WrenchScene({
   return (
     <group>
       <Wheel />
+      <mesh castShadow position={[nut[0], nut[1], 0.112]}>
+        <torusGeometry args={[0.026, 0.009, 12, 24]} />
+        <SurfaceMaterial
+          color={MATERIAL.chrome}
+          metalness={1}
+          roughness={0.25}
+          surface="brushed"
+        />
+      </mesh>
       <mesh
         castShadow
-        position={[nut[0], nut[1], 0.115]}
+        position={[nut[0], nut[1], 0.1]}
         rotation={[Math.PI / 2, 0, 0]}
       >
-        <cylinderGeometry args={[0.024, 0.024, 0.05, 20]} />
-        <meshStandardMaterial
+        <cylinderGeometry args={[0.017, 0.017, 0.03, 6]} />
+        <SurfaceMaterial
           color={MATERIAL.chrome}
           metalness={1}
-          roughness={0.2}
+          roughness={0.3}
+          surface="brushed"
         />
       </mesh>
-      <mesh castShadow position={[nut[0] + grip.arm / 2 + 0.06, nut[1], 0.13]}>
-        <boxGeometry args={[grip.arm + 0.16, 0.024, 0.016]} />
-        <meshStandardMaterial
+      <RoundedBox
+        args={[grip.arm + 0.1, 0.022, 0.012]}
+        castShadow
+        position={[nut[0] + grip.arm / 2 + 0.06, nut[1], 0.112]}
+        radius={0.005}
+        smoothness={3}
+      >
+        <SurfaceMaterial
           color={MATERIAL.chrome}
           metalness={1}
-          roughness={0.22}
+          roughness={0.25}
+          surface="brushed"
         />
-      </mesh>
-      <mesh castShadow position={[nut[0] + grip.arm + 0.04, nut[1], 0.13]}>
-        <boxGeometry args={[0.12, 0.036, 0.03]} />
-        <meshStandardMaterial color={MATERIAL.tyre} roughness={0.8} />
-      </mesh>
+      </RoundedBox>
+      <RoundedBox
+        args={[0.13, 0.034, 0.026]}
+        castShadow
+        position={[nut[0] + grip.arm + 0.04, nut[1], 0.112]}
+        radius={0.012}
+        smoothness={3}
+      >
+        <SurfaceMaterial color={MATERIAL.gripRed} surface="rubber" />
+      </RoundedBox>
       <FixedArrow
         color={PLOT_COLORS.slate}
         from={[nut[0], nut[1], 0.16]}
