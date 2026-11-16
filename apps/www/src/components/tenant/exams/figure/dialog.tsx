@@ -18,8 +18,9 @@ import {
   PickerTrigger,
 } from "@repo/design-system/components/ui/picker";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
+import { ScrollArea } from "@repo/design-system/components/ui/scroll-area";
 import { lazy } from "@repo/design-system/lib/lazy";
-import { Result } from "effect";
+import { Option, Result } from "effect";
 import { Suspense, useId, useState } from "react";
 import { useTranslations } from "use-intl";
 import type { PendingFigure } from "@/components/tenant/exams/editing";
@@ -34,6 +35,14 @@ import {
   figureOf,
   setAt,
 } from "@/components/tenant/exams/figure/form";
+import { GraphBuilder } from "@/components/tenant/exams/figure/graph/builder";
+import {
+  emptyGraph,
+  figureDraftOf,
+  type GraphDraft,
+  graphOf,
+} from "@/components/tenant/exams/figure/graph/draft";
+import { GraphProvider } from "@/components/tenant/exams/figure/graph/provider";
 import { useExamEditing } from "@/components/tenant/exams/provider";
 
 /** The figure's code loads when a dialog first shows one. */
@@ -90,6 +99,8 @@ function VisualPicker({
  * The form of one figure: the visual it draws, its props as that visual's catalog schema reads them,
  * the words it says to a student who cannot see it, and the figure itself as it takes
  * shape. What the schema refuses is named under the form, and the figure is saved only once it holds.
+ * A MathVisual the graph builder can write opens the builder instead, where the teacher puts each
+ * object on the plane or in space like a geometry app.
  */
 function FigureForm({
   onClose,
@@ -101,9 +112,14 @@ function FigureForm({
   const t = useTranslations("Exams");
   const id = useId();
   const [draft, setDraft] = useState<FigureDraft>(pending.draft);
+  // The graph the builder opens on, the last one the teacher made, and a fresh builder each time the
+  // teacher picks MathVisual again.
+  const [graph, setGraph] = useState(() => ({
+    draft: graphOf(pending.draft),
+    key: 0,
+  }));
   const [open, setOpen] = useState(true);
   const made = figureOf(draft);
-  const form = figureForm(draft.component);
 
   /** Places the figure at the caret, or in the place of the one it edits. */
   const save = () => {
@@ -143,61 +159,118 @@ function FigureForm({
       size="wide"
       title={t("figure")}
     >
-      <FieldGroup>
-        <Field>
-          <FieldLabel>{t("figure-visual")}</FieldLabel>
-          <VisualPicker
-            component={draft.component}
-            onChoose={(component) =>
-              setDraft((current) => ({
-                ...emptyDraft(component),
-                alt: current.alt,
-              }))
-            }
-          />
-        </Field>
-        <FigurePropsProvider
-          props={draft.props}
-          write={(path, value) =>
-            setDraft((current) => ({
-              ...current,
-              props: setAt(current.props, path, value),
-            }))
-          }
-        >
-          {form.kind === "group" ? (
-            <FigureField
-              field={form}
-              name={draft.component}
-              optional={false}
-              path={[]}
+      {/* A wide dialog's panel fills the screen and scrolls nothing itself: the form scrolls under its header. */}
+      <ScrollArea className="min-h-0 flex-1" scrollFade>
+        {/* The end padding keeps a field's border and focus ring clear of the scrollbar. */}
+        <FieldGroup className="pe-3">
+          <Field>
+            <FieldLabel>{t("figure-visual")}</FieldLabel>
+            <VisualPicker
+              component={draft.component}
+              onChoose={(component) => {
+                const start = component === "MathVisual" ? emptyGraph() : null;
+                setGraph((current) => ({
+                  draft: Option.fromNullishOr(start),
+                  key: current.key + 1,
+                }));
+                setDraft((current) =>
+                  start === null
+                    ? { ...emptyDraft(component), alt: current.alt }
+                    : figureDraftOf(
+                        { ...start, alt: current.alt },
+                        current.caption
+                      )
+                );
+              }}
             />
-          ) : null}
-        </FigurePropsProvider>
-        <Field>
-          <FieldLabel htmlFor={`${id}-alt`}>{t("figure-alt")}</FieldLabel>
-          <Input
-            dir="auto"
-            id={`${id}-alt`}
-            onChange={(event) =>
-              setDraft((current) => ({ ...current, alt: event.target.value }))
-            }
-            placeholder={t("figure-alt-placeholder")}
-            value={draft.alt}
-          />
-        </Field>
-        {Result.match(made, {
-          onFailure: (reason) => (
-            <FieldError className="whitespace-pre-wrap">{reason}</FieldError>
-          ),
-          onSuccess: (attrs) => (
-            <Suspense fallback={null}>
-              <LazyFigure attrs={attrs} />
-            </Suspense>
-          ),
-        })}
-      </FieldGroup>
+          </Field>
+          {Option.isSome(graph.draft) ? (
+            <GraphProvider
+              draft={graph.draft.value}
+              key={graph.key}
+              write={(next: GraphDraft) => {
+                setDraft((current) => figureDraftOf(next, current.caption));
+                // A dialog that turns into a drawer, or back, mounts the builder again: it opens on this graph.
+                setGraph((current) => ({
+                  ...current,
+                  draft: Option.some(next),
+                }));
+              }}
+            >
+              <GraphBuilder />
+            </GraphProvider>
+          ) : (
+            <CatalogFields
+              draft={draft}
+              id={id}
+              made={made}
+              setDraft={setDraft}
+            />
+          )}
+        </FieldGroup>
+      </ScrollArea>
     </ResponsiveDialog>
+  );
+}
+
+/** The catalog's own form of a figure: its props by their schema, its words, and the figure or what its schema refuses. */
+function CatalogFields({
+  draft,
+  id,
+  made,
+  setDraft,
+}: {
+  readonly draft: FigureDraft;
+  readonly id: string;
+  readonly made: ReturnType<typeof figureOf>;
+  readonly setDraft: (edit: (current: FigureDraft) => FigureDraft) => void;
+}) {
+  const t = useTranslations("Exams");
+  const form = figureForm(draft.component);
+
+  return (
+    <>
+      <FigurePropsProvider
+        props={draft.props}
+        write={(path, value) =>
+          setDraft((current) => ({
+            ...current,
+            props: setAt(current.props, path, value),
+          }))
+        }
+      >
+        {form.kind === "group" ? (
+          <FigureField
+            field={form}
+            name={draft.component}
+            optional={false}
+            path={[]}
+          />
+        ) : null}
+      </FigurePropsProvider>
+      <Field>
+        <FieldLabel htmlFor={`${id}-alt`}>{t("figure-alt")}</FieldLabel>
+        <Input
+          dir="auto"
+          id={`${id}-alt`}
+          onChange={(event) =>
+            setDraft((current) => ({ ...current, alt: event.target.value }))
+          }
+          placeholder={t("figure-alt-placeholder")}
+          value={draft.alt}
+        />
+      </Field>
+      {Result.match(made, {
+        onFailure: (reason) => (
+          <FieldError className="whitespace-pre-wrap">{reason}</FieldError>
+        ),
+        onSuccess: (attrs) => (
+          <Suspense fallback={null}>
+            <LazyFigure attrs={attrs} />
+          </Suspense>
+        ),
+      })}
+    </>
   );
 }
 
