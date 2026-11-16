@@ -230,7 +230,8 @@ export const Route = createFileRoute(
           makeArticleJsonLd(article),
           makeLearningResourceNode(
             article,
-            readPlacementAlignments(locale, placements)
+            readPlacementAlignments(locale, placements),
+            [route.topicTitle]
           ),
         ],
         locale,
