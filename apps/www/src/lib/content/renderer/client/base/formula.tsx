@@ -27,12 +27,18 @@ const Drawing = lazy(() =>
  * TeX, and it then draws that, as a formula that mounts on a navigation does,
  * with KaTeX, whose code the navigation loads before it shows the page
  * (`settle.ts`).
+ *
+ * A formula that the server knows may mount only in the browser, such as a
+ * scene's label in a canvas overlay, comes with the `markup` the server drew for
+ * its TeX, and shows that instead of drawing it (`formula.server.tsx`).
  */
 function FormulaMarkup({
   display,
+  markup,
   math,
 }: {
   readonly display: boolean;
+  readonly markup?: string;
   readonly math: string;
 }) {
   const hydrated = useHydrated();
@@ -45,6 +51,13 @@ function FormulaMarkup({
   );
   if (Option.contains(served, math)) {
     return display ? <DrawnBlockMath html="" /> : <DrawnInlineMath html="" />;
+  }
+  if (markup !== undefined) {
+    return display ? (
+      <DrawnBlockMath html={markup} />
+    ) : (
+      <DrawnInlineMath html={markup} />
+    );
   }
   return <Drawing display={display} math={math} />;
 }

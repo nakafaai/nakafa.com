@@ -1,5 +1,5 @@
 import { expect, type Page, test } from "@playwright/test";
-import { Array as Arr, Effect, Result, String as Str } from "effect";
+import { Array as Arr, Effect, Result } from "effect";
 import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { pinnedRoutes } from "@/e2e/support/corpus";
 import { waitForCommittedAppRouter } from "@/e2e/support/navigation/readiness";
@@ -9,7 +9,21 @@ import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
 /** The scripts of a page that carry the router's data, the server component trees included. */
 const STREAM_PART =
-  /<script data-tsr-stream-part="">(?<part>[\s\S]*?)<\/script>/gu;
+  /<script(?: data-tsr-stream-part="")?>(?<part>\$_TSR[\s\S]*?)<\/script>/gu;
+
+/** A formula that KaTeX has drawn: its markup holds one visual part. */
+const DRAWN_FORMULA = /katex-html/gu;
+
+/** A formula that carries the markup the server drew, as the data names its prop. */
+const CARRIED_MARKUP = /\\"markup\\":/gu;
+
+/** How many times a pattern occurs across the page's data. */
+const countIn = (data: readonly string[], pattern: RegExp) =>
+  Arr.reduce(
+    data,
+    0,
+    (count, part) => count + Arr.fromIterable(part.matchAll(pattern)).length
+  );
 
 /** The TeX of every formula the page's article draws, in order, as KaTeX's MathML copy names it. */
 const drawnTex = () =>
@@ -43,6 +57,9 @@ const openLesson = Effect.fn("NakafaE2E.openMathLesson")(function* (
 /**
  * A lesson's data carries each formula's TeX, never KaTeX's markup: the server
  * draws the markup into the HTML once, and the browser keeps it as it hydrates.
+ * Only a formula inside another renderer's prop, such as a scene's label that
+ * mounts in a canvas overlay, carries the markup the server drew for it, so the
+ * markup in the data is exactly those formulas' (ADR 0039 D13).
  */
 const verifyLoadedLesson = Effect.fn("NakafaE2E.verifyLoadedMathLesson")(
   function* (page: Page) {
@@ -63,7 +80,7 @@ const verifyLoadedLesson = Effect.fn("NakafaE2E.verifyLoadedMathLesson")(
     yield* Effect.sync(() => {
       expect(html).toContain('class="katex"');
       expect(data.length).toBeGreaterThan(0);
-      expect(Arr.filter(data, Str.includes("katex-html"))).toEqual([]);
+      expect(countIn(data, DRAWN_FORMULA)).toBe(countIn(data, CARRIED_MARKUP));
       expect(tex.length).toBeGreaterThan(0);
       expect(empty).toBe(0);
     });

@@ -53,6 +53,9 @@ const MEMORY_MAX_DECODED_BYTES = 3_346_000;
 // (the owner's rule of 15 November 2026): 1,160,551 encoded / 3,619,129 decoded
 // on 15 November 2026, so the decoded limit rose by the same rule as D9's
 // (ADR 0039 D11). The encoded limit holds.
+// A scene's formula labels mount in its canvas overlay and once drew with
+// KaTeX there; they carry the server's markup since 16 November 2026, and the
+// lesson measured 1,162,484 encoded / 3,625,112 decoded (ADR 0039 D13).
 const LESSON_MAX_ENCODED_BYTES = 1_195_000;
 const LESSON_MAX_DECODED_BYTES = 3_837_000;
 

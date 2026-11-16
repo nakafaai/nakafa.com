@@ -14,6 +14,7 @@ import { Array as Arr, Effect, Schema } from "effect";
 import { createElement, Fragment, type ReactNode } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { TAKES_LOCALE } from "@/lib/content/renderer/locale";
+import { IN_PROP } from "@/lib/content/renderer/prop";
 import { renderContentTree } from "@/lib/content/renderer/tree";
 
 const contentKey = ContentKeySchema.make("test:tree");
@@ -58,8 +59,19 @@ const Localized = Object.assign(
   { [TAKES_LOCALE]: true }
 );
 
+/** Test component that draws one way in the body and another inside a prop. */
+const Formula = Object.assign(
+  (props: { readonly math: string }) =>
+    createElement("i", null, `body:${props.math}`),
+  {
+    [IN_PROP]: (props: { readonly math: string }) =>
+      createElement("b", null, `prop:${props.math}`),
+  }
+);
+
 const components = {
   ...semanticMdxComponents,
+  Formula,
   Localized,
   Probe,
   Values,
@@ -252,6 +264,29 @@ describe("content tree rendering", () => {
           ])
         );
         expect(ids).toEqual(["#heading-with-bold-words", "#rate-k", "#own"]);
+      })
+  );
+
+  it.effect(
+    "draws an element inside a prop, and all under it, with its component for a prop",
+    () =>
+      Effect.gen(function* () {
+        const element = yield* renderTree(
+          root([
+            node("fragment", [node("Formula", [], { math: "x" })]),
+            node("Probe", [], {
+              icon: node("fragment", [
+                "at ",
+                node("Formula", [], { math: "F_1" }),
+              ]),
+              label: "scene ",
+            }),
+          ])
+        );
+
+        expect(renderToStaticMarkup(element)).toBe(
+          "<i>body:x</i><span>scene at <b>prop:F_1</b></span>"
+        );
       })
   );
 });

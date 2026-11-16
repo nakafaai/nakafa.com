@@ -17,6 +17,7 @@ import {
   type ReactNode,
 } from "react";
 import { takesLocale } from "@/lib/content/renderer/locale";
+import { inPropType } from "@/lib/content/renderer/prop";
 import { RendererImplementationMissing } from "@/lib/content/renderer/selection";
 
 /** The element that renders its children without an element of its own. */
@@ -41,14 +42,17 @@ function isRecord(value: ContentTreeValue): value is ContentTreeProps {
   return Predicate.isObject(value) && !Arr.isArray(value);
 }
 
-/** Renders one prop value: nested elements become React elements, JSON data passes through. */
+/**
+ * Renders one prop value: nested elements become React elements, JSON data passes
+ * through. Every element of a prop renders as one inside a prop (`IN_PROP`).
+ */
 function renderValue(
   value: ContentTreeValue,
   components: MDXComponents,
   locale: ArtifactLocale
 ): unknown {
   if (isElement(value)) {
-    return renderElement(value, components, locale);
+    return renderElement(value, components, locale, true);
   }
   if (isList(value)) {
     return Arr.map(value, (item) => renderValue(item, components, locale));
@@ -64,17 +68,22 @@ function renderValue(
  * the same map and stays the literal tag when the map has no entry for it, so
  * `br` is never mapped. A component marked with `TAKES_LOCALE` also gets the
  * artifact's locale. A heading gets the id the page's outline links to
- * (`headingIdOf`), so the two come from one source.
+ * (`headingIdOf`), so the two come from one source. An element inside another
+ * element's prop, and everything under it, draws with the component its renderer
+ * marks for a prop (`IN_PROP`): a prop such as a scene's label can mount where the
+ * server never renders it.
  */
 function renderElement(
   element: ContentTreeElement,
   components: MDXComponents,
-  locale: ArtifactLocale
+  locale: ArtifactLocale,
+  inProp: boolean
 ): ReactElement {
-  const type =
+  const named =
     element.name === FRAGMENT
       ? Fragment
       : (components[element.name] ?? element.name);
+  const type = inProp ? inPropType(named) : named;
   const rendered = Rec.map(element.props, (value) =>
     renderValue(value, components, locale)
   );
@@ -83,7 +92,9 @@ function renderElement(
     onSome: (id) => Rec.set(rendered, "id", id),
   });
   const children = Arr.map(element.children, (child) =>
-    typeof child === "string" ? child : renderElement(child, components, locale)
+    typeof child === "string"
+      ? child
+      : renderElement(child, components, locale, inProp)
   );
   return createElement(
     type,
@@ -123,7 +134,7 @@ export const renderContentTree = Effect.fn("NakafaContent.renderContentTree")(
       (child): ReactNode =>
         typeof child === "string"
           ? child
-          : renderElement(child, components, locale)
+          : renderElement(child, components, locale, false)
     );
   }
 );
