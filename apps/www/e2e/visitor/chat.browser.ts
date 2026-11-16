@@ -7,7 +7,7 @@ import { CHAT_PATH } from "@/e2e/support/chat";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { waitUntilTakenOver } from "@/e2e/support/window";
 
-const SESSION_READ = "/api/auth/get-session";
+const SESSION_READ = "/api/auth/refresh";
 const AUTH_URL = /\/auth/u;
 
 /**

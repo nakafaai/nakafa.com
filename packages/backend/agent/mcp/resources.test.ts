@@ -3,7 +3,7 @@
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import { OPENAPI_RESPONSE_EXAMPLES } from "@repo/backend/agent/openapi/examples";
 import { getNakafaTaxonomy } from "@repo/backend/agent/taxonomy";
-import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
+import { createConvexTestWithAuth } from "@repo/backend/confect/test.helpers";
 import {
   MCP_SECRET,
   MCP_SECRET_ENVIRONMENT,
@@ -40,7 +40,7 @@ describe("Nakafa MCP resources", () => {
       )(OPENAPI_RESPONSE_EXAMPLES.Taxonomy);
       vi.mocked(getNakafaTaxonomy).mockReturnValue(Effect.succeed(taxonomy));
       const response = yield* Effect.promise(() =>
-        sendMcpRequest(createConvexTestWithBetterAuth(), TAXONOMY_REQUEST)
+        sendMcpRequest(createConvexTestWithAuth(), TAXONOMY_REQUEST)
       );
       const text = encodePrettyJsonText(taxonomy);
 
@@ -67,7 +67,7 @@ describe("Nakafa MCP resources", () => {
           Effect.die(new Error("private storage failure"))
         );
         const response = yield* Effect.promise(() =>
-          sendMcpRequest(createConvexTestWithBetterAuth(), TAXONOMY_REQUEST)
+          sendMcpRequest(createConvexTestWithAuth(), TAXONOMY_REQUEST)
         );
         const answer = yield* Effect.promise(() => response.json());
 

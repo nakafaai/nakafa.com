@@ -1,9 +1,9 @@
 import { components } from "@repo/backend/confect/_generated/components";
-import type { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
+import type { createConvexTestWithAuth } from "@repo/backend/confect/test.helpers";
 import { Array as Arr, Predicate, Record as Rec } from "effect";
 
 /** A test deployment of the backend, as the stored rows are read from it. */
-type Deployment = ReturnType<typeof createConvexTestWithBetterAuth>;
+type Deployment = ReturnType<typeof createConvexTestWithAuth>;
 
 const decoder = new TextDecoder();
 

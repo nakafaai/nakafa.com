@@ -17,7 +17,6 @@ describe("middleware/member", () => {
       const defect = yield* confect.run(
         Effect.gen(function* () {
           const userId = yield* (yield* DatabaseWriter).table("users").insert({
-            authId: "member-wiring",
             credits: 0,
             creditsResetAt: 0,
             email: "member-wiring@example.com",
@@ -36,10 +35,7 @@ describe("middleware/member", () => {
               name: "probe",
             },
           }).pipe(
-            Effect.provideService(Session, {
-              appUser,
-              authId: "member-wiring",
-            }),
+            Effect.provideService(Session, { appUser, userId }),
             Effect.exit
           );
           return defectOf(exit);

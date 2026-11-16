@@ -2,10 +2,8 @@ import { Ref } from "@confect/core";
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { components } from "@repo/backend/confect/_generated/components";
 import refs from "@repo/backend/confect/_generated/refs";
-import { authComponent } from "@repo/backend/confect/auth/client";
-import { createAuthOptions } from "@repo/backend/confect/auth/runtime";
 import {
-  createConvexTestWithBetterAuth,
+  createConvexTestWithAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
 import { api } from "@repo/backend/convex/_generated/api";
@@ -16,7 +14,7 @@ describe("users/mutations", () => {
     vi.setSystemTime(NOW);
   });
   it("updates the authenticated user's role", async () => {
-    const t = createConvexTestWithBetterAuth();
+    const t = createConvexTestWithAuth();
     const identity = await t.mutation(
       async (ctx) =>
         await seedAuthenticatedUser(ctx, {
@@ -25,10 +23,7 @@ describe("users/mutations", () => {
         })
     );
     await t
-      .withIdentity({
-        subject: identity.authUserId,
-        sessionId: identity.sessionId,
-      })
+      .withIdentity({ subject: identity.sessionId })
       .mutation(api.users.mutations.updateUserRole, {
         role: "teacher",
       });
@@ -37,8 +32,8 @@ describe("users/mutations", () => {
     );
     expect(appUser?.role).toBe("teacher");
   });
-  it("updates the authenticated user's name in auth and app tables", async () => {
-    const t = createConvexTestWithBetterAuth();
+  it("updates the authenticated user's name on the account row", async () => {
+    const t = createConvexTestWithAuth();
     const identity = await t.mutation(
       async (ctx) =>
         await seedAuthenticatedUser(ctx, {
@@ -46,39 +41,18 @@ describe("users/mutations", () => {
         })
     );
     await t
-      .withIdentity({
-        subject: identity.authUserId,
-        sessionId: identity.sessionId,
-      })
+      .withIdentity({ subject: identity.sessionId })
       .mutation(api.users.mutations.updateUserName, {
         name: "Nabil Akbarazzima Fatih",
       });
-    const result = await t.query(async (ctx) => {
-      const authUser = await ctx.runQuery(
-        components.betterAuth.adapter.findOne,
-        {
-          model: "user",
-          where: [
-            {
-              field: "_id",
-              value: identity.authUserId,
-            },
-          ],
-        }
-      );
-      return {
-        authUserName:
-          authUser && typeof authUser.name === "string" ? authUser.name : null,
-        appUser: await ctx.db.get("users", identity.userId),
-      };
-    });
-    expect(result.authUserName).toBe("Nabil Akbarazzima Fatih");
-    expect(result.appUser?.name).toBe("Nabil Akbarazzima Fatih");
+    await expect(
+      t.query((ctx) => ctx.db.get("users", identity.userId))
+    ).resolves.toMatchObject({ name: "Nabil Akbarazzima Fatih" });
   });
   describe("username", () => {
     /** Seeds an account, optionally with a username, and the caller that signs in as it. */
     async function seedAccount(
-      t: ReturnType<typeof createConvexTestWithBetterAuth>,
+      t: ReturnType<typeof createConvexTestWithAuth>,
       suffix: string,
       username?: string
     ) {
@@ -91,17 +65,13 @@ describe("users/mutations", () => {
         );
       }
       return {
-        as: t.withIdentity({
-          subject: identity.authUserId,
-          sessionId: identity.sessionId,
-        }),
-        authUserId: identity.authUserId,
+        as: t.withIdentity({ subject: identity.sessionId }),
         userId: identity.userId,
       };
     }
 
     it("stores the new username in lowercase and frees the old one", async () => {
-      const t = createConvexTestWithBetterAuth();
+      const t = createConvexTestWithAuth();
       const first = await seedAccount(t, "first", "alpha");
       const second = await seedAccount(t, "second", "bravo");
 
@@ -121,7 +91,7 @@ describe("users/mutations", () => {
     });
 
     it("keeps the username when the caller asks for it again", async () => {
-      const t = createConvexTestWithBetterAuth();
+      const t = createConvexTestWithAuth();
       const account = await seedAccount(t, "again", "alpha");
 
       await expect(
@@ -149,7 +119,7 @@ describe("users/mutations", () => {
     ])(
       "refuses %j because %s and keeps the username",
       async (username, reason) => {
-        const t = createConvexTestWithBetterAuth();
+        const t = createConvexTestWithAuth();
         const account = await seedAccount(t, "asking", "alpha");
         await seedAccount(t, "holder", "bravo");
 
@@ -167,59 +137,52 @@ describe("users/mutations", () => {
     );
 
     it("answers a visitor without a session as unauthenticated", async () => {
-      const t = createConvexTestWithBetterAuth();
+      const t = createConvexTestWithAuth();
 
       await expect(
         t.mutation(api.users.mutations.updateUsername, { username: "alpha" })
       ).rejects.toMatchObject({ data: { _tag: "SessionRequired" } });
     });
 
-    /** The Better Auth username of one account, or null when it holds none. */
-    function authUsernameOf(
-      t: ReturnType<typeof createConvexTestWithBetterAuth>,
-      authUserId: string
+    /** The Convex Auth username that one account signs in with, or null when it has none. */
+    function signInNameOf(
+      t: ReturnType<typeof createConvexTestWithAuth>,
+      userId: string
     ) {
-      return t.mutation(async (ctx) => {
-        const adapter = authComponent.adapter(ctx)(createAuthOptions(ctx));
-        const account = await adapter.findOne<{ username?: string | null }>({
-          model: "user",
-          where: [{ field: "_id", operator: "eq", value: authUserId }],
-        });
-        return account?.username ?? null;
-      });
+      return t.query((ctx) =>
+        ctx.runQuery(components.authUsername.public.getUsername, { userId })
+      );
     }
 
-    it("renames a school account's Better Auth username with it, so both hold one value", async () => {
-      const t = createConvexTestWithBetterAuth();
+    it("renames a school account and keeps its sign-in name, which is its own id", async () => {
+      const t = createConvexTestWithAuth();
       const school = await seedAccount(t, "school", "alpha");
-      await t.mutation(async (ctx) => {
-        const adapter = authComponent.adapter(ctx)(createAuthOptions(ctx));
-        await adapter.update({
-          model: "user",
-          update: { displayUsername: "alpha", username: "alpha" },
-          where: [{ field: "_id", operator: "eq", value: school.authUserId }],
-        });
-      });
+      await t.mutation((ctx) =>
+        ctx.runMutation(components.authUsername.public.setUsername, {
+          userId: school.userId,
+          username: school.userId,
+        })
+      );
 
       await school.as.mutation(api.users.mutations.updateUsername, {
         username: "bravo",
       });
 
-      expect(await authUsernameOf(t, school.authUserId)).toBe("bravo");
+      expect(await signInNameOf(t, school.userId)).toBe(school.userId);
       expect(
         await t.query((ctx) => ctx.db.get("users", school.userId))
       ).toMatchObject({ username: "bravo" });
     });
 
-    it("renames a Google account without giving it a Better Auth username", async () => {
-      const t = createConvexTestWithBetterAuth();
+    it("renames a Google account without giving it a sign-in name", async () => {
+      const t = createConvexTestWithAuth();
       const google = await seedAccount(t, "google", "alpha");
 
       await google.as.mutation(api.users.mutations.updateUsername, {
         username: "bravo",
       });
 
-      expect(await authUsernameOf(t, google.authUserId)).toBeNull();
+      expect(await signInNameOf(t, google.userId)).toBeNull();
       expect(
         await t.query((ctx) => ctx.db.get("users", google.userId))
       ).toMatchObject({ username: "bravo" });
@@ -228,14 +191,11 @@ describe("users/mutations", () => {
 
   describe("bio", () => {
     it("stores the trimmed lines of the bio and clears the bio when the text holds nothing", async () => {
-      const t = createConvexTestWithBetterAuth();
+      const t = createConvexTestWithAuth();
       const identity = await t.mutation(
         async (ctx) => await seedAuthenticatedUser(ctx, { now: NOW })
       );
-      const as = t.withIdentity({
-        subject: identity.authUserId,
-        sessionId: identity.sessionId,
-      });
+      const as = t.withIdentity({ subject: identity.sessionId });
       const read = () => t.query((ctx) => ctx.db.get("users", identity.userId));
 
       await as.mutation(api.users.mutations.updateBio, {
@@ -250,14 +210,11 @@ describe("users/mutations", () => {
     });
 
     it("refuses a bio of more than 160 characters and keeps the bio", async () => {
-      const t = createConvexTestWithBetterAuth();
+      const t = createConvexTestWithAuth();
       const identity = await t.mutation(
         async (ctx) => await seedAuthenticatedUser(ctx, { now: NOW })
       );
-      const as = t.withIdentity({
-        subject: identity.authUserId,
-        sessionId: identity.sessionId,
-      });
+      const as = t.withIdentity({ subject: identity.sessionId });
       await as.mutation(api.users.mutations.updateBio, { bio: "Kept." });
 
       await expect(
@@ -280,7 +237,7 @@ describe("users/mutations", () => {
     const OTHER = "cat.0.243e66.right.open";
 
     it("stores the animal the caller chooses, answers it, and keeps the rest of the account", async () => {
-      const t = createConvexTestWithBetterAuth();
+      const t = createConvexTestWithAuth();
       const identity = await t.mutation(async (ctx) => {
         const user = await seedAuthenticatedUser(ctx, { now: NOW });
         await ctx.db.patch("users", user.userId, {
@@ -289,10 +246,7 @@ describe("users/mutations", () => {
         });
         return user;
       });
-      const as = t.withIdentity({
-        subject: identity.authUserId,
-        sessionId: identity.sessionId,
-      });
+      const as = t.withIdentity({ subject: identity.sessionId });
 
       await expect(as.mutation(setMascot, { mascot: CODE })).resolves.toEqual({
         mascot: CODE,
@@ -312,16 +266,13 @@ describe("users/mutations", () => {
     });
 
     it("stores the code of the animal as its canonical text", async () => {
-      const t = createConvexTestWithBetterAuth();
+      const t = createConvexTestWithAuth();
       const identity = await t.mutation(
         async (ctx) => await seedAuthenticatedUser(ctx, { now: NOW })
       );
 
       await t
-        .withIdentity({
-          subject: identity.authUserId,
-          sessionId: identity.sessionId,
-        })
+        .withIdentity({ subject: identity.sessionId })
         .mutation(setMascot, { mascot: CODE });
 
       const stored = await t.query((ctx) =>
@@ -331,7 +282,7 @@ describe("users/mutations", () => {
     });
 
     it("answers a visitor without a session as unauthenticated", async () => {
-      const t = createConvexTestWithBetterAuth();
+      const t = createConvexTestWithAuth();
 
       await expect(
         t.mutation(setMascot, { mascot: CODE })
@@ -345,7 +296,7 @@ describe("users/mutations", () => {
     );
 
     it("stores the picture the caller chooses, and keeps the rest of the account", async () => {
-      const t = createConvexTestWithBetterAuth();
+      const t = createConvexTestWithAuth();
       const identity = await t.mutation(async (ctx) => {
         const user = await seedAuthenticatedUser(ctx, { now: NOW });
         await ctx.db.patch("users", user.userId, {
@@ -354,10 +305,7 @@ describe("users/mutations", () => {
         });
         return user;
       });
-      const as = t.withIdentity({
-        subject: identity.authUserId,
-        sessionId: identity.sessionId,
-      });
+      const as = t.withIdentity({ subject: identity.sessionId });
       const read = () => t.query((ctx) => ctx.db.get("users", identity.userId));
 
       await as.mutation(setPicture, { picture: "photo" });
@@ -372,7 +320,7 @@ describe("users/mutations", () => {
     });
 
     it("answers a visitor without a session as unauthenticated", async () => {
-      const t = createConvexTestWithBetterAuth();
+      const t = createConvexTestWithAuth();
 
       await expect(
         t.mutation(setPicture, { picture: "photo" })

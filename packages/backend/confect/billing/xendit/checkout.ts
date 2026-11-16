@@ -124,7 +124,7 @@ export const createXenditCheckout = Effect.fn("billing.xendit.checkout.create")(
     }
     const customerId = yield* prepared.providerCustomerId === null
       ? ensureCustomer({
-          reference_id: prepared.authId,
+          reference_id: input.appUserId,
           type: "INDIVIDUAL",
           individual_detail: { given_names: prepared.name },
           email: prepared.email,

@@ -17,8 +17,10 @@ import { waitUntilTakenOver } from "@/e2e/support/window";
 const SIGN_IN = "/en/auth";
 const HOME = "/en/home";
 /**
- * Where home sends the synthetic learner, who has not answered the onboarding
- * questionnaire. Home owns that gate, so the sign-in page sends the learner home.
+ * The first run, where the sign-in page sends the synthetic learner, who has not
+ * answered the onboarding questionnaire: Google returns to the sign-in page, so
+ * every signed-in visitor goes on through the first run, which moves on at once
+ * for a learner who answered it.
  */
 const ONBOARDING = "/en/onboarding";
 const PRICING = "/en/pricing";
@@ -89,7 +91,9 @@ const expectSentOn = Effect.fn("NakafaE2E.expectSignInSentOn")(function* (
             expect(response?.request().redirectedFrom()).toBeNull();
           });
           yield* Effect.promise(() =>
-            page.waitForURL((url) => url.pathname === route.landing)
+            page.waitForURL(
+              (url) => `${url.pathname}${url.search}` === route.landing
+            )
           );
           const watch = yield* Effect.promise(() =>
             page.evaluate(
@@ -109,7 +113,7 @@ const expectSentOn = Effect.fn("NakafaE2E.expectSignInSentOn")(function* (
   );
 });
 
-test("a signed-in learner who opens the sign-in page lands on home", async ({
+test("a signed-in learner who opens the sign-in page goes through the first run", async ({
   baseURL,
   browser,
 }) => {
@@ -122,7 +126,7 @@ test("a signed-in learner who opens the sign-in page lands on home", async ({
   );
 });
 
-test("a signed-in learner who opens the sign-in page with an intent lands on it", async ({
+test("a signed-in learner who opens the sign-in page with an intent carries it through the first run", async ({
   baseURL,
   browser,
 }) => {
@@ -131,7 +135,7 @@ test("a signed-in learner who opens the sign-in page with an intent lands on it"
   await Effect.runPromise(
     expectSentOn(baseURL ?? "", browser, {
       from: intent,
-      landing: LESSON_PATH,
+      landing: `${ONBOARDING}?${new URLSearchParams({ intent: LESSON_PATH })}`,
     })
   );
 });

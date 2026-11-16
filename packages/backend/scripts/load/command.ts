@@ -21,7 +21,7 @@ import { captureLogs } from "@repo/backend/scripts/load/logs";
 import { BLUEPRINT_PLAN, LoadPlan } from "@repo/backend/scripts/load/plan";
 import { recorderLayer, timed } from "@repo/backend/scripts/load/recorder";
 import { runLoad } from "@repo/backend/scripts/load/run";
-import { issueToken, sessionCookie } from "@repo/backend/scripts/load/token";
+import { seatTokens } from "@repo/backend/scripts/load/token";
 import { openWire } from "@repo/backend/scripts/load/wire";
 import {
   Duration,
@@ -57,20 +57,17 @@ const TOKEN_RETRY = {
  * recorded, and one that the backend still refuses after its retries leaves the tab signed out,
  * so the tab's calls fail and the run goes on to record them.
  */
-const connectTo = (runtime: LocalRuntime) => (sessionToken: string) =>
-  openWire(
-    runtime.query,
-    sessionCookie(sessionToken).pipe(
-      Effect.orDie,
-      Effect.flatMap((cookie) =>
-        timed(
-          "auth:token",
-          issueToken(runtime.site, cookie).pipe(Effect.retry(TOKEN_RETRY))
+const connectTo =
+  (runtime: LocalRuntime) =>
+  (seat: { readonly token: string; readonly userId: string }) =>
+    Effect.flatMap(seatTokens(runtime.query, seat), (tokens) =>
+      openWire(
+        runtime.query,
+        timed("auth:token", tokens.pipe(Effect.retry(TOKEN_RETRY))).pipe(
+          Effect.orElseSucceed(() => null)
         )
-      ),
-      Effect.orElseSucceed(() => null)
-    )
-  );
+      )
+    );
 
 /** How many students sit in one room of the blueprint's plan. */
 const ROOM_SIZE = BLUEPRINT_PLAN.students / BLUEPRINT_PLAN.rooms;

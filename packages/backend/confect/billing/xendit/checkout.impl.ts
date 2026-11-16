@@ -77,7 +77,6 @@ const prepare = FunctionImpl.make(
     );
     return {
       accountId,
-      authId: user.authId,
       email: user.email,
       name: user.name,
       providerCustomerId: account.providerCustomerId,

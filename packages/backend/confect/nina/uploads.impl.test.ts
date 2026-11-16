@@ -171,10 +171,7 @@ describe("native Nina attachment ownership", () => {
     const other = await t.mutation((ctx) =>
       seedAuthenticatedUser(ctx, { now: NOW, suffix: "other" })
     );
-    const stranger = t.withIdentity({
-      subject: other.authUserId,
-      sessionId: other.sessionId,
-    });
+    const stranger = t.withIdentity({ subject: other.sessionId });
     const args = sending([uploadId]);
     await expect(stranger.mutation(start, args)).rejects.toMatchObject({
       data: { code: "NINA_UPLOAD_INVALID" },
@@ -423,10 +420,7 @@ describe("native Nina attachment ownership", () => {
     const other = await f.t.mutation((ctx) =>
       seedAuthenticatedUser(ctx, { now: NOW, suffix: "other" })
     );
-    const stranger = f.t.withIdentity({
-      subject: other.authUserId,
-      sessionId: other.sessionId,
-    });
+    const stranger = f.t.withIdentity({ subject: other.sessionId });
 
     await expect(f.t.mutation(release, { uploadId })).rejects.toMatchObject({
       data: { code: "UNAUTHENTICATED" },

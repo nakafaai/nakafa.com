@@ -5,7 +5,7 @@ import { openChatPage, runOnPage } from "@/e2e/support/chat";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { SERVER_FUNCTION_PATH } from "@/e2e/support/requests";
 
-const SESSION_READ = "/api/auth/get-session";
+const SESSION_READ = "/api/auth/refresh";
 const AUTH_URL = /\/auth/u;
 
 /**

@@ -5,19 +5,6 @@ import { Array as Arr, Effect, HashMap, Struct } from "effect";
 
 type UserData = typeof userDataValidator.Type;
 
-/** Resolve a persisted identity without weakening the unique auth index. */
-export const getAppUserByAuthId = Effect.fn("users.directory.identity")(
-  function* (authId: string) {
-    return yield* (yield* DatabaseReader)
-      .table("users")
-      .get("by_authId", authId)
-      .pipe(
-        Effect.catchTag("GetByIndexFailure", () => Effect.succeed(null)),
-        Effect.orDie
-      );
-  }
-);
-
 /** Resolve the account that holds a username; a username belongs to one account. */
 export const getAppUserByUsername = Effect.fn("users.directory.username")(
   function* (username: string) {

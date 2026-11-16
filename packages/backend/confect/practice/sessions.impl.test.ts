@@ -187,10 +187,7 @@ describe("practice/sessions", () => {
         )
       );
       const outsider = client(
-        world.t.withIdentity({
-          sessionId: other.sessionId,
-          subject: other.authUserId,
-        })
+        world.t.withIdentity({ subject: other.sessionId })
       );
       expect(yield* outsider.query(state, TARGET)).toBeNull();
       expect(

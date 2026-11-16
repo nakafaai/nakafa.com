@@ -23,7 +23,7 @@ import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Confect, confectLayer } from "@repo/backend/confect/test.setup";
 import { MASCOT } from "@repo/backend/test/mascot";
 import type { Value } from "convex/values";
-import { Array as Arr, Effect, Ref, Schema } from "effect";
+import { Array as Arr, Effect, Schema } from "effect";
 
 const slug = Schema.decodeSync(TenantSlug)("grants");
 const system = { kind: "system" } as const;
@@ -47,11 +47,8 @@ const tenant = Effect.fn("test.grant.tenant")(function* () {
     slug,
     status: "active",
   });
-  const accounts = yield* Ref.make(0);
   const claimedAccount = Effect.fn(function* () {
-    const index = yield* Ref.updateAndGet(accounts, (count) => count + 1);
     const userId = yield* writer.table("users").insert({
-      authId: `grants-${index}`,
       credits: 0,
       creditsResetAt: 0,
       email: "person@example.com",

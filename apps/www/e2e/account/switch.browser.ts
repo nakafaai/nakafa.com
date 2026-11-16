@@ -20,7 +20,7 @@ const ONBOARDING = "/en/onboarding";
 const SETTINGS = "/en/user/settings";
 const NOTIFICATIONS = "/en/notifications";
 const SIGN_IN = "/en/auth";
-const SESSION_ANSWER = "**/api/auth/get-session**";
+const SESSION_ANSWER = "**/api/auth/refresh**";
 /** How long the session's answer is held back, so a page sits in its first state. */
 const SESSION_DELAY_MILLISECONDS = 1500;
 const HINT_COOKIE = "nakafa-signed-in";
@@ -186,7 +186,7 @@ test("signing in as another account shows its profile with no reload", async ({
 
 /**
  * A hint that outlived its session, as after a session ended on the server: the
- * page starts as a learner's, and once Better Auth says there is none it shows the
+ * page starts as a learner's, and once the refresh route says there is none it shows the
  * sign-in button in the same document, not an empty footer.
  */
 test("a hint that outlived its session shows the sign-in button with no reload", async ({

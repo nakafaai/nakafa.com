@@ -194,7 +194,6 @@ describe("exams/presence", () => {
               (index) =>
                 Effect.gen(function* () {
                   const userId = yield* writer.table("users").insert({
-                    authId: `editor-${index}`,
                     credits: 0,
                     creditsResetAt: 0,
                     email: `editor-${index}@example.com`,

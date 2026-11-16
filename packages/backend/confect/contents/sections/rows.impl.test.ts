@@ -2,7 +2,7 @@ import { Ref } from "@confect/core";
 import { describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
 import { embeddingDimensions } from "@repo/backend/confect/gateway/model";
-import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
+import { createConvexTestWithAuth } from "@repo/backend/confect/test.helpers";
 import { KNOWLEDGE_RELEASE, seedKnowledge } from "@repo/backend/test/knowledge";
 import { activateQuranSource } from "@repo/backend/test/quran/snapshot";
 import { Array as Arr } from "effect";
@@ -51,7 +51,7 @@ const sections = [
 
 describe("section rows", () => {
   it("reads the lessons of the active release", async () => {
-    const t = createConvexTestWithBetterAuth();
+    const t = createConvexTestWithAuth();
     await t.mutation(seedKnowledge);
     expect(await t.query(lessons, { cursor: null })).toMatchObject({
       kind: "page",
@@ -63,13 +63,13 @@ describe("section rows", () => {
   });
 
   it("reads the Quran of the active release", async () => {
-    const t = createConvexTestWithBetterAuth();
+    const t = createConvexTestWithAuth();
     await t.mutation(activateQuranSource);
     expect(await t.query(surah, { surah: 1 })).toMatchObject({ kind: "done" });
   });
 
   it("stores a document, tells which sections are stored, and deletes a document that is not published", async () => {
-    const t = createConvexTestWithBetterAuth();
+    const t = createConvexTestWithAuth();
     await t.mutation(seedKnowledge);
     expect(
       await t.mutation(save, {
@@ -99,7 +99,7 @@ describe("section rows", () => {
   });
 
   it("records a finished build for the active release only", async () => {
-    const t = createConvexTestWithBetterAuth();
+    const t = createConvexTestWithAuth();
     await t.mutation(seedKnowledge);
     expect(
       await t.mutation(finish, {

@@ -148,7 +148,7 @@ describe("tenancy/people rename and remove", () => {
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
         const admin = fixture.as("admin");
-        const account = yield* fixture.account("guru", guru, true);
+        const account = yield* fixture.account("guru", guru);
         yield* admin.mutation(invite, {
           email: guru,
           locale: "id",

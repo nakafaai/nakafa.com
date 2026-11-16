@@ -6,6 +6,9 @@ process.env.VITE_POSTHOG_PROXY_HOST ??= "https://t.nakafa.com";
 /** Google's ad script, as every deployment names it. */
 process.env.VITE_AD_SCRIPT_URL ??=
   "https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js";
+
+/** The deployment's own address, the issuer Convex Auth checks in the backend's test functions. */
+process.env.CONVEX_CLOUD_URL ??= "https://example.convex.cloud";
 /** The server's own site, whose host names the session cookie's prefix. */
 process.env.SITE_URL ??= "https://nakafa.com";
 

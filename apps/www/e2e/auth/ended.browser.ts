@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 import { Array as Arr, MutableList } from "effect";
 import { SIGNED_IN_HINT_COOKIE } from "@/lib/auth/hint";
 import { KNOWN_SESSION_KEY } from "@/lib/auth/keys";
-import { TOKEN_PATH } from "@/lib/auth/session";
+import { REFRESH_PATH } from "@/lib/auth/token";
 
 /** The id of a session the browser remembers, which the server no longer holds. */
 const ENDED_SESSION = "ended-session";
@@ -14,9 +14,9 @@ const HOME = "/en/home";
 
 /**
  * A browser that still holds the signed-in hint and the id of a session that
- * has ended asks for that session's Convex token as the page loads. The token
- * route answers that no session holds a token, so the browser fetches no 401
- * and the console stays empty while the page settles signed out.
+ * has ended asks the refresh route for its session as the page loads. The route
+ * answers that no session holds a token, so the browser fetches no 401 and the
+ * console stays empty while the page settles signed out.
  */
 test("the learner home of a remembered session that has ended loads with no console error", async ({
   baseURL,
@@ -32,7 +32,7 @@ test("the learner home of a remembered session that has ended loads with no cons
   });
   page.on("pageerror", (error) => MutableList.append(errors, String(error)));
   page.on("response", (response) => {
-    if (new URL(response.url()).pathname === TOKEN_PATH) {
+    if (new URL(response.url()).pathname === REFRESH_PATH) {
       MutableList.append(tokenAnswers, response.status());
     }
   });
@@ -49,12 +49,18 @@ test("the learner home of a remembered session that has ended loads with no cons
     { key: KNOWN_SESSION_KEY, value: ENDED_SESSION }
   );
 
-  const tokenRead = page.waitForResponse(
-    (response) => new URL(response.url()).pathname === TOKEN_PATH
-  );
+  // The answer's body is read as it passes, because the page may move on from a
+  // session that ended before a response read later could still be read.
+  const tokenBodies = MutableList.make<unknown>();
+  await page.route(`**${REFRESH_PATH}`, async (route) => {
+    const response = await route.fetch();
+    MutableList.append(tokenBodies, await response.json());
+    await route.fulfill({ response });
+  });
   await page.goto(HOME);
-  expect(await (await tokenRead).json()).toStrictEqual({ token: null });
   await page.waitForLoadState("networkidle");
+
+  expect(MutableList.toArray(tokenBodies)[0]).toStrictEqual({ tokens: null });
 
   expect(MutableList.toArray(tokenAnswers).length).toBeGreaterThan(0);
   expect(

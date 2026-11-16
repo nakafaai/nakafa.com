@@ -28,3 +28,10 @@ export const KEPT_SCHOOL_KEY = "nakafa-school";
  * sign-in that just left for the provider will come back with.
  */
 export const EXPECTED_SESSION = "expected";
+
+/**
+ * The account of the session the browser last signed in to or refreshed, as
+ * JSON `{ sessionId, userId }`: Convex Auth's access token names only the
+ * session, so a page that starts from the stored token reads its account here.
+ */
+export const SESSION_USER_KEY = "nakafa-session-user";

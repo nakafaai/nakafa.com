@@ -1,11 +1,10 @@
 import { afterEach, expect, it } from "@effect/vitest";
-// convex-test imports a function's module, and the Better Auth module behind a signed write, on the first
-// call, inside that test's 5 s, and the cold graph takes longer. Importing them here loads them while the
-// file is collected, so no test pays it.
+// convex-test imports a function's module on the first call, inside that test's 5 s, and the cold graph
+// takes longer. Importing them here loads them while the file is collected, so no test pays it.
 import "@repo/backend/convex/auth/cleanup";
 import { createDeletedUserTombstone } from "@repo/backend/confect/auth/deletion/tombstone";
 import {
-  createConvexTestWithBetterAuth,
+  createConvexTestWithAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
 import { internal } from "@repo/backend/convex/_generated/api";
@@ -17,7 +16,7 @@ it("keeps every reply other learners wrote when an account goes, and rebuilds th
   vi.useFakeTimers({ toFake: ["Date", "setTimeout", "clearTimeout"] });
   const now = Date.UTC(2026, 9, 18);
   vi.setSystemTime(now);
-  const t = createConvexTestWithBetterAuth();
+  const t = createConvexTestWithAuth();
   const seeded = await t.mutation(async (ctx) => {
     const owner = (await seedAuthenticatedUser(ctx, { now, suffix: "gone" }))
       .userId;
@@ -147,7 +146,7 @@ it("deletes a learner's reports and unposted photos when the account goes, and k
   vi.useFakeTimers({ toFake: ["Date", "setTimeout", "clearTimeout"] });
   const now = Date.UTC(2026, 10, 8);
   vi.setSystemTime(now);
-  const t = createConvexTestWithBetterAuth();
+  const t = createConvexTestWithAuth();
   const seeded = await t.mutation(async (ctx) => {
     const owner = (await seedAuthenticatedUser(ctx, { now, suffix: "gone" }))
       .userId;

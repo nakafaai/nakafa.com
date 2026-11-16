@@ -7,7 +7,7 @@ import { createSchool, inviteLearner } from "@/e2e/support/school";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { desktopViewport, touchViewport } from "@/e2e/support/viewport";
 
-const SESSION_READ = "**/api/auth/get-session*";
+const SESSION_READ = "**/api/auth/refresh*";
 
 /** Every script of the page, held back so the page shows what its HTML and inline scripts draw. */
 const SCRIPTS = /\/assets\/.*\.js/u;
@@ -85,6 +85,15 @@ const verifyKeptRow = Effect.fn("NakafaE2E.verifyKeptRow")(function* (
     await page.goto("/en/search");
     await expect(accountButton(page)).toBeVisible({
       timeout: readinessTimeoutMilliseconds,
+    });
+    // The access token the page kept is dropped, as when it has expired, so the
+    // next page has to read the session from the refresh route.
+    await page.evaluate(() => {
+      for (const key of Object.keys(window.localStorage)) {
+        if (key.startsWith("__convexAuthJWT")) {
+          window.localStorage.removeItem(key);
+        }
+      }
     });
   });
 

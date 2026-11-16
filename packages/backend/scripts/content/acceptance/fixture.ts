@@ -15,12 +15,6 @@ export const CardFixture = Schema.Struct({
   loginName: Schema.String,
 });
 
-/**
- * The plain sign-in code of a parent whose address the school linked, which the
- * seed answers in place of the mail.
- */
-export const GuardianFixture = Schema.Struct({ code: Schema.String });
-
 /** The sitting that a browser test enters: its exam, the sitting, and the sitting's token. */
 export const SittingFixture = Schema.Struct({
   examId: Schema.String,
@@ -45,11 +39,13 @@ export const ForumFixture = Schema.Struct({
   messages: Schema.Array(Schema.String),
 });
 
-/** The session cookie of an account that the local runtime signed in, for a browser to send. */
-export const SessionCookie = Schema.Struct({
-  name: Schema.String,
-  value: Schema.String,
-});
+/** The session cookies of an account that the local runtime signed in, for a browser to send. */
+export const SessionCookies = Schema.Array(
+  Schema.Struct({
+    name: Schema.String,
+    value: Schema.String,
+  })
+);
 
 /**
  * Writes one fixture to `output` as JSON, mode 600, for a person or a script

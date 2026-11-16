@@ -124,7 +124,7 @@ describe("Name policy", () => {
           "packages/design-system/components/ui/dropdown-menu.tsx",
           "packages/design-system/components/evilcharts/charts/area-chart.tsx",
           "packages/backend/convex/contentRelease/accept.ts",
-          "packages/backend/components/betterAuth/adapter.ts",
+          "packages/backend/components/ledger/adapter.ts",
           "packages/backend/confect/tables/accountConsentDecisions.ts",
           "packages/backend/confect/contentRelease/quran/tafsir.spec.ts",
           "packages/backend/confect/tryouts/queries/attemptPage.impl.ts",

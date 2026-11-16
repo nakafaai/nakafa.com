@@ -6,7 +6,7 @@ import {
   findSource,
   holdsVersion,
 } from "@repo/backend/confect/contents/sections/source";
-import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
+import { createConvexTestWithAuth } from "@repo/backend/confect/test.helpers";
 import { Effect } from "effect";
 
 const lesson: Source = {
@@ -18,7 +18,7 @@ const lesson: Source = {
 
 /** A deployment that holds the record of one document. */
 async function setup() {
-  const t = createConvexTestWithBetterAuth();
+  const t = createConvexTestWithAuth();
   await t.mutation((ctx) => ctx.db.insert("contentSectionSources", lesson));
   const find = (key: Pick<Source, "appLocale" | "contentKey">) =>
     t.mutation((ctx) =>

@@ -18,7 +18,6 @@ async function insertAccount(
   >[0]
 ): Promise<BillingAccountId> {
   const userId = await ctx.db.insert("users", {
-    authId: "auth-billing-subscription",
     credits: 0,
     creditsResetAt: 0,
     email: "billing-subscription@example.com",

@@ -50,7 +50,7 @@ const claimedInvitee = (fixture: Fixture) =>
   Effect.gen(function* () {
     yield* inviteAt(fixture, "nf", fixture.invited, GURU);
     yield* consumeSchool(fixture, fixture.tenants.nf);
-    const account = yield* fixture.account("guru", GURU, true);
+    const account = yield* fixture.account("guru", GURU);
     yield* claim(fixture, fixture.invited, account.userId);
     return account.userId;
   });

@@ -1,6 +1,6 @@
 import { localConvexLayer } from "@repo/backend/scripts/content/acceptance/convex";
 import {
-  SessionCookie,
+  SessionCookies,
   writeFixture,
 } from "@repo/backend/scripts/content/acceptance/fixture";
 import { seedSchoolMember } from "@repo/backend/scripts/content/acceptance/member";
@@ -64,6 +64,6 @@ export const teacherMode = {
     const cookie = yield* seedTeacher(slug).pipe(
       Effect.provide(localConvexLayer(root))
     );
-    yield* writeFixture(output, SessionCookie, cookie);
+    yield* writeFixture(output, SessionCookies, cookie);
   }),
 } satisfies AcceptanceMode;

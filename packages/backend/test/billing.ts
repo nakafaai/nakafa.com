@@ -242,7 +242,6 @@ export async function seedXenditSubscription(
   } = {}
 ) {
   const userId = await ctx.db.insert("users", {
-    authId: `auth-xendit-${options.planId ?? "plan"}-${options.rail ?? "xendit"}`,
     credits: 0,
     creditsResetAt: 0,
     email: "xendit-process@example.com",

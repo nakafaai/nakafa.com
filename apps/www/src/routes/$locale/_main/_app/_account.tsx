@@ -52,7 +52,7 @@ function AccountLayout() {
 }
 
 /**
- * Sends the reader to sign-in once Better Auth answers that no session stands under
+ * Sends the reader to sign-in once Convex Auth answers that no session stands under
  * an open screen: one that ended in another tab or on the server, or a hint that
  * outlived its session. The gate above reads only on a move between pages. The live
  * session reads signed out until the page starts it after hydration, so that state

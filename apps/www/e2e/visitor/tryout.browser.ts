@@ -7,7 +7,7 @@ import { withObservedPageErrors } from "@/e2e/support/observe";
 import { SERVER_FUNCTION_PATH } from "@/e2e/support/requests";
 import { waitUntilTakenOver } from "@/e2e/support/window";
 
-const SESSION_READ = "/api/auth/get-session";
+const SESSION_READ = "/api/auth/refresh";
 const TRACK_PATH = "/en/try-out/indonesia/snbt/2027/utbk";
 
 /**

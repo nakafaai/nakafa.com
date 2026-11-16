@@ -25,7 +25,6 @@ vi.mock("@repo/backend/confect/analytics/capture", () => ({
 async function seedUser(t: ReturnType<typeof createBillingTestConvex>) {
   const userId = await t.mutation((ctx) =>
     ctx.db.insert("users", {
-      authId: "auth-plan",
       credits: 0,
       creditsResetAt: NOW,
       email: "plan@example.com",
@@ -134,7 +133,6 @@ describe("billing/plan top-up packs", () => {
     const t = createBillingTestConvex();
     const userId = await t.mutation(async (ctx) => {
       const id = await ctx.db.insert("users", {
-        authId: "auth-plan-packs",
         credits: 0,
         creditsResetAt: NOW,
         email: "plan-packs@example.com",

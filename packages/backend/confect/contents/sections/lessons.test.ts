@@ -4,7 +4,7 @@ import confectSchema from "@repo/backend/confect/_generated/schema";
 import { readLessons } from "@repo/backend/confect/contents/sections/lessons";
 import { LESSONS_PER_STEP } from "@repo/backend/confect/contents/sections/limits";
 import type { lessonValidator } from "@repo/backend/confect/contents/sections/schema";
-import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
+import { createConvexTestWithAuth } from "@repo/backend/confect/test.helpers";
 import {
   editKnowledgeLesson,
   KNOWLEDGE_RELEASE,
@@ -14,7 +14,7 @@ import {
 import { Array as Arr, Effect, Order } from "effect";
 
 function setup() {
-  const t = createConvexTestWithBetterAuth();
+  const t = createConvexTestWithAuth();
   const read = (input: Parameters<typeof readLessons>[0]) =>
     t.mutation((ctx) =>
       Effect.runPromise(

@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { accountUnavailableCode } from "@repo/backend/confect/auth/spec";
 import { polarProductIdFor } from "@repo/backend/confect/billing/polar/catalog";
 import {
-  createConvexTestWithBetterAuth,
+  createConvexTestWithAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
 import { api } from "@repo/backend/convex/_generated/api";
@@ -36,7 +36,7 @@ const request = {
 const setup = Effect.fn("billing.pack.test.setup")(function* (
   plan: "free" | "pro" = "free"
 ) {
-  const t = createConvexTestWithBetterAuth();
+  const t = createConvexTestWithAuth();
   yield* TestClock.setTime(NOW);
   const now = yield* Clock.currentTimeMillis;
   const user = yield* Effect.promise(() =>
@@ -63,7 +63,7 @@ const setup = Effect.fn("billing.pack.test.setup")(function* (
   }
   const customer = {
     email: "billing@example.com",
-    externalId: user.authUserId,
+    externalId: user.userId,
     id: "polar-billing",
     name: "User billing",
   };
@@ -72,10 +72,7 @@ const setup = Effect.fn("billing.pack.test.setup")(function* (
   );
   polarGateway.createCustomer.mockReturnValue(Effect.succeed(customer));
   polarGateway.updateCustomer.mockReturnValue(Effect.succeed(customer));
-  const authed = t.withIdentity({
-    sessionId: user.sessionId,
-    subject: user.authUserId,
-  });
+  const authed = t.withIdentity({ subject: user.sessionId });
   return { authed, t, user };
 });
 

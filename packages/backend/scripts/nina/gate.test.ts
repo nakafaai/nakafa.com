@@ -31,7 +31,7 @@ import {
   Schema,
 } from "effect";
 
-const LEARNER = { authId: "user-1", sessionId: "session-1" };
+const LEARNER = { sessionId: "session-1" };
 const CHAT = Schema.decodeUnknownSync(Id("chats"))("chat-1");
 const TURN = Schema.decodeUnknownSync(Id("ninaTurns"))("turn-1");
 const RECEIPT = {
@@ -178,7 +178,7 @@ function scripted(script: Script) {
           )
         ),
       retire: (learner) =>
-        record(`retire ${learner.authId}`).pipe(
+        record(`retire ${learner.sessionId}`).pipe(
           Effect.andThen(script.retire ?? Effect.void)
         ),
       signIn: record("signIn").pipe(
@@ -213,7 +213,7 @@ describe("the release gate", () => {
           "read",
           "journal thread-1",
           "forget chat-1",
-          "retire user-1",
+          "retire session-1",
         ]);
       })
   );
@@ -266,7 +266,7 @@ describe("the release gate", () => {
         expect(Arr.takeRight(MutableList.toArray(calls), 3)).toEqual([
           "journal thread-1",
           "forget chat-1",
-          "retire user-1",
+          "retire session-1",
         ]);
       })
   );
@@ -336,7 +336,7 @@ describe("the release gate", () => {
         "read",
         "journal thread-1",
         "forget chat-1",
-        "retire user-1",
+        "retire session-1",
       ]);
     })
   );
@@ -358,7 +358,7 @@ describe("the release gate", () => {
         );
         expect(Arr.takeRight(MutableList.toArray(calls), 2)).toEqual([
           "forget chat-1",
-          "retire user-1",
+          "retire session-1",
         ]);
       })
   );
@@ -396,7 +396,7 @@ describe("the release gate", () => {
           ],
           [
             "The synthetic learner was not removed",
-            { authId: "user-1", reason: "Learner removal failed: offline" },
+            { reason: "Learner removal failed: offline" },
           ],
         ]);
       })
@@ -439,7 +439,7 @@ describe("the release gate", () => {
       expect(MutableList.toArray(calls)).toEqual([
         "signIn",
         "ask",
-        "retire user-1",
+        "retire session-1",
       ]);
     })
   );

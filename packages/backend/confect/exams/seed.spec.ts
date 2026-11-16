@@ -99,7 +99,7 @@ export default GroupSpec.make()
         seats: Schema.Array(Seat).check(Schema.isMaxLength(SEATS_MAX)),
         slug: TenantSlug,
       }),
-      returns: () => Schema.Null,
+      returns: () => Schema.Array(Id("users")),
       error: () => SeedRefused,
     })
   )

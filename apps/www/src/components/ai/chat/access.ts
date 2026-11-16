@@ -66,24 +66,27 @@ export function readChatArgs(
  * What the viewer may do in a conversation, the same on every surface. Only the
  * owner continues it, retries an answer or takes its follow-up suggestions. The
  * server names the owner in the chat of the owner alone, so a chat that names
- * none is a reader's, whoever signed in. A chat the learner just started has no
- * owner on record until it loads, so the learner who started it can already
- * write to it.
+ * none is a reader's, whoever signed in. A chat read without a link can only be
+ * the signed-in learner's own, since the server answers no one else, so its
+ * composer stands while it loads, disabled until it does: the session's token,
+ * which every read waits for, may come late.
  */
 export function readChatAccess({
   chatUserId,
   loading,
-  opening,
+  shared,
+  signedIn,
   viewerId,
 }: {
   chatUserId: Id<"users"> | undefined;
   loading: boolean;
-  opening: boolean;
+  shared: boolean;
+  signedIn: boolean;
   viewerId: Id<"users"> | undefined;
 }) {
   const owner = viewerId !== undefined && chatUserId === viewerId;
   return {
-    canWrite: owner || (viewerId !== undefined && loading && opening),
+    canWrite: owner || (signedIn && loading && !shared),
     owner,
   };
 }

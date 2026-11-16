@@ -21,9 +21,9 @@ answer's body as well as its headers.
   for a read, which has no effect to repeat. A write that must not repeat, such
   as a push to a push service (ADR 0027), does not call the helper. A caller also
   repeats what it knows to be safe for its own request, such as a 5xx answer to
-  the session token read and to the browser's read of the session (`readSession`
-  in `apps/www/src/lib/auth/request.ts`), which Better Auth does not ask for again
-  after a first read that failed until the learner returns to the tab.
+  the browser's refresh of the session (`readBrowserSession` in
+  `apps/www/src/lib/auth/token.ts`): Convex Auth accepts a redeemed refresh token
+  again while none of its successors has been presented.
 - A caller keeps its own status rules, its decoder, and its error type. The
   shared part is the deadline, the retry, and the unwrap.
 - A request that a person waits for can cut that budget: the content copy

@@ -2,6 +2,7 @@ import type { Docs } from "@repo/backend/confect/_generated/docs";
 import {
   DatabaseReader,
   DatabaseWriter,
+  DocumentIds,
 } from "@repo/backend/confect/_generated/services";
 import { isAccountDeletionPending } from "@repo/backend/confect/auth/deletion/state";
 import { BillingCurrency } from "@repo/backend/confect/billing/catalog";
@@ -99,7 +100,7 @@ export const recordProviderCustomer = Effect.fn(
 
 /**
  * Links a Polar customer to the personal Polar account of the Nakafa user whose
- * Better Auth ID is the customer's external ID. The account is opened on first
+ * id is the customer's external ID. The account is opened on first
  * use, in the billing country Polar holds for the customer, or unknown when it
  * holds none. An account that already names another customer is a conflict, and
  * nothing changes. A user whose account is being deleted links nothing.
@@ -107,16 +108,15 @@ export const recordProviderCustomer = Effect.fn(
 export const linkPolarCustomer = Effect.fn(
   "billing.accounts.linkPolarCustomer"
 )(function* (input: {
-  readonly authId: string;
+  readonly externalId: string;
   readonly country: BillingCountry;
   readonly providerCustomerId: string;
 }) {
   const reader = yield* DatabaseReader;
-  const user = yield* reader
-    .table("users")
-    .index("by_authId", (query) => query.eq("authId", input.authId))
-    .first()
-    .pipe(Effect.orDie);
+  const userId = yield* (yield* DocumentIds).parse("users", input.externalId);
+  const user = Option.isNone(userId)
+    ? Option.none()
+    : yield* reader.table("users").get(userId.value).pipe(Effect.option);
   if (Option.isNone(user)) {
     return "noUser" as const;
   }

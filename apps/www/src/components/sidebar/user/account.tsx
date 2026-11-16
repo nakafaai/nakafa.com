@@ -102,15 +102,15 @@ export function NavUserAccount({ user }: { user: CurrentUser }) {
   return (
     <AccountMenu
       account={{
-        email: user.authUser.email,
+        email: user.appUser.email,
         mascot: user.appUser.mascot,
         photo: photoOf(user.appUser),
       }}
       description={planLabelByPlan[user.appUser.plan]}
-      name={user.authUser.name}
+      name={user.appUser.name}
       onSignOut={handleSignOut}
     >
-      <SidebarSchools canOpenSchool={!isLoginAddress(user.authUser.email)}>
+      <SidebarSchools canOpenSchool={!isLoginAddress(user.appUser.email)}>
         <Suspense fallback={<SidebarKnownSchoolItems />}>
           <SidebarMembershipItems />
         </Suspense>

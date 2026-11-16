@@ -46,16 +46,15 @@ function sidebarName(page: Page, name: string) {
 
 /**
  * Writes the name and the photo address of a learner through the acceptance
- * seed, which updates the account in Better Auth and runs the app's update
- * trigger, which copies both to the profile that the sidebar and the comments
- * read. Provider accounts can hold a name of any length, so the test writes the
- * names the settings form refuses.
+ * seed, straight to the profile that the sidebar and the comments read. A
+ * Google profile can hold a name of any length, so the test writes the names
+ * the settings form refuses.
  */
 const setProfile = Effect.fn("NakafaE2E.setProfile")(function* (
-  authId: string,
+  userId: string,
   profile: { readonly image?: string; readonly name?: string }
 ) {
-  yield* runFixture(seedProfile(authId, profile));
+  yield* runFixture(seedProfile(userId, profile));
 });
 
 test("a learner without a photo is drawn as an animal on the account button and on the profile", async ({
@@ -96,7 +95,7 @@ test("a photo shows once the learner chooses it, and a photo that fails keeps th
 
       const withAnimal = yield* Effect.promise(() => drawnAnimal(avatar));
 
-      yield* setProfile(learner.authId, {
+      yield* setProfile(learner.userId, {
         image: `${origin}${LOADING_PHOTO}`,
       });
       yield* Effect.promise(async () => {
@@ -124,7 +123,7 @@ test("a photo shows once the learner chooses it, and a photo that fails keeps th
           route.fulfill({ status: 404 })
         )
       );
-      yield* setProfile(learner.authId, {
+      yield* setProfile(learner.userId, {
         image: `${origin}${MISSING_PHOTO}`,
       });
       const withMissingPhoto = yield* Effect.promise(() => drawnAnimal(avatar));
@@ -186,7 +185,7 @@ for (const { label, name } of NAME_CASES) {
 
         const before = yield* Effect.promise(() => drawnAnimal(avatar));
 
-        yield* setProfile(learner.authId, { name });
+        yield* setProfile(learner.userId, { name });
         yield* Effect.promise(async () => {
           await expect(sidebarName(page, name)).toBeVisible({
             timeout: readinessTimeoutMilliseconds,

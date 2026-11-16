@@ -1,4 +1,4 @@
-import { describe, expect, it } from "@effect/vitest";
+import { assert, describe, expect, it } from "@effect/vitest";
 import { internal } from "@repo/backend/convex/_generated/api";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import {
@@ -13,13 +13,12 @@ const NOW = Date.UTC(2026, 9, 25, 12, 0, 0);
 const FAR_FUTURE = Date.UTC(2099, 0, 1);
 const FAR_PAST = Date.UTC(2000, 0, 1);
 
-/** Inserts one active user for the checkout steps, optionally marked as deleting. */
+/** Inserts one active user for the checkout steps, optionally deleted. */
 async function insertUser(ctx: MutationCtx, deleting = false) {
   return await ctx.db.insert("users", {
-    authId: `auth-checkout-${deleting ? "deleting" : "active"}`,
     credits: 0,
     creditsResetAt: NOW,
-    ...(deleting ? { deletionPreparedAt: NOW } : {}),
+    ...(deleting ? { deletedAt: NOW } : {}),
     email: "checkout@example.com",
     mascot: MASCOT_CODE,
     name: "Checkout",
@@ -39,7 +38,6 @@ describe("billing/checkout internal steps", () => {
     });
     expect(first).toEqual({
       accountId: expect.any(String),
-      authId: "auth-checkout-active",
       email: "checkout@example.com",
       kind: "open",
       name: "Checkout",
@@ -71,7 +69,6 @@ describe("billing/checkout internal steps", () => {
     ).toEqual({ kind: "unavailable" });
     const missing = await t.mutation((ctx) =>
       ctx.db.insert("users", {
-        authId: "auth-checkout-missing",
         credits: 0,
         creditsResetAt: NOW,
         email: "missing@example.com",
@@ -116,10 +113,7 @@ describe("billing/checkout internal steps", () => {
     const opened = await t.mutation(internal.billing.checkout.openAccount, {
       userId,
     });
-    expect(opened.kind).toBe("open");
-    if (opened.kind !== "open") {
-      throw new Error("Expected an open account.");
-    }
+    assert(opened.kind === "open", "Expected an open account.");
     await t.mutation(internal.billing.checkout.recordCustomer, {
       accountId: opened.accountId,
       providerCustomerId: "cust_recorded",

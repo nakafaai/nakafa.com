@@ -1,9 +1,9 @@
 import { defineSchema as $defineSchema } from "convex/server";
 import { Table as $Table } from "@confect/server";
 
-import accountDeletionAttemptCancellations from "./tables/accountDeletionAttemptCancellations";
-import accountDeletionPreparations from "./tables/accountDeletionPreparations";
-import accountDeletionReceipts from "./tables/accountDeletionReceipts";
+import agentClients from "./tables/agentClients";
+import agentCodes from "./tables/agentCodes";
+import agentGrants from "./tables/agentGrants";
 import articleBuckets from "./tables/articleBuckets";
 import articleCatalog from "./tables/articleCatalog";
 import articleCategories from "./tables/articleCategories";
@@ -93,7 +93,6 @@ import exams from "./tables/exams";
 import gradingSchemes from "./tables/gradingSchemes";
 import graduationLetters from "./tables/graduationLetters";
 import graduations from "./tables/graduations";
-import guardianCodes from "./tables/guardianCodes";
 import guardianConsents from "./tables/guardianConsents";
 import guardianLinks from "./tables/guardianLinks";
 import guardianRequests from "./tables/guardianRequests";
@@ -184,9 +183,9 @@ import vendorSpend from "./tables/vendorSpend";
 import welcomeEmailIntents from "./tables/welcomeEmailIntents";
 
 export default $defineSchema({
-  accountDeletionAttemptCancellations: $Table.tableDefinition(accountDeletionAttemptCancellations),
-  accountDeletionPreparations: $Table.tableDefinition(accountDeletionPreparations),
-  accountDeletionReceipts: $Table.tableDefinition(accountDeletionReceipts),
+  agentClients: $Table.tableDefinition(agentClients),
+  agentCodes: $Table.tableDefinition(agentCodes),
+  agentGrants: $Table.tableDefinition(agentGrants),
   articleBuckets: $Table.tableDefinition(articleBuckets),
   articleCatalog: $Table.tableDefinition(articleCatalog),
   articleCategories: $Table.tableDefinition(articleCategories),
@@ -276,7 +275,6 @@ export default $defineSchema({
   gradingSchemes: $Table.tableDefinition(gradingSchemes),
   graduationLetters: $Table.tableDefinition(graduationLetters),
   graduations: $Table.tableDefinition(graduations),
-  guardianCodes: $Table.tableDefinition(guardianCodes),
   guardianConsents: $Table.tableDefinition(guardianConsents),
   guardianLinks: $Table.tableDefinition(guardianLinks),
   guardianRequests: $Table.tableDefinition(guardianRequests),

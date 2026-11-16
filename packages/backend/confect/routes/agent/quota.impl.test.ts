@@ -2,7 +2,7 @@ import { Ref } from "@confect/core";
 import { RateLimiter } from "@convex-dev/rate-limiter";
 import { afterEach, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
-import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
+import { createConvexTestWithAuth } from "@repo/backend/confect/test.helpers";
 import { Array as Arr, Effect, Option, Schema } from "effect";
 
 afterEach(() => vi.restoreAllMocks());
@@ -12,7 +12,7 @@ it("reports a component outage as unavailable instead of approving an unmetered 
     new Error("quota unavailable")
   );
   await expect(
-    createConvexTestWithBetterAuth().mutation(
+    createConvexTestWithAuth().mutation(
       Ref.getFunctionReference(refs.internal.routes.agent.quota.consume),
       { key: "a".repeat(64) }
     )
@@ -36,7 +36,7 @@ it.effect(
       // Every read takes from shard 0 or 1 of the bucket's six, whose ten tokens
       // are then the bucket, since `Math.random` answers 0.
       vi.spyOn(Math, "random").mockReturnValue(0);
-      const t = createConvexTestWithBetterAuth();
+      const t = createConvexTestWithAuth();
       const consume = Ref.getFunctionReference(
         refs.internal.routes.agent.quota.consume
       );

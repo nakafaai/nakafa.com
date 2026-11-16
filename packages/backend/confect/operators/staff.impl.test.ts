@@ -31,8 +31,7 @@ describe("operators/staff grant", () => {
         const fixture = yield* tenancyFixture;
         const account = yield* fixture.account(
           "grantee",
-          "grantee@nakafa.example.test",
-          true
+          "grantee@nakafa.example.test"
         );
         vi.setSystemTime(actedAt());
         const first = yield* fixture.internal.mutation(grant, {
@@ -74,8 +73,7 @@ describe("operators/staff grant", () => {
       const fixture = yield* tenancyFixture;
       const account = yield* fixture.account(
         "removed",
-        "removed@nakafa.example.test",
-        true
+        "removed@nakafa.example.test"
       );
       yield* fixture.run(
         Effect.flatMap(DatabaseWriter, (writer) =>
@@ -165,8 +163,7 @@ describe("operators/staff revoke", () => {
       const fixture = yield* tenancyFixture;
       const learner = yield* fixture.account(
         "learner",
-        "learner@nakafa.example.test",
-        true
+        "learner@nakafa.example.test"
       );
       const denial = yield* fixture.internal
         .mutation(revoke, { userId: learner.userId })
@@ -182,8 +179,7 @@ describe("operators/staff revoke", () => {
         const fixture = yield* tenancyFixture;
         const learner = yield* fixture.account(
           "onboarded",
-          "onboarded@nakafa.example.test",
-          true
+          "onboarded@nakafa.example.test"
         );
         yield* fixture.run(
           Effect.flatMap(DatabaseWriter, (writer) =>

@@ -10,11 +10,13 @@ import {
   cardRowOf,
   claimInviteeByInvite,
   DEVICE,
+  deviceAt,
   inviteePerson,
   issueFirst,
   LOGIN_NAME,
   nf,
   PASSWORD,
+  PLACEHOLDER_ADDRESS,
   redeem,
   redeemOn,
   reissue,
@@ -30,7 +32,7 @@ import {
 } from "@repo/backend/test/tenancy";
 import { Array as Arr, Duration, Effect, Exit, Option, Schema } from "effect";
 
-// The password step is the one Better Auth call in a redemption. A test makes it
+// The password step is the one Convex Auth call in a redemption. A test makes it
 // fail once to prove that the card and the account roll back together.
 vi.mock("@repo/backend/confect/identity/account", async (importOriginal) => {
   const actual =
@@ -42,14 +44,6 @@ vi.mock("@repo/backend/confect/identity/account", async (importOriginal) => {
     setLoginPassword: vi.fn(actual.setLoginPassword),
   };
 });
-
-/** A placeholder address: a random UUID key at the reserved `.invalid` domain. */
-const PLACEHOLDER_ADDRESS =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}@login\.nakafa\.invalid$/u;
-
-/** A device the sign-in page keeps, as a UUID, numbered so that each one differs. */
-const deviceAt = (index: number) =>
-  `00000000-0000-4000-8000-${String(index).padStart(12, "0")}`;
 
 /** Fake timers keep the clock at one moment, so every term and limit is exact. */
 beforeEach(() => {
@@ -210,34 +204,34 @@ describe("identity/cards redeem", () => {
     })
   );
 
-  it.effect(
-    "refuses a password that is too short and writes nothing, so the card still works",
-    () =>
+  // A format refusal writes nothing. A password that Convex Auth's component alone
+  // finds too common leaves the account it made, which the next redemption reuses.
+  it.effect.each([
+    ["shorter than eight characters", "short", "passwordTooShort", "unclaimed"],
+    [
+      "longer than Convex Auth accepts",
+      "x".repeat(101),
+      "passwordTooLong",
+      "unclaimed",
+    ],
+    ["Convex Auth finds too common", "12345678", "passwordRejected", "claimed"],
+  ] as const)(
+    "refuses a password %s, and the card still works",
+    ([, password, reason, state]) =>
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
         const issued = yield* issueFirst(fixture);
-        expect(yield* redeemOn(fixture, issued.code, "short")).toEqual({
+        expect(yield* redeemOn(fixture, issued.code, password)).toEqual({
           outcome: "refused",
-          reason: "passwordTooShort",
+          reason,
         });
-        expect((yield* inviteePerson(fixture)).account).toEqual({
-          state: "unclaimed",
+        expect((yield* inviteePerson(fixture)).account).toMatchObject({
+          state,
         });
         expect(yield* redeemOn(fixture, issued.code)).toMatchObject({
           outcome: "redeemed",
         });
       })
-  );
-
-  it.effect("refuses a password longer than Better Auth accepts", () =>
-    Effect.gen(function* () {
-      const fixture = yield* tenancyFixture;
-      const issued = yield* issueFirst(fixture);
-      expect(yield* redeemOn(fixture, issued.code, "x".repeat(129))).toEqual({
-        outcome: "refused",
-        reason: "passwordTooLong",
-      });
-    })
   );
 
   it.effect("limits the attempts of one device", () =>
@@ -437,7 +431,7 @@ describe("identity/cards redeem", () => {
         const fixture = yield* tenancyFixture;
         const issued = yield* issueFirst(fixture);
         vi.mocked(setLoginPassword).mockImplementationOnce(() =>
-          Effect.die(new Error("Better Auth is unavailable"))
+          Effect.die(new Error("Convex Auth is unavailable"))
         );
         const failed = yield* redeemOn(fixture, issued.code).pipe(Effect.exit);
         expect(Exit.isFailure(failed)).toBe(true);

@@ -1,7 +1,7 @@
 // @vitest-environment node
 
 import { describe, expect, it } from "@effect/vitest";
-import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
+import { createConvexTestWithAuth } from "@repo/backend/confect/test.helpers";
 import {
   expectPublicJson,
   fetchApi,
@@ -19,7 +19,7 @@ setupApiTest();
 describe("public agent search", () => {
   it("returns stable empty pagination from an empty deployment", async () => {
     const response = await fetchApi(
-      createConvexTestWithBetterAuth(),
+      createConvexTestWithAuth(),
       "/search?query=algebra&locale=en&limit=10&offset=0"
     );
 
@@ -35,7 +35,7 @@ describe("public agent search", () => {
   });
 
   it("searches one authenticated current article", async () => {
-    const test = createConvexTestWithBetterAuth();
+    const test = createConvexTestWithAuth();
     const article = testArticleProjection(0);
     await test.mutation(async (ctx) => {
       await insertRuntimeArticles(ctx, 1);

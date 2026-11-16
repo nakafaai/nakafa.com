@@ -24,7 +24,7 @@ Shared client state lives in one of two places, chosen by what writes it.
   with `useStore(store, selector)`. A reader that did not select the changed
   value never runs.
 - Everything a provider receives or computes during render (props, server
-  data, Confect, Convex Agent, and Better Auth hook results), and state that
+  data, Confect, and Convex Agent hook results), and state that
   follows props or a React transition, uses a plain React context read with
   `use()`. Split such a context by change frequency when some readers need
   only its slower part, and never copy it into a store through an effect.
@@ -43,8 +43,8 @@ Confect hook answers, as the reader of the Memory page does: the only boundary
 below it is the editor's, which mounts in the browser after the learner opens
 it.
 
-- State that resolves in the browser after hydration, such as the Better Auth
-  session (read from its session atom, not its hook), Convex authentication,
+- State that resolves in the browser after hydration, such as the session
+  (followed from Convex Auth's client, `@/lib/auth/feed`), Convex authentication,
   the viewport, and browser storage, lives in a store whose `useStore` server
   snapshot is the state the server rendered.
 - A value derived from a Confect query is derived in the reading hook, where
@@ -53,13 +53,13 @@ it.
   through a ref mirrored in a layout effect.
 - Convex authentication is read with `useConvexAuth` from
   `@/components/providers/convex` and its gates from `@/components/auth/gate`.
-- Better Auth answers for the session one request after a page loads. The
+- The refresh route answers for the session one request after a page loads. The
   browser remembers the id of its last session (`@/lib/auth/known`, read with
   `useSyncExternalStore`, whose server snapshot knows none), so Convex asks for
   that session's token at once and holds every function call until it has an
   answer. A change made in the first moment after a load is therefore sent
   signed in, and a signed-in page authenticates one request sooner. Readers
-  still see the session as pending until Better Auth answers.
+  still see the session as pending until the refresh route answers.
 - A lesson renderer that loads with `React.lazy` goes through
   `withHydrationBoundary` from `@/lib/content/renderer/client/boundary`, whose
   visible `Activity` lets the lesson hydrate, and answer presses, before the
@@ -121,7 +121,7 @@ kept, so no first press is a dead click.
 - A replayed press runs when React mounts the control, before the page's live
   session starts. A handler that treats a visitor differently counts the reader
   as a visitor only when the page has no signed-in hint (`hasSignedInHint`). A
-  press it holds for the session settles once Better Auth confirms the session,
+  press it holds for the session settles once Convex Auth confirms the session,
   answers signed out, or cannot be read (`hasError`, which a failed module load
   sets too), so no held press waits on a read that failed.
 
@@ -174,13 +174,13 @@ the same.
 - `scripts/check/react.ts`, run by `bun run check:tests`, rejects
   `use-context-selector`, React's `useContext`, and Zustand's module-level
   `create`. Biome's `noRestrictedImports` rejects the context-backed auth APIs
-  of `convex/react` and `@convex-dev/better-auth`. Neither looks at
+  of `convex/react` and `@convex-dev/auth/react`. Neither looks at
   `createStore`, so a store that `createStore` makes at module level passes both.
   Two players or two working sets would share such a store, so review rejects
   it.
 - `apps/www/e2e/content/hydration.browser.ts` proves cold lessons and
   articles keep their streamed content, signed out and signed in.
-- `apps/www/e2e/account/session.browser.ts` holds Better Auth's answer back
+- `apps/www/e2e/account/session.browser.ts` holds the refresh route's answer back
   after a reload and proves a change made in that moment is saved signed in.
 
 ## Rejected Alternative

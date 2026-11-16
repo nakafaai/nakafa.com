@@ -7,6 +7,9 @@ import { fakeServer } from "@repo/backend/test/load";
 import { nodePlatform } from "@repo/backend/test/platform";
 import { Array as Arr, Effect, FileSystem, Schema } from "effect";
 
+/** The seats of one seats call, which the fake answers an account id for each. */
+const SeatBatch = Schema.Struct({ seats: Schema.Array(Schema.Unknown) });
+
 const encodeJson = Schema.encodeUnknownSync(
   Schema.fromJsonString(Schema.Unknown)
 );
@@ -55,41 +58,53 @@ describe("load run", () => {
           output,
           plan,
           run: (_operation, call) =>
-            Effect.sync(() => {
-              if (call.path === "exams/seed:load") {
-                return {
-                  examId: "e1",
-                  sittings: [{ id: "s1", room: "Ruang 01", token: "AAAAAA" }],
-                };
-              }
-              if (call.path === "exams/seed:answers") {
-                // The answers come in two pages: this run's, then another run's after the cursor.
-                const first = encodeJson(call.args).includes('"cursor":null');
-                return {
-                  continueCursor: "after-a1",
-                  isDone: !first,
-                  page: first
-                    ? Arr.map(
-                        Arr.fromIterable(fake.saved),
-                        ([question, saved]) => ({
-                          attempt: "a1",
-                          question,
-                          response: saved.response,
-                          version: saved.version,
-                        })
-                      )
-                    : [
-                        {
-                          attempt: "other",
-                          question: "q1",
-                          response: [],
-                          version: 1,
-                        },
+            call.path === "exams/seed:seats"
+              ? // A seats call answers the account id of each seat, in the order of the seats.
+                Schema.decodeUnknownEffect(SeatBatch)(call.args).pipe(
+                  Effect.map(({ seats }) =>
+                    Arr.map(seats, (_seat, index) => `user-${index}`)
+                  ),
+                  Effect.orDie
+                )
+              : Effect.sync(() => {
+                  if (call.path === "exams/seed:load") {
+                    return {
+                      examId: "e1",
+                      sittings: [
+                        { id: "s1", room: "Ruang 01", token: "AAAAAA" },
                       ],
-                };
-              }
-              return null;
-            }),
+                    };
+                  }
+                  if (call.path === "exams/seed:answers") {
+                    // The answers come in two pages: this run's, then another run's after the cursor.
+                    const first = encodeJson(call.args).includes(
+                      '"cursor":null'
+                    );
+                    return {
+                      continueCursor: "after-a1",
+                      isDone: !first,
+                      page: first
+                        ? Arr.map(
+                            Arr.fromIterable(fake.saved),
+                            ([question, saved]) => ({
+                              attempt: "a1",
+                              question,
+                              response: saved.response,
+                              version: saved.version,
+                            })
+                          )
+                        : [
+                            {
+                              attempt: "other",
+                              question: "q1",
+                              response: [],
+                              version: 1,
+                            },
+                          ],
+                    };
+                  }
+                  return null;
+                }),
           school: Effect.succeed("sekolah"),
         }).pipe(Effect.provide(recorderLayer(ledger)));
         expect(yield* fs.readFileString(ledger)).toContain('"attempt":"a1"');

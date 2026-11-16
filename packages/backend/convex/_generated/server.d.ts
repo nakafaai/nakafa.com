@@ -34,6 +34,8 @@ type Env = {
   readonly AKSARA_AGENT_SIGNING_PUBLIC_KEY: string | undefined;
   readonly AKSARA_PUBLICATION_TOKEN: string;
   readonly CONTENT_READ_TOKEN: string;
+  readonly GOOGLE_AUTH_CLIENT_ID: string;
+  readonly GOOGLE_AUTH_CLIENT_SECRET: string;
   readonly LOGIN_CARD_SECRET: string;
   readonly NAKAFA_API_EDGE_SECRET: string;
   readonly NAKAFA_MCP_ALLOWED_ORIGINS: string | undefined;

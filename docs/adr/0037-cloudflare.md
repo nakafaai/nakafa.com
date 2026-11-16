@@ -47,13 +47,13 @@ for each, which is a workaround and not a better design.
    - `staging`: the web Worker serves `staging.nakafa.com` behind Cloudflare
      Access for the two owner accounts. Workers.dev is off. Staging runs on the
      dev deployment, which also serves local development at its `SITE_URL`, so
-     the dev deployment sets `STAGING_SITE_URL`. Better Auth then answers each
-     of the two sites on its own host, with its own callback URL and cookie
-     domain, and a checkout may return to either site. Production names its
-     session cookie for `nakafa.com`, so the browser sends it to staging and to
-     local development as well; both name their cookies `nakafa-dev` instead of
-     `better-auth` (`readAuthCookiePrefix`), so production's cookie never reads
-     as their session. Staging has no School hosts: a host under
+     the dev deployment sets `STAGING_SITE_URL`. Google's sign-in may return to
+     either site (`allowedRedirectOrigins` in `confect/auth/core.ts`), each site
+     serves its own auth routes, and a checkout may return to either site.
+     Production names its session cookies for `nakafa.com`, so the browser
+     sends them to staging as well; staging names its own with the prefix
+     `nakafa-dev.` (`siteAuthCookies` in `apps/www/src/lib/auth/cookies.ts`), so
+     production's session never reads as staging's. Staging has no School hosts: a host under
      `staging.nakafa.com` would need a paid certificate.
    - any other stage: only the workers.dev URL, with no custom domain.
 3. **Exact routes beat the wildcard.** Cloudflare sends a request to the most

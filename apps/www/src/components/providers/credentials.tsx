@@ -7,7 +7,7 @@ import {
 import { ConvexAuthContext } from "@/lib/auth/convex";
 
 /**
- * Hands the page's one Convex client its Better Auth credentials. It mounts once
+ * Hands the page's one Convex client its Convex Auth credentials. It mounts once
  * the store holds a client, and it lives in this module, which a visitor's page
  * never loads. `LiveRelease` clears them, after the page's readers.
  */

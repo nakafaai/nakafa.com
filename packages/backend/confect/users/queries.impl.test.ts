@@ -2,15 +2,12 @@ import { Ref } from "@confect/core";
 import { describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
 import {
-  createConvexTestWithBetterAuth,
+  createConvexTestWithAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
-import { convexModules } from "@repo/backend/confect/test.setup";
-import { api, internal } from "@repo/backend/convex/_generated/api";
-import schema from "@repo/backend/convex/schema";
+import { api } from "@repo/backend/convex/_generated/api";
 import { MASCOT_CODE } from "@repo/backend/test/mascot";
 import { seedSchoolMember } from "@repo/backend/test/member";
-import { convexTest } from "convex-test";
 
 const NOW = Date.UTC(2026, 9, 12, 12, 0, 0);
 const getProfileByUsername = Ref.getFunctionReference(
@@ -19,21 +16,18 @@ const getProfileByUsername = Ref.getFunctionReference(
 
 /** Reads the profile of a username as one caller. */
 const profileOf = (
-  caller: Pick<ReturnType<typeof createConvexTestWithBetterAuth>, "query">,
+  caller: Pick<ReturnType<typeof createConvexTestWithAuth>, "query">,
   username: string
 ) => caller.query(getProfileByUsername, { username });
 
 /** The caller signed in as one seeded account. */
 const callerOf = (
-  t: ReturnType<typeof createConvexTestWithBetterAuth>,
+  t: ReturnType<typeof createConvexTestWithAuth>,
   account: Awaited<ReturnType<typeof seedAuthenticatedUser>>
-) =>
-  t.withIdentity({ sessionId: account.sessionId, subject: account.authUserId });
+) => t.withIdentity({ subject: account.sessionId });
 
 /** A learner who holds the username nabilfatih with a bio and a photo, and another account. */
-async function seedProfiles(
-  t: ReturnType<typeof createConvexTestWithBetterAuth>
-) {
+async function seedProfiles(t: ReturnType<typeof createConvexTestWithAuth>) {
   const holder = await t.mutation(async (ctx) => {
     const seeded = await seedAuthenticatedUser(ctx, {
       now: NOW,
@@ -55,36 +49,8 @@ async function seedProfiles(
 }
 
 describe("users/queries", () => {
-  it("loads users by id and auth id", async () => {
-    const t = convexTest(schema, convexModules);
-
-    const userId = await t.mutation(async (ctx) =>
-      ctx.db.insert("users", {
-        authId: "auth_user_real_example",
-        email: "nabil@example.com",
-        mascot: MASCOT_CODE,
-        name: "Test Learner",
-        plan: "free",
-        credits: 7,
-        creditsResetAt: Date.UTC(2026, 3, 2, 0, 0, 0),
-      })
-    );
-
-    const [byAuthId, missingByAuthId] = await Promise.all([
-      t.query(internal.users.queries.getUserByAuthId, {
-        authId: "auth_user_real_example",
-      }),
-      t.query(internal.users.queries.getUserByAuthId, {
-        authId: "missing_auth_user",
-      }),
-    ]);
-
-    expect(byAuthId?._id).toBe(userId);
-    expect(missingByAuthId).toBeNull();
-  });
-
   it("refuses a visitor and checks a username for an account and for the account that holds it", async () => {
-    const t = createConvexTestWithBetterAuth();
+    const t = createConvexTestWithAuth();
     const holder = await t.mutation(async (ctx) => {
       const seeded = await seedAuthenticatedUser(ctx, {
         now: NOW,
@@ -97,10 +63,7 @@ describe("users/queries", () => {
       seedAuthenticatedUser(ctx, { now: NOW, suffix: "stranger" })
     );
     const signedIn = (account: typeof holder) =>
-      t.withIdentity({
-        sessionId: account.sessionId,
-        subject: account.authUserId,
-      });
+      t.withIdentity({ subject: account.sessionId });
     const check = (caller: Pick<typeof t, "query">, username: string) =>
       caller.query(api.users.queries.checkUsername, { username });
 
@@ -119,7 +82,7 @@ describe("users/queries", () => {
   });
 
   it("shows a learner's profile to anyone, to share, and nothing for a name nobody holds", async () => {
-    const t = createConvexTestWithBetterAuth();
+    const t = createConvexTestWithAuth();
     const { holder, stranger } = await seedProfiles(t);
     // Only the public fields leave the server: no email, auth id, plan, or settings.
     const expected = {
@@ -142,7 +105,7 @@ describe("users/queries", () => {
   });
 
   it("shows a school member's profile to its own account alone, never to share (K15)", async () => {
-    const t = createConvexTestWithBetterAuth();
+    const t = createConvexTestWithAuth();
     const { holder, stranger } = await seedProfiles(t);
     const personId = await t.mutation((ctx) =>
       seedSchoolMember(ctx, holder.userId, NOW)
@@ -173,7 +136,7 @@ describe("users/queries", () => {
   });
 
   it("hides the photo of an account that shows its animal, and an empty bio", async () => {
-    const t = createConvexTestWithBetterAuth();
+    const t = createConvexTestWithAuth();
     const holder = await t.mutation(async (ctx) => {
       const seeded = await seedAuthenticatedUser(ctx, {
         now: NOW,
@@ -190,10 +153,7 @@ describe("users/queries", () => {
 
     expect(
       await t
-        .withIdentity({
-          sessionId: holder.sessionId,
-          subject: holder.authUserId,
-        })
+        .withIdentity({ subject: holder.sessionId })
         .query(getProfileByUsername, {
           username: "sitiaminah",
         })

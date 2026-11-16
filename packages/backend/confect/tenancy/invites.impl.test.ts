@@ -135,7 +135,7 @@ describe("tenancy/invites invite", () => {
     () =>
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
-        const account = yield* fixture.account("guru", guru, true);
+        const account = yield* fixture.account("guru", guru);
         const made = yield* inviteInvited(fixture);
         const jobs = yield* fixture.run(scheduledJobs);
         expect(
@@ -293,7 +293,7 @@ describe("tenancy/invites resend and expiry", () => {
     () =>
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
-        const account = yield* fixture.account("guru", guru, true);
+        const account = yield* fixture.account("guru", guru);
         const first = yield* inviteInvited(fixture);
         yield* fixture.internal.mutation(expire, { inviteId: first.id });
         vi.setSystemTime(NOW + TERM);

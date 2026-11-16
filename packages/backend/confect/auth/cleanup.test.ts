@@ -10,13 +10,12 @@ import databaseSchema from "@repo/backend/confect/_generated/schema";
 import { drainDeletedUserDataProgram } from "@repo/backend/confect/auth/cleanup";
 import { cleanupDeletedUserProgram } from "@repo/backend/confect/auth/cleanup/impl";
 import { createDeletedUserTombstone } from "@repo/backend/confect/auth/deletion/tombstone";
-import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
+import { createConvexTestWithAuth } from "@repo/backend/confect/test.helpers";
 import { internal } from "@repo/backend/convex/_generated/api";
 import { MASCOT_CODE } from "@repo/backend/test/mascot";
 import { Effect, Layer } from "effect";
 
 const NOW = Date.UTC(2026, 6, 22, 8, 0, 0);
-const deletedAuthIdPattern = /^deleted:/u;
 const deletedEmailPattern = /^deleted-.+@account\.nakafa\.invalid$/u;
 describe("auth/cleanup", () => {
   it.effect(
@@ -34,11 +33,10 @@ describe("auth/cleanup", () => {
   );
   it.effect("stops after the first cleanup batch that makes progress", () =>
     Effect.gen(function* () {
-      const t = createConvexTestWithBetterAuth();
+      const t = createConvexTestWithAuth();
       const state = yield* Effect.promise(() =>
         t.mutation(async (ctx) => {
           const userId = await ctx.db.insert("users", {
-            authId: "bounded-cleanup-user",
             credits: 10,
             creditsResetAt: NOW,
             email: "bounded@example.com",
@@ -52,7 +50,6 @@ describe("auth/cleanup", () => {
             createDeletedUserTombstone(userId, NOW)
           );
           const otherUserId = await ctx.db.insert("users", {
-            authId: "bounded-cleanup-reader",
             credits: 10,
             creditsResetAt: NOW,
             email: "reader@example.com",
@@ -99,7 +96,6 @@ describe("auth/cleanup", () => {
       expect(remaining.reply?.replyToUserId).toBeUndefined();
       expect(remaining.comment).not.toBeNull();
       expect(remaining.user).toMatchObject({
-        authId: expect.stringMatching(deletedAuthIdPattern),
         email: expect.stringMatching(deletedEmailPattern),
       });
     })
@@ -109,11 +105,10 @@ describe("auth/cleanup", () => {
     () =>
       Effect.gen(function* () {
         const runtimeServices = yield* Effect.context<never>();
-        const t = createConvexTestWithBetterAuth();
+        const t = createConvexTestWithAuth();
         const result = yield* Effect.promise(() =>
           t.mutation(async (ctx) => {
             const userId = await ctx.db.insert("users", {
-              authId: "deleted-auth-user",
               credits: 10,
               creditsResetAt: NOW,
               email: "deleted@example.com",
@@ -127,7 +122,6 @@ describe("auth/cleanup", () => {
               createDeletedUserTombstone(userId, NOW)
             );
             const otherUserId = await ctx.db.insert("users", {
-              authId: "retained-auth-user",
               credits: 10,
               creditsResetAt: NOW,
               email: "retained@example.com",
@@ -217,7 +211,6 @@ describe("auth/cleanup", () => {
             text: "Reply without retained personal preview",
           }),
           user: expect.objectContaining({
-            authId: expect.stringMatching(deletedAuthIdPattern),
             credits: 0,
             creditsResetAt: 0,
             deletedAt: expect.any(Number),
@@ -233,11 +226,10 @@ describe("auth/cleanup", () => {
       })
   );
   it("deletes a deleted learner's personal connections, their sealed tokens, and their journal entries, and keeps another learner's", async () => {
-    const t = createConvexTestWithBetterAuth();
+    const t = createConvexTestWithAuth();
     const seeded = await t.mutation(async (ctx) => {
       const seedUser = (name: string) =>
         ctx.db.insert("users", {
-          authId: `connections-${name}`,
           credits: 10,
           creditsResetAt: NOW,
           email: `connections-${name}@example.com`,

@@ -4,7 +4,7 @@ import { idOf } from "@repo/backend/confect/island/blocks";
 import { EMPTY_TALLY } from "@repo/backend/confect/island/schema";
 import type { Edit } from "@repo/backend/confect/island/world";
 import {
-  createConvexTestWithBetterAuth,
+  createConvexTestWithAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
 import { client } from "@repo/backend/test/client";
@@ -18,16 +18,14 @@ const BERLIN = DateTime.zoneMakeNamedUnsafe("Europe/Berlin");
 /** One signed-in learner and the test backend. */
 const islandWorld = Effect.fn("test.island.world")(function* () {
   vi.useFakeTimers({ now: NOW });
-  const t = createConvexTestWithBetterAuth();
+  const t = createConvexTestWithAuth();
   const owner = yield* Effect.promise(() =>
     t.mutation((ctx) =>
       seedAuthenticatedUser(ctx, { now: NOW, suffix: "owner" })
     )
   );
   return {
-    owner: client(
-      t.withIdentity({ sessionId: owner.sessionId, subject: owner.authUserId })
-    ),
+    owner: client(t.withIdentity({ subject: owner.sessionId })),
     t,
   };
 });

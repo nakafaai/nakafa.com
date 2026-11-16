@@ -1,5 +1,9 @@
 import aggregate from "@convex-dev/aggregate/convex.config";
 import agent from "@convex-dev/agent/convex.config";
+import auth from "@convex-dev/auth/convex.config";
+import authGoogle from "@convex-dev/auth/components/google/convex.config";
+import authPassword from "@convex-dev/auth/components/password/convex.config";
+import authUsername from "@convex-dev/auth/components/username/convex.config";
 import presence from "@convex-dev/presence/convex.config";
 import rateLimiter from "@convex-dev/rate-limiter/convex.config";
 import resend from "@convex-dev/resend/convex.config";
@@ -10,7 +14,6 @@ import {
   NAKAFA_MCP_ALLOWED_ORIGINS_ENVIRONMENT,
   NAKAFA_MCP_EDGE_CONTRACT,
 } from "@repo/backend/agent/edge";
-import betterAuth from "@repo/backend/components/betterAuth/convex.config";
 import { defineApp } from "convex/server";
 import { v } from "convex/values";
 
@@ -25,6 +28,10 @@ const app = defineApp({
     AKSARA_PUBLICATION_TOKEN: v.string(),
     CONTENT_READ_TOKEN: v.string(),
     [NAKAFA_API_EDGE_CONTRACT.secretEnvironment]: v.string(),
+    // The Google OAuth client that the Google sign-in component exchanges codes
+    // with. Convex refuses a push to a deployment that lacks them.
+    GOOGLE_AUTH_CLIENT_ID: v.string(),
+    GOOGLE_AUTH_CLIENT_SECRET: v.string(),
     [NAKAFA_MCP_ALLOWED_ORIGINS_ENVIRONMENT]: v.optional(v.string()),
     [NAKAFA_MCP_EDGE_CONTRACT.secretEnvironment]: v.string(),
     // The key of the hash that stores each login card code. Convex refuses a
@@ -41,7 +48,22 @@ const app = defineApp({
     VAULT_ROOT_KEYS: v.string(),
   },
 });
-app.use(betterAuth);
+// Convex Auth: the core owns sessions and signs their access tokens with the
+// deployment's own key, under its default name `auth`, which
+// `convexAuthProvider` and `getAuthUserId` read. Google serves its callback at
+// `<CONVEX_SITE_URL>/oauth/google/callback`. School accounts sign in with a
+// username and a password (ADR 0009).
+// https://docs.convex.dev/auth/convex-auth/getting-started
+app.use(auth);
+app.use(authGoogle, {
+  httpPrefix: "/oauth/google",
+  env: {
+    CLIENT_ID: app.env.GOOGLE_AUTH_CLIENT_ID,
+    CLIENT_SECRET: app.env.GOOGLE_AUTH_CLIENT_SECRET,
+  },
+});
+app.use(authUsername);
+app.use(authPassword);
 app.use(agent, { name: "nina" });
 app.use(presence);
 app.use(rateLimiter, { name: "agentRateLimiter" });

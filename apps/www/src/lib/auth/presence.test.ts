@@ -5,7 +5,7 @@ import { Effect } from "effect";
 import { FetchHttpClient } from "effect/http";
 import { readBrowserPresence } from "@/lib/auth/presence";
 
-/** One fetch double for the whole file: the browser's request to the token route. */
+/** One fetch double for the whole file: the browser's request to the refresh route. */
 const fetcher = vi.fn<typeof fetch>();
 
 const ORIGIN = "https://harapan.nakafa.com";
@@ -25,10 +25,14 @@ describe("browser presence", () => {
   });
 
   it.effect(
-    "reads the token from the token route of the page's own origin, and nothing before it runs",
+    "reads the token from the refresh route of the page's own origin, and nothing before it runs",
     () =>
       Effect.gen(function* () {
-        fetcher.mockResolvedValueOnce(Response.json({ token: "token-ayu" }));
+        fetcher.mockResolvedValueOnce(
+          Response.json({
+            tokens: { accessToken: "token-ayu", userId: "user-1" },
+          })
+        );
         const presence = readBrowserPresence("", ORIGIN);
         expect(fetcher).not.toHaveBeenCalled();
 
@@ -38,7 +42,7 @@ describe("browser presence", () => {
           )
         ).toBe("token-ayu");
         const [address] = fetcher.mock.calls[0] ?? [];
-        expect(String(address)).toBe(`${ORIGIN}/api/auth/convex/token`);
+        expect(String(address)).toBe(`${ORIGIN}/api/auth/refresh`);
       })
   );
 

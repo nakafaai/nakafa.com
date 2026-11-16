@@ -43,7 +43,6 @@ afterEach(() => {
 /** One learner with a Polar account, and a Pro grant when `pro` is true. */
 async function seedLearner(ctx: MutationCtx, pro: boolean) {
   const userId = await ctx.db.insert("users", {
-    authId: `auth-topup-${pro}`,
     credits: 0,
     creditsResetAt: NOW,
     email: `topup-${pro}@example.com`,

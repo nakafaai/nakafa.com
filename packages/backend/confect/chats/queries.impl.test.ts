@@ -3,7 +3,7 @@ import { assert, describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
 import { shareTokenValidator } from "@repo/backend/confect/chats/schema";
 import {
-  createConvexTestWithBetterAuth,
+  createConvexTestWithAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
 import { api } from "@repo/backend/convex/_generated/api";
@@ -20,14 +20,11 @@ const getShareToken = Ref.getFunctionReference(
 
 describe("chats/queries", () => {
   it("lets a signed-out viewer read a shared chat with its token and no other chat", async () => {
-    const t = createConvexTestWithBetterAuth();
+    const t = createConvexTestWithAuth();
     const identity = await t.mutation((ctx) =>
       seedAuthenticatedUser(ctx, { now: NOW })
     );
-    const owner = t.withIdentity({
-      sessionId: identity.sessionId,
-      subject: identity.authUserId,
-    });
+    const owner = t.withIdentity({ subject: identity.sessionId });
     const chatId = await t.mutation(async (ctx) =>
       ctx.db.insert("chats", {
         threadId: "fixture-thread",
@@ -66,7 +63,7 @@ describe("chats/queries", () => {
   });
 
   it("lists a learner's own chats, private and shared, and none to another learner", async () => {
-    const t = createConvexTestWithBetterAuth();
+    const t = createConvexTestWithAuth();
     const [owner, stranger] = await t.mutation(async (ctx) => {
       const users = await Promise.all([
         seedAuthenticatedUser(ctx, { now: NOW, suffix: "list-owner" }),
@@ -83,14 +80,8 @@ describe("chats/queries", () => {
       }
       return users;
     });
-    const asStranger = t.withIdentity({
-      sessionId: stranger.sessionId,
-      subject: stranger.authUserId,
-    });
-    const asOwner = t.withIdentity({
-      sessionId: owner.sessionId,
-      subject: owner.authUserId,
-    });
+    const asStranger = t.withIdentity({ subject: stranger.sessionId });
+    const asOwner = t.withIdentity({ subject: owner.sessionId });
     const paginationOpts = { cursor: null, numItems: 10 };
 
     expect(
@@ -118,21 +109,15 @@ describe("chats/queries", () => {
   });
 
   it("gives the share token to the owner of a shared chat and to nobody else", async () => {
-    const t = createConvexTestWithBetterAuth();
+    const t = createConvexTestWithAuth();
     const [owner, stranger] = await t.mutation((ctx) =>
       Promise.all([
         seedAuthenticatedUser(ctx, { now: NOW, suffix: "token-owner" }),
         seedAuthenticatedUser(ctx, { now: NOW, suffix: "token-stranger" }),
       ])
     );
-    const asOwner = t.withIdentity({
-      sessionId: owner.sessionId,
-      subject: owner.authUserId,
-    });
-    const asStranger = t.withIdentity({
-      sessionId: stranger.sessionId,
-      subject: stranger.authUserId,
-    });
+    const asOwner = t.withIdentity({ subject: owner.sessionId });
+    const asStranger = t.withIdentity({ subject: stranger.sessionId });
     const chatId = await t.mutation((ctx) =>
       ctx.db.insert("chats", {
         threadId: "fixture-thread",
@@ -171,7 +156,7 @@ describe("chats/queries", () => {
   });
 
   it("answers a share whose vault key is gone with the declared read failure, not a defect", async () => {
-    const t = createConvexTestWithBetterAuth();
+    const t = createConvexTestWithAuth();
     const { chatId, owner, userId } = await sharedChatOf(t, "token-gone");
 
     // Sharing sealed the token with the owner's key. Without that key the token
@@ -187,7 +172,7 @@ describe("chats/queries", () => {
   });
 
   it("answers a share whose vault key row does not decode with the declared read failure, not a defect", async () => {
-    const t = createConvexTestWithBetterAuth();
+    const t = createConvexTestWithAuth();
     const { chatId, owner, userId } = await sharedChatOf(t, "token-corrupt");
 
     // A root that no key of the vault names does not decode, so the vault dies
@@ -205,16 +190,13 @@ describe("chats/queries", () => {
 
 /** Creates a learner and a public chat of theirs, which sharing sealed a key for. */
 async function sharedChatOf(
-  t: ReturnType<typeof createConvexTestWithBetterAuth>,
+  t: ReturnType<typeof createConvexTestWithAuth>,
   suffix: string
 ) {
   const identity = await t.mutation((ctx) =>
     seedAuthenticatedUser(ctx, { now: NOW, suffix })
   );
-  const owner = t.withIdentity({
-    sessionId: identity.sessionId,
-    subject: identity.authUserId,
-  });
+  const owner = t.withIdentity({ subject: identity.sessionId });
   const chatId = await t.mutation((ctx) =>
     ctx.db.insert("chats", {
       threadId: "fixture-thread",
@@ -242,7 +224,7 @@ async function keyRowOf(ctx: MutationCtx, userId: Id<"users">) {
 }
 
 it("keeps search and every optional list filter scoped to the right owner and visibility", async () => {
-  const t = createConvexTestWithBetterAuth();
+  const t = createConvexTestWithAuth();
   const identity = await t.mutation(async (ctx) => {
     const owner = await seedAuthenticatedUser(ctx, {
       now: NOW,
@@ -266,10 +248,7 @@ it("keeps search and every optional list filter scoped to the right owner and vi
     }
     return owner;
   });
-  const owner = t.withIdentity({
-    subject: identity.authUserId,
-    sessionId: identity.sessionId,
-  });
+  const owner = t.withIdentity({ subject: identity.sessionId });
   const paginationOpts = { cursor: null, numItems: 10 };
   expect(
     (await t.query(api.chats.queries.getOwnChats, { paginationOpts })).page
@@ -298,7 +277,7 @@ it("keeps search and every optional list filter scoped to the right owner and vi
 });
 
 it("gives a title to a chat's owner and never to a chat id alone, shared or private, or for a chat that is missing or untitled", async () => {
-  const t = createConvexTestWithBetterAuth();
+  const t = createConvexTestWithAuth();
   const fixture = await t.mutation(async (ctx) => {
     const owner = await seedAuthenticatedUser(ctx, { now: NOW });
     const base = {
@@ -336,10 +315,7 @@ it("gives a title to a chat's owner and never to a chat id alone, shared or priv
     await ctx.db.delete("chats", missingId);
     return { owner, privateId, publicId, emptyPublic, emptyPrivate, missingId };
   });
-  const owner = t.withIdentity({
-    subject: fixture.owner.authUserId,
-    sessionId: fixture.owner.sessionId,
-  });
+  const owner = t.withIdentity({ subject: fixture.owner.sessionId });
   expect(
     await t.query(api.chats.queries.getChatTitle, { chatId: fixture.privateId })
   ).toStrictEqual({ title: null });
@@ -377,21 +353,15 @@ it("gives a title to a chat's owner and never to a chat id alone, shared or priv
 });
 
 it("opens a sealed title with its owner's key for the readers the access rules allow", async () => {
-  const t = createConvexTestWithBetterAuth();
+  const t = createConvexTestWithAuth();
   const [owner, stranger] = await t.mutation((ctx) =>
     Promise.all([
       seedAuthenticatedUser(ctx, { now: NOW, suffix: "sealed-owner" }),
       seedAuthenticatedUser(ctx, { now: NOW, suffix: "sealed-stranger" }),
     ])
   );
-  const asOwner = t.withIdentity({
-    sessionId: owner.sessionId,
-    subject: owner.authUserId,
-  });
-  const asStranger = t.withIdentity({
-    sessionId: stranger.sessionId,
-    subject: stranger.authUserId,
-  });
+  const asOwner = t.withIdentity({ subject: owner.sessionId });
+  const asStranger = t.withIdentity({ subject: stranger.sessionId });
   const insertChat = () =>
     t.mutation((ctx) =>
       ctx.db.insert("chats", {

@@ -30,7 +30,6 @@ afterEach(() => {
 async function insertUser(test: TestConvex<typeof schema>, suffix: string) {
   return await test.mutation((ctx) =>
     ctx.db.insert("users", {
-      authId: `${suffix}-auth`,
       credits: 0,
       creditsResetAt: 0,
       email: `${suffix}@example.com`,

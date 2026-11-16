@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import { deactivateCanceledPlan } from "@repo/backend/confect/billing/xendit/cancel";
 import {
-  createConvexTestWithBetterAuth,
+  createConvexTestWithAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
 import { api } from "@repo/backend/convex/_generated/api";
@@ -45,7 +45,7 @@ function plan(status: "ACTIVE" | "INACTIVE") {
 
 /** A signed-in learner whose Pro plan Xendit bills, active until the end of its paid period. */
 async function subscriber() {
-  const t = createConvexTestWithBetterAuth();
+  const t = createConvexTestWithAuth();
   const user = await t.mutation((ctx) =>
     seedAuthenticatedUser(ctx, { now: NOW, plan: "pro", suffix: "cancel" })
   );
@@ -73,10 +73,7 @@ async function subscriber() {
       providerUpdatedAt: NOW,
     });
   });
-  const authed = t.withIdentity({
-    sessionId: user.sessionId,
-    subject: user.authUserId,
-  });
+  const authed = t.withIdentity({ subject: user.sessionId });
   return { authed, subscriptionId, t };
 }
 
@@ -146,14 +143,11 @@ describe("billing/xendit/cancel", () => {
   });
 
   it("changes nothing for a learner whom Xendit bills no plan", async () => {
-    const t = createConvexTestWithBetterAuth();
+    const t = createConvexTestWithAuth();
     const user = await t.mutation((ctx) =>
       seedAuthenticatedUser(ctx, { now: NOW, suffix: "cancel-none" })
     );
-    const authed = t.withIdentity({
-      sessionId: user.sessionId,
-      subject: user.authUserId,
-    });
+    const authed = t.withIdentity({ subject: user.sessionId });
     expect(
       await authed.mutation(api.billing.xendit.cancel.cancelPlan, {})
     ).toBeNull();

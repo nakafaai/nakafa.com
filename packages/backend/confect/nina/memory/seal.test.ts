@@ -30,7 +30,6 @@ const scenario = <A, Failure>(
 /** Creates one account and returns its keys. */
 const learner = Effect.fn("test.memory.seal.learner")(function* (name: string) {
   const userId = yield* (yield* DatabaseWriter).table("users").insert({
-    authId: `seal-${name}`,
     credits: 0,
     creditsResetAt: 0,
     email: `${name}@example.com`,

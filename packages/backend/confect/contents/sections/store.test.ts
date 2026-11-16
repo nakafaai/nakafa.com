@@ -11,7 +11,7 @@ import {
   storeDocument,
 } from "@repo/backend/confect/contents/sections/store";
 import { embeddingDimensions } from "@repo/backend/confect/gateway/model";
-import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
+import { createConvexTestWithAuth } from "@repo/backend/confect/test.helpers";
 import { KNOWLEDGE_RELEASE, seedKnowledge } from "@repo/backend/test/knowledge";
 import { Array as Arr, Effect } from "effect";
 
@@ -61,7 +61,7 @@ function toStore(
 
 /** A deployment whose active release is the one of the knowledge fixture. */
 async function setup() {
-  const t = createConvexTestWithBetterAuth();
+  const t = createConvexTestWithAuth();
   await t.mutation(seedKnowledge);
   const run = (
     releaseId: string,
@@ -306,7 +306,7 @@ describe("section store", () => {
   });
 
   it("stores nothing while no release is active", async () => {
-    const t = createConvexTestWithBetterAuth();
+    const t = createConvexTestWithAuth();
     const result = await t.mutation((ctx) =>
       Effect.runPromise(
         storeDocument({

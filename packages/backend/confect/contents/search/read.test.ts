@@ -5,7 +5,7 @@ import {
 import { describe, expect, it } from "@effect/vitest";
 import confectSchema from "@repo/backend/confect/_generated/schema";
 import { readContentSearchDocuments } from "@repo/backend/confect/contents/search/read";
-import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
+import { createConvexTestWithAuth } from "@repo/backend/confect/test.helpers";
 import { makeMaterialProjection } from "@repo/backend/test/content/material";
 import {
   insertRuntimeArticles,
@@ -28,7 +28,7 @@ describe("readContentSearchDocuments", () => {
   itWithRuntimeRelease(
     "reads searchable articles only from the active signed projection",
     async (runtime) => {
-      const t = createConvexTestWithBetterAuth();
+      const t = createConvexTestWithAuth();
       const projection = testArticleProjection(0);
       await t.mutation(async (ctx) => {
         await insertRuntimeArticles(ctx, 1);
@@ -75,7 +75,7 @@ describe("readContentSearchDocuments", () => {
   itWithRuntimeRelease(
     "fills an unscoped search window from current signed materials",
     async (runtime) => {
-      const t = createConvexTestWithBetterAuth();
+      const t = createConvexTestWithAuth();
       const projections = Array.from(
         {
           length: 25,
@@ -134,7 +134,7 @@ describe("readContentSearchDocuments", () => {
     }
   );
   it("resolves exact route queries through current catalog identities", async () => {
-    const t = createConvexTestWithBetterAuth();
+    const t = createConvexTestWithAuth();
     const projection = makeMaterialProjection("en", 1);
     await t.mutation((ctx) =>
       Effect.runPromise(
@@ -187,7 +187,7 @@ describe("readContentSearchDocuments", () => {
     ]);
   });
   it("returns no published documents without an active search owner", async () => {
-    const t = createConvexTestWithBetterAuth();
+    const t = createConvexTestWithAuth();
     await expect(
       t.query((ctx) =>
         Effect.runPromise(

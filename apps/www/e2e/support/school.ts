@@ -17,7 +17,7 @@ import { recordTransfer as recordInvoiceTransfer } from "@repo/backend/scripts/c
 import { payInvoice as payInvoiceOnXendit } from "@repo/backend/scripts/content/acceptance/xendit";
 import { Array as Arr, Effect } from "effect";
 import { runFixture } from "@/e2e/support/acceptance";
-import { addSessionCookie } from "@/e2e/support/context";
+import { addSessionCookies } from "@/e2e/support/context";
 
 /**
  * Opens a new school in the running local acceptance runtime and answers its
@@ -52,7 +52,7 @@ export const signInOwner = Effect.fn("NakafaE2E.signInOwner")(function* (
   address: string
 ) {
   const cookie = yield* runFixture(seedOwner(slug));
-  yield* addSessionCookie(context, cookie, address);
+  yield* addSessionCookies(context, cookie, address);
 });
 
 /**
@@ -67,7 +67,7 @@ export const signInTeacher = Effect.fn("NakafaE2E.signInTeacher")(function* (
   address: string
 ) {
   const cookie = yield* runFixture(seedTeacher(slug));
-  yield* addSessionCookie(context, cookie, address);
+  yield* addSessionCookies(context, cookie, address);
 });
 
 /**
@@ -79,7 +79,7 @@ export const signInTeacher = Effect.fn("NakafaE2E.signInTeacher")(function* (
 export const signInClassTeacher = Effect.fn("NakafaE2E.signInClassTeacher")(
   function* (context: BrowserContext, slug: string, address: string) {
     const cookie = yield* runFixture(seedClassTeacher(slug));
-    yield* addSessionCookie(context, cookie, address);
+    yield* addSessionCookies(context, cookie, address);
   }
 );
 
@@ -102,7 +102,7 @@ export const inviteLearner = Effect.fn("NakafaE2E.inviteLearner")(
     const cookie = yield* runFixture(
       seedInvite(learner.slug, learner.address, learner.expired === true)
     );
-    yield* addSessionCookie(learner.context, cookie, learner.baseURL);
+    yield* addSessionCookies(learner.context, cookie, learner.baseURL);
   }
 );
 

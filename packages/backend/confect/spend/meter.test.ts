@@ -5,7 +5,7 @@ import confectSchema from "@repo/backend/confect/_generated/schema";
 import { MutationRunner } from "@repo/backend/confect/_generated/services";
 import { foldSpend } from "@repo/backend/confect/spend/ledger";
 import { metered, meterOf } from "@repo/backend/confect/spend/meter";
-import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
+import { createConvexTestWithAuth } from "@repo/backend/confect/test.helpers";
 import { runInMutation } from "@repo/backend/test/billing";
 import { MASCOT_CODE } from "@repo/backend/test/mascot";
 import { recordingMeter } from "@repo/backend/test/spend";
@@ -54,10 +54,9 @@ describe("spend/meter", () => {
   );
 
   it("holds and settles through the escrow mutations of the claim", async () => {
-    const t = createConvexTestWithBetterAuth();
+    const t = createConvexTestWithAuth();
     const userId = await t.run((ctx) =>
       ctx.db.insert("users", {
-        authId: "auth-meter",
         credits: 0,
         creditsResetAt: NOW,
         email: "meter@example.com",
@@ -113,10 +112,9 @@ describe("spend/meter", () => {
   });
 
   it("holds and settles an action's calls at once, each on its own escrow, and the fold counts them all", async () => {
-    const t = createConvexTestWithBetterAuth();
+    const t = createConvexTestWithAuth();
     const userId = await t.run((ctx) =>
       ctx.db.insert("users", {
-        authId: "auth-turns",
         credits: 0,
         creditsResetAt: NOW,
         email: "turns@example.com",

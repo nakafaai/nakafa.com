@@ -8,9 +8,9 @@ import type { SessionTokenUnavailable } from "@/lib/auth/token";
  * reads `document` and `window` once, and every decision it hands the presence to
  * is a function of its arguments. It answers whether the signed-in hint of the
  * cookie says a session exists, and the read of the session's Convex token from
- * the token route of its own origin, which answers `undefined` for a visitor.
+ * the refresh route of its own origin, which answers `undefined` for a visitor.
  * The server reads the session itself
- * (`sessionFn`), or the session cookie of the request (`readSessionCookie`).
+ * (`sessionFn`), or the session cookie of the request (`hasSessionCookie`).
  *
  * A route's `beforeLoad` calls this, and the route tree is in the first JavaScript
  * of every page, so the token reader and Effect's HTTP client load only when the
@@ -26,9 +26,8 @@ export function readBrowserPresence(
   return {
     signedIn: hasSignedInHint(cookie),
     token: Effect.promise(() => import("@/lib/auth/token")).pipe(
-      Effect.flatMap(({ readBrowserSessionToken }) =>
-        readBrowserSessionToken(origin)
-      )
+      Effect.flatMap(({ readBrowserSession }) => readBrowserSession(origin)),
+      Effect.map((session) => session?.accessToken)
     ),
   };
 }

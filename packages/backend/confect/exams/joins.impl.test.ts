@@ -322,9 +322,7 @@ describe("exams/joins join", () => {
       });
       const workspace = yield* fixture.account(
         "workspace",
-        "siswa@sekolah.sch.id",
-        true,
-        "sekolah.sch.id"
+        "siswa@sekolah.sch.id"
       );
       expect(yield* workspace.client.mutation(join, scanned)).toEqual({
         outcome: "joined",

@@ -103,10 +103,7 @@ function declarationOf(
 const factories = HashMap.fromIterable<string, Origin>([
   ["convex-test:convexTest", "client"],
   ["convex-test:TestConvex", "client"],
-  [
-    "@repo/backend/confect/test.helpers:createConvexTestWithBetterAuth",
-    "client",
-  ],
+  ["@repo/backend/confect/test.helpers:createConvexTestWithAuth", "client"],
   ["@repo/backend/test/polar:createWebhookTestConvex", "client"],
   [
     "@repo/backend/test/nina:createNinaTest",

@@ -5,10 +5,7 @@ import {
   resolveLegalLinks,
 } from "@repo/backend/confect/emails/legal";
 import { unsubscribePage } from "@repo/backend/confect/emails/unsubscribe/token";
-import {
-  deferWelcomeIntent,
-  toWelcomeIntentError,
-} from "@repo/backend/confect/emails/welcome/impl";
+import { toWelcomeIntentError } from "@repo/backend/confect/emails/welcome/impl";
 import type { welcomeIntentInputValidator } from "@repo/backend/confect/emails/welcome/schema";
 import { readSiteUrl } from "@repo/backend/confect/site/config";
 import { publicationLayer } from "@repo/backend/content/publication/confect";
@@ -54,9 +51,6 @@ export const readWelcomeIntentInput = Effect.fn(
       );
     if (!user || user.deletedAt !== undefined) {
       return null;
-    }
-    if (user.deletionPreparedAt !== undefined) {
-      return yield* deferWelcomeIntent();
     }
     const catalog = yield* readPageCatalog().pipe(
       Effect.provide(publicationLayer)

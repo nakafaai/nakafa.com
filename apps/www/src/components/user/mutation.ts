@@ -68,7 +68,6 @@ export function useUpdateUserNameMutation() {
         Option.some({
           ...current,
           appUser: patchUser(current.appUser, { name }),
-          authUser: patchUser(current.authUser, { name }),
         })
       );
       patchPublicUser(localStore, current.appUser._id, { name });

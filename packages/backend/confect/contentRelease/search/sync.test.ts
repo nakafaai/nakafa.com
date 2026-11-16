@@ -4,7 +4,7 @@ import confectSchema from "@repo/backend/confect/_generated/schema";
 import contentReleases from "@repo/backend/confect/_generated/tables/contentReleases";
 import { decodeReleaseJson } from "@repo/backend/confect/contentRelease/parse";
 import { syncSearch } from "@repo/backend/confect/contentRelease/search/sync";
-import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
+import { createConvexTestWithAuth } from "@repo/backend/confect/test.helpers";
 import { insertArticleProjection } from "@repo/backend/test/article/release";
 import { testArtifactJson } from "@repo/backend/test/content/artifact";
 import { insertCompletedRelease } from "@repo/backend/test/content/model";
@@ -20,7 +20,7 @@ const identity = {
 
 /** Seeds an inactive search buffer from one completed article change. */
 async function stageBuild() {
-  const t = createConvexTestWithBetterAuth();
+  const t = createConvexTestWithAuth();
   await t.mutation(async (ctx) => {
     await insertCompletedRelease(ctx, identity, 1);
     await insertArticleProjection(ctx, identity, 0, testArticleProjection(0));

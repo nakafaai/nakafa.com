@@ -10,7 +10,7 @@ import {
 } from "@effect/vitest";
 import { components } from "@repo/backend/confect/_generated/components";
 import refs from "@repo/backend/confect/_generated/refs";
-import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
+import { createConvexTestWithAuth } from "@repo/backend/confect/test.helpers";
 import { appendNinaTurn, createNinaTest } from "@repo/backend/test/nina";
 import { encodeJsonText } from "@repo/utilities/json";
 import type { FunctionArgs } from "convex/server";
@@ -339,7 +339,7 @@ describe("report of the waits of the newest turns", () => {
   });
 
   it("returns counts of zero and no spread when there is no turn", async () => {
-    const t = createConvexTestWithBetterAuth();
+    const t = createConvexTestWithAuth();
 
     const result = await report({ t }, 10);
 
@@ -365,7 +365,7 @@ describe("report of the waits of the newest turns", () => {
     ["a count of zero", 0, `between 1 and ${WAITS_MAX}`],
     ["a count that is not a whole number", 2.5, "Expected an integer"],
   ])("refuses %s with the error of its schema", async (_, count, message) => {
-    const t = createConvexTestWithBetterAuth();
+    const t = createConvexTestWithAuth();
 
     await expect(t.query(summary, { count })).rejects.toThrow(message);
   });

@@ -335,7 +335,7 @@ describe("operators/visits approve", () => {
         yield* fixture.run(
           Effect.flatMap(DatabaseWriter, (writer) =>
             writer.table("users").patch(staff.userId, {
-              deletionPreparedAt: TENANCY_NOW,
+              deletedAt: TENANCY_NOW,
             })
           )
         );

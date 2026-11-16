@@ -7,7 +7,7 @@ import { describe, expect, it } from "@effect/vitest";
 import { PublicPathSchema } from "@nakafa/aksara-contracts/ids";
 import { MaterialLessonProjectionSchema } from "@nakafa/aksara-contracts/projection/material";
 import { deriveMaterialTopicReference } from "@repo/backend/confect/contentRelease/material/topic";
-import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
+import { createConvexTestWithAuth } from "@repo/backend/confect/test.helpers";
 import {
   expectProblem,
   expectPublicJson,
@@ -31,7 +31,7 @@ import { activateQuranSnapshot } from "@repo/backend/test/quran/snapshot";
 setupApiTest();
 describe("public agent content", () => {
   it("rejects a signed Quran reference with a noncanonical surah route", async () => {
-    const test = createConvexTestWithBetterAuth();
+    const test = createConvexTestWithAuth();
     const search = makeQuranSearch("en", 1);
     await test.mutation((ctx) =>
       activateQuranSnapshot(ctx, [
@@ -67,7 +67,7 @@ describe("public agent content", () => {
   ])(
     "preserves optional authored description semantics: %j",
     async ({ metadata, expected }) => {
-      const test = createConvexTestWithBetterAuth();
+      const test = createConvexTestWithAuth();
       const source = makeMaterialProjection("en", 1);
       const material = MaterialLessonProjectionSchema.make({
         ...source,
@@ -96,7 +96,7 @@ describe("public agent content", () => {
     }
   );
   it("renders a signed opening Bismillah once before the first verse", async () => {
-    const test = createConvexTestWithBetterAuth();
+    const test = createConvexTestWithAuth();
     const bismillah = "بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ";
     await test.mutation((ctx) =>
       activateQuranSnapshot(ctx, [
@@ -132,7 +132,7 @@ describe("public agent content", () => {
     expect(body.text.split(bismillah)).toHaveLength(2);
   });
   it("reads authenticated article markdown through its canonical URL", async () => {
-    const test = createConvexTestWithBetterAuth();
+    const test = createConvexTestWithAuth();
     const article = testArticleProjection(0);
     await test.mutation((ctx) => insertRuntimeArticles(ctx, 1));
     const reference = encodeURIComponent(
@@ -151,7 +151,7 @@ describe("public agent content", () => {
     });
   });
   it("reads authenticated material markdown through its content ID", async () => {
-    const test = createConvexTestWithBetterAuth();
+    const test = createConvexTestWithAuth();
     const material = makeMaterialProjection("en", 1);
     await test.mutation((ctx) =>
       Effect.runPromise(
@@ -180,7 +180,7 @@ describe("public agent content", () => {
   it.effect("keeps material topics citation-only without a runtime read", () =>
     Effect.gen(function* () {
       const runtimeServices = yield* Effect.context<never>();
-      const test = createConvexTestWithBetterAuth();
+      const test = createConvexTestWithAuth();
       const material = makeMaterialProjection("en", 1);
       const topic = yield* deriveMaterialTopicReference(material);
       yield* Effect.promise(() =>
@@ -215,7 +215,7 @@ describe("public agent content", () => {
     })
   );
   it("reads Quran markdown through one transactionally pinned source", async () => {
-    const test = createConvexTestWithBetterAuth();
+    const test = createConvexTestWithAuth();
     await test.mutation((ctx) =>
       activateQuranSnapshot(ctx, [
         makeQuranAttribution(),
@@ -263,7 +263,7 @@ describe("public agent content", () => {
     expect(body.text).toContain("Technical English Tafsir notice.");
   });
   it("fails closed when an article catalog identity is corrupted", async () => {
-    const test = createConvexTestWithBetterAuth();
+    const test = createConvexTestWithAuth();
     const article = testArticleProjection(0);
     await test.mutation(async (ctx) => {
       await insertRuntimeArticles(ctx, 1);

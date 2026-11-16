@@ -71,7 +71,7 @@ const startSession = Effect.fnUntraced(function* (
   yield* Scope.provide(
     authenticateConvex({
       client,
-      readToken,
+      readToken: () => readToken,
       returns,
       sessionId: "session-1",
       store,
@@ -111,7 +111,7 @@ describe("Convex authentication", () => {
     [signedIn("session-2"), "session-1", "session-2"],
     [previewAuthSession, "session-1", null],
   ])(
-    "holds the session the browser last had only until Better Auth answers",
+    "holds the session the browser last had only until the refresh route answers",
     (session, known, id) => {
       expect(readConvexSessionId(session, known)).toBe(id);
     }
@@ -233,6 +233,37 @@ describe("Convex authentication", () => {
         expect(store.getState().confirmation).toStrictEqual(
           answer("session-1", false)
         );
+      })
+  );
+
+  it.effect(
+    "reads the token Convex Auth holds, and asks for a fresh one only when Convex does",
+    () =>
+      Effect.gen(function* () {
+        const read = vi.fn((fresh: boolean) =>
+          Effect.succeed(fresh ? "token-fresh" : "token-held")
+        );
+        const client = makeClient();
+        const scope = yield* Scope.make();
+        yield* Scope.provide(
+          authenticateConvex({
+            client,
+            readToken: read,
+            returns: Stream.empty,
+            sessionId: "session-1",
+            store: createConvexAuthStore(),
+          }),
+          scope
+        );
+        const { fetchToken } = readBinding(client);
+
+        expect(
+          yield* Effect.promise(() => fetchToken({ forceRefreshToken: false }))
+        ).toBe("token-held");
+        expect(
+          yield* Effect.promise(() => fetchToken({ forceRefreshToken: true }))
+        ).toBe("token-fresh");
+        expect(read.mock.calls).toStrictEqual([[false], [true]]);
       })
   );
 

@@ -1,87 +1,31 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
-import { UserCleanupErrorWire } from "@repo/backend/confect/auth/cleanup/spec";
-import {
-  AccountDeletionCancellationUnprovenError,
-  accountDeletionAttemptStatusValidator,
-  accountDeletionCancellationOutcomeValidator,
-  accountDeletionPreparationOutcomeValidator,
-  accountDeletionPreparationVersionValidator,
-} from "@repo/backend/confect/auth/deletion/spec";
+import { AuthFailure } from "@repo/backend/confect/auth/spec";
 import Atomic from "@repo/backend/confect/middleware/atomic.spec";
+import Session from "@repo/backend/confect/middleware/session.spec";
 import { Schema } from "effect";
-export default GroupSpec.make()
-  .addFunction(
-    FunctionSpec.internalMutation({
-      name: "claimAccountDeletion",
-      args: () => ({
-        attemptId: Schema.String,
-        authId: Schema.String,
-      }),
-      returns: () => accountDeletionPreparationOutcomeValidator,
-      error: () => UserCleanupErrorWire,
-    }).middleware(Atomic)
-  )
-  .addFunction(
-    FunctionSpec.internalMutation({
-      name: "continueAccountDeletionCommit",
-      args: () => ({
-        authId: Schema.String,
-        expectedPreparation: accountDeletionPreparationVersionValidator,
-      }),
-      returns: () => Schema.Boolean,
-      error: () => UserCleanupErrorWire,
-    }).middleware(Atomic)
-  )
-  .addFunction(
-    FunctionSpec.publicMutation({
-      name: "prepareCurrentAccountDeletion",
-      args: () => ({
-        attemptId: Schema.String,
-      }),
-      returns: () => accountDeletionPreparationOutcomeValidator,
-      error: () => UserCleanupErrorWire,
-    }).middleware(Atomic)
-  )
-  .addFunction(
-    FunctionSpec.internalMutation({
-      name: "cancelAccountDeletion",
-      args: () => ({
-        authId: Schema.String,
-        expectedPreparation: accountDeletionPreparationVersionValidator,
-      }),
-      returns: () => Schema.Null,
-      error: () => UserCleanupErrorWire,
-    }).middleware(Atomic)
-  )
-  .addFunction(
-    FunctionSpec.publicMutation({
-      name: "cancelAccountDeletionAttempt",
-      args: () => ({
-        attemptId: Schema.String,
-      }),
-      returns: () => accountDeletionCancellationOutcomeValidator,
-      error: () =>
-        Schema.Union([
-          UserCleanupErrorWire,
-          AccountDeletionCancellationUnprovenError,
-        ]),
-    }).middleware(Atomic)
-  )
-  .addFunction(
-    FunctionSpec.publicQuery({
-      name: "getAccountDeletionAttemptStatus",
-      args: () => ({
-        attemptId: Schema.String,
-      }),
-      returns: () => accountDeletionAttemptStatusValidator,
-      error: () => UserCleanupErrorWire,
-    })
-  )
-  .addFunction(
-    FunctionSpec.internalMutation({
-      name: "sweepAccountDeletionRetention",
-      args: () => ({}),
-      returns: () => Schema.Null,
-      error: () => UserCleanupErrorWire,
-    }).middleware(Atomic)
-  );
+
+export const accountDeletionUnavailableCode =
+  "ACCOUNT_DELETION_TEMPORARILY_UNAVAILABLE";
+
+/**
+ * The deletion cannot start, because this deployment could not erase the account from PostHog:
+ * a deleted account leaves PostHog too, so nothing of it is deleted first.
+ */
+export class AccountDeletionUnavailable extends Schema.TaggedError<
+  AccountDeletionUnavailable,
+  { readonly brand: unique symbol }
+>()("AccountDeletionUnavailable", {
+  code: Schema.Literal(accountDeletionUnavailableCode),
+  message: Schema.Literal("Account deletion is temporarily unavailable."),
+}) {}
+
+/** The signed-in person deletes their own account (`deletion/request`). */
+export default GroupSpec.make().addFunction(
+  FunctionSpec.publicMutation({
+    name: "deleteAccount",
+    returns: () => Schema.Null,
+    error: () => Schema.Union([AuthFailure, AccountDeletionUnavailable]),
+  })
+    .middleware(Session)
+    .middleware(Atomic)
+);

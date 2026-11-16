@@ -2,7 +2,7 @@ import { describe, expect, it } from "@effect/vitest";
 import { LEADER_COUNT, leadersOf } from "@repo/backend/confect/island/leaders";
 import { EMPTY_TALLY } from "@repo/backend/confect/island/schema";
 import {
-  createConvexTestWithBetterAuth,
+  createConvexTestWithAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
 import { inMutation } from "@repo/backend/test/client";
@@ -21,7 +21,7 @@ const leaderWorld = Effect.fn("test.island.leaderWorld")(function* (
   learners: readonly (typeof Learner.Type)[]
 ) {
   vi.useFakeTimers({ now: NOW });
-  const t = createConvexTestWithBetterAuth();
+  const t = createConvexTestWithAuth();
   const ids = yield* Effect.forEach(learners, (learner, index) =>
     Effect.promise(() =>
       t.mutation(async (ctx) => {

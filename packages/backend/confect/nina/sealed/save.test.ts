@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { components } from "@repo/backend/confect/_generated/components";
 import { isSealed } from "@repo/backend/confect/nina/sealed";
 import {
-  createConvexTestWithBetterAuth,
+  createConvexTestWithAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
 import { makeBucket, stubBucket } from "@repo/backend/test/bucket";
@@ -66,7 +66,7 @@ describe("saving a learner's message sealed", () => {
   });
 
   it("writes the first message of an empty thread at order 0 and step 0", async () => {
-    const t = createConvexTestWithBetterAuth();
+    const t = createConvexTestWithAuth();
     const { threadId, userId } = await t.mutation(async (ctx) => {
       const user = await seedAuthenticatedUser(ctx, { now: NOW });
       const created = await createThread(ctx, components.nina, {

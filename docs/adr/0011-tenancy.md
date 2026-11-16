@@ -76,7 +76,7 @@ Planned. ADR 0026 lists what is live.
 which never reads the database and routes only labels that are a valid
 `TenantSlug` outside `reservedSlugs`. Unknown tenants render the School
 not-found page from `tenancy/profile:get`. One sign-in covers nakafa.com and
-every tenant host of its cell through Better Auth cross-subdomain cookies, sign-in from a
+every tenant host of its cell through the domain-wide session cookies of Convex Auth (ADR 0009), sign-in from a
 tenant host returns through the apex domain of the tenant's cell (`nakafa.com`
 for `us`, ADR 0026), so the session cookie is set where that cell's hosts read
 it, and tenant pages are private and
@@ -98,18 +98,17 @@ Person and any change reruns that caller's subscriptions. Persons of kind
 
 An invite names a Person and an email address. A claim binds the Person to the
 account that controls the address: an invite is claimed automatically when an
-account whose Better Auth email is verified and equal to the invite address
+account whose address Google verified and that equals the invite address
 exists, the tenant is active, and the tenant's allowed email domains, one of its
-policies, admit the address (an empty list admits every address). A tenant that
-sets domains also needs the account's Google sign-ins to come from them: the
-account holds a Google account, and each of them names one of the domains as
-its hosted domain (ADR 0009). An invite claim
+policies, admit the address (an empty list admits every address). The earlier
+check of the Google account's hosted domain is gone until Convex Auth's Google
+profile carries it (ADR 0009, amended 13 November 2026). An invite claim
 is the one place where an account is matched by its verified email, and ADR 0009
 names it as the exception to its rule that a school account is never matched by
 its email address. An invite expires 14 days after it is created if nobody has
 claimed it, and an expired invite is never claimed: the school invites again.
-Claims run in a scheduled mutation after sign-up, after Better Auth verifies an
-address, and after an invite is created for an existing account, never inside
+Claims run in a scheduled mutation after a Google sign-up, and after an invite
+is created for an existing account, never inside
 the sign-in transaction. The claim writes `person.claimed` with the claim method
 (ADR 0016). An account that already holds a Person in the tenant, an address the
 allowed email domains do not admit, and a suspended tenant leave the invite
@@ -341,8 +340,8 @@ mutations write. Every cell's deployment holds its own `operators` rows (ADR
 in each, and the first operator of a cell is granted through a production
 operation on that cell's deployment. The onboarding role on `users` is a
 learner's self-description and never grants privilege; an environment allowlist
-would match emails instead of accounts and keep no history; the Better Auth admin
-plugin would move platform privilege into the auth component's schema.
+would match emails instead of accounts and keep no history; an admin role in the
+auth component would move platform privilege into the auth component's schema.
 
 Each `operators` row holds its account, its status (`active` or `revoked`), and
 the times it was granted and last changed. The journal records tenant changes
@@ -472,9 +471,9 @@ deleted. Retired data is deleted, not kept.
   transaction, and starts the invitation email through `emails/invite`, since
   `emails` is the only sender. Nakafa staff run
   it with the deployment's key. `tenancy/claims:run` claims the pending invites of one
-  account whose address Better Auth has verified and the tenant admits, a page
-  at a time. It is scheduled by the Better Auth user triggers after sign-up and
-  after verification, only when an invite waits for the address, and for an
+  account whose address Google verified and the tenant admits, a page at a
+  time. It is scheduled by the Google sign-up (`confect/auth/account.ts`), only
+  when an invite waits for the address, and for an
   account that already holds the address of a new invite by
   `tenancy/holders:schedule`, which `open` starts and which pages through those
   accounts, so no number of them is assumed.
@@ -559,7 +558,7 @@ deleted. Retired data is deleted, not kept.
 
 ## Rejected Alternatives
 
-- The Better Auth organization plugin would move tenancy into the auth
+- An organization model of the auth component would move tenancy into the auth
   component's schema and its role model.
 - Client-supplied tenant IDs would make the client choose its authorization
   scope.

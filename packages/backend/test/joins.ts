@@ -10,7 +10,7 @@ import { Array as Arr, Effect, Option } from "effect";
 
 /** An account that no school has invited, signed in with a personal Google address. */
 export const newcomer = (fixture: SittingFixture, suffix: string) =>
-  fixture.account(suffix, `${suffix}@gmail.example.test`, true, null);
+  fixture.account(suffix, `${suffix}@gmail.example.test`);
 
 /** The Person that an account holds in the test school, with its active grants. */
 export const personOf = (

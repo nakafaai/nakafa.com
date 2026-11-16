@@ -32,7 +32,7 @@ export const NETWORK_RETRY_SCHEDULE = Schedule.recurs(2).pipe(
  * retries above, one read answers or fails within 31.5 seconds.
  */
 export const NETWORK_ATTEMPT_DEADLINE = Duration.seconds(10);
-export const NetworkRetryCodeSchema = Schema.Literals([
+const NetworkRetryCodeSchema = Schema.Literals([
   "ECONNRESET",
   "ECONNREFUSED",
   "ENOTFOUND",

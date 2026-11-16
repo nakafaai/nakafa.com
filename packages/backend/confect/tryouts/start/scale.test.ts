@@ -30,10 +30,7 @@ const startAsAnother = (world: TryoutWorld, suffix: string) =>
       )
     );
     return yield* client(
-      world.t.withIdentity({
-        sessionId: other.sessionId,
-        subject: other.authUserId,
-      })
+      world.t.withIdentity({ subject: other.sessionId })
     ).mutation(tryouts.mutations.attempts.startAttempt, startArgs());
   });
 

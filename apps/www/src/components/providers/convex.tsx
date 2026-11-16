@@ -2,6 +2,7 @@
 
 import {
   ConvexProvider as ConvexClientProvider,
+  type ConvexReactClient,
   useConvex,
 } from "convex/react";
 import { Effect, Exit, Function as Fn, Option, Scope } from "effect";
@@ -29,37 +30,51 @@ import { loadKnownSession, saveKnownSession } from "@/lib/auth/known";
 import { readConvexClient } from "@/lib/convex/client";
 
 /**
- * Reads a fresh Convex JWT through the installed Better Auth client plugin. A
- * request that never got an answer and a server failure may answer otherwise
- * when asked again; a refusal and an answer without a token do not.
- * https://labs.convex.dev/better-auth/framework-guides/next
+ * Reads an access token from Convex Auth's client, which asks the refresh route
+ * when told to (`forceRefreshToken`) and otherwise answers with the token it
+ * holds, or none.
  */
-const readConvexToken = Effect.tryPromise({
-  catch: () =>
-    new ConvexTokenReadError({
-      detail: "Better Auth could not read a Convex access token.",
-      retryable: true,
-    }),
-  try: () => readAuthClient().convex.token({ fetchOptions: { throw: false } }),
-}).pipe(
-  Effect.flatMap((response) =>
-    response.error
-      ? Effect.fail(
+const fetchConvexToken = (
+  client: ConvexReactClient,
+  forceRefreshToken: boolean
+) =>
+  readAuthClient(client).pipe(
+    Effect.flatMap((auth) =>
+      Effect.tryPromise({
+        catch: () =>
           new ConvexTokenReadError({
-            detail: "Better Auth rejected the Convex access token request.",
-            retryable: response.error.status >= 500,
+            detail: "Convex Auth could not refresh the access token.",
+            retryable: true,
+          }),
+        try: () => auth.fetchAccessToken({ forceRefreshToken }),
+      })
+    )
+  );
+
+/**
+ * Reads an access token for Convex: the token Convex Auth holds, which a reload
+ * keeps, or the refresh route's for a fresh read or a page that holds none yet.
+ * No token from the refresh route means the session ended, which asking again
+ * would not change.
+ * https://docs.convex.dev/auth/convex-auth/ssr-nextjs/setup
+ */
+const readConvexToken = (client: ConvexReactClient) => (fresh: boolean) =>
+  fetchConvexToken(client, fresh).pipe(
+    Effect.filterOrElse(
+      (held) => held !== null || fresh,
+      () => fetchConvexToken(client, true)
+    ),
+    Effect.flatMap((token) =>
+      Effect.fromOption(
+        Option.fromNullOr(token),
+        () =>
+          new ConvexTokenReadError({
+            detail: "Convex Auth holds no session.",
+            retryable: false,
           })
-        )
-      : Effect.fromOption(
-          Option.fromNullishOr(response.data?.token),
-          () =>
-            new ConvexTokenReadError({
-              detail: "Better Auth returned no Convex access token.",
-              retryable: false,
-            })
-        )
-  )
-);
+      )
+    )
+  );
 
 /** What the browser knows about its session never changes under a mounted page, so nothing notifies. */
 function subscribeKnownSession() {
@@ -78,7 +93,7 @@ function readNoSession() {
 
 /**
  * The session Convex holds credentials for: the signed-in session, and until
- * Better Auth has answered, the session the browser last had.
+ * Convex Auth has answered, the session the browser last had.
  */
 function useConvexSessionId() {
   const known = useSyncExternalStore(
@@ -127,7 +142,7 @@ export function ConvexSessionCredentials({
       Scope.provide(
         authenticateConvex({
           client,
-          readToken: readConvexToken,
+          readToken: readConvexToken(client),
           returns: pageReturns,
           sessionId,
           store,
@@ -166,7 +181,7 @@ export function ConvexSessionRelease() {
 }
 
 /**
- * Keeps the Convex client authenticated as the Better Auth session.
+ * Keeps the Convex client authenticated as the Convex Auth session.
  *
  * Convex's `ConvexProviderWithAuth` shares its state through a context whose
  * value changes when the session resolves, and React client-renders every
@@ -189,7 +204,7 @@ function ConvexAuthProvider({ children }: { children: ReactNode }) {
 }
 
 /**
- * Provides one shared Convex client authenticated by Nakafa's Better Auth session.
+ * Provides one shared Convex client authenticated by Nakafa's Convex Auth session.
  */
 export function ConvexProvider({
   children,

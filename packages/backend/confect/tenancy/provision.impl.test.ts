@@ -304,8 +304,8 @@ describe("tenancy/provision open", () => {
     () =>
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
-        const account = yield* fixture.account("kepala", address, true);
-        yield* fixture.account("lain", stranger, true);
+        const account = yield* fixture.account("kepala", address);
+        yield* fixture.account("lain", stranger);
         const opened = yield* fixture.internal.mutation(
           open,
           request("harapan", [sma])
@@ -349,7 +349,7 @@ describe("tenancy/provision open", () => {
   it.effect("schedules no claim while no account holds the address", () =>
     Effect.gen(function* () {
       const fixture = yield* tenancyFixture;
-      yield* fixture.account("lain", stranger, true);
+      yield* fixture.account("lain", stranger);
       yield* fixture.internal.mutation(open, request("harapan", [sma]));
       yield* fixture.internal.mutation(holdersSchedule, {
         cursor: null,

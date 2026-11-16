@@ -1,7 +1,7 @@
 import { describe, expect, it } from "@effect/vitest";
 import { grantAward } from "@repo/backend/confect/island/award";
 import {
-  createConvexTestWithBetterAuth,
+  createConvexTestWithAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
 import { internal } from "@repo/backend/convex/_generated/api";
@@ -16,7 +16,7 @@ describe("auth/cleanup/island", () => {
     () =>
       Effect.gen(function* () {
         vi.useFakeTimers({ now: NOW });
-        const t = createConvexTestWithBetterAuth();
+        const t = createConvexTestWithAuth();
         const { deleted, kept } = yield* Effect.promise(() =>
           t.mutation(async (ctx) => ({
             deleted: await seedAuthenticatedUser(ctx, {

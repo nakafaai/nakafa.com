@@ -50,14 +50,6 @@ export default GroupSpec.make()
   )
   .addFunction(
     FunctionSpec.internalQuery({
-      name: "user",
-      args: () => ({ authId: Schema.String }),
-      returns: () => Id("users"),
-      error: () => SeedRefused,
-    })
-  )
-  .addFunction(
-    FunctionSpec.internalQuery({
       name: "invitation",
       args: () => ({
         invite: Id("tenantInvites"),

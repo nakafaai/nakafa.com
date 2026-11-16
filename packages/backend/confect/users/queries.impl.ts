@@ -3,23 +3,11 @@ import databaseSchema from "@repo/backend/confect/_generated/schema";
 import { requireAuth, Session } from "@repo/backend/confect/auth/session";
 import sessionMiddleware from "@repo/backend/confect/middleware/session.impl";
 import { inspectUsername } from "@repo/backend/confect/users/availability";
-import {
-  getAppUserByAuthId,
-  getAppUserByUsername,
-} from "@repo/backend/confect/users/directory";
+import { getAppUserByUsername } from "@repo/backend/confect/users/directory";
 import { photoOf } from "@repo/backend/confect/users/picture";
 import { profileAccess } from "@repo/backend/confect/users/profile";
 import spec from "@repo/backend/confect/users/queries.spec";
 import { Effect, Layer, Result } from "effect";
-
-const getUserByAuthId = FunctionImpl.make(
-  databaseSchema,
-  spec,
-  "getUserByAuthId",
-  Effect.fn("users.queries.getUserByAuthId")(function* (args) {
-    return yield* getAppUserByAuthId(args.authId);
-  })
-);
 
 /**
  * The profile of the account that holds a username (ADR 0009, Who Opens A Profile).
@@ -73,7 +61,6 @@ const checkUsername = FunctionImpl.make(
   })
 );
 export default GroupImpl.make(databaseSchema, spec).pipe(
-  Layer.provide(getUserByAuthId),
   Layer.provide(getProfileByUsername),
   Layer.provide(checkUsername),
   Layer.provide(sessionMiddleware),

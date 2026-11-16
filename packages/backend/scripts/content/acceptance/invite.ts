@@ -5,7 +5,7 @@ import {
 } from "@repo/backend/scripts/content/acceptance/convex";
 import { acceptanceRuntimeError } from "@repo/backend/scripts/content/acceptance/error";
 import {
-  SessionCookie,
+  SessionCookies,
   writeFixture,
 } from "@repo/backend/scripts/content/acceptance/fixture";
 import { seedInvitedMember } from "@repo/backend/scripts/content/acceptance/member";
@@ -128,6 +128,6 @@ export const inviteMode = {
     const cookie = yield* seedInvite(slug, address, state === "expired").pipe(
       Effect.provide(localConvexLayer(root))
     );
-    yield* writeFixture(output, SessionCookie, cookie);
+    yield* writeFixture(output, SessionCookies, cookie);
   }),
 } satisfies AcceptanceMode;
