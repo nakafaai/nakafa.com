@@ -14,6 +14,31 @@ const quadsOf = (list: ReturnType<typeof meshChunk>["solid"]) =>
   list.indices.length / 6;
 
 describe("island/mesh", () => {
+  it("grows a tuft on about two in five grass tops under open air, and none on a covered top or on soil", () => {
+    /** A chunk of one block across at height 8, with `over` on top of every column. */
+    const field = (block: "grass" | "dirt", over = 0) => {
+      const cells = emptyCells();
+      for (const cell of Arr.makeBy(16 * 16, (index) => index)) {
+        cells[cellOf(cell % 16, 8, Math.floor(cell / 16))] = idOf(block);
+        cells[cellOf(cell % 16, 9, Math.floor(cell / 16))] = over;
+      }
+      return meshChunk(cells, lightingOf(cells), 0, 0).tufts;
+    };
+    // A tuft is a cross of four quads, standing in the air over its top.
+    const meadow = field("grass");
+    const tufts = quadsOf(meadow) / 4;
+    expect(tufts).toBeGreaterThan(256 * 0.25);
+    expect(tufts).toBeLessThan(256 * 0.55);
+    const heights = Arr.makeBy(
+      meadow.vertices.length / STRIDE,
+      (vertex) => meadow.vertices[vertex * STRIDE + 1]
+    );
+    expect(Math.min(...heights)).toBe(9);
+    expect(Math.max(...heights)).toBe(10);
+    expect(quadsOf(field("grass", idOf("stone")))).toBe(0);
+    expect(quadsOf(field("dirt"))).toBe(0);
+  });
+
   it("draws all six faces of a lone block, and none of the faces two blocks share", () => {
     const cells = emptyCells();
     cells[cellOf(5, 10, 5)] = idOf("stone");

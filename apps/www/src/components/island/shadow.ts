@@ -48,17 +48,12 @@ export function createShadow(gl: WebGL2RenderingContext) {
 
     return {
       /**
-       * Draws what casts a shadow from the light's view `sun`: the blocks
-       * through `blocks` with the cast program and the atlas on unit 0, then
-       * whatever `others` draws with its own program. The map leaves `unit`
-       * while it is drawn into, so no program reads it then.
+       * Clears the map and draws what casts a shadow from the light's view
+       * `sun` through `casters`, which starts with the cast program in use
+       * and may switch to its own for the bodies. The map leaves `unit` while
+       * it is drawn into, so no program reads it then.
        */
-      cast(
-        sun: Float32Array,
-        unit: number,
-        blocks: () => void,
-        others: () => void
-      ) {
+      cast(sun: Float32Array, unit: number, casters: () => void) {
         gl.activeTexture(gl.TEXTURE0 + unit);
         gl.bindTexture(gl.TEXTURE_2D, null);
         gl.activeTexture(gl.TEXTURE0);
@@ -72,8 +67,7 @@ export function createShadow(gl: WebGL2RenderingContext) {
         activate(gl, program);
         gl.uniformMatrix4fv(viewProjection, false, sun);
         gl.uniform1i(atlasUnit, 0);
-        blocks();
-        others();
+        casters();
       },
       /** Puts the map on texture unit `unit` for the programs that read it. */
       bind(unit: number) {

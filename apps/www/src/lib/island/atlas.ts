@@ -35,6 +35,7 @@ import {
   SAND_MARKS,
   sandTile,
   stoneTile,
+  tuftTile,
   waterTile,
 } from "@/lib/island/tiles/nature";
 import { type Pixels, TILE } from "@/lib/island/tiles/paint";
@@ -80,6 +81,7 @@ export const TILE_NAMES = [
   "carrotSprout",
   "cassavaSprout",
   "sweetPotatoSprout",
+  "tuft",
 ] as const;
 
 /** The name of one tile of the atlas. */
@@ -124,6 +126,7 @@ const PAINTERS = {
   carrotSprout: () => sproutTile("lime", "ginger"),
   cassavaSprout: () => sproutTile("leaf", "bark"),
   sweetPotatoSprout: () => sproutTile("leaf", "violet"),
+  tuft: tuftTile,
 } satisfies Record<TileName, (seed: number) => Pixels>;
 
 /** Tiles along one side of the atlas: room for every block, sprite and species. */

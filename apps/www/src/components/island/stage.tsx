@@ -50,6 +50,7 @@ import { lightingOf, meshChunk } from "@/lib/island/mesh";
 import { firefliesOf } from "@/lib/island/night";
 import { planOf } from "@/lib/island/plan";
 import { plantBodies } from "@/lib/island/plants";
+import { RUNGS, stepLadder, TOP_RUNG } from "@/lib/island/quality";
 import { castRay } from "@/lib/island/ray";
 import { hourOf, lightOf } from "@/lib/island/sky";
 import { chimneysOf } from "@/lib/island/smoke";
@@ -121,6 +122,10 @@ function start(
     Math.floor(DateTime.toEpochMillis(DateTime.nowUnsafe()) / 86_400_000)
   );
   let lastLife = 0;
+  // The quality ladder (D44) reads only frames drawn on two ticks in a row, so a resting island's slow pace never counts as slow.
+  let ladder = TOP_RUNG;
+  let lastTick = 0;
+  let drewLast = false;
   const fox = createFox(store, canvas);
   const remesh = (chunks: Iterable<number>) => {
     const { cells } = store.getState();
@@ -357,8 +362,19 @@ function start(
     }
     return moving;
   };
+  /** Feeds the quality ladder a frame drawn right after another (D44), and steps the painter down a rung when it says so. */
+  const measure = (seconds: number) => {
+    const next = stepLadder(ladder, seconds);
+    if (next.rung !== ladder.rung) {
+      painter.quality(RUNGS[next.rung]);
+      canvas.dataset.quality = String(next.rung);
+    }
+    ladder = next;
+  };
   const tick = (now: number) => {
     frame = requestAnimationFrame(tick);
+    const sinceTick = (now - lastTick) / 1000;
+    lastTick = now;
     input.tend(now);
     if (followCamera(now)) {
       needsDraw = true;
@@ -369,8 +385,13 @@ function start(
       !(needsDraw || waterDue || fox.walking() || rod.active()) ||
       document.hidden
     ) {
+      drewLast = false;
       return;
     }
+    if (drewLast) {
+      measure(sinceTick);
+    }
+    drewLast = true;
     lastWater = now;
     needsDraw = false;
     const dt = lastLife === 0 ? 0 : Math.min(0.25, (now - lastLife) / 1000);
