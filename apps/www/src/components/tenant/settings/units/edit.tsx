@@ -18,9 +18,9 @@ import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-d
 import { Array as Arr, Schema } from "effect";
 import { startTransition, useId, useState } from "react";
 import { useTranslations } from "use-intl";
-import { LanguageField } from "@/components/shared/language";
 import { useTenant } from "@/components/tenant/context";
 import { timeZoneItems } from "@/components/tenant/settings/choices";
+import { LanguageField } from "@/components/tenant/settings/language";
 import {
   editUnitChange,
   setNpsnChange,

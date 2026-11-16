@@ -29,8 +29,8 @@ import {
 } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
-import { LanguageField } from "@/components/shared/language";
 import { timeZoneItems } from "@/components/tenant/settings/choices";
+import { LanguageField } from "@/components/tenant/settings/language";
 import { addUnitChange } from "@/components/tenant/settings/mutation";
 import type { Unit } from "@/components/tenant/settings/state";
 import {

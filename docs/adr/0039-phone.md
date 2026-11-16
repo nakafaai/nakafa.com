@@ -54,6 +54,19 @@ Lighthouse on a GitHub runner, mobile, at a slowdown scaled to the runner, media
 
 D10. A static page preloads only what its first paint runs (15 November 2026). TanStack Start lists every `?tsr-split=` chunk of a route as its preload, the chunks of its `errorComponent` and `notFoundComponent` included, so every page fetched them and never ran them: WebKit flagged the `$locale` error and not-found parts and `components/state/app.tsx` as preloaded and unused on every load of `/en`. The build records each client chunk with its address, its static imports and the route parts it holds, and the loader starts the entry, the preloads that hold a route `component`, and what those import statically (`readFirstLoad` in `apps/www/src/lib/static/chunks.ts`). The router loads an error or not-found part when it shows one. A preload the build recorded no chunk for stays and counts toward `BOOT_SCRIPT_LIMIT`, and a build that recorded no chunk fails.
 
+D11. A lesson's first visual draws with MathVisual (15 November 2026). The retired lesson visuals moved onto MathVisual (#2385 and the Aksara content it pins), and every visual serves every content kind, by the owner's rule of 15 November 2026. So the measured lesson, Hyperbola, draws its first visual card with MathVisual's renderer, which the budget counts because the card is near enough to the first screen to load. D9 measured the Quran and Memory graphs again and left the lesson at 3,524,499 decoded bytes, 0.6% under its 3,545,000 limit instead of the spec's 6%. Measured on the production build of 15 November 2026 against D9's own build, the lesson grew by 94,630 decoded bytes:
+
+| Owner | Decoded bytes |
+| --- | --- |
+| MathVisual: its renderer, its 3D names and its slider | 49,185 |
+| The order wrappers of D9's copied chunks | 36,447 |
+| Base UI's composite, copied into five chunks | 14,188 |
+| Icons, the sibling crumbs, the mascot and the flags | 28,656 |
+| Modules that left the graph | -38,215 |
+| Line breaks, which no source map attributes | 4,369 |
+
+The composite copies are a known cost of D9's inlined common chunks, which keep every page under Google's render cap; this change does not touch them. The same day, the School form's language field moved out of the language menu's module into `apps/www/src/components/tenant/settings/language.tsx`: a chunk holds whole modules, so every header and sidebar that drew the menu had loaded the field's Select, Field and their Base UI internals. That took the English pricing graph from 2,059,999 to 2,002,367 decoded bytes and the homepage from 2,704,059 to 2,639,727, both under their limits again. The lesson, at 1,160,551 encoded and 3,619,129 decoded bytes, takes a decoded limit of 3,837,000 by D9's rule: the measurement plus 6%, rounded up to the next thousand. Its encoded limit holds.
+
 ## Consequences
 
 Positive: every page loses those recalculations, the home page's first JavaScript no longer holds the sections under its first screen, and decoration leaves the thread to the reader.

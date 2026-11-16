@@ -48,9 +48,13 @@ const MEMORY_MAX_DECODED_BYTES = 3_346_000;
 
 // A lesson, whose first visual card is near enough to the first screen to load
 // its 3D scene: 1,127,084 encoded / 3,343,730 decoded, 1,017,722 before its
-// warmed neighbours.
+// warmed neighbours. Its first visual card has drawn with MathVisual since the
+// retired visuals moved onto it, and every visual serves every content kind
+// (the owner's rule of 15 November 2026): 1,160,551 encoded / 3,619,129 decoded
+// on 15 November 2026, so the decoded limit rose by the same rule as D9's
+// (ADR 0039 D11). The encoded limit holds.
 const LESSON_MAX_ENCODED_BYTES = 1_195_000;
-const LESSON_MAX_DECODED_BYTES = 3_545_000;
+const LESSON_MAX_DECODED_BYTES = 3_837_000;
 
 // Google renders a page in a browser that loads about 250 of its resources and
 // fails every later one, so a page over that count never starts for Google and

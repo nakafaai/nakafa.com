@@ -25,11 +25,11 @@ import {
 import { Array as Arr, Option, Schema } from "effect";
 import { useId, useState, useTransition } from "react";
 import { useTranslations } from "use-intl";
-import { LanguageField } from "@/components/shared/language";
 import { useTenant, useViewerQuery } from "@/components/tenant/context";
 import { SchoolHeaderAdd } from "@/components/tenant/header";
 import { roleIcon } from "@/components/tenant/roles";
 import { addMemberChange } from "@/components/tenant/settings/accounts";
+import { LanguageField } from "@/components/tenant/settings/language";
 import { cardOffered } from "@/components/tenant/settings/offer";
 import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 
