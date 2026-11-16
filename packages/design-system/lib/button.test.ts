@@ -33,10 +33,10 @@ describe("buttonVariants", () => {
 
     expect(classes).toContain("border-success");
     expect(classes).toContain(
-      "bg-[color-mix(in_oklch,var(--success)_5%,var(--background))]"
+      "bg-[color-mix(in_oklab,var(--success)_5%,var(--background))]"
     );
     expect(classes).toContain(
-      "hover:bg-[color-mix(in_oklch,var(--success)_8%,var(--background))]"
+      "hover:bg-[color-mix(in_oklab,var(--success)_8%,var(--background))]"
     );
   });
 });

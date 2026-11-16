@@ -151,7 +151,7 @@ export function IntegritySheet({
     <Sheet onOpenChange={onOpenChange} open={open}>
       <SheetContent className="sm:max-w-3xl">
         <SheetHeader className="flex-row items-center gap-3 pe-12">
-          <HugeIcons className="size-5 shrink-0" icon={SecurityCheckIcon} />
+          <HugeIcons icon={SecurityCheckIcon} />
           <SheetTitle>{t("integrity-title")}</SheetTitle>
         </SheetHeader>
         <ReadBoundary

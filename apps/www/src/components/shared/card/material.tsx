@@ -56,7 +56,7 @@ export function CardMaterial({ material }: Props) {
                 href={`#${id}`}
                 title={material.title}
               >
-                <HugeIcons className="size-4" icon={Link04Icon} />
+                <HugeIcons icon={Link04Icon} />
               </a>
             </CardTitle>
             <CardDescription title={material.description}>
@@ -72,7 +72,7 @@ export function CardMaterial({ material }: Props) {
           >
             <HugeIcons
               className={cn(
-                "text-muted-foreground size-4 transition-transform",
+                "text-muted-foreground transition-transform",
                 isOpen ? "" : "rotate-180"
               )}
               icon={ArrowDown01Icon}

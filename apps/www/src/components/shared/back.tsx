@@ -31,7 +31,7 @@ export function BackButton(
 
   return (
     <Button onClick={handleBack} variant="ghost" {...props}>
-      <HugeIcons className="size-4" icon={ArrowLeft02Icon} />
+      <HugeIcons icon={ArrowLeft02Icon} />
       {t("back")}
     </Button>
   );

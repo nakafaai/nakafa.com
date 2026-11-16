@@ -306,10 +306,7 @@ function PersonSelect({
             onSome: (person) => person.name,
           })}
         </span>
-        <HugeIcons
-          className="size-4 text-inherit opacity-80"
-          icon={ArrowDown01Icon}
-        />
+        <HugeIcons className="text-inherit opacity-80" icon={ArrowDown01Icon} />
       </PickerTrigger>
       <PickerContent
         empty={

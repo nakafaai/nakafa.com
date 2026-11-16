@@ -109,7 +109,7 @@ function BreadcrumbEllipsis({
       role="presentation"
       {...props}
     >
-      <HugeIcons className="size-4" icon={FolderTreeIcon} />
+      <HugeIcons icon={FolderTreeIcon} />
     </span>
   );
 }

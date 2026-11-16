@@ -47,7 +47,7 @@ export function SidebarSearchButton({
           variant="outline"
         >
           <div className="flex min-w-0 items-center gap-2">
-            <HugeIcons className="size-4 shrink-0" icon={Search02Icon} />
+            <HugeIcons icon={Search02Icon} />
             <span className="truncate">{label}</span>
           </div>
           <SearchShortcut className="hidden shrink-0 group-data-[collapsible=icon]:hidden lg:inline-flex" />

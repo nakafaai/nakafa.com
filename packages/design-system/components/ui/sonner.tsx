@@ -44,12 +44,12 @@ type ToasterStyle = React.CSSProperties & typeof ToasterStyleSchema.Type;
  */
 const toasterStyle: ToasterStyle = {
   "--border-radius": "var(--radius)",
-  "--error-bg": "color-mix(in oklch, var(--destructive) 15%, var(--popover))",
+  "--error-bg": "color-mix(in oklab, var(--destructive) 15%, var(--popover))",
   "--error-border": "var(--destructive)",
   "--error-text": "var(--popover-foreground)",
   "--gray2": "var(--accent)",
   "--gray5": "var(--input)",
-  "--info-bg": "color-mix(in oklch, var(--info) 15%, var(--popover))",
+  "--info-bg": "color-mix(in oklab, var(--info) 15%, var(--popover))",
   "--info-border": "var(--info)",
   "--info-text": "var(--popover-foreground)",
   "--normal-bg": "var(--popover)",
@@ -57,10 +57,10 @@ const toasterStyle: ToasterStyle = {
   "--normal-border": "var(--border)",
   "--normal-border-hover": "var(--input)",
   "--normal-text": "var(--popover-foreground)",
-  "--success-bg": "color-mix(in oklch, var(--success) 15%, var(--popover))",
+  "--success-bg": "color-mix(in oklab, var(--success) 15%, var(--popover))",
   "--success-border": "var(--success)",
   "--success-text": "var(--popover-foreground)",
-  "--warning-bg": "color-mix(in oklch, var(--warning) 15%, var(--popover))",
+  "--warning-bg": "color-mix(in oklab, var(--warning) 15%, var(--popover))",
   "--warning-border": "var(--warning)",
   "--warning-text": "var(--popover-foreground)",
 };
@@ -71,7 +71,9 @@ const toasterStyle: ToasterStyle = {
  * The Toaster is `unstyled`: Sonner's own stylesheet would otherwise set the
  * toast, its buttons, and its close button in unlayered CSS, which beats every
  * Tailwind utility, so the design system recipes would never show. Every part
- * takes its classes here instead. A title takes one line and a description two,
+ * takes its classes here instead. Its dark theme still colors a description in
+ * that unlayered CSS, so the description's muted color is marked important. The
+ * status icons are decorative, since the toast's words say its kind. A title takes one line and a description two,
  * which the line clamps enforce whatever the copy says. The copy is a message
  * node from `lib/toast/message`, which renders the reader's language.
  */
@@ -94,10 +96,10 @@ function Toaster({
       closeButton
       containerAriaLabel={containerAriaLabel}
       icons={{
-        success: <HugeIcons className="size-4" icon={Tick01Icon} />,
-        info: <HugeIcons className="size-4" icon={InformationCircleIcon} />,
-        warning: <HugeIcons className="size-4" icon={Alert02Icon} />,
-        error: <HugeIcons className="size-4" icon={SadDizzyIcon} />,
+        success: <HugeIcons aria-hidden icon={Tick01Icon} />,
+        info: <HugeIcons aria-hidden icon={InformationCircleIcon} />,
+        warning: <HugeIcons aria-hidden icon={Alert02Icon} />,
+        error: <HugeIcons aria-hidden icon={SadDizzyIcon} />,
         loading: <Spinner className="size-4" />,
       }}
       richColors
@@ -113,7 +115,7 @@ function Toaster({
             "absolute start-0 top-0 -translate-x-[35%] -translate-y-[35%]"
           ),
           content: "flex min-w-0 flex-1 flex-col gap-0.5",
-          description: "text-pretty text-muted-foreground leading-[1.4]",
+          description: "text-pretty text-muted-foreground! leading-[1.4]",
           icon: "-ms-0.75 me-1 flex size-4 shrink-0 items-center justify-center",
           title: "text-pretty font-medium leading-normal",
           toast:

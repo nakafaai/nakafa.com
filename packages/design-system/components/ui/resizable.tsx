@@ -34,7 +34,7 @@ function ResizablePanel({ ...props }: React.ComponentProps<typeof Panel>) {
 function ResizeGrip() {
   return (
     <div className="bg-border z-10 flex h-4 w-3 items-center justify-center rounded-xs border">
-      <HugeIcons className="size-2.5" icon={DragDropVerticalIcon} />
+      <HugeIcons icon={DragDropVerticalIcon} size="2xs" />
     </div>
   );
 }

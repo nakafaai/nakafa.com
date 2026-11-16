@@ -29,7 +29,7 @@ export function HomeTrending({
     <section className="flex flex-col gap-4">
       <h2 className="flex items-center gap-2 px-3 font-medium">
         {t("trending-subjects")}
-        <HugeIcons className="size-4" icon={ArrowDown02Icon} />
+        <HugeIcons icon={ArrowDown02Icon} />
       </h2>
       <div className="bg-card text-card-foreground grid divide-y overflow-hidden rounded-xl border shadow-sm">
         {Arr.zipWith(subjects, looks, (subject, look) => (

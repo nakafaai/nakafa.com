@@ -81,10 +81,7 @@ function DatePicker({
           " "
         )}
       >
-        <HugeIcons
-          className="text-muted-foreground size-4 shrink-0"
-          icon={Calendar03Icon}
-        />
+        <HugeIcons className="text-muted-foreground" icon={Calendar03Icon} />
         <span className="flex-1 whitespace-nowrap" id={shownId}>
           {Option.isSome(chosen)
             ? format.dateTime(

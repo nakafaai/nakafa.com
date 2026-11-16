@@ -91,7 +91,7 @@ export function CodeBlockFilename({
       {iconValue ? (
         <SimpleIcon className="size-4 shrink-0" icon={iconValue} />
       ) : (
-        <HugeIcons className="size-4 shrink-0" icon={TerminalIcon} />
+        <HugeIcons icon={TerminalIcon} />
       )}
       <span className="min-w-0 flex-1 truncate">{children}</span>
     </div>

@@ -180,7 +180,7 @@ function TaskHeader() {
         DateTime.toDateUtc(DateTime.makeUnsafe(task.deadline)),
         { dateStyle: "medium", timeStyle: "short", timeZone }
       )}
-      icon={<HugeIcons className="size-5 shrink-0" icon={TaskEdit01Icon} />}
+      icon={<HugeIcons icon={TaskEdit01Icon} />}
       title={task.title}
     />
   );

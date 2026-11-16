@@ -87,13 +87,9 @@ function PaginationLabel({
   return (
     <>
       <div className="text-muted-foreground group-hover:text-accent-foreground flex items-center gap-2 text-sm font-normal transition-colors">
-        {iconPosition === "left" && (
-          <HugeIcons className="size-4 shrink-0" icon={icon} />
-        )}
+        {iconPosition === "left" && <HugeIcons icon={icon} />}
         {label}
-        {iconPosition === "right" && (
-          <HugeIcons className="size-4 shrink-0" icon={icon} />
-        )}
+        {iconPosition === "right" && <HugeIcons icon={icon} />}
       </div>
       <p
         className={cn(

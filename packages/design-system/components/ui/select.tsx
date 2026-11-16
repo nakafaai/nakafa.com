@@ -122,10 +122,7 @@ function SelectTrigger({
     >
       {children}
       <SelectPrimitive.Icon>
-        <HugeIcons
-          className="size-4 text-inherit opacity-80"
-          icon={ArrowDown01Icon}
-        />
+        <HugeIcons className="text-inherit opacity-80" icon={ArrowDown01Icon} />
       </SelectPrimitive.Icon>
     </SelectPrimitive.Trigger>
   );
@@ -262,7 +259,7 @@ function SelectItem({
           <span className="pointer-events-none absolute right-2 flex size-3.5 items-center justify-center" />
         }
       >
-        <HugeIcons className="size-4" icon={Tick01Icon} />
+        <HugeIcons icon={Tick01Icon} />
       </SelectPrimitive.ItemIndicator>
     </SelectPrimitive.Item>
   );
@@ -294,7 +291,7 @@ function SelectScrollUpButton({
       data-slot="select-scroll-up-button"
       {...props}
     >
-      <HugeIcons className="size-4" icon={ArrowUp01Icon} />
+      <HugeIcons icon={ArrowUp01Icon} />
     </SelectPrimitive.ScrollUpArrow>
   );
 }
@@ -312,7 +309,7 @@ function SelectScrollDownButton({
       data-slot="select-scroll-down-button"
       {...props}
     >
-      <HugeIcons className="size-4" icon={ArrowDown01Icon} />
+      <HugeIcons icon={ArrowDown01Icon} />
     </SelectPrimitive.ScrollDownArrow>
   );
 }

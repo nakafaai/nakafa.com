@@ -1,11 +1,11 @@
 import {
-  ArrowDown01Icon,
   ArrowLeft01Icon,
   ArrowRight01Icon,
   Calendar01Icon,
   Calendar03Icon,
 } from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
+import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
   Select,
@@ -14,7 +14,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@repo/design-system/components/ui/select";
-import { buttonVariants } from "@repo/design-system/lib/button";
 import { getCalendarDayKey } from "@repo/design-system/lib/calendar/day";
 import {
   captionChoices,
@@ -59,45 +58,8 @@ function CalendarRoot({
   );
 }
 
-function CalendarChevron({
-  className,
-  orientation,
-  ...props
-}: {
-  className?: string;
-  orientation?: "left" | "right" | "up" | "down";
-}) {
-  if (orientation === "left") {
-    return (
-      <HugeIcons
-        className={cn("size-4", className)}
-        icon={ArrowLeft01Icon}
-        {...props}
-      />
-    );
-  }
-
-  if (orientation === "right") {
-    return (
-      <HugeIcons
-        className={cn("size-4", className)}
-        icon={ArrowRight01Icon}
-        {...props}
-      />
-    );
-  }
-
-  return (
-    <HugeIcons
-      className={cn("size-4", className)}
-      icon={ArrowDown01Icon}
-      {...props}
-    />
-  );
-}
-
 /**
- * The month a calendar shows, as two selects between its arrows: the month, and the year. A month outside the
+ * The month a calendar shows, as one button group: the previous month, the month, the year, and the next month. A month outside the
  * calendar's `startMonth` and `endMonth` cannot be chosen, and a year that would show one shows the nearest month
  * within them. A calendar that names no bounds offers ten years on each side of the shown year.
  */
@@ -108,7 +70,8 @@ function CalendarCaption({
 }: ComponentProps<typeof MonthCaption>) {
   const t = useTranslations("Common");
   const format = useFormatter();
-  const { dayPickerProps, goToMonth } = useDayPicker();
+  const { dayPickerProps, goToMonth, nextMonth, previousMonth } =
+    useDayPicker();
   const shown = calendarMonth.date;
   const year = shown.getFullYear();
   const fallback = defaultBounds(year);
@@ -141,7 +104,17 @@ function CalendarCaption({
 
   return (
     <div {...props}>
-      <div className="flex items-center gap-1.5">
+      <ButtonGroup className="w-full">
+        <Button
+          disabled={previousMonth === undefined}
+          onClick={() => {
+            Option.map(Option.fromNullishOr(previousMonth), goToMonth);
+          }}
+          size="icon-sm"
+          tooltip={t("previous")}
+        >
+          <HugeIcons className="rtl:rotate-180" icon={ArrowLeft01Icon} />
+        </Button>
         <Select
           items={monthItems}
           onValueChange={(value: string | null) => {
@@ -154,7 +127,11 @@ function CalendarCaption({
           }}
           value={String(shown.getMonth())}
         >
-          <SelectTrigger aria-label={t("month")} size="sm">
+          <SelectTrigger
+            aria-label={t("month")}
+            className="min-w-0 flex-1"
+            size="sm"
+          >
             <SelectValue />
           </SelectTrigger>
           <SelectContent label={t("menu-month")}>
@@ -182,7 +159,7 @@ function CalendarCaption({
           }}
           value={String(year)}
         >
-          <SelectTrigger aria-label={t("year")} size="sm">
+          <SelectTrigger aria-label={t("year")} className="shrink-0" size="sm">
             <SelectValue />
           </SelectTrigger>
           <SelectContent label={t("menu-year")}>
@@ -197,7 +174,17 @@ function CalendarCaption({
             ))}
           </SelectContent>
         </Select>
-      </div>
+        <Button
+          disabled={nextMonth === undefined}
+          onClick={() => {
+            Option.map(Option.fromNullishOr(nextMonth), goToMonth);
+          }}
+          size="icon-sm"
+          tooltip={t("next")}
+        >
+          <HugeIcons className="rtl:rotate-180" icon={ArrowRight01Icon} />
+        </Button>
+      </ButtonGroup>
     </div>
   );
 }
@@ -220,12 +207,9 @@ function Calendar({
   className,
   classNames,
   showOutsideDays = true,
-  buttonVariant = "ghost",
   components,
   ...props
-}: ComponentProps<typeof DayPicker> & {
-  buttonVariant?: ComponentProps<typeof Button>["variant"];
-}) {
+}: ComponentProps<typeof DayPicker>) {
   const defaultClassNames = getDefaultClassNames();
   const locale = calendarLocales[useLocale()];
 
@@ -233,8 +217,6 @@ function Calendar({
     <DayPicker
       className={cn(
         "group/calendar bg-background p-3 [--cell-size:--spacing(8)] in-data-[slot=card-content]:bg-transparent in-data-[slot=popover-content]:bg-transparent",
-        String.raw`rtl:**:[.rdp-button\_next>svg]:rotate-180`,
-        String.raw`rtl:**:[.rdp-button\_previous>svg]:rotate-180`,
         className
       )}
       classNames={{
@@ -244,24 +226,8 @@ function Calendar({
           defaultClassNames.months
         ),
         month: cn("flex w-full flex-col gap-4", defaultClassNames.month),
-        // The bar lies over the caption, across its width, so it takes no press itself: the month and year
-        // selects under its middle take theirs, and only its two arrows take a press.
-        nav: cn(
-          "pointer-events-none absolute inset-x-0 top-0 flex w-full items-center justify-between gap-1",
-          defaultClassNames.nav
-        ),
-        button_previous: cn(
-          buttonVariants({ variant: buttonVariant }),
-          "pointer-events-auto size-(--cell-size) p-0 select-none aria-disabled:opacity-50",
-          defaultClassNames.button_previous
-        ),
-        button_next: cn(
-          buttonVariants({ variant: buttonVariant }),
-          "pointer-events-auto size-(--cell-size) p-0 select-none aria-disabled:opacity-50",
-          defaultClassNames.button_next
-        ),
         month_caption: cn(
-          "flex h-(--cell-size) w-full items-center justify-center px-(--cell-size)",
+          "flex h-(--cell-size) w-full items-center justify-center",
           defaultClassNames.month_caption
         ),
         caption_label: cn(
@@ -310,12 +276,12 @@ function Calendar({
       }}
       components={{
         Root: CalendarRoot,
-        Chevron: CalendarChevron,
         MonthCaption: CalendarCaption,
         DayButton: CalendarDayButton,
         WeekNumber: CalendarWeekNumber,
         ...components,
       }}
+      hideNavigation
       locale={locale}
       showOutsideDays={showOutsideDays}
       {...props}

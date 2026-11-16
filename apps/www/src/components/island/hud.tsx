@@ -101,10 +101,10 @@ function Hotbar() {
         label={t("pickaxe")}
         onPress={() => setTool("remove")}
       >
-        <HugeIcons className="size-6" icon={PickaxeIcon} />
+        <HugeIcons icon={PickaxeIcon} />
       </HudButton>
       <HudButton label={t("book")} onPress={() => setBook(true)}>
-        <HugeIcons className="size-6" icon={BookOpen01Icon} />
+        <HugeIcons icon={BookOpen01Icon} />
       </HudButton>
     </nav>
   );
@@ -124,10 +124,10 @@ function History() {
       })}
     >
       <HudButton label={t("undo")} onPress={undo}>
-        <HugeIcons className="size-5" icon={Undo02Icon} />
+        <HugeIcons icon={Undo02Icon} />
       </HudButton>
       <HudButton label={t("redo")} onPress={redo}>
-        <HugeIcons className="size-5" icon={Redo02Icon} />
+        <HugeIcons icon={Redo02Icon} />
       </HudButton>
       <HudButton
         held={muted}
@@ -137,10 +137,7 @@ function History() {
           writeMuted(!muted);
         }}
       >
-        <HugeIcons
-          className="size-5"
-          icon={muted ? VolumeOffIcon : VolumeHighIcon}
-        />
+        <HugeIcons icon={muted ? VolumeOffIcon : VolumeHighIcon} />
       </HudButton>
     </div>
   );
@@ -226,7 +223,7 @@ export function IslandHud() {
           })}
         >
           <HudButton label={t("leave")} onPress={leave}>
-            <HugeIcons className="size-5" icon={ArrowLeft01Icon} />
+            <HugeIcons icon={ArrowLeft01Icon} />
           </HudButton>
           <Progress />
         </div>

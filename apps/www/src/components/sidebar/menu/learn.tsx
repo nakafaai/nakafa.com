@@ -155,7 +155,7 @@ export function CommunityMenuItem() {
       )}
     >
       {t("community")}
-      <HugeIcons className="ml-auto size-4" icon={LinkSquare02Icon} />
+      <HugeIcons className="ml-auto" icon={LinkSquare02Icon} />
     </DropdownMenuItem>
   );
 }

@@ -41,27 +41,15 @@ export function FunctionIllustration({
             {content.input}
           </span>
 
-          <HugeIcons
-            className="hidden size-4 sm:block"
-            icon={ArrowRight02Icon}
-          />
-          <HugeIcons
-            className="block size-4 sm:hidden"
-            icon={ArrowDown02Icon}
-          />
+          <HugeIcons className="hidden sm:block" icon={ArrowRight02Icon} />
+          <HugeIcons className="block sm:hidden" icon={ArrowDown02Icon} />
 
           <div className="bg-accent text-accent-foreground flex items-center justify-center rounded-md p-8">
             {machineLabel}
           </div>
 
-          <HugeIcons
-            className="block size-4 sm:hidden"
-            icon={ArrowDown02Icon}
-          />
-          <HugeIcons
-            className="hidden size-4 sm:block"
-            icon={ArrowRight02Icon}
-          />
+          <HugeIcons className="block sm:hidden" icon={ArrowDown02Icon} />
+          <HugeIcons className="hidden sm:block" icon={ArrowRight02Icon} />
 
           <span
             className={buttonVariants({

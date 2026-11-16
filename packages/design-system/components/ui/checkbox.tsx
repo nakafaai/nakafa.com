@@ -30,7 +30,7 @@ function Checkbox({
           className="grid place-content-center text-current transition-none"
           data-slot="checkbox-indicator"
         >
-          <HugeIcons className="size-3.5" icon={Tick01Icon} />
+          <HugeIcons icon={Tick01Icon} size="sm" />
         </CheckboxPrimitive.Indicator>
       )}
     </CheckboxPrimitive.Root>

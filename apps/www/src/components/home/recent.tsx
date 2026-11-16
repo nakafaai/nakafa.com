@@ -40,7 +40,7 @@ export function HomeContinueLearning({
     <section className="flex flex-col gap-4">
       <h2 className="flex items-center gap-2 px-3 font-medium">
         {t("continue-learning")}
-        <HugeIcons className="size-4" icon={Progress03Icon} />
+        <HugeIcons icon={Progress03Icon} />
       </h2>
       <div className="bg-card text-card-foreground grid divide-y overflow-hidden rounded-xl border shadow-sm">
         {Arr.zipWith(subjects, looks, (subject, look) => (
@@ -56,7 +56,7 @@ export function HomeContinueLearning({
         className={buttonVariants({ className: "w-fit", variant: "ghost" })}
         to="/$locale/search"
       >
-        <HugeIcons className="size-4" icon={Search02Icon} />
+        <HugeIcons icon={Search02Icon} />
         {t("explore-materials")}
       </Link>
     </section>

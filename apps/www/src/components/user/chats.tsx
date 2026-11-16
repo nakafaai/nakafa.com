@@ -202,7 +202,7 @@ function ChatRow({ chat }: { chat: ChatView }) {
           </FeedAge>
           <HugeIcons
             aria-label={tAi(isPrivate ? "private" : "public")}
-            className="text-muted-foreground size-4"
+            className="text-muted-foreground"
             icon={isPrivate ? SquareLock01Icon : Globe02Icon}
             role="img"
           />

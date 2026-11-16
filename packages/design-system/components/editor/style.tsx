@@ -108,8 +108,9 @@ export function RichEditorStyle({
       >
         <HugeIcons icon={icon} />
         <HugeIcons
-          className="text-muted-foreground size-3"
+          className="text-muted-foreground"
           icon={ArrowDown01Icon}
+          size="xs"
         />
       </DropdownMenuTrigger>
       <DropdownMenuContent

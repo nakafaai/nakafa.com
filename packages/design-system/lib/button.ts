@@ -11,25 +11,25 @@ export const buttonVariants = cva(
     variants: {
       variant: {
         default:
-          "bg-primary text-primary-foreground shadow-xs hover:bg-[color-mix(in_oklch,var(--primary)_99%,var(--background))] hover:shadow-md",
+          "bg-primary text-primary-foreground shadow-xs hover:bg-[color-mix(in_oklab,var(--primary)_99%,var(--background))] hover:shadow-md",
         "default-outline":
-          "border-primary text-foreground border bg-[color-mix(in_oklch,var(--primary)_5%,var(--background))] shadow-xs hover:bg-[color-mix(in_oklch,var(--primary)_8%,var(--background))] hover:shadow-md",
+          "border-primary text-foreground border bg-[color-mix(in_oklab,var(--primary)_5%,var(--background))] shadow-xs hover:bg-[color-mix(in_oklab,var(--primary)_8%,var(--background))] hover:shadow-md",
         destructive:
-          "bg-destructive text-destructive-foreground focus-visible:ring-destructive/20 shadow-xs hover:bg-[color-mix(in_oklch,var(--destructive)_99%,var(--background))] hover:shadow-md",
+          "bg-destructive text-destructive-foreground focus-visible:ring-destructive/20 shadow-xs hover:bg-[color-mix(in_oklab,var(--destructive)_99%,var(--background))] hover:shadow-md",
         "destructive-outline":
-          "border-destructive text-foreground border bg-[color-mix(in_oklch,var(--destructive)_5%,var(--background))] shadow-xs hover:bg-[color-mix(in_oklch,var(--destructive)_8%,var(--background))] hover:shadow-md",
+          "border-destructive text-foreground border bg-[color-mix(in_oklab,var(--destructive)_5%,var(--background))] shadow-xs hover:bg-[color-mix(in_oklab,var(--destructive)_8%,var(--background))] hover:shadow-md",
         "success-outline":
-          "border-success text-foreground border bg-[color-mix(in_oklch,var(--success)_5%,var(--background))] shadow-xs hover:bg-[color-mix(in_oklch,var(--success)_8%,var(--background))] hover:shadow-md",
+          "border-success text-foreground border bg-[color-mix(in_oklab,var(--success)_5%,var(--background))] shadow-xs hover:bg-[color-mix(in_oklab,var(--success)_8%,var(--background))] hover:shadow-md",
         outline:
           "border-border bg-background hover:bg-accent hover:text-accent-foreground aria-expanded:bg-muted aria-pressed:bg-muted border shadow-xs",
         secondary:
-          "bg-secondary text-secondary-foreground shadow-xs hover:bg-[color-mix(in_oklch,var(--secondary)_99%,var(--background))] hover:shadow-md",
+          "bg-secondary text-secondary-foreground shadow-xs hover:bg-[color-mix(in_oklab,var(--secondary)_99%,var(--background))] hover:shadow-md",
         "secondary-outline":
-          "border-muted-foreground text-foreground border bg-[color-mix(in_oklch,var(--secondary)_5%,var(--background))] shadow-xs hover:bg-[color-mix(in_oklch,var(--secondary)_8%,var(--background))] hover:shadow-md",
+          "border-muted-foreground text-foreground border bg-[color-mix(in_oklab,var(--secondary)_5%,var(--background))] shadow-xs hover:bg-[color-mix(in_oklab,var(--secondary)_8%,var(--background))] hover:shadow-md",
         // On a band that stays dark in every theme, such as the school band:
         // Nina's light face color with her ink, so it reads in every theme.
         inverse:
-          "bg-nina-face text-nina-ink shadow-xs hover:bg-[color-mix(in_oklch,var(--color-nina-face)_90%,var(--color-nina-ink))] hover:shadow-md",
+          "bg-nina-face text-nina-ink shadow-xs hover:bg-[color-mix(in_oklab,var(--color-nina-face)_90%,var(--color-nina-ink))] hover:shadow-md",
         // The quieter action beside `inverse`, on the same dark band.
         "inverse-outline":
           "border-nina-face text-nina-face hover:bg-nina-face hover:text-nina-ink border shadow-xs",

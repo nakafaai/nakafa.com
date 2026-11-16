@@ -207,7 +207,7 @@ function SearchState() {
     <CommandEmpty className="text-muted-foreground text-center text-sm not-empty:flex not-empty:flex-col not-empty:items-center not-empty:justify-center not-empty:gap-2 not-empty:p-7.5">
       {Result.isFailure(answer) && (
         <>
-          <HugeIcons className="size-4" icon={InformationCircleIcon} />
+          <HugeIcons icon={InformationCircleIcon} />
           <p>{t("search-unavailable")}</p>
         </>
       )}
