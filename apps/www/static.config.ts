@@ -102,7 +102,8 @@ export function writeStaticArtifactFiles(outDir: string): Promise<void> {
       return;
     }
     runner.ref();
-    runner.channel?.ref();
+    // Bun's channel has no ref either, as it has no unref above.
+    runner.channel?.ref?.();
     runner.on("exit", (code, signal) => {
       if (code === 0) {
         resolve();
