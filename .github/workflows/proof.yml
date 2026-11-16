@@ -28,13 +28,21 @@
 # `gate`, the proof `proof/<engine>` for each engine it ran, and the job that
 # finds all three engine statuses of this run final `proof`.
 #
+# A push to main runs only the warming job, which saves main's prepared runtime
+# and the browsers in main's scope, the only one a merge group can restore from.
+#
 # It reads no secret, publishes nothing and touches no Convex or Cloudflare
 # deployment. A pull request from a fork gets a read-only token, so its run
 # posts no status and it cannot enter the queue.
 name: Proof
-run-name: Proof ${{ inputs.sha || github.event.pull_request.head.sha || github.event.merge_group.head_sha }} ${{ inputs.nonce }}
+run-name: ${{ github.event_name == 'push' && 'Warm' || 'Proof' }} ${{ inputs.sha || github.event.pull_request.head.sha || github.event.merge_group.head_sha || github.sha }} ${{ inputs.nonce }}
 
 on:
+  # A push to main warms the caches that merge groups restore: a group runs on a
+  # gh-readonly-queue branch, which reads only main's caches, and what it saves
+  # itself no later group can read.
+  push:
+    branches: [ main ]
   pull_request:
     types: [ opened, synchronize, reopened, ready_for_review ]
   merge_group:
@@ -77,11 +85,12 @@ on:
         type: string
 
 # A push to a pull request cancels the run of the head it replaced, whose
-# statuses name that older head only. Every other run has a group of its own,
-# so a merge group or a dispatch is never cancelled by a later one.
+# statuses name that older head only, and a push to main cancels the warming of
+# the main it replaced. Every other run has a group of its own, so a merge group
+# or a dispatch is never cancelled by a later one.
 concurrency:
-  group: ${{ github.event_name == 'pull_request' && format('proof-pull-{0}', github.event.pull_request.number) || format('proof-run-{0}', github.run_id) }}
-  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+  group: ${{ github.event_name == 'pull_request' && format('proof-pull-{0}', github.event.pull_request.number) || github.event_name == 'push' && 'proof-warm' || format('proof-run-{0}', github.run_id) }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' || github.event_name == 'push' }}
 
 permissions: {}
 
@@ -428,6 +437,22 @@ jobs:
           ref: ${{ env.SHA }}
           persist-credentials: false
 
+      # Convex runs "use node" actions on the Node major that convex.json names,
+      # which the acceptance runtime finds through CONVEX_NODE_BIN. It installs
+      # before the workspace's Node, which then comes first on the PATH.
+      - name: Name Node for Convex actions
+        id: convex
+        run: echo "node=$(jq -r .node.nodeVersion packages/backend/convex.json)" >> "$GITHUB_OUTPUT"
+
+      - name: Install Node for Convex actions
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: ${{ steps.convex.outputs.node }}
+          package-manager-cache: false
+
+      - name: Point the runtime at Node for Convex actions
+        run: echo "CONVEX_NODE_BIN=$(dirname "$(command -v node)")" >> "$GITHUB_ENV"
+
       - name: Install dependencies
         uses: ./.github/actions/install
 
@@ -493,19 +518,8 @@ jobs:
           (setsid bash -c "bash '$RUNNER_TEMP/browsers.sh'; echo \$? > '$RUNNER_TEMP/browsers.exit'" \
             > "$RUNNER_TEMP/browsers.log" 2>&1 &)
 
-      # Convex runs "use node" actions on the Node major that convex.json names,
-      # which the acceptance runtime finds through Homebrew, as on the Mac.
-      - name: Install Node for Convex actions
-        env:
-          HOMEBREW_NO_AUTO_UPDATE: "1"
-          HOMEBREW_NO_INSTALL_CLEANUP: "1"
-        run: |
-          echo /home/linuxbrew/.linuxbrew/bin >> "$GITHUB_PATH"
-          /home/linuxbrew/.linuxbrew/bin/brew install --quiet "node@$(jq -r .node.nodeVersion packages/backend/convex.json)"
-
-      - name: Generate bindings
-        run: bun run --cwd packages/backend codegen
-
+      # The proof reads the committed bindings, which the gate regenerates and
+      # compares on the same head.
       - name: Name the prepared runtime
         id: key
         run: |
@@ -543,12 +557,6 @@ jobs:
         env:
           TURBO_CONCURRENCY: "2"
         run: bun run --cwd packages/backend acceptance build
-
-      # A head whose committed bindings differ from what its own code generates is not ready.
-      - name: Verify generated bindings
-        run: |
-          git status --porcelain -- packages/backend/confect/_generated packages/backend/convex/_generated
-          test -z "$(git status --porcelain -- packages/backend/confect/_generated packages/backend/convex/_generated)"
 
       - name: Start
         run: |
@@ -693,3 +701,93 @@ jobs:
       - name: Post the group's verdict
         if: always() && env.VERIFY == 'group'
         uses: ./.github/actions/verdict
+
+  # Prepares main's runtime and downloads the browsers once per push to main, and
+  # saves both in main's scope, so a merge group whose head changes no backend
+  # input restores its prepared runtime and every group restores its browsers.
+  # It posts no status and builds nothing.
+  warm:
+    name: Warm
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    env:
+      ENGINES: chromium firefox webkit
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Name Node for Convex actions
+        id: convex
+        run: echo "node=$(jq -r .node.nodeVersion packages/backend/convex.json)" >> "$GITHUB_OUTPUT"
+
+      - name: Install Node for Convex actions
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: ${{ steps.convex.outputs.node }}
+          package-manager-cache: false
+
+      - name: Point the runtime at Node for Convex actions
+        run: echo "CONVEX_NODE_BIN=$(dirname "$(command -v node)")" >> "$GITHUB_ENV"
+
+      - name: Install dependencies
+        uses: ./.github/actions/install
+
+      - name: Name the browsers
+        id: playwright
+        working-directory: apps/www
+        run: echo "version=$(bunx --no-install playwright --version | awk '{print $2}')" >> "$GITHUB_OUTPUT"
+
+      # The key of the proof machine that runs all three engines.
+      - name: Restore the browsers
+        id: browsers
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          key: playwright-${{ runner.os }}-${{ runner.arch }}-${{ steps.playwright.outputs.version }}-chromium-firefox-webkit
+          path: ~/.cache/ms-playwright
+
+      - name: Download the browsers
+        if: steps.browsers.outputs.cache-hit != 'true'
+        working-directory: apps/www
+        run: bunx --no-install playwright install $ENGINES
+
+      - name: Save the browsers
+        if: steps.browsers.outputs.cache-hit != 'true'
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          key: playwright-${{ runner.os }}-${{ runner.arch }}-${{ steps.playwright.outputs.version }}-chromium-firefox-webkit
+          path: ~/.cache/ms-playwright
+
+      - name: Name the prepared runtime
+        id: key
+        run: |
+          key="$(bun run --cwd packages/backend acceptance key | grep -E '^[0-9a-f]{64}$' | tail -1)"
+          [ -n "$key" ] || { echo "The prepared runtime has no key." >&2; exit 1; }
+          echo "key=$key" >> "$GITHUB_OUTPUT"
+          echo "ACCEPTANCE_SNAPSHOTS=$RUNNER_TEMP/snapshots" >> "$GITHUB_ENV"
+
+      - name: Restore the prepared runtime
+        id: restore
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          key: prepared-${{ steps.key.outputs.key }}
+          lookup-only: true
+          path: |
+            ${{ runner.temp }}/snapshots
+            ~/.cache/convex/binaries
+
+      - name: Prepare
+        if: steps.restore.outputs.cache-hit != 'true'
+        run: bun run --cwd packages/backend acceptance prepare
+
+      - name: Save the prepared runtime
+        if: steps.restore.outputs.cache-hit != 'true'
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          key: prepared-${{ steps.key.outputs.key }}
+          path: |
+            ${{ runner.temp }}/snapshots
+            ~/.cache/convex/binaries
