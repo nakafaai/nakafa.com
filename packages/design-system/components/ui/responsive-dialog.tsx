@@ -22,15 +22,19 @@ import {
   Item,
   ItemContent,
   ItemDescription,
+  ItemGroup,
   ItemMedia,
   ItemTitle,
 } from "@repo/design-system/components/ui/item";
 import { TAILWIND_MEDIA_QUERIES } from "@repo/design-system/lib/breakpoints";
 import { pressMainAction } from "@repo/design-system/lib/dialog";
+import { cva } from "class-variance-authority";
 import {
   type ComponentProps,
+  createContext,
   type KeyboardEvent,
   type ReactNode,
+  use,
   useRef,
 } from "react";
 
@@ -145,6 +149,40 @@ export function ResponsiveDialog({
   );
 }
 
+/** Whether a subject stands in a dialog's list of subjects (`ResponsiveDialogSubjects`). */
+const SubjectsContext = createContext(false);
+
+/** A subject alone keeps its own outline; in a list it is one row of the list's card, split from the next by a line. */
+const dialogSubjectVariants = cva("", {
+  variants: {
+    listed: {
+      false: "",
+      true: "rounded-none border-x-0 border-t-0 last:border-b-0",
+    },
+  },
+});
+
+/**
+ * Several subjects of one dialog as one card: rows joined by a line and no gap, as a button group joins its
+ * segments, with the group's radius and shadow, so the dialog reads them as one list rather than separate boxes.
+ */
+export function ResponsiveDialogSubjects({
+  children,
+}: {
+  children: ReactNode;
+}) {
+  return (
+    <SubjectsContext value={true}>
+      <ItemGroup
+        className="gap-0 overflow-hidden rounded-md border shadow-xs has-data-[size=sm]:gap-0"
+        data-slot="dialog-subjects"
+      >
+        {children}
+      </ItemGroup>
+    </SubjectsContext>
+  );
+}
+
 /**
  * What a dialog's action is about, the body of a confirm: the icon of its kind beside its name, and a second line
  * when one name is not enough, so the reader sees what the action changes or takes away before pressing it.
@@ -158,8 +196,15 @@ export function ResponsiveDialogSubject({
   description?: ReactNode;
   icon: ComponentProps<typeof OptionIcon>["icon"];
 }) {
+  const listed = use(SubjectsContext);
+
   return (
-    <Item size="sm" variant="outline">
+    <Item
+      className={dialogSubjectVariants({ listed })}
+      render={listed ? <li /> : undefined}
+      size="sm"
+      variant="outline"
+    >
       <ItemMedia variant="icon">
         <OptionIcon icon={icon} />
       </ItemMedia>
