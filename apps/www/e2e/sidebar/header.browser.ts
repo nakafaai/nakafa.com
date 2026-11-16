@@ -1,4 +1,7 @@
 import { expect, type Route, test } from "@playwright/test";
+import en from "@repo/internationalization/dictionaries/en.json" with {
+  type: "json",
+};
 import { Effect, MutableList } from "effect";
 import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { activateUntilVisible } from "@/e2e/support/input";
@@ -8,6 +11,9 @@ import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
 /** The page header a page draws for itself. */
 const PAGE_HEADER = '[data-slot="page-header"]';
+
+/** The words the search palette is given, whose last row opens the search page for them. */
+const QUERY = "limit";
 
 /** Every script of the page, held back so a press lands before React takes the page over. */
 const SCRIPTS = /\/assets\/.*\.js/u;
@@ -107,20 +113,28 @@ test("a phone shows the app's bar again on a page without a header of its own, a
           expect(header).toBeVisible({ timeout: readinessTimeoutMilliseconds })
         );
 
-        // The Quran draws no page header, while the router keeps the try-out page in
-        // the document, hidden: its header must not hide the app's bar. Both pages
-        // are public, so the visit needs no account (Home sends a visitor without
-        // one to sign in).
-        const quran = yield* activateUntilVisible(
+        // The search page draws no page header, while the router keeps the try-out page
+        // in the document, hidden: its header must not hide the app's bar. Both pages
+        // are public, so the visit needs no account (Home sends a visitor without one
+        // to sign in). The sidebar's search opens the palette, whose last row opens the
+        // search page for the words typed, in the same document.
+        const search = yield* activateUntilVisible(
           header.getByRole("button", { name: "Toggle Sidebar" }),
           page
-            .locator('[data-sidebar="sidebar"]:visible')
-            .getByRole("link", { exact: true, name: "Quran" }),
+            .getByRole("dialog", { name: "Sidebar" })
+            .getByRole("button", { name: en.Utils["search-bar-placeholder"] }),
           readinessTimeoutMilliseconds
         );
         yield* Effect.promise(async () => {
-          await quran.click();
-          await page.waitForURL("**/en/quran");
+          await search.click();
+          const palette = page.getByRole("dialog", { name: en.Common.search });
+          await palette.getByRole("combobox").fill(QUERY);
+          await palette
+            .getByRole("option", {
+              name: en.Utils["search-full"].replace("{query}", QUERY),
+            })
+            .click();
+          await page.waitForURL(`**/en/search?q=${QUERY}`);
         });
         // The app's bar stands in the page's main. The sidebar's sheet, still closing from the press, holds
         // a search row of the same name outside it for a moment.
