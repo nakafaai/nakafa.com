@@ -1,5 +1,6 @@
 import { SPAN } from "@repo/backend/confect/island/world";
 import { ATLAS_TILES } from "@/lib/island/atlas";
+import { SHORE_REACH } from "@/lib/island/shore";
 import { WIND_GLSL } from "@/lib/island/wind";
 
 /**
@@ -108,20 +109,24 @@ void main() {
   }
   float foam = 0.0;
   if (uWater > 0.5) {
-    // The sea in whole art pixels (D28): how near land this pixel is, and a slow drift that breaks every line of it.
+    // The sea in whole art pixels (D28, D34): how far this pixel lies from the land's edge, in cells, wobbled by a still noise of its place so no band copies the coast's steps.
     vec2 art = floor(vWorld.xz * 16.0) / 16.0;
-    float near = texture(uShore, (art + 0.5 - uShoreBox.x) / uShoreBox.y).r;
+    float coast = texture(uShore, (art + 0.5 - uShoreBox.x) / uShoreBox.y).r * ${SHORE_REACH.toFixed(1)} - 0.5;
+    coast += (noiseOf(art * 0.7) - 0.5) * 0.8;
     float drift = noiseOf(art * 2.0 + vec2(uTime * 0.25, -uTime * 0.18));
-    // Shallows: the water pales and greens toward the shore.
-    paint = mix(paint, paint + vec3(0.06, 0.2, 0.17), smoothstep(0.0, 0.8, near) * 0.7);
-    // Surf: a band along the land that laps in and out, and one thin line of foam riding in ahead of it.
+    // Depth in four bands, each a flat step of colour: shoal, shallows, the shelf, then the deep.
+    vec3 tint = coast < 0.8 ? vec3(0.1, 0.3, 0.24) : coast < 2.4 ? vec3(0.05, 0.17, 0.14) : coast < 5.5 ? vec3(0.015, 0.06, 0.05) : vec3(0.0);
+    paint = paint + tint * 0.8;
+    // Waves: thin crests that roll in toward the coast from the shelf, broken where the noise is low, and gone in the shoal.
+    float crest = step(fract((coast + uTime * 0.55) / 2.6), 0.07) * step(0.9, coast) * (1.0 - step(7.0, coast));
+    float wave = crest * step(0.4, noiseOf(art * 0.9 + vec2(uTime * 0.05, 0.0)));
+    // Surf: foam that laps up and back against the land, and one line riding in ahead of it.
     float lap = 0.5 + 0.5 * sin(uTime * 1.1 + drift * 5.0);
-    float reach = near + (drift - 0.5) * 0.24;
-    float surf = step(0.8 - 0.1 * lap, reach);
-    float line = step(0.4 + 0.08 * lap, reach) * (1.0 - step(0.5 + 0.08 * lap, reach)) * step(0.35, lap);
+    float surf = step(coast, 0.12 + 0.28 * lap);
+    float line = step(abs(coast - (0.7 + 0.25 * lap)), 0.05) * step(0.35, lap);
     // Glints: out at sea, patches of sparse specks of light that run with the wind.
-    float glint = step(0.955, noiseOf(vec2(art.x * 3.0 + uTime * 0.7, art.y * 9.0 - uTime * 0.2))) * step(0.5, noiseOf(art * 0.12 + vec2(uTime * 0.03, 0.0))) * (1.0 - smoothstep(0.0, 0.3, near)) * vSky;
-    foam = max(max(surf, line * 0.85), glint * 0.55);
+    float glint = step(0.955, noiseOf(vec2(art.x * 3.0 + uTime * 0.7, art.y * 9.0 - uTime * 0.2))) * step(0.5, noiseOf(art * 0.12 + vec2(uTime * 0.03, 0.0))) * smoothstep(4.0, 7.0, coast) * vSky;
+    foam = max(max(surf, line * 0.85), max(wave * 0.45, glint * 0.55));
   }
   vec3 light = uAmbient * (0.55 + 0.45 * vShade) + uSun * vShade * vSky * (1.0 - 0.4 * cloudOf(vWorld.xz));
   light = max(light, uLamp * vGlow * vGlow * vShade);
