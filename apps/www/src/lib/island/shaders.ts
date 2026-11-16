@@ -1,4 +1,5 @@
 import { ATLAS_TILES, SLOTS } from "@/lib/island/atlas";
+import { GROUND_GLSL } from "@/lib/island/ground";
 import { SHORE_REACH } from "@/lib/island/shore";
 import { WIND_GLSL } from "@/lib/island/wind";
 
@@ -35,14 +36,12 @@ out vec2 vUv;
 out float vShade;
 out float vSky;
 out float vGlow;
-out float vSway;
 out vec3 vWorld;
 void main() {
   vUv = aUv;
   vShade = aShade;
   vSky = aSky;
   vGlow = aGlow;
-  vSway = aSway;
   // The light and the edges keep to where the block stands; only what is drawn gives to the wind (D32).
   vWorld = aPosition;
   vec3 place = aSway > 0.0 ? aPosition + windShift(aPosition.xz, aSway) : aPosition;
@@ -72,7 +71,6 @@ in vec2 vUv;
 in float vShade;
 in float vSky;
 in float vGlow;
-in float vSway;
 in vec3 vWorld;
 layout(location = 0) out vec4 color;
 layout(location = 1) out vec4 surface;
@@ -89,6 +87,7 @@ float noiseOf(vec2 place) {
     part.y
   );
 }
+${GROUND_GLSL}
 // The shadow of the clouds drifting over the island, cut into whole art pixels.
 float cloudOf(vec2 place) {
   vec2 pixel = floor((place + vec2(uTime * 0.7, uTime * 0.3)) * 4.0) / 4.0;
@@ -101,6 +100,22 @@ void main() {
     vec2 local = fract(vWorld.xz * 0.5 + vec2(uTime * 0.04, uTime * 0.017) + vWorld.y * 0.5);
     uv = (uWaterTile + 0.002 + local * 0.996) / ${ATLAS_TILES.toFixed(1)};
   }
+  // A ground top (D39) draws each art pixel from the ground the column map gives it, in the same tile of that ground's set, darkened where a higher ground's edge stands beside it toward the sun, and along its own edge away from it.
+  float slot = dot(floor(vUv * ${ATLAS_TILES.toFixed(1)}), vec2(1.0, ${ATLAS_TILES.toFixed(1)}));
+  float ground = uWater > 0.5 ? 0.0 : groundOfSlot(slot);
+  float border = 0.0;
+  if (ground > 0.0) {
+    float pixel = 1.0 / 16.0;
+    vec2 art = (floor(vWorld.xz * 16.0) + 0.5) * pixel;
+    float top = floor(vWorld.y + 0.5) - 1.0;
+    float own = ground;
+    ground = groundAt(art, top, own);
+    float sunward = max(groundAt(art - vec2(pixel, 0.0), top, own), groundAt(art + vec2(0.0, pixel), top, own));
+    float shadeward = min(groundAt(art + vec2(pixel, 0.0), top, own), groundAt(art - vec2(0.0, pixel), top, own));
+    border = 0.22 * step(ground + 0.5, sunward) + 0.12 * step(shadeward + 0.5, ground);
+    float tile = GROUND_SLOT + (ground - 1.0) * WANG + mod(slot - GROUND_SLOT, WANG);
+    uv = (vec2(mod(tile, ${ATLAS_TILES.toFixed(1)}), floor(tile / ${ATLAS_TILES.toFixed(1)})) + fract(vUv * ${ATLAS_TILES.toFixed(1)})) / ${ATLAS_TILES.toFixed(1)};
+  }
   vec4 texel = texture(uAtlas, uv);
   // After dusk a window's clear panes glow warm instead of showing through (D36); most homes are lit, a few stay dark.
   float pane = uWater < 0.5 && all(equal(floor(vUv * ${ATLAS_TILES.toFixed(1)}), GLASS_TILE)) ? 1.0 : 0.0;
@@ -110,10 +125,14 @@ void main() {
     if (pane * step(0.3, uLamp.r) * step(home, 0.8) < 0.5) discard;
     emit = smoothstep(0.3, 0.7, uLamp.r);
   }
-  vec3 paint = texel.rgb;
-  if (vSway < -0.5) {
+  vec3 paint = texel.rgb * (1.0 - border);
+  if (abs(ground - GRASS) < 0.5) {
+    vec2 art = floor(vWorld.xz * 16.0) / 16.0;
+    // The meadow in patches a few blocks wide, a shade darker or lighter, so a field never reads as one flat green (D39).
+    float meadow = noiseOf(art * 0.2);
+    paint *= 1.0 + 0.06 * (step(0.66, meadow) - step(meadow, 0.32));
     // A gust shows on the meadow (D32): the grass under its front turns a tone lighter, in whole art pixels.
-    paint *= 1.0 + 0.1 * step(0.55, windField(floor(vWorld.xz * 16.0) / 16.0, 1.0));
+    paint *= 1.0 + 0.1 * step(0.55, windField(art, 1.0));
   }
   vec3 face = normalize(cross(dFdx(vWorld), dFdy(vWorld)));
   if (uWater < 0.5) {

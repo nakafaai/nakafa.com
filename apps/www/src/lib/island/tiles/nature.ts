@@ -7,6 +7,7 @@ import {
   speckle,
   TILE,
 } from "@/lib/island/tiles/paint";
+import { markOf } from "@/lib/island/tiles/wang";
 
 /** Soil: warm brown grain with darker clods and a few pebbles. */
 export function dirtTile(seed: number) {
@@ -21,7 +22,7 @@ export function dirtTile(seed: number) {
   return pixels;
 }
 
-/** The top of grass: blades in tufts, light over dark, on a sunlit green. */
+/** The top of grass: blades in tufts, light over dark, on a sunlit green. Every tuft stands inside the tile, so a Wang set lays any two side by side (D39). */
 export function grassTopTile(seed: number) {
   const pixels = blankTile();
   speckle(pixels, seed, "grass", [
@@ -31,7 +32,7 @@ export function grassTopTile(seed: number) {
   ]);
   for (let index = 0; index < 14; index += 1) {
     const x = Math.floor(unitOf(seed + 3, index, 1) * TILE);
-    const y = Math.floor(unitOf(seed + 3, index, 2) * TILE);
+    const y = Math.floor(unitOf(seed + 3, index, 2) * (TILE - 2));
     put(pixels, x, y, "grass", 3);
     put(pixels, x, y + 1, "grass", 2);
     put(pixels, x, y + 2, "grass", 0);
@@ -61,7 +62,7 @@ export function sandTile(seed: number) {
     [0, 0.15],
   ]);
   for (let row = 2; row < TILE; row += 5) {
-    const start = Math.floor(unitOf(seed, row, 5) * TILE);
+    const start = Math.floor(unitOf(seed, row, 5) * (TILE - 4));
     for (let step = 0; step < 5; step += 1) {
       put(pixels, start + step, row, "sand", 3);
     }
@@ -185,3 +186,73 @@ export function flowersTile() {
   }
   return pixels;
 }
+
+/**
+ * The marks of the ground's Wang sets (D39): what straddles an edge where it
+ * is marked, a row mark across a north or south edge, a column mark across a
+ * west or east edge. Grass and leaf tones only on grass, so the season paints
+ * them with the meadow.
+ */
+export const GRASS_MARKS = [
+  // A clump of clover, dark under its lit middle.
+  markOf(2, ["..a.a..", ".abcba.", "abcdcba", ".abcba.", "..a.a.."], {
+    a: ["leaf", 0],
+    b: ["leaf", 1],
+    c: ["leaf", 2],
+    d: ["grass", 3],
+  }),
+  // A tuft of tall blades, their tips catching the light.
+  markOf(2, ["..d..", ".dc.d", ".cbdc", "dbcbc", "abab.", ".aaa."], {
+    a: ["grass", 0],
+    b: ["grass", 1],
+    c: ["grass", 2],
+    d: ["grass", 3],
+  }),
+] as const;
+
+export const SAND_MARKS = [
+  // A ripple the wind left, lit along its crest.
+  markOf(1, ["..ddddd..", "ddcccccdd", "bb.....bb"], {
+    b: ["sand", 0],
+    c: ["sand", 2],
+    d: ["sand", 3],
+  }),
+  // A small shell, its shadow under it.
+  markOf(2, [".aa.", "abba", "bccb", ".ss."], {
+    a: ["cream", 3],
+    b: ["cream", 2],
+    c: ["cream", 1],
+    s: ["sand", 0],
+  }),
+] as const;
+
+export const DIRT_MARKS = [
+  // A clod, lit on top and shaded under.
+  markOf(2, [".aba.", "abcba", ".bdb.", "..d.."], {
+    a: ["soil", 3],
+    b: ["soil", 2],
+    c: ["soil", 1],
+    d: ["soil", 0],
+  }),
+  // Two pebbles.
+  markOf(2, ["ab...", "cd.ab", "...cd"], {
+    a: ["stone", 3],
+    b: ["stone", 2],
+    c: ["stone", 1],
+    d: ["stone", 0],
+  }),
+] as const;
+
+export const GRAVEL_MARKS = [
+  // Two larger stones bedded in the path.
+  markOf(1, [".ab..ab.", "abbcabbc", ".cc..cc."], {
+    a: ["gravel", 3],
+    b: ["gravel", 2],
+    c: ["gravel", 0],
+  }),
+  // A dip worn by feet.
+  markOf(2, [".aa.", "abba", "abba", ".aa."], {
+    a: ["gravel", 1],
+    b: ["gravel", 0],
+  }),
+] as const;

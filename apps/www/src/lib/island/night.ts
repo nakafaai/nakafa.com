@@ -1,7 +1,7 @@
 import { idOf } from "@repo/backend/confect/island/blocks";
 import { SPAN } from "@repo/backend/confect/island/world";
 import { Array as Arr } from "effect";
-import { skylineOf } from "@/lib/island/mesh";
+import { skylineOf } from "@/lib/island/ground";
 import { unitOf } from "@/lib/island/noise";
 import type { Cells } from "@/lib/island/world";
 import { blockAt } from "@/lib/island/world";

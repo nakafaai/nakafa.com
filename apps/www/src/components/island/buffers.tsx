@@ -252,12 +252,17 @@ export function uploadMoving(gl: WebGL2RenderingContext, capacity: number) {
 }
 
 /**
- * A map of the ground on the GPU, one byte a texel, read smoothly: the shore
- * map (D28), so the surf bends round a coast instead of stepping along its
- * cells, and the lean map (D32), so neighbouring trees lean alike. `write`
- * replaces it, `bind` puts it on a texture unit.
+ * A map of the ground on the GPU, one or two bytes a texel, read smoothly:
+ * the shore map (D28), so the surf bends round a coast instead of stepping
+ * along its cells, the lean map (D32), so neighbouring trees lean alike, and
+ * the column map (D39), two bytes a column that the shaders fetch whole.
+ * `write` replaces it, `bind` puts it on a texture unit.
  */
-export function uploadMap(gl: WebGL2RenderingContext, side: number) {
+export function uploadMap(
+  gl: WebGL2RenderingContext,
+  side: number,
+  channels: 1 | 2
+) {
   const texture = gl.createTexture();
   gl.bindTexture(gl.TEXTURE_2D, texture);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
@@ -270,16 +275,16 @@ export function uploadMap(gl: WebGL2RenderingContext, side: number) {
     gl.texImage2D(
       gl.TEXTURE_2D,
       0,
-      gl.R8,
+      channels === 2 ? gl.RG8 : gl.R8,
       side,
       side,
       0,
-      gl.RED,
+      channels === 2 ? gl.RG : gl.RED,
       gl.UNSIGNED_BYTE,
       map
     );
   };
-  write(new Uint8Array(side * side));
+  write(new Uint8Array(side * side * channels));
   return {
     bind(unit: number) {
       gl.activeTexture(gl.TEXTURE0 + unit);

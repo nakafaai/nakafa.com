@@ -78,8 +78,9 @@ export function clumps(
   dark: Tone
 ) {
   for (let index = 0; index < count; index += 1) {
-    const x = Math.floor(unitOf(seed, index, 1) * TILE);
-    const y = Math.floor(unitOf(seed, index, 2) * TILE);
+    // Each clump keeps inside the tile, so a tile that a Wang set lays next to any other shows no half clump at its edge (D39).
+    const x = Math.floor(unitOf(seed, index, 1) * (TILE - 1));
+    const y = Math.floor(unitOf(seed, index, 2) * (TILE - 1));
     put(pixels, x, y, ramp, light);
     put(pixels, x + 1, y, ramp, light);
     put(pixels, x, y + 1, ramp, dark);

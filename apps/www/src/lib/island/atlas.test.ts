@@ -1,15 +1,20 @@
 // @vitest-environment node
 import { describe, expect, it } from "@effect/vitest";
+import { PLANT_KEYS } from "@repo/backend/confect/island/flora";
 import { Array as Arr, HashSet, Record as Rec } from "effect";
 import {
   ATLAS_SIZE,
   ATLAS_TILES,
   atlasPixels,
+  GROUND_TILES,
+  groundSlot,
+  PLANT_SLOT,
   SLOTS,
   TILE_NAMES,
   tilePixels,
 } from "@/lib/island/atlas";
 import { TILE } from "@/lib/island/tiles/paint";
+import { WANG_SET } from "@/lib/island/tiles/wang";
 
 /** How many of a tile's pixels are clear. */
 const clearOf = (pixels: Uint8ClampedArray) =>
@@ -57,6 +62,26 @@ describe("island/atlas", () => {
         expect(clear, name).toBe(0);
       }
     }
+  });
+
+  it("lays each ground's Wang set after the plants, inside the atlas, its first tile the ground the block shows in the hand", () => {
+    const atlas = atlasPixels();
+    expect(groundSlot(0, 0)).toBe(PLANT_SLOT + PLANT_KEYS.length);
+    expect(groundSlot(GROUND_TILES.length - 1, WANG_SET - 1)).toBeLessThan(
+      ATLAS_TILES * ATLAS_TILES
+    );
+    Arr.forEach(GROUND_TILES, (name, ground) => {
+      const slot = groundSlot(ground, 0);
+      const left = (slot % ATLAS_TILES) * TILE;
+      const top = Math.floor(slot / ATLAS_TILES) * TILE;
+      const tile = tilePixels(name);
+      for (let y = 0; y < TILE; y += 1) {
+        const at = ((top + y) * ATLAS_SIZE + left) * 4;
+        expect([...atlas.slice(at, at + TILE * 4)], name).toEqual([
+          ...tile.slice(y * TILE * 4, (y + 1) * TILE * 4),
+        ]);
+      }
+    });
   });
 
   it("copies each tile into its slot of the atlas", () => {

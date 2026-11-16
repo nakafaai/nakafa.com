@@ -2,6 +2,7 @@ import { idOf } from "@repo/backend/confect/island/blocks";
 import { HEIGHT, SPAN } from "@repo/backend/confect/island/world";
 import { Array as Arr } from "effect";
 import { ATLAS_TILES } from "@/lib/island/atlas";
+import { groundOf, groundTopSlot, skylineOf } from "@/lib/island/ground";
 import { KIND, LOOK } from "@/lib/island/look";
 import { isPlantBlock } from "@/lib/island/plants";
 import {
@@ -15,16 +16,11 @@ import {
 /**
  * Floats per vertex: position (3), atlas coordinate (2), face shade, sky
  * light, block light, and how the wind takes it (ADR 0047, D32): 0 holds it
- * still, up to 1 lets it go, and `GRASS_TOP` marks the top of a grass block,
- * which never moves but lightens where a gust passes.
+ * still, up to 1 lets it go.
  */
 export const STRIDE = 9;
 
-/** The wind mark of a grass block's top face. */
-export const GRASS_TOP = -1;
-
 const LEAVES = idOf("leaves");
-const GRASS = idOf("grass");
 
 /** How bright each face is under a sky straight above: top, bottom, east and west, south and north. */
 const SHADE = { bottom: 0.55, top: 1, x: 0.8, z: 0.68 } as const;
@@ -104,23 +100,6 @@ function drawList() {
   };
 }
 
-/** The highest cell of each column that stops the sky, -1 for an empty column. */
-export function skylineOf(cells: Cells) {
-  const skyline = new Int8Array(SPAN * SPAN).fill(-1);
-  for (let z = 0; z < SPAN; z += 1) {
-    for (let x = 0; x < SPAN; x += 1) {
-      for (let y = HEIGHT - 1; y >= 0; y -= 1) {
-        const kind = LOOK.kinds[cells[cellOf(x, y, z)]];
-        if (kind === KIND.solid || kind === KIND.liquid) {
-          skyline[z * SPAN + x] = y;
-          break;
-        }
-      }
-    }
-  }
-  return skyline;
-}
-
 /** Whether a cell darkens the corners of the faces beside it. */
 function occludes(cells: Cells, x: number, y: number, z: number) {
   return LOOK.kinds[blockAt(cells, x, y, z)] === KIND.solid ? 1 : 0;
@@ -157,17 +136,15 @@ function leafSway(cells: Cells, x: number, y: number, z: number) {
   return sway;
 }
 
-/** How the wind takes a corner of a cube's face: a leaf block's by its place, a grass top's by its mark, any other not at all. */
+/** How the wind takes a corner of a cube's face: a leaf block's by its place, any other not at all. */
 function cubeSway(
   cells: Cells,
   block: number,
-  up: boolean,
   corner: readonly [number, number, number]
 ) {
-  if (block === LEAVES) {
-    return leafSway(cells, corner[0], corner[1], corner[2]);
-  }
-  return block === GRASS && up ? GRASS_TOP : 0;
+  return block === LEAVES
+    ? leafSway(cells, corner[0], corner[1], corner[2])
+    : 0;
 }
 
 /** Whether a face of `block` toward `neighbour` can be seen. */
@@ -213,16 +190,20 @@ function glowAt(lighting: Lighting, x: number, y: number, z: number) {
   return isInside(x, y, z) ? lighting.glow[cellOf(x, y, z)] / 15 : 0;
 }
 
-/** The atlas slot of a face: the block's side tile, or its top or bottom tile. */
-function slotOf(block: number, side: boolean, ny: number) {
-  if (side) {
-    return LOOK.sides[block];
-  }
-  return ny > 0 ? LOOK.tops[block] : LOOK.bottoms[block];
-}
-
 /** One face of a cube: its normal, its edges and its shade, as `FACES` lists them. */
 type Face = (typeof FACES)[number];
+
+/** The atlas slot of a face of a block at column (x, z): its side tile, its top or bottom tile, or for a ground top the tile of its Wang set its edges choose (D39). */
+function slotOf(block: number, face: Face, x: number, z: number) {
+  if (face.side) {
+    return LOOK.sides[block];
+  }
+  if (face.n[1] < 0) {
+    return LOOK.bottoms[block];
+  }
+  const ground = groundOf(block);
+  return ground > 0 ? groundTopSlot(ground, x, z) : LOOK.tops[block];
+}
 
 /**
  * How open one corner of a face is, from 0 to 3: the two cells beside the
@@ -294,7 +275,7 @@ function addCube(
     if (!(shown && isVisible(block, blockAt(cells, ...front)))) {
       continue;
     }
-    const slot = slotOf(block, face.side, face.n[1]);
+    const slot = slotOf(block, face, x, z);
     const sky = skyAt(lighting, ...front);
     const glow = glowAt(lighting, ...front);
     const opens = Arr.map(CORNERS, ([a, b]) =>
@@ -315,7 +296,7 @@ function addCube(
         face.shade * OCCLUSION[opens[index]],
         sky,
         glow,
-        cubeSway(cells, block, face.n[1] > 0, [px, py, pz]),
+        cubeSway(cells, block, [px, py, pz]),
       ];
     });
     list.quad(corners, opens[0] + opens[2] < opens[1] + opens[3]);

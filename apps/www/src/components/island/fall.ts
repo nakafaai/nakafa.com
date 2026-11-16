@@ -1,9 +1,8 @@
-import { SPAN } from "@repo/backend/confect/island/world";
 import { Option } from "effect";
 import {
   activate,
   PARTICLES,
-  uploadMap,
+  type uploadMap,
   uploadWeather,
 } from "@/components/island/buffers";
 import type { createGale } from "@/components/island/wind";
@@ -15,18 +14,21 @@ import { SEA_LEVEL } from "@/lib/island/world";
 /** The side of the square of sky the weather falls through round the camera's target, near in. */
 const AREA = 56;
 
-/** The texture unit the roof map takes while the weather is drawn; the wind's lean map holds unit 2. */
+/** The texture unit the column map takes while the weather is drawn; the wind's lean map holds unit 2. */
 const UNIT = 3;
 
 /**
  * The weather on the GPU (ADR 0047, D33): what falls and where it stops, and
- * what it leaves on the ground. It holds the roof map the drops stop on, the
- * particles that fall, and how wet and how snowed the island is, which it
- * moves on as the world is drawn and hands to the program that draws the
- * blocks.
+ * what it leaves on the ground. It reads where the drops stop from the
+ * painter's column map (D39), and holds the particles that fall and how wet
+ * and how snowed the island is, which it moves on as the world is drawn and
+ * hands to the program that draws the blocks.
  */
-export function createFall(gl: WebGL2RenderingContext, program: WebGLProgram) {
-  const roof = uploadMap(gl, SPAN);
+export function createFall(
+  gl: WebGL2RenderingContext,
+  program: WebGLProgram,
+  columns: ReturnType<typeof uploadMap>
+) {
   const particles = uploadWeather(gl);
   const cover = createCover();
   let stepped = Option.none<number>();
@@ -64,8 +66,8 @@ export function createFall(gl: WebGL2RenderingContext, program: WebGLProgram) {
         gl.uniform1f(locate("uTop"), Math.max(16, area * 0.3));
         gl.uniform4fv(locate("uColor"), fall.color);
         gale.blow(locate, time, sky);
-        roof.bind(UNIT);
-        gl.uniform1i(locate("uRoof"), UNIT);
+        columns.bind(UNIT);
+        gl.uniform1i(locate("uColumns"), UNIT);
         gl.bindVertexArray(particles.vao);
         const count =
           Math.min(PARTICLES, Math.round(fall.count * (area / AREA) ** 2)) * 2;
@@ -77,14 +79,9 @@ export function createFall(gl: WebGL2RenderingContext, program: WebGLProgram) {
         }
       });
     },
-    /** Lets the GPU go of the roof map and the particles. */
+    /** Lets the GPU go of the particles. */
     release() {
-      roof.release();
       particles.release();
-    },
-    /** Replaces where the drops stop, after the world changed. */
-    roof(map: Uint8Array) {
-      roof.write(map);
     },
     /** Moves how wet and how snowed the island is on to `time` seconds under a weather. */
     step(time: number, sky: Weather) {

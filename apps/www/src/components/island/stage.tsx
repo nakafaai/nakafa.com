@@ -29,9 +29,9 @@ import {
   type Orbit,
   openingOrbit,
 } from "@/lib/island/camera";
-import { roofOf } from "@/lib/island/cover";
 import { hoeOf, ripeningOf, sownOf, waterOf } from "@/lib/island/farming";
 import type { Point } from "@/lib/island/gesture";
+import { columnsOf } from "@/lib/island/ground";
 import { islesMesh } from "@/lib/island/isles";
 import { itemPlanOf, turnOf } from "@/lib/island/items";
 import { type Animal, flatQuads, herdOf, wander } from "@/lib/island/life";
@@ -128,10 +128,10 @@ function start(
       );
     }
     painter.shore(shoreOf(cells, store.getState().seed, true));
+    painter.columns(columnsOf(cells));
     painter.scenery({
       chimneys: chimneysOf(cells),
       fireflies: firefliesOf(cells, store.getState().seed),
-      roof: roofOf(cells),
     });
     needsDraw = true;
   };

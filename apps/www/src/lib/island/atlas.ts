@@ -22,13 +22,17 @@ import {
 import { farmlandTile, sproutTile } from "@/lib/island/tiles/farm";
 import {
   barkTile,
+  DIRT_MARKS,
   dirtTile,
   flowersTile,
+  GRASS_MARKS,
+  GRAVEL_MARKS,
   grassSideTile,
   grassTopTile,
   gravelTile,
   leavesTile,
   ringsTile,
+  SAND_MARKS,
   sandTile,
   stoneTile,
   waterTile,
@@ -36,6 +40,7 @@ import {
 import { type Pixels, TILE } from "@/lib/island/tiles/paint";
 import { emptyShape, markBody, paintShape } from "@/lib/island/tiles/shape";
 import { bobberTile } from "@/lib/island/tiles/tools";
+import { WANG_SET, wangTile } from "@/lib/island/tiles/wang";
 
 /** Every tile the island draws, in atlas order (ADR 0047, D4). */
 export const TILE_NAMES = [
@@ -135,13 +140,46 @@ export const SLOTS = Rec.fromEntries(
   Arr.map(TILE_NAMES, (name, index) => [name, index] as const)
 );
 
-/** The pixels of one tile, painted from the shared seed and the tile's own slot. */
+/** The seed one tile is painted from: the shared seed and the tile's own slot. */
+function seedOf(name: TileName) {
+  return TEXTURE_SEED + SLOTS[name] * 101;
+}
+
+/** The pixels of one tile, painted from its seed. */
 export function tilePixels(name: TileName) {
-  return PAINTERS[name](TEXTURE_SEED + SLOTS[name] * 101);
+  return PAINTERS[name](seedOf(name));
 }
 
 /** The atlas slot of the first plant; each plant follows in the order of its id. */
 export const PLANT_SLOT = TILE_NAMES.length;
+
+/**
+ * The ground tiles drawn as Wang sets (D39), in the order the column map
+ * numbers them from 1: where two meet at one height, a later one spreads over
+ * an earlier one, so grass grows over the edge of a path and a beach.
+ */
+export const GROUND_TILES = [
+  "sand",
+  "dirt",
+  "gravel",
+  "grassTop",
+] as const satisfies readonly TileName[];
+
+/** The marks each ground's set draws across its edges: a row mark, then a column mark. */
+const GROUND_MARKS = {
+  dirt: DIRT_MARKS,
+  grassTop: GRASS_MARKS,
+  gravel: GRAVEL_MARKS,
+  sand: SAND_MARKS,
+} as const;
+
+/** The atlas slot of the first ground set, after the plants; each set holds its sixteen tiles in a row. */
+export const GROUND_SLOT = PLANT_SLOT + PLANT_KEYS.length;
+
+/** The atlas slot of one tile of a ground's Wang set: the set's place in `GROUND_TILES`, then the tile's marked edges. */
+export function groundSlot(ground: number, index: number) {
+  return GROUND_SLOT + ground * WANG_SET + index;
+}
 
 /** One plant drawn by its family's shape in its own coat. */
 export function plantPixels(index: number) {
@@ -172,7 +210,7 @@ function placeTile(atlas: Uint8ClampedArray, tile: Pixels, slot: number) {
   }
 }
 
-/** The whole atlas as RGBA pixels: every named tile in its slot, then every plant, row by row. */
+/** The whole atlas as RGBA pixels: every named tile in its slot, then every plant, then the ground's Wang sets, row by row. */
 export function atlasPixels() {
   const atlas = new Uint8ClampedArray(ATLAS_SIZE * ATLAS_SIZE * 4);
   for (const name of TILE_NAMES) {
@@ -181,6 +219,15 @@ export function atlasPixels() {
   Arr.forEach(PLANT_KEYS, (_plant, index) =>
     placeTile(atlas, plantPixels(index), PLANT_SLOT + index)
   );
+  Arr.forEach(GROUND_TILES, (name, ground) => {
+    for (let index = 0; index < WANG_SET; index += 1) {
+      placeTile(
+        atlas,
+        wangTile(PAINTERS[name], GROUND_MARKS[name], seedOf(name), index),
+        groundSlot(ground, index)
+      );
+    }
+  });
   return atlas;
 }
 

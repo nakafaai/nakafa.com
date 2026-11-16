@@ -53,7 +53,7 @@ describe("island/tiles/paint", () => {
     ).toBe(false);
   });
 
-  it("paints clumps lit on top and shaded under", () => {
+  it("paints clumps lit on top and shaded under, each inside the tile so a Wang set lays any two tiles side by side", () => {
     const pixels = blankTile();
     clumps(pixels, 3, 4, "soil", 2, 0);
     let painted = 0;
@@ -63,6 +63,17 @@ describe("island/tiles/paint", () => {
       }
     }
     expect(painted).toBeGreaterThan(4);
+    // A clump on the last column or row would wrap its other half to the first; none does.
+    const crowded = blankTile();
+    clumps(crowded, 9, 200, "soil", 2, 0);
+    for (let at = 0; at < TILE; at += 1) {
+      expect(isPainted(crowded, TILE - 1, at)).toBe(
+        isPainted(crowded, TILE - 1, at) && isPainted(crowded, TILE - 2, at)
+      );
+      expect(isPainted(crowded, at, TILE - 1)).toBe(
+        isPainted(crowded, at, TILE - 1) && isPainted(crowded, at, TILE - 2)
+      );
+    }
   });
 
   it("splits a tile into wrapping cells with thin edges between them", () => {

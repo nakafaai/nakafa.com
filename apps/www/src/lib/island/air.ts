@@ -11,7 +11,7 @@ import { WIND_GLSL } from "@/lib/island/wind";
 /**
  * The weather program (ADR 0047, D33): rain as short streaks and snow as
  * flakes, each falling along the wind until it meets the first thing over its
- * column (the roof map, `lib/island/cover.ts`), so a roof keeps the ground
+ * column (the column map, `lib/island/ground.ts`), so a roof keeps the ground
  * under it dry. Each particle is a seed: every cycle it picks where it lands,
  * falls there from the sky over the camera's target, and its place at any
  * moment comes from the time, so nothing is uploaded while it falls. It falls
@@ -32,7 +32,7 @@ uniform float uSplash;
 uniform float uSea;
 uniform float uArea;
 uniform float uTop;
-uniform sampler2D uRoof;
+uniform sampler2D uColumns;
 ${WIND_GLSL}
 out float vTail;
 out float vRing;
@@ -47,7 +47,7 @@ vec2 surfaceAt(vec2 at) {
   if (cell.x < 0.0 || cell.y < 0.0 || cell.x >= SIDE || cell.y >= SIDE) {
     return vec2(uSea, 1.0);
   }
-  float code = floor(texelFetch(uRoof, ivec2(cell), 0).r * 255.0 + 0.5);
+  float code = floor(texelFetch(uColumns, ivec2(cell), 0).r * 255.0 + 0.5);
   float water = mod(code, 2.0);
   return vec2(floor(code / 2.0) - 0.125 * water, water);
 }

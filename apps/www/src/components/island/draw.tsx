@@ -1,3 +1,4 @@
+import { SPAN } from "@repo/backend/confect/island/world";
 import { Array as Arr, Option } from "effect";
 import { createAir } from "@/components/island/air";
 import { createBodies } from "@/components/island/bodies";
@@ -12,10 +13,6 @@ import {
 } from "@/components/island/buffers";
 import { createFrame } from "@/components/island/frame";
 import { createGale } from "@/components/island/wind";
-
-/** The learner's own fox, the one body seen through what stands in front of it. */
-const FOX = { _tag: "body", kind: "fox" } as const;
-
 import {
   ATLAS_SIZE,
   ATLAS_TILES,
@@ -45,6 +42,12 @@ import type { Light, Weather } from "@/lib/island/sky";
 import { flashed, flashOf } from "@/lib/island/storm";
 import { TILE } from "@/lib/island/tiles/paint";
 import { CHUNKS, SEA_LEVEL } from "@/lib/island/world";
+
+/** The learner's own fox, the one body seen through what stands in front of it. */
+const FOX = { _tag: "body", kind: "fox" } as const;
+
+/** The texture unit the column map takes while the blocks are drawn: the atlas holds 0, the shore 1, the wind's lean map 2. */
+const COLUMNS = 3;
 
 /**
  * The island's WebGL2 painter (ADR 0047, D2): it holds every chunk's buffers,
@@ -109,10 +112,12 @@ export function createPainter(canvas: HTMLCanvasElement, season: Season) {
         water: Option.none<ReturnType<typeof uploadList>>(),
       }));
       const sea = uploadList(gl, seaRing(SEA_LEVEL - 0.125, [0, 0], 1));
-      const shore = uploadMap(gl, SHORE_SIDE);
+      const shore = uploadMap(gl, SHORE_SIDE, 1);
+      // What tops each column: where a drop stops and which ground the blocks blend (D39).
+      const columns = uploadMap(gl, SPAN, 2);
       const gale = createGale(gl);
       // What moves in the air: the weather, the chimneys' smoke and the fireflies (D33, D36).
-      const airborne = createAir(gl, gale, painted);
+      const airborne = createAir(gl, gale, painted, columns);
       if (Option.isNone(airborne)) {
         return Option.none();
       }
@@ -255,6 +260,8 @@ export function createPainter(canvas: HTMLCanvasElement, season: Season) {
         shore.bind(1);
         gl.uniform1i(uniform("uShore"), 1);
         gl.uniform2f(uniform("uShoreBox"), SHORE_FROM, SHORE_SIDE);
+        columns.bind(COLUMNS);
+        gl.uniform1i(uniform("uColumns"), COLUMNS);
         gale.blow(uniform, time, sky);
         air.cover(uniform);
         gl.uniform1f(uniform("uWater"), 0);
@@ -285,7 +292,6 @@ export function createPainter(canvas: HTMLCanvasElement, season: Season) {
         gl.drawElements(gl.TRIANGLES, sea.count, gl.UNSIGNED_INT, 0);
       };
 
-      /** Draws the rain or snow falling around the camera's target. */
       /** Outlines the cell a press would change, over everything but the HUD. */
       const drawOutline = (
         camera: Float32Array,
@@ -398,6 +404,8 @@ export function createPainter(canvas: HTMLCanvasElement, season: Season) {
         burst: air.burst,
         /** Replaces what the blocks decide for the air over them (D33, D36). */
         scenery: air.scenery,
+        /** Replaces the column map: where a drop stops and which ground each top blends (D39). */
+        columns: columns.write,
         /** Replaces the map of where land meets the sea, which the water draws its surf from (D28). */
         shore(map: Uint8Array) {
           shore.write(map);
@@ -466,6 +474,7 @@ export function createPainter(canvas: HTMLCanvasElement, season: Season) {
           }
           sea.release();
           shore.release();
+          columns.release();
           gale.release();
           Option.map(isles, (list) => list.release());
           air.release();
