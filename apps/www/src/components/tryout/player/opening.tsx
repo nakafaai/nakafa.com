@@ -131,7 +131,7 @@ export function TryoutPlayerOpening({
         </PlayerHeader>
         <PlayerMain
           navigator={
-            <PlayerSidebar>
+            <PlayerSidebar questions={questions}>
               <PlayerGrid questions={questions} />
               <PlayerLegend />
             </PlayerSidebar>

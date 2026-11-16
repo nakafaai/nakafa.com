@@ -1,6 +1,8 @@
 import { ScrollArea } from "@repo/design-system/components/ui/scroll-area";
+import { Array as Arr } from "effect";
 import { type ReactNode, useEffect, useRef } from "react";
 import { useTranslations } from "use-intl";
+import type { PlayerCellModel } from "@/components/player/model";
 import { keepVisible } from "@/components/player/navigator/scroll";
 import { PlayerShortcuts } from "@/components/player/navigator/shortcuts";
 import { usePlayer } from "@/components/player/provider";
@@ -10,9 +12,16 @@ import { PaneHeader } from "@/components/shared/page/pane";
  * The navigator in its pane beside the questions from the large breakpoint: the
  * numbers, then the keys, in a column as wide as its pane that stays under the
  * header while the questions scroll, and scrolls by itself to keep the current
- * number in view. The page never moves for it.
+ * number in view. The page never moves for it. Its header counts the answered questions under its title.
  */
-export function PlayerSidebar({ children }: { children: ReactNode }) {
+export function PlayerSidebar({
+  children,
+  questions,
+}: {
+  children: ReactNode;
+  /** The questions the grid shows, whose answered ones the header counts. */
+  questions: readonly PlayerCellModel[];
+}) {
   const t = useTranslations("Player");
   const current = usePlayer((state) => state.current);
   const column = useRef<HTMLDivElement>(null);
@@ -39,7 +48,14 @@ export function PlayerSidebar({ children }: { children: ReactNode }) {
       className="hidden h-full min-h-0 w-full min-w-0 flex-col lg:flex"
       data-player-sidebar=""
     >
-      <PaneHeader title={t("navigator")} />
+      <PaneHeader
+        description={t("navigator-answered", {
+          answered: Arr.filter(questions, (question) => question.answered)
+            .length,
+          total: questions.length,
+        })}
+        title={t("navigator")}
+      />
       <ScrollArea viewportClassName="relative" viewportRef={column}>
         <div className="flex flex-col gap-4 px-6 py-4">
           {children}

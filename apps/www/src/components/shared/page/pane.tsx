@@ -24,8 +24,8 @@ const sheetHeaderVariants = cva("", {
 });
 
 /**
- * A detail's header: its title, and what it shows on a second line, so it holds two lines at most
- * as every header does, and a long one cuts off with its whole text on hover. A detail of a thing
+ * A detail's header: its title, and what it shows on a second line, always: every pane header holds two
+ * lines (owner, 15 Nov 2026), so the type refuses a pane with a title alone, and either line takes any content, and a long one cuts off with its whole text on hover. A detail of a thing
  * with its own icon stands it before the title, as the thing's card does. Beside the list a row's
  * detail holds the button that closes it; an always-on detail has none. The phone's drawer holds no
  * close button: it closes as an iPhone sheet does, by its handle, a swipe or a press outside.
@@ -35,11 +35,19 @@ export function PaneHeader({
   icon,
   title,
 }: {
-  description?: string | undefined;
+  /**
+   * The second line: what the pane shows, as a fact, never a sentence about the controls. Any content, text or
+   * designed (owner, 15 Nov 2026: a title and a description are never limited to text).
+   */
+  description: ReactNode;
   /** The thing's own icon, before the title. */
   icon?: ReactNode;
-  title: string;
+  /** The first line, any content; text alone also shows whole on hover when it is cut. */
+  title: ReactNode;
 }) {
+  const titleText = typeof title === "string" ? title : undefined;
+  const descriptionText =
+    typeof description === "string" ? description : undefined;
   const t = useTranslations("Common");
   const { close, place } = usePaneMode();
 
@@ -51,18 +59,16 @@ export function PaneHeader({
       >
         {icon}
         <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-          <DrawerTitle className="truncate" dir="auto" title={title}>
+          <DrawerTitle className="truncate" dir="auto" title={titleText}>
             {title}
           </DrawerTitle>
-          {description === undefined ? null : (
-            <DrawerDescription
-              className="truncate"
-              dir="auto"
-              title={description}
-            >
-              {description}
-            </DrawerDescription>
-          )}
+          <DrawerDescription
+            className="truncate"
+            dir="auto"
+            title={descriptionText}
+          >
+            {description}
+          </DrawerDescription>
         </div>
       </DrawerHeader>
     );
@@ -77,18 +83,20 @@ export function PaneHeader({
       <div className="flex min-w-0 flex-1 items-center gap-3">
         {icon}
         <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-          <h2 className="truncate text-sm font-medium" dir="auto" title={title}>
+          <h2
+            className="truncate text-sm font-medium"
+            dir="auto"
+            title={titleText}
+          >
             {title}
           </h2>
-          {description === undefined ? null : (
-            <p
-              className="text-muted-foreground truncate text-sm"
-              dir="auto"
-              title={description}
-            >
-              {description}
-            </p>
-          )}
+          <p
+            className="text-muted-foreground truncate text-sm"
+            dir="auto"
+            title={descriptionText}
+          >
+            {description}
+          </p>
         </div>
       </div>
       {close === undefined ? null : (
