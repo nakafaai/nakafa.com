@@ -4,13 +4,7 @@ import { FAMILIES } from "@/lib/island/fauna/families";
 import { SPECIES } from "@/lib/island/fauna/species";
 import { FLORA } from "@/lib/island/flora/families";
 import { plantLookOf } from "@/lib/island/flora/plants";
-import {
-  duckTile,
-  henStepTile,
-  henTile,
-  ninaStepTile,
-  ninaTile,
-} from "@/lib/island/tiles/animals";
+import { ninaStepTile, ninaTile } from "@/lib/island/tiles/animals";
 import {
   bookshelfTile,
   brickTile,
@@ -26,7 +20,6 @@ import {
   woolTile,
 } from "@/lib/island/tiles/built";
 import { farmlandTile, sproutTile } from "@/lib/island/tiles/farm";
-import { folkBottomTile, folkTopTile } from "@/lib/island/tiles/folk";
 import {
   barkTile,
   dirtTile,
@@ -69,23 +62,8 @@ export const TILE_NAMES = [
   "bookshelf",
   "marble",
   "gold",
-  "hen",
-  "henStep",
-  "duck",
   "nina",
   "ninaStep",
-  "catTop",
-  "catBottom",
-  "catStep",
-  "rabbitTop",
-  "rabbitBottom",
-  "rabbitStep",
-  "bearTop",
-  "bearBottom",
-  "bearStep",
-  "foxTop",
-  "foxBottom",
-  "foxStep",
   "bobber",
   "farmland",
   "wetFarmland",
@@ -128,23 +106,8 @@ const PAINTERS = {
   bookshelf: bookshelfTile,
   marble: marbleTile,
   gold: goldTile,
-  hen: henTile,
-  henStep: henStepTile,
-  duck: duckTile,
   nina: ninaTile,
   ninaStep: ninaStepTile,
-  catTop: () => folkTopTile("cat"),
-  catBottom: () => folkBottomTile("cat", false),
-  catStep: () => folkBottomTile("cat", true),
-  rabbitTop: () => folkTopTile("rabbit"),
-  rabbitBottom: () => folkBottomTile("rabbit", false),
-  rabbitStep: () => folkBottomTile("rabbit", true),
-  bearTop: () => folkTopTile("bear"),
-  bearBottom: () => folkBottomTile("bear", false),
-  bearStep: () => folkBottomTile("bear", true),
-  foxTop: () => folkTopTile("fox"),
-  foxBottom: () => folkBottomTile("fox", false),
-  foxStep: () => folkBottomTile("fox", true),
   bobber: bobberTile,
   farmland: (seed: number) => farmlandTile(seed, false),
   wetFarmland: (seed: number) => farmlandTile(seed, true),

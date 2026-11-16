@@ -1,4 +1,5 @@
 import { Array as Arr, Option } from "effect";
+import { createBodies } from "@/components/island/bodies";
 import {
   activate,
   PARTICLES,
@@ -22,6 +23,8 @@ import type { meshChunk } from "@/lib/island/mesh";
 import { mipsOf } from "@/lib/island/mips";
 import { repaintFor, type Season } from "@/lib/island/season";
 import {
+  BODY_FRAGMENT,
+  BODY_VERTEX,
   CHUNK_FRAGMENT,
   CHUNK_VERTEX,
   EDGE_FRAGMENT,
@@ -63,6 +66,7 @@ export function createPainter(canvas: HTMLCanvasElement, season: Season) {
       programOf(gl, WEATHER_VERTEX, WEATHER_FRAGMENT),
       programOf(gl, OUTLINE_VERTEX, OUTLINE_FRAGMENT),
       programOf(gl, EDGE_VERTEX, EDGE_FRAGMENT),
+      programOf(gl, BODY_VERTEX, BODY_FRAGMENT),
     ]),
     ([
       chunkProgram,
@@ -70,6 +74,7 @@ export function createPainter(canvas: HTMLCanvasElement, season: Season) {
       weatherProgram,
       outlineProgram,
       edgeProgram,
+      bodyProgram,
     ]) => {
       const atlas = gl.createTexture();
       gl.bindTexture(gl.TEXTURE_2D, atlas);
@@ -126,6 +131,9 @@ export function createPainter(canvas: HTMLCanvasElement, season: Season) {
       const weather = uploadWeather(gl);
       const outline = uploadOutline(gl);
       const herd = uploadMoving(gl, 64);
+      const bodies = createBodies(gl);
+      const bodyUniform = (name: string) =>
+        gl.getUniformLocation(bodyProgram, name);
       const outlineUniform = (name: string) =>
         gl.getUniformLocation(outlineProgram, name);
       const weatherUniform = (name: string) =>
@@ -146,6 +154,44 @@ export function createPainter(canvas: HTMLCanvasElement, season: Season) {
         gl.uniform3fv(skyUniform("uZenith"), light.zenith);
         gl.uniform3fv(skyUniform("uHorizon"), light.horizon);
         gl.drawArrays(gl.TRIANGLES, 0, 3);
+      };
+
+      /**
+       * Draws every true 3D body (D21): first each one's shadow, a dark disc
+       * pressed onto the ground that writes no depth and no edges, then the
+       * bodies themselves, lit flat and edged like the blocks.
+       */
+      const drawBodies = (
+        orbit: Orbit,
+        light: Light,
+        time: number,
+        camera: Float32Array
+      ) => {
+        activate(gl, bodyProgram);
+        gl.uniformMatrix4fv(bodyUniform("uViewProjection"), false, camera);
+        gl.uniform1f(bodyUniform("uTime"), time);
+        gl.uniform3fv(bodyUniform("uSun"), light.sun);
+        gl.uniform3fv(bodyUniform("uAmbient"), light.ambient);
+        gl.uniform3fv(bodyUniform("uFog"), light.fog);
+        gl.uniform2f(
+          bodyUniform("uFogRange"),
+          orbit.distance + 30,
+          orbit.distance + 160
+        );
+        gl.uniform3fv(bodyUniform("uEye"), eyeOf(orbit));
+        gl.enable(gl.BLEND);
+        gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+        gl.depthMask(false);
+        gl.drawBuffers([gl.COLOR_ATTACHMENT0, gl.NONE]);
+        gl.uniform1f(bodyUniform("uShadow"), 1);
+        bodies.draw();
+        gl.disable(gl.BLEND);
+        gl.depthMask(true);
+        gl.drawBuffers([gl.COLOR_ATTACHMENT0, gl.COLOR_ATTACHMENT1]);
+        gl.enable(gl.CULL_FACE);
+        gl.uniform1f(bodyUniform("uShadow"), 0);
+        bodies.draw();
+        gl.disable(gl.CULL_FACE);
       };
 
       /** Draws one pass of every chunk's lists. */
@@ -193,6 +239,8 @@ export function createPainter(canvas: HTMLCanvasElement, season: Season) {
         gl.disable(gl.CULL_FACE);
         gl.bindVertexArray(herd.vao);
         gl.drawElements(gl.TRIANGLES, herd.count(), gl.UNSIGNED_INT, 0);
+        drawBodies(orbit, light, time, camera);
+        activate(gl, chunkProgram);
         gl.enable(gl.BLEND);
         gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
         gl.depthMask(false);
@@ -332,6 +380,10 @@ export function createPainter(canvas: HTMLCanvasElement, season: Season) {
         }) {
           herd.write(quads);
         },
+        /** Replaces where every true 3D body stands this frame (D21). */
+        bodies(next: Parameters<typeof bodies.write>[0]) {
+          bodies.write(next);
+        },
         /** Replaces one chunk's buffers with its new mesh. */
         upload(index: number, mesh: ReturnType<typeof meshChunk>) {
           const slot = chunks[index];
@@ -392,6 +444,7 @@ export function createPainter(canvas: HTMLCanvasElement, season: Season) {
           target.release();
           outline.release();
           herd.release();
+          bodies.release();
           floor.release();
           gl.getExtension("WEBGL_lose_context")?.loseContext();
         },
