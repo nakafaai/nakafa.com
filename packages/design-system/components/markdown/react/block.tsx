@@ -8,8 +8,8 @@ import { codeBodyVariants } from "@repo/design-system/components/code/variants";
 import { SimpleIcon } from "@repo/design-system/components/icons/simple";
 import { CodeFence } from "@repo/design-system/components/markdown/react/fence";
 import { useFenceSource } from "@repo/design-system/components/markdown/react/source";
-import { DEFAULT_CODE_THEMES } from "@repo/design-system/lib/code/highlight";
 import { languageIconMap } from "@repo/design-system/lib/code/icons";
+import { DEFAULT_CODE_THEMES } from "@repo/design-system/lib/code/theme";
 
 /**
  * Renders one fenced response block, highlighted, with the shared code controls.

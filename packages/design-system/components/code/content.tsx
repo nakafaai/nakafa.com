@@ -34,7 +34,7 @@ class CodeHighlighterLoadError extends Schema.TaggedError<
 
 /** The highlighter, which only code that a server did not draw loads. */
 const loadHighlighter = Effect.tryPromise({
-  try: () => import("@repo/design-system/lib/code/highlight"),
+  try: () => import("@repo/design-system/lib/code/browser"),
   catch: (cause) => new CodeHighlighterLoadError({ cause }),
 });
 
