@@ -42,7 +42,7 @@ export function OsmosisLab({
   strips,
   title,
 }: {
-  readonly description: ReactNode;
+  readonly description: NonNullable<ReactNode>;
   readonly labels: {
     readonly change: ReactNode;
     readonly concentration: string;
@@ -59,7 +59,7 @@ export function OsmosisLab({
   };
   readonly mass?: number;
   readonly strips: readonly [Strip, ...Strip[]];
-  readonly title: ReactNode;
+  readonly title: NonNullable<ReactNode>;
 }) {
   const quantity = useQuantity();
   const low = Arr.reduce(strips, strips[0].concentration, (least, strip) =>

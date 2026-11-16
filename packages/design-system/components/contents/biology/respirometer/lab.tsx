@@ -40,7 +40,7 @@ export function RespirometerLab({
   title,
 }: {
   readonly carbonDioxide: number;
-  readonly description: ReactNode;
+  readonly description: NonNullable<ReactNode>;
   readonly labels: {
     readonly potash: ReactNode;
     readonly quotient: ReactNode;
@@ -52,7 +52,7 @@ export function RespirometerLab({
   };
   readonly minutes: number;
   readonly oxygen: number;
-  readonly title: ReactNode;
+  readonly title: NonNullable<ReactNode>;
 }) {
   const [elapsed, setElapsed] = useState(minutes);
   const quantity = useQuantity();

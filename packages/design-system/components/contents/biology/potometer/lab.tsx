@@ -43,7 +43,7 @@ export function PotometerLab({
   shoots,
   title,
 }: {
-  readonly description: ReactNode;
+  readonly description: NonNullable<ReactNode>;
   readonly labels: {
     readonly distance: ReactNode;
     readonly rate: ReactNode;
@@ -55,7 +55,7 @@ export function PotometerLab({
   readonly minutes: number;
   readonly radius: number;
   readonly shoots: readonly [Shoot, ...Shoot[]];
-  readonly title: ReactNode;
+  readonly title: NonNullable<ReactNode>;
 }) {
   const [chosen, setChosen] = useState(0);
   const [elapsed, setElapsed] = useState(minutes);

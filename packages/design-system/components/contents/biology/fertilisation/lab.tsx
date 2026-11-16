@@ -38,7 +38,7 @@ export function FertilisationLab({
   ovules,
   title,
 }: {
-  readonly description: ReactNode;
+  readonly description: NonNullable<ReactNode>;
   readonly father: number;
   readonly labels: {
     readonly embryo: ReactNode;
@@ -52,7 +52,7 @@ export function FertilisationLab({
   };
   readonly mother: number;
   readonly ovules?: number;
-  readonly title: ReactNode;
+  readonly title: NonNullable<ReactNode>;
 }) {
   const [elapsed, setElapsed] = useState(1);
   const quantity = useQuantity();

@@ -48,7 +48,7 @@ export function NephronLab({
   title,
   urea,
 }: {
-  readonly description: ReactNode;
+  readonly description: NonNullable<ReactNode>;
   readonly filtration: number;
   readonly glucose?: Glucose;
   readonly labels: {
@@ -65,7 +65,7 @@ export function NephronLab({
     readonly urine: ReactNode;
     readonly view: string;
   };
-  readonly title: ReactNode;
+  readonly title: NonNullable<ReactNode>;
   readonly urea?: Urea;
 }) {
   const [solute, setSolute] = useState<Solute>(

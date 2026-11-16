@@ -64,7 +64,7 @@ export function MicroscopeLab({
   title,
 }: {
   readonly cell?: number;
-  readonly description: ReactNode;
+  readonly description: NonNullable<ReactNode>;
   readonly eyepiece: number;
   readonly field?: Field;
   readonly graticule?: Graticule;
@@ -81,7 +81,7 @@ export function MicroscopeLab({
   };
   readonly objectives: readonly [number, ...number[]];
   readonly specimen: Specimen;
-  readonly title: ReactNode;
+  readonly title: NonNullable<ReactNode>;
 }) {
   const [objective, setObjective] = useState(objectives[0]);
   const [view, setView] = useState<"eyepiece" | "stand">("eyepiece");

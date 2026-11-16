@@ -42,7 +42,7 @@ export function PhotosynthesisLab({
   readings,
   title,
 }: {
-  readonly description: ReactNode;
+  readonly description: NonNullable<ReactNode>;
   readonly labels: {
     readonly bubbles: ReactNode;
     readonly carbon: ReactNode;
@@ -53,7 +53,7 @@ export function PhotosynthesisLab({
     readonly view: string;
   };
   readonly readings: readonly [Reading, ...Reading[]];
-  readonly title: ReactNode;
+  readonly title: NonNullable<ReactNode>;
 }) {
   const [chosen, setChosen] = useState(0);
   const quantity = useQuantity();

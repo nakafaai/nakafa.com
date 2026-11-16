@@ -49,7 +49,7 @@ export function TropismLab({
   setup,
   title,
 }: {
-  readonly description: ReactNode;
+  readonly description: NonNullable<ReactNode>;
   readonly labels: {
     readonly bend: ReactNode;
     readonly directions: Readonly<{
@@ -66,7 +66,7 @@ export function TropismLab({
     readonly view: string;
   };
   readonly setup: TropismSetup;
-  readonly title: ReactNode;
+  readonly title: NonNullable<ReactNode>;
 }) {
   const [chosen, setChosen] = useState(0);
   const [elapsed, setElapsed] = useState(HOURS);
