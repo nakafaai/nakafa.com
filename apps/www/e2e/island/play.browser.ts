@@ -11,6 +11,7 @@ import {
 } from "@/e2e/support/island";
 import { signInLearner } from "@/e2e/support/learner";
 import { withObservedPageErrors } from "@/e2e/support/observe";
+import { revealTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { desktopViewport, touchViewport } from "@/e2e/support/viewport";
 
 for (const viewport of [desktopViewport, touchViewport]) {
@@ -87,6 +88,27 @@ for (const viewport of [desktopViewport, touchViewport]) {
           Effect.andThen(
             Effect.promise(async () => {
               await expectRevision(page, 5);
+              // The learner's fox walks where they press with their feet in hand.
+              const start = await islandStage(page).getAttribute("data-player");
+              await page.getByRole("button", { name: en.Island.walk }).click();
+              const box = await islandStage(page).boundingBox();
+              expect(box).not.toBeNull();
+              if (box !== null) {
+                const x = box.x + box.width * 0.5;
+                const y = box.y + box.height * 0.72;
+                await (viewport.hasTouch
+                  ? page.touchscreen.tap(x, y)
+                  : page.mouse.click(x, y));
+              }
+              await expect(islandStage(page)).not.toHaveAttribute(
+                "data-player",
+                start ?? ""
+              );
+              await expect(islandStage(page)).toHaveAttribute(
+                "data-walking",
+                "false",
+                { timeout: revealTimeoutMilliseconds }
+              );
               await testInfo.attach(`island-${viewport.name}.png`, {
                 body: await page.screenshot(),
                 contentType: "image/png",
