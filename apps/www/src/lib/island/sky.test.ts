@@ -1,7 +1,7 @@
 // @vitest-environment node
 import { describe, expect, it } from "@effect/vitest";
 import { DateTime, Option } from "effect";
-import { fallOf, hourOf, lightOf, weatherOf } from "@/lib/island/sky";
+import { fallOf, hourOf, lightOf, towardOf, weatherOf } from "@/lib/island/sky";
 
 /** How bright a color is. */
 const brightness = (color: readonly number[]) => color[0] + color[1] + color[2];
@@ -35,6 +35,19 @@ describe("island/sky", () => {
     expect(brightness(lightOf(12, "snow").sun)).toBeLessThan(
       brightness(clear.sun)
     );
+  });
+
+  it("lights from the upper left, the sun low at morning and evening and high at noon, the moon at one height all night", () => {
+    const morning = towardOf(6.5);
+    const noon = towardOf(12.3);
+    expect(Math.hypot(...noon)).toBeCloseTo(1, 6);
+    expect(noon[0]).toBeLessThan(0);
+    expect(noon[2]).toBeGreaterThan(0);
+    expect(noon[1]).toBeGreaterThan(morning[1]);
+    expect(towardOf(18.5)[1]).toBeLessThan(noon[1]);
+    expect(towardOf(1)).toEqual(towardOf(23));
+    expect(towardOf(12.3)).toEqual(towardOf(12.31));
+    expect(lightOf(12.3, "rain").toward).toEqual(noon);
   });
 
   it("reads the weather from the route's icon code, day or night", () => {

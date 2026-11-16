@@ -3,7 +3,7 @@ import { describe, expect, it } from "@effect/vitest";
 import { idOf } from "@repo/backend/confect/island/blocks";
 import { SPAN } from "@repo/backend/confect/island/world";
 import { Array as Arr, HashMap, HashSet, Option } from "effect";
-import { BODY_STRIDE, NO_SHADOW, whaleAt } from "@/lib/island/bodies";
+import { BODY_STRIDE, whaleAt } from "@/lib/island/bodies";
 import { SPECIES } from "@/lib/island/fauna/species";
 import { groundOf } from "@/lib/island/life";
 import { speciesFaces } from "@/lib/island/models/catalog";
@@ -128,14 +128,14 @@ describe("island/wild", () => {
     expect([stuck.tx, stuck.tz]).toEqual([1.5, 1.5]);
   });
 
-  it("draws a walker as its species' body on its ground, facing its goal, its shadow at its feet, bobbing only while it walks", () => {
+  it("draws a walker as its species' body on its ground, facing its goal, bobbing only while it walks", () => {
     const meadow = floored("grass", 8);
     const walker = speciesWhere((species) => species.home === "land");
-    const [x, y, z, yaw, bob, shadow] = placesOf(
+    const [x, y, z, yaw, bob] = placesOf(
       meadow,
       creature(walker, 5.5, 5.5, 8.5, 5.5)
     );
-    expect([x, y, z, shadow]).toEqual([5.5, 9, 5.5, 9]);
+    expect([x, y, z]).toEqual([5.5, 9, 5.5]);
     expect(bob).toBeCloseTo(0.04);
     expect(yaw).toBeCloseTo(Math.PI / 2);
     const still = placesOf(meadow, { ...creature(walker, 5.5, 5.5), rest: 2 });
@@ -146,20 +146,17 @@ describe("island/wild", () => {
     );
   });
 
-  it("flies a flyer on its loop facing its way, its shadow on the ground under it and none over water", () => {
+  it("flies a flyer on its loop high over the ground, facing its way", () => {
     const flyer = creature(
       speciesWhere((species) => species.home === "sky"),
       5.5,
       5.5
     );
-    const [x, y, z, yaw, , shadow] = placesOf(floored("grass", 8), flyer);
+    const [x, y, z, yaw] = placesOf(floored("grass", 8), flyer);
     expect(y).toBeGreaterThan(SEA_LEVEL + 10);
-    expect(shadow).toBe(9);
     const [later] = wildBodies(floored("grass", 8), [flyer], 52, 12.05);
     const [lx, , lz] = Array.from(later[1]);
     expect(Math.atan2(lx - x, lz - z)).toBeCloseTo(yaw, 1);
-    expect(placesOf(floored("sand", 4, true), flyer)[5]).toBe(NO_SHADOW);
-    expect(placesOf(emptyCells(), flyer)[5]).toBe(NO_SHADOW);
   });
 
   it("floats a waterbird on the sea, walks a lobster on its floor, and swims fish in shoals between the floor and the surface", () => {
@@ -176,7 +173,6 @@ describe("island/wild", () => {
     const bird = placesOf(sea, of("waterbird"), 0);
     expect(bird).toHaveLength(BODY_STRIDE);
     expect(bird[1]).toBeCloseTo(SEA_LEVEL - 0.2);
-    expect(bird[5]).toBe(NO_SHADOW);
     expect(placesOf(sea, of("crab"), 0)[1]).toBe(5);
     const small = creature(
       speciesWhere(
@@ -191,10 +187,9 @@ describe("island/wild", () => {
     const shoal = placesOf(sea, small, 0);
     expect(shoal.length / BODY_STRIDE).toBeGreaterThan(4);
     expect(shoal.length / BODY_STRIDE).toBeLessThanOrEqual(9);
-    Arr.forEach(Arr.chunksOf(shoal, BODY_STRIDE), ([, y, , , , shadow]) => {
+    Arr.forEach(Arr.chunksOf(shoal, BODY_STRIDE), ([, y]) => {
       expect(y).toBeGreaterThan(5);
       expect(y).toBeLessThan(SEA_LEVEL);
-      expect(shadow).toBe(NO_SHADOW);
     });
     expect(placesOf(sea, of("ray"), 0).length).toBe(BODY_STRIDE);
   });

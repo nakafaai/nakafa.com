@@ -48,6 +48,28 @@ export function perspective(
   ]);
 }
 
+/** An orthographic projection with WebGL's clip space: a box `half` wide on each side of its middle, from `near` to `far` ahead. */
+export function orthographic(half: number, near: number, far: number): Matrix {
+  return new Float32Array([
+    1 / half,
+    0,
+    0,
+    0,
+    0,
+    1 / half,
+    0,
+    0,
+    0,
+    0,
+    -2 / (far - near),
+    0,
+    0,
+    0,
+    -(far + near) / (far - near),
+    1,
+  ]);
+}
+
 /** The view from `eye` looking at `target`, with the world's up kept up. */
 export function lookAt(
   eye: readonly [number, number, number],

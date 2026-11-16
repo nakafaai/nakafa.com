@@ -14,7 +14,7 @@ import {
 } from "@/lib/island/world";
 
 /**
- * Floats per vertex: position (3), atlas coordinate (2), face shade, sky
+ * Floats per vertex: position (3), atlas coordinate (2), corner occlusion, sky
  * light, block light, and how the wind takes it (ADR 0047, D32): 0 holds it
  * still, up to 1 lets it go.
  */
@@ -22,26 +22,17 @@ export const STRIDE = 9;
 
 const LEAVES = idOf("leaves");
 
-/** How bright each face is under a sky straight above: top, bottom, east and west, south and north. */
-const SHADE = { bottom: 0.55, top: 1, x: 0.8, z: 0.68 } as const;
-
 /** How bright a corner is with 0 to 3 open neighbours around it (ambient occlusion). */
 const OCCLUSION = [0.5, 0.68, 0.84, 1] as const;
 
 /** A face's normal and its two edges, in the order that winds it counter-clockwise from outside. */
 export const FACES = [
-  { n: [1, 0, 0], shade: SHADE.x, u: [0, 0, -1], v: [0, 1, 0], side: true },
-  { n: [-1, 0, 0], shade: SHADE.x, u: [0, 0, 1], v: [0, 1, 0], side: true },
-  { n: [0, 0, 1], shade: SHADE.z, u: [1, 0, 0], v: [0, 1, 0], side: true },
-  { n: [0, 0, -1], shade: SHADE.z, u: [-1, 0, 0], v: [0, 1, 0], side: true },
-  { n: [0, 1, 0], shade: SHADE.top, u: [0, 0, 1], v: [1, 0, 0], side: false },
-  {
-    n: [0, -1, 0],
-    shade: SHADE.bottom,
-    u: [1, 0, 0],
-    v: [0, 0, 1],
-    side: false,
-  },
+  { n: [1, 0, 0], u: [0, 0, -1], v: [0, 1, 0], side: true },
+  { n: [-1, 0, 0], u: [0, 0, 1], v: [0, 1, 0], side: true },
+  { n: [0, 0, 1], u: [1, 0, 0], v: [0, 1, 0], side: true },
+  { n: [0, 0, -1], u: [-1, 0, 0], v: [0, 1, 0], side: true },
+  { n: [0, 1, 0], u: [0, 0, 1], v: [1, 0, 0], side: false },
+  { n: [0, -1, 0], u: [1, 0, 0], v: [0, 0, 1], side: false },
 ] as const;
 
 /** The corners of a face along its edges: (0, 0), (1, 0), (1, 1), (0, 1). */
@@ -190,7 +181,7 @@ function glowAt(lighting: Lighting, x: number, y: number, z: number) {
   return isInside(x, y, z) ? lighting.glow[cellOf(x, y, z)] / 15 : 0;
 }
 
-/** One face of a cube: its normal, its edges and its shade, as `FACES` lists them. */
+/** One face of a cube: its normal and its edges, as `FACES` lists them. */
 type Face = (typeof FACES)[number];
 
 /** The atlas slot of a face of a block at column (x, z): its side tile, its top or bottom tile, or for a ground top the tile of its Wang set its edges choose (D39). */
@@ -293,7 +284,7 @@ function addCube(
         pz,
         tu,
         tv,
-        face.shade * OCCLUSION[opens[index]],
+        OCCLUSION[opens[index]],
         sky,
         glow,
         cubeSway(cells, block, [px, py, pz]),

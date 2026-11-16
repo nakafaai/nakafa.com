@@ -77,9 +77,33 @@ describe("island/life", () => {
     const arrived = wander(cells, hen, 11, 0, 1);
     expect(arrived.steps).toBe(1);
     expect(arrived.rest).toBeGreaterThan(0);
-    expect(suitsOf("hen", cells, arrived.tx, arrived.tz)).toBe(true);
-    const stuck = wander(cells, { ...hen, kind: "duck" }, 11, 0, 1);
-    expect([stuck.tx, stuck.tz]).toEqual([hen.tx, hen.tz]);
+    // Within a few rolls it picks a new goal, and only on ground that suits it.
+    const moved = Arr.findFirst(
+      Arr.makeBy(24, (steps) => wander(cells, { ...hen, steps }, 11, 0, 1)),
+      (next) => next.tx !== hen.tx || next.tz !== hen.tz
+    );
+    expect(Option.isSome(moved)).toBe(true);
+    Option.map(moved, (next) =>
+      expect(suitsOf("hen", cells, next.tx, next.tz)).toBe(true)
+    );
+    // A duck set down on dry land, with no water within its reach, keeps its goal.
+    const isDry = (animal: typeof hen) =>
+      Arr.every(
+        Arr.makeBy(49, (cell) => cell),
+        (cell) =>
+          !suitsOf(
+            "duck",
+            cells,
+            animal.tx - 3 + (cell % 7),
+            animal.tz - 3 + Math.floor(cell / 7)
+          )
+      );
+    const landed = Arr.findFirst(herdOf(cells, 11, 44), isDry);
+    expect(Option.isSome(landed)).toBe(true);
+    Option.map(landed, (animal) => {
+      const stuck = wander(cells, { ...animal, kind: "duck" }, 11, 0, 1);
+      expect([stuck.tx, stuck.tz]).toEqual([animal.tx, animal.tz]);
+    });
   });
 
   it("swims Nina around the island past its footprint, facing along her loop, flat on the sea and beating her tail", () => {

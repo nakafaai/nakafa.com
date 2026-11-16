@@ -51,7 +51,6 @@ import { firefliesOf } from "@/lib/island/night";
 import { planOf } from "@/lib/island/plan";
 import { plantBodies } from "@/lib/island/plants";
 import { castRay } from "@/lib/island/ray";
-import { shoreOf } from "@/lib/island/shore";
 import { hourOf, lightOf } from "@/lib/island/sky";
 import { chimneysOf } from "@/lib/island/smoke";
 import { roam, wildBodies, wildOf } from "@/lib/island/wild";
@@ -132,7 +131,6 @@ function start(
         meshChunk(cells, lighting, index % CHUNKS, Math.floor(index / CHUNKS))
       );
     }
-    painter.shore(shoreOf(cells, store.getState().seed, true));
     painter.columns(columnsOf(cells));
     painter.scenery({
       butterflies: butterfliesOf(cells, store.getState().seed),

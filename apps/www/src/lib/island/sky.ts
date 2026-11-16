@@ -1,4 +1,5 @@
 import { Array as Arr, DateTime, Option, Schema } from "effect";
+import { blendLab, greyedLab, type Rgb } from "@/lib/island/oklab";
 import { rgbOf } from "@/lib/island/palette";
 
 const Color = Schema.Tuple([Schema.Finite, Schema.Finite, Schema.Finite]);
@@ -6,14 +7,17 @@ const Color = Schema.Tuple([Schema.Finite, Schema.Finite, Schema.Finite]);
 /**
  * The light of one moment (ADR 0047, D8): the sky's zenith and horizon, which
  * far blocks also fade into (D35), the sun's color on lit faces, the ambient
- * color every face gets, and the lamps' color at night. Each is linear RGB, 0
- * to 1.
+ * color every face gets, and the lamps' color at night, each as the screen
+ * shows it, from 0 to 1; and `toward`, the unit direction toward the sun by
+ * day and the moon by night, which faces are lit from and shadows fall away
+ * from.
  */
 export const Light = Schema.Struct({
   ambient: Color,
   horizon: Color,
   lamp: Color,
   sun: Color,
+  toward: Color,
   zenith: Color,
 });
 export type Light = typeof Light.Type;
@@ -29,9 +33,41 @@ export const Weather = Schema.Literals([
 export type Weather = typeof Weather.Type;
 
 /** A color written as `#rrggbb`, with each channel from 0 to 1. */
-function rgb(hex: string) {
+function rgb(hex: string): Rgb {
   const [red, green, blue] = rgbOf(hex);
-  return [red / 255, green / 255, blue / 255] as const;
+  return [red / 255, green / 255, blue / 255];
+}
+
+/**
+ * Where the light comes from across the ground: always the upper left of the
+ * island as the opening camera sees it, the side the tiles' own pixel shading
+ * is drawn for, so a face's painted light and its shadow agree.
+ */
+const ACROSS = [
+  -0.45 / Math.hypot(0.45, 0.4),
+  0.4 / Math.hypot(0.45, 0.4),
+] as const;
+
+/** When the sun rises and sets, in hours. */
+const DAY = { rise: 6, set: 18.6 } as const;
+
+/**
+ * The direction toward the light at an hour: the sun climbs from 20 degrees at
+ * sunrise to 60 at midday and sinks again, so morning and evening shadows run
+ * long; the moon stands at 45 degrees all night. The angle keeps to whole
+ * degrees, so a shadow's edge holds still between two of them.
+ */
+export function towardOf(hour: number): Rgb {
+  const at = ((hour % 24) + 24) % 24;
+  const day = at >= DAY.rise && at < DAY.set;
+  const share = (at - DAY.rise) / (DAY.set - DAY.rise);
+  const degrees = day ? Math.round(20 + 40 * Math.sin(Math.PI * share)) : 45;
+  const angle = (degrees * Math.PI) / 180;
+  return [
+    ACROSS[0] * Math.cos(angle),
+    Math.sin(angle),
+    ACROSS[1] * Math.cos(angle),
+  ];
 }
 
 /** The light at a few hours of the day; the hours between blend them. */
@@ -111,24 +147,9 @@ const WEATHER = {
   storm: { grey: 0.7, sun: 0.3 },
 } as const;
 
-/** The color between `a` and `b`, `t` of the way. */
-function mix(a: readonly number[], b: readonly number[], t: number) {
-  return [
-    a[0] + (b[0] - a[0]) * t,
-    a[1] + (b[1] - a[1]) * t,
-    a[2] + (b[2] - a[2]) * t,
-  ] as const;
-}
-
-/** A color moved toward its own grey by `t`. */
-function greyed(color: readonly number[], t: number) {
-  const grey = (color[0] + color[1] + color[2]) / 3;
-  return mix(color, [grey, grey, grey], t);
-}
-
 /**
  * The light at an hour of the day, from 0 to 24, under a weather: the two
- * nearest keys blended, then greyed and dimmed by the weather.
+ * nearest keys blended in OKLab, then greyed and dimmed by the weather.
  */
 export function lightOf(hour: number, weather: Weather): Light {
   const at = ((hour % 24) + 24) % 24;
@@ -138,15 +159,15 @@ export function lightOf(hour: number, weather: Weather): Light {
   const to = KEYS[index + 1];
   const t = (at - from.at) / (to.at - from.at);
   const blend = (field: "ambient" | "horizon" | "lamp" | "sun" | "zenith") =>
-    mix(rgb(from[field]), rgb(to[field]), t);
+    blendLab(rgb(from[field]), rgb(to[field]), t);
   const { grey, sun } = WEATHER[weather];
-  const horizon = greyed(blend("horizon"), grey);
   return {
-    ambient: greyed(blend("ambient"), grey * 0.5),
-    horizon,
+    ambient: greyedLab(blend("ambient"), grey * 0.5),
+    horizon: greyedLab(blend("horizon"), grey),
     lamp: blend("lamp"),
-    sun: mix([0, 0, 0], greyed(blend("sun"), grey), sun),
-    zenith: greyed(blend("zenith"), grey),
+    sun: blendLab([0, 0, 0], greyedLab(blend("sun"), grey), sun),
+    toward: towardOf(at),
+    zenith: greyedLab(blend("zenith"), grey),
   };
 }
 

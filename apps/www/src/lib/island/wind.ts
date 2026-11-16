@@ -1,5 +1,5 @@
+import { SPAN } from "@repo/backend/confect/island/world";
 import { Array as Arr } from "effect";
-import { SHORE_FROM, SHORE_SIDE } from "@/lib/island/shore";
 import type { Weather } from "@/lib/island/sky";
 import { TILE } from "@/lib/island/tiles/paint";
 
@@ -23,10 +23,10 @@ const WIND_WAVE = 4.5;
 /** How often the leaves take a new pose, a second: a pixel's worth of motion drawn on twos, never a slide. */
 const WIND_POSES = 10;
 
-/** The side of the lean map in texels, over the square of sea the shore map covers. */
+/** The side of the lean map in texels, and the square of the world it covers: its side in cells and the coordinate it starts at, with the learner's island in its middle and every isle of the ring inside it. */
 export const WIND_SIDE = 64;
-export const WIND_FROM = SHORE_FROM;
-export const WIND_SPAN = SHORE_SIDE;
+export const WIND_SPAN = 256;
+export const WIND_FROM = SPAN / 2 - WIND_SPAN / 2;
 
 /** The most a treetop leans, in art pixels: the lean one byte of the map spans, from -WIND_LEAN to WIND_LEAN. */
 const WIND_LEAN = 4;

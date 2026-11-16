@@ -1,6 +1,7 @@
 import { ATLAS_TILES, SLOTS } from "@/lib/island/atlas";
 import { GROUND_GLSL } from "@/lib/island/ground";
-import { SHORE_REACH } from "@/lib/island/shore";
+import { TOON_GLSL } from "@/lib/island/toon";
+import { WATER_GLSL } from "@/lib/island/water";
 import { WIND_GLSL } from "@/lib/island/wind";
 
 /**
@@ -22,7 +23,7 @@ vec3 skyRow(float height) {
   return mix(uHorizon, uZenith, floor(t * 10.0) / 10.0);
 }`;
 
-/** The chunk program: atlas pixels lit by the sun, shaded where a cloud passes, lit by the sky over them and the lamps beside them, fading into fog. */
+/** The chunk program: atlas pixels lit by the sun in toon bands where its shadow map lets it reach, shaded where a cloud passes, lit by the sky over them and the lamps beside them, dimmed and laced with caustics under the sea, fading into fog. */
 export const CHUNK_VERTEX = `#version 300 es
 layout(location = 0) in vec3 aPosition;
 layout(location = 1) in vec2 aUv;
@@ -55,13 +56,11 @@ uniform vec3 uSun;
 uniform vec3 uAmbient;
 uniform vec3 uLamp;
 uniform vec2 uFogRange;
-uniform float uAlpha;
 uniform float uTime;
+uniform float uSea;
 uniform vec2 uWaterTile;
 const vec2 GLASS_TILE = vec2(${(SLOTS.glass % ATLAS_TILES).toFixed(1)}, ${Math.floor(SLOTS.glass / ATLAS_TILES).toFixed(1)});
 uniform float uWater;
-uniform sampler2D uShore;
-uniform vec2 uShoreBox;
 uniform vec3 uEye;
 ${SKY_ROW}
 uniform float uWet;
@@ -88,6 +87,8 @@ float noiseOf(vec2 place) {
   );
 }
 ${GROUND_GLSL}
+${TOON_GLSL}
+${WATER_GLSL}
 // The shadow of the clouds drifting over the island, cut into whole art pixels.
 float cloudOf(vec2 place) {
   vec2 pixel = floor((place + vec2(uTime * 0.7, uTime * 0.3)) * 4.0) / 4.0;
@@ -148,34 +149,31 @@ void main() {
     paint = mix(paint, vec3(0.92, 0.95, 1.0), step(spread, lying) * 0.94);
   }
   float foam = 0.0;
+  float alpha = 1.0;
   if (uWater > 0.5) {
-    // The sea in whole art pixels (D28, D34): how far this pixel lies from the land's edge, in cells, wobbled by a still noise of its place so no band copies the coast's steps.
-    vec2 art = floor(vWorld.xz * 16.0) / 16.0;
-    float coast = texture(uShore, (art + 0.5 - uShoreBox.x) / uShoreBox.y).r * ${SHORE_REACH.toFixed(1)} - 0.5;
-    coast += (noiseOf(art * 0.7) - 0.5) * 0.8;
-    float drift = noiseOf(art * 2.0 + vec2(uTime * 0.25, -uTime * 0.18));
-    // Depth in four bands, each a flat step of colour: shoal, shallows, the shelf, then the deep.
-    vec3 tint = coast < 0.8 ? vec3(0.1, 0.3, 0.24) : coast < 2.4 ? vec3(0.05, 0.17, 0.14) : coast < 5.5 ? vec3(0.015, 0.06, 0.05) : vec3(0.0);
-    paint = paint + tint * 0.8;
-    // Waves: thin crests that roll in toward the coast from the shelf, broken where the noise is low, and gone in the shoal.
-    float crest = step(fract((coast + uTime * 0.55) / 2.6), 0.07) * step(0.9, coast) * (1.0 - step(7.0, coast));
-    float wave = crest * step(0.4, noiseOf(art * 0.9 + vec2(uTime * 0.05, 0.0)));
-    // Surf: foam that laps up and back against the land, and one line riding in ahead of it.
-    float lap = 0.5 + 0.5 * sin(uTime * 1.1 + drift * 5.0);
-    float surf = step(coast, 0.12 + 0.28 * lap);
-    float line = step(abs(coast - (0.7 + 0.25 * lap)), 0.05) * step(0.35, lap);
-    // Glints: out at sea, patches of sparse specks of light that run with the wind.
-    float glint = step(0.955, noiseOf(vec2(art.x * 3.0 + uTime * 0.7, art.y * 9.0 - uTime * 0.2))) * step(0.5, noiseOf(art * 0.12 + vec2(uTime * 0.03, 0.0))) * smoothstep(4.0, 7.0, coast) * vSky;
-    foam = max(max(surf, line * 0.85), max(wave * 0.45, glint * 0.55));
+    vec4 water = waterOf(vWorld, uEye, uToward, uTime, vSky, foam);
+    paint = water.rgb * (0.9 + 0.2 * dot(texel.rgb, vec3(0.333)));
+    alpha = water.a;
   }
-  vec3 light = uAmbient * (0.55 + 0.45 * vShade) + uSun * vShade * vSky * (1.0 - 0.4 * cloudOf(vWorld.xz));
+  // The sun reaches a face only where nothing stands between them, and a cloud passing over dims it; the sky over a face lets it in at all.
+  float lit = sunlitAt(vWorld, face) * vSky * (1.0 - 0.4 * cloudOf(vWorld.xz));
+  vec3 light = toonLight(uAmbient, uSun, face, lit, 0.55 + 0.45 * vShade);
   light = max(light, uLamp * vGlow * vGlow * vShade);
+  // Under the sea the light fades with depth, and the swell's caustics play over the floor in whole art pixels.
+  float under = uSea - vWorld.y;
+  if (uWater < 0.5 && under > 0.0) {
+    vec2 bed = floor(vWorld.xz * 16.0) / 16.0;
+    float a = noiseOf(bed * 1.7 + vec2(uTime * 0.5, uTime * 0.3));
+    float b = noiseOf(bed * 2.3 - vec2(uTime * 0.4, -uTime * 0.35));
+    float caustic = step(abs(a - b), 0.05) * exp(-0.3 * under) * vSky;
+    light = light * mix(1.0, 0.5, 1.0 - exp(-0.3 * under)) + uSun * caustic * 0.7;
+  }
   light = floor(light * 12.0 + 0.5) / 12.0;
   // Measured per pixel: the sea is a few huge quads, and a distance blended between their far corners would fog all of it.
   float fog = smoothstep(uFogRange.x, uFogRange.y, distance(vWorld, uEye));
-  vec3 lit = mix(paint * light, vec3(0.97, 0.99, 1.0) * min(vec3(1.0), light + 0.12), foam);
-  lit = mix(lit, vec3(1.0, 0.8, 0.46) * (0.82 + 0.18 * home), emit);
-  color = vec4(mix(lit, skyRow(gl_FragCoord.y / uRows), fog), mix(uAlpha, 1.0, foam));
+  vec3 shown = mix(paint * light, vec3(0.97, 0.99, 1.0) * min(vec3(1.0), light + 0.12), foam);
+  shown = mix(shown, vec3(1.0, 0.8, 0.46) * (0.82 + 0.18 * home), emit);
+  color = vec4(mix(shown, skyRow(gl_FragCoord.y / uRows), fog), mix(alpha, 1.0, foam));
   // The face's own direction, from how the world moves across this pixel, for the edge pass (D20).
   surface = vec4(face * 0.5 + 0.5, 1.0);
 }`;
@@ -287,10 +285,10 @@ void main() {
 /**
  * The body program (ADR 0047, D21): every true 3D model of one kind at once,
  * each body placed, turned to face its way and bobbing as it walks from its
- * own numbers. Faces are lit flat by the sun from the upper left and the sky,
- * in the same few steps of light as the blocks, and write their direction for
- * the edge pass, so every body is outlined as crisply as a house. A shadow
- * pass draws the same kind flattened to a dark disc on the ground.
+ * own numbers. Faces are lit by the sun in the blocks' toon bands where the
+ * shadow map lets it reach, and write their direction for the edge pass, so
+ * every body is outlined as crisply as a house. Drawn from the sun's own view,
+ * the same program casts each body's shadow into the shadow map (D43).
  */
 export const BODY_VERTEX = `#version 300 es
 layout(location = 0) in vec3 aPosition;
@@ -298,10 +296,8 @@ layout(location = 1) in vec3 aNormal;
 layout(location = 2) in vec3 aColor;
 layout(location = 3) in vec4 aPlace;
 layout(location = 4) in float aMove;
-layout(location = 5) in float aGround;
 uniform mat4 uViewProjection;
 uniform float uTime;
-uniform float uShadow;
 ${WIND_GLSL}
 out vec3 vColor;
 out vec3 vNormal;
@@ -310,29 +306,18 @@ void main() {
   float c = cos(aPlace.w);
   float s = sin(aPlace.w);
   vec3 local = aPosition;
-  vec3 base = aPlace.xyz;
-  if (uShadow > 0.5) {
-    // A shadow is the body pressed flat onto the ground under it, a hair above so it never fights it.
-    local = vec3(local.x * 0.9, 0.03, local.z * 0.9);
-    base = vec3(aPlace.x, aGround, aPlace.z);
-  }
   vec3 turned = vec3(local.x * c + local.z * s, local.y, -local.x * s + local.z * c);
-  vec3 place = base + turned;
+  vec3 place = aPlace.xyz + turned;
   if (aMove < 0.0) {
-    // A plant gives to the wind like a rod held at its foot (D32): hardly at all low down, most at its top, a tall one further than a small one. Its shadow follows on the ground.
+    // A plant gives to the wind like a rod held at its foot (D32): hardly at all low down, most at its top, a tall one further than a small one. Its shadow sways with it.
     float height = min(1.0, aPosition.y * -aMove);
-    vec3 shift = windShift(aPlace.xz, height * height * min(1.0, 0.4 - 0.2 / aMove));
-    place += uShadow > 0.5 ? vec3(shift.x, 0.0, shift.z) : shift;
+    place += windShift(aPlace.xz, height * height * min(1.0, 0.4 - 0.2 / aMove));
   }
-  place.y += abs(sin(uTime * 9.0 + aPlace.x * 3.1)) * max(aMove, 0.0) * (1.0 - uShadow);
+  place.y += abs(sin(uTime * 9.0 + aPlace.x * 3.1)) * max(aMove, 0.0);
   vNormal = vec3(aNormal.x * c + aNormal.z * s, aNormal.y, -aNormal.x * s + aNormal.z * c);
   vColor = aColor;
   vWorld = place;
   gl_Position = uViewProjection * vec4(place, 1.0);
-  if (uShadow > 0.5 && aGround < 0.0) {
-    // A body in the water or over it casts no shadow: its triangles fall outside the frame.
-    gl_Position = vec4(2.0, 2.0, 2.0, 1.0);
-  }
 }`;
 
 export const BODY_FRAGMENT = `#version 300 es
@@ -342,8 +327,8 @@ uniform vec3 uAmbient;
 ${SKY_ROW}
 uniform vec2 uFogRange;
 uniform vec3 uEye;
-uniform float uShadow;
 uniform float uSeen;
+${TOON_GLSL}
 in vec3 vColor;
 in vec3 vNormal;
 in vec3 vWorld;
@@ -357,16 +342,36 @@ void main() {
     color = vec4(mix(vec3(0.16, 0.1, 0.08), vColor, 0.15), 0.88);
     return;
   }
-  if (uShadow > 0.5) {
-    color = vec4(0.0, 0.0, 0.0, 0.28);
-    surface = vec4(0.5, 1.0, 0.5, 1.0);
-    return;
-  }
-  float facing = max(dot(normal, normalize(vec3(-0.45, 0.8, 0.4))), 0.0);
-  float shade = 0.62 + 0.38 * max(normal.y, 0.0);
-  vec3 light = uAmbient * shade + uSun * facing;
-  light = floor(light * 6.0 + 0.5) / 6.0;
+  vec3 light = toonLight(uAmbient, uSun, normal, sunlitAt(vWorld, normal), 0.62 + 0.38 * max(normal.y, 0.0));
+  light = floor(light * 8.0 + 0.5) / 8.0;
   float fog = smoothstep(uFogRange.x, uFogRange.y, distance(vWorld, uEye));
   color = vec4(mix(vColor * light, skyRow(gl_FragCoord.y / uRows), fog), 1.0);
   surface = vec4(normal * 0.5 + 0.5, 1.0);
+}`;
+
+/**
+ * The cast program (ADR 0047, D43): the blocks seen from the sun, depth only,
+ * into the shadow map. A clear atlas pixel casts nothing, so a crown's gaps
+ * let the light through in flecks.
+ */
+export const CAST_VERTEX = `#version 300 es
+layout(location = 0) in vec3 aPosition;
+layout(location = 1) in vec2 aUv;
+uniform mat4 uViewProjection;
+out vec2 vUv;
+void main() {
+  vUv = aUv;
+  gl_Position = uViewProjection * vec4(aPosition, 1.0);
+}`;
+
+export const CAST_FRAGMENT = `#version 300 es
+precision mediump float;
+uniform sampler2D uAtlas;
+in vec2 vUv;
+out vec4 color;
+void main() {
+  if (texture(uAtlas, vUv).a < 0.5) {
+    discard;
+  }
+  color = vec4(1.0);
 }`;

@@ -42,7 +42,7 @@ export function isPassable(block: number) {
  * Every plant of the world as its true 3D model at its real height (ADR
  * 0047, D25), one model a plant with its bodies as one run of numbers,
  * `BODY_STRIDE` a body: standing in the middle of its cell, turned a way of
- * its own, giving to the wind over its whole height, its shadow at its foot.
+ * its own, giving to the wind over its whole height.
  * The world changes only by its edits, so
  * this is read again after an edit, never every frame.
  */
@@ -67,7 +67,6 @@ export function plantBodies(cells: Cells) {
                       z + 0.5,
                       unitOf(17, x, y, z) * Math.PI * 2,
                       -SCALE.block / PLANT_HEIGHTS[PLANT_KEYS[index]],
-                      y,
                     ],
                   });
             }

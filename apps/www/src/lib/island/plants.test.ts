@@ -59,9 +59,9 @@ describe("island/plants", () => {
       );
     const roses = of("rose");
     expect(roses).toHaveLength(2);
-    for (const [x, y, z, yaw, give, ground] of roses) {
+    for (const [x, y, z, yaw, give] of roses) {
       // A rose stands 0.9 m, one block: the wind takes hold of all of it.
-      expect([x % 1, y, z % 1, give, ground]).toEqual([0.5, 9, 0.5, -1, 9]);
+      expect([x % 1, y, z % 1, give]).toEqual([0.5, 9, 0.5, -1]);
       expect(yaw).toBeGreaterThanOrEqual(0);
       expect(yaw).toBeLessThan(Math.PI * 2 + 1e-6);
     }
