@@ -305,6 +305,24 @@ describe("GitHub proof runner", () => {
     PROCESS_TIMEOUT
   );
 
+  it("reads the phases of the one machine that ran a small selection, beside the engine jobs that ended", () => {
+    const [, chromium, firefox, webkit] = RUN.jobs;
+    const ended = (job: typeof firefox) => ({
+      ...job,
+      completedAt: job.startedAt,
+      steps: Arr.map(job.steps, (one) => ({ ...one, conclusion: "skipped" })),
+    });
+    const timings = runTimings({
+      ...RUN,
+      jobs: [GATE_JOB, ended(firefox), chromium, ended(webkit)],
+    });
+
+    expect(timings.prepare).toEqual(Option.some(4));
+    expect(timings.restored).toEqual(Option.some(true));
+    expect(timings.build).toEqual(Option.some(18));
+    expect(timings.specs).toEqual(Option.some(12));
+  });
+
   it("reads no phase that a run never reached", () => {
     expect(
       runTimings({

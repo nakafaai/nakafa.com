@@ -18,10 +18,11 @@
 # serves `bun run gate`, whose gate also posts `verify`, `bun run proof`, and a
 # merge group rehearsal that names its `base`.
 #
-# Jobs side by side and no `needs`: the gate, and the proof, which installs,
-# prepares and builds once and runs the three engines one after another when a
-# run proves selected specs (a merge group, its rehearsal or a named dispatch),
-# and runs one machine per engine when it proves every suite. Every `needs`
+# Jobs side by side and no `needs`: the gate, and one proof job per engine.
+# Each proof job selects the run's specs first: a selection of at most ten specs
+# installs, prepares and builds once on the Chromium job, which runs the three
+# engines one after another while the other two end, and a larger selection, or
+# every suite, runs each engine on its own machine. Every `needs`
 # stage waits in the account's free runner queue again from the back, which
 # turned 14 minutes of work into three hours, while jobs without one leave the
 # queue together. Each job posts its own statuses: the gate `gate/<part>` and
@@ -398,11 +399,12 @@ jobs:
       # One machine's failure never stops another, so every engine reports.
       fail-fast: false
       matrix:
-        # Selected specs (a merge group's, its rehearsal's or a named dispatch's)
-        # take the engines a minute or two, so one machine builds and prepares
-        # once and runs all three. Every suite takes them far longer, so each
-        # engine gets a machine of its own, side by side.
-        engines: ${{ fromJSON((github.event_name == 'merge_group' || inputs.specs != '' || inputs.base != '') && '[["chromium","firefox","webkit"]]' || '[["chromium"],["firefox"],["webkit"]]') }}
+        # One entry per engine. Each selects its specs first, in seconds: a
+        # selection of at most ONE_MACHINE_SPECS runs on the Chromium entry's one
+        # build in all three engines, one after another, and the other two
+        # entries end there; a larger one, or every suite, runs each engine on its
+        # own machine, side by side.
+        engine: [ chromium, firefox, webkit ]
     permissions:
       # As for the gate: the job that finishes last posts the group's verdict.
       actions: write
@@ -410,27 +412,17 @@ jobs:
       statuses: write
     env:
       GH_TOKEN: ${{ github.token }}
-      ENGINES: ${{ join(matrix.engines, ' ') }}
+      ENGINE: ${{ matrix.engine }}
+      # The most specs that one machine runs in all three engines. A spec takes an
+      # engine about 25 seconds on these runners (the median of 60 engine jobs on
+      # 15 and 16 November 2026), and a machine's install, prepare, build and start
+      # take 7 to 14 minutes. Above ten specs the two extra engines' time on one
+      # machine (2 x 10 x 25 s, about 8 minutes) passes the build that a machine of
+      # their own repeats, so they run side by side instead.
+      ONE_MACHINE_SPECS: "10"
     steps:
-      - name: Mark the engines pending
-        run: |
-          # GitHub's API now and then drops a call ("unexpected end of JSON input"). A status post is idempotent per context,
-          # so a failed call is sent again, failing the step only after the third.
-          retry() {
-            for attempt in 1 2 3; do
-              "$@" && return 0
-              [ "$attempt" = 3 ] || sleep 5
-            done
-            return 1
-          }
-          [[ "$SHA" =~ ^[0-9a-f]{40}$ ]] || { echo "sha must be a full lower-case commit SHA." >&2; exit 1; }
-          contexts=(proof)
-          for engine in $ENGINES; do contexts+=("proof/$engine"); done
-          [ "$VERIFY" != group ] || contexts+=(verify)
-          for context in "${contexts[@]}"; do
-            retry gh api --silent "repos/$GITHUB_REPOSITORY/statuses/$SHA" \
-              -f state=pending -f context="$context" -f target_url="$URL" -f description="Verifying"
-          done
+      - name: Check the head
+        run: '[[ "$SHA" =~ ^[0-9a-f]{40}$ ]] || { echo "sha must be a full lower-case commit SHA." >&2; exit 1; }'
 
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -460,6 +452,7 @@ jobs:
       # folders its app source paths name, and the smoke spec. A dispatch proves
       # the specs it names, or every suite.
       - name: Select the specs
+        id: select
         env:
           NAMED: ${{ inputs.specs }}
         run: |
@@ -472,8 +465,40 @@ jobs:
           [[ "$specs" =~ ^(e2e/[A-Za-z0-9/_.-]+\.browser\.ts( |$))*$ ]] || { echo "specs must be spec files under apps/www." >&2; exit 1; }
           echo "SPECS=$specs" >> "$GITHUB_ENV"
           echo "Specs: ${specs:-every suite}"
+          # The engines this machine runs: all three on the Chromium entry for a
+          # small selection, none on the other two, and its own for a large one.
+          count="$(wc -w <<< "$specs")"
+          engines="$ENGINE"
+          if [ -n "$specs" ] && [ "$count" -le "$ONE_MACHINE_SPECS" ]; then
+            engines=""
+            [ "$ENGINE" != chromium ] || engines="chromium firefox webkit"
+          fi
+          echo "ENGINES=$engines" >> "$GITHUB_ENV"
+          echo "ENGINES_KEY=${engines// /-}" >> "$GITHUB_ENV"
+          echo "${count} specs: this machine runs ${engines:-no engine}"
+
+      - name: Mark the engines pending
+        if: env.ENGINES != ''
+        run: |
+          # GitHub's API now and then drops a call ("unexpected end of JSON input"). A status post is idempotent per context,
+          # so a failed call is sent again, failing the step only after the third.
+          retry() {
+            for attempt in 1 2 3; do
+              "$@" && return 0
+              [ "$attempt" = 3 ] || sleep 5
+            done
+            return 1
+          }
+          contexts=(proof)
+          for engine in $ENGINES; do contexts+=("proof/$engine"); done
+          [ "$VERIFY" != group ] || contexts+=(verify)
+          for context in "${contexts[@]}"; do
+            retry gh api --silent "repos/$GITHUB_REPOSITORY/statuses/$SHA" \
+              -f state=pending -f context="$context" -f target_url="$URL" -f description="Verifying"
+          done
 
       - name: Name the browsers
+        if: env.ENGINES != ''
         id: playwright
         working-directory: apps/www
         run: echo "version=$(bunx --no-install playwright --version | awk '{print $2}')" >> "$GITHUB_OUTPUT"
@@ -481,10 +506,11 @@ jobs:
       # The browsers of one Playwright release never change, so a machine
       # downloads them only when no run of that release kept them.
       - name: Restore the browsers
+        if: env.ENGINES != ''
         id: browsers
         uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
-          key: playwright-${{ runner.os }}-${{ runner.arch }}-${{ steps.playwright.outputs.version }}-${{ join(matrix.engines, '-') }}
+          key: playwright-${{ runner.os }}-${{ runner.arch }}-${{ steps.playwright.outputs.version }}-${{ env.ENGINES_KEY }}
           path: ~/.cache/ms-playwright
 
       # The engines install while the runtime prepares and builds. The system
@@ -492,6 +518,7 @@ jobs:
       # or Firefox finds no virtual display. The apt timeout lets a silent mirror
       # fall back in ten seconds instead of thirty a file.
       - name: Start the browser install
+        if: env.ENGINES != ''
         run: |
           echo 'Acquire::http::Timeout "10"; Acquire::https::Timeout "10";' \
             | sudo tee /etc/apt/apt.conf.d/99-mirror-timeout > /dev/null
@@ -521,6 +548,7 @@ jobs:
       # The proof reads the committed bindings, which the gate regenerates and
       # compares on the same head.
       - name: Name the prepared runtime
+        if: env.ENGINES != ''
         id: key
         run: |
           key="$(bun run --cwd packages/backend acceptance key | grep -E '^[0-9a-f]{64}$' | tail -1)"
@@ -529,6 +557,7 @@ jobs:
           echo "ACCEPTANCE_SNAPSHOTS=$RUNNER_TEMP/snapshots" >> "$GITHUB_ENV"
 
       - name: Restore the prepared runtime
+        if: env.ENGINES != ''
         id: restore
         uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
@@ -538,13 +567,14 @@ jobs:
             ~/.cache/convex/binaries
 
       - name: Prepare
+        if: env.ENGINES != ''
         id: prepare
         run: bun run --cwd packages/backend acceptance prepare
 
       # Machines that prepare the same key race to save it; the first keeps it,
       # and the others' saves only warn.
       - name: Save the prepared runtime
-        if: steps.restore.outputs.cache-hit != 'true'
+        if: env.ENGINES != '' && steps.restore.outputs.cache-hit != 'true'
         uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           key: prepared-${{ steps.key.outputs.key }}
@@ -553,12 +583,14 @@ jobs:
             ~/.cache/convex/binaries
 
       - name: Build
+        if: env.ENGINES != ''
         id: build
         env:
           TURBO_CONCURRENCY: "2"
         run: bun run --cwd packages/backend acceptance build
 
       - name: Start
+        if: env.ENGINES != ''
         run: |
           setsid bun run --cwd packages/backend acceptance start > "$RUNNER_TEMP/start.log" 2>&1 &
           for _ in $(seq 1 150); do
@@ -569,6 +601,7 @@ jobs:
           exit 1
 
       - name: Wait for the browsers
+        if: env.ENGINES != ''
         run: |
           for _ in $(seq 1 300); do
             if [ -s "$RUNNER_TEMP/browsers.exit" ]; then
@@ -581,10 +614,10 @@ jobs:
           exit 1
 
       - name: Save the browsers
-        if: steps.browsers.outputs.cache-hit != 'true'
+        if: env.ENGINES != '' && steps.browsers.outputs.cache-hit != 'true'
         uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
-          key: playwright-${{ runner.os }}-${{ runner.arch }}-${{ steps.playwright.outputs.version }}-${{ join(matrix.engines, '-') }}
+          key: playwright-${{ runner.os }}-${{ runner.arch }}-${{ steps.playwright.outputs.version }}-${{ env.ENGINES_KEY }}
           path: ~/.cache/ms-playwright
 
       # The engines run one after another against the one started app, each
@@ -592,6 +625,7 @@ jobs:
       # step. Playwright empties its output folder on every run, so each engine's
       # traces move aside before the next engine starts.
       - name: Run specs
+        if: env.ENGINES != ''
         env:
           # A runner has no GPU and no display, and headless Firefox finds no
           # GL driver there. It runs with a window on a virtual display, where
@@ -619,7 +653,7 @@ jobs:
       # One artifact per engine, `results-<engine>`, whichever machine ran it:
       # `bun run proof` and the group's verdict read every `results-*` the same way.
       - name: Keep the Chromium result
-        if: always() && contains(matrix.engines, 'chromium')
+        if: always() && env.ENGINES != '' && contains(env.ENGINES, 'chromium')
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: results-chromium
@@ -628,7 +662,7 @@ jobs:
           retention-days: 7
 
       - name: Keep the Firefox result
-        if: always() && contains(matrix.engines, 'firefox')
+        if: always() && env.ENGINES != '' && contains(env.ENGINES, 'firefox')
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: results-firefox
@@ -637,7 +671,7 @@ jobs:
           retention-days: 7
 
       - name: Keep the WebKit result
-        if: always() && contains(matrix.engines, 'webkit')
+        if: always() && env.ENGINES != '' && contains(env.ENGINES, 'webkit')
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: results-webkit
@@ -646,10 +680,10 @@ jobs:
           retention-days: 7
 
       - name: Keep the traces of failures
-        if: always()
+        if: always() && env.ENGINES != ''
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: traces-${{ join(matrix.engines, '-') }}
+          name: traces-${{ env.ENGINES_KEY }}
           path: |
             ${{ runner.temp }}/traces
             ${{ runner.temp }}/start.log
@@ -664,7 +698,8 @@ jobs:
       # engines' statuses before it reads the others, so the last to finish
       # always sees them all. `bun run proof` reads the same results.
       - name: Post the proof
-        if: always()
+        # A selection that failed posts its own engine's failure, so no status waits.
+        if: always() && (env.ENGINES != '' || steps.select.outcome != 'success')
         run: |
           # GitHub's API now and then drops a call ("unexpected end of JSON input"). A status post is idempotent per context and a read changes nothing,
           # so a failed call is sent again, failing the step only after the third.
@@ -679,7 +714,7 @@ jobs:
             retry gh api --silent "repos/$GITHUB_REPOSITORY/statuses/$SHA" \
               -f state="$2" -f context="$1" -f target_url="$URL" -f description="$3"
           }
-          for engine in $ENGINES; do
+          for engine in ${ENGINES:-$ENGINE}; do
             file="$RUNNER_TEMP/result/$engine/result.json"
             if [ ! -s "$file" ]; then
               state=failure; description="No result: the build or the start failed"
@@ -699,7 +734,7 @@ jobs:
           post proof "$all" "Chromium, Firefox and WebKit: $all"
 
       - name: Post the group's verdict
-        if: always() && env.VERIFY == 'group'
+        if: always() && env.VERIFY == 'group' && (env.ENGINES != '' || steps.select.outcome != 'success')
         uses: ./.github/actions/verdict
 
   # Prepares main's runtime and downloads the browsers once per push to main, and
