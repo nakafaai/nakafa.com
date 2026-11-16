@@ -178,10 +178,10 @@ function RunRig({
         <MetalMaterial color={MATERIAL.probeSteel} roughness={0.3} />
       </mesh>
       <ThreeLabel
-        color={ORIGIN_COLOR.DARK}
+        color={ORIGIN_COLOR.LIGHT}
         fontSize="compact"
-        outlineColor={ORIGIN_COLOR.LIGHT}
-        outlineWidth={0.004}
+        outlineColor={ORIGIN_COLOR.DARK}
+        outlineWidth={0.006}
         position={[x, -0.02, 0.06]}
       >
         {run.label}

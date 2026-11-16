@@ -157,7 +157,7 @@ export function Battery({
         color={colors.text}
         fontSize="compact"
         outlineColor={colors.halo}
-        outlineWidth={0.004}
+        outlineWidth={0.006}
         position={[-TERMINAL_OFFSET - 0.1, 0.02, 0.08]}
       >
         <InlineMath math="+" />
@@ -166,7 +166,7 @@ export function Battery({
         color={colors.text}
         fontSize="compact"
         outlineColor={colors.halo}
-        outlineWidth={0.004}
+        outlineWidth={0.006}
         position={[TERMINAL_OFFSET + 0.1, 0.02, 0.08]}
       >
         <InlineMath math="-" />
@@ -175,7 +175,7 @@ export function Battery({
         color={colors.text}
         fontSize="compact"
         outlineColor={colors.halo}
-        outlineWidth={0.004}
+        outlineWidth={0.006}
         position={[0, 0.12, 0]}
       >
         {label}

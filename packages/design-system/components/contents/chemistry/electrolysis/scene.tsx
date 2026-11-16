@@ -147,7 +147,7 @@ function CellModel({ cell }: { readonly cell: Cell }) {
         fontSize="compact"
         gap={0.004}
         outlineColor={colors.halo}
-        outlineWidth={0.004}
+        outlineWidth={0.006}
         position={[-ELECTRODE_OFFSET - 0.06, ELECTRODE_TOP - 0.02, 0.1]}
       >
         <InlineMath math="(+)" />
@@ -158,7 +158,7 @@ function CellModel({ cell }: { readonly cell: Cell }) {
         fontSize="compact"
         gap={0.004}
         outlineColor={colors.halo}
-        outlineWidth={0.004}
+        outlineWidth={0.006}
         position={[ELECTRODE_OFFSET + 0.06, ELECTRODE_TOP - 0.02, 0.1]}
       >
         <InlineMath math="(-)" />
@@ -168,7 +168,7 @@ function CellModel({ cell }: { readonly cell: Cell }) {
         color={colors.text}
         fontSize="compact"
         outlineColor={colors.halo}
-        outlineWidth={0.004}
+        outlineWidth={0.006}
         position={[0, -0.06, BEAKER_RADIUS]}
       >
         <InlineMath math={ELECTROLYTE_FORMULA[cell.electrolyte]} />
@@ -243,7 +243,7 @@ function Electrode({
           color={colors.text}
           fontSize="compact"
           outlineColor={colors.halo}
-          outlineWidth={0.004}
+          outlineWidth={0.006}
           position={[0, LIQUID_HEIGHT + 0.08, BEAKER_RADIUS * 0.7]}
         >
           <InlineMath math={PRODUCT_FORMULA[reaction.product]} />

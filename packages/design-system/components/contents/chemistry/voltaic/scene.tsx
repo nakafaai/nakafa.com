@@ -199,11 +199,11 @@ export function HalfCell({
         ) : null}
         <ThreeLabel
           anchorX={side === -1 ? "right" : "left"}
-          color={ORIGIN_COLOR.DARK}
+          color={ORIGIN_COLOR.LIGHT}
           fontSize="compact"
           gap={0.004}
-          outlineColor={ORIGIN_COLOR.LIGHT}
-          outlineWidth={0.004}
+          outlineColor={ORIGIN_COLOR.DARK}
+          outlineWidth={0.006}
           position={[side * 0.08, ELECTRODE_TOP - 0.02, 0.1]}
         >
           <InlineMath math={side === -1 ? "(-)" : "(+)"} />
@@ -211,10 +211,10 @@ export function HalfCell({
       </group>
       <ThreeLabel
         anchorY="top"
-        color={ORIGIN_COLOR.DARK}
+        color={ORIGIN_COLOR.LIGHT}
         fontSize="compact"
-        outlineColor={ORIGIN_COLOR.LIGHT}
-        outlineWidth={0.004}
+        outlineColor={ORIGIN_COLOR.DARK}
+        outlineWidth={0.006}
         position={[0, -0.06, BEAKER_RADIUS]}
       >
         <InlineMath math={`${symbol}\\,|\\,${ion}\\mathrm{(aq)}`} />

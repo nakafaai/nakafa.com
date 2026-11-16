@@ -117,11 +117,11 @@ export function TitrationScene({
         {showReading ? (
           <ThreeLabel
             anchorX="left"
-            color={ORIGIN_COLOR.DARK}
+            color={ORIGIN_COLOR.LIGHT}
             fontSize="compact"
             gap={0.004}
-            outlineColor={ORIGIN_COLOR.LIGHT}
-            outlineWidth={0.004}
+            outlineColor={ORIGIN_COLOR.DARK}
+            outlineWidth={0.006}
             position={[TUBE_RADIUS + 0.012, meniscus, 0]}
           >
             <InlineMath
