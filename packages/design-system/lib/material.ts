@@ -132,6 +132,8 @@ export const MATERIAL = {
   periplasm: "#dfe9e6",
   porin: "#6f8fb8",
   teichoic: "#c46f86",
+  phaseCell: "#4a4740",
+  phaseHalo: "#fffbef",
   bacterialEnvelope: "#c99a5b",
   cytosol: "#efe3c4",
   fimbria: "#d8c8a4",
