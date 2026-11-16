@@ -35,11 +35,12 @@ import { Array as Arr, Record as Rec, Schema } from "effect";
 import { useOptimistic, useState, useTransition } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
-import { ListCard } from "@/components/shared/page/body";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { RowItems } from "@/components/shared/table/menu";
 import { TableFiltersProvider } from "@/components/shared/table/toolbar";
+import { EmptyState } from "@/components/state/empty";
+import { EmptyNina } from "@/components/state/nina";
 import { useTenant } from "@/components/tenant/context";
 import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 
@@ -108,7 +109,7 @@ function RequestMenu({ request }: { request: ParentRequest }) {
   );
 }
 
-/** What a parent asked about one child, and the button that asks again. */
+/** What a parent asked about one child, as the child pane's Requests view; the pane's footer asks again (`AskDialog`). */
 export function ParentRequests({
   linkId,
 }: {
@@ -127,63 +128,61 @@ export function ParentRequests({
     throw requests.error;
   }
   return (
-    <div className="flex flex-col items-start gap-3">
-      {QueryResult.isSuccess(requests) &&
-      !Arr.isReadonlyArrayEmpty(requests.value) ? (
-        <TableFiltersProvider>
-          <ListCard>
-            <DataTable
-              columns={[
-                parentColumns.values((request) => request.kind, {
-                  cell: (info) => t(`request-kind-${info.getValue()}`),
-                  header: t("request-kind"),
-                  id: "kind",
-                  options: kindOptions,
-                }),
-                parentColumns.text((request) => request.text, {
-                  cell: (info) => (
-                    <span
-                      className="block max-w-xs truncate"
-                      dir="auto"
-                      title={info.getValue()}
-                    >
-                      {info.getValue()}
-                    </span>
-                  ),
-                  header: t("request-text"),
-                  id: "text",
-                }),
-                parentColumns.values((request) => request.state, {
-                  cell: (info) => t(`request-state-${info.getValue()}`),
-                  header: t("request-state"),
-                  id: "state",
-                  options: Arr.map(
-                    Rec.toEntries(REQUEST_STATE_ICONS),
-                    ([state, icon]) => ({
-                      icon,
-                      label: t(`request-state-${state}`),
-                      value: state,
-                    })
-                  ),
-                }),
-                parentColumns.menu((info) => (
-                  <RequestMenu request={info.row.original} />
-                )),
-              ]}
-              data={requests.value}
-              plain
-              rowId={(request) => request.id}
-            />
-          </ListCard>
-        </TableFiltersProvider>
-      ) : null}
-      <AskDialog linkId={linkId} />
-    </div>
+    <DataTable
+      columns={[
+        parentColumns.values((request) => request.kind, {
+          cell: (info) => t(`request-kind-${info.getValue()}`),
+          header: t("request-kind"),
+          id: "kind",
+          options: kindOptions,
+        }),
+        parentColumns.text((request) => request.text, {
+          cell: (info) => (
+            <span
+              className="block max-w-xs truncate"
+              dir="auto"
+              title={info.getValue()}
+            >
+              {info.getValue()}
+            </span>
+          ),
+          header: t("request-text"),
+          id: "text",
+        }),
+        parentColumns.values((request) => request.state, {
+          cell: (info) => t(`request-state-${info.getValue()}`),
+          header: t("request-state"),
+          id: "state",
+          options: Arr.map(
+            Rec.toEntries(REQUEST_STATE_ICONS),
+            ([state, icon]) => ({
+              icon,
+              label: t(`request-state-${state}`),
+              value: state,
+            })
+          ),
+        }),
+        parentColumns.menu((info) => (
+          <RequestMenu request={info.row.original} />
+        )),
+      ]}
+      data={QueryResult.isSuccess(requests) ? requests.value : []}
+      empty={
+        <EmptyState
+          description={t("requests-empty-description")}
+          scene={<EmptyNina act="writing" />}
+          title={t("requests-empty")}
+        />
+      }
+      loading={!QueryResult.isSuccess(requests)}
+      plain
+      rowId={(request) => request.id}
+    />
   );
 }
 
 /** The button and the dialog that send one request to the school office. */
-function AskDialog({
+export function AskDialog({
   linkId,
 }: {
   linkId: GenericId.GenericId<"guardianLinks">;

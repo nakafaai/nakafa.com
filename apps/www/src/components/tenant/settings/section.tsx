@@ -28,7 +28,8 @@ export function SettingsPage({
  * One School settings section that lists records: its one header, with the path to the
  * section, then what works on the list and the section's main action at the end, and
  * the list as the whole body, in the one card of a table page (`PageList`), so the
- * card's edges meet the path and the actions above it. A data table, or the empty state in
+ * card's edges meet the path and the actions above it. The page is as tall as the screen,
+ * so the card closes on it and a long table scrolls inside the card. A data table, or the empty state in
  * its place, draws itself in the card.
  */
 export function SettingsTablePage({
@@ -40,9 +41,9 @@ export function SettingsTablePage({
   children: ReactNode;
 }) {
   return (
-    <>
+    <Page height="screen" width="column">
       <SchoolSettingsHeader>{actions}</SchoolSettingsHeader>
       <PageList>{children}</PageList>
-    </>
+    </Page>
   );
 }

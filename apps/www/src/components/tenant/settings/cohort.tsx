@@ -2,13 +2,11 @@ import { QueryResult, useQuery } from "@confect/react";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { buttonVariants } from "@repo/design-system/lib/button";
-import { cn } from "cn";
 import type { ReactNode } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { PageList } from "@/components/shared/page/body";
 import { Page } from "@/components/shared/page/frame";
-import { pageRowVariants } from "@/components/shared/page/width";
 import {
   TableFiltersProvider,
   TableSearch,
@@ -21,7 +19,6 @@ import { SchoolHeader } from "@/components/tenant/header";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { isDenied } from "@/components/tenant/refusal";
 import { SchoolCohortMembers } from "@/components/tenant/settings/cohort/members";
-import { SchoolHomeroomCard } from "@/components/tenant/settings/homeroom";
 import { SchoolPlacementAdd } from "@/components/tenant/settings/placement";
 import type { CohortDetail } from "@/components/tenant/settings/state";
 import { TargetLink } from "@/lib/routing/link";
@@ -182,11 +179,6 @@ function SchoolCohortPage({
             </WithAction>
           )}
         </SchoolHeader>
-        <div className={cn(pageRowVariants(), "pt-4")}>
-          <WithAction action="cohort.manage">
-            <SchoolHomeroomCard cohort={detail} slug={slug} />
-          </WithAction>
-        </div>
         <PageList>
           {detail === undefined ? null : (
             <ReadBoundary>

@@ -24,7 +24,6 @@ import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-d
 import { Array as Arr, Option, Schema } from "effect";
 import { useState } from "react";
 import { useTranslations } from "use-intl";
-import { ListCard } from "@/components/shared/page/body";
 import { reloadPage } from "@/components/shared/reload";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
@@ -93,53 +92,51 @@ export function TaskWorkTable({ task }: { task: ClassTask }) {
 
   return (
     <>
-      <ListCard>
-        <DataTable
-          columns={[
-            workColumns.text((work) => work.person.name, {
-              cell: (info) => <TableName>{info.getValue()}</TableName>,
-              header: t("task-student"),
-              id: "student",
-            }),
-            workColumns.values((work) => (work.late ? "late" : "onTime"), {
-              cell: (info) => (
-                <span className="text-muted-foreground">
-                  {info.row.original.late
-                    ? t("task-handed-in-late")
-                    : t("task-handed-in")}
-                </span>
-              ),
-              header: t("task-status"),
-              id: "late",
-              options: [
-                {
-                  icon: TaskDone01Icon,
-                  label: t("task-handed-in"),
-                  value: "onTime" as const,
-                },
-                {
-                  icon: TimeQuarterPassIcon,
-                  label: t("task-handed-in-late"),
-                  value: "late" as const,
-                },
-              ],
-            }),
-            workColumns.number((work) => work.score, {
-              cell: (info) => (
-                <WorkPoints points={task.points} work={info.row.original} />
-              ),
-              header: t("task-points"),
-              id: "points",
-            }),
-            workColumns.menu((info) => <WorkMenu work={info.row.original} />),
-          ]}
-          data={Option.getOrElse(kept, Arr.empty)}
-          empty={<WorkEmpty searched={search !== ""} />}
-          loading={!PaginatedQueryResult.isExhausted(pagination)}
-          plain
-          rowId={(work) => work.id}
-        />
-      </ListCard>
+      <DataTable
+        columns={[
+          workColumns.text((work) => work.person.name, {
+            cell: (info) => <TableName>{info.getValue()}</TableName>,
+            header: t("task-student"),
+            id: "student",
+          }),
+          workColumns.values((work) => (work.late ? "late" : "onTime"), {
+            cell: (info) => (
+              <span className="text-muted-foreground">
+                {info.row.original.late
+                  ? t("task-handed-in-late")
+                  : t("task-handed-in")}
+              </span>
+            ),
+            header: t("task-status"),
+            id: "late",
+            options: [
+              {
+                icon: TaskDone01Icon,
+                label: t("task-handed-in"),
+                value: "onTime" as const,
+              },
+              {
+                icon: TimeQuarterPassIcon,
+                label: t("task-handed-in-late"),
+                value: "late" as const,
+              },
+            ],
+          }),
+          workColumns.number((work) => work.score, {
+            cell: (info) => (
+              <WorkPoints points={task.points} work={info.row.original} />
+            ),
+            header: t("task-points"),
+            id: "points",
+          }),
+          workColumns.menu((info) => <WorkMenu work={info.row.original} />),
+        ]}
+        data={Option.getOrElse(kept, Arr.empty)}
+        empty={<WorkEmpty searched={search !== ""} />}
+        loading={!PaginatedQueryResult.isExhausted(pagination)}
+        plain
+        rowId={(work) => work.id}
+      />
       {loadMore === null ? null : <TableEnd onLoad={loadMore} />}
     </>
   );

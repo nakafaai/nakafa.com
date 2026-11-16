@@ -94,7 +94,7 @@
  * which the landing test checks.
  */
 :root {
-  /* The widest a page may be. A page's frame sets it, and every row of the page reads it (`shared/content/width.ts`). */
+  /* The widest a page may be. A page's frame sets it, and every row of the page reads it (`shared/page/width.ts`). */
   --page-width: var(--container-7xl);
   /* A pane's width, which a drag of its edge sets, so the page narrows beside it from the first paint. */
   --pane-width: 420px;

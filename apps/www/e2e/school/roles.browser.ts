@@ -2,6 +2,7 @@ import { type Browser, expect, test } from "@playwright/test";
 import { Effect } from "effect";
 import { saved, trackChanges } from "@/e2e/support/changes";
 import { seedGuardianCode } from "@/e2e/support/guardian";
+import { assignHomeroom } from "@/e2e/support/homeroom";
 import { giveRole } from "@/e2e/support/roles";
 import {
   createSchool,
@@ -121,10 +122,8 @@ async function makeHomeroom(school: Awaited<ReturnType<typeof openSchool>>) {
   await dialog.getByRole("combobox", { name: "Student" }).click();
   await page.getByRole("option", { name: LEARNER_NAME }).click();
   await dialog.getByRole("button", { name: "Add student" }).click();
-  await page.getByRole("combobox", { name: "Teacher" }).click();
-  await page.getByRole("option", { name: CLASS_TEACHER }).click();
-  await page.getByRole("button", { exact: true, name: "Save" }).click();
-  await expect(page.getByText(CLASS_TEACHER).first()).toBeVisible();
+  await page.goto(new URL("/settings/cohorts", school.home).href);
+  await assignHomeroom(page, COHORT, CLASS_TEACHER);
   await page.close();
 }
 
