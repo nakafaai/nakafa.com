@@ -140,15 +140,21 @@ export const GITHUB_ACTION_REVIEWS = Schema.decodeSync(
   },
   {
     action: "actions/setup-node",
+    alternativeInputs: [
+      {
+        "node-version": expression("steps.convex.outputs.node"),
+        "package-manager-cache": "false",
+      },
+    ],
     approvedSha: "949feb2413d6458794dcd2491c4babbbce0c15c1",
     expectedInputs: {
       "node-version": NODE_RUNTIME_VERSION,
       "package-manager-cache": "false",
     },
     expectedTag: "v7.1.0",
-    expectedUsages: 4,
+    expectedUsages: 5,
     reason:
-      "CLI publication, its verification, and the deploy job pin Node without dependency caching, and the install action pins it for every job that installs dependencies, because Bun does not provision the Node runtime that pnpm's devEngines download used to provide.",
+      "CLI publication, its verification, and the deploy job pin Node without dependency caching, and the install action pins it for every job that installs dependencies, because Bun does not provision the Node runtime that pnpm's devEngines download used to provide. The proof job also installs the Node major that convex.json names for Convex's \"use node\" actions, from the runner's tool cache instead of Homebrew.",
   },
 ]);
 
