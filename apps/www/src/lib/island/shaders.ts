@@ -324,6 +324,7 @@ ${SKY_ROW}
 uniform vec2 uFogRange;
 uniform vec3 uEye;
 uniform float uShadow;
+uniform float uSeen;
 in vec3 vColor;
 in vec3 vNormal;
 in vec3 vWorld;
@@ -331,6 +332,12 @@ layout(location = 0) out vec4 color;
 layout(location = 1) out vec4 surface;
 void main() {
   vec3 normal = normalize(vNormal);
+  if (uSeen > 0.5) {
+    // Seen through a wall or a crown (D38): every other art pixel in a deep warm ink, which reads on a pale wall, a red roof and a crown alike.
+    if (mod(floor(gl_FragCoord.x) + floor(gl_FragCoord.y), 2.0) > 0.5) discard;
+    color = vec4(mix(vec3(0.16, 0.1, 0.08), vColor, 0.15), 0.88);
+    return;
+  }
   if (uShadow > 0.5) {
     color = vec4(0.0, 0.0, 0.0, 0.28);
     surface = vec4(0.5, 1.0, 0.5, 1.0);

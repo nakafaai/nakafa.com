@@ -165,6 +165,17 @@ function start(
     if (state.weather !== previous.weather) {
       needsDraw = true;
     }
+    // A change the learner just made throws its dust or chips (D38).
+    if (state.pending.length > previous.pending.length) {
+      Option.map(Arr.last(state.pending), (edit) =>
+        painter.burst(
+          [edit.x, edit.y, edit.z],
+          edit.after === 0 ? edit.before : edit.after,
+          edit.after === 0,
+          performance.now() / 1000
+        )
+      );
+    }
   });
 
   /** What a ray through a point of the screen meets first, none when it meets nothing. */

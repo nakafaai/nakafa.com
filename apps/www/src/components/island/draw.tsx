@@ -12,6 +12,10 @@ import {
 } from "@/components/island/buffers";
 import { createFrame } from "@/components/island/frame";
 import { createGale } from "@/components/island/wind";
+
+/** The learner's own fox, the one body seen through what stands in front of it. */
+const FOX = { _tag: "body", kind: "fox" } as const;
+
 import {
   ATLAS_SIZE,
   ATLAS_TILES,
@@ -73,11 +77,8 @@ export function createPainter(canvas: HTMLCanvasElement, season: Season) {
       const atlas = gl.createTexture();
       gl.bindTexture(gl.TEXTURE_2D, atlas);
       // Each tile's own smaller levels (D20): a far face shows its color, not the noise of its pixels.
-      const levels = mipsOf(
-        repaintFor(atlasPixels(), season),
-        ATLAS_SIZE,
-        TILE
-      );
+      const painted = repaintFor(atlasPixels(), season);
+      const levels = mipsOf(painted, ATLAS_SIZE, TILE);
       Arr.forEach(levels, (pixels, level) =>
         gl.texImage2D(
           gl.TEXTURE_2D,
@@ -111,7 +112,7 @@ export function createPainter(canvas: HTMLCanvasElement, season: Season) {
       const shore = uploadMap(gl, SHORE_SIDE);
       const gale = createGale(gl);
       // What moves in the air: the weather, the chimneys' smoke and the fireflies (D33, D36).
-      const airborne = createAir(gl, gale);
+      const airborne = createAir(gl, gale, painted);
       if (Option.isNone(airborne)) {
         return Option.none();
       }
@@ -195,7 +196,18 @@ export function createPainter(canvas: HTMLCanvasElement, season: Season) {
         gl.drawBuffers([gl.COLOR_ATTACHMENT0, gl.COLOR_ATTACHMENT1]);
         gl.enable(gl.CULL_FACE);
         gl.uniform1f(bodyUniform("uShadow"), 0);
-        bodies.draw();
+        bodies.draw(FOX);
+        // The learner's fox shows through what stands in front of it as a dithered outline of itself, then draws over that wherever it is in sight (D38).
+        gl.depthMask(false);
+        gl.depthFunc(gl.GREATER);
+        gl.drawBuffers([gl.COLOR_ATTACHMENT0, gl.NONE]);
+        gl.uniform1f(bodyUniform("uSeen"), 1);
+        bodies.drawModel(FOX);
+        gl.uniform1f(bodyUniform("uSeen"), 0);
+        gl.depthFunc(gl.LESS);
+        gl.depthMask(true);
+        gl.drawBuffers([gl.COLOR_ATTACHMENT0, gl.COLOR_ATTACHMENT1]);
+        bodies.drawModel(FOX);
         gl.disable(gl.CULL_FACE);
       };
 
@@ -382,6 +394,8 @@ export function createPainter(canvas: HTMLCanvasElement, season: Season) {
           Option.map(isles, (list) => list.release());
           isles = Option.some(uploadList(gl, mesh));
         },
+        /** Throws the dust or the chips of one changed block (D38), on the clock the frames are drawn on. */
+        burst: air.burst,
         /** Replaces what the blocks decide for the air over them (D33, D36). */
         scenery: air.scenery,
         /** Replaces the map of where land meets the sea, which the water draws its surf from (D28). */
