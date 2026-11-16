@@ -142,11 +142,14 @@ function columnFaces(
         onSome: (ground) => ground.top,
       }
     );
+    // A neighbour as high as this column hides the whole side, and
+    // Array.makeBy never makes an empty array, so it draws nothing here.
+    const open = top - Math.max(beside, FOOT - 1);
+    if (open <= 0) {
+      return [];
+    }
     return Arr.flatMap(
-      Arr.makeBy(
-        Math.max(0, top - Math.max(beside, FOOT - 1)),
-        (step) => top - step
-      ),
+      Arr.makeBy(open, (step) => top - step),
       (y) => faceOf(y === top ? block : under, face, x, y, z)
     );
   });

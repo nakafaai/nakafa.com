@@ -103,13 +103,17 @@ export function houseParts(style: Style) {
       const eaves = Arr.flatMap([step, depth - 1 - step], (z) =>
         Arr.makeBy(width + 2, (index) => part(style.roof, index - 1, y, z))
       );
-      const gables = Arr.flatMap(
-        Arr.makeBy(
-          Math.max(0, depth - 2 - step * 2),
-          (index) => step + 1 + index
-        ),
-        (z) => [part(style.upper, 0, y, z), part(style.upper, width - 1, y, z)]
+      // Between the two eaves of this step, and none at the ridge, where the
+      // eaves meet: Array.makeBy never makes an empty array, so the rows are
+      // picked from the house's depth instead.
+      const rows = Arr.filter(
+        Arr.makeBy(depth, (z) => z),
+        (z: number) => z > step && z < depth - 1 - step
       );
+      const gables = Arr.flatMap(rows, (z) => [
+        part(style.upper, 0, y, z),
+        part(style.upper, width - 1, y, z),
+      ]);
       return Arr.appendAll(eaves, gables);
     }
   );
