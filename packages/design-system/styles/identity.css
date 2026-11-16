@@ -59,6 +59,10 @@
   --color-island-shadow: #2c1a0d;
   /* The scrim behind the open book, at 40%. */
   --color-island-shade: #1b100a;
+  /* The filled part of the Stars bar. */
+  --color-island-gold: #e6b93a;
+  /* A star, and the bar's inner shadow. */
+  --color-island-gold-dark: #c6911f;
 }
 
 /* Each thing does one small thing by itself. The names are the `motion` of a

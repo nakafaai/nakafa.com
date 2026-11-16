@@ -1,3 +1,4 @@
+import { SPAN } from "@repo/backend/confect/island/world";
 import { Array as Arr, Option } from "effect";
 import {
   ATLAS_SIZE,
@@ -9,7 +10,7 @@ import { eyeOf, type Orbit } from "@/lib/island/camera";
 import { viewProjectionOf } from "@/lib/island/matrix";
 import { type meshChunk, STRIDE } from "@/lib/island/mesh";
 import type { Light } from "@/lib/island/sky";
-import { CHUNKS, SEA_LEVEL, SPAN } from "@/lib/island/world";
+import { CHUNKS, SEA_LEVEL } from "@/lib/island/world";
 
 /** The chunk program: atlas pixels lit by the sun, the sky over them and the lamps beside them, fading into fog. */
 const CHUNK_VERTEX = `#version 300 es

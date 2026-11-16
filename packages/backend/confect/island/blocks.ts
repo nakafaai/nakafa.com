@@ -1,4 +1,4 @@
-import { Schema } from "effect";
+import { Array as Arr, Schema } from "effect";
 
 /**
  * Every block of the island game (ADR 0047, D3 and D7): the id an edit stores
@@ -63,6 +63,11 @@ export const AIR = 0;
 /** The id a block is stored by. */
 export function idOf(key: BlockKey) {
   return CATALOG[key].id;
+}
+
+/** The block a stored id names, none for air or an id no block holds. */
+export function keyOf(id: number) {
+  return Arr.findFirst(BLOCK_KEYS, (key) => CATALOG[key].id === id);
 }
 
 /** The level that opens a block for building. */

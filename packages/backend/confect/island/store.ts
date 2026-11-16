@@ -2,8 +2,6 @@ import {
   DatabaseReader,
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
-import { NO_MATERIALS } from "@repo/backend/confect/island/material";
-import { STARTER_LAYOUT } from "@repo/backend/confect/island/starter";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { DateTime, Effect, Option } from "effect";
 
@@ -23,9 +21,9 @@ export const findIsland = Effect.fn("island.store.find")(function* (
 });
 
 /**
- * The learner's island, made with the starter set when they have none yet. A
- * new island is private, starts in the given zone (UTC when a grant makes it
- * before the owner's first visit), and has earned nothing.
+ * The learner's island, made when they have none yet. A new island has
+ * changed no cell of its terrain, starts in the given zone (UTC when a grant
+ * makes it before the owner's first visit), and has earned nothing.
  */
 export const ensureIsland = Effect.fn("island.store.ensure")(function* (
   userId: Id<"users">,
@@ -41,13 +39,11 @@ export const ensureIsland = Effect.fn("island.store.ensure")(function* (
     .table("islands")
     .insert({
       badges: [],
-      harvested: NO_MATERIALS,
-      layout: STARTER_LAYOUT,
       lifetime: 0,
       timeZone,
       userId,
       version: 0,
-      visibility: "private",
+      world: [],
     })
     .pipe(Effect.orDie);
   return yield* database.table("islands").get(islandId).pipe(Effect.orDie);
