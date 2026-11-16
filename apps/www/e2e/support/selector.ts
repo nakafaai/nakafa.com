@@ -60,6 +60,8 @@ export const VISIBLE_SIDEBAR_TRIGGER = '[data-slot="sidebar-trigger"]:visible';
 export const MARKETING_PAGE = 'main[data-marketing-page="true"]';
 /** The Nina part of the homepage, which holds its own composer. */
 export const NINA_SECTION = "#nina";
+/** A learner's profile inside the app shell's `<main>`: its header, its tabs and the tab open. */
+export const PROFILE_PAGE = 'main [data-slot="profile"]';
 /** A visual card, which wraps a lesson's lab, chart, or 3D scene. */
 export const VISUAL_CARD = '[data-slot="visual-card"]';
 /** The toolbar of a visual card: the controls that change what the visual shows. */

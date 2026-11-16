@@ -5,12 +5,14 @@ import en from "@repo/internationalization/dictionaries/en.json" with {
 import { Effect } from "effect";
 import { live, reloadUntil, saved } from "@/e2e/support/changes";
 import {
+  CHAT_PAGE,
   DELETE,
   FAILED,
   LESSON_PATH,
   openChatPage,
   runOnPage,
 } from "@/e2e/support/chat";
+import { PROFILE_PAGE } from "@/e2e/support/selector";
 import { ACCESS_TITLE } from "@/e2e/support/share";
 import { inTheSheet, promptWith } from "@/e2e/support/sheet";
 import { shownTexts, watchTexts } from "@/e2e/support/shown";
@@ -22,7 +24,9 @@ const DELETED_ELSEWHERE = en.Toast["chat-deleted"].title;
 
 /** A chat's row on the learner's chats page, which holds a link over the whole row. */
 const rowOf = (page: Page, chatId: string) =>
-  page.locator(`main main a[href="/en/chat/${chatId}"]`).locator("xpath=..");
+  page
+    .locator(`${PROFILE_PAGE} a[href="/en/chat/${chatId}"]`)
+    .locator("xpath=..");
 
 /** A chat's row in the sidebar beside a chat page. */
 const sidebarRowOf = (page: Page, chatId: string) =>
@@ -135,7 +139,7 @@ const asksBeforeDeleting = Effect.fn("NakafaE2E.deleteAsksFirst")(function* (
 /** The button that opens the menu of the open chat, which only its owner has. */
 const chatMenuOf = (page: Page) =>
   page
-    .locator("main main header")
+    .locator(`${CHAT_PAGE} header`)
     .getByRole("button", { name: "More actions" });
 
 /** A learner with two chats, in the older one with the sidebar beside it. */
@@ -237,7 +241,7 @@ const staysWhenRefused = Effect.fn("NakafaE2E.deleteStaysWhenRefused")(
         timeout: readinessTimeoutMilliseconds,
       });
       await expect(
-        page.locator('main main [data-slot="bubble"]').filter({
+        page.locator(`${CHAT_PAGE} [data-slot="bubble"]`).filter({
           hasText: "The oldest",
         })
       ).toBeVisible({ timeout: readinessTimeoutMilliseconds });

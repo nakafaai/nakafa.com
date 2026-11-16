@@ -14,7 +14,7 @@ import {
   live,
   saved,
 } from "@/e2e/support/changes";
-import { onThePage, openChatPage } from "@/e2e/support/chat";
+import { CHAT_PAGE, onThePage, openChatPage } from "@/e2e/support/chat";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { SHARE_ENTRY } from "@/lib/share/fragment";
 
@@ -33,12 +33,12 @@ const isAnalyticsRequest = (url: URL) =>
 
 /** The title in the header of a chat page. */
 const chatTitle = (page: Page) =>
-  page.locator("main main header").getByRole("heading", { level: 1 });
+  page.locator(`${CHAT_PAGE} header`).getByRole("heading", { level: 1 });
 
 /** The button that opens the menu of the open chat, which only its owner has. */
 const chatMenu = (page: Page) =>
   page
-    .locator("main main header")
+    .locator(`${CHAT_PAGE} header`)
     .getByRole("button", { name: "More actions" });
 
 /** The box where the learner writes to Nina, which only the owner has. */

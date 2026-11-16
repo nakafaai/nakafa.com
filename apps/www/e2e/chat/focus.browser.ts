@@ -1,7 +1,7 @@
 import { expect, type Page, test } from "@playwright/test";
 import { Effect } from "effect";
 import { saved } from "@/e2e/support/changes";
-import { FAILED, RENAME, runOnPage } from "@/e2e/support/chat";
+import { CHAT_PAGE, FAILED, RENAME, runOnPage } from "@/e2e/support/chat";
 import {
   editorOf,
   headerControl,
@@ -158,7 +158,7 @@ const keepsTwoHeaderButtons = Effect.fn("NakafaE2E.renameKeepsTwoButtons")(
     yield* Effect.promise(async () => {
       await startRename(page);
       const group = page
-        .locator("main main header")
+        .locator(`${CHAT_PAGE} header`)
         .getByRole("group", { exact: true, name: "Chat actions" });
       await expect(
         group.getByRole("button").filter({ visible: true })

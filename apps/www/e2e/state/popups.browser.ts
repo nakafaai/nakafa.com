@@ -1,6 +1,6 @@
 import { expect, type Page, test } from "@playwright/test";
 import { Effect } from "effect";
-import { runOnPage } from "@/e2e/support/chat";
+import { CHAT_PAGE, runOnPage } from "@/e2e/support/chat";
 import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { withBrowserContext } from "@/e2e/support/context";
 import { signInLearner } from "@/e2e/support/learner";
@@ -251,7 +251,7 @@ test("the chat share dialog shows its options in its first frame", async ({
       });
       yield* Effect.promise(async () => {
         const more = page
-          .locator("main main header")
+          .locator(`${CHAT_PAGE} header`)
           .getByRole("button", { name: "More actions" });
         await more.click();
         await expect(
