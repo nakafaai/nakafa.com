@@ -9,7 +9,7 @@ export const card = {
   name: "Accordion",
   group: "Content",
   height: 260,
-  source: "accordion",
+  source: "components/ui/accordion",
 };
 
 /** The card's live example. */

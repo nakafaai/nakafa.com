@@ -36,7 +36,7 @@ export const card = {
   name: "HugeIcons",
   group: "Content",
   height: 150,
-  source: "huge-icons",
+  source: "components/ui/huge-icons",
 };
 
 /** The card's live example. */
@@ -45,12 +45,7 @@ export function Preview() {
     <div className="flex flex-col gap-4 p-6">
       <div className="flex flex-wrap gap-4">
         {Arr.map(Rec.toEntries(icons), ([name, icon]) => (
-          <HugeIcons
-            aria-label={name}
-            className="size-4"
-            icon={icon}
-            key={name}
-          />
+          <HugeIcons aria-label={name} icon={icon} key={name} />
         ))}
       </div>
     </div>

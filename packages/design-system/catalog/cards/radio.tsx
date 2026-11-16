@@ -8,7 +8,7 @@ export const card = {
   name: "RadioGroup",
   group: "Forms",
   height: 140,
-  source: "radio-group",
+  source: "components/ui/radio-group",
 };
 
 /** The card's live example. */

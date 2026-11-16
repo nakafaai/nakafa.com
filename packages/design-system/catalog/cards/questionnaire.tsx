@@ -21,7 +21,7 @@ export const card = {
   name: "Questionnaire",
   group: "Forms",
   height: 420,
-  source: "questionnaire",
+  source: "components/ui/questionnaire",
 };
 
 /** The card's live example. */

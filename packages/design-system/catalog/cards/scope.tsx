@@ -8,7 +8,7 @@ export const card = {
   name: "SidebarScope",
   group: "Navigation",
   height: 110,
-  source: "sidebar-scope",
+  source: "components/ui/sidebar-scope",
 };
 
 /** The card's live example. */

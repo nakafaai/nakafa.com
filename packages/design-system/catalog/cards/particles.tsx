@@ -4,7 +4,7 @@ export const card = {
   name: "Particles",
   group: "Identity",
   height: 220,
-  source: "particles",
+  source: "components/ui/particles",
 };
 
 /** The card's live example. */

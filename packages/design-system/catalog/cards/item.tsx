@@ -19,7 +19,7 @@ export const card = {
   name: "Item",
   group: "Content",
   height: 220,
-  source: "item",
+  source: "components/ui/item",
 };
 
 /** Rows of a list: the icon of each row's kind, a title and one line under it, and the row's action at its end. */

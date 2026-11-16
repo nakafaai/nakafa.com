@@ -183,9 +183,21 @@ function usageOf(token: typeof Commented.Type) {
         new TokenSourceError({
           message: `--${token.name} needs a comment on the line above it that says what it is for.`,
         })
+    ),
+    Effect.filterOrFail(
+      (usage) =>
+        !token.name.endsWith(FOREGROUND) ||
+        usage.includes(`\`${token.name.slice(0, -FOREGROUND.length)}\``),
+      () =>
+        new TokenSourceError({
+          message: `--${token.name} needs its ground named in its comment, as \`${token.name.slice(0, -FOREGROUND.length)}\`, so the design system page measures it on that surface.`,
+        })
     )
   );
 }
+
+/** The suffix of a color drawn on another, whose ground its comment names. */
+const FOREGROUND = "-foreground";
 
 /** A rem length as pixels, for the page's type view. */
 function pixels(value: string) {

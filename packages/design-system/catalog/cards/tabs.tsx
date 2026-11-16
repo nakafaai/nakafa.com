@@ -9,7 +9,7 @@ export const card = {
   name: "Tabs",
   group: "Content",
   height: 220,
-  source: "tabs",
+  source: "components/ui/tabs",
 };
 
 /** The card's live example. */

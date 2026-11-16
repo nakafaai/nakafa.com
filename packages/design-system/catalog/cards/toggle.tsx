@@ -7,7 +7,7 @@ export const card = {
   name: "ToggleGroup",
   group: "Actions",
   height: 150,
-  source: "toggle-group",
+  source: "components/ui/toggle-group",
 };
 
 /** The card's live example. */

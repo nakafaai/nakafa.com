@@ -41,7 +41,7 @@ export const card = {
   name: "PersonAvatar",
   group: "Identity",
   height: 140,
-  source: "person",
+  source: "components/ui/person",
 };
 
 /** The card's live example. */

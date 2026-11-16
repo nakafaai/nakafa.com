@@ -61,6 +61,10 @@ const ReasoningTimingSchema = Schema.Struct({
 });
 type ReasoningTiming = typeof ReasoningTimingSchema.Type;
 
+/**
+ * How Nina thought before she answered, folded under one row that says how long she thought. It opens while she
+ * streams and folds once she is done, so the answer stays first.
+ */
 export const Reasoning = memo(
   ({
     className,

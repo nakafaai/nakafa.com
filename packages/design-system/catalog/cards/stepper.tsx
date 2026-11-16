@@ -19,7 +19,7 @@ export const card = {
   name: "Stepper",
   group: "Navigation",
   height: 150,
-  source: "stepper",
+  source: "components/ui/stepper",
 };
 
 /** The card's live example. */

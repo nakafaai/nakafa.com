@@ -14,14 +14,18 @@ export const Group = Schema.Literals([
 ]);
 
 /**
- * One card of the design system page: the bundle export it shows, its section, the height of its preview row, and
- * the `components/ui` module whose doc comment on that export becomes the card's guideline.
+ * One card of the design system page: its name, its section, the height of its preview row, the design system module
+ * it shows (a path under `packages/design-system`, without its extension), and the declaration in that module whose
+ * doc comment becomes the card's guideline, which is the card's name unless the card names another.
  */
 export const Card = Schema.Struct({
   name: Schema.String.check(Schema.isPattern(/^[A-Z][A-Za-z]+$/u)),
   group: Group,
   height: Schema.Int.check(Schema.isBetween({ minimum: 40, maximum: 4000 })),
-  source: Schema.String.check(Schema.isPattern(/^[a-z]+(?:-[a-z]+)*$/u)),
+  source: Schema.String.check(
+    Schema.isPattern(/^[a-z]+(?:\/[a-z0-9]+(?:-[a-z0-9]+)*)+$/u)
+  ),
+  declaration: Schema.String.check(Schema.isPattern(/^[A-Za-z]\w*$/u)),
 });
 
 /** A card module whose `card` export the generator cannot read. */
@@ -54,6 +58,7 @@ export const readCard = Effect.fn("designSystem.catalog.readCard")(function* (
     group: field(text, "group"),
     height: Number(field(text, "height")),
     source: field(text, "source"),
+    declaration: field(text, "declaration") ?? field(text, "name"),
   }).pipe(
     Effect.mapError(
       (issue) =>

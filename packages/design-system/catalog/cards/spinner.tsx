@@ -5,7 +5,7 @@ export const card = {
   name: "Spinner",
   group: "Feedback",
   height: 110,
-  source: "spinner",
+  source: "components/ui/spinner",
 };
 
 /** The card's live example. */

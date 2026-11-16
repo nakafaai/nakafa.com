@@ -150,6 +150,40 @@ describe("readTokens", () => {
       })
   );
 
+  it.effect("refuses a foreground whose comment does not name its ground", () =>
+    Effect.gen(function* () {
+      const error = yield* Effect.flip(
+        readTokens(
+          globals(
+            "/* Text on the brand fill. */\n  --primary-foreground: white;",
+            "--primary-foreground: white;"
+          ),
+          identity,
+          scale
+        )
+      );
+      expect(error.message).toContain(
+        "--primary-foreground needs its ground named in its comment, as `primary`"
+      );
+    })
+  );
+
+  it.effect("accepts a foreground whose comment names its ground", () =>
+    Effect.gen(function* () {
+      const tokens = yield* readTokens(
+        globals(
+          "/* Text on `primary`. */\n  --primary-foreground: white;",
+          "--primary-foreground: white;"
+        ),
+        identity,
+        scale
+      );
+      expect(Arr.map(tokens.color.tokens, (token) => token.name)).toContain(
+        "primary-foreground"
+      );
+    })
+  );
+
   it.effect("refuses a light token the dark theme does not declare", () =>
     Effect.gen(function* () {
       const error = yield* Effect.flip(

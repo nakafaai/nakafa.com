@@ -10,7 +10,7 @@ export const card = {
   name: "Picture",
   group: "Identity",
   height: 190,
-  source: "picture",
+  source: "components/ui/picture",
 };
 
 /** The card's live example. */

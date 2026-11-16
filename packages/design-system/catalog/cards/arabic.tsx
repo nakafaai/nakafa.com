@@ -23,7 +23,7 @@ export const card = {
   name: "ArabicKeypad",
   group: "Forms",
   height: 350,
-  source: "arabic",
+  source: "components/ui/arabic",
 };
 
 /** The card's live example. */

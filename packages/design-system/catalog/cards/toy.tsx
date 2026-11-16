@@ -5,7 +5,7 @@ export const card = {
   name: "Toy",
   group: "Identity",
   height: 260,
-  source: "toy",
+  source: "components/ui/toy",
 };
 
 /** The card's live example. */

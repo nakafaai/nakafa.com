@@ -15,7 +15,7 @@ export const card = {
   name: "Picker",
   group: "Forms",
   height: 360,
-  source: "picker",
+  source: "components/ui/picker",
 };
 
 /** A searchable choice: the search over the options in a popover on a wide screen, in a drawer on a phone. */

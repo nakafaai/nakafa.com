@@ -4,7 +4,7 @@ export const card = {
   name: "Textarea",
   group: "Forms",
   height: 150,
-  source: "textarea",
+  source: "components/ui/textarea",
 };
 
 /** The card's live example. */

@@ -15,7 +15,7 @@ export const card = {
   name: "Message",
   group: "Chat",
   height: 300,
-  source: "message",
+  source: "components/ui/message",
 };
 
 /** The card's live example. */

@@ -9,7 +9,7 @@ export const card = {
   name: "Calendar",
   group: "Forms",
   height: 384,
-  source: "calendar",
+  source: "components/ui/calendar",
 };
 
 /** The card's live example. */

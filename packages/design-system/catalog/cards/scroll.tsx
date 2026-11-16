@@ -21,7 +21,7 @@ export const card = {
   name: "ScrollArea",
   group: "Content",
   height: 260,
-  source: "scroll-area",
+  source: "components/ui/scroll-area",
 };
 
 /** The card's live example. */

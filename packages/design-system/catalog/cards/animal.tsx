@@ -1,66 +1,34 @@
 import { Animal } from "@repo/design-system/components/ui/animal";
+import { Animal as Animals } from "@repo/mascot/animal";
+import { groundsOf } from "@repo/mascot/seed";
 import { Array as Arr } from "effect";
-import type { ComponentProps } from "react";
-
-type Mascot = NonNullable<ComponentProps<typeof Animal>["mascot"]>;
-
-// The animals, palettes, grounds and poses of cast("Nakafa", 6); the eyes vary to show each kind of eye.
-const cast: readonly Mascot[] = [
-  { animal: "frog", eyes: "open", ground: "b45c6e", palette: 0, pose: "left" },
-  {
-    animal: "eagle",
-    eyes: "smile",
-    ground: "f4c7cf",
-    palette: 0,
-    pose: "center",
-  },
-  {
-    animal: "octopus",
-    eyes: "wink",
-    ground: "3f6fa0",
-    palette: 1,
-    pose: "peek-right",
-  },
-  {
-    animal: "penguin",
-    eyes: "asleep",
-    ground: "cfe6f7",
-    palette: 0,
-    pose: "peek-left",
-  },
-  {
-    animal: "parrot",
-    eyes: "open",
-    ground: "2e5b45",
-    palette: 1,
-    pose: "peek",
-  },
-  {
-    animal: "crab",
-    eyes: "smile",
-    ground: "2e5b45",
-    palette: 0,
-    pose: "right",
-  },
-];
 
 export const card = {
   name: "Animal",
   group: "Identity",
-  height: 170,
-  source: "animal",
+  height: 760,
+  source: "components/ui/animal",
 };
 
-/** The card's live example. */
+/** Every animal a person can be, each in its first palette on the first ground its body stands out from. */
 export function Preview() {
   return (
-    <div className="flex flex-wrap items-end gap-4 p-6">
-      {Arr.map(cast, (mascot) => (
+    <div className="flex flex-wrap gap-3 p-6">
+      {Arr.map(Animals.literals, (animal) => (
         <div
-          className="size-20 overflow-hidden rounded-full"
-          key={mascot.animal}
+          className="size-14 overflow-hidden rounded-full"
+          key={animal}
+          title={animal}
         >
-          <Animal mascot={mascot} />
+          <Animal
+            mascot={{
+              animal,
+              eyes: "open",
+              ground: Arr.getUnsafe(groundsOf(animal, 0), 0),
+              palette: 0,
+              pose: "center",
+            }}
+          />
         </div>
       ))}
     </div>

@@ -3,6 +3,7 @@ import { layer } from "@effect/platform-node/NodeServices";
 import {
   Array as Arr,
   Config,
+  Data,
   Effect,
   FileSystem,
   Order,
@@ -17,7 +18,14 @@ import { readCard } from "#catalog/card";
 import { exportsOf, guideline, preview, readme } from "#catalog/docs";
 import { entryModule, GLOBALS, LIBRARIES, shimName } from "#catalog/entry";
 import { catalogSheet } from "#catalog/sheet";
+import { uncovered } from "#catalog/skipped";
+import { themesSection } from "#catalog/themes";
 import { readTokens, Tokens } from "#catalog/tokens";
+
+/** A design system module that no card shows and no skip names, or a skip that names nothing. */
+class CoverageError extends Data.TaggedError("CoverageError")<{
+  readonly message: string;
+}> {}
 
 /**
  * Writes every file of the Nakafa design system artifact under `CATALOG_OUT/project` from the code: the tokens from
@@ -57,6 +65,23 @@ const generate = Effect.gen(function* () {
     )
   );
 
+  const components = Arr.filterMap(
+    yield* fs.readDirectory(`${root}/components`, { recursive: true }),
+    (file) =>
+      file.endsWith(".tsx") &&
+      !file.endsWith(".test.tsx") &&
+      !file.includes("/test.")
+        ? Result.succeed(`components/${file.slice(0, -4)}`)
+        : Result.failVoid
+  );
+  const gaps = uncovered(
+    components,
+    Arr.map(cards, (card) => card.source)
+  );
+  if (Arr.isReadonlyArrayNonEmpty(gaps)) {
+    return yield* new CoverageError({ message: Arr.join(gaps, "\n") });
+  }
+
   const parse = (path: string) =>
     Effect.map(fs.readFileString(path), (text) =>
       postcss.parse(text, { from: path })
@@ -65,6 +90,8 @@ const generate = Effect.gen(function* () {
   const identity = yield* parse(`${root}/styles/identity.css`);
   const scale = yield* parse(`${root}/node_modules/tailwindcss/theme.css`);
   const tokens = yield* readTokens(globals, identity, scale);
+  const themesPath = `${packages}/../apps/www/public/themes.css`;
+  const themes = yield* parse(themesPath);
 
   yield* fs.makeDirectory(work, { recursive: true });
   yield* Effect.forEach(Rec.toEntries(GLOBALS), ([module, global]) =>
@@ -75,13 +102,18 @@ const generate = Effect.gen(function* () {
   );
   yield* fs.writeFileString(
     `${work}/catalog.css`,
-    catalogSheet(globals, `${root}/styles`)
+    catalogSheet(globals, `${root}/styles`, themesPath)
   );
   yield* fs.writeFileString(
     `${work}/entry.ts`,
     entryModule(
       modules,
       Arr.map(files, (file) => file.slice(0, -4)),
+      Arr.filterMap(cards, (card) =>
+        card.source.startsWith("components/ui/")
+          ? Result.failVoid
+          : Result.succeed([card.name, card.source] as const)
+      ),
       root
     )
   );
@@ -113,6 +145,7 @@ const generate = Effect.gen(function* () {
     "tokens.json",
     `${yield* Schema.encodeEffect(Schema.fromJsonString(Tokens))(tokens)}\n`
   );
+  yield* write("themes.md", themesSection(themes));
   yield* write(
     "README.md",
     yield* fs.readFileString(`${root}/catalog/brand.md`)
@@ -129,13 +162,14 @@ const generate = Effect.gen(function* () {
   );
   yield* Effect.forEach(cards, (card) =>
     Effect.gen(function* () {
-      const source = yield* fs.readFileString(
-        `${root}/components/ui/${card.source}.tsx`
-      );
-      const text = yield* guideline(card, source);
+      const file = (yield* fs.exists(`${root}/${card.source}.tsx`))
+        ? `${card.source}.tsx`
+        : `${card.source}.ts`;
+      const source = yield* fs.readFileString(`${root}/${file}`);
+      const text = yield* guideline(card, source, file);
       yield* write(
         `components/${card.name}/README.md`,
-        readme(card, text, exportsOf(source))
+        readme(card, text, exportsOf(source), file)
       );
       yield* write(`components/${card.name}/preview.html`, preview(card));
     })

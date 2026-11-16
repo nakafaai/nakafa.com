@@ -35,7 +35,7 @@ export const card = {
   name: "Watch",
   group: "Identity",
   height: 170,
-  source: "watch",
+  source: "components/ui/watch",
 };
 
 /** The card's live example. */

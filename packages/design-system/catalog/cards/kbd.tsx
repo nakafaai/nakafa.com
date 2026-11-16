@@ -4,7 +4,7 @@ export const card = {
   name: "Kbd",
   group: "Content",
   height: 150,
-  source: "kbd",
+  source: "components/ui/kbd",
 };
 
 /** The card's live example. */

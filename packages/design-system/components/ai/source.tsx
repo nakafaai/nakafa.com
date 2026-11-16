@@ -60,6 +60,10 @@ interface SourceProps {
   href: string;
 }
 
+/**
+ * A page Nina's answer cites: its site and its title on one row, and its description in a card a pointer reads.
+ * Every answer that draws on Nakafa cites it.
+ */
 export function Source({ href, children }: SourceProps) {
   const domain = getSourceDomain(href);
   const source = useMemo(() => ({ domain, href }), [domain, href]);

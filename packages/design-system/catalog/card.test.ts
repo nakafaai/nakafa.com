@@ -11,7 +11,7 @@ export const card = {
   name: "Questionnaire",
   group: "Forms",
   height: 300,
-  source: "questionnaire",
+  source: "components/ui/questionnaire",
 };
 `;
 
@@ -24,7 +24,8 @@ describe("readCard", () => {
           name: "Questionnaire",
           group: "Forms",
           height: 300,
-          source: "questionnaire",
+          source: "components/ui/questionnaire",
+          declaration: "Questionnaire",
         });
       })
   );
@@ -39,6 +40,16 @@ describe("readCard", () => {
         expect(error._tag).toBe("CardError");
         expect(error.message).toContain("catalog/cards/questionnaire.tsx");
       })
+  );
+
+  it.effect("reads the declaration a card names for its guideline", () =>
+    Effect.gen(function* () {
+      const themes = yield* readCard(
+        'export const card = { name: "Themes", group: "Identity", height: 900, source: "lib/theme/registry", declaration: "themes" };',
+        "themes.tsx"
+      );
+      expect(themes.declaration).toBe("themes");
+    })
   );
 
   it.effect("refuses a module that exports no card", () =>

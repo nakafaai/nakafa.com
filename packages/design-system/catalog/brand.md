@@ -4,7 +4,9 @@ This book is generated from the Nakafa design system's code. Every token, card a
 
 ## Using the components
 
-Every card is a live export of the `Nakafa` bundle. A design that renders Nakafa components wraps them once in `Nakafa.Root`, which gives them the product's English copy and locale. Compose the parts a card lists; color, radius and spacing come from the components and tokens, so a class only places things.
+Every card is a live export of the `Nakafa` bundle. The core components are exported by name (`Nakafa.Button`); the others live under their card's name, so the parts of one chart never meet another's (`Nakafa.BarChart.EvilBarChart`, `Nakafa.VisualCard.VisualCardHeader`). A design that renders Nakafa components wraps them once in `Nakafa.Root`, which gives them the product's English copy, its locale and the theme this page shows. Compose the parts a card lists; color, radius and spacing come from the components and tokens, so a class only places things.
+
+The light and dark pair are this system's own themes. Every named theme a learner can pick is in the Themes section and the Themes card.
 
 ## Principles
 

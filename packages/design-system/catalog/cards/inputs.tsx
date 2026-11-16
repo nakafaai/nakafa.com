@@ -12,7 +12,7 @@ export const card = {
   name: "InputGroup",
   group: "Forms",
   height: 150,
-  source: "input-group",
+  source: "components/ui/input-group",
 };
 
 /** The card's live example. */

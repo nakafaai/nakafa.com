@@ -4,7 +4,7 @@ export const card = {
   name: "Separator",
   group: "Content",
   height: 140,
-  source: "separator",
+  source: "components/ui/separator",
 };
 
 /** The card's live example. */

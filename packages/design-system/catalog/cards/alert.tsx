@@ -10,7 +10,7 @@ export const card = {
   name: "Alert",
   group: "Feedback",
   height: 210,
-  source: "alert",
+  source: "components/ui/alert",
 };
 
 /** The card's live example. */

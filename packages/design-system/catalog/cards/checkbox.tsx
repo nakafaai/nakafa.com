@@ -5,7 +5,7 @@ export const card = {
   name: "Checkbox",
   group: "Forms",
   height: 120,
-  source: "checkbox",
+  source: "components/ui/checkbox",
 };
 
 /** The card's live example. */

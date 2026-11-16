@@ -11,7 +11,7 @@ export const card = {
   name: "Collapsible",
   group: "Content",
   height: 200,
-  source: "collapsible",
+  source: "components/ui/collapsible",
 };
 
 /** The card's live example. */

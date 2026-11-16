@@ -32,7 +32,7 @@ export const card = {
   name: "Sidebar",
   group: "Navigation",
   height: 420,
-  source: "sidebar-shell",
+  source: "components/ui/sidebar-shell",
 };
 
 /** The card's live example. */

@@ -9,7 +9,7 @@ export const card = {
   name: "HoverCard",
   group: "Overlays",
   height: 220,
-  source: "hover-card",
+  source: "components/ui/hover-card",
 };
 
 /** The card's live example. */

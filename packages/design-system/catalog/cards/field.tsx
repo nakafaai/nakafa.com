@@ -13,7 +13,7 @@ export const card = {
   name: "Field",
   group: "Forms",
   height: 320,
-  source: "field",
+  source: "components/ui/field",
 };
 
 /** The card's live example. */

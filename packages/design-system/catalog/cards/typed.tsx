@@ -4,7 +4,7 @@ export const card = {
   name: "TypedText",
   group: "Identity",
   height: 170,
-  source: "typed",
+  source: "components/ui/typed",
 };
 
 /** The card's live example. */

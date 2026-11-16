@@ -49,7 +49,7 @@ export const card = {
   name: "DatePicker",
   group: "Forms",
   height: 420,
-  source: "date",
+  source: "components/ui/date",
 };
 
 /** The card's live example. */

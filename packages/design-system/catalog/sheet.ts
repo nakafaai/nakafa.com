@@ -14,9 +14,10 @@ const KEPT = ["--radius", "color-scheme"];
  * Turns the app's global stylesheet into the design system page's stylesheet, in place. The page writes the theme
  * tokens itself from the tokens file and marks the dark theme on `<html data-theme="dark">`, so the theme blocks keep
  * only what the tokens file does not hold, the dark variant follows the page's attribute, and the classes come from the library alone. Inter takes its plain
- * Google Fonts name first, and Geist Mono the name of the font the tokens file lists.
+ * Google Fonts name first, and Geist Mono the name of the font the tokens file lists. Every named theme's class comes
+ * along, so a card can show a component in each theme.
  */
-export function catalogSheet(root: Root, styles: string) {
+export function catalogSheet(root: Root, styles: string, themes: string) {
   root.each((node) => {
     if (
       node.type === "rule" &&
@@ -54,6 +55,7 @@ export function catalogSheet(root: Root, styles: string) {
       '"Inter", "Inter Variable"'
     );
   });
+  root.prepend(`@import "${themes}";`);
   root.append(':root { --font-geist-mono: "Geist Mono"; }');
   return root.toString();
 }

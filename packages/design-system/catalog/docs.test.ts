@@ -8,7 +8,8 @@ const card = {
   name: "Badge",
   group: "Content",
   height: 120,
-  source: "badge",
+  source: "components/ui/badge",
+  declaration: "Badge",
 } as const;
 
 const source = `
@@ -33,7 +34,7 @@ describe("guideline", () => {
     "returns the doc comment above the card's component, without its frame",
     () =>
       Effect.gen(function* () {
-        expect(yield* guideline(card, source)).toBe(
+        expect(yield* guideline(card, source, "components/ui/badge.tsx")).toBe(
           "A short label of a status.\n\nA status badge always carries a word."
         );
       })
@@ -44,11 +45,11 @@ describe("guideline", () => {
     () =>
       Effect.gen(function* () {
         const error = yield* Effect.flip(
-          guideline(card, "function Badge() {}")
+          guideline(card, "function Badge() {}", "components/ui/badge.tsx")
         );
         expect(error._tag).toBe("GuidelineError");
         expect(error.message).toContain(
-          "components/ui/badge.tsx needs a doc comment on Badge"
+          "components/ui/badge.tsx needs a doc comment on Badge, the guideline of the Badge card"
         );
       })
   );
@@ -67,7 +68,7 @@ describe("exportsOf", () => {
 
 describe("readme", () => {
   it("writes the guideline, the parts and the source path", () => {
-    expect(readme(card, "A label.", ["Badge"])).toBe(
+    expect(readme(card, "A label.", ["Badge"], "components/ui/badge.tsx")).toBe(
       "# Badge\n\nA label.\n\n## Parts\n\n- `Badge`\n\n## Source\n\n- `packages/design-system/components/ui/badge.tsx`\n"
     );
   });

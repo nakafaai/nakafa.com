@@ -10,7 +10,7 @@ export const card = {
   name: "ResponsiveDialog",
   group: "Overlays",
   height: 360,
-  source: "responsive-dialog",
+  source: "components/ui/responsive-dialog",
 };
 
 /** A confirm: the title and its sentence, a body that shows what the action takes away, then Cancel beside it. */

@@ -30,10 +30,11 @@ function commentText(comment: string) {
  */
 export const guideline = Effect.fn("designSystem.catalog.guideline")(function* (
   card: CardValue,
-  source: string
+  source: string,
+  file: string
 ) {
   const declaration = new RegExp(
-    String.raw`(?<comment>\/\*\*(?:(?!\*\/)[\s\S])*\*\/)\s*(?:export\s+)?(?:function|const)\s+${card.name}\b`,
+    String.raw`(?<comment>\/\*\*(?:(?!\*\/)[\s\S])*\*\/)\s*(?:export\s+)?(?:function|const)\s+${card.declaration}\b`,
     "u"
   );
   const match = Option.fromNullishOr(declaration.exec(source)?.groups?.comment);
@@ -42,7 +43,7 @@ export const guideline = Effect.fn("designSystem.catalog.guideline")(function* (
     Effect.mapError(
       () =>
         new GuidelineError({
-          message: `components/ui/${card.source}.tsx needs a doc comment on ${card.name}, the guideline of its card.`,
+          message: `${file} needs a doc comment on ${card.declaration}, the guideline of the ${card.name} card.`,
         })
     )
   );
@@ -89,7 +90,8 @@ export function exportsOf(source: string) {
 export function readme(
   card: CardValue,
   text: string,
-  parts: readonly string[]
+  parts: readonly string[],
+  file: string
 ) {
   return Arr.join(
     [
@@ -103,7 +105,7 @@ export function readme(
       "",
       "## Source",
       "",
-      `- \`packages/design-system/components/ui/${card.source}.tsx\``,
+      `- \`packages/design-system/${file}\``,
       "",
     ],
     "\n"

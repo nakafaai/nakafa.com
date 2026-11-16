@@ -6,7 +6,7 @@ export const card = {
   name: "Label",
   group: "Forms",
   height: 150,
-  source: "label",
+  source: "components/ui/label",
 };
 
 /** The card's live example. */

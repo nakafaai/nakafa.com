@@ -4,7 +4,7 @@ export const card = {
   name: "Input",
   group: "Forms",
   height: 240,
-  source: "input",
+  source: "components/ui/input",
 };
 
 /** The card's live example. */

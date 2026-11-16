@@ -4,7 +4,7 @@ export const card = {
   name: "Meter",
   group: "Feedback",
   height: 120,
-  source: "meter",
+  source: "components/ui/meter",
 };
 
 /** How much of a whole is done: a lesson read, a storage quota used. */
