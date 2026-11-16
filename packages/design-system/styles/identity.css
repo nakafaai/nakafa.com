@@ -67,6 +67,10 @@
   --color-island-page: #f3dfb6;
   /* The frame of a guide card and a counter. */
   --color-island-rule: #c9a46c;
+  /* The frame of a locked card, a tab and the search field. */
+  --color-island-rule-dark: #a9865a;
+  /* The search field's ground. */
+  --color-island-page-light: #fbf1da;
 }
 
 /* Each thing does one small thing by itself. The names are the `motion` of a

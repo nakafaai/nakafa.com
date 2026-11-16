@@ -49,7 +49,7 @@ describe("island/sky", () => {
     expect(weatherOf("13d")).toBe("snow");
   });
 
-  it("lets rain and storms fall as streaks and snow as slow flakes, and nothing from a dry sky", () => {
+  it("lets rain and storms fall as faint streaks and snow as slow flakes, and nothing from a dry sky", () => {
     expect(Option.isNone(fallOf("clear"))).toBe(true);
     expect(Option.isNone(fallOf("clouds"))).toBe(true);
     const rain = Option.getOrNull(fallOf("rain"));
@@ -59,6 +59,9 @@ describe("island/sky", () => {
     expect(storm?.speed).toBeGreaterThan(rain?.speed ?? 0);
     expect(snow?.flakes).toBe(true);
     expect(snow?.speed).toBeLessThan(rain?.speed ?? 0);
+    // Rain stays faint and sparse, so the world shows through it; a storm brings more.
+    expect(rain?.color[3]).toBeLessThanOrEqual(0.5);
+    expect(storm?.count).toBeGreaterThan(rain?.count ?? 0);
   });
 
   it("reads the hour of a moment in the learner's zone, minutes included", () => {

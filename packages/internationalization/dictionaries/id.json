@@ -4706,7 +4706,7 @@
     "next": "{stars} Bintang lagi ke level {level}",
     "top": "Semua blok sudah terbuka",
     "mute": "Matikan suara",
-    "items": "Siap pasang",
+    "items": "Barang",
     "blocks": "Balok",
     "item-house": "Pondok",
     "item-tree": "Pohon",
@@ -5014,6 +5014,7 @@
     "block-papaya": "Pohon pepaya",
     "plants": "Tanaman",
     "walk": "Jalan",
-    "notice-path": "Nggak ada jalan ke sana. Coba tempat yang bisa dicapai rubahmu."
+    "notice-path": "Nggak ada jalan ke sana. Coba tempat yang bisa dicapai rubahmu.",
+    "search": "Cari"
   }
 }

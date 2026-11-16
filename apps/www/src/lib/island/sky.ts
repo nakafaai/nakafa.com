@@ -182,6 +182,7 @@ export const Fall = Schema.Struct({
     Schema.Finite,
     Schema.Finite,
   ]),
+  count: Schema.Int,
   flakes: Schema.Boolean,
   length: Schema.Finite,
   speed: Schema.Finite,
@@ -190,10 +191,12 @@ export const Fall = Schema.Struct({
 export type Fall = typeof Fall.Type;
 
 /** Rain: fast slanted streaks. */
+// Light enough to show the weather without hiding the world under it: few, faint drops whose tails fade.
 const RAIN: Fall = {
-  color: [0.8, 0.88, 1, 0.8],
+  color: [0.86, 0.92, 1, 0.42],
+  count: 320,
   flakes: false,
-  length: 1.8,
+  length: 1.1,
   speed: 22,
   sway: 0,
 };
@@ -204,11 +207,18 @@ export function fallOf(weather: Weather): Option.Option<Fall> {
     return Option.some(RAIN);
   }
   if (weather === "storm") {
-    return Option.some({ ...RAIN, length: 2.4, speed: 30 });
+    return Option.some({
+      ...RAIN,
+      color: [0.86, 0.92, 1, 0.5],
+      count: 560,
+      length: 1.6,
+      speed: 30,
+    });
   }
   return weather === "snow"
     ? Option.some({
-        color: [0.97, 0.98, 1, 0.95],
+        color: [0.97, 0.98, 1, 0.9],
+        count: 420,
         flakes: true,
         length: 0,
         speed: 2.2,

@@ -31,7 +31,7 @@ import { writeMuted } from "@/lib/island/settings";
 
 /** One square of the hotbar or the HUD's buttons, lit when it is held. */
 const slotVariants = cva(
-  "relative grid size-9 shrink-0 place-items-center border-2 p-1 transition-transform outline-none active:translate-y-px sm:size-12 sm:p-1.5",
+  "relative grid size-9 shrink-0 cursor-pointer place-items-center border-2 p-1 transition-transform outline-none active:translate-y-px sm:size-12 sm:p-1.5",
   {
     defaultVariants: { held: false, screen: "every" },
     variants: {
