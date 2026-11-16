@@ -38,8 +38,11 @@ const SUPPORT_FILE = /^apps\/www\/e2e\/support\/(?<name>.+)\.ts$/u;
 const SUPPORT_IMPORT =
   /^[^:]+:(?<importer>apps\/www\/e2e\/[^:]+\.ts):@\/e2e\/support\/(?<name>[A-Za-z0-9/_-]+)$/u;
 
-/** What every spec runs under, so a change to it reaches every spec. */
-const CONFIG_FILE = "apps/www/playwright.config.ts";
+/** What every spec runs under, the Playwright config and the suites it selects specs from, so a change to either reaches every spec. */
+const CONFIG_FILES = [
+  "apps/www/playwright.config.ts",
+  "apps/www/e2e/suites.ts",
+];
 
 const USAGE = "Usage: node scripts/proof/select.ts <base sha> <head sha>";
 
@@ -116,7 +119,7 @@ const importersOf = (
  * `apps/www/src/routes/$locale/quran/index.tsx`, every spec that imports a
  * changed support module directly or through another (`imports`, each
  * `[importer, name]`), and the smoke spec; a change to the Playwright config
- * proves every spec. A group that changes nothing the product or the suites
+ * or its suites proves every spec. A group that changes nothing the product or the suites
  * run proves its own spec files and the smoke spec.
  */
 export function selectSpecs(
@@ -137,7 +140,9 @@ export function selectSpecs(
       )
     )
   );
-  const everySpec = Arr.contains(changed, CONFIG_FILE);
+  const everySpec = Arr.some(changed, (path) =>
+    Arr.contains(CONFIG_FILES, path)
+  );
   return Arr.sort(
     Arr.dedupe([
       SMOKE_SPEC,
