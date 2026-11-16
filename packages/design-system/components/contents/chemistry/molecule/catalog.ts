@@ -8,6 +8,10 @@ import {
   type Placement,
   PlacementSchema,
 } from "@repo/design-system/components/contents/chemistry/molecule/geometry";
+import {
+  ORGANIC_IDS,
+  ORGANIC_SOURCES,
+} from "@repo/design-system/components/contents/chemistry/molecule/organic";
 import { Array as Arr, Result, Schema } from "effect";
 
 /** Every molecule the molecule and reaction labs can draw. */
@@ -35,6 +39,7 @@ export const MoleculeIdSchema = Schema.Literals([
   "propane",
   "ethanol",
   "methanol",
+  ...ORGANIC_IDS,
 ]);
 export type MoleculeId = typeof MoleculeIdSchema.Type;
 
@@ -163,6 +168,7 @@ function methyl(
  * three atoms in the xy plane, which faces the lab's camera.
  */
 const SOURCES = {
+  ...ORGANIC_SOURCES,
   "carbon-dioxide": {
     angle: { arms: [1, 2], vertex: 0 },
     formula: "\\mathrm{CO_2}",
