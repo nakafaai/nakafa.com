@@ -8,6 +8,20 @@ import { WIND_GLSL } from "@/lib/island/wind";
  * compiles them once; nothing here runs in JavaScript.
  */
 
+/**
+ * The sky's color on a row of the frame, from 0 at its foot to 1 at its top,
+ * in the sky's own ten steps (D35): what a far pixel fades toward, so far
+ * land meets the sky behind it on the same row with no seam.
+ */
+const SKY_ROW = `
+uniform vec3 uZenith;
+uniform vec3 uHorizon;
+uniform float uRows;
+vec3 skyRow(float height) {
+  float t = clamp(height * 1.4 - 0.2, 0.0, 1.0);
+  return mix(uHorizon, uZenith, floor(t * 10.0) / 10.0);
+}`;
+
 /** The chunk program: atlas pixels lit by the sun, shaded where a cloud passes, lit by the sky over them and the lamps beside them, fading into fog. */
 export const CHUNK_VERTEX = `#version 300 es
 layout(location = 0) in vec3 aPosition;
@@ -42,7 +56,6 @@ uniform sampler2D uAtlas;
 uniform vec3 uSun;
 uniform vec3 uAmbient;
 uniform vec3 uLamp;
-uniform vec3 uFog;
 uniform vec2 uFogRange;
 uniform float uAlpha;
 uniform float uTime;
@@ -51,6 +64,7 @@ uniform float uWater;
 uniform sampler2D uShore;
 uniform vec2 uShoreBox;
 uniform vec3 uEye;
+${SKY_ROW}
 uniform float uWet;
 uniform float uSnow;
 ${WIND_GLSL}
@@ -134,7 +148,7 @@ void main() {
   // Measured per pixel: the sea is a few huge quads, and a distance blended between their far corners would fog all of it.
   float fog = smoothstep(uFogRange.x, uFogRange.y, distance(vWorld, uEye));
   vec3 lit = mix(paint * light, vec3(0.97, 0.99, 1.0) * min(vec3(1.0), light + 0.12), foam);
-  color = vec4(mix(lit, uFog, fog), mix(uAlpha, 1.0, foam));
+  color = vec4(mix(lit, skyRow(gl_FragCoord.y / uRows), fog), mix(uAlpha, 1.0, foam));
   // The face's own direction, from how the world moves across this pixel, for the edge pass (D20).
   surface = vec4(face * 0.5 + 0.5, 1.0);
 }`;
@@ -155,13 +169,11 @@ export const SKY_VERTEX = FULL_FRAME;
 
 export const SKY_FRAGMENT = `#version 300 es
 precision mediump float;
-uniform vec3 uZenith;
-uniform vec3 uHorizon;
+${SKY_ROW}
 in float vHeight;
 layout(location = 0) out vec4 color;
 void main() {
-  float t = clamp(vHeight * 1.4 - 0.2, 0.0, 1.0);
-  color = vec4(mix(uHorizon, uZenith, floor(t * 10.0) / 10.0), 1.0);
+  color = vec4(skyRow(vHeight), 1.0);
 }`;
 
 /**
@@ -410,7 +422,7 @@ export const BODY_FRAGMENT = `#version 300 es
 precision highp float;
 uniform vec3 uSun;
 uniform vec3 uAmbient;
-uniform vec3 uFog;
+${SKY_ROW}
 uniform vec2 uFogRange;
 uniform vec3 uEye;
 uniform float uShadow;
@@ -431,6 +443,6 @@ void main() {
   vec3 light = uAmbient * shade + uSun * facing;
   light = floor(light * 6.0 + 0.5) / 6.0;
   float fog = smoothstep(uFogRange.x, uFogRange.y, distance(vWorld, uEye));
-  color = vec4(mix(vColor * light, uFog, fog), 1.0);
+  color = vec4(mix(vColor * light, skyRow(gl_FragCoord.y / uRows), fog), 1.0);
   surface = vec4(normal * 0.5 + 0.5, 1.0);
 }`;

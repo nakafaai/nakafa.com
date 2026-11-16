@@ -4,13 +4,13 @@ import { rgbOf } from "@/lib/island/palette";
 const Color = Schema.Tuple([Schema.Finite, Schema.Finite, Schema.Finite]);
 
 /**
- * The light of one moment (ADR 0047, D8): the sky's zenith and horizon, the fog
- * that far blocks fade into, the sun's color on lit faces, the ambient color
- * every face gets, and the lamps' color at night. Each is linear RGB, 0 to 1.
+ * The light of one moment (ADR 0047, D8): the sky's zenith and horizon, which
+ * far blocks also fade into (D35), the sun's color on lit faces, the ambient
+ * color every face gets, and the lamps' color at night. Each is linear RGB, 0
+ * to 1.
  */
 export const Light = Schema.Struct({
   ambient: Color,
-  fog: Color,
   horizon: Color,
   lamp: Color,
   sun: Color,
@@ -143,7 +143,6 @@ export function lightOf(hour: number, weather: Weather): Light {
   const horizon = greyed(blend("horizon"), grey);
   return {
     ambient: greyed(blend("ambient"), grey * 0.5),
-    fog: horizon,
     horizon,
     lamp: blend("lamp"),
     sun: mix([0, 0, 0], greyed(blend("sun"), grey), sun),
