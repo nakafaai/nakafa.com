@@ -77,16 +77,27 @@ function entryOf(gl: WebGL2RenderingContext, model: Model) {
 export function createBodies(gl: WebGL2RenderingContext) {
   const entries = MutableHashMap.empty<string, ReturnType<typeof entryOf>>();
   return {
-    /** Draws every model's bodies with the program and uniforms already set. */
-    draw() {
-      MutableHashMap.forEach(entries, (entry) => {
-        if (entry.count === 0) {
+    /** Draws every model's bodies with the program and uniforms already set, but the model `skip` names. */
+    draw(skip?: Model) {
+      const skipped = skip === undefined ? "" : modelKey(skip);
+      MutableHashMap.forEach(entries, (entry, key) => {
+        if (entry.count === 0 || key === skipped) {
           return;
         }
         gl.bindVertexArray(entry.vao);
         gl.drawArraysInstanced(gl.TRIANGLES, 0, entry.corners, entry.count);
       });
       gl.bindVertexArray(null);
+    },
+    /** Draws one model's bodies alone, with the program and uniforms already set. */
+    drawModel(model: Model) {
+      Option.map(MutableHashMap.get(entries, modelKey(model)), (entry) => {
+        if (entry.count > 0) {
+          gl.bindVertexArray(entry.vao);
+          gl.drawArraysInstanced(gl.TRIANGLES, 0, entry.corners, entry.count);
+          gl.bindVertexArray(null);
+        }
+      });
     },
     /** Lets the GPU go of every mesh and place buffer. */
     release() {
