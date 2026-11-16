@@ -23,8 +23,9 @@ const MARKS = {
  * A species' colors for its 3D model (ADR 0047, D21), from the same ramps its
  * field-guide picture is painted in: the body a tone above the base, so the
  * renderer's light and shade land on it as on the blocks; the belly a tone
- * lighter, legs and marks a tone darker, eyes and dark parts in ink, horns
- * pale. `hide` paints a body: belly underneath, the mark in its pattern. A
+ * lighter, the back, legs and marks a tone darker, eyes and dark parts in ink, horns
+ * pale. `hide` paints a body: belly underneath, the mark in its pattern, the
+ * back over the rest. A
  * heavy beast's patch is a saddle round its middle on legs in its accent, as
  * a panda's black band and legs or a tapir's pale saddle.
  */
@@ -37,6 +38,7 @@ export function coatOf(species: Species) {
     body: tint(body, 2),
     dark: tint("ink", 1),
     eye: tint("ink", 0),
+    back: tint(body, 1),
     leg: saddled ? tint(accent, 1) : tint(body, 1),
     mark: tint(mark, 1),
     pale: tint("plaster", 2),
@@ -48,7 +50,11 @@ export function coatOf(species: Species) {
     if (spot.up < -0.75) {
       return colors.belly;
     }
-    return marked(spot) ? colors.mark : colors.body;
+    if (marked(spot)) {
+      return colors.mark;
+    }
+    // The back a tone darker than the flanks (D46): what the camera sees from above reads as two tones, never one fill.
+    return spot.up > 0.55 ? colors.back : colors.body;
   };
   return { ...colors, hide };
 }

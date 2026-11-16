@@ -17,7 +17,7 @@ function headOf(
     ...rod(
       [x, y - r * 0.15, z + r * 0.85],
       beak,
-      [r * 0.35, 0],
+      [r * 0.45, 0],
       coat.accent,
       4
     ),
@@ -35,10 +35,10 @@ function headOf(
       ? slab(
           [
             [0, y + r * 0.8, z - r * 0.3],
-            [0, y + r * 1.7, z - r * 0.7],
+            [0, y + r * 2.1, z - r * 0.8],
             [0, y + r * 0.9, z + r * 0.4],
           ],
-          r * 0.25,
+          r * 0.35,
           coat.mark
         )
       : []),

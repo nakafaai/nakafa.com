@@ -19,6 +19,16 @@ const Crown = Schema.Struct({
 });
 export type Crown = typeof Crown.Type;
 
+/**
+ * How much larger than life ears, horns and antlers are drawn (ADR 0047,
+ * D46): at the opening zoom an animal is a few art pixels, and its mark has
+ * to survive there to tell a hare from a fox and a goat from a deer.
+ */
+const BOLD = 1.45;
+
+/** How much thicker than life a tail is drawn, so it reads as a stroke behind the body from the camera's height (D46). */
+const STROKE = 1.4;
+
 /** Both eyes: a small dark block on either side of the head, so a face reads from the camera's height. */
 export function eyesOf(crown: Crown, coat: Coat): readonly Face[] {
   const half = crown.size * 0.075;
@@ -38,7 +48,7 @@ export function earsOf(
   coat: Coat
 ): readonly Face[] {
   const [, y, z] = crown.top;
-  const size = crown.size;
+  const size = crown.size * BOLD;
   const x = crown.wide * 0.6;
   const ear = (() => {
     if (kind === "point") {
@@ -90,7 +100,7 @@ export function hornsOf(
   coat: Coat
 ): readonly Face[] {
   const [, y, z] = crown.top;
-  const size = crown.size;
+  const size = crown.size * BOLD;
   const x = crown.wide * 0.35;
   const horn = (() => {
     if (kind === "horns") {
@@ -176,16 +186,20 @@ export function tailOf(
   if (kind === "long") {
     return tube(
       [
-        { at: root, high: length * 0.07, wide: length * 0.07 },
+        {
+          at: root,
+          high: length * 0.07 * STROKE,
+          wide: length * 0.07 * STROKE,
+        },
         {
           at: [x, y - length * 0.12, z - length * 0.35],
-          high: length * 0.055,
-          wide: length * 0.055,
+          high: length * 0.055 * STROKE,
+          wide: length * 0.055 * STROKE,
         },
         {
           at: [x, y - length * 0.4, z - length * 0.6],
-          high: length * 0.05,
-          wide: length * 0.05,
+          high: length * 0.05 * STROKE,
+          wide: length * 0.05 * STROKE,
         },
         { at: [x, y - length * 0.55, z - length * 0.68], high: 0, wide: 0 },
       ],
@@ -196,7 +210,7 @@ export function tailOf(
   if (kind === "bushy") {
     return ball(
       [x, y - length * 0.2, z - length * 0.45],
-      [length * 0.17, length * 0.17, length * 0.5],
+      [length * 0.17 * STROKE, length * 0.17 * STROKE, length * 0.5],
       (spot) => (spot.along < 0.25 ? coat.belly : coat.body),
       3,
       6
@@ -205,7 +219,7 @@ export function tailOf(
   if (kind === "short") {
     return ball(
       [x, y, z - length * 0.1],
-      [length * 0.12, length * 0.12, length * 0.14],
+      [length * 0.12 * STROKE, length * 0.12 * STROKE, length * 0.14],
       coat.body,
       1,
       6
