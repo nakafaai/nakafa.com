@@ -5,7 +5,6 @@ import { composerOf } from "@/e2e/support/attachment";
 import type { Changes } from "@/e2e/support/changes";
 import {
   LESSON_PATH,
-  OPENED_CHAT,
   onThePage,
   openChatPage,
   runOnPage,
@@ -17,12 +16,8 @@ import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
 declare global {
   interface Window {
-    /**
-     * How many writes of the persisted AI store still go through once a test
-     * arms the refusal. Once none is left, each write is refused. Undefined
-     * means nothing is refused.
-     */
-    nakafaAiWritesAllowed?: number | undefined;
+    /** Whether the browser refuses the writes of the persisted AI store, which a test arms. */
+    nakafaAiWritesRefused?: boolean | undefined;
   }
 }
 
@@ -33,77 +28,60 @@ const MESSAGES = "nina/messages:page";
 
 /**
  * Refuses the writes of the persisted AI store once the test has armed it, as a
- * full quota does. The store writes on every change, and a new-chat send writes
- * twice before its prompt is on its way: the composer empties, then the chat
- * draft is kept. The test lets as many writes through as it allows, and the
- * store refuses the rest.
+ * full quota does. The store keeps only the chat Nina has open, and writes when
+ * that chat changes (#2467). Once the test arms the refusal, every write of the
+ * store throws.
  */
 function refuseAiStoreWrites(key: string) {
   const setItem = Storage.prototype.setItem;
   Storage.prototype.setItem = function (name, value) {
-    const allowed = window.nakafaAiWritesAllowed;
-    if (name === key && allowed !== undefined) {
-      if (allowed <= 0) {
-        throw new DOMException(
-          "The quota has been exceeded.",
-          "QuotaExceededError"
-        );
-      }
-      window.nakafaAiWritesAllowed = allowed - 1;
+    if (name === key && window.nakafaAiWritesRefused) {
+      throw new DOMException(
+        "The quota has been exceeded.",
+        "QuotaExceededError"
+      );
     }
     setItem.call(this, name, value);
   };
 }
 
 /**
- * The store refuses the chat draft of a new-chat send, which it writes after the
- * composer is emptied. The prompt leaves at once, and the learner's next send
- * opens the chat.
+ * A browser that refuses Nina's storage keeps nothing, and the store goes on as a
+ * first visit does (#2467): a new-chat send opens its chat, and the chat it opened
+ * is not kept for the next load.
  */
-const refusesTheChatDraft = Effect.fn("NakafaE2E.refusesTheChatDraft")(
-  function* (page: Page, baseURL: string) {
-    yield* Effect.promise(() =>
-      page.addInitScript(refuseAiStoreWrites, AI_STORAGE_KEY)
-    );
-    yield* openChatPage(page, baseURL);
+const sendsWhileTheStoreRefuses = Effect.fn(
+  "NakafaE2E.sendsWhileTheStoreRefuses"
+)(function* (page: Page, baseURL: string) {
+  yield* Effect.promise(() =>
+    page.addInitScript(refuseAiStoreWrites, AI_STORAGE_KEY)
+  );
+  yield* openChatPage(page, baseURL);
 
-    yield* Effect.promise(async () => {
-      const scope = onThePage(page);
+  yield* Effect.promise(async () => {
+    const scope = onThePage(page);
 
-      await write(scope);
-      // One write goes through: the one that empties the composer.
-      await page.evaluate(() => {
-        window.nakafaAiWritesAllowed = 1;
-      });
-      await composerOf(scope).press("Enter");
-
-      await expect(promptIn(scope)).toHaveCount(0);
-      // The composer is never disabled. The send button holds the next send back.
-      await expect(
-        scope.getByRole("button", { name: "Send message" })
-      ).toBeEnabled();
-      await expect(page).not.toHaveURL(OPENED_CHAT);
-
-      await page.evaluate(() => {
-        window.nakafaAiWritesAllowed = undefined;
-      });
-      await write(scope);
-      await composerOf(scope).press("Enter");
-      await pageOpensChat(page)();
+    await write(scope);
+    await page.evaluate(() => {
+      window.nakafaAiWritesRefused = true;
     });
-  }
-);
+    await composerOf(scope).press("Enter");
+    await pageOpensChat(page)();
 
-test.describe("New chat whose draft the store refuses at 1440px", () => {
+    // The write that keeps the open chat was refused, and the send went on without it.
+    expect(
+      await page.evaluate((key) => localStorage.getItem(key), AI_STORAGE_KEY)
+    ).toBeNull();
+  });
+});
+
+test.describe("New chat while the browser refuses Nina's storage at 1440px", () => {
   test.use({ viewport: { height: 900, width: 1440 } });
   test.describe.configure({ timeout: 180_000 });
 
-  test("clears the prompt, and takes the next send", async ({
-    baseURL,
-    page,
-  }) => {
+  test("opens its chat, and keeps nothing", async ({ baseURL, page }) => {
     await runOnPage(page, baseURL, (origin) =>
-      refusesTheChatDraft(page, origin)
+      sendsWhileTheStoreRefuses(page, origin)
     );
   });
 });
