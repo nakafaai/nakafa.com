@@ -1,5 +1,5 @@
 import { type BlockKey, idOf } from "@repo/backend/confect/island/blocks";
-import { Array as Arr, HashSet } from "effect";
+import { Array as Arr, HashSet, Schema } from "effect";
 import { createContext, use } from "react";
 import { createStore, useStore } from "zustand";
 import { applyEdits, type Edit, inverseOf } from "@/lib/island/edits";
@@ -8,15 +8,27 @@ import type { Cells } from "@/lib/island/world";
 /** The hand the learner builds with: one block placed per tap, or the pickaxe that removes one. */
 export type Tool = "place" | "remove";
 
+/** What the game tells the learner about the server: a refused build, or edits another device made first. */
+export type Notice = "refused" | "stale";
+
+/** The learner's lifetime Stars between the level they reached and the next one. */
+export const Progress = Schema.Struct({
+  from: Schema.Finite,
+  lifetime: Schema.Finite,
+  next: Schema.optionalKey(Schema.Finite),
+});
+export type Progress = typeof Progress.Type;
+
 /** How many steps undo keeps. */
 const HISTORY = 64;
 
 /**
  * What the game's own actions write (ADR 0047, D5 and D6): the world's cells,
  * which chunks need meshing again, the hotbar and the held slot, the tool, the
- * steps undo and redo walk, and whether the block book is open. The world is
- * one typed array changed in place, so `revision` rises with every change for
- * the readers that draw it.
+ * steps undo and redo walk, whether the block book is open, and the edits the
+ * server has not taken yet with the version they build on. The world is one
+ * typed array changed in place, so `revision` rises with every change for the
+ * readers that draw it.
  */
 interface GameStore {
   /** Writes edits into the world as one step the learner can undo. */
@@ -35,35 +47,54 @@ interface GameStore {
   leave: () => void;
   /** The island's level, which opens blocks for building (D7). */
   level: number;
+  /** What the game tells the learner, none most of the time. */
+  notice: Notice | null;
   past: readonly (readonly Edit[])[];
+  /** What the server has not taken yet, in the order it changed. */
+  pending: readonly Edit[];
+  /** The learner's lifetime Stars, the Stars that opened this level, and those that open the next, none at the last. */
+  progress: Progress;
   redo: () => void;
   revision: number;
+  /**
+   * Takes back everything the server has not taken, so the world matches what
+   * it holds again, after it refused a batch. Undo then starts afresh.
+   */
+  rollback: () => void;
   setBook: (book: boolean) => void;
+  setNotice: (notice: Notice | null) => void;
   setTool: (tool: Tool) => void;
+  /** Records that the server took the first `count` pending edits, now at `version`. */
+  settle: (count: number, version: number) => void;
   slot: number;
   /** Hands the chunks to mesh to the stage and forgets them. */
   takeDirty: () => HashSet.HashSet<number>;
   tool: Tool;
   undo: () => void;
+  /** The version of the edits the server holds, which the next batch builds on. */
+  version: number;
 }
 
+/** What a game opens with: its world, hotbar, level, progress, the version of its edits, and the way out. */
+type GameSetup = Pick<
+  GameStore,
+  "cells" | "hotbar" | "leave" | "level" | "progress" | "version"
+>;
+
 /** Creates the store of one game, which lives and ends with its provider. */
-export function createGameStore(
-  cells: Cells,
-  hotbar: readonly BlockKey[],
-  level: number,
-  leave: () => void
-) {
+export function createGameStore(setup: GameSetup) {
   return createStore<GameStore>()((set, get) => {
-    /** Writes edits and marks what they change, without touching history. */
+    /** Writes edits, marks what they change, and queues them for the server, without touching history. */
     const write = (edits: readonly Edit[]) => {
       const touched = applyEdits(get().cells, edits);
       set((state) => ({
         dirty: HashSet.union(state.dirty, touched),
+        pending: Arr.appendAll(state.pending, edits),
         revision: state.revision + 1,
       }));
     };
     return {
+      ...setup,
       apply: (edits) => {
         if (edits.length === 0) {
           return;
@@ -83,14 +114,12 @@ export function createGameStore(
           tool: "place",
         })),
       book: false,
-      cells,
       choose: (slot) => set({ slot, tool: "place" }),
       dirty: HashSet.empty(),
       future: [],
-      hotbar,
-      leave,
-      level,
+      notice: null,
       past: [],
+      pending: [],
       redo: () => {
         const step = Arr.last(get().future);
         if (step._tag === "None") {
@@ -104,7 +133,23 @@ export function createGameStore(
       },
       revision: 0,
       setBook: (book) => set({ book }),
+      setNotice: (notice) => set({ notice }),
       setTool: (tool) => set({ tool }),
+      rollback: () => {
+        const touched = applyEdits(get().cells, inverseOf(get().pending));
+        set((state) => ({
+          dirty: HashSet.union(state.dirty, touched),
+          future: [],
+          past: [],
+          pending: [],
+          revision: state.revision + 1,
+        }));
+      },
+      settle: (count, settled) =>
+        set((state) => ({
+          pending: Arr.drop(state.pending, count),
+          version: settled,
+        })),
       slot: 0,
       takeDirty: () => {
         const { dirty } = get();

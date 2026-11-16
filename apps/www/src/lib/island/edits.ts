@@ -1,12 +1,6 @@
+import { HEIGHT, SPAN } from "@repo/backend/confect/island/world";
 import { Array as Arr, HashSet, Schema } from "effect";
-import {
-  type Cells,
-  CHUNK,
-  CHUNKS,
-  cellOf,
-  HEIGHT,
-  SPAN,
-} from "@/lib/island/world";
+import { type Cells, CHUNK, CHUNKS, cellOf } from "@/lib/island/world";
 
 /**
  * One change to one cell (ADR 0047, D6): the block it held and the block it

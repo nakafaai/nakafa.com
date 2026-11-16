@@ -99,16 +99,26 @@ describe("islandScreenHandler", () => {
   it("opens the learner's level, footprint and seed, with a head kept out of search", async () => {
     sessionWith(Option.some("token"));
     answerQueries([
-      [island.queries.own, { lifetime: 420 }],
+      [
+        island.queries.own,
+        {
+          lifetime: 420,
+          version: 3,
+          world: [{ block: 5, x: 30, y: 9, z: 30 }],
+        },
+      ],
       [auth.queries.getCurrentUser, account],
     ]);
     const screen = await islandScreenHandler({ data: { locale: "en" } });
     expect(screen).toMatchObject({
+      edits: [{ block: 5, x: 30, y: 9, z: 30 }],
+      from: 400,
       level: 3,
       lifetime: 420,
       next: 900,
       seed: seedOf("users-1"),
-      world: 32,
+      size: 32,
+      version: 3,
     });
     expect(screen.seo).toMatchObject({
       canonicalPath: "/en/island",
@@ -125,18 +135,20 @@ describe("islandScreenHandler", () => {
     ]);
     const first = await islandScreenHandler({ data: { locale: "id" } });
     expect(first).toMatchObject({
+      edits: [],
       level: 1,
       lifetime: 0,
       next: 150,
-      world: 16,
       seed: seedOf("island"),
+      size: 16,
+      version: 0,
     });
     expect(first.seo.title).toBe("Pulau");
     answerQueries([
-      [island.queries.own, { lifetime: 9000 }],
+      [island.queries.own, { lifetime: 9000, version: 0, world: [] }],
       [auth.queries.getCurrentUser, account],
     ]);
     const top = await islandScreenHandler({ data: { locale: "en" } });
-    expect(top).toMatchObject({ level: 7, next: undefined, world: 64 });
+    expect(top).toMatchObject({ level: 7, next: undefined, size: 64 });
   });
 });

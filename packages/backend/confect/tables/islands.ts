@@ -1,30 +1,22 @@
 import { Table } from "@confect/core";
 import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
-import { Layout } from "@repo/backend/confect/island/layout";
-import { Materials } from "@repo/backend/confect/island/material";
-import { EarnedBadge, Visibility } from "@repo/backend/confect/island/schema";
+import { EarnedBadge } from "@repo/backend/confect/island/schema";
+import { Edits } from "@repo/backend/confect/island/world";
 import { Schema } from "effect";
 export default Table.make(() =>
   Schema.Struct({
     /** The badges the island earned, at most one of each (ADR 0042, D11). */
     badges: Schema.Array(EarnedBadge),
-    /** Every material its harvests ever gave (D13). */
-    harvested: Materials,
-    /** The island's day of its newest grant, as an ISO date; none before the first (D13). */
+    /** The island's day of its newest grant, as an ISO date; none before the first. */
     learned: Schema.optionalKey(Schema.String),
-    /** Every Star ever granted; level and spendable Stars derive from it (D3). */
+    /** Every Star ever granted; the level and the footprint derive from it (ADR 0042, D3). */
     lifetime: Schema.Finite,
-    /** The placements, stored packed (D4). */
-    layout: Layout,
-    /** The stored picture of the island its owner last shared, a visit's OpenGraph image; none before the first (D20). */
-    snapshot: Schema.optionalKey(IdSchema("bucketFiles")),
-    /** The owner's zone, kept current by their own visits; it sets the island's day and hour (D18). */
+    /** The owner's zone, kept current by their own visits; it sets the island's day. */
     timeZone: Schema.TimeZoneNamedFromString,
     userId: IdSchema("users"),
-    /** Rises by one on every write of the layout, so an edit of an older layout is refused (D4). */
+    /** Rises by one on every build, so an edit made against older edits is refused (ADR 0047, D6). */
     version: Schema.Finite,
-    visibility: Visibility,
-    /** The island's last day of watering, as an ISO date in its zone, none before the first (D13). */
-    watered: Schema.optionalKey(Schema.String),
+    /** The cells the learner changed over the generated terrain, packed (ADR 0047, D6). */
+    world: Edits,
   })
 ).index("by_userId", ["userId"]);

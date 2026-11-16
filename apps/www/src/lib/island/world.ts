@@ -1,15 +1,11 @@
 import { AIR } from "@repo/backend/confect/island/blocks";
+import { HEIGHT, SPAN } from "@repo/backend/confect/island/world";
 
-/**
- * The island's world (ADR 0047, D3): a grid of cells `SPAN` wide, `SPAN` deep
- * and `HEIGHT` high, one block id a cell. The grid keeps the widest footprint
- * at every level, so a cell keeps its coordinates while the island grows
- * around its middle. `x` runs east, `y` up and `z` south.
+/*
+ * The island's world in the browser (ADR 0047, D3): a grid of cells `SPAN`
+ * wide, `SPAN` deep and `HEIGHT` high, the sizes the server checks edits
+ * against, one block id a cell. `x` runs east, `y` up and `z` south.
  */
-export const SPAN = 64;
-
-/** The cells from the sea floor to the sky. */
-export const HEIGHT = 32;
 
 /** The water's surface: the top of the highest water cell. */
 export const SEA_LEVEL = 8;
@@ -41,13 +37,4 @@ export function cellOf(x: number, y: number, z: number) {
 /** The block of a cell, air outside the world. */
 export function blockAt(cells: Cells, x: number, y: number, z: number) {
   return isInside(x, y, z) ? cells[cellOf(x, y, z)] : AIR;
-}
-
-/**
- * The first and last cell, inclusive, of the footprint an island of this side
- * covers: a square in the middle of the world.
- */
-export function footprintOf(size: number) {
-  const from = (SPAN - size) / 2;
-  return { from, to: from + size - 1 };
 }
