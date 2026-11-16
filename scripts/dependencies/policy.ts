@@ -28,7 +28,7 @@ export const PACKAGE_MANAGER = "bun@1.4.4";
 export const NODE_RUNTIME_VERSION = "26.13.1";
 const CONTRACT_PACKAGE_VERSION = "7.0.0";
 /** Effect and its platform and test packages move as one exact cohort. */
-export const EFFECT_COHORT_VERSION = "4.1.2";
+export const EFFECT_COHORT_VERSION = "4.1.4";
 /**
  * Effect packages that only dependencies declare: the Confect CLI's platform
  * packages and the Confect server's AI providers. An override keeps each one
@@ -41,7 +41,7 @@ export const EFFECT_COHORT_OVERRIDES = [
   "@effect/platform-node-shared",
 ] as const;
 /** The tsrs release that the pinned @effect/tsgo patches, which every manifest takes from the catalog. */
-export const TSRS_VERSION = "0.24.0-ts7.1.0-beta";
+export const TSRS_VERSION = "0.25.0-ts7.1.0-beta";
 /** The Vitest runner, coverage, and UI packages move as one catalog cohort. */
 export const VITEST_COHORT_VERSION = "5.1.0";
 /**
@@ -53,7 +53,7 @@ export const VITEST_COHORT_VERSION = "5.1.0";
  */
 export const AI_SDK_COHORT = {
   "@convex-dev/ai-sdk-provider": "0.3.0",
-  ai: "7.0.172",
+  ai: "7.0.173",
 } as const;
 /**
  * Alchemy's packages move as one exact cohort. Alchemy 2 is a beta whose releases
@@ -61,10 +61,10 @@ export const AI_SDK_COHORT = {
  * the cohort is the same release.
  */
 export const ALCHEMY_COHORT = {
-  "@alchemy.run/cloudflare": "2.0.0-beta.85",
-  "@alchemy.run/cloudflare-runtime": "2.0.0-beta.85",
-  "@alchemy.run/github": "2.0.0-beta.85",
-  alchemy: "2.0.0-beta.85",
+  "@alchemy.run/cloudflare": "2.0.0-beta.87",
+  "@alchemy.run/cloudflare-runtime": "2.0.0-beta.87",
+  "@alchemy.run/github": "2.0.0-beta.87",
+  alchemy: "2.0.0-beta.87",
 } as const;
 /**
  * Tiptap moves as one exact cohort, and the workspace catalog does not hold it, so
@@ -237,7 +237,7 @@ export const DEPENDENCY_HOLDS: readonly DependencyHold[] = [
     minimumDeclarations: 1,
   },
   {
-    approved: "0.68.1",
+    approved: "0.69.0",
     dependency: "@effect/tsgo",
     minimumDeclarations: 1,
   },
@@ -328,7 +328,7 @@ export const SCRIPT_DEPENDENCY_HOLDS = [
   {
     // bunx installs React Doctor into a throwaway directory outside the lockfile,
     // so the script pins its exact release.
-    approved: "bunx react-doctor@0.9.18",
+    approved: "bunx react-doctor@0.9.23",
     manifestPath: "apps/www/package.json",
     script: "doctor",
   },

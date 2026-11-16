@@ -8,43 +8,43 @@ import { AI_SDK_COHORT } from "#scripts/dependencies/policy";
 export const REGISTRY_REVIEWS = [
   [
     "alchemy@latest",
-    "2.0.0-beta.85",
-    "2.0.0-beta.85 is the first release past beta.84 and runs on Effect 4.1, so ALCHEMY_COHORT names it in place of the preview tarballs. Its breaking changes touch AWS, GCP, the Domain platform, Cloudflare.state options and GitHub Ruleset props, none of which the Nakafa stack uses in the changed form. Checked 7 November 2026.",
+    "2.0.0-beta.87",
+    "2.0.0-beta.87 is the latest release and the adopted one. It peers effect ^4.1.4, so it moves with that cohort. beta.86 breaks Archil, Domain, Fly, Prisma, SQL and Docker interfaces, regenerates the distilled Cloudflare and GitHub specs, adds Resource.lookup, drops resolveProgram's telemetry option and Cloudflare SSL issuance attributes, and moves GitHub credentials to GitHub.fromApp; the Nakafa stack typechecks against all of them. beta.87's cloudflare-runtime proxies the Vite preview and dev requests to workerd over a Unix socket, which ends the loopback port exhaustion of alchemy-run/alchemy#3194. A deploy with it moves the shared state store, so it lands right after its first deploy. Checked 13 November 2026.",
   ],
   [
     "effect@latest",
-    "4.1.2",
-    "Effect 4.1.2 is the latest release and the adopted cohort (EFFECT_COHORT_VERSION). 4.1.1 and 4.1.2 are patch releases with fixes only. The contracts lead the cohort: @nakafa/aksara-contracts 7.0.0 peers effect 4.1.2 exactly. Checked 15 November 2026.",
+    "4.1.4",
+    "Effect 4.1.4 is the latest release and the adopted cohort (EFFECT_COHORT_VERSION). 4.1.3 and 4.1.4 are patch releases: Rational, CLI completion and validation fixes, cluster workflow retries, a TestClock finalizer fix, and OpenRouter schema regeneration. The contracts follow the cohort: @nakafa/aksara-contracts 7.0.0 peers effect 4.1.2 exactly, and the release that Aksara#624 cuts after this lands peers effect 4.1.4. Checked 16 November 2026.",
   ],
   [
     "@effect/platform-node@latest",
-    "4.1.2",
-    "@effect/platform-node follows the Effect cohort and moves with effect@latest; 4.1.2 is the adopted release.",
+    "4.1.4",
+    "@effect/platform-node follows the Effect cohort and moves with effect@latest; 4.1.4 is the adopted release.",
   ],
   [
     "@effect/platform-node-shared@latest",
-    "4.1.2",
-    "@effect/platform-node-shared follows the Effect cohort and moves with effect@latest; 4.1.2 is the adopted release.",
+    "4.1.4",
+    "@effect/platform-node-shared follows the Effect cohort and moves with effect@latest; 4.1.4 is the adopted release.",
   ],
   [
     "@effect/vitest@latest",
-    "4.1.2",
-    "@effect/vitest follows the Effect cohort and moves with effect@latest; 4.1.2 is the adopted release.",
+    "4.1.4",
+    "@effect/vitest follows the Effect cohort and moves with effect@latest; 4.1.4 is the adopted release.",
   ],
   [
     "@effect/ai-openai-compat@latest",
-    "4.1.2",
-    "@effect/ai-openai-compat follows the Effect cohort and moves with effect@latest; 4.1.2 is the adopted release.",
+    "4.1.4",
+    "@effect/ai-openai-compat follows the Effect cohort and moves with effect@latest; 4.1.4 is the adopted release.",
   ],
   [
     "@effect/ai-openrouter@latest",
-    "4.1.2",
-    "@effect/ai-openrouter follows the Effect cohort and moves with effect@latest; 4.1.2 is the adopted release.",
+    "4.1.4",
+    "@effect/ai-openrouter follows the Effect cohort and moves with effect@latest; 4.1.4 is the adopted release.",
   ],
   [
     "@effect/platform-bun@latest",
-    "4.1.2",
-    "@effect/platform-bun follows the Effect cohort and moves with effect@latest; 4.1.2 is the adopted release.",
+    "4.1.4",
+    "@effect/platform-bun follows the Effect cohort and moves with effect@latest; 4.1.4 is the adopted release.",
   ],
   [
     "@confect/core@latest",
@@ -53,8 +53,8 @@ export const REGISTRY_REVIEWS = [
   ],
   [
     "@effect/tsgo@latest",
-    "0.68.1",
-    "Compiler patching moves with tsrs and Effect, and every rule is decided in packages/typescript-config/base.json, which Aksara's rule block matches (docs/adr/0021-rules.md). 0.68.1 is the adopted release: it patches tsrs 0.24.0-ts7.1.0-beta (its upstream.json), which replaces the TypeScript package, and base.json decides onExitFailureToOnError, the one rule 0.68 adds. Checked 13 November 2026.",
+    "0.69.0",
+    "Compiler patching moves with tsrs and Effect, and every rule is decided in packages/typescript-config/base.json, which Aksara's rule block matches (docs/adr/0021-rules.md). 0.69.0 is the latest release and the adopted one: it patches tsrs 0.25.0-ts7.1.0-beta (the version table of its README), which replaces the TypeScript package, and base.json decides missingConcurrencyOption, the one rule 0.69 adds (docs/adr/0021-rules.md). Checked 14 November 2026.",
   ],
   [
     "vitest@latest",
@@ -79,12 +79,12 @@ export const REGISTRY_REVIEWS = [
   [
     "tsrs@latest",
     "0.25.0-ts7.1.0-beta",
-    "tsrs is the Rust port of the TypeScript 7.1 checker, pinned exactly to 0.24.0-ts7.1.0-beta, the release @effect/tsgo 0.68.1 patches. Every typecheck, the language server, and the source check's compiler API run on it. 0.25.0 adds concurrent headless lint and a Windows ARM64 package with the same checker; only tsgo's main branch patches it, so it lands with the @effect/tsgo release that supports it. Checked 13 November 2026.",
+    "tsrs is the Rust port of the TypeScript 7.1 checker, pinned exactly to 0.25.0-ts7.1.0-beta, the latest release and the one @effect/tsgo 0.69.0 patches. Every typecheck, the language server, and the source check's compiler API run on it. 0.25.0 adds concurrent headless lint and a Windows ARM64 package with the same checker. Checked 14 November 2026.",
   ],
   [
     "ai@latest",
-    "7.0.172",
-    "AI SDK packages move as one reviewed cohort. 7.0.172 is the latest release and the adopted one: @convex-dev/agent 0.7.9 peers ai ^7.0.129, the gateway provider 0.3.0 peers ^7.0.105, and the gateway module (confect/gateway) typechecks against it. From 7.0.171 a failed tool's error text reaches the client as the model received it, and the agent offers no redactToolErrors, so a Nina capability that breaks on a defect settles as a failure whose text names no cause (confect/nina/capability/progress.ts). Checked 13 November 2026.",
+    "7.0.173",
+    "AI SDK packages move as one reviewed cohort. 7.0.173 is the latest release and the adopted one (its changes are WorkflowAgent fixes and stable tool arguments across an approval replay, neither used here): @convex-dev/agent 0.7.9 peers ai ^7.0.129, the gateway provider 0.3.0 peers ^7.0.105, and the gateway module (confect/gateway) typechecks against it. From 7.0.171 a failed tool's error text reaches the client as the model received it, and the agent offers no redactToolErrors, so a Nina capability that breaks on a defect settles as a failure whose text names no cause (confect/nina/capability/progress.ts). Checked 14 November 2026.",
   ],
   [
     "@convex-dev/ai-sdk-provider@latest",
@@ -93,8 +93,8 @@ export const REGISTRY_REVIEWS = [
   ],
   [
     "better-auth@latest",
-    "1.7.18",
-    "Runtime stays on the latest 1.6 patch (1.6.34, which fixes stateless OAuth linking and SAML, neither used here). 1.7 moves the MCP plugin that the agent sign-in uses (confect/auth/oauth.ts) to @better-auth/mcp, which depends on @better-auth/oauth-provider. That provider's schema declares a compound unique index, oauthClientResource [clientId, resourceId], and mergeSchema lets a plugin option rename a model or its fields but not drop an index. @convex-dev/better-auth 0.13.0, the only adapter that admits 1.7, throws on any unique index of more than one field (assertNoCompoundUniqueIndexes in src/client/adapter-utils.ts, called from create-schema.ts and withTableLevelUniqueFields), and its 0.13 upgrade guide states that apps can no longer act as an OAuth provider for that reason. So the agent sign-in has no supported 1.7 path on Convex until the adapter enforces compound unique indexes, which convex/better-auth#470 tracks. Checked 7 November 2026.",
+    "1.7.23",
+    "Runtime stays on the latest 1.6 patch (1.6.34, which fixes stateless OAuth linking and SAML, neither used here). 1.7 moves the MCP plugin that the agent sign-in uses (confect/auth/oauth.ts) to @better-auth/mcp, which depends on @better-auth/oauth-provider. That provider's schema declares a compound unique index, oauthClientResource [clientId, resourceId], and mergeSchema lets a plugin option rename a model or its fields but not drop an index. @convex-dev/better-auth 0.13.0, the only adapter that admits 1.7, throws on any unique index of more than one field (assertNoCompoundUniqueIndexes in src/client/adapter-utils.ts, called from create-schema.ts and withTableLevelUniqueFields), and its 0.13 upgrade guide states that apps can no longer act as an OAuth provider for that reason. So the agent sign-in has no supported 1.7 path on Convex until the adapter enforces compound unique indexes, which convex/better-auth#470 tracks. 1.7.23 changes none of this, and the Convex Auth cutover deletes the package. Checked 14 November 2026.",
   ],
   [
     "@convex-dev/better-auth@latest",
@@ -128,7 +128,7 @@ export const REGISTRY_REVIEWS = [
   ],
   [
     "react-doctor@latest",
-    "0.9.18",
-    "The local scanners move as one reviewed cohort. The doctor script installs only releases older than a day, so it takes a release once that release has settled. 0.9.18 narrows existing rules to reduce false positives and adds the opt-in --scope contextual mode, which this repository does not use.",
+    "0.9.23",
+    "The local scanners move as one reviewed cohort. The doctor script installs only releases older than a day, so it takes a release once that release has settled. 0.9.23, released 13 November 2026, is the adopted one: since 0.9.18 the releases narrow existing rules (an effect cleanup that only reads a local binding counts as empty, button type keywords in any case), pin the hooks plugin the lockfile resolves, and bound the duplicate-JSX analysis so it finishes on a large project. Checked 14 November 2026.",
   ],
 ];
