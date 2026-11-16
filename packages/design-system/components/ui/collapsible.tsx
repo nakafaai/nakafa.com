@@ -2,6 +2,9 @@ import { Collapsible as CollapsiblePrimitive } from "@base-ui/react/collapsible"
 
 import { cn } from "cn";
 
+/**
+ * One region that shows and hides under its trigger. What matters most never hides in one.
+ */
 function Collapsible({ ...props }: CollapsiblePrimitive.Root.Props) {
   return <CollapsiblePrimitive.Root data-slot="collapsible" {...props} />;
 }

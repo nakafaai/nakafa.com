@@ -18,6 +18,10 @@ const alertVariants = cva(
   }
 );
 
+/**
+ * A notice that stays in the page's flow: an icon, a title and one sentence. `destructive` says something failed and
+ * what to do next. For a passing confirmation use a toast instead.
+ */
 function Alert({
   className,
   variant,

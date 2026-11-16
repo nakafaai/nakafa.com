@@ -20,6 +20,10 @@ function TooltipProvider({
   );
 }
 
+/**
+ * The words of a control that shows only an icon, on hover and focus. It names the action; it never holds anything a
+ * reader must read.
+ */
 function Tooltip({
   ...props
 }: React.ComponentProps<typeof TooltipPrimitive.Root>) {

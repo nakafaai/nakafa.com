@@ -8,6 +8,10 @@ import { cva } from "class-variance-authority";
 import { cn } from "cn";
 import type * as React from "react";
 
+/**
+ * One question per screen with its choices, its progress and the keys that answer it. The answer button stands close
+ * under the choices, and only the closing sentence is the footer.
+ */
 function Questionnaire({
   className,
   ...props

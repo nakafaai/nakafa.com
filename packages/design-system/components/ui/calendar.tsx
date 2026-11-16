@@ -211,6 +211,10 @@ function CalendarWeekNumber({ children, ...props }: ComponentProps<"td">) {
   );
 }
 
+/**
+ * A month grid to pick a day or a range, in the reader's locale. A date field opens it in a popover; a filter of a
+ * date column uses it too.
+ */
 function Calendar({
   className,
   classNames,

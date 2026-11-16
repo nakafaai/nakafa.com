@@ -2,6 +2,10 @@ import { Avatar as AvatarPrimitive } from "@base-ui/react/avatar";
 import { cn } from "cn";
 import type * as React from "react";
 
+/**
+ * The round frame of a person. A person is drawn as their animal or their photo through `PersonAvatar`, never as
+ * initials; circles are for people only.
+ */
 function Avatar({
   className,
   size = "default",

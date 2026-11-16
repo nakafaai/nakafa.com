@@ -1,6 +1,10 @@
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "cn";
 
+/**
+ * The layout of an empty state: its picture, a title, one sentence and at most one action. The picture is a mascot
+ * act that fits the place, never a bare icon or text alone.
+ */
 function Empty({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div

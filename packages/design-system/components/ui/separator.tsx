@@ -2,6 +2,9 @@ import { Separator as SeparatorPrimitive } from "@base-ui/react/separator";
 
 import { cn } from "cn";
 
+/**
+ * A hairline between parts that a gap alone does not separate.
+ */
 function Separator({
   className,
   orientation = "horizontal",

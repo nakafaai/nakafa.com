@@ -48,6 +48,10 @@ const badgeVariants = cva(
   }
 );
 
+/**
+ * A short label of a status or a kind, in a word or two. The `-subtle` and `-outline` variants tint a status without
+ * a fill; a status badge always carries a word, since a colour alone says nothing to everyone.
+ */
 function Badge({
   className,
   variant = "default",

@@ -5,6 +5,10 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { cn } from "cn";
 import type * as React from "react";
 
+/**
+ * The path to the page, which is the navigation of the page's header. Each step links to its page, and the last
+ * names the page itself.
+ */
 function Breadcrumb({
   className,
   ...props

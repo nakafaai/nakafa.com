@@ -4,6 +4,9 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { letterBubble } from "@repo/design-system/lib/bubble";
 import { cn } from "cn";
 
+/**
+ * A choice that is on or off, or one of several in a group. Its label sits beside it and toggles it too.
+ */
 function Checkbox({
   className,
   letter,

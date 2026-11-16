@@ -84,6 +84,9 @@ interface StepperProps extends React.HTMLAttributes<HTMLDivElement> {
   value?: number;
 }
 
+/**
+ * The steps of a process in order, each with its title and whether it is done, current or ahead.
+ */
 function Stepper({
   defaultValue = 0,
   value,

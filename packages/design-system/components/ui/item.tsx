@@ -57,6 +57,10 @@ const itemVariants = cva(
   }
 );
 
+/**
+ * A row of a list: the icon of its kind or a picture, a title and one line under it, and its actions at its end. A
+ * bare icon beside two lines sits on the first line.
+ */
 export function Item({
   className,
   variant = "default",

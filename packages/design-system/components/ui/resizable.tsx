@@ -9,6 +9,10 @@ import {
   useDefaultLayout,
 } from "react-resizable-panels";
 
+/**
+ * Panes the reader resizes by dragging the grip on their shared edge. Every resizable edge shows the one grip, never
+ * a line that changes colour.
+ */
 function ResizablePanelGroup({
   className,
   ...props

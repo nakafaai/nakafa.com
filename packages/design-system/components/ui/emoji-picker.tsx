@@ -11,6 +11,9 @@ import {
 import type * as React from "react";
 import { useTranslations } from "use-intl";
 
+/**
+ * A searchable grid of emoji in categories, like a command palette, for reactions and messages.
+ */
 function EmojiPicker({
   className,
   ...props

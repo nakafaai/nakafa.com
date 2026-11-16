@@ -1,6 +1,9 @@
 import { Switch as SwitchPrimitive } from "@base-ui/react/switch";
 import { cn } from "cn";
 
+/**
+ * A setting that takes effect the moment it is turned on or off, with its label beside it.
+ */
 function Switch({ className, ...props }: SwitchPrimitive.Root.Props) {
   return (
     <SwitchPrimitive.Root

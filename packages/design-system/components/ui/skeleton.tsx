@@ -1,5 +1,9 @@
 import { cn } from "cn";
 
+/**
+ * The shape of content that is on its way, used only where the shape is truthful. When nothing truthful can stand
+ * in, render nothing.
+ */
 function Skeleton({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div

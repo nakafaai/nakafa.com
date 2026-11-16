@@ -3,6 +3,10 @@ import { ArrowDown01Icon } from "@hugeicons/core-free-icons";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { cn } from "cn";
 
+/**
+ * Sections that open one at a time or several at once, for content a reader scans by its headings, such as questions
+ * and answers. Each item is a header that opens its panel; keep panels short.
+ */
 function Accordion({ className, ...props }: AccordionPrimitive.Root.Props) {
   return (
     <AccordionPrimitive.Root

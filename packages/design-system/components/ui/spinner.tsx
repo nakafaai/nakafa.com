@@ -14,6 +14,9 @@ interface SpinnerProps
   label?: string;
 }
 
+/**
+ * A small turning mark for an action that is running, beside the words that say what is running.
+ */
 function Spinner({
   className,
   isLoading,

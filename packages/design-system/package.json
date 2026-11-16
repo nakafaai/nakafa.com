@@ -3,7 +3,11 @@
   "version": "1.1.0",
   "private": true,
   "type": "module",
+  "imports": {
+    "#catalog/*": "./catalog/*.ts"
+  },
   "scripts": {
+    "catalog": "node catalog/main.ts",
     "clean": "git clean -xdf .cache .turbo dist node_modules",
     "test": "vitest run",
     "test:watch": "vitest watch",
@@ -82,11 +86,13 @@
     "@effect/vitest": "catalog:",
     "@repo/testing": "workspace:*",
     "@repo/typescript-config": "workspace:*",
+    "@tailwindcss/vite": "4.3.5",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "@types/three": "0.187.0",
     "@vitest/coverage-istanbul": "catalog:",
     "postcss": "8.5.32",
+    "vite": "catalog:",
     "vitest": "catalog:"
   }
 }
