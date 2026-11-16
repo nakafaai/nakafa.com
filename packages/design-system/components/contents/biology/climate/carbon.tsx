@@ -15,6 +15,7 @@ import {
   CHART_AXES,
   ChartScale,
 } from "@repo/design-system/components/contents/biology/climate/scale";
+import { drawTub } from "@repo/design-system/components/contents/biology/climate/tub";
 import { useQuantity } from "@repo/design-system/components/contents/simulation/quantity";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { Slider } from "@repo/design-system/components/ui/slider";
@@ -37,7 +38,6 @@ import {
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { P5Sketch } from "@repo/design-system/components/visual/sketch";
 import { getColor } from "@repo/design-system/lib/color";
-import { MATERIAL } from "@repo/design-system/lib/material";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr, Option, Schema } from "effect";
 import type p5 from "p5";
@@ -45,9 +45,6 @@ import { type ReactNode, useMemo, useState } from "react";
 
 /** The year pathways run to. */
 const END_YEAR: number = CHART_AXES.pathway.last;
-
-/** The tank is empty at 250 ppm and full at 600 ppm. */
-const TANK = { empty: 250, full: 600 } as const;
 
 /** GtC to GtCO2. */
 const CO2_PER_C = 3.664;
@@ -298,8 +295,9 @@ function Labeled({
 }
 
 /**
- * The sketch: a glass tub on the left whose tap and drain run as wide as the
- * year's emissions and uptake, and on the right a graph of the CO2 level.
+ * The sketch: an enamelled bathtub on the left whose filler and waste run as
+ * wide as the year's emissions and uptake, and on the right a graph of the
+ * CO2 level.
  * A pathway draws itself from 2024 to 2100 while it plays, beside the path
  * of no action.
  */
@@ -328,7 +326,7 @@ function tubProgram(sketch: p5, read: () => Tub) {
     const current = tub.record
       ? { emitted: 0, level: recordLevel(tub.year), taken: 0 }
       : yearOf(tub.pathway, drawnTo);
-    drawTub(sketch, current.level, current.emitted, current.taken, tub);
+    drawTub(sketch, current, tub.record);
     drawChart(sketch, tub, drawnTo);
   };
 }
@@ -345,80 +343,6 @@ function yearOf(pathway: readonly Year[], year: number) {
     (BUDGET.sinks * (level - BUDGET.preindustrial)) /
     (BUDGET.start - BUDGET.preindustrial);
   return { emitted: (each?.net ?? 0) + taken, level, taken };
-}
-
-/** The tub, its water at `level`, the tap and the drain. */
-function drawTub(
-  sketch: p5,
-  level: number,
-  emitted: number,
-  taken: number,
-  tub: Tub
-) {
-  const left = sketch.width * 0.06;
-  const width = sketch.width * 0.3;
-  const top = sketch.height * 0.2;
-  const bottom = sketch.height * 0.88;
-  const share = (level - TANK.empty) / (TANK.full - TANK.empty);
-  const surface = bottom - (bottom - top) * Math.min(1, Math.max(0, share));
-  const ripple = sketch.frameCount / 20;
-  sketch.noStroke();
-  sketch.fill(MATERIAL.seawaterDeep);
-  sketch.rect(left, surface, width, bottom - surface);
-  sketch.fill(MATERIAL.seawater);
-  sketch.rect(left, surface, width, (bottom - surface) * 0.45);
-  sketch.noFill();
-  sketch.stroke(MATERIAL.glass);
-  sketch.strokeWeight(2);
-  sketch.beginShape();
-  Arr.forEach(Arr.range(0, 24), (step) => {
-    const along = left + (width * step) / 24;
-    sketch.vertex(along, surface + Math.sin(step * 0.9 + ripple) * 1.5);
-  });
-  sketch.endShape();
-  sketch.stroke(getColor("SLATE", 600));
-  sketch.strokeWeight(3);
-  sketch.line(left, top, left, bottom);
-  sketch.line(left, bottom, left + width, bottom);
-  sketch.line(left + width, top, left + width, bottom);
-  const preindustrial =
-    bottom -
-    (bottom - top) *
-      ((BUDGET.preindustrial - TANK.empty) / (TANK.full - TANK.empty));
-  sketch.strokeWeight(1);
-  Arr.forEach(Arr.range(0, Math.floor(width / 8)), (dash) => {
-    sketch.line(
-      left + dash * 8,
-      preindustrial,
-      left + dash * 8 + 4,
-      preindustrial
-    );
-  });
-  if (tub.record) {
-    return;
-  }
-  // The tap pours as wide as the year's emissions; the drain low on the
-  // right wall spills as wide as the year's uptake.
-  const pipe = getColor("SLATE", 600);
-  const spout = left + width * 0.3;
-  sketch.noStroke();
-  sketch.fill(pipe);
-  sketch.rect(left - 6, top - 34, width * 0.3 + 12, 8, 3);
-  sketch.rect(spout - 2, top - 30, 10, 14, 2);
-  sketch.fill(MATERIAL.seawater);
-  const pour = Math.max(2, emitted * 1.2);
-  sketch.rect(spout + 3 - pour / 2, top - 16, pour, surface - top + 16);
-  const drain = left + width;
-  sketch.fill(pipe);
-  sketch.rect(drain, bottom - 14, sketch.width * 0.04, 8, 2);
-  sketch.fill(MATERIAL.seawater);
-  const spill = Math.max(2, taken * 1.2);
-  sketch.rect(
-    drain + sketch.width * 0.04 - spill,
-    bottom - 6,
-    spill,
-    sketch.height - bottom + 6
-  );
 }
 
 /** The CO2 level over the years, with axis ticks, beside the tub. */

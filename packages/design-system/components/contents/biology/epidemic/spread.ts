@@ -123,22 +123,39 @@ const WalkerSchema = Schema.Struct({
 });
 export type Walker = typeof WalkerSchema.Type;
 
-/** The square is 60 m by 40 m, and people stroll at 1.2 m/s. */
-export const SQUARE = { depth: 40, speed: 1.2, width: 60 } as const;
+/**
+ * The square is 60 m by 40 m with a fountain in its middle whose rim is
+ * 4.6 m from its centre, and people stroll at 1.2 m/s. A person keeps
+ * `shoulder`, half their width, between their middle and the rim or the
+ * square's edge, so no one walks through the fountain or off the paving.
+ */
+export const SQUARE = {
+  depth: 40,
+  fountain: 4.6,
+  shoulder: 0.65,
+  speed: 1.2,
+  width: 60,
+} as const;
+
+/** How close to the fountain's centre a person's middle may come. */
+const CLEARANCE = SQUARE.fountain + SQUARE.shoulder;
 
 /** A crowd of `count` people placed at seeded spots, the first `home` share at home. */
 export function crowdOf(count: number, home: number) {
-  return Arr.map(Arr.range(0, count - 1), (index) => ({
-    heading: hashUnit(index, 3) * Math.PI * 2,
-    home: index < Math.round(count * clamp(home)),
-    x: (hashUnit(index, 1) - 0.5) * SQUARE.width,
-    y: (hashUnit(index, 2) - 0.5) * SQUARE.depth,
-  }));
+  return Arr.map(Arr.range(0, count - 1), (index) =>
+    aroundFountain({
+      heading: hashUnit(index, 3) * Math.PI * 2,
+      home: index < Math.round(count * clamp(home)),
+      x: (hashUnit(index, 1) - 0.5) * (SQUARE.width - SQUARE.shoulder * 2),
+      y: (hashUnit(index, 2) - 0.5) * (SQUARE.depth - SQUARE.shoulder * 2),
+    })
+  );
 }
 
 /**
  * Moves a walker `seconds` along its heading, turning a little at random each
- * step and bouncing off the square's edges. People at home stay put.
+ * step, bouncing off the square's edges and turning away at the fountain's
+ * rim. People at home stay put.
  */
 export function walk(walker: Walker, seconds: number, salt: number): Walker {
   if (walker.home) {
@@ -148,11 +165,11 @@ export function walk(walker: Walker, seconds: number, salt: number): Walker {
   const heading = walker.heading + turn;
   const x = walker.x + Math.cos(heading) * SQUARE.speed * seconds;
   const y = walker.y + Math.sin(heading) * SQUARE.speed * seconds;
-  const halfWidth = SQUARE.width / 2;
-  const halfDepth = SQUARE.depth / 2;
+  const halfWidth = SQUARE.width / 2 - SQUARE.shoulder;
+  const halfDepth = SQUARE.depth / 2 - SQUARE.shoulder;
   const bounceX = Math.abs(x) > halfWidth;
   const bounceY = Math.abs(y) > halfDepth;
-  return {
+  return aroundFountain({
     heading: Math.atan2(
       bounceY ? -Math.sin(heading) : Math.sin(heading),
       bounceX ? -Math.cos(heading) : Math.cos(heading)
@@ -160,6 +177,30 @@ export function walk(walker: Walker, seconds: number, salt: number): Walker {
     home: false,
     x: Math.max(-halfWidth, Math.min(halfWidth, x)),
     y: Math.max(-halfDepth, Math.min(halfDepth, y)),
+  });
+}
+
+/**
+ * Keeps a walker out of the fountain: one whose middle has come inside the
+ * clearance is set back on it, along the line from the fountain's centre,
+ * and a heading into the fountain is mirrored off the rim, as a person turns
+ * at a low wall. A heading already leaving the fountain is kept.
+ */
+function aroundFountain(walker: Walker): Walker {
+  if (Math.hypot(walker.x, walker.y) >= CLEARANCE) {
+    return walker;
+  }
+  const normal = Math.atan2(walker.y, walker.x);
+  const nx = Math.cos(normal);
+  const ny = Math.sin(normal);
+  const dx = Math.cos(walker.heading);
+  const dy = Math.sin(walker.heading);
+  const inward = Math.min(0, dx * nx + dy * ny);
+  return {
+    heading: Math.atan2(dy - 2 * inward * ny, dx - 2 * inward * nx),
+    home: walker.home,
+    x: nx * CLEARANCE,
+    y: ny * CLEARANCE,
   };
 }
 

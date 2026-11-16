@@ -1,11 +1,16 @@
 import { useReducedMotion } from "@mantine/hooks";
-import { useTexture } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
-import { BLUE_MARBLE_EARTH_TEXTURE_ASSET } from "@repo/design-system/components/contents/biology/assets";
+import { Molecules } from "@repo/design-system/components/contents/biology/climate/molecules";
 import {
-  type BiologySceneColors,
-  getBiologySceneColors,
-} from "@repo/design-system/components/contents/biology/data";
+  Atmosphere,
+  Earth,
+} from "@repo/design-system/components/contents/biology/climate/planet";
+import {
+  CAMERA,
+  SUN,
+} from "@repo/design-system/components/contents/biology/climate/rays";
+import { Ribbons } from "@repo/design-system/components/contents/biology/climate/ribbons";
+import { Sun } from "@repo/design-system/components/contents/biology/climate/sun";
 import { CameraControls } from "@repo/design-system/components/three/camera/controls";
 import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene";
@@ -22,19 +27,14 @@ import {
 import { VisualFact } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { useRequired } from "@repo/design-system/hooks/required";
-import { useTheme } from "@repo/design-system/providers/theme";
-import { Array as Arr } from "effect";
-import type { ReactNode, RefObject } from "react";
-import { createContext, Suspense, useMemo, useRef, useState } from "react";
-import { type Group, SRGBColorSpace } from "three";
+import { MATERIAL } from "@repo/design-system/lib/material";
+import type { ReactNode } from "react";
+import { createContext, Suspense, useRef, useState } from "react";
+import type { Group } from "three";
 import { createStore, useStore } from "zustand";
 import { combine } from "zustand/middleware";
 
 const DEFAULT_GAS_LEVEL = 3;
-const HEAT_PARTICLE_IDS = Array.from(
-  { length: 14 },
-  (_, index) => `heat-${index}`
-);
 
 /** Creates the lab's store, which holds the gas level its slider sets. */
 function createGasLevelStore(initialGasLevel: number) {
@@ -47,40 +47,18 @@ function createGasLevelStore(initialGasLevel: number) {
 
 type GasLevelStore = ReturnType<typeof createGasLevelStore>;
 
-interface GreenhouseProviderProps {
-  children: ReactNode;
-  colors: BiologySceneColors;
-  store: GasLevelStore;
-}
-
-const GreenhouseContext = createContext<Omit<
-  GreenhouseProviderProps,
-  "children"
-> | null>(null);
-
 /**
- * Provides the colors and the gas-level store of the lab to its scene. The
- * value changes only with the colors, so the scene does not rerun when the
- * slider moves.
+ * The gas-level store of the lab, handed into its canvas. The store itself
+ * never changes, so only the parts that read the level rerun when it moves.
  */
-function GreenhouseProvider({
-  children,
-  colors,
-  store,
-}: GreenhouseProviderProps) {
-  const value = useMemo(() => ({ colors, store }), [colors, store]);
-
-  return <GreenhouseContext value={value}>{children}</GreenhouseContext>;
-}
-
-/** Reads the colors and the gas-level store of the surrounding lab. */
-function useGreenhouse() {
-  return useRequired(GreenhouseContext, "useGreenhouse");
-}
+const GreenhouseContext = createContext<GasLevelStore | null>(null);
 
 /** Reads the gas level the slider of the surrounding lab sets. */
 function useGreenhouseGasLevel() {
-  return useStore(useGreenhouse().store, (state) => state.gasLevel);
+  return useStore(
+    useRequired(GreenhouseContext, "useGreenhouseGasLevel"),
+    (state) => state.gasLevel
+  );
 }
 
 interface GreenhouseEffectLabProps {
@@ -101,11 +79,6 @@ export function GreenhouseEffectLab(props: GreenhouseEffectLabProps) {
   const [store] = useState(() => createGasLevelStore(DEFAULT_GAS_LEVEL));
   const gasLevel = useStore(store, (state) => state.gasLevel);
   const setGasLevel = useStore(store, (state) => state.setGasLevel);
-  const resolvedTheme = useTheme((state) => state.resolvedTheme);
-  const colors = useMemo(
-    () => getBiologySceneColors(resolvedTheme),
-    [resolvedTheme]
-  );
 
   return (
     <VisualCard>
@@ -135,13 +108,13 @@ export function GreenhouseEffectLab(props: GreenhouseEffectLabProps) {
         <ScienceStage frameloop="always" setting="space">
           <Suspense>
             <CameraControls
-              cameraPosition={[3, 1.7, 4.05]}
-              cameraTarget={[0.1, 0.08, 0]}
+              cameraPosition={CAMERA.position}
+              cameraTarget={CAMERA.target}
               fov={42}
             />
-            <GreenhouseProvider colors={colors} store={store}>
+            <GreenhouseContext value={store}>
               <GreenhouseScene />
-            </GreenhouseProvider>
+            </GreenhouseContext>
           </Suspense>
         </ScienceStage>
       </VisualCardBody>
@@ -158,148 +131,36 @@ export function GreenhouseEffectLab(props: GreenhouseEffectLabProps) {
   );
 }
 
+/**
+ * The scene: the Sun and its beams, the turning Earth in its glowing air,
+ * the greenhouse gas molecules, and the infrared leaving the surface.
+ */
 function GreenhouseScene() {
-  const { colors } = useGreenhouse();
+  const level = useGreenhouseGasLevel();
   const earthRef = useRef<Group>(null);
-  const heatRef = useRef<Group>(null);
   const calm = useReducedMotion(undefined, { getInitialValueInEffect: false });
 
   useFrame((_, delta) => {
-    if (calm) {
+    if (calm || earthRef.current === null) {
       return;
     }
-
-    if (earthRef.current) {
-      earthRef.current.rotation.y += delta * 0.12;
-    }
-
-    if (heatRef.current) {
-      heatRef.current.rotation.y -= delta * 0.18;
-    }
+    earthRef.current.rotation.y += delta * 0.06;
   });
 
   return (
-    <group position={[0, 0.02, 0]}>
-      <SunLight color={colors.grain} />
+    <group>
+      <directionalLight
+        color={MATERIAL.sunlight}
+        intensity={1.4}
+        position={SUN.position}
+      />
+      <Sun />
       <CameraBounds motion={{ rotation: "y" }} objectRef={earthRef}>
-        <EarthModel />
+        <Earth />
       </CameraBounds>
-      <HeatParticles color={colors.heat} refObject={heatRef} />
+      <Atmosphere level={level} />
+      <Molecules level={level} />
+      <Ribbons level={level} />
     </group>
   );
 }
-
-function EarthModel() {
-  const { colors } = useGreenhouse();
-  const gasLevel = useGreenhouseGasLevel();
-  const texture = useTexture(BLUE_MARBLE_EARTH_TEXTURE_ASSET.path);
-  texture.colorSpace = SRGBColorSpace;
-  const particles = useMemo(() => createGasParticles(gasLevel), [gasLevel]);
-
-  return (
-    <group>
-      <mesh rotation={[0.1, -1.28, 0]}>
-        <sphereGeometry args={[0.94, 96, 48]} />
-        <meshBasicMaterial map={texture} />
-      </mesh>
-      <mesh>
-        <sphereGeometry args={[1.1, 96, 48]} />
-        <meshStandardMaterial
-          color={colors.ice}
-          opacity={0.17 + gasLevel * 0.035}
-          transparent
-        />
-      </mesh>
-      {Arr.map(particles, (particle) => (
-        <mesh key={particle.id} position={particle.position}>
-          <sphereGeometry args={[0.035, 18, 12]} />
-          <meshStandardMaterial
-            color={colors.carbon}
-            emissive={colors.carbon}
-            emissiveIntensity={0.08}
-          />
-        </mesh>
-      ))}
-    </group>
-  );
-}
-
-function SunLight({ color }: { color: string }) {
-  return (
-    <group>
-      <mesh position={[-2.55, 1.3, 0]}>
-        <sphereGeometry args={[0.18, 32, 20]} />
-        <meshStandardMaterial color={color} emissive={color} />
-      </mesh>
-      {Arr.map([-0.22, 0, 0.22], (offset) => (
-        <mesh
-          key={offset}
-          position={[-1.55, 0.94 + offset, 0.12]}
-          rotation={[0, 0, Math.PI / 2.9]}
-        >
-          <cylinderGeometry args={[0.012, 0.012, 1.08, 18]} />
-          <meshStandardMaterial color={color} opacity={0.2} transparent />
-        </mesh>
-      ))}
-    </group>
-  );
-}
-
-function HeatParticles({
-  color,
-  refObject,
-}: {
-  color: string;
-  refObject: RefObject<Group | null>;
-}) {
-  const gasLevel = useGreenhouseGasLevel();
-  const particleCount = 4 + gasLevel * 2;
-
-  return (
-    <CameraBounds motion={{ rotation: "y" }} objectRef={refObject}>
-      {Arr.map(Arr.take(HEAT_PARTICLE_IDS, particleCount), (id, index) => (
-        <mesh key={id} position={getHeatParticlePosition(index, particleCount)}>
-          <sphereGeometry args={[0.026, 18, 12]} />
-          <meshStandardMaterial
-            color={color}
-            emissive={color}
-            emissiveIntensity={0.38}
-            opacity={0.42}
-            transparent
-          />
-        </mesh>
-      ))}
-    </CameraBounds>
-  );
-}
-
-function getHeatParticlePosition(index: number, total: number) {
-  const angle = (index / total) * Math.PI * 1.35 - Math.PI * 0.18;
-  const radius = 1.02 + (index % 3) * 0.06;
-
-  return [
-    Math.cos(angle) * radius,
-    Math.sin(angle) * radius * 0.9,
-    0.56 + (index % 2) * 0.08,
-  ] as const;
-}
-
-function createGasParticles(level: number) {
-  return Array.from({ length: 8 + level * 4 }, (_, index) => {
-    const y = 1 - (index / Math.max(1, 7 + level * 4)) * 2;
-    const ringRadius = Math.sqrt(Math.max(0, 1 - y * y));
-    const angle = index * Math.PI * (3 - Math.sqrt(5));
-    const radius = 1.16;
-
-    return {
-      id: `gas-${index}`,
-      position: [
-        Math.cos(angle) * ringRadius * radius,
-        y * radius,
-        Math.sin(angle) * ringRadius * radius,
-      ] as const,
-    };
-  });
-}
-
-useTexture.preload(BLUE_MARBLE_EARTH_TEXTURE_ASSET.path);

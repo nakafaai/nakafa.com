@@ -1,4 +1,3 @@
-import { RoundedBox } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
 import {
   type Alert,
@@ -9,12 +8,20 @@ import {
   REEF_MMM,
   WINDOW_WEEKS,
 } from "@repo/design-system/components/contents/biology/climate/bleaching";
+import { BrainCoral } from "@repo/design-system/components/contents/biology/climate/brain";
+import { Paleness } from "@repo/design-system/components/contents/biology/climate/coral";
+import { Heater } from "@repo/design-system/components/contents/biology/climate/heater";
+import { PlateCoral } from "@repo/design-system/components/contents/biology/climate/plate";
 import {
-  BrainCoral,
-  BranchingCoral,
-  PlateCoral,
-  Tissue,
-} from "@repo/design-system/components/contents/biology/climate/coral";
+  SandBed,
+  sandLevel,
+} from "@repo/design-system/components/contents/biology/climate/sand";
+import { StaghornCoral } from "@repo/design-system/components/contents/biology/climate/staghorn";
+import {
+  ReefLight,
+  TankGlass,
+  WaterSurface,
+} from "@repo/design-system/components/contents/biology/climate/tank";
 import { LabBench } from "@repo/design-system/components/contents/chemistry/bench";
 import {
   useQuantity,
@@ -23,12 +30,6 @@ import {
 import { SimulationTicker } from "@repo/design-system/components/contents/simulation/ticker";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { CameraControls } from "@repo/design-system/components/three/camera/controls";
-import { ThreeLabel } from "@repo/design-system/components/three/label";
-import {
-  GlassMaterial,
-  LiquidMaterial,
-  MetalMaterial,
-} from "@repo/design-system/components/three/physical";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene";
 import { ScienceStage } from "@repo/design-system/components/three/stage";
 import { Slider } from "@repo/design-system/components/ui/slider";
@@ -43,23 +44,51 @@ import {
 } from "@repo/design-system/components/visual/card";
 import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
-import { MATERIAL } from "@repo/design-system/lib/material";
-import { Array as Arr } from "effect";
-import {
-  type ReactNode,
-  Suspense,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
-import { Color } from "three";
+import { type ReactNode, Suspense, useEffect, useRef, useState } from "react";
 
 /** Played, a week passes each second. */
 const WEEKS_PER_SECOND = 1;
 
-/** The tank: 60 cm long, 35 cm deep and 35 cm high, its water 30 cm deep. */
-const TANK = { depth: 0.35, height: 0.35, length: 0.6, water: 0.3 } as const;
+/**
+ * Where the corals stand on the sand, in metres: two staghorn colonies on
+ * their rocks, each with the reach its branches may spread to, a brain coral
+ * at the back and a plate coral lying free at the front.
+ */
+const LEFT = { reach: 0.1, x: -0.155, z: -0.045 };
+const RIGHT = { reach: 0.095, x: 0.145, z: 0.015 };
+const BRAIN = { radius: 0.064, x: 0.02, z: -0.075 };
+const PLATE = { radius: 0.058, x: -0.035, z: 0.085 };
+
+/** Where the heater's foot stands, 2.5 cm above the sand at the back. */
+const HEATER_BASE = sandLevel(-0.15) + 0.025;
+
+/** The sand kept flat under each coral and the heater, `[x, z, radius]`. */
+const CLEARINGS = [
+  [LEFT.x, LEFT.z, 0.045],
+  [RIGHT.x, RIGHT.z, 0.045],
+  [BRAIN.x, BRAIN.z, BRAIN.radius * 1.04],
+  [PLATE.x, PLATE.z, PLATE.radius * 1.14],
+  [0.255, -0.15, 0.016],
+] as const;
+
+/**
+ * The brain and plate corals as spheres `[x, y, z, radius]` round them, in
+ * the frame of a staghorn colony at `(x, z)`, so its branches keep clear.
+ */
+function obstaclesFor(x: number, z: number) {
+  const floor = sandLevel(z);
+  return [
+    [BRAIN.x - x, sandLevel(BRAIN.z) - floor, BRAIN.z - z, BRAIN.radius * 1.08],
+    [
+      PLATE.x - x,
+      sandLevel(PLATE.z) + 0.008 - floor,
+      PLATE.z - z,
+      PLATE.radius * 1.2,
+    ],
+  ] as const;
+}
+const LEFT_OBSTACLES = obstaclesFor(LEFT.x, LEFT.z);
+const RIGHT_OBSTACLES = obstaclesFor(RIGHT.x, RIGHT.z);
 
 /**
  * A reef tank on a lab bench with corals from a reef whose warmest month
@@ -199,8 +228,9 @@ function Labeled({
 }
 
 /**
- * The bench, the glass tank with its water and sand, the corals and the
- * heater with its display. Played, the weeks run on and reach the card.
+ * The bench and the reef tank: its glass, water, light and sand, the corals
+ * paling together as the bleaching model says, and the heater with its
+ * controller. Played, the weeks run on and reach the card.
  */
 function TankScene({
   onWeeks,
@@ -216,23 +246,6 @@ function TankScene({
   const playing = useVisualScene((card) => card.playing, false);
   const clock = useRef(weeks);
   const sent = useRef(weeks);
-  const reading = useReading();
-  const tissue = useMemo(
-    () =>
-      new Color(MATERIAL.coralHealthy).lerp(
-        new Color(MATERIAL.coralBleached),
-        paleness
-      ),
-    [paleness]
-  );
-  const tips = useMemo(
-    () =>
-      new Color(MATERIAL.coralTip).lerp(
-        new Color(MATERIAL.coralBleached),
-        paleness
-      ),
-    [paleness]
-  );
 
   useEffect(() => {
     if (weeks !== sent.current) {
@@ -260,96 +273,40 @@ function TankScene({
     <>
       <SimulationTicker running={playing} />
       <LabBench />
-      <group position={[0, 0, 0]}>
-        <TankGlass />
-        <mesh position={[0, TANK.water / 2 + 0.004, -0.004]}>
-          <boxGeometry
-            args={[TANK.length - 0.01, TANK.water, TANK.depth - 0.018]}
-          />
-          <LiquidMaterial color={MATERIAL.solution} opacity={0.12} />
-        </mesh>
-        <mesh position={[0, 0.02, 0]} receiveShadow>
-          <boxGeometry
-            args={[TANK.length - 0.012, 0.035, TANK.depth - 0.012]}
-          />
-          <meshStandardMaterial color={MATERIAL.sand} roughness={1} />
-        </mesh>
-        <Tissue value={tissue}>
-          <BranchingCoral
-            position={[-0.13, 0.035, -0.04]}
-            seed={1}
-            tips={tips}
-          />
-          <BranchingCoral position={[0.15, 0.035, 0.05]} seed={2} tips={tips} />
-          <BrainCoral />
-          <PlateCoral />
-        </Tissue>
-        <group
-          position={[TANK.length / 2 - 0.04, 0.16, -TANK.depth / 2 + 0.03]}
-        >
-          <mesh castShadow>
-            <cylinderGeometry args={[0.012, 0.012, 0.2, 16]} />
-            <MetalMaterial color={MATERIAL.probeSteel} roughness={0.3} />
-          </mesh>
-        </group>
-        <group position={[TANK.length / 2 + 0.07, 0.05, 0.05]}>
-          <RoundedBox
-            args={[0.08, 0.1, 0.03]}
-            castShadow
-            position={[0, 0, 0]}
-            radius={0.008}
-          >
-            <meshStandardMaterial color={MATERIAL.meterBody} roughness={0.5} />
-          </RoundedBox>
-          <ThreeLabel
-            color={MATERIAL.meterInk}
-            fontSize="compact"
-            outlineColor={MATERIAL.meterHalo}
-            outlineWidth={0.003}
-            position={[0, 0.015, 0.017]}
-          >
-            <span className="font-mono tabular-nums">
-              {reading(temperature, 1)} °C
-            </span>
-          </ThreeLabel>
-        </group>
-      </group>
+      <TankGlass />
+      <WaterSurface />
+      <ReefLight />
+      <SandBed clearings={CLEARINGS} />
+      <Paleness value={paleness}>
+        <StaghornCoral
+          colony="brown"
+          obstacles={LEFT_OBSTACLES}
+          position={[LEFT.x, sandLevel(LEFT.z), LEFT.z]}
+          reach={LEFT.reach}
+          seed={3}
+        />
+        <StaghornCoral
+          colony="gold"
+          obstacles={RIGHT_OBSTACLES}
+          position={[RIGHT.x, sandLevel(RIGHT.z), RIGHT.z]}
+          reach={RIGHT.reach}
+          seed={8}
+        />
+        <BrainCoral
+          colony="olive"
+          position={[BRAIN.x, sandLevel(BRAIN.z) + 0.0015, BRAIN.z]}
+          radius={BRAIN.radius}
+          seed={5}
+        />
+        <PlateCoral
+          colony="brown"
+          position={[PLATE.x, sandLevel(PLATE.z) - 0.0006, PLATE.z]}
+          radius={PLATE.radius}
+          seed={2}
+          turn={0.5}
+        />
+      </Paleness>
+      <Heater base={HEATER_BASE} temperature={temperature} />
     </>
-  );
-}
-
-/**
- * The tank's glass: a back pane, two side panes and the floor, with only a
- * rim along the open front, so the reader looks straight in at the corals.
- */
-function TankGlass() {
-  const panes = [
-    [
-      "back",
-      [0, TANK.height / 2, -TANK.depth / 2],
-      [TANK.length, TANK.height, 0.006],
-    ],
-    [
-      "left",
-      [-TANK.length / 2, TANK.height / 2, 0],
-      [0.006, TANK.height, TANK.depth],
-    ],
-    [
-      "right",
-      [TANK.length / 2, TANK.height / 2, 0],
-      [0.006, TANK.height, TANK.depth],
-    ],
-    ["rim", [0, TANK.height, TANK.depth / 2], [TANK.length, 0.008, 0.008]],
-    ["sill", [0, 0.004, TANK.depth / 2], [TANK.length, 0.008, 0.008]],
-  ] as const;
-  return (
-    <group>
-      {Arr.map(panes, ([name, position, size]) => (
-        <mesh castShadow key={name} position={position}>
-          <boxGeometry args={size} />
-          <GlassMaterial color={MATERIAL.glass} opacity={0.14} />
-        </mesh>
-      ))}
-    </group>
   );
 }

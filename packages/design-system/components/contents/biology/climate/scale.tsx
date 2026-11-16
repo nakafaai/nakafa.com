@@ -18,10 +18,10 @@ export const CHART_AXES = {
 
 /**
  * The values on the chart's axes, written over the sketch where its axes
- * stand: the CO2 level in ppm just inside the vertical axis at its bottom,
- * middle and top, clear of the tub's drain, and the first and last year
- * under the horizontal one. The sketch
- * places its chart at the same shares of its width and height.
+ * stand: the CO2 level in ppm just inside the vertical axis at its top and
+ * middle and just above the horizontal axis at its bottom, clear of the tub
+ * and its waste, and the first and last year under the horizontal one. The
+ * sketch places its chart at the same shares of its width and height.
  */
 export function ChartScale({ record }: { readonly record: boolean }) {
   const quantity = useQuantity();
@@ -42,7 +42,7 @@ export function ChartScale({ record }: { readonly record: boolean }) {
       <span className="absolute top-[49%] left-[46%] -translate-y-1/2 ps-1.5">
         <InlineMath math={quantity((low + high) / 2, "", 0)} />
       </span>
-      <span className="absolute top-[86%] left-[46%] -translate-y-1/2 ps-1.5">
+      <span className="absolute top-[86%] left-[46%] -translate-y-full ps-1.5 pb-0.5">
         <InlineMath math={quantity(low, "", 0)} />
       </span>
       <span className="absolute top-[89%] left-[46%] -translate-x-1/2">

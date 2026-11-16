@@ -1,3 +1,8 @@
+import { createCrowd } from "@repo/design-system/components/contents/biology/epidemic/people";
+import {
+  createPlaza,
+  layoutOf,
+} from "@repo/design-system/components/contents/biology/epidemic/plaza";
 import {
   crowdOf,
   type Day,
@@ -8,7 +13,6 @@ import {
   peakOf,
   type Route,
   reproductionOf,
-  SQUARE,
   type Walker,
   walk,
 } from "@repo/design-system/components/contents/biology/epidemic/spread";
@@ -33,8 +37,6 @@ import {
 } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { P5Sketch } from "@repo/design-system/components/visual/sketch";
-import { getColor } from "@repo/design-system/lib/color";
-import { MATERIAL } from "@repo/design-system/lib/material";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr, Option } from "effect";
 import type p5 from "p5";
@@ -228,6 +230,30 @@ const STATE_COLORS = {
   susceptible: PLOT_COLORS.slate,
 } as const;
 
+/** The shirts the people wear, one per state, in the colours the legend names. */
+const SHIRTS = [
+  STATE_COLORS.susceptible,
+  STATE_COLORS.infected,
+  STATE_COLORS.recovered,
+  STATE_COLORS.immune,
+] as const;
+
+/** The shirt a person wears: the index in `SHIRTS` of their state, an infection first. */
+function stateOf(
+  index: number,
+  infected: readonly boolean[],
+  recovered: readonly boolean[],
+  immune: readonly boolean[]
+) {
+  if (infected[index] === true) {
+    return 1;
+  }
+  if (recovered[index] === true) {
+    return 2;
+  }
+  return immune[index] === true ? 3 : 0;
+}
+
 /**
  * The sketch: the square, its people and a graph of the outbreak under it.
  * The outbreak's curves say how many are infected each day; the sketch
@@ -235,12 +261,15 @@ const STATE_COLORS = {
  * longest infected recover first.
  */
 function townProgram(sketch: p5, read: () => Town) {
+  const plaza = createPlaza();
+  const crowd = createCrowd(SHIRTS);
   let walkers: readonly Walker[] = [];
   let infected: readonly boolean[] = [];
   let recovered: readonly boolean[] = [];
   let immune: readonly boolean[] = [];
   let order: readonly number[] = [];
   let day = 0;
+  let clock = 0;
   let reported = -1;
   let shown: Town | undefined;
 
@@ -272,6 +301,7 @@ function townProgram(sketch: p5, read: () => Town) {
       restart(town);
     }
     const seconds = Math.min(0.1, sketch.deltaTime / 1000);
+    clock += seconds;
     day += seconds * DAYS_PER_SECOND;
     if (day > DAYS + 16) {
       restart(town);
@@ -313,15 +343,14 @@ function townProgram(sketch: p5, read: () => Town) {
       walk(walker, seconds * 4, index + Math.floor(day * 10))
     );
 
-    drawSquare(sketch);
-    drawPeople(
+    plaza.ground(sketch, clock);
+    crowd(
       sketch,
       walkers,
-      infected,
-      recovered,
-      immune,
-      town.measures.masks
+      (index) => stateOf(index, infected, recovered, immune),
+      Math.round(town.measures.masks * PEOPLE)
     );
+    plaza.canopies(sketch);
     drawGraph(sketch, town, today);
 
     if (Math.floor(today) !== reported) {
@@ -329,133 +358,6 @@ function townProgram(sketch: p5, read: () => Town) {
       town.report(reported);
     }
   };
-}
-
-/**
- * Where the square and the graph go: side by side on a wide card, the
- * square on the left filling the height; stacked on a narrow one, the square
- * over the graph. The square keeps its 60 m by 40 m shape either way.
- */
-function layoutOf(sketch: p5) {
-  const wide = sketch.width > sketch.height * 1.3;
-  const plazaWidth = wide ? sketch.width * 0.64 : sketch.width;
-  const plazaHeight = wide ? sketch.height : sketch.height * 0.72;
-  return {
-    graphBottom: wide ? sketch.height * 0.88 : sketch.height - 10,
-    graphLeft: wide ? plazaWidth + 16 : 12,
-    graphTop: wide ? sketch.height * 0.12 : sketch.height * 0.75,
-    plazaHeight,
-    plazaWidth,
-  };
-}
-
-/** How the square's metres map onto its part of the canvas. */
-function squareFrame(sketch: p5) {
-  const { plazaHeight, plazaWidth } = layoutOf(sketch);
-  const scale = Math.min(
-    plazaWidth / (SQUARE.width + 6),
-    plazaHeight / (SQUARE.depth + 6)
-  );
-  return {
-    scale,
-    x: (metres: number) => plazaWidth / 2 + metres * scale,
-    y: (metres: number) => plazaHeight / 2 + metres * scale,
-  };
-}
-
-/** Stone paving, a fountain in the middle and shade trees in the corners. */
-function drawSquare(sketch: p5) {
-  const frame = squareFrame(sketch);
-  sketch.clear();
-  sketch.noStroke();
-  sketch.fill(MATERIAL.grass);
-  const { plazaHeight, plazaWidth } = layoutOf(sketch);
-  sketch.rect(0, 0, plazaWidth, plazaHeight);
-  sketch.noStroke();
-  sketch.fill(MATERIAL.pavement);
-  sketch.rect(
-    frame.x(-SQUARE.width / 2),
-    frame.y(-SQUARE.depth / 2),
-    SQUARE.width * frame.scale,
-    SQUARE.depth * frame.scale,
-    4
-  );
-  sketch.stroke(getColor("SLATE", 400));
-  sketch.strokeWeight(0.6);
-  Arr.forEach(Arr.range(-14, 14), (column) => {
-    sketch.line(
-      frame.x(column * 2),
-      frame.y(-SQUARE.depth / 2),
-      frame.x(column * 2),
-      frame.y(SQUARE.depth / 2)
-    );
-  });
-  Arr.forEach(Arr.range(-9, 9), (row) => {
-    sketch.line(
-      frame.x(-SQUARE.width / 2),
-      frame.y(row * 2),
-      frame.x(SQUARE.width / 2),
-      frame.y(row * 2)
-    );
-  });
-  sketch.noStroke();
-  sketch.fill(MATERIAL.concrete);
-  sketch.circle(frame.x(0), frame.y(0), 9 * frame.scale);
-  sketch.fill(MATERIAL.seawater);
-  sketch.circle(frame.x(0), frame.y(0), 7.4 * frame.scale);
-  Arr.forEach(
-    [
-      [-26, -16],
-      [26, -16],
-      [-26, 16],
-      [26, 16],
-    ] as const,
-    ([x, y]) => {
-      sketch.fill(MATERIAL.foliageShade);
-      sketch.circle(frame.x(x), frame.y(y), 7 * frame.scale);
-      sketch.fill(MATERIAL.foliageLight);
-      sketch.circle(
-        frame.x(x) - frame.scale,
-        frame.y(y) - frame.scale,
-        4.6 * frame.scale
-      );
-    }
-  );
-}
-
-/**
- * Everyone out in the square as a dot coloured by state, a vaccinated person
- * with a ring, and a mask as a pale band on the first `masks` share.
- */
-function drawPeople(
-  sketch: p5,
-  walkers: readonly Walker[],
-  infected: readonly boolean[],
-  recovered: readonly boolean[],
-  immune: readonly boolean[],
-  masks: number
-) {
-  const frame = squareFrame(sketch);
-  const size = Math.max(4, 1.1 * frame.scale);
-  Arr.forEach(walkers, (walker, index) => {
-    if (walker.home) {
-      return;
-    }
-    const x = frame.x(walker.x);
-    const y = frame.y(walker.y);
-    const color =
-      (infected[index] === true && STATE_COLORS.infected) ||
-      (recovered[index] === true && STATE_COLORS.recovered) ||
-      (immune[index] === true && STATE_COLORS.immune) ||
-      STATE_COLORS.susceptible;
-    sketch.noStroke();
-    sketch.fill(color);
-    sketch.circle(x, y, size);
-    if (index < Math.round(masks * PEOPLE)) {
-      sketch.fill(getColor("SLATE", 50));
-      sketch.rect(x - size * 0.35, y + size * 0.05, size * 0.7, size * 0.22, 1);
-    }
-  });
 }
 
 /** The share infected, recovered and still susceptible over the days, under the square. */
@@ -474,14 +376,21 @@ function drawGraph(sketch: p5, town: Town, today: number) {
     ["recovered", (each: Day) => each.recovered],
   ] as const;
   sketch.noFill();
-  sketch.strokeWeight(2);
   Arr.forEach(series, ([state, value]) => {
     sketch.stroke(STATE_COLORS[state]);
+    sketch.strokeWeight(2.5);
     sketch.beginShape();
     Arr.forEach(Arr.take(town.outbreak, Math.floor(today) + 1), (each) => {
       sketch.vertex(x(each.day), y(value(each)));
     });
     sketch.endShape();
+    const now = town.outbreak[Math.floor(today)];
+    if (now) {
+      sketch.noStroke();
+      sketch.fill(STATE_COLORS[state]);
+      sketch.circle(x(now.day), y(value(now)), 7);
+      sketch.noFill();
+    }
   });
 }
 
