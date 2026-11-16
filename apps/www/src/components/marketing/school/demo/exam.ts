@@ -4,33 +4,14 @@ import {
 } from "@repo/backend/confect/exams/blank";
 import { ExamView } from "@repo/backend/confect/exams/exam";
 import { ALL_OR_NOTHING } from "@repo/backend/confect/exams/scoring";
+import { Array as Arr, Schema } from "effect";
 import {
-  Array as Arr,
-  Option,
-  Record as Rec,
-  Schema,
-  String as Str,
-} from "effect";
-
-/** A placeholder of a formula in a demo sentence: `<mass></mass>` names the formula `mass`. */
-const FORMULA_TAG = /<(?<name>\w+)><\/\k<name>>/u;
-
-/** The JSON text of a document, as the server stores it. */
-const DocumentText = Schema.fromJsonString(Schema.Unknown);
-
-/** The school the demo exam belongs to. Its address only keys the editor's reads. */
-export const DEMO_SLUG = "demo";
-
-/** The formulas the demo's sentences name, in LaTeX. */
-const FORMULAS: Readonly<Record<string, string>> = {
-  cart: "4\\ \\text{kg}",
-  formula: "p = m v = 2 \\cdot 3 = 6\\ \\text{kg}\\cdot\\text{m/s}",
-  mass: "2\\ \\text{kg}",
-  pace: "2.5\\ \\text{m/s}",
-  speed: "3\\ \\text{m/s}",
-  total: "p = 4 \\cdot 2.5 = 10\\ \\text{kg}\\cdot\\text{m/s}",
-  unit: "\\text{kg}\\cdot\\text{m/s}",
-};
+  DEMO_EXAM_ID,
+  DEMO_SLUG,
+  formulaText,
+  latexLabel,
+  sentenceText,
+} from "@/components/marketing/school/demo/seed";
 
 /** The options of the first question, each a momentum, the third one right. */
 const MOMENTA = [
@@ -39,42 +20,6 @@ const MOMENTA = [
   "6\\ \\text{kg}\\cdot\\text{m/s}",
   "9\\ \\text{kg}\\cdot\\text{m/s}",
 ] as const;
-
-/**
- * The inline content of one sentence: its words as text, and each formula it names as an inline formula, the way
- * the editor writes a formula a teacher types.
- */
-const inline = (sentence: string) =>
-  Arr.getSomes(
-    Arr.map(Str.split(sentence, FORMULA_TAG), (part, index) => {
-      if (index % 2 === 1) {
-        return Option.map(Rec.get(FORMULAS, part), (latex) => ({
-          attrs: { latex },
-          type: "mathInline",
-        }));
-      }
-      return part === ""
-        ? Option.none()
-        : Option.some({ text: part, type: "text" });
-    })
-  );
-
-/** A document of one paragraph holding `content`. */
-const paragraphOf = (content: readonly unknown[]) => ({
-  content: [
-    content.length === 0
-      ? { type: "paragraph" }
-      : { content, type: "paragraph" },
-  ],
-  type: "doc",
-});
-
-/** The JSON text of a document of one sentence. */
-const sentenceText = (sentence: string) =>
-  Schema.encodeSync(DocumentText)(paragraphOf(inline(sentence)));
-
-/** The JSON text of a document holding one formula alone. */
-const formulaText = (name: string) => sentenceText(`<${name}></${name}>`);
 
 /**
  * The exam of the School landing's editor, in the reader's language, as the server answers it: a choice question on
@@ -95,7 +40,7 @@ export function demoExam(texts: {
   const exam = Schema.encodeSync(ExamView)(
     Schema.decodeUnknownSync(ExamView)({
       archived: false,
-      id: "seedexam",
+      id: DEMO_EXAM_ID,
       questions: [
         {
           answers: [
@@ -107,7 +52,7 @@ export function demoExam(texts: {
               minChoices: 1,
               options: Arr.map(MOMENTA, (latex, index) => ({
                 id: `option-${index + 1}`,
-                label: paragraphOf([{ attrs: { latex }, type: "mathInline" }]),
+                label: latexLabel(latex),
               })),
               shuffle: false,
             },

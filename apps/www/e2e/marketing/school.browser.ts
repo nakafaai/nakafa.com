@@ -30,22 +30,30 @@ const readOverflow = (page: Page) =>
   );
 
 /**
- * The name of the exam's right answer, the momentum of a 2 kg ball at 3 m/s: its formula reads 6, and no
+ * The name of the paper's right answer, the momentum of a 2 kg ball at 3 m/s: its formula reads 6, and no
  * other answer holds that digit.
  */
 const MOMENTUM = /6/u;
 
-/** The sections of the School landing, one per feature, in the order the page shows them. */
-const FEATURE_SECTIONS = [
-  "forum",
-  "library",
+/** The parts of the School landing under its hero, in the order the page shows them. */
+const PARTS = [
   "tasks",
   "exams",
+  "player",
   "reports",
   "insight",
-  "graduation",
   "parents",
+  "year",
 ] as const;
+
+/** The address of the landing once the editor's Try as student has opened the player's part. */
+const PLAYER_PART = /#player$/u;
+
+/** An address on the machine that built the page, which no page a visitor reads may hold. */
+const BUILD_ADDRESS = /localhost|127\.0\.0\.1/u;
+
+/** The ten types of question the paper names, in the order of the editor's type menu. */
+const TYPES = 10;
 
 const verifySchoolLanding = Effect.fn("NakafaE2E.verifySchoolLanding")(
   function* (page: Page) {
@@ -60,25 +68,80 @@ const verifySchoolLanding = Effect.fn("NakafaE2E.verifySchoolLanding")(
         page.locator("#hero").getByRole("link", { name: "Start free trial" })
       ).toHaveAttribute("href", "/en/school/new")
     );
-    // Each feature has one title; the exam editor's own pages, which name their questions, stand under it.
-    for (const feature of FEATURE_SECTIONS) {
+    // Each part has one title; the School's own screens in a demo, which name their questions, stand under it.
+    for (const part of PARTS) {
       yield* Effect.promise(() =>
         expect(
-          page.locator(
-            `section#${feature} h2:not([data-slot="editor-demo"] h2)`
-          )
+          page.locator(`section#${part} h2:not([data-slot$="-demo"] h2)`)
         ).toHaveCount(1)
       );
     }
-    // The exam answers itself with the momentum of a 2 kg ball at 3 m/s.
-    const exam = page.locator("#player");
-    // WebKit's scrollIntoView skips a part the page has not drawn yet, so the page steps to it as a reader does.
-    yield* stepTo(page, exam.getByRole("radiogroup"));
+    // The page shows the editor before the player, so a reader meets it first, and the walk follows the page down.
+    // The editor stands in a frame outside any school, so nothing in it leaves the page: its Try as student opens
+    // the player's part, and it offers no way back to a school's exams.
+    const paper = page.locator("#player");
+    const editor = page.locator('[data-slot="editor-demo"]');
+    // The strip of pages draws every question's own controls in its thumbnails, and none of them stands inside the
+    // button that opens its page.
+    const pages = editor.getByRole("button", { name: "Pages" });
+    yield* stepTo(page, pages);
     yield* Effect.promise(() =>
-      expect(exam.getByRole("radio", { checked: true })).toHaveAccessibleName(
-        MOMENTUM,
-        { timeout: 10_000 }
-      )
+      expect(editor.locator('a[href]:not([href^="#"])')).toHaveCount(0)
+    );
+    yield* Effect.promise(() => pages.click());
+    yield* Effect.promise(() =>
+      expect(
+        editor.getByRole("navigation", { name: "Pages" }).getByRole("button")
+      ).not.toHaveCount(0)
+    );
+    yield* Effect.promise(() =>
+      expect(page.locator("button button, button a, a button")).toHaveCount(0)
+    );
+    const attempt = editor.getByRole("link", { name: "Try as student" });
+    yield* stepTo(page, attempt);
+    yield* Effect.promise(() => attempt.click());
+    yield* Effect.promise(() => expect(page).toHaveURL(PLAYER_PART));
+    yield* Effect.promise(() => expect(paper).toBeInViewport());
+    // The paper names every type of question, and each press opens that type's question in the player.
+    const types = paper.getByRole("group", { name: "Question types" });
+    // WebKit's scrollIntoView skips a part the page has not drawn yet, so the page steps to it as a reader does.
+    yield* stepTo(page, types);
+    yield* Effect.promise(() =>
+      expect(types.getByRole("button")).toHaveCount(TYPES)
+    );
+    yield* Effect.promise(() =>
+      types.getByRole("button", { name: "True or false table" }).click()
+    );
+    yield* Effect.promise(() =>
+      expect(paper.getByText("Momentum is measured in joules.")).toBeVisible()
+    );
+    yield* Effect.promise(() =>
+      types
+        .getByRole("button", { name: "Multiple choice", exact: true })
+        .click()
+    );
+    const answer = paper.getByRole("radio", { name: MOMENTUM });
+    yield* Effect.promise(() => answer.click());
+    yield* Effect.promise(() => expect(answer).toBeChecked());
+    // The report card's code shows, and a parent's Scan opens the child's code in a dialog that closes again.
+    const reports = page.locator("#reports");
+    yield* stepTo(page, reports.getByRole("img", { name: "A QR code" }));
+    yield* Effect.promise(() =>
+      expect(reports.getByRole("img", { name: "A QR code" })).toBeVisible()
+    );
+    const scan = page.locator("#parents").getByRole("button", { name: "Scan" });
+    yield* stepTo(page, scan);
+    yield* Effect.promise(() => scan.click());
+    const code = page.getByRole("dialog", { name: "Ayu's report card" });
+    yield* Effect.promise(() =>
+      expect(code.getByRole("img", { name: "A QR code" })).toBeVisible()
+    );
+    yield* Effect.promise(() => page.keyboard.press("Escape"));
+    yield* Effect.promise(() => expect(code).toBeHidden());
+    // A header link to a feature lands on its part.
+    yield* Effect.promise(() => page.goto("/en/school#insight"));
+    yield* Effect.promise(() =>
+      expect(page.locator("#insight h2")).toBeInViewport()
     );
     yield* Effect.promise(() =>
       expect(
@@ -175,6 +238,7 @@ test("the School pages stand in the first HTML with their structured data", asyn
 
   expect(landing).toMatch(BREADCRUMB_NODE);
   expect(landing).toMatch(FAQ_NODE);
+  expect(landing).not.toMatch(BUILD_ADDRESS);
   expect(pricing).toMatch(PLAN_NODE);
   expect(pricing).toMatch(INDONESIAN_ALTERNATE);
 });

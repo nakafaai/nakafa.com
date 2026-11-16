@@ -8,8 +8,8 @@ import en from "@repo/internationalization/dictionaries/en.json" with {
 };
 import { getFunctionName } from "convex/server";
 import { Array as Arr, Option, Schema } from "effect";
-import { createDemoBackend } from "@/components/marketing/school/editor/backend";
-import { demoExam } from "@/components/marketing/school/editor/exam";
+import { createDemoBackend } from "@/components/marketing/school/demo/backend";
+import { demoExam } from "@/components/marketing/school/demo/exam";
 import { isPlaceholderId } from "@/components/tenant/exams/placeholder";
 
 /** The Convex name of a Confect function. */

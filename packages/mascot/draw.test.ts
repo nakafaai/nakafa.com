@@ -1,7 +1,7 @@
 import { describe, expect, it } from "@effect/vitest";
 import { Animal, DESIGNS } from "@repo/mascot/animal";
 import { encode, Mascot, MascotCode } from "@repo/mascot/code";
-import { draw } from "@repo/mascot/draw";
+import { draw, stand } from "@repo/mascot/draw";
 import { Eyes, type Layer } from "@repo/mascot/kit";
 import { Pose } from "@repo/mascot/pose";
 import { DIGESTS } from "@repo/mascot/test.fixture";
@@ -155,6 +155,17 @@ describe("mascot/draw", () => {
     expect(transforms([draw(mascotOf("cat.0.243e66.peek-left.open"))])).toEqual(
       ["translate(56 246) rotate(14) scale(1.14) translate(-100 -200)"]
     );
+  });
+
+  it("stands an animal free on no ground and in no pose, looking ahead, whatever its pose", () => {
+    const free = stand(mascotOf(CAT));
+    expect(transforms([free])).toEqual([]);
+    expect(fills([free])).not.toContain("#243e66");
+    expect(fills([free])).toEqual(
+      expect.arrayContaining(["#ee8a4c", "#f4e6ce"])
+    );
+    expect(Arr.map(marked([free]), centreOf)).toEqual([74, 126]);
+    expect(stand(mascotOf("cat.0.243e66.peek-left.open"))).toEqual(free);
   });
 
   it("turns the open eyes the way the pose looks", () => {

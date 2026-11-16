@@ -17,7 +17,7 @@ import {
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ResponsiveDialogSubject } from "@repo/design-system/components/ui/responsive-dialog";
 import { buttonVariants } from "@repo/design-system/lib/button";
-import { useState } from "react";
+import { use, useState } from "react";
 import { useTranslations } from "use-intl";
 import { SplitMenuTrigger } from "@/components/shared/split";
 import {
@@ -25,6 +25,7 @@ import {
   useDeleteExam,
 } from "@/components/tenant/exams/delete";
 import { useDuplicateExam } from "@/components/tenant/exams/duplicate";
+import { ExamFrameContext } from "@/components/tenant/exams/framed";
 import { ImportQuestions } from "@/components/tenant/exams/import/dialog";
 import { ExamLockMark } from "@/components/tenant/exams/lock";
 import { useExam, useExamLocked } from "@/components/tenant/exams/provider";
@@ -33,7 +34,9 @@ import { Link } from "@/lib/routing/link";
 /**
  * The editor's secondary action with the rest joined to it, as Google Docs and Canva show them: Try
  * as student as one button, and a menu beside it of what a teacher reaches less often, Import, Duplicate and
- * Delete exam, each opening its dialog. With Schedule, the main action, the header shows two buttons.
+ * Delete exam, each opening its dialog. With Schedule, the main action, the header shows two buttons. An editor in a
+ * frame outside a school (`ExamFrameContext`) offers Import alone: it has no school to copy an exam into or to delete
+ * one from, and its Try as student opens the part of the page the frame names.
  * A locked exam takes neither change, so Try as student stands alone. On a phone the button keeps its
  * icon and its name for screen readers.
  */
@@ -45,6 +48,7 @@ export function ExamMenu() {
   const [dialog, setDialog] = useState<"delete" | "import" | null>(null);
   const { isPending, press } = useDuplicateExam(exam, slug);
   const remove = useDeleteExam(() => setDialog(null));
+  const framed = use(ExamFrameContext) !== null;
 
   // A gone exam has no try to open.
   if (gone) {
@@ -77,24 +81,19 @@ export function ExamMenu() {
               >
                 {t("import-action")}
               </DropdownMenuItem>
-              <DropdownMenuItem
-                disabled={isPending}
-                icon={Copy01Icon}
-                onClick={press}
-              >
-                {t("duplicate-action")}
-              </DropdownMenuItem>
+              {framed ? null : (
+                <DropdownMenuItem
+                  disabled={isPending}
+                  icon={Copy01Icon}
+                  onClick={press}
+                >
+                  {t("duplicate-action")}
+                </DropdownMenuItem>
+              )}
             </DropdownMenuGroup>
-            <DropdownMenuSeparator />
-            <DropdownMenuGroup>
-              <DropdownMenuItem
-                icon={Delete02Icon}
-                onClick={() => setDialog("delete")}
-                variant="destructive"
-              >
-                {t("delete-action")}
-              </DropdownMenuItem>
-            </DropdownMenuGroup>
+            {framed ? null : (
+              <DeleteExamItem onPress={() => setDialog("delete")} />
+            )}
           </DropdownMenuContent>
         </DropdownMenu>
       </ButtonGroup>
@@ -111,6 +110,26 @@ export function ExamMenu() {
           {remove.title}
         </ResponsiveDialogSubject>
       </ExamDeleteConfirm>
+    </>
+  );
+}
+
+/** Delete exam, last in the menu under its own line, as every menu ends. */
+function DeleteExamItem({ onPress }: { onPress: () => void }) {
+  const t = useTranslations("Exams");
+
+  return (
+    <>
+      <DropdownMenuSeparator />
+      <DropdownMenuGroup>
+        <DropdownMenuItem
+          icon={Delete02Icon}
+          onClick={onPress}
+          variant="destructive"
+        >
+          {t("delete-action")}
+        </DropdownMenuItem>
+      </DropdownMenuGroup>
     </>
   );
 }
@@ -141,6 +160,20 @@ export function ExamMenuFrame() {
 function TryAsStudent() {
   const t = useTranslations("Exams");
   const { exam, slug } = useExam();
+  const frame = use(ExamFrameContext);
+
+  if (frame !== null) {
+    return (
+      <a
+        aria-label={t("try-action")}
+        className={buttonVariants({ variant: "outline" })}
+        data-slot="button"
+        href={`#${frame}`}
+      >
+        <TryAsStudentLabel />
+      </a>
+    );
+  }
 
   return (
     <Link

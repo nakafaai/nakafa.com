@@ -37,24 +37,9 @@ export const schoolSections = {
       (module) => module.SchoolFaq
     )
   ),
-  forum: laterCode(() =>
-    import("@/components/marketing/school/features/forum").then(
-      (module) => module.SchoolForum
-    )
-  ),
-  graduation: laterCode(() =>
-    import("@/components/marketing/school/features/graduation").then(
-      (module) => module.SchoolGraduation
-    )
-  ),
   insight: laterCode(() =>
     import("@/components/marketing/school/features/insight").then(
       (module) => module.SchoolInsight
-    )
-  ),
-  library: laterCode(() =>
-    import("@/components/marketing/school/features/library").then(
-      (module) => module.SchoolLibrary
     )
   ),
   parents: laterCode(() =>
@@ -77,6 +62,11 @@ export const schoolSections = {
       (module) => module.SchoolTasks
     )
   ),
+  year: laterCode(() =>
+    import("@/components/marketing/school/features/year").then(
+      (module) => module.SchoolYear
+    )
+  ),
 };
 
 /**
@@ -90,14 +80,12 @@ export function openSchoolLanding() {
     openLaterCode(schoolSections.closing),
     openLaterCode(schoolSections.exams),
     openLaterCode(schoolSections.faq),
-    openLaterCode(schoolSections.forum),
-    openLaterCode(schoolSections.graduation),
     openLaterCode(schoolSections.insight),
-    openLaterCode(schoolSections.library),
     openLaterCode(schoolSections.parents),
     openLaterCode(schoolSections.player),
     openLaterCode(schoolSections.reports),
     openLaterCode(schoolSections.tasks),
+    openLaterCode(schoolSections.year),
   ]);
 }
 

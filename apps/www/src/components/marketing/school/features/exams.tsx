@@ -1,5 +1,5 @@
 import { Nina } from "@repo/design-system/components/ui/nina";
-import { EditorDemo } from "@/components/marketing/school/editor/demo";
+import { EditorDemo } from "@/components/marketing/school/demo/editor";
 import { SchoolFeatureText } from "@/components/marketing/school/features/text";
 import {
   FeatureProduct,
