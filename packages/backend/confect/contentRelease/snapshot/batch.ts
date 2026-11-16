@@ -1,45 +1,38 @@
-import {
-  type ContentSnapshotRow,
-  contentSnapshotId,
-} from "@nakafa/aksara-contracts/release/snapshot/data";
 import type { ContentSnapshotKind } from "@nakafa/aksara-contracts/release/snapshot/scope";
-import { snapshotRowCount } from "@nakafa/aksara-contracts/release/snapshot/spec";
 import {
   DatabaseReader,
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
-import {
-  hashBatch,
-  validateStoredBatch,
-} from "@repo/backend/confect/contentRelease/batch";
+import { validateStoredBatch } from "@repo/backend/confect/contentRelease/batch";
 import { releaseFail } from "@repo/backend/confect/contentRelease/error";
 import { loadStaged } from "@repo/backend/confect/contentRelease/model";
-import {
-  decodeReleaseJson,
-  decodeSnapshotJson,
-} from "@repo/backend/confect/contentRelease/parse";
 import { stageAssessmentRow } from "@repo/backend/confect/contentRelease/snapshot/assessment";
+import type { stageBatchArgsValidator } from "@repo/backend/confect/contentRelease/snapshot/batch.spec";
 import { loadSnapshot } from "@repo/backend/confect/contentRelease/snapshot/manifest";
-import { stageProgramRow } from "@repo/backend/confect/contentRelease/snapshot/program";
+import {
+  stageCurriculum,
+  stageProgram,
+} from "@repo/backend/confect/contentRelease/snapshot/program";
 import { stageQuranRow } from "@repo/backend/confect/contentRelease/snapshot/quran";
-import { decodeSnapshotBatch } from "@repo/backend/confect/contentRelease/snapshot/request";
-import { encodeSnapshotRowJson } from "@repo/backend/confect/contentRelease/wire";
+import type { PreparedRowSchema } from "@repo/backend/confect/contentRelease/snapshot/shape";
 import { Array as Arr, Clock, Effect } from "effect";
 
-/** Stores one decoded family row in its domain-owned physical table. */
-function stageRow(
+/** Stores one prepared row in its domain-owned physical table. */
+export function stageRow(
   snapshotId: string,
   index: number,
-  row: ContentSnapshotRow,
-  rowJson: string
+  row: typeof PreparedRowSchema.Type
 ) {
-  if (row.family === "program") {
-    return stageProgramRow(snapshotId, index, row.record, rowJson);
+  if (row.kind === "program") {
+    return stageProgram(snapshotId, index, row.document);
   }
-  if (row.family === "quran") {
-    return stageQuranRow(snapshotId, index, row.record, rowJson);
+  if (row.kind === "curriculum") {
+    return stageCurriculum(snapshotId, index, row.document);
   }
-  return stageAssessmentRow(snapshotId, index, row.record, rowJson);
+  if (row.kind === "quran") {
+    return stageQuranRow(snapshotId, index, row.document, row.search);
+  }
+  return stageAssessmentRow(snapshotId, index, row.document);
 }
 
 /** Rejects ambiguous ledger identity before accepting a retry or continuation. */
@@ -88,69 +81,38 @@ const nextRowIndex = Effect.fn("contentRelease.nextSnapshotRowIndex")(
   }
 );
 
-/** Stages one canonical snapshot batch with byte-identical retry semantics. */
+/**
+ * Stages one prepared snapshot batch with byte-identical retry semantics. The
+ * ingress action already decoded, hashed, derived and sized every row, and
+ * read the row counts from the signed manifest whose hash this checks, so this
+ * transaction only reads the ledger and the row indexes, and inserts.
+ */
 export const stageBatch = Effect.fn("contentRelease.stageSnapshotBatch")(
-  function* (
-    releaseId: string,
-    family: ContentSnapshotKind,
-    snapshotId: string,
-    batchIndex: number,
-    sources: readonly string[]
-  ) {
+  function* (args: typeof stageBatchArgsValidator.Type) {
+    const { batchHash, batchIndex, family, releaseId, rows, snapshotId } = args;
     const writer = yield* DatabaseWriter;
-    const decoded = yield* decodeSnapshotBatch(
-      releaseId,
-      family,
-      snapshotId,
-      batchIndex,
-      sources
-    );
-    const entries = Arr.map(decoded.rows, (row) => ({
-      row,
-      rowJson: encodeSnapshotRowJson(row),
-    }));
-    const values = Arr.map(entries, ({ rowJson }) => rowJson);
-    const batchHash = yield* hashBatch("snapshot", releaseId, batchIndex, [
-      family,
-      snapshotId,
-      ...values,
-    ]);
     const { release } = yield* loadStaged(releaseId);
-    const signed = yield* decodeReleaseJson(release.releaseJson);
-    const state = signed.manifest.snapshots[family];
     if (
       release.status !== "staging" ||
       release.abortingAt !== undefined ||
-      state.mode !== "replace" ||
-      state.resultSnapshotId !== snapshotId
+      release.manifestHash !== args.manifestHash
     ) {
       return yield* releaseFail(
         "CONTENT_RELEASE_STATE",
         `Release ${releaseId} does not accept ${family} snapshot rows.`
       );
     }
-    const storedManifest = yield* loadSnapshot(family, snapshotId);
-    if (!storedManifest) {
+    if (!(yield* loadSnapshot(family, snapshotId))) {
       return yield* releaseFail(
         "CONTENT_RELEASE_MISSING",
         `Snapshot ${family}/${snapshotId} must be staged before its rows.`
-      );
-    }
-    const manifest = yield* decodeSnapshotJson(storedManifest.snapshotJson);
-    if (
-      contentSnapshotId(manifest) !== snapshotId ||
-      manifest.family !== family
-    ) {
-      return yield* releaseFail(
-        "CONTENT_RELEASE_INTEGRITY",
-        `Snapshot ${family}/${snapshotId} lost its manifest identity.`
       );
     }
     const existing = yield* loadBatch(releaseId, family, batchIndex);
     if (existing) {
       yield* validateStoredBatch(
         existing.rowCount,
-        values.length,
+        rows.length,
         [existing.batchHash],
         batchHash,
         releaseId,
@@ -168,22 +130,21 @@ export const stageBatch = Effect.fn("contentRelease.stageSnapshotBatch")(
         family,
         releaseId,
         snapshotId,
-        unchanged: values.length,
+        unchanged: rows.length,
       };
     }
     const firstIndex = yield* nextRowIndex(releaseId, family, batchIndex);
     if (
-      firstIndex + values.length > state.rowCount ||
-      release.stagedSnapshotRows + values.length >
-        snapshotRowCount(signed.manifest.snapshots)
+      firstIndex + rows.length > args.familyRows ||
+      release.stagedSnapshotRows + rows.length > args.totalRows
     ) {
       return yield* releaseFail(
         "CONTENT_RELEASE_INTEGRITY",
         `Snapshot batch ${family}/${batchIndex} exceeds signed row counts.`
       );
     }
-    const unchangedRows = yield* Effect.forEach(entries, (entry, offset) =>
-      stageRow(snapshotId, firstIndex + offset, entry.row, entry.rowJson)
+    const unchangedRows = yield* Effect.forEach(rows, (row, offset) =>
+      stageRow(snapshotId, firstIndex + offset, row)
     );
     const unchanged = Arr.filter(
       unchangedRows,
@@ -199,7 +160,7 @@ export const stageBatch = Effect.fn("contentRelease.stageSnapshotBatch")(
         family,
         firstIndex,
         releaseId,
-        rowCount: values.length,
+        rowCount: rows.length,
         sequence: release.sequence,
         snapshotId,
       })
@@ -208,13 +169,13 @@ export const stageBatch = Effect.fn("contentRelease.stageSnapshotBatch")(
       .table("contentReleases")
       .patch(release._id, {
         stagedSnapshotBatches: release.stagedSnapshotBatches + 1,
-        stagedSnapshotRows: release.stagedSnapshotRows + values.length,
+        stagedSnapshotRows: release.stagedSnapshotRows + rows.length,
         updatedAt: now,
       })
       .pipe(Effect.orDie);
     return {
       batchIndex,
-      created: values.length - unchanged,
+      created: rows.length - unchanged,
       family,
       releaseId,
       snapshotId,

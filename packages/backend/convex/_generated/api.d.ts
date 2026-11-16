@@ -19386,15 +19386,113 @@ export declare const internal: {
     };
     snapshot: {
       batch: {
+        context: FunctionReference<
+          "query",
+          "internal",
+          {
+            family: "assessment" | "program" | "quran";
+            releaseId: string;
+            snapshotId: string;
+          },
+          { releaseJson: string; snapshotJson: string }
+        >;
         stageSnapshotBatch: FunctionReference<
           "mutation",
           "internal",
           {
+            batchHash: string;
             batchIndex: number;
             family: "assessment" | "program" | "quran";
+            familyRows: number;
+            manifestHash: string;
             releaseId: string;
-            rowJson: Array<string>;
+            rows: Array<
+              | {
+                  document: {
+                    displayOrder: number;
+                    programKey: string;
+                    rowHash: string;
+                    rowJson: string;
+                  };
+                  kind: "program";
+                }
+              | {
+                  document: {
+                    appLocale: "en" | "id" | "de" | "ms";
+                    bucket?: string;
+                    contextPath?: string;
+                    level:
+                      | "class"
+                      | "course"
+                      | "domain"
+                      | "lesson"
+                      | "phase"
+                      | "section"
+                      | "set"
+                      | "stage"
+                      | "subject"
+                      | "topic"
+                      | "track"
+                      | "unit";
+                    materialKey?: string;
+                    nodeKey: string;
+                    order: number;
+                    parentPath?: string;
+                    path: string;
+                    programKey: string;
+                    rowHash: string;
+                    rowJson: string;
+                    sourcePath: string;
+                  };
+                  kind: "curriculum";
+                }
+              | {
+                  document: {
+                    appLocale?: "en" | "id" | "de" | "ms";
+                    firstVerse?: number;
+                    identity: string;
+                    kind: string;
+                    rowHash: string;
+                    rowJson: string;
+                    surahNumber?: number;
+                  };
+                  kind: "quran";
+                  search?: {
+                    appLocale: "en" | "id" | "de" | "ms";
+                    assetId: string;
+                    identity: string;
+                    rowHash: string;
+                    surahNumber: number;
+                    text: string;
+                  };
+                }
+              | {
+                  document: {
+                    appLocale?: "en" | "id" | "de" | "ms";
+                    assetId?: string;
+                    identity: string;
+                    kind:
+                      | "catalog"
+                      | "profile"
+                      | "paper"
+                      | "family"
+                      | "item"
+                      | "stimulus"
+                      | "key"
+                      | "explanation";
+                    language?: string;
+                    order?: number;
+                    publicPath?: string;
+                    rowHash: string;
+                    rowJson: string;
+                    setIdentity?: string;
+                    versionHash?: string;
+                  };
+                  kind: "assessment";
+                }
+            >;
             snapshotId: string;
+            totalRows: number;
           },
           {
             batchIndex: number;

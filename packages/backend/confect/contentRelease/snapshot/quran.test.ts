@@ -7,11 +7,11 @@ import {
 import { canonicalizeContentSnapshotRow } from "@nakafa/aksara-contracts/release/snapshot/data";
 import confectSchema from "@repo/backend/confect/_generated/schema";
 import { QURAN_SEARCH_DOCUMENT_LIMIT } from "@repo/backend/confect/contentRelease/quran/limits";
-import { stageQuranRow } from "@repo/backend/confect/contentRelease/snapshot/quran";
 import { convexModules } from "@repo/backend/confect/test.setup";
 import schema from "@repo/backend/convex/schema";
 import { makeQuranSearch, makeQuranSurah } from "@repo/backend/test/quran/rows";
 import { makeQuranSnapshotRow } from "@repo/backend/test/quran/snapshot";
+import { stageTestRow } from "@repo/backend/test/snapshot/stage";
 import { convexTest } from "convex-test";
 import { Effect } from "effect";
 
@@ -27,7 +27,7 @@ describe("contentRelease/snapshot/quran", () => {
         expect(
           t.mutation((ctx) =>
             Effect.runPromiseWith(runtimeServices)(
-              stageQuranRow(snapshotId, 0, source.record, rowJson).pipe(
+              stageTestRow(snapshotId, 0, source, rowJson).pipe(
                 Effect.provide(
                   RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
                 )
@@ -40,7 +40,7 @@ describe("contentRelease/snapshot/quran", () => {
         expect(
           t.mutation((ctx) =>
             Effect.runPromiseWith(runtimeServices)(
-              stageQuranRow(snapshotId, 0, source.record, rowJson).pipe(
+              stageTestRow(snapshotId, 0, source, rowJson).pipe(
                 Effect.provide(
                   RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
                 )
@@ -72,33 +72,16 @@ describe("contentRelease/snapshot/quran", () => {
       );
     })
   );
-  it.live("rejects cross-snapshot rows and identity collisions", () =>
+  it.live("rejects a row that collides with another row's identity", () =>
     Effect.gen(function* () {
       const runtimeServices = yield* Effect.context<never>();
       const source = yield* makeQuranSnapshotRow(snapshotId);
       const rowJson = canonicalizeContentSnapshotRow(source);
-      const otherId = Sha256HashSchema.make(`sha256:${"8".repeat(64)}`);
-      const wrong = convexTest(schema, convexModules);
-      yield* Effect.promise(() =>
-        expect(
-          wrong.mutation((ctx) =>
-            Effect.runPromiseWith(runtimeServices)(
-              stageQuranRow(otherId, 0, source.record, rowJson).pipe(
-                Effect.provide(
-                  RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
-                )
-              )
-            )
-          )
-        ).rejects.toMatchObject({
-          code: "CONTENT_RELEASE_INTEGRITY",
-        })
-      );
       const collision = convexTest(schema, convexModules);
       yield* Effect.promise(() =>
         collision.mutation((ctx) =>
           Effect.runPromiseWith(runtimeServices)(
-            stageQuranRow(snapshotId, 0, source.record, rowJson).pipe(
+            stageTestRow(snapshotId, 0, source, rowJson).pipe(
               Effect.provide(
                 RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
               )
@@ -110,7 +93,7 @@ describe("contentRelease/snapshot/quran", () => {
         expect(
           collision.mutation((ctx) =>
             Effect.runPromiseWith(runtimeServices)(
-              stageQuranRow(snapshotId, 1, source.record, rowJson).pipe(
+              stageTestRow(snapshotId, 1, source, rowJson).pipe(
                 Effect.provide(
                   RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
                 )
@@ -132,7 +115,7 @@ describe("contentRelease/snapshot/quran", () => {
       yield* Effect.promise(() =>
         t.mutation((ctx) =>
           Effect.runPromiseWith(runtimeServices)(
-            stageQuranRow(snapshotId, 0, source.record, rowJson).pipe(
+            stageTestRow(snapshotId, 0, source, rowJson).pipe(
               Effect.provide(
                 RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
               )
@@ -155,7 +138,7 @@ describe("contentRelease/snapshot/quran", () => {
         expect(
           t.mutation((ctx) =>
             Effect.runPromiseWith(runtimeServices)(
-              stageQuranRow(snapshotId, 0, source.record, rowJson).pipe(
+              stageTestRow(snapshotId, 0, source, rowJson).pipe(
                 Effect.provide(
                   RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
                 )
@@ -192,7 +175,7 @@ describe("contentRelease/snapshot/quran", () => {
         expect(
           t.mutation((ctx) =>
             Effect.runPromiseWith(runtimeServices)(
-              stageQuranRow(snapshotId, 0, source.record, rowJson).pipe(
+              stageTestRow(snapshotId, 0, source, rowJson).pipe(
                 Effect.provide(
                   RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
                 )
@@ -214,7 +197,7 @@ describe("contentRelease/snapshot/quran", () => {
       yield* Effect.promise(() =>
         t.mutation((ctx) =>
           Effect.runPromiseWith(runtimeServices)(
-            stageQuranRow(snapshotId, 0, source.record, rowJson).pipe(
+            stageTestRow(snapshotId, 0, source, rowJson).pipe(
               Effect.provide(
                 RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
               )
@@ -226,7 +209,7 @@ describe("contentRelease/snapshot/quran", () => {
         expect(
           t.mutation((ctx) =>
             Effect.runPromiseWith(runtimeServices)(
-              stageQuranRow(snapshotId, 0, source.record, rowJson).pipe(
+              stageTestRow(snapshotId, 0, source, rowJson).pipe(
                 Effect.provide(
                   RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
                 )
@@ -253,7 +236,7 @@ describe("contentRelease/snapshot/quran", () => {
         expect(
           t.mutation((ctx) =>
             Effect.runPromiseWith(runtimeServices)(
-              stageQuranRow(snapshotId, 0, source.record, rowJson).pipe(
+              stageTestRow(snapshotId, 0, source, rowJson).pipe(
                 Effect.provide(
                   RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
                 )
@@ -279,7 +262,7 @@ describe("contentRelease/snapshot/quran", () => {
         expect(
           t.mutation((ctx) =>
             Effect.runPromiseWith(runtimeServices)(
-              stageQuranRow(snapshotId, 0, source.record, rowJson).pipe(
+              stageTestRow(snapshotId, 0, source, rowJson).pipe(
                 Effect.provide(
                   RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
                 )
@@ -305,7 +288,7 @@ describe("contentRelease/snapshot/quran", () => {
         expect(
           t.mutation((ctx) =>
             Effect.runPromiseWith(runtimeServices)(
-              stageQuranRow(snapshotId, 0, source.record, rowJson).pipe(
+              stageTestRow(snapshotId, 0, source, rowJson).pipe(
                 Effect.provide(
                   RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
                 )

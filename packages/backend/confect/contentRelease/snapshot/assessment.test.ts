@@ -4,10 +4,10 @@ import { assessmentRowIdentity } from "@nakafa/aksara-contracts/assessment/snaps
 import { Sha256HashSchema } from "@nakafa/aksara-contracts/ids";
 import { canonicalizeContentSnapshotRow } from "@nakafa/aksara-contracts/release/snapshot/data";
 import confectSchema from "@repo/backend/confect/_generated/schema";
-import { stageAssessmentRow } from "@repo/backend/confect/contentRelease/snapshot/assessment";
 import { convexModules } from "@repo/backend/confect/test.setup";
 import schema from "@repo/backend/convex/schema";
 import { makeAssessmentTestSnapshot } from "@repo/backend/test/snapshot/assessment";
+import { stageTestRow } from "@repo/backend/test/snapshot/stage";
 import { convexTest } from "convex-test";
 import { Array as Arr, Effect } from "effect";
 
@@ -29,7 +29,7 @@ describe("contentRelease/snapshot/assessment", () => {
           const stage = (index: number) =>
             t.mutation((ctx) =>
               Effect.runPromiseWith(runtimeServices)(
-                stageAssessmentRow(snapshotId, index, row.record, rowJson).pipe(
+                stageTestRow(snapshotId, index, row, rowJson).pipe(
                   Effect.provide(
                     RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
                   )

@@ -1,22 +1,14 @@
-import type {
-  CurriculumRouteRecordSchema,
-  LearningProgramRecordSchema,
-} from "@nakafa/aksara-contracts/program/snapshot/row";
 import {
   DatabaseReader,
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
-import { getHashBucket } from "@repo/backend/confect/contentRelease/bucket";
-import {
-  ensureDocumentSize,
-  READ_MODEL_DOCUMENT_LIMIT,
-} from "@repo/backend/confect/contentRelease/document";
 import { releaseFail } from "@repo/backend/confect/contentRelease/error";
 import { addProgramBucketRoute } from "@repo/backend/confect/contentRelease/program/bucket";
+import type {
+  CurriculumDocumentSchema,
+  ProgramDocumentSchema,
+} from "@repo/backend/confect/contentRelease/snapshot/shape";
 import { Effect } from "effect";
-
-type ProgramRecord = typeof LearningProgramRecordSchema.Type;
-type CurriculumRecord = typeof CurriculumRouteRecordSchema.Type;
 
 /** Rejects any global row-index collision across the two program tables. */
 const loadProgramIndex = Effect.fn("contentRelease.loadProgramIndex")(
@@ -41,12 +33,11 @@ const loadProgramIndex = Effect.fn("contentRelease.loadProgramIndex")(
   }
 );
 
-/** Stores one immutable learning-program catalog row. */
-const stageProgram = Effect.fn("contentRelease.stageProgram")(function* (
+/** Stores one prepared immutable learning-program catalog row. */
+export const stageProgram = Effect.fn("contentRelease.stageProgram")(function* (
   snapshotId: string,
   index: number,
-  record: ProgramRecord,
-  rowJson: string
+  document: typeof ProgramDocumentSchema.Type
 ) {
   const database = yield* DatabaseReader;
   const writer = yield* DatabaseWriter;
@@ -56,7 +47,7 @@ const stageProgram = Effect.fn("contentRelease.stageProgram")(function* (
   );
   const byIdentity = yield* database
     .table("programCatalog")
-    .get("by_snapshotId_and_programKey", snapshotId, record.row.key)
+    .get("by_snapshotId_and_programKey", snapshotId, document.programKey)
     .pipe(
       Effect.catchTag("GetByIndexFailure", () => Effect.succeed(null)),
       Effect.orDie
@@ -66,8 +57,8 @@ const stageProgram = Effect.fn("contentRelease.stageProgram")(function* (
       storedCurriculum ||
       !(storedProgram && byIdentity) ||
       storedProgram._id !== byIdentity._id ||
-      storedProgram.rowJson !== rowJson ||
-      storedProgram.rowHash !== record.rowHash
+      storedProgram.rowJson !== document.rowJson ||
+      storedProgram.rowHash !== document.rowHash
     ) {
       return yield* releaseFail(
         "CONTENT_RELEASE_CONFLICT",
@@ -76,144 +67,87 @@ const stageProgram = Effect.fn("contentRelease.stageProgram")(function* (
     }
     return true;
   }
-  const row = {
-    displayOrder: record.row.displayOrder,
-    index,
-    programKey: record.row.key,
-    rowHash: record.rowHash,
-    rowJson,
-    snapshotId,
-  };
-  yield* ensureDocumentSize(
-    `Program snapshot ${snapshotId} catalog row ${index}`,
-    row,
-    READ_MODEL_DOCUMENT_LIMIT
-  );
-  yield* writer.table("programCatalog").insert(row).pipe(Effect.orDie);
+  yield* writer
+    .table("programCatalog")
+    .insert({ ...document, index, snapshotId })
+    .pipe(Effect.orDie);
   return false;
 });
 
-/** Stores one immutable localized curriculum route row. */
-const stageCurriculum = Effect.fn("contentRelease.stageCurriculum")(function* (
-  snapshotId: string,
-  index: number,
-  record: CurriculumRecord,
-  rowJson: string
-) {
-  const database = yield* DatabaseReader;
-  const writer = yield* DatabaseWriter;
-  const bucket = getHashBucket(record.rowHash);
-  const row = {
-    ...(record.row.sitemap
-      ? {
-          bucket,
-        }
-      : {}),
-    appLocale: record.row.appLocale,
-    index,
-    level: record.row.level,
-    ...(record.row.materialContextParentPath === undefined
-      ? {}
-      : {
-          contextPath: record.row.materialContextParentPath,
-        }),
-    ...(record.row.materialKey === undefined
-      ? {}
-      : {
-          materialKey: record.row.materialKey,
-        }),
-    nodeKey: record.row.nodeKey,
-    order: record.row.order,
-    ...(record.row.parentPath === undefined
-      ? {}
-      : {
-          parentPath: record.row.parentPath,
-        }),
-    programKey: record.row.programKey,
-    path: record.row.publicPath,
-    rowHash: record.rowHash,
-    rowJson,
-    snapshotId,
-    sourcePath: record.row.sourcePath,
-  };
-  const [storedProgram, storedCurriculum] = yield* loadProgramIndex(
-    snapshotId,
-    index
-  );
-  const [byPath, byNode] = yield* Effect.all([
-    database
-      .table("curriculumRoutes")
-      .get(
-        "by_snapshotId_and_appLocale_and_path",
-        snapshotId,
-        record.row.appLocale,
-        record.row.publicPath
-      )
-      .pipe(
-        Effect.catchTag("GetByIndexFailure", () => Effect.succeed(null)),
-        Effect.orDie
-      ),
-    database
-      .table("curriculumRoutes")
-      .get(
-        "by_snapshotId_and_appLocale_and_programKey_and_nodeKey",
-        snapshotId,
-        record.row.appLocale,
-        record.row.programKey,
-        record.row.nodeKey
-      )
-      .pipe(
-        Effect.catchTag("GetByIndexFailure", () => Effect.succeed(null)),
-        Effect.orDie
-      ),
-  ]);
-  if (storedProgram || storedCurriculum || byPath || byNode) {
-    if (
-      storedProgram ||
-      !(storedCurriculum && byPath && byNode) ||
-      storedCurriculum._id !== byPath._id ||
-      storedCurriculum._id !== byNode._id ||
-      storedCurriculum.rowJson !== rowJson ||
-      storedCurriculum.rowHash !== record.rowHash
-    ) {
-      return yield* releaseFail(
-        "CONTENT_RELEASE_CONFLICT",
-        `Program snapshot ${snapshotId} has a curriculum identity collision.`
-      );
-    }
-    if (storedCurriculum.bucket !== row.bucket) {
-      return yield* releaseFail(
-        "CONTENT_RELEASE_CONFLICT",
-        `Program snapshot ${snapshotId} has a curriculum bucket collision.`
-      );
-    }
-    return true;
-  }
-  yield* ensureDocumentSize(
-    `Program snapshot ${snapshotId} curriculum row ${index}`,
-    row,
-    READ_MODEL_DOCUMENT_LIMIT
-  );
-  yield* writer.table("curriculumRoutes").insert(row).pipe(Effect.orDie);
-  if (row.bucket !== undefined) {
-    yield* addProgramBucketRoute(
+/** Stores one prepared immutable localized curriculum route row. */
+export const stageCurriculum = Effect.fn("contentRelease.stageCurriculum")(
+  function* (
+    snapshotId: string,
+    index: number,
+    document: typeof CurriculumDocumentSchema.Type
+  ) {
+    const database = yield* DatabaseReader;
+    const writer = yield* DatabaseWriter;
+    const [storedProgram, storedCurriculum] = yield* loadProgramIndex(
       snapshotId,
-      index,
-      record.row.appLocale,
-      row.bucket
+      index
     );
+    const [byPath, byNode] = yield* Effect.all([
+      database
+        .table("curriculumRoutes")
+        .get(
+          "by_snapshotId_and_appLocale_and_path",
+          snapshotId,
+          document.appLocale,
+          document.path
+        )
+        .pipe(
+          Effect.catchTag("GetByIndexFailure", () => Effect.succeed(null)),
+          Effect.orDie
+        ),
+      database
+        .table("curriculumRoutes")
+        .get(
+          "by_snapshotId_and_appLocale_and_programKey_and_nodeKey",
+          snapshotId,
+          document.appLocale,
+          document.programKey,
+          document.nodeKey
+        )
+        .pipe(
+          Effect.catchTag("GetByIndexFailure", () => Effect.succeed(null)),
+          Effect.orDie
+        ),
+    ]);
+    if (storedProgram || storedCurriculum || byPath || byNode) {
+      if (
+        storedProgram ||
+        !(storedCurriculum && byPath && byNode) ||
+        storedCurriculum._id !== byPath._id ||
+        storedCurriculum._id !== byNode._id ||
+        storedCurriculum.rowJson !== document.rowJson ||
+        storedCurriculum.rowHash !== document.rowHash
+      ) {
+        return yield* releaseFail(
+          "CONTENT_RELEASE_CONFLICT",
+          `Program snapshot ${snapshotId} has a curriculum identity collision.`
+        );
+      }
+      if (storedCurriculum.bucket !== document.bucket) {
+        return yield* releaseFail(
+          "CONTENT_RELEASE_CONFLICT",
+          `Program snapshot ${snapshotId} has a curriculum bucket collision.`
+        );
+      }
+      return true;
+    }
+    yield* writer
+      .table("curriculumRoutes")
+      .insert({ ...document, index, snapshotId })
+      .pipe(Effect.orDie);
+    if (document.bucket !== undefined) {
+      yield* addProgramBucketRoute(
+        snapshotId,
+        index,
+        document.appLocale,
+        document.bucket
+      );
+    }
+    return false;
   }
-  return false;
-});
-
-/** Stores one decoded program-family row in its cohesive physical table. */
-export function stageProgramRow(
-  snapshotId: string,
-  index: number,
-  record: ProgramRecord | CurriculumRecord,
-  rowJson: string
-) {
-  return record.kind === "program"
-    ? stageProgram(snapshotId, index, record, rowJson)
-    : stageCurriculum(snapshotId, index, record, rowJson);
-}
+);

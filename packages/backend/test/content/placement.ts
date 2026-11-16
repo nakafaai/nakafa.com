@@ -17,7 +17,6 @@ import {
   canonicalizeContentSnapshotRow,
 } from "@nakafa/aksara-contracts/release/snapshot/data";
 import confectSchema from "@repo/backend/confect/_generated/schema";
-import { stageProgramRow } from "@repo/backend/confect/contentRelease/snapshot/program";
 import type { LearningContextInput } from "@repo/backend/confect/contents/context";
 import type schema from "@repo/backend/convex/schema";
 import { FUNCTION_MATERIAL } from "@repo/backend/test/content/material";
@@ -26,6 +25,7 @@ import {
   activateProgramSnapshot,
   makeProgramSnapshotData,
 } from "@repo/backend/test/program/snapshot";
+import { stageTestRow } from "@repo/backend/test/snapshot/stage";
 import type { TestConvex } from "convex-test";
 import { Effect } from "effect";
 
@@ -139,10 +139,10 @@ const stagePlacement = Effect.fn("contents.views.test.stagePlacement")(
         Effect.promise(() =>
           target.mutation((ctx) =>
             Effect.runPromiseWith(runtimeServices)(
-              stageProgramRow(
+              stageTestRow(
                 snapshotId,
                 offset + 100,
-                row.source.record,
+                row.source,
                 row.rowJson
               ).pipe(Effect.provide(mutationLayer(confectSchema, ctx)))
             )

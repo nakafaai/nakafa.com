@@ -20,14 +20,15 @@ import type {
   StageSnapshotRequest,
 } from "@nakafa/aksara-contracts/transport/snapshot";
 import contentReleaseInternal from "@repo/backend/confect/_generated/refs/contentRelease.server";
-import { MutationRunner } from "@repo/backend/confect/_generated/services";
+import {
+  MutationRunner,
+  QueryRunner,
+} from "@repo/backend/confect/_generated/services";
 import { releaseFail } from "@repo/backend/confect/contentRelease/error";
 import { contractFailure } from "@repo/backend/confect/contentRelease/proof/failure";
-import {
-  encodeSnapshotJson,
-  encodeSnapshotRowJson,
-} from "@repo/backend/confect/contentRelease/wire";
-import { Array as Arr, Effect } from "effect";
+import { prepareSnapshotStage } from "@repo/backend/confect/contentRelease/snapshot/prepare";
+import { encodeSnapshotJson } from "@repo/backend/confect/contentRelease/wire";
+import { Effect } from "effect";
 
 /** Rejects one content identity mismatch before immutable storage. */
 function requireHash(
@@ -162,20 +163,28 @@ export const stageSnapshot = Effect.fn("contentRelease.stageSnapshot")(
   }
 );
 
-/** Verifies and stages one bounded structured-family row batch. */
+/**
+ * Verifies, prepares and stages one bounded structured-family row batch. Every
+ * CPU step runs here, so the mutation stays within its transaction budget.
+ */
 export const stageSnapshotBatch = Effect.fn(
   "contentRelease.stageSnapshotBatch"
 )(function* (request: StageSnapshotBatchRequest) {
   const { runMutation } = yield* MutationRunner;
-  yield* verifySnapshotBatch(request.family, request.snapshotId, request.rows);
+  const { runQuery } = yield* QueryRunner;
+  const { family, releaseId, snapshotId } = request;
+  yield* verifySnapshotBatch(family, snapshotId, request.rows);
+  const stored = yield* runQuery(
+    contentReleaseInternal.snapshot.batch.context,
+    {
+      family,
+      releaseId,
+      snapshotId,
+    }
+  ).pipe(Effect.catchTag("SchemaError", Effect.die));
+  const args = yield* prepareSnapshotStage(request, stored);
   return yield* runMutation(
     contentReleaseInternal.snapshot.batch.stageSnapshotBatch,
-    {
-      batchIndex: request.batchIndex,
-      family: request.family,
-      releaseId: request.releaseId,
-      rowJson: Arr.map(request.rows, encodeSnapshotRowJson),
-      snapshotId: request.snapshotId,
-    }
+    args
   ).pipe(Effect.catchTag("SchemaError", Effect.die));
 });
