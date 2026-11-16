@@ -1,26 +1,12 @@
-import {
-  existsSync,
-  mkdirSync,
-  readdirSync,
-  readFileSync,
-  writeFileSync,
-} from "node:fs";
-import { basename, dirname, join } from "node:path";
+import { existsSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
+import { basename, join } from "node:path";
 import { DEFAULT_LOCALE, LOCALES } from "@repo/internationalization/src/locale";
-import { FetchClient } from "@repo/utilities/http/client";
-import { Array as Arr, Effect, Option, Record, Result, Schema } from "effect";
-import { HttpClient } from "effect/http";
-import { toJSONAsync } from "seroval";
+import { Array as Arr, Option, Record, Result } from "effect";
 import type { Plugin } from "vite";
 import { SHELL_PATH, schoolEntryPath } from "#www/src/lib/routing/shell";
 import { readPageFacts } from "#www/src/lib/seo/audit/html";
 import { auditSite } from "#www/src/lib/seo/audit/site";
-import {
-  readStaticCalls,
-  type StaticCall,
-  staticDataPath,
-  toStaticFile,
-} from "#www/src/lib/static/calls";
+import { readStaticCalls } from "#www/src/lib/static/calls";
 import { type BuiltChunk, readParts } from "#www/src/lib/static/chunks";
 import { composeSchoolEntry, readSchoolEntry } from "#www/src/lib/static/entry";
 import {
@@ -33,35 +19,11 @@ import { deferStaticScripts } from "#www/src/lib/static/scripts";
 import { THEME_PREPAINT_SCRIPT } from "#www/src/lib/theme/prepaint";
 
 /*
- * The build steps around TanStack's prerender of the public pages: the address
- * of the preview servers the build reads its pages from, then, after TanStack has
- * prerendered them, the static answers that the browser reads on a navigation,
- * the deferred scripts of each page, the static not-found page of each locale,
- * and the check that the output holds exactly the listed pages.
- * `vite.config.ts` adds them in that order.
+ * The build steps after the public pages render (`render.config.ts`): the
+ * deferred scripts of each page, the static not-found page of each locale, and
+ * the check that the output holds exactly the listed pages. `vite.config.ts` adds
+ * them in that order.
  */
-
-/**
- * The address of every preview server that the build fetches its own pages from.
- * A server that listens at `localhost` binds only its first address, ::1, and the
- * fetching Node races ::1 and 127.0.0.1 on a 250 ms timer. A prerender that holds
- * the event loop past the timer then fails with ETIMEDOUT on ::1 and ECONNREFUSED
- * on 127.0.0.1. A literal address leaves Node one address and no race.
- */
-const PRERENDER_HOST = "127.0.0.1";
-
-/**
- * Binds TanStack's prerender preview server to `PRERENDER_HOST`. TanStack starts
- * that server from this config with TSS_PRERENDERING set, then crawls the address
- * the server resolves, which no prerender option names.
- */
-export const bindPrerenderHost: Plugin = {
-  config: () =>
-    process.env.TSS_PRERENDERING === "true"
-      ? { preview: { host: PRERENDER_HOST } }
-      : undefined,
-  name: "www:bind-prerender-host",
-};
 
 /**
  * The marker that React writes where a Suspense boundary failed on the server, so
@@ -163,141 +125,6 @@ function assertSearchContract(
     );
   }
 }
-
-/** How many static answers the build reads from its prerender server at once. */
-const STATIC_ANSWER_CONCURRENCY = 8;
-
-/** A serialized server function input as the JSON text of its `payload` query field. */
-const PayloadJson = Schema.fromJsonString(Schema.Unknown);
-
-/** The headers of a server function request as the browser sends it. */
-const SERVER_FUNCTION_REQUEST_HEADERS = {
-  accept: "application/x-tss-framed, application/x-ndjson, application/json",
-  // Start's CSRF check accepts a server function request from the page's own site.
-  "sec-fetch-site": "same-origin",
-  "x-tsr-serverFn": "true",
-};
-
-/**
- * Removes the closing comment from every prerendered page, and returns the server
- * function calls that the comments list, each once. A page without the comment was
- * rendered without recording its calls, which fails the build.
- */
-function takeStaticCalls(
-  clientOutputDirectory: string,
-  pages: readonly string[]
-): readonly StaticCall[] {
-  const calls = new Map<string, StaticCall>();
-  for (const path of pages) {
-    const file = join(clientOutputDirectory, path, "index.html");
-    const read = readStaticCalls(readFileSync(file, "utf8"));
-    if (Option.isNone(read)) {
-      throw new Error(`The prerendered page ${path} lists no server calls.`);
-    }
-    writeFileSync(file, read.value.html);
-    for (const call of read.value.calls) {
-      calls.set(call.key, call);
-    }
-  }
-  return [...calls.values()];
-}
-
-/**
- * Reads the answer of one call from the prerender server, as the browser would
- * request it, and writes it as the static file that the browser reads instead. The
- * input is serialized as Start serializes it, and only a serialized answer is kept.
- */
-const writeStaticAnswer = (
-  clientOutputDirectory: string,
-  origin: string,
-  call: StaticCall
-) =>
-  Effect.gen(function* () {
-    const payload = yield* Effect.promise(() =>
-      toJSONAsync({ data: call.data })
-    );
-    const address = new URL(call.url, origin);
-    address.searchParams.set(
-      "payload",
-      yield* Schema.encodeEffect(PayloadJson)(payload)
-    );
-    const response = yield* HttpClient.get(address, {
-      headers: SERVER_FUNCTION_REQUEST_HEADERS,
-    }).pipe(
-      // A busy machine can hold the build past the preview server's keep-alive, and the pooled
-      // connection the server closed then answers with a reset. The request only reads, so it is sent again.
-      Effect.retry({
-        times: 2,
-        while: (error) => error.reason._tag === "TransportError",
-      })
-    );
-    const contentType = response.headers["content-type"];
-    if (
-      response.status !== 200 ||
-      contentType === undefined ||
-      response.headers["x-tss-serialized"] === undefined ||
-      response.headers["x-tss-raw"] !== undefined
-    ) {
-      const text = yield* response.text;
-      return yield* Effect.die(
-        new Error(
-          `The answer of ${call.url} for ${address.search.slice(0, 200)} is not a serialized answer: ${response.status} ${contentType ?? "no type"}: ${text.slice(0, 300)}`
-        )
-      );
-    }
-    const body = new Uint8Array(yield* response.arrayBuffer);
-    const file = join(clientOutputDirectory, staticDataPath(call.key));
-    mkdirSync(dirname(file), { recursive: true });
-    writeFileSync(file, toStaticFile(contentType, body));
-  });
-
-/**
- * Writes the answer of every server function call that the prerendered pages'
- * loaders made as a static file, after TanStack has prerendered them. The browser
- * reads these files on a navigation, so moving between prerendered pages costs no
- * Worker request. The answers come from a preview server of the same build, as
- * TanStack's own prerender reads its pages.
- */
-export const writeStaticAnswers = (pages: readonly string[]): Plugin => ({
-  apply: "build",
-  // After TanStack's prerender, which is a post plugin too, and before the verifier.
-  enforce: "post",
-  buildApp: {
-    order: "post",
-    handler: async (builder) => {
-      const outDir = builder.environments.client.config.build.outDir;
-      const calls = takeStaticCalls(outDir, pages);
-      if (calls.length === 0) {
-        return;
-      }
-      const { configFile } = builder.config;
-      if (configFile === undefined) {
-        throw new Error("The build has no config file to preview.");
-      }
-      const { preview } = await import("vite");
-      const server = await preview({
-        configFile,
-        preview: { host: PRERENDER_HOST, open: false, port: 0 },
-      });
-      try {
-        const origin = server.resolvedUrls?.local[0];
-        if (origin === undefined) {
-          throw new Error("The prerender server has no local address.");
-        }
-        await Effect.runPromise(
-          Effect.forEach(
-            calls,
-            (call) => writeStaticAnswer(outDir, origin, call),
-            { concurrency: STATIC_ANSWER_CONCURRENCY, discard: true }
-          ).pipe(Effect.provide(FetchClient))
-        );
-      } finally {
-        await server.close();
-      }
-    },
-  },
-  name: "www:write-static-answers",
-});
 
 /**
  * Defers the scripts of every prerendered page until the page has painted (see

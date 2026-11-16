@@ -13,13 +13,12 @@ import { Result } from "effect";
 import { defineConfig, type Plugin, type PluginOption } from "vite";
 import { ENVIRONMENT_OUTPUTS } from "#www/output.config";
 import {
-  bindPrerenderHost,
   deferStaticPageScripts,
   standalonePages,
   verifyPrerenderedPages,
   writeStandalonePages,
-  writeStaticAnswers,
 } from "#www/prerender.config";
+import { bindPrerenderHost, renderPublicPages } from "#www/render.config";
 import { SHELL_PATH } from "#www/src/lib/routing/shell";
 import {
   createWwwHeaders,
@@ -35,7 +34,10 @@ import {
 } from "#www/static.config";
 import { workerEnvironment, workerSettings } from "#www/worker";
 
-/** How many prerender requests run at once. Set, so the build machine's core count never changes the output. */
+/**
+ * How many requests TanStack's prerender of the shell and the standalone pages
+ * runs at once. The listed pages render across several servers (`render.config.ts`).
+ */
 const PRERENDER_CONCURRENCY = 8;
 
 /**
@@ -335,6 +337,7 @@ const FONT_FILE_PATTERN = /\.woff2?$/u;
 
 export default defineConfig(async ({ command, isPreview }) => {
   const prerenderedPages = await listPrerenderedPages(command);
+  const publicPages = renderPublicPages(prerenderedPages);
   return {
     build: {
       // The font-src policy allows only this origin, so a font file stays a file
@@ -363,17 +366,10 @@ export default defineConfig(async ({ command, isPreview }) => {
           // stay, and this one adds every `node:` specifier, subpaths included.
           client: { specifiers: [NODE_BUILTIN_SPECIFIER] },
         },
-        // A build that lists no public page, as the static runner's, prerenders none.
-        pages:
-          prerenderedPages.length === 0
-            ? []
-            : [
-                ...prerenderedPages.map((path) => ({
-                  path,
-                  prerender: { outputPath: path },
-                })),
-                ...standalonePages,
-              ],
+        // TanStack prerenders the standalone pages, and `renderPublicPages` the
+        // listed ones. A build that lists no public page, as the static runner's,
+        // prerenders none.
+        pages: prerenderedPages.length === 0 ? [] : standalonePages,
         // A school page and a learner's signed-in screen render only in the
         // browser (ADR 0038 D2). The build prerenders the root document once as
         // the browser shell, at `/_shell`, and the Worker answers every such page
@@ -391,7 +387,7 @@ export default defineConfig(async ({ command, isPreview }) => {
         // client" islands ship JavaScript. An island's heavy module loads on
         // intent, never in the first load of the route.
         rsc: { enabled: true },
-        // Only the listed pages prerender: discovery would add the root route,
+        // Only the given pages prerender: discovery would add the root route,
         // whose 307 answer depends on the request. A failed page does not fail
         // the build by itself; verifyPrerenderedPages does.
         prerender: {
@@ -401,7 +397,7 @@ export default defineConfig(async ({ command, isPreview }) => {
           enabled: true,
           failOnError: true,
           // The Worker renders each page whole and records its server
-          // function calls, which writeStaticAnswers turns into static files.
+          // function calls, as it does for the listed pages.
           headers: { [PRERENDER_HEADER]: "1" },
         },
       }),
@@ -419,9 +415,10 @@ export default defineConfig(async ({ command, isPreview }) => {
       readPreviewHeaders,
       writeRobotsFile,
       serveRobotsFile,
+      publicPages.render,
       writeStaticArtifacts,
       bindPrerenderHost,
-      writeStaticAnswers(prerenderedPages),
+      publicPages.answers,
       deferStaticPageScripts(prerenderedPages),
       writeStandalonePages(prerenderedPages),
       verifyPrerenderedPages(prerenderedPages),
