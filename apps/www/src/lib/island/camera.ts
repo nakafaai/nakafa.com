@@ -24,8 +24,8 @@ export const DISTANCE = { far: 120, near: 10 } as const;
 /** The lowest and highest tilt, from almost level to almost straight down. */
 export const PITCH = { high: 1.35, low: 0.32 } as const;
 
-/** The cells across the opening view frames: the village and its shore, whatever the footprint. */
-const FRAMED = 24;
+/** The cells across the opening view frames: the village square, close enough that a person reads at a glance (D21). */
+const FRAMED = 16;
 
 /**
  * The camera an island of this footprint side opens with, on a screen of this
