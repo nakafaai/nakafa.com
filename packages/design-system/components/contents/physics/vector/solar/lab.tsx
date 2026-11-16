@@ -238,7 +238,7 @@ export function SolarPanelFluxLab({
         className={threeSceneFrameVariants()}
         render={<section />}
       >
-        <ScienceStage floor={0} reach={2.2} setting="field">
+        <ScienceStage floor={0} ground="grass" reach={2.2} setting="field">
           <Suspense fallback={null}>
             <CameraControls
               cameraPosition={[0.6, 1.6, 3.6]}

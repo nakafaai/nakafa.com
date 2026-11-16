@@ -83,10 +83,10 @@ export function TugboatResultantLab({
         className={threeSceneFrameVariants()}
         render={<section />}
       >
-        <ScienceStage floor={-0.05} reach={9} setting="sky">
+        <ScienceStage frameloop="always" reach={9} setting="sky">
           <Suspense fallback={null}>
             <CameraControls
-              cameraPosition={[3, 12, 10]}
+              cameraPosition={[3, 8.5, 11.5]}
               cameraTarget={[7, 0.6, 0]}
               fov={40}
               maxDistance={30}

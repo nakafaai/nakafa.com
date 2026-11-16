@@ -2,7 +2,6 @@ import { Line } from "@react-three/drei";
 import { FixedArrow } from "@repo/design-system/components/contents/physics/vector/solid/arrow";
 import { Rod } from "@repo/design-system/components/contents/physics/vector/solid/rod";
 import { Hull } from "@repo/design-system/components/contents/physics/vector/tugboat/hull";
-import { Sea } from "@repo/design-system/components/contents/physics/vector/tugboat/sea";
 import {
   type Tugs,
   towResultant,
@@ -10,6 +9,7 @@ import {
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import type { CoordinateTuple } from "@repo/design-system/components/three/frame";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
+import { Sea } from "@repo/design-system/components/three/stage/sea";
 import { getColor } from "@repo/design-system/lib/color";
 import { MATERIAL } from "@repo/design-system/lib/material";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
@@ -17,6 +17,9 @@ import { Array as Arr } from "effect";
 
 /** The ship's bow, where both cables are made fast, in scene units of ten metres. */
 const BOW = [4, 0.6, 0] as const;
+
+/** The height of the harbour's water. */
+const SEA_LEVEL = -0.05;
 
 /** How far ahead of the bow each tug runs, in scene units. */
 const CABLE = 5.5;
@@ -170,7 +173,7 @@ export function TugboatScene({
 
   return (
     <group>
-      <Sea />
+      <Sea level={SEA_LEVEL} swell={1.4} />
       <Ship />
       <Tug heading={half} />
       <Tug heading={-half} />

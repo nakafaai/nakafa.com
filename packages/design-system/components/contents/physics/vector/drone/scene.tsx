@@ -1,6 +1,5 @@
 import { Line } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
-import { mix } from "@repo/design-system/components/contents/physics/canvas/paint";
 import {
   VectorArrow,
   type VectorArrowHandle,
@@ -101,32 +100,6 @@ function Quadcopter({ rotors }: { readonly rotors: Ref<Group> }) {
   );
 }
 
-/** A mown meadow around the pad: stripes of grass in two shades, as a mower leaves them. */
-function Meadow() {
-  return (
-    <group>
-      {Arr.makeBy(14, (index) => (
-        <mesh
-          key={index}
-          position={[(index - 6.5) * 3, 0.002, -4]}
-          receiveShadow
-          rotation={[-Math.PI / 2, 0, 0]}
-        >
-          <planeGeometry args={[3, 44]} />
-          <meshStandardMaterial
-            color={
-              index % 2 === 0
-                ? mix(MATERIAL.grass, MATERIAL.foliageLight, 0.35)
-                : mix(MATERIAL.grass, MATERIAL.foliageDark, 0.25)
-            }
-            roughness={0.95}
-          />
-        </mesh>
-      ))}
-    </group>
-  );
-}
-
 /** The launch pad: a round rubber mat on the grass with a pale ring. */
 function Pad() {
   return (
@@ -201,7 +174,6 @@ export function DroneScene({
   return (
     <group>
       <SimulationTicker running={playing} />
-      <Meadow />
       <Pad />
       <Line
         color={getColor("WHITE")}

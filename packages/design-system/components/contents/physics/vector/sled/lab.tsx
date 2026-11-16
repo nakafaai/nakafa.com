@@ -87,7 +87,7 @@ export function SledPullWorkLab({
         className={threeSceneFrameVariants()}
         render={<section />}
       >
-        <ScienceStage floor={0} reach={2} setting="field">
+        <ScienceStage floor={0} ground="snow" reach={2} setting="field">
           <Suspense fallback={null}>
             <CameraControls
               cameraPosition={[0.35, 0.95, 2.6]}
