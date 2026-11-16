@@ -247,6 +247,7 @@ export const MATERIAL = {
   signalRed: "#d23a2a",
   solarCell: "#1b2a4a",
   stackBuff: "#c8a66b",
+  turbineWhite: "#e4e7eb",
   standBlue: "#23344d",
   walnut: "#5a3b26",
   wheatField: "#c2b280",
