@@ -81,7 +81,7 @@ export function PlayerFlagMark({
 }) {
   return (
     <span aria-hidden="true" className={flagMarkVariants({ placement })}>
-      <HugeIcons className="size-2.5" icon={Flag02Icon} />
+      <HugeIcons icon={Flag02Icon} size="2xs" />
     </span>
   );
 }

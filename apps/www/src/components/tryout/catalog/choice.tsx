@@ -59,7 +59,7 @@ export function TryoutCatalogChoice({
             onNone: () => <span className="truncate">{label}</span>,
             onSome: (entry) => (
               <>
-                <HugeIcons className="size-4 shrink-0" icon={entry.icon} />
+                <HugeIcons icon={entry.icon} />
                 <span className="truncate max-sm:sr-only">{entry.title}</span>
               </>
             ),

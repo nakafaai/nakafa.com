@@ -131,7 +131,7 @@ function TryoutSetName({ row }: { row: TryoutSetRow }) {
         data-progress
       >
         {row.attemptStatus === "completed" && (
-          <HugeIcons className="size-4" icon={CheckmarkCircle02Icon} />
+          <HugeIcons icon={CheckmarkCircle02Icon} />
         )}
       </span>
       <span className="truncate" title={row.title}>

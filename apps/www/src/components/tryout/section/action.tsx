@@ -124,7 +124,7 @@ function TryoutReturnAction({
       className={cn(buttonVariants(), "w-full sm:w-auto")}
       {...value.returnAddress}
     >
-      <HugeIcons className="size-4" icon={ArrowLeft02Icon} />
+      <HugeIcons icon={ArrowLeft02Icon} />
       {tTryouts("back-to-set-cta")}
     </TryoutPageLink>
   );

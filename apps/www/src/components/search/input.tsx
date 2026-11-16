@@ -53,7 +53,7 @@ export function InputSearch() {
             value={q}
           />
           <InputGroupAddon align="inline-start">
-            <HugeIcons className="size-4" icon={Search02Icon} />
+            <HugeIcons icon={Search02Icon} />
           </InputGroupAddon>
           <InputGroupAddon
             align="inline-end"
@@ -64,7 +64,7 @@ export function InputSearch() {
               size="icon-sm"
               tooltip={t("clear-search")}
             >
-              <HugeIcons className="size-4" icon={Cancel01Icon} />
+              <HugeIcons icon={Cancel01Icon} />
             </InputGroupButton>
           </InputGroupAddon>
         </InputGroup>

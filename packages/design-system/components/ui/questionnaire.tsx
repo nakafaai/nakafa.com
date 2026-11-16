@@ -144,9 +144,10 @@ function QuestionnaireChoice({
           data-slot="questionnaire-choice-indicator-dot"
         />
         <HugeIcons
-          className="hidden size-3.5 group-data-checked/questionnaire-choice:block group-data-[type=radio]/questionnaire-choice:hidden"
+          className="hidden group-data-checked/questionnaire-choice:block group-data-[type=radio]/questionnaire-choice:hidden"
           data-slot="questionnaire-choice-indicator-check"
           icon={Tick02Icon}
+          size="sm"
         />
       </span>
       <QuestionnairePrimitive.ChoiceLabel

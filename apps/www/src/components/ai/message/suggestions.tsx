@@ -29,7 +29,7 @@ export function SuggestionsPart({ live, suggestions }: Props) {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center gap-2">
-        <HugeIcons className="size-4" icon={QuoteDownIcon} />
+        <HugeIcons icon={QuoteDownIcon} />
         <span>{t("follow-up")}</span>
       </div>
       <div className="flex flex-col">
@@ -71,7 +71,7 @@ function SuggestionsPartButton({
       type="button"
     >
       {children}
-      <HugeIcons className="text-primary size-4" icon={Add01Icon} />
+      <HugeIcons className="text-primary" icon={Add01Icon} />
     </button>
   );
 }

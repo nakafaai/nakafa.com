@@ -33,7 +33,7 @@ export function SchoolGraduation() {
       </SchoolFeatureText>
       <FeatureCard>
         <p className="flex min-w-0 items-center gap-2 font-medium">
-          <HugeIcons className="size-4" icon={MortarboardIcon} />
+          <HugeIcons icon={MortarboardIcon} />
           <span className="truncate">
             {t("demo-graduation-year", { year: "2026/2027" })}
           </span>
@@ -50,7 +50,7 @@ export function SchoolGraduation() {
               <span className="flex min-w-0 flex-1 items-center gap-2 text-sm">
                 <span>{tSubject("grade", { grade: move.from })}</span>
                 <HugeIcons
-                  className="text-muted-foreground size-4"
+                  className="text-muted-foreground"
                   icon={ArrowRight02Icon}
                 />
                 <span className="font-medium">

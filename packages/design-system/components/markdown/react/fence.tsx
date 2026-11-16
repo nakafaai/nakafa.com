@@ -40,7 +40,7 @@ export function CodeFence({
         data-language={language}
       >
         <div className={codeLabelVariants()}>
-          {icon ?? <HugeIcons className="size-4" icon={TerminalIcon} />}
+          {icon ?? <HugeIcons icon={TerminalIcon} />}
           <span className="truncate font-mono lowercase" title={language}>
             {language || "txt"}
           </span>

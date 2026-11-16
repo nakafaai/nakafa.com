@@ -86,7 +86,7 @@ export function RegionPicker({
             })}
           </span>
           <HugeIcons
-            className="ml-auto size-4 transition-transform ease-out"
+            className="ml-auto transition-transform ease-out"
             icon={ArrowDown01Icon}
           />
         </PickerTrigger>

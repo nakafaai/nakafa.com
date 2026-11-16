@@ -81,7 +81,7 @@ export function BreadcrumbSiblingsSegment({
               type="button"
             >
               <span className="min-w-0 truncate">{label}</span>
-              <HugeIcons className="size-3.5 shrink-0" icon={ArrowDown01Icon} />
+              <HugeIcons icon={ArrowDown01Icon} size="sm" />
             </button>
           }
         />

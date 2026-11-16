@@ -91,7 +91,7 @@ function TryoutAttemptFace({ children }: { children?: ReactNode }) {
       <HugeIcons icon={TransactionHistoryIcon} />
       <PageHeaderLabel>{children}</PageHeaderLabel>
       <HugeIcons
-        className="tryout-history-chevron ml-auto size-4 transition-transform ease-out @max-2xl/header:hidden"
+        className="tryout-history-chevron ml-auto transition-transform ease-out @max-2xl/header:hidden"
         icon={ArrowDown01Icon}
       />
     </>

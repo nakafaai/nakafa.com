@@ -43,7 +43,7 @@ function SchoolAddOn({ addOn }: { addOn: SchoolAddOnKey }) {
       <CardHeader className="md:mb-4">
         <h3 className="flex items-center gap-2 text-lg font-medium tracking-tight">
           <HugeIcons
-            className="text-muted-foreground size-4"
+            className="text-muted-foreground"
             icon={ADD_ON_ICONS[addOn]}
           />
           {item.recurring

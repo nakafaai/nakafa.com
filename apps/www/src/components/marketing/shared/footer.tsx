@@ -162,7 +162,7 @@ export function Footer({
                         rel="noopener noreferrer"
                         target="_blank"
                       >
-                        <HugeIcons className="size-4" icon={social.icon} />
+                        <HugeIcons icon={social.icon} />
                       </a>
                     }
                   />

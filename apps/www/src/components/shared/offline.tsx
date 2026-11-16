@@ -45,11 +45,9 @@ export function OfflineNote() {
       >
         <HugeIcons
           aria-hidden="true"
-          className={statusIconVariants({
-            className: "size-3.5",
-            tone: "warning",
-          })}
+          className={statusIconVariants({ className: "", tone: "warning" })}
           icon={CloudOffIcon}
+          size="sm"
         />
         <span className="max-md:sr-only">{t("offline-note")}</span>
       </TooltipTrigger>

@@ -72,7 +72,6 @@ function ReaderChatHeader({ chat }: { chat: ChatView }) {
     <ChatHeader>
       <h1 className="flex items-center gap-2 px-1.5">
         <HugeIcons
-          className="size-4 shrink-0"
           icon={chat.visibility === "private" ? SquareLock01Icon : Globe02Icon}
         />
         <span className="line-clamp-1 text-sm">
@@ -204,10 +203,7 @@ function OwnerChatHeader({ chat }: { chat: ChatView }) {
             ref={titleRef}
             tabIndex={-1}
           >
-            <HugeIcons
-              className="size-4 shrink-0"
-              icon={isPrivate ? SquareLock01Icon : Globe02Icon}
-            />
+            <HugeIcons icon={isPrivate ? SquareLock01Icon : Globe02Icon} />
             <span className="line-clamp-1 text-sm">
               {readChatTitle(chat.title, t("new-chat"))}
             </span>

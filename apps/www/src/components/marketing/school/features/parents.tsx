@@ -35,7 +35,7 @@ function ParentLine({
         step,
       })}
     >
-      <HugeIcons className="text-muted-foreground size-4" icon={icon} />
+      <HugeIcons className="text-muted-foreground" icon={icon} />
       <span className="min-w-0 flex-1 truncate text-sm">{label}</span>
       {children}
     </li>
