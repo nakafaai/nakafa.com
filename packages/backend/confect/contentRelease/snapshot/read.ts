@@ -1,4 +1,5 @@
 import type { ContentSnapshotManifest } from "@nakafa/aksara-contracts/release/snapshot/data";
+import type { Docs } from "@repo/backend/confect/_generated/docs";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { releaseFail } from "@repo/backend/confect/contentRelease/error";
 import { loadRelease } from "@repo/backend/confect/contentRelease/model";
@@ -122,12 +123,24 @@ export const manifestProgram = Effect.fn("contentRelease.readSnapshotManifest")(
   }
 );
 
-/** Reads one exact contiguous release-owned snapshot batch. */
+/** Total UTF-16 length of row JSON, the budget a run of batches spends. */
+function runBytes(rowJson: readonly string[]) {
+  return Arr.reduce(rowJson, 0, (total, row) => total + row.length);
+}
+
+/**
+ * Reads a run of contiguous release-owned snapshot batches after a cursor: at
+ * least one batch, then more while the run stays under `maxBatches` batches and
+ * `maxBytes` of row JSON. Every batch passes the same ledger checks a single
+ * batch did, so a run is exactly the rows of its batches in canonical order.
+ */
 export const rowPageProgram = Effect.fn("contentRelease.readSnapshotBatch")(
   function* (
     releaseId: string,
     family: SnapshotFamily,
-    afterBatchIndex: number
+    afterBatchIndex: number,
+    maxBatches: number,
+    maxBytes: number
   ) {
     const database = yield* DatabaseReader;
     const release = yield* loadRelease(releaseId);
@@ -139,6 +152,7 @@ export const rowPageProgram = Effect.fn("contentRelease.readSnapshotBatch")(
         `Release ${releaseId} does not own ${family} snapshot rows.`
       );
     }
+    const snapshotId = state.resultSnapshotId;
     let expectedFirstIndex = 0;
     if (afterBatchIndex >= 0) {
       const previousRows = yield* database
@@ -155,7 +169,7 @@ export const rowPageProgram = Effect.fn("contentRelease.readSnapshotBatch")(
       if (
         !previous ||
         previousRows.length !== 1 ||
-        previous.snapshotId !== state.resultSnapshotId
+        previous.snapshotId !== snapshotId
       ) {
         return yield* releaseFail(
           "CONTENT_RELEASE_INTEGRITY",
@@ -164,16 +178,55 @@ export const rowPageProgram = Effect.fn("contentRelease.readSnapshotBatch")(
       }
       expectedFirstIndex = previous.firstIndex + previous.rowCount;
     }
-    const [batch, next] = yield* database
-      .table("snapshotBatches")
-      .index("by_releaseId_and_family_and_batchIndex", (query) =>
-        query
-          .eq("releaseId", releaseId)
-          .eq("family", family)
-          .gt("batchIndex", afterBatchIndex)
-      )
-      .take(2)
-      .pipe(Effect.orDie);
+    /** The batch after `index` and the one after that, as the ledger stores them. */
+    const following = (index: number) =>
+      database
+        .table("snapshotBatches")
+        .index("by_releaseId_and_family_and_batchIndex", (query) =>
+          query
+            .eq("releaseId", releaseId)
+            .eq("family", family)
+            .gt("batchIndex", index)
+        )
+        .take(2)
+        .pipe(Effect.orDie);
+    /** Proves one batch continues the run and returns its exact rows. */
+    const readBatch = Effect.fnUntraced(function* (
+      batch: Docs["snapshotBatches"],
+      next: Docs["snapshotBatches"] | undefined,
+      expectedBatch: number,
+      firstIndex: number
+    ) {
+      if (
+        batch.batchIndex !== expectedBatch ||
+        batch.snapshotId !== snapshotId ||
+        batch.firstIndex !== firstIndex ||
+        batch.firstIndex + batch.rowCount > state.rowCount
+      ) {
+        return yield* releaseFail(
+          "CONTENT_RELEASE_INTEGRITY",
+          `Release ${releaseId} has a non-contiguous ${family} snapshot ledger.`
+        );
+      }
+      if (
+        next
+          ? next.batchIndex !== batch.batchIndex + 1 ||
+            next.firstIndex !== batch.firstIndex + batch.rowCount
+          : batch.firstIndex + batch.rowCount !== state.rowCount
+      ) {
+        return yield* releaseFail(
+          "CONTENT_RELEASE_INTEGRITY",
+          `Release ${releaseId} has an incomplete ${family} snapshot ledger.`
+        );
+      }
+      return yield* loadRows(
+        family,
+        batch.snapshotId,
+        batch.firstIndex,
+        batch.rowCount
+      );
+    });
+    const [batch, next] = yield* following(afterBatchIndex);
     if (!batch) {
       if (expectedFirstIndex !== state.rowCount) {
         return yield* releaseFail(
@@ -187,45 +240,39 @@ export const rowPageProgram = Effect.fn("contentRelease.readSnapshotBatch")(
         firstIndex: state.rowCount,
         nextBatchIndex: afterBatchIndex,
         rowJson: [],
-        snapshotId: state.resultSnapshotId,
+        snapshotId,
       };
     }
-    const expectedBatch = afterBatchIndex + 1;
-    if (
-      batch.batchIndex !== expectedBatch ||
-      batch.snapshotId !== state.resultSnapshotId ||
-      batch.firstIndex !== expectedFirstIndex ||
-      batch.firstIndex + batch.rowCount > state.rowCount
-    ) {
-      return yield* releaseFail(
-        "CONTENT_RELEASE_INTEGRITY",
-        `Release ${releaseId} has a non-contiguous ${family} snapshot ledger.`
-      );
-    }
-    if (
-      next
-        ? next.batchIndex !== batch.batchIndex + 1 ||
-          next.firstIndex !== batch.firstIndex + batch.rowCount
-        : batch.firstIndex + batch.rowCount !== state.rowCount
-    ) {
-      return yield* releaseFail(
-        "CONTENT_RELEASE_INTEGRITY",
-        `Release ${releaseId} has an incomplete ${family} snapshot ledger.`
-      );
-    }
-    const rowJson = yield* loadRows(
-      family,
-      batch.snapshotId,
-      batch.firstIndex,
-      batch.rowCount
+    let rowJson = yield* readBatch(
+      batch,
+      next,
+      afterBatchIndex + 1,
+      expectedFirstIndex
     );
+    let last = batch;
+    let upcoming = next;
+    let batches = 1;
+    while (upcoming && batches < maxBatches && runBytes(rowJson) < maxBytes) {
+      const current = upcoming;
+      const [, after] = yield* following(last.batchIndex);
+      const rows = yield* readBatch(
+        current,
+        after,
+        last.batchIndex + 1,
+        last.firstIndex + last.rowCount
+      );
+      rowJson = Arr.appendAll(rowJson, rows);
+      last = current;
+      upcoming = after;
+      batches += 1;
+    }
     return {
       batchIndex: batch.batchIndex,
-      done: next === undefined,
+      done: upcoming === undefined,
       firstIndex: batch.firstIndex,
-      nextBatchIndex: batch.batchIndex,
+      nextBatchIndex: last.batchIndex,
       rowJson,
-      snapshotId: batch.snapshotId,
+      snapshotId,
     };
   }
 );

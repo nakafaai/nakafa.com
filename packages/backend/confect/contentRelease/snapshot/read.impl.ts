@@ -23,7 +23,9 @@ const rows = FunctionImpl.make(
     return yield* rowPageProgram(
       args.releaseId,
       args.family,
-      args.afterBatchIndex
+      args.afterBatchIndex,
+      args.maxBatches,
+      args.maxBytes
     );
   })
 );

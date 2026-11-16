@@ -56,6 +56,16 @@ const readManifest = Effect.fn("contentRelease.readProofSnapshotManifest")(
   }
 );
 
+/**
+ * Batches the proof joins into one row page. A release stages snapshots in
+ * batches of at most 16 rows, so reading them one per query cost the proof over
+ * 1,400 sequential Convex round trips and ran it past the publisher's
+ * ten-minute window.
+ */
+const PROOF_RUN_BATCHES = 64;
+/** Row JSON one page may start another batch under: a few MiB per round trip. */
+const PROOF_RUN_BYTES = 4 * 1024 * 1024;
+
 /** Creates one replayable family row stream from exact release batch ledgers. */
 function familyRows(releaseId: string, family: ContentSnapshotKind) {
   return Stream.paginate(-1, (afterBatchIndex) =>
@@ -64,6 +74,8 @@ function familyRows(releaseId: string, family: ContentSnapshotKind) {
         runQuery(contentReleaseInternal.snapshot.read.rows, {
           afterBatchIndex,
           family,
+          maxBatches: PROOF_RUN_BATCHES,
+          maxBytes: PROOF_RUN_BYTES,
           releaseId,
         })
       ),
@@ -71,7 +83,7 @@ function familyRows(releaseId: string, family: ContentSnapshotKind) {
       Effect.map(
         (page): readonly [readonly string[], Option.Option<number>] => [
           page.rowJson,
-          page.done ? Option.none() : Option.some(page.nextBatchIndex),
+          Option.filter(Option.some(page.nextBatchIndex), () => !page.done),
         ]
       )
     )
@@ -108,8 +120,10 @@ const verifyFamilies = Effect.fn("contentRelease.verifyFamilySnapshots")(
     previous: ContentSnapshotSet | null
   ) {
     const families = replacementFamilies(release);
-    const proofs = yield* Effect.forEach(families, (family) =>
-      verifyFamily(release, previous, family)
+    const proofs = yield* Effect.forEach(
+      families,
+      (family) => verifyFamily(release, previous, family),
+      { concurrency: "unbounded" }
     );
     if (!Arr.isArrayNonEmpty(proofs)) {
       return yield* verifyContentSnapshots({
