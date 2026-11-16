@@ -179,35 +179,31 @@ export function ConvexLensLab({
     <VisualCard>
       <VisualCardHeader description={description} title={title} />
       <VisualCardToolbar>
-        <div className="flex w-full flex-col gap-4">
-          <LabSlider
-            label={<span>{labels.distance}</span>}
-            max={Math.ceil(focal * 4)}
-            min={Math.max(1, Math.round(focal * 0.2))}
-            name={labels.distanceName}
-            onValueChange={setObject}
-            readout={<InlineMath math={quantity(object, "\\text{ cm}", 0)} />}
-            step={1}
-            value={object}
-          />
-          {Arr.isReadonlyArrayNonEmpty(presets) ? (
-            <ToggleGroup
-              aria-label={labels.presets}
-              onValueChange={(value) => setObject(Number(value))}
-              type="single"
-              value={String(object)}
-              variant="outline"
-            >
-              {Arr.map(presets, (preset) => (
-                <ToggleGroupItem key={preset} value={String(preset)}>
-                  <InlineMath
-                    math={`u=${quantity(preset, "\\text{ cm}", 0)}`}
-                  />
-                </ToggleGroupItem>
-              ))}
-            </ToggleGroup>
-          ) : null}
-        </div>
+        <LabSlider
+          label={<span>{labels.distance}</span>}
+          max={Math.ceil(focal * 4)}
+          min={Math.max(1, Math.round(focal * 0.2))}
+          name={labels.distanceName}
+          onValueChange={setObject}
+          readout={<InlineMath math={quantity(object, "\\text{ cm}", 0)} />}
+          step={1}
+          value={object}
+        />
+        {Arr.isReadonlyArrayNonEmpty(presets) ? (
+          <ToggleGroup
+            aria-label={labels.presets}
+            onValueChange={(value) => setObject(Number(value))}
+            type="single"
+            value={String(object)}
+            variant="outline"
+          >
+            {Arr.map(presets, (preset) => (
+              <ToggleGroupItem key={preset} value={String(preset)}>
+                <InlineMath math={`u=${quantity(preset, "\\text{ cm}", 0)}`} />
+              </ToggleGroupItem>
+            ))}
+          </ToggleGroup>
+        ) : null}
       </VisualCardToolbar>
       <VisualCardBody aria-label={labels.viewLabel} render={<section />}>
         <P5Sketch
