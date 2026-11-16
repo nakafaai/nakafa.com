@@ -2,15 +2,10 @@
 
 import { describe, expect, it } from "@effect/vitest";
 import { idOf } from "@repo/backend/confect/island/blocks";
-import { SPAN } from "@repo/backend/confect/island/world";
 import { Array as Arr, MutableHashSet, Result } from "effect";
-import {
-  GRASS_TOP,
-  lightingOf,
-  meshChunk,
-  STRIDE,
-  skylineOf,
-} from "@/lib/island/mesh";
+import { ATLAS_TILES } from "@/lib/island/atlas";
+import { groundOf, groundTopSlot } from "@/lib/island/ground";
+import { lightingOf, meshChunk, STRIDE } from "@/lib/island/mesh";
 import { terrainOf } from "@/lib/island/terrain";
 import { cellOf, emptyCells } from "@/lib/island/world";
 
@@ -77,19 +72,23 @@ describe("island/mesh", () => {
     expect(swaysAt(5, 9, 5)).toEqual([0]);
   });
 
-  it("marks a grass top for the gust's streak, and lets a flower go at its top only", () => {
+  it("draws a ground top from its Wang set by its edges, holds it still, and lets a flower go at its top only", () => {
     const cells = emptyCells();
     cells[cellOf(5, 10, 5)] = idOf("grass");
     cells[cellOf(5, 11, 5)] = idOf("flowers");
     const { vertices } = meshChunk(cells, lightingOf(cells), 0, 0).solid;
     const corners = Arr.makeBy(vertices.length / STRIDE, (vertex) => ({
+      slot:
+        Math.floor(vertices[vertex * STRIDE + 3] * ATLAS_TILES) +
+        Math.floor(vertices[vertex * STRIDE + 4] * ATLAS_TILES) * ATLAS_TILES,
       sway: vertices[vertex * STRIDE + 8],
       y: vertices[vertex * STRIDE + 1],
     }));
-    // The grass's top face is hidden under nothing: a flower lets it show.
-    expect(Arr.filter(corners, ({ sway }) => sway === GRASS_TOP)).toHaveLength(
-      4
-    );
+    // The grass's top face, which a flower lets show, draws its set's tile for the marks of its edges.
+    const grassTop = groundTopSlot(groundOf(idOf("grass")), 5, 5);
+    expect(
+      Arr.filter(corners, ({ slot, y }) => y === 11 && slot === grassTop)
+    ).toHaveLength(4);
     expect(
       Arr.dedupe(
         Arr.map(
@@ -98,9 +97,7 @@ describe("island/mesh", () => {
         )
       )
     ).toEqual([12]);
-    expect(Arr.some(corners, ({ sway, y }) => y === 10 && sway !== 0)).toBe(
-      false
-    );
+    expect(Arr.some(corners, ({ sway }) => sway < 0)).toBe(false);
   });
 
   it("puts water in its own pass, its open surface sunk below the cell's top", () => {
@@ -156,7 +153,7 @@ describe("island/mesh", () => {
     expect(tops).toContainEqual([0.35, 1]);
   });
 
-  it("meshes a whole chunk of generated land, and reads the skyline of every column", () => {
+  it("meshes a whole chunk of generated land", () => {
     const cells = terrainOf(2, 32);
     const mesh = meshChunk(cells, lightingOf(cells), 1, 1);
     expect(quadsOf(mesh.solid)).toBeGreaterThan(256);
@@ -164,10 +161,5 @@ describe("island/mesh", () => {
     expect(mesh.solid.vertices.length).toBe(
       (mesh.solid.indices.length / 6) * 4 * STRIDE
     );
-    const skyline = skylineOf(emptyCells());
-    expect(skyline[0]).toBe(-1);
-    expect(
-      skylineOf(cells)[(SPAN / 2) * SPAN + SPAN / 2]
-    ).toBeGreaterThanOrEqual(8);
   });
 });

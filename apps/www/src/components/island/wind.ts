@@ -26,7 +26,7 @@ const UNIT = 2;
  */
 export function createGale(gl: WebGL2RenderingContext) {
   const wind = createWind();
-  const lean = uploadMap(gl, WIND_SIDE);
+  const lean = uploadMap(gl, WIND_SIDE, 1);
   let stepped = Option.none<number>();
   return {
     /** Hands the program in use the wind at `time` seconds under a weather. */

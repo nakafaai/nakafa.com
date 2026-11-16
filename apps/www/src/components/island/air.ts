@@ -1,5 +1,9 @@
 import { Option } from "effect";
-import { activate, programOf } from "@/components/island/buffers";
+import {
+  activate,
+  programOf,
+  type uploadMap,
+} from "@/components/island/buffers";
 import { createFall } from "@/components/island/fall";
 import { createNight } from "@/components/island/night";
 import { createSmoke } from "@/components/island/smoke";
@@ -30,7 +34,8 @@ import type { Light, Weather } from "@/lib/island/sky";
 export function createAir(
   gl: WebGL2RenderingContext,
   gale: ReturnType<typeof createGale>,
-  pixels: Uint8ClampedArray
+  pixels: Uint8ClampedArray,
+  columns: ReturnType<typeof uploadMap>
 ) {
   return Option.map(
     Option.all([
@@ -40,7 +45,7 @@ export function createAir(
       programOf(gl, DUST_VERTEX, DUST_FRAGMENT),
     ]),
     ([weatherProgram, smokeProgram, fireflyProgram, dustProgram]) => {
-      const fall = createFall(gl, weatherProgram);
+      const fall = createFall(gl, weatherProgram, columns);
       const smoke = createSmoke(gl, smokeProgram);
       const night = createNight(gl, fireflyProgram);
       // The latest bursts of dust and chips (D38): each a cell and the second it began, and a color with 1 for chips.
@@ -95,13 +100,11 @@ export function createAir(
           night.release();
           gl.deleteVertexArray(empty);
         },
-        /** Replaces what the blocks decide for the air over them: where a drop stops, where the chimneys smoke, where the fireflies live. */
+        /** Replaces what the blocks decide for the air over them: where the chimneys smoke and where the fireflies live. */
         scenery(next: {
           readonly chimneys: Float32Array;
           readonly fireflies: Float32Array;
-          readonly roof: Uint8Array;
         }) {
-          fall.roof(next.roof);
           smoke.chimneys(next.chimneys);
           night.homes(next.fireflies);
         },

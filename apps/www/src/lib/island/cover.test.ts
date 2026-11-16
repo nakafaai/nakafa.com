@@ -1,10 +1,7 @@
 // @vitest-environment node
 
 import { describe, expect, it } from "@effect/vitest";
-import { idOf } from "@repo/backend/confect/island/blocks";
-import { SPAN } from "@repo/backend/confect/island/world";
-import { createCover, roofOf, stepCover } from "@/lib/island/cover";
-import { cellOf, emptyCells, SEA_LEVEL } from "@/lib/island/world";
+import { createCover, stepCover } from "@/lib/island/cover";
 
 /** A cover after `seconds` of one weather, stepped as the painter does, sixty times a second. */
 function after(
@@ -19,30 +16,6 @@ function after(
 }
 
 describe("island/cover", () => {
-  it("stops a drop on the first thing over a column, so a roof keeps the ground under it dry", () => {
-    const cells = emptyCells();
-    cells[cellOf(4, 8, 4)] = idOf("grass");
-    cells[cellOf(5, 8, 4)] = idOf("grass");
-    cells[cellOf(5, 12, 4)] = idOf("planks");
-    cells[cellOf(6, 7, 4)] = idOf("water");
-    const roof = roofOf(cells);
-    // Open grass: the drop lands on its top, at 9.
-    expect(roof[4 * SPAN + 4]).toBe(9 * 2);
-    // Under the plank roof the drop stops on the roof, at 13, and never reaches the grass.
-    expect(roof[4 * SPAN + 5]).toBe(13 * 2);
-    // On water it stops at the surface and rings.
-    expect(roof[4 * SPAN + 6]).toBe(8 * 2 + 1);
-    // An empty column is open to the sea.
-    expect(roof[0]).toBe(SEA_LEVEL * 2 + 1);
-  });
-
-  it("lets a drop through a flower, which stands in the rain", () => {
-    const cells = emptyCells();
-    cells[cellOf(4, 8, 4)] = idOf("grass");
-    cells[cellOf(4, 9, 4)] = idOf("flowers");
-    expect(roofOf(cells)[4 * SPAN + 4]).toBe(9 * 2);
-  });
-
   it("soaks the ground in half a minute of rain and dries it in the sun over four", () => {
     const cover = createCover();
     after(cover, "rain", 15);
