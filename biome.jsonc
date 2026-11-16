@@ -184,6 +184,7 @@
     {
       "includes": [
         "**/*.test.{ts,tsx,mts,cts}",
+        "**/test.*.{ts,tsx,mts,cts}",
         "**/test/**/*.{ts,tsx,mts,cts}",
         "**/vitest.setup.{ts,mts,cts}"
       ],

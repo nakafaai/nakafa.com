@@ -1,3 +1,4 @@
+import { assert, expect } from "@effect/vitest";
 import { Effect } from "effect";
 import { answerRequest } from "@/lib/routing/answer.server";
 import type { RouterHandler } from "@/lib/routing/routed.server";
@@ -47,14 +48,22 @@ export function served(
   }));
 }
 
+/** The arguments of the router's one call, which the test expects it to have received. */
+function routedCall(handle: ReturnType<typeof router>) {
+  const [call, ...others] = handle.mock.calls;
+  assert.ok(call, "Expected the router to receive a request.");
+  expect(others).toStrictEqual([]);
+  return call;
+}
+
 /** The request that the router received in its single call. */
 export function routedRequest(handle: ReturnType<typeof router>) {
-  const [request] = handle.mock.calls[0] ?? [];
+  const [request] = routedCall(handle);
   return request;
 }
 
 /** The not-found page that the router received with its single call, if any. */
 export function routedNotFound(handle: ReturnType<typeof router>) {
-  const [, notFound] = handle.mock.calls[0] ?? [];
+  const [, notFound] = routedCall(handle);
   return notFound;
 }
