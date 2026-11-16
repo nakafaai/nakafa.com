@@ -7,7 +7,6 @@ import {
   ScatterDiagram,
 } from "@/lib/content/renderer/client/mathematics/charts";
 import {
-  LineEquation,
   QuadraticEquationReadingRoomProblem,
 } from "@/lib/content/renderer/client/mathematics/equation";
 import {
@@ -16,12 +15,10 @@ import {
   FunctionMachine,
   InverseFunctionIllustration,
 } from "@/lib/content/renderer/client/mathematics/function";
-import { UnitCircle } from "@/lib/content/renderer/client/mathematics/geometry";
 import {
   BacterialGrowth,
   FunctionExplorationVirusChart,
 } from "@/lib/content/renderer/client/mathematics/growth";
-import { NumberLine } from "@/lib/content/renderer/client/mathematics/number";
 import { SequenceConceptTableChairsAnimation } from "@/lib/content/renderer/client/mathematics/sequence";
 import type { RendererImplementation } from "@/lib/content/renderer/selection";
 
@@ -68,14 +65,6 @@ export const mathematicsRenderers = [
     component: InverseFunctionIllustration,
   },
   {
-    name: mathematicsComponentNames.lineEquation,
-    component: LineEquation,
-  },
-  {
-    name: mathematicsComponentNames.numberLine,
-    component: NumberLine,
-  },
-  {
     name: mathematicsComponentNames.quadraticEquationReadingRoomProblem,
     component: QuadraticEquationReadingRoomProblem,
   },
@@ -86,9 +75,5 @@ export const mathematicsRenderers = [
   {
     name: mathematicsComponentNames.sequenceConceptTableChairsAnimation,
     component: SequenceConceptTableChairsAnimation,
-  },
-  {
-    name: mathematicsComponentNames.unitCircle,
-    component: UnitCircle,
   },
 ] satisfies readonly RendererImplementation[];

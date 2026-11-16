@@ -78,7 +78,7 @@ describe("MDX agent markdown projection", () => {
     () =>
       Effect.gen(function* () {
         const markdown =
-          yield* projectMdxForAgentMarkdown(`import { LineEquation } from "@repo/design-system/components/contents/mathematics/line/equation";
+          yield* projectMdxForAgentMarkdown(`import { ScatterDiagram } from "@repo/design-system/components/contents/mathematics/scatter";
 import { Mermaid } from "@repo/design-system/components/ui/mermaid";
 
 ## Example
@@ -108,14 +108,14 @@ print(area)\`
 
 <CodeBlock data={[{ code: \`plain = true\` }]} />
 
-<LineEquation
+<ScatterDiagram
   title={<>Sector <InlineMath math="60^\\circ" /></>}
   description={<>Shows <InlineMath math="\\frac{1}{6}" /> of a circle.</>}
   caption={<>Move $$P(3,2)$$ to{" "}<InlineMath math="P'(1,5)" />.</>}
   data={[{ points: [{ x: 0, y: 0, z: 0 }, { x: 1, y: 1, z: 0 }], label: "diameter" }]}
 />
 
-<NumberLine
+<HistogramChart
   title={<>Solution range</>}
   segments={[
     { start: 0, end: 2, startInclusive: true, endInclusive: true },
@@ -163,13 +163,13 @@ A-->B\`} />
         expect(markdown).toContain("```python\narea = 0.5 * base * height");
         expect(markdown).not.toContain("```[]");
         expect(markdown).toContain("```\nplain = true\n```");
-        expect(markdown).toContain("Component: LineEquation");
+        expect(markdown).toContain("Component: ScatterDiagram");
         expect(markdown).toContain("points: [{ x: 0, y: 0, z: 0 }");
         expect(markdown).toContain("Visible text: Sector");
         expect(markdown).toContain("Visible text: Shows of a circle.");
         expect(markdown).toContain("Visible text: Move to .");
         expect(markdown).toContain("diameter");
-        expect(markdown).toContain("Component: NumberLine");
+        expect(markdown).toContain("Component: HistogramChart");
         expect(markdown).toContain("startInclusive: true");
         expect(markdown).toContain("Number.POSITIVE_INFINITY");
         expect(markdown).toContain("Component: FunctionChart");
