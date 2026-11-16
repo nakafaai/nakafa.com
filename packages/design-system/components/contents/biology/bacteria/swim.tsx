@@ -207,33 +207,51 @@ function swimProgram(
 }
 
 /**
- * The dish's water across the whole view, yellowing toward the sugar crystal
- * as the sugar spreads from it: beyond the crystal it stays at its sweetest.
+ * The dish as dark-field microscopy shows it: black water, with the sugar
+ * that spreads from the crystal scattering a faint glow that brightens toward
+ * it, and the crystal itself as a bright, faceted grain.
  */
 function drawDish(
   sketch: p5,
   toScreen: (x: number, y: number) => readonly [number, number]
 ) {
+  sketch.background(8, 10, 12);
   sketch.noStroke();
-  const [left] = toScreen(-DISH / 2, 0);
-  const [right] = toScreen(DISH / 2, 0);
-  const bands = 48;
-  Arr.forEach(Arr.range(0, bands - 1), (band) => {
-    const x0 = (sketch.width * band) / bands;
-    const x1 = (sketch.width * (band + 1)) / bands;
-    const share = Math.min(
-      1,
-      Math.max(0, ((x0 + x1) / 2 - left) / (right - left))
-    );
-    sketch.fill(238 + 10 * share, 242 - 4 * share, 240 - 46 * share);
-    sketch.rect(x0, 0, x1 - x0 + 1, sketch.height);
-  });
   const [cx, cy] = toScreen(DISH / 2 - 8, 0);
   const size = Math.min(sketch.width, sketch.height) / DISH;
-  sketch.fill(250, 236, 180);
-  sketch.stroke(214, 190, 120);
-  sketch.strokeWeight(1);
-  sketch.rect(cx - 10 * size, cy - 26 * size, 20 * size, 52 * size, 3 * size);
+  Arr.forEach(Arr.range(0, 71), (ring) => {
+    const reach = (72 - ring) * 4.6 * size;
+    sketch.fill(212, 196, 140, 2 + ring * 0.18);
+    sketch.ellipse(cx, cy, reach * 2.4, reach * 2);
+  });
+  const facets = [
+    [0, -28],
+    [11, -16],
+    [10, 20],
+    [-2, 27],
+    [-11, 12],
+    [-9, -18],
+  ] as const;
+  sketch.fill(250, 244, 220);
+  sketch.stroke(255, 252, 238);
+  sketch.strokeWeight(Math.max(1, size));
+  sketch.beginShape();
+  Arr.forEach(facets, ([fx, fy]) =>
+    sketch.vertex(cx + fx * size, cy + fy * size)
+  );
+  sketch.endShape(sketch.CLOSE);
+  sketch.stroke(200, 186, 140, 180);
+  sketch.line(cx, cy - 28 * size, cx + size, cy + 4 * size);
+  sketch.line(cx + size, cy + 4 * size, cx - 2 * size, cy + 27 * size);
+  Arr.forEach(Arr.range(0, 40), (index) => {
+    const [dx, dy] = toScreen(
+      (hashUnit(index, 51) - 0.5) * DISH,
+      (hashUnit(index, 53) - 0.5) * DISH
+    );
+    sketch.noStroke();
+    sketch.fill(180, 186, 190, 40 + hashUnit(index, 57) * 60);
+    sketch.circle(dx, dy, 1 + hashUnit(index, 59) * 2);
+  });
 }
 
 /** A cell's path as a thin line that fades into the past. */
@@ -244,9 +262,9 @@ function drawTrail(
   hex: string
 ) {
   const ink = sketch.color(hex);
-  ink.setAlpha(150);
+  ink.setAlpha(90);
   sketch.noFill();
-  sketch.strokeWeight(1.2);
+  sketch.strokeWeight(1);
   sketch.stroke(ink);
   sketch.beginShape();
   Arr.forEach(trail, ([x, y]) => {
@@ -285,9 +303,17 @@ function drawCell(
     sketch.vertex(along, wave);
   });
   sketch.endShape();
+  // Dark-field light scatters off the cell's edge, so it glows with a soft
+  // halo around a brighter rim.
   sketch.noStroke();
-  sketch.fill(hex);
   sketch.rectMode(sketch.CENTER);
+  const glow = sketch.color(hex);
+  Arr.forEach([2.2, 1.6, 1.25] as const, (spread, layer) => {
+    glow.setAlpha(28 + layer * 26);
+    sketch.fill(glow);
+    sketch.rect(0, 0, size * 2 * spread, size * spread, (size * spread) / 2);
+  });
+  sketch.fill(sketch.lerpColor(sketch.color(hex), sketch.color(255), 0.55));
   sketch.rect(0, 0, size * 2, size, size / 2);
   sketch.pop();
 }

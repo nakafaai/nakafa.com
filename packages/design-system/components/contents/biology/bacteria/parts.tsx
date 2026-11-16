@@ -1,260 +1,90 @@
-import type { BiologySceneColors } from "@repo/design-system/components/contents/biology/data";
-import { DnaDoubleHelix } from "@repo/design-system/components/contents/biology/parts";
+import {
+  cytoplasmPoints,
+  nucleoidPath,
+  rodSurfaceSpots,
+} from "@repo/design-system/components/contents/biology/bacteria/cell";
+import {
+  CapsuleHalo,
+  EnvelopeMaterial,
+  Fimbriae,
+  Flagellum,
+  useClipping,
+  useRodGeometry,
+} from "@repo/design-system/components/contents/biology/bacteria/envelope";
+import { valueNoise } from "@repo/design-system/components/contents/simulation/grain";
+import { MATERIAL } from "@repo/design-system/lib/material";
 import { Array as Arr } from "effect";
-import { useMemo } from "react";
-import { CatmullRomCurve3, Vector3 } from "three";
+import { useEffect, useLayoutEffect, useMemo, useRef } from "react";
+import {
+  CatmullRomCurve3,
+  type InstancedMesh,
+  Matrix4,
+  Plane,
+  SphereGeometry,
+  TubeGeometry,
+  Vector3,
+} from "three";
 
-const BACILLUS_RIBOSOMES = [
-  { id: "ribo-1", position: [-0.44, 0.08, 0.28], scale: 0.86 },
-  { id: "ribo-2", position: [-0.26, -0.14, 0.3], scale: 0.72 },
-  { id: "ribo-3", position: [-0.08, 0.18, 0.3], scale: 0.78 },
-  { id: "ribo-4", position: [0.16, -0.12, 0.3], scale: 0.82 },
-  { id: "ribo-5", position: [0.36, 0.12, 0.28], scale: 0.68 },
-  { id: "ribo-6", position: [0.48, -0.04, 0.26], scale: 0.76 },
-] as const;
-const BACILLUS_SURFACE_GRAINS = [
-  { id: "grain-1", position: [-0.58, 0.1, 0.29], scale: 0.9 },
-  { id: "grain-2", position: [-0.34, -0.24, 0.26], scale: 0.74 },
-  { id: "grain-3", position: [-0.02, 0.25, 0.28], scale: 0.82 },
-  { id: "grain-4", position: [0.28, -0.22, 0.27], scale: 0.72 },
-  { id: "grain-5", position: [0.58, 0.06, 0.25], scale: 0.78 },
-  { id: "grain-6", position: [-0.48, -0.08, 0.3], scale: 0.64 },
-  { id: "grain-7", position: [-0.18, 0.02, 0.31], scale: 0.58 },
-  { id: "grain-8", position: [0.1, -0.28, 0.25], scale: 0.58 },
-  { id: "grain-9", position: [0.42, 0.22, 0.24], scale: 0.62 },
-] as const;
-const BACILLUS_PILI = [
-  {
-    id: "pilus-left-top",
-    points: [
-      [-0.52, 0.22, 0.1],
-      [-0.6, 0.28, 0.14],
-      [-0.68, 0.34, 0.16],
-    ],
-  },
-  {
-    id: "pilus-right-top",
-    points: [
-      [-0.06, 0.28, 0.1],
-      [-0.1, 0.36, 0.14],
-      [-0.14, 0.44, 0.16],
-    ],
-  },
-  {
-    id: "pilus-center-bottom",
-    points: [
-      [0.18, -0.26, 0.1],
-      [0.15, -0.34, 0.14],
-      [0.12, -0.42, 0.16],
-    ],
-  },
-  {
-    id: "pilus-right",
-    points: [
-      [0.52, 0.16, 0.1],
-      [0.6, 0.22, 0.14],
-      [0.68, 0.28, 0.16],
-    ],
-  },
-] as const;
-const BACILLUS_FLAGELLUM = [
-  [0.82, -0.02, 0.02],
-  [0.98, -0.1, 0.06],
-  [1.14, -0.02, 0.08],
-  [1.3, 0.08, 0.07],
-  [1.48, 0, 0.04],
-] as const;
-const BACILLUS_SURFACE_SIDES = [-1, 1] as const;
-const BACILLUS_CAPSULE_SCALE = [1.16, 1.08, 1.16] as const;
-const BACILLUS_CELL_WALL_SCALE = [1.02, 0.96, 1.02] as const;
-const BACILLUS_CYTOPLASM_SCALE = [0.82, 0.82, 0.82] as const;
-const COCCUS_CLUSTER = [
-  [-0.22, 0.12, 0.02],
-  [0.02, 0.2, -0.02],
-  [0.24, 0.06, 0.04],
-  [-0.08, -0.08, 0.06],
-  [0.16, -0.18, -0.03],
-] as const;
-const SPIRILLUM_BODY = [
-  [-0.62, -0.08, 0],
-  [-0.42, 0.16, 0.04],
-  [-0.16, -0.16, -0.03],
-  [0.1, 0.16, 0.04],
-  [0.38, -0.16, -0.03],
-  [0.62, 0.08, 0],
-] as const;
-const SPIRILLUM_SURFACE_GRAINS = [
-  [-0.44, 0.09, 0.09],
-  [-0.22, -0.08, 0.08],
-  [0.04, 0.08, 0.09],
-  [0.28, -0.1, 0.08],
-  [0.48, 0.02, 0.09],
-] as const;
+/** A bacillus at scene scale: about 0.6 wide and 1.6 long, the proportions of Escherichia coli (0.8 by 2 µm). */
+const BACILLUS = { length: 1, radius: 0.3 } as const;
+
+/** The plane that opens a bacillus to show its cytoplasm: everything in front of z = 0 is cut away. */
+const CUTAWAY = [new Plane(new Vector3(0, 0, -1), 0)] as const;
+
+/** Where the peritrichous flagella leave the rear half of the cell, and the way each trails. */
+const FLAGELLA = Arr.filter(
+  rodSurfaceSpots(14, BACILLUS.radius, BACILLUS.length),
+  ({ position }) => position[0] < -0.05
+);
 
 /**
- * Renders cocci as attached round bacterial cells instead of floating dots.
- */
-export function CoccusClusterModel({
-  colors,
-  scale = 1,
-}: {
-  colors: Pick<BiologySceneColors, "host" | "microbe" | "spore">;
-  scale?: number;
-}) {
-  return (
-    <group scale={scale}>
-      {Arr.map(COCCUS_CLUSTER, (position, index) => (
-        <group
-          key={Arr.join(Arr.map(position, String), "-")}
-          position={position}
-        >
-          <mesh>
-            <sphereGeometry args={[0.17, 24, 18]} />
-            <meshStandardMaterial color={colors.microbe} roughness={0.82} />
-          </mesh>
-          <mesh scale={1.08}>
-            <sphereGeometry args={[0.17, 24, 18]} />
-            <meshStandardMaterial
-              color={colors.host}
-              opacity={0.16}
-              roughness={0.94}
-              transparent
-            />
-          </mesh>
-          <mesh position={[0.04, 0.02, 0.15]}>
-            <sphereGeometry args={[0.022 + index * 0.001, 8, 6]} />
-            <meshStandardMaterial color={colors.spore} roughness={0.78} />
-          </mesh>
-        </group>
-      ))}
-    </group>
-  );
-}
-
-/**
- * Renders a spiral bacterium as a thick curved cell body with surface texture.
- */
-export function SpirillumBacteriumModel({
-  colors,
-  scale = 1,
-}: {
-  colors: Pick<BiologySceneColors, "host" | "microbe" | "spore">;
-  scale?: number;
-}) {
-  return (
-    <group scale={scale}>
-      <BacterialAppendage
-        color={colors.microbe}
-        points={SPIRILLUM_BODY}
-        radius={0.082}
-      />
-      <BacterialAppendage
-        color={colors.host}
-        points={SPIRILLUM_BODY}
-        radius={0.102}
-        transparent
-      />
-      {Arr.map(SPIRILLUM_SURFACE_GRAINS, (position) => (
-        <mesh
-          key={Arr.join(Arr.map(position, String), "-")}
-          position={position}
-        >
-          <sphereGeometry args={[0.026, 9, 7]} />
-          <meshStandardMaterial color={colors.spore} roughness={0.78} />
-        </mesh>
-      ))}
-    </group>
-  );
-}
-
-/**
- * Renders a bacillus as a real bacterial cell, not a plain green capsule.
+ * A rod-shaped bacterium such as Escherichia coli: a bumpy, waxy envelope in
+ * a faint slime capsule, short fimbriae all over, and flagella trailing as
+ * left-handed helices. Opened, a cutaway shows the inner membrane, the
+ * tangled nucleoid with no nuclear envelope, a plasmid, and the cytoplasm
+ * crowded with ribosomes.
  */
 export function BacillusBacteriumModel({
-  colors,
   scale = 1,
   showFlagellum = true,
   showInterior = true,
   showPili = true,
 }: {
-  colors: Pick<
-    BiologySceneColors,
-    "genome" | "host" | "membrane" | "microbe" | "spore"
-  >;
   scale?: number;
   showFlagellum?: boolean;
   showInterior?: boolean;
   showPili?: boolean;
 }) {
-  const capsuleOpacity = showInterior ? 0.16 : 0.1;
-  const wallOpacity = showInterior ? 0.5 : 1;
-  const cytoplasmOpacity = showInterior ? 0.2 : 0.16;
-
+  useClipping();
+  const body = useRodGeometry(BACILLUS.radius, BACILLUS.length, 1);
+  const clip = showInterior ? CUTAWAY : undefined;
   return (
     <group scale={scale}>
-      <mesh rotation={[0, 0, Math.PI / 2]} scale={BACILLUS_CAPSULE_SCALE}>
-        <capsuleGeometry args={[0.32, 0.98, 14, 34]} />
-        <meshStandardMaterial
-          color={colors.host}
-          opacity={capsuleOpacity}
-          roughness={0.94}
-          transparent
-        />
-      </mesh>
-      <mesh rotation={[0, 0, Math.PI / 2]} scale={BACILLUS_CELL_WALL_SCALE}>
-        <capsuleGeometry args={[0.3, 0.96, 12, 30]} />
-        <meshStandardMaterial
-          color={colors.microbe}
-          opacity={wallOpacity}
-          roughness={0.86}
-          transparent={showInterior}
-        />
+      <mesh castShadow geometry={body} receiveShadow>
+        <EnvelopeMaterial clip={clip} color={MATERIAL.bacterialEnvelope} />
       </mesh>
       {showInterior ? (
-        <mesh rotation={[0, 0, Math.PI / 2]} scale={BACILLUS_CYTOPLASM_SCALE}>
-          <capsuleGeometry args={[0.3, 0.88, 10, 24]} />
-          <meshStandardMaterial
-            color={colors.host}
-            opacity={cytoplasmOpacity}
-            roughness={0.92}
-            transparent
-          />
-        </mesh>
+        <BacillusInterior />
+      ) : (
+        <CapsuleHalo geometry={body} scale={[1.07, 1.16, 1.16]} />
+      )}
+      {showPili ? (
+        <Fimbriae
+          count={140}
+          length={BACILLUS.length}
+          radius={BACILLUS.radius}
+          reach={0.12}
+        />
       ) : null}
-      {Arr.map(BACILLUS_SURFACE_SIDES, (side) => (
-        <group key={`bacillus-surface-${side}`} scale={[1, 1, side]}>
-          {Arr.map(BACILLUS_SURFACE_GRAINS, (grain) => (
-            <mesh key={grain.id} position={grain.position} scale={grain.scale}>
-              <sphereGeometry args={[0.026, 10, 8]} />
-              <meshStandardMaterial color={colors.microbe} roughness={0.88} />
-            </mesh>
-          ))}
-        </group>
-      ))}
-      {showInterior ? <BacillusInterior colors={colors} /> : null}
-      {showPili
-        ? Arr.map(BACILLUS_SURFACE_SIDES, (side) => (
-            <group key={`bacillus-pili-${side}`} scale={[1, 1, side]}>
-              {Arr.map(BACILLUS_PILI, (pilus) => (
-                <BacterialAppendage
-                  color={colors.microbe}
-                  key={pilus.id}
-                  points={pilus.points}
-                  radius={0.012}
-                />
-              ))}
-            </group>
-          ))
-        : null}
       {showFlagellum
-        ? Arr.map(BACILLUS_SURFACE_SIDES, (side) => (
-            <group key={`bacillus-flagellum-${side}`} scale={[1, 1, side]}>
-              <BacterialAppendage
-                color={colors.microbe}
-                points={BACILLUS_FLAGELLUM}
-                radius={0.018}
-              />
-            </group>
+        ? Arr.map(FLAGELLA, ({ normal, position }, index) => (
+            <Flagellum
+              direction={[-1.6, normal[1] * 0.5, normal[2] * 0.5]}
+              key={Arr.join(Arr.map(position, String), ",")}
+              length={1.5}
+              origin={position}
+              phase={index * 1.3}
+            />
           ))
         : null}
     </group>
@@ -262,73 +92,218 @@ export function BacillusBacteriumModel({
 }
 
 /**
- * Builds a smooth bacterial appendage as real tube geometry instead of a line.
+ * The inside of an opened bacillus: the plasma membrane lining the wall, the
+ * nucleoid as a tangled strand in the middle, a small circular plasmid, and
+ * ribosomes in their hundreds.
  */
-function BacterialAppendage({
-  color,
-  points,
-  radius,
-  transparent = false,
-}: {
-  color: string;
-  points: readonly (readonly [number, number, number])[];
-  radius: number;
-  transparent?: boolean;
-}) {
-  const curve = useMemo(
+function BacillusInterior() {
+  const membrane = useRodGeometry(BACILLUS.radius * 0.9, BACILLUS.length, 4);
+  const nucleoid = useMemo(
     () =>
-      new CatmullRomCurve3(Arr.map(points, (point) => new Vector3(...point))),
-    [points]
+      new CatmullRomCurve3(
+        Arr.map(
+          nucleoidPath(260, 0.15, 0.7, 2),
+          (point) => new Vector3(...point)
+        )
+      ),
+    []
   );
-
+  const plasmid = useMemo(
+    () =>
+      new CatmullRomCurve3(
+        Arr.map(Arr.range(0, 23), (step) => {
+          const angle = (step / 24) * Math.PI * 2;
+          return new Vector3(
+            Math.cos(angle) * 0.06,
+            Math.sin(angle) * 0.06,
+            Math.sin(angle * 3) * 0.012
+          );
+        }),
+        true
+      ),
+    []
+  );
   return (
-    <mesh>
-      <tubeGeometry args={[curve, 24, radius, 8, false]} />
-      <meshStandardMaterial
-        color={color}
-        opacity={transparent ? 0.18 : 1}
-        roughness={0.82}
-        transparent={transparent}
-      />
-    </mesh>
+    <group>
+      <mesh geometry={membrane}>
+        <EnvelopeMaterial clip={CUTAWAY} color={MATERIAL.plasmaMembrane} />
+      </mesh>
+      <mesh>
+        <tubeGeometry args={[nucleoid, 900, 0.008, 5, false]} />
+        <meshStandardMaterial color={MATERIAL.nucleoid} roughness={0.45} />
+      </mesh>
+      <mesh position={[0.36, -0.12, -0.08]} rotation={[0.4, 0.3, 0]}>
+        <tubeGeometry args={[plasmid, 64, 0.008, 5, true]} />
+        <meshStandardMaterial color={MATERIAL.nucleoid} roughness={0.45} />
+      </mesh>
+      <Ribosomes />
+    </group>
+  );
+}
+
+/** Ribosomes scattered through the back half of the cytoplasm, one instanced mesh of small granules. */
+function Ribosomes() {
+  const mesh = useRef<InstancedMesh>(null);
+  const points = useMemo(
+    () =>
+      Arr.filter(
+        cytoplasmPoints(700, BACILLUS.radius * 0.9, BACILLUS.length, 7),
+        (point) => point[2] < 0
+      ),
+    []
+  );
+  useLayoutEffect(() => {
+    const target = mesh.current;
+    if (target === null) {
+      return;
+    }
+    const matrix = new Matrix4();
+    Arr.forEach(points, (point, index) => {
+      target.setMatrixAt(index, matrix.makeTranslation(...point));
+    });
+    target.instanceMatrix.needsUpdate = true;
+  });
+  return (
+    <instancedMesh args={[undefined, undefined, points.length]} ref={mesh}>
+      <icosahedronGeometry args={[0.011, 0]} />
+      <meshStandardMaterial color={MATERIAL.ribosome} roughness={0.55} />
+    </instancedMesh>
+  );
+}
+
+/** A sphere bumped by noise, for a coccus whose surface is never quite round. */
+function useBumpySphere(radius: number, seed: number) {
+  const geometry = useMemo(() => {
+    const sphere = new SphereGeometry(radius, 72, 54);
+    const position = sphere.getAttribute("position");
+    const point = new Vector3();
+    for (const index of Arr.range(0, position.count - 1)) {
+      point.fromBufferAttribute(position, index);
+      const lift =
+        1 +
+        0.03 *
+          (valueNoise(point.x * 30 + seed, point.y * 30 + point.z * 17, 64) -
+            0.5);
+      point.multiplyScalar(lift);
+      position.setXYZ(index, point.x, point.y, point.z);
+    }
+    sphere.computeVertexNormals();
+    return sphere;
+  }, [radius, seed]);
+  useEffect(() => () => geometry.dispose(), [geometry]);
+  return geometry;
+}
+
+/**
+ * Cocci as Staphylococcus aureus grows them: golden cells about 1 µm across
+ * in a grape-like cluster, because each division plane is perpendicular to
+ * the last, the young pairs still joined at a pale septum band.
+ */
+export function CoccusClusterModel({ scale = 1 }: { scale?: number }) {
+  const cell = useBumpySphere(0.16, 3);
+  const cells = [
+    [-0.2, 0.1, 0.02],
+    [0.08, 0.2, -0.04],
+    [0.26, 0.02, 0.06],
+    [-0.06, -0.1, 0.12],
+    [0.16, -0.22, -0.02],
+    [-0.28, -0.16, -0.08],
+    [0.02, 0.02, -0.22],
+  ] as const;
+  return (
+    <group scale={scale}>
+      {Arr.map(cells, (position, index) => (
+        <group
+          key={Arr.join(Arr.map(position, String), ",")}
+          position={position}
+          rotation={[index, index * 0.7, 0]}
+        >
+          <mesh castShadow geometry={cell} receiveShadow scale={[1, 0.94, 1]}>
+            <EnvelopeMaterial
+              clip={undefined}
+              color={MATERIAL.staphylococcus}
+            />
+          </mesh>
+          {index % 2 === 0 ? (
+            <mesh rotation={[Math.PI / 2, 0, 0]}>
+              <torusGeometry args={[0.152, 0.008, 8, 48]} />
+              <meshStandardMaterial color={MATERIAL.septum} roughness={0.6} />
+            </mesh>
+          ) : null}
+        </group>
+      ))}
+    </group>
   );
 }
 
 /**
- * Adds nucleoid DNA and ribosomes inside the bacillus without over-labeling it.
+ * A spirillum: a rigid, helical cell body about three turns long, its surface
+ * bumped like any envelope, with a tuft of flagella at each pole.
  */
-function BacillusInterior({
-  colors,
-}: {
-  colors: Pick<BiologySceneColors, "genome" | "membrane" | "spore">;
-}) {
+export function SpirillumBacteriumModel({ scale = 1 }: { scale?: number }) {
+  const turns = 2.6;
+  const length = 1.3;
+  const path = useMemo(
+    () =>
+      new CatmullRomCurve3(
+        Arr.map(Arr.range(0, 80), (step) => {
+          const t = step / 80;
+          const angle = t * turns * Math.PI * 2;
+          return new Vector3(
+            -length / 2 + t * length,
+            Math.cos(angle) * 0.13,
+            Math.sin(angle) * 0.13
+          );
+        })
+      ),
+    []
+  );
+  const body = useMemo(
+    () => new TubeGeometry(path, 240, 0.065, 18, false),
+    [path]
+  );
+  useEffect(() => () => body.dispose(), [body]);
+  const ends = [
+    {
+      direction: [-1, 0.3, 0] as const,
+      origin: path.getPointAt(0).toArray(),
+      pole: 0,
+    },
+    {
+      direction: [1, -0.3, 0] as const,
+      origin: path.getPointAt(1).toArray(),
+      pole: 1,
+    },
+  ];
   return (
-    <group>
-      <group position={[-0.04, 0, 0.32]} rotation={[0.1, 0.04, -0.08]}>
-        <DnaDoubleHelix
-          backboneColor={colors.genome}
-          length={0.88}
-          lineWidth={2.2}
-          pairColor={colors.spore}
-          pairLineWidth={0.9}
-          radius={0.04}
-          turns={1.9}
-        />
-      </group>
-      <mesh position={[0.36, -0.08, 0.31]} rotation={[Math.PI / 2, 0, 0.18]}>
-        <torusGeometry args={[0.08, 0.009, 8, 40]} />
-        <meshStandardMaterial color={colors.genome} roughness={0.74} />
+    <group scale={scale}>
+      <mesh castShadow geometry={body} receiveShadow>
+        <EnvelopeMaterial clip={undefined} color={MATERIAL.bacterialEnvelope} />
       </mesh>
-      {Arr.map(BACILLUS_RIBOSOMES, (ribosome) => (
-        <mesh
-          key={ribosome.id}
-          position={ribosome.position}
-          scale={ribosome.scale}
-        >
-          <sphereGeometry args={[0.026, 10, 8]} />
-          <meshStandardMaterial color={colors.spore} roughness={0.72} />
+      {Arr.map([0, 1] as const, (end) => (
+        <mesh key={end} position={path.getPointAt(end)}>
+          <sphereGeometry args={[0.065, 18, 14]} />
+          <EnvelopeMaterial
+            clip={undefined}
+            color={MATERIAL.bacterialEnvelope}
+          />
         </mesh>
       ))}
+      {Arr.flatMap(ends, ({ direction, origin, pole }) =>
+        Arr.map([-1, 0, 1] as const, (spread) => (
+          <Flagellum
+            direction={[
+              direction[0],
+              direction[1] + spread * 0.35,
+              spread * 0.3,
+            ]}
+            key={`${pole}${spread}`}
+            length={0.9}
+            origin={[origin[0] ?? 0, origin[1] ?? 0, origin[2] ?? 0]}
+            phase={spread * 2 + pole}
+          />
+        ))
+      )}
     </group>
   );
 }

@@ -48,16 +48,26 @@ import {
 const SOAK = 0.8;
 
 /** Grape-like clusters of cocci: Staphylococcus, Gram-positive. */
-const CLUSTERS = 7;
-const COCCI_PER_CLUSTER = 8;
+const CLUSTERS = 22;
+const COCCI_PER_CLUSTER = 9;
 const COCCUS = 0.5;
 
 /** Short rods: Escherichia coli, Gram-negative, 2 µm long and 0.8 µm wide. */
-const RODS = 16;
+const RODS = 54;
 const ROD = { length: 2, radius: 0.4 } as const;
 
 /** Spirals: Spirillum, Gram-negative, about 10 µm long. */
-const SPIRALS = 5;
+const SPIRALS = 8;
+
+/**
+ * How much darker or lighter each cell takes the stain than the next: a real
+ * smear is never uniform, since cells lie at different depths and walls soak
+ * up the dye unevenly.
+ */
+const SHADES = [0.78, 1, 1.18] as const;
+
+/** Specks of fixed debris and dried medium on the slide, which the counterstain tints faintly. */
+const DEBRIS = 160;
 
 /** Where the cells lie on the slide: spread inside the field's light. */
 function scatter(index: number, salt: number) {
@@ -176,11 +186,24 @@ function createStainMaterial() {
 function GramScene({ step }: { readonly step: StainStep }) {
   const materials = useMemo(
     () => ({
-      negative: createStainMaterial(),
-      positive: createStainMaterial(),
+      negative: Arr.map(SHADES, createStainMaterial),
+      positive: Arr.map(SHADES, createStainMaterial),
     }),
     []
   );
+  const debris = useMemo(
+    () =>
+      Arr.map(Arr.range(1, DEBRIS), (index) => {
+        const [x, z] = scatter(index, 31);
+        return {
+          index,
+          position: [x, -0.2, z] as const,
+          size: 0.15 + hashUnit(index, 37) * 0.45,
+        };
+      }),
+    []
+  );
+  const speck = useMemo(createStainMaterial, []);
   const spirals = useMemo(
     () => Arr.map(Arr.range(1, SPIRALS), createSpiral),
     []
@@ -192,29 +215,34 @@ function GramScene({ step }: { readonly step: StainStep }) {
 
   useEffect(
     () => () => {
-      materials.negative.dispose();
-      materials.positive.dispose();
+      Arr.forEach(
+        [...materials.negative, ...materials.positive, speck],
+        (material) => material.dispose()
+      );
       Arr.forEach(spirals, (spiral) => spiral.dispose());
     },
-    [materials, spirals]
+    [materials, speck, spirals]
   );
 
   useFrame((_, delta) => {
     // A new step starts soaking in from the colours the cells show now.
     if (soaking.current !== step) {
       soaking.current = step;
-      from.current.negative.copy(materials.negative.color);
-      from.current.positive.copy(materials.positive.color);
+      from.current.negative.copy(materials.negative[1].color);
+      from.current.positive.copy(materials.positive[1].color);
       soaked.current = 0;
     }
     soaked.current = Math.min(1, soaked.current + delta / SOAK);
     Arr.forEach(["negative", "positive"] as const, (gram: Gram) => {
       const target = new Color(stainOf(gram, step));
-      materials[gram].color
-        .copy(from.current[gram])
-        .lerp(target, soaked.current);
-      materials[gram].opacity = step === "smear" ? 0.35 : 0.92;
+      const mixed = from.current[gram].clone().lerp(target, soaked.current);
+      Arr.forEach(materials[gram], (material, shade) => {
+        material.color.copy(mixed).multiplyScalar(SHADES[shade] ?? 1);
+        material.opacity = step === "smear" ? 0.35 : 0.92;
+      });
     });
+    speck.color.copy(materials.negative[2].color);
+    speck.opacity = step === "smear" ? 0.12 : 0.22;
     if (soaked.current >= 1 && settled !== step) {
       setSettled(step);
     }
@@ -229,7 +257,7 @@ function GramScene({ step }: { readonly step: StainStep }) {
           return Arr.map(Arr.range(1, COCCI_PER_CLUSTER), (coccus) => (
             <mesh
               key={`${cluster}-${coccus}`}
-              material={materials.positive}
+              material={materials.positive[(cluster + coccus) % SHADES.length]}
               position={[
                 x + (hashUnit(cluster, coccus) - 0.5) * 2.4,
                 0,
@@ -245,7 +273,7 @@ function GramScene({ step }: { readonly step: StainStep }) {
           return (
             <mesh
               key={rod}
-              material={materials.negative}
+              material={materials.negative[rod % SHADES.length]}
               position={[x, 0, z]}
               rotation={[Math.PI / 2, 0, hashUnit(rod, 5) * Math.PI]}
             >
@@ -257,8 +285,19 @@ function GramScene({ step }: { readonly step: StainStep }) {
           <mesh
             geometry={spiral}
             key={spiral.uuid}
-            material={materials.negative}
+            material={materials.negative[1]}
           />
+        ))}
+        {Arr.map(debris, ({ index, position, size }) => (
+          <mesh
+            key={index}
+            material={speck}
+            position={position}
+            rotation={[-Math.PI / 2, 0, 0]}
+            scale={size}
+          >
+            <circleGeometry args={[1, 7]} />
+          </mesh>
         ))}
       </MicroscopeField>
     </>

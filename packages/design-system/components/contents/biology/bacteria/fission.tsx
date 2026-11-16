@@ -31,6 +31,9 @@ import type { InstancedMesh } from "three";
 /** Two hours: six doublings, sixty-four cells. */
 const MINUTES = 120;
 
+/** How much wider a phase-contrast halo is than its cell. */
+const HALO = 1.45;
+
 /** Played, twenty minutes pass in two seconds. */
 const MINUTES_PER_SECOND = 10;
 
@@ -153,6 +156,8 @@ function FissionScene({
   const playing = useVisualScene((card) => card.playing, false);
   const bodies = useRef<InstancedMesh>(null);
   const caps = useRef<InstancedMesh>(null);
+  const haloBodies = useRef<InstancedMesh>(null);
+  const haloCaps = useRef<InstancedMesh>(null);
   const clock = useRef(minutes);
   const sent = useRef(minutes);
 
@@ -201,19 +206,39 @@ function FissionScene({
           0,
           (z + Math.sin(angle) * along) * MAGNIFY,
         ] as const;
-      const bodyPart = bodies.current?.children[slot];
-      bodyPart?.position.set(...at(centre));
-      bodyPart?.rotation.set(0, -angle, Math.PI / 2);
-      bodyPart?.scale.set(
-        shown ? MAGNIFY : 0,
-        (body / NEWBORN) * MAGNIFY,
-        shown ? MAGNIFY : 0
+      // Phase contrast draws each cell dark inside a bright halo, so the
+      // halo is the same cell a little wider, just below it.
+      Arr.forEach(
+        [
+          { caps: caps.current, flat: 1, grow: 1, parts: bodies.current, y: 0 },
+          {
+            caps: haloCaps.current,
+            flat: 0.08,
+            grow: HALO,
+            parts: haloBodies.current,
+            y: -0.45,
+          },
+        ],
+        (layer) => {
+          const bodyPart = layer.parts?.children[slot];
+          const [px, , pz] = at(centre);
+          bodyPart?.position.set(px, layer.y, pz);
+          bodyPart?.rotation.set(0, -angle, Math.PI / 2);
+          // The body lies on its side, so its local x stands up from the slide.
+          bodyPart?.scale.set(
+            shown ? MAGNIFY * layer.grow * layer.flat : 0,
+            (body / NEWBORN) * MAGNIFY,
+            shown ? MAGNIFY * layer.grow : 0
+          );
+          Arr.forEach([-1, 1] as const, (end, cap) => {
+            const capPart = layer.caps?.children[slot * 2 + cap];
+            const [cx, , cz] = at(centre + (end * body) / 2);
+            capPart?.position.set(cx, layer.y, cz);
+            const size = shown ? MAGNIFY * layer.grow : 0;
+            capPart?.scale.set(size, size * layer.flat, size);
+          });
+        }
       );
-      Arr.forEach([-1, 1] as const, (end, cap) => {
-        const capPart = caps.current?.children[slot * 2 + cap];
-        capPart?.position.set(...at(centre + (end * body) / 2));
-        capPart?.scale.setScalar(shown ? MAGNIFY : 0);
-      });
     });
   });
 
@@ -222,16 +247,38 @@ function FissionScene({
       <SimulationTicker running={playing} />
       <MicroscopeField>
         <directionalLight intensity={1.2} position={[20, 60, 30]} />
+        <Instances limit={MOST * 2} ref={haloBodies}>
+          <cylinderGeometry args={[RADIUS, RADIUS, NEWBORN, 14, 1, true]} />
+          <meshBasicMaterial color={MATERIAL.phaseHalo} toneMapped={false} />
+          {Arr.map(Arr.range(1, MOST * 2), (slot) => (
+            <Instance key={slot} />
+          ))}
+        </Instances>
+        <Instances limit={MOST * 4} ref={haloCaps}>
+          <sphereGeometry args={[RADIUS, 14, 10]} />
+          <meshBasicMaterial color={MATERIAL.phaseHalo} toneMapped={false} />
+          {Arr.map(Arr.range(1, MOST * 4), (slot) => (
+            <Instance key={slot} />
+          ))}
+        </Instances>
         <Instances limit={MOST * 2} ref={bodies}>
           <cylinderGeometry args={[RADIUS, RADIUS, NEWBORN, 14, 1, true]} />
-          <meshStandardMaterial color={MATERIAL.cellBody} roughness={0.55} />
+          <meshPhysicalMaterial
+            clearcoat={0.5}
+            color={MATERIAL.phaseCell}
+            roughness={0.5}
+          />
           {Arr.map(Arr.range(1, MOST * 2), (slot) => (
             <Instance key={slot} />
           ))}
         </Instances>
         <Instances limit={MOST * 4} ref={caps}>
           <sphereGeometry args={[RADIUS, 14, 10]} />
-          <meshStandardMaterial color={MATERIAL.cellBody} roughness={0.55} />
+          <meshPhysicalMaterial
+            clearcoat={0.5}
+            color={MATERIAL.phaseCell}
+            roughness={0.5}
+          />
           {Arr.map(Arr.range(1, MOST * 4), (slot) => (
             <Instance key={slot} />
           ))}
