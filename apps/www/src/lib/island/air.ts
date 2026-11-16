@@ -135,8 +135,9 @@ void main() {
   float seed = fract(sin(dot(aChimney.xz, vec2(12.9898, 78.233))) * 43758.5453);
   float age = fract(uWind.z / LIFE + float(gl_VertexID) / PUFFS + seed);
   vAge = age;
-  float rise = 3.6 * sqrt(age);
-  vec2 lean = WIND_HEADING * (0.5 * uWindForce + 2.0 * windField(aChimney.xz, 2.2)) * age * age * 3.0;
+  // Warm smoke climbs straight out of the chimney first and bends with the wind as it cools, still climbing, so from the island's high camera it reads as rising and never as falling.
+  float rise = 3.0 * age + 3.4 * sqrt(age);
+  vec2 lean = WIND_HEADING * (0.45 * uWindForce + windField(aChimney.xz, 2.2)) * pow(age, 1.8) * 2.2;
   float sway = sin(age * 7.0 + seed * 20.0) * 0.18 * age;
   vec3 at = aChimney + vec3(lean.x + sway * WIND_HEADING.y, rise, lean.y - sway * WIND_HEADING.x);
   gl_Position = uViewProjection * vec4(at, 1.0);
