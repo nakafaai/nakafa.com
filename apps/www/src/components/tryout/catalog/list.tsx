@@ -67,9 +67,14 @@ function TryoutRow({ row }: { row: TryoutListRow }) {
             <TileIcon icon={row.visual.icon} />
           </Tile>
 
-          <div className="-mt-1 flex flex-1 flex-col gap-0.5">
-            <div className="flex flex-wrap items-center gap-2">
-              <h2>{row.title}</h2>
+          <div className="-mt-1 flex min-w-0 flex-1 flex-col gap-0.5">
+            <div className="flex min-w-0 items-center gap-2">
+              <h2
+                className="min-w-0 truncate"
+                title={typeof row.title === "string" ? row.title : undefined}
+              >
+                {row.title}
+              </h2>
               <TryoutRowStatus status={row.status} />
             </div>
             <TryoutRowMeta meta={row.meta} />
@@ -123,7 +128,7 @@ function TryoutRowDescription({
   }
 
   return (
-    <span className="text-muted-foreground group-hover:text-accent-foreground line-clamp-1 text-sm">
+    <span className="text-muted-foreground group-hover:text-accent-foreground truncate text-sm">
       {description}
     </span>
   );
