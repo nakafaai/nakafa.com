@@ -18,6 +18,7 @@ const SCHOOL_NAMESPACES = [
   "Connectors",
   "DataTable",
   "Editor",
+  "Emoji",
   "Error",
   "Exams",
   "Legal",

@@ -68,6 +68,7 @@ const mentionArg = (mention: typeof MentionView.Type) =>
  */
 export function ForumComposer() {
   const t = useTranslations("Classroom");
+  const tEmoji = useTranslations("Emoji");
   const { channelId, classId, discussion, slug } = useChannelScope();
   const send = useMutation(classroom.forum.messages.send);
   const reply = useMutation(classroom.forum.threads.reply);
@@ -263,7 +264,7 @@ export function ForumComposer() {
                 <InputGroupButton
                   className="rounded-full"
                   size="icon"
-                  tooltip={t("emoji-open")}
+                  tooltip={tEmoji("open")}
                   variant="ghost"
                 />
               }

@@ -54,7 +54,7 @@ export function EmojiPopover({
   quick?: readonly string[];
   side?: "bottom" | "top";
 }) {
-  const t = useTranslations("Classroom");
+  const t = useTranslations("Emoji");
   const common = useTranslations("Common");
   const [glyphs, setGlyphs] = useState<Option.Option<Glyphs>>(Option.none);
   const [open, setOpen] = useState(false);
@@ -102,7 +102,7 @@ export function EmojiPopover({
         side={side}
       >
         <header className="flex items-center justify-between gap-2 border-b py-2 ps-3 pe-2">
-          <PopoverTitle className="text-sm">{t("emoji-title")}</PopoverTitle>
+          <PopoverTitle className="text-sm">{t("title")}</PopoverTitle>
           <Button
             onClick={() => setOpen(false)}
             size="icon"
