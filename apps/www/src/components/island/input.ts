@@ -5,16 +5,23 @@ import {
   panOrbit,
   turnOrbit,
   zoomOrbit,
+  zoomToward,
 } from "@/lib/island/camera";
 import {
+  DRAG,
   distanceOf,
+  followSpin,
   isTap,
   LONG_PRESS,
   type Point,
   type Press,
   pinchOf,
+  releaseSpin,
+  type Spin,
+  STILL_SPIN,
   wheelZoomOf,
 } from "@/lib/island/gesture";
+import { groundThrough } from "@/lib/island/matrix";
 
 /** What the stage does with the learner's hands and keys (ADR 0047, D2 and D5). */
 interface Controls {
@@ -28,19 +35,25 @@ interface Controls {
   readonly move: (next: Orbit, eased?: boolean) => void;
   /** A press at a point of the screen: build there, or dig when `remove`. */
   readonly press: (point: Point, remove: boolean) => void;
+  /** Hands the world the turn a drag left it with when it lifted, which fades on its own. */
+  readonly spin: (spin: Spin) => void;
   /** Walks the fox a cell, right (`across`) or away from the camera (`ahead` negative). */
   readonly step: (across: number, ahead: number) => void;
 }
+
+/** How far a drag of one CSS pixel turns the world around, and tilts it, in radians. */
+const TURN = { pitch: 0.006, yaw: 0.01 } as const;
 
 /** How far a press may move, in pixels, and still count as a press. */
 const STILL = 8;
 
 /**
  * Reads the learner's pointer, wheel and keys over the canvas until
- * `release` stops it: one finger or the left button drags the world,
- * the right button or Shift turns it, two fingers pan, pinch and twist, the
- * wheel zooms, a tap builds, and a press held still digs. Keys walk the fox,
- * pan, turn and zoom, and pick a hotbar slot.
+ * `release` stops it: one finger or the left button turns the world around
+ * once it has moved past `DRAG`, and lets it spin on when it lifts; the right
+ * button or Shift pans it, two fingers pan, pinch and twist, the wheel zooms
+ * toward the pointer, a tap builds, and a press held still digs. Keys walk the
+ * fox, pan, turn and zoom, and pick a hotbar slot.
  */
 export function bindInput(
   canvas: HTMLCanvasElement,
@@ -48,6 +61,8 @@ export function bindInput(
   controls: Controls
 ) {
   const presses = MutableHashMap.empty<number, Press>();
+  /** How fast the one-press turn goes, so it can spin on when the press lifts. */
+  let spin: Spin = STILL_SPIN;
 
   /** Marks every press as used, so none of them builds when it lifts. */
   const spendPresses = () => {
@@ -62,6 +77,8 @@ export function bindInput(
     spendPresses();
     const point = { x: event.clientX, y: event.clientY };
     const id = event.pointerId;
+    spin = STILL_SPIN;
+    controls.spin(STILL_SPIN);
     MutableHashMap.set(presses, id, {
       at: event.timeStamp,
       button: event.button,
@@ -73,7 +90,7 @@ export function bindInput(
   };
 
   /** Moves the camera as one press moved from its last point to `point`. */
-  const dragTo = (press: Press, point: Point, shift: boolean) => {
+  const dragTo = (press: Press, point: Point, shift: boolean, now: number) => {
     const { orbit } = controls.camera();
     const other = Arr.findFirst(
       Arr.fromIterable(MutableHashMap.values(presses)),
@@ -90,11 +107,13 @@ export function bindInput(
     }
     const dx = point.x - press.last.x;
     const dy = point.y - press.last.y;
-    controls.move(
-      press.button === 2 || shift
-        ? turnOrbit(orbit, -dx * 0.01, dy * 0.006)
-        : panOrbit(orbit, dx, dy, canvas.clientHeight)
-    );
+    if (press.button === 2 || shift) {
+      controls.move(panOrbit(orbit, dx, dy, canvas.clientHeight));
+      return;
+    }
+    const [yaw, pitch] = [-dx * TURN.yaw, dy * TURN.pitch];
+    spin = followSpin(spin, yaw, pitch, now);
+    controls.move(turnOrbit(orbit, yaw, pitch));
   };
 
   const onMove = (event: PointerEvent) => {
@@ -107,8 +126,14 @@ export function bindInput(
       return;
     }
     const press = found.value;
-    dragTo(press, point, event.shiftKey);
     const moved = Math.max(press.moved, distanceOf(press.start, point));
+    // A press turns the world only once it has moved past the slop of its kind of pointer.
+    const slop = event.pointerType === "mouse" ? DRAG.mouse : DRAG.touch;
+    if (moved < slop && MutableHashMap.size(presses) < 2) {
+      MutableHashMap.set(presses, event.pointerId, { ...press, moved });
+      return;
+    }
+    dragTo(press, point, event.shiftKey, event.timeStamp);
     if (moved >= STILL) {
       controls.drag(true);
     }
@@ -123,6 +148,10 @@ export function bindInput(
     const found = MutableHashMap.get(presses, event.pointerId);
     MutableHashMap.remove(presses, event.pointerId);
     controls.drag(false);
+    if (MutableHashMap.size(presses) === 0) {
+      controls.spin(releaseSpin(spin, event.timeStamp));
+      spin = STILL_SPIN;
+    }
     Option.map(found, (press) => {
       if (!press.used && isTap(press.moved, event.timeStamp - press.at)) {
         controls.press(press.start, press.button === 2);
@@ -132,8 +161,21 @@ export function bindInput(
 
   const onWheel = (event: WheelEvent) => {
     event.preventDefault();
+    const { goal } = controls.camera();
+    const rect = canvas.getBoundingClientRect();
+    // The ground under the pointer stays under it while the camera comes closer or backs away.
+    const ground = groundThrough(
+      goal,
+      rect.width / Math.max(1, rect.height),
+      ((event.clientX - rect.left) / Math.max(1, rect.width)) * 2 - 1,
+      1 - ((event.clientY - rect.top) / Math.max(1, rect.height)) * 2
+    );
+    const factor = wheelZoomOf(event.deltaY);
     controls.move(
-      zoomOrbit(controls.camera().goal, wheelZoomOf(event.deltaY)),
+      Option.match(ground, {
+        onNone: () => zoomOrbit(goal, factor),
+        onSome: (point) => zoomToward(goal, point, factor),
+      }),
       true
     );
   };

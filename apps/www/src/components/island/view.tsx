@@ -5,7 +5,7 @@ import { createFramePace } from "@repo/design-system/lib/pace";
 import { Array as Arr, DateTime, Option } from "effect";
 import { createPainter, type Painter } from "@/components/island/draw";
 import { bodiesOf } from "@/lib/island/bodies";
-import { openingOrbit, turnOrbit } from "@/lib/island/camera";
+import { openingOrbit } from "@/lib/island/camera";
 import { flatQuads } from "@/lib/island/life";
 import { glowOf } from "@/lib/island/light";
 import { lightingOf, meshChunk } from "@/lib/island/mesh";
@@ -16,11 +16,12 @@ import { hourOf, lightOf } from "@/lib/island/sky";
 import { worldOf } from "@/lib/island/terrain";
 import { CHUNKS } from "@/lib/island/world";
 
-/** How fast the camera circles the island on the home page, in radians a second. */
-const TOUR = 0.06;
-
-/** Draws the world into one canvas while the camera slowly circles it, until the returned cleanup stops it. */
-function tour(
+/**
+ * Draws the world into one canvas from a still camera, its water and its life
+ * moving, until the returned cleanup stops it. The camera never turns by
+ * itself: the learner turns the world once they enter the game.
+ */
+function preview(
   canvas: HTMLCanvasElement,
   painter: Painter,
   world: Uint8Array,
@@ -39,12 +40,11 @@ function tour(
   );
   painter.shore(shoreOf(world, 0, false));
   let frame = 0;
-  let last = 0;
   let orbit = openingOrbit(size, 1);
   // A canvas drawn before its size is known, or cleared by a new size, shows black until it is
   // drawn again, so the frame after a resize draws whatever the pace says.
   let fresh = true;
-  // A tour runs by itself, so it keeps to its share of the thread (ADR 0039,
+  // A preview's water and life move by themselves, so they keep to its share of the thread (ADR 0039,
   // D5) and rests while hidden or scrolled away (ADR 0047, D26).
   const pace = createFramePace();
   let inSight = true;
@@ -58,10 +58,6 @@ function tour(
       return;
     }
     fresh = false;
-    // A tour back in sight goes on from where it stopped rather than jumping.
-    const seconds = last === 0 ? 0 : Math.min(0.25, (now - last) / 1000);
-    orbit = turnOrbit(orbit, seconds * TOUR);
-    last = now;
     painter.bodies([...bodiesOf(world, [], now / 1000), ...plants]);
     painter.herd(flatQuads(size, now / 1000));
     const hour = hourOf(DateTime.nowUnsafe(), DateTime.zoneMakeLocal());
@@ -81,17 +77,15 @@ function tour(
     pace.rest(now);
   };
   const resize = new ResizeObserver(() => {
-    const ratio = Math.min(2, window.devicePixelRatio || 1);
+    // Every device pixel, so the browser never stretches the canvas by a fraction (D20).
+    const ratio = window.devicePixelRatio || 1;
     canvas.width = Math.max(1, Math.round(canvas.clientWidth * ratio));
     canvas.height = Math.max(1, Math.round(canvas.clientHeight * ratio));
     fresh = true;
-    orbit = {
-      ...openingOrbit(
-        size,
-        canvas.clientWidth / Math.max(1, canvas.clientHeight)
-      ),
-      yaw: orbit.yaw,
-    };
+    orbit = openingOrbit(
+      size,
+      canvas.clientWidth / Math.max(1, canvas.clientHeight)
+    );
   });
   resize.observe(canvas);
   frame = requestAnimationFrame(tick);
@@ -105,7 +99,7 @@ function tour(
 
 /**
  * The learner's island as the home page shows it (ADR 0047): the same world
- * and renderer as the game, seen from a camera that slowly circles it, with no
+ * and renderer as the game, seen from a still camera, with no
  * HUD and no input. Its code loads once the reader is on the page.
  */
 export default function IslandView({
@@ -135,7 +129,7 @@ export default function IslandView({
           return Option.match(createPainter(canvas, seasonNow()), {
             onNone: () => undefined,
             onSome: (painter) =>
-              tour(canvas, painter, worldOf(seed, size, edits), size),
+              preview(canvas, painter, worldOf(seed, size, edits), size),
           });
         }}
         tabIndex={-1}

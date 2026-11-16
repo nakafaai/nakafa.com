@@ -2,10 +2,12 @@
 
 import { describe, expect, it } from "@effect/vitest";
 import { SPAN } from "@repo/backend/confect/island/world";
+import { Array as Arr } from "effect";
 import {
   clampOrbit,
   DISTANCE,
   easeOrbit,
+  easeShare,
   eyeOf,
   FIELD_OF_VIEW,
   openingOrbit,
@@ -13,7 +15,9 @@ import {
   panOrbit,
   snapOrbit,
   turnOrbit,
+  YAW_STEP,
   zoomOrbit,
+  zoomToward,
 } from "@/lib/island/camera";
 
 describe("island/camera", () => {
@@ -90,28 +94,30 @@ describe("island/camera", () => {
     expect(half.distance).toBeCloseTo(orbit.distance * 1.5);
   });
 
-  it("snaps the target to whole art pixels across the screen, keeps its depth, and says what it rounded away", () => {
+  it("snaps the turn to whole steps and the target to whole art pixels across the screen, keeps its depth, and says what it rounded away", () => {
     const orbit = {
       distance: 40,
       pitch: 0.7,
       target: [20.37, 9, 31.81] as const,
-      yaw: 0.9,
+      yaw: 52.3 * YAW_STEP,
     };
     const rows = 270;
     const { orbit: snapped, shift } = snapOrbit(orbit, rows);
     const pixel = (2 * orbit.distance * Math.tan(FIELD_OF_VIEW / 2)) / rows;
     const dot = (a: readonly number[], b: readonly number[]) =>
       a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
-    const right = [Math.cos(0.9), 0, -Math.sin(0.9)];
+    const yaw = 52 * YAW_STEP;
+    expect(snapped.yaw).toBeCloseTo(yaw, 12);
+    const right = [Math.cos(yaw), 0, -Math.sin(yaw)];
     const up = [
-      -Math.sin(0.7) * Math.sin(0.9),
+      -Math.sin(0.7) * Math.sin(yaw),
       Math.cos(0.7),
-      -Math.sin(0.7) * Math.cos(0.9),
+      -Math.sin(0.7) * Math.cos(yaw),
     ];
     const ahead = [
-      Math.cos(0.7) * Math.sin(0.9),
+      Math.cos(0.7) * Math.sin(yaw),
       Math.sin(0.7),
-      Math.cos(0.7) * Math.cos(0.9),
+      Math.cos(0.7) * Math.cos(yaw),
     ];
     const across = dot(snapped.target, right) / pixel;
     const height = dot(snapped.target, up) / pixel;
@@ -121,5 +127,46 @@ describe("island/camera", () => {
     expect(Math.abs(shift[0])).toBeLessThanOrEqual(0.5);
     expect(shift[0]).toBeCloseTo(across - dot(orbit.target, right) / pixel, 6);
     expect(snapOrbit(snapped, rows).shift[0]).toBeCloseTo(0, 6);
+  });
+
+  it("keeps the view between 15 and 55 degrees over the ground", () => {
+    const orbit = openingOrbit(24, 1.5);
+    expect(turnOrbit(orbit, 0, 5).pitch).toBeCloseTo((55 * Math.PI) / 180);
+    expect(turnOrbit(orbit, 0, -5).pitch).toBeCloseTo((15 * Math.PI) / 180);
+    expect(PITCH.low).toBeLessThan(orbit.pitch);
+    expect(orbit.pitch).toBeLessThan(PITCH.high);
+  });
+
+  it("eases the same distance in the same time at any frame rate, and never jumps over a stalled frame", () => {
+    const after = (frames: number, seconds: number) =>
+      1 - (1 - easeShare(seconds / frames)) ** frames;
+    expect(after(30, 0.5)).toBeCloseTo(after(120, 0.5), 10);
+    expect(easeShare(0)).toBe(0);
+    expect(easeShare(5)).toBe(easeShare(1 / 15));
+    expect(easeShare(1 / 60)).toBeCloseTo(0.25, 1);
+  });
+
+  it("zooms toward a point of the world, which keeps its place on the screen", () => {
+    const orbit = openingOrbit(24, 1.5);
+    const point = [
+      orbit.target[0] + 6,
+      orbit.target[1],
+      orbit.target[2] - 4,
+    ] as const;
+    const closer = zoomToward(orbit, point, 0.5);
+    expect(closer.distance).toBeCloseTo(orbit.distance * 0.5);
+    const eye = eyeOf(orbit);
+    const nearer = eyeOf(closer);
+    // The point, the old eye and the new eye stay on one line, so the point stays put on the screen.
+    const toward = (from: readonly number[]) => {
+      const d = [point[0] - from[0], point[1] - from[1], point[2] - from[2]];
+      const length = Math.hypot(d[0], d[1], d[2]);
+      return Arr.map(d, (value) => value / length);
+    };
+    const [a, b] = [toward(eye), toward(nearer)];
+    expect(a[0]).toBeCloseTo(b[0], 6);
+    expect(a[1]).toBeCloseTo(b[1], 6);
+    expect(a[2]).toBeCloseTo(b[2], 6);
+    expect(zoomToward(orbit, point, 1000).distance).toBe(DISTANCE.far);
   });
 });

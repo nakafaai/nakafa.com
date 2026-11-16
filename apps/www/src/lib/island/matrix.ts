@@ -1,3 +1,4 @@
+import { Option } from "effect";
 import { eyeOf, FIELD_OF_VIEW, type Orbit } from "@/lib/island/camera";
 
 /** A 4 by 4 matrix in column-major order, as WebGL reads it. */
@@ -149,9 +150,18 @@ export function invert(m: Matrix): Matrix {
 /** The nearest and farthest the camera sees; the edge pass reads depth by them too (D20). */
 export const CLIP = { far: 3000, near: 0.5 } as const;
 
-/** The camera's projection and view in one matrix, for a screen of this aspect. */
-export function viewProjectionOf(orbit: Orbit, aspect: number) {
-  const projection = perspective(FIELD_OF_VIEW, aspect, CLIP.near, CLIP.far);
+/**
+ * The camera's projection and view in one matrix, for a screen of this aspect.
+ * A `lens` over 1 widens the view by that share, for a frame drawn a little
+ * past the screen's edges so its pixels can slide under them (D20).
+ */
+export function viewProjectionOf(orbit: Orbit, aspect: number, lens = 1) {
+  const projection = perspective(
+    2 * Math.atan(Math.tan(FIELD_OF_VIEW / 2) * lens),
+    aspect,
+    CLIP.near,
+    CLIP.far
+  );
   return multiply(projection, lookAt(eyeOf(orbit), orbit.target));
 }
 
@@ -187,4 +197,26 @@ export function rayThrough(
     ]),
     origin: near,
   };
+}
+
+/**
+ * Where the ray through a point of the screen meets the level of the camera's
+ * target, the point given in clip coordinates; none when the ray runs above it.
+ */
+export function groundThrough(
+  orbit: Orbit,
+  aspect: number,
+  clipX: number,
+  clipY: number
+) {
+  const ray = rayThrough(orbit, aspect, clipX, clipY);
+  if (ray.direction[1] >= -1e-6) {
+    return Option.none();
+  }
+  const reach = (orbit.target[1] - ray.origin[1]) / ray.direction[1];
+  return Option.some([
+    ray.origin[0] + ray.direction[0] * reach,
+    orbit.target[1],
+    ray.origin[2] + ray.direction[2] * reach,
+  ] as const);
 }
