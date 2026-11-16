@@ -4705,6 +4705,13 @@
     "notice-stale": "Your island changed somewhere else, so it's loading again.",
     "next": "{stars} more Stars to level {level}",
     "top": "Every block is open",
-    "mute": "Mute sound"
+    "mute": "Mute sound",
+    "items": "Ready-made",
+    "blocks": "Blocks",
+    "item-house": "Cottage",
+    "item-tree": "Tree",
+    "item-well": "Well",
+    "item-lamp": "Lamp post",
+    "notice-room": "No room for that here. Try a flat, open spot."
   }
 }
