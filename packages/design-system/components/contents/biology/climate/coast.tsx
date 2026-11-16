@@ -1,4 +1,12 @@
 import { useFrame } from "@react-three/fiber";
+import { Bananas } from "@repo/design-system/components/contents/biology/climate/bananas";
+import { Boat } from "@repo/design-system/components/contents/biology/climate/boat";
+import { Houses } from "@repo/design-system/components/contents/biology/climate/house";
+import {
+  Boardwalk,
+  TideGauge,
+} from "@repo/design-system/components/contents/biology/climate/jetty";
+import { Palms } from "@repo/design-system/components/contents/biology/climate/palms";
 import {
   floodedCount,
   floodLevel,
@@ -12,13 +20,12 @@ import {
   VILLAGE,
   waveAtShore,
 } from "@repo/design-system/components/contents/biology/climate/sea";
+import { Shore } from "@repo/design-system/components/contents/biology/climate/shore";
 import {
-  Beach,
-  House,
   Mangroves,
   Sea,
   SeaWall,
-  TideGauge,
+  WALL_LINE,
 } from "@repo/design-system/components/contents/biology/climate/village";
 import {
   useQuantity,
@@ -119,6 +126,8 @@ export function SeaLevelRiseLab({
       ? sea
       : floodLevel(sea, storm ? STORM.surge : 0, wave);
   const flooded = floodedCount(level, VILLAGE.floors, wall ? VILLAGE.wall : 0);
+  const reach = wallReach(wall, level);
+  const held = reach !== undefined;
 
   return (
     <VisualCard>
@@ -202,25 +211,27 @@ export function SeaLevelRiseLab({
         <ScienceStage floor={0} reach={45} setting="field">
           <Suspense fallback={null}>
             <CameraControls
-              cameraPosition={[78, 22, 42]}
-              cameraTarget={[8, 0, 0]}
+              cameraPosition={[58, 16, 38]}
+              cameraTarget={[-3, 0, -2]}
               fov={38}
               maxDistance={160}
               maxPolarAngle={1.45}
               minDistance={20}
             />
-            <Beach />
-            {Arr.map(VILLAGE.floors, (floor, index) => (
-              <House
-                index={index}
-                key={floor}
-                wet={level > floor && !(wall && level < VILLAGE.wall)}
-              />
-            ))}
+            <Shore level={level} reach={reach} wave={wave} />
+            <Houses
+              wet={Arr.map(VILLAGE.floors, (floor) => level > floor && !held)}
+            />
+            <Palms />
+            <Bananas />
+            <Boardwalk />
             <TideGauge />
             {wall && <SeaWall />}
             {mangrove && <Mangroves />}
-            <Water level={level} wave={wave} />
+            <Water level={level} wave={wave}>
+              <Sea level={0} reach={reach} />
+              <Boat />
+            </Water>
           </Suspense>
         </ScienceStage>
       </VisualCardBody>
@@ -367,6 +378,11 @@ function seaRise(
   return mode === "scenario" ? scenario : chosen;
 }
 
+/** How far inland the sea reaches when a sea wall stands and its crest holds the water back, or nothing when the sea runs free. */
+function wallReach(wall: boolean, level: number) {
+  return wall && level < VILLAGE.wall ? WALL_LINE : undefined;
+}
+
 /** A slider with its name and its value above it. */
 function Labeled({
   children,
@@ -389,13 +405,16 @@ function Labeled({
 }
 
 /**
- * The sea at `level`. Played, it eases toward its level and heaves by the
- * waves' height, so the reader sees how far a wave reaches up the beach.
+ * The sea at `level`, with what floats on it. Played, it eases toward its
+ * level and heaves by the waves' height, so the reader sees how far a wave
+ * reaches up the beach.
  */
 function Water({
+  children,
   level,
   wave,
 }: {
+  readonly children: ReactNode;
   readonly level: number;
   readonly wave: number;
 }) {
@@ -416,7 +435,7 @@ function Water({
     <>
       <SimulationTicker running={playing} />
       <group position={[0, level, 0]} ref={surface}>
-        <Sea level={0} />
+        {children}
       </group>
     </>
   );

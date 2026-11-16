@@ -1,184 +1,125 @@
+import { MATERIAL } from "@repo/design-system/lib/material";
+import { Array as Arr, Schema } from "effect";
+import { createContext, use, useEffect, useLayoutEffect, useMemo } from "react";
 import {
-  hashUnit,
-  valueNoise,
-} from "@repo/design-system/components/contents/simulation/grain";
-import { Array as Arr } from "effect";
-import { createContext, use, useMemo } from "react";
-import {
+  BufferAttribute,
+  type BufferGeometry,
   Color,
-  DoubleSide,
-  LatheGeometry,
-  SphereGeometry,
-  Vector2,
+  MeshPhysicalMaterial,
 } from "three";
 
-/** The colour of living coral tissue, which every coral in the tank shares as it pales. */
-export const Tissue = createContext(new Color());
+/**
+ * How far every coral in the tank has paled, from 0 in full colour to 1 bone
+ * white, as the bleaching model reads the heat stress.
+ */
+export const Paleness = createContext(0);
+
+/** The colonies in the tank, each tinted a little differently by its algae. */
+const ColonySchema = Schema.Literals(["brown", "gold", "olive"]);
+export type Colony = typeof ColonySchema.Type;
 
 /**
- * A branching coral colony like Acropora: branches that fan up from a short
- * base and fork in two, each fork tipped with a paler growing tip.
+ * The healthy colour of each colony. The zooxanthellae living in coral tissue
+ * tint it brown to olive, and no two colonies carry quite the same algae.
  */
-export function BranchingCoral({
-  position,
-  seed,
-  tips,
-}: {
-  readonly position: readonly [number, number, number];
-  readonly seed: number;
-  readonly tips: Color;
-}) {
-  const branches = useMemo(() => branchesOf(seed), [seed]);
-  return (
-    <group position={position}>
-      {Arr.map(branches, ([id, x, y, z, tiltX, tiltZ, length, radius]) => (
-        <group key={id} position={[x, y, z]} rotation={[tiltX, 0, tiltZ]}>
-          <Branch length={length} radius={radius} />
-          {Arr.map([-1, 1], (side) => (
-            <group
-              key={side}
-              position={[0, length, 0]}
-              rotation={[side * 0.35, 0, side * 0.55]}
-            >
-              <Branch length={length * 0.55} radius={radius * 0.8} />
-              <mesh castShadow position={[0, length * 0.55, 0]}>
-                <sphereGeometry args={[radius * 0.7, 10, 8]} />
-                <meshStandardMaterial color={tips} roughness={0.7} />
-              </mesh>
-            </group>
-          ))}
-        </group>
-      ))}
-    </group>
-  );
-}
+const HEALTHY = {
+  brown: MATERIAL.coralBrown,
+  gold: MATERIAL.coralGold,
+  olive: MATERIAL.coralHealthy,
+} satisfies Record<Colony, string>;
 
-/** One tapering stretch of a coral branch, standing on its base. */
-function Branch({
-  length,
-  radius,
-}: {
-  readonly length: number;
-  readonly radius: number;
-}) {
-  const color = use(Tissue);
-  return (
-    <mesh castShadow position={[0, length / 2, 0]}>
-      <cylinderGeometry args={[radius * 0.8, radius, length, 10]} />
-      <meshStandardMaterial color={color} roughness={0.85} />
-    </mesh>
-  );
+/**
+ * The colour `share` of the way from `from` to `to`, mixed as the eye sees
+ * it, in sRGB, so a coral half way to white looks half way there.
+ */
+function mixed(from: string, to: string, share: number) {
+  return new Color(from)
+    .convertLinearToSRGB()
+    .lerp(new Color(to).convertLinearToSRGB(), share)
+    .convertSRGBToLinear();
 }
 
 /**
- * A plate coral such as Turbinaria: a short stalk that opens into a broad,
- * shallow cup whose rim lifts and waves, its surface pitted by its polyps.
+ * The tissue of `colony` at `paleness`: its body colour and the paler colour
+ * of its growing tips and ridges, both fading toward bone white as the algae
+ * leave and the skeleton shows through.
  */
-export function PlateCoral() {
-  const color = use(Tissue);
-  const geometry = useMemo(() => {
-    const profile = Arr.map(
-      [
-        [0.004, 0],
-        [0.009, 0.004],
-        [0.012, 0.018],
-        [0.03, 0.026],
-        [0.055, 0.03],
-        [0.072, 0.036],
-        [0.078, 0.046],
-        [0.074, 0.049],
-        [0.066, 0.041],
-        [0.048, 0.034],
-        [0.02, 0.03],
-        [0.002, 0.028],
-      ] as const,
-      ([radius, height]) => new Vector2(radius, height)
-    );
-    const cup = new LatheGeometry(profile, 72);
-    const positions = cup.attributes.position;
-    if (positions) {
-      Arr.forEach(Arr.range(0, positions.count - 1), (index) => {
-        const x = positions.getX(index);
-        const z = positions.getZ(index);
-        const reach = Math.hypot(x, z);
-        const wave = Math.sin(Math.atan2(z, x) * 5) * 0.004 * (reach / 0.078);
-        const pits = (valueNoise(x * 600, z * 600, 64) - 0.5) * 0.0015;
-        positions.setY(index, positions.getY(index) + wave + pits);
-      });
+function tissueOf(colony: Colony, paleness: number) {
+  return {
+    body: mixed(HEALTHY[colony], MATERIAL.coralBleached, paleness),
+    tip: mixed(MATERIAL.coralTip, MATERIAL.coralBleached, paleness),
+  };
+}
+
+/**
+ * Paints a coral's vertices from two of its attributes: `tipness`, from 0 on
+ * the body to 1 on a growing tip or a ridge, which lightens it toward the tip
+ * colour, and `shade`, the darker tissue down a valley or deep inside the
+ * colony, which fades as the pigment goes. The colours are written into the
+ * same buffer each time the paleness changes.
+ */
+export function useTissuePaint(geometry: BufferGeometry, colony: Colony) {
+  const paleness = use(Paleness);
+  useLayoutEffect(() => {
+    const tipness = geometry.getAttribute("tipness");
+    const shade = geometry.getAttribute("shade");
+    const paint = geometry.hasAttribute("color")
+      ? geometry.getAttribute("color")
+      : new BufferAttribute(new Float32Array(tipness.count * 3), 3);
+    const { body, tip } = tissueOf(colony, paleness);
+    const color = new Color();
+    for (const index of Arr.range(0, tipness.count - 1)) {
+      const dark = shade.getX(index);
+      color
+        .copy(body)
+        .lerp(tip, tipness.getX(index))
+        .multiplyScalar(dark + (1 - dark) * paleness * 0.6);
+      paint.setXYZ(index, color.r, color.g, color.b);
     }
-    cup.computeVertexNormals();
-    return cup;
-  }, []);
-  return (
-    <mesh
-      castShadow
-      geometry={geometry}
-      position={[-0.03, 0.035, 0.09]}
-      receiveShadow
-      rotation={[0.08, 0, 0.1]}
-    >
-      <meshStandardMaterial color={color} roughness={0.85} side={DoubleSide} />
-    </mesh>
-  );
+    paint.needsUpdate = true;
+    geometry.setAttribute("color", paint);
+  }, [colony, geometry, paleness]);
 }
 
 /**
- * A brain coral: a dome whose surface folds into meandering ridges and
- * valleys, raised from seeded value noise so every visit shows the same
- * maze.
+ * Living coral tissue: soft flesh over the skeleton with a wet film of mucus,
+ * which catches a faint sheen at its edges, painted by `useTissuePaint`.
  */
-export function BrainCoral() {
-  const color = use(Tissue);
-  const geometry = useMemo(() => {
-    const dome = new SphereGeometry(0.06, 96, 64);
-    const positions = dome.attributes.position;
-    if (positions) {
-      Arr.forEach(Arr.range(0, positions.count - 1), (index) => {
-        const x = positions.getX(index);
-        const y = positions.getY(index);
-        const z = positions.getZ(index);
-        const ridge = Math.sin(
-          valueNoise((x + 0.06) * 90, (z + 0.06) * 90, 16) * Math.PI * 9 +
-            y * 60
-        );
-        const lift = 1 + 0.035 * ridge;
-        positions.setXYZ(index, x * lift, y * lift, z * lift);
-      });
-    }
-    dome.computeVertexNormals();
-    return dome;
-  }, []);
-  return (
-    <mesh
-      castShadow
-      geometry={geometry}
-      position={[0.02, 0.07, -0.06]}
-      scale={[1, 0.7, 1]}
-    >
-      <meshStandardMaterial color={color} roughness={0.85} />
-    </mesh>
+export function TissueMaterial() {
+  // Sheen is set on the material object itself, which JSX props cannot name.
+  const material = useMemo(
+    () =>
+      new MeshPhysicalMaterial({
+        clearcoat: 0.3,
+        clearcoatRoughness: 0.42,
+        roughness: 0.62,
+        sheen: 0.2,
+        sheenColor: new Color(MATERIAL.coralTip),
+        sheenRoughness: 0.55,
+        vertexColors: true,
+      }),
+    []
   );
+  useEffect(() => () => material.dispose(), [material]);
+  return <primitive attach="material" object={material} />;
 }
 
 /**
- * The branches of colony `seed`: each as its number, its base point, its two tilts, its
- * length and its radius, in metres. Twelve branches fan up from the base at
- * seeded angles and heights.
+ * The tissue over a colony's corallites, the little cups its polyps sit in:
+ * a touch paler than the branch they stand on.
  */
-function branchesOf(seed: number) {
-  return Arr.map(Arr.range(0, 13), (branch) => {
-    const angle = hashUnit(seed, branch) * Math.PI * 2;
-    const lean = 0.2 + hashUnit(seed + 7, branch) * 0.6;
-    const height = hashUnit(seed + 3, branch) * 0.03;
-    return [
-      branch,
-      Math.cos(angle) * 0.015,
-      height,
-      Math.sin(angle) * 0.015,
-      Math.sin(angle) * lean,
-      -Math.cos(angle) * lean,
-      0.06 + hashUnit(seed + 5, branch) * 0.06,
-      0.007,
-    ] as const;
-  });
+export function CoralliteMaterial({ colony }: { readonly colony: Colony }) {
+  const paleness = use(Paleness);
+  const color = useMemo(() => {
+    const { body, tip } = tissueOf(colony, paleness);
+    return body.lerp(tip, 0.15);
+  }, [colony, paleness]);
+  return (
+    <meshPhysicalMaterial
+      clearcoat={0.3}
+      clearcoatRoughness={0.42}
+      color={color}
+      roughness={0.6}
+    />
+  );
 }

@@ -11,6 +11,7 @@ import {
   reproductionOf,
   SPREAD,
   SQUARE,
+  type Walker,
   walk,
 } from "@repo/design-system/components/contents/biology/epidemic/spread";
 import { Array as Arr, Option } from "effect";
@@ -81,6 +82,37 @@ describe("the square", () => {
     expect(Math.cos(moved.heading)).toBeLessThan(0);
     const up = walk({ heading: Math.PI / 2, home: false, x: 0, y: 19.9 }, 5, 3);
     expect(Math.sin(up.heading)).toBeLessThan(0);
+  });
+
+  it("keeps every walker out of the fountain and on the paving at every step", () => {
+    const clearance = SQUARE.fountain + SQUARE.shoulder;
+    const halfWidth = SQUARE.width / 2 - SQUARE.shoulder;
+    const halfDepth = SQUARE.depth / 2 - SQUARE.shoulder;
+    const outside = (walker: Walker) =>
+      Math.hypot(walker.x, walker.y) >= clearance - 1e-9 &&
+      Math.abs(walker.x) <= halfWidth &&
+      Math.abs(walker.y) <= halfDepth;
+    const start = crowdOf(160, 0);
+    expect(Arr.every(start, outside)).toBe(true);
+    const steps = Arr.reduce(Arr.range(1, 300), [start], (runs, step) => {
+      const last = Option.getOrThrow(Arr.last(runs));
+      return Arr.append(
+        runs,
+        Arr.map(last, (walker, index) => walk(walker, 0.5, index + step * 10))
+      );
+    });
+    expect(Arr.every(steps, (crowd) => Arr.every(crowd, outside))).toBe(true);
+  });
+
+  it("turns a walker heading into the fountain away at its rim", () => {
+    const clearance = SQUARE.fountain + SQUARE.shoulder;
+    const into = walk({ heading: Math.PI, home: false, x: 5.5, y: 0 }, 1, 1);
+    expect(Math.hypot(into.x, into.y)).toBeCloseTo(clearance);
+    expect(Math.cos(into.heading)).toBeGreaterThan(0);
+    // A walker already inside and leaving keeps its way, set back on the rim.
+    const leaving = walk({ heading: 0, home: false, x: 1, y: 0 }, 0.1, 1);
+    expect(leaving.x).toBeCloseTo(clearance);
+    expect(Math.cos(leaving.heading)).toBeGreaterThan(0);
   });
 
   it("infects the susceptible walkers nearest to a case", () => {
