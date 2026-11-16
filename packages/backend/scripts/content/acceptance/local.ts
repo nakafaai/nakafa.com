@@ -2,6 +2,7 @@ import {
   NAKAFA_API_EDGE_CONTRACT,
   NAKAFA_MCP_EDGE_CONTRACT,
 } from "@repo/backend/agent/edge";
+import { AD_SCRIPT_PATH } from "@repo/backend/scripts/content/acceptance/ads";
 import { reserveAnalyticsOrigin } from "@repo/backend/scripts/content/acceptance/analytics";
 import {
   createLocalJwks,
@@ -133,6 +134,7 @@ export function localApplicationEnvironment(runtime: LocalRuntime) {
     VITE_POSTHOG_PROJECT_TOKEN: "phc_local_acceptance",
     VITE_POSTHOG_UI_HOST: runtime.app,
     VITE_POSTHOG_PROXY_HOST: runtime.analytics,
+    VITE_AD_SCRIPT_URL: new URL(AD_SCRIPT_PATH, runtime.analytics).href,
     SITE_URL: runtime.app,
     [NAKAFA_API_EDGE_CONTRACT.secretEnvironment]:
       localEnvironment[NAKAFA_API_EDGE_CONTRACT.secretEnvironment],

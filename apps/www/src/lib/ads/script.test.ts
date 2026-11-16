@@ -1,11 +1,7 @@
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import { Effect, Exit, Fiber } from "effect";
-import {
-  AD_SCRIPT_SOURCE,
-  loadAdScript,
-  requestAd,
-  untilFilled,
-} from "@/lib/ads/script";
+import { AD_CLIENT } from "@/lib/ads/account";
+import { loadAdScript, requestAd, untilFilled } from "@/lib/ads/script";
 
 /** The one ad script the document holds. */
 function adScript() {
@@ -32,7 +28,10 @@ describe("loading the ad script", () => {
         yield* Effect.yieldNow;
 
         const script = adScript();
-        expect(script.src).toBe(AD_SCRIPT_SOURCE);
+        // The test setup names Google's address, as every deployment does.
+        expect(script.src).toBe(
+          `https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${AD_CLIENT}`
+        );
         expect(script.async).toBe(true);
         expect(script.crossOrigin).toBe("anonymous");
         expect(document.head.querySelectorAll("script")).toHaveLength(1);

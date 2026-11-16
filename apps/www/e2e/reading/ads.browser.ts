@@ -1,4 +1,5 @@
 import { expect, type Page, test } from "@playwright/test";
+import { AD_SCRIPT_PATH } from "@repo/backend/scripts/content/acceptance/ads";
 import { seedXendit } from "@repo/backend/scripts/content/acceptance/xendit";
 import { Array as Arr, Effect, Schema } from "effect";
 import { runFixture } from "@/e2e/support/acceptance";
@@ -8,12 +9,13 @@ import { pinnedRoutes } from "@/e2e/support/corpus";
 import { revealTimeoutMilliseconds } from "@/e2e/support/timeout";
 
 /**
- * Google's ad script. The tests answer it themselves, so no request leaves the
- * machine: with an empty script AdSense never answers, as while the site waits
- * for review or under an ad blocker, and with `FILLING_SCRIPT` every unit gets
- * an ad of a phone's in-article height.
+ * The ad script, which a proof's build loads from the acceptance runtime's
+ * stand-in (`AD_SCRIPT_PATH`). The tests answer it themselves: with an empty
+ * script AdSense never answers, as while the site waits for review or under an
+ * ad blocker, and with `FILLING_SCRIPT` every unit gets an ad of a phone's
+ * in-article height.
  */
-const AD_SCRIPT = "https://pagead2.googlesyndication.com/**";
+const AD_SCRIPT = `**${AD_SCRIPT_PATH}*`;
 
 /** Puts a 280 px ad in every unit that asks, the way AdSense marks a unit it filled. */
 const FILLING_SCRIPT = `
@@ -67,26 +69,48 @@ async function stubAdScript(page: Page, body: string) {
   return () => requests;
 }
 
-/**
- * Scrolls until the first ad place stands a screen and a half under the view:
- * near enough to open, still out of sight.
- */
-async function nearFirstPlace(page: Page) {
-  await page.evaluate(() => {
-    const place = document.querySelector("div[data-ad-slot]");
-    const top = place?.getBoundingClientRect().top ?? 0;
-    window.scrollTo(0, window.scrollY + top - window.innerHeight * 1.5);
-  });
-}
+/** Screens under the top of the view where a place is near enough to open, still out of sight. */
+const NEAR = 1.5;
 
 /**
- * Lets the scroll settle, then counts layout shifts from here on. A long lesson
- * that hydrates while the reader scrolls can shift by itself before any frame
- * exists, as its sections take their place; from here on a shift could come
- * from the frame, which no gesture has opened yet.
+ * Screens under the top of the view within which a place opens: the view and the
+ * screen under it (`NEAR_SCREEN` in components/ads/slot.tsx).
  */
-async function countShiftsFromHere(page: Page) {
+const REACH = 2;
+
+/**
+ * Screens under the top of the view where a place stands out of reach. A jump
+ * down a phone's lesson lets the sections it passes take their size, which
+ * brings the place up to 0.6 of a screen nearer at once in WebKit, so the place
+ * starts well past the reach.
+ */
+const OUT_OF_REACH = 3.5;
+
+/** Scrolls until the first ad place stands `screens` screens under the top of the view. */
+async function scrollToFirstPlace(page: Page, screens: number) {
+  await page.evaluate((distance) => {
+    const place = document.querySelector("div[data-ad-slot]");
+    const top = place?.getBoundingClientRect().top ?? 0;
+    window.scrollTo(0, window.scrollY + top - window.innerHeight * distance);
+  }, screens);
+}
+
+/** Scrolls until the first ad place is near enough to open, still out of sight. */
+const nearFirstPlace = (page: Page) => scrollToFirstPlace(page, NEAR);
+
+/**
+ * Scrolls the first place just out of reach and lets the scroll settle, counts
+ * layout shifts from there on, and brings the place near. A long lesson that
+ * hydrates while the reader scrolls can shift by itself before any frame exists,
+ * as its sections take their place. A scroll is a reader's gesture once the page
+ * has settled (ADR 0039), and WebKit settles at the load and scrolls the page
+ * itself to anchor it, so a scroll could open the frame; out of reach it cannot,
+ * and from the count on a shift could come from the frame.
+ */
+async function nearFirstPlaceCountingShifts(page: Page) {
+  await scrollToFirstPlace(page, OUT_OF_REACH);
   await page.waitForTimeout(1000);
+  expect(await firstPlaceScreens(page)).toBeGreaterThan(REACH);
   await expect(firstFrame(page)).toHaveCount(0);
   await page.evaluate(() => {
     const shifts = Reflect.get(window, "nakafaShifts");
@@ -94,6 +118,7 @@ async function countShiftsFromHere(page: Page) {
       shifts.length = 0;
     }
   });
+  await nearFirstPlace(page);
 }
 
 /** The first ad place. */
@@ -101,6 +126,12 @@ const firstPlace = (page: Page) => page.locator("div[data-ad-slot]").first();
 
 /** The frame of the first ad place, mounted or shown. */
 const firstFrame = (page: Page) => firstPlace(page).locator("aside");
+
+/** How many screens under the top of the view the first ad place stands. */
+const firstPlaceScreens = (page: Page) =>
+  firstPlace(page).evaluate(
+    (place) => place.getBoundingClientRect().top / window.innerHeight
+  );
 
 /**
  * The first place's height, and the space between the sections around it, with
@@ -137,6 +168,17 @@ async function readUntilFrame(page: Page) {
   }).toPass({ timeout: revealTimeoutMilliseconds });
 }
 
+/**
+ * Opens the lesson at its top. A load of the address the page already shows
+ * restores the scroll it left, as WebKit does for every width after the first,
+ * which would bring the first place near before the test scrolls: the page
+ * goes back to its top before it leaves.
+ */
+async function openLessonAtTop(page: Page) {
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await page.goto(pinnedRoutes.material.en);
+}
+
 /** Expects the first place to take no room: the sections keep the spacing they have without it. */
 async function expectNoRoom(page: Page) {
   const gaps = await firstGaps(page);
@@ -156,7 +198,7 @@ test("an ad that never comes leaves the page as if it had no frame, at every wid
         await page.addInitScript(recordShifts);
         for (const width of WIDTHS) {
           await page.setViewportSize({ height: 800, width });
-          await page.goto(pinnedRoutes.material.en);
+          await openLessonAtTop(page);
 
           // The page's HTML holds the places, empty, and at most two of them,
           // each before a section's heading.
@@ -171,8 +213,7 @@ test("an ad that never comes leaves the page as if it had no frame, at every wid
 
           // The frame asks for its ad and waits out of sight; AdSense never
           // answers, so the reader never sees it.
-          await nearFirstPlace(page);
-          await countShiftsFromHere(page);
+          await nearFirstPlaceCountingShifts(page);
           await readUntilFrame(page);
           await expect.poll(requests).toBeGreaterThan(0);
           await firstPlace(page).scrollIntoViewIfNeeded();
@@ -197,9 +238,8 @@ test("a filled ad comes in a frame of its own height that moves nothing the read
         await page.addInitScript(recordShifts);
         for (const width of WIDTHS) {
           await page.setViewportSize({ height: 800, width });
-          await page.goto(pinnedRoutes.material.en);
-          await nearFirstPlace(page);
-          await countShiftsFromHere(page);
+          await openLessonAtTop(page);
+          await nearFirstPlaceCountingShifts(page);
           await readUntilFrame(page);
 
           const frame = firstFrame(page);

@@ -8,6 +8,7 @@ import {
 import { AGENT_DISCOVERY_HEADERS } from "@repo/site/discovery";
 import { Array as Arr, Option, Result, Schema } from "effect";
 import { AD_POLICY_SOURCES } from "#www/src/lib/ads/account";
+import { adScriptKeys } from "#www/src/lib/ads/keys";
 import { GOOGLE_ANALYTICS_POLICY_SOURCES } from "#www/src/lib/analytics/google";
 
 const WwwHeaderSchema = Schema.Struct({
@@ -25,6 +26,8 @@ const WwwHeaderOriginsSchema = Schema.Struct({
   convexSiteUrl: Schema.String,
   /** The first-party PostHog proxy host that analytics sends events to. */
   posthogProxyHost: Schema.String,
+  /** The address of Google's ad script, or of the acceptance runtime's stand-in for it. */
+  adScriptUrl: Schema.String,
 });
 
 /** The origins that the page headers name. */
@@ -47,7 +50,8 @@ export class WwwHeaderLineTooLong extends Schema.TaggedError<
  * one analytics origin, and the ad script's Google origins join the policy that
  * every page shares, since a lesson's frames load after a client navigation too.
  * A loopback analytics host is the local stand-in that also serves the bucket,
- * so its origin may draw pictures too.
+ * so its origin may draw pictures too, and a loopback ad script is the
+ * acceptance runtime's stand-in for Google's, so its origin may run it.
  */
 export function createWwwHeaders(origins: WwwHeaderOrigins): WwwHeader[] {
   const convexOrigins = Arr.flatMap(
@@ -76,6 +80,10 @@ export function createWwwHeaders(origins: WwwHeaderOrigins): WwwHeader[] {
         (source) => source.startsWith("http:")
       ),
       additionalScriptSources: [
+        ...Arr.filter(
+          createLoopbackConnectSources(new URL(origins.adScriptUrl)),
+          (source) => source.startsWith("http:")
+        ),
         ...AD_POLICY_SOURCES.script,
         ...GOOGLE_ANALYTICS_POLICY_SOURCES.script,
       ],
@@ -92,6 +100,7 @@ export function readWwwHeaderOrigins(): WwwHeaderOrigins {
     convexSiteUrl: convexSiteServerKeys().VITE_CONVEX_SITE_URL,
     convexUrl: agentTrustKeys().VITE_CONVEX_URL,
     posthogProxyHost: postHogProxyKeys().VITE_POSTHOG_PROXY_HOST,
+    adScriptUrl: adScriptKeys().VITE_AD_SCRIPT_URL,
   };
 }
 

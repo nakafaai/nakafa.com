@@ -140,6 +140,8 @@ jobs:
           VITE_POSTHOG_PROJECT_TOKEN: ${{ vars.VITE_POSTHOG_PROJECT_TOKEN }}
           VITE_POSTHOG_PROXY_HOST: ${{ vars.VITE_POSTHOG_PROXY_HOST }}
           VITE_POSTHOG_UI_HOST: ${{ vars.VITE_POSTHOG_UI_HOST }}
+          # Google's ad script, the same in every stage; only a proof serves a stand-in.
+          VITE_AD_SCRIPT_URL: https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js
         run: bunx --no-install alchemy deploy --stage "$NAKAFA_DEPLOY_STAGE" --yes
 
       # A build that finished drops the entries it did not use, such as the answers of an
