@@ -114,6 +114,35 @@ describe("contentRelease/quran/attribution", () => {
         );
       })
   );
+  it.live(
+    "reads the Malay translation and its external Tafsir from the signed attribution",
+    () =>
+      Effect.gen(function* () {
+        const active = yield* Confect.pipe(Effect.provide(confectLayer));
+        yield* active.run(
+          Effect.gen(function* () {
+            const activeCtx = yield* MutationCtx;
+            const snapshotId = yield* Effect.promise(() =>
+              activateQuranSnapshot(activeCtx, [makeQuranAttribution()])
+            );
+            expect(
+              yield* readQuranLocaleSources(snapshotId, "ms").pipe(
+                Effect.provide(quranLayer)
+              )
+            ).toMatchObject({
+              sources: {
+                translation: { id: "quranenc-malay" },
+              },
+              tafsirAccess: {
+                appLocale: "ms",
+                kind: "external",
+                source: { id: "mokhtasar-indonesian" },
+              },
+            });
+          })
+        );
+      })
+  );
   it.live("fails closed when the signed locale set excludes a request", () =>
     Effect.gen(function* () {
       const active = yield* Confect.pipe(Effect.provide(confectLayer));

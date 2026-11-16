@@ -11,7 +11,10 @@ export const NAKAFA_SEARCH_CONTENT_TOOL = {
         anyOf: [{ type: "integer", minimum: 1, maximum: 10 }, { type: "null" }],
       },
       locale: {
-        anyOf: [{ type: "string", enum: ["en", "id", "de"] }, { type: "null" }],
+        anyOf: [
+          { type: "string", enum: ["en", "id", "de", "ms"] },
+          { type: "null" },
+        ],
       },
       offset: {
         anyOf: [{ type: "integer", minimum: 0, maximum: 9 }, { type: "null" }],
@@ -68,7 +71,7 @@ export const NAKAFA_SEARCH_CONTENT_TOOL = {
                 lensId: { type: "string" },
                 locale: {
                   type: "string",
-                  enum: ["en", "id", "de"],
+                  enum: ["en", "id", "de", "ms"],
                   description: "Locale of the referenced content.",
                 },
                 route: { type: "string" },

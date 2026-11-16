@@ -194,6 +194,7 @@ describe("published article category", () => {
         { appLocale: "en", publicPath: "articles/politics" },
         { appLocale: "id", publicPath: "articles/politics" },
         { appLocale: "de", publicPath: "articles/politik" },
+        { appLocale: "ms", publicPath: "articles/politics" },
       ]);
     })
   );
@@ -238,6 +239,7 @@ describe("published article category", () => {
             { appLocale: "en", publicPath: "articles/politics" },
             { appLocale: "id", publicPath: "articles/politics" },
             { appLocale: "de", publicPath: "articles/politik" },
+            { appLocale: "ms", publicPath: "articles/politics" },
           ]
         );
       })

@@ -3,15 +3,26 @@ import "@tanstack/react-start/server-only";
 import type { CompiledContentPayload } from "@nakafa/aksara-contracts/content";
 import { ContentKeySchema } from "@nakafa/aksara-contracts/ids";
 import { RendererDomainSchema } from "@nakafa/aksara-contracts/renderer/domain";
-import { semanticComponentNames } from "@repo/design-system/lib/markdown/names";
+import {
+  baseComponentNames,
+  semanticComponentNames,
+} from "@repo/design-system/lib/markdown/names";
 import type { MDXComponents } from "@repo/design-system/types/markdown";
-import { Array as Arr, Effect, HashSet, MutableList, Schema } from "effect";
-import { baseRenderers } from "@/lib/content/renderer/registry/base";
-import { biologyRenderers } from "@/lib/content/renderer/registry/biology";
-import { chemistryRenderers } from "@/lib/content/renderer/registry/chemistry";
-import { mathematicsRenderers } from "@/lib/content/renderer/registry/mathematics";
-import { physicsRenderers } from "@/lib/content/renderer/registry/physics";
-import { politicsRenderers } from "@/lib/content/renderer/registry/politics";
+import {
+  Array as Arr,
+  Effect,
+  HashSet,
+  MutableList,
+  Option,
+  Record as Rec,
+  Schema,
+} from "effect";
+import { catalogRenderers } from "@/lib/content/renderer/catalog";
+import { CodeBlockServer } from "@/lib/content/renderer/code.server";
+import {
+  BlockFormula,
+  InlineFormula,
+} from "@/lib/content/renderer/formula.server";
 
 export type RendererSelection = Pick<
   CompiledContentPayload,
@@ -53,17 +64,32 @@ class RendererComponentCollision extends Schema.TaggedError<
 }) {}
 
 /**
- * Every registered implementation, the same for every route domain: a lesson
- * in any subject may use any visual.
+ * The components a lesson, built on the server, draws there instead of the
+ * browser's: code blocks in the colors `CodeBlockServer` draws, and formulas
+ * whose TeX the page's data carries while their markup stays in the HTML
+ * (`formula.server.tsx`).
  */
-export const rendererImplementations = [
-  ...baseRenderers,
-  ...biologyRenderers,
-  ...chemistryRenderers,
-  ...mathematicsRenderers,
-  ...physicsRenderers,
-  ...politicsRenderers,
-] satisfies readonly RendererImplementation[];
+const serverComponents: Readonly<Record<string, MDXComponents[string]>> = {
+  [baseComponentNames.blockMath]: BlockFormula,
+  [baseComponentNames.codeBlock]: CodeBlockServer,
+  [baseComponentNames.inlineMath]: InlineFormula,
+};
+
+/**
+ * Every registered implementation, the same for every route domain: a lesson
+ * in any subject may use any visual. Each is the one the browser draws in any
+ * document, except the ones a lesson draws on the server.
+ */
+export const rendererImplementations = Arr.map(
+  catalogRenderers,
+  (renderer): RendererImplementation => ({
+    component: Option.getOrElse(
+      Rec.get(serverComponents, renderer.name),
+      () => renderer.component
+    ),
+    name: renderer.name,
+  })
+);
 
 const semanticNames = HashSet.fromIterable<string>(semanticComponentNames);
 

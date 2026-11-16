@@ -1,4 +1,6 @@
 import { figureExtensions } from "@repo/editor/figure";
+import { groupExtensions } from "@repo/editor/group";
+import { Highlight } from "@repo/editor/highlight";
 import { imageExtensions } from "@repo/editor/image";
 import {
   type MathViews,
@@ -117,6 +119,7 @@ type MarkExtension = (
 const MARKS = {
   bold: (priority) => Bold.extend({ priority }),
   code: (priority) => Code.extend({ priority }),
+  highlight: (priority) => Highlight.extend({ priority }),
   italic: (priority) => Italic.extend({ priority }),
   link: (priority, isLinkAllowed) =>
     Link.extend({
@@ -162,7 +165,7 @@ const NO_DOCUMENT_VIEWS = {
 /**
  * The extensions of an editor that holds a document of the given rules. StarterKit
  * supplies the blocks and the text, with the heading levels of the rules. Its own marks
- * are off, so no strike and no highlight is offered, and its horizontal rule is off,
+ * are off, so no strike is offered and the highlight is the contract's own, and its horizontal rule is off,
  * because a document of this kind holds no rule (ADR 0031). Its ordered list is the
  * document's own, and so is its link, so each holds only the attributes the contract names.
  * A table is the contract's table, of rows and cells that hold blocks, with the spans of
@@ -199,6 +202,7 @@ export function documentExtensions(
     ...mathExtensions(views),
     ...imageExtensions(views.image),
     ...figureExtensions(views.figure),
+    ...groupExtensions(),
     ...Arr.map(rules.marks, (mark, index) =>
       MARKS[mark](TOP_PRIORITY - index, rules.isLinkAllowed).configure({
         HTMLAttributes: { class: views.marks[mark] },

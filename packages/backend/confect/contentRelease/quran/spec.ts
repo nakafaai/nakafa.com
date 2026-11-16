@@ -3,6 +3,7 @@ import {
   ENGLISH_APP_LOCALE_CODE,
   GERMAN_APP_LOCALE_CODE,
   INDONESIAN_APP_LOCALE_CODE,
+  MALAY_APP_LOCALE_CODE,
 } from "@nakafa/aksara-contracts/locale";
 import {
   type QuranEmbeddedSourceId,
@@ -32,6 +33,7 @@ export const quranSurahMeaningValidator = Schema.Union([
     de: Schema.String,
     en: Schema.String,
     id: Schema.String,
+    ms: Schema.String,
   }),
   Schema.Struct({
     appLocale: Schema.Literal(ENGLISH_APP_LOCALE_CODE),
@@ -116,6 +118,12 @@ export const quranReadingSourcesValidator = Schema.Union([
       quranTranslationSourceId(GERMAN_APP_LOCALE_CODE)
     ),
   }),
+  Schema.Struct({
+    arabic: quranArabicSourceValidator,
+    translation: embeddedSourceValidator(
+      quranTranslationSourceId(MALAY_APP_LOCALE_CODE)
+    ),
+  }),
 ]);
 
 /** Semantic source-note relationship for one translated Quran verse. */
@@ -172,6 +180,12 @@ export const quranTafsirAccessValidator = Schema.Union([
     source: externalSourceValidator(
       quranTafsirSourceId(GERMAN_APP_LOCALE_CODE)
     ),
+  }),
+  Schema.Struct({
+    appLocale: Schema.Literal(MALAY_APP_LOCALE_CODE),
+    kind: Schema.Literal("external"),
+    notice: Schema.String,
+    source: externalSourceValidator(quranTafsirSourceId(MALAY_APP_LOCALE_CODE)),
   }),
 ]);
 

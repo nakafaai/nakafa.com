@@ -141,11 +141,13 @@ export const freezeAttempt = Effect.fn("tryouts.start.freezeAttempt")(
           paperSection.value.placements,
           (place, index) =>
             Effect.gen(function* () {
-              const item = HashMap.get(items, place.hash);
+              // A learner starts a place in its section's first language.
+              const { hash } = Arr.headNonEmpty(place.versions);
+              const item = HashMap.get(items, hash);
               if (Option.isNone(item)) {
                 return yield* new TryoutFreezeError({
                   code: "TRYOUT_ITEM_MISSING",
-                  message: `The snapshot holds no item version ${place.hash} for the paper ${source.paper.id}.`,
+                  message: `The snapshot holds no item version ${hash} for the paper ${source.paper.id}.`,
                 });
               }
               return yield* freezePlace(source.profile, item.value, {

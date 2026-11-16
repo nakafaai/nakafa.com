@@ -1,6 +1,7 @@
 // @vitest-environment node
 
 import { describe, expect, it } from "@effect/vitest";
+import { LOCALES } from "@repo/internationalization/src/locale";
 import { Effect } from "effect";
 import { BASE_URL } from "@/lib/llms/constants";
 import { AGENT_MARKDOWN_DIRECTIVE } from "@/lib/llms/format";
@@ -14,7 +15,7 @@ describe("School Markdown", () => {
     expect(isSchoolLlmsRoute("pricing")).toBe(false);
   });
 
-  it.effect.each(["de", "en", "id"] as const)(
+  it.effect.each(LOCALES)(
     "states every plan, period, add-on and question of the pricing page in %s",
     (locale) =>
       Effect.gen(function* () {

@@ -13,6 +13,7 @@ import { previewIdProjection, previewProjection } from "@/test/manifest";
 import {
   testArticleDeProjection,
   testArticleIdProjection,
+  testArticleMsProjection,
   testArticleProjection,
 } from "@/test/published/article";
 import {
@@ -38,6 +39,7 @@ const articleProjections = [
   testArticleProjection,
   testArticleIdProjection,
   testArticleDeProjection,
+  testArticleMsProjection,
 ];
 const activeMaterialRoute = {
   activeReleaseId,

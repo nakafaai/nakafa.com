@@ -24,6 +24,7 @@ function markText(text: string, mark: Mark) {
     Match.discriminatorsExhaustive("type")({
       bold: () => `**${text}**`,
       code: () => `\`${text}\``,
+      highlight: () => `**${text}**`,
       italic: () => `_${text}_`,
       link: ({ attrs }) => `[${text}](${attrs.href})`,
       subscript: () => text,
@@ -95,6 +96,10 @@ function blockText(block: BlockNode): string {
           Arr.map(content ?? [], ({ text }) => text),
           ""
         )}\n\`\`\``,
+      contentBlock: ({ content }) =>
+        Arr.join(Arr.map(content, blockText), "\n\n"),
+      contentStack: ({ content }) =>
+        Arr.join(Arr.map(content, blockText), "\n\n"),
       figure: ({ attrs }) => `[Figure: ${attrs.alt}]`,
       heading: ({ attrs, content }) =>
         `${"#".repeat(attrs.level)} ${inlineText(content)}`,

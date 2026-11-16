@@ -78,6 +78,10 @@ export function readSectionSuccessor(
   appLocale: ActiveAppLocaleCode,
   section: string
 ) {
+  // A locale served after the rename, such as Malay, never had a retired name.
+  if (!isRetiredSectionLocale(appLocale)) {
+    return section;
+  }
   return Option.getOrElse(
     HashMap.get(RETIRED_SNBT_SECTIONS[appLocale], section),
     () => section

@@ -59,20 +59,21 @@ describe("section build", () => {
     expect(Arr.map(steps, ({ position }) => position.phase)).toEqual([
       "lessons",
       "lessons",
+      "lessons",
       "quran",
       "prune",
     ]);
-    expect(embeddedBy(steps)).toBe(27);
+    expect(embeddedBy(steps)).toBe(36);
     expect(skippedBy(steps)).toBe(0);
     expect(
       Arr.flatMap(model.doEmbedCalls, ({ values }) => values)
-    ).toHaveLength(27);
+    ).toHaveLength(36);
     const stored = await rows();
-    expect(stored).toHaveLength(27);
+    expect(stored).toHaveLength(36);
     expect(
       Arr.every(stored, (row) => row.embedding.length === embeddingDimensions)
     ).toBe(true);
-    expect(await sources()).toHaveLength(9);
+    expect(await sources()).toHaveLength(12);
     expect(
       Arr.every(await sources(), ({ version }) =>
         Str.startsWith("2:google/gemini-embedding-2:sha256:")(version)
@@ -104,8 +105,8 @@ describe("section build", () => {
     // reads are the lessons (40), the state that each of the 9 stores reads
     // (the checks of an empty index read nothing), the Quran (2), the clean up
     // (19), and the record (1).
-    expect(total.documentsWritten).toBe(37);
-    expect(total.documentsRead).toBe(71);
+    expect(total.documentsWritten).toBe(49);
+    expect(total.documentsRead).toBe(94);
   });
 
   it("passes over every document it holds, embeds nothing, and writes nothing", async () => {
@@ -117,7 +118,7 @@ describe("section build", () => {
     model.doEmbedCalls.length = 0;
     const { steps, total } = await measuredBuild(t);
     expect(embeddedBy(steps)).toBe(0);
-    expect(skippedBy(steps)).toBe(9);
+    expect(skippedBy(steps)).toBe(12);
     expect(model.doEmbedCalls).toHaveLength(0);
     expect(await rows()).toEqual(before.rows);
     expect(await sources()).toEqual(before.sources);
@@ -125,7 +126,7 @@ describe("section build", () => {
     // its route, and its record), two for each of the two pages that load the
     // active release, two for the Quran, two for each document the clean up
     // checks (its record and its head) and one more, and two for the record.
-    expect(total.documentsRead).toBe(63);
+    expect(total.documentsRead).toBe(83);
     expect(total.documentsWritten).toBe(0);
   });
 
@@ -167,7 +168,7 @@ describe("section build", () => {
     // that the check reads, and the 8 documents that its store reads. It
     // writes the section, the record of its document, and the record of the
     // build.
-    expect(total.documentsRead).toBe(77);
+    expect(total.documentsRead).toBe(97);
     expect(total.documentsWritten).toBe(3);
   });
 
@@ -208,7 +209,7 @@ describe("section build", () => {
     ]);
     // Each row of the lesson says how many sections it has, so all 5 are
     // written, with the record of the document and the record of the build.
-    expect(total.documentsRead).toBe(80);
+    expect(total.documentsRead).toBe(100);
     expect(total.documentsWritten).toBe(7);
   });
 
@@ -224,7 +225,7 @@ describe("section build", () => {
     expect(model.doEmbedCalls).toHaveLength(0);
     // The 63 documents that a build of nothing new reads, and the record of the
     // earlier release, which replacing it reads.
-    expect(total.documentsRead).toBe(64);
+    expect(total.documentsRead).toBe(84);
     expect(total.documentsWritten).toBe(1);
     expect(
       await t.query((ctx) => ctx.db.query("contentSectionState").collect())
@@ -266,13 +267,13 @@ describe("section build", () => {
     const steps = await build();
     // No text is new: the section that moved up keeps its vector.
     expect(embeddedBy(steps)).toBe(0);
-    expect(skippedBy(steps)).toBe(8);
+    expect(skippedBy(steps)).toBe(11);
     expect(model.doEmbedCalls).toHaveLength(0);
     const stored = await rows();
     expect(determinantOf(stored)).toEqual(
       Option.map(determinant, ({ embedding }) => ({ embedding, ordinal: 2 }))
     );
-    expect(stored).toHaveLength(26);
+    expect(stored).toHaveLength(35);
     expect(
       Arr.sort(
         Arr.map(
@@ -292,7 +293,7 @@ describe("section build", () => {
         ({ contentKey }) => contentKey === "material/lesson/removed"
       )
     ).toBe(false);
-    expect(await sources()).toHaveLength(9);
+    expect(await sources()).toHaveLength(12);
   });
 
   it("fails at a lesson whose source cannot be split, names it, and stores nothing of its page", async () => {
@@ -443,7 +444,7 @@ describe("section build", () => {
           appLocale === "id" && contentKey.endsWith("section-1")
       )
     ).toBe(false);
-    expect(await sources()).toHaveLength(9);
+    expect(await sources()).toHaveLength(12);
     expect(
       await t.query((ctx) => ctx.db.query("contentSectionState").collect())
     ).toMatchObject([{ missing: 3, releaseId: KNOWLEDGE_RELEASE.releaseId }]);
@@ -456,7 +457,7 @@ describe("section build", () => {
     const again = await build();
     expect(embeddedBy(again)).toBe(3);
     // The edited lesson has three sections, one fewer than the seeded lesson had.
-    expect(await rows()).toHaveLength(26);
+    expect(await rows()).toHaveLength(35);
     expect(
       Arr.filter(await sources(), ({ missing }) => missing !== undefined)
     ).toEqual([]);

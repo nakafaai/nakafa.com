@@ -50,7 +50,7 @@ export const KNOWLEDGE_RELEASE = TEST_RUNTIME_RELEASE;
 const LESSON_ORDERS = [1, 2] as const;
 
 /**
- * The source of each lesson in each language. The three languages are written
+ * The source of each lesson in each language. The four languages are written
  * line by line, so a section has the same place in all of them while its
  * heading, and so its anchor, differs.
  */
@@ -83,6 +83,15 @@ const LESSONS = {
       "## Determinan",
       "Determinan matriks dua kali dua adalah ad dikurangi bc.",
     ],
+    ms: [
+      "Matriks menyusun nombor.",
+      "## Bentuk Matriks",
+      "Matriks menyusun nombor dalam baris dan lajur.",
+      "### Matriks Segi Empat Sama",
+      "Matriks segi empat sama mempunyai bilangan baris dan lajur yang sama.",
+      "## Penentu",
+      "Penentu matriks dua kali dua ialah ad tolak bc.",
+    ],
   },
   2: {
     de: [
@@ -106,6 +115,13 @@ const LESSONS = {
       "## Diskriminan",
       "Diskriminan menunjukkan banyaknya akar real.",
     ],
+    ms: [
+      "Persamaan kuadratik mempunyai pemboleh ubah kuasa dua.",
+      "## Rumus Kuadratik",
+      "Rumus ini menyelesaikan setiap persamaan kuadratik.",
+      "## Pembezalayan",
+      "Pembezalayan menunjukkan bilangan punca nyata.",
+    ],
   },
 } as const;
 
@@ -114,15 +130,16 @@ const ARTICLE = {
   de: ["Einleitung des Artikels.", "## Überblick", "Politik prägt das Leben."],
   en: ["An article introduction.", "## Overview", "Politics shapes life."],
   id: ["Pengantar artikel.", "## Gambaran", "Politik membentuk kehidupan."],
+  ms: ["Pengenalan artikel.", "## Gambaran", "Politik membentuk kehidupan."],
 } as const;
 
-/** Groups of words that mean one thing in the three languages. */
+/** Groups of words that mean one thing in the four languages. */
 const KNOWLEDGE_CONCEPTS = [
   ["matrix", "matriks", "matrizen"],
-  ["determinant", "determinan", "determinante"],
-  ["quadratic", "kuadrat", "quadratische"],
+  ["determinant", "determinan", "determinante", "penentu"],
+  ["quadratic", "kuadrat", "quadratische", "kuadratik"],
   ["formula", "rumus", "formel"],
-  ["discriminant", "diskriminan", "diskriminante"],
+  ["discriminant", "diskriminan", "diskriminante", "pembezalayan"],
   ["rows", "baris", "zeilen"],
   ["politics", "politik"],
 ] as const;

@@ -157,7 +157,7 @@ describe("tryouts/mutations/sections", () => {
       Effect.gen(function* () {
         const world = yield* tryoutWorld({
           scoring: {
-            formula: { de: "Summe", en: "Sum", id: "Jumlah" },
+            formula: { de: "Summe", en: "Sum", id: "Jumlah", ms: "Jumlah" },
             kind: "composite",
           },
         });

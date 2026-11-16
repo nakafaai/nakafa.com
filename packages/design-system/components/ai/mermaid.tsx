@@ -40,7 +40,8 @@ interface MermaidProps {
   chart: string;
   className?: string;
   config?: MermaidRenderConfig | undefined;
-  label: string;
+  /** The id of the element whose text names the drawing. */
+  labelledBy: string;
   /** The multiple of its natural size a reader zoomed the diagram to; without one it fits its box. */
   zoom?: number | undefined;
 }
@@ -55,7 +56,7 @@ export function Mermaid({
   chart,
   className,
   config,
-  label,
+  labelledBy,
   zoom,
 }: MermaidProps) {
   const t = useTranslations("Ai");
@@ -170,7 +171,7 @@ export function Mermaid({
   // Always render the SVG if we have content (either current or last valid)
   return (
     <div
-      aria-label={label}
+      aria-labelledby={labelledBy}
       className={cn(
         "flex overflow-auto [&>svg]:m-auto [&>svg]:shrink-0",
         className

@@ -96,8 +96,8 @@ describe("contents/llms/document", () => {
               component: "Mermaid",
               props: {
                 chart: "graph TD; A-->B",
-                description: "Dua langkah",
-                title: "Alur",
+                description: [text("Dua langkah")],
+                title: [text("Alur")],
               },
             },
             type: "figure",
@@ -186,5 +186,28 @@ describe("contents/llms/document", () => {
         ])
       )
     ).toBe("> kutipan\n>\n> baris\n\n| A | B |\n| --- | --- |\n| 1 | 2 3 |");
+  });
+  it("writes a highlight as bold and the blocks of a stack and a block in order", () => {
+    expect(
+      documentMarkdown(
+        doc([
+          paragraph(
+            text("jarak sama", [
+              { attrs: { variant: null }, type: "highlight" },
+            ])
+          ),
+          {
+            content: [
+              paragraph(text("Rumus")),
+              {
+                content: [paragraph(text("Grafik"))],
+                type: "contentBlock",
+              },
+            ],
+            type: "contentStack",
+          },
+        ])
+      )
+    ).toBe("**jarak sama**\n\nRumus\n\nGrafik");
   });
 });

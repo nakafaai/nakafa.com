@@ -37,7 +37,7 @@ describe("contentRelease/quran/facts", () => {
       expect(Arr.map(records, quranRowFacts)).toEqual([
         {
           identity:
-            "attribution:tanzil-text:tanzil-metadata:kemenag-names:bubenheim-names:quranenc-english:quranenc-indonesian:quranenc-german:quranenc-tafsir:mokhtasar-english:mokhtasar-german",
+            "attribution:tanzil-text:tanzil-metadata:kemenag-names:bubenheim-names:nakafa-malay-names:quranenc-english:quranenc-indonesian:quranenc-german:quranenc-malay:quranenc-tafsir:mokhtasar-english:mokhtasar-german:mokhtasar-indonesian",
           kind: "quran-attribution",
         },
         { identity: "surah:1", kind: "quran-surah", surahNumber: 1 },

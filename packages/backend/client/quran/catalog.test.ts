@@ -111,6 +111,7 @@ describe("signed Quran catalog decoder", () => {
               de: "Die Eröffnende",
               en: "The Opening",
               id: "Pembuka",
+              ms: "Pembukaan",
             },
             transliteration: "Al-Fatihah",
           },
@@ -125,6 +126,7 @@ describe("signed Quran catalog decoder", () => {
           de: "Die Eröffnende",
           en: "The Opening",
           id: "Pembuka",
+          ms: "Pembukaan",
         },
         transliteration: "Al-Fatihah",
       });

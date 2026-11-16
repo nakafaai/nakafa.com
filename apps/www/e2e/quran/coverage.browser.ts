@@ -78,6 +78,18 @@ const quranLocaleContracts = {
     ],
     translationNotesLabel: "Catatan terjemahan",
   },
+  ms: {
+    bibliographyLabel: "Bibliografi",
+    hasEmbeddedTafsir: false,
+    // Abdullah Basumayyah's translation, pinned as QuranEnc's 114 API responses, carries no footnote.
+    hasTranslationNotes: false,
+    locale: "ms",
+    meanings: [
+      { locale: "ms", text: "Lembu Betina" },
+      { locale: "en", text: "The Cow" },
+    ],
+    translationNotesLabel: "Nota terjemahan",
+  },
 } satisfies QuranLocaleContracts;
 type QuranLocaleCase = (typeof quranLocaleContracts)[ActiveAppLocaleCode];
 

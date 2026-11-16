@@ -18,6 +18,7 @@ const meaningByLocale = {
   de: "Die Eröffnende",
   en: "The Opening",
   id: "Pembuka",
+  ms: "Pembukaan",
 } as const;
 /** Builds one complete embedded source for injected results. */
 function embeddedSource(id: QuranEmbeddedSourceId) {
@@ -70,6 +71,14 @@ function tafsirAccess(locale: ActiveAppLocaleCode) {
       kind: "external",
       locale,
       notice: "Technical de tafsir access.",
+      source: externalSource(quranTafsirSourceId(locale)),
+    };
+  }
+  if (locale === "ms") {
+    return {
+      kind: "external",
+      locale,
+      notice: "Technical ms tafsir access.",
       source: externalSource(quranTafsirSourceId(locale)),
     };
   }

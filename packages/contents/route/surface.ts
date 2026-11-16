@@ -2,6 +2,8 @@ import {
   type AppLocaleCode,
   AppLocaleCodeSchema,
 } from "@nakafa/aksara-contracts/locale";
+import { CURRICULUM_NAMESPACES } from "@nakafa/aksara-contracts/program/curriculum";
+import { MATERIAL_PUBLIC_NAMESPACES } from "@nakafa/aksara-contracts/projection/material";
 import { Array as Arr, Option, Schema } from "effect";
 
 type SchemaType<T extends Schema.Constraint> = Schema.Schema.Type<T>;
@@ -31,22 +33,13 @@ const publicRouteSurfaceInput = [
   {
     appSegment: "curricula",
     key: "curriculum",
-    routeSlugs: {
-      de: "lehrplaene",
-      en: "curriculum",
-      id: "kurikulum",
-      ms: "kurikulum",
-    },
+    // The Aksara contract owns the namespaces it publishes curricula and lessons under.
+    routeSlugs: CURRICULUM_NAMESPACES,
   },
   {
     appSegment: "materials",
     key: "subject",
-    routeSlugs: {
-      de: "faecher",
-      en: "subjects",
-      id: "materi",
-      ms: "mata-pelajaran",
-    },
+    routeSlugs: MATERIAL_PUBLIC_NAMESPACES,
   },
   {
     appSegment: "try-out",

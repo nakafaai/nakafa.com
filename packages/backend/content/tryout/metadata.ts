@@ -10,7 +10,14 @@ import type {
   tryoutLocalizedPathArgsValidator,
   tryoutMetadataArgsValidator,
 } from "@repo/backend/content/tryout/spec";
-import { Array as Arr, Effect, Option, type Schema } from "effect";
+import {
+  Array as Arr,
+  Effect,
+  Match,
+  Option,
+  type Schema,
+  String as Str,
+} from "effect";
 
 type TryoutMetadataInput = Schema.Struct.Type<
   typeof tryoutMetadataArgsValidator
@@ -59,7 +66,7 @@ const readAlternate = Effect.fn("tryouts.catalog.readMetadataAlternate")(
  */
 export const readTryoutMetadata = Effect.fn("tryouts.catalog.readMetadata")(
   function* (input: TryoutMetadataInput) {
-    const { activeAppLocales, snapshotId } = yield* loadActiveAssessment();
+    const { snapshotId } = yield* loadActiveAssessment();
     const current = yield* readCatalogRow(
       snapshotId,
       input.appLocale,
@@ -73,8 +80,10 @@ export const readTryoutMetadata = Effect.fn("tryouts.catalog.readMetadata")(
       return { route: null };
     }
     const row = current.value;
+    // A node is published only in the locales its row names, as a try-out set
+    // is served only in the locales it is explained in.
     const alternates = Arr.getSomes(
-      yield* Effect.forEach(activeAppLocales, (locale) =>
+      yield* Effect.forEach(row.appLocales, (locale) =>
         readAlternate(snapshotId, row, locale)
       )
     );
@@ -96,7 +105,40 @@ export const readTryoutMetadata = Effect.fn("tryouts.catalog.readMetadata")(
   }
 );
 
-/** Resolves one public route of the active release to its public path in another app locale. */
+/**
+ * The keys of the page above a row that a reader can land on: a section's set,
+ * a set's track, a track's group, and a group's country. An exam has no page of
+ * its own, and a country has the try-out hub above it.
+ */
+function pageAbove(row: CatalogRow): Option.Option<CatalogNodeKeys> {
+  const base = { appLocale: row.appLocale, countryKey: row.countryKey };
+  return Match.value(row).pipe(
+    Match.discriminatorsExhaustive("kind")({
+      country: () => Option.none(),
+      exam: () => Option.some({ ...base, kind: "country" as const }),
+      group: () => Option.some({ ...base, kind: "country" as const }),
+      section: ({ examKey, setKey, trackKey }) =>
+        Option.some({
+          ...base,
+          examKey,
+          kind: "set" as const,
+          setKey,
+          trackKey,
+        }),
+      set: ({ examKey, trackKey }) =>
+        Option.some({ ...base, examKey, kind: "track" as const, trackKey }),
+      track: ({ examKey, groupKey }) =>
+        Option.some({ ...base, examKey, groupKey, kind: "group" as const }),
+    })
+  );
+}
+
+/**
+ * Resolves one public route of the active release to its public path in another
+ * app locale. A node that locale does not serve, such as a try-out set not
+ * written in Malay, leads to the nearest page above it that the locale serves,
+ * and to the try-out hub when none does; nothing falls back to another language.
+ */
 export const readTryoutLocalizedPath = Effect.fn(
   "tryouts.catalog.readLocalizedPath"
 )(function* (input: TryoutLocalizedPathInput) {
@@ -109,12 +151,18 @@ export const readTryoutLocalizedPath = Effect.fn(
   if (Option.isNone(current)) {
     return null;
   }
-  const alternate = yield* readAlternate(
-    snapshotId,
-    current.value,
-    input.targetAppLocale
-  );
-  return Option.getOrNull(
-    Option.map(alternate, ({ publicPath }) => publicPath)
-  );
+  const hub = Arr.headNonEmpty(Str.split(input.publicPath, "/"));
+  let node: Option.Option<CatalogRow> = current;
+  while (Option.isSome(node)) {
+    const alternate: Effect.Success<ReturnType<typeof readAlternate>> =
+      yield* readAlternate(snapshotId, node.value, input.targetAppLocale);
+    if (Option.isSome(alternate)) {
+      return alternate.value.publicPath;
+    }
+    const above = pageAbove(node.value);
+    node = Option.isNone(above)
+      ? Option.none()
+      : yield* readCatalogNode(snapshotId, above.value);
+  }
+  return hub;
 });

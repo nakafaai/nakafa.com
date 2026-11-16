@@ -21,7 +21,10 @@ export const NAKAFA_GET_QURAN_REFERENCE_TOOL = {
       },
       include_tafsir: { anyOf: [{ type: "boolean" }, { type: "null" }] },
       locale: {
-        anyOf: [{ type: "string", enum: ["en", "id", "de"] }, { type: "null" }],
+        anyOf: [
+          { type: "string", enum: ["en", "id", "de", "ms"] },
+          { type: "null" },
+        ],
       },
       surah: {
         type: "integer",
@@ -66,6 +69,7 @@ export const NAKAFA_GET_QURAN_REFERENCE_TOOL = {
           quranReferenceOutput("en"),
           quranReferenceOutput("id"),
           quranReferenceOutput("de"),
+          quranReferenceOutput("ms"),
         ],
         description:
           "Nakafa Quran reference with semantic notes and signed source attribution.",

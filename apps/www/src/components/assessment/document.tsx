@@ -8,6 +8,8 @@ import type {
 import { CodeBlockMdx } from "@repo/design-system/components/markdown/code/client";
 import { BlockMath } from "@repo/design-system/components/markdown/math";
 import {
+  ContentBlock,
+  ContentStack,
   MdxBlockquote,
   MdxHeading4,
   MdxHeading5,
@@ -110,6 +112,16 @@ function Block({
             },
           ]}
         />
+      ),
+      contentBlock: ({ content }) => (
+        <ContentBlock>
+          <Blocks blocks={content} flow="page" />
+        </ContentBlock>
+      ),
+      contentStack: ({ content }) => (
+        <ContentStack>
+          <Blocks blocks={content} flow="page" />
+        </ContentStack>
       ),
       figure: ({ attrs }) => <AssessmentFigure attrs={attrs} />,
       heading: ({ attrs, content }) =>

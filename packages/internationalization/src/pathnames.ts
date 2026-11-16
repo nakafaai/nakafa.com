@@ -1,26 +1,18 @@
-import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
+import { CURRICULUM_NAMESPACES } from "@nakafa/aksara-contracts/program/curriculum";
+import { MATERIAL_PUBLIC_NAMESPACES } from "@nakafa/aksara-contracts/projection/material";
 import { LOCALES, type Locale } from "@repo/internationalization/src/locale";
 import { Array as Arr, Option, Record as Rec } from "effect";
 
 /**
  * The one route map. Each canonical segment is the name the router uses, and it
- * holds the spelling of that segment in every declared locale. `satisfies`
- * makes a new locale fail the build until every segment has its spelling.
+ * holds the spelling of that segment in every declared locale, which the
+ * Aksara contract owns: the curriculum and the material namespaces it
+ * publishes routes under.
  */
 const LOCALIZED_SEGMENTS = {
-  curricula: {
-    de: "lehrplaene",
-    en: "curriculum",
-    id: "kurikulum",
-    ms: "kurikulum",
-  },
-  materials: {
-    de: "faecher",
-    en: "subjects",
-    id: "materi",
-    ms: "mata-pelajaran",
-  },
-} as const satisfies Record<string, Record<AppLocaleCode, string>>;
+  curricula: CURRICULUM_NAMESPACES,
+  materials: MATERIAL_PUBLIC_NAMESPACES,
+} as const;
 
 type CanonicalSegment = keyof typeof LOCALIZED_SEGMENTS;
 

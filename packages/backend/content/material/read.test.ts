@@ -150,6 +150,10 @@ describe("contentRelease/material/model", () => {
         appLocale: "de",
         order: 1,
       },
+      {
+        appLocale: "ms",
+        order: 1,
+      },
     ]);
     expect(
       Arr.map(result.siblingJson, (value) => decodeProjection(value))
@@ -164,10 +168,11 @@ describe("contentRelease/material/model", () => {
       },
     ]);
   });
-  it("uses 12 queries for three alternates and one sibling", async () => {
+  it("uses the queries of four alternates and one sibling", async () => {
     const target = convexTest(schema, convexModules);
-    const projections = Arr.map(["en", "id", "de"] as const, (appLocale) =>
-      makeMaterialProjection(appLocale, 1)
+    const projections = Arr.map(
+      ["en", "id", "de", "ms"] as const,
+      (appLocale) => makeMaterialProjection(appLocale, 1)
     );
     const requested = projections[0];
     await target.mutation((ctx) =>
@@ -182,9 +187,9 @@ describe("contentRelease/material/model", () => {
         result: material,
       };
     });
-    expect(result.alternateJson).toHaveLength(3);
+    expect(result.alternateJson).toHaveLength(4);
     expect(result.siblingJson).toHaveLength(1);
-    expect(metrics.databaseQueries.used).toBe(12);
+    expect(metrics.databaseQueries.used).toBe(15);
   });
   it.each([
     [
@@ -384,6 +389,7 @@ describe("contentRelease/material/model", () => {
           conflicting,
           makeMaterialProjection("id", 1),
           makeMaterialProjection("de", 1),
+          makeMaterialProjection("ms", 1),
         ])
       )
     );

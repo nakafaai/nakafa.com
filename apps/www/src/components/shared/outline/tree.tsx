@@ -115,7 +115,11 @@ function revealEntry(entry: HTMLElement) {
  * the entry the reader leaves, so Back and Forward restore this page through the
  * router. A plain fragment entry carries no router state, and the router ignores
  * it on Back, which left the page the reader had moved away from on screen.
- * A modified click keeps the browser's own handling, such as a new tab.
+ * The jump scrolls to the heading itself, at once, so the entry tells the
+ * router not to scroll to its hash again (`hashScrollIntoView: false`): the
+ * router's own scroll lands a few frames later and undid any scroll the reader
+ * made in between. A modified click keeps the browser's own handling, such as
+ * a new tab.
  */
 function jumpToHeading(event: MouseEvent<HTMLAnchorElement>) {
   if (
@@ -129,11 +133,15 @@ function jumpToHeading(event: MouseEvent<HTMLAnchorElement>) {
   }
   event.preventDefault();
   const link = event.currentTarget;
+  const state = {
+    ...window.history.state,
+    __hashScrollIntoViewOptions: false,
+  };
   // A fragment the page is already on replaces its entry, as the browser does.
   if (link.href === window.location.href) {
-    window.history.replaceState(window.history.state, "", link.href);
+    window.history.replaceState(state, "", link.href);
   } else {
-    window.history.pushState(window.history.state, "", link.href);
+    window.history.pushState(state, "", link.href);
   }
   elementById(decodeURIComponent(link.hash.slice(1)))?.scrollIntoView();
 }

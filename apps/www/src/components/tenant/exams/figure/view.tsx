@@ -7,7 +7,7 @@ import { lazy } from "@repo/design-system/lib/lazy";
 import { Option, Schema } from "effect";
 import { Suspense } from "react";
 import { useTranslations } from "use-intl";
-import { draftOf } from "@/components/tenant/exams/figure/draft";
+import { draftOf } from "@/components/tenant/exams/figure/form";
 import { useExamEditing } from "@/components/tenant/exams/provider";
 
 /** A figure's code loads with the first figure of a text. */
@@ -19,13 +19,14 @@ const LazyFigure = lazy(() =>
 
 /**
  * One figure in a text being written, drawn as the student reads it, with the teacher's controls over its corner
- * while the text takes changes. A figure a teacher cannot make here, as one a file brought in, can only be removed.
+ * while the text takes changes. A teacher edits any catalog figure through its schema; a figure its contract
+ * refuses can only be removed.
  */
 export function ExamFigure() {
   const t = useTranslations("Exams");
   const { attrs, editor, onRemove, position } = useFigureNode();
   const openFigure = useExamEditing((state) => state.openFigure);
-  const editing = Option.flatMap(
+  const editing = Option.map(
     Schema.decodeUnknownOption(FigureAttrsSchema)(attrs),
     draftOf
   );

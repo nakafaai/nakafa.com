@@ -55,6 +55,7 @@ const dateLabels = {
   de: { published: "Veröffentlicht", updated: "Aktualisiert" },
   en: { published: "Published", updated: "Updated" },
   id: { published: "Diterbitkan", updated: "Diperbarui" },
+  ms: { published: "Diterbitkan", updated: "Dikemas kini" },
 } satisfies Record<ActiveAppLocaleCode, DateLabels>;
 
 const LocalizedContentRouteSchema = Schema.Struct({

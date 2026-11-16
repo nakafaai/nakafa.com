@@ -49,6 +49,8 @@ interface BacterialGrowthProps {
   /** The labels to use for the animation. */
   labels?: {
     title?: ReactNode;
+    /** What the animation shows, read under its title. */
+    description?: ReactNode;
     bacterial?: string;
   };
   /** The maximum number of generations to display. @default 6 */
@@ -271,7 +273,10 @@ export function BacterialGrowth({
     >
       <BacterialTimeProvider time={time}>
         <VisualCard>
-          <VisualCardHeader title={labels.title} />
+          <VisualCardHeader
+            description={labels.description}
+            title={labels.title}
+          />
           <BacteriaToolbar />
           <BacteriaDish />
           <VisualCardSceneActions />

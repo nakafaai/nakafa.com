@@ -209,6 +209,42 @@ export const previewDeProjection = makeMaterialLessonProjection(
   previewDeMetadata
 );
 
+/** Exact Malay route owned by the real Function Concept source. */
+const previewMsRoute = Schema.decodeSync(MaterialLessonRouteSchema)({
+  contentKey: previewRoute.contentKey,
+  graph: makeMaterialGraph(
+    "mathematics",
+    "function-composition-inverse-function",
+    "function-concept",
+    "ms"
+  ),
+  appLocale: AppLocaleSchema.make("ms"),
+  artifactLocale: ArtifactLocaleSchema.make("ms"),
+  materialKey: previewRoute.materialKey,
+  order: previewRoute.order,
+  publicPath:
+    "subjek/matematik/fungsi-gubahan-dan-fungsi-songsang/konsep-fungsi",
+  sectionKey: previewRoute.sectionKey,
+  topicTitle: "Fungsi Gubahan dan Fungsi Songsang",
+});
+
+/** Exact Malay metadata authored by the real Function Concept lesson. */
+const previewMsMetadata = MaterialMetadataSchema.make({
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  dateModified: "2026-11-08",
+  datePublished: "2025-04-27",
+  description:
+    "Fungsi memberikan tepat satu output kepada setiap input yang dibenarkan dan boleh diwakili dengan tatatanda, jadual, dan pasangan bertertib.",
+  subject: "Fungsi Gubahan dan Fungsi Songsang",
+  title: "Konsep Fungsi",
+});
+
+/** Exact Malay projection derived from the selected real document. */
+export const previewMsProjection = makeMaterialLessonProjection(
+  previewMsRoute,
+  previewMsMetadata
+);
+
 /** Exact filtered-history source path selected by the Aksara CLI. */
 export const previewSourcePath = CorpusSourcePathSchema.make(
   "packages/corpus/material/lesson/mathematics/function-composition-inverse-function/function-concept/en.mdx"

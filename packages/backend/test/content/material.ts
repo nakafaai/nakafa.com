@@ -23,6 +23,7 @@ const testTopicPrefixes = {
   de: "technisch",
   en: "technical",
   id: "teknis",
+  ms: "teknikal",
 } as const satisfies Record<ActiveAppLocaleCode, string>;
 
 /** Resolves the registered localized route prefix for material test rows. */

@@ -3,6 +3,7 @@ import {
   ENGLISH_APP_LOCALE_CODE,
   GERMAN_APP_LOCALE_CODE,
   INDONESIAN_APP_LOCALE_CODE,
+  MALAY_APP_LOCALE_CODE,
 } from "@nakafa/aksara-contracts/locale";
 import { QuranTranslationDocumentSchema } from "@nakafa/aksara-contracts/quran/notes";
 import { QuranSurahRowSchema } from "@nakafa/aksara-contracts/quran/spec";
@@ -14,6 +15,8 @@ import {
   NakafaQuranGermanTafsirAccessSchema,
   NakafaQuranIndonesianReadingSourcesSchema,
   NakafaQuranIndonesianTafsirAccessSchema,
+  NakafaQuranMalayReadingSourcesSchema,
+  NakafaQuranMalayTafsirAccessSchema,
 } from "@repo/contents/agent/schema/quran/source";
 import { NakafaAgentReadableContentRefSchema } from "@repo/contents/agent/schema/ref";
 import { Schema, Struct } from "effect";
@@ -34,7 +37,10 @@ const NakafaQuranEnglishMeaningSchema = makeNakafaQuranMeaningSchema(
 
 /** Accepts current locale meaning or truthful English from retained storage. */
 function makeNakafaQuranLocalizedMeaningSchema(
-  locale: typeof GERMAN_APP_LOCALE_CODE | typeof INDONESIAN_APP_LOCALE_CODE
+  locale:
+    | typeof GERMAN_APP_LOCALE_CODE
+    | typeof INDONESIAN_APP_LOCALE_CODE
+    | typeof MALAY_APP_LOCALE_CODE
 ) {
   return Schema.Union([
     makeNakafaQuranMeaningSchema(locale),
@@ -127,11 +133,22 @@ const NakafaQuranGermanReferenceSchema = Schema.Struct({
   }),
 }).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)));
 
+const NakafaQuranMalayReferenceSchema = Schema.Struct({
+  ...NakafaQuranReferenceFields,
+  locale: Schema.Literal(MALAY_APP_LOCALE_CODE),
+  meaning: makeNakafaQuranLocalizedMeaningSchema(MALAY_APP_LOCALE_CODE),
+  sources: NakafaQuranMalayReadingSourcesSchema,
+  tafsir_access: NakafaQuranMalayTafsirAccessSchema.annotate({
+    description: "Signed link-only Malay Tafsir access.",
+  }),
+}).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)));
+
 /** Quran output with locale-selected meaning and signed reading access. */
 export const NakafaAgentQuranReferenceSchema = Schema.Union([
   NakafaQuranEnglishReferenceSchema,
   NakafaQuranIndonesianReferenceSchema,
   NakafaQuranGermanReferenceSchema,
+  NakafaQuranMalayReferenceSchema,
 ]).annotate({
   description:
     "Nakafa Quran reference with semantic notes and signed source attribution.",

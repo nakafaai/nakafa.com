@@ -17,6 +17,8 @@ import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
 
 interface Props {
+  /** What the stages compare, read under the title. */
+  description?: ReactNode;
   labels: {
     delivery: ReactNode;
     election: ReactNode;
@@ -26,7 +28,7 @@ interface Props {
 }
 
 /** Renders the governance-stage comparison used by the nepotism article. */
-export function Stage({ title, labels }: Props) {
+export function Stage({ description, title, labels }: Props) {
   const stages = [
     { step: 1, title: labels.selection },
     { step: 2, title: labels.election },
@@ -35,7 +37,7 @@ export function Stage({ title, labels }: Props) {
 
   return (
     <VisualCard className="mb-4">
-      <VisualCardHeader title={title} />
+      <VisualCardHeader description={description} title={title} />
       <VisualCardBody>
         <Stepper className="p-(--card-spacing)" defaultValue={2}>
           {Arr.map(stages, (stage) => (

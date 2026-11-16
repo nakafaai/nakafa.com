@@ -1,6 +1,5 @@
 import {
   ACTIVE_APP_LOCALE_CODES,
-  ActiveAppLocaleCodeSchema,
   AppLocaleCodeSchema,
 } from "@nakafa/aksara-contracts/locale";
 import { DEFAULT_LOCALE, LOCALES } from "@repo/internationalization/src/locale";
@@ -16,7 +15,7 @@ const LocalizedAlternatesOptionsSchema = Schema.Struct({
 });
 type LocalizedAlternatesOptions = typeof LocalizedAlternatesOptionsSchema.Type;
 
-/** A localized counterpart as a release names it, in any locale the contract declares. */
+/** A localized counterpart as a release names it, in a locale Nakafa serves. */
 const ResolvedAlternateRouteSchema = Schema.Struct({
   appLocale: AppLocaleCodeSchema,
   publicPath: Schema.String,
@@ -69,11 +68,7 @@ export function createLocalizedAlternates(
   };
 }
 
-/**
- * Builds hreflang alternates from already-resolved localized counterparts. A
- * counterpart in a declared locale that Nakafa does not serve yet is no
- * alternate, because no page answers at its address.
- */
+/** Builds hreflang alternates from already-resolved localized counterparts. */
 export function createResolvedRouteAlternates(
   route: ResolvedAlternateRoute,
   alternates: readonly ResolvedAlternateRoute[],
@@ -81,10 +76,10 @@ export function createResolvedRouteAlternates(
 ) {
   const routePath = `/${route.appLocale}/${route.publicPath}`;
   const languages = Rec.fromEntries(
-    Arr.flatMap(alternates, ({ appLocale, publicPath }) =>
-      Schema.is(ActiveAppLocaleCodeSchema)(appLocale)
-        ? [[appLocale, `/${appLocale}/${publicPath}`] as const]
-        : []
+    Arr.map(
+      alternates,
+      ({ appLocale, publicPath }) =>
+        [appLocale, `/${appLocale}/${publicPath}`] as const
     )
   );
 

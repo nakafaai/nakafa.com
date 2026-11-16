@@ -1,7 +1,6 @@
 // @vitest-environment node
 
 import { beforeEach, describe, expect, it } from "@effect/vitest";
-import { ACTIVE_APP_LOCALE_CODES } from "@nakafa/aksara-contracts/locale";
 import { fixtureSetPath } from "@repo/backend/test/assessment/snapshot";
 import { tryoutWorld } from "@repo/backend/test/tryout/world";
 import { Effect, Layer } from "effect";
@@ -37,13 +36,16 @@ vi.mock(
   "@/lib/content/store/memory",
   async () => (await import("@/test/store")).testRuntimeCacheModule
 );
+/** The locales the fixture's one set is written in: no node of it serves Malay. */
+const SERVED_LOCALES = ["en", "id", "de"] as const;
+
 describe("published try-out localized paths", () => {
   beforeEach(() => {
     resetTestRuntimeCache();
     activateTestRelease("release-tryout");
     runtimeQueryMock.mockReset();
   });
-  it.effect.each(ACTIVE_APP_LOCALE_CODES)(
+  it.effect.each(SERVED_LOCALES)(
     "resolves the set and section identity into %s",
     (targetAppLocale) =>
       Effect.gen(function* () {
@@ -63,6 +65,21 @@ describe("published try-out localized paths", () => {
             })
           ).toBe(localized);
         }
+      })
+  );
+  it.effect(
+    "leads to the try-out hub in a locale the set is not written in",
+    () =>
+      Effect.gen(function* () {
+        const world = yield* tryoutWorld();
+        runtimeQueryMock.mockImplementation(world.visitor.query);
+        expect(
+          yield* readPublishedTryoutLocalizedPath({
+            currentAppLocale: "en",
+            publicPath: fixtureSetPath("set-1", "en"),
+            targetAppLocale: "ms",
+          })
+        ).toBe("try-out");
       })
   );
   it.effect("returns no localized route for an absent identity", () =>

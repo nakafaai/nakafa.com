@@ -14,7 +14,7 @@ export const REGISTRY_REVIEWS = [
   [
     "effect@latest",
     "4.1.2",
-    "Effect 4.1.2 is the latest release and the adopted cohort (EFFECT_COHORT_VERSION). 4.1.1 and 4.1.2 are patch releases with fixes only. The contracts lead the cohort: @nakafa/aksara-contracts 6.5.0 peers effect 4.1.2 exactly. Checked 14 November 2026.",
+    "Effect 4.1.2 is the latest release and the adopted cohort (EFFECT_COHORT_VERSION). 4.1.1 and 4.1.2 are patch releases with fixes only. The contracts lead the cohort: @nakafa/aksara-contracts 7.0.0 peers effect 4.1.2 exactly. Checked 15 November 2026.",
   ],
   [
     "@effect/platform-node@latest",
@@ -73,8 +73,8 @@ export const REGISTRY_REVIEWS = [
   ],
   [
     "@nakafa/aksara-contracts@latest",
-    "6.5.0",
-    "nakafa.com declares 6.5.0, the newest release, which peers effect 4.1.2 exactly: the contracts lead the Effect cohort. 6.4.0 keys each public namespace by every declared locale (Malay reads subjek and kurikulum, where 6.3.0 gave it the German faecher), so Nakafa decodes the Malay documents an Aksara release now carries. 6.5.0 adds the measured level of every try-out set (easy, medium, hard or cooked) to the catalog a release signs, so a release built with it is refused by a backend that still declares 6.4.0. Checked 14 November 2026.",
+    "7.0.0",
+    "nakafa.com declares 7.0.0, the newest release, which peers effect 4.1.2 exactly: the contracts lead the Effect cohort. 7.0.0 makes Malay an active locale, lists on each catalog row the locales its sets are explained in, places every language of a try-out section in its paper for the question language toggle, and carries the Visual Catalog figure contract. A release built with it is refused by a backend that still declares 6.5.0, so the backend and the apps adopt it in one step. Checked 15 November 2026.",
   ],
   [
     "tsrs@latest",
