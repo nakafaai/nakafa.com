@@ -244,7 +244,7 @@ function Progress() {
           }}
         />
       </div>
-      <p className="text-island-bark-soft text-sm leading-tight text-balance">
+      <p className="text-island-bark-soft text-sm leading-tight whitespace-nowrap tabular-nums">
         {t("next", { level: level + 1, stars: next - lifetime })}
       </p>
     </div>
