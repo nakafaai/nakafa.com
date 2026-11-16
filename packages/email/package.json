@@ -12,7 +12,7 @@
   "dependencies": {
     "@nakafa/aksara-contracts": "6.5.0",
     "@react-email/render": "catalog:",
-    "@repo/design-system": "workspace:*",
+    "@repo/palette": "workspace:*",
     "@repo/seo": "workspace:*",
     "@repo/utilities": "workspace:*",
     "effect": "catalog:",

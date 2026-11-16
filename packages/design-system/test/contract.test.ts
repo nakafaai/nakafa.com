@@ -18,7 +18,8 @@ import {
   ThemeStyleSourceLoadError,
   toRgbProjection,
 } from "@repo/design-system/test/contract";
-import { Array as Arr, Effect, Option, Order } from "effect";
+import { THEME_COMPATIBILITY_COLORS } from "@repo/palette/colors";
+import { Array as Arr, Effect, Option, Order, Record as Rec } from "effect";
 import postcss from "postcss";
 
 const STATUS_NAMES = ["success", "warning", "info"];
@@ -283,6 +284,55 @@ describe("theme profile contract", () => {
           readDirectValue(inlineTheme, `--color-${status}-foreground`)
         ).toBe(`var(--${status}-foreground)`);
       }
+    })
+  );
+});
+
+describe("the palette's sRGB projections", () => {
+  it.effect.each([
+    { name: "light", values: THEME_COMPATIBILITY_COLORS.light },
+    { name: "dark", values: THEME_COMPATIBILITY_COLORS.dark },
+  ])("derive every $name RGB value from canonical OKLCH", ({ name, values }) =>
+    Effect.gen(function* () {
+      const profiles = createThemeProfiles(
+        ["light", "dark"],
+        yield* readSources
+      );
+      const profile = Arr.findFirst(
+        profiles,
+        (candidate) => candidate.name === name
+      );
+      expect(Option.isSome(profile)).toBe(true);
+      if (Option.isNone(profile)) {
+        return;
+      }
+
+      const rule = findTopLevelRule(profile.value.root, profile.value.selector);
+      expect(rule).toBeDefined();
+      if (!rule) {
+        return;
+      }
+
+      const expected = Rec.fromEntries(
+        yield* Effect.forEach(SEMANTIC_COLOR_TOKENS, (token) =>
+          Effect.gen(function* () {
+            const value = readDirectValue(rule, token);
+            expect(value).toBeDefined();
+            return [
+              token.slice(2),
+              value ? yield* toRgbProjection(value) : undefined,
+            ] as const;
+          })
+        )
+      );
+
+      expect(Arr.sort(Rec.keys(values), Order.String)).toEqual(
+        Arr.sort(
+          Arr.map(SEMANTIC_COLOR_TOKENS, (token) => token.slice(2)),
+          Order.String
+        )
+      );
+      expect(values).toEqual(expected);
     })
   );
 });

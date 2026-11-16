@@ -1,7 +1,9 @@
 /**
  * Eight-bit sRGB projections for boundaries that cannot consume OKLCH.
- * The canonical values remain the semantic tokens in styles/globals.css;
- * contract tests keep every projection synchronized with that source.
+ * The canonical values remain the semantic tokens in
+ * packages/design-system/styles/globals.css; the design system's contract
+ * test keeps every projection synchronized with that source, and depends on
+ * this package, so a change to either runs it.
  */
 export const THEME_COMPATIBILITY_COLORS = {
   light: {

@@ -1,7 +1,7 @@
 // @vitest-environment node
 
 import { describe, expect, it } from "@effect/vitest";
-import { THEME_COMPATIBILITY_COLORS } from "@repo/design-system/lib/theme/compatibility";
+import { THEME_COMPATIBILITY_COLORS } from "@repo/palette/colors";
 import { JsonTextSchema } from "@repo/utilities/json";
 import { Effect, Schema } from "effect";
 import { readManifestText } from "@/lib/seo/manifest";
