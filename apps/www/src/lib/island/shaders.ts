@@ -116,7 +116,9 @@ uniform float uTime;
 uniform float uSpeed;
 uniform float uLength;
 uniform float uSway;
+out float vTail;
 void main() {
+  vTail = aTail;
   float height = 18.0;
   float fall = mod(aSeed.z * height + uTime * uSpeed, height);
   vec3 position = vec3(
@@ -132,9 +134,11 @@ void main() {
 export const WEATHER_FRAGMENT = `#version 300 es
 precision mediump float;
 uniform vec4 uColor;
+in float vTail;
 out vec4 color;
 void main() {
-  color = uColor;
+  // A drop is brightest at its head and fades along its tail.
+  color = vec4(uColor.rgb, uColor.a * (1.0 - vTail * 0.75));
 }`;
 
 /** The outline program: the twelve edges of the cell a press would change, drawn over everything. */
