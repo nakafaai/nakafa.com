@@ -31,7 +31,7 @@ const config = {
 export const card = {
   name: "ComposedChart",
   group: "Content",
-  height: 340,
+  height: 360,
   source: "components/evilcharts/charts/composed-chart",
   declaration: "EvilComposedChart",
 };

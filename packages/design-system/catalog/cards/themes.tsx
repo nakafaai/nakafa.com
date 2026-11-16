@@ -7,7 +7,7 @@ import { Array as Arr } from "effect";
 export const card = {
   name: "Themes",
   group: "Identity",
-  height: 900,
+  height: 1100,
   source: "lib/theme/registry",
   declaration: "themes",
 };

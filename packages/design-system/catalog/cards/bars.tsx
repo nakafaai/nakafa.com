@@ -30,7 +30,7 @@ const config = {
 export const card = {
   name: "BarChart",
   group: "Content",
-  height: 340,
+  height: 360,
   source: "components/evilcharts/charts/bar-chart",
   declaration: "EvilBarChart",
 };
