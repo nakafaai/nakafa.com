@@ -5,7 +5,7 @@ import { Spinner } from "@repo/design-system/components/ui/spinner";
 export function SceneSpinner() {
   return (
     <div aria-hidden="true" className="grid size-full place-items-center">
-      <Spinner className="size-6 motion-reduce:animate-none" />
+      <Spinner className="motion-reduce:animate-none" />
     </div>
   );
 }
@@ -18,7 +18,7 @@ export function ScenePlaceholder() {
         className: "grid place-items-center",
       })}
     >
-      <Spinner className="size-6 motion-reduce:animate-none" />
+      <Spinner className="motion-reduce:animate-none" />
     </div>
   );
 }

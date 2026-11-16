@@ -287,7 +287,7 @@ export function ThreeCanvas(
     <ClientOnly
       fallback={
         <div className="flex h-full w-full items-center justify-center">
-          <Spinner aria-hidden="true" className="size-6" />
+          <Spinner aria-hidden="true" />
         </div>
       }
     >

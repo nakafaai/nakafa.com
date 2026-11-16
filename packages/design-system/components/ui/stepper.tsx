@@ -215,8 +215,8 @@ function StepperDefaultIndicator() {
         icon={Tick01Icon}
       />
       {isLoading ? (
-        <span className="absolute">
-          <Spinner aria-hidden="true" className="size-3.5" />
+        <span className="absolute [&_svg]:size-3.5">
+          <Spinner aria-hidden="true" />
         </span>
       ) : null}
     </>

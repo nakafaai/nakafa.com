@@ -112,7 +112,7 @@ function EmojiPickerContent({
         className="text-muted-foreground absolute inset-0 flex items-center justify-center"
         data-slot="emoji-picker-loading"
       >
-        <Spinner className="size-4" label={t("loading")} />
+        <Spinner label={t("loading")} />
       </EmojiPickerPrimitive.Loading>
       <EmojiPickerPrimitive.Empty
         className="text-muted-foreground absolute inset-0 flex items-center justify-center text-sm"

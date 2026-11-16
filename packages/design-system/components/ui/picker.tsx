@@ -327,7 +327,7 @@ function PickerContent<Item>({
             {children}
           </AutocompleteList>
           <AutocompleteEmpty className="not-empty:flex not-empty:justify-center not-empty:px-4 not-empty:py-6">
-            {waiting ? <Spinner className="size-4" /> : empty}
+            {waiting ? <Spinner /> : empty}
           </AutocompleteEmpty>
           {onEnd === undefined ? null : <Intersection onIntersect={onEnd} />}
         </ScrollArea>
