@@ -7,11 +7,9 @@ import {
   chosenOptions,
   type ExamResponse,
 } from "@repo/backend/confect/assessment/response";
+import { gradeVerdict } from "@repo/backend/confect/assessment/verdict";
 import { QuestionView } from "@repo/backend/confect/exams/question";
-import {
-  examResultValidator,
-  gradeVerdict,
-} from "@repo/backend/confect/exams/results/schema";
+import { examResultValidator } from "@repo/backend/confect/exams/results/schema";
 import {
   ALL_OR_NOTHING,
   ANSWER_AND_REASON,

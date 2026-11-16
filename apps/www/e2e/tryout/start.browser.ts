@@ -234,7 +234,9 @@ for (const viewport of tryoutViewports) {
 /**
  * A slow phone paints the start button seconds before the page can act. A learner's
  * press in that moment shows the loader, and the confirmation opens once the page's
- * client and its reads arrive, so the press is never lost.
+ * client and its reads arrive, so the press is never lost. A signed-in learner's first visit draws no
+ * button until the learner read answers, so the learner has opened the set once, and the section's page
+ * names its set's action with what this browser kept.
  */
 test("a press on the start before the page can act opens the confirmation", async ({
   baseURL,
@@ -249,6 +251,10 @@ test("a press on the start before the page can act opens the confirmation", asyn
         yield* seedAnalyticsConsent(page, "denied");
         yield* signInLearner(page.context(), origin);
         yield* Effect.promise(async () => {
+          await page.goto(SET_HREF, { waitUntil: "commit" });
+          await expect(
+            page.locator(`${ACTION_NAME}:not([data-learner-read])`)
+          ).toBeAttached({ timeout: readinessTimeoutMilliseconds });
           const held = MutableList.make<Route>();
           await page.route(SCRIPTS, (route) => {
             MutableList.append(held, route);

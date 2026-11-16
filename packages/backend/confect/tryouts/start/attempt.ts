@@ -23,6 +23,7 @@ import {
   startAttemptArgsValidator,
   toTryoutStartError,
 } from "@repo/backend/confect/tryouts/start/spec";
+import { TRYOUT_ATTEMPT_WINDOW } from "@repo/backend/confect/tryouts/window";
 import { Duration, Effect, flow, Option, Schema, Struct } from "effect";
 
 type TryoutAttempt = Docs["tryoutAttempts"];
@@ -97,7 +98,7 @@ function buildAttemptValues(
     countryKey: source.set.countryKey,
     endReason: null,
     examKey: source.set.examKey,
-    expiresAt: input.now + 3 * 24 * 60 * 60 * 1000,
+    expiresAt: input.now + Duration.toMillis(TRYOUT_ATTEMPT_WINDOW),
     lastActivityAt: input.now,
     paper: { hash: source.paper.hash, id: source.paper.paper.id },
     profile: { hash: source.profile.hash, id: source.profile.profile.id },

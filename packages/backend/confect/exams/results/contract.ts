@@ -3,12 +3,10 @@ import { Id } from "@repo/backend/confect/_generated/id";
 import { entries } from "@repo/backend/confect/access/catalog";
 import { Kind } from "@repo/backend/confect/access/kind";
 import { ExamResponse } from "@repo/backend/confect/assessment/response";
+import { Verdict } from "@repo/backend/confect/assessment/verdict";
 import { LetterScript } from "@repo/backend/confect/exams/letters";
 import { QuestionPoints } from "@repo/backend/confect/exams/question";
-import {
-  GradePoints,
-  Verdict,
-} from "@repo/backend/confect/exams/results/schema";
+import { GradePoints } from "@repo/backend/confect/exams/results/schema";
 import { SittingView } from "@repo/backend/confect/exams/sittings/contract";
 import { AttemptState } from "@repo/backend/confect/exams/sittings/schema";
 import { PersonName } from "@repo/backend/confect/tenancy/schema";

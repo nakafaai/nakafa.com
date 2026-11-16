@@ -9,6 +9,7 @@ import {
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { toast } from "@repo/design-system/lib/toast/notify";
+import { useRouter } from "@tanstack/react-router";
 import { Effect, Option } from "effect";
 import { useTransition } from "react";
 import { useTranslations } from "use-intl";
@@ -44,6 +45,7 @@ export function PlayerViewSwitch() {
  */
 function useChooseView() {
   const choose = usePlayer((state) => state.choose);
+  const router = useRouter();
   const [, startTransition] = useTransition();
 
   return (value: string) => {
@@ -53,7 +55,7 @@ function useChooseView() {
     }
     startTransition(async () => {
       const choice = await Effect.runPromise(
-        choose(next.value, rememberPlayerMode(next.value))
+        choose(next.value, rememberPlayerMode(router, next.value))
       );
       if (choice === "reverted") {
         toast.error(

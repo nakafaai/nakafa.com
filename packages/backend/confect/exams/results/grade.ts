@@ -6,6 +6,7 @@ import {
   DatabaseReader,
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
+import { gradeVerdict } from "@repo/backend/confect/assessment/verdict";
 import { ResultSitting } from "@repo/backend/confect/exams/results/access";
 import { resultAuthority } from "@repo/backend/confect/exams/results/authority";
 import {
@@ -13,7 +14,6 @@ import {
   ResultNotFound,
 } from "@repo/backend/confect/exams/results/errors";
 import { attemptResults } from "@repo/backend/confect/exams/results/rows";
-import { gradeVerdict } from "@repo/backend/confect/exams/results/schema";
 import { Member } from "@repo/backend/confect/middleware/member.spec";
 import { personActor } from "@repo/backend/confect/tenancy/actor";
 import { Array as Arr, Effect, Option } from "effect";

@@ -5,13 +5,13 @@ import type {
   TenantPeopleDoc,
 } from "@repo/backend/confect/_generated/docs";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
+import type { Verdict } from "@repo/backend/confect/assessment/verdict";
 import { questionView } from "@repo/backend/confect/exams/question";
 import { ResultSitting } from "@repo/backend/confect/exams/results/access";
 import {
   personResult,
   questionResults,
 } from "@repo/backend/confect/exams/results/rows";
-import type { Verdict } from "@repo/backend/confect/exams/results/schema";
 import {
   optionIdsOf,
   tallyAnswers,

@@ -46,7 +46,8 @@ export function PlayerFinish({
 }) {
   const t = useTranslations("Player");
   const overlay = usePlayer((state) => state.overlay);
-  const waiting = usePlayer((state) => state.pending !== null);
+  // A question chosen here takes the focus, so the dialog never hands it back to where it opened.
+  const landed = usePlayer((state) => state.landed);
   const open = usePlayer((state) => state.open);
   const close = usePlayer((state) => state.close);
   const settle = usePlayer((state) => state.settle);
@@ -81,7 +82,7 @@ export function PlayerFinish({
           </Button>
         }
         description={description}
-        finalFocus={!waiting}
+        finalFocus={!landed}
         onOpenChangeComplete={(next) => {
           if (!next) {
             settle();

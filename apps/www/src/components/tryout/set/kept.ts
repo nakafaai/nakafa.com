@@ -29,6 +29,12 @@ const KEPT_ATTEMPTS_KEY = "nakafa-tryout-attempts";
 /** The attribute the page's script sets on the name's cell, which the styles read. */
 const KEPT_NAME_ATTRIBUTE = "data-kept-name";
 
+/**
+ * The attribute that gives the name's cell the address of its set's own page, whose name the browser kept.
+ * A section's page shows its set's action too, so the cell names the set, never the page it stands on.
+ */
+export const KEPT_ADDRESS_ATTRIBUTE = "data-kept-address";
+
 /** How many pages the browser remembers. The page read longest ago leaves first. */
 const KEPT_PAGES = 40;
 
@@ -154,16 +160,18 @@ export const keepAttemptLabel = Effect.fn("tryout.kept.label")(
 /**
  * The inline script, the first child of the name's cell, that names the cell before the first paint.
  * No first paint knows a learner's attempt, but this browser may have read it before, so a set whose
- * attempt runs says Continue from its first frame. The read still decides. Storage the page cannot
- * read leaves the cell without a name, as a first visit is.
+ * attempt runs says Continue from its first frame, on its own page and on each of its sections' pages.
+ * The cell carries its set's address, which the script reads the kept name by. The read still decides.
+ * Storage the page cannot read leaves the cell without a name, as a first visit is.
  */
 export const KEPT_NAME_SCRIPT = Arr.join(
   [
     "(function () {",
     "  try {",
     `    var names = JSON.parse(localStorage.getItem('${KEPT_NAMES_KEY}') || 'null');`,
-    "    var name = names && names[location.pathname];",
-    `    if (typeof name === 'string') document.currentScript.parentElement.setAttribute('${KEPT_NAME_ATTRIBUTE}', name);`,
+    "    var cell = document.currentScript.parentElement;",
+    `    var name = names && names[cell.getAttribute('${KEPT_ADDRESS_ATTRIBUTE}')];`,
+    `    if (typeof name === 'string') cell.setAttribute('${KEPT_NAME_ATTRIBUTE}', name);`,
     "  } catch (error) {}",
     "})();",
   ],
@@ -186,7 +194,7 @@ export const KEPT_ATTEMPT_SCRIPT = Arr.join(
     "    if (typeof label !== 'string' || !names || names[location.pathname] !== 'restart-cta') return;",
     "    var place = document.currentScript.parentElement;",
     "    place.querySelector('[data-label]').setAttribute('data-label', label);",
-    "    place.removeAttribute('data-empty');",
+    "    place.removeAttribute('hidden');",
     "  } catch (error) {}",
     "})();",
   ],

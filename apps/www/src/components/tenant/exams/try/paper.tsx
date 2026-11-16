@@ -21,7 +21,10 @@ import { PlayerKeys } from "@/components/player/keys";
 import { PlayerGrid } from "@/components/player/navigator/grid";
 import { PlayerLegend } from "@/components/player/navigator/legend";
 import { PlayerSheet } from "@/components/player/navigator/sheet";
-import { PlayerSidebar } from "@/components/player/navigator/sidebar";
+import {
+  PlayerNavigatorHeader,
+  PlayerSidebar,
+} from "@/components/player/navigator/sidebar";
 import { PlayerProvider } from "@/components/player/provider";
 import { PlayerQuestions } from "@/components/player/questions";
 import {
@@ -126,7 +129,9 @@ export function ExamTryPaper({
               </PaperBar>
               <PlayerMain
                 navigator={
-                  <PlayerSidebar questions={models}>
+                  <PlayerSidebar
+                    header={<PlayerNavigatorHeader questions={models} />}
+                  >
                     <PlayerGrid questions={models} />
                     <PlayerLegend />
                   </PlayerSidebar>

@@ -3,6 +3,7 @@ import { Array as Arr, Effect, Option } from "effect";
 import { KeyValueStore } from "effect/persistence";
 import { keptStorage } from "@/components/player/storage";
 import {
+  KEPT_ADDRESS_ATTRIBUTE,
   KEPT_ATTEMPT_SCRIPT,
   KEPT_NAME_SCRIPT,
   KEPT_PANE_SCRIPT,
@@ -30,17 +31,18 @@ const scoped = <A, E>(
   effect: Effect.Effect<A, E, KeyValueStore.KeyValueStore>
 ) => Effect.provide(effect, KeyValueStore.layerMemory);
 
-/** Runs the cell's script over the browser's storage, and returns what it set on the cell. */
-function runScript(stored: string | null, pathname = SET) {
+/** Runs the script of a cell that names the set at `address` over the browser's storage, and returns what it set. */
+function runScript(stored: string | null, address = SET) {
   const set: Record<string, string> = {};
   const parentElement = {
+    getAttribute: (name: string) =>
+      name === KEPT_ADDRESS_ATTRIBUTE ? address : null,
     setAttribute: (name: string, value: string) => {
       set[name] = value;
     },
   };
-  new Function("localStorage", "location", "document", KEPT_NAME_SCRIPT)(
+  new Function("localStorage", "document", KEPT_NAME_SCRIPT)(
     { getItem: () => stored },
-    { pathname },
     { currentScript: { parentElement } }
   );
   return set;
@@ -144,7 +146,7 @@ describe("keepActionName", () => {
 });
 
 describe("KEPT_NAME_SCRIPT", () => {
-  it("names the cell with what the browser kept for this address", () => {
+  it("names the cell with what the browser kept for its set's address, on whichever page it stands", () => {
     expect(runScript(storedNames)).toStrictEqual({
       "data-kept-name": "continue-cta",
     });
@@ -224,8 +226,8 @@ function runPlaceScript(
         place.label = value;
       },
     }),
-    removeAttribute: () => {
-      place.empty = false;
+    removeAttribute: (name: string) => {
+      place.empty = name !== "hidden";
     },
   };
   new Function("localStorage", "location", "document", KEPT_ATTEMPT_SCRIPT)(
