@@ -123,3 +123,37 @@ export function easeOrbit(from: Orbit, to: Orbit, t: number): Orbit {
     yaw: from.yaw + turn * t,
   };
 }
+
+/**
+ * The camera moved onto the grid of art pixels (ADR 0047, D20): its target
+ * slides across the screen's plane to the nearest whole art pixel, so a pan
+ * never makes the blocks' pixels crawl, and `shift` is what was rounded away,
+ * in art pixels right and up, for the enlarged frame to move back by.
+ * `rows` is the height of the frame in art pixels.
+ */
+export function snapOrbit(orbit: Orbit, rows: number) {
+  const pixel =
+    (2 * orbit.distance * Math.tan(FIELD_OF_VIEW / 2)) / Math.max(1, rows);
+  const [cy, sy] = [Math.cos(orbit.yaw), Math.sin(orbit.yaw)];
+  const [cp, sp] = [Math.cos(orbit.pitch), Math.sin(orbit.pitch)];
+  const right = [cy, 0, -sy] as const;
+  const up = [-sp * sy, cp, -sp * cy] as const;
+  const along = (axis: readonly [number, number, number]) =>
+    (orbit.target[0] * axis[0] +
+      orbit.target[1] * axis[1] +
+      orbit.target[2] * axis[2]) /
+    pixel;
+  const [x, y] = [along(right), along(up)];
+  const [dx, dy] = [Math.round(x) - x, Math.round(y) - y];
+  return {
+    orbit: {
+      ...orbit,
+      target: [
+        orbit.target[0] + (right[0] * dx + up[0] * dy) * pixel,
+        orbit.target[1] + (right[1] * dx + up[1] * dy) * pixel,
+        orbit.target[2] + (right[2] * dx + up[2] * dy) * pixel,
+      ] as const,
+    },
+    shift: [dx, dy] as const,
+  };
+}

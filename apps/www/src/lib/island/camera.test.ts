@@ -7,9 +7,11 @@ import {
   DISTANCE,
   easeOrbit,
   eyeOf,
+  FIELD_OF_VIEW,
   openingOrbit,
   PITCH,
   panOrbit,
+  snapOrbit,
   turnOrbit,
   zoomOrbit,
 } from "@/lib/island/camera";
@@ -72,5 +74,38 @@ describe("island/camera", () => {
     const half = easeOrbit(from, to, 0.5);
     expect(half.yaw).toBeCloseTo(0);
     expect(half.distance).toBeCloseTo(orbit.distance * 1.5);
+  });
+
+  it("snaps the target to whole art pixels across the screen, keeps its depth, and says what it rounded away", () => {
+    const orbit = {
+      distance: 40,
+      pitch: 0.7,
+      target: [20.37, 9, 31.81] as const,
+      yaw: 0.9,
+    };
+    const rows = 270;
+    const { orbit: snapped, shift } = snapOrbit(orbit, rows);
+    const pixel = (2 * orbit.distance * Math.tan(FIELD_OF_VIEW / 2)) / rows;
+    const dot = (a: readonly number[], b: readonly number[]) =>
+      a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+    const right = [Math.cos(0.9), 0, -Math.sin(0.9)];
+    const up = [
+      -Math.sin(0.7) * Math.sin(0.9),
+      Math.cos(0.7),
+      -Math.sin(0.7) * Math.cos(0.9),
+    ];
+    const ahead = [
+      Math.cos(0.7) * Math.sin(0.9),
+      Math.sin(0.7),
+      Math.cos(0.7) * Math.cos(0.9),
+    ];
+    const across = dot(snapped.target, right) / pixel;
+    const height = dot(snapped.target, up) / pixel;
+    expect(Math.abs(across - Math.round(across))).toBeLessThan(1e-6);
+    expect(Math.abs(height - Math.round(height))).toBeLessThan(1e-6);
+    expect(dot(snapped.target, ahead)).toBeCloseTo(dot(orbit.target, ahead), 6);
+    expect(Math.abs(shift[0])).toBeLessThanOrEqual(0.5);
+    expect(shift[0]).toBeCloseTo(across - dot(orbit.target, right) / pixel, 6);
+    expect(snapOrbit(snapped, rows).shift[0]).toBeCloseTo(0, 6);
   });
 });

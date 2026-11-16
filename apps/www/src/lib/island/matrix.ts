@@ -146,9 +146,12 @@ export function invert(m: Matrix): Matrix {
   return out;
 }
 
+/** The nearest and farthest the camera sees; the edge pass reads depth by them too (D20). */
+export const CLIP = { far: 3000, near: 0.5 } as const;
+
 /** The camera's projection and view in one matrix, for a screen of this aspect. */
 export function viewProjectionOf(orbit: Orbit, aspect: number) {
-  const projection = perspective(FIELD_OF_VIEW, aspect, 0.5, 3000);
+  const projection = perspective(FIELD_OF_VIEW, aspect, CLIP.near, CLIP.far);
   return multiply(projection, lookAt(eyeOf(orbit), orbit.target));
 }
 
