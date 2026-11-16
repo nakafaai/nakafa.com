@@ -117,7 +117,7 @@ describe("islandScreenHandler", () => {
       lifetime: 420,
       next: 900,
       seed: seedOf("users-1"),
-      size: 32,
+      size: 56,
       version: 3,
     });
     expect(screen.seo).toMatchObject({
@@ -140,7 +140,7 @@ describe("islandScreenHandler", () => {
       lifetime: 0,
       next: 150,
       seed: seedOf("island"),
-      size: 16,
+      size: 52,
       version: 0,
     });
     expect(first.seo.title).toBe("Pulau");

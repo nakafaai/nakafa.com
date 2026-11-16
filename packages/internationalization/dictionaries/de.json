@@ -4660,6 +4660,13 @@
     "notice-stale": "Deine Insel hat sich woanders geändert, sie lädt gerade neu.",
     "next": "Noch {stars} Sterne bis Stufe {level}",
     "top": "Alle Blöcke sind offen",
-    "mute": "Ton aus"
+    "mute": "Ton aus",
+    "items": "Fertig",
+    "blocks": "Blöcke",
+    "item-house": "Häuschen",
+    "item-tree": "Baum",
+    "item-well": "Brunnen",
+    "item-lamp": "Laterne",
+    "notice-room": "Hier ist kein Platz dafür. Probier eine flache, freie Stelle."
   }
 }
