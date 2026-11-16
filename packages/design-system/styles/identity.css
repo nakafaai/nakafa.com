@@ -73,6 +73,10 @@
   --color-island-page-light: #fbf1da;
   /* The hook on a fish the learner has caught. */
   --color-island-water: #2c6ec2;
+  /* The top of the sky behind the home's island preview. */
+  --color-island-sky-high: #58a6e4;
+  /* The foot of the sky behind the home's island preview. */
+  --color-island-sky-low: #bfe2f0;
 }
 
 /* Each thing does one small thing by itself. The names are the `motion` of a

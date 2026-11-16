@@ -21,4 +21,7 @@ export default Table.make(() =>
     /** The cells the learner changed over the generated terrain, packed (ADR 0047, D6). */
     world: Edits,
   })
-).index("by_userId", ["userId"]);
+)
+  .index("by_userId", ["userId"])
+  /** The global leaderboard reads the islands with the most Stars first (ADR 0047, D27). */
+  .index("by_lifetime", ["lifetime"]);

@@ -39,6 +39,9 @@ function tour(
   let frame = 0;
   let last = 0;
   let orbit = openingOrbit(size, 1);
+  // A canvas drawn before its size is known, or cleared by a new size, shows black until it is
+  // drawn again, so the frame after a resize draws whatever the pace says.
+  let fresh = true;
   // A tour runs by itself, so it keeps to its share of the thread (ADR 0039,
   // D5) and rests while hidden or scrolled away (ADR 0047, D26).
   const pace = createFramePace();
@@ -49,9 +52,10 @@ function tour(
   sight.observe(canvas);
   const tick = (now: number) => {
     frame = requestAnimationFrame(tick);
-    if (!(pace.isDue(now) && inSight) || document.hidden) {
+    if (!(fresh || (pace.isDue(now) && inSight)) || document.hidden) {
       return;
     }
+    fresh = false;
     // A tour back in sight goes on from where it stopped rather than jumping.
     const seconds = last === 0 ? 0 : Math.min(0.25, (now - last) / 1000);
     orbit = turnOrbit(orbit, seconds * TOUR);
@@ -66,13 +70,19 @@ function tour(
       "clear",
       Option.none()
     );
-    canvas.dataset.drawn = "true";
+    if (canvas.dataset.drawn !== "true") {
+      // The browser presents this frame after the callback ends, so the next one says it shows.
+      requestAnimationFrame(() => {
+        canvas.dataset.drawn = "true";
+      });
+    }
     pace.rest(now);
   };
   const resize = new ResizeObserver(() => {
     const ratio = Math.min(2, window.devicePixelRatio || 1);
     canvas.width = Math.max(1, Math.round(canvas.clientWidth * ratio));
     canvas.height = Math.max(1, Math.round(canvas.clientHeight * ratio));
+    fresh = true;
     orbit = {
       ...openingOrbit(
         size,
@@ -105,22 +115,29 @@ export default function IslandView({
   seed: number;
   size: number;
 }) {
+  // Until its first frame is on screen the canvas stays clear over the island's sky, so a slow
+  // phone sees sky where an opaque canvas would show black.
   return (
-    <canvas
+    <div
       aria-hidden="true"
-      className="pointer-events-none absolute inset-0 block size-full [image-rendering:pixelated]"
-      data-testid="island-view"
-      ref={(canvas) => {
-        if (canvas === null) {
-          return;
-        }
-        return Option.match(createPainter(canvas, seasonNow()), {
-          onNone: () => undefined,
-          onSome: (painter) =>
-            tour(canvas, painter, worldOf(seed, size, edits), size),
-        });
-      }}
-      tabIndex={-1}
-    />
+      className="pointer-events-none absolute inset-0 bg-[linear-gradient(var(--color-island-sky-high),var(--color-island-sky-low))]"
+    >
+      <canvas
+        aria-hidden="true"
+        className="block size-full opacity-0 [image-rendering:pixelated] data-[drawn=true]:opacity-100"
+        data-testid="island-view"
+        ref={(canvas) => {
+          if (canvas === null) {
+            return;
+          }
+          return Option.match(createPainter(canvas, seasonNow()), {
+            onNone: () => undefined,
+            onSome: (painter) =>
+              tour(canvas, painter, worldOf(seed, size, edits), size),
+          });
+        }}
+        tabIndex={-1}
+      />
+    </div>
   );
 }

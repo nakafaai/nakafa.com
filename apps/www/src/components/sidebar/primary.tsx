@@ -4,6 +4,7 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
   SidebarGroup,
   SidebarGroupContent,
+  SidebarGroupLabel,
 } from "@repo/design-system/components/ui/sidebar-content";
 import {
   SidebarMenu,
@@ -31,14 +32,16 @@ import { usePreferredTryoutTarget } from "@/lib/tryout/preferences";
 type PrimaryItem = ReturnType<typeof getPrimaryNavigationItems>[number];
 
 /**
- * Renders the primary app navigation shared by every audience, the first group of
- * the sidebar, which needs no label. Each shortcut is its own island, so the group
+ * Renders the primary app navigation shared by every audience, the Study group
+ * under the home and notifications rows. Each shortcut is its own island, so the group
  * never remounts when the page's client arrives: a shortcut shows its shared
  * destination until the learner's preference is read.
  */
 export function NavPrimary() {
+  const tCommon = useTranslations("Common");
   return (
     <SidebarGroup>
+      <SidebarGroupLabel>{tCommon("study")}</SidebarGroupLabel>
       <SidebarGroupContent>
         <SidebarMenu>
           {Arr.map(getPrimaryNavigationItems(), (item) => (
