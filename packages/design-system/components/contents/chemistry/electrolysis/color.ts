@@ -9,8 +9,9 @@ import { MATERIAL } from "@repo/design-system/lib/material";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 
 /**
- * The colors of an electrolysis scene, which stands in the lit teaching lab in
- * either theme, so its labels are dark ink on a light halo. Each ion has
+ * The colors of an electrolysis scene, which stands on the dark bench of the
+ * lit teaching lab in either theme, so its labels are light ink on a dark
+ * halo, which no glass, liquid or bench behind them can swallow. Each ion has
  * its own plot color, which the legend under the scene names, so no reading
  * rests on color alone. The apparatus and the solutions take the colors of
  * their real materials.
@@ -44,8 +45,8 @@ export function getElectrolysisColors() {
       oxygen: MATERIAL.gasWisp,
       silver: MATERIAL.silver,
     } satisfies Record<Product, string>,
-    halo: ORIGIN_COLOR.LIGHT,
-    text: ORIGIN_COLOR.DARK,
+    halo: ORIGIN_COLOR.DARK,
+    text: ORIGIN_COLOR.LIGHT,
     tintedLiquid: MATERIAL.copperSulfate,
     wire: MATERIAL.lead,
   };

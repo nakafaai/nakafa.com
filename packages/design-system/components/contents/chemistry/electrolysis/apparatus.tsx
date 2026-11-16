@@ -1,7 +1,8 @@
-import { Line } from "@react-three/drei";
+import { RoundedBox } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
 import {
   BATTERY_Y,
+  ELECTRODE_TOP,
   type Path,
   pointAlong,
   TERMINAL_OFFSET,
@@ -10,10 +11,14 @@ import type { ElectrolysisColors } from "@repo/design-system/components/contents
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
-import { GlassMaterial } from "@repo/design-system/components/three/physical";
-import { Array as Arr } from "effect";
-import { useRef } from "react";
-import type { Group } from "three";
+import {
+  GlassMaterial,
+  MetalMaterial,
+} from "@repo/design-system/components/three/physical";
+import { MATERIAL } from "@repo/design-system/lib/material";
+import { Array as Arr, Option } from "effect";
+import { useMemo, useRef } from "react";
+import { CatmullRomCurve3, type Group, Vector3 } from "three";
 
 /** The beaker's inner radius and height. */
 export const BEAKER_RADIUS = 0.42;
@@ -55,7 +60,7 @@ export function Beaker({ colors }: { readonly colors: ElectrolysisColors }) {
       </mesh>
       <mesh position={[0, 0.004, 0]} rotation={[-Math.PI / 2, 0, 0]}>
         <circleGeometry args={[BEAKER_RADIUS * 0.97, 48]} />
-        <GlassMaterial color={colors.glass} opacity={0.32} />
+        <GlassMaterial color={colors.glass} />
       </mesh>
     </group>
   );
@@ -97,7 +102,11 @@ export function Bubbles({ color }: { readonly color: string }) {
   );
 }
 
-/** The battery: a dark cell with its positive terminal on the left. */
+/**
+ * The low-voltage DC power pack a school lab runs electrolysis from: a
+ * light grey case with a dark front panel and a voltage knob, and its two
+ * 4 mm terminals on top, red for positive on the left and black for negative.
+ */
 export function Battery({
   colors,
   label,
@@ -107,16 +116,49 @@ export function Battery({
 }) {
   return (
     <group position={[0, BATTERY_Y, 0]}>
-      <mesh castShadow>
-        <boxGeometry args={[TERMINAL_OFFSET * 2, 0.16, 0.14]} />
-        <meshStandardMaterial color={colors.battery} roughness={0.5} />
+      <RoundedBox
+        args={[TERMINAL_OFFSET * 2 + 0.34, 0.3, 0.26]}
+        castShadow
+        position={[0, -0.18, 0]}
+        radius={0.035}
+        smoothness={4}
+      >
+        <meshPhysicalMaterial
+          clearcoat={0.3}
+          color={MATERIAL.hotplateBody}
+          roughness={0.5}
+        />
+      </RoundedBox>
+      <mesh position={[0, -0.18, 0.131]}>
+        <planeGeometry args={[TERMINAL_OFFSET * 2 + 0.2, 0.2]} />
+        <meshStandardMaterial color={MATERIAL.epoxy} roughness={0.7} />
       </mesh>
+      <mesh position={[0, -0.18, 0.15]} rotation={[Math.PI / 2, 0, 0]}>
+        <cylinderGeometry args={[0.045, 0.05, 0.04, 32]} />
+        <meshStandardMaterial color={MATERIAL.bottleCap} roughness={0.45} />
+      </mesh>
+      {Arr.map(
+        [
+          { color: MATERIAL.leadRed, x: -TERMINAL_OFFSET },
+          { color: MATERIAL.leadBlack, x: TERMINAL_OFFSET },
+        ] as const,
+        (terminal) => (
+          <mesh castShadow key={terminal.x} position={[terminal.x, -0.02, 0]}>
+            <cylinderGeometry args={[0.03, 0.034, 0.07, 24]} />
+            <meshPhysicalMaterial
+              clearcoat={0.4}
+              color={terminal.color}
+              roughness={0.4}
+            />
+          </mesh>
+        )
+      )}
       <ThreeLabel
         color={colors.text}
         fontSize="compact"
         outlineColor={colors.halo}
-        outlineWidth={0.004}
-        position={[-TERMINAL_OFFSET + 0.09, 0, 0.08]}
+        outlineWidth={0.006}
+        position={[-TERMINAL_OFFSET - 0.1, 0.02, 0.08]}
       >
         <InlineMath math="+" />
       </ThreeLabel>
@@ -124,8 +166,8 @@ export function Battery({
         color={colors.text}
         fontSize="compact"
         outlineColor={colors.halo}
-        outlineWidth={0.004}
-        position={[TERMINAL_OFFSET - 0.09, 0, 0.08]}
+        outlineWidth={0.006}
+        position={[TERMINAL_OFFSET + 0.1, 0.02, 0.08]}
       >
         <InlineMath math="-" />
       </ThreeLabel>
@@ -133,8 +175,8 @@ export function Battery({
         color={colors.text}
         fontSize="compact"
         outlineColor={colors.halo}
-        outlineWidth={0.004}
-        position={[0, 0.2, 0]}
+        outlineWidth={0.006}
+        position={[0, 0.12, 0]}
       >
         {label}
       </ThreeLabel>
@@ -142,15 +184,35 @@ export function Battery({
   );
 }
 
-/** One lead and the electrons moving along it. */
+/**
+ * One insulated test lead in its colour, run along its path with soft bends,
+ * a chrome crocodile clip where it grips an electrode, and the electrons
+ * moving along it.
+ */
 export function Lead({
   colors,
   lead,
+  sheath,
 }: {
   readonly colors: ElectrolysisColors;
   readonly lead: Path;
+  readonly sheath: string;
 }) {
   const group = useRef<Group>(null);
+  const cable = useMemo(
+    () =>
+      new CatmullRomCurve3(
+        Arr.map(lead, ([x, y, z]) => new Vector3(x, y, z)),
+        false,
+        "catmullrom",
+        0.05
+      ),
+    [lead]
+  );
+  const clips = Arr.filter(
+    [Arr.head(lead), Arr.last(lead)],
+    (end) => Option.isSome(end) && end.value[1] === ELECTRODE_TOP
+  );
 
   useFrame(({ clock }) => {
     Arr.forEach(group.current?.children ?? [], (electron, index) => {
@@ -164,12 +226,27 @@ export function Lead({
 
   return (
     <group>
-      <Line color={colors.wire} lineWidth={2.2} points={[...lead]} />
+      <mesh castShadow>
+        <tubeGeometry args={[cable, 96, 0.016, 12, false]} />
+        <meshPhysicalMaterial clearcoat={0.3} color={sheath} roughness={0.45} />
+      </mesh>
+      {Arr.map(Arr.getSomes(clips), ([x, y, z]) => (
+        <RoundedBox
+          args={[0.06, 0.08, 0.1]}
+          castShadow
+          key={`${x}-${y}`}
+          position={[x, y + 0.02, z]}
+          radius={0.012}
+          smoothness={2}
+        >
+          <MetalMaterial color={MATERIAL.chrome} roughness={0.25} />
+        </RoundedBox>
+      ))}
       <CameraBounds exclude>
         <group ref={group}>
           {Arr.makeBy(ELECTRONS_PER_LEAD, (index) => (
             <mesh key={String(index)}>
-              <sphereGeometry args={[0.02, 12, 8]} />
+              <sphereGeometry args={[0.022, 12, 8]} />
               <meshStandardMaterial color={colors.electron} roughness={0.3} />
             </mesh>
           ))}

@@ -1,4 +1,5 @@
 import {
+  ColumnLiquid,
   Flask,
   FlaskLiquid,
   flaskRadiusAt,
@@ -15,7 +16,6 @@ import { ORIGIN_COLOR } from "@repo/design-system/components/three/data/constant
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import {
   GlassMaterial,
-  LiquidMaterial,
   MetalMaterial,
 } from "@repo/design-system/components/three/physical";
 import { MATERIAL } from "@repo/design-system/lib/material";
@@ -117,11 +117,11 @@ export function TitrationScene({
         {showReading ? (
           <ThreeLabel
             anchorX="left"
-            color={ORIGIN_COLOR.DARK}
+            color={ORIGIN_COLOR.LIGHT}
             fontSize="compact"
             gap={0.004}
-            outlineColor={ORIGIN_COLOR.LIGHT}
-            outlineWidth={0.004}
+            outlineColor={ORIGIN_COLOR.DARK}
+            outlineWidth={0.006}
             position={[TUBE_RADIUS + 0.012, meniscus, 0]}
           >
             <InlineMath
@@ -134,7 +134,12 @@ export function TitrationScene({
   );
 }
 
-/** A 50 cm³ burette: a glass tube with its scale, the titrant in it, a stopcock and a tip. */
+/**
+ * A 50 cm³ burette as ISO 385 makes it: a borosilicate tube with its scale,
+ * the white Schellbach stripe and its blue centre line behind it, which make
+ * the meniscus easy to read, the titrant up to that meniscus, a PTFE
+ * stopcock key with its paddle, and a drawn-out tip.
+ */
 function Burette({
   color,
   meniscus,
@@ -143,23 +148,34 @@ function Burette({
   readonly meniscus: number;
 }) {
   const tube = TUBE_TOP - STOPCOCK;
-  const liquid = meniscus - STOPCOCK;
   const marks = Arr.makeBy(BURETTE_CAPACITY / 5 + 1, (index) => index * 5);
 
   return (
     <group>
       <mesh position={[0, STOPCOCK + tube / 2, 0]}>
         <cylinderGeometry
-          args={[TUBE_RADIUS, TUBE_RADIUS, tube, 24, 1, true]}
+          args={[TUBE_RADIUS, TUBE_RADIUS, tube, 32, 1, true]}
         />
-        <GlassMaterial color={MATERIAL.glass} opacity={0.3} />
+        <GlassMaterial color={MATERIAL.glass} />
       </mesh>
-      <mesh position={[0, STOPCOCK + liquid / 2, 0]}>
-        <cylinderGeometry
-          args={[TUBE_RADIUS - 0.001, TUBE_RADIUS - 0.001, liquid, 20]}
+      <mesh position={[0, STOPCOCK + tube / 2, -TUBE_RADIUS - 0.0004]}>
+        <planeGeometry args={[TUBE_RADIUS * 1.2, tube]} />
+        <meshStandardMaterial
+          color={MATERIAL.schellbachWhite}
+          roughness={0.8}
         />
-        <LiquidMaterial color={color} opacity={0.6} />
       </mesh>
+      <mesh position={[0, STOPCOCK + tube / 2, -TUBE_RADIUS - 0.0003]}>
+        <planeGeometry args={[TUBE_RADIUS * 0.25, tube]} />
+        <meshStandardMaterial color={MATERIAL.schellbachBlue} roughness={0.6} />
+      </mesh>
+      <ColumnLiquid
+        bottom={STOPCOCK}
+        color={color}
+        level={meniscus}
+        opacity={0.6}
+        radius={TUBE_RADIUS - 0.001}
+      />
       {Arr.map(marks, (volume) => (
         <mesh
           key={volume}
@@ -175,11 +191,23 @@ function Burette({
         <cylinderGeometry
           args={[TUBE_RADIUS * 0.6, 0.0016, STOPCOCK - TIP_END, 16]}
         />
-        <GlassMaterial color={MATERIAL.glass} opacity={0.35} />
+        <GlassMaterial color={MATERIAL.glass} />
       </mesh>
       <mesh position={[0, STOPCOCK, 0]} rotation={[0, 0, Math.PI / 2]}>
-        <cylinderGeometry args={[0.004, 0.004, 0.03, 16]} />
-        <meshStandardMaterial color={MATERIAL.stopper} roughness={0.5} />
+        <cylinderGeometry args={[0.0045, 0.0035, 0.026, 24]} />
+        <meshPhysicalMaterial
+          clearcoat={0.3}
+          color={MATERIAL.ptfe}
+          roughness={0.45}
+        />
+      </mesh>
+      <mesh position={[0.016, STOPCOCK, 0]}>
+        <boxGeometry args={[0.004, 0.016, 0.003]} />
+        <meshPhysicalMaterial
+          clearcoat={0.3}
+          color={MATERIAL.ptfe}
+          roughness={0.45}
+        />
       </mesh>
     </group>
   );

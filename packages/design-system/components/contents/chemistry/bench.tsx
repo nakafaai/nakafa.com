@@ -228,6 +228,66 @@ function profile(points: readonly (readonly [number, number])[]) {
   return Arr.map(points, ([radius, height]) => new Vector2(radius, height));
 }
 
+/** How high water climbs the glass where it meets the wall, about 1.5 mm. */
+const MENISCUS_RISE = 0.0015;
+
+/** How far in from the wall the curve of the meniscus reaches, at most. */
+const MENISCUS_REACH = 0.004;
+
+/** How thick the wall of school glassware is, about 1.5 mm. */
+export const GLASS_WALL = 0.0015;
+
+/**
+ * The surface of a liquid in glass, as lathe points from the wall inward:
+ * water wets glass, so its surface climbs the wall in a concave meniscus and
+ * lies flat in the middle, where a reading is taken.
+ */
+function meniscus(radius: number, level: number) {
+  const reach = Math.min(MENISCUS_REACH, radius * 0.6);
+  return Arr.map(Arr.range(0, 6), (step) => {
+    const share = step / 6;
+    return [
+      radius - share * reach,
+      level + MENISCUS_RISE * (1 - share) ** 2,
+    ] as const;
+  });
+}
+
+/**
+ * A liquid standing in a straight glass, a beaker or a burette, from
+ * `bottom` up to `level` metres, its surface curved into a meniscus.
+ */
+export function ColumnLiquid({
+  bottom,
+  color,
+  level,
+  opacity,
+  radius,
+}: {
+  readonly bottom: number;
+  readonly color: string;
+  readonly level: number;
+  readonly opacity: number;
+  readonly radius: number;
+}) {
+  const points = useMemo(
+    () =>
+      profile([
+        [0.0005, bottom],
+        [radius, bottom],
+        ...meniscus(radius, level),
+        [0.0005, level],
+      ]),
+    [bottom, level, radius]
+  );
+  return (
+    <mesh>
+      <latheGeometry args={[points, 48]} />
+      <LiquidMaterial color={color} opacity={opacity} />
+    </mesh>
+  );
+}
+
 /** A 250 mL conical (Erlenmeyer) flask: its outer wall, base to rim, in metres. */
 const FLASK_WALL = profile([
   [0.001, 0],
@@ -251,19 +311,23 @@ export function flaskRadiusAt(y: number) {
   return 0.04 - ((y - 0.012) / (0.105 - 0.012)) * (0.04 - 0.016);
 }
 
-/** A conical flask of clear glass. */
+/**
+ * A conical flask of clear borosilicate glass. It stays transparent rather
+ * than transmissive: three.js leaves transparent objects out of the scene a
+ * transmissive surface refracts, so the liquid inside would vanish.
+ */
 export function Flask() {
   return (
     <mesh castShadow>
-      <latheGeometry args={[FLASK_WALL, 48]} />
-      <GlassMaterial color={MATERIAL.glass} opacity={0.28} />
+      <latheGeometry args={[FLASK_WALL, 64]} />
+      <GlassMaterial color={MATERIAL.glass} />
     </mesh>
   );
 }
 
 /**
  * The liquid in a conical flask, filled to `level` metres: the flask's
- * inside, turned up to the surface.
+ * inside, turned up to a surface that climbs the glass in a meniscus.
  */
 export function FlaskLiquid({
   color,
@@ -278,10 +342,11 @@ export function FlaskLiquid({
     () =>
       profile([
         [0.001, 0.003],
-        ...Arr.map(Arr.range(0, 8), (step) => {
+        ...Arr.map(Arr.range(0, 7), (step) => {
           const y = 0.003 + ((level - 0.003) * step) / 8;
           return [flaskRadiusAt(y) - 0.002, y] as const;
         }),
+        ...meniscus(flaskRadiusAt(level) - 0.002, level),
         [0.001, level],
       ]),
     [level]
@@ -303,12 +368,12 @@ const BEAKER_WALL = profile([
   [0.028, 0.072],
 ]);
 
-/** A beaker of clear glass. */
+/** A beaker of clear borosilicate glass. */
 export function Beaker() {
   return (
     <mesh castShadow>
-      <latheGeometry args={[BEAKER_WALL, 40]} />
-      <GlassMaterial color={MATERIAL.glass} opacity={0.26} />
+      <latheGeometry args={[BEAKER_WALL, 64]} />
+      <GlassMaterial color={MATERIAL.glass} />
     </mesh>
   );
 }
