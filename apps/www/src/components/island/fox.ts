@@ -12,14 +12,15 @@ const WALK_SPEED = 3.2;
 
 /**
  * The learner's own fox (ADR 0047, D12, D22 and D40): where it stands, the
- * route it walks, and its footsteps. It starts on the village square, walks
+ * route it walks, and its footsteps. It starts on the village square west of
+ * the well, where the opening view sees it past every roof, walks
  * the shortest way to where the learner sends it, waits for an animal in its
  * way instead of walking through it, and treads once a stride on whatever its
  * paws land on, which the sound answers. The canvas carries its column and
  * whether it walks, for the browser specs.
  */
 export function createFox(store: GameStoreApi, canvas: HTMLCanvasElement) {
-  let at = { x: SPAN / 2 + 0.5, z: SPAN / 2 + 2.5 };
+  let at = { x: SPAN / 2 - 2.5, z: SPAN / 2 + 0.5 };
   let route: readonly (readonly [number, number])[] = [];
   let walked = 0;
   const show = () => {
