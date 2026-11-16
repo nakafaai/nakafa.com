@@ -1,4 +1,3 @@
-import { Target02Icon } from "@hugeicons/core-free-icons";
 import type { Interaction } from "@nakafa/aksara-contracts/assessment/interaction";
 import { Checkbox } from "@repo/design-system/components/ui/checkbox";
 import {
@@ -189,7 +188,7 @@ export function NumberKey({
           </SelectTrigger>
           <SelectContent label={common("menu-tolerance")}>
             {Arr.map(ToleranceKind.literals, (value) => (
-              <SelectItem icon={Target02Icon} key={value} value={value}>
+              <SelectItem key={value} plain value={value}>
                 {t(TOLERANCE_NAME[value])}
               </SelectItem>
             ))}

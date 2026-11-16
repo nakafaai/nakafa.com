@@ -1,8 +1,4 @@
-import {
-  Add01Icon,
-  Delete02Icon,
-  ListViewIcon,
-} from "@hugeicons/core-free-icons";
+import { Add01Icon, Delete02Icon } from "@hugeicons/core-free-icons";
 import { RichTextSchema } from "@nakafa/aksara-contracts/assessment/inline";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
@@ -168,11 +164,7 @@ function FieldControl({
               </SelectTrigger>
               <SelectContent label={common("menu-kind")}>
                 {Arr.map(options, (option) => (
-                  <SelectItem
-                    icon={ListViewIcon}
-                    key={String(option)}
-                    value={option}
-                  >
+                  <SelectItem key={String(option)} plain value={option}>
                     {String(option)}
                   </SelectItem>
                 ))}
@@ -335,7 +327,7 @@ function VariantInput({
         </SelectTrigger>
         <SelectContent label={common("menu-type")}>
           {Arr.map(field.cases, ({ value }) => (
-            <SelectItem icon={ListViewIcon} key={String(value)} value={value}>
+            <SelectItem key={String(value)} plain value={value}>
               {String(value)}
             </SelectItem>
           ))}

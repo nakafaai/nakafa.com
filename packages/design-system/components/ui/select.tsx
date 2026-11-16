@@ -11,6 +11,7 @@ import {
 import {
   HugeIcons,
   OptionIcon,
+  type OptionMark,
 } from "@repo/design-system/components/ui/huge-icons";
 import { ButtonGroupVariant } from "@repo/design-system/lib/group";
 import { PortalContainer } from "@repo/design-system/lib/portal";
@@ -18,7 +19,6 @@ import { cva } from "class-variance-authority";
 import { cn } from "cn";
 import { Array as Arr } from "effect";
 import type * as React from "react";
-import type { ComponentProps } from "react";
 import { use } from "react";
 import { useTranslations } from "use-intl";
 
@@ -238,9 +238,9 @@ function SelectItem({
   className,
   children,
   icon,
+  plain,
   ...props
-}: SelectPrimitive.Item.Props &
-  Pick<ComponentProps<typeof OptionIcon>, "icon">) {
+}: SelectPrimitive.Item.Props & OptionMark) {
   return (
     <SelectPrimitive.Item
       className={cn(
@@ -251,7 +251,7 @@ function SelectItem({
       {...props}
     >
       <SelectPrimitive.ItemText className="flex min-w-0 flex-1 items-center gap-2 text-pretty">
-        <OptionIcon icon={icon} />
+        {plain ? null : <OptionIcon icon={icon} />}
         {children}
       </SelectPrimitive.ItemText>
       <SelectPrimitive.ItemIndicator

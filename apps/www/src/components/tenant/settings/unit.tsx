@@ -1,5 +1,4 @@
 import type { Ref } from "@confect/core";
-import { SchoolIcon } from "@hugeicons/core-free-icons";
 import { Id } from "@repo/backend/confect/_generated/id";
 import type tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import {
@@ -56,7 +55,7 @@ export function SchoolUnitChoice({
       </SelectTrigger>
       <SelectContent label={common("menu-unit")}>
         {Arr.map(items, (item) => (
-          <SelectItem icon={SchoolIcon} key={item.value} value={item.value}>
+          <SelectItem key={item.value} plain value={item.value}>
             {item.label}
           </SelectItem>
         ))}

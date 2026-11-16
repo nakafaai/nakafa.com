@@ -1,5 +1,4 @@
 import { QueryResult, useMutation, useQuery } from "@confect/react";
-import { UserGroupIcon } from "@hugeicons/core-free-icons";
 import { Id } from "@repo/backend/confect/_generated/id";
 import classroom from "@repo/backend/confect/_generated/refs/classroom";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
@@ -202,11 +201,7 @@ function ClassCohortSelect({
         </SelectTrigger>
         <SelectContent label={common("menu-cohort")}>
           {Arr.map(items, (item) => (
-            <SelectItem
-              icon={UserGroupIcon}
-              key={item.value}
-              value={item.value}
-            >
+            <SelectItem key={item.value} plain value={item.value}>
               {item.label}
             </SelectItem>
           ))}

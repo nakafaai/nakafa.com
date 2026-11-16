@@ -186,11 +186,7 @@ export default function TableChairsAnimation({ labels }: TableChairsProps) {
             </SelectTrigger>
             <SelectContent label={common("menu-speed")}>
               {Arr.map(speedItems, (item) => (
-                <SelectItem
-                  icon={DashboardSpeed01Icon}
-                  key={item.value}
-                  value={item.value}
-                >
+                <SelectItem key={item.value} plain value={item.value}>
                   {item.label}
                 </SelectItem>
               ))}
@@ -213,11 +209,7 @@ export default function TableChairsAnimation({ labels }: TableChairsProps) {
             </SelectTrigger>
             <SelectContent label={common("menu-count")}>
               {Arr.map(tableItems, (item) => (
-                <SelectItem
-                  icon={Table01Icon}
-                  key={item.value}
-                  value={item.value}
-                >
+                <SelectItem key={item.value} plain value={item.value}>
                   {item.label}
                 </SelectItem>
               ))}

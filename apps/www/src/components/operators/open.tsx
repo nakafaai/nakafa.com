@@ -84,7 +84,7 @@ function OpenSelectField<const Value extends string>({
   value,
 }: {
   items: readonly {
-    readonly icon: ComponentProps<typeof SelectItem>["icon"];
+    readonly icon: NonNullable<ComponentProps<typeof SelectItem>["icon"]>;
     readonly label: string;
     readonly value: Value;
   }[];

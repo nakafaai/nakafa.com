@@ -4,7 +4,6 @@ import {
   useMutation,
   usePaginatedQuery,
 } from "@confect/react";
-import { Key01Icon } from "@hugeicons/core-free-icons";
 import integrations from "@repo/backend/confect/_generated/refs/integrations";
 import {
   ReceiverUrl,
@@ -256,7 +255,7 @@ export function SchoolWebhookCreateDialog({
             </SelectTrigger>
             <SelectContent label={common("menu-client")}>
               {Arr.map(active, (each) => (
-                <SelectItem icon={Key01Icon} key={each.id} value={each.id}>
+                <SelectItem key={each.id} plain value={each.id}>
                   {each.name}
                 </SelectItem>
               ))}

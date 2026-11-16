@@ -182,7 +182,10 @@ export function CodeBlockSelectContent({
 }
 
 /** Menu-item attributes for one selectable language. */
-type CodeBlockSelectItemProps = Omit<ComponentProps<typeof SelectItem>, "icon">;
+type CodeBlockSelectItemProps = Omit<
+  ComponentProps<typeof SelectItem>,
+  "icon" | "plain"
+>;
 
 /** Applies the code-block typography to one language option, which shows the code icon. */
 export function CodeBlockSelectItem({

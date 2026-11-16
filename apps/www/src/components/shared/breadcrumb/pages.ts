@@ -19,7 +19,7 @@ export function crumbSiblings(siblings: {
     | undefined;
   readonly options: readonly {
     readonly current: boolean;
-    readonly icon: ComponentProps<typeof OptionIcon>["icon"];
+    readonly icon: NonNullable<ComponentProps<typeof OptionIcon>["icon"]>;
     readonly label: string;
     readonly target: LinkTarget;
   }[];
