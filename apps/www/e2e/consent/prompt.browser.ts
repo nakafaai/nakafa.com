@@ -253,21 +253,30 @@ const promptOf = (page: Page) =>
 const actionsOf = (prompt: Locator) =>
   prompt.locator('[data-slot="card-footer"] button');
 
-/** Waits for the prompt of a first visit, and for the page's fonts to load. */
+/** The prompt's own element, by the attribute that its hiding rules key on. */
+const PROMPT_ELEMENT = "[data-analytics-consent-prompt]";
+
+/**
+ * Waits for the prompt of a first visit, named as a region, and for the page's fonts to load, then
+ * answers the prompt by its own element for measuring. Firefox's page crashes when Playwright resolves
+ * the region by its role a second time on a phone, so what the prompt measures is read through the
+ * element the role named.
+ */
 const openFirstVisit = Effect.fn("NakafaE2E.openUsageDataPrompt")(function* (
   page: Page
 ) {
   yield* Effect.promise(() => page.goto("/en"));
-  const prompt = promptOf(page);
   yield* Effect.promise(() =>
-    expect(prompt).toBeVisible({ timeout: readinessTimeoutMilliseconds })
+    expect(promptOf(page)).toBeVisible({
+      timeout: readinessTimeoutMilliseconds,
+    })
   );
   yield* Effect.promise(() =>
     page.evaluate(async () => {
       await document.fonts.ready;
     })
   );
-  return prompt;
+  return page.locator(PROMPT_ELEMENT);
 });
 
 const verifyActionsAtLargeText = Effect.fn(
