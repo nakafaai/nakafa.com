@@ -13,18 +13,18 @@ export function GramWallComparison({
   const colors = useBiologyColors();
 
   return (
-    <group position={[0, 0.32, 0]}>
+    <group position={[0, 0.2, 0]} scale={1.55}>
       <BacterialWallStack
-        colors={[colors.microbe, colors.plant]}
+        gram="positive"
         label={gramPositiveLabel}
         textColor={colors.text}
-        x={-0.7}
+        x={-0.66}
       />
       <BacterialWallStack
-        colors={[colors.membrane, colors.microbe, colors.pathogen]}
+        gram="negative"
         label={gramNegativeLabel}
         textColor={colors.text}
-        x={0.72}
+        x={0.66}
       />
     </group>
   );

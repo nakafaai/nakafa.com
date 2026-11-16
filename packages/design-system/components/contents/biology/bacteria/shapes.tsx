@@ -22,7 +22,7 @@ export function BacterialShapes({
   return (
     <group scale={1.22}>
       <group position={[-0.92, 0.34, 0]}>
-        <CoccusClusterModel colors={colors} scale={0.96} />
+        <CoccusClusterModel scale={0.96} />
         {coccusLabel === undefined ? null : (
           <ThreeLabel
             color={colors.text}
@@ -33,9 +33,8 @@ export function BacterialShapes({
           </ThreeLabel>
         )}
       </group>
-      <group position={[0.18, 0.32, 0]} rotation={[0.1, 0, -0.18]}>
+      <group position={[0.18, 0.32, 0]} rotation={[0.1, Math.PI, 0.18]}>
         <BacillusBacteriumModel
-          colors={colors}
           scale={0.78}
           showInterior={false}
           showPili={false}
@@ -51,7 +50,7 @@ export function BacterialShapes({
         )}
       </group>
       <group position={[0.92, -0.42, 0]} rotation={[0, 0, -0.18]}>
-        <SpirillumBacteriumModel colors={colors} scale={1.02} />
+        <SpirillumBacteriumModel scale={1.02} />
         {spiralLabel === undefined ? null : (
           <ThreeLabel
             color={colors.text}

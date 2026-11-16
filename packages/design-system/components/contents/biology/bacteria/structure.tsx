@@ -14,7 +14,7 @@ export function BacterialStructure({
   return (
     <group>
       <group rotation={[0, 0, -0.08]}>
-        <BacillusBacteriumModel colors={colors} scale={1.18} />
+        <BacillusBacteriumModel scale={1.18} />
       </group>
       {nucleoidDnaLabel === undefined ? null : (
         <ThreeLabel

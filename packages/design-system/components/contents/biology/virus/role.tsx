@@ -115,7 +115,6 @@ function EcologyRole() {
           rotation={bacterium.rotation}
         >
           <BacillusBacteriumModel
-            colors={colors}
             scale={0.82}
             showFlagellum={bacterium.showFlagellum}
             showInterior={false}
