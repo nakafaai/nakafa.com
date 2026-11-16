@@ -185,4 +185,26 @@ describe("waiting for the page to settle", () => {
         yield* Fiber.interrupt(waiting);
       })
   );
+
+  it.effect(
+    "loads what needs the reader's intent only at their first gesture, never by a wait",
+    () =>
+      Effect.gen(function* () {
+        // A fresh module, as a new document that has not seen its reader yet.
+        vi.resetModules();
+        const { untilReaderGesture } = yield* Effect.promise(
+          () => import("@repo/design-system/lib/settle")
+        );
+
+        const waiting = yield* Effect.forkChild(untilReaderGesture);
+        yield* Effect.yieldNow;
+        yield* TestClock.adjust("1 minute");
+        expect(waiting.pollUnsafe()).toBeUndefined();
+
+        window.dispatchEvent(new Event("scroll"));
+        yield* Fiber.join(waiting);
+        // The gesture is kept, so the next part that asks starts at once.
+        yield* untilReaderGesture;
+      })
+  );
 });
