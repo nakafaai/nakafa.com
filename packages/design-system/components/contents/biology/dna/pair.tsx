@@ -7,18 +7,27 @@ import {
   complementOf,
   type Nucleic,
 } from "@repo/design-system/components/contents/biology/dna/strand";
-import { PLOT_COLORS } from "@repo/design-system/lib/plot";
+import { MATERIAL } from "@repo/design-system/lib/material";
 import { createContext, use } from "react";
-import { Quaternion, Vector3 } from "three";
+import { Matrix4, Quaternion, Vector3 } from "three";
 
-/** Each base keeps one colour in every lesson, from the plot palette. */
+/** Each base keeps one colour in every lesson: the same hues as before, in the muted tones of a molecular model. */
 const BASE_COLORS = {
-  A: PLOT_COLORS.amber,
-  C: PLOT_COLORS.pink,
-  G: PLOT_COLORS.violet,
-  T: PLOT_COLORS.teal,
-  U: PLOT_COLORS.orange,
+  A: MATERIAL.adenine,
+  C: MATERIAL.cytosine,
+  G: MATERIAL.guanine,
+  T: MATERIAL.thymine,
+  U: MATERIAL.uracil,
 } as const satisfies Record<Base, string>;
+
+/**
+ * How wide each base's slab is, in nanometres across the helix: the purines
+ * A and G have two rings, the pyrimidines C, T and U one.
+ */
+const BASE_WIDTH = { A: 0.42, C: 0.3, G: 0.42, T: 0.3, U: 0.3 } as const;
+
+/** The ladder lays the helix along x, so each slab lies across x, stacked on its neighbours. */
+const HELIX_AXIS = new Vector3(1, 0, 0);
 
 /** Whether the bases drawn inside glow: the scene sets it for each changed pair. */
 export const BaseGlow = createContext(false);
@@ -47,13 +56,11 @@ export function Pair({
     return (
       <>
         <Rod
-          color={BASE_COLORS[base]}
+          base={base}
           from={rung.first}
           to={single ? stub(rung.first, rung.second) : middle}
         />
-        {!single && (
-          <Rod color={BASE_COLORS[partner]} from={rung.second} to={middle} />
-        )}
+        {!single && <Rod base={partner} from={rung.second} to={middle} />}
       </>
     );
   }
@@ -63,15 +70,11 @@ export function Pair({
     : stub(rung.second, rung.newSecond);
   return (
     <>
-      <Rod
-        color={BASE_COLORS[base]}
-        from={rung.first}
-        to={midpoint(rung.first, upper)}
-      />
+      <Rod base={base} from={rung.first} to={midpoint(rung.first, upper)} />
       {rung.copied && (
         <BaseGlow value={false}>
           <Rod
-            color={BASE_COLORS[partner]}
+            base={partner}
             from={rung.newFirst}
             to={midpoint(rung.first, upper)}
           />
@@ -81,7 +84,7 @@ export function Pair({
         <>
           <BaseGlow value={false}>
             <Rod
-              color={BASE_COLORS[partner]}
+              base={partner}
               from={rung.second}
               to={midpoint(rung.second, lower)}
             />
@@ -89,7 +92,7 @@ export function Pair({
           {rung.copied && (
             <BaseGlow value={false}>
               <Rod
-                color={BASE_COLORS[base]}
+                base={base}
                 from={rung.newSecond}
                 to={midpoint(rung.second, lower)}
               />
@@ -101,34 +104,44 @@ export function Pair({
   );
 }
 
-/** A base drawn as a rounded rod between two points, glowing where `BaseGlow` says so. */
+/**
+ * A base drawn as a flat slab from its backbone to the middle of the helix,
+ * lying across the helix axis as the bases stack, glowing where `BaseGlow`
+ * says so.
+ */
 function Rod({
-  color,
+  base,
   from,
   to,
 }: {
-  readonly color: string;
+  readonly base: Base;
   readonly from: Point;
   readonly to: Point;
 }) {
   const glow = use(BaseGlow);
+  const color = BASE_COLORS[base];
   const start = new Vector3(from[0], from[1], from[2]);
   const end = new Vector3(to[0], to[1], to[2]);
   const length = start.distanceTo(end);
-  const quaternion = new Quaternion().setFromUnitVectors(
-    new Vector3(0, 1, 0),
-    end.clone().sub(start).normalize()
+  const along = end.clone().sub(start).normalize();
+  const flat = new Vector3().crossVectors(along, HELIX_AXIS).normalize();
+  const stack = new Vector3().crossVectors(flat, along);
+  const quaternion = new Quaternion().setFromRotationMatrix(
+    new Matrix4().makeBasis(flat, along, stack)
   );
   const center = start.add(end).multiplyScalar(0.5);
   return (
     <mesh castShadow position={center} quaternion={quaternion}>
-      <capsuleGeometry args={[0.1, Math.max(0.01, length - 0.2), 4, 10]} />
+      <boxGeometry
+        args={[BASE_WIDTH[base], Math.max(0.01, length - 0.04), 0.09]}
+      />
       <meshPhysicalMaterial
-        clearcoat={0.4}
+        clearcoat={0.5}
+        clearcoatRoughness={0.3}
         color={color}
         emissive={color}
         emissiveIntensity={glow ? 1.6 : 0}
-        roughness={0.4}
+        roughness={0.45}
       />
     </mesh>
   );

@@ -1,13 +1,21 @@
 import { RoundedBox } from "@react-three/drei";
-import { spotInHalf } from "@repo/design-system/components/contents/biology/cell/anatomy";
+import { CutNucleus } from "@repo/design-system/components/contents/biology/cell/nucleus";
 import {
-  HalfShell,
-  Scatter,
-} from "@repo/design-system/components/contents/biology/cell/parts";
+  type Keepout,
+  Lysosomes,
+  Mitochondria,
+  Ribosomes,
+} from "@repo/design-system/components/contents/biology/cell/organelles";
+import { HalfShell } from "@repo/design-system/components/contents/biology/cell/parts";
+import {
+  Instances,
+  type Placement,
+} from "@repo/design-system/components/contents/biology/instances";
 import { hashUnit } from "@repo/design-system/components/contents/simulation/grain";
 import { MATERIAL } from "@repo/design-system/lib/material";
 import { Array as Arr } from "effect";
-import { DoubleSide } from "three";
+import { useMemo } from "react";
+import { DoubleSide, Euler, Matrix4, Quaternion, Vector3 } from "three";
 
 /** One micrometre of a 20 µm animal cell drawn with a radius of 1. */
 const ANIMAL_UM = 1 / 10;
@@ -15,85 +23,86 @@ const ANIMAL_UM = 1 / 10;
 /** The nucleus of the animal cell: 6 µm across, off the middle. */
 const NUCLEUS = { radius: 3 * ANIMAL_UM, x: -0.2, y: 0.05, z: -0.42 } as const;
 
+/** Where the Golgi stack sits in the animal cell. */
+const GOLGI = [0.42, 0.22, -0.45] as const;
+
+/** The nucleus with its wrap of reticulum, and the Golgi stack, which nothing else may enter. */
+const ANIMAL_KEEPOUT: readonly Keepout[] = [
+  [NUCLEUS.x, NUCLEUS.y, NUCLEUS.z, NUCLEUS.radius + 0.2],
+  [GOLGI[0], GOLGI[1], GOLGI[2], 0.2],
+];
+
 /**
- * An animal cell such as a liver cell, cut open: a membrane with no wall, a
- * nucleus with its nucleolus and pores, rough endoplasmic reticulum around
- * it, a Golgi stack, mitochondria about 1.5 µm long, and ribosomes, each at
- * its real size against the 20 µm cell.
+ * An animal cell such as a liver cell, cut open: an uneven membrane with no
+ * wall, a nucleus with its double envelope, pores, chromatin and nucleolus,
+ * rough endoplasmic reticulum studded with ribosomes around it, a Golgi
+ * stack shedding vesicles, lysosomes, mitochondria about 1.5 µm long, and
+ * free ribosomes, each at its real size against the 20 µm cell.
  */
 export function AnimalCell() {
   return (
     <group>
       <HalfShell color={MATERIAL.membrane} scale={[1, 1, 1]} thickness={0.02} />
-      <Nucleus />
+      <CutNucleus
+        position={[NUCLEUS.x, NUCLEUS.y, NUCLEUS.z]}
+        radius={NUCLEUS.radius}
+      />
       <Reticulum />
-      <Golgi position={[0.42, 0.22, -0.45]} />
-      <Mitochondria count={22} margin={0.12} size={ANIMAL_UM} />
-      <Ribosomes count={420} margin={0.05} size={ANIMAL_UM} />
+      <Golgi position={GOLGI} />
+      <Lysosomes avoid={ANIMAL_KEEPOUT} count={8} size={ANIMAL_UM} />
+      <Mitochondria
+        avoid={ANIMAL_KEEPOUT}
+        count={22}
+        margin={0.12}
+        size={ANIMAL_UM}
+      />
+      <Ribosomes
+        avoid={ANIMAL_KEEPOUT}
+        count={420}
+        margin={0.05}
+        size={ANIMAL_UM}
+      />
     </group>
   );
 }
 
-/** The nucleus cut open: its envelope, its pores and its dark nucleolus. */
-function Nucleus() {
-  return (
-    <group position={[NUCLEUS.x, NUCLEUS.y, NUCLEUS.z]}>
-      <mesh castShadow>
-        <sphereGeometry args={[NUCLEUS.radius, 48, 32, Math.PI, Math.PI]} />
-        <meshPhysicalMaterial
-          clearcoat={0.6}
-          color={MATERIAL.nucleus}
-          roughness={0.45}
-          side={DoubleSide}
-        />
-      </mesh>
-      <mesh position={[0.05, 0.04, -0.1]}>
-        <sphereGeometry args={[NUCLEUS.radius * 0.36, 32, 24]} />
-        <meshStandardMaterial color={MATERIAL.nucleolus} roughness={0.6} />
-      </mesh>
-      <Scatter
-        count={40}
-        place={(index) => {
-          const theta = Math.acos(2 * hashUnit(index, 41) - 1);
-          const phi = Math.PI + hashUnit(index, 42) * Math.PI;
-          const r = NUCLEUS.radius * 1.01;
-          return [
-            [
-              r * Math.sin(theta) * Math.cos(phi),
-              r * Math.cos(theta),
-              r * Math.sin(theta) * Math.sin(phi),
-            ],
-            [0, 0, 0],
-            [1, 1, 1],
-          ];
-        }}
-      >
-        <sphereGeometry args={[0.009, 8, 6]} />
-        <meshStandardMaterial color={MATERIAL.nucleolus} roughness={0.7} />
-      </Scatter>
-    </group>
-  );
-}
+/** The sheets of the rough endoplasmic reticulum, as segments of shells round the nucleus. */
+const SHEETS = Arr.map(Arr.range(0, 3), (layer) => ({
+  layer,
+  phi: [Math.PI * (1.05 + 0.12 * layer), Math.PI * 0.55] as const,
+  radius: NUCLEUS.radius + 0.07 + 0.05 * layer,
+  theta: [Math.PI * (0.2 + 0.05 * layer), Math.PI * 0.55] as const,
+  turn: 0.5 * layer,
+}));
 
 /**
  * Rough endoplasmic reticulum: folded sheets that wrap the nucleus in layers,
- * each a curved patch of membrane studded with ribosomes.
+ * each a curved patch of membrane studded on its outer face with ribosomes.
  */
 function Reticulum() {
+  const studs = useMemo(
+    () =>
+      Arr.flatMap(SHEETS, ({ layer, phi, radius, theta, turn }) =>
+        Arr.map(Arr.range(0, 69), (index): Placement => {
+          const p = phi[0] + hashUnit(index, 60 + layer) * phi[1];
+          const t = theta[0] + hashUnit(index, 70 + layer) * theta[1];
+          const r = radius + 0.006;
+          const local = new Vector3(
+            -r * Math.cos(p) * Math.sin(t),
+            r * Math.cos(t),
+            r * Math.sin(p) * Math.sin(t)
+          ).applyAxisAngle(new Vector3(0, 1, 0), turn);
+          return { position: [local.x, local.y, local.z] };
+        })
+      ),
+    []
+  );
   return (
     <group position={[NUCLEUS.x, NUCLEUS.y, NUCLEUS.z]}>
-      {Arr.map(Arr.range(0, 3), (layer) => (
-        <mesh castShadow key={layer} rotation={[0, 0.5 * layer, 0]}>
+      {Arr.map(SHEETS, ({ layer, phi, radius, theta, turn }) => (
+        <mesh castShadow key={layer} rotation={[0, turn, 0]}>
           <sphereGeometry
-            args={[
-              NUCLEUS.radius + 0.07 + 0.05 * layer,
-              48,
-              24,
-              Math.PI * (1.05 + 0.12 * layer),
-              Math.PI * 0.55,
-              Math.PI * (0.2 + 0.05 * layer),
-              Math.PI * 0.55,
-            ]}
+            args={[radius, 48, 24, phi[0], phi[1], theta[0], theta[1]]}
           />
           <meshPhysicalMaterial
             clearcoat={0.3}
@@ -105,16 +114,34 @@ function Reticulum() {
           />
         </mesh>
       ))}
+      <Instances placements={studs}>
+        <sphereGeometry args={[0.006, 6, 4]} />
+        <meshStandardMaterial color={MATERIAL.ribosome} roughness={0.8} />
+      </Instances>
     </group>
   );
 }
 
-/** A Golgi stack: five flattened, curved sacs. */
+/** A Golgi stack: five flattened, curved sacs, with vesicles budding from their rims. */
 function Golgi({
   position,
 }: {
   readonly position: readonly [number, number, number];
 }) {
+  const vesicles = useMemo(
+    () =>
+      Arr.map(
+        Arr.range(0, 9),
+        (index): Placement => ({
+          position: [
+            (index % 2 === 0 ? 1 : -1) * (0.13 + hashUnit(index, 81) * 0.05),
+            (hashUnit(index, 82) - 0.2) * 0.16,
+            (hashUnit(index, 83) - 0.5) * 0.08,
+          ],
+        })
+      ),
+    []
+  );
   return (
     <group position={position} rotation={[0.5, 0.4, 0.3]}>
       {Arr.map(Arr.range(0, 4), (sac) => (
@@ -134,58 +161,15 @@ function Golgi({
           />
         </mesh>
       ))}
+      <Instances placements={vesicles}>
+        <sphereGeometry args={[0.014, 12, 8]} />
+        <meshPhysicalMaterial
+          clearcoat={0.5}
+          color={MATERIAL.golgi}
+          roughness={0.4}
+        />
+      </Instances>
     </group>
-  );
-}
-
-/** Mitochondria: capsules about 1.5 µm long and 0.5 µm wide at `size` per µm. */
-export function Mitochondria({
-  count,
-  margin,
-  size,
-}: {
-  readonly count: number;
-  readonly margin: number;
-  readonly size: number;
-}) {
-  return (
-    <Scatter
-      count={count}
-      place={(index) => [
-        spotInHalf(index, 11, margin),
-        [hashUnit(index, 12) * 3, hashUnit(index, 13) * 3, 0],
-        [1, 1, 1],
-      ]}
-    >
-      <capsuleGeometry args={[0.25 * size, 1 * size, 6, 12]} />
-      <meshPhysicalMaterial
-        clearcoat={0.5}
-        color={MATERIAL.mitochondrion}
-        roughness={0.4}
-      />
-    </Scatter>
-  );
-}
-
-/** Ribosomes: grains 25 nm across, drawn at `size` per µm. */
-export function Ribosomes({
-  count,
-  margin,
-  size,
-}: {
-  readonly count: number;
-  readonly margin: number;
-  readonly size: number;
-}) {
-  const radius = Math.max(0.006, 0.0125 * size);
-  return (
-    <Scatter
-      count={count}
-      place={(index) => [spotInHalf(index, 21, margin), [0, 0, 0], [1, 1, 1]]}
-    >
-      <sphereGeometry args={[radius, 6, 4]} />
-      <meshStandardMaterial color={MATERIAL.ribosome} roughness={0.8} />
-    </Scatter>
   );
 }
 
@@ -195,11 +179,60 @@ const PLANT_UM = 1 / 20;
 /** The leaf cell's half sizes, in drawing units: 40 by 24 by 24 µm. */
 const PLANT = { x: 20 * PLANT_UM, y: 12 * PLANT_UM, z: 12 * PLANT_UM } as const;
 
+/** The leaf cell's nucleus, pushed into a lower corner by the vacuole. */
+const PLANT_NUCLEUS = {
+  position: [-PLANT.x * 0.78, -PLANT.y * 0.62, -PLANT.z * 0.5] as const,
+  radius: 3 * PLANT_UM,
+};
+
+/** The chloroplasts of the leaf cell, as placements of a unit sphere, none of them inside the nucleus. */
+const CHLOROPLASTS = Arr.filter(
+  Arr.map(Arr.range(0, 39), chloroplastSpot),
+  ({ position }) =>
+    Math.hypot(
+      position[0] - PLANT_NUCLEUS.position[0],
+      position[1] - PLANT_NUCLEUS.position[1],
+      position[2] - PLANT_NUCLEUS.position[2]
+    ) >
+    PLANT_NUCLEUS.radius + 2.8 * PLANT_UM
+);
+
+/**
+ * The grana inside each chloroplast: stacks of thylakoids seen through its
+ * envelope, placed in the chloroplast's own frame and carried with it.
+ */
+const GRANA = Arr.flatMap(CHLOROPLASTS, (chloroplast, index) => {
+  const frame = new Matrix4().compose(
+    new Vector3(...chloroplast.position),
+    new Quaternion().setFromEuler(
+      new Euler(...(chloroplast.rotation ?? [0, 0, 0]))
+    ),
+    new Vector3(...(chloroplast.scale ?? [1, 1, 1]))
+  );
+  const turn = new Euler().setFromQuaternion(
+    new Quaternion().setFromEuler(
+      new Euler(...(chloroplast.rotation ?? [0, 0, 0]))
+    )
+  );
+  return Arr.map(Arr.range(0, 6), (granum): Placement => {
+    const at = new Vector3(
+      (granum / 5 - 0.5) * 1.3 + (hashUnit(index, granum) - 0.5) * 0.12,
+      (hashUnit(index, granum + 9) - 0.5) * 0.3,
+      0
+    ).applyMatrix4(frame);
+    return {
+      position: [at.x, at.y, at.z],
+      rotation: [turn.x, turn.y, turn.z],
+      scale: [1, 1, 1],
+    };
+  });
+});
+
 /**
  * A palisade cell of a leaf, cut open: a cellulose wall around the membrane,
  * a central vacuole that fills most of it, chloroplasts about 5 µm long
- * pressed against the walls, a nucleus pushed to one side, and a few
- * mitochondria.
+ * pressed against the walls with their grana showing through, and a
+ * nucleus pushed to one side.
  */
 export function PlantCell() {
   const wall = 0.6 * PLANT_UM;
@@ -213,31 +246,35 @@ export function PlantCell() {
         smoothness={4}
       >
         <meshPhysicalMaterial
+          clearcoat={0.6}
           color={MATERIAL.vacuole}
-          opacity={0.55}
-          roughness={0.1}
+          opacity={0.45}
+          roughness={0.08}
           transparent
         />
       </RoundedBox>
-      <Scatter count={34} place={(index) => chloroplastSpot(index)}>
-        <sphereGeometry args={[1, 24, 16]} />
-        <meshPhysicalMaterial
-          clearcoat={0.4}
-          color={MATERIAL.chloroplast}
-          roughness={0.45}
-        />
-      </Scatter>
-      <mesh
-        castShadow
-        position={[-PLANT.x * 0.78, -PLANT.y * 0.62, -PLANT.z * 0.5]}
-      >
-        <sphereGeometry args={[3 * PLANT_UM, 32, 24]} />
+      <Instances placements={CHLOROPLASTS}>
+        <sphereGeometry args={[1, 32, 20]} />
         <meshPhysicalMaterial
           clearcoat={0.5}
-          color={MATERIAL.nucleus}
-          roughness={0.45}
+          clearcoatRoughness={0.3}
+          color={MATERIAL.chloroplast}
+          depthWrite={false}
+          opacity={0.72}
+          roughness={0.35}
+          transparent
         />
-      </mesh>
+      </Instances>
+      <Instances placements={GRANA}>
+        <cylinderGeometry
+          args={[0.32 * PLANT_UM, 0.32 * PLANT_UM, 0.5 * PLANT_UM, 14]}
+        />
+        <meshStandardMaterial color={MATERIAL.granum} roughness={0.55} />
+      </Instances>
+      <CutNucleus
+        position={PLANT_NUCLEUS.position}
+        radius={PLANT_NUCLEUS.radius}
+      />
     </group>
   );
 }
@@ -246,7 +283,7 @@ export function PlantCell() {
  * Where chloroplast `index` lies: in the thin cytoplasm between the vacuole
  * and one of the four side walls or the back wall, flattened against it.
  */
-function chloroplastSpot(index: number) {
+function chloroplastSpot(index: number): Placement {
   const side = index % 5;
   const along = hashUnit(index, 31) * 2 - 1;
   const across = hashUnit(index, 32);
@@ -280,7 +317,7 @@ function chloroplastSpot(index: number) {
     ],
   ] as const;
   const [position, rotation] = sides[side] ?? sides[0];
-  return [position, rotation, flat] as const;
+  return { position, rotation, scale: flat };
 }
 
 /** The cellulose wall's back and four sides, open at the front cut. */
@@ -301,10 +338,21 @@ function Wall({
   return (
     <group>
       {Arr.map(slabs, ([name, position, size]) => (
-        <mesh castShadow key={name} position={position} receiveShadow>
-          <boxGeometry args={size} />
-          <meshStandardMaterial color={MATERIAL.cellWall} roughness={0.8} />
-        </mesh>
+        <RoundedBox
+          args={[size[0], size[1], size[2]]}
+          castShadow
+          key={name}
+          position={position}
+          radius={thickness * 0.45}
+          receiveShadow
+          smoothness={3}
+        >
+          <meshPhysicalMaterial
+            clearcoat={0.2}
+            color={MATERIAL.cellWall}
+            roughness={0.7}
+          />
+        </RoundedBox>
       ))}
     </group>
   );

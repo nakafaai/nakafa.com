@@ -1,25 +1,70 @@
-import { useFrame } from "@react-three/fiber";
+import { BacillusBacteriumModel } from "@repo/design-system/components/contents/biology/bacteria/parts";
 import {
   budShare,
   isDividing,
-  spotInHalf,
 } from "@repo/design-system/components/contents/biology/cell/anatomy";
+import { CutNucleus } from "@repo/design-system/components/contents/biology/cell/nucleus";
 import {
   Mitochondria,
   Ribosomes,
-} from "@repo/design-system/components/contents/biology/cell/eukaryote";
+} from "@repo/design-system/components/contents/biology/cell/organelles";
 import { HalfShell } from "@repo/design-system/components/contents/biology/cell/parts";
-import { useVisualScene } from "@repo/design-system/components/visual/card";
+import {
+  Instances,
+  type Placement,
+} from "@repo/design-system/components/contents/biology/instances";
+import { insideBall } from "@repo/design-system/components/contents/biology/virus/capsid";
 import { MATERIAL } from "@repo/design-system/lib/material";
 import { Array as Arr } from "effect";
-import { useMemo, useRef } from "react";
-import { CatmullRomCurve3, DoubleSide, type Group, Vector3 } from "three";
 
 /** One micrometre of a 5 µm yeast cell drawn 2 units long. */
 const YEAST_UM = 1 / 2.5;
 
 /** The yeast mother's half sizes: 5 by 4 by 4 µm. */
 const MOTHER = [1, 0.8, 0.8] as const;
+
+/**
+ * Bud scars on the back of the mother's wall: raised rings of chitin left
+ * where earlier daughters broke away, each facing out from the wall.
+ */
+const SCARS = Arr.map(
+  [
+    [-0.55, 0.45, -0.7],
+    [-0.15, -0.55, -0.82],
+    [0.35, 0.5, -0.78],
+  ] as const,
+  (direction): Placement => {
+    const length = Math.hypot(...direction);
+    const up = [
+      direction[0] / length,
+      direction[1] / length,
+      direction[2] / length,
+    ] as const;
+    return {
+      position: [
+        up[0] * MOTHER[0] * 1.01,
+        up[1] * MOTHER[1] * 1.01,
+        up[2] * MOTHER[2] * 1.01,
+      ],
+      up,
+    };
+  }
+);
+
+/**
+ * The nucleus and the vacuole, in the mother's unit frame, which mitochondria
+ * and ribosomes keep out of.
+ */
+const YEAST_KEEPOUT = [
+  [0.17, 0.06, -0.23, 0.42],
+  [-0.56, -0.13, -0.38, 0.44],
+] as const;
+
+/** Polyphosphate granules floating in the yeast vacuole. */
+const GRANULES = Arr.map(
+  Arr.filter(insideBall(18, 0.28, 23), ([, , z]) => z < 0),
+  (point): Placement => ({ position: point })
+);
 
 /**
  * A baker's yeast cell, cut open: a thick wall of glucans with chitin, the
@@ -43,30 +88,50 @@ export function YeastCell({ minutes }: { readonly minutes: number }) {
       <group scale={[0.93, 0.93, 0.93]}>
         <HalfShell color={MATERIAL.yeastCell} scale={MOTHER} thickness={0.02} />
       </group>
-      <mesh
-        castShadow
-        position={[dividing ? neck - 0.12 : 0.05, 0.05, -0.36]}
+      <group
+        position={[dividing ? neck - 0.12 : 0.17, 0.05, -0.18]}
         scale={dividing ? [1.7, 0.75, 0.75] : [1, 1, 1]}
       >
-        <sphereGeometry args={[0.8 * YEAST_UM, 32, 24]} />
+        <CutNucleus position={[0, 0, 0]} radius={0.8 * YEAST_UM} />
+      </group>
+      <group position={[-0.56, -0.1, -0.3]}>
+        <mesh>
+          <sphereGeometry args={[0.85 * YEAST_UM, 32, 24]} />
+          <meshPhysicalMaterial
+            clearcoat={0.6}
+            color={MATERIAL.vacuole}
+            depthWrite={false}
+            opacity={0.55}
+            roughness={0.1}
+            transparent
+          />
+        </mesh>
+        <Instances placements={GRANULES}>
+          <sphereGeometry args={[0.02, 10, 8]} />
+          <meshStandardMaterial color={MATERIAL.nucleolus} roughness={0.6} />
+        </Instances>
+      </group>
+      <Instances placements={SCARS}>
+        <torusGeometry args={[0.13, 0.03, 10, 32]} />
         <meshPhysicalMaterial
-          clearcoat={0.5}
-          color={MATERIAL.nucleus}
-          roughness={0.45}
+          clearcoat={0.3}
+          color={MATERIAL.chitin}
+          roughness={0.7}
         />
-      </mesh>
-      <mesh position={[-0.42, -0.12, -0.34]}>
-        <sphereGeometry args={[0.85 * YEAST_UM, 32, 24]} />
-        <meshPhysicalMaterial
-          color={MATERIAL.vacuole}
-          opacity={0.7}
-          roughness={0.15}
-          transparent
-        />
-      </mesh>
+      </Instances>
       <group scale={MOTHER}>
-        <Mitochondria count={7} margin={0.45} size={YEAST_UM * 0.8} />
-        <Ribosomes count={260} margin={0.12} size={YEAST_UM} />
+        <Mitochondria
+          avoid={YEAST_KEEPOUT}
+          count={7}
+          margin={0.2}
+          size={YEAST_UM * 0.8}
+        />
+        <Ribosomes
+          avoid={YEAST_KEEPOUT}
+          count={260}
+          margin={0.12}
+          size={YEAST_UM}
+        />
       </group>
       {share > 0 && (
         <group
@@ -92,142 +157,11 @@ export function YeastCell({ minutes }: { readonly minutes: number }) {
   );
 }
 
-/** One micrometre of a 2 µm Escherichia coli rod drawn 2 units long. */
-const ROD_UM = 1;
-
-/** The rod's radius and the length of its straight middle, in drawing units. */
-const ROD = { middle: 1, radius: 0.5 } as const;
-
 /**
- * An Escherichia coli rod 2 µm long and 1 µm wide, cut open: its wall and
- * membrane, a tangled loop of DNA in the nucleoid with no membrane around it,
- * a small plasmid, ribosomes 25 nm across packed through the cytoplasm, and
- * one flagellum that turns while the card plays.
+ * An Escherichia coli rod 2 µm long, cut open: the bacillus of the bacteria
+ * labs at this card's scale, its envelope opened on the nucleoid, a plasmid
+ * and ribosomes, with fimbriae and flagella.
  */
 export function BacteriumCell() {
-  return (
-    <group>
-      <RodShell color={MATERIAL.cellBody} radius={ROD.radius} roughness={0.7} />
-      <RodShell
-        color={MATERIAL.membrane}
-        radius={ROD.radius * 0.9}
-        roughness={0.5}
-      />
-      <Nucleoid />
-      <mesh position={[0.45, -0.18, -0.2]} rotation={[0.4, 0.2, 0]}>
-        <torusGeometry args={[0.07, 0.008, 8, 32]} />
-        <meshStandardMaterial color={MATERIAL.nucleolus} roughness={0.5} />
-      </mesh>
-      <group
-        scale={[
-          ROD.middle / 2 + ROD.radius * 0.85,
-          ROD.radius * 0.85,
-          ROD.radius * 0.85,
-        ]}
-      >
-        <Ribosomes count={520} margin={0.08} size={ROD_UM} />
-      </group>
-      <Flagellum />
-    </group>
-  );
-}
-
-/** The back half of a capsule lying along x: a half tube and two quarter domes. */
-function RodShell({
-  color,
-  radius,
-  roughness,
-}: {
-  readonly color: string;
-  readonly radius: number;
-  readonly roughness: number;
-}) {
-  const half = ROD.middle / 2;
-  return (
-    <group>
-      <mesh castShadow receiveShadow rotation={[0, 0, Math.PI / 2]}>
-        <cylinderGeometry
-          args={[radius, radius, ROD.middle, 64, 1, true, Math.PI / 2, Math.PI]}
-        />
-        <meshPhysicalMaterial
-          color={color}
-          roughness={roughness}
-          side={DoubleSide}
-        />
-      </mesh>
-      <mesh castShadow position={[half, 0, 0]}>
-        <sphereGeometry args={[radius, 48, 32, Math.PI, Math.PI / 2]} />
-        <meshPhysicalMaterial
-          color={color}
-          roughness={roughness}
-          side={DoubleSide}
-        />
-      </mesh>
-      <mesh castShadow position={[-half, 0, 0]}>
-        <sphereGeometry args={[radius, 48, 32, Math.PI * 1.5, Math.PI / 2]} />
-        <meshPhysicalMaterial
-          color={color}
-          roughness={roughness}
-          side={DoubleSide}
-        />
-      </mesh>
-    </group>
-  );
-}
-
-/** The chromosome: one long loop of DNA folded into a tangle in the middle. */
-function Nucleoid() {
-  const curve = useMemo(
-    () =>
-      new CatmullRomCurve3(
-        Arr.map(Arr.range(0, 39), (index) => {
-          const [x, y, z] = spotInHalf(index, 51, 0.15);
-          return new Vector3(x * 0.55, y * 0.3, z * 0.3);
-        }),
-        true
-      ),
-    []
-  );
-  return (
-    <mesh castShadow>
-      <tubeGeometry args={[curve, 400, 0.012, 6, true]} />
-      <meshStandardMaterial color={MATERIAL.nucleolus} roughness={0.5} />
-    </mesh>
-  );
-}
-
-/** A flagellum: a helical filament about 4 µm long that spins while the card plays. */
-function Flagellum() {
-  const playing = useVisualScene((card) => card.playing, false);
-  const group = useRef<Group>(null);
-  const curve = useMemo(
-    () =>
-      new CatmullRomCurve3(
-        Arr.map(Arr.range(0, 80), (step) => {
-          const along = step / 80;
-          const angle = along * Math.PI * 2 * 3;
-          return new Vector3(
-            -along * 2.5,
-            Math.cos(angle) * 0.12,
-            Math.sin(angle) * 0.12 - 0.1
-          );
-        })
-      ),
-    []
-  );
-
-  useFrame((_, delta) => {
-    if (playing && group.current) {
-      group.current.rotation.x += Math.min(delta, 0.1) * 12;
-    }
-  });
-
-  return (
-    <group position={[-ROD.middle / 2 - ROD.radius, 0, 0]} ref={group}>
-      <mesh castShadow>
-        <tubeGeometry args={[curve, 240, 0.01, 6, false]} />
-        <meshStandardMaterial color={MATERIAL.cellBody} roughness={0.6} />
-      </mesh>
-    </group>
-  );
+  return <BacillusBacteriumModel scale={1.25} />;
 }

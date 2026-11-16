@@ -1,10 +1,10 @@
 import { useFrame, useThree } from "@react-three/fiber";
 import { useLabelInk } from "@repo/design-system/components/contents/biology/cell/parts";
 import {
-  ladderOf,
-  type Point,
-  type Rung,
-} from "@repo/design-system/components/contents/biology/dna/ladder";
+  Backbone,
+  NewStrands,
+} from "@repo/design-system/components/contents/biology/dna/backbone";
+import { ladderOf } from "@repo/design-system/components/contents/biology/dna/ladder";
 import {
   BaseGlow,
   Pair,
@@ -56,7 +56,7 @@ import {
   useRef,
   useState,
 } from "react";
-import { CatmullRomCurve3, type Group, Vector3 } from "three";
+import type { Group } from "three";
 
 /** A card narrower than this width-to-height ratio gets the farther camera. */
 const NARROW_ASPECT = 1.2;
@@ -424,51 +424,6 @@ function HelixCamera() {
       maxDistance={30}
       minDistance={4}
     />
-  );
-}
-
-/** One strand's sugar-phosphate backbone, a smooth tube through its points. */
-function Backbone({
-  color,
-  points,
-}: {
-  readonly color: string;
-  readonly points: readonly Point[];
-}) {
-  const curve = useMemo(
-    () =>
-      points.length < 2
-        ? undefined
-        : new CatmullRomCurve3(
-            Arr.map(points, ([x, y, z]) => new Vector3(x, y, z))
-          ),
-    [points]
-  );
-  if (curve === undefined) {
-    return null;
-  }
-  return (
-    <mesh castShadow>
-      <tubeGeometry args={[curve, points.length * 8, 0.13, 10, false]} />
-      <meshPhysicalMaterial clearcoat={0.5} color={color} roughness={0.4} />
-    </mesh>
-  );
-}
-
-/** The new backbones the polymerase has laid, one beside each parent. */
-function NewStrands({ ladder }: { readonly ladder: readonly Rung[] }) {
-  const copied = Arr.filter(ladder, (rung) => rung.copied);
-  return (
-    <>
-      <Backbone
-        color={MATERIAL.phosphateNew}
-        points={Arr.map(copied, (rung) => rung.newFirst)}
-      />
-      <Backbone
-        color={MATERIAL.phosphateNew}
-        points={Arr.map(copied, (rung) => rung.newSecond)}
-      />
-    </>
   );
 }
 
