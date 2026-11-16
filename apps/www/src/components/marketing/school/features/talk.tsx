@@ -158,6 +158,7 @@ export function DemoThread({
   replies: number;
 }) {
   const t = useTranslations("Classroom");
+  const tCommon = useTranslations("Common");
   const locale = useLocale();
 
   return (
@@ -181,7 +182,7 @@ export function DemoThread({
       <ItemContent className="min-w-0">
         <ItemTitle className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
           <span className="font-semibold">
-            {t("discussion-replies", { count: replies })}
+            {tCommon("replies", { count: replies })}
           </span>
           <span className="text-muted-foreground text-xs font-normal">
             {t("thread-last", { time: demoTime(locale, minutes) })}

@@ -45,7 +45,7 @@ for (const viewport of [desktopViewport, touchViewport]) {
           await expect(page.getByText("Trending")).toHaveCount(0);
           // The header's one button is the page's primary action: a new learner starts learning.
           await expect(
-            page.getByRole("link", { name: en.Home.begin })
+            page.getByRole("link", { name: en.Common["start-learning"] })
           ).toBeVisible();
           // The world pane stands beside the page on a wide screen; on a phone the tracker's Your world opens its sheet.
           const door = page.getByRole("button", {

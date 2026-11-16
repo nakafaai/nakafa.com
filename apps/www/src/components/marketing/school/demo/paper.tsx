@@ -67,9 +67,10 @@ const TIME_LEFT = 1453;
 export function PaperDemo() {
   const t = useTranslations("SchoolSite");
   const exams = useTranslations("Exams");
+  const tCommon = useTranslations("Common");
   const [seed] = useState(() =>
     paperExam({
-      answer: t("demo-exam-answer"),
+      answer: tCommon("answer"),
       cause: t("paper-cause"),
       causes: [
         exams("cause-related"),
@@ -97,7 +98,7 @@ export function PaperDemo() {
         t("paper-table-rest"),
       ],
       table: t("paper-table"),
-      time: t("paper-time"),
+      time: tCommon("time"),
       title: t("demo-exam-title"),
       truefalse: t("paper-truefalse"),
       truth: [exams("truefalse-true"), exams("truefalse-false")],

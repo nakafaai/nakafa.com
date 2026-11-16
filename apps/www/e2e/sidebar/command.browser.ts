@@ -56,7 +56,7 @@ test("the shell's palette suggests from the page and finds a subject through a t
     palette.getByText(en.Utils["search-near"], { exact: true })
   ).toBeVisible();
   await expect(
-    palette.getByText(en.Utils["search-explore"], { exact: true })
+    palette.getByText(en.Common.explore, { exact: true })
   ).toBeVisible();
 
   await palette.getByRole("combobox").fill("mathematcs");

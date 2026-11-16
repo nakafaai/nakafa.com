@@ -57,7 +57,7 @@ export function PlayerQuestionHeader({
   children?: ReactNode;
   number: number;
 }) {
-  const t = useTranslations("Player");
+  const tCommon = useTranslations("Common");
   const ids = readQuestionIds(number);
 
   return (
@@ -70,7 +70,7 @@ export function PlayerQuestionHeader({
         <div className="border-primary bg-secondary text-secondary-foreground flex size-9 items-center justify-center rounded-full border">
           <span className="font-mono text-xs tracking-tighter">{number}</span>
           <h2 className="sr-only" id={ids.title}>
-            {t("question", { number })}
+            {tCommon("question", { number })}
           </h2>
         </div>
       </a>

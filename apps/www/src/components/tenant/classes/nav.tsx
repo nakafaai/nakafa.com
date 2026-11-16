@@ -72,12 +72,14 @@ function useDrawnClasses() {
  */
 export function TenantClassesGroup() {
   const { slug } = useTenant();
-  const t = useTranslations("School");
+  const tCommon = useTranslations("Common");
 
   return (
     <ReadBoundary
       fallback={(failure) => (
-        <TenantSidebarGroup label={t("classes")}>{failure}</TenantSidebarGroup>
+        <TenantSidebarGroup label={tCommon("classes")}>
+          {failure}
+        </TenantSidebarGroup>
       )}
       read={{ args: { slug }, ref: classroom.classes.mine }}
     >
@@ -90,7 +92,7 @@ export function TenantClassesGroup() {
 function TenantClassesRows() {
   const classes = useMyClasses();
   const { reach } = useTenant();
-  const t = useTranslations("School");
+  const tCommon = useTranslations("Common");
 
   if (QueryResult.isFailure(classes)) {
     throw classes.error;
@@ -100,7 +102,7 @@ function TenantClassesRows() {
   return (
     <>
       {Arr.isReadonlyArrayNonEmpty(rows) ? (
-        <TenantSidebarGroup label={t("classes")}>
+        <TenantSidebarGroup label={tCommon("classes")}>
           {Arr.map(withMarks(rows), (klass) => (
             <TenantClassItem
               key={klass.id}

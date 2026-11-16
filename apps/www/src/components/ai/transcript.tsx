@@ -45,6 +45,7 @@ export function NinaTranscript() {
   const order = useChat((state) => state.turn?.order);
   const { canLoadMore, loadMore, messages } = useChatFeed();
   const t = useTranslations("Ai");
+  const tCommon = useTranslations("Common");
   const chat = `nina:${chatId}`;
   const kept = useKeptPlace(chat);
   const viewport = useRef<HTMLDivElement>(null);
@@ -66,7 +67,10 @@ export function NinaTranscript() {
   return (
     <Primitive.Provider autoScroll defaultScrollPosition="end">
       <MessageScroller className="flex-1">
-        <MessageScrollerViewport aria-label={t("messages")} ref={viewport}>
+        <MessageScrollerViewport
+          aria-label={tCommon("messages")}
+          ref={viewport}
+        >
           <MessageScrollerContent
             aria-busy={busy}
             className={cn(pageRowVariants(), pageRhythmVariants())}

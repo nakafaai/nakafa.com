@@ -25,6 +25,7 @@ const skillColumns =
 /** A student's own standing in each competency, without a chance, with their exams one press from every row. */
 export function OwnMastery() {
   const t = useTranslations("SchoolInsight");
+  const tCommon = useTranslations("Common");
   const { slug } = useTenant();
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
   const mine = useQuery(insight.reads.mine, isSettled ? { slug } : "skip");
@@ -48,7 +49,7 @@ export function OwnMastery() {
             id: "competency",
           }),
           skillColumns.number((skill) => percentOf(skill.rating), {
-            header: t("mastery"),
+            header: tCommon("mastery"),
             id: "mastery",
           }),
           skillColumns.number((skill) => skill.earned, {
@@ -61,7 +62,7 @@ export function OwnMastery() {
             id: "evidence",
           }),
           skillColumns.number((skill) => skill.observations, {
-            header: t("observations"),
+            header: tCommon("answers"),
             id: "observations",
           }),
           skillColumns.menu(() => <OwnExamsItems />),
@@ -75,7 +76,7 @@ export function OwnMastery() {
                 params={{ slug }}
                 to="/school/$slug/exams"
               >
-                {t("exams-action")}
+                {tCommon("open-exams")}
               </Link>
             }
             description={t("empty-description")}
@@ -95,7 +96,7 @@ export function OwnMastery() {
 
 /** The menu of a row of a student's standing: the exams its points came from. */
 function OwnExamsItems() {
-  const t = useTranslations("SchoolInsight");
+  const tCommon = useTranslations("Common");
   const { slug } = useTenant();
 
   return (
@@ -104,7 +105,7 @@ function OwnExamsItems() {
         icon={File02Icon}
         render={<Link params={{ slug }} to="/school/$slug/exams" />}
       >
-        {t("exams-action")}
+        {tCommon("open-exams")}
       </DropdownMenuItem>
     </RowItems>
   );

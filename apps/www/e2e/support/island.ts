@@ -38,7 +38,7 @@ export const openIsland = Effect.fn("NakafaE2E.openIsland")(function* (
   );
   const asked = yield* Effect.promise(() =>
     page
-      .getByRole("button", { exact: true, name: en.AnalyticsConsent.decline })
+      .getByRole("button", { exact: true, name: en.Common.decline })
       .isVisible()
   );
   if (asked) {

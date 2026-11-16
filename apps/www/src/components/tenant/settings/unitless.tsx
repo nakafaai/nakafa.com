@@ -12,6 +12,7 @@ import { Link } from "@/lib/routing/link";
 export function NoActiveUnit() {
   const { slug } = useTenant();
   const t = useTranslations("SchoolSettings");
+  const tCommon = useTranslations("Common");
 
   return (
     <EmptyState
@@ -21,7 +22,7 @@ export function NoActiveUnit() {
           params={{ slug }}
           to="/school/$slug/settings/units"
         >
-          {t("no-unit-action")}
+          {tCommon("open-units")}
         </Link>
       }
       description={t("no-unit-description")}

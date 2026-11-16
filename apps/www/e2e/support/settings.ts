@@ -50,13 +50,13 @@ export async function settingsLink(sidebar: Locator, section: SettingsSection) {
     await openGroup(
       sidebar.getByRole("button", {
         exact: true,
-        name: en.SchoolSettings[group.key],
+        name: en.SchoolSettings.group[group.key],
       })
     );
   }
   const link = sidebar.getByRole("link", {
     exact: true,
-    name: en.SchoolSettings[section],
+    name: en.SchoolSettings.section[section],
   });
   await expect(link).toBeVisible();
   return link;
@@ -71,7 +71,7 @@ export async function openEverySettingsGroup(sidebar: Locator) {
     }
     const fold = sidebar.getByRole("button", {
       exact: true,
-      name: en.SchoolSettings[group.key],
+      name: en.SchoolSettings.group[group.key],
     });
     if ((await fold.count()) > 0) {
       await openGroup(fold);

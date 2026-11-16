@@ -155,7 +155,7 @@ export function ChangeTokenDialog({
     <ResponsiveDialog
       action={
         <ConfirmAction
-          confirm={t("confirm-change-token-action")}
+          confirm={t("change-token")}
           onConfirm={() => {
             onOpenChange(false);
             runSittingCall(() => changeToken({ sittingId, slug }));
@@ -192,7 +192,7 @@ export function CloseSittingDialog({
     <ResponsiveDialog
       action={
         <ConfirmAction
-          confirm={t("confirm-close-action")}
+          confirm={t("close-sitting")}
           onConfirm={() => {
             onOpenChange(false);
             runSittingCall(() => closeSitting({ sittingId, slug }));
@@ -337,7 +337,7 @@ export function AddMinutesDialog({
     <ResponsiveDialog
       action={
         <ConfirmAction
-          confirm={t("confirm-add-minutes-action")}
+          confirm={t("add-minutes")}
           disabled={reason === null || Option.isNone(minutes)}
           onConfirm={() => {
             if (reason === null || Option.isNone(minutes)) {

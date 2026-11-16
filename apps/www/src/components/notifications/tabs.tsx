@@ -43,7 +43,7 @@ export function InboxTabs({
                 })}
                 to="."
               >
-                {t(`topic-${item}`)}
+                {t(`topic.${item}`)}
               </Link>
             }
             value={item}

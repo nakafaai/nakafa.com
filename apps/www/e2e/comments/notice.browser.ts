@@ -19,7 +19,7 @@ import { waitUntilTakenOver } from "@/e2e/support/window";
 
 const INBOX = "/en/notifications";
 const REPLIED = app.Notifications["comment-replied"];
-const REPLY_MAIL = `${app.Notifications["kind-commentReply"]}, ${app.Notifications["channel-email"]}`;
+const REPLY_MAIL = `${app.Notifications["kind-commentReply"]}, ${app.Notifications.channel.email}`;
 /** The address of a lesson that opens one of its comments. */
 const OPENS_COMMENT = /comment=/u;
 
@@ -75,7 +75,7 @@ test("a reply to a comment reaches its author's inbox and opens the reply", asyn
             await author.goto(INBOX);
             await author
               .getByRole("tab", {
-                name: app.Notifications["topic-comments"],
+                name: app.Notifications.topic.comments,
               })
               .click();
             const row = author.getByRole("link", { name: REPLIED }).first();

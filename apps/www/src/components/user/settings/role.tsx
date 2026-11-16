@@ -42,7 +42,7 @@ export function UserSettingsRole({ user }: { user: CurrentUser }) {
     label: (
       <>
         <HugeIcons icon={role.icon} />
-        {t(role.value)}
+        {t(`roles.${role.value}`)}
       </>
     ),
     value: role.value,
@@ -106,13 +106,13 @@ export function UserSettingsRole({ user }: { user: CurrentUser }) {
   });
   return (
     <form action={() => form.handleSubmit()} id="user-settings-role-form">
-      <CardSection description={t("role-description")} title={t("role")}>
+      <CardSection description={t("role-description")} title={common("role")}>
         <CardContent>
           <form.Field name="role">
             {(field) => (
               <Field>
                 <FieldLabel className="sr-only" htmlFor="user-settings-role">
-                  {t("role")}
+                  {common("role")}
                 </FieldLabel>
                 <Select
                   items={roleItems}
@@ -139,7 +139,7 @@ export function UserSettingsRole({ user }: { user: CurrentUser }) {
                         key={role.value}
                         value={role.value}
                       >
-                        {t(role.value)}
+                        {t(`roles.${role.value}`)}
                       </SelectItem>
                     ))}
                   </SelectContent>

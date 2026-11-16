@@ -51,6 +51,7 @@ export function TenantLogin() {
  */
 function TenantLoginForm() {
   const t = useTranslations("SchoolEntry");
+  const tCommon = useTranslations("Common");
   const { slug } = schoolRoute.useRouteContext().school.profile;
   const id = useId();
   const redeem = useMutation(identity.cards.redeem);
@@ -155,7 +156,7 @@ function TenantLoginForm() {
         type="submit"
       >
         <Spinner icon={Login03Icon} isLoading={isPending} />
-        {t("submit")}
+        {tCommon("sign-in")}
       </Button>
     </form>
   );

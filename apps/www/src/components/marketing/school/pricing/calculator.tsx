@@ -79,6 +79,7 @@ function readPeriod(value: string) {
  */
 export function SchoolCalculator() {
   const t = useTranslations("SchoolSite");
+  const tCommon = useTranslations("Common");
   const locale = useLocale();
   const format = useFormatter();
   const inputId = useId();
@@ -111,7 +112,7 @@ export function SchoolCalculator() {
         <div className="grid gap-6">
           <div className="grid gap-2">
             <span className="text-sm font-medium" id={`${inputId}-plan`}>
-              {t("calculator-plan")}
+              {tCommon("plan")}
             </span>
             <ToggleGroup
               aria-labelledby={`${inputId}-plan`}
@@ -120,7 +121,7 @@ export function SchoolCalculator() {
             >
               {Arr.map(SchoolPaidTierKey.literals, (option) => (
                 <ToggleGroupItem key={option} value={option}>
-                  {t(`plan-${option}`)}
+                  {t(`plan.${option}`)}
                 </ToggleGroupItem>
               ))}
             </ToggleGroup>
@@ -184,7 +185,7 @@ export function SchoolCalculator() {
           aria-live="polite"
           className="bg-muted/50 grid grid-cols-2 gap-6 rounded-lg p-4"
         >
-          <CalculatorFigure label={t("calculator-accounts")}>
+          <CalculatorFigure label={tCommon("accounts")}>
             {format.number(idr.accounts)}
           </CalculatorFigure>
           <CalculatorFigure label={t("calculator-credits")}>

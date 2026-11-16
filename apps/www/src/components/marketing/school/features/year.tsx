@@ -9,7 +9,7 @@ import {
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Nina } from "@repo/design-system/components/ui/nina";
 import { cva } from "class-variance-authority";
-import { Array as Arr } from "effect";
+import { Array as Arr, Match } from "effect";
 import type { AnimationSequence } from "motion";
 import { useTranslations } from "use-intl";
 import { SchoolFeatureText } from "@/components/marketing/school/features/text";
@@ -137,9 +137,25 @@ function composeYear(
   ];
 }
 
+/** The name of one part of the year, read from the key that owns its word. */
+function PartName({ part }: { part: (typeof NODES)[number]["key"] }) {
+  const t = useTranslations("SchoolSite");
+  const tCommon = useTranslations("Common");
+  const tExams = useTranslations("Exams");
+  const tClassroom = useTranslations("Classroom");
+  return Match.value(part).pipe(
+    Match.when("classes", () => tCommon("classes")),
+    Match.when("tasks", () => tClassroom("tabs-tasks")),
+    Match.when("exams", () => tExams("title")),
+    Match.when("reports", () => tCommon("report-cards")),
+    Match.when("insight", () => t("year-insight")),
+    Match.when("graduation", () => tCommon("graduation")),
+    Match.exhaustive
+  );
+}
+
 /** One part of the school year: its icon and its name, upright on a phone and in one line from there. */
 function Part({ index }: { index: number }) {
-  const t = useTranslations("SchoolSite");
   const { at, icon, key, tone } = Arr.getUnsafe(NODES, index);
 
   return (
@@ -151,7 +167,7 @@ function Part({ index }: { index: number }) {
         <span className={toneVariants({ tone })}>
           <HugeIcons icon={icon} />
         </span>
-        {t(`year-${key}`)}
+        <PartName part={key} />
       </div>
     </FlowNode>
   );

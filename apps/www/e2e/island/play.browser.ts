@@ -50,7 +50,7 @@ for (const viewport of [desktopViewport, touchViewport]) {
               await expectRevision(page, 2);
               await page.getByRole("button", { name: en.Island.undo }).click();
               await expectRevision(page, 3);
-              await page.getByRole("button", { name: en.Island.redo }).click();
+              await page.getByRole("button", { name: en.Common.redo }).click();
               await expectRevision(page, 4);
               await page.getByRole("button", { name: en.Island.book }).click();
               const book = page.getByRole("dialog", { name: en.Island.book });

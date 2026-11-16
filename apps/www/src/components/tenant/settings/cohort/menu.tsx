@@ -49,7 +49,7 @@ export function SchoolCohortRestore({
   cohort: Cohort;
   slug: TenantSlug;
 }) {
-  const t = useTranslations("SchoolSettings");
+  const tCommon = useTranslations("Common");
   const restore = useMutation(tenancy.cohorts.restore).withOptimisticUpdate(
     restoreCohortChange
   );
@@ -67,7 +67,7 @@ export function SchoolCohortRestore({
           )
         }
       >
-        {t("cohort-restore")}
+        {tCommon("restore")}
       </DropdownMenuItem>
     </ConfirmRowMenu>
   );
@@ -192,7 +192,7 @@ export function SchoolCohortMenu({
               )
             }
           >
-            {t("cohort-archive")}
+            {common("archive")}
           </DropdownMenuItem>
         }
       >
@@ -237,7 +237,7 @@ export function SchoolCohortMenu({
             }}
             type="button"
           >
-            {t("cohort-edit-save")}
+            {common("save")}
           </Button>
         }
         description={t("cohort-edit-description")}

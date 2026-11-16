@@ -79,7 +79,7 @@ export function MedalItem({
         </TooltipTrigger>
         <TooltipContent>
           {t(
-            isKind(medal.name) ? KIND_HINTS[medal.name] : "badge-subject-hint",
+            isKind(medal.name) ? KIND_HINTS[medal.name] : "badge-lessons-hint",
             { count: medal.count, next: medal.next }
           )}
         </TooltipContent>

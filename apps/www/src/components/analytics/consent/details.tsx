@@ -16,7 +16,7 @@ export function ConsentActions({
   canGrant,
   decide,
 }: Pick<AnalyticsConsentContextValue, "canDecline" | "canGrant" | "decide">) {
-  const t = useTranslations("AnalyticsConsent");
+  const tCommon = useTranslations("Common");
 
   return (
     <>
@@ -26,10 +26,10 @@ export function ConsentActions({
         type="button"
         variant="outline"
       >
-        {t("decline")}
+        {tCommon("decline")}
       </Button>
       <Button disabled={!canGrant} onClick={() => decide(true)} type="button">
-        {t("allow")}
+        {tCommon("allow")}
       </Button>
     </>
   );

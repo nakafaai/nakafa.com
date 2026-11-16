@@ -45,11 +45,11 @@ const sectionIcons: Record<
  * routes, replacing the browsing navigation without replacing the shell.
  */
 export function UserSettingsNav() {
-  const t = useTranslations("Auth");
+  const tCommon = useTranslations("Common");
 
   return (
     <>
-      <SettingsBack home={HOME_TARGET} label={t("back-to-nakafa")} />
+      <SettingsBack home={HOME_TARGET} label={tCommon("back-to-nakafa")} />
       {Arr.map(userSettingsGroups, (group) => (
         <UserSettingsNavGroup group={group} key={group.key} />
       ))}
@@ -73,7 +73,7 @@ function UserSettingsNavGroup({
           {Arr.map(group.sections, (section) => (
             <UserSettingsNavItem
               key={section.target.to}
-              label={t(section.labelKey)}
+              label={t(`section.${section.labelKey}`)}
               labelKey={section.labelKey}
               target={section.target}
             />

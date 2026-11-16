@@ -74,7 +74,7 @@ export function TaskFields({
   return (
     <FieldGroup>
       <Field>
-        <FieldLabel htmlFor={`${id}-title`}>{t("task-title")}</FieldLabel>
+        <FieldLabel htmlFor={`${id}-title`}>{common("title")}</FieldLabel>
         <Input
           dir="auto"
           id={`${id}-title`}
@@ -97,7 +97,7 @@ export function TaskFields({
         />
       </Field>
       <Field>
-        <FieldLabel htmlFor={`${id}-deadline`}>{t("task-deadline")}</FieldLabel>
+        <FieldLabel htmlFor={`${id}-deadline`}>{common("deadline")}</FieldLabel>
         <DateTimePicker
           dayPlaceholder={t("task-day-placeholder")}
           id={`${id}-deadline`}
@@ -110,7 +110,9 @@ export function TaskFields({
       </Field>
       <div className="grid gap-7 sm:grid-cols-2">
         <Field>
-          <FieldLabel htmlFor={`${id}-points`}>{t("task-points")}</FieldLabel>
+          <FieldLabel htmlFor={`${id}-points`}>
+            {common("score-points")}
+          </FieldLabel>
           <NumberField
             disabled={pointsFixed}
             id={`${id}-points`}

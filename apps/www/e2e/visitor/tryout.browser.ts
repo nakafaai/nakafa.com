@@ -70,7 +70,7 @@ test("a visitor's try-out track opens no socket, sends no session read, and read
 async function sortRows(page: Page) {
   const sort = page.getByRole("button", {
     exact: true,
-    name: en.Tryouts["set-column-name"],
+    name: en.Common.name,
   });
   await waitUntilTakenOver(sort);
   await sort.click();

@@ -33,6 +33,7 @@ import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
  */
 export function TaskRowMenu({ task }: { task: ClassTask }) {
   const t = useTranslations("Classroom");
+  const tCommon = useTranslations("Common");
   const { can, classId, slug } = useClassScope();
   const [openings, setOpenings] = useState(0);
   const remove = useMutation(classroom.tasks.remove);
@@ -84,7 +85,7 @@ export function TaskRowMenu({ task }: { task: ClassTask }) {
                 );
               }}
             >
-              {t("task-restore")}
+              {tCommon("restore")}
             </DropdownMenuItem>
           ) : (
             <DropdownMenuItem
@@ -98,7 +99,7 @@ export function TaskRowMenu({ task }: { task: ClassTask }) {
                 );
               }}
             >
-              {t("task-archive")}
+              {tCommon("archive")}
             </DropdownMenuItem>
           )
         }

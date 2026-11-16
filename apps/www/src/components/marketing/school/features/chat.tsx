@@ -23,6 +23,7 @@ import {
  */
 export function ForumChat() {
   const t = useTranslations("Classroom");
+  const tCommon = useTranslations("Common");
   const tEmoji = useTranslations("Emoji");
   const [text, setText] = useState("");
   const post = useRoom((state) => state.post);
@@ -75,7 +76,7 @@ export function ForumChat() {
             className="rounded-full"
             disabled={text.trim() === ""}
             size="icon"
-            tooltip={t("send-message")}
+            tooltip={tCommon("send")}
             type="submit"
             variant="secondary"
           >

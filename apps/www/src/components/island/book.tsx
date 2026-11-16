@@ -40,6 +40,13 @@ import { ITEM_KEYS, itemOpensAt } from "@/lib/island/items";
 import { isPlant } from "@/lib/island/look";
 
 /** The icon of each ready-made item. */
+/** The name of each home tier: a cottage reads the cottage item's name, so the word has one key. */
+const HOME_NAMES = {
+  cottage: "item-house",
+  house: "home-house",
+  manor: "home-manor",
+} as const;
+
 const ITEM_ICONS = {
   house: House03Icon,
   lamp: LanternIcon,
@@ -161,7 +168,7 @@ function HomeEntry() {
           <button
             aria-label={
               open
-                ? t("upgrade", { name: t(`home-${name}`) })
+                ? t("upgrade", { name: t(HOME_NAMES[name]) })
                 : t("locked", { level: tierOpensAt(tier) })
             }
             className={entryVariants({ state: open ? "open" : "locked" })}
@@ -175,7 +182,7 @@ function HomeEntry() {
                 },
               })
             }
-            title={t(`home-${name}`)}
+            title={t(HOME_NAMES[name])}
             type="button"
           >
             <span className="text-island-wood-dark relative grid size-10 place-items-center">
@@ -188,7 +195,7 @@ function HomeEntry() {
             </span>
             <span className="text-sm leading-tight text-balance hyphens-auto">
               {open
-                ? t(`home-${name}`)
+                ? t(HOME_NAMES[name])
                 : t("level", { level: tierOpensAt(tier) })}
             </span>
           </button>
@@ -375,14 +382,14 @@ function Earnings() {
 
 /** The search over the open shelf. */
 function Search() {
-  const t = useTranslations("Island");
+  const tCommon = useTranslations("Common");
   const query = useGame((state) => state.query);
   const setQuery = useGame((state) => state.setQuery);
   return (
     <SearchField
       className="border-island-rule-dark bg-island-page-light text-island-bark"
       onValueChange={setQuery}
-      placeholder={t("search")}
+      placeholder={tCommon("search")}
       value={query}
     />
   );
@@ -398,6 +405,7 @@ function Search() {
  */
 export function IslandBook() {
   const t = useTranslations("Island");
+  const tCommon = useTranslations("Common");
   const setBook = useGame((state) => state.setBook);
   return (
     <dialog
@@ -427,10 +435,10 @@ export function IslandBook() {
             <Earnings />
           </div>
           <button
-            aria-label={t("close")}
+            aria-label={tCommon("close")}
             className="border-island-wood bg-island-straw hover:bg-island-straw-hover focus-visible:border-island-highlight grid size-10 shrink-0 cursor-pointer place-items-center border-2 outline-none"
             onClick={() => setBook(false)}
-            title={t("close")}
+            title={tCommon("close")}
             type="button"
           >
             <HugeIcons icon={Cancel01Icon} />

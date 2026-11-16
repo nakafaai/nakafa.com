@@ -68,6 +68,7 @@ export function SchoolCardDialog({
 }) {
   const { slug } = useTenant();
   const t = useTranslations("SchoolSettings");
+  const tCommon = useTranslations("Common");
   const clipboard = useClipboard({ timeout: 1500 });
   const printCard = useMutation(identity.cards.print);
   const [isPrinting, startPrinting] = useTransition();
@@ -86,7 +87,7 @@ export function SchoolCardDialog({
             variant="outline"
           >
             <HugeIcons icon={clipboard.copied ? Tick01Icon : Copy01Icon} />
-            {t("card-copy")}
+            {tCommon("copy-code")}
           </Button>
           <Button
             disabled={isPrinting}
@@ -158,6 +159,7 @@ function SchoolCardSheet({ children }: { children: ReactNode }) {
 function SchoolCardFace({ card }: { card: CardView }) {
   const { slug } = useTenant();
   const t = useTranslations("SchoolSettings");
+  const tCommon = useTranslations("Common");
   const address = schoolOrigin(slug).host;
 
   return (
@@ -165,9 +167,9 @@ function SchoolCardFace({ card }: { card: CardView }) {
       <p className="text-sm font-medium">{address}</p>
       <div className="flex items-start justify-between gap-4">
         <dl className="grid min-w-0 gap-3 text-sm">
-          <CardField label={t("card-student")} value={card.name} />
+          <CardField label={tCommon("student")} value={card.name} />
           <CardField label={t("card-username")} mono value={card.loginName} />
-          <CardField label={t("card-code")} mono value={card.code} />
+          <CardField label={tCommon("code")} mono value={card.code} />
           <div>
             <dt className="text-muted-foreground">{t("card-expires")}</dt>
             <dd>

@@ -73,28 +73,28 @@ const SHAPE_ICON = {
 
 /** The name of each object. */
 const SHAPE_NAME = {
-  angle: "figure-angle",
-  circle: "figure-circle",
-  equation: "figure-equation",
-  function: "figure-function",
-  line: "figure-line",
-  point: "figure-point",
-  polygon: "figure-polygon",
-  ray: "figure-ray",
-  region: "figure-region",
-  segment: "figure-segment",
-  vector: "figure-vector",
+  angle: "Common.angle",
+  circle: "Exams.figure-circle",
+  equation: "Common.equation",
+  function: "Exams.figure-function",
+  line: "Exams.figure-line",
+  point: "Exams.figure-point",
+  polygon: "Exams.figure-polygon",
+  ray: "Exams.figure-ray",
+  region: "Exams.figure-region",
+  segment: "Exams.figure-segment",
+  vector: "Exams.figure-vector",
 } as const satisfies Record<ShapeKind, string>;
 
 /** The name of each role an object takes, which the design system draws in its own way. */
 const STYLE_NAME = {
-  answer: "figure-answer",
-  construction: "figure-construction",
-  highlight: "figure-highlight",
-  primary: "figure-primary",
-  reference: "figure-reference",
-  secondary: "figure-secondary",
-  warning: "figure-warning",
+  answer: "Common.answer",
+  construction: "Exams.figure-construction",
+  highlight: "Exams.figure-highlight",
+  primary: "Exams.figure-primary",
+  reference: "Exams.figure-reference",
+  secondary: "Exams.figure-secondary",
+  warning: "Exams.figure-warning",
 } as const satisfies Record<typeof MathAppearanceSchema.Type, string>;
 
 /** Whether a value the style select gives is one of the roles. */
@@ -104,6 +104,7 @@ const isStyle = Schema.is(MathAppearanceSchema);
 export function AddMenu() {
   const common = useTranslations("Common");
   const t = useTranslations("Exams");
+  const label = useTranslations();
   const addShape = useGraph((state) => state.addShape);
   const addSlider = useGraph((state) => state.addSlider);
   const space = useGraph((state) => state.draft.space === "space");
@@ -117,7 +118,7 @@ export function AddMenu() {
         render={<Button className="w-full" type="button" variant="outline" />}
       >
         <HugeIcons aria-hidden="true" icon={Add01Icon} />
-        {t("figure-add-object")}
+        {common("add")}
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" label={common("menu-insert")}>
         {Arr.map(space ? SPACE_KINDS : ShapeKind.literals, (kind) => (
@@ -126,7 +127,7 @@ export function AddMenu() {
             key={kind}
             onClick={() => addShape(kind)}
           >
-            {t(SHAPE_NAME[kind])}
+            {label(SHAPE_NAME[kind])}
           </DropdownMenuItem>
         ))}
         <DropdownMenuItem
@@ -184,6 +185,7 @@ function ShapeMenu({ shape }: { readonly shape: ShapeDraft }) {
 export function ShapeCard({ shape }: { readonly shape: ShapeDraft }) {
   const editor = useTranslations("Editor");
   const t = useTranslations("Exams");
+  const label = useTranslations();
   const changeShape = useGraph((state) => state.changeShape);
   const space = useGraph((state) => state.draft.space === "space");
   const id = useId();
@@ -196,7 +198,7 @@ export function ShapeCard({ shape }: { readonly shape: ShapeDraft }) {
           className="text-muted-foreground"
           icon={SHAPE_ICON[shape.kind]}
         />
-        {t(SHAPE_NAME[shape.kind])}
+        {label(SHAPE_NAME[shape.kind])}
         <ShapeMenu shape={shape} />
       </FieldLegend>
       {space ? <SpacePlace shape={shape} /> : <PlanePlace shape={shape} />}
@@ -219,7 +221,7 @@ export function ShapeCard({ shape }: { readonly shape: ShapeDraft }) {
           <FieldLabel htmlFor={`${id}-style`}>{t("figure-style")}</FieldLabel>
           <Select
             items={Arr.map(MathAppearanceSchema.literals, (value) => ({
-              label: t(STYLE_NAME[value]),
+              label: label(STYLE_NAME[value]),
               value,
             }))}
             onValueChange={(value) => {
@@ -235,7 +237,7 @@ export function ShapeCard({ shape }: { readonly shape: ShapeDraft }) {
             <SelectContent label={editor("menu-style")}>
               {Arr.map(MathAppearanceSchema.literals, (value) => (
                 <SelectItem key={value} plain value={value}>
-                  {t(STYLE_NAME[value])}
+                  {label(STYLE_NAME[value])}
                 </SelectItem>
               ))}
             </SelectContent>

@@ -90,7 +90,7 @@ export function AttachMenu({
             icon={File02Icon}
             onClick={() => documents.current?.click()}
           >
-            {t("attach-document")}
+            {common("document")}
           </DropdownMenuItem>
           {onPoll === undefined ? null : (
             <DropdownMenuItem icon={ChartBarLineIcon} onClick={onPoll}>

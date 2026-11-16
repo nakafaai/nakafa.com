@@ -42,7 +42,7 @@ test("The School entry leads a learner with no school to the form", async ({
               page.getByRole("heading", { name: ENTRY["entry-title"] })
             ).toBeVisible({ timeout: SESSION_WAIT });
 
-            const field = page.getByLabel(ENTRY["entry-field"]);
+            const field = page.getByLabel(app.Common["school-address"]);
             await field.fill("nakafa.com");
             await page
               .getByRole("button", { name: ENTRY["entry-submit"] })

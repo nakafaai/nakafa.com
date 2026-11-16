@@ -350,7 +350,7 @@ function RoomsTable({
               <span className="inline-flex items-center gap-2">
                 <TableStatus
                   icon={ROOM_STATE_LOOKS[info.getValue()].icon}
-                  label={t(`room-state-${info.getValue()}`)}
+                  label={t(`room-state.${info.getValue()}`)}
                   tone={ROOM_STATE_LOOKS[info.getValue()].tone}
                 />
                 {info.getValue() === "open" ? (
@@ -365,7 +365,7 @@ function RoomsTable({
               { icon: Calendar03Icon, label: t("state-all"), value: "all" },
               ...Arr.map(ROOM_STATES, (state) => ({
                 icon: ROOM_STATE_LOOKS[state].icon,
-                label: t(`room-state-${state}`),
+                label: t(`room-state.${state}`),
                 value: state,
               })),
             ],

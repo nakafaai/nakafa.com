@@ -80,7 +80,7 @@ export function RoomMenu({
             {room.room}
           </ResponsiveDialogSubject>
         }
-        confirm={t("room-cancel-confirm")}
+        confirm={t("room-cancel")}
         description={t("room-cancel-description")}
         icon={Cancel01Icon}
         offered={room.canChange}
@@ -113,7 +113,7 @@ export function RoomMenu({
             />
           }
         >
-          {t("results-title")}
+          {common("results")}
         </DropdownMenuItem>
         {room.canChange ? (
           <DropdownMenuItem
@@ -138,6 +138,7 @@ export function RoomMenu({
  */
 function RoomMoveDialog({ room, slug }: { room: Room; slug: TenantSlug }) {
   const t = useTranslations("Exams");
+  const tCommon = useTranslations("Common");
   const id = useId();
   const reschedule = useMutation(
     exams.sittings.reschedule
@@ -194,7 +195,7 @@ function RoomMoveDialog({ room, slug }: { room: Room; slug: TenantSlug }) {
     <ResponsiveDialog
       action={
         <Button disabled={!ready} onClick={save} type="button">
-          {t("room-move-save")}
+          {tCommon("save")}
         </Button>
       }
       description={t("room-move-description")}

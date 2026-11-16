@@ -328,6 +328,7 @@ function ThreadContent() {
  */
 function ThreadHeader() {
   const t = useTranslations("Classroom");
+  const tCommon = useTranslations("Common");
   const label = Option.match(use(ThreadShownContext), {
     onNone: () => t("thread-title"),
     onSome: ({ thread }) =>
@@ -346,7 +347,7 @@ function ThreadHeader() {
 
   return (
     <PaneHeader
-      description={t("discussion-replies", { count: replies })}
+      description={tCommon("replies", { count: replies })}
       title={label}
     />
   );

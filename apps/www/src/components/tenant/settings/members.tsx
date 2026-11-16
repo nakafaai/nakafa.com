@@ -134,6 +134,7 @@ function SchoolMembersBody() {
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
   const search = useServerSearch();
   const t = useTranslations("SchoolSettings");
+  const tCommon = useTranslations("Common");
   const tSchool = useTranslations("School");
   const pagination = usePaginatedQuery(
     tenancy.roster.members,
@@ -164,12 +165,12 @@ function SchoolMembersBody() {
           <TableName>{info.getValue()}</TableName>
         </TableTitle>
       ),
-      header: t("member-name"),
+      header: tCommon("name"),
       id: "name",
     }),
     memberColumns.text((member) => member.email ?? "", {
       cell: (info) => <TableText>{info.getValue()}</TableText>,
-      header: t("member-email"),
+      header: tCommon("email"),
       id: "email",
     }),
     memberColumns.list(unitsOf, {
@@ -182,7 +183,7 @@ function SchoolMembersBody() {
           )}
         </TableList>
       ),
-      header: t("member-units"),
+      header: tCommon("units"),
       id: "units",
       options: namedOptions(
         Arr.dedupe(Arr.flatMap(members, unitsOf)),
@@ -197,7 +198,7 @@ function SchoolMembersBody() {
           tone={STATUS_LOOKS[info.getValue()].tone}
         />
       ),
-      header: t("member-status"),
+      header: tCommon("state"),
       id: "status",
       options: Arr.map(MemberStatus.literals, (status) => ({
         icon: STATUS_LOOKS[status].icon,
@@ -257,6 +258,7 @@ function SchoolMembersBody() {
 function SchoolMemberMenu({ member }: { member: MemberItem }) {
   const { slug } = useTenant();
   const t = useTranslations("SchoolSettings");
+  const tCommon = useTranslations("Common");
   const sendLocale = Option.getOrUndefined(
     Schema.decodeOption(ActiveAppLocaleCodeSchema)(useLocale())
   );
@@ -306,7 +308,7 @@ function SchoolMemberMenu({ member }: { member: MemberItem }) {
           icon={PencilEdit02Icon}
           onClick={() => dialogs.show("rename")}
         >
-          {t("person-rename")}
+          {tCommon("rename")}
         </DropdownMenuItem>
         <DropdownMenuItem
           icon={UserStar01Icon}
@@ -359,12 +361,12 @@ function SchoolMemberMenu({ member }: { member: MemberItem }) {
       />
       {dialogs.kind === "invite" ? (
         <LineDialog
-          action={t("invite-submit")}
+          action={t("invite-action")}
           description={t("invite-dialog-description")}
           initial=""
           isValid={Schema.is(Email)}
           key={dialogs.key}
-          label={t("invite-email")}
+          label={tCommon("email")}
           onSave={inviteAt}
           open={dialogs.isOpen("invite")}
           placeholder={t("invite-email-placeholder")}
@@ -385,7 +387,7 @@ function SchoolMemberMenu({ member }: { member: MemberItem }) {
       <ResponsiveDialog
         action={
           <Button onClick={removeMember} type="button" variant="destructive">
-            {t("member-remove-confirm")}
+            {t("member-remove")}
           </Button>
         }
         description={t("member-remove-description")}

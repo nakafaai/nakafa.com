@@ -176,7 +176,7 @@ export function UploadTray({
   files: readonly (typeof TrayFile.Type)[];
   onRemove: (file: typeof TrayFile.Type) => void;
 }) {
-  const t = useTranslations("Classroom");
+  const tCommon = useTranslations("Common");
 
   if (Arr.isReadonlyArrayEmpty(files)) {
     return null;
@@ -207,7 +207,7 @@ export function UploadTray({
           <AttachmentActions>
             <AttachmentAction
               onClick={() => onRemove(file)}
-              tooltip={t("attach-remove", { name: file.name })}
+              tooltip={tCommon("media-remove", { name: file.name })}
               type="button"
             >
               <HugeIcons icon={Cancel01Icon} />

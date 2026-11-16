@@ -26,7 +26,7 @@ function PreferencesMenuItem({
       onFocus={consent.warmPreferences}
       onPointerEnter={consent.warmPreferences}
     >
-      {t("manage")}
+      {t("title")}
     </DropdownMenuItem>
   );
 }

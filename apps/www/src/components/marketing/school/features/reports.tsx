@@ -78,6 +78,7 @@ function useDemoAddress() {
  */
 function ReportCard() {
   const t = useTranslations("SchoolSite");
+  const tCommon = useTranslations("Common");
   const tSubject = useTranslations("Subject");
   const format = useFormatter();
   const address = useDemoAddress();
@@ -114,7 +115,7 @@ function ReportCard() {
               step: 5,
             })}
           >
-            <dt className="text-sm font-medium">{t("demo-report-average")}</dt>
+            <dt className="text-sm font-medium">{tCommon("average")}</dt>
             <dd className="font-mono text-sm font-medium tabular-nums">
               {format.number(REPORT_AVERAGE)}
             </dd>

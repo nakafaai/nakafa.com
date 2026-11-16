@@ -50,7 +50,7 @@ test("a visitor's search opens no socket, sends no session read, and reads its r
         yield* Effect.promise(() =>
           expect(
             page
-              .getByRole("region", { name: app.Utils["search-results"] })
+              .getByRole("region", { name: app.Common["search-results"] })
               .locator("a[href*='/subjects/']")
               .first()
           ).toBeVisible()

@@ -60,15 +60,15 @@ export const Route = createFileRoute("/$locale/_marketing/school/pricing")({
     return {
       breadcrumb: {
         home: tCommon("home"),
-        pricing: t("pricing-breadcrumb"),
-        school: t("breadcrumb"),
+        pricing: tCommon("pricing"),
+        school: tCommon("school"),
       },
       description: t("pricing-metadata-description"),
       faqs: Arr.map(
         schoolPricingQuestions,
         (key): MarketingFaqItem => ({
-          answer: t(`faq-${key}-answer`),
-          question: t(`faq-${key}-question`),
+          answer: t(`faq.${key}.answer`),
+          question: t(`faq.${key}.question`),
         })
       ),
       title: t("pricing-metadata-title"),

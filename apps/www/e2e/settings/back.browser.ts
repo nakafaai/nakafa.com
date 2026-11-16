@@ -13,7 +13,7 @@ const SETTINGS_URL = /\/en\/user\/settings$/u;
 const MEMORY_URL = /\/en\/user\/settings\/memory$/u;
 
 /** The first row of the settings sidebar, which leads out of settings. */
-const BACK = app.Auth["back-to-nakafa"];
+const BACK = app.Common["back-to-nakafa"];
 
 /**
  * Settings has its own sidebar, so its first row leads back to Nakafa: to the
@@ -45,7 +45,7 @@ test("the settings sidebar leads back to the page the learner came from, and Esc
         await expect(back).toBeVisible();
         // A section opened in settings does not change where the way back leads.
         await page
-          .getByRole("link", { exact: true, name: app.Auth.memory })
+          .getByRole("link", { exact: true, name: app.Auth.section.memory })
           .click();
         await expect(page).toHaveURL(MEMORY_URL);
         await back.click();

@@ -48,6 +48,7 @@ export function AddChannel({
   slug: TenantSlug;
 }) {
   const t = useTranslations("Classroom");
+  const tCommon = useTranslations("Common");
   const add = useMutation(classroom.forum.channels.add);
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState("");
@@ -134,7 +135,7 @@ export function AddChannel({
       <ResponsiveDialog
         action={
           <Button disabled={!ready} inert={isPending} onClick={submit}>
-            {t("add-submit")}
+            {tCommon("add")}
           </Button>
         }
         description={t("add-channel-description")}
@@ -161,7 +162,7 @@ export function AddChannel({
               {Option.match(refusal, {
                 onNone: () =>
                   nameTooLong
-                    ? t("channel-name-too-long", {
+                    ? tCommon("title-too-long", {
                         count: CHANNEL_NAME_MAX_LENGTH,
                       })
                     : null,

@@ -12,16 +12,16 @@ import { Array as Arr, Option, Result, String as Str } from "effect";
 
 /** The copy key that names each verdict of an answer. */
 export const verdictKeys = {
-  correct: "verdict-correct",
-  incorrect: "verdict-incorrect",
-  partial: "verdict-partial",
-  pending: "verdict-pending",
+  correct: "verdict.correct",
+  incorrect: "verdict.incorrect",
+  partial: "verdict.partial",
+  pending: "verdict.pending",
 } satisfies Record<
   Verdict,
-  | "verdict-correct"
-  | "verdict-incorrect"
-  | "verdict-partial"
-  | "verdict-pending"
+  | "verdict.correct"
+  | "verdict.incorrect"
+  | "verdict.partial"
+  | "verdict.pending"
 >;
 
 /**

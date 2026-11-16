@@ -154,7 +154,7 @@ function TaskExamField({
 
   return (
     <Field>
-      <FieldLabel htmlFor={`${id}-exam`}>{t("task-exam")}</FieldLabel>
+      <FieldLabel htmlFor={`${id}-exam`}>{common("questions")}</FieldLabel>
       <Select
         items={items}
         onValueChange={(value) => onExam(String(value ?? WRITTEN))}

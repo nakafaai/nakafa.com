@@ -119,7 +119,7 @@ export function TryoutPracticeSession({
       label: title,
       target: Option.getOrUndefined(getTryoutPageTarget(returnAddress)),
     },
-    { label: t("practice-short") },
+    { label: tCommon("practice") },
   ]);
   const view = useSearch({ select: (search) => search.view, strict: false });
   const content = useQuery(practice.sessions.content, {
@@ -244,13 +244,14 @@ function TryoutPracticeOpener({
   questions: readonly PracticeQuestion[];
 }) {
   const t = useTranslations("Tryouts");
+  const tCommon = useTranslations("Common");
   const open = usePlayer((state) => state.open);
   const { checked, total } = practiceProgressOf(questions);
 
   return (
     <TryoutPaneOpener
       count={checked}
-      label={t("practice-short")}
+      label={tCommon("practice")}
       name={t("practice-open", { checked, total })}
       onOpen={() => open("navigator")}
       total={total}

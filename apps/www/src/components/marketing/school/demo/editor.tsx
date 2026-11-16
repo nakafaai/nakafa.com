@@ -20,9 +20,10 @@ import { ExamProvider } from "@/components/tenant/exams/provider";
  */
 export function EditorDemo() {
   const t = useTranslations("SchoolSite");
+  const tCommon = useTranslations("Common");
   const [seed] = useState(() =>
     demoExam({
-      answer: t("demo-exam-answer"),
+      answer: tCommon("answer"),
       essay: t.raw("demo-exam-essay"),
       explanation: t.raw("demo-exam-explanation"),
       numeric: t.raw("demo-exam-numeric"),

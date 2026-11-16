@@ -179,7 +179,7 @@ function SittingResultsContent({
                       icon={ChartHistogramIcon}
                       onClick={() => setQuestionsOpen(true)}
                     >
-                      {t("questions")}
+                      {common("questions")}
                     </DropdownMenuItem>
                     <DropdownMenuItem
                       icon={SecurityCheckIcon}
@@ -262,7 +262,7 @@ function ResultsHeader({
   readonly room: string;
   readonly sittingId: GenericId.GenericId<"examSittings">;
 }) {
-  const t = useTranslations("Exams");
+  const tCommon = useTranslations("Common");
   const tenant = useTenant();
   const crumbs = useExamCrumbs(examId, examTitle);
 
@@ -274,9 +274,9 @@ function ResultsHeader({
           label: room,
           target: schoolExamSittingTarget(tenant.slug, examId, sittingId),
         },
-        { label: t("results-title") },
+        { label: tCommon("results") },
       ]}
-      title={t("results-title")}
+      title={tCommon("results")}
     >
       {children}
     </SchoolHeader>
@@ -289,6 +289,7 @@ function ResultsHeader({
  */
 function ExamsCrumbHeader() {
   const t = useTranslations("Exams");
+  const tCommon = useTranslations("Common");
   const tenant = useTenant();
 
   return (
@@ -297,9 +298,9 @@ function ExamsCrumbHeader() {
         ...(tenant.canOpenExams
           ? [{ label: t("title"), target: schoolExamsTarget(tenant.slug) }]
           : []),
-        { label: t("results-title") },
+        { label: tCommon("results") },
       ]}
-      title={t("results-title")}
+      title={tCommon("results")}
     />
   );
 }

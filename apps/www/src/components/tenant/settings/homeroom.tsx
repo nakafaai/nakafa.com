@@ -98,7 +98,7 @@ export function HomeroomDialog({
       <FieldGroup>
         <Field>
           <FieldLabel htmlFor={`${id}-teacher`}>
-            {t("homeroom-teacher")}
+            {t("class-teacher")}
           </FieldLabel>
           {homeroom === null && !isArchived ? (
             <SchoolTeacherPicker
@@ -134,17 +134,17 @@ function HomeroomAction({
   /** Whether the cohort has a homeroom teacher now. */
   teacherSet: boolean;
 }) {
-  const t = useTranslations("SchoolSettings");
+  const tCommon = useTranslations("Common");
   if (teacherSet) {
     return (
       <Button onClick={onRemove} type="button" variant="destructive">
-        {t("homeroom-remove")}
+        {tCommon("remove")}
       </Button>
     );
   }
   return (
     <Button disabled={!canSave} onClick={onSave} type="button">
-      {t("homeroom-save")}
+      {tCommon("save")}
     </Button>
   );
 }

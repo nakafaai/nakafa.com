@@ -108,6 +108,7 @@ export function ThreadListsProvider({ children }: { children: ReactNode }) {
  */
 export function ThreadRows() {
   const t = useTranslations("Classroom");
+  const tCommon = useTranslations("Common");
   const { can } = useClassScope();
   const lists = useRequired(ThreadListsContext, "ThreadRows");
   const search = useTableFilters((state) => state.search);
@@ -130,7 +131,7 @@ export function ThreadRows() {
               },
               {
                 icon: Archive02Icon,
-                label: t("threads-archived"),
+                label: tCommon("archived"),
                 value: "archived",
               },
             ]}
@@ -177,7 +178,7 @@ function ThreadList({
     />
   ) : (
     <ItemGroup
-      aria-label={t("chat-filter-threads")}
+      aria-label={t("chat-filter-label.threads")}
       className="gap-0.5 py-2 lg:pe-2"
     >
       {Arr.map(rows, (row) => (
@@ -191,6 +192,7 @@ function ThreadList({
 /** One thread as a row: its number and title, which open it across the whole row, and its replies. */
 function ThreadItem({ row }: { row: typeof ThreadRow.Type }) {
   const t = useTranslations("Classroom");
+  const tCommon = useTranslations("Common");
   const { can, classSlug, slug } = useClassScope();
   const { discussion } = row;
 
@@ -226,7 +228,7 @@ function ThreadItem({ row }: { row: typeof ThreadRow.Type }) {
         <ItemDescription className="line-clamp-1">
           {discussion.replies === 0
             ? t("thread-empty")
-            : t("discussion-replies", { count: discussion.replies })}
+            : tCommon("replies", { count: discussion.replies })}
         </ItemDescription>
       </ItemContent>
       {Arr.contains(can, "forum.manage") ? <ThreadShelf row={row} /> : null}
@@ -239,7 +241,6 @@ function ThreadItem({ row }: { row: typeof ThreadRow.Type }) {
  * archived one. The row leaves its list at once and comes back with the School toast on a refusal.
  */
 function ThreadShelf({ row }: { row: typeof ThreadRow.Type }) {
-  const t = useTranslations("Classroom");
   const common = useTranslations("Common");
   const { classId, classSlug, slug } = useClassScope();
   const archive = useMutation(classroom.forum.threads.archive);
@@ -293,7 +294,7 @@ function ThreadShelf({ row }: { row: typeof ThreadRow.Type }) {
                   )
                 }
               >
-                {t("discussion-restore")}
+                {common("restore")}
               </DropdownMenuItem>
             ) : (
               <DropdownMenuItem
@@ -306,7 +307,7 @@ function ThreadShelf({ row }: { row: typeof ThreadRow.Type }) {
                   )
                 }
               >
-                {t("discussion-archive")}
+                {common("archive")}
               </DropdownMenuItem>
             )}
           </DropdownMenuGroup>

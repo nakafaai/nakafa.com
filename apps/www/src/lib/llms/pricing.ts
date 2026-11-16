@@ -23,6 +23,7 @@ export const getPricingLlmsText = Effect.fn("www.llms.pricing.text")(function* (
 ) {
   const messages = yield* Effect.promise(() => loadLocaleMessages(locale));
   const plans = createTranslator({ locale, messages, namespace: "Pricing" });
+  const tCommon = createTranslator({ locale, messages, namespace: "Common" });
   const page = createTranslator({
     locale,
     messages,
@@ -33,7 +34,7 @@ export const getPricingLlmsText = Effect.fn("www.llms.pricing.text")(function* (
     Arr.map(
       pricingFaqNumbers,
       (number) =>
-        `### ${page(`q${number}`)}\n\n${page(`a${number}`, { cost: NINA_RESPONSE_CREDITS })}`
+        `### ${page(`faq.${number}.question`)}\n\n${page(`faq.${number}.answer`, { cost: NINA_RESPONSE_CREDITS })}`
     ),
     "\n\n"
   );
@@ -53,7 +54,7 @@ export const getPricingLlmsText = Effect.fn("www.llms.pricing.text")(function* (
       plans("free-worth-card"),
       plans("free-worth-trial"),
       ...Arr.map(freePlanFeatures, (key) => `- ${plans(key)}`),
-      `## ${plans("pro-title")}`,
+      `## ${tCommon("pro")}`,
       plans("pro-description"),
       ...Arr.map(proPlanFeatures, (key) => `- ${plans(key, { credits })}`),
       page("price-line", {
@@ -62,7 +63,7 @@ export const getPricingLlmsText = Effect.fn("www.llms.pricing.text")(function* (
           Arr.map(proPricing, ({ format, price }) => format(price.amount)),
           "or"
         ),
-        pro: plans("pro-title"),
+        pro: tCommon("pro"),
         yearly: formatterOf(locale).list(
           Arr.map(proPricing, ({ format, price }) =>
             format(price.yearlyAmount)

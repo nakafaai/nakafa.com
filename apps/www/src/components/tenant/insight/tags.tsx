@@ -85,7 +85,7 @@ export function QuestionTags() {
               params={{ slug }}
               to="/school/$slug/exams"
             >
-              {t("exams-action")}
+              {common("open-exams")}
             </Link>
           ) : undefined
         }
@@ -101,7 +101,7 @@ export function QuestionTags() {
         {!hasNoExam && shown !== null ? (
           <FieldGroup>
             <Field>
-              <FieldLabel htmlFor={`${id}-exam`}>{t("exam")}</FieldLabel>
+              <FieldLabel htmlFor={`${id}-exam`}>{common("exam")}</FieldLabel>
               <Select
                 items={items}
                 onValueChange={(value) => setPicked(value)}
@@ -186,6 +186,7 @@ function QuestionTag({
   };
 }) {
   const t = useTranslations("SchoolInsight");
+  const tCommon = useTranslations("Common");
   const { slug } = useTenant();
   const set = useMutation(insight.tags.set);
   const id = useId();
@@ -195,7 +196,7 @@ function QuestionTag({
   return (
     <Field>
       <FieldLabel htmlFor={id}>
-        {t("question", { number: tag.number })}
+        {tCommon("question", { number: tag.number })}
       </FieldLabel>
       <Input
         id={id}

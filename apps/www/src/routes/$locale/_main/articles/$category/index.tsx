@@ -239,7 +239,6 @@ export const Route = createFileRoute("/$locale/_main/articles/$category/")({
 
 function ArticleCategoryPage() {
   const page = Route.useLoaderData();
-  const t = useTranslations("Articles");
   const tCommon = useTranslations("Common");
   return (
     <Page width="column">
@@ -248,7 +247,7 @@ function ArticleCategoryPage() {
           home: HOME_TARGET,
           homeLabel: tCommon("home"),
           items: [
-            { label: t("articles"), target: ARTICLES_TARGET },
+            { label: tCommon("articles"), target: ARTICLES_TARGET },
             {
               label: page.label,
               siblings: crumbSiblings({

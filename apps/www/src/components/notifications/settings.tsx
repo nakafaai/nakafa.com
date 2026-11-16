@@ -106,7 +106,7 @@ export function PreferenceTable({
               on={info.getValue() === "on"}
             />
           ),
-        header: t(`channel-${channel}`),
+        header: t(`channel.${channel}`),
         id: channel,
         options: [
           { icon: Notification01Icon, label: t("channel-on"), value: "on" },
@@ -186,7 +186,7 @@ function ChannelItem({
         })
       }
     >
-      {t(`channel-${channel}`)}
+      {t(`channel.${channel}`)}
     </DropdownMenuCheckboxItem>
   );
 }
@@ -208,7 +208,7 @@ function ChannelSwitch({
 
   return (
     <Switch
-      aria-label={`${t(`kind-${kind}`)}, ${t(`channel-${channel}`)}`}
+      aria-label={`${t(`kind-${kind}`)}, ${t(`channel.${channel}`)}`}
       checked={shown}
       className={cn(save === null && "invisible")}
       onCheckedChange={(next) =>

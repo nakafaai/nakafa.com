@@ -86,7 +86,10 @@ test.describe("The set pane beside a track's table", () => {
     // The set's parts stand in the set page's own list, each row a link to its part, with no heading above them.
     await expect(pane.getByRole("link").first()).toBeVisible();
     await expect(
-      pane.getByRole("button", { exact: true, name: en.Tryouts["start-cta"] })
+      pane.getByRole("button", {
+        exact: true,
+        name: en.Tryouts.action["start-cta"],
+      })
     ).toBeVisible();
 
     // Escape closes it and the row lets go of its mark; the set's name opens it again, and the page stays on the
@@ -114,7 +117,10 @@ test.describe("The set pane beside a track's table", () => {
       name: en.Tryouts["set-pane"],
     });
     await pane
-      .getByRole("button", { exact: true, name: en.Tryouts["start-cta"] })
+      .getByRole("button", {
+        exact: true,
+        name: en.Tryouts.action["start-cta"],
+      })
       .click();
     await expect.poll(() => new URL(page.url()).pathname).toBe("/en/auth");
     expect(new URL(page.url()).searchParams.get("redirect")).toBe(

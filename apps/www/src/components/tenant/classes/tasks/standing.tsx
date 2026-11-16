@@ -18,5 +18,5 @@ export function TaskStanding({ task }: { task: ClassTask }) {
   if (standing === "open") {
     return t("task-not-handed-in");
   }
-  return standing === "late" ? t("task-handed-in-late") : t("task-handed-in");
+  return standing === "late" ? t("task-handed-in-late") : t("task-submissions");
 }

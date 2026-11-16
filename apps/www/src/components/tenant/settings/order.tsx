@@ -122,7 +122,7 @@ export function SchoolOrderDialog({
         {kind === "plan" ? (
           <Field>
             <RadioGroup
-              aria-label={t("billing-order-plan")}
+              aria-label={common("plan")}
               onValueChange={(value) => {
                 if (Schema.is(SchoolPaidTierKey)(value)) {
                   setPlan(value);
@@ -150,7 +150,7 @@ export function SchoolOrderDialog({
               }),
               value: String(each),
             }))}
-            label={t("billing-order-period")}
+            label={t("invoice-term")}
             menu={common("menu-period")}
             onChoose={(value) => {
               const chosen = Number(value);
@@ -233,7 +233,7 @@ function SchoolPlanOption({
       <Radio className="mt-0.5" value={plan} />
       <span className="grid flex-1 gap-1">
         <span className="flex items-baseline justify-between gap-3 text-sm font-medium">
-          <span>{t(`billing-plan-${plan}`)}</span>
+          <span>{t(`billing-plan.${plan}`)}</span>
           <span className="whitespace-nowrap tabular-nums">
             {t("billing-per-month", {
               price: formatMinorAmount(

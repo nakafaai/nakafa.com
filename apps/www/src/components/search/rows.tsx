@@ -207,12 +207,14 @@ function readRows(
 /** The words of each group's label. */
 function useGroupLabels(): Readonly<Record<SearchGroup, string>> {
   const t = useTranslations("Utils");
+  const tCommon = useTranslations("Common");
+  const tHoly = useTranslations("Holy");
   return {
-    articles: t("search-group-articles"),
+    articles: tCommon("articles"),
     curricula: t("search-group-curricula"),
     lessons: t("search-group-lessons"),
-    pages: t("search-group-pages"),
-    quran: t("search-group-quran"),
+    pages: tCommon("pages"),
+    quran: tHoly("quran"),
     tryouts: t("search-group-tryouts"),
   };
 }
@@ -267,7 +269,7 @@ export function usePaletteGroups({
         },
         {
           key: "explore",
-          label: t("search-explore"),
+          label: tCommon("explore"),
           items: readRows("explore", readExploreEntries(entries), ""),
         },
       ],

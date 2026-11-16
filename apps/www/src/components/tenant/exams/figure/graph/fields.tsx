@@ -20,13 +20,14 @@ const LazyFigure = lazy(() =>
 /** The figure's name, its card's title. */
 export function NameField() {
   const t = useTranslations("Exams");
+  const common = useTranslations("Common");
   const title = useGraph((state) => state.draft.title);
   const change = useGraph((state) => state.change);
   const id = useId();
 
   return (
     <Field>
-      <FieldLabel htmlFor={id}>{t("figure-name")}</FieldLabel>
+      <FieldLabel htmlFor={id}>{common("name")}</FieldLabel>
       <Input
         dir="auto"
         id={id}

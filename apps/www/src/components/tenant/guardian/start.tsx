@@ -35,6 +35,7 @@ export function GuardianLinkStartDialog({
   setOpen: (open: boolean) => void;
 }) {
   const t = useTranslations("SchoolGuardians");
+  const tCommon = useTranslations("Common");
   const { slug } = useTenant();
   const id = useId();
   const start = useMutation(guardians.links.start).withOptimisticUpdate(
@@ -102,7 +103,9 @@ export function GuardianLinkStartDialog({
     >
       <FieldGroup>
         <Field>
-          <FieldLabel htmlFor={`${id}-student`}>{t("student")}</FieldLabel>
+          <FieldLabel htmlFor={`${id}-student`}>
+            {tCommon("student")}
+          </FieldLabel>
           <SchoolStudentPicker
             id={`${id}-student`}
             onChoose={setStudentId}

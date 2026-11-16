@@ -37,6 +37,7 @@ export function PlayerSheet({
   title?: string;
 }) {
   const t = useTranslations("Player");
+  const tCommon = useTranslations("Common");
   const overlay = usePlayer((state) => state.overlay);
   // A question chosen here takes the focus, so the drawer never hands it back to where it opened.
   const landed = usePlayer((state) => state.landed);
@@ -65,7 +66,7 @@ export function PlayerSheet({
         <PaneModeContext value={{ close, place: "sheet" }}>
           <PaneHeader
             description={description ?? t("navigator-description")}
-            title={title ?? t("navigator")}
+            title={title ?? tCommon("exam-questions")}
           />
           <PaneBody>
             <div className={cn(monospace, "grid gap-4")} ref={body}>

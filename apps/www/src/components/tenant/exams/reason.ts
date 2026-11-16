@@ -9,5 +9,5 @@ export const choiceTitle = (
   if (template !== "reason") {
     return null;
   }
-  return choiceId === REASON_ID ? "reason-title" : "reason-answer";
+  return choiceId === REASON_ID ? "choice-title.reason" : "choice-title.answer";
 };

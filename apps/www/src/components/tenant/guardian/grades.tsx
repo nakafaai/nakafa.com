@@ -36,6 +36,7 @@ export function GuardianGrades({
   linkId: GenericId.GenericId<"guardianLinks">;
 }) {
   const t = useTranslations("SchoolGuardians");
+  const tCommon = useTranslations("Common");
   const { slug } = useTenant();
   const grades = useQuery(guardians.family.grades, { linkId, slug });
   const narratives = useQuery(guardians.family.narratives, { linkId, slug });
@@ -48,11 +49,11 @@ export function GuardianGrades({
       columns={[
         gradeColumns.text((grade) => grade.className, {
           cell: (info) => <span dir="auto">{info.getValue()}</span>,
-          header: t("grade-class"),
+          header: tCommon("class"),
           id: "class",
         }),
         gradeColumns.number((grade) => grade.value, {
-          header: t("grade-value"),
+          header: tCommon("grade"),
           id: "value",
         }),
         gradeColumns.text((grade) => grade.band ?? t(`kktp-${grade.kktp}`), {

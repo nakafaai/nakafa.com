@@ -67,6 +67,7 @@ export function RosterPreviewTable({
   readonly rows: readonly (typeof ReadRow.Type)[];
 }) {
   const t = useTranslations("SchoolRoster");
+  const tCommon = useTranslations("Common");
   const cohorts = Arr.sort(
     Arr.filter(Arr.dedupe(Arr.map(rows, cohortOf)), (cohort) => cohort !== ""),
     Order.String
@@ -80,16 +81,16 @@ export function RosterPreviewTable({
         info.row.original.outcome === "problem" ? null : (
           <TableName>{nameOf(info.row.original)}</TableName>
         ),
-      header: t("name"),
+      header: tCommon("name"),
       id: "name",
     }),
     rowColumns.text(identityOf, {
       cell: (info) => <span className="tabular-nums">{info.getValue()}</span>,
-      header: t("nisn"),
+      header: tCommon("nisn"),
       id: "nisn",
     }),
     rowColumns.values(cohortOf, {
-      header: t("cohort"),
+      header: tCommon("class-group"),
       id: "cohort",
       options: namedOptions(cohorts, GRADE_ICONS),
     }),
@@ -97,17 +98,17 @@ export function RosterPreviewTable({
       cell: (info) => (
         <TableStatus
           icon={ROSTER_STATUS_LOOKS[info.getValue()].icon}
-          label={t(`status-${info.getValue()}`)}
+          label={t(`status-label.${info.getValue()}`)}
           tone={ROSTER_STATUS_LOOKS[info.getValue()].tone}
         />
       ),
-      header: t("status"),
+      header: tCommon("state"),
       id: "status",
       options: Arr.map(
         ["ready", ...RowProblem.literals] as const,
         (status) => ({
           icon: ROSTER_STATUS_LOOKS[status].icon,
-          label: t(`status-${status}`),
+          label: t(`status-label.${status}`),
           value: status,
         })
       ),

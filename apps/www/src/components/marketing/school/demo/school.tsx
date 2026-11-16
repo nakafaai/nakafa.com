@@ -38,7 +38,7 @@ export function DemoSchool({
   /** The exam the demo's server starts with, and the texts of its questions. */
   seed: Parameters<typeof createDemoBackend>[0];
 }) {
-  const t = useTranslations("SchoolSite");
+  const tCommon = useTranslations("Common");
   const [client] = useState(
     () => new DemoConvexClient(createDemoBackend(seed))
   );
@@ -72,7 +72,7 @@ export function DemoSchool({
               home: { canCreate: false, canWatch: false, choices: [] },
               logo: undefined,
               mascot: schoolMascot(DEMO_SLUG),
-              name: t("breadcrumb"),
+              name: tCommon("school"),
               reach: [],
               role: Option.some("teacher"),
               slug: DEMO_EXAM.slug,

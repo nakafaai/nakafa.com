@@ -29,7 +29,6 @@ const NOTIFICATIONS_TARGET = {
  */
 export function NavTop() {
   const tCommon = useTranslations("Common");
-  const tNotifications = useTranslations("Notifications");
   return (
     <SidebarGroup>
       <SidebarGroupContent>
@@ -40,7 +39,7 @@ export function NavTop() {
           </TopLink>
           <TopLink target={NOTIFICATIONS_TARGET}>
             <HugeIcons icon={Notification01Icon} />
-            <span className="truncate">{tNotifications("title")}</span>
+            <span className="truncate">{tCommon("notifications")}</span>
           </TopLink>
         </SidebarMenu>
       </SidebarGroupContent>

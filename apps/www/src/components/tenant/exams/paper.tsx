@@ -91,7 +91,7 @@ function PageRow({
   /** Whether the server has saved the question, so it takes a move and a type. */
   readonly saved: boolean;
 }) {
-  const t = useTranslations("Exams");
+  const tCommon = useTranslations("Common");
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
   const { editing, locked, number, question } = useQuestionPage();
   const editable = saved && !locked;
@@ -105,7 +105,7 @@ function PageRow({
           <span aria-hidden className="size-8 shrink-0" />
         )}
         <h2 className="shrink-0 text-sm font-medium">
-          {t("question", { number })}
+          {tCommon("question", { number })}
         </h2>
         <QuestionType
           editable={editable && isSettled}
@@ -130,7 +130,7 @@ function PageRow({
  * no change until it answers.
  */
 export function ExamPage({ canvas, index, question }: ExamPageProps) {
-  const t = useTranslations("Exams");
+  const tCommon = useTranslations("Common");
   const { exam } = useExam();
   // Each page reads a boolean for its own choice, so a change of the choice renders only the two pages it moves between.
   const awaiting = useExamSelection((state) =>
@@ -208,7 +208,7 @@ export function ExamPage({ canvas, index, question }: ExamPageProps) {
       }}
     >
       <section
-        aria-label={t("question", { number })}
+        aria-label={tCommon("question", { number })}
         className="flex min-w-0 flex-col gap-2"
         data-page=""
         data-question={question.id}

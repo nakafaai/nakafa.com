@@ -66,12 +66,13 @@ export function TryoutPartsResult({
 /** Opens the numbers of a set of parts in their sheet. */
 export function TryoutPartsOpener({ score }: { score: TryoutScoreResult }) {
   const t = useTranslations("Tryouts");
+  const tCommon = useTranslations("Common");
   const showSheet = usePanes((state) => state.showSheet);
 
   return (
     <TryoutPaneOpener
       count={score.totalCorrect}
-      label={t("result-short")}
+      label={tCommon("result")}
       name={t("result-open", {
         correct: score.totalCorrect,
         total: score.totalQuestions,

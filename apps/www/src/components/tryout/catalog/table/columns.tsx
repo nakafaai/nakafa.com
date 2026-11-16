@@ -48,12 +48,13 @@ function setAddress(row: TryoutSetRow): TryoutPageAddress {
  */
 function useStatusChoices() {
   const t = useTranslations("Tryouts");
+  const tCommon = useTranslations("Common");
 
   return Arr.map(
     setFilterValidator.literals,
     (value: TryoutSetStatusFilter) => {
       if (value === "all") {
-        return { icon: Menu01Icon, label: t("set-filter-all"), value };
+        return { icon: Menu01Icon, label: tCommon("all"), value };
       }
       const look = statusLook(value === "not-started" ? null : value);
       return { icon: look.icon, label: t(look.label), value };
@@ -72,13 +73,14 @@ function useStatusChoices() {
  */
 export function useTryoutSetColumns() {
   const t = useTranslations("Tryouts");
+  const tCommon = useTranslations("Common");
   const statusChoices = useStatusChoices();
   const levelChoices = useLevelChoices();
 
   return [
     setColumns.text((row) => row.title, {
       cell: (info) => <TryoutSetName row={info.row.original} />,
-      header: t("set-column-name"),
+      header: tCommon("name"),
       id: "title",
       narrow: "fit",
     }),
@@ -96,13 +98,13 @@ export function useTryoutSetColumns() {
           <TryoutStatus status={info.row.original.attemptStatus} />
         </span>
       ),
-      header: t("set-column-status"),
+      header: tCommon("state"),
       id: "status",
       options: statusChoices,
       narrow: "fit",
     }),
     setColumns.number((row) => row.questionCount, {
-      header: t("set-column-questions"),
+      header: tCommon("exam-questions"),
       id: "questionCount",
       narrow: "hidden",
     }),

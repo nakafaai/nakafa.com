@@ -63,7 +63,7 @@ export function TryoutActionName({
           data-name={key}
           key={key}
         >
-          {t(key)}
+          {t(`action.${key}`)}
         </span>
       ))}
     </span>

@@ -159,6 +159,7 @@ function Hotbar() {
 /** Undo and redo, which walk the learner's own steps, and the sound switch. */
 function History() {
   const t = useTranslations("Island");
+  const tCommon = useTranslations("Common");
   const undo = useGame((state) => state.undo);
   const redo = useGame((state) => state.redo);
   const muted = useGame((state) => state.muted);
@@ -172,7 +173,7 @@ function History() {
       <HudButton label={t("undo")} onPress={undo}>
         <HugeIcons icon={Undo02Icon} />
       </HudButton>
-      <HudButton label={t("redo")} onPress={redo}>
+      <HudButton label={tCommon("redo")} onPress={redo}>
         <HugeIcons icon={Redo02Icon} />
       </HudButton>
       <HudButton

@@ -79,6 +79,7 @@ export function MessageStream({
   opening: Option.Option<ForumMessage>;
 }) {
   const t = useTranslations("Classroom");
+  const tCommon = useTranslations("Common");
   const format = useFormatter();
   // The message the address asks this place to bring into view, if any.
   const { jump } = useChannelScope();
@@ -134,7 +135,7 @@ export function MessageStream({
       <Primitive.Provider autoScroll defaultScrollPosition="last-anchor">
         <MessageScroller className="min-h-0 flex-1">
           <MessageScrollerViewport
-            aria-label={t("messages")}
+            aria-label={tCommon("messages")}
             preserveScrollOnPrepend
             ref={viewport}
           >

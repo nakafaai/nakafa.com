@@ -63,6 +63,7 @@ const kindOf = (type: string) =>
  */
 export function AddToLibrary() {
   const t = useTranslations("Classroom");
+  const tCommon = useTranslations("Common");
   const locale = useLocale();
   const { classId, slug } = useClassScope();
   const viewer = useViewerQuery();
@@ -184,7 +185,7 @@ export function AddToLibrary() {
       <ResponsiveDialog
         action={
           <Button disabled={!ready} onClick={submit}>
-            {t("library-submit")}
+            {tCommon("add")}
           </Button>
         }
         description={t("library-add-description")}
@@ -211,9 +212,9 @@ export function AddToLibrary() {
             <TabsList className="w-full">
               <TabsTab value="file">{t("library-file")}</TabsTab>
               {driveOffered ? (
-                <TabsTab value="drive">{t("library-drive")}</TabsTab>
+                <TabsTab value="drive">{tCommon("drive")}</TabsTab>
               ) : null}
-              <TabsTab value="link">{t("library-link")}</TabsTab>
+              <TabsTab value="link">{tCommon("link")}</TabsTab>
             </TabsList>
           </Tabs>
           {mode === "file" ? (
@@ -245,7 +246,7 @@ export function AddToLibrary() {
           {mode === "link" ? (
             <Field>
               <FieldLabel htmlFor={`${id}-address`}>
-                {t("library-address")}
+                {tCommon("address")}
               </FieldLabel>
               <Input
                 autoComplete="url"
@@ -261,9 +262,7 @@ export function AddToLibrary() {
             </Field>
           ) : null}
           <Field>
-            <FieldLabel htmlFor={`${id}-title`}>
-              {t("library-title")}
-            </FieldLabel>
+            <FieldLabel htmlFor={`${id}-title`}>{tCommon("title")}</FieldLabel>
             <Input
               dir="auto"
               id={`${id}-title`}

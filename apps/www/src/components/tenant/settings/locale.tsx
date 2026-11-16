@@ -51,6 +51,7 @@ export function SchoolLocaleCard({
   slug: TenantSlug;
 }) {
   const t = useTranslations("SchoolSettings");
+  const tCommon = useTranslations("Common");
   const locale = useLocale();
   const id = useId();
   const setLocale = useMutation(
@@ -94,7 +95,7 @@ export function SchoolLocaleCard({
         <FieldGroup className="max-w-sm">
           <Field>
             <FieldLabel htmlFor={`${id}-country`}>
-              {t("locale-country")}
+              {tCommon("country")}
             </FieldLabel>
             <RegionPicker
               choices={countryItems}
@@ -131,7 +132,7 @@ export function SchoolLocaleCard({
             type="button"
             variant="outline"
           >
-            {t("save")}
+            {tCommon("save")}
           </Button>
         </CardSectionActions>
       </CardSectionFooter>

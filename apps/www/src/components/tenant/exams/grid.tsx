@@ -92,6 +92,7 @@ function GridTile({
   selected,
 }: TileProps) {
   const t = useTranslations("Exams");
+  const tCommon = useTranslations("Common");
   const open = useEditorView((view) => view.open);
   const [target, setTarget] = useState(false);
   const number = index + 1;
@@ -146,7 +147,7 @@ function GridTile({
             onCheckedChange={(checked) => onSelect(question.id, checked)}
           />
         ) : null}
-        <span className="tabular-nums">{t("question", { number })}</span>
+        <span className="tabular-nums">{tCommon("question", { number })}</span>
       </div>
     </li>
   );
@@ -162,6 +163,7 @@ function GridTile({
  */
 export function ExamGrid() {
   const t = useTranslations("Exams");
+  const tCommon = useTranslations("Common");
   const { exam } = useExam();
   const editable = !isLocked(exam);
   const active = useActiveQuestion();
@@ -289,7 +291,7 @@ export function ExamGrid() {
               variant="ghost"
             >
               <HugeIcons aria-hidden="true" icon={Delete02Icon} />
-              {t("grid-delete")}
+              {tCommon("delete")}
             </Button>
           </div>
         </div>
@@ -347,7 +349,7 @@ export function ExamGrid() {
         action={
           <Button onClick={remove} variant="destructive">
             <HugeIcons aria-hidden="true" icon={Delete02Icon} />
-            {t("grid-delete")}
+            {tCommon("delete")}
           </Button>
         }
         description={t("remove-many-description")}

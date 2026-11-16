@@ -63,8 +63,8 @@ export function TryoutResultFacts({
       <PaneFact
         label={t(
           score.scoreStatus === "provisional"
-            ? "score-label-estimated"
-            : "score-label-standard"
+            ? "score-label.estimated"
+            : "score-label.standard"
         )}
       >
         {score.publishedScore}
@@ -197,13 +197,14 @@ export function TryoutPaneOpener({
 /** The review's result opener, in the player's footer, which opens the player's sheet. */
 export function TryoutReviewOpener() {
   const t = useTranslations("Tryouts");
+  const tCommon = useTranslations("Common");
   const { score } = useTryoutReview();
   const open = usePlayer((state) => state.open);
 
   return (
     <TryoutPaneOpener
       count={score.totalCorrect}
-      label={t("result-short")}
+      label={tCommon("result")}
       name={t("result-open", {
         correct: score.totalCorrect,
         total: score.totalQuestions,
