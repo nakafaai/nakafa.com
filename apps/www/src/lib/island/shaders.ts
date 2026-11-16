@@ -1,3 +1,4 @@
+import { SPAN } from "@repo/backend/confect/island/world";
 import { ATLAS_TILES } from "@/lib/island/atlas";
 import { WIND_GLSL } from "@/lib/island/wind";
 
@@ -49,6 +50,8 @@ uniform float uWater;
 uniform sampler2D uShore;
 uniform vec2 uShoreBox;
 uniform vec3 uEye;
+uniform float uWet;
+uniform float uSnow;
 ${WIND_GLSL}
 in vec2 vUv;
 in float vShade;
@@ -90,6 +93,19 @@ void main() {
     // A gust shows on the meadow (D32): the grass under its front turns a tone lighter, in whole art pixels.
     paint *= 1.0 + 0.1 * step(0.55, windField(floor(vWorld.xz * 16.0) / 16.0, 1.0));
   }
+  vec3 face = normalize(cross(dFdx(vWorld), dFdy(vWorld)));
+  if (uWater < 0.5) {
+    // What the weather left (D33), only where the sky reaches: wet ground darkens and cools, the tops of things more than their sides.
+    float open = smoothstep(0.6, 0.95, vSky);
+    float wet = uWet * open * (face.y > 0.5 ? 1.0 : 0.55);
+    paint = mix(paint, paint * vec3(0.74, 0.77, 0.85), wet);
+    // Snow settles art pixel by art pixel on what faces the sky, the first patches where it lies thickest.
+    vec2 grain = floor(vWorld.xz * 16.0);
+    float lying = uSnow * open * step(0.5, face.y);
+    // Drifts first, then whole fields: soft patches a few cells wide, their edges ragged by a pixel or two.
+    float spread = noiseOf(grain / 40.0) * 0.6 + noiseOf(grain / 9.0) * 0.28 + hashOf(grain) * 0.12;
+    paint = mix(paint, vec3(0.92, 0.95, 1.0), step(spread, lying) * 0.94);
+  }
   float foam = 0.0;
   if (uWater > 0.5) {
     // The sea in whole art pixels (D28): how near land this pixel is, and a slow drift that breaks every line of it.
@@ -115,7 +131,7 @@ void main() {
   vec3 lit = mix(paint * light, vec3(0.97, 0.99, 1.0) * min(vec3(1.0), light + 0.12), foam);
   color = vec4(mix(lit, uFog, fog), mix(uAlpha, 1.0, foam));
   // The face's own direction, from how the world moves across this pixel, for the edge pass (D20).
-  surface = vec4(normalize(cross(dFdx(vWorld), dFdy(vWorld))) * 0.5 + 0.5, 1.0);
+  surface = vec4(face * 0.5 + 0.5, 1.0);
 }`;
 
 /** One triangle over the whole frame, for the passes that paint every pixel. */
@@ -144,10 +160,15 @@ void main() {
 }`;
 
 /**
- * The weather program: rain as short slanted streaks and snow as single flakes,
- * falling through a box of sky around the camera's target. Each particle is a
- * seed; its place at any moment comes from the time, so nothing is uploaded
- * while it falls.
+ * The weather program (ADR 0047, D33): rain as short streaks and snow as
+ * flakes, each falling along the wind until it meets the first thing over its
+ * column (the roof map, `lib/island/cover.ts`), so a roof keeps the ground
+ * under it dry. Each particle is a seed: every cycle it picks where it lands,
+ * falls there from the sky over the camera's target, and its place at any
+ * moment comes from the time, so nothing is uploaded while it falls. It falls
+ * over all the camera sees, however far the camera stands back. The
+ * splash pass (`uSplash` 1) draws what a landing drop leaves: two droplets
+ * thrown up from ground or a roof, a ring spreading on water.
  */
 export const WEATHER_VERTEX = `#version 300 es
 layout(location = 0) in vec3 aSeed;
@@ -158,17 +179,71 @@ uniform float uTime;
 uniform float uSpeed;
 uniform float uLength;
 uniform float uSway;
+uniform float uSplash;
+uniform float uSea;
+uniform float uArea;
+uniform float uTop;
+uniform sampler2D uRoof;
+${WIND_GLSL}
 out float vTail;
+out float vRing;
+out float vAge;
+const float SIDE = ${SPAN.toFixed(1)};
+// Seconds a splash stays on ground, and a ring on water.
+const float SPLASH = 0.16;
+const float RING = 0.5;
+// Where a drop that lands at a place stops: the height, and 1 on water.
+vec2 surfaceAt(vec2 at) {
+  vec2 cell = floor(at);
+  if (cell.x < 0.0 || cell.y < 0.0 || cell.x >= SIDE || cell.y >= SIDE) {
+    return vec2(uSea, 1.0);
+  }
+  float code = floor(texelFetch(uRoof, ivec2(cell), 0).r * 255.0 + 0.5);
+  float water = mod(code, 2.0);
+  return vec2(floor(code / 2.0) - 0.125 * water, water);
+}
 void main() {
   vTail = aTail;
-  float height = 18.0;
-  float fall = mod(aSeed.z * height + uTime * uSpeed, height);
-  vec3 position = vec3(
-    uTarget.x + (aSeed.x - 0.5) * 56.0 + sin(uTime * 0.8 + aSeed.z * 20.0) * uSway,
-    uTarget.y + 16.0 - fall + aTail * uLength,
-    uTarget.z + (aSeed.y - 0.5) * 56.0
-  );
-  position.x += aTail * uLength * 0.25;
+  vRing = 0.0;
+  vAge = 0.0;
+  float top = uTarget.y + uTop;
+  // One cycle is long enough to fall from the sky to the lowest ground in view.
+  float period = (uTop + 4.0) / uSpeed;
+  float clock = uTime / period + aSeed.z;
+  float cycle = floor(clock);
+  // Each cycle the drop lands somewhere new round the target, at a time of its own within the cycle.
+  vec2 land = uTarget.xz + (fract(aSeed.xy + cycle * vec2(0.6180339, 0.3819660)) - 0.5) * uArea;
+  vec2 surface = surfaceAt(land);
+  float fall = (top - surface.x) / uSpeed;
+  float since = fract(clock) * period - fall;
+  // The wind carries the drop as it falls: a breeze always, and more under a gust's front.
+  vec2 drift = WIND_HEADING * uWindForce * (1.5 + 4.0 * windField(land, 1.0));
+  if (uSplash > 0.5) {
+    float last = surface.y > 0.5 ? RING : SPLASH;
+    if (since < 0.0 || since > last || (surface.y > 0.5 && aTail > 0.5)) {
+      gl_Position = vec4(2.0, 2.0, 2.0, 1.0);
+      return;
+    }
+    vAge = since / last;
+    vRing = surface.y;
+    // Two droplets thrown up and out from where the drop hit, falling back as they go.
+    float side = (aTail - 0.5) * 2.0 * (0.06 + since * 0.9);
+    float up = surface.y > 0.5 ? 0.0 : since * 2.2 - since * since * 9.0;
+    vec3 at = vec3(land.x + side * WIND_HEADING.y, surface.x + 0.04 + up, land.y - side * WIND_HEADING.x);
+    gl_Position = uViewProjection * vec4(at, 1.0);
+    gl_PointSize = surface.y > 0.5 ? 2.0 + 5.0 * vAge : 1.0;
+    return;
+  }
+  if (since >= 0.0) {
+    gl_Position = vec4(2.0, 2.0, 2.0, 1.0);
+    return;
+  }
+  float left = -since;
+  vec3 velocity = vec3(drift.x, -uSpeed, drift.y);
+  vec3 head = vec3(land.x, surface.x, land.y) - velocity * left;
+  head.x += sin(uTime * 0.8 + aSeed.z * 20.0) * uSway;
+  // A streak trails back along the way it came.
+  vec3 position = head - normalize(velocity) * aTail * uLength;
   gl_Position = uViewProjection * vec4(position, 1.0);
   gl_PointSize = 2.0;
 }`;
@@ -177,10 +252,21 @@ export const WEATHER_FRAGMENT = `#version 300 es
 precision mediump float;
 uniform vec4 uColor;
 in float vTail;
+in float vRing;
+in float vAge;
 out vec4 color;
 void main() {
-  // A drop is brightest at its head and fades along its tail.
-  color = vec4(uColor.rgb, uColor.a * (1.0 - vTail * 0.75));
+  if (vRing > 0.5) {
+    // A ring lying on the water: an ellipse, its inside clear, fading as it spreads.
+    vec2 at = gl_PointCoord - 0.5;
+    at.y *= 2.0;
+    float reach = length(at);
+    if (reach > 0.5 || reach < 0.3) discard;
+    color = vec4(uColor.rgb, uColor.a * (1.0 - vAge));
+    return;
+  }
+  // A drop is brightest at its head and fades along its tail; a splash fades as it falls back.
+  color = vec4(uColor.rgb, min(1.0, uColor.a * (1.0 - vTail * 0.75) * (vAge > 0.0 ? 1.6 : 1.0)) * (1.0 - vAge * 0.6));
 }`;
 
 /** The outline program: the twelve edges of the cell a press would change, drawn over everything. */

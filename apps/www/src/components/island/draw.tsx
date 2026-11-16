@@ -2,15 +2,14 @@ import { Array as Arr, Option } from "effect";
 import { createBodies } from "@/components/island/bodies";
 import {
   activate,
-  PARTICLES,
   programOf,
   seaRing,
   uploadList,
   uploadMap,
   uploadMoving,
   uploadOutline,
-  uploadWeather,
 } from "@/components/island/buffers";
+import { createFall } from "@/components/island/fall";
 import { createFrame } from "@/components/island/frame";
 import { createGale } from "@/components/island/wind";
 import {
@@ -40,7 +39,8 @@ import {
   WEATHER_VERTEX,
 } from "@/lib/island/shaders";
 import { SHORE_FROM, SHORE_SIDE } from "@/lib/island/shore";
-import { type Fall, fallOf, type Light, type Weather } from "@/lib/island/sky";
+import type { Light, Weather } from "@/lib/island/sky";
+import { flashed, flashOf } from "@/lib/island/storm";
 import { TILE } from "@/lib/island/tiles/paint";
 import { CHUNKS, SEA_LEVEL } from "@/lib/island/world";
 
@@ -136,7 +136,7 @@ export function createPainter(canvas: HTMLCanvasElement, season: Season) {
       );
       const uniform = (name: string) =>
         gl.getUniformLocation(chunkProgram, name);
-      const weather = uploadWeather(gl);
+      const fall = createFall(gl, weatherProgram);
       const outline = uploadOutline(gl);
       const herd = uploadMoving(gl, 64);
       const bodies = createBodies(gl);
@@ -144,8 +144,6 @@ export function createPainter(canvas: HTMLCanvasElement, season: Season) {
         gl.getUniformLocation(bodyProgram, name);
       const outlineUniform = (name: string) =>
         gl.getUniformLocation(outlineProgram, name);
-      const weatherUniform = (name: string) =>
-        gl.getUniformLocation(weatherProgram, name);
       const skyUniform = (name: string) =>
         gl.getUniformLocation(skyProgram, name);
       const waterSlot = SLOTS.water;
@@ -247,6 +245,7 @@ export function createPainter(canvas: HTMLCanvasElement, season: Season) {
         gl.uniform1i(uniform("uShore"), 1);
         gl.uniform2f(uniform("uShoreBox"), SHORE_FROM, SHORE_SIDE);
         gale.blow(uniform, time, sky);
+        fall.cover(uniform);
         gl.uniform1f(uniform("uWater"), 0);
         gl.uniform1f(uniform("uAlpha"), 1);
         gl.bindVertexArray(floor.vao);
@@ -276,28 +275,6 @@ export function createPainter(canvas: HTMLCanvasElement, season: Season) {
       };
 
       /** Draws the rain or snow falling around the camera's target. */
-      const drawWeather = (
-        orbit: Orbit,
-        time: number,
-        camera: Float32Array,
-        fall: Fall
-      ) => {
-        activate(gl, weatherProgram);
-        gl.uniformMatrix4fv(weatherUniform("uViewProjection"), false, camera);
-        gl.uniform3fv(weatherUniform("uTarget"), orbit.target);
-        gl.uniform1f(weatherUniform("uTime"), time);
-        gl.uniform1f(weatherUniform("uSpeed"), fall.speed);
-        gl.uniform1f(weatherUniform("uLength"), fall.length);
-        gl.uniform1f(weatherUniform("uSway"), fall.sway);
-        gl.uniform4fv(weatherUniform("uColor"), fall.color);
-        gl.bindVertexArray(weather.vao);
-        gl.drawArrays(
-          fall.flakes ? gl.POINTS : gl.LINES,
-          0,
-          Math.min(PARTICLES, fall.count) * 2
-        );
-      };
-
       /** Outlines the cell a press would change, over everything but the HUD. */
       const drawOutline = (
         camera: Float32Array,
@@ -406,6 +383,10 @@ export function createPainter(canvas: HTMLCanvasElement, season: Season) {
           Option.map(isles, (list) => list.release());
           isles = Option.some(uploadList(gl, mesh));
         },
+        /** Replaces the map of where a falling drop stops on each column (D33). */
+        roof(map: Uint8Array) {
+          fall.roof(map);
+        },
         /** Replaces the map of where land meets the sea, which the water draws its surf from (D28). */
         shore(map: Uint8Array) {
           shore.write(map);
@@ -431,13 +412,17 @@ export function createPainter(canvas: HTMLCanvasElement, season: Season) {
         /** Draws one frame: the sky, every chunk, the water, then the falling weather, enlarged to the canvas. */
         draw(
           orbit: Orbit,
-          light: Light,
+          daylight: Light,
           time: number,
           sky: Weather,
           aim: Option.Option<readonly [number, number, number]>
         ) {
+          // A storm's lightning lights the sky and the shade for an instant (D33).
+          const light =
+            sky === "storm" ? flashed(daylight, flashOf(time)) : daylight;
           target.resize();
           gale.step(time, sky);
+          fall.step(time, sky);
           const snapped = snapOrbit(orbit, target.height);
           gl.bindFramebuffer(gl.FRAMEBUFFER, target.frame);
           gl.viewport(0, 0, target.width, target.height);
@@ -456,9 +441,7 @@ export function createPainter(canvas: HTMLCanvasElement, season: Season) {
           gl.enable(gl.DEPTH_TEST);
           gl.enable(gl.BLEND);
           gl.depthMask(false);
-          Option.map(fallOf(sky), (fall) =>
-            drawWeather(snapped.orbit, time, camera, fall)
-          );
+          fall.draw(snapped.orbit, time, camera, sky, gale);
           Option.map(aim, (cell) => drawOutline(camera, cell));
           gl.depthMask(true);
           gl.bindVertexArray(null);
@@ -474,7 +457,7 @@ export function createPainter(canvas: HTMLCanvasElement, season: Season) {
           shore.release();
           gale.release();
           Option.map(isles, (list) => list.release());
-          weather.release();
+          fall.release();
           target.release();
           outline.release();
           herd.release();

@@ -4,6 +4,11 @@ import { useRequired } from "@repo/design-system/hooks/required";
 import { Array as Arr, Option } from "effect";
 import { type GameStoreApi, GameStoreContext } from "@/components/island/store";
 import { fallOf } from "@/lib/island/sky";
+import { thundersBetween } from "@/lib/island/storm";
+
+/** How often the storm's next thunders are looked up, and how far ahead they are scheduled, in seconds. */
+const THUNDER_LOOK = 1;
+const THUNDER_AHEAD = 2;
 
 /** How loud the sea and the rain are under the cues. */
 const AMBIENCE = { rain: 0.05, sea: 0.035 } as const;
@@ -44,7 +49,8 @@ function bed(
 /**
  * The island's sound (ADR 0047, D8), synthesized in Web Audio with no file: a
  * wooden knock when a block is placed, a gritty crunch when one is dug, the sea
- * rolling under everything, and rain when it rains. It starts at the learner's
+ * rolling under everything, rain when it rains, and thunder after a storm's
+ * lightning, late by the distance it crossed. It starts at the learner's
  * first press, as browsers ask, and follows the game's switch.
  */
 function startSound(store: GameStoreApi) {
@@ -106,6 +112,46 @@ function startSound(store: GameStoreApi) {
     });
   };
 
+  /**
+   * A roll of thunder at an audio time: deep noise that swells, rolls a
+   * second time and dies away, higher and louder after a near strike.
+   */
+  const thunder = (
+    at: number,
+    roll: ReturnType<typeof thundersBetween>[number]
+  ) => {
+    const source = audio.createBufferSource();
+    source.buffer = noise;
+    source.loop = true;
+    const filter = audio.createBiquadFilter();
+    filter.type = "lowpass";
+    filter.frequency.setValueAtTime(roll.pitch, at);
+    filter.frequency.exponentialRampToValueAtTime(80, at + roll.length);
+    const gain = audio.createGain();
+    gain.gain.setValueAtTime(0.0001, at);
+    gain.gain.exponentialRampToValueAtTime(roll.loud, at + 0.12);
+    gain.gain.exponentialRampToValueAtTime(roll.loud * 0.4, at + 0.7);
+    gain.gain.exponentialRampToValueAtTime(roll.loud * 0.65, at + 1.2);
+    gain.gain.exponentialRampToValueAtTime(0.0001, at + roll.length);
+    source.connect(filter).connect(gain).connect(master);
+    source.start(at, (roll.at * 7) % 2);
+    source.stop(at + roll.length + 0.1);
+  };
+
+  // The thunders come from the same strikes the painter flashes, on the same clock (D33).
+  let heardUntil = performance.now() / 1000;
+  const listen = () => {
+    const now = performance.now() / 1000;
+    const until = now + THUNDER_AHEAD;
+    if (store.getState().weather === "storm") {
+      Arr.forEach(thundersBetween(heardUntil, until), (roll) =>
+        thunder(audio.currentTime + Math.max(0, roll.at - now), roll)
+      );
+    }
+    heardUntil = until;
+  };
+  const listening = window.setInterval(listen, THUNDER_LOOK * 1000);
+
   settle();
   const unsubscribe = store.subscribe((state, previous) => {
     if (state.muted !== previous.muted || state.weather !== previous.weather) {
@@ -119,6 +165,7 @@ function startSound(store: GameStoreApi) {
   });
   return () => {
     unsubscribe();
+    window.clearInterval(listening);
     audio.close();
   };
 }
