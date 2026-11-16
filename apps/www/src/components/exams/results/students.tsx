@@ -12,7 +12,7 @@ import type { StudentRow as StudentRowSchema } from "@repo/backend/confect/exams
 import { AttemptState } from "@repo/backend/confect/exams/sittings/schema";
 import { Button } from "@repo/design-system/components/ui/button";
 import { DropdownMenuItem } from "@repo/design-system/components/ui/dropdown-menu";
-import { Array as Arr, DateTime, Option, Schema } from "effect";
+import { Array as Arr, Option, Schema } from "effect";
 import { useFormatter, useTranslations } from "use-intl";
 import {
   useResultsPaper,
@@ -230,11 +230,7 @@ function useStudentColumns() {
         return at === null ? (
           <NotYet />
         ) : (
-          format.dateTime(DateTime.toDateUtc(DateTime.makeUnsafe(at)), {
-            dateStyle: "medium",
-            timeStyle: "short",
-            timeZone,
-          })
+          format.dateTime(at, "dateTime", { timeZone })
         );
       },
       header: t("results-finished"),

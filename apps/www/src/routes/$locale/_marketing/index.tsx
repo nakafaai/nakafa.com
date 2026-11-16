@@ -139,7 +139,6 @@ export const Route = createFileRoute("/$locale/_marketing/")({
 
 /** The marketing home: the sections of the landing page. */
 function HomePage() {
-  const { locale } = Route.useParams();
   const { featuredTryout } = Route.useLoaderData();
 
   return (
@@ -148,7 +147,7 @@ function HomePage() {
       <div className="relative grid grid-cols-1">
         <Hero />
         <LaterSection code={homeSections.lesson}>
-          {(Lesson) => <Lesson locale={locale} />}
+          {(Lesson) => <Lesson />}
         </LaterSection>
         {featuredTryout.kind === "question" ? (
           <LaterSection code={homeSections.tryout}>

@@ -12,16 +12,9 @@ import {
 } from "@repo/backend/confect/pdf/parts";
 import type { ReportInput } from "@repo/backend/confect/pdf/report/contract";
 import { REPORT_COPY } from "@repo/backend/confect/pdf/report/copy";
+import { formatterOf } from "@repo/internationalization/src/formats";
 import { Array as Arr, DateTime } from "effect";
 import type {} from "takumi-pdf/primitives";
-
-/** A grade as each language writes it, with up to two decimals: `67.5`, `67,5`. */
-const GRADES = {
-  de: new Intl.NumberFormat("de", { maximumFractionDigits: 2 }),
-  en: new Intl.NumberFormat("en", { maximumFractionDigits: 2 }),
-  id: new Intl.NumberFormat("id", { maximumFractionDigits: 2 }),
-  ms: new Intl.NumberFormat("ms", { maximumFractionDigits: 2 }),
-} satisfies Record<keyof typeof REPORT_COPY, Intl.NumberFormat>;
 
 /**
  * The body of one report card (ADR 0033, S5): the student, the class group, the
@@ -35,7 +28,7 @@ export function ReportDocument({
   report: typeof ReportInput.Type;
 }) {
   const copy = REPORT_COPY[report.locale];
-  const grade = GRADES[report.locale];
+  const formatter = formatterOf(report.locale);
 
   return (
     <Sheet>
@@ -60,7 +53,7 @@ export function ReportDocument({
         {Arr.map(report.subjects, (subject) => (
           <TableRow key={subject.className}>
             <TextCell>{subject.className}</TextCell>
-            <NumberCell>{grade.format(subject.value)}</NumberCell>
+            <NumberCell>{formatter.number(subject.value, "grade")}</NumberCell>
             <WordCell>
               {subject.band ??
                 (subject.kktp === "reached"

@@ -14,10 +14,10 @@ import {
   CardHeader,
 } from "@repo/design-system/components/ui/card";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { formatBytes } from "@repo/internationalization/src/formats";
 import { useLocale, useTranslations } from "use-intl";
 import { SchoolAmount } from "@/components/marketing/school/pricing/price";
 import { MarketingSection } from "@/components/marketing/shared/section";
-import { formatStorage } from "@/lib/pricing/school";
 
 /** The icon of each add-on, none shared. */
 const ADD_ON_ICONS = {
@@ -48,7 +48,7 @@ function SchoolAddOn({ addOn }: { addOn: SchoolAddOnKey }) {
           />
           {item.recurring
             ? t("addon-drive-title", {
-                size: formatStorage(item.storageMegabytes, locale),
+                size: formatBytes(item.storageMegabytes * 1_000_000, locale),
               })
             : t("addon-credits-title", { count: item.credits })}
         </h3>

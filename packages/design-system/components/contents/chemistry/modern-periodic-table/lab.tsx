@@ -140,7 +140,7 @@ export function ModernPeriodicTableLab({
               label={labels.categoryNames[categoryId]}
               value={format.number(
                 getPeriodicElementCategoryCount(categoryId),
-                { useGrouping: false }
+                "plain"
               )}
             />
           ))}

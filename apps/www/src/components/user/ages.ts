@@ -1,7 +1,7 @@
+import { AGE_TICK_MILLISECONDS } from "@repo/internationalization/src/formats";
 import { DateTime } from "effect";
 import { useEffect, useState } from "react";
 import { type StoreApi, useStore } from "zustand";
-import { AGE_TICK_MILLISECONDS } from "@/components/user/age";
 import { type AgeClock, createAgeClock } from "@/components/user/clock";
 
 /**

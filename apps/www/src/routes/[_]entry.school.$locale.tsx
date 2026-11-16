@@ -1,6 +1,7 @@
 import { buttonVariants } from "@repo/design-system/lib/button";
 import { DesignSystemProvider } from "@repo/design-system/providers/system";
 import { textDirection } from "@repo/internationalization/src/direction";
+import { FORMATS } from "@repo/internationalization/src/formats";
 import { localeTimeZone } from "@repo/internationalization/src/locale";
 import { createFileRoute } from "@tanstack/react-router";
 import { Option } from "effect";
@@ -61,6 +62,7 @@ function SchoolEntryPage() {
   const { legal, locale, messages } = Route.useLoaderData();
   return (
     <IntlProvider
+      formats={FORMATS}
       locale={locale}
       messages={messages}
       timeZone={localeTimeZone(locale)}

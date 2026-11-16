@@ -130,7 +130,7 @@ export function MassSpectrometerLab({
   const sample = getSample(shown);
   const number = (value: number, digits: number) =>
     format
-      .number(value, { maximumFractionDigits: digits, useGrouping: false })
+      .number(value, "math", { maximumFractionDigits: digits })
       .replaceAll(",", "{,}");
   const nuclide = (mass: number) => `\\mathrm{^{${mass}}${sample.symbol}}`;
   const isotopes = sample.isotopes;

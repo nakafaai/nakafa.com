@@ -7,10 +7,7 @@ import {
   survivors,
 } from "@repo/design-system/components/contents/chemistry/decay/law";
 import { HandSlider } from "@repo/design-system/components/contents/chemistry/slider";
-import {
-  MATH_NUMBER_OPTIONS,
-  mathNumber,
-} from "@repo/design-system/components/contents/mathematics/number";
+import { mathNumber } from "@repo/design-system/components/contents/mathematics/number";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { CameraControls } from "@repo/design-system/components/three/camera/controls";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene";
@@ -84,12 +81,7 @@ export function RadioactiveDecayLab({
   const [years, setYears] = useState(CARBON_HALF_LIFE);
   const times = useMemo(() => decayTimes(SIDE * SIDE, CARBON_HALF_LIFE), []);
   const number = (value: number, digits: number) =>
-    mathNumber(
-      format.number(value, {
-        ...MATH_NUMBER_OPTIONS,
-        maximumFractionDigits: digits,
-      })
-    );
+    mathNumber(format.number(value, "math", { maximumFractionDigits: digits }));
   const count = SIDE * SIDE;
 
   return (

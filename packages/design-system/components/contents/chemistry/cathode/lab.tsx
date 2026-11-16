@@ -7,10 +7,7 @@ import {
 } from "@repo/design-system/components/contents/chemistry/cathode/beam";
 import { ENVELOPE } from "@repo/design-system/components/contents/chemistry/cathode/envelope";
 import { CathodeTube } from "@repo/design-system/components/contents/chemistry/cathode/tube";
-import {
-  MATH_NUMBER_OPTIONS,
-  mathNumber,
-} from "@repo/design-system/components/contents/mathematics/number";
+import { mathNumber } from "@repo/design-system/components/contents/mathematics/number";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { CameraControls } from "@repo/design-system/components/three/camera/controls";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene";
@@ -65,12 +62,7 @@ export function CathodeRayLab({
   const format = useFormatter();
   const [plate, setPlate] = useState(100);
   const number = (value: number, digits: number) =>
-    mathNumber(
-      format.number(value, {
-        ...MATH_NUMBER_OPTIONS,
-        maximumFractionDigits: digits,
-      })
-    );
+    mathNumber(format.number(value, "math", { maximumFractionDigits: digits }));
 
   return (
     <VisualCard>

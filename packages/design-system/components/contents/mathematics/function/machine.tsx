@@ -1,8 +1,5 @@
 import { ArrowDown02Icon, ArrowRight02Icon } from "@hugeicons/core-free-icons";
-import {
-  MATH_NUMBER_OPTIONS,
-  mathNumber,
-} from "@repo/design-system/components/contents/mathematics/number";
+import { mathNumber } from "@repo/design-system/components/contents/mathematics/number";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { Button as UiButton } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
@@ -42,7 +39,7 @@ export function FunctionMachine({ title, description, inputLabel }: Props) {
   const [input, setInput] = useState<number>(DEFAULT_INPUT);
   const output = 2 * input + 1;
   const formatNumber = (value: number) =>
-    mathNumber(format.number(value, MATH_NUMBER_OPTIONS));
+    mathNumber(format.number(value, "math"));
 
   return (
     <VisualCard>

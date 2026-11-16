@@ -55,7 +55,7 @@ function useOtherSignals() {
           ? Result.failVoid
           : Result.succeed(t(`integrity-${kind}`, { count: row[kind] }))
       ),
-      { type: "conjunction" }
+      "and"
     );
 }
 

@@ -3,7 +3,11 @@ import {
   proYearlyPrices,
 } from "@repo/backend/confect/billing/catalog";
 import { currencyOfCountry } from "@repo/backend/confect/country/registry";
-import { Array as Arr, Function as Fn, Schema } from "effect";
+import {
+  currencySymbol,
+  formatCurrency,
+} from "@repo/internationalization/src/money";
+import { Schema } from "effect";
 
 /** The currencies that the monthly pro price is shown in, as the Polar catalog names them. */
 export const PricingCurrencySchema = Schema.Literals([
@@ -41,54 +45,6 @@ function monthlyPriceOf(
   };
 }
 
-/** Builds the shared formatting contract for one catalog price. */
-function getPriceFormat(price: MonthlyPrice) {
-  return {
-    currency: price.currency,
-    maximumFractionDigits: price.fractionDigits,
-    minimumFractionDigits: price.fractionDigits,
-    style: "currency",
-  } satisfies Intl.NumberFormatOptions;
-}
-
-/** The symbol in letters that opens a price, and any space after it. */
-const LETTER_SYMBOL = /^(?<symbol>\p{L}+)\s*/u;
-
-/**
- * Spaces a formatted price the same in every browser. Each engine ships its own
- * locale data: Node and Chrome put a no-break space after the rupiah's symbol and
- * Safari puts none, so a page prerendered by one and hydrated by the other fails
- * hydration and React renders it again from nothing. A symbol in letters always
- * takes the no-break space (Rp 79.000).
- */
-export function spaceLetterSymbol(text: string) {
-  return text.replace(LETTER_SYMBOL, "$<symbol>\u00a0");
-}
-
-/** The currency symbol of a price, as its locale writes it. */
-function symbolOf(formatter: Intl.NumberFormat) {
-  return Arr.join(
-    Arr.map(
-      Arr.filter(
-        formatter.formatToParts(0),
-        (part) => part.type === "currency"
-      ),
-      (part) => part.value
-    ),
-    ""
-  );
-}
-
-/** Builds the formatter of one price, which loads its locale's data. */
-const buildFormatter = (price: MonthlyPrice) =>
-  new Intl.NumberFormat(price.locale, getPriceFormat(price));
-
-/**
- * The formatter of one price, built at its first read. The root's currency script
- * brings this module to every page, and a page that shows no price pays nothing.
- */
-const formatterOf = Fn.memoize(buildFormatter);
-
 /** The price of one currency with its formatting, as the pages read it. */
 function makePricing<Currency extends PricingCurrency>(
   currency: Currency,
@@ -97,10 +53,14 @@ function makePricing<Currency extends PricingCurrency>(
   return {
     currency,
     format: (amount: number) =>
-      spaceLetterSymbol(formatterOf(price).format(amount)),
+      formatCurrency(amount, {
+        currency,
+        digits: price.fractionDigits,
+        locale: price.locale,
+      }),
     price,
     get symbol() {
-      return symbolOf(formatterOf(price));
+      return currencySymbol(currency, price.locale);
     },
   };
 }

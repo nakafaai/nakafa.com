@@ -2,6 +2,7 @@
 
 import type { PassReminderInput } from "@repo/backend/confect/billing/reminder/internal.spec";
 import { renderPassEndingEmail } from "@repo/email/templates/pass/email";
+import { formatterOf } from "@repo/internationalization/src/formats";
 import { Effect } from "effect";
 
 /**
@@ -24,10 +25,7 @@ export const deliverPassReminderProgram = Effect.fn("billing.reminder.deliver")(
       return null;
     }
     const message = yield* renderPassEndingEmail({
-      endsOn: new Intl.DateTimeFormat(input.locale, {
-        dateStyle: "long",
-        timeZone: "Asia/Jakarta",
-      }).format(input.endsAt),
+      endsOn: formatterOf(input.locale).dateTime(input.endsAt, "billing"),
       extendUrl: input.extendUrl,
       locale: input.locale,
       privacyPolicyUrl: input.privacyPolicyUrl,

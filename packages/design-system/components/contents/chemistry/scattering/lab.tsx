@@ -9,10 +9,7 @@ import {
   GOLD_NUCLEUS,
   pointAlong,
 } from "@repo/design-system/components/contents/chemistry/scattering/coulomb";
-import {
-  MATH_NUMBER_OPTIONS,
-  mathNumber,
-} from "@repo/design-system/components/contents/mathematics/number";
+import { mathNumber } from "@repo/design-system/components/contents/mathematics/number";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { CameraControls } from "@repo/design-system/components/three/camera/controls";
 import { MetalMaterial } from "@repo/design-system/components/three/physical";
@@ -108,12 +105,7 @@ export function RutherfordScatteringLab({
   );
   const approach = closestApproach(energy, GOLD_CHARGE);
   const number = (value: number, digits: number) =>
-    mathNumber(
-      format.number(value, {
-        ...MATH_NUMBER_OPTIONS,
-        maximumFractionDigits: digits,
-      })
-    );
+    mathNumber(format.number(value, "math", { maximumFractionDigits: digits }));
 
   return (
     <VisualCard>

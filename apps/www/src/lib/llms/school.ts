@@ -9,6 +9,10 @@ import {
   schoolPeriodTotal,
   schoolTiers,
 } from "@repo/backend/confect/billing/tiers";
+import {
+  formatBytes,
+  formatterOf,
+} from "@repo/internationalization/src/formats";
 import { loadLocaleMessages } from "@repo/internationalization/src/messages";
 import { Array as Arr, Effect } from "effect";
 import { createTranslator, type Locale } from "use-intl/core";
@@ -20,7 +24,7 @@ import {
   schoolPricingQuestions,
 } from "@/lib/marketing/school";
 import type { PricingCurrencySchema } from "@/lib/pricing/monthly";
-import { formatSchoolPrice, formatStorage } from "@/lib/pricing/school";
+import { formatSchoolPrice } from "@/lib/pricing/school";
 
 /** The School pages that answer with application-owned Markdown. */
 const SCHOOL_LLMS_ROUTES = ["school", "school/pricing"] as const;
@@ -30,10 +34,6 @@ export function isSchoolLlmsRoute(cleanSlug: string) {
   return Arr.contains(SCHOOL_LLMS_ROUTES, cleanSlug);
 }
 
-/** Joins prices as alternatives, in the reader's language. */
-const joinPrices = (locale: Locale, prices: readonly string[]) =>
-  new Intl.ListFormat(locale, { type: "disjunction" }).format(prices);
-
 /** One amount in every currency, rupiah first, as a price list states them. */
 const everyCurrency = (
   locale: Locale,
@@ -41,11 +41,11 @@ const everyCurrency = (
     currency: (typeof PricingCurrencySchema.literals)[number]
   ) => number
 ) =>
-  joinPrices(
-    locale,
+  formatterOf(locale).list(
     Arr.map(["IDR", "MYR", "USD", "EUR"] as const, (currency) =>
       formatSchoolPrice(currency, amountOf(currency))
-    )
+    ),
+    "or"
   );
 
 /** Renders one School page, the landing or its pricing, as agent-readable Markdown. */
@@ -72,7 +72,7 @@ export const getSchoolLlmsText = Effect.fn("www.llms.school.text")(function* (
           `- ${price}`,
           `- ${t("plan-accounts", { count: plan.accounts })}`,
           `- ${t(plan.creditsRenew ? "plan-credits-month" : "plan-credits-once", { count: plan.credits })}`,
-          `- ${t("plan-storage", { size: formatStorage(plan.storageMegabytes, locale) })}`,
+          `- ${t("plan-storage", { size: formatBytes(plan.storageMegabytes * 1_000_000, locale) })}`,
           `- ${t("plan-everything")}`,
         ],
         "\n"
@@ -100,12 +100,12 @@ export const getSchoolLlmsText = Effect.fn("www.llms.school.text")(function* (
     `## ${t("period-label")}`,
     ...periods,
     `## ${t("calculator-title")}`,
-    `${everyCurrency(locale, (currency) => schoolAccount.monthly[currency])} ${t("calculator-unit")}. ${t("calculator-lead", { credits: schoolAccount.credits, size: formatStorage(schoolAccount.storageMegabytes, locale) })}`,
+    `${everyCurrency(locale, (currency) => schoolAccount.monthly[currency])} ${t("calculator-unit")}. ${t("calculator-lead", { credits: schoolAccount.credits, size: formatBytes(schoolAccount.storageMegabytes * 1_000_000, locale) })}`,
     `## ${t("addons-title")}`,
     `- ${t("addon-credits-title", { count: credits.credits })}: ${everyCurrency(locale, (currency) => credits.price[currency])} ${t("addon-once")}. ${t("addon-credits-text", { months: SCHOOL_CREDIT_PACK_MONTHS })}`,
     ...Arr.map(["drive", "driveLarge"] as const, (key) => {
       const addOn = schoolAddOns[key];
-      return `- ${t("addon-drive-title", { size: formatStorage(addOn.storageMegabytes, locale) })}: ${everyCurrency(locale, (currency) => addOn.price[currency])} ${t("plan-month")}. ${t("addon-drive-text")}`;
+      return `- ${t("addon-drive-title", { size: formatBytes(addOn.storageMegabytes * 1_000_000, locale) })}: ${everyCurrency(locale, (currency) => addOn.price[currency])} ${t("plan-month")}. ${t("addon-drive-text")}`;
     }),
     t("tax-note"),
   ];

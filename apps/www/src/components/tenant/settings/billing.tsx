@@ -12,9 +12,10 @@ import { Button } from "@repo/design-system/components/ui/button";
 import { CardContent } from "@repo/design-system/components/ui/card";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Meter } from "@repo/design-system/components/ui/meter";
+import { formatBytes } from "@repo/internationalization/src/formats";
 import { DateTime, Option } from "effect";
 import { useState } from "react";
-import { useLocale, useTranslations } from "use-intl";
+import { useFormatter, useLocale, useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import {
   CardSection,
@@ -26,7 +27,6 @@ import { SchoolInvoicesCard } from "@/components/tenant/settings/invoices";
 import { SchoolOrderDialog } from "@/components/tenant/settings/order";
 import { SchoolSeatsDialog } from "@/components/tenant/settings/seats";
 import { SettingsPage } from "@/components/tenant/settings/section";
-import { formatBillingDate, formatCount } from "@/lib/billing/plan";
 import {
   openInvoice,
   paidPlan,
@@ -70,15 +70,6 @@ function SchoolBillingBody({ slug }: { slug: TenantSlug }) {
   );
 }
 
-/** A whole number of bytes as gigabytes or megabytes in the words of one locale. */
-function formatDrive(bytes: number, locale: string) {
-  return new Intl.NumberFormat(locale, {
-    maximumFractionDigits: 1,
-    style: "unit",
-    unit: bytes >= 1_000_000_000 ? "gigabyte" : "megabyte",
-  }).format(bytes >= 1_000_000_000 ? bytes / 1_000_000_000 : bytes / 1_000_000);
-}
-
 /**
  * The plan of the school: the trial until its last day, Pro or Max over its period, or
  * a contract, with its shared AI credits and Drive. Its one action pays the open
@@ -88,6 +79,7 @@ function formatDrive(bytes: number, locale: string) {
 function SchoolPlanCard({ billing: overview }: { billing: SchoolBilling }) {
   const t = useTranslations("SchoolSettings");
   const locale = useLocale();
+  const format = useFormatter();
   const [isOrdering, setIsOrdering] = useState(false);
   const { plan } = overview;
   const now = DateTime.toEpochMillis(DateTime.nowUnsafe());
@@ -98,12 +90,12 @@ function SchoolPlanCard({ billing: overview }: { billing: SchoolBilling }) {
       description={
         plan.kind === "trial"
           ? t("billing-trial-description", {
-              date: formatBillingDate(plan.endsAt, locale),
+              date: format.dateTime(plan.endsAt, "billing"),
             })
           : t("billing-paid-description", {
-              date: formatBillingDate(
+              date: format.dateTime(
                 (plan.kind === "school" ? plan.validTo : plan.period.end) - 1,
-                locale
+                "billing"
               ),
             })
       }
@@ -115,15 +107,15 @@ function SchoolPlanCard({ billing: overview }: { billing: SchoolBilling }) {
           <dd>
             {plan.kind === "trial"
               ? t("billing-credits-trial", {
-                  total: formatCount(schoolTiers.free.credits, locale),
+                  total: format.number(schoolTiers.free.credits),
                 })
               : t("billing-credits-used", {
-                  total: formatCount(plan.credits.capacity, locale),
-                  used: formatCount(plan.credits.used, locale),
+                  total: format.number(plan.credits.capacity),
+                  used: format.number(plan.credits.used),
                 })}
           </dd>
           <dt className="text-muted-foreground">{t("billing-drive")}</dt>
-          <dd>{formatDrive(overview.driveBytes, locale)}</dd>
+          <dd>{formatBytes(overview.driveBytes, locale)}</dd>
         </dl>
       </CardContent>
       <CardSectionFooter
@@ -136,7 +128,7 @@ function SchoolPlanCard({ billing: overview }: { billing: SchoolBilling }) {
             ),
           onSome: (invoice) =>
             t("billing-open-footer", {
-              date: formatBillingDate(invoice.dueAt, locale),
+              date: format.dateTime(invoice.dueAt, "billing"),
             }),
         })}
       >
@@ -221,7 +213,7 @@ function SchoolPayButton({
  */
 function SchoolAccountsCard({ billing: overview }: { billing: SchoolBilling }) {
   const t = useTranslations("SchoolSettings");
-  const locale = useLocale();
+  const format = useFormatter();
   const [isAdding, setIsAdding] = useState(false);
   const { limit, used } = overview.accounts;
   const running = paidPlan(overview);
@@ -235,8 +227,8 @@ function SchoolAccountsCard({ billing: overview }: { billing: SchoolBilling }) {
       <CardContent className="grid gap-2">
         <p className="text-sm tabular-nums">
           {t("billing-accounts-used", {
-            total: formatCount(limit, locale),
-            used: formatCount(used, locale),
+            total: format.number(limit),
+            used: format.number(used),
           })}
         </p>
         <Meter
@@ -249,7 +241,7 @@ function SchoolAccountsCard({ billing: overview }: { billing: SchoolBilling }) {
           Option.isSome(running)
             ? t("billing-accounts-footer")
             : t("billing-accounts-trial", {
-                limit: formatCount(schoolTiers.free.accounts, locale),
+                limit: format.number(schoolTiers.free.accounts),
               })
         }
       >

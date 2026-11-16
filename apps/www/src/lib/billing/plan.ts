@@ -91,35 +91,6 @@ export function providerNameOf(rail: BillingRail) {
   return PROVIDER_NAMES[rail];
 }
 
-/** The zone of Nakafa's Indonesian billing, in which a payment's day is read. */
-export const BILLING_TIME_ZONE = "Asia/Jakarta";
-
-/**
- * A calendar day in the words of one locale, read in Asia/Jakarta, the zone of
- * Nakafa's Indonesian billing. The server and the browser then write the same
- * day, whatever zone the viewer is in. The credit reset falls on 00:00 UTC, which
- * is 07:00 on the same day in Jakarta.
- */
-export function formatBillingDate(moment: number, locale: string) {
-  return new Intl.DateTimeFormat(locale, {
-    dateStyle: "long",
-    timeZone: BILLING_TIME_ZONE,
-  }).format(moment);
-}
-
-/** A calendar day in the short words of one locale, for a table's narrow column, read as `formatBillingDate` reads it. */
-export function formatBillingDay(moment: number, locale: string) {
-  return new Intl.DateTimeFormat(locale, {
-    dateStyle: "medium",
-    timeZone: BILLING_TIME_ZONE,
-  }).format(moment);
-}
-
-/** A count of credits in the digits of one locale. */
-export function formatCount(count: number, locale: string) {
-  return new Intl.NumberFormat(locale).format(count);
-}
-
 /**
  * An amount in a currency's minor units (rupiah, cents) as the pages write that
  * currency, with the formatter the prices use, so an invoice reads like the price.

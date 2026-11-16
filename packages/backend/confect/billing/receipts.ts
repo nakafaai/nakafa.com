@@ -6,6 +6,8 @@ import type { Docs } from "@repo/backend/confect/_generated/docs";
 import type { BillingCurrency } from "@repo/backend/confect/billing/catalog";
 import { SchoolLineKey } from "@repo/backend/confect/billing/quote";
 import type { InvoiceInput } from "@repo/backend/confect/pdf/invoice/contract";
+import { formatterOf } from "@repo/internationalization/src/formats";
+import { formatCurrency } from "@repo/internationalization/src/money";
 import { Array as Arr, Schema } from "effect";
 
 /** What each kind of payment bought, in the language of the invoice. */
@@ -74,21 +76,17 @@ const MINOR_DIGITS = {
   USD: 2,
 } as const satisfies Record<BillingCurrency, number>;
 
-/** The zone an invoice's date reads in, the one the settings show dates in. */
-const INVOICE_TIME_ZONE = "Asia/Jakarta";
-
 /** An amount in its minor unit, written as the invoice's language writes that currency. */
 const writtenAmount = (
   amount: number,
   currency: BillingCurrency,
   locale: ActiveAppLocaleCode
 ) =>
-  new Intl.NumberFormat(locale, {
+  formatCurrency(amount / 10 ** MINOR_DIGITS[currency], {
     currency,
-    maximumFractionDigits: MINOR_DIGITS[currency],
-    minimumFractionDigits: MINOR_DIGITS[currency],
-    style: "currency",
-  }).format(amount / 10 ** MINOR_DIGITS[currency]);
+    digits: MINOR_DIGITS[currency],
+    locale,
+  });
 
 /**
  * The invoice of one paid payment as its PDF reads it. A payment has no number of
@@ -103,10 +101,7 @@ export function paymentInvoice(
   return {
     buyer: { email: buyer.email, name: buyer.name },
     dueOn: null,
-    issuedOn: new Intl.DateTimeFormat(locale, {
-      dateStyle: "long",
-      timeZone: INVOICE_TIME_ZONE,
-    }).format(payment.paidAt),
+    issuedOn: formatterOf(locale).dateTime(payment.paidAt, "billing"),
     lines: [
       { amount: total, description: PAYMENT_ITEMS[locale][payment.kind] },
     ],
@@ -133,14 +128,14 @@ export function schoolInvoice(
   school: string,
   locale: ActiveAppLocaleCode
 ): typeof InvoiceInput.Type {
-  const date = new Intl.DateTimeFormat(locale, {
-    dateStyle: "long",
-    timeZone: INVOICE_TIME_ZONE,
-  });
+  const formatter = formatterOf(locale);
   return {
     buyer: { email: null, name: school },
-    dueOn: invoice.status === "open" ? date.format(invoice.dueAt) : null,
-    issuedOn: date.format(invoice._creationTime),
+    dueOn:
+      invoice.status === "open"
+        ? formatter.dateTime(invoice.dueAt, "billing")
+        : null,
+    issuedOn: formatter.dateTime(invoice._creationTime, "billing"),
     lines: Arr.map(invoice.lines, (line) => ({
       amount: writtenAmount(line.amount, invoice.currency, locale),
       description: lineDescription(line.description, locale),

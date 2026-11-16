@@ -18,10 +18,7 @@ import {
   ElectrolysisScene,
   type ElectrolysisSceneLabels,
 } from "@repo/design-system/components/contents/chemistry/electrolysis/scene";
-import {
-  MATH_NUMBER_OPTIONS,
-  mathNumber,
-} from "@repo/design-system/components/contents/mathematics/number";
+import { mathNumber } from "@repo/design-system/components/contents/mathematics/number";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { CameraControls } from "@repo/design-system/components/three/camera/controls";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene";
@@ -96,7 +93,7 @@ export function ElectrolysisLab({
   const colors = getElectrolysisColors();
   const format = useFormatter();
   const number = (value: number) =>
-    mathNumber(format.number(value, MATH_NUMBER_OPTIONS));
+    mathNumber(format.number(value, "math"));
   const ions = Arr.dedupe(
     Arr.flatMap(cells, (cell) => ionsOf(cell.electrolyte))
   );
@@ -201,7 +198,7 @@ function Reading({
 }) {
   const format = useFormatter();
   const number = (value: number) =>
-    mathNumber(format.number(value, MATH_NUMBER_OPTIONS));
+    mathNumber(format.number(value, "math"));
   if (electrons === undefined) {
     return <InlineMath math={reaction.equation} />;
   }

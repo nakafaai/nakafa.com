@@ -42,6 +42,7 @@ import {
   readAuthoredTree,
   readOtherModules,
 } from "#scripts/check/files";
+import { inspectFormatSource } from "#scripts/check/formats";
 import { inspectFrameSource } from "#scripts/check/frame";
 import { inspectGatewaySource } from "#scripts/check/gateway";
 import { inspectGroupSource } from "#scripts/check/groups";
@@ -126,6 +127,7 @@ const inspectSources = Effect.fn("RepositoryPolicy.inspectSources")(function* (
         inspectChartSource(file, sourceFile),
         inspectGatewaySource(file, sourceFile),
         inspectToastSource(file, sourceFile),
+        inspectFormatSource(file, sourceFile),
         inspectReactSource(file, sourceFile),
         inspectDrillingSource(file, sourceFile),
         inspectMenuSource(file, sourceFile),

@@ -14,10 +14,7 @@ import {
   shellsAfterLoss,
   shellsTex,
 } from "@repo/design-system/components/contents/chemistry/transfer/ions";
-import {
-  MATH_NUMBER_OPTIONS,
-  mathNumber,
-} from "@repo/design-system/components/contents/mathematics/number";
+import { mathNumber } from "@repo/design-system/components/contents/mathematics/number";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { CameraControls } from "@repo/design-system/components/three/camera/controls";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
@@ -113,8 +110,7 @@ export function IonFormationLab({
   }
 
   const pair = getPair(shown);
-  const number = (value: number) =>
-    mathNumber(format.number(value, MATH_NUMBER_OPTIONS));
+  const number = (value: number) => mathNumber(format.number(value, "math"));
   const metalAfter = shellsAfterLoss(pair.metal.shells, pair.electrons);
   const nonmetalAfter = shellsAfterGain(pair.nonmetal.shells, pair.electrons);
 

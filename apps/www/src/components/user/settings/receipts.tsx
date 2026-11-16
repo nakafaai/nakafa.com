@@ -11,8 +11,9 @@ import {
 } from "@hugeicons/core-free-icons";
 import billingRefs from "@repo/backend/confect/_generated/refs/billing";
 import { DropdownMenuItem } from "@repo/design-system/components/ui/dropdown-menu";
+import { BILLING_TIME_ZONE } from "@repo/internationalization/src/formats";
 import { Array as Arr, Record as Rec } from "effect";
-import { useLocale, useTranslations } from "use-intl";
+import { useFormatter, useLocale, useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { useInvoiceDownload } from "@/components/billing/invoice";
 import { tableColumns } from "@/components/shared/table/columns";
@@ -22,11 +23,7 @@ import { RowItems } from "@/components/shared/table/menu";
 import { TableTitle } from "@/components/shared/table/title";
 import { TableFiltersProvider } from "@/components/shared/table/toolbar";
 import { useBillingNavigation } from "@/lib/billing/checkout";
-import {
-  BILLING_TIME_ZONE,
-  formatBillingDay,
-  formatMinorAmount,
-} from "@/lib/billing/plan";
+import { formatMinorAmount } from "@/lib/billing/plan";
 import { isActiveLocale } from "@/lib/i18n/active";
 
 /** One receipt as the payments query answers it. */
@@ -112,7 +109,7 @@ function PortalAction() {
 /** The receipts, newest first: what each bought, its day, its amount, and its invoice. */
 function ReceiptsTable({ payments }: { payments: readonly Receipt[] }) {
   const t = useTranslations("Auth");
-  const locale = useLocale();
+  const format = useFormatter();
   const kindOf = (payment: Receipt) => t(PAYMENT_KINDS[payment.kind].label);
   const amountOf = (payment: Receipt) =>
     formatMinorAmount(payment.amount, payment.currency);
@@ -137,7 +134,7 @@ function ReceiptsTable({ payments }: { payments: readonly Receipt[] }) {
       options: kinds,
     }),
     receiptColumns.days((payment) => payment.paidAt, {
-      cell: (info) => formatBillingDay(info.getValue(), locale),
+      cell: (info) => format.dateTime(info.getValue(), "billingDay"),
       header: t("payment-date"),
       id: "date",
       timeZone: () => BILLING_TIME_ZONE,
