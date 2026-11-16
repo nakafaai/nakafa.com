@@ -13,7 +13,7 @@
  * plugin and maps `cloudflare:workers` to the build shim for that run.
  */
 import { NodeRuntime } from "@effect/platform-node";
-import { Array as Arr, Effect, Fiber, Schema } from "effect";
+import { Array as Arr, Effect, Fiber, Formatter, Schema } from "effect";
 import { createServer, createServerModuleRunner } from "vite";
 import {
   PagesListed,
@@ -119,13 +119,17 @@ const askedOutDir = Effect.callback<string, StaticRunError>((resume) => {
   });
 });
 
-/** Runs one step of the build module, naming the step when it fails. */
+/**
+ * Runs one step of the build module, naming the step when it fails. The failure
+ * prints with its fields, because a tagged error without a `message` prints its
+ * tag alone, which hid the reason of every failed production page list.
+ */
 const step = <A>(name: string, run: () => Promise<A>) =>
   Effect.tryPromise({
     try: run,
     catch: (cause) =>
       new StaticRunError({
-        message: `The static ${name} failed: ${String(cause)}`,
+        message: `The static ${name} failed: ${Formatter.formatJson(cause)}`,
       }),
   });
 
