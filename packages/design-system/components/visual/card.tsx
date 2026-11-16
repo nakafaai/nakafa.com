@@ -137,7 +137,7 @@ const visualBandVariants = cva(
         // The visual's own controls: a choice made of joined buttons spans the
         // band, its options sharing the width, as the grid-column groups do.
         toolbar:
-          "flex flex-wrap items-center gap-2 py-3 [&>[data-slot=button-group]>*]:flex-1 [&>[data-slot=button-group]]:w-full [&>[data-slot=toggle-group]:not([data-grid-columns]):not([data-orientation=vertical])>*]:flex-1 [&>[data-slot=toggle-group]]:w-full",
+          "flex flex-wrap items-center gap-2 py-3 [&>[data-slot=button-group]]:w-full [&>[data-slot=button-group]>*]:flex-1 [&>[data-slot=toggle-group]]:w-full [&>[data-slot=toggle-group]:not([data-grid-columns]):not([data-orientation=vertical])>*]:flex-1",
         // Text: the card's own spacing above and below.
         text: "flex flex-col gap-3 py-(--card-spacing) text-sm",
       },
