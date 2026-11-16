@@ -35,7 +35,6 @@ const PlacementContext = createContext<{
   readonly page: MaterialNavigationPage;
   readonly placements: readonly MaterialPlacement[];
   readonly store: PlacementStore;
-  readonly title: string;
 } | null>(null);
 
 /**
@@ -52,20 +51,17 @@ export function MaterialPlacementProvider({
   hint,
   page,
   placements,
-  title,
 }: {
   children: ReactNode;
   /** The `ctx` hint of the reader's address. */
   hint: string | undefined;
   page: MaterialNavigationPage;
   placements: readonly MaterialPlacement[];
-  title: string;
 }) {
   const [value] = useState(() => ({
     page,
     placements,
     store: createPlacementStore(),
-    title,
   }));
 
   useLayoutEffect(() => {
@@ -101,12 +97,12 @@ function useMaterialNavigation() {
 
 /**
  * One path of the lesson in its HTML: the place's, walking from the curriculum down
- * to its card, or with no place the lesson's own, which shows until the prepaint script
- * names another.
+ * to its card, or with no place Home alone, which shows until the prepaint script names
+ * another.
  */
 function PlacementPath({ placement }: { placement: MaterialPlacement | null }) {
   const t = useTranslations("Common");
-  const { page, title } = usePlacementContext();
+  const { page } = usePlacementContext();
   const hint = placement === null ? "" : placementHint(placement);
   return (
     <div
@@ -116,7 +112,7 @@ function PlacementPath({ placement }: { placement: MaterialPlacement | null }) {
       <BreadcrumbHeaderPath
         home={HOME_TARGET}
         homeLabel={t("home")}
-        items={readMaterialPath(readMaterialNavigation(page, placement), title)}
+        items={readMaterialPath(readMaterialNavigation(page, placement))}
         unfolds
       />
     </div>

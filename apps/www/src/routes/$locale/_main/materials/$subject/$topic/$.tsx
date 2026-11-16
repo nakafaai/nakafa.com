@@ -255,7 +255,6 @@ function MaterialPage() {
       key={`${route.publicPath}?${ctx ?? ""}`}
       page={page.navigation}
       placements={page.placements}
-      title={metadata.title}
     >
       <ContentViewTracker
         contentId={page.contentId}

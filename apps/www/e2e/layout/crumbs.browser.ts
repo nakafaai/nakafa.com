@@ -9,7 +9,7 @@ const SOME_ADDRESS = /./u;
 // A phone's width folds every ancestor of the path into the breadcrumb's More menu.
 // An article's path has Home, Articles and its category, so it folds, and it ends at
 // the category: the article's title is the heading under it, and a long title in the
-// path would cut it. A lesson's breadcrumb names only the lesson and never folds.
+// path would cut it. A list's path ends at the list itself.
 test.use({ viewport: { height: 844, width: 390 } });
 
 test("every breadcrumb item is a link, the current page included", async ({
@@ -24,7 +24,7 @@ test("every breadcrumb item is a link, the current page included", async ({
     await expect(item).toHaveAttribute("href", SOME_ADDRESS);
   }
 
-  await page.goto(pinnedRoutes.material.en);
+  await page.goto("/en/articles/politics");
   const current = page
     .getByRole("navigation", { name: "breadcrumb" })
     .locator('[aria-current="page"]');

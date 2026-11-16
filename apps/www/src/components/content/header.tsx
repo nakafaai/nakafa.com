@@ -6,22 +6,20 @@ import { PageActions, PageHeader } from "@/components/shared/page/header";
 import { PanelSheetTrigger } from "@/components/sidebar/sheet";
 
 /**
- * Keeps parent navigation and reading controls together above the content. A page
- * whose path names it, such as an article, gives its `title`, which stands as the
- * page's heading for assistive technology, as every breadcrumb header's does.
+ * The header of a reading page: the path to the page's parent and the reading controls. It draws no heading, because
+ * the page's title opens its body (`ContentTitle`), as every reading page's does, so a path ends at the parent and
+ * never names the page.
  */
 export function ContentHeader({
   breadcrumb,
   children,
-  title,
 }: {
   breadcrumb: ReactNode;
   children: ReactNode;
-  title?: string;
 }) {
   const t = useTranslations("Common");
   return (
-    <PageHeader {...(title === undefined ? {} : { title })}>
+    <PageHeader>
       <div className="min-w-0">{breadcrumb}</div>
       <PageActions>
         <ButtonGroup aria-label={t("content-actions")}>{children}</ButtonGroup>

@@ -2,12 +2,16 @@ import { cn } from "cn";
 import type { ReactNode } from "react";
 import { pageRowVariants } from "@/components/shared/page/width";
 
-/** Gives a lesson one left-aligned reading title and what stands under it. */
+/**
+ * Opens every reading page, a lesson or an article, under its header: the page's one visible heading, left-aligned
+ * in the reading column, and what stands under it, such as the byline. The header above holds only the path to the
+ * page's parent and the reading controls, so a reading page names itself here once.
+ */
 export function ContentTitle({
   children,
   title,
 }: {
-  children?: ReactNode;
+  children: ReactNode;
   title: string;
 }) {
   return (
@@ -20,12 +24,4 @@ export function ContentTitle({
       </div>
     </header>
   );
-}
-
-/**
- * What opens an article whose path in its header names it: its byline, in the
- * reading column, over the article's first words.
- */
-export function ContentLead({ children }: { children: ReactNode }) {
-  return <div className={cn(pageRowVariants(), "pt-8 pb-10")}>{children}</div>;
 }
