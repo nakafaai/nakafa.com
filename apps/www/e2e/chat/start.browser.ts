@@ -9,6 +9,7 @@ import {
   openChatPage,
   runOnPage,
   START,
+  viewerKnown,
 } from "@/e2e/support/chat";
 import { PROMPT, pageOpensChat, promptIn, write } from "@/e2e/support/prompt";
 import { BUBBLE } from "@/e2e/support/selector";
@@ -25,46 +26,54 @@ import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
  * The prompt shows at once, Nina types after it and the composer is empty. Then
  * the chat opens, and in no frame from the press until then does a reader see
  * the prompt twice: the surface the prompt leaves and the chat it opens never
- * show it together.
+ * show it together. It sends once the page knows its viewer: a send pressed
+ * earlier waits for the viewer, whose answer the step holds.
  */
 const showsAtOnce = (
   scope: Locator,
   changes: Changes,
   opensChat: () => Promise<void>
 ) =>
-  Effect.promise(async () => {
-    const page = scope.page();
+  Effect.andThen(
+    viewerKnown(changes),
+    Effect.promise(async () => {
+      const page = scope.page();
 
-    await write(scope);
-    await watchCopies(page, BUBBLE, PROMPT);
-    changes.hold();
-    await composerOf(scope).press("Enter");
-    await expect(promptIn(scope)).toBeVisible();
-    await expect(scope.getByText("Loading", { exact: true })).toBeVisible();
-    await expect(composerOf(scope)).toHaveValue("");
-    changes.release();
-    await opensChat();
-    expect(await mostCopies(page)).toBe(1);
-  });
+      await write(scope);
+      await watchCopies(page, BUBBLE, PROMPT);
+      changes.hold();
+      await composerOf(scope).press("Enter");
+      await expect(promptIn(scope)).toBeVisible();
+      await expect(scope.getByText("Loading", { exact: true })).toBeVisible();
+      await expect(composerOf(scope)).toHaveValue("");
+      changes.release();
+      await opensChat();
+      expect(await mostCopies(page)).toBe(1);
+    })
+  );
 
 /**
  * A prompt the server refuses shows at once, like any other. Once the page
  * learns of the refusal the prompt is gone, the words are back in the composer,
- * the learner is told, and nothing opened.
+ * the learner is told, and nothing opened. It sends once the page knows its
+ * viewer, as `showsAtOnce` does.
  */
 const givesBackWhenRefused = (page: Page, scope: Locator, changes: Changes) =>
-  Effect.promise(async () => {
-    await write(scope);
-    changes.hold();
-    changes.failNext(START);
-    await composerOf(scope).press("Enter");
-    await expect(promptIn(scope)).toBeVisible();
-    changes.release();
-    await expect(page.getByText(UNCONFIRMED).first()).toBeVisible();
-    await expect(promptIn(scope)).toHaveCount(0);
-    await expect(composerOf(scope)).toHaveValue(PROMPT);
-    await expect(page).not.toHaveURL(OPENED_CHAT);
-  });
+  Effect.andThen(
+    viewerKnown(changes),
+    Effect.promise(async () => {
+      await write(scope);
+      changes.hold();
+      changes.failNext(START);
+      await composerOf(scope).press("Enter");
+      await expect(promptIn(scope)).toBeVisible();
+      changes.release();
+      await expect(page.getByText(UNCONFIRMED).first()).toBeVisible();
+      await expect(promptIn(scope)).toHaveCount(0);
+      await expect(composerOf(scope)).toHaveValue(PROMPT);
+      await expect(page).not.toHaveURL(OPENED_CHAT);
+    })
+  );
 
 /** Waits until the sheet shows the chat its prompt opened, with the answer that failed. */
 const sheetOpensChat = (page: Page) => async () => {
@@ -144,6 +153,9 @@ const givesBackAfterClosingTheSheet = Effect.fn(
   const { changes } = yield* openChatPage(page, baseURL);
 
   yield* openSheet(page);
+  // A send pressed before the lesson knows its viewer waits for it, and the
+  // sheet closed meanwhile sends nothing, so no answer could refuse it.
+  yield* viewerKnown(changes);
   yield* Effect.promise(async () => {
     const sheet = inTheSheet(page);
     const hiddenComposer = composerOf(

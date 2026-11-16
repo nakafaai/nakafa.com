@@ -34,7 +34,7 @@ import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
  * module cannot be imported here, because it pulls in packages that Node does
  * not resolve outside the bundler.
  */
-const CURRENT_USER = "auth/queries:getCurrentUser";
+export const CURRENT_USER = "auth/queries:getCurrentUser";
 const CURRENT_CHOICE = "consents/current:get";
 const SAVE_CHOICE = "consents/current:set";
 

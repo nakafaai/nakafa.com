@@ -11,6 +11,7 @@ import {
   openChatPage,
   runOnPage,
   START,
+  viewerKnown,
 } from "@/e2e/support/chat";
 import { sidebarRows } from "@/e2e/support/rows";
 import {
@@ -42,6 +43,7 @@ const sendsAndWaits = Effect.fn("NakafaE2E.sendsAndWaits")(function* (
   page: Page,
   changes: Changes
 ) {
+  yield* viewerKnown(changes);
   yield* Effect.promise(async () => {
     const composer = composerOf(onThePage(page));
     await composer.fill(PROMPT);
@@ -82,7 +84,10 @@ test.describe("A new chat admitted after the learner left, at 1440px", () => {
     await runOnPage(page, baseURL, (origin) =>
       Effect.gen(function* () {
         const { changes, learner } = yield* openChatPage(page, origin);
-        yield* learner.startChat(OTHER.prompt);
+        const other = yield* learner.startChat(OTHER.prompt);
+        // The page's own prompt is admitted only once the other chat's answer
+        // has given the learner's credits back.
+        yield* learner.answered(other.chatId);
         yield* learner.titleNewest([OTHER.title]);
         yield* Effect.promise(() =>
           expect(
@@ -123,7 +128,10 @@ test.describe("A new chat admitted after the learner left, at 1440px", () => {
     await runOnPage(page, baseURL, (origin) =>
       Effect.gen(function* () {
         const { changes, learner } = yield* openChatPage(page, origin);
-        yield* learner.startChat(OTHER.prompt);
+        const other = yield* learner.startChat(OTHER.prompt);
+        // The page's own prompt is admitted only once the other chat's answer
+        // has given the learner's credits back.
+        yield* learner.answered(other.chatId);
         yield* learner.titleNewest([OTHER.title]);
         yield* Effect.promise(() =>
           expect(
@@ -153,11 +161,15 @@ test.describe("A new chat admitted after the learner left, at 1440px", () => {
     await runOnPage(page, baseURL, (origin) =>
       Effect.gen(function* () {
         const { changes, learner } = yield* openChatPage(page, origin);
-        yield* learner.startChat(OTHER.prompt);
+        const other = yield* learner.startChat(OTHER.prompt);
+        // The page's own prompt is admitted only once the other chat's answer
+        // has given the learner's credits back.
+        yield* learner.answered(other.chatId);
         yield* learner.titleNewest([OTHER.title]);
 
         yield* openSheet(page);
         const sheet = inTheSheet(page);
+        yield* viewerKnown(changes);
         yield* Effect.promise(async () => {
           const composer = composerOf(sheet);
           await composer.fill(PROMPT);
@@ -199,11 +211,15 @@ test.describe("A new chat admitted after the learner left, at 1440px", () => {
     await runOnPage(page, baseURL, (origin) =>
       Effect.gen(function* () {
         const { changes, learner } = yield* openChatPage(page, origin);
-        yield* learner.startChat(OTHER.prompt);
+        const other = yield* learner.startChat(OTHER.prompt);
+        // The page's own prompt is admitted only once the other chat's answer
+        // has given the learner's credits back.
+        yield* learner.answered(other.chatId);
         yield* learner.titleNewest([OTHER.title]);
 
         yield* openSheet(page);
         const sheet = inTheSheet(page);
+        yield* viewerKnown(changes);
         yield* Effect.promise(async () => {
           const composer = composerOf(sheet);
           await composer.fill(PROMPT);
@@ -252,7 +268,10 @@ test.describe("A follow-up admitted in a chat, which does not hold the next clic
       Effect.gen(function* () {
         const { changes, learner } = yield* openChatPage(page, origin);
         yield* learner.startChat(OTHER.prompt);
-        yield* learner.startChat(FIRST.prompt);
+        const firstChat = yield* learner.startChat(FIRST.prompt);
+        // The follow-up is admitted only once the first chat's answer has given
+        // the learner's credits back.
+        yield* learner.answered(firstChat.chatId);
         yield* learner.titleNewest([FIRST.title, OTHER.title]);
         yield* Effect.promise(() =>
           expect(
@@ -265,6 +284,15 @@ test.describe("A follow-up admitted in a chat, which does not hold the next clic
           await expect(page).toHaveURL(OPENED_CHAT, {
             timeout: readinessTimeoutMilliseconds,
           });
+          // The address changes as the navigation starts, while the new chat page
+          // still draws its own composer until the chat has loaded. The step holds
+          // the server's answers next, so it waits for the chat's own page first.
+          await expect(
+            onThePage(page).getByRole("heading", {
+              level: 1,
+              name: FIRST.title,
+            })
+          ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
           await expect(
             onThePage(page).getByRole("button", { name: "Send message" })
           ).toBeEnabled({ timeout: readinessTimeoutMilliseconds });
