@@ -9,6 +9,7 @@ import {
 import { tryoutRouteKeyValidator } from "@repo/backend/confect/tryouts/route";
 import {
   setFilterValidator,
+  setLevelFilterValidator,
   setSortValidator,
 } from "@repo/backend/confect/tryouts/sets/query";
 import { tryoutStatusValidator } from "@repo/backend/confect/tryouts/status";
@@ -23,6 +24,7 @@ const trackIdentityValidator = Schema.Struct({
 export const listArgsValidator = Schema.Struct({
   ...trackIdentityValidator.fields,
   filter: setFilterValidator,
+  level: setLevelFilterValidator,
   paginationOpts: PaginationOptionsSchema,
   sort: setSortValidator,
 });

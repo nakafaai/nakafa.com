@@ -124,7 +124,12 @@ describe("readTryoutSetRoute", () => {
         );
         expect(mocks.readTryoutTrackSetList).toHaveBeenCalledExactlyOnceWith({
           locale: "en",
-          search: { direction: "asc", sort: "order", status: "all" },
+          search: {
+            direction: "asc",
+            level: "all",
+            sort: "order",
+            status: "all",
+          },
           track: { countryKey: "indonesia", examKey: "snbt", trackKey: "utbk" },
         });
       })

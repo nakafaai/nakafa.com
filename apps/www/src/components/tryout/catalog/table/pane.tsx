@@ -11,6 +11,7 @@ import {
 } from "@/components/shared/page/pane";
 import { usePanes } from "@/components/shared/page/panes";
 import type { TryoutSetRow } from "@/components/tryout/catalog/table/types";
+import { TryoutLevelBadge } from "@/components/tryout/level";
 import {
   TryoutPressProvider,
   TryoutStartProvider,
@@ -24,9 +25,9 @@ import { isActiveLocale } from "@/lib/i18n/active";
 
 /**
  * The open set of a track, beside its table: a press on the row of a set the learner has not started opens it
- * here (the owner's sketch "pane baru kebuka", for a set not yet started). Its header names the set over what it
- * says of itself, its body shows the set's facts in their card and its parts in the set page's own list, and its
- * footer starts
+ * here (the owner's sketch "pane baru kebuka", for a set not yet started). Its header names the set over what it says of
+ * itself, its body shows the set's facts in their card and its parts in the set page's own list, and its
+ * footer shows its level and starts
  * it through the start's dialog, which asks Latihan or Simulasi. A set the learner has started opens its own page
  * instead, so its row never opens this pane.
  */
@@ -76,6 +77,10 @@ function TryoutSetDetail({ row }: { row: TryoutSetRow }) {
         </div>
       </PaneBody>
       <PaneFooter>
+        {/* The set's measured level, at the footer's start: a badge never sits in a title (owner, 15 Nov 2026). */}
+        <span className="me-auto">
+          <TryoutLevelBadge level={row.level} />
+        </span>
         {/* A learner's Start reads the try-out clock, as the set page's does, so the pane gives it one. */}
         <ClockProvider>
           <TryoutPressProvider>

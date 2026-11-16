@@ -15546,6 +15546,7 @@ export declare const api: {
                   countryKey: string;
                   description?: string;
                   examKey: string;
+                  level: "easy" | "medium" | "hard" | "cooked";
                   publicPath: string;
                   questionCount: number;
                   scoringStrategy: "irt" | "raw" | "penalized" | "composite";
@@ -15737,6 +15738,7 @@ export declare const api: {
                   countryKey: string;
                   description?: string;
                   examKey: string;
+                  level: "easy" | "medium" | "hard" | "cooked";
                   publicPath: string;
                   questionCount: number;
                   scoringStrategy: "irt" | "raw" | "penalized" | "composite";
@@ -15914,6 +15916,7 @@ export declare const api: {
                   countryKey: string;
                   description?: string;
                   examKey: string;
+                  level: "easy" | "medium" | "hard" | "cooked";
                   publicPath: string;
                   questionCount: number;
                   scoringStrategy: "irt" | "raw" | "penalized" | "composite";
@@ -16127,6 +16130,7 @@ export declare const api: {
               countryKey: string;
               description?: string;
               examKey: string;
+              level: "easy" | "medium" | "hard" | "cooked";
               publicPath: string;
               questionCount: number;
               scoringStrategy: "irt" | "raw" | "penalized" | "composite";
@@ -16187,6 +16191,7 @@ export declare const api: {
               countryKey: string;
               description?: string;
               examKey: string;
+              level: "easy" | "medium" | "hard" | "cooked";
               publicPath: string;
               questionCount: number;
               scoringStrategy: "irt" | "raw" | "penalized" | "composite";
@@ -16520,6 +16525,7 @@ export declare const api: {
             examKey: string;
             filter:
               "all" | "not-started" | "in-progress" | "completed" | "expired";
+            level: "all" | "easy" | "medium" | "hard" | "cooked";
             locale: "en" | "id" | "de" | "ms";
             paginationOpts: {
               cursor: string | null;
@@ -16533,6 +16539,7 @@ export declare const api: {
               direction: "asc" | "desc";
               field:
                 | "order"
+                | "level"
                 | "publishedScore"
                 | "questionCount"
                 | "durationSeconds"
@@ -16558,6 +16565,7 @@ export declare const api: {
                 visibility: "internal-entry" | "visible";
               };
               examKey: string;
+              level: "easy" | "medium" | "hard" | "cooked";
               publicPath: string;
               publishedScore: number | null;
               questionCount: number;

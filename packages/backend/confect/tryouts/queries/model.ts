@@ -1,6 +1,7 @@
 import {
   GroupAxisSchema,
   SectionVisibilitySchema,
+  SetLevelSchema,
 } from "@nakafa/aksara-contracts/assessment/catalog";
 import { ContentLanguageSchema } from "@nakafa/aksara-contracts/locale";
 import { tryoutRouteKeyValidator } from "@repo/backend/confect/tryouts/route";
@@ -39,6 +40,8 @@ export const publicTryoutSetValidator = Schema.Struct({
   countryKey: tryoutRouteKeyValidator,
   description: Schema.optionalKey(Schema.String),
   examKey: tryoutRouteKeyValidator,
+  /** How hard the set is, measured from its panel rating; even `easy` stands at the real exam's bar. */
+  level: SetLevelSchema,
   publicPath: Schema.String,
   questionCount: Schema.Finite,
   scoringStrategy: tryoutScoringStrategyValidator,

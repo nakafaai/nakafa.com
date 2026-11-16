@@ -14,18 +14,25 @@ describe("catalog URL selection", () => {
     expect(
       decodeQuery({
         direction: "desc",
-        sort: "durationSeconds",
+        level: "cooked",
+        sort: "level",
         status: "expired",
       })
     ).toEqual({
       direction: "desc",
-      sort: "durationSeconds",
+      level: "cooked",
+      sort: "level",
       status: "expired",
     });
   });
 
   it("uses the authored order, every set and ascending for an absent URL", () => {
-    const defaults = { direction: "asc", sort: "order", status: "all" };
+    const defaults = {
+      direction: "asc",
+      level: "all",
+      sort: "order",
+      status: "all",
+    };
     expect(decodeQuery({})).toEqual(defaults);
     expect(CATALOG_QUERY_DEFAULTS).toEqual(defaults);
   });
@@ -34,14 +41,20 @@ describe("catalog URL selection", () => {
     expect(
       decodeQuery({
         direction: "unknown",
+        level: "trivial",
         sort: ["title", "order"],
         status: "unknown",
       })
-    ).toEqual({ direction: "asc", sort: "order", status: "all" });
+    ).toEqual({ direction: "asc", level: "all", sort: "order", status: "all" });
     expect(
-      decodeQuery({ sort: "publishedScore", status: "not-started" })
+      decodeQuery({
+        level: "hard",
+        sort: "publishedScore",
+        status: "not-started",
+      })
     ).toEqual({
       direction: "asc",
+      level: "hard",
       sort: "publishedScore",
       status: "not-started",
     });
@@ -50,6 +63,7 @@ describe("catalog URL selection", () => {
   it("reads a value that TanStack parsed from JSON as its default", () => {
     expect(decodeQuery({ direction: 1, sort: null, status: false })).toEqual({
       direction: "asc",
+      level: "all",
       sort: "order",
       status: "all",
     });
@@ -60,12 +74,14 @@ describe("catalog loader dependency", () => {
   it("keys the loader by one JSON whatever order the address lists its keys", () => {
     const canonical = catalogLoaderDeps({
       direction: "asc",
+      level: "all",
       sort: "order",
       status: "all",
     });
     const spelledOut = catalogLoaderDeps({
       status: "all",
       sort: "order",
+      level: "all",
       direction: "asc",
     });
     expect(encodeJsonText(spelledOut)).toBe(encodeJsonText(canonical));

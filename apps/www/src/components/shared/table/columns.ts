@@ -7,6 +7,7 @@ import type {
   ColumnHelper,
   RowData,
 } from "@tanstack/react-table";
+import { Schema } from "effect";
 import type { ComponentProps } from "react";
 import { withinDays } from "@/components/shared/table/days";
 import type { dataTableFeatures } from "@/components/shared/table/features";
@@ -29,8 +30,25 @@ export type HeadFilter =
   | { readonly kind: "days" }
   | { readonly kind: "number" }
   | { readonly kind: "text" }
-  | { readonly kind: "choice"; readonly options: readonly ColumnOption[] }
+  | {
+      readonly kind: "choice";
+      readonly options: readonly ColumnOption[];
+      readonly sort?: ColumnSortWords;
+    }
   | { readonly kind: "values"; readonly options: readonly ColumnOption[] };
+
+/**
+ * How a column of known values names the two ways its server sorts the rows, by the order of its values: the first
+ * value first, such as "Easiest", and the last value first, such as "Hardest".
+ */
+export const ColumnSortWords = Schema.Struct({
+  asc: Schema.String,
+  desc: Schema.String,
+});
+export type ColumnSortWords = typeof ColumnSortWords.Type;
+
+/** What a column of one value adds when the server also sorts by the order of its values. */
+const ChoiceSort = Schema.Struct({ sort: Schema.optionalKey(ColumnSortWords) });
 
 /** What every column of data declares: its ID, its name in the head, how its cell draws, and where it stands. */
 interface ColumnSpec<TData extends RowData, TValue extends CellData> {
@@ -97,13 +115,24 @@ function dataColumn<TData extends RowData, TValue extends CellData>(
  * known values by those values. The rows sort by a column of text, numbers or moments.
  */
 export const tableColumns = <TData extends RowData>() => ({
-  /** A column of one value out of `options`, of a list the server filters by one value at a time. */
+  /**
+   * A column of one value out of `options`, of a list the server filters by one value at a time. With `sort` the server
+   * also sorts the rows by the order of the values, and the head's menu offers both ways under those words.
+   */
   choice: <TValue extends string>(
     read: AccessorFn<TData, TValue>,
-    { options, ...column }: ValuesSpec<TData, TValue>
+    {
+      options,
+      sort,
+      ...column
+    }: ValuesSpec<TData, TValue> & typeof ChoiceSort.Type
   ): TableColumn<TData> => ({
-    ...dataColumn(read, column, { kind: "choice", options }),
-    enableSorting: false,
+    ...dataColumn(read, column, {
+      kind: "choice",
+      options,
+      ...(sort === undefined ? {} : { sort }),
+    }),
+    enableSorting: sort !== undefined,
     filterFn: "oneOf",
   }),
   /** A column of moments, a row without one reading as nothing. */

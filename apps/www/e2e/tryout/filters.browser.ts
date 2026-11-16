@@ -10,6 +10,7 @@ import { waitUntilTakenOver } from "@/e2e/support/window";
 const TRACK_PATH = "/en/try-out/indonesia/snbt/2027/utbk";
 const HEADS = {
   duration: en.Tryouts["set-column-duration"],
+  level: en.Tryouts["set-column-level"],
   name: en.Tryouts["set-column-name"],
   questions: en.Tryouts["set-column-questions"],
   score: en.Tryouts["set-column-score"],
@@ -42,6 +43,12 @@ test("every head of a try-out table filters its column, and no menu shows a raw 
         expect(await table.getByRole("columnheader").count()).toBe(
           Arr.length(Rec.values(HEADS)) + 1
         );
+        // A head that filters known values is named for its filter, so each head is found by the words it shows.
+        for (const head of Rec.values(HEADS)) {
+          await expect(
+            table.getByRole("columnheader").filter({ hasText: head })
+          ).toHaveCount(1);
+        }
         const total = await rows.count();
 
         await table

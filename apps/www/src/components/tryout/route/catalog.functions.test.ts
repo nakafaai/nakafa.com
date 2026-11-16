@@ -56,6 +56,7 @@ const countryPage = { country: { countryKey: "id" }, exams: [] };
 const hub = { countries: [], sourceRevision: undefined };
 const search = {
   direction: "asc",
+  level: "all",
   sort: "title",
   status: "all",
 } satisfies CatalogQuery;
@@ -110,7 +111,12 @@ describe("try-out catalog server functions", () => {
           exam: "snbt",
           group: "2027",
           locale: "en",
-          search: { direction: "asc", sort: "order", status: "all" },
+          search: {
+            direction: "asc",
+            level: "all",
+            sort: "order",
+            status: "all",
+          },
           track: "utbk",
         },
       })
@@ -135,6 +141,7 @@ describe("try-out catalog server functions", () => {
       countryKey: "id",
       examKey: "snbt",
       filter: "all",
+      level: "all",
       locale: "en",
       sort: { direction: "asc", field: "title" },
       trackKey: "2027",

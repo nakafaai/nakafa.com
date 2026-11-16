@@ -75,6 +75,7 @@ export function toPublicPublishedSet(
     countryKey: set.countryKey,
     ...descriptionOf(set),
     examKey: set.examKey,
+    level: set.level,
     publicPath: set.publicPath,
     questionCount: facts.questionCount,
     scoringStrategy: facts.scoringStrategy,

@@ -197,6 +197,7 @@ describe("immutable try-out application catalog", () => {
           trackKey: "matematika-wajib",
           locale: "id",
           filter: "completed",
+          level: "all",
           sort: {
             field: "durationSeconds",
             direction: "desc",
