@@ -35,7 +35,7 @@ import {
   type HeadAlign,
   HeadMenuContext,
   headWidth,
-  phoneColumn,
+  narrowColumn,
 } from "@/components/shared/table/align";
 import { boundOf } from "@/components/shared/table/filter";
 import { useTableFilters } from "@/components/shared/table/toolbar";
@@ -71,7 +71,7 @@ export function ColumnHeads({ children }: { children: ReactNode }) {
 export function ColumnHead({
   children,
   menu = "center",
-  phone,
+  narrow,
   place,
   sorted,
   width,
@@ -79,8 +79,8 @@ export function ColumnHead({
   children?: ReactNode;
   /** Where the head's menu opens under it. */
   menu?: typeof HeadAlign.Type;
-  /** How the column stands on a phone (`phoneColumn`). */
-  phone?: VariantProps<typeof phoneColumn>["phone"];
+  /** How the column stands in a narrow table (`narrowColumn`). */
+  narrow?: VariantProps<typeof narrowColumn>["narrow"];
   place: VariantProps<typeof columnAlign>["align"];
   /** How the column sorts the rows, for a head that sorts them. */
   sorted?: keyof typeof sortNames | undefined;
@@ -93,7 +93,7 @@ export function ColumnHead({
       className={cn(
         columnAlign({ align: place }),
         headWidth({ width }),
-        phoneColumn({ phone })
+        narrowColumn({ narrow })
       )}
       scope="col"
     >

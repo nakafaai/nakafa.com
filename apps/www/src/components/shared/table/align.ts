@@ -79,15 +79,18 @@ export const headWidth = cva("", {
 });
 
 /**
- * How a column stands on a phone, for a table whose rows must read whole there without scrolling sideways: a column
- * that `fit`s shrinks to what it holds below the small breakpoint, and a `hidden` one steps aside until it. A column
- * that names neither keeps its width at every size.
+ * How a column stands in a narrow table, for a table whose rows must read whole without scrolling sideways. The
+ * table's own box is measured (`tableBoxVariants` names it as a container), never the window: a card beside an open
+ * pane or the sidebar is narrow on a wide screen too. A column that `fit`s gives up its floor and shrinks to what it
+ * holds while the box is under 56rem, which every column of a five-column list still fits; a `hidden` one steps
+ * aside while the box is under 42rem, where only the name, the status and the menu fit. A column that names neither
+ * keeps its width at every size.
  */
-export const phoneColumn = cva("", {
+export const narrowColumn = cva("", {
   variants: {
-    phone: {
-      fit: "max-sm:w-auto max-sm:min-w-0",
-      hidden: "max-sm:hidden",
+    narrow: {
+      fit: "@max-4xl/table:w-auto @max-4xl/table:min-w-0",
+      hidden: "@max-2xl/table:hidden",
     },
   },
 });

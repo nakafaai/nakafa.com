@@ -10,13 +10,14 @@ export const tableCardVariants = cva(
 );
 
 /**
- * The box of a data table, whose cells keep their words on one line. It fills the card, except over a list's empty
+ * The box of a data table, whose cells keep their words on one line, and the container its columns measure to
+ * stand aside or shrink in a narrow table (`narrowColumn`). It fills the card, except over a list's empty
  * state, which fills the card under the column heads instead. Only rows close a table, so a table with none draws no
  * line: left in place it would move from the card's bottom edge as the rows read, to the heads for an empty list and
  * past the screen for a long one.
  */
 export const tableBoxVariants = cva(
-  "[&_[data-slot=table-cell]]:whitespace-nowrap",
+  "@container/table [&_[data-slot=table-cell]]:whitespace-nowrap",
   {
     variants: {
       closes: { false: "after:hidden", true: "" },

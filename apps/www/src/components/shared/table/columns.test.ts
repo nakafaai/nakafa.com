@@ -127,14 +127,14 @@ describe("the columns of a table", () => {
     ).toMatchObject({ meta: { wide: true } });
   });
 
-  it("keeps how a column stands on a phone in the column's meta", () => {
+  it("keeps how a column stands in a narrow table in the column's meta", () => {
     expect(
       columns.number((row) => row.score, {
         header: "Score",
         id: "score",
-        phone: "hidden",
+        narrow: "hidden",
       })
-    ).toMatchObject({ meta: { phone: "hidden" } });
+    ).toMatchObject({ meta: { narrow: "hidden" } });
   });
 
   it("leaves the row's menu the one column with nothing to filter by", () => {
