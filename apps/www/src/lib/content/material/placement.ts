@@ -88,7 +88,7 @@ export function readPlacementTrails(
   });
 }
 
-/** What a lesson teaches in each curriculum: the curriculum, its unit, and the unit's address. */
+/** What a lesson teaches in each curriculum: the curriculum, its unit, the unit's address, and the level when the curriculum names one. */
 export function readPlacementAlignments(
   locale: Locale,
   placements: readonly MaterialPlacement[]
@@ -101,8 +101,21 @@ export function readPlacementAlignments(
           framework: program.label,
           path: `/${locale}/${parent.publicPath}#${hash}`,
           target: label,
+          ...readTrailLevel(trail),
         },
       ],
     })
   );
+}
+
+/**
+ * The level of a curriculum trail, such as Kelas 12 or Upper Secondary: the place
+ * between the curriculum and its subject, which only a trail of three places or
+ * more names. A shorter trail goes from the curriculum straight to its subject.
+ */
+function readTrailLevel(trail: MaterialPlacement["trail"]) {
+  const [, level, ...below] = trail;
+  return level === undefined || below.length === 0
+    ? {}
+    : { level: level.label };
 }

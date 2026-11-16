@@ -103,6 +103,37 @@ describe("lesson places in search", () => {
       },
     ]);
   });
+
+  it("names the level between a curriculum and its subject, when the trail has one", () => {
+    const leveled: MaterialPlacement = {
+      ...placeIn("merdeka"),
+      trail: [
+        {
+          label: "Curriculum merdeka",
+          publicPath: PublicPathSchema.make("curriculum/merdeka"),
+        },
+        {
+          label: "Class 11",
+          publicPath: PublicPathSchema.make("curriculum/merdeka/class-11"),
+        },
+        {
+          label: "Mathematics",
+          publicPath: PublicPathSchema.make(
+            "curriculum/merdeka/class-11/mathematics"
+          ),
+        },
+      ],
+    };
+
+    expect(readPlacementAlignments("en", [leveled])).toStrictEqual([
+      {
+        framework: "Curriculum merdeka",
+        level: "Class 11",
+        path: "/en/curriculum/merdeka/class-11/mathematics#functions",
+        target: "Functions",
+      },
+    ]);
+  });
 });
 
 describe("lesson placement", () => {

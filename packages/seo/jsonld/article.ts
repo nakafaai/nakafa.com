@@ -4,7 +4,7 @@ import { ActiveAppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
 import { COMPANY_IDENTITY } from "@repo/seo/company";
 import { ORGANIZATION_ID } from "@repo/seo/jsonld/constants";
 import { CONTENT_LICENSE_URL } from "@repo/seo/license";
-import { Array as Arr, DateTime, Option, Schema } from "effect";
+import { Array as Arr, DateTime, Option, Result, Schema } from "effect";
 
 const SCHEMA_ORG = "https://schema.org";
 
@@ -160,6 +160,8 @@ const LessonAlignmentSchema = Schema.Struct({
   path: Schema.String,
   /** The unit of the curriculum that holds the lesson. */
   target: Schema.String,
+  /** The level of the curriculum that holds the unit, such as Kelas 12, when the curriculum names one. */
+  level: Schema.optionalKey(Schema.String),
 });
 
 /** Resolves one localized site path against the canonical origin. */
@@ -234,26 +236,42 @@ export function makeArticleJsonLd(input: ArticleJsonLdInput): ArticleJsonLd {
 /**
  * The lesson as a learning resource, a node of its own at the Article's address:
  * Google reads the Article, and an answer service reads what a lesson teaches and
- * in which language, which curricula it belongs to, who wrote it, and that it is
- * free to read and cite.
+ * in which language, which curricula and levels it belongs to, what it is about
+ * (`about`, its topic), who wrote it, and that it is free to read and cite.
  *
  * @see https://schema.org/LearningResource
  * @see https://schema.org/AlignmentObject
  */
 export function makeLearningResourceNode(
   input: ArticleJsonLdInput,
-  alignments: readonly (typeof LessonAlignmentSchema.Type)[]
+  alignments: readonly (typeof LessonAlignmentSchema.Type)[],
+  about: readonly string[]
 ) {
+  const levels = Arr.dedupe(
+    Arr.filterMap(alignments, ({ level }) =>
+      level === undefined ? Result.failVoid : Result.succeed(level)
+    )
+  );
   return {
     "@context": SCHEMA_ORG,
     "@type": "LearningResource",
     url: toSiteUrl(input.path),
     name: input.headline,
+    headline: input.headline,
     ...(input.description === undefined
       ? {}
       : { description: input.description }),
     inLanguage: input.locale,
     learningResourceType: "lesson",
+    ...(Arr.isReadonlyArrayEmpty(levels) ? {} : { educationalLevel: levels }),
+    ...(Arr.isReadonlyArrayEmpty(about)
+      ? {}
+      : {
+          about: Arr.map(Arr.dedupe(about), (name) => ({
+            "@type": "Thing",
+            name,
+          })),
+        }),
     isAccessibleForFree: true,
     license: CONTENT_LICENSE_URL,
     datePublished: toDayStart(input.dates.datePublished),

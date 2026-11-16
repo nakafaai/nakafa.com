@@ -315,7 +315,7 @@ describe("article JSON-LD", () => {
 
 describe("makeLearningResourceNode", () => {
   it("names the lesson, its authors, its dates and its license at the article's address", () => {
-    expect(makeLearningResourceNode(lesson, [])).toMatchObject({
+    expect(makeLearningResourceNode(lesson, [], [])).toMatchObject({
       "@type": "LearningResource",
       author: [{ "@type": "Person", name: "Nabil Akbarazzima Fatih" }],
       dateModified: "2026-09-23T00:00:00.000Z",
@@ -338,22 +338,29 @@ describe("makeLearningResourceNode", () => {
         ...undescribed,
         dates: { datePublished: "2025-05-26" },
       },
+      [],
       []
     );
 
     expect(node).not.toHaveProperty("description");
     expect(node).not.toHaveProperty("dateModified");
     expect(node).not.toHaveProperty("educationalAlignment");
+    expect(node).not.toHaveProperty("educationalLevel");
+    expect(node).not.toHaveProperty("about");
   });
 
   it("names each curriculum place that the lesson teaches, with its address", () => {
-    const node = makeLearningResourceNode(lesson, [
-      {
-        framework: "Kurikulum Merdeka",
-        path: "/id/kurikulum/merdeka/kelas-11/fisika#kinematika",
-        target: "Kinematika",
-      },
-    ]);
+    const node = makeLearningResourceNode(
+      lesson,
+      [
+        {
+          framework: "Kurikulum Merdeka",
+          path: "/id/kurikulum/merdeka/kelas-11/fisika#kinematika",
+          target: "Kinematika",
+        },
+      ],
+      []
+    );
 
     expect(node.educationalAlignment).toStrictEqual([
       {
@@ -365,5 +372,37 @@ describe("makeLearningResourceNode", () => {
           "https://nakafa.com/id/kurikulum/merdeka/kelas-11/fisika#kinematika",
       },
     ]);
+  });
+
+  it("names each level its curricula place it at, once, and the topic it is about", () => {
+    const node = makeLearningResourceNode(
+      lesson,
+      [
+        {
+          framework: "Kurikulum Merdeka",
+          level: "Kelas 11",
+          path: "/id/kurikulum/merdeka/kelas-11/fisika#kinematika",
+          target: "Kinematika",
+        },
+        {
+          framework: "Kurikulum 2013",
+          level: "Kelas 11",
+          path: "/id/kurikulum/k13/kelas-11/fisika#kinematika",
+          target: "Kinematika",
+        },
+        {
+          framework: "Cambridge International",
+          path: "/id/kurikulum/cambridge-international/physics#kinematics",
+          target: "Kinematics",
+        },
+      ],
+      ["Transformasi Geometri", "Transformasi Geometri"]
+    );
+
+    expect(node).toMatchObject({
+      about: [{ "@type": "Thing", name: "Transformasi Geometri" }],
+      educationalLevel: ["Kelas 11"],
+      headline: "Rotasi",
+    });
   });
 });
