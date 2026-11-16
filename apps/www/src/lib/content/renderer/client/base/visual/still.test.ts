@@ -108,12 +108,60 @@ describe("the still of a MathVisual scene", () => {
     );
     expect(Arr.some(drawn.strokes, ({ id }) => id === "line")).toBe(true);
     expect(Arr.map(drawn.dots, ({ id }) => id)).toStrictEqual(["o", "tip"]);
-    const region = Arr.filter(drawn.strokes, ({ id }) => id.startsWith("half"));
-    expect(Arr.some(region, ({ filled }) => filled)).toBe(true);
-    expect(Arr.some(region, ({ filled }) => !filled)).toBe(true);
+    // A region shades one area under its stroked edges.
+    const edges = Arr.filter(drawn.strokes, ({ id }) => id.startsWith("half"));
+    expect(edges.length).toBeGreaterThan(0);
+    expect(Arr.every(edges, ({ filled }) => !filled)).toBe(true);
+    expect(Arr.map(drawn.areas, ({ id }) => id)).toStrictEqual(["half"]);
     expect(
       Arr.map(drawn.labels, ({ key, placement }) => [key, placement])
     ).toStrictEqual([["a", "center"]]);
+  });
+
+  it("writes a region that fills the frame and its sampled curves in a few kilobytes", () => {
+    // The orthogonal projection lesson's scene: two regions over a 240 by 240 grid wrote 9,614 polygons, 2.7 MB.
+    const drawn = still({
+      ...plane(
+        {
+          ...fields,
+          id: "above",
+          inequalities: ["y <= x^2", "y >= 1/3", "x >= -1", "x <= 1"],
+          kind: "region",
+        },
+        {
+          ...fields,
+          id: "below",
+          inequalities: ["y >= x^2", "y <= 1/3"],
+          kind: "region",
+        },
+        {
+          ...fields,
+          domain: { max: 1, min: -1 },
+          formula: "1/3",
+          id: "flat",
+          kind: "function",
+        }
+      ),
+      frame: {
+        kind: "cartesian",
+        x: { max: 1.2, min: -1.2 },
+        y: { max: 1.15, min: -0.2 },
+      },
+    });
+    const written = (points: readonly (readonly [number, number])[]) =>
+      Arr.join(
+        Arr.map(points, ([x, y]) => `${x},${-y}`),
+        " "
+      ).length;
+    const bytes =
+      Arr.reduce(drawn.areas, 0, (sum, { rings }) =>
+        Arr.reduce(rings, sum, (total, ring) => total + written(ring))
+      ) +
+      Arr.reduce(drawn.strokes, 0, (sum, { points }) => sum + written(points));
+    expect(bytes).toBeLessThan(60_000);
+    // A flat line keeps its two ends, however many points sampled it.
+    const [flat] = Arr.filter(drawn.strokes, ({ id }) => id === "flat");
+    expect(flat?.points).toHaveLength(2);
   });
 
   it("draws a space scene's three axes, its surfaces as rows and its solids as faces", () => {

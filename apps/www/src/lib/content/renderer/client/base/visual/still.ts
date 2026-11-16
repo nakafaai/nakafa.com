@@ -2,6 +2,10 @@ import { MathAppearanceSchema } from "@nakafa/aksara-contracts/math/base";
 import type { FormulaScope } from "@nakafa/aksara-contracts/math/formula/compile";
 import { Array as Arr, Option, Result, Schema } from "effect";
 import {
+  mergeCells,
+  StillPointSchema,
+} from "@/lib/content/renderer/client/base/visual/area";
+import {
   type FormulaShape,
   labelPoint,
   resolveFormulaShapes,
@@ -15,14 +19,16 @@ import type {
   SpaceVisual,
 } from "@/lib/content/renderer/client/base/visual/scene";
 import {
+  THIN_TOLERANCE,
+  thinLine,
+} from "@/lib/content/renderer/client/base/visual/thin";
+import {
   projectVisualFrame,
   projectVisualPoint,
   type VisualProjection,
 } from "@/lib/content/renderer/client/base/visual/transform";
 import { resolveMathView } from "@/lib/content/renderer/client/base/visual/view";
 
-/** One point of the still, right and up from the camera's target, in scene units. */
-const StillPointSchema = Schema.Tuple([Schema.Finite, Schema.Finite]);
 type StillPoint = typeof StillPointSchema.Type;
 
 /** How far the drawing reaches past its outermost point, as a share of its larger side. */
@@ -92,6 +98,14 @@ const StillStrokeSchema = Schema.Struct({
 });
 type StillStroke = typeof StillStrokeSchema.Type;
 
+/** The shading of one region, as the rings of one unstroked path that its stroked edges outline. */
+const StillAreaSchema = Schema.Struct({
+  appearance: MathAppearanceSchema,
+  id: Schema.String,
+  rings: Schema.Array(Schema.Array(StillPointSchema)),
+});
+type StillArea = typeof StillAreaSchema.Type;
+
 /** A label of either scene dimension, so one list can hold both. */
 type StillLabel =
   | NonNullable<PlaneVisual["labels"]>[number]
@@ -121,14 +135,9 @@ function formulaStrokes(
     return [];
   }
   if (shape.kind === "region") {
-    return [
-      ...Arr.map(shape.fill, (points, index) =>
-        stroke(`${shape.id}:fill:${index}`, points, true, true)
-      ),
-      ...Arr.map(shape.boundary, ({ points }, index) =>
-        stroke(`${shape.id}:edge:${index}`, points, false, false)
-      ),
-    ];
+    return Arr.map(shape.boundary, ({ points }, index) =>
+      stroke(`${shape.id}:edge:${index}`, points, false, false)
+    );
   }
   if (shape.kind === "surface") {
     const { columns, points, rows } = shape.grid;
@@ -220,6 +229,19 @@ export function drawStill(
     })),
     ...Arr.flatMap(shapes, (shape) => formulaStrokes(shape, flat)),
   ];
+  const areas: readonly StillArea[] = Arr.flatMap(shapes, (shape) =>
+    shape.kind === "region"
+      ? [
+          {
+            appearance: shape.appearance,
+            id: shape.id,
+            rings: mergeCells(
+              Arr.map(shape.fill, (points) => Arr.map(points, flat))
+            ),
+          },
+        ]
+      : []
+  );
   const dots = [
     ...Arr.map(geometry.markers, (marker) => ({
       appearance: marker.appearance,
@@ -257,6 +279,7 @@ export function drawStill(
   );
   const all = [
     ...Arr.flatMap(axes, ({ points }) => points),
+    ...Arr.flatMap(areas, ({ rings }) => Arr.flatten(rings)),
     ...Arr.flatMap(strokes, (stroke) => stroke.points),
     ...Arr.map(dots, (dot) => dot.at),
     ...Arr.map(labels, (label) => label.at),
@@ -268,11 +291,18 @@ export function drawStill(
   const width = Math.max(...xs) - left;
   const height = Math.max(...ys) - bottom;
   const margin = Math.max(width, height) * MARGIN;
+  // The still is drawn once at the card's size: a point nearer the line than a thousandth of the still adds bytes,
+  // never shape, and a sampled curve or a region's edge is mostly such points.
+  const tolerance = Math.max(width, height) * THIN_TOLERANCE;
   return {
+    areas,
     axes,
     dots,
     labels,
-    strokes,
+    strokes: Arr.map(strokes, (stroke) => ({
+      ...stroke,
+      points: thinLine(stroke.points, tolerance),
+    })),
     view: {
       height: height + margin * 2,
       left: left - margin,
