@@ -1,7 +1,7 @@
 import type { Ref } from "@confect/core";
 import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundary";
 import { lazy } from "@repo/design-system/lib/lazy";
-import { ClientOnly, useLocation } from "@tanstack/react-router";
+import { ClientOnly, useRouterState } from "@tanstack/react-router";
 import type { PropsWithChildren, ReactNode } from "react";
 import { Suspense } from "react";
 import { readChatFailureKind } from "@/components/ai/chat/access";
@@ -29,7 +29,11 @@ interface ChatRead<Query extends Ref.AnyPublicQuery> {
  * code loads when the first failure of a page needs it, so that first failure
  * can show an empty surface until the code arrives. The boundary also tries
  * again when the route changes or one of `resetKeys` changes, so a card does
- * not stay over a page the learner has moved to.
+ * not stay over a page the learner has moved to. The route counts as changed
+ * once the router has rendered the new page (its resolved location), not when
+ * the navigation starts: until the new page's code arrives the router still
+ * draws the old one, which would only fail again, under the new path, and the
+ * card would stay over the page the learner opened.
  *
  * With `read`, the retry waits for the server's answer before the surface
  * remounts, so the remount does not read the failure that the cache still holds.
@@ -43,7 +47,9 @@ export function ChatBoundary<Query extends Ref.AnyPublicQuery>({
   read?: ChatRead<Query> | undefined;
   resetKeys?: readonly unknown[];
 }>) {
-  const pathname = useLocation({ select: (location) => location.pathname });
+  const pathname = useRouterState({
+    select: (state) => (state.resolvedLocation ?? state.location).pathname,
+  });
 
   // The card fills the surface it replaces, so it centres in a page whose
   // content is not a flex container, and in the sheet's flex column alike.
