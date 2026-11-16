@@ -48,6 +48,16 @@ function entryOf(gl: WebGL2RenderingContext, model: Model) {
       location * 3 * FLOAT
     );
   });
+  // How each corner moves (D48): its swing, phase, rate and mode, after its place, direction and color.
+  gl.enableVertexAttribArray(5);
+  gl.vertexAttribPointer(
+    5,
+    4,
+    gl.FLOAT,
+    false,
+    MODEL_STRIDE * FLOAT,
+    9 * FLOAT
+  );
   gl.bindBuffer(gl.ARRAY_BUFFER, places);
   gl.bufferData(
     gl.ARRAY_BUFFER,

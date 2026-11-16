@@ -10,9 +10,10 @@ import {
   meters,
   mirrored,
   normalOf,
+  type Rig,
   rgb,
+  rigged,
   tipped,
-  turned,
 } from "@/lib/island/models/parts";
 
 /** Whether every face of a solid points away from `inside`. */
@@ -67,10 +68,7 @@ describe("island/models/parts", () => {
     ).toEqual([0, 0, 0]);
   });
 
-  it("turns and tips parts around a pivot, and measures a model in blocks", () => {
-    const [face] = turned(box([1, 0, 0], [2, 1, 1], rgb(0)), Math.PI / 2);
-    expect(face.corners[0][0]).toBeCloseTo(0, 6);
-    expect(face.corners[0][2]).toBeCloseTo(-1, 6);
+  it("tips parts around a pivot, and measures a model in blocks", () => {
     const tipTop = Arr.flatMap(
       tipped(box([0, 0, 0], [1, 2, 1], rgb(0)), Math.PI / 2),
       (part) => part.corners
@@ -85,5 +83,56 @@ describe("island/models/parts", () => {
       y: [0, 3],
       z: [0, 4],
     });
+  });
+
+  it("bakes each corner's motion: a wave growing toward the tail, a stride from the hip with left and right apart, a flap from the root", () => {
+    /** The motion numbers of every corner of flattened faces: swing, phase, rate, mode. */
+    const motions = (faces: Parameters<typeof flatten>[0]) =>
+      Arr.map(
+        Arr.chunksOf(Arr.fromIterable(flatten(faces)), MODEL_STRIDE),
+        (corner) => Arr.drop(corner, 9)
+      );
+    const swingsOf = (faces: Parameters<typeof flatten>[0]) =>
+      Arr.map(motions(faces), ([swing]) => swing);
+    const grey = rgb(0x80_80_80);
+    const wave: Rig = {
+      mode: "sway",
+      phase: 0,
+      pivot: 0,
+      rate: 6,
+      reach: 0.1,
+      waves: 1,
+    };
+    // Two blocks long: a fifth of the reach at the head, all of it at the tail.
+    const body = rigged(box([0, 0, -1], [0.2, 0.2, 1], grey), wave);
+    expect(Math.max(...swingsOf(body))).toBeCloseTo(0.2);
+    expect(Math.min(...swingsOf(body))).toBeCloseTo(0.04);
+    expect(
+      Arr.every(motions(body), ([, , rate, mode]) => rate === 6 && mode === 1)
+    ).toBe(true);
+    const leg = rigged(box([0.1, 0, 0], [0.2, 1, 0.1], grey), {
+      mode: "stride",
+      phase: 0,
+      pivot: 1,
+      rate: 8,
+      reach: 0.5,
+      waves: 0,
+    });
+    expect(Math.max(...swingsOf(leg))).toBeCloseTo(0.5);
+    expect(motions(leg)[0][1]).toBe(0);
+    expect(motions(mirrored(leg))[0][1]).toBeCloseTo(Math.PI);
+    const wing = rigged(box([0.5, 0, 0], [1.5, 0.05, 0.2], grey), {
+      mode: "flap",
+      phase: 0,
+      pivot: 0.5,
+      rate: 3,
+      reach: 0.4,
+      waves: 0,
+    });
+    expect(Math.max(...swingsOf(wing))).toBeCloseTo(0.4);
+    // A part with no length along the body has nothing to wave along, and a part with no rig stays still.
+    const plaque = rigged(box([0, 0, 0], [1, 1, 0], grey), wave);
+    expect(Arr.every(swingsOf(plaque), (swing) => swing === 0)).toBe(true);
+    expect(motions(box([0, 0, 0], [1, 1, 1], grey))[0]).toEqual([0, 0, 0, 0]);
   });
 });

@@ -4,7 +4,9 @@ import {
   meters as m,
   mirrored,
   type Rgb,
+  type Rig,
   rgb,
+  rigged,
   type Vec,
 } from "@/lib/island/models/parts";
 import { type Ring, scaled, slab, tube } from "@/lib/island/models/solids";
@@ -188,11 +190,15 @@ function dolphinFaces(kind: "dolphin" | "orca"): readonly Face[] {
     0.01,
     back
   );
+  // A swept, lunate fluke wing with a notch at the middle of its trailing edge (D48).
   const fluke = slab(
     [
-      [0, 0, -0.4],
-      [0.16, 0, -0.5],
-      [0.12, 0, -0.44],
+      [0.01, 0, -0.4],
+      [0.09, 0, -0.43],
+      [0.17, 0, -0.5],
+      [0.13, 0, -0.49],
+      [0.07, 0, -0.47],
+      [0.015, 0, -0.455],
     ],
     0.012,
     back
@@ -244,8 +250,29 @@ function dolphinFaces(kind: "dolphin" | "orca"): readonly Face[] {
 }
 
 /**
+ * How a big swimmer's body beats (ADR 0047, D48): a shark sways side to side
+ * in nearly one wavelength, its tail swinging most; a dolphin or an orca
+ * heaves up and down in under half of one, its flukes doing the work. A
+ * longer body beats more slowly, about once a second for a dolphin or a reef
+ * shark and twice as slowly for a 10 m whale shark.
+ */
+function swimOf(kind: Swimmer): Rig {
+  const length = LOOKS[kind].length;
+  const toothed = kind === "dolphin" || kind === "orca";
+  return {
+    mode: toothed ? "heave" : "sway",
+    phase: 0,
+    pivot: 0,
+    rate: (2 * Math.PI * (toothed ? 1.6 : 1.4)) / Math.sqrt(length),
+    reach: toothed ? 0.06 : 0.08,
+    waves: toothed ? 0.35 : 0.8,
+  };
+}
+
+/**
  * A big swimmer at its real length (ADR 0047, D24), in blocks, centered on
- * the origin and facing +z, so it swims at the depth the world gives it.
+ * the origin and facing +z, so it swims at the depth the world gives it,
+ * beating its body as it goes (D48).
  */
 export function swimmerFaces(kind: Swimmer): readonly Face[] {
   const unit = Match.value(kind).pipe(
@@ -253,7 +280,7 @@ export function swimmerFaces(kind: Swimmer): readonly Face[] {
     Match.when("orca", dolphinFaces),
     Match.orElse(sharkFaces)
   );
-  return scaled(unit, m(LOOKS[kind].length));
+  return scaled(rigged(unit, swimOf(kind)), m(LOOKS[kind].length));
 }
 
 /** One fish of a school: where it swims relative to the school's middle, in blocks, and how far its turn leads or lags. */

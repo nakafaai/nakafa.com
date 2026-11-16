@@ -9,8 +9,41 @@ type Vec = typeof Vec.Type;
 const Rgb = Schema.Tuple([Schema.Finite, Schema.Finite, Schema.Finite]);
 type Rgb = typeof Rgb.Type;
 
-/** One flat face of a model: its corners in order around its front, and its color. */
-const Face = Schema.Struct({ color: Rgb, corners: Schema.Array(Vec) });
+/**
+ * How a part of a living body moves (ADR 0047, D48), which the body program
+ * plays from the numbers `flatten` bakes into every corner, so a frame does
+ * no work on the CPU:
+ *
+ * - `sway`: a wave that runs from head to tail across the body, the way a
+ *   fish or a shark swims, growing toward the tail;
+ * - `heave`: the same wave up and down, the way a whale or a dolphin beats
+ *   its flukes;
+ * - `stride`: a leg or an arm swinging forward and back about the height
+ *   `pivot`, only while its body walks, a left limb half a cycle after its
+ *   right twin;
+ * - `flap`: a wing or a flipper rising and falling about the distance `pivot`
+ *   from the middle.
+ *
+ * `rate` is in radians a second, `phase` in radians, and `reach` the swing's
+ * size: a share of the body's length for a wave, an angle in radians for a
+ * stride or a flap. `waves` is how many wavelengths run along the body.
+ */
+const Rig = Schema.Struct({
+  mode: Schema.Literals(["sway", "heave", "stride", "flap"]),
+  phase: Schema.Finite,
+  pivot: Schema.Finite,
+  rate: Schema.Finite,
+  reach: Schema.Finite,
+  waves: Schema.Finite,
+});
+type Rig = typeof Rig.Type;
+
+/** One flat face of a model: its corners in order around its front, its color, and how it moves, when it does. */
+const Face = Schema.Struct({
+  color: Rgb,
+  corners: Schema.Array(Vec),
+  rig: Schema.optional(Rig),
+});
 type Face = typeof Face.Type;
 
 /** A color from its hex digits, such as `0xc8653a`. */
@@ -104,26 +137,6 @@ export function loft(sections: Arr.NonEmptyReadonlyArray<Section>, color: Rgb) {
   ]);
 }
 
-/** Turns faces around the vertical axis through `pivot` by `angle`, counter-clockwise seen from above. */
-export function turned(
-  faces: readonly Face[],
-  angle: number,
-  pivot: Vec = [0, 0, 0]
-) {
-  const [cos, sin] = [Math.cos(angle), Math.sin(angle)];
-  return Arr.map(faces, (face) => ({
-    color: face.color,
-    corners: Arr.map(face.corners, ([x, y, z]): Vec => {
-      const [dx, dz] = [x - pivot[0], z - pivot[2]];
-      return [
-        pivot[0] + dx * cos + dz * sin,
-        y,
-        pivot[2] - dx * sin + dz * cos,
-      ];
-    }),
-  }));
-}
-
 /** Tips faces forward around the across axis through `pivot` by `angle`, the top toward +z. */
 export function tipped(
   faces: readonly Face[],
@@ -132,7 +145,7 @@ export function tipped(
 ) {
   const [cos, sin] = [Math.cos(angle), Math.sin(angle)];
   return Arr.map(faces, (face) => ({
-    color: face.color,
+    ...face,
     corners: Arr.map(face.corners, ([x, y, z]): Vec => {
       const [dy, dz] = [y - pivot[1], z - pivot[2]];
       return [
@@ -147,7 +160,7 @@ export function tipped(
 /** Mirrors faces across the middle plane (x = 0), keeping each face's front outward. */
 export function mirrored(faces: readonly Face[]) {
   return Arr.map(faces, (face) => ({
-    color: face.color,
+    ...face,
     corners: Arr.reverse(Arr.map(face.corners, ([x, y, z]): Vec => [-x, y, z])),
   }));
 }
@@ -168,26 +181,82 @@ export function normalOf(corners: readonly Vec[]) {
     : ([n[0] / length, n[1] / length, n[2] / length] as const);
 }
 
-/** How many numbers each corner of a drawn model holds: its place, its face's direction and its color. */
-export const MODEL_STRIDE = 9;
+/** How many numbers each corner of a drawn model holds: its place, its face's direction, its color and its motion. */
+export const MODEL_STRIDE = 13;
+
+/** The motion numbers of a rigid corner: no reach, no phase, no rate, mode none. */
+const STILL = [0, 0, 0, 0] as const;
+
+/** The number the body program reads for each mode; 0 is a part that never moves. */
+const MODES = { flap: 4, heave: 2, stride: 3, sway: 1 } as const;
+
+/**
+ * The motion numbers of one corner (D48): how far it swings, its phase, its
+ * rate and its mode. A wave's swing grows from a fifth of its reach at the
+ * head to all of it at the tail and lags along the body by its `waves`; a
+ * stride's grows with the depth below its pivot, a flap's with the distance
+ * out from its pivot.
+ */
+function motionOf(
+  rig: Rig,
+  [x, y, z]: Vec,
+  [tail, head]: readonly [number, number]
+) {
+  const mode = MODES[rig.mode];
+  if (rig.mode === "stride") {
+    // A left limb steps half a cycle after its right twin, so a mirrored pair walks instead of hopping.
+    const side = x < 0 ? Math.PI : 0;
+    return [
+      rig.reach * Math.max(0, rig.pivot - y),
+      rig.phase + side,
+      rig.rate,
+      mode,
+    ];
+  }
+  if (rig.mode === "flap") {
+    return [
+      rig.reach * Math.max(0, Math.abs(x) - rig.pivot),
+      rig.phase,
+      rig.rate,
+      mode,
+    ];
+  }
+  const length = head - tail;
+  const back = length > 0 ? (head - z) / length : 0;
+  const swing = rig.reach * length * (0.2 + 0.8 * back * back);
+  return [swing, rig.phase + back * rig.waves * 2 * Math.PI, rig.rate, mode];
+}
+
+/** The faces with every one moving by `rig` (D48). */
+export function rigged(faces: readonly Face[], rig: Rig): readonly Face[] {
+  return Arr.map(faces, (face) => ({ ...face, rig }));
+}
 
 /**
  * A model's faces as triangles for the GPU (ADR 0047, D21): every face fanned
  * from its first corner, each corner with its place, its face's direction
- * (so the face is lit flat and its edges outlined) and its color. Faces
- * folded to nothing are left out.
+ * (so the face is lit flat and its edges outlined), its color and its motion
+ * numbers (D48). Faces folded to nothing are left out.
  */
 export function flatten(faces: readonly Face[]) {
   const solid = Arr.filter(faces, (face) => {
     const [x, y, z] = normalOf(face.corners);
     return x !== 0 || y !== 0 || z !== 0;
   });
+  const { z: length } = boundsOf(faces);
   const triangles = Arr.flatMap(solid, (face) => {
     const normal = normalOf(face.corners);
     return Arr.makeBy(face.corners.length - 2, (index) =>
       Arr.map(
         [face.corners[0], face.corners[index + 1], face.corners[index + 2]],
-        (corner) => [...corner, ...normal, ...face.color]
+        (corner) => [
+          ...corner,
+          ...normal,
+          ...face.color,
+          ...(face.rig === undefined
+            ? STILL
+            : motionOf(face.rig, corner, length)),
+        ]
       )
     );
   });
@@ -204,4 +273,4 @@ export function boundsOf(faces: readonly Face[]) {
   return { x: axis(0), y: axis(1), z: axis(2) };
 }
 
-export type { Face, Rgb, Vec };
+export type { Face, Rgb, Rig, Vec };

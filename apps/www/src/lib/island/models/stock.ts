@@ -5,7 +5,9 @@ import {
   loft,
   meters as m,
   mirrored,
+  type Rig,
   rgb,
+  rigged,
 } from "@/lib/island/models/parts";
 
 /** The farm's animals (ADR 0047, D21). */
@@ -24,11 +26,22 @@ const HORN = rgb(0xe8_dc_c0);
  * udder, short horns and a tail.
  */
 function cowFaces(): readonly Face[] {
+  // Each leg strides from the hip while the cow walks, a hind leg a quarter of a cycle after the foreleg (D48).
   const leg = (x: number, z: number) =>
-    box(
-      [x - m(0.08), 0, z - m(0.08)],
-      [x + m(0.08), m(0.75), z + m(0.08)],
-      WHITE
+    rigged(
+      box(
+        [x - m(0.08), 0, z - m(0.08)],
+        [x + m(0.08), m(0.75), z + m(0.08)],
+        WHITE
+      ),
+      {
+        mode: "stride",
+        phase: z > 0 ? 0 : Math.PI / 2,
+        pivot: m(0.75),
+        rate: 7,
+        reach: 0.35,
+        waves: 0,
+      }
     );
   const half = [
     ...leg(m(0.24), m(0.7)),
@@ -65,9 +78,24 @@ function fowlFaces(kind: "hen" | "duck"): readonly Face[] {
   const head = kind === "hen" ? body : rgb(0x2f_7a_4a);
   const bill = kind === "hen" ? rgb(0xf0_c0_40) : rgb(0xf0_90_30);
   const leg = rgb(0xe0_8a_30);
+  // Two quick legs, one stepping as the other lifts (D48).
+  const step: Rig = {
+    mode: "stride",
+    phase: 0,
+    pivot: m(0.14),
+    rate: 12,
+    reach: 0.6,
+    waves: 0,
+  };
   return [
-    ...box([m(0.03), 0, m(-0.01)], [m(0.05), m(0.14), m(0.01)], leg),
-    ...box([m(-0.05), 0, m(-0.01)], [m(-0.03), m(0.14), m(0.01)], leg),
+    ...rigged(
+      box([m(0.03), 0, m(-0.01)], [m(0.05), m(0.14), m(0.01)], leg),
+      step
+    ),
+    ...rigged(
+      box([m(-0.05), 0, m(-0.01)], [m(-0.03), m(0.14), m(0.01)], leg),
+      step
+    ),
     ...loft(
       [
         { high: m(0.32), low: m(0.2), width: m(0.06), z: m(-0.17) },

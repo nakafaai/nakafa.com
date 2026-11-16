@@ -229,18 +229,27 @@ export function slab(
   ];
 }
 
-/** Faces grown by `factor` from the origin. */
-export function scaled(faces: readonly Face[], factor: number) {
+/** Faces grown by `factor` from the origin, a moving part's pivot with them (D48). */
+export function scaled(
+  faces: readonly Face[],
+  factor: number
+): readonly Face[] {
   return Arr.map(faces, (face) => ({
-    color: face.color,
+    ...face,
     corners: Arr.map(face.corners, (corner) => times(corner, factor)),
+    ...(face.rig === undefined
+      ? {}
+      : { rig: { ...face.rig, pivot: face.rig.pivot * factor } }),
   }));
 }
 
-/** Faces moved by `offset`. */
-export function moved(faces: readonly Face[], offset: Vec) {
+/** Faces moved by `offset`, a striding part's pivot height with them (D48). */
+export function moved(faces: readonly Face[], offset: Vec): readonly Face[] {
   return Arr.map(faces, (face) => ({
-    color: face.color,
+    ...face,
     corners: Arr.map(face.corners, (corner) => add(corner, offset)),
+    ...(face.rig?.mode === "stride"
+      ? { rig: { ...face.rig, pivot: face.rig.pivot + offset[1] } }
+      : {}),
   }));
 }
