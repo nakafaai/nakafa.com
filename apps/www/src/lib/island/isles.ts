@@ -107,12 +107,7 @@ function faceOf(
       [0, 1],
     ] as const,
     ([a, b]) => {
-      const [u, v] = slotUv(
-        slot,
-        face.side ? a : b,
-        face.side ? 1 - b : a,
-        false
-      );
+      const [u, v] = slotUv(slot, face.side ? a : b, face.side ? 1 - b : a);
       return [
         origin[0] + face.u[0] * a + face.v[0] * b,
         origin[1] + face.u[1] * a + face.v[1] * b,

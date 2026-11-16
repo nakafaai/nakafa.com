@@ -8,6 +8,7 @@ import {
   groundOf,
   herdOf,
   ninaAt,
+  standingQuad,
   suitsOf,
   wander,
 } from "@/lib/island/life";
@@ -135,5 +136,16 @@ describe("island/life", () => {
     expect(blocked.x).toBe(4.5);
     const away = wander(cells, { ...free, tx: 5.4 }, 11, 0, 0.2, [free, bear]);
     expect(away.x).toBeGreaterThan(4.5);
+  });
+
+  it("stands the fishing float upright at its place, its tile's width wide and facing the camera", () => {
+    const quad = standingQuad(5, [10, 8, 20], 0.5, 0);
+    expect(quad).toHaveLength(4 * STRIDE);
+    const corner = (index: number) =>
+      Arr.take(Arr.drop(quad, index * STRIDE), 3);
+    expect(corner(0)).toEqual([9.75, 8, 20]);
+    expect(corner(1)).toEqual([10.25, 8, 20]);
+    expect(corner(2)).toEqual([10.25, 8.5, 20]);
+    expect(corner(3)).toEqual([9.75, 8.5, 20]);
   });
 });

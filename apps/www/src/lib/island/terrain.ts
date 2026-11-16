@@ -42,6 +42,14 @@ function isPond(seed: number, x: number, z: number) {
   return Math.hypot(x + 0.5 - centre[0], z + 0.5 - centre[1]) < reach;
 }
 
+/** The island's shore: its radius is half its side less `inset`, and its edge wobbles from `least` of that radius to `least + wobble`. */
+const SHORE = { inset: 1.5, least: 0.8, wobble: 0.28 } as const;
+
+/** The farthest an island of this side's land reaches from its middle, in cells: past it, every column is sea. */
+export function shoreOf(size: number) {
+  return (size / 2 - SHORE.inset) * (SHORE.least + SHORE.wobble);
+}
+
 /**
  * The column at (x, z): the top cell of its ground and whether that ground is
  * land above the water. The island is a rounded patch whose edge wobbles with
@@ -50,8 +58,9 @@ function isPond(seed: number, x: number, z: number) {
  */
 export function columnOf(seed: number, size: number, x: number, z: number) {
   const distance = Math.hypot(x + 0.5 - MIDDLE, z + 0.5 - MIDDLE);
-  const radius = size / 2 - 1.5;
-  const edge = radius * (0.8 + 0.28 * smoothOf(seed, x, z, 5));
+  const edge =
+    (size / 2 - SHORE.inset) *
+    (SHORE.least + SHORE.wobble * smoothOf(seed, x, z, 5));
   if (distance < edge - 3 && isPond(seed, x, z)) {
     return { land: false, top: SEA_LEVEL - 2 };
   }

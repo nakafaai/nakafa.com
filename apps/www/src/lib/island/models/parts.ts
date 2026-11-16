@@ -204,4 +204,4 @@ export function boundsOf(faces: readonly Face[]) {
   return { x: axis(0), y: axis(1), z: axis(2) };
 }
 
-export type { Face };
+export type { Face, Rgb, Vec };
