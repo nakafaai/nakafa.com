@@ -30,7 +30,7 @@ import { readSchoolRefusal } from "@/lib/routing/school/refusal";
 import { answerSchoolRefusal } from "@/lib/routing/school/refused.server";
 import {
   answerSchoolPage,
-  readSchoolFile,
+  readSchoolStray,
 } from "@/lib/routing/school/shell.server";
 import { readPathSegments } from "@/lib/routing/template";
 import { answerUnmatchedRequest } from "@/lib/routing/unmatched.server";
@@ -168,9 +168,9 @@ export const answerRequest = Effect.fn("www.routing.answer.request")(function* (
     return yield* answerRejection(request, schoolTree.value, route);
   }
 
-  const schoolFile = yield* readSchoolFile(request);
-  if (Option.isSome(schoolFile)) {
-    return schoolFile.value;
+  const schoolStray = yield* readSchoolStray(request);
+  if (Option.isSome(schoolStray)) {
+    return schoolStray.value;
   }
 
   const refused = yield* readSchoolRefusal(request);

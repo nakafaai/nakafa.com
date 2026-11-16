@@ -5,7 +5,7 @@ import { Effect, Option } from "effect";
 import { clientEnv } from "@/env.public";
 import {
   answerSchoolPage,
-  readSchoolFile,
+  readSchoolStray,
 } from "@/lib/routing/school/shell.server";
 
 const assets = vi.hoisted(() => ({
@@ -162,7 +162,7 @@ describe("answerSchoolPage", () => {
   );
 });
 
-describe("readSchoolFile", () => {
+describe("readSchoolStray", () => {
   it.effect(
     "answers a file that a school host's address names with the static not-found page",
     () =>
@@ -171,7 +171,7 @@ describe("readSchoolFile", () => {
           new Response("<h1>Not found</h1>", { status: 404 })
         );
 
-        const answer = yield* readSchoolFile(
+        const answer = yield* readSchoolStray(
           request("https://n8n.nakafa.com/.env")
         );
 
@@ -184,23 +184,47 @@ describe("readSchoolFile", () => {
   );
 
   it.effect(
-    "answers nothing for a page, a shared route, a write, another host or a prerender",
+    "answers a write to a school host's page with the static not-found page, read with a GET, so the router renders nothing",
+    () =>
+      Effect.gen(function* () {
+        assets.fetch.mockResolvedValue(
+          new Response("<h1>Not found</h1>", { status: 404 })
+        );
+
+        for (const method of ["POST", "PUT", "DELETE"]) {
+          const answer = yield* readSchoolStray(
+            request("https://harapan.nakafa.com/cgi-bin/luci", method)
+          );
+          expect(Option.getOrThrow(answer).status).toBe(404);
+        }
+        for (const [page] of assets.fetch.mock.calls) {
+          expect(page.method).toBe("GET");
+          expect(page.url).toBe("https://harapan.nakafa.com/cgi-bin/luci");
+        }
+      })
+  );
+
+  it.effect(
+    "answers nothing for a read of a page, a shared route, another host or a prerender",
     () =>
       Effect.gen(function* () {
         for (const other of [
           request("https://harapan.nakafa.com/exams"),
+          request("https://harapan.nakafa.com/exams", "HEAD"),
           request("https://harapan.nakafa.com/api/weather.json"),
-          request("https://harapan.nakafa.com/.env", "POST"),
+          request("https://harapan.nakafa.com/api/auth/sign-out", "POST"),
           request("https://nakafa.com/.env"),
+          request("https://nakafa.com/cgi-bin/luci", "POST"),
         ]) {
-          expect(Option.isNone(yield* readSchoolFile(other))).toBe(true);
+          expect(Option.isNone(yield* readSchoolStray(other))).toBe(true);
         }
         release.bound = false;
-        expect(
-          Option.isNone(
-            yield* readSchoolFile(request("https://harapan.nakafa.com/.env"))
-          )
-        ).toBe(true);
+        for (const prerender of [
+          request("https://harapan.nakafa.com/.env"),
+          request("https://harapan.nakafa.com/cgi-bin/luci", "POST"),
+        ]) {
+          expect(Option.isNone(yield* readSchoolStray(prerender))).toBe(true);
+        }
         expect(assets.fetch).not.toHaveBeenCalled();
       })
   );
