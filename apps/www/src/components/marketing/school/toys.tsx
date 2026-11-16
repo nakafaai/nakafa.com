@@ -39,15 +39,17 @@ const PLACEMENTS: readonly ToyPlacement[] = [
     picture: <ToyAnimal herd={SCHOOL_TOY_HERD} index={index} />,
     place: within("hero", { dx: -28, dy: -28, minWidth, x, y }),
   })),
-  ...gap("tasks", 0.5, SCHOOL_TOY_HERD, [6, 7], ["backpack", "book"]),
-  ...gap("exams", 0.5, SCHOOL_TOY_HERD, [8, 9], ["hourglass", "calculator"]),
-  ...gap("player", 0.5, SCHOOL_TOY_HERD, [10, 11], ["glasses", "pencil"]),
-  ...gap("reports", 0.5, SCHOOL_TOY_HERD, [12, 13], ["letter", "clip"]),
-  ...gap("insight", 0.5, SCHOOL_TOY_HERD, [14, 15], ["magnifier", "ruler"]),
-  ...gap("parents", 0.5, SCHOOL_TOY_HERD, [16, 17], ["bubble", "coffee"]),
-  ...gap("year", 0.5, SCHOOL_TOY_HERD, [18, 19], ["cap", "calendar"]),
-  ...gap("faq", 0.5, SCHOOL_TOY_HERD, [20, 21], ["globe", "highlighter"]),
-  ...gap("closing", 0.5, SCHOOL_TOY_HERD, [22, 23], ["medal", "flag"]),
+  ...gap("forum", 0.5, SCHOOL_TOY_HERD, [6, 7], ["bubble", "headphones"]),
+  ...gap("library", 0.5, SCHOOL_TOY_HERD, [8, 9], ["book", "board"]),
+  ...gap("tasks", 0.5, SCHOOL_TOY_HERD, [10, 11], ["backpack", "note"]),
+  ...gap("exams", 0.5, SCHOOL_TOY_HERD, [12, 13], ["hourglass", "calculator"]),
+  ...gap("player", 0.5, SCHOOL_TOY_HERD, [14, 15], ["glasses", "pencil"]),
+  ...gap("reports", 0.5, SCHOOL_TOY_HERD, [16, 17], ["letter", "clip"]),
+  ...gap("insight", 0.5, SCHOOL_TOY_HERD, [18, 19], ["magnifier", "ruler"]),
+  ...gap("parents", 0.5, SCHOOL_TOY_HERD, [20, 21], ["donut", "coffee"]),
+  ...gap("year", 0.5, SCHOOL_TOY_HERD, [22, 23], ["cap", "calendar"]),
+  ...gap("faq", 0.5, SCHOOL_TOY_HERD, [24, 25], ["globe", "highlighter"]),
+  ...gap("closing", 0.5, SCHOOL_TOY_HERD, [26, 27], ["medal", "flag"]),
 ];
 
 /**
@@ -85,6 +87,8 @@ export function SchoolToys() {
   return (
     <ToyOverlay placements={PLACEMENTS}>
       <NinaToy act="teaching" size={240} slot={SCHOOL_NINA_ID} />
+      <NinaToy act="typing" size={88} slot="forum-nina" />
+      <NinaToy act="reading" size={88} slot="library-nina" />
       <NinaToy act="carrying" size={88} slot="tasks-nina" />
       <NinaToy act="thinking" size={88} slot="exams-nina" />
       <NinaToy act="writing" size={88} slot="player-nina" />
