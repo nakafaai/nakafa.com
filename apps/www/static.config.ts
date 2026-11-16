@@ -72,8 +72,8 @@ export function readPrerenderedPagePaths(): Promise<readonly string[]> {
       if (!Schema.is(PagesListed)(message)) {
         return;
       }
+      // Bun's IPC channel has no ref or unref; unref on the runner releases it too.
       runner.unref();
-      runner.channel?.unref();
       resolve(
         Schema.decodeSync(PrerenderedPagesJson)(
           readFileSync(message.file, "utf8")
@@ -100,7 +100,6 @@ export function writeStaticArtifactFiles(outDir: string): Promise<void> {
       return;
     }
     runner.ref();
-    runner.channel?.ref();
     runner.on("exit", (code, signal) => {
       if (code === 0) {
         resolve();
