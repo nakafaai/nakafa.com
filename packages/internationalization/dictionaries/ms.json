@@ -545,8 +545,6 @@
     "cause-both-false": "Pernyataan dan sebab salah",
     "template-short": "Jawapan pendek",
     "template-numeric": "Jawapan berangka",
-    "short-placeholder": "Taip jawapan kamu",
-    "number-placeholder": "Taip nombor",
     "number-key": "Nombor yang betul",
     "number-value-placeholder": "0.75",
     "number-tolerance-placeholder": "0.01",
@@ -569,7 +567,6 @@
     "accepted-add": "Tambah jawapan",
     "accepted-hint": "Huruf besar kecil dan ruang tambahan tidak dikira, dan jawapan lain menunggu semakan kamu.",
     "template-essay": "Esei",
-    "essay-placeholder": "Tulis jawapan kamu",
     "grade-of": "Mata {name}",
     "template-match": "Padanan",
     "statement-of": "Soalan {number}, pernyataan {name}",
@@ -2591,7 +2588,12 @@
     "menu-parts": "Subjek",
     "parts-empty": "Tiada subjek yang sepadan.",
     "parts-search": "Cari subjek",
-    "time": "Baki masa"
+    "time": "Baki masa",
+    "placeholder": {
+      "essay": "Tulis jawapan kamu",
+      "number": "Taip nombor",
+      "short": "Taip jawapan kamu"
+    }
   },
   "Utils": {
     "search-bar-placeholder": "Cari kandungan...",

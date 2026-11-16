@@ -6,12 +6,12 @@ import {
   useRouter,
 } from "@tanstack/react-router";
 import { Suspense } from "react";
-import { IntlProvider } from "use-intl";
 import { RouteConvexProvider } from "@/components/providers/route";
 import { privateHead } from "@/lib/account/head";
 import { islandScreenFn } from "@/lib/account/island.functions";
 import { resolvePostAuthIntent } from "@/lib/auth/admission";
 import { isSignedIn } from "@/lib/auth/gate";
+import { MessagesProvider } from "@/lib/i18n/provider";
 import { readRenderedRouteMessages } from "@/lib/i18n/rendered";
 
 /** The game and its renderer, loaded once the learner enters (ADR 0047, D1 and D9). */
@@ -61,7 +61,10 @@ function IslandPage() {
   const { messages: shellMessages } = localeRoute.useLoaderData();
   const router = useRouter();
   return (
-    <IntlProvider locale={locale} messages={{ ...shellMessages, ...messages }}>
+    <MessagesProvider
+      locale={locale}
+      messages={{ ...shellMessages, ...messages }}
+    >
       <RouteConvexProvider>
         <Suspense fallback={null}>
           <IslandGame
@@ -85,6 +88,6 @@ function IslandPage() {
           />
         </Suspense>
       </RouteConvexProvider>
-    </IntlProvider>
+    </MessagesProvider>
   );
 }

@@ -62,7 +62,7 @@ export function SittingField({
   readonly text: string;
 }) {
   const disabled = usePaperLocked();
-  const t = useTranslations("Exams");
+  const t = useTranslations("Player");
   const line = useRef<HTMLInputElement>(null);
   const save = useDebouncedCallback(onType, {
     delay: TYPING_PAUSE_MILLISECONDS,
@@ -122,7 +122,7 @@ export function SittingField({
           name={entry.id}
           onBlur={() => save.flush()}
           onChange={(event) => write(event.currentTarget.value)}
-          placeholder={t("number-placeholder")}
+          placeholder={t("placeholder.number")}
           ref={line}
           spellCheck={false}
         />
@@ -148,7 +148,7 @@ export function SittingField({
         name={entry.id}
         onBlur={() => save.flush()}
         onChange={(event) => write(event.currentTarget.value)}
-        placeholder={t("short-placeholder")}
+        placeholder={t("placeholder.short")}
         ref={line}
         spellCheck={false}
       />
