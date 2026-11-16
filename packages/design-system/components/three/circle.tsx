@@ -169,28 +169,12 @@ function UnitCircleScene() {
   );
 }
 
-/**
- * Renders the interactive unit-circle scene with smooth circle and angle arcs.
- */
-export function UnitCircle({ angle = 45, showLabels = true, ...props }: Props) {
-  const values = useMemo(() => ({ angle, showLabels }), [angle, showLabels]);
-
-  return (
-    <UnitCircleContext value={values}>
-      <group frustumCulled {...props}>
-        <UnitCircleScene />
-      </group>
-    </UnitCircleContext>
-  );
-}
-
 const CAMERA_Z_POSITION = 4;
 
 /**
  * The unit circle drawn at one angle, in its own coordinate system. It loads
  * apart from the card that holds its controls, so the card can keep its frame
- * before the scene has loaded. It composes the scene itself rather than the
- * registered unit circle, so the angle reaches the scene through its context.
+ * before the scene has loaded. The angle reaches the scene through its context.
  */
 export function UnitCircleStage({
   angle,

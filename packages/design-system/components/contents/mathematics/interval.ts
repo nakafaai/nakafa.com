@@ -2,13 +2,13 @@ import { mathNumber } from "@repo/design-system/components/contents/mathematics/
 import { Array as Arr, Order, Schema } from "effect";
 
 /** A closed range of numbers: its smallest value and its largest. */
-export const IntervalSchema = Schema.Struct({
+const IntervalSchema = Schema.Struct({
   max: Schema.Finite,
   min: Schema.Finite,
 });
 
 /** A closed range of numbers. */
-export type Interval = typeof IntervalSchema.Type;
+type Interval = typeof IntervalSchema.Type;
 
 /** The smallest and the largest of some numbers. */
 export function intervalOf(
