@@ -2,12 +2,14 @@ import { Line, PointMaterial, Points } from "@react-three/drei";
 import { useThree } from "@react-three/fiber";
 import { toggleColumns } from "@repo/design-system/components/contents/chemistry/columns";
 import {
+  boundaryDensity,
   type OrbitalId,
   OrbitalIdSchema,
   orbitalNumbers,
   orbitalReach,
   radialNodes,
   sampleCloud,
+  waveGrid,
 } from "@repo/design-system/components/contents/chemistry/orbital/wave";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { CameraControls } from "@repo/design-system/components/three/camera/controls";
@@ -32,17 +34,27 @@ import { getColor } from "@repo/design-system/lib/color";
 import { isMobileDevice } from "@repo/design-system/lib/device";
 import { AXIS_COLORS, PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr, Option, Schema } from "effect";
-import { type ReactNode, Suspense, useMemo, useState } from "react";
-import { Color } from "three";
+import { type ReactNode, Suspense, useEffect, useMemo, useState } from "react";
+import { Color, DoubleSide, MeshPhysicalMaterial } from "three";
+import { MarchingCubes } from "three/examples/jsm/objects/MarchingCubes.js";
 
 /** How long one Bohr radius is in the scene, so a 3s cloud stands larger than a 1s one. */
 const BOHR = 0.17;
 
-/** How many candidate points a cloud is sampled from, by device. */
-const CANDIDATES = { desktop: 320_000, phone: 110_000 } as const;
+/** How many candidate points the faint cloud inside the surface is sampled from, by device. */
+const CANDIDATES = { desktop: 160_000, phone: 60_000 } as const;
 
 /** How much brighter than white a cloud's points glow, so the finish's bloom catches them. */
-const GLOW = 1.8;
+const GLOW = 1.4;
+
+/** The share of the electron's probability the drawn surface holds, as chemistry books draw an orbital. */
+const BOUNDARY_SHARE = 0.9;
+
+/** How many grid cells a side the boundary surface is traced through, by device. */
+const SURFACE_CELLS = { desktop: 64, phone: 44 } as const;
+
+/** The most triangles one lobe's surface may take, enough for a d lobe at the finest grid. */
+const SURFACE_TRIANGLES = 80_000;
 
 /** The words an orbital lab reads from its lesson. */
 interface OrbitalLabels {
@@ -171,14 +183,36 @@ export function OrbitalCloudLab({
 }
 
 /**
- * The cloud itself: every sampled point at its place, glowing in the color of
- * its lobe's sign, around a small bright nucleus.
+ * An orbital as chemistry books and molecular software draw it: the surface
+ * that holds 90% of the electron's probability, one glossy translucent shell
+ * per sign of the wave function, over a faint cloud of sampled points that
+ * shows where the electron is most likely found, around a small bright
+ * nucleus.
  */
 function OrbitalCloud({ id }: { readonly id: OrbitalId }) {
+  const phone = isMobileDevice();
+  const cells = phone ? SURFACE_CELLS.phone : SURFACE_CELLS.desktop;
+  const surface = useMemo(() => {
+    const wave = waveGrid(id, cells);
+    const level = boundaryDensity(wave, BOUNDARY_SHARE);
+    return Arr.map(
+      [
+        { color: PLOT_COLORS.amber, phase: 1 },
+        { color: PLOT_COLORS.violet, phase: -1 },
+      ] as const,
+      (lobe) => ({
+        color: lobe.color,
+        field: Float32Array.from(wave, (value) =>
+          value * lobe.phase > 0 ? value * value : 0
+        ),
+        level,
+      })
+    );
+  }, [cells, id]);
   const geometry = useMemo(() => {
     const cloud = sampleCloud(
       id,
-      isMobileDevice() ? CANDIDATES.phone : CANDIDATES.desktop
+      phone ? CANDIDATES.phone : CANDIDATES.desktop
     );
     const plus = new Color(PLOT_COLORS.amber).multiplyScalar(GLOW);
     const minus = new Color(PLOT_COLORS.violet).multiplyScalar(GLOW);
@@ -194,15 +228,25 @@ function OrbitalCloud({ id }: { readonly id: OrbitalId }) {
         )
       ),
     };
-  }, [id]);
+  }, [id, phone]);
 
   return (
     <group>
+      {Arr.map(surface, (lobe) => (
+        <OrbitalLobe
+          cells={cells}
+          color={lobe.color}
+          field={lobe.field}
+          key={`${id}-${lobe.color}`}
+          level={lobe.level}
+          size={orbitalReach(id) * BOHR}
+        />
+      ))}
       <Points colors={geometry.colors} key={id} positions={geometry.positions}>
         <PointMaterial
           depthWrite={false}
-          opacity={0.75}
-          size={0.026}
+          opacity={0.35}
+          size={0.018}
           sizeAttenuation
           toneMapped={false}
           transparent
@@ -219,6 +263,58 @@ function OrbitalCloud({ id }: { readonly id: OrbitalId }) {
       </mesh>
     </group>
   );
+}
+
+/**
+ * One lobe sign's boundary surface, traced once by marching cubes through
+ * the density of that sign, at the level that holds 90% of the probability,
+ * and drawn as glossy translucent glass so the cloud inside still shows.
+ */
+function OrbitalLobe({
+  cells,
+  color,
+  field,
+  level,
+  size,
+}: {
+  readonly cells: number;
+  readonly color: string;
+  readonly field: Float32Array;
+  readonly level: number;
+  readonly size: number;
+}) {
+  const shell = useMemo(() => {
+    const cubes = new MarchingCubes(
+      cells,
+      new MeshPhysicalMaterial({
+        clearcoat: 1,
+        clearcoatRoughness: 0.08,
+        color,
+        depthWrite: false,
+        opacity: 0.5,
+        roughness: 0.18,
+        side: DoubleSide,
+        transparent: true,
+      }),
+      false,
+      false,
+      SURFACE_TRIANGLES
+    );
+    cubes.field.set(field);
+    cubes.isolation = level;
+    cubes.update();
+    return cubes;
+  }, [cells, color, field, level]);
+
+  useEffect(
+    () => () => {
+      shell.geometry.dispose();
+      Arr.map(Arr.ensure(shell.material), (material) => material.dispose());
+    },
+    [shell]
+  );
+
+  return <primitive object={shell} scale={size} />;
 }
 
 /** Three faint axes through the nucleus, x red, y green, z blue, to read a lobe's direction. */

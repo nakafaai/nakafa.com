@@ -65,6 +65,16 @@ function placeBonds(
   }
 }
 
+/** How low the names of the two sides stand under the molecules. */
+function reactionLabelHeight(layout: ReactionLayout) {
+  return -layout.span / 6 - 1.1;
+}
+
+/** The floor the molecules cast their shadows on, just under the names of the two sides. */
+export function reactionFloor(layout: ReactionLayout) {
+  return reactionLabelHeight(layout) - 0.3;
+}
+
 /**
  * A reaction as it happens to its atoms: the reactant molecules on the left
  * jostle, their bonds thin away, every atom flies on an arc to its place in a
@@ -127,7 +137,7 @@ export function ReactionScene({
   });
 
   const sideX = layout.span / 4 + 0.65;
-  const labelY = -layout.span / 6 - 1.1;
+  const labelY = reactionLabelHeight(layout);
 
   return (
     <group>

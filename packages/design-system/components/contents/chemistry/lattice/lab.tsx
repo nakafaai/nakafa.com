@@ -49,6 +49,18 @@ const PICOMETRES = 100;
 /** The share of its ionic radius each ion is drawn at, so touching ions do not overlap. */
 const ION_SCALE = 0.94;
 
+/** How far under the block's lowest ions the floor it casts its shadow on lies. */
+const FLOOR_GAP = 0.2;
+
+/**
+ * How far the block of `cells` cells reaches below its middle: half its edge,
+ * out to the bottom of the larger ion.
+ */
+function latticeDepth(crystal: ReturnType<typeof getCrystal>, cells: number) {
+  const larger = Math.max(crystal.cation.radius, crystal.anion.radius);
+  return ((cells * crystal.lattice) / 2 + larger * ION_SCALE) / PICOMETRES;
+}
+
 /** The widest block offered, in unit cells along an edge. */
 const MOST_CELLS = 3;
 
@@ -161,6 +173,7 @@ export function IonLatticeLab({
         render={<section />}
       >
         <ScienceStage
+          floor={-latticeDepth(crystal, cells) - FLOOR_GAP}
           reach={(MOST_CELLS * crystal.lattice) / PICOMETRES}
           setting="studio"
         >
@@ -248,7 +261,10 @@ function LatticeBlock({
   );
 }
 
-/** Every ion of one kind as one instanced mesh of glossy spheres. */
+/**
+ * Every ion of one kind as one instanced mesh of spheres in its CPK color,
+ * which cast shadows on each other and on the floor.
+ */
 function IonInstances({
   color,
   positions,
@@ -279,13 +295,19 @@ function IonInstances({
   }, [positions, radius]);
 
   return (
-    <instancedMesh args={[undefined, undefined, positions.length]} ref={mesh}>
-      <sphereGeometry args={[1, 24, 16]} />
+    <instancedMesh
+      args={[undefined, undefined, positions.length]}
+      castShadow
+      receiveShadow
+      ref={mesh}
+    >
+      <sphereGeometry args={[1, 32, 24]} />
       <meshPhysicalMaterial
-        clearcoat={0.7}
-        clearcoatRoughness={0.15}
+        clearcoat={0.5}
+        clearcoatRoughness={0.12}
         color={color}
-        roughness={0.32}
+        metalness={0}
+        roughness={0.3}
       />
     </instancedMesh>
   );

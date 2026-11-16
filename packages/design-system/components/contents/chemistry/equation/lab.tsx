@@ -14,6 +14,7 @@ import { layoutReaction } from "@repo/design-system/components/contents/chemistr
 import {
   type ReactionLayout,
   ReactionScene,
+  reactionFloor,
 } from "@repo/design-system/components/contents/chemistry/equation/scene";
 import {
   ReactionProvider,
@@ -180,7 +181,11 @@ function ReactionCard({
         className={threeSceneFrameVariants()}
         render={<section />}
       >
-        <ScienceStage reach={layout.span / 2 + 1} setting="studio">
+        <ScienceStage
+          floor={reactionFloor(layout)}
+          reach={layout.span / 2 + 1}
+          setting="studio"
+        >
           <Suspense>
             <ReactionCamera layout={layout} />
             <ReactionScene
