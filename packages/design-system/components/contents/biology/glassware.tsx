@@ -23,9 +23,18 @@ import {
   Matrix4,
   Object3D,
   Quaternion,
+  SpotLight,
   Vector2,
   Vector3,
 } from "three";
+
+/** How long a rule's tick is at `mm` millimetres, as a share of the longest: full every centimetre, longer every half. */
+function tickLength(mm: number) {
+  if (mm % 10 === 0) {
+    return 1;
+  }
+  return mm % 5 === 0 ? 0.7 : 0.45;
+}
 
 /** A point in a lab scene, in metres. */
 type Point = readonly [number, number, number];
@@ -200,7 +209,7 @@ export function FlatRule({
     const place = new Vector3();
     const turn = new Quaternion();
     for (const mm of Arr.range(0, millimetres)) {
-      const long = mm % 10 === 0 ? 1 : mm % 5 === 0 ? 0.7 : 0.45;
+      const long = tickLength(mm);
       scale.set(1, 1, long);
       place.set(along(mm), 0.0021, -0.012 + (long * 0.013) / 2);
       mesh.setMatrixAt(mm, matrix.compose(place, turn, scale));
@@ -248,6 +257,14 @@ export function BenchLamp({ target }: { readonly target: Point }) {
     object.position.set(...target);
     return object;
   }, [target]);
+  // A bulb of about this many candela, its cone half-angle and soft edge;
+  // the light falls off with the square of the distance (decay 2).
+  const light = useMemo(() => {
+    const spot = new SpotLight(MATERIAL.headlightGlow, 2.4, 0, 0.5, 0.7, 2);
+    spot.target = aim;
+    return spot;
+  }, [aim]);
+  useEffect(() => () => light.dispose(), [light]);
   const shade = useMemo(
     () => [
       new Vector2(0.012, -0.02),
@@ -284,15 +301,7 @@ export function BenchLamp({ target }: { readonly target: Point }) {
         </mesh>
       </group>
       <primitive object={aim} />
-      <spotLight
-        angle={0.5}
-        color={MATERIAL.headlightGlow}
-        decay={2}
-        intensity={2.4}
-        penumbra={0.7}
-        position={[0.01, LAMP_HEIGHT, 0]}
-        target={aim}
-      />
+      <primitive object={light} position={[0.01, LAMP_HEIGHT, 0]} />
     </group>
   );
 }
@@ -408,8 +417,6 @@ export function LeafyShoot({
             <meshPhysicalMaterial
               color={MATERIAL.leaf}
               roughness={0.55}
-              sheen={0.4}
-              sheenColor={MATERIAL.leafUnder}
               side={DoubleSide}
             />
           </mesh>

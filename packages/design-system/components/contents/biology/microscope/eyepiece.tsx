@@ -75,6 +75,14 @@ export function EyepieceView({
   );
 }
 
+/** How tall a graticule tick is at division `index`, as a share of the tallest: full every tenth, longer every fifth. */
+function tickShare(index: number) {
+  if (index % 10 === 0) {
+    return 1;
+  }
+  return index % 5 === 0 ? 5 / 7 : 3 / 7;
+}
+
 /** Fills the triangles of each closed polygon from its first corner. */
 function fanPositions(
   outlines: readonly (readonly (readonly [number, number])[])[],
@@ -130,13 +138,6 @@ function circle(
 function nucleusShapes(cell: SlideCell) {
   const [x, z] = cell.nucleus;
   const r = cell.nucleusRadius;
-  const band = (offset: number) =>
-    [
-      [x - r * 1.3, z + offset - r * 0.2],
-      [x + r * 1.3, z + offset - r * 0.2],
-      [x + r * 1.3, z + offset + r * 0.2],
-      [x - r * 1.3, z + offset + r * 0.2],
-    ] as const;
   const rod = (cx: number, cz: number, angle: number, long = r * 0.7) => {
     const along = [Math.cos(angle) * long, Math.sin(angle) * long] as const;
     const across = [
@@ -282,7 +283,7 @@ function Graticule() {
   const positions = useMemo(
     () =>
       Arr.flatMap(Arr.range(0, GRATICULE_DIVISIONS), (index) => {
-        const tall = index % 10 === 0 ? 7 : index % 5 === 0 ? 5 : 3;
+        const tall = 7 * tickShare(index);
         const x = -length / 2 + index * step;
         return [x, 0.4, 0, x, 0.4, -tall];
       }),

@@ -92,15 +92,11 @@ export function FertilisationScene({
       ),
     []
   );
-  const grown =
-    stage === "pollination"
-      ? 0
-      : stage === "tube"
-        ? stageProgress("tube", elapsed)
-        : 1;
+  // Each stage's share of the run is 0 before it starts and 1 once it ends.
+  const grown = stageProgress("tube", elapsed);
   const tip = tube.getPointAt(Math.max(0.001, grown * 0.999));
   const entering = stage === "entry" ? stageProgress("entry", elapsed) : 0;
-  const fused = stage === "fusion" ? stageProgress("fusion", elapsed) : 0;
+  const fused = stageProgress("fusion", elapsed);
   const egg: Point = [OVULE[0] - 0.12, OVULE[1] + 0.46, OVULE[2] + 0.1];
   const polar: Point = [OVULE[0], OVULE[1], OVULE[2] + 0.1];
   const spermPosition = (target: Point, lead: number): Point => {
@@ -292,7 +288,6 @@ function Flower() {
         <meshPhysicalMaterial
           color={MATERIAL.ovary}
           roughness={0.55}
-          sheen={0.3}
           side={DoubleSide}
         />
       </mesh>
@@ -336,8 +331,6 @@ function Flower() {
             <meshPhysicalMaterial
               color={MATERIAL.petal}
               roughness={0.45}
-              sheen={0.6}
-              sheenColor={MATERIAL.petalSheen}
               side={DoubleSide}
             />
           </mesh>
@@ -398,7 +391,6 @@ function Ovules() {
         <meshPhysicalMaterial
           color={MATERIAL.ovule}
           roughness={0.45}
-          sheen={0.3}
           side={DoubleSide}
         />
       </mesh>
@@ -439,11 +431,7 @@ function PollenGrain() {
     <group position={STIGMA}>
       <mesh>
         <icosahedronGeometry args={[0.11, 2]} />
-        <meshStandardMaterial
-          color={MATERIAL.pollen}
-          flatShading
-          roughness={0.7}
-        />
+        <meshStandardMaterial color={MATERIAL.pollen} roughness={0.7} />
       </mesh>
     </group>
   );

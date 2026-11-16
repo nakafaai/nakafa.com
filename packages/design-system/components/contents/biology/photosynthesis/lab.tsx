@@ -78,7 +78,10 @@ export function PhotosynthesisLab({
             variant="outline"
           >
             {Arr.map(readings, (each, index) => (
-              <ToggleGroupItem key={index} value={String(index)}>
+              <ToggleGroupItem
+                key={`${each.distance}-${each.bubbles}-${each.bicarbonate === true}`}
+                value={String(index)}
+              >
                 <InlineMath
                   math={`${quantity(each.distance, "\\text{ cm}", 1)}${each.bicarbonate === true ? "+\\mathrm{NaHCO_3}" : ""}`}
                 />

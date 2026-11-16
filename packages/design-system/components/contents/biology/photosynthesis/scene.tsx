@@ -71,7 +71,7 @@ export function PhotosynthesisScene({
   const playing = useVisualScene((card) => card.playing, false);
   const time = useRef(bubbleInterval(reading.bubbles) * 0.4);
   const bubbles = useMemo(
-    () => Arr.map(Arr.range(1, POOL), () => createRef<Mesh>()),
+    () => Arr.map(Arr.range(1, POOL), (id) => ({ id, ref: createRef<Mesh>() })),
     []
   );
   const lampX = BEAKER_X - reading.distance / 100;
@@ -87,7 +87,7 @@ export function PhotosynthesisScene({
       TUBE.water - STEM_TOP
     );
     Arr.forEach(bubbles, (bubble, index) => {
-      const mesh = bubble.current;
+      const mesh = bubble.ref.current;
       if (mesh === null) {
         return;
       }
@@ -109,8 +109,8 @@ export function PhotosynthesisScene({
       <group position={[0, 0, 0.12]}>
         <Bath />
         <Hydrilla />
-        {Arr.map(bubbles, (bubble, index) => (
-          <mesh key={index} ref={bubble}>
+        {Arr.map(bubbles, (bubble) => (
+          <mesh key={bubble.id} ref={bubble.ref}>
             <sphereGeometry args={[0.0011, 12, 8]} />
             <meshPhysicalMaterial
               clearcoat={1}
@@ -265,8 +265,6 @@ function Hydrilla() {
         <meshPhysicalMaterial
           color={MATERIAL.hydrilla}
           roughness={0.5}
-          sheen={0.5}
-          sheenColor={MATERIAL.leafUnder}
           side={DoubleSide}
         />
       </instancedMesh>

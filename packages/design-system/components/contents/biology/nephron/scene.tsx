@@ -112,7 +112,7 @@ export function NephronScene({
   const efferent = useMemo(() => curve(EFFERENT), []);
   const time = useRef(TRANSIT * 0.55);
   const grains = useMemo(
-    () => Arr.map(Arr.range(1, POOL), () => createRef<Mesh>()),
+    () => Arr.map(Arr.range(1, POOL), (id) => ({ id, ref: createRef<Mesh>() })),
     []
   );
   const point = useMemo(() => new Vector3(), []);
@@ -123,7 +123,7 @@ export function NephronScene({
       time.current += simulationStep(delta);
     }
     Arr.forEach(grains, (grain, index) => {
-      const mesh = grain.current;
+      const mesh = grain.ref.current;
       if (mesh === null) {
         return;
       }
@@ -188,8 +188,8 @@ export function NephronScene({
         <tubeGeometry args={[efferent, 240, 0.055, 10, false]} />
         <meshStandardMaterial color={MATERIAL.bloodDark} roughness={0.45} />
       </mesh>
-      {Arr.map(grains, (grain, index) => (
-        <mesh key={index} ref={grain}>
+      {Arr.map(grains, (grain) => (
+        <mesh key={grain.id} ref={grain.ref}>
           <sphereGeometry args={[0.055, 12, 8]} />
           <meshStandardMaterial
             color={solute === "glucose" ? MATERIAL.glucose : MATERIAL.urea}

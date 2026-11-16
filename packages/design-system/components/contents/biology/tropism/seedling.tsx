@@ -9,7 +9,7 @@ import {
   tipHeading,
 } from "@repo/design-system/components/contents/biology/tropism/shape";
 import { MATERIAL } from "@repo/design-system/lib/material";
-import { Array as Arr } from "effect";
+import { Array as Arr, Option } from "effect";
 import { useMemo } from "react";
 import { CatmullRomCurve3, Vector3 } from "three";
 
@@ -80,7 +80,7 @@ export function SeedlingOrgan({
       new CatmullRomCurve3(Arr.map(points, ([x, y]) => new Vector3(x, y, 0))),
     [points]
   );
-  const tip = points[points.length - 1] ?? [0, 0];
+  const tip = Option.getOrElse(Arr.last(points), () => [0, 0] as const);
   const end = tipHeading(heading, turn);
   const grains = Arr.flatMap([-1, 1] as const, (side) => {
     const share = side === 1 ? split.far : split.near;
@@ -114,12 +114,7 @@ export function SeedlingOrgan({
     <group>
       <mesh castShadow>
         <tubeGeometry args={[path, 48, radius, 14, false]} />
-        <meshPhysicalMaterial
-          color={color}
-          roughness={0.5}
-          sheen={0.4}
-          sheenColor={MATERIAL.leafUnder}
-        />
+        <meshPhysicalMaterial color={color} roughness={0.5} />
       </mesh>
       {!cut && (
         <mesh position={[tip[0], tip[1], 0]}>

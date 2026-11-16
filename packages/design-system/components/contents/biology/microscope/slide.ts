@@ -187,6 +187,14 @@ export function slideCells(
   );
 }
 
+/** How long a micrometer line is at `index`, as a share of the longest: full every tenth, longer every fifth. */
+function lineLength(index: number) {
+  if (index % 10 === 0) {
+    return 1;
+  }
+  return index % 5 === 0 ? 0.7 : 0.45;
+}
+
 /**
  * The engraved lines of a stage micrometer across the field: one every
  * `spacing` field units, longer every fifth and every tenth, out to
@@ -195,7 +203,7 @@ export function slideCells(
 export function micrometerLines(spacing: number, reach: number) {
   const count = Math.floor(reach / spacing);
   return Arr.map(Arr.range(-count, count), (index) => ({
-    length: index % 10 === 0 ? 1 : index % 5 === 0 ? 0.7 : 0.45,
+    length: lineLength(index),
     x: index * spacing,
   }));
 }
