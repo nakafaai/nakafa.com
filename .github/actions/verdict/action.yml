@@ -14,11 +14,20 @@ runs:
       id: read
       shell: bash
       run: |
+        # GitHub's API now and then drops a call ("unexpected end of JSON input"). A status post is idempotent per context and a read changes nothing,
+        # so a failed call is sent again, failing the step only after the third.
+        retry() {
+          for attempt in 1 2 3; do
+            "$@" && return 0
+            [ "$attempt" = 3 ] || sleep 5
+          done
+          return 1
+        }
         post() {
-          gh api --silent "repos/$GITHUB_REPOSITORY/statuses/$SHA" \
+          retry gh api --silent "repos/$GITHUB_REPOSITORY/statuses/$SHA" \
             -f state="$1" -f context=verify -f target_url="$URL" -f description="$2"
         }
-        statuses="$(gh api "repos/$GITHUB_REPOSITORY/commits/$SHA/status?per_page=100" --jq \
+        statuses="$(retry gh api "repos/$GITHUB_REPOSITORY/commits/$SHA/status?per_page=100" --jq \
           "[.statuses[] | select(.target_url == \"$URL\" and (.context | test(\"^(gate|proof/(chromium|firefox|webkit))\$\"))) | {context, state}]")"
         [ "$(jq 'map(select(.state != "pending")) | length' <<< "$statuses")" = 4 ] || exit 0
         if [ "$(jq 'all(.state == "success")' <<< "$statuses")" = true ]; then
@@ -45,6 +54,15 @@ runs:
       if: steps.read.outputs.judge == 'true'
       shell: bash
       run: |
+        # GitHub's API now and then drops a call ("unexpected end of JSON input"). A status post is idempotent per context,
+        # so a failed call is sent again, failing the step only after the third.
+        retry() {
+          for attempt in 1 2 3; do
+            "$@" && return 0
+            [ "$attempt" = 3 ] || sleep 5
+          done
+          return 1
+        }
         node scripts/proof/group.ts "$SHA" "$RUNNER_TEMP/group" "$URL" | tee -a "$GITHUB_STEP_SUMMARY" \
-          || gh api --silent "repos/$GITHUB_REPOSITORY/statuses/$SHA" \
+          || retry gh api --silent "repos/$GITHUB_REPOSITORY/statuses/$SHA" \
             -f state=failure -f context=verify -f target_url="$URL" -f description="The verdict against main failed: see this run"
