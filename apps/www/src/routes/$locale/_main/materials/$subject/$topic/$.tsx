@@ -15,7 +15,7 @@ import { AiMenuItem } from "@/components/ai/sheet/menu";
 import { DeferredComments } from "@/components/comments/deferred";
 import { ContentByline } from "@/components/content/byline";
 import { ContentHeader } from "@/components/content/header";
-import { ContentTitle } from "@/components/content/title";
+import { ContentLead, ContentTitle } from "@/components/content/title";
 import { OpenContent } from "@/components/shared/content/actions";
 import {
   MaterialBreadcrumb,
@@ -283,6 +283,9 @@ function MaterialPage() {
             </OpenContent>
           </ContentHeader>
           <ContentTitle title={metadata.title}>
+            {metadata.description === undefined ? null : (
+              <ContentLead>{metadata.description}</ContentLead>
+            )}
             <ContentByline
               authors={metadata.authors}
               {...(metadata.dateModified === undefined
