@@ -29,6 +29,7 @@ import {
   type Orbit,
   openingOrbit,
 } from "@/lib/island/camera";
+import { roofOf } from "@/lib/island/cover";
 import { hoeOf, ripeningOf, sownOf, waterOf } from "@/lib/island/farming";
 import type { Point } from "@/lib/island/gesture";
 import { islesMesh } from "@/lib/island/isles";
@@ -125,6 +126,7 @@ function start(
       );
     }
     painter.shore(shoreOf(cells, store.getState().seed, true));
+    painter.roof(roofOf(cells));
     needsDraw = true;
   };
   painter.isles(islesMesh(store.getState().seed));

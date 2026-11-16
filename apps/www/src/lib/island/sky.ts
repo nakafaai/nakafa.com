@@ -175,7 +175,7 @@ export function weatherOf(icon: string): Weather {
  * of a streak and the sway of a flake in cells, its linear RGBA color, and
  * whether it falls as flakes (points) or streaks (lines).
  */
-export const Fall = Schema.Struct({
+const Fall = Schema.Struct({
   color: Schema.Tuple([
     Schema.Finite,
     Schema.Finite,
@@ -188,7 +188,7 @@ export const Fall = Schema.Struct({
   speed: Schema.Finite,
   sway: Schema.Finite,
 });
-export type Fall = typeof Fall.Type;
+type Fall = typeof Fall.Type;
 
 /** Rain: fast slanted streaks. */
 // Light enough to show the weather without hiding the world under it: few, faint drops whose tails fade.
