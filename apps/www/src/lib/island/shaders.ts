@@ -286,6 +286,44 @@ void main() {
   color = vec4(uColor.rgb, min(1.0, uColor.a * (1.0 - vTail * 0.75) * (vAge > 0.0 ? 1.6 : 1.0)) * (1.0 - vAge * 0.6));
 }`;
 
+/**
+ * The smoke program (ADR 0047, D33): puffs rising from every chimney, twelve to
+ * a chimney, each a soft round blot of whole art pixels that grows as it
+ * rises, slows as it cools and leans farther the higher it gets, carried by
+ * the one wind of D32. A puff's place comes from the time alone.
+ */
+export const SMOKE_VERTEX = `#version 300 es
+layout(location = 0) in vec3 aChimney;
+uniform mat4 uViewProjection;
+${WIND_GLSL}
+out float vAge;
+const float PUFFS = 12.0;
+const float LIFE = 7.0;
+void main() {
+  float seed = fract(sin(dot(aChimney.xz, vec2(12.9898, 78.233))) * 43758.5453);
+  float age = fract(uWind.z / LIFE + float(gl_VertexID) / PUFFS + seed);
+  vAge = age;
+  float rise = 3.6 * sqrt(age);
+  vec2 lean = WIND_HEADING * (0.5 * uWindForce + 2.0 * windField(aChimney.xz, 2.2)) * age * age * 3.0;
+  float sway = sin(age * 7.0 + seed * 20.0) * 0.18 * age;
+  vec3 at = aChimney + vec3(lean.x + sway * WIND_HEADING.y, rise, lean.y - sway * WIND_HEADING.x);
+  gl_Position = uViewProjection * vec4(at, 1.0);
+  gl_PointSize = floor(3.0 + 6.0 * age + 0.5);
+}`;
+
+export const SMOKE_FRAGMENT = `#version 300 es
+precision mediump float;
+uniform vec3 uTint;
+in float vAge;
+out vec4 color;
+void main() {
+  vec2 at = gl_PointCoord - 0.5;
+  if (dot(at, at) > 0.25) discard;
+  // A puff swells in, then thins away as it rises.
+  float alpha = smoothstep(0.0, 0.06, vAge) * (1.0 - vAge * vAge) * 0.75;
+  color = vec4(uTint, alpha);
+}`;
+
 /** The outline program: the twelve edges of the cell a press would change, drawn over everything. */
 export const OUTLINE_VERTEX = `#version 300 es
 layout(location = 0) in vec3 aCorner;
