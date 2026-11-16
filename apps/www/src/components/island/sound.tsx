@@ -2,10 +2,12 @@
 
 import { useRequired } from "@repo/design-system/hooks/required";
 import { Array as Arr, DateTime, Option } from "effect";
+import { createPatter } from "@/components/island/patter";
 import { type GameStoreApi, GameStoreContext } from "@/components/island/store";
 import { createTread } from "@/components/island/tread";
 import { callOf, voicesOf } from "@/lib/island/chorus";
 import { unitOf } from "@/lib/island/noise";
+import { roofShareOf } from "@/lib/island/patter";
 import { fallOf, hourOf } from "@/lib/island/sky";
 import { thundersBetween } from "@/lib/island/storm";
 import { gustAt, WIND_FORCE } from "@/lib/island/wind";
@@ -18,6 +20,7 @@ const THUNDER_AHEAD = 2;
 const AMBIENCE = {
   bird: 0.05,
   crickets: 0.012,
+  patter: 0.06,
   rain: 0.05,
   sea: 0.035,
   wind: 0.045,
@@ -63,7 +66,8 @@ function bed(
  * The island's sound (ADR 0047, D8), synthesized in Web Audio with no file: a
  * wooden knock when a block is placed, a gritty crunch when one is dug, the sea
  * rolling under everything, a wind that rises with each gust, birds by day and
- * crickets by night (D37), rain when it rains, thunder after a storm's
+ * crickets by night (D37), rain when it rains, pattering on the roofs as
+ * much as the village has roofs (D42), thunder after a storm's
  * lightning, late by the distance it crossed, and the fox's footsteps on
  * whatever it walks over (D40). It starts at the learner's
  * first press, as browsers ask, and follows the game's switch.
@@ -74,6 +78,8 @@ function startSound(store: GameStoreApi) {
   master.connect(audio.destination);
   const noise = noiseOf(audio);
   const tread = createTread(audio, noise, master);
+  const patter = createPatter(audio, master);
+  let roofs = roofShareOf(store.getState().cells);
   const sea = bed(audio, noise, "lowpass", 420, master);
   const rain = bed(audio, noise, "highpass", 2200, master);
   const swell = audio.createOscillator();
@@ -88,11 +94,10 @@ function startSound(store: GameStoreApi) {
     const now = audio.currentTime;
     master.gain.setTargetAtTime(muted ? 0 : 1, now, 0.1);
     sea.gain.setTargetAtTime(AMBIENCE.sea, now, 0.5);
-    rain.gain.setTargetAtTime(
-      Option.isSome(fallOf(weather)) && weather !== "snow" ? AMBIENCE.rain : 0,
-      now,
-      0.8
-    );
+    const raining = Option.isSome(fallOf(weather)) && weather !== "snow";
+    rain.gain.setTargetAtTime(raining ? AMBIENCE.rain : 0, now, 0.8);
+    // A village roofed over a quarter of its land patters as loud as it can.
+    patter(raining ? AMBIENCE.patter * Math.min(1, roofs * 4) : 0);
   };
 
   /** A short knock: a falling tone with a click on top. */
@@ -234,7 +239,14 @@ function startSound(store: GameStoreApi) {
 
   settle();
   const unsubscribe = store.subscribe((state, previous) => {
-    if (state.muted !== previous.muted || state.weather !== previous.weather) {
+    if (state.revision !== previous.revision) {
+      roofs = roofShareOf(state.cells);
+    }
+    if (
+      state.muted !== previous.muted ||
+      state.weather !== previous.weather ||
+      state.revision !== previous.revision
+    ) {
       settle();
     }
     if (state.steps > previous.steps && !state.muted) {
