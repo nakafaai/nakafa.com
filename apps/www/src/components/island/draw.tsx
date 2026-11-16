@@ -18,6 +18,7 @@ import {
   SLOTS,
 } from "@/lib/island/atlas";
 import { eyeOf, type Orbit, snapOrbit } from "@/lib/island/camera";
+import type { islesMesh } from "@/lib/island/isles";
 import { CLIP, invert, viewProjectionOf } from "@/lib/island/matrix";
 import type { meshChunk } from "@/lib/island/mesh";
 import { mipsOf } from "@/lib/island/mips";
@@ -114,6 +115,8 @@ export function createPainter(canvas: HTMLCanvasElement, season: Season) {
         water: Option.none<ReturnType<typeof uploadList>>(),
       }));
       const sea = uploadList(gl, seaRing(SEA_LEVEL - 0.125, [0, 0], 1));
+      // The other isles of the archipelago (D23): one static list, set once a game.
+      let isles = Option.none<ReturnType<typeof uploadList>>();
       const sandSlot = SLOTS.sand;
       const floor = uploadList(
         gl,
@@ -236,6 +239,10 @@ export function createPainter(canvas: HTMLCanvasElement, season: Season) {
         gl.bindVertexArray(floor.vao);
         gl.drawElements(gl.TRIANGLES, floor.count, gl.UNSIGNED_INT, 0);
         drawLists("solid");
+        Option.map(isles, (list) => {
+          gl.bindVertexArray(list.vao);
+          gl.drawElements(gl.TRIANGLES, list.count, gl.UNSIGNED_INT, 0);
+        });
         gl.disable(gl.CULL_FACE);
         gl.bindVertexArray(herd.vao);
         gl.drawElements(gl.TRIANGLES, herd.count(), gl.UNSIGNED_INT, 0);
@@ -380,6 +387,11 @@ export function createPainter(canvas: HTMLCanvasElement, season: Season) {
         }) {
           herd.write(quads);
         },
+        /** Sets the other isles of the archipelago, drawn with the blocks from then on (D23). */
+        isles(mesh: ReturnType<typeof islesMesh>) {
+          Option.map(isles, (list) => list.release());
+          isles = Option.some(uploadList(gl, mesh));
+        },
         /** Replaces where every true 3D body stands this frame (D21). */
         bodies(next: Parameters<typeof bodies.write>[0]) {
           bodies.write(next);
@@ -440,6 +452,7 @@ export function createPainter(canvas: HTMLCanvasElement, season: Season) {
             Option.map(chunk.water, (list) => list.release());
           }
           sea.release();
+          Option.map(isles, (list) => list.release());
           weather.release();
           target.release();
           outline.release();

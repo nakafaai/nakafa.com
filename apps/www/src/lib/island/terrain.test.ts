@@ -86,4 +86,23 @@ describe("island/terrain", () => {
     expect(blockAt(cells, middle, SEA_LEVEL + 1, middle)).toBe(idOf("planks"));
     expect(blockAt(cells, middle, SEA_LEVEL, middle)).toBe(0);
   });
+
+  it("holds a pond in the meadow of every island, well inside its shore, a block under the ground", () => {
+    for (const seed of [7, 11, 2026]) {
+      const cells = terrainOf(seed, 64);
+      const pond = Arr.filter(
+        Arr.flatMap(
+          Arr.makeBy(SPAN, (z) => z),
+          (z) => Arr.makeBy(SPAN, (x) => [x, z] as const)
+        ),
+        ([x, z]) =>
+          Math.hypot(x + 0.5 - SPAN / 2, z + 0.5 - SPAN / 2) < 21 &&
+          blockAt(cells, x, SEA_LEVEL - 1, z) === idOf("water")
+      );
+      expect(pond.length).toBeGreaterThan(4);
+      for (const [x, z] of pond) {
+        expect(blockAt(cells, x, SEA_LEVEL, z)).toBe(0);
+      }
+    }
+  });
 });
