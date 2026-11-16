@@ -2450,7 +2450,7 @@
     "route-metadata-description": "Peperiksaan percubaan {name} bermasa, dimarkah sebaik sahaja kamu selesai. Percuma dan tanpa had di Nakafa.",
     "search-title": "Peperiksaan Percubaan {name} Percuma",
     "track-metadata-description": "Pilih set percubaan {exam} di Nakafa: bermasa, dan dimarkah sebaik sahaja kamu selesai.",
-    "set-metadata-description": "Jawab {exam} {set} percuma di Nakafa: tengok contoh soalan berserta penerangannya, kemudian cuba percubaan bermasa yang dimarkah sebaik sahaja kamu selesai.",
+    "set-metadata-description": "Jawab {count} soalan {exam} {set} percuma: tengok contoh soalan lengkap dengan jawapan dan penerangan, kemudian buat percubaan bermasa yang terus dimarkah.",
     "section-metadata-description": "Berlatih {section} daripada {exam} {set} di Nakafa: percubaan bermasa, dimarkah sebaik sahaja kamu selesai.",
     "open-set-cta": "Lihat set",
     "list-empty": "Tiada percubaan yang dipaparkan sekarang.",
@@ -2514,7 +2514,7 @@
       "continue-cta": "Teruskan",
       "restart-cta": "Mula semula"
     },
-    "set-search-title": "{set}: Latihan Soalan Percubaan {exam} Percuma",
+    "set-search-title": "{count} Soalan Percubaan {exam} {set} Percuma",
     "samples-title": "Contoh soalan dan penerangan",
     "samples-description": "Tengok soalan-soalan awal set ini, lengkap dengan jawapan dan penerangannya.",
     "siblings-title": "Set lain",

@@ -64,9 +64,14 @@ export const readTryoutSetRoute = Effect.fn("www.tryout.route.readSet")(
       },
     });
     const exam = `${page.exam.title} ${page.group.title} ${page.track.title}`;
-    const values = { exam, set: page.set.title };
+    const values = {
+      count: page.set.questionCount,
+      exam,
+      set: page.set.title,
+    };
     return {
-      // Every exam has a Set 1, so the page names its exam too.
+      // Every exam has a Set 1, so the page names its exam too, and a searcher who asks for a number of
+      // questions meets the set's own count.
       head: {
         ...head.value,
         description:
