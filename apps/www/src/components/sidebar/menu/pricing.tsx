@@ -10,7 +10,11 @@ import type { CurrentUser } from "@/lib/identity/client";
 import { Link } from "@/lib/routing/link";
 import { EXACT_ACTIVE_OPTIONS } from "@/lib/routing/tree";
 
-/** Links a sidebar footer to the localized pricing page. */
+/**
+ * Links a sidebar footer to the localized pricing page. The page stands in the
+ * marketing shell, which no app page runs, so the link warms on the reader's
+ * intent and never on a look (`data-cold`).
+ */
 export function PricingItem() {
   const t = useTranslations("Auth");
   const label = t("pricing-cta");
@@ -21,6 +25,7 @@ export function PricingItem() {
         render={
           <Link
             activeOptions={EXACT_ACTIVE_OPTIONS}
+            data-cold=""
             title={label}
             to="/$locale/pricing"
           />
