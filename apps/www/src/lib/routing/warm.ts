@@ -12,8 +12,14 @@ const WARMED_LINKS = 6;
 /** The links two at a time, so a slow phone keeps room for what the reader does. */
 const WARMED_AT_ONCE = 2;
 
-/** Every link inside the app. */
-const LINKS = 'a[href^="/"]';
+/**
+ * Every link inside the app that a look may warm. A link marked `data-cold`
+ * waits for the reader's intent, which the router preloads on a hover, a focus
+ * or a touch: it leads into a shell whose code the page never runs, as the app's
+ * pricing link leads into the marketing shell, so a look would spend a phone's
+ * data on that whole shell for a press the reader rarely makes.
+ */
+const LINKS = 'a[href^="/"]:not([data-cold])';
 
 /**
  * The tabs of a page, which it marks with `data-warm`. A tab is the likely next

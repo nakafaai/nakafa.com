@@ -105,6 +105,30 @@ describe("warm links", () => {
     })
   );
 
+  it.effect(
+    "leaves a link marked cold to the reader's intent, tab or not",
+    () =>
+      Effect.gen(function* () {
+        drawLinks([
+          { href: "/en/pricing", top: 0 },
+          { href: "/en/quran/1", top: 10 },
+        ]);
+        const pricing = document.querySelector('a[href="/en/pricing"]');
+        pricing?.setAttribute("data-cold", "");
+        pricing?.setAttribute("data-warm", "");
+        const { preloadRoute, router } = routerOf({
+          "/en/pricing": "/$locale/pricing",
+          "/en/quran/1": "/$locale/quran/$surah/",
+        });
+
+        yield* warmLinks(router);
+
+        expect(
+          Arr.map(preloadRoute.mock.calls, ([{ href }]) => href)
+        ).toStrictEqual(["/en/quran/1"]);
+      })
+  );
+
   it.effect("warms a page's tabs first, though they ask the Worker", () =>
     Effect.gen(function* () {
       const hrefs = Arr.makeBy(7, (index) => `/en/quran/${index}`);
