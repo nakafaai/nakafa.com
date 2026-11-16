@@ -1,3 +1,5 @@
+import { useTranslations } from "use-intl";
+import { PaneHeader } from "@/components/shared/page/pane";
 import {
   TryoutFinishedFacts,
   TryoutFinishedPanel,
@@ -44,6 +46,7 @@ export interface TryoutSetOverviewProps {
  * above its parts.
  */
 export function TryoutSetOverview({ value }: TryoutSetOverviewProps) {
+  const t = useTranslations("Tryouts");
   return (
     <TryoutPage>
       <TryoutSetPageHeader
@@ -73,9 +76,15 @@ export function TryoutSetOverview({ value }: TryoutSetOverviewProps) {
       {value.actionAttempt?.score ? (
         <TryoutFinishedPanes
           panel={
-            <TryoutFinishedPanel runtime={null}>
-              <TryoutFinishedFacts score={value.actionAttempt.score} />
-            </TryoutFinishedPanel>
+            <>
+              <PaneHeader
+                description={value.page.set.title}
+                title={t("finished-panel")}
+              />
+              <TryoutFinishedPanel runtime={null}>
+                <TryoutFinishedFacts score={value.actionAttempt.score} />
+              </TryoutFinishedPanel>
+            </>
           }
         >
           <TryoutSetParts value={value} />
@@ -86,7 +95,12 @@ export function TryoutSetOverview({ value }: TryoutSetOverviewProps) {
             <TryoutCountdown expiresAt={value.activeAttempt.expiresAt} />
           ) : null}
           <TryoutSetParts value={value} />
-          <TryoutFinishedPlace pending={value.actionAttempt === undefined} />
+          <TryoutFinishedPlace pending={value.actionAttempt === undefined}>
+            <PaneHeader
+              description={value.page.set.title}
+              title={t("finished-panel")}
+            />
+          </TryoutFinishedPlace>
         </TryoutPageBody>
       )}
     </TryoutPage>

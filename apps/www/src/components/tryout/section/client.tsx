@@ -3,11 +3,12 @@ import tryouts from "@repo/backend/confect/_generated/refs/tryouts";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { Option } from "effect";
 import { createContext, type ReactNode, use, useState } from "react";
-import { useLocale } from "use-intl";
+import { useLocale, useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import type { PlayerMode } from "@/components/player/mode";
 import { useNow } from "@/components/player/now";
 import { PlayerTimer } from "@/components/player/timer";
+import { PaneHeader } from "@/components/shared/page/pane";
 import { ShellLock } from "@/components/sidebar/lock";
 import type { TryoutBody } from "@/components/tryout/content/body";
 import { TryoutContentContext } from "@/components/tryout/content/context";
@@ -221,6 +222,7 @@ function ResolvedTryoutSectionPage({
   finish: TryoutFinish | null;
   state: SectionState;
 }) {
+  const t = useTranslations("Tryouts");
   const { page, pending, route } = useTryoutSectionPage();
   const opening = useTryoutStartPhase() === "opening";
   const attempt = state?.attempt ?? null;
@@ -286,12 +288,18 @@ function ResolvedTryoutSectionPage({
       {runtimeState.kind === "review" && actionAttempt?.section?.score ? (
         <TryoutFinishedPanes
           panel={
-            <TryoutFinishedPanel runtime={runtimeState.runtime}>
-              <TryoutFinishedFacts
-                score={actionAttempt.section.score}
-                seconds={page.section.timeLimitSeconds}
+            <>
+              <PaneHeader
+                description={page.section.title}
+                title={t("finished-panel")}
               />
-            </TryoutFinishedPanel>
+              <TryoutFinishedPanel runtime={runtimeState.runtime}>
+                <TryoutFinishedFacts
+                  score={actionAttempt.section.score}
+                  seconds={page.section.timeLimitSeconds}
+                />
+              </TryoutFinishedPanel>
+            </>
           }
         >
           {children}
@@ -305,7 +313,12 @@ function ResolvedTryoutSectionPage({
               section: page.section,
             }}
           />
-          <TryoutFinishedPlace pending={actionAttempt === undefined} />
+          <TryoutFinishedPlace pending={actionAttempt === undefined}>
+            <PaneHeader
+              description={page.section.title}
+              title={t("finished-panel")}
+            />
+          </TryoutFinishedPlace>
         </TryoutPageBody>
       )}
     </TryoutPage>

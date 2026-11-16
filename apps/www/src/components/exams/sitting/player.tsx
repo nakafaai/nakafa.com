@@ -290,7 +290,7 @@ function RunningPaper({
       {header}
       <PlayerMain
         navigator={
-          <PlayerSidebar>
+          <PlayerSidebar questions={questions}>
             <PlayerGrid questions={questions} />
             <PlayerLegend />
           </PlayerSidebar>

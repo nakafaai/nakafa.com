@@ -6,7 +6,7 @@ import { type ComponentProps, type ReactNode, use } from "react";
 import { useTranslations } from "use-intl";
 import { readQuestionIds } from "@/components/player/ids";
 import { splitTime } from "@/components/player/time";
-import { PaneBody, PaneHeader } from "@/components/shared/page/pane";
+import { PaneBody } from "@/components/shared/page/pane";
 import {
   PagePane,
   Panes,
@@ -36,7 +36,7 @@ export function TryoutFinishedPanes({
   panel,
 }: {
   children: ReactNode;
-  /** The second pane's body and footer, under its header. */
+  /** The second pane whole: its header (`PaneHeader`, titled Your result), its body and its footer. */
   panel: ReactNode;
 }) {
   const t = useTranslations("Tryouts");
@@ -52,7 +52,6 @@ export function TryoutFinishedPanes({
           </div>
         </PanesList>
         <PagePane alwaysOn label={t("finished-panel")}>
-          <PaneHeader title={t("finished-panel")} />
           {panel}
         </PagePane>
       </Panes>
@@ -106,8 +105,14 @@ export function TryoutFinishedPanel({
  * page this browser last read as finished stands an empty pane there from the first frame, under the
  * title the pane will carry, and nothing moves when the pane arrives. A first visit has nothing to draw.
  */
-export function TryoutFinishedPlace({ pending }: { pending: boolean }) {
-  const t = useTranslations("Tryouts");
+export function TryoutFinishedPlace({
+  children,
+  pending,
+}: {
+  /** The header the pane will carry, so it stands whole from the first frame. */
+  children: ReactNode;
+  pending: boolean;
+}) {
   const waiting = useFactsWaiting(pending);
   const finished = useKeptFinished();
   if (!waiting) {
@@ -122,7 +127,7 @@ export function TryoutFinishedPlace({ pending }: { pending: boolean }) {
       inert
     >
       <PaneEdge resizer={STILL_EDGE} />
-      <PaneHeader title={t("finished-panel")} />
+      {children}
       <script
         // biome-ignore lint/security/noDangerouslySetInnerHtml: the script text is built from constants only
         dangerouslySetInnerHTML={{ __html: KEPT_PANE_SCRIPT }}

@@ -85,7 +85,10 @@ function AttemptAnswers({
   if (QueryResult.isFailure(read)) {
     return (
       <>
-        <PaneHeader title={t("results-student-answers")} />
+        <PaneHeader
+          description={t("results-state-unavailable")}
+          title={t("results-student-answers")}
+        />
         <PaneBody>
           <p className="text-muted-foreground text-sm">
             {t("results-unavailable")}
@@ -101,7 +104,10 @@ function AttemptAnswers({
   if (result === null) {
     return (
       <>
-        <PaneHeader title={t("results-student-answers")} />
+        <PaneHeader
+          description={t("results-state-not-submitted")}
+          title={t("results-student-answers")}
+        />
         <PaneBody>
           <p className="text-sm">{t("results-not-submitted")}</p>
         </PaneBody>

@@ -126,7 +126,7 @@ export function ExamTryPaper({
               </PaperBar>
               <PlayerMain
                 navigator={
-                  <PlayerSidebar>
+                  <PlayerSidebar questions={models}>
                     <PlayerGrid questions={models} />
                     <PlayerLegend />
                   </PlayerSidebar>

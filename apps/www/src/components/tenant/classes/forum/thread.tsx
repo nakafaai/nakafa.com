@@ -288,7 +288,17 @@ function ThreadHeader() {
         : t("thread-title"),
   });
 
-  return <PaneHeader title={label} />;
+  const replies = Option.match(use(ThreadShownContext), {
+    onNone: () => 0,
+    onSome: ({ thread }) => thread.opening.discussion?.replies ?? 0,
+  });
+
+  return (
+    <PaneHeader
+      description={t("discussion-replies", { count: replies })}
+      title={label}
+    />
+  );
 }
 
 /**

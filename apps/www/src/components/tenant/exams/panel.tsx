@@ -22,7 +22,7 @@ export function ExamPanel() {
     <PagePane alwaysOn label={t("teacher-layer")}>
       <PaneHeader
         description={Option.match(active, {
-          onNone: () => undefined,
+          onNone: () => t("teacher-layer-none"),
           onSome: (page) => t("question", { number: page.index + 1 }),
         })}
         title={t("teacher-layer")}

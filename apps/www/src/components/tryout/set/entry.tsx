@@ -1,6 +1,8 @@
 import type { ReactNode } from "react";
+import { useTranslations } from "use-intl";
 import type { PlayerMode } from "@/components/player/mode";
 import { PlayerTimer } from "@/components/player/timer";
+import { PaneHeader } from "@/components/shared/page/pane";
 import type { TryoutFinish } from "@/components/tryout/player/finish";
 import {
   TryoutPlayerOpening,
@@ -47,6 +49,7 @@ interface TryoutSetEntryProps {
  * the player's frame until it runs, and every other state is the set page.
  */
 export function TryoutSetEntry({ children, value }: TryoutSetEntryProps) {
+  const t = useTranslations("Tryouts");
   const opening = useTryoutStartPhase() === "opening";
   const state = value.runtimeState;
   if (value.player && isTryoutRuntimeRunning(state)) {
@@ -91,14 +94,20 @@ export function TryoutSetEntry({ children, value }: TryoutSetEntryProps) {
       {value.actionAttempt?.score ? (
         <TryoutFinishedPanes
           panel={
-            <TryoutFinishedPanel
-              runtime={state.kind === "review" ? state.runtime : null}
-            >
-              <TryoutFinishedFacts
-                score={value.actionAttempt.score}
-                seconds={value.entrySection.timeLimitSeconds}
+            <>
+              <PaneHeader
+                description={value.page.set.title}
+                title={t("finished-panel")}
               />
-            </TryoutFinishedPanel>
+              <TryoutFinishedPanel
+                runtime={state.kind === "review" ? state.runtime : null}
+              >
+                <TryoutFinishedFacts
+                  score={value.actionAttempt.score}
+                  seconds={value.entrySection.timeLimitSeconds}
+                />
+              </TryoutFinishedPanel>
+            </>
           }
         >
           {state.kind === "review" ? children : null}
@@ -112,7 +121,12 @@ export function TryoutSetEntry({ children, value }: TryoutSetEntryProps) {
               section: value.entrySection,
             }}
           />
-          <TryoutFinishedPlace pending={value.actionAttempt === undefined} />
+          <TryoutFinishedPlace pending={value.actionAttempt === undefined}>
+            <PaneHeader
+              description={value.page.set.title}
+              title={t("finished-panel")}
+            />
+          </TryoutFinishedPlace>
         </TryoutPageBody>
       )}
     </TryoutPage>
