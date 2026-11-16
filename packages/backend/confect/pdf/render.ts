@@ -12,7 +12,7 @@ import {
   PDF_FONT,
   type PdfFrame,
 } from "@repo/backend/confect/pdf/frame";
-import { THEME_COMPATIBILITY_COLORS } from "@repo/design-system/lib/theme/compatibility";
+import { THEME_COMPATIBILITY_COLORS } from "@repo/palette/colors";
 import { COMPANY_IDENTITY } from "@repo/seo/company";
 import {
   Array as Arr,

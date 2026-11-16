@@ -80,6 +80,7 @@
   "devDependencies": {
     "@effect/platform-node": "catalog:",
     "@effect/vitest": "catalog:",
+    "@repo/palette": "workspace:*",
     "@repo/testing": "workspace:*",
     "@repo/typescript-config": "workspace:*",
     "@types/react": "catalog:",

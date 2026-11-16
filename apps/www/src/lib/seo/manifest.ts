@@ -1,4 +1,4 @@
-import { THEME_COMPATIBILITY_COLORS } from "@repo/design-system/lib/theme/compatibility";
+import { THEME_COMPATIBILITY_COLORS } from "@repo/palette/colors";
 import { encodeJsonText } from "@repo/utilities/json";
 import { Effect } from "effect";
 import { readCopy } from "@/lib/i18n/copy.server";

@@ -59,6 +59,22 @@
           ]
         }
       },
+      "palette": {
+        "dependencies": {
+          "deny": [
+            "app",
+            "analytics",
+            "backend",
+            "contents",
+            "design-system",
+            "editor",
+            "mail",
+            "mascot",
+            "math",
+            "utilities"
+          ]
+        }
+      },
       "analytics": {
         "dependencies": {
           "deny": ["app", "backend", "contents", "design-system", "mail"]
@@ -89,12 +105,12 @@
       },
       "mail": {
         "dependencies": {
-          "deny": ["app", "backend", "contents"]
+          "deny": ["app", "backend", "contents", "design-system"]
         }
       },
       "backend": {
         "dependencies": {
-          "deny": ["app"]
+          "deny": ["app", "design-system"]
         }
       }
     }

@@ -101,6 +101,7 @@
         "@repo/internationalization": "workspace:*",
         "@repo/mascot": "workspace:*",
         "@repo/math": "workspace:*",
+        "@repo/palette": "workspace:*",
         "@repo/seo": "workspace:*",
         "@repo/site": "workspace:*",
         "@repo/utilities": "workspace:*",
@@ -207,11 +208,11 @@
         "@react-email/render": "catalog:",
         "@repo/analytics": "workspace:*",
         "@repo/contents": "workspace:*",
-        "@repo/design-system": "workspace:*",
         "@repo/editor": "workspace:*",
         "@repo/email": "workspace:*",
         "@repo/mascot": "workspace:*",
         "@repo/math": "workspace:*",
+        "@repo/palette": "workspace:*",
         "@repo/seo": "workspace:*",
         "@repo/utilities": "workspace:*",
         "@tiptap/core": "3.33.0",
@@ -380,6 +381,7 @@
       "devDependencies": {
         "@effect/platform-node": "catalog:",
         "@effect/vitest": "catalog:",
+        "@repo/palette": "workspace:*",
         "@repo/testing": "workspace:*",
         "@repo/typescript-config": "workspace:*",
         "@types/react": "catalog:",
@@ -423,7 +425,7 @@
       "dependencies": {
         "@nakafa/aksara-contracts": "6.5.0",
         "@react-email/render": "catalog:",
-        "@repo/design-system": "workspace:*",
+        "@repo/palette": "workspace:*",
         "@repo/seo": "workspace:*",
         "@repo/utilities": "workspace:*",
         "effect": "catalog:",
@@ -487,6 +489,13 @@
         "@repo/typescript-config": "workspace:*",
         "@vitest/coverage-istanbul": "catalog:",
         "vitest": "catalog:",
+      },
+    },
+    "packages/palette": {
+      "name": "@repo/palette",
+      "version": "0.1.0",
+      "devDependencies": {
+        "@repo/typescript-config": "workspace:*",
       },
     },
     "packages/seo": {
@@ -1193,6 +1202,8 @@
     "@repo/mascot": ["@repo/mascot@workspace:packages/mascot"],
 
     "@repo/math": ["@repo/math@workspace:packages/math"],
+
+    "@repo/palette": ["@repo/palette@workspace:packages/palette"],
 
     "@repo/seo": ["@repo/seo@workspace:packages/seo"],
 

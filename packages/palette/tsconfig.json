@@ -1,0 +1,10 @@
+{
+  "extends": "@repo/typescript-config/library.json",
+  "compilerOptions": {
+    "paths": {
+      "@repo/palette/*": ["./*"]
+    }
+  },
+  "include": ["**/*.ts"],
+  "exclude": ["node_modules"]
+}
