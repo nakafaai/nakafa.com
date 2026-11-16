@@ -97,6 +97,18 @@ const untilGesture = Effect.callback<void>((resume) => {
 });
 
 /**
+ * Completes at the reader's first gesture, at once when they already made one since the document first asked, and
+ * never on a page nobody touches. What only a reader's intent should load waits here, such as a lesson's 3D scene,
+ * whose code is the largest part of the lesson's JavaScript: a crawler, Lighthouse and a reader who never moves see
+ * its placeholder, and the first scroll, pointer move, touch or key brings it.
+ */
+export const untilReaderGesture = Effect.suspend(() =>
+  MutableRef.get(readerGestured)
+    ? Effect.void
+    : listenForGesture.pipe(Effect.andThen(untilGesture))
+);
+
+/**
  * Completes once a settled page has its reader: at once when they already made a
  * gesture since the document first asked, else at the first gesture, or after ten
  * seconds without one, and then at the browser's next idle moment. A phone spends
