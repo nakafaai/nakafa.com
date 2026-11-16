@@ -4697,7 +4697,7 @@
     "leave": "Leave the island",
     "close": "Close",
     "level": "Level {level}",
-    "next": "{stars} more Stars to level {level}",
+    "next": "{stars, number} Stars to level {level}",
     "locked": "Opens at level {level}",
     "earn": "Learn to earn Stars: +{lesson} a lesson, +{section} a try-out section, +{set} a finished set.",
     "block-grass": "Grass",

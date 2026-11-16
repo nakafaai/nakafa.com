@@ -4697,7 +4697,7 @@
     "leave": "Insel verlassen",
     "close": "Schließen",
     "level": "Stufe {level}",
-    "next": "Noch {stars} Sterne bis Stufe {level}",
+    "next": "{stars, number} Sterne bis Stufe {level}",
     "locked": "Ab Stufe {level}",
     "earn": "Lern und sammle Sterne: +{lesson} pro Lektion, +{section} pro Testabschnitt, +{set} pro fertigem Set.",
     "block-grass": "Gras",

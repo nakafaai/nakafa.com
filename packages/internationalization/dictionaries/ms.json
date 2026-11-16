@@ -4697,7 +4697,7 @@
     "leave": "Keluar dari pulau",
     "close": "Tutup",
     "level": "Tahap {level}",
-    "next": "{stars} Bintang lagi ke tahap {level}",
+    "next": "{stars, number} Bintang ke tahap {level}",
     "locked": "Dibuka pada tahap {level}",
     "earn": "Belajar untuk dapat Bintang: +{lesson} setiap pelajaran, +{section} setiap bahagian try out, +{set} setiap set yang selesai.",
     "block-grass": "Rumput",
