@@ -263,7 +263,7 @@ function digesterProgram(sketch: p5, read: () => DigesterFrame) {
 }
 
 interface BiogasDigesterLabProps {
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   /** The dung fed each day at first, in kilograms. */
   dung?: number;
   labels: {
@@ -274,7 +274,7 @@ interface BiogasDigesterLabProps {
     methane: ReactNode;
     viewLabel: string;
   };
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
 }
 
 /**

@@ -317,7 +317,7 @@ function trialProgram(sketch: p5, read: () => typeof TrialFrame.Type) {
 interface StopwatchSpreadLabProps {
   /** How many trials are recorded first. */
   count?: number;
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   labels: {
     mean: ReactNode;
     spread: ReactNode;
@@ -325,7 +325,7 @@ interface StopwatchSpreadLabProps {
     uncertainty: ReactNode;
     viewLabel: string;
   };
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
 }
 
 /**

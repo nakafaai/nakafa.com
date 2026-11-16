@@ -52,7 +52,7 @@ const TRACK_Y = 0.01;
 
 interface UniformCircularMotionLabProps {
   decimalSeparator?: DecimalSeparator;
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   labels: {
     acceleration: ReactNode;
     choosePeriod: string;
@@ -61,7 +61,7 @@ interface UniformCircularMotionLabProps {
     speed: ReactNode;
     viewLabel: string;
   };
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
 }
 
 export function UniformCircularMotionLab({

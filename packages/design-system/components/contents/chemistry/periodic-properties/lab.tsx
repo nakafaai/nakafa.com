@@ -25,7 +25,7 @@ import { useState } from "react";
 import { useTranslations } from "use-intl";
 
 interface PeriodicPropertiesLabProps {
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   labels: {
     chooseTrend: string;
     factLabels: PeriodicPropertiesFactLabels;
@@ -43,7 +43,7 @@ interface PeriodicPropertiesLabProps {
     >;
     sceneLabel: string;
   };
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
 }
 
 /**

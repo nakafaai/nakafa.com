@@ -81,7 +81,7 @@ export function LavoisierCalxLab({
   labels,
   title,
 }: {
-  readonly description: ReactNode;
+  readonly description: NonNullable<ReactNode>;
   readonly labels: {
     readonly air: ReactNode;
     readonly airUnit: string;
@@ -92,7 +92,7 @@ export function LavoisierCalxLab({
     readonly reverseLabel: ReactNode;
     readonly viewLabel: string;
   };
-  readonly title: ReactNode;
+  readonly title: NonNullable<ReactNode>;
 }) {
   const [day, setDay] = useState<number>(LAVOISIER.days);
   const quantity = useQuantity();

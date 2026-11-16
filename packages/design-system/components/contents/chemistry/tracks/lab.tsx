@@ -73,9 +73,9 @@ export function ParticleTrackLab({
   labels,
   title,
 }: {
-  readonly description: ReactNode;
+  readonly description: NonNullable<ReactNode>;
   readonly labels: TrackLabels;
-  readonly title: ReactNode;
+  readonly title: NonNullable<ReactNode>;
 }) {
   const format = useFormatter();
   const [field, setField] = useState(0.0005);

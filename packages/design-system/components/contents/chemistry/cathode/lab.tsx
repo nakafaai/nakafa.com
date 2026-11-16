@@ -58,9 +58,9 @@ export function CathodeRayLab({
   labels,
   title,
 }: {
-  readonly description: ReactNode;
+  readonly description: NonNullable<ReactNode>;
   readonly labels: CathodeLabels;
-  readonly title: ReactNode;
+  readonly title: NonNullable<ReactNode>;
 }) {
   const format = useFormatter();
   const [plate, setPlate] = useState(100);

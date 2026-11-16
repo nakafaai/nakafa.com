@@ -180,7 +180,7 @@ function RampScene({ angle }: { readonly angle: RampAngle }) {
 }
 
 interface GalileoInclineBellsLabProps {
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   labels: {
     acceleration: ReactNode;
     chooseAngle: string;
@@ -188,7 +188,7 @@ interface GalileoInclineBellsLabProps {
     gaps: ReactNode;
     viewLabel: string;
   };
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
 }
 
 /**

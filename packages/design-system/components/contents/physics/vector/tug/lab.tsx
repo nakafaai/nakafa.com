@@ -227,7 +227,7 @@ function tugProgram(sketch: p5, read: () => TugFrame) {
 }
 
 interface TugOfWarForceLabProps {
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   labels: {
     left: ReactNode;
     leftCount: ReactNode;
@@ -244,7 +244,7 @@ interface TugOfWarForceLabProps {
   pull: number;
   /** The pullers on the right team at the start. */
   right: number;
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
 }
 
 /**

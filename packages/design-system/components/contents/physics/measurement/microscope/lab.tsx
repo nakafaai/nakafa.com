@@ -237,7 +237,7 @@ function fieldProgram(sketch: p5, read: () => typeof FieldFrame.Type) {
 }
 
 interface MicroscopeScaleLabProps {
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   labels: {
     chooseObjective: string;
     diameter: ReactNode;
@@ -246,7 +246,7 @@ interface MicroscopeScaleLabProps {
     oneDivision: ReactNode;
     viewLabel: string;
   };
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
 }
 
 /**

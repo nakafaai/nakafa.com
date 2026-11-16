@@ -15,9 +15,9 @@ interface Props {
     input: ReactNode;
     output: ReactNode;
   };
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   machineLabel: ReactNode;
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
 }
 
 /**

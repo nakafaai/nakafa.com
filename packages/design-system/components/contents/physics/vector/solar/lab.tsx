@@ -177,7 +177,7 @@ function SolarScene({
 interface SolarPanelFluxLabProps {
   /** The panel's area, in m². */
   area: number;
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   /** The sun's elevation above the horizon, in degrees. */
   elevation: number;
   labels: {
@@ -192,7 +192,7 @@ interface SolarPanelFluxLabProps {
   sunlight: number;
   /** The tilt the card starts at, in degrees from level. */
   tilt: number;
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
 }
 
 /**

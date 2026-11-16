@@ -68,7 +68,7 @@ export function HyphaeDecayLab({
   labels,
   title,
 }: {
-  readonly description: ReactNode;
+  readonly description: NonNullable<ReactNode>;
   readonly labels: {
     readonly cover: ReactNode;
     readonly hours: string;
@@ -77,7 +77,7 @@ export function HyphaeDecayLab({
     readonly time: ReactNode;
     readonly viewLabel: string;
   };
-  readonly title: ReactNode;
+  readonly title: NonNullable<ReactNode>;
 }) {
   const [hours, setHours] = useState<number>(TEMPEH.hours);
   const quantity = useQuantity();

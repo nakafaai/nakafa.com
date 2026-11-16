@@ -49,7 +49,7 @@ export function CellScaleLab({
   labels,
   title,
 }: {
-  readonly description: ReactNode;
+  readonly description: NonNullable<ReactNode>;
   readonly labels: {
     readonly bacterium: ReactNode;
     readonly cell: ReactNode;
@@ -58,7 +58,7 @@ export function CellScaleLab({
     readonly virion: ReactNode;
     readonly zoom: string;
   };
-  readonly title: ReactNode;
+  readonly title: NonNullable<ReactNode>;
 }) {
   const [zoom, setZoom] = useState(0);
   const quantity = useQuantity();

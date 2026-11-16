@@ -43,6 +43,7 @@ import {
   VisualCardBody,
   VisualCardFacts,
   VisualCardFooter,
+  VisualCardHeader,
   VisualCardToolbar,
 } from "@repo/design-system/components/visual/card";
 import {
@@ -65,9 +66,14 @@ import { Array as Arr, Option } from "effect";
  * an empty frame where the scene goes, so the lab takes over the same box.
  */
 export function ProjectilePlaceholder({
+  description,
+  title,
   decimalSeparator,
   labels,
 }: {
+  /** The card's title and description, which the lab that takes over draws too. */
+  description: string;
+  title: string;
   decimalSeparator: DecimalSeparator;
   labels: {
     chooseLaunch: string;
@@ -80,6 +86,7 @@ export function ProjectilePlaceholder({
 
   return (
     <VisualCard>
+      <VisualCardHeader description={description} title={title} />
       <VisualCardToolbar>
         <ToggleGroup
           aria-label={labels.chooseLaunch}
@@ -123,9 +130,14 @@ export function ProjectilePlaceholder({
  * takes over, and the scene an empty frame, so the lab takes over the same box.
  */
 export function CirclePlaceholder({
+  description,
+  title,
   formatNumber,
   labels,
 }: {
+  /** The card's title and description, which the lab that takes over draws too. */
+  description: string;
+  title: string;
   formatNumber: (value: number) => string;
   labels: { onAxis: string; quadrant: string; radian: string };
 }) {
@@ -145,6 +157,7 @@ export function CirclePlaceholder({
   return (
     <CoordinateProvider>
       <VisualCard>
+        <VisualCardHeader description={description} title={title} />
         <VisualCardToolbar>
           <div
             aria-hidden="true"
@@ -211,8 +224,13 @@ export function CirclePlaceholder({
  * the same toggles, frame and facts, with the toggles as static items.
  */
 export function AtomPlaceholder({
+  description,
+  title,
   labels,
 }: {
+  /** The card's title and description, which the lab that takes over draws too. */
+  description: string;
+  title: string;
   labels: {
     atomicNumber: string;
     chooseAtom: string;
@@ -229,6 +247,7 @@ export function AtomPlaceholder({
 
   return (
     <VisualCard>
+      <VisualCardHeader description={description} title={title} />
       <VisualCardToolbar>
         <ToggleGroup
           aria-label={labels.chooseAtom}
@@ -286,8 +305,13 @@ export function AtomPlaceholder({
  * the same item toggles and frame, with the toggles as static items.
  */
 export function CellPlaceholder({
+  description,
+  title,
   labels,
 }: {
+  /** The card's title and description, which the lab that takes over draws too. */
+  description: string;
+  title: string;
   labels: {
     chooseMode: string;
     items: readonly { tab: string }[];
@@ -296,6 +320,7 @@ export function CellPlaceholder({
 }) {
   return (
     <VisualCard>
+      <VisualCardHeader description={description} title={title} />
       <VisualCardToolbar>
         <ToggleGroup
           aria-label={labels.chooseMode}

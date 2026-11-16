@@ -87,11 +87,11 @@ export function ElectrolysisLab({
   title,
 }: {
   readonly cells: Arr.NonEmptyReadonlyArray<Cell>;
-  readonly description: ReactNode;
+  readonly description: NonNullable<ReactNode>;
   readonly electrons?: number;
   readonly labels: ElectrolysisLabels;
   readonly showProducts?: boolean;
-  readonly title: ReactNode;
+  readonly title: NonNullable<ReactNode>;
 }) {
   const colors = getElectrolysisColors();
   const format = useFormatter();

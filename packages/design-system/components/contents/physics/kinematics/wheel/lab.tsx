@@ -213,7 +213,7 @@ function WheelScene({ period }: WheelSceneProps) {
 }
 
 interface BicycleWheelSpeedLabProps {
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   labels: {
     angularSpeed: ReactNode;
     choosePeriod: string;
@@ -222,7 +222,7 @@ interface BicycleWheelSpeedLabProps {
     valveSpeed: ReactNode;
     viewLabel: string;
   };
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
 }
 
 /**

@@ -172,7 +172,7 @@ function slingProgram(sketch: p5, read: () => SlingFrame) {
 }
 
 interface StringWhirlReleaseLabProps {
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   labels: {
     acceleration: ReactNode;
     chooseRelease: string;
@@ -186,7 +186,7 @@ interface StringWhirlReleaseLabProps {
   period: number;
   /** The length of the string, in metres. */
   radius: number;
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
 }
 
 /**

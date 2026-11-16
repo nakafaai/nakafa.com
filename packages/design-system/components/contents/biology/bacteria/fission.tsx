@@ -80,14 +80,14 @@ export function BinaryFissionLab({
   labels,
   title,
 }: {
-  readonly description: ReactNode;
+  readonly description: NonNullable<ReactNode>;
   readonly labels: {
     readonly cells: ReactNode;
     readonly generations: ReactNode;
     readonly minutes: string;
     readonly viewLabel: string;
   };
-  readonly title: ReactNode;
+  readonly title: NonNullable<ReactNode>;
 }) {
   const [minutes, setMinutes] = useState(MINUTES);
 

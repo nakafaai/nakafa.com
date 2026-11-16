@@ -63,7 +63,7 @@ const Z_INDEX_CHAIR = 20;
 
 interface TableChairsProps {
   labels: {
-    title: ReactNode;
+    title: NonNullable<ReactNode>;
     table: string;
     chair: string;
     reset: string;
@@ -163,7 +163,11 @@ export default function TableChairsAnimation({ labels }: TableChairsProps) {
 
   return (
     <VisualCard ref={ref}>
-      <VisualCardHeader title={labels.title} />
+      <VisualCardHeader
+        // What the card counts; the counts themselves stand in its footer.
+        description={`${labels.table} & ${labels.chair}`}
+        title={labels.title}
+      />
 
       <VisualCardToolbar>
         {/* The speed and the count read as one control at the default size. */}

@@ -40,7 +40,7 @@ import { useTranslations } from "use-intl";
 const NARROW_CANVAS_ASPECT_RATIO = 1.24;
 
 interface MultipleProportionsLabProps {
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   labels: {
     changingLabel: string;
     chooseMode: string;
@@ -57,7 +57,7 @@ interface MultipleProportionsLabProps {
       }
     >;
   };
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
 }
 
 export function MultipleProportionsLab({

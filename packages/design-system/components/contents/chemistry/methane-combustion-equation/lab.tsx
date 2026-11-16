@@ -40,14 +40,14 @@ type MoleculeModel = ReturnType<typeof molecule>;
 type MoleculeInstance = ReturnType<typeof instance>;
 
 interface MethaneCombustionEquationLabProps {
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   labels: {
     equation: ReactNode;
     moleculeView: string;
     products: string;
     reactants: string;
   };
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
 }
 
 const VIEW = {

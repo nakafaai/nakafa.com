@@ -184,7 +184,7 @@ function voyageProgram(sketch: p5, read: () => VoyageFrame) {
 interface ShipBearingComponentLabProps {
   /** The legs of the voyage, distances in km and bearings in degrees; the learner turns the last leg's bearing. */
   courses: readonly [Course, ...Course[]];
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   labels: {
     bearing: ReactNode;
     bearingName: string;
@@ -194,7 +194,7 @@ interface ShipBearingComponentLabProps {
     north: ReactNode;
     viewLabel: string;
   };
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
 }
 
 /**

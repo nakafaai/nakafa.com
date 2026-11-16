@@ -83,7 +83,7 @@ export function DnaHelixLab({
   variant,
 }: {
   readonly copy?: boolean;
-  readonly description: ReactNode;
+  readonly description: NonNullable<ReactNode>;
   readonly genome?: number;
   readonly labels: {
     readonly choose?: string;
@@ -102,7 +102,7 @@ export function DnaHelixLab({
   };
   readonly nucleic?: Nucleic;
   readonly sequence: string;
-  readonly title: ReactNode;
+  readonly title: NonNullable<ReactNode>;
   readonly variant?: string;
 }) {
   const [shown, setShown] = useState<"first" | "second">("first");

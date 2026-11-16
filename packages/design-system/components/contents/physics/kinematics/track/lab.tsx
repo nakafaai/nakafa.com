@@ -209,7 +209,7 @@ function trackProgram(sketch: p5, read: () => TrackFrame) {
 }
 
 interface RunningTrackDisplacementLabProps {
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   labels: {
     averageVelocity: ReactNode;
     chooseDistance: string;
@@ -220,7 +220,7 @@ interface RunningTrackDisplacementLabProps {
   };
   /** The runner's steady speed, in m/s. */
   speed: number;
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
 }
 
 /**

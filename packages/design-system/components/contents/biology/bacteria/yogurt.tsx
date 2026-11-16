@@ -58,7 +58,7 @@ export function YogurtLab({
   labels,
   title,
 }: {
-  readonly description: ReactNode;
+  readonly description: NonNullable<ReactNode>;
   readonly labels: {
     readonly hours: string;
     readonly ph: ReactNode;
@@ -67,7 +67,7 @@ export function YogurtLab({
     readonly tilt: string;
     readonly viewLabel: string;
   };
-  readonly title: ReactNode;
+  readonly title: NonNullable<ReactNode>;
 }) {
   const [hours, setHours] = useState(HOURS);
   const [tilted, setTilted] = useState(false);

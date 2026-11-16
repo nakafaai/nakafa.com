@@ -67,9 +67,9 @@ export function MillikanOilDropLab({
   labels,
   title,
 }: {
-  readonly description: ReactNode;
+  readonly description: NonNullable<ReactNode>;
   readonly labels: MillikanLabels;
-  readonly title: ReactNode;
+  readonly title: NonNullable<ReactNode>;
 }) {
   const format = useFormatter();
   const [voltage, setVoltage] = useState(500);

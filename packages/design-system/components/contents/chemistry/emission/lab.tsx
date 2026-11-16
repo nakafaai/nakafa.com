@@ -84,10 +84,10 @@ export function BohrEmissionLab({
   labels,
   title,
 }: {
-  readonly description: ReactNode;
+  readonly description: NonNullable<ReactNode>;
   readonly falls: readonly Fall[];
   readonly labels: EmissionLabels;
-  readonly title: ReactNode;
+  readonly title: NonNullable<ReactNode>;
 }) {
   const format = useFormatter();
   const offered = Arr.filter(

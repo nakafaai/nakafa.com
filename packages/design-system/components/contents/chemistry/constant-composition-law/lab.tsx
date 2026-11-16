@@ -37,7 +37,7 @@ import { useTranslations } from "use-intl";
 const NARROW_CANVAS_ASPECT_RATIO = 1.28;
 
 export interface ConstantCompositionLabProps {
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   labels: {
     after: string;
     before: string;
@@ -58,7 +58,7 @@ export interface ConstantCompositionLabProps {
     ratioLabel: string;
     reactionView: string;
   };
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
 }
 
 export function ConstantCompositionLab({

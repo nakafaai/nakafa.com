@@ -12,8 +12,10 @@ export function CellLesson() {
   return (
     <BacteriaStructureLab
       defaultItemIndex={defaultItemIndex ?? undefined}
+      description={t("lab.bacteria.description")}
       labels={getCellLabels(t)}
       onItemIndexChange={onItemIndexChange}
+      title={t("lab.bacteria.title")}
     />
   );
 }

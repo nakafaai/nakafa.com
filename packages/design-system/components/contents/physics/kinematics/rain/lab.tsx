@@ -153,7 +153,7 @@ function rainProgram(sketch: p5, read: () => RainFrame) {
 interface RainDriveRelativeVelocityLabProps {
   /** The car's speed the card starts at, in m/s. */
   car?: number;
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   labels: {
     angle: ReactNode;
     apparentSpeed: ReactNode;
@@ -166,7 +166,7 @@ interface RainDriveRelativeVelocityLabProps {
   };
   /** How fast the rain falls, in m/s. */
   rain?: number;
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
 }
 
 /**

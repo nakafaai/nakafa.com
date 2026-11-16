@@ -81,7 +81,7 @@ export function StoppingDistanceLab({
   labels,
   title,
 }: {
-  readonly description: ReactNode;
+  readonly description: NonNullable<ReactNode>;
   readonly labels: {
     readonly brakingDistance: ReactNode;
     readonly chooseSpeed: string;
@@ -90,7 +90,7 @@ export function StoppingDistanceLab({
     readonly stoppingDistance: ReactNode;
     readonly viewLabel: string;
   };
-  readonly title: ReactNode;
+  readonly title: NonNullable<ReactNode>;
 }) {
   const [speed, setSpeed] = useState<(typeof SPEEDS)[number]>(20);
   const quantity = useQuantity();

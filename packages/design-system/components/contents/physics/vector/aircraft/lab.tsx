@@ -206,7 +206,7 @@ function crosswindProgram(sketch: p5, read: () => CrosswindFrame) {
 interface AircraftCrosswindLabProps {
   /** The airspeed of the plane, in km/h. */
   airspeed: number;
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   /** The heading the plane starts on, as a bearing in degrees. */
   heading?: number;
   labels: {
@@ -218,7 +218,7 @@ interface AircraftCrosswindLabProps {
     track: ReactNode;
     viewLabel: string;
   };
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
   /** The bearing the wind blows toward, in degrees. */
   toward: number;
   /** The wind speed, in km/h. */

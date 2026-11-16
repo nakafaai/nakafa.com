@@ -43,7 +43,7 @@ type Mode = (typeof MODES)[number];
 
 interface VerticalMovementLabProps {
   decimalSeparator?: DecimalSeparator;
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   labels: {
     condition: string;
     finalVelocity: ReactNode;
@@ -53,7 +53,7 @@ interface VerticalMovementLabProps {
     time: ReactNode;
     viewLabel: string;
   };
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
 }
 
 export function VerticalMovementLab({

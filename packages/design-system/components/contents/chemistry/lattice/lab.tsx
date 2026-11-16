@@ -97,9 +97,9 @@ export function IonLatticeLab({
   title,
 }: {
   readonly crystals: readonly CrystalId[];
-  readonly description: ReactNode;
+  readonly description: NonNullable<ReactNode>;
   readonly labels: LatticeLabels;
-  readonly title: ReactNode;
+  readonly title: NonNullable<ReactNode>;
 }) {
   const format = useFormatter();
   const offered = Arr.filter(crystals, (id) => Schema.is(CrystalIdSchema)(id));

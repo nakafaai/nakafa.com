@@ -23,6 +23,7 @@ import {
   VisualCardBody,
   VisualCardFacts,
   VisualCardFooter,
+  VisualCardHeader,
   VisualCardToolbar,
 } from "@repo/design-system/components/visual/card";
 import { VisualFact } from "@repo/design-system/components/visual/fact";
@@ -49,8 +50,8 @@ const UnitCircleStage = lazy(() =>
 interface CardProps {
   /** The angle the card shows until the reader picks another. */
   angle?: number | undefined;
-  /** The card's header. A lesson page names its unit circle with a title and a description. */
-  header?: ReactNode;
+  /** What the card says it shows, under its title. */
+  description: NonNullable<ReactNode>;
   /**
    * Whether the three-dimensional scene is mounted. A card that is not live keeps
    * its whole frame in place, with an empty frame where the scene goes.
@@ -58,6 +59,8 @@ interface CardProps {
   live?: boolean;
   /** Reports each angle the reader picks, so a window can keep it while this card is unmounted. */
   onAngleChange?: (angle: number) => void;
+  /** The card's title: the lesson's, or the window's that shows it. */
+  title: NonNullable<ReactNode>;
   /** Exact trigonometric values as fractions (e.g., "5/13", "12/13", "5/12") */
   trigValues?:
     | {
@@ -101,7 +104,7 @@ function useUnitCircle() {
   return useRequired(UnitCircleContext, "useUnitCircle");
 }
 
-/** The visual card that holds a unit circle's header, its controls, and its values. */
+/** The visual card that holds a unit circle's header, given as its children, its controls, and its values. */
 function UnitCircleFrame({ children }: { children: ReactNode }) {
   return (
     <VisualCard>
@@ -112,15 +115,15 @@ function UnitCircleFrame({ children }: { children: ReactNode }) {
 }
 
 /**
- * The unit circle as a visual card without a header. The scene, its angle
- * controls and the trigonometric values of the angle are all in the card; the
- * page or the window that holds the card names the lesson.
+ * The unit circle as a visual card that a window holds: its title and description, the scene, its angle controls and
+ * the trigonometric values of the angle.
  */
 export function UnitCircleCard({
   angle = UNIT_CIRCLE_DEFAULT_ANGLE,
-  header,
+  description,
   live = true,
   onAngleChange,
+  title,
   trigValues,
   viewLabel,
 }: CardProps) {
@@ -128,7 +131,9 @@ export function UnitCircleCard({
 
   return (
     <UnitCircleProvider config={config}>
-      <UnitCircleFrame>{header}</UnitCircleFrame>
+      <UnitCircleFrame>
+        <VisualCardHeader description={description} title={title} />
+      </UnitCircleFrame>
     </UnitCircleProvider>
   );
 }

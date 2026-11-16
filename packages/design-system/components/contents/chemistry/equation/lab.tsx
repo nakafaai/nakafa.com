@@ -93,11 +93,11 @@ interface ReactionLabels {
  * @param reading - Which fourth reading the footer shows
  */
 export function ReactionBalanceLab(props: {
-  readonly description: ReactNode;
+  readonly description: NonNullable<ReactNode>;
   readonly labels: ReactionLabels;
   readonly reactions: readonly ReactionChoice[];
   readonly reading: "economy" | "molecules";
-  readonly title: ReactNode;
+  readonly title: NonNullable<ReactNode>;
 }) {
   return (
     <ReactionProvider>

@@ -54,7 +54,7 @@ const SCENE_REACH =
   RELATIVE_MOVEMENT_SCENE.roadLength / 2 + RELATIVE_MOVEMENT_SCENE.roadWidth;
 
 interface RelativeMovementLabProps {
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   labels: {
     chooseCase: string;
     directionLabels: Record<"left" | "right", ReactNode>;
@@ -67,7 +67,7 @@ interface RelativeMovementLabProps {
     modeLabels: Record<RelativeMovementCaseId, ReactNode>;
     viewLabel: string;
   };
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
 }
 
 export function RelativeMovementLab({

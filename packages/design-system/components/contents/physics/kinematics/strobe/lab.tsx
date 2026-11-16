@@ -238,7 +238,7 @@ function strobeProgram(sketch: p5, read: () => StrobeFrame) {
 }
 
 interface StrobePhotoMotionLabProps {
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   labels: {
     airTime: ReactNode;
     height: ReactNode;
@@ -249,7 +249,7 @@ interface StrobePhotoMotionLabProps {
   };
   /** The photograph to develop. */
   shot: StrobeShot;
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
 }
 
 /**

@@ -25,12 +25,12 @@ import { useTranslations } from "use-intl";
 const BUDGET_CHART_MARGIN = { right: 16 } as const;
 
 interface BudgetChartProps {
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   footnote: ReactNode;
   labels: {
     budget: ReactNode;
   };
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
   yLabel: string;
 }
 

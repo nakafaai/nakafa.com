@@ -259,7 +259,7 @@ function TableScene({ pulls }: { pulls: readonly PlacedPull[] }) {
 }
 
 interface ForceTableResultantLabProps {
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   labels: {
     angle: ReactNode;
     angleName: string;
@@ -271,7 +271,7 @@ interface ForceTableResultantLabProps {
   };
   /** The strings: hanging mass in grams and pulley angle in degrees; the learner turns the last one. */
   pulls: readonly Pull[];
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
 }
 
 /**

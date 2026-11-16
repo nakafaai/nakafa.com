@@ -350,7 +350,7 @@ function tickerProgram(sketch: p5, read: () => TickerFrame) {
 }
 
 interface TickerTapeMotionLabProps {
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   labels: {
     acceleration: ReactNode;
     chooseMotion: string;
@@ -362,7 +362,7 @@ interface TickerTapeMotionLabProps {
   };
   /** The motion the trolley makes first. */
   motion?: TapeMotion;
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
 }
 
 /**

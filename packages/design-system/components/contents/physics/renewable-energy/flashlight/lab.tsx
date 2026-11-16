@@ -245,7 +245,7 @@ function flashlightProgram(sketch: p5, read: () => FlashlightFrame) {
 interface FlashlightEfficiencyLabProps {
   /** The bulb in the flashlight first. */
   bulb?: Bulb;
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   labels: {
     battery: ReactNode;
     bulbs: Record<Bulb, ReactNode>;
@@ -257,7 +257,7 @@ interface FlashlightEfficiencyLabProps {
     runTime: ReactNode;
     viewLabel: string;
   };
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
 }
 
 /**

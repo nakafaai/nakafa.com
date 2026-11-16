@@ -16,8 +16,8 @@ import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
 
 interface ReadingRoomProblemProps {
-  /** What the room shows, read under its title. */
-  description?: ReactNode;
+  /** What the room asks the reader to find, under its measures. */
+  description?: NonNullable<ReactNode>;
   heightLabel: ReactNode;
   widthLabel: ReactNode;
 }

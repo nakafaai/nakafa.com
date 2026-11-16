@@ -76,7 +76,7 @@ export function SeaLevelRiseLab({
   scenarios = ["ssp126", "ssp245", "ssp585"],
   title,
 }: {
-  readonly description: ReactNode;
+  readonly description: NonNullable<ReactNode>;
   readonly labels: {
     readonly choose?: string;
     readonly defences?: Readonly<Partial<Record<Defence, ReactNode>>>;
@@ -96,7 +96,7 @@ export function SeaLevelRiseLab({
   };
   readonly mode: "adapt" | "flood" | "record" | "scenario";
   readonly scenarios?: readonly Scenario[];
-  readonly title: ReactNode;
+  readonly title: NonNullable<ReactNode>;
 }) {
   const [year, setYear] = useState<number>(RECORD_YEARS.last);
   const [scenario, setScenario] = useState<Scenario>(scenarios[0] ?? "ssp245");

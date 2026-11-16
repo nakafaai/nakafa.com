@@ -228,7 +228,7 @@ function hunterProgram(sketch: p5, read: () => HunterFrame) {
 }
 
 interface FallingTargetAimLabProps {
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   labels: {
     drop: ReactNode;
     meetTime: ReactNode;
@@ -238,7 +238,7 @@ interface FallingTargetAimLabProps {
   };
   /** The launch speed the card starts at, in m/s, from 5 to 16. */
   speed?: number;
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
 }
 
 /**

@@ -324,7 +324,7 @@ function systemProgram(sketch: p5, read: () => typeof SystemFrame.Type) {
 }
 
 interface UnitSystemsLabProps {
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   labels: {
     chooseSystem: string;
     diameter: ReactNode;
@@ -333,7 +333,7 @@ interface UnitSystemsLabProps {
     time: ReactNode;
     viewLabel: string;
   };
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
 }
 
 /**

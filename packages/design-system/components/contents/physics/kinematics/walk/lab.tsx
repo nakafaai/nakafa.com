@@ -160,7 +160,7 @@ function walkProgram(sketch: p5, read: () => WalkFrame) {
 }
 
 interface CityWalkDisplacementLabProps {
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   labels: {
     averageSpeed: ReactNode;
     averageVelocity: ReactNode;
@@ -173,7 +173,7 @@ interface CityWalkDisplacementLabProps {
   legs: Walk["legs"];
   /** The walking pace, in m/s. */
   pace: number;
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
 }
 
 /**

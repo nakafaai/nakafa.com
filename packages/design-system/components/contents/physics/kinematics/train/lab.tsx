@@ -211,7 +211,7 @@ function trainProgram(sketch: p5, read: () => TrainFrame) {
 }
 
 interface TrainPassengerRelativeLabProps {
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   labels: {
     chooseObserver: string;
     chooseWay: string;
@@ -222,7 +222,7 @@ interface TrainPassengerRelativeLabProps {
     walk: ReactNode;
     ways: Record<WalkWay, ReactNode>;
   };
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
 }
 
 /**

@@ -270,7 +270,7 @@ function panelProgram(sketch: p5, read: () => PanelFrame) {
 }
 
 interface SolarPanelHeatLabProps {
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   /** The sunlight on the panel at first, in watts per square metre. */
   irradiance?: number;
   labels: {
@@ -283,7 +283,7 @@ interface SolarPanelHeatLabProps {
     temperature: ReactNode;
     viewLabel: string;
   };
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
 }
 
 /**

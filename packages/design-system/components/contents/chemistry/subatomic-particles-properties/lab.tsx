@@ -42,7 +42,7 @@ import { useTranslations } from "use-intl";
 const NARROW_CANVAS_ASPECT_RATIO = 1.4;
 
 export interface SubatomicParticlePropertiesLabProps {
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   labels: {
     chooseMode: string;
     modes: Record<
@@ -66,7 +66,7 @@ export interface SubatomicParticlePropertiesLabProps {
       proton: ReactNode;
     };
   };
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
 }
 
 /**

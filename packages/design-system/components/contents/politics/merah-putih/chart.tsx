@@ -28,9 +28,9 @@ const VALUE_AXIS_PADDING_RATIO = 0.12;
 const VALUE_LABEL_MARGIN = 16;
 
 interface SharedProps {
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   footnote: ReactNode;
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
 }
 
 interface CabinetChartProps extends SharedProps {

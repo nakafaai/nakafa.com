@@ -301,7 +301,7 @@ function steamProgram(sketch: p5, read: () => SteamFrame) {
 }
 
 interface SteamPlantCycleLabProps {
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   /** The fuel that heats the boiler first. */
   fuel?: Fuel;
   labels: {
@@ -315,7 +315,7 @@ interface SteamPlantCycleLabProps {
     viewLabel: string;
     waste: ReactNode;
   };
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
 }
 
 /**

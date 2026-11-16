@@ -92,7 +92,7 @@ export function FollowingDistanceLab({
   labels,
   title,
 }: {
-  readonly description: ReactNode;
+  readonly description: NonNullable<ReactNode>;
   readonly labels: {
     readonly chooseHeadway: string;
     readonly crash: ReactNode;
@@ -104,7 +104,7 @@ export function FollowingDistanceLab({
     readonly safe: ReactNode;
     readonly viewLabel: string;
   };
-  readonly title: ReactNode;
+  readonly title: NonNullable<ReactNode>;
 }) {
   const [headway, setHeadway] = useState<(typeof HEADWAYS)[number]>(2);
   const [reaction, setReaction] = useState(1.5);

@@ -41,9 +41,9 @@ import { Suspense, useState } from "react";
 const NARROW_CANVAS_ASPECT_RATIO = 1.4;
 
 interface DimensionLabProps {
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   labels: DimensionLabLabels;
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
 }
 
 /**

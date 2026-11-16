@@ -246,7 +246,7 @@ interface RiverBoatCrossingLabProps {
   boatSpeed: number;
   /** The speed of the current, in m/s. */
   current: number;
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   /** The heading the boat starts with, in degrees from straight across, negative upstream. */
   heading?: number;
   labels: {
@@ -258,7 +258,7 @@ interface RiverBoatCrossingLabProps {
     time: ReactNode;
     viewLabel: string;
   };
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
   /** The width of the river, in metres. */
   width: number;
 }

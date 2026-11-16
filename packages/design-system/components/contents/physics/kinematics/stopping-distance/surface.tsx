@@ -94,7 +94,7 @@ export function BrakingSurfaceLab({
   labels,
   title,
 }: {
-  readonly description: ReactNode;
+  readonly description: NonNullable<ReactNode>;
   readonly labels: {
     readonly brakingDistance: ReactNode;
     readonly brakingTime: ReactNode;
@@ -104,7 +104,7 @@ export function BrakingSurfaceLab({
     readonly surfaces: Readonly<Record<Surface, string>>;
     readonly viewLabel: string;
   };
-  readonly title: ReactNode;
+  readonly title: NonNullable<ReactNode>;
 }) {
   const [surface, setSurface] = useState<Surface>("dry");
   const quantity = useQuantity();

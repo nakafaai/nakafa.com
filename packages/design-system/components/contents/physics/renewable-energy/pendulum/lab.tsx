@@ -44,7 +44,7 @@ const STORE_COLORS = {
 } as const;
 
 interface PendulumEnergyLabProps {
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   /** The drag the bob swings against first. */
   drag?: Drag;
   labels: {
@@ -56,7 +56,7 @@ interface PendulumEnergyLabProps {
     start: ReactNode;
     viewLabel: string;
   };
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
 }
 
 /**

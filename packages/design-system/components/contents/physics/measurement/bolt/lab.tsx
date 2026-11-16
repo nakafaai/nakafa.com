@@ -314,7 +314,7 @@ function dimensionOf(mass: number, length: number) {
 }
 
 interface BoltDimensionsLabProps {
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   labels: {
     chooseQuantity: string;
     dimension: ReactNode;
@@ -322,7 +322,7 @@ interface BoltDimensionsLabProps {
     value: ReactNode;
     viewLabel: string;
   };
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
 }
 
 /**

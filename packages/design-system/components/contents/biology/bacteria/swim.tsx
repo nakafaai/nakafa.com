@@ -61,14 +61,14 @@ export function ChemotaxisLab({
   labels,
   title,
 }: {
-  readonly description: ReactNode;
+  readonly description: NonNullable<ReactNode>;
   readonly labels: {
     readonly elapsed: ReactNode;
     readonly mutant: ReactNode;
     readonly sensing: ReactNode;
     readonly viewLabel: string;
   };
-  readonly title: ReactNode;
+  readonly title: NonNullable<ReactNode>;
 }) {
   const [progress, setProgress] = useState<Progress>({
     mutant: 0,

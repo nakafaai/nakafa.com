@@ -260,7 +260,7 @@ function carbonProgram(sketch: p5, read: () => CarbonFrame) {
 }
 
 interface FuelCombustionCarbonLabProps {
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   /** The fuel on the burner first. */
   fuel?: Fuel;
   labels: {
@@ -273,7 +273,7 @@ interface FuelCombustionCarbonLabProps {
     viewLabel: string;
     volume: ReactNode;
   };
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
 }
 
 /**
