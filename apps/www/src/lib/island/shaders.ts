@@ -244,6 +244,7 @@ layout(location = 1) in vec3 aNormal;
 layout(location = 2) in vec3 aColor;
 layout(location = 3) in vec4 aPlace;
 layout(location = 4) in float aBob;
+layout(location = 5) in float aGround;
 uniform mat4 uViewProjection;
 uniform float uTime;
 uniform float uShadow;
@@ -254,17 +255,23 @@ void main() {
   float c = cos(aPlace.w);
   float s = sin(aPlace.w);
   vec3 local = aPosition;
+  vec3 base = aPlace.xyz;
   if (uShadow > 0.5) {
-    // A shadow is the body pressed flat, a hair above the ground so it never fights it.
+    // A shadow is the body pressed flat onto the ground under it, a hair above so it never fights it.
     local = vec3(local.x * 0.9, 0.03, local.z * 0.9);
+    base = vec3(aPlace.x, aGround, aPlace.z);
   }
   vec3 turned = vec3(local.x * c + local.z * s, local.y, -local.x * s + local.z * c);
-  vec3 place = aPlace.xyz + turned;
+  vec3 place = base + turned;
   place.y += abs(sin(uTime * 9.0 + aPlace.x * 3.1)) * aBob * (1.0 - uShadow);
   vNormal = vec3(aNormal.x * c + aNormal.z * s, aNormal.y, -aNormal.x * s + aNormal.z * c);
   vColor = aColor;
   vWorld = place;
   gl_Position = uViewProjection * vec4(place, 1.0);
+  if (uShadow > 0.5 && aGround < 0.0) {
+    // A body in the water or over it casts no shadow: its triangles fall outside the frame.
+    gl_Position = vec4(2.0, 2.0, 2.0, 1.0);
+  }
 }`;
 
 export const BODY_FRAGMENT = `#version 300 es

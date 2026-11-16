@@ -10,8 +10,8 @@ import {
   dipOf,
   reelOf,
 } from "@/lib/island/fishing";
+import { standingQuad } from "@/lib/island/life";
 import type { castRay } from "@/lib/island/ray";
-import { standingQuad } from "@/lib/island/wild";
 
 /** The water block, where a line is cast. */
 const WATER_BLOCK = idOf("water");
