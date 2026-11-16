@@ -74,6 +74,21 @@ const LOOKS = {
   },
   marble: plain("marble"),
   gold: plain("gold"),
+  farmland: { bottom: "dirt", kind: "solid", side: "dirt", top: "farmland" },
+  "wet-farmland": {
+    bottom: "dirt",
+    kind: "solid",
+    side: "dirt",
+    top: "wetFarmland",
+  },
+  "rice-sprout": plain("riceSprout", "cross"),
+  "corn-sprout": plain("cornSprout", "cross"),
+  "cabbage-sprout": plain("cabbageSprout", "cross"),
+  "tomato-sprout": plain("tomatoSprout", "cross"),
+  "chili-sprout": plain("chiliSprout", "cross"),
+  "carrot-sprout": plain("carrotSprout", "cross"),
+  "cassava-sprout": plain("cassavaSprout", "cross"),
+  "sweet-potato-sprout": plain("sweetPotatoSprout", "cross"),
 } satisfies Record<BuiltKey, Faces>;
 
 /** The faces of one built block. */

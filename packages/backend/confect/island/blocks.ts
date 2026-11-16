@@ -1,3 +1,4 @@
+import { FARM, FARM_KEYS } from "@repo/backend/confect/island/farm";
 import { PLANT_KEYS, PLANTS } from "@repo/backend/confect/island/flora";
 import { Array as Arr, Schema } from "effect";
 
@@ -30,7 +31,7 @@ const BUILT = {
   gold: { id: 21, opens: 6 },
 } as const;
 
-const CATALOG = { ...BUILT, ...PLANTS };
+const CATALOG = { ...BUILT, ...PLANTS, ...FARM };
 
 export const BlockKey = Schema.Literals([
   "grass",
@@ -55,6 +56,7 @@ export const BlockKey = Schema.Literals([
   "marble",
   "gold",
   ...PLANT_KEYS,
+  ...FARM_KEYS,
 ]);
 export type BlockKey = typeof BlockKey.Type;
 
