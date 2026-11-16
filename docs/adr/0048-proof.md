@@ -247,6 +247,21 @@ The first groups whose diffs reach many folders failed on specs that main fails 
 3. **Status check timeout: 150 minutes.** A group that proves every suite took up to 80 minutes, and a base proof adds a build and the failing specs, about 25 minutes while runners are free.
 4. **What main fails stays work.** A spec set aside is main's defect, never a reason to skip, retry or weaken it: the lane that owns its folder makes main pass it, and each fix narrows what a verdict sets aside.
 
+## Amendment: The Backend Suite In Shards, 16 November 2026
+
+The gate ran its three parts one after another in one job, and the backend suite, 1,074 test files and 7,781 tests, set its pace: 10 to 14 minutes after static (3 to 4) and www (3 to 4). No file dominates it (the slowest takes 10 seconds, and the tests' own time is a third of the run); importing each file's modules and its setup take the rest, file by file. Measured on one runner, one after another (run 43767878264): two workers, the configuration's half of four cores, 844 seconds; four workers 677; four workers on threads 606; half the files on four workers 354. A runner's four cores are saturated at two workers, and a shard scales with its share of the files.
+
+### Decision
+
+1. **Three shards beside the gate.** The `backend` job runs the suite in three shards on three runners at once (`--shard=<n>/3`, every core of each), while the gate job runs static and www. A shard writes its results and its coverage as a Vitest blob and checks no threshold, since a file's tests may stand in another shard.
+2. **The last shard merges.** No job waits on the shards, since a job that `needs` others waits for a runner again from the back of the account's queue. Each shard posts `gate/backend-<n>` after its blob is kept, then reads the others'; the shard that finds all three final merges the blobs (`vitest run --merge-reports`), checks every changed file at 100% per file on the merged coverage, as one run did, and posts `gate/backend`. Fewer blobs than shards fails it.
+3. **Nothing to run, nothing run.** Each shard first asks turbo whether the head reaches the backend suite (`--affected --dry=json`, after the install). When it does not, the first shard posts `gate/backend` and the others end, so such a head spends only the install and that question.
+4. **The last part posts the gate.** The gate job posts `gate/static` and `gate/www`; whichever of it and the backend shards posts the last part finds the three final and posts `gate`, and `verify` for a pull request (`.github/actions/gate`), then runs the group's verdict as before. Each job posts its part before it reads, so the later reader always finds all three.
+
+### Consequences
+
+The backend part takes about one shard and a merge, some 5 minutes, inside the 6 to 8 of static and www, so a gate takes about as long as those two. A verification holds up to three more jobs for those minutes, of the account's twenty (see "The ceiling of free runners"); the runner minutes stay about the same, plus each shard's install of some 30 seconds.
+
 ## Amendment: One Build For Selected Specs, 16 November 2026
 
 A merge group proves the specs its diff selects, often only the smoke spec, yet each of the three engine jobs installed, prepared, built and started the same head on its own machine. Merge group runs 43759530064, 43758332497 and 43756713192 took 18 to 26 minutes and 45 to 68 runner-minutes each. Every engine job spent 0.8 to 1.1 minutes installing Node for Convex, 3.4 to 5.8 preparing, 5.1 to 8.4 building and 0.9 to 1.3 starting, and only 0.2 to 0.6 on its specs, so about 40 of a group's runner-minutes were the same work done three times, and the three machines starved the account's 20 jobs.
