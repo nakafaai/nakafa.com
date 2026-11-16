@@ -305,6 +305,38 @@ describe("GitHub proof runner", () => {
   );
 
   it.effect(
+    "reads a shard cancelled while it ran, whose folder holds no result, as an engine that never reported",
+    () =>
+      Effect.gen(function* () {
+        const answer = github({
+          chromium: shard("chromium"),
+          firefox: shard("firefox"),
+        });
+        const { exit } = yield* withGithub(
+          (args) => {
+            const reply = answer(args);
+            return args[1] === "download"
+              ? {
+                  ...reply,
+                  files: {
+                    ...reply.files,
+                    [`${Option.getOrThrow(Arr.last(args))}/results-webkit-1/upload.log`]:
+                      "",
+                  },
+                }
+              : reply;
+          },
+          proveOnGithub(SHA, [], { gate: true, full: false })
+        );
+        const { result } = yield* exit;
+        expect(result.engines.chromium.passed).toBe(true);
+        expect(result.engines.webkit).toEqual({ passed: false, failures: [] });
+        expect(result.passed).toBe(false);
+      }).pipe(Effect.provide(NodeServices.layer)),
+    PROCESS_TIMEOUT
+  );
+
+  it.effect(
     "fails with what GitHub said, or answered unexpectedly",
     () =>
       Effect.gen(function* () {

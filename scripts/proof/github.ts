@@ -123,8 +123,9 @@ const awaitRun = Effect.fn("proof.awaitRun")(function* (
 
 /**
  * The result of each engine that a completed run uploaded, one artifact per
- * engine, which the CLI writes into a folder named after the artifact; an
- * engine whose build failed uploaded none.
+ * engine, which the CLI writes into a folder named after the artifact. An
+ * engine whose build failed uploaded none, and a shard cancelled while it ran
+ * can upload its folder without the result: neither reported.
  */
 const readResults = Effect.fn("proof.readResults")(function* (id: number) {
   const fs = yield* FileSystem.FileSystem;
@@ -148,7 +149,10 @@ const readResults = Effect.fn("proof.readResults")(function* (id: number) {
     return [];
   }
   const names = yield* fs.readDirectory(directory);
-  return yield* Effect.forEach(names, (name) =>
+  const reported = yield* Effect.filter(names, (name) =>
+    fs.exists(`${directory}/${name}/result.json`)
+  );
+  return yield* Effect.forEach(reported, (name) =>
     fs
       .readFileString(`${directory}/${name}/result.json`)
       .pipe(Effect.flatMap(Schema.decodeEffect(ShardResultJson)))
