@@ -17,7 +17,12 @@ const VIEWPORTS = [
 
 const SCHEMES = ["light", "dark"] as const;
 
-/** How far apart the two names' centre lines may lie, in CSS px. */
+/**
+ * How far apart the two names' centre lines may lie, in CSS px. A screen draws
+ * each line on whole device pixels, so the gap is judged in the device pixels
+ * it shows: a layout that lands a fraction of a pixel past the limit, such as
+ * 1.05 px, shows as one pixel, and a gap of a pixel and a half or more fails.
+ */
 const CENTRE_GAP_MAX = 1;
 
 /** The surah list, and a surah whose header searches the others. */
@@ -78,6 +83,7 @@ function measureNames() {
         face: getComputedStyle(arabic).fontFamily,
         gap: centreOf(arabic, "أ ج م") - centreOf(latin, "H"),
         name: `${latin.textContent} ${arabic.textContent}`,
+        ratio: window.devicePixelRatio,
       },
     ];
   });
@@ -89,14 +95,19 @@ const fontsReady = (page: Page) =>
     page.evaluate(() => document.fonts.ready.then(() => true))
   );
 
-/** Every name pair on screen whose centre lines lie apart, with how far. */
+/** Every name pair on screen whose centre lines lie apart by more than the screen shows as level, with how far. */
 const unlevelNames = (page: Page) =>
   Effect.promise(() => page.evaluate(measureNames)).pipe(
     Effect.tap((names) =>
       Effect.sync(() => expect(names.length).toBeGreaterThan(0))
     ),
     Effect.map((names) =>
-      Arr.filter(names, (name) => Math.abs(name.gap) > CENTRE_GAP_MAX)
+      Arr.filter(
+        names,
+        (name) =>
+          Math.round(Math.abs(name.gap) * name.ratio) >
+          CENTRE_GAP_MAX * name.ratio
+      )
     )
   );
 
