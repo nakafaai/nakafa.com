@@ -26,7 +26,7 @@ export function ComingSoon() {
           {t("contribute")}
         </a>
       }
-      scene={<DeferredEmptyNina act="writing" />}
+      scene={<DeferredEmptyNina act="wishing" />}
       title={<h2>{t("title")}</h2>}
     />
   );

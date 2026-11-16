@@ -634,6 +634,28 @@ found 6 variables, 1 in `apps/www` and 5 in `packages/design-system`. Reading
 calls, shorthand members, string keys, and destructured names raised neither
 count and found no further variable.
 
+### Nina does one thing in one place
+
+The owner's rule of 14 November 2026: Nina is never redundant. Every place that
+shows her doing something gives her the act that fits what she does on that
+page, and no act appears in two places. `scripts/check/poses.ts` reads every
+`.tsx` module outside the registry's component sets and collects the acts it
+draws her with:
+
+- The `act` of `Nina` and of every component named for her, such as
+  `EmptyNina` or the try-out demo's `TryoutDemoNina`: each literal it writes,
+  on both sides of a choice too.
+- For an `act` read from a table that the module declares at its top, such as
+  the acts of a service by its state, every literal of that table.
+- The `act` of a table of scenes, such as the figure of a page that broke.
+
+An act that two modules draw is reported at each of them, with the others
+named. One module may draw one act for several states of its own place. A
+component that only hands its `act` prop on names no act, since the module
+that writes the literal does, and `NinaToy` stands in for a section's own
+Nina, so it is that Nina and no second place. The module is the unit a syntax
+rule can see: two places written in one module are review's to find.
+
 ### Store selectors that answer a new value
 
 A Zustand selector that answers a new array or object on every read makes
