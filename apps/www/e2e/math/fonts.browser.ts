@@ -1,6 +1,5 @@
 import { expect, type Page, test } from "@playwright/test";
 import { Array as Arr, Effect, HashSet, Order } from "effect";
-import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { pinnedRoutes } from "@/e2e/support/corpus";
 import { readMathFonts } from "@/e2e/support/fonts";
 import { waitForCommittedAppRouter } from "@/e2e/support/navigation/readiness";
@@ -18,7 +17,6 @@ const lessonPath = /^\/en\/subjects\//u;
  */
 const verifyServedLessonFonts = Effect.fn("NakafaE2E.verifyServedLessonFonts")(
   function* (page: Page) {
-    yield* seedAnalyticsConsent(page, "denied");
     yield* waitForServedRoute(page, pinnedRoutes.inverse.en);
     const warnings = yield* collectUnusedPreloads(
       page,
@@ -60,7 +58,6 @@ const verifyServedLessonFonts = Effect.fn("NakafaE2E.verifyServedLessonFonts")(
  */
 const verifyNavigationFonts = Effect.fn("NakafaE2E.verifyNavigationFonts")(
   function* (page: Page) {
-    yield* seedAnalyticsConsent(page, "denied");
     yield* Effect.promise(() => page.goto(pinnedRoutes.inverse.en));
     yield* waitForCommittedAppRouter(
       page,

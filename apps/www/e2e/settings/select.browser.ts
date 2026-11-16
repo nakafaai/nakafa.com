@@ -1,7 +1,6 @@
 import { expect, type Locator, type Page, test } from "@playwright/test";
 import { Array as Arr, Effect } from "effect";
 import { runOnPage } from "@/e2e/support/chat";
-import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { signInLearner } from "@/e2e/support/learner";
 import { appRoutes } from "@/e2e/support/route";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
@@ -93,7 +92,6 @@ for (const width of [390, 1440]) {
     }) => {
       await runOnPage(page, baseURL, (origin) =>
         Effect.gen(function* () {
-          yield* seedAnalyticsConsent(page, "denied");
           yield* signInLearner(page.context(), origin);
           yield* Effect.promise(() => page.goto(LEARNING_PATH));
           for (const id of [
@@ -115,7 +113,6 @@ for (const width of [390, 1440]) {
       }) => {
         await runOnPage(page, baseURL, () =>
           Effect.gen(function* () {
-            yield* seedAnalyticsConsent(page, "denied");
             yield* Effect.promise(() => page.goto(path));
             const triggers = page
               .locator('[data-slot="select-trigger"]')

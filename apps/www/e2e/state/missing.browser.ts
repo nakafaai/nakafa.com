@@ -13,7 +13,6 @@ import ms from "@repo/internationalization/dictionaries/standalone/ms.json" with
 };
 import { LOCALES } from "@repo/internationalization/src/locale";
 import { Effect } from "effect";
-import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { waitForCommittedAppRouter } from "@/e2e/support/navigation/readiness";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import {
@@ -87,7 +86,6 @@ const openMissing = Effect.fn("NakafaE2E.openMissing")(function* (
   locale: Locale,
   address: string
 ) {
-  yield* seedAnalyticsConsent(page, "denied");
   yield* holdWebFont(page);
   const response = yield* Effect.promise(() =>
     page.goto(`/${locale}/${SOFT_SOURCE}`, { waitUntil: "domcontentloaded" })
@@ -116,7 +114,6 @@ const openStandalone = Effect.fn("NakafaE2E.openStandalone")(function* (
   page: Page,
   locale: Locale
 ) {
-  yield* seedAnalyticsConsent(page, "denied");
   yield* holdWebFont(page);
   const response = yield* Effect.promise(() =>
     page.goto(`/${locale}/${SCHOOL_TREE_ADDRESS}`, {
@@ -356,7 +353,6 @@ const openAddress = Effect.fn("NakafaE2E.openAddress")(function* (
   page: Page,
   address: string
 ) {
-  yield* seedAnalyticsConsent(page, "denied");
   yield* holdWebFont(page);
   return yield* Effect.promise(() =>
     page.goto(address, { waitUntil: "domcontentloaded" })

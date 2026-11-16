@@ -74,7 +74,7 @@ const verifyBrokenState = Effect.fn("NakafaE2E.verifyBrokenState")(function* (
   // The home page loads more chunks than the browser's 250 timing entries, and a
   // chunk the list left out would fail as if the deploy had removed it.
   yield* keepResourceTimings(page);
-  yield* openRoute(page, target.href, "denied");
+  yield* openRoute(page, target.href);
   yield* waitForCommittedAppRouter(
     page,
     target.href,

@@ -1,7 +1,4 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
-import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
-import { AnalyticsErasureRequestError } from "@repo/backend/confect/analytics/erasure/spec";
-import { ConsentPersistenceError } from "@repo/backend/confect/consents/schema";
 import { Schema } from "effect";
 export const productAnalyticsCaptureFailedCode =
   "PRODUCT_ANALYTICS_CAPTURE_FAILED";
@@ -13,35 +10,16 @@ export class ProductAnalyticsCaptureError extends Schema.TaggedError<
   code: Schema.Literal(productAnalyticsCaptureFailedCode),
   message: Schema.String,
 }) {}
-/** Maps one Convex or PostHog failure into the analytics capture channel. */
-
-export default GroupSpec.make()
-  .addFunction(
-    FunctionSpec.internalQuery({
-      name: "isProductAnalyticsUserEligible",
-      args: () => ({
-        userId: IdSchema("users"),
-      }),
-      returns: () => Schema.Boolean,
-      error: () =>
-        Schema.Union([ProductAnalyticsCaptureError, ConsentPersistenceError]),
-    })
-  )
-  .addFunction(
-    FunctionSpec.internalAction({
-      name: "deliverProductEvent",
-      args: () => ({
-        disableGeoip: Schema.Boolean,
-        distinctId: IdSchema("users"),
-        event: Schema.String,
-        properties: Schema.optionalKey(Schema.String),
-        timestamp: Schema.optionalKey(Schema.Finite),
-      }),
-      returns: () => Schema.Null,
-      error: () =>
-        Schema.Union([
-          ProductAnalyticsCaptureError,
-          AnalyticsErasureRequestError,
-        ]),
-    })
-  );
+/** The internal action that delivers one anonymous product event to PostHog. */
+export default GroupSpec.make().addFunction(
+  FunctionSpec.internalAction({
+    name: "deliverProductEvent",
+    args: () => ({
+      event: Schema.String,
+      properties: Schema.optionalKey(Schema.String),
+      timestamp: Schema.optionalKey(Schema.Finite),
+    }),
+    returns: () => Schema.Null,
+    error: () => ProductAnalyticsCaptureError,
+  })
+);

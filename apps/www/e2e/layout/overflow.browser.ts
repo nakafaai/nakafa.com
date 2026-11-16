@@ -101,7 +101,7 @@ for (const route of routes) {
             yield* withObservedPageErrors(
               page,
               Effect.gen(function* () {
-                yield* openRoute(page, route, "denied");
+                yield* openRoute(page, route);
                 // Every part mounts on the way down, and the page ends at the top.
                 yield* scrollThroughPage(page);
                 yield* Effect.forEach(

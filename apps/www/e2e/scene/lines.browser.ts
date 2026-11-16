@@ -53,7 +53,7 @@ const withObservedSceneDiagnostics = Effect.fn(
 const openLessonScenes = Effect.fn("NakafaE2E.openLessonScenes")(function* (
   page: Page
 ) {
-  yield* openRoute(page, pinnedRoutes.material.en, "denied");
+  yield* openRoute(page, pinnedRoutes.material.en);
 
   const cards = mathSceneCards(page);
   const count = yield* Effect.promise(() => cards.count());

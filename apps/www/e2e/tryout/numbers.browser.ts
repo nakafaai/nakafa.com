@@ -1,6 +1,5 @@
 import { expect, test } from "@playwright/test";
 import { Array as Arr, Effect } from "effect";
-import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { readSectionHref, setHref, settledSection } from "@/e2e/support/tryout";
 
@@ -23,7 +22,6 @@ test("a try-out section shows its numbers before its scripts run", async ({
     withObservedPageErrors(
       page,
       Effect.gen(function* () {
-        yield* seedAnalyticsConsent(page, "denied");
         yield* Effect.promise(() => page.goto(setHref));
         const href = yield* readSectionHref(yield* settledSection(page));
 

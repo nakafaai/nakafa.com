@@ -4,7 +4,6 @@ import app from "@repo/internationalization/dictionaries/en.json" with {
 };
 import { Effect } from "effect";
 import { runOnPage } from "@/e2e/support/chat";
-import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { holdPageData } from "@/e2e/support/hold";
 import { signInLearner } from "@/e2e/support/learner";
 import { openObservedRoute } from "@/e2e/support/navigation/prefetch";
@@ -101,7 +100,6 @@ test("every family of the learner's pages keeps the page a press leaves whole un
 }) => {
   await runOnPage(page, baseURL, (origin) =>
     Effect.gen(function* () {
-      yield* seedAnalyticsConsent(page, "denied");
       yield* signInLearner(page.context(), origin);
       yield* Effect.promise(() => finishOnboarding(page));
       yield* openObservedRoute(page, "/en/home");

@@ -1,6 +1,5 @@
 import { expect, test } from "@playwright/test";
 import { Effect, Schema } from "effect";
-import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { pinnedRoutes } from "@/e2e/support/corpus";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { waitForQuiet } from "@/e2e/support/quiet";
@@ -38,7 +37,6 @@ test("the next lesson moves nothing while its body arrives", async ({
     withObservedPageErrors(
       page,
       Effect.gen(function* () {
-        yield* seedAnalyticsConsent(page, "denied");
         yield* Effect.promise(() => page.addInitScript(recordShifts));
         const cdp = yield* Effect.promise(() =>
           page.context().newCDPSession(page)

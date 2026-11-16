@@ -4,9 +4,7 @@ import {
   type Page,
   type Route,
 } from "@playwright/test";
-import type { AnalyticsConsentDecision } from "@repo/analytics/consent";
 import { Deferred, Effect, MutableList, Semaphore } from "effect";
-import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { servedTimeoutMilliseconds } from "@/e2e/support/timeout";
 
 /** The app routes that several suites open by name, in English and Indonesian. */
@@ -43,14 +41,6 @@ export const waitForServedRoute = Effect.fn("NakafaE2E.waitForServedRoute")(
  * loads next.
  */
 export const APP_CHUNK_PATH = /\/assets\/.*\.js(?:\?.*)?$/u;
-
-/**
- * Stops every app chunk from loading, so the page stays as the server sent it
- * and only the inline bootstrap script and the stylesheet can act.
- */
-export async function stopAppCode(page: Page) {
-  await page.route(APP_CHUNK_PATH, (route) => route.abort());
-}
 
 /**
  * The most chunks that the routes of one page fetch from the server at once: the
@@ -148,16 +138,11 @@ export const holdChunks = Effect.fn("NakafaE2E.holdChunks")(function* (
     Effect.runPromiseWith(services)(Deferred.succeed(gate, undefined));
 });
 
-/**
- * Seeds one consent decision before the first navigation, then opens `href`
- * and expects the server to answer it with a page.
- */
+/** Opens `href` and expects the server to answer it with a page. */
 export const openRoute = Effect.fn("NakafaE2E.openRoute")(function* (
   page: Page,
-  href: string,
-  consent: AnalyticsConsentDecision
+  href: string
 ) {
-  yield* seedAnalyticsConsent(page, consent);
   const response = yield* Effect.promise(() =>
     page.goto(href, { waitUntil: "domcontentloaded" })
   );

@@ -1,7 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
 import { readAnatomy } from "@/e2e/support/anatomy";
-import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { signInLearner } from "@/e2e/support/learner";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
@@ -19,7 +18,6 @@ test("every section of the account's settings starts its body one rhythm under t
   const context = await browser.newContext();
   await Effect.runPromise(signInLearner(context, String(baseURL)));
   const page = await context.newPage();
-  await Effect.runPromise(seedAnalyticsConsent(page, "denied"));
 
   for (const section of SECTIONS) {
     await page.goto(`${baseURL}/en/user/settings${section}`);

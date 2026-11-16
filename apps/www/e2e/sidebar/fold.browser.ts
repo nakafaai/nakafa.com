@@ -3,7 +3,6 @@ import app from "@repo/internationalization/dictionaries/en.json" with {
   type: "json",
 };
 import { Effect, HashSet, Schema } from "effect";
-import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { waitForAnimations } from "@/e2e/support/quiet";
 import { waitUntilTakenOver } from "@/e2e/support/window";
@@ -51,7 +50,6 @@ const verifyFold = Effect.fn("NakafaE2E.verifySearchRowFold")(function* (
   first: Effect.Effect<void>,
   second: Effect.Effect<void>
 ) {
-  yield* seedAnalyticsConsent(page, "denied");
   yield* Effect.promise(() =>
     page.addInitScript(watchPlaceholder, PLACEHOLDER)
   );

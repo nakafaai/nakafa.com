@@ -1,6 +1,5 @@
 import { expect, type Page, test } from "@playwright/test";
 import { Array as Arr, Deferred, Duration, Effect, MutableList } from "effect";
-import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import {
   PRELOADED_FONT_SELECTOR,
   readTypefaceFiles,
@@ -18,8 +17,6 @@ const lateTypefaceMilliseconds = 1000;
 const verifyQuranTypefaceScope = Effect.fn(
   "NakafaE2E.verifyQuranTypefaceScope"
 )(function* (page: Page) {
-  yield* seedAnalyticsConsent(page, "denied");
-
   const warnings = yield* collectUnusedPreloads(
     page,
     Effect.gen(function* () {
@@ -92,7 +89,6 @@ const readQuranTextFonts = Effect.fn("NakafaE2E.readQuranTextFonts")(function* (
 const verifySurahPreloadsTypeface = Effect.fn(
   "NakafaE2E.verifySurahPreloadsTypeface"
 )(function* (page: Page) {
-  yield* seedAnalyticsConsent(page, "denied");
   const href = appRoutes.quranSurah;
   yield* openSurah(page, href);
   const files = yield* readTypefaceFiles(page);
@@ -126,7 +122,6 @@ const verifySurahPreloadsTypeface = Effect.fn(
 const verifyLateTypefaceNeverShowsFallback = Effect.fn(
   "NakafaE2E.verifyLateTypefaceNeverShowsFallback"
 )(function* (page: Page, surah: number) {
-  yield* seedAnalyticsConsent(page, "denied");
   const href = `/en/quran/${surah}`;
   yield* openSurah(page, href);
   const files = yield* readTypefaceFiles(page);

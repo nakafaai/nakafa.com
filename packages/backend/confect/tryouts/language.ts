@@ -177,7 +177,6 @@ export const countQuestionLook = Effect.fn("tryouts.language.countLook")(
       return;
     }
     yield* captureProductEvent({
-      distinctId: input.userId,
       event: {
         name: "tryout question looked at in other language",
         properties: {

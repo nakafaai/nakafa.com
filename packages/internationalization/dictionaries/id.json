@@ -4210,19 +4210,7 @@
     "legal-description": "Dengan masuk, kamu setuju dengan <terms-of-service>Syarat dan Ketentuan</terms-of-service> serta <privacy-policy>Kebijakan Privasi</privacy-policy>."
   },
   "AnalyticsConsent": {
-    "title": "Data penggunaan",
-    "prompt-description": "Berbagi detail bersifat opsional.",
-    "prompt-footer": "Kamu bisa mengubahnya nanti.",
-    "description": "Nakafa menghitung kunjungan tanpa cookie, dan dengan izinmu Nakafa juga melihat fitur yang kamu pakai dan memakai Google Analytics untuk menghitung kunjungan, tanpa merekam layar.",
-    "status-granted": "Berbagi detail penggunaan sedang aktif.",
-    "status-denied": "Berbagi detail penggunaan sedang nonaktif.",
-    "status-browser-signal": "Pengaturan privasi browsermu menonaktifkan berbagi detail.",
-    "status-pending": "Pilihanmu sedang dimuat.",
-    "status-prompt": "Belum ada pilihan.",
-    "policy": "Izinkan jika kamu berusia 18 tahun ke atas, atau 13 sampai 17 tahun dengan persetujuan wali, sesuai <privacy-policy>Kebijakan Privasi</privacy-policy>.",
-    "load-error": "Pilihanmu belum bisa dimuat, jadi pembagian data tetap nonaktif selama kami mencoba lagi.",
-    "runtime-error": "Pilihanmu sudah disimpan, tetapi pembagian data tetap seperti semula.",
-    "save-error": "Pilihanmu tidak bisa disimpan, jadi pembagian data tetap nonaktif."
+    "title": "Pilihan privasi"
   },
   "Ads": {
     "label": "Iklan",

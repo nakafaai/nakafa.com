@@ -4210,19 +4210,7 @@
     "legal-description": "By signing in, you agree to the <terms-of-service>Terms of Service</terms-of-service> and the <privacy-policy>Privacy Policy</privacy-policy>."
   },
   "AnalyticsConsent": {
-    "title": "Usage data",
-    "prompt-description": "Sharing details is optional.",
-    "prompt-footer": "You can change it later.",
-    "description": "Nakafa counts visits without cookies, and with your consent it also sees which features you use and lets Google Analytics count visits, never your screen.",
-    "status-granted": "Detailed usage sharing is on.",
-    "status-denied": "Detailed usage sharing is off.",
-    "status-browser-signal": "Your browser privacy settings keep detailed sharing off.",
-    "status-pending": "We are loading your choice.",
-    "status-prompt": "You have not chosen yet.",
-    "policy": "Allow at 18 or older, or at 13 to 17 with a guardian's approval, as the <privacy-policy>Privacy Policy</privacy-policy> explains.",
-    "load-error": "We could not load your choice, so sharing stays off while we retry.",
-    "runtime-error": "Your choice was saved, but sharing stays as it was.",
-    "save-error": "We could not save your choice, so sharing stays off."
+    "title": "Privacy choices"
   },
   "Ads": {
     "label": "Advertisements",

@@ -11,7 +11,6 @@ import {
 import { readThread } from "@repo/backend/confect/nina/sealed/thread";
 import { SealedReadError } from "@repo/backend/confect/nina/sealed.spec";
 import { SEAL_BYTES_PER_SWEEP } from "@repo/backend/confect/nina/sweep";
-import { seedAnalyticsConsent } from "@repo/backend/confect/test.helpers";
 import { createNinaTest } from "@repo/backend/test/nina";
 import { stubReport } from "@repo/backend/test/nina/report";
 import { encodeJsonText } from "@repo/utilities/json";
@@ -81,9 +80,6 @@ describe("Nina turn sweep", () => {
 
   it("ends a turn whose run was lost as interrupted, refunds it and unlocks its chat", async () => {
     const f = await fixture();
-    await f.t.mutation((ctx) =>
-      seedAnalyticsConsent(ctx, { userId: f.identity.userId, decidedAt: NOW })
-    );
     await f.t.mutation(claim, { turnId: f.turnId });
     const overdue = NOW + DEADLINE + 1;
     vi.setSystemTime(overdue);
@@ -127,6 +123,7 @@ describe("Nina turn sweep", () => {
           properties: encodeJsonText({
             chat_type: "study",
             error_code: "interrupted",
+            $process_person_profile: false,
           }),
         }),
       ],
@@ -305,9 +302,6 @@ describe("Nina turn sweep", () => {
 
   it("settles a stopped turn whose run never exited as cancelled, with no failure event", async () => {
     const f = await fixture();
-    await f.t.mutation((ctx) =>
-      seedAnalyticsConsent(ctx, { userId: f.identity.userId, decidedAt: NOW })
-    );
     await f.t.mutation(claim, { turnId: f.turnId });
     // The consent and the claim commit first, so the stop has its own moment.
     const stoppedAt = NOW + 1000;
@@ -341,9 +335,6 @@ describe("Nina turn sweep", () => {
 
   it("settles once however many sweeps and late results reach the turn", async () => {
     const f = await fixture();
-    await f.t.mutation((ctx) =>
-      seedAnalyticsConsent(ctx, { userId: f.identity.userId, decidedAt: NOW })
-    );
     await f.t.mutation(claim, { turnId: f.turnId });
     vi.setSystemTime(NOW + DEADLINE + 1);
     await f.t.mutation(sweep, {});
@@ -388,9 +379,6 @@ describe("Nina turn start check", () => {
 
   it("settles a turn whose run never started as timed out, with its credits back, and unlocks its chat", async () => {
     const f = await fixture();
-    await f.t.mutation((ctx) =>
-      seedAnalyticsConsent(ctx, { userId: f.identity.userId, decidedAt: NOW })
-    );
     const checked = NOW + START;
     vi.setSystemTime(checked);
     await f.t.mutation(expire, { turnId: f.turnId });

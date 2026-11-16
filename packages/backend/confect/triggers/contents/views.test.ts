@@ -3,7 +3,6 @@ import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import confectSchema from "@repo/backend/confect/_generated/schema";
 import {
   createConvexTestWithBetterAuth,
-  seedAnalyticsConsent,
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
 import { api } from "@repo/backend/convex/_generated/api";
@@ -48,10 +47,6 @@ describe("triggers/contents/views", () => {
         const identity = await seedAuthenticatedUser(ctx, {
           now: NOW,
         });
-        await seedAnalyticsConsent(ctx, {
-          decidedAt: NOW,
-          userId: identity.userId,
-        });
         if (section === "articles") {
           await insertRuntimeArticles(ctx, 1, () => article);
         }
@@ -78,7 +73,6 @@ describe("triggers/contents/views", () => {
           expect.objectContaining({
             args: [
               expect.objectContaining({
-                distinctId: identity.userId,
                 event: "content viewed",
                 properties: encodeJsonText({
                   alignment_id: projection.graph.alignmentId,
@@ -91,6 +85,7 @@ describe("triggers/contents/views", () => {
                   lens_id: projection.graph.lensId,
                   locale: "en",
                   route: projection.publicPath,
+                  $process_person_profile: false,
                 }),
               }),
             ],

@@ -41,7 +41,7 @@ for (const viewport of NARROW_VIEWPORTS) {
               page,
               Effect.forEach(["id", "en", "de"], (locale) =>
                 Effect.gen(function* () {
-                  yield* openRoute(page, `/${locale}`, "denied");
+                  yield* openRoute(page, `/${locale}`);
                   // Every part mounts on the way down, the lesson labs and the toys included.
                   yield* scrollThroughPage(page);
                   yield* expectNoOverflow(page, locale);

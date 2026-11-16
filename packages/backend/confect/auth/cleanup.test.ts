@@ -10,10 +10,7 @@ import databaseSchema from "@repo/backend/confect/_generated/schema";
 import { drainDeletedUserDataProgram } from "@repo/backend/confect/auth/cleanup";
 import { cleanupDeletedUserProgram } from "@repo/backend/confect/auth/cleanup/impl";
 import { createDeletedUserTombstone } from "@repo/backend/confect/auth/deletion/tombstone";
-import {
-  createConvexTestWithBetterAuth,
-  seedAnalyticsConsent,
-} from "@repo/backend/confect/test.helpers";
+import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
 import { internal } from "@repo/backend/convex/_generated/api";
 import { MASCOT_CODE } from "@repo/backend/test/mascot";
 import { Effect, Layer } from "effect";
@@ -138,10 +135,6 @@ describe("auth/cleanup", () => {
               name: "Retained User",
               plan: "free",
             });
-            await seedAnalyticsConsent(ctx, {
-              decidedAt: NOW,
-              userId,
-            });
             await ctx.db.insert("chats", {
               threadId: await createThread(ctx, components.nina, { userId }),
               type: "study",
@@ -196,18 +189,6 @@ describe("auth/cleanup", () => {
               );
             }
             return {
-              consentDecisions: await ctx.db
-                .query("accountConsentDecisions")
-                .withIndex("by_userId_and_category_and_decidedAt", (query) =>
-                  query.eq("userId", userId)
-                )
-                .take(2),
-              consents: await ctx.db
-                .query("accountConsents")
-                .withIndex("by_userId_and_category", (query) =>
-                  query.eq("userId", userId)
-                )
-                .take(2),
               chats: await ctx.db
                 .query("chats")
                 .withIndex("by_userId", (query) => query.eq("userId", userId))
@@ -230,8 +211,6 @@ describe("auth/cleanup", () => {
         );
         expect(result).toEqual({
           chats: [],
-          consentDecisions: [],
-          consents: [],
           creditTransactions: [],
           learningPreferences: [],
           referencedComment: expect.objectContaining({

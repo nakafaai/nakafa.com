@@ -1,6 +1,5 @@
 import { expect, type Page } from "@playwright/test";
 import { Array as Arr, Effect, Option } from "effect";
-import { pressDecline, seedAnalyticsConsent } from "@/e2e/support/consent";
 import { loadMathFonts } from "@/e2e/support/fonts";
 import { activate } from "@/e2e/support/input";
 import { signInLearner } from "@/e2e/support/learner";
@@ -178,11 +177,9 @@ export const waitForObservers = Effect.fn("NakafaE2E.waitForObservers")(
  */
 export const runFirstSection = Effect.fn("NakafaE2E.runFirstSection")(
   function* (page: Page, hasTouch: boolean, baseURL: string) {
-    yield* seedAnalyticsConsent(page, "denied");
     yield* signInLearner(page.context(), baseURL);
     yield* observeShell(page);
     yield* openCountry(page);
-    yield* pressDecline(page, hasTouch);
     yield* openTrack(page, hasTouch);
 
     // The set opens beside the track's table, and its pane's Start asks for the mode.

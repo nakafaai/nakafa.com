@@ -141,7 +141,7 @@ test("home lesson window mounts its visual once half of the window is on the scr
           yield* withObservedPageErrors(
             page,
             Effect.gen(function* () {
-              yield* openRoute(page, "/id", "denied");
+              yield* openRoute(page, "/id");
               yield* Effect.promise(() => page.waitForLoadState("load"));
               const root = lessonWindow(page);
               const visual = lessonVisual(page, PROJECTILE_VIEW).locator(
@@ -206,7 +206,7 @@ test("home lesson window keeps its visual mounted once the window has left the s
           yield* withObservedPageErrors(
             page,
             Effect.gen(function* () {
-              yield* openRoute(page, "/id", "denied");
+              yield* openRoute(page, "/id");
               const visual = lessonVisual(page, PROJECTILE_VIEW).locator(
                 "canvas"
               );
@@ -254,7 +254,7 @@ test("home lesson window draws no layout shift in its section while it is reveal
           yield* withObservedPageErrors(
             page,
             Effect.gen(function* () {
-              yield* openRoute(page, "/id", "denied");
+              yield* openRoute(page, "/id");
               yield* Effect.promise(() => page.waitForLoadState("load"));
               const shiftsBefore = yield* Effect.promise(() =>
                 countSectionShifts(page)
@@ -307,7 +307,7 @@ test("home lesson placeholder holds still with reduced motion while its scene lo
                 CIRCLE_SCENE_MARKER,
                 LOADING_HOLD_MS
               );
-              yield* openRoute(page, "/id", "denied");
+              yield* openRoute(page, "/id");
               yield* showLessonWindow(page);
               yield* Effect.promise(() =>
                 expect(

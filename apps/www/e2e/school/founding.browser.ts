@@ -1,6 +1,5 @@
 import { expect, test } from "@playwright/test";
 import { Clock, Duration, Effect } from "effect";
-import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { signInLearner } from "@/e2e/support/learner";
 import { finishSchoolStart } from "@/e2e/support/school";
 import { stepTo } from "@/e2e/support/scroll";
@@ -90,7 +89,6 @@ test("the home page's school band copies the one link a new school opens from", 
       return Promise.resolve();
     });
   }, COPIED);
-  await Effect.runPromise(seedAnalyticsConsent(page, "denied"));
   await page.goto("/en");
   // A section under the first screen takes over only as the reader nears it.
   const copy = page.getByRole("button", { name: "Copy link" });

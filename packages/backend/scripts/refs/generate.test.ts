@@ -16,7 +16,6 @@ import comments from "@repo/backend/confect/_generated/refs/comments";
 import commentsInternal from "@repo/backend/confect/_generated/refs/comments.server";
 import connectors from "@repo/backend/confect/_generated/refs/connectors";
 import connectorsInternal from "@repo/backend/confect/_generated/refs/connectors.server";
-import consents from "@repo/backend/confect/_generated/refs/consents";
 import contentRelease from "@repo/backend/confect/_generated/refs/contentRelease";
 import contentReleaseInternal from "@repo/backend/confect/_generated/refs/contentRelease.server";
 import contents from "@repo/backend/confect/_generated/refs/contents";
@@ -139,7 +138,6 @@ const domainModules = {
   classroom,
   comments,
   connectors,
-  consents,
   contentRelease,
   contents,
   editor,

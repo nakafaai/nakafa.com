@@ -4210,19 +4210,7 @@
     "legal-description": "Mit der Anmeldung stimmst du den <terms-of-service>Nutzungsbedingungen</terms-of-service> und der <privacy-policy>Datenschutzerklärung</privacy-policy> zu."
   },
   "AnalyticsConsent": {
-    "title": "Nutzungsdaten",
-    "prompt-description": "Details zu teilen ist freiwillig.",
-    "prompt-footer": "Du kannst das später ändern.",
-    "description": "Nakafa zählt Besuche ohne Cookies, und mit deiner Zustimmung sieht es auch, welche Funktionen du nutzt, und lässt Google Analytics Besuche zählen, nie deinen Bildschirm.",
-    "status-granted": "Detaillierte Nutzungsteilung ist an.",
-    "status-denied": "Detaillierte Nutzungsteilung ist aus.",
-    "status-browser-signal": "Deine Browser-Datenschutzeinstellungen lassen das Teilen von Details ausgeschaltet.",
-    "status-pending": "Deine Entscheidung wird geladen.",
-    "status-prompt": "Du hast noch keine Auswahl getroffen.",
-    "policy": "Erlaube es ab 18 oder mit 13 bis 17 mit Zustimmung eines Erziehungsberechtigten, wie die <privacy-policy>Datenschutzerklärung</privacy-policy> erklärt.",
-    "load-error": "Deine Auswahl konnte nicht geladen werden, daher bleibt das Teilen aus, während wir es erneut versuchen.",
-    "runtime-error": "Deine Auswahl ist gespeichert, aber das Teilen bleibt wie bisher.",
-    "save-error": "Deine Auswahl konnte nicht gespeichert werden, daher bleibt das Teilen aus."
+    "title": "Datenschutzeinstellungen"
   },
   "Ads": {
     "label": "Anzeigen",

@@ -5,7 +5,7 @@ import contents from "@repo/backend/confect/_generated/refs/contents";
 import { Effect, Option, Result } from "effect";
 import { useEffect } from "react";
 import { useConvexAuth } from "@/components/auth/convex";
-import { useAnalyticsConsent } from "@/lib/analytics/consent/facts";
+import { useAnalyticsConsent } from "@/lib/analytics/consent";
 import { useContentViews } from "@/lib/content/views/context";
 import {
   readContentViewIdentity,
@@ -47,7 +47,7 @@ export function useRecordContentView({
   const isUserPending = useViewer((state) => state.isPending);
   const signedInUserId = useViewer((state) => state.viewer?.id ?? null);
   const attribution = useAnalyticsConsent((state) =>
-    resolveContentViewAttribution({ isAuthenticated, status: state.status })
+    resolveContentViewAttribution({ isAuthenticated, status: state.analytics })
   );
 
   const documentState = useDocumentVisibility();

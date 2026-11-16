@@ -1,5 +1,3 @@
-import { ANALYTICS_CONSENT_CATEGORY } from "@repo/analytics/consent";
-import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
 import analyticsInternal from "@repo/backend/confect/_generated/refs/analytics.server";
 import { Scheduler } from "@repo/backend/confect/_generated/services";
 import {
@@ -7,21 +5,18 @@ import {
   productAnalyticsCaptureFailedCode,
 } from "@repo/backend/confect/analytics/capture.spec";
 import { productAnalyticsEventValidator } from "@repo/backend/confect/analytics/events";
-import { hasCurrentConsent } from "@repo/backend/confect/consents/impl";
 import { getUnknownErrorMessage } from "@repo/backend/confect/failure";
-import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { JsonTextSchema } from "@repo/utilities/json";
-import { Duration, Effect, flow, Result, Schema } from "effect";
+import { Duration, Effect, flow, Schema } from "effect";
 
 const ProductAnalyticsCaptureArgsSchema = Schema.Struct({
-  distinctId: IdSchema("users"),
   event: productAnalyticsEventValidator,
   /** Event time as epoch milliseconds. */
   timestamp: Schema.optionalKey(Schema.Finite),
 });
 type ProductAnalyticsCaptureArgs =
   typeof ProductAnalyticsCaptureArgsSchema.Type;
-/** Raised when an admitted backend product event cannot be queued. */
+
 /** Maps one Convex or PostHog failure into the analytics capture channel. */
 export function toProductAnalyticsCaptureError(error: unknown) {
   return new ProductAnalyticsCaptureError({
@@ -29,40 +24,32 @@ export function toProductAnalyticsCaptureError(error: unknown) {
     message: getUnknownErrorMessage(error),
   });
 }
-/** Checks the exact current analytics grant before any event can be queued. */
-export const hasProductAnalyticsConsent = Effect.fn(
-  "analytics.capture.hasProductAnalyticsConsent"
-)(function* (userId: Id<"users">) {
-  return yield* hasCurrentConsent(userId, ANALYTICS_CONSENT_CATEGORY).pipe(
-    Effect.mapError(toProductAnalyticsCaptureError)
-  );
-});
-/** Queues one backend event behind deletion-aware PostHog delivery. */
+
+/**
+ * Queues one backend product event for PostHog, anonymous: it names no account
+ * and builds no person, so the counts and funnels of an event's properties stay
+ * while no server event identifies anyone. Google's consent mode, which governs
+ * identified analytics, lives in the browser, where the server cannot read it.
+ * A failure to queue is logged, never raised, because the event is optional.
+ */
 export const captureProductEvent = Effect.fn(
   "analytics.capture.captureProductEvent"
 )(
-  function* ({ distinctId, event, timestamp }: ProductAnalyticsCaptureArgs) {
+  function* ({ event, timestamp }: ProductAnalyticsCaptureArgs) {
     const scheduler = yield* Scheduler;
-    if (!(yield* hasProductAnalyticsConsent(distinctId))) {
-      return;
-    }
-    const properties = yield* Schema.encodeEffect(JsonTextSchema)(
-      event.properties
-    ).pipe(Effect.orDie);
+    // PostHog builds no person from an event that turns this off.
+    const properties = yield* Schema.encodeEffect(JsonTextSchema)({
+      ...event.properties,
+      $process_person_profile: false,
+    }).pipe(Effect.orDie);
     yield* scheduler
       .runAfter(
         Duration.millis(0),
         analyticsInternal.capture.deliverProductEvent,
         {
-          disableGeoip: true,
-          distinctId,
           event: event.name,
           properties,
-          ...(timestamp === undefined
-            ? {}
-            : {
-                timestamp,
-              }),
+          ...(timestamp === undefined ? {} : { timestamp }),
         }
       )
       .pipe(
@@ -77,32 +64,3 @@ export const captureProductEvent = Effect.fn(
     )
   )
 );
-/** Delivers only for eligible users and erases writes overlapping withdrawal. */
-export const deliverProductAnalyticsProgram = Effect.fn(
-  "analytics.capture.deliverProductAnalytics"
-)(function* <R>(operations: {
-  readonly capture: Effect.Effect<void, ProductAnalyticsCaptureError, R>;
-  readonly isUserEligible: Effect.Effect<
-    boolean,
-    ProductAnalyticsCaptureError,
-    R
-  >;
-  readonly requestErasure: Effect.Effect<void, ProductAnalyticsCaptureError, R>;
-}) {
-  const isEligibleBeforeSend = yield* operations.isUserEligible;
-  if (!isEligibleBeforeSend) {
-    return;
-  }
-  const captureResult = yield* Effect.result(operations.capture);
-  const eligibilityAfterSend = yield* Effect.result(operations.isUserEligible);
-  if (Result.isFailure(eligibilityAfterSend)) {
-    yield* operations.requestErasure;
-    return yield* eligibilityAfterSend.failure;
-  }
-  if (!eligibilityAfterSend.success) {
-    yield* operations.requestErasure;
-  }
-  if (Result.isFailure(captureResult)) {
-    return yield* captureResult.failure;
-  }
-});

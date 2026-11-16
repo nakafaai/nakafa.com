@@ -1,6 +1,5 @@
 import { expect, test } from "@playwright/test";
 import { Array as Arr, Effect } from "effect";
-import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { activateUntilVisible } from "@/e2e/support/input";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
@@ -17,7 +16,6 @@ test("the language menu replaces the route in the chosen locale in place", async
     withObservedPageErrors(
       page,
       Effect.gen(function* () {
-        yield* seedAnalyticsConsent(page, "denied");
         yield* Effect.promise(() =>
           page.goto("/en/search", { waitUntil: "domcontentloaded" })
         );
@@ -68,7 +66,6 @@ test("the language menu shows each language with its own country's flag", async 
     withObservedPageErrors(
       page,
       Effect.gen(function* () {
-        yield* seedAnalyticsConsent(page, "denied");
         yield* Effect.promise(() =>
           page.goto("/en/search", { waitUntil: "domcontentloaded" })
         );

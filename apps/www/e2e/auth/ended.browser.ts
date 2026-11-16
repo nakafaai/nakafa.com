@@ -1,6 +1,5 @@
 import { expect, test } from "@playwright/test";
 import { Array as Arr, MutableList } from "effect";
-import { seedRawStorage } from "@/e2e/support/consent";
 import { SIGNED_IN_HINT_COOKIE } from "@/lib/auth/hint";
 import { KNOWN_SESSION_KEY } from "@/lib/auth/keys";
 import { TOKEN_PATH } from "@/lib/auth/session";
@@ -45,7 +44,10 @@ test("the learner home of a remembered session that has ended loads with no cons
       value: "1",
     },
   ]);
-  await seedRawStorage(page, KNOWN_SESSION_KEY, ENDED_SESSION);
+  await page.addInitScript(
+    ({ key, value }) => localStorage.setItem(key, value),
+    { key: KNOWN_SESSION_KEY, value: ENDED_SESSION }
+  );
 
   const tokenRead = page.waitForResponse(
     (response) => new URL(response.url()).pathname === TOKEN_PATH

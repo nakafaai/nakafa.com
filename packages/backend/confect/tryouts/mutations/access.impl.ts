@@ -12,10 +12,9 @@ const trackPaywallView = FunctionImpl.make(
   spec,
   "trackPaywallView",
   Effect.fn("tryouts.mutations.access.trackPaywallView")(function* (args) {
-    const { appUser } = yield* requireAuth();
+    yield* requireAuth();
     const now = yield* Clock.currentTimeMillis;
     yield* captureProductEvent({
-      distinctId: appUser._id,
       event: {
         name: "tryout paywall viewed",
         properties: {

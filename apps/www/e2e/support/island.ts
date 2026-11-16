@@ -1,9 +1,5 @@
 import { expect, type Page } from "@playwright/test";
-import en from "@repo/internationalization/dictionaries/en.json" with {
-  type: "json",
-};
 import { Effect } from "effect";
-import { pressDecline } from "@/e2e/support/consent";
 import { revealTimeoutMilliseconds } from "@/e2e/support/timeout";
 
 /** The island game of the signed-in learner. */
@@ -23,12 +19,10 @@ export const expectRevision = (page: Page, revision: number) =>
  * Opens the learner's island and waits for its first frame. The game loads its
  * renderer once the learner enters, and a machine busy with other work
  * stretches that past the default five seconds, so the wait is a deferred
- * scene's. A learner asked about usage data declines first; a runtime where
- * the choice is made shows no card, so the helper looks once and never waits.
+ * scene's.
  */
 export const openIsland = Effect.fn("NakafaE2E.openIsland")(function* (
-  page: Page,
-  hasTouch: boolean
+  page: Page
 ) {
   yield* Effect.promise(() => page.goto(ISLAND_PATH));
   yield* Effect.promise(() =>
@@ -36,14 +30,6 @@ export const openIsland = Effect.fn("NakafaE2E.openIsland")(function* (
       timeout: revealTimeoutMilliseconds,
     })
   );
-  const asked = yield* Effect.promise(() =>
-    page
-      .getByRole("button", { exact: true, name: en.Common.decline })
-      .isVisible()
-  );
-  if (asked) {
-    yield* pressDecline(page, hasTouch);
-  }
 });
 
 /** Presses the world at a share of its width and height, with a finger on a touch screen and the mouse elsewhere. */

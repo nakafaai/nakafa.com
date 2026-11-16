@@ -3,7 +3,7 @@ import {
   SidebarMenuSeparator,
 } from "@repo/design-system/components/ui/sidebar-menu";
 import { useTranslations } from "use-intl";
-import { VisitorConsentMenuItem } from "@/components/analytics/consent/menu";
+import { PrivacyChoicesMenuItem } from "@/components/analytics/choices";
 import {
   CommunityMenuItem,
   GuestLearnMoreMenu,
@@ -26,7 +26,7 @@ export function NavUserGuest() {
         <NakafaAboutMenuItem />
         <CommunityMenuItem />
         <LegalMenuItems />
-        <VisitorConsentMenuItem />
+        <PrivacyChoicesMenuItem />
       </GuestLearnMoreMenu>
       <SidebarMenuSeparator />
       <SidebarMenuItem className="flex flex-col gap-3 px-2 py-1 group-data-[collapsible=icon]:px-0">

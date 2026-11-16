@@ -2,8 +2,6 @@ import { expect, type Page, test } from "@playwright/test";
 import en from "@repo/internationalization/dictionaries/en.json" with {
   type: "json",
 };
-import { Effect } from "effect";
-import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { appRoutes } from "@/e2e/support/route";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { desktopViewport } from "@/e2e/support/viewport";
@@ -25,7 +23,6 @@ const marked = (page: Page) => page.locator(`${SIDEBAR} a[data-active="true"]`);
 test("moves the sidebar's mark from the Quran to Try out when Try out is pressed", async ({
   page,
 }) => {
-  await Effect.runPromise(seedAnalyticsConsent(page, "denied"));
   await page.setViewportSize(desktopViewport);
   await page.goto(appRoutes.quran, { waitUntil: "domcontentloaded" });
   await expect(marked(page)).toHaveText([en.Holy.quran], {

@@ -4,7 +4,6 @@ import {
 } from "@nakafa/aksara-contracts/locale";
 import { expect, type Page, test } from "@playwright/test";
 import { Array as Arr, Effect, HashSet, Record as Rec, Schema } from "effect";
-import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { waitForCommittedAppRouter } from "@/e2e/support/navigation/readiness";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { appRoutes, waitForServedRoute } from "@/e2e/support/route";
@@ -110,7 +109,6 @@ function quranMeaningLocator(
 const verifyQuranInterpretationDrawer = Effect.fn(
   "NakafaE2E.verifyQuranInterpretationDrawer"
 )(function* (page: Page) {
-  yield* seedAnalyticsConsent(page, "denied");
   const response = yield* Effect.promise(() =>
     page.goto(appRoutes.quranSurahId, { waitUntil: "domcontentloaded" })
   );
@@ -183,8 +181,6 @@ const verifyQuranInterpretationDrawer = Effect.fn(
 const verifyQuranLocaleCoverage = Effect.fn(
   "NakafaE2E.verifyQuranLocaleCoverage"
 )(function* (page: Page, contract: QuranLocaleCase) {
-  yield* seedAnalyticsConsent(page, "denied");
-
   const href = `/${contract.locale}/quran/2`;
   // Only the first surah of each locale is prerendered, so the first visit of
   // this page in a locale gets the shell and fetches the page after it loaded.

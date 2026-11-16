@@ -88,12 +88,14 @@ describe("tryouts/mutations/sections", () => {
         const running = yield* readFinished(world, attemptId);
         expect(running.sections).toMatchObject([
           {
-            expiresAt: TRYOUT_NOW + 600_000,
             sectionKey: "section-a",
             status: "in-progress",
             totalQuestions: 2,
           },
         ]);
+        // The section's timer runs ten minutes from its own start.
+        const [section] = running.sections;
+        expect(section?.expiresAt).toBe((section?.startedAt ?? 0) + 600_000);
         expect(yield* sitSet(world, attemptId)).toEqual({ kind: "completed" });
         const finished = yield* readFinished(world, attemptId);
         expect(finished.attempt).toMatchObject({

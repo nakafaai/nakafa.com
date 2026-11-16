@@ -1,6 +1,5 @@
 import { test } from "@playwright/test";
 import { Effect } from "effect";
-import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { expectNoSidewaysSidebar } from "@/e2e/support/sidebar";
 
@@ -13,12 +12,6 @@ test("the sidebar keeps every part inside its own width at 320, 390, 768, 1024 a
 }) => {
   test.setTimeout(180_000);
   await Effect.runPromise(
-    withObservedPageErrors(
-      page,
-      Effect.andThen(
-        seedAnalyticsConsent(page, "denied"),
-        expectNoSidewaysSidebar(page, "/en/try-out")
-      )
-    )
+    withObservedPageErrors(page, expectNoSidewaysSidebar(page, "/en/try-out"))
   );
 });

@@ -1,7 +1,6 @@
 import { expect, type Page, test } from "@playwright/test";
 import { Array as Arr, Effect } from "effect";
 import { runOnPage } from "@/e2e/support/chat";
-import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import {
   readRecordedLayoutShifts,
   recordLayoutShifts,
@@ -73,7 +72,6 @@ for (const destination of destinations) {
   }) => {
     await runOnPage(page, baseURL, (origin) =>
       Effect.gen(function* () {
-        yield* seedAnalyticsConsent(page, "denied");
         yield* signInLearner(page.context(), origin);
         yield* Effect.promise(() => page.goto("/en/search"));
         const pressedAt = yield* Effect.promise(() =>

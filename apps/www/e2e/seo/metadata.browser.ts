@@ -1,6 +1,5 @@
 import { expect, type Page, test } from "@playwright/test";
 import { Effect, Record as Rec, Schema } from "effect";
-import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { withBrowserContext } from "@/e2e/support/context";
 import { pinnedRoutes } from "@/e2e/support/corpus";
 import { readRobots } from "@/e2e/support/crawler";
@@ -65,9 +64,6 @@ for (const [locale, href] of Rec.toEntries(pinnedRoutes.material)) {
                 const run = Effect.runPromiseWith(
                   yield* Effect.context<never>()
                 );
-                // The usage-data prompt stands over the foot of the page until
-                // the visitor decides, and the next lesson's link sits there.
-                yield* seedAnalyticsConsent(page, "denied");
                 yield* Effect.promise(() => page.goto(href));
                 const pagination = paginationNavigation(page, locale);
                 const next = pagination.locator("a[href]:visible").last();

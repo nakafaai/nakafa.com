@@ -1,6 +1,5 @@
 import { expect, type Page, test } from "@playwright/test";
 import { Array as Arr, Effect } from "effect";
-import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { pinnedRoutes } from "@/e2e/support/corpus";
 import { waitForCommittedAppRouter } from "@/e2e/support/navigation/readiness";
 import { withObservedPageErrors } from "@/e2e/support/observe";
@@ -120,7 +119,6 @@ const openLesson = Effect.fn("NakafaE2E.openOutlineLesson")(function* (
   page: Page,
   baseURL: string | undefined
 ) {
-  yield* seedAnalyticsConsent(page, "denied");
   yield* Effect.promise(() =>
     page.goto(`${baseURL ?? ""}${LESSON}`, { waitUntil: "domcontentloaded" })
   );

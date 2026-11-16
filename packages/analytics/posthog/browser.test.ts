@@ -43,17 +43,9 @@ function stubWindow(href = "https://nakafa.com/en") {
   });
 }
 
-const anonymousIdentity: BrowserAnalyticsIdentity = {
-  consentDecidedAt: 100,
-  consentMechanism: "privacy-controls",
-  consentNoticeVersion: "privacy-2026-08-22",
-  status: "anonymous",
-};
+const anonymousIdentity: BrowserAnalyticsIdentity = { status: "anonymous" };
 
 const identifiedIdentity: BrowserAnalyticsIdentity = {
-  consentDecidedAt: 100,
-  consentMechanism: "privacy-controls",
-  consentNoticeVersion: "privacy-2026-08-22",
   plan: "free",
   role: "student",
   status: "identified",
@@ -204,14 +196,7 @@ describe("two-tier PostHog browser runtime", () => {
         captureEventName: false,
       });
       expect(client.capture).toHaveBeenCalledExactlyOnceWith("$pageview");
-      expect(client.register).toHaveBeenCalledWith({
-        $geoip_disable: false,
-        consent_decided_at: "1970-01-01T00:00:00.100Z",
-        consent_decision: "granted",
-        consent_mechanism: "privacy-controls",
-        consent_notice_version: "privacy-2026-08-22",
-        consent_scope: "anonymous",
-      });
+      expect(client.register).toHaveBeenCalledWith({ $geoip_disable: false });
     })
   );
 

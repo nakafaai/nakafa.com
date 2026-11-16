@@ -6,7 +6,6 @@ import {
   observeDrawingBufferSize,
   waitForStableCanvas,
 } from "@/e2e/support/canvas";
-import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { withBrowserContext } from "@/e2e/support/context";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import {
@@ -53,7 +52,6 @@ const orbitScene = Effect.fn("NakafaE2E.orbitScene")(function* (
 const expectStableCoordinateSystem = Effect.fn(
   "NakafaE2E.expectStableCoordinateSystem"
 )(function* (page: Page) {
-  yield* seedAnalyticsConsent(page, "denied");
   const response = yield* Effect.promise(() =>
     page.goto(LINEAR_SYSTEM_ROUTE, { waitUntil: "domcontentloaded" })
   );
@@ -151,7 +149,6 @@ test("coordinate-system interaction keeps its drawing buffer stable", async ({
  */
 const expectSliderReadouts = Effect.fn("NakafaE2E.expectSliderReadouts")(
   function* (page: Page) {
-    yield* seedAnalyticsConsent(page, "denied");
     yield* Effect.promise(() =>
       page.goto(SLIDER_ROUTE, { waitUntil: "domcontentloaded" })
     );

@@ -1,5 +1,5 @@
-import { MAIN_DOMAIN } from "@repo/site/domains";
 import { Array as Arr, DateTime, Effect } from "effect";
+import { sendsPrivacySignal } from "@/lib/ads/consent";
 
 /** Nakafa's Google Analytics web stream, of property a307729543p433708734. */
 export const GOOGLE_ANALYTICS_ID = "G-F0WTB42EQM";
@@ -20,10 +20,60 @@ export const GOOGLE_ANALYTICS_POLICY_SOURCES = {
   script: ["https://www.googletagmanager.com"],
 } as const;
 
-/** The cookies that Google Analytics sets for the stream, which a withdrawal deletes. */
-const COOKIES = ["_ga", `_ga_${GOOGLE_ANALYTICS_ID.replace("G-", "")}`];
+/**
+ * Where Google's consent message asks before anything is stored: the European
+ * Economic Area, the United Kingdom and Switzerland, by ISO 3166-1 code. Google's
+ * certified message updates consent there itself, and only there.
+ */
+export const CONSENT_FIRST_REGIONS = [
+  "AT",
+  "BE",
+  "BG",
+  "CH",
+  "CY",
+  "CZ",
+  "DE",
+  "DK",
+  "EE",
+  "ES",
+  "FI",
+  "FR",
+  "GB",
+  "GR",
+  "HR",
+  "HU",
+  "IE",
+  "IS",
+  "IT",
+  "LI",
+  "LT",
+  "LU",
+  "LV",
+  "MT",
+  "NL",
+  "NO",
+  "PL",
+  "PT",
+  "RO",
+  "SE",
+  "SI",
+  "SK",
+];
 
-/** Google Analytics' command queue, started as an array until its library takes it over. */
+/** How long Google's tags wait for the consent message's answer before they act on the default. */
+const CONSENT_WAIT_MILLISECONDS = 500;
+
+/** Every consent type of consent mode denied, analytics storage granted when `analytics` says so. */
+function consentWith(analytics: "denied" | "granted") {
+  return {
+    ad_personalization: "denied",
+    ad_storage: "denied",
+    ad_user_data: "denied",
+    analytics_storage: analytics,
+  };
+}
+
+/** Google's command queue, started as an array until its library takes it over. */
 function commandQueue(): GoogleQueue {
   const queue = window.dataLayer ?? Arr.empty<object>();
   window.dataLayer = queue;
@@ -31,7 +81,7 @@ function commandQueue(): GoogleQueue {
 }
 
 /**
- * Hands one command to Google Analytics. Its library reads only `arguments`
+ * Hands one command to Google's tag. Its library reads only `arguments`
  * objects from `dataLayer`, never arrays, so this pushes the call's own.
  */
 function gtag(..._command: readonly unknown[]) {
@@ -39,23 +89,31 @@ function gtag(..._command: readonly unknown[]) {
 }
 
 /**
- * Starts Google Analytics once per document, after the visitor allowed it, in
- * consent mode: every ad signal denied, analytics storage granted, and neither
- * Google signals nor ad personalization, so its data never targets ads. A later
- * start after a withdrawal grants analytics storage again.
+ * Starts Google Analytics once per document, for every visitor, in consent mode
+ * (https://developers.google.com/tag-platform/security/guides/consent). Every
+ * consent is denied by default where Google's consent message asks first, which
+ * then updates it. Elsewhere only analytics storage is granted, so the stream
+ * counts visits in aggregate, and not even that when the browser sends Global
+ * Privacy Control. The defaults come before the library and any measurement. Ad
+ * click identifiers are redacted while ad storage is denied, and neither Google
+ * signals nor ad personalization is on, so the stream never targets ads.
  */
 export const startGoogleAnalytics = Effect.gen(function* () {
   if (document.querySelector(`#${SCRIPT_ID}`) !== null) {
-    gtag("consent", "update", { analytics_storage: "granted" });
     return;
   }
   const now = yield* DateTime.now;
   gtag("consent", "default", {
-    ad_personalization: "denied",
-    ad_storage: "denied",
-    ad_user_data: "denied",
-    analytics_storage: "granted",
+    ...consentWith("denied"),
+    region: CONSENT_FIRST_REGIONS,
+    wait_for_update: CONSENT_WAIT_MILLISECONDS,
   });
+  gtag(
+    "consent",
+    "default",
+    consentWith(sendsPrivacySignal() ? "denied" : "granted")
+  );
+  gtag("set", "ads_data_redaction", true);
   gtag("js", DateTime.toDate(now));
   gtag("config", GOOGLE_ANALYTICS_ID, {
     allow_ad_personalization_signals: false,
@@ -67,22 +125,3 @@ export const startGoogleAnalytics = Effect.gen(function* () {
   script.src = SCRIPT_SOURCE;
   document.head.append(script);
 });
-
-/**
- * Stops Google Analytics after a withdrawal: analytics storage denied where it
- * runs, and its cookies deleted on the site's domain, where Google sets them.
- */
-export const stopGoogleAnalytics = Effect.sync(() => {
-  if (document.querySelector(`#${SCRIPT_ID}`) !== null) {
-    gtag("consent", "update", { analytics_storage: "denied" });
-  }
-}).pipe(
-  Effect.andThen(
-    Effect.forEach(COOKIES, (name) =>
-      Effect.sync(() => {
-        document.cookie = `${name}=; Max-Age=0; Path=/; Domain=.${MAIN_DOMAIN}`;
-      })
-    )
-  ),
-  Effect.asVoid
-);

@@ -1,4 +1,4 @@
-import { RegisteredConvexFunction, RegisteredFunction } from "@confect/server";
+import { RegisteredConvexFunction } from "@confect/server";
 import confectSchema from "@repo/backend/confect/_generated/schema";
 import { MASCOT_CODE } from "@repo/backend/test/mascot";
 // @vitest-environment node
@@ -12,7 +12,6 @@ import {
   it,
 } from "@effect/vitest";
 import { components } from "@repo/backend/confect/_generated/components";
-import { requestAnalyticsErasure } from "@repo/backend/confect/analytics/erasure/request";
 import {
   cleanupWorkflowStorageProgram,
   retryCleanupWorkflowProgram,
@@ -80,11 +79,16 @@ async function admit() {
       plan: "free",
     })
   );
-  await t.action((ctx) =>
-    Effect.runPromise(
-      requestAnalyticsErasure(userId).pipe(
-        Effect.provide(RegisteredFunction.actionLayer(confectSchema, ctx))
-      )
+  await t.mutation((ctx) =>
+    workflow.start(
+      ctx,
+      internal.auth.deletion.cleanup.cleanupDeletedUserAnalytics,
+      { userId },
+      {
+        context: { source: cleanupSource.accountDeletion },
+        onComplete: internal.privacy.recovery.handleCleanupComplete,
+        startAsync: true,
+      }
     )
   );
   const admitted = await t.query((ctx) => workflow.list(ctx));
@@ -137,19 +141,22 @@ function delayAfterScheduling(
 ) {
   return job.scheduledTime - Math.floor(job._creationTime);
 }
+/**
+ * Expects the account's analytics erased: one request, and the same request
+ * again once the reconciliation delay has passed, for writes that arrived late.
+ */
 async function expectErased(fixture: Awaited<ReturnType<typeof admit>>) {
-  expect(fixture.requests()).toEqual([
-    {
-      body: encodeJsonText({
-        delete_events: true,
-        delete_recordings: true,
-        distinct_ids: [fixture.userId],
-        keep_person: false,
-      }),
-      method: "POST",
-      url: "https://eu.posthog.com/api/projects/114144/persons/bulk_delete/",
-    },
-  ]);
+  const erasure = {
+    body: encodeJsonText({
+      delete_events: true,
+      delete_recordings: true,
+      distinct_ids: [fixture.userId],
+      keep_person: false,
+    }),
+    method: "POST",
+    url: "https://eu.posthog.com/api/projects/114144/persons/bulk_delete/",
+  };
+  expect(fixture.requests()).toEqual([erasure, erasure]);
   expect((await fixture.t.query((ctx) => workflow.list(ctx))).page).toEqual([]);
 }
 describe("privacy workflow recovery", () => {
@@ -166,7 +173,7 @@ describe("privacy workflow recovery", () => {
     ]);
     await fixture.t.mutation(internal.privacy.recovery.cleanupWorkflowStorage, {
       workflowId: fixture.workflowId,
-      source: cleanupSource.consentOverlap,
+      source: cleanupSource.accountDeletion,
     });
     expect(await readJobs(fixture, "cleanupWorkflowStorage")).toHaveLength(1);
   });
@@ -265,7 +272,7 @@ describe("privacy workflow recovery", () => {
               ? retryCleanupWorkflowProgram
               : cleanupWorkflowStorageProgram)(
               fixture.workflowId,
-              cleanupSource.consentOverlap
+              cleanupSource.accountDeletion
             ).pipe(
               Effect.provide(
                 RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
@@ -304,7 +311,7 @@ describe("privacy workflow recovery", () => {
     );
     await t.mutation(internal.privacy.recovery.retryCleanupWorkflow, {
       workflowId,
-      source: cleanupSource.consentOverlap,
+      source: cleanupSource.accountDeletion,
     });
     const after = await t.query((ctx) =>
       ctx.runQuery(components.workflow.workflow.getStatus, {

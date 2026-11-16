@@ -7,10 +7,6 @@ import {
   Option,
   Schema,
 } from "effect";
-import {
-  openConsentPreferences,
-  seedAnalyticsConsent,
-} from "@/e2e/support/consent";
 import { withBrowserContext } from "@/e2e/support/context";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import {
@@ -108,6 +104,47 @@ const waitForFirstPageview = (
   captured: MutableList.MutableList<CapturedIngest>
 ) => waitForPageviews(captured, 1, servedTimeoutMilliseconds);
 
+/**
+ * Stands in for Google's consent message before the page loads: a callback queue
+ * that runs each callback at once and a TCF API that answers with the visitor's
+ * storage consent where the message asks. The page keeps the listener, so a test
+ * can answer again later with `answerConsent`.
+ */
+const standInConsentMessage = (page: Page, storage: boolean) =>
+  Effect.promise(() =>
+    page.addInitScript((granted: boolean) => {
+      const listeners: ((data: unknown, success: boolean) => void)[] = [];
+      const answer = (consent: boolean) => ({
+        eventStatus: "useractioncomplete",
+        gdprApplies: true,
+        purpose: { consents: { 1: consent } },
+      });
+      Reflect.set(window, "googlefc", {
+        callbackQueue: {
+          push: (entry: { CONSENT_API_READY?: () => void }) =>
+            entry.CONSENT_API_READY?.(),
+        },
+      });
+      Reflect.set(
+        window,
+        "__tcfapi",
+        (
+          _command: string,
+          _version: number,
+          listener: (data: unknown, success: boolean) => void
+        ) => {
+          listeners.push(listener);
+          listener(answer(granted), true);
+        }
+      );
+      Reflect.set(window, "answerConsent", (consent: boolean) => {
+        for (const listener of listeners) {
+          listener(answer(consent), true);
+        }
+      });
+    }, storage)
+  );
+
 test("baseline counts one cookieless pageview without consent", async ({
   baseURL,
   browser,
@@ -153,7 +190,7 @@ test("baseline counts one cookieless pageview without consent", async ({
   );
 });
 
-test("granted consent upgrades to attributed pageviews", async ({
+test("a consent that Google's message grants upgrades to attributed pageviews", async ({
   baseURL,
   browser,
 }) => {
@@ -168,8 +205,8 @@ test("granted consent upgrades to attributed pageviews", async ({
           yield* withObservedPageErrors(
             page,
             Effect.gen(function* () {
-              yield* seedAnalyticsConsent(page, "granted");
               const captured = yield* observeIngest(page);
+              yield* standInConsentMessage(page, true);
               const response = yield* Effect.promise(() =>
                 page.goto("/en", { waitUntil: "domcontentloaded" })
               );
@@ -185,7 +222,8 @@ test("granted consent upgrades to attributed pageviews", async ({
 
               const views = pageviews(captured);
               expect(views).toHaveLength(2);
-              expect(views[0]?.properties.consent_decision).toBe("granted");
+              expect(views[0]?.properties.$cookieless_mode).toBeUndefined();
+              expect(views[0]?.properties.$geoip_disable).toBe(false);
               expect(views[1]?.properties.$current_url).toContain("?x=1");
             })
           );
@@ -210,23 +248,15 @@ test("grant keeps exact counts and attributes the next view", async ({
             page,
             Effect.gen(function* () {
               const captured = yield* observeIngest(page);
+              yield* standInConsentMessage(page, false);
               const response = yield* Effect.promise(() =>
                 page.goto("/en", { waitUntil: "domcontentloaded" })
               );
               yield* Effect.sync(() => expect(response?.ok()).toBe(true));
               yield* waitForFirstPageview(captured);
 
-              yield* openConsentPreferences(page, "dialog-content");
               yield* Effect.promise(() =>
-                page
-                  .getByRole("dialog")
-                  .getByRole("button", { name: "Allow" })
-                  .click()
-              );
-              yield* Effect.promise(() =>
-                expect(
-                  page.getByRole("heading", { name: "Usage data" })
-                ).toBeHidden({ timeout: readinessTimeoutMilliseconds })
+                page.evaluate(() => Reflect.get(window, "answerConsent")(true))
               );
               expect(pageviewCount(captured)).toBe(1);
 
@@ -240,7 +270,7 @@ test("grant keeps exact counts and attributes the next view", async ({
               const views = pageviews(captured);
               expect(views).toHaveLength(2);
               expect(views[0]?.properties.$cookieless_mode).toBe(true);
-              expect(views[1]?.properties.consent_decision).toBe("granted");
+              expect(views[1]?.properties.$cookieless_mode).toBeUndefined();
               expect(views[1]?.properties.$current_url).toContain("?x=1");
             })
           );

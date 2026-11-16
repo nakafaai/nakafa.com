@@ -1,7 +1,6 @@
 import { expect, type Page, test } from "@playwright/test";
 import { Effect, Schema } from "effect";
 import { CHAT_PATH, runOnPage } from "@/e2e/support/chat";
-import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { waitForQuiet } from "@/e2e/support/quiet";
 
 /**
@@ -51,7 +50,6 @@ for (const width of [390, 1440]) {
     }) => {
       await runOnPage(page, baseURL, () =>
         Effect.gen(function* () {
-          yield* seedAnalyticsConsent(page, "denied");
           yield* Effect.promise(() => page.addInitScript(recordShifts));
           yield* slowPhone(page);
           yield* Effect.promise(() =>

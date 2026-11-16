@@ -1,12 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import {
   createConvexTestWithBetterAuth,
-  seedAnalyticsConsent,
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
 import { api } from "@repo/backend/convex/_generated/api";
 import {
-  getContentViewDistinctId as getScheduledDistinctId,
   insertContentViewMaterial as insertMaterial,
   makeMaterialViewArgs,
   CONTENT_VIEW_NOW as NOW,
@@ -83,14 +81,6 @@ describe("contents/views/viewer", () => {
         now: NOW,
         suffix: "shared-device-second",
       });
-      await seedAnalyticsConsent(ctx, {
-        decidedAt: NOW,
-        userId: firstUser.userId,
-      });
-      await seedAnalyticsConsent(ctx, {
-        decidedAt: NOW,
-        userId: secondUser.userId,
-      });
 
       return { contentId: material.contentId, firstUser, secondUser };
     });
@@ -162,11 +152,11 @@ describe("contents/views/viewer", () => {
     );
     expect(state.engagementQueue).toHaveLength(2);
     expect(state.viewerSignals).toHaveLength(2);
-    expect(Arr.map(state.contentViewEvents, getScheduledDistinctId)).toEqual([
-      identity.firstUser.userId,
-      identity.firstUser.userId,
-      identity.secondUser.userId,
-    ]);
+    // The events count the views but name no account.
+    expect(state.contentViewEvents).toHaveLength(3);
+    for (const event of state.contentViewEvents) {
+      expect(event.args[0]).not.toHaveProperty("distinctId");
+    }
   });
 
   it("records signed-in user views per device while deduplicating popularity", async () => {

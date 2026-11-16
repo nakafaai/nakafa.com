@@ -1,6 +1,5 @@
 import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
-import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { withBrowserContext } from "@/e2e/support/context";
 import {
   navigationCases,
@@ -51,7 +50,6 @@ for (const viewport of NAVIGATION_VIEWPORTS) {
           (context) =>
             Effect.gen(function* () {
               const page = yield* Effect.promise(() => context.newPage());
-              yield* seedAnalyticsConsent(page, "denied");
               const target = yield* navigationCase.resolve(page);
               yield* verifyHardAndClientNavigation(
                 page,

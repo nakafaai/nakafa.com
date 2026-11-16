@@ -69,7 +69,7 @@ test("home toys and loaders move while they are on screen and hold still out of 
           yield* withObservedPageErrors(
             page,
             Effect.gen(function* () {
-              yield* openRoute(page, "/id", "denied");
+              yield* openRoute(page, "/id");
               // The closing ball, a stopwatch of the toy layer, and a dot of the crowd's typing bubbles.
               const shapes = [
                 page.locator("#closing [class*='animate-thing-hop']").first(),
@@ -121,7 +121,7 @@ test("home holds still with reduced motion: the ball does not turn", async ({
           yield* withObservedPageErrors(
             page,
             Effect.gen(function* () {
-              yield* openRoute(page, "/id", "denied");
+              yield* openRoute(page, "/id");
               const ball = page
                 .locator("#closing [class*='animate-thing-hop']")
                 .first();

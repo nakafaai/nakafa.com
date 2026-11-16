@@ -2,7 +2,6 @@ import { expect, type Locator, type Page, test } from "@playwright/test";
 import { Deferred, Effect, HashSet } from "effect";
 import { GERMAN, openComposer } from "@/e2e/support/attachment";
 import { CHAT_PATH, runOnPage } from "@/e2e/support/chat";
-import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { waitForSlide } from "@/e2e/support/layout";
 import { signInLearner } from "@/e2e/support/learner";
 import { NINA_SECTION, SHEET_POPUP } from "@/e2e/support/selector";
@@ -122,7 +121,6 @@ const verifySurfaces = Effect.fn("NakafaE2E.verifyNinaSurfaces")(function* (
   origin: string
 ) {
   // A visitor's attach button asks for sign-in, so a learner attaches.
-  yield* seedAnalyticsConsent(page, "denied");
   yield* signInLearner(page.context(), origin);
   // Each surface is checked once the learner's session has settled, with its
   // Convex token: an attach pressed earlier is held, which its own cases check.
@@ -174,7 +172,6 @@ for (const surface of EARLY_SURFACES) {
   }) => {
     await runOnPage(page, baseURL, (origin) =>
       Effect.gen(function* () {
-        yield* seedAnalyticsConsent(page, "denied");
         yield* signInLearner(page.context(), origin);
         // Better Auth's answer for the session is held back, so the press lands
         // in the moment before the page knows who is signed in.

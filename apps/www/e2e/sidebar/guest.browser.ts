@@ -4,7 +4,6 @@ import en from "@repo/internationalization/dictionaries/en.json" with {
 };
 import { Effect } from "effect";
 import { expectSignInParts } from "@/e2e/support/auth";
-import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { activateUntilVisible } from "@/e2e/support/input";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { appRoutes } from "@/e2e/support/route";
@@ -27,7 +26,6 @@ for (const viewport of sidebarViewports) {
       withObservedPageErrors(
         page,
         Effect.gen(function* () {
-          yield* seedAnalyticsConsent(page, "denied");
           yield* Effect.promise(() =>
             page.setViewportSize({
               height: viewport.height,
@@ -101,15 +99,15 @@ for (const viewport of sidebarViewports) {
           // A hover opens the menu only once React has taken the button over.
           yield* Effect.promise(() => waitUntilTakenOver(learnMoreButton));
           yield* Effect.promise(() => learnMoreButton.hover());
-          const usageData = page.getByRole("menuitem", {
+          const privacyPolicy = page.getByRole("menuitem", {
             exact: true,
-            name: "Usage data",
+            name: "Privacy Policy",
           });
-          yield* Effect.promise(() => expect(usageData).toBeVisible());
+          yield* Effect.promise(() => expect(privacyPolicy).toBeVisible());
           // On a phone the open menu covers the footer below it, so the reader
           // closes it before reaching for the language menu.
           yield* Effect.promise(() => page.keyboard.press("Escape"));
-          yield* Effect.promise(() => expect(usageData).toBeHidden());
+          yield* Effect.promise(() => expect(privacyPolicy).toBeHidden());
           yield* Effect.promise(() => expect(loginLink).toBeVisible());
           yield* Effect.promise(() =>
             expect(loginLink).toHaveAttribute(
@@ -149,7 +147,6 @@ test("the language menu opens the same route in the chosen language", async ({
     withObservedPageErrors(
       page,
       Effect.gen(function* () {
-        yield* seedAnalyticsConsent(page, "denied");
         const response = yield* Effect.promise(() =>
           page.goto("/en/search", { waitUntil: "domcontentloaded" })
         );
@@ -188,7 +185,6 @@ test("provider failures land on one clean generic retry", async ({ page }) => {
     withObservedPageErrors(
       page,
       Effect.gen(function* () {
-        yield* seedAnalyticsConsent(page, "denied");
         const intent = "/en/search?q=geometry#results";
         const providerLanding = `/en/auth/error?${new URLSearchParams({
           error: "access_denied",
@@ -233,7 +229,6 @@ test("guest auth link preserves a dynamic query and hash for native actions", as
     withObservedPageErrors(
       page,
       Effect.gen(function* () {
-        yield* seedAnalyticsConsent(page, "denied");
         yield* Effect.promise(() =>
           page.setViewportSize({ height: 900, width: 1440 })
         );
@@ -324,7 +319,6 @@ test("guest reaches authentication only when starting a public tryout", async ({
     withObservedPageErrors(
       page,
       Effect.gen(function* () {
-        yield* seedAnalyticsConsent(page, "denied");
         yield* Effect.promise(() =>
           page.setViewportSize({ height: 900, width: 1440 })
         );
@@ -409,7 +403,6 @@ test("guest sidebar marks only the page the reader is on", async ({ page }) => {
     withObservedPageErrors(
       page,
       Effect.gen(function* () {
-        yield* seedAnalyticsConsent(page, "denied");
         yield* Effect.promise(() =>
           page.setViewportSize({ height: 900, width: 1440 })
         );

@@ -1,6 +1,5 @@
 import { expect, test } from "@playwright/test";
 import { Array as Arr, Effect, MutableList } from "effect";
-import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { withBrowserContext } from "@/e2e/support/context";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 
@@ -57,7 +56,6 @@ test("a lesson shows its curriculum path from its static page, with no read", as
           yield* withObservedPageErrors(
             page,
             Effect.gen(function* () {
-              yield* seedAnalyticsConsent(page, "denied");
               // With no script the page is what the first paint draws.
               yield* Effect.promise(() =>
                 page.route("**/*.js", (route) => route.abort())

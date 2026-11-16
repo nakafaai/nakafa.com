@@ -1,6 +1,5 @@
 import { expect, type Page, test } from "@playwright/test";
 import { Duration, Effect } from "effect";
-import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { pinnedRoutes } from "@/e2e/support/corpus";
 import {
   expectUncovered,
@@ -18,7 +17,6 @@ const heldScriptMilliseconds = 1000;
 
 const verifyOutlineHydration = Effect.fn("NakafaE2E.verifyOutlineHydration")(
   function* (page: Page) {
-    yield* seedAnalyticsConsent(page, "denied");
     // Holding the app's scripts back paints the server-rendered outline first,
     // as a slow device does; its rows must not move when the page hydrates.
     const services = yield* Effect.context<never>();
@@ -58,7 +56,6 @@ const verifyVerseActive = Effect.fn("NakafaE2E.verifyVerseActive")(function* (
   page: Page
 ) {
   const href = appRoutes.quranSurah;
-  yield* seedAnalyticsConsent(page, "denied");
   yield* Effect.promise(() => page.goto(href));
   yield* waitForCommittedAppRouter(
     page,
@@ -110,7 +107,6 @@ test.describe("Desktop outline", () => {
 const verifyPhoneOutlineJump = Effect.fn("NakafaE2E.verifyPhoneOutlineJump")(
   function* (page: Page) {
     const href = pinnedRoutes.material.en;
-    yield* seedAnalyticsConsent(page, "denied");
     yield* Effect.promise(() => page.goto(href));
     yield* waitForCommittedAppRouter(
       page,
@@ -143,7 +139,6 @@ const verifyPhoneOutlineJump = Effect.fn("NakafaE2E.verifyPhoneOutlineJump")(
 const verifyPhoneVerseJump = Effect.fn("NakafaE2E.verifyPhoneVerseJump")(
   function* (page: Page) {
     const href = appRoutes.quranSurah;
-    yield* seedAnalyticsConsent(page, "denied");
     yield* Effect.promise(() => page.goto(href));
     yield* waitForCommittedAppRouter(
       page,

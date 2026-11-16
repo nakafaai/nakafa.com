@@ -9,7 +9,6 @@ import {
   Option,
   Schema,
 } from "effect";
-import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { withBrowserContext } from "@/e2e/support/context";
 import { signInLearner } from "@/e2e/support/learner";
 import {
@@ -309,7 +308,6 @@ export const measureRouteJavascript = Effect.fn(
           }
           const page = yield* Effect.promise(() => context.newPage());
           yield* keepResourceTimings(page);
-          yield* seedAnalyticsConsent(page, "denied");
           const applicationOrigin = new URL(baseURL).origin;
           const classifyRequest =
             createResourceRequestClassifier(applicationOrigin);

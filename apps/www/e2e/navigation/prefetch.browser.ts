@@ -1,14 +1,11 @@
-import { expect, type Page, test } from "@playwright/test";
+import { type Page, test } from "@playwright/test";
 import { Effect } from "effect";
-import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { pinnedRoutes } from "@/e2e/support/corpus";
 import {
   openObservedRoute,
   openPrefetched,
 } from "@/e2e/support/navigation/prefetch";
-import { settleRouter } from "@/e2e/support/navigation/settle";
 import { withObservedPageErrors } from "@/e2e/support/observe";
-import { recordServerFunctionCalls } from "@/e2e/support/requests";
 import { paginationNavigation } from "@/e2e/support/selector";
 import { desktopViewport, touchViewport } from "@/e2e/support/viewport";
 
@@ -23,28 +20,12 @@ const viewports = [desktopViewport, touchViewport] as const;
 const paginationLink = (page: Page, name: RegExp) =>
   paginationNavigation(page).getByRole("link", { name });
 
-/**
- * A first visit opens the usage-data prompt. Intent over its privacy link must
- * not preload the page it opens, and the next lesson must still come from its
- * own intent preload.
- */
+/** Next waits for intent, and its page must paint from that prefetch. */
 const verifyNextLesson = Effect.fn("NakafaE2E.verifyNextLesson")(function* (
   page: Page,
   hasTouch: boolean
 ) {
   yield* openObservedRoute(page, lessonHref);
-  const prompt = page.getByRole("region", { name: "Usage data" });
-  const privacyLink = prompt.getByRole("link", { name: "Privacy Policy" });
-  const dataCalls = recordServerFunctionCalls(page);
-  yield* settleRouter(
-    page,
-    Effect.promise(() => privacyLink.hover())
-  );
-  yield* Effect.sync(() => expect(dataCalls.length).toBe(0));
-  yield* Effect.promise(() =>
-    prompt.getByRole("button", { name: "Decline" }).click()
-  );
-  yield* Effect.promise(() => expect(prompt).toBeHidden());
   yield* openPrefetched(
     page,
     paginationLink(page, FORWARD_LINK_PATTERN),
@@ -55,7 +36,6 @@ const verifyNextLesson = Effect.fn("NakafaE2E.verifyNextLesson")(function* (
 /** Previous waits for intent, and its page must paint from that prefetch. */
 const verifyPreviousLesson = Effect.fn("NakafaE2E.verifyPreviousLesson")(
   function* (page: Page, hasTouch: boolean) {
-    yield* seedAnalyticsConsent(page, "denied");
     yield* openObservedRoute(page, lessonHref);
     yield* openPrefetched(
       page,
@@ -70,7 +50,6 @@ const verifyArticleCard = Effect.fn("NakafaE2E.verifyArticleCard")(function* (
   page: Page,
   hasTouch: boolean
 ) {
-  yield* seedAnalyticsConsent(page, "denied");
   yield* openObservedRoute(page, articleCategoryHref);
   yield* openPrefetched(
     page,
@@ -84,7 +63,6 @@ const verifyContentLink = Effect.fn("NakafaE2E.verifyContentLink")(function* (
   page: Page,
   hasTouch: boolean
 ) {
-  yield* seedAnalyticsConsent(page, "denied");
   yield* openObservedRoute(page, lessonHref);
   yield* openPrefetched(
     page,

@@ -6,7 +6,6 @@ import refs from "@repo/backend/confect/_generated/refs";
 import { readThread } from "@repo/backend/confect/nina/sealed/thread";
 import { SealedReadError } from "@repo/backend/confect/nina/sealed.spec";
 import { STOP_GRACE, settleTurn } from "@repo/backend/confect/nina/settlement";
-import { seedAnalyticsConsent } from "@repo/backend/confect/test.helpers";
 import { createNinaTest } from "@repo/backend/test/nina";
 import { encodeJsonText } from "@repo/utilities/json";
 import { Array as Arr, Duration, Effect, Option, pipe } from "effect";
@@ -61,9 +60,6 @@ describe("native Nina settlement", () => {
 
   it("claims a queued response once and refunds an interrupted generation exactly once", async () => {
     const f = await fixture();
-    await f.t.mutation((ctx) =>
-      seedAnalyticsConsent(ctx, { userId: f.identity.userId, decidedAt: NOW })
-    );
     const args = { turnId: f.turnId };
     expect(
       Ref.decodeReturnsSync(
@@ -118,6 +114,7 @@ describe("native Nina settlement", () => {
           properties: encodeJsonText({
             chat_type: "study",
             error_code: "interrupted",
+            $process_person_profile: false,
           }),
         }),
       ],
@@ -148,9 +145,6 @@ describe("native Nina settlement", () => {
 
   it("settles an already committed answer before a concurrent cancel without another debit", async () => {
     const f = await fixture();
-    await f.t.mutation((ctx) =>
-      seedAnalyticsConsent(ctx, { userId: f.identity.userId, decidedAt: NOW })
-    );
     await f.t.mutation(claim, { turnId: f.turnId });
     for (const agent of ["nina", "research", "research", "math-repair"]) {
       await f.t.mutation(record, {
@@ -221,6 +215,7 @@ describe("native Nina settlement", () => {
             input_tokens: 48,
             output_tokens: 16,
             total_tokens: 64,
+            $process_person_profile: false,
           }),
         }),
       ],
@@ -273,9 +268,6 @@ describe("native Nina settlement", () => {
 
   it("asks a running generation to stop and pays back only after its run has exited", async () => {
     const f = await fixture();
-    await f.t.mutation((ctx) =>
-      seedAnalyticsConsent(ctx, { userId: f.identity.userId, decidedAt: NOW })
-    );
     await f.t.mutation(claim, { turnId: f.turnId });
     const streamId = await f.t.mutation((ctx) =>
       ctx.runMutation(components.nina.streams.create, {

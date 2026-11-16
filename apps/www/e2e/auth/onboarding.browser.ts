@@ -1,6 +1,5 @@
 import { expect, type Page, test } from "@playwright/test";
 import { Effect } from "effect";
-import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { signInLearner } from "@/e2e/support/learner";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { isTakenOver } from "@/e2e/support/window";
@@ -56,7 +55,6 @@ test("a signed-in learner answers each onboarding question on one laptop screen,
   const context = await browser.newContext({ viewport: LAPTOP });
   await Effect.runPromise(signInLearner(context, String(baseURL)));
   const page = await context.newPage();
-  await Effect.runPromise(seedAnalyticsConsent(page, "denied"));
   await page.goto("/en/onboarding");
 
   // The live status waits for Convex to hold the session, so a signed-in learner stays on the

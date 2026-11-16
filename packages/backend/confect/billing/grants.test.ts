@@ -488,7 +488,12 @@ describe("billing/grants", () => {
       await runInMutation(ctx, projectSchoolPage(tenantId, null, START + 1));
       return ctx.db.system.query("_scheduled_functions").collect();
     });
-    // One plan recomputation per member of the page, and one job for the next page.
-    expect(jobs).toHaveLength(51);
+    // One plan recomputation per member of the page, and one job for the next page,
+    // beside the anonymous analytics event of each member's plan.
+    const work = Arr.filter(
+      jobs,
+      (job) => !job.name.includes("deliverProductEvent")
+    );
+    expect(work).toHaveLength(51);
   });
 });

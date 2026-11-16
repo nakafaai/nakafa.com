@@ -4,18 +4,22 @@ import { appendRows } from "@repo/backend/scripts/content/acceptance/import";
 import { Array as Arr, Clock, Effect, Schedule, Schema } from "effect";
 import { runFixture } from "@/e2e/support/acceptance";
 import { type Changes, trackChanges } from "@/e2e/support/changes";
-import {
-  CURRENT_USER,
-  declineUsageData,
-  type PromptLocale,
-  seedAnalyticsConsent,
-} from "@/e2e/support/consent";
 import { signInLearner } from "@/e2e/support/learner";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
+/**
+ * The Convex name of the function that reads the signed-in learner. The refs
+ * module cannot be imported here, because it pulls in packages that Node does
+ * not resolve outside the bundler.
+ */
+export const CURRENT_USER = "auth/queries:getCurrentUser";
+
+/** A language of the site whose chat a test opens. */
+export type ChatLocale = "de" | "en" | "id";
+
 /** The new chat page of a language of the site. */
-const chatPathOf = (locale: PromptLocale) => `/${locale}/chat`;
+const chatPathOf = (locale: ChatLocale) => `/${locale}/chat`;
 /** The new chat page of the English site. */
 export const CHAT_PATH = chatPathOf("en");
 /** A lesson, where Nina's sheet opens beside the page. */
@@ -321,16 +325,15 @@ export const learnerOf = Effect.fn("NakafaE2E.learnerOf")(function* (
 export const openChatPage = Effect.fn("NakafaE2E.openChatPage")(function* (
   page: Page,
   baseURL: string,
-  locale: PromptLocale = "en"
+  locale: ChatLocale = "en"
 ) {
   const changes = yield* trackChanges(page, [LIST_QUERY]);
-  yield* seedAnalyticsConsent(page, "denied");
   yield* signInLearner(page.context(), baseURL);
   yield* Effect.promise(() => page.goto(chatPathOf(locale)));
 
-  // The server took the learner's choice, so the page was signed in and its
-  // connection to the backend is open.
-  yield* declineUsageData(page, changes, locale);
+  // The server answered the learner's own query, so the page was signed in and
+  // its connection to the backend is open.
+  yield* viewerKnown(changes);
   const learner = yield* learnerOf(page, baseURL, changes.origin);
   return { changes, learner };
 });

@@ -45,7 +45,7 @@ export const openedHeaderSection = Effect.fn("NakafaE2E.openedHeaderSection")(
 /** Opens one marketing page and waits until its visible route boundary is on screen. */
 export const loadMarketingPage = Effect.fn("NakafaE2E.loadMarketingPage")(
   function* (page: Page, href: string) {
-    yield* openRoute(page, href, "denied");
+    yield* openRoute(page, href);
     yield* waitForCommittedAppRouter(
       page,
       href,

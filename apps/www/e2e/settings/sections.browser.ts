@@ -4,7 +4,6 @@ import app from "@repo/internationalization/dictionaries/en.json" with {
 };
 import { Array as Arr, Effect } from "effect";
 import { runOnPage } from "@/e2e/support/chat";
-import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { holdPageData } from "@/e2e/support/hold";
 import { signInLearner } from "@/e2e/support/learner";
 import { openObservedRoute } from "@/e2e/support/navigation/prefetch";
@@ -51,7 +50,6 @@ test("a press between settings sections keeps the section it leaves whole until 
 }) => {
   await runOnPage(page, baseURL, (origin) =>
     Effect.gen(function* () {
-      yield* seedAnalyticsConsent(page, "denied");
       yield* signInLearner(page.context(), origin);
       // Home sends a learner who has not answered the onboarding there, and the way back leads home.
       yield* Effect.promise(() => finishOnboarding(page));

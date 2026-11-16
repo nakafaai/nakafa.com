@@ -3,7 +3,6 @@ import en from "@repo/internationalization/dictionaries/en.json" with {
   type: "json",
 };
 import { Effect, MutableList } from "effect";
-import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { activateUntilVisible } from "@/e2e/support/input";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { VISIBLE_SIDEBAR_TRIGGER } from "@/e2e/support/selector";
@@ -24,27 +23,24 @@ test("a press on the phone's sidebar toggle before React takes the page over ope
   await Effect.runPromise(
     withObservedPageErrors(
       page,
-      Effect.gen(function* () {
-        yield* seedAnalyticsConsent(page, "denied");
-        yield* Effect.promise(async () => {
-          await page.setViewportSize({ height: 844, width: 390 });
-          const held = MutableList.make<Route>();
-          await page.route(SCRIPTS, (route) => {
-            MutableList.append(held, route);
-          });
-          await page.goto("/en/try-out", { waitUntil: "domcontentloaded" });
-          await page
-            .getByRole("button", { name: "Toggle Sidebar" })
-            .first()
-            .click();
-          for (const route of MutableList.toArray(held)) {
-            await route.continue();
-          }
-          await page.unroute(SCRIPTS);
-          await expect(
-            page.getByRole("dialog", { name: "Sidebar" })
-          ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
+      Effect.promise(async () => {
+        await page.setViewportSize({ height: 844, width: 390 });
+        const held = MutableList.make<Route>();
+        await page.route(SCRIPTS, (route) => {
+          MutableList.append(held, route);
         });
+        await page.goto("/en/try-out", { waitUntil: "domcontentloaded" });
+        await page
+          .getByRole("button", { name: "Toggle Sidebar" })
+          .first()
+          .click();
+        for (const route of MutableList.toArray(held)) {
+          await route.continue();
+        }
+        await page.unroute(SCRIPTS);
+        await expect(page.getByRole("dialog", { name: "Sidebar" })).toBeVisible(
+          { timeout: readinessTimeoutMilliseconds }
+        );
       })
     )
   );
@@ -57,7 +53,6 @@ test("a phone shows one header row: the page's own, with the app sidebar's trigg
     withObservedPageErrors(
       page,
       Effect.gen(function* () {
-        yield* seedAnalyticsConsent(page, "denied");
         yield* Effect.promise(() =>
           page.setViewportSize({ height: 844, width: 390 })
         );
@@ -103,7 +98,6 @@ test("a phone shows the app's bar again on a page without a header of its own, a
     withObservedPageErrors(
       page,
       Effect.gen(function* () {
-        yield* seedAnalyticsConsent(page, "denied");
         yield* Effect.promise(() =>
           page.setViewportSize({ height: 844, width: 390 })
         );

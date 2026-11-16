@@ -1,6 +1,5 @@
 import { expect, type Page, test } from "@playwright/test";
 import { Deferred, Effect } from "effect";
-import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { pinnedRoutes } from "@/e2e/support/corpus";
 import { waitForCommittedAppRouter } from "@/e2e/support/navigation/readiness";
 import { withObservedPageErrors } from "@/e2e/support/observe";
@@ -18,7 +17,6 @@ const READ_DEPTH = 1600;
  */
 const verifyEarlyScrollKept = Effect.fn("NakafaE2E.verifyEarlyScrollKept")(
   function* (page: Page, href: string) {
-    yield* seedAnalyticsConsent(page, "denied");
     const released = yield* Deferred.make<void>();
     const services = yield* Effect.context<never>();
     yield* Effect.promise(() =>

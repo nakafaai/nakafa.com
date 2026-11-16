@@ -4,12 +4,10 @@ import { Effect, Schema } from "effect";
 const privacyCleanupFailedCode = "PRIVACY_CLEANUP_FAILED";
 export const cleanupSource = {
   accountDeletion: "account-deletion",
-  consentOverlap: "consent-overlap",
 } as const;
-export const cleanupSourceValidator = Schema.Union([
-  Schema.Literal(cleanupSource.accountDeletion),
-  Schema.Literal(cleanupSource.consentOverlap),
-]);
+export const cleanupSourceValidator = Schema.Literal(
+  cleanupSource.accountDeletion
+);
 export type CleanupSource = typeof cleanupSourceValidator.Type;
 
 /** Typed failure for durable privacy cleanup coordination. */

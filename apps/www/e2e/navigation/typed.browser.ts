@@ -1,6 +1,5 @@
 import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
-import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { waitUntilTakenOver } from "@/e2e/support/window";
 
@@ -17,7 +16,6 @@ test("a same-app link moves inside the document and marks the current page", asy
     withObservedPageErrors(
       page,
       Effect.gen(function* () {
-        yield* seedAnalyticsConsent(page, "denied");
         yield* Effect.promise(() =>
           page.goto("/en/search", { waitUntil: "domcontentloaded" })
         );
@@ -58,7 +56,6 @@ test("a locale-aware link shows the public spelling of its route", async ({
     withObservedPageErrors(
       page,
       Effect.gen(function* () {
-        yield* seedAnalyticsConsent(page, "denied");
         yield* Effect.promise(() =>
           page.goto("/id", { waitUntil: "domcontentloaded" })
         );

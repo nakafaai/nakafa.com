@@ -1,6 +1,5 @@
 import { expect, type Page, test } from "@playwright/test";
 import { Effect } from "effect";
-import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
@@ -40,7 +39,6 @@ const verifyWholeTitles = Effect.fn("NakafaE2E.verifyWholeTitles")(function* (
   page: Page,
   path: string
 ) {
-  yield* seedAnalyticsConsent(page, "denied");
   const response = yield* Effect.promise(() =>
     page.goto(path, { waitUntil: "domcontentloaded" })
   );

@@ -258,7 +258,7 @@ const checkPage = <E>(
         yield* withObservedPageErrors(
           page,
           Effect.gen(function* () {
-            yield* openRoute(page, href, "denied");
+            yield* openRoute(page, href);
             yield* expectOneRowHeaders(page, label);
           })
         );
@@ -469,7 +469,7 @@ test("a phone opens a folded ancestor of the path with a tap", async ({
   await Effect.runPromise(
     withObservedPageErrors(
       page,
-      openRoute(page, "/en/try-out/indonesia/snbt/2027/utbk/set-1", "denied")
+      openRoute(page, "/en/try-out/indonesia/snbt/2027/utbk/set-1")
     )
   );
   const breadcrumb = page.getByRole("navigation", { name: "breadcrumb" });

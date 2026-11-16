@@ -93,7 +93,7 @@ for (const viewport of targetViewports) {
               page,
               Effect.gen(function* () {
                 const heading = page.getByRole("heading", { level: 1 });
-                yield* openRoute(page, "/en", "denied");
+                yield* openRoute(page, "/en");
                 yield* Effect.promise(() => expect(heading).toBeVisible());
                 const home = yield* Effect.promise(() => heading.textContent());
                 yield* expectHeaderDrawn(page);

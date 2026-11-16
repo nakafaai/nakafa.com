@@ -1,7 +1,6 @@
 import { MAIN_DOMAIN } from "@repo/site/domains";
 import { Array as Arr, Effect, Schema } from "effect";
 import { AD_CLIENT } from "@/lib/ads/account";
-import { followConsentMessage } from "@/lib/ads/consent";
 import { adScriptPublicKeys } from "@/lib/ads/public";
 
 /**
@@ -44,8 +43,8 @@ function adQueue(): GoogleQueue {
 }
 
 /**
- * Adds the ad script to the document, asks for non-personalized ads, records how
- * its load ends, and starts following the consent message.
+ * Adds the ad script to the document, asks for non-personalized ads, and records
+ * how its load ends.
  */
 function appendAdScript() {
   const script = document.createElement("script");
@@ -67,7 +66,6 @@ function appendAdScript() {
   // advertising, as its privacy policy commits, and many readers are under 18.
   adQueue().requestNonPersonalizedAds = 1;
   document.head.append(script);
-  followConsentMessage();
   return script;
 }
 
