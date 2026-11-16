@@ -36,8 +36,10 @@ function getTryoutSectionLifecycle(
 
 /**
  * Resolves lifecycle access and the current billing-owned Pro plan together.
- * `answers` opens every answer of a finished section to Pro learners;
- * `preview` opens only its leading questions to everyone else.
+ * `grades` shows every reviewer whether each answer of a finished section is
+ * right, Pro or not, as a score is free; `answers` opens every key and
+ * explanation of it to Pro learners; `preview` opens only its leading
+ * questions' keys and explanations to everyone else.
  */
 export const readTryoutSectionContentAccess = Effect.fn(
   "tryouts.content.readAccess"
@@ -46,6 +48,7 @@ export const readTryoutSectionContentAccess = Effect.fn(
   if (!lifecycle.isReview) {
     return {
       answers: false,
+      grades: false,
       preview: false,
       questions: lifecycle.questions,
     };
@@ -60,6 +63,7 @@ export const readTryoutSectionContentAccess = Effect.fn(
   const pro = user.plan === "pro";
   return {
     answers: pro,
+    grades: true,
     preview: !pro,
     questions: true,
   };

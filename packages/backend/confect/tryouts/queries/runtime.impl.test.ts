@@ -88,6 +88,41 @@ describe("tryouts/queries/runtime", () => {
   );
 
   it.effect(
+    "grades each answer for a free learner once the attempt is reviewed, and for no one while it runs",
+    () =>
+      Effect.gen(function* () {
+        const world = yield* tryoutWorld({ entry: true });
+        const { attemptId } = yield* world.start({ entry: true });
+        yield* world.answer(attemptId, {
+          order: 1,
+          pick: "correct",
+          section: "section-a",
+        });
+        yield* world.answer(attemptId, {
+          order: 2,
+          pick: "wrong",
+          section: "section-a",
+        });
+        const graded = Effect.fn("test.tryout.graded")(function* () {
+          const state = yield* world.learner.query(getSetAttemptState, {
+            attemptId,
+            locale: "id",
+          });
+          return Arr.map(
+            state?.runtime?.questions ?? [],
+            ({ response }) => response?.grade
+          );
+        });
+        expect(yield* graded()).toEqual([undefined, undefined]);
+        yield* world.completeSection(attemptId, "section-a");
+        expect(yield* graded()).toEqual([
+          { category: 1, ceiling: 1, status: "scored" },
+          { category: 0, ceiling: 1, status: "scored" },
+        ]);
+      })
+  );
+
+  it.effect(
     "binds section state to the attempt's owner and its frozen sections, whatever the active release holds",
     () =>
       Effect.gen(function* () {

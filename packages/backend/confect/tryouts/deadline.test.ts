@@ -3,15 +3,16 @@ import type { Id } from "@repo/backend/confect/_generated/id";
 import refs from "@repo/backend/confect/_generated/refs";
 import { DEADLINE_GRACE_MS } from "@repo/backend/confect/assessment/gate/deadline";
 import { sweepTryoutDeadlines } from "@repo/backend/confect/tryouts/deadline";
+import { TRYOUT_ATTEMPT_WINDOW } from "@repo/backend/confect/tryouts/window";
 import { inMutation } from "@repo/backend/test/client";
 import {
   TRYOUT_NOW,
   type TryoutWorld,
   tryoutWorld,
 } from "@repo/backend/test/tryout/world";
-import { Array as Arr, Effect } from "effect";
+import { Array as Arr, Duration, Effect } from "effect";
 
-const ATTEMPT_END = TRYOUT_NOW + 3 * 86_400_000;
+const ATTEMPT_END = TRYOUT_NOW + Duration.toMillis(TRYOUT_ATTEMPT_WINDOW);
 const SECTION_END = TRYOUT_NOW + 600_000;
 const expiry = refs.internal.tryouts.mutations.expiry;
 
