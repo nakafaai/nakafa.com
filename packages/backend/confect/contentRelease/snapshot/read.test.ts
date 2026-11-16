@@ -2,6 +2,7 @@ import { RegisteredConvexFunction } from "@confect/server";
 import { assert, describe, expect, it } from "@effect/vitest";
 import { canonicalizeContentSnapshotRow } from "@nakafa/aksara-contracts/release/snapshot/data";
 import confectSchema from "@repo/backend/confect/_generated/schema";
+import { MAX_RUN_BYTES } from "@repo/backend/confect/contentRelease/snapshot/read.spec";
 import { convexModules } from "@repo/backend/confect/test.setup";
 import { internal } from "@repo/backend/convex/_generated/api";
 import schema from "@repo/backend/convex/schema";
@@ -27,6 +28,8 @@ import { Array as Arr, Effect, Match, Struct } from "effect";
 
 const readManifest = internal.contentRelease.snapshot.read.manifest;
 const readRows = internal.contentRelease.snapshot.read.rows;
+/** Caps that read exactly one batch per page, as the ledger checks expect. */
+const ONE_BATCH = { maxBatches: 1, maxBytes: MAX_RUN_BYTES };
 describe("contentRelease/snapshot/read", () => {
   it.live.each([
     {
@@ -137,6 +140,7 @@ describe("contentRelease/snapshot/read", () => {
           });
           await expect(
             t.query(readRows, {
+              ...ONE_BATCH,
               afterBatchIndex,
               family: "program",
               releaseId: TEST_RELEASE_ID,
@@ -191,6 +195,7 @@ describe("contentRelease/snapshot/read", () => {
           )
         );
         const args = {
+          ...ONE_BATCH,
           family,
           releaseId: TEST_RELEASE_ID,
           afterBatchIndex: -1,
@@ -242,17 +247,17 @@ describe("contentRelease/snapshot/read", () => {
         );
       })
   );
-  it.live("replays one manifest and contiguous bounded row pages", () =>
+  it.live("replays one manifest and row pages bounded by their caps", () =>
     Effect.gen(function* () {
       const runtimeServices = yield* Effect.context<never>();
       const data = yield* makeProgramSnapshotData();
       const t = convexTest(schema, convexModules);
       // Three batches hold the fixture: two full ones and the rest.
-      const batchSize = Math.ceil(data.rowJson.length / 3);
+      const size = Math.ceil(data.rowJson.length / 3);
       yield* Effect.promise(() =>
         t.mutation((ctx) =>
           Effect.runPromiseWith(runtimeServices)(
-            stageProgramSnapshot(data, batchSize).pipe(
+            stageProgramSnapshot(data, size).pipe(
               Effect.provide(
                 RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
               )
@@ -268,70 +273,73 @@ describe("contentRelease/snapshot/read", () => {
           })
         ).resolves.toBe(data.manifestJson)
       );
-      yield* Effect.promise(() =>
-        expect(
+      const all = data.rowJson.length;
+      const wide = { maxBatches: 128, maxBytes: MAX_RUN_BYTES };
+      // [after, caps, first batch, done, next, first row, end row]
+      const pages = [
+        [-1, ONE_BATCH, 0, false, 0, 0, size],
+        [0, ONE_BATCH, 1, false, 1, size, size * 2],
+        [1, ONE_BATCH, 2, true, 2, size * 2, all],
+        [2, ONE_BATCH, 2, true, 2, all, all],
+        [
+          -1,
+          { maxBatches: 2, maxBytes: MAX_RUN_BYTES },
+          0,
+          false,
+          1,
+          0,
+          size * 2,
+        ],
+        [-1, { maxBatches: 128, maxBytes: 1 }, 0, false, 0, 0, size],
+        [-1, wide, 0, true, 2, 0, all],
+      ] as const;
+      for (const [after, caps, batch, done, next, from, to] of pages) {
+        yield* Effect.promise(() =>
+          expect(
+            t.query(readRows, {
+              ...caps,
+              afterBatchIndex: after,
+              family: "program",
+              releaseId: TEST_RELEASE_ID,
+            })
+          ).resolves.toEqual({
+            batchIndex: batch,
+            done,
+            firstIndex: from,
+            nextBatchIndex: next,
+            rowJson: Arr.take(Arr.drop(data.rowJson, from), to - from),
+            snapshotId: data.snapshotId,
+          })
+        );
+      }
+      // A later batch that breaks the ledger fails the whole run.
+      yield* Effect.promise(async () => {
+        await t.mutation(async (ctx) => {
+          const last = await ctx.db
+            .query("snapshotBatches")
+            .withIndex("by_releaseId_and_family_and_batchIndex", (query) =>
+              query
+                .eq("releaseId", TEST_RELEASE_ID)
+                .eq("family", "program")
+                .eq("batchIndex", 2)
+            )
+            .unique();
+          assert(last);
+          await ctx.db.patch("snapshotBatches", last._id, {
+            firstIndex: last.firstIndex + 1,
+          });
+        });
+        await expect(
           t.query(readRows, {
+            ...wide,
             afterBatchIndex: -1,
             family: "program",
             releaseId: TEST_RELEASE_ID,
           })
-        ).resolves.toEqual({
-          batchIndex: 0,
-          done: false,
-          firstIndex: 0,
-          nextBatchIndex: 0,
-          rowJson: Arr.take(data.rowJson, batchSize),
-          snapshotId: data.snapshotId,
-        })
-      );
-      yield* Effect.promise(() =>
-        expect(
-          t.query(readRows, {
-            afterBatchIndex: 0,
-            family: "program",
-            releaseId: TEST_RELEASE_ID,
-          })
-        ).resolves.toEqual({
-          batchIndex: 1,
-          done: false,
-          firstIndex: batchSize,
-          nextBatchIndex: 1,
-          rowJson: Arr.take(Arr.drop(data.rowJson, batchSize), batchSize),
-          snapshotId: data.snapshotId,
-        })
-      );
-      yield* Effect.promise(() =>
-        expect(
-          t.query(readRows, {
-            afterBatchIndex: 1,
-            family: "program",
-            releaseId: TEST_RELEASE_ID,
-          })
-        ).resolves.toEqual({
-          batchIndex: 2,
-          done: true,
-          firstIndex: batchSize * 2,
-          nextBatchIndex: 2,
-          rowJson: Arr.drop(data.rowJson, batchSize * 2),
-          snapshotId: data.snapshotId,
-        })
-      );
-      yield* Effect.promise(() =>
-        expect(
-          t.query(readRows, {
-            afterBatchIndex: 2,
-            family: "program",
-            releaseId: TEST_RELEASE_ID,
-          })
-        ).resolves.toEqual({
-          batchIndex: 2,
-          done: true,
-          firstIndex: data.rowJson.length,
-          nextBatchIndex: 2,
-          rowJson: [],
-          snapshotId: data.snapshotId,
-        })
-      );
+        ).rejects.toMatchObject({
+          data: { code: "CONTENT_RELEASE_INTEGRITY" },
+        });
+      });
     })
   );
   it.live("rejects inherited-family reads and missing physical rows", () =>
@@ -365,6 +373,7 @@ describe("contentRelease/snapshot/read", () => {
       yield* Effect.promise(() =>
         expect(
           inherited.query(readRows, {
+            ...ONE_BATCH,
             family: "quran",
             releaseId: TEST_RELEASE_ID,
             afterBatchIndex: -1,
@@ -402,6 +411,7 @@ describe("contentRelease/snapshot/read", () => {
       yield* Effect.promise(() =>
         expect(
           missing.query(readRows, {
+            ...ONE_BATCH,
             afterBatchIndex: -1,
             family: "program",
             releaseId: TEST_RELEASE_ID,
@@ -450,6 +460,7 @@ describe("contentRelease/snapshot/read", () => {
       yield* Effect.promise(() =>
         expect(
           t.query(readRows, {
+            ...ONE_BATCH,
             afterBatchIndex: 0,
             family: "program",
             releaseId: TEST_RELEASE_ID,
