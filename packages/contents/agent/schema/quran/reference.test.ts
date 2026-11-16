@@ -17,6 +17,7 @@ const meaningByLocale = {
   de: "Die Eröffnende",
   en: "The Opening",
   id: "Pembuka",
+  ms: "Pembukaan",
 } as const;
 
 /** Builds one schema-valid embedded source fixture. */

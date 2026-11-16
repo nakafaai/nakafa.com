@@ -1,6 +1,7 @@
 // @vitest-environment node
 
 import { describe, expect, it } from "@effect/vitest";
+import { LOCALES } from "@repo/internationalization/src/locale";
 import { Array as Arr, Effect } from "effect";
 import { contributors } from "@/lib/data/contributor";
 import { BASE_URL } from "@/lib/llms/constants";
@@ -17,7 +18,7 @@ describe("contributors Markdown", () => {
     expect(isContributorLlmsRoute("pricing")).toBe(false);
   });
 
-  it.effect.each(["de", "en", "id"] as const)(
+  it.effect.each(LOCALES)(
     "names every contributor once with their role for %s",
     (locale) =>
       Effect.gen(function* () {

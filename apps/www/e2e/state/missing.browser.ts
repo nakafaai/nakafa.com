@@ -8,6 +8,10 @@ import en from "@repo/internationalization/dictionaries/standalone/en.json" with
 import id from "@repo/internationalization/dictionaries/standalone/id.json" with {
   type: "json",
 };
+import ms from "@repo/internationalization/dictionaries/standalone/ms.json" with {
+  type: "json",
+};
+import { LOCALES } from "@repo/internationalization/src/locale";
 import { Effect } from "effect";
 import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { waitForCommittedAppRouter } from "@/e2e/support/navigation/readiness";
@@ -28,7 +32,7 @@ import {
 } from "@/e2e/support/viewport";
 import { waitUntilTakenOver } from "@/e2e/support/window";
 
-const dictionaries = { de, en, id };
+const dictionaries = { de, en, id, ms };
 
 type Locale = keyof typeof dictionaries;
 
@@ -185,7 +189,7 @@ for (const viewport of [narrowViewport, ...targetViewports]) {
 test("an address that no page owns is answered with 404 in every language", async ({
   request,
 }) => {
-  for (const locale of ["de", "en", "id"] as const) {
+  for (const locale of LOCALES) {
     const response = await request.get(`/${locale}/${HARD_ADDRESS}`);
     expect(response.status(), locale).toBe(404);
   }
@@ -199,7 +203,7 @@ test("the server draws each not-found page whole before any script runs, and the
   const addresses = [SCHOOL_TREE_ADDRESS, HARD_ADDRESS];
   const withoutScript = await browser.newContext({ javaScriptEnabled: false });
   const server = await withoutScript.newPage();
-  for (const locale of ["de", "en", "id"] as const) {
+  for (const locale of LOCALES) {
     for (const address of addresses) {
       const response = await server.goto(
         new URL(`/${locale}/${address}`, baseURL).href
@@ -219,7 +223,7 @@ test("the server draws each not-found page whole before any script runs, and the
     withObservedPageErrors(
       page,
       Effect.promise(async () => {
-        for (const locale of ["de", "en", "id"] as const) {
+        for (const locale of LOCALES) {
           for (const address of addresses) {
             await page.goto(`/${locale}/${address}`);
             await expect(

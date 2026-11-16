@@ -17,7 +17,12 @@ const surah = {
   kind: "quran-surah",
   name: {
     arabic: "Al-Fatihah",
-    meaning: { de: "Die Eröffnende", en: "The Opening", id: "Pembuka" },
+    meaning: {
+      de: "Die Eröffnende",
+      en: "The Opening",
+      id: "Pembuka",
+      ms: "Pembukaan",
+    },
     transliteration: "Al-Fatihah",
   },
   number: 1,

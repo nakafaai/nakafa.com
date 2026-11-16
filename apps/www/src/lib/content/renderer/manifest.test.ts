@@ -2,6 +2,7 @@ import { describe, expect, it } from "@effect/vitest";
 import { ContentKeySchema } from "@nakafa/aksara-contracts/ids";
 import { RENDERER_DOMAINS } from "@nakafa/aksara-contracts/renderer/domain";
 import { validateRendererManifestHash } from "@nakafa/aksara-contracts/renderer/manifest";
+import { VISUAL_NAMES } from "@nakafa/aksara-contracts/visual/catalog";
 import { semanticComponentNames } from "@repo/design-system/lib/markdown/names";
 import { Array as Arr, Effect, HashSet, Order, Record as Rec } from "effect";
 import { rendererImplementations } from "@/lib/content/renderer/selection";
@@ -99,6 +100,9 @@ describe("renderer manifest", () => {
             Arr.isReadonlyArrayEmpty(components)
           )
         ).toBe(true);
+        expect(
+          Arr.filter(manifest.base, (name) => !HashSet.has(semanticNames, name))
+        ).toEqual(VISUAL_NAMES);
       })
   );
 });

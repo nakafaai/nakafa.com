@@ -150,9 +150,11 @@ function HomePage() {
         <LaterSection code={homeSections.lesson}>
           {(Lesson) => <Lesson locale={locale} />}
         </LaterSection>
-        <LaterSection code={homeSections.tryout}>
-          {(Tryout) => <Tryout value={featuredTryout} />}
-        </LaterSection>
+        {featuredTryout.kind === "question" ? (
+          <LaterSection code={homeSections.tryout}>
+            {(Tryout) => <Tryout value={featuredTryout.body} />}
+          </LaterSection>
+        ) : null}
         <LaterSection code={homeSections.nina}>
           {(NinaSection) => <NinaSection />}
         </LaterSection>

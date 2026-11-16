@@ -34,7 +34,11 @@ export function NinaWords({ children }: { children: ReactNode }) {
 
   // A folded box is shorter than its text exactly when the text is tall, and
   // its text changes height when the width changes. An open box has nothing to
-  // compare, so it keeps what the fold found.
+  // compare, so it keeps what the fold found. A change of the text's height is
+  // read in the next frame, never inside the observer's callback: there the read
+  // forces a layout, which in WebKit sizes the sections that `content-visibility`
+  // skipped, so the page changes height while its own change is being delivered
+  // and the browser reports a ResizeObserver loop.
   useLayoutEffect(() => {
     const folded = box.current;
     const words = text.current;
@@ -43,13 +47,24 @@ export function NinaWords({ children }: { children: ReactNode }) {
       return;
     }
 
-    const measure = () => setTall(folded.scrollHeight > folded.clientHeight);
+    let frame = 0;
+    const measure = () => {
+      frame = 0;
+      setTall(folded.scrollHeight > folded.clientHeight);
+    };
 
     measure();
-    const observer = new ResizeObserver(measure);
+    const observer = new ResizeObserver(() => {
+      if (frame === 0) {
+        frame = window.requestAnimationFrame(measure);
+      }
+    });
     observer.observe(words);
 
-    return () => observer.disconnect();
+    return () => {
+      observer.disconnect();
+      window.cancelAnimationFrame(frame);
+    };
   }, [open]);
 
   return (

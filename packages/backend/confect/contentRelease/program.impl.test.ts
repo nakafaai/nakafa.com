@@ -64,6 +64,7 @@ describe("contentRelease/program registered queries", () => {
             expect.any(String),
             expect.any(String),
             expect.any(String),
+            expect.any(String),
           ],
           routeJson: path.routeJson,
         });

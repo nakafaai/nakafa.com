@@ -18,10 +18,11 @@ import {
 import { readSectionSuccessor } from "@/lib/routing/public/tryout/section";
 
 /**
- * The set segment that each app locale publishes for a set. German names its
- * sets `aufgabensatz-N`; English and Indonesian name them `set-N`.
+ * The set segment of a retired track-less URL in each app locale that had one.
+ * German names its sets `aufgabensatz-N`; English and Indonesian name them
+ * `set-N`. Malay was served after the tracks arrived, so it has none.
  */
-const TRACKLESS_SET_PATTERNS: Record<ActiveAppLocaleCode, RegExp> = {
+const TRACKLESS_SET_PATTERNS: Partial<Record<ActiveAppLocaleCode, RegExp>> = {
   de: /^aufgabensatz-\d+$/u,
   en: /^set-\d+$/u,
   id: /^set-\d+$/u,
@@ -45,13 +46,17 @@ export function readTracklessSetRoute(
   const [localeSegment, root, country, exam, set, ...rest] =
     readPathSegments(pathname);
   const appLocale = decodeAppLocale(localeSegment);
+  const pattern = Option.flatMap(appLocale, (locale) =>
+    Option.fromUndefinedOr(TRACKLESS_SET_PATTERNS[locale])
+  );
   if (
     Option.isNone(appLocale) ||
+    Option.isNone(pattern) ||
     root !== TRYOUT_ROOT ||
     country === undefined ||
     exam === undefined ||
     set === undefined ||
-    !TRACKLESS_SET_PATTERNS[appLocale.value].test(set) ||
+    !pattern.value.test(set) ||
     rest.length > 1
   ) {
     return Option.none();

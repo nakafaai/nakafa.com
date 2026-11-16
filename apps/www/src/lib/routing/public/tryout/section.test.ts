@@ -2,6 +2,7 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
 import { readTryoutRedirect } from "@/lib/routing/public/tryout";
+import { readSectionSuccessor } from "@/lib/routing/public/tryout/section";
 import { type RouteIdentity, serveTryoutCatalog } from "@/test/catalog";
 
 const mocks = vi.hoisted(() => ({
@@ -27,6 +28,20 @@ function serveCatalog(routes: readonly RouteIdentity[]) {
 describe("retired try-out redirects", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+  });
+
+  describe("section successors", () => {
+    it("renames a retired section and keeps a Malay key, as Malay never had a retired name", () => {
+      expect(readSectionSuccessor("id", "bahasa-inggris")).toBe(
+        "literasi-dalam-bahasa-inggris"
+      );
+      expect(readSectionSuccessor("id", "penalaran-umum")).toBe(
+        "penalaran-umum"
+      );
+      expect(readSectionSuccessor("ms", "bahasa-inggris")).toBe(
+        "bahasa-inggris"
+      );
+    });
   });
 
   describe("retired SNBT section URLs", () => {

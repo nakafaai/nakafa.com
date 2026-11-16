@@ -139,14 +139,16 @@ export const INVALID_TOOL_CALL_CASES: readonly McpCase[] = [
             content: [
               {
                 type: "text",
-                text: '{"error":{"message":"Invalid Nakafa taxonomy options.","suggestions":["Expected \\"en\\" | \\"id\\" | \\"de\\"\\n  at [\\"locale\\"]"]}}',
+                text: '{"error":{"message":"Invalid Nakafa taxonomy options.","suggestions":["Expected \\"en\\" | \\"id\\" | \\"de\\" | \\"ms\\"\\n  at [\\"locale\\"]"]}}',
               },
             ],
             isError: true,
             structuredContent: {
               error: {
                 message: "Invalid Nakafa taxonomy options.",
-                suggestions: ['Expected "en" | "id" | "de"\n  at ["locale"]'],
+                suggestions: [
+                  'Expected "en" | "id" | "de" | "ms"\n  at ["locale"]',
+                ],
               },
             },
             resultType: "complete",
@@ -312,7 +314,7 @@ export const INVALID_TOOL_CALL_CASES: readonly McpCase[] = [
             content: [
               {
                 type: "text",
-                text: '{"error":{"message":"Invalid Nakafa taxonomy options.","suggestions":["Expected \\"en\\" | \\"id\\" | \\"de\\" | undefined\\n  at [\\"locale\\"]"]}}',
+                text: '{"error":{"message":"Invalid Nakafa taxonomy options.","suggestions":["Expected \\"en\\" | \\"id\\" | \\"de\\" | \\"ms\\" | undefined\\n  at [\\"locale\\"]"]}}',
               },
             ],
             isError: true,
@@ -320,7 +322,7 @@ export const INVALID_TOOL_CALL_CASES: readonly McpCase[] = [
               error: {
                 message: "Invalid Nakafa taxonomy options.",
                 suggestions: [
-                  'Expected "en" | "id" | "de" | undefined\n  at ["locale"]',
+                  'Expected "en" | "id" | "de" | "ms" | undefined\n  at ["locale"]',
                 ],
               },
             },

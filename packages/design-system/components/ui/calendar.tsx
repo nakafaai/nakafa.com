@@ -35,10 +35,11 @@ import {
 import { de } from "react-day-picker/locale/de";
 import { enUS } from "react-day-picker/locale/en-US";
 import { id } from "react-day-picker/locale/id";
+import { ms } from "react-day-picker/locale/ms";
 import { useFormatter, useLocale, useTranslations } from "use-intl";
 
 /** The words and the first weekday that the calendar draws in each Nakafa locale. */
-const calendarLocales = { de, en: enUS, id } satisfies Record<
+const calendarLocales = { de, en: enUS, id, ms } satisfies Record<
   Locale,
   ComponentProps<typeof DayPicker>["locale"]
 >;

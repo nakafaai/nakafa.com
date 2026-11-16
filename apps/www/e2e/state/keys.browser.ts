@@ -1,4 +1,5 @@
 import { expect, type Page, test } from "@playwright/test";
+import { LOCALES } from "@repo/internationalization/src/locale";
 import { Effect } from "effect";
 import { pinnedRoutes } from "@/e2e/support/corpus";
 import { withoutRawKeys } from "@/e2e/support/keys";
@@ -13,6 +14,7 @@ const PAGES = {
   de: ["/de", "/de/pricing", "/de/search", "/de/try-out", "/de/quran"],
   en: ["/en", "/en/pricing", "/en/search", "/en/try-out", "/en/quran"],
   id: ["/id", "/id/pricing", "/id/search", "/id/try-out", "/id/quran"],
+  ms: ["/ms", "/ms/pricing", "/ms/search", "/ms/try-out", "/ms/quran"],
 };
 
 /**
@@ -49,7 +51,7 @@ const openPage = (page: Page, path: string) =>
  * left the table's messages out, in every language. A page that draws a raw key, or renders a message its route does
  * not hold, fails here in each of them.
  */
-for (const locale of ["de", "en", "id"] as const) {
+for (const locale of LOCALES) {
   test(`every visitor page in ${locale} draws its messages, never a raw key`, async ({
     page,
   }) => {

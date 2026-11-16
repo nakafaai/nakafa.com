@@ -74,7 +74,12 @@ function surahPage(): typeof SurahPageSchema.Type {
       kind: "quran-surah",
       name: {
         arabic: "البقرة",
-        meaning: { de: "Die Kuh", en: "The Cow", id: "Sapi" },
+        meaning: {
+          de: "Die Kuh",
+          en: "The Cow",
+          id: "Sapi",
+          ms: "Lembu Betina",
+        },
         transliteration: "Al-Baqarah",
       },
       number: 2,
@@ -86,7 +91,12 @@ function surahPage(): typeof SurahPageSchema.Type {
       kind: "quran-surah",
       name: {
         arabic: "الفاتحة",
-        meaning: { de: "Die Eröffnende", en: "The Opening", id: "Pembuka" },
+        meaning: {
+          de: "Die Eröffnende",
+          en: "The Opening",
+          id: "Pembuka",
+          ms: "Pembukaan",
+        },
         transliteration: "Al-Fatihah",
       },
       number: 1,

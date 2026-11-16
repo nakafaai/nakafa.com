@@ -272,7 +272,7 @@ describe("contentRelease/material", () => {
       activeReleaseId: MATERIAL_IDENTITY.releaseId,
     });
   });
-  it.each(["en", "id", "de"] as const)(
+  it.each(["en", "id", "de", "ms"] as const)(
     "returns the %s current page with stable release identity",
     async (appLocale) => {
       const t = convexTest(schema, convexModules);
@@ -332,7 +332,7 @@ describe("contentRelease/material", () => {
       }
     }
   );
-  it.each(["en", "id", "de"] as const)(
+  it.each(["en", "id", "de", "ms"] as const)(
     "returns the %s current route across alternates and siblings",
     async (appLocale) => {
       const t = convexTest(schema, convexModules);
@@ -353,7 +353,7 @@ describe("contentRelease/material", () => {
       expect(result.projectionJson).toBe(
         canonicalizeMaterialProjection(requested)
       );
-      expect(result.alternateJson).toHaveLength(3);
+      expect(result.alternateJson).toHaveLength(4);
       expect(result.siblingJson).toHaveLength(2);
       for (const source of [
         result.projectionJson ?? "{}",

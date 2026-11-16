@@ -8,17 +8,21 @@ import en from "@repo/internationalization/dictionaries/en.json" with {
 import id from "@repo/internationalization/dictionaries/id.json" with {
   type: "json",
 };
+import ms from "@repo/internationalization/dictionaries/ms.json" with {
+  type: "json",
+};
+import { LOCALES } from "@repo/internationalization/src/locale";
 import { MutableList } from "effect";
 import { pinnedRoutes } from "@/e2e/support/corpus";
 
-const dictionaries = { de, en, id } as const;
+const dictionaries = { de, en, id, ms } as const;
 
 /**
  * A learn page with no content yet shows the coming-soon body in its own
  * language. The learn layout loads that body's messages, so the static page and
  * the hydrated one show every label and report no missing message.
  */
-for (const locale of ["de", "en", "id"] as const) {
+for (const locale of LOCALES) {
   test(`an empty curriculum page says coming soon in ${locale}`, async ({
     page,
   }) => {

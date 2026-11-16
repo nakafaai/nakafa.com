@@ -1,7 +1,6 @@
 // @vitest-environment node
 
 import { beforeEach, describe, expect, it } from "@effect/vitest";
-import { ACTIVE_APP_LOCALE_CODES } from "@nakafa/aksara-contracts/locale";
 import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
 import { fixtureSetPath } from "@repo/backend/test/assessment/snapshot";
 import { client } from "@repo/backend/test/client";
@@ -42,6 +41,9 @@ vi.mock("@confect/js", async (importOriginal) => {
     },
   };
 });
+/** The locales the fixture's one set is written in: no node of it serves Malay. */
+const SERVED_LOCALES = ["en", "id", "de"] as const;
+
 describe("published try-out sitemap", () => {
   beforeEach(() => {
     runtimeQueryMock.mockReset();
@@ -70,7 +72,7 @@ describe("published try-out sitemap", () => {
       expect(runtimeQueryMock).toHaveBeenCalledTimes(4);
     })
   );
-  it.effect.each(ACTIVE_APP_LOCALE_CODES)(
+  it.effect.each(SERVED_LOCALES)(
     "reads the complete %s route inventory",
     (locale) =>
       Effect.gen(function* () {
@@ -94,6 +96,16 @@ describe("published try-out sitemap", () => {
         expect(yield* readPublishedTryoutSitemap(locale, 1)).toBeNull();
         expect(yield* readPublishedTryoutSitemap(locale, -1)).toBeNull();
       })
+  );
+  it.effect("lists no route in a locale no set is written in", () =>
+    Effect.gen(function* () {
+      const world = yield* tryoutWorld();
+      runtimeQueryMock.mockImplementation(world.visitor.query);
+      expect(yield* readPublishedTryoutSitemapCount("ms")).toEqual({
+        pageCount: 0,
+        routeCount: 0,
+      });
+    })
   );
   it.effect("fails closed when no release is active", () =>
     Effect.gen(function* () {

@@ -4,6 +4,7 @@ import {
   ENGLISH_APP_LOCALE_CODE,
   GERMAN_APP_LOCALE_CODE,
   INDONESIAN_APP_LOCALE_CODE,
+  MALAY_APP_LOCALE_CODE,
 } from "@nakafa/aksara-contracts/locale";
 import {
   type QuranEmbeddedSourceId,
@@ -157,6 +158,13 @@ const projectQuranReadingSources = Effect.fn(
       quranTranslationSourceId(INDONESIAN_APP_LOCALE_CODE)
     );
   }
+  if (appLocale === MALAY_APP_LOCALE_CODE) {
+    return yield* projectQuranReadingSourcesFor(
+      attribution,
+      appLocale,
+      quranTranslationSourceId(MALAY_APP_LOCALE_CODE)
+    );
+  }
   return yield* projectQuranReadingSourcesFor(
     attribution,
     appLocale,
@@ -219,6 +227,23 @@ export const readQuranLocaleSources = Effect.fn(
       sources,
       tafsirAccess: {
         appLocale: ENGLISH_APP_LOCALE_CODE,
+        kind: source.kind,
+        notice: access.notice,
+        source,
+      },
+    };
+  }
+  if (access.appLocale === MALAY_APP_LOCALE_CODE) {
+    const sourceId = quranTafsirSourceId(MALAY_APP_LOCALE_CODE);
+    const source = yield* projectExternalQuranSource(
+      attribution,
+      MALAY_APP_LOCALE_CODE,
+      sourceId
+    );
+    return {
+      sources,
+      tafsirAccess: {
+        appLocale: MALAY_APP_LOCALE_CODE,
         kind: source.kind,
         notice: access.notice,
         source,

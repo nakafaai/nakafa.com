@@ -40,7 +40,13 @@ export const readFeaturedTryout = Effect.fn("www.tryout.catalog.readFeatured")(
         appLocale: AppLocaleSchema.make(locale),
       }
     );
-    return yield* Schema.decodeEffect(TryoutQuestionBodyText)(featured.body);
+    if (featured.kind === "none") {
+      return featured;
+    }
+    return {
+      body: yield* Schema.decodeEffect(TryoutQuestionBodyText)(featured.body),
+      kind: featured.kind,
+    };
   }
 );
 

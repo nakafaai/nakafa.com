@@ -1,4 +1,3 @@
-import { StateTable } from "@repo/design-system/components/contents/politics/nepotism/table";
 import { politicsComponentNames } from "@repo/design-system/lib/markdown/names";
 import {
   PorkBarrelBudgetChart,
@@ -12,7 +11,10 @@ import {
   KimPlusElectabilityChart,
   PorkBarrelElectabilityChart,
 } from "@/lib/content/renderer/client/politics/elections";
-import { NepotismStage } from "@/lib/content/renderer/client/politics/nepotism";
+import {
+  NepotismStage,
+  NepotismStateTable,
+} from "@/lib/content/renderer/client/politics/nepotism";
 import type { RendererImplementation } from "@/lib/content/renderer/selection";
 
 /** Every politics visual, which any lesson in any domain may use. */
@@ -35,7 +37,7 @@ export const politicsRenderers = [
   },
   {
     name: politicsComponentNames.nepotismStateTable,
-    component: StateTable,
+    component: NepotismStateTable,
   },
   {
     name: politicsComponentNames.porkBarrelBudgetChart,

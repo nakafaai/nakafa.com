@@ -2,6 +2,7 @@
 
 import { describe, expect, it } from "@effect/vitest";
 import { getPlanCreditConfig } from "@repo/backend/confect/credits/constants";
+import { LOCALES } from "@repo/internationalization/src/locale";
 import { Effect } from "effect";
 import { BASE_URL } from "@/lib/llms/constants";
 import { AGENT_MARKDOWN_DIRECTIVE } from "@/lib/llms/format";
@@ -27,7 +28,7 @@ describe("pricing Markdown", () => {
       })
   );
 
-  it.effect.each(["de", "en", "id"] as const)(
+  it.effect.each(LOCALES)(
     "renders localized plans and all questions for %s",
     (locale) =>
       Effect.gen(function* () {
@@ -61,7 +62,7 @@ describe("pricing Markdown", () => {
     })
   );
 
-  it.effect.each(["de", "en", "id"] as const)(
+  it.effect.each(LOCALES)(
     "states every price, so an answer can quote it, for %s",
     (locale) =>
       Effect.gen(function* () {

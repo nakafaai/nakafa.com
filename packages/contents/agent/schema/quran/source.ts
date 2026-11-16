@@ -3,6 +3,7 @@ import {
   ENGLISH_APP_LOCALE_CODE,
   GERMAN_APP_LOCALE_CODE,
   INDONESIAN_APP_LOCALE_CODE,
+  MALAY_APP_LOCALE_CODE,
 } from "@nakafa/aksara-contracts/locale";
 import {
   type QuranEmbeddedSourceId,
@@ -115,6 +116,10 @@ export const NakafaQuranGermanReadingSourcesSchema = makeReadingSourcesSchema(
   GERMAN_APP_LOCALE_CODE,
   quranTranslationSourceId(GERMAN_APP_LOCALE_CODE)
 );
+export const NakafaQuranMalayReadingSourcesSchema = makeReadingSourcesSchema(
+  MALAY_APP_LOCALE_CODE,
+  quranTranslationSourceId(MALAY_APP_LOCALE_CODE)
+);
 
 /** Narrows one embedded source to its Aksara-owned Tafsir identity. */
 function makeEmbeddedTafsirSourceSchema<const Id extends QuranEmbeddedSourceId>(
@@ -160,5 +165,14 @@ export const NakafaQuranGermanTafsirAccessSchema = Schema.Struct({
   notice: QuranSourceCopySchema.fields.notice,
   source: makeExternalTafsirSourceSchema(
     quranTafsirSourceId(GERMAN_APP_LOCALE_CODE)
+  ),
+}).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)));
+
+export const NakafaQuranMalayTafsirAccessSchema = Schema.Struct({
+  kind: Schema.Literal("external"),
+  locale: Schema.Literal(MALAY_APP_LOCALE_CODE),
+  notice: QuranSourceCopySchema.fields.notice,
+  source: makeExternalTafsirSourceSchema(
+    quranTafsirSourceId(MALAY_APP_LOCALE_CODE)
   ),
 }).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)));

@@ -10,3 +10,11 @@ export const NepotismStage = withHydrationBoundary(
     ).then((module) => ({ default: module.Stage }))
   )
 );
+
+export const NepotismStateTable = withHydrationBoundary(
+  lazy(() =>
+    import(
+      "@repo/design-system/components/contents/politics/nepotism/table"
+    ).then((module) => ({ default: module.StateTable }))
+  )
+);

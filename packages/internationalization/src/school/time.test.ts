@@ -27,12 +27,18 @@ const TIME_IN_ZONE = {
 };
 
 /** How each locale writes `EVENING` in Jakarta: a date, a time, and both. */
-const DATE = { de: "06.10.2026", en: "Oct 6, 2026", id: "6 Okt 2026" };
-const TIME = { de: "22:30", en: "10:30 PM", id: "22.30" };
+const DATE = {
+  de: "06.10.2026",
+  en: "Oct 6, 2026",
+  id: "6 Okt 2026",
+  ms: "6 Okt 2026",
+};
+const TIME = { de: "22:30", en: "10:30 PM", id: "22.30", ms: "10:30 PTG" };
 const DATE_AND_TIME = {
   de: "06.10.2026, 22:30",
   en: "Oct 6, 2026, 10:30 PM",
   id: "6 Okt 2026, 22.30",
+  ms: "6 Okt 2026, 10:30 PTG",
 };
 
 /** How each locale writes the weekday and the time of `EVENING` in Jakarta. */
@@ -40,15 +46,26 @@ const DAY_AND_TIME = {
   de: "6. Okt., 22:30",
   en: "Oct 6, 10:30 PM",
   id: "6 Okt, 22.30",
+  ms: "6 Okt, 10:30 PTG",
 };
 
 /**
  * How each locale names the day of `ACROSS_MIDNIGHT` in Jakarta when that day is
  * today, when it is yesterday, and as a date when it is neither.
  */
-const TODAY = { de: "heute", en: "today", id: "hari ini" };
-const YESTERDAY = { de: "gestern", en: "yesterday", id: "kemarin" };
-const OLDER = { de: "17.10.2026", en: "Oct 17, 2026", id: "17 Okt 2026" };
+const TODAY = { de: "heute", en: "today", id: "hari ini", ms: "hari ini" };
+const YESTERDAY = {
+  de: "gestern",
+  en: "yesterday",
+  id: "kemarin",
+  ms: "semalam",
+};
+const OLDER = {
+  de: "17.10.2026",
+  en: "Oct 17, 2026",
+  id: "17 Okt 2026",
+  ms: "17 Okt 2026",
+};
 
 /** Writes one school time for a reading of the clock, which defaults to `LATER`. */
 function schoolTime(

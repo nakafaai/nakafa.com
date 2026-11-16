@@ -1,7 +1,7 @@
 import type { DocumentEditorInstance } from "@repo/design-system/components/editor/document";
 import { Array as Arr } from "effect";
 import { createStore } from "zustand";
-import type { FigureDraft } from "@/components/tenant/exams/figure/draft";
+import type { FigureDraft } from "@/components/tenant/exams/figure/form";
 
 /** A picture that waits for its alt text, and the editor it goes into. */
 export interface PendingPicture<E extends object = DocumentEditorInstance> {

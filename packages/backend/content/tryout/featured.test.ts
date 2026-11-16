@@ -1,8 +1,9 @@
 import { assert, describe, expect, it } from "@effect/vitest";
 import type { AssessmentRowSchema } from "@nakafa/aksara-contracts/assessment/snapshot";
+import { ContentLanguageSchema } from "@nakafa/aksara-contracts/locale";
 import tryouts from "@repo/backend/confect/_generated/refs/tryouts";
 import { TryoutQuestionBodyText } from "@repo/backend/confect/tryouts/runtime/spec";
-import { LANDING_FEATURED_TRYOUT } from "@repo/backend/content/tryout/featured";
+import { makeAssessmentSnapshot } from "@repo/backend/test/assessment/snapshot";
 import { tryoutWorld } from "@repo/backend/test/tryout/world";
 import { Array as Arr, Effect, Option, Schema } from "effect";
 
@@ -10,41 +11,42 @@ type AssessmentRow = typeof AssessmentRowSchema.Type;
 
 const { getFeaturedQuestion } = tryouts.queries.catalog;
 
-/** The fixture paper of the landing's set. */
-const isFeaturedPaper = (row: AssessmentRow) =>
-  row.kind === "paper" && row.paper.id === "test-paper-set-1";
+/** Selects the fixture paper of one set. */
+const isPaperOf = (setKey: string) => (row: AssessmentRow) =>
+  row.kind === "paper" && row.paper.id === `test-paper-${setKey}`;
 
-/** The hash of the version the landing's set places first in the featured section. */
-const featuredHash = (rows: readonly AssessmentRow[]) => {
-  const place = Option.flatMap(Arr.findFirst(rows, isFeaturedPaper), (row) =>
+/** The hash of the version a set's paper places first in its first section. */
+const firstPlaceHash = (rows: readonly AssessmentRow[], setKey: string) => {
+  const place = Option.flatMap(Arr.findFirst(rows, isPaperOf(setKey)), (row) =>
     row.kind === "paper"
       ? Option.map(
-          Arr.findFirst(
-            row.paper.sections,
-            ({ section }) => section === LANDING_FEATURED_TRYOUT.sectionKey
-          ),
-          ({ placements }) => Arr.headNonEmpty(placements).hash
+          Arr.head(row.paper.sections),
+          ({ placements }) =>
+            Arr.headNonEmpty(Arr.headNonEmpty(placements).versions).hash
         )
       : Option.none()
   );
-  assert.ok(Option.isSome(place), "Expected the featured place.");
+  assert.ok(Option.isSome(place), "Expected the first place.");
   return place.value;
 };
 
-/** A world whose first section is the landing's featured section. */
-const featuredWorld = tryoutWorld({
-  firstSectionKey: LANDING_FEATURED_TRYOUT.sectionKey,
-});
+/** Selects one catalog row of one kind in one app locale. */
+const isCatalogRow =
+  (kind: string, appLocale: string) => (row: AssessmentRow) =>
+    row.kind === "catalog" &&
+    row.row.kind === kind &&
+    row.row.appLocale === appLocale;
 
 describe("content/tryout/featured", () => {
   it.effect(
-    "demonstrates the reading the featured version was written against",
+    "demonstrates the first place of the first set the catalog lists, with its reading",
     () =>
       Effect.gen(function* () {
-        const world = yield* featuredWorld;
+        const world = yield* tryoutWorld();
         yield* world.rewrite(
           (row, rows) =>
-            row.kind === "item" && row.version.hash === featuredHash(rows),
+            row.kind === "item" &&
+            row.version.hash === firstPlaceHash(rows, "set-1"),
           (row, rows) => {
             const read = Arr.findFirst(
               rows,
@@ -66,20 +68,130 @@ describe("content/tryout/featured", () => {
         const question = yield* world.visitor.query(getFeaturedQuestion, {
           appLocale: "id",
         });
+        assert.ok(question.kind === "question", "Expected a question.");
         expect(
           yield* Schema.decodeEffect(TryoutQuestionBodyText)(question.body)
         ).toMatchObject({ stimulus: { type: "doc" } });
       })
   );
 
+  it.effect("follows the catalog's order to the set it lists first", () =>
+    Effect.gen(function* () {
+      const { rows } = yield* makeAssessmentSnapshot({ sets: 2 });
+      const world = yield* tryoutWorld({ sets: 2 });
+      yield* world.rewrite(isCatalogRow("set", "id"), (row) => {
+        assert.ok(
+          row.kind === "catalog" && row.row.kind === "set",
+          "Expected the first set's catalog row."
+        );
+        // The first set now comes after the second.
+        return { ...row, row: { ...row.row, order: 3 } };
+      });
+      expect(
+        yield* world.visitor.query(getFeaturedQuestion, { appLocale: "id" })
+      ).toMatchObject({
+        kind: "question",
+        versionHash: firstPlaceHash(rows, "set-2"),
+      });
+    })
+  );
+
   it.effect(
-    "refuses a release whose featured key has no answer for its version, or whose paper lost the section",
+    "prefers the first set written in the locale's language, and else shows the first set",
     () =>
       Effect.gen(function* () {
-        const keyless = yield* featuredWorld;
+        const { rows } = yield* makeAssessmentSnapshot({ sets: 2 });
+        const world = yield* tryoutWorld({ sets: 2 });
+        yield* world.rewrite(isPaperOf("set-1"), (row) => {
+          assert.ok(row.kind === "paper", "Expected the first set's paper.");
+          const [section, ...sections] = row.paper.sections;
+          // The first set's first section is now written in German only.
+          const german = ContentLanguageSchema.make("de");
+          const placements = Arr.map(section.placements, (placement) => ({
+            ...placement,
+            versions: Arr.map(placement.versions, (version) => ({
+              ...version,
+              language: german,
+            })),
+          }));
+          return {
+            ...row,
+            paper: {
+              ...row.paper,
+              sections: [
+                { ...section, languages: [german], placements },
+                ...sections,
+              ],
+            },
+          };
+        });
+        expect(
+          yield* world.visitor.query(getFeaturedQuestion, { appLocale: "id" })
+        ).toMatchObject({ versionHash: firstPlaceHash(rows, "set-2") });
+        expect(
+          yield* world.visitor.query(getFeaturedQuestion, { appLocale: "en" })
+        ).toMatchObject({ versionHash: firstPlaceHash(rows, "set-1") });
+      })
+  );
+
+  it.effect("demonstrates none in a locale whose catalog serves no set", () =>
+    Effect.gen(function* () {
+      const world = yield* tryoutWorld();
+      // The fixture's sets are not written in Malay.
+      expect(
+        yield* world.visitor.query(getFeaturedQuestion, { appLocale: "ms" })
+      ).toEqual({ kind: "none" });
+    })
+  );
+
+  it.effect(
+    "refuses a catalog whose set lost its track or a node above it",
+    () =>
+      Effect.gen(function* () {
+        const trackless = yield* tryoutWorld();
+        yield* trackless.rewrite(isCatalogRow("track", "id"), (row) => {
+          assert.ok(
+            row.kind === "catalog" && row.row.kind === "track",
+            "Expected the track."
+          );
+          return { ...row, row: { ...row.row, trackKey: "elsewhere" } };
+        });
+        expect(
+          yield* trackless.visitor
+            .query(getFeaturedQuestion, { appLocale: "id" })
+            .pipe(Effect.flip)
+        ).toMatchObject({
+          code: "CONTENT_RELEASE_INTEGRITY",
+          message: expect.stringContaining("featured track"),
+        });
+        const countryless = yield* tryoutWorld();
+        yield* countryless.rewrite(isCatalogRow("country", "id"), (row) => {
+          assert.ok(
+            row.kind === "catalog" && row.row.kind === "country",
+            "Expected the country."
+          );
+          return { ...row, row: { ...row.row, countryKey: "elsewhere" } };
+        });
+        expect(
+          yield* countryless.visitor
+            .query(getFeaturedQuestion, { appLocale: "id" })
+            .pipe(Effect.flip)
+        ).toMatchObject({
+          code: "CONTENT_RELEASE_INTEGRITY",
+          message: expect.stringContaining("featured country"),
+        });
+      })
+  );
+
+  it.effect(
+    "refuses a release whose featured key has no answer for its version",
+    () =>
+      Effect.gen(function* () {
+        const keyless = yield* tryoutWorld();
         yield* keyless.rewrite(
           (row, rows) =>
-            row.kind === "key" && row.key.version === featuredHash(rows),
+            row.kind === "key" &&
+            row.key.version === firstPlaceHash(rows, "set-1"),
           (row, rows) => {
             const other = Arr.findFirst(
               rows,
@@ -99,27 +211,6 @@ describe("content/tryout/featured", () => {
         ).toMatchObject({
           code: "CONTENT_RELEASE_INTEGRITY",
           message: expect.stringContaining("featured answer"),
-        });
-        const unplaced = yield* featuredWorld;
-        yield* unplaced.rewrite(isFeaturedPaper, (row) => {
-          assert.ok(row.kind === "paper", "Expected the featured paper.");
-          const [first, second, ...rest] = row.paper.sections;
-          assert.ok(second, "Expected a second paper section.");
-          // The featured section's places now sit under the second section's key.
-          return {
-            ...row,
-            paper: {
-              ...row.paper,
-              sections: [{ ...first, section: second.section }, ...rest],
-            },
-          };
-        });
-        expect(
-          yield* unplaced.visitor
-            .query(getFeaturedQuestion, { appLocale: "id" })
-            .pipe(Effect.flip)
-        ).toMatchObject({
-          message: expect.stringContaining("featured question"),
         });
       })
   );

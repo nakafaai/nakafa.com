@@ -48,11 +48,12 @@ export const AttributeValueSchema = Schema.Json.check(
 /**
  * The mark types that a step or a document may hold: the contract's marks, in the
  * contract's order (ADR 0031). The contract's mark schema is a union of the plain
- * marks and the link, so the names are read from its two members.
+ * marks, the highlight, and the link, so the names are read from its three members.
  */
-const [plainMark, linkMark] = ContractMarkSchema.members;
+const [plainMark, highlightMark, linkMark] = ContractMarkSchema.members;
 export const MarkTypeSchema = Schema.Literals([
   ...plainMark.fields.type.literals,
+  highlightMark.fields.type.literal,
   linkMark.fields.type.literal,
 ]);
 
@@ -74,6 +75,8 @@ export const NodeTypeSchema = Schema.Literals([
   "blockquote",
   "bulletList",
   "codeBlock",
+  "contentBlock",
+  "contentStack",
   "figure",
   "hardBreak",
   "heading",

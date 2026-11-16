@@ -18,7 +18,7 @@ import {
   toCardArtwork,
 } from "@/lib/og/artwork";
 
-const ARTWORK_FILENAME_PATTERN = /^(?:de|en|id)-[a-z0-9-]+\.png$/u;
+const ARTWORK_FILENAME_PATTERN = /^(?:de|en|id|ms)-[a-z0-9-]+\.png$/u;
 
 /** Every file of the static inventory: each design in each locale it has a file for. */
 function staticArtworkPaths() {
@@ -113,8 +113,8 @@ describe("public artwork", () => {
         (entry) => `/open-graph/${entry}`
       );
 
-      expect(manifestPaths).toHaveLength(85);
-      expect(Arr.dedupe(manifestPaths)).toHaveLength(85);
+      expect(manifestPaths).toHaveLength(98);
+      expect(Arr.dedupe(manifestPaths)).toHaveLength(98);
       expect(Arr.sort(publicFilesystemPaths, Order.String)).toEqual(
         Arr.sort(manifestPaths, Order.String)
       );

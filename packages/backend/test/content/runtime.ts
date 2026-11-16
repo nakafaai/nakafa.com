@@ -11,6 +11,7 @@ import {
   PublicPathSchema,
 } from "@nakafa/aksara-contracts/ids";
 import {
+  type ActiveAppLocaleCode,
   ActiveAppLocaleSchema,
   ArtifactLocaleSchema,
 } from "@nakafa/aksara-contracts/locale";
@@ -131,7 +132,7 @@ export function testArticleProjection(
 /** Localizes one article route while preserving its canonical content identity. */
 export function testLocalizedArticleProjection(
   index: number,
-  appLocale: "de" | "en" | "id"
+  appLocale: ActiveAppLocaleCode
 ) {
   const projection = testArticleProjection(index);
   const categoryRoute = ArticleRouteSlugSchema.make(

@@ -44,6 +44,7 @@ const CONTRACT_ORDER = [
   "code",
   "subscript",
   "superscript",
+  "highlight",
   "link",
 ];
 

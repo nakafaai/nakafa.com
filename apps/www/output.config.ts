@@ -1,3 +1,5 @@
+import { readdirSync, readFileSync } from "node:fs";
+import { join } from "node:path";
 import type { Rolldown, UserConfig } from "vite";
 import { workerSettings } from "#www/worker";
 
@@ -55,12 +57,91 @@ const BROWSER_CODE_SPLITTING = {
   groups: [{ name: "boot", priority: 1, tags: ["$initial"] }],
 } satisfies Rolldown.CodeSplittingOptions;
 
+/** The client loaders of the lesson renderer, which load each visual of the catalog lazily. */
+const RENDERER_CLIENT = join(
+  import.meta.dirname,
+  "src/lib/content/renderer/client"
+);
+
+/** What a lazy renderer of the catalog imports: one design-system module, by its path. */
+const LAZY_RENDERER =
+  /import\(\s*"@repo\/design-system\/(?<module>components\/[^"]+)"\s*\)/gu;
+
+/** A design-system module as a chunk's facade names it: its path, without its extension. */
+const DESIGN_SYSTEM_MODULE =
+  /\/packages\/design-system\/(?<module>components\/.+)\.tsx?$/u;
+
+/**
+ * The design-system module of every lazy renderer of the Visual Catalog, such as
+ * `components/contents/biology/virus/structure`, read from the client loaders that import them.
+ */
+export function lazyRendererModules(): readonly string[] {
+  const files = readdirSync(RENDERER_CLIENT, {
+    recursive: true,
+    encoding: "utf8",
+  });
+  const modules = new Set<string>();
+  for (const file of files) {
+    if (!file.endsWith(".tsx")) {
+      continue;
+    }
+    const source = readFileSync(join(RENDERER_CLIENT, file), "utf8");
+    for (const match of source.matchAll(LAZY_RENDERER)) {
+      if (match.groups?.module !== undefined) {
+        modules.add(match.groups.module);
+      }
+    }
+  }
+  return [...modules];
+}
+
+/**
+ * The name of a lazy renderer's chunk: its module's path under `components`, so every visual of the
+ * catalog has a chunk no other module shares, such as `catalog-contents-biology-virus-structure`.
+ */
+export function rendererChunkName(module: string) {
+  return `catalog-${module.replace("components/", "").replaceAll("/", "-")}`;
+}
+
+/** The lazy renderer a chunk holds under its own name, read from the modules it was built from. */
+function rendererOf(
+  chunk: Rolldown.PreRenderedChunk,
+  renderers: ReadonlySet<string>
+) {
+  for (const id of chunk.moduleIds) {
+    const module = DESIGN_SYSTEM_MODULE.exec(id)?.groups?.module;
+    if (
+      module !== undefined &&
+      renderers.has(module) &&
+      module.slice(module.lastIndexOf("/") + 1) === chunk.name
+    ) {
+      return module;
+    }
+  }
+}
+
+/**
+ * Names each lazy renderer's chunk after its module's path, so a test can tell which visual of the
+ * catalog a page loaded. Rolldown names every other chunk after its module's file, and dozens of
+ * renderers share a file name such as `lab` or `card`. A renderer that another module also imports
+ * statically has no facade in its chunk, so the chunk is found by its name among its modules.
+ */
+function chunkFileName(renderers: ReadonlySet<string>) {
+  return (chunk: Rolldown.PreRenderedChunk) => {
+    const module = rendererOf(chunk, renderers);
+    return module === undefined
+      ? "assets/[name]-[hash].js"
+      : `assets/${rendererChunkName(module)}-[hash].js`;
+  };
+}
+
 /** The output of each environment, by its Vite environment name. */
 export const ENVIRONMENT_OUTPUTS = {
   client: {
     build: {
       rolldownOptions: {
         output: {
+          chunkFileNames: chunkFileName(new Set(lazyRendererModules())),
           codeSplitting: BROWSER_CODE_SPLITTING,
           strictExecutionOrder: true,
         },

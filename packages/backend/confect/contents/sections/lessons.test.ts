@@ -74,9 +74,19 @@ describe("section lessons", () => {
     if (second.kind !== "page") {
       throw new Error("Expected a second page.");
     }
-    expect(second.next).toBeNull();
-    const lessons = [...first.lessons, ...second.lessons];
-    expect(lessons).toHaveLength(9);
+    if (second.next === null) {
+      throw new Error("Expected a third page.");
+    }
+    const last = await read({
+      cursor: second.next,
+      releaseId: KNOWLEDGE_RELEASE.releaseId,
+    });
+    if (last.kind !== "page") {
+      throw new Error("Expected a last page.");
+    }
+    expect(last.next).toBeNull();
+    const lessons = [...first.lessons, ...second.lessons, ...last.lessons];
+    expect(lessons).toHaveLength(12);
     expect(
       Arr.sort(
         Arr.map(lessons, ({ section }) => section),
@@ -86,6 +96,9 @@ describe("section lessons", () => {
       "articles",
       "articles",
       "articles",
+      "articles",
+      "material",
+      "material",
       "material",
       "material",
       "material",
@@ -102,22 +115,6 @@ describe("section lessons", () => {
       title: "ID Section 1",
       version: expect.stringContaining("2:google/gemini-embedding-2:sha256:"),
     });
-  });
-
-  it("passes over a lesson of a declared locale Nakafa does not serve yet", async () => {
-    const { readAll, t } = setup();
-    await t.mutation(seedKnowledge);
-    await t.run(async (ctx) => {
-      const row = await ctx.db.query("contentIndex").first();
-      if (row === null) {
-        throw new Error("Expected a seeded lesson.");
-      }
-      const { _creationTime, _id, ...fields } = row;
-      await ctx.db.insert("contentIndex", { ...fields, appLocale: "ms" });
-    });
-    const { lessons, unchanged } = await readAll();
-    expect(lessons).toHaveLength(9);
-    expect(unchanged).toBe(1);
   });
 
   it("names the version of a lesson by the signed facts of its source", async () => {
@@ -159,7 +156,7 @@ describe("section lessons", () => {
         await ctx.db.delete("contentArtifacts", artifact._id);
       }
     });
-    expect(await readAll()).toEqual({ lessons: [], unchanged: 9 });
+    expect(await readAll()).toEqual({ lessons: [], unchanged: 12 });
   });
 
   it("reads again the lesson whose source changed or whose sections were made at another version", async () => {
@@ -178,7 +175,7 @@ describe("section lessons", () => {
     });
     await t.mutation((ctx) => editKnowledgeLesson(ctx, 2, "en", "Neu."));
     const again = await readAll();
-    expect(again.unchanged).toBe(5);
+    expect(again.unchanged).toBe(8);
     expect(
       Arr.sort(
         Arr.map(again.lessons, ({ appLocale, rawMdx }) =>

@@ -16,20 +16,29 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import type { MermaidRenderConfig } from "@repo/design-system/lib/mermaid/render";
 import { Array as Arr, Option } from "effect";
-import { createContext, use, useMemo, useState } from "react";
+import {
+  createContext,
+  type ReactNode,
+  use,
+  useId,
+  useMemo,
+  useState,
+} from "react";
 import { useTranslations } from "use-intl";
 
 interface Props {
   chart: string;
   className?: string | undefined;
   config?: MermaidRenderConfig | undefined;
-  description: string;
-  title: string;
+  description: ReactNode;
+  title: ReactNode;
 }
 
 /** What the diagram's card and its dialog draw: the source, the settings and the words, and how the card opens the dialog. */
 type MermaidFigure = Pick<Props, "chart" | "className" | "config" | "title"> & {
   readonly openDialog: () => void;
+  /** The id of the card's title, which names the drawing for a screen reader. */
+  readonly titleId: string;
 };
 
 const MermaidFigureContext = createContext<MermaidFigure | null>(null);
@@ -47,7 +56,8 @@ function useMermaidFigure() {
 /** The diagram in its card, with the controls that open it and copy its source. */
 function DiagramCard() {
   const t = useTranslations("Ai");
-  const { chart, className, config, openDialog, title } = useMermaidFigure();
+  const { chart, className, config, openDialog, title, titleId } =
+    useMermaidFigure();
 
   return (
     <DiagramFrame
@@ -70,12 +80,13 @@ function DiagramCard() {
       }
       className={className}
       title={title}
+      titleId={titleId}
     >
       <Mermaid
         chart={chart}
         className="size-full"
         config={config}
-        label={title}
+        labelledBy={titleId}
       />
     </DiagramFrame>
   );
@@ -92,7 +103,7 @@ const ZOOM_STEPS = [1, 1.5, 2];
  */
 function DialogDiagram() {
   const t = useTranslations("Ai");
-  const { chart, config, title } = useMermaidFigure();
+  const { chart, config, titleId } = useMermaidFigure();
   // -1 is the fit the dialog opens at; each step after it is one of ZOOM_STEPS.
   const [step, setStep] = useState(-1);
 
@@ -124,7 +135,7 @@ function DialogDiagram() {
         chart={chart}
         className="bg-muted/40 min-h-0 flex-1 basis-[60dvh] rounded-lg p-4 text-base"
         config={config}
-        label={title}
+        labelledBy={titleId}
         zoom={Option.getOrUndefined(Arr.get(ZOOM_STEPS, step))}
       />
     </>
@@ -146,6 +157,7 @@ export function MermaidMdx({
   title,
 }: Props) {
   const [open, setOpen] = useState(false);
+  const titleId = useId();
   const figure = useMemo(
     () => ({
       chart,
@@ -153,8 +165,9 @@ export function MermaidMdx({
       config,
       openDialog: () => setOpen(true),
       title,
+      titleId,
     }),
-    [chart, className, config, title]
+    [chart, className, config, title, titleId]
   );
 
   return (

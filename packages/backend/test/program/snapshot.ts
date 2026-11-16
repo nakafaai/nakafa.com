@@ -93,6 +93,11 @@ export function makeTechnicalProgram(
         publicSlug: `technisches-programm-${index}`,
         title: `Technisches Programm ${index}`,
       },
+      {
+        appLocale: ActiveAppLocaleSchema.make("ms"),
+        publicSlug: `program-teknikal-${index}`,
+        title: `Program Teknikal ${index}`,
+      },
     ],
     version: { label: "Technical protocol version" },
   });

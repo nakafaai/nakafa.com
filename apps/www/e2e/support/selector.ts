@@ -9,9 +9,12 @@ import en from "@repo/internationalization/dictionaries/en.json" with {
 import id from "@repo/internationalization/dictionaries/id.json" with {
   type: "json",
 };
+import ms from "@repo/internationalization/dictionaries/ms.json" with {
+  type: "json",
+};
 
 /** The site's messages in each of its languages. */
-const MESSAGES = { de, en, id } satisfies Record<
+const MESSAGES = { de, en, id, ms } satisfies Record<
   ActiveAppLocaleCode,
   typeof en
 >;

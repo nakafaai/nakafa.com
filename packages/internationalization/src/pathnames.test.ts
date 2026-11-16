@@ -15,6 +15,8 @@ describe("route map spellings", () => {
     ["materials", "en", "subjects"],
     ["materials", "id", "materi"],
     ["materials", "de", "faecher"],
+    ["curricula", "ms", "kurikulum"],
+    ["materials", "ms", "subjek"],
   ] as const)("spells %s in %s as %s", (canonical, locale, spelling) => {
     expect(publicSegment(canonical, locale)).toBe(spelling);
   });
@@ -56,15 +58,16 @@ describe("canonical segment of a spelling", () => {
 
 describe("locale of a spelling", () => {
   it.each([
-    ["kurikulum", "id"],
     ["materi", "id"],
+    ["subjek", "ms"],
     ["subjects", "en"],
     ["faecher", "de"],
   ] as const)("reads %s as %s", (spelling, locale) => {
     expect(readSpellingLocale(spelling)).toStrictEqual(Option.some(locale));
   });
 
-  it("names no locale for a segment that no locale spells", () => {
+  it("names no locale for a segment that no locale or two locales spell", () => {
+    expect(Option.isNone(readSpellingLocale("kurikulum"))).toBe(true);
     expect(Option.isNone(readSpellingLocale("articles"))).toBe(true);
     expect(Option.isNone(readSpellingLocale("materials"))).toBe(true);
   });

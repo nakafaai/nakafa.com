@@ -1,7 +1,7 @@
 import { describe, expect, it } from "@effect/vitest";
 import { Array as Arr } from "effect";
 import { createExamEditing } from "@/components/tenant/exams/editing";
-import { emptyDraft } from "@/components/tenant/exams/figure/draft";
+import { emptyDraft } from "@/components/tenant/exams/figure/form";
 
 describe("createExamEditing", () => {
   it("starts with no active editor and no picture waiting", () => {
@@ -56,7 +56,7 @@ describe("createExamEditing", () => {
   it("holds the figure the dialog writes until it closes", () => {
     const store = createExamEditing<object>();
     const figure = {
-      draft: emptyDraft("graph"),
+      draft: emptyDraft("Chart"),
       editor: {},
       position: null,
     };

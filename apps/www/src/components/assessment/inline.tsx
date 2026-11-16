@@ -5,6 +5,7 @@ import type {
 import { Anchor } from "@repo/design-system/components/markdown/anchor";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import {
+  Highlight,
   MdxCode,
   MdxEmphasis,
   MdxStrong,
@@ -73,6 +74,9 @@ function TextMark({
     Match.discriminatorsExhaustive("type")({
       bold: () => <MdxStrong>{children}</MdxStrong>,
       code: () => <MdxCode>{children}</MdxCode>,
+      highlight: ({ attrs }) => (
+        <Highlight variant={attrs.variant ?? undefined}>{children}</Highlight>
+      ),
       italic: () => <MdxEmphasis>{children}</MdxEmphasis>,
       link: ({ attrs }) => <Anchor href={attrs.href}>{children}</Anchor>,
       subscript: () => <MdxSubscript>{children}</MdxSubscript>,

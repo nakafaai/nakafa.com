@@ -21,6 +21,10 @@ first delivery wave of the School program. The engine cutover, the shared
 player, and the removal of the try-out tables are program wave B. Calibration
 and analysis are program wave C. Implementation Status lists what is live today.
 
+Amended on 15 November 2026 by the owner's decision that every visual is usable
+in every content kind: a figure is any visual of the Aksara Visual Catalog
+(contracts 7.0.0), drawn by the lesson renderer registry (section 2b).
+
 ## Context
 
 Nakafa today runs try-outs on one engine, and it has no school exams. Measured
@@ -100,19 +104,56 @@ that the model must change:
   write of an item version (a publication or a teacher's save) checks the encoded
   size of the whole record, its documents, interactions, rules and hash included,
   against Convex's 1 MiB per document, and refuses it before the write.
-- A figure is one of the published components (`MathVisual`, `NumberLine`,
-  `LineEquation`, `UnitCircle`, `Mermaid`) or an image with alternative text. The
-  image form has no schema yet, and wave A adds one with the document contract.
-  The per-set figure components of the SNBT question bank (`Set<N>Question<M>`,
-  with kinds such as `Graph` and `SalesChart`) are not in this list. Each kind
-  takes one of these forms, or it is removed, in the release that replaces the
-  corpus, and its form is recorded here before that release. No release may
-  contain a figure outside this list.
+- A figure is any figure component of the Aksara Visual Catalog with the props
+  its catalog schema takes, a required text alternative, and a caption, or an
+  image with alternative text (section 2b).
 - Aksara still writes MDX. Its compiler produces the document, and Tiptap edits
   the same document.
 - The formula node is Nakafa's own Tiptap node, with KaTeX 0.19 and MathLive
   input. It is not a community formula extension (K16).
 - The renderer contract is in ADR 0018.
+
+### 2b. Every visual in every content kind
+
+The owner decided on 15 November 2026 that no visual is limited to lessons:
+lessons, articles, prompts, readings, explanations, and School items may use
+every visual Nakafa draws, labs and three-dimensional scenes included.
+
+- The Visual Catalog of `@nakafa/aksara-contracts` (`visual/catalog`) is the one
+  list of visuals: each component's name, the schema of its props, and the props
+  that hold answer state. The renderer manifest names exactly the catalog, and
+  `apps/www/src/lib/content/renderer/catalog.test.ts` proves that the renderer
+  registers every catalog component once and nothing else.
+- One renderer path. The registries under `lib/content/renderer/registry` hold
+  every component as the browser draws it, each loading its own code when a page
+  first shows it; `catalog.ts` lists them. An assessment figure draws through
+  that list (`components/assessment/figure.tsx`): it looks the component up and
+  draws each rich text of its props as inline content (`renderer/rich.ts`). A
+  lesson built on the server takes the same list and swaps in `CodeBlockServer`,
+  which colors code at build time (`selection.ts`). The per-figure dispatch of
+  the assessment renderer and the School figure drafts are deleted.
+- `Highlight` is a mark of a document, and `ContentStack` and `ContentBlock` are
+  nodes that group blocks; the editor (`@repo/editor/highlight`,
+  `@repo/editor/group`), the reader, and the Markdown twin hold them.
+- A prompt or a reading never shows answer state: Aksara refuses a catalog
+  component's answer-state props there at publish, and review checks every
+  interactive prompt figure. An explanation may show everything.
+- An exam page mounts every question of a section when the section starts, so
+  each figure's renderer code loads then, in parallel and off the timer, and
+  never on navigation. Every figure keeps its text alternative on the `figure`
+  element, so a slow device or a screen reader still has the full question.
+- The School editor writes a figure through its catalog schema
+  (`components/tenant/exams/figure/form.ts`): a teacher picks any catalog
+  figure, and the form reads each prop's control from its schema (text, rich text
+  with formulas between dollars, numbers, switches, fixed values, groups, lists,
+  shapes told apart by a tag, and JSON for a shape no control fits). The figure
+  saves only once its schema accepts it, and the schema's reasons show under
+  the form.
+- Checking the corpus against the catalog found renderer drift, fixed here:
+  `Mermaid` now takes a rich title and description and names its drawing by the
+  title's element instead of an `aria-label` that received an object, and
+  `QuadraticEquationReadingRoomProblem`, `NepotismStage`, and `BacterialGrowth`
+  draw the descriptions their lessons and articles wrote.
 
 ### 3. The interaction catalog follows QTI 3
 

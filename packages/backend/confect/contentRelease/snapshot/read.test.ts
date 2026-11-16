@@ -247,7 +247,8 @@ describe("contentRelease/snapshot/read", () => {
       const runtimeServices = yield* Effect.context<never>();
       const data = yield* makeProgramSnapshotData();
       const t = convexTest(schema, convexModules);
-      const batchSize = 3;
+      // Three batches hold the fixture: two full ones and the rest.
+      const batchSize = Math.ceil(data.rowJson.length / 3);
       yield* Effect.promise(() =>
         t.mutation((ctx) =>
           Effect.runPromiseWith(runtimeServices)(

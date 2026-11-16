@@ -16,14 +16,17 @@ import type { readFeaturedTryout } from "@/components/tryout/catalog/source.serv
 import { TryoutQuestionBody } from "@/components/tryout/runtime/question/body";
 
 /** The featured question's body, as the catalog decodes it: its prompt, its interaction, and its key. */
-type FeaturedTryout = Effect.Success<ReturnType<typeof readFeaturedTryout>>;
+type FeaturedBody = Extract<
+  Effect.Success<ReturnType<typeof readFeaturedTryout>>,
+  { readonly kind: "question" }
+>["body"];
 
 /**
  * The practice test row: its words on one side, and on the other a card with a
  * real question and its real choices, which answers itself once it is on
  * screen while Nina beside the title thinks, then cheers a right answer.
  */
-export function Tryout({ value }: { value: FeaturedTryout }) {
+export function Tryout({ value }: { value: FeaturedBody }) {
   const t = useTranslations("Landing");
   const responseId = "home-tryout-response";
 

@@ -98,6 +98,7 @@ beforeEach(() => {
         { appLocale: "en" },
         { appLocale: "id" },
         { appLocale: "de" },
+        { appLocale: "ms" },
       ],
     })
   );
@@ -129,6 +130,8 @@ describe("sitemap page catalog", () => {
         { id: "page_id", kind: "page", locale: "id" },
         { id: "quran_de", kind: "quran", locale: "de" },
         { id: "page_de", kind: "page", locale: "de" },
+        { id: "quran_ms", kind: "quran", locale: "ms" },
+        { id: "page_ms", kind: "page", locale: "ms" },
       ]);
     })
   );

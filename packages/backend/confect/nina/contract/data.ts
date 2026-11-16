@@ -4,6 +4,7 @@ import {
   ENGLISH_APP_LOCALE_CODE,
   GERMAN_APP_LOCALE_CODE,
   INDONESIAN_APP_LOCALE_CODE,
+  MALAY_APP_LOCALE_CODE,
 } from "@nakafa/aksara-contracts/locale";
 import { NakafaAgentQuranReferenceOptionsSchema } from "@repo/contents/agent/schema/quran/input";
 import { NakafaAgentReadOptionsSchema } from "@repo/contents/agent/schema/read";
@@ -84,6 +85,7 @@ const NakafaQuranDoneSchema = Schema.Union([
   makeQuranDoneSchema(ENGLISH_APP_LOCALE_CODE),
   makeQuranDoneSchema(INDONESIAN_APP_LOCALE_CODE),
   makeQuranDoneSchema(GERMAN_APP_LOCALE_CODE),
+  makeQuranDoneSchema(MALAY_APP_LOCALE_CODE),
 ]);
 const TaxonomyPreviewSchema = Schema.Struct({
   content_counts: Schema.Array(
