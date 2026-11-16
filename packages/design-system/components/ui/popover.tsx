@@ -4,6 +4,10 @@ import { PortalContainer } from "@repo/design-system/lib/portal";
 import { cn } from "cn";
 import { use } from "react";
 
+/**
+ * A small floating panel under its trigger, for a short form or details. Its header, body and footer keep one
+ * padding, and a padded child never adds its own.
+ */
 function Popover({ ...props }: PopoverPrimitive.Root.Props) {
   return <PopoverPrimitive.Root data-slot="popover" {...props} />;
 }

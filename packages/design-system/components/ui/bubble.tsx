@@ -20,6 +20,10 @@ const bubbleVariants = cva(
   }
 );
 
+/**
+ * The bubble of a chat message, holding its text. The author's name and the time stand above it in the message's
+ * header, never inside it.
+ */
 export function Bubble({
   variant = "default",
   align = "start",

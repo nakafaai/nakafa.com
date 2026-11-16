@@ -9,6 +9,10 @@ import type { ComponentProps } from "react";
 
 // Source: https://ui.shadcn.com/docs/components/base/message-scroller
 // Consumers compose the package's Provider directly; this file owns styling.
+/**
+ * The scrolling list of a conversation: it keeps the reader's place as messages arrive and shows a button back to
+ * the latest message.
+ */
 export function MessageScroller({
   className,
   ...props

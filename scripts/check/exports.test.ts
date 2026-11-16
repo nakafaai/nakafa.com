@@ -250,6 +250,8 @@ export const { tax } = source;
             "packages/backend/convex/notes/list.ts": text,
             "packages/backend/components/betterAuth/session.ts": text,
             "packages/design-system/components/ui/table.tsx": text,
+            "packages/design-system/catalog/page.tsx": text,
+            "packages/design-system/catalog/cards/badge.tsx": text,
             "packages/design-system/components/evilcharts/charts/area.tsx":
               text,
             "packages/cli/src/client.ts": text,

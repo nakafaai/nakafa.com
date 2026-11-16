@@ -101,57 +101,104 @@
 }
 
 :root {
+  /* The page ground. */
   --background: oklch(1 0 0);
+  /* Text and icons on the page ground. */
   --foreground: oklch(0.21033 0.00586 285.89);
+  /* The ground of a card or a section. */
   --card: oklch(1 0 0);
+  /* Text on a card. */
   --card-foreground: oklch(0.13706 0.03597 258.53);
+  /* The ground of a floating surface: a menu, a popover, a tooltip. */
   --popover: oklch(1 0 0);
+  /* Text on a floating surface. */
   --popover-foreground: oklch(0.13706 0.03597 258.53);
+  /* The brand ink, navy in light and sky in dark: the page's one primary action, links and headline marks. */
   --primary: oklch(0.28693 0.0744 261.92);
+  /* Text and icons on the primary fill. */
   --primary-foreground: oklch(0.98383 0.00348 247.86);
+  /* The primary's swap partner, a fill for supporting actions and selected states, never text. */
   --secondary: oklch(0.77498 0.1318 224.26);
+  /* Text and icons on the secondary fill. */
   --secondary-foreground: oklch(0.21033 0.00586 285.89);
+  /* A quiet fill: code, tables, blockquotes, skeletons and tab tracks. */
   --muted: oklch(0.96844 0.00682 247.9);
+  /* Secondary text and idle icons on the neutral grounds. */
   --muted-foreground: oklch(0.5125 0.04071 257.44);
+  /* The hover and focus fill of a row, an item or a ghost button. Some themes make it bold. */
   --accent: oklch(0.92682 0.01559 248);
+  /* Everything on an accent fill, marks and icons included. */
   --accent-foreground: oklch(0.20792 0.03991 265.73);
+  /* Errors, a wrong chosen answer and an action that deletes. */
   --destructive: oklch(0.56 0.21808 17.703);
+  /* Text and icons on the destructive fill. */
   --destructive-foreground: oklch(0.98383 0.00348 247.86);
+  /* A correct answer or a met requirement, always with a word or an icon. */
   --success: oklch(0.765 0.115 174);
+  /* Text and icons on the success fill. */
   --success-foreground: oklch(0.13706 0.03597 258.53);
+  /* The emphasis marker and warnings, always with a word or an icon. */
   --warning: oklch(0.825 0.135 83);
+  /* Text and icons on the warning fill. */
   --warning-foreground: oklch(0.13706 0.03597 258.53);
+  /* Info toasts and neutral notices, always with a word or an icon. */
   --info: oklch(0.755 0.125 230);
+  /* Text and icons on the info fill. */
   --info-foreground: oklch(0.13706 0.03597 258.53);
+  /* Hairlines between parts. Subtle by design. */
   --border: oklch(0.88 0.012 252.84);
+  /* The edge of a field. Subtle by design; a field reads by its placeholder and focus ring. */
   --input: oklch(0.86 0.012 252.84);
+  /* The focus ring. */
   --ring: oklch(0.28693 0.0744 261.92);
+  /* The first chart series. */
   --chart-1: oklch(0.28693 0.0744 261.92);
+  /* The second chart series. */
   --chart-2: oklch(0.64275 0.12097 224.26);
+  /* The third chart series. */
   --chart-3: oklch(0.62517 0.21808 17.703);
+  /* The fourth chart series, and the rule under lesson headings. */
   --chart-4: oklch(0.6625 0.13622 82.951);
+  /* The fifth chart series. */
   --chart-5: oklch(0.64475 0.11554 181.92);
+  /* The sidebar ground. */
   --sidebar: oklch(0.96844 0.00682 247.9);
+  /* Text and icons in the sidebar. */
   --sidebar-foreground: oklch(0.21033 0.00586 285.89);
+  /* The active marker in the sidebar. */
   --sidebar-primary: oklch(0.28693 0.0744 261.92);
+  /* Text on the sidebar's primary fill. */
   --sidebar-primary-foreground: oklch(0.98383 0.00348 247.86);
+  /* The hovered or current sidebar row. */
   --sidebar-accent: oklch(1 0 0);
+  /* Text and icons on a hovered or current sidebar row. */
   --sidebar-accent-foreground: oklch(0.21033 0.00586 285.89);
+  /* Hairlines in the sidebar. */
   --sidebar-border: oklch(0.88 0.012 252.84);
+  /* The focus ring in the sidebar. */
   --sidebar-ring: oklch(0.28693 0.0744 261.92);
+  /* The base radius every rounded shape derives from. Some themes change it. */
   --radius: 1rem;
+  /* The faintest lift. */
   --shadow-2xs: 0px 1px 4px 0px hsl(0 0% 0% / 0.03);
+  /* A card's lift, beside its hairline ring. */
   --shadow-xs: 0px 1px 4px 0px hsl(0 0% 0% / 0.03);
+  /* A small raised control. */
   --shadow-sm:
     0px 1px 4px 0px hsl(0 0% 0% / 0.05), 0px 1px 2px -1px hsl(0 0% 0% / 0.05);
+  /* A raised control. */
   --shadow:
     0px 1px 4px 0px hsl(0 0% 0% / 0.05), 0px 1px 2px -1px hsl(0 0% 0% / 0.05);
+  /* A filled button on hover, and a popover. */
   --shadow-md:
     0px 1px 4px 0px hsl(0 0% 0% / 0.05), 0px 2px 4px -1px hsl(0 0% 0% / 0.05);
+  /* A dialog. */
   --shadow-lg:
     0px 1px 4px 0px hsl(0 0% 0% / 0.05), 0px 4px 6px -1px hsl(0 0% 0% / 0.05);
+  /* A large floating surface. */
   --shadow-xl:
     0px 1px 4px 0px hsl(0 0% 0% / 0.05), 0px 8px 10px -1px hsl(0 0% 0% / 0.05);
+  /* The strongest lift. */
   --shadow-2xl: 0px 1px 4px 0px hsl(0 0% 0% / 0.13);
   color-scheme: light;
 }
@@ -220,10 +267,15 @@
  * the time of its swipe, which belong to the gesture. A transition that names
  * no curve or duration takes ease-out and ui. */
 @theme {
+  /* Interface motion that enters or leaves. */
   --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  /* A thing that moves from one place to another. */
   --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  /* The answer to a press. */
   --transition-duration-press: 120ms;
+  /* Menus, popovers, tooltips and colour changes. */
   --transition-duration-ui: 180ms;
+  /* Dialogs, sheets and the sidebar. */
   --transition-duration-surface: 240ms;
   --default-transition-duration: var(--transition-duration-ui);
   --default-transition-timing-function: var(--ease-out);
@@ -287,9 +339,13 @@
   --color-chart-5: var(--chart-5);
   /* Rendered content headings draw their rule in the validated chart mark. */
   --color-heading-rule: var(--chart-4);
+  /* Chips, menu items and the emphasis marker. */
   --radius-sm: calc(var(--radius) - 4px);
+  /* Controls: buttons, fields, badges and tabs. */
   --radius-md: calc(var(--radius) - 2px);
+  /* The base radius. */
   --radius-lg: var(--radius);
+  /* Cards, dialogs, block math and tables. */
   --radius-xl: calc(var(--radius) + 4px);
   --color-sidebar: var(--sidebar);
   --color-sidebar-foreground: var(--sidebar-foreground);
@@ -299,13 +355,21 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+  /* The faintest lift. */
   --shadow-2xs: var(--shadow-2xs);
+  /* A card's lift, beside its hairline ring. */
   --shadow-xs: var(--shadow-xs);
+  /* A small raised control. */
   --shadow-sm: var(--shadow-sm);
+  /* A raised control. */
   --shadow: var(--shadow);
+  /* A filled button on hover, and a popover. */
   --shadow-md: var(--shadow-md);
+  /* A dialog. */
   --shadow-lg: var(--shadow-lg);
+  /* A large floating surface. */
   --shadow-xl: var(--shadow-xl);
+  /* The strongest lift. */
   --shadow-2xl: var(--shadow-2xl);
   --animate-accordion-down: accordion-down var(--transition-duration-ui)
     var(--ease-out);

@@ -25,6 +25,10 @@ const attachmentVariants = cva(
   }
 );
 
+/**
+ * A file sent or added: its icon or image, its name and type, and its actions. Its border and inner padding stay the
+ * same on every side, in a message, a composer or a list of uploads.
+ */
 export function Attachment({
   className,
   state = "done",

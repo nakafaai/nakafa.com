@@ -1,0 +1,61 @@
+// @vitest-environment node
+
+import { describe, expect, it } from "@effect/vitest";
+import postcss from "postcss";
+import { catalogSheet } from "#catalog/sheet";
+
+const globals = `@import "tailwindcss";
+@import "./identity.css";
+@source "../../**/*.{ts,tsx}";
+@custom-variant dark (&:is(.dark *));
+:root {
+  --background: oklch(1 0 0);
+  --radius: 1rem;
+  color-scheme: light;
+}
+.dark {
+  --background: oklch(0.15 0.02 260);
+  --radius: 1rem;
+  color-scheme: dark;
+}
+@theme inline {
+  --font-sans: "Inter Variable", system-ui, sans-serif;
+}
+.geist-mono {
+  --font-geist-mono: "Geist Mono Variable";
+}
+`;
+
+describe("catalogSheet", () => {
+  const sheet = catalogSheet(postcss.parse(globals), "/ds/styles");
+
+  it("leaves the colors to the page and keeps the base radius and color scheme", () => {
+    expect(sheet).not.toContain("--background");
+    expect(sheet).toContain(
+      ":root {\n  --radius: 1rem;\n  color-scheme: light;\n}"
+    );
+    expect(sheet).toContain(
+      '[data-theme="dark"] {\n  --radius: 1rem;\n  color-scheme: dark;\n}'
+    );
+  });
+
+  it("follows the page's dark theme attribute", () => {
+    expect(sheet).toContain(
+      '@custom-variant dark (&:is([data-theme="dark"] *));'
+    );
+  });
+
+  it("reads its imports and classes from the design system by absolute path", () => {
+    expect(sheet).toContain('@import "/ds/styles/identity.css";');
+    expect(sheet).toContain('@source "/ds/styles/../components";');
+    expect(sheet).toContain('@source "/ds/styles/../catalog";');
+    expect(sheet).not.toContain("../../**");
+  });
+
+  it("names Inter and Geist Mono as the page loads them", () => {
+    expect(sheet).toContain(
+      '--font-sans: "Inter", "Inter Variable", system-ui, sans-serif;'
+    );
+    expect(sheet).toContain('--font-geist-mono: "Geist Mono"');
+  });
+});

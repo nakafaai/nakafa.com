@@ -12,6 +12,10 @@ export function MessageGroup({ className, ...props }: ComponentProps<"div">) {
   );
 }
 
+/**
+ * One chat message: the author's avatar beside it, the name and time in its header, the bubble or the answer as its
+ * content, and reactions and actions in its footer.
+ */
 export function Message({
   className,
   align = "start",

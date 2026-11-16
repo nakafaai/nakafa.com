@@ -79,6 +79,10 @@ const fieldVariants = cva(
   }
 );
 
+/**
+ * One form field: its label, its control, an optional description that adds what the label does not say, and its
+ * error. A `FieldGroup` spaces fields apart, and a label sits tight on its control.
+ */
 function Field({
   className,
   orientation = "vertical",

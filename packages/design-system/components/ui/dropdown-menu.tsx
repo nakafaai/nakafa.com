@@ -9,6 +9,10 @@ import type * as React from "react";
 import { use } from "react";
 import { useTranslations } from "use-intl";
 
+/**
+ * A menu of actions under its trigger. It reads as header, body and footer: its one-word `label`, its main actions,
+ * then a separator with Archive and Delete last. Every item shows the icon of its kind.
+ */
 function DropdownMenu({ ...props }: MenuPrimitive.Root.Props) {
   return <MenuPrimitive.Root data-slot="dropdown-menu" {...props} />;
 }

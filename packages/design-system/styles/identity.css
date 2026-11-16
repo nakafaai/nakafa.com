@@ -1,13 +1,22 @@
 /* The colors of Nina and of what she holds. They look the same in every theme. */
 @theme static {
+  /* Nina's body, the same in every theme. */
   --color-nina-body: oklch(0.77498 0.1318 224.26);
+  /* Nina's face and belly, the same in every theme. */
   --color-nina-face: #e3f6fe;
+  /* Nina's eyes and mouth, and text on the light pop colours. */
   --color-nina-ink: oklch(0.28693 0.0744 261.92);
+  /* A flat highlight and the sparkle. Text on it is nina-ink. */
   --color-pop-yellow: #f1cd1f;
+  /* A flat highlight. Text on it is white. */
   --color-pop-blue: #2878b1;
+  /* A flat highlight. Text on it is nina-ink. */
   --color-pop-orange: #fa6707;
+  /* A flat highlight that carries no text. */
   --color-pop-green: #58904d;
+  /* A flat highlight, never an error colour. Text on it is white. */
   --color-pop-red: #dc3437;
+  /* A soft flat ground. Text on it is nina-ink. */
   --color-pop-cream: #fff4cc;
 }
 

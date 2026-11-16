@@ -12,6 +12,10 @@ function getInputGroupControl(parentElement: HTMLElement | null) {
   );
 }
 
+/**
+ * A field with something attached to its edge: an icon, a prefix, or a button such as Send or Clear, all inside one
+ * border.
+ */
 function InputGroup({ className, ...props }: React.ComponentProps<"fieldset">) {
   return (
     <fieldset

@@ -39,12 +39,14 @@ const WORD_BREAK_PATTERN = /[^\w$]+/u;
 /**
  * Modules whose exports a framework reads by name, so no module imports them:
  * the TanStack Start route files and entry modules in the `src` directory of
- * an app, and the modules of the Convex functions folder and of a Convex
+ * an app, the modules of the Convex functions folder and of a Convex
  * component, whose functions and `experimental_reuseContext` the Convex runtime
- * reads from each namespace.
+ * reads from each namespace, and the design system catalog's page and cards,
+ * whose `Root`, `catalog`, `card` and `Preview` the bundle entry that its
+ * generator writes on each run reads.
  */
 const FRAMEWORK_MODULE_PATTERN =
-  /^(?:apps\/[^/]+\/src\/(?:routes\/.+|routeTree\.gen|router|server|start)|packages\/backend\/(?:convex|components\/[^/]+)\/.+)\.tsx?$/u;
+  /^(?:apps\/[^/]+\/src\/(?:routes\/.+|routeTree\.gen|router|server|start)|packages\/backend\/(?:convex|components\/[^/]+)\/.+|packages\/design-system\/catalog\/(?:page|cards\/[a-z]+))\.tsx?$/u;
 /**
  * The component sets that a registry ships: shadcn and EvilCharts. Each keeps
  * every part that its upstream ships, so a later update of a component applies

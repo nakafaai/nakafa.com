@@ -4,6 +4,9 @@ import { RadioGroup as RadioGroupPrimitive } from "@base-ui/react/radio-group";
 import { letterBubble } from "@repo/design-system/lib/bubble";
 import { cn } from "cn";
 
+/**
+ * One choice among a few options that all stay visible. For more than a handful use a `Select` or a `Picker`.
+ */
 function RadioGroup({ className, ...props }: RadioGroupPrimitive.Props) {
   return (
     <RadioGroupPrimitive

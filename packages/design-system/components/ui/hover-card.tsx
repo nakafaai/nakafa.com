@@ -4,6 +4,10 @@ import { PortalContainer } from "@repo/design-system/lib/portal";
 import { cn } from "cn";
 import { use } from "react";
 
+/**
+ * A preview that opens while a pointer rests on its trigger, such as a person's card over their name. It holds
+ * nothing a reader needs to act on, since touch screens never hover.
+ */
 function HoverCard({ ...props }: HoverCardPrimitive.Root.Props) {
   return <HoverCardPrimitive.Root data-slot="hover-card" {...props} />;
 }

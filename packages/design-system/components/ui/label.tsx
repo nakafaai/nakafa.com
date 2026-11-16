@@ -1,6 +1,9 @@
 import { cn } from "cn";
 import type * as React from "react";
 
+/**
+ * The name of a control, tied to it so a press on the label reaches the control.
+ */
 function Label({
   children,
   className,

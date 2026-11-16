@@ -10,6 +10,10 @@ import { useTranslations } from "use-intl";
 
 const SheetContext = createContext<SheetPrimitive.Root.Props["modal"]>(true);
 
+/**
+ * A panel that slides in from an edge, for details or editing beside the page. It reads as header, body and
+ * footer, closes from one X in its header's top right corner, and its footer holds its sentence and its one action.
+ */
 function Sheet({ modal = true, ...props }: SheetPrimitive.Root.Props) {
   return (
     <SheetContext value={modal}>

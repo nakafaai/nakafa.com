@@ -2,6 +2,10 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import { cn } from "cn";
 import { type ComponentProps, isValidElement, type ReactElement } from "react";
 
+/**
+ * An icon from the Hugeicons set at `size-4`, the largest an icon is drawn; a picture that needs more room is drawn
+ * artwork instead. An icon labels: pair it with words or give its control a tooltip.
+ */
 export function HugeIcons({
   className,
   strokeWidth = 2,
