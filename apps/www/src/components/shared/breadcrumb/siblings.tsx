@@ -59,10 +59,13 @@ function CrumbOptions({ siblings }: { siblings: CrumbSiblings }) {
  */
 export function BreadcrumbSiblingsSegment({
   className,
+  current,
   label,
   siblings,
 }: {
   className?: string;
+  /** Whether the crumb is the current page, which the path names as the page it ends at. */
+  current: boolean;
   /** The crumb's own name, which the path shows. */
   label: string;
   siblings: CrumbSiblings;
@@ -73,6 +76,7 @@ export function BreadcrumbSiblingsSegment({
         <DropdownMenuTrigger
           render={
             <button
+              aria-current={current ? "page" : undefined}
               className="hover:text-foreground data-popup-open:text-foreground focus-visible:ring-ring flex min-w-0 items-center gap-1 rounded-md transition-colors focus-visible:ring-2 focus-visible:outline-none"
               type="button"
             >
