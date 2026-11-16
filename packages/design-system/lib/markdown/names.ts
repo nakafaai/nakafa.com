@@ -105,6 +105,7 @@ export const chemistryComponentNames = {
   rutherfordScatteringLab: "RutherfordScatteringLab",
   subatomicParticlePropertiesLab: "SubatomicParticlePropertiesLab",
   subatomicParticlesLab: "SubatomicParticlesLab",
+  titrationLab: "TitrationLab",
   valenceElectronLab: "ValenceElectronLab",
 } as const;
 

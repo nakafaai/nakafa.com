@@ -5,13 +5,13 @@ import {
   AtomSymbolLab,
   DaltonEvidenceLab,
 } from "@/lib/content/renderer/client/chemistry/atom";
-import { ElectrolysisLab } from "@/lib/content/renderer/client/chemistry/electrochemistry";
 import {
   FizzBalanceLab,
   LavoisierCalxLab,
   PrecipitateLab,
   SteelWoolLab,
 } from "@/lib/content/renderer/client/chemistry/balance";
+import { ElectrolysisLab } from "@/lib/content/renderer/client/chemistry/electrochemistry";
 import {
   ElectronConfigurationLab,
   ValenceElectronLab,
@@ -43,6 +43,7 @@ import {
   ModernPeriodicTableLab,
   PeriodicPropertiesLab,
 } from "@/lib/content/renderer/client/chemistry/periodic";
+import { TitrationLab } from "@/lib/content/renderer/client/chemistry/quantitative";
 import {
   ChemicalReactionCharacteristicsLab,
   ChemicalReactionTypesLab,
@@ -208,6 +209,10 @@ export const chemistryRenderers = [
   {
     name: chemistryComponentNames.subatomicParticlesLab,
     component: SubatomicParticlesLab,
+  },
+  {
+    name: chemistryComponentNames.titrationLab,
+    component: TitrationLab,
   },
   {
     name: chemistryComponentNames.valenceElectronLab,
