@@ -5,6 +5,7 @@ import { encodeJsonText } from "@repo/utilities/json";
 import { Array as Arr, Option, Record as Rec } from "effect";
 import {
   learnsNoStreamAndNoMemory,
+  learnsNothingLive,
   learnsNothingOfWhoOwnsTheChat,
   learnsOnlyWhereTurnsStand,
   learnsWhatTurnsCost,
@@ -114,6 +115,20 @@ const reader = {
     streamsOf({ kind: "deltas", deltas: [] }),
   ],
 };
+
+describe("the check of an anonymous reader's page, which holds no client", () => {
+  it("passes for a page that was told nothing live", () => {
+    learnsNothingLive(given({}));
+  });
+
+  it("fails for a page that was told a live answer of the chat, its turns or its messages, and names the query", () => {
+    for (const [udfPath, answers] of Rec.toEntries(reader)) {
+      expect(() => learnsNothingLive(given({ [udfPath]: answers }))).toThrow(
+        `the live answers to ${udfPath} that the reader's page was told`
+      );
+    }
+  });
+});
 
 describe("the checks of what a page was told of a chat", () => {
   it("pass for the owner's page and a reader's page that were told what each is meant to be told", () => {

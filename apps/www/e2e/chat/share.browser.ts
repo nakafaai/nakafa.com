@@ -20,6 +20,7 @@ import {
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import {
   learnsNoStreamAndNoMemory,
+  learnsNothingLive,
   learnsNothingOfWhoOwnsTheChat,
   learnsOnlyWhereTurnsStand,
   learnsWhatTurnsCost,
@@ -83,16 +84,32 @@ const meetsNothing = (reader: Page, address: string) =>
   });
 
 /**
- * A reader's page loses the chat once the owner stops sharing, and it is the
- * same document: the page asked the server again, and was not reloaded.
+ * A signed-in learner's page loses the chat once the owner stops sharing, and it
+ * is the same document: its live query answered again, and it was not reloaded.
  */
-const losesTheChat = (reader: Page) =>
+const losesTheChat = (learner: Page) =>
   Effect.promise(async () => {
-    await expect(notAvailable(reader)).toBeVisible({
+    await expect(notAvailable(learner)).toBeVisible({
       timeout: ANSWER_MILLISECONDS,
     });
+    await expect(promptOf(learner, PROMPT)).toHaveCount(0);
+    expect(await learner.evaluate(() => Reflect.get(window, "kept"))).toBe(
+      true
+    );
+  });
+
+/**
+ * An anonymous reader's page holds no client, so a share the owner stopped
+ * reaches it on its next read: the page reloaded meets the card of a chat it
+ * cannot open.
+ */
+const losesTheChatOnItsNextLoad = (reader: Page) =>
+  Effect.promise(async () => {
+    await reader.reload();
+    await expect(notAvailable(reader)).toBeVisible({
+      timeout: readinessTimeoutMilliseconds,
+    });
     await expect(promptOf(reader, PROMPT)).toHaveCount(0);
-    expect(await reader.evaluate(() => Reflect.get(window, "kept"))).toBe(true);
   });
 
 /**
@@ -160,11 +177,12 @@ const sharesAndStops = Effect.fn("NakafaE2E.sharesAndStops")(function* (
         // 4. Another learner reads the chat, with no control to write.
         yield* readsByLink(member, origin, first.link, chatId);
 
-        // 5. The owner stops sharing: both pages lose the chat without a reload.
+        // 5. The owner stops sharing: the learner's page loses the chat without a
+        // reload, and the reader's page on its next load.
         yield* readsByLink(reader, origin, first.link, chatId);
         yield* Effect.promise(() => unshareChat(page, owner.changes));
-        yield* losesTheChat(reader);
         yield* losesTheChat(member);
+        yield* losesTheChatOnItsNextLoad(reader);
         yield* meetsNothing(reader, linkOn(origin, first.link));
 
         // 6. Sharing again makes a different link, and the first stays dead.
@@ -173,25 +191,26 @@ const sharesAndStops = Effect.fn("NakafaE2E.sharesAndStops")(function* (
         yield* meetsNothing(reader, linkOn(origin, first.link));
         yield* readsByLink(reader, origin, second.link, chatId);
 
-        // No reader sent a mutation or an action to the server. The pages of
-        // both were told where each turn stands and nothing of what it cost the
-        // owner, nothing of the account that owns the chat, no live stream, no
-        // part of a memory call and no report of the provider. The owner's own
-        // page was told what the turn cost and which account owns the chat.
+        // No reader sent a mutation or an action to the server. The anonymous
+        // reader holds no client, so its page was told nothing live. The other
+        // learner's page was told where each turn stands and nothing of what it
+        // cost the owner, nothing of the account that owns the chat, no live
+        // stream, no part of a memory call and no report of the provider. The
+        // owner's own page was told what the turn cost and which account owns it.
         yield* Effect.sync(() => {
           expect(readerChanges.sent).toBe(0);
           expect(memberChanges.sent).toBe(memberSent);
           learnsWhatTurnsCost(owner.changes);
           learnsWhoOwnsTheChat(owner.changes);
-          for (const readerSide of [readerChanges, memberChanges]) {
-            learnsOnlyWhereTurnsStand(readerSide);
-            learnsNothingOfWhoOwnsTheChat(readerSide);
-            learnsNoStreamAndNoMemory(readerSide);
-          }
+          learnsNothingLive(readerChanges);
+          learnsOnlyWhereTurnsStand(memberChanges);
+          learnsNothingOfWhoOwnsTheChat(memberChanges);
+          learnsNoStreamAndNoMemory(memberChanges);
         });
 
-        // 7. No request of the reader's page holds a token, to any host, and the
-        // analytics it sent were answered and named no fragment.
+        // 7. No request of the reader's page holds a token, to any host, beyond its
+        // own read of the chat, and the analytics it sent were answered and named
+        // no fragment.
         yield* Effect.promise(() =>
           expect
             .poll(
@@ -202,12 +221,13 @@ const sharesAndStops = Effect.fn("NakafaE2E.sharesAndStops")(function* (
             .toBe(true)
         );
         yield* Effect.sync(() => {
-          expect(requests.carry(first.token)).toBe(false);
-          expect(requests.carry(second.token)).toBe(false);
+          expect(requests.carryBeyondTheRead(first.token, origin)).toEqual([]);
+          expect(requests.carryBeyondTheRead(second.token, origin)).toEqual([]);
           expect(
             Arr.difference(requests.hosts(), [
               new URL(origin).host,
               new URL(owner.changes.origin).host,
+              ...requests.analyticsHosts(),
             ])
           ).toEqual([]);
           expect(Arr.map(requests.pageviews(), ({ url }) => url)).toContain(

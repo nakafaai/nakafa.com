@@ -162,6 +162,19 @@ export const learnsWhatTurnsCost = (page: Answered) => {
 };
 
 /**
+ * An anonymous reader's page holds no client: it reads a shared chat once through the server, and is
+ * told nothing over a live query of the chat, its turns or its messages.
+ */
+export const learnsNothingLive = (page: Answered) => {
+  for (const udfPath of [CONVERSATION, TURNS, MESSAGES]) {
+    expect(
+      page.answersTo(udfPath),
+      `the live answers to ${udfPath} that the reader's page was told`
+    ).toEqual([]);
+  }
+};
+
+/**
  * What a reader's page was told of the turns of a shared chat: where each
  * stands and which prompt it answers, with an empty list of usage. None of
  * what a turn cost the owner, what Nina kept from it or what she suggests next

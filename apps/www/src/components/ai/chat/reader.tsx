@@ -45,7 +45,8 @@ const refuse = (): false => false;
  * The page of a shared chat for a reader, who holds no client. The token of the
  * link lives in the fragment, which the server never sees, so the header renders
  * on the server and the chat is read here, with the token in the body of the
- * request. While the learner's session still loads, only the header shows.
+ * request. While the learner's session still loads, only the header shows. A
+ * share its owner stops reaches the reader on its next read: a reload, or Retry.
  */
 export function ReaderChatPage({
   chatId,
