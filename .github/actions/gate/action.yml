@@ -33,8 +33,17 @@ runs:
       env:
         PARTS: ${{ steps.parts.outputs.states }}
       run: |
+        # GitHub's API now and then drops a call. A status post is idempotent per
+        # context, so a dropped call is sent again, failing only after the third.
+        retry() {
+          for attempt in 1 2 3; do
+            "$@" && return 0
+            [ "$attempt" = 3 ] || sleep 5
+          done
+          return 1
+        }
         post() {
-          gh api --silent "repos/$GITHUB_REPOSITORY/statuses/$SHA" \
+          retry gh api --silent "repos/$GITHUB_REPOSITORY/statuses/$SHA" \
             -f state="$2" -f context="$1" -f target_url="$URL" -f description="$3"
         }
         all=failure

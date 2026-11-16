@@ -141,11 +141,20 @@ jobs:
       # pending: this job may start after that shard has already posted it.
       - name: Mark the gate pending
         run: |
+          # GitHub's API now and then drops a call. A status post is idempotent per
+          # context, so a dropped call is sent again, failing only after the third.
+          retry() {
+            for attempt in 1 2 3; do
+              "$@" && return 0
+              [ "$attempt" = 3 ] || sleep 5
+            done
+            return 1
+          }
           [[ "$SHA" =~ ^[0-9a-f]{40}$ ]] || { echo "sha must be a full lower-case commit SHA." >&2; exit 1; }
           contexts=(gate gate/static gate/www)
           [ -z "$VERIFY" ] || contexts+=(verify)
           for context in "${contexts[@]}"; do
-            gh api --silent "repos/$GITHUB_REPOSITORY/statuses/$SHA" \
+            retry gh api --silent "repos/$GITHUB_REPOSITORY/statuses/$SHA" \
               -f state=pending -f context="$context" -f target_url="$URL" -f description="Verifying"
           done
 
@@ -215,13 +224,22 @@ jobs:
           STATIC: ${{ steps.static.outcome }}
           WWW: ${{ steps.www.outcome }}
         run: |
+          # GitHub's API now and then drops a call. A status post is idempotent per
+          # context, so a dropped call is sent again, failing only after the third.
+          retry() {
+            for attempt in 1 2 3; do
+              "$@" && return 0
+              [ "$attempt" = 3 ] || sleep 5
+            done
+            return 1
+          }
           echo "known<<EOF" >> "$GITHUB_OUTPUT"
           for part in static www; do
             name=${part^^}
             outcome=${!name}
             state=failure
             [ "$outcome" = success ] && state=success
-            gh api --silent "repos/$GITHUB_REPOSITORY/statuses/$SHA" \
+            retry gh api --silent "repos/$GITHUB_REPOSITORY/statuses/$SHA" \
               -f state="$state" -f context="gate/$part" -f target_url="$URL" -f description="${outcome:-did not run}"
             echo "gate/$part=$state" >> "$GITHUB_OUTPUT"
           done
@@ -277,7 +295,16 @@ jobs:
       - name: Mark the backend part pending
         if: matrix.shard == 1
         run: |
-          gh api --silent "repos/$GITHUB_REPOSITORY/statuses/$SHA" \
+          # GitHub's API now and then drops a call. A status post is idempotent per
+          # context, so a dropped call is sent again, failing only after the third.
+          retry() {
+            for attempt in 1 2 3; do
+              "$@" && return 0
+              [ "$attempt" = 3 ] || sleep 5
+            done
+            return 1
+          }
+          retry gh api --silent "repos/$GITHUB_REPOSITORY/statuses/$SHA" \
             -f state=pending -f context=gate/backend -f target_url="$URL" -f description="Verifying"
 
       # Coverage counts the files changed since origin/main, and turbo measures
@@ -296,6 +323,15 @@ jobs:
       - name: Ask whether the head reaches the backend
         id: affected
         run: |
+          # GitHub's API now and then drops a call. A status post is idempotent per
+          # context, so a dropped call is sent again, failing only after the third.
+          retry() {
+            for attempt in 1 2 3; do
+              "$@" && return 0
+              [ "$attempt" = 3 ] || sleep 5
+            done
+            return 1
+          }
           set -o pipefail
           tasks=1
           if [ -n "$AFFECTED" ]; then
@@ -305,7 +341,7 @@ jobs:
           # Anything but a count fails the step, so the shards report it instead of guessing.
           [[ "$tasks" =~ ^[0-9]+$ ]] || { echo "turbo answered no task count: '$tasks'" >&2; exit 1; }
           echo "tasks=$tasks" >> "$GITHUB_OUTPUT"
-          [ "$tasks" != 0 ] || [ "$SHARD" != 1 ] || gh api --silent "repos/$GITHUB_REPOSITORY/statuses/$SHA" \
+          [ "$tasks" != 0 ] || [ "$SHARD" != 1 ] || retry gh api --silent "repos/$GITHUB_REPOSITORY/statuses/$SHA" \
             -f state=success -f context=gate/backend -f target_url="$URL" -f description="The head changes nothing the backend suite reads"
 
       - name: Post the gate
@@ -345,9 +381,18 @@ jobs:
         env:
           OUTCOME: ${{ steps.shard.outcome }}
         run: |
+          # GitHub's API now and then drops a call. A status post is idempotent per
+          # context, so a dropped call is sent again, failing only after the third.
+          retry() {
+            for attempt in 1 2 3; do
+              "$@" && return 0
+              [ "$attempt" = 3 ] || sleep 5
+            done
+            return 1
+          }
           state=failure
           [ "$OUTCOME" = success ] && state=success
-          gh api --silent "repos/$GITHUB_REPOSITORY/statuses/$SHA" \
+          retry gh api --silent "repos/$GITHUB_REPOSITORY/statuses/$SHA" \
             -f state="$state" -f context="gate/backend-$SHARD" -f target_url="$URL" -f description="${OUTCOME:-did not run}"
           echo "known=gate/backend-$SHARD=$state" >> "$GITHUB_OUTPUT"
 
@@ -390,9 +435,18 @@ jobs:
         env:
           OUTCOME: ${{ steps.merge.outcome }}
         run: |
+          # GitHub's API now and then drops a call. A status post is idempotent per
+          # context, so a dropped call is sent again, failing only after the third.
+          retry() {
+            for attempt in 1 2 3; do
+              "$@" && return 0
+              [ "$attempt" = 3 ] || sleep 5
+            done
+            return 1
+          }
           state=failure
           [ "$OUTCOME" = success ] && state=success
-          gh api --silent "repos/$GITHUB_REPOSITORY/statuses/$SHA" \
+          retry gh api --silent "repos/$GITHUB_REPOSITORY/statuses/$SHA" \
             -f state="$state" -f context=gate/backend -f target_url="$URL" -f description="${OUTCOME:-did not run}"
           echo "known=gate/backend=$state" >> "$GITHUB_OUTPUT"
 
@@ -526,6 +580,15 @@ jobs:
       - name: Mark the engines pending
         if: env.ENGINES != ''
         run: |
+          # GitHub's API now and then drops a call. A status post is idempotent per
+          # context, so a dropped call is sent again, failing only after the third.
+          retry() {
+            for attempt in 1 2 3; do
+              "$@" && return 0
+              [ "$attempt" = 3 ] || sleep 5
+            done
+            return 1
+          }
           contexts=(proof)
           for engine in $ENGINES; do
             contexts+=("proof/$engine")
@@ -533,7 +596,7 @@ jobs:
           done
           [ "$VERIFY" != group ] || contexts+=(verify)
           for context in "${contexts[@]}"; do
-            gh api --silent "repos/$GITHUB_REPOSITORY/statuses/$SHA" \
+            retry gh api --silent "repos/$GITHUB_REPOSITORY/statuses/$SHA" \
               -f state=pending -f context="$context" -f target_url="$URL" -f description="Verifying"
           done
 
@@ -746,8 +809,17 @@ jobs:
         # A selection that failed posts its own engine's failure, so no status waits.
         if: always() && (env.ENGINES != '' || steps.select.outcome != 'success')
         run: |
+          # GitHub's API now and then drops a call. A status post is idempotent per
+          # context, so a dropped call is sent again, failing only after the third.
+          retry() {
+            for attempt in 1 2 3; do
+              "$@" && return 0
+              [ "$attempt" = 3 ] || sleep 5
+            done
+            return 1
+          }
           post() {
-            gh api --silent "repos/$GITHUB_REPOSITORY/statuses/$SHA" \
+            retry gh api --silent "repos/$GITHUB_REPOSITORY/statuses/$SHA" \
               -f state="$2" -f context="$1" -f target_url="$URL" -f description="$3"
           }
           for engine in ${ENGINES:-$ENGINE}; do
@@ -785,9 +857,18 @@ jobs:
         env:
           STATES: ${{ steps.shards.outputs.states }}
         run: |
+          # GitHub's API now and then drops a call. A status post is idempotent per
+          # context, so a dropped call is sent again, failing only after the third.
+          retry() {
+            for attempt in 1 2 3; do
+              "$@" && return 0
+              [ "$attempt" = 3 ] || sleep 5
+            done
+            return 1
+          }
           state=failure
           [ "$(jq 'all(.[]; . == "success")' <<< "$STATES")" = true ] && state=success
-          gh api --silent "repos/$GITHUB_REPOSITORY/statuses/$SHA" \
+          retry gh api --silent "repos/$GITHUB_REPOSITORY/statuses/$SHA" \
             -f state="$state" -f context="proof/$ENGINE" -f target_url="$URL" -f description="$TOTAL shards: $state"
           echo "known=proof/$ENGINE=$state" >> "$GITHUB_OUTPUT"
 
@@ -807,9 +888,18 @@ jobs:
         env:
           STATES: ${{ steps.engines.outputs.states }}
         run: |
+          # GitHub's API now and then drops a call. A status post is idempotent per
+          # context, so a dropped call is sent again, failing only after the third.
+          retry() {
+            for attempt in 1 2 3; do
+              "$@" && return 0
+              [ "$attempt" = 3 ] || sleep 5
+            done
+            return 1
+          }
           all=failure
           [ "$(jq 'all(.[]; . == "success")' <<< "$STATES")" = true ] && all=success
-          gh api --silent "repos/$GITHUB_REPOSITORY/statuses/$SHA" \
+          retry gh api --silent "repos/$GITHUB_REPOSITORY/statuses/$SHA" \
             -f state="$all" -f context=proof -f target_url="$URL" -f description="Chromium, Firefox and WebKit: $all"
 
       - name: Post the group's verdict
