@@ -303,3 +303,14 @@ Chunk 1 (#2338, #2340, #2370, #2410 and #2472, a linked stack that touches share
 2. **Build concurrency: 4.** Four groups take 16 of the account's 20 concurrent jobs, and the pull request gates and Aksara take the rest. `max_entries_to_build: 4`.
 3. **A large group goes last.** Groups merge in queue order, so a group that selects every suite holds every group behind it until its run ends. Main orders the queue by the size of each entry's selection (`scripts/proof/select.ts`), smallest first, and moves an entry whose selection reaches most suites behind the rest.
 4. **The timeout comes back down** once an engine whose specs run longer than about 20 minutes is sharded across more jobs, as point 4 of "The Landing Queue" decided, and once main fails no spec, so a group's longest run is again its slowest shard.
+
+## Amendment: Headed Firefox For WebGL Alone, 16 November 2026
+
+#2532 (15 November) ran every Firefox project of the proof in a window on one virtual display (`xvfb-run`, `PLAYWRIGHT_FIREFOX_HEADED`), because headless Firefox on Linux finds no GL driver and no 3D spec had ever been proven in Firefox. The windows of one display stack, and Firefox stops painting a window that another covers: its CSS transitions hold at their first frame, and Base UI keeps a closing sheet until its exit animation ends. The memory editor spec failed in learner-firefox in both tries of merge group run 43831876003 at `e2e/support/worst.ts:118`, the editor still mounted after Escape, its sheet `data-closed data-ending-style` with both animations running at 0 ms. On a Mac, headed with four workers it failed 2 of 40 runs, headed with one worker 0 of 40, and headless 0 of 160.
+
+### Decision
+
+1. **Headed only where WebGL is needed.** Under the proof, `visual-firefox` alone runs headed (`headed` in `apps/www/playwright.config.ts`), and every other Firefox project, the School's included, runs headless. Every Firefox project still forces `webgl.force-enabled`.
+2. **One window at a time.** `visual-firefox` runs one worker when headed, so no window covers another. One display per worker would need a worker fixture that starts, addresses and stops an Xvfb of its own for each Firefox it launches; one worker needs one line of configuration.
+3. **No WebGL outside the visual project.** WebGL draws only in the content visuals (`packages/design-system/components/three` and `components/contents`). The one spec outside the visual project that waited on a scene's canvas, `e2e/seo/contracts.browser.ts`, now checks only that the served lesson ships its scenes without a canvas; `e2e/scene/lines.browser.ts` reveals every scene of the same lesson in the visual project. A new spec that needs a WebGL scene belongs to the visual project.
+

@@ -27,10 +27,7 @@ import { signInLearner } from "@/e2e/support/learner";
 import { waitForCommittedAppRouter } from "@/e2e/support/navigation/readiness";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { MATH_SCENE, mathSceneCards } from "@/e2e/support/selector";
-import {
-  readinessTimeoutMilliseconds,
-  revealTimeoutMilliseconds,
-} from "@/e2e/support/timeout";
+import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { waitUntilTakenOver } from "@/e2e/support/window";
 
 const APP_ORIGIN = "https://nakafa.com";
@@ -304,17 +301,11 @@ const verifyContentRoute = Effect.fn("NakafaE2E.verifyContentRoute")(function* (
   const card = mathSceneCards(page).filter({ visible: true }).first();
   const scene = card.locator(MATH_SCENE);
   const canvases = page.locator("canvas");
+  // The served lesson ships its scenes without a canvas: each draws one only
+  // once the reader nears it, which `e2e/scene/lines.browser.ts` proves for
+  // every scene of this lesson in the visual project, where Firefox has WebGL.
   yield* Effect.promise(() => expect(scene).toBeAttached());
   yield* Effect.promise(() => expect(canvases).toHaveCount(0));
-  // Reveal the content-visibility card before scrolling its deferred scene.
-  yield* Effect.promise(() =>
-    expect(async () => {
-      await card.scrollIntoViewIfNeeded();
-      await expect(scene).toBeVisible();
-      await scene.scrollIntoViewIfNeeded();
-      expect(await scene.locator("canvas").isVisible()).toBe(true);
-    }).toPass({ timeout: revealTimeoutMilliseconds })
-  );
 });
 
 for (const group of contentRouteGroups) {
