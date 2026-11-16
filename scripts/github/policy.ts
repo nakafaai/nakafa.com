@@ -46,7 +46,7 @@ const RELEASE_READS = `${STAGE_READS}${expression("steps.release.outputs.id")}-`
 const PREPARED_PATHS = `${expression("runner.temp")}/snapshots\n~/.cache/convex/binaries\n`;
 
 /** The key of a proof machine's browsers: one Playwright release's builds of the engines it runs. */
-const PLAYWRIGHT_BROWSERS = `playwright-${expression("runner.os")}-${expression("runner.arch")}-${expression("steps.playwright.outputs.version")}-${expression("join(matrix.engines, '-')")}`;
+const PLAYWRIGHT_BROWSERS = `playwright-${expression("runner.os")}-${expression("runner.arch")}-${expression("steps.playwright.outputs.version")}-${expression("env.ENGINES_KEY")}`;
 
 /** The key of the browsers that the warming of main saves: those of the machine that runs all three engines. */
 const PLAYWRIGHT_ALL_BROWSERS = `playwright-${expression("runner.os")}-${expression("runner.arch")}-${expression("steps.playwright.outputs.version")}-chromium-firefox-webkit`;
@@ -63,7 +63,7 @@ export const GITHUB_ACTION_REVIEWS = Schema.decodeSync(
     expectedTag: "v7.0.1",
     expectedUsages: 6,
     reason:
-      "Checkout is pinned to the latest reviewed stable release. The CLI publication and the deploy workflow each check out the commit, and the proof workflow checks out the verified head (a pull request's, a merge group's or a dispatched one) without credentials: its gate job and its backend shard job, which the matrix runs once per shard, with the whole history, its proof job, which the matrix runs once, or once per engine when a run proves every suite, and its warming of main's caches on a push to main.",
+      "Checkout is pinned to the latest reviewed stable release. The CLI publication and the deploy workflow each check out the commit, and the proof workflow checks out the verified head (a pull request's, a merge group's or a dispatched one) without credentials: its gate job and its backend shard job, which the matrix runs once per shard, with the whole history, its proof job, which the matrix runs once per engine, and its warming of main's caches on a push to main.",
   },
   {
     action: "oven-sh/setup-bun",

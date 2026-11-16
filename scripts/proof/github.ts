@@ -90,16 +90,28 @@ function gateOf(run: RunView) {
   });
 }
 
+/** Whether a job prepared a runtime: an engine job that a small selection left to the Chromium job skipped it. */
+const prepared = (job: RunView["jobs"][number]) =>
+  Arr.some(
+    job.steps,
+    (step) => step.name === "Prepare" && step.conclusion !== "skipped"
+  );
+
 /**
  * The phases of a run in seconds, read from the steps of all its jobs. The
- * engines run side by side, so a phase runs from the first of its steps to
+ * machines run side by side, so a phase runs from the first of its steps to
  * start to the last to end, and a phase that any job left unfinished has none.
- * The queue runs from the dispatch to the first job that started.
+ * A step a job skipped, as an engine job does when one machine runs all three
+ * engines, counts for no phase. The queue runs from the dispatch to the first
+ * job that started.
  */
 export function runTimings(run: RunView) {
   const steps = stepsOf(run);
   const duration = (names: readonly string[]) => {
-    const spans = Arr.filter(steps, (step) => Arr.contains(names, step.name));
+    const spans = Arr.filter(
+      steps,
+      (step) => step.conclusion !== "skipped" && Arr.contains(names, step.name)
+    );
     return Option.gen(function* () {
       const starts = yield* momentsOf(Arr.map(spans, (span) => span.startedAt));
       const ends = yield* momentsOf(Arr.map(spans, (span) => span.completedAt));
@@ -121,9 +133,14 @@ export function runTimings(run: RunView) {
     }),
     gate: duration(GATE_STEPS),
     prepare: duration(["Prepare"]),
-    restored: Option.map(
-      Arr.findFirst(steps, (one) => one.name === "Save the prepared runtime"),
-      (one) => one.conclusion === "skipped"
+    restored: Option.flatMap(Arr.findFirst(jobsOf(run), prepared), (job) =>
+      Option.map(
+        Arr.findFirst(
+          job.steps,
+          (one) => one.name === "Save the prepared runtime"
+        ),
+        (one) => one.conclusion === "skipped"
+      )
     ),
     build: duration(["Build"]),
     specs: duration(["Run specs"]),
