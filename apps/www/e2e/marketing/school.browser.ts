@@ -166,6 +166,29 @@ const readOpacity = (page: Page, selector: string) =>
   }, selector);
 
 /**
+ * Marks the page once Nina's dots show in the forum, from the next frame on, so a check that reaches the chat after
+ * her reply has landed still knows the dots played.
+ */
+const watchTyping = (page: Page) =>
+  page.evaluate(() => {
+    const look = () => {
+      const dots = document.querySelector("#forum [data-typing]");
+      if (dots !== null && Number(getComputedStyle(dots).opacity) > 0) {
+        document.documentElement.dataset.typingSeen = "";
+        return;
+      }
+      requestAnimationFrame(look);
+    };
+    requestAnimationFrame(look);
+  });
+
+/** Whether the page saw Nina's dots in the forum. */
+const readTypingSeen = (page: Page) =>
+  page.evaluate(
+    () => document.documentElement.dataset.typingSeen !== undefined
+  );
+
+/**
  * The forum and the library play as a reader meets them, and stay inside the page. Nina's dots breathe in the forum and
  * her reply lands where they stood; an emoji takes a press, and a message the reader sends lands in the open chat. A
  * wide screen shows the list of chats beside the chat: its search narrows the list, and a press opens another chat.
@@ -174,24 +197,27 @@ const readOpacity = (page: Page, selector: string) =>
 const verifyForumAndLibrary = Effect.fn("NakafaE2E.verifyForumAndLibrary")(
   function* (page: Page, wide: boolean) {
     yield* loadMarketingPage(page, "/en/school");
+    yield* Effect.promise(() => watchTyping(page));
     const forum = page.locator("#forum");
     const composer = forum.getByRole("textbox", { name: "Write a message" });
     yield* stepTo(page, composer);
     yield* Effect.promise(() =>
-      expect
-        .poll(() => readOpacity(page, "#forum [data-typing]"))
-        .toBeGreaterThan(0)
+      expect.poll(() => readTypingSeen(page)).toBe(true)
     );
     yield* Effect.promise(() =>
       expect.poll(() => readOpacity(page, "#forum [data-arrive]")).toBe(1)
     );
     yield* Effect.promise(() =>
       expect(
-        forum.getByText("I put a short summary of chapter 3 next to it.")
+        forum.getByText("I put a short summary of chapter 3 next to it.", {
+          exact: true,
+        })
       ).toBeVisible()
     );
     yield* Effect.promise(() =>
-      expect(forum.getByText("Momentum worksheet.pdf")).toBeVisible()
+      expect(
+        forum.getByText("Momentum worksheet.pdf", { exact: true })
+      ).toBeVisible()
     );
     yield* Effect.promise(() =>
       expect(forum.getByText("3 replies", { exact: true })).toBeVisible()
@@ -224,7 +250,9 @@ const verifyForumAndLibrary = Effect.fn("NakafaE2E.verifyForumAndLibrary")(
       );
       yield* Effect.promise(() =>
         expect(
-          forum.getByText("Here's our graph from the cart lab.")
+          forum.getByText("Here's our graph from the cart lab.", {
+            exact: true,
+          })
         ).toBeVisible()
       );
       yield* Effect.promise(() =>
@@ -236,7 +264,9 @@ const verifyForumAndLibrary = Effect.fn("NakafaE2E.verifyForumAndLibrary")(
     const shelf = page
       .locator("#library")
       .getByRole("img", { name: "A chapter's shelf in the class library" });
-    yield* stepTo(page, shelf);
+    // The shelf is taller than a phone's screen, so the page steps to the video that arrives on it.
+    yield* stepTo(page, page.locator("#library [data-arriving]"));
+    yield* Effect.promise(() => expect(shelf).toBeVisible());
     yield* Effect.promise(() =>
       expect
         .poll(() => readOpacity(page, "#library [data-uploading]"))

@@ -128,7 +128,7 @@ function ForumRail() {
   return (
     <nav
       aria-label={t("channels-title")}
-      className="hidden min-h-0 flex-col gap-3 border-e p-3 md:flex"
+      className="hidden min-h-0 min-w-0 flex-col gap-3 border-e p-3 md:flex"
     >
       <InputGroup>
         <InputGroupAddon>
@@ -141,7 +141,7 @@ function ForumRail() {
           value={query}
         />
       </InputGroup>
-      <ul className="grid gap-0.5">
+      <ul className="grid min-w-0 grid-cols-1 gap-0.5">
         {Arr.map(shown, (channel) => (
           <RailItem channel={channel} key={channel} />
         ))}
@@ -197,7 +197,7 @@ export function SchoolForum() {
       <FeatureProduct>
         <RoomProvider>
           <Card className="mx-auto w-full max-w-5xl gap-0 py-0">
-            <div className="grid min-h-0 md:h-144 md:grid-cols-[17rem_minmax(0,1fr)]">
+            <div className="grid min-h-0 md:h-168 md:grid-cols-[17rem_minmax(0,1fr)]">
               <ForumRail />
               <section className="flex min-h-0 min-w-0 flex-col">
                 <ChatHead />

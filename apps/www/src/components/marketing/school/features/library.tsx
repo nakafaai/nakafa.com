@@ -149,7 +149,7 @@ function ShelfFiles() {
   const format = useFormatter();
 
   return (
-    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-6">
+    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4">
       <ShelfCard
         icon={Pdf02Icon}
         kind={t("demo-kind-pdf")}
@@ -182,7 +182,7 @@ function ShelfFiles() {
         kind={t("demo-kind-lesson")}
         meta="nakafa.com"
         name={t("demo-library-lesson")}
-        step={4}
+        step={1}
       >
         <ShelfLesson />
       </ShelfCard>
@@ -191,7 +191,7 @@ function ShelfFiles() {
         kind={t("demo-kind-tryout")}
         meta={t("demo-library-questions", { count: 10 })}
         name={t("demo-library-quiz")}
-        step={5}
+        step={2}
       >
         <ShelfQuestion />
       </ShelfCard>
@@ -201,7 +201,7 @@ function ShelfFiles() {
           kind={t("demo-kind-video")}
           meta={format.number(4, { style: "unit", unit: "minute" })}
           name={t("demo-library-video")}
-          step={6}
+          step={3}
         >
           <ShelfVideo fresh={t("demo-library-new")} />
         </ShelfCard>

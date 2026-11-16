@@ -37,7 +37,13 @@ export function ShelfFolder({
   tone: NonNullable<VariantProps<typeof folderVariants>["tone"]>;
 }) {
   return (
-    <div className={stepVariants({ className: "grid min-w-0 gap-2", step })}>
+    <div
+      className={stepVariants({
+        className:
+          "grid min-w-0 gap-2 sm:grid-cols-[4rem_minmax(0,1fr)] sm:items-center sm:gap-3",
+        step,
+      })}
+    >
       <div className="relative aspect-4/3">
         <div className={folderVariants({ part: "tab", tone })} />
         <div className="bg-background ring-foreground/10 absolute inset-x-[12%] top-[14%] h-1/2 -rotate-3 rounded-md ring-1" />
@@ -71,7 +77,7 @@ export function ShelfCard({
   kind: string;
   meta: string;
   name: string;
-  step: 1 | 2 | 3 | 4 | 5 | 6;
+  step: 1 | 2 | 3;
 }) {
   return (
     <div
@@ -81,13 +87,16 @@ export function ShelfCard({
         step,
       })}
     >
-      <div className="bg-muted/50 relative aspect-4/3 overflow-hidden border-b">
+      <div className="bg-muted/50 relative aspect-4/3 overflow-hidden border-b sm:aspect-video">
         {children}
       </div>
       <div className="grid min-w-0 gap-1 p-3">
-        <p className="flex min-w-0 items-center gap-2 text-sm font-medium">
-          <HugeIcons className="text-muted-foreground shrink-0" icon={icon} />
-          <span className="truncate">{name}</span>
+        <p className="flex min-w-0 items-start gap-2 text-sm font-medium">
+          <HugeIcons
+            className="text-muted-foreground mt-0.5 shrink-0"
+            icon={icon}
+          />
+          <span className="line-clamp-2">{name}</span>
         </p>
         <p className="text-muted-foreground flex min-w-0 justify-between gap-2 text-xs">
           <span className="truncate">{kind}</span>

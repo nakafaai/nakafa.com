@@ -66,12 +66,25 @@ const LESSON_MAX_DECODED_BYTES = 3_837_000;
 // leaves the rest of that count to its stylesheets, fonts, images and ads.
 const ROUTE_MAX_SCRIPTS = 120;
 
+// The School landing, whose forum stands under its hero, near enough to the
+// first screen to load its chat and composer: 713,942 encoded / 2,141,799
+// decoded, 45 scripts, measured on 16 November 2026.
+const SCHOOL_MAX_ENCODED_BYTES = 757_000;
+const SCHOOL_MAX_DECODED_BYTES = 2_271_000;
+
 const routeBudgets = [
   {
     decodedBodySize: HOMEPAGE_MAX_DECODED_BYTES,
     encodedBodySize: HOMEPAGE_MAX_ENCODED_BYTES,
     href: "/en",
     name: "English homepage no-scroll graph",
+    signedIn: false,
+  },
+  {
+    decodedBodySize: SCHOOL_MAX_DECODED_BYTES,
+    encodedBodySize: SCHOOL_MAX_ENCODED_BYTES,
+    href: "/en/school",
+    name: "English School landing no-scroll graph",
     signedIn: false,
   },
   {
