@@ -3,6 +3,7 @@ import {
   VectorArrow,
   type VectorArrowHandle,
 } from "@repo/design-system/components/contents/physics/solid/arrow";
+import { Guide } from "@repo/design-system/components/contents/physics/vector/solid/guide";
 import type { CoordinateTuple } from "@repo/design-system/components/three/frame";
 import { useLayoutEffect, useRef } from "react";
 import { Vector3 } from "three";
@@ -36,6 +37,13 @@ export function FixedArrow({
   }, [fx, fy, fz, vx, vy, vz, invalidate]);
 
   return (
-    <VectorArrow color={color} head={head} ref={handle} thickness={thickness} />
+    <Guide>
+      <VectorArrow
+        color={color}
+        head={head}
+        ref={handle}
+        thickness={thickness}
+      />
+    </Guide>
   );
 }

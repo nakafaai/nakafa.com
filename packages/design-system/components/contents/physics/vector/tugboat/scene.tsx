@@ -1,6 +1,8 @@
 import { Line } from "@react-three/drei";
 import { FixedArrow } from "@repo/design-system/components/contents/physics/vector/solid/arrow";
 import { Rod } from "@repo/design-system/components/contents/physics/vector/solid/rod";
+import { Hull } from "@repo/design-system/components/contents/physics/vector/tugboat/hull";
+import { Sea } from "@repo/design-system/components/contents/physics/vector/tugboat/sea";
 import {
   type Tugs,
   towResultant,
@@ -36,20 +38,24 @@ function fromBow(distance: number, heading: number, height: number) {
 function Ship() {
   return (
     <group>
-      <mesh castShadow position={[0, 0.2, 0]}>
-        <boxGeometry args={[8, 0.9, 1.3]} />
-        <meshStandardMaterial color={MATERIAL.hullNavy} roughness={0.55} />
-      </mesh>
-      <mesh position={[0, -0.18, 0]}>
-        <boxGeometry args={[8.02, 0.2, 1.32]} />
-        <meshStandardMaterial color={MATERIAL.hullRed} roughness={0.6} />
-      </mesh>
-      <mesh castShadow position={[4.3, 0.2, 0]} rotation={[0, Math.PI / 4, 0]}>
-        <boxGeometry args={[0.92, 0.9, 0.92]} />
-        <meshStandardMaterial color={MATERIAL.hullNavy} roughness={0.55} />
-      </mesh>
+      <group position={[0, -0.3, 0]}>
+        <Hull
+          beam={1.3}
+          bow={1.6}
+          color={MATERIAL.hullNavy}
+          height={1}
+          length={8.6}
+        />
+        <Hull
+          beam={1.34}
+          bow={1.62}
+          color={MATERIAL.hullRed}
+          height={0.36}
+          length={8.64}
+        />
+      </group>
       {Arr.makeBy(6, (index) => (
-        <mesh castShadow key={index} position={[-1.8 + index * 1.05, 0.72, 0]}>
+        <mesh castShadow key={index} position={[-1.8 + index * 1.05, 0.8, 0]}>
           <boxGeometry args={[0.8, 0.14, 0.9]} />
           <meshStandardMaterial color={MATERIAL.hullRed} roughness={0.6} />
         </mesh>
@@ -66,19 +72,36 @@ function Ship() {
   );
 }
 
-/** A harbour tug: a short red and white hull with a high wheelhouse, facing along its cable. */
+/** A harbour tug: a short red hull with a white wheelhouse, facing along its cable, and the white wash its propeller throws astern. */
 function Tug({ heading }: { readonly heading: number }) {
   const at = fromBow(CABLE, heading, 0.1);
   return (
     <group position={at} rotation={[0, (heading * Math.PI) / 180, 0]}>
-      <mesh castShadow>
-        <boxGeometry args={[1.6, 0.5, 0.7]} />
-        <meshStandardMaterial color={MATERIAL.hullRed} roughness={0.55} />
-      </mesh>
-      <mesh castShadow position={[0.85, 0, 0]} rotation={[0, Math.PI / 4, 0]}>
-        <boxGeometry args={[0.5, 0.5, 0.5]} />
-        <meshStandardMaterial color={MATERIAL.hullRed} roughness={0.55} />
-      </mesh>
+      <group position={[0, -0.25, 0]}>
+        <Hull
+          beam={0.75}
+          bow={0.55}
+          color={MATERIAL.hullRed}
+          height={0.5}
+          length={1.8}
+        />
+      </group>
+      {Arr.map([0, 1, 2], (step) => (
+        <mesh
+          key={step}
+          position={[-1.1 - step * 0.45, -0.02, 0]}
+          rotation={[-Math.PI / 2, 0, 0]}
+          scale={[1 + step * 0.5, 0.35 + step * 0.18, 1]}
+        >
+          <circleGeometry args={[0.3, 24]} />
+          <meshStandardMaterial
+            color={MATERIAL.foam}
+            opacity={0.55 - step * 0.15}
+            roughness={0.9}
+            transparent
+          />
+        </mesh>
+      ))}
       <mesh castShadow position={[0.2, 0.5, 0]}>
         <boxGeometry args={[0.6, 0.5, 0.55]} />
         <meshStandardMaterial color={MATERIAL.deckWhite} roughness={0.5} />
@@ -118,7 +141,7 @@ function Pull({
       <ThreeLabel
         color={color}
         fontSize="reading"
-        position={fromBow(size * scale + 0.7, heading, 1.4)}
+        position={fromBow(size * scale + 0.9, heading, 2.1)}
       >
         <InlineMath math={math} />
       </ThreeLabel>
@@ -147,18 +170,7 @@ export function TugboatScene({
 
   return (
     <group>
-      <mesh
-        position={[0, -0.05, 0]}
-        receiveShadow
-        rotation={[-Math.PI / 2, 0, 0]}
-      >
-        <planeGeometry args={[160, 160]} />
-        <meshStandardMaterial
-          color={MATERIAL.water}
-          metalness={0.2}
-          roughness={0.18}
-        />
-      </mesh>
+      <Sea />
       <Ship />
       <Tug heading={half} />
       <Tug heading={-half} />

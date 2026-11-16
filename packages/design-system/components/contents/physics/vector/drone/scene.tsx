@@ -12,6 +12,7 @@ import {
   pathLength,
 } from "@repo/design-system/components/contents/physics/vector/drone/flight";
 import { FixedArrow } from "@repo/design-system/components/contents/physics/vector/solid/arrow";
+import { Guide } from "@repo/design-system/components/contents/physics/vector/solid/guide";
 import { SimulationTicker } from "@repo/design-system/components/contents/simulation/ticker";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import type { CoordinateTuple } from "@repo/design-system/components/three/frame";
@@ -215,30 +216,32 @@ export function DroneScene({
       <group ref={drone} scale={1.7}>
         <Quadcopter rotors={rotors} />
       </group>
-      <VectorArrow
-        color={PLOT_COLORS.teal}
-        head={0.5}
-        ref={east}
-        thickness={0.07}
-      />
-      <VectorArrow
-        color={PLOT_COLORS.amber}
-        head={0.5}
-        ref={north}
-        thickness={0.07}
-      />
-      <VectorArrow
-        color={PLOT_COLORS.fuchsia}
-        head={0.5}
-        ref={up}
-        thickness={0.07}
-      />
-      <VectorArrow
-        color={PLOT_COLORS.violet}
-        head={0.6}
-        ref={reach}
-        thickness={0.1}
-      />
+      <Guide>
+        <VectorArrow
+          color={PLOT_COLORS.teal}
+          head={0.5}
+          ref={east}
+          thickness={0.07}
+        />
+        <VectorArrow
+          color={PLOT_COLORS.amber}
+          head={0.5}
+          ref={north}
+          thickness={0.07}
+        />
+        <VectorArrow
+          color={PLOT_COLORS.fuchsia}
+          head={0.5}
+          ref={up}
+          thickness={0.07}
+        />
+        <VectorArrow
+          color={PLOT_COLORS.violet}
+          head={0.6}
+          ref={reach}
+          thickness={0.1}
+        />
+      </Guide>
       {units ? <UnitArrows /> : null}
     </group>
   );
@@ -249,16 +252,19 @@ function UnitArrows() {
   const units = [
     {
       color: PLOT_COLORS.teal,
+      label: { east: 1.45, north: 0, up: 0 },
       math: "\\hat{\\imath}",
       to: { east: 1, north: 0, up: 0 },
     },
     {
       color: PLOT_COLORS.amber,
+      label: { east: 0.45, north: 1.6, up: 0 },
       math: "\\hat{\\jmath}",
       to: { east: 0, north: 1, up: 0 },
     },
     {
       color: PLOT_COLORS.fuchsia,
+      label: { east: -0.4, north: 0, up: 1.45 },
       math: "\\hat{k}",
       to: { east: 0, north: 0, up: 1 },
     },
@@ -277,11 +283,7 @@ function UnitArrows() {
           <ThreeLabel
             color={unit.color}
             fontSize="reading"
-            position={scenePoint({
-              east: unit.to.east * 1.35,
-              north: unit.to.north * 1.35,
-              up: unit.to.up * 1.35,
-            })}
+            position={scenePoint(unit.label)}
           >
             <InlineMath math={unit.math} />
           </ThreeLabel>
