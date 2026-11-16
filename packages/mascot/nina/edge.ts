@@ -7,7 +7,12 @@ import { Schema } from "effect";
  * out of her body and rest their tips on the edge. The things she does there
  * move only those arms and her face. The edge is at y = 170 of her own figure.
  */
-export const EdgeSchema = Schema.Literals(["gripping", "greeting", "drumming"]);
+export const EdgeSchema = Schema.Literals([
+  "gripping",
+  "greeting",
+  "drumming",
+  "resting",
+]);
 
 /** Her at rest, with her arms where she puts them. */
 function reach(armL: Curve, armR: Curve): Pose {
@@ -60,11 +65,26 @@ function drumming(t: number): Pose {
   };
 }
 
+/** Her arms folded along the edge and her chin on them, dozing off and waking again. The foot of a page. */
+function resting(t: number): Pose {
+  const nod = Math.sin(t * 0.9);
+  return {
+    ...reach(
+      armLeft(52, 150, 30, 158, 26, 166 + nod * 0.6),
+      armRight(52, 150, 30, 158, 26, 166 - nod * 0.6)
+    ),
+    lift: 7 + nod * 1.5,
+    mood: nod > 0.2 ? "asleep" : "calm",
+    tilt: 2.5 + nod * 1.5,
+  };
+}
+
 /** Each act answers her pose at time t. `still` is the moment that shows it best. */
 export const EDGES = {
   drumming: { pose: drumming, still: 0.1 },
   greeting: { pose: greeting, still: 0.2 },
   gripping: { pose: gripping, still: 0.3 },
+  resting: { pose: resting, still: 1.2 },
 } satisfies Record<
   typeof EdgeSchema.Type,
   { readonly pose: (t: number) => Pose; readonly still: number }
