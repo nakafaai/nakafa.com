@@ -134,7 +134,14 @@ export function MoleculeShapeLab({
                 key={each.id}
                 value={each.id}
               >
-                <InlineMath math={moleculeFormula(each.id)} />
+                {isomeric(
+                  Arr.map(offered, (other) => other.id),
+                  each.id
+                ) ? (
+                  each.name
+                ) : (
+                  <InlineMath math={moleculeFormula(each.id)} />
+                )}
               </ToggleGroupItem>
             ))}
           </ToggleGroup>
@@ -192,5 +199,16 @@ export function MoleculeShapeLab({
         </VisualCardFacts>
       </VisualCardFooter>
     </VisualCard>
+  );
+}
+
+/**
+ * Whether another offered molecule shares this one's formula, as isomers do,
+ * so the toggle names each one instead of repeating the formula.
+ */
+function isomeric(offered: readonly MoleculeId[], id: MoleculeId) {
+  return (
+    Arr.filter(offered, (each) => moleculeFormula(each) === moleculeFormula(id))
+      .length > 1
   );
 }

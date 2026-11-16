@@ -8,6 +8,7 @@ import {
   inheritContentSnapshots,
   replaceContentSnapshot,
 } from "@nakafa/aksara-contracts/release/snapshot/spec";
+import { MAX_SNAPSHOT_BATCH_COUNT } from "@nakafa/aksara-contracts/transport/limits";
 import confectSchema from "@repo/backend/confect/_generated/schema";
 import { stageProgramRow } from "@repo/backend/confect/contentRelease/snapshot/program";
 import { encodeSnapshotJson } from "@repo/backend/confect/contentRelease/wire";
@@ -103,7 +104,7 @@ describe("contentRelease/snapshot/batch", () => {
         const rows =
           family === "quran"
             ? [yield* makeQuranSnapshotRow(snapshotId)]
-            : assessment.rows;
+            : Arr.take(assessment.rows, MAX_SNAPSHOT_BATCH_COUNT);
         const t = convexTest(schema, convexModules);
         yield* Effect.promise(() =>
           t.mutation((ctx) =>

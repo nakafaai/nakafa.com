@@ -12,6 +12,10 @@ import {
   SteelWoolLab,
 } from "@/lib/content/renderer/client/chemistry/balance";
 import {
+  ChemicalCellLab,
+  ElectrolysisLab,
+} from "@/lib/content/renderer/client/chemistry/electrochemistry";
+import {
   ElectronConfigurationLab,
   ValenceElectronLab,
 } from "@/lib/content/renderer/client/chemistry/electron";
@@ -43,6 +47,10 @@ import {
   PeriodicPropertiesLab,
 } from "@/lib/content/renderer/client/chemistry/periodic";
 import {
+  GasRateLab,
+  TitrationLab,
+} from "@/lib/content/renderer/client/chemistry/quantitative";
+import {
   ChemicalReactionCharacteristicsLab,
   ChemicalReactionTypesLab,
   MethaneCombustionEquationLab,
@@ -60,6 +68,10 @@ import type { RendererImplementation } from "@/lib/content/renderer/selection";
 
 /** Every chemistry visual, which any lesson in any domain may use. */
 export const chemistryRenderers = [
+  {
+    name: chemistryComponentNames.gasRateLab,
+    component: GasRateLab,
+  },
   {
     name: chemistryComponentNames.fizzBalanceLab,
     component: FizzBalanceLab,
@@ -119,6 +131,14 @@ export const chemistryRenderers = [
   {
     name: chemistryComponentNames.daltonEvidenceLab,
     component: DaltonEvidenceLab,
+  },
+  {
+    name: chemistryComponentNames.chemicalCellLab,
+    component: ChemicalCellLab,
+  },
+  {
+    name: chemistryComponentNames.electrolysisLab,
+    component: ElectrolysisLab,
   },
   {
     name: chemistryComponentNames.electronConfigurationLab,
@@ -203,6 +223,10 @@ export const chemistryRenderers = [
   {
     name: chemistryComponentNames.subatomicParticlesLab,
     component: SubatomicParticlesLab,
+  },
+  {
+    name: chemistryComponentNames.titrationLab,
+    component: TitrationLab,
   },
   {
     name: chemistryComponentNames.valenceElectronLab,
