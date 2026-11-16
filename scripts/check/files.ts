@@ -36,6 +36,10 @@ const IGNORED_DIRECTORIES = HashSet.make(
 /** TypeScript modules in every flavor: `.ts`, `.tsx`, `.mts`, and `.cts`. */
 const SOURCE_FILE_PATTERN = /\.[cm]?tsx?$/u;
 const DECLARATION_FILE_PATTERN = /\.d\.[cm]?ts$/u;
+/** JavaScript modules in every flavor: `.js`, `.jsx`, `.mjs`, and `.cjs`. */
+const JAVASCRIPT_FILE_PATTERN = /\.[cm]?jsx?$/u;
+/** The folder whose files the browser loads by URL as they are, such as a service worker. */
+const PUBLIC_DIRECTORY = "public";
 /** JavaScript and TypeScript modules in every flavor, declaration files included. */
 const MODULE_FILE_PATTERN = /\.[cm]?[jt]sx?$/u;
 const GENERATED_DIRECTORY = "_generated";
@@ -218,6 +222,26 @@ function isAuthored(file: string, separator: string) {
     !DECLARATION_FILE_PATTERN.test(file) &&
     !Arr.contains(Str.split(file, separator), GENERATED_DIRECTORY)
   );
+}
+
+/**
+ * The authored JavaScript among `files`. Every module is TypeScript, which Node
+ * runs as it is and the build compiles, except a file the browser loads by URL
+ * from a public folder as it is, such as the web-push service worker, and
+ * generated output.
+ */
+export function authoredJavaScript(
+  files: readonly string[],
+  separator: string
+) {
+  return Arr.filter(files, (file) => {
+    const segments = Str.split(file, separator);
+    return (
+      JAVASCRIPT_FILE_PATTERN.test(file) &&
+      !Arr.contains(segments, PUBLIC_DIRECTORY) &&
+      !Arr.contains(segments, GENERATED_DIRECTORY)
+    );
+  });
 }
 
 /**

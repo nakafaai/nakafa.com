@@ -13,6 +13,7 @@ import {
 } from "effect";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
 import {
+  authoredJavaScript,
   RepositoryIgnoreError,
   RepositoryReadError,
   readAuthoredTree,
@@ -167,6 +168,30 @@ function rewriteGit(name: string, rewrite: ChildProcess.Command) {
     })
   ).pipe(Layer.provide(NodeServices.layer));
 }
+
+describe("authored JavaScript", () => {
+  it("lists every JavaScript module outside a public folder and generated output", () => {
+    expect(
+      authoredJavaScript(
+        [
+          "apps/www/scripts/static/run.mjs",
+          "scripts/tool.js",
+          "packages/cli/bin.cjs",
+          "apps/www/src/card.jsx",
+          "apps/www/public/sw.js",
+          "packages/backend/convex/_generated/api.js",
+          "apps/www/scripts/static/run.ts",
+        ],
+        "/"
+      )
+    ).toEqual([
+      "apps/www/scripts/static/run.mjs",
+      "scripts/tool.js",
+      "packages/cli/bin.cjs",
+      "apps/www/src/card.jsx",
+    ]);
+  });
+});
 
 describe("authored tree", () => {
   it.effect(

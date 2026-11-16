@@ -35,6 +35,7 @@ import {
   publishedDirectories,
 } from "#scripts/check/exports";
 import {
+  authoredJavaScript,
   readAuthoredSources,
   readAuthoredTree,
   readOtherModules,
@@ -255,6 +256,15 @@ export const checkTestPolicy = Effect.fn("RepositoryPolicy.checkTests")(
         fileReport(
           "Tests must not use __test__ or __tests__ folders:",
           relative(nestedTests)
+        ),
+        fileReport(
+          "Authored modules are TypeScript; JavaScript stays only in a public folder the browser loads it from by URL:",
+          relative(
+            authoredJavaScript(
+              Arr.flatten([workspaces, scripts, agents]),
+              path.sep
+            )
+          )
         ),
         lineReport(runnerViolations),
         lineReport(sourceViolations),

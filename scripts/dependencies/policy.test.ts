@@ -1,12 +1,12 @@
 import { createRequire } from "node:module";
-import { fileURLToPath } from "node:url";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Path } from "effect";
 import { build } from "esbuild";
 import { inspectDependencyPolicy } from "#scripts/dependencies/source";
 
-const REPOSITORY_ROOT = fileURLToPath(new URL("../..", import.meta.url));
+/** The repository root, two folders above this test. */
+const REPOSITORY_ROOT = `${import.meta.dirname}/../..`;
 
 describe("dependency policy", () => {
   it.effect("accepts the actual repository dependency policy", () =>

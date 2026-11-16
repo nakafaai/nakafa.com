@@ -147,7 +147,7 @@ deploy that read nothing keeps every entry.
   screen and the try-out tracks, sets and sections (which Phase B for try-out adds),
   plus the articles index and the try-out hub of each locale. The sitemap files drop the same paths
   (`apps/www/src/lib/sitemap/files.ts`), so every sitemap URL is a static page.
-  `scripts/static/run.mjs pages` writes the list before the client build, and
+  `scripts/static/run.ts pages` writes the list before the client build, and
   `vite.config.ts` gives it to TanStack's prerender with `autoStaticPathsDiscovery`
   and `crawlLinks` off and a fixed concurrency.
 - **Strict verifier.** The build fails unless the emitted `index.html` files are

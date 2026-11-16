@@ -62,6 +62,7 @@ import { createRequire } from "node:module";
 export const spawn = import("child_process");
 export const hash = import("node:crypto");
 export const dynamic = import(name);
+import assert from "node:assert/strict";
 `),
           [
             "1 node-module",
@@ -77,8 +78,10 @@ export const dynamic = import(name);
             "13 node-module",
             "14 node-module",
             "15 node-module",
+            "16 node-module",
             "19 node-module",
             "20 node-module",
+            "22 node-module",
           ]
         );
       })

@@ -1,4 +1,3 @@
-import { fileURLToPath } from "node:url";
 import { layer as nodeServicesLayer } from "@effect/platform-node/NodeServices";
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import { runAcceptanceCommand } from "@repo/backend/scripts/content/acceptance/command";
@@ -65,9 +64,9 @@ describe("the release gate command", () => {
         // instead. `development/cli.test.ts` proves each refusal in a temporary
         // folder.
         const error = yield* runAcceptanceCommand({
-          args: [fileURLToPath(new URL("./main.ts", import.meta.url))],
+          args: [`${import.meta.dirname}/main.ts`],
           command: "bun",
-          cwd: fileURLToPath(new URL("../..", import.meta.url)),
+          cwd: `${import.meta.dirname}/../..`,
           env: { CONVEX_DEPLOYMENT: "prod:some-name-1" },
           operation: "Native release gate",
           reportStderr: true,

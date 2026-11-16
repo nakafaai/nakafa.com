@@ -1,9 +1,8 @@
-import { fileURLToPath } from "node:url";
 import { layer as nodeServicesLayer } from "@effect/platform-node/NodeServices";
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import { runAcceptanceCommand } from "@repo/backend/scripts/content/acceptance/command";
 import type { AcceptanceModeError } from "@repo/backend/scripts/content/acceptance/mode";
-import { Effect, FileSystem } from "effect";
+import { Effect, FileSystem, Path } from "effect";
 
 const mocks = vi.hoisted(() => {
   let entry: Effect.Effect<unknown, AcceptanceModeError> | undefined;
@@ -22,9 +21,6 @@ vi.mock("@repo/backend/scripts/load/command", () => ({
   runLoadCommand: mocks.command,
 }));
 
-/** The slash that ends a folder's address, which a real path does not end with. */
-const TRAILING_SLASH = /\/$/u;
-
 describe("the load test command", () => {
   afterEach(() => {
     vi.resetAllMocks();
@@ -40,9 +36,9 @@ describe("the load test command", () => {
         });
         const outputPath = `${directory}/output.log`;
         const error = yield* runAcceptanceCommand({
-          args: [fileURLToPath(new URL("./main.ts", import.meta.url))],
+          args: [`${import.meta.dirname}/main.ts`],
           command: "bun",
-          cwd: fileURLToPath(new URL("../..", import.meta.url)),
+          cwd: `${import.meta.dirname}/../..`,
           env: {},
           operation: "Native load test",
           reportStderr: true,
@@ -59,6 +55,7 @@ describe("the load test command", () => {
 
   it.live("runs the command from the repository root with its arguments", () =>
     Effect.gen(function* () {
+      const path = yield* Path.Path;
       mocks.command.mockReturnValue(Effect.succeed("ran"));
       const argv = process.argv;
       process.argv = ["bun", "main.ts", "report.json", "300"];
@@ -68,12 +65,7 @@ describe("the load test command", () => {
       expect(yield* entry ?? Effect.void).toBe("ran");
       process.argv = argv;
       const [root, args] = mocks.command.mock.calls[0] ?? [];
-      expect(root).toBe(
-        fileURLToPath(new URL("../../../..", import.meta.url)).replace(
-          TRAILING_SLASH,
-          ""
-        )
-      );
+      expect(root).toBe(path.resolve(import.meta.dirname, "../../../.."));
       expect(args).toEqual(["report.json", "300"]);
     }).pipe(Effect.provide(nodeServicesLayer))
   );

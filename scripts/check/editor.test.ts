@@ -1,10 +1,10 @@
-import { fileURLToPath } from "node:url";
 import { NodeServices } from "@effect/platform-node";
 import { assert, describe, it } from "@effect/vitest";
 import { Array as Arr, Effect, FileSystem, Order, Schema } from "effect";
 import { CLASS_ATTRIBUTES, CLASS_FUNCTIONS } from "#scripts/check/editor";
 
-const REPOSITORY_ROOT = fileURLToPath(new URL("../..", import.meta.url));
+/** The repository root, two folders above this test. */
+const REPOSITORY_ROOT = `${import.meta.dirname}/../..`;
 
 /** The Tailwind lists that the Zed settings give the language server. */
 const ZedSettings = Schema.fromJsonString(
@@ -30,7 +30,7 @@ describe("editor class positions", () => {
     Effect.gen(function* () {
       const fileSystem = yield* FileSystem.FileSystem;
       const zed = yield* fileSystem
-        .readFileString(`${REPOSITORY_ROOT}.zed/settings.json`)
+        .readFileString(`${REPOSITORY_ROOT}/.zed/settings.json`)
         .pipe(Effect.flatMap(Schema.decodeEffect(ZedSettings)));
       const { settings } = zed.lsp["tailwindcss-language-server"];
 

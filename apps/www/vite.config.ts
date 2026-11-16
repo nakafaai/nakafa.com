@@ -40,6 +40,12 @@ import { workerEnvironment, workerSettings } from "#www/worker";
  */
 const PAGE_LIST_FILE = join(import.meta.dirname, ".cache/static-pages.json");
 
+/**
+ * The static runner's environment: this build's own, plus the flag that turns off
+ * the Cloudflare plugin in the runner's Vite server (`STATIC_RUNNER` below).
+ */
+const STATIC_RUNNER_ENV = { ...process.env, NAKAFA_STATIC_RUNNER: "1" };
+
 /** How many prerender requests run at once. Set, so the build machine's core count never changes the output. */
 const PRERENDER_CONCURRENCY = 8;
 
@@ -52,11 +58,11 @@ function readPrerenderedPagePaths(): Promise<readonly string[]> {
     const runner = spawn(
       process.execPath,
       [
-        join(import.meta.dirname, "scripts/static/run.mjs"),
+        join(import.meta.dirname, "scripts/static/run.ts"),
         "pages",
         PAGE_LIST_FILE,
       ],
-      { cwd: import.meta.dirname, env: process.env, stdio: "inherit" }
+      { cwd: import.meta.dirname, env: STATIC_RUNNER_ENV, stdio: "inherit" }
     );
     runner.on("error", reject);
     runner.on("exit", (code, signal) => {
@@ -197,12 +203,12 @@ const writeStaticArtifacts: Plugin = {
         const runner = spawn(
           process.execPath,
           [
-            join(import.meta.dirname, "scripts/static/run.mjs"),
+            join(import.meta.dirname, "scripts/static/run.ts"),
             "artifacts",
             builder.environments.client.config.build.outDir,
             PAGE_LIST_FILE,
           ],
-          { cwd: import.meta.dirname, env: process.env, stdio: "inherit" }
+          { cwd: import.meta.dirname, env: STATIC_RUNNER_ENV, stdio: "inherit" }
         );
         runner.on("error", reject);
         runner.on("exit", (code, signal) => {
