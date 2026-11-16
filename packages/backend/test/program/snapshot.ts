@@ -35,6 +35,7 @@ import {
   inheritContentSnapshots,
   replaceContentSnapshot,
 } from "@nakafa/aksara-contracts/release/snapshot/spec";
+import { MAX_SNAPSHOT_BATCH_COUNT } from "@nakafa/aksara-contracts/transport/limits";
 import refs from "@repo/backend/confect/_generated/refs";
 import {
   DatabaseReader,
@@ -225,9 +226,12 @@ export const makeProgramSnapshotData = Effect.fn(
 export type ProgramSnapshotData = Effect.Success<
   ReturnType<typeof makeProgramSnapshotData>
 >;
-/** Stages the signed technical program snapshot through registered Confect mutations. */
+/**
+ * Stages the signed technical program snapshot through registered Confect
+ * mutations, in batches no larger than the transport contract allows.
+ */
 export const stageProgramSnapshot = Effect.fn("TestProgram.stageSnapshot")(
-  function* (data: ProgramSnapshotData, batchSize = data.rowJson.length) {
+  function* (data: ProgramSnapshotData, batchSize = MAX_SNAPSHOT_BATCH_COUNT) {
     const ctx = yield* MutationCtx;
     const { runMutation: mutate } = yield* MutationRunner;
     yield* Effect.promise(() =>
@@ -265,7 +269,7 @@ export const stageProgramSnapshot = Effect.fn("TestProgram.stageSnapshot")(
 /** Selects one verified program snapshot with a coherent material owner. */
 export const activateProgramSnapshot = Effect.fn(
   "TestProgram.activateSnapshot"
-)(function* (data: ProgramSnapshotData, batchSize = data.rowJson.length) {
+)(function* (data: ProgramSnapshotData, batchSize = MAX_SNAPSHOT_BATCH_COUNT) {
   yield* stageProgramSnapshot(data, batchSize);
   const reader = yield* DatabaseReader;
   const writer = yield* DatabaseWriter;

@@ -34,7 +34,7 @@
     "@hugeicons/core-free-icons": "catalog:",
     "@hugeicons/react": "catalog:",
     "@mantine/hooks": "catalog:",
-    "@nakafa/aksara-contracts": "8.0.0",
+    "@nakafa/aksara-contracts": "8.0.2",
     "@repo/analytics": "workspace:*",
     "@repo/backend": "workspace:*",
     "@repo/contents": "workspace:*",

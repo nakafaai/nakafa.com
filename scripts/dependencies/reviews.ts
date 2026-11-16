@@ -14,7 +14,7 @@ export const REGISTRY_REVIEWS = [
   [
     "effect@latest",
     "4.1.4",
-    "Effect 4.1.4 is the latest release and the adopted cohort (EFFECT_COHORT_VERSION). 4.1.3 and 4.1.4 are patch releases: Rational, CLI completion and validation fixes, cluster workflow retries, a TestClock finalizer fix, and OpenRouter schema regeneration. The contracts follow the cohort: @nakafa/aksara-contracts 8.0.0 peers effect 4.1.2 exactly, and the release that Aksara#624 cuts after this lands peers effect 4.1.4. Checked 16 November 2026.",
+    "Effect 4.1.4 is the latest release and the adopted cohort (EFFECT_COHORT_VERSION). 4.1.3 and 4.1.4 are patch releases: Rational, CLI completion and validation fixes, cluster workflow retries, a TestClock finalizer fix, and OpenRouter schema regeneration. The contracts follow the cohort: @nakafa/aksara-contracts 8.0.2 peers effect 4.1.4 exactly. Checked 16 November 2026.",
   ],
   [
     "@effect/platform-node@latest",
@@ -73,8 +73,8 @@ export const REGISTRY_REVIEWS = [
   ],
   [
     "@nakafa/aksara-contracts@latest",
-    "8.0.0",
-    "nakafa.com declares 8.0.0, the newest release, which peers effect 4.1.2 exactly: the contracts lead the Effect cohort. 7.1.0 added the 100 labs of the science stack to the Visual Catalog, and 8.0.0 removes LineEquation, NumberLine and UnitCircle, which MathVisual replaces and no document used. Every catalog figure renders in lessons and try-outs through one renderer, whose registry equals the catalog. Checked 16 November 2026.",
+    "8.0.2",
+    "nakafa.com declares 8.0.2, the newest release, which peers effect 4.1.4 exactly, the adopted cohort. 7.1.0 added the 100 labs of the science stack to the Visual Catalog, 8.0.0 removes LineEquation, NumberLine and UnitCircle, which MathVisual replaces and no document used, and 8.0.2 adds ElectrolysisLab, TitrationLab, ChemicalCellLab and GasRateLab and the SPM organic molecules of MoleculeShapeLab. Every catalog figure renders in lessons and try-outs through one renderer, whose registry equals the catalog. Checked 16 November 2026.",
   ],
   [
     "tsrs@latest",
