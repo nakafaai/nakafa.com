@@ -7,6 +7,7 @@ import en from "@repo/internationalization/dictionaries/en.json" with {
 import { Effect, Schema } from "effect";
 import { ANSWER_MILLISECONDS } from "@/e2e/support/changes";
 import { openChatPage, runOnPage, SHARE_TOKEN_QUERY } from "@/e2e/support/chat";
+import { lastCopy } from "@/e2e/support/clipboard";
 import { withReader } from "@/e2e/support/reader";
 import {
   notAvailable,
@@ -112,7 +113,7 @@ const retriesTheLink = Effect.fn("NakafaE2E.retriesTheLink")(function* (
       await dialog.evaluate((node) => Reflect.get(node, "shareDialogKept"))
     ).toBe(true);
     await copy.click();
-    const link = await page.evaluate(() => navigator.clipboard.readText());
+    const link = await lastCopy(page);
     expect(readLink(link).token).toMatch(SHARE_TOKEN);
   });
 });

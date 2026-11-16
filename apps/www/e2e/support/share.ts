@@ -15,6 +15,8 @@ import {
   saved,
 } from "@/e2e/support/changes";
 import { CHAT_PAGE, onThePage, openChatPage } from "@/e2e/support/chat";
+import { lastCopy, recordCopies } from "@/e2e/support/clipboard";
+import { SERVER_FUNCTION_PATH } from "@/e2e/support/requests";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { SHARE_ENTRY } from "@/lib/share/fragment";
 
@@ -101,7 +103,7 @@ export const shareChat = async (page: Page, changes: Changes) => {
   await saved(changes, before);
   await copy.click();
   await expect(page.getByText("Link copied!")).toBeVisible();
-  const link = await page.evaluate(() => navigator.clipboard.readText());
+  const link = await lastCopy(page);
   await page.keyboard.press("Escape");
   await expect(dialog).toHaveCount(0);
   return link;
@@ -159,16 +161,14 @@ export const offersNoWriting = async (page: Page) => {
 
 /**
  * A learner with a chat, open on its page, where the learner sees every
- * control of the owner. The page can read the clipboard, for the link.
+ * control of the owner. The page records what it copies, for the link.
  */
 export const ownedChat = Effect.fn("NakafaE2E.ownedChat")(function* (
   page: Page,
   baseURL: string,
   words: { prompt: string; title: string }
 ) {
-  yield* Effect.promise(() =>
-    page.context().grantPermissions(["clipboard-read", "clipboard-write"])
-  );
+  yield* Effect.promise(() => recordCopies(page));
   const { changes, learner } = yield* openChatPage(page, baseURL);
   const chat = yield* learner.startChat(words.prompt);
   yield* learner.titleNewest([words.title]);
@@ -208,13 +208,36 @@ export const watchRequests = (page: Page) => {
   });
 
   return {
-    /** Whether any request carries `text` in its address or in its body. */
-    carry: (text: string) =>
-      Arr.some(
-        MutableList.toArray(sent),
-        (request) =>
-          request.url().includes(text) ||
-          (request.postData() ?? "").includes(text)
+    /**
+     * The addresses of the requests that carry `text`, in their address or in
+     * their body, beyond the page's own read of a shared chat: a POST to a
+     * server function of `origin` that sends the token in its body, because the
+     * fragment that holds it never reaches the server.
+     */
+    carryBeyondTheRead: (text: string, origin: string) =>
+      Arr.map(
+        Arr.filter(MutableList.toArray(sent), (request) => {
+          const address = new URL(request.url());
+          const read =
+            request.method() === "POST" &&
+            address.origin === origin &&
+            address.pathname.startsWith(SERVER_FUNCTION_PATH) &&
+            !request.url().includes(text);
+          return (
+            !read &&
+            (request.url().includes(text) ||
+              (request.postData() ?? "").includes(text))
+          );
+        }),
+        (request) => request.url()
+      ),
+    /** The hosts that the page sent its analytics to: the proxy, each with its port. */
+    analyticsHosts: () =>
+      Arr.dedupe(
+        Arr.flatMap(MutableList.toArray(sent), (request) => {
+          const address = new URL(request.url());
+          return isAnalyticsRequest(address) ? [address.host] : [];
+        })
       ),
     /** The hosts the page talked to, each with its port. */
     hosts: () =>

@@ -122,6 +122,7 @@ export function ChatSharing({
                 chatId={chat._id}
                 isPrivate={isPrivate}
                 onCreate={() => handleUpdateVisibility("public")}
+                retried={attempt > 0}
               />
             </ChatRetryContext>
           </ErrorBoundary>
@@ -235,15 +236,19 @@ function ChatShareAction({
   chatId,
   isPrivate,
   onCreate,
+  retried,
 }: {
   chatId: ChatView["_id"];
   isPrivate: boolean;
   onCreate: () => void;
+  /** Whether the readers were remounted by a retry, which only ever adds to the attempts. */
+  retried: boolean;
 }) {
   const t = useTranslations("Ai");
   const clipboard = useClipboard({ timeout: 500 });
   const locale = useCurrentLocale();
   const link = useChatShareToken(chatId, isPrivate);
+  const retry = useChatRetry();
   const failure = linkFailure(link);
   // The failure at the mount is the cache's answer, which a retry shows until the
   // server answers, so only a failure that appears after the mount is reported.
@@ -272,6 +277,16 @@ function ChatShareAction({
   }
   if (QueryResult.isFailure(link)) {
     return <ChatShareRetry />;
+  }
+  // A retry remounts the readers, and the client can let go of the failure it
+  // held for them, so until the server answers they stay the retry, waiting
+  // for that answer, which a second press cannot ask for again.
+  if (retried && QueryResult.isLoading(link)) {
+    return (
+      <ChatRetryContext value={{ isPending: true, onRetry: retry.onRetry }}>
+        <ChatShareRetry />
+      </ChatRetryContext>
+    );
   }
   const token = QueryResult.isSuccess(link) ? link.value : null;
   /** Copy the link once the server has drawn its token. */
