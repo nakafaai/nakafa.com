@@ -14,6 +14,7 @@ import {
 } from "@/components/island/store";
 import { IslandSync } from "@/components/island/sync";
 import { IslandWeather } from "@/components/island/weather";
+import { seasonNow } from "@/lib/island/season";
 import { readMuted } from "@/lib/island/settings";
 import { worldOf } from "@/lib/island/terrain";
 
@@ -55,6 +56,7 @@ export default function IslandGame({
       level,
       muted: readMuted(),
       progress,
+      season: seasonNow(),
       seed,
       version,
     })
