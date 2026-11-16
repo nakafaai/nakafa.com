@@ -27,6 +27,8 @@ import {
 import {
   getTryoutAttemptAuthHref,
   getTryoutAttemptHref,
+  getTryoutPracticeAuthHref,
+  PRACTICE_SEARCH,
 } from "@/components/tryout/route/path";
 import type { TryoutAttemptSearch } from "@/components/tryout/route/search";
 import { holdsTryoutQuestions } from "@/components/tryout/runtime/state";
@@ -100,6 +102,7 @@ export function useAttemptSignIn(input: {
   );
   const attemptId = attemptOf(input.search);
   const view = viewOfAddress(input.search);
+  const practicing = input.search.mode === PRACTICE_SEARCH.mode;
   const signedOut = !(isLoading || isAuthenticated);
 
   useEffect(() => {
@@ -119,8 +122,25 @@ export function useAttemptSignIn(input: {
         ),
         replace: true,
       });
+      return;
     }
-  }, [attemptId, input.publicPath, locale, looked, navigate, signedOut, view]);
+    // A practice is a learner's own, so its address goes to sign-in as an attempt's does.
+    if (practicing) {
+      navigate({
+        href: getTryoutPracticeAuthHref(locale, input.publicPath),
+        replace: true,
+      });
+    }
+  }, [
+    attemptId,
+    input.publicPath,
+    locale,
+    looked,
+    navigate,
+    practicing,
+    signedOut,
+    view,
+  ]);
 }
 
 /**

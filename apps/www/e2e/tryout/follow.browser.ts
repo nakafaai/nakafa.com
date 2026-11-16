@@ -11,6 +11,7 @@ import {
   scrollPageBy,
   scrollPageTo,
   scrollToQuestion,
+  showList,
   sidebarOf,
   waitForObservers,
 } from "@/e2e/support/player";
@@ -37,7 +38,7 @@ const verifyScrollbar = Effect.fn("NakafaE2E.verifyPlayerScrollbar")(function* (
 ) {
   yield* runFirstSection(page, hasTouch, baseURL);
   // The questions stream in after the header, so wait for them before keys.
-  yield* expectView(page, "List");
+  yield* showList(page, hasTouch);
   const current = currentNumberOf(page, hasTouch);
   const total = yield* Effect.promise(() => numberCells(page).count());
   yield* Effect.promise(() => expect(current).toHaveText("1"));
