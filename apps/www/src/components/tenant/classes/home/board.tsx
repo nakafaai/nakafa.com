@@ -88,7 +88,7 @@ export function ClassHome({ archived }: { archived: boolean }) {
       {Arr.isReadonlyArrayEmpty(pagination.results) ? (
         <EmptyState
           description={t("posts-empty-description")}
-          scene={<EmptyNina act="reading" />}
+          scene={<EmptyNina act="mailing" />}
           title={t("posts-empty")}
         />
       ) : (
@@ -128,7 +128,7 @@ function ArchivedPosts({
       {Arr.isReadonlyArrayEmpty(pagination.results) ? (
         <EmptyState
           description={t("posts-archived-empty-description")}
-          scene={<EmptyNina act="reading" />}
+          scene={<EmptyNina act="unboxing" />}
           title={t("posts-archived-empty")}
         />
       ) : (

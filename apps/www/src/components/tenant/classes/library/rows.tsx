@@ -116,7 +116,7 @@ function LibraryEmpty() {
           ? "library-empty-description"
           : "library-folder-empty-description"
       )}
-      scene={<EmptyNina act="reading" />}
+      scene={<EmptyNina act="filing" />}
       title={t("library-empty")}
     />
   );
