@@ -109,6 +109,8 @@ const ROOT_RULES: { readonly [Root in ApplicationRoot]: RootRule } = {
   comment: (segments) => segments.length === 1,
   contributor: isRootPage,
   home: isRootPage,
+  // The island game, one full-screen page.
+  island: isRootPage,
   notifications: isRootPage,
   onboarding: isRootPage,
   operators: isRootPage,
