@@ -11,6 +11,7 @@ import { BreadcrumbHeader } from "@/components/shared/breadcrumb/header";
 import { RefContent } from "@/components/shared/content/references";
 import { PageStack } from "@/components/shared/page/body";
 import { PageFooter } from "@/components/shared/page/footer";
+import { Page } from "@/components/shared/page/frame";
 import { SubjectItem } from "@/components/shared/subject/item";
 import { SubjectList } from "@/components/shared/subject/list";
 import {
@@ -156,7 +157,7 @@ function ArticleIndexPage() {
   const page = Route.useLoaderData();
   const tCommon = useTranslations("Common");
   return (
-    <>
+    <Page width="column">
       <BreadcrumbHeader
         value={{
           home: HOME_TARGET,
@@ -187,6 +188,6 @@ function ArticleIndexPage() {
           <RefContent githubUrl={page.sourceUrl} />
         </PageFooter>
       ) : null}
-    </>
+    </Page>
   );
 }

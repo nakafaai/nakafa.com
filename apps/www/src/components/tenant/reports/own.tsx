@@ -15,6 +15,7 @@ import { Array as Arr, DateTime } from "effect";
 import { useFormatter, useLocale, useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { PageList } from "@/components/shared/page/body";
+import { Page } from "@/components/shared/page/frame";
 import { useFormatTimeZone } from "@/components/shared/table/calendar";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
@@ -55,12 +56,17 @@ export function SchoolOwnReports() {
 
   return (
     <TableFiltersProvider>
-      <SchoolHeader items={[{ label: t("own-title") }]} title={t("own-title")}>
-        <TableSearch placeholder={t("own-search")} />
-      </SchoolHeader>
-      <PageList>
-        <OwnReportTable />
-      </PageList>
+      <Page height="screen">
+        <SchoolHeader
+          items={[{ label: t("own-title") }]}
+          title={t("own-title")}
+        >
+          <TableSearch placeholder={t("own-search")} />
+        </SchoolHeader>
+        <PageList>
+          <OwnReportTable />
+        </PageList>
+      </Page>
     </TableFiltersProvider>
   );
 }

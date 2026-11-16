@@ -19,6 +19,7 @@ import { useState } from "react";
 import { useLocale, useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { PageList } from "@/components/shared/page/body";
+import { Page } from "@/components/shared/page/frame";
 import { PaneOpen } from "@/components/shared/page/pane";
 import {
   PagePane,
@@ -96,8 +97,10 @@ export function CohortReports() {
   return (
     <TableFiltersProvider>
       <PanesProvider>
-        <CohortReportsHeader />
-        <CohortReportsBody />
+        <Page height="screen">
+          <CohortReportsHeader />
+          <CohortReportsBody />
+        </Page>
       </PanesProvider>
     </TableFiltersProvider>
   );

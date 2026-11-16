@@ -15,6 +15,7 @@ import { Array as Arr } from "effect";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { PageList } from "@/components/shared/page/body";
+import { Page } from "@/components/shared/page/frame";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { namedOptions } from "@/components/shared/table/filter";
@@ -100,26 +101,29 @@ export function GraduationCohorts({ slug }: { slug: TenantSlug }) {
 
   return (
     <TableFiltersProvider>
-      <SchoolHeader items={[{ label: t("title") }]} title={t("title")}>
-        <TableSearch placeholder={t("search-cohorts")} />
-      </SchoolHeader>
-      <PageList>
-        {QueryResult.isSuccess(cohorts) && Arr.isReadonlyArrayEmpty(loaded) ? (
-          <EmptyState
-            description={t("cohorts-empty-description")}
-            scene={<EmptyNina act="pointing" />}
-            title={t("cohorts-empty")}
-          />
-        ) : null}
-        {Arr.isReadonlyArrayNonEmpty(loaded) ? (
-          <DataTable
-            columns={columns}
-            data={loaded}
-            rowId={(cohort) => cohort.id}
-            search="cohort"
-          />
-        ) : null}
-      </PageList>
+      <Page height="screen">
+        <SchoolHeader items={[{ label: t("title") }]} title={t("title")}>
+          <TableSearch placeholder={t("search-cohorts")} />
+        </SchoolHeader>
+        <PageList>
+          {QueryResult.isSuccess(cohorts) &&
+          Arr.isReadonlyArrayEmpty(loaded) ? (
+            <EmptyState
+              description={t("cohorts-empty-description")}
+              scene={<EmptyNina act="pointing" />}
+              title={t("cohorts-empty")}
+            />
+          ) : null}
+          {Arr.isReadonlyArrayNonEmpty(loaded) ? (
+            <DataTable
+              columns={columns}
+              data={loaded}
+              rowId={(cohort) => cohort.id}
+              search="cohort"
+            />
+          ) : null}
+        </PageList>
+      </Page>
     </TableFiltersProvider>
   );
 }
