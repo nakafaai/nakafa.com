@@ -194,4 +194,14 @@ export function flatten(faces: readonly Face[]) {
   return Float32Array.from(Arr.flatten(Arr.flatten(triangles)));
 }
 
+/** The box around a model: its lowest and highest corner. */
+export function boundsOf(faces: readonly Face[]) {
+  const corners = Arr.flatMap(faces, (face) => face.corners);
+  const axis = (index: 0 | 1 | 2) => {
+    const values = Arr.map(corners, (corner) => corner[index]);
+    return [Math.min(...values), Math.max(...values)] as const;
+  };
+  return { x: axis(0), y: axis(1), z: axis(2) };
+}
+
 export type { Face };

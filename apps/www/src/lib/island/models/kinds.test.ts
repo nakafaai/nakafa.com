@@ -2,22 +2,12 @@
 import { describe, expect, it } from "@effect/vitest";
 import { Array as Arr } from "effect";
 import { BodyKind, bodyFaces } from "@/lib/island/models/kinds";
-import { type Face, flatten, meters } from "@/lib/island/models/parts";
+import { boundsOf, flatten, meters } from "@/lib/island/models/parts";
 import { SCALE } from "@/lib/island/scale";
 
 /** A body's measure in meters along one axis. */
 const span = (range: readonly [number, number]) =>
   (range[1] - range[0]) * SCALE.block;
-
-/** The box around a model: its lowest and highest corner. */
-const boundsOf = (faces: readonly Face[]) => {
-  const corners = Arr.flatMap(faces, (face) => face.corners);
-  const axis = (index: 0 | 1 | 2) => {
-    const values = Arr.map(corners, (corner) => corner[index]);
-    return [Math.min(...values), Math.max(...values)] as const;
-  };
-  return { x: axis(0), y: axis(1), z: axis(2) };
-};
 
 describe("island/models/kinds", () => {
   it("builds every body at its real size, standing on the ground it is placed on", () => {
