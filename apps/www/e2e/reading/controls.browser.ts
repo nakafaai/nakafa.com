@@ -11,9 +11,15 @@ import { withObservedPageErrors } from "@/e2e/support/observe";
 import { APP_SCRIPT_PATTERN } from "@/e2e/support/requests";
 import { paginationNavigation, SUBJECT_LINK } from "@/e2e/support/selector";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
+import { expectReadingTitle } from "@/e2e/support/title";
 
 const NINA_DIALOG_NAME = /^Nina/u;
-const INTER_FONT = /Inter/u;
+/** The clipboard permissions that each engine's Playwright build grants by name. */
+const CLIPBOARD_PERMISSIONS: Readonly<Record<string, readonly string[]>> = {
+  chromium: ["clipboard-read", "clipboard-write"],
+  firefox: [],
+  webkit: ["clipboard-read"],
+};
 
 const routes = [pinnedRoutes.material.en, pinnedRoutes.article.en];
 // The lesson's pagination, breadcrumb and outline header, as the server sends them.
@@ -56,14 +62,8 @@ const verifyReadingHeader = Effect.fn("NakafaE2E.verifyReadingHeader")(
     );
     const title = page.getByRole("heading", { level: 1 });
     yield* Effect.promise(() => expect(title).toHaveCount(1));
-    yield* Effect.promise(() => expect(title).toHaveCSS("font-size", "36px"));
-    yield* Effect.promise(() => expect(title).toHaveCSS("text-align", "start"));
-    yield* Effect.promise(() =>
-      expect(title).toHaveCSS("font-family", INTER_FONT)
-    );
-    yield* Effect.promise(() =>
-      expect(title).toHaveCSS("text-wrap-style", "balance")
-    );
+    const lesson = href === routes[0];
+    yield* expectReadingTitle(page, title, lesson);
     const interLoaded = yield* Effect.promise(() =>
       page.evaluate(async () => {
         await document.fonts.ready;
@@ -76,30 +76,13 @@ const verifyReadingHeader = Effect.fn("NakafaE2E.verifyReadingHeader")(
       })
     );
     yield* Effect.sync(() => expect(interLoaded).toBe(true));
-    // The summary follows the title, apart from the byline's author and dates.
+    // No summary follows the title: a page's description reaches its head and
+    // structured data, never its column (e2e/content/titles.browser.ts).
     const summary = page
       .locator("header")
       .filter({ has: title })
       .locator("h1 + p");
-    if (href === routes[0]) {
-      yield* Effect.promise(() => expect(summary).toHaveCount(0));
-    } else {
-      yield* Effect.promise(() => expect(summary).toBeVisible());
-      yield* Effect.promise(() => expect(summary).not.toBeEmpty());
-      yield* Effect.promise(() =>
-        expect(summary).toHaveCSS("text-align", "start")
-      );
-      yield* Effect.promise(() =>
-        expect(summary).toHaveCSS("text-wrap-style", "pretty")
-      );
-      const titleLeft = yield* Effect.promise(() =>
-        title.evaluate((element) => element.getBoundingClientRect().left)
-      );
-      const summaryLeft = yield* Effect.promise(() =>
-        summary.evaluate((element) => element.getBoundingClientRect().left)
-      );
-      yield* Effect.sync(() => expect(summaryLeft).toBe(titleLeft));
-    }
+    yield* Effect.promise(() => expect(summary).toHaveCount(0));
 
     const sectionHeading = page
       .locator("article")
@@ -147,15 +130,11 @@ const verifyReadingHeader = Effect.fn("NakafaE2E.verifyReadingHeader")(
     });
     const header = page.locator("header").filter({ has: actions });
     yield* Effect.promise(() => expect(header).toBeVisible());
-    if (href === routes[0]) {
-      yield* Effect.promise(() =>
-        expect(
-          header.getByRole("navigation", { name: "breadcrumb" })
-        ).toContainText(titleText)
-      );
-    } else {
-      yield* Effect.promise(() => expect(header).not.toContainText(titleText));
-    }
+    yield* Effect.promise(() =>
+      expect(
+        header.getByRole("navigation", { name: "breadcrumb" })
+      ).toContainText(titleText)
+    );
     yield* Effect.promise(() =>
       expect(
         header.getByRole("group", { name: "Content actions", exact: true })
@@ -288,10 +267,13 @@ const verifyReadingHeader = Effect.fn("NakafaE2E.verifyReadingHeader")(
     yield* Effect.promise(() => expect(openIn).toBeFocused());
     yield* Effect.promise(() => page.keyboard.press("Escape"));
     yield* Effect.promise(() => expect(more).toBeFocused());
+    // Each engine names the clipboard's permissions its own way: Chromium asks for
+    // both, WebKit only for reading, and Playwright's Firefox knows neither name
+    // and lets the page read what it wrote.
     const clipboardPermissions =
-      page.context().browser()?.browserType().name() === "webkit"
-        ? ["clipboard-read"]
-        : ["clipboard-read", "clipboard-write"];
+      CLIPBOARD_PERMISSIONS[
+        page.context().browser()?.browserType().name() ?? "chromium"
+      ] ?? [];
     yield* Effect.promise(() =>
       page.context().grantPermissions(clipboardPermissions)
     );
