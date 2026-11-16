@@ -425,19 +425,21 @@ describe("public agent API routes", () => {
     });
     const now = Date.UTC(2026, 8, 6, 12);
     vi.setSystemTime(now);
+    // Every read takes from shard 0 or 1 of the bucket's six, whose ten tokens
+    // are then the bucket, since `Math.random` answers 0.
+    vi.spyOn(Math, "random").mockReturnValue(0);
     const test = createConvexTestWithBetterAuth();
-    for (let index = 0; index < 30; index += 1) {
+    for (let index = 0; index < 10; index += 1) {
       const read = await fetchApi(test, "/search");
       const health = await fetchApi(test, "/health");
       expect(read.status).toBe(200);
-      expect(read.headers.get("ratelimit")).toContain(
-        `"public-read";r=${29 - index};t=`
-      );
+      // An answer names the quota's policy and never counts what is left.
+      expect(read.headers.get("ratelimit")).toBeNull();
       expect(read.headers.get("ratelimit-policy")).toBe(
         '"public-read";q=30;w=15'
       );
       expect(health.status).toBe(200);
-      expect(health.headers.get("ratelimit")).toBeNull();
+      expect(health.headers.get("ratelimit-policy")).toBeNull();
     }
     const limited = await fetchApi(test, "/search");
     await expectProblem(limited, {
@@ -445,12 +447,16 @@ describe("public agent API routes", () => {
       status: 429,
     });
     expect(Number(limited.headers.get("retry-after"))).toBeGreaterThan(0);
-    expect(limited.headers.get("ratelimit")).toBe('"public-read";r=0;t=15');
+    expect(limited.headers.get("ratelimit-policy")).toBe(
+      '"public-read";q=30;w=15'
+    );
 
-    // Two reads per second restore one token after half a second. The burst's
-    // last reads ran a millisecond past the frozen clock, since convex-test runs
-    // each mutation after the commits before it, so half a second is read from there.
-    vi.setSystemTime(now + 501);
+    // A shard refills 20 reads a minute, one every three seconds, so three
+    // seconds give each of the two shards a token. The burst's last reads ran a
+    // millisecond past the frozen clock, since convex-test runs each mutation
+    // after the commits before it, so the three seconds are read from there.
+    vi.setSystemTime(now + 3001);
+    expect((await fetchApi(test, "/search")).status).toBe(200);
     expect((await fetchApi(test, "/search")).status).toBe(200);
     await expectProblem(await fetchApi(test, "/search"), {
       code: "RATE_LIMITED",

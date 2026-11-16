@@ -7,29 +7,33 @@ import { getUnknownErrorMessage } from "@repo/backend/confect/failure";
 import {
   AgentRateLimitError,
   PUBLIC_READ_QUOTA,
-  readAgentQuota,
 } from "@repo/backend/confect/routes/agent/quota";
 import spec from "@repo/backend/confect/routes/agent/quota.spec";
 import { NakafaAgentDataReadError } from "@repo/contents/agent/errors";
 import { Effect, Layer } from "effect";
 
 /**
- * One bucket per client address, unsharded, on purpose. A bucket is one row, so
- * reads from one client in the same instant retry against each other: Convex
- * Insights on 7 Nov 2026 showed all 29 OCC retries of `consume` in 72 hours on a
- * single row, at the minutes of three is-agentic scans (10:21, 14:26 and 17:13
- * UTC), which is one scanner bursting its own quota. Every retry succeeded.
- * Sharding the bucket would only add reads: the remaining count that the
- * RateLimit fields carry is read with `getValue`, which samples a shard other
- * than the one `limit` wrote, and then conflicts with that shard's writers. Two
- * different clients never share a row, so this contention cannot spread.
+ * One bucket per client address, in `QUOTA_SHARDS` shards. An unsharded bucket
+ * is one row, so a client's reads in the same instant retried against each
+ * other: Convex Insights showed every OCC retry of `consume` on one such row,
+ * one scanner bursting its own quota. Each read now takes a token from one
+ * shard, so two reads retry only when they meet on the same shard, and nothing
+ * reads the other shards: the answer carries the quota's policy, never a count
+ * of what is left (`AGENT_QUOTA_HEADERS`). Two clients never share a row.
  */
+/**
+ * The shards of a client's bucket. Each holds a sixth of the 30 reads, five,
+ * and refills 20 a minute, and a read takes from one shard at random.
+ */
+const QUOTA_SHARDS = 6;
+
 const limiter = new RateLimiter(components.agentRateLimiter, {
   publicRead: {
     capacity: PUBLIC_READ_QUOTA.capacity,
     kind: "token bucket",
     period: MINUTE,
     rate: PUBLIC_READ_QUOTA.ratePerMinute,
+    shards: QUOTA_SHARDS,
   },
 });
 
@@ -56,12 +60,7 @@ const consume = FunctionImpl.make(
         retryAfterMs: Math.max(0, status.retryAfter),
       });
     }
-    // The bucket after this read, so the answer can tell the client what is left.
-    const bucket = yield* Effect.tryPromise({
-      try: () => limiter.getValue(ctx, "publicRead", { key }),
-      catch: quotaUnavailable,
-    });
-    return readAgentQuota(bucket.value);
+    return null;
   })
 );
 export default GroupImpl.make(schema, spec).pipe(

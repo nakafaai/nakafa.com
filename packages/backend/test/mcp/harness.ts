@@ -151,14 +151,17 @@ function pinMcpClock() {
 }
 
 /**
- * Spends the public-read bucket of 30 tokens: 29 allowed discovery reads, then
- * one oversized request that is charged before its body is read.
+ * Spends the public-read bucket. Every read takes from shard 0 or shard 1 of
+ * the bucket's six, since `Math.random` answers 0, so the two shards' ten
+ * tokens are the bucket: nine allowed discovery reads, then one oversized
+ * request that is charged before its body is read.
  */
 const spendPublicRead = (test: BackendTest) =>
   Effect.gen(function* () {
     pinMcpClock();
+    vi.spyOn(Math, "random").mockReturnValue(0);
     const allowed = yield* Effect.all(
-      Arr.makeBy(29, (index) =>
+      Arr.makeBy(9, (index) =>
         Effect.promise(() =>
           sendMcpRequest(test, modernPost(100 + index, "server/discover"))
         )
@@ -175,7 +178,7 @@ const spendPublicRead = (test: BackendTest) =>
       })
     );
     expect(Arr.map(allowed, ({ status }) => status)).toEqual(
-      Arr.makeBy(29, () => 200)
+      Arr.makeBy(9, () => 200)
     );
     expect(oversized.status).toBe(413);
   });

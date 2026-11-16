@@ -1,8 +1,7 @@
 import type { AgentHttpInputError } from "@repo/backend/confect/routes/agent/input";
 import {
+  AGENT_QUOTA_HEADERS,
   type AgentRateLimitError,
-  agentQuotaHeaders,
-  readAgentQuota,
 } from "@repo/backend/confect/routes/agent/quota";
 import type {
   NakafaAgentDataReadError,
@@ -21,7 +20,7 @@ const PUBLIC_API_HEADERS = {
     "Accept, Content-Type, traceparent, tracestate, baggage",
   "Access-Control-Allow-Methods": "GET, OPTIONS",
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Expose-Headers": "Retry-After, RateLimit, RateLimit-Policy",
+  "Access-Control-Expose-Headers": "Retry-After, RateLimit-Policy",
   "Cache-Control": "no-store",
   "Content-Type": "application/json; charset=utf-8",
   Vary: "Accept, Accept-Encoding",
@@ -92,8 +91,7 @@ export function agentFailureResponse(
           code: "RATE_LIMITED",
           detail: "The client exceeded the bounded public read quota.",
           headers: {
-            // An empty bucket: no read is left, and it is full again after the refill window.
-            ...agentQuotaHeaders(readAgentQuota(0)),
+            ...AGENT_QUOTA_HEADERS,
             "Retry-After": Math.max(
               1,
               Math.ceil(retryAfterMs / 1000)

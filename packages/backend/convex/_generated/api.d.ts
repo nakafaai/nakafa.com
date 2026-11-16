@@ -22068,7 +22068,7 @@ export declare const internal: {
           "mutation",
           "internal",
           { key: string },
-          { remaining: number; resetSeconds: number }
+          null
         >;
       };
     };
