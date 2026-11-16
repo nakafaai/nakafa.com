@@ -1,5 +1,6 @@
 import registeredFunctions from "../../confect/_generated/registeredFunctions/spend/escrow";
 
+export const fold = registeredFunctions.fold;
 export const hold = registeredFunctions.hold;
 export const settle = registeredFunctions.settle;
 export const experimental_reuseContext = true;

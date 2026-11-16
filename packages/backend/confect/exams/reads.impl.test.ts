@@ -6,7 +6,9 @@ import {
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
 import { GatewayConfigurationError } from "@repo/backend/confect/gateway/failure";
+import { foldSpend } from "@repo/backend/confect/spend/ledger";
 import { languageCost } from "@repo/backend/confect/spend/rates";
+import { runInMutation } from "@repo/backend/test/billing";
 import { makeBucket, stubBucket } from "@repo/backend/test/bucket";
 import { nf } from "@repo/backend/test/editor";
 import {
@@ -133,7 +135,11 @@ describe("exams/reads read", () => {
         // The read was held against the teacher before the model was called,
         // and settled to the tokens it measured.
         const spend = yield* Effect.promise(() =>
-          fixture.convex.run((ctx) => ctx.db.query("vendorSpend").collect())
+          fixture.convex.run(async (ctx) => {
+            // The minute's fold counts the read's escrow on its row.
+            await runInMutation(ctx, foldSpend());
+            return await ctx.db.query("vendorSpend").collect();
+          })
         );
         expect(
           Arr.map(spend, ({ calls, held, payer, spent, vendor }) => ({

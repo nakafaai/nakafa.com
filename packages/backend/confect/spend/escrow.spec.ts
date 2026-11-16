@@ -14,7 +14,8 @@ const MicroUsd = Schema.Int.check(Schema.isGreaterThanOrEqualTo(0));
 /**
  * The escrow of every metered call: `hold` before the call, in the
  * transaction that checks the payer's budget, up to the most the call may
- * cost, and `settle` after it, to what the call cost.
+ * cost, and `settle` after it, to what the call cost. `fold`, run every minute,
+ * counts both on the payer's vendor rows.
  */
 export default GroupSpec.make()
   .addFunction(
@@ -29,6 +30,13 @@ export default GroupSpec.make()
     FunctionSpec.internalMutation({
       name: "settle",
       args: () => ({ escrowId: Id("vendorEscrows"), spent: MicroUsd }),
+      returns: () => Schema.Null,
+    })
+  )
+  .addFunction(
+    FunctionSpec.internalMutation({
+      name: "fold",
+      args: () => ({}),
       returns: () => Schema.Null,
     })
   );

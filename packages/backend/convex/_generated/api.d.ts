@@ -22075,6 +22075,7 @@ export declare const internal: {
   };
   spend: {
     escrow: {
+      fold: FunctionReference<"mutation", "internal", {}, null>;
       hold: FunctionReference<
         "mutation",
         "internal",

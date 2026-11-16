@@ -17,6 +17,7 @@ import integrationsInternal from "@repo/backend/confect/_generated/refs/integrat
 import ninaInternal from "@repo/backend/confect/_generated/refs/nina.server";
 import notificationsInternal from "@repo/backend/confect/_generated/refs/notifications.server";
 import operatorsInternal from "@repo/backend/confect/_generated/refs/operators.server";
+import spendInternal from "@repo/backend/confect/_generated/refs/spend.server";
 import tenancyInternal from "@repo/backend/confect/_generated/refs/tenancy.server";
 import tryoutsInternal from "@repo/backend/confect/_generated/refs/tryouts.server";
 import {
@@ -43,6 +44,8 @@ const WEBHOOK_DELIVERY_PRUNE_INTERVAL_HOURS = 1;
 const WEBHOOK_SWEEP_INTERVAL_MINUTES = 1;
 const INVITE_EXPIRY_SWEEP_INTERVAL_HOURS = 1;
 const TRYOUT_EXPIRY_SWEEP_INTERVAL_MINUTES = 5;
+/** How long a payer's month may not count its newest escrows (`holdSpend`). */
+const SPEND_FOLD_INTERVAL_MINUTES = 1;
 const VISIT_EXPIRY_SWEEP_INTERVAL_HOURS = 1;
 
 /**
@@ -50,6 +53,14 @@ const VISIT_EXPIRY_SWEEP_INTERVAL_HOURS = 1;
  * never starts.
  */
 export default CronJobs.make()
+  .add(
+    CronJob.make(
+      "count metered calls on their vendor rows",
+      Duration.minutes(SPEND_FOLD_INTERVAL_MINUTES),
+      spendInternal.escrow.fold,
+      {}
+    )
+  )
   .add(
     CronJob.make(
       "delete old school API requests",

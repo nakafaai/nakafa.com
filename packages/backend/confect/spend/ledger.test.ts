@@ -2,6 +2,8 @@ import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import { schoolAccount } from "@repo/backend/confect/billing/tiers";
 import {
   BUDGET_PER_CREDIT,
+  FOLD_BATCH,
+  foldSpend,
   holdSpend,
   monthOf,
   settleSpend,
@@ -65,8 +67,14 @@ function insertPoolGrant(
   });
 }
 
-/** Every vendor row, as a person reads it. */
+/** Counts every open escrow on its row, as the minute's fold does. */
+function fold(ctx: MutationCtx) {
+  return runInMutation(ctx, foldSpend());
+}
+
+/** Every vendor row once the fold has counted every escrow, as a person reads it. */
 async function rowsOf(ctx: MutationCtx) {
+  await fold(ctx);
   const rows = await ctx.db.query("vendorSpend").collect();
   return Arr.map(rows, ({ calls, held, month, payer, spent, vendor }) => ({
     calls,
@@ -99,6 +107,7 @@ describe("spend/ledger", () => {
         ctx,
         holdSpend(claim, "chat", 775_000 - BUDGET_PER_CREDIT + 1)
       );
+      await fold(ctx);
       const refused = await exitInMutation(
         ctx,
         holdSpend(claim, "search", 300_000)
@@ -113,6 +122,7 @@ describe("spend/ledger", () => {
       await runInMutation(ctx, settleSpend(first.escrowId, 100_000));
       // A second settle of the same escrow changes nothing.
       await runInMutation(ctx, settleSpend(first.escrowId, 400_000));
+      await fold(ctx);
       const second = await runInMutation(
         ctx,
         holdSpend(claim, "search", 300_000)
@@ -147,6 +157,7 @@ describe("spend/ledger", () => {
       const userId = await insertLearner(ctx, "pro");
       const claim: Claim = { kind: "learner", userId };
       const first = await runInMutation(ctx, holdSpend(claim, "chat", 1000));
+      await fold(ctx);
       const second = await runInMutation(
         ctx,
         holdSpend(claim, "specialist", 2000)
@@ -178,6 +189,7 @@ describe("spend/ledger", () => {
       const claim: Claim = { kind: "learner", userId };
       // Pro 1,000 a month and a pack of 1,000: 2,000 credits at $0.0025.
       await runInMutation(ctx, holdSpend(claim, "chat", 5_000_000));
+      await fold(ctx);
       const refused = await exitInMutation(ctx, holdSpend(claim, "chat", 1));
       expect(refusalOf(refused)).toMatchObject({ budget: 5_000_000 });
     });
@@ -193,6 +205,7 @@ describe("spend/ledger", () => {
       const claim: Claim = { kind: "member", tenantId, userId };
       // Three students' credits a month, at $0.0025 a credit with the reserve.
       await runInMutation(ctx, holdSpend(claim, "import", 3 * SEAT_BUDGET));
+      await fold(ctx);
       const refused = await exitInMutation(ctx, holdSpend(claim, "import", 1));
       expect(refusalOf(refused)).toMatchObject({ budget: 3 * SEAT_BUDGET });
       expect(await rowsOf(ctx)).toEqual([
@@ -229,6 +242,7 @@ describe("spend/ledger", () => {
     const t = createBillingTestConvex();
     await t.run(async (ctx) => {
       const tenantId = await insertSchool(ctx);
+      await fold(ctx);
       const refused = await exitInMutation(
         ctx,
         holdSpend({ kind: "school", tenantId }, "import", 1)
@@ -250,6 +264,7 @@ describe("spend/ledger", () => {
         ctx,
         holdSpend({ kind: "school", tenantId }, "embedding", SEAT_BUDGET)
       );
+      await fold(ctx);
       const refused = await exitInMutation(
         ctx,
         holdSpend({ kind: "school", tenantId }, "embedding", 1)
@@ -271,12 +286,14 @@ describe("spend/ledger", () => {
       );
       expect(escrow.held).toBe(SEAT_BUDGET);
       // The open call holds the rest of the month, so the next one waits for it to settle.
+      await fold(ctx);
       const refused = await exitInMutation(
         ctx,
         holdSpend(claim, "chat", languageCeiling("chat"))
       );
       expect(refusalOf(refused)).toMatchObject({ used: SEAT_BUDGET });
       await runInMutation(ctx, settleSpend(escrow.escrowId, 300));
+      await fold(ctx);
       const next = await runInMutation(
         ctx,
         holdSpend(claim, "chat", languageCeiling("chat"))
@@ -296,6 +313,7 @@ describe("spend/ledger", () => {
       );
       const fits = await runInMutation(ctx, holdSpend(claim, "embedding", 100));
       expect(fits.held).toBe(100);
+      await fold(ctx);
       const refused = await exitInMutation(
         ctx,
         holdSpend(claim, "embedding", BUDGET_PER_CREDIT)
@@ -312,11 +330,13 @@ describe("spend/ledger", () => {
     await t.run(async (ctx) => {
       const claim: Claim = { kind: "nakafa" };
       await runInMutation(ctx, holdSpend(claim, "embedding", 29_000_000));
+      await fold(ctx);
       const second = await runInMutation(
         ctx,
         holdSpend(claim, "embedding", 1_000_000)
       );
       expect(second.held).toBe(1_000_000);
+      await fold(ctx);
       const refused = await exitInMutation(
         ctx,
         holdSpend(claim, "decision", 1)
@@ -332,6 +352,66 @@ describe("spend/ledger", () => {
           vendor: "google",
         },
       ]);
+    });
+  });
+
+  it("writes no row on a hold or a settle, and the fold counts each hold, then each cost, once", async () => {
+    const t = createBillingTestConvex();
+    await t.run(async (ctx) => {
+      const userId = await insertLearner(ctx, "pro");
+      const claim: Claim = { kind: "learner", userId };
+      const open = await runInMutation(ctx, holdSpend(claim, "chat", 1000));
+      const quick = await runInMutation(ctx, holdSpend(claim, "chat", 2000));
+      expect(await ctx.db.query("vendorSpend").collect()).toEqual([]);
+      // A call that settled before any fold counts its cost and no hold.
+      await runInMutation(ctx, settleSpend(quick.escrowId, 700));
+      expect(await fold(ctx)).toBe(false);
+      expect(await rowsOf(ctx)).toEqual([
+        {
+          calls: 2,
+          held: 1000,
+          month: "2026-11",
+          payer: { kind: "learner", userId },
+          spent: 700,
+          vendor: "anthropic",
+        },
+      ]);
+      await runInMutation(ctx, settleSpend(open.escrowId, 400));
+      await fold(ctx);
+      // A fold with nothing new to count changes nothing.
+      await fold(ctx);
+      expect(await rowsOf(ctx)).toEqual([
+        {
+          calls: 2,
+          held: 0,
+          month: "2026-11",
+          payer: { kind: "learner", userId },
+          spent: 1100,
+          vendor: "anthropic",
+        },
+      ]);
+      expect(
+        Arr.map(
+          await ctx.db.query("vendorEscrows").collect(),
+          ({ counted }) => counted
+        )
+      ).toEqual(["cost", "cost"]);
+    });
+  });
+
+  it("counts at most a batch of escrows in one fold, and says more are left", async () => {
+    const t = createBillingTestConvex();
+    await t.run(async (ctx) => {
+      const claim: Claim = { kind: "nakafa" };
+      for (const _ of Arr.range(0, FOLD_BATCH)) {
+        await runInMutation(ctx, holdSpend(claim, "embedding", 1));
+      }
+      expect(await fold(ctx)).toBe(true);
+      expect(await fold(ctx)).toBe(false);
+      expect((await rowsOf(ctx))[0]).toMatchObject({
+        calls: FOLD_BATCH + 1,
+        held: FOLD_BATCH + 1,
+      });
     });
   });
 });

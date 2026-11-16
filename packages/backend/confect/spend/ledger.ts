@@ -9,11 +9,7 @@ import {
   MAX_CREDIT_LOTS,
 } from "@repo/backend/confect/credits/constants";
 import { schoolCreditsOf } from "@repo/backend/confect/credits/pool";
-import {
-  type Vendor,
-  vendorOf,
-  type Work,
-} from "@repo/backend/confect/spend/rates";
+import { vendorOf, type Work } from "@repo/backend/confect/spend/rates";
 import {
   type Claim,
   type Escrow,
@@ -27,6 +23,7 @@ import {
   Effect,
   Match,
   Option,
+  Record as Rec,
   String as Str,
 } from "effect";
 
@@ -155,30 +152,6 @@ function usedOf(rows: readonly Docs["vendorSpend"][]) {
   return Arr.reduce(rows, 0, (total, row) => total + row.held + row.spent);
 }
 
-/** Adds one call's hold to its vendor's row of the month, made on the month's first call to that vendor. */
-const holdOnRow = Effect.fn("spend.holdOnRow")(function* (
-  rows: readonly Docs["vendorSpend"][],
-  payer: Payer,
-  month: string,
-  vendor: Vendor,
-  held: number
-) {
-  const writer = (yield* DatabaseWriter).table("vendorSpend");
-  const row = Arr.findFirst(rows, (candidate) => candidate.vendor === vendor);
-  if (Option.isSome(row)) {
-    yield* writer
-      .patch(row.value._id, {
-        held: row.value.held + held,
-        calls: row.value.calls + 1,
-      })
-      .pipe(Effect.orDie);
-    return row.value._id;
-  }
-  return yield* writer
-    .insert({ payer, month, vendor, held, spent: 0, calls: 1 })
-    .pipe(Effect.orDie);
-});
-
 /**
  * Holds up to `ceiling` micro-dollars for one call before it runs, in the
  * transaction that checks the payer's month. The hold is the ceiling, or what
@@ -197,12 +170,14 @@ const holdOnRow = Effect.fn("spend.holdOnRow")(function* (
  * nothing for the next one. The credit ledger accepts the same gap, a turn
  * that holds its balance when that is less than the most one response may cost.
  *
- * Calls of one payer that run at once retry against each other: a hold reads
- * every vendor row of the payer's month to check the one budget they share,
- * and writes one of them, so a concurrent hold or settle of the same payer
- * writes what it read. Sharding the rows would not remove that, because a
- * hold must read every shard to check the total. So the caller writes one
- * escrow at a time (`meterOf`), and two payers never share a row.
+ * A hold writes only its own escrow, and reads the payer's month as
+ * `foldSpend` last counted it, so calls of one payer that run at once never
+ * write one document and never retry against each other: on 15 Nov 2026 the
+ * holds and settles that wrote Nakafa's one Google row retried 1,471 times, and
+ * one failed. The price is that a month does not yet count the holds of the
+ * last fold's minute, so a payer's calls in that minute can pass its budget by
+ * their holds; the credit ledger still bounds what a learner's or a school's
+ * turns may take.
  */
 export const holdSpend = Effect.fn("spend.hold")(function* (
   claim: Claim,
@@ -219,46 +194,147 @@ export const holdSpend = Effect.fn("spend.hold")(function* (
   if (held < Math.min(ceiling, BUDGET_PER_CREDIT)) {
     return yield* new SpendRefused({ vendor, budget, used, held: ceiling });
   }
-  const spendId = yield* holdOnRow(rows, payer, month, vendor, held);
   const escrowId = yield* (yield* DatabaseWriter)
     .table("vendorEscrows")
-    .insert({ spendId, work, held, state: { status: "held" } })
+    .insert({
+      payer,
+      month,
+      vendor,
+      work,
+      held,
+      state: { status: "held" },
+      counted: "nothing",
+    })
     .pipe(Effect.orDie);
   const escrow: Escrow = { escrowId, held };
   return escrow;
 });
 
 /**
- * Settles one call's escrow to what it cost: its row lets go of the hold and
- * adds the cost, which may be more than the hold when the call measured more
- * than its ceiling. An escrow settles once, so a second settle changes nothing.
+ * Settles one call's escrow to what it cost, which may be more than its hold
+ * when the call measured more than its ceiling. It writes only the escrow:
+ * `foldSpend` lets go of the hold on its row and adds the cost. An escrow
+ * settles once, so a second settle changes nothing.
  */
 export const settleSpend = Effect.fn("spend.settle")(function* (
   escrowId: Docs["vendorEscrows"]["_id"],
   spent: number
 ) {
-  const reader = yield* DatabaseReader;
-  const writer = yield* DatabaseWriter;
-  const escrow = yield* reader
+  const escrow = yield* (yield* DatabaseReader)
     .table("vendorEscrows")
     .get(escrowId)
     .pipe(Effect.orDie);
   if (escrow.state.status === "settled") {
     return;
   }
-  const row = yield* reader
-    .table("vendorSpend")
-    .get(escrow.spendId)
-    .pipe(Effect.orDie);
-  yield* writer
-    .table("vendorSpend")
-    .patch(row._id, {
-      held: Math.max(0, row.held - escrow.held),
-      spent: row.spent + spent,
-    })
-    .pipe(Effect.orDie);
-  yield* writer
+  yield* (yield* DatabaseWriter)
     .table("vendorEscrows")
     .patch(escrowId, { state: { status: "settled", spent } })
     .pipe(Effect.orDie);
+});
+
+/** The most escrows one fold counts, so a fold stays well inside a mutation's limits. */
+export const FOLD_BATCH = 400;
+
+/** The row an escrow counts toward: its payer, month and vendor. */
+function rowKey(escrow: Docs["vendorEscrows"]) {
+  const payer = Match.value(escrow.payer).pipe(
+    Match.discriminatorsExhaustive("kind")({
+      school: ({ tenantId }) => `school:${tenantId}`,
+      learner: ({ userId }) => `learner:${userId}`,
+      nakafa: () => "nakafa",
+    })
+  );
+  return `${payer}|${escrow.month}|${escrow.vendor}`;
+}
+
+/** What counting one escrow adds to its row, and what its row then counts of it. */
+function countOf(escrow: Docs["vendorEscrows"]) {
+  if (escrow.state.status === "held") {
+    return { calls: 1, counted: "hold" as const, held: escrow.held, spent: 0 };
+  }
+  // A settled escrow lets go of the hold its row counts, if it counts one.
+  const released = escrow.counted === "hold";
+  return {
+    calls: released ? 0 : 1,
+    counted: "cost" as const,
+    held: released ? -escrow.held : 0,
+    spent: escrow.state.spent,
+  };
+}
+
+/** Counts one row's escrows on it: made on its month's first call, patched after. */
+const foldRow = Effect.fn("spend.foldRow")(function* (
+  escrows: readonly [Docs["vendorEscrows"], ...Docs["vendorEscrows"][]]
+) {
+  const writer = yield* DatabaseWriter;
+  const [first] = escrows;
+  const counts = Arr.map(escrows, countOf);
+  const sum = (field: "calls" | "held" | "spent") =>
+    Arr.reduce(counts, 0, (total, count) => total + count[field]);
+  const rows = yield* monthRows(first.payer, first.month);
+  const row = Arr.findFirst(
+    rows,
+    (candidate) => candidate.vendor === first.vendor
+  );
+  if (Option.isSome(row)) {
+    yield* writer
+      .table("vendorSpend")
+      .patch(row.value._id, {
+        calls: row.value.calls + sum("calls"),
+        held: Math.max(0, row.value.held + sum("held")),
+        spent: row.value.spent + sum("spent"),
+      })
+      .pipe(Effect.orDie);
+  } else {
+    yield* writer
+      .table("vendorSpend")
+      .insert({
+        payer: first.payer,
+        month: first.month,
+        vendor: first.vendor,
+        calls: sum("calls"),
+        held: Math.max(0, sum("held")),
+        spent: sum("spent"),
+      })
+      .pipe(Effect.orDie);
+  }
+  yield* Effect.forEach(
+    Arr.zip(escrows, counts),
+    ([escrow, count]) =>
+      writer
+        .table("vendorEscrows")
+        .patch(escrow._id, { counted: count.counted })
+        .pipe(Effect.orDie),
+    { discard: true }
+  );
+});
+
+/**
+ * Counts on their vendor rows the escrows the rows do not count yet, up to
+ * `FOLD_BATCH`: each new hold, and each settle, which lets go of its hold and
+ * adds its cost. The calls never write the rows themselves, so the fold, run
+ * every minute, is the one writer of a row and the only work a hold that reads
+ * the row can retry against. It answers whether escrows were left for the next
+ * fold.
+ */
+export const foldSpend = Effect.fn("spend.fold")(function* () {
+  const table = (yield* DatabaseReader).table("vendorEscrows");
+  const fresh = yield* table
+    .index("by_counted_and_status", (index) => index.eq("counted", "nothing"))
+    .take(FOLD_BATCH)
+    .pipe(Effect.orDie);
+  const settled = yield* table
+    .index("by_counted_and_status", (index) =>
+      index.eq("counted", "hold").eq("state.status", "settled")
+    )
+    .take(FOLD_BATCH - fresh.length)
+    .pipe(Effect.orDie);
+  const escrows = [...fresh, ...settled];
+  yield* Effect.forEach(
+    Rec.values(Arr.groupBy(escrows, rowKey)),
+    (group) => foldRow(group),
+    { discard: true }
+  );
+  return escrows.length === FOLD_BATCH;
 });

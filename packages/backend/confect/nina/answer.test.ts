@@ -1,7 +1,9 @@
 import { Ref } from "@confect/core";
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
+import { foldSpend } from "@repo/backend/confect/spend/ledger";
 import { languageCeiling } from "@repo/backend/confect/spend/rates";
+import { runInMutation } from "@repo/backend/test/billing";
 import { deployment, provider } from "@repo/backend/test/gateway";
 import { createNinaTest, ninaStream, ninaUsage } from "@repo/backend/test/nina";
 import { MockLanguageModelV4 } from "ai/test";
@@ -47,6 +49,8 @@ describe("A Nina turn's spend", () => {
         yield* Effect.promise(() => f.t.action(run, { turnId: f.turnId }));
         const ledger = yield* Effect.promise(() =>
           f.t.run(async (ctx) => ({
+            // The minute's fold counts the turn's escrow on its row.
+            folded: await runInMutation(ctx, foldSpend()),
             escrows: await ctx.db.query("vendorEscrows").collect(),
             rows: await ctx.db.query("vendorSpend").collect(),
           }))
