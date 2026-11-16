@@ -249,3 +249,44 @@ export function uploadMoving(gl: WebGL2RenderingContext, capacity: number) {
     },
   };
 }
+
+/**
+ * The shore map on the GPU (D28): one byte a column of sea, read smoothly so
+ * the surf bends round a coast instead of stepping along its cells. `write`
+ * replaces it, `bind` puts it on a texture unit.
+ */
+export function uploadShore(gl: WebGL2RenderingContext, side: number) {
+  const texture = gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D, texture);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+  const write = (map: Uint8Array) => {
+    gl.bindTexture(gl.TEXTURE_2D, texture);
+    gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
+    gl.texImage2D(
+      gl.TEXTURE_2D,
+      0,
+      gl.R8,
+      side,
+      side,
+      0,
+      gl.RED,
+      gl.UNSIGNED_BYTE,
+      map
+    );
+  };
+  write(new Uint8Array(side * side));
+  return {
+    bind(unit: number) {
+      gl.activeTexture(gl.TEXTURE0 + unit);
+      gl.bindTexture(gl.TEXTURE_2D, texture);
+      gl.activeTexture(gl.TEXTURE0);
+    },
+    release() {
+      gl.deleteTexture(texture);
+    },
+    write,
+  };
+}

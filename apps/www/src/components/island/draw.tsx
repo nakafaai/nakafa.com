@@ -8,6 +8,7 @@ import {
   uploadList,
   uploadMoving,
   uploadOutline,
+  uploadShore,
   uploadWeather,
 } from "@/components/island/buffers";
 import { createFrame } from "@/components/island/frame";
@@ -37,6 +38,7 @@ import {
   WEATHER_FRAGMENT,
   WEATHER_VERTEX,
 } from "@/lib/island/shaders";
+import { SHORE_FROM, SHORE_SIDE } from "@/lib/island/shore";
 import { type Fall, fallOf, type Light, type Weather } from "@/lib/island/sky";
 import { TILE } from "@/lib/island/tiles/paint";
 import { CHUNKS, SEA_LEVEL } from "@/lib/island/world";
@@ -115,6 +117,7 @@ export function createPainter(canvas: HTMLCanvasElement, season: Season) {
         water: Option.none<ReturnType<typeof uploadList>>(),
       }));
       const sea = uploadList(gl, seaRing(SEA_LEVEL - 0.125, [0, 0], 1));
+      const shore = uploadShore(gl, SHORE_SIDE);
       // The other isles of the archipelago (D23): one static list, set once a game.
       let isles = Option.none<ReturnType<typeof uploadList>>();
       const sandSlot = SLOTS.sand;
@@ -234,6 +237,10 @@ export function createPainter(canvas: HTMLCanvasElement, season: Season) {
         gl.activeTexture(gl.TEXTURE0);
         gl.bindTexture(gl.TEXTURE_2D, atlas);
         gl.uniform1i(uniform("uAtlas"), 0);
+        // The edge pass leaves the frame's own faces on unit 1, which this pass must not read while it draws them.
+        shore.bind(1);
+        gl.uniform1i(uniform("uShore"), 1);
+        gl.uniform2f(uniform("uShoreBox"), SHORE_FROM, SHORE_SIDE);
         gl.uniform1f(uniform("uWater"), 0);
         gl.uniform1f(uniform("uAlpha"), 1);
         gl.bindVertexArray(floor.vao);
@@ -256,6 +263,7 @@ export function createPainter(canvas: HTMLCanvasElement, season: Season) {
         gl.drawBuffers([gl.COLOR_ATTACHMENT0, gl.NONE]);
         gl.uniform1f(uniform("uWater"), 1);
         gl.uniform1f(uniform("uAlpha"), 0.9);
+
         drawLists("water");
         gl.bindVertexArray(sea.vao);
         gl.drawElements(gl.TRIANGLES, sea.count, gl.UNSIGNED_INT, 0);
@@ -392,6 +400,10 @@ export function createPainter(canvas: HTMLCanvasElement, season: Season) {
           Option.map(isles, (list) => list.release());
           isles = Option.some(uploadList(gl, mesh));
         },
+        /** Replaces the map of where land meets the sea, which the water draws its surf from (D28). */
+        shore(map: Uint8Array) {
+          shore.write(map);
+        },
         /** Replaces where every true 3D body stands this frame (D21). */
         bodies(next: Parameters<typeof bodies.write>[0]) {
           bodies.write(next);
@@ -452,6 +464,7 @@ export function createPainter(canvas: HTMLCanvasElement, season: Season) {
             Option.map(chunk.water, (list) => list.release());
           }
           sea.release();
+          shore.release();
           Option.map(isles, (list) => list.release());
           weather.release();
           target.release();

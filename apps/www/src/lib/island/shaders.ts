@@ -39,6 +39,8 @@ uniform float uAlpha;
 uniform float uTime;
 uniform vec2 uWaterTile;
 uniform float uWater;
+uniform sampler2D uShore;
+uniform vec2 uShoreBox;
 uniform vec3 uEye;
 in vec2 vUv;
 in float vShade;
@@ -74,12 +76,31 @@ void main() {
   }
   vec4 texel = texture(uAtlas, uv);
   if (texel.a < 0.5) discard;
+  vec3 paint = texel.rgb;
+  float foam = 0.0;
+  if (uWater > 0.5) {
+    // The sea in whole art pixels (D28): how near land this pixel is, and a slow drift that breaks every line of it.
+    vec2 art = floor(vWorld.xz * 16.0) / 16.0;
+    float near = texture(uShore, (art + 0.5 - uShoreBox.x) / uShoreBox.y).r;
+    float drift = noiseOf(art * 2.0 + vec2(uTime * 0.25, -uTime * 0.18));
+    // Shallows: the water pales and greens toward the shore.
+    paint = mix(paint, paint + vec3(0.06, 0.2, 0.17), smoothstep(0.0, 0.8, near) * 0.7);
+    // Surf: a band along the land that laps in and out, and one thin line of foam riding in ahead of it.
+    float lap = 0.5 + 0.5 * sin(uTime * 1.1 + drift * 5.0);
+    float reach = near + (drift - 0.5) * 0.24;
+    float surf = step(0.8 - 0.1 * lap, reach);
+    float line = step(0.4 + 0.08 * lap, reach) * (1.0 - step(0.5 + 0.08 * lap, reach)) * step(0.35, lap);
+    // Glints: out at sea, patches of sparse specks of light that run with the wind.
+    float glint = step(0.955, noiseOf(vec2(art.x * 3.0 + uTime * 0.7, art.y * 9.0 - uTime * 0.2))) * step(0.5, noiseOf(art * 0.12 + vec2(uTime * 0.03, 0.0))) * (1.0 - smoothstep(0.0, 0.3, near)) * vSky;
+    foam = max(max(surf, line * 0.85), glint * 0.55);
+  }
   vec3 light = uAmbient * (0.55 + 0.45 * vShade) + uSun * vShade * vSky * (1.0 - 0.4 * cloudOf(vWorld.xz));
   light = max(light, uLamp * vGlow * vGlow * vShade);
   light = floor(light * 12.0 + 0.5) / 12.0;
   // Measured per pixel: the sea is a few huge quads, and a distance blended between their far corners would fog all of it.
   float fog = smoothstep(uFogRange.x, uFogRange.y, distance(vWorld, uEye));
-  color = vec4(mix(texel.rgb * light, uFog, fog), uAlpha);
+  vec3 lit = mix(paint * light, vec3(0.97, 0.99, 1.0) * min(vec3(1.0), light + 0.12), foam);
+  color = vec4(mix(lit, uFog, fog), mix(uAlpha, 1.0, foam));
   // The face's own direction, from how the world moves across this pixel, for the edge pass (D20).
   surface = vec4(normalize(cross(dFdx(vWorld), dFdy(vWorld))) * 0.5 + 0.5, 1.0);
 }`;

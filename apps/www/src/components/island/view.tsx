@@ -11,6 +11,7 @@ import { glowOf } from "@/lib/island/light";
 import { lightingOf, meshChunk } from "@/lib/island/mesh";
 import { plantBodies } from "@/lib/island/plants";
 import { seasonNow } from "@/lib/island/season";
+import { shoreOf } from "@/lib/island/shore";
 import { hourOf, lightOf } from "@/lib/island/sky";
 import { worldOf } from "@/lib/island/terrain";
 import { CHUNKS } from "@/lib/island/world";
@@ -36,6 +37,7 @@ function tour(
       );
     }
   );
+  painter.shore(shoreOf(world, 0, false));
   let frame = 0;
   let last = 0;
   let orbit = openingOrbit(size, 1);
