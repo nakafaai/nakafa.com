@@ -1,8 +1,12 @@
 import { RegisteredFunction } from "@confect/server";
 import { describe, expect, it } from "@effect/vitest";
+import spendInternal from "@repo/backend/confect/_generated/refs/spend.server";
 import confectSchema from "@repo/backend/confect/_generated/schema";
+import { MutationRunner } from "@repo/backend/confect/_generated/services";
+import { foldSpend } from "@repo/backend/confect/spend/ledger";
 import { metered, meterOf } from "@repo/backend/confect/spend/meter";
 import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
+import { runInMutation } from "@repo/backend/test/billing";
 import { MASCOT_CODE } from "@repo/backend/test/mascot";
 import { recordingMeter } from "@repo/backend/test/spend";
 import { Array as Arr, Effect, Fiber, Layer, MutableRef } from "effect";
@@ -71,6 +75,9 @@ describe("spend/meter", () => {
             Effect.succeed("answer"),
             () => 1875
           );
+          const { runMutation } = yield* MutationRunner;
+          // A hold reads the month as the minute's fold last counted it.
+          yield* runMutation(spendInternal.escrow.fold, {});
           // A ceiling above what the free month has left holds the rest of it.
           const rest = yield* metered(
             "chat",
@@ -78,13 +85,15 @@ describe("spend/meter", () => {
             Effect.succeed("rest"),
             () => 775_000 - 1875
           );
+          yield* runMutation(spendInternal.escrow.fold, {});
           const refused = yield* Effect.flip(
             metered("chat", 1, Effect.succeed("never"), () => 0)
           );
           return { answered, refused: refused._tag, rest };
         }).pipe(
           Effect.provide(
-            Layer.provide(
+            // The test folds through the action's own mutation runner too.
+            Layer.provideMerge(
               meterOf({ kind: "learner", userId }),
               RegisteredFunction.actionLayer(confectSchema, ctx)
             )
@@ -103,7 +112,7 @@ describe("spend/meter", () => {
     ).toEqual([{ calls: 2, held: 0, spent: 775_000 }]);
   });
 
-  it("writes one escrow at a time while an action's calls run at once, so they never retry against each other", async () => {
+  it("holds and settles an action's calls at once, each on its own escrow, and the fold counts them all", async () => {
     const t = createConvexTestWithBetterAuth();
     const userId = await t.run((ctx) =>
       ctx.db.insert("users", {
@@ -149,7 +158,9 @@ describe("spend/meter", () => {
         })
       )
     );
-    expect(most).toBe(1);
+    // No lock: the calls write their own escrows side by side.
+    expect(most).toBeGreaterThan(1);
+    await t.run((ctx) => runInMutation(ctx, foldSpend()));
     const rows = await t.run((ctx) => ctx.db.query("vendorSpend").collect());
     expect(
       Arr.map(rows, ({ calls, held, spent }) => ({ calls, held, spent }))

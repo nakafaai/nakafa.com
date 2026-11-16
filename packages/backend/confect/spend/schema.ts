@@ -7,6 +7,9 @@ import { Schema } from "effect";
 /** A whole number of micro-dollars, zero or more. */
 const MicroUsd = Schema.Int.check(Schema.isGreaterThanOrEqualTo(0));
 
+/** A calendar month (UTC), `YYYY-MM`. */
+const Month = Schema.String.check(Schema.isPattern(/^\d{4}-\d{2}$/u));
+
 /**
  * Who pays for a call: a school from the AI credits its plan grants, a learner
  * from their own plan and top-up packs, or Nakafa itself for work that belongs
@@ -40,13 +43,14 @@ export type Claim = typeof Claim.Type;
 
 /**
  * What one payer spent with one vendor in one calendar month (UTC),
- * `YYYY-MM`, in micro-dollars. `held` is what open calls hold before they
- * settle, `spent` what settled calls cost, and `calls` how many calls took a
- * hold. A refund of credits never lowers `spent`: the vendor was paid.
+ * `YYYY-MM`, in micro-dollars, as far as `foldSpend` has counted the month's
+ * escrows. `held` is what open calls hold before they settle, `spent` what
+ * settled calls cost, and `calls` how many calls took a hold. A refund of
+ * credits never lowers `spent`: the vendor was paid.
  */
 export const vendorSpendValidator = Schema.Struct({
   payer: Payer,
-  month: Schema.String.check(Schema.isPattern(/^\d{4}-\d{2}$/u)),
+  month: Month,
   vendor: Vendor,
   held: MicroUsd,
   spent: MicroUsd,
@@ -54,17 +58,30 @@ export const vendorSpendValidator = Schema.Struct({
 });
 
 /**
- * One call's escrow: the amount held on its vendor row before the call, and,
- * once it settled, what it cost. An escrow settles once.
+ * What of an escrow its vendor row counts: nothing yet, its hold, or its cost
+ * once it settled. `foldSpend` moves each escrow along, and an escrow whose row
+ * counts its cost is done.
+ */
+export const Counted = Schema.Literals(["nothing", "hold", "cost"]);
+export type Counted = typeof Counted.Type;
+
+/**
+ * One call's escrow: the payer, month and vendor whose row it counts toward,
+ * the amount held before the call, and, once it settled, what it cost. An
+ * escrow settles once. The call writes only its own escrow, and `foldSpend`
+ * adds it to its row later, so two calls of one payer never write one document.
  */
 export const vendorEscrowValidator = Schema.Struct({
-  spendId: Id("vendorSpend"),
+  payer: Payer,
+  month: Month,
+  vendor: Vendor,
   work: Work,
   held: MicroUsd,
   state: Schema.Union([
     Schema.Struct({ status: Schema.Literal("held") }),
     Schema.Struct({ status: Schema.Literal("settled"), spent: MicroUsd }),
   ]),
+  counted: Counted,
 });
 
 /** A call's escrow, as the caller holds it until it settles. */

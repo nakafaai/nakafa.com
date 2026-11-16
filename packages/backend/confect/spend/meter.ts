@@ -6,7 +6,7 @@ import type {
   Escrow,
   SpendRefused,
 } from "@repo/backend/confect/spend/schema";
-import { Context, Effect, Exit, Layer, Semaphore } from "effect";
+import { Context, Effect, Exit, Layer } from "effect";
 
 /**
  * The escrow of one action's calls, for the claim the action works for. Every
@@ -26,31 +26,25 @@ export class Meter extends Context.Service<
 
 /**
  * The meter of an action that works for `claim`, over the escrow mutations.
- * Every hold and settle of one payer reads all of its month's rows and writes
- * one, so two of them at once retry against each other. One action's calls
- * often run at once, such as the four embedding requests of a lesson build, so
- * the meter writes one escrow at a time: on 15 Nov 2026 a release's re-embed
- * retried 1,194 holds and 390 settles on the Nakafa row, and one hold failed
- * after four retries. The calls themselves still run at once; only their
- * escrow writes, a few milliseconds each, wait their turn.
+ * Each hold and settle writes only its own escrow (`holdSpend`), so the calls
+ * of an action, such as the four embedding requests of a lesson build, hold
+ * and settle at once without retrying against each other.
  */
 export const meterOf = (claim: Claim) =>
   Layer.effect(
     Meter,
     Effect.gen(function* () {
       const { runMutation } = yield* MutationRunner;
-      const turn = yield* Semaphore.make(1);
       return Meter.of({
         hold: (work, ceiling) =>
           runMutation(spendInternal.escrow.hold, { ceiling, claim, work }).pipe(
-            Effect.catchTag("SchemaError", Effect.die),
-            turn.withPermit
+            Effect.catchTag("SchemaError", Effect.die)
           ),
         settle: (escrow, spent) =>
           runMutation(spendInternal.escrow.settle, {
             escrowId: escrow.escrowId,
             spent,
-          }).pipe(Effect.orDie, Effect.asVoid, turn.withPermit),
+          }).pipe(Effect.orDie, Effect.asVoid),
       });
     })
   );

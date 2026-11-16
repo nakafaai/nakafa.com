@@ -9,4 +9,5 @@ const definitions = ConvexFunctionDefinitions.buildForGroup<typeof import("../..
 export default {
 ["hold"]: RegisteredConvexFunction.register({ ...definitions["hold"], handler: forward(definitions["hold"].handler) }),
 ["settle"]: RegisteredConvexFunction.register({ ...definitions["settle"], handler: forward(definitions["settle"].handler) }),
+["fold"]: RegisteredConvexFunction.register({ ...definitions["fold"], handler: forward(definitions["fold"].handler) }),
 } as RegisteredFunctions.RegisteredFunctionsForGroupSpec<typeof import("../../../spend/escrow.spec")["default"]>;
