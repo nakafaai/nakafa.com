@@ -302,6 +302,11 @@ export const openChatPage = Effect.fn("NakafaE2E.openChatPage")(function* (
   const changes = yield* trackChanges(page, [LIST_QUERY]);
   yield* seedAnalyticsConsent(page, "denied");
   yield* signInLearner(page.context(), baseURL);
+  page.on("console", (message) => {
+    if (message.text().startsWith("PROBE")) {
+      console.log(message.text());
+    }
+  });
   yield* Effect.promise(() => page.goto(chatPathOf(locale)));
 
   // The server took the learner's choice, so the page was signed in and its

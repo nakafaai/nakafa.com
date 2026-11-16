@@ -136,6 +136,7 @@ export function useChatAdmission({
     const submittedFrom = activation.current;
     return send(draft)
       .then((receipt) => {
+        console.log(`PROBE admission receipt=${receipt ? "yes" : "no"} left=${activation.current !== submittedFrom} shown=${shownNow.current}`);
         if (!receipt) {
           return takeBack(draft.text, submittedBy);
         }

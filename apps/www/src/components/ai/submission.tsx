@@ -82,6 +82,7 @@ export function useNinaSubmission(
     chatId?: Id<"chats">
   ): Promise<Ref.Returns<Start> | undefined> {
     if (inFlight.current) {
+      console.log("PROBE perform: in flight, refused");
       return Promise.resolve(undefined);
     }
     inFlight.current = true;
@@ -170,6 +171,7 @@ export function useNinaSubmission(
             if (result.failure._tag !== "NinaConnectionError") {
               uncertain.current = null;
             }
+            console.log(`PROBE perform failure ${result.failure._tag} ${result.failure.code}`);
             onFailure?.(result.failure);
             const feedbackKey =
               ninaFailureFeedback[result.failure.code].message;
