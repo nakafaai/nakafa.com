@@ -9,23 +9,16 @@ import { openSheet } from "@/e2e/support/sheet";
 /** Where the pointer lets go of the edge, in pixels from the left of the window. */
 const POINTER = 800;
 
-// The page has a scrollbar that takes room, as the pages of Windows and Linux
-// do, and a lesson is long enough that the page needs one.
 test.use({
-  launchOptions: {
-    args: ["--disable-features=OverlayScrollbar"],
-    ignoreDefaultArgs: ["--hide-scrollbars"],
-  },
   reducedMotion: "reduce",
   viewport: { height: 700, width: 1280 },
 });
 
 /**
- * The learner drags the edge of Nina's sheet with the mouse. The sheet is fixed
- * to the right edge of the page, which is where the page ends and the
- * scrollbar begins, so its edge lands where the pointer is, and not the width
- * of the scrollbar away from it. Every sheet and the memory panel resize by the
- * same edge and hook.
+ * The learner drags the edge of Nina's sheet with the mouse, and its edge lands
+ * where the pointer lets go. No native scrollbar takes room on a fine pointer
+ * (`globals.css`), so the sheet's right edge is the window's. Every sheet and
+ * the memory panel resize by the same edge and hook.
  */
 const verifyDrag = Effect.fn("NakafaE2E.verifyNinaSheetDrag")(function* (
   page: Page
@@ -36,11 +29,6 @@ const verifyDrag = Effect.fn("NakafaE2E.verifyNinaSheetDrag")(function* (
   const sheet = page.locator(SHEET_POPUP);
 
   yield* waitForSlide(sheet);
-  const scrollbar = yield* Effect.promise(() =>
-    page.evaluate(
-      () => window.innerWidth - document.documentElement.clientWidth
-    )
-  );
   const separator = sheet.getByRole("separator", { name: "Change width" });
   const edge = yield* Effect.promise(() => separator.boundingBox());
   // The edge is the page pane's: its grip in the middle, and no colour of its own on hover.
@@ -52,8 +40,6 @@ const verifyDrag = Effect.fn("NakafaE2E.verifyNinaSheetDrag")(function* (
     expect(separator).toHaveCSS("background-color", resting)
   );
 
-  // A page with no scrollbar of its own would prove nothing.
-  expect(scrollbar).toBeGreaterThan(0);
   expect(edge).not.toBeNull();
   yield* Effect.promise(async () => {
     const y = (edge?.y ?? 0) + 200;
@@ -66,7 +52,7 @@ const verifyDrag = Effect.fn("NakafaE2E.verifyNinaSheetDrag")(function* (
   expect((yield* Effect.promise(() => sheet.boundingBox()))?.x).toBe(POINTER);
 });
 
-test.describe("Nina's sheet dragged beside a scrollbar that takes room", () => {
+test.describe("Nina's sheet dragged by its edge", () => {
   test("lands its edge under the pointer", async ({ page }) => {
     await Effect.runPromise(withObservedPageErrors(page, verifyDrag(page)));
   });

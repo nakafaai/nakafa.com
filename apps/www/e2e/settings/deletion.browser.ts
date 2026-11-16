@@ -317,8 +317,9 @@ const verifyRefusalStays = Effect.fn("NakafaE2E.verifyRefusalStays")(function* (
     await expect(confirm).toBeEnabled({
       timeout: readinessTimeoutMilliseconds,
     });
+    // The close in the corner is the dialog's one way out: no footer repeats it with Cancel.
     await dialog
-      .getByRole("button", { exact: true, name: app.Common.cancel })
+      .getByRole("button", { exact: true, name: app.Common.close })
       .click();
     await expect(dialog).toHaveCount(0);
     expect(

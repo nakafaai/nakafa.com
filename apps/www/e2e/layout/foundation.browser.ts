@@ -1,6 +1,9 @@
 import { expect, type Page, test } from "@playwright/test";
 import { Array as Arr, Effect } from "effect";
-import { openConsentPreferences } from "@/e2e/support/consent";
+import {
+  openConsentPreferences,
+  seedAnalyticsConsent,
+} from "@/e2e/support/consent";
 import { openRoute } from "@/e2e/support/route";
 import { SHEET_POPUP } from "@/e2e/support/selector";
 import { openSheet } from "@/e2e/support/sheet";
@@ -150,7 +153,11 @@ for (const scheme of SCHEMES) {
       test("Nina's sheet resizes from the pane's edge, and its header's icons touch", async ({
         page,
       }) => {
-        await Effect.runPromise(openSheet(page));
+        // As on every other page here, the visitor has answered the consent banner, which would
+        // otherwise cover the Ask Nina bar docked to the bottom of the page.
+        await Effect.runPromise(
+          Effect.andThen(seedAnalyticsConsent(page, "denied"), openSheet(page))
+        );
         const sheet = page.locator(SHEET_POPUP);
         await expect(sheet).toBeVisible({
           timeout: readinessTimeoutMilliseconds,
