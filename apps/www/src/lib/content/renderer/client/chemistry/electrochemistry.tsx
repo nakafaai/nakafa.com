@@ -10,3 +10,11 @@ export const ElectrolysisLab = withHydrationBoundary(
     ).then((module) => ({ default: module.ElectrolysisLab }))
   )
 );
+
+export const ChemicalCellLab = withHydrationBoundary(
+  lazy(() =>
+    import(
+      "@repo/design-system/components/contents/chemistry/voltaic/lab"
+    ).then((module) => ({ default: module.ChemicalCellLab }))
+  )
+);
