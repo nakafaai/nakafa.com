@@ -93,7 +93,7 @@ export function CurriculumList({ curricula }: CurriculumListProps) {
             className="ring-foreground/10 h-auto w-6 shrink-0 rounded-xs ring-1"
             countryCode={curriculum.countryCode}
             fallback={
-              <HugeIcons className="size-6 shrink-0" icon={Globe02Icon} />
+              <HugeIcons className="size-4 shrink-0" icon={Globe02Icon} />
             }
           />
           {curriculum.title}

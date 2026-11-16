@@ -44,12 +44,12 @@ type ToasterStyle = React.CSSProperties & typeof ToasterStyleSchema.Type;
  */
 const toasterStyle: ToasterStyle = {
   "--border-radius": "var(--radius)",
-  "--error-bg": "color-mix(in oklch, var(--destructive) 15%, var(--popover))",
+  "--error-bg": "color-mix(in oklab, var(--destructive) 15%, var(--popover))",
   "--error-border": "var(--destructive)",
   "--error-text": "var(--popover-foreground)",
   "--gray2": "var(--accent)",
   "--gray5": "var(--input)",
-  "--info-bg": "color-mix(in oklch, var(--info) 15%, var(--popover))",
+  "--info-bg": "color-mix(in oklab, var(--info) 15%, var(--popover))",
   "--info-border": "var(--info)",
   "--info-text": "var(--popover-foreground)",
   "--normal-bg": "var(--popover)",
@@ -57,10 +57,10 @@ const toasterStyle: ToasterStyle = {
   "--normal-border": "var(--border)",
   "--normal-border-hover": "var(--input)",
   "--normal-text": "var(--popover-foreground)",
-  "--success-bg": "color-mix(in oklch, var(--success) 15%, var(--popover))",
+  "--success-bg": "color-mix(in oklab, var(--success) 15%, var(--popover))",
   "--success-border": "var(--success)",
   "--success-text": "var(--popover-foreground)",
-  "--warning-bg": "color-mix(in oklch, var(--warning) 15%, var(--popover))",
+  "--warning-bg": "color-mix(in oklab, var(--warning) 15%, var(--popover))",
   "--warning-border": "var(--warning)",
   "--warning-text": "var(--popover-foreground)",
 };

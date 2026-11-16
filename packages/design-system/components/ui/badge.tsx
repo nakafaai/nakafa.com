@@ -9,29 +9,29 @@ const badgeVariants = cva(
     variants: {
       variant: {
         default:
-          "bg-primary text-primary-foreground border-transparent [a&]:hover:bg-[color-mix(in_oklch,var(--primary)_99%,var(--background))] [a&]:hover:shadow-sm",
+          "bg-primary text-primary-foreground border-transparent [a&]:hover:bg-[color-mix(in_oklab,var(--primary)_99%,var(--background))] [a&]:hover:shadow-sm",
         "default-subtle":
-          "border-primary text-foreground bg-[color-mix(in_oklch,var(--primary)_5%,var(--background))] [a&]:hover:bg-[color-mix(in_oklch,var(--primary)_8%,var(--background))] [a&]:hover:shadow-sm",
+          "border-primary text-foreground bg-[color-mix(in_oklab,var(--primary)_5%,var(--background))] [a&]:hover:bg-[color-mix(in_oklab,var(--primary)_8%,var(--background))] [a&]:hover:shadow-sm",
         "default-outline":
-          "border-border bg-primary text-primary-foreground [a&]:hover:bg-[color-mix(in_oklch,var(--primary)_99%,var(--background))] [a&]:hover:shadow-sm",
+          "border-border bg-primary text-primary-foreground [a&]:hover:bg-[color-mix(in_oklab,var(--primary)_99%,var(--background))] [a&]:hover:shadow-sm",
         secondary:
-          "bg-secondary text-secondary-foreground border-transparent [a&]:hover:bg-[color-mix(in_oklch,var(--secondary)_99%,var(--background))] [a&]:hover:shadow-sm",
+          "bg-secondary text-secondary-foreground border-transparent [a&]:hover:bg-[color-mix(in_oklab,var(--secondary)_99%,var(--background))] [a&]:hover:shadow-sm",
         "secondary-subtle":
-          "border-muted-foreground text-foreground bg-[color-mix(in_oklch,var(--secondary)_5%,var(--background))] [a&]:hover:bg-[color-mix(in_oklch,var(--secondary)_8%,var(--background))] [a&]:hover:shadow-sm",
+          "border-muted-foreground text-foreground bg-[color-mix(in_oklab,var(--secondary)_5%,var(--background))] [a&]:hover:bg-[color-mix(in_oklab,var(--secondary)_8%,var(--background))] [a&]:hover:shadow-sm",
         "secondary-outline":
-          "border-border bg-secondary text-secondary-foreground [a&]:hover:bg-[color-mix(in_oklch,var(--secondary)_99%,var(--background))] [a&]:hover:shadow-sm",
+          "border-border bg-secondary text-secondary-foreground [a&]:hover:bg-[color-mix(in_oklab,var(--secondary)_99%,var(--background))] [a&]:hover:shadow-sm",
         muted:
           "bg-muted text-muted-foreground [a&]:hover:bg-muted/90 border-transparent [a&]:hover:shadow-sm",
         "muted-outline":
           "border-border bg-muted text-muted-foreground [a&]:hover:bg-muted/90 [a&]:hover:shadow-sm",
         "muted-subtle":
-          "border-muted-foreground text-foreground bg-[color-mix(in_oklch,var(--muted)_5%,var(--background))] [a&]:hover:bg-[color-mix(in_oklch,var(--muted)_20%,var(--background))] [a&]:hover:shadow-sm",
+          "border-muted-foreground text-foreground bg-[color-mix(in_oklab,var(--muted)_5%,var(--background))] [a&]:hover:bg-[color-mix(in_oklab,var(--muted)_20%,var(--background))] [a&]:hover:shadow-sm",
         destructive:
-          "bg-destructive text-destructive-foreground border-transparent [a&]:hover:bg-[color-mix(in_oklch,var(--destructive)_99%,var(--background))] [a&]:hover:shadow-sm",
+          "bg-destructive text-destructive-foreground border-transparent [a&]:hover:bg-[color-mix(in_oklab,var(--destructive)_99%,var(--background))] [a&]:hover:shadow-sm",
         "destructive-subtle":
-          "border-destructive text-foreground bg-[color-mix(in_oklch,var(--destructive)_5%,var(--background))] [a&]:hover:bg-[color-mix(in_oklch,var(--destructive)_8%,var(--background))] [a&]:hover:shadow-sm",
+          "border-destructive text-foreground bg-[color-mix(in_oklab,var(--destructive)_5%,var(--background))] [a&]:hover:bg-[color-mix(in_oklab,var(--destructive)_8%,var(--background))] [a&]:hover:shadow-sm",
         "destructive-outline":
-          "border-border bg-destructive text-destructive-foreground [a&]:hover:bg-[color-mix(in_oklch,var(--destructive)_99%,var(--background))] [a&]:hover:shadow-sm",
+          "border-border bg-destructive text-destructive-foreground [a&]:hover:bg-[color-mix(in_oklab,var(--destructive)_99%,var(--background))] [a&]:hover:shadow-sm",
         outline:
           "text-foreground [a&]:hover:bg-accent [a&]:hover:text-accent-foreground",
         // The tones of a status, each from its colour token of the theme.
