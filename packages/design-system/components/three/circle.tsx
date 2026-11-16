@@ -12,9 +12,10 @@ import {
   GRAPH_POINT_SEGMENTS,
 } from "@repo/design-system/components/three/data/quality";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
+import { useRequired } from "@repo/design-system/hooks/required";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { getCos, getRadians, getSin } from "@repo/math/angles";
-import { createContext, use, useMemo } from "react";
+import { createContext, useMemo } from "react";
 import { Vector3 } from "three";
 
 interface Props {
@@ -32,13 +33,8 @@ type UnitCircleValues = Required<Pick<Props, "angle" | "showLabels">>;
 const UnitCircleContext = createContext<UnitCircleValues | null>(null);
 
 /** Selects the angle and labels of the surrounding unit circle. */
-function useUnitCircle() {
-  const values = use(UnitCircleContext);
-  if (values === null) {
-    // A missing circle is a programmer composition error at this React seam.
-    throw new Error("The unit circle scene requires a UnitCircleContext.");
-  }
-  return values;
+function useUnitCircleScene() {
+  return useRequired(UnitCircleContext, "useUnitCircleScene");
 }
 
 const SPHERE_RADIUS = 0.05;
@@ -60,7 +56,7 @@ const STATIC_CIRCLE_POINTS = createArcPoints(
  * of its sine and cosine. It reads the angle from its unit circle.
  */
 function UnitCircleScene() {
-  const { angle, showLabels } = useUnitCircle();
+  const { angle, showLabels } = useUnitCircleScene();
   const angleInRadians = getRadians(angle);
   const sin = getSin(angle);
   const cos = getCos(angle);

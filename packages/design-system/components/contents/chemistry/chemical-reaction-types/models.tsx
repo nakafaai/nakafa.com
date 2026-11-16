@@ -25,8 +25,9 @@ import {
   ParticleElementContext,
 } from "@repo/design-system/components/contents/chemistry/chemical-reaction-types/parts";
 import { MetalMaterial } from "@repo/design-system/components/three/physical";
+import { useRequired } from "@repo/design-system/hooks/required";
 import { Array as Arr } from "effect";
-import { createContext, use } from "react";
+import { createContext } from "react";
 
 const PHOSPHORUS_POINTS = [
   [-0.18, -0.08, 0],
@@ -72,13 +73,7 @@ export const ReactionPhaseContext = createContext<ReactionPhase | null>(null);
 
 /** Reads the side of the reaction that the surrounding model draws. */
 function useReactionPhase() {
-  const phase = use(ReactionPhaseContext);
-  if (phase === null) {
-    throw new Error(
-      "useReactionPhase must be used within ReactionPhaseContext"
-    );
-  }
-  return phase;
+  return useRequired(ReactionPhaseContext, "useReactionPhase");
 }
 
 /** Draws the model of the selected reaction type on the side its context names. */

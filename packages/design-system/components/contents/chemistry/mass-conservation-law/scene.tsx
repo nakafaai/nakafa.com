@@ -13,8 +13,9 @@ import type { MassConservationLabProps } from "@repo/design-system/components/co
 import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { GlassMaterial } from "@repo/design-system/components/three/physical";
+import { useRequired } from "@repo/design-system/hooks/required";
 import { Array as Arr, Schema } from "effect";
-import { createContext, use, useRef } from "react";
+import { createContext, useRef } from "react";
 import type { Group, MeshStandardMaterial } from "three";
 
 /** The two balances stand 38 cm apart on the bench, in metres. */
@@ -124,14 +125,7 @@ const MassConservationSceneContext =
 
 /** Reads the colors of the surrounding mass-conservation scene. */
 function useMassConservationScene() {
-  const colors = use(MassConservationSceneContext);
-  if (!colors) {
-    // A missing provider is a programmer composition error at this React seam.
-    throw new Error(
-      "useMassConservationScene must be used within MassConservationScene"
-    );
-  }
-  return colors;
+  return useRequired(MassConservationSceneContext, "useMassConservationScene");
 }
 
 export function MassConservationScene({

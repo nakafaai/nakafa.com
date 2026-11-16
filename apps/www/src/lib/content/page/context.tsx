@@ -1,5 +1,6 @@
 "use client";
 
+import { OutsideProvider } from "@repo/design-system/hooks/required";
 import { createContext, type ReactNode, use } from "react";
 import type { PageNavigation } from "@/lib/content/page/navigation";
 
@@ -28,9 +29,7 @@ export function usePageNavigation<T>(
 ) {
   const navigation = use(PageNavigationContext);
   if (navigation === missingPageNavigation) {
-    throw new Error(
-      "usePageNavigation must be used within PageNavigationProvider"
-    );
+    throw new OutsideProvider({ part: "usePageNavigation" });
   }
   return selector(navigation);
 }

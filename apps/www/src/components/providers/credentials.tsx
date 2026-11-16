@@ -1,5 +1,5 @@
+import { useRequired } from "@repo/design-system/hooks/required";
 import { ConvexProvider, type ConvexReactClient } from "convex/react";
-import { use } from "react";
 import {
   ConvexSessionCredentials,
   ConvexSessionRelease,
@@ -12,10 +12,7 @@ import { ConvexAuthContext } from "@/lib/auth/convex";
  * never loads. `LiveRelease` clears them, after the page's readers.
  */
 export function LiveCredentials({ client }: { client: ConvexReactClient }) {
-  const store = use(ConvexAuthContext);
-  if (!store) {
-    throw new TypeError("LiveCredentials must be used within PageProviders");
-  }
+  const store = useRequired(ConvexAuthContext, "LiveCredentials");
   return (
     <ConvexProvider client={client}>
       <ConvexSessionCredentials store={store} />

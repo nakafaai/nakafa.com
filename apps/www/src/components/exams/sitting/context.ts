@@ -1,8 +1,9 @@
 import { Id } from "@repo/backend/confect/_generated/id";
 import { DashboardView } from "@repo/backend/confect/exams/sittings/contract";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
+import { useRequired } from "@repo/design-system/hooks/required";
 import { Array as Arr, HashMap, Schema } from "effect";
-import { createContext, use } from "react";
+import { createContext } from "react";
 import { type StoreApi, useStore } from "zustand";
 import type { DashboardAttempt } from "@/components/exams/sitting/change";
 import type { SittingStore } from "@/components/exams/sitting/store";
@@ -33,11 +34,7 @@ export const SittingStoreContext = createContext<StoreApi<SittingStore> | null>(
 
 /** Reads the dashboard's data. It throws outside the dashboard, which always provides it. */
 export function useSittingData() {
-  const data = use(SittingDataContext);
-  if (data === null) {
-    throw new Error("useSittingData must be used within the sitting dashboard");
-  }
-  return data;
+  return useRequired(SittingDataContext, "useSittingData");
 }
 
 /** Whether the viewer may take the proctor's actions, which the dashboard lists for each caller (ADR 0013). */
@@ -50,11 +47,6 @@ export function useMayProctor() {
 export function useSittingStore<Selected>(
   selector: (state: SittingStore) => Selected
 ) {
-  const store = use(SittingStoreContext);
-  if (store === null) {
-    throw new Error(
-      "useSittingStore must be used within the sitting dashboard"
-    );
-  }
+  const store = useRequired(SittingStoreContext, "useSittingStore");
   return useStore(store, selector);
 }

@@ -3,9 +3,9 @@
 import { useMutation } from "@confect/react";
 import island from "@repo/backend/confect/_generated/refs/island";
 import { BUILD_BATCH } from "@repo/backend/confect/island/mutations.spec";
+import { useRequired } from "@repo/design-system/hooks/required";
 import { useRouter } from "@tanstack/react-router";
 import { Array as Arr, DateTime, Effect, Result } from "effect";
-import { use } from "react";
 import { type GameStoreApi, GameStoreContext } from "@/components/island/store";
 
 /** How long the learner's building rests before its edits go to the server. */
@@ -22,13 +22,10 @@ const EAGER = 32;
  * edits another device made first reload the island.
  */
 export function IslandSync() {
-  const store = use(GameStoreContext);
+  const store = useRequired(GameStoreContext, "IslandSync");
   const build = useMutation(island.mutations.build);
   const open = useMutation(island.mutations.open);
   const router = useRouter();
-  if (store === null) {
-    throw new Error("IslandSync must be used within the island game");
-  }
   return (
     <span
       hidden

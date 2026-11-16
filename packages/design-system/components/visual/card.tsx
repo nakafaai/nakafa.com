@@ -30,6 +30,7 @@ import {
   type VisualState,
   type VisualStore,
 } from "@repo/design-system/components/visual/store";
+import { useRequired } from "@repo/design-system/hooks/required";
 import { PortalContainer } from "@repo/design-system/lib/portal";
 import { cva } from "class-variance-authority";
 import { cn } from "cn";
@@ -51,11 +52,7 @@ const VisualContext = createContext<VisualStore | null>(null);
 
 /** Selects part of the surrounding card's presentation and actions. */
 function useVisual<T>(selector: (state: VisualState) => T) {
-  const store = use(VisualContext);
-  if (!store) {
-    // A missing card is a programmer composition error at this React seam.
-    throw new Error("Visual card parts require VisualCard.");
-  }
+  const store = useRequired(VisualContext, "useVisual");
   return useStore(store, useShallow(selector));
 }
 

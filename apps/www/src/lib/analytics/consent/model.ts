@@ -11,7 +11,7 @@ import {
   createAnalyticsConsentPromptIdentity,
   resolveAnalyticsConsentSessionPolicy,
 } from "@repo/analytics/consent/session";
-import { Option } from "effect";
+import { Option, Schema } from "effect";
 import { useState } from "react";
 import { useStore } from "zustand";
 import {
@@ -55,6 +55,15 @@ export interface AnalyticsConsentAccount {
 /** The full derived consent model: its value for readers and the inputs its effects need. */
 export type AnalyticsConsentModel = ReturnType<typeof useAnalyticsConsentModel>;
 
+/** A save of a consent choice for a visitor, who has no account to save it to. */
+class VisitorAccountMissing extends Schema.TaggedError<
+  VisitorAccountMissing,
+  { readonly brand: unique symbol }
+>()("VisitorAccountMissing", {}) {
+  override readonly message =
+    "A visitor has no account to save a consent choice to.";
+}
+
 /** A visitor has no account, so no account answer and no account save exist. */
 const visitorAccountQuery = { status: "pending" } as const;
 
@@ -68,7 +77,7 @@ export const visitorAnalyticsConsentAccount: AnalyticsConsentAccount = {
   isAuthenticated: false,
   isUserPending: false,
   setAccountConsent: () => {
-    throw new TypeError("A visitor has no account to save a consent choice to");
+    throw new VisitorAccountMissing();
   },
   user: null,
 };

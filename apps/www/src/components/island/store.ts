@@ -1,6 +1,7 @@
 import { type BlockKey, idOf } from "@repo/backend/confect/island/blocks";
+import { useRequired } from "@repo/design-system/hooks/required";
 import { Array as Arr, HashSet, Schema } from "effect";
-import { createContext, use } from "react";
+import { createContext } from "react";
 import { createStore, useStore } from "zustand";
 import { applyEdits, type Edit, inverseOf } from "@/lib/island/edits";
 import type { Weather } from "@/lib/island/sky";
@@ -202,9 +203,6 @@ export const GameStoreContext = createContext<GameStoreApi | null>(null);
 
 /** Reads one value of the game's store. */
 export function useGame<T>(selector: (state: GameStore) => T) {
-  const store = use(GameStoreContext);
-  if (store === null) {
-    throw new Error("useGame must be used within the island game");
-  }
+  const store = useRequired(GameStoreContext, "useGame");
   return useStore(store, selector);
 }

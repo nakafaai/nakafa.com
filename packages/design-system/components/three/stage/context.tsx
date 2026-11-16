@@ -1,11 +1,12 @@
 import { useThree } from "@react-three/fiber";
 import type { GroundSchema } from "@repo/design-system/components/three/stage/grain";
+import { useRequired } from "@repo/design-system/hooks/required";
 import {
   isMobileDevice,
   isSoftwareRenderer,
 } from "@repo/design-system/lib/device";
 import { Schema } from "effect";
-import { createContext, type ReactNode, use, useMemo } from "react";
+import { createContext, type ReactNode, useMemo } from "react";
 import type { WebGLRenderer } from "three";
 
 /**
@@ -77,10 +78,5 @@ export function StageProvider({
 
 /** Reads the floor, reach, and tier of the surrounding stage. */
 export function useStage() {
-  const stage = use(StageContext);
-  if (!stage) {
-    // A missing provider is a programmer composition error at this React seam.
-    throw new Error("useStage must be used within StageProvider");
-  }
-  return stage;
+  return useRequired(StageContext, "useStage");
 }

@@ -1,4 +1,5 @@
-import { use, useSyncExternalStore } from "react";
+import { useRequired } from "@repo/design-system/hooks/required";
+import { useSyncExternalStore } from "react";
 import { useAuthSessionStore } from "@/components/auth/session";
 import {
   type ConvexAuth,
@@ -16,10 +17,7 @@ import {
  * the Better Auth or Convex client modules.
  */
 export function useConvexAuth<T>(selector: (auth: ConvexAuth) => T) {
-  const store = use(ConvexAuthContext);
-  if (!store) {
-    throw new TypeError("useConvexAuth must be used within ConvexProvider");
-  }
+  const store = useRequired(ConvexAuthContext, "useConvexAuth");
   const session = useAuthSessionStore();
 
   return useSyncExternalStore(

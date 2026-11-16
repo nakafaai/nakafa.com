@@ -4,15 +4,11 @@ import posts from "@repo/backend/confect/_generated/refs/posts";
 import { readLearnerText } from "@repo/backend/confect/writing/text";
 import { Button } from "@repo/design-system/components/ui/button";
 import { InputGroupTextarea } from "@repo/design-system/components/ui/input-group";
+import { useRequired } from "@repo/design-system/hooks/required";
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { randomUuid } from "@repo/utilities/uuid";
 import { DateTime, Effect, Option, Result, Schema } from "effect";
-import {
-  createContext,
-  type SubmitEventHandler,
-  use,
-  useLayoutEffect,
-} from "react";
+import { createContext, type SubmitEventHandler, useLayoutEffect } from "react";
 import { useTranslations } from "use-intl";
 import { SignedInIsland } from "@/components/providers/island";
 import { useEarlyTyping } from "@/components/shared/typed";
@@ -132,10 +128,7 @@ const PostComposerContext = createContext<{
 
 /** The composer's fields and send button, which read the draft and need no client. */
 function PostComposerFields() {
-  const composer = use(PostComposerContext);
-  if (composer === null) {
-    throw new Error("PostComposerFields must be used within a composer");
-  }
+  const composer = useRequired(PostComposerContext, "PostComposerFields");
   const { disabled, profile } = composer;
   const t = useTranslations("Posts");
   const text = usePostDraft((draft) => draft.text);

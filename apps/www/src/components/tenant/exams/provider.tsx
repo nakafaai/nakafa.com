@@ -1,7 +1,8 @@
 import { ExamView as ExamViewSchema } from "@repo/backend/confect/exams/exam";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
+import { useRequired } from "@repo/design-system/hooks/required";
 import { Schema } from "effect";
-import { createContext, type ReactNode, use, useState } from "react";
+import { createContext, type ReactNode, useState } from "react";
 import { type StoreApi, useStore } from "zustand";
 import {
   createExamEditing,
@@ -85,13 +86,7 @@ export function ExamProvider({
 
 /** Reads the exam and the school of the editor. */
 export function useExam() {
-  const value = use(ExamContext);
-
-  if (value === null) {
-    throw new Error("useExam must be used within ExamProvider");
-  }
-
-  return value;
+  return useRequired(ExamContext, "useExam");
 }
 
 /**
@@ -105,11 +100,7 @@ export function useExamLocked() {
 
 /** Reads one selected slice of the teacher's selection. */
 export function useExamSelection<T>(selector: (state: ExamSelection) => T) {
-  const store = use(SelectionContext);
-
-  if (store === null) {
-    throw new Error("useExamSelection must be used within ExamProvider");
-  }
+  const store = useRequired(SelectionContext, "useExamSelection");
 
   return useStore(store, selector);
 }
@@ -119,55 +110,33 @@ export function useExamSelection<T>(selector: (state: ExamSelection) => T) {
  * action runs, so the component that holds the action does not render on each change of the choice.
  */
 export function useExamSelectionStore() {
-  const store = use(SelectionContext);
-
-  if (store === null) {
-    throw new Error("useExamSelectionStore must be used within ExamProvider");
-  }
-
-  return store;
+  return useRequired(SelectionContext, "useExamSelectionStore");
 }
 
 /** Reads one selected slice of the prompts the canvas holds open. */
 export function useExamLive<T>(selector: (state: ExamLive) => T) {
-  const store = use(LiveContext);
-
-  if (store === null) {
-    throw new Error("useExamLive must be used within ExamProvider");
-  }
+  const store = useRequired(LiveContext, "useExamLive");
 
   return useStore(store, selector);
 }
 
 /** Reads one selected slice of the editing state: the editor the toolbar acts on and the pictures that wait. */
 export function useExamEditing<T>(selector: (state: ExamEditing) => T) {
-  const store = use(EditingContext);
-
-  if (store === null) {
-    throw new Error("useExamEditing must be used within ExamProvider");
-  }
+  const store = useRequired(EditingContext, "useExamEditing");
 
   return useStore(store, selector);
 }
 
 /** Reads one selected slice of the zoom of the pages. */
 export function useExamZoom<T>(selector: (state: ExamZoom) => T) {
-  const store = use(ZoomContext);
-
-  if (store === null) {
-    throw new Error("useExamZoom must be used within ExamProvider");
-  }
+  const store = useRequired(ZoomContext, "useExamZoom");
 
   return useStore(store, selector);
 }
 
 /** Reads one selected slice of how the editor shows its questions: the canvas of pages, or the grid. */
 export function useEditorView<T>(selector: (state: EditorView) => T) {
-  const store = use(ViewContext);
-
-  if (store === null) {
-    throw new Error("useEditorView must be used within ExamProvider");
-  }
+  const store = useRequired(ViewContext, "useEditorView");
 
   return useStore(store, selector);
 }

@@ -1,6 +1,7 @@
 import type { AtomShellSampleId } from "@repo/design-system/components/contents/chemistry/atom-shell/data";
 import type { ParabolicLaunchId } from "@repo/design-system/components/contents/physics/kinematics/parabolic-movement/data";
-import { createContext, use } from "react";
+import { useRequired } from "@repo/design-system/hooks/required";
+import { createContext } from "react";
 import { createStore, type StoreApi, useStore } from "zustand";
 
 /**
@@ -47,10 +48,6 @@ export const LessonSelectionContext =
 export function useLessonSelection<Selected>(
   selector: (state: LessonSelectionState) => Selected
 ) {
-  const store = use(LessonSelectionContext);
-  if (!store) {
-    // A lab has no selections outside its lesson window, a composition error at this seam.
-    throw new Error("A lesson lab reads its selections inside its window.");
-  }
+  const store = useRequired(LessonSelectionContext, "useLessonSelection");
   return useStore(store, selector);
 }

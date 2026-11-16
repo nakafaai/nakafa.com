@@ -3,9 +3,10 @@ import type { Interaction } from "@nakafa/aksara-contracts/assessment/interactio
 import type { InteractionKey } from "@nakafa/aksara-contracts/assessment/key";
 import type { ExamResponse } from "@repo/backend/confect/assessment/response";
 import { Nina } from "@repo/design-system/components/ui/nina";
+import { useRequired } from "@repo/design-system/hooks/required";
 import type { MoodSchema } from "@repo/mascot/nina/face";
 import { Schema } from "effect";
-import { createContext, type ReactNode, use, useEffect, useState } from "react";
+import { createContext, type ReactNode, useEffect, useState } from "react";
 import { createStore, type StoreApi, useStore } from "zustand";
 import { TryoutResponseFields } from "@/components/tryout/runtime/response/fields";
 import { matchesKey } from "@/components/tryout/runtime/response/state";
@@ -31,11 +32,7 @@ const TryoutDemoContext = createContext<StoreApi<TryoutDemoState> | null>(null);
 function useTryoutDemo<Selected>(
   selector: (state: TryoutDemoState) => Selected
 ) {
-  const store = use(TryoutDemoContext);
-  if (!store) {
-    // A part of the demo outside it is a composition error at this seam.
-    throw new Error("A try-out demo part renders inside its TryoutDemo.");
-  }
+  const store = useRequired(TryoutDemoContext, "useTryoutDemo");
   return useStore(store, selector);
 }
 

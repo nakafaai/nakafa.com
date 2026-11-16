@@ -1,10 +1,10 @@
 import { useCallbackRef, useMergedRef } from "@mantine/hooks";
+import { useRequired } from "@repo/design-system/hooks/required";
 import { cn } from "cn";
 import { Array as Arr, type Option } from "effect";
 import {
   type CSSProperties,
   createContext,
-  use,
   useLayoutEffect,
   useRef,
   useState,
@@ -52,11 +52,7 @@ const HandedFocus = createContext<
 
 /** Reads the window's handed focus and rejects a list outside the window. */
 function useHandedFocus() {
-  const exchange = use(HandedFocus);
-  if (!exchange) {
-    throw new TypeError("MemoryItems must be used within MemoryWindow");
-  }
-  return exchange;
+  return useRequired(HandedFocus, "useHandedFocus");
 }
 
 /**

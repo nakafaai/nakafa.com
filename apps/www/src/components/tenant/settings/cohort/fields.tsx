@@ -8,8 +8,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@repo/design-system/components/ui/select";
+import { useRequired } from "@repo/design-system/hooks/required";
 import { Array as Arr } from "effect";
-import { use } from "react";
 import { useTranslations } from "use-intl";
 import { gradeItemsOf } from "@/components/tenant/settings/choices";
 import { CohortLevelContext } from "@/components/tenant/settings/cohort/level";
@@ -54,10 +54,7 @@ export function CohortGradeField({
 }) {
   const common = useTranslations("Common");
   const t = useTranslations("SchoolSettings");
-  const level = use(CohortLevelContext);
-  if (level === null) {
-    throw new Error("CohortGradeField must be used within the cohorts page");
-  }
+  const level = useRequired(CohortLevelContext, "CohortGradeField");
   const gradeItems = gradeItemsOf(level);
 
   return (

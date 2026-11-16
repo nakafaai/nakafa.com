@@ -1,4 +1,5 @@
-import { createContext, type ReactNode, use, useState } from "react";
+import { useRequired } from "@repo/design-system/hooks/required";
+import { createContext, type ReactNode, useState } from "react";
 import { createStore, type ExtractState, useStore } from "zustand";
 import { combine } from "zustand/middleware";
 
@@ -29,12 +30,7 @@ export function ReactionProvider({ children }: { children: ReactNode }) {
 
 /** Reads the surrounding reaction lab's progress store. */
 export function useReactionProgress() {
-  const store = use(ProgressContext);
-  if (!store) {
-    // A missing provider is a programmer composition error at this React seam.
-    throw new Error("Reaction progress requires ReactionProvider.");
-  }
-  return store;
+  return useRequired(ProgressContext, "useReactionProgress");
 }
 
 /** Selects one part of the surrounding reaction lab's progress. */

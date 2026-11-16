@@ -1,4 +1,5 @@
-import { createContext, use } from "react";
+import { useRequired } from "@repo/design-system/hooks/required";
+import { createContext } from "react";
 
 /**
  * The retry of a chat's failure card: whether a retry is waiting, and the
@@ -12,9 +13,5 @@ export const ChatRetryContext = createContext<{
 
 /** Reads the retry of the failure card around it. */
 export function useChatRetry() {
-  const retry = use(ChatRetryContext);
-  if (retry === null) {
-    throw new Error("useChatRetry must be used within ChatRetryContext");
-  }
-  return retry;
+  return useRequired(ChatRetryContext, "useChatRetry");
 }

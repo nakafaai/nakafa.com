@@ -11,9 +11,9 @@ const findings = Effect.fn("KindPolicyTest.findings")(function* (
   return Arr.map(found, ({ file, line, rule }) => `${file}:${line} ${rule}`);
 }, Effect.scoped);
 
-/** A timer and a throw, which a React module may keep and a plain module may not. */
+/** A timer and a throw of a tagged error, which a React module may keep and a plain module may not. */
 const BODY = `export const hide = () => setTimeout(close, 1);
-export const read = () => { throw new Error("hook"); };
+export const read = () => { throw new HookFailure(); };
 `;
 
 describe("React client modules", () => {

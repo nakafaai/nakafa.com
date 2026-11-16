@@ -7,6 +7,7 @@ import {
   PickerItem,
   PickerTrigger,
 } from "@repo/design-system/components/ui/picker";
+import { useRequired } from "@repo/design-system/hooks/required";
 import { Array as Arr, Option, Record as Rec, Schema } from "effect";
 import {
   createContext,
@@ -157,10 +158,7 @@ function RegionOption({
 
 /** The flag of one country, drawn from the picker's flags once they load. */
 function RegionFlag({ code }: { code: string }) {
-  const flags = use(RegionFlags);
-  if (flags === null) {
-    throw new Error("RegionFlag must be used within a country picker");
-  }
+  const flags = useRequired(RegionFlags, "RegionFlag");
   return (
     <CountryFlagIcon
       countryCode={code}

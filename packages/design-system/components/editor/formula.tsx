@@ -2,6 +2,7 @@ import {
   FormulaEdit,
   FormulaMarkup,
 } from "@repo/design-system/components/editor/edit";
+import { useRequired } from "@repo/design-system/hooks/required";
 import {
   NodeViewWrapper,
   type ReactNodeViewProps,
@@ -9,7 +10,7 @@ import {
   useEditorState,
 } from "@tiptap/react";
 import { Option } from "effect";
-import { type ComponentProps, createContext, type ReactNode, use } from "react";
+import { type ComponentProps, createContext, type ReactNode } from "react";
 
 /** The names of the formula editor, which the page gives the formulas of its editor. */
 type FormulaLabels = ComponentProps<typeof FormulaEdit>["labels"];
@@ -32,12 +33,7 @@ export function FormulaLabelsProvider({
 
 /** The names of the formula editor, from the provider above the editor. */
 function useFormulaLabels(): FormulaLabels {
-  const labels = use(FormulaLabelsContext);
-  if (labels === null) {
-    // A formula is drawn only inside its editor, so a missing provider is a composition error.
-    throw new Error("A formula requires FormulaLabelsProvider.");
-  }
-  return labels;
+  return useRequired(FormulaLabelsContext, "useFormulaLabels");
 }
 
 /**

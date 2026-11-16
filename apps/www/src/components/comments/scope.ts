@@ -1,4 +1,5 @@
-import { createContext, use } from "react";
+import { useRequired } from "@repo/design-system/hooks/required";
+import { createContext } from "react";
 import type { CommentRow, RowComment } from "@/components/comments/state";
 
 /** The comment of the row around its parts: its text, its photos, its menu and its like. */
@@ -6,11 +7,7 @@ export const RowCommentContext = createContext<RowComment | null>(null);
 
 /** Reads the comment of the surrounding row. */
 export function useRowComment() {
-  const comment = use(RowCommentContext);
-  if (comment === null) {
-    throw new Error("useRowComment must be used within CommentRow");
-  }
-  return comment;
+  return useRequired(RowCommentContext, "useRowComment");
 }
 
 /**

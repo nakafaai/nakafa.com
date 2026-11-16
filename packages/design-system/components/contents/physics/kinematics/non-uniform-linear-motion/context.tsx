@@ -1,5 +1,6 @@
 import type { GlbbLabels } from "@repo/design-system/components/contents/physics/kinematics/non-uniform-linear-motion/data";
-import { createContext, type ReactNode, use } from "react";
+import { useRequired } from "@repo/design-system/hooks/required";
+import { createContext, type ReactNode } from "react";
 
 const GlbbLabelsContext = createContext<GlbbLabels | null>(null);
 
@@ -16,10 +17,5 @@ export function GlbbLabelsProvider({
 
 /** Reads the labels of the surrounding non-uniform motion card. */
 export function useGlbbLabels() {
-  const labels = use(GlbbLabelsContext);
-  if (!labels) {
-    // A missing provider is a programmer composition error at this React seam.
-    throw new Error("useGlbbLabels must be used within GlbbLabelsProvider");
-  }
-  return labels;
+  return useRequired(GlbbLabelsContext, "useGlbbLabels");
 }

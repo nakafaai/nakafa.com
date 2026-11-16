@@ -1,7 +1,8 @@
 import type { ParsedHeading } from "@repo/contents/toc";
+import { useRequired } from "@repo/design-system/hooks/required";
 import { elementById } from "@repo/design-system/lib/element";
 import { Array as Arr, Equal, Option, Schema } from "effect";
-import { createContext, type ReactNode, use, useEffect, useState } from "react";
+import { createContext, type ReactNode, useEffect, useState } from "react";
 import { createStore, type StoreApi, useStore } from "zustand";
 import {
   outlineIds,
@@ -136,9 +137,6 @@ export function TocProvider({
 
 /** Selects one value from the outline state; it re-renders only when that value changes. */
 export function useToc<T>(selector: (state: TocState) => T): T {
-  const store = use(TocContext);
-  if (!store) {
-    throw new Error("useToc must be used within a TocProvider.");
-  }
+  const store = useRequired(TocContext, "useToc");
   return useStore(store, selector);
 }

@@ -1,4 +1,5 @@
 import type { DocumentEditorInstance } from "@repo/design-system/components/editor/document";
+import { useRequired } from "@repo/design-system/hooks/required";
 import {
   type NodeViewProps,
   NodeViewWrapper,
@@ -39,11 +40,7 @@ export function FiguresProvider({
 
 /** The figure a view draws. It throws outside a figure's node, where no view is drawn. */
 export function useFigureNode(): FigureNodeValue {
-  const figure = use(FigureNodeContext);
-  if (figure === null) {
-    throw new Error("useFigureNode must be used within a figure's node.");
-  }
-  return figure;
+  return useRequired(FigureNodeContext, "useFigureNode");
 }
 
 /** One figure in an editor: an atom that shows it is selected, drawn by the component of `FiguresProvider`. */

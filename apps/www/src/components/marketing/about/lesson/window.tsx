@@ -11,13 +11,13 @@ import { Button } from "@repo/design-system/components/ui/button";
 import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
+import { useRequired } from "@repo/design-system/hooks/required";
 import { cva } from "class-variance-authority";
 import { Array as Arr } from "effect";
 import {
   createContext,
   type ReactNode,
   Suspense,
-  use,
   useEffect,
   useId,
   useState,
@@ -118,10 +118,7 @@ function LessonPanel({
   placeholder,
 }: LessonPanelProps) {
   const Lab = LESSON_LABS[lesson];
-  const decimalSeparator = use(LessonDecimalContext);
-  if (decimalSeparator === null) {
-    throw new Error("LessonPanel must be used within LessonWindow");
-  }
+  const decimalSeparator = useRequired(LessonDecimalContext, "LessonPanel");
 
   return (
     <section

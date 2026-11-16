@@ -13,6 +13,7 @@ import {
   CommandPanel,
 } from "@repo/design-system/components/ui/command";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { useRequired } from "@repo/design-system/hooks/required";
 import { useNavigate } from "@tanstack/react-router";
 import { Effect, Option, Result } from "effect";
 import {
@@ -88,11 +89,7 @@ function SearchIndex({ children }: { children: ReactNode }) {
 
 /** What reading the index settled with; it suspends the caller until then. */
 function useIndexAnswer() {
-  const answer = use(SearchIndexContext);
-  if (answer === null) {
-    throw new Error("useIndexAnswer must be used within SearchIndex");
-  }
-  return use(answer);
+  return use(useRequired(SearchIndexContext, "useIndexAnswer"));
 }
 
 /** The dialog, or the phone's drawer, that holds the palette, drawn once the index has settled. */

@@ -32,8 +32,9 @@ import {
   ItemMedia,
   ItemTitle,
 } from "@repo/design-system/components/ui/item";
+import { useRequired } from "@repo/design-system/hooks/required";
 import { Array as Arr } from "effect";
-import { createContext, type ReactNode, use, useState } from "react";
+import { createContext, type ReactNode, useState } from "react";
 import { useTranslations } from "use-intl";
 import { reloadPage } from "@/components/shared/reload";
 import { matchesSearch } from "@/components/shared/table/search";
@@ -106,12 +107,9 @@ export function ThreadListsProvider({ children }: { children: ReactNode }) {
 export function ThreadRows() {
   const t = useTranslations("Classroom");
   const { can } = useClassScope();
-  const lists = use(ThreadListsContext);
+  const lists = useRequired(ThreadListsContext, "ThreadRows");
   const search = useTableFilters((state) => state.search);
   const [view, setView] = useState<"active" | "archived">("active");
-  if (lists === null) {
-    throw new Error("ThreadRows must be used within ThreadListsProvider");
-  }
   const pagination = lists[view];
 
   return (

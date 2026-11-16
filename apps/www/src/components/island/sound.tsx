@@ -1,7 +1,7 @@
 "use client";
 
+import { useRequired } from "@repo/design-system/hooks/required";
 import { Array as Arr, Option } from "effect";
-import { use } from "react";
 import { type GameStoreApi, GameStoreContext } from "@/components/island/store";
 import { fallOf } from "@/lib/island/sky";
 
@@ -125,10 +125,7 @@ function startSound(store: GameStoreApi) {
 
 /** Starts the island's sound at the learner's first press, and stops it when the game closes. */
 export function IslandSound() {
-  const store = use(GameStoreContext);
-  if (store === null) {
-    throw new Error("IslandSound must be used within the island game");
-  }
+  const store = useRequired(GameStoreContext, "IslandSound");
   return (
     <span
       hidden

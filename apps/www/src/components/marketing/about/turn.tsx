@@ -1,6 +1,7 @@
 import { useIntersection, useReducedMotion } from "@mantine/hooks";
 import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundary";
 import { TypedText } from "@repo/design-system/components/ui/typed";
+import { useRequired } from "@repo/design-system/hooks/required";
 import { lazy } from "@repo/design-system/lib/lazy";
 import { cva } from "class-variance-authority";
 import { Schema } from "effect";
@@ -9,7 +10,6 @@ import {
   createContext,
   type ReactNode,
   Suspense,
-  use,
   useEffect,
   useEffectEvent,
   useState,
@@ -59,11 +59,7 @@ const TurnContext = createContext<StoreApi<TurnState> | null>(null);
 
 /** Reads one part of the turn that holds a message. */
 function useTurn<Selected>(selector: (state: TurnState) => Selected) {
-  const store = use(TurnContext);
-  if (!store) {
-    // A message outside its turn is a composition error at this seam.
-    throw new Error("A turn message renders inside its TurnPlayer.");
-  }
+  const store = useRequired(TurnContext, "useTurn");
   return useStore(store, selector);
 }
 

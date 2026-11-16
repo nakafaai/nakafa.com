@@ -5,9 +5,10 @@ import {
   SelectItem,
   SelectTrigger,
 } from "@repo/design-system/components/ui/select";
+import { useRequired } from "@repo/design-system/hooks/required";
 import { getTileLooks } from "@repo/design-system/lib/look";
 import { Array as Arr, Effect, Option, Tuple } from "effect";
-import { createContext, use } from "react";
+import { createContext } from "react";
 import { useLocale, useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { ConvexIsland } from "@/components/providers/island";
@@ -35,13 +36,7 @@ const TryoutCountrySelectorContext = createContext<{
 
 /** Reads the country selector around a variant. */
 function useTryoutCountrySelector() {
-  const value = use(TryoutCountrySelectorContext);
-  if (value === null) {
-    throw new Error(
-      "useTryoutCountrySelector must be used within TryoutCountrySelector"
-    );
-  }
-  return value;
+  return useRequired(TryoutCountrySelectorContext, "useTryoutCountrySelector");
 }
 
 /**

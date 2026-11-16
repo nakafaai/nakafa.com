@@ -1,5 +1,6 @@
 import type { QuranViewTafsirAccess } from "@repo/backend/client/quran/view";
-import { createContext, type ReactNode, use } from "react";
+import { useRequired } from "@repo/design-system/hooks/required";
+import { createContext, type ReactNode } from "react";
 
 /** Props of the verse provider: one surah's Tafsir access and verse labels. */
 interface QuranVersesProviderProps {
@@ -44,9 +45,6 @@ export function QuranVersesProvider({
 
 /** Selects one of the surah's shared verse settings. */
 export function useQuranVerses<T>(selector: (value: QuranVersesValue) => T) {
-  const value = use(QuranVersesContext);
-  if (!value) {
-    throw new Error("Quran verses must render within QuranVersesProvider.");
-  }
+  const value = useRequired(QuranVersesContext, "useQuranVerses");
   return selector(value);
 }

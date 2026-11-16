@@ -1,5 +1,6 @@
 "use client";
 
+import { useRequired } from "@repo/design-system/hooks/required";
 import {
   Array as Arr,
   DateTime,
@@ -8,7 +9,7 @@ import {
   Option,
   Record as Rec,
 } from "effect";
-import { use, useState } from "react";
+import { useState } from "react";
 import { createPainter, type Painter } from "@/components/island/draw";
 import {
   type GameStoreApi,
@@ -49,11 +50,8 @@ import { CHUNKS } from "@/lib/island/world";
  * exists and stops when it leaves.
  */
 export function IslandStage({ size }: { size: number }) {
-  const store = use(GameStoreContext);
+  const store = useRequired(GameStoreContext, "IslandStage");
   const [failed, setFailed] = useState(false);
-  if (store === null) {
-    throw new Error("IslandStage must be used within the island game");
-  }
   return failed ? (
     <p className="text-paper absolute inset-0 grid place-items-center p-8 text-center">
       WebGL2

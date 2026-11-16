@@ -9,11 +9,12 @@ import {
   SelectItem,
   SelectTrigger,
 } from "@repo/design-system/components/ui/select";
+import { useRequired } from "@repo/design-system/hooks/required";
 import { type ToastCopy, toast } from "@repo/design-system/lib/toast/notify";
 import type { Locale } from "@repo/internationalization/src/locale";
 import { useNavigate } from "@tanstack/react-router";
 import { Array as Arr, Effect, Option, Schema } from "effect";
-import { createContext, use } from "react";
+import { createContext } from "react";
 import { useLocale, useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { ConvexIsland } from "@/components/providers/island";
@@ -72,13 +73,7 @@ const CurriculumSelectorContext = createContext<CurriculumSelectorProps | null>(
 
 /** Reads the curriculum selector around a variant. */
 function useCurriculumSelector() {
-  const value = use(CurriculumSelectorContext);
-  if (value === null) {
-    throw new Error(
-      "useCurriculumSelector must be used within CurriculumSelector"
-    );
-  }
-  return value;
+  return useRequired(CurriculumSelectorContext, "useCurriculumSelector");
 }
 
 /** The selected option of a change, when the change names another curriculum. */

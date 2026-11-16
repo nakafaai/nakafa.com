@@ -1,4 +1,5 @@
-import { createContext, use } from "react";
+import { useRequired } from "@repo/design-system/hooks/required";
+import { createContext } from "react";
 import { useStore } from "zustand";
 import type { LiveSessionState, LiveSessionStore } from "@/lib/auth/live";
 
@@ -12,11 +13,7 @@ export const LiveSessionContext = createContext<LiveSessionStore | null>(null);
 
 /** Returns the live-session store and rejects a missing provider. */
 function useLiveSessionStore() {
-  const store = use(LiveSessionContext);
-  if (!store) {
-    throw new TypeError("useLiveSession must be used within PageProviders");
-  }
-  return store;
+  return useRequired(LiveSessionContext, "useLiveSessionStore");
 }
 
 /** Selects one part of the page's live session. */

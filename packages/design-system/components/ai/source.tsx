@@ -6,9 +6,10 @@ import {
   HoverCardTrigger,
 } from "@repo/design-system/components/ui/hover-card";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { useRequired } from "@repo/design-system/hooks/required";
 import { cn } from "cn";
 import { Array as Arr, Option, Schema } from "effect";
-import { createContext, use, useMemo, useState } from "react";
+import { createContext, useMemo, useState } from "react";
 
 /** One cited link and the domain it is shown under. */
 const SourceLinkSchema = Schema.Struct({
@@ -48,10 +49,7 @@ function getDomainLabel(domain: string) {
 
 /** Selects one part of the nearest Source link. */
 function useSource<T>(selector: (source: SourceLink) => T) {
-  const value = use(SourceContext);
-  if (!value) {
-    throw new Error("Source.* must be used inside <Source>");
-  }
+  const value = useRequired(SourceContext, "useSource");
   return selector(value);
 }
 

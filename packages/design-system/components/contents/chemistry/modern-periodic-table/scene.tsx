@@ -23,8 +23,9 @@ import type {
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { THREE_FONT_SIZE } from "@repo/design-system/components/three/data/constants";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
+import { useRequired } from "@repo/design-system/hooks/required";
 import { Array as Arr } from "effect";
-import { createContext, type ReactNode, use, useMemo } from "react";
+import { createContext, type ReactNode, useMemo } from "react";
 import { useStore } from "zustand";
 
 const GROUP_COUNT = 18;
@@ -92,14 +93,10 @@ export function ModernPeriodicTableSceneProvider({
 
 /** Reads the colors and the labels of the surrounding periodic-table lab. */
 function useModernPeriodicTableScene() {
-  const scene = use(ModernPeriodicTableSceneContext);
-  if (!scene) {
-    // A missing provider is a programmer composition error at this React seam.
-    throw new Error(
-      "useModernPeriodicTableScene must be used within ModernPeriodicTableSceneProvider"
-    );
-  }
-  return scene;
+  return useRequired(
+    ModernPeriodicTableSceneContext,
+    "useModernPeriodicTableScene"
+  );
 }
 
 /** Selects one part of the surrounding lab's focus, so a tile reruns only for it. */

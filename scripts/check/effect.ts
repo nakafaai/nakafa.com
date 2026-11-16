@@ -12,6 +12,7 @@ import type { Snapshot } from "tsrs/sync";
 import { assertionCandidates } from "#scripts/check/assertion";
 import { symbolTable } from "#scripts/check/convex";
 import { dispatchCandidates } from "#scripts/check/dispatch";
+import { errorCandidates } from "#scripts/check/errors";
 import { failureCandidates } from "#scripts/check/failure";
 import { globalCandidates } from "#scripts/check/globals";
 import { inlineCandidates } from "#scripts/check/inline";
@@ -188,6 +189,7 @@ export const effectFindings = Effect.fn("RepositoryPolicy.effectFindings")(
                 assertionCandidates(sourceFile, nodes),
                 dispatchCandidates(sourceFile, nodes),
                 stateCandidates(sourceFile),
+                errorCandidates(sourceFile, runtime),
                 failures,
               ]),
               (found) =>

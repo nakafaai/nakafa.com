@@ -7,6 +7,7 @@ import {
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { useControllableState } from "@repo/design-system/hooks/controllable";
+import { useRequired } from "@repo/design-system/hooks/required";
 import { lineMark } from "@repo/design-system/lib/mark";
 import { cva } from "class-variance-authority";
 import { cn } from "cn";
@@ -15,7 +16,6 @@ import {
   type ComponentProps,
   createContext,
   memo,
-  use,
   useEffect,
   useMemo,
   useRef,
@@ -35,10 +35,7 @@ const ReasoningContext = createContext<ReasoningContextValue | null>(null);
 
 /** Selects one part of the surrounding reasoning state. */
 function useReasoning<T>(selector: (reasoning: ReasoningContextValue) => T) {
-  const value = use(ReasoningContext);
-  if (!value) {
-    throw new Error("Reasoning components must be used within Reasoning");
-  }
+  const value = useRequired(ReasoningContext, "useReasoning");
   return selector(value);
 }
 
