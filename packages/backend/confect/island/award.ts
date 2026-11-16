@@ -14,6 +14,7 @@ import {
   Granted,
 } from "@repo/backend/confect/island/schema";
 import { ensureIsland } from "@repo/backend/confect/island/store";
+import { streakAfter } from "@repo/backend/confect/island/week";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { Array as Arr, Clock, Effect, Match, Option } from "effect";
 
@@ -32,8 +33,8 @@ const keyOf = Match.type<AwardSource>().pipe(
  * count for the kind, or whose 150 Stars, are reached grants nothing and writes
  * nothing, so the same learning can still earn on another day. Otherwise the
  * grant writes its ledger row with what remains of the day, at most the kind's
- * Stars, raises the island's lifetime, and records the badges it completes. A
- * learner without an island gets one with the starter set.
+ * Stars, raises the island's lifetime, carries the learner's run of days on,
+ * and records the badges it completes. A learner without an island gets one.
  */
 export const grantAward = Effect.fn("island.grantAward")(function* (
   userId: Id<"users">,
@@ -92,6 +93,7 @@ export const grantAward = Effect.fn("island.grantAward")(function* (
       ],
       learned: day,
       lifetime: island.lifetime + grant.stars,
+      streak: streakAfter(island.learned, island.streak ?? 0, day),
     })
     .pipe(Effect.orDie);
   return Granted.make({ badges, stars: grant.stars });
