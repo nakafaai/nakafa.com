@@ -10,3 +10,11 @@ export const TitrationLab = withHydrationBoundary(
     ).then((module) => ({ default: module.TitrationLab }))
   )
 );
+
+export const GasRateLab = withHydrationBoundary(
+  lazy(() =>
+    import("@repo/design-system/components/contents/chemistry/rate/lab").then(
+      (module) => ({ default: module.GasRateLab })
+    )
+  )
+);
