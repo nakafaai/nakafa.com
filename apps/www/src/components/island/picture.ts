@@ -10,7 +10,12 @@ import {
 } from "@/lib/island/atlas";
 import { isPlant, looksOf } from "@/lib/island/look";
 import { TILE } from "@/lib/island/tiles/paint";
-import { feetTile, hammerTile, pickaxeTile } from "@/lib/island/tiles/tools";
+import {
+  feetTile,
+  hammerTile,
+  pickaxeTile,
+  rodTile,
+} from "@/lib/island/tiles/tools";
 
 /*
  * The island's pictures drawn on a 2D canvas once a page (ADR 0047, D4 and D5):
@@ -159,6 +164,9 @@ export function cursorOf(tool: Tool, block: BlockKey) {
   }
   if (tool === "item") {
     return `url(${cursorOnce("item", () => cursorUrlOf(hammerTile()))}) 2 2, copy`;
+  }
+  if (tool === "fish") {
+    return `url(${cursorOnce("fish", () => cursorUrlOf(rodTile()))}) 30 2, pointer`;
   }
   return `url(${cursorOnce("walk", () => cursorUrlOf(feetTile()))}) 16 16, pointer`;
 }

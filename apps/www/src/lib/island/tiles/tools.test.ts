@@ -1,7 +1,12 @@
 // @vitest-environment node
 import { describe, expect, it } from "@effect/vitest";
 import { TILE } from "@/lib/island/tiles/paint";
-import { feetTile, hammerTile, pickaxeTile } from "@/lib/island/tiles/tools";
+import {
+  feetTile,
+  hammerTile,
+  pickaxeTile,
+  rodTile,
+} from "@/lib/island/tiles/tools";
 
 /** The opacity of one pixel of a tile. */
 const alphaAt = (pixels: Uint8ClampedArray, x: number, y: number) =>
@@ -19,5 +24,12 @@ describe("island/tiles/tools", () => {
     expect(alphaAt(feet, 3, 1)).toBe(255);
     expect(pickaxe).not.toEqual(hammer);
     expect(hammer).not.toEqual(feet);
+  });
+  it("draws the fishing rod with its tip at the cursor's hot spot, where the line leaves it", () => {
+    const rod = rodTile();
+    expect(rod).toHaveLength(TILE * TILE * 4);
+    expect(alphaAt(rod, 15, 1)).toBe(255);
+    expect(alphaAt(rod, 0, 15)).toBe(0);
+    expect(rod).not.toEqual(pickaxeTile());
   });
 });
