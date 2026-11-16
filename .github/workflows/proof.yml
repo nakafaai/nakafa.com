@@ -125,10 +125,12 @@ jobs:
       AFFECTED: ${{ !inputs.full && '--affected' || '' }}
       TURBO_SCM_BASE: ${{ github.event.merge_group.base_sha || inputs.base || 'origin/main' }}
     steps:
+      # `gate/backend` belongs to the backend job, whose first shard marks it
+      # pending: this job may start after that shard has already posted it.
       - name: Mark the gate pending
         run: |
           [[ "$SHA" =~ ^[0-9a-f]{40}$ ]] || { echo "sha must be a full lower-case commit SHA." >&2; exit 1; }
-          contexts=(gate gate/static gate/www gate/backend)
+          contexts=(gate gate/static gate/www)
           [ -z "$VERIFY" ] || contexts+=(verify)
           for context in "${contexts[@]}"; do
             gh api --silent "repos/$GITHUB_REPOSITORY/statuses/$SHA" \
@@ -239,7 +241,18 @@ jobs:
       TURBO_SCM_BASE: ${{ github.event.merge_group.base_sha || inputs.base || 'origin/main' }}
       SHARD: ${{ matrix.shard }}
       SHARDS: ${{ strategy.job-total }}
+      # Turbo's first run prints a telemetry notice, which a step must not read.
+      TURBO_TELEMETRY_DISABLED: 1
     steps:
+      # The first shard owns `gate/backend` from its start, before anything can
+      # post it: the gate job, which may start later, leaves it alone, and the
+      # shard that merges posts it only after this shard has finished.
+      - name: Mark the backend part pending
+        if: matrix.shard == 1
+        run: |
+          gh api --silent "repos/$GITHUB_REPOSITORY/statuses/$SHA" \
+            -f state=pending -f context=gate/backend -f target_url="$URL" -f description="Verifying"
+
       # Coverage counts the files changed since origin/main, and turbo measures
       # what the head changes, so the job reads the whole history.
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -256,11 +269,14 @@ jobs:
       - name: Ask whether the head reaches the backend
         id: affected
         run: |
+          set -o pipefail
           tasks=1
           if [ -n "$AFFECTED" ]; then
             tasks="$(bun run turbo run test --filter=@repo/backend --affected --dry=json \
               | jq '[.tasks[] | select(.taskId == "@repo/backend#test")] | length')"
           fi
+          # Anything but a count fails the step, so the shards report it instead of guessing.
+          [[ "$tasks" =~ ^[0-9]+$ ]] || { echo "turbo answered no task count: '$tasks'" >&2; exit 1; }
           echo "tasks=$tasks" >> "$GITHUB_OUTPUT"
           [ "$tasks" != 0 ] || [ "$SHARD" != 1 ] || gh api --silent "repos/$GITHUB_REPOSITORY/statuses/$SHA" \
             -f state=success -f context=gate/backend -f target_url="$URL" -f description="The head changes nothing the backend suite reads"
