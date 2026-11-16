@@ -284,7 +284,7 @@ function useStatusText() {
   return (link: LinkItem) =>
     link.status === "pending" && link.mismatches > 0
       ? t("status-mismatch")
-      : t(`status-${link.status}`);
+      : t(`status-label.${link.status}`);
 }
 
 /**
@@ -293,6 +293,7 @@ function useStatusText() {
  */
 function GuardianLinkTable() {
   const t = useTranslations("SchoolGuardians");
+  const tCommon = useTranslations("Common");
   const links = useLinks();
   const statusText = useStatusText();
 
@@ -301,7 +302,7 @@ function GuardianLinkTable() {
       cell: (info) => (
         <PaneOpen id={info.row.original.id}>{info.getValue()}</PaneOpen>
       ),
-      header: t("student"),
+      header: tCommon("student"),
       id: "student",
     }),
     linkColumns.text((link) => link.guardian.name, {
@@ -309,7 +310,7 @@ function GuardianLinkTable() {
       id: "guardian",
     }),
     linkColumns.text((link) => link.email, {
-      header: t("guardian-email"),
+      header: t("email-label"),
       id: "email",
     }),
     linkColumns.values((link) => link.status, {
@@ -320,11 +321,11 @@ function GuardianLinkTable() {
           tone={LINK_STATUS_LOOKS[info.getValue()].tone}
         />
       ),
-      header: t("status"),
+      header: tCommon("state"),
       id: "status",
       options: Arr.map(LinkStatus.literals, (status) => ({
         icon: LINK_STATUS_LOOKS[status].icon,
-        label: t(`status-${status}`),
+        label: t(`status-label.${status}`),
         value: status,
       })),
     }),
@@ -351,6 +352,7 @@ function GuardianLinkTable() {
  */
 function GuardianLinkDetail() {
   const t = useTranslations("SchoolGuardians");
+  const tCommon = useTranslations("Common");
   const links = useLinks();
   const statusText = useStatusText();
   const open = usePanes((state) => state.open);
@@ -371,7 +373,7 @@ function GuardianLinkDetail() {
             <PaneFact label={t("email-label")}>
               <span className="break-all">{found.email}</span>
             </PaneFact>
-            <PaneFact label={t("status")}>
+            <PaneFact label={tCommon("state")}>
               <TableStatus
                 icon={LINK_STATUS_LOOKS[found.status].icon}
                 label={statusText(found)}
@@ -379,7 +381,7 @@ function GuardianLinkDetail() {
               />
             </PaneFact>
             {found.status === "pending" ? (
-              <PaneFact label={t("expires")}>
+              <PaneFact label={tCommon("expires")}>
                 <SchoolDateTime at={found.expiresAt} />
               </PaneFact>
             ) : null}

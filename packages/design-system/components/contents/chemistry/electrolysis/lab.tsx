@@ -92,8 +92,7 @@ export function ElectrolysisLab({
 }) {
   const colors = getElectrolysisColors();
   const format = useFormatter();
-  const number = (value: number) =>
-    mathNumber(format.number(value, "math"));
+  const number = (value: number) => mathNumber(format.number(value, "math"));
   const ions = Arr.dedupe(
     Arr.flatMap(cells, (cell) => ionsOf(cell.electrolyte))
   );
@@ -197,8 +196,7 @@ function Reading({
   readonly reaction: Reaction;
 }) {
   const format = useFormatter();
-  const number = (value: number) =>
-    mathNumber(format.number(value, "math"));
+  const number = (value: number) => mathNumber(format.number(value, "math"));
   if (electrons === undefined) {
     return <InlineMath math={reaction.equation} />;
   }

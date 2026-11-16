@@ -52,6 +52,7 @@ const cohortColumns = tableColumns<CohortItem>();
  */
 export function GraduationCohorts({ slug }: { slug: TenantSlug }) {
   const t = useTranslations("SchoolGraduation");
+  const tCommon = useTranslations("Common");
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
   const cohorts = useQuery(
     records.graduations.cohorts,
@@ -75,7 +76,7 @@ export function GraduationCohorts({ slug }: { slug: TenantSlug }) {
           </Link>
         </TableTitle>
       ),
-      header: t("cohort"),
+      header: tCommon("class-group"),
       id: "cohort",
     }),
     cohortColumns.values((cohort) => cohort.unit, {
@@ -87,7 +88,7 @@ export function GraduationCohorts({ slug }: { slug: TenantSlug }) {
       ),
     }),
     cohortColumns.values((cohort) => cohort.period, {
-      header: t("period"),
+      header: tCommon("period"),
       id: "period",
       options: namedOptions(
         Arr.dedupe(Arr.map(loaded, (cohort) => cohort.period)),
@@ -102,8 +103,11 @@ export function GraduationCohorts({ slug }: { slug: TenantSlug }) {
   return (
     <TableFiltersProvider>
       <Page height="screen">
-        <SchoolHeader items={[{ label: t("title") }]} title={t("title")}>
-          <TableSearch placeholder={t("search-cohorts")} />
+        <SchoolHeader
+          items={[{ label: tCommon("graduation") }]}
+          title={tCommon("graduation")}
+        >
+          <TableSearch placeholder={tCommon("search-class-groups")} />
         </SchoolHeader>
         <PageList>
           {QueryResult.isSuccess(cohorts) &&

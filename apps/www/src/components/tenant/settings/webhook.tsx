@@ -222,7 +222,7 @@ export function SchoolWebhookCreateDialog({
           onClick={submit}
           type="button"
         >
-          {t("webhook-create")}
+          {common("create")}
         </Button>
       }
       description={t("webhook-add-description")}
@@ -303,6 +303,7 @@ export function SchoolWebhookEditDialog({
 }) {
   const { slug } = useTenant();
   const t = useTranslations("SchoolSettings");
+  const tCommon = useTranslations("Common");
   const change = useMutation(integrations.webhooks.change).withOptimisticUpdate(
     changeWebhookChange
   );
@@ -345,13 +346,13 @@ export function SchoolWebhookEditDialog({
           onClick={submit}
           type="button"
         >
-          {t("webhook-save")}
+          {tCommon("save")}
         </Button>
       }
       description={t("webhook-edit-description")}
       open={open}
       setOpen={setOpen}
-      title={t("webhook-edit")}
+      title={tCommon("edit")}
     >
       <FieldGroup>
         <WebhookFields

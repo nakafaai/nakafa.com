@@ -118,6 +118,7 @@ function ArchivedPosts({
   pagination: ReturnType<typeof useClassPosts>["pagination"];
 }) {
   const t = useTranslations("Classroom");
+  const tCommon = useTranslations("Common");
 
   if (pagination._tag === "LoadingFirstPage") {
     return null;
@@ -132,7 +133,7 @@ function ArchivedPosts({
           title={t("posts-archived-empty")}
         />
       ) : (
-        <ItemGroup aria-label={t("posts-archived")}>
+        <ItemGroup aria-label={tCommon("archived")}>
           {Arr.map(pagination.results, (post) => (
             <PostRow key={post.clientKey} post={post} />
           ))}

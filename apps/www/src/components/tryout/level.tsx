@@ -62,10 +62,11 @@ export function TryoutLevelBadge({ level }: { level: SetLevel }) {
  */
 export function useLevelChoices() {
   const t = useTranslations("Tryouts");
+  const tCommon = useTranslations("Common");
 
   return Arr.map(setLevelFilterValidator.literals, (value) =>
     value === "all"
-      ? { icon: Menu01Icon, label: t("set-filter-all"), value }
+      ? { icon: Menu01Icon, label: tCommon("all"), value }
       : { icon: LEVEL_LOOKS[value].icon, label: t(`level-${value}`), value }
   );
 }

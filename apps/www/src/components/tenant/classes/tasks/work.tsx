@@ -61,6 +61,7 @@ const workColumns = tableColumns<TaskWork>();
  */
 export function TaskWorkTable({ task }: { task: ClassTask }) {
   const t = useTranslations("Classroom");
+  const tCommon = useTranslations("Common");
   const { classId, slug } = useClassScope();
   const search = useServerSearch();
   const pagination = usePaginatedQuery(
@@ -96,7 +97,7 @@ export function TaskWorkTable({ task }: { task: ClassTask }) {
         columns={[
           workColumns.text((work) => work.person.name, {
             cell: (info) => <TableName>{info.getValue()}</TableName>,
-            header: t("task-student"),
+            header: tCommon("student"),
             id: "student",
           }),
           workColumns.values((work) => (work.late ? "late" : "onTime"), {
@@ -104,15 +105,15 @@ export function TaskWorkTable({ task }: { task: ClassTask }) {
               <span className="text-muted-foreground">
                 {info.row.original.late
                   ? t("task-handed-in-late")
-                  : t("task-handed-in")}
+                  : t("task-submissions")}
               </span>
             ),
-            header: t("task-status"),
+            header: tCommon("status"),
             id: "late",
             options: [
               {
                 icon: TaskDone01Icon,
-                label: t("task-handed-in"),
+                label: t("task-submissions"),
                 value: "onTime" as const,
               },
               {
@@ -126,7 +127,7 @@ export function TaskWorkTable({ task }: { task: ClassTask }) {
             cell: (info) => (
               <WorkPoints points={task.points} work={info.row.original} />
             ),
-            header: t("task-points"),
+            header: tCommon("score-points"),
             id: "points",
           }),
           workColumns.menu((info) => <WorkMenu work={info.row.original} />),
@@ -180,7 +181,7 @@ function WorkDialog({ work }: { work: TaskWork }) {
 
   return (
     <ResponsiveDialog
-      description={work.late ? t("task-handed-in-late") : t("task-handed-in")}
+      description={work.late ? t("task-handed-in-late") : t("task-submissions")}
       open={open}
       setOpen={setOpen}
       title={work.person.name}

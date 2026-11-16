@@ -16,7 +16,7 @@ export function UserSettingsHeader({ children }: { children?: ReactNode }) {
   const t = useTranslations("Auth");
   const tCommon = useTranslations("Common");
   const section = getUserSettingsSection(leafPath);
-  const label = t(section.labelKey);
+  const label = t(`section.${section.labelKey}`);
 
   return (
     <BreadcrumbHeader

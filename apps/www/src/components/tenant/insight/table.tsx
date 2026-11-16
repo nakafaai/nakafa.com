@@ -74,6 +74,7 @@ export function ClassInsightTabs({
   classId: GenericId.GenericId<"classes">;
 }) {
   const t = useTranslations("SchoolInsight");
+  const tCommon = useTranslations("Common");
   const { slug } = useTenant();
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
   const found = useQuery(
@@ -102,15 +103,15 @@ export function ClassInsightTabs({
         <TabsList aria-label={t("tabs-label")} className={pageRowVariants()}>
           <TabsTab value="students">
             <HugeIcons icon={UserGroupIcon} />
-            {t("tab-students")}
+            {tCommon("students")}
           </TabsTab>
           <TabsTab value="mastery">
             <HugeIcons icon={Target02Icon} />
-            {t("mastery")}
+            {tCommon("mastery")}
           </TabsTab>
           <TabsTab value="practice">
             <HugeIcons icon={Share08Icon} />
-            {t("tab-practice")}
+            {tCommon("practice")}
           </TabsTab>
         </TabsList>
         <TabsPanel className="flex min-h-0 flex-col" value="students">
@@ -140,7 +141,7 @@ export function ClassInsightTabs({
                     id: "competency",
                   }),
                   skillColumns.number((row) => percentOf(row.rating), {
-                    header: t("mastery"),
+                    header: tCommon("mastery"),
                     id: "mastery",
                   }),
                   skillColumns.number((row) => row.earned, {
@@ -177,7 +178,7 @@ export function ClassInsightTabs({
                         params={{ slug }}
                         to="/school/$slug/exams"
                       >
-                        {t("exams-action")}
+                        {tCommon("open-exams")}
                       </Link>
                     }
                     description={t("class-empty-description")}
@@ -220,6 +221,7 @@ function ClassStudents({
   students: readonly InsightStudent[];
 }) {
   const t = useTranslations("SchoolInsight");
+  const tCommon = useTranslations("Common");
   const { canManage, slug } = useTenant();
 
   return (
@@ -237,40 +239,40 @@ function ClassStudents({
           }),
           studentColumns.text((row) => row.email ?? "", {
             cell: (info) => <TableText>{info.getValue()}</TableText>,
-            header: t("email"),
+            header: tCommon("email"),
             id: "email",
           }),
           studentColumns.number((row) => row.competencies, {
-            header: t("competencies-count"),
+            header: tCommon("skills"),
             id: "competencies",
           }),
           studentColumns.number((row) => row.mastery, {
-            header: t("mastery"),
+            header: tCommon("mastery"),
             id: "mastery",
           }),
           studentColumns.values((row) => row.state, {
             cell: (info) => (
               <TableStatus
                 {...NARRATIVE_LOOKS[info.row.original.state]}
-                label={t(`narrative-${info.row.original.state}`)}
+                label={t(`narrative-label.${info.row.original.state}`)}
               />
             ),
-            header: t("narrative"),
+            header: tCommon("narrative"),
             id: "narrative",
             options: [
               {
                 icon: NoteEditIcon,
-                label: t("narrative-none"),
+                label: t("narrative-label.none"),
                 value: "none",
               },
               {
                 icon: Note01Icon,
-                label: t("narrative-saved"),
+                label: t("narrative-label.saved"),
                 value: "saved",
               },
               {
                 icon: CheckmarkCircle02Icon,
-                label: t("narrative-shared"),
+                label: t("narrative-label.shared"),
                 value: "shared",
               },
             ],
@@ -289,7 +291,7 @@ function ClassStudents({
                   params={{ slug }}
                   to="/school/$slug/settings/classes"
                 >
-                  {t("no-class-action")}
+                  {tCommon("open-classrooms")}
                 </Link>
               ) : undefined
             }

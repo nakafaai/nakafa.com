@@ -68,13 +68,14 @@ export function PlayerNavigatorHeader({
   questions: readonly PlayerCellModel[];
 }) {
   const t = useTranslations("Player");
+  const tCommon = useTranslations("Common");
   return (
     <PaneHeader
       description={t("navigator-answered", {
         answered: Arr.filter(questions, (question) => question.answered).length,
         total: questions.length,
       })}
-      title={t("navigator")}
+      title={tCommon("exam-questions")}
     />
   );
 }

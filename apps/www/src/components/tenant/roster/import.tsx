@@ -99,6 +99,7 @@ function RosterImportContent() {
  */
 function RosterImportOfUnit({ unitId }: { unitId: UnitId }) {
   const t = useTranslations("SchoolRoster");
+  const tCommon = useTranslations("Common");
   const { slug } = useTenant();
   const navigate = useNavigate();
   const apply = useMutation(roster.imports.apply);
@@ -185,7 +186,7 @@ function RosterImportOfUnit({ unitId }: { unitId: UnitId }) {
                 type="button"
               >
                 <HugeIcons icon={Cancel01Icon} />
-                <span className="max-sm:sr-only">{t("cancel")}</span>
+                <span className="max-sm:sr-only">{tCommon("cancel")}</span>
               </Button>
             </ButtonGroup>
             <Button
@@ -197,7 +198,7 @@ function RosterImportOfUnit({ unitId }: { unitId: UnitId }) {
               type="button"
             >
               <Spinner isLoading={isApplying} />
-              {t("apply")}
+              {tCommon("import-students")}
             </Button>
           </>
         }

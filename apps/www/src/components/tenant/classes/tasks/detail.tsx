@@ -181,6 +181,7 @@ function TaskHeader() {
 /** What a task asks, then its deadline, its points, what late work gets, who gets it, and where it stands. */
 function TaskInfo() {
   const t = useTranslations("Classroom");
+  const tCommon = useTranslations("Common");
   const task = useOpenTask();
   const format = useFormatter();
   const timeZone = useClockZone();
@@ -191,10 +192,10 @@ function TaskInfo() {
         {task.text}
       </p>
       <PaneFacts>
-        <PaneFact label={t("task-deadline")}>
+        <PaneFact label={tCommon("deadline")}>
           {format.dateTime(task.deadline, "full", { timeZone })}
         </PaneFact>
-        <PaneFact label={t("task-points")}>{task.points}</PaneFact>
+        <PaneFact label={tCommon("score-points")}>{task.points}</PaneFact>
         <PaneFact label={t("task-late")}>
           {t(`task-late-${task.latePolicy}`)}
         </PaneFact>
@@ -203,7 +204,7 @@ function TaskInfo() {
             ? t("task-reach-class")
             : t("task-reach-count", { count: task.targets.length })}
         </PaneFact>
-        <PaneFact label={t("task-status")}>
+        <PaneFact label={tCommon("status")}>
           <TaskStanding task={task} />
         </PaneFact>
       </PaneFacts>
@@ -218,6 +219,7 @@ function TaskInfo() {
  */
 function TeacherTask() {
   const t = useTranslations("Classroom");
+  const tCommon = useTranslations("Common");
   const task = useOpenTask();
   const [openings, setOpenings] = useState(0);
   const [view, setView] = useState<"missing" | "work">("work");
@@ -246,7 +248,7 @@ function TeacherTask() {
                   },
                 ]}
               />
-              <TableSearch placeholder={t("task-work-search")} />
+              <TableSearch placeholder={tCommon("search-students")} />
             </>
           }
         >
@@ -350,6 +352,7 @@ function HandIn() {
  */
 function ExamTask() {
   const t = useTranslations("Classroom");
+  const tCommon = useTranslations("Common");
   const task = useOpenTask();
   const { can, slug } = useClassScope();
   const [openings, setOpenings] = useState(0);
@@ -373,7 +376,7 @@ function ExamTask() {
               to="/school/$slug/exams/$exam/edit"
             >
               <HugeIcons aria-hidden="true" icon={Edit02Icon} />
-              {t("task-questions")}
+              {tCommon("questions")}
             </Link>
             <Link
               className={buttonVariants({ variant: "outline" })}
@@ -381,7 +384,7 @@ function ExamTask() {
               to="/school/$slug/exams/$exam/sittings/$sitting/results"
             >
               <HugeIcons aria-hidden="true" icon={ChartBarLineIcon} />
-              {t("task-results")}
+              {tCommon("results")}
             </Link>
             <Button onClick={() => setOpenings((count) => count + 1)}>
               <HugeIcons aria-hidden="true" icon={PencilEdit02Icon} />

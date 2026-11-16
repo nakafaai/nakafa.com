@@ -79,13 +79,13 @@ function ChildTasks() {
 
 /** The child's grades, one line for each subject. */
 function ChildGrades() {
-  const t = useTranslations("SchoolSite");
+  const tCommon = useTranslations("Common");
   const tSubject = useTranslations("Subject");
   const format = useFormatter();
 
   return (
     <section className="grid content-start gap-3">
-      <h3 className="text-muted-foreground text-sm">{t("parents-grades")}</h3>
+      <h3 className="text-muted-foreground text-sm">{tCommon("grades")}</h3>
       <dl className="grid gap-3">
         {Arr.map(CHILD_GRADES, ({ score, step, subject }) => (
           <div

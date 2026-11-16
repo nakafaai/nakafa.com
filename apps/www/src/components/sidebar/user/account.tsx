@@ -54,8 +54,8 @@ const SidebarMembershipItems = lazy(() =>
 
 /** The second line of the account button: the account's plan. */
 function usePlanLabels() {
-  const t = useTranslations("Auth");
-  return { free: t("plan-free"), pro: t("plan-pro") };
+  const tCommon = useTranslations("Common");
+  return { free: tCommon("free"), pro: tCommon("pro") };
 }
 
 /**
@@ -66,7 +66,7 @@ function usePlanLabels() {
  */
 export function NavUserAccount({ user }: { user: CurrentUser }) {
   const t = useTranslations("Auth");
-  const tNotifications = useTranslations("Notifications");
+  const tCommon = useTranslations("Common");
   const navigate = useNavigate();
   const locale = useCurrentLocale();
   const sessionId = useLiveSession((state) => state.sessionId);
@@ -130,7 +130,7 @@ export function NavUserAccount({ user }: { user: CurrentUser }) {
             navigate({ from: LOCALE_ROUTE, to: "/$locale/notifications" })
           }
         >
-          {tNotifications("title")}
+          {tCommon("notifications")}
         </DropdownMenuItem>
         <DropdownMenuItem
           icon={Settings01Icon}
@@ -138,7 +138,7 @@ export function NavUserAccount({ user }: { user: CurrentUser }) {
             navigate({ from: LOCALE_ROUTE, to: "/$locale/user/settings" })
           }
         >
-          {t("settings")}
+          {tCommon("settings")}
         </DropdownMenuItem>
       </DropdownMenuGroup>
       <DropdownMenuSeparator />

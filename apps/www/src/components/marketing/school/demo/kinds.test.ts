@@ -17,8 +17,12 @@ import { Array as Arr, Record as Rec, Schema } from "effect";
 import { paperExam } from "@/components/marketing/school/demo/kinds";
 
 /** The paper's texts in one language, as the landing reads them from the dictionary. */
-const textsOf = ({ Exams: exams, SchoolSite: site }: typeof en) => ({
-  answer: site["demo-exam-answer"],
+const textsOf = ({
+  Common: common,
+  Exams: exams,
+  SchoolSite: site,
+}: typeof en) => ({
+  answer: common.answer,
   cause: site["paper-cause"],
   causes: [
     exams["cause-related"],
@@ -46,7 +50,7 @@ const textsOf = ({ Exams: exams, SchoolSite: site }: typeof en) => ({
     site["paper-table-rest"],
   ] as const,
   table: site["paper-table"],
-  time: site["paper-time"],
+  time: common.time,
   title: site["demo-exam-title"],
   truefalse: site["paper-truefalse"],
   truth: [exams["truefalse-true"], exams["truefalse-false"]] as const,

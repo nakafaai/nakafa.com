@@ -21,6 +21,7 @@ import { NewPostPoll } from "@/components/tenant/classes/home/poll";
  */
 export function HomeFeed({ publishes }: { publishes: boolean }) {
   const t = useTranslations("Classroom");
+  const tCommon = useTranslations("Common");
   const [view, setView] = useState<"archived" | "live">("live");
 
   return (
@@ -45,7 +46,7 @@ export function HomeFeed({ publishes }: { publishes: boolean }) {
               { icon: Megaphone01Icon, label: t("view-active"), value: "live" },
               {
                 icon: Archive02Icon,
-                label: t("posts-archived"),
+                label: tCommon("archived"),
                 value: "archived",
               },
             ]}

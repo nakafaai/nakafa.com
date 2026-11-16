@@ -102,6 +102,7 @@ export function SpacePlace({ shape }: { readonly shape: ShapeDraft }) {
 /** The fields that place an object on a plane, by its kind. */
 export function PlanePlace({ shape }: { readonly shape: ShapeDraft }) {
   const t = useTranslations("Exams");
+  const common = useTranslations("Common");
   const changeShape = useGraph((state) => state.changeShape);
   const id = useId();
 
@@ -155,7 +156,7 @@ export function PlanePlace({ shape }: { readonly shape: ShapeDraft }) {
       <ShapeInput
         check={isEquation}
         field="formula"
-        label={t("figure-equation")}
+        label={common("equation")}
         placeholder="x^2 + y^2 = 4"
         shape={shape}
       />

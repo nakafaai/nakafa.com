@@ -70,7 +70,7 @@ test("a comment, a reply and a reply to that reply make one thread behind its to
                 .click();
               await expect(openComposer(replier)).toHaveText(reply);
               await replier
-                .getByRole("button", { name: app.Comments.send, exact: true })
+                .getByRole("button", { name: app.Common.send, exact: true })
                 .last()
                 .click();
               await expect(commentRow(replier, reply)).toBeVisible({

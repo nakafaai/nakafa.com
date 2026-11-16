@@ -15,6 +15,7 @@ type CheckAnswer = Ref.Returns<typeof records.checks.report>;
  */
 export function ReportCheck({ answer }: { answer: CheckAnswer }) {
   const t = useTranslations("ReportCheck");
+  const tCommon = useTranslations("Common");
 
   if (answer.outcome === "unknown") {
     return (
@@ -37,11 +38,13 @@ export function ReportCheck({ answer }: { answer: CheckAnswer }) {
         </p>
       </div>
       <dl className="grid w-full grid-cols-2 gap-x-4 gap-y-2 text-sm">
-        <dt className="text-muted-foreground">{t("school")}</dt>
+        <dt className="text-muted-foreground">{tCommon("school")}</dt>
         <dd className="text-right font-medium">{answer.school}</dd>
-        <dt className="text-muted-foreground">{t("kind")}</dt>
-        <dd className="text-right font-medium">{t(`kind-${answer.kind}`)}</dd>
-        <dt className="text-muted-foreground">{t("period")}</dt>
+        <dt className="text-muted-foreground">{tCommon("document")}</dt>
+        <dd className="text-right font-medium">
+          {t(`kind-label.${answer.kind}`)}
+        </dd>
+        <dt className="text-muted-foreground">{tCommon("period")}</dt>
         <dd className="text-right font-medium">{answer.period}</dd>
         <dt className="text-muted-foreground">
           {t(answer.kind === "report" ? "approved" : "issued")}

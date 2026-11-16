@@ -182,12 +182,13 @@ function ClassPendingHeader({
 /** The first steps of a class's path, by the class's name. */
 function useClassRoot(classSlug: string, slug: TenantSlug) {
   const t = useTranslations("Classroom");
+  const tCommon = useTranslations("Common");
 
   return (name: string) => ({
     classSlug,
-    forum: t("tabs-forum"),
-    grades: t("tabs-grades"),
-    library: t("tabs-library"),
+    forum: tCommon("forum"),
+    grades: tCommon("grades"),
+    library: tCommon("library"),
     name,
     people: t("tabs-people"),
     slug,

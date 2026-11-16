@@ -50,6 +50,7 @@ export function CommentWriter({
   onSend: () => void;
 }) {
   const t = useTranslations("Comments");
+  const tCommon = useTranslations("Common");
   const labels = useDocumentLabels();
   const text = useCommentDraft((draft) => textOf(draft, composerKey));
   const generation = useCommentDraft((draft) =>
@@ -89,7 +90,7 @@ export function CommentWriter({
           disabled={!sendable}
           onClick={onSend}
           size="icon-sm"
-          tooltip={t("send")}
+          tooltip={tCommon("send")}
           type="button"
         >
           <HugeIcons icon={ArrowUp02Icon} />
@@ -101,7 +102,7 @@ export function CommentWriter({
 
 /** The emoji of a comment: the forum's searchable chooser, whose pick goes in at the caret. */
 function EmojiButton() {
-  const t = useTranslations("Comments");
+  const tCommon = useTranslations("Common");
   const insert = useInsertText();
 
   return (
@@ -110,7 +111,7 @@ function EmojiButton() {
         render={
           <Button
             size="icon-sm"
-            tooltip={t("emoji")}
+            tooltip={tCommon("emoji")}
             type="button"
             variant="ghost"
           />

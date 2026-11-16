@@ -110,6 +110,7 @@ function FigureForm({
   readonly pending: PendingFigure;
 }) {
   const t = useTranslations("Exams");
+  const tCommon = useTranslations("Common");
   const id = useId();
   const [draft, setDraft] = useState<FigureDraft>(pending.draft);
   // The graph the builder opens on, the last one the teacher made, and a fresh builder each time the
@@ -145,7 +146,7 @@ function FigureForm({
     <ResponsiveDialog
       action={
         <Button disabled={Result.isFailure(made)} onClick={save}>
-          {t("figure-save")}
+          {tCommon("save")}
         </Button>
       }
       description={t("figure-description")}

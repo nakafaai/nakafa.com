@@ -63,6 +63,7 @@ export function useGraduationPage() {
  */
 export function CohortGraduationHeader() {
   const t = useTranslations("SchoolGraduation");
+  const tCommon = useTranslations("Common");
   const args = useCohortArgs();
   const page = useGraduationPage();
   const title = QueryResult.isSuccess(page) ? page.value.cohort.name : "";
@@ -71,7 +72,7 @@ export function CohortGraduationHeader() {
     <SchoolHeader
       items={[
         {
-          label: t("title"),
+          label: tCommon("graduation"),
           target: {
             from: LOCALE_ROUTE,
             params: { slug: args.slug },

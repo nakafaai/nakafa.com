@@ -41,7 +41,7 @@ export function SittingTable({
       onMark={(statement, column) =>
         onMark(markedWith(table.statements, cells, { column, statement }))
       }
-      statementLabel={t("statement-placeholder")}
+      statementLabel={t("placeholder.statement")}
       statements={Arr.map(table.statements, (statement) => ({
         id: statement.id,
         label: (

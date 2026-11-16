@@ -16,7 +16,7 @@ export function ChoiceGroup({
   /** The id of the name, for the options that a screen reader reads by it. */
   readonly id?: string;
   /** The key of the choice's name, or none for a question of one choice. */
-  readonly title: "reason-answer" | "reason-title" | null;
+  readonly title: "choice-title.answer" | "choice-title.reason" | null;
 }) {
   const t = useTranslations("Exams");
 
@@ -53,7 +53,7 @@ export function SittingReason({
 
   return (
     <div className="grid gap-8">
-      <ChoiceGroup id={answerId} title="reason-answer">
+      <ChoiceGroup id={answerId} title="choice-title.answer">
         <SittingChoice
           choice={answer}
           labelledBy={answerId}
@@ -61,7 +61,7 @@ export function SittingReason({
           response={heldBy(answer, response)}
         />
       </ChoiceGroup>
-      <ChoiceGroup id={reasonId} title="reason-title">
+      <ChoiceGroup id={reasonId} title="choice-title.reason">
         <SittingChoice
           choice={reason}
           labelledBy={reasonId}

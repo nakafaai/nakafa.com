@@ -19,13 +19,18 @@ export const Route = createFileRoute("/$locale/_main/_app/chat/")({
       messages: loaderData,
       namespace: "Ai",
     });
+    const tCommon = createTranslator({
+      locale,
+      messages: loaderData,
+      namespace: "Common",
+    });
     return signedInHead(
       {
         canonicalPath: `/${locale}/chat`,
         description: t("new-chat-description"),
         indexable: false,
         locale,
-        title: t("new-chat-title"),
+        title: tCommon("what-do-you-want-to-learn"),
       },
       getAppSocialArtwork({ key: "ask-nina", locale, publicPath: "chat" })
     );

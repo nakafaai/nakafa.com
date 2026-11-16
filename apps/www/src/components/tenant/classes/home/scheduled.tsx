@@ -166,6 +166,7 @@ function WaitingDialog({
   setOpen: (open: boolean) => void;
 }) {
   const t = useTranslations("Classroom");
+  const tCommon = useTranslations("Common");
   const { classId, slug } = useClassScope();
   const id = useId();
   const edit = useMutation(classroom.scheduled.edit);
@@ -208,7 +209,7 @@ function WaitingDialog({
     <ResponsiveDialog
       action={
         <Button disabled={!ready} onClick={save}>
-          {t("message-save")}
+          {tCommon("save")}
         </Button>
       }
       description={t("post-schedule-description")}

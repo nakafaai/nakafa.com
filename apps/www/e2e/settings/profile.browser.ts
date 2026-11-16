@@ -117,7 +117,7 @@ test("a learner takes a new username in settings: a taken or invalid name says w
       // is unique too, and it starts with a letter.
       const renamed = `pelajar${learner.userId.slice(-12)}`;
       const form = page.locator("#user-settings-username-form");
-      const save = form.getByRole("button", { name: app.Auth.save });
+      const save = form.getByRole("button", { name: app.Common.save });
 
       yield* Effect.promise(async () => {
         await page.goto(appRoutes.settings);
@@ -218,7 +218,7 @@ test("a learner writes a bio in settings, the profile shows it, and clearing it 
       const { learner } = yield* openChatPage(page, origin);
       const profile = `/en/@${learner.username}`;
       const form = page.locator("#user-settings-bio-form");
-      const save = form.getByRole("button", { name: app.Auth.save });
+      const save = form.getByRole("button", { name: app.Common.save });
 
       yield* Effect.promise(async () => {
         await page.goto(appRoutes.settings);
@@ -283,7 +283,7 @@ test("a bio of many lines shows every line on the profile", async ({
       const profile = `/en/@${learner.username}`;
       const save = page
         .locator("#user-settings-bio-form")
-        .getByRole("button", { name: app.Auth.save });
+        .getByRole("button", { name: app.Common.save });
 
       yield* Effect.promise(async () => {
         await page.goto(appRoutes.settings);

@@ -104,7 +104,7 @@ export function GuardianHome() {
               </PageList>
             </PanesList>
             {QueryResult.isSuccess(children) ? (
-              <PagePane label={t("child-detail")}>
+              <PagePane label={t("child")}>
                 <GuardianChild items={children.value} />
               </PagePane>
             ) : null}
@@ -137,32 +137,36 @@ function GuardianChildren() {
     }),
     childColumns.text((child) => child.student.email ?? "", {
       cell: (info) => <TableText>{info.getValue()}</TableText>,
-      header: t("email"),
+      header: common("email"),
       id: "email",
     }),
     childColumns.values((child) => child.status, {
       cell: (info) => (
         <TableStatus
           icon={LINK_STATUS_LOOKS[info.getValue()].icon}
-          label={t(`status-${info.getValue()}`)}
+          label={t(`status-label.${info.getValue()}`)}
           tone={LINK_STATUS_LOOKS[info.getValue()].tone}
         />
       ),
-      header: t("status"),
+      header: common("state"),
       id: "status",
       options: Arr.map(LinkStatus.literals, (status) => ({
         icon: LINK_STATUS_LOOKS[status].icon,
-        label: t(`status-${status}`),
+        label: t(`status-label.${status}`),
         value: status,
       })),
     }),
     childColumns.values((child) => (child.staffCheck ? "school" : "nisn"), {
-      cell: (info) => t(`check-${info.getValue()}`),
+      cell: (info) => t(`check-label.${info.getValue()}`),
       header: t("check"),
       id: "check",
       options: [
-        { icon: IdentityCardIcon, label: t("check-nisn"), value: "nisn" },
-        { icon: Building03Icon, label: t("check-school"), value: "school" },
+        { icon: IdentityCardIcon, label: t("check-label.nisn"), value: "nisn" },
+        {
+          icon: Building03Icon,
+          label: t("check-label.school"),
+          value: "school",
+        },
       ],
     }),
     childColumns.menu(() => (
@@ -304,6 +308,7 @@ function GuardianConfirm({ child }: { child: ChildItem }) {
  */
 function GuardianVerified({ child }: { child: ChildItem }) {
   const t = useTranslations("SchoolGuardians");
+  const tCommon = useTranslations("Common");
   const [view, setView] = useState<"grades" | "requests">("grades");
 
   return (
@@ -318,7 +323,7 @@ function GuardianVerified({ child }: { child: ChildItem }) {
               views={[
                 {
                   icon: ChartBarLineIcon,
-                  label: t("view-grades"),
+                  label: tCommon("grades"),
                   value: "grades",
                 },
                 {

@@ -8,12 +8,12 @@ import {
 
 /** The Save action of a settings card, which submits its form. */
 export function SettingsSave({ disabled }: { disabled: boolean }) {
-  const t = useTranslations("Auth");
+  const tCommon = useTranslations("Common");
 
   return (
     <CardSectionActions>
       <Button disabled={disabled} size="sm" type="submit">
-        {t("save")}
+        {tCommon("save")}
       </Button>
     </CardSectionActions>
   );

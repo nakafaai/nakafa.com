@@ -79,7 +79,7 @@ export function ExamMenu() {
                 icon={FileImportIcon}
                 onClick={() => setDialog("import")}
               >
-                {t("import-action")}
+                {common("import")}
               </DropdownMenuItem>
               {framed ? null : (
                 <DropdownMenuItem

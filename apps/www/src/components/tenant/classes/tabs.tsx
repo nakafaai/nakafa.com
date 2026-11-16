@@ -45,12 +45,13 @@ export function ClassTabs({
   tab: (typeof ClassView.Type)["_tag"];
 }) {
   const t = useTranslations("Classroom");
+  const tCommon = useTranslations("Common");
   const { slug } = useTenant();
   const params = { classSlug, slug };
 
   return (
     <Tabs value={tabOfView(tab)}>
-      <TabsList aria-label={t("tabs-label")} className={pageRowVariants()}>
+      <TabsList aria-label={tCommon("class")} className={pageRowVariants()}>
         <TabsTab
           nativeButton={false}
           render={
@@ -74,7 +75,7 @@ export function ClassTabs({
               to="/school/$slug/classes/$classSlug/forum"
             >
               <HugeIcons icon={MessageMultiple01Icon} />
-              {t("tabs-forum")}
+              {tCommon("forum")}
             </Link>
           }
           value="forum"
@@ -88,7 +89,7 @@ export function ClassTabs({
               to="/school/$slug/classes/$classSlug/library"
             >
               <HugeIcons icon={LibraryIcon} />
-              {t("tabs-library")}
+              {tCommon("library")}
             </Link>
           }
           value="library"
@@ -131,7 +132,7 @@ export function ClassTabs({
                 to="/school/$slug/classes/$classSlug/grades"
               >
                 <HugeIcons icon={ChartBarLineIcon} />
-                {t("tabs-grades")}
+                {tCommon("grades")}
               </Link>
             }
             value="grades"

@@ -88,13 +88,13 @@ export function NarrativeProvider({
 
 /** The menu of a row that names a student: their narrative. */
 export function NarrativeMenu({ id }: { id: InsightStudent["id"] }) {
-  const t = useTranslations("SchoolInsight");
+  const tCommon = useTranslations("Common");
   const choose = useNarrativeChoice((state) => state.choose);
 
   return (
     <RowItems>
       <DropdownMenuItem icon={NoteEditIcon} onClick={() => choose(id)}>
-        {t("narrative-open")}
+        {tCommon("narrative")}
       </DropdownMenuItem>
     </RowItems>
   );
@@ -106,6 +106,7 @@ export function NarrativeMenu({ id }: { id: InsightStudent["id"] }) {
  */
 function StudentNarrative({ student }: { student: InsightStudent }) {
   const t = useTranslations("SchoolInsight");
+  const tCommon = useTranslations("Common");
   const classId = useNarrativeClass();
   const { slug } = useTenant();
   const viewer = useViewerQuery();
@@ -171,7 +172,7 @@ function StudentNarrative({ student }: { student: InsightStudent }) {
             }
             type="button"
           >
-            {t("narrative-save")}
+            {tCommon("save")}
           </Button>
         </>
       }

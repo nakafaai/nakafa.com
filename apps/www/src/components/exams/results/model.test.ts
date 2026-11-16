@@ -8,10 +8,10 @@ import {
 describe("components/exams/results model", () => {
   it("names each verdict with its own copy key", () => {
     expect(verdictKeys).toEqual({
-      correct: "verdict-correct",
-      incorrect: "verdict-incorrect",
-      partial: "verdict-partial",
-      pending: "verdict-pending",
+      correct: "verdict.correct",
+      incorrect: "verdict.incorrect",
+      partial: "verdict.partial",
+      pending: "verdict.pending",
     });
   });
 

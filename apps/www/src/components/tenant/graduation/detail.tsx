@@ -46,6 +46,7 @@ export function GraduationLineDetail({
   lines: readonly GraduationLine[];
 }) {
   const t = useTranslations("SchoolGraduation");
+  const tCommon = useTranslations("Common");
   const locale = useLocale();
   const format = useFormatter();
   const open = usePanes((state) => state.open);
@@ -82,7 +83,7 @@ export function GraduationLineDetail({
               columns={[
                 subjectColumns.text((subject) => subject.subject, {
                   cell: (info) => <span dir="auto">{info.getValue()}</span>,
-                  header: t("subject"),
+                  header: tCommon("school-subject"),
                   id: "subject",
                 }),
                 subjectColumns.number((subject) => subject.value, {
@@ -101,7 +102,7 @@ export function GraduationLineDetail({
               <TableFooter>
                 <TableRow>
                   <TableCell className={columnAlign({ align: "start" })}>
-                    {t("average")}
+                    {tCommon("average")}
                   </TableCell>
                   <TableCell className={columnAlign()}>
                     {twoDecimals(found.transcript.average)}
@@ -145,10 +146,11 @@ export function GraduationLineDetail({
 /** The facts of the open student's graduation: their NISN on file, their SKL's number, and what it still lacks. */
 function GraduationFacts({ line }: { line: GraduationLine }) {
   const t = useTranslations("SchoolGraduation");
+  const tCommon = useTranslations("Common");
 
   return (
     <PaneFacts>
-      <PaneFact label={t("nisn")}>
+      <PaneFact label={tCommon("nisn")}>
         {t(`nisn-${line.hasNisn ? "yes" : "no"}`)}
       </PaneFact>
       {line.letter === null ? null : (
@@ -158,9 +160,9 @@ function GraduationFacts({ line }: { line: GraduationLine }) {
       )}
       <PaneFact label={t("ready")}>
         {Arr.isReadonlyArrayEmpty(line.missing)
-          ? t("ready-ready")
+          ? t("ready-label.ready")
           : Arr.join(
-              Arr.map(line.missing, (missing) => t(`ready-${missing}`)),
+              Arr.map(line.missing, (missing) => t(`ready-label.${missing}`)),
               ", "
             )}
       </PaneFact>

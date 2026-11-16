@@ -149,7 +149,7 @@ function SchoolInviteDialog({
             }}
             type="button"
           >
-            {t("invite-submit")}
+            {t("invite-action")}
           </Button>
         </>
       }
@@ -160,7 +160,7 @@ function SchoolInviteDialog({
     >
       <FieldGroup>
         <Field>
-          <FieldLabel htmlFor={`${id}-name`}>{t("invite-name")}</FieldLabel>
+          <FieldLabel htmlFor={`${id}-name`}>{common("name")}</FieldLabel>
           <Input
             id={`${id}-name`}
             onChange={(event) => setName(event.target.value)}
@@ -169,7 +169,7 @@ function SchoolInviteDialog({
           />
         </Field>
         <Field>
-          <FieldLabel htmlFor={`${id}-email`}>{t("invite-email")}</FieldLabel>
+          <FieldLabel htmlFor={`${id}-email`}>{common("email")}</FieldLabel>
           <Input
             id={`${id}-email`}
             onChange={(event) => setEmail(event.target.value)}
@@ -184,7 +184,7 @@ function SchoolInviteDialog({
           </FieldDescription>
         </Field>
         <Field>
-          <FieldLabel htmlFor={`${id}-role`}>{t("invite-role")}</FieldLabel>
+          <FieldLabel htmlFor={`${id}-role`}>{common("role")}</FieldLabel>
           <Select
             items={roleItems}
             onValueChange={(value) => {

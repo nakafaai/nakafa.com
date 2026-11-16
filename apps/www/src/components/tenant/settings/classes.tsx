@@ -257,7 +257,7 @@ function ClassesCohortLink() {
       params={{ slug }}
       to="/school/$slug/settings/cohorts"
     >
-      {t("cohorts")}
+      {t("section.cohorts")}
     </Link>
   );
 }
@@ -269,6 +269,7 @@ function ClassesCohortLink() {
  */
 function SchoolClassTable({ periodId }: { periodId: Period["id"] }) {
   const t = useTranslations("SchoolSettings");
+  const tCommon = useTranslations("Common");
   const { slug } = useTenant();
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
   const pagination = usePaginatedQuery(
@@ -330,7 +331,7 @@ function SchoolClassTable({ periodId }: { periodId: Period["id"] }) {
           )}
         </TableTitle>
       ),
-      header: t("class-name"),
+      header: tCommon("name"),
       id: "name",
     }),
     classColumns.values(cohortName, {
@@ -364,21 +365,21 @@ function SchoolClassTable({ periodId }: { periodId: Period["id"] }) {
           onNone: () => null,
           onSome: (cohort) => cohort.students,
         }),
-      { header: t("class-students"), id: "students" }
+      { header: tCommon("students"), id: "students" }
     ),
     classColumns.values((row) => row.status, {
       cell: (info) => (
         <TableStatus
           icon={CLASS_STATUS_LOOKS[info.getValue()].icon}
-          label={t(`class-${info.getValue()}`)}
+          label={t(`class.${info.getValue()}`)}
           tone={CLASS_STATUS_LOOKS[info.getValue()].tone}
         />
       ),
-      header: t("class-status"),
+      header: tCommon("state"),
       id: "status",
       options: Arr.map(ClassStatus.literals, (status) => ({
         icon: CLASS_STATUS_LOOKS[status].icon,
-        label: t(`class-${status}`),
+        label: t(`class.${status}`),
         value: status,
       })),
     }),

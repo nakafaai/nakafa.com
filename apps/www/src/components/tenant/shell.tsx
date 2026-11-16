@@ -149,7 +149,6 @@ function TenantAccount() {
  * menu's do, so the menu opens with them in place.
  */
 function TenantSwitcher() {
-  const t = useTranslations("School");
   const common = useTranslations("Common");
   const locale = useLocale();
   const tenant = useTenant();
@@ -206,7 +205,7 @@ function TenantSwitcher() {
                 />
               }
             >
-              {t("home")}
+              {common("home")}
             </DropdownMenuItem>
             <DropdownMenuItem
               icon={ArrowTurnBackwardIcon}
@@ -216,7 +215,7 @@ function TenantSwitcher() {
                 </a>
               )}
             >
-              {t("back-to-learning")}
+              {common("back-to-nakafa")}
             </DropdownMenuItem>
           </DropdownMenuGroup>
         </DropdownMenuContent>

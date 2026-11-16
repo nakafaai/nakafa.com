@@ -111,6 +111,7 @@ function HomeBar() {
  */
 function HomeAction() {
   const t = useTranslations("Home");
+  const tCommon = useTranslations("Common");
   const { recent } = Route.useLoaderData();
   const last = Arr.head(recent);
   if (Option.isNone(last)) {
@@ -120,7 +121,7 @@ function HomeAction() {
         target={getPrimaryNavigationTarget(getPrimaryNavigationItems()[0])}
       >
         <HugeIcons icon={PlayIcon} />
-        {t("begin")}
+        {tCommon("start-learning")}
       </TargetLink>
     );
   }

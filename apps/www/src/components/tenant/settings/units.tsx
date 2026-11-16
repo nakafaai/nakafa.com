@@ -80,6 +80,7 @@ export function SchoolUnitsSettings({ slug }: { slug: TenantSlug }) {
 /** The schools of the organisation in a data table, once the read has answered. */
 function SchoolUnitsTable({ slug }: { slug: TenantSlug }) {
   const t = useTranslations("SchoolSettings");
+  const tCommon = useTranslations("Common");
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
   const units = useQuery(tenancy.units.list, isSettled ? { slug } : "skip");
 
@@ -102,12 +103,12 @@ function SchoolUnitsTable({ slug }: { slug: TenantSlug }) {
           <span dir="auto">{info.row.original.name}</span>
         </TableTitle>
       ),
-      header: t("unit-add-name"),
+      header: tCommon("name"),
       id: "name",
     }),
     unitColumns.values((unit) => unit.level, {
       cell: (info) => levelName(info.getValue()),
-      header: t("unit-add-level"),
+      header: tCommon("level"),
       id: "level",
       options: Arr.zipWith(
         levels,
@@ -142,7 +143,7 @@ function SchoolUnitsTable({ slug }: { slug: TenantSlug }) {
           tone={STATUS_LOOKS[info.getValue()].tone}
         />
       ),
-      header: t("unit-status"),
+      header: tCommon("state"),
       id: "status",
       options: Arr.map(UnitStatus.literals, (status) => ({
         icon: STATUS_LOOKS[status].icon,

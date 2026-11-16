@@ -25,9 +25,9 @@ const FORBIDDEN = {
   code: "FORBIDDEN",
   message: "This chat is not available.",
 };
-const FAILED_TITLE = en.Ai["chat-failed"];
+const FAILED_TITLE = en.Common["load-error-title"];
 const FAILED_COPY = en.Ai["chat-failed-description"];
-const RETRY = en.Ai.retry;
+const RETRY = en.Common.retry;
 /** The Google sign-in button a signed-out visitor is offered. */
 const GOOGLE_SIGN_IN = /google/iu;
 /** The request that the new chat page's weather widget makes, which marks the widget's code. */

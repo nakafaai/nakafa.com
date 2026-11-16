@@ -300,7 +300,7 @@ function SchoolStartForm({ draft }: { draft: StartDraft }) {
         <StartRoleQuestion />
         <StartSizeQuestion />
         <QuestionnaireSteps finishIcon={School01Icon} inert={isOpening}>
-          {t("finish")}
+          {tCommon("school-open")}
         </QuestionnaireSteps>
       </Questionnaire>
       {limited ? (

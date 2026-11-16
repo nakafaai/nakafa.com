@@ -10,8 +10,11 @@ import {
   School01Icon,
   Target01Icon,
 } from "@hugeicons/core-free-icons";
-import { Array as Arr } from "effect";
-import { SCHOOL_FEATURES } from "@/components/marketing/school/features/list";
+import { Array as Arr, Match } from "effect";
+import {
+  SCHOOL_FEATURES,
+  type SchoolFeature,
+} from "@/components/marketing/school/features/list";
 import type { LinkTarget } from "@/lib/routing/link";
 import {
   ARTICLES_TARGET,
@@ -35,11 +38,20 @@ import { LOCALE_ROUTE } from "@/lib/routing/tree";
  * the app draws for its page and a label from the dictionary. The School
  * features open their section of the School landing.
  */
+
+/** A School feature's words in the header: the forum and the library read the words the School app shows for them. */
+const featureLabel = (key: SchoolFeature) =>
+  Match.value(key).pipe(
+    Match.when("forum", () => "Common.forum" as const),
+    Match.when("library", () => "Common.library" as const),
+    Match.orElse((other) => `Marketing.feature.${other}` as const)
+  );
+
 export const HEADER_SECTIONS = [
   {
     groups: [
       {
-        label: "Marketing.explore",
+        label: "Common.explore",
         links: [
           {
             icon: Books02Icon,
@@ -78,7 +90,7 @@ export const HEADER_SECTIONS = [
           },
           {
             icon: Diamond02Icon,
-            label: "Marketing.pricing",
+            label: "Common.pricing",
             target: PRICING_TARGET,
           },
           {
@@ -103,7 +115,7 @@ export const HEADER_SECTIONS = [
         links: Arr.map(SCHOOL_FEATURES, (feature) => ({
           hash: feature.key,
           icon: feature.icon,
-          label: `Marketing.school-${feature.key}` as const,
+          label: featureLabel(feature.key),
           target: SCHOOL_TARGET,
         })),
         wide: true,
@@ -118,7 +130,7 @@ export const HEADER_SECTIONS = [
           },
           {
             icon: Diamond02Icon,
-            label: "Marketing.pricing",
+            label: "Common.pricing",
             target: SCHOOL_PRICING_TARGET,
           },
           {
@@ -136,7 +148,7 @@ export const HEADER_SECTIONS = [
       },
     ],
     key: "school",
-    label: "Marketing.school",
+    label: "Common.school",
   },
 ] as const;
 

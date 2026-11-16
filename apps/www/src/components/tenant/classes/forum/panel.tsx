@@ -79,7 +79,7 @@ export function EmojiPanel({
       : Arr.match(found, {
           onEmpty: () => [],
           onNonEmpty: (held) => [
-            { emojis: held, key: "results", label: t("results") },
+            { emojis: held, key: "results", label: common("search-results") },
           ],
         });
   const shown = Arr.flatMap(sections, (section) => section.emojis);
@@ -163,7 +163,7 @@ export function EmojiPanel({
         ))}
       </div>
       <div
-        aria-label={t("list")}
+        aria-label={common("emoji")}
         className="h-56 overflow-y-auto overscroll-contain px-2 pb-2"
         id={`${id}-list`}
         ref={list}

@@ -76,7 +76,7 @@ export function useTryoutPath(
   items: readonly BreadcrumbHeaderItem[]
 ): readonly BreadcrumbHeaderItem[] {
   const tCommon = useTranslations("Common");
-  return [{ label: tCommon("try-out-short"), target: TRYOUT_TARGET }, ...items];
+  return [{ label: tCommon("try-out"), target: TRYOUT_TARGET }, ...items];
 }
 
 /**

@@ -78,6 +78,7 @@ function SchoolBillingBody({ slug }: { slug: TenantSlug }) {
  */
 function SchoolPlanCard({ billing: overview }: { billing: SchoolBilling }) {
   const t = useTranslations("SchoolSettings");
+  const tCommon = useTranslations("Common");
   const locale = useLocale();
   const format = useFormatter();
   const [isOrdering, setIsOrdering] = useState(false);
@@ -99,7 +100,7 @@ function SchoolPlanCard({ billing: overview }: { billing: SchoolBilling }) {
               ),
             })
       }
-      title={t(`billing-plan-${plan.kind}`)}
+      title={t(`billing-plan.${plan.kind}`)}
     >
       <CardContent>
         <dl className="grid grid-cols-[auto_1fr] items-baseline gap-x-4 gap-y-3 text-sm">
@@ -114,7 +115,7 @@ function SchoolPlanCard({ billing: overview }: { billing: SchoolBilling }) {
                   used: format.number(plan.credits.used),
                 })}
           </dd>
-          <dt className="text-muted-foreground">{t("billing-drive")}</dt>
+          <dt className="text-muted-foreground">{tCommon("drive")}</dt>
           <dd>{formatBytes(overview.driveBytes, locale)}</dd>
         </dl>
       </CardContent>
@@ -213,6 +214,7 @@ function SchoolPayButton({
  */
 function SchoolAccountsCard({ billing: overview }: { billing: SchoolBilling }) {
   const t = useTranslations("SchoolSettings");
+  const tCommon = useTranslations("Common");
   const format = useFormatter();
   const [isAdding, setIsAdding] = useState(false);
   const { limit, used } = overview.accounts;
@@ -222,7 +224,7 @@ function SchoolAccountsCard({ billing: overview }: { billing: SchoolBilling }) {
   return (
     <CardSection
       description={t("billing-accounts-description")}
-      title={t("billing-accounts")}
+      title={tCommon("accounts")}
     >
       <CardContent className="grid gap-2">
         <p className="text-sm tabular-nums">
@@ -232,7 +234,7 @@ function SchoolAccountsCard({ billing: overview }: { billing: SchoolBilling }) {
           })}
         </p>
         <Meter
-          label={t("billing-accounts")}
+          label={tCommon("accounts")}
           percent={Math.min(Math.round((used / Math.max(limit, 1)) * 100), 100)}
         />
       </CardContent>
@@ -252,7 +254,7 @@ function SchoolAccountsCard({ billing: overview }: { billing: SchoolBilling }) {
             variant="outline"
           >
             <HugeIcons icon={UserAdd01Icon} />
-            {t("billing-add-accounts")}
+            {t("billing-more-title")}
           </Button>
         </CardSectionActions>
       </CardSectionFooter>

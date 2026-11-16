@@ -47,6 +47,7 @@ export function TryoutSetPane({ rows }: { rows: readonly TryoutSetRow[] }) {
 /** The detail of one open set: its header, its facts and parts, and its start. */
 function TryoutSetDetail({ row }: { row: TryoutSetRow }) {
   const t = useTranslations("Tryouts");
+  const tCommon = useTranslations("Common");
   const minutes = row.durationSeconds / 60;
 
   return (
@@ -63,7 +64,7 @@ function TryoutSetDetail({ row }: { row: TryoutSetRow }) {
           <Card size="sm">
             <CardContent>
               <PaneFacts layout="grid">
-                <PaneFact label={t("set-column-questions")}>
+                <PaneFact label={tCommon("exam-questions")}>
                   {row.questionCount}
                 </PaneFact>
                 <PaneFact label={t("set-column-duration")}>

@@ -179,7 +179,7 @@ const getSurahLlmsText = Effect.fn("www.llms.quran.surahText")(function* ({
     `- **${t("arabic-source")}:** [${markdown.sources.arabic.label}](${markdown.sources.arabic.sourceUrl})`,
     `  ${markdown.sources.arabic.notice}`,
     `  ${markdown.sources.arabic.publisher} · ${markdown.sources.arabic.version}`,
-    `- **${t("translation-source")}:** [${markdown.sources.translation.label}](${markdown.sources.translation.sourceUrl})`,
+    `- **${t("translation")}:** [${markdown.sources.translation.label}](${markdown.sources.translation.sourceUrl})`,
     `  ${markdown.sources.translation.notice}`,
     `  ${markdown.sources.translation.publisher} · ${markdown.sources.translation.version}`,
     "",

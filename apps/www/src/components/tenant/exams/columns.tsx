@@ -34,12 +34,12 @@ type PartKind = "answers" | "statements";
 const PART_WORDS = {
   answers: {
     editor: "answer-of",
-    placeholder: "answer-placeholder",
+    placeholder: "placeholder.answer",
     remove: "answer-remove-of",
   },
   statements: {
     editor: "statement-of",
-    placeholder: "statement-placeholder",
+    placeholder: "placeholder.statement",
     remove: "statement-remove-of",
   },
 } as const;

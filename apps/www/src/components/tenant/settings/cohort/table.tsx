@@ -42,6 +42,7 @@ export function SchoolCohortTable({
   slug: TenantSlug;
 }) {
   const t = useTranslations("SchoolSettings");
+  const tCommon = useTranslations("Common");
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
   const cohorts = useQuery(
     tenancy.cohorts.list,
@@ -83,7 +84,7 @@ export function SchoolCohortTable({
           </Link>
         </TableTitle>
       ),
-      header: t("cohort-name"),
+      header: tCommon("name"),
       id: "name",
     }),
     cohortColumns.values((cohort) => String(cohort.grade), {
@@ -117,7 +118,7 @@ export function SchoolCohortTable({
           onNone: () => null,
           onSome: (found) => found.students,
         }),
-      { header: t("cohort-students"), id: "students" }
+      { header: tCommon("students"), id: "students" }
     ),
     cohortColumns.number(
       (cohort) =>
@@ -125,21 +126,21 @@ export function SchoolCohortTable({
           onNone: () => null,
           onSome: (found) => found.classes,
         }),
-      { header: t("cohort-classes"), id: "classes" }
+      { header: tCommon("classes"), id: "classes" }
     ),
     cohortColumns.values((cohort) => cohort.status, {
       cell: (info) => (
         <TableStatus
           icon={COHORT_STATUS_LOOKS[info.getValue()].icon}
-          label={t(`cohort-${info.getValue()}`)}
+          label={t(`cohort.${info.getValue()}`)}
           tone={COHORT_STATUS_LOOKS[info.getValue()].tone}
         />
       ),
-      header: t("cohort-status"),
+      header: tCommon("state"),
       id: "status",
       options: Arr.map(CohortStatus.literals, (status) => ({
         icon: COHORT_STATUS_LOOKS[status].icon,
-        label: t(`cohort-${status}`),
+        label: t(`cohort.${status}`),
         value: status,
       })),
     }),

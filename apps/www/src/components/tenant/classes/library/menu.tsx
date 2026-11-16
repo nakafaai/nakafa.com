@@ -107,11 +107,12 @@ export function MoveAndTrash({
   onTrash: () => void;
 }) {
   const t = useTranslations("Classroom");
+  const tCommon = useTranslations("Common");
 
   return (
     <>
       <DropdownMenuItem icon={FolderTransferIcon} onClick={onMove}>
-        {t("library-move")}
+        {tCommon("move")}
       </DropdownMenuItem>
       <DropdownMenuSeparator />
       <DropdownMenuItem
@@ -128,6 +129,7 @@ export function MoveAndTrash({
 /** The items that open an item: Open for everyone, and Download for a file. */
 function OpenItems({ item }: { item: LibraryItem }) {
   const t = useTranslations("Classroom");
+  const tCommon = useTranslations("Common");
   const openItem = useOpenItem();
 
   return (
@@ -136,14 +138,14 @@ function OpenItems({ item }: { item: LibraryItem }) {
         icon={ArrowRight01Icon}
         onClick={() => openItem(item, false)}
       >
-        {t("library-open")}
+        {tCommon("open")}
       </DropdownMenuItem>
       {item.kind === "link" ? null : (
         <DropdownMenuItem
           icon={Download04Icon}
           onClick={() => openItem(item, true)}
         >
-          {t("library-download")}
+          {t("media-download")}
         </DropdownMenuItem>
       )}
     </>
@@ -172,7 +174,7 @@ export function ReaderItemMenu({ item }: { item: LibraryItem }) {
  * shows at once; the trash keeps the item until it is restored or deleted forever, so nothing asks first.
  */
 export function ManagerItemMenu({ item }: { item: LibraryItem }) {
-  const t = useTranslations("Classroom");
+  const tCommon = useTranslations("Common");
   const { classId, slug } = useClassScope();
   const move = useMutation(classroom.library.move);
   const trash = useMutation(classroom.library.trash);
@@ -197,7 +199,7 @@ export function ManagerItemMenu({ item }: { item: LibraryItem }) {
           icon={PencilEdit02Icon}
           onClick={() => dialogs.show("edit")}
         >
-          {t("library-edit")}
+          {tCommon("edit")}
         </DropdownMenuItem>
         <MoveAndTrash
           onMove={() => dialogs.show("move")}

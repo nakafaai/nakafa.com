@@ -43,7 +43,7 @@ export function TryoutReviewQuestionShell({
   /** The key that the player and the store name this question by. */
   readonly questionKey: string;
 }) {
-  const tPlayer = useTranslations("Player");
+  const tCommon = useTranslations("Common");
   const ids = readQuestionIds(questionOrder);
   const open = useTryoutExplained((state) =>
     HashSet.has(state.open, questionKey)
@@ -60,7 +60,7 @@ export function TryoutReviewQuestionShell({
         <PlayerQuestionHeader number={questionOrder}>
           {mark}
           <ButtonGroup
-            aria-label={tPlayer("question", { number: questionOrder })}
+            aria-label={tCommon("question", { number: questionOrder })}
             className="shrink-0"
           >
             {action}

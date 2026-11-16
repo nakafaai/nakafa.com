@@ -76,7 +76,7 @@ function composeShelf(stage: HTMLElement): AnimationSequence {
 /** Where the shelf stands in the library, and the teacher who keeps it. */
 function ShelfHead() {
   const t = useTranslations("SchoolSite");
-  const tClass = useTranslations("Classroom");
+  const tCommon = useTranslations("Common");
 
   return (
     <div className="flex min-w-0 items-center justify-between gap-4">
@@ -86,7 +86,7 @@ function ShelfHead() {
           icon={LibraryIcon}
         />
         <span className="text-muted-foreground shrink-0">
-          {tClass("tabs-library")}
+          {tCommon("library")}
         </span>
         <HugeIcons
           className="text-muted-foreground shrink-0 rtl:rotate-180"
@@ -149,6 +149,7 @@ function ShelfFolders() {
 /** What the open chapter holds: the teacher's worksheet, Nina's summary, the lab's graph, a lesson, a try-out and the video that arrives. */
 function ShelfFiles() {
   const t = useTranslations("SchoolSite");
+  const tCommon = useTranslations("Common");
   const format = useFormatter();
 
   return (
@@ -159,7 +160,7 @@ function ShelfFiles() {
         </ShelfPicture>
         <ShelfLabel
           icon={Pdf02Icon}
-          kind={t("demo-kind-pdf")}
+          kind={t("demo-kind.pdf")}
           meta={format.number(240, "kilobyte")}
         >
           <FileName name={t("demo-library-worksheet")} />
@@ -171,7 +172,7 @@ function ShelfFiles() {
         </ShelfPicture>
         <ShelfLabel
           icon={Pdf02Icon}
-          kind={t("demo-kind-pdf")}
+          kind={t("demo-kind.pdf")}
           meta={format.number(96, "kilobyte")}
         >
           <FileName name={t("demo-library-summary")} />
@@ -183,7 +184,7 @@ function ShelfFiles() {
         </ShelfPicture>
         <ShelfLabel
           icon={Image01Icon}
-          kind={t("demo-kind-image")}
+          kind={t("demo-kind.image")}
           meta={format.number(1.2, "megabyte")}
         >
           <FileName name={t("demo-library-graph")} />
@@ -195,7 +196,7 @@ function ShelfFiles() {
         </ShelfPicture>
         <ShelfLabel
           icon={Link04Icon}
-          kind={t("demo-kind-lesson")}
+          kind={t("demo-kind.lesson")}
           meta="nakafa.com"
         >
           <FileName name={t("demo-library-lesson")} />
@@ -207,7 +208,7 @@ function ShelfFiles() {
         </ShelfPicture>
         <ShelfLabel
           icon={Link04Icon}
-          kind={t("demo-kind-tryout")}
+          kind={tCommon("try-out")}
           meta={t("demo-library-questions", { count: 10 })}
         >
           <FileName name={t("demo-library-quiz")} />
@@ -220,7 +221,7 @@ function ShelfFiles() {
           </ShelfPicture>
           <ShelfLabel
             icon={Link04Icon}
-            kind={t("demo-kind-video")}
+            kind={t("demo-kind.video")}
             meta={format.number(4, "minute")}
           >
             <FileName name={t("demo-library-video")} />

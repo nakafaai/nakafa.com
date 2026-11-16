@@ -17,7 +17,7 @@ export const readSiteLlmsEntries = Effect.fn("www.llms.site.entries")(
       {
         description: messages.PricingPage["metadata-description"],
         route: "/pricing",
-        title: messages.PricingPage.breadcrumb,
+        title: messages.Common.pricing,
       },
       {
         description: messages.SchoolSite["metadata-description"],

@@ -28,7 +28,7 @@ export function AnalyticsConsentFooterItem({
       type="button"
     >
       <HugeIcons icon={Analytics01Icon} />
-      {t("manage")}
+      {t("title")}
     </Button>
   );
 }

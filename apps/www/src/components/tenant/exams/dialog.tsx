@@ -235,7 +235,7 @@ export function CreateExam({
             <FieldDescription>{t("title-needed")}</FieldDescription>
             <FieldError>
               {titleTooLong
-                ? t("title-too-long", { count: EXAM_TITLE_MAX_LENGTH })
+                ? common("title-too-long", { count: EXAM_TITLE_MAX_LENGTH })
                 : null}
             </FieldError>
           </Field>
@@ -253,7 +253,7 @@ export function CreateExam({
             }}
           />
           <Field>
-            <FieldLabel htmlFor={`${id}-unit`}>{t("unit")}</FieldLabel>
+            <FieldLabel htmlFor={`${id}-unit`}>{common("unit")}</FieldLabel>
             <Select
               items={unitItems}
               onValueChange={(key) => setPicked(key)}

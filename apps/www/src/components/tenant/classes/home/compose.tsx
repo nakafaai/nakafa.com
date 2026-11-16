@@ -31,6 +31,7 @@ import { runSchoolWrite } from "@/components/tenant/write";
  */
 export function NewAnnouncement() {
   const t = useTranslations("Classroom");
+  const tCommon = useTranslations("Common");
   const { classId, slug } = useClassScope();
   const publish = useMutation(classroom.posts.publish);
   const schedule = useMutation(classroom.scheduled.schedule);
@@ -97,7 +98,7 @@ export function NewAnnouncement() {
       <ResponsiveDialog
         action={
           <Button disabled={!ready} onClick={submit}>
-            {t(later ? "post-schedule-submit" : "post-submit")}
+            {later ? t("post-schedule-submit") : tCommon("post")}
           </Button>
         }
         description={t("post-new-description")}
