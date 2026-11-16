@@ -44,7 +44,9 @@ export const LIMIT_CASES: readonly McpCase[] = [
       body: { text: "" },
       headers: {
         ...BODYLESS_RESPONSE_HEADERS,
-        "retry-after": "1",
+        // A shard refills 20 reads a minute, one every three seconds; the burst ran
+        // past the pinned clock, so the empty shards are part of the way there.
+        "retry-after": "2",
       },
       status: 429,
     },

@@ -1,8 +1,5 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
-import {
-  AgentQuota,
-  AgentRateLimitError,
-} from "@repo/backend/confect/routes/agent/quota";
+import { AgentRateLimitError } from "@repo/backend/confect/routes/agent/quota";
 import { NakafaAgentDataReadError } from "@repo/contents/agent/errors";
 import { Schema } from "effect";
 
@@ -14,7 +11,7 @@ export default GroupSpec.make().addFunction(
     args: () => ({
       key: Schema.String.check(Schema.isPattern(quotaKeyPattern)),
     }),
-    returns: () => AgentQuota,
+    returns: () => Schema.Null,
     error: () => Schema.Union([AgentRateLimitError, NakafaAgentDataReadError]),
   })
 );
