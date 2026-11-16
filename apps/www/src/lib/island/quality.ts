@@ -1,15 +1,18 @@
 import { Schema } from "effect";
 
 /**
- * The quality ladder (ADR 0047, D44): what the painter draws on each rung,
- * from the full picture down to the least a slow device can keep smooth.
+ * The quality ladder (ADR 0047, D44 and D47): what the painter draws on
+ * each rung, from the full picture down to the least a slow device can keep
+ * smooth: the tufts go first, then the shadows, then the art pixel stops
+ * following the zoom and keeps the screen's own.
  * The ladder only steps down within a game: a device that ran slow keeps the
  * rung it reached, so the picture never flickers between two.
  */
 export const RUNGS = [
-  { shadows: true, tufts: true },
-  { shadows: true, tufts: false },
-  { shadows: false, tufts: false },
+  { coarse: false, shadows: true, tufts: true },
+  { coarse: false, shadows: true, tufts: false },
+  { coarse: false, shadows: false, tufts: false },
+  { coarse: true, shadows: false, tufts: false },
 ] as const;
 
 /** What the ladder holds: its rung, a running average of a frame's seconds, and how long frames have run over budget. */
