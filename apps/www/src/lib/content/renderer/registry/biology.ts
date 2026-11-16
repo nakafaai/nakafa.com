@@ -23,6 +23,18 @@ import {
   GramStainLab,
   YogurtLab,
 } from "@/lib/content/renderer/client/biology/microbes";
+import {
+  MicroscopeLab,
+  NephronLab,
+  RespirometerLab,
+} from "@/lib/content/renderer/client/biology/physiology";
+import {
+  FertilisationLab,
+  OsmosisLab,
+  PhotosynthesisLab,
+  PotometerLab,
+  TropismLab,
+} from "@/lib/content/renderer/client/biology/plants";
 import { SarsCov2VirionLab } from "@/lib/content/renderer/client/biology/virion";
 import {
   AntibodyNeutralizeLab,
@@ -127,5 +139,37 @@ export const biologyRenderers = [
   {
     name: biologyComponentNames.seaLevelRiseLab,
     component: SeaLevelRiseLab,
+  },
+  {
+    name: biologyComponentNames.fertilisationLab,
+    component: FertilisationLab,
+  },
+  {
+    name: biologyComponentNames.microscopeLab,
+    component: MicroscopeLab,
+  },
+  {
+    name: biologyComponentNames.nephronLab,
+    component: NephronLab,
+  },
+  {
+    name: biologyComponentNames.osmosisLab,
+    component: OsmosisLab,
+  },
+  {
+    name: biologyComponentNames.photosynthesisLab,
+    component: PhotosynthesisLab,
+  },
+  {
+    name: biologyComponentNames.potometerLab,
+    component: PotometerLab,
+  },
+  {
+    name: biologyComponentNames.respirometerLab,
+    component: RespirometerLab,
+  },
+  {
+    name: biologyComponentNames.tropismLab,
+    component: TropismLab,
   },
 ] satisfies readonly RendererImplementation[];
