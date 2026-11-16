@@ -1,3 +1,4 @@
+import { RoundedBox } from "@react-three/drei";
 import { useThree } from "@react-three/fiber";
 import {
   GROUP_ONE_FOCUS_ID,
@@ -237,8 +238,13 @@ function SeriesTile({
   );
 }
 
+/** How rounded a tile's edges are, as on a moulded acrylic block. */
+const TILE_BEVEL = 0.035;
+
 /**
- * Draws a single periodic-table block with an optional readable label.
+ * Draws a single periodic-table block as a moulded acrylic tile with rounded
+ * edges and an optional readable label: a raised tile is opaque and casts its
+ * shadow, the rest stand faint behind it.
  */
 function PeriodicTile({
   color,
@@ -265,17 +271,24 @@ function PeriodicTile({
 
   return (
     <group position={position}>
-      <mesh castShadow receiveShadow>
-        <boxGeometry args={[TILE_WIDTH, height, TILE_DEPTH]} />
-        <meshStandardMaterial
+      <RoundedBox
+        args={[TILE_WIDTH, height, TILE_DEPTH]}
+        castShadow
+        radius={Math.min(TILE_BEVEL, height / 2)}
+        receiveShadow
+        smoothness={3}
+      >
+        <meshPhysicalMaterial
+          clearcoat={0.6}
+          clearcoatRoughness={0.18}
           color={color}
-          {...(highlighted ? { emissive: color } : {})}
-          emissiveIntensity={highlighted ? 0.1 : 0}
+          depthWrite={highlighted}
+          metalness={0}
           opacity={opacity}
-          roughness={0.44}
-          transparent
+          roughness={0.36}
+          transparent={!highlighted}
         />
-      </mesh>
+      </RoundedBox>
 
       {label && (
         <PeriodicTileLabel

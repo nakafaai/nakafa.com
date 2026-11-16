@@ -3,7 +3,10 @@ import {
   getPeriodicPropertiesSceneColors,
   type PeriodicPropertyModeId,
 } from "@repo/design-system/components/contents/chemistry/periodic-properties/data";
-import { PeriodicPropertiesScene } from "@repo/design-system/components/contents/chemistry/periodic-properties/scene";
+import {
+  PERIODIC_PROPERTIES_FLOOR,
+  PeriodicPropertiesScene,
+} from "@repo/design-system/components/contents/chemistry/periodic-properties/scene";
 import { CameraControls } from "@repo/design-system/components/three/camera/controls";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene";
 import { ScienceStage } from "@repo/design-system/components/three/stage";
@@ -32,7 +35,11 @@ export function PeriodicPropertiesCanvas({
       className={threeSceneFrameVariants()}
       render={<section />}
     >
-      <ScienceStage frameloop="demand" setting="studio">
+      <ScienceStage
+        floor={PERIODIC_PROPERTIES_FLOOR}
+        frameloop="demand"
+        setting="studio"
+      >
         <Suspense>
           <PeriodicPropertiesRenderSync key={modeId} />
           <CameraControls

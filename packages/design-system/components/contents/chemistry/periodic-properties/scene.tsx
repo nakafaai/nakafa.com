@@ -33,6 +33,9 @@ const PILLAR_LABEL_OFFSET = 0.22;
 const SCENE_SCALE = 1.12;
 const SCENE_Y_OFFSET = 0.62;
 
+/** The height of the plane the markers stand on, where their shadows fall. */
+export const PERIODIC_PROPERTIES_FLOOR = SCENE_Y_OFFSET + RAIL_Y * SCENE_SCALE;
+
 type ScenePoint = [number, number, number];
 type TrendAxis = "period" | "group";
 
@@ -158,8 +161,14 @@ function TrendMarker({
     return (
       <group position={position}>
         <mesh castShadow position={[0, radius, 0]}>
-          <sphereGeometry args={[radius, 36, 24]} />
-          <meshStandardMaterial color={color} roughness={0.42} />
+          <sphereGeometry args={[radius, 48, 32]} />
+          <meshPhysicalMaterial
+            clearcoat={0.5}
+            clearcoatRoughness={0.12}
+            color={color}
+            metalness={0}
+            roughness={0.3}
+          />
         </mesh>
         <MarkerLabel fontSize="compact" position={[0, radius, 0]}>
           <InlineMath math={`\\mathrm{${sample.symbol}}`} />
@@ -178,12 +187,13 @@ function TrendMarker({
   return (
     <group position={position}>
       <mesh castShadow position={[0, height / 2, 0]} receiveShadow>
-        <cylinderGeometry args={[PILLAR_RADIUS, PILLAR_RADIUS, height, 36]} />
-        <meshStandardMaterial
+        <cylinderGeometry args={[PILLAR_RADIUS, PILLAR_RADIUS, height, 48]} />
+        <meshPhysicalMaterial
+          clearcoat={0.5}
+          clearcoatRoughness={0.12}
           color={color}
-          emissive={color}
-          emissiveIntensity={0.06}
-          roughness={0.44}
+          metalness={0}
+          roughness={0.3}
         />
       </mesh>
       <MarkerLabel
