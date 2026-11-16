@@ -114,6 +114,18 @@ const CommentReplyRow = Schema.Struct({
 });
 
 /**
+ * The row of a try-out reminder: the learner's running attempt ends within the hour. A try-out belongs to no school,
+ * so the row is addressed to the account (ADR 0027), and it names the attempt.
+ */
+const TryoutReminderRow = Schema.Struct({
+  attemptId: Id("tryoutAttempts"),
+  changeType: Schema.Literal("tryout.reminder"),
+  createdAt: Schema.Finite,
+  readAt: Schema.optionalKey(Schema.Finite),
+  recipientUserId: Id("users"),
+});
+
+/**
  * One inbox row: one recipient Person and one invitation, mention, announcement, new task, coming sitting, child's
  * coming sitting, or released grade, told apart by `changeType`. It holds IDs and codes only, and its text is read from its subject when
  * it is opened (ADR 0027).
@@ -129,20 +141,36 @@ export const Notification = Schema.Union([
   ExamReminderRow,
   GradeReleasedRow,
   CommentReplyRow,
+  TryoutReminderRow,
 ]);
 
-/** A row addressed to an account, which no school holds. */
-export type AccountRow = Extract<
+/** What a row addressed to an account tells: a reply to its comment, or a reminder of its running try-out. */
+export const AccountChange = Schema.Literals([
+  "comment.replied",
+  "tryout.reminder",
+]);
+
+/** The row of a reply to an account's comment. */
+export type ReplyRow = Extract<
   NotificationsDoc,
   { readonly changeType: "comment.replied" }
 >;
+
+/** The row of a reminder of an account's running try-out. */
+export type ReminderRow = Extract<
+  NotificationsDoc,
+  { readonly changeType: "tryout.reminder" }
+>;
+
+/** A row addressed to an account, which no school holds: one change of `AccountChange`. */
+export type AccountRow = ReplyRow | ReminderRow;
 
 /** A row addressed to a Person of a school. */
 export type SchoolRow = Exclude<NotificationsDoc, AccountRow>;
 
 /** Whether a row is addressed to an account. */
 export const isAccountRow = (row: NotificationsDoc): row is AccountRow =>
-  row.changeType === "comment.replied";
+  Schema.is(AccountChange)(row.changeType);
 
 /** Whether a row is addressed to a Person of a school. */
 export const isSchoolRow = (row: NotificationsDoc): row is SchoolRow =>
@@ -243,10 +271,31 @@ const ReplyNotificationView = Schema.Struct({
   readAt: Schema.optionalKey(Schema.Finite),
 });
 
+/**
+ * A try-out reminder's inbox row as the wire shows it: the set of the attempt it opens, read when the row is read, or
+ * null once the attempt is gone.
+ */
+const ReminderNotificationView = Schema.Struct({
+  attemptId: Id("tryoutAttempts"),
+  changeType: Schema.Literal("tryout.reminder"),
+  createdAt: Schema.Finite,
+  id: Id("notifications"),
+  readAt: Schema.optionalKey(Schema.Finite),
+  set: Schema.NullOr(
+    Schema.Struct({
+      countryKey: Schema.String,
+      examKey: Schema.String,
+      setKey: Schema.String,
+      trackKey: Schema.String,
+    })
+  ),
+});
+
 /** One inbox row as the wire shows it, of a school or of the account itself. */
 export const NotificationView = Schema.Union([
   SchoolNotificationView,
   ReplyNotificationView,
+  ReminderNotificationView,
 ]);
 
 /**
@@ -281,9 +330,22 @@ export const notificationView = (
   ...(row.readAt === undefined ? {} : { readAt: row.readAt }),
 });
 
+/** Projects a stored reminder row onto its wire view, with the set its attempt names now. */
+export const reminderView = (
+  row: ReminderRow,
+  set: typeof ReminderNotificationView.Type.set
+) => ({
+  attemptId: row.attemptId,
+  changeType: row.changeType,
+  createdAt: row.createdAt,
+  id: row._id,
+  set,
+  ...(row.readAt === undefined ? {} : { readAt: row.readAt }),
+});
+
 /** Projects a stored reply row onto its wire view, with the name its source gives now. */
 export const replyView = (
-  row: AccountRow,
+  row: ReplyRow,
   actor: typeof ReplyNotificationView.Type.actor
 ) => ({
   actor,

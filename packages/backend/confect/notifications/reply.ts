@@ -7,7 +7,7 @@ import { findComment } from "@repo/backend/confect/comments/rows";
 import { queueReplyMail } from "@repo/backend/confect/notifications/mail";
 import { scheduleAccountPush } from "@repo/backend/confect/notifications/schedule";
 import {
-  type AccountRow,
+  type ReplyRow,
   replyView,
 } from "@repo/backend/confect/notifications/schema";
 import { photoOf } from "@repo/backend/confect/users/picture";
@@ -35,13 +35,13 @@ export const noticeReply = Effect.fn("notifications.reply.write")(function* (
       recipientUserId,
     })
     .pipe(Effect.orDie);
-  yield* scheduleAccountPush(notificationId, recipientUserId);
+  yield* scheduleAccountPush("commentReply", notificationId, recipientUserId);
   yield* queueReplyMail(recipientUserId);
 });
 
 /** The public face of a reply's author, read when the row is read, or null once either is gone. */
 const actorOf = Effect.fn("notifications.reply.actor")(function* (
-  row: AccountRow
+  row: ReplyRow
 ) {
   const comment = yield* findComment(row.commentId);
   if (comment === null) {
@@ -65,7 +65,7 @@ const actorOf = Effect.fn("notifications.reply.actor")(function* (
 
 /** One reply's row as the wire shows it, with its author as they stand now. */
 export const replyNotice = Effect.fn("notifications.reply.view")(function* (
-  row: AccountRow
+  row: ReplyRow
 ) {
   return replyView(row, yield* actorOf(row));
 });

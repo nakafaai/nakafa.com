@@ -47,7 +47,7 @@ function SchoolChoices() {
     >
       <PreferenceTable
         off={isRead ? off.value : []}
-        relation={relationOfRole(Option.getOrElse(role, () => "teacher"))}
+        relations={[relationOfRole(Option.getOrElse(role, () => "teacher"))]}
       />
     </ChoiceContext>
   );

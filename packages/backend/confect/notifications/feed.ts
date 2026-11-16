@@ -1,13 +1,13 @@
 import type { GenericId } from "@confect/core";
 import { Id } from "@repo/backend/confect/_generated/id";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
+import { accountNotice } from "@repo/backend/confect/notifications/account";
 import { partsOf } from "@repo/backend/confect/notifications/detail";
 import { NotificationCursorInvalid } from "@repo/backend/confect/notifications/errors";
 import {
   HELD_SCHOOL_LIMIT,
   type HeldSchool,
 } from "@repo/backend/confect/notifications/held";
-import { replyNotice } from "@repo/backend/confect/notifications/reply";
 import {
   isAccountRow,
   isSchoolRow,
@@ -116,7 +116,7 @@ const accountStream = Effect.fn("notifications.feed.account")(function* (
       Effect.map((rows) =>
         Arr.map(Arr.filter(rows, isAccountRow), (row) => ({
           row,
-          view: replyNotice(row),
+          view: accountNotice(row),
         }))
       )
     );

@@ -5,6 +5,7 @@ import { requireAuth } from "@repo/backend/confect/auth/session";
 import session from "@repo/backend/confect/middleware/session.impl";
 import spec from "@repo/backend/confect/notifications/personal.spec";
 import {
+  ACCOUNT_RELATIONS,
   canSwitchOff,
   routeOf,
 } from "@repo/backend/confect/notifications/rules";
@@ -42,8 +43,11 @@ const set = FunctionImpl.make(
   "set",
   Effect.fn("notifications.personal.set")(function* ({ channel, kind, on }) {
     if (
-      Option.isNone(routeOf(kind, "commenter")) ||
-      !canSwitchOff(kind, channel)
+      !(
+        Arr.some(ACCOUNT_RELATIONS, (relation) =>
+          Option.isSome(routeOf(kind, relation))
+        ) && canSwitchOff(kind, channel)
+      )
     ) {
       return null;
     }
