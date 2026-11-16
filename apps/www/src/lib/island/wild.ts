@@ -197,6 +197,81 @@ function loopOf(
   };
 }
 
+/**
+ * A bird of the sky's round of the day (ADR 0047, D49), in seconds: it flies
+ * its loop, glides down onto whatever tops the land under it (a roof, a
+ * crown, the ground), sits a while, and rises back onto its loop where it
+ * left it.
+ */
+const FLIGHT = { cycle: 36, fly: 26, land: 3, sit: 5 } as const;
+
+/** A smooth step from 0 to 1, for a bird gliding down or rising. */
+function eased(share: number) {
+  return share * share * (3 - 2 * share);
+}
+
+/** Where a bird coming down from (x, z) can perch: the top of the first column of land on its way toward the island's middle. */
+function perchOf(cells: Cells, x: number, z: number) {
+  const middle = SPAN / 2;
+  const steps = Math.max(1, Math.ceil(Math.hypot(middle - x, middle - z)));
+  const columns = Arr.makeBy(steps + 1, (step) => {
+    const share = step / steps;
+    return [
+      Math.floor(x + (middle - x) * share),
+      Math.floor(z + (middle - z) * share),
+    ] as const;
+  });
+  const isLand = ([column, row]: readonly [number, number]) =>
+    Option.exists(
+      groundOf(cells, column, row),
+      ({ block }) => LOOK.kinds[block] !== KIND.liquid
+    );
+  return Option.flatMap(Arr.findFirst(columns, isLand), ([column, row]) =>
+    Option.map(groundOf(cells, column, row), ({ y }) => ({
+      x: column + 0.5,
+      y: y + 1,
+      z: row + 0.5,
+    }))
+  );
+}
+
+/**
+ * Where a bird of the sky is at `time` and whether it is on the wing (D49):
+ * on its loop while it flies, gliding down to its perch and back up again,
+ * still on its perch while it sits. Its loop counts only the time it has
+ * flown, so it rises back onto the loop where it came down from it.
+ */
+function skyOf(cells: Cells, wild: Wild, size: number, time: number) {
+  const shifted = time + wild.phase * 7;
+  const cycle = Math.floor(shifted / FLIGHT.cycle);
+  const within = shifted - cycle * FLIGHT.cycle;
+  const flown =
+    cycle * FLIGHT.fly + Math.min(within, FLIGHT.fly) - wild.phase * 7;
+  const loop = loopOf(wild, "sky", size, flown);
+  const onLoop = { ...loop, flying: true };
+  if (within < FLIGHT.fly) {
+    return onLoop;
+  }
+  return Option.match(perchOf(cells, loop.x, loop.z), {
+    onNone: () => onLoop,
+    onSome: (perch) => {
+      const down = (within - FLIGHT.fly) / FLIGHT.land;
+      const up =
+        (within - FLIGHT.fly - FLIGHT.land - FLIGHT.sit) /
+        (FLIGHT.cycle - FLIGHT.fly - FLIGHT.land - FLIGHT.sit);
+      const sitting = down >= 1 && up < 0;
+      const share = sitting ? 1 : eased(down < 1 ? down : 1 - up);
+      return {
+        flying: !sitting,
+        heading: loop.heading,
+        x: loop.x + (perch.x - loop.x) * share,
+        y: loop.y + (perch.y - loop.y) * share,
+        z: loop.z + (perch.z - loop.z) * share,
+      };
+    },
+  });
+}
+
 /** How many fish of a species swim together, by its length in blocks: shoals of small fish, a few big ones, a big one alone. */
 function shoalOf(length: number) {
   return Math.min(9, Math.max(1, Math.round(2.4 / length)));
@@ -267,14 +342,14 @@ function seaPlaces(cells: Cells, wild: Wild, size: number, time: number) {
 }
 
 /**
- * A walker, a flyer or a flower visitor as one body: a walker on its ground
- * facing its goal, bobbing while it walks; a flyer on its loop facing its
+ * A walker or a flower visitor as one body: a walker on its ground facing
+ * its goal, bobbing while it walks; a flower visitor on its loop facing its
  * way.
  */
 function creaturePlaces(
   cells: Cells,
   wild: Wild,
-  home: "land" | "shore" | "sky" | "bloom",
+  home: "land" | "shore" | "bloom",
   size: number,
   time: number
 ) {
@@ -314,6 +389,15 @@ export function wildBodies(
 ) {
   return Arr.map(wilds, (wild) => {
     const home = SPECIES[wild.index].home;
+    if (home === "sky") {
+      // A bird of the sky is drawn on the wing while it flies, and folded while it perches (D49).
+      const flight = skyOf(cells, wild, size, time);
+      const model = flight.flying
+        ? ({ _tag: "flyer", index: wild.index } as const)
+        : ({ _tag: "species", index: wild.index } as const);
+      const place = [flight.x, flight.y, flight.z, yawOf(flight.heading), 0];
+      return [model, Float32Array.from(place)] as const;
+    }
     const places =
       home === "sea"
         ? seaPlaces(cells, wild, size, time)

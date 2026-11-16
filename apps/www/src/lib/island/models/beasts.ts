@@ -9,6 +9,7 @@ import {
 } from "@/lib/island/models/features";
 import {
   type Face,
+  flexed,
   mirrored,
   rigged,
   type Vec,
@@ -156,53 +157,61 @@ export function quadruped(
         coat.accent
       )
     : [];
-  return [
-    ...tube([first, ...rest], coat.hide, 6),
-    ...legs,
-    ...mirrored(legs),
-    ...rod(chest, throat, [thick, head.high * 0.62], coat.hide, 6),
-    ...mane,
-    ...tube(
-      [
-        { at: nape, high: head.high * 0.78, wide: head.wide * 0.8 },
-        { at: along(nape, head.long * 0.4), high: head.high, wide: head.wide },
-        { at: brow, high: head.high * 0.82, wide: head.wide * 0.85 },
-        {
-          at: along(brow, snout.long * 0.1),
-          high: snout.high,
-          wide: snout.wide,
-        },
-        { at: muzzle, high: snout.high * 0.85, wide: snout.wide * 0.85 },
-      ],
-      (spot) => (spot.segment >= 2 ? coat.belly : coat.body),
-      6
-    ),
-    ...ball(
-      along(muzzle, snout.high * 0.05),
-      [snout.wide * 0.55, snout.high * 0.45, snout.high * 0.18],
-      coat.accent,
-      1,
-      6
-    ),
-    ...(plan.hump > 0
-      ? ball(
-          [0, 1 - plan.hump * 0.1, -body.long * 0.05],
-          [body.wide * 0.75, plan.hump * 0.6, body.long * 0.26],
-          coat.body,
-          3,
-          8
-        )
-      : []),
-    ...eyesOf(crown, coat),
-    ...earsOf(species.traits.ears, { ...crown, size: plan.ear * 2 }, coat),
-    ...hornsOf(species.traits.horns, crown, coat),
-    ...tailOf(
-      species.traits.tail,
-      [0, middle + body.high * 0.3, back],
-      plan.tail,
-      coat
-    ),
-  ];
+  // The spine flexes from side to side in step with the legs while the animal walks, the head steadier than the rump (D49).
+  return flexed(
+    [
+      ...tube([first, ...rest], coat.hide, 6),
+      ...legs,
+      ...mirrored(legs),
+      ...rod(chest, throat, [thick, head.high * 0.62], coat.hide, 6),
+      ...mane,
+      ...tube(
+        [
+          { at: nape, high: head.high * 0.78, wide: head.wide * 0.8 },
+          {
+            at: along(nape, head.long * 0.4),
+            high: head.high,
+            wide: head.wide,
+          },
+          { at: brow, high: head.high * 0.82, wide: head.wide * 0.85 },
+          {
+            at: along(brow, snout.long * 0.1),
+            high: snout.high,
+            wide: snout.wide,
+          },
+          { at: muzzle, high: snout.high * 0.85, wide: snout.wide * 0.85 },
+        ],
+        (spot) => (spot.segment >= 2 ? coat.belly : coat.body),
+        6
+      ),
+      ...ball(
+        along(muzzle, snout.high * 0.05),
+        [snout.wide * 0.55, snout.high * 0.45, snout.high * 0.18],
+        coat.accent,
+        1,
+        6
+      ),
+      ...(plan.hump > 0
+        ? ball(
+            [0, 1 - plan.hump * 0.1, -body.long * 0.05],
+            [body.wide * 0.75, plan.hump * 0.6, body.long * 0.26],
+            coat.body,
+            3,
+            8
+          )
+        : []),
+      ...eyesOf(crown, coat),
+      ...earsOf(species.traits.ears, { ...crown, size: plan.ear * 2 }, coat),
+      ...hornsOf(species.traits.horns, crown, coat),
+      ...tailOf(
+        species.traits.tail,
+        [0, middle + body.high * 0.3, back],
+        plan.tail,
+        coat
+      ),
+    ],
+    { mode: "bend", phase: 0, pivot: 0, rate: 9, reach: 0.03, waves: 0.5 }
+  );
 }
 
 const plan = (

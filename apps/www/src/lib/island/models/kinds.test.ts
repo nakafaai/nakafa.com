@@ -1,7 +1,12 @@
 // @vitest-environment node
 import { describe, expect, it } from "@effect/vitest";
-import { Array as Arr } from "effect";
-import { plantFaces, speciesFaces } from "@/lib/island/models/catalog";
+import { Array as Arr, Option } from "effect";
+import { SPECIES } from "@/lib/island/fauna/species";
+import {
+  flyerFaces,
+  plantFaces,
+  speciesFaces,
+} from "@/lib/island/models/catalog";
 import {
   BodyKind,
   bodyFaces,
@@ -57,20 +62,57 @@ describe("island/models/kinds", () => {
     const models = [
       { _tag: "body", kind: "cow" },
       { _tag: "species", index: 3 },
+      { _tag: "flyer", index: 3 },
       { _tag: "swimmer", kind: "orca" },
       { _tag: "plant", index: 0 },
     ] as const;
     expect(Arr.map(models, modelFaces)).toEqual([
       bodyFaces("cow"),
       speciesFaces(3),
+      flyerFaces(3),
       swimmerFaces("orca"),
       plantFaces(0),
     ]);
     expect(Arr.map(models, modelKey)).toEqual([
       "body-cow",
       "species-3",
+      "flyer-3",
       "swimmer-orca",
       "plant-0",
     ]);
+  });
+
+  it("spreads a bird of the sky's wings wide when it flies and beats them from the shoulder", () => {
+    const sky = Arr.findFirstIndex(
+      SPECIES,
+      (species) => species.home === "sky"
+    );
+    const index = Option.getOrThrow(sky);
+    const span = (faces: readonly Parameters<typeof boundsOf>[0][number][]) =>
+      boundsOf(faces).x[1] - boundsOf(faces).x[0];
+    expect(span(flyerFaces(index))).toBeGreaterThan(
+      span(speciesFaces(index)) * 2
+    );
+    const flapping = Arr.filter(
+      flyerFaces(index),
+      (face) => face.rig?.mode === "flap"
+    );
+    expect(flapping.length).toBeGreaterThan(0);
+    // A raptor beats its broad, slotted wings about half as fast as a songbird beats its pointed ones.
+    const rateOf = (family: string) =>
+      Option.getOrThrow(
+        Arr.findFirst(
+          flyerFaces(
+            Option.getOrThrow(
+              Arr.findFirstIndex(
+                SPECIES,
+                (species) => species.home === "sky" && species.family === family
+              )
+            )
+          ),
+          (face) => face.rig?.mode === "flap"
+        )
+      ).rig?.rate ?? 0;
+    expect(rateOf("perch")).toBeLessThan(rateOf("songbird"));
   });
 });

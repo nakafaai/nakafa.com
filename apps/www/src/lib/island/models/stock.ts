@@ -2,6 +2,7 @@ import { Schema } from "effect";
 import {
   box,
   type Face,
+  flexed,
   loft,
   meters as m,
   mirrored,
@@ -52,24 +53,27 @@ function cowFaces(): readonly Face[] {
     ...box([m(0.12), m(1.52), m(1.08)], [m(0.2), m(1.56), m(1.16)], HORN),
     ...box([m(0.2), m(1.4), m(1.06)], [m(0.3), m(1.46), m(1.14)], WHITE),
   ];
-  return [
-    ...half,
-    ...mirrored(half),
-    ...loft(
-      [
-        { high: m(1.32), low: m(0.72), width: m(0.32), z: m(-1.03) },
-        { high: m(1.4), low: m(0.7), width: m(0.36), z: m(-0.5) },
-        { high: m(1.42), low: m(0.72), width: m(0.36), z: m(0.45) },
-        { high: m(1.36), low: m(0.8), width: m(0.3), z: m(0.86) },
-      ],
-      WHITE
-    ),
-    ...box([m(-0.2), m(1.08), m(0.86)], [m(0.2), m(1.52), m(1.2)], WHITE),
-    ...box([m(-0.16), m(1.06), m(1.2)], [m(0.16), m(1.28), m(1.28)], PINK),
-    ...box([m(-0.11), m(0.6), m(-0.3)], [m(0.11), m(0.72), m(-0.08)], PINK),
-    ...box([m(-0.04), m(0.6), m(-1.1)], [m(0.04), m(1.3), m(-1.03)], WHITE),
-    ...box([m(-0.06), m(0.5), m(-1.12)], [m(0.06), m(0.6), m(-1.02)], BLACK),
-  ];
+  return flexed(
+    [
+      ...half,
+      ...mirrored(half),
+      ...loft(
+        [
+          { high: m(1.32), low: m(0.72), width: m(0.32), z: m(-1.03) },
+          { high: m(1.4), low: m(0.7), width: m(0.36), z: m(-0.5) },
+          { high: m(1.42), low: m(0.72), width: m(0.36), z: m(0.45) },
+          { high: m(1.36), low: m(0.8), width: m(0.3), z: m(0.86) },
+        ],
+        WHITE
+      ),
+      ...box([m(-0.2), m(1.08), m(0.86)], [m(0.2), m(1.52), m(1.2)], WHITE),
+      ...box([m(-0.16), m(1.06), m(1.2)], [m(0.16), m(1.28), m(1.28)], PINK),
+      ...box([m(-0.11), m(0.6), m(-0.3)], [m(0.11), m(0.72), m(-0.08)], PINK),
+      ...box([m(-0.04), m(0.6), m(-1.1)], [m(0.04), m(1.3), m(-1.03)], WHITE),
+      ...box([m(-0.06), m(0.5), m(-1.12)], [m(0.06), m(0.6), m(-1.02)], BLACK),
+    ],
+    { mode: "bend", phase: 0, pivot: 0, rate: 7, reach: 0.025, waves: 0.5 }
+  );
 }
 
 /** A hen (red comb) or a duck (green head, wide bill), 45 cm tall, facing +z. */

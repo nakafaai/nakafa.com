@@ -5,7 +5,13 @@ import { SPECIES } from "@/lib/island/fauna/species";
 import type { Flora } from "@/lib/island/flora/families";
 import { plantLookOf } from "@/lib/island/flora/plants";
 import { elephant, PLANS, quadruped, TWEAKS } from "@/lib/island/models/beasts";
-import { perch, songbird, wader, waterbird } from "@/lib/island/models/birds";
+import {
+  flyingBird,
+  perch,
+  songbird,
+  wader,
+  waterbird,
+} from "@/lib/island/models/birds";
 import type { Bloom } from "@/lib/island/models/blooms";
 import { type Coat, coatOf, type Species } from "@/lib/island/models/coat";
 import {
@@ -110,17 +116,27 @@ function measureOf(faces: readonly Face[], measure: (typeof MEASURES)[Family]) {
 }
 
 /**
- * How a swimming family's whole body moves (ADR 0047, D48), from the bend
+ * How a swimming or flying family's whole body moves (ADR 0047, D48 and D49), from the bend
  * share the research on fish swimming sets out: a fish sways in about one
  * wavelength, its rear half doing most of the work; an eel or a snake bends
  * along all of itself in a wavelength and a half; a ray beats its wide disc up
- * and down from its middle. Families not named here move by their own parts,
- * or not at all.
+ * and down from its middle; a butterfly claps its wings and a bee buzzes
+ * them from its body, always aloft (D49). Families not named here move by
+ * their own parts, or not at all.
  */
-const SWIMS: Partial<Record<Family, Rig>> = {
+const MOTIONS: Partial<Record<Family, Rig>> = {
   eel: { mode: "sway", phase: 0, pivot: 0, rate: 5, reach: 0.09, waves: 1.5 },
   fish: { mode: "sway", phase: 0, pivot: 0, rate: 11, reach: 0.08, waves: 0.9 },
   ray: { mode: "flap", phase: 0, pivot: 0.08, rate: 3.5, reach: 0.3, waves: 0 },
+  bee: { mode: "flap", phase: 0, pivot: 0.05, rate: 40, reach: 0.5, waves: 0 },
+  butterfly: {
+    mode: "flap",
+    phase: 0,
+    pivot: 0.03,
+    rate: 24,
+    reach: 0.9,
+    waves: 0,
+  },
   snake: { mode: "sway", phase: 0, pivot: 0, rate: 4, reach: 0.06, waves: 1.5 },
 };
 
@@ -139,13 +155,23 @@ export function speciesFaces(index: number): readonly Face[] {
     return stockFaces(species.key);
   }
   const built = BUILDERS[species.family](species, coatOf(species));
-  const swim = SWIMS[species.family];
-  const unit = swim === undefined ? built : rigged(built, swim);
+  const motion = MOTIONS[species.family];
+  const unit = motion === undefined ? built : rigged(built, motion);
   const size = Option.match(HashMap.get(LENGTHS, species.key), {
     onNone: () => species.height,
     onSome: meters,
   });
   return scaled(unit, size / measureOf(unit, MEASURES[species.family]));
+}
+
+/**
+ * A species of the sky on the wing (ADR 0047, D49): every one is a songbird
+ * or a raptor, drawn in its open-wing flight about one and a half times as
+ * long as it stands tall.
+ */
+export function flyerFaces(index: number): readonly Face[] {
+  const species = SPECIES[index];
+  return scaled(flyingBird(species, coatOf(species)), species.height * 1.5);
 }
 
 /** Each plant family's 3D builder (ADR 0047, D25), and the sprawl of a vine that grows over the ground. */

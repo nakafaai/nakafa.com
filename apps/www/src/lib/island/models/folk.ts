@@ -2,6 +2,7 @@ import { Match, Schema } from "effect";
 import {
   box,
   type Face,
+  flexed,
   meters as m,
   mirrored,
   rgb,
@@ -159,27 +160,38 @@ export function folkFaces(kind: Folk): readonly Face[] {
     ...earOf(kind, look.fur, look.chest),
     ...box([m(0.07), m(1.4), m(0.235)], [m(0.13), m(1.48), m(0.245)], INK),
   ];
-  return [
-    ...half,
-    ...mirrored(half),
-    ...box(
-      [m(-0.26), m(0.6), m(-0.15)],
-      [m(0.26), m(1.18), m(0.15)],
-      rgb(look.shirt),
-      0.12
-    ),
-    ...box(
-      [m(-0.12), m(0.86), m(0.15)],
-      [m(0.12), m(1.12), m(0.16)],
-      rgb(look.chest)
-    ),
-    ...box([m(-0.25), m(1.16), m(-0.21)], [m(0.25), m(1.62), m(0.235)], fur),
-    ...box(
-      [m(-0.12), m(1.2), m(0.235)],
-      [m(0.12), m(1.36), m(0.33)],
-      rgb(look.chest)
-    ),
-    ...box([m(-0.04), m(1.32), m(0.33)], [m(0.04), m(1.38), m(0.345)], NOSE),
-    ...tailOf(kind, look.fur, look.chest),
-  ];
+  // The trunk and head sway from side to side over each step, a quarter of a stride behind the legs (D49).
+  return flexed(
+    [
+      ...half,
+      ...mirrored(half),
+      ...box(
+        [m(-0.26), m(0.6), m(-0.15)],
+        [m(0.26), m(1.18), m(0.15)],
+        rgb(look.shirt),
+        0.12
+      ),
+      ...box(
+        [m(-0.12), m(0.86), m(0.15)],
+        [m(0.12), m(1.12), m(0.16)],
+        rgb(look.chest)
+      ),
+      ...box([m(-0.25), m(1.16), m(-0.21)], [m(0.25), m(1.62), m(0.235)], fur),
+      ...box(
+        [m(-0.12), m(1.2), m(0.235)],
+        [m(0.12), m(1.36), m(0.33)],
+        rgb(look.chest)
+      ),
+      ...box([m(-0.04), m(1.32), m(0.33)], [m(0.04), m(1.38), m(0.345)], NOSE),
+      ...tailOf(kind, look.fur, look.chest),
+    ],
+    {
+      mode: "bend",
+      phase: Math.PI / 2,
+      pivot: 0,
+      rate: 8,
+      reach: 0.06,
+      waves: 0,
+    }
+  );
 }

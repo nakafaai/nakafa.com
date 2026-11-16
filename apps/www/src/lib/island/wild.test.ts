@@ -54,10 +54,11 @@ const floored = (
 const placesOf = (
   cells: Cells,
   wild: ReturnType<typeof creature>,
-  time = 12
+  time = 12,
+  pose: "species" | "flyer" = "species"
 ) => {
   const [[model, places]] = wildBodies(cells, [wild], 52, time);
-  expect(model).toEqual({ _tag: "species", index: wild.index });
+  expect(model).toEqual({ _tag: pose, index: wild.index });
   expect(places.length % BODY_STRIDE).toBe(0);
   return Array.from(places);
 };
@@ -152,11 +153,49 @@ describe("island/wild", () => {
       5.5,
       5.5
     );
-    const [x, y, z, yaw] = placesOf(floored("grass", 8), flyer);
+    const [x, y, z, yaw] = placesOf(floored("grass", 8), flyer, 12, "flyer");
     expect(y).toBeGreaterThan(SEA_LEVEL + 10);
     const [later] = wildBodies(floored("grass", 8), [flyer], 52, 12.05);
     const [lx, , lz] = Array.from(later[1]);
     expect(Math.atan2(lx - x, lz - z)).toBeCloseTo(yaw, 1);
+  });
+
+  it("loops a flower visitor low over the village garden", () => {
+    const visitor = creature(
+      speciesWhere((species) => species.home === "bloom"),
+      5.5,
+      5.5
+    );
+    const [x, y, z] = placesOf(floored("grass", 8), visitor);
+    expect(Math.abs(y - (SEA_LEVEL + 2.2))).toBeLessThanOrEqual(0.3);
+    expect(Math.hypot(x - (SPAN / 2 - 7), z - (SPAN / 2 + 6.5))).toBeLessThan(
+      3
+    );
+  });
+
+  it("brings a bird of the sky down to perch on the top of the land under it, folded, then back up onto its loop on the wing", () => {
+    const flyer = creature(
+      speciesWhere((species) => species.home === "sky"),
+      5.5,
+      5.5
+    );
+    // Its phase of 1 shifts its day by 7 s: it flies until 19 s, glides down until 22 s, sits until 27 s and rises until 29 s.
+    const meadow = floored("grass", 8);
+    const [, sitting] = placesOf(meadow, flyer, 24);
+    expect(sitting).toBe(9);
+    const [, gliding] = placesOf(meadow, flyer, 20.5, "flyer");
+    expect(gliding).toBeGreaterThan(9);
+    expect(gliding).toBeLessThan(SEA_LEVEL + 10);
+    const [, rising] = placesOf(meadow, flyer, 28, "flyer");
+    expect(rising).toBeGreaterThan(9);
+    expect(rising).toBeLessThan(SEA_LEVEL + 10);
+    expect(placesOf(meadow, flyer, 30, "flyer")[1]).toBeGreaterThan(
+      SEA_LEVEL + 10
+    );
+    // Over open sea there is no land to come down on, so it keeps flying its loop.
+    expect(
+      placesOf(floored("sand", 4, true), flyer, 24, "flyer")[1]
+    ).toBeGreaterThan(SEA_LEVEL + 10);
   });
 
   it("floats a waterbird on the sea, walks a lobster on its floor, and swims fish in shoals between the floor and the surface", () => {
