@@ -1,5 +1,6 @@
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { createRouter } from "@tanstack/react-router";
+import { followHashJumps } from "@/components/marketing/shared/jump";
 import type { NotFoundPage } from "@/lib/routing/missing";
 import { holdsOffline } from "@/lib/routing/offline";
 import { routeRewrite } from "@/lib/routing/rewrite";
@@ -28,6 +29,7 @@ export function getRouter() {
     scrollRestoration: makeScrollRestoration(),
   });
   if (typeof document !== "undefined") {
+    followHashJumps(router);
     router.history.block({
       blockerFn: ({ currentLocation, nextLocation }) => {
         const held = holdsOffline(
