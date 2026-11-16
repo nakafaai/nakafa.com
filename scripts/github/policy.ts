@@ -58,9 +58,9 @@ export const GITHUB_ACTION_REVIEWS = Schema.decodeSync(
     action: "actions/checkout",
     approvedSha: "3d3c42e5aac5ba805825da76410c181273ba90b1",
     expectedTag: "v7.0.1",
-    expectedUsages: 4,
+    expectedUsages: 5,
     reason:
-      "Checkout is pinned to the latest reviewed stable release. The CLI publication and the deploy workflow each check out the commit, and the proof workflow checks out the verified head (a pull request's, a merge group's or a dispatched one) without credentials twice: its gate job with the whole history, and its proof job, which the matrix runs once, or once per engine when a run proves every suite.",
+      "Checkout is pinned to the latest reviewed stable release. The CLI publication and the deploy workflow each check out the commit, and the proof workflow checks out the verified head (a pull request's, a merge group's or a dispatched one) without credentials: its gate job and its backend shard job, which the matrix runs once per shard, with the whole history, and its proof job, which the matrix runs once, or once per engine when a run proves every suite.",
   },
   {
     action: "oven-sh/setup-bun",
@@ -126,17 +126,17 @@ export const GITHUB_ACTION_REVIEWS = Schema.decodeSync(
     action: "actions/upload-artifact",
     approvedSha: "cf430e030ddbb5b0abf93d22962f4752f3646cd9",
     expectedTag: "v7.0.2",
-    expectedUsages: 6,
+    expectedUsages: 7,
     reason:
-      "Separated CLI artifacts use the reviewed release, and the proof workflow keeps each engine's result, one step per engine because one machine may run all three, and the failure traces.",
+      "Separated CLI artifacts use the reviewed release, and the proof workflow keeps each engine's result, one step per engine because one machine may run all three, the failure traces and each backend shard's Vitest blob.",
   },
   {
     action: "actions/download-artifact",
     approvedSha: "9000827ccba6bdab643e8b6fd33ac0654aef8333",
     expectedTag: "v8.0.2",
-    expectedUsages: 4,
+    expectedUsages: 5,
     reason:
-      "CLI publishing and verification download separated artifacts, and a merge group's verdict downloads its engines' results to prove their failing specs on its base.",
+      "CLI publishing and verification download separated artifacts, a merge group's verdict downloads its engines' results to prove their failing specs on its base, and the last backend shard downloads the shards' Vitest blobs to merge them.",
   },
   {
     action: "actions/setup-node",
