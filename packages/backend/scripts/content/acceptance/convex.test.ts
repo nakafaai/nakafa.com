@@ -284,10 +284,10 @@ describe("the local backend over HTTP", () => {
             "/api/import/start_upload",
             "/api/import/upload_part?partNumber=1&uploadToken=upload-1",
             "/api/import/finish_upload",
-            "/api/function",
-            "/api/function",
+            "/api/query",
+            "/api/query",
             "/api/perform_import",
-            "/api/function",
+            "/api/query",
           ]);
           expect(requests[1]?.body).toBe('{"type":"study"}\n{"type":"study"}');
           expect(decodeJson(requests[2]?.body ?? "")).toEqual({
@@ -320,7 +320,7 @@ describe("the local backend over HTTP", () => {
           if (path === "/api/import/finish_upload") {
             return json({ importId: "import-1" });
           }
-          if (path === "/api/function") {
+          if (path === "/api/query") {
             return json({
               status: "success",
               value: { state: { state: "completed" } },
@@ -354,7 +354,7 @@ describe("the local backend over HTTP", () => {
             if (path === "/api/import/finish_upload") {
               return json({ importId: "import-1" });
             }
-            if (path === "/api/function") {
+            if (path === "/api/query") {
               return json({
                 status: "success",
                 value: {

@@ -21,6 +21,7 @@ import {
   sidebarSearch,
 } from "@/e2e/support/rows";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
+import { waitUntilTakenOver } from "@/e2e/support/window";
 
 /** The chats after the first page, beside the chat that waits at the end. */
 const LATER = 5;
@@ -107,16 +108,22 @@ const sheetHistory = Effect.fn("NakafaE2E.sheetHistoryLoadsMore")(function* (
     page,
     changes,
     historyRows(page),
-    page.locator('[role="menu"]')
+    // The open menu: the account menus stay mounted while closed.
+    page.locator('[role="menu"][data-open]')
   );
 });
 
-/** Opens the sidebar of the new chat page, which a phone shows in a sheet. */
+/**
+ * Opens the sidebar of the new chat page, which a phone shows in a sheet. Its trigger takes a press
+ * once React has taken the page over: the server draws it with the wide screen's open state.
+ */
 const openSidebar = (page: Page, narrow: boolean) =>
   Effect.promise(async () => {
     await page.goto(CHAT_PATH);
     if (narrow) {
-      await page.getByRole("button", { name: "Chat history" }).click();
+      const trigger = page.getByRole("button", { name: "Chat history" });
+      await waitUntilTakenOver(trigger);
+      await trigger.click();
     }
   });
 
