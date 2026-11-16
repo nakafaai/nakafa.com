@@ -9,6 +9,7 @@ import { TryoutCountdown } from "@/components/tryout/runtime/countdown";
 import { TryoutAttemptPicker } from "@/components/tryout/score/history";
 import { TryoutSetAction } from "@/components/tryout/set/action";
 import { TryoutSetPageHeader } from "@/components/tryout/set/header";
+import { TryoutSetSamplesLater } from "@/components/tryout/set/later";
 import type {
   CurrentAttempt,
   SetEntrySection,
@@ -17,6 +18,7 @@ import type {
   TryoutSetRoute,
 } from "@/components/tryout/set/model";
 import { TryoutSectionRows } from "@/components/tryout/set/rows";
+import { TryoutSetSiblings } from "@/components/tryout/set/siblings";
 import { TryoutPage, TryoutPageBody } from "@/components/tryout/shell/header";
 
 /** Props of the set overview: one cohesive render model shared by its surfaces. */
@@ -42,7 +44,9 @@ export interface TryoutSetOverviewProps {
 /**
  * Renders a set page that offers visible nested sections. A finished attempt's
  * parts stand beside its result and history; a running attempt's countdown stands
- * above its parts.
+ * above its parts. Under the parts stand the set's worked samples, which a running
+ * attempt has not answered yet, so its page holds them back, and the other sets of
+ * its track.
  */
 export function TryoutSetOverview({ value }: TryoutSetOverviewProps) {
   return (
@@ -90,6 +94,8 @@ export function TryoutSetOverview({ value }: TryoutSetOverviewProps) {
             <TryoutCountdown expiresAt={value.activeAttempt.expiresAt} />
           ) : null}
           <TryoutSetParts value={value} />
+          {value.activeAttempt ? null : <TryoutSetSamplesLater />}
+          <TryoutSetSiblings />
           <TryoutFinishedPlace pending={value.actionAttempt === undefined} />
         </TryoutPageBody>
       )}
