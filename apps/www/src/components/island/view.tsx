@@ -9,6 +9,7 @@ import { openingOrbit, turnOrbit } from "@/lib/island/camera";
 import { flatQuads } from "@/lib/island/life";
 import { glowOf } from "@/lib/island/light";
 import { lightingOf, meshChunk } from "@/lib/island/mesh";
+import { plantBodies } from "@/lib/island/plants";
 import { seasonNow } from "@/lib/island/season";
 import { hourOf, lightOf } from "@/lib/island/sky";
 import { worldOf } from "@/lib/island/terrain";
@@ -25,6 +26,7 @@ function tour(
   size: number
 ) {
   const lighting = lightingOf(world, glowOf(world));
+  const plants = plantBodies(world);
   Arr.forEach(
     Arr.makeBy(CHUNKS * CHUNKS, (index) => index),
     (index) => {
@@ -54,7 +56,7 @@ function tour(
     const seconds = last === 0 ? 0 : Math.min(0.25, (now - last) / 1000);
     orbit = turnOrbit(orbit, seconds * TOUR);
     last = now;
-    painter.bodies(bodiesOf(world, [], now / 1000));
+    painter.bodies([...bodiesOf(world, [], now / 1000), ...plants]);
     painter.herd(flatQuads(size, now / 1000));
     const hour = hourOf(DateTime.nowUnsafe(), DateTime.zoneMakeLocal());
     painter.draw(

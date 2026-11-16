@@ -1,8 +1,12 @@
-import { HashMap, Option, Schema } from "effect";
+import { PLANT_KEYS } from "@repo/backend/confect/island/flora";
+import { Array as Arr, HashMap, Option, Schema } from "effect";
 import type { Family } from "@/lib/island/fauna/families";
 import { SPECIES } from "@/lib/island/fauna/species";
+import type { Flora } from "@/lib/island/flora/families";
+import { plantLookOf } from "@/lib/island/flora/plants";
 import { elephant, PLANS, quadruped, TWEAKS } from "@/lib/island/models/beasts";
 import { perch, songbird, wader, waterbird } from "@/lib/island/models/birds";
+import type { Bloom } from "@/lib/island/models/blooms";
 import { type Coat, coatOf, type Species } from "@/lib/island/models/coat";
 import {
   bee,
@@ -11,11 +15,15 @@ import {
   crab,
   snail,
 } from "@/lib/island/models/critters";
+import { CROPS } from "@/lib/island/models/crops";
+import { FLOWERS } from "@/lib/island/models/flowers";
+import { GREENS } from "@/lib/island/models/greens";
+import { PLANT_HEIGHTS } from "@/lib/island/models/heights";
 import { LENGTHS } from "@/lib/island/models/lengths";
 import { boundsOf, type Face, meters } from "@/lib/island/models/parts";
 import { primate } from "@/lib/island/models/primates";
 import { frog, lizard, snake } from "@/lib/island/models/reptiles";
-import { scaled } from "@/lib/island/models/solids";
+import { scaled, tint } from "@/lib/island/models/solids";
 import { Stock, stockFaces } from "@/lib/island/models/stock";
 import { eel, fish, ray, turtle } from "@/lib/island/models/swimmers";
 
@@ -115,4 +123,34 @@ export function speciesFaces(index: number): readonly Face[] {
     onSome: meters,
   });
   return scaled(unit, size / measureOf(unit, MEASURES[species.family]));
+}
+
+/** Each plant family's 3D builder (ADR 0047, D25), and the sprawl of a vine that grows over the ground. */
+const FLORA = { ...FLOWERS, ...CROPS, ...GREENS } satisfies Record<
+  Flora | "sprawl",
+  (bloom: Bloom) => readonly Face[]
+>;
+
+/** The vines that lie on the ground with their fruit instead of climbing a stake. */
+const SPRAWLERS: readonly (typeof PLANT_KEYS)[number][] = [
+  "pumpkin",
+  "watermelon",
+  "strawberry",
+];
+
+/**
+ * One plant of the catalog as a true 3D model at its real height, in blocks
+ * (ADR 0047, D25): built by its family in its own petal, heart and leaf
+ * colors, standing on the origin.
+ */
+export function plantFaces(index: number): readonly Face[] {
+  const look = plantLookOf(index);
+  const key = PLANT_KEYS[index];
+  const unit = FLORA[Arr.contains(SPRAWLERS, key) ? "sprawl" : look.family]({
+    heart: tint(look.coat.belly, 2),
+    leaf: tint(look.coat.accent, 2),
+    petal: tint(look.coat.body, 2),
+    stem: tint(look.coat.accent, 1),
+  });
+  return scaled(unit, meters(PLANT_HEIGHTS[key]) / boundsOf(unit).y[1]);
 }

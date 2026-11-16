@@ -1,19 +1,26 @@
 // @vitest-environment node
 import { describe, expect, it } from "@effect/vitest";
+import { PLANT_KEYS } from "@repo/backend/confect/island/flora";
 import { Array as Arr, HashMap, HashSet, Option } from "effect";
 import { SPECIES } from "@/lib/island/fauna/species";
-import { speciesFaces } from "@/lib/island/models/catalog";
+import { plantFaces, speciesFaces } from "@/lib/island/models/catalog";
+import { PLANT_HEIGHTS } from "@/lib/island/models/heights";
 import { LENGTHS } from "@/lib/island/models/lengths";
 import {
   boundsOf,
   type Face,
   flatten,
+  meters,
   normalOf,
 } from "@/lib/island/models/parts";
 
 const ANIMALS = Arr.map(SPECIES, (species, index) => ({
   faces: speciesFaces(index),
   species,
+}));
+const PLANTS = Arr.map(PLANT_KEYS, (key, index) => ({
+  faces: plantFaces(index),
+  key,
 }));
 
 /** A model's fingerprint: its length and a hash of every number the renderer uploads, to tell models apart. */
@@ -113,5 +120,30 @@ describe("island/models/catalog", () => {
     ).toBeLessThan(0.12);
     expect(bounds.y[1] * 0.9).toBeGreaterThan(1.44);
     expect(bounds.y[1] * 0.9).toBeLessThan(1.9);
+  });
+
+  it("builds every plant at its real height on the ground, no two alike", () => {
+    expect(PLANTS).toHaveLength(PLANT_KEYS.length);
+    expect(
+      Arr.every(
+        PLANTS,
+        ({ faces }) => isSound(faces) && trianglesOf(faces) <= 400
+      )
+    ).toBe(true);
+    expect(
+      Arr.every(
+        PLANTS,
+        ({ faces, key }) =>
+          Math.abs(boundsOf(faces).y[1] - meters(PLANT_HEIGHTS[key])) < 1e-9
+      )
+    ).toBe(true);
+    expect(Arr.every(PLANTS, ({ faces }) => boundsOf(faces).y[0] > -0.05)).toBe(
+      true
+    );
+    expect(
+      HashSet.size(
+        HashSet.fromIterable(Arr.map(PLANTS, ({ faces }) => drawingOf(faces)))
+      )
+    ).toBe(PLANT_KEYS.length);
   });
 });
