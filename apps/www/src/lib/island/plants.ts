@@ -5,6 +5,7 @@ import { Array as Arr, Option, Order, Record as Rec, Result } from "effect";
 import { KIND, LOOK } from "@/lib/island/look";
 import { PLANT_HEIGHTS } from "@/lib/island/models/heights";
 import { unitOf } from "@/lib/island/noise";
+import { SCALE } from "@/lib/island/scale";
 import { type Cells, cellOf } from "@/lib/island/world";
 
 /** How tall a plant may be, in meters, and still be pushed aside by a body walking through it: about a knee. */
@@ -41,7 +42,8 @@ export function isPassable(block: number) {
  * Every plant of the world as its true 3D model at its real height (ADR
  * 0047, D25), one model a plant with its bodies as one run of numbers,
  * `BODY_STRIDE` a body: standing in the middle of its cell, turned a way of
- * its own, its shadow at its foot. The world changes only by its edits, so
+ * its own, giving to the wind over its whole height, its shadow at its foot.
+ * The world changes only by its edits, so
  * this is read again after an edit, never every frame.
  */
 export function plantBodies(cells: Cells) {
@@ -64,7 +66,7 @@ export function plantBodies(cells: Cells) {
                       y,
                       z + 0.5,
                       unitOf(17, x, y, z) * Math.PI * 2,
-                      0,
+                      -SCALE.block / PLANT_HEIGHTS[PLANT_KEYS[index]],
                       y,
                     ],
                   });

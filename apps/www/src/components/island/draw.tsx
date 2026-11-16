@@ -6,12 +6,13 @@ import {
   programOf,
   seaRing,
   uploadList,
+  uploadMap,
   uploadMoving,
   uploadOutline,
-  uploadShore,
   uploadWeather,
 } from "@/components/island/buffers";
 import { createFrame } from "@/components/island/frame";
+import { createGale } from "@/components/island/wind";
 import {
   ATLAS_SIZE,
   ATLAS_TILES,
@@ -117,7 +118,8 @@ export function createPainter(canvas: HTMLCanvasElement, season: Season) {
         water: Option.none<ReturnType<typeof uploadList>>(),
       }));
       const sea = uploadList(gl, seaRing(SEA_LEVEL - 0.125, [0, 0], 1));
-      const shore = uploadShore(gl, SHORE_SIDE);
+      const shore = uploadMap(gl, SHORE_SIDE);
+      const gale = createGale(gl);
       // The other isles of the archipelago (D23): one static list, set once a game.
       let isles = Option.none<ReturnType<typeof uploadList>>();
       const sandSlot = SLOTS.sand;
@@ -171,11 +173,13 @@ export function createPainter(canvas: HTMLCanvasElement, season: Season) {
         orbit: Orbit,
         light: Light,
         time: number,
+        sky: Weather,
         camera: Float32Array
       ) => {
         activate(gl, bodyProgram);
         gl.uniformMatrix4fv(bodyUniform("uViewProjection"), false, camera);
         gl.uniform1f(bodyUniform("uTime"), time);
+        gale.blow(bodyUniform, time, sky);
         gl.uniform3fv(bodyUniform("uSun"), light.sun);
         gl.uniform3fv(bodyUniform("uAmbient"), light.ambient);
         gl.uniform3fv(bodyUniform("uFog"), light.fog);
@@ -215,6 +219,7 @@ export function createPainter(canvas: HTMLCanvasElement, season: Season) {
         orbit: Orbit,
         light: Light,
         time: number,
+        sky: Weather,
         camera: Float32Array
       ) => {
         gl.enable(gl.DEPTH_TEST);
@@ -241,6 +246,7 @@ export function createPainter(canvas: HTMLCanvasElement, season: Season) {
         shore.bind(1);
         gl.uniform1i(uniform("uShore"), 1);
         gl.uniform2f(uniform("uShoreBox"), SHORE_FROM, SHORE_SIDE);
+        gale.blow(uniform, time, sky);
         gl.uniform1f(uniform("uWater"), 0);
         gl.uniform1f(uniform("uAlpha"), 1);
         gl.bindVertexArray(floor.vao);
@@ -253,7 +259,7 @@ export function createPainter(canvas: HTMLCanvasElement, season: Season) {
         gl.disable(gl.CULL_FACE);
         gl.bindVertexArray(herd.vao);
         gl.drawElements(gl.TRIANGLES, herd.count(), gl.UNSIGNED_INT, 0);
-        drawBodies(orbit, light, time, camera);
+        drawBodies(orbit, light, time, sky, camera);
         activate(gl, chunkProgram);
         gl.enable(gl.BLEND);
         gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
@@ -431,6 +437,7 @@ export function createPainter(canvas: HTMLCanvasElement, season: Season) {
           aim: Option.Option<readonly [number, number, number]>
         ) {
           target.resize();
+          gale.step(time, sky);
           const snapped = snapOrbit(orbit, target.height);
           gl.bindFramebuffer(gl.FRAMEBUFFER, target.frame);
           gl.viewport(0, 0, target.width, target.height);
@@ -442,7 +449,7 @@ export function createPainter(canvas: HTMLCanvasElement, season: Season) {
           drawSky(light);
           gl.drawBuffers([gl.COLOR_ATTACHMENT0, gl.COLOR_ATTACHMENT1]);
           gl.clearBufferfv(gl.COLOR, 1, [0.5, 1, 0.5, 0]);
-          drawWorld(snapped.orbit, light, time, camera);
+          drawWorld(snapped.orbit, light, time, sky, camera);
           gl.depthMask(true);
           drawEdges(snapped.orbit, camera);
           gl.bindFramebuffer(gl.FRAMEBUFFER, target.overlay);
@@ -465,6 +472,7 @@ export function createPainter(canvas: HTMLCanvasElement, season: Season) {
           }
           sea.release();
           shore.release();
+          gale.release();
           Option.map(isles, (list) => list.release());
           weather.release();
           target.release();
