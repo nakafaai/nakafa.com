@@ -11,11 +11,20 @@ runs:
     - name: Post the gate when its parts are final
       shell: bash
       run: |
+        # GitHub's API now and then drops a call ("unexpected end of JSON input"). A status post is idempotent per context and a read changes nothing,
+        # so a failed call is sent again, failing the step only after the third.
+        retry() {
+          for attempt in 1 2 3; do
+            "$@" && return 0
+            [ "$attempt" = 3 ] || sleep 5
+          done
+          return 1
+        }
         post() {
-          gh api --silent "repos/$GITHUB_REPOSITORY/statuses/$SHA" \
+          retry gh api --silent "repos/$GITHUB_REPOSITORY/statuses/$SHA" \
             -f state="$2" -f context="$1" -f target_url="$URL" -f description="$3"
         }
-        parts="$(gh api "repos/$GITHUB_REPOSITORY/commits/$SHA/status?per_page=100" --jq \
+        parts="$(retry gh api "repos/$GITHUB_REPOSITORY/commits/$SHA/status?per_page=100" --jq \
           "[.statuses[] | select(.target_url == \"$URL\" and (.context | test(\"^gate/(static|www|backend)\$\"))) | .state]")"
         [ "$(jq 'map(select(. != "pending")) | length' <<< "$parts")" = 3 ] || exit 0
         all=failure
