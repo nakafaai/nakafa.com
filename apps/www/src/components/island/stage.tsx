@@ -45,6 +45,7 @@ import { castRay } from "@/lib/island/ray";
 import { touches } from "@/lib/island/room";
 import { shoreOf } from "@/lib/island/shore";
 import { hourOf, lightOf } from "@/lib/island/sky";
+import { chimneysOf } from "@/lib/island/smoke";
 import { roam, wildBodies, wildOf } from "@/lib/island/wild";
 import { type Cells, CHUNKS, SEA_LEVEL } from "@/lib/island/world";
 
@@ -126,7 +127,7 @@ function start(
       );
     }
     painter.shore(shoreOf(cells, store.getState().seed, true));
-    painter.roof(roofOf(cells));
+    painter.roof(roofOf(cells), chimneysOf(cells));
     needsDraw = true;
   };
   painter.isles(islesMesh(store.getState().seed));
