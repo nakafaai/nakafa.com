@@ -11,21 +11,20 @@ import {
   formatVerdict,
   makeBaseline,
 } from "#scripts/proof/baseline";
-import { gh, ProofError, REPOSITORY } from "#scripts/proof/client";
+import { gh, mainHead, ProofError, REPOSITORY } from "#scripts/proof/client";
 import { githubProver } from "#scripts/proof/github";
 
 const USAGE =
-  "Usage: node scripts/proof/group.ts <base sha> <head sha> <results folder> <run url>";
+  "Usage: node scripts/proof/group.ts <head sha> <results folder> <run url>";
 
 /**
- * What the job that posts a merge group's verdict hands it: the group's base and
- * head, the folder its engines' results were downloaded into, and its run.
+ * What the job that posts a merge group's verdict hands it: the group's head,
+ * the folder its engines' results were downloaded into, and its run.
  */
 export const parseGroupArguments = Effect.fn("proof.parseGroupArguments")(
   function* (argv: readonly string[]) {
-    const [base, head, results, url] = argv;
+    const [head, results, url] = argv;
     return {
-      base: yield* Schema.decodeEffect(HeadSha)(base ?? ""),
       head: yield* Schema.decodeEffect(HeadSha)(head ?? ""),
       results: yield* Schema.decodeEffect(Schema.NonEmptyString)(results ?? ""),
       url: yield* Schema.decodeEffect(Schema.NonEmptyString)(url ?? ""),
@@ -58,11 +57,12 @@ const readResults = Effect.fn("proof.readGroupResults")(function* (
 /**
  * Posts `verify` for a merge group whose gate passed and whose engines did not
  * all pass, as the landing train judged a batch (ADR 0048, "A Merge Group Sets
- * Aside What Its Base Fails"): every failing spec is proven on the group's base
- * (main, or the head of the group ahead), and the group fails only on a spec its
- * base passes, a suite that failed outside every test, or an engine that never
- * reported. It returns once the verdict is posted, whatever the verdict, so the
- * job keeps its own outcome.
+ * Aside What Its Base Fails"): every failing spec is proven on main's head, and
+ * the group fails only on a spec main passes, a suite that failed outside every
+ * test, or an engine that never reported. Every group of the queue judges
+ * against the same main commit, so the first one to fail on main's reds proves
+ * them and the others read that run (`proveOnGithub`). It returns once the
+ * verdict is posted, whatever the verdict, so the job keeps its own outcome.
  */
 export const judgeGroup = Effect.fn("proof.judgeGroup")(function* (
   argv: readonly string[]
@@ -75,10 +75,11 @@ export const judgeGroup = Effect.fn("proof.judgeGroup")(function* (
     yield* readResults(input.results)
   );
   const failures = failuresOf(result);
+  const main = yield* mainHead;
   const shared =
     failures.length === 0
       ? []
-      : yield* makeBaseline(input.base).pipe(
+      : yield* makeBaseline(main).pipe(
           Effect.flatMap((baseline) => baseline.shared(failures)),
           Effect.provide(githubProver)
         );
@@ -86,7 +87,7 @@ export const judgeGroup = Effect.fn("proof.judgeGroup")(function* (
     failures,
     (failure) => !Arr.contains(shared, failure)
   );
-  const base = input.base.slice(0, 10);
+  const base = main.slice(0, 10);
   yield* gh([
     "api",
     "--silent",
@@ -104,7 +105,7 @@ export const judgeGroup = Effect.fn("proof.judgeGroup")(function* (
         : `${fresh.length} new failures against main ${base}`
     }`,
   ]);
-  yield* writeOutput(formatVerdict(fresh, shared, input.base));
+  yield* writeOutput(formatVerdict(fresh, shared, main));
 });
 
 runEntry(import.meta.main, judgeGroup(Arr.drop(process.argv, 2)));

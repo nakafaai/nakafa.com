@@ -122,12 +122,18 @@ export const statusAnswer = (
     },
   });
 
-/** What the calls around a proof answer: the sweep's lists, the head of main and the statuses read. */
+/** The fields the prover lists when it looks for a run of the same specs to reuse. */
+export const REUSABLE = "databaseId,displayTitle,conclusion";
+
+/**
+ * What the calls around a proof answer: the sweep's lists, the runs to reuse
+ * (none), the head of main and the statuses read.
+ */
 const housekeeping = (args: readonly string[]): Answer | undefined => {
   if (args[0] === "pr" || args[0] === "fetch" || args[1] === "cancel") {
     return {};
   }
-  if (Arr.contains(args, "--status")) {
+  if (Arr.contains(args, "--status") || Arr.contains(args, REUSABLE)) {
     return { stdout: "[]" };
   }
   if (args[1] === "graphql") {

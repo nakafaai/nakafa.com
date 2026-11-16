@@ -3,9 +3,10 @@ description: >-
   Posts `verify` for a merge group or its rehearsal once the gate and the three engines of this run have posted
   their own statuses, so the job that finishes last posts it (docs/adr/0048-proof.md, "A Merge Group Sets Aside What
   Its Base Fails"). Four successes pass at once and a failed gate fails. A passed gate beside a failed engine downloads
-  the engines' results and proves the failing specs on the group's base (`scripts/proof/group.ts`), which fails the
-  group only on what its base passes. The calling job checks out the head, installs the workspace and holds a token
-  that may post statuses, read this run's artifacts and dispatch the proof workflow.
+  the engines' results and proves the failing specs on main's head (`scripts/proof/group.ts`), reading a proof of the
+  same specs on that commit that another group already started, which fails the group only on what main passes. The
+  calling job checks out the head, installs the workspace and holds a token that may post statuses, read this run's
+  artifacts and dispatch the proof workflow.
 runs:
   using: composite
   steps:
@@ -40,10 +41,10 @@ runs:
 
     # The verdict posts `verify` itself and ends without error whatever it is;
     # an error before it posted leaves the failure that names this run.
-    - name: Judge the failures against the base
+    - name: Judge the failures against main
       if: steps.read.outputs.judge == 'true'
       shell: bash
       run: |
-        node scripts/proof/group.ts "$BASE" "$SHA" "$RUNNER_TEMP/group" "$URL" | tee -a "$GITHUB_STEP_SUMMARY" \
+        node scripts/proof/group.ts "$SHA" "$RUNNER_TEMP/group" "$URL" | tee -a "$GITHUB_STEP_SUMMARY" \
           || gh api --silent "repos/$GITHUB_REPOSITORY/statuses/$SHA" \
-            -f state=failure -f context=verify -f target_url="$URL" -f description="The verdict against the base failed: see this run"
+            -f state=failure -f context=verify -f target_url="$URL" -f description="The verdict against main failed: see this run"
