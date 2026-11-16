@@ -1,6 +1,5 @@
 import { ORIGIN_COLOR } from "@repo/design-system/components/three/data/constants";
 import type { NarrowCameraPose } from "@repo/design-system/lib/geometry/camera";
-import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { getThemeAppearance } from "@repo/design-system/lib/theme/registry";
 import { Schema } from "effect";
 
@@ -41,12 +40,6 @@ const STOPWATCH_STEP_SECONDS = 0.2;
 export const STOPWATCH_HAND_LENGTH = 0.95;
 export const STOPWATCH_HAND_CENTER = STOPWATCH_HAND_LENGTH / 2;
 
-export const RULER_COLOR = PLOT_COLORS.amber;
-export const OBJECT_COLOR = PLOT_COLORS.teal;
-export const METAL_COLOR = PLOT_COLORS.slate;
-export const MASS_COLOR = PLOT_COLORS.violet;
-export const TIME_COLOR = PLOT_COLORS.pink;
-export const TIME_FACE_COLOR = PLOT_COLORS.orange;
 export const MASS_SCENE_SCALE = 1.1;
 export const TIME_SCENE_SCALE = 0.95;
 

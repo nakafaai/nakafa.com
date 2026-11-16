@@ -7,7 +7,6 @@ import {
   MASS_BALANCE_MAX_TILT_RADIANS,
   MASS_BALANCE_REST_EPSILON,
   MASS_BALANCE_STIFFNESS,
-  MASS_COLOR,
   MASS_LOAD_BOTTOM_OFFSET_Y,
   MASS_PAN_DROP_Y,
   MASS_PIVOT_Y,
@@ -16,13 +15,12 @@ import {
   MASS_WEIGHT_HEIGHT,
   MASS_WEIGHT_RADIUS,
   MASS_WEIGHT_TAPER_RATIO,
-  METAL_COLOR,
-  OBJECT_COLOR,
-  RULER_COLOR,
 } from "@repo/design-system/components/contents/physics/measurement/tools/data";
 import type { MeasurementSceneProps } from "@repo/design-system/components/contents/physics/measurement/tools/scene";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
+import { SurfaceMaterial } from "@repo/design-system/components/three/surface/material";
+import { MATERIAL } from "@repo/design-system/lib/material";
 import { useRef } from "react";
 import type { Group, Mesh } from "three";
 
@@ -98,64 +96,139 @@ export function MassScene({
       rotation={[-0.15, -0.35, 0]}
       scale={MASS_SCENE_SCALE}
     >
-      <mesh position={[0, -0.2, 0]}>
-        <cylinderGeometry args={[1.25, 1.45, 0.25, 48]} />
-        <meshStandardMaterial color={METAL_COLOR} metalness={0.25} />
+      <mesh castShadow position={[0, -0.2, 0]} receiveShadow>
+        <cylinderGeometry args={[1.25, 1.45, 0.25, 64]} />
+        <SurfaceMaterial color={MATERIAL.carbonShell} surface="paint" />
       </mesh>
-      <mesh position={[0, 0.75, 0]}>
-        <cylinderGeometry args={[0.06, 0.08, 2, 24]} />
-        <meshStandardMaterial color={METAL_COLOR} metalness={0.35} />
+      <mesh castShadow position={[0, 0.75, 0]}>
+        <cylinderGeometry args={[0.06, 0.09, 2, 32]} />
+        <SurfaceMaterial
+          color={MATERIAL.brass}
+          metalness={1}
+          roughness={0.4}
+          surface="brushed"
+        />
       </mesh>
+      <RoundedBox
+        args={[0.5, 0.36, 0.06]}
+        castShadow
+        position={[0, 0.25, 0.08]}
+        radius={0.02}
+        smoothness={2}
+      >
+        <SurfaceMaterial color={MATERIAL.dialWhite} surface="plastic" />
+      </RoundedBox>
       <group
         position={[0, MASS_PIVOT_Y, 0]}
         ref={beamRef}
         rotation={[0, 0, currentTilt.current]}
       >
-        <mesh rotation={[0, 0, Math.PI / 2]}>
-          <cylinderGeometry args={[0.04, 0.04, 4.6, 24]} />
-          <meshStandardMaterial color={METAL_COLOR} metalness={0.35} />
+        <RoundedBox
+          args={[4.6, 0.12, 0.06]}
+          castShadow
+          radius={0.025}
+          smoothness={2}
+        >
+          <SurfaceMaterial
+            color={MATERIAL.chrome}
+            metalness={1}
+            roughness={0.35}
+            surface="brushed"
+          />
+        </RoundedBox>
+        <mesh position={[0, -0.75, 0.16]}>
+          <boxGeometry args={[0.02, 1.3, 0.01]} />
+          <meshStandardMaterial color={MATERIAL.tyre} roughness={0.5} />
         </mesh>
       </group>
-      <mesh position={[0, MASS_PIVOT_Y, 0]}>
-        <sphereGeometry args={[0.13, 32, 32]} />
-        <meshStandardMaterial color={METAL_COLOR} metalness={0.35} />
-      </mesh>
+      <RoundedBox
+        args={[0.26, 0.26, 0.2]}
+        castShadow
+        position={[0, MASS_PIVOT_Y, 0]}
+        radius={0.04}
+        smoothness={2}
+      >
+        <SurfaceMaterial
+          color={MATERIAL.brass}
+          metalness={1}
+          roughness={0.4}
+          surface="brushed"
+        />
+      </RoundedBox>
       <mesh
         position={[leftPanPosition.x, leftPanPosition.hangerY, 0]}
         ref={leftHangerRef}
       >
-        <boxGeometry args={[0.035, MASS_PAN_DROP_Y, 0.035]} />
-        <meshStandardMaterial color={METAL_COLOR} metalness={0.35} />
+        <cylinderGeometry args={[0.014, 0.014, MASS_PAN_DROP_Y, 10]} />
+        <SurfaceMaterial
+          color={MATERIAL.brass}
+          metalness={1}
+          roughness={0.4}
+          surface="brushed"
+        />
       </mesh>
       <mesh
         position={[rightPanPosition.x, rightPanPosition.hangerY, 0]}
         ref={rightHangerRef}
       >
-        <boxGeometry args={[0.035, MASS_PAN_DROP_Y, 0.035]} />
-        <meshStandardMaterial color={METAL_COLOR} metalness={0.35} />
+        <cylinderGeometry args={[0.014, 0.014, MASS_PAN_DROP_Y, 10]} />
+        <SurfaceMaterial
+          color={MATERIAL.brass}
+          metalness={1}
+          roughness={0.4}
+          surface="brushed"
+        />
       </mesh>
       <group
         position={[leftPanPosition.x, leftPanPosition.panY, 0]}
         ref={leftPanRef}
       >
-        <mesh>
-          <cylinderGeometry args={[0.75, 0.62, 0.18, 48]} />
-          <meshStandardMaterial color={MASS_COLOR} roughness={0.45} />
+        <mesh castShadow receiveShadow>
+          <cylinderGeometry args={[0.75, 0.62, 0.08, 64]} />
+          <SurfaceMaterial
+            color={MATERIAL.brass}
+            metalness={1}
+            roughness={0.35}
+            surface="brushed"
+          />
+        </mesh>
+        <mesh position={[0, 0.04, 0]} rotation={[Math.PI / 2, 0, 0]}>
+          <torusGeometry args={[0.75, 0.025, 10, 64]} />
+          <SurfaceMaterial
+            color={MATERIAL.brass}
+            metalness={1}
+            roughness={0.3}
+            surface="brushed"
+          />
         </mesh>
         <RoundedBox
           args={[0.9 * objectSize.scale, 0.55 * objectSize.scale, 0.9]}
           position={[0, MASS_LOAD_BOTTOM_OFFSET_Y + objectSize.height / 2, 0]}
         >
-          <meshStandardMaterial color={OBJECT_COLOR} roughness={0.5} />
+          <SurfaceMaterial color={MATERIAL.oak} surface="wood" />
         </RoundedBox>
       </group>
       <group
         position={[rightPanPosition.x, rightPanPosition.panY, 0]}
         ref={rightPanRef}
       >
-        <mesh>
-          <cylinderGeometry args={[0.75, 0.62, 0.18, 48]} />
-          <meshStandardMaterial color={MASS_COLOR} roughness={0.45} />
+        <mesh castShadow receiveShadow>
+          <cylinderGeometry args={[0.75, 0.62, 0.08, 64]} />
+          <SurfaceMaterial
+            color={MATERIAL.brass}
+            metalness={1}
+            roughness={0.35}
+            surface="brushed"
+          />
+        </mesh>
+        <mesh position={[0, 0.04, 0]} rotation={[Math.PI / 2, 0, 0]}>
+          <torusGeometry args={[0.75, 0.025, 10, 64]} />
+          <SurfaceMaterial
+            color={MATERIAL.brass}
+            metalness={1}
+            roughness={0.3}
+            surface="brushed"
+          />
         </mesh>
         <mesh
           position={[
@@ -169,10 +242,47 @@ export function MassScene({
               referenceSize.radius,
               referenceSize.radius * MASS_WEIGHT_TAPER_RATIO,
               referenceSize.height,
-              40,
+              48,
             ]}
           />
-          <meshStandardMaterial color={RULER_COLOR} roughness={0.45} />
+          <SurfaceMaterial
+            color={MATERIAL.brass}
+            metalness={1}
+            roughness={0.3}
+            surface="brushed"
+          />
+        </mesh>
+        <mesh
+          castShadow
+          position={[
+            0,
+            MASS_LOAD_BOTTOM_OFFSET_Y + referenceSize.height + 0.05,
+            0,
+          ]}
+        >
+          <cylinderGeometry args={[0.06, 0.08, 0.1, 24]} />
+          <SurfaceMaterial
+            color={MATERIAL.brass}
+            metalness={1}
+            roughness={0.3}
+            surface="brushed"
+          />
+        </mesh>
+        <mesh
+          castShadow
+          position={[
+            0,
+            MASS_LOAD_BOTTOM_OFFSET_Y + referenceSize.height + 0.14,
+            0,
+          ]}
+        >
+          <sphereGeometry args={[0.1, 24, 16]} />
+          <SurfaceMaterial
+            color={MATERIAL.brass}
+            metalness={1}
+            roughness={0.3}
+            surface="brushed"
+          />
         </mesh>
       </group>
       <ThreeLabel

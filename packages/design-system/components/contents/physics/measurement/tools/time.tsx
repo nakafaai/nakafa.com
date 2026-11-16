@@ -1,20 +1,52 @@
 import {
-  METAL_COLOR,
   STOPWATCH_HAND_CENTER,
   STOPWATCH_HAND_LENGTH,
   STOPWATCH_SECONDS_PER_ROTATION,
-  TIME_COLOR,
-  TIME_FACE_COLOR,
   TIME_SCENE_SCALE,
 } from "@repo/design-system/components/contents/physics/measurement/tools/data";
 import type { MeasurementSceneProps } from "@repo/design-system/components/contents/physics/measurement/tools/scene";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
-import { MetalMaterial } from "@repo/design-system/components/three/physical";
+import {
+  type Placement,
+  Repeat,
+} from "@repo/design-system/components/three/repeat";
+import { SurfaceMaterial } from "@repo/design-system/components/three/surface/material";
+import { MATERIAL } from "@repo/design-system/lib/material";
 import { Array as Arr } from "effect";
-import { useMemo } from "react";
+
+/** The radius of the dial, in scene units. */
+const DIAL = 1.08;
+
+/** The radius of the sphere the domed crystal is cut from, so its rim meets the bezel. */
+const CRYSTAL = (DIAL + 0.1) / Math.sin(Math.PI / 7);
+
+/** The dial's ticks: one a second, and a longer, bolder one every five seconds. */
+function ticks(every: number, length: number): readonly Placement[] {
+  return Arr.map(
+    Arr.filter(
+      Arr.makeBy(60, (second) => second),
+      (second) => (every === 5 ? second % 5 === 0 : second % 5 !== 0)
+    ),
+    (second) => {
+      const angle = (second / 60) * Math.PI * 2;
+      const reach = DIAL - 0.05 - length / 2;
+      return {
+        position: [Math.sin(angle) * reach, Math.cos(angle) * reach, 0.172],
+        rotation: [0, 0, -angle],
+      };
+    }
+  );
+}
+
+/** The five-second ticks and the second ticks between them. */
+const MAJOR_TICKS = ticks(5, 0.16);
+const MINOR_TICKS = ticks(1, 0.08);
 
 /**
- * Renders a stopwatch with a hand angle derived from elapsed seconds.
+ * A mechanical stopwatch with its hand at the elapsed seconds: a chrome case
+ * and bezel, a white enamel dial with a tick every second and a bolder one
+ * every five, the crown, bow and side pusher on top, a red sweep hand with
+ * its counterweight and centre cap, and a domed crystal over it all.
  */
 export function TimeScene({
   colors,
@@ -23,20 +55,6 @@ export function TimeScene({
 }: MeasurementSceneProps) {
   const handAngle =
     (measurement / STOPWATCH_SECONDS_PER_ROTATION) * Math.PI * 2;
-  const tickMarks = useMemo(
-    () =>
-      Array.from({ length: 12 }, (_, index) => {
-        const angle = (index / 12) * Math.PI * 2;
-
-        return {
-          id: `clock-${index}`,
-          rotation: -angle,
-          x: Math.sin(angle) * 1.05,
-          y: Math.cos(angle) * 1.05,
-        };
-      }),
-    []
-  );
 
   return (
     <group
@@ -44,49 +62,119 @@ export function TimeScene({
       rotation={[0.05, -0.25, 0]}
       scale={TIME_SCENE_SCALE}
     >
-      <mesh position={[0, 0, 0]} rotation={[Math.PI / 2, 0, 0]}>
-        <cylinderGeometry args={[1.35, 1.35, 0.22, 80]} />
-        <meshStandardMaterial color={TIME_COLOR} roughness={0.35} />
+      <mesh castShadow rotation={[Math.PI / 2, 0, 0]}>
+        <cylinderGeometry args={[1.3, 1.3, 0.3, 96]} />
+        <SurfaceMaterial
+          color={MATERIAL.chrome}
+          metalness={1}
+          roughness={0.3}
+          surface="brushed"
+        />
       </mesh>
-      <mesh position={[0, 0, 0.14]} rotation={[Math.PI / 2, 0, 0]}>
-        <cylinderGeometry args={[1.08, 1.08, 0.04, 80]} />
-        <meshStandardMaterial color={TIME_FACE_COLOR} roughness={0.5} />
+      <mesh castShadow position={[0, 0, 0.15]}>
+        <torusGeometry args={[1.2, 0.09, 20, 96]} />
+        <SurfaceMaterial
+          color={MATERIAL.chrome}
+          metalness={1}
+          roughness={0.18}
+          surface="brushed"
+        />
       </mesh>
-      <mesh position={[0, 1.45, 0]}>
-        <boxGeometry args={[0.46, 0.28, 0.24]} />
-        <MetalMaterial color={METAL_COLOR} />
+      <mesh position={[0, 0, 0.16]} rotation={[Math.PI / 2, 0, 0]}>
+        <cylinderGeometry args={[DIAL + 0.04, DIAL + 0.04, 0.02, 96]} />
+        <SurfaceMaterial color={MATERIAL.dialWhite} surface="plastic" />
       </mesh>
+      <Repeat placements={MAJOR_TICKS} shadows={false}>
+        <boxGeometry args={[0.035, 0.16, 0.004]} />
+        <meshStandardMaterial color={MATERIAL.tyre} roughness={0.5} />
+      </Repeat>
+      <Repeat placements={MINOR_TICKS} shadows={false}>
+        <boxGeometry args={[0.014, 0.08, 0.004]} />
+        <meshStandardMaterial color={MATERIAL.tyre} roughness={0.5} />
+      </Repeat>
 
-      {Arr.map(tickMarks, (tick) => (
-        <mesh
-          key={tick.id}
-          position={[tick.x, tick.y, 0.2]}
-          rotation={[0, 0, tick.rotation]}
-        >
-          <boxGeometry args={[0.04, 0.18, 0.04]} />
-          <meshStandardMaterial color={colors.text} />
+      <group position={[0, 1.3, 0]}>
+        <mesh castShadow position={[0, 0.08, 0]}>
+          <cylinderGeometry args={[0.07, 0.07, 0.18, 20]} />
+          <SurfaceMaterial
+            color={MATERIAL.chrome}
+            metalness={1}
+            roughness={0.3}
+            surface="brushed"
+          />
         </mesh>
-      ))}
-
+        <mesh castShadow position={[0, 0.22, 0]}>
+          <cylinderGeometry args={[0.15, 0.15, 0.14, 28]} />
+          <SurfaceMaterial
+            color={MATERIAL.chrome}
+            metalness={1}
+            roughness={0.45}
+            surface="brushed"
+          />
+        </mesh>
+        <mesh castShadow position={[0, 0.48, 0]}>
+          <torusGeometry args={[0.2, 0.035, 12, 40]} />
+          <SurfaceMaterial
+            color={MATERIAL.chrome}
+            metalness={1}
+            roughness={0.2}
+            surface="brushed"
+          />
+        </mesh>
+      </group>
       <mesh
-        position={[
-          Math.sin(handAngle) * STOPWATCH_HAND_CENTER,
-          Math.cos(handAngle) * STOPWATCH_HAND_CENTER,
-          0.22,
-        ]}
-        rotation={[0, 0, -handAngle]}
+        castShadow
+        position={[0.82, 1.02, 0]}
+        rotation={[0, 0, -Math.PI / 4]}
       >
-        <boxGeometry args={[0.06, STOPWATCH_HAND_LENGTH, 0.04]} />
-        <meshStandardMaterial color={TIME_COLOR} />
+        <cylinderGeometry args={[0.07, 0.07, 0.2, 20]} />
+        <SurfaceMaterial
+          color={MATERIAL.chrome}
+          metalness={1}
+          roughness={0.3}
+          surface="brushed"
+        />
       </mesh>
-      <mesh position={[0, 0, 0.25]}>
-        <sphereGeometry args={[0.09, 32, 32]} />
-        <meshStandardMaterial color={TIME_COLOR} />
+
+      <group rotation={[0, 0, -handAngle]}>
+        <mesh position={[0, STOPWATCH_HAND_CENTER, 0.19]}>
+          <boxGeometry args={[0.03, STOPWATCH_HAND_LENGTH, 0.012]} />
+          <meshStandardMaterial color={MATERIAL.signalRed} roughness={0.4} />
+        </mesh>
+        <mesh position={[0, -0.18, 0.19]}>
+          <boxGeometry args={[0.06, 0.26, 0.012]} />
+          <meshStandardMaterial color={MATERIAL.signalRed} roughness={0.4} />
+        </mesh>
+      </group>
+      <mesh position={[0, 0, 0.2]} rotation={[Math.PI / 2, 0, 0]}>
+        <cylinderGeometry args={[0.07, 0.07, 0.03, 24]} />
+        <SurfaceMaterial
+          color={MATERIAL.chrome}
+          metalness={1}
+          roughness={0.25}
+          surface="brushed"
+        />
+      </mesh>
+      <mesh
+        position={[0, 0, 0.17 - CRYSTAL * Math.cos(Math.PI / 7)]}
+        rotation={[Math.PI / 2, 0, 0]}
+      >
+        <sphereGeometry
+          args={[CRYSTAL, 64, 12, 0, Math.PI * 2, 0, Math.PI / 7]}
+        />
+        <meshPhysicalMaterial
+          clearcoat={1}
+          color={MATERIAL.glass}
+          depthWrite={false}
+          opacity={0.14}
+          roughness={0.02}
+          transparent
+        />
       </mesh>
       <ThreeLabel
         color={colors.text}
         fontSize="display"
-        position={[0, -0.55, 0.25]}
+        position={[0, -1.75, 0.25]}
       >
         {reading}
       </ThreeLabel>
