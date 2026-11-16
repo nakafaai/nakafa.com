@@ -11,6 +11,7 @@ import {
   newestSeen,
   opensDay,
   opensRun,
+  showsUnreadStart,
 } from "@/components/tenant/classes/forum/marks";
 import type { ForumMessage } from "@/components/tenant/classes/forum/optimistic";
 
@@ -185,5 +186,20 @@ describe("forum read marks", () => {
     expect(isJumbo("Oke 👍")).toBe(false);
     expect(isJumbo("")).toBe(false);
     expect(isJumbo(null)).toBe(false);
+  });
+});
+
+describe("showsUnreadStart", () => {
+  const loaded = [message("a", 10), message("b", 20), message("c", 30)];
+
+  it("holds the start once the message before the first unread one is loaded, or when nothing is unread", () => {
+    expect(showsUnreadStart(loaded, 15, true)).toBe(true);
+    expect(showsUnreadStart(loaded, 30, true)).toBe(true);
+    expect(showsUnreadStart(loaded, null, true)).toBe(true);
+  });
+
+  it("asks for older messages while every loaded message is unread and older ones remain", () => {
+    expect(showsUnreadStart(loaded, 5, true)).toBe(false);
+    expect(showsUnreadStart(loaded, 5, false)).toBe(true);
   });
 });
