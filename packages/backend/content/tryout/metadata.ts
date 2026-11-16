@@ -45,30 +45,6 @@ function keysOf(row: CatalogRow, appLocale: AppLocaleCode): CatalogNodeKeys {
   };
 }
 
-/** Reads the public path of a row's node in another app locale, none when that locale has no route for it. */
-const readAlternate = Effect.fn("tryouts.catalog.readMetadataAlternate")(
-  function* (
-    snapshotId: string,
-    current: CatalogRow,
-    appLocale: AppLocaleCode
-  ) {
-    const alternate = yield* readCatalogNode(
-      snapshotId,
-      keysOf(current, appLocale)
-    );
-    return Option.flatMap(alternate, (row) =>
-      Option.map(Option.fromUndefinedOr(row.publicPath), (publicPath) => ({
-        appLocale,
-        publicPath,
-      }))
-    );
-  }
-);
-
-/**
- * Reads one public route of the active release with its localized counterparts, none when no row of
- * the asked kind holds the path.
- */
 /**
  * Whether a link lands on a route's own page, as the sitemap lists pages: an exam never, since a link to it opens
  * its entry; a group only when it is its own entry (`isPublishedLanding`); every other route always. The
@@ -90,6 +66,36 @@ const readRoutePage = Effect.fn("tryouts.catalog.readRoutePage")(function* (
   return isPublishedLanding(index, row);
 });
 
+/** Reads the public path of a row's node in another app locale, none when that locale has no page for it. */
+const readAlternate = Effect.fn("tryouts.catalog.readMetadataAlternate")(
+  function* (
+    snapshotId: string,
+    current: CatalogRow,
+    appLocale: AppLocaleCode
+  ) {
+    const alternate = yield* readCatalogNode(
+      snapshotId,
+      keysOf(current, appLocale)
+    );
+    if (Option.isNone(alternate)) {
+      return Option.none();
+    }
+    // An address that lands on no page of its own, such as a group with one track, is no
+    // counterpart: a search engine's alternate must be an indexable page.
+    if (!(yield* readRoutePage(appLocale, alternate.value))) {
+      return Option.none();
+    }
+    return Option.map(
+      Option.fromUndefinedOr(alternate.value.publicPath),
+      (publicPath) => ({ appLocale, publicPath })
+    );
+  }
+);
+
+/**
+ * Reads one public route of the active release with its localized counterparts, none when no row of
+ * the asked kind holds the path.
+ */
 export const readTryoutMetadata = Effect.fn("tryouts.catalog.readMetadata")(
   function* (input: TryoutMetadataInput) {
     const { snapshotId } = yield* loadActiveAssessment();
