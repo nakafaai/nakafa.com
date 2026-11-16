@@ -3,7 +3,7 @@ import {
   HeadSha,
   type ProofResult,
   SpecPath,
-} from "@repo/backend/scripts/content/acceptance/result";
+} from "@repo/testing/proof";
 import { Array as Arr, Effect, Option, Schema } from "effect";
 import { ChildProcess } from "effect/process";
 import { runEntry } from "#scripts/entry";

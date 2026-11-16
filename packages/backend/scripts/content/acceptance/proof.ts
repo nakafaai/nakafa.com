@@ -15,7 +15,7 @@ import {
   reportFailures,
   ShardResultJson,
   SpecPath,
-} from "@repo/backend/scripts/content/acceptance/result";
+} from "@repo/testing/proof";
 import {
   Array as Arr,
   Console,

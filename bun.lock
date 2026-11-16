@@ -11,7 +11,6 @@
         "@effect/platform-node": "catalog:",
         "@effect/tsgo": "0.67.5",
         "@effect/vitest": "catalog:",
-        "@repo/backend": "workspace:*",
         "@repo/testing": "workspace:*",
         "@repo/utilities": "workspace:*",
         "@sigstore/bundle": "5.0.1",
@@ -536,7 +535,11 @@
     "packages/testing": {
       "name": "@repo/testing",
       "version": "0.1.0",
+      "dependencies": {
+        "effect": "catalog:",
+      },
       "devDependencies": {
+        "@effect/vitest": "catalog:",
         "@repo/typescript-config": "workspace:*",
         "@vitejs/plugin-react": "^6.3.0",
         "@vitest/coverage-istanbul": "catalog:",

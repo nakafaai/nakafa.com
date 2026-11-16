@@ -1,7 +1,4 @@
-import {
-  HeadSha,
-  SpecPath,
-} from "@repo/backend/scripts/content/acceptance/result";
+import { HeadSha, SpecPath } from "@repo/testing/proof";
 import {
   Array as Arr,
   Effect,

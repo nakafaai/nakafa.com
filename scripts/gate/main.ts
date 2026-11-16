@@ -1,4 +1,4 @@
-import { HeadSha } from "@repo/backend/scripts/content/acceptance/result";
+import { HeadSha } from "@repo/testing/proof";
 import { Array as Arr, Duration, Effect, Schema } from "effect";
 import { runEntry } from "#scripts/entry";
 import {

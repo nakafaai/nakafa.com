@@ -162,6 +162,8 @@ jobs:
           git status --porcelain -- packages/backend/confect/_generated packages/backend/convex/_generated
           test -z "$(git status --porcelain -- packages/backend/confect/_generated packages/backend/convex/_generated)" || failed=1
           bun run lint || failed=1
+          # A package that reaches a workspace its tag denies (`boundaries` in turbo.json) is not ready.
+          bun run boundaries || failed=1
           bun run doctor --verbose --scope changed --base origin/main --blocking warning || failed=1
           bun run security:audit || failed=1
           bun run test:scripts || failed=1
