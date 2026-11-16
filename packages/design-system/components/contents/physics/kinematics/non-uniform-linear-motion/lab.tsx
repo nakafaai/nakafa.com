@@ -23,6 +23,7 @@ import { CameraControls } from "@repo/design-system/components/three/camera/cont
 import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene";
 import { ScienceStage } from "@repo/design-system/components/three/stage";
+import { Rail } from "@repo/design-system/components/three/stage/rail";
 import {
   ToggleGroup,
   ToggleGroupItem,
@@ -37,14 +38,12 @@ import {
 } from "@repo/design-system/components/visual/card";
 import { VisualFactIndicator } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
-import { getColor } from "@repo/design-system/lib/color";
 import { Array as Arr, Option } from "effect";
 import { type ReactNode, Suspense, useMemo, useRef, useState } from "react";
 import type { Group } from "three";
 
-const TRACK_COLOR = getColor("SLATE", 700);
-const RAIL_COLOR = getColor("SLATE", 400);
-const SLEEPER_COLOR = getColor("STONE", 600);
+/** The height of the bed the rails lie on. */
+const BED_Y = -0.025;
 
 interface GlbbLabProps {
   description: ReactNode;
@@ -71,7 +70,7 @@ export function NonUniformLinearMotionLab({
     DEFAULT_GLBB_SCENARIO_ID
   );
   const motion = useMemo(() => getGlbbMotionState(scenarioId), [scenarioId]);
-  const reach = motion.trackLength / 2 + GLBB_SCENE.trackWidth;
+  const reach = Math.abs(motion.trainStartX) + GLBB_SCENE.railGap * 2;
 
   function handleScenarioChange(value: string) {
     if (!isGlbbScenarioId(value)) {
@@ -107,7 +106,13 @@ export function NonUniformLinearMotionLab({
         className={threeSceneFrameVariants()}
         render={<section />}
       >
-        <ScienceStage frameloop="always" reach={reach} setting="field">
+        <ScienceStage
+          floor={BED_Y}
+          frameloop="always"
+          ground="grass"
+          reach={reach}
+          setting="field"
+        >
           <Suspense>
             <CameraControls
               cameraPosition={GLBB_SCENE.cameraPosition}
@@ -117,7 +122,13 @@ export function NonUniformLinearMotionLab({
               enableZoom
               fov={GLBB_SCENE.cameraFov}
             />
-            <GlbbScene motion={motion} />
+            <Rail
+              gauge={GLBB_SCENE.railGap}
+              sleeper={GLBB_SCENE.sleeperWidth}
+              spacing={GLBB_SCENE.sleeperSpacing}
+            />
+            <PositionMarkers motion={motion} />
+            <AnimatedTrain motion={motion} />
           </Suspense>
         </ScienceStage>
       </VisualCardBody>
@@ -166,18 +177,6 @@ export function NonUniformLinearMotionLab({
         </VisualCardFacts>
       </VisualCardFooter>
     </VisualCard>
-  );
-}
-
-function GlbbScene({ motion }: { motion: GlbbMotionState }) {
-  return (
-    <group>
-      <CameraBounds exclude>
-        <RailTrack trackLength={motion.trackLength} />
-      </CameraBounds>
-      <PositionMarkers motion={motion} />
-      <AnimatedTrain motion={motion} />
-    </group>
   );
 }
 
@@ -231,54 +230,6 @@ function AnimatedTrain({ motion }: { motion: GlbbMotionState }) {
         />
       </group>
     </CameraBounds>
-  );
-}
-
-function RailTrack({ trackLength }: { trackLength: number }) {
-  const sleeperCount = Math.ceil(trackLength / GLBB_SCENE.sleeperSpacing);
-  const sleeperSpacing = trackLength / sleeperCount;
-  const sleeperPositions = Array.from(
-    { length: sleeperCount },
-    (_, index) => -trackLength / 2 + sleeperSpacing * (index + 0.5)
-  );
-
-  return (
-    <group>
-      <mesh position={[0, -0.045, 0]} receiveShadow>
-        <boxGeometry args={[trackLength, 0.04, GLBB_SCENE.trackWidth]} />
-        <meshStandardMaterial color={TRACK_COLOR} roughness={0.8} />
-      </mesh>
-
-      {Arr.map([-1, 1], (side) => (
-        <mesh
-          key={side}
-          position={[0, 0.025, (side * GLBB_SCENE.railGap) / 2]}
-          receiveShadow
-        >
-          <boxGeometry
-            args={[trackLength, GLBB_SCENE.railHeight, GLBB_SCENE.railWidth]}
-          />
-          <meshStandardMaterial
-            color={RAIL_COLOR}
-            metalness={0.35}
-            roughness={0.36}
-          />
-        </mesh>
-      ))}
-
-      {Arr.map(sleeperPositions, (x) => (
-        <mesh key={x} position={[x, -0.005, 0]} receiveShadow>
-          <boxGeometry
-            args={[
-              GLBB_SCENE.sleeperWidth,
-              GLBB_SCENE.sleeperHeight,
-              GLBB_SCENE.sleeperLength,
-            ]}
-          />
-          <meshStandardMaterial color={SLEEPER_COLOR} roughness={0.76} />
-        </mesh>
-      ))}
-    </group>
   );
 }
 

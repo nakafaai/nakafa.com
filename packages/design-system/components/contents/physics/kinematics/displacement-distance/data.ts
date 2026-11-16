@@ -32,7 +32,7 @@ const RouteSegmentSchema = Schema.Struct({
   start: RoutePointSchema,
 });
 
-export type RouteSegment = typeof RouteSegmentSchema.Type;
+type RouteSegment = typeof RouteSegmentSchema.Type;
 
 export const DISPLACEMENT_DISTANCE_SCENE = {
   carScale: 0.52,
@@ -45,7 +45,6 @@ export const DISPLACEMENT_DISTANCE_SCENE = {
   routeLineY: 0.1,
   stripeLength: 0.32,
   stripeSpacing: 1.05,
-  stripeWidth: 0.05,
 } as const;
 
 const ROUTES: Record<DisplacementDistanceCaseId, RoutePoint[]> = {

@@ -18,6 +18,7 @@ import { CameraControls } from "@repo/design-system/components/three/camera/cont
 import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene";
 import { ScienceStage } from "@repo/design-system/components/three/stage";
+import { Road } from "@repo/design-system/components/three/stage/road";
 import {
   ToggleGroup,
   ToggleGroupItem,
@@ -32,7 +33,6 @@ import {
 } from "@repo/design-system/components/visual/card";
 import { VisualFactIndicator } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
-import { getColor } from "@repo/design-system/lib/color";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
@@ -41,6 +41,10 @@ import type { Group } from "three";
 
 const OBSERVER_COLOR = PLOT_COLORS.teal;
 const TARGET_COLOR = PLOT_COLORS.orange;
+/** The height of the road the cars drive on. */
+const ROAD_Y = 0.02;
+/** How long a dash of the centre line is. */
+const STRIPE_LENGTH = 0.38;
 const CAR_SCALE = 0.58;
 const MIN_LOOP_SECONDS = 6.5;
 const MAX_LOOP_SECONDS = 10.5;
@@ -109,13 +113,21 @@ export function RelativeMovementLab({
         className={threeSceneFrameVariants()}
         render={<section />}
       >
-        <ScienceStage frameloop="always" reach={SCENE_REACH} setting="field">
+        <ScienceStage
+          floor={ROAD_Y}
+          frameloop="always"
+          ground="grass"
+          reach={SCENE_REACH}
+          setting="field"
+        >
           <Suspense>
             <RelativeMovementCamera />
             <group>
-              <CameraBounds exclude>
-                <Road />
-              </CameraBounds>
+              <Road
+                dash={STRIPE_LENGTH}
+                spacing={RELATIVE_MOVEMENT_SCENE.stripeSpacing}
+                width={RELATIVE_MOVEMENT_SCENE.roadWidth}
+              />
               <AnimatedCarPair motion={motion} />
             </group>
           </Suspense>
@@ -277,43 +289,6 @@ function Car({
       scale={CAR_SCALE}
     >
       <PhysicsCarModel bodyColor={accentColor} modelPath={modelPath} />
-    </group>
-  );
-}
-
-function Road() {
-  const stripeCount = Math.ceil(
-    RELATIVE_MOVEMENT_SCENE.roadLength / RELATIVE_MOVEMENT_SCENE.stripeSpacing
-  );
-  const stripePositions = Array.from({ length: stripeCount }, (_, index) => {
-    const spacing = RELATIVE_MOVEMENT_SCENE.roadLength / stripeCount;
-    return (
-      -RELATIVE_MOVEMENT_SCENE.roadLength / 2 + spacing * index + spacing * 0.5
-    );
-  });
-
-  return (
-    <group>
-      <mesh position={[0, -0.02, 0]} receiveShadow>
-        <boxGeometry
-          args={[
-            RELATIVE_MOVEMENT_SCENE.roadLength,
-            0.08,
-            RELATIVE_MOVEMENT_SCENE.roadWidth,
-          ]}
-        />
-        <meshStandardMaterial color={getColor("SLATE", 700)} roughness={0.74} />
-      </mesh>
-
-      {Arr.map(stripePositions, (x) => (
-        <mesh key={x} position={[x, 0.035, 0]}>
-          <boxGeometry args={[0.38, 0.018, 0.06]} />
-          <meshStandardMaterial
-            color={getColor("SLATE", 50)}
-            roughness={0.58}
-          />
-        </mesh>
-      ))}
     </group>
   );
 }

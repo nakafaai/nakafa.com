@@ -14,31 +14,18 @@ import {
 } from "@repo/design-system/components/contents/physics/kinematics/average-velocity-speed/data";
 import { CameraControls } from "@repo/design-system/components/three/camera/controls";
 import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
-import { Array as Arr, Schema } from "effect";
+import { Array as Arr } from "effect";
 import { type ReactNode, Suspense, useMemo, useRef } from "react";
 import { CatmullRomCurve3, type Group, Vector3 } from "three";
 
 const TRACK_Y = 0.18;
 const PAD_Y = 0.06;
-const PLATFORM_HEIGHT = 0.16;
-const PLATFORM_PADDING = 0.78;
-const EDGE_THICKNESS = 0.12;
-const EDGE_HEIGHT = 0.16;
 const PAUSE_SECONDS = 0.8;
 const SAME_POINT_EPSILON = 0.001;
 const BALL_Y =
   TRACK_Y +
   AVERAGE_VELOCITY_SPEED_SCENE.routeRadius +
   AVERAGE_VELOCITY_SPEED_SCENE.ballRadius;
-
-const PlatformBoundsSchema = Schema.Struct({
-  centerX: Schema.Finite,
-  centerZ: Schema.Finite,
-  depth: Schema.Finite,
-  width: Schema.Finite,
-});
-
-type PlatformBounds = typeof PlatformBoundsSchema.Type;
 
 /** The lights and the camera of the average-motion scene. The lab draws its motion as children. */
 export function AverageMotionStage({ children }: { children: ReactNode }) {
@@ -67,7 +54,6 @@ export function AverageMotionScene({
 
   return (
     <group>
-      <MotionPlatform bounds={track.platformBounds} />
       <RouteTube
         color={AVERAGE_VELOCITY_SPEED_COLORS.route}
         points={track.centerPoints}
@@ -87,83 +73,6 @@ export function AverageMotionScene({
       <DisplacementGuide motion={motion} />
       <GhostBalls motion={motion} />
       <RollingBall motion={motion} />
-    </group>
-  );
-}
-
-function MotionPlatform({ bounds }: { bounds: PlatformBounds }) {
-  const topY = -PLATFORM_HEIGHT / 2;
-  const edgeY = PAD_Y + EDGE_HEIGHT / 2;
-
-  return (
-    <group>
-      <mesh position={[bounds.centerX, topY, bounds.centerZ]} receiveShadow>
-        <boxGeometry args={[bounds.width, PLATFORM_HEIGHT, bounds.depth]} />
-        <meshStandardMaterial
-          color={AVERAGE_VELOCITY_SPEED_COLORS.platform}
-          roughness={0.82}
-        />
-      </mesh>
-      <mesh
-        castShadow
-        position={[
-          bounds.centerX,
-          edgeY,
-          bounds.centerZ + bounds.depth / 2 - EDGE_THICKNESS / 2,
-        ]}
-        receiveShadow
-      >
-        <boxGeometry args={[bounds.width, EDGE_HEIGHT, EDGE_THICKNESS]} />
-        <meshStandardMaterial
-          color={AVERAGE_VELOCITY_SPEED_COLORS.platformEdge}
-          roughness={0.72}
-        />
-      </mesh>
-      <mesh
-        castShadow
-        position={[
-          bounds.centerX,
-          edgeY,
-          bounds.centerZ - bounds.depth / 2 + EDGE_THICKNESS / 2,
-        ]}
-        receiveShadow
-      >
-        <boxGeometry args={[bounds.width, EDGE_HEIGHT, EDGE_THICKNESS]} />
-        <meshStandardMaterial
-          color={AVERAGE_VELOCITY_SPEED_COLORS.platformEdge}
-          roughness={0.72}
-        />
-      </mesh>
-      <mesh
-        castShadow
-        position={[
-          bounds.centerX + bounds.width / 2 - EDGE_THICKNESS / 2,
-          edgeY,
-          bounds.centerZ,
-        ]}
-        receiveShadow
-      >
-        <boxGeometry args={[EDGE_THICKNESS, EDGE_HEIGHT, bounds.depth]} />
-        <meshStandardMaterial
-          color={AVERAGE_VELOCITY_SPEED_COLORS.platformEdge}
-          roughness={0.72}
-        />
-      </mesh>
-      <mesh
-        castShadow
-        position={[
-          bounds.centerX - bounds.width / 2 + EDGE_THICKNESS / 2,
-          edgeY,
-          bounds.centerZ,
-        ]}
-        receiveShadow
-      >
-        <boxGeometry args={[EDGE_THICKNESS, EDGE_HEIGHT, bounds.depth]} />
-        <meshStandardMaterial
-          color={AVERAGE_VELOCITY_SPEED_COLORS.platformEdge}
-          roughness={0.72}
-        />
-      </mesh>
     </group>
   );
 }
@@ -400,43 +309,10 @@ function getTrackGeometry(motion: AverageVelocitySpeedState) {
   const centerPoints = getAverageMotionRoutePoints(motion);
   const leftRailPoints = getAverageMotionRoutePoints(motion, railOffset);
   const rightRailPoints = getAverageMotionRoutePoints(motion, -railOffset);
-  const platformBounds = getPlatformBounds([
-    ...centerPoints,
-    ...leftRailPoints,
-    ...rightRailPoints,
-  ]);
 
   return {
     centerPoints,
     leftRailPoints,
-    platformBounds,
     rightRailPoints,
-  };
-}
-
-function getPlatformBounds(points: readonly WorldPoint2[]): PlatformBounds {
-  const bounds = Arr.reduce(
-    points,
-    {
-      maxX: Number.NEGATIVE_INFINITY,
-      maxZ: Number.NEGATIVE_INFINITY,
-      minX: Number.POSITIVE_INFINITY,
-      minZ: Number.POSITIVE_INFINITY,
-    },
-    (nextBounds, point) => ({
-      maxX: Math.max(nextBounds.maxX, point.x),
-      maxZ: Math.max(nextBounds.maxZ, point.z),
-      minX: Math.min(nextBounds.minX, point.x),
-      minZ: Math.min(nextBounds.minZ, point.z),
-    })
-  );
-  const width = bounds.maxX - bounds.minX + PLATFORM_PADDING * 2;
-  const depth = bounds.maxZ - bounds.minZ + PLATFORM_PADDING * 2;
-
-  return {
-    centerX: (bounds.minX + bounds.maxX) / 2,
-    centerZ: (bounds.minZ + bounds.maxZ) / 2,
-    depth,
-    width,
   };
 }

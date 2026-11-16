@@ -41,22 +41,15 @@ export const DEFAULT_GLBB_SCENARIO_ID = "from-rest" satisfies GlbbScenarioId;
 export const GLBB_SCENE = {
   animationSeconds: 4.2,
   cameraFov: 44,
-  cameraPosition: [6.4, 6.2, 6.1],
+  cameraPosition: [4.9, 2.3, 6.3],
   cameraTarget: [0, 0.08, 0],
   markerHeight: 0.05,
   markerRadius: 0.11,
   markerSideOffset: -0.44,
   motionEndClearanceRatio: 0.22,
   railGap: 0.58,
-  railHeight: 0.05,
-  railWidth: 0.05,
-  sleeperHeight: 0.06,
-  sleeperLength: 1.14,
   sleeperSpacing: 0.62,
   sleeperWidth: 0.11,
-  trackMinimumLength: 92,
-  trackPadding: 42,
-  trackWidth: 1.28,
   trainScale: 0.64,
   worldScale: 0.16,
 } as const;
@@ -107,7 +100,6 @@ export function getGlbbMotionState(id: GlbbScenarioId) {
   const displacement = getDisplacementAt(scenario, scenario.duration);
   const worldDisplacement = displacement * GLBB_SCENE.worldScale;
   const trainStartX = getTrainStartX(worldDisplacement);
-  const trackLength = getTrackLength(worldDisplacement);
   const timeSamples = getTimeSamples(scenario.duration);
   const positionSamples = Arr.map(timeSamples, (time) =>
     getGlbbPositionSample(scenario, time, trainStartX)
@@ -118,7 +110,6 @@ export function getGlbbMotionState(id: GlbbScenarioId) {
     finalVelocity: getFinalVelocity(scenario),
     positionSamples,
     scenario,
-    trackLength,
     trainStartX,
     worldDisplacement,
   };
@@ -129,12 +120,6 @@ function getTrainStartX(worldDisplacement: number) {
     worldDisplacement * GLBB_SCENE.motionEndClearanceRatio;
 
   return -(worldDisplacement / 2) - endClearanceOffset;
-}
-
-function getTrackLength(worldDisplacement: number) {
-  const contextualLength = worldDisplacement + GLBB_SCENE.trackPadding * 2;
-
-  return Math.max(GLBB_SCENE.trackMinimumLength, contextualLength);
 }
 
 export function getGlbbPositionSample(

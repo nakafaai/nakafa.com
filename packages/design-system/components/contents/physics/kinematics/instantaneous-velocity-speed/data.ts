@@ -1,4 +1,3 @@
-import { getColor } from "@repo/design-system/lib/color";
 import type { CameraPose } from "@repo/design-system/lib/geometry/camera";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr, Option } from "effect";
@@ -33,11 +32,9 @@ export const INSTANTANEOUS_SPEED_SCENE = {
   detectorPostRadius: 0.045,
   detectorStripWidth: 0.08,
   pauseSeconds: 0.55,
-  roadMinimumLength: 42,
   roadWidth: 1.8,
   stripeLength: 0.44,
   stripeSpacing: 1.5,
-  stripeWidth: 0.06,
   trackZ: 0.18,
   worldScale: 0.06,
 } as const;
@@ -52,8 +49,6 @@ export const INSTANTANEOUS_SPEED_COLORS = {
   car: PLOT_COLORS.violet,
   detector: PLOT_COLORS.teal,
   detectorBase: PLOT_COLORS.teal,
-  road: getColor("GRAY", 800),
-  stripe: getColor("SLATE", 50),
 } as const;
 
 export type InstantaneousVelocitySpeedState = ReturnType<
@@ -67,18 +62,15 @@ export function getInstantaneousVelocitySpeedState(
   const velocity = scenario.speed * scenario.direction;
   const halfTravelLength =
     scenario.speed * scenario.time * INSTANTANEOUS_SPEED_SCENE.worldScale;
-  const trackLength = halfTravelLength * 2;
   const startX = -scenario.direction * halfTravelLength;
   const endX = scenario.direction * halfTravelLength;
   const loopSeconds = scenario.time * 2;
   const measurementX = 0;
-  const roadLength = getRoadLength(trackLength);
 
   return {
     endX,
     loopSeconds,
     measurementX,
-    roadLength,
     scenario,
     startX,
     velocity,
@@ -99,8 +91,4 @@ function getInstantaneousSpeedCaseById(id: InstantaneousSpeedCaseId) {
     Arr.findFirst(INSTANTANEOUS_SPEED_CASES, (scenario) => scenario.id === id),
     () => INSTANTANEOUS_SPEED_CASES[0]
   );
-}
-
-function getRoadLength(trackLength: number) {
-  return Math.max(INSTANTANEOUS_SPEED_SCENE.roadMinimumLength, trackLength * 4);
 }

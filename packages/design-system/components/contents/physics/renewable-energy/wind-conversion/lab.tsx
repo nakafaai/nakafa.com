@@ -52,6 +52,9 @@ interface WindEnergyConversionLabProps {
   title: ReactNode;
 }
 
+/** The height of the ground the tower's foot stands on: the scaled bottom of its base. */
+const TOWER_FOOT_Y = -0.02 + 1.18 * (-0.42 - 0.09);
+
 /**
  * Shows wind energy conversion as one interactive 3D system: moving air turns a
  * rotor while the nacelle houses the generator.
@@ -96,7 +99,12 @@ export function WindEnergyConversionLab({
         className={threeSceneFrameVariants()}
         render={<section />}
       >
-        <ScienceStage frameloop="always" setting="field">
+        <ScienceStage
+          floor={TOWER_FOOT_Y}
+          frameloop="always"
+          ground="grass"
+          setting="field"
+        >
           <Suspense>
             <CameraControls
               cameraPosition={[2.65, 2, 4.7]}

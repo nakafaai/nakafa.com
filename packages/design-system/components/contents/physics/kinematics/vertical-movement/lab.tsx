@@ -24,7 +24,6 @@ import {
 } from "@repo/design-system/components/visual/card";
 import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
-import { getColor } from "@repo/design-system/lib/color";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
@@ -100,7 +99,12 @@ export function VerticalMovementLab({
         className={threeSceneFrameVariants()}
         render={<section />}
       >
-        <ScienceStage floor={0} frameloop="always" setting="field">
+        <ScienceStage
+          floor={0}
+          frameloop="always"
+          ground="grass"
+          setting="field"
+        >
           <Suspense>
             <CameraControls
               cameraPosition={CAMERA_POSITION}
@@ -110,10 +114,8 @@ export function VerticalMovementLab({
               enableZoom
               fov={42}
             />
-            <VerticalMotionScene>
-              <VerticalTrail motion={motion} />
-              <AnimatedBall motion={motion} />
-            </VerticalMotionScene>
+            <VerticalTrail motion={motion} />
+            <AnimatedBall motion={motion} />
           </Suspense>
         </ScienceStage>
       </VisualCardBody>
@@ -157,19 +159,6 @@ export function VerticalMovementLab({
         </VisualCardFacts>
       </VisualCardFooter>
     </VisualCard>
-  );
-}
-
-/** Draws the ground of the vertical motion scene under the trail and the ball it holds. */
-function VerticalMotionScene({ children }: { children: ReactNode }) {
-  return (
-    <group>
-      <mesh receiveShadow rotation={[-Math.PI / 2, 0, 0]}>
-        <circleGeometry args={[0.82, 48]} />
-        <meshStandardMaterial color={getColor("SLATE", 200)} roughness={0.8} />
-      </mesh>
-      {children}
-    </group>
   );
 }
 
