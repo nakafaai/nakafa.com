@@ -96,14 +96,6 @@ function KiteScene({
   return (
     <group>
       <SimulationTicker running={playing} />
-      <mesh
-        position={[0, 0.002, 0]}
-        receiveShadow
-        rotation={[-Math.PI / 2, 0, 0]}
-      >
-        <circleGeometry args={[60, 64]} />
-        <meshStandardMaterial color={MATERIAL.sand} roughness={0.95} />
-      </mesh>
       <mesh castShadow position={[0, 0.3, 0]}>
         <cylinderGeometry args={[0.05, 0.03, 0.8, 10]} />
         <meshStandardMaterial color={MATERIAL.bark} roughness={0.8} />
@@ -225,7 +217,12 @@ export function KiteStringTensionLab({
         className={threeSceneFrameVariants()}
         render={<section />}
       >
-        <ScienceStage floor={0} reach={length * 0.7} setting="sky">
+        <ScienceStage
+          floor={0}
+          ground="sand"
+          reach={length * 0.7}
+          setting="sky"
+        >
           <Suspense fallback={null}>
             <CameraControls
               cameraPosition={[length * 0.4, length * 0.45, length * 1.35]}

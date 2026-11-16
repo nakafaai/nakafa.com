@@ -73,32 +73,6 @@ function Sled() {
   );
 }
 
-/** A level field of snow with the grooves the runners leave behind. */
-function Snow() {
-  return (
-    <group>
-      <mesh
-        position={[0, 0.001, 0]}
-        receiveShadow
-        rotation={[-Math.PI / 2, 0, 0]}
-      >
-        <planeGeometry args={[80, 80]} />
-        <meshStandardMaterial color={MATERIAL.snow} roughness={0.92} />
-      </mesh>
-      {Arr.map([-0.18, 0.18], (z) => (
-        <mesh
-          key={z}
-          position={[-1.5, 0.003, z]}
-          rotation={[-Math.PI / 2, 0, 0]}
-        >
-          <planeGeometry args={[6, 0.035]} />
-          <meshStandardMaterial color={MATERIAL.snowTrack} roughness={0.8} />
-        </mesh>
-      ))}
-    </group>
-  );
-}
-
 /** One force arrow from the hitch with its symbol at the tip. */
 function Pull({
   color,
@@ -170,7 +144,6 @@ export function SledScene({
   return (
     <group>
       <SimulationTicker running={playing} />
-      <Snow />
       <group ref={holder}>
         <Sled />
         <Rod

@@ -96,12 +96,12 @@ export function DroneDisplacementLab({
         className={threeSceneFrameVariants()}
         render={<section />}
       >
-        <ScienceStage floor={0} reach={reach} setting="field">
+        <ScienceStage floor={0} ground="grass" reach={reach} setting="field">
           <Suspense fallback={null}>
             <CameraControls
               cameraPosition={[
                 moved.east * 0.5 - reach * 0.6,
-                moved.up * 0.5 + reach * 0.75,
+                moved.up * 0.5 + reach * 0.32,
                 -moved.north * 0.5 + reach * 1.5,
               ]}
               cameraTarget={[
