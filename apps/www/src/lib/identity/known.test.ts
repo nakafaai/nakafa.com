@@ -20,7 +20,6 @@ const account = Schema.decodeUnknownSync(Account)({
   appUser: {
     _creationTime: 1,
     _id: "users-1",
-    authId: "auth-1",
     credits: 1000,
     creditsResetAt: 0,
     email: "learner@example.com",

@@ -284,7 +284,6 @@ export declare const api: {
           appUser: {
             _creationTime: number;
             _id: Id<"users">;
-            authId?: string;
             bio?: string;
             credits: number;
             creditsResetAt: number;
@@ -16818,7 +16817,6 @@ export declare const internal: {
           appUser: {
             _creationTime: number;
             _id: Id<"users">;
-            authId?: string;
             bio?: string;
             credits: number;
             creditsResetAt: number;

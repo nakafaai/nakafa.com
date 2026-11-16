@@ -29,11 +29,6 @@ export type UserPlan = typeof userPlanValidator.Type;
  */
 export const userValidator = Schema.Struct({
   email: Schema.String,
-  // The retired id of the earlier auth system, on accounts made before Convex Auth. Nothing
-  // reads or writes it: the Convex CLI clears it right after the deploy that
-  // retires it, because Convex refuses to drop a required field that every row
-  // holds in one deploy, and the next change deletes this line.
-  authId: Schema.optionalKey(Schema.String),
   name: Schema.String,
   image: Schema.optionalKey(Schema.String),
   // The one name of the public profile address `@username`. Every live account
