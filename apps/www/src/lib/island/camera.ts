@@ -28,16 +28,28 @@ export const PITCH = { high: 1.35, low: 0.32 } as const;
 const FRAMED = 16;
 
 /**
+ * The cells across the opening view of a portrait phone: fewer, so the
+ * learner's fox and the square around it read at a glance on a narrow screen,
+ * and a pinch shows the rest of the village.
+ */
+const FRAMED_PORTRAIT = 12;
+
+/** Below this aspect, width over height, a screen opens as a portrait phone. */
+const PORTRAIT = 0.75;
+
+/**
  * The camera an island of this footprint side opens with, on a screen of this
  * aspect (width over height): its village in view from the south-east,
- * farther back on a narrow screen so the village fits across it.
+ * farther back on a narrow screen so the square fits across it, and closer on
+ * a portrait phone, which frames fewer cells.
  */
 export function openingOrbit(size: number, aspect: number): Orbit {
   const across = Math.atan(Math.tan(FIELD_OF_VIEW / 2) * Math.min(1, aspect));
+  const framed = aspect < PORTRAIT ? FRAMED_PORTRAIT : FRAMED;
   return {
     distance: Math.min(
       DISTANCE.far,
-      (Math.min(size, FRAMED) * 0.62) / Math.tan(across) + 6
+      (Math.min(size, framed) * 0.62) / Math.tan(across) + 6
     ),
     pitch: 0.72,
     target: [SPAN / 2, SEA_LEVEL + 1, SPAN / 2],

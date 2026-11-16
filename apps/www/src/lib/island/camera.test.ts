@@ -29,6 +29,20 @@ describe("island/camera", () => {
     );
   });
 
+  it("frames fewer cells on a portrait phone, so the fox and the square read at a glance", () => {
+    const cellsAcross = (aspect: number) => {
+      const across = Math.atan(
+        Math.tan(FIELD_OF_VIEW / 2) * Math.min(1, aspect)
+      );
+      return (
+        ((openingOrbit(64, aspect).distance - 6) * Math.tan(across)) / 0.62
+      );
+    };
+    expect(cellsAcross(390 / 844)).toBeCloseTo(12);
+    expect(cellsAcross(0.8)).toBeCloseTo(16);
+    expect(cellsAcross(1.5)).toBeCloseTo(16);
+  });
+
   it("keeps the camera within its distance, its tilt, and over the world", () => {
     const wild = clampOrbit({
       distance: 1,
