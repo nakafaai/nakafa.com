@@ -1,7 +1,12 @@
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
-import { Array as Arr, Effect, Ref } from "effect";
-import { SMOKE_SPEC, selectGroup, selectSpecs } from "#scripts/proof/select";
+import { Array as Arr, Effect, Ref, Tuple } from "effect";
+import {
+  SMOKE_SPEC,
+  selectGroup,
+  selectSpecs,
+  supportImports,
+} from "#scripts/proof/select";
 import { MAIN, PROCESS_TIMEOUT, SHA } from "#scripts/proof/test.github";
 import { type Answer, scriptedShell } from "#scripts/test.shell";
 
@@ -12,6 +17,14 @@ const PRESENT = [
   "apps/www/e2e/tryout/flow/start.browser.ts",
   "apps/www/e2e/school/home.browser.ts",
   "apps/www/e2e/school/fixture.ts",
+];
+
+/** Who imports which support module: a spec, a support module that imports another, and a spec of that one. */
+const IMPORTS = [
+  Tuple.make("apps/www/e2e/quran/surah.browser.ts", "quran"),
+  Tuple.make("apps/www/e2e/support/school.ts", "window"),
+  Tuple.make("apps/www/e2e/school/home.browser.ts", "school"),
+  Tuple.make("apps/www/e2e/tryout/player.browser.ts", "timeout"),
 ];
 
 describe("merge group specs", () => {
@@ -55,6 +68,41 @@ describe("merge group specs", () => {
     ]);
   });
 
+  it("adds every spec that imports a changed support module, through the support modules that import it", () => {
+    expect(
+      selectSpecs(["apps/www/e2e/support/window.ts"], PRESENT, IMPORTS)
+    ).toEqual(["e2e/quran/landing.browser.ts", "e2e/school/home.browser.ts"]);
+    expect(
+      selectSpecs(["apps/www/e2e/support/quran.ts"], PRESENT, IMPORTS)
+    ).toEqual(["e2e/quran/landing.browser.ts", "e2e/quran/surah.browser.ts"]);
+    expect(
+      selectSpecs(["apps/www/e2e/support/frames.test.ts"], PRESENT, IMPORTS)
+    ).toEqual([SMOKE_SPEC]);
+  });
+
+  it("proves every spec when the Playwright config changes", () => {
+    expect(selectSpecs(["apps/www/playwright.config.ts"], PRESENT)).toEqual([
+      "e2e/quran/landing.browser.ts",
+      "e2e/quran/surah.browser.ts",
+      "e2e/school/home.browser.ts",
+      "e2e/tryout/flow/start.browser.ts",
+      "e2e/tryout/player.browser.ts",
+    ]);
+  });
+
+  it("reads the support imports from the lines git grep printed", () => {
+    expect(
+      supportImports([
+        `${SHA}:apps/www/e2e/school/home.browser.ts:@/e2e/support/school`,
+        `${SHA}:apps/www/e2e/support/school.ts:@/e2e/support/window`,
+        "not an import",
+      ])
+    ).toEqual([
+      ["apps/www/e2e/school/home.browser.ts", "school"],
+      ["apps/www/e2e/support/school.ts", "window"],
+    ]);
+  });
+
   it("reaches no folder from a path outside the app source", () => {
     expect(
       selectSpecs(["packages/design-system/components/tryout.tsx"], PRESENT)
@@ -95,6 +143,39 @@ describe("selecting a merge group's specs", () => {
           `git diff --name-only --no-renames ${MAIN} ${SHA}`,
           `git ls-tree -r --name-only ${SHA} -- apps/www/e2e`,
         ]);
+      }).pipe(Effect.provide(NodeServices.layer)),
+    PROCESS_TIMEOUT
+  );
+
+  it.effect(
+    "reads the support modules' importers only when the group changes one, and reads no match as none",
+    () =>
+      Effect.gen(function* () {
+        const grep = `git grep -o -E @/e2e/support/[A-Za-z0-9/_-]+ ${SHA} -- apps/www/e2e`;
+        const found = yield* select([MAIN, SHA], (args) => {
+          if (args[0] === "diff") {
+            return { stdout: "apps/www/e2e/support/window.ts\n" };
+          }
+          if (args[0] === "grep") {
+            return {
+              stdout: `${SHA}:apps/www/e2e/support/school.ts:@/e2e/support/window\n${SHA}:apps/www/e2e/school/home.browser.ts:@/e2e/support/school\n`,
+            };
+          }
+          return { stdout: `${Arr.join(PRESENT, "\n")}\n` };
+        });
+        expect(found.exit._tag).toBe("Success");
+        expect(found.calls).toContain(grep);
+        const none = yield* select([MAIN, SHA], (args) => {
+          if (args[0] === "diff") {
+            return { stdout: "apps/www/e2e/support/window.ts\n" };
+          }
+          if (args[0] === "grep") {
+            return { code: 1 };
+          }
+          return { stdout: `${Arr.join(PRESENT, "\n")}\n` };
+        });
+        expect(none.exit._tag).toBe("Success");
+        expect(none.calls).toContain(grep);
       }).pipe(Effect.provide(NodeServices.layer)),
     PROCESS_TIMEOUT
   );

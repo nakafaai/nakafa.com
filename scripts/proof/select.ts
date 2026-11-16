@@ -11,6 +11,7 @@ import {
   Result,
   Schema,
   String as Str,
+  Tuple,
 } from "effect";
 import { runEntry } from "#scripts/entry";
 import { writeOutput } from "#scripts/output";
@@ -32,6 +33,16 @@ const SOURCE_ROOT = "apps/www/src/";
 
 /** A file extension, which the last segment of a source path drops before it names a folder. */
 const EXTENSION = /\.[^.]+$/u;
+
+/** A support module of the browser suites, which every spec and support module imports as `@/e2e/support/<name>`. */
+const SUPPORT_FILE = /^apps\/www\/e2e\/support\/(?<name>.+)\.ts$/u;
+
+/** One import of a support module, as `git grep -o` prints it: `<head>:<importer>:@/e2e/support/<name>`. */
+const SUPPORT_IMPORT =
+  /^[^:]+:(?<importer>apps\/www\/e2e\/[^:]+\.ts):@\/e2e\/support\/(?<name>[A-Za-z0-9/_-]+)$/u;
+
+/** What every spec runs under, so a change to it reaches every spec. */
+const CONFIG_FILE = "apps/www/playwright.config.ts";
 
 const USAGE = "Usage: node scripts/proof/select.ts <base sha> <head sha>";
 
@@ -56,28 +67,89 @@ const sourceSegments = (changed: readonly string[]) =>
     )
   );
 
+/** The support module a path names, when it is one: a unit test beside a support module is not. */
+const supportName = (path: string) =>
+  Option.match(
+    Option.filter(
+      Option.fromNullishOr(SUPPORT_FILE.exec(path)?.groups?.name),
+      (name) => !name.endsWith(".test")
+    ),
+    { onNone: () => Result.failVoid, onSome: Result.succeed }
+  );
+
+/** The imports of support modules among the lines `git grep -o` printed, each `[importer, name]`. */
+export const supportImports = (lines: readonly string[]) =>
+  Arr.filterMap(lines, (line) =>
+    Option.match(Option.fromNullishOr(SUPPORT_IMPORT.exec(line)?.groups), {
+      onNone: () => Result.failVoid,
+      onSome: ({ importer, name }) =>
+        Result.succeed(Tuple.make(importer, name)),
+    })
+  );
+
+/**
+ * The files that import, directly or through other support modules, one of
+ * the support modules `names`: each round adds the support modules among the
+ * importers, until a round adds none.
+ */
+const importersOf = (
+  imports: readonly (readonly [string, string])[],
+  names: HashSet.HashSet<string>
+): HashSet.HashSet<string> => {
+  const importers = HashSet.fromIterable(
+    Arr.filterMap(imports, ([importer, name]) =>
+      HashSet.has(names, name) ? Result.succeed(importer) : Result.failVoid
+    )
+  );
+  const reached = HashSet.union(
+    names,
+    HashSet.fromIterable(
+      Arr.filterMap(Arr.fromIterable(importers), supportName)
+    )
+  );
+  return HashSet.size(reached) === HashSet.size(names)
+    ? importers
+    : importersOf(imports, reached);
+};
+
 /**
  * The specs a merge group proves, sorted: every spec file it changes that the
  * head still has, every spec in an e2e folder whose name is a segment of a
  * changed app source path, such as `e2e/quran` for
- * `apps/www/src/routes/$locale/quran/index.tsx`, and the smoke spec. A group
- * that changes nothing the product runs reaches no folder, so it proves its
- * own spec files and the smoke spec.
+ * `apps/www/src/routes/$locale/quran/index.tsx`, every spec that imports a
+ * changed support module directly or through another (`imports`, each
+ * `[importer, name]`), and the smoke spec; a change to the Playwright config
+ * proves every spec. A group that changes nothing the product or the suites
+ * run proves its own spec files and the smoke spec.
  */
 export function selectSpecs(
   changed: readonly string[],
-  present: readonly string[]
+  present: readonly string[],
+  imports: readonly (readonly [string, string])[] = []
 ) {
   const specs = specsOf(present);
   const touched = HashSet.fromIterable(specsOf(changed));
   const segments = sourceSegments(changed);
+  const supported = HashSet.fromIterable(
+    specsOf(
+      Arr.fromIterable(
+        importersOf(
+          imports,
+          HashSet.fromIterable(Arr.filterMap(changed, supportName))
+        )
+      )
+    )
+  );
+  const everySpec = Arr.contains(changed, CONFIG_FILE);
   return Arr.sort(
     Arr.dedupe([
       SMOKE_SPEC,
       ...Arr.filter(
         specs,
         (spec) =>
+          everySpec ||
           HashSet.has(touched, spec) ||
+          HashSet.has(supported, spec) ||
           Option.exists(Arr.get(Str.split(spec, "/"), 1), (folder) =>
             HashSet.has(segments, folder)
           )
@@ -91,11 +163,21 @@ export function selectSpecs(
 const lines = (text: string) =>
   Arr.filter(Str.split(text, "\n"), (line) => line !== "");
 
-/** Runs one Git command in this checkout and returns what it printed, or fails with what it said. */
-const git = Effect.fn("proof.selectGit")(function* (args: readonly string[]) {
+/**
+ * Runs one Git command in this checkout and returns what it printed, or fails
+ * with what it said. `none` names the exit code that means "nothing found",
+ * as `git grep` answers 1, which reads as no lines.
+ */
+const git = Effect.fn("proof.selectGit")(function* (
+  args: readonly string[],
+  none?: number
+) {
   const output = yield* runText("git", args).pipe(
     Effect.mapError(() => new ProofError({ message: "Git could not start." }))
   );
+  if (output.code === none) {
+    return [];
+  }
   if (output.code !== 0) {
     return yield* new ProofError({
       message: `git ${Arr.join(Arr.take(args, 1), " ")} failed: ${output.stderr.trim()}`,
@@ -130,8 +212,27 @@ export const selectGroup = Effect.fn("proof.selectGroup")(function* (
     "--",
     "apps/www/e2e",
   ]);
+  // The support modules' importers are read only when the group changes one.
+  const imports = Arr.some(changed, (path) =>
+    Result.isSuccess(supportName(path))
+  )
+    ? supportImports(
+        yield* git(
+          [
+            "grep",
+            "-o",
+            "-E",
+            "@/e2e/support/[A-Za-z0-9/_-]+",
+            head,
+            "--",
+            "apps/www/e2e",
+          ],
+          1
+        )
+      )
+    : [];
   const specs = yield* Schema.decodeEffect(Schema.Array(SpecPath))(
-    selectSpecs(changed, present)
+    selectSpecs(changed, present, imports)
   ).pipe(
     Effect.mapError(
       () => new ProofError({ message: "A selected spec is not a spec path." })
