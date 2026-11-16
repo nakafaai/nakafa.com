@@ -1,7 +1,6 @@
 import auth from "@repo/backend/confect/_generated/refs/auth";
 import island from "@repo/backend/confect/_generated/refs/island";
-import { growthOf } from "@repo/backend/confect/island/level";
-import { Effect, Option } from "effect";
+import { Effect } from "effect";
 import { createTranslator } from "use-intl/core";
 import {
   accountHandler,
@@ -11,7 +10,7 @@ import {
 import type { ScreenSeo } from "@/lib/account/head";
 import type { LocaleInput } from "@/lib/account/input";
 import { readOptional } from "@/lib/data/read.server";
-import { seedOf } from "@/lib/island/noise";
+import { entryOf } from "@/lib/island/entry";
 
 /**
  * The island game's screen (ADR 0047, D1 and D6): the learner's level and
@@ -33,7 +32,6 @@ export const islandScreenHandler = accountHandler(
         ],
         { concurrency: "unbounded" }
       );
-      const growth = growthOf(own?.lifetime ?? 0);
       const t = createTranslator({ locale, messages, namespace: "Island" });
       const seo: ScreenSeo = {
         canonicalPath: `/${locale}/island`,
@@ -43,15 +41,8 @@ export const islandScreenHandler = accountHandler(
         title: t("title"),
       };
       return {
-        edits: own?.world ?? [],
-        from: growth.from,
-        level: growth.level,
-        lifetime: own?.lifetime ?? 0,
-        next: Option.getOrUndefined(growth.next),
-        seed: seedOf(account?.appUser._id ?? "island"),
+        ...entryOf(own, account?.appUser._id),
         seo,
-        size: growth.size,
-        version: own?.version ?? 0,
       };
     })
 );
