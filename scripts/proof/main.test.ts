@@ -1,7 +1,12 @@
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
-import { Array as Arr, Effect, Layer, Ref } from "effect";
-import { parseProofArguments, runProof } from "#scripts/proof/main";
+import { Array as Arr, Effect, Layer, Option, Ref } from "effect";
+import {
+  formatProof,
+  parseProofArguments,
+  runProof,
+} from "#scripts/proof/main";
+import { runTimings } from "#scripts/proof/run";
 import {
   GATE_JOB,
   github,
@@ -137,4 +142,36 @@ describe("proof command line", () => {
       }).pipe(Effect.provide(NodeServices.layer)),
     PROCESS_TIMEOUT
   );
+
+  it("writes the phases a run reached, and what it could not read", () => {
+    const passed = {
+      sha: SHA,
+      url: "local",
+      passed: true,
+      engines: {
+        chromium: { passed: true, failures: [] },
+        firefox: { passed: true, failures: [] },
+        webkit: { passed: true, failures: [] },
+      },
+    };
+    expect(
+      formatProof(passed, Option.none(), {
+        ...runTimings(RUN),
+        restored: Option.some(false),
+        queue: Option.none(),
+      })
+    ).toContain("queue -, gate 11s, prepare 6s (prepared)");
+    expect(
+      formatProof(passed, Option.some(false), {
+        ...runTimings(RUN),
+        restored: Option.none(),
+      })
+    ).toContain("gate     failed\nchromium passed");
+    expect(
+      formatProof(passed, Option.none(), {
+        ...runTimings(RUN),
+        restored: Option.none(),
+      })
+    ).toContain("prepare 6s, build");
+  });
 });

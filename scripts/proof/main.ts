@@ -14,11 +14,8 @@ import {
   makeBaseline,
 } from "#scripts/proof/baseline";
 import { mainHead, ProofError } from "#scripts/proof/client";
-import {
-  githubProver,
-  proveOnGithub,
-  type RunTimings,
-} from "#scripts/proof/github";
+import { githubProver, proveOnGithub } from "#scripts/proof/github";
+import type { RunTimings } from "#scripts/proof/run";
 
 const USAGE =
   "Usage: bun run proof <sha> [spec...], or bun run proof --local <sha> [spec...]";

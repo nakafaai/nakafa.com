@@ -1,12 +1,7 @@
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { Array as Arr, Effect, MutableRef, Option } from "effect";
-import {
-  githubProver,
-  Prover,
-  proveOnGithub,
-  runTimings,
-} from "#scripts/proof/github";
+import { githubProver, Prover, proveOnGithub } from "#scripts/proof/github";
 import { formatProof } from "#scripts/proof/main";
 import {
   GATE_JOB,
@@ -22,6 +17,10 @@ import {
   toJson,
   withGithub,
 } from "#scripts/proof/test.github";
+
+/** The failure of a proof whose three dispatches all started no run. */
+const LOST_RUN =
+  /^No run is named Proof a{40} [0-9a-f-]{36}: 3 dispatches started none\.$/u;
 
 /** The nonce of a proof of the specs alone: their key, then a fresh suffix. */
 const BASE_NONCE = /-f nonce=(?<key>base-[0-9a-f]{16})-[0-9a-f]{8}$/u;
@@ -61,7 +60,7 @@ describe("GitHub proof runner", () => {
           Option.some(
             expect.stringMatching(
               new RegExp(
-                `^gh workflow run proof.yml --repo nakafaai/nakafa.com --ref main -f sha=${SHA} -f specs=e2e/a.browser.ts -f gate=true -f full=false -f nonce=[0-9a-f-]{36}$`,
+                `^gh workflow run proof.yml --repo nakafaai/nakafa.com --ref main -f sha=${SHA} -f specs=e2e/a.browser.ts -f gate=true -f full=false -f retries=true -f nonce=[0-9a-f-]{36}$`,
                 "u"
               )
             )
@@ -101,10 +100,11 @@ describe("GitHub proof runner", () => {
           passed: false,
           failures: [],
         });
-        // A proof alone, such as main's baseline, skips the gate.
+        // A proof alone, such as main's baseline, skips the gate and retries
+        // no failing test, so a flaky spec on main stays a failure of main.
         expect(
           Arr.some(calls, (call) =>
-            call.includes("-f gate=false -f full=false")
+            call.includes("-f gate=false -f full=false -f retries=false")
           )
         ).toBe(true);
       }).pipe(Effect.provide(NodeServices.layer))
@@ -239,6 +239,49 @@ describe("GitHub proof runner", () => {
     PROCESS_TIMEOUT
   );
 
+  it.effect(
+    "dispatches again under a fresh nonce when GitHub accepts a dispatch and starts no run, and fails after the third",
+    () =>
+      Effect.gen(function* () {
+        const answer = github({
+          chromium: shard("chromium"),
+          firefox: shard("firefox"),
+          webkit: shard("webkit"),
+        });
+        // GitHub accepts these dispatches and starts no run for them.
+        const losing = (lost: number) => {
+          const left = MutableRef.make(lost);
+          return (args: readonly string[]) =>
+            args[0] === "workflow" && MutableRef.getAndDecrement(left) > 0
+              ? {}
+              : answer(args);
+        };
+        const dispatches = (calls: readonly string[]) =>
+          Arr.map(
+            Arr.filter(calls, (call) => call.startsWith("gh workflow run")),
+            (call) => call.slice(call.indexOf("-f nonce="))
+          );
+
+        const once = yield* withGithub(
+          losing(1),
+          proveOnGithub(SHA, [], { gate: true, full: false })
+        );
+        expect((yield* once.exit).result.passed).toBe(true);
+        const [first, second] = dispatches(once.calls);
+        expect(dispatches(once.calls)).toHaveLength(2);
+        expect(second).not.toBe(first);
+
+        const always = yield* withGithub(
+          losing(3),
+          proveOnGithub(SHA, [], { gate: true, full: false })
+        );
+        const error = yield* Effect.flip(always.exit);
+        expect(error.message).toMatch(LOST_RUN);
+        expect(dispatches(always.calls)).toHaveLength(3);
+      }).pipe(Effect.provide(NodeServices.layer)),
+    PROCESS_TIMEOUT
+  );
+
   it.effect("waits out GitHub's rate limit and goes on", () =>
     Effect.gen(function* () {
       const answer = github({
@@ -304,104 +347,6 @@ describe("GitHub proof runner", () => {
       }).pipe(Effect.provide(NodeServices.layer)),
     PROCESS_TIMEOUT
   );
-
-  it("reads the phases of the one machine that ran a small selection, beside the engine jobs that ended", () => {
-    const [, chromium, firefox, webkit] = RUN.jobs;
-    const ended = (job: typeof firefox) => ({
-      ...job,
-      completedAt: job.startedAt,
-      steps: Arr.map(job.steps, (one) => ({ ...one, conclusion: "skipped" })),
-    });
-    const timings = runTimings({
-      ...RUN,
-      jobs: [GATE_JOB, ended(firefox), chromium, ended(webkit)],
-    });
-
-    expect(timings.prepare).toEqual(Option.some(4));
-    expect(timings.restored).toEqual(Option.some(true));
-    expect(timings.build).toEqual(Option.some(18));
-    expect(timings.specs).toEqual(Option.some(12));
-  });
-
-  it("reads no phase that a run never reached", () => {
-    expect(
-      runTimings({
-        ...RUN,
-        jobs: [
-          {
-            ...GATE_JOB,
-            conclusion: "cancelled",
-            startedAt: null,
-            steps: [
-              { ...step("Gate static", 5, 12), completedAt: null },
-              { ...step("Prepare", 16, 20), completedAt: null },
-              { ...step("Run specs", 38, 48), startedAt: null },
-            ],
-          },
-        ],
-      })
-    ).toEqual({
-      queue: Option.none(),
-      gate: Option.none(),
-      prepare: Option.none(),
-      restored: Option.none(),
-      build: Option.none(),
-      specs: Option.none(),
-      total: Option.some(50),
-    });
-    expect(runTimings({ ...RUN, jobs: [] }).queue).toEqual(Option.none());
-    // A proof alone skips the gate job, which then counts for no phase, and a
-    // phase that one engine left unfinished has none while the others finished.
-    const [, chromium, firefox, webkit] = RUN.jobs;
-    const alone = runTimings({
-      ...RUN,
-      jobs: [
-        { ...GATE_JOB, conclusion: "skipped", steps: [] },
-        chromium,
-        firefox,
-        {
-          ...webkit,
-          conclusion: "cancelled",
-          steps: Arr.map(webkit.steps, (one) =>
-            one.name === "Run specs" ? { ...one, completedAt: null } : one
-          ),
-        },
-      ],
-    });
-    expect(alone.queue).toEqual(Option.some(5));
-    expect(alone.gate).toEqual(Option.none());
-    expect(alone.build).toEqual(Option.some(20));
-    expect(alone.specs).toEqual(Option.none());
-    const passed = {
-      sha: SHA,
-      url: "local",
-      passed: true,
-      engines: {
-        chromium: { passed: true, failures: [] },
-        firefox: { passed: true, failures: [] },
-        webkit: { passed: true, failures: [] },
-      },
-    };
-    expect(
-      formatProof(passed, Option.none(), {
-        ...runTimings(RUN),
-        restored: Option.some(false),
-        queue: Option.none(),
-      })
-    ).toContain("queue -, gate 11s, prepare 6s (prepared)");
-    expect(
-      formatProof(passed, Option.some(false), {
-        ...runTimings(RUN),
-        restored: Option.none(),
-      })
-    ).toContain("gate     failed\nchromium passed");
-    expect(
-      formatProof(passed, Option.none(), {
-        ...runTimings(RUN),
-        restored: Option.none(),
-      })
-    ).toContain("prepare 6s, build");
-  });
 });
 
 describe("proof waiter", () => {

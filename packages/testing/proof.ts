@@ -14,14 +14,15 @@ export const SpecPath = Schema.String.check(
 );
 
 /**
- * What one machine of a proof reports: its engine and shard, whether every
- * suite passed, and the spec files that failed. A suite that wrote no report,
+ * What one machine of a proof reports: its engine, its shard of the engine's
+ * `total`, whether every suite passed, and the spec files that failed. A suite that wrote no report,
  * or failed outside every test, fails as `suite:<name>`, which names no file, so
  * a rerun on main never takes it for a known failure.
  */
 export const ShardResult = Schema.Struct({
   engine: Engine,
   shard: Schema.Int,
+  total: Schema.Int,
   passed: Schema.Boolean,
   failures: Schema.Array(Schema.String),
 });
@@ -99,22 +100,25 @@ export const reportFailures = Effect.fn("acceptance.reportFailures")(function* (
 });
 
 /**
- * Combines the shard results of a proof. An engine passes only when every one
- * of its `total` shards reported and passed, so a machine that never reported
- * fails its engine.
+ * Combines the shard results of a proof. An engine passes only when it
+ * reported, every one of the shards its machines name reported, and all of them
+ * passed, so a machine that never reported fails its engine. Each engine has its
+ * own number of shards, which its selection decides.
  */
 export function combineShards(
   sha: string,
   url: string,
-  total: number,
   shards: readonly ShardResult[]
 ): ProofResult {
   const engine = (name: Engine) => {
     const own = Arr.filter(shards, (shard) => shard.engine === name);
     const reported = Arr.dedupe(Arr.map(own, (shard) => shard.shard));
+    const totals = Arr.dedupe(Arr.map(own, (shard) => shard.total));
     return {
       passed:
-        reported.length === total && Arr.every(own, (shard) => shard.passed),
+        totals.length === 1 &&
+        reported.length === totals[0] &&
+        Arr.every(own, (shard) => shard.passed),
       failures: Arr.sort(
         Arr.dedupe(Arr.flatMap(own, (shard) => shard.failures)),
         Order.String
