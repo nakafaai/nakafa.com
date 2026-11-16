@@ -3,6 +3,8 @@ import { describe, expect, it } from "@effect/vitest";
 import { idOf } from "@repo/backend/confect/island/blocks";
 import { Array as Arr, Result } from "effect";
 import {
+  COTTAGE,
+  houseParts,
   ITEM_KEYS,
   itemOpensAt,
   itemPlanOf,
@@ -47,6 +49,28 @@ describe("island/items", () => {
     expect(Math.abs(tree - SCALE.house.height)).toBeLessThanOrEqual(1);
     expect(spanOf(partsOf("lamp", 0), "y")).toBe(SCALE.lamp);
     expect(spanOf(partsOf("well", 0), "x")).toBe(3);
+  });
+
+  it("caps every house style with its roof: no two parts share a cell, so no gable pierces the ridge", () => {
+    const styles = [
+      COTTAGE,
+      { ...COTTAGE, storeys: 2 },
+      { lower: "brick", roof: "slate", storeys: 2, upper: "plaster" },
+    ] as const;
+    for (const style of styles) {
+      const parts = houseParts(style);
+      const cells = Arr.map(parts, ({ x, y, z }) => `${x},${y},${z}`);
+      expect(Arr.dedupe(cells)).toHaveLength(cells.length);
+      // The ridge: the top step's two rows, where the eaves of both sides meet.
+      const top = SCALE.storey * style.storeys + SCALE.house.depth / 2 - 1;
+      const rows = [SCALE.house.depth / 2 - 1, SCALE.house.depth / 2];
+      const ridge = Arr.filter(
+        parts,
+        ({ y, z }) => y === top && Arr.contains(rows, z)
+      );
+      expect(ridge).toHaveLength((SCALE.house.width + 2) * 2);
+      expect(Arr.every(ridge, ({ block }) => block === style.roof)).toBe(true);
+    }
   });
 
   it("leaves a doorway two blocks high in the middle of the cottage's front, and turns it with the item", () => {

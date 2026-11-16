@@ -2,7 +2,7 @@
 import { describe, expect, it } from "@effect/vitest";
 import { idOf } from "@repo/backend/confect/island/blocks";
 import { SPAN } from "@repo/backend/confect/island/world";
-import { Array as Arr, Option } from "effect";
+import { Array as Arr, Option, Order } from "effect";
 import { isleGround, islesMesh, islesOf } from "@/lib/island/isles";
 import { STRIDE } from "@/lib/island/mesh";
 import { SEA_LEVEL } from "@/lib/island/world";
@@ -62,6 +62,23 @@ describe("island/isles", () => {
       );
       expect(reach).toBeGreaterThan(MIDDLE + 10);
     }
+  });
+
+  it("draws no face twice: a side that a neighbour as high hides is left out", () => {
+    const mesh = islesMesh(11);
+    const quads = Arr.makeBy(mesh.vertices.length / (4 * STRIDE), (quad) =>
+      Arr.join(
+        Arr.sort(
+          Arr.makeBy(4, (corner) => {
+            const at = (quad * 4 + corner) * STRIDE;
+            return `${mesh.vertices[at]},${mesh.vertices[at + 1]},${mesh.vertices[at + 2]}`;
+          }),
+          Order.String
+        ),
+        "|"
+      )
+    );
+    expect(Arr.dedupe(quads)).toHaveLength(quads.length);
   });
 
   it("grows trees on a wooded isle, taller than any of its hills", () => {
