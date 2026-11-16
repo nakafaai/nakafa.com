@@ -63,7 +63,10 @@ const verifyContentColumn = Effect.fn("NakafaE2E.verifyContentColumn")(
   }
 );
 
-/** A try-out page reaches the screen's bottom, so a locked review ends there. */
+/**
+ * A try-out page's least height reaches the screen's bottom, so a locked review ends there. A set page
+ * with its samples runs past the screen, so its least height is measured, not its bottom.
+ */
 const verifyTryoutHeight = Effect.fn("NakafaE2E.verifyTryoutHeight")(function* (
   page: Page
 ) {
@@ -72,21 +75,17 @@ const verifyTryoutHeight = Effect.fn("NakafaE2E.verifyTryoutHeight")(function* (
     expect(page.locator('main [data-slot="tryout-page"]')).toBeVisible()
   );
   const heights = yield* Effect.promise(() =>
-    page.evaluate(() => ({
-      bottom: Math.round(
-        document
-          .querySelector('main [data-slot="tryout-page"]')
-          ?.getBoundingClientRect().bottom ?? 0
-      ),
-      document: document.documentElement.scrollHeight,
-      screen: window.innerHeight,
-    }))
+    page.evaluate(() => {
+      const tryout = document.querySelector('main [data-slot="tryout-page"]');
+      const top = (tryout?.getBoundingClientRect().top ?? 0) + window.scrollY;
+      const least = tryout
+        ? Number.parseFloat(getComputedStyle(tryout).minHeight)
+        : 0;
+      return { reach: Math.round(top + least), screen: window.innerHeight };
+    })
   );
 
-  yield* Effect.sync(() => {
-    expect(heights.bottom).toBe(heights.screen);
-    expect(heights.document).toBe(heights.screen);
-  });
+  yield* Effect.sync(() => expect(heights.reach).toBe(heights.screen));
 });
 
 for (const width of [390, 1440]) {
@@ -103,7 +102,6 @@ for (const width of [390, 1440]) {
   });
 
   test.describe(`Try-out page at ${width}px`, () => {
-    // Taller than the set page, so the page has to fill the rest.
     test.use({ viewport: { height: 1400, width } });
 
     test("fills the screen below the app header", async ({ page }) => {
