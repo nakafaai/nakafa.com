@@ -91,7 +91,7 @@
         "@hugeicons/core-free-icons": "catalog:",
         "@hugeicons/react": "catalog:",
         "@mantine/hooks": "catalog:",
-        "@nakafa/aksara-contracts": "8.0.3",
+        "@nakafa/aksara-contracts": "8.0.4",
         "@repo/analytics": "workspace:*",
         "@repo/backend": "workspace:*",
         "@repo/contents": "workspace:*",
@@ -201,7 +201,7 @@
         "@effect/platform-node": "catalog:",
         "@fontsource-variable/inter": "5.3.0",
         "@fontsource-variable/noto-naskh-arabic": "5.3.0",
-        "@nakafa/aksara-contracts": "8.0.3",
+        "@nakafa/aksara-contracts": "8.0.4",
         "@polar-sh/sdk": "1.0.2",
         "@posthog/convex": "2.1.9",
         "@react-email/render": "catalog:",
@@ -287,7 +287,7 @@
       "version": "2.0.2",
       "dependencies": {
         "@hugeicons/core-free-icons": "catalog:",
-        "@nakafa/aksara-contracts": "8.0.3",
+        "@nakafa/aksara-contracts": "8.0.4",
         "@repo/math": "workspace:*",
         "@repo/seo": "workspace:*",
         "@repo/utilities": "workspace:*",
@@ -426,7 +426,7 @@
       "name": "@repo/email",
       "version": "0.0.3",
       "dependencies": {
-        "@nakafa/aksara-contracts": "8.0.3",
+        "@nakafa/aksara-contracts": "8.0.4",
         "@react-email/render": "catalog:",
         "@repo/palette": "workspace:*",
         "@repo/seo": "workspace:*",
@@ -450,7 +450,7 @@
       "name": "@repo/internationalization",
       "version": "1.0.0",
       "dependencies": {
-        "@nakafa/aksara-contracts": "8.0.3",
+        "@nakafa/aksara-contracts": "8.0.4",
         "@repo/seo": "workspace:*",
         "@repo/utilities": "workspace:*",
         "effect": "catalog:",
@@ -505,7 +505,7 @@
       "name": "@repo/seo",
       "version": "1.0.1",
       "dependencies": {
-        "@nakafa/aksara-contracts": "8.0.3",
+        "@nakafa/aksara-contracts": "8.0.4",
         "@repo/site": "workspace:*",
         "effect": "catalog:",
         "schema-dts": "^2.1.0",
@@ -1082,7 +1082,7 @@
 
     "@mrleebo/prisma-ast": ["@mrleebo/prisma-ast@0.13.1", "", { "dependencies": { "chevrotain": "^10.5.0", "lilconfig": "^2.1.0" } }, "sha512-XyroGQXcHrZdvmrGJvsA9KNeOOgGMg1Vg9OlheUsBOSKznLMDl+YChxbkboRHvtFYJEMRYmlV3uoo/njCw05iw=="],
 
-    "@nakafa/aksara-contracts": ["@nakafa/aksara-contracts@8.0.3", "", { "peerDependencies": { "effect": "4.1.4" } }, "sha512-vuHxFydfxlKgDtdeJif0dZEa4gEKtqnpmAamicsv2+yo8MdxZhcU1Fcsk6jZKkYwA/7cCooGmv7WAl4V/UKqmQ=="],
+    "@nakafa/aksara-contracts": ["@nakafa/aksara-contracts@8.0.4", "", { "peerDependencies": { "effect": "4.1.4" } }, "sha512-6uKX5dRpxfzBzZ3WxTn6Jtg1syoyJF+QjCfci56fsrBWAysp/tWt5ipG14Ylm9ofeL5fsosD0WpwBa2Sjw9W6w=="],
 
     "@nakafa/cli": ["@nakafa/cli@workspace:packages/cli"],
 
