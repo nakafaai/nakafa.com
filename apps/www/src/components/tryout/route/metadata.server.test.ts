@@ -1,7 +1,7 @@
 // @vitest-environment node
 
 import { beforeEach, describe, expect, it } from "@effect/vitest";
-import { Array as Arr, Effect, Option } from "effect";
+import { Array as Arr, Effect, Option, Schema } from "effect";
 import { readTryoutRouteHead } from "@/components/tryout/route/metadata.server";
 
 const catalog = vi.hoisted(() => ({
@@ -41,6 +41,7 @@ const publishedRoute = {
   alternates: ALTERNATES,
   canonicalPath: COUNTRY,
   description: "Country",
+  page: true,
   publicPath: COUNTRY,
   socialImageIdentity: null,
   title: "Indonesia",
@@ -66,6 +67,12 @@ beforeEach(() => {
   );
   publishRoute(publishedRoute);
 });
+
+/** One ancestor a test publishes: its title, and whether a link lands on it. */
+const Ancestor = Schema.Struct({ page: Schema.Boolean, title: Schema.String });
+
+/** What a metadata read asks the catalog for. */
+const MetadataRequest = Schema.Struct({ publicPath: Schema.String });
 
 describe("readTryoutRouteHead", () => {
   it.effect("reads no head for a route the catalog does not publish", () =>
@@ -106,15 +113,9 @@ describe("readTryoutRouteHead", () => {
           },
           {
             "@type": "ListItem",
-            item: "https://nakafa.com/en/try-out",
-            name: "try-out",
-            position: 2,
-          },
-          {
-            "@type": "ListItem",
             item: `https://nakafa.com/en/${COUNTRY}`,
             name: "Indonesia",
-            position: 3,
+            position: 2,
           },
         ],
         canonicalPath: `/en/${COUNTRY}`,
@@ -127,27 +128,34 @@ describe("readTryoutRouteHead", () => {
     })
   );
 
+  /** Publishes the given ancestors, each with its title and whether a link lands on it. */
+  function publishAncestors(
+    routes: Readonly<Record<string, typeof Ancestor.Type>>
+  ) {
+    catalog.readTryoutMetadata.mockImplementation(
+      ({ publicPath }: typeof MetadataRequest.Type) => {
+        const route = routes[publicPath];
+        return Effect.succeed({
+          route:
+            route === undefined
+              ? undefined
+              : { ...publishedRoute, ...route, publicPath },
+        });
+      }
+    );
+  }
+
   it.effect(
-    "walks the breadcrumb down each ancestor the catalog publishes, its exam leading its group and one it does not publish skipped",
+    "names only pages in the breadcrumb: the exam and a group of one track lead the next crumb, and no hub",
     () =>
       Effect.gen(function* () {
-        catalog.readTryoutMetadata.mockImplementation(
-          ({ publicPath }: { readonly publicPath: string }) => {
-            const titles: Readonly<Record<string, string>> = {
-              [COUNTRY]: "Indonesia",
-              [EXAM]: "SNBT",
-              [GROUP]: "2027",
-              [TRACK_SET]: "Set 1",
-            };
-            const title = titles[publicPath];
-            return Effect.succeed({
-              route:
-                title === undefined
-                  ? undefined
-                  : { ...publishedRoute, publicPath, title },
-            });
-          }
-        );
+        publishAncestors({
+          [COUNTRY]: { page: true, title: "Indonesia" },
+          [EXAM]: { page: false, title: "SNBT" },
+          [GROUP]: { page: false, title: "2027" },
+          [TRACK]: { page: true, title: "UTBK" },
+          [TRACK_SET]: { page: true, title: "Set 1" },
+        });
 
         const set = yield* readTryoutRouteHead({
           kind: "set",
@@ -167,14 +175,41 @@ describe("readTryoutRouteHead", () => {
           ])
         ).toStrictEqual([
           ["home", "https://nakafa.com/en"],
-          ["try-out", "https://nakafa.com/en/try-out"],
           ["Indonesia", `https://nakafa.com/en/${COUNTRY}`],
-          ["SNBT 2027", `https://nakafa.com/en/${GROUP}`],
+          ["SNBT 2027 UTBK", `https://nakafa.com/en/${TRACK}`],
           ["Set 1", `https://nakafa.com/en/${TRACK_SET}`],
         ]);
         expect(
           Arr.map(Option.getOrThrow(group).breadcrumbs, ({ name }) => name)
-        ).toStrictEqual(["home", "try-out", "Indonesia", "SNBT 2027"]);
+        ).toStrictEqual(["home", "Indonesia", "SNBT 2027"]);
+      })
+  );
+
+  it.effect(
+    "keeps a group that is its own page as a crumb, its exam leading it, and skips an ancestor the catalog does not publish",
+    () =>
+      Effect.gen(function* () {
+        publishAncestors({
+          [COUNTRY]: { page: true, title: "Indonesia" },
+          [EXAM]: { page: false, title: "TKA" },
+          [GROUP]: { page: true, title: "Senior High School" },
+          [TRACK_SET]: { page: true, title: "Set 1" },
+        });
+
+        const set = yield* readTryoutRouteHead({
+          kind: "set",
+          locale: "en",
+          publicPath: TRACK_SET,
+        });
+
+        expect(
+          Arr.map(Option.getOrThrow(set).breadcrumbs, ({ name }) => name)
+        ).toStrictEqual([
+          "home",
+          "Indonesia",
+          "TKA Senior High School",
+          "Set 1",
+        ]);
       })
   );
 

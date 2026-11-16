@@ -6,7 +6,8 @@ import { useTranslations } from "use-intl";
 import { ClosingQuestion } from "@/components/marketing/about/closing/question";
 import { NINA_SLOT } from "@/components/marketing/about/toys/slot";
 import { MarketingSection } from "@/components/marketing/shared/section";
-import { Link } from "@/lib/routing/link";
+import { Link, TargetLink } from "@/lib/routing/link";
+import { TRYOUT_TARGET } from "@/lib/routing/target";
 import { EXACT_ACTIVE_OPTIONS } from "@/lib/routing/tree";
 
 /**
@@ -34,13 +35,13 @@ export function Closing() {
           >
             {t("hero-start")}
           </Link>
-          <Link
+          <TargetLink
             activeOptions={EXACT_ACTIVE_OPTIONS}
             className={buttonVariants({ size: "lg", variant: "outline" })}
-            to="/$locale/try-out"
+            target={TRYOUT_TARGET}
           >
             {t("hero-tryout")}
-          </Link>
+          </TargetLink>
         </div>
         <div className="relative flex items-end justify-center">
           <span className="inline-block" id={NINA_SLOT.closing}>

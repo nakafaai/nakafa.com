@@ -3,33 +3,49 @@
 import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
 import {
-  getTryoutCountryCatalogArtwork,
+  getTryoutCountryPageArtwork,
   getTryoutSectionArtwork,
   getTryoutTrackCatalogArtwork,
   resolveTryoutExamArtwork,
 } from "@/lib/tryout/artwork";
 
 describe("try-out artwork", () => {
+  it.effect.each(["en", "id", "de"] as const)(
+    "draws each exam card with that exam's own design, and the Aufnahmeprüfung with none yet, in %s",
+    (appLocale) =>
+      Effect.gen(function* () {
+        for (const [countryKey, examKey, artwork] of [
+          ["germany", "entrance-examination", undefined],
+          ["indonesia", "snbt", "/open-graph/tryout/indonesia/en-snbt.png"],
+          ["indonesia", "tka", "/open-graph/tryout/indonesia/en-tka.png"],
+        ] as const) {
+          expect(
+            (yield* resolveTryoutExamArtwork({
+              appLocale,
+              countryKey,
+              examKey,
+              publicPath: `try-out/${countryKey}/${examKey}`,
+            })).cardImageSrc
+          ).toBe(artwork);
+        }
+      })
+  );
+
   it.each(["en", "id", "de"] as const)(
-    "uses English-default country artwork for %s",
-    (appLocale) => {
-      expect(
-        getTryoutCountryCatalogArtwork(appLocale, {
-          countryKey: "indonesia",
-        })
-      ).toBe("/open-graph/tryout/indonesia/en-index.png");
-      expect(
-        getTryoutCountryCatalogArtwork(appLocale, {
-          countryKey: "germany",
-        })
-      ).toBe("/open-graph/tryout/germany/en-index.png");
-      expect(
-        getTryoutCountryCatalogArtwork(appLocale, {
-          countryKey: "future-country",
-        })
-      ).toBeUndefined();
+    "keeps a country's design for its own page's social image, and lends it to no card, in %s",
+    (locale) => {
+      expect(getTryoutCountryPageArtwork(locale, "germany")).toBe(
+        "/open-graph/tryout/germany/en-index.png"
+      );
+      expect(getTryoutCountryPageArtwork(locale, "indonesia")).toBe(
+        "/open-graph/tryout/indonesia/en-index.png"
+      );
+      expect(getTryoutCountryPageArtwork(locale, "malaysia")).toBeUndefined();
+      // An entity's design is no country page's image.
+      expect(getTryoutCountryPageArtwork(locale, "snbt")).toBeUndefined();
     }
   );
+
   it.effect.each(["en", "id", "de"] as const)(
     "uses English-default exam artwork for %s",
     (appLocale) =>

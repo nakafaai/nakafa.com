@@ -175,7 +175,6 @@ describe("sitemap route pages", () => {
         "/school",
         "/school/pricing",
         "/search",
-        "/try-out",
       ]);
       expect(yield* readPaths("quran_en")).toEqual(["/quran/1", "/quran/2"]);
     })
@@ -295,7 +294,6 @@ describe("sitemap route pages", () => {
         { path: "/school" },
         { path: "/school/pricing" },
         { path: "/search" },
-        { lastModified: "2026-10-01", path: "/try-out" },
       ]);
     })
   );

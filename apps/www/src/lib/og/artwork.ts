@@ -52,7 +52,6 @@ export const artworkSources = {
   "subject/science": ALL_ARTWORK_LOCALES,
   "subject/secondary-additional-mathematics": ["en", "de"],
   "tryout/germany/index": ENGLISH_ARTWORK,
-  "tryout/index": ["en", "de"],
   "tryout/indonesia/2027": ENGLISH_ARTWORK,
   "tryout/indonesia/index": ENGLISH_ARTWORK,
   "tryout/indonesia/snbt": ENGLISH_ARTWORK,

@@ -19,10 +19,8 @@ import {
 import { startTryoutAttempt } from "@repo/backend/confect/tryouts/start/impl";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
-import {
-  FIXTURE_TRACK,
-  type makeAssessmentSnapshot,
-} from "@repo/backend/test/assessment/snapshot";
+import { FIXTURE_TRACK } from "@repo/backend/test/assessment/catalog";
+import type { makeAssessmentSnapshot } from "@repo/backend/test/assessment/snapshot";
 import { client, inMutation, internalClient } from "@repo/backend/test/client";
 import {
   activateAssessmentTestSnapshot,

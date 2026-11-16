@@ -17,7 +17,7 @@ import {
   arrive,
   intend,
   onPath,
-  openHub,
+  openCountry,
   openSetPane,
   openTrack,
   paneSectionLink,
@@ -92,7 +92,7 @@ const verifyTryoutShell = Effect.fn("NakafaE2E.verifyTryoutShell")(function* (
 ) {
   yield* seedAnalyticsConsent(page, "denied");
   yield* observeShell(page);
-  yield* openHub(page);
+  yield* openCountry(page);
   const since = yield* readPageTime(page);
   yield* openTrack(page, hasTouch);
   yield* Effect.promise(() => waitForQuiet(page));
@@ -135,7 +135,7 @@ const verifyPrefetchedHeadings = Effect.fn(
   // Each press reads the frames that the recorder keeps, so it starts with the page.
   yield* observeShell(page);
   const requested = recordDataRequests(page);
-  yield* openHub(page);
+  yield* openCountry(page);
   yield* openTrack(page, hasTouch);
   yield* openSetPane(page, hasTouch);
 

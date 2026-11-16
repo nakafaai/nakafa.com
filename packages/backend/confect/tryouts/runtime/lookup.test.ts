@@ -7,7 +7,7 @@ import {
 } from "@repo/backend/confect/tryouts/runtime/lookup";
 import { TryoutQuestionBodyText } from "@repo/backend/confect/tryouts/runtime/spec";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
-import { FIXTURE_TRACK } from "@repo/backend/test/assessment/snapshot";
+import { FIXTURE_TRACK } from "@repo/backend/test/assessment/catalog";
 import { TRYOUT_NOW, tryoutWorld } from "@repo/backend/test/tryout/world";
 import { Array as Arr, Effect, Schema, Struct } from "effect";
 

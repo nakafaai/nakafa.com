@@ -18,6 +18,8 @@ declare module "@tanstack/react-table" {
     readonly filter?: HeadFilter;
     /** Whether a row's menu does not answer yet, such as a row the server has not confirmed. */
     readonly inert?: (row: TData) => boolean;
+    /** How the column stands on a phone: shrunk to what it holds, or stepped aside (`phoneColumn`). */
+    readonly phone?: "fit" | "hidden";
     /** The column's name, which its head says it filters by. */
     readonly title?: string;
     /** Whether the column's cell holds more than one value's width. */

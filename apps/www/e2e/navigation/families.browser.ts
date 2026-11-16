@@ -52,7 +52,8 @@ const WALK: readonly Step[] = [
   },
   {
     control: async (page) => sidebarLink(page, app.Common["try-out"]),
-    path: /\/en\/try-out$/u,
+    // One country's page: the learner's last choice, else the locale's own country.
+    path: /\/en\/try-out\/[^/]+$/u,
   },
   {
     control: async (page) => sidebarLink(page, app.Holy.quran),

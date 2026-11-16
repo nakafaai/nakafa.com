@@ -94,11 +94,13 @@ function TryoutTrackPage() {
                 currentValue={route.page.exam.publicPath}
                 options={route.examOptions}
               />
-              <TryoutGroupSelector
-                axis={route.page.exam.groupAxis}
-                currentValue={route.page.group.publicPath}
-                options={route.groupOptions}
-              />
+              {route.groupOptions.length > 0 ? (
+                <TryoutGroupSelector
+                  axis={route.page.exam.groupAxis}
+                  currentValue={route.page.group.publicPath}
+                  options={route.groupOptions}
+                />
+              ) : null}
             </TryoutCatalogChoices>
           ),
           home: HOME_TARGET,
@@ -112,10 +114,13 @@ function TryoutTrackPage() {
               ),
             },
             {
-              label: `${route.page.exam.title} ${route.page.group.title}`,
-              target: Option.getOrUndefined(
-                getTryoutCrumbTarget(route.page.group.publicPath)
-              ),
+              label: route.examCrumb.label,
+              target:
+                route.examCrumb.path === undefined
+                  ? undefined
+                  : Option.getOrUndefined(
+                      getTryoutCrumbTarget(route.examCrumb.path)
+                    ),
             },
             { label: route.page.track.title },
           ],

@@ -21,6 +21,6 @@ export const readTryoutTaxonomy = Effect.fn(
     ),
     exams: Arr.map(Arr.fromIterable(exams), ([id, label]) => ({ id, label })),
     // The pages of the catalog, as its sitemap lists them.
-    routeCount: listTryoutSitemapPaths(catalog).length,
+    routeCount: (yield* listTryoutSitemapPaths(catalog)).length,
   };
 });

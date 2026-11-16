@@ -120,8 +120,8 @@ describe("public artwork", () => {
         (entry) => `/open-graph/${entry}`
       );
 
-      expect(manifestPaths).toHaveLength(99);
-      expect(Arr.dedupe(manifestPaths)).toHaveLength(99);
+      expect(manifestPaths).toHaveLength(97);
+      expect(Arr.dedupe(manifestPaths)).toHaveLength(97);
       expect(Arr.sort(publicFilesystemPaths, Order.String)).toEqual(
         Arr.sort(manifestPaths, Order.String)
       );
