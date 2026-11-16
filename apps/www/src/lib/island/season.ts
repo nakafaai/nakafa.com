@@ -1,5 +1,5 @@
 import { Array as Arr, DateTime, Schema } from "effect";
-import { RAMPS, rgbOf } from "@/lib/island/palette";
+import { colorOf, RAMPS, rgbOf, type Tone } from "@/lib/island/palette";
 
 /**
  * Every season the world knows (ADR 0047, D8): the four of the temperate
@@ -109,6 +109,13 @@ const REPAINTS = {
     leaf: ["#58796b", "#86a398", "#c3d7d3", "#f1f8f8"],
   },
 } as const;
+
+/** One tone of the season's leaves, as red, green and blue from 0 to 255: the palette's own green in summer and the wet season. */
+export function leafToneOf(season: Season, tone: Tone) {
+  return season === "summer" || season === "wet"
+    ? colorOf("leaf", tone)
+    : rgbOf(REPAINTS[season].leaf[tone]);
+}
 
 /**
  * The atlas repainted for a season, in place: every pixel in a tone of the

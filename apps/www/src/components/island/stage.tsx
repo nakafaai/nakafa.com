@@ -29,6 +29,7 @@ import {
   type Orbit,
   openingOrbit,
 } from "@/lib/island/camera";
+import { butterfliesOf, crownsOf } from "@/lib/island/drift";
 import { hoeOf, ripeningOf, sownOf, waterOf } from "@/lib/island/farming";
 import type { Point } from "@/lib/island/gesture";
 import { columnsOf } from "@/lib/island/ground";
@@ -122,7 +123,9 @@ function start(
     painter.shore(shoreOf(cells, store.getState().seed, true));
     painter.columns(columnsOf(cells));
     painter.scenery({
+      butterflies: butterfliesOf(cells, store.getState().seed),
       chimneys: chimneysOf(cells),
+      crowns: crownsOf(cells),
       fireflies: firefliesOf(cells, store.getState().seed),
     });
     needsDraw = true;

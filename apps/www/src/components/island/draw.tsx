@@ -117,7 +117,7 @@ export function createPainter(canvas: HTMLCanvasElement, season: Season) {
       const columns = uploadMap(gl, SPAN, 2);
       const gale = createGale(gl);
       // What moves in the air: the weather, the chimneys' smoke and the fireflies (D33, D36).
-      const airborne = createAir(gl, gale, painted, columns);
+      const airborne = createAir(gl, gale, painted, columns, season);
       if (Option.isNone(airborne)) {
         return Option.none();
       }
