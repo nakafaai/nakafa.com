@@ -350,43 +350,6 @@ export function createPainter(canvas: HTMLCanvasElement, season: Season) {
         gl.activeTexture(gl.TEXTURE0);
       };
 
-      /**
-       * Enlarges the edged frame onto the canvas by a whole number, centered on
-       * the horizon's color, moved back by the art pixels the camera's snap
-       * rounded away, so a pan glides while the pixels hold still (D20).
-       */
-      const blit = (light: Light, shift: readonly [number, number]) => {
-        const scale = Math.max(
-          1,
-          Math.floor(
-            Math.min(canvas.width / target.width, canvas.height / target.height)
-          )
-        );
-        const left =
-          Math.floor((canvas.width - target.width * scale) / 2) +
-          Math.round(shift[0] * scale);
-        const top =
-          Math.floor((canvas.height - target.height * scale) / 2) +
-          Math.round(shift[1] * scale);
-        gl.bindFramebuffer(gl.READ_FRAMEBUFFER, target.final);
-        gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, null);
-        gl.clearColor(light.horizon[0], light.horizon[1], light.horizon[2], 1);
-        gl.clear(gl.COLOR_BUFFER_BIT);
-        gl.blitFramebuffer(
-          0,
-          0,
-          target.width,
-          target.height,
-          left,
-          top,
-          left + target.width * scale,
-          top + target.height * scale,
-          gl.COLOR_BUFFER_BIT,
-          gl.NEAREST
-        );
-        gl.bindFramebuffer(gl.READ_FRAMEBUFFER, null);
-      };
-
       return Option.some({
         /** Replaces the quads of the island's animals. */
         herd(quads: {
@@ -442,12 +405,13 @@ export function createPainter(canvas: HTMLCanvasElement, season: Season) {
           target.resize();
           gale.step(time, sky);
           air.step(time, sky);
-          const snapped = snapOrbit(orbit, target.height);
+          const snapped = snapOrbit(orbit, target.rows);
           gl.bindFramebuffer(gl.FRAMEBUFFER, target.frame);
           gl.viewport(0, 0, target.width, target.height);
           const camera = viewProjectionOf(
             snapped.orbit,
-            target.width / target.height
+            target.width / target.height,
+            target.lens
           );
           gl.drawBuffers([gl.COLOR_ATTACHMENT0, gl.NONE]);
           drawSky(light);
@@ -464,7 +428,7 @@ export function createPainter(canvas: HTMLCanvasElement, season: Season) {
           Option.map(aim, (cell) => drawOutline(camera, cell));
           gl.depthMask(true);
           gl.bindVertexArray(null);
-          blit(light, snapped.shift);
+          target.enlarge(light.horizon, snapped.shift);
         },
         /** Lets the GPU go of everything the painter held. */
         release() {

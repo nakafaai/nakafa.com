@@ -26,12 +26,20 @@ import { bodiesOf, seaBodies } from "@/lib/island/bodies";
 import {
   clampOrbit,
   easeOrbit,
+  easeShare,
   type Orbit,
   openingOrbit,
+  turnOrbit,
 } from "@/lib/island/camera";
 import { butterfliesOf, crownsOf } from "@/lib/island/drift";
 import { hoeOf, ripeningOf, sownOf, waterOf } from "@/lib/island/farming";
-import type { Point } from "@/lib/island/gesture";
+import {
+  fadeSpin,
+  isSpinning,
+  type Point,
+  type Spin,
+  STILL_SPIN,
+} from "@/lib/island/gesture";
 import { columnsOf } from "@/lib/island/ground";
 import { islesMesh } from "@/lib/island/isles";
 import { itemPlanOf, turnOf } from "@/lib/island/items";
@@ -94,6 +102,10 @@ function start(
     canvas.clientWidth / Math.max(1, canvas.clientHeight)
   );
   let goal: Orbit = orbit;
+  /** The turn a drag left the world with, which fades on its own (ADR 0047, D5). */
+  let spin: Spin = STILL_SPIN;
+  /** When the camera last moved, so it eases by the time that passed, alike at any frame rate. */
+  let lastCamera = 0;
   let needsDraw = true;
   let frame = 0;
   let lastWater = 0;
@@ -322,16 +334,35 @@ function start(
       weather === "rain" || weather === "storm" || weather === "snow";
     return now - lastWater > (falling ? 33 : 66) && pace.isDue(now);
   };
-  const tick = (now: number) => {
-    frame = requestAnimationFrame(tick);
-    input.tend(now);
+  /**
+   * Moves the drawn camera on by the time since the last frame: a spin the
+   * learner's drag left turns it and fades, and otherwise it closes on its
+   * goal at the same pace at any frame rate. Whether it moved.
+   */
+  const followCamera = (now: number) => {
+    const seconds = lastCamera === 0 ? 0 : (now - lastCamera) / 1000;
+    lastCamera = now;
+    if (isSpinning(spin)) {
+      const step = Math.min(1 / 15, seconds);
+      goal = turnOrbit(goal, spin.yaw * step, spin.pitch * step);
+      orbit = goal;
+      spin = fadeSpin(spin, step);
+      return true;
+    }
     const moving =
       Math.abs(goal.yaw - orbit.yaw) > 1e-3 ||
       Math.abs(goal.distance - orbit.distance) > 1e-2 ||
       Math.abs(goal.target[0] - orbit.target[0]) > 1e-2 ||
       Math.abs(goal.target[2] - orbit.target[2]) > 1e-2;
     if (moving) {
-      orbit = easeOrbit(orbit, goal, 0.25);
+      orbit = easeOrbit(orbit, goal, easeShare(seconds));
+    }
+    return moving;
+  };
+  const tick = (now: number) => {
+    frame = requestAnimationFrame(tick);
+    input.tend(now);
+    if (followCamera(now)) {
       needsDraw = true;
     }
     const { weather } = store.getState();
@@ -377,7 +408,8 @@ function start(
   frame = requestAnimationFrame(tick);
 
   const resize = new ResizeObserver(() => {
-    const ratio = Math.min(2, window.devicePixelRatio || 1);
+    // Every device pixel, so the browser never stretches the canvas by a fraction: the frame is enlarged by whole art pixels (D20).
+    const ratio = window.devicePixelRatio || 1;
     canvas.width = Math.max(1, Math.round(canvas.clientWidth * ratio));
     canvas.height = Math.max(1, Math.round(canvas.clientHeight * ratio));
     needsDraw = true;
@@ -403,6 +435,9 @@ function start(
       needsDraw = true;
     },
     press: act,
+    spin: (next) => {
+      spin = next;
+    },
     step: (across, ahead) => {
       needsDraw = fox.step(across, ahead, orbit.yaw) || needsDraw;
     },

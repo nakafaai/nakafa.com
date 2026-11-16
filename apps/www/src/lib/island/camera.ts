@@ -21,8 +21,27 @@ export const FIELD_OF_VIEW = (32 * Math.PI) / 180;
 /** The closest and farthest the camera may be. */
 export const DISTANCE = { far: 180, near: 10 } as const;
 
-/** The lowest and highest tilt, from almost level to almost straight down. */
-export const PITCH = { high: 1.35, low: 0.32 } as const;
+/** The lowest and highest tilt, 15 to 55 degrees over the ground: always a three-quarter view, never flat or straight down. */
+export const PITCH = {
+  high: (55 * Math.PI) / 180,
+  low: (15 * Math.PI) / 180,
+} as const;
+
+/** The step the drawn camera's turn snaps to, so a turn changes the blocks' pixels in whole steps instead of crawling. */
+export const YAW_STEP = Math.PI / 180;
+
+/** How fast the camera closes on where it is going, per second, the same at any frame rate. */
+const EASE_RATE = 17;
+
+/** The longest frame the camera eases over, so a stalled frame never jumps it. */
+const LONGEST_FRAME = 1 / 15;
+
+/** The share of the way to its goal the camera covers in a frame of `seconds`, alike at 30, 60 or 120 frames a second. */
+export function easeShare(seconds: number) {
+  return (
+    1 - Math.exp(-Math.min(LONGEST_FRAME, Math.max(0, seconds)) * EASE_RATE)
+  );
+}
 
 /** The cells across the opening view frames: the village square, close enough that a person reads at a glance (D21). */
 const FRAMED = 16;
@@ -108,6 +127,32 @@ export function zoomOrbit(orbit: Orbit, factor: number) {
   return clampOrbit({ ...orbit, distance: orbit.distance * factor });
 }
 
+/**
+ * Moves the camera closer (a factor under 1) or farther toward `point`, a
+ * point of the world on the screen, which stays where it is on the screen:
+ * the eye and the target both slide along their lines to it.
+ */
+export function zoomToward(
+  orbit: Orbit,
+  point: readonly [number, number, number],
+  factor: number
+) {
+  const distance = Math.min(
+    DISTANCE.far,
+    Math.max(DISTANCE.near, orbit.distance * factor)
+  );
+  const share = distance / orbit.distance;
+  return clampOrbit({
+    ...orbit,
+    distance,
+    target: [
+      point[0] + (orbit.target[0] - point[0]) * share,
+      point[1] + (orbit.target[1] - point[1]) * share,
+      point[2] + (orbit.target[2] - point[2]) * share,
+    ],
+  });
+}
+
 /** Turns the camera around its target and tilts it. */
 export function turnOrbit(orbit: Orbit, yaw: number, pitch = 0) {
   return clampOrbit({
@@ -137,13 +182,18 @@ export function easeOrbit(from: Orbit, to: Orbit, t: number): Orbit {
 }
 
 /**
- * The camera moved onto the grid of art pixels (ADR 0047, D20): its target
- * slides across the screen's plane to the nearest whole art pixel, so a pan
- * never makes the blocks' pixels crawl, and `shift` is what was rounded away,
- * in art pixels right and up, for the enlarged frame to move back by.
- * `rows` is the height of the frame in art pixels.
+ * The camera moved onto the grid of art pixels (ADR 0047, D20): its turn
+ * snaps to whole `YAW_STEP`s and its target slides across the screen's plane
+ * to the nearest whole art pixel, so neither a turn nor a pan makes the
+ * blocks' pixels crawl, and `shift` is what was rounded away, in art pixels
+ * right and up, for the enlarged frame to move back by. `rows` is the height
+ * of the screen in art pixels.
  */
-export function snapOrbit(orbit: Orbit, rows: number) {
+export function snapOrbit(unsnapped: Orbit, rows: number) {
+  const orbit = {
+    ...unsnapped,
+    yaw: Math.round(unsnapped.yaw / YAW_STEP) * YAW_STEP,
+  };
   const pixel =
     (2 * orbit.distance * Math.tan(FIELD_OF_VIEW / 2)) / Math.max(1, rows);
   const [cy, sy] = [Math.cos(orbit.yaw), Math.sin(orbit.yaw)];

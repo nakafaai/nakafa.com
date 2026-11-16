@@ -1,8 +1,9 @@
 // @vitest-environment node
 import { describe, expect, it } from "@effect/vitest";
-import { Array as Arr } from "effect";
+import { Array as Arr, Option } from "effect";
 import { openingOrbit } from "@/lib/island/camera";
 import {
+  groundThrough,
   invert,
   lookAt,
   multiply,
@@ -58,5 +59,23 @@ describe("island/matrix", () => {
     expect(ray.direction[0]).toBeCloseTo(toTarget[0], 4);
     expect(ray.direction[1]).toBeCloseTo(toTarget[1], 4);
     expect(normalize([0, 0, 0])).toEqual([0, 0, 0]);
+  });
+
+  it("finds the ground under a point of the screen at the target's level, and none above the horizon", () => {
+    const orbit = openingOrbit(24, 1.5);
+    const middle = Option.getOrThrow(groundThrough(orbit, 1.5, 0, 0));
+    expect(middle[0]).toBeCloseTo(orbit.target[0], 3);
+    expect(middle[1]).toBe(orbit.target[1]);
+    expect(middle[2]).toBeCloseTo(orbit.target[2], 3);
+    const level = { ...orbit, pitch: 0.05 };
+    expect(Option.isNone(groundThrough(level, 1.5, 0, 1))).toBe(true);
+  });
+
+  it("widens the view by a lens, for a frame drawn past the screen's edges", () => {
+    const orbit = openingOrbit(24, 1.5);
+    const plain = viewProjectionOf(orbit, 1.5);
+    const wide = viewProjectionOf(orbit, 1.5, 1.1);
+    // A wider view draws the same world smaller: the projection's vertical scale shrinks by the lens.
+    expect(wide[5] / plain[5]).toBeCloseTo(1 / 1.1, 4);
   });
 });

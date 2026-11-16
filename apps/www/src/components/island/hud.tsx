@@ -48,6 +48,13 @@ const slotVariants = cva(
   }
 );
 
+/**
+ * The shape both panels of the HUD's top row share: one height and one
+ * centered row, so the way out on the left and the history on the right stand
+ * level with each other on every screen.
+ */
+const HEADER_PANEL = "flex h-17 items-center";
+
 /** A square HUD button with its icon and its name, which a screen reader reads. */
 function HudButton({
   children,
@@ -159,7 +166,7 @@ function History() {
   return (
     <div
       className={panelVariants({
-        className: "pointer-events-auto flex gap-1 p-1.5",
+        className: `pointer-events-auto gap-1 p-1.5 ${HEADER_PANEL}`,
       })}
     >
       <HudButton label={t("undo")} onPress={undo}>
@@ -350,7 +357,7 @@ export function IslandHud() {
       <header className="flex items-start justify-between gap-3">
         <div
           className={panelVariants({
-            className: "pointer-events-auto flex items-center gap-2 p-1.5 pr-3",
+            className: `pointer-events-auto gap-2 p-1.5 pr-3 ${HEADER_PANEL}`,
           })}
         >
           <HudButton label={t("leave")} onPress={leave}>
