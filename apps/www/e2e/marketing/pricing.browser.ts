@@ -1,6 +1,9 @@
 import { expect, type Page, test } from "@playwright/test";
 import { Effect } from "effect";
-import { loadMarketingPage } from "@/e2e/support/marketing";
+import {
+  loadMarketingPage,
+  openedHeaderSection,
+} from "@/e2e/support/marketing";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import {
   expectStablePricingAppShell,
@@ -145,9 +148,9 @@ const verifyPricingNavigation = Effect.fn("NakafaE2E.verifyPricingNavigation")(
     yield* Effect.promise(() =>
       page.locator("header").getByRole("button", { name: "Belajar" }).click()
     );
-    const pricingLink = page
-      .locator('[data-slot="navigation-menu-popup"]')
-      .locator('[href="/id/pricing"]');
+    const pricingLink = (yield* openedHeaderSection(page)).locator(
+      '[href="/id/pricing"]'
+    );
     yield* Effect.promise(() => expect(pricingLink).toHaveText("Harga"));
     yield* Effect.promise(() => pricingLink.click());
     yield* Effect.promise(() =>

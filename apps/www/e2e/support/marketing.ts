@@ -2,6 +2,7 @@ import { expect, type Page } from "@playwright/test";
 import type { Contributor } from "@repo/contents/contributor";
 import { Effect, Schema } from "effect";
 import { waitForCommittedAppRouter } from "@/e2e/support/navigation/readiness";
+import { waitForAnimations } from "@/e2e/support/quiet";
 import { openRoute } from "@/e2e/support/route";
 import { MARKETING_PAGE } from "@/e2e/support/selector";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
@@ -27,6 +28,20 @@ class MarketingSurfaceMissing extends Schema.TaggedError<
 }
 
 /** Reads the required first contributor without inventing fixture data. */
+/**
+ * The header's open section, once its popup has finished opening. A press made while the popup still
+ * scales in can land on another of its links: Firefox read a press on School's Pricing as one on the
+ * School landing, so the page never left.
+ */
+export const openedHeaderSection = Effect.fn("NakafaE2E.openedHeaderSection")(
+  function* (page: Page) {
+    const popup = page.locator('[data-slot="navigation-menu-popup"]');
+    yield* Effect.promise(() => expect(popup).toBeVisible());
+    yield* Effect.promise(() => waitForAnimations(popup));
+    return popup;
+  }
+);
+
 /** Opens one marketing page and waits until its visible route boundary is on screen. */
 export const loadMarketingPage = Effect.fn("NakafaE2E.loadMarketingPage")(
   function* (page: Page, href: string) {

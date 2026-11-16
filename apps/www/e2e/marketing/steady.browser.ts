@@ -6,7 +6,10 @@ import {
   readRecordedLayoutShifts,
   recordLayoutShifts,
 } from "@/e2e/support/layout";
-import { loadMarketingPage } from "@/e2e/support/marketing";
+import {
+  loadMarketingPage,
+  openedHeaderSection,
+} from "@/e2e/support/marketing";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { waitForQuiet } from "@/e2e/support/quiet";
 import { desktopViewport, touchViewport } from "@/e2e/support/viewport";
@@ -130,11 +133,9 @@ const openSchoolFromHeader = Effect.fn("NakafaE2E.openSchoolFromHeader")(
     // The pointer comes to the trigger from the page, as a reader's does, so the trigger sees it arrive.
     yield* Effect.promise(() => page.mouse.move(8, 320));
     yield* movePointerTo(page, header.getByRole("button", { name: "School" }));
+    const popup = yield* openedHeaderSection(page);
     yield* Effect.promise(() =>
-      page
-        .locator('[data-slot="navigation-menu-popup"]')
-        .getByRole("link", { name: "Nakafa School" })
-        .click()
+      popup.getByRole("link", { name: "Nakafa School" }).click()
     );
   }
 );
