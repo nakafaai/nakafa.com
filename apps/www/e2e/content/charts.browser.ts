@@ -3,6 +3,7 @@ import { Effect, MutableList, Record as Rec } from "effect";
 import { withBrowserContext } from "@/e2e/support/context";
 import { pinnedRoutes } from "@/e2e/support/corpus";
 import { withObservedPageErrors } from "@/e2e/support/observe";
+import { openRoute } from "@/e2e/support/route";
 import { VISUAL_CARD, VISUAL_CARD_TABLE } from "@/e2e/support/selector";
 import { servedTimeoutMilliseconds } from "@/e2e/support/timeout";
 
@@ -225,6 +226,72 @@ test("function charts retain their tables and hydrate after a cached reload", as
             })
           );
         })
+    )
+  );
+});
+
+/**
+ * A lesson the acceptance runtime serves whose chart compares boiling points
+ * in two bar series, four of its six values below zero.
+ */
+const BONDS_ROUTE =
+  "/en/subjects/chemistry/chemical-bond/types-of-chemical-bonds";
+const BOILING_TITLE = "Boiling Points with and without Hydrogen Bonds";
+
+test("a bar chart draws its values below zero downward from the zero line", async ({
+  page,
+}) => {
+  await Effect.runPromise(
+    withObservedPageErrors(
+      page,
+      Effect.gen(function* () {
+        yield* openRoute(page, BONDS_ROUTE);
+        const chart = page
+          .locator(`article ${VISUAL_CARD}`)
+          .filter({ hasText: BOILING_TITLE })
+          .locator('[data-slot="chart"]');
+        yield* revealChart(chart);
+        // Each bar is one painted rect, series by series, in category order:
+        // 100, -33, 20, then -60, -88, -85. A bar above zero ends at the zero
+        // line with its bottom, and a bar below zero starts there with its top.
+        yield* Effect.promise(() =>
+          expect
+            .poll(() =>
+              chart.evaluate((element) => {
+                const bars = Array.from(
+                  element.querySelectorAll(".recharts-bar-rectangle rect")
+                ).map((rect) => ({
+                  height: Number(rect.getAttribute("height")),
+                  y: Number(rect.getAttribute("y")),
+                }));
+                const zero = (bars[0]?.y ?? 0) + (bars[0]?.height ?? 0);
+                return {
+                  drawn: bars.filter((bar) => bar.height > 0).length,
+                  negativeTick: Array.from(
+                    element.querySelectorAll(
+                      ".recharts-yAxis-tick-labels .recharts-cartesian-axis-tick-value"
+                    )
+                  ).some((label) =>
+                    ["-", "−"].some((minus) =>
+                      (label.textContent ?? "").startsWith(minus)
+                    )
+                  ),
+                  sides: bars.map((bar) => {
+                    if (Math.abs(bar.y + bar.height - zero) < 1) {
+                      return "up";
+                    }
+                    return Math.abs(bar.y - zero) < 1 ? "down" : "off";
+                  }),
+                };
+              })
+            )
+            .toEqual({
+              drawn: 6,
+              negativeTick: true,
+              sides: ["up", "down", "up", "down", "down", "down"],
+            })
+        );
+      })
     )
   );
 });
