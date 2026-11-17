@@ -26,6 +26,7 @@ import { TryoutAttemptSearch } from "@/components/tryout/route/search";
 import { TryoutPressProvider } from "@/components/tryout/runtime/start";
 import { TryoutSetPageClient } from "@/components/tryout/set/client";
 import { openSetSamples } from "@/components/tryout/set/code";
+import { readSetSections } from "@/components/tryout/set/sections";
 import { TryoutPage } from "@/components/tryout/shell/header";
 import { readStaticData } from "@/lib/static/data";
 
@@ -89,7 +90,7 @@ export const Route = createFileRoute(
               name: loaderData.head.title,
               timeLimitSeconds: Num.sumAll(
                 Arr.map(
-                  loaderData.page.sections,
+                  readSetSections(loaderData.page),
                   ({ timeLimitSeconds }) => timeLimitSeconds
                 )
               ),
