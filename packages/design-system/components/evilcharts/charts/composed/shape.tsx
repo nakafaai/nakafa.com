@@ -1,4 +1,5 @@
 import type { BarVariant } from "@repo/design-system/components/evilcharts/charts/composed/bars";
+import { barRectangle } from "@repo/design-system/components/evilcharts/charts/composed/geometry";
 import type { ComposedAnimationType } from "@repo/design-system/components/evilcharts/charts/composed-chart";
 import { getChartColorVariable } from "@repo/design-system/components/evilcharts/ui/chart-config";
 import {
@@ -14,6 +15,9 @@ import { Match } from "effect";
 import type { KeyboardEvent } from "react";
 
 // Custom bar shape
+
+/** The height of the solid stripe a stripped bar draws at its value's end. */
+const STRIPE_HEIGHT = 2;
 
 // Props Recharts passes to a bar's custom shape renderer
 interface BarShapeProps {
@@ -86,16 +90,18 @@ export const CustomBar = ({
   });
   const cursorStyle =
     isClickable || enableHoverHighlight ? { cursor: "pointer" } : undefined;
-  const hitAreaX = background?.x ?? x;
-  const hitAreaY = background?.y ?? y;
-  const hitAreaWidth = background?.width ?? width;
-  const hitAreaHeight = background?.height ?? height;
+  const bar = barRectangle({ height, width, x, y });
+  const hitAreaX = background?.x ?? bar.x;
+  const hitAreaY = background?.y ?? bar.y;
+  const hitAreaWidth = background?.width ?? bar.width;
+  const hitAreaHeight = background?.height ?? bar.height;
 
   const grow = getBarGrowAnimation(
     animationType,
     index,
     dataLength,
-    isRevealActive
+    isRevealActive,
+    bar.baseline
   );
 
   const getFill = () =>
@@ -142,13 +148,19 @@ export const CustomBar = ({
           filter={filter}
           opacity={fillOpacity}
         >
-          <rect fill={getFill()} height={height} width={width} x={x} y={y} />
+          <rect
+            fill={getFill()}
+            height={bar.height}
+            width={bar.width}
+            x={bar.x}
+            y={bar.y}
+          />
           <rect
             fill={`url(#${id}-bar-colors)`}
-            height={2}
-            width={width}
-            x={x}
-            y={y}
+            height={STRIPE_HEIGHT}
+            width={bar.width}
+            x={bar.x}
+            y={bar.baseline === 1 ? bar.y : bar.y + bar.height - STRIPE_HEIGHT}
           />
         </RevealGroup>
       ) : (
@@ -157,13 +169,13 @@ export const CustomBar = ({
             className="transition-opacity"
             fill={getFill()}
             filter={filter}
-            height={height}
+            height={bar.height}
             opacity={fillOpacity}
             rx={barRadius}
             ry={barRadius}
-            width={width}
-            x={x}
-            y={y}
+            width={bar.width}
+            x={bar.x}
+            y={bar.y}
           />
         </RevealGroup>
       )}
@@ -184,7 +196,8 @@ export const CustomBar = ({
 /**
  * Builds the motion.dev grow-in animation for a single bar, or returns `null`
  * when it should render statically (`"none"`, an unknown index, empty data, or
- * once the intro window is complete).
+ * once the intro window is complete). The bar grows out of the zero line at
+ * its `baseline`: up for a value above zero, down for one below it.
  *
  * The owning <Bar /> series owns its reveal window. Once the window ends, every
  * bar renders as plain SVG geometry, so long/offscreen content cannot leave
@@ -194,7 +207,8 @@ const getBarGrowAnimation = (
   animationType: ComposedAnimationType,
   index: number,
   dataLength: number,
-  isRevealActive: boolean
+  isRevealActive: boolean,
+  baseline: number
 ) => {
   if (
     animationType === "none" ||
@@ -214,7 +228,7 @@ const getBarGrowAnimation = (
       ease: REVEAL_EASE,
       delay: (step * BAR_REVEAL_STAGGER_MS) / 1000,
     },
-    style: { originY: 1 }, // grow upward from the baseline
+    style: { originY: baseline },
   };
 };
 
