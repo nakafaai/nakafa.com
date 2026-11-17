@@ -4,7 +4,6 @@ import { describe, expect, it } from "@effect/vitest";
 import confectSchema from "@repo/backend/confect/_generated/schema";
 import { declareWelcomeIntent } from "@repo/backend/confect/emails/welcome/impl";
 import { api } from "@repo/backend/convex/_generated/api";
-import { MASCOT_CODE } from "@repo/backend/test/mascot";
 import {
   activateOnboardingPrograms,
   createOnboardingTest,
@@ -366,41 +365,6 @@ describe("onboarding", () => {
           data: {
             code: "UNAUTHENTICATED",
             message: "Unauthenticated",
-          },
-        })
-      );
-    })
-  );
-  it.effect("redacts inconsistent account linkage during a draft write", () =>
-    Effect.gen(function* () {
-      const { authenticated, identity, test } =
-        yield* createOnboardingTest(NOW);
-      yield* Effect.promise(() =>
-        test.mutation((ctx) =>
-          ctx.db.insert("users", {
-            authId: identity.authUserId,
-            credits: 0,
-            creditsResetAt: NOW,
-            email: "duplicate-mutation-linkage@example.com",
-            mascot: MASCOT_CODE,
-            name: "Duplicate Mutation Linkage",
-            plan: "free",
-          })
-        )
-      );
-      yield* Effect.promise(() =>
-        expect(
-          authenticated.mutation(api.onboarding.mutations.saveAnswer, {
-            answer: {
-              kind: "role",
-              value: "student",
-            },
-          })
-        ).rejects.toMatchObject({
-          data: {
-            _tag: "AuthReadError",
-            code: "AUTH_READ_FAILED",
-            message: "Unable to read authentication state.",
           },
         })
       );

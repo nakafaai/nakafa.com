@@ -168,7 +168,7 @@ function exactCohortHolds(
 }
 
 /**
- * Ten transitive overrides in the root `package.json` hold a version for a reason
+ * Nine transitive overrides in the root `package.json` hold a version for a reason
  * that no manifest states. `capnp-es` 0.0.17 replaces the 0.0.16 that
  * `@alchemy.run/cloudflare-runtime` 2.0.0-beta.87 still pins, since `^0.0.16` holds
  * one patch: 0.0.16 grows a single-segment message by each allocation and copies it
@@ -187,11 +187,7 @@ function exactCohortHolds(
  * by one copy fails `instanceof` checks against the other. `convex-helpers`
  * 0.1.135 keeps one copy for every Convex component: @convex-dev/aggregate 0.3.4 pins
  * 0.1.128 exactly, the Agent and Workflow peers need ^0.1.127, and the Workpool peer
- * needs ^0.1.94, so one copy satisfies every range. `lodash` 4.18.1 replaces the
- * 4.17.21 that chevrotain 10.5.0 pins exactly, which GHSA-f23m-r3pf-42rh,
- * GHSA-r5fr-rjxr-66jc and GHSA-xxjr-mmjv-4gpg affect: Better Auth 1.6's `auth` reaches it
- * through @mrleebo/prisma-ast ^0.13.1, and `auth` 1.7 moves to prisma-ast ^0.16 on
- * chevrotain 12. KaTeX 0.19.1, the design system's own, replaces the ^0.16.0 that
+ * needs ^0.1.94, so one copy satisfies every range. KaTeX 0.19.1, the design system's own, replaces the ^0.16.0 that
  * micromark-extension-math 3.1.0, its latest release, declares: every 0.16 release is
  * affected by GHSA-238p-pmpm-9mq7, which 0.18.2 fixes. `glob` 14.0.3 and `minimatch`
  * 11.0.3 replace the 13.0.6 and 10.2.6 that GHSA-3g3m-2fjr-6pw4 and GHSA-g3hv-75wg-m249
@@ -260,14 +256,8 @@ export const DEPENDENCY_HOLDS: readonly DependencyHold[] = [
     minimumDeclarations: 1,
   },
   {
-    approved: "1.6.34",
-    dependency: "better-auth",
-    minimumDeclarations: 1,
-  },
-  { approved: "1.6.34", dependency: "auth", minimumDeclarations: 1 },
-  {
-    approved: "0.12.6",
-    dependency: "@convex-dev/better-auth",
+    approved: "2.0.0",
+    dependency: "@convex-dev/auth",
     minimumDeclarations: 1,
   },
   {

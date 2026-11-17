@@ -7,10 +7,9 @@ import {
   RedeemUnanswered,
   redeemRefusalKey,
   redeemRequestOf,
-  SignInUnanswered,
-  signInAnswerOf,
   submitLogin,
 } from "@/components/tenant/signin";
+import { SchoolSignInFailed } from "@/lib/auth/signin";
 
 const slug = Schema.decodeSync(TenantSlug)("harapan");
 const UUID =
@@ -46,7 +45,7 @@ const portsOf = (
       signIn: () => {
         requests.signIns += 1;
         return signedIn === "failure"
-          ? Effect.fail(new SignInUnanswered())
+          ? Effect.fail(new SchoolSignInFailed())
           : Effect.succeed(signedIn);
       },
     },
@@ -82,6 +81,7 @@ describe("redeemRefusalKey", () => {
   it.each([
     ["expired", "card-expired"],
     ["invalid", "card-invalid"],
+    ["passwordRejected", "password-rejected"],
     ["passwordTooLong", "password-too-long"],
     ["passwordTooShort", "password-too-short"],
     ["rateLimited", "card-rate-limited"],
@@ -257,31 +257,6 @@ describe("submitLogin", () => {
         expect(yield* submitLogin(valuesWith("ABCDE-FGHJK"), ports)).toBe(
           "failed"
         );
-      })
-  );
-});
-
-describe("signInAnswerOf", () => {
-  it.effect("signs the student in when the server accepts the password", () =>
-    Effect.gen(function* () {
-      expect(yield* signInAnswerOf(undefined)).toBe(true);
-    })
-  );
-
-  it.effect(
-    "refuses a password that the server answers with a client error status",
-    () =>
-      Effect.gen(function* () {
-        expect(yield* signInAnswerOf(401)).toBe(false);
-      })
-  );
-
-  it.effect(
-    "leaves a server failure unanswered, so it does not read as a wrong password",
-    () =>
-      Effect.gen(function* () {
-        const error = yield* Effect.flip(signInAnswerOf(503));
-        expect(error).toMatchObject({ _tag: "SignInUnanswered" });
       })
   );
 });

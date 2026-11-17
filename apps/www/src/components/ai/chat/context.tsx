@@ -24,7 +24,7 @@ import { useAi } from "@/components/ai/context";
 import { NinaConnectionError } from "@/components/ai/feedback";
 import { restoreRefusedText } from "@/components/ai/store/draft";
 import { type NinaDraft, useNinaSubmission } from "@/components/ai/submission";
-import { useAuthSessionStore } from "@/components/auth/session";
+import { useAuthSession, useAuthSessionStore } from "@/components/auth/session";
 import { useViewer } from "@/lib/identity/client";
 
 const ChatContext = createContext<ChatContextValue | null>(null);
@@ -71,6 +71,7 @@ export function useChatState(
   } = useConversation(chatId, shareToken, leaving);
   const submission = useNinaSubmission(store.getState().setSubmissionFailure);
   const session = useAuthSessionStore();
+  const signedIn = useAuthSession((state) => state.sessionId !== null);
   // A send, stop or retry on its way is held by the chat store as plain state. A
   // transition would hold it until the server answers, and React makes every
   // transition started meanwhile wait for a pending one: the learner's next
@@ -99,7 +100,8 @@ export function useChatState(
   const { canWrite, owner } = readChatAccess({
     chatUserId: chat?.userId,
     loading,
-    opening,
+    shared: shareToken !== undefined,
+    signedIn,
     viewerId,
   });
 

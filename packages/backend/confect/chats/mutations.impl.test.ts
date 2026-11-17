@@ -4,7 +4,7 @@ import { expect, it } from "@effect/vitest";
 import { components } from "@repo/backend/confect/_generated/components";
 import refs from "@repo/backend/confect/_generated/refs";
 import {
-  createConvexTestWithBetterAuth,
+  createConvexTestWithAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
 import { api } from "@repo/backend/convex/_generated/api";
@@ -16,21 +16,15 @@ const getShareToken = Ref.getFunctionReference(
 );
 
 it("enforces chat ownership for title, visibility, and deletion mutations", async () => {
-  const t = createConvexTestWithBetterAuth();
+  const t = createConvexTestWithAuth();
   const [identity, outsider] = await t.mutation(async (ctx) =>
     Promise.all([
       seedAuthenticatedUser(ctx, { now: NOW, suffix: "chat-owner" }),
       seedAuthenticatedUser(ctx, { now: NOW, suffix: "chat-outsider" }),
     ])
   );
-  const owner = t.withIdentity({
-    subject: identity.authUserId,
-    sessionId: identity.sessionId,
-  });
-  const stranger = t.withIdentity({
-    subject: outsider.authUserId,
-    sessionId: outsider.sessionId,
-  });
+  const owner = t.withIdentity({ subject: identity.sessionId });
+  const stranger = t.withIdentity({ subject: outsider.sessionId });
   const chatId = await t.mutation(async (ctx) =>
     ctx.db.insert("chats", {
       threadId: await createThread(ctx, components.nina, {
@@ -86,14 +80,11 @@ it("enforces chat ownership for title, visibility, and deletion mutations", asyn
 });
 
 it("trims a renamed title, and refuses one that is empty or longer than 80 characters before it writes anything", async () => {
-  const t = createConvexTestWithBetterAuth();
+  const t = createConvexTestWithAuth();
   const identity = await t.mutation((ctx) =>
     seedAuthenticatedUser(ctx, { now: NOW, suffix: "chat-rename-bound" })
   );
-  const owner = t.withIdentity({
-    subject: identity.authUserId,
-    sessionId: identity.sessionId,
-  });
+  const owner = t.withIdentity({ subject: identity.sessionId });
   const chatId = await t.mutation((ctx) =>
     ctx.db.insert("chats", {
       threadId: "fixture-thread",
@@ -119,14 +110,11 @@ it("trims a renamed title, and refuses one that is empty or longer than 80 chara
 });
 
 it("stores a renamed title sealed and reads it back as the new title", async () => {
-  const t = createConvexTestWithBetterAuth();
+  const t = createConvexTestWithAuth();
   const identity = await t.mutation((ctx) =>
     seedAuthenticatedUser(ctx, { now: NOW, suffix: "chat-rename" })
   );
-  const owner = t.withIdentity({
-    subject: identity.authUserId,
-    sessionId: identity.sessionId,
-  });
+  const owner = t.withIdentity({ subject: identity.sessionId });
   const chatId = await t.mutation((ctx) =>
     ctx.db.insert("chats", {
       threadId: "fixture-thread",
@@ -153,14 +141,11 @@ it("stores a renamed title sealed and reads it back as the new title", async () 
 });
 
 it("draws a token when a chat is shared, keeps it while the chat stays shared, and deletes it when sharing stops", async () => {
-  const t = createConvexTestWithBetterAuth();
+  const t = createConvexTestWithAuth();
   const identity = await t.mutation((ctx) =>
     seedAuthenticatedUser(ctx, { now: NOW, suffix: "chat-share" })
   );
-  const owner = t.withIdentity({
-    subject: identity.authUserId,
-    sessionId: identity.sessionId,
-  });
+  const owner = t.withIdentity({ subject: identity.sessionId });
   const chatId = await t.mutation((ctx) =>
     ctx.db.insert("chats", {
       threadId: "fixture-thread",
@@ -207,14 +192,11 @@ it("draws a token when a chat is shared, keeps it while the chat stays shared, a
 });
 
 it("gives a link to a chat that was public before share tokens when its owner shares it again", async () => {
-  const t = createConvexTestWithBetterAuth();
+  const t = createConvexTestWithAuth();
   const identity = await t.mutation((ctx) =>
     seedAuthenticatedUser(ctx, { now: NOW, suffix: "chat-legacy" })
   );
-  const owner = t.withIdentity({
-    subject: identity.authUserId,
-    sessionId: identity.sessionId,
-  });
+  const owner = t.withIdentity({ subject: identity.sessionId });
   const chatId = await t.mutation((ctx) =>
     ctx.db.insert("chats", {
       threadId: "fixture-thread",

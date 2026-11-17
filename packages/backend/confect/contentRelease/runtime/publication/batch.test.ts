@@ -9,7 +9,7 @@ import {
   PublicContentRuntimeRequestSchema,
 } from "@nakafa/aksara-contracts/runtime/spec";
 import { dispatchBatchProgram } from "@repo/backend/confect/contentRelease/runtime/publication/batch";
-import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
+import { createConvexTestWithAuth } from "@repo/backend/confect/test.helpers";
 import {
   MAX_PUBLIC_RUNTIME_BATCH_REQUEST_BYTES,
   PublicContentRuntimeBatchRequestSchema,
@@ -26,7 +26,7 @@ import { insertRuntimeHead } from "@repo/backend/test/runtime/head";
 import { TEST_RUNTIME_PATH } from "@repo/backend/test/runtime/values";
 import { JsonTextSchema } from "@repo/utilities/json";
 
-type RuntimeTest = ReturnType<typeof createConvexTestWithBetterAuth>;
+type RuntimeTest = ReturnType<typeof createConvexTestWithAuth>;
 type RuntimeAction = Pick<RuntimeTest, "action">;
 const encodeBatchBody = Schema.encodeSync(
   Schema.fromJsonString(PublicContentRuntimeBatchRequestSchema)
@@ -78,7 +78,7 @@ function seedPublicRuntime(t: RuntimeTest) {
 }
 describe("contentRelease/runtime/publication/batch", () => {
   it("returns eight ordered exact responses from one batch read", async () => {
-    const t = createConvexTestWithBetterAuth();
+    const t = createConvexTestWithAuth();
     await seedPublicRuntime(t);
     const requests = [
       foundRequest,
@@ -126,7 +126,7 @@ describe("contentRelease/runtime/publication/batch", () => {
     });
   });
   it("rejects empty, nine-item, malformed, and mismatched request bytes", async () => {
-    const t = createConvexTestWithBetterAuth();
+    const t = createConvexTestWithAuth();
     const source = encodeBatchBody({
       requests: [foundRequest],
     });
@@ -167,7 +167,7 @@ describe("contentRelease/runtime/publication/batch", () => {
     expect(mismatch.status).toBe(400);
   });
   it("returns the exact too-large failure when one item exceeds 1 MiB", async () => {
-    const t = createConvexTestWithBetterAuth();
+    const t = createConvexTestWithAuth();
     await t.mutation(async (ctx) => {
       await insertRuntimeRelease(ctx);
       await insertRuntimeHead(ctx, "public", runtimeContentKey("public"), {
@@ -192,7 +192,7 @@ describe("contentRelease/runtime/publication/batch", () => {
     });
   });
   it("fails the complete batch when one stored row is corrupt", async () => {
-    const t = createConvexTestWithBetterAuth();
+    const t = createConvexTestWithAuth();
     await seedPublicRuntime(t);
     await t.mutation(async (ctx) => {
       const head = await ctx.db.query("contentHeads").unique();
@@ -216,7 +216,7 @@ describe("contentRelease/runtime/publication/batch", () => {
     });
   });
   it("rejects corrupt artifact JSON after the stored route has been authenticated", async () => {
-    const t = createConvexTestWithBetterAuth();
+    const t = createConvexTestWithAuth();
     await seedPublicRuntime(t);
     await t.mutation(async (ctx) => {
       const artifact = await ctx.db.query("contentArtifacts").unique();
@@ -240,7 +240,7 @@ describe("contentRelease/runtime/publication/batch", () => {
     });
   });
   it("rejects a transport response whose cardinality differs from its request", async () => {
-    const t = createConvexTestWithBetterAuth();
+    const t = createConvexTestWithAuth();
     const source = encodeBatchBody({
       requests: [foundRequest],
     });
@@ -261,7 +261,7 @@ describe("contentRelease/runtime/publication/batch", () => {
     });
   });
   it("returns an internal failure when a read row does not match its stored hash", async () => {
-    const t = createConvexTestWithBetterAuth();
+    const t = createConvexTestWithAuth();
     await seedPublicRuntime(t);
     const source = encodeBatchBody({
       requests: [foundRequest],
@@ -300,7 +300,7 @@ describe("contentRelease/runtime/publication/batch", () => {
     });
   });
   it("returns an internal failure when Node cannot hash an authenticated query result", async () => {
-    const t = createConvexTestWithBetterAuth();
+    const t = createConvexTestWithAuth();
     await seedPublicRuntime(t);
     const source = encodeBatchBody({
       requests: [foundRequest],
@@ -338,7 +338,7 @@ describe("contentRelease/runtime/publication/batch", () => {
   it.each(["invalid", "rejected"])(
     "sanitizes a %s query response at the action boundary",
     async (failure) => {
-      const t = createConvexTestWithBetterAuth();
+      const t = createConvexTestWithAuth();
       const source = encodeBatchBody({
         requests: [foundRequest],
       });

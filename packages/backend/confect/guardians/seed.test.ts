@@ -1,20 +1,22 @@
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
+import { components } from "@repo/backend/confect/_generated/components";
 import refs from "@repo/backend/confect/_generated/refs";
+import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { nf } from "@repo/backend/test/classroom";
 import {
   asStaffSchool,
   IBU,
   NISN,
-  redeem,
   startLink,
 } from "@repo/backend/test/guardians";
-import { TENANCY_NOW, tenancyFixture } from "@repo/backend/test/tenancy";
+import {
+  defectOf,
+  TENANCY_NOW,
+  tenancyFixture,
+} from "@repo/backend/test/tenancy";
 import { Effect } from "effect";
 
-const { code } = refs.internal.guardians.seed;
-
-/** A sign-in code as the parent receives it. */
-const CODE = /^\d{6}$/u;
+const { account } = refs.internal.guardians.seed;
 
 beforeEach(() => {
   vi.useFakeTimers({ toFake: ["Date"] });
@@ -28,28 +30,59 @@ afterEach(() => {
 
 describe("guardians/seed", () => {
   it.effect(
-    "puts the linked student's NISN on the roster and answers a live code for the address",
+    "puts the linked student's NISN on the roster and answers a password account that holds the guardian Person",
     () =>
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
         yield* asStaffSchool(fixture);
-        yield* startLink(fixture);
-        const seeded = yield* fixture.internal.mutation(code, {
+        const link = yield* startLink(fixture);
+        const seeded = yield* fixture.internal.mutation(account, {
           email: IBU,
           nisn: NISN,
           slug: "nf",
         });
-        expect(seeded.code).toMatch(CODE);
         expect(
           yield* fixture.as("admin").query(refs.public.roster.entries.get, {
             personId: fixture.people.student.personId,
             slug: nf,
           })
         ).toMatchObject({ hasNisn: true });
-        expect(yield* redeem(fixture, seeded.code)).toMatchObject({
-          outcome: "signedIn",
+        const guardian = yield* fixture.run(
+          Effect.flatMap(DatabaseReader, (reader) =>
+            reader.table("tenantPeople").get(link.guardian.id)
+          )
+        );
+        expect(guardian.account).toMatchObject({
+          method: "address",
+          state: "claimed",
+          userId: seeded.userId,
         });
+        // The browser test signs the parent in with the password it answers.
+        const verified = yield* Effect.promise(() =>
+          fixture.convex.mutation((ctx) =>
+            ctx.runMutation(components.authPassword.public.verifyPassword, {
+              password: seeded.password,
+              userId: seeded.userId,
+            })
+          )
+        );
+        expect(verified).toEqual({ success: true });
       })
+  );
+
+  it.effect("dies for an address that no live link names", () =>
+    Effect.gen(function* () {
+      const fixture = yield* tenancyFixture;
+      yield* asStaffSchool(fixture);
+      const exit = yield* Effect.exit(
+        fixture.internal.mutation(account, {
+          email: IBU,
+          nisn: NISN,
+          slug: "nf",
+        })
+      );
+      expect(defectOf(exit)).toContain("The address has no live link.");
+    })
   );
 
   it.effect("refuses outside the acceptance runtime", () =>
@@ -57,7 +90,11 @@ describe("guardians/seed", () => {
       vi.stubEnv("ACCEPTANCE_SEED", "false");
       const fixture = yield* tenancyFixture;
       const refused = yield* Effect.flip(
-        fixture.internal.mutation(code, { email: IBU, nisn: NISN, slug: "nf" })
+        fixture.internal.mutation(account, {
+          email: IBU,
+          nisn: NISN,
+          slug: "nf",
+        })
       );
       expect(refused).toMatchObject({ _tag: "SeedRefused" });
     })

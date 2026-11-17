@@ -24,7 +24,7 @@ describe("agent discovery", () => {
     });
     expect(readAuthorizationServer(request)).toMatchObject({
       issuer: "https://nakafa.com",
-      token_endpoint: "https://nakafa.com/api/auth/mcp/token",
+      token_endpoint: "https://nakafa.com/api/agent/token",
     });
   });
 
@@ -35,10 +35,10 @@ describe("agent discovery", () => {
     );
 
     expect(readAuthorizationServer(request)).toMatchObject({
-      authorization_endpoint: `${STAGING}/api/auth/mcp/authorize`,
+      authorization_endpoint: `${STAGING}/agent`,
       code_challenge_methods_supported: ["S256"],
       issuer: STAGING,
-      registration_endpoint: `${STAGING}/api/auth/mcp/register`,
+      registration_endpoint: `${STAGING}/api/agent/register`,
     });
   });
 

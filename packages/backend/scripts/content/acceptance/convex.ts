@@ -20,11 +20,8 @@ import {
 import { Base64 } from "effect/encoding";
 import { HttpClient, HttpClientRequest } from "effect/http";
 
-/** The identity a call acts as: a Better Auth session and the user it belongs to. */
-const ConvexIdentity = Schema.Struct({
-  sessionId: Schema.String,
-  subject: Schema.String,
-});
+/** The identity a call acts as: its subject is a Convex Auth session, as an access token's is. */
+const ConvexIdentity = Schema.Struct({ subject: Schema.String });
 
 /**
  * One call of a Convex function: its path, its arguments as plain JSON, the

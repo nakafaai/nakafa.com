@@ -7,6 +7,7 @@ import type {
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { randomUuid } from "@repo/utilities/uuid";
 import { Effect, Match, Option, Result, Schema } from "effect";
+import type { SchoolSignInFailed } from "@/lib/auth/signin";
 
 /** What the login form holds when a student submits it, before the card is read. */
 const LoginFormValues = Schema.Struct({
@@ -42,6 +43,7 @@ export const redeemRefusalKey = (reason: typeof RedeemRefusal.Type) =>
   Match.value(reason).pipe(
     Match.when("expired", () => "card-expired" as const),
     Match.when("invalid", () => "card-invalid" as const),
+    Match.when("passwordRejected", () => "password-rejected" as const),
     Match.when("passwordTooLong", () => "password-too-long" as const),
     Match.when("passwordTooShort", () => "password-too-short" as const),
     Match.when("rateLimited", () => "card-rate-limited" as const),
@@ -57,34 +59,6 @@ export class RedeemUnanswered extends Schema.TaggedError<
   RedeemUnanswered,
   { readonly brand: unique symbol }
 >()("RedeemUnanswered", {}) {}
-
-/**
- * A password sign-in whose request got no answer, or whose server failed to answer. It is not a
- * refusal: a wrong password answers an error status below 500, which the form reads as a refusal.
- */
-export class SignInUnanswered extends Schema.TaggedError<
-  SignInUnanswered,
-  { readonly brand: unique symbol }
->()("SignInUnanswered", {}) {}
-
-/**
- * Reads the answer of one password sign-in from the status of its error. No error status means
- * the server signed the student in, and a status below 500 means it refused the password. A server
- * failure is unanswered, so an outage never reads as a wrong password.
- */
-export const signInAnswerOf = Effect.fn("www.tenant.login.signInAnswer")(
-  function* (
-    errorStatus: number | undefined
-  ): Effect.fn.Return<boolean, SignInUnanswered> {
-    if (errorStatus === undefined) {
-      return true;
-    }
-    if (errorStatus >= 500) {
-      return yield* new SignInUnanswered();
-    }
-    return false;
-  }
-);
 
 /** The copy key of a submission that does not sign the student in. */
 type SubmitMessage =
@@ -108,9 +82,9 @@ interface SubmitPorts {
     request: typeof RedeemRequest.Type
   ) => Effect.Effect<typeof RedeemOutcome.Type, RedeemUnanswered>;
   readonly signIn: (credentials: {
+    readonly loginName: string;
     readonly password: string;
-    readonly username: string;
-  }) => Effect.Effect<boolean, SignInUnanswered>;
+  }) => Effect.Effect<boolean, SchoolSignInFailed>;
 }
 
 /** The credentials of one password sign-in, as the form sends them. */
@@ -128,7 +102,7 @@ const passwordSignIn = (
 ): Effect.Effect<SubmitStep> =>
   ports.signIn(credentials).pipe(
     Effect.map((signedIn) => (signedIn ? "signed-in" : refusal)),
-    Effect.catchTag("SignInUnanswered", () =>
+    Effect.catchTag("SchoolSignInFailed", () =>
       Effect.succeed<SubmitStep>("failed")
     )
   );
@@ -154,8 +128,8 @@ export const submitLogin = Effect.fn("www.tenant.login.submit")(function* (
       : "card-password-missing";
   }
   const credentials = {
+    loginName: values.loginName,
     password: values.password,
-    username: values.loginName,
   };
   if (values.code.trim() === "") {
     return yield* passwordSignIn(ports, credentials, "sign-in-refused");

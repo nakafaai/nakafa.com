@@ -80,13 +80,15 @@ const storedAnswers = <E, R>(run: RunConvex<E, R>) =>
 /**
  * What a run needs from the acceptance runtime: the Convex runner that reaches it; `school`,
  * which opens a school with its Owner signed in and returns the school's slug; `capture`, which streams the function log into a file for the
- * scope; and `connect`, which opens one browser's connection for a seat's session token.
+ * scope; and `connect`, which opens one browser's connection for a seat that signs in with
+ * its account id and its token.
  */
 export interface LoadInput<E, R> {
   readonly capture: (path: string) => Effect.Effect<void, E, R | Scope.Scope>;
-  readonly connect: (
-    sessionToken: string
-  ) => Effect.Effect<Wire, never, Recorder | Scope.Scope>;
+  readonly connect: (seat: {
+    readonly token: string;
+    readonly userId: string;
+  }) => Effect.Effect<Wire, never, Recorder | Scope.Scope>;
   readonly output: string;
   readonly plan: LoadPlan;
   readonly run: RunConvex<E, R>;
@@ -134,7 +136,7 @@ export const runLoad = Effect.fn("load.run")(function* <E, R>(
         const room = yield* roomOf(proctor.room);
         return yield* runProctor({
           done,
-          open: input.connect(proctor.token),
+          open: input.connect(proctor),
           seating: { sittingId: room.id, slug },
         });
       }),
@@ -148,7 +150,7 @@ export const runLoad = Effect.fn("load.run")(function* <E, R>(
       yield* timed(
         "run:student",
         runStudent({
-          open: input.connect(student.token),
+          open: input.connect(student),
           script,
           seating: { sittingId: room.id, slug, token: room.token },
           start,

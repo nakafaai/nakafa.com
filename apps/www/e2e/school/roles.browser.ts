@@ -1,7 +1,7 @@
 import { type Browser, expect, test } from "@playwright/test";
 import { Effect } from "effect";
 import { saved, trackChanges } from "@/e2e/support/changes";
-import { seedGuardianCode } from "@/e2e/support/guardian";
+import { signInGuardian } from "@/e2e/support/guardian";
 import { assignHomeroom } from "@/e2e/support/homeroom";
 import { giveRole } from "@/e2e/support/roles";
 import {
@@ -26,9 +26,8 @@ const WALK_MILLISECONDS = 15 * 60 * 1000;
 /** The name that the acceptance runtime gives every learner it invites. */
 const LEARNER_NAME = "Acceptance Learner";
 
-/** The class teacher the class teacher's seed signs in, and the cohort it opens. */
+/** The class teacher the class teacher's seed signs in. */
 const CLASS_TEACHER = "Acceptance Class Teacher";
-const COHORT = "X-1";
 
 /** The student the card seed adds, and the NISN the guardian seed writes on the roster. */
 const CARD_STUDENT = "Siswa Uji";
@@ -80,8 +79,10 @@ async function seedStudent(
   const sitting = await Effect.runPromise(
     seedSitting(school.slug, learner, 3, "upcoming")
   );
-  await Effect.runPromise(seedGraduation(school.slug, learner));
-  return sitting;
+  const graduation = await Effect.runPromise(
+    seedGraduation(school.slug, learner)
+  );
+  return { ...sitting, graduating: graduation.cohort };
 }
 
 /**
@@ -107,23 +108,18 @@ async function signInWithRole(
   await page.close();
 }
 
-/** The Owner places the student in the class teacher's cohort and makes the class teacher its homeroom teacher. */
-async function makeHomeroom(school: Awaited<ReturnType<typeof openSchool>>) {
+/**
+ * The Owner makes the class teacher the homeroom teacher of the graduating class group, which
+ * holds the walk's student. A student has one placement in a period, so the graduation seed's
+ * class group is the student's cohort.
+ */
+async function makeHomeroom(
+  school: Awaited<ReturnType<typeof openSchool>>,
+  cohort: string
+) {
   const page = await school.owner.newPage();
   await page.goto(new URL("/settings/cohorts", school.home).href);
-  const cohort = page.getByRole("link", { exact: true, name: COHORT });
-  await waitUntilTakenOver(cohort);
-  await cohort.click();
-  await page
-    .locator("header")
-    .getByRole("button", { name: "Add student" })
-    .click();
-  const dialog = page.getByRole("dialog");
-  await dialog.getByRole("combobox", { name: "Student" }).click();
-  await page.getByRole("option", { name: LEARNER_NAME }).click();
-  await dialog.getByRole("button", { name: "Add student" }).click();
-  await page.goto(new URL("/settings/cohorts", school.home).href);
-  await assignHomeroom(page, COHORT, CLASS_TEACHER);
+  await assignHomeroom(page, cohort, CLASS_TEACHER);
   await page.close();
 }
 
@@ -156,18 +152,16 @@ async function signInParent(
   await saved(changes, linkedBefore);
   await settings.close();
 
+  await Effect.runPromise(
+    signInGuardian(
+      context,
+      { address: school.home, slug: school.slug },
+      email,
+      NISN
+    )
+  );
   const page = await context.newPage();
   await page.goto(new URL("/parents", school.home).href);
-  const send = page.getByRole("button", { name: "Send code" });
-  await waitUntilTakenOver(send);
-  await page.getByLabel("Parent email").fill(email);
-  await send.click();
-  await expect(page.getByLabel("Sign-in code")).toBeVisible();
-  const seeded = await Effect.runPromise(
-    seedGuardianCode(school.slug, email, NISN)
-  );
-  await page.getByLabel("Sign-in code").fill(seeded.code);
-  await page.getByRole("button", { name: "Sign in" }).click();
   await expect(page.getByRole("button", { name: CARD_STUDENT })).toBeVisible({
     timeout: readinessTimeoutMilliseconds,
   });
@@ -191,9 +185,12 @@ async function openRole(
     await Effect.runPromise(
       signInClassTeacher(context, school.slug, school.home)
     );
-    const { examId, sittingId } = await seedStudent(browser, school);
+    const { examId, graduating, sittingId } = await seedStudent(
+      browser,
+      school
+    );
     await Effect.runPromise(seedForum(school.slug, 12, 6));
-    await makeHomeroom(school);
+    await makeHomeroom(school, graduating);
     await school.owner.close();
     return {
       origin: new URL(school.home).origin,

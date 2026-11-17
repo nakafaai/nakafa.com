@@ -26,7 +26,6 @@ const ENDS_EARLY = PRO_PERIOD_END - DAY_MS;
 /** Inserts a free user with a Polar account and one active Pro subscription on it. */
 async function seedProSubscription(ctx: MutationCtx) {
   const userId = await ctx.db.insert("users", {
-    authId: "auth-grant-end",
     credits: 0,
     creditsResetAt: 0,
     email: "grant-end@example.com",

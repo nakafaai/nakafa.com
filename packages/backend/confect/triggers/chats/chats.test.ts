@@ -10,7 +10,7 @@ import { resolveNinaContext } from "@repo/backend/confect/nina/context";
 import { readThread } from "@repo/backend/confect/nina/sealed/thread";
 import { SealedReadError } from "@repo/backend/confect/nina/sealed.spec";
 import {
-  createConvexTestWithBetterAuth,
+  createConvexTestWithAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
 import { makeBucket, stubBucket } from "@repo/backend/test/bucket";
@@ -80,14 +80,11 @@ afterEach(() => {
 });
 
 async function fixture() {
-  const t = createConvexTestWithBetterAuth();
+  const t = createConvexTestWithAuth();
   const identity = await t.mutation((ctx) =>
     seedAuthenticatedUser(ctx, { now: NOW, credits: 10 })
   );
-  const owner = t.withIdentity({
-    subject: identity.authUserId,
-    sessionId: identity.sessionId,
-  });
+  const owner = t.withIdentity({ subject: identity.sessionId });
   const uploadId = Ref.decodeReturnsSync(
     refs.public.nina.uploads.save,
     await owner.action(save, {

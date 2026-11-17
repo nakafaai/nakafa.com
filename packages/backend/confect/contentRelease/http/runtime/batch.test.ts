@@ -3,7 +3,7 @@ import { Array as Arr, Schema } from "effect";
 
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import { PublicContentRuntimeRequestSchema } from "@nakafa/aksara-contracts/runtime/spec";
-import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
+import { createConvexTestWithAuth } from "@repo/backend/confect/test.helpers";
 import {
   MAX_PUBLIC_RUNTIME_BATCH_REQUEST_BYTES,
   PublicContentRuntimeBatchRequestSchema,
@@ -40,7 +40,7 @@ const missingRequest = {
   publicPath: "test/missing",
 };
 
-type RuntimeTest = ReturnType<typeof createConvexTestWithBetterAuth>;
+type RuntimeTest = ReturnType<typeof createConvexTestWithAuth>;
 type RuntimeFetcher = Pick<RuntimeTest, "fetch">;
 
 /** Sends one batch through the actual registered Convex HTTP route. */
@@ -90,7 +90,7 @@ afterEach(() => {
 
 describe("public content runtime batch HTTP route", () => {
   it("returns current publications on the canonical batch path", async () => {
-    const t = createConvexTestWithBetterAuth();
+    const t = createConvexTestWithAuth();
     await seedPublicRuntime(t);
     const body = batchJson({ requests: [foundRequest, missingRequest] });
 
@@ -106,7 +106,7 @@ describe("public content runtime batch HTTP route", () => {
   });
 
   it("authenticates before consuming the request body", async () => {
-    const t = createConvexTestWithBetterAuth();
+    const t = createConvexTestWithAuth();
     let pulls = 0;
     const body = new ReadableStream<Uint8Array>(
       {
@@ -134,7 +134,7 @@ describe("public content runtime batch HTTP route", () => {
   });
 
   it("returns eight ordered found and missing responses", async () => {
-    const t = createConvexTestWithBetterAuth();
+    const t = createConvexTestWithAuth();
     await seedPublicRuntime(t);
     const requests = [
       foundRequest,
@@ -166,7 +166,7 @@ describe("public content runtime batch HTTP route", () => {
   });
 
   it("rejects nine items and a body above the complete batch ceiling", async () => {
-    const t = createConvexTestWithBetterAuth();
+    const t = createConvexTestWithAuth();
     const overCount = await post(
       t,
       malformedJson({
@@ -187,7 +187,7 @@ describe("public content runtime batch HTTP route", () => {
   });
 
   it("returns one sanitized failure when any stored item is corrupt", async () => {
-    const t = createConvexTestWithBetterAuth();
+    const t = createConvexTestWithAuth();
     await seedPublicRuntime(t);
     await t.mutation(async (ctx) => {
       const head = await ctx.db.query("contentHeads").unique();

@@ -1,4 +1,5 @@
 import config from "@repo/testing/node";
+import wasmModule from "vite-plugin-wasm-module";
 import { mergeConfig } from "vitest/config";
 
 const defaultExcludes = ["**/node_modules/**", "coverage/**"];
@@ -12,7 +13,6 @@ const coverageExcludes = [
   "confect/**/schema.ts",
   "confect/tables/**",
   "confect/**/*.spec.ts",
-  "components/betterAuth/schema.ts",
   "confect/crons.ts",
   "confect/http.ts",
   "confect/test.*.ts",
@@ -35,13 +35,22 @@ export default mergeConfig(config, {
     projects: [
       {
         extends: true,
+        // Loads each `.wasm` import as a `WebAssembly.Module`, as the Convex
+        // bundler does, so Convex Auth's password hashing runs in the tests.
+        plugins: [wasmModule()],
         test: {
           name: "convex",
           include: ["confect/**/*.test.ts", "components/**/*.test.ts"],
           exclude: defaultExcludes,
           environment: "edge-runtime",
-          // The Convex AI gateway provider imports `convex/server`, which tests mock.
-          server: { deps: { inline: ["@convex-dev/ai-sdk-provider"] } },
+          // The Convex AI gateway provider imports `convex/server`, which tests
+          // mock, and `password-hash-wasm` is inlined so its `.wasm` import
+          // reaches the plugin above.
+          server: {
+            deps: {
+              inline: ["@convex-dev/ai-sdk-provider", "password-hash-wasm"],
+            },
+          },
         },
       },
       {

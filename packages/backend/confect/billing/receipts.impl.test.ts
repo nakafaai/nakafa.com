@@ -1,7 +1,7 @@
 import { describe, expect, it } from "@effect/vitest";
 import { schoolInvoice } from "@repo/backend/confect/billing/receipts";
 import {
-  createConvexTestWithBetterAuth,
+  createConvexTestWithAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
 import { api, internal } from "@repo/backend/convex/_generated/api";
@@ -36,7 +36,7 @@ async function seedPaidPack(ctx: MutationCtx, suffix: string) {
 
 describe("billing/receipts", () => {
   it("reads the invoice of the learner's own paid Xendit payment", async () => {
-    const t = createConvexTestWithBetterAuth();
+    const t = createConvexTestWithAuth();
     const invoice = await t.mutation(async (ctx) => {
       const { paymentId, userId } = await seedPaidPack(ctx, "own");
       return ctx.runQuery(internal.billing.receipts.read, {
@@ -57,7 +57,7 @@ describe("billing/receipts", () => {
   });
 
   it("gives no invoice for another learner's, a Polar, a refunded, or a missing payment", async () => {
-    const t = createConvexTestWithBetterAuth();
+    const t = createConvexTestWithAuth();
     const result = await t.mutation(async (ctx) => {
       const owner = await seedPaidPack(ctx, "owner");
       const other = await seedPaidPack(ctx, "other");
@@ -131,15 +131,12 @@ describe("billing/receipts", () => {
   });
 
   it("downloads the learner's invoice as a PDF, and refuses another's", async () => {
-    const t = createConvexTestWithBetterAuth();
+    const t = createConvexTestWithAuth();
     const { owner, other } = await t.mutation(async (ctx) => ({
       other: await seedPaidPack(ctx, "stranger"),
       owner: await seedPaidPack(ctx, "buyer"),
     }));
-    const authed = t.withIdentity({
-      sessionId: owner.sessionId,
-      subject: owner.authUserId,
-    });
+    const authed = t.withIdentity({ subject: owner.sessionId });
     const file = await authed.action(api.billing.receipts.download, {
       locale: "de",
       paymentId: owner.paymentId,

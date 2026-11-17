@@ -15,7 +15,7 @@ import {
   saveCurriculumProgram,
 } from "@repo/backend/confect/learningPreferences/program";
 import {
-  createConvexTestWithBetterAuth,
+  createConvexTestWithAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
 import { convexModules } from "@repo/backend/confect/test.setup";
@@ -35,7 +35,7 @@ describe("learningPreferences/program", () => {
   it.effect("returns no curriculum for a retired saved key", () =>
     Effect.gen(function* () {
       const runtimeServices = yield* Effect.context<never>();
-      const test = createConvexTestWithBetterAuth();
+      const test = createConvexTestWithAuth();
       const data = yield* makeProgramSnapshotData();
       yield* Effect.promise(() =>
         test.mutation((ctx) =>
@@ -85,7 +85,7 @@ describe("learningPreferences/program", () => {
   it.effect("reads the saved program without reading the catalog", () =>
     Effect.gen(function* () {
       const runtimeServices = yield* Effect.context<never>();
-      const test = createConvexTestWithBetterAuth();
+      const test = createConvexTestWithAuth();
       const data = yield* makeProgramSnapshotData(
         Arr.makeBy(PROGRAM_COUNT, (index) => makeTechnicalProgram(index + 1))
       );
@@ -144,7 +144,7 @@ describe("learningPreferences/program", () => {
     () =>
       Effect.gen(function* () {
         const runtimeServices = yield* Effect.context<never>();
-        const test = createConvexTestWithBetterAuth();
+        const test = createConvexTestWithAuth();
         const data = yield* makeProgramSnapshotData();
         yield* Effect.promise(() =>
           test.mutation((ctx) =>
@@ -227,7 +227,7 @@ describe("learningPreferences/program", () => {
     () =>
       Effect.gen(function* () {
         const runtimeServices = yield* Effect.context<never>();
-        const test = createConvexTestWithBetterAuth();
+        const test = createConvexTestWithAuth();
         const data = yield* makeProgramSnapshotData();
         yield* Effect.promise(() =>
           test.mutation((ctx) =>

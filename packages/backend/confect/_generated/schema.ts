@@ -1,8 +1,8 @@
 import { DatabaseSchema as $DatabaseSchema } from "@confect/server";
 
-import accountDeletionAttemptCancellations from "./tables/accountDeletionAttemptCancellations";
-import accountDeletionPreparations from "./tables/accountDeletionPreparations";
-import accountDeletionReceipts from "./tables/accountDeletionReceipts";
+import agentClients from "./tables/agentClients";
+import agentCodes from "./tables/agentCodes";
+import agentGrants from "./tables/agentGrants";
 import articleBuckets from "./tables/articleBuckets";
 import articleCatalog from "./tables/articleCatalog";
 import articleCategories from "./tables/articleCategories";
@@ -92,7 +92,6 @@ import exams from "./tables/exams";
 import gradingSchemes from "./tables/gradingSchemes";
 import graduationLetters from "./tables/graduationLetters";
 import graduations from "./tables/graduations";
-import guardianCodes from "./tables/guardianCodes";
 import guardianConsents from "./tables/guardianConsents";
 import guardianLinks from "./tables/guardianLinks";
 import guardianRequests from "./tables/guardianRequests";
@@ -183,9 +182,9 @@ import vendorSpend from "./tables/vendorSpend";
 import welcomeEmailIntents from "./tables/welcomeEmailIntents";
 
 const databaseSchema: $DatabaseSchema.DatabaseSchema<{
-  readonly accountDeletionAttemptCancellations: typeof accountDeletionAttemptCancellations;
-  readonly accountDeletionPreparations: typeof accountDeletionPreparations;
-  readonly accountDeletionReceipts: typeof accountDeletionReceipts;
+  readonly agentClients: typeof agentClients;
+  readonly agentCodes: typeof agentCodes;
+  readonly agentGrants: typeof agentGrants;
   readonly articleBuckets: typeof articleBuckets;
   readonly articleCatalog: typeof articleCatalog;
   readonly articleCategories: typeof articleCategories;
@@ -275,7 +274,6 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   readonly gradingSchemes: typeof gradingSchemes;
   readonly graduationLetters: typeof graduationLetters;
   readonly graduations: typeof graduations;
-  readonly guardianCodes: typeof guardianCodes;
   readonly guardianConsents: typeof guardianConsents;
   readonly guardianLinks: typeof guardianLinks;
   readonly guardianRequests: typeof guardianRequests;
@@ -365,9 +363,9 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   readonly vendorSpend: typeof vendorSpend;
   readonly welcomeEmailIntents: typeof welcomeEmailIntents;
 }> = $DatabaseSchema.make({
-  accountDeletionAttemptCancellations,
-  accountDeletionPreparations,
-  accountDeletionReceipts,
+  agentClients,
+  agentCodes,
+  agentGrants,
   articleBuckets,
   articleCatalog,
   articleCategories,
@@ -457,7 +455,6 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   gradingSchemes,
   graduationLetters,
   graduations,
-  guardianCodes,
   guardianConsents,
   guardianLinks,
   guardianRequests,

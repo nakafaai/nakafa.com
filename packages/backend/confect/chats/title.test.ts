@@ -28,7 +28,6 @@ const scenario = <A, Failure>(
 /** Creates one account and returns its id. */
 const learner = Effect.fn("test.chats.title.learner")(function* (name: string) {
   return yield* (yield* DatabaseWriter).table("users").insert({
-    authId: `title-${name}`,
     credits: 0,
     creditsResetAt: 0,
     email: `${name}@example.com`,

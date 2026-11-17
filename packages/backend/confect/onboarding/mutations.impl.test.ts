@@ -82,7 +82,7 @@ describe("onboarding admission", () => {
       yield* Effect.promise(() =>
         test.mutation((ctx) =>
           ctx.db.patch("users", identity.userId, {
-            deletionPreparedAt: NOW,
+            deletedAt: NOW,
           })
         )
       );

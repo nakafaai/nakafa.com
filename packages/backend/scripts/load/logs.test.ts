@@ -49,9 +49,9 @@ describe("load logs", () => {
               udfType: "Query",
             }),
             completion({
-              componentPath: "betterAuth",
-              identifier: "session.js:live",
-              occInfo: { tableName: "session" },
+              componentPath: "auth",
+              identifier: "public.js:getSession",
+              occInfo: { tableName: "sessions" },
               udfType: "Query",
             }),
             completion({ occInfo: {} }),
@@ -78,7 +78,7 @@ describe("load logs", () => {
             name: "query:exams/sittings:paper (cached)",
             value: 12.5,
           },
-          { failed: false, name: "query:betterAuth/session:live", value: 12.5 },
+          { failed: false, name: "query:auth/public:getSession", value: 12.5 },
           {
             failed: false,
             name: "mutation:exams/sittings:answer",
@@ -97,7 +97,7 @@ describe("load logs", () => {
             readDocuments: 42,
             writeBytes: 750,
           },
-          "query:betterAuth/session:live": {
+          "query:auth/public:getSession": {
             calls: 1,
             readBytes: 1500,
             readDocuments: 14,
@@ -113,7 +113,7 @@ describe("load logs", () => {
         expect(run.conflicts).toEqual([
           {
             failed: true,
-            name: "query:betterAuth/session:live on session",
+            name: "query:auth/public:getSession on sessions",
             value: 1,
           },
           {

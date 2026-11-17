@@ -182,7 +182,7 @@ describe("notifications/consume run", () => {
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
         yield* inviteAt(fixture, "nf", fixture.invited, GURU);
-        const account = yield* fixture.account("guru", GURU, true);
+        const account = yield* fixture.account("guru", GURU);
         yield* claim(fixture, fixture.invited, account.userId);
         const user = yield* fixture.run(
           Effect.flatMap(DatabaseReader, (reader) =>

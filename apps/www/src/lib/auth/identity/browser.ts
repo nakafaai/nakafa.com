@@ -3,17 +3,19 @@ import {
   revokeToBaselineAnalytics,
 } from "@repo/analytics/posthog/browser";
 import { Effect, Schema } from "effect";
+import { clientEnv } from "@/env.public";
 import { reportClientException } from "@/lib/analytics/client";
-import { readAuthClient } from "@/lib/auth/client";
+import { type SignOutFailed, signOutSession } from "@/lib/auth/client";
 import { holdSession, releaseSession } from "@/lib/auth/session";
+import { readConvexClient } from "@/lib/convex/client";
 
 const accountSignOutFailedCode = "ACCOUNT_SIGN_OUT_FAILED";
 const accountStorageKeyPrefix = "nakafa-";
 
-type SignOutResult = Awaited<
-  ReturnType<ReturnType<typeof readAuthClient>["signOut"]>
->;
-type SignOutRequest = () => Promise<SignOutResult>;
+/** The page's sign-out: the sign-out route ends the session, then Convex Auth's client forgets it. */
+const signOutPage = Effect.suspend(() =>
+  signOutSession(readConvexClient(clientEnv.VITE_CONVEX_URL))
+);
 
 /** Raised when the current account cannot be signed out safely. */
 export class AccountSignOutFailed extends Schema.TaggedError<
@@ -109,28 +111,17 @@ export const clearDeletedAccountBrowserIdentity = Effect.fn(
  * Signs the account out, then clears account-scoped browser identity. Every
  * caller leaves by loading another document once it succeeds, so the page's
  * readers keep the session they see until then (`holdSession`). A sign-out that
- * fails lets them follow Better Auth again.
+ * fails lets them follow the session again.
  */
 export const signOutAccountBrowserIdentity = Effect.fn(
   "www.auth.signOutAccountBrowserIdentity"
-)(function* (
-  request: SignOutRequest = async () => await readAuthClient().signOut()
-) {
+)(function* (signOut: Effect.Effect<void, SignOutFailed> = signOutPage) {
   yield* holdSession();
-  const result = yield* Effect.tryPromise({
-    try: request,
-    catch: () =>
-      new AccountSignOutFailed({
-        code: accountSignOutFailedCode,
-      }),
-  }).pipe(Effect.tapError(() => releaseSession()));
-
-  if (result.error) {
-    yield* releaseSession();
-    return yield* new AccountSignOutFailed({
-      code: accountSignOutFailedCode,
-    });
-  }
-
+  yield* signOut.pipe(
+    Effect.mapError(
+      () => new AccountSignOutFailed({ code: accountSignOutFailedCode })
+    ),
+    Effect.tapError(() => releaseSession())
+  );
   yield* clearAccountBrowserIdentity();
 });

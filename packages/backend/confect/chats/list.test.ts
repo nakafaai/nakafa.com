@@ -6,7 +6,7 @@ import {
 } from "@repo/backend/client/chats/list";
 import type { ChatView } from "@repo/backend/confect/chats/view";
 import {
-  createConvexTestWithBetterAuth,
+  createConvexTestWithAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
 import { api } from "@repo/backend/convex/_generated/api";
@@ -26,15 +26,14 @@ const STRANGER = "Aljabar dasar";
  * through the public rename, so each is stored the way a real write stores it.
  */
 async function fixture() {
-  const t = createConvexTestWithBetterAuth();
+  const t = createConvexTestWithAuth();
   const [owner, stranger] = await t.mutation((ctx) =>
     Promise.all([
       seedAuthenticatedUser(ctx, { now: NOW, suffix: "list-owner" }),
       seedAuthenticatedUser(ctx, { now: NOW, suffix: "list-stranger" }),
     ])
   );
-  const as = (who: typeof owner) =>
-    t.withIdentity({ sessionId: who.sessionId, subject: who.authUserId });
+  const as = (who: typeof owner) => t.withIdentity({ subject: who.sessionId });
   const add = async (
     who: typeof owner,
     visibility: Doc<"chats">["visibility"],

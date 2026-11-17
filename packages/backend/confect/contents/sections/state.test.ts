@@ -6,7 +6,7 @@ import {
   finishBuild,
   isReady,
 } from "@repo/backend/confect/contents/sections/state";
-import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
+import { createConvexTestWithAuth } from "@repo/backend/confect/test.helpers";
 import { KNOWLEDGE_RELEASE, seedKnowledge } from "@repo/backend/test/knowledge";
 import { Effect, Option } from "effect";
 
@@ -14,7 +14,7 @@ const MODEL = "google/gemini-embedding-2";
 const ACTIVE = KNOWLEDGE_RELEASE.releaseId;
 
 /** What a test does to the state of the index of one deployment. */
-function against(t: ReturnType<typeof createConvexTestWithBetterAuth>) {
+function against(t: ReturnType<typeof createConvexTestWithAuth>) {
   /** Finishes the build and gives, with the answer, how many documents the transaction wrote. */
   const finishMeasured = (releaseId: string, model = MODEL, missing = 0) =>
     t.mutation(async (ctx) => {
@@ -79,7 +79,7 @@ function against(t: ReturnType<typeof createConvexTestWithBetterAuth>) {
 
 /** A deployment whose active release is the one of the knowledge fixture. */
 async function setup() {
-  const t = createConvexTestWithBetterAuth();
+  const t = createConvexTestWithAuth();
   await t.mutation(seedKnowledge);
   return against(t);
 }
@@ -92,7 +92,7 @@ describe("section index state", () => {
   });
 
   it("gives no sequence while no release is active", async () => {
-    const { sequence } = against(createConvexTestWithBetterAuth());
+    const { sequence } = against(createConvexTestWithAuth());
     expect(await sequence(ACTIVE)).toBeNull();
   });
 
@@ -179,12 +179,12 @@ describe("section index state", () => {
   });
 
   it("is not ready while no release is active", async () => {
-    const { ready } = against(createConvexTestWithBetterAuth());
+    const { ready } = against(createConvexTestWithAuth());
     expect(await ready()).toBe(false);
   });
 
   it("refuses a record of a finished build that does not say how many sections it left out", async () => {
-    const t = createConvexTestWithBetterAuth();
+    const t = createConvexTestWithAuth();
     await t.mutation(seedKnowledge);
     await expect(
       t.mutation((ctx) =>

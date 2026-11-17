@@ -4,7 +4,7 @@ import { describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
 import confectSchema from "@repo/backend/confect/_generated/schema";
 import {
-  createConvexTestWithBetterAuth,
+  createConvexTestWithAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
@@ -29,7 +29,7 @@ async function commentOn(
   slug: string,
   appLocales: readonly ("en" | "id")[] = []
 ) {
-  const t = createConvexTestWithBetterAuth();
+  const t = createConvexTestWithAuth();
   if (Arr.isReadonlyArrayNonEmpty(appLocales)) {
     await t.mutation((ctx) => Effect.runPromise(activate(appLocales, ctx)));
   }

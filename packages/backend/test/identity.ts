@@ -2,11 +2,9 @@ import refs from "@repo/backend/confect/_generated/refs";
 import {
   DatabaseReader,
   DatabaseWriter,
-  MutationCtx,
 } from "@repo/backend/confect/_generated/services";
-import { createAuth } from "@repo/backend/confect/auth/runtime";
 import { slugOf, type tenancyFixture } from "@repo/backend/test/tenancy";
-import { Array as Arr, Effect, Option } from "effect";
+import { Effect } from "effect";
 
 /** The moment the card tests start from. Fake timers hold the clock here. */
 export const CARD_NOW = Date.UTC(2026, 9, 14, 9, 0, 0);
@@ -14,6 +12,12 @@ export const CARD_NOW = Date.UTC(2026, 9, 14, 9, 0, 0);
 export const CODE_PATTERN = /^[0-9A-HJKMNP-TV-Z]{5}-[0-9A-HJKMNP-TV-Z]{5}$/u;
 /** A device the sign-in page keeps, as a UUID. */
 export const DEVICE = "0f8fad5b-d9cb-4691-a165-8c45a5d2a1e1";
+/** A device the sign-in page keeps, as a UUID, numbered so that each one differs. */
+export const deviceAt = (index: number) =>
+  `00000000-0000-4000-8000-${String(index).padStart(12, "0")}`;
+/** A placeholder address: a random UUID key at the reserved `.invalid` domain. */
+export const PLACEHOLDER_ADDRESS =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}@login\.nakafa\.invalid$/u;
 export const PASSWORD = "correct horse battery";
 /** A code no card holds, with the dash the page sends. */
 export const UNKNOWN_CODE = "ABCDE-FGHJK";
@@ -107,40 +111,15 @@ export const cardRowOf = (
   );
 
 /**
- * Whether the invitee's stored password is `password`, checked the way Better
- * Auth checks a password at sign-in, so a test reads the stored credential.
+ * Whether the invitee's school login signs in with `password` on its school's
+ * host, through the sign-in a student uses, so a test reads the stored password
+ * by its one use.
  */
 export const storedPasswordIs = (fixture: CardFixture, password: string) =>
-  fixture.run(
-    Effect.gen(function* () {
-      const reader = yield* DatabaseReader;
-      const person = yield* reader
-        .table("tenantPeople")
-        .get(fixture.invited)
-        .pipe(Effect.orDie);
-      if (person.account.state !== "claimed") {
-        return false;
-      }
-      const user = yield* reader
-        .table("users")
-        .get(person.account.userId)
-        .pipe(Effect.orDie);
-      const auth = yield* createAuth(yield* MutationCtx);
-      const context = yield* Effect.promise(() => auth.$context);
-      const accounts = yield* Effect.promise(() =>
-        context.internalAdapter.findAccountByUserId(user.authId)
-      );
-      const hash = Option.getOrUndefined(
-        Arr.findFirst(
-          accounts,
-          (account) => account.providerId === "credential"
-        )
-      )?.password;
-      if (!hash) {
-        return false;
-      }
-      return yield* Effect.promise(() =>
-        context.password.verify({ hash, password })
-      );
+  fixture.anonymous
+    .mutation(refs.public.auth.school.signIn, {
+      loginName: LOGIN_NAME,
+      password,
+      slug: nf,
     })
-  );
+    .pipe(Effect.map((answer) => answer.status === "complete"));

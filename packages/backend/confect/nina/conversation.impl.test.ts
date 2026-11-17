@@ -11,7 +11,7 @@ import { DEFAULT_TITLE } from "@repo/backend/client/nina/presentation";
 import refs from "@repo/backend/confect/_generated/refs";
 import { resolveNinaContext } from "@repo/backend/confect/nina/context";
 import {
-  createConvexTestWithBetterAuth,
+  createConvexTestWithAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
 import { contextFor } from "@repo/backend/test/nina/admission";
@@ -41,14 +41,11 @@ const input = {
 };
 
 async function fixture() {
-  const t = createConvexTestWithBetterAuth();
+  const t = createConvexTestWithAuth();
   const identity = await t.mutation((ctx) =>
     seedAuthenticatedUser(ctx, { now: NOW, credits: 10 })
   );
-  const owner = t.withIdentity({
-    subject: identity.authUserId,
-    sessionId: identity.sessionId,
-  });
+  const owner = t.withIdentity({ subject: identity.sessionId });
   const receipt = Ref.decodeReturnsSync(
     refs.public.nina.turns.start,
     await owner.mutation(start, input)
@@ -146,10 +143,7 @@ describe("Nina conversation visibility", () => {
     const stranger = await f.t.mutation((ctx) =>
       seedAuthenticatedUser(ctx, { now: NOW, suffix: "stranger" })
     );
-    const asStranger = f.t.withIdentity({
-      sessionId: stranger.sessionId,
-      subject: stranger.authUserId,
-    });
+    const asStranger = f.t.withIdentity({ subject: stranger.sessionId });
     const where = {
       order: f.order,
       promptMessageId: f.promptMessageId,
@@ -215,10 +209,7 @@ describe("Nina conversation visibility", () => {
     const stranger = await f.t.mutation((ctx) =>
       seedAuthenticatedUser(ctx, { now: NOW, suffix: "stranger" })
     );
-    const asStranger = f.t.withIdentity({
-      sessionId: stranger.sessionId,
-      subject: stranger.authUserId,
-    });
+    const asStranger = f.t.withIdentity({ subject: stranger.sessionId });
     const chatOf = async (
       reader: typeof f.owner,
       access: { shareToken?: string }

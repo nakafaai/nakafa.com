@@ -13,9 +13,7 @@ import {
 } from "@repo/backend/confect/auth/cleanup/spec";
 import { resend } from "@repo/backend/confect/emails/client";
 import {
-  WelcomeIntentDeferredError,
   WelcomeIntentError,
-  welcomeIntentDeferredCode,
   welcomeIntentFailedCode,
 } from "@repo/backend/confect/emails/welcome/spec";
 import { workflow } from "@repo/backend/confect/workflow";
@@ -32,12 +30,6 @@ export function tryWelcomeIntent<A>(operation: () => Promise<A>) {
   return Effect.tryPromise({
     catch: toWelcomeIntentError,
     try: operation,
-  });
-}
-export function deferWelcomeIntent() {
-  return new WelcomeIntentDeferredError({
-    code: welcomeIntentDeferredCode,
-    message: "Welcome email is deferred during account deletion preparation.",
   });
 }
 const readWelcomeIntentByUserId = Effect.fn("emails.welcome.readIntent")(

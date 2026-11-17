@@ -48,29 +48,16 @@ finds the right data.
   bare School pages answered 404).
 - One sign-in covers `nakafa.com` and every school host of the `us` cell,
   through the cross-subdomain cookies that ADR 0011 describes.
-- The shared sign-in trusts an origin only when it is the site's own origin on a
-  local run, or a school host of the site. A school host's label must pass
-  `isSchoolLabel` (`confect/tenancy/slug.ts`), the rule that the school router
-  applies too, so a reserved label such as `cas`, `api` or `mcp` is not trusted,
-  and neither is a label of two levels, a label the slug rules refuse, or an
-  origin that a browser would not write. A script on a service host sends the
-  shared session cookie with a credentialed request, so trusting every subdomain
-  would let that script act on the session (ADR 0009). Better Auth asks for the
-  trusted origins with each request (`trustedOrigins` as a function in
-  `better-auth` 1.6.33, `dist/context/helpers.mjs` lines 76 to 82, and
-  `dist/api/middlewares/origin-check.mjs` line 108), so the answer holds the
-  origin that Better Auth checks for the request only when the rule trusts it
-  (`confect/auth/host.ts`). That origin is the Origin header or, when the header
-  is empty, the origin of the Referer header (`origin-check.mjs` line 98). A
-  browser sends an Origin with every POST: the Fetch standard appends one to
-  every request whose method is neither GET nor HEAD (section 3.2, step 4), and
-  MDN lists same-origin POST requests among those that carry it. A `null` Origin
-  is refused before the Referer is read, because the header is not empty. The
-  Referer therefore answers only a client that is not a browser, and such a
-  client already holds the session cookie that the check protects. A school host
-  and the base host both pass the check for a request with no Origin. A callback
-  URL on a school host is trusted only for a request from that host. No sign-in
-  flow names another school host yet.
+- The shared sign-in trusts a request only from its own host. Each host serves
+  the auth routes itself (`/api/auth/signin`, `/api/auth/refresh`,
+  `/api/auth/signout`), and Convex Auth's handlers answer only a request whose
+  `Origin` names the host it reached (`ssr/origin.js` of `@convex-dev/auth`
+  2.0.0), so a script on another subdomain, which sends the shared cookie with
+  a credentialed request, cannot act on the session (ADR 0009). A browser sends
+  an Origin with every POST: the Fetch standard appends one to every request
+  whose method is neither GET nor HEAD (section 3.2, step 4). Google's sign-in
+  returns only to the main site or staging (`allowedRedirectOrigins`), so a
+  school host starts its Google sign-in there.
 - The proxy reads the host, the cookie, and Accept-Language. The map from host to
   school is configuration, so a request never reads the database to find its
   school. A request that reads nothing has a target of under 1 ms, which no run has
@@ -230,8 +217,8 @@ its own change, before any school code that depends on it lands.
   cell is shown only in the settings. A move runs in the order of the next
   section.
 - An account has one home cell, and it signs in and writes only there: every
-  mutation checks its session against the Better Auth rows of its own deployment
-  (ADR 0009). A person with schools in two cells holds one account in each,
+  function checks its session against the Convex Auth rows of its own
+  deployment (ADR 0009). A person with schools in two cells holds one account in each,
   signed in with the same email or Google identity.
 - A browser sends a cookie to every host under the domain the cookie names, so
   each cell's hosts live under a registrable domain of their own and its session
@@ -337,7 +324,7 @@ A move runs in this order:
 | The routes of the old School and `readSchoolAuthRedirect` in `apps/www/proxy.ts` | Deleted from the web app in #1051 and its backend in #1037 (K11) |
 | Host rewrite for school subdomains | Live |
 | Shared sign-in cookie across the school hosts of the `us` cell (ADR 0009) | Live |
-| Shared sign-in cookie on a local run (`SITE_URL` on `localhost`) | Chromium sends a `Domain=localhost` cookie to `localhost` and not to `school.localhost`, so a sign-in on a school host of a local run keeps its cookies on that host alone (`hostOwnSchoolCookies` in `packages/backend/confect/auth/host.ts`), and the auth proxy hands Better Auth the browser's host (`apps/www/src/lib/auth/relay.ts`), because a local `next start` builds the request URL from its own address. Sharing one sign-in across school hosts is proven only on a real domain (`nakafa.com`, `local.nakafa.com`) |
+| Shared sign-in cookie on a local run (`SITE_URL` on `localhost`) | A local run names its cookies without a domain, so each host keeps its own session; sharing one sign-in across school hosts is proven only on a real domain (`nakafa.com`) |
 | School URL tree, root (`/`, Beranda) | Live |
 | The proxy decides the 404 of a school page (Hosts) | Live |
 | School URL tree, every other address | Planned |

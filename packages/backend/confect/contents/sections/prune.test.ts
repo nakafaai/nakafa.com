@@ -15,7 +15,7 @@ import {
   embeddingDimensions,
   embeddingModelId,
 } from "@repo/backend/confect/gateway/model";
-import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
+import { createConvexTestWithAuth } from "@repo/backend/confect/test.helpers";
 import { TEST_RELEASE_ID } from "@repo/backend/test/content/release";
 import {
   embedWithKnowledge,
@@ -92,7 +92,7 @@ function storingLeavingOut(source: Source) {
 }
 
 /** What a test does to the clean-up of one deployment. */
-function against(t: ReturnType<typeof createConvexTestWithBetterAuth>) {
+function against(t: ReturnType<typeof createConvexTestWithAuth>) {
   const prune = (releaseId: string, cursor: string | null = null) =>
     t.mutation((ctx) =>
       Effect.runPromise(
@@ -124,14 +124,14 @@ function against(t: ReturnType<typeof createConvexTestWithBetterAuth>) {
 
 /** A deployment whose active release is the one of the knowledge fixture. */
 async function setup() {
-  const t = createConvexTestWithBetterAuth();
+  const t = createConvexTestWithAuth();
   await t.mutation(seedKnowledge);
   return against(t);
 }
 
 /** A deployment whose active release holds the first surah of the Quran and no lesson. */
 async function withQuran() {
-  const t = createConvexTestWithBetterAuth();
+  const t = createConvexTestWithAuth();
   await t.mutation((ctx) =>
     activateQuranSnapshot(ctx, [
       makeQuranSurah(1, 6),
@@ -289,7 +289,7 @@ describe("section prune", () => {
   });
 
   it("deletes the Quran when the active release has none", async () => {
-    const t = createConvexTestWithBetterAuth();
+    const t = createConvexTestWithAuth();
     await t.mutation(activateQuranSource);
     const { prune, rows, sources } = against(t);
     await t.mutation((ctx) => leaveDocument(ctx, fatiha, [0, 1]));
@@ -315,13 +315,13 @@ describe("section prune", () => {
   });
 
   it("does nothing while no release is active", async () => {
-    const { prune } = against(createConvexTestWithBetterAuth());
+    const { prune } = against(createConvexTestWithAuth());
     expect(await prune("release-0")).toMatchObject({ stale: true });
   });
 
   it("deletes the documents that no release publishes any more in bounded batches, and records the build after the last", async () => {
     embedWithKnowledge();
-    const t = createConvexTestWithBetterAuth();
+    const t = createConvexTestWithAuth();
     await t.mutation(seedKnowledge);
     const { run } = knowledgeBuild(t);
     const { rows, sources } = against(t);

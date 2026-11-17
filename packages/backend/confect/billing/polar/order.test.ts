@@ -43,7 +43,6 @@ function orderEvent(
 /** Seeds a learner on Pro with a personal Polar account linked to the webhook customer. */
 async function seedProLearner(ctx: MutationCtx) {
   const userId = await ctx.db.insert("users", {
-    authId: "auth-polar-topup",
     credits: 0,
     creditsResetAt: 0,
     email: "polar-topup@example.com",

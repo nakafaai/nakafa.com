@@ -78,7 +78,7 @@ export const saveKnownAccount = Effect.fn("www.identity.saveKnownAccount")(
     const text = yield* encodeKnownAccountText(
       KnownAccount.make({
         mascot: account.appUser.mascot,
-        name: account.authUser.name,
+        name: account.appUser.name,
         photo: photoOf(account.appUser),
         plan: account.appUser.plan,
         sessionId,

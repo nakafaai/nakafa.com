@@ -34,7 +34,6 @@ describe("billing/grants.impl", () => {
           Effect.gen(function* () {
             const writer = yield* DatabaseWriter;
             const userId = yield* writer.table("users").insert({
-              authId: "auth-grants-impl",
               credits: 0,
               creditsResetAt: START,
               email: "grants-impl@example.com",

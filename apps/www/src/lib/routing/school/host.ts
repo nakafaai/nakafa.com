@@ -79,7 +79,7 @@ export function readHostRole(hostname: string): HostRole {
  * one, such as `harapan.localhost:3000`. The value must name a host (see
  * `readHostname`), so a missing header, or a value that is not a host, names none.
  */
-export function readRequestHost(headers: Headers) {
+function readRequestHost(headers: Headers) {
   return Option.fromNullOr(headers.get("host")).pipe(
     Option.filter((host) => Option.isSome(readHostname(host)))
   );

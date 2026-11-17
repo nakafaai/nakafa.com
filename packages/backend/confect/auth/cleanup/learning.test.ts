@@ -6,7 +6,7 @@ import { createDeletedUserTombstone } from "@repo/backend/confect/auth/deletion/
 import { createCanonicalLearningContext } from "@repo/backend/confect/contents/context";
 import { createPopularityViewerKey } from "@repo/backend/confect/contents/popularity";
 import {
-  createConvexTestWithBetterAuth,
+  createConvexTestWithAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
 import { Effect } from "effect";
@@ -23,7 +23,7 @@ const learningTables = [
 ] as const;
 const NOW = Date.UTC(2026, 9, 8, 9, 0, 0);
 it("drains deleted-user credit history, keeps each batch bounded, and preserves another learner", async () => {
-  const t = createConvexTestWithBetterAuth();
+  const t = createConvexTestWithAuth();
   const identity = await t.mutation(async (ctx) => {
     const removed = await seedAuthenticatedUser(ctx, {
       now: NOW,

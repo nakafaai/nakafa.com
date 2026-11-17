@@ -34,7 +34,6 @@ async function insertEnqueuedIntent(
 ) {
   return await test.mutation(async (ctx) => {
     const userId = await ctx.db.insert("users", {
-      authId: `reconcile-${suffix}`,
       credits: 0,
       creditsResetAt: 0,
       email: `${suffix}@example.com`,
@@ -74,7 +73,6 @@ async function insertScheduledIntent(
 ) {
   const userId = await test.mutation((ctx) =>
     ctx.db.insert("users", {
-      authId: `scheduled-${suffix}`,
       credits: 0,
       creditsResetAt: 0,
       email: `${suffix}@example.com`,

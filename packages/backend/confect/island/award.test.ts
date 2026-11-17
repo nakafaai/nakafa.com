@@ -2,7 +2,7 @@ import { assert, describe, expect, it } from "@effect/vitest";
 import { grantAward } from "@repo/backend/confect/island/award";
 import type { AwardSource } from "@repo/backend/confect/island/schema";
 import {
-  createConvexTestWithBetterAuth,
+  createConvexTestWithAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
 import { inMutation } from "@repo/backend/test/client";
@@ -15,7 +15,7 @@ const DAY = 86_400_000;
 /** One signed-in learner with no island yet, and a way to grant them Stars. */
 const learnerWorld = Effect.fn("test.island.learnerWorld")(function* () {
   vi.useFakeTimers({ now: NOW });
-  const t = createConvexTestWithBetterAuth();
+  const t = createConvexTestWithAuth();
   const { userId } = yield* Effect.promise(() =>
     t.mutation((ctx) => seedAuthenticatedUser(ctx, { now: NOW }))
   );

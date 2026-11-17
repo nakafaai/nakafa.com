@@ -1,7 +1,6 @@
 import { Ref } from "@confect/core";
-// convex-test imports a function's module, and the Better Auth module behind a signed write, on the first
-// call, inside that test's 5 s, and the cold graph takes longer. Importing them here loads them while the
-// file is collected, so no test pays it.
+// convex-test imports a function's module on the first call, inside that test's 5 s, and the cold graph
+// takes longer. Importing them here loads them while the file is collected, so no test pays it.
 import "@repo/backend/convex/auth/cleanup";
 import "@repo/backend/convex/nina/memory";
 import { afterEach, expect, it } from "@effect/vitest";
@@ -10,7 +9,7 @@ import { createDeletedUserTombstone } from "@repo/backend/confect/auth/deletion/
 import { MEMORY_BATCH } from "@repo/backend/confect/nina/memory/store";
 import { POST_LIKE_CLEANUP_BATCH_SIZE } from "@repo/backend/confect/posts/cleanup";
 import {
-  createConvexTestWithBetterAuth,
+  createConvexTestWithAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
 import { internal } from "@repo/backend/convex/_generated/api";
@@ -29,7 +28,7 @@ async function createOwners(suffix: string) {
   vi.useFakeTimers({ toFake: ["Date", "setTimeout", "clearTimeout"] });
   const now = Date.UTC(2026, 8, 27);
   vi.setSystemTime(now);
-  const t = createConvexTestWithBetterAuth();
+  const t = createConvexTestWithAuth();
   const users = await t.mutation(async (ctx) => {
     const owner = await seedAuthenticatedUser(ctx, {
       now,

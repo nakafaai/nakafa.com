@@ -38,18 +38,16 @@ const scheduledRuns = Effect.map(jobsOf("tenancy/claims:run"), (jobs) =>
 );
 
 /**
- * An account row that holds an address without a Better Auth user behind it:
- * the row that stays while an account is being deleted, or any other account
- * row. Better Auth keeps one user for an address, so only rows like this one
- * can share it.
+ * An account row that holds an address, live or deleted. Convex Auth links one
+ * account to each verified address (`auth/account`), so only rows written
+ * like this one share an address.
  */
 const bareAccount = (index: number, deleting: boolean) =>
   Effect.flatMap(DatabaseWriter, (writer) =>
     writer.table("users").insert({
-      authId: `bare-${index}`,
       credits: 0,
       creditsResetAt: 0,
-      ...(deleting ? { deletionPreparedAt: NOW } : {}),
+      ...(deleting ? { deletedAt: NOW } : {}),
       email: address,
       mascot: MASCOT,
       name: `Bare ${index}`,
@@ -66,8 +64,8 @@ describe("tenancy/holders schedule", () => {
         const leaving = yield* fixture.run(
           Effect.forEach([1, 2], (index) => bareAccount(index, true))
         );
-        const guru = yield* fixture.account("guru", address, true);
-        yield* fixture.account("lain", other, true);
+        const guru = yield* fixture.account("guru", address);
+        yield* fixture.account("lain", other);
         const { personId } = yield* fixture.run(
           invitePerson(fixture.tenants.nf, address)
         );
@@ -99,7 +97,7 @@ describe("tenancy/holders schedule", () => {
   it.effect("schedules nothing when no account holds the address", () =>
     Effect.gen(function* () {
       const fixture = yield* tenancyFixture;
-      yield* fixture.account("lain", other, true);
+      yield* fixture.account("lain", other);
       yield* fixture.internal.mutation(schedule, {
         cursor: null,
         email: address,

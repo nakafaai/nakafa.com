@@ -23,7 +23,8 @@ const token = "abcdefghijklmnopqrstuvwxyz0123456789-_ABCDE";
 const loaded = {
   chatUserId: learner,
   loading: false,
-  opening: false,
+  shared: false,
+  signedIn: true,
   viewerId: learner,
 };
 
@@ -45,49 +46,45 @@ describe("chat/access", () => {
     ).toEqual({ canWrite: false, owner: false });
   });
 
-  it("gives a signed-out viewer nothing to write, even to a chat with no owner yet", () => {
-    expect(readChatAccess({ ...loaded, viewerId: undefined })).toEqual({
-      canWrite: false,
-      owner: false,
-    });
+  it("gives a signed-out viewer nothing to write, even to a chat that still loads", () => {
+    expect(
+      readChatAccess({ ...loaded, signedIn: false, viewerId: undefined })
+    ).toEqual({ canWrite: false, owner: false });
     expect(
       readChatAccess({
+        ...loaded,
         chatUserId: undefined,
         loading: true,
-        opening: true,
+        signedIn: false,
         viewerId: undefined,
       })
     ).toEqual({ canWrite: false, owner: false });
   });
 
-  it("lets the learner write to the chat they just started while it loads", () => {
+  it("keeps the composer of the learner's own chat while it loads, before the session's token confirms the viewer", () => {
     expect(
       readChatAccess({
+        ...loaded,
         chatUserId: undefined,
         loading: true,
-        opening: true,
-        viewerId: learner,
+        viewerId: undefined,
       })
     ).toEqual({ canWrite: true, owner: false });
   });
 
-  it("gives a chat that only loads, or that someone else owns, no write access", () => {
+  it("gives a chat read through a link no composer while it loads, and a loaded chat of someone else none", () => {
     expect(
       readChatAccess({
+        ...loaded,
         chatUserId: undefined,
         loading: true,
-        opening: false,
-        viewerId: learner,
+        shared: true,
       })
     ).toEqual({ canWrite: false, owner: false });
-    expect(
-      readChatAccess({
-        chatUserId: stranger,
-        loading: false,
-        opening: true,
-        viewerId: learner,
-      })
-    ).toEqual({ canWrite: false, owner: false });
+    expect(readChatAccess({ ...loaded, chatUserId: stranger })).toEqual({
+      canWrite: false,
+      owner: false,
+    });
   });
 });
 

@@ -6,7 +6,7 @@ import { setHref, trackHref } from "@/e2e/support/tryout";
 /** What Cloudflare's assets answer a page with, which a Worker render never sends. */
 const ASSET_CACHE = "public, max-age=0, must-revalidate";
 const HINT_COOKIE = "nakafa-signed-in";
-const SESSION_ANSWER = "**/api/auth/get-session**";
+const SESSION_ANSWER = "**/api/auth/refresh**";
 /** A progress mark of the rows every visitor reads. */
 const SHARED_MARK = '[data-rows="shared"] [data-progress]';
 

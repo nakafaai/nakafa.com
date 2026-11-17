@@ -5,7 +5,7 @@ import {
 } from "@nakafa/aksara-contracts/program/spec";
 import confectSchema from "@repo/backend/confect/_generated/schema";
 import {
-  createConvexTestWithBetterAuth,
+  createConvexTestWithAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
@@ -25,7 +25,7 @@ import { Array as Arr, Effect } from "effect";
 export const createOnboardingTest = Effect.fn("test.onboarding.create")(
   function* (now: number, role?: Doc<"users">["role"], suffix = "onboarding") {
     yield* Effect.sync(() => vi.setSystemTime(now - 60_000));
-    const test = createConvexTestWithBetterAuth();
+    const test = createConvexTestWithAuth();
     const identity = yield* Effect.promise(() =>
       test.mutation((ctx) =>
         seedAuthenticatedUser(ctx, {
@@ -41,10 +41,7 @@ export const createOnboardingTest = Effect.fn("test.onboarding.create")(
     );
     yield* Effect.sync(() => vi.setSystemTime(now));
     return {
-      authenticated: test.withIdentity({
-        sessionId: identity.sessionId,
-        subject: identity.authUserId,
-      }),
+      authenticated: test.withIdentity({ subject: identity.sessionId }),
       identity,
       test,
     };
@@ -54,7 +51,7 @@ export const createOnboardingTest = Effect.fn("test.onboarding.create")(
 /** Activates every curriculum key used by onboarding defaults. */
 export const activateOnboardingPrograms = Effect.fn(
   "test.onboarding.activatePrograms"
-)(function* (test: ReturnType<typeof createConvexTestWithBetterAuth>) {
+)(function* (test: ReturnType<typeof createConvexTestWithAuth>) {
   const runtimeServices = yield* Effect.context<never>();
   const programs = [
     makeOnboardingProgram(1, "merdeka", "merdeka"),

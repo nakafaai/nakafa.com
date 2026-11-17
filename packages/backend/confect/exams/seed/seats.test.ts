@@ -1,5 +1,12 @@
-import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
-import { components } from "@repo/backend/confect/_generated/components";
+import authTest from "@convex-dev/auth/test";
+import {
+  afterEach,
+  assert,
+  beforeEach,
+  describe,
+  expect,
+  it,
+} from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
 import {
   DatabaseReader,
@@ -7,22 +14,20 @@ import {
 } from "@repo/backend/confect/_generated/services";
 import { schoolTiers } from "@repo/backend/confect/billing/tiers";
 import { systemActor } from "@repo/backend/confect/tenancy/actor";
+import { api } from "@repo/backend/convex/_generated/api";
 import { nf } from "@repo/backend/test/editor";
 import { keyedSchool } from "@repo/backend/test/sittings";
 import { TENANCY_NOW, tenancyFixture } from "@repo/backend/test/tenancy";
-import { Array as Arr, Effect, Schema } from "effect";
+import { Array as Arr, Cause, Effect, Exit } from "effect";
 
 const { load, seats } = refs.internal.exams.seed;
 const { dashboard, enter, mine } = refs.public.exams.sittings;
-
-/** The session that Better Auth holds for a token, as the session middleware reads it. */
-const Session = Schema.Struct({ _id: Schema.String, userId: Schema.String });
 
 /** A seat of the test with its own key and token. */
 const seat = (number: number) => ({
   key: `load-test-${number}`,
   name: `Siswa ${number}`,
-  token: `token-${number}`,
+  token: `seat-token-${number}`,
 });
 
 describe("exams seed seats", () => {
@@ -106,6 +111,44 @@ describe("exams seed seats", () => {
       })
   );
 
+  it.effect(
+    "refuses a seat whose token Convex Auth takes for no password, and seats no one",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        yield* keyedSchool(fixture);
+        yield* fixture.internal.mutation(load, {
+          questions: 1,
+          rooms: 1,
+          slug: nf,
+        });
+        // Convex Auth takes a password of eight characters at least.
+        const refused = yield* fixture.internal
+          .mutation(seats, {
+            kind: "student",
+            seats: [{ ...seat(4), token: "short" }],
+            slug: nf,
+          })
+          .pipe(Effect.exit);
+        assert.ok(Exit.isFailure(refused));
+        expect(Cause.pretty(refused.cause)).toContain(
+          "A seat's token is not a password Convex Auth takes."
+        );
+        const seated = yield* fixture.run(
+          Effect.gen(function* () {
+            return yield* (yield* DatabaseReader)
+              .table("tenantPeople")
+              .index("by_tenantId_and_status", (query) =>
+                query.eq("tenantId", fixture.tenants.nf).eq("status", "active")
+              )
+              .collect()
+              .pipe(Effect.orDie);
+          })
+        );
+        expect(Arr.map(seated, ({ name }) => name)).not.toContain(seat(4).name);
+      })
+  );
+
   it.effect("refuses the seed outside the acceptance runtime", () =>
     Effect.gen(function* () {
       const fixture = yield* tenancyFixture;
@@ -131,34 +174,32 @@ describe("exams seed seats", () => {
         const room = yield* Effect.fromOption(Arr.head(made.sittings)).pipe(
           Effect.orDie
         );
-        yield* fixture.internal.mutation(seats, {
+        const students = yield* fixture.internal.mutation(seats, {
           kind: "student",
           seats: [seat(1), seat(2)],
           slug: nf,
         });
-        yield* fixture.internal.mutation(seats, {
+        const proctors = yield* fixture.internal.mutation(seats, {
           kind: "proctor",
           seats: [seat(3)],
           slug: nf,
         });
-        const signedIn = (token: string) =>
+        // A seat signs in as the load test does: its account id, and its token as the password.
+        const signedIn = (userId: string | undefined, token: string) =>
           Effect.promise(() =>
-            fixture.convex.run((ctx) =>
-              ctx.runQuery(components.betterAuth.adapter.findOne, {
-                model: "session",
-                where: [{ field: "token", operator: "eq", value: token }],
-              })
-            )
+            fixture.convex.mutation(api.auth.core.signInWithUsernamePassword, {
+              password: token,
+              username: userId ?? "",
+            })
           ).pipe(
-            Effect.flatMap(Schema.decodeUnknownEffect(Session)),
-            Effect.map((session) =>
-              fixture.signedIn({
-                sessionId: session._id,
-                subject: session.userId,
-              })
-            )
+            Effect.map((answer) => {
+              assert(answer.status === "complete", "Expected a session.");
+              return fixture.signedIn(
+                authTest.sessionIdentity(answer.tokens).subject
+              );
+            })
           );
-        const student = yield* signedIn("token-2");
+        const student = yield* signedIn(students[1], seat(2).token);
         const listed = yield* student.query(mine, { slug: nf });
         expect(Arr.map(listed, (row) => row.id)).toEqual([room.id]);
         const entered = yield* student.mutation(enter, {
@@ -168,7 +209,7 @@ describe("exams seed seats", () => {
           token: room.token,
         });
         expect(entered).toMatchObject({ outcome: "admitted" });
-        const proctor = yield* signedIn("token-3");
+        const proctor = yield* signedIn(proctors[0], seat(3).token);
         const page = yield* proctor.query(dashboard, {
           paginationOpts: { cursor: null, numItems: 100 },
           sittingId: room.id,

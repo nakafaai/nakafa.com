@@ -2,6 +2,7 @@
   "extends": "../typescript-config/library.json",
   "compilerOptions": {
     "allowJs": true,
+    "allowImportingTsExtensions": true,
     "jsx": "react-jsx",
     "target": "ESNext",
     "lib": ["ES2022", "dom", "ESNext.Array", "DOM.Iterable"],

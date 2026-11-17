@@ -10,6 +10,7 @@ import {
   loadPageModule,
   startLiveSession,
 } from "@/lib/auth/live";
+import { AuthSession } from "@/lib/auth/session";
 
 const CONVEX_URL = "https://example.convex.cloud";
 const SIGNED_IN_COOKIE = "theme=dark; nakafa-signed-in=1";
@@ -25,14 +26,8 @@ const pageModules = vi.hoisted(() => {
   };
 });
 
-vi.mock("@/lib/auth/client", () => ({
-  readAuthClient: () => ({
-    $store: {
-      atoms: {
-        session: { subscribe: pageModules.listen },
-      },
-    },
-  }),
+vi.mock("@/lib/auth/feed", () => ({
+  followClientSession: () => ({ subscribe: pageModules.listen }),
 }));
 
 vi.mock("@/lib/convex/client", async () => {
@@ -42,30 +37,30 @@ vi.mock("@/lib/convex/client", async () => {
   return { readConvexClient: pageModules.readConvexClient };
 });
 
-/** A Better Auth session atom that the test drives: it reports values to its listener. */
-function sessionAtom() {
-  let listener: ((value: unknown) => void) | undefined;
+/** The session feed of Convex Auth's client, which the test drives: it reports sessions to its listener. */
+function sessionFeed() {
+  let listener: ((session: AuthSession) => void) | undefined;
   const unsubscribe = vi.fn();
   return {
-    atom: {
-      subscribe: (next: (value: unknown) => void) => {
+    feed: {
+      subscribe: (next: (session: AuthSession) => void) => {
         listener = next;
         return unsubscribe;
       },
     },
-    report: (value: unknown) => listener?.(value),
+    report: (session: AuthSession) => listener?.(session),
     unsubscribe,
   };
 }
 
 /** Browser modules that record each load, so a test can see which modules a page loaded. */
-function recordingModules(atom: ReturnType<typeof sessionAtom>["atom"]) {
+function recordingModules(feed: ReturnType<typeof sessionFeed>["feed"]) {
   const loads = vi.fn();
   const convex = new ConvexReactClient(CONVEX_URL, { logger: false });
   const modules: LiveSessionModules = {
     auth: Effect.sync(() => {
       loads("auth");
-      return { readSessionAtom: () => atom };
+      return { followClientSession: () => feed };
     }),
     convex: Effect.sync(() => {
       loads("convex");
@@ -75,11 +70,12 @@ function recordingModules(atom: ReturnType<typeof sessionAtom>["atom"]) {
   return { convex, loads, modules };
 }
 
-const signedInSession = {
-  data: { session: { id: "session-1" }, user: { id: "user-1" } },
-  error: null,
+const signedInSession = AuthSession.make({
+  hasError: false,
   isPending: false,
-};
+  sessionId: "session-1",
+  userId: "user-1",
+});
 
 describe("live session store", () => {
   it("starts signed out with no client and no Convex answer", () => {
@@ -105,8 +101,8 @@ describe("live session store", () => {
     "leaves a visitor's page with no client and loads no browser module",
     () =>
       Effect.gen(function* () {
-        const session = sessionAtom();
-        const { loads, modules } = recordingModules(session.atom);
+        const session = sessionFeed();
+        const { loads, modules } = recordingModules(session.feed);
         const store = createLiveSessionStore();
 
         yield* startLiveSession(store, {
@@ -123,11 +119,11 @@ describe("live session store", () => {
   );
 
   it.effect(
-    "creates the page's one client and follows Better Auth's session",
+    "creates the page's one client and follows Convex Auth's session",
     () =>
       Effect.gen(function* () {
-        const session = sessionAtom();
-        const { convex, loads, modules } = recordingModules(session.atom);
+        const session = sessionFeed();
+        const { convex, loads, modules } = recordingModules(session.feed);
         const store = createLiveSessionStore();
 
         yield* Effect.scoped(
@@ -191,8 +187,8 @@ describe("live session store", () => {
 
   it.effect("starts once, so a second start loads nothing", () =>
     Effect.gen(function* () {
-      const session = sessionAtom();
-      const { loads, modules } = recordingModules(session.atom);
+      const session = sessionFeed();
+      const { loads, modules } = recordingModules(session.feed);
       const store = createLiveSessionStore();
       const start = startLiveSession(store, {
         convexUrl: CONVEX_URL,

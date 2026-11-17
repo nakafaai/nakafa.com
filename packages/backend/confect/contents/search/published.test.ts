@@ -6,7 +6,7 @@ import { describe, expect, it } from "@effect/vitest";
 import confectSchema from "@repo/backend/confect/_generated/schema";
 import { loadSearchOwner } from "@repo/backend/confect/contentRelease/search/owner";
 import { readPublishedSearchDocuments } from "@repo/backend/confect/contents/search/published";
-import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
+import { createConvexTestWithAuth } from "@repo/backend/confect/test.helpers";
 import { makeMaterialProjection } from "@repo/backend/test/content/material";
 import {
   insertRuntimeArticles,
@@ -25,7 +25,7 @@ import { Array as Arr, Effect, Order } from "effect";
 
 /** Reads one published article window through the production owner boundary. */
 function readArticles(
-  t: ReturnType<typeof createConvexTestWithBetterAuth>,
+  t: ReturnType<typeof createConvexTestWithAuth>,
   queries: readonly string[],
   scanLimit: number
 ) {
@@ -58,7 +58,7 @@ function readArticles(
 
 /** Activates the release-owned search identity used by published read tests. */
 async function activateSearch(
-  t: ReturnType<typeof createConvexTestWithBetterAuth>,
+  t: ReturnType<typeof createConvexTestWithAuth>,
   runtime: { readonly manifestHash: string }
 ) {
   await t.mutation(async (ctx) => {
@@ -77,7 +77,7 @@ describe("readPublishedSearchDocuments", () => {
   itWithRuntimeRelease(
     "keeps smaller pages stable across empty and overlapping queries",
     async (runtime) => {
-      const t = createConvexTestWithBetterAuth();
+      const t = createConvexTestWithAuth();
       const queries = [
         "/",
         "articles/no-such-route",
@@ -117,7 +117,7 @@ describe("readPublishedSearchDocuments", () => {
   itWithRuntimeRelease(
     "fills the window when an exact route repeats in search hits",
     async (runtime) => {
-      const t = createConvexTestWithBetterAuth();
+      const t = createConvexTestWithAuth();
       const exact = testArticleProjection(0);
       await t.mutation(async (ctx) => {
         await insertRuntimeArticles(ctx, 4);
@@ -138,7 +138,7 @@ describe("readPublishedSearchDocuments", () => {
     }
   );
   it("browses current materials in stable public-path order", async () => {
-    const t = createConvexTestWithBetterAuth();
+    const t = createConvexTestWithAuth();
     const projections = Array.from(
       {
         length: 40,
@@ -212,7 +212,7 @@ describe("readPublishedSearchDocuments", () => {
 itWithRuntimeRelease(
   "keeps the signed description in published search documents",
   async (runtime) => {
-    const t = createConvexTestWithBetterAuth();
+    const t = createConvexTestWithAuth();
     await t.mutation((ctx) =>
       insertRuntimeArticles(ctx, 1, (index) => {
         const projection = testArticleProjection(index);

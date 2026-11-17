@@ -1,7 +1,7 @@
 import { vWorkflowId } from "@convex-dev/workflow";
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import { WORKFLOW_RECOVERY_DELAY_MS } from "@repo/backend/confect/privacy/recovery";
-import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
+import { createConvexTestWithAuth } from "@repo/backend/confect/test.helpers";
 import { internal } from "@repo/backend/convex/_generated/api";
 import { parse } from "convex-helpers/validators";
 
@@ -18,7 +18,7 @@ describe("privacy workflow completion", () => {
   ] as const)("schedules the durable next step for $kind", async (result) => {
     vi.useFakeTimers();
     vi.setSystemTime(NOW);
-    const t = createConvexTestWithBetterAuth();
+    const t = createConvexTestWithAuth();
     await t.mutation(internal.privacy.recovery.handleCleanupComplete, {
       context: { source: "account-deletion" },
       result,

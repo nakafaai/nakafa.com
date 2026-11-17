@@ -95,7 +95,7 @@ describe("tenancy/expiry invite", () => {
     () =>
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
-        const account = yield* fixture.account("guru", guru, true);
+        const account = yield* fixture.account("guru", guru);
         const { inviteId, personId } = yield* fixture.run(
           invitePerson(fixture.tenants.nf, guru)
         );

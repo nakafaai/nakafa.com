@@ -6,9 +6,9 @@ import {
   DatabaseReader,
   MutationCtx,
 } from "@repo/backend/confect/_generated/services";
-import { type Auth, createAuth } from "@repo/backend/confect/auth/runtime";
 import {
   createLoginAccount,
+  passwordFormatRefusal,
   setLoginPassword,
 } from "@repo/backend/confect/identity/account";
 import {
@@ -152,7 +152,7 @@ const findRedeemable = Effect.fn("identity.redeem.find")(function* (
 });
 
 /**
- * The Better Auth account of a Person, made first when the Person has none. A
+ * The account of a Person, made first when the Person has none. A
  * new account is bound to the Person as a card claim in the same transaction,
  * so a password step that fails later rolls the claim back with it. The claim
  * accepts the Person's pending invite, as a claim by the invited address does,
@@ -161,37 +161,32 @@ const findRedeemable = Effect.fn("identity.redeem.find")(function* (
  * reissued card reuses that account.
  */
 const accountOf = Effect.fn("identity.redeem.account")(function* (
-  auth: Auth,
   person: TenantPeopleDoc
 ) {
   if (person.account.state === "claimed") {
-    const user = yield* (yield* DatabaseReader)
-      .table("users")
-      .get(person.account.userId)
-      .pipe(Effect.orDie);
-    return { authId: user.authId };
+    return person.account.userId;
   }
-  const created = yield* createLoginAccount(auth, person.name);
+  const userId = yield* createLoginAccount(person.name);
   const claimedAt = yield* Clock.currentTimeMillis;
   yield* bindPerson(person, {
     claimedAt,
     method: "card",
     state: "claimed",
-    userId: created.userId,
+    userId,
   });
   const pending = yield* pendingInviteOf(person._id);
   if (Option.isSome(pending)) {
     yield* replaceInviteState(pending.value, {
       at: claimedAt,
       status: "accepted",
-      userId: created.userId,
+      userId,
     });
   }
   yield* personAuthority.record(personActor(person), person, {
     method: "card",
     type: "person.claimed",
   });
-  return { authId: created.authId };
+  return userId;
 });
 
 /**
@@ -199,13 +194,15 @@ const accountOf = Effect.fn("identity.redeem.account")(function* (
  * a reissued card allows. In order, it refuses a request that carries a signed-in
  * identity before any limit is spent, counts the attempt against its device's bucket
  * (which only slows one browser), reads the code and the typed login name, opens the
- * card on the school's host with that login name, checks the password length,
- * creates the account if the Person has none, claims the Person and accepts its
- * pending invite, stores the password through Better Auth, marks the card used,
- * and journals the redemption.
+ * card on the school's host with that login name, checks the password's length
+ * and ends, creates the account if the Person has none, claims the Person and
+ * accepts its pending invite, stores the password through Convex Auth, marks the
+ * card used, and journals the redemption.
  * The rate-limit count is written first, on purpose: a refusal is a value, so the
- * attempt it refuses still counts. The account, claim, password, and card writes
- * come after the last refusal, so a refused card changes nothing else.
+ * attempt it refuses still counts. The account and claim writes come after every
+ * refusal but one: a password the component finds too common, which only it
+ * knows. That refusal leaves the card unspent and the claimed account without a
+ * password, so the next redemption of the same card reuses the account.
  */
 export const redeemCard = Effect.fn("identity.redeem.card")(function* (
   input: typeof RedeemRequest.Type
@@ -231,18 +228,14 @@ export const redeemCard = Effect.fn("identity.redeem.card")(function* (
     return refused(found.failure);
   }
   const { card, login, person } = found.success;
-  // A missing site or Google setting is a deployment defect, not a refusal.
-  const auth = yield* createAuth(ctx).pipe(Effect.orDie);
-  const context = yield* Effect.promise(() => auth.$context);
-  const { maxPasswordLength, minPasswordLength } = context.password.config;
-  if (input.password.length < minPasswordLength) {
-    return refused("passwordTooShort");
+  const format = passwordFormatRefusal(input.password);
+  if (Option.isSome(format)) {
+    return refused(format.value);
   }
-  if (input.password.length > maxPasswordLength) {
-    return refused("passwordTooLong");
+  const userId = yield* accountOf(person);
+  if ((yield* setLoginPassword(userId, input.password)) !== null) {
+    return refused("passwordRejected");
   }
-  const account = yield* accountOf(auth, person);
-  yield* setLoginPassword(auth, account.authId, input.password);
   yield* markRedeemed(card, yield* Clock.currentTimeMillis);
   yield* personAuthority.record(personActor(person), person, {
     card: card._id,

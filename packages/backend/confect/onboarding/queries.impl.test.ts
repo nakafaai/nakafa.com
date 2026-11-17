@@ -1,10 +1,9 @@
 import { describe, expect, it } from "@effect/vitest";
 import {
-  createConvexTestWithBetterAuth,
+  createConvexTestWithAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
 import { api } from "@repo/backend/convex/_generated/api";
-import { MASCOT_CODE } from "@repo/backend/test/mascot";
 import { Effect } from "effect";
 
 const NOW = Date.UTC(2026, 7, 31, 12, 0, 0);
@@ -12,7 +11,7 @@ const NOW = Date.UTC(2026, 7, 31, 12, 0, 0);
 describe("onboarding/queries", () => {
   it.effect("reports signed-out onboarding state", () =>
     Effect.gen(function* () {
-      const test = createConvexTestWithBetterAuth();
+      const test = createConvexTestWithAuth();
 
       const status = yield* Effect.promise(() =>
         test.query(api.onboarding.queries.getStatus, {})
@@ -28,7 +27,7 @@ describe("onboarding/queries", () => {
 
   it.effect("reports onboarding as required for a new account", () =>
     Effect.gen(function* () {
-      const test = createConvexTestWithBetterAuth();
+      const test = createConvexTestWithAuth();
       const identity = yield* Effect.promise(() =>
         test.mutation((ctx) =>
           seedAuthenticatedUser(ctx, {
@@ -37,10 +36,7 @@ describe("onboarding/queries", () => {
           })
         )
       );
-      const authenticated = test.withIdentity({
-        sessionId: identity.sessionId,
-        subject: identity.authUserId,
-      });
+      const authenticated = test.withIdentity({ subject: identity.sessionId });
 
       const status = yield* Effect.promise(() =>
         authenticated.query(api.onboarding.queries.getStatus, {})
@@ -51,49 +47,6 @@ describe("onboarding/queries", () => {
         isRequired: true,
         profile: null,
       });
-    })
-  );
-
-  it.effect("redacts inconsistent account linkage", () =>
-    Effect.gen(function* () {
-      const test = createConvexTestWithBetterAuth();
-      const identity = yield* Effect.promise(() =>
-        test.mutation((ctx) =>
-          seedAuthenticatedUser(ctx, {
-            now: NOW,
-            suffix: "onboarding-query-linkage",
-          })
-        )
-      );
-      yield* Effect.promise(() =>
-        test.mutation((ctx) =>
-          ctx.db.insert("users", {
-            authId: identity.authUserId,
-            credits: 0,
-            creditsResetAt: NOW,
-            email: "duplicate-query-linkage@example.com",
-            mascot: MASCOT_CODE,
-            name: "Duplicate Query Linkage",
-            plan: "free",
-          })
-        )
-      );
-      const authenticated = test.withIdentity({
-        sessionId: identity.sessionId,
-        subject: identity.authUserId,
-      });
-
-      yield* Effect.promise(() =>
-        expect(
-          authenticated.query(api.onboarding.queries.getStatus, {})
-        ).rejects.toMatchObject({
-          data: {
-            _tag: "AuthReadError",
-            code: "AUTH_READ_FAILED",
-            message: "Unable to read authentication state.",
-          },
-        })
-      );
     })
   );
 });

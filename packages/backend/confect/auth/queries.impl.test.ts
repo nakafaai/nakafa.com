@@ -1,6 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
 import {
-  createConvexTestWithBetterAuth,
+  createConvexTestWithAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
 import { api } from "@repo/backend/convex/_generated/api";
@@ -10,7 +10,7 @@ const NOW = Date.UTC(2026, 8, 4, 12, 0, 0);
 
 describe("authenticated user query contracts", () => {
   it("returns the account projection only for an existing app user", async () => {
-    const t = createConvexTestWithBetterAuth();
+    const t = createConvexTestWithAuth();
     expect(await t.query(api.auth.queries.getCurrentUser)).toBeNull();
     const user = await t.mutation((ctx) =>
       seedAuthenticatedUser(ctx, {
@@ -18,29 +18,32 @@ describe("authenticated user query contracts", () => {
         suffix: "query-user",
       })
     );
-    const authed = t.withIdentity({
-      sessionId: user.sessionId,
-      subject: user.authUserId,
+    const authed = t.withIdentity({ subject: user.sessionId });
+    expect(await authed.query(api.auth.queries.getCurrentUser)).toEqual({
+      appUser: expect.objectContaining({
+        _id: user.userId,
+        name: "User query-user",
+      }),
     });
-    expect(await authed.query(api.auth.queries.getCurrentUser)).toMatchObject({
-      appUser: { _id: user.userId, authId: user.authUserId },
-      authUser: { _id: user.authUserId, name: "User query-user" },
-    });
-    // The profile comes from the app user copy that auth triggers maintain.
+    // The account row holds the whole profile, so no component is read.
     await t.mutation((ctx) =>
       ctx.db.patch("users", user.userId, {
         image: "https://example.com/query-user.png",
       })
     );
     expect(await authed.query(api.auth.queries.getCurrentUser)).toMatchObject({
-      authUser: { image: "https://example.com/query-user.png" },
+      appUser: { image: "https://example.com/query-user.png" },
     });
+    await t.mutation((ctx) =>
+      ctx.db.patch("users", user.userId, { deletedAt: NOW })
+    );
+    expect(await authed.query(api.auth.queries.getCurrentUser)).toBeNull();
     await t.mutation((ctx) => ctx.db.delete("users", user.userId));
     expect(await authed.query(api.auth.queries.getCurrentUser)).toBeNull();
   });
 
   it("exposes only public profile fields and sends the photo only when the account shows it", async () => {
-    const t = createConvexTestWithBetterAuth();
+    const t = createConvexTestWithAuth();
     const user = await t.mutation((ctx) =>
       seedAuthenticatedUser(ctx, {
         now: NOW,

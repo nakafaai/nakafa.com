@@ -21,7 +21,6 @@ const claimedPerson = Effect.fn("test.forum.faces.claimed")(function* (
 ) {
   const writer = yield* DatabaseWriter;
   const userId = yield* writer.table("users").insert({
-    authId: `face-${name}`,
     credits: 0,
     creditsResetAt: 0,
     email: `${name}@example.com`,

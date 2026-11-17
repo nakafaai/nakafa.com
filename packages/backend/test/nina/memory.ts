@@ -159,10 +159,7 @@ export function memoryTools(f: NinaTest) {
       })
     );
     return {
-      owner: f.t.withIdentity({
-        sessionId: seeded.sessionId,
-        subject: seeded.authUserId,
-      }),
+      owner: f.t.withIdentity({ subject: seeded.sessionId }),
       userId: seeded.userId,
     };
   };

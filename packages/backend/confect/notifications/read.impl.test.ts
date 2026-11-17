@@ -64,15 +64,10 @@ describe("notifications/inbox readAll", () => {
     () =>
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
-        const ana = yield* fixture.account(
-          "ana",
-          "ana@harapan.example.test",
-          true
-        );
+        const ana = yield* fixture.account("ana", "ana@harapan.example.test");
         const budi = yield* fixture.account(
           "budi",
-          "budi@harapan.example.test",
-          true
+          "budi@harapan.example.test"
         );
         const anaNf = yield* addPerson(fixture, fixture.tenants.nf, "Ana");
         const budiNf = yield* addPerson(fixture, fixture.tenants.nf, "Budi");
@@ -107,11 +102,7 @@ describe("notifications/inbox readAll", () => {
     () =>
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
-        const ana = yield* fixture.account(
-          "ana",
-          "ana@harapan.example.test",
-          true
-        );
+        const ana = yield* fixture.account("ana", "ana@harapan.example.test");
         const anaNf = yield* addPerson(fixture, fixture.tenants.nf, "Ana");
         const anaOther = yield* addPerson(
           fixture,
@@ -152,11 +143,7 @@ describe("notifications/inbox readAll", () => {
     () =>
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
-        const ana = yield* fixture.account(
-          "ana",
-          "ana@harapan.example.test",
-          true
-        );
+        const ana = yield* fixture.account("ana", "ana@harapan.example.test");
         const anaNf = yield* addPerson(fixture, fixture.tenants.nf, "Ana");
         yield* claim(fixture, anaNf, ana.userId);
         yield* insertRows(fixture, anaNf, fixture.tenants.nf, 51);
@@ -196,11 +183,7 @@ describe("notifications/inbox readAll", () => {
     () =>
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
-        const ana = yield* fixture.account(
-          "ana",
-          "ana@harapan.example.test",
-          true
-        );
+        const ana = yield* fixture.account("ana", "ana@harapan.example.test");
         yield* inviteAt(
           fixture,
           "nf",

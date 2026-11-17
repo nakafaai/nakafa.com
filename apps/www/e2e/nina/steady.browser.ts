@@ -8,7 +8,7 @@ import { NINA_SECTION } from "@/e2e/support/selector";
 
 const HOME = "/en";
 /** The session route, which the test answers late so the session loads on screen. */
-const SESSION_READ = "**/api/auth/get-session**";
+const SESSION_READ = "**/api/auth/refresh**";
 /** How long the session read waits before it answers. */
 const SESSION_DELAY = Duration.seconds(2);
 /** The window mark set once any composer of the page has been disabled. */

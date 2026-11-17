@@ -90,10 +90,7 @@ export const homeScreenHandler = accountHandler(
         island: entryOf(own, account?.appUser._id),
         leaders: leaders ?? [],
         name: Option.getOrUndefined(
-          Option.map(
-            Option.fromNullishOr(account),
-            (user) => user.authUser.name
-          )
+          Option.map(Option.fromNullishOr(account), (user) => user.appUser.name)
         ),
         recent,
         recentLooks: getMaterialLooks(recent),

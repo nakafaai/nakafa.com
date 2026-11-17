@@ -2,7 +2,7 @@ import { RegisteredConvexFunction } from "@confect/server";
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import confectSchema from "@repo/backend/confect/_generated/schema";
 import {
-  createConvexTestWithBetterAuth,
+  createConvexTestWithAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
 import { api } from "@repo/backend/convex/_generated/api";
@@ -28,7 +28,7 @@ describe("triggers/contents/views", () => {
   it.each(["articles", "material"] as const)(
     "captures signed-in %s views after the engaged write",
     async (section) => {
-      const t = createConvexTestWithBetterAuth();
+      const t = createConvexTestWithAuth();
       const article = testArticleProjection(0);
       const material = makeMaterialProjection("en", 1);
       const projection = section === "articles" ? article : material;
@@ -53,10 +53,7 @@ describe("triggers/contents/views", () => {
         return identity;
       });
       await t
-        .withIdentity({
-          subject: identity.authUserId,
-          sessionId: identity.sessionId,
-        })
+        .withIdentity({ subject: identity.sessionId })
         .mutation(api.contents.mutations.views.recordContentView, {
           contentId: projection.graph.assetId,
           deviceId: "device-1",

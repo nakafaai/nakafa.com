@@ -2,7 +2,7 @@ import { RegisteredFunction } from "@confect/server";
 import { expect, it } from "@effect/vitest";
 import { getNakafaQuranReference } from "@repo/backend/agent/quran";
 import schema from "@repo/backend/confect/_generated/schema";
-import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
+import { createConvexTestWithAuth } from "@repo/backend/confect/test.helpers";
 import {
   makeQuranAttribution,
   makeQuranSurah,
@@ -14,7 +14,7 @@ import { Effect } from "effect";
 it.each(["surahs", "passage"])(
   "rejects malformed Quran %s data before interpretation",
   async (query) => {
-    const test = createConvexTestWithBetterAuth();
+    const test = createConvexTestWithAuth();
     await test.mutation((ctx) =>
       activateQuranSnapshot(ctx, [
         makeQuranAttribution(),

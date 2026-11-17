@@ -1,7 +1,7 @@
 // @vitest-environment node
 
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
-import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
+import { createConvexTestWithAuth } from "@repo/backend/confect/test.helpers";
 import {
   MCP_SECRET,
   MCP_SECRET_ENVIRONMENT,
@@ -25,7 +25,7 @@ describe("Nakafa MCP prompts", () => {
       Effect.gen(function* () {
         const response = yield* Effect.promise(() =>
           sendMcpRequest(
-            createConvexTestWithBetterAuth(),
+            createConvexTestWithAuth(),
             modernPost(
               16,
               "prompts/get",

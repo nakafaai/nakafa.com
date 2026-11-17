@@ -104,7 +104,8 @@ const ROOT_RULES: { readonly [Root in ApplicationRoot]: RootRule } = {
   agent: isRootPage,
   // The article index, one category, and one article; the published inventory decides which exist.
   articles: (segments) => segments.length <= 2,
-  auth: (segments) => Arr.contains(["", "error"], Arr.join(segments, "/")),
+  // The sign-in page.
+  auth: isRootPage,
   chat: (segments) => segments.length <= 1,
   comment: (segments) => segments.length === 1,
   contributor: isRootPage,

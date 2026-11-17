@@ -148,7 +148,7 @@ The root guide's Effect V4 Standard applies in full. In `confect/`:
   `Effect.log` reaches Convex logs at its own severity and `Config` reads
   Convex environment variables.
 - When an SDK owns the callback contract, such as a Convex component handler,
-  a Better Auth hook, or an AI SDK tool, build the work as an Effect and hand
+  a Convex Auth user callback, or an AI SDK tool, build the work as an Effect and hand
   the SDK its Promise once at that callback through `Effect.runPromise` or
   `Effect.runPromiseWith` over the captured context, as
   `confect/nina/generation.ts` does. The program itself stays free of `async`,

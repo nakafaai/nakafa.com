@@ -1,6 +1,6 @@
 import { assert, describe, expect, it } from "@effect/vitest";
 import tryouts from "@repo/backend/confect/_generated/refs/tryouts";
-import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
+import { createConvexTestWithAuth } from "@repo/backend/confect/test.helpers";
 import type { CatalogNodeKeys } from "@repo/backend/confect/tryouts/catalog/rows";
 import { catalogNodeIdentity } from "@repo/backend/confect/tryouts/catalog/rows";
 import { TryoutQuestionBodyText } from "@repo/backend/confect/tryouts/runtime/spec";
@@ -44,7 +44,7 @@ const tamperCatalog = (
 describe("tryouts/queries/catalog", () => {
   it.effect("reads nothing before any release activates a snapshot", () =>
     Effect.gen(function* () {
-      const visitor = client(createConvexTestWithBetterAuth());
+      const visitor = client(createConvexTestWithAuth());
       expect(
         yield* visitor
           .query(catalog.getHubPage, { appLocale: "id" })

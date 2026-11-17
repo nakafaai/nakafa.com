@@ -31,7 +31,6 @@ const DECEMBER_END_WITH_GRACE = Date.UTC(2026, 11, 2);
 /** Inserts a person with a free plan and a Polar account for them. */
 async function insertPerson(ctx: MutationCtx) {
   const userId = await ctx.db.insert("users", {
-    authId: "auth-billing-grant",
     credits: 0,
     creditsResetAt: START,
     email: "billing-grant@example.com",
@@ -316,7 +315,7 @@ describe("billing/grants", () => {
     const t = createBillingTestConvex();
     const result = await t.run(async (ctx) => {
       const { accountId, userId } = await insertPerson(ctx);
-      await ctx.db.patch(userId, { deletionPreparedAt: START });
+      await ctx.db.patch(userId, { deletedAt: START });
       const applied = await runInMutation(
         ctx,
         applySubscriptionState(proState(accountId))
@@ -472,7 +471,6 @@ describe("billing/grants", () => {
       const userIds = await Promise.all(
         Arr.makeBy(51, (index) =>
           ctx.db.insert("users", {
-            authId: `auth-school-member-${index}`,
             credits: 0,
             creditsResetAt: START,
             email: `school-member-${index}@example.com`,

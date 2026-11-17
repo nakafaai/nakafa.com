@@ -6,31 +6,27 @@ import spec from "@repo/backend/confect/auth/deletion/workflow.spec";
 import atomic from "@repo/backend/confect/middleware/atomic.impl";
 import { Effect, Layer } from "effect";
 
-const finalizeDeletedUserCleanup = FunctionImpl.make(
+const finalize = FunctionImpl.make(
   databaseSchema,
   spec,
-  "finalizeDeletedUserCleanup",
-  Effect.fn("auth.deletion.workflow.finalizeDeletedUserCleanup")(
-    function* (args) {
-      yield* finalizeAccountDeletion(args.authId, args.expectedPreparation);
-      return null;
-    }
-  )
+  "finalize",
+  Effect.fn("auth.deletion.workflow.finalize")(function* (args) {
+    yield* finalizeAccountDeletion(args.userId);
+    return null;
+  })
 );
-const launchDeletedUserCleanup = FunctionImpl.make(
+const launch = FunctionImpl.make(
   databaseSchema,
   spec,
-  "launchDeletedUserCleanup",
-  Effect.fn("auth.deletion.workflow.launchDeletedUserCleanup")(
-    function* (args) {
-      yield* launchDeletedUserCleanupProgram(args.authId, args.userId);
-      return null;
-    }
-  )
+  "launch",
+  Effect.fn("auth.deletion.workflow.launch")(function* (args) {
+    yield* launchDeletedUserCleanupProgram(args.userId);
+    return null;
+  })
 );
 export default GroupImpl.make(databaseSchema, spec).pipe(
-  Layer.provide(finalizeDeletedUserCleanup),
-  Layer.provide(launchDeletedUserCleanup),
+  Layer.provide(finalize),
+  Layer.provide(launch),
   Layer.provide(atomic),
   GroupImpl.finalize
 );

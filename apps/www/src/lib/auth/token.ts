@@ -1,15 +1,16 @@
 import {
-  classifyNetworkFailure,
   RetryableNetworkAttempt,
   retryNetworkAttempt,
 } from "@repo/backend/client/network";
 import { FetchClient } from "@repo/utilities/http/client";
 import { Effect, Schema } from "effect";
 import { HttpClient, HttpClientRequest, HttpClientResponse } from "effect/http";
-import { TOKEN_PATH } from "@/lib/auth/session";
+
+/** The refresh route of Convex Auth, which answers the access token of the refresh cookie's session. */
+export const REFRESH_PATH = "/api/auth/refresh";
 
 /**
- * The token route could not answer for a request that carries a session cookie.
+ * The refresh route could not answer for a request that carries a session cookie.
  * It holds the reason and, when the route answered, its status: never a header,
  * a cookie, or a body. A 401 is the route's "no session" answer and is not this
  * error.
@@ -22,32 +23,35 @@ export class SessionTokenUnavailable extends Schema.TaggedError<
   status: Schema.optionalKey(Schema.Int),
 }) {}
 
-/** The token route's 200 answer: the token, or `null` for a request whose session is missing or has ended. */
+/** A live session as the refresh route names it: its access token and its account. */
+export const SessionTokens = Schema.Struct({
+  accessToken: Schema.String,
+  userId: Schema.String,
+});
+
+/** The refresh route's answer: the session, or `null` for a request whose session is missing or has ended. */
 const TokenResponseSchema = Schema.Struct({
-  token: Schema.NullOr(Schema.String),
+  tokens: Schema.NullOr(SessionTokens),
 });
 
 /**
- * Classifies the token route's answer. A 200 must decode to a token or to `null`,
- * which means no session, as a 401 does; a 5xx may be tried again, and every
- * other status is final.
+ * Classifies the refresh route's answer. A 200 must decode to a session or to
+ * `null`, which means no session, as a 401 does; a 5xx may be tried again, and
+ * every other status is final.
  */
 const readTokenAnswer = Effect.fn("www.auth.readTokenAnswer")(function* (
   response: HttpClientResponse.HttpClientResponse
 ) {
   if (response.status === 401) {
-    return;
+    return null;
   }
   if (response.status === 200) {
-    const { token } = yield* HttpClientResponse.schemaBodyJson(
+    const { tokens } = yield* HttpClientResponse.schemaBodyJson(
       TokenResponseSchema
     )(response).pipe(
       Effect.mapError(() => new SessionTokenUnavailable({ reason: "body" }))
     );
-    if (token === null) {
-      return;
-    }
-    return token;
+    return tokens;
   }
   const failure = new SessionTokenUnavailable({
     reason: "status",
@@ -65,19 +69,11 @@ type TransportFailure = (
 ) => SessionTokenUnavailable | RetryableNetworkAttempt<SessionTokenUnavailable>;
 
 /**
- * The server's rule: a failure that names a retryable network code is tried
- * again, and any other is final.
- */
-const classifyServerTransport: TransportFailure = (cause) =>
-  classifyNetworkFailure(
-    cause,
-    new SessionTokenUnavailable({ reason: "fetch" })
-  );
-
-/**
  * The browser's rule: every failure is tried again. A browser rejects a dropped
  * connection with a bare TypeError that names no network code, so no failure on
- * the way can be told apart from a dropped one, and the request is a read.
+ * the way can be told apart from a dropped one, and Convex Auth accepts a
+ * redeemed refresh token again while none of its successors has been
+ * presented, so a refresh whose answer was lost may go again.
  */
 const retryBrowserTransport: TransportFailure = () =>
   new RetryableNetworkAttempt({
@@ -100,11 +96,11 @@ const sendTokenRequest = Effect.fn("www.auth.sendTokenRequest")(function* (
 }, Effect.scoped);
 
 /**
- * Sends one token request until it answers. The token route answers with the
- * token, or with `undefined` for a 401. Any other answer fails with
+ * Sends one refresh request until it answers. The route answers with the
+ * session, or with `null` for a 401. Any other answer fails with
  * `SessionTokenUnavailable`, so an outage never looks like a signed-out visitor.
  * A 5xx answer, a missed deadline, and a retryable network failure are tried
- * again on the shared schedule; the request is a read, so repeating it is safe.
+ * again on the shared schedule.
  */
 const sendUntilAnswered = Effect.fn("www.auth.sendUntilAnswered")(function* (
   request: HttpClientRequest.HttpClientRequest,
@@ -116,24 +112,17 @@ const sendUntilAnswered = Effect.fn("www.auth.sendUntilAnswered")(function* (
   );
 }, Effect.provide(FetchClient));
 
-/** Sends the server's token request until it answers, by the server's rule for a transport failure. */
-export const requestSessionToken = Effect.fn("www.auth.requestSessionToken")(
-  function* (request: HttpClientRequest.HttpClientRequest) {
-    return yield* sendUntilAnswered(request, classifyServerTransport);
+/**
+ * Refreshes the browser's session through the refresh route of the page's own
+ * host, which reads the httpOnly refresh cookie that scripts cannot: it answers
+ * the session's new access token and its account, or `null` for a visitor or a
+ * session that ended. An outage fails, so it never reads as signed out.
+ */
+export const readBrowserSession = Effect.fn("www.auth.readBrowserSession")(
+  function* (origin: string) {
+    return yield* sendUntilAnswered(
+      HttpClientRequest.post(new URL(REFRESH_PATH, origin)),
+      retryBrowserTransport
+    );
   }
 );
-
-/**
- * Reads the Convex token in the browser, for a page that renders only there. The
- * session cookie is not readable in the browser, so the token route of the page's
- * own host decides: the browser sends the session cookie itself, and the route
- * answers `undefined` for a visitor with no session.
- */
-export const readBrowserSessionToken = Effect.fn(
-  "www.auth.readBrowserSessionToken"
-)(function* (origin: string) {
-  return yield* sendUntilAnswered(
-    HttpClientRequest.get(new URL(TOKEN_PATH, origin)),
-    retryBrowserTransport
-  );
-});

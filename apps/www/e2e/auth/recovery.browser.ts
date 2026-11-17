@@ -16,8 +16,8 @@ import {
 } from "@/e2e/support/school";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
-const SESSION_READ = "**/api/auth/get-session*";
-const CONVEX_SIGN_IN_READ = "**/api/auth/convex/token*";
+const SESSION_READ = "**/api/auth/refresh*";
+const CONVEX_SIGN_IN_READ = "**/api/auth/refresh*";
 
 /** The words of every state that says a read failed, was refused, or found nothing. */
 const ERROR_STATES = [
@@ -50,7 +50,7 @@ const DROPPED_AUTH_READS = {
   times: 2,
 } as const;
 
-/** How the first requests to one Better Auth route fail. */
+/** How the first requests to one auth route fail. */
 type Failure =
   | typeof DROPPED_SESSION
   | typeof DROPPED_AUTH_READS
@@ -98,7 +98,7 @@ async function failFirst(page: Page, failure: Failure) {
 }
 
 /**
- * Opens a page of a signed-in viewer while the first requests to a Better Auth
+ * Opens a page of a signed-in viewer while the first requests to an auth
  * route fail, and checks that no error state ever shows: the page asks Convex
  * for `read` only once its connection has signed in, and Convex answers it.
  * When every attempt of the first session read fails, the page waits for the
@@ -120,7 +120,7 @@ async function opensWithoutError(
   await page.goto(address);
   await expect.poll(() => failed.count).toBe(failure.times);
   if (failure.answer === "unavailable") {
-    // Every attempt of the read failed: Better Auth asks again when the
+    // Every attempt of the read failed: Convex Auth's client asks again when the
     // network returns, and until then the page waits as it renders.
     await waitForQuiet(page);
     expect(changes.askedSignedOut(read)).toBe(false);

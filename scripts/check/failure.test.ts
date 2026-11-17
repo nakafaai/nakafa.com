@@ -147,7 +147,7 @@ export const note = \`throw \${reason}\`;
     () =>
       Effect.gen(function* () {
         assert.deepStrictEqual(
-          yield* findings(`import { mutation } from "@repo/backend/components/betterAuth/_generated/server";
+          yield* findings(`import { mutation } from "@repo/backend/components/ledger/_generated/server";
 import { ConvexError, v } from "convex/values";
 export const setUser = mutation({
   args: { authId: v.string() },
@@ -221,7 +221,7 @@ export const wrapped = wrap({
     () =>
       Effect.gen(function* () {
         assert.deepStrictEqual(
-          yield* findings(`import { action, internalMutation, query } from "@repo/backend/components/betterAuth/_generated/server";
+          yield* findings(`import { action, internalMutation, query } from "@repo/backend/components/ledger/_generated/server";
 import { ConvexError } from "convex/values";
 export const search = query({
   handler: (ctx) => {
@@ -252,7 +252,7 @@ export const shared = query(sharedOptions);
     () =>
       Effect.gen(function* () {
         assert.deepStrictEqual(
-          yield* findings(`import { mutation } from "@repo/backend/components/betterAuth/_generated/server";
+          yield* findings(`import { mutation } from "@repo/backend/components/ledger/_generated/server";
 import { ConvexError as Failure } from "convex/values";
 export const setUser = mutation({
   handler: (ctx) => {
@@ -266,33 +266,33 @@ export const setUser = mutation({
   );
 
   it.effect(
-    "exempts the two Better Auth mutations that throw a ConvexError",
+    "exempts the vanilla Convex mutations that throw a ConvexError",
     () =>
       Effect.gen(function* () {
         assert.deepStrictEqual(
-          yield* findings(`import { mutation } from "@repo/backend/components/betterAuth/_generated/server";
+          yield* findings(`import { mutation } from "@repo/backend/components/ledger/_generated/server";
 import { ConvexError, v } from "convex/values";
-export const setUserId = mutation({
-  args: { authId: v.string(), userId: v.string() },
+export const setOwner = mutation({
+  args: { entryId: v.string(), ownerId: v.string() },
   returns: v.null(),
   handler: async (ctx, args) => {
-    const authId = ctx.db.normalizeId("user", args.authId);
-    if (!authId) {
-      throw new ConvexError({ code: "BETTER_AUTH_USER_ID_INVALID", message: "Better Auth user ID is invalid." });
+    const entryId = ctx.db.normalizeId("entries", args.entryId);
+    if (!entryId) {
+      throw new ConvexError({ code: "LEDGER_ENTRY_ID_INVALID", message: "Ledger entry ID is invalid." });
     }
-    await ctx.db.patch("user", authId, { userId: args.userId });
+    await ctx.db.patch("entries", entryId, { ownerId: args.ownerId });
     return null;
   },
 });
-export const updateUserName = mutation({
-  args: { authId: v.string(), name: v.string() },
+export const rename = mutation({
+  args: { entryId: v.string(), name: v.string() },
   returns: v.null(),
   handler: async (ctx, args) => {
-    const authId = ctx.db.normalizeId("user", args.authId);
-    if (!authId) {
-      throw new ConvexError({ code: "BETTER_AUTH_USER_ID_INVALID", message: "Better Auth user ID is invalid." });
+    const entryId = ctx.db.normalizeId("entries", args.entryId);
+    if (!entryId) {
+      throw new ConvexError({ code: "LEDGER_ENTRY_ID_INVALID", message: "Ledger entry ID is invalid." });
     }
-    await ctx.db.patch("user", authId, { name: args.name });
+    await ctx.db.patch("entries", entryId, { name: args.name });
     return null;
   },
 });
@@ -307,7 +307,7 @@ export const updateUserName = mutation({
     () =>
       Effect.gen(function* () {
         assert.deepStrictEqual(
-          yield* findings(`import { mutation as m } from "@repo/backend/components/betterAuth/_generated/server";
+          yield* findings(`import { mutation as m } from "@repo/backend/components/ledger/_generated/server";
 import { ConvexError } from "convex/values";
 export const setUser = m({
   handler: (ctx) => {
@@ -380,7 +380,7 @@ export const setUser = mutation({
     () =>
       Effect.gen(function* () {
         assert.deepStrictEqual(
-          yield* findings(`import { mutation } from "@repo/backend/components/betterAuth/_generated/server";
+          yield* findings(`import { mutation } from "@repo/backend/components/ledger/_generated/server";
 import { ConvexError } from "convex/values";
 export function wrapped() {
   const mutation = (options) => options;
@@ -401,7 +401,7 @@ export function wrapped() {
     () =>
       Effect.gen(function* () {
         assert.deepStrictEqual(
-          yield* findings(`import { mutation } from "@repo/backend/components/betterAuth/_generated/server";
+          yield* findings(`import { mutation } from "@repo/backend/components/ledger/_generated/server";
 import { ConvexError } from "convex/values";
 import { Effect } from "effect";
 export const setUser = mutation({
@@ -421,7 +421,7 @@ export const setUser = mutation({
     () =>
       Effect.gen(function* () {
         assert.deepStrictEqual(
-          yield* findings(`import { mutation } from "@repo/backend/components/betterAuth/_generated/server";
+          yield* findings(`import { mutation } from "@repo/backend/components/ledger/_generated/server";
 import { ConvexError } from "convex/values";
 export const setUser = mutation({
   handler: (ctx) => {
@@ -438,7 +438,7 @@ export const setUser = mutation({
   it.effect("reports a plain Error thrown in a Convex handler", () =>
     Effect.gen(function* () {
       assert.deepStrictEqual(
-        yield* findings(`import { mutation } from "@repo/backend/components/betterAuth/_generated/server";
+        yield* findings(`import { mutation } from "@repo/backend/components/ledger/_generated/server";
 export const setUser = mutation({
   handler: (ctx) => {
     throw new Error("plain");

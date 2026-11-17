@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
 import { saved, trackChanges } from "@/e2e/support/changes";
-import { seedGuardianCode } from "@/e2e/support/guardian";
+import { signInGuardian } from "@/e2e/support/guardian";
 import {
   createSchool,
   hostAddress,
@@ -89,27 +89,16 @@ test("an admin links a parent and corrects the mistyped email, the parent signs 
   await saved(changes, renamedBefore);
 
   const parent = await browser.newContext();
+  await Effect.runPromise(
+    signInGuardian(
+      parent,
+      { address: address("/"), slug: school.slug },
+      email,
+      NISN
+    )
+  );
   const home = await parent.newPage();
   await home.goto(address("/parents"));
-  const send = home.getByRole("button", { name: "Send code" });
-  await waitUntilTakenOver(send);
-  await home.getByLabel("Parent email").fill(email);
-  await send.click();
-  await expect(home.getByLabel("Sign-in code")).toBeVisible();
-  const seeded = await Effect.runPromise(
-    seedGuardianCode(school.slug, email, NISN)
-  );
-  await home.getByLabel("Sign-in code").fill("000000");
-  const signIn = home.getByRole("button", { name: "Sign in" });
-  const pressed = await signIn.boundingBox();
-  await signIn.click();
-  await expect(home.locator("form").getByRole("alert")).toHaveText(
-    "The code is wrong or has expired."
-  );
-  // Each message takes the line kept for it, so the form never moves the button it answers.
-  expect((await signIn.boundingBox())?.y).toBe(pressed?.y);
-  await home.getByLabel("Sign-in code").fill(seeded.code);
-  await home.getByRole("button", { name: "Sign in" }).click();
 
   const open = home.getByRole("button", { name: "Siswa Uji" });
   await expect(open).toBeVisible({ timeout: readinessTimeoutMilliseconds });

@@ -49,13 +49,15 @@ const openSettings = Effect.fn("NakafaE2E.openDeletionSettings")(function* (
   page: Page,
   origin: string
 ) {
-  yield* openChatPage(page, origin);
+  // The chat page watches the page's changes, which is the one watch its socket keeps.
+  const { changes } = yield* openChatPage(page, origin);
   yield* Effect.promise(async () => {
     await page.goto(appRoutes.settings);
     await expect(deleteAction(page)).toBeVisible({
       timeout: readinessTimeoutMilliseconds,
     });
   });
+  return changes;
 });
 
 const verifyActionAtLargeText = Effect.fn(
@@ -182,8 +184,8 @@ test.describe("the account deletion card on a standard phone", () => {
   });
 });
 
-/** Better Auth's delete route, which the dialog calls once the server prepared the account. */
-const DELETE_USER = "**/api/auth/delete-user*";
+/** The mutation that deletes the signed-in account, which the dialog calls. */
+const DELETE_ACCOUNT = "auth/deletion:deleteAccount";
 
 /**
  * Records, until the page leaves, whether the deletion card left the page. The
@@ -220,25 +222,14 @@ const confirmDeletion = (page: Page) =>
   });
 
 /**
- * Better Auth refuses the deletion after the server prepared the account, so
- * the server takes the preparation back. The account reads as gone in between,
- * and the page stays as it is: the dialog says why, and the profile and its
- * deletion card never leave the page.
+ * The server cannot take the deletion, so nothing changed and the page stays
+ * as it is: the dialog says why, and the profile and its deletion card never
+ * leave the page.
  */
 const verifyRefusedDeletion = Effect.fn("NakafaE2E.verifyRefusedDeletion")(
   function* (page: Page, origin: string) {
-    yield* openSettings(page, origin);
-    yield* Effect.promise(() =>
-      page.route(DELETE_USER, (route) =>
-        route.fulfill({
-          json: {
-            code: "ACCOUNT_DELETION_TEMPORARILY_UNAVAILABLE",
-            message: "Refused by the test.",
-          },
-          status: 503,
-        })
-      )
-    );
+    const changes = yield* openSettings(page, origin);
+    changes.failNext(DELETE_ACCOUNT);
     const card = yield* Effect.promise(() => watchDeletionCard(page));
     yield* confirmDeletion(page);
     yield* Effect.promise(async () => {
@@ -284,18 +275,8 @@ const verifyRefusalStays = Effect.fn("NakafaE2E.verifyRefusalStays")(function* (
   page: Page,
   origin: string
 ) {
-  yield* openSettings(page, origin);
-  yield* Effect.promise(() =>
-    page.route(DELETE_USER, (route) =>
-      route.fulfill({
-        json: {
-          code: "ACCOUNT_DELETION_TEMPORARILY_UNAVAILABLE",
-          message: "Refused by the test.",
-        },
-        status: 503,
-      })
-    )
-  );
+  const changes = yield* openSettings(page, origin);
+  changes.failNext(DELETE_ACCOUNT);
   yield* confirmDeletion(page);
   const dialog = page.getByRole("dialog");
   const confirm = dialog.getByRole("button", {
@@ -309,11 +290,11 @@ const verifyRefusalStays = Effect.fn("NakafaE2E.verifyRefusalStays")(function* (
     await expect(confirm).toBeEnabled();
     await page.evaluate(watchDialogRefusal);
 
-    const retried = page.waitForResponse((response) =>
-      response.url().includes("/api/auth/delete-user")
-    );
+    changes.failNext(DELETE_ACCOUNT);
     await confirm.click();
-    await retried;
+    await expect
+      .poll(() => changes.failing, { timeout: readinessTimeoutMilliseconds })
+      .toBe(false);
     await expect(confirm).toBeEnabled({
       timeout: readinessTimeoutMilliseconds,
     });
@@ -330,7 +311,7 @@ const verifyRefusalStays = Effect.fn("NakafaE2E.verifyRefusalStays")(function* (
   });
 });
 
-/** How long a finished deletion may take to reach the home page: it prepares, deletes and checks on the server. */
+/** How long a finished deletion may take to reach the home page: the server ends the sessions and marks the account deleted first. */
 const DELETION_MILLISECONDS = 60_000;
 
 /**
@@ -358,7 +339,7 @@ test.describe("the account deletion flow on a desktop", () => {
     viewport: { height: desktopViewport.height, width: desktopViewport.width },
   });
 
-  test("keeps the page and says why when the deletion is refused after the account was prepared", async ({
+  test("keeps the page and says why when the server cannot take the deletion", async ({
     baseURL,
     page,
   }) => {

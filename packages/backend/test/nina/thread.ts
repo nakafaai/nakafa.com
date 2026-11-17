@@ -1,7 +1,7 @@
 import { createThread, saveMessage, saveMessages } from "@convex-dev/agent";
 import { components } from "@repo/backend/confect/_generated/components";
 import {
-  createConvexTestWithBetterAuth,
+  createConvexTestWithAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
 import type { ToolCallPart, ToolResultPart } from "ai";
@@ -84,7 +84,7 @@ export const SEARCHING_TURN: Turn = [
  * Agent saved, and the arguments that read the chat's first page of messages.
  */
 export async function createThreadTest(turn: Turn = MATH_TURN) {
-  const t = createConvexTestWithBetterAuth();
+  const t = createConvexTestWithAuth();
   const { identity, promptMessageId } = await t.mutation(async (ctx) => {
     const user = await seedAuthenticatedUser(ctx, { now: NOW });
     const threadId = await createThread(ctx, components.nina, {
@@ -111,10 +111,7 @@ export async function createThreadTest(turn: Turn = MATH_TURN) {
       promptMessageId: prompt.messageId,
     };
   });
-  const owner = t.withIdentity({
-    subject: identity.authUserId,
-    sessionId: identity.sessionId,
-  });
+  const owner = t.withIdentity({ subject: identity.sessionId });
   return {
     t,
     owner,

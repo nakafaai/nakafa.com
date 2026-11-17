@@ -39,7 +39,7 @@ Measured on a real local Convex backend under the same load, with the real backe
 
 D1. Every module that Confect writes and the Convex runtime runs exports `experimental_reuseContext = true`. Confect has no option for it, so `scripts/reuse` adds the line, and `bun run codegen` runs it after Confect. A `"use node"` module runs in Node, where a context is never reused, and stays as it is.
 
-The auth component's `adapter` and `session` modules export the same line by hand, since Confect does not write them. Its adapter module evaluates all of Better Auth, 411 ms of JavaScript for one `adapter:findOne` on production.
+Convex Auth's components ship their own modules, which Nakafa does not edit; on 13 November 2026 they replaced the earlier auth component, whose adapter module evaluated 411 ms of JavaScript for one `adapter:findOne` on production (ADR 0009).
 
 D2. A module holds no state between calls, because one caller's value would reach the next caller. The `module-state` source rule rejects a top-level `let` or `var` and a top-level value made by Effect's `Mutable` modules in the domain folders. Identity stays safe because Confect builds its reader, writer, auth, and scheduler layers from each call's `ctx`, and a layer's memo map lives for one run. The proof ran 160 calls of `getCurrentUser` on saved contexts, three users and an anonymous caller in turn, with a write to the caller's row before each signed-in call so that no query cache answered. Every answer carried its own caller and the value just written.
 

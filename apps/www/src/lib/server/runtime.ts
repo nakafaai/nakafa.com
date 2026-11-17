@@ -18,7 +18,7 @@ readRuntimeConfig();
  */
 export const CONVEX_URL = Config.NonEmptyString("VITE_CONVEX_URL");
 
-/** The address of the Convex site, which serves Better Auth and its token routes. */
+/** The address of the Convex site, which serves the deployment's HTTP actions. */
 export const CONVEX_SITE_URL = Config.NonEmptyString("VITE_CONVEX_SITE_URL");
 
 /**

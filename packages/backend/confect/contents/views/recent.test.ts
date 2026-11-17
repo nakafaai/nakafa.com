@@ -10,7 +10,7 @@ import {
 import { upsertUserRecent } from "@repo/backend/confect/contents/views/recent";
 import type { ContentViewTarget } from "@repo/backend/confect/contents/views/target";
 import {
-  createConvexTestWithBetterAuth,
+  createConvexTestWithAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
@@ -69,7 +69,7 @@ describe("contents/views/recent", () => {
     () =>
       Effect.gen(function* () {
         const runtimeServices = yield* Effect.context<never>();
-        const t = createConvexTestWithBetterAuth();
+        const t = createConvexTestWithAuth();
         const result = yield* Effect.promise(() =>
           t.mutation((ctx) =>
             Effect.runPromiseWith(runtimeServices)(

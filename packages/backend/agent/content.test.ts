@@ -2,7 +2,7 @@ import { RegisteredConvexFunction, RegisteredFunction } from "@confect/server";
 import { describe, expect, it } from "@effect/vitest";
 import { getNakafaContent } from "@repo/backend/agent/content";
 import confectSchema from "@repo/backend/confect/_generated/schema";
-import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
+import { createConvexTestWithAuth } from "@repo/backend/confect/test.helpers";
 import { internal } from "@repo/backend/convex/_generated/api";
 import { makeMaterialProjection } from "@repo/backend/test/content/material";
 import {
@@ -21,7 +21,7 @@ import { Effect, Option } from "effect";
 
 describe("agent/content", () => {
   it("rejects a malformed signed publication result before reading markdown", async () => {
-    const test = createConvexTestWithBetterAuth();
+    const test = createConvexTestWithAuth();
     const article = testArticleProjection(0);
     await test.mutation((ctx) => insertRuntimeArticles(ctx, 1));
     const source = await test.query(
@@ -51,7 +51,7 @@ describe("agent/content", () => {
     });
   });
   it("does not query publication for an unrecognized reference", async () => {
-    const test = createConvexTestWithBetterAuth();
+    const test = createConvexTestWithAuth();
     await test.action(async (ctx) => {
       const query = vi.spyOn(ctx, "runQuery");
       expect(
@@ -66,7 +66,7 @@ describe("agent/content", () => {
     });
   });
   it("returns no content for an absent current reference", async () => {
-    const test = createConvexTestWithBetterAuth();
+    const test = createConvexTestWithAuth();
     expect(
       await test.action((ctx) =>
         Effect.runPromise(
@@ -81,7 +81,7 @@ describe("agent/content", () => {
     ).toEqual(Option.none());
   });
   it("fails closed for a signed graph too short to identify a public asset", async () => {
-    const test = createConvexTestWithBetterAuth();
+    const test = createConvexTestWithAuth();
     const search = makeQuranSearch("en", 1);
     await test.mutation((ctx) =>
       activateQuranSnapshot(ctx, [
@@ -117,7 +117,7 @@ describe("agent/content", () => {
     });
   });
   it("returns no markdown when content is retired between reference and body reads", async () => {
-    const test = createConvexTestWithBetterAuth();
+    const test = createConvexTestWithAuth();
     const article = testArticleProjection(0);
     await test.mutation((ctx) => insertRuntimeArticles(ctx, 1));
     const source = await test.query(
@@ -145,7 +145,7 @@ describe("agent/content", () => {
     });
   });
   it("rejects a changed asset between reference and body reads", async () => {
-    const test = createConvexTestWithBetterAuth();
+    const test = createConvexTestWithAuth();
     const first = testArticleProjection(0);
     const second = testArticleProjection(1);
     await test.mutation((ctx) => insertRuntimeArticles(ctx, 2));
@@ -184,7 +184,7 @@ describe("agent/content", () => {
     });
   });
   it("rejects a changed content family between reference and body reads", async () => {
-    const test = createConvexTestWithBetterAuth();
+    const test = createConvexTestWithAuth();
     const article = testArticleProjection(0);
     await test.mutation((ctx) => insertRuntimeArticles(ctx, 1));
     const source = await test.query(
@@ -197,7 +197,7 @@ describe("agent/content", () => {
         },
       }
     );
-    const materials = createConvexTestWithBetterAuth();
+    const materials = createConvexTestWithAuth();
     const material = makeMaterialProjection("en", 1);
     await materials.mutation((ctx) =>
       Effect.runPromise(

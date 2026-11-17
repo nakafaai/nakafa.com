@@ -50,7 +50,8 @@ const runs = [
   { signedIn: true, slot: 3, viewport: { height: 900, width: 1440 } },
 ] as const;
 
-const CONVEX_TOKEN_PATH = "/api/auth/convex/token";
+/** How Convex's sync protocol names the token of a signed-in learner. */
+const USER_TOKEN = '"tokenType":"User"';
 // Settling keeps its own budget, so it can change apart from readiness.
 const SETTLE_TIMEOUT_MILLISECONDS = readinessTimeoutMilliseconds;
 
@@ -110,21 +111,22 @@ const readFamilyPaths = Effect.fn("NakafaE2E.readFamilyPaths")(function* (
 });
 
 /**
- * Counts the Convex tokens the open page read. Only a client that settled on
- * a signed-in session asks for one.
+ * Counts the times the open page authenticated Convex with a learner's token:
+ * the sync protocol's Authenticate message that carries a user token. Only a
+ * client that settled on a signed-in session sends one, whether its token came
+ * from the refresh route or from the session the browser kept.
  */
 const watchConvexTokens = Effect.fn("NakafaE2E.watchConvexTokens")(function* (
   page: Page
 ) {
   const tokens = MutableRef.make(0);
   yield* Effect.sync(() =>
-    page.on("response", (response) => {
-      if (
-        response.ok() &&
-        new URL(response.url()).pathname === CONVEX_TOKEN_PATH
-      ) {
-        MutableRef.increment(tokens);
-      }
+    page.on("websocket", (socket) => {
+      socket.on("framesent", ({ payload }) => {
+        if (typeof payload === "string" && payload.includes(USER_TOKEN)) {
+          MutableRef.increment(tokens);
+        }
+      });
     })
   );
   return tokens;
@@ -190,7 +192,7 @@ const verifyServerContentSurvives = Effect.fn(
 
 /**
  * Lets a signed-in browser settle its session the way its first page does:
- * Better Auth answers once, and the browser keeps the id of that session, as
+ * the refresh route answers once, and the browser keeps the id of that session, as
  * `saveKnownSession` writes it after each settled answer. The session test does
  * the same before it checks the saved session.
  */

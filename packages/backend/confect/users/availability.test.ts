@@ -10,7 +10,6 @@ const seedHolder = Effect.fn("test.seedHolder")(function* (username: string) {
   const ctx = yield* MutationCtx;
   return yield* Effect.promise(() =>
     ctx.db.insert("users", {
-      authId: `auth-${username}`,
       credits: 100,
       creditsResetAt: 0,
       email: `${username}@example.com`,

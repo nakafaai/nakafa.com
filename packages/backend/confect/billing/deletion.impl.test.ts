@@ -50,7 +50,6 @@ async function seedDeletingUser(
   providerCustomerId: string | null = "cust_deleted"
 ) {
   const userId = await ctx.db.insert("users", {
-    authId: "auth-billing-deletion",
     credits: 0,
     creditsResetAt: NOW,
     deletedAt: NOW,
@@ -76,7 +75,6 @@ async function seedDeletingUser(
 /** Inserts one Xendit account and one Xendit subscription on it, the rows a Xendit deletion removes. */
 async function seedXenditUser(ctx: MutationCtx, planId: string) {
   const userId = await ctx.db.insert("users", {
-    authId: `auth-xendit-${planId}`,
     credits: 0,
     creditsResetAt: NOW,
     deletedAt: NOW,
@@ -152,7 +150,6 @@ describe("billing/deletion", () => {
       async (ctx) => (await seedDeletingUser(ctx)).userId
     );
     await t.action(internal.billing.deletion.cleanupDeletedUserBilling, {
-      authId: "auth-billing-deletion",
       userId,
     });
     expect(polarGateway.deleteCustomer).toHaveBeenCalledWith("cust_deleted");
@@ -164,7 +161,7 @@ describe("billing/deletion", () => {
     expect(stored).toEqual({ accounts: [], grants: [], subscriptions: [] });
   });
 
-  it("looks up the Polar customer by the user's auth ID when no account links one, and erases it", async () => {
+  it("looks up the Polar customer by the user's id when no account links one, and erases it", async () => {
     const t = createBillingTestConvex();
     const userId = await t.mutation(
       async (ctx) => (await seedDeletingUser(ctx, null)).userId
@@ -173,28 +170,24 @@ describe("billing/deletion", () => {
       Effect.succeed({
         billingCountry: null,
         email: null,
-        externalId: "auth-billing-deletion",
-        id: "cust_by_auth",
+        externalId: userId,
+        id: "cust_by_id",
         name: null,
       })
     );
     await t.action(internal.billing.deletion.cleanupDeletedUserBilling, {
-      authId: "auth-billing-deletion",
       userId,
     });
-    expect(polarGateway.getCustomerByExternalId).toHaveBeenCalledWith(
-      "auth-billing-deletion"
-    );
-    expect(polarGateway.deleteCustomer).toHaveBeenCalledWith("cust_by_auth");
+    expect(polarGateway.getCustomerByExternalId).toHaveBeenCalledWith(userId);
+    expect(polarGateway.deleteCustomer).toHaveBeenCalledWith("cust_by_id");
   });
 
-  it("deletes no Polar customer for an account that never linked one, when Polar holds none under the auth ID", async () => {
+  it("deletes no Polar customer for an account that never linked one, when Polar holds none under the user's id", async () => {
     const t = createBillingTestConvex();
     const userId = await t.mutation(
       async (ctx) => (await seedDeletingUser(ctx, null)).userId
     );
     await t.action(internal.billing.deletion.cleanupDeletedUserBilling, {
-      authId: "auth-billing-deletion",
       userId,
     });
     expect(polarGateway.deleteCustomer).not.toHaveBeenCalled();
@@ -209,7 +202,6 @@ describe("billing/deletion", () => {
       async (ctx) => (await seedXenditUser(ctx, "plan_turned_off")).userId
     );
     await t.action(internal.billing.deletion.cleanupDeletedUserBilling, {
-      authId: "auth-xendit-plan_turned_off",
       userId,
     });
     expect(ensurePlanInactive).toHaveBeenCalledWith("plan_turned_off");
@@ -234,7 +226,6 @@ describe("billing/deletion", () => {
     );
     await expect(
       t.action(internal.billing.deletion.cleanupDeletedUserBilling, {
-        authId: "auth-xendit-plan_stuck",
         userId,
       })
     ).rejects.toThrow();
@@ -356,7 +347,6 @@ describe("billing/deletion", () => {
       return seeded.userId;
     });
     await t.action(internal.billing.deletion.cleanupDeletedUserBilling, {
-      authId: "auth-billing-deletion",
       userId,
     });
     expect(
@@ -413,7 +403,6 @@ describe("billing/deletion", () => {
     );
     await expect(
       t.action(internal.billing.deletion.cleanupDeletedUserBilling, {
-        authId: "auth-billing-deletion",
         userId,
       })
     ).rejects.toThrow();
@@ -448,7 +437,6 @@ describe("billing/deletion", () => {
         userId: seeded.userId,
       });
       const otherUserId = await ctx.db.insert("users", {
-        authId: "auth-billing-deletion-other",
         credits: 0,
         creditsResetAt: NOW,
         email: "kept@example.com",
@@ -479,7 +467,6 @@ describe("billing/deletion", () => {
       return seeded.userId;
     });
     await t.action(internal.billing.deletion.cleanupDeletedUserBilling, {
-      authId: "auth-billing-deletion",
       userId,
     });
     expect(

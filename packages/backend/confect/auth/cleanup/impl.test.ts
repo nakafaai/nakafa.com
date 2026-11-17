@@ -1,14 +1,14 @@
 import { expect, it } from "@effect/vitest";
 import { createDeletedUserTombstone } from "@repo/backend/confect/auth/deletion/tombstone";
 import {
-  createConvexTestWithBetterAuth,
+  createConvexTestWithAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
 import { internal } from "@repo/backend/convex/_generated/api";
 
 it("shreds the deleted learner's vault key and keeps another learner's", async () => {
   const now = Date.UTC(2026, 9, 10);
-  const t = createConvexTestWithBetterAuth();
+  const t = createConvexTestWithAuth();
   const { owner, retained } = await t.mutation(async (ctx) => {
     const deleted = await seedAuthenticatedUser(ctx, {
       now,

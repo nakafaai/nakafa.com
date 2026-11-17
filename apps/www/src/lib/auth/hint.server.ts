@@ -1,34 +1,54 @@
-import { parseSetCookieHeader } from "better-auth/cookies";
-import { Array as Arr, Config, Effect, Option, pipe, Schema } from "effect";
-import { SessionJson } from "@/lib/auth/answer";
-import { isSessionCookieName } from "@/lib/auth/cookie.server";
+import { AUTH_REFRESH_COOKIE } from "@convex-dev/auth/ssr";
+import { Array as Arr, Option, Result, String as Str } from "effect";
 import {
   expiredHintCookie,
-  hintCookieFor,
   hintScopeFor,
-  isHintCurrent,
   signedInHintCookie,
 } from "@/lib/auth/hint";
-import { SESSION_PATH } from "@/lib/auth/session";
-import { ClientSession } from "@/lib/auth/visitor";
 
-/** The site's own address, whose host the hint cookie names. */
-const SITE_URL = Config.String("SITE_URL");
+/** The name and value of one Set-Cookie header. */
+const nameAndValue = (setCookie: string) => {
+  const pair = Arr.headNonEmpty(Str.split(setCookie, ";"));
+  const at = pair.indexOf("=");
+  return at < 0
+    ? Result.failVoid
+    : Result.succeed({
+        name: Str.trim(pair.slice(0, at)),
+        value: Str.trim(pair.slice(at + 1)),
+      });
+};
 
-/** Whether an answer signs the browser in or out, by the session cookie it writes. */
-function readSessionWrite(response: Response) {
-  return pipe(
-    response.headers.getSetCookie(),
-    Arr.flatMap((cookie) => Arr.fromIterable(parseSetCookieHeader(cookie))),
-    Arr.findLast(([name]) => isSessionCookieName(name)),
-    Option.map(([, { value }]) => value !== "")
+/**
+ * Whether an auth route's answer started a session (true), ended one (false),
+ * or left the session as it was (none), read from the refresh cookie it wrote:
+ * a value starts or keeps one, an empty value clears it.
+ */
+const readSessionWrite = (response: Response, prefix: string) =>
+  Arr.findLast(
+    Arr.filterMap(response.headers.getSetCookie(), nameAndValue),
+    ({ name }) => name === `${prefix}${AUTH_REFRESH_COOKIE}`
+  ).pipe(Option.map(({ value }) => value !== ""));
+
+/**
+ * The answer of an auth route with the signed-in hint that matches the session
+ * it wrote, so a static page knows at once whether to start the live session.
+ * A refused answer (401) holds no session, so it ends the hint even when no
+ * refresh cookie was there to clear, as for a hint that outlived its session.
+ * Any other answer that wrote no session cookie keeps the hint as it is.
+ */
+export function withSessionHint(response: Response, site: URL, prefix: string) {
+  const write = Option.orElse(readSessionWrite(response, prefix), () =>
+    response.status === 401 ? Option.some(false) : Option.none()
   );
-}
-
-/** The answer with one more cookie for the browser. */
-function withCookie(response: Response, cookie: string) {
+  if (Option.isNone(write)) {
+    return response;
+  }
+  const scope = hintScopeFor(site);
   const headers = new Headers(response.headers);
-  headers.append("set-cookie", cookie);
+  headers.append(
+    "set-cookie",
+    write.value ? signedInHintCookie(scope) : expiredHintCookie(scope)
+  );
   return new Response(response.body, {
     headers,
     status: response.status,
@@ -37,48 +57,17 @@ function withCookie(response: Response, cookie: string) {
 }
 
 /**
- * Gives an answer of Better Auth the hint cookie that it says. Better Auth's own
- * routes skip the request middleware that keeps the hint (`requestSession` in
- * `start.ts`), and a sign-in ends on a static page that no middleware serves, so
- * these answers keep it instead. An answer that writes the session cookie, as a
- * sign-in, a sign-out and a session refresh do, sets the hint with it or clears it,
- * so the next document is right from its first paint and a hint lives as long as
- * the session it marks. The session read that every page makes corrects a hint
- * that says otherwise. Any other answer passes unchanged.
+ * The refresh route's answer for a browser with no live session: Convex Auth
+ * refuses it (401), but no session is the refresh route's ordinary answer, not a
+ * failure, so the browser gets it as a 200 with the same body and logs no failed
+ * fetch for a session that ended (#1424). Every other answer is as it was.
  */
-export const withSessionHint = Effect.fn("www.auth.hint.answer")(function* (
-  request: Request,
-  response: Response
-) {
-  const write = readSessionWrite(response);
-  if (Option.isSome(write)) {
-    const scope = hintScopeFor(new URL(yield* SITE_URL));
-    return withCookie(
-      response,
-      write.value ? signedInHintCookie(scope) : expiredHintCookie(scope)
-    );
-  }
-  if (new URL(request.url).pathname !== SESSION_PATH) {
+export function answerNoSession(response: Response) {
+  if (response.status !== 401) {
     return response;
   }
-  const text = yield* Effect.promise(() => response.clone().text());
-  const body = Schema.decodeOption(SessionJson)(text);
-  if (Option.isNone(body)) {
-    return response;
-  }
-  const session =
-    body.value === null
-      ? ClientSession.cases.SignedOut.make({})
-      : ClientSession.cases.SignedIn.make({
-          name: body.value.user.name,
-          sessionId: body.value.session.id,
-          userId: body.value.user.id,
-        });
-  if (isHintCurrent(session, request.headers)) {
-    return response;
-  }
-  return withCookie(
-    response,
-    hintCookieFor(session, hintScopeFor(new URL(yield* SITE_URL)))
-  );
-});
+  return new Response(response.body, {
+    headers: response.headers,
+    status: 200,
+  });
+}

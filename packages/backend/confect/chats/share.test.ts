@@ -31,7 +31,6 @@ const scenario = <A, Failure>(
 /** Creates one account and one private chat of it, and loads the chat back. */
 const chatOf = Effect.fn("test.chats.share.chat")(function* (name: string) {
   const userId = yield* (yield* DatabaseWriter).table("users").insert({
-    authId: `share-${name}`,
     credits: 0,
     creditsResetAt: 0,
     email: `${name}@example.com`,

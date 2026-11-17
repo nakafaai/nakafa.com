@@ -16,16 +16,9 @@ type LoadRouter = () => Promise<{ readonly default: HttpRouter }>;
 /**
  * Every family of HTTP paths and the module that serves it. Convex reuses no context for an
  * action, so each HTTP call evaluates this module and all that it imports, and a family
- * loads only for its own paths: a token read pays for the auth routes and no others.
+ * loads only for its own paths: a webhook pays for the hook routes and no others.
  */
 const FAMILIES = [
-  {
-    load: () => import("@repo/backend/confect/auth/http"),
-    routes: [
-      { path: "/.well-known/openid-configuration" },
-      { pathPrefix: "/api/auth/" },
-    ],
-  },
   {
     load: () => import("@repo/backend/confect/contentRelease/http/router"),
     routes: [{ pathPrefix: "/internal/content/" }],

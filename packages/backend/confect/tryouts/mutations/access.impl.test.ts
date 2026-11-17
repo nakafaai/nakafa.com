@@ -1,6 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
 import {
-  createConvexTestWithBetterAuth,
+  createConvexTestWithAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
 import { api } from "@repo/backend/convex/_generated/api";
@@ -11,7 +11,7 @@ const NOW = Date.UTC(2026, 6, 22, 9, 0, 0);
 describe("tryouts/mutations/access", () => {
   it("records the authenticated paywall source", async () => {
     vi.setSystemTime(NOW);
-    const t = createConvexTestWithBetterAuth();
+    const t = createConvexTestWithAuth();
     const identity = await t.mutation(async (ctx) => {
       const seeded = await seedAuthenticatedUser(ctx, {
         now: NOW,
@@ -19,10 +19,7 @@ describe("tryouts/mutations/access", () => {
       });
       return seeded;
     });
-    const authed = t.withIdentity({
-      sessionId: identity.sessionId,
-      subject: identity.authUserId,
-    });
+    const authed = t.withIdentity({ subject: identity.sessionId });
 
     await expect(
       authed.mutation(api.tryouts.mutations.access.trackPaywallView, {
@@ -49,7 +46,7 @@ describe("tryouts/mutations/access", () => {
   });
 
   it("rejects anonymous analytics writes", async () => {
-    const t = createConvexTestWithBetterAuth();
+    const t = createConvexTestWithAuth();
 
     await expect(
       t.mutation(api.tryouts.mutations.access.trackPaywallView, {
