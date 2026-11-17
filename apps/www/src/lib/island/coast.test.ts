@@ -5,7 +5,7 @@ import { SPAN } from "@repo/backend/confect/island/world";
 import { Array as Arr } from "effect";
 import { COAST_STEPS, coastOf } from "@/lib/island/coast";
 import { terrainOf } from "@/lib/island/terrain";
-import { cellOf, emptyCells, SEA_LEVEL } from "@/lib/island/world";
+import { blockAt, cellOf, emptyCells, SEA_LEVEL } from "@/lib/island/world";
 
 const SAND = idOf("sand");
 const WATER = idOf("water");
@@ -78,19 +78,21 @@ describe("island/coast", () => {
   });
 
   it("stills the home island's pond and lets the sea round it roll", () => {
-    const coast = coastOf(terrainOf(7, 52));
-    const stillWater = Arr.filter(
-      Arr.makeBy(SPAN * SPAN, (index) => index),
-      (index) => coast[index * 2 + 1] === 255
+    const cells = terrainOf(7, 52);
+    const coast = coastOf(cells);
+    // The pond: water a block under the meadow, well inside the shore.
+    const pond = Arr.filter(
+      Arr.makeBy(
+        SPAN * SPAN,
+        (index) => [index % SPAN, Math.floor(index / SPAN)] as const
+      ),
+      ([x, z]) =>
+        Math.hypot(x + 0.5 - SPAN / 2, z + 0.5 - SPAN / 2) < 21 &&
+        blockAt(cells, x, SEA_LEVEL - 1, z) === WATER &&
+        blockAt(cells, x, SEA_LEVEL, z) === 0
     );
-    expect(stillWater.length).toBeGreaterThan(5);
-    // The pond lies inland, far from the world's edge, where the sea is.
-    Arr.forEach(stillWater, (index) => {
-      const [x, z] = [index % SPAN, Math.floor(index / SPAN)];
-      expect(Math.hypot(x + 0.5 - SPAN / 2, z + 0.5 - SPAN / 2)).toBeLessThan(
-        24
-      );
-    });
+    expect(pond.length).toBeGreaterThan(4);
+    Arr.forEach(pond, ([x, z]) => expect(at(coast, x, z).still).toBe(true));
     expect(at(coast, 0, 0).still).toBe(false);
   });
 });

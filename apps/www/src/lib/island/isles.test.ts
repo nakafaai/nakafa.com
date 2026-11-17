@@ -3,7 +3,9 @@ import { describe, expect, it } from "@effect/vitest";
 import { idOf } from "@repo/backend/confect/island/blocks";
 import { SPAN } from "@repo/backend/confect/island/world";
 import { Array as Arr, Option, Order } from "effect";
+import { slotUv } from "@/lib/island/atlas";
 import { isleGround, islesMesh, islesOf } from "@/lib/island/isles";
+import { LOOK } from "@/lib/island/look";
 import { STRIDE } from "@/lib/island/mesh";
 import { SEA_LEVEL } from "@/lib/island/world";
 
@@ -81,19 +83,32 @@ describe("island/isles", () => {
     expect(Arr.dedupe(quads)).toHaveLength(quads.length);
   });
 
-  it("grows trees on a wooded isle, taller than any of its hills", () => {
-    // The height of every vertex is read where it lies, one stride apart: an isle has tens of thousands.
-    const tallest = (seed: number) => {
+  it("grows trees on a wooded isle", () => {
+    const [left, top] = slotUv(LOOK.sides[idOf("leaves")], 0, 0);
+    const leaves = (seed: number) => {
       const { vertices } = islesMesh(seed);
-      return Arr.reduce(
+      return Arr.some(
         Arr.range(0, vertices.length / STRIDE - 1),
-        0,
-        (top, index) => Math.max(top, vertices[index * STRIDE + 1] ?? 0)
+        (index) =>
+          Math.abs(vertices[index * STRIDE + 3] - left) < 1 / 64 &&
+          Math.abs(vertices[index * STRIDE + 4] - top) < 1 / 64
       );
     };
-    // Grass grows below stone, which tops the tallest hills, so only a crown of leaves reaches this high.
-    expect(
-      Arr.some([1, 7, 42, 1009], (seed) => tallest(seed) > SEA_LEVEL + 7)
-    ).toBe(true);
+    expect(Arr.some([1, 7, 42, 1009], leaves)).toBe(true);
+  });
+
+  it("raises some isles as bare stone mountains and leaves the rest as low green hills", () => {
+    const isles = Arr.flatMap([1, 7, 42, 1009, 2026], islesOf);
+    const mountains = Arr.filter(isles, (isle) => isle.peak >= 7);
+    expect(mountains.length).toBeGreaterThan(3);
+    expect(mountains.length).toBeLessThan(isles.length);
+    Arr.forEach(mountains, (isle) => {
+      expect(isle.peak).toBeLessThanOrEqual(12);
+      expect(isle.forest).toBe(false);
+    });
+    Arr.forEach(
+      Arr.filter(isles, (isle) => isle.peak < 7),
+      (isle) => expect(isle.peak).toBeLessThanOrEqual(4)
+    );
   });
 });
