@@ -4226,32 +4226,32 @@
   },
   "SEO": {
     "subject": {
-      "title": "{title}: {chapter, select, __EMPTY__ {} other {{chapter} - }}{material} ({grade}) - Nakafa",
+      "title": "{title}: {chapter, select, __EMPTY__ {} other {{chapter} - }}{material} ({grade})",
       "description": "Pelajari {title} dalam {chapter, select, __EMPTY__ {} other {{chapter} }}{material} untuk {grade}. Halaman ini menerangkan konsep, contoh dan latihan untuk menyemak kefahaman.",
       "keywords": "{title}, {chapter, select, __EMPTY__ {} other {{chapter}, }}{material}, {grade}, belajar, bahan, soalan latihan, latihan, pendidikan"
     },
     "exercise": {
-      "title": "{number, select, 0 {} other {Soalan {number}{questionTotal, select, __EMPTY__ {} other {{questionTotal}}}: }}{set, select, __EMPTY__ {} other {{set}{number, select, 0 {: } other { - }}}}{group, select, __EMPTY__ {} other {{group} - }}{material} ({exam}) - Nakafa",
+      "title": "{number, select, 0 {} other {Soalan {number}{questionTotal, select, __EMPTY__ {} other {{questionTotal}}}: }}{set, select, __EMPTY__ {} other {{set}{number, select, 0 {: } other { - }}}}{group, select, __EMPTY__ {} other {{group} - }}{material} ({exam})",
       "description": "Jawab latihan {material} {exam}{group, select, __EMPTY__ {} other { {group}}}{set, select, __EMPTY__ {} other { {set}}} dengan {questionCount, plural, =0 {soalan latihan} =1 {1 soalan} other {{questionCount} soalan}} dan penjelasan untuk menyemak penaakulan kamu.",
       "keywords": "{material}, {exam}, {group, select, __EMPTY__ {} other {{group}, }}{set, select, __EMPTY__ {} other {{set}, }}latihan, soalan latihan, penyelesaian, peperiksaan"
     },
     "exercise-program": {
-      "title": "Soalan Latihan {exam} - Nakafa",
+      "title": "Soalan Latihan {exam}",
       "description": "Pilih domain latihan {exam} untuk {category}. Setiap domain dipautkan kepada set soalan dengan penjelasan untuk menyemak kefahaman.",
       "keywords": "{exam}, {category}, soalan latihan, set soalan, penjelasan, persediaan peperiksaan"
     },
     "curriculum": {
-      "title": "{title}{parent, select, __EMPTY__ {} other { - {parent}}}{program, select, __EMPTY__ {} other { ({program})}} - Nakafa",
+      "title": "{title}{parent, select, __EMPTY__ {} other { - {parent}}}{program, select, __EMPTY__ {} other { ({program})}}",
       "description": "Layari {title}{parent, select, __EMPTY__ {} other { dalam {parent}}}{program, select, __EMPTY__ {} other { untuk {program}}}. Indeks kurikulum ini memautkan pelajar kepada bahan dan laluan latihan yang berkaitan.",
       "keywords": "{title}, {parent, select, __EMPTY__ {} other {{parent}, }}{program, select, __EMPTY__ {} other {{program}, }}kurikulum, laluan pembelajaran, bahan, latihan"
     },
     "article": {
-      "title": "{title} - {category} - Nakafa",
+      "title": "{title} - {category}",
       "description": "Baca {title} dalam {category}. Artikel ini membentangkan konteks, data dan rujukan yang boleh disemak oleh pembaca.",
       "keywords": "{title}, {category}, analisis, fakta, terkini, penyelidikan, maklumat, berita"
     },
     "quran": {
-      "title": "Surah {transliteration}{translation, select, __EMPTY__ {} other { ({translation})}}: Teks Arab dan Terjemahan - Nakafa",
+      "title": "Surah {transliteration}{translation, select, __EMPTY__ {} other { ({translation})}}: Teks Arab dan Terjemahan",
       "description": "Baca Surah {name} ({transliteration}) dengan terjemahan ayat demi ayat. {numberOfVerses} ayat daripada Al-Quran.",
       "keywords": "Surah {name}, Al-Quran{translation, select, __EMPTY__ {} other {, {translation}}}, {revelation}"
     }

@@ -14,7 +14,7 @@ describe("generateFallbackMetadata", () => {
         },
       })
     ).toStrictEqual({
-      title: "Trigonometric Function Graph - mathematics - Nakafa",
+      title: "Trigonometric Function Graph - mathematics",
       description: "Graph lesson fallback. Trigonometric Function Graph",
       keywords: [],
     });
@@ -31,7 +31,7 @@ describe("generateFallbackMetadata", () => {
         },
       })
     ).toStrictEqual({
-      title: "Regional Elections - Politics - Nakafa",
+      title: "Regional Elections - Politics",
       description: "Article fallback. Regional Elections",
       keywords: [],
     });
@@ -48,7 +48,7 @@ describe("generateFallbackMetadata", () => {
         },
       })
     ).toStrictEqual({
-      title: "Kurikulum Merdeka - Nakafa",
+      title: "Kurikulum Merdeka",
       description: "Curriculum fallback.",
       keywords: [],
     });
@@ -65,7 +65,7 @@ describe("generateFallbackMetadata", () => {
         },
       })
     ).toStrictEqual({
-      title: "Biologi - Kurikulum Merdeka - Nakafa",
+      title: "Biologi - Kurikulum Merdeka",
       description: "Biologi",
       keywords: [],
     });
@@ -82,7 +82,7 @@ describe("generateFallbackMetadata", () => {
         },
       })
     ).toStrictEqual({
-      title: "Kelas 10 - Kurikulum Merdeka - Nakafa",
+      title: "Kelas 10 - Kurikulum Merdeka",
       description: "Kelas 10",
       keywords: [],
     });
@@ -124,7 +124,7 @@ describe("generateFallbackMetadata", () => {
         },
       })
     ).toStrictEqual({
-      title: "Al-Fatihah - Nakafa",
+      title: "Al-Fatihah",
       description: "Al-Fatihah",
       keywords: [],
     });

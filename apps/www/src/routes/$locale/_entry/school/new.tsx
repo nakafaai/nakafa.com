@@ -60,6 +60,7 @@ export const Route = createFileRoute("/$locale/_entry/school/new")({
             }),
             indexable: false,
             jsonLd: [],
+            kind: "account",
             locale: params.locale,
             parts: [],
             type: "website",

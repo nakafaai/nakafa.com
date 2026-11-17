@@ -47,7 +47,7 @@ describe("createTryoutHead", () => {
     });
 
     expect(head.meta).toContainEqual({
-      title: "General Knowledge and Understanding - Set 1 - Nakafa",
+      title: "General Knowledge and Understanding - Set 1",
     });
   });
 

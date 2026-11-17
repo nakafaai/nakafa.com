@@ -37,6 +37,7 @@ export function signedInHead(
       image,
       indexable: seo.indexable,
       jsonLd,
+      kind: "account",
       locale: seo.locale,
       parts: [seo.title],
       type: "website",

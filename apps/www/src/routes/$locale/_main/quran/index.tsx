@@ -94,6 +94,7 @@ export const Route = createFileRoute("/$locale/_main/quran/")({
             url,
           }),
         ],
+        kind: "hub",
         locale,
         parts: [title],
         type: "book",

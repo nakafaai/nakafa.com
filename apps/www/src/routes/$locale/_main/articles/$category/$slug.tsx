@@ -208,6 +208,7 @@ export const Route = createFileRoute("/$locale/_main/articles/$category/$slug")(
               ],
             }),
           ],
+          kind: "article",
           locale,
           parts: [title],
           type: "article",

@@ -77,6 +77,7 @@ export const Route = createFileRoute("/$locale/_marketing/contributor")({
                 url: `${COMPANY_IDENTITY.url}/${params.locale}/contributor`,
               }),
             ],
+            kind: "marketing",
             locale: params.locale,
             absoluteTitle: loaderData.title,
             parts: [],

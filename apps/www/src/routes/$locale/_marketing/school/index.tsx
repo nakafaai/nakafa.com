@@ -123,6 +123,7 @@ export const Route = createFileRoute("/$locale/_marketing/school/")({
               })
             ),
           ],
+          kind: "marketing",
           locale: params.locale,
           parts: [],
           type: "website",

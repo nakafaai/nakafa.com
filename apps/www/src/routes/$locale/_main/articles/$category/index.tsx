@@ -237,6 +237,7 @@ export const Route = createFileRoute("/$locale/_main/articles/$category/")({
             url,
           }),
         ],
+        kind: "hub",
         locale,
         parts: [searchTitle],
         type: "website",
