@@ -14,28 +14,29 @@ export type TryoutProgress = TryoutStatusValue | null;
 
 /**
  * How one try-out workflow status looks wherever it shows, in a badge or as a filter's value: its icon, the key of its
- * label, and its badge's variant. A set the learner has not started reads as not started.
+ * label, and its status tone (`StatusTone`), which the design system's badge draws. A set the learner has not started
+ * reads as not started.
  */
 export const statusLook = (status: TryoutProgress) =>
   Match.value(status).pipe(
     Match.when("in-progress", () => ({
       icon: PlayCircle02Icon,
       label: "status.in-progress" as const,
-      variant: "default" as const,
+      tone: "info" as const,
     })),
     Match.when("completed", () => ({
       icon: CheckmarkCircle02Icon,
       label: "status.completed" as const,
-      variant: "secondary" as const,
+      tone: "success" as const,
     })),
     Match.when("expired", () => ({
       icon: ClockAlertIcon,
       label: "status.expired" as const,
-      variant: "destructive" as const,
+      tone: "destructive" as const,
     })),
     Match.orElse(() => ({
       icon: CircleDashedIcon,
       label: "status.not-started" as const,
-      variant: "muted" as const,
+      tone: "neutral" as const,
     }))
   );

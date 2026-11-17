@@ -1,5 +1,6 @@
 import { Badge } from "@repo/design-system/components/ui/badge";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { STATUS_BADGES } from "@repo/design-system/lib/status";
 import type { ComponentProps } from "react";
 import { useTranslations } from "use-intl";
 import { statusLook, type TryoutProgress } from "@/components/tryout/progress";
@@ -24,10 +25,10 @@ function TryoutStatusLabel({
   );
 }
 
-/** Renders one consistent, filled try-out workflow badge. */
+/** Renders one try-out workflow badge in its status tone. */
 export function TryoutStatus({ status }: { status: TryoutProgress }) {
   return (
-    <Badge variant={statusLook(status).variant}>
+    <Badge variant={STATUS_BADGES[statusLook(status).tone]}>
       <TryoutStatusIcon status={status} />
       <TryoutStatusLabel className="truncate" status={status} />
     </Badge>
