@@ -1,14 +1,9 @@
 import { Menu02Icon } from "@hugeicons/core-free-icons";
-import { LocalizedPath } from "@repo/internationalization/src/alternates";
-import { loadLocaleMessages } from "@repo/internationalization/src/messages";
-import { toCanonicalPath } from "@repo/internationalization/src/rewrite";
 import { makeBreadcrumbNodes } from "@repo/seo/jsonld/node";
 import { createFileRoute, notFound } from "@tanstack/react-router";
-import { createServerFn } from "@tanstack/react-start";
-import { Array as Arr, Effect, Option, Schema } from "effect";
+import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
 import { useTranslations } from "use-intl";
-import { createTranslator } from "use-intl/core";
 import { CurriculumCardGrid } from "@/components/curriculum/cards";
 import { CurriculumNestedHeader } from "@/components/curriculum/header";
 import { CurriculumSelector } from "@/components/curriculum/selector";
@@ -32,132 +27,10 @@ import { ReportButton } from "@/components/sidebar/actions/report";
 import { ShareButton } from "@/components/sidebar/actions/share";
 import { PanelSheetTrigger } from "@/components/sidebar/sheet";
 import { PUBLIC_CONTENT_HEADERS } from "@/lib/content/delivery";
-import { getAksaraTreeUrl } from "@/lib/content/repository";
-import {
-  getCurriculumRouteSocialImage,
-  resolveCurriculumArtwork,
-} from "@/lib/curriculum/artwork";
-import { readMaterialCardChapters } from "@/lib/curriculum/chapters";
-import { getCurriculumLooks } from "@/lib/curriculum/look";
-import {
-  readRuntimeCurriculumBreadcrumbs,
-  readRuntimeCurriculumCatalog,
-  readRuntimeCurriculumOptions,
-  readRuntimeCurriculumToc,
-  resolveRuntimeCurriculumRoute,
-} from "@/lib/curriculum/model";
-import { readCurriculumSeoContext } from "@/lib/curriculum/seo";
-import { getLocaleOrThrow } from "@/lib/routing/locale/address";
+import { readCurriculumRoute } from "@/lib/curriculum/node.functions";
 import { HOME_TARGET } from "@/lib/routing/target";
-import { createResolvedRouteAlternates } from "@/lib/seo/alternates";
-import { createBreadcrumbItems } from "@/lib/seo/breadcrumbs";
-import { resolveSEOMetadata } from "@/lib/seo/generator";
-import { createSeoHead, toHeadAlternates, toRouterHead } from "@/lib/seo/head";
-import { serverHandler } from "@/lib/server/fn";
+import { createSeoHead, toRouterHead } from "@/lib/seo/head";
 import { readStaticData } from "@/lib/static/data";
-
-const CurriculumInput = Schema.Struct({
-  curriculum: Schema.String,
-  locale: Schema.String,
-  path: Schema.Array(Schema.String),
-});
-
-/**
- * Reads one curriculum node on the server: its breadcrumbs, its cards or child
- * routes, its outline and its SEO copy. An unknown node is answered with 404 by
- * the resolver, which throws before this read returns.
- */
-const readCurriculumRoute = createServerFn({ method: "GET" })
-  .validator(Schema.toStandardSchemaV1(CurriculumInput))
-  .handler(
-    serverHandler(
-      Effect.fn("www.curricula.route.read")(function* (
-        data: typeof CurriculumInput.Type
-      ) {
-        const locale = getLocaleOrThrow(data.locale);
-        const model = yield* resolveRuntimeCurriculumRoute({
-          curriculum: data.curriculum,
-          locale,
-          path: data.path,
-        });
-        const { program, route } = model;
-        const canonicalPath = Schema.decodeUnknownOption(LocalizedPath)(
-          toCanonicalPath(`/${locale}/${route.publicPath}`)
-        );
-        if (Option.isNone(canonicalPath)) {
-          return { kind: "notFound" as const };
-        }
-        const [catalog, messages, seo] = yield* Effect.all(
-          [
-            readRuntimeCurriculumCatalog(locale),
-            Effect.promise(() => loadLocaleMessages(locale)),
-            resolveSEOMetadata(
-              readCurriculumSeoContext(route, model.ancestors),
-              locale
-            ),
-          ],
-          { concurrency: "unbounded" }
-        );
-        const tCommon = createTranslator({
-          locale,
-          messages,
-          namespace: "Common",
-        });
-        const tLearningPrograms = createTranslator({
-          locale,
-          messages,
-          namespace: "LearningPrograms",
-        });
-        const homeLabel = tCommon("home");
-        const subjectLabel = tCommon("subject");
-        const childVisuals = getCurriculumLooks(model.childRoutes, (child) =>
-          resolveCurriculumArtwork(locale, child)
-        );
-
-        return {
-          alternates: toHeadAlternates(
-            createResolvedRouteAlternates(route, model.alternates)
-          ),
-          ancestors: model.ancestors,
-          breadcrumbs: createBreadcrumbItems(
-            locale,
-            readRuntimeCurriculumBreadcrumbs(homeLabel, subjectLabel, model)
-          ),
-          canonicalPath: canonicalPath.value,
-          chapters: readMaterialCardChapters(model.materialCards),
-          childCards: Arr.zipWith(
-            model.childRoutes,
-            childVisuals,
-            (route, visual) => ({
-              route,
-              visual,
-            })
-          ),
-          kind: "found" as const,
-          description: seo.description,
-          image: getCurriculumRouteSocialImage(locale, program.key, route),
-          labels: {
-            home: homeLabel,
-            routeAction: tCommon("view-options"),
-            selector: tLearningPrograms("kind.school-curriculum"),
-            subject: subjectLabel,
-          },
-          locale,
-          materialCards: model.materialCards,
-          options: readRuntimeCurriculumOptions(catalog),
-          route,
-          sourceUrl: model.sourceRevision
-            ? getAksaraTreeUrl({
-                path: model.sourcePath,
-                revision: model.sourceRevision,
-              })
-            : null,
-          title: seo.title,
-          toc: readRuntimeCurriculumToc(model, seo.description),
-        };
-      })
-    )
-  );
 
 /** One curriculum node: a track chooser, a nested node or a material list. */
 export const Route = createFileRoute("/$locale/_main/curricula/$curriculum/$")({

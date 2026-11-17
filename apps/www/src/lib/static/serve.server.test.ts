@@ -31,6 +31,10 @@ vi.mock("@/lib/i18n/messages.functions", () => ({
   readRouteMessages: { url: "/_serverFn/test-route-messages" },
 }));
 
+vi.mock("@/lib/curriculum/node.functions", () => ({
+  readCurriculumRoute: { url: "/_serverFn/test-curriculum-node" },
+}));
+
 vi.mock("@/components/tryout/route/catalog.functions", () => ({
   readTryoutCountryFn: { url: "/_serverFn/test-tryout-country" },
 }));
