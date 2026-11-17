@@ -1,4 +1,4 @@
-import { expect, type Page } from "@playwright/test";
+import { expect, type Frame, type Page, type Request } from "@playwright/test";
 import { Effect, MutableList } from "effect";
 
 /**
@@ -34,7 +34,11 @@ export const LEFT_BEHIND = /due to access control checks/u;
 
 /**
  * Observes uncaught browser errors for the complete page use program. A request a navigation left
- * behind is no error of the page (`LEFT_BEHIND`).
+ * behind is no error of the page (`LEFT_BEHIND`), and neither is what the page reports while it is
+ * being left: from the moment the main frame requests another document until that document commits,
+ * Firefox and WebKit fail the page's loads still in flight, and a scene's canvas reports such a load
+ * as an uncaught error (React Three Fiber's `reportError`), where Chromium drops it in silence. The
+ * page is gone the moment after, so a reader sees none of it.
  */
 export const withObservedPageErrors = Effect.fn(
   "NakafaE2E.withObservedPageErrors"
@@ -44,13 +48,33 @@ export const withObservedPageErrors = Effect.fn(
 ): Effect.fn.Return<A, E, R> {
   return yield* withObservedEvents(
     (record) => {
+      let leaving = false;
+      const isDocument = (request: Request) =>
+        request.isNavigationRequest() && request.frame() === page.mainFrame();
+      const leave = (request: Request) => {
+        leaving ||= isDocument(request);
+      };
+      const stay = (request: Request) => {
+        leaving &&= !isDocument(request);
+      };
+      const arrive = (frame: Frame) => {
+        leaving &&= frame !== page.mainFrame();
+      };
       const listener = (error: Error) => {
-        if (!LEFT_BEHIND.test(error.message)) {
+        if (!(leaving || LEFT_BEHIND.test(error.message))) {
           record(String(error));
         }
       };
+      page.on("request", leave);
+      page.on("requestfailed", stay);
+      page.on("framenavigated", arrive);
       page.on("pageerror", listener);
-      return () => page.off("pageerror", listener);
+      return () => {
+        page.off("request", leave);
+        page.off("requestfailed", stay);
+        page.off("framenavigated", arrive);
+        page.off("pageerror", listener);
+      };
     },
     (errors) =>
       use.pipe(
