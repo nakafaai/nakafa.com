@@ -3,8 +3,11 @@ import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { LineEquation } from "@repo/design-system/components/three/line";
 import { Origin } from "@repo/design-system/components/three/origin";
 import { Polygon } from "@repo/design-system/components/three/polygon";
+import { AXIS_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr, Option, Result } from "effect";
 import { type ComponentProps, type ReactNode, useMemo } from "react";
+import { useFormatter } from "use-intl";
+import { resolveVisualAxes } from "@/lib/content/renderer/client/base/visual/axes";
 import {
   labelPoint,
   resolveFormulaShapes,
@@ -73,7 +76,12 @@ function resolveArrow(position: "both" | "end" | "none", size: number) {
   return position === "none" ? undefined : { position, size };
 }
 
-/** All authored dimensions compose the same interactive Nakafa primitives. */
+/**
+ * All authored dimensions compose the same interactive Nakafa primitives. The
+ * coordinate system takes the scene's own frame, so its axes, its grid and the
+ * camera's fit cover the frame and never reach for a zero outside it, with the
+ * axes and their real values where the still draws them (`resolveVisualAxes`).
+ */
 export function MathScene({ labels = EMPTY_LABELS, scene }: MathSceneProps) {
   const projection = useMemo(() => resolveVisualProjection(scene), [scene]);
   const geometry = resolveVisualGeometry(scene, projection);
@@ -83,7 +91,11 @@ export function MathScene({ labels = EMPTY_LABELS, scene }: MathSceneProps) {
     [scene, projection, scope]
   );
   const view = resolveMathView(scene, projection);
-  const origin = projectVisualPoint({ x: 0, y: 0, z: 0 }, projection);
+  const axes = useMemo(
+    () => resolveVisualAxes(scene, projection),
+    [scene, projection]
+  );
+  const format = useFormatter();
   // Schema validation guarantees that each label has exactly one object owner.
   const objects: readonly (PlaneObject | SpaceObject)[] = scene.objects;
   const sceneLabels: readonly VisualLabel[] = scene.labels ?? [];
@@ -106,7 +118,8 @@ export function MathScene({ labels = EMPTY_LABELS, scene }: MathSceneProps) {
       cameraPosition={view.position}
       cameraProjection={view.projection}
       cameraTarget={view.target}
-      origin={origin}
+      frame={axes.frame}
+      origin={axes.anchor}
       showOrigin={false}
     >
       {Result.match(formulas, {
@@ -116,7 +129,7 @@ export function MathScene({ labels = EMPTY_LABELS, scene }: MathSceneProps) {
             anchorY="middle"
             color={resolveMathAppearance("warning")}
             fontSize="diagram"
-            position={pointTuple(origin)}
+            position={view.target}
           >
             {failure.message}
           </ThreeLabel>
@@ -158,6 +171,19 @@ export function MathScene({ labels = EMPTY_LABELS, scene }: MathSceneProps) {
           position={pointTuple(label.position)}
         >
           {labels[label.key]}
+        </ThreeLabel>
+      ))}
+      {Arr.map(axes.values, (tick) => (
+        <ThreeLabel
+          anchorX={tick.axis === "x" ? "center" : "right"}
+          anchorY={tick.axis === "x" ? "top" : "middle"}
+          color={AXIS_COLORS[tick.axis]}
+          fontSize="diagram"
+          gap={0.15}
+          key={`${tick.axis}:${tick.end}`}
+          position={pointTuple(tick.at)}
+        >
+          {format.number(tick.value, "math")}
         </ThreeLabel>
       ))}
     </CoordinateSystem>

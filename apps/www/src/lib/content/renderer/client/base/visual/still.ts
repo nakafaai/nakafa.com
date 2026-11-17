@@ -1,6 +1,7 @@
 import { MathAppearanceSchema } from "@nakafa/aksara-contracts/math/base";
 import type { FormulaScope } from "@nakafa/aksara-contracts/math/formula/compile";
 import { Array as Arr, Option, Result, Schema } from "effect";
+import { resolveVisualAxes } from "@/lib/content/renderer/client/base/visual/axes";
 import {
   type FormulaShape,
   labelPoint,
@@ -20,7 +21,6 @@ import {
   thinLine,
 } from "@/lib/content/renderer/client/base/visual/thin";
 import {
-  projectVisualFrame,
   projectVisualPoint,
   type VisualProjection,
 } from "@/lib/content/renderer/client/base/visual/transform";
@@ -177,8 +177,10 @@ function formulaStrokes(
 
 /**
  * Draws a scene flat, as its camera first sees it, for the still that stands in the card until the reader's intent
- * loads the scene: the axes, every object and formula at the sliders' values, and where each label stands. The still
- * reads the same geometry the scene does, so it shows the same picture and never a blank or invented one.
+ * loads the scene: the axes with the real values of an axis whose range leaves zero out (`ticks`), every object and
+ * formula at the sliders' values, and where each label stands. The still reads the same geometry and axes the scene
+ * does (`resolveVisualAxes`), so it shows the same picture, framed by the scene's own frame, and never a blank or
+ * invented one.
  */
 export function drawStill(
   scene: PlaneVisual | SpaceVisual,
@@ -188,23 +190,16 @@ export function drawStill(
   const view = resolveMathView(scene, projection);
   const flat = cameraPlane(view.position, view.target);
   const geometry = resolveVisualGeometry(scene, projection);
-  const frame = projectVisualFrame(scene, projection);
-  const origin = projectVisualPoint({ x: 0, y: 0, z: 0 }, projection);
-  const clamp = (value: number, axis: "x" | "y" | "z") =>
-    Math.min(frame[axis].max, Math.max(frame[axis].min, value));
-  const at = (x: number, y: number, z: number) => ({
-    x: clamp(x, "x"),
-    y: clamp(y, "y"),
-    z: clamp(z, "z"),
-  });
-  const axisNames: readonly ("x" | "y" | "z")[] =
-    scene.space === "plane" ? ["x", "y"] : ["x", "y", "z"];
-  const axes = Arr.map(axisNames, (axis) => ({
+  const { lines, values } = resolveVisualAxes(scene, projection);
+  const axes = Arr.map(lines, ({ axis, from, to }) => ({
     axis,
-    points: Arr.map(["min", "max"] as const, (end) => {
-      const point = { ...origin, [axis]: frame[axis][end] };
-      return flat(at(point.x, point.y, point.z));
-    }),
+    points: [flat(from), flat(to)],
+  }));
+  const ticks = Arr.map(values, ({ at, axis, end, value }) => ({
+    at: flat(at),
+    axis,
+    key: `${axis}:${end}`,
+    value,
   }));
   const shapes = Result.getOrElse(
     resolveFormulaShapes(scene, projection, scope),
@@ -299,6 +294,7 @@ export function drawStill(
       ...stroke,
       points: thinLine(stroke.points, tolerance),
     })),
+    ticks,
     view: {
       height: height + margin * 2,
       left: left - margin,

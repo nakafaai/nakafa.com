@@ -1,7 +1,9 @@
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene";
+import { AXIS_COLORS } from "@repo/design-system/lib/plot";
 import { cva } from "class-variance-authority";
 import { Array as Arr } from "effect";
 import { type ReactNode, useMemo } from "react";
+import { useFormatter } from "use-intl";
 import { resolveMathAppearance } from "@/lib/content/renderer/client/base/visual/palette";
 import type { MathSceneProps } from "@/lib/content/renderer/client/base/visual/render";
 import { useParameterValues } from "@/lib/content/renderer/client/base/visual/sliders";
@@ -34,8 +36,9 @@ function svgPoint([x, y]: readonly [number, number]) {
 }
 
 /**
- * The still of a mathematical scene, which stands in its card until the reader's intent loads the scene: the axes,
- * every object and formula at the sliders' values, and the labels with the markup the server drew, drawn flat from the
+ * The still of a mathematical scene, which stands in its card until the reader's intent loads the scene: the axes with
+ * the real values at the ends of an axis whose range leaves zero out, every object and formula at the sliders' values,
+ * and the labels with the markup the server drew, drawn flat from the
  * scene's own camera (`drawStill`). It is the truthful picture of the card, never a blank frame or a skeleton, and the
  * server draws it into the page's HTML. A label stands where the SVG's fit puts its point: the frame is a size
  * container, so the label's offset scales with the same `min` of width and height that `meet` uses.
@@ -43,6 +46,7 @@ function svgPoint([x, y]: readonly [number, number]) {
 export function MathPicture({ labels = EMPTY_LABELS, scene }: MathSceneProps) {
   const projection = useMemo(() => resolveVisualProjection(scene), [scene]);
   const scope = useParameterValues();
+  const format = useFormatter();
   const still = drawStill(scene, projection, scope);
   const { view } = still;
   const middle = {
@@ -137,6 +141,22 @@ export function MathPicture({ labels = EMPTY_LABELS, scene }: MathSceneProps) {
           }}
         >
           {labels[label.key]}
+        </span>
+      ))}
+      {Arr.map(still.ticks, (tick) => (
+        <span
+          className={labelVariants({
+            placement: tick.axis === "x" ? "below" : "left",
+          })}
+          data-axis-value={tick.key}
+          key={tick.key}
+          style={{
+            color: AXIS_COLORS[tick.axis],
+            left: `calc(50% + ${tick.at[0] - middle.x} * ${scale})`,
+            top: `calc(50% - ${tick.at[1] - middle.y} * ${scale})`,
+          }}
+        >
+          {format.number(tick.value, "math")}
         </span>
       ))}
     </div>
