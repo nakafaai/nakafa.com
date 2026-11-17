@@ -83,7 +83,10 @@ export function ColumnHead({
   /** How the column stands in a narrow table (`narrowColumn`). */
   narrow?: VariantProps<typeof narrowColumn>["narrow"];
   place: VariantProps<typeof columnAlign>["align"];
-  /** The column's width as a length, for a column sized by what it holds (`choiceWidth`), in place of `width`. */
+  /**
+   * The column's width as a length, for a column sized by what it holds (`choiceWidth`), in place of `width`. It is the
+   * column's floor through a class, so a column that `fit`s a narrow table gives the floor up and keeps the width.
+   */
   size?: string | undefined;
   /** How the column sorts the rows, for a head that sorts them. */
   sorted?: keyof typeof sortNames | undefined;
@@ -96,10 +99,13 @@ export function ColumnHead({
       className={cn(
         columnAlign({ align: place }),
         headWidth({ width }),
+        size !== undefined && "min-w-(--column-width)",
         narrowColumn({ narrow })
       )}
       scope="col"
-      style={size === undefined ? undefined : { minWidth: size, width: size }}
+      style={
+        size === undefined ? undefined : { "--column-width": size, width: size }
+      }
     >
       <HeadMenuContext value={menu}>{children}</HeadMenuContext>
     </TableHead>

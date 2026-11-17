@@ -1,4 +1,5 @@
 import { expect, type Page, test } from "@playwright/test";
+import { Array as Arr } from "effect";
 import { groupHref, trackHref } from "@/e2e/support/tryout";
 
 /** Indonesia's page, which holds SNBT and TKA. */
@@ -244,6 +245,53 @@ for (const width of TABLE_WIDTHS) {
       )
     ).toBeLessThanOrEqual(0);
   });
+}
+
+/**
+ * The status column holds its locale's longest state, which in Indonesian is
+ * long enough to fill a phone's card, so at every width every status badge
+ * stands clear of the sticky menu's column and draws its name whole or cut
+ * with an ellipsis inside the badge, never under the menu.
+ */
+for (const locale of ["en", "id"] as const) {
+  for (const width of [320, 390, 1280] as const) {
+    test(`the set table's ${locale} states clear the menu at ${width} px`, async ({
+      page,
+    }) => {
+      await page.setViewportSize({ height: 800, width });
+      await visit(page, trackHref.replace("/en/", `/${locale}/`));
+      const card = page.locator('[data-slot="table-card"]');
+      await expect(
+        card.locator("tbody [data-slot=badge]").first()
+      ).toBeVisible();
+      const states = await card.evaluate((element) =>
+        Array.from(element.querySelectorAll("tbody tr"), (row) => {
+          const menu = row.querySelector("td:last-child");
+          const badge = row.querySelector<HTMLElement>(
+            "[data-progress] [data-slot=badge]"
+          );
+          if (menu === null || badge === null) {
+            return { clear: false, whole: false };
+          }
+          const name = badge.querySelector<HTMLElement>(".truncate");
+          return {
+            clear:
+              badge.getBoundingClientRect().right <=
+              menu.getBoundingClientRect().left + 0.5,
+            whole:
+              badge.scrollWidth <= badge.clientWidth &&
+              (name === null ||
+                name.scrollWidth <= name.clientWidth ||
+                getComputedStyle(name).textOverflow === "ellipsis"),
+          };
+        })
+      );
+      expect(states.length).toBeGreaterThan(0);
+      expect(
+        Arr.filter(states, (state) => !(state.clear && state.whole))
+      ).toEqual([]);
+    });
+  }
 }
 
 /** An exam's official name is never translated, in any locale. */

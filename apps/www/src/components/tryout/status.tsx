@@ -29,7 +29,7 @@ export function TryoutStatus({ status }: { status: TryoutProgress }) {
   return (
     <Badge variant={statusLook(status).variant}>
       <TryoutStatusIcon status={status} />
-      <TryoutStatusLabel status={status} />
+      <TryoutStatusLabel className="truncate" status={status} />
     </Badge>
   );
 }
