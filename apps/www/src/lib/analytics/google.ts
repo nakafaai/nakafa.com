@@ -1,5 +1,5 @@
 import { Array as Arr, DateTime, Effect } from "effect";
-import { sendsPrivacySignal } from "@/lib/ads/consent";
+import { sendsPrivacySignal } from "#www/src/lib/ads/consent";
 
 /** Nakafa's Google Analytics web stream, of property a307729543p433708734. */
 export const GOOGLE_ANALYTICS_ID = "G-F0WTB42EQM";
