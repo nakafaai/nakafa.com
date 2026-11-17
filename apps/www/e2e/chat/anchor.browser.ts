@@ -159,9 +159,15 @@ test("opens a chat again where the reader left it, and at its end once they left
           const back = await standing(page, EARLIER_ROW);
           expect(Math.abs(back.top - left.top)).toBeLessThan(4);
 
+          // The reader scrolls to the end, which lies under the last answer by the transcript's bottom room: an answer
+          // brought just into view stands that room short of the end, where the chat keeps the reader's place.
           await page
             .locator(ANSWER_ROW)
-            .evaluate((row) => row.scrollIntoView({ block: "end" }));
+            .evaluate((row) =>
+              row
+                .closest('[data-slot="message-scroller-viewport"]')
+                ?.scrollTo({ top: Number.MAX_SAFE_INTEGER })
+            );
           await page.waitForTimeout(SETTLE_MILLISECONDS);
         });
 
