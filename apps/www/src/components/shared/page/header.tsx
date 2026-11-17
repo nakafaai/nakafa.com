@@ -43,7 +43,12 @@ export function PageHeader({
       data-slot="page-header"
     >
       <ShellTitle />
-      <div className={pageHeaderRowVariants()}>
+      {/* Text at twice its size: the row wraps, and the path and the actions take a line under the trigger. */}
+      <div
+        className={pageHeaderRowVariants({
+          className: "@max-3xs/bar:flex-wrap",
+        })}
+      >
         <div className="[display:var(--app-shell-locked,contents)]">
           <SidebarScopeStart
             className="group-data-locked/sidebar-wrapper:hidden lg:hidden"
@@ -55,7 +60,7 @@ export function PageHeader({
             {title}
           </h1>
         )}
-        <div className="flex min-h-12 min-w-0 flex-1 items-center justify-between gap-3 py-2 has-data-[slot=page-center]:grid has-data-[slot=page-center]:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] has-data-[slot=page-title]:grid has-data-[slot=page-title]:grid-cols-[auto_minmax(0,1fr)_auto] md:has-data-[slot=page-title]:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] md:has-data-[slot=page-title]:gap-x-4 @max-3xs/bar:flex-wrap">
+        <div className="flex min-h-12 min-w-0 flex-1 items-center justify-between gap-3 py-2 has-data-[slot=page-center]:grid has-data-[slot=page-center]:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] has-data-[slot=page-title]:grid has-data-[slot=page-title]:grid-cols-[auto_minmax(0,1fr)_auto] md:has-data-[slot=page-title]:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] md:has-data-[slot=page-title]:gap-x-4 @max-3xs/bar:basis-full @max-3xs/bar:flex-wrap">
           {children}
         </div>
       </div>
