@@ -34,7 +34,7 @@ import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { P5Sketch } from "@repo/design-system/components/visual/sketch";
 import { getColor } from "@repo/design-system/lib/color";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { INSTRUMENT_COLORS } from "@repo/design-system/lib/material/instrument";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr, Option, Schema } from "effect";
 import type p5 from "p5";
@@ -196,7 +196,7 @@ function pulse(sketch: p5, path: readonly Point[], phase: number) {
         y: from.y + (to.y - from.y) * t,
       };
       sketch.noStroke();
-      sketch.fill(fade(MATERIAL.laserBeam, 0.35));
+      sketch.fill(fade(INSTRUMENT_COLORS.laserBeam, 0.35));
       sketch.circle(at.x, at.y, 18);
       sketch.fill(fade(getColor("WHITE"), 0.95));
       sketch.circle(at.x, at.y, 6);
@@ -234,11 +234,17 @@ function blockProgram(sketch: p5, read: () => BlockFrame) {
     });
     normal(sketch, ray.entry, true, place.scale * 0.32);
     const reflected = along(ray.entry, -ray.incoming, place.scale * 0.6);
-    beam(sketch, ray.entry, reflected, MATERIAL.laserBeam, 0.18);
+    beam(sketch, ray.entry, reflected, INSTRUMENT_COLORS.laserBeam, 0.18);
     Arr.forEach(
       Arr.zip(ray.path, Arr.drop(ray.path, 1)),
       ([point, next], index) =>
-        beam(sketch, point, next, MATERIAL.laserBeam, index === 1 ? 0.85 : 1)
+        beam(
+          sketch,
+          point,
+          next,
+          INSTRUMENT_COLORS.laserBeam,
+          index === 1 ? 0.85 : 1
+        )
     );
     paintRayBox(sketch, ray.source, ray.incoming, place.scale * 0.11);
     const arc = place.scale * 0.2;

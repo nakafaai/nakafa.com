@@ -22,7 +22,10 @@ import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { P5Sketch } from "@repo/design-system/components/visual/sketch";
 import { getColor } from "@repo/design-system/lib/color";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { BENCH_COLORS } from "@repo/design-system/lib/material/bench";
+import { CAR_COLORS } from "@repo/design-system/lib/material/car";
+import { ENERGY_COLORS } from "@repo/design-system/lib/material/energy";
+import { INSTRUMENT_COLORS } from "@repo/design-system/lib/material/instrument";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Schema } from "effect";
 import type p5 from "p5";
@@ -71,7 +74,7 @@ function jackProgram(sketch: p5, read: () => JackFrame) {
     const smallTop = base - height * 0.5 + push * frame.stroke * centimetre;
     const rise = push * frame.stroke * (frame.small / frame.large) * centimetre;
     const largeTop = base - height * 0.3 - rise;
-    const oil = MATERIAL.dieselFuel;
+    const oil = ENERGY_COLORS.dieselFuel;
     gradientRect(
       sketch,
       {
@@ -104,7 +107,7 @@ function jackProgram(sketch: p5, read: () => JackFrame) {
       true
     );
     sketch.noFill();
-    sketch.stroke(fade(MATERIAL.glass, 0.7));
+    sketch.stroke(fade(BENCH_COLORS.glass, 0.7));
     sketch.strokeWeight(3);
     sketch.rect(
       smallX - 3,
@@ -114,17 +117,17 @@ function jackProgram(sketch: p5, read: () => JackFrame) {
     );
     sketch.rect(largeX - 3, base - height * 0.5, largeWidth + 6, height * 0.5);
     sketch.noStroke();
-    sketch.fill(MATERIAL.aluminium);
+    sketch.fill(INSTRUMENT_COLORS.aluminium);
     sketch.rect(smallX, smallTop - 10, smallWidth, 10);
     sketch.rect(largeX, largeTop - 12, largeWidth, 12);
-    sketch.fill(MATERIAL.castIron);
+    sketch.fill(CAR_COLORS.castIron);
     sketch.rect(
       smallX + smallWidth / 2 - 3,
       smallTop - height * 0.12,
       6,
       height * 0.12
     );
-    sketch.fill(MATERIAL.crateWood);
+    sketch.fill(ENERGY_COLORS.crateWood);
     sketch.rect(
       largeX + largeWidth * 0.15,
       largeTop - 12 - height * 0.16,
@@ -132,7 +135,9 @@ function jackProgram(sketch: p5, read: () => JackFrame) {
       height * 0.16,
       3
     );
-    sketch.stroke(fade(mix(MATERIAL.crateWood, getColor("BLACK"), 0.4), 0.8));
+    sketch.stroke(
+      fade(mix(ENERGY_COLORS.crateWood, getColor("BLACK"), 0.4), 0.8)
+    );
     sketch.strokeWeight(2);
     sketch.line(
       largeX + largeWidth * 0.15,

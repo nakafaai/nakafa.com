@@ -37,7 +37,10 @@ import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { P5Sketch } from "@repo/design-system/components/visual/sketch";
 import { getColor } from "@repo/design-system/lib/color";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { BENCH_COLORS } from "@repo/design-system/lib/material/bench";
+import { CAR_COLORS } from "@repo/design-system/lib/material/car";
+import { ROAD_COLORS } from "@repo/design-system/lib/material/road";
+import { TOWN_COLORS } from "@repo/design-system/lib/material/town";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Schema } from "effect";
 import type p5 from "p5";
@@ -75,20 +78,20 @@ function paintRiver(sketch: p5, plan: Plan, river: River) {
     sketch,
     { height: sketch.height, width: sketch.width, x: 0, y: 0 },
     [
-      [0, mix(MATERIAL.grass, MATERIAL.foliageLight, 0.3)],
-      [1, mix(MATERIAL.grass, MATERIAL.foliageDark, 0.35)],
+      [0, mix(ROAD_COLORS.grass, ROAD_COLORS.foliageLight, 0.3)],
+      [1, mix(ROAD_COLORS.grass, ROAD_COLORS.foliageDark, 0.35)],
     ]
   );
   sketch.noStroke();
-  sketch.fill(MATERIAL.riverbank);
+  sketch.fill(TOWN_COLORS.riverbank);
   sketch.rect(0, north - bank, sketch.width, south - north + 2 * bank);
   gradientRect(
     sketch,
     { height: south - north, width: sketch.width, x: 0, y: north },
     [
-      [0, MATERIAL.water],
-      [0.5, MATERIAL.waterDeep],
-      [1, MATERIAL.water],
+      [0, TOWN_COLORS.water],
+      [0.5, TOWN_COLORS.waterDeep],
+      [1, TOWN_COLORS.water],
     ]
   );
   for (let index = 0; index < 28; index += 1) {
@@ -102,9 +105,9 @@ function paintRiver(sketch: p5, plan: Plan, river: River) {
       Math.max(plan.scale * river.width * 0.01, 1);
     sketch.fill(fade(getColor("BLACK"), 0.3));
     sketch.circle(x + radius * 0.3, y + radius * 0.3, radius * 2.1);
-    sketch.fill(MATERIAL.foliageDark);
+    sketch.fill(ROAD_COLORS.foliageDark);
     sketch.circle(x, y, radius * 2);
-    sketch.fill(MATERIAL.foliageLight);
+    sketch.fill(ROAD_COLORS.foliageLight);
     sketch.circle(x - radius * 0.25, y - radius * 0.25, radius * 1.2);
   }
 }
@@ -114,7 +117,7 @@ function paintCurrent(sketch: p5, plan: Plan, river: River, clock: number) {
   const south = planPoint(plan, { east: 0, north: 0 }).y;
   const north = planPoint(plan, { east: 0, north: river.width }).y;
   sketch.push();
-  sketch.stroke(fade(MATERIAL.waterGlint, 0.35));
+  sketch.stroke(fade(TOWN_COLORS.waterGlint, 0.35));
   sketch.strokeWeight(1.5);
   for (let index = 0; index < 40; index += 1) {
     const y = north + (south - north) * (0.05 + 0.9 * hashUnit(index, 9));
@@ -141,7 +144,7 @@ function paintBoat(
   sketch.noStroke();
   sketch.fill(fade(getColor("BLACK"), 0.35));
   sketch.ellipse(size * 0.12, size * 0.12, size * 0.55, size * 1.25);
-  sketch.fill(MATERIAL.dish);
+  sketch.fill(BENCH_COLORS.dish);
   sketch.beginShape();
   sketch.vertex(0, -size * 0.62);
   sketch.vertex(size * 0.24, -size * 0.1);
@@ -151,7 +154,7 @@ function paintBoat(
   sketch.endShape(sketch.CLOSE);
   sketch.fill(PLOT_COLORS.orange);
   sketch.rect(-size * 0.2, size * 0.05, size * 0.4, size * 0.12);
-  sketch.fill(MATERIAL.tintedGlass);
+  sketch.fill(CAR_COLORS.tintedGlass);
   sketch.rect(-size * 0.14, -size * 0.18, size * 0.28, size * 0.16, 2);
   sketch.pop();
 }

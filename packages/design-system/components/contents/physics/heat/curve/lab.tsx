@@ -27,7 +27,10 @@ import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { P5Sketch } from "@repo/design-system/components/visual/sketch";
 import { getColor } from "@repo/design-system/lib/color";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { BENCH_COLORS } from "@repo/design-system/lib/material/bench";
+import { CAR_COLORS } from "@repo/design-system/lib/material/car";
+import { MACHINE_COLORS } from "@repo/design-system/lib/material/machine";
+import { REAGENT_COLORS } from "@repo/design-system/lib/material/reagent";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr, Schema } from "effect";
 import type p5 from "p5";
@@ -95,10 +98,10 @@ function curveProgram(sketch: p5, read: () => CurveFrame) {
       sketch,
       beaker,
       0.6,
-      mix(MATERIAL.cotton, MATERIAL.vinegar, melted)
+      mix(MACHINE_COLORS.cotton, REAGENT_COLORS.vinegar, melted)
     );
     sketch.noStroke();
-    sketch.fill(fade(MATERIAL.cotton, 0.85 * (1 - melted)));
+    sketch.fill(fade(MACHINE_COLORS.cotton, 0.85 * (1 - melted)));
     sketch.rect(
       beaker.x + 4,
       beaker.y + beaker.height * 0.4,
@@ -106,14 +109,14 @@ function curveProgram(sketch: p5, read: () => CurveFrame) {
       beaker.height * 0.6 - 4,
       3
     );
-    sketch.fill(MATERIAL.castIron);
+    sketch.fill(CAR_COLORS.castIron);
     sketch.rect(
       beaker.x + beaker.width * 0.3,
       beaker.y - height * 0.08,
       6,
       beaker.height * 0.9
     );
-    sketch.fill(MATERIAL.coalGlow);
+    sketch.fill(BENCH_COLORS.coalGlow);
     sketch.rect(
       beaker.x + beaker.width * 0.3 - 2,
       beaker.y + beaker.height * 0.62,

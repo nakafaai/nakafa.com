@@ -8,7 +8,7 @@ import {
   mix,
 } from "@repo/design-system/components/contents/physics/canvas/paint";
 import { hashUnit } from "@repo/design-system/components/contents/simulation/grain";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { ECOLOGY_COLORS } from "@repo/design-system/lib/material/ecology";
 import { Array as Arr } from "effect";
 import type p5 from "p5";
 
@@ -60,7 +60,7 @@ function owlBody(sprite: p5.Graphics, span: number) {
 /** A barn owl gliding, seen from above, its head forward along +x. */
 export function owlSprite(sketch: p5, span: number) {
   const sprite = spriteOf(sketch, span * 0.55);
-  sprite.fill(MATERIAL.owlWing);
+  sprite.fill(ECOLOGY_COLORS.owlWing);
   owlWing(sprite, span, -1);
   owlWing(sprite, span, 1);
   owlBody(sprite, span);
@@ -71,9 +71,15 @@ export function owlSprite(sketch: p5, span: number) {
       span * 0.2,
       span * 0.5
     );
-    sun.addColorStop(0, mix(MATERIAL.owlWing, MATERIAL.owlFace, 0.3));
-    sun.addColorStop(0.5, MATERIAL.owlWing);
-    sun.addColorStop(1, mix(MATERIAL.owlWing, MATERIAL.owlWingTip, 0.45));
+    sun.addColorStop(
+      0,
+      mix(ECOLOGY_COLORS.owlWing, ECOLOGY_COLORS.owlFace, 0.3)
+    );
+    sun.addColorStop(0.5, ECOLOGY_COLORS.owlWing);
+    sun.addColorStop(
+      1,
+      mix(ECOLOGY_COLORS.owlWing, ECOLOGY_COLORS.owlWingTip, 0.45)
+    );
     drawing.fillStyle = sun;
     drawing.fillRect(-span * 0.6, -span * 0.6, span * 1.2, span * 1.2);
     // The flight feathers along the trailing edge and in the hand are paler.
@@ -85,8 +91,8 @@ export function owlSprite(sketch: p5, span: number) {
       0,
       span * 0.55
     );
-    pale.addColorStop(0, fade(MATERIAL.owlFace, 0));
-    pale.addColorStop(1, fade(MATERIAL.owlFace, 0.35));
+    pale.addColorStop(0, fade(ECOLOGY_COLORS.owlFace, 0));
+    pale.addColorStop(1, fade(ECOLOGY_COLORS.owlFace, 0.35));
     drawing.fillStyle = pale;
     drawing.fillRect(-span * 0.6, -span * 0.6, span * 1.2, span * 1.2);
   });
@@ -96,7 +102,7 @@ export function owlSprite(sketch: p5, span: number) {
       const side = spot % 2 === 0 ? 1 : -1;
       const x = -0.16 + hashUnit(spot, 91) * 0.32;
       const y = hashUnit(spot, 92) * 0.32;
-      sprite.fill(fade(MATERIAL.owlGrey, 0.3 + hashUnit(spot, 93) * 0.3));
+      sprite.fill(fade(ECOLOGY_COLORS.owlGrey, 0.3 + hashUnit(spot, 93) * 0.3));
       sprite.ellipse(
         x * span,
         side * y * span,
@@ -108,7 +114,7 @@ export function owlSprite(sketch: p5, span: number) {
     sprite.strokeWeight(Math.max(0.5, span * 0.008));
     Arr.forEach([-1, 1], (side) => {
       // The primaries fan out from the wrist, each edged a shade darker.
-      sprite.stroke(fade(MATERIAL.owlWingTip, 0.45));
+      sprite.stroke(fade(ECOLOGY_COLORS.owlWingTip, 0.45));
       Arr.forEach(Arr.range(0, 6), (feather) => {
         const angle = side * (0.55 + feather * 0.3);
         sprite.line(
@@ -119,7 +125,7 @@ export function owlSprite(sketch: p5, span: number) {
         );
       });
       // Faint dark bars across the flight feathers.
-      sprite.stroke(fade(MATERIAL.owlWingTip, 0.4));
+      sprite.stroke(fade(ECOLOGY_COLORS.owlWingTip, 0.4));
       Arr.forEach(Arr.range(1, 4), (bar) => {
         const reach = (0.07 + bar * 0.04) * span * 2;
         sprite.arc(
@@ -140,9 +146,9 @@ export function owlSprite(sketch: p5, span: number) {
       const side = spot % 2 === 0 ? 1 : -1;
       const x = (-0.1 + hashUnit(spot, 96) * 0.2) * span;
       const y = side * hashUnit(spot, 97) * 0.26 * span;
-      sprite.fill(fade(MATERIAL.owlFace, 0.9));
+      sprite.fill(fade(ECOLOGY_COLORS.owlFace, 0.9));
       sprite.circle(x, y, Math.max(0.7, span * 0.01));
-      sprite.fill(fade(MATERIAL.hairBlack, 0.8));
+      sprite.fill(fade(ECOLOGY_COLORS.hairBlack, 0.8));
       sprite.circle(x - span * 0.005, y, Math.max(0.4, span * 0.005));
     });
   });
@@ -153,8 +159,8 @@ export function owlSprite(sketch: p5, span: number) {
 /** The pale heart-shaped facial disc, rimmed in buff, with small black eyes and a pale bill. */
 function owlFace(sprite: p5.Graphics, span: number) {
   const at = (x: number, y: number) => [x * span, y * span] as const;
-  sprite.fill(MATERIAL.owlFace);
-  sprite.stroke(mix(MATERIAL.owlWing, MATERIAL.owlWingTip, 0.35));
+  sprite.fill(ECOLOGY_COLORS.owlFace);
+  sprite.stroke(mix(ECOLOGY_COLORS.owlWing, ECOLOGY_COLORS.owlWingTip, 0.35));
   sprite.strokeWeight(Math.max(0.6, span * 0.007));
   sprite.beginShape();
   sprite.vertex(...at(0.13, 0));
@@ -173,12 +179,12 @@ function owlFace(sprite: p5.Graphics, span: number) {
   sprite.endShape(sprite.CLOSE);
   sprite.noStroke();
   // The disc dips toward the bill, a little shaded on the side away from the sun.
-  sprite.fill(fade(MATERIAL.owlGrey, 0.25));
+  sprite.fill(fade(ECOLOGY_COLORS.owlGrey, 0.25));
   sprite.ellipse(...at(0.168, 0.025), span * 0.05, span * 0.04);
-  sprite.fill(MATERIAL.hairBlack);
+  sprite.fill(ECOLOGY_COLORS.hairBlack);
   sprite.circle(...at(0.166, -0.024), span * 0.014);
   sprite.circle(...at(0.166, 0.024), span * 0.014);
-  sprite.fill(MATERIAL.ratSkin);
+  sprite.fill(ECOLOGY_COLORS.ratSkin);
   sprite.ellipse(...at(0.195, 0), span * 0.02, span * 0.01);
 }
 

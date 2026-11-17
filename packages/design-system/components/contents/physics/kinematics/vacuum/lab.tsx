@@ -28,7 +28,10 @@ import {
 } from "@repo/design-system/components/visual/card";
 import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { BENCH_COLORS } from "@repo/design-system/lib/material/bench";
+import { CAR_COLORS } from "@repo/design-system/lib/material/car";
+import { REAGENT_COLORS } from "@repo/design-system/lib/material/reagent";
+import { ROAD_COLORS } from "@repo/design-system/lib/material/road";
 import { Array as Arr, Schema } from "effect";
 import { type ReactNode, Suspense, useRef, useState } from "react";
 import type { Group } from "three";
@@ -48,7 +51,7 @@ function GlassTube() {
     <group>
       <mesh castShadow position={[0, TUBE.base / 2, 0]} receiveShadow>
         <boxGeometry args={[0.32, TUBE.base, 0.22]} />
-        <meshStandardMaterial color={MATERIAL.bark} roughness={0.7} />
+        <meshStandardMaterial color={ROAD_COLORS.bark} roughness={0.7} />
       </mesh>
       <mesh position={[0, TUBE.base + TUBE.height / 2, 0]}>
         <cylinderGeometry
@@ -61,14 +64,14 @@ function GlassTube() {
             true,
           ]}
         />
-        <GlassMaterial color={MATERIAL.glass} opacity={0.2} />
+        <GlassMaterial color={BENCH_COLORS.glass} opacity={0.2} />
       </mesh>
       {Arr.map([TUBE.base + 0.02, TUBE.base + TUBE.height - 0.02], (height) => (
         <mesh castShadow key={height} position={[0, height, 0]}>
           <cylinderGeometry
             args={[TUBE.radius + 0.008, TUBE.radius + 0.008, 0.05, 32]}
           />
-          <meshStandardMaterial color={MATERIAL.stopper} roughness={0.85} />
+          <meshStandardMaterial color={BENCH_COLORS.stopper} roughness={0.85} />
         </mesh>
       ))}
       <mesh
@@ -77,7 +80,7 @@ function GlassTube() {
         rotation={[0, 0, Math.PI / 2]}
       >
         <torusGeometry args={[0.1, 0.009, 12, 32, Math.PI]} />
-        <meshStandardMaterial color={MATERIAL.tyre} roughness={0.8} />
+        <meshStandardMaterial color={CAR_COLORS.tyre} roughness={0.8} />
       </mesh>
     </group>
   );
@@ -89,7 +92,7 @@ function Coin() {
     <mesh castShadow rotation={[0.2, 0, 0.1]}>
       <cylinderGeometry args={[0.02, 0.02, 0.003, 32]} />
       <meshStandardMaterial
-        color={MATERIAL.batteryTerminal}
+        color={BENCH_COLORS.batteryTerminal}
         metalness={1}
         roughness={0.25}
       />
@@ -103,11 +106,11 @@ function Feather() {
     <group rotation={[0, 0, 0.35]}>
       <mesh castShadow scale={[0.02, 0.05, 0.003]}>
         <sphereGeometry args={[1, 24, 12]} />
-        <meshStandardMaterial color={MATERIAL.foam} roughness={0.95} />
+        <meshStandardMaterial color={REAGENT_COLORS.foam} roughness={0.95} />
       </mesh>
       <mesh position={[0, -0.012, 0]}>
         <cylinderGeometry args={[0.001, 0.001, 0.1, 6]} />
-        <meshStandardMaterial color={MATERIAL.cabinet} roughness={0.6} />
+        <meshStandardMaterial color={BENCH_COLORS.cabinet} roughness={0.6} />
       </mesh>
     </group>
   );

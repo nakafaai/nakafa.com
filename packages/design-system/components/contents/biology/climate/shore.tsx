@@ -1,6 +1,7 @@
 import { groundAt } from "@repo/design-system/components/contents/biology/climate/sea";
 import { valueNoise } from "@repo/design-system/components/contents/simulation/grain";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { ECOLOGY_COLORS } from "@repo/design-system/lib/material/ecology";
+import { MACHINE_COLORS } from "@repo/design-system/lib/material/machine";
 import { Array as Arr } from "effect";
 import { useEffect, useLayoutEffect, useMemo } from "react";
 import { BufferAttribute, Color, PlaneGeometry } from "three";
@@ -85,11 +86,11 @@ export function Shore({
     const positions = geometry.getAttribute("position");
     const colors = geometry.getAttribute("color");
     const palette = {
-      dry: new Color(MATERIAL.sand),
-      lush: new Color(MATERIAL.grassLush),
-      mud: new Color(MATERIAL.mud),
-      sun: new Color(MATERIAL.grassSun),
-      wet: new Color(MATERIAL.sandWet),
+      dry: new Color(MACHINE_COLORS.sand),
+      lush: new Color(ECOLOGY_COLORS.grassLush),
+      mud: new Color(ECOLOGY_COLORS.mud),
+      sun: new Color(ECOLOGY_COLORS.grassSun),
+      wet: new Color(ECOLOGY_COLORS.sandWet),
     };
     const run = 0.2 + wave * 0.6;
     const paint = new Color();

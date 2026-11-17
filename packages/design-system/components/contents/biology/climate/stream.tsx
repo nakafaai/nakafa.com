@@ -11,7 +11,8 @@ import {
   tint,
 } from "@repo/design-system/components/contents/biology/climate/paint";
 import { hashUnit } from "@repo/design-system/components/contents/simulation/grain";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { ECOLOGY_COLORS } from "@repo/design-system/lib/material/ecology";
+import { TOWN_COLORS } from "@repo/design-system/lib/material/town";
 import { Array as Arr } from "effect";
 import type p5 from "p5";
 
@@ -39,7 +40,7 @@ export function drawPour(
   sketch.strokeWeight(Math.max(0.6, 0.8 * frame.unit));
   Arr.forEach(Arr.range(0, 15), (bubble) => {
     const phase = (time * 0.9 + hashUnit(bubble, 11)) % 1;
-    sketch.stroke(tint(sketch, MATERIAL.waterGlint, 210 * (1 - phase)));
+    sketch.stroke(tint(sketch, TOWN_COLORS.waterGlint, 210 * (1 - phase)));
     sketch.circle(
       frame.spout + (hashUnit(bubble, 13) - 0.5) * wide * (0.6 + phase * 2.4),
       surface + phase * plume,
@@ -84,14 +85,14 @@ function drawStream(
     Math.sin(y * 0.09 - time * 14) * 0.35 * frame.unit;
   painted(
     sketch,
-    tint(sketch, MATERIAL.bathwater, 200),
+    tint(sketch, ECOLOGY_COLORS.bathwater, 200),
     (context) =>
       stopped(context.createLinearGradient(x - wide / 2, 0, x + wide / 2, 0), [
-        [0, tint(sketch, MATERIAL.seawater, 215)],
-        [0.24, tint(sketch, MATERIAL.bathwater, 170)],
-        [0.4, tint(sketch, MATERIAL.waterGlint, 240)],
-        [0.58, tint(sketch, MATERIAL.bathwater, 150)],
-        [1, tint(sketch, MATERIAL.seawater, 215)],
+        [0, tint(sketch, ECOLOGY_COLORS.seawater, 215)],
+        [0.24, tint(sketch, ECOLOGY_COLORS.bathwater, 170)],
+        [0.4, tint(sketch, TOWN_COLORS.waterGlint, 240)],
+        [0.58, tint(sketch, ECOLOGY_COLORS.bathwater, 150)],
+        [1, tint(sketch, ECOLOGY_COLORS.seawater, 215)],
       ]),
     () =>
       shape(
@@ -107,7 +108,7 @@ function drawStream(
   );
   sketch.push();
   sketch.strokeCap(sketch.ROUND);
-  sketch.stroke(tint(sketch, MATERIAL.porcelainGloss, 220));
+  sketch.stroke(tint(sketch, ECOLOGY_COLORS.porcelainGloss, 220));
   sketch.strokeWeight(Math.max(0.8, wide * 0.12));
   Arr.forEach(Arr.range(0, 2), (glint) => {
     const y = from + ((time * 1.6 + glint / 3) % 1) * (to - from);
@@ -132,7 +133,7 @@ function drawSplash(
 ) {
   sketch.push();
   sketch.noStroke();
-  sketch.fill(tint(sketch, MATERIAL.waterGlint, 190));
+  sketch.fill(tint(sketch, TOWN_COLORS.waterGlint, 190));
   Arr.forEach(Arr.range(0, 2), (foam) =>
     sketch.ellipse(
       x + (hashUnit(foam, 3) - 0.5) * wide * 1.8,
@@ -145,7 +146,7 @@ function drawSplash(
     const phase = (time * 1.8 + hashUnit(drop, 7)) % 1;
     const throwX = (hashUnit(drop, 8) - 0.5) * wide * 3.2;
     const throwY = (0.4 + hashUnit(drop, 9)) * wide * 1.4;
-    sketch.fill(tint(sketch, MATERIAL.waterGlint, 230 * (1 - phase)));
+    sketch.fill(tint(sketch, TOWN_COLORS.waterGlint, 230 * (1 - phase)));
     sketch.circle(
       x + throwX * phase,
       y - throwY * 4 * phase * (1 - phase),

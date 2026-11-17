@@ -33,7 +33,7 @@ import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { P5Sketch } from "@repo/design-system/components/visual/sketch";
 import { getColor } from "@repo/design-system/lib/color";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { INSTRUMENT_COLORS } from "@repo/design-system/lib/material/instrument";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Schema } from "effect";
 import type p5 from "p5";
@@ -133,7 +133,7 @@ function paintGateBack(
       sketch.rect(x - arm / 2, top - shift, shift + arm, arm, 3);
     }
   );
-  sketch.stroke(fade(MATERIAL.laserBeam, cut ? 0.12 : 0.85));
+  sketch.stroke(fade(INSTRUMENT_COLORS.laserBeam, cut ? 0.12 : 0.85));
   sketch.strokeWeight(cut ? 1 : 3);
   sketch.line(x + shift, beam - shift, x, beam);
   sketch.noStroke();
@@ -160,10 +160,10 @@ function paintGateFront(
   litBall(sketch, { x, y: beamHeight(sketch, place) }, arm * 0.32, {
     dark: cut
       ? getColor("ZINC", 900)
-      : mix(MATERIAL.laserBeam, getColor("BLACK"), 0.3),
+      : mix(INSTRUMENT_COLORS.laserBeam, getColor("BLACK"), 0.3),
     light: cut
       ? getColor("SLATE", 600)
-      : mix(MATERIAL.laserBeam, getColor("WHITE"), 0.6),
+      : mix(INSTRUMENT_COLORS.laserBeam, getColor("WHITE"), 0.6),
   });
 }
 
@@ -220,10 +220,10 @@ function paintTimer(
     height * 0.016,
     {
       dark: running
-        ? mix(MATERIAL.statusLed, getColor("BLACK"), 0.2)
+        ? mix(INSTRUMENT_COLORS.statusLed, getColor("BLACK"), 0.2)
         : getColor("ZINC", 900),
       light: running
-        ? mix(MATERIAL.statusLed, getColor("WHITE"), 0.7)
+        ? mix(INSTRUMENT_COLORS.statusLed, getColor("WHITE"), 0.7)
         : getColor("SLATE", 600),
     }
   );
@@ -256,9 +256,9 @@ function paintTrolley(
         sketch,
         { height: body, width: length, x: right - length, y: bottom - body },
         [
-          [0, mix(MATERIAL.trolleyPaint, getColor("WHITE"), 0.35)],
-          [0.4, MATERIAL.trolleyPaint],
-          [1, mix(MATERIAL.trolleyPaint, getColor("BLACK"), 0.45)],
+          [0, mix(INSTRUMENT_COLORS.trolleyPaint, getColor("WHITE"), 0.35)],
+          [0.4, INSTRUMENT_COLORS.trolleyPaint],
+          [1, mix(INSTRUMENT_COLORS.trolleyPaint, getColor("BLACK"), 0.45)],
         ]
       );
       sketch.fill(getColor("ZINC", 950));

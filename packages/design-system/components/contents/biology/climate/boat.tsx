@@ -1,4 +1,4 @@
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { ECOLOGY_COLORS } from "@repo/design-system/lib/material/ecology";
 import { Array as Arr } from "effect";
 import { useEffect, useMemo } from "react";
 import { BufferAttribute, BufferGeometry, Color, DoubleSide } from "three";
@@ -45,9 +45,9 @@ function paintAt(v: number, height: number) {
 /** The hull as one painted shell: blue topsides, a red sheer strake, and a darker boot under the waterline. */
 function hullGeometry() {
   const paint = {
-    boot: new Color(MATERIAL.boatHull).multiplyScalar(0.45),
-    hull: new Color(MATERIAL.boatHull),
-    trim: new Color(MATERIAL.boatTrim),
+    boot: new Color(ECOLOGY_COLORS.boatHull).multiplyScalar(0.45),
+    hull: new Color(ECOLOGY_COLORS.boatHull),
+    trim: new Color(ECOLOGY_COLORS.boatTrim),
   };
   const points = Arr.flatMap(Arr.range(0, GRID.along), (row) =>
     Arr.map(Arr.range(0, GRID.across), (column) => {
@@ -102,7 +102,10 @@ export function Boat() {
       {Arr.map([-0.8, 0.9], (x) => (
         <mesh castShadow key={x} position={[x, 0.35, 0]} receiveShadow>
           <boxGeometry args={[0.24, 0.04, 1.3]} />
-          <meshStandardMaterial color={MATERIAL.woodPale} roughness={0.8} />
+          <meshStandardMaterial
+            color={ECOLOGY_COLORS.woodPale}
+            roughness={0.8}
+          />
         </mesh>
       ))}
     </group>

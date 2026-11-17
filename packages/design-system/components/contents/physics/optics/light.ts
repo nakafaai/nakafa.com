@@ -5,7 +5,8 @@ import {
   spotlight,
 } from "@repo/design-system/components/contents/physics/canvas/paint";
 import { getColor } from "@repo/design-system/lib/color";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { BENCH_COLORS } from "@repo/design-system/lib/material/bench";
+import { INSTRUMENT_COLORS } from "@repo/design-system/lib/material/instrument";
 import { Schema } from "effect";
 import type p5 from "p5";
 
@@ -85,7 +86,7 @@ export function paintGlass(
     readonly y: number;
   }
 ) {
-  const tint = MATERIAL.glass;
+  const tint = BENCH_COLORS.glass;
   gradientRect(
     sketch,
     box,
@@ -148,7 +149,7 @@ export function paintRayBox(
   sketch.rect(-size * 2.2, -size * 0.55, size * 2.2, size * 0.25, size * 0.18);
   sketch.fill(getColor("ZINC", 950));
   sketch.rect(-size * 0.12, -size * 0.3, size * 0.12, size * 0.6);
-  sketch.fill(fade(MATERIAL.lampLight, 0.9));
+  sketch.fill(fade(INSTRUMENT_COLORS.lampLight, 0.9));
   sketch.rect(-size * 0.06, -size * 0.07, size * 0.06, size * 0.14);
   sketch.pop();
 }

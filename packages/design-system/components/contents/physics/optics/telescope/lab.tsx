@@ -26,7 +26,8 @@ import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { P5Sketch } from "@repo/design-system/components/visual/sketch";
 import { getColor } from "@repo/design-system/lib/color";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { BENCH_COLORS } from "@repo/design-system/lib/material/bench";
+import { INSTRUMENT_COLORS } from "@repo/design-system/lib/material/instrument";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Schema } from "effect";
 import type p5 from "p5";
@@ -83,9 +84,12 @@ function lensShape(sketch: p5, at: Point, reach: number) {
   drawing.moveTo(at.x, at.y - reach);
   drawing.quadraticCurveTo(at.x + bulge, at.y, at.x, at.y + reach);
   drawing.quadraticCurveTo(at.x - bulge, at.y, at.x, at.y - reach);
-  drawing.fillStyle = fade(MATERIAL.glass, 0.25);
+  drawing.fillStyle = fade(BENCH_COLORS.glass, 0.25);
   drawing.fill();
-  drawing.strokeStyle = fade(mix(MATERIAL.glass, getColor("WHITE"), 0.5), 0.85);
+  drawing.strokeStyle = fade(
+    mix(BENCH_COLORS.glass, getColor("WHITE"), 0.5),
+    0.85
+  );
   drawing.lineWidth = 1.5;
   drawing.stroke();
   drawing.restore();
@@ -117,9 +121,9 @@ function paintRays(
       ray.length + leave,
       ray.atEyepiece + leave * ray.out
     );
-    beam(sketch, start, atObjective, MATERIAL.lampLight, weight);
-    beam(sketch, atObjective, atEyepiece, MATERIAL.lampLight, weight);
-    beam(sketch, atEyepiece, end, MATERIAL.lampLight, weight);
+    beam(sketch, start, atObjective, INSTRUMENT_COLORS.lampLight, weight);
+    beam(sketch, atObjective, atEyepiece, INSTRUMENT_COLORS.lampLight, weight);
+    beam(sketch, atEyepiece, end, INSTRUMENT_COLORS.lampLight, weight);
   }
   const top = place(view, scope.objective, radius * 1.1);
   const bottom = place(view, scope.objective, -radius * 1.1);

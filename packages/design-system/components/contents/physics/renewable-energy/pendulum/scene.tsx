@@ -12,7 +12,10 @@ import {
 import { Pipe } from "@repo/design-system/components/contents/physics/renewable-energy/world/parts";
 import { SurfaceMaterial } from "@repo/design-system/components/three/surface/material";
 import { useVisualScene } from "@repo/design-system/components/visual/card";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { CAR_COLORS } from "@repo/design-system/lib/material/car";
+import { ENERGY_COLORS } from "@repo/design-system/lib/material/energy";
+import { INSTRUMENT_COLORS } from "@repo/design-system/lib/material/instrument";
+import { MACHINE_COLORS } from "@repo/design-system/lib/material/machine";
 import { Array as Arr } from "effect";
 import { useRef } from "react";
 import type { Group } from "three";
@@ -69,7 +72,7 @@ export function PendulumScene({
         <group key={`${foot}-${z}`}>
           <Pipe from={[foot, 0.03, z]} radius={0.025} to={[0, PIVOT, z]}>
             <SurfaceMaterial
-              color={MATERIAL.galvanizedSteel}
+              color={ENERGY_COLORS.galvanizedSteel}
               metalness={1}
               roughness={0.6}
               surface="brushed"
@@ -77,14 +80,14 @@ export function PendulumScene({
           </Pipe>
           <mesh castShadow position={[foot, 0.02, z]}>
             <cylinderGeometry args={[0.045, 0.05, 0.04, 20]} />
-            <SurfaceMaterial color={MATERIAL.tyre} surface="rubber" />
+            <SurfaceMaterial color={CAR_COLORS.tyre} surface="rubber" />
           </mesh>
         </group>
       ))}
       {Arr.map([-0.45, 0.45] as const, (z) => (
         <Pipe from={[-0.45, 0.5, z]} key={z} radius={0.018} to={[0.45, 0.5, z]}>
           <SurfaceMaterial
-            color={MATERIAL.galvanizedSteel}
+            color={ENERGY_COLORS.galvanizedSteel}
             metalness={1}
             roughness={0.6}
             surface="brushed"
@@ -93,7 +96,7 @@ export function PendulumScene({
       ))}
       <Pipe from={[0, PIVOT, -0.5]} radius={0.03} to={[0, PIVOT, 0.5]}>
         <SurfaceMaterial
-          color={MATERIAL.castIron}
+          color={CAR_COLORS.castIron}
           metalness={1}
           roughness={0.5}
           surface="brushed"
@@ -106,13 +109,13 @@ export function PendulumScene({
         radius={0.015}
         smoothness={2}
       >
-        <SurfaceMaterial color={MATERIAL.standBlue} surface="paint" />
+        <SurfaceMaterial color={MACHINE_COLORS.standBlue} surface="paint" />
       </RoundedBox>
       <group position={[0, PIVOT, 0]} ref={arm}>
         <mesh position={[0, -LENGTH / 2, 0]}>
           <cylinderGeometry args={[0.0025, 0.0025, LENGTH, 8]} />
           <SurfaceMaterial
-            color={MATERIAL.chrome}
+            color={CAR_COLORS.chrome}
             metalness={1}
             roughness={0.4}
             surface="brushed"
@@ -121,7 +124,7 @@ export function PendulumScene({
         <mesh position={[0, -LENGTH + 0.1, 0]}>
           <torusGeometry args={[0.014, 0.004, 8, 20]} />
           <SurfaceMaterial
-            color={MATERIAL.brass}
+            color={INSTRUMENT_COLORS.brass}
             metalness={1}
             roughness={0.35}
             surface="brushed"
@@ -130,7 +133,7 @@ export function PendulumScene({
         <mesh position={[0, -LENGTH + 0.075, 0]}>
           <cylinderGeometry args={[0.006, 0.006, 0.03, 10]} />
           <SurfaceMaterial
-            color={MATERIAL.brass}
+            color={INSTRUMENT_COLORS.brass}
             metalness={1}
             roughness={0.35}
             surface="brushed"
@@ -139,7 +142,7 @@ export function PendulumScene({
         <mesh castShadow position={[0, -LENGTH, 0]}>
           <sphereGeometry args={[0.09, 48, 32]} />
           <SurfaceMaterial
-            color={MATERIAL.brass}
+            color={INSTRUMENT_COLORS.brass}
             metalness={1}
             roughness={0.28}
             surface="brushed"

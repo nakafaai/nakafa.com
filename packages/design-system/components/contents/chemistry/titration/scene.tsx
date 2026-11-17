@@ -18,7 +18,10 @@ import {
   GlassMaterial,
   MetalMaterial,
 } from "@repo/design-system/components/three/physical";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { BENCH_COLORS } from "@repo/design-system/lib/material/bench";
+import { CAR_COLORS } from "@repo/design-system/lib/material/car";
+import { INSTRUMENT_COLORS } from "@repo/design-system/lib/material/instrument";
+import { REAGENT_COLORS } from "@repo/design-system/lib/material/reagent";
 import { Array as Arr } from "effect";
 
 /** The burette's capacity in cm³. */
@@ -50,16 +53,16 @@ const TILE_HEIGHT = 0.006;
 /** The colour each hue draws with, from the real reagents. */
 function hueColor(hue: Hue, titration: Titration) {
   const colors = {
-    colourless: MATERIAL.solution,
-    green: MATERIAL.chromiumGreen,
+    colourless: REAGENT_COLORS.solution,
+    green: REAGENT_COLORS.chromiumGreen,
     orange:
       titration.titrant.solute === "potassium-dichromate"
-        ? MATERIAL.dichromate
-        : MATERIAL.methylOrange,
-    "pale-green": MATERIAL.ironPaleGreen,
-    pink: MATERIAL.phenolphthaleinPink,
-    red: MATERIAL.methylRed,
-    yellow: MATERIAL.methylYellow,
+        ? REAGENT_COLORS.dichromate
+        : REAGENT_COLORS.methylOrange,
+    "pale-green": REAGENT_COLORS.ironPaleGreen,
+    pink: REAGENT_COLORS.phenolphthaleinPink,
+    red: REAGENT_COLORS.methylRed,
+    yellow: REAGENT_COLORS.methylYellow,
   } satisfies Record<Hue, string>;
   return colors[hue];
 }
@@ -92,8 +95,8 @@ export function TitrationScene({
   );
   const titrantColor =
     titration.titrant.solute === "potassium-dichromate"
-      ? MATERIAL.dichromate
-      : MATERIAL.solution;
+      ? REAGENT_COLORS.dichromate
+      : REAGENT_COLORS.solution;
   const meniscus = meniscusAt(added);
 
   return (
@@ -103,7 +106,10 @@ export function TitrationScene({
       <group position={[0, 0, AXIS_Z]}>
         <mesh position={[0, TILE_HEIGHT / 2, 0]} receiveShadow>
           <boxGeometry args={[0.16, TILE_HEIGHT, 0.16]} />
-          <meshStandardMaterial color={MATERIAL.ceramicTile} roughness={0.4} />
+          <meshStandardMaterial
+            color={BENCH_COLORS.ceramicTile}
+            roughness={0.4}
+          />
         </mesh>
         <group position={[0, TILE_HEIGHT, 0]}>
           <Flask />
@@ -156,18 +162,21 @@ function Burette({
         <cylinderGeometry
           args={[TUBE_RADIUS, TUBE_RADIUS, tube, 32, 1, true]}
         />
-        <GlassMaterial color={MATERIAL.glass} />
+        <GlassMaterial color={BENCH_COLORS.glass} />
       </mesh>
       <mesh position={[0, STOPCOCK + tube / 2, -TUBE_RADIUS - 0.0004]}>
         <planeGeometry args={[TUBE_RADIUS * 1.2, tube]} />
         <meshStandardMaterial
-          color={MATERIAL.schellbachWhite}
+          color={BENCH_COLORS.schellbachWhite}
           roughness={0.8}
         />
       </mesh>
       <mesh position={[0, STOPCOCK + tube / 2, -TUBE_RADIUS - 0.0003]}>
         <planeGeometry args={[TUBE_RADIUS * 0.25, tube]} />
-        <meshStandardMaterial color={MATERIAL.schellbachBlue} roughness={0.6} />
+        <meshStandardMaterial
+          color={BENCH_COLORS.schellbachBlue}
+          roughness={0.6}
+        />
       </mesh>
       <ColumnLiquid
         bottom={STOPCOCK}
@@ -184,20 +193,20 @@ function Burette({
           <boxGeometry
             args={[volume % 10 === 0 ? 0.008 : 0.005, 0.0008, 0.0004]}
           />
-          <meshBasicMaterial color={MATERIAL.graphite} />
+          <meshBasicMaterial color={INSTRUMENT_COLORS.graphite} />
         </mesh>
       ))}
       <mesh position={[0, (TIP_END + STOPCOCK) / 2, 0]}>
         <cylinderGeometry
           args={[TUBE_RADIUS * 0.6, 0.0016, STOPCOCK - TIP_END, 16]}
         />
-        <GlassMaterial color={MATERIAL.glass} />
+        <GlassMaterial color={BENCH_COLORS.glass} />
       </mesh>
       <mesh position={[0, STOPCOCK, 0]} rotation={[0, 0, Math.PI / 2]}>
         <cylinderGeometry args={[0.0045, 0.0035, 0.026, 24]} />
         <meshPhysicalMaterial
           clearcoat={0.3}
-          color={MATERIAL.ptfe}
+          color={BENCH_COLORS.ptfe}
           roughness={0.45}
         />
       </mesh>
@@ -205,7 +214,7 @@ function Burette({
         <boxGeometry args={[0.004, 0.016, 0.003]} />
         <meshPhysicalMaterial
           clearcoat={0.3}
-          color={MATERIAL.ptfe}
+          color={BENCH_COLORS.ptfe}
           roughness={0.45}
         />
       </mesh>
@@ -225,11 +234,11 @@ function Stand() {
         receiveShadow
       >
         <boxGeometry args={[0.13, 0.012, 0.2]} />
-        <MetalMaterial color={MATERIAL.castIron} roughness={0.65} />
+        <MetalMaterial color={CAR_COLORS.castIron} roughness={0.65} />
       </mesh>
       <mesh castShadow position={[ROD_X, 0.45, ROD_Z]}>
         <cylinderGeometry args={[0.006, 0.006, 0.9, 16]} />
-        <MetalMaterial color={MATERIAL.chrome} roughness={0.22} />
+        <MetalMaterial color={CAR_COLORS.chrome} roughness={0.22} />
       </mesh>
       <mesh
         castShadow
@@ -237,11 +246,11 @@ function Stand() {
         rotation={[0, Math.atan2(AXIS_Z - ROD_Z, -ROD_X), Math.PI / 2]}
       >
         <cylinderGeometry args={[0.004, 0.004, reach, 12]} />
-        <MetalMaterial color={MATERIAL.chrome} roughness={0.22} />
+        <MetalMaterial color={CAR_COLORS.chrome} roughness={0.22} />
       </mesh>
       <mesh position={[0, clampY, AXIS_Z]} rotation={[Math.PI / 2, 0, 0]}>
         <torusGeometry args={[TUBE_RADIUS + 0.003, 0.003, 10, 32]} />
-        <MetalMaterial color={MATERIAL.castIron} roughness={0.45} />
+        <MetalMaterial color={CAR_COLORS.castIron} roughness={0.45} />
       </mesh>
     </group>
   );

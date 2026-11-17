@@ -42,7 +42,11 @@ import {
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { P5Sketch } from "@repo/design-system/components/visual/sketch";
 import { getColor } from "@repo/design-system/lib/color";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { BENCH_COLORS } from "@repo/design-system/lib/material/bench";
+import { CAR_COLORS } from "@repo/design-system/lib/material/car";
+import { ENERGY_COLORS } from "@repo/design-system/lib/material/energy";
+import { INSTRUMENT_COLORS } from "@repo/design-system/lib/material/instrument";
+import { MACHINE_COLORS } from "@repo/design-system/lib/material/machine";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr, Schema } from "effect";
 import type p5 from "p5";
@@ -60,9 +64,9 @@ const FLOW_COLORS = {
  * flame, and the blue Cherenkov glow of a reactor core under water.
  */
 const SOURCE_GLOW = {
-  coal: MATERIAL.coalGlow,
-  gas: MATERIAL.biogasFlame,
-  uranium: MATERIAL.reactorGlow,
+  coal: BENCH_COLORS.coalGlow,
+  gas: ENERGY_COLORS.biogasFlame,
+  uranium: ENERGY_COLORS.reactorGlow,
 } as const;
 
 /** What the sketch reads on every frame: the fuel that heats the boiler. */
@@ -81,8 +85,8 @@ function paintSource(
     { blur: 16, color: fade(getColor("BLACK"), 0.55), drop: 6 },
     () => {
       gradientRect(sketch, box, [
-        [0, mix(MATERIAL.concrete, getColor("WHITE"), 0.25)],
-        [1, mix(MATERIAL.concrete, getColor("BLACK"), 0.35)],
+        [0, mix(MACHINE_COLORS.concrete, getColor("WHITE"), 0.25)],
+        [1, mix(MACHINE_COLORS.concrete, getColor("BLACK"), 0.35)],
       ]);
     }
   );
@@ -93,7 +97,7 @@ function paintSource(
     x: box.x + box.width * 0.15,
     y: box.y + box.height * 0.3,
   };
-  sketch.fill(mix(MATERIAL.castIron, getColor("BLACK"), 0.75));
+  sketch.fill(mix(CAR_COLORS.castIron, getColor("BLACK"), 0.75));
   sketch.rect(
     core.x,
     core.y,
@@ -120,7 +124,7 @@ function paintSource(
     }
   }
   if (fuel === "coal") {
-    sketch.fill(MATERIAL.coalLump);
+    sketch.fill(ENERGY_COLORS.coalLump);
     sketch.arc(
       box.x - box.width * 0.1,
       box.y + box.height,
@@ -131,7 +135,7 @@ function paintSource(
     );
   }
   if (fuel === "gas") {
-    sketch.fill(MATERIAL.galvanizedSteel);
+    sketch.fill(ENERGY_COLORS.galvanizedSteel);
     sketch.rect(0, box.y + box.height * 0.8, box.x, box.height * 0.08);
   }
 }
@@ -147,14 +151,14 @@ function paintCycle(sketch: p5, fuel: Fuel, time: number, ground: number) {
   const turbine = { x: width * 0.46, y: ground - height * 0.36 };
   const condenser = { x: width * 0.5, y: ground - height * 0.12 };
   const pipe = Math.max(height * 0.018, 5);
-  sketch.stroke(mix(MATERIAL.galvanizedSteel, getColor("WHITE"), 0.35));
+  sketch.stroke(mix(ENERGY_COLORS.galvanizedSteel, getColor("WHITE"), 0.35));
   sketch.strokeWeight(pipe);
   sketch.line(drum.x, drum.y, turbine.x, turbine.y);
-  sketch.stroke(mix(MATERIAL.galvanizedSteel, getColor("BLACK"), 0.25));
+  sketch.stroke(mix(ENERGY_COLORS.galvanizedSteel, getColor("BLACK"), 0.25));
   sketch.line(condenser.x, condenser.y, drum.x, condenser.y);
   sketch.line(drum.x, condenser.y, drum.x, ground - height * 0.2);
   sketch.noStroke();
-  sketch.fill(MATERIAL.galvanizedSteel);
+  sketch.fill(ENERGY_COLORS.galvanizedSteel);
   sketch.rect(
     drum.x - width * 0.06,
     drum.y - height * 0.04,
@@ -167,7 +171,7 @@ function paintCycle(sketch: p5, fuel: Fuel, time: number, ground: number) {
     sketch,
     { blur: 12, color: fade(getColor("BLACK"), 0.5), drop: 5 },
     () => {
-      sketch.fill(mix(MATERIAL.galvanizedSteel, getColor("BLACK"), 0.15));
+      sketch.fill(mix(ENERGY_COLORS.galvanizedSteel, getColor("BLACK"), 0.15));
       sketch.quad(
         turbine.x,
         turbine.y - blade * 0.45,
@@ -180,7 +184,7 @@ function paintCycle(sketch: p5, fuel: Fuel, time: number, ground: number) {
       );
     }
   );
-  sketch.stroke(fade(mix(MATERIAL.castIron, getColor("BLACK"), 0.5), 0.8));
+  sketch.stroke(fade(mix(CAR_COLORS.castIron, getColor("BLACK"), 0.5), 0.8));
   sketch.strokeWeight(2);
   for (let row = 0; row < 5; row += 1) {
     const x = turbine.x + width * 0.02 + row * width * 0.022;
@@ -202,18 +206,18 @@ function paintCycle(sketch: p5, fuel: Fuel, time: number, ground: number) {
       y: turbine.y - blade * 0.65,
     },
     [
-      [0, mix(MATERIAL.castIron, getColor("WHITE"), 0.2)],
-      [1, mix(MATERIAL.castIron, getColor("BLACK"), 0.4)],
+      [0, mix(CAR_COLORS.castIron, getColor("WHITE"), 0.2)],
+      [1, mix(CAR_COLORS.castIron, getColor("BLACK"), 0.4)],
     ]
   );
-  sketch.fill(MATERIAL.brass);
+  sketch.fill(INSTRUMENT_COLORS.brass);
   sketch.rect(
     turbine.x + width * 0.13,
     turbine.y - blade * 0.12,
     width * 0.09,
     blade * 0.24
   );
-  sketch.fill(mix(MATERIAL.galvanizedSteel, getColor("BLACK"), 0.4));
+  sketch.fill(mix(ENERGY_COLORS.galvanizedSteel, getColor("BLACK"), 0.4));
   sketch.rect(
     condenser.x - width * 0.06,
     condenser.y - height * 0.05,
@@ -222,7 +226,7 @@ function paintCycle(sketch: p5, fuel: Fuel, time: number, ground: number) {
     4
   );
   const tower = { base: width * 0.12, x: width * 0.84 };
-  sketch.fill(mix(MATERIAL.concrete, getColor("WHITE"), 0.2));
+  sketch.fill(mix(MACHINE_COLORS.concrete, getColor("WHITE"), 0.2));
   const waist = (share: number) =>
     tower.base * (0.5 - 0.3 * Math.sin(Math.PI * share * 0.85));
   sketch.beginShape();
@@ -239,7 +243,7 @@ function paintCycle(sketch: p5, fuel: Fuel, time: number, ground: number) {
     );
   }
   sketch.endShape(sketch.CLOSE);
-  sketch.stroke(mix(MATERIAL.galvanizedSteel, getColor("BLACK"), 0.25));
+  sketch.stroke(mix(ENERGY_COLORS.galvanizedSteel, getColor("BLACK"), 0.25));
   sketch.strokeWeight(pipe * 0.8);
   sketch.line(
     condenser.x + width * 0.08,
@@ -251,7 +255,7 @@ function paintCycle(sketch: p5, fuel: Fuel, time: number, ground: number) {
   const plume = wasteHeat(fuel) / HEAT_INPUT;
   for (let puff = 0; puff < 7; puff += 1) {
     const rise = (time * 0.12 + puff / 7) % 1;
-    sketch.fill(fade(MATERIAL.cloud, 0.6 * (1 - rise)));
+    sketch.fill(fade(ENERGY_COLORS.cloud, 0.6 * (1 - rise)));
     sketch.circle(
       tower.x + Math.sin(puff * 2 + time * 0.5) * 10 + rise * width * 0.05,
       ground - height * 0.5 - rise * height * 0.4,

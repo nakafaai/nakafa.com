@@ -33,7 +33,8 @@ import {
 } from "@repo/design-system/components/visual/card";
 import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { BENCH_COLORS } from "@repo/design-system/lib/material/bench";
+import { REAGENT_COLORS } from "@repo/design-system/lib/material/reagent";
 import { Array as Arr } from "effect";
 import {
   type ReactNode,
@@ -280,23 +281,23 @@ function CalxScene({
           <meshStandardMaterial
             bumpMap={clay}
             bumpScale={4}
-            color={MATERIAL.brick}
+            color={BENCH_COLORS.brick}
             roughness={0.95}
           />
         </mesh>
         <mesh position={[0, 0.142, 0]} rotation={[Math.PI / 2, 0, 0]}>
           <torusGeometry args={[0.072, 0.006, 10, 48]} />
-          <MetalMaterial color={MATERIAL.ironOxide} roughness={0.7} />
+          <MetalMaterial color={REAGENT_COLORS.ironOxide} roughness={0.7} />
         </mesh>
         <mesh position={[0, 0.05, 0.081]}>
           <boxGeometry args={[0.07, 0.05, 0.016]} />
-          <meshStandardMaterial color={MATERIAL.coals} roughness={1} />
+          <meshStandardMaterial color={BENCH_COLORS.coals} roughness={1} />
         </mesh>
         <mesh position={[0, 0.042, 0.0895]}>
           <planeGeometry args={[0.058, 0.026]} />
           <meshStandardMaterial
-            color={MATERIAL.coals}
-            emissive={MATERIAL.coalGlow}
+            color={BENCH_COLORS.coals}
+            emissive={BENCH_COLORS.coalGlow}
             emissiveIntensity={2.2}
             ref={coals}
             toneMapped={false}
@@ -305,17 +306,17 @@ function CalxScene({
       </group>
       <mesh castShadow position={BULB}>
         <sphereGeometry args={[0.05, 40, 24]} />
-        <GlassMaterial color={MATERIAL.glass} opacity={0.14} />
+        <GlassMaterial color={BENCH_COLORS.glass} opacity={0.14} />
       </mesh>
       <mesh position={[BULB.x, BULB.y - 0.03, 0]}>
         <sphereGeometry
           args={[0.036, 32, 12, 0, Math.PI * 2, Math.PI / 2, Math.PI / 2]}
         />
-        <MetalMaterial color={MATERIAL.mercury} roughness={0.08} />
+        <MetalMaterial color={REAGENT_COLORS.mercury} roughness={0.08} />
       </mesh>
       <Instances limit={SPECKS} ref={specks}>
         <boxGeometry args={[0.004, 0.0015, 0.004]} />
-        <meshStandardMaterial color={MATERIAL.calx} roughness={0.8} />
+        <meshStandardMaterial color={REAGENT_COLORS.calx} roughness={0.8} />
         {Arr.map(Arr.range(1, SPECKS), (index) => {
           const angle = hashUnit(index, 2) * Math.PI * 2;
           const radius = 0.033 * Math.sqrt(hashUnit(index, 3));
@@ -333,34 +334,34 @@ function CalxScene({
         })}
       </Instances>
       <mesh geometry={neck}>
-        <GlassMaterial color={MATERIAL.glass} opacity={0.16} />
+        <GlassMaterial color={BENCH_COLORS.glass} opacity={0.16} />
       </mesh>
       <group position={JAR}>
         <mesh position={[0, 0.015, 0]} receiveShadow>
           <cylinderGeometry args={[0.11, 0.1, 0.03, 48, 1, true]} />
-          <meshStandardMaterial color={MATERIAL.trough} roughness={0.6} />
+          <meshStandardMaterial color={BENCH_COLORS.trough} roughness={0.6} />
         </mesh>
         <mesh position={[0, 0.022, 0]}>
           <cylinderGeometry args={[0.105, 0.105, 0.002, 48]} />
-          <MetalMaterial color={MATERIAL.mercury} roughness={0.06} />
+          <MetalMaterial color={REAGENT_COLORS.mercury} roughness={0.06} />
         </mesh>
         <mesh position={[0, 0.022, 0]} ref={inside}>
           <cylinderGeometry
             args={[JAR_RADIUS - 0.002, JAR_RADIUS - 0.002, 0.002, 40]}
           />
-          <MetalMaterial color={MATERIAL.mercury} roughness={0.05} />
+          <MetalMaterial color={REAGENT_COLORS.mercury} roughness={0.05} />
         </mesh>
         <mesh castShadow position={[0, 0.1, 0]}>
           <cylinderGeometry
             args={[JAR_RADIUS, JAR_RADIUS, 0.16, 48, 1, true]}
           />
-          <GlassMaterial color={MATERIAL.glass} opacity={0.12} />
+          <GlassMaterial color={BENCH_COLORS.glass} opacity={0.12} />
         </mesh>
         <mesh position={[0, 0.18, 0]}>
           <sphereGeometry
             args={[JAR_RADIUS, 48, 16, 0, Math.PI * 2, 0, Math.PI / 2]}
           />
-          <GlassMaterial color={MATERIAL.glass} opacity={0.12} />
+          <GlassMaterial color={BENCH_COLORS.glass} opacity={0.12} />
         </mesh>
       </group>
     </>

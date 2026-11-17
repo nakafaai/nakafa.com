@@ -14,7 +14,7 @@ import {
   type Placement,
 } from "@repo/design-system/components/contents/biology/instances";
 import { insideBall } from "@repo/design-system/components/contents/biology/virus/capsid";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { CELL_COLORS } from "@repo/design-system/lib/material/cell";
 import { Array as Arr } from "effect";
 
 /** One micrometre of a 5 µm yeast cell drawn 2 units long. */
@@ -80,13 +80,17 @@ export function YeastCell({ minutes }: { readonly minutes: number }) {
   return (
     <group position={[-share * 0.89, 0, 0]}>
       <HalfShell
-        color={MATERIAL.chitin}
+        color={CELL_COLORS.chitin}
         roughness={0.75}
         scale={MOTHER}
         thickness={0.07}
       />
       <group scale={[0.93, 0.93, 0.93]}>
-        <HalfShell color={MATERIAL.yeastCell} scale={MOTHER} thickness={0.02} />
+        <HalfShell
+          color={CELL_COLORS.yeastCell}
+          scale={MOTHER}
+          thickness={0.02}
+        />
       </group>
       <group
         position={[dividing ? neck - 0.12 : 0.17, 0.05, -0.18]}
@@ -99,7 +103,7 @@ export function YeastCell({ minutes }: { readonly minutes: number }) {
           <sphereGeometry args={[0.85 * YEAST_UM, 32, 24]} />
           <meshPhysicalMaterial
             clearcoat={0.6}
-            color={MATERIAL.vacuole}
+            color={CELL_COLORS.vacuole}
             depthWrite={false}
             opacity={0.55}
             roughness={0.1}
@@ -108,14 +112,14 @@ export function YeastCell({ minutes }: { readonly minutes: number }) {
         </mesh>
         <Instances placements={GRANULES}>
           <sphereGeometry args={[0.02, 10, 8]} />
-          <meshStandardMaterial color={MATERIAL.nucleolus} roughness={0.6} />
+          <meshStandardMaterial color={CELL_COLORS.nucleolus} roughness={0.6} />
         </Instances>
       </group>
       <Instances placements={SCARS}>
         <torusGeometry args={[0.13, 0.03, 10, 32]} />
         <meshPhysicalMaterial
           clearcoat={0.3}
-          color={MATERIAL.chitin}
+          color={CELL_COLORS.chitin}
           roughness={0.7}
         />
       </Instances>
@@ -139,14 +143,14 @@ export function YeastCell({ minutes }: { readonly minutes: number }) {
           scale={[share, share, share]}
         >
           <HalfShell
-            color={MATERIAL.chitin}
+            color={CELL_COLORS.chitin}
             roughness={0.75}
             scale={MOTHER}
             thickness={0.07}
           />
           <group scale={[0.92, 0.92, 0.92]}>
             <HalfShell
-              color={MATERIAL.yeastCell}
+              color={CELL_COLORS.yeastCell}
               scale={MOTHER}
               thickness={0.02}
             />

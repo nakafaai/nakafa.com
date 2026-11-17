@@ -6,7 +6,9 @@ import {
   withShadow,
 } from "@repo/design-system/components/contents/physics/canvas/paint";
 import { getColor } from "@repo/design-system/lib/color";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { CAR_COLORS } from "@repo/design-system/lib/material/car";
+import { ROAD_COLORS } from "@repo/design-system/lib/material/road";
+import { SKY_COLORS } from "@repo/design-system/lib/material/sky";
 import { Schema } from "effect";
 import type p5 from "p5";
 
@@ -51,14 +53,14 @@ function ridge(x: number, seed: number) {
 export function paintLandscape(sketch: p5, road: Road) {
   const { width } = sketch;
   gradientRect(sketch, { height: road.height, width, x: 0, y: road.top }, [
-    [0, MATERIAL.skyZenith],
-    [0.7, mix(MATERIAL.skyZenith, MATERIAL.skyHaze, 0.75)],
-    [1, MATERIAL.skyHaze],
+    [0, SKY_COLORS.skyZenith],
+    [0.7, mix(SKY_COLORS.skyZenith, SKY_COLORS.skyHaze, 0.75)],
+    [1, SKY_COLORS.skyHaze],
   ]);
   const horizon = road.surface - road.height * 0.18;
   outOfFocus(sketch, 3, () => {
     sketch.noStroke();
-    sketch.fill(mix(MATERIAL.foliageShade, MATERIAL.skyHaze, 0.62));
+    sketch.fill(mix(ROAD_COLORS.foliageShade, SKY_COLORS.skyHaze, 0.62));
     sketch.beginShape();
     sketch.vertex(0, road.surface);
     for (let x = 0; x <= width; x += 8) {
@@ -69,7 +71,7 @@ export function paintLandscape(sketch: p5, road: Road) {
     }
     sketch.vertex(width, road.surface);
     sketch.endShape(sketch.CLOSE);
-    sketch.fill(mix(MATERIAL.foliageDark, MATERIAL.skyHaze, 0.3));
+    sketch.fill(mix(ROAD_COLORS.foliageDark, SKY_COLORS.skyHaze, 0.3));
     sketch.beginShape();
     sketch.vertex(0, road.surface);
     for (let x = 0; x <= width; x += 6) {
@@ -102,13 +104,13 @@ export function paintRoad(
     sketch,
     { height: depth * 0.35, width, x: 0, y: road.surface - depth * 0.35 },
     [
-      [0, MATERIAL.grass],
-      [1, mix(MATERIAL.grass, MATERIAL.foliageDark, 0.5)],
+      [0, ROAD_COLORS.grass],
+      [1, mix(ROAD_COLORS.grass, ROAD_COLORS.foliageDark, 0.5)],
     ]
   );
   gradientRect(sketch, { height: depth, width, x: 0, y: road.surface }, [
-    [0, mix(MATERIAL.asphalt, MATERIAL.skyHaze, 0.12)],
-    [1, mix(MATERIAL.asphalt, getColor("BLACK"), 0.35)],
+    [0, mix(ROAD_COLORS.asphalt, SKY_COLORS.skyHaze, 0.12)],
+    [1, mix(ROAD_COLORS.asphalt, getColor("BLACK"), 0.35)],
   ]);
   const below = road.surface + depth;
   if (below < sketch.height) {
@@ -116,14 +118,14 @@ export function paintRoad(
       sketch,
       { height: sketch.height - below, width, x: 0, y: below },
       [
-        [0, mix(MATERIAL.grass, MATERIAL.foliageDark, 0.4)],
-        [1, mix(MATERIAL.foliageDark, getColor("BLACK"), 0.35)],
+        [0, mix(ROAD_COLORS.grass, ROAD_COLORS.foliageDark, 0.4)],
+        [1, mix(ROAD_COLORS.foliageDark, getColor("BLACK"), 0.35)],
       ]
     );
   }
   sketch.push();
   sketch.noStroke();
-  sketch.fill(fade(MATERIAL.roadPaint, 0.8));
+  sketch.fill(fade(ROAD_COLORS.roadPaint, 0.8));
   for (let x = -((road.origin % 60) + 60); x < width; x += 60) {
     sketch.rect(x, road.surface + depth * 0.5, 30, Math.max(2, depth * 0.06));
   }
@@ -139,7 +141,7 @@ export function paintRoad(
       sketch,
       { blur: 6, color: fade(getColor("BLACK"), 0.5), drop: 2 },
       () => {
-        sketch.fill(MATERIAL.distancePost);
+        sketch.fill(ROAD_COLORS.distancePost);
         sketch.rect(x - 2.5, road.surface - tall, 5, tall);
       }
     );
@@ -212,7 +214,7 @@ export function paintCar(
     length * 0.035,
     length * 0.02
   );
-  sketch.fill(mix(MATERIAL.tintedGlass, MATERIAL.skyHaze, 0.25));
+  sketch.fill(mix(CAR_COLORS.tintedGlass, SKY_COLORS.skyHaze, 0.25));
   const [glassStart, glassEnd] = part(0.29, 0.69);
   const [topStart, topEnd] = part(0.36, 0.63);
   sketch.quad(
@@ -226,7 +228,7 @@ export function paintCar(
     bodyTop - 1
   );
   const [lampAt] = part(0.97, 1);
-  sketch.fill(MATERIAL.headlightLens);
+  sketch.fill(CAR_COLORS.headlightLens);
   sketch.rect(
     lampAt - length * 0.02,
     bodyTop + length * 0.05,
@@ -236,11 +238,11 @@ export function paintCar(
   );
   for (const at of [0.2, 0.8]) {
     const [x] = part(at, at);
-    sketch.fill(MATERIAL.tyre);
+    sketch.fill(CAR_COLORS.tyre);
     sketch.circle(x, road.surface - wheel, wheel * 2);
-    sketch.fill(MATERIAL.rimBright);
+    sketch.fill(CAR_COLORS.rimBright);
     sketch.circle(x, road.surface - wheel, wheel * 0.9);
-    sketch.fill(MATERIAL.hub);
+    sketch.fill(CAR_COLORS.hub);
     sketch.circle(x, road.surface - wheel, wheel * 0.3);
   }
   sketch.pop();
@@ -261,7 +263,7 @@ export function paintPerson(
   sketch.noStroke();
   sketch.fill(fade(getColor("BLACK"), 0.35));
   sketch.ellipse(at.x, at.y, tall * 0.36, tall * 0.05);
-  sketch.stroke(MATERIAL.tintedGlass);
+  sketch.stroke(CAR_COLORS.tintedGlass);
   sketch.strokeWeight(tall * 0.07);
   sketch.strokeCap(sketch.ROUND);
   sketch.line(at.x, at.y - tall * 0.46, at.x - tall * 0.08, at.y);

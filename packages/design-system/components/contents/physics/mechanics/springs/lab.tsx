@@ -22,7 +22,9 @@ import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { P5Sketch } from "@repo/design-system/components/visual/sketch";
 import { getColor } from "@repo/design-system/lib/color";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { BENCH_COLORS } from "@repo/design-system/lib/material/bench";
+import { CAR_COLORS } from "@repo/design-system/lib/material/car";
+import { INSTRUMENT_COLORS } from "@repo/design-system/lib/material/instrument";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr, Schema } from "effect";
 import type p5 from "p5";
@@ -62,7 +64,7 @@ function coil(
     x: x + sway(index, wide),
     y: top + ((bottom - top) * index) / (COILS * 2),
   }));
-  sketch.stroke(mix(MATERIAL.chrome, getColor("BLACK"), 0.2));
+  sketch.stroke(mix(CAR_COLORS.chrome, getColor("BLACK"), 0.2));
   sketch.strokeWeight(2.5);
   for (const [a, b] of Arr.zip(points, Arr.drop(points, 1))) {
     sketch.line(a.x, a.y, b.x, b.y);
@@ -89,8 +91,8 @@ function springProgram(sketch: p5, read: () => SpringFrame) {
       sketch,
       { height: 10, width: width * 0.5, x: width * 0.25, y: ceiling - 10 },
       [
-        [0, MATERIAL.castIron],
-        [1, mix(MATERIAL.castIron, getColor("BLACK"), 0.4)],
+        [0, CAR_COLORS.castIron],
+        [1, mix(CAR_COLORS.castIron, getColor("BLACK"), 0.4)],
       ]
     );
     const centre = width * 0.5;
@@ -98,17 +100,17 @@ function springProgram(sketch: p5, read: () => SpringFrame) {
     const secondBar = firstBar + (NATURAL + frame.pair) * centimetre;
     coil(sketch, centre, ceiling, firstBar, width * 0.035);
     sketch.noStroke();
-    sketch.fill(MATERIAL.aluminium);
+    sketch.fill(INSTRUMENT_COLORS.aluminium);
     sketch.rect(centre - width * 0.12, firstBar, width * 0.24, 6);
     coil(sketch, centre - width * 0.09, firstBar + 6, secondBar, width * 0.03);
     coil(sketch, centre + width * 0.09, firstBar + 6, secondBar, width * 0.03);
-    sketch.fill(MATERIAL.aluminium);
+    sketch.fill(INSTRUMENT_COLORS.aluminium);
     sketch.rect(centre - width * 0.12, secondBar, width * 0.24, 6);
-    sketch.stroke(MATERIAL.probeSteel);
+    sketch.stroke(BENCH_COLORS.probeSteel);
     sketch.strokeWeight(2);
     sketch.line(centre, secondBar + 6, centre, secondBar + 18);
     sketch.noStroke();
-    sketch.fill(MATERIAL.castIron);
+    sketch.fill(CAR_COLORS.castIron);
     sketch.rect(
       centre - width * 0.07,
       secondBar + 18,
@@ -117,7 +119,7 @@ function springProgram(sketch: p5, read: () => SpringFrame) {
       4
     );
     const rule = width * 0.82;
-    sketch.fill(MATERIAL.metreRule);
+    sketch.fill(INSTRUMENT_COLORS.metreRule);
     sketch.rect(rule, ceiling, 18, height * 0.84);
     sketch.stroke(fade(getColor("BLACK"), 0.7));
     sketch.strokeWeight(1);

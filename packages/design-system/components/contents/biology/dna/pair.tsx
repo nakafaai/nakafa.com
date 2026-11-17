@@ -7,17 +7,17 @@ import {
   complementOf,
   type Nucleic,
 } from "@repo/design-system/components/contents/biology/dna/strand";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { CELL_COLORS } from "@repo/design-system/lib/material/cell";
 import { createContext, use } from "react";
 import { Matrix4, Quaternion, Vector3 } from "three";
 
 /** Each base keeps one colour in every lesson: the same hues as before, in the muted tones of a molecular model. */
 const BASE_COLORS = {
-  A: MATERIAL.adenine,
-  C: MATERIAL.cytosine,
-  G: MATERIAL.guanine,
-  T: MATERIAL.thymine,
-  U: MATERIAL.uracil,
+  A: CELL_COLORS.adenine,
+  C: CELL_COLORS.cytosine,
+  G: CELL_COLORS.guanine,
+  T: CELL_COLORS.thymine,
+  U: CELL_COLORS.uracil,
 } as const satisfies Record<Base, string>;
 
 /**

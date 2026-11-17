@@ -31,7 +31,7 @@ import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { P5Sketch } from "@repo/design-system/components/visual/sketch";
 import { getColor } from "@repo/design-system/lib/color";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { INSTRUMENT_COLORS } from "@repo/design-system/lib/material/instrument";
 import { Array as Arr, Schema } from "effect";
 import type p5 from "p5";
 import { type ReactNode, useState } from "react";
@@ -49,19 +49,19 @@ const SwingFrame = Schema.Struct({ length: Schema.Finite });
 function bobColors(bob: typeof BobSchema.Type) {
   if (bob === "wood") {
     return {
-      dark: mix(MATERIAL.pine, getColor("BLACK"), 0.45),
-      light: mix(MATERIAL.pine, getColor("WHITE"), 0.45),
+      dark: mix(INSTRUMENT_COLORS.pine, getColor("BLACK"), 0.45),
+      light: mix(INSTRUMENT_COLORS.pine, getColor("WHITE"), 0.45),
     };
   }
   if (bob === "brass") {
     return {
-      dark: mix(MATERIAL.brass, getColor("BLACK"), 0.5),
-      light: mix(MATERIAL.brass, getColor("WHITE"), 0.65),
+      dark: mix(INSTRUMENT_COLORS.brass, getColor("BLACK"), 0.5),
+      light: mix(INSTRUMENT_COLORS.brass, getColor("WHITE"), 0.65),
     };
   }
   return {
-    dark: mix(MATERIAL.lead, getColor("BLACK"), 0.55),
-    light: mix(MATERIAL.lead, getColor("WHITE"), 0.35),
+    dark: mix(INSTRUMENT_COLORS.lead, getColor("BLACK"), 0.55),
+    light: mix(INSTRUMENT_COLORS.lead, getColor("WHITE"), 0.35),
   };
 }
 
@@ -75,7 +75,7 @@ function paintRoom(sketch: p5) {
     [1, mix(getColor("STONE", 600), getColor("BLACK"), 0.5)],
   ]);
   spotlight(sketch, { x: width * 0.5, y: height * 0.15 }, width * 0.65, {
-    color: MATERIAL.lampLight,
+    color: INSTRUMENT_COLORS.lampLight,
     strength: 0.25,
   });
 }

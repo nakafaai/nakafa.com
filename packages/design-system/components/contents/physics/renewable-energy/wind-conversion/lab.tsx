@@ -16,7 +16,8 @@ import {
 } from "@repo/design-system/components/visual/card";
 import { VisualFact } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { CAR_COLORS } from "@repo/design-system/lib/material/car";
+import { MACHINE_COLORS } from "@repo/design-system/lib/material/machine";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr } from "effect";
 import type { ReactNode, RefObject } from "react";
@@ -286,14 +287,17 @@ function WindTurbine({ rotorRef }: { rotorRef: RefObject<Group | null> }) {
     <group>
       <mesh castShadow position={[0, 0.42, 0]} receiveShadow>
         <cylinderGeometry args={[0.048, 0.075, 1.62, 40]} />
-        <SurfaceMaterial color={MATERIAL.turbineWhite} surface="paint" />
+        <SurfaceMaterial color={MACHINE_COLORS.turbineWhite} surface="paint" />
       </mesh>
       {Arr.map(FLANGES, (y) => (
         <mesh key={y} position={[0, y, 0]} rotation={[Math.PI / 2, 0, 0]}>
           <torusGeometry
             args={[0.075 - ((y + 0.39) / 1.62) * 0.027, 0.004, 6, 40]}
           />
-          <SurfaceMaterial color={MATERIAL.turbineWhite} surface="paint" />
+          <SurfaceMaterial
+            color={MACHINE_COLORS.turbineWhite}
+            surface="paint"
+          />
         </mesh>
       ))}
       <RoundedBox
@@ -302,17 +306,20 @@ function WindTurbine({ rotorRef }: { rotorRef: RefObject<Group | null> }) {
         radius={0.01}
         smoothness={2}
       >
-        <SurfaceMaterial color={MATERIAL.hub} surface="paint" />
+        <SurfaceMaterial color={CAR_COLORS.hub} surface="paint" />
       </RoundedBox>
       <mesh castShadow position={[0, -0.42, 0]} receiveShadow>
         <cylinderGeometry args={[0.2, 0.24, 0.18, 48]} />
-        <SurfaceMaterial color={MATERIAL.concrete} surface="concrete" />
+        <SurfaceMaterial color={MACHINE_COLORS.concrete} surface="concrete" />
       </mesh>
 
       <group position={[0.2, 1.25, -0.02]}>
         <mesh castShadow rotation={[0, 0, Math.PI / 2]}>
           <capsuleGeometry args={[0.12, 0.5, 8, 24]} />
-          <SurfaceMaterial color={MATERIAL.turbineWhite} surface="paint" />
+          <SurfaceMaterial
+            color={MACHINE_COLORS.turbineWhite}
+            surface="paint"
+          />
         </mesh>
         <RoundedBox
           args={[0.2, 0.06, 0.16]}
@@ -321,12 +328,15 @@ function WindTurbine({ rotorRef }: { rotorRef: RefObject<Group | null> }) {
           radius={0.02}
           smoothness={2}
         >
-          <SurfaceMaterial color={MATERIAL.turbineWhite} surface="paint" />
+          <SurfaceMaterial
+            color={MACHINE_COLORS.turbineWhite}
+            surface="paint"
+          />
         </RoundedBox>
         <mesh castShadow position={[0.32, 0.22, 0]}>
           <cylinderGeometry args={[0.004, 0.004, 0.16, 6]} />
           <SurfaceMaterial
-            color={MATERIAL.hub}
+            color={CAR_COLORS.hub}
             metalness={1}
             surface="brushed"
           />
@@ -338,7 +348,7 @@ function WindTurbine({ rotorRef }: { rotorRef: RefObject<Group | null> }) {
         rotation={[Math.PI / 2, 0, 0]}
       >
         <cylinderGeometry args={[0.07, 0.11, 0.14, 32]} />
-        <SurfaceMaterial color={MATERIAL.turbineWhite} surface="paint" />
+        <SurfaceMaterial color={MACHINE_COLORS.turbineWhite} surface="paint" />
       </mesh>
       <group position={[-0.08, 1.25, 0.26]}>
         <group ref={rotorRef}>
@@ -354,14 +364,14 @@ function WindTurbine({ rotorRef }: { rotorRef: RefObject<Group | null> }) {
                 rotation={[0, 0.18, 0]}
               >
                 <SurfaceMaterial
-                  color={MATERIAL.turbineWhite}
+                  color={MACHINE_COLORS.turbineWhite}
                   surface="plastic"
                 />
               </mesh>
               <mesh castShadow position={[0, 0.08, 0]}>
                 <cylinderGeometry args={[0.035, 0.04, 0.12, 18]} />
                 <SurfaceMaterial
-                  color={MATERIAL.turbineWhite}
+                  color={MACHINE_COLORS.turbineWhite}
                   surface="plastic"
                 />
               </mesh>
@@ -371,7 +381,10 @@ function WindTurbine({ rotorRef }: { rotorRef: RefObject<Group | null> }) {
             <sphereGeometry
               args={[0.1, 32, 20, 0, Math.PI * 2, 0, Math.PI / 2]}
             />
-            <SurfaceMaterial color={MATERIAL.turbineWhite} surface="plastic" />
+            <SurfaceMaterial
+              color={MACHINE_COLORS.turbineWhite}
+              surface="plastic"
+            />
           </mesh>
         </group>
       </group>

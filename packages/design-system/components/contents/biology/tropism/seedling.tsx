@@ -8,7 +8,7 @@ import {
   organPath,
   tipHeading,
 } from "@repo/design-system/components/contents/biology/tropism/shape";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { BIOLOGY_COLORS } from "@repo/design-system/lib/material/biology";
 import { Array as Arr, Option } from "effect";
 import { useMemo } from "react";
 import { CatmullRomCurve3, Vector3 } from "three";
@@ -108,7 +108,8 @@ export function SeedlingOrgan({
       };
     });
   });
-  const color = organ === "shoot" ? MATERIAL.coleoptile : MATERIAL.root;
+  const color =
+    organ === "shoot" ? BIOLOGY_COLORS.coleoptile : BIOLOGY_COLORS.root;
 
   return (
     <group>
@@ -120,7 +121,7 @@ export function SeedlingOrgan({
         <mesh position={[tip[0], tip[1], 0]}>
           <sphereGeometry args={[radius, 16, 12]} />
           <meshPhysicalMaterial
-            color={organ === "root" ? MATERIAL.rootCap : color}
+            color={organ === "root" ? BIOLOGY_COLORS.rootCap : color}
             roughness={0.5}
           />
         </mesh>
@@ -131,13 +132,16 @@ export function SeedlingOrgan({
           rotation={[0, 0, end - Math.PI / 2]}
         >
           <cylinderGeometry args={[radius * 1.01, radius * 1.01, 0.0006, 16]} />
-          <meshStandardMaterial color={MATERIAL.cutTissue} roughness={0.7} />
+          <meshStandardMaterial
+            color={BIOLOGY_COLORS.cutTissue}
+            roughness={0.7}
+          />
         </mesh>
       )}
       {Arr.map(grains, (grain) => (
         <mesh key={grain.key} position={grain.position}>
           <sphereGeometry args={[radius * 0.28, 8, 6]} />
-          <meshBasicMaterial color={MATERIAL.auxin} toneMapped={false} />
+          <meshBasicMaterial color={BIOLOGY_COLORS.auxin} toneMapped={false} />
         </mesh>
       ))}
     </group>

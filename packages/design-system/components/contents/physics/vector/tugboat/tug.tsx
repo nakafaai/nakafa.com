@@ -13,7 +13,8 @@ import {
 } from "@repo/design-system/components/three/vessel/hull";
 import { Strake } from "@repo/design-system/components/three/vessel/strake";
 import { getColor } from "@repo/design-system/lib/color";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { CAR_COLORS } from "@repo/design-system/lib/material/car";
+import { MACHINE_COLORS } from "@repo/design-system/lib/material/machine";
 import { Array as Arr } from "effect";
 
 /**
@@ -130,34 +131,37 @@ export function Tug() {
     <group position={[0, -TUG_WATERLINE, 0]}>
       <Hull
         boot={TUG_WATERLINE + 0.02}
-        bottom={MATERIAL.antifouling}
-        deck={MATERIAL.concrete}
+        bottom={MACHINE_COLORS.antifouling}
+        deck={MACHINE_COLORS.concrete}
         lines={LINES}
-        topside={MATERIAL.hullRed}
+        topside={MACHINE_COLORS.hullRed}
       />
       <Strake
-        color={MATERIAL.tyre}
+        color={CAR_COLORS.tyre}
         points={strake}
         radius={0.055}
         surface="rubber"
       />
       <Strake
-        color={MATERIAL.deckWhite}
+        color={MACHINE_COLORS.deckWhite}
         points={rail}
         radius={0.009}
         surface="paint"
       />
       <Repeat placements={TYRES}>
         <torusGeometry args={[0.07, 0.034, 10, 20]} />
-        <SurfaceMaterial color={MATERIAL.tyre} surface="rubber" />
+        <SurfaceMaterial color={CAR_COLORS.tyre} surface="rubber" />
       </Repeat>
       <Repeat placements={BOW_FENDERS}>
         <cylinderGeometry args={[0.07, 0.07, 0.56, 18]} />
-        <SurfaceMaterial color={MATERIAL.tyre} surface="rubber" />
+        <SurfaceMaterial color={CAR_COLORS.tyre} surface="rubber" />
       </Repeat>
       <Repeat placements={STANCHIONS}>
         <cylinderGeometry args={[0.006, 0.006, 0.12, 6]} />
-        <meshStandardMaterial color={MATERIAL.deckWhite} roughness={0.5} />
+        <meshStandardMaterial
+          color={MACHINE_COLORS.deckWhite}
+          roughness={0.5}
+        />
       </Repeat>
 
       <RoundedBox
@@ -168,7 +172,7 @@ export function Tug() {
         receiveShadow
         smoothness={3}
       >
-        <SurfaceMaterial color={MATERIAL.deckWhite} surface="paint" />
+        <SurfaceMaterial color={MACHINE_COLORS.deckWhite} surface="paint" />
       </RoundedBox>
       <RoundedBox
         args={[0.6, 0.28, 0.6]}
@@ -178,7 +182,7 @@ export function Tug() {
         receiveShadow
         smoothness={3}
       >
-        <SurfaceMaterial color={MATERIAL.deckWhite} surface="paint" />
+        <SurfaceMaterial color={MACHINE_COLORS.deckWhite} surface="paint" />
       </RoundedBox>
       <RoundedBox
         args={[0.62, 0.12, 0.62]}
@@ -187,14 +191,17 @@ export function Tug() {
         smoothness={2}
       >
         <meshStandardMaterial
-          color={MATERIAL.tintedGlass}
+          color={CAR_COLORS.tintedGlass}
           metalness={0.3}
           roughness={0.06}
         />
       </RoundedBox>
       <Repeat placements={MULLIONS}>
         <boxGeometry args={[0.012, 0.13, 0.012]} />
-        <meshStandardMaterial color={MATERIAL.deckWhite} roughness={0.5} />
+        <meshStandardMaterial
+          color={MACHINE_COLORS.deckWhite}
+          roughness={0.5}
+        />
       </Repeat>
       <RoundedBox
         args={[0.72, 0.035, 0.68]}
@@ -203,20 +210,26 @@ export function Tug() {
         radius={0.012}
         smoothness={2}
       >
-        <SurfaceMaterial color={MATERIAL.deckWhite} surface="paint" />
+        <SurfaceMaterial color={MACHINE_COLORS.deckWhite} surface="paint" />
       </RoundedBox>
 
       <group position={[0.26, HOUSE_TOP + 0.31, 0]}>
         <mesh castShadow position={[0, 0.22, 0]}>
           <cylinderGeometry args={[0.01, 0.016, 0.44, 8]} />
-          <SurfaceMaterial color={MATERIAL.deckWhite} surface="paint" />
+          <SurfaceMaterial color={MACHINE_COLORS.deckWhite} surface="paint" />
         </mesh>
         <mesh castShadow position={[0, 0.34, 0]}>
           <boxGeometry args={[0.02, 0.016, 0.34]} />
-          <SurfaceMaterial color={MATERIAL.deckWhite} surface="paint" />
+          <SurfaceMaterial color={MACHINE_COLORS.deckWhite} surface="paint" />
         </mesh>
-        <Light color={MATERIAL.signalRed} position={[0.02, 0.36, -0.16]} />
-        <Light color={MATERIAL.signalGreen} position={[0.02, 0.36, 0.16]} />
+        <Light
+          color={MACHINE_COLORS.signalRed}
+          position={[0.02, 0.36, -0.16]}
+        />
+        <Light
+          color={MACHINE_COLORS.signalGreen}
+          position={[0.02, 0.36, 0.16]}
+        />
         <Light color={getColor("WHITE")} position={[0.02, 0.45, 0]} />
       </group>
 
@@ -224,11 +237,11 @@ export function Tug() {
         <group key={side} position={[-0.2, HOUSE_TOP, side * 0.17]}>
           <mesh castShadow position={[0, 0.17, 0]} rotation={[0, 0, 0.08]}>
             <cylinderGeometry args={[0.055, 0.062, 0.34, 18]} />
-            <SurfaceMaterial color={MATERIAL.stackBuff} surface="paint" />
+            <SurfaceMaterial color={MACHINE_COLORS.stackBuff} surface="paint" />
           </mesh>
           <mesh position={[0.014, 0.35, 0]} rotation={[0, 0, 0.08]}>
             <cylinderGeometry args={[0.057, 0.057, 0.05, 18]} />
-            <SurfaceMaterial color={MATERIAL.tyre} surface="paint" />
+            <SurfaceMaterial color={CAR_COLORS.tyre} surface="paint" />
           </mesh>
         </group>
       ))}
@@ -243,13 +256,13 @@ export function Tug() {
             radius={0.01}
             smoothness={2}
           >
-            <SurfaceMaterial color={MATERIAL.hullNavy} surface="paint" />
+            <SurfaceMaterial color={MACHINE_COLORS.hullNavy} surface="paint" />
           </RoundedBox>
         ))}
         <mesh castShadow position={[0, 0.1, 0]} rotation={[Math.PI / 2, 0, 0]}>
           <cylinderGeometry args={[0.068, 0.068, 0.3, 20]} />
           <SurfaceMaterial
-            color={MATERIAL.hemp}
+            color={MACHINE_COLORS.hemp}
             repeat={[6, 3]}
             surface="cloth"
           />
@@ -261,7 +274,7 @@ export function Tug() {
         rotation={[0, Math.PI / 2, 0]}
       >
         <torusGeometry args={[0.13, 0.02, 8, 20, Math.PI]} />
-        <SurfaceMaterial color={MATERIAL.hullNavy} surface="paint" />
+        <SurfaceMaterial color={MACHINE_COLORS.hullNavy} surface="paint" />
       </mesh>
     </group>
   );

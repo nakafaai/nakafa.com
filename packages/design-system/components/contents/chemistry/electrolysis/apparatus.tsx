@@ -15,7 +15,8 @@ import {
   GlassMaterial,
   MetalMaterial,
 } from "@repo/design-system/components/three/physical";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { BENCH_COLORS } from "@repo/design-system/lib/material/bench";
+import { CAR_COLORS } from "@repo/design-system/lib/material/car";
 import { Array as Arr, Option } from "effect";
 import { useMemo, useRef } from "react";
 import { CatmullRomCurve3, type Group, Vector3 } from "three";
@@ -125,22 +126,22 @@ export function Battery({
       >
         <meshPhysicalMaterial
           clearcoat={0.3}
-          color={MATERIAL.hotplateBody}
+          color={BENCH_COLORS.hotplateBody}
           roughness={0.5}
         />
       </RoundedBox>
       <mesh position={[0, -0.18, 0.131]}>
         <planeGeometry args={[TERMINAL_OFFSET * 2 + 0.2, 0.2]} />
-        <meshStandardMaterial color={MATERIAL.epoxy} roughness={0.7} />
+        <meshStandardMaterial color={BENCH_COLORS.epoxy} roughness={0.7} />
       </mesh>
       <mesh position={[0, -0.18, 0.15]} rotation={[Math.PI / 2, 0, 0]}>
         <cylinderGeometry args={[0.045, 0.05, 0.04, 32]} />
-        <meshStandardMaterial color={MATERIAL.bottleCap} roughness={0.45} />
+        <meshStandardMaterial color={BENCH_COLORS.bottleCap} roughness={0.45} />
       </mesh>
       {Arr.map(
         [
-          { color: MATERIAL.leadRed, x: -TERMINAL_OFFSET },
-          { color: MATERIAL.leadBlack, x: TERMINAL_OFFSET },
+          { color: BENCH_COLORS.leadRed, x: -TERMINAL_OFFSET },
+          { color: BENCH_COLORS.leadBlack, x: TERMINAL_OFFSET },
         ] as const,
         (terminal) => (
           <mesh castShadow key={terminal.x} position={[terminal.x, -0.02, 0]}>
@@ -239,7 +240,7 @@ export function Lead({
           radius={0.012}
           smoothness={2}
         >
-          <MetalMaterial color={MATERIAL.chrome} roughness={0.25} />
+          <MetalMaterial color={CAR_COLORS.chrome} roughness={0.25} />
         </RoundedBox>
       ))}
       <CameraBounds exclude>

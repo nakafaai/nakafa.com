@@ -24,7 +24,10 @@ import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { P5Sketch } from "@repo/design-system/components/visual/sketch";
 import { getColor } from "@repo/design-system/lib/color";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { ECOLOGY_COLORS } from "@repo/design-system/lib/material/ecology";
+import { ENERGY_COLORS } from "@repo/design-system/lib/material/energy";
+import { ROAD_COLORS } from "@repo/design-system/lib/material/road";
+import { SKY_COLORS } from "@repo/design-system/lib/material/sky";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Schema } from "effect";
 import type p5 from "p5";
@@ -69,17 +72,17 @@ function cliffProgram(sketch: p5, read: () => CliffFrame) {
     const metre = (height * 0.76) / drop.peak;
     const edge = sea - frame.height * metre;
     gradientRect(sketch, { height: sea, width, x: 0, y: 0 }, [
-      [0, MATERIAL.skyZenith],
-      [1, MATERIAL.skyHaze],
+      [0, SKY_COLORS.skyZenith],
+      [1, SKY_COLORS.skyHaze],
     ]);
     gradientRect(sketch, { height: height - sea, width, x: 0, y: sea }, [
-      [0, MATERIAL.seawater],
-      [1, MATERIAL.seawaterDeep],
+      [0, ECOLOGY_COLORS.seawater],
+      [1, ECOLOGY_COLORS.seawaterDeep],
     ]);
     sketch.noStroke();
-    sketch.fill(mix(MATERIAL.rock, getColor("BLACK"), 0.1));
+    sketch.fill(mix(ENERGY_COLORS.rock, getColor("BLACK"), 0.1));
     sketch.rect(0, edge, width * 0.4, sea - edge);
-    sketch.fill(mix(MATERIAL.foliage, getColor("BLACK"), 0.1));
+    sketch.fill(mix(ROAD_COLORS.foliage, getColor("BLACK"), 0.1));
     sketch.rect(0, edge - 6, width * 0.4, 8);
     sketch.stroke(fade(getColor("WHITE"), 0.55));
     sketch.strokeWeight(1);

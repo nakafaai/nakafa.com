@@ -46,7 +46,7 @@ import {
 } from "@repo/design-system/components/visual/card";
 import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { CELL_COLORS } from "@repo/design-system/lib/material/cell";
 import { Array as Arr } from "effect";
 import {
   type ReactNode,
@@ -372,12 +372,12 @@ function HelixScene({
       <group position={[-middle, 0, 0]}>
         <group ref={spin}>
           <Backbone
-            color={MATERIAL.phosphate}
+            color={CELL_COLORS.phosphate}
             points={Arr.map(ladder, (rung) => rung.first)}
           />
           {!(single && share === 0) && (
             <Backbone
-              color={single ? MATERIAL.phosphateNew : MATERIAL.phosphate}
+              color={single ? CELL_COLORS.phosphateNew : CELL_COLORS.phosphate}
               points={Arr.map(ladder, (rung) => rung.second)}
             />
           )}

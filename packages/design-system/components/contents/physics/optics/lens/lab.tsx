@@ -34,7 +34,7 @@ import {
 import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { P5Sketch } from "@repo/design-system/components/visual/sketch";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { INSTRUMENT_COLORS } from "@repo/design-system/lib/material/instrument";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr, Option, Schema } from "effect";
 import type p5 from "p5";
@@ -107,7 +107,7 @@ function lensProgram(sketch: p5, read: () => LensFrame) {
       const hit = { x: bench.lens, y };
       if (object < focal) {
         dashed(sketch, focusNear, tip, {
-          color: fade(MATERIAL.lampLight, 0.45),
+          color: fade(INSTRUMENT_COLORS.lampLight, 0.45),
           dash: 4,
           weight: 1.2,
         });

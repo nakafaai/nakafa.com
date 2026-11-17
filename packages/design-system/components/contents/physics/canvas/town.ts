@@ -6,7 +6,8 @@ import {
 } from "@repo/design-system/components/contents/physics/canvas/paint";
 import { hashUnit } from "@repo/design-system/components/contents/simulation/grain";
 import { getColor } from "@repo/design-system/lib/color";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { ROAD_COLORS } from "@repo/design-system/lib/material/road";
+import { TOWN_COLORS } from "@repo/design-system/lib/material/town";
 import { Schema } from "effect";
 import type p5 from "p5";
 
@@ -69,7 +70,7 @@ function paintHouse(
   size: number,
   seed: number
 ) {
-  const roof = seed < 0.62 ? MATERIAL.roofTerracotta : MATERIAL.roofZinc;
+  const roof = seed < 0.62 ? TOWN_COLORS.roofTerracotta : TOWN_COLORS.roofZinc;
   const wide = size * (0.62 + 0.25 * hashUnit(seed * 1000, 3));
   const deep = size * (0.55 + 0.25 * hashUnit(seed * 1000, 7));
   const x = corner.x + (size - wide) * hashUnit(seed * 1000, 11);
@@ -104,9 +105,9 @@ function paintTree(
     centre.y + radius * 0.35,
     radius * 2.1
   );
-  sketch.fill(MATERIAL.foliageDark);
+  sketch.fill(ROAD_COLORS.foliageDark);
   sketch.circle(centre.x, centre.y, radius * 2);
-  sketch.fill(MATERIAL.foliageLight);
+  sketch.fill(ROAD_COLORS.foliageLight);
   sketch.circle(
     centre.x - radius * 0.25,
     centre.y - radius * 0.25,
@@ -148,13 +149,13 @@ function paintBlock(
 /** One street line along x or y: asphalt with a dashed centre line. */
 function paintStreet(sketch: p5, at: number, street: number, across: boolean) {
   const length = across ? sketch.width : sketch.height;
-  sketch.fill(MATERIAL.asphalt);
+  sketch.fill(ROAD_COLORS.asphalt);
   if (across) {
     sketch.rect(0, at - street / 2, length, street);
   } else {
     sketch.rect(at - street / 2, 0, street, length);
   }
-  sketch.fill(fade(MATERIAL.roadPaint, 0.55));
+  sketch.fill(fade(ROAD_COLORS.roadPaint, 0.55));
   for (let along = 0; along < length; along += 18) {
     if (across) {
       sketch.rect(along, at - 1, 9, 2);
@@ -171,8 +172,8 @@ function paintStreet(sketch: p5, at: number, street: number, across: boolean) {
 export function paintTown(sketch: p5, plan: Plan, block: number) {
   const { height, width } = sketch;
   gradientRect(sketch, { height, width, x: 0, y: 0 }, [
-    [0, mix(MATERIAL.grass, MATERIAL.foliageLight, 0.3)],
-    [1, mix(MATERIAL.grass, MATERIAL.foliageDark, 0.3)],
+    [0, mix(ROAD_COLORS.grass, ROAD_COLORS.foliageLight, 0.3)],
+    [1, mix(ROAD_COLORS.grass, ROAD_COLORS.foliageDark, 0.3)],
   ]);
   const street = Math.max(block * plan.scale * 0.16, 6);
   const span = block * plan.scale;

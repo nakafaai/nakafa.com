@@ -26,7 +26,7 @@ import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { P5Sketch } from "@repo/design-system/components/visual/sketch";
 import { getColor } from "@repo/design-system/lib/color";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { CAR_COLORS } from "@repo/design-system/lib/material/car";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr, Schema } from "effect";
 import type p5 from "p5";
@@ -116,7 +116,7 @@ function areaProgram(sketch: p5, read: () => AreaFrame) {
     // On a road this long a real car would be a speck, so it is drawn larger than life, its front at its place.
     const car = Math.max(4.5, length / 12);
     paintCar(sketch, road, {
-      color: MATERIAL.carPaint,
+      color: CAR_COLORS.carPaint,
       facing: now.velocity >= 0 ? 1 : -1,
       length: car,
       rear: now.velocity >= 0 ? now.travelled - car : now.travelled,

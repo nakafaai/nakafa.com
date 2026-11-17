@@ -32,7 +32,8 @@ import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { P5Sketch } from "@repo/design-system/components/visual/sketch";
 import { getColor } from "@repo/design-system/lib/color";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { INSTRUMENT_COLORS } from "@repo/design-system/lib/material/instrument";
+import { TOWN_COLORS } from "@repo/design-system/lib/material/town";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Schema } from "effect";
 import type p5 from "p5";
@@ -111,11 +112,11 @@ function paintCylinder(
     sketch,
     { height: place.base - water, width: place.wall * 2, x: left, y: water },
     [
-      [0, fade(mix(MATERIAL.water, MATERIAL.waterGlint, 0.45), 0.6)],
-      [1, fade(MATERIAL.water, 0.8)],
+      [0, fade(mix(TOWN_COLORS.water, TOWN_COLORS.waterGlint, 0.45), 0.6)],
+      [1, fade(TOWN_COLORS.water, 0.8)],
     ]
   );
-  sketch.fill(fade(MATERIAL.waterGlint, 0.8));
+  sketch.fill(fade(TOWN_COLORS.waterGlint, 0.8));
   sketch.arc(place.centre, water, place.wall * 2, height * 0.02, 0, Math.PI);
   sketch.stroke(fade(getColor("WHITE"), 0.6));
   sketch.strokeWeight(1);
@@ -163,7 +164,7 @@ function paintCylinder(
     dark: getColor("SLATE", 300),
     light: getColor("WHITE"),
   });
-  sketch.fill(MATERIAL.iris);
+  sketch.fill(INSTRUMENT_COLORS.iris);
   sketch.circle(place.eye + height * 0.022, eyeY, height * 0.03);
   sketch.fill(getColor("ZINC", 950));
   sketch.circle(place.eye + height * 0.027, eyeY, height * 0.014);
@@ -243,7 +244,7 @@ function paintLens(
     ]
   );
   const wall = toX(-CYLINDER_RADIUS);
-  sketch.fill(fade(MATERIAL.water, 0.75));
+  sketch.fill(fade(TOWN_COLORS.water, 0.75));
   sketch.beginShape();
   for (let step = 0; step <= 24; step += 1) {
     const x = -CYLINDER_RADIUS + (CYLINDER_RADIUS * 1.6 * step) / 24;

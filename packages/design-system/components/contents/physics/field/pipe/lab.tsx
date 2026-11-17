@@ -24,7 +24,9 @@ import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { P5Sketch } from "@repo/design-system/components/visual/sketch";
 import { getColor } from "@repo/design-system/lib/color";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { BENCH_COLORS } from "@repo/design-system/lib/material/bench";
+import { INSTRUMENT_COLORS } from "@repo/design-system/lib/material/instrument";
+import { MACHINE_COLORS } from "@repo/design-system/lib/material/machine";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr, Schema } from "effect";
 import type p5 from "p5";
@@ -82,7 +84,8 @@ function pipeProgram(sketch: p5, read: () => PipeFrame) {
     Arr.forEach(PIPES, (pipe, index) => {
       const x = width * (0.22 + index * 0.28);
       const half = width * 0.06;
-      const color = pipe === "plastic" ? MATERIAL.glass : MATERIAL.copper;
+      const color =
+        pipe === "plastic" ? BENCH_COLORS.glass : INSTRUMENT_COLORS.copper;
       gradientRect(
         sketch,
         { height: metre, width: half * 2, x: x - half, y: top },
@@ -116,9 +119,9 @@ function pipeProgram(sketch: p5, read: () => PipeFrame) {
       );
       const y = top + (fallen / PIPE) * metre;
       sketch.noStroke();
-      sketch.fill(MATERIAL.signalRed);
+      sketch.fill(MACHINE_COLORS.signalRed);
       sketch.rect(x - half * 0.7, y - 14, half * 1.4, 14, 3);
-      sketch.fill(MATERIAL.trolleyPaint);
+      sketch.fill(INSTRUMENT_COLORS.trolleyPaint);
       sketch.rect(x - half * 0.7, y, half * 1.4, 14, 3);
       if (pipe === "copper" && fallen < PIPE) {
         sketch.noFill();

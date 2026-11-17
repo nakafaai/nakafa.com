@@ -4,7 +4,7 @@ import {
   type Placement,
 } from "@repo/design-system/components/contents/biology/instances";
 import { hashUnit } from "@repo/design-system/components/contents/simulation/grain";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { CELL_COLORS } from "@repo/design-system/lib/material/cell";
 import { Array as Arr } from "effect";
 
 /** Lysosomes: dense vesicles about 0.5 µm across, drawn at `size` per µm. */
@@ -27,7 +27,7 @@ export function Lysosomes({
       <sphereGeometry args={[0.25 * size, 16, 12]} />
       <meshPhysicalMaterial
         clearcoat={0.4}
-        color={MATERIAL.lysosome}
+        color={CELL_COLORS.lysosome}
         roughness={0.5}
       />
     </Instances>
@@ -92,7 +92,7 @@ export function Mitochondria({
       <meshPhysicalMaterial
         clearcoat={0.5}
         clearcoatRoughness={0.4}
-        color={MATERIAL.mitochondrion}
+        color={CELL_COLORS.mitochondrion}
         roughness={0.4}
       />
     </Instances>
@@ -120,7 +120,7 @@ export function Ribosomes({
       )}
     >
       <sphereGeometry args={[radius, 6, 4]} />
-      <meshStandardMaterial color={MATERIAL.ribosome} roughness={0.8} />
+      <meshStandardMaterial color={CELL_COLORS.ribosome} roughness={0.8} />
     </Instances>
   );
 }

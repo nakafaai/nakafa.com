@@ -23,7 +23,7 @@ import {
 } from "@repo/design-system/components/contents/biology/virus/parts";
 import { BacteriophageModel } from "@repo/design-system/components/contents/biology/virus/phage";
 import type { NarrowCameraPose } from "@repo/design-system/lib/geometry/camera";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { VIRION_COLORS } from "@repo/design-system/lib/material/virion";
 import { Array as Arr } from "effect";
 import { useMemo, useRef } from "react";
 import { CatmullRomCurve3, type Group, Vector3 } from "three";
@@ -130,7 +130,7 @@ function VirusStructureScene() {
         <mesh castShadow geometry={envelope} receiveShadow>
           <EnvelopeMaterial
             clip={envelopeClip}
-            color={MATERIAL.viralEnvelope}
+            color={VIRION_COLORS.viralEnvelope}
             wedge
           />
         </mesh>
@@ -138,7 +138,7 @@ function VirusStructureScene() {
           <cylinderGeometry args={[0.008, 0.012, 0.1, 6]} />
           <EnvelopeMaterial
             clip={envelopeClip}
-            color={MATERIAL.haemagglutinin}
+            color={VIRION_COLORS.haemagglutinin}
             wedge
           />
         </Instances>
@@ -146,7 +146,7 @@ function VirusStructureScene() {
           <sphereGeometry args={[1, 10, 8]} />
           <EnvelopeMaterial
             clip={envelopeClip}
-            color={MATERIAL.haemagglutinin}
+            color={VIRION_COLORS.haemagglutinin}
             wedge
           />
         </Instances>
@@ -157,7 +157,7 @@ function VirusStructureScene() {
           />
           <meshPhysicalMaterial
             clearcoat={0.4}
-            color={MATERIAL.nucleicAcid}
+            color={VIRION_COLORS.nucleicAcid}
             roughness={0.45}
           />
         </mesh>

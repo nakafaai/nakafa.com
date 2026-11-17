@@ -17,7 +17,9 @@ import { CameraControls } from "@repo/design-system/components/three/camera/cont
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { MetalMaterial } from "@repo/design-system/components/three/physical";
 import { useVisualScene } from "@repo/design-system/components/visual/card";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { BENCH_COLORS } from "@repo/design-system/lib/material/bench";
+import { BIOLOGY_COLORS } from "@repo/design-system/lib/material/biology";
+import { ENERGY_COLORS } from "@repo/design-system/lib/material/energy";
 import { Array as Arr } from "effect";
 import { type ReactNode, useMemo, useRef } from "react";
 import { type Group, Vector2 } from "three";
@@ -113,7 +115,7 @@ function Treatment({
         <cylinderGeometry
           args={[shape.radius * 1.35, shape.radius * 1.35, 0.012, 18, 1]}
         />
-        <MetalMaterial color={MATERIAL.foil} roughness={0.5} />
+        <MetalMaterial color={BIOLOGY_COLORS.foil} roughness={0.5} />
       </mesh>
     );
   }
@@ -130,7 +132,7 @@ function Treatment({
         <boxGeometry args={[shape.radius * 1.6, 0.0005, 0.012]} />
         <meshPhysicalMaterial
           clearcoat={1}
-          color={MATERIAL.mica}
+          color={BIOLOGY_COLORS.mica}
           metalness={0.2}
           opacity={0.75}
           roughness={0.15}
@@ -183,7 +185,10 @@ export function GravityScene({
           <Board klinostat={seedling.treatment === "klinostat"}>
             <mesh scale={[1, 0.72, 0.6]}>
               <sphereGeometry args={[0.009, 20, 14]} />
-              <meshStandardMaterial color={MATERIAL.bean} roughness={0.5} />
+              <meshStandardMaterial
+                color={BIOLOGY_COLORS.bean}
+                roughness={0.5}
+              />
             </mesh>
             <group position={[0.006, 0, 0]}>
               <SeedlingOrgan
@@ -231,7 +236,7 @@ function Board({
       <mesh castShadow position={[0, -0.05, -0.012]}>
         <boxGeometry args={[0.03, 0.08, 0.012]} />
         <meshStandardMaterial
-          color={klinostat ? MATERIAL.meterBody : MATERIAL.blockWood}
+          color={klinostat ? BENCH_COLORS.meterBody : BIOLOGY_COLORS.blockWood}
           roughness={0.6}
         />
       </mesh>
@@ -242,7 +247,7 @@ function Board({
           rotation={[Math.PI / 2, 0, 0]}
         >
           <cylinderGeometry args={[0.072, 0.072, 0.006, 48]} />
-          <meshStandardMaterial color={MATERIAL.cork} roughness={0.9} />
+          <meshStandardMaterial color={BIOLOGY_COLORS.cork} roughness={0.9} />
         </mesh>
         {children}
       </group>
@@ -266,11 +271,14 @@ function Pot() {
     <group>
       <mesh castShadow receiveShadow>
         <latheGeometry args={[wall, 36]} />
-        <meshStandardMaterial color={MATERIAL.terracotta} roughness={0.85} />
+        <meshStandardMaterial
+          color={BIOLOGY_COLORS.terracotta}
+          roughness={0.85}
+        />
       </mesh>
       <mesh position={[0, 0.044, 0]} rotation={[-Math.PI / 2, 0, 0]}>
         <circleGeometry args={[0.0295, 36]} />
-        <meshStandardMaterial color={MATERIAL.soil} roughness={1} />
+        <meshStandardMaterial color={ENERGY_COLORS.soil} roughness={1} />
       </mesh>
     </group>
   );
@@ -287,7 +295,7 @@ function PotTag({
   const ink = useLabelInk();
   return (
     <ThreeLabel
-      color={chosen ? MATERIAL.auxin : ink}
+      color={chosen ? BIOLOGY_COLORS.auxin : ink}
       fontSize="compact"
       position={[0, 0.012, 0.045]}
     >

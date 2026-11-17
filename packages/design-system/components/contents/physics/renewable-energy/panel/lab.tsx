@@ -36,7 +36,9 @@ import {
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { P5Sketch } from "@repo/design-system/components/visual/sketch";
 import { getColor } from "@repo/design-system/lib/color";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { MACHINE_COLORS } from "@repo/design-system/lib/material/machine";
+import { ROAD_COLORS } from "@repo/design-system/lib/material/road";
+import { TOWN_COLORS } from "@repo/design-system/lib/material/town";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Schema } from "effect";
 import type p5 from "p5";
@@ -60,7 +62,7 @@ type PanelFrame = typeof PanelFrameSchema.Type;
 /** The roof the panel lies on, its tiles in light and shade. */
 function paintRoof(sketch: p5, eave: number) {
   const { height, width } = sketch;
-  const tile = MATERIAL.roofTerracotta;
+  const tile = TOWN_COLORS.roofTerracotta;
   sketch.fill(tile);
   sketch.quad(
     0,
@@ -100,7 +102,11 @@ function panelCorners(sketch: p5) {
 /** The panel: dark cells that warm toward pink as the sun heats them, under bright glass. */
 function paintPanel(sketch: p5, warmth: number) {
   const corners = panelCorners(sketch);
-  const cell = mix(MATERIAL.solarCell, getColor("SLATE", 600), warmth * 0.25);
+  const cell = mix(
+    MACHINE_COLORS.solarCell,
+    getColor("SLATE", 600),
+    warmth * 0.25
+  );
   withShadow(
     sketch,
     { blur: 18, color: fade(getColor("BLACK"), 0.6), drop: 8 },
@@ -255,8 +261,8 @@ function panelProgram(sketch: p5, read: () => PanelFrame) {
       sketch,
       { height: height - horizon, width, x: 0, y: horizon },
       [
-        [0, MATERIAL.grass],
-        [1, MATERIAL.foliageDark],
+        [0, ROAD_COLORS.grass],
+        [1, ROAD_COLORS.foliageDark],
       ]
     );
     paintRoof(sketch, height * 0.62);

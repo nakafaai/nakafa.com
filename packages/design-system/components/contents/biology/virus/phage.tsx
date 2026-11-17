@@ -4,7 +4,7 @@ import {
   tailFibre,
 } from "@repo/design-system/components/contents/biology/virus/capsid";
 import { useFacetedShell } from "@repo/design-system/components/contents/biology/virus/parts";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { VIRION_COLORS } from "@repo/design-system/lib/material/virion";
 import { Array as Arr } from "effect";
 import { useMemo } from "react";
 import { CatmullRomCurve3, Vector3 } from "three";
@@ -93,7 +93,7 @@ export function BacteriophageModel({
         <meshPhysicalMaterial
           clearcoat={0.5}
           clearcoatRoughness={0.35}
-          color={MATERIAL.phageHead}
+          color={VIRION_COLORS.phageHead}
           roughness={0.5}
         />
       </mesh>
@@ -101,19 +101,22 @@ export function BacteriophageModel({
         <cylinderGeometry args={[0.025, 0.028, 0.008, 6]} />
         <meshPhysicalMaterial
           clearcoat={0.4}
-          color={MATERIAL.phageHead}
+          color={VIRION_COLORS.phageHead}
           roughness={0.5}
         />
       </Instances>
       <mesh castShadow position={[0, -0.045, 0]}>
         <cylinderGeometry args={[0.07, 0.06, 0.03, 18]} />
-        <meshStandardMaterial color={MATERIAL.phageSheath} roughness={0.55} />
+        <meshStandardMaterial
+          color={VIRION_COLORS.phageSheath}
+          roughness={0.55}
+        />
       </mesh>
       <Instances placements={rings}>
         <cylinderGeometry args={[tail.ring, tail.ring, tail.gap * 0.86, 18]} />
         <meshPhysicalMaterial
           clearcoat={0.3}
-          color={MATERIAL.phageSheath}
+          color={VIRION_COLORS.phageSheath}
           roughness={0.5}
         />
       </Instances>
@@ -121,14 +124,14 @@ export function BacteriophageModel({
         <cylinderGeometry
           args={[0.021, 0.021, tail.top - tail.base + tail.tube, 14]}
         />
-        <meshStandardMaterial color={MATERIAL.baseplate} roughness={0.5} />
+        <meshStandardMaterial color={VIRION_COLORS.baseplate} roughness={0.5} />
       </mesh>
       <group position={[0, tail.base, 0]}>
         <mesh castShadow>
           <cylinderGeometry args={[0.1, 0.09, 0.03, 6]} />
           <meshPhysicalMaterial
             clearcoat={0.3}
-            color={MATERIAL.baseplate}
+            color={VIRION_COLORS.baseplate}
             roughness={0.5}
           />
         </mesh>
@@ -146,12 +149,18 @@ export function BacteriophageModel({
           })}
         >
           <coneGeometry args={[0.012, 0.045, 6]} />
-          <meshStandardMaterial color={MATERIAL.baseplate} roughness={0.5} />
+          <meshStandardMaterial
+            color={VIRION_COLORS.baseplate}
+            roughness={0.5}
+          />
         </Instances>
         {Arr.map(FIBRES, ({ curve, index }) => (
           <mesh castShadow key={index}>
             <tubeGeometry args={[curve, 48, 0.0065, 6, false]} />
-            <meshStandardMaterial color={MATERIAL.tailFibre} roughness={0.55} />
+            <meshStandardMaterial
+              color={VIRION_COLORS.tailFibre}
+              roughness={0.55}
+            />
           </mesh>
         ))}
       </group>

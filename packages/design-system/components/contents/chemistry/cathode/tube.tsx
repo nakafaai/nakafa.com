@@ -21,7 +21,9 @@ import {
 import { useStage } from "@repo/design-system/components/three/stage/context";
 import { useVisualScene } from "@repo/design-system/components/visual/card";
 import { getColor } from "@repo/design-system/lib/color";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { BENCH_COLORS } from "@repo/design-system/lib/material/bench";
+import { INSTRUMENT_COLORS } from "@repo/design-system/lib/material/instrument";
+import { MACHINE_COLORS } from "@repo/design-system/lib/material/machine";
 import { Array as Arr } from "effect";
 import { createRef, useMemo } from "react";
 import { Color, DoubleSide, type Mesh, Vector2 } from "three";
@@ -64,8 +66,8 @@ const GRID_STEP = 0.4;
 export function CathodeTube({ plate }: { readonly plate: number }) {
   const playing = useVisualScene((card) => card.playing, false);
   const end = TUBE.plates + TUBE.screen;
-  const spot = new Color(MATERIAL.phosphorGlow).multiplyScalar(2.6);
-  const trace = new Color(MATERIAL.residualGasGlow).multiplyScalar(1.6);
+  const spot = new Color(BENCH_COLORS.phosphorGlow).multiplyScalar(2.6);
+  const trace = new Color(BENCH_COLORS.residualGasGlow).multiplyScalar(1.6);
   const outline = useMemo(
     () => Arr.map(envelopeOutline(160), ([r, x]) => new Vector2(r, x)),
     []
@@ -101,9 +103,9 @@ export function CathodeTube({ plate }: { readonly plate: number }) {
       <mesh rotation={[0, 0, -Math.PI / 2]}>
         <latheGeometry args={[outline, 96]} />
         <VesselGlassMaterial
-          color={MATERIAL.glass}
+          color={BENCH_COLORS.glass}
           thickness={WALL}
-          tint={MATERIAL.glassEdge}
+          tint={BENCH_COLORS.glassEdge}
         />
       </mesh>
       <SideArm x={ANODE_X} />
@@ -160,20 +162,20 @@ function SideArm({
       <mesh position={[0, middle, 0]}>
         <cylinderGeometry args={[ARM, ARM, ARM_LENGTH, 32, 1, true]} />
         <VesselGlassMaterial
-          color={MATERIAL.glass}
+          color={BENCH_COLORS.glass}
           thickness={WALL}
-          tint={MATERIAL.glassEdge}
+          tint={BENCH_COLORS.glassEdge}
         />
       </mesh>
       <mesh position={[0, side * (ENVELOPE.neck / 2 + ARM_LENGTH / 2), 0]}>
         <cylinderGeometry
           args={[LEAD, LEAD, ENVELOPE.neck + ARM_LENGTH, 8, 1]}
         />
-        <MetalMaterial color={MATERIAL.probeSteel} roughness={0.35} />
+        <MetalMaterial color={BENCH_COLORS.probeSteel} roughness={0.35} />
       </mesh>
       <mesh castShadow position={[0, tip + side * 0.08, 0]}>
         <cylinderGeometry args={[ARM + 0.03, ARM + 0.03, 0.18, 32]} />
-        <MetalMaterial color={MATERIAL.brass} roughness={0.3} />
+        <MetalMaterial color={INSTRUMENT_COLORS.brass} roughness={0.3} />
       </mesh>
     </group>
   );
@@ -191,7 +193,7 @@ function CathodeStem() {
     <group>
       <mesh position={[CATHODE_X, 0, 0]} rotation={[0, 0, -Math.PI / 2]}>
         <cylinderGeometry args={[0.42, 0.36, 0.14, 40, 1]} />
-        <MetalMaterial color={MATERIAL.aluminium} roughness={0.38} />
+        <MetalMaterial color={INSTRUMENT_COLORS.aluminium} roughness={0.38} />
       </mesh>
       {Arr.map([-0.12, 0.12] as const, (z) => (
         <mesh
@@ -200,7 +202,7 @@ function CathodeStem() {
           rotation={[0, 0, Math.PI / 2]}
         >
           <cylinderGeometry args={[LEAD, LEAD, stem, 8, 1]} />
-          <MetalMaterial color={MATERIAL.probeSteel} roughness={0.35} />
+          <MetalMaterial color={BENCH_COLORS.probeSteel} roughness={0.35} />
         </mesh>
       ))}
       <mesh
@@ -209,9 +211,9 @@ function CathodeStem() {
       >
         <cylinderGeometry args={[0.22, 0.3, stem * 0.5, 32, 1]} />
         <VesselGlassMaterial
-          color={MATERIAL.glass}
+          color={BENCH_COLORS.glass}
           thickness={0.2}
-          tint={MATERIAL.glassEdge}
+          tint={BENCH_COLORS.glassEdge}
         />
       </mesh>
       <mesh
@@ -220,7 +222,7 @@ function CathodeStem() {
         rotation={[0, 0, Math.PI / 2]}
       >
         <cylinderGeometry args={[0.28, 0.28, 0.28, 40, 1]} />
-        <MetalMaterial color={MATERIAL.brass} roughness={0.3} />
+        <MetalMaterial color={INSTRUMENT_COLORS.brass} roughness={0.3} />
       </mesh>
     </group>
   );
@@ -233,7 +235,7 @@ function Anode() {
       <mesh>
         <ringGeometry args={[0.07, ENVELOPE.neck - 0.08, 48]} />
         <meshPhysicalMaterial
-          color={MATERIAL.aluminium}
+          color={INSTRUMENT_COLORS.aluminium}
           metalness={1}
           roughness={0.35}
           side={DoubleSide}
@@ -243,7 +245,7 @@ function Anode() {
         <cylinderGeometry
           args={[ENVELOPE.neck - 0.08, ENVELOPE.neck - 0.08, 0.36, 48, 1, true]}
         />
-        <MetalMaterial color={MATERIAL.aluminium} roughness={0.42} />
+        <MetalMaterial color={INSTRUMENT_COLORS.aluminium} roughness={0.42} />
       </mesh>
     </group>
   );
@@ -274,7 +276,10 @@ function Plates({ plate }: { readonly plate: number }) {
               radius={0.025}
               smoothness={3}
             >
-              <MetalMaterial color={MATERIAL.aluminium} roughness={0.22} />
+              <MetalMaterial
+                color={INSTRUMENT_COLORS.aluminium}
+                roughness={0.22}
+              />
             </RoundedBox>
             <ThreeLabel
               color={ORIGIN_COLOR.LIGHT}
@@ -325,7 +330,7 @@ function Screen({ end }: { readonly end: number }) {
       <mesh position={[end, 0, 0]} rotation={[0, Math.PI / 2, 0]}>
         <circleGeometry args={[radius, 72]} />
         <meshStandardMaterial
-          color={MATERIAL.phosphorCoat}
+          color={BENCH_COLORS.phosphorCoat}
           roughness={0.9}
           side={DoubleSide}
         />
@@ -366,11 +371,11 @@ function TubeStand() {
               rotation={[0, Math.PI / 2, 0]}
             >
               <torusGeometry args={[radius, 0.07, 16, 64]} />
-              <MetalMaterial color={MATERIAL.brass} roughness={0.28} />
+              <MetalMaterial color={INSTRUMENT_COLORS.brass} roughness={0.28} />
             </mesh>
             <mesh castShadow position={[x, floor + 0.3 + post / 2, 0]}>
               <cylinderGeometry args={[0.09, 0.09, post, 20, 1]} />
-              <MetalMaterial color={MATERIAL.probeSteel} roughness={0.3} />
+              <MetalMaterial color={BENCH_COLORS.probeSteel} roughness={0.3} />
             </mesh>
           </group>
         );
@@ -386,7 +391,7 @@ function TubeStand() {
         <meshPhysicalMaterial
           clearcoat={0.4}
           clearcoatRoughness={0.3}
-          color={MATERIAL.walnut}
+          color={MACHINE_COLORS.walnut}
           roughness={0.55}
         />
       </RoundedBox>

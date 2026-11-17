@@ -44,7 +44,9 @@ import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { P5Sketch } from "@repo/design-system/components/visual/sketch";
 import { getColor } from "@repo/design-system/lib/color";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { ENERGY_COLORS } from "@repo/design-system/lib/material/energy";
+import { MACHINE_COLORS } from "@repo/design-system/lib/material/machine";
+import { ROAD_COLORS } from "@repo/design-system/lib/material/road";
 import { Array as Arr, Schema } from "effect";
 import type p5 from "p5";
 import { type ReactNode, useState } from "react";
@@ -74,7 +76,9 @@ function paintTower(sketch: p5, place: ReturnType<typeof layout>) {
   const platform = place.ground - LIFT_HEIGHT * place.metre;
   const right = place.towerLeft + place.towerWidth;
   const topOfTower = platform - place.metre * 0.55;
-  sketch.stroke(mix(MATERIAL.galvanizedSteel, getColor("SLATE", 700), 0.3));
+  sketch.stroke(
+    mix(ENERGY_COLORS.galvanizedSteel, getColor("SLATE", 700), 0.3)
+  );
   sketch.strokeWeight(Math.max(2, place.towerWidth * 0.08));
   sketch.line(place.towerLeft, place.ground, place.towerLeft, topOfTower);
   sketch.line(right, place.ground, right, topOfTower);
@@ -99,8 +103,8 @@ function paintTower(sketch: p5, place: ReturnType<typeof layout>) {
           y: platform,
         },
         [
-          [0, mix(MATERIAL.concrete, getColor("WHITE"), 0.3)],
-          [1, mix(MATERIAL.concrete, getColor("BLACK"), 0.25)],
+          [0, mix(MACHINE_COLORS.concrete, getColor("WHITE"), 0.3)],
+          [1, mix(MACHINE_COLORS.concrete, getColor("BLACK"), 0.25)],
         ]
       );
     }
@@ -140,8 +144,8 @@ function paintWinch(
           y: y - drum * 0.7,
         },
         [
-          [0, mix(MATERIAL.buoyPaint, getColor("WHITE"), 0.25)],
-          [1, mix(MATERIAL.buoyPaint, getColor("BLACK"), 0.35)],
+          [0, mix(ENERGY_COLORS.buoyPaint, getColor("WHITE"), 0.25)],
+          [1, mix(ENERGY_COLORS.buoyPaint, getColor("BLACK"), 0.35)],
         ]
       );
     }
@@ -193,14 +197,14 @@ function paintCrate(
         sketch,
         { height: size, width: size, x: left, y: bottom - size },
         [
-          [0, mix(MATERIAL.crateWood, getColor("WHITE"), 0.3)],
-          [0.4, MATERIAL.crateWood],
-          [1, mix(MATERIAL.crateWood, getColor("BLACK"), 0.45)],
+          [0, mix(ENERGY_COLORS.crateWood, getColor("WHITE"), 0.3)],
+          [0.4, ENERGY_COLORS.crateWood],
+          [1, mix(ENERGY_COLORS.crateWood, getColor("BLACK"), 0.45)],
         ]
       );
     }
   );
-  sketch.stroke(fade(MATERIAL.bark, 0.8));
+  sketch.stroke(fade(ROAD_COLORS.bark, 0.8));
   sketch.strokeWeight(1.5);
   sketch.line(left, bottom - size, left + size, bottom);
   sketch.line(left + size, bottom - size, left, bottom);
@@ -241,7 +245,7 @@ function hoistProgram(sketch: p5, read: () => HoistFrame) {
     paintSky(sketch, place.ground);
     paintClouds(sketch, place.ground, clouds);
     paintHills(sketch, place.ground);
-    paintGround(sketch, place.ground, MATERIAL.soil);
+    paintGround(sketch, place.ground, ENERGY_COLORS.soil);
     const { topOfTower } = paintTower(sketch, place);
     const height = crateHeight(motor, now);
     const turn = (height * place.metre) / (place.towerWidth * 0.35);

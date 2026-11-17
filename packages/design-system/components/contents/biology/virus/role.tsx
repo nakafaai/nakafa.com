@@ -12,7 +12,8 @@ import { Virion } from "@repo/design-system/components/contents/biology/virus/en
 import { PolyhedralVirusModel } from "@repo/design-system/components/contents/biology/virus/parts";
 import { BacteriophageModel } from "@repo/design-system/components/contents/biology/virus/phage";
 import type { NarrowCameraPose } from "@repo/design-system/lib/geometry/camera";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { CELL_COLORS } from "@repo/design-system/lib/material/cell";
+import { VIRION_COLORS } from "@repo/design-system/lib/material/virion";
 import { Array as Arr } from "effect";
 import { CatmullRomCurve3, Vector3 } from "three";
 
@@ -106,7 +107,7 @@ function HostCell({
       receiveShadow
       scale={size}
     >
-      <EnvelopeMaterial clip={undefined} color={MATERIAL.membrane} />
+      <EnvelopeMaterial clip={undefined} color={CELL_COLORS.membrane} />
     </mesh>
   );
 }
@@ -209,7 +210,10 @@ function BiotechRole() {
       </group>
       <mesh castShadow>
         <tubeGeometry args={[GENE, 80, 0.014, 6, false]} />
-        <meshStandardMaterial color={MATERIAL.nucleicAcid} roughness={0.45} />
+        <meshStandardMaterial
+          color={VIRION_COLORS.nucleicAcid}
+          roughness={0.45}
+        />
       </mesh>
     </group>
   );

@@ -28,7 +28,9 @@ import {
 } from "@repo/design-system/components/visual/card";
 import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { CAR_COLORS } from "@repo/design-system/lib/material/car";
+import { MACHINE_COLORS } from "@repo/design-system/lib/material/machine";
+import { ROAD_COLORS } from "@repo/design-system/lib/material/road";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr, Schema } from "effect";
 import { type ReactNode, Suspense, useEffect, useMemo, useState } from "react";
@@ -106,7 +108,7 @@ function Wheel() {
         rotation={[Math.PI / 2, 0, 0]}
       >
         <SurfaceMaterial
-          color={MATERIAL.tyre}
+          color={CAR_COLORS.tyre}
           repeat={[24, 1]}
           surface="rubber"
         />
@@ -114,13 +116,13 @@ function Wheel() {
       {Arr.map(GROOVES, (depth) => (
         <mesh key={depth} position={[0, 0, depth]}>
           <torusGeometry args={[0.3462, 0.0045, 6, 96]} />
-          <meshStandardMaterial color={MATERIAL.skidRubber} roughness={1} />
+          <meshStandardMaterial color={ROAD_COLORS.skidRubber} roughness={1} />
         </mesh>
       ))}
       <mesh rotation={[Math.PI / 2, 0, 0]}>
         <cylinderGeometry args={[0.212, 0.212, 0.17, 64, 1, true]} />
         <SurfaceMaterial
-          color={MATERIAL.hub}
+          color={CAR_COLORS.hub}
           metalness={1}
           roughness={0.6}
           side={DoubleSide}
@@ -130,7 +132,7 @@ function Wheel() {
       <mesh position={[0, 0, 0.068]}>
         <torusGeometry args={[0.206, 0.012, 12, 96]} />
         <SurfaceMaterial
-          color={MATERIAL.rimBright}
+          color={CAR_COLORS.rimBright}
           metalness={1}
           roughness={0.35}
           surface="brushed"
@@ -139,7 +141,7 @@ function Wheel() {
       <Repeat placements={SPOKES}>
         <boxGeometry args={[0.15, 0.034, 0.02]} />
         <SurfaceMaterial
-          color={MATERIAL.rimBright}
+          color={CAR_COLORS.rimBright}
           metalness={1}
           roughness={0.55}
           surface="brushed"
@@ -148,7 +150,7 @@ function Wheel() {
       <mesh position={[0, 0, 0.066]} rotation={[Math.PI / 2, 0, 0]}>
         <cylinderGeometry args={[0.075, 0.08, 0.025, 48]} />
         <SurfaceMaterial
-          color={MATERIAL.rimBright}
+          color={CAR_COLORS.rimBright}
           metalness={1}
           roughness={0.35}
           surface="brushed"
@@ -157,7 +159,7 @@ function Wheel() {
       <mesh position={[0, 0, 0.082]} rotation={[Math.PI / 2, 0, 0]}>
         <cylinderGeometry args={[0.03, 0.032, 0.012, 32]} />
         <SurfaceMaterial
-          color={MATERIAL.hub}
+          color={CAR_COLORS.hub}
           metalness={1}
           roughness={0.4}
           surface="brushed"
@@ -166,7 +168,7 @@ function Wheel() {
       <mesh position={[0, 0, -0.01]} rotation={[Math.PI / 2, 0, 0]}>
         <cylinderGeometry args={[0.165, 0.165, 0.022, 64]} />
         <SurfaceMaterial
-          color={MATERIAL.castIron}
+          color={CAR_COLORS.castIron}
           metalness={1}
           roughness={0.55}
           surface="brushed"
@@ -179,12 +181,12 @@ function Wheel() {
         rotation={[0, 0, 0.6]}
         smoothness={2}
       >
-        <SurfaceMaterial color={MATERIAL.caliper} surface="paint" />
+        <SurfaceMaterial color={CAR_COLORS.caliper} surface="paint" />
       </RoundedBox>
       <Repeat placements={LUGS}>
         <cylinderGeometry args={[0.014, 0.014, 0.022, 6]} />
         <SurfaceMaterial
-          color={MATERIAL.chrome}
+          color={CAR_COLORS.chrome}
           metalness={1}
           roughness={0.3}
           surface="brushed"
@@ -218,7 +220,7 @@ function WrenchScene({
       <mesh castShadow position={[nut[0], nut[1], 0.112]}>
         <torusGeometry args={[0.026, 0.009, 12, 24]} />
         <SurfaceMaterial
-          color={MATERIAL.chrome}
+          color={CAR_COLORS.chrome}
           metalness={1}
           roughness={0.25}
           surface="brushed"
@@ -231,7 +233,7 @@ function WrenchScene({
       >
         <cylinderGeometry args={[0.017, 0.017, 0.03, 6]} />
         <SurfaceMaterial
-          color={MATERIAL.chrome}
+          color={CAR_COLORS.chrome}
           metalness={1}
           roughness={0.3}
           surface="brushed"
@@ -245,7 +247,7 @@ function WrenchScene({
         smoothness={3}
       >
         <SurfaceMaterial
-          color={MATERIAL.chrome}
+          color={CAR_COLORS.chrome}
           metalness={1}
           roughness={0.25}
           surface="brushed"
@@ -258,7 +260,7 @@ function WrenchScene({
         radius={0.012}
         smoothness={3}
       >
-        <SurfaceMaterial color={MATERIAL.gripRed} surface="rubber" />
+        <SurfaceMaterial color={MACHINE_COLORS.gripRed} surface="rubber" />
       </RoundedBox>
       <FixedArrow
         color={PLOT_COLORS.slate}

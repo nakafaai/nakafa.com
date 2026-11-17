@@ -25,7 +25,9 @@ import {
   MetalMaterial,
 } from "@repo/design-system/components/three/physical";
 import { useVisualScene } from "@repo/design-system/components/visual/card";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { BENCH_COLORS } from "@repo/design-system/lib/material/bench";
+import { BIOLOGY_COLORS } from "@repo/design-system/lib/material/biology";
+import { CAR_COLORS } from "@repo/design-system/lib/material/car";
 import { Array as Arr } from "effect";
 import { createRef, useEffect, useLayoutEffect, useMemo, useRef } from "react";
 import {
@@ -114,8 +116,8 @@ export function PhotosynthesisScene({
             <sphereGeometry args={[0.0011, 12, 8]} />
             <meshPhysicalMaterial
               clearcoat={1}
-              color={MATERIAL.bubble}
-              emissive={MATERIAL.bubble}
+              color={BIOLOGY_COLORS.bubble}
+              emissive={BIOLOGY_COLORS.bubble}
               emissiveIntensity={0.3}
               roughness={0.05}
             />
@@ -149,13 +151,13 @@ function Bath() {
     <group position={[BEAKER_X, 0, 0]}>
       <mesh castShadow>
         <latheGeometry args={[wall, 48]} />
-        <GlassMaterial color={MATERIAL.glass} opacity={0.14} />
+        <GlassMaterial color={BENCH_COLORS.glass} opacity={0.14} />
       </mesh>
       <mesh position={[0, BATH.level / 2 + 0.002, 0]}>
         <cylinderGeometry
           args={[BATH.radius - 0.001, BATH.radius - 0.001, BATH.level, 48]}
         />
-        <LiquidMaterial color={MATERIAL.pondWater} opacity={0.1} />
+        <LiquidMaterial color={BIOLOGY_COLORS.pondWater} opacity={0.1} />
       </mesh>
       <GlassTube
         end={[0, TUBE.top, 0]}
@@ -167,7 +169,7 @@ function Bath() {
         <sphereGeometry
           args={[TUBE.radius, 28, 14, 0, Math.PI * 2, 0, Math.PI / 2]}
         />
-        <GlassMaterial color={MATERIAL.glass} opacity={0.3} />
+        <GlassMaterial color={BENCH_COLORS.glass} opacity={0.3} />
       </mesh>
       <mesh position={[0, (TUBE.bottom + TUBE.water) / 2, 0]}>
         <cylinderGeometry
@@ -178,17 +180,17 @@ function Bath() {
             28,
           ]}
         />
-        <LiquidMaterial color={MATERIAL.pondWater} opacity={0.08} />
+        <LiquidMaterial color={BIOLOGY_COLORS.pondWater} opacity={0.08} />
       </mesh>
       <group position={[0.026, 0, -0.022]} rotation={[0, 0, -0.12]}>
         <GlassTube end={[0, 0.2, 0]} radius={0.003} start={[0, 0.02, 0]} />
         <mesh position={[0, 0.022, 0]}>
           <sphereGeometry args={[0.0035, 16, 12]} />
-          <meshStandardMaterial color={MATERIAL.dye} roughness={0.3} />
+          <meshStandardMaterial color={BIOLOGY_COLORS.dye} roughness={0.3} />
         </mesh>
         <mesh position={[0, 0.065, 0]}>
           <cylinderGeometry args={[0.0009, 0.0009, 0.085, 8]} />
-          <meshStandardMaterial color={MATERIAL.dye} roughness={0.3} />
+          <meshStandardMaterial color={BIOLOGY_COLORS.dye} roughness={0.3} />
         </mesh>
       </group>
     </group>
@@ -259,18 +261,18 @@ function Hydrilla() {
     <group position={[BEAKER_X, 0, 0]}>
       <mesh castShadow>
         <tubeGeometry args={[stem, 40, 0.0014, 8, false]} />
-        <meshStandardMaterial color={MATERIAL.hydrilla} roughness={0.6} />
+        <meshStandardMaterial color={BIOLOGY_COLORS.hydrilla} roughness={0.6} />
       </mesh>
       <instancedMesh args={[blade, undefined, count]} castShadow ref={leaves}>
         <meshPhysicalMaterial
-          color={MATERIAL.hydrilla}
+          color={BIOLOGY_COLORS.hydrilla}
           roughness={0.5}
           side={DoubleSide}
         />
       </instancedMesh>
       <mesh position={[0, 0.019, 0]} rotation={[Math.PI / 2, 0, 0]}>
         <torusGeometry args={[0.0035, 0.0005, 6, 20]} />
-        <MetalMaterial color={MATERIAL.chrome} roughness={0.3} />
+        <MetalMaterial color={CAR_COLORS.chrome} roughness={0.3} />
       </mesh>
     </group>
   );

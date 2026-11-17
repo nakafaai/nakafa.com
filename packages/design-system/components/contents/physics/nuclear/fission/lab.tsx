@@ -24,7 +24,8 @@ import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { P5Sketch } from "@repo/design-system/components/visual/sketch";
 import { getColor } from "@repo/design-system/lib/color";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { ENERGY_COLORS } from "@repo/design-system/lib/material/energy";
+import { MACHINE_COLORS } from "@repo/design-system/lib/material/machine";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr, Schema } from "effect";
 import type p5 from "p5";
@@ -68,12 +69,12 @@ function nucleus(
         size * 0.12,
         {
           dark: mix(
-            proton ? MATERIAL.signalRed : MATERIAL.galvanizedSteel,
+            proton ? MACHINE_COLORS.signalRed : ENERGY_COLORS.galvanizedSteel,
             getColor("BLACK"),
             0.4
           ),
           light: mix(
-            proton ? MATERIAL.signalRed : MATERIAL.galvanizedSteel,
+            proton ? MACHINE_COLORS.signalRed : ENERGY_COLORS.galvanizedSteel,
             getColor("WHITE"),
             0.3
           ),
@@ -105,7 +106,7 @@ function fissionProgram(sketch: p5, read: () => FissionFrame) {
     const t = Math.min(clock / PLAY_SECONDS, 1);
     const { height, width } = sketch;
     gradientRect(sketch, { height, width, x: 0, y: 0 }, [
-      [0, MATERIAL.nightSky],
+      [0, ENERGY_COLORS.nightSky],
       [1, getColor("ZINC", 950)],
     ]);
     const centre = { x: width * 0.5, y: height * 0.34 };
@@ -121,7 +122,7 @@ function fissionProgram(sketch: p5, read: () => FissionFrame) {
         },
         size * 0.08,
         {
-          dark: mix(MATERIAL.galvanizedSteel, getColor("BLACK"), 0.4),
+          dark: mix(ENERGY_COLORS.galvanizedSteel, getColor("BLACK"), 0.4),
           light: getColor("WHITE"),
         }
       );
@@ -158,14 +159,14 @@ function fissionProgram(sketch: p5, read: () => FissionFrame) {
             },
             size * 0.08,
             {
-              dark: mix(MATERIAL.galvanizedSteel, getColor("BLACK"), 0.4),
+              dark: mix(ENERGY_COLORS.galvanizedSteel, getColor("BLACK"), 0.4),
               light: getColor("WHITE"),
             }
           );
         }
       );
       sketch.noStroke();
-      sketch.fill(fade(MATERIAL.reactorGlow, 0.35 * (1 - spread)));
+      sketch.fill(fade(ENERGY_COLORS.reactorGlow, 0.35 * (1 - spread)));
       sketch.circle(centre.x, centre.y, size * 2.5 * spread);
     }
     const bars = { left: width * 0.12, right: width * 0.88, top: height * 0.7 };

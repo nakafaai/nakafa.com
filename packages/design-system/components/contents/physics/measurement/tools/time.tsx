@@ -11,7 +11,9 @@ import {
   Repeat,
 } from "@repo/design-system/components/three/repeat";
 import { SurfaceMaterial } from "@repo/design-system/components/three/surface/material";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { BENCH_COLORS } from "@repo/design-system/lib/material/bench";
+import { CAR_COLORS } from "@repo/design-system/lib/material/car";
+import { MACHINE_COLORS } from "@repo/design-system/lib/material/machine";
 import { Array as Arr } from "effect";
 
 /** The radius of the dial, in scene units. */
@@ -65,7 +67,7 @@ export function TimeScene({
       <mesh castShadow rotation={[Math.PI / 2, 0, 0]}>
         <cylinderGeometry args={[1.3, 1.3, 0.3, 96]} />
         <SurfaceMaterial
-          color={MATERIAL.chrome}
+          color={CAR_COLORS.chrome}
           metalness={1}
           roughness={0.3}
           surface="brushed"
@@ -74,7 +76,7 @@ export function TimeScene({
       <mesh castShadow position={[0, 0, 0.15]}>
         <torusGeometry args={[1.2, 0.09, 20, 96]} />
         <SurfaceMaterial
-          color={MATERIAL.chrome}
+          color={CAR_COLORS.chrome}
           metalness={1}
           roughness={0.18}
           surface="brushed"
@@ -82,22 +84,22 @@ export function TimeScene({
       </mesh>
       <mesh position={[0, 0, 0.16]} rotation={[Math.PI / 2, 0, 0]}>
         <cylinderGeometry args={[DIAL + 0.04, DIAL + 0.04, 0.02, 96]} />
-        <SurfaceMaterial color={MATERIAL.dialWhite} surface="plastic" />
+        <SurfaceMaterial color={MACHINE_COLORS.dialWhite} surface="plastic" />
       </mesh>
       <Repeat placements={MAJOR_TICKS} shadows={false}>
         <boxGeometry args={[0.035, 0.16, 0.004]} />
-        <meshStandardMaterial color={MATERIAL.tyre} roughness={0.5} />
+        <meshStandardMaterial color={CAR_COLORS.tyre} roughness={0.5} />
       </Repeat>
       <Repeat placements={MINOR_TICKS} shadows={false}>
         <boxGeometry args={[0.014, 0.08, 0.004]} />
-        <meshStandardMaterial color={MATERIAL.tyre} roughness={0.5} />
+        <meshStandardMaterial color={CAR_COLORS.tyre} roughness={0.5} />
       </Repeat>
 
       <group position={[0, 1.3, 0]}>
         <mesh castShadow position={[0, 0.08, 0]}>
           <cylinderGeometry args={[0.07, 0.07, 0.18, 20]} />
           <SurfaceMaterial
-            color={MATERIAL.chrome}
+            color={CAR_COLORS.chrome}
             metalness={1}
             roughness={0.3}
             surface="brushed"
@@ -106,7 +108,7 @@ export function TimeScene({
         <mesh castShadow position={[0, 0.22, 0]}>
           <cylinderGeometry args={[0.15, 0.15, 0.14, 28]} />
           <SurfaceMaterial
-            color={MATERIAL.chrome}
+            color={CAR_COLORS.chrome}
             metalness={1}
             roughness={0.45}
             surface="brushed"
@@ -115,7 +117,7 @@ export function TimeScene({
         <mesh castShadow position={[0, 0.48, 0]}>
           <torusGeometry args={[0.2, 0.035, 12, 40]} />
           <SurfaceMaterial
-            color={MATERIAL.chrome}
+            color={CAR_COLORS.chrome}
             metalness={1}
             roughness={0.2}
             surface="brushed"
@@ -129,7 +131,7 @@ export function TimeScene({
       >
         <cylinderGeometry args={[0.07, 0.07, 0.2, 20]} />
         <SurfaceMaterial
-          color={MATERIAL.chrome}
+          color={CAR_COLORS.chrome}
           metalness={1}
           roughness={0.3}
           surface="brushed"
@@ -139,17 +141,23 @@ export function TimeScene({
       <group rotation={[0, 0, -handAngle]}>
         <mesh position={[0, STOPWATCH_HAND_CENTER, 0.19]}>
           <boxGeometry args={[0.03, STOPWATCH_HAND_LENGTH, 0.012]} />
-          <meshStandardMaterial color={MATERIAL.signalRed} roughness={0.4} />
+          <meshStandardMaterial
+            color={MACHINE_COLORS.signalRed}
+            roughness={0.4}
+          />
         </mesh>
         <mesh position={[0, -0.18, 0.19]}>
           <boxGeometry args={[0.06, 0.26, 0.012]} />
-          <meshStandardMaterial color={MATERIAL.signalRed} roughness={0.4} />
+          <meshStandardMaterial
+            color={MACHINE_COLORS.signalRed}
+            roughness={0.4}
+          />
         </mesh>
       </group>
       <mesh position={[0, 0, 0.2]} rotation={[Math.PI / 2, 0, 0]}>
         <cylinderGeometry args={[0.07, 0.07, 0.03, 24]} />
         <SurfaceMaterial
-          color={MATERIAL.chrome}
+          color={CAR_COLORS.chrome}
           metalness={1}
           roughness={0.25}
           surface="brushed"
@@ -164,7 +172,7 @@ export function TimeScene({
         />
         <meshPhysicalMaterial
           clearcoat={1}
-          color={MATERIAL.glass}
+          color={BENCH_COLORS.glass}
           depthWrite={false}
           opacity={0.14}
           roughness={0.02}

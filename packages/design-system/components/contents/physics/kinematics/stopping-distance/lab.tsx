@@ -41,7 +41,7 @@ import {
 } from "@repo/design-system/components/visual/card";
 import { VisualFactIndicator } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { CAR_COLORS } from "@repo/design-system/lib/material/car";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr, Option } from "effect";
 import {
@@ -247,7 +247,7 @@ function StopScene({ stop }: { readonly stop: Stop }) {
       <Stretch color={REACTION_COLOR} from={0} to={reactionEnd} />
       <Stretch color={BRAKING_COLOR} from={reactionEnd} to={end} />
       <group position={[0, 0, ROAD.lane]}>
-        <Sedan color={MATERIAL.carPaint} ref={car} />
+        <Sedan color={CAR_COLORS.carPaint} ref={car} />
       </group>
     </>
   );

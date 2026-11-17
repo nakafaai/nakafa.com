@@ -14,7 +14,7 @@ import {
   useBumpySphere,
   useClipping,
 } from "@repo/design-system/components/contents/biology/surface";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { CELL_COLORS } from "@repo/design-system/lib/material/cell";
 import { Array as Arr } from "effect";
 import {
   type ReactNode,
@@ -101,7 +101,10 @@ function ClosedBacillus() {
   return (
     <group>
       <mesh castShadow geometry={body} receiveShadow>
-        <EnvelopeMaterial clip={undefined} color={MATERIAL.bacterialEnvelope} />
+        <EnvelopeMaterial
+          clip={undefined}
+          color={CELL_COLORS.bacterialEnvelope}
+        />
       </mesh>
       <CapsuleHalo geometry={body} scale={[1.07, 1.16, 1.16]} />
     </group>
@@ -120,10 +123,13 @@ export function OpenBacillus({ children }: { readonly children: ReactNode }) {
   return (
     <group>
       <mesh castShadow geometry={body} receiveShadow>
-        <EnvelopeMaterial clip={CUTAWAY} color={MATERIAL.bacterialEnvelope} />
+        <EnvelopeMaterial
+          clip={CUTAWAY}
+          color={CELL_COLORS.bacterialEnvelope}
+        />
       </mesh>
       <mesh geometry={membrane}>
-        <EnvelopeMaterial clip={CUTAWAY} color={MATERIAL.plasmaMembrane} />
+        <EnvelopeMaterial clip={CUTAWAY} color={CELL_COLORS.plasmaMembrane} />
       </mesh>
       {children}
     </group>
@@ -164,11 +170,11 @@ function Nucleoid() {
     <group>
       <mesh>
         <tubeGeometry args={[nucleoid, 900, 0.008, 5, false]} />
-        <meshStandardMaterial color={MATERIAL.nucleoid} roughness={0.45} />
+        <meshStandardMaterial color={CELL_COLORS.nucleoid} roughness={0.45} />
       </mesh>
       <mesh position={[0.36, -0.12, -0.08]} rotation={[0.4, 0.3, 0]}>
         <tubeGeometry args={[plasmid, 64, 0.008, 5, true]} />
-        <meshStandardMaterial color={MATERIAL.nucleoid} roughness={0.45} />
+        <meshStandardMaterial color={CELL_COLORS.nucleoid} roughness={0.45} />
       </mesh>
     </group>
   );
@@ -199,7 +205,7 @@ export function Ribosomes() {
   return (
     <instancedMesh args={[undefined, undefined, points.length]} ref={mesh}>
       <icosahedronGeometry args={[0.011, 0]} />
-      <meshStandardMaterial color={MATERIAL.ribosome} roughness={0.55} />
+      <meshStandardMaterial color={CELL_COLORS.ribosome} roughness={0.55} />
     </instancedMesh>
   );
 }
@@ -231,13 +237,16 @@ export function CoccusClusterModel({ scale = 1 }: { scale?: number }) {
           <mesh castShadow geometry={cell} receiveShadow scale={[1, 0.94, 1]}>
             <EnvelopeMaterial
               clip={undefined}
-              color={MATERIAL.staphylococcus}
+              color={CELL_COLORS.staphylococcus}
             />
           </mesh>
           {index % 2 === 0 ? (
             <mesh rotation={[Math.PI / 2, 0, 0]}>
               <torusGeometry args={[0.152, 0.008, 8, 48]} />
-              <meshStandardMaterial color={MATERIAL.septum} roughness={0.6} />
+              <meshStandardMaterial
+                color={CELL_COLORS.septum}
+                roughness={0.6}
+              />
             </mesh>
           ) : null}
         </group>
@@ -288,14 +297,17 @@ export function SpirillumBacteriumModel({ scale = 1 }: { scale?: number }) {
   return (
     <group scale={scale}>
       <mesh castShadow geometry={body} receiveShadow>
-        <EnvelopeMaterial clip={undefined} color={MATERIAL.bacterialEnvelope} />
+        <EnvelopeMaterial
+          clip={undefined}
+          color={CELL_COLORS.bacterialEnvelope}
+        />
       </mesh>
       {Arr.map([0, 1] as const, (end) => (
         <mesh key={end} position={path.getPointAt(end)}>
           <sphereGeometry args={[0.065, 18, 14]} />
           <EnvelopeMaterial
             clip={undefined}
-            color={MATERIAL.bacterialEnvelope}
+            color={CELL_COLORS.bacterialEnvelope}
           />
         </mesh>
       ))}

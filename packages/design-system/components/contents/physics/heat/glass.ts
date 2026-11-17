@@ -7,7 +7,10 @@ import {
 } from "@repo/design-system/components/contents/physics/canvas/paint";
 import type { Point } from "@repo/design-system/components/contents/physics/optics/light";
 import { getColor } from "@repo/design-system/lib/color";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { BENCH_COLORS } from "@repo/design-system/lib/material/bench";
+import { ENERGY_COLORS } from "@repo/design-system/lib/material/energy";
+import { INSTRUMENT_COLORS } from "@repo/design-system/lib/material/instrument";
+import { REAGENT_COLORS } from "@repo/design-system/lib/material/reagent";
 import type p5 from "p5";
 
 /**
@@ -20,16 +23,16 @@ import type p5 from "p5";
 export function paintBench(sketch: p5, top: number) {
   const { height, width } = sketch;
   gradientRect(sketch, { height: top, width, x: 0, y: 0 }, [
-    [0, mix(MATERIAL.wallPlaster, getColor("BLACK"), 0.55)],
-    [1, mix(MATERIAL.wallPlaster, getColor("BLACK"), 0.35)],
+    [0, mix(ENERGY_COLORS.wallPlaster, getColor("BLACK"), 0.55)],
+    [1, mix(ENERGY_COLORS.wallPlaster, getColor("BLACK"), 0.35)],
   ]);
   spotlight(sketch, { x: width * 0.45, y: top * 0.4 }, width * 0.6, {
-    color: MATERIAL.lampLight,
+    color: INSTRUMENT_COLORS.lampLight,
     strength: 0.22,
   });
   gradientRect(sketch, { height: height - top, width, x: 0, y: top }, [
-    [0, MATERIAL.epoxy],
-    [1, mix(MATERIAL.epoxy, getColor("BLACK"), 0.5)],
+    [0, BENCH_COLORS.epoxy],
+    [1, mix(BENCH_COLORS.epoxy, getColor("BLACK"), 0.5)],
   ]);
 }
 
@@ -60,7 +63,7 @@ export function paintBeaker(
     ]
   );
   sketch.noFill();
-  sketch.stroke(fade(MATERIAL.glass, 0.8));
+  sketch.stroke(fade(BENCH_COLORS.glass, 0.8));
   sketch.strokeWeight(3);
   sketch.line(box.x, box.y, box.x, box.y + box.height);
   sketch.line(box.x + box.width, box.y, box.x + box.width, box.y + box.height);
@@ -98,15 +101,15 @@ export function paintThermometer(
   const { bottom, top } = place;
   const tall = bottom.y - top;
   sketch.noStroke();
-  sketch.fill(fade(MATERIAL.glass, 0.85));
+  sketch.fill(fade(BENCH_COLORS.glass, 0.85));
   sketch.rect(bottom.x - 6, top, 12, tall, 6);
-  sketch.fill(MATERIAL.mercury);
+  sketch.fill(REAGENT_COLORS.mercury);
   sketch.circle(bottom.x, bottom.y, 18);
   const share = Math.min(
     Math.max((scale.temperature - scale.low) / (scale.high - scale.low), 0),
     1
   );
-  sketch.fill(MATERIAL.dialNeedle);
+  sketch.fill(INSTRUMENT_COLORS.dialNeedle);
   sketch.circle(bottom.x, bottom.y, 13);
   sketch.rect(bottom.x - 2.5, bottom.y - tall * share, 5, tall * share);
   sketch.stroke(fade(getColor("NEUTRAL", 800), 0.7));

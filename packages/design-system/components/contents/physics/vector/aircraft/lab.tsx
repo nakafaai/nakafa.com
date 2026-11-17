@@ -29,7 +29,9 @@ import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { P5Sketch } from "@repo/design-system/components/visual/sketch";
 import { getColor } from "@repo/design-system/lib/color";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { CAR_COLORS } from "@repo/design-system/lib/material/car";
+import { INSTRUMENT_COLORS } from "@repo/design-system/lib/material/instrument";
+import { MACHINE_COLORS } from "@repo/design-system/lib/material/machine";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Schema } from "effect";
 import type p5 from "p5";
@@ -50,8 +52,8 @@ const TILE = 640;
 
 /** The airliner from above, nose up the canvas before it turns to its heading. */
 function paintAirliner(sketch: p5, size: number) {
-  const body = MATERIAL.deckWhite;
-  const shade = mix(MATERIAL.deckWhite, MATERIAL.aluminium, 0.6);
+  const body = MACHINE_COLORS.deckWhite;
+  const shade = mix(MACHINE_COLORS.deckWhite, INSTRUMENT_COLORS.aluminium, 0.6);
   sketch.noStroke();
   sketch.fill(shade);
   sketch.beginShape();
@@ -77,10 +79,10 @@ function paintAirliner(sketch: p5, size: number) {
     size * 0.98,
     size * 0.055
   );
-  sketch.fill(MATERIAL.aluminium);
+  sketch.fill(INSTRUMENT_COLORS.aluminium);
   sketch.rect(-size * 0.2, size * 0.02, size * 0.05, size * 0.12, size * 0.02);
   sketch.rect(size * 0.15, size * 0.02, size * 0.05, size * 0.12, size * 0.02);
-  sketch.fill(MATERIAL.tintedGlass);
+  sketch.fill(CAR_COLORS.tintedGlass);
   sketch.rect(
     -size * 0.03,
     -size * 0.47,
@@ -146,7 +148,7 @@ function crosswindProgram(sketch: p5, read: () => CrosswindFrame) {
           const radius = 34 + hashUnit(index + puff, 4) * 34;
           sketch.fill(fade(getColor("BLACK"), 0.07));
           sketch.circle(x + dx + 34, y + dy + 46, radius * 2);
-          sketch.fill(fade(MATERIAL.cloudTop, 0.32));
+          sketch.fill(fade(MACHINE_COLORS.cloudTop, 0.32));
           sketch.circle(x + dx, y + dy, radius * 2);
         }
       }

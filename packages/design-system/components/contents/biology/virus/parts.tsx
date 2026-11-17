@@ -13,7 +13,7 @@ import {
   helixPath,
   icosahedronFaces,
 } from "@repo/design-system/components/contents/biology/virus/capsid";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { VIRION_COLORS } from "@repo/design-system/lib/material/virion";
 import { Array as Arr } from "effect";
 import { useEffect, useMemo, useRef } from "react";
 import {
@@ -76,13 +76,16 @@ export function HelicalVirusModel({ scale = 1 }: { scale?: number }) {
         <meshPhysicalMaterial
           clearcoat={0.35}
           clearcoatRoughness={0.4}
-          color={MATERIAL.tmvCoat}
+          color={VIRION_COLORS.tmvCoat}
           roughness={0.55}
         />
       </Instances>
       <mesh castShadow>
         <tubeGeometry args={[rna, 1600, 0.006, 5, false]} />
-        <meshStandardMaterial color={MATERIAL.nucleicAcid} roughness={0.45} />
+        <meshStandardMaterial
+          color={VIRION_COLORS.nucleicAcid}
+          roughness={0.45}
+        />
       </mesh>
     </group>
   );
@@ -138,15 +141,23 @@ export function IcosahedralCapsid({
   return (
     <group>
       <mesh geometry={shell} receiveShadow scale={radius * 0.96}>
-        <EnvelopeMaterial clip={clip} color={MATERIAL.capsidProtein} wedge />
+        <EnvelopeMaterial
+          clip={clip}
+          color={VIRION_COLORS.capsidProtein}
+          wedge
+        />
       </mesh>
       <Instances placements={spots.hexons}>
         <cylinderGeometry args={[size * 0.4, size * 0.48, size * 0.28, 6]} />
-        <EnvelopeMaterial clip={clip} color={MATERIAL.capsidProtein} wedge />
+        <EnvelopeMaterial
+          clip={clip}
+          color={VIRION_COLORS.capsidProtein}
+          wedge
+        />
       </Instances>
       <Instances placements={spots.pentons}>
         <cylinderGeometry args={[size * 0.36, size * 0.46, size * 0.32, 5]} />
-        <EnvelopeMaterial clip={clip} color={MATERIAL.penton} wedge />
+        <EnvelopeMaterial clip={clip} color={VIRION_COLORS.penton} wedge />
       </Instances>
     </group>
   );
@@ -177,7 +188,10 @@ export function PolyhedralVirusModel({ scale = 1 }: { scale?: number }) {
         }))}
       >
         <cylinderGeometry args={[0.006, 0.008, 0.2, 6]} />
-        <meshStandardMaterial color={MATERIAL.adenoFibre} roughness={0.55} />
+        <meshStandardMaterial
+          color={VIRION_COLORS.adenoFibre}
+          roughness={0.55}
+        />
       </Instances>
       <Instances
         placements={Arr.map(fibres, ({ normal, position }) => ({
@@ -193,7 +207,7 @@ export function PolyhedralVirusModel({ scale = 1 }: { scale?: number }) {
         <sphereGeometry args={[0.024, 14, 10]} />
         <meshPhysicalMaterial
           clearcoat={0.4}
-          color={MATERIAL.adenoFibre}
+          color={VIRION_COLORS.adenoFibre}
           roughness={0.5}
         />
       </Instances>
@@ -269,23 +283,43 @@ export function EnvelopedVirusModel({ scale = 1 }: { scale?: number }) {
     <group scale={scale}>
       <group ref={body}>
         <mesh castShadow geometry={envelope} receiveShadow>
-          <EnvelopeMaterial clip={cut} color={MATERIAL.viralEnvelope} wedge />
+          <EnvelopeMaterial
+            clip={cut}
+            color={VIRION_COLORS.viralEnvelope}
+            wedge
+          />
         </mesh>
         <mesh scale={0.93}>
           <sphereGeometry args={[INFLUENZA.radius, 48, 32]} />
-          <EnvelopeMaterial clip={cut} color={MATERIAL.matrixProtein} wedge />
+          <EnvelopeMaterial
+            clip={cut}
+            color={VIRION_COLORS.matrixProtein}
+            wedge
+          />
         </mesh>
         <Instances placements={spikes.ha}>
           <cylinderGeometry args={[0.016, 0.009, 0.07, 7]} />
-          <EnvelopeMaterial clip={cut} color={MATERIAL.haemagglutinin} wedge />
+          <EnvelopeMaterial
+            clip={cut}
+            color={VIRION_COLORS.haemagglutinin}
+            wedge
+          />
         </Instances>
         <Instances placements={spikes.naStalk}>
           <cylinderGeometry args={[0.004, 0.004, 0.06, 5]} />
-          <EnvelopeMaterial clip={cut} color={MATERIAL.neuraminidase} wedge />
+          <EnvelopeMaterial
+            clip={cut}
+            color={VIRION_COLORS.neuraminidase}
+            wedge
+          />
         </Instances>
         <Instances placements={spikes.naHead}>
           <boxGeometry args={[0.034, 0.034, 0.034]} />
-          <EnvelopeMaterial clip={cut} color={MATERIAL.neuraminidase} wedge />
+          <EnvelopeMaterial
+            clip={cut}
+            color={VIRION_COLORS.neuraminidase}
+            wedge
+          />
         </Instances>
         {Arr.map(SEGMENTS, (segment) => (
           <Ribonucleoprotein
@@ -330,7 +364,7 @@ function Ribonucleoprotein({
           <tubeGeometry args={[curve, 120, 0.011, 6, false]} />
           <meshPhysicalMaterial
             clearcoat={0.3}
-            color={MATERIAL.nucleocapsid}
+            color={VIRION_COLORS.nucleocapsid}
             roughness={0.5}
           />
         </mesh>

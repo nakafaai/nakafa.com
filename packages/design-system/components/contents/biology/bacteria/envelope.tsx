@@ -6,7 +6,7 @@ import {
   surfaceBump,
 } from "@repo/design-system/components/contents/biology/bacteria/cell";
 import { useVisualScene } from "@repo/design-system/components/visual/card";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { CELL_COLORS } from "@repo/design-system/lib/material/cell";
 import { Array as Arr } from "effect";
 import { useEffect, useLayoutEffect, useMemo, useRef } from "react";
 import {
@@ -76,7 +76,7 @@ export function CapsuleHalo({
       <meshPhysicalMaterial
         clearcoat={1}
         clearcoatRoughness={0.1}
-        color={MATERIAL.bacterialCapsule}
+        color={CELL_COLORS.bacterialCapsule}
         depthWrite={false}
         opacity={0.16}
         roughness={0.15}
@@ -131,7 +131,7 @@ export function Fimbriae({
   return (
     <instancedMesh args={[undefined, undefined, count]} ref={mesh}>
       <cylinderGeometry args={[0.0045, 0.0055, 1, 5]} />
-      <meshStandardMaterial color={MATERIAL.fimbria} roughness={0.6} />
+      <meshStandardMaterial color={CELL_COLORS.fimbria} roughness={0.6} />
     </instancedMesh>
   );
 }
@@ -191,14 +191,14 @@ export function Flagellum({
           <tubeGeometry args={[curve, 220, 0.011, 6, false]} />
           <meshPhysicalMaterial
             clearcoat={0.5}
-            color={MATERIAL.flagellin}
+            color={CELL_COLORS.flagellin}
             roughness={0.4}
           />
         </mesh>
       </group>
       <mesh rotation={[0, 0, Math.PI / 2]}>
         <torusGeometry args={[0.02, 0.008, 6, 14]} />
-        <meshStandardMaterial color={MATERIAL.flagellin} roughness={0.5} />
+        <meshStandardMaterial color={CELL_COLORS.flagellin} roughness={0.5} />
       </mesh>
     </group>
   );

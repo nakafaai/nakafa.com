@@ -34,7 +34,8 @@ import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { P5Sketch } from "@repo/design-system/components/visual/sketch";
 import { getColor } from "@repo/design-system/lib/color";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { INSTRUMENT_COLORS } from "@repo/design-system/lib/material/instrument";
+import { MACHINE_COLORS } from "@repo/design-system/lib/material/machine";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr, Schema } from "effect";
 import type p5 from "p5";
@@ -57,22 +58,22 @@ function paintCircuit(sketch: p5, frame: CellFrame) {
   wire(
     sketch,
     [at(0.16, 0.33), at(0.16, 0.48), at(0.42, 0.48)],
-    MATERIAL.trolleyPaint
+    INSTRUMENT_COLORS.trolleyPaint
   );
   wire(
     sketch,
     [at(0.62, 0.48), at(0.86, 0.48), at(0.86, 0.33), at(0.44, 0.33)],
-    MATERIAL.hullRed
+    MACHINE_COLORS.hullRed
   );
   wire(
     sketch,
     [at(0.16, 0.33), at(0.16, 0.13), at(0.24, 0.13)],
-    MATERIAL.trolleyPaint
+    INSTRUMENT_COLORS.trolleyPaint
   );
   wire(
     sketch,
     [at(0.36, 0.13), at(0.44, 0.13), at(0.44, 0.33)],
-    MATERIAL.hullRed
+    MACHINE_COLORS.hullRed
   );
   paintResistor(sketch, at(0.42, 0.48), at(0.62, 0.48), width * 0.16);
   paintCell(sketch, at(0.3, 0.33), width * 0.2, 1);

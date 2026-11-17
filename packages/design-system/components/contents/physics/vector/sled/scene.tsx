@@ -15,7 +15,8 @@ import {
 } from "@repo/design-system/components/three/repeat";
 import { SurfaceMaterial } from "@repo/design-system/components/three/surface/material";
 import { useVisualScene } from "@repo/design-system/components/visual/card";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { CAR_COLORS } from "@repo/design-system/lib/material/car";
+import { MACHINE_COLORS } from "@repo/design-system/lib/material/machine";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr } from "effect";
 import { useEffect, useMemo, useRef } from "react";
@@ -113,7 +114,7 @@ function Sled() {
           receiveShadow
         >
           <SurfaceMaterial
-            color={MATERIAL.ash}
+            color={MACHINE_COLORS.ash}
             repeat={[3, 3]}
             surface="wood"
           />
@@ -122,7 +123,7 @@ function Sled() {
       <Repeat placements={SHOE}>
         <boxGeometry args={[0.7, 0.008, 0.024]} />
         <SurfaceMaterial
-          color={MATERIAL.chrome}
+          color={CAR_COLORS.chrome}
           metalness={1}
           roughness={0.7}
           surface="brushed"
@@ -130,32 +131,36 @@ function Sled() {
       </Repeat>
       <Repeat placements={KNEES}>
         <boxGeometry args={[0.03, 0.1, 0.024]} />
-        <SurfaceMaterial color={MATERIAL.ash} surface="wood" />
+        <SurfaceMaterial color={MACHINE_COLORS.ash} surface="wood" />
       </Repeat>
       <Repeat placements={SLATS}>
         <boxGeometry args={[0.72, 0.016, 0.07]} />
-        <SurfaceMaterial color={MATERIAL.ash} repeat={[2, 1]} surface="wood" />
+        <SurfaceMaterial
+          color={MACHINE_COLORS.ash}
+          repeat={[2, 1]}
+          surface="wood"
+        />
       </Repeat>
       <mesh castShadow position={[0.3, 0.12, 0]} rotation={[Math.PI / 2, 0, 0]}>
         <cylinderGeometry args={[0.014, 0.014, 0.44, 12]} />
-        <SurfaceMaterial color={MATERIAL.ash} surface="wood" />
+        <SurfaceMaterial color={MACHINE_COLORS.ash} surface="wood" />
       </mesh>
       <Repeat placements={LOGS}>
         <cylinderGeometry args={[0.05, 0.055, 0.5, 14]} />
         <SurfaceMaterial
           attach="material-0"
-          color={MATERIAL.logBark}
+          color={MACHINE_COLORS.logBark}
           repeat={[2, 1]}
           surface="bark"
         />
         <SurfaceMaterial
           attach="material-1"
-          color={MATERIAL.ash}
+          color={MACHINE_COLORS.ash}
           surface="wood"
         />
         <SurfaceMaterial
           attach="material-2"
-          color={MATERIAL.ash}
+          color={MACHINE_COLORS.ash}
           surface="wood"
         />
       </Repeat>
@@ -237,7 +242,7 @@ export function SledScene({
       <group ref={holder}>
         <Sled />
         <Rod
-          color={MATERIAL.hemp}
+          color={MACHINE_COLORS.hemp}
           from={HITCH}
           radius={0.008}
           to={[

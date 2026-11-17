@@ -38,7 +38,10 @@ import {
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { P5Sketch } from "@repo/design-system/components/visual/sketch";
 import { getColor } from "@repo/design-system/lib/color";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { BENCH_COLORS } from "@repo/design-system/lib/material/bench";
+import { CAR_COLORS } from "@repo/design-system/lib/material/car";
+import { ENERGY_COLORS } from "@repo/design-system/lib/material/energy";
+import { INSTRUMENT_COLORS } from "@repo/design-system/lib/material/instrument";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr, Schema } from "effect";
 import type p5 from "p5";
@@ -57,8 +60,8 @@ const CHARGE_COLOR = PLOT_COLORS.teal;
 
 /** The tint of each bulb's light: a filament glows warm, an LED white. */
 const BEAM_TINT = {
-  filament: MATERIAL.filamentGlow,
-  led: MATERIAL.ledGlow,
+  filament: ENERGY_COLORS.filamentGlow,
+  led: ENERGY_COLORS.ledGlow,
 } as const;
 
 /** What the sketch reads on every frame: the bulb in the flashlight. */
@@ -69,15 +72,15 @@ type FlashlightFrame = typeof FlashlightFrameSchema.Type;
 function paintRoom(sketch: p5, table: number, wall: number) {
   const { height, width } = sketch;
   gradientRect(sketch, { height: table, width: wall, x: 0, y: 0 }, [
-    [0, mix(MATERIAL.wallPlaster, getColor("BLACK"), 0.93)],
-    [1, mix(MATERIAL.wallPlaster, getColor("BLACK"), 0.82)],
+    [0, mix(ENERGY_COLORS.wallPlaster, getColor("BLACK"), 0.93)],
+    [1, mix(ENERGY_COLORS.wallPlaster, getColor("BLACK"), 0.82)],
   ]);
   gradientRect(
     sketch,
     { height, width: width - wall, x: wall, y: 0 },
     [
-      [0, mix(MATERIAL.wallPlaster, getColor("BLACK"), 0.9)],
-      [1, mix(MATERIAL.wallPlaster, getColor("BLACK"), 0.75)],
+      [0, mix(ENERGY_COLORS.wallPlaster, getColor("BLACK"), 0.9)],
+      [1, mix(ENERGY_COLORS.wallPlaster, getColor("BLACK"), 0.75)],
     ],
     true
   );
@@ -85,8 +88,8 @@ function paintRoom(sketch: p5, table: number, wall: number) {
     sketch,
     { height: height - table, width: wall, x: 0, y: table },
     [
-      [0, mix(MATERIAL.crateWood, getColor("BLACK"), 0.55)],
-      [1, mix(MATERIAL.crateWood, getColor("BLACK"), 0.85)],
+      [0, mix(ENERGY_COLORS.crateWood, getColor("BLACK"), 0.55)],
+      [1, mix(ENERGY_COLORS.crateWood, getColor("BLACK"), 0.85)],
     ]
   );
 }
@@ -131,9 +134,9 @@ function paintTorch(
     { blur: 16, color: fade(getColor("BLACK"), 0.7), drop: 8 },
     () => {
       gradientRect(sketch, body, [
-        [0, MATERIAL.panSteel],
-        [0.45, MATERIAL.castIron],
-        [1, mix(MATERIAL.castIron, getColor("BLACK"), 0.6)],
+        [0, BENCH_COLORS.panSteel],
+        [0.45, CAR_COLORS.castIron],
+        [1, mix(CAR_COLORS.castIron, getColor("BLACK"), 0.6)],
       ]);
     }
   );
@@ -144,9 +147,9 @@ function paintTorch(
   };
   for (let index = 0; index < 2; index += 1) {
     const left = body.x + body.width * (0.06 + index * 0.4);
-    sketch.fill(MATERIAL.battery);
+    sketch.fill(BENCH_COLORS.battery);
     sketch.rect(left, cell.y, cell.width, cell.height, 3);
-    sketch.fill(MATERIAL.brass);
+    sketch.fill(INSTRUMENT_COLORS.brass);
     sketch.rect(
       left + cell.width,
       cell.y + cell.height * 0.3,
@@ -180,7 +183,7 @@ function paintTorch(
     sketch.endShape();
   }
   sketch.noStroke();
-  sketch.fill(MATERIAL.chrome);
+  sketch.fill(CAR_COLORS.chrome);
   sketch.quad(
     head.x,
     body.y,
@@ -196,7 +199,7 @@ function paintTorch(
     { x: head.x + body.height * 0.4, y: head.y },
     body.height * (0.8 + heat),
     {
-      color: MATERIAL.filamentGlow,
+      color: ENERGY_COLORS.filamentGlow,
       strength: 0.6 * heat,
     }
   );

@@ -22,7 +22,10 @@ import {
   MetalMaterial,
 } from "@repo/design-system/components/three/physical";
 import { useVisualScene } from "@repo/design-system/components/visual/card";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { BENCH_COLORS } from "@repo/design-system/lib/material/bench";
+import { BIOLOGY_COLORS } from "@repo/design-system/lib/material/biology";
+import { CAR_COLORS } from "@repo/design-system/lib/material/car";
+import { CELL_COLORS } from "@repo/design-system/lib/material/cell";
 import { Array as Arr } from "effect";
 import { useRef } from "react";
 import type { Group } from "three";
@@ -82,14 +85,14 @@ export function OsmosisScene({
               <sphereGeometry
                 args={[TUBE.radius, 24, 12, 0, Math.PI * 2, 0, Math.PI / 2]}
               />
-              <GlassMaterial color={MATERIAL.glass} opacity={0.3} />
+              <GlassMaterial color={BENCH_COLORS.glass} opacity={0.3} />
             </mesh>
             <mesh position={[0, FOOT + 0.055, 0]}>
               <cylinderGeometry
                 args={[TUBE.radius - 0.0012, TUBE.radius - 0.0012, 0.09, 24]}
               />
               <LiquidMaterial
-                color={MATERIAL.sucrose}
+                color={BIOLOGY_COLORS.sucrose}
                 opacity={0.08 + strip.concentration * 0.25}
               />
             </mesh>
@@ -104,10 +107,13 @@ export function OsmosisScene({
               <boxGeometry
                 args={[0.008, lengthAfter(STRIP, strip.change), 0.008]}
               />
-              <meshStandardMaterial color={MATERIAL.potato} roughness={0.75} />
+              <meshStandardMaterial
+                color={BIOLOGY_COLORS.potato}
+                roughness={0.75}
+              />
             </mesh>
             <ThreeLabel
-              color={index === chosen ? MATERIAL.auxin : ink}
+              color={index === chosen ? BIOLOGY_COLORS.auxin : ink}
               fontSize="compact"
               position={[0, 0.02, 0.05]}
             >
@@ -128,11 +134,17 @@ function Rack({ width }: { readonly width: number }) {
     <group>
       <mesh castShadow position={[0, 0.005, 0]} receiveShadow>
         <boxGeometry args={[length, 0.01, 0.05]} />
-        <meshStandardMaterial color={MATERIAL.blockWood} roughness={0.75} />
+        <meshStandardMaterial
+          color={BIOLOGY_COLORS.blockWood}
+          roughness={0.75}
+        />
       </mesh>
       <mesh castShadow position={[0, 0.09, 0]}>
         <boxGeometry args={[length, 0.008, 0.05]} />
-        <meshStandardMaterial color={MATERIAL.blockWood} roughness={0.75} />
+        <meshStandardMaterial
+          color={BIOLOGY_COLORS.blockWood}
+          roughness={0.75}
+        />
       </mesh>
       {Arr.map([-1, 1] as const, (side) => (
         <mesh
@@ -141,7 +153,10 @@ function Rack({ width }: { readonly width: number }) {
           position={[side * (length / 2 - 0.005), 0.05, 0]}
         >
           <boxGeometry args={[0.01, 0.09, 0.05]} />
-          <meshStandardMaterial color={MATERIAL.blockWood} roughness={0.75} />
+          <meshStandardMaterial
+            color={BIOLOGY_COLORS.blockWood}
+            roughness={0.75}
+          />
         </mesh>
       ))}
     </group>
@@ -178,25 +193,31 @@ function Cell({ fill }: { readonly fill: number }) {
       <SimulationTicker running={playing} />
       <mesh>
         <torusGeometry args={[0.075, 0.005, 16, 72]} />
-        <MetalMaterial color={MATERIAL.chrome} roughness={0.25} />
+        <MetalMaterial color={CAR_COLORS.chrome} roughness={0.25} />
       </mesh>
       <mesh position={[0, 0, -0.002]}>
         <circleGeometry args={[0.075, 72]} />
-        <GlassMaterial color={MATERIAL.lensBlue} opacity={0.12} />
+        <GlassMaterial color={BIOLOGY_COLORS.lensBlue} opacity={0.12} />
       </mesh>
       <mesh castShadow position={[0, (-0.08 - CELL[1]) / 2, 0]}>
         <cylinderGeometry args={[0.005, 0.006, CELL[1] - 0.08, 16]} />
-        <meshStandardMaterial color={MATERIAL.lampShade} roughness={0.5} />
+        <meshStandardMaterial
+          color={BIOLOGY_COLORS.lampShade}
+          roughness={0.5}
+        />
       </mesh>
       <mesh castShadow position={[0, 0.004 - CELL[1], 0]}>
         <cylinderGeometry args={[0.03, 0.034, 0.008, 32]} />
-        <meshStandardMaterial color={MATERIAL.lampShade} roughness={0.5} />
+        <meshStandardMaterial
+          color={BIOLOGY_COLORS.lampShade}
+          roughness={0.5}
+        />
       </mesh>
       <group ref={group} scale={0.9}>
         <RoundedBox args={[0.1, 0.07, 0.07]} radius={0.012}>
           <meshPhysicalMaterial
             clearcoat={0.4}
-            color={MATERIAL.cellWall}
+            color={CELL_COLORS.cellWall}
             depthWrite={false}
             opacity={0.28}
             roughness={0.4}
@@ -206,7 +227,7 @@ function Cell({ fill }: { readonly fill: number }) {
         <group ref={protoplast}>
           <RoundedBox args={[0.094, 0.064, 0.064]} radius={0.014}>
             <meshPhysicalMaterial
-              color={MATERIAL.cytoplasm}
+              color={CELL_COLORS.cytoplasm}
               depthWrite={false}
               opacity={0.45}
               roughness={0.5}
@@ -216,7 +237,7 @@ function Cell({ fill }: { readonly fill: number }) {
           <mesh scale={[0.04, 0.025, 0.025]}>
             <sphereGeometry args={[1, 32, 20]} />
             <meshPhysicalMaterial
-              color={MATERIAL.vacuole}
+              color={CELL_COLORS.vacuole}
               opacity={0.55}
               roughness={0.2}
               transparent
@@ -225,7 +246,7 @@ function Cell({ fill }: { readonly fill: number }) {
           <mesh position={[-0.03, 0.012, 0.012]}>
             <sphereGeometry args={[0.008, 20, 14]} />
             <meshStandardMaterial
-              color={MATERIAL.onionNucleus}
+              color={BIOLOGY_COLORS.onionNucleus}
               roughness={0.5}
             />
           </mesh>
@@ -240,7 +261,10 @@ function Cell({ fill }: { readonly fill: number }) {
               scale={[1, 0.8, 0.8]}
             >
               <sphereGeometry args={[0.004, 12, 8]} />
-              <meshStandardMaterial color={MATERIAL.starch} roughness={0.6} />
+              <meshStandardMaterial
+                color={BIOLOGY_COLORS.starch}
+                roughness={0.6}
+              />
             </mesh>
           ))}
         </group>

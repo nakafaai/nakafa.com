@@ -30,7 +30,8 @@ import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { P5Sketch } from "@repo/design-system/components/visual/sketch";
 import { getColor } from "@repo/design-system/lib/color";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { INSTRUMENT_COLORS } from "@repo/design-system/lib/material/instrument";
+import { MACHINE_COLORS } from "@repo/design-system/lib/material/machine";
 import { Schema } from "effect";
 import type p5 from "p5";
 import { type ReactNode, useState } from "react";
@@ -81,12 +82,16 @@ function switchProgram(sketch: p5, read: () => SwitchFrame) {
     sketch.noStroke();
     sketch.fill(fade(getColor("BLACK"), 0.55 * (1 - frame.light)));
     sketch.rect(0, 0, width, height);
-    wire(sketch, [at(0.06, 0.1), at(0.94, 0.1)], MATERIAL.hullRed);
-    wire(sketch, [at(0.06, 0.9), at(0.94, 0.9)], MATERIAL.trolleyPaint);
-    wire(sketch, [at(0.24, 0.1), at(0.24, 0.2)], MATERIAL.hullRed);
+    wire(sketch, [at(0.06, 0.1), at(0.94, 0.1)], MACHINE_COLORS.hullRed);
+    wire(
+      sketch,
+      [at(0.06, 0.9), at(0.94, 0.9)],
+      INSTRUMENT_COLORS.trolleyPaint
+    );
+    wire(sketch, [at(0.24, 0.1), at(0.24, 0.2)], MACHINE_COLORS.hullRed);
     paintResistor(sketch, at(0.24, 0.2), at(0.24, 0.4), height * 0.16);
-    wire(sketch, [at(0.24, 0.4), at(0.24, 0.6)], MATERIAL.signalAmber);
-    wire(sketch, [at(0.24, 0.5), at(0.6, 0.5)], MATERIAL.signalAmber);
+    wire(sketch, [at(0.24, 0.4), at(0.24, 0.6)], MACHINE_COLORS.signalAmber);
+    wire(sketch, [at(0.24, 0.5), at(0.6, 0.5)], MACHINE_COLORS.signalAmber);
     terminal(sketch, at(0.24, 0.5));
     paintLdr(
       sketch,
@@ -94,22 +99,26 @@ function switchProgram(sketch: p5, read: () => SwitchFrame) {
       Math.min(width, height) * 0.12,
       frame.light
     );
-    wire(sketch, [at(0.24, 0.75), at(0.24, 0.9)], MATERIAL.trolleyPaint);
+    wire(
+      sketch,
+      [at(0.24, 0.75), at(0.24, 0.9)],
+      INSTRUMENT_COLORS.trolleyPaint
+    );
     const legs = paintTransistor(
       sketch,
       at(0.64, 0.46),
       Math.min(width, height) * 0.1
     );
-    wire(sketch, [at(0.6, 0.5), legs.base], MATERIAL.signalAmber);
+    wire(sketch, [at(0.6, 0.5), legs.base], MACHINE_COLORS.signalAmber);
     wire(
       sketch,
       [legs.emitter, { x: legs.emitter.x, y: height * 0.9 }],
-      MATERIAL.trolleyPaint
+      INSTRUMENT_COLORS.trolleyPaint
     );
     wire(
       sketch,
       [legs.collector, { x: width * 0.8, y: legs.collector.y }, at(0.8, 0.36)],
-      MATERIAL.hullRed
+      MACHINE_COLORS.hullRed
     );
     paintBulb(
       sketch,
@@ -117,7 +126,7 @@ function switchProgram(sketch: p5, read: () => SwitchFrame) {
       Math.min(width, height) * 0.12,
       frame.on ? 1 : 0
     );
-    wire(sketch, [at(0.8, 0.2), at(0.8, 0.1)], MATERIAL.hullRed);
+    wire(sketch, [at(0.8, 0.2), at(0.8, 0.1)], MACHINE_COLORS.hullRed);
     const sign = {
       align: "left",
       baseline: "middle",

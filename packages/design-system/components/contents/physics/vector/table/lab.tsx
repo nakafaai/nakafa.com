@@ -30,7 +30,9 @@ import {
 } from "@repo/design-system/components/visual/card";
 import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { CAR_COLORS } from "@repo/design-system/lib/material/car";
+import { INSTRUMENT_COLORS } from "@repo/design-system/lib/material/instrument";
+import { MACHINE_COLORS } from "@repo/design-system/lib/material/machine";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr, Schema } from "effect";
 import { type ReactNode, Suspense, useMemo, useState } from "react";
@@ -106,7 +108,7 @@ function Table() {
       <mesh castShadow position={[0, TOP - 0.006, 0]} receiveShadow>
         <cylinderGeometry args={[RADIUS, RADIUS - 0.002, 0.012, 96]} />
         <SurfaceMaterial
-          color={MATERIAL.aluminium}
+          color={INSTRUMENT_COLORS.aluminium}
           metalness={1}
           roughness={0.5}
           surface="brushed"
@@ -114,16 +116,16 @@ function Table() {
       </mesh>
       <Repeat placements={LONG_TICKS}>
         <boxGeometry args={[0.03, 0.001, 0.0032]} />
-        <meshStandardMaterial color={MATERIAL.tyre} roughness={0.6} />
+        <meshStandardMaterial color={CAR_COLORS.tyre} roughness={0.6} />
       </Repeat>
       <Repeat placements={SHORT_TICKS}>
         <boxGeometry args={[0.016, 0.001, 0.0022]} />
-        <meshStandardMaterial color={MATERIAL.tyre} roughness={0.6} />
+        <meshStandardMaterial color={CAR_COLORS.tyre} roughness={0.6} />
       </Repeat>
       <mesh castShadow position={[0, TOP + 0.012, 0]}>
         <cylinderGeometry args={[0.003, 0.003, 0.024, 12]} />
         <SurfaceMaterial
-          color={MATERIAL.brass}
+          color={INSTRUMENT_COLORS.brass}
           metalness={1}
           roughness={0.4}
           surface="brushed"
@@ -132,7 +134,7 @@ function Table() {
       <mesh castShadow position={[0, TOP / 2, 0]}>
         <cylinderGeometry args={[0.012, 0.012, TOP, 20]} />
         <SurfaceMaterial
-          color={MATERIAL.chrome}
+          color={CAR_COLORS.chrome}
           metalness={1}
           roughness={0.35}
           surface="brushed"
@@ -140,12 +142,12 @@ function Table() {
       </mesh>
       <mesh castShadow position={[0, 0.05, 0]}>
         <cylinderGeometry args={[0.03, 0.04, 0.1, 24]} />
-        <SurfaceMaterial color={MATERIAL.standBlue} surface="paint" />
+        <SurfaceMaterial color={MACHINE_COLORS.standBlue} surface="paint" />
       </mesh>
       {Arr.map(FEET, (angle) => (
         <group key={angle}>
           <Rod
-            color={MATERIAL.standBlue}
+            color={MACHINE_COLORS.standBlue}
             from={onTable(0.02, angle, 0.06)}
             radius={0.012}
             surface="paint"
@@ -153,7 +155,7 @@ function Table() {
           />
           <mesh castShadow position={onTable(0.26, angle, 0.012)}>
             <cylinderGeometry args={[0.012, 0.012, 0.024, 16]} />
-            <SurfaceMaterial color={MATERIAL.tyre} surface="rubber" />
+            <SurfaceMaterial color={CAR_COLORS.tyre} surface="rubber" />
           </mesh>
         </group>
       ))}
@@ -170,9 +172,9 @@ function Pulley({ pull, ring }: { pull: Pull; ring: CoordinateTuple }) {
 
   return (
     <group>
-      <Rod color={MATERIAL.cotton} from={ring} radius={0.0007} to={top} />
+      <Rod color={MACHINE_COLORS.cotton} from={ring} radius={0.0007} to={top} />
       <Rod
-        color={MATERIAL.cotton}
+        color={MACHINE_COLORS.cotton}
         from={onTable(PULLEY + 0.012, pull.angle, STRING - 0.012)}
         radius={0.0007}
         to={hook}
@@ -184,7 +186,7 @@ function Pulley({ pull, ring }: { pull: Pull; ring: CoordinateTuple }) {
         <mesh castShadow rotation={[Math.PI / 2, 0, 0]}>
           <cylinderGeometry args={[0.013, 0.013, 0.005, 28]} />
           <SurfaceMaterial
-            color={MATERIAL.brass}
+            color={INSTRUMENT_COLORS.brass}
             metalness={1}
             roughness={0.4}
             surface="brushed"
@@ -193,7 +195,7 @@ function Pulley({ pull, ring }: { pull: Pull; ring: CoordinateTuple }) {
         <mesh rotation={[0, 0, 0]}>
           <torusGeometry args={[0.013, 0.0012, 8, 32]} />
           <meshStandardMaterial
-            color={MATERIAL.castIron}
+            color={CAR_COLORS.castIron}
             metalness={1}
             roughness={0.5}
           />
@@ -204,7 +206,7 @@ function Pulley({ pull, ring }: { pull: Pull; ring: CoordinateTuple }) {
         position={onTable(RADIUS - 0.004, pull.angle, TOP - 0.02)}
       >
         <boxGeometry args={[0.022, 0.03, 0.022]} />
-        <SurfaceMaterial color={MATERIAL.standBlue} surface="paint" />
+        <SurfaceMaterial color={MACHINE_COLORS.standBlue} surface="paint" />
       </mesh>
       {Arr.makeBy(discs, (index) => (
         <mesh
@@ -214,7 +216,7 @@ function Pulley({ pull, ring }: { pull: Pull; ring: CoordinateTuple }) {
         >
           <cylinderGeometry args={[0.019, 0.019, 0.0075, 28]} />
           <SurfaceMaterial
-            color={MATERIAL.brass}
+            color={INSTRUMENT_COLORS.brass}
             metalness={1}
             roughness={0.45}
             surface="brushed"
@@ -238,7 +240,7 @@ function TableScene({ pulls }: { pulls: readonly PlacedPull[] }) {
       <mesh position={ring} rotation={[Math.PI / 2, 0, 0]}>
         <torusGeometry args={[0.008, 0.0016, 12, 32]} />
         <meshStandardMaterial
-          color={MATERIAL.chrome}
+          color={CAR_COLORS.chrome}
           metalness={1}
           roughness={0.2}
         />

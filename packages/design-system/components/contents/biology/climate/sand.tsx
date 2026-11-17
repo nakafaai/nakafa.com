@@ -5,7 +5,7 @@ import {
   hashUnit,
   valueNoise,
 } from "@repo/design-system/components/contents/simulation/grain";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { ECOLOGY_COLORS } from "@repo/design-system/lib/material/ecology";
 import { Array as Arr } from "effect";
 import { useEffect, useMemo } from "react";
 import {
@@ -224,7 +224,7 @@ export function SandBed({
         <meshStandardMaterial
           bumpMap={bump}
           bumpScale={0.6}
-          color={MATERIAL.reefSand}
+          color={ECOLOGY_COLORS.reefSand}
           map={color}
           roughness={0.95}
         />
@@ -233,7 +233,7 @@ export function SandBed({
         <meshStandardMaterial
           bumpMap={bump}
           bumpScale={0.6}
-          color={MATERIAL.reefSand}
+          color={ECOLOGY_COLORS.reefSand}
           map={color}
           roughness={0.95}
         />
@@ -243,7 +243,7 @@ export function SandBed({
         <meshStandardMaterial
           bumpMap={bump}
           bumpScale={0.6}
-          color={MATERIAL.coralRubble}
+          color={ECOLOGY_COLORS.coralRubble}
           map={color}
           roughness={0.92}
         />

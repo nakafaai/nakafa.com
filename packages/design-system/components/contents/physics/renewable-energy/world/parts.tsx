@@ -1,6 +1,6 @@
 import { useFrame } from "@react-three/fiber";
 import { useVisualScene } from "@repo/design-system/components/visual/card";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { ENERGY_COLORS } from "@repo/design-system/lib/material/energy";
 import { Array as Arr } from "effect";
 import { type ReactNode, useMemo, useRef } from "react";
 import { type Mesh, Quaternion, Vector3 } from "three";
@@ -168,7 +168,7 @@ export function Puffs({
         >
           <sphereGeometry args={[1, 16, 12]} />
           <meshStandardMaterial
-            color={MATERIAL.cloud}
+            color={ENERGY_COLORS.cloud}
             depthWrite={false}
             roughness={1}
             transparent

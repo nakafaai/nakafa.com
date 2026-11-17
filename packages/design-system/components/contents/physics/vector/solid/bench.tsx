@@ -4,7 +4,9 @@ import {
   Repeat,
 } from "@repo/design-system/components/three/repeat";
 import { SurfaceMaterial } from "@repo/design-system/components/three/surface/material";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { BENCH_COLORS } from "@repo/design-system/lib/material/bench";
+import { CAR_COLORS } from "@repo/design-system/lib/material/car";
+import { MACHINE_COLORS } from "@repo/design-system/lib/material/machine";
 import { Array as Arr } from "effect";
 
 /**
@@ -23,23 +25,23 @@ export function Bench() {
         smoothness={2}
       >
         <SurfaceMaterial
-          color={MATERIAL.epoxy}
+          color={BENCH_COLORS.epoxy}
           roughness={0.8}
           surface="plastic"
         />
       </RoundedBox>
       <mesh position={[0, -0.4, -0.17]} receiveShadow>
         <boxGeometry args={[2.3, 0.72, 0.8]} />
-        <SurfaceMaterial color={MATERIAL.laminate} surface="plastic" />
+        <SurfaceMaterial color={MACHINE_COLORS.laminate} surface="plastic" />
       </mesh>
       <Repeat placements={DOORS}>
         <boxGeometry args={[0.56, 0.62, 0.012]} />
-        <SurfaceMaterial color={MATERIAL.laminate} surface="plastic" />
+        <SurfaceMaterial color={MACHINE_COLORS.laminate} surface="plastic" />
       </Repeat>
       <Repeat placements={PULLS}>
         <boxGeometry args={[0.012, 0.12, 0.016]} />
         <SurfaceMaterial
-          color={MATERIAL.chrome}
+          color={CAR_COLORS.chrome}
           metalness={1}
           roughness={0.5}
           surface="brushed"

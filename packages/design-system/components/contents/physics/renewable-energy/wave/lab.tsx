@@ -36,7 +36,8 @@ import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { P5Sketch } from "@repo/design-system/components/visual/sketch";
 import { getColor } from "@repo/design-system/lib/color";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { ENERGY_COLORS } from "@repo/design-system/lib/material/energy";
+import { TOWN_COLORS } from "@repo/design-system/lib/material/town";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr, Schema } from "effect";
 import type p5 from "p5";
@@ -89,9 +90,9 @@ function paintSea(sketch: p5, points: readonly Point[], still: number) {
       sketch,
       { height: height - still * 0.8, width, x: 0, y: still * 0.8 },
       [
-        [0, mix(MATERIAL.water, MATERIAL.waterGlint, 0.45)],
-        [0.25, MATERIAL.water],
-        [1, mix(MATERIAL.water, getColor("BLACK"), 0.65)],
+        [0, mix(TOWN_COLORS.water, TOWN_COLORS.waterGlint, 0.45)],
+        [0.25, TOWN_COLORS.water],
+        [1, mix(TOWN_COLORS.water, getColor("BLACK"), 0.65)],
       ]
     );
     drawing.restore();
@@ -142,15 +143,15 @@ function paintBuoy(sketch: p5, sea: Sea, time: number, still: number) {
           y: y - size * 0.3,
         },
         [
-          [0, mix(MATERIAL.buoyPaint, getColor("WHITE"), 0.3)],
-          [1, mix(MATERIAL.buoyPaint, getColor("BLACK"), 0.35)],
+          [0, mix(ENERGY_COLORS.buoyPaint, getColor("WHITE"), 0.3)],
+          [1, mix(ENERGY_COLORS.buoyPaint, getColor("BLACK"), 0.35)],
         ]
       );
     }
   );
   sketch.fill(getColor("SLATE", 300));
   sketch.rect(x - 2, y - size * 0.95, 4, size * 0.65);
-  sketch.fill(MATERIAL.windowGlow);
+  sketch.fill(ENERGY_COLORS.windowGlow);
   sketch.circle(x, y - size * 0.95, 7);
 }
 

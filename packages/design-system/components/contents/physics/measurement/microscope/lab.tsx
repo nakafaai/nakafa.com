@@ -34,7 +34,8 @@ import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { P5Sketch } from "@repo/design-system/components/visual/sketch";
 import { getColor } from "@repo/design-system/lib/color";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { INSTRUMENT_COLORS } from "@repo/design-system/lib/material/instrument";
+import { REAGENT_COLORS } from "@repo/design-system/lib/material/reagent";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr, Schema } from "effect";
 import type p5 from "p5";
@@ -65,7 +66,7 @@ const FieldFrame = Schema.Struct({ objective: ObjectiveSchema });
  */
 function paintHair(sketch: p5, x: number, width: number, field: number) {
   const { height } = sketch;
-  const brown = MATERIAL.hair;
+  const brown = INSTRUMENT_COLORS.hair;
   gradientRect(
     sketch,
     { height, width, x: x - width / 2, y: 0 },
@@ -145,14 +146,14 @@ function fieldProgram(sketch: p5, read: () => typeof FieldFrame.Type) {
         center.y,
         field
       );
-      light.addColorStop(0, MATERIAL.microscopeLight);
+      light.addColorStop(0, REAGENT_COLORS.microscopeLight);
       light.addColorStop(
         0.75,
-        mix(MATERIAL.microscopeLight, MATERIAL.lampLight, 0.6)
+        mix(REAGENT_COLORS.microscopeLight, INSTRUMENT_COLORS.lampLight, 0.6)
       );
       light.addColorStop(
         1,
-        mix(MATERIAL.lampLight, getColor("STONE", 600), 0.55)
+        mix(INSTRUMENT_COLORS.lampLight, getColor("STONE", 600), 0.55)
       );
       drawing.fillStyle = light;
       drawing.fillRect(
@@ -164,7 +165,10 @@ function fieldProgram(sketch: p5, read: () => typeof FieldFrame.Type) {
     }
     outOfFocus(sketch, field * 0.03, () => {
       sketch.fill(
-        fade(mix(MATERIAL.hair, MATERIAL.microscopeLight, 0.4), 0.35)
+        fade(
+          mix(INSTRUMENT_COLORS.hair, REAGENT_COLORS.microscopeLight, 0.4),
+          0.35
+        )
       );
       Arr.forEach(SPECKS, ([x, y, size]) => {
         sketch.circle(

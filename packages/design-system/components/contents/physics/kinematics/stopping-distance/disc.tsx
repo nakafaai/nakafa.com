@@ -45,7 +45,7 @@ import {
 } from "@repo/design-system/components/visual/card";
 import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { CAR_COLORS } from "@repo/design-system/lib/material/car";
 import { Array as Arr, Option, Record as Rec } from "effect";
 import {
   type ReactNode,
@@ -203,24 +203,29 @@ export function BrakeHeatLab({
 /** The parts the thermal camera paints, with their daylight look. */
 const PARTS = {
   caliper: {
-    color: MATERIAL.caliper,
+    color: CAR_COLORS.caliper,
     metalness: 0.2,
     roughness: 0.35,
     warming: 0.35,
   },
   disc: {
-    color: MATERIAL.castIron,
+    color: CAR_COLORS.castIron,
     metalness: 0.9,
     roughness: 0.42,
     warming: 1,
   },
   rim: {
-    color: MATERIAL.rimBright,
+    color: CAR_COLORS.rimBright,
     metalness: 1,
     roughness: 0.2,
     warming: 0.12,
   },
-  tyre: { color: MATERIAL.tyre, metalness: 0, roughness: 0.92, warming: 0.04 },
+  tyre: {
+    color: CAR_COLORS.tyre,
+    metalness: 0,
+    roughness: 0.92,
+    warming: 0.04,
+  },
 } as const;
 
 /**
@@ -310,11 +315,11 @@ function TestStand() {
         radius={0.008}
         receiveShadow
       >
-        <MetalMaterial color={MATERIAL.hub} roughness={0.55} />
+        <MetalMaterial color={CAR_COLORS.hub} roughness={0.55} />
       </RoundedBox>
       <mesh castShadow position={[0, HUB_HEIGHT / 2, STAND_DEPTH]}>
         <cylinderGeometry args={[0.045, 0.055, HUB_HEIGHT, 28]} />
-        <MetalMaterial color={MATERIAL.hub} roughness={0.5} />
+        <MetalMaterial color={CAR_COLORS.hub} roughness={0.5} />
       </mesh>
       <mesh
         castShadow
@@ -322,7 +327,7 @@ function TestStand() {
         rotation={[Math.PI / 2, 0, 0]}
       >
         <cylinderGeometry args={[0.03, 0.03, -STAND_DEPTH, 20]} />
-        <MetalMaterial color={MATERIAL.chrome} roughness={0.3} />
+        <MetalMaterial color={CAR_COLORS.chrome} roughness={0.3} />
       </mesh>
       <RoundedBox
         args={[0.16, 0.22, 0.02]}
@@ -330,7 +335,7 @@ function TestStand() {
         position={[-0.05, HUB_HEIGHT + 0.04, -0.035]}
         radius={0.006}
       >
-        <MetalMaterial color={MATERIAL.hub} roughness={0.6} />
+        <MetalMaterial color={CAR_COLORS.hub} roughness={0.6} />
       </RoundedBox>
     </group>
   );
@@ -407,7 +412,7 @@ function WheelScene({
           </mesh>
           <mesh position={[0, 0, 0.03]} rotation={[Math.PI / 2, 0, 0]}>
             <cylinderGeometry args={[0.09, 0.09, 0.05, 40]} />
-            <MetalMaterial color={MATERIAL.hub} roughness={0.5} />
+            <MetalMaterial color={CAR_COLORS.hub} roughness={0.5} />
           </mesh>
           <mesh
             material={materials.tyre}

@@ -26,7 +26,10 @@ import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { P5Sketch } from "@repo/design-system/components/visual/sketch";
 import { getColor } from "@repo/design-system/lib/color";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { ENERGY_COLORS } from "@repo/design-system/lib/material/energy";
+import { REAGENT_COLORS } from "@repo/design-system/lib/material/reagent";
+import { ROAD_COLORS } from "@repo/design-system/lib/material/road";
+import { TOWN_COLORS } from "@repo/design-system/lib/material/town";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr, Schema } from "effect";
 import type p5 from "p5";
@@ -92,8 +95,8 @@ function iceProgram(sketch: p5, read: () => IceFrame) {
         y: cup.y - 4,
       },
       [
-        [0, MATERIAL.foam],
-        [1, mix(MATERIAL.foam, getColor("BLACK"), 0.2)],
+        [0, REAGENT_COLORS.foam],
+        [1, mix(REAGENT_COLORS.foam, getColor("BLACK"), 0.2)],
       ]
     );
     const level = cup.y + cup.height * (1 - 0.72 * frame.waterShare - 0.18);
@@ -106,15 +109,15 @@ function iceProgram(sketch: p5, read: () => IceFrame) {
         y: level,
       },
       [
-        [0, fade(MATERIAL.kettleWater, 0.85)],
-        [1, fade(mix(MATERIAL.kettleWater, MATERIAL.water, 0.5), 0.95)],
+        [0, fade(ENERGY_COLORS.kettleWater, 0.85)],
+        [1, fade(mix(ENERGY_COLORS.kettleWater, TOWN_COLORS.water, 0.5), 0.95)],
       ]
     );
     const left = 1 - frame.meltedShare * eased;
     const side = cup.width * 0.36 * Math.cbrt(Math.max(left, 0));
     if (side > 1) {
       sketch.noStroke();
-      sketch.fill(fade(MATERIAL.ice, 0.9));
+      sketch.fill(fade(ROAD_COLORS.ice, 0.9));
       sketch.rect(
         cup.x + cup.width * 0.5 - side / 2,
         level - side * 0.35,
@@ -122,7 +125,7 @@ function iceProgram(sketch: p5, read: () => IceFrame) {
         side,
         side * 0.15
       );
-      sketch.fill(fade(MATERIAL.icePolish, 0.7));
+      sketch.fill(fade(ROAD_COLORS.icePolish, 0.7));
       sketch.rect(
         cup.x + cup.width * 0.5 - side / 2 + 3,
         level - side * 0.35 + 3,

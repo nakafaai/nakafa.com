@@ -26,7 +26,9 @@ import {
 } from "@repo/design-system/components/visual/card";
 import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { CAR_COLORS } from "@repo/design-system/lib/material/car";
+import { INSTRUMENT_COLORS } from "@repo/design-system/lib/material/instrument";
+import { MACHINE_COLORS } from "@repo/design-system/lib/material/machine";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr, Schema } from "effect";
 import { type ReactNode, Suspense, useMemo, useState } from "react";
@@ -79,7 +81,7 @@ function Module() {
       </mesh>
       <mesh castShadow receiveShadow>
         <boxGeometry args={[SIZE[0] - FRAME, 0.02, SIZE[1] - FRAME]} />
-        <SurfaceMaterial color={MATERIAL.backsheet} surface="plastic" />
+        <SurfaceMaterial color={MACHINE_COLORS.backsheet} surface="plastic" />
       </mesh>
       {Arr.map([-1, 1], (side) => (
         <group key={side}>
@@ -91,7 +93,7 @@ function Module() {
             smoothness={2}
           >
             <SurfaceMaterial
-              color={MATERIAL.aluminium}
+              color={INSTRUMENT_COLORS.aluminium}
               metalness={1}
               roughness={0.6}
               surface="brushed"
@@ -105,7 +107,7 @@ function Module() {
             smoothness={2}
           >
             <SurfaceMaterial
-              color={MATERIAL.aluminium}
+              color={INSTRUMENT_COLORS.aluminium}
               metalness={1}
               roughness={0.6}
               surface="brushed"
@@ -114,7 +116,7 @@ function Module() {
           <mesh castShadow position={[0, -0.04, side * 0.3]}>
             <boxGeometry args={[SIZE[0] * 0.9, 0.04, 0.04]} />
             <SurfaceMaterial
-              color={MATERIAL.galvanised}
+              color={MACHINE_COLORS.galvanised}
               metalness={1}
               roughness={0.7}
               surface="brushed"
@@ -129,7 +131,7 @@ function Module() {
         radius={0.005}
         smoothness={2}
       >
-        <SurfaceMaterial color={MATERIAL.carbonShell} surface="plastic" />
+        <SurfaceMaterial color={MACHINE_COLORS.carbonShell} surface="plastic" />
       </RoundedBox>
     </group>
   );
@@ -161,7 +163,7 @@ function SolarScene({
           {Arr.map([low, high], (top) => (
             <group key={top[0]}>
               <Rod
-                color={MATERIAL.galvanised}
+                color={MACHINE_COLORS.galvanised}
                 from={[top[0], 0.12, z]}
                 metalness={1}
                 radius={0.024}
@@ -170,12 +172,15 @@ function SolarScene({
               />
               <mesh castShadow position={[top[0], 0.06, z]} receiveShadow>
                 <cylinderGeometry args={[0.1, 0.11, 0.14, 24]} />
-                <SurfaceMaterial color={MATERIAL.concrete} surface="concrete" />
+                <SurfaceMaterial
+                  color={MACHINE_COLORS.concrete}
+                  surface="concrete"
+                />
               </mesh>
             </group>
           ))}
           <Rod
-            color={MATERIAL.galvanised}
+            color={MACHINE_COLORS.galvanised}
             from={[low[0], 0.16, z]}
             metalness={1}
             radius={0.012}
@@ -188,7 +193,7 @@ function SolarScene({
         const hit = onPanel(tilt, up * 0.9, 0.25, 0.03);
         return (
           <Line
-            color={MATERIAL.headlightGlow}
+            color={CAR_COLORS.headlightGlow}
             key={up}
             lineWidth={1.5}
             opacity={0.8}

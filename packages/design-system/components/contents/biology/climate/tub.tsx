@@ -29,7 +29,9 @@ import {
   drawSpill,
 } from "@repo/design-system/components/contents/biology/climate/stream";
 import { hashUnit } from "@repo/design-system/components/contents/simulation/grain";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { CAR_COLORS } from "@repo/design-system/lib/material/car";
+import { ECOLOGY_COLORS } from "@repo/design-system/lib/material/ecology";
+import { TOWN_COLORS } from "@repo/design-system/lib/material/town";
 import { Array as Arr, Schema } from "effect";
 import type p5 from "p5";
 
@@ -91,18 +93,18 @@ function drawShell(sketch: p5, frame: Frame) {
   const inside = outline(frame.top, frame.bottom, (y, side) =>
     insideAt(frame, y, side)
   );
-  const clear = tint(sketch, MATERIAL.porcelainDeep, 0);
+  const clear = tint(sketch, ECOLOGY_COLORS.porcelainDeep, 0);
   const across = (context: CanvasRenderingContext2D) =>
     context.createLinearGradient(frame.left, 0, frame.right, 0);
   painted(
     sketch,
-    MATERIAL.porcelain,
+    ECOLOGY_COLORS.porcelain,
     (context) =>
       stopped(context.createLinearGradient(0, frame.rim, 0, frame.base), [
-        [0, MATERIAL.porcelain],
-        [0.6, MATERIAL.porcelain],
-        [0.86, MATERIAL.porcelainShade],
-        [1, MATERIAL.porcelainDeep],
+        [0, ECOLOGY_COLORS.porcelain],
+        [0.6, ECOLOGY_COLORS.porcelain],
+        [0.86, ECOLOGY_COLORS.porcelainShade],
+        [1, ECOLOGY_COLORS.porcelainDeep],
       ]),
     () => shape(sketch, shell)
   );
@@ -111,23 +113,23 @@ function drawShell(sketch: p5, frame: Frame) {
     clear,
     (context) =>
       stopped(across(context), [
-        [0, tint(sketch, MATERIAL.porcelainGloss, 230)],
-        [0.05, tint(sketch, MATERIAL.porcelainGloss, 0)],
+        [0, tint(sketch, ECOLOGY_COLORS.porcelainGloss, 230)],
+        [0.05, tint(sketch, ECOLOGY_COLORS.porcelainGloss, 0)],
         [0.8, clear],
-        [1, tint(sketch, MATERIAL.porcelainDeep, 110)],
+        [1, tint(sketch, ECOLOGY_COLORS.porcelainDeep, 110)],
       ]),
     () => shape(sketch, shell)
   );
   painted(
     sketch,
-    MATERIAL.porcelain,
+    ECOLOGY_COLORS.porcelain,
     (context) =>
       stopped(context.createLinearGradient(0, frame.top, 0, frame.bottom), [
-        [0, MATERIAL.porcelainShade],
-        [0.1, MATERIAL.porcelain],
-        [0.55, MATERIAL.porcelain],
-        [0.9, MATERIAL.porcelainShade],
-        [1, MATERIAL.porcelainDeep],
+        [0, ECOLOGY_COLORS.porcelainShade],
+        [0.1, ECOLOGY_COLORS.porcelain],
+        [0.55, ECOLOGY_COLORS.porcelain],
+        [0.9, ECOLOGY_COLORS.porcelainShade],
+        [1, ECOLOGY_COLORS.porcelainDeep],
       ]),
     () => shape(sketch, inside)
   );
@@ -136,22 +138,22 @@ function drawShell(sketch: p5, frame: Frame) {
     clear,
     (context) =>
       stopped(across(context), [
-        [0, tint(sketch, MATERIAL.porcelainDeep, 130)],
+        [0, tint(sketch, ECOLOGY_COLORS.porcelainDeep, 130)],
         [0.14, clear],
-        [0.22, tint(sketch, MATERIAL.porcelainGloss, 0)],
-        [0.29, tint(sketch, MATERIAL.porcelainGloss, 110)],
-        [0.38, tint(sketch, MATERIAL.porcelainGloss, 0)],
+        [0.22, tint(sketch, ECOLOGY_COLORS.porcelainGloss, 0)],
+        [0.29, tint(sketch, ECOLOGY_COLORS.porcelainGloss, 110)],
+        [0.38, tint(sketch, ECOLOGY_COLORS.porcelainGloss, 0)],
         [0.86, clear],
-        [1, tint(sketch, MATERIAL.porcelainDeep, 120)],
+        [1, tint(sketch, ECOLOGY_COLORS.porcelainDeep, 120)],
       ]),
     () => shape(sketch, inside)
   );
   sketch.push();
   sketch.noFill();
   sketch.strokeWeight(Math.max(0.8, frame.unit));
-  sketch.stroke(tint(sketch, MATERIAL.porcelainDeep, 120));
+  sketch.stroke(tint(sketch, ECOLOGY_COLORS.porcelainDeep, 120));
   trace(sketch, inside);
-  sketch.stroke(tint(sketch, MATERIAL.porcelainDeep, 90));
+  sketch.stroke(tint(sketch, ECOLOGY_COLORS.porcelainDeep, 90));
   trace(sketch, shell);
   sketch.pop();
 }
@@ -162,11 +164,11 @@ function drawPlug(sketch: p5, frame: Frame, record: boolean) {
   const deep = frame.height * 0.004;
   const ring = (context: CanvasRenderingContext2D) =>
     chromeAcross(sketch, context, frame.plug - wide, frame.plug + wide);
-  painted(sketch, MATERIAL.chrome, ring, () =>
+  painted(sketch, CAR_COLORS.chrome, ring, () =>
     sketch.ellipse(frame.plug, frame.bottom - deep, wide * 2, deep * 2.4)
   );
   if (record) {
-    painted(sketch, MATERIAL.chrome, ring, () =>
+    painted(sketch, CAR_COLORS.chrome, ring, () =>
       sketch.arc(
         frame.plug,
         frame.bottom - deep * 1.6,
@@ -180,7 +182,7 @@ function drawPlug(sketch: p5, frame: Frame, record: boolean) {
   }
   sketch.push();
   sketch.noStroke();
-  sketch.fill(MATERIAL.chromeShadow);
+  sketch.fill(ECOLOGY_COLORS.chromeShadow);
   sketch.ellipse(frame.plug, frame.bottom - deep, wide, deep * 1.2);
   sketch.pop();
 }
@@ -197,12 +199,12 @@ function drawWater(sketch: p5, frame: Frame, surface: number, time: number) {
   const depth = frame.bottom - frame.top;
   painted(
     sketch,
-    tint(sketch, MATERIAL.seawater, 190),
+    tint(sketch, ECOLOGY_COLORS.seawater, 190),
     (context) =>
       stopped(context.createLinearGradient(0, surface, 0, surface + depth), [
-        [0, tint(sketch, MATERIAL.bathwater, 140)],
-        [0.22, tint(sketch, MATERIAL.seawater, 150)],
-        [1, tint(sketch, MATERIAL.seawaterDeep, 230)],
+        [0, tint(sketch, ECOLOGY_COLORS.bathwater, 140)],
+        [0.22, tint(sketch, ECOLOGY_COLORS.seawater, 150)],
+        [1, tint(sketch, ECOLOGY_COLORS.seawaterDeep, 230)],
       ]),
     () => shape(sketch, water)
   );
@@ -220,7 +222,7 @@ function drawWater(sketch: p5, frame: Frame, surface: number, time: number) {
       frame.bottom -
       (frame.bottom - surface) * (0.03 + hashUnit(thread, 23) * 0.4);
     sketch.stroke(
-      tint(sketch, MATERIAL.waterGlint, 20 + hashUnit(thread, 24) * 34)
+      tint(sketch, TOWN_COLORS.waterGlint, 20 + hashUnit(thread, 24) * 34)
     );
     trace(
       sketch,
@@ -266,12 +268,12 @@ function drawSurface(sketch: p5, frame: Frame, surface: number, time: number) {
   const sheet = Arr.appendAll(backEdge, Arr.reverse(frontEdge));
   painted(
     sketch,
-    tint(sketch, MATERIAL.bathwater, 200),
+    tint(sketch, ECOLOGY_COLORS.bathwater, 200),
     (context) =>
       stopped(context.createLinearGradient(0, back, 0, front), [
-        [0, tint(sketch, MATERIAL.waterGlint, 220)],
-        [0.5, tint(sketch, MATERIAL.bathwater, 210)],
-        [1, tint(sketch, MATERIAL.seawater, 140)],
+        [0, tint(sketch, TOWN_COLORS.waterGlint, 220)],
+        [0.5, tint(sketch, ECOLOGY_COLORS.bathwater, 210)],
+        [1, tint(sketch, ECOLOGY_COLORS.seawater, 140)],
       ]),
     () => shape(sketch, sheet)
   );
@@ -281,7 +283,7 @@ function drawSurface(sketch: p5, frame: Frame, surface: number, time: number) {
   sketch.strokeWeight(Math.max(0.8, frame.unit));
   Arr.forEach(Arr.range(0, 2), (ring) => {
     const phase = (time * 0.6 + ring / 3) % 1;
-    sketch.stroke(tint(sketch, MATERIAL.waterGlint, (1 - phase) * 170));
+    sketch.stroke(tint(sketch, TOWN_COLORS.waterGlint, (1 - phase) * 170));
     sketch.ellipse(
       frame.spout,
       surface,
@@ -292,7 +294,7 @@ function drawSurface(sketch: p5, frame: Frame, surface: number, time: number) {
   sketch.noStroke();
   Arr.forEach(Arr.range(0, 5), (glint) => {
     const shine = 0.5 + 0.5 * Math.sin(time * 2 + glint * 2.3);
-    sketch.fill(tint(sketch, MATERIAL.porcelainGloss, shine * 230));
+    sketch.fill(tint(sketch, ECOLOGY_COLORS.porcelainGloss, shine * 230));
     sketch.ellipse(
       frame.left +
         (frame.right - frame.left) * (0.15 + hashUnit(glint, 5) * 0.7),
@@ -304,10 +306,10 @@ function drawSurface(sketch: p5, frame: Frame, surface: number, time: number) {
   sketch.pop();
   sketch.push();
   sketch.noFill();
-  sketch.stroke(tint(sketch, MATERIAL.waterGlint, 230));
+  sketch.stroke(tint(sketch, TOWN_COLORS.waterGlint, 230));
   sketch.strokeWeight(1.2 * frame.unit);
   trace(sketch, frontEdge);
-  sketch.stroke(tint(sketch, MATERIAL.porcelainGloss, 160));
+  sketch.stroke(tint(sketch, ECOLOGY_COLORS.porcelainGloss, 160));
   sketch.strokeWeight(frame.unit);
   trace(sketch, backEdge);
   sketch.pop();
@@ -321,8 +323,8 @@ function drawMark(sketch: p5, frame: Frame) {
   const dash = 6 * frame.unit;
   const dashes = Arr.range(0, Math.floor((to - from) / (dash * 1.7)));
   const strokes = [
-    [2.6, tint(sketch, MATERIAL.seawaterDeep, 150)],
-    [1.2, tint(sketch, MATERIAL.waterGlint, 235)],
+    [2.6, tint(sketch, ECOLOGY_COLORS.seawaterDeep, 150)],
+    [1.2, tint(sketch, TOWN_COLORS.waterGlint, 235)],
   ] as const;
   sketch.push();
   sketch.strokeCap(sketch.ROUND);
@@ -343,7 +345,7 @@ function drawRim(sketch: p5, frame: Frame) {
   const from = frame.left - over;
   const to = frame.right + over;
   const tall = frame.top - frame.rim;
-  const clear = tint(sketch, MATERIAL.porcelainDeep, 0);
+  const clear = tint(sketch, ECOLOGY_COLORS.porcelainDeep, 0);
   const inner = insideAt(frame, frame.top, "left");
   painted(
     sketch,
@@ -352,7 +354,7 @@ function drawRim(sketch: p5, frame: Frame) {
       stopped(
         context.createLinearGradient(0, frame.top, 0, frame.top + tall * 1.4),
         [
-          [0, tint(sketch, MATERIAL.porcelainDeep, 100)],
+          [0, tint(sketch, ECOLOGY_COLORS.porcelainDeep, 100)],
           [1, clear],
         ]
       ),
@@ -367,14 +369,14 @@ function drawRim(sketch: p5, frame: Frame) {
   const roll = () => sketch.rect(from, frame.rim, to - from, tall, tall / 2);
   painted(
     sketch,
-    MATERIAL.porcelain,
+    ECOLOGY_COLORS.porcelain,
     (context) =>
       stopped(context.createLinearGradient(0, frame.rim, 0, frame.top), [
-        [0, MATERIAL.porcelainShade],
-        [0.24, MATERIAL.porcelainGloss],
-        [0.45, MATERIAL.porcelain],
-        [0.78, MATERIAL.porcelainShade],
-        [1, MATERIAL.porcelainDeep],
+        [0, ECOLOGY_COLORS.porcelainShade],
+        [0.24, ECOLOGY_COLORS.porcelainGloss],
+        [0.45, ECOLOGY_COLORS.porcelain],
+        [0.78, ECOLOGY_COLORS.porcelainShade],
+        [1, ECOLOGY_COLORS.porcelainDeep],
       ]),
     roll
   );
@@ -383,16 +385,16 @@ function drawRim(sketch: p5, frame: Frame) {
     clear,
     (context) =>
       stopped(context.createLinearGradient(from, 0, to, 0), [
-        [0, tint(sketch, MATERIAL.porcelainGloss, 160)],
+        [0, tint(sketch, ECOLOGY_COLORS.porcelainGloss, 160)],
         [0.03, clear],
         [0.95, clear],
-        [1, tint(sketch, MATERIAL.porcelainDeep, 130)],
+        [1, tint(sketch, ECOLOGY_COLORS.porcelainDeep, 130)],
       ]),
     roll
   );
   sketch.push();
   sketch.strokeCap(sketch.ROUND);
-  sketch.stroke(MATERIAL.porcelainGloss);
+  sketch.stroke(ECOLOGY_COLORS.porcelainGloss);
   sketch.strokeWeight(Math.max(1, tall * 0.14));
   sketch.line(
     from + tall,

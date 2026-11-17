@@ -9,7 +9,9 @@ import {
 } from "@repo/design-system/components/contents/biology/instances";
 import { useBumpySphere } from "@repo/design-system/components/contents/biology/surface";
 import { hashUnit } from "@repo/design-system/components/contents/simulation/grain";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { ECOLOGY_COLORS } from "@repo/design-system/lib/material/ecology";
+import { MACHINE_COLORS } from "@repo/design-system/lib/material/machine";
+import { ROAD_COLORS } from "@repo/design-system/lib/material/road";
 import { Array as Arr } from "effect";
 import { useEffect, useMemo } from "react";
 import {
@@ -54,7 +56,7 @@ export function SeaWall() {
   return (
     <group>
       <mesh castShadow geometry={geometry} receiveShadow>
-        <meshStandardMaterial color={MATERIAL.concrete} roughness={0.9} />
+        <meshStandardMaterial color={MACHINE_COLORS.concrete} roughness={0.9} />
       </mesh>
       <mesh
         castShadow
@@ -62,7 +64,7 @@ export function SeaWall() {
         receiveShadow
       >
         <boxGeometry args={[1.3, 0.15, COAST]} />
-        <meshStandardMaterial color={MATERIAL.concrete} roughness={0.8} />
+        <meshStandardMaterial color={MACHINE_COLORS.concrete} roughness={0.8} />
       </mesh>
     </group>
   );
@@ -162,11 +164,14 @@ export function Mangroves() {
     <group>
       <Instances placements={stands}>
         <primitive attach="geometry" object={roots} />
-        <meshStandardMaterial color={MATERIAL.mangroveRoot} roughness={0.95} />
+        <meshStandardMaterial
+          color={ECOLOGY_COLORS.mangroveRoot}
+          roughness={0.95}
+        />
       </Instances>
       <Instances placements={stands}>
         <primitive attach="geometry" object={trunk} />
-        <meshStandardMaterial color={MATERIAL.bark} roughness={0.95} />
+        <meshStandardMaterial color={ROAD_COLORS.bark} roughness={0.95} />
       </Instances>
       <Instances
         placements={Arr.map(
@@ -175,7 +180,10 @@ export function Mangroves() {
         )}
       >
         <primitive attach="geometry" object={crown} />
-        <meshStandardMaterial color={MATERIAL.foliageDark} roughness={0.85} />
+        <meshStandardMaterial
+          color={ROAD_COLORS.foliageDark}
+          roughness={0.85}
+        />
       </Instances>
       <Instances
         placements={Arr.map(
@@ -184,7 +192,10 @@ export function Mangroves() {
         )}
       >
         <primitive attach="geometry" object={crown} />
-        <meshStandardMaterial color={MATERIAL.foliageShade} roughness={0.85} />
+        <meshStandardMaterial
+          color={ROAD_COLORS.foliageShade}
+          roughness={0.85}
+        />
       </Instances>
     </group>
   );
@@ -213,7 +224,7 @@ export function Sea({
       <meshPhysicalMaterial
         clearcoat={1}
         clearcoatRoughness={0.1}
-        color={MATERIAL.seawater}
+        color={ECOLOGY_COLORS.seawater}
         opacity={0.9}
         roughness={0.12}
         transparent

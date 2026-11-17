@@ -1,0 +1,41 @@
+/**
+ * Forces and machines: bench hardware, wood and rope, boats, a pool table, a street signal, a solar roof and
+ * farmland.
+ * A simulation that shows one of them takes its colour from here, so it looks the same in every lesson.
+ */
+export const MACHINE_COLORS = {
+  antifouling: "#5c231d",
+  ash: "#c9a978",
+  backsheet: "#dfe3e6",
+  carbonShell: "#2a2c30",
+  cloudTop: "#f4f6f8",
+  craneYellow: "#d9a21f",
+  deckGreen: "#56685b",
+  dialWhite: "#f2f0ea",
+  concrete: "#9a9893",
+  cotton: "#ece6d6",
+  deckWhite: "#eeeeea",
+  felt: "#1f6b4a",
+  galvanised: "#a9afb4",
+  gripRed: "#9c2a24",
+  hemp: "#b49a6c",
+  hullNavy: "#2d3e50",
+  hullRed: "#8e2f25",
+  kiteNavy: "#1f3f73",
+  laminate: "#8f8a80",
+  logBark: "#75604a",
+  padOrange: "#e2621d",
+  kiteNylon: "#d9572b",
+  propeller: "#16181b",
+  sand: "#d8c7a0",
+  signalAmber: "#f0a020",
+  signalGreen: "#2fa055",
+  signalHousing: "#2b2f33",
+  signalRed: "#d23a2a",
+  solarCell: "#1b2a4a",
+  stackBuff: "#c8a66b",
+  turbineWhite: "#e4e7eb",
+  standBlue: "#23344d",
+  walnut: "#5a3b26",
+  wheatField: "#c2b280",
+} as const;

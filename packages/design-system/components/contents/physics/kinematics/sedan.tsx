@@ -1,5 +1,5 @@
 import { getColor } from "@repo/design-system/lib/color";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { CAR_COLORS } from "@repo/design-system/lib/material/car";
 import { Array as Arr } from "effect";
 import {
   type Ref,
@@ -155,8 +155,8 @@ export function Sedan({
   const tail = useMemo(
     () =>
       new MeshStandardMaterial({
-        color: MATERIAL.brakeLightLens,
-        emissive: MATERIAL.brakeLightGlow,
+        color: CAR_COLORS.brakeLightLens,
+        emissive: CAR_COLORS.brakeLightGlow,
         emissiveIntensity: TAIL_GLOW,
         roughness: 0.18,
       }),
@@ -196,7 +196,7 @@ export function Sedan({
         <meshPhysicalMaterial
           clearcoat={1}
           clearcoatRoughness={0.02}
-          color={MATERIAL.tintedGlass}
+          color={CAR_COLORS.tintedGlass}
           envMapIntensity={1.6}
           metalness={0.55}
           roughness={0.04}
@@ -215,8 +215,8 @@ export function Sedan({
           <mesh position={[2.27, 0.73, side * 0.6]}>
             <boxGeometry args={[0.1, 0.11, 0.36]} />
             <meshStandardMaterial
-              color={MATERIAL.headlightLens}
-              emissive={MATERIAL.headlightGlow}
+              color={CAR_COLORS.headlightLens}
+              emissive={CAR_COLORS.headlightGlow}
               emissiveIntensity={0.8}
               roughness={0.08}
             />
@@ -238,11 +238,11 @@ export function Sedan({
       </mesh>
       <mesh position={[-2.36, 0.52, 0]}>
         <boxGeometry args={[0.04, 0.12, 0.48]} />
-        <meshStandardMaterial color={MATERIAL.numberPlate} roughness={0.4} />
+        <meshStandardMaterial color={CAR_COLORS.numberPlate} roughness={0.4} />
       </mesh>
       <mesh position={[2.35, 0.48, 0]}>
         <boxGeometry args={[0.04, 0.16, 0.8]} />
-        <meshStandardMaterial color={MATERIAL.grille} roughness={0.5} />
+        <meshStandardMaterial color={CAR_COLORS.grille} roughness={0.5} />
       </mesh>
 
       {Arr.map(
@@ -316,12 +316,12 @@ function Wheel({ side }: { readonly side: 1 | -1 }) {
     <group rotation={[side > 0 ? -Math.PI / 2 : Math.PI / 2, 0, 0]}>
       <mesh castShadow>
         <latheGeometry args={[TYRE_PROFILE, 40]} />
-        <meshStandardMaterial color={MATERIAL.tyre} roughness={0.9} />
+        <meshStandardMaterial color={CAR_COLORS.tyre} roughness={0.9} />
       </mesh>
       <mesh>
         <cylinderGeometry args={[0.215, 0.215, 0.16, 40]} />
         <meshStandardMaterial
-          color={MATERIAL.rimDark}
+          color={CAR_COLORS.rimDark}
           metalness={0.9}
           roughness={0.4}
         />
@@ -331,7 +331,7 @@ function Wheel({ side }: { readonly side: 1 | -1 }) {
           <mesh position={[0.11, -0.09, 0]}>
             <boxGeometry args={[0.2, 0.03, 0.05]} />
             <meshStandardMaterial
-              color={MATERIAL.rimBright}
+              color={CAR_COLORS.rimBright}
               metalness={1}
               roughness={0.22}
             />
@@ -341,7 +341,7 @@ function Wheel({ side }: { readonly side: 1 | -1 }) {
       <mesh position={[0, -0.1, 0]}>
         <cylinderGeometry args={[0.045, 0.045, 0.03, 20]} />
         <meshStandardMaterial
-          color={MATERIAL.chrome}
+          color={CAR_COLORS.chrome}
           metalness={1}
           roughness={0.2}
         />

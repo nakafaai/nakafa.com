@@ -8,7 +8,9 @@ import {
 } from "@repo/design-system/components/contents/physics/canvas/paint";
 import type { Point } from "@repo/design-system/components/contents/physics/optics/light";
 import { getColor } from "@repo/design-system/lib/color";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { BENCH_COLORS } from "@repo/design-system/lib/material/bench";
+import { INSTRUMENT_COLORS } from "@repo/design-system/lib/material/instrument";
+import { REAGENT_COLORS } from "@repo/design-system/lib/material/reagent";
 import type p5 from "p5";
 
 /**
@@ -37,7 +39,7 @@ export function paintTransistor(sketch: p5, at: Point, size: number) {
     collector: { x: at.x + size * 0.32, y: at.y + size * 0.9 },
     emitter: { x: at.x - size * 0.32, y: at.y + size * 0.9 },
   };
-  sketch.stroke(MATERIAL.probeSteel);
+  sketch.stroke(BENCH_COLORS.probeSteel);
   sketch.strokeWeight(2);
   for (const leg of [legs.emitter, legs.base, legs.collector]) {
     sketch.line(leg.x, at.y + size * 0.25, leg.x, leg.y);
@@ -57,16 +59,16 @@ export function paintTransistor(sketch: p5, at: Point, size: number) {
 /** A light-dependent resistor at `at`, its window lit by `light` from 0 (dark) to 1 (bright). */
 export function paintLdr(sketch: p5, at: Point, size: number, light: number) {
   spotlight(sketch, at, size * 1.6, {
-    color: MATERIAL.lampLight,
+    color: INSTRUMENT_COLORS.lampLight,
     strength: 0.5 * light,
   });
   sketch.noStroke();
-  sketch.fill(mix(MATERIAL.dish, getColor("WHITE"), 0.3));
+  sketch.fill(mix(BENCH_COLORS.dish, getColor("WHITE"), 0.3));
   sketch.circle(at.x, at.y, size);
-  sketch.fill(mix(MATERIAL.calx, MATERIAL.coalGlow, 0.3));
+  sketch.fill(mix(REAGENT_COLORS.calx, BENCH_COLORS.coalGlow, 0.3));
   sketch.circle(at.x, at.y, size * 0.8);
   sketch.noFill();
-  sketch.stroke(mix(MATERIAL.dish, getColor("WHITE"), 0.5));
+  sketch.stroke(mix(BENCH_COLORS.dish, getColor("WHITE"), 0.5));
   sketch.strokeWeight(Math.max(1.5, size * 0.06));
   const rows = 5;
   for (let row = 0; row < rows; row += 1) {
@@ -118,7 +120,7 @@ export function paintChip(
       ]);
     }
   );
-  sketch.stroke(MATERIAL.probeSteel);
+  sketch.stroke(BENCH_COLORS.probeSteel);
   sketch.strokeWeight(2);
   for (let pin = 0; pin < 4; pin += 1) {
     const x = box.x + (box.width * (pin + 0.5)) / 4;

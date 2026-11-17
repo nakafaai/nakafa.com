@@ -6,7 +6,7 @@ import {
 } from "@repo/design-system/components/contents/simulation/grain";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { getColor } from "@repo/design-system/lib/color";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { ROAD_COLORS } from "@repo/design-system/lib/material/road";
 import { Array as Arr, Schema } from "effect";
 import {
   type ReactNode,
@@ -47,13 +47,18 @@ const SurfaceLookSchema = Schema.Struct({
 
 /** How each surface looks: its base colour, its gloss and its grain. */
 const SURFACE_LOOK = {
-  dry: { clearcoat: 0, color: MATERIAL.asphalt, grain: 0.5, roughness: 0.88 },
-  gravel: { clearcoat: 0, color: MATERIAL.gravel, grain: 0.9, roughness: 1 },
-  ice: { clearcoat: 1, color: MATERIAL.ice, grain: 0.18, roughness: 0.06 },
-  snow: { clearcoat: 0, color: MATERIAL.snow, grain: 0.28, roughness: 0.82 },
+  dry: {
+    clearcoat: 0,
+    color: ROAD_COLORS.asphalt,
+    grain: 0.5,
+    roughness: 0.88,
+  },
+  gravel: { clearcoat: 0, color: ROAD_COLORS.gravel, grain: 0.9, roughness: 1 },
+  ice: { clearcoat: 1, color: ROAD_COLORS.ice, grain: 0.18, roughness: 0.06 },
+  snow: { clearcoat: 0, color: ROAD_COLORS.snow, grain: 0.28, roughness: 0.82 },
   wet: {
     clearcoat: 0.85,
-    color: MATERIAL.wetAsphalt,
+    color: ROAD_COLORS.wetAsphalt,
     grain: 0.42,
     roughness: 0.2,
   },
@@ -189,7 +194,7 @@ export function Road({
           receiveShadow
         >
           <boxGeometry args={[length, ROAD.kerb, 0.16]} />
-          <meshStandardMaterial color={MATERIAL.kerb} roughness={0.9} />
+          <meshStandardMaterial color={ROAD_COLORS.kerb} roughness={0.9} />
         </mesh>
       ))}
       <mesh
@@ -202,7 +207,7 @@ export function Road({
       >
         <boxGeometry args={[length, 0.04, ROAD.pavement]} />
         <meshStandardMaterial
-          color={MATERIAL.pavement}
+          color={ROAD_COLORS.pavement}
           map={color}
           roughness={0.95}
         />
@@ -225,7 +230,7 @@ function RoadPaint({
   return (
     <Instances limit={count} receiveShadow>
       <boxGeometry args={[1, 0.006, 1]} />
-      <meshStandardMaterial color={MATERIAL.roadPaint} roughness={0.6} />
+      <meshStandardMaterial color={ROAD_COLORS.roadPaint} roughness={0.6} />
       {children}
     </Instances>
   );
@@ -236,10 +241,10 @@ const CROWN_LUMPS = 11;
 
 /** Leaf greens of a tropical roadside tree, sunlit to shaded. */
 const LEAVES = [
-  MATERIAL.foliageShade,
-  MATERIAL.foliage,
-  MATERIAL.foliageDark,
-  MATERIAL.foliageLight,
+  ROAD_COLORS.foliageShade,
+  ROAD_COLORS.foliage,
+  ROAD_COLORS.foliageDark,
+  ROAD_COLORS.foliageLight,
 ] as const;
 
 /**
@@ -270,7 +275,7 @@ function Trees({ positions }: { readonly positions: readonly number[] }) {
     <group>
       <Instances castShadow limit={Math.max(1, positions.length)}>
         <cylinderGeometry args={[0.14, 0.26, 4, 10]} />
-        <meshStandardMaterial color={MATERIAL.bark} roughness={1} />
+        <meshStandardMaterial color={ROAD_COLORS.bark} roughness={1} />
         {Arr.map(positions, (x) => (
           <Instance key={x} position={[x, 2, ROAD.side * 10]} />
         ))}
@@ -301,7 +306,7 @@ function Lamps({ positions }: { readonly positions: readonly number[] }) {
       <Instances castShadow limit={Math.max(1, positions.length)}>
         <cylinderGeometry args={[0.06, 0.09, 7, 10]} />
         <meshStandardMaterial
-          color={MATERIAL.lampPost}
+          color={ROAD_COLORS.lampPost}
           metalness={0.8}
           roughness={0.4}
         />
@@ -312,7 +317,7 @@ function Lamps({ positions }: { readonly positions: readonly number[] }) {
       <Instances castShadow limit={Math.max(1, positions.length)}>
         <boxGeometry args={[0.12, 0.08, 1.6]} />
         <meshStandardMaterial
-          color={MATERIAL.lampPost}
+          color={ROAD_COLORS.lampPost}
           metalness={0.8}
           roughness={0.4}
         />
@@ -335,7 +340,10 @@ export function DistancePosts({
     <group>
       <Instances castShadow limit={Math.max(1, posts.length)}>
         <boxGeometry args={[0.1, 1, 0.1]} />
-        <meshStandardMaterial color={MATERIAL.distancePost} roughness={0.5} />
+        <meshStandardMaterial
+          color={ROAD_COLORS.distancePost}
+          roughness={0.5}
+        />
         {Arr.map(posts, (x) => (
           <Instance key={x} position={[x, 0.5, z]} />
         ))}

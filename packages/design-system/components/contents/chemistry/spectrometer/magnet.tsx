@@ -3,7 +3,8 @@ import {
   GlassMaterial,
   MetalMaterial,
 } from "@repo/design-system/components/three/physical";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { BENCH_COLORS } from "@repo/design-system/lib/material/bench";
+import { INSTRUMENT_COLORS } from "@repo/design-system/lib/material/instrument";
 import { Array as Arr } from "effect";
 import { useMemo } from "react";
 import { CatmullRomCurve3, Color, Shape, Vector3 } from "three";
@@ -78,13 +79,13 @@ export function SectorMagnet({
     <group position={[centre, 0, 0]} rotation={[-Math.PI / 2, 0, 0]}>
       <mesh castShadow position={[0, 0, POLE_FACE - POLE]} receiveShadow>
         <extrudeGeometry args={[shapes.pole, { ...BEVEL, depth: POLE }]} />
-        <MetalMaterial color={MATERIAL.probeSteel} roughness={0.42} />
+        <MetalMaterial color={BENCH_COLORS.probeSteel} roughness={0.42} />
       </mesh>
       <mesh castShadow position={[0, 0, POLE_FACE - POLE - 0.05]}>
         <extrudeGeometry
           args={[shapes.coil, { ...BEVEL, bevelSize: 0.06, depth: 0.3 }]}
         />
-        <MetalMaterial color={MATERIAL.copper} roughness={0.48} />
+        <MetalMaterial color={INSTRUMENT_COLORS.copper} roughness={0.48} />
       </mesh>
       <mesh castShadow position={[0, 0, POLE_FACE]}>
         <extrudeGeometry
@@ -93,15 +94,15 @@ export function SectorMagnet({
             { ...BEVEL, bevelSize: 0.01, depth: UPPER - POLE_FACE },
           ]}
         />
-        <MetalMaterial color={MATERIAL.panSteel} roughness={0.28} />
+        <MetalMaterial color={BENCH_COLORS.panSteel} roughness={0.28} />
       </mesh>
       <mesh castShadow position={[0, 0, UPPER]}>
         <extrudeGeometry args={[shapes.frame, { ...BEVEL, depth: 0.14 }]} />
-        <MetalMaterial color={MATERIAL.probeSteel} roughness={0.42} />
+        <MetalMaterial color={BENCH_COLORS.probeSteel} roughness={0.42} />
       </mesh>
       <mesh position={[0, 0, UPPER + 0.05]}>
         <shapeGeometry args={[shapes.window, 64]} />
-        <GlassMaterial color={MATERIAL.glass} opacity={0.14} />
+        <GlassMaterial color={BENCH_COLORS.glass} opacity={0.14} />
       </mesh>
     </group>
   );
@@ -114,7 +115,7 @@ export function SectorMagnet({
  * black hose to the vacuum pump.
  */
 export function IonSource({ at }: { readonly at: number }) {
-  const filament = new Color(MATERIAL.coalGlow).multiplyScalar(2.2);
+  const filament = new Color(BENCH_COLORS.coalGlow).multiplyScalar(2.2);
   const hose = useMemo(
     () =>
       new CatmullRomCurve3([
@@ -134,7 +135,7 @@ export function IonSource({ at }: { readonly at: number }) {
         rotation={[0, 0, Math.PI / 2]}
       >
         <cylinderGeometry args={[0.32, 0.32, 0.9, 40, 1]} />
-        <MetalMaterial color={MATERIAL.panSteel} roughness={0.26} />
+        <MetalMaterial color={BENCH_COLORS.panSteel} roughness={0.26} />
       </mesh>
       <mesh position={[0, 0.34, at + 0.2]}>
         <boxGeometry args={[0.18, 0.04, 0.04]} />
@@ -149,12 +150,12 @@ export function IonSource({ at }: { readonly at: number }) {
           radius={0.012}
           smoothness={2}
         >
-          <MetalMaterial color={MATERIAL.aluminium} roughness={0.24} />
+          <MetalMaterial color={INSTRUMENT_COLORS.aluminium} roughness={0.24} />
         </RoundedBox>
       ))}
       <mesh castShadow>
         <tubeGeometry args={[hose, 48, 0.09, 16, false]} />
-        <meshStandardMaterial color={MATERIAL.epoxy} roughness={0.7} />
+        <meshStandardMaterial color={BENCH_COLORS.epoxy} roughness={0.7} />
       </mesh>
     </group>
   );
@@ -183,11 +184,11 @@ export function Detector({
         receiveShadow
         smoothness={3}
       >
-        <MetalMaterial color={MATERIAL.panSteel} roughness={0.3} />
+        <MetalMaterial color={BENCH_COLORS.panSteel} roughness={0.3} />
       </RoundedBox>
       <mesh position={[0, 0.3, -0.06]}>
         <boxGeometry args={[length - 0.2, 0.12, 0.02]} />
-        <MetalMaterial color={MATERIAL.copper} roughness={0.35} />
+        <MetalMaterial color={INSTRUMENT_COLORS.copper} roughness={0.35} />
       </mesh>
     </group>
   );

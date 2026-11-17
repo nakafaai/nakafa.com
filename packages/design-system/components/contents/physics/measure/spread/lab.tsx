@@ -29,7 +29,7 @@ import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { P5Sketch } from "@repo/design-system/components/visual/sketch";
 import { getColor } from "@repo/design-system/lib/color";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { INSTRUMENT_COLORS } from "@repo/design-system/lib/material/instrument";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr, Option, Schema } from "effect";
 import type p5 from "p5";
@@ -64,8 +64,8 @@ function spreadProgram(sketch: p5, read: () => SpreadFrame) {
     const frame = read();
     const { height, width } = sketch;
     gradientRect(sketch, { height, width, x: 0, y: 0 }, [
-      [0, mix(MATERIAL.paper, getColor("BLACK"), 0.78)],
-      [1, mix(MATERIAL.paper, getColor("BLACK"), 0.88)],
+      [0, mix(INSTRUMENT_COLORS.paper, getColor("BLACK"), 0.78)],
+      [1, mix(INSTRUMENT_COLORS.paper, getColor("BLACK"), 0.88)],
     ]);
     const all = Arr.flatMap(frame.students, (student) => student.readings);
     const reach =

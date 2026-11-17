@@ -33,7 +33,10 @@ import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { P5Sketch } from "@repo/design-system/components/visual/sketch";
 import { getColor } from "@repo/design-system/lib/color";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { BENCH_COLORS } from "@repo/design-system/lib/material/bench";
+import { ROAD_COLORS } from "@repo/design-system/lib/material/road";
+import { SKY_COLORS } from "@repo/design-system/lib/material/sky";
+import { TOWN_COLORS } from "@repo/design-system/lib/material/town";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr, Schema } from "effect";
 import type p5 from "p5";
@@ -77,8 +80,8 @@ function paintGarden(sketch: p5, view: ReturnType<typeof lawnView>) {
     sketch,
     { height: view.ground, width: sketch.width, x: 0, y: 0 },
     [
-      [0, MATERIAL.skyZenith],
-      [1, MATERIAL.skyHaze],
+      [0, SKY_COLORS.skyZenith],
+      [1, SKY_COLORS.skyHaze],
     ]
   );
   outOfFocus(sketch, 4, () => {
@@ -88,8 +91,8 @@ function paintGarden(sketch: p5, view: ReturnType<typeof lawnView>) {
       const r = sketch.height * (0.06 + 0.05 * hashUnit(index, 3));
       sketch.fill(
         mix(
-          MATERIAL.foliageDark,
-          MATERIAL.skyHaze,
+          ROAD_COLORS.foliageDark,
+          SKY_COLORS.skyHaze,
           0.25 + 0.2 * hashUnit(index, 5)
         )
       );
@@ -105,11 +108,11 @@ function paintGarden(sketch: p5, view: ReturnType<typeof lawnView>) {
       y: view.ground,
     },
     [
-      [0, MATERIAL.grass],
-      [1, mix(MATERIAL.grass, MATERIAL.foliageDark, 0.6)],
+      [0, ROAD_COLORS.grass],
+      [1, mix(ROAD_COLORS.grass, ROAD_COLORS.foliageDark, 0.6)],
     ]
   );
-  sketch.fill(fade(MATERIAL.roadPaint, 0.75));
+  sketch.fill(fade(ROAD_COLORS.roadPaint, 0.75));
   sketch.noStroke();
   for (let metre = 1; view.x(metre) < sketch.width; metre += 1) {
     sketch.rect(view.x(metre) - 1, view.ground, 2, sketch.height * 0.025);
@@ -139,7 +142,7 @@ function paintNozzle(
   sketch.translate(view.nozzle, view.ground);
   sketch.rotate((-angle * Math.PI) / 180);
   sketch.noStroke();
-  sketch.fill(MATERIAL.batteryTerminal);
+  sketch.fill(BENCH_COLORS.batteryTerminal);
   sketch.rect(
     0,
     -sketch.height * 0.012,
@@ -188,20 +191,20 @@ function fountainProgram(sketch: p5, read: () => FountainFrame) {
       const age = ((index / DROPS) * flight + clock) % flight;
       const drop = jetDrop(speed, angle, age);
       const spread = (hashUnit(index, 7) - 0.5) * 0.06 * age;
-      sketch.fill(fade(MATERIAL.waterGlint, 0.85));
+      sketch.fill(fade(TOWN_COLORS.waterGlint, 0.85));
       sketch.circle(
         view.x(drop.x + spread),
         view.y(drop.y + spread),
         Math.max(3, view.scale * 0.035)
       );
-      sketch.fill(fade(MATERIAL.water, 0.5));
+      sketch.fill(fade(TOWN_COLORS.water, 0.5));
       sketch.circle(
         view.x(drop.x + spread) + 1,
         view.y(drop.y + spread) + 1,
         Math.max(2, view.scale * 0.02)
       );
     }
-    sketch.fill(fade(MATERIAL.waterGlint, 0.4));
+    sketch.fill(fade(TOWN_COLORS.waterGlint, 0.4));
     sketch.ellipse(
       view.x(range),
       view.ground + 2,

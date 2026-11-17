@@ -33,7 +33,7 @@ import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { P5Sketch } from "@repo/design-system/components/visual/sketch";
 import { getColor } from "@repo/design-system/lib/color";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { MACHINE_COLORS } from "@repo/design-system/lib/material/machine";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr, Schema } from "effect";
 import type p5 from "p5";
@@ -94,20 +94,20 @@ function gatesProgram(sketch: p5, read: () => GatesFrame) {
     wire(
       sketch,
       [at(0.1, 0.14), at(0.3, 0.14), at(0.3, 0.2)],
-      MATERIAL.hullRed
+      MACHINE_COLORS.hullRed
     );
     wire(
       sketch,
       [at(0.1, 0.32), at(0.3, 0.32), at(0.3, 0.28)],
-      MATERIAL.hullRed
+      MACHINE_COLORS.hullRed
     );
-    wire(sketch, [at(0.44, 0.23), at(0.6, 0.23)], MATERIAL.signalAmber);
+    wire(sketch, [at(0.44, 0.23), at(0.6, 0.23)], MACHINE_COLORS.signalAmber);
     wire(
       sketch,
       [at(0.1, 0.44), at(0.66, 0.44), at(0.66, 0.31)],
-      MATERIAL.hullRed
+      MACHINE_COLORS.hullRed
     );
-    wire(sketch, [at(0.8, 0.27), at(0.9, 0.27)], MATERIAL.signalGreen);
+    wire(sketch, [at(0.8, 0.27), at(0.9, 0.27)], MACHINE_COLORS.signalGreen);
     paintChip(
       sketch,
       {
@@ -141,7 +141,13 @@ function gatesProgram(sketch: p5, read: () => GatesFrame) {
         { label: "C", on: row.c === 1, y: 0.44 },
       ],
       (input) => {
-        paintLed(sketch, at(0.1, input.y), led, input.on, MATERIAL.signalRed);
+        paintLed(
+          sketch,
+          at(0.1, input.y),
+          led,
+          input.on,
+          MACHINE_COLORS.signalRed
+        );
         caption(
           sketch,
           input.label,
@@ -155,7 +161,7 @@ function gatesProgram(sketch: p5, read: () => GatesFrame) {
       at(0.52, 0.23),
       led * 0.8,
       result.x === 1,
-      MATERIAL.signalAmber
+      MACHINE_COLORS.signalAmber
     );
     caption(
       sketch,
@@ -163,7 +169,13 @@ function gatesProgram(sketch: p5, read: () => GatesFrame) {
       { x: width * 0.52, y: height * 0.23 - led },
       { ...name, align: "center", baseline: "bottom" }
     );
-    paintLed(sketch, at(0.92, 0.27), led, result.q === 1, MATERIAL.signalGreen);
+    paintLed(
+      sketch,
+      at(0.92, 0.27),
+      led,
+      result.q === 1,
+      MACHINE_COLORS.signalGreen
+    );
     caption(
       sketch,
       "Q",

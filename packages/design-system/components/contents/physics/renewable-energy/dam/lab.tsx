@@ -34,7 +34,10 @@ import {
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { P5Sketch } from "@repo/design-system/components/visual/sketch";
 import { getColor } from "@repo/design-system/lib/color";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { ENERGY_COLORS } from "@repo/design-system/lib/material/energy";
+import { MACHINE_COLORS } from "@repo/design-system/lib/material/machine";
+import { ROAD_COLORS } from "@repo/design-system/lib/material/road";
+import { TOWN_COLORS } from "@repo/design-system/lib/material/town";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Schema } from "effect";
 import type p5 from "p5";
@@ -81,9 +84,9 @@ function paintReservoir(
     sketch,
     { height: place.bed - surface, width: place.damFoot + 4, x: 0, y: surface },
     [
-      [0, mix(MATERIAL.water, MATERIAL.waterGlint, 0.45)],
-      [0.2, MATERIAL.water],
-      [1, mix(MATERIAL.water, getColor("BLACK"), 0.55)],
+      [0, mix(TOWN_COLORS.water, TOWN_COLORS.waterGlint, 0.45)],
+      [0.2, TOWN_COLORS.water],
+      [1, mix(TOWN_COLORS.water, getColor("BLACK"), 0.55)],
     ]
   );
   sketch.stroke(fade(getColor("WHITE"), 0.35));
@@ -97,7 +100,7 @@ function paintReservoir(
     sketch,
     { blur: 20, color: fade(getColor("BLACK"), 0.55), drop: 6 },
     () => {
-      sketch.fill(MATERIAL.concrete);
+      sketch.fill(MACHINE_COLORS.concrete);
       sketch.quad(
         place.damFoot,
         place.bed,
@@ -135,10 +138,14 @@ function paintPenstock(
     y: place.bed - sketch.height * 0.05,
   };
   const pipe = Math.max(sketch.height * 0.028, 7);
-  sketch.stroke(mix(MATERIAL.galvanizedSteel, getColor("SLATE", 700), 0.45));
+  sketch.stroke(
+    mix(ENERGY_COLORS.galvanizedSteel, getColor("SLATE", 700), 0.45)
+  );
   sketch.strokeWeight(pipe);
   sketch.line(intake.x, intake.y, turbine.x, turbine.y);
-  sketch.stroke(fade(mix(MATERIAL.water, MATERIAL.waterGlint, 0.45), 0.9));
+  sketch.stroke(
+    fade(mix(TOWN_COLORS.water, TOWN_COLORS.waterGlint, 0.45), 0.9)
+  );
   sketch.strokeWeight(pipe * 0.45);
   sketch.line(intake.x, intake.y, turbine.x, turbine.y);
   sketch.noStroke();
@@ -173,8 +180,8 @@ function paintPowerhouse(
       y: place.bed - height * 0.015,
     },
     [
-      [0, mix(MATERIAL.water, MATERIAL.waterGlint, 0.45)],
-      [1, MATERIAL.water],
+      [0, mix(TOWN_COLORS.water, TOWN_COLORS.waterGlint, 0.45)],
+      [1, TOWN_COLORS.water],
     ]
   );
   sketch.stroke(fade(getColor("WHITE"), 0.5));
@@ -196,8 +203,8 @@ function paintPowerhouse(
     { blur: 16, color: fade(getColor("BLACK"), 0.55), drop: 6 },
     () => {
       gradientRect(sketch, box, [
-        [0, mix(MATERIAL.concrete, getColor("WHITE"), 0.35)],
-        [1, mix(MATERIAL.concrete, getColor("BLACK"), 0.3)],
+        [0, mix(MACHINE_COLORS.concrete, getColor("WHITE"), 0.35)],
+        [1, mix(MACHINE_COLORS.concrete, getColor("BLACK"), 0.3)],
       ]);
     }
   );
@@ -266,7 +273,7 @@ function damProgram(sketch: p5, read: () => DamFrame) {
     paintSky(sketch, place.bed);
     paintClouds(sketch, place.bed, time);
     paintHills(sketch, place.bed * 0.9);
-    paintGround(sketch, place.bed, MATERIAL.grass);
+    paintGround(sketch, place.bed, ROAD_COLORS.grass);
     paintReservoir(sketch, place, head, time);
     const turbine = paintPenstock(sketch, place, head, time);
     paintPowerhouse(sketch, place, turbine, turn, time);

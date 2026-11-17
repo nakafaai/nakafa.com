@@ -41,7 +41,8 @@ import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { P5Sketch } from "@repo/design-system/components/visual/sketch";
 import { getColor } from "@repo/design-system/lib/color";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { ROAD_COLORS } from "@repo/design-system/lib/material/road";
+import { TOWN_COLORS } from "@repo/design-system/lib/material/town";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr, Schema } from "effect";
 import type p5 from "p5";
@@ -104,21 +105,21 @@ function paintStadium(sketch: p5, plan: Plan) {
     sketch,
     { height: sketch.height, width: sketch.width, x: 0, y: 0 },
     [
-      [0, mix(MATERIAL.pavement, getColor("WHITE"), 0.1)],
-      [1, mix(MATERIAL.pavement, getColor("BLACK"), 0.2)],
+      [0, mix(ROAD_COLORS.pavement, getColor("WHITE"), 0.1)],
+      [1, mix(ROAD_COLORS.pavement, getColor("BLACK"), 0.2)],
     ]
   );
   sketch.noStroke();
-  sketch.fill(mix(MATERIAL.athleticsTrack, getColor("BLACK"), 0.15));
+  sketch.fill(mix(TOWN_COLORS.athleticsTrack, getColor("BLACK"), 0.15));
   stadium(sketch, plan, KERB + LANE * LANES + 0.6);
-  sketch.fill(MATERIAL.athleticsTrack);
+  sketch.fill(TOWN_COLORS.athleticsTrack);
   stadium(sketch, plan, KERB + LANE * LANES);
-  sketch.fill(MATERIAL.kerb);
+  sketch.fill(ROAD_COLORS.kerb);
   stadium(sketch, plan, KERB);
-  sketch.fill(MATERIAL.grass);
+  sketch.fill(ROAD_COLORS.grass);
   stadium(sketch, plan, KERB - 0.4);
   sketch.noFill();
-  sketch.stroke(fade(MATERIAL.roadPaint, 0.85));
+  sketch.stroke(fade(ROAD_COLORS.roadPaint, 0.85));
   sketch.strokeWeight(Math.max(1, plan.scale * 0.08));
   for (let lane = 1; lane <= LANES; lane += 1) {
     laneLine(sketch, plan, KERB + LANE * lane);
@@ -129,7 +130,7 @@ function paintStadium(sketch: p5, plan: Plan) {
     north: -KERB - LANE * LANES,
   });
   sketch.strokeWeight(Math.max(2, plan.scale * 0.3));
-  sketch.stroke(MATERIAL.roadPaint);
+  sketch.stroke(ROAD_COLORS.roadPaint);
   sketch.line(finish.x, finish.y, outer.x, outer.y);
   sketch.noStroke();
 }

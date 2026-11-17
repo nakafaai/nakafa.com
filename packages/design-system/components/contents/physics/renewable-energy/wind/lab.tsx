@@ -38,7 +38,10 @@ import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { P5Sketch } from "@repo/design-system/components/visual/sketch";
 import { getColor } from "@repo/design-system/lib/color";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { MACHINE_COLORS } from "@repo/design-system/lib/material/machine";
+import { ROAD_COLORS } from "@repo/design-system/lib/material/road";
+import { SKY_COLORS } from "@repo/design-system/lib/material/sky";
+import { TOWN_COLORS } from "@repo/design-system/lib/material/town";
 import { Array as Arr, Schema } from "effect";
 import type p5 from "p5";
 import { type ReactNode, useState } from "react";
@@ -55,10 +58,10 @@ function paintSite(sketch: p5, site: Site, ground: number) {
   const { height, width } = sketch;
   if (site === "coast") {
     gradientRect(sketch, { height: height - ground, width, x: 0, y: ground }, [
-      [0, mix(MATERIAL.water, MATERIAL.waterGlint, 0.45)],
-      [1, mix(MATERIAL.water, getColor("BLACK"), 0.4)],
+      [0, mix(TOWN_COLORS.water, TOWN_COLORS.waterGlint, 0.45)],
+      [1, mix(TOWN_COLORS.water, getColor("BLACK"), 0.4)],
     ]);
-    sketch.fill(MATERIAL.sand);
+    sketch.fill(MACHINE_COLORS.sand);
     sketch.quad(
       0,
       ground + height * 0.04,
@@ -73,11 +76,11 @@ function paintSite(sketch: p5, site: Site, ground: number) {
   }
   const top = site === "hill" ? ground - height * 0.22 : ground + height * 0.04;
   gradientRect(sketch, { height: height - ground, width, x: 0, y: ground }, [
-    [0, MATERIAL.grass],
-    [1, MATERIAL.foliageDark],
+    [0, ROAD_COLORS.grass],
+    [1, ROAD_COLORS.foliageDark],
   ]);
   if (site === "hill") {
-    sketch.fill(mix(MATERIAL.grass, getColor("WHITE"), 0.08));
+    sketch.fill(mix(ROAD_COLORS.grass, getColor("WHITE"), 0.08));
     sketch.beginShape();
     sketch.vertex(width * 0.05, ground + 2);
     for (let step = 0; step <= 20; step += 1) {
@@ -91,7 +94,7 @@ function paintSite(sketch: p5, site: Site, ground: number) {
     sketch.endShape(sketch.CLOSE);
   }
   if (site === "valley") {
-    sketch.fill(mix(MATERIAL.foliageDark, MATERIAL.skyHaze, 0.25));
+    sketch.fill(mix(ROAD_COLORS.foliageDark, SKY_COLORS.skyHaze, 0.25));
     sketch.triangle(
       -width * 0.1,
       ground,

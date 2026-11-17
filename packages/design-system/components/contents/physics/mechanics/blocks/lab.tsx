@@ -19,7 +19,8 @@ import {
 import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { P5Sketch } from "@repo/design-system/components/visual/sketch";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { INSTRUMENT_COLORS } from "@repo/design-system/lib/material/instrument";
+import { MACHINE_COLORS } from "@repo/design-system/lib/material/machine";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Schema } from "effect";
 import type p5 from "p5";
@@ -72,18 +73,18 @@ function blocksProgram(sketch: p5, read: () => BlocksFrame) {
     const gap = width * 0.18;
     const frontLeft = backLeft + backSize + gap;
     const string = floor - Math.min(backSize, frontSize) * 0.5;
-    sketch.stroke(MATERIAL.hemp);
+    sketch.stroke(MACHINE_COLORS.hemp);
     sketch.strokeWeight(3);
     sketch.line(backLeft + backSize, string, frontLeft, string);
     paintBlock(
       sketch,
       { base: floor, height: backSize, left: backLeft, width: backSize },
-      MATERIAL.oak
+      INSTRUMENT_COLORS.oak
     );
     paintBlock(
       sketch,
       { base: floor, height: frontSize, left: frontLeft, width: frontSize },
-      MATERIAL.pine
+      INSTRUMENT_COLORS.pine
     );
     const newton = (width * 0.16) / Math.max(frame.pull, 1);
     const pullFrom = { x: frontLeft + frontSize, y: string };

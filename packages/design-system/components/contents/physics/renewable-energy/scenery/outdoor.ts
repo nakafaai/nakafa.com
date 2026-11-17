@@ -6,14 +6,17 @@ import {
   spotlight,
 } from "@repo/design-system/components/contents/physics/canvas/paint";
 import { getColor } from "@repo/design-system/lib/color";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { ENERGY_COLORS } from "@repo/design-system/lib/material/energy";
+import { ROAD_COLORS } from "@repo/design-system/lib/material/road";
+import { SKY_COLORS } from "@repo/design-system/lib/material/sky";
 import type p5 from "p5";
 
 /**
  * The outdoor world the renewable-energy sketches share: a sky that falls off
  * toward a hazy horizon, a sun with its glare, hills the lens leaves out of
- * focus, ground and clouds. Every tone is a real material from `MATERIAL`, so
- * grass, water and sky look the same as in every other lesson.
+ * focus, ground and clouds. Every tone is a real material from the colour
+ * modules in `@repo/design-system/lib/material`, so grass, water and sky look
+ * the same as in every other lesson.
  */
 
 /** How light the sky is: full day, the glow before sunset, or night. */
@@ -21,9 +24,12 @@ type Daylight = "day" | "dusk" | "night";
 
 /** The top and horizon tones of each daylight. */
 const SKY_TONES = {
-  day: [MATERIAL.skyZenith, MATERIAL.skyHaze],
-  dusk: [MATERIAL.duskZenith, MATERIAL.duskGlow],
-  night: [MATERIAL.nightSky, mix(MATERIAL.nightSky, MATERIAL.duskZenith, 0.5)],
+  day: [SKY_COLORS.skyZenith, SKY_COLORS.skyHaze],
+  dusk: [ENERGY_COLORS.duskZenith, ENERGY_COLORS.duskGlow],
+  night: [
+    ENERGY_COLORS.nightSky,
+    mix(ENERGY_COLORS.nightSky, ENERGY_COLORS.duskZenith, 0.5),
+  ],
 } as const satisfies Record<Daylight, readonly [string, string]>;
 
 /** Paints the sky from the top of the frame down to the horizon. */
@@ -52,7 +58,7 @@ export function paintSun(
   strength = 1
 ) {
   spotlight(sketch, center, radius * 9, {
-    color: MATERIAL.sunDisc,
+    color: ENERGY_COLORS.sunDisc,
     strength: 0.42 * strength,
   });
   spotlight(sketch, center, radius * 2.4, {
@@ -60,7 +66,7 @@ export function paintSun(
     strength: 0.7 * strength,
   });
   sketch.noStroke();
-  sketch.fill(fade(MATERIAL.sunDisc, Math.min(1, 0.35 + 0.65 * strength)));
+  sketch.fill(fade(ENERGY_COLORS.sunDisc, Math.min(1, 0.35 + 0.65 * strength)));
   sketch.circle(center.x, center.y, radius * 2);
 }
 
@@ -82,7 +88,7 @@ export function paintHills(
   outOfFocus(sketch, Math.max(1.5, width / 260), () => {
     for (const range of ranges) {
       sketch.noStroke();
-      sketch.fill(mix(MATERIAL.foliageDark, low, range.amount));
+      sketch.fill(mix(ROAD_COLORS.foliageDark, low, range.amount));
       sketch.beginShape();
       sketch.vertex(-10, horizon + 4);
       for (let x = -10; x <= width + 10; x += 12) {
@@ -103,13 +109,13 @@ export function paintHills(
 export function paintGround(
   sketch: p5,
   horizon: number,
-  tone: string = MATERIAL.grass
+  tone: string = ROAD_COLORS.grass
 ) {
   gradientRect(
     sketch,
     { height: sketch.height - horizon, width: sketch.width, x: 0, y: horizon },
     [
-      [0, mix(tone, MATERIAL.skyHaze, 0.35)],
+      [0, mix(tone, SKY_COLORS.skyHaze, 0.35)],
       [0.35, tone],
       [1, mix(tone, getColor("BLACK"), 0.45)],
     ]
@@ -136,7 +142,7 @@ export function paintClouds(
       const x = ((cloud.at * span + time * cloud.speed) % span) - width * 0.15;
       const y = horizon * cloud.high;
       const size = width * cloud.size;
-      sketch.fill(fade(MATERIAL.cloud, opacity));
+      sketch.fill(fade(ENERGY_COLORS.cloud, opacity));
       sketch.ellipse(x, y, size, size * 0.34);
       sketch.ellipse(x + size * 0.22, y - size * 0.1, size * 0.6, size * 0.36);
       sketch.ellipse(x - size * 0.25, y - size * 0.04, size * 0.5, size * 0.26);

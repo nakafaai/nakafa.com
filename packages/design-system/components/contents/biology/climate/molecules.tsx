@@ -1,6 +1,6 @@
 import { moleculeParts } from "@repo/design-system/components/contents/biology/climate/gases";
 import { Instances } from "@repo/design-system/components/contents/biology/instances";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { ECOLOGY_COLORS } from "@repo/design-system/lib/material/ecology";
 import { useMemo } from "react";
 
 /**
@@ -9,9 +9,9 @@ import { useMemo } from "react";
  * real model kit rather than the saturated screen colours.
  */
 const ELEMENT_COLORS = {
-  carbon: MATERIAL.moleculeCarbon,
-  hydrogen: MATERIAL.moleculeHydrogen,
-  oxygen: MATERIAL.moleculeOxygen,
+  carbon: ECOLOGY_COLORS.moleculeCarbon,
+  hydrogen: ECOLOGY_COLORS.moleculeHydrogen,
+  oxygen: ECOLOGY_COLORS.moleculeOxygen,
 } as const;
 
 /**

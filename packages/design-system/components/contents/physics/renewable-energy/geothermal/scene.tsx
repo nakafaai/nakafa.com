@@ -10,18 +10,22 @@ import {
 } from "@repo/design-system/components/contents/physics/renewable-energy/world/parts";
 import { MetalMaterial } from "@repo/design-system/components/three/physical";
 import { getColor } from "@repo/design-system/lib/color";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { CAR_COLORS } from "@repo/design-system/lib/material/car";
+import { ENERGY_COLORS } from "@repo/design-system/lib/material/energy";
+import { MACHINE_COLORS } from "@repo/design-system/lib/material/machine";
+import { ROAD_COLORS } from "@repo/design-system/lib/material/road";
+import { TOWN_COLORS } from "@repo/design-system/lib/material/town";
 import { Array as Arr } from "effect";
 import { DoubleSide, Vector2 } from "three";
 
 /** The deepest rock, before the reservoir's heat warms its tone. */
-const DEEP_ROCK = mix(MATERIAL.rock, getColor("BLACK"), 0.35);
+const DEEP_ROCK = mix(ENERGY_COLORS.rock, getColor("BLACK"), 0.35);
 
 /** The cutaway block's layers from the surface down: their tone and thickness in scene units. */
 const LAYERS = [
-  { tall: 0.25, tone: MATERIAL.grass },
-  { tall: 1.4, tone: MATERIAL.soil },
-  { tall: 2.6, tone: MATERIAL.rock },
+  { tall: 0.25, tone: ROAD_COLORS.grass },
+  { tall: 1.4, tone: ENERGY_COLORS.soil },
+  { tall: 2.6, tone: ENERGY_COLORS.rock },
   { tall: 2.2, tone: DEEP_ROCK },
 ] as const;
 
@@ -82,7 +86,7 @@ export function GeothermalScene({
       <mesh position={[0, bottom - 0.5, 0]}>
         <boxGeometry args={[BLOCK.wide, 1, BLOCK.deep]} />
         <meshStandardMaterial
-          color={mix(DEEP_ROCK, MATERIAL.roofTerracotta, 0.1 + warmth * 0.3)}
+          color={mix(DEEP_ROCK, TOWN_COLORS.roofTerracotta, 0.1 + warmth * 0.3)}
           roughness={0.9}
         />
       </mesh>
@@ -98,7 +102,10 @@ export function GeothermalScene({
               radius={0.14}
               to={[well.x, bottom - 0.4, BLOCK.deep / 2 + 0.01]}
             >
-              <MetalMaterial color={MATERIAL.galvanizedSteel} roughness={0.5} />
+              <MetalMaterial
+                color={ENERGY_COLORS.galvanizedSteel}
+                roughness={0.5}
+              />
             </Pipe>
             <Parcels
               color={well.color}
@@ -121,7 +128,7 @@ export function GeothermalScene({
       )}
       <mesh castShadow position={[...HALL.at]} receiveShadow>
         <boxGeometry args={[...HALL.size]} />
-        <meshStandardMaterial color={MATERIAL.concrete} roughness={0.8} />
+        <meshStandardMaterial color={MACHINE_COLORS.concrete} roughness={0.8} />
       </mesh>
       <mesh
         castShadow
@@ -144,7 +151,7 @@ export function GeothermalScene({
             Math.PI / 2,
           ]}
         />
-        <MetalMaterial color={MATERIAL.roofZinc} roughness={0.5} />
+        <MetalMaterial color={TOWN_COLORS.roofZinc} roughness={0.5} />
       </mesh>
       {Arr.map([-2.2, -1.1, 0, 1.1, 2.2] as const, (x) => (
         <mesh
@@ -153,7 +160,7 @@ export function GeothermalScene({
         >
           <boxGeometry args={[0.6, 0.35, 0.02]} />
           <meshStandardMaterial
-            color={MATERIAL.tintedGlass}
+            color={CAR_COLORS.tintedGlass}
             metalness={0.2}
             roughness={0.15}
           />
@@ -166,11 +173,14 @@ export function GeothermalScene({
             radius={0.1}
             to={[x, 0.4, HALL.at[2] + HALL.size[2] / 2]}
           >
-            <MetalMaterial color={MATERIAL.galvanizedSteel} roughness={0.45} />
+            <MetalMaterial
+              color={ENERGY_COLORS.galvanizedSteel}
+              roughness={0.45}
+            />
           </Pipe>
           <mesh castShadow position={[x, 0.4, BLOCK.deep / 2 + 0.01]}>
             <sphereGeometry args={[0.15, 20, 12]} />
-            <MetalMaterial color={MATERIAL.castIron} roughness={0.5} />
+            <MetalMaterial color={CAR_COLORS.castIron} roughness={0.5} />
           </mesh>
         </group>
       ))}
@@ -181,13 +191,16 @@ export function GeothermalScene({
           radius={0.09}
           to={[TOWER.at[0] + 0.75, 0.4, TOWER.at[2] + offset]}
         >
-          <MetalMaterial color={MATERIAL.galvanizedSteel} roughness={0.45} />
+          <MetalMaterial
+            color={ENERGY_COLORS.galvanizedSteel}
+            roughness={0.45}
+          />
         </Pipe>
       ))}
       <mesh castShadow position={[...TOWER.at]} receiveShadow>
         <latheGeometry args={[TOWER_SHELL, 40]} />
         <meshStandardMaterial
-          color={MATERIAL.concrete}
+          color={MACHINE_COLORS.concrete}
           roughness={0.85}
           side={DoubleSide}
         />
@@ -205,7 +218,10 @@ export function GeothermalScene({
           radius={0.05}
           to={[4.6, 3.6, -0.5]}
         >
-          <MetalMaterial color={MATERIAL.galvanizedSteel} roughness={0.4} />
+          <MetalMaterial
+            color={ENERGY_COLORS.galvanizedSteel}
+            roughness={0.4}
+          />
         </Pipe>
       ))}
       <Parcels

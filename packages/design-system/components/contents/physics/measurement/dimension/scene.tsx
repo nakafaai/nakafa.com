@@ -16,7 +16,8 @@ import {
   Repeat,
 } from "@repo/design-system/components/three/repeat";
 import { SurfaceMaterial } from "@repo/design-system/components/three/surface/material";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { CAR_COLORS } from "@repo/design-system/lib/material/car";
+import { INSTRUMENT_COLORS } from "@repo/design-system/lib/material/instrument";
 import { Array as Arr } from "effect";
 
 /** The tape's graduations: a tick every two centimetres of the scene, longer at each tenth. */
@@ -59,7 +60,11 @@ export function DimensionScene({
         receiveShadow
         smoothness={4}
       >
-        <SurfaceMaterial color={MATERIAL.pine} repeat={[2, 1]} surface="wood" />
+        <SurfaceMaterial
+          color={INSTRUMENT_COLORS.pine}
+          repeat={[2, 1]}
+          surface="wood"
+        />
       </RoundedBox>
 
       {modeId === LENGTH_MODE_ID && <Tape />}
@@ -87,16 +92,16 @@ function Tape() {
     <group position={[0, TAPE_Y, TAPE_Z]}>
       <mesh receiveShadow>
         <boxGeometry args={[BLOCK_WIDTH + 0.04, 0.008, 0.18]} />
-        <SurfaceMaterial color={MATERIAL.tapeYellow} surface="paint" />
+        <SurfaceMaterial color={INSTRUMENT_COLORS.tapeYellow} surface="paint" />
       </mesh>
       <Repeat placements={TAPE_TICKS} shadows={false}>
         <boxGeometry args={[0.012, 0.002, 0.06]} />
-        <meshStandardMaterial color={MATERIAL.tyre} roughness={0.6} />
+        <meshStandardMaterial color={CAR_COLORS.tyre} roughness={0.6} />
       </Repeat>
       <mesh castShadow position={[BLOCK_WIDTH / 2 + 0.03, -0.05, 0]}>
         <boxGeometry args={[0.02, 0.12, 0.18]} />
         <SurfaceMaterial
-          color={MATERIAL.brass}
+          color={INSTRUMENT_COLORS.brass}
           metalness={1}
           roughness={0.4}
           surface="brushed"
@@ -109,7 +114,10 @@ function Tape() {
         radius={0.1}
         smoothness={4}
       >
-        <SurfaceMaterial color={MATERIAL.tapeYellow} surface="plastic" />
+        <SurfaceMaterial
+          color={INSTRUMENT_COLORS.tapeYellow}
+          surface="plastic"
+        />
       </RoundedBox>
     </group>
   );

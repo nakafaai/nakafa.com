@@ -7,7 +7,7 @@ import {
 } from "@repo/design-system/components/contents/simulation/ticker";
 import { CameraControls } from "@repo/design-system/components/three/camera/controls";
 import { useVisualScene } from "@repo/design-system/components/visual/card";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { BIOLOGY_COLORS } from "@repo/design-system/lib/material/biology";
 import { Array as Arr } from "effect";
 import { createRef, useMemo, useRef } from "react";
 import { CatmullRomCurve3, DoubleSide, type Mesh, Vector3 } from "three";
@@ -157,7 +157,7 @@ export function NephronScene({
         />
         <meshPhysicalMaterial
           clearcoat={0.4}
-          color={MATERIAL.tubule}
+          color={BIOLOGY_COLORS.tubule}
           depthWrite={false}
           opacity={0.45}
           roughness={0.4}
@@ -167,13 +167,13 @@ export function NephronScene({
       </mesh>
       <mesh position={CAPSULE}>
         <torusKnotGeometry args={[0.24, 0.055, 220, 12, 3, 7]} />
-        <meshStandardMaterial color={MATERIAL.blood} roughness={0.45} />
+        <meshStandardMaterial color={BIOLOGY_COLORS.blood} roughness={0.45} />
       </mesh>
       <mesh>
         <tubeGeometry args={[tubule, 360, 0.12, 16, false]} />
         <meshPhysicalMaterial
           clearcoat={0.5}
-          color={MATERIAL.tubule}
+          color={BIOLOGY_COLORS.tubule}
           depthWrite={false}
           opacity={0.42}
           roughness={0.35}
@@ -182,18 +182,29 @@ export function NephronScene({
       </mesh>
       <mesh>
         <tubeGeometry args={[afferent, 40, 0.085, 12, false]} />
-        <meshStandardMaterial color={MATERIAL.blood} roughness={0.45} />
+        <meshStandardMaterial color={BIOLOGY_COLORS.blood} roughness={0.45} />
       </mesh>
       <mesh>
         <tubeGeometry args={[efferent, 240, 0.055, 10, false]} />
-        <meshStandardMaterial color={MATERIAL.bloodDark} roughness={0.45} />
+        <meshStandardMaterial
+          color={BIOLOGY_COLORS.bloodDark}
+          roughness={0.45}
+        />
       </mesh>
       {Arr.map(grains, (grain) => (
         <mesh key={grain.id} ref={grain.ref}>
           <sphereGeometry args={[0.055, 12, 8]} />
           <meshStandardMaterial
-            color={solute === "glucose" ? MATERIAL.glucose : MATERIAL.urea}
-            emissive={solute === "glucose" ? MATERIAL.glucose : MATERIAL.urea}
+            color={
+              solute === "glucose"
+                ? BIOLOGY_COLORS.glucose
+                : BIOLOGY_COLORS.urea
+            }
+            emissive={
+              solute === "glucose"
+                ? BIOLOGY_COLORS.glucose
+                : BIOLOGY_COLORS.urea
+            }
             emissiveIntensity={0.35}
             roughness={0.35}
           />

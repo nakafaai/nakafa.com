@@ -24,7 +24,9 @@ import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { P5Sketch } from "@repo/design-system/components/visual/sketch";
 import { getColor } from "@repo/design-system/lib/color";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { BENCH_COLORS } from "@repo/design-system/lib/material/bench";
+import { ENERGY_COLORS } from "@repo/design-system/lib/material/energy";
+import { INSTRUMENT_COLORS } from "@repo/design-system/lib/material/instrument";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Schema } from "effect";
 import type p5 from "p5";
@@ -65,7 +67,7 @@ function manometerProgram(sketch: p5, read: () => ManometerFrame) {
     const rest = (bend + armTop) / 2 + height * 0.06;
     const gasLevel = rest + (shown / 2) * centimetre;
     const openLevel = rest - (shown / 2) * centimetre;
-    const liquid = MATERIAL.kettleWater;
+    const liquid = ENERGY_COLORS.kettleWater;
     const fill = (x: number, level: number) =>
       gradientRect(
         sketch,
@@ -87,7 +89,7 @@ function manometerProgram(sketch: p5, read: () => ManometerFrame) {
       ]
     );
     sketch.noFill();
-    sketch.stroke(fade(MATERIAL.glass, 0.8));
+    sketch.stroke(fade(BENCH_COLORS.glass, 0.8));
     sketch.strokeWeight(2.5);
     for (const x of [left, right]) {
       sketch.line(x - bore / 2, armTop, x - bore / 2, bend + bore);
@@ -97,7 +99,7 @@ function manometerProgram(sketch: p5, read: () => ManometerFrame) {
     sketch.line(left + bore / 2, bend, right - bore / 2, bend);
     sketch.line(right + bore / 2, bend, right + bore / 2, bend + bore);
     sketch.noStroke();
-    sketch.fill(MATERIAL.brass);
+    sketch.fill(INSTRUMENT_COLORS.brass);
     sketch.rect(
       left - bore,
       armTop - height * 0.04,
@@ -105,7 +107,7 @@ function manometerProgram(sketch: p5, read: () => ManometerFrame) {
       height * 0.04,
       3
     );
-    sketch.fill(MATERIAL.galvanizedSteel);
+    sketch.fill(ENERGY_COLORS.galvanizedSteel);
     sketch.rect(
       left - bore * 0.3,
       armTop - height * 0.1,

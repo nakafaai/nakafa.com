@@ -11,7 +11,8 @@ import {
   slideCells,
 } from "@repo/design-system/components/contents/biology/microscope/slide";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { BIOLOGY_COLORS } from "@repo/design-system/lib/material/biology";
+import { REAGENT_COLORS } from "@repo/design-system/lib/material/reagent";
 import { Array as Arr, Match } from "effect";
 import { useEffect, useMemo } from "react";
 import { BufferGeometry, DoubleSide, Float32BufferAttribute } from "three";
@@ -22,19 +23,19 @@ const FIELD_RADIUS = 60;
 /** The stains each specimen takes, as the cell's body, its wall or membrane, and its nucleus. */
 const STAIN = {
   cheek: {
-    body: MATERIAL.cheekCell,
-    edge: MATERIAL.methyleneBlue,
-    nucleus: MATERIAL.methyleneDark,
+    body: BIOLOGY_COLORS.cheekCell,
+    edge: BIOLOGY_COLORS.methyleneBlue,
+    nucleus: BIOLOGY_COLORS.methyleneDark,
   },
   onion: {
-    body: MATERIAL.onionCell,
-    edge: MATERIAL.onionWall,
-    nucleus: MATERIAL.onionNucleus,
+    body: BIOLOGY_COLORS.onionCell,
+    edge: BIOLOGY_COLORS.onionWall,
+    nucleus: BIOLOGY_COLORS.onionNucleus,
   },
   root: {
-    body: MATERIAL.rootCell,
-    edge: MATERIAL.rootWall,
-    nucleus: MATERIAL.chromatinStain,
+    body: BIOLOGY_COLORS.rootCell,
+    edge: BIOLOGY_COLORS.rootWall,
+    nucleus: BIOLOGY_COLORS.chromatinStain,
   },
 } as const;
 
@@ -69,7 +70,10 @@ export function EyepieceView({
       {graticule && <Graticule />}
       <mesh position={[0, 1, 0]} rotation={[-Math.PI / 2, 0, 0]}>
         <ringGeometry args={[FIELD_RADIUS, FIELD_RADIUS * 6, 192]} />
-        <meshBasicMaterial color={MATERIAL.microscopeDark} toneMapped={false} />
+        <meshBasicMaterial
+          color={REAGENT_COLORS.microscopeDark}
+          toneMapped={false}
+        />
       </mesh>
     </MicroscopeField>
   );
@@ -263,10 +267,10 @@ function Micrometer({ spacing }: { readonly spacing: number }) {
     <group>
       <mesh position={[0, 0.05, 6]} rotation={[-Math.PI / 2, 0, 0]}>
         <planeGeometry args={[FIELD_RADIUS * 2, 0.35]} />
-        <meshBasicMaterial color={MATERIAL.ink} toneMapped={false} />
+        <meshBasicMaterial color={BIOLOGY_COLORS.ink} toneMapped={false} />
       </mesh>
       <lineSegments geometry={geometry}>
-        <lineBasicMaterial color={MATERIAL.ink} toneMapped={false} />
+        <lineBasicMaterial color={BIOLOGY_COLORS.ink} toneMapped={false} />
       </lineSegments>
     </group>
   );
@@ -294,17 +298,23 @@ function Graticule() {
     <group>
       <mesh position={[0, 0.35, 0]} rotation={[-Math.PI / 2, 0, 0]}>
         <planeGeometry args={[length, 0.4]} />
-        <meshBasicMaterial color={MATERIAL.graticule} toneMapped={false} />
+        <meshBasicMaterial
+          color={BIOLOGY_COLORS.graticule}
+          toneMapped={false}
+        />
       </mesh>
       <lineSegments geometry={geometry}>
-        <lineBasicMaterial color={MATERIAL.graticule} toneMapped={false} />
+        <lineBasicMaterial
+          color={BIOLOGY_COLORS.graticule}
+          toneMapped={false}
+        />
       </lineSegments>
       {Arr.map(Arr.range(0, 10), (index) => (
         <ThreeLabel
-          color={MATERIAL.graticule}
+          color={BIOLOGY_COLORS.graticule}
           fontSize="compact"
           key={index}
-          outlineColor={MATERIAL.microscopeLight}
+          outlineColor={REAGENT_COLORS.microscopeLight}
           outlineWidth={0.02}
           position={[-length / 2 + index * 10 * step, 0.5, -11]}
         >

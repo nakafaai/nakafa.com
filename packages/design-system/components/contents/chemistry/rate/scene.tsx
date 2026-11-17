@@ -17,7 +17,9 @@ import {
   MetalMaterial,
   VesselGlassMaterial,
 } from "@repo/design-system/components/three/physical";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { BENCH_COLORS } from "@repo/design-system/lib/material/bench";
+import { INSTRUMENT_COLORS } from "@repo/design-system/lib/material/instrument";
+import { REAGENT_COLORS } from "@repo/design-system/lib/material/reagent";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr, Schema } from "effect";
 import type { ReactNode } from "react";
@@ -116,7 +118,11 @@ function RunRig({
     <group position={[0, 0, 0.1]}>
       <group position={[x, 0, 0]}>
         <Flask />
-        <FlaskLiquid color={MATERIAL.solution} level={0.04} opacity={0.3} />
+        <FlaskLiquid
+          color={REAGENT_COLORS.solution}
+          level={0.04}
+          opacity={0.3}
+        />
         {Arr.makeBy(pieces, (index) => {
           const angle = index * 2.4;
           const radius = 0.006 + ((index * 7) % 10) * 0.0028;
@@ -131,7 +137,7 @@ function RunRig({
             >
               <boxGeometry args={[size, size, size]} />
               <meshStandardMaterial
-                color={MATERIAL.bakingSoda}
+                color={REAGENT_COLORS.bakingSoda}
                 roughness={0.9}
               />
             </mesh>
@@ -139,11 +145,11 @@ function RunRig({
         })}
         <mesh position={[0, 0.152, 0]}>
           <cylinderGeometry args={[0.019, 0.016, 0.022, 20]} />
-          <meshStandardMaterial color={MATERIAL.stopper} roughness={0.7} />
+          <meshStandardMaterial color={BENCH_COLORS.stopper} roughness={0.7} />
         </mesh>
       </group>
       <Line
-        color={MATERIAL.glass}
+        color={BENCH_COLORS.glass}
         lineWidth={3}
         points={[
           [x, 0.16, 0],
@@ -159,23 +165,23 @@ function RunRig({
           args={[SYRINGE_RADIUS, SYRINGE_RADIUS, SYRINGE_LENGTH, 24, 1, true]}
         />
         <VesselGlassMaterial
-          color={MATERIAL.glass}
+          color={BENCH_COLORS.glass}
           thickness={GLASS_WALL}
-          tint={MATERIAL.glassEdge}
+          tint={BENCH_COLORS.glassEdge}
         />
       </mesh>
       <mesh position={[plunger, SYRINGE_Y, 0]} rotation={[0, 0, Math.PI / 2]}>
         <cylinderGeometry
           args={[SYRINGE_RADIUS - 0.001, SYRINGE_RADIUS - 0.001, 0.006, 24]}
         />
-        <meshStandardMaterial color={MATERIAL.stopper} roughness={0.5} />
+        <meshStandardMaterial color={BENCH_COLORS.stopper} roughness={0.5} />
       </mesh>
       <mesh
         position={[plunger + side * 0.05, SYRINGE_Y, 0]}
         rotation={[0, 0, Math.PI / 2]}
       >
         <cylinderGeometry args={[0.003, 0.003, 0.1, 12]} />
-        <MetalMaterial color={MATERIAL.probeSteel} roughness={0.3} />
+        <MetalMaterial color={BENCH_COLORS.probeSteel} roughness={0.3} />
       </mesh>
       <ThreeLabel
         color={ORIGIN_COLOR.LIGHT}
@@ -216,10 +222,10 @@ export function Board({
     <group position={[0, 0, -0.12]}>
       <mesh position={[0, BOARD_Y, 0]}>
         <boxGeometry args={[BOARD_WIDTH, BOARD_HEIGHT, 0.008]} />
-        <meshStandardMaterial color={MATERIAL.paper} roughness={0.9} />
+        <meshStandardMaterial color={INSTRUMENT_COLORS.paper} roughness={0.9} />
       </mesh>
       <Line
-        color={MATERIAL.graphite}
+        color={INSTRUMENT_COLORS.graphite}
         lineWidth={1.5}
         points={[
           [left, bottom + height, 0.006],

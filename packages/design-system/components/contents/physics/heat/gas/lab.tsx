@@ -29,7 +29,10 @@ import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { P5Sketch } from "@repo/design-system/components/visual/sketch";
 import { getColor } from "@repo/design-system/lib/color";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { BENCH_COLORS } from "@repo/design-system/lib/material/bench";
+import { CAR_COLORS } from "@repo/design-system/lib/material/car";
+import { INSTRUMENT_COLORS } from "@repo/design-system/lib/material/instrument";
+import { REAGENT_COLORS } from "@repo/design-system/lib/material/reagent";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr, Schema } from "effect";
 import type p5 from "p5";
@@ -88,8 +91,8 @@ function gasProgram(sketch: p5, read: () => GasFrame) {
         y: box.y - 8,
       },
       [
-        [0, fade(MATERIAL.glass, 0.35)],
-        [1, fade(MATERIAL.glass, 0.18)],
+        [0, fade(BENCH_COLORS.glass, 0.35)],
+        [1, fade(BENCH_COLORS.glass, 0.18)],
       ]
     );
     gradientRect(
@@ -100,14 +103,14 @@ function gasProgram(sketch: p5, read: () => GasFrame) {
           0,
           fade(
             mix(
-              MATERIAL.gasWisp,
+              REAGENT_COLORS.gasWisp,
               PLOT_COLORS.orange,
               (frame.kelvin - 250) / 400
             ),
             0.25
           ),
         ],
-        [1, fade(MATERIAL.gasWisp, 0.12)],
+        [1, fade(REAGENT_COLORS.gasWisp, 0.12)],
       ]
     );
     gradientRect(
@@ -119,12 +122,12 @@ function gasProgram(sketch: p5, read: () => GasFrame) {
         y: box.y + 3,
       },
       [
-        [0, MATERIAL.aluminium],
-        [1, mix(MATERIAL.aluminium, getColor("BLACK"), 0.45)],
+        [0, INSTRUMENT_COLORS.aluminium],
+        [1, mix(INSTRUMENT_COLORS.aluminium, getColor("BLACK"), 0.45)],
       ]
     );
     sketch.noStroke();
-    sketch.fill(MATERIAL.castIron);
+    sketch.fill(CAR_COLORS.castIron);
     sketch.rect(
       box.left + inner + width * 0.04,
       box.y + box.height * 0.44,

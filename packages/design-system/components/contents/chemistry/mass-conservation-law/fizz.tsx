@@ -39,7 +39,8 @@ import {
 import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { getColor } from "@repo/design-system/lib/color";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { BENCH_COLORS } from "@repo/design-system/lib/material/bench";
+import { REAGENT_COLORS } from "@repo/design-system/lib/material/reagent";
 import { Array as Arr, Schema } from "effect";
 import { type ReactNode, Suspense, useRef, useState } from "react";
 import type { Group, InstancedMesh, Mesh, Object3D } from "three";
@@ -222,7 +223,11 @@ function FizzScene({ seal }: { readonly seal: Seal }) {
       <LabBench />
       <Scale ref={scale} unitLabel="g">
         <Flask />
-        <FlaskLiquid color={MATERIAL.vinegar} level={LEVEL} opacity={0.42} />
+        <FlaskLiquid
+          color={REAGENT_COLORS.vinegar}
+          level={LEVEL}
+          opacity={0.42}
+        />
         <mesh position={[0, LEVEL + 0.002, 0]} ref={foam}>
           <cylinderGeometry
             args={[
@@ -232,7 +237,7 @@ function FizzScene({ seal }: { readonly seal: Seal }) {
               32,
             ]}
           />
-          <meshStandardMaterial color={MATERIAL.foam} roughness={0.9} />
+          <meshStandardMaterial color={REAGENT_COLORS.foam} roughness={0.9} />
         </mesh>
         <Instances limit={BUBBLES} ref={bubbles}>
           <sphereGeometry args={[0.0022, 8, 6]} />
@@ -250,7 +255,7 @@ function FizzScene({ seal }: { readonly seal: Seal }) {
         <Instances limit={WISPS} ref={wisps}>
           <sphereGeometry args={[0.012, 10, 8]} />
           <meshBasicMaterial
-            color={MATERIAL.gasWisp}
+            color={REAGENT_COLORS.gasWisp}
             depthWrite={false}
             opacity={0.12}
             transparent
@@ -262,19 +267,25 @@ function FizzScene({ seal }: { readonly seal: Seal }) {
         {seal === "closed" ? (
           <mesh castShadow position={[0, 0.152, 0]}>
             <cylinderGeometry args={[0.019, 0.015, 0.024, 24]} />
-            <meshStandardMaterial color={MATERIAL.stopper} roughness={0.85} />
+            <meshStandardMaterial
+              color={BENCH_COLORS.stopper}
+              roughness={0.85}
+            />
           </mesh>
         ) : null}
         <group position={[0.075, 0.004, 0]} ref={dish}>
           <mesh receiveShadow>
             <cylinderGeometry args={[0.028, 0.022, 0.008, 28]} />
-            <meshStandardMaterial color={MATERIAL.dish} roughness={0.5} />
+            <meshStandardMaterial color={BENCH_COLORS.dish} roughness={0.5} />
           </mesh>
           <mesh position={[0, 0.006, 0]} ref={powder}>
             <sphereGeometry
               args={[0.016, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2]}
             />
-            <meshStandardMaterial color={MATERIAL.bakingSoda} roughness={1} />
+            <meshStandardMaterial
+              color={REAGENT_COLORS.bakingSoda}
+              roughness={1}
+            />
           </mesh>
         </group>
       </Scale>

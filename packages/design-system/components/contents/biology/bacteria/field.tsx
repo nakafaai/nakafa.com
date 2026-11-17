@@ -1,6 +1,6 @@
 import { OrthographicCamera } from "@react-three/drei";
 import { useThree } from "@react-three/fiber";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { REAGENT_COLORS } from "@repo/design-system/lib/material/reagent";
 import { type ReactNode, useEffect, useMemo } from "react";
 import { DataTexture } from "three";
 
@@ -59,12 +59,15 @@ export function MicroscopeField({
       />
       <mesh position={[0, -0.6, 0]} rotation={[-Math.PI / 2, 0, 0]}>
         <planeGeometry args={[FIELD_RADIUS * 6, FIELD_RADIUS * 6]} />
-        <meshBasicMaterial color={MATERIAL.microscopeDark} toneMapped={false} />
+        <meshBasicMaterial
+          color={REAGENT_COLORS.microscopeDark}
+          toneMapped={false}
+        />
       </mesh>
       <mesh position={[0, -0.5, 0]} rotation={[-Math.PI / 2, 0, 0]}>
         <circleGeometry args={[FIELD_RADIUS * 1.01, 256]} />
         <meshBasicMaterial
-          color={MATERIAL.microscopeLight}
+          color={REAGENT_COLORS.microscopeLight}
           map={vignette}
           toneMapped={false}
         />

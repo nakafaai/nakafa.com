@@ -21,7 +21,8 @@ import { useBumpySphere } from "@repo/design-system/components/contents/biology/
 import { spikeAnchor } from "@repo/design-system/components/contents/biology/virus/binding";
 import { hashUnit } from "@repo/design-system/components/contents/simulation/grain";
 import type { NarrowCameraPose } from "@repo/design-system/lib/geometry/camera";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { BIOLOGY_COLORS } from "@repo/design-system/lib/material/biology";
+import { ECOLOGY_COLORS } from "@repo/design-system/lib/material/ecology";
 import { Array as Arr } from "effect";
 import { useEffect, useMemo } from "react";
 import { CatmullRomCurve3, TubeGeometry, Vector3 } from "three";
@@ -121,7 +122,7 @@ function Beans() {
         <meshPhysicalMaterial
           clearcoat={0.6}
           clearcoatRoughness={0.3}
-          color={MATERIAL.bananaLeaf}
+          color={BIOLOGY_COLORS.bananaLeaf}
           roughness={0.5}
         />
       </mesh>
@@ -138,7 +139,7 @@ function Beans() {
           <meshPhysicalMaterial
             clearcoat={0.25}
             clearcoatRoughness={0.6}
-            color={MATERIAL.soybean}
+            color={ECOLOGY_COLORS.soybean}
             roughness={0.62}
           />
         </mesh>
@@ -181,7 +182,7 @@ function Mycelium() {
       <meshPhysicalMaterial
         clearcoat={0.4}
         clearcoatRoughness={0.4}
-        color={MATERIAL.hypha}
+        color={BIOLOGY_COLORS.hypha}
         roughness={0.45}
       />
     </mesh>
@@ -212,7 +213,7 @@ function Enzymes() {
       <meshPhysicalMaterial
         clearcoat={1}
         clearcoatRoughness={0.05}
-        color={MATERIAL.enzyme}
+        color={BIOLOGY_COLORS.enzyme}
         opacity={0.75}
         roughness={0.1}
         transparent
@@ -277,7 +278,7 @@ function Sporangiophores() {
       <mesh castShadow geometry={stalks}>
         <meshPhysicalMaterial
           clearcoat={0.4}
-          color={MATERIAL.hypha}
+          color={BIOLOGY_COLORS.hypha}
           roughness={0.45}
         />
       </mesh>
@@ -285,14 +286,19 @@ function Sporangiophores() {
         <mesh castShadow geometry={sporangium} key={index} position={top}>
           <meshPhysicalMaterial
             clearcoat={0.3}
-            color={ripe ? MATERIAL.sporangium : MATERIAL.sporangiumYoung}
+            color={
+              ripe ? BIOLOGY_COLORS.sporangium : BIOLOGY_COLORS.sporangiumYoung
+            }
             roughness={0.7}
           />
         </mesh>
       ))}
       <Instances placements={grains}>
         <icosahedronGeometry args={[0.009, 0]} />
-        <meshStandardMaterial color={MATERIAL.sporangium} roughness={0.8} />
+        <meshStandardMaterial
+          color={BIOLOGY_COLORS.sporangium}
+          roughness={0.8}
+        />
       </Instances>
       {Arr.map(Arr.range(0, 4), (index) => (
         <FloatingGroup key={index} phase={index * 0.44} travel={0.035}>
@@ -305,7 +311,10 @@ function Sporangiophores() {
             scale={[1, 0.8, 1]}
           >
             <sphereGeometry args={[0.012, 10, 8]} />
-            <meshStandardMaterial color={MATERIAL.sporangium} roughness={0.8} />
+            <meshStandardMaterial
+              color={BIOLOGY_COLORS.sporangium}
+              roughness={0.8}
+            />
           </mesh>
         </FloatingGroup>
       ))}

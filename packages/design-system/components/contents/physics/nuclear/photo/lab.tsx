@@ -22,7 +22,10 @@ import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { P5Sketch } from "@repo/design-system/components/visual/sketch";
 import { getColor } from "@repo/design-system/lib/color";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { BENCH_COLORS } from "@repo/design-system/lib/material/bench";
+import { ENERGY_COLORS } from "@repo/design-system/lib/material/energy";
+import { INSTRUMENT_COLORS } from "@repo/design-system/lib/material/instrument";
+import { LIGHT_COLORS } from "@repo/design-system/lib/material/light";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr, Option, Schema } from "effect";
 import type p5 from "p5";
@@ -36,16 +39,16 @@ import { type ReactNode, useState } from "react";
 function spectrum(wavelength: number) {
   const stops: readonly (readonly [number, string])[] = [
     [380, PLOT_COLORS.violet],
-    [450, MATERIAL.spectrumBlue],
-    [495, MATERIAL.spectrumCyan],
-    [530, MATERIAL.spectrumGreen],
-    [580, MATERIAL.spectrumYellow],
-    [620, MATERIAL.spectrumOrange],
-    [700, MATERIAL.spectrumRed],
+    [450, LIGHT_COLORS.spectrumBlue],
+    [495, LIGHT_COLORS.spectrumCyan],
+    [530, LIGHT_COLORS.spectrumGreen],
+    [580, LIGHT_COLORS.spectrumYellow],
+    [620, LIGHT_COLORS.spectrumOrange],
+    [700, LIGHT_COLORS.spectrumRed],
   ];
   const upper = Arr.findFirstIndex(stops, ([edge]) => edge >= wavelength);
   if (Option.isNone(upper)) {
-    return MATERIAL.spectrumRed;
+    return LIGHT_COLORS.spectrumRed;
   }
   const high = stops[upper.value];
   const low = stops[Math.max(upper.value - 1, 0)];
@@ -83,7 +86,7 @@ function photoProgram(sketch: p5, read: () => PhotoFrame) {
     }
     const { height, width } = sketch;
     gradientRect(sketch, { height, width, x: 0, y: 0 }, [
-      [0, mix(MATERIAL.nightSky, getColor("WHITE"), 0.05)],
+      [0, mix(ENERGY_COLORS.nightSky, getColor("WHITE"), 0.05)],
       [1, getColor("ZINC", 950)],
     ]);
     const tube = {
@@ -93,15 +96,15 @@ function photoProgram(sketch: p5, read: () => PhotoFrame) {
       y: height * 0.19,
     };
     sketch.noStroke();
-    sketch.fill(fade(MATERIAL.glass, 0.08));
+    sketch.fill(fade(BENCH_COLORS.glass, 0.08));
     sketch.rect(tube.x, tube.y, tube.width, tube.height, tube.height * 0.5);
     sketch.noFill();
-    sketch.stroke(fade(MATERIAL.glass, 0.6));
+    sketch.stroke(fade(BENCH_COLORS.glass, 0.6));
     sketch.strokeWeight(2);
     sketch.rect(tube.x, tube.y, tube.width, tube.height, tube.height * 0.5);
     const plate = { x: width * 0.6, y: height * 0.32 };
     sketch.noStroke();
-    sketch.fill(MATERIAL.aluminium);
+    sketch.fill(INSTRUMENT_COLORS.aluminium);
     sketch.rect(plate.x, plate.y, width * 0.03, height * 0.36);
     const color = spectrum(frame.wavelength);
     const lamp = { x: width * 0.14, y: height * 0.5 };

@@ -32,7 +32,8 @@ import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { P5Sketch } from "@repo/design-system/components/visual/sketch";
 import { getColor } from "@repo/design-system/lib/color";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { CAR_COLORS } from "@repo/design-system/lib/material/car";
+import { ROAD_COLORS } from "@repo/design-system/lib/material/road";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr, Match, Schema } from "effect";
 import type p5 from "p5";
@@ -60,8 +61,8 @@ const BALL_RADIUS = {
 /** The colours of each ball: steel for one, orange and teal when two fall side by side. */
 const BALL_COLORS = [
   {
-    dark: mix(MATERIAL.castIron, getColor("BLACK"), 0.5),
-    light: MATERIAL.chrome,
+    dark: mix(CAR_COLORS.castIron, getColor("BLACK"), 0.5),
+    light: CAR_COLORS.chrome,
   },
   {
     dark: mix(PLOT_COLORS.teal, getColor("BLACK"), 0.5),
@@ -137,7 +138,7 @@ function paintRoom(
   const band = shot === "components" ? 0.5 : 0.1;
   for (let y = 0; y < frame.top - 1e-9; y += band) {
     const even = Math.round(y / band) % 2 === 0;
-    sketch.fill(even ? MATERIAL.distancePost : getColor("ZINC", 900));
+    sketch.fill(even ? ROAD_COLORS.distancePost : getColor("ZINC", 900));
     sketch.rect(
       stick,
       view.y(Math.min(y + band, frame.top)),
@@ -146,7 +147,7 @@ function paintRoom(
     );
   }
   if (shot === "launch") {
-    sketch.fill(mix(MATERIAL.bark, getColor("BLACK"), 0.2));
+    sketch.fill(mix(ROAD_COLORS.bark, getColor("BLACK"), 0.2));
     sketch.rect(
       view.x(frame.left),
       view.y(1.25),

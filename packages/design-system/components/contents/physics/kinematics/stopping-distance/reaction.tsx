@@ -41,7 +41,7 @@ import {
   VisualCardHeader,
 } from "@repo/design-system/components/visual/card";
 import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { CAR_COLORS } from "@repo/design-system/lib/material/car";
 import { Array as Arr, Effect, Option, Random } from "effect";
 import {
   type KeyboardEvent,
@@ -333,7 +333,7 @@ function ReactionScene({
       <SimulationTicker running={running} />
       <Road from={-40} surface="dry" to={GAP + 400} />
       <group position={[0, 0, ROAD.lane]}>
-        <Sedan color={MATERIAL.carPaintDark} ref={lead} />
+        <Sedan color={CAR_COLORS.carPaintDark} ref={lead} />
         <group ref={rig}>
           <Cockpit />
         </group>
@@ -389,7 +389,7 @@ function Cockpit() {
         <meshPhysicalMaterial
           clearcoat={1}
           clearcoatRoughness={0.05}
-          color={MATERIAL.carPaint}
+          color={CAR_COLORS.carPaint}
           metalness={0.4}
           roughness={0.34}
         />
@@ -399,14 +399,14 @@ function Cockpit() {
         position={[0.42, 0.88, 0]}
         radius={0.05}
       >
-        <meshStandardMaterial color={MATERIAL.dashboard} roughness={0.85} />
+        <meshStandardMaterial color={CAR_COLORS.dashboard} roughness={0.85} />
       </RoundedBox>
       <RoundedBox
         args={[0.18, 0.07, 0.32]}
         position={[0.26, 0.97, EYE[2]]}
         radius={0.03}
       >
-        <meshStandardMaterial color={MATERIAL.dashboard} roughness={0.8} />
+        <meshStandardMaterial color={CAR_COLORS.dashboard} roughness={0.8} />
       </RoundedBox>
       <group
         position={[0.08, 0.86, EYE[2]]}
@@ -414,18 +414,18 @@ function Cockpit() {
       >
         <mesh>
           <torusGeometry args={[0.19, 0.022, 14, 48]} />
-          <meshStandardMaterial color={MATERIAL.tyre} roughness={0.6} />
+          <meshStandardMaterial color={CAR_COLORS.tyre} roughness={0.6} />
         </mesh>
         <mesh rotation={[Math.PI / 2, 0, 0]}>
           <cylinderGeometry args={[0.055, 0.06, 0.05, 24]} />
-          <meshStandardMaterial color={MATERIAL.dashboard} roughness={0.7} />
+          <meshStandardMaterial color={CAR_COLORS.dashboard} roughness={0.7} />
         </mesh>
         {Arr.map([0, Math.PI, -Math.PI / 2] as const, (angle) => (
           <group key={angle} rotation={[0, 0, angle]}>
             <mesh position={[0.11, 0, 0]}>
               <boxGeometry args={[0.13, 0.035, 0.016]} />
               <meshStandardMaterial
-                color={MATERIAL.dashboard}
+                color={CAR_COLORS.dashboard}
                 roughness={0.7}
               />
             </mesh>
@@ -435,27 +435,27 @@ function Cockpit() {
       {Arr.map(pillars, ({ length, middle, turn }) => (
         <mesh key={middle.z} position={middle} quaternion={turn}>
           <boxGeometry args={[length, 0.07, 0.06]} />
-          <meshStandardMaterial color={MATERIAL.headliner} roughness={0.9} />
+          <meshStandardMaterial color={CAR_COLORS.headliner} roughness={0.9} />
         </mesh>
       ))}
       <mesh position={[0.12, 1.43, 0]}>
         <boxGeometry args={[0.1, 0.05, 1.36]} />
-        <meshStandardMaterial color={MATERIAL.headliner} roughness={0.9} />
+        <meshStandardMaterial color={CAR_COLORS.headliner} roughness={0.9} />
       </mesh>
       <mesh position={[-0.32, 1.47, 0]}>
         <boxGeometry args={[0.8, 0.02, 1.4]} />
-        <meshStandardMaterial color={MATERIAL.headliner} roughness={0.95} />
+        <meshStandardMaterial color={CAR_COLORS.headliner} roughness={0.95} />
       </mesh>
       <mesh position={[0.11, 1.38, 0]}>
         <boxGeometry args={[0.02, 0.06, 0.02]} />
-        <meshStandardMaterial color={MATERIAL.dashboard} roughness={0.6} />
+        <meshStandardMaterial color={CAR_COLORS.dashboard} roughness={0.6} />
       </mesh>
       <RoundedBox
         args={[0.025, 0.065, 0.25]}
         position={[0.1, 1.33, 0]}
         radius={0.01}
       >
-        <meshStandardMaterial color={MATERIAL.dashboard} roughness={0.5} />
+        <meshStandardMaterial color={CAR_COLORS.dashboard} roughness={0.5} />
       </RoundedBox>
     </group>
   );

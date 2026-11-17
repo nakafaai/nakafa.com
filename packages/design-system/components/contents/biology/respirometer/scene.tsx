@@ -21,7 +21,9 @@ import {
   LiquidMaterial,
   MetalMaterial,
 } from "@repo/design-system/components/three/physical";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { BENCH_COLORS } from "@repo/design-system/lib/material/bench";
+import { BIOLOGY_COLORS } from "@repo/design-system/lib/material/biology";
+import { REAGENT_COLORS } from "@repo/design-system/lib/material/reagent";
 import { Array as Arr } from "effect";
 import { useRef } from "react";
 import type { Group } from "three";
@@ -107,7 +109,7 @@ export function RespirometerScene({
           <group key={tube} ref={drops[tube]}>
             <mesh rotation={[0, 0, Math.PI / 2]}>
               <cylinderGeometry args={[0.0024, 0.0024, DROP, 14]} />
-              <LiquidMaterial color={MATERIAL.dye} opacity={0.92} />
+              <LiquidMaterial color={BIOLOGY_COLORS.dye} opacity={0.92} />
             </mesh>
           </group>
         ))}
@@ -150,24 +152,24 @@ function Bath() {
       {Arr.map(walls, (wall) => (
         <mesh key={wall.key} position={wall.position}>
           <boxGeometry args={wall.size} />
-          <GlassMaterial color={MATERIAL.glass} opacity={0.18} />
+          <GlassMaterial color={BENCH_COLORS.glass} opacity={0.18} />
         </mesh>
       ))}
       <mesh position={[0, BATH_LEVEL / 2, 0]}>
         <boxGeometry
           args={[TANK.width - 0.006, BATH_LEVEL, TANK.depth - 0.006]}
         />
-        <LiquidMaterial color={MATERIAL.pondWater} opacity={0.32} />
+        <LiquidMaterial color={BIOLOGY_COLORS.pondWater} opacity={0.32} />
       </mesh>
       <group position={[TANK.width / 2 - 0.02, 0, -TANK.depth / 2 + 0.02]}>
         <GlassTube end={[0, 0.2, 0]} radius={0.003} start={[0, 0.03, 0]} />
         <mesh position={[0, 0.032, 0]}>
           <sphereGeometry args={[0.0035, 16, 12]} />
-          <meshStandardMaterial color={MATERIAL.dye} roughness={0.3} />
+          <meshStandardMaterial color={BIOLOGY_COLORS.dye} roughness={0.3} />
         </mesh>
         <mesh position={[0, 0.08, 0]}>
           <cylinderGeometry args={[0.0009, 0.0009, 0.1, 8]} />
-          <meshStandardMaterial color={MATERIAL.dye} roughness={0.3} />
+          <meshStandardMaterial color={BIOLOGY_COLORS.dye} roughness={0.3} />
         </mesh>
       </group>
     </group>
@@ -211,14 +213,16 @@ function Respirometer({
         <sphereGeometry
           args={[TUBE.radius, 28, 14, 0, Math.PI * 2, 0, Math.PI / 2]}
         />
-        <GlassMaterial color={MATERIAL.glass} opacity={0.3} />
+        <GlassMaterial color={BENCH_COLORS.glass} opacity={0.3} />
       </mesh>
       <mesh position={[0, 0.03, 0]}>
         <cylinderGeometry
           args={[TUBE.radius - 0.0015, TUBE.radius - 0.0015, 0.024, 28]}
         />
         <LiquidMaterial
-          color={tube === "potash" ? MATERIAL.potash : MATERIAL.pondWater}
+          color={
+            tube === "potash" ? BIOLOGY_COLORS.potash : BIOLOGY_COLORS.pondWater
+          }
           opacity={0.7}
         />
       </mesh>
@@ -226,7 +230,7 @@ function Respirometer({
         <cylinderGeometry
           args={[TUBE.radius - 0.0016, TUBE.radius - 0.0016, 0.0012, 28]}
         />
-        <MetalMaterial color={MATERIAL.steelWool} roughness={0.55} />
+        <MetalMaterial color={REAGENT_COLORS.steelWool} roughness={0.55} />
       </mesh>
       {Arr.map(seeds, (seed) => (
         <mesh
@@ -237,7 +241,7 @@ function Respirometer({
           scale={[1, 0.62, 0.72]}
         >
           <sphereGeometry args={[0.0034, 14, 10]} />
-          <meshStandardMaterial color={MATERIAL.seed} roughness={0.55} />
+          <meshStandardMaterial color={BIOLOGY_COLORS.seed} roughness={0.55} />
         </mesh>
       ))}
       <group position={[0, TUBE.height + 0.008, 0]}>

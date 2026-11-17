@@ -6,7 +6,8 @@ import {
 } from "@repo/design-system/components/contents/physics/canvas/paint";
 import { hashUnit } from "@repo/design-system/components/contents/simulation/grain";
 import { getColor } from "@repo/design-system/lib/color";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { ECOLOGY_COLORS } from "@repo/design-system/lib/material/ecology";
+import { ROAD_COLORS } from "@repo/design-system/lib/material/road";
 import { Array as Arr, Order } from "effect";
 import type p5 from "p5";
 
@@ -108,7 +109,7 @@ export function paintCanopies(
       },
       () => {
         layer.noStroke();
-        layer.fill(MATERIAL.foliageDark);
+        layer.fill(ROAD_COLORS.foliageDark);
         layer.circle(x, y, CANOPY * 1.55 * scale);
       }
     );
@@ -122,10 +123,14 @@ export function paintCanopies(
         },
         cluster.radius * scale,
         {
-          dark: mix(MATERIAL.foliageShade, MATERIAL.foliageDark, 1 - light),
+          dark: mix(
+            ROAD_COLORS.foliageShade,
+            ROAD_COLORS.foliageDark,
+            1 - light
+          ),
           light: mix(
-            MATERIAL.foliage,
-            MATERIAL.riceLeafPale,
+            ROAD_COLORS.foliage,
+            ECOLOGY_COLORS.riceLeafPale,
             0.15 + light * 0.4
           ),
         }
@@ -139,8 +144,8 @@ export function paintCanopies(
       const ly = Math.sin(angle) * reach;
       layer.fill(
         lx + ly < 0
-          ? fade(MATERIAL.riceLeafPale, 0.55)
-          : fade(MATERIAL.foliageDark, 0.6)
+          ? fade(ECOLOGY_COLORS.riceLeafPale, 0.55)
+          : fade(ROAD_COLORS.foliageDark, 0.6)
       );
       layer.ellipse(
         centreX + (treeX + lx) * scale,

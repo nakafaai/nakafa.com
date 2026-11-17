@@ -24,7 +24,7 @@ import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { P5Sketch } from "@repo/design-system/components/visual/sketch";
 import { getColor } from "@repo/design-system/lib/color";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { INSTRUMENT_COLORS } from "@repo/design-system/lib/material/instrument";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Schema } from "effect";
 import type p5 from "p5";
@@ -74,13 +74,13 @@ function bulletProgram(sketch: p5, read: () => BulletFrame) {
       const x =
         width * 0.02 + (start - width * 0.02) * (clock / FLIGHT_SECONDS);
       sketch.noStroke();
-      sketch.fill(MATERIAL.brass);
+      sketch.fill(INSTRUMENT_COLORS.brass);
       sketch.rect(x - 14, floor - size * 0.5 - 3, 14, 6, 3);
     }
     paintBlock(
       sketch,
       { base: floor, height: size, left, width: size },
-      MATERIAL.oak
+      INSTRUMENT_COLORS.oak
     );
     sketch.stroke(fade(getColor("WHITE"), 0.6));
     sketch.strokeWeight(1);

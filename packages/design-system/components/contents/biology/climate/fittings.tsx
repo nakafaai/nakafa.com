@@ -12,7 +12,8 @@ import {
   shape,
   stopped,
 } from "@repo/design-system/components/contents/biology/climate/paint";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { CAR_COLORS } from "@repo/design-system/lib/material/car";
+import { ECOLOGY_COLORS } from "@repo/design-system/lib/material/ecology";
 import { Array as Arr } from "effect";
 import type p5 from "p5";
 
@@ -35,13 +36,13 @@ export function drawFloor(sketch: p5, frame: Frame, draining: boolean) {
   const deep = frame.height * 0.007;
   painted(
     sketch,
-    MATERIAL.chrome,
+    CAR_COLORS.chrome,
     (context) => chromeAcross(sketch, context, x - wide, x + wide),
     () => sketch.ellipse(x, frame.ground, wide * 2, deep * 2)
   );
   sketch.push();
   sketch.noStroke();
-  sketch.fill(MATERIAL.chromeShadow);
+  sketch.fill(ECOLOGY_COLORS.chromeShadow);
   sketch.ellipse(x, frame.ground, wide * 1.5, deep * 1.2);
   sketch.stroke(chromeMid(sketch, 0.8));
   sketch.strokeWeight(Math.max(0.8, frame.unit));
@@ -100,7 +101,7 @@ export function drawFoot(sketch: p5, frame: Frame, x: number) {
   shadowAt(sketch, [x, frame.ground], half * 1.6, frame.height * 0.012, 120);
   painted(
     sketch,
-    MATERIAL.chrome,
+    CAR_COLORS.chrome,
     (context) => chromeAcross(sketch, context, x - half, x + half),
     () =>
       shape(sketch, [
@@ -114,7 +115,7 @@ export function drawFoot(sketch: p5, frame: Frame, x: number) {
   );
   painted(
     sketch,
-    MATERIAL.chrome,
+    CAR_COLORS.chrome,
     (context) =>
       stopped(
         context.createRadialGradient(
@@ -126,10 +127,10 @@ export function drawFoot(sketch: p5, frame: Frame, x: number) {
           ball
         ),
         [
-          [0, MATERIAL.chromeSpecular],
-          [0.3, MATERIAL.chrome],
+          [0, ECOLOGY_COLORS.chromeSpecular],
+          [0.3, CAR_COLORS.chrome],
           [0.75, chromeMid(sketch, 0.45)],
-          [1, MATERIAL.chromeShadow],
+          [1, ECOLOGY_COLORS.chromeShadow],
         ]
       ),
     () => sketch.circle(x, ballY, ball * 2)
@@ -193,7 +194,7 @@ export function drawFiller(sketch: p5, frame: Frame) {
   );
   painted(
     sketch,
-    MATERIAL.chrome,
+    CAR_COLORS.chrome,
     (context) =>
       chromeAcross(
         sketch,

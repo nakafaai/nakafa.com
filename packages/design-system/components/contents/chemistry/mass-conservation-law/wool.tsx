@@ -31,7 +31,8 @@ import {
 } from "@repo/design-system/components/visual/card";
 import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { BENCH_COLORS } from "@repo/design-system/lib/material/bench";
+import { REAGENT_COLORS } from "@repo/design-system/lib/material/reagent";
 import { Array as Arr, Schema } from "effect";
 import {
   type ReactNode,
@@ -68,9 +69,9 @@ const STRAND_POINTS = 9;
 const TUFT = { depth: 0.045, height: 0.03, width: 0.07 } as const;
 
 /** Steel before, the glowing front, and the blue-black oxide after. */
-const STEEL = new Color(MATERIAL.steelWool);
-const OXIDE = new Color(MATERIAL.ironOxide);
-const GLOW = new Color(MATERIAL.woolGlow);
+const STEEL = new Color(REAGENT_COLORS.steelWool);
+const OXIDE = new Color(REAGENT_COLORS.ironOxide);
+const GLOW = new Color(REAGENT_COLORS.woolGlow);
 
 /**
  * A tuft of steel wool on a heatproof tile on a balance. Touched with a
@@ -257,7 +258,10 @@ function WoolScene({ seal }: { readonly seal: Seal }) {
       <Scale ref={scale} unitLabel="g">
         <mesh position={[0, 0.004, 0]} receiveShadow>
           <boxGeometry args={[0.12, 0.008, 0.1]} />
-          <meshStandardMaterial color={MATERIAL.ceramicTile} roughness={0.9} />
+          <meshStandardMaterial
+            color={BENCH_COLORS.ceramicTile}
+            roughness={0.9}
+          />
         </mesh>
         <group position={[0, 0.008, 0]}>
           <mesh castShadow geometry={steel}>
@@ -282,19 +286,19 @@ function WoolScene({ seal }: { readonly seal: Seal }) {
             <sphereGeometry
               args={[0.075, 48, 24, 0, Math.PI * 2, 0, Math.PI / 2]}
             />
-            <GlassMaterial color={MATERIAL.glass} opacity={0.2} />
+            <GlassMaterial color={BENCH_COLORS.glass} opacity={0.2} />
           </mesh>
         ) : null}
       </Scale>
       <group position={[-0.24, 0, 0.05]} rotation={[0, 0.5, 0]}>
         <mesh castShadow position={[0, 0.024, 0]}>
           <boxGeometry args={[0.026, 0.048, 0.017]} />
-          <meshStandardMaterial color={MATERIAL.battery} roughness={0.5} />
+          <meshStandardMaterial color={BENCH_COLORS.battery} roughness={0.5} />
         </mesh>
         <mesh position={[0, 0.05, 0]}>
           <boxGeometry args={[0.02, 0.004, 0.012]} />
           <meshStandardMaterial
-            color={MATERIAL.batteryTerminal}
+            color={BENCH_COLORS.batteryTerminal}
             metalness={1}
             roughness={0.3}
           />

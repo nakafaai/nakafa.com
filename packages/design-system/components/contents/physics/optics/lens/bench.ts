@@ -11,7 +11,8 @@ import {
 } from "@repo/design-system/components/contents/physics/optics/light";
 import type { Image } from "@repo/design-system/components/contents/physics/optics/ray";
 import { getColor } from "@repo/design-system/lib/color";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { BENCH_COLORS } from "@repo/design-system/lib/material/bench";
+import { INSTRUMENT_COLORS } from "@repo/design-system/lib/material/instrument";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Option, Schema } from "effect";
 import type p5 from "p5";
@@ -68,8 +69,8 @@ export function fitBench(
 export function paintRail(sketch: p5, bench: Bench, focal: number) {
   const top = sketch.height * RAIL;
   gradientRect(sketch, { height: 10, width: sketch.width, x: 0, y: top }, [
-    [0, MATERIAL.aluminium],
-    [1, mix(MATERIAL.aluminium, getColor("BLACK"), 0.45)],
+    [0, INSTRUMENT_COLORS.aluminium],
+    [1, mix(INSTRUMENT_COLORS.aluminium, getColor("BLACK"), 0.45)],
   ]);
   sketch.stroke(fade(getColor("WHITE"), 0.25));
   sketch.strokeWeight(1);
@@ -110,10 +111,10 @@ export function paintLens(sketch: p5, bench: Bench, reach: number) {
       bench.axis - reach
     );
     drawing.closePath();
-    drawing.fillStyle = fade(MATERIAL.glass, 0.22);
+    drawing.fillStyle = fade(BENCH_COLORS.glass, 0.22);
     drawing.fill();
     drawing.strokeStyle = fade(
-      mix(MATERIAL.glass, getColor("WHITE"), 0.5),
+      mix(BENCH_COLORS.glass, getColor("WHITE"), 0.5),
       0.8
     );
     drawing.lineWidth = 1.5;
@@ -170,11 +171,23 @@ export function paintRay(
     readonly before: readonly [Point, Point];
   }
 ) {
-  beam(sketch, parts.before[0], parts.before[1], MATERIAL.lampLight, 0.85);
-  beam(sketch, parts.after[0], parts.after[1], MATERIAL.lampLight, 0.85);
+  beam(
+    sketch,
+    parts.before[0],
+    parts.before[1],
+    INSTRUMENT_COLORS.lampLight,
+    0.85
+  );
+  beam(
+    sketch,
+    parts.after[0],
+    parts.after[1],
+    INSTRUMENT_COLORS.lampLight,
+    0.85
+  );
   Option.map(parts.back, ([from, to]) =>
     dashed(sketch, from, to, {
-      color: fade(MATERIAL.lampLight, 0.65),
+      color: fade(INSTRUMENT_COLORS.lampLight, 0.65),
       dash: 6,
       weight: 1.5,
     })

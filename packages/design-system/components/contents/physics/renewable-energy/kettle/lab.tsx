@@ -40,7 +40,10 @@ import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { P5Sketch } from "@repo/design-system/components/visual/sketch";
 import { getColor } from "@repo/design-system/lib/color";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { BENCH_COLORS } from "@repo/design-system/lib/material/bench";
+import { CAR_COLORS } from "@repo/design-system/lib/material/car";
+import { ENERGY_COLORS } from "@repo/design-system/lib/material/energy";
+import { REAGENT_COLORS } from "@repo/design-system/lib/material/reagent";
 import { Array as Arr, Schema } from "effect";
 import type p5 from "p5";
 import { type ReactNode, useState } from "react";
@@ -52,8 +55,8 @@ const PLAY_SECONDS = 7;
 const HOLD_SECONDS = 2;
 
 /** The cold and the hot tone of the water. */
-const COLD_WATER = MATERIAL.kettleWater;
-const HOT_WATER = MATERIAL.warmWater;
+const COLD_WATER = ENERGY_COLORS.kettleWater;
+const HOT_WATER = ENERGY_COLORS.warmWater;
 
 /** What the sketch reads on every frame: how full the kettle is. */
 const KettleFrameSchema = Schema.Struct({ fill: FillSchema });
@@ -67,7 +70,7 @@ function paintKitchen(sketch: p5, counter: number) {
     [1, mix(getColor("SLATE", 200), getColor("STONE", 600), 0.25)],
   ]);
   spotlight(sketch, { x: width * 0.12, y: counter * 0.3 }, width * 0.6, {
-    color: MATERIAL.sunDisc,
+    color: ENERGY_COLORS.sunDisc,
     strength: 0.4,
   });
   gradientRect(sketch, { height: height - counter, width, x: 0, y: counter }, [
@@ -113,7 +116,7 @@ function paintKettle(
       );
     }
   );
-  sketch.fill(fade(MATERIAL.coalGlow, 0.3 + 0.6 * Math.min(warm * 3, 1)));
+  sketch.fill(fade(BENCH_COLORS.coalGlow, 0.3 + 0.6 * Math.min(warm * 3, 1)));
   sketch.rect(
     body.x + body.width * 0.1,
     counter - base - 3,
@@ -191,7 +194,7 @@ function paintThermometer(sketch: p5, counter: number, temperature: number) {
     sketch,
     { blur: 10, color: fade(getColor("BLACK"), 0.4), drop: 4 },
     () => {
-      sketch.fill(mix(MATERIAL.castIron, getColor("BLACK"), 0.45));
+      sketch.fill(mix(CAR_COLORS.castIron, getColor("BLACK"), 0.45));
       sketch.rect(
         x - tube * 1.5,
         counter - tube * 0.7,
@@ -199,14 +202,14 @@ function paintThermometer(sketch: p5, counter: number, temperature: number) {
         tube * 0.7,
         tube * 0.2
       );
-      sketch.fill(MATERIAL.probeSteel);
+      sketch.fill(BENCH_COLORS.probeSteel);
       sketch.rect(
         rod - tube * 0.25,
         top - tube * 3,
         tube * 0.5,
         counter - top + tube * 2.4
       );
-      sketch.fill(MATERIAL.castIron);
+      sketch.fill(CAR_COLORS.castIron);
       sketch.rect(
         rod - tube * 0.6,
         top - tube * 0.3,
@@ -227,7 +230,7 @@ function paintThermometer(sketch: p5, counter: number, temperature: number) {
     }
   );
   const filled = (temperature / BOILING_POINT) * span;
-  sketch.fill(MATERIAL.calx);
+  sketch.fill(REAGENT_COLORS.calx);
   sketch.rect(x - tube * 0.4, top + span - filled, tube * 0.8, filled + tube);
   sketch.circle(x, top + span + tube, tube * 2.2);
   sketch.stroke(fade(getColor("NEUTRAL", 800), 0.6));
@@ -237,7 +240,7 @@ function paintThermometer(sketch: p5, counter: number, temperature: number) {
     sketch.line(x + tube, y, x + tube + (mark % 5 === 0 ? 9 : 5), y);
   }
   sketch.noStroke();
-  sketch.fill(MATERIAL.castIron);
+  sketch.fill(CAR_COLORS.castIron);
   sketch.rect(x - tube * 1.3, top - tube * 0.1, tube * 2.6, tube, tube * 0.3);
 }
 

@@ -23,7 +23,7 @@ import {
 } from "@repo/design-system/components/visual/card";
 import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { CELL_COLORS } from "@repo/design-system/lib/material/cell";
 import { Array as Arr } from "effect";
 import { type ReactNode, Suspense, useEffect, useRef, useState } from "react";
 import type { InstancedMesh } from "three";
@@ -249,14 +249,14 @@ function FissionScene({
         <directionalLight intensity={1.2} position={[20, 60, 30]} />
         <Instances limit={MOST * 2} ref={haloBodies}>
           <cylinderGeometry args={[RADIUS, RADIUS, NEWBORN, 14, 1, true]} />
-          <meshBasicMaterial color={MATERIAL.phaseHalo} toneMapped={false} />
+          <meshBasicMaterial color={CELL_COLORS.phaseHalo} toneMapped={false} />
           {Arr.map(Arr.range(1, MOST * 2), (slot) => (
             <Instance key={slot} />
           ))}
         </Instances>
         <Instances limit={MOST * 4} ref={haloCaps}>
           <sphereGeometry args={[RADIUS, 14, 10]} />
-          <meshBasicMaterial color={MATERIAL.phaseHalo} toneMapped={false} />
+          <meshBasicMaterial color={CELL_COLORS.phaseHalo} toneMapped={false} />
           {Arr.map(Arr.range(1, MOST * 4), (slot) => (
             <Instance key={slot} />
           ))}
@@ -265,7 +265,7 @@ function FissionScene({
           <cylinderGeometry args={[RADIUS, RADIUS, NEWBORN, 14, 1, true]} />
           <meshPhysicalMaterial
             clearcoat={0.5}
-            color={MATERIAL.phaseCell}
+            color={CELL_COLORS.phaseCell}
             roughness={0.5}
           />
           {Arr.map(Arr.range(1, MOST * 2), (slot) => (
@@ -276,7 +276,7 @@ function FissionScene({
           <sphereGeometry args={[RADIUS, 14, 10]} />
           <meshPhysicalMaterial
             clearcoat={0.5}
-            color={MATERIAL.phaseCell}
+            color={CELL_COLORS.phaseCell}
             roughness={0.5}
           />
           {Arr.map(Arr.range(1, MOST * 4), (slot) => (

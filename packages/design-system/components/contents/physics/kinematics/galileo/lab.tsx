@@ -29,7 +29,9 @@ import {
 } from "@repo/design-system/components/visual/card";
 import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { BENCH_COLORS } from "@repo/design-system/lib/material/bench";
+import { CAR_COLORS } from "@repo/design-system/lib/material/car";
+import { ROAD_COLORS } from "@repo/design-system/lib/material/road";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr, Schema } from "effect";
 import { type ReactNode, type Ref, Suspense, useRef, useState } from "react";
@@ -65,14 +67,17 @@ function Ramp({ angle }: { readonly angle: RampAngle }) {
       <group position={[middle.x, middle.y, 0]} rotation={[0, 0, -frame.tilt]}>
         <mesh castShadow receiveShadow>
           <boxGeometry args={[BOARD.length, BOARD.thickness, BOARD.width]} />
-          <meshStandardMaterial color={MATERIAL.bark} roughness={0.62} />
+          <meshStandardMaterial color={ROAD_COLORS.bark} roughness={0.62} />
         </mesh>
         <mesh
           position={[0, BOARD.thickness / 2 + 0.0005, 0]}
           rotation={[-Math.PI / 2, 0, 0]}
         >
           <planeGeometry args={[BOARD.length, 0.022]} />
-          <meshStandardMaterial color={MATERIAL.gravelGroove} roughness={0.5} />
+          <meshStandardMaterial
+            color={ROAD_COLORS.gravelGroove}
+            roughness={0.5}
+          />
         </mesh>
       </group>
       <mesh
@@ -81,7 +86,7 @@ function Ramp({ angle }: { readonly angle: RampAngle }) {
         receiveShadow
       >
         <boxGeometry args={[0.18, frame.top.y, BOARD.width + 0.04]} />
-        <meshStandardMaterial color={MATERIAL.brick} roughness={0.85} />
+        <meshStandardMaterial color={BENCH_COLORS.brick} roughness={0.85} />
       </mesh>
     </group>
   );
@@ -100,7 +105,7 @@ function Bell({
       <mesh castShadow position={[0, (place.y + 0.12) / 2, 0]}>
         <cylinderGeometry args={[0.005, 0.005, place.y + 0.12, 8]} />
         <meshStandardMaterial
-          color={MATERIAL.castIron}
+          color={CAR_COLORS.castIron}
           metalness={0.8}
           roughness={0.35}
         />
@@ -110,7 +115,7 @@ function Bell({
           args={[0.028, 24, 12, 0, Math.PI * 2, 0, Math.PI / 2]}
         />
         <meshStandardMaterial
-          color={MATERIAL.batteryTerminal}
+          color={BENCH_COLORS.batteryTerminal}
           emissive={PLOT_COLORS.amber}
           emissiveIntensity={0}
           metalness={1}
@@ -169,7 +174,7 @@ function RampScene({ angle }: { readonly angle: RampAngle }) {
         <mesh castShadow>
           <sphereGeometry args={[BALL, 32, 16]} />
           <meshStandardMaterial
-            color={MATERIAL.chrome}
+            color={CAR_COLORS.chrome}
             metalness={1}
             roughness={0.15}
           />

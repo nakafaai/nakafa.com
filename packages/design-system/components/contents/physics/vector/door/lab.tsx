@@ -29,7 +29,9 @@ import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { P5Sketch } from "@repo/design-system/components/visual/sketch";
 import { getColor } from "@repo/design-system/lib/color";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { CAR_COLORS } from "@repo/design-system/lib/material/car";
+import { INSTRUMENT_COLORS } from "@repo/design-system/lib/material/instrument";
+import { MACHINE_COLORS } from "@repo/design-system/lib/material/machine";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Schema } from "effect";
 import type p5 from "p5";
@@ -52,8 +54,8 @@ function paintRoom(layer: p5, hinge: Spot, width: number) {
     layer,
     { height: layer.height, width: layer.width, x: 0, y: 0 },
     [
-      [0, mix(MATERIAL.oak, getColor("WHITE"), 0.12)],
-      [1, mix(MATERIAL.oak, getColor("BLACK"), 0.15)],
+      [0, mix(INSTRUMENT_COLORS.oak, getColor("WHITE"), 0.12)],
+      [1, mix(INSTRUMENT_COLORS.oak, getColor("BLACK"), 0.15)],
     ]
   );
   layer.noStroke();
@@ -65,7 +67,7 @@ function paintRoom(layer: p5, hinge: Spot, width: number) {
     layer,
     { blur: 14, color: fade(getColor("BLACK"), 0.5), drop: 6 },
     () => {
-      layer.fill(mix(MATERIAL.concrete, getColor("WHITE"), 0.55));
+      layer.fill(mix(MACHINE_COLORS.concrete, getColor("WHITE"), 0.55));
       layer.rect(0, hinge.y - 14, hinge.x - 4, 28);
       layer.rect(hinge.x + width + 4, hinge.y - 14, layer.width, 28);
     }
@@ -118,14 +120,14 @@ function doorProgram(sketch: p5, read: () => DoorFrame) {
       sketch,
       { blur: 10, color: fade(getColor("BLACK"), 0.45), drop: 5 },
       () => {
-        sketch.stroke(MATERIAL.walnut);
+        sketch.stroke(MACHINE_COLORS.walnut);
         sketch.strokeWeight(14);
         sketch.strokeCap(sketch.SQUARE);
         sketch.line(hinge.x, hinge.y, end.x, end.y);
       }
     );
     sketch.noStroke();
-    sketch.fill(MATERIAL.chrome);
+    sketch.fill(CAR_COLORS.chrome);
     sketch.circle(hinge.x, hinge.y, 12);
     const hand = {
       x: hinge.x + along.x * arm * scale,

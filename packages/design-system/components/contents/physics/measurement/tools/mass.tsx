@@ -20,7 +20,9 @@ import type { MeasurementSceneProps } from "@repo/design-system/components/conte
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { SurfaceMaterial } from "@repo/design-system/components/three/surface/material";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { CAR_COLORS } from "@repo/design-system/lib/material/car";
+import { INSTRUMENT_COLORS } from "@repo/design-system/lib/material/instrument";
+import { MACHINE_COLORS } from "@repo/design-system/lib/material/machine";
 import { useRef } from "react";
 import type { Group, Mesh } from "three";
 
@@ -98,12 +100,12 @@ export function MassScene({
     >
       <mesh castShadow position={[0, -0.2, 0]} receiveShadow>
         <cylinderGeometry args={[1.25, 1.45, 0.25, 64]} />
-        <SurfaceMaterial color={MATERIAL.carbonShell} surface="paint" />
+        <SurfaceMaterial color={MACHINE_COLORS.carbonShell} surface="paint" />
       </mesh>
       <mesh castShadow position={[0, 0.75, 0]}>
         <cylinderGeometry args={[0.06, 0.09, 2, 32]} />
         <SurfaceMaterial
-          color={MATERIAL.brass}
+          color={INSTRUMENT_COLORS.brass}
           metalness={1}
           roughness={0.4}
           surface="brushed"
@@ -116,7 +118,7 @@ export function MassScene({
         radius={0.02}
         smoothness={2}
       >
-        <SurfaceMaterial color={MATERIAL.dialWhite} surface="plastic" />
+        <SurfaceMaterial color={MACHINE_COLORS.dialWhite} surface="plastic" />
       </RoundedBox>
       <group
         position={[0, MASS_PIVOT_Y, 0]}
@@ -130,7 +132,7 @@ export function MassScene({
           smoothness={2}
         >
           <SurfaceMaterial
-            color={MATERIAL.chrome}
+            color={CAR_COLORS.chrome}
             metalness={1}
             roughness={0.35}
             surface="brushed"
@@ -138,7 +140,7 @@ export function MassScene({
         </RoundedBox>
         <mesh position={[0, -0.75, 0.16]}>
           <boxGeometry args={[0.02, 1.3, 0.01]} />
-          <meshStandardMaterial color={MATERIAL.tyre} roughness={0.5} />
+          <meshStandardMaterial color={CAR_COLORS.tyre} roughness={0.5} />
         </mesh>
       </group>
       <RoundedBox
@@ -149,7 +151,7 @@ export function MassScene({
         smoothness={2}
       >
         <SurfaceMaterial
-          color={MATERIAL.brass}
+          color={INSTRUMENT_COLORS.brass}
           metalness={1}
           roughness={0.4}
           surface="brushed"
@@ -161,7 +163,7 @@ export function MassScene({
       >
         <cylinderGeometry args={[0.014, 0.014, MASS_PAN_DROP_Y, 10]} />
         <SurfaceMaterial
-          color={MATERIAL.brass}
+          color={INSTRUMENT_COLORS.brass}
           metalness={1}
           roughness={0.4}
           surface="brushed"
@@ -173,7 +175,7 @@ export function MassScene({
       >
         <cylinderGeometry args={[0.014, 0.014, MASS_PAN_DROP_Y, 10]} />
         <SurfaceMaterial
-          color={MATERIAL.brass}
+          color={INSTRUMENT_COLORS.brass}
           metalness={1}
           roughness={0.4}
           surface="brushed"
@@ -186,7 +188,7 @@ export function MassScene({
         <mesh castShadow receiveShadow>
           <cylinderGeometry args={[0.75, 0.62, 0.08, 64]} />
           <SurfaceMaterial
-            color={MATERIAL.brass}
+            color={INSTRUMENT_COLORS.brass}
             metalness={1}
             roughness={0.35}
             surface="brushed"
@@ -195,7 +197,7 @@ export function MassScene({
         <mesh position={[0, 0.04, 0]} rotation={[Math.PI / 2, 0, 0]}>
           <torusGeometry args={[0.75, 0.025, 10, 64]} />
           <SurfaceMaterial
-            color={MATERIAL.brass}
+            color={INSTRUMENT_COLORS.brass}
             metalness={1}
             roughness={0.3}
             surface="brushed"
@@ -205,7 +207,7 @@ export function MassScene({
           args={[0.9 * objectSize.scale, 0.55 * objectSize.scale, 0.9]}
           position={[0, MASS_LOAD_BOTTOM_OFFSET_Y + objectSize.height / 2, 0]}
         >
-          <SurfaceMaterial color={MATERIAL.oak} surface="wood" />
+          <SurfaceMaterial color={INSTRUMENT_COLORS.oak} surface="wood" />
         </RoundedBox>
       </group>
       <group
@@ -215,7 +217,7 @@ export function MassScene({
         <mesh castShadow receiveShadow>
           <cylinderGeometry args={[0.75, 0.62, 0.08, 64]} />
           <SurfaceMaterial
-            color={MATERIAL.brass}
+            color={INSTRUMENT_COLORS.brass}
             metalness={1}
             roughness={0.35}
             surface="brushed"
@@ -224,7 +226,7 @@ export function MassScene({
         <mesh position={[0, 0.04, 0]} rotation={[Math.PI / 2, 0, 0]}>
           <torusGeometry args={[0.75, 0.025, 10, 64]} />
           <SurfaceMaterial
-            color={MATERIAL.brass}
+            color={INSTRUMENT_COLORS.brass}
             metalness={1}
             roughness={0.3}
             surface="brushed"
@@ -246,7 +248,7 @@ export function MassScene({
             ]}
           />
           <SurfaceMaterial
-            color={MATERIAL.brass}
+            color={INSTRUMENT_COLORS.brass}
             metalness={1}
             roughness={0.3}
             surface="brushed"
@@ -262,7 +264,7 @@ export function MassScene({
         >
           <cylinderGeometry args={[0.06, 0.08, 0.1, 24]} />
           <SurfaceMaterial
-            color={MATERIAL.brass}
+            color={INSTRUMENT_COLORS.brass}
             metalness={1}
             roughness={0.3}
             surface="brushed"
@@ -278,7 +280,7 @@ export function MassScene({
         >
           <sphereGeometry args={[0.1, 24, 16]} />
           <SurfaceMaterial
-            color={MATERIAL.brass}
+            color={INSTRUMENT_COLORS.brass}
             metalness={1}
             roughness={0.3}
             surface="brushed"

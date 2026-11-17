@@ -19,7 +19,9 @@ import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { SurfaceMaterial } from "@repo/design-system/components/three/surface/material";
 import { useVisualScene } from "@repo/design-system/components/visual/card";
 import { getColor } from "@repo/design-system/lib/color";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { CAR_COLORS } from "@repo/design-system/lib/material/car";
+import { MACHINE_COLORS } from "@repo/design-system/lib/material/machine";
+import { ROAD_COLORS } from "@repo/design-system/lib/material/road";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr } from "effect";
 import { useRef } from "react";
@@ -65,14 +67,14 @@ function Propeller({ spin }: { readonly spin: (group: Group | null) => void }) {
           scale={[0.05, 0.0025, 0.011]}
         >
           <sphereGeometry args={[1, 16, 8]} />
-          <SurfaceMaterial color={MATERIAL.propeller} surface="plastic" />
+          <SurfaceMaterial color={MACHINE_COLORS.propeller} surface="plastic" />
         </mesh>
       ))}
       {blur ? (
         <mesh rotation={[-Math.PI / 2, 0, 0]}>
           <circleGeometry args={[0.1, 32]} />
           <meshStandardMaterial
-            color={MATERIAL.propeller}
+            color={MACHINE_COLORS.propeller}
             depthWrite={false}
             opacity={0.14}
             transparent
@@ -99,17 +101,17 @@ function Quadcopter({
     <group>
       <mesh castShadow scale={[0.11, 0.04, 0.055]}>
         <sphereGeometry args={[1, 32, 20]} />
-        <SurfaceMaterial color={MATERIAL.carbonShell} surface="plastic" />
+        <SurfaceMaterial color={MACHINE_COLORS.carbonShell} surface="plastic" />
       </mesh>
       <mesh castShadow position={[-0.01, 0.028, 0]} scale={[0.08, 0.02, 0.042]}>
         <sphereGeometry args={[1, 28, 16]} />
-        <SurfaceMaterial color={MATERIAL.hub} surface="plastic" />
+        <SurfaceMaterial color={CAR_COLORS.hub} surface="plastic" />
       </mesh>
       {Arr.map([-1, 1], (side) => (
         <mesh key={side} position={[0.104, 0.008, side * 0.016]}>
           <sphereGeometry args={[0.006, 10, 8]} />
           <meshStandardMaterial
-            color={MATERIAL.tintedGlass}
+            color={CAR_COLORS.tintedGlass}
             metalness={0.4}
             roughness={0.05}
           />
@@ -123,12 +125,15 @@ function Quadcopter({
             rotation={[0, -motor.angle, Math.PI / 2]}
           >
             <cylinderGeometry args={[0.007, 0.011, DIAGONAL / 2, 10]} />
-            <SurfaceMaterial color={MATERIAL.carbonShell} surface="plastic" />
+            <SurfaceMaterial
+              color={MACHINE_COLORS.carbonShell}
+              surface="plastic"
+            />
           </mesh>
           <mesh castShadow position={[motor.x, 0.006, motor.z]}>
             <cylinderGeometry args={[0.013, 0.014, 0.022, 18]} />
             <SurfaceMaterial
-              color={MATERIAL.castIron}
+              color={CAR_COLORS.castIron}
               metalness={1}
               roughness={0.5}
               surface="brushed"
@@ -136,14 +141,23 @@ function Quadcopter({
           </mesh>
           <mesh castShadow position={[motor.x, -0.03, motor.z]}>
             <cylinderGeometry args={[0.003, 0.004, 0.05, 6]} />
-            <SurfaceMaterial color={MATERIAL.carbonShell} surface="plastic" />
+            <SurfaceMaterial
+              color={MACHINE_COLORS.carbonShell}
+              surface="plastic"
+            />
           </mesh>
           <mesh position={[motor.x, -0.012, motor.z]}>
             <sphereGeometry args={[0.004, 8, 6]} />
             <meshStandardMaterial
-              color={motor.forward ? MATERIAL.signalRed : MATERIAL.signalGreen}
+              color={
+                motor.forward
+                  ? MACHINE_COLORS.signalRed
+                  : MACHINE_COLORS.signalGreen
+              }
               emissive={
-                motor.forward ? MATERIAL.signalRed : MATERIAL.signalGreen
+                motor.forward
+                  ? MACHINE_COLORS.signalRed
+                  : MACHINE_COLORS.signalGreen
               }
               emissiveIntensity={3}
             />
@@ -156,16 +170,19 @@ function Quadcopter({
       <group position={[0.1, -0.035, 0]}>
         <mesh castShadow>
           <boxGeometry args={[0.012, 0.02, 0.03]} />
-          <SurfaceMaterial color={MATERIAL.hub} surface="plastic" />
+          <SurfaceMaterial color={CAR_COLORS.hub} surface="plastic" />
         </mesh>
         <mesh castShadow position={[0.008, -0.02, 0]}>
           <boxGeometry args={[0.024, 0.022, 0.026]} />
-          <SurfaceMaterial color={MATERIAL.carbonShell} surface="plastic" />
+          <SurfaceMaterial
+            color={MACHINE_COLORS.carbonShell}
+            surface="plastic"
+          />
         </mesh>
         <mesh position={[0.021, -0.02, 0]} rotation={[0, 0, Math.PI / 2]}>
           <cylinderGeometry args={[0.008, 0.008, 0.004, 16]} />
           <meshStandardMaterial
-            color={MATERIAL.tintedGlass}
+            color={CAR_COLORS.tintedGlass}
             metalness={0.5}
             roughness={0.04}
           />
@@ -182,14 +199,14 @@ function Pad() {
       <mesh position={[0, 0.004, 0]} receiveShadow>
         <cylinderGeometry args={[0.55, 0.55, 0.006, 64]} />
         <SurfaceMaterial
-          color={MATERIAL.padOrange}
+          color={MACHINE_COLORS.padOrange}
           repeat={[4, 4]}
           surface="cloth"
         />
       </mesh>
       <mesh position={[0, 0.008, 0]} rotation={[-Math.PI / 2, 0, 0]}>
         <ringGeometry args={[0.4, 0.45, 64]} />
-        <meshStandardMaterial color={MATERIAL.roadPaint} roughness={0.8} />
+        <meshStandardMaterial color={ROAD_COLORS.roadPaint} roughness={0.8} />
       </mesh>
       {Arr.map(
         [
@@ -203,7 +220,10 @@ function Pad() {
             position={[bar.at[0], 0.008, bar.at[1]]}
           >
             <boxGeometry args={bar.args} />
-            <meshStandardMaterial color={MATERIAL.roadPaint} roughness={0.8} />
+            <meshStandardMaterial
+              color={ROAD_COLORS.roadPaint}
+              roughness={0.8}
+            />
           </mesh>
         )
       )}

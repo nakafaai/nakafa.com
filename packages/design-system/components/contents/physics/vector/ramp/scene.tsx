@@ -14,7 +14,9 @@ import type { CoordinateTuple } from "@repo/design-system/components/three/frame
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { SurfaceMaterial } from "@repo/design-system/components/three/surface/material";
 import { useVisualScene } from "@repo/design-system/components/visual/card";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { CAR_COLORS } from "@repo/design-system/lib/material/car";
+import { INSTRUMENT_COLORS } from "@repo/design-system/lib/material/instrument";
+import { MACHINE_COLORS } from "@repo/design-system/lib/material/machine";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { useRef } from "react";
 import type { Group } from "three";
@@ -64,12 +66,16 @@ function Ramp({ angle }: { readonly angle: number }) {
       <Bench />
       <mesh castShadow position={middle} receiveShadow rotation={[0, 0, turn]}>
         <boxGeometry args={[PLANK, THICK, 0.2]} />
-        <SurfaceMaterial color={MATERIAL.pine} repeat={[3, 1]} surface="wood" />
+        <SurfaceMaterial
+          color={INSTRUMENT_COLORS.pine}
+          repeat={[3, 1]}
+          surface="wood"
+        />
       </mesh>
       <mesh position={[HINGE[0], 0.006, 0]} rotation={[Math.PI / 2, 0, 0]}>
         <cylinderGeometry args={[0.008, 0.008, 0.22, 16]} />
         <SurfaceMaterial
-          color={MATERIAL.brass}
+          color={INSTRUMENT_COLORS.brass}
           metalness={1}
           roughness={0.45}
           surface="brushed"
@@ -78,7 +84,7 @@ function Ramp({ angle }: { readonly angle: number }) {
       {top[1] > 0.01 ? (
         <group>
           <Rod
-            color={MATERIAL.chrome}
+            color={CAR_COLORS.chrome}
             from={[top[0], 0.02, 0.11]}
             metalness={1}
             radius={0.006}
@@ -86,7 +92,7 @@ function Ramp({ angle }: { readonly angle: number }) {
             to={[top[0], top[1] + 0.08, 0.11]}
           />
           <Rod
-            color={MATERIAL.chrome}
+            color={CAR_COLORS.chrome}
             from={[top[0], top[1], 0.11]}
             metalness={1}
             radius={0.0055}
@@ -101,7 +107,7 @@ function Ramp({ angle }: { readonly angle: number }) {
             smoothness={2}
           >
             <SurfaceMaterial
-              color={MATERIAL.castIron}
+              color={CAR_COLORS.castIron}
               metalness={1}
               roughness={0.6}
               surface="brushed"
@@ -115,7 +121,7 @@ function Ramp({ angle }: { readonly angle: number }) {
             receiveShadow
             smoothness={2}
           >
-            <SurfaceMaterial color={MATERIAL.standBlue} surface="paint" />
+            <SurfaceMaterial color={MACHINE_COLORS.standBlue} surface="paint" />
           </RoundedBox>
         </group>
       ) : null}
@@ -216,7 +222,7 @@ export function RampScene({
           rotation={[0, 0, turn]}
           smoothness={2}
         >
-          <SurfaceMaterial color={MATERIAL.oak} surface="wood" />
+          <SurfaceMaterial color={INSTRUMENT_COLORS.oak} surface="wood" />
         </RoundedBox>
         <Force
           color={PLOT_COLORS.violet}

@@ -37,7 +37,8 @@ import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { P5Sketch } from "@repo/design-system/components/visual/sketch";
 import { getColor } from "@repo/design-system/lib/color";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { BENCH_COLORS } from "@repo/design-system/lib/material/bench";
+import { INSTRUMENT_COLORS } from "@repo/design-system/lib/material/instrument";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr, Schema } from "effect";
 import type p5 from "p5";
@@ -161,7 +162,7 @@ function paintScale(
   );
   const needle =
     -Math.PI / 2 - DIAL_SWEEP / 2 + (BALL_MASS / DIAL_FULL) * DIAL_SWEEP;
-  sketch.stroke(MATERIAL.dialNeedle);
+  sketch.stroke(INSTRUMENT_COLORS.dialNeedle);
   sketch.strokeWeight(2.5);
   sketch.line(
     dial.x,
@@ -183,8 +184,8 @@ function paintBall(sketch: p5, place: ReturnType<typeof layout>) {
     { blur: 26, color: fade(getColor("BLACK"), 0.7), drop: 10 },
     () => {
       litBall(sketch, center, radius, {
-        dark: mix(MATERIAL.bowlingResin, getColor("BLACK"), 0.6),
-        light: mix(MATERIAL.bowlingResin, getColor("WHITE"), 0.3),
+        dark: mix(INSTRUMENT_COLORS.bowlingResin, getColor("BLACK"), 0.6),
+        light: mix(INSTRUMENT_COLORS.bowlingResin, getColor("WHITE"), 0.3),
       });
     }
   );
@@ -268,7 +269,7 @@ function paintRuler(
     sketch,
     { blur: 10, color: fade(getColor("BLACK"), 0.5), drop: 4 },
     () => {
-      sketch.fill(fade(MATERIAL.glass, 0.6));
+      sketch.fill(fade(BENCH_COLORS.glass, 0.6));
       sketch.triangle(
         place.centre - width * 0.02,
         ballTop,

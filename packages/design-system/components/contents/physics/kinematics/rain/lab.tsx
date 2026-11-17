@@ -31,7 +31,8 @@ import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { P5Sketch } from "@repo/design-system/components/visual/sketch";
 import { getColor } from "@repo/design-system/lib/color";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { SKY_COLORS } from "@repo/design-system/lib/material/sky";
+import { TOWN_COLORS } from "@repo/design-system/lib/material/town";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Schema } from "effect";
 import type p5 from "p5";
@@ -86,7 +87,7 @@ function rainProgram(sketch: p5, read: () => RainFrame) {
       paintLandscape(layer, road);
       paintRoad(layer, road, { length: SPAN, start: -SPAN, step: 4 });
     });
-    sketch.fill(fade(MATERIAL.skyHaze, 0.25));
+    sketch.fill(fade(SKY_COLORS.skyHaze, 0.25));
     sketch.noStroke();
     sketch.rect(0, 0, sketch.width, road.surface);
     const carLength = sketch.width * 0.22;
@@ -103,7 +104,7 @@ function rainProgram(sketch: p5, read: () => RainFrame) {
       rear,
     });
     const fall = road.surface * 1.1;
-    sketch.stroke(fade(MATERIAL.waterGlint, 0.75));
+    sketch.stroke(fade(TOWN_COLORS.waterGlint, 0.75));
     sketch.strokeWeight(1.4);
     const streak = 0.05;
     for (let index = 0; index < DROPS; index += 1) {
