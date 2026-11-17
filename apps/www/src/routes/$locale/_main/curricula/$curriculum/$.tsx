@@ -5,9 +5,7 @@ import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
 import { useTranslations } from "use-intl";
 import { CurriculumCardGrid } from "@/components/curriculum/cards";
-import { CurriculumNestedHeader } from "@/components/curriculum/header";
-import { CurriculumSelector } from "@/components/curriculum/selector";
-import { BreadcrumbHeader } from "@/components/shared/breadcrumb/header";
+import { CurriculumHeader } from "@/components/curriculum/header";
 import { ContainerList } from "@/components/shared/card/list";
 import { CardMaterial } from "@/components/shared/card/material";
 import { RefContent } from "@/components/shared/content/references";
@@ -28,7 +26,6 @@ import { ShareButton } from "@/components/sidebar/actions/share";
 import { PanelSheetTrigger } from "@/components/sidebar/sheet";
 import { PUBLIC_CONTENT_HEADERS } from "@/lib/content/delivery";
 import { readCurriculumRoute } from "@/lib/curriculum/node.functions";
-import { HOME_TARGET } from "@/lib/routing/target";
 import { createSeoHead, toRouterHead } from "@/lib/seo/head";
 import { readStaticData } from "@/lib/static/data";
 
@@ -88,32 +85,14 @@ function CurriculumRoutePage() {
   return (
     <CurriculumOutline enabled={hasOutline}>
       <Page>
-        {route.level === "track" ? (
-          <BreadcrumbHeader
-            value={{
-              action: (
-                <CurriculumSelector
-                  currentValue={route.publicPath}
-                  label={labels.selector}
-                  options={page.options}
-                />
-              ),
-              home: HOME_TARGET,
-              homeLabel: labels.home,
-              items: [{ label: labels.subject }],
-              title: route.title,
-            }}
-          />
-        ) : (
-          <CurriculumNestedHeader
-            ancestors={page.ancestors}
-            currentRoute={route}
-            homeLabel={labels.home}
-            subjectLabel={labels.subject}
-          >
-            {hasOutline ? <CurriculumOutlineToggle /> : null}
-          </CurriculumNestedHeader>
-        )}
+        <CurriculumHeader
+          action={hasOutline ? <CurriculumOutlineToggle /> : undefined}
+          homeLabel={labels.home}
+          options={page.options}
+          subjectLabel={labels.subject}
+          title={route.title}
+          trail={page.trail}
+        />
         <PageBody>
           {page.materialCards.length > 0 ? (
             <ContainerList className="pt-6 sm:grid-cols-1">

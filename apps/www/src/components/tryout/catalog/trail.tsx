@@ -5,13 +5,11 @@ import { createContext } from "react";
 import { useLocale, useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { ConvexIsland } from "@/components/providers/island";
-import {
-  BreadcrumbHeader,
-  type BreadcrumbHeaderItem,
-} from "@/components/shared/breadcrumb/header";
+import { BreadcrumbHeader } from "@/components/shared/breadcrumb/header";
 import {
   type CrumbSiblings,
   crumbSiblings,
+  siblingCrumb,
 } from "@/components/shared/breadcrumb/pages";
 import { CountryFlagIcon } from "@/components/shared/flag";
 import {
@@ -58,30 +56,18 @@ function sibling(
   }));
 }
 
-/**
- * One crumb of the trail, named after its own page: with two or more siblings
- * it opens them, else it links to its own page. A crumb whose own page is not
- * among its options names nothing, so it is left out.
- */
+/** One crumb of the trail, its siblings under the menu's one-word heading. */
 function trailCrumb(input: {
   readonly menu: string;
   readonly onChoose?: CrumbSiblings["onChoose"];
   readonly options: CrumbSiblings["options"];
-}): Option.Option<BreadcrumbHeaderItem> {
-  const { options } = input;
-  return Option.map(
-    Arr.findFirst(options, (option) => option.current),
-    (own) =>
-      options.length > 1
-        ? {
-            label: own.label,
-            siblings: crumbSiblings({
-              label: input.menu,
-              onChoose: input.onChoose,
-              options,
-            }),
-          }
-        : { label: own.label, target: own.target }
+}) {
+  return siblingCrumb(
+    crumbSiblings({
+      label: input.menu,
+      onChoose: input.onChoose,
+      options: input.options,
+    })
   );
 }
 

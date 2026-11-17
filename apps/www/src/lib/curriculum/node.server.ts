@@ -19,6 +19,7 @@ import {
 } from "@/lib/curriculum/model";
 import type { CurriculumInput } from "@/lib/curriculum/node.functions";
 import { readCurriculumSeoContext } from "@/lib/curriculum/seo";
+import { readCurriculumTrail } from "@/lib/curriculum/trail";
 import { getLocaleOrThrow } from "@/lib/routing/locale/address";
 import { createResolvedRouteAlternates } from "@/lib/seo/alternates";
 import { createBreadcrumbItems } from "@/lib/seo/breadcrumbs";
@@ -58,15 +59,11 @@ export const readCurriculumPage = Effect.fn("www.curricula.route.read")(
       ],
       { concurrency: "unbounded" }
     );
+    const trail = yield* readCurriculumTrail(model, catalog);
     const tCommon = createTranslator({
       locale,
       messages,
       namespace: "Common",
-    });
-    const tLearningPrograms = createTranslator({
-      locale,
-      messages,
-      namespace: "LearningPrograms",
     });
     const homeLabel = tCommon("home");
     const subjectLabel = tCommon("subject");
@@ -78,7 +75,6 @@ export const readCurriculumPage = Effect.fn("www.curricula.route.read")(
       alternates: toHeadAlternates(
         createResolvedRouteAlternates(route, model.alternates)
       ),
-      ancestors: model.ancestors,
       breadcrumbs: createBreadcrumbItems(
         locale,
         readRuntimeCurriculumBreadcrumbs(homeLabel, subjectLabel, model)
@@ -99,7 +95,6 @@ export const readCurriculumPage = Effect.fn("www.curricula.route.read")(
       labels: {
         home: homeLabel,
         routeAction: tCommon("view-options"),
-        selector: tLearningPrograms("kind.school-curriculum"),
         subject: subjectLabel,
       },
       locale,
@@ -114,6 +109,7 @@ export const readCurriculumPage = Effect.fn("www.curricula.route.read")(
         : null,
       title: seo.title,
       toc: readRuntimeCurriculumToc(model, seo.description),
+      trail,
     };
   }
 );
