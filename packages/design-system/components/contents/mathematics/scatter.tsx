@@ -166,13 +166,13 @@ export function ScatterDiagram({
           <Grid vertical={false} />
           <XAxis
             dataKey="x"
+            height="auto"
             {...(xAxisDomain === "min-max"
               ? { domain: ["dataMin", "dataMax"] }
               : {})}
             label={{
               value: xAxisLabel || "X",
-              position: "bottom",
-              offset: 10,
+              position: "insideBottom",
               style: { textAnchor: "middle" },
             }}
             tickFormatter={(value) => value.toString()}

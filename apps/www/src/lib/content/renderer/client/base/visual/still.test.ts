@@ -104,31 +104,31 @@ describe("the still of a MathVisual scene", () => {
       }),
       frame: {
         kind: "cartesian",
-        x: { max: 10, min: 0 },
+        x: { max: 5, min: 0 },
         y: { max: 39, min: 35 },
       },
     });
 
-    // The frame spans 10 by 4 scene units around its middle; y = 0 would sit 37 below it.
+    // The frame spans 10 by 8 scene units around its middle; y = 0 would sit 37 below it.
     expect(drawn.view).toStrictEqual({
-      height: 5.2,
+      height: 9.2,
       left: -5.6,
-      top: -2.6,
+      top: -4.6,
       width: 11.2,
     });
     expect(Arr.map(drawn.axes, ({ points }) => points)).toStrictEqual([
       [
-        [-5, -2],
-        [5, -2],
+        [-5, -4],
+        [5, -4],
       ],
       [
-        [-5, -2],
-        [-5, 2],
+        [-5, -4],
+        [-5, 4],
       ],
     ]);
     expect(drawn.ticks).toStrictEqual([
-      { at: [-5, -2], axis: "y", key: "y:min", value: 35 },
-      { at: [-5, 2], axis: "y", key: "y:max", value: 39 },
+      { at: [-5, -4], axis: "y", key: "y:min", value: 35 },
+      { at: [-5, 4], axis: "y", key: "y:max", value: 39 },
     ]);
   });
 

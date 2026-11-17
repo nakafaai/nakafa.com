@@ -14,6 +14,7 @@ import { useStore } from "zustand";
 import {
   createParameterStore,
   type ParameterStore,
+  sliderDigits,
 } from "@/lib/content/renderer/client/base/visual/parameters";
 
 const ParameterContext = createContext<{
@@ -58,12 +59,6 @@ export function useParameterValues() {
   return useStore(useParameters().store, (state) => state.values);
 }
 
-/** The digits a slider's value shows, enough for its step. */
-function digits(parameter: FormulaParameter) {
-  const step = parameter.step ?? (parameter.max - parameter.min) / 100;
-  return Math.min(4, Math.max(0, Math.ceil(-Math.log10(step))));
-}
-
 /**
  * One slider: its rich label, or its name as math, its value, and the track
  * that moves it.
@@ -85,16 +80,20 @@ function ParameterSlider({
     Rec.get<string, string>(PARAMETER_NAMES, parameter.name),
     () => ""
   );
+  const step = parameter.step ?? (parameter.max - parameter.min) / 100;
   return (
     <div className="flex w-full flex-col gap-3">
       <div className="flex items-center justify-between gap-4 text-sm">
-        {parameter.label === undefined ? (
-          <DrawnInlineMath html={name} />
-        ) : (
-          labels[parameter.label]
-        )}
+        {/* One element, so a label of text and math reads as one phrase beside the value. */}
+        <span className="min-w-0">
+          {parameter.label === undefined ? (
+            <DrawnInlineMath html={name} />
+          ) : (
+            labels[parameter.label]
+          )}
+        </span>
         <span className="shrink-0 tabular-nums">
-          {value.toFixed(digits(parameter))}
+          {value.toFixed(sliderDigits({ min: parameter.min, step }))}
         </span>
       </div>
       <Slider
@@ -102,7 +101,7 @@ function ParameterSlider({
         max={parameter.max}
         min={parameter.min}
         onValueChange={(next) => move(parameter.name, next)}
-        step={parameter.step ?? (parameter.max - parameter.min) / 100}
+        step={step}
         value={value}
       />
     </div>

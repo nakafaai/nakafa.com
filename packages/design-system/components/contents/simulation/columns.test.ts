@@ -1,5 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
-import { toggleColumns } from "@repo/design-system/components/contents/chemistry/columns";
+import { toggleColumns } from "@repo/design-system/components/contents/simulation/columns";
 
 describe("toggle columns", () => {
   it("fits every count of choices without an empty cell", () => {

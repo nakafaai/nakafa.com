@@ -1,6 +1,5 @@
 import { Line } from "@react-three/drei";
 import { useFrame, useThree } from "@react-three/fiber";
-import { toggleColumns } from "@repo/design-system/components/contents/chemistry/columns";
 import {
   DischargeTube,
   SpectroscopeView,
@@ -13,6 +12,7 @@ import {
   wavelength,
 } from "@repo/design-system/components/contents/chemistry/emission/spectrum";
 import { mathNumber } from "@repo/design-system/components/contents/mathematics/number";
+import { toggleColumns } from "@repo/design-system/components/contents/simulation/columns";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { CameraControls } from "@repo/design-system/components/three/camera/controls";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene";

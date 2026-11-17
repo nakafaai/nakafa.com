@@ -1,6 +1,5 @@
 import { Line } from "@react-three/drei";
 import { useFrame, useThree } from "@react-three/fiber";
-import { toggleColumns } from "@repo/design-system/components/contents/chemistry/columns";
 import { MathLines } from "@repo/design-system/components/contents/chemistry/lines";
 import {
   averageMass,
@@ -15,6 +14,7 @@ import {
   SectorMagnet,
 } from "@repo/design-system/components/contents/chemistry/spectrometer/magnet";
 import { spreadLabels } from "@repo/design-system/components/contents/chemistry/spectrometer/placement";
+import { toggleColumns } from "@repo/design-system/components/contents/simulation/columns";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { CameraControls } from "@repo/design-system/components/three/camera/controls";
 import { ORIGIN_COLOR } from "@repo/design-system/components/three/data/constants";

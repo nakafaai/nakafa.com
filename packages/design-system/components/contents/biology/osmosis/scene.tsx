@@ -112,10 +112,14 @@ export function OsmosisScene({
                 roughness={0.75}
               />
             </mesh>
+            {/* Every other tube's value hangs a row lower, so neighbouring
+                values stand two tubes apart and read clearly on a phone. */}
             <ThreeLabel
+              anchorY={index % 2 === 0 ? "bottom" : "top"}
               color={index === chosen ? BIOLOGY_COLORS.auxin : ink}
               fontSize="compact"
-              position={[0, 0.02, 0.05]}
+              gap={0.002}
+              position={[0, 0.006, 0.05]}
             >
               <InlineMath math={quantity(strip.concentration, "", 2)} />
             </ThreeLabel>

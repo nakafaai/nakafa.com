@@ -1,5 +1,4 @@
 import { useThree } from "@react-three/fiber";
-import { toggleColumns } from "@repo/design-system/components/contents/chemistry/columns";
 import {
   balanceLines,
   economyLines,
@@ -22,6 +21,7 @@ import {
 } from "@repo/design-system/components/contents/chemistry/equation/store";
 import { MathLines } from "@repo/design-system/components/contents/chemistry/lines";
 import { mathNumber } from "@repo/design-system/components/contents/mathematics/number";
+import { toggleColumns } from "@repo/design-system/components/contents/simulation/columns";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { CameraControls } from "@repo/design-system/components/three/camera/controls";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene";
