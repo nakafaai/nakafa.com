@@ -64,9 +64,9 @@ describe("figure forms", () => {
           name: "defaultSampleId",
           optional: true,
         },
-        { field: { kind: "rich" }, name: "description", optional: true },
+        { field: { kind: "rich" }, name: "description", optional: false },
         { field: { kind: "group" }, name: "labels", optional: false },
-        { field: { kind: "rich" }, name: "title", optional: true },
+        { field: { kind: "rich" }, name: "title", optional: false },
       ],
     });
   });
