@@ -48,6 +48,7 @@ import { inspectFrameSource } from "#scripts/check/frame";
 import { inspectGatewaySource } from "#scripts/check/gateway";
 import { inspectGroupSource } from "#scripts/check/groups";
 import { inspectIconSource } from "#scripts/check/icons";
+import { inspectMarkers, TEXT_FILE_PATTERN } from "#scripts/check/markers";
 import { inspectMenuSource } from "#scripts/check/menus";
 import { inspectMessageReach } from "#scripts/check/messages";
 import { manifestEntries, nameViolations } from "#scripts/check/names";
@@ -251,6 +252,24 @@ export const checkTestPolicy = Effect.fn("RepositoryPolicy.checkTests")(
     const sdkViolations = yield* inspectSdkReach(root, workspaces);
     const dictionaryViolations = yield* inspectDictionaries(root, workspaces);
     const messageViolations = yield* inspectMessageReach(root, workspaces);
+    // A merge that stopped on a conflict leaves Git's marker lines in a file; every text file is read for them, the
+    // repository root's own included.
+    const markerViolations = yield* Effect.forEach(
+      Arr.filter(
+        Arr.appendAll(
+          Arr.flatten([workspaces, scripts, agents, docs]),
+          Arr.map(rootEntries, (entry) => path.join(root, entry))
+        ),
+        (file) => TEXT_FILE_PATTERN.test(file)
+      ),
+      (file) =>
+        Effect.map(fileSystem.readFileString(file), (sourceText) =>
+          inspectMarkers(
+            Arr.join(Str.split(path.relative(root, file), path.sep), "/"),
+            sourceText
+          )
+        )
+    );
     // Every hand-written path is named, the documents and the agent skills' tooling included, by repository path. A
     // repository that runs this check from another one names its paths by its own rules, so only the owner is judged.
     const isOwner =
@@ -295,6 +314,7 @@ export const checkTestPolicy = Effect.fn("RepositoryPolicy.checkTests")(
         lineReport(sdkViolations),
         lineReport(dictionaryViolations),
         lineReport(messageViolations),
+        lineReport(Arr.flatten(markerViolations)),
         lineReport(names),
         lineReport(
           inspectCompilerConfigs(
