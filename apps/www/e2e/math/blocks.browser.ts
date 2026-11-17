@@ -41,9 +41,9 @@ test("a lesson's display formulas scroll in plain boxes, and the page stays stil
 /**
  * A browser may break a line between an inline formula and the full stop after
  * it, so a line would start with the full stop alone. Every inline formula of
- * a lesson that text touches stands in one unit with that text, a unit that
- * takes no line break, and the touching text's first character sits on the
- * line of the formula's last piece at every phone width.
+ * a lesson that text touches stands in one inline block with that text, which
+ * the line never breaks inside, and the touching text's first character sits
+ * on the line of the formula's last piece at every phone width.
  */
 test("a lesson's inline formula keeps the punctuation that touches it on its line", async ({
   page,
@@ -84,21 +84,22 @@ test("a lesson's inline formula keeps the punctuation that touches it on its lin
         const piece = last.getBoundingClientRect();
         const middle = (mark.top + mark.bottom) / 2;
         return (
-          getComputedStyle(unit).whiteSpace !== "nowrap" ||
+          getComputedStyle(unit).display !== "inline-block" ||
           middle < piece.top ||
           middle > piece.bottom
         );
       });
+      // Each case apart names its TeX and the text that touches it.
       return {
         apart: apart.map(
           (formula) =>
-            `${formula.textContent?.slice(-12)}|${formula.nextSibling?.textContent?.slice(0, 3)}`
+            `${formula.querySelector("annotation")?.textContent}|${formula.nextSibling?.textContent?.slice(0, 3)}`
         ),
         touched: touched.length,
       };
     });
 
     expect(facts.touched).toBeGreaterThan(0);
-    expect(facts.apart).toEqual([]);
+    expect({ apart: facts.apart, width }).toEqual({ apart: [], width });
   }
 });
