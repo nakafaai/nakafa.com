@@ -3139,7 +3139,7 @@
       "description": "Nina tidak dapat membukanya, jadi hantar soalan kamu sekali lagi."
     },
     "failure-credits": {
-      "title": "Kredit kamu tidak cukup untuk jawapan ini.",
+      "title": "Kredit kamu tidak cukup.",
       "description": "Semak baki dan tarikh set semula dalam tetapan langganan."
     },
     "failure-message-size": {
@@ -3249,8 +3249,8 @@
       "description": "Tanya guru kamu langkah seterusnya."
     },
     "sitting-answers-unsent": {
-      "title": "Sebahagian jawapan mungkin tidak tersimpan.",
-      "description": "Sebahagiannya mungkin tidak sampai ke peperiksaan, jadi beritahu pengawas kamu."
+      "title": "Jawapan mungkin tidak tersimpan.",
+      "description": "Ada yang mungkin tidak sampai, jadi beritahu pengawas kamu."
     },
     "sitting-attempt-closed": {
       "title": "Percubaan ini sudah ditutup.",
