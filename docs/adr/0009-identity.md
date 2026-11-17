@@ -211,12 +211,12 @@ release, with no compatibility window and no migration function.
   Google sign-in, which signs in to the account that holds its verified address
   and keeps its id. Each learner signs in once more, because the earlier
   sessions do not carry over.
-- `users.authId`, the earlier id, cannot leave the schema in the same deploy,
+- `users.authId`, the earlier id, could not leave the schema in the same deploy,
   because Convex refuses a schema that drops a field every row holds. The
-  cutover makes it optional and unread, the Convex CLI clears it from every row
+  cutover made it optional and unread, the Convex CLI cleared it from every row
   right after the deploy (`convex import --table users --replace` of the rows
-  without it, which keeps each id and creation time), and the next change drops
-  the field. This is the one exception to the one-step change rule.
+  without it, which keeps each id and creation time), and the next change
+  dropped the field. This is the one exception to the one-step change rule.
 - The earlier component's data is deleted, and the deployment variables it read,
   its secret and its key set, are removed by name.
 - Upstream changes that close the gaps of Account Deletion and of the hosted
