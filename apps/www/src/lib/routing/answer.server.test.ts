@@ -29,6 +29,14 @@ const source = vi.hoisted(() => ({ read: vi.fn() }));
 
 const release = vi.hoisted(() => ({ hasStaticRelease: true }));
 
+const stored = vi.hoisted(() => ({
+  answer: vi.fn<(request: Request) => Effect.Effect<Option.Option<Response>>>(),
+}));
+
+vi.mock("@/lib/static/serve.server", () => ({
+  answerStaticFunction: stored.answer,
+}));
+
 vi.mock("@/lib/routing/rendered", async () => {
   const { isBarePath, isRenderedPath } = await import("@/lib/routing/template");
   const { routeRewrite } = await import("@/lib/routing/rewrite");
@@ -107,9 +115,27 @@ beforeEach(() => {
   reporting.report.mockReset().mockReturnValue(Effect.void);
   retired.read.mockReset().mockReturnValue(Effect.succeed(false));
   source.read.mockReset().mockReturnValue(Effect.succeed(null));
+  stored.answer.mockReset().mockReturnValue(Effect.succeedNone);
 });
 
 describe("decisions before the router", () => {
+  it.effect(
+    "answers a static function's call from its static answer, not the router",
+    () =>
+      Effect.gen(function* () {
+        stored.answer.mockReturnValue(
+          Effect.succeedSome(new Response("stored answer"))
+        );
+
+        const { handle, response } = yield* served("/_serverFn/messages");
+
+        expect(yield* Effect.promise(() => response.text())).toBe(
+          "stored answer"
+        );
+        expect(handle).not.toHaveBeenCalled();
+      })
+  );
+
   it.effect(
     "answers a try-out set the release does not hold with the static page, not the router",
     () =>
