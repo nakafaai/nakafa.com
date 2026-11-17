@@ -327,14 +327,15 @@ void main() {
   float c = cos(aPlace.w);
   float s = sin(aPlace.w);
   vec3 local = aPosition;
-  // The body's own motion (D48): a swim wave across or up and down it, a leg or an arm striding while it walks, a wing or a flipper flapping, each body a little out of step with its neighbours.
+  // The body's own motion (D48 and D49): a swim wave across or up and down it, a leg or an arm striding while it walks, a wing or a flipper flapping, a walking spine flexing, each body a little out of step with its neighbours.
   float beat = aRig.x * sin(uTime * aRig.z + aRig.y + aPlace.x * 1.7 + aPlace.z * 0.9);
   float walking = step(0.001, aMove);
   local += aRig.w < 0.5 ? vec3(0.0)
     : aRig.w < 1.5 ? vec3(beat, 0.0, 0.0)
     : aRig.w < 2.5 ? vec3(0.0, beat, 0.0)
     : aRig.w < 3.5 ? vec3(0.0, 0.0, beat * walking)
-    : vec3(0.0, beat, 0.0);
+    : aRig.w < 4.5 ? vec3(0.0, beat, 0.0)
+    : vec3(beat * walking, 0.0, 0.0);
   vec3 turned = vec3(local.x * c + local.z * s, local.y, -local.x * s + local.z * c);
   vec3 place = aPlace.xyz + turned;
   if (aMove < 0.0) {

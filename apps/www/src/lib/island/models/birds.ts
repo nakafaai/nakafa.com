@@ -1,6 +1,12 @@
+import { Array as Arr } from "effect";
 import type { Coat, Species } from "@/lib/island/models/coat";
 import { eyesOf } from "@/lib/island/models/features";
-import { type Face, mirrored, type Vec } from "@/lib/island/models/parts";
+import {
+  type Face,
+  mirrored,
+  rigged,
+  type Vec,
+} from "@/lib/island/models/parts";
 import { ball, rod, slab, tube } from "@/lib/island/models/solids";
 
 /** A head at `at` of radius `r` with its eyes, a beak `long` toward `tip`, and a tuft when the species has a crest. */
@@ -210,5 +216,96 @@ export function perch(species: Species, coat: Coat): readonly Face[] {
       train ? coat.accent : coat.mark
     ),
     ...legsOf(0.12, 0.06, 0.04, 0.02, coat),
+  ];
+}
+
+/** A wing's outline seen from above, as (out, along) pairs from the shoulder: a songbird's pointed and short, a raptor's broad with the slotted primaries it soars on. */
+function wingOutline(
+  slotted: boolean
+): Arr.NonEmptyReadonlyArray<readonly [number, number]> {
+  return slotted
+    ? [
+        [0, 0.12],
+        [0.4, 0.12],
+        [0.8, 0.06],
+        [0.9, 0],
+        [0.85, -0.03],
+        [0.9, -0.07],
+        [0.82, -0.1],
+        [0.85, -0.14],
+        [0.7, -0.18],
+        [0.3, -0.2],
+        [0, -0.15],
+      ]
+    : [
+        [0, 0.12],
+        [0.35, 0.1],
+        [0.7, 0],
+        [0.76, -0.08],
+        [0.5, -0.12],
+        [0.25, -0.16],
+        [0, -0.12],
+      ];
+}
+
+/**
+ * A bird of the sky on the wing (ADR 0047, D49), one long from its beak to its
+ * tail and facing +z: a streamlined body with its legs tucked up, its head
+ * and beak forward, its tail fanned behind, and its wings spread wide, a
+ * songbird's short and pointed, a raptor's broad with slotted tips. The
+ * wings beat from the shoulder (a small bird about four times a second, a
+ * big one about twice) and the body bobs against each beat, rising as the
+ * wings sweep down.
+ */
+export function flyingBird(species: Species, coat: Coat): readonly Face[] {
+  const big = species.family === "perch";
+  const rate = big ? 13 : 26;
+  const shoulder = 0.1;
+  const wing = slab(
+    Arr.map(
+      wingOutline(big),
+      ([out, along]): Vec => [shoulder + out, 0.02, along]
+    ),
+    0.025,
+    coat.mark
+  );
+  const beating = rigged(wing, {
+    mode: "flap",
+    phase: 0,
+    pivot: shoulder,
+    rate,
+    reach: 0.75,
+    waves: 0,
+  });
+  const body = [
+    ...ball([0, 0, 0], [0.13, 0.12, 0.3], coat.hide, 3, 6),
+    ...headOf(
+      [0, 0.05, 0.3],
+      0.11,
+      [0, 0.03, 0.48],
+      coat,
+      species.traits.crest
+    ),
+    ...slab(
+      [
+        [0, 0.02, -0.24],
+        [0.13, 0.02, -0.5],
+        [-0.13, 0.02, -0.5],
+      ],
+      0.02,
+      coat.mark
+    ),
+  ];
+  return [
+    ...rigged(body, {
+      mode: "heave",
+      phase: Math.PI,
+      pivot: 0,
+      rate,
+      reach: 0.03,
+      waves: 0,
+    }),
+    ...beating,
+    ...mirrored(beating),
   ];
 }

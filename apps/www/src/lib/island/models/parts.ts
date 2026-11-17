@@ -22,14 +22,16 @@ type Rgb = typeof Rgb.Type;
  *   `pivot`, only while its body walks, a left limb half a cycle after its
  *   right twin;
  * - `flap`: a wing or a flipper rising and falling about the distance `pivot`
- *   from the middle.
+ *   from the middle;
+ * - `bend`: the same wave as `sway`, only while the body walks, so a walking
+ *   animal's spine flexes from side to side in step with its legs (D49).
  *
  * `rate` is in radians a second, `phase` in radians, and `reach` the swing's
  * size: a share of the body's length for a wave, an angle in radians for a
  * stride or a flap. `waves` is how many wavelengths run along the body.
  */
 const Rig = Schema.Struct({
-  mode: Schema.Literals(["sway", "heave", "stride", "flap"]),
+  mode: Schema.Literals(["sway", "heave", "stride", "flap", "bend"]),
   phase: Schema.Finite,
   pivot: Schema.Finite,
   rate: Schema.Finite,
@@ -188,7 +190,7 @@ export const MODEL_STRIDE = 13;
 const STILL = [0, 0, 0, 0] as const;
 
 /** The number the body program reads for each mode; 0 is a part that never moves. */
-const MODES = { flap: 4, heave: 2, stride: 3, sway: 1 } as const;
+const MODES = { bend: 5, flap: 4, heave: 2, stride: 3, sway: 1 } as const;
 
 /**
  * The motion numbers of one corner (D48): how far it swings, its phase, its
@@ -225,6 +227,13 @@ function motionOf(
   const back = length > 0 ? (head - z) / length : 0;
   const swing = rig.reach * length * (0.2 + 0.8 * back * back);
   return [swing, rig.phase + back * rig.waves * 2 * Math.PI, rig.rate, mode];
+}
+
+/** The faces that do not move yet, moving by `rig`, and the rest as they were: a body's trunk flexing around its own striding limbs (D49). */
+export function flexed(faces: readonly Face[], rig: Rig): readonly Face[] {
+  return Arr.map(faces, (face) =>
+    face.rig === undefined ? { ...face, rig } : face
+  );
 }
 
 /** The faces with every one moving by `rig` (D48). */

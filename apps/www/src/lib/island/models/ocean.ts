@@ -78,13 +78,63 @@ function hullOf(
   return tube([first, ...rest], (spot) => paint(spot.along, spot.up), 8);
 }
 
-/** A shark (ADR 0047, D24): a torpedo with a tall back fin, side fins swept back, a tall forked tail, and the hammerhead's wide head. */
+/**
+ * A flat fin in its own plane (ADR 0047, D49): each point is how far out along
+ * `out` and how far back along `back` from `root`, so a falcate fin keeps its
+ * curve and every corner lies in one plane, as a slab must.
+ */
+function planarFin(
+  root: Vec,
+  out: Vec,
+  back: Vec,
+  points: Arr.NonEmptyReadonlyArray<readonly [number, number]>,
+  color: Rgb
+): readonly Face[] {
+  return slab(
+    Arr.map(
+      points,
+      ([along, behind]): Vec => [
+        root[0] + out[0] * along + back[0] * behind,
+        root[1] + out[1] * along + back[1] * behind,
+        root[2] + out[2] * along + back[2] * behind,
+      ]
+    ),
+    0.008,
+    color
+  );
+}
+
+/** A fin in the body's middle plane (x = 0), from its outline as (up, along) pairs. */
+function keelFin(
+  points: Arr.NonEmptyReadonlyArray<readonly [number, number]>,
+  color: Rgb
+): readonly Face[] {
+  return slab(
+    Arr.map(points, ([up, z]): Vec => [0, up, z]),
+    0.01,
+    color
+  );
+}
+
+/**
+ * A shark from its anatomy (ADR 0047, D24 and D49), one long from its snout to
+ * the tip of its tail, facing +z: a torpedo with a pointed snout and a narrow
+ * tail stock, a tall falcate first dorsal fin with a hollow trailing edge, a
+ * small second dorsal and anal fin, long falcate pectoral fins swept back and
+ * down, small pelvic fins, five gill slits, and a heterocercal tail whose
+ * upper lobe is longer and angled up over a shorter lower lobe. A hammerhead
+ * carries its flat, scalloped head blade with an eye at each tip and a taller
+ * dorsal fin; a whale shark a broad flat head, a white-spotted back and a
+ * deeper, near-even tail.
+ */
 function sharkFaces(
   kind: Exclude<Swimmer, "dolphin" | "orca">
 ): readonly Face[] {
   const look = LOOKS[kind];
   const [back, belly, mark] = [rgb(look.back), rgb(look.belly), rgb(look.mark)];
+  const ink = rgb(0x15_15_18);
   const whale = kind === "whale-shark";
+  const hammer = kind === "hammerhead";
   const paint = (along: number, up: number) => {
     if (up < -0.3) {
       return belly;
@@ -94,73 +144,170 @@ function sharkFaces(
       (kind === "tiger-shark" && Math.floor(along * 10) % 3 === 1);
     return spotted ? mark : back;
   };
-  const side = slab(
+  const hull = hullOf(
     [
-      [0.05, -0.04, 0.22],
-      [0.26, -0.09, 0.06],
-      [0.06, -0.05, 0.12],
+      [0, 0, 0],
+      [0.03, whale ? 0.07 : 0.022, whale ? 0.03 : 0.018],
+      [0.08, whale ? 0.085 : 0.048, whale ? 0.05 : 0.042],
+      [0.18, 0.072, 0.068],
+      [0.32, 0.078, 0.074],
+      [0.5, 0.062, 0.06],
+      [0.66, 0.04, 0.042],
+      [0.8, 0.017, 0.02],
+      [0.86, 0, 0],
     ],
-    0.008,
+    paint
+  );
+  const pectoral = planarFin(
+    [0.05, -0.04, 0.17],
+    [0.92, -0.33, -0.2],
+    [0, 0, -1],
+    [
+      [0, 0],
+      [0.12, 0.03],
+      [0.24, 0.09],
+      [0.25, 0.12],
+      [0.17, 0.11],
+      [0.08, 0.09],
+      [0, 0.08],
+    ],
     back
   );
+  const pelvic = planarFin(
+    [0.03, -0.045, -0.1],
+    [0.8, -0.6, 0],
+    [0, 0, -1],
+    [
+      [0, 0],
+      [0.06, 0.03],
+      [0.06, 0.05],
+      [0, 0.05],
+    ],
+    back
+  );
+  const gills = Arr.flatMap(
+    Arr.makeBy(5, (index) => index),
+    (index) =>
+      slab(
+        [
+          [0.07, 0.02, 0.27 - index * 0.018],
+          [0.07, -0.025, 0.268 - index * 0.018],
+          [0.07, -0.025, 0.264 - index * 0.018],
+          [0.07, 0.02, 0.266 - index * 0.018],
+        ],
+        0.004,
+        mark
+      )
+  );
+  const blade = hammer
+    ? slab(
+        [
+          [-0.15, 0.01, 0.43],
+          [-0.1, 0.01, 0.465],
+          [-0.045, 0.01, 0.485],
+          [0, 0.01, 0.47],
+          [0.045, 0.01, 0.485],
+          [0.1, 0.01, 0.465],
+          [0.15, 0.01, 0.43],
+          [0.14, 0.01, 0.405],
+          [0.05, 0.01, 0.405],
+          [0.03, 0.01, 0.385],
+          [-0.03, 0.01, 0.385],
+          [-0.05, 0.01, 0.405],
+          [-0.14, 0.01, 0.405],
+        ],
+        0.022,
+        back
+      )
+    : [];
+  const eye = hammer
+    ? slab(
+        [
+          [0.15, 0.024, 0.425],
+          [0.158, 0.024, 0.418],
+          [0.15, 0.024, 0.411],
+        ],
+        0.012,
+        ink
+      )
+    : slab(
+        [
+          [0.033, 0.016, 0.405],
+          [0.037, 0.026, 0.398],
+          [0.037, 0.014, 0.392],
+        ],
+        0.006,
+        ink
+      );
   return [
-    ...hullOf(
-      [
-        [0, 0, 0],
-        [0.04, whale ? 0.07 : 0.035, 0.035],
-        [0.16, 0.075, 0.08],
-        [0.38, 0.08, 0.085],
-        [0.62, 0.05, 0.055],
-        [0.82, 0.022, 0.03],
-        [0.88, 0, 0],
-      ],
-      paint
-    ),
-    ...slab(
-      [
-        [0, 0.07, 0.16],
-        [0, 0.22, 0.02],
-        [0, 0.075, -0.02],
-      ],
-      0.01,
+    ...hull,
+    ...keelFin(
+      hammer
+        ? [
+            [0.06, 0.13],
+            [0.27, 0.04],
+            [0.26, 0.01],
+            [0.13, 0.02],
+            [0.07, -0.02],
+          ]
+        : [
+            [0.065, 0.13],
+            [0.21, 0.02],
+            [0.2, -0.005],
+            [0.12, 0.005],
+            [0.07, -0.02],
+          ],
       back
     ),
-    ...slab(
+    ...keelFin(
       [
-        [0, 0.02, -0.32],
-        [0, 0.17, -0.5],
-        [0, 0.01, -0.4],
-        [0, -0.1, -0.48],
-        [0, -0.01, -0.34],
+        [0.03, -0.21],
+        [0.075, -0.25],
+        [0.025, -0.265],
       ],
-      0.01,
       back
     ),
-    ...side,
-    ...mirrored(side),
-    ...(kind === "hammerhead"
-      ? slab(
-          [
-            [-0.14, 0.01, 0.47],
-            [0.14, 0.01, 0.47],
-            [0.14, 0.01, 0.42],
-            [-0.14, 0.01, 0.42],
+    ...keelFin(
+      [
+        [-0.03, -0.21],
+        [-0.07, -0.255],
+        [-0.025, -0.265],
+      ],
+      back
+    ),
+    ...keelFin(
+      whale
+        ? [
+            [0.02, -0.33],
+            [0.2, -0.49],
+            [0.16, -0.5],
+            [0.03, -0.44],
+            [-0.14, -0.5],
+            [-0.17, -0.48],
+            [-0.01, -0.35],
+          ]
+        : [
+            [0.02, -0.33],
+            [0.1, -0.41],
+            [0.19, -0.495],
+            [0.165, -0.5],
+            [0.09, -0.465],
+            [0.04, -0.45],
+            [-0.03, -0.445],
+            [-0.1, -0.47],
+            [-0.065, -0.42],
+            [-0.01, -0.35],
           ],
-          0.025,
-          back
-        )
-      : []),
-    ...(whale
-      ? []
-      : slab(
-          [
-            [0.03, 0.015, 0.4],
-            [0.034, 0.03, 0.4],
-            [0.034, 0.015, 0.395],
-          ],
-          0.004,
-          rgb(0x15_15_18)
-        )),
+      back
+    ),
+    ...pectoral,
+    ...mirrored(pectoral),
+    ...pelvic,
+    ...mirrored(pelvic),
+    ...(whale ? [] : [...gills, ...mirrored(gills)]),
+    ...blade,
+    ...eye,
+    ...mirrored(eye),
   ];
 }
 
