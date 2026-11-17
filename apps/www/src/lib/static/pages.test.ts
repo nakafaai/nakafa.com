@@ -75,7 +75,7 @@ describe("static page paths", () => {
     ]);
   });
 
-  it("leaves out the search screen and keeps every try-out group, track, set and section", () => {
+  it("keeps the search screen and every try-out group, track, set and section", () => {
     const paths = selectStaticPagePaths({
       locales: ["en"],
       sitemapPaths: [
@@ -89,6 +89,7 @@ describe("static page paths", () => {
 
     expect(paths).toEqual([
       "/en/auth",
+      "/en/search",
       "/en/try-out/indonesia/snbt/2027",
       "/en/try-out/indonesia/snbt/2027/utbk",
       "/en/try-out/indonesia/snbt/2027/utbk/set-1",

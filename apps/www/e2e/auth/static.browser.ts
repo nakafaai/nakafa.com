@@ -11,8 +11,8 @@ const SIGN_IN = "/en/auth";
 const PRESS_TO_TITLE_BUDGET = 200;
 /** The cookie that tells a page, before any script runs, that a session may exist. */
 const SIGNED_IN_HINT = "nakafa-signed-in";
-/** Addresses that only the Worker answers: the auth API, the search screen and the chat. */
-const WORKER_PATHS = ["/api/auth/get-session", "/en/search", "/en/chat"];
+/** Addresses that only the Worker answers: the auth API and the chat. */
+const WORKER_PATHS = ["/api/auth/get-session", "/en/chat"];
 /** What React writes to the console when the server's HTML and the first render differ. */
 const HYDRATION_ERROR = /hydrat|#418|#423|did not match/iu;
 

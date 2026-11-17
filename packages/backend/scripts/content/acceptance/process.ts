@@ -182,8 +182,6 @@ const startLocalBackend = Effect.fn("contentAcceptance.startLocalBackend")(
         deployment.instanceSecret,
         "--local-storage",
         `${state}/convex_local_storage`,
-        "--local-log-sink",
-        `${runtime.directory}/functions.log`,
         "--disable-beacon",
         `${state}/convex_local_backend.sqlite3`,
       ],

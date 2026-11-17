@@ -22,6 +22,7 @@ export const PRERENDERED_ROUTE_TEMPLATES = [
   "/$locale/quran/$surah",
   "/$locale/school",
   "/$locale/school/pricing",
+  "/$locale/search",
   "/$locale/try-out/$country",
   "/$locale/try-out/$country/$exam/$group",
   "/$locale/try-out/$country/$exam/$group/$track",

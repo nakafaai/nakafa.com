@@ -49,7 +49,7 @@ describe("sitemap files", () => {
   );
 
   it.effect(
-    "lists the try-out pages that the build writes, and not the search screen",
+    "lists every page the build writes, the search screen included, but no try-out section",
     () =>
       Effect.gen(function* () {
         descriptorsMock.mockReturnValue(Effect.succeed([{ id: "quran_en" }]));
@@ -73,7 +73,7 @@ describe("sitemap files", () => {
         expect(page?.text).toContain(
           `<loc>${SITE_ORIGIN}/en/try-out/indonesia/snbt/2027/utbk/set-1</loc>`
         );
-        expect(page?.text).not.toContain("/en/search");
+        expect(page?.text).toContain(`<loc>${SITE_ORIGIN}/en/search</loc>`);
         expect(page?.text).not.toContain("set-1/reading");
       })
   );

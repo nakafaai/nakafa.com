@@ -1,7 +1,10 @@
 import { Option } from "effect";
 import { useTranslations } from "use-intl";
 
-/** Renders the greeting of the signed-in visitor, including its first paint. */
+/**
+ * Renders the greeting of the signed-in visitor, including its first paint, over
+ * the question that heads the search page as its one `h1`.
+ */
 export function HomeHeader({ name }: { name: Option.Option<string> }) {
   const t = useTranslations("Home");
   const tCommon = useTranslations("Common");
@@ -13,9 +16,9 @@ export function HomeHeader({ name }: { name: Option.Option<string> }) {
           name: Option.getOrElse(name, () => t("guest")),
         })}
       </p>
-      <h2 className="text-4xl font-medium tracking-tight text-pretty">
+      <h1 className="text-4xl font-medium tracking-tight text-pretty">
         {tCommon("what-do-you-want-to-learn")}
-      </h2>
+      </h1>
     </div>
   );
 }

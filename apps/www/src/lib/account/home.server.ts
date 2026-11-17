@@ -150,40 +150,6 @@ export const chatScreenHandler = accountHandler(
     })
 );
 
-/** Search: the visitor's name for the greeting, and the search page head. */
-export const searchScreenHandler = accountHandler(
-  ({ locale }: typeof LocaleInput.Type) =>
-    Effect.gen(function* () {
-      const token = yield* readToken();
-      const t = createTranslator({
-        locale,
-        messages: yield* messagesFor(locale),
-        namespace: "Utils",
-      });
-      const account =
-        token === undefined
-          ? Option.none()
-          : Option.fromNullishOr(
-              yield* readOptional(auth.queries.getCurrentUser, {}, token)
-            );
-      // The bare search page holds no learner's data, so it may be indexed; the route's
-      // head keeps every page with a query out of indexes (searchHead).
-      const seo: ScreenSeo = {
-        canonicalPath: `/${locale}/search`,
-        description: t("search-description"),
-        indexable: true,
-        locale,
-        title: t("search-title"),
-      };
-      return {
-        name: Option.getOrUndefined(
-          Option.map(account, (user) => user.authUser.name)
-        ),
-        seo,
-      };
-    })
-);
-
 /**
  * Notifications: the first page of the inbox and the inbox title, with the robots
  * rule the reference sets (noindex).

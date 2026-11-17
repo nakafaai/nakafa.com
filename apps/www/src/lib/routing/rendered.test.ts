@@ -76,7 +76,7 @@ vi.mock("@/router", () => ({
 describe("rendered route templates", () => {
   it("renders the learner routes and leaves the prerendered pages to the assets", () => {
     expect(RENDERED_ROUTE_TEMPLATES).toContain("/$locale/chat/$id");
-    expect(RENDERED_ROUTE_TEMPLATES).toContain("/$locale/search");
+    expect(RENDERED_ROUTE_TEMPLATES).not.toContain("/$locale/search");
     expect(RENDERED_ROUTE_TEMPLATES).not.toContain(
       "/$locale/try-out/$country/$exam/$group/$track/$set/$section"
     );
@@ -114,8 +114,11 @@ describe("rendered route templates", () => {
   });
 
   it("classifies a locale address by its rendered route", () => {
+    expect(
+      isRenderedRoutePath(new URL("https://nakafa.com/en/chat/chat-1"))
+    ).toBe(true);
     expect(isRenderedRoutePath(new URL("https://nakafa.com/en/search"))).toBe(
-      true
+      false
     );
     expect(isRenderedRoutePath(new URL("https://nakafa.com/en/quran/2"))).toBe(
       false
