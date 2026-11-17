@@ -4,12 +4,12 @@ import type { Edit } from "@repo/backend/confect/island/world";
 import { createFramePace } from "@repo/design-system/lib/pace";
 import { Array as Arr, DateTime, Option } from "effect";
 import { createPainter, type Painter } from "@/components/island/draw";
-import { bodiesOf } from "@/lib/island/bodies";
 import { openingOrbit } from "@/lib/island/camera";
+import { islesMesh } from "@/lib/island/isles";
 import { flatQuads } from "@/lib/island/life";
 import { glowOf } from "@/lib/island/light";
 import { lightingOf, meshChunk } from "@/lib/island/mesh";
-import { plantBodies } from "@/lib/island/plants";
+import { livedOf, sceneBodies, sceneOf } from "@/lib/island/scene";
 import { seasonNow } from "@/lib/island/season";
 import { hourOf, lightOf } from "@/lib/island/sky";
 import { worldOf } from "@/lib/island/terrain";
@@ -17,17 +17,27 @@ import { CHUNKS } from "@/lib/island/world";
 
 /**
  * Draws the world into one canvas from a still camera, its water and its life
- * moving, until the returned cleanup stops it. The camera never turns by
- * itself: the learner turns the world once they enter the game.
+ * moving, until the returned cleanup stops it: the same living scene as the
+ * game (ADR 0047, D53), its archipelago round it, its herd and villagers
+ * wandering, the day's wild visitors, the sea's swimmers and the reef. The
+ * camera never turns by itself: the learner turns the world once they enter
+ * the game.
  */
 function preview(
   canvas: HTMLCanvasElement,
   painter: Painter,
   world: Uint8Array,
-  size: number
+  { seed, size }: { seed: number; size: number }
 ) {
   const lighting = lightingOf(world, glowOf(world));
-  const plants = plantBodies(world);
+  let scene = sceneOf(
+    world,
+    seed,
+    size,
+    Math.floor(DateTime.toEpochMillis(DateTime.nowUnsafe()) / 86_400_000)
+  );
+  painter.isles(islesMesh(seed));
+  painter.world(world, seed);
   Arr.forEach(
     Arr.makeBy(CHUNKS * CHUNKS, (index) => index),
     (index) => {
@@ -38,6 +48,7 @@ function preview(
     }
   );
   let frame = 0;
+  let lastLife = 0;
   let orbit = openingOrbit(size, 1);
   // A canvas drawn before its size is known, or cleared by a new size, shows black until it is
   // drawn again, so the frame after a resize draws whatever the pace says.
@@ -56,7 +67,11 @@ function preview(
       return;
     }
     fresh = false;
-    painter.bodies([...bodiesOf(world, [], now / 1000), ...plants]);
+    // The scene lives on by the time that passed, at most a quarter second after a rest, so nothing leaps on return.
+    const dt = lastLife === 0 ? 0 : Math.min(0.25, (now - lastLife) / 1000);
+    lastLife = now;
+    scene = livedOf(scene, dt);
+    painter.bodies(sceneBodies(scene, now / 1000));
     painter.herd(flatQuads(size, now / 1000));
     const hour = hourOf(DateTime.nowUnsafe(), DateTime.zoneMakeLocal());
     painter.draw(
@@ -127,7 +142,10 @@ export default function IslandView({
           return Option.match(createPainter(canvas, seasonNow()), {
             onNone: () => undefined,
             onSome: (painter) =>
-              preview(canvas, painter, worldOf(seed, size, edits), size),
+              preview(canvas, painter, worldOf(seed, size, edits), {
+                seed,
+                size,
+              }),
           });
         }}
         tabIndex={-1}
