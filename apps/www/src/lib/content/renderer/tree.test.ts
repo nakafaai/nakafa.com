@@ -69,9 +69,15 @@ const Formula = Object.assign(
   }
 );
 
+/** Test component that stands for an inline formula, which the tree names `InlineMath`. */
+function InlineMath(props: { readonly math: string }) {
+  return createElement("i", null, props.math);
+}
+
 const components = {
   ...semanticMdxComponents,
   Formula,
+  InlineMath,
   Localized,
   Probe,
   Values,
@@ -286,6 +292,53 @@ describe("content tree rendering", () => {
 
         expect(renderToStaticMarkup(element)).toBe(
           "<i>body:x</i><span>scene at <b>prop:F_1</b></span>"
+        );
+      })
+  );
+
+  it.effect(
+    "keeps an inline formula and the text that touches it on one line, in the body and in a prop",
+    () =>
+      Effect.gen(function* () {
+        const formula = node("InlineMath", [], { math: "10" });
+        const element = yield* renderTree(
+          root([
+            node("div", ["Grows to ", formula, ". Then it stops."]),
+            node("div", ["(", formula, ")"]),
+            node("Probe", [], {
+              icon: node("fragment", ["near ", formula, ", here"]),
+              label: "scene ",
+            }),
+          ])
+        );
+
+        expect(renderToStaticMarkup(element)).toBe(
+          Arr.join(
+            [
+              '<div>Grows to <span class="math-tail"><i>10</i>.</span> Then it stops.</div>',
+              '<div>(<span class="math-tail"><i>10</i>)</span></div>',
+              '<span>scene near <span class="math-tail"><i>10</i>,</span> here</span>',
+            ],
+            ""
+          )
+        );
+      })
+  );
+
+  it.effect(
+    "leaves a formula that nothing touches, and text after any other element, as they are",
+    () =>
+      Effect.gen(function* () {
+        const formula = node("InlineMath", [], { math: "x" });
+        const element = yield* renderTree(
+          root([
+            node("div", [formula, " and ", formula, node("em", ["y"]), "."]),
+            node("div", ["Ends at ", formula]),
+          ])
+        );
+
+        expect(renderToStaticMarkup(element)).toBe(
+          "<div><i>x</i> and <i>x</i><em>y</em>.</div><div>Ends at <i>x</i></div>"
         );
       })
   );

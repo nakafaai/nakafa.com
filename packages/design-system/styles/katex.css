@@ -45,3 +45,21 @@
     position: absolute;
   }
 }
+
+/*
+ * A formula inside a line of text and the text that touches it after it, such
+ * as its full stop or its closing bracket (`mathTailVariants`). A browser may
+ * break a line on either side of a formula's piece, a box of its own, even
+ * before a full stop, so a line could start with the punctuation alone. The
+ * unit takes no line break, and the formula inside it takes them back, so a
+ * long formula still breaks after its relations: the break between two pieces
+ * follows `.katex-html`, and the one between the last piece and the text
+ * follows the unit.
+ */
+@utility math-tail {
+  white-space: nowrap;
+
+  & .katex-html {
+    white-space: normal;
+  }
+}

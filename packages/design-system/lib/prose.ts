@@ -153,5 +153,8 @@ export const mathScrollVariants = cva("overflow-x-auto overflow-y-hidden px-4");
 /** A formula inside a line of text, which the `math-inline` utility of `styles/katex.css` lays out. */
 export const mathInlineVariants = cva("math-inline");
 
+/** A formula inside a line of text with the text that touches it, which the `math-tail` utility of `styles/katex.css` keeps on one line. */
+export const mathTailVariants = cva("math-tail");
+
 /** The colour of a formula KaTeX cannot draw: muted, so a broken formula reads as a slip, not an alarm. */
 export const MATH_ERROR_COLOR = "var(--color-muted-foreground)";
