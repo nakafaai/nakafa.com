@@ -1,5 +1,5 @@
 import { Array as Arr, Effect, MutableRef, Option, Schema } from "effect";
-import { AD_CLIENT } from "@/lib/ads/account";
+import { AD_CLIENT } from "#www/src/lib/ads/account";
 
 /** The TCF version that Google's consent message speaks. */
 const TCF_VERSION = 2.2;
