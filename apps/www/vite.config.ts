@@ -1,6 +1,7 @@
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { join, resolve } from "node:path";
+import { pathToFileURL } from "node:url";
 import { local as assetsBinding } from "@alchemy.run/cloudflare-runtime/core/bindings/assets/Assets";
 import { local as textBinding } from "@alchemy.run/cloudflare-runtime/core/bindings/Text";
 import cloudflare from "@alchemy.run/cloudflare-runtime/vite";
@@ -293,6 +294,56 @@ const workerDrawsNoDiagram: Plugin = {
       : undefined,
 };
 
+/**
+ * `shiki/langs` and `shiki/themes` map every grammar and theme name to a loader,
+ * and each loader is a dynamic import, so a module that reads either map put
+ * every grammar Shiki ships, about 9 MiB, into the Worker. The Worker highlights
+ * lessons with its own closed set (`lib/code/lesson.ts`), and the browser loads
+ * every other grammar on first use. The Worker environments keep each map's
+ * names, read from Shiki itself at build time, so a language check answers as it
+ * does in the browser, while every loader refuses, so no grammar ships.
+ */
+const SHIKI_MAPS = {
+  "shiki/langs": "bundledLanguages",
+  "shiki/themes": "bundledThemes",
+} as const;
+const WORKER_SHIKI = "\0www:shiki:";
+
+const isShikiMap = (source: string): source is keyof typeof SHIKI_MAPS =>
+  Object.hasOwn(SHIKI_MAPS, source);
+
+const workerLoadsNoGrammar: Plugin = {
+  name: "www:worker-loads-no-grammar",
+  enforce: "pre",
+  applyToEnvironment: (environment) =>
+    !STATIC_RUNNER && WORKER_ENVIRONMENTS.includes(environment.name),
+  async resolveId(source, importer) {
+    if (!isShikiMap(source)) {
+      return;
+    }
+    const resolved = await this.resolve(source, importer, { skipSelf: true });
+    return resolved ? `${WORKER_SHIKI}${source}|${resolved.id}` : undefined;
+  },
+  async load(id) {
+    if (!id.startsWith(WORKER_SHIKI)) {
+      return;
+    }
+    const [source = "", file = ""] = id.slice(WORKER_SHIKI.length).split("|");
+    if (!isShikiMap(source)) {
+      return;
+    }
+    const map = SHIKI_MAPS[source];
+    const shiki: Record<string, Record<string, unknown>> = await import(
+      pathToFileURL(file).href
+    );
+    const names = Object.keys(shiki[map] ?? {});
+    return [
+      'const refuse = () => Promise.reject(new Error("Shiki loads grammars and themes in the browser, never in the Worker."));',
+      `export const ${map} = Object.fromEntries(${JSON.stringify(names)}.map((name) => [name, refuse]));`,
+    ].join("\n");
+  },
+};
+
 /** The Node built-in specifiers, which have no browser build. */
 const NODE_BUILTIN_SPECIFIER = /^node:/u;
 
@@ -436,6 +487,7 @@ export default defineConfig(async ({ command, isPreview }) => {
       bundleCommonJsReactPeers,
       workerIsNoBrowser,
       workerDrawsNoDiagram,
+      workerLoadsNoGrammar,
       writeHeadersFile,
       readPreviewHeaders,
       writeRobotsFile,
