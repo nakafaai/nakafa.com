@@ -36,6 +36,7 @@ import {
 } from "@/lib/routing/school/shell.server";
 import { readPathSegments } from "@/lib/routing/template";
 import { answerUnmatchedRequest } from "@/lib/routing/unmatched.server";
+import { answerStaticFunction } from "@/lib/static/serve.server";
 import { readSchoolTreeGate } from "@/lib/tenant/gate";
 
 /** Names a failure of a decision as the entry's uncaught error, and keeps an error that already is one. */
@@ -110,7 +111,8 @@ function namesUnrenderedPage(request: Request) {
 /**
  * Answers a request that no address decision answered: the not-found page of a
  * document that the projection does not own, then the root's locale redirect, then
- * the static shell of a school page, or else the router's page. A path that no Worker route renders answers the
+ * the static answer of a static server function's call (`answerStaticFunction`),
+ * then the static shell of a school page, or else the router's page. A path that no Worker route renders answers the
  * static not-found page before the router runs.
  */
 const answerRouter = Effect.fn("www.routing.answer.router")(function* (
@@ -132,6 +134,10 @@ const answerRouter = Effect.fn("www.routing.answer.router")(function* (
   }
   if (!isRenderedRoutePath(url)) {
     return yield* answerUnmatchedRequest(request);
+  }
+  const stored = yield* answerStaticFunction(request);
+  if (Option.isSome(stored)) {
+    return stored.value;
   }
   return yield* answerSchoolPage(request, 200, answerRouted(request, route));
 });
