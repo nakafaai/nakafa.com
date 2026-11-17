@@ -3,15 +3,15 @@ import {
   ActiveAppLocaleCodeSchema,
 } from "@nakafa/aksara-contracts/locale";
 import { Array as Arr, Effect, Option, Order, Schema } from "effect";
-import {
-  readPublishedTryoutExamPage,
-  readPublishedTryoutSectionPage,
-} from "@/lib/content/tryout/catalog";
 import { temporaryRedirect } from "@/lib/routing/public/redirect";
 import { readSoleTrack } from "@/lib/routing/public/tryout/group";
 import {
-  decodeAppLocale,
   readActiveTryoutPath,
+  readMappedExamPage,
+  readMappedSectionPage,
+} from "@/lib/routing/public/tryout/map.server";
+import {
+  decodeAppLocale,
   readPathSegments,
   TRYOUT_ROOT,
 } from "@/lib/routing/public/tryout/route";
@@ -79,7 +79,7 @@ export function readTracklessSetRoute(
 const readNewestServingTrack = Effect.fn(
   "www.routing.publicHtml.tryoutNewestTrack"
 )(function* (appLocale: ActiveAppLocaleCode, examPath: string, set: string) {
-  const exam = yield* readPublishedTryoutExamPage({
+  const exam = yield* readMappedExamPage({
     appLocale,
     publicPath: examPath,
   });
@@ -160,7 +160,7 @@ const readTracklessSectionRedirect = Effect.fn(
     return null;
   }
   const successor = readSectionSuccessor(appLocale, section);
-  const page = yield* readPublishedTryoutSectionPage({
+  const page = yield* readMappedSectionPage({
     appLocale,
     publicPath: `${track.publicPath}/${set}/${successor}`,
   });

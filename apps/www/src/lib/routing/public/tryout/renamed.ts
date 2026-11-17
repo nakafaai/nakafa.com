@@ -1,9 +1,9 @@
 import { ActiveAppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
 import { Array as Arr, Effect, Option, Schema } from "effect";
 import { permanentRedirect } from "@/lib/routing/public/redirect";
+import { readActiveTryoutPath } from "@/lib/routing/public/tryout/map.server";
 import {
   decodeAppLocale,
-  readActiveTryoutPath,
   readPathSegments,
   TRYOUT_ROOT,
 } from "@/lib/routing/public/tryout/route";

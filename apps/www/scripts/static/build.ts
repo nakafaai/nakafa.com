@@ -33,6 +33,7 @@ import {
   readSubjectMap,
   SubjectLocaleSchema,
 } from "@/lib/routing/public/subject";
+import { readTryoutMap } from "@/lib/routing/public/tryout/map";
 import { SearchIndexJson, searchIndexPath } from "@/lib/search/entry";
 import { readExamEntries, readPageEntry } from "@/lib/search/page";
 import { renderSecurityTxt, SECURITY_TXT_PATH } from "@/lib/security/txt";
@@ -192,8 +193,9 @@ function buildLlmsText(twins: readonly PreparedTwin[]) {
 }
 
 /**
- * Renders the feeds and indexes of the release as text artifacts, and the maps
- * that redirect each locale's retired subject lessons to their successors.
+ * Renders the feeds and indexes of the release as text artifacts, the maps that
+ * redirect each locale's retired subject lessons to their successors, and the
+ * try-out route map that the retired try-out redirects read.
  */
 const readTextArtifacts = Effect.fn("www.static.textArtifacts")(function* (
   twins: readonly PreparedTwin[]
@@ -203,6 +205,7 @@ const readTextArtifacts = Effect.fn("www.static.textArtifacts")(function* (
     SubjectLocaleSchema.literals,
     readSubjectMap
   );
+  const tryouts = yield* readTryoutMap(yield* readStaticPagePaths());
   const rss = yield* readRssText();
   const manifest = yield* readManifestText();
   const now = yield* DateTime.now;
@@ -212,7 +215,7 @@ const readTextArtifacts = Effect.fn("www.static.textArtifacts")(function* (
     { path: "manifest.webmanifest", text: manifest },
     { path: SECURITY_TXT_PATH, text: renderSecurityTxt(now) },
   ];
-  return [...sitemap, ...subjects, ...rest];
+  return [...sitemap, ...subjects, tryouts, ...rest];
 });
 
 /**

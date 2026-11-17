@@ -4,8 +4,8 @@ import { Effect } from "effect";
 import { readHubRedirect } from "@/lib/routing/public/tryout/hub";
 
 const hub = vi.hoisted(() => vi.fn());
-vi.mock("@/lib/content/tryout/catalog", () => ({
-  readPublishedTryoutHubPage: hub,
+vi.mock("@/lib/routing/public/tryout/map.server", () => ({
+  readMappedHubPage: hub,
 }));
 
 const COUNTRIES = [

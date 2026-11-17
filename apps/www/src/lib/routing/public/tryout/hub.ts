@@ -1,7 +1,7 @@
 import { Effect, Option } from "effect";
 import { readLocaleCountry } from "@/components/tryout/catalog/options";
-import { readPublishedTryoutHubPage } from "@/lib/content/tryout/catalog";
 import { temporaryRedirect } from "@/lib/routing/public/redirect";
+import { readMappedHubPage } from "@/lib/routing/public/tryout/map.server";
 import {
   decodeAppLocale,
   readPathSegments,
@@ -21,7 +21,7 @@ export const readHubRedirect = Effect.fn("www.routing.publicHtml.tryoutHub")(
     if (Option.isNone(appLocale) || root !== TRYOUT_ROOT || rest.length > 0) {
       return null;
     }
-    const hub = yield* readPublishedTryoutHubPage({
+    const hub = yield* readMappedHubPage({
       appLocale: appLocale.value,
     });
     return Option.match(readLocaleCountry(appLocale.value, hub.countries), {
