@@ -15,8 +15,10 @@ import { cn } from "cn";
  * CSS cannot see `display: none`, so a child that hides at some width would still shape its neighbours. A control that
  * changes form with the width is therefore one wrapper around both forms (`TableSearch`), never two children. A part
  * that waits hidden by its `hidden` attribute, such as a place an inline script shows before the first paint, shapes
- * nothing until it shows. A last part that leaves from the `xl` width says so with `data-hides="xl"`, and the part
- * before it then rounds its end. Controls that stand apart do not go in a group: they keep a clear gap.
+ * nothing until it shows. A first or last part that leaves from a width says which with `data-hides` (`sm`, `md`,
+ * `lg`, `xl` or `2xl`), and from that width its neighbour takes the group's outer corner and edge, so the parts that
+ * show always round the group's ends: a lone part is round on both. Controls that stand apart do not go in a group:
+ * they keep a clear gap.
  */
 const buttonGroupVariants = cva(
   "flex w-fit items-stretch *:focus-visible:relative *:focus-visible:z-10 has-[>[data-slot=button-group]]:gap-2 [&>[data-slot=select-trigger]:not([class*='w-'])]:w-fit [&>div:not([data-slot])]:rounded-md [&>div:not([data-slot])>[data-slot]]:rounded-[inherit] [&>input]:flex-1",
@@ -38,7 +40,21 @@ const buttonGroupVariants = cva(
     compoundVariants: [
       {
         className:
-          "xl:[&>:has(+[data-hides=xl]:last-child)]:rounded-r-md [&>:is([data-slot],a,button,div):not([hidden]):has(~:is([data-slot],a,button,div):not([hidden]))]:rounded-r-none [&>:is([data-slot],a,button,div):not([hidden])~:is([data-slot],a,button,div):not([hidden])]:rounded-l-none [&>:is([data-slot],a,button,div):not([hidden])~:is([data-slot],a,button,div):not([hidden])]:border-l-0 [&>:is([data-slot],a,button,div):not([hidden])~div:not([data-slot]):not([hidden])>[data-slot]]:border-l-0",
+          "[&>:is([data-slot],a,button,div):not([hidden]):has(~:is([data-slot],a,button,div):not([hidden]))]:rounded-r-none [&>:is([data-slot],a,button,div):not([hidden])~:is([data-slot],a,button,div):not([hidden])]:rounded-l-none [&>:is([data-slot],a,button,div):not([hidden])~:is([data-slot],a,button,div):not([hidden])]:border-l-0 [&>:is([data-slot],a,button,div):not([hidden])~div:not([data-slot]):not([hidden])>[data-slot]]:border-l-0",
+        joined: true,
+        orientation: "horizontal",
+      },
+      {
+        // A part that leaves from a width (`data-hides`) hands the group's outer corner, and at the start its edge, to
+        // its neighbour from that width. These selectors weigh more than the joining ones above, so they win whatever
+        // order the styles come in.
+        className: [
+          "sm:[&>:is([data-slot],a,button,div):not([hidden]):has(+:is([data-slot],a,button,div)[data-hides=sm]:last-child)]:rounded-r-md sm:[&>:is([data-slot],a,button,div)[data-hides=sm]:first-child:not([hidden])+:is([data-slot],a,button,div):not([hidden])]:rounded-l-md sm:[&>:is([data-slot],a,button,div)[data-hides=sm]:first-child:not([hidden])+:is([data-slot],a,button,div):not([hidden])]:border-l",
+          "md:[&>:is([data-slot],a,button,div):not([hidden]):has(+:is([data-slot],a,button,div)[data-hides=md]:last-child)]:rounded-r-md md:[&>:is([data-slot],a,button,div)[data-hides=md]:first-child:not([hidden])+:is([data-slot],a,button,div):not([hidden])]:rounded-l-md md:[&>:is([data-slot],a,button,div)[data-hides=md]:first-child:not([hidden])+:is([data-slot],a,button,div):not([hidden])]:border-l",
+          "lg:[&>:is([data-slot],a,button,div):not([hidden]):has(+:is([data-slot],a,button,div)[data-hides=lg]:last-child)]:rounded-r-md lg:[&>:is([data-slot],a,button,div)[data-hides=lg]:first-child:not([hidden])+:is([data-slot],a,button,div):not([hidden])]:rounded-l-md lg:[&>:is([data-slot],a,button,div)[data-hides=lg]:first-child:not([hidden])+:is([data-slot],a,button,div):not([hidden])]:border-l",
+          "xl:[&>:is([data-slot],a,button,div):not([hidden]):has(+:is([data-slot],a,button,div)[data-hides=xl]:last-child)]:rounded-r-md xl:[&>:is([data-slot],a,button,div)[data-hides=xl]:first-child:not([hidden])+:is([data-slot],a,button,div):not([hidden])]:rounded-l-md xl:[&>:is([data-slot],a,button,div)[data-hides=xl]:first-child:not([hidden])+:is([data-slot],a,button,div):not([hidden])]:border-l",
+          "2xl:[&>:is([data-slot],a,button,div):not([hidden]):has(+:is([data-slot],a,button,div)[data-hides=2xl]:last-child)]:rounded-r-md 2xl:[&>:is([data-slot],a,button,div)[data-hides=2xl]:first-child:not([hidden])+:is([data-slot],a,button,div):not([hidden])]:rounded-l-md 2xl:[&>:is([data-slot],a,button,div)[data-hides=2xl]:first-child:not([hidden])+:is([data-slot],a,button,div):not([hidden])]:border-l",
+        ],
         joined: true,
         orientation: "horizontal",
       },
