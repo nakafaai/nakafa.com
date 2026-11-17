@@ -8,6 +8,8 @@ import {
 } from "@repo/design-system/components/ui/sidebar-menu";
 import { useSidebar } from "@repo/design-system/lib/sidebar/context";
 import { cva } from "class-variance-authority";
+import { useRef } from "react";
+import { flushSync } from "react-dom";
 import { useTranslations } from "use-intl";
 
 /**
@@ -43,7 +45,19 @@ export function SidebarToggle({
   const t = useTranslations("Common");
   const open = useSidebar((sidebar) => sidebar.open);
   const toggleSidebar = useSidebar((sidebar) => sidebar.toggleSidebar);
+  const button = useRef<HTMLButtonElement>(null);
   const name = label ?? t("toggle-sidebar");
+
+  // A folded sidebar's button carries its tooltip and an open one's does not, so the toggle, which folds its own
+  // sidebar, mounts a new button on every press. The press commits at once and hands the focus to that button, so
+  // the learner who pressed it keeps their place.
+  const toggle = () => {
+    const focused = document.activeElement === button.current;
+    flushSync(toggleSidebar);
+    if (focused) {
+      button.current?.focus();
+    }
+  };
 
   return (
     <SidebarFooter className={toggleVariants({ side })}>
@@ -51,7 +65,8 @@ export function SidebarToggle({
         <SidebarMenuItem>
           <SidebarMenuButton
             aria-expanded={open}
-            onClick={toggleSidebar}
+            onClick={toggle}
+            ref={button}
             tooltip={name}
           >
             <HugeIcons
