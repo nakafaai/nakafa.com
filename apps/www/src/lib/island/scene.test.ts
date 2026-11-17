@@ -7,6 +7,7 @@ import type { Animal } from "@/lib/island/life";
 import { modelKey } from "@/lib/island/models/kinds";
 import { livedOf, rerootedOf, sceneBodies, sceneOf } from "@/lib/island/scene";
 import { terrainOf } from "@/lib/island/terrain";
+import { SPOTS } from "@/lib/island/village";
 import { cellOf } from "@/lib/island/world";
 
 const CELLS = terrainOf(7, 52);
@@ -31,7 +32,7 @@ describe("island/scene", () => {
       x: 32.5,
       z: 32.5,
     };
-    const bodies = sceneBodies(SCENE, 12, [fox]);
+    const bodies = sceneBodies(SCENE, 12, 12, [fox]);
     const keys = Arr.map(bodies, ([model]) => modelKey(model));
     expect(Arr.dedupe(keys)).toHaveLength(keys.length);
     Arr.forEach(["body-fox", "body-whale", "swimmer-reef-shark"], (key) =>
@@ -51,14 +52,14 @@ describe("island/scene", () => {
           : count
       );
     expect(foxes(bodies)).toBe(1);
-    expect(foxes(sceneBodies(SCENE, 12))).toBe(0);
+    expect(foxes(sceneBodies(SCENE, 12, 12))).toBe(0);
   });
 
   it("lets the herd wander and the visitors roam as time passes, the learner's fox among them", () => {
     const later = Arr.reduce(
       Arr.makeBy(40, (step) => step),
       SCENE,
-      (scene) => livedOf(scene, 0.25)
+      (scene) => livedOf(scene, 0.25, 12)
     );
     const moved = (before: readonly Animal[], after: readonly Animal[]) =>
       Arr.some(Arr.zip(before, after), ([a, b]) => a.x !== b.x || a.z !== b.z);
@@ -73,7 +74,7 @@ describe("island/scene", () => {
     // A fox standing on an animal's goal is one more body that animal walks round, never one it walks through.
     const [first] = SCENE.herd;
     const fox: Animal = { ...first, kind: "fox", x: first.tx, z: first.tz };
-    const beside = livedOf(SCENE, 0.25, [fox]);
+    const beside = livedOf(SCENE, 0.25, 12, [fox]);
     expect(beside.herd).toHaveLength(SCENE.herd.length);
   });
 
@@ -96,5 +97,25 @@ describe("island/scene", () => {
     expect(rerooted.reef).toHaveLength(SCENE.reef.length - 1);
     expect(rerooted.herd).toBe(SCENE.herd);
     expect(rerooted.cells).toBe(edited);
+  });
+
+  it("draws no villager asleep in its cottage, and every villager awake by day", () => {
+    const [hx, hz] = SPOTS.homes[0];
+    const herd = Arr.map(SCENE.herd, (animal) =>
+      animal.kind === "cat"
+        ? { ...animal, tx: hx + 0.5, tz: hz + 0.5, x: hx + 0.5, z: hz + 0.5 }
+        : animal
+    );
+    const cats = (hour: number) =>
+      Arr.reduce(
+        sceneBodies({ ...SCENE, herd }, 0, hour),
+        0,
+        (count, [model, places]) =>
+          modelKey(model) === "body-cat"
+            ? count + places.length / BODY_STRIDE
+            : count
+      );
+    expect(cats(23)).toBe(0);
+    expect(cats(12)).toBe(1);
   });
 });

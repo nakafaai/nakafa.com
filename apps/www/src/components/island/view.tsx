@@ -5,8 +5,8 @@ import { createFramePace } from "@repo/design-system/lib/pace";
 import { Array as Arr, DateTime, Option } from "effect";
 import { createPainter, type Painter } from "@/components/island/draw";
 import { openingOrbit } from "@/lib/island/camera";
+import { flatQuads } from "@/lib/island/flat";
 import { islesMesh } from "@/lib/island/isles";
-import { flatQuads } from "@/lib/island/life";
 import { glowOf } from "@/lib/island/light";
 import { lightingOf, meshChunk } from "@/lib/island/mesh";
 import { livedOf, sceneBodies, sceneOf } from "@/lib/island/scene";
@@ -70,10 +70,11 @@ function preview(
     // The scene lives on by the time that passed, at most a quarter second after a rest, so nothing leaps on return.
     const dt = lastLife === 0 ? 0 : Math.min(0.25, (now - lastLife) / 1000);
     lastLife = now;
-    scene = livedOf(scene, dt);
-    painter.bodies(sceneBodies(scene, now / 1000));
-    painter.herd(flatQuads(size, now / 1000));
+    // The island's hour, which lights the world and keeps the villagers' day (D54).
     const hour = hourOf(DateTime.nowUnsafe(), DateTime.zoneMakeLocal());
+    scene = livedOf(scene, dt, hour);
+    painter.bodies(sceneBodies(scene, now / 1000, hour));
+    painter.herd(flatQuads(size, now / 1000));
     painter.draw(
       orbit,
       lightOf(hour, "clear"),

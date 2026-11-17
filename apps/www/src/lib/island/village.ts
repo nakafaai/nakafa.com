@@ -10,6 +10,31 @@ const MIDDLE = SPAN / 2;
 /** How far from the middle the village reaches, in cells; its ground is flat and no wild tree grows on it. */
 export const VILLAGE = 14;
 
+/**
+ * The places of the villagers' day (ADR 0047, D54), as path cells, one a
+ * villager in the order the village's folk come: the doorstep of each
+ * cottage, each one's spot round the well, and each one's spot at work, the
+ * cat at the garden's gate, the rabbit at the east path's end and the bear at
+ * the north path's end.
+ */
+export const SPOTS = {
+  homes: [
+    [MIDDLE - 7, MIDDLE - 3],
+    [MIDDLE + 7, MIDDLE - 3],
+    [MIDDLE + 7, MIDDLE + 3],
+  ],
+  plaza: [
+    [MIDDLE - 2, MIDDLE],
+    [MIDDLE + 2, MIDDLE],
+    [MIDDLE, MIDDLE + 2],
+  ],
+  work: [
+    [MIDDLE - 7, MIDDLE + 2],
+    [MIDDLE + 11, MIDDLE],
+    [MIDDLE, MIDDLE - 11],
+  ],
+} as const;
+
 /** The ground row the village is built on, and the row its buildings stand in. */
 const GROUND = SEA_LEVEL;
 const FLOOR = GROUND + 1;
