@@ -197,7 +197,7 @@ export const MATERIAL = {
   bubble: "#f4f7f8",
   capillaryWater: "#4f9cc4",
   cheekCell: "#aac3e6",
-  chromatin: "#6b2a5c",
+  chromatinStain: "#6b2a5c",
   coleoptile: "#c9d98a",
   cork: "#a8794e",
   cutTissue: "#e8e2b8",

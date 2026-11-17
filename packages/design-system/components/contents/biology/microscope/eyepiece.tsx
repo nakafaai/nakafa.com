@@ -34,7 +34,7 @@ const STAIN = {
   root: {
     body: MATERIAL.rootCell,
     edge: MATERIAL.rootWall,
-    nucleus: MATERIAL.chromatin,
+    nucleus: MATERIAL.chromatinStain,
   },
 } as const;
 
