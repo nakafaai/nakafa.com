@@ -78,13 +78,20 @@ const SORTED = { far: SHADED_SHARE, near: 1 - SHADED_SHARE } as const;
 /** The gravity-sorted split of a seedling laid flat: most auxin on the lower side. */
 const SETTLED = { far: 1 - SHADED_SHARE, near: SHADED_SHARE } as const;
 
-/** The auxin on the shaded and lit sides below the tip of a seedling lit from one side. */
+/**
+ * The auxin on the shaded and lit sides below the tip of a seedling lit from
+ * one side. Mica on the shaded side leaves the shoot straight, as Boysen-Jensen
+ * found ("La transmission de l'irritation phototropique dans l'Avena", 1913)
+ * and the SPM textbooks teach: the lit tip has sent its auxin to the shaded
+ * side, where the plate stops it, so neither side below elongates. Mica on the
+ * lit side leaves the shaded path open, and the shoot bends towards the light.
+ */
 export function lightSplit(treatment: LightTreatment): Split {
   return Match.value(treatment).pipe(
     Match.when("intact", () => SORTED),
     Match.when("cut", () => ({ far: 0, near: 0 })),
     Match.when("cap", () => EVEN),
-    Match.when("micaShade", () => ({ far: 0, near: SORTED.near })),
+    Match.when("micaShade", () => ({ far: 0, near: 0 })),
     Match.when("micaLit", () => ({ far: SORTED.far, near: 0 })),
     Match.exhaustive
   );

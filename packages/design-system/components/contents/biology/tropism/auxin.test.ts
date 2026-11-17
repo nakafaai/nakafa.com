@@ -21,16 +21,16 @@ describe("phototropism", () => {
     );
   });
 
-  it("keeps a capped or cut shoot straight, and never bends a shoot blocked on its shaded side towards the light", () => {
+  it("keeps a capped shoot, a cut shoot and a shoot with mica on its shaded side straight", () => {
     expect(bend(lightSplit("cap"), "shoot", 1)).toBe(0);
     expect(bend(lightSplit("cut"), "shoot", 1)).toBe(0);
-    expect(bend(lightSplit("micaShade"), "shoot", 1)).toBeLessThan(0);
+    expect(bend(lightSplit("micaShade"), "shoot", 1)).toBe(0);
   });
 
   it("lets an organ without auxin barely grow", () => {
     expect(growth(lightSplit("cut"), 1)).toBe(0);
     expect(growth(lightSplit("cap"), 0.5)).toBe(0.5);
-    expect(growth(lightSplit("micaShade"), 1)).toBeCloseTo(0.35, 12);
+    expect(growth(lightSplit("micaShade"), 1)).toBe(0);
   });
 });
 
