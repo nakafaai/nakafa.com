@@ -1,5 +1,4 @@
 import { expect, type Page, test } from "@playwright/test";
-import { Array as Arr } from "effect";
 import { groupHref, trackHref } from "@/e2e/support/tryout";
 
 /** Indonesia's page, which holds SNBT and TKA. */
@@ -24,8 +23,18 @@ const DARMSTADT_MATHEMATICS =
   /\/open-graph\/tryout\/germany\/entrance-examination\/en-tu-darmstadt-mathematics\.png$/u;
 /** A size an image declares, in whole pixels. */
 const PIXELS = /^\d+$/u;
-/** The widths at which the set table reads whole: phones, tablets, and a laptop whose sidebar narrows the card. */
-const TABLE_WIDTHS = [320, 360, 390, 430, 640, 768, 1024, 1280] as const;
+/**
+ * The set tables the owner checks: SNBT's one track, whose Indonesian states are
+ * the longest, and TKA's compulsory mathematics, where the columns went missing.
+ */
+const SET_TABLES = [
+  trackHref,
+  trackHref.replace("/en/", "/id/"),
+  `${TKA_GRADE}/compulsory-mathematics`,
+  "/id/try-out/indonesia/tka/sma-ma-smk/matematika-wajib",
+] as const;
+/** The widths at which the set table keeps every column: two phones and a desktop. */
+const TABLE_WIDTHS = [320, 390, 1440] as const;
 
 /**
  * Opens a page and lets it finish loading before a test leaves it. In Firefox
@@ -202,94 +211,98 @@ for (const width of [390, 1440]) {
 }
 
 /**
- * At every width the set table reads whole, without scrolling sideways: the
- * card does not scroll, and every box drawn inside it stays within its edges.
- * A phone's card shows a set's name, its status and its menu, and a wider one
- * every column, its score never cut by the menu's column. The boxes are measured, not each element's scroll
- * size, because a visually hidden label is 1 px wide and reports its whole text
- * as overflow in every engine.
+ * One table at every width (the owner's rule): every column of a track's sets
+ * stands on a phone as on a desktop, Level, Questions, Minutes and Score
+ * included, and a card narrower than its columns scrolls them sideways inside
+ * itself, under the row's menu, while the page never scrolls sideways. So no head
+ * is hidden or zero wide, every row holds a cell under every head, the table's
+ * scroll stays inside the card's edges, and once scrolled to its end the last
+ * column stands whole beside the menu. Each state badge draws its name whole or
+ * cut with an ellipsis inside the badge.
  */
-for (const width of TABLE_WIDTHS) {
-  test(`the set table fits a ${width} px screen`, async ({ page }) => {
-    await page.setViewportSize({ height: 800, width });
-    await visit(page, trackHref);
-    const card = page.locator('[data-slot="table-card"]');
-    const row = card.getByRole("row").filter({ hasText: "Set 1" });
-
-    await expect(row.getByRole("link", { name: "Set 1" })).toBeVisible();
-    await expect(
-      row.getByRole("button", { name: "More actions" })
-    ).toBeInViewport();
-    const fit = await card.evaluate((element) => {
-      const edges = element.getBoundingClientRect();
-      const spills = Array.from(
-        element.querySelectorAll<HTMLElement>("*"),
-        (child) => {
-          const box = child.getBoundingClientRect();
-          return box.width === 0
-            ? 0
-            : Math.max(box.right - edges.right, edges.left - box.left);
-        }
-      );
-      return {
-        scroll: element.scrollWidth - element.clientWidth,
-        spill: Math.max(0, ...spills),
-      };
-    });
-    expect(fit.scroll).toBeLessThanOrEqual(0);
-    // Half a pixel of a rounded edge is no spill.
-    expect(fit.spill).toBeLessThanOrEqual(0.5);
-    expect(
-      await page.evaluate(
-        () => document.documentElement.scrollWidth - window.innerWidth
-      )
-    ).toBeLessThanOrEqual(0);
-  });
-}
-
-/**
- * The status column holds its locale's longest state, which in Indonesian is
- * long enough to fill a phone's card, so at every width every status badge
- * stands clear of the sticky menu's column and draws its name whole or cut
- * with an ellipsis inside the badge, never under the menu.
- */
-for (const locale of ["en", "id"] as const) {
-  for (const width of [320, 390, 1280] as const) {
-    test(`the set table's ${locale} states clear the menu at ${width} px`, async ({
+for (const href of SET_TABLES) {
+  for (const width of TABLE_WIDTHS) {
+    test(`${href} keeps every column of its set table at ${width} px`, async ({
       page,
     }) => {
       await page.setViewportSize({ height: 800, width });
-      await visit(page, trackHref.replace("/en/", `/${locale}/`));
+      await visit(page, href);
       const card = page.locator('[data-slot="table-card"]');
-      await expect(
-        card.locator("tbody [data-slot=badge]").first()
-      ).toBeVisible();
-      const states = await card.evaluate((element) =>
-        Array.from(element.querySelectorAll("tbody tr"), (row) => {
-          const menu = row.querySelector("td:last-child");
-          const badge = row.querySelector<HTMLElement>(
+      await expect(card.locator("tbody tr a[href]").first()).toBeVisible();
+      const table = await card.evaluate((element) => {
+        const edges = element.getBoundingClientRect();
+        const viewport = element.querySelector<HTMLElement>(
+          '[data-slot="scroll-area-viewport"]'
+        );
+        const heads = Array.from(
+          element.querySelectorAll<HTMLElement>("thead th")
+        );
+        const shown = (cell: Element) =>
+          getComputedStyle(cell).display !== "none" &&
+          cell.getBoundingClientRect().width > 0;
+        const hidden = heads
+          .filter((head) => !shown(head))
+          .map((head, index) => head.textContent?.trim() || `head ${index}`);
+        const rows = Array.from(element.querySelectorAll("tbody tr"));
+        const short = rows.filter(
+          (row) =>
+            Array.from(row.querySelectorAll("td")).filter(shown).length !==
+            heads.length
+        ).length;
+        const box = viewport?.getBoundingClientRect();
+        const scrolls =
+          viewport !== null && viewport.scrollWidth > viewport.clientWidth;
+        if (viewport !== null) {
+          viewport.scrollLeft = viewport.scrollWidth;
+        }
+        const last = heads.at(-2)?.getBoundingClientRect();
+        const menu = heads.at(-1)?.getBoundingClientRect();
+        const badges = Array.from(
+          element.querySelectorAll<HTMLElement>(
             "[data-progress] [data-slot=badge]"
-          );
-          if (menu === null || badge === null) {
-            return { clear: false, whole: false };
-          }
+          )
+        ).filter((badge) => {
           const name = badge.querySelector<HTMLElement>(".truncate");
-          return {
-            clear:
-              badge.getBoundingClientRect().right <=
-              menu.getBoundingClientRect().left + 0.5,
-            whole:
-              badge.scrollWidth <= badge.clientWidth &&
-              (name === null ||
-                name.scrollWidth <= name.clientWidth ||
-                getComputedStyle(name).textOverflow === "ellipsis"),
-          };
-        })
-      );
-      expect(states.length).toBeGreaterThan(0);
+          return !(
+            badge.scrollWidth <= badge.clientWidth &&
+            (name === null ||
+              name.scrollWidth <= name.clientWidth ||
+              getComputedStyle(name).textOverflow === "ellipsis")
+          );
+        }).length;
+        return {
+          cutBadges: badges,
+          heads: heads.length,
+          hidden,
+          inside:
+            box !== undefined &&
+            box.left >= edges.left - 0.5 &&
+            box.right <= edges.right + 0.5,
+          lastBesideMenu:
+            last !== undefined &&
+            menu !== undefined &&
+            last.right <= menu.left + 0.5,
+          rows: rows.length,
+          scrolls,
+          short,
+        };
+      });
+
+      // Six columns of data and the row's menu.
+      expect(table.heads).toBe(7);
+      expect(table.hidden).toEqual([]);
+      expect(table.rows).toBeGreaterThan(0);
+      expect(table.short).toBe(0);
+      expect(table.inside).toBe(true);
+      expect(table.lastBesideMenu).toBe(true);
+      expect(table.cutBadges).toBe(0);
+      // A phone's card is narrower than the columns, so it scrolls them; a desktop's holds them.
+      expect(table.scrolls).toBe(width < 768);
       expect(
-        Arr.filter(states, (state) => !(state.clear && state.whole))
-      ).toEqual([]);
+        await page.evaluate(
+          () => document.documentElement.scrollWidth - window.innerWidth
+        )
+      ).toBeLessThanOrEqual(0);
     });
   }
 }

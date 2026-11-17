@@ -66,10 +66,9 @@ function useStatusChoices() {
  * The columns of a track's sets: the name, which opens the set, its measured level and the learner's status, which the
  * server filters by, the questions, the minutes and the score. The server sorts the track by the name, the level, from
  * easy up to cooked, and the figures; the heads of text and figures keep the sets the table has read. A learner's
- * progress marks carry `data-progress`, so the rows every visitor reads can hide them under a signed-in hint. In a
- * narrow card the status takes what the name leaves, up to its longest state, and the minutes and the score step aside,
- * since the set's pane names them, and in a card as narrow as a phone's the level and the questions step aside too, so
- * the rows read whole from 320 px without scrolling sideways, beside an open pane too.
+ * progress marks carry `data-progress`, so the rows every visitor reads can hide them under a signed-in hint. Every
+ * column stands at every width: a card narrower than the columns scrolls them sideways inside itself, under the row's
+ * menu, and the page never scrolls sideways.
  */
 export function useTryoutSetColumns() {
   const t = useTranslations("Tryouts");
@@ -82,7 +81,6 @@ export function useTryoutSetColumns() {
       cell: (info) => <TryoutSetName row={info.row.original} />,
       header: tCommon("name"),
       id: "title",
-      narrow: "fit",
     }),
     setColumns.choice((row) => row.level, {
       cell: (info) => <TryoutLevelBadge level={info.row.original.level} />,
@@ -90,7 +88,6 @@ export function useTryoutSetColumns() {
       id: "level",
       options: levelChoices,
       sort: { asc: t("level-sort-easiest"), desc: t("level-sort-hardest") },
-      narrow: "hidden",
     }),
     setColumns.choice((row) => row.attemptStatus ?? "not-started", {
       cell: (info) => (
@@ -101,24 +98,20 @@ export function useTryoutSetColumns() {
       header: tCommon("state"),
       id: "status",
       options: statusChoices,
-      narrow: "fit",
     }),
     setColumns.number((row) => row.questionCount, {
       header: tCommon("exam-questions"),
       id: "questionCount",
-      narrow: "hidden",
     }),
     setColumns.number((row) => row.durationSeconds / SECONDS_IN_MINUTE, {
       cell: (info) => t("set-duration-minutes", { minutes: info.getValue() }),
       header: t("set-column-duration"),
       id: "durationSeconds",
-      narrow: "secondary",
     }),
     setColumns.number((row) => row.publishedScore, {
       cell: (info) => <span data-progress>{info.getValue()}</span>,
       header: t("set-column-score"),
       id: "publishedScore",
-      narrow: "secondary",
     }),
     setColumns.menu(() => <TryoutSetMenu />),
   ];

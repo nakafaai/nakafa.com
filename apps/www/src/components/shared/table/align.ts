@@ -77,28 +77,6 @@ export const headWidth = cva("", {
   },
 });
 
-/** How a column stands in a narrow table: shrunk to what it holds, or stepped aside below one of two widths. */
-export const NarrowColumn = Schema.Literals(["fit", "hidden", "secondary"]);
-
-/**
- * How a column stands in a narrow table, for a table whose rows must read whole without scrolling sideways. The
- * table's own box is measured (`tableBoxVariants` names it as a container), never the window: a card beside an open
- * pane or the sidebar is narrow on a wide screen too. A column that `fit`s gives up its floor while the box is under
- * 56rem and keeps its width as what it asks for, so it takes what the others leave up to that width, cuts its value
- * past it, and never slips under the sticky menu's column. A `secondary` one, a figure the row's pane repeats, steps
- * aside under 56rem, so a seven-column list reads whole beside a pane; a `hidden` one steps aside while the box is under 42rem, where only
- * the name, the status and the menu fit. A column that names none keeps its width at every size.
- */
-export const narrowColumn = cva("", {
-  variants: {
-    narrow: {
-      fit: "@max-4xl/table:min-w-0",
-      hidden: "@max-2xl/table:hidden",
-      secondary: "@max-4xl/table:hidden",
-    },
-  },
-});
-
 /**
  * The width of a column of one known value: as wide as its longest value's badge or its head's name, whichever is
  * longer, so a short value such as a level never holds the room of a long one, and the column keeps its width before

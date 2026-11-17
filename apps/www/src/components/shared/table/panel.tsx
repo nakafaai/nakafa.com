@@ -35,7 +35,6 @@ import {
   type HeadAlign,
   HeadMenuContext,
   headWidth,
-  narrowColumn,
 } from "@/components/shared/table/align";
 import { boundOf } from "@/components/shared/table/filter";
 import { useTableFilters } from "@/components/shared/table/toolbar";
@@ -71,7 +70,6 @@ export function ColumnHeads({ children }: { children: ReactNode }) {
 export function ColumnHead({
   children,
   menu = "center",
-  narrow,
   place,
   size,
   sorted,
@@ -80,13 +78,8 @@ export function ColumnHead({
   children?: ReactNode;
   /** Where the head's menu opens under it. */
   menu?: typeof HeadAlign.Type;
-  /** How the column stands in a narrow table (`narrowColumn`). */
-  narrow?: VariantProps<typeof narrowColumn>["narrow"];
   place: VariantProps<typeof columnAlign>["align"];
-  /**
-   * The column's width as a length, for a column sized by what it holds (`choiceWidth`), in place of `width`. It is the
-   * column's floor through a class, so a column that `fit`s a narrow table gives the floor up and keeps the width.
-   */
+  /** The column's width as a length, for a column sized by what it holds (`choiceWidth`), in place of `width`. */
   size?: string | undefined;
   /** How the column sorts the rows, for a head that sorts them. */
   sorted?: keyof typeof sortNames | undefined;
@@ -96,16 +89,9 @@ export function ColumnHead({
   return (
     <TableHead
       aria-sort={sorted === undefined ? undefined : sortNames[sorted]}
-      className={cn(
-        columnAlign({ align: place }),
-        headWidth({ width }),
-        size !== undefined && "min-w-(--column-width)",
-        narrowColumn({ narrow })
-      )}
+      className={cn(columnAlign({ align: place }), headWidth({ width }))}
       scope="col"
-      style={
-        size === undefined ? undefined : { "--column-width": size, width: size }
-      }
+      style={size === undefined ? undefined : { minWidth: size, width: size }}
     >
       <HeadMenuContext value={menu}>{children}</HeadMenuContext>
     </TableHead>

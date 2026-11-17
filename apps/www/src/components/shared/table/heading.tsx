@@ -49,13 +49,7 @@ export function DataTableHead<TData extends RowData>({
 }) {
   const common = useTranslations("Common");
   const column = header.column;
-  const {
-    align,
-    filter,
-    narrow,
-    title = "",
-    wide,
-  } = column.columnDef.meta ?? {};
+  const { align, filter, title = "", wide } = column.columnDef.meta ?? {};
   const place = placeOf(index, align);
 
   if (header.isPlaceholder || filter === undefined) {
@@ -78,7 +72,6 @@ export function DataTableHead<TData extends RowData>({
           () => index
         )
       )}
-      narrow={narrow}
       place={place}
       size={sizing.size}
       sorted={column.getCanSort() ? column.getIsSorted() || "none" : undefined}
