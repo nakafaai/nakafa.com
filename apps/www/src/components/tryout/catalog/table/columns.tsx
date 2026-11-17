@@ -67,9 +67,9 @@ function useStatusChoices() {
  * server filters by, the questions, the minutes and the score. The server sorts the track by the name, the level, from
  * easy up to cooked, and the figures; the heads of text and figures keep the sets the table has read. A learner's
  * progress marks carry `data-progress`, so the rows every visitor reads can hide them under a signed-in hint. In a
- * narrow card the name and the status shrink to what they hold and the minutes and the score step aside, since the set's
- * pane names them, and in a card as narrow as a phone's the level and the questions step aside too, so the rows read
- * whole from 320 px without scrolling sideways, beside an open pane too.
+ * narrow card the status takes what the name leaves, up to its longest state, and the minutes and the score step aside,
+ * since the set's pane names them, and in a card as narrow as a phone's the level and the questions step aside too, so
+ * the rows read whole from 320 px without scrolling sideways, beside an open pane too.
  */
 export function useTryoutSetColumns() {
   const t = useTranslations("Tryouts");
