@@ -10,7 +10,7 @@ import {
   dipOf,
   reelOf,
 } from "@/lib/island/fishing";
-import { standingQuad } from "@/lib/island/life";
+import { standingQuad } from "@/lib/island/flat";
 import type { castRay } from "@/lib/island/ray";
 
 /** The water block, where a line is cast. */

@@ -1,8 +1,9 @@
-import { Array as Arr } from "effect";
+import { Array as Arr, Option } from "effect";
 import { bodiesOf, joined, seaBodies } from "@/lib/island/bodies";
 import { type Animal, herdOf, wander } from "@/lib/island/life";
 import { plantBodies } from "@/lib/island/plants";
 import { reefBodies, reefOf } from "@/lib/island/reef";
+import { folkIndex, isAsleep, keepDay } from "@/lib/island/routine";
 import { schoolBodies } from "@/lib/island/schools";
 import { roam, wildBodies, wildOf } from "@/lib/island/wild";
 import type { Cells } from "@/lib/island/world";
@@ -36,19 +37,33 @@ export function rerootedOf(scene: Scene, cells: Cells): Scene {
 }
 
 /**
- * The scene `dt` seconds on: each animal of the herd wandering among the rest
- * and among `others` (the learner's fox), and each wild visitor roaming.
+ * The scene `dt` seconds on at `hour`: each villager keeping its day (D54),
+ * each other animal of the herd wandering, all among the rest and among
+ * `others` (the learner's fox), and each wild visitor roaming.
  */
 export function livedOf(
   scene: Scene,
   dt: number,
+  hour: number,
   others: readonly Animal[] = []
 ): Scene {
   const everyone = Arr.appendAll(scene.herd, others);
   return {
     ...scene,
-    herd: Arr.map(scene.herd, (animal, index) =>
-      wander(scene.cells, animal, scene.seed, index, dt, everyone)
+    herd: Arr.map(scene.herd, (animal, order) =>
+      Option.match(folkIndex(animal.kind), {
+        onNone: () =>
+          wander(scene.cells, animal, scene.seed, order, dt, everyone),
+        onSome: (index) =>
+          keepDay(
+            scene.cells,
+            animal,
+            { hour, index },
+            scene.seed,
+            dt,
+            everyone
+          ),
+      })
     ),
     wild: Arr.map(scene.wild, (creature) =>
       roam(scene.cells, creature, scene.seed, dt)
@@ -57,18 +72,20 @@ export function livedOf(
 }
 
 /**
- * Every body of the scene at `time` seconds, each model once (D50): the herd
- * with `extra` animals among it (the learner's fox), the whale and the open
- * sea's swimmers, the wild visitors, the reef's residents, the plants and the
- * reef.
+ * Every body of the scene at `time` seconds and `hour`, each model once
+ * (D50): the herd with `extra` animals among it (the learner's fox), but for
+ * a villager asleep in its cottage (D54), the whale and the open sea's
+ * swimmers, the wild visitors, the reef's residents, the plants and the reef.
  */
 export function sceneBodies(
   scene: Scene,
   time: number,
+  hour: number,
   extra: readonly Animal[] = []
 ) {
+  const awake = Arr.filter(scene.herd, (animal) => !isAsleep(animal, hour));
   return joined([
-    ...bodiesOf(scene.cells, Arr.appendAll(scene.herd, extra), time),
+    ...bodiesOf(scene.cells, Arr.appendAll(awake, extra), time),
     ...seaBodies(scene.seed, time),
     ...wildBodies(scene.cells, scene.wild, scene.size, time),
     ...schoolBodies(scene.cells, scene.seed, scene.size, scene.reef, time),

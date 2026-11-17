@@ -31,6 +31,7 @@ import {
   turnOrbit,
 } from "@/lib/island/camera";
 import { hoeOf, ripeningOf, sownOf, waterOf } from "@/lib/island/farming";
+import { flatQuads } from "@/lib/island/flat";
 import {
   fadeSpin,
   isSpinning,
@@ -40,7 +41,6 @@ import {
 } from "@/lib/island/gesture";
 import { islesMesh } from "@/lib/island/isles";
 import { itemPlanOf, turnOf } from "@/lib/island/items";
-import { flatQuads } from "@/lib/island/life";
 import { changedChunks, glowOf } from "@/lib/island/light";
 import { rayThrough } from "@/lib/island/matrix";
 import { lightingOf, meshChunk } from "@/lib/island/mesh";
@@ -286,7 +286,8 @@ function start(
   const drawLife = (
     cells: Cells,
     next: Option.Option<readonly [number, number]>,
-    seconds: number
+    seconds: number,
+    hour: number
   ) => {
     // The fox faces where it walks, or its float while it fishes.
     const facing = Option.getOrElse(
@@ -297,7 +298,7 @@ function start(
       () => [fox.at().x, fox.at().z] as const
     );
     painter.bodies(
-      sceneBodies({ ...scene, cells }, seconds, [
+      sceneBodies({ ...scene, cells }, seconds, hour, [
         fox.animal(facing[0], facing[1]),
       ])
     );
@@ -378,7 +379,9 @@ function start(
     const dt = lastLife === 0 ? 0 : Math.min(0.25, (now - lastLife) / 1000);
     lastLife = now;
     const { cells } = store.getState();
-    scene = livedOf({ ...scene, cells }, dt, [fox.animal()]);
+    // The island's hour, which lights the world and keeps the villagers' day (D54).
+    const hour = hourOf(DateTime.nowUnsafe(), DateTime.zoneMakeLocal());
+    scene = livedOf({ ...scene, cells }, dt, hour, [fox.animal()]);
     const { moved, next } = fox.advance(dt, scene.herd);
     if (moved) {
       // The camera keeps the walking fox in view.
@@ -390,8 +393,7 @@ function start(
     }
     rod.tend(now / 1000);
     canvas.dataset.fishing = rod.active() ? "true" : "false";
-    drawLife(cells, next, now / 1000);
-    const hour = hourOf(DateTime.nowUnsafe(), DateTime.zoneMakeLocal());
+    drawLife(cells, next, now / 1000, hour);
     const minute = Math.floor(hour * 60) % (24 * 60);
     if (minute !== store.getState().minute) {
       store.getState().setMinute(minute);
