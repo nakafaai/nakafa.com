@@ -272,7 +272,8 @@ test("a teacher builds a graph of a function, a slider, a labelled point and a v
   await expect(
     dialog.getByRole("switch", { name: "Fit the plane to the objects" })
   ).not.toBeChecked();
-  await dialog.getByRole("button", { name: "Cancel" }).click();
+  // A dialog closes from its corner or Escape, with no footer Cancel (#2390).
+  await page.keyboard.press("Escape");
   await expect(dialog).toHaveCount(0);
 
   await page.getByRole("link", { name: "Try as student" }).click();

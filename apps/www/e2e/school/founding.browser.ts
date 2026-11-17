@@ -57,10 +57,10 @@ for (const viewport of VIEWPORTS) {
       page.getByText("Free for 30 days, up to 20 accounts.")
     ).toBeVisible();
     await expect(
-      page.getByText("Pro or Max, every role counted as one account.")
+      page.getByText("Pro or Max, each role is one account.")
     ).toHaveCount(2);
     await expect(
-      page.getByText("School plan, with the founder's help.")
+      page.getByText("School plan, set up with the founder.")
     ).toBeVisible();
     await page.getByRole("radio", { name: "Under 100" }).click();
     await Effect.runPromise(

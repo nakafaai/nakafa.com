@@ -259,7 +259,8 @@ test("the forum holds the worst a class writes: a long name, long words, 2,000 c
   await expect(messageRow(page, "Terkirim saat jaringan kembali.")).toBeVisible(
     { timeout: readinessTimeoutMilliseconds }
   );
-  await page.unroute("**/*", slow);
+  // Waits for the requests still held, so none continues a route the unroute already let go.
+  await page.unrouteAll({ behavior: "wait" });
 
   // A thread of 200 replies, its summary counting them under the message.
   const root = messageRow(page, "Pesan 100").first();

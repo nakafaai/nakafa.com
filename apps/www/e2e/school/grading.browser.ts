@@ -142,7 +142,11 @@ test("a student writes an essay, the teacher grades it with part of its points, 
     student.getByText("Your teacher released these results.")
   ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
   await expect(student.getByText("Partly correct")).toBeVisible();
-  await expect(student.getByText(`Your answer: ${ESSAY}`)).toBeVisible();
+  // An essay reads as its label over the student's own text (#2318).
+  await expect(
+    student.getByText("Your answer:", { exact: true })
+  ).toBeVisible();
+  await expect(student.getByText(ESSAY)).toBeVisible();
   await studentContext.close();
   await teacherContext.close();
 });

@@ -7,7 +7,8 @@ import type { Page } from "@playwright/test";
 export function readFormProblems(page: Page) {
   return page.evaluate(() => {
     const mostLabelGap = 8;
-    const leastFieldGap = 24;
+    // Fields stand one step wider than a label on its value (`FieldGroup`, gap-4 since #2398).
+    const leastFieldGap = 16;
     const leastEdge = 16;
     const tolerance = 1;
 
