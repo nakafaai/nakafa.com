@@ -22,7 +22,6 @@ import {
   GameStoreContext,
   heldOf,
 } from "@/components/island/store";
-import { bodiesOf, joined, seaBodies } from "@/lib/island/bodies";
 import {
   clampOrbit,
   easeOrbit,
@@ -31,8 +30,6 @@ import {
   openingOrbit,
   turnOrbit,
 } from "@/lib/island/camera";
-import { coastOf } from "@/lib/island/coast";
-import { butterfliesOf, crownsOf } from "@/lib/island/drift";
 import { hoeOf, ripeningOf, sownOf, waterOf } from "@/lib/island/farming";
 import {
   fadeSpin,
@@ -41,23 +38,17 @@ import {
   type Spin,
   STILL_SPIN,
 } from "@/lib/island/gesture";
-import { columnsOf } from "@/lib/island/ground";
 import { islesMesh } from "@/lib/island/isles";
 import { itemPlanOf, turnOf } from "@/lib/island/items";
-import { flatQuads, herdOf, wander } from "@/lib/island/life";
+import { flatQuads } from "@/lib/island/life";
 import { changedChunks, glowOf } from "@/lib/island/light";
 import { rayThrough } from "@/lib/island/matrix";
 import { lightingOf, meshChunk } from "@/lib/island/mesh";
-import { firefliesOf } from "@/lib/island/night";
 import { planOf } from "@/lib/island/plan";
-import { plantBodies } from "@/lib/island/plants";
 import { RUNGS, stepLadder, TOP_RUNG } from "@/lib/island/quality";
 import { castRay } from "@/lib/island/ray";
-import { reefBodies, reefOf } from "@/lib/island/reef";
-import { schoolBodies } from "@/lib/island/schools";
+import { livedOf, rerootedOf, sceneBodies, sceneOf } from "@/lib/island/scene";
 import { hourOf, lightOf } from "@/lib/island/sky";
-import { chimneysOf } from "@/lib/island/smoke";
-import { roam, wildBodies, wildOf } from "@/lib/island/wild";
 import { type Cells, CHUNKS, SEA_LEVEL } from "@/lib/island/world";
 
 /**
@@ -114,14 +105,9 @@ function start(
   let lastWater = 0;
 
   let glow = glowOf(store.getState().cells);
-  // Every plant as its model (D25), read again only when the world changes.
-  let plants = plantBodies(store.getState().cells);
-  // The reef on the sea floor and the pond's lily pads (D50), read again only when the world changes.
-  let reef = reefOf(store.getState().cells, store.getState().seed, size);
-  let corals = reefBodies(reef);
-  let herd = herdOf(store.getState().cells, store.getState().seed, size);
-  // The wild visitors change with the day, so the island meets new species as the days go by (ADR 0047, D11).
-  let wild = wildOf(
+  // Everything alive on the island, the same scene the home page shows (D53): its plants and reef read again only when
+  // the world changes, and the wild visitors changing with the day, so the island meets new species as the days go by (D11).
+  let scene = sceneOf(
     store.getState().cells,
     store.getState().seed,
     size,
@@ -142,14 +128,7 @@ function start(
         meshChunk(cells, lighting, index % CHUNKS, Math.floor(index / CHUNKS))
       );
     }
-    painter.columns(columnsOf(cells));
-    painter.coast(coastOf(cells));
-    painter.scenery({
-      butterflies: butterfliesOf(cells, store.getState().seed),
-      chimneys: chimneysOf(cells),
-      crowns: crownsOf(cells),
-      fireflies: firefliesOf(cells, store.getState().seed),
-    });
+    painter.world(cells, store.getState().seed);
     needsDraw = true;
   };
   painter.isles(islesMesh(store.getState().seed));
@@ -175,9 +154,7 @@ function start(
       const relit = glowOf(state.cells);
       const moved = changedChunks(glow, relit);
       glow = relit;
-      plants = plantBodies(state.cells);
-      reef = reefOf(state.cells, state.seed, size);
-      corals = reefBodies(reef);
+      scene = rerootedOf(scene, state.cells);
       remesh(HashSet.union(store.getState().takeDirty(), moved));
       canvas.dataset.revision = String(state.revision);
     }
@@ -319,19 +296,9 @@ function start(
       ),
       () => [fox.at().x, fox.at().z] as const
     );
-    const { seed } = store.getState();
     painter.bodies(
-      joined([
-        ...bodiesOf(
-          cells,
-          Arr.append(herd, fox.animal(facing[0], facing[1])),
-          seconds
-        ),
-        ...seaBodies(seed, seconds),
-        ...wildBodies(cells, wild, size, seconds),
-        ...schoolBodies(cells, seed, size, reef, seconds),
-        ...plants,
-        ...corals,
+      sceneBodies({ ...scene, cells }, seconds, [
+        fox.animal(facing[0], facing[1]),
       ])
     );
     painter.herd(flatQuads(size, seconds, rod.quads(seconds, orbit.yaw)));
@@ -410,13 +377,9 @@ function start(
     needsDraw = false;
     const dt = lastLife === 0 ? 0 : Math.min(0.25, (now - lastLife) / 1000);
     lastLife = now;
-    const { cells, seed } = store.getState();
-    const everyone = Arr.append(herd, fox.animal());
-    herd = Arr.map(herd, (animal, index) =>
-      wander(cells, animal, seed, index, dt, everyone)
-    );
-    wild = Arr.map(wild, (creature) => roam(cells, creature, seed, dt));
-    const { moved, next } = fox.advance(dt, herd);
+    const { cells } = store.getState();
+    scene = livedOf({ ...scene, cells }, dt, [fox.animal()]);
+    const { moved, next } = fox.advance(dt, scene.herd);
     if (moved) {
       // The camera keeps the walking fox in view.
       goal = { ...goal, target: [fox.at().x, SEA_LEVEL + 1, fox.at().z] };

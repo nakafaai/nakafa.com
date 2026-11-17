@@ -22,10 +22,14 @@ import {
   SLOTS,
 } from "@/lib/island/atlas";
 import { eyeOf, type Orbit, snapOrbit } from "@/lib/island/camera";
+import { coastOf } from "@/lib/island/coast";
+import { butterfliesOf, crownsOf } from "@/lib/island/drift";
+import { columnsOf } from "@/lib/island/ground";
 import type { islesMesh } from "@/lib/island/isles";
 import { CLIP, viewProjectionOf } from "@/lib/island/matrix";
 import type { meshChunk } from "@/lib/island/mesh";
 import { mipsOf } from "@/lib/island/mips";
+import { firefliesOf } from "@/lib/island/night";
 import { RUNGS } from "@/lib/island/quality";
 import { repaintFor, type Season } from "@/lib/island/season";
 import {
@@ -39,11 +43,12 @@ import {
   SKY_VERTEX,
 } from "@/lib/island/shaders";
 import type { Light, Weather } from "@/lib/island/sky";
+import { chimneysOf } from "@/lib/island/smoke";
 import { flashed, flashOf } from "@/lib/island/storm";
 import { sunViewOf } from "@/lib/island/sun";
 import { DEEP } from "@/lib/island/terrain";
 import { TILE } from "@/lib/island/tiles/paint";
-import { CHUNKS, SEA_LEVEL } from "@/lib/island/world";
+import { type Cells, CHUNKS, SEA_LEVEL } from "@/lib/island/world";
 
 /** The learner's own fox, the one body seen through what stands in front of it. */
 const FOX = { _tag: "body", kind: "fox" } as const;
@@ -373,12 +378,17 @@ export function createPainter(canvas: HTMLCanvasElement, season: Season) {
         },
         /** Throws the dust or the chips of one changed block (D38), on the clock the frames are drawn on. */
         burst: air.burst,
-        /** Replaces what the blocks decide for the air over them (D33, D36). */
-        scenery: air.scenery,
-        /** Replaces the column map: where a drop stops and which ground each top blends (D39). */
-        columns: columns.write,
-        /** Replaces the coast map: how far each column lies from land, and whether its water lies still (D51). */
-        coast: coast.write,
+        /** Replaces what the cells decide beside the chunks (D53): the column map (D39), the coast map (D51), the air's scenery (D33, D36). */
+        world(cells: Cells, seed: number) {
+          columns.write(columnsOf(cells));
+          coast.write(coastOf(cells));
+          air.scenery({
+            butterflies: butterfliesOf(cells, seed),
+            chimneys: chimneysOf(cells),
+            crowns: crownsOf(cells),
+            fireflies: firefliesOf(cells, seed),
+          });
+        },
         /** Replaces where every true 3D body stands this frame (D21). */
         bodies(next: Parameters<typeof bodies.write>[0]) {
           bodies.write(next);
