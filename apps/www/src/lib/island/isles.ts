@@ -35,6 +35,9 @@ const LEAVES = idOf("leaves");
 /** How deep the isles' sides reach under the sea, where the water hides the rest. */
 const FOOT = SEA_LEVEL - 3;
 
+/** The share of the isles that rise as mountains, seven to twelve blocks over the sea (ADR 0047, D52). */
+const MOUNTAINS = 0.4;
+
 /** The isles of a seed, spread round the ring, each its own size, height and cover. */
 export function islesOf(seed: number) {
   const turn = unitOf(seed + 20, 0, 0, 0) * Math.PI * 2;
@@ -44,9 +47,13 @@ export function islesOf(seed: number) {
       turn + (index * Math.PI * 2) / RING.count + (roll(1) - 0.5) * 0.4;
     const radius = 6 + roll(3) * 9;
     const away = RING.from + radius * 1.15 + roll(2) * RING.spread;
+    // Some isles rise as mountains, their peaks bare stone, the rest as low green hills (D52).
+    const mountain = roll(6) < MOUNTAINS;
     return {
-      forest: roll(5) < 0.5,
-      peak: 1 + Math.floor(roll(4) * 5),
+      forest: !mountain && roll(5) < 0.5,
+      peak: mountain
+        ? 7 + Math.floor(roll(4) * 6)
+        : 1 + Math.floor(roll(4) * 4),
       radius,
       x: SPAN / 2 + Math.cos(angle) * away,
       z: SPAN / 2 + Math.sin(angle) * away,

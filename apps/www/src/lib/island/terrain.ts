@@ -5,6 +5,14 @@ import { SPAN } from "@repo/backend/confect/island/world";
 import { Array as Arr, Option } from "effect";
 import { WILD_PLANTS } from "@/lib/island/flora/plants";
 import { smoothOf, unitOf } from "@/lib/island/noise";
+import {
+  bulgeOf,
+  highlandOf,
+  layStream,
+  pondBearing,
+  ROCK,
+  riseOf,
+} from "@/lib/island/relief";
 import { layVillage, VILLAGE } from "@/lib/island/village";
 import {
   blockAt,
@@ -34,7 +42,7 @@ const POND = { away: 18.5, radius: 2.4 } as const;
 
 /** Whether (x, z) is in the pond, which lies in the meadow beyond the village, toward a side the seed picks. */
 function isPond(seed: number, x: number, z: number) {
-  const angle = (0.1 + unitOf(seed + 12, 0, 0, 0) * 0.8) * Math.PI;
+  const angle = pondBearing(seed);
   const centre = [
     MIDDLE + Math.cos(angle) * POND.away,
     MIDDLE - Math.sin(angle) * POND.away,
@@ -68,11 +76,24 @@ export function shoreOf(size: number) {
   return (size / 2 - SHORE.inset) * (SHORE.least + SHORE.wobble);
 }
 
-/** How far the island's shore reaches from its middle toward (x, z), in cells. */
+/**
+ * How far the island's shore reaches from its middle toward (x, z), in cells:
+ * its wobbling round, pushed out into a headland on the highland's side
+ * (D52), never past the island's own farthest shore, where the sea visitors'
+ * rounds begin, nor within three cells of the world's edge, which has no wall.
+ */
 function edgeOf(seed: number, size: number, x: number, z: number) {
-  return (
+  const distance = Math.hypot(x + 0.5 - MIDDLE, z + 0.5 - MIDDLE);
+  const room =
+    ((MIDDLE - 3) /
+      Math.max(Math.abs(x + 0.5 - MIDDLE), Math.abs(z + 0.5 - MIDDLE), 1e-6)) *
+    distance;
+  const base =
     (size / 2 - SHORE.inset) *
-    (SHORE.least + SHORE.wobble * smoothOf(seed, x, z, 5))
+    (SHORE.least + SHORE.wobble * smoothOf(seed, x, z, 5));
+  const cap = Math.min(room, shoreOf(size));
+  return (
+    base + Math.min(bulgeOf(highlandOf(seed, x, z)), Math.max(0, cap - base))
   );
 }
 
@@ -96,6 +117,8 @@ export function outOf(seed: number, size: number, x: number, z: number) {
  */
 export function columnOf(seed: number, size: number, x: number, z: number) {
   const distance = Math.hypot(x + 0.5 - MIDDLE, z + 0.5 - MIDDLE);
+  // The highland pushes the shore out into a headland on its side of the island (D52).
+  const highland = highlandOf(seed, x, z);
   const edge = edgeOf(seed, size, x, z);
   if (distance < edge - 3 && isPond(seed, x, z)) {
     return { land: false, top: SEA_LEVEL - 2 };
@@ -107,7 +130,9 @@ export function columnOf(seed: number, size: number, x: number, z: number) {
       TERRACES,
       Math.floor(smoothOf(seed + 1, x, z, 12) * (TERRACES + 0.6) * inland)
     );
-    return { land: true, top: SEA_LEVEL + (distance < MEADOW ? 0 : hills) };
+    const rise = riseOf(seed, x, z, highland, distance, [MEADOW, edge]);
+    const lifted = Math.max(hills, rise);
+    return { land: true, top: SEA_LEVEL + (distance < MEADOW ? 0 : lifted) };
   }
   const out = distance - edge;
   const depth = Option.match(
@@ -125,9 +150,12 @@ function fillColumn(
   column: ReturnType<typeof columnOf>,
   shore: boolean
 ) {
+  // The highland's tallest terraces stand in bare stone (D52).
+  const rocky = column.top >= SEA_LEVEL + ROCK;
   for (let y = 0; y <= column.top; y += 1) {
     const below = column.top - y;
-    const surface = column.land && !shore ? GRASS : SAND;
+    const grassy = column.land && !shore ? GRASS : SAND;
+    const surface = rocky ? STONE : grassy;
     const ground = below === 0 ? surface : DIRT;
     cells[cellOf(x, y, z)] = below > 2 ? STONE : ground;
   }
@@ -144,7 +172,7 @@ function growTree(
   top: number,
   z: number
 ) {
-  // Ground stands at most three cells above the sea, so a crown stays far below the sky.
+  // Grass stands at most a few cells under the highland's bare stone, so a crown stays below the sky.
   const trunk = 4 + ((x + z) % 2);
   for (let y = top + 1; y <= top + trunk; y += 1) {
     cells[cellOf(x, y, z)] = LOG;
@@ -178,7 +206,9 @@ function layGround(cells: Cells, seed: number, size: number) {
       const shore =
         column.land && column.top === SEA_LEVEL && isShore(seed, size, x, z);
       fillColumn(cells, x, z, column, shore);
-      meadows[z * SPAN + x] = column.land && !shore ? column.top : -1;
+      // Nothing grows on the shore's sand or the highland's bare stone.
+      const rocky = column.top >= SEA_LEVEL + ROCK;
+      meadows[z * SPAN + x] = column.land && !shore && !rocky ? column.top : -1;
     }
   }
   return meadows;
@@ -220,6 +250,7 @@ export function terrainOf(seed: number, size: number) {
   const cells = emptyCells();
   const meadows = layGround(cells, seed, size);
   layVillage(cells);
+  layStream(cells, meadows, seed);
   for (let z = 2; z < SPAN - 2; z += 1) {
     for (let x = 2; x < SPAN - 2; x += 1) {
       plantAt(cells, meadows, seed, x, z);

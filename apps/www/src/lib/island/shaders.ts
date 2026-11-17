@@ -160,6 +160,15 @@ void main() {
     vec4 water = waterOf(vWorld, uEye, uToward, uTime, vSky, foam);
     paint = water.rgb * (0.9 + 0.2 * dot(texel.rgb, vec3(0.333)));
     alpha = water.a;
+    if (abs(face.y) < 0.5) {
+      // A wall of water is a fall (D52): white streaks pour down it in whole art pixels, a few broad ones and many thin.
+      vec2 sheet = floor(vec2(vWorld.x + vWorld.z, vWorld.y) * 16.0);
+      float pour = noiseOf(vec2(sheet.x * 0.55, (sheet.y + uTime * 44.0) * 0.09));
+      float streak = step(0.58, pour) + step(0.8, hashOf(vec2(sheet.x, floor((sheet.y + uTime * 60.0) * 0.25)))) * 0.6;
+      paint = mix(vec3(0.46, 0.74, 0.88), vec3(0.94, 0.98, 1.0), min(1.0, streak));
+      alpha = 0.9;
+      foam = max(foam, min(1.0, streak) * 0.55);
+    }
   }
   // The sun reaches a face only where nothing stands between them, and a cloud passing over dims it; the sky over a face lets it in at all.
   // A plant's or a tuft's thin plane takes the light from above, like the ground it grows on (D44).

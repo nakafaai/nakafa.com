@@ -5,6 +5,7 @@ import { idOf } from "@repo/backend/confect/island/blocks";
 import { PLANT_KEYS } from "@repo/backend/confect/island/flora";
 import { SPAN } from "@repo/backend/confect/island/world";
 import { Array as Arr } from "effect";
+import { highlandOf } from "@/lib/island/relief";
 import {
   columnOf,
   DEEP,
@@ -114,7 +115,7 @@ describe("island/terrain", () => {
     ]);
   });
 
-  it("raises the hills beyond the meadow in whole terraces, never more than three above the sea", () => {
+  it("raises the lowland hills beyond the meadow in whole terraces, never more than three above the sea, and the highland far above them", () => {
     const tops = Arr.flatMap(
       Arr.makeBy(SPAN, (x) => x),
       (x) =>
@@ -122,12 +123,21 @@ describe("island/terrain", () => {
           Arr.makeBy(SPAN, (z) => z),
           (z) => {
             const column = columnOf(9, 64, x, z);
-            return column.land ? [column.top - SEA_LEVEL] : [];
+            return column.land
+              ? [{ high: highlandOf(9, x, z) > 0, top: column.top - SEA_LEVEL }]
+              : [];
           }
         )
     );
-    expect(Math.max(...tops)).toBeLessThanOrEqual(3);
-    expect(Arr.dedupe(tops).length).toBeGreaterThanOrEqual(3);
+    const low = Arr.map(
+      Arr.filter(tops, (column) => !column.high),
+      (column) => column.top
+    );
+    expect(Math.max(...low)).toBeLessThanOrEqual(3);
+    expect(Arr.dedupe(low).length).toBeGreaterThanOrEqual(3);
+    expect(
+      Math.max(...Arr.map(tops, (column) => column.top))
+    ).toBeGreaterThanOrEqual(6);
   });
 
   it("keeps every island's land inside its shore, with deep water a few cells past it", () => {
