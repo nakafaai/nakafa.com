@@ -19,7 +19,6 @@ import {
   tryoutMetadataArgsValidator,
   tryoutMetadataReturnValidator,
   tryoutPageArgsValidator,
-  tryoutSetSamplesValidator,
 } from "@repo/backend/content/tryout/spec";
 import { Schema } from "effect";
 
@@ -147,14 +146,6 @@ export default GroupSpec.make()
             track: publicTryoutTrackValidator,
           }),
         ]),
-      error: () => ReleaseError,
-    })
-  )
-  .addFunction(
-    FunctionSpec.publicQuery({
-      name: "getSetSamples",
-      args: () => tryoutPageArgsValidator.fields,
-      returns: () => tryoutSetSamplesValidator,
       error: () => ReleaseError,
     })
   )

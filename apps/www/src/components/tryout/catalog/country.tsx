@@ -8,6 +8,7 @@ import { useTranslations } from "use-intl";
 import {
   CatalogCard,
   CatalogCardVisual,
+  CatalogGrid,
 } from "@/components/shared/catalog/card";
 import { CatalogActionLabelContext } from "@/components/shared/catalog/label";
 import { ComingSoon } from "@/components/shared/upcoming";
@@ -52,7 +53,7 @@ export function TryoutCountryPageClient({
 
   return (
     <CatalogActionLabelContext value={tCommon("view-options")}>
-      <div className="grid grid-cols-1 gap-4 pt-6 pb-24 sm:grid-cols-2">
+      <CatalogGrid className="pt-6 pb-24">
         {Arr.map(Arr.zip(page.exams, visuals), ([exam, visual], index) => (
           <CatalogCard
             action={(anchor) => (
@@ -64,7 +65,7 @@ export function TryoutCountryPageClient({
             <CatalogCardVisual preload={index === 0} visual={visual} />
           </CatalogCard>
         ))}
-      </div>
+      </CatalogGrid>
     </CatalogActionLabelContext>
   );
 }

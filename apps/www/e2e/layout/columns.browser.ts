@@ -68,7 +68,7 @@ const verifyContentColumn = Effect.fn("NakafaE2E.verifyContentColumn")(
 
 /**
  * A try-out page's least height reaches the screen's bottom, so a locked review ends there. A set page
- * with its samples runs past the screen, so its least height is measured, not its bottom.
+ * can run past the screen, so its least height is measured, not its bottom.
  */
 const verifyTryoutHeight = Effect.fn("NakafaE2E.verifyTryoutHeight")(function* (
   page: Page

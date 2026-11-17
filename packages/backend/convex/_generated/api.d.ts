@@ -16264,12 +16264,6 @@ export declare const api: {
             };
           }
         >;
-        getSetSamples: FunctionReference<
-          "query",
-          "public",
-          { appLocale: "en" | "id" | "de" | "ms"; publicPath: string },
-          Array<{ body: string; versionHash: string }> | null
-        >;
         getTrackPage: FunctionReference<
           "query",
           "public",
