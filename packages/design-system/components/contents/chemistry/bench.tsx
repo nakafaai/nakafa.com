@@ -4,7 +4,8 @@ import {
   LiquidMaterial,
   MetalMaterial,
 } from "@repo/design-system/components/three/physical";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { BENCH_COLORS } from "@repo/design-system/lib/material/bench";
+import { CAR_COLORS } from "@repo/design-system/lib/material/car";
 import { Array as Arr } from "effect";
 import {
   type ReactNode,
@@ -35,13 +36,13 @@ export function LabBench({ width = 2.4 }: { readonly width?: number }) {
         <meshPhysicalMaterial
           clearcoat={0.6}
           clearcoatRoughness={0.3}
-          color={MATERIAL.epoxy}
+          color={BENCH_COLORS.epoxy}
           roughness={0.55}
         />
       </mesh>
       <mesh position={[0, -0.47, 0.02]}>
         <boxGeometry args={[width - 0.04, 0.84, 0.86]} />
-        <meshStandardMaterial color={MATERIAL.cabinet} roughness={0.6} />
+        <meshStandardMaterial color={BENCH_COLORS.cabinet} roughness={0.6} />
       </mesh>
       {Arr.map(bottles, (bottle) => (
         <group key={bottle.key} position={[bottle.x, 0, -0.34]}>
@@ -55,7 +56,10 @@ export function LabBench({ width = 2.4 }: { readonly width?: number }) {
           </mesh>
           <mesh position={[0, 0.165, 0]}>
             <cylinderGeometry args={[0.018, 0.018, 0.025, 20]} />
-            <meshStandardMaterial color={MATERIAL.bottleCap} roughness={0.6} />
+            <meshStandardMaterial
+              color={BENCH_COLORS.bottleCap}
+              roughness={0.6}
+            />
           </mesh>
         </group>
       ))}
@@ -65,9 +69,9 @@ export function LabBench({ width = 2.4 }: { readonly width?: number }) {
 
 /** Amber, clear and green reagent glass. */
 const BOTTLE_GLASS = [
-  MATERIAL.bottleAmber,
-  MATERIAL.bottleClear,
-  MATERIAL.bottleGreen,
+  BENCH_COLORS.bottleAmber,
+  BENCH_COLORS.bottleClear,
+  BENCH_COLORS.bottleGreen,
 ] as const;
 
 /** A reagent bottle's outline, turned around its axis: body, shoulder, neck. */
@@ -125,7 +129,7 @@ export function Scale({
       {Arr.map(BALANCE.feet, ([x, z]) => (
         <mesh key={`${x}-${z}`} position={[x, 0.003, z]}>
           <cylinderGeometry args={[0.012, 0.014, 0.006, 16]} />
-          <meshStandardMaterial color={MATERIAL.dashboard} roughness={0.8} />
+          <meshStandardMaterial color={CAR_COLORS.dashboard} roughness={0.8} />
         </mesh>
       ))}
       <mesh
@@ -135,18 +139,21 @@ export function Scale({
         receiveShadow
         rotation={[0, -Math.PI / 2, 0]}
       >
-        <meshStandardMaterial color={MATERIAL.balanceBody} roughness={0.6} />
+        <meshStandardMaterial
+          color={BENCH_COLORS.balanceBody}
+          roughness={0.6}
+        />
       </mesh>
       <group position={BALANCE.panel} rotation={[BALANCE.slope, 0, 0]}>
         <mesh>
           <boxGeometry args={[0.15, 0.004, 0.042]} />
-          <meshStandardMaterial color={MATERIAL.dashboard} roughness={0.5} />
+          <meshStandardMaterial color={CAR_COLORS.dashboard} roughness={0.5} />
         </mesh>
         <mesh position={[-0.02, 0.0025, 0]}>
           <boxGeometry args={[0.09, 0.002, 0.028]} />
           <meshStandardMaterial
-            color={MATERIAL.lcd}
-            emissive={MATERIAL.lcdGlow}
+            color={BENCH_COLORS.lcd}
+            emissive={BENCH_COLORS.lcdGlow}
             emissiveIntensity={0.6}
             roughness={0.2}
           />
@@ -154,13 +161,16 @@ export function Scale({
         {Arr.map([0.045, 0.062] as const, (x) => (
           <mesh key={x} position={[x, 0.003, 0]}>
             <cylinderGeometry args={[0.006, 0.006, 0.004, 16]} />
-            <meshStandardMaterial color={MATERIAL.balanceKey} roughness={0.5} />
+            <meshStandardMaterial
+              color={BENCH_COLORS.balanceKey}
+              roughness={0.5}
+            />
           </mesh>
         ))}
         <ThreeLabel
-          color={MATERIAL.lcdInk}
+          color={BENCH_COLORS.lcdInk}
           fontSize="compact"
-          outlineColor={MATERIAL.lcdHalo}
+          outlineColor={BENCH_COLORS.lcdHalo}
           outlineWidth={0.003}
           position={[-0.02, 0.006, 0]}
         >
@@ -174,11 +184,11 @@ export function Scale({
       </group>
       <mesh castShadow position={[0, 0.095, BALANCE.pan]}>
         <cylinderGeometry args={[0.1, 0.098, 0.006, 64]} />
-        <MetalMaterial color={MATERIAL.panSteel} roughness={0.3} />
+        <MetalMaterial color={BENCH_COLORS.panSteel} roughness={0.3} />
       </mesh>
       <mesh position={[0, 0.098, BALANCE.pan]} rotation={[Math.PI / 2, 0, 0]}>
         <torusGeometry args={[0.099, 0.002, 8, 64]} />
-        <MetalMaterial color={MATERIAL.panSteel} roughness={0.25} />
+        <MetalMaterial color={BENCH_COLORS.panSteel} roughness={0.25} />
       </mesh>
       <group position={[0, 0.098, BALANCE.pan]}>{children}</group>
     </group>
@@ -320,7 +330,7 @@ export function Flask() {
   return (
     <mesh castShadow>
       <latheGeometry args={[FLASK_WALL, 64]} />
-      <GlassMaterial color={MATERIAL.glass} />
+      <GlassMaterial color={BENCH_COLORS.glass} />
     </mesh>
   );
 }
@@ -373,7 +383,7 @@ export function Beaker() {
   return (
     <mesh castShadow>
       <latheGeometry args={[BEAKER_WALL, 64]} />
-      <GlassMaterial color={MATERIAL.glass} />
+      <GlassMaterial color={BENCH_COLORS.glass} />
     </mesh>
   );
 }

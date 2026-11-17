@@ -28,7 +28,12 @@ import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { P5Sketch } from "@repo/design-system/components/visual/sketch";
 import { getColor } from "@repo/design-system/lib/color";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { BENCH_COLORS } from "@repo/design-system/lib/material/bench";
+import { CAR_COLORS } from "@repo/design-system/lib/material/car";
+import { ENERGY_COLORS } from "@repo/design-system/lib/material/energy";
+import { INSTRUMENT_COLORS } from "@repo/design-system/lib/material/instrument";
+import { MACHINE_COLORS } from "@repo/design-system/lib/material/machine";
+import { REAGENT_COLORS } from "@repo/design-system/lib/material/reagent";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr, Schema } from "effect";
 import type p5 from "p5";
@@ -83,8 +88,8 @@ function liftProgram(sketch: p5, read: () => LiftFrame) {
     }
     const { height, width } = sketch;
     gradientRect(sketch, { height, width, x: 0, y: 0 }, [
-      [0, mix(MATERIAL.concrete, getColor("BLACK"), 0.55)],
-      [1, mix(MATERIAL.concrete, getColor("BLACK"), 0.7)],
+      [0, mix(MACHINE_COLORS.concrete, getColor("BLACK"), 0.55)],
+      [1, mix(MACHINE_COLORS.concrete, getColor("BLACK"), 0.7)],
     ]);
     const drift = ((clock * 40) % 60) * (frame.movingUp ? 1 : -1);
     sketch.stroke(fade(getColor("WHITE"), 0.15));
@@ -103,15 +108,15 @@ function liftProgram(sketch: p5, read: () => LiftFrame) {
       sketch,
       cabin,
       [
-        [0, mix(MATERIAL.galvanizedSteel, getColor("WHITE"), 0.15)],
-        [1, mix(MATERIAL.galvanizedSteel, getColor("BLACK"), 0.35)],
+        [0, mix(ENERGY_COLORS.galvanizedSteel, getColor("WHITE"), 0.15)],
+        [1, mix(ENERGY_COLORS.galvanizedSteel, getColor("BLACK"), 0.35)],
       ],
       true
     );
     const floor = cabin.y + cabin.height * 0.92;
     const centre = cabin.x + cabin.width / 2;
     sketch.noStroke();
-    sketch.fill(MATERIAL.balanceBody);
+    sketch.fill(BENCH_COLORS.balanceBody);
     sketch.rect(
       centre - cabin.width * 0.18,
       floor - 10,
@@ -119,7 +124,7 @@ function liftProgram(sketch: p5, read: () => LiftFrame) {
       10,
       3
     );
-    sketch.fill(MATERIAL.lcd);
+    sketch.fill(BENCH_COLORS.lcd);
     sketch.rect(
       centre - cabin.width * 0.12,
       floor - 8,
@@ -127,7 +132,7 @@ function liftProgram(sketch: p5, read: () => LiftFrame) {
       6,
       2
     );
-    sketch.fill(MATERIAL.trolleyPaint);
+    sketch.fill(INSTRUMENT_COLORS.trolleyPaint);
     sketch.rect(
       centre - cabin.width * 0.08,
       floor - cabin.height * 0.5,
@@ -135,9 +140,9 @@ function liftProgram(sketch: p5, read: () => LiftFrame) {
       cabin.height * 0.3,
       8
     );
-    sketch.fill(MATERIAL.cellBody);
+    sketch.fill(REAGENT_COLORS.cellBody);
     sketch.circle(centre, floor - cabin.height * 0.56, cabin.width * 0.14);
-    sketch.fill(MATERIAL.tintedGlass);
+    sketch.fill(CAR_COLORS.tintedGlass);
     sketch.rect(
       centre - cabin.width * 0.06,
       floor - cabin.height * 0.2,
@@ -172,7 +177,7 @@ function liftProgram(sketch: p5, read: () => LiftFrame) {
       sketch,
       frame.reading,
       { x: centre, y: floor + 16 },
-      { align: "center", baseline: "top", color: MATERIAL.lcdInk, size: 13 }
+      { align: "center", baseline: "top", color: BENCH_COLORS.lcdInk, size: 13 }
     );
     vignette(sketch, 0.3);
   };

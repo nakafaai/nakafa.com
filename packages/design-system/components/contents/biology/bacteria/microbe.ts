@@ -1,4 +1,4 @@
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { REAGENT_COLORS } from "@repo/design-system/lib/material/reagent";
 import { Schema } from "effect";
 
 /**
@@ -23,18 +23,18 @@ export type Gram = typeof GramSchema.Type;
 /** The colour a cell shows under the microscope after each step. */
 const STAIN = {
   negative: {
-    alcohol: MATERIAL.cellUnstained,
-    iodine: MATERIAL.iodineComplex,
-    safranin: MATERIAL.safranin,
-    smear: MATERIAL.cellUnstained,
-    violet: MATERIAL.crystalViolet,
+    alcohol: REAGENT_COLORS.cellUnstained,
+    iodine: REAGENT_COLORS.iodineComplex,
+    safranin: REAGENT_COLORS.safranin,
+    smear: REAGENT_COLORS.cellUnstained,
+    violet: REAGENT_COLORS.crystalViolet,
   },
   positive: {
-    alcohol: MATERIAL.iodineComplex,
-    iodine: MATERIAL.iodineComplex,
-    safranin: MATERIAL.iodineComplex,
-    smear: MATERIAL.cellUnstained,
-    violet: MATERIAL.crystalViolet,
+    alcohol: REAGENT_COLORS.iodineComplex,
+    iodine: REAGENT_COLORS.iodineComplex,
+    safranin: REAGENT_COLORS.iodineComplex,
+    smear: REAGENT_COLORS.cellUnstained,
+    violet: REAGENT_COLORS.crystalViolet,
   },
 } satisfies Record<Gram, Record<StainStep, string>>;
 

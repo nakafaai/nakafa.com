@@ -7,7 +7,9 @@ import {
 import type { Spot } from "@repo/design-system/components/contents/physics/vector/spot";
 import { hashUnit } from "@repo/design-system/components/contents/simulation/grain";
 import { getColor } from "@repo/design-system/lib/color";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { MACHINE_COLORS } from "@repo/design-system/lib/material/machine";
+import { ROAD_COLORS } from "@repo/design-system/lib/material/road";
+import { TOWN_COLORS } from "@repo/design-system/lib/material/town";
 import { Array as Arr } from "effect";
 import type p5 from "p5";
 
@@ -16,11 +18,11 @@ function paintTree(layer: p5, at: Spot, radius: number) {
   layer.noStroke();
   layer.fill(fade(getColor("BLACK"), 0.28));
   layer.circle(at.x + radius * 0.45, at.y + radius * 0.45, radius * 2.1);
-  layer.fill(MATERIAL.foliageDark);
+  layer.fill(ROAD_COLORS.foliageDark);
   layer.circle(at.x, at.y, radius * 2);
-  layer.fill(MATERIAL.foliage);
+  layer.fill(ROAD_COLORS.foliage);
   layer.circle(at.x - radius * 0.2, at.y - radius * 0.2, radius * 1.45);
-  layer.fill(MATERIAL.foliageLight);
+  layer.fill(ROAD_COLORS.foliageLight);
   layer.circle(at.x - radius * 0.38, at.y - radius * 0.38, radius * 0.7);
 }
 
@@ -32,8 +34,8 @@ function paintTree(layer: p5, at: Spot, radius: number) {
 export function paintPark(layer: p5, keep: readonly Spot[]) {
   const { height, width } = layer;
   gradientRect(layer, { height, width, x: 0, y: 0 }, [
-    [0, mix(MATERIAL.grass, MATERIAL.foliageLight, 0.4)],
-    [1, mix(MATERIAL.grass, MATERIAL.foliageDark, 0.3)],
+    [0, mix(ROAD_COLORS.grass, ROAD_COLORS.foliageLight, 0.4)],
+    [1, mix(ROAD_COLORS.grass, ROAD_COLORS.foliageDark, 0.3)],
   ]);
   layer.noStroke();
   for (let stripe = 0; stripe < width; stripe += 46) {
@@ -41,26 +43,26 @@ export function paintPark(layer: p5, keep: readonly Spot[]) {
     layer.rect(stripe, 0, 23, height);
   }
   layer.noFill();
-  layer.stroke(fade(MATERIAL.gravelGroove, 0.5));
+  layer.stroke(fade(ROAD_COLORS.gravelGroove, 0.5));
   layer.strokeWeight(13);
   layer.ellipse(width * 0.5, height * 0.52, width * 0.82, height * 0.74);
-  layer.stroke(MATERIAL.gravel);
+  layer.stroke(ROAD_COLORS.gravel);
   layer.strokeWeight(10);
   layer.ellipse(width * 0.5, height * 0.52, width * 0.82, height * 0.74);
   layer.line(width * 0.09, height * 0.52, width * 0.91, height * 0.52);
   layer.noStroke();
   const pond = { x: width * 0.72, y: height * 0.26 };
-  layer.fill(MATERIAL.riverbank);
+  layer.fill(TOWN_COLORS.riverbank);
   layer.ellipse(pond.x, pond.y, width * 0.2, height * 0.17);
   withShadow(
     layer,
     { blur: 10, color: fade(getColor("BLACK"), 0.4), drop: 2 },
     () => {
-      layer.fill(MATERIAL.water);
+      layer.fill(TOWN_COLORS.water);
       layer.ellipse(pond.x, pond.y, width * 0.18, height * 0.15);
     }
   );
-  layer.fill(fade(MATERIAL.waterGlint, 0.25));
+  layer.fill(fade(TOWN_COLORS.waterGlint, 0.25));
   layer.ellipse(
     pond.x - width * 0.03,
     pond.y - height * 0.03,
@@ -91,9 +93,9 @@ export function paintFlag(sketch: p5, at: Spot, size: number) {
   sketch.noStroke();
   sketch.fill(fade(getColor("BLACK"), 0.35));
   sketch.rect(at.x - size * 0.3, at.y - size * 0.3, size, size * 0.8, 2);
-  sketch.fill(MATERIAL.deckWhite);
+  sketch.fill(MACHINE_COLORS.deckWhite);
   sketch.rect(at.x - size * 0.5, at.y - size * 0.5, size, size, 2);
-  sketch.fill(MATERIAL.kiteNylon);
+  sketch.fill(MACHINE_COLORS.kiteNylon);
   sketch.triangle(
     at.x + size * 0.5,
     at.y - size * 0.5,

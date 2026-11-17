@@ -5,7 +5,8 @@ import {
   type BiologyLabProps,
 } from "@repo/design-system/components/contents/biology/lab";
 import type { NarrowCameraPose } from "@repo/design-system/lib/geometry/camera";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { CELL_COLORS } from "@repo/design-system/lib/material/cell";
+import { VIRION_COLORS } from "@repo/design-system/lib/material/virion";
 import { Array as Arr } from "effect";
 import { useMemo } from "react";
 import {
@@ -64,9 +65,9 @@ function natural(red: number, green: number, blue: number) {
     Math.min(1, Math.max(0, (red - green - 0.3) * 3)) * (1 - envelope);
   const spike = 1 - envelope - protein;
   const tones = [
-    [new Color(MATERIAL.viralEnvelope), envelope],
-    [new Color(MATERIAL.membraneDimer), protein],
-    [new Color(MATERIAL.spike), spike],
+    [new Color(VIRION_COLORS.viralEnvelope), envelope],
+    [new Color(VIRION_COLORS.membraneDimer), protein],
+    [new Color(CELL_COLORS.spike), spike],
   ] as const;
   return Arr.reduce(tones, new Color(0, 0, 0), (sum, [tone, weight]) =>
     sum.add(tone.clone().multiplyScalar(weight))

@@ -41,7 +41,9 @@ import {
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { P5Sketch } from "@repo/design-system/components/visual/sketch";
 import { getColor } from "@repo/design-system/lib/color";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { ENERGY_COLORS } from "@repo/design-system/lib/material/energy";
+import { ROAD_COLORS } from "@repo/design-system/lib/material/road";
+import { TOWN_COLORS } from "@repo/design-system/lib/material/town";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr, Schema } from "effect";
 import type p5 from "p5";
@@ -82,20 +84,22 @@ function paintVillage(sketch: p5, hour: number, lit: boolean, ground: number) {
     [1, fade(getColor("ZINC", 950), 0.6 * (1 - light))],
   ]);
   paintHills(sketch, ground, light > 0.15 ? "day" : "night");
-  sketch.fill(mix(MATERIAL.foliageDark, getColor("BLACK"), 0.6 * (1 - light)));
+  sketch.fill(
+    mix(ROAD_COLORS.foliageDark, getColor("BLACK"), 0.6 * (1 - light))
+  );
   sketch.rect(0, ground, width, height - ground);
   const size = Math.min(width * 0.06, height * 0.12);
   Arr.forEach(HOUSES, (at, index) => {
     const x = width * at;
     const wall = mix(
-      MATERIAL.wallPlaster,
+      ENERGY_COLORS.wallPlaster,
       getColor("BLACK"),
       0.65 * (1 - light)
     );
     sketch.fill(wall);
     sketch.rect(x - size / 2, ground - size * 0.75, size, size * 0.75);
     sketch.fill(
-      mix(MATERIAL.roofTerracotta, getColor("BLACK"), 0.5 * (1 - light))
+      mix(TOWN_COLORS.roofTerracotta, getColor("BLACK"), 0.5 * (1 - light))
     );
     sketch.triangle(
       x - size * 0.62,
@@ -108,14 +112,14 @@ function paintVillage(sketch: p5, hour: number, lit: boolean, ground: number) {
     const glowing = lit && light < 0.6 && (index + Math.floor(hour)) % 7 !== 0;
     sketch.fill(
       glowing
-        ? MATERIAL.windowGlow
+        ? ENERGY_COLORS.windowGlow
         : mix(getColor("ZINC", 900), getColor("SLATE", 600), 0.3)
     );
     sketch.rect(x - size * 0.25, ground - size * 0.5, size * 0.2, size * 0.2);
     sketch.rect(x + size * 0.05, ground - size * 0.5, size * 0.2, size * 0.2);
     if (glowing) {
       spotlight(sketch, { x, y: ground - size * 0.4 }, size * 0.9, {
-        color: MATERIAL.windowGlow,
+        color: ENERGY_COLORS.windowGlow,
         strength: 0.3 * (1 - light),
       });
     }

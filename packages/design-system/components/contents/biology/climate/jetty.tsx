@@ -5,7 +5,8 @@ import {
 } from "@repo/design-system/components/contents/biology/instances";
 import { hashUnit } from "@repo/design-system/components/contents/simulation/grain";
 import { getColor } from "@repo/design-system/lib/color";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { ECOLOGY_COLORS } from "@repo/design-system/lib/material/ecology";
+import { REAGENT_COLORS } from "@repo/design-system/lib/material/reagent";
 import { Array as Arr } from "effect";
 
 /**
@@ -56,15 +57,24 @@ export function Boardwalk() {
     <group>
       <Instances placements={PLANKS}>
         <boxGeometry args={[0.2, 0.05, WALK.width]} />
-        <meshStandardMaterial color={MATERIAL.woodWeathered} roughness={0.9} />
+        <meshStandardMaterial
+          color={ECOLOGY_COLORS.woodWeathered}
+          roughness={0.9}
+        />
       </Instances>
       <Instances placements={STRINGERS}>
         <boxGeometry args={[WALK.land - WALK.sea, 0.12, 0.14]} />
-        <meshStandardMaterial color={MATERIAL.woodChengal} roughness={0.85} />
+        <meshStandardMaterial
+          color={ECOLOGY_COLORS.woodChengal}
+          roughness={0.85}
+        />
       </Instances>
       <Instances placements={PILES}>
         <boxGeometry args={[0.16, 1, 0.16]} />
-        <meshStandardMaterial color={MATERIAL.woodChengal} roughness={0.9} />
+        <meshStandardMaterial
+          color={ECOLOGY_COLORS.woodChengal}
+          roughness={0.9}
+        />
       </Instances>
     </group>
   );
@@ -90,7 +100,10 @@ export function TideGauge() {
     <group position={[0, 0, GAUGE_Z]}>
       <mesh castShadow position={[0.2, 0.9, 0]} receiveShadow>
         <boxGeometry args={[0.22, 4.2, 0.22]} />
-        <meshStandardMaterial color={MATERIAL.woodChengal} roughness={0.9} />
+        <meshStandardMaterial
+          color={ECOLOGY_COLORS.woodChengal}
+          roughness={0.9}
+        />
       </mesh>
       <Instances
         placements={Arr.map(
@@ -108,7 +121,7 @@ export function TideGauge() {
         )}
       >
         <boxGeometry args={[0.06, 0.1, 0.3]} />
-        <meshStandardMaterial color={MATERIAL.calx} roughness={0.5} />
+        <meshStandardMaterial color={REAGENT_COLORS.calx} roughness={0.5} />
       </Instances>
     </group>
   );

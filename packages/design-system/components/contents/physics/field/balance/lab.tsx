@@ -22,7 +22,8 @@ import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { P5Sketch } from "@repo/design-system/components/visual/sketch";
 import { getColor } from "@repo/design-system/lib/color";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { INSTRUMENT_COLORS } from "@repo/design-system/lib/material/instrument";
+import { MACHINE_COLORS } from "@repo/design-system/lib/material/machine";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Schema } from "effect";
 import type p5 from "p5";
@@ -82,14 +83,14 @@ function balanceProgram(sketch: p5, read: () => BalanceFrame) {
       }
       sketch.endShape(sketch.CLOSE);
     };
-    block(0.67, mix(MATERIAL.trolleyPaint, getColor("BLACK"), 0.1));
+    block(0.67, mix(INSTRUMENT_COLORS.trolleyPaint, getColor("BLACK"), 0.1));
     const wireHeight = 0.25 + lift;
     const from = iso(sketch, -0.6, 0, wireHeight);
     const to = iso(sketch, 0.6, 0, wireHeight);
-    sketch.stroke(mix(MATERIAL.copper, getColor("BLACK"), 0.3));
+    sketch.stroke(mix(INSTRUMENT_COLORS.copper, getColor("BLACK"), 0.3));
     sketch.strokeWeight(6);
     sketch.line(from.x, from.y, to.x, to.y);
-    sketch.stroke(mix(MATERIAL.copper, getColor("WHITE"), 0.35));
+    sketch.stroke(mix(INSTRUMENT_COLORS.copper, getColor("WHITE"), 0.35));
     sketch.strokeWeight(2);
     sketch.line(from.x, from.y - 1.5, to.x, to.y - 1.5);
     const centre = iso(sketch, 0, 0, wireHeight);
@@ -115,7 +116,7 @@ function balanceProgram(sketch: p5, read: () => BalanceFrame) {
       head: 11,
       weight: 3.5,
     });
-    block(-0.55, mix(MATERIAL.signalRed, getColor("BLACK"), 0.15));
+    block(-0.55, mix(MACHINE_COLORS.signalRed, getColor("BLACK"), 0.15));
     const pole = {
       align: "center",
       baseline: "middle",

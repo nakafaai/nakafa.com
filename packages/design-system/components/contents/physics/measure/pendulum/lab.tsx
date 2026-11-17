@@ -26,7 +26,9 @@ import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { P5Sketch } from "@repo/design-system/components/visual/sketch";
 import { getColor } from "@repo/design-system/lib/color";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { CAR_COLORS } from "@repo/design-system/lib/material/car";
+import { ENERGY_COLORS } from "@repo/design-system/lib/material/energy";
+import { INSTRUMENT_COLORS } from "@repo/design-system/lib/material/instrument";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Schema } from "effect";
 import type p5 from "p5";
@@ -66,8 +68,8 @@ function pendulumProgram(sketch: p5, read: () => PendulumFrame) {
     }
     const { height, width } = sketch;
     gradientRect(sketch, { height, width, x: 0, y: 0 }, [
-      [0, mix(MATERIAL.wallPlaster, getColor("BLACK"), 0.55)],
-      [1, mix(MATERIAL.wallPlaster, getColor("BLACK"), 0.7)],
+      [0, mix(ENERGY_COLORS.wallPlaster, getColor("BLACK"), 0.55)],
+      [1, mix(ENERGY_COLORS.wallPlaster, getColor("BLACK"), 0.7)],
     ]);
     const pivot = { x: width * 0.2, y: height * 0.12 };
     const string = height * 0.58;
@@ -77,7 +79,7 @@ function pendulumProgram(sketch: p5, read: () => PendulumFrame) {
       x: pivot.x + Math.sin(swing) * (string + bob),
       y: pivot.y + Math.cos(swing) * (string + bob),
     };
-    sketch.stroke(MATERIAL.castIron);
+    sketch.stroke(CAR_COLORS.castIron);
     sketch.strokeWeight(5);
     sketch.line(width * 0.06, pivot.y, width * 0.34, pivot.y);
     sketch.stroke(fade(getColor("WHITE"), 0.8));
@@ -89,8 +91,8 @@ function pendulumProgram(sketch: p5, read: () => PendulumFrame) {
       pivot.y + Math.cos(swing) * string
     );
     litBall(sketch, centre, bob, {
-      dark: mix(MATERIAL.brass, getColor("BLACK"), 0.4),
-      light: mix(MATERIAL.brass, getColor("WHITE"), 0.4),
+      dark: mix(INSTRUMENT_COLORS.brass, getColor("BLACK"), 0.4),
+      light: mix(INSTRUMENT_COLORS.brass, getColor("WHITE"), 0.4),
     });
     const measured =
       frame.measure === "top" ? pivot.y + string : pivot.y + string + bob;

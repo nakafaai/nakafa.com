@@ -4,7 +4,9 @@ import {
 } from "@repo/design-system/components/contents/physics/canvas/paint";
 import { hashUnit } from "@repo/design-system/components/contents/simulation/grain";
 import { getColor } from "@repo/design-system/lib/color";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { MACHINE_COLORS } from "@repo/design-system/lib/material/machine";
+import { ROAD_COLORS } from "@repo/design-system/lib/material/road";
+import { TOWN_COLORS } from "@repo/design-system/lib/material/town";
 import type p5 from "p5";
 
 /** Fields across one side of the tile. */
@@ -12,12 +14,12 @@ const FIELDS = 8;
 
 /** The crops and bare soil a field may show from cruising height. */
 const CROPS = [
-  MATERIAL.wheatField,
-  MATERIAL.grass,
-  MATERIAL.foliageLight,
-  MATERIAL.riverbank,
-  MATERIAL.foliageShade,
-  mix(MATERIAL.wheatField, MATERIAL.grass, 0.5),
+  MACHINE_COLORS.wheatField,
+  ROAD_COLORS.grass,
+  ROAD_COLORS.foliageLight,
+  TOWN_COLORS.riverbank,
+  ROAD_COLORS.foliageShade,
+  mix(MACHINE_COLORS.wheatField, ROAD_COLORS.grass, 0.5),
 ] as const;
 
 /** One field: its crop in one or three strips, its furrows, and sometimes a farmhouse. */
@@ -25,7 +27,8 @@ function paintField(layer: p5, column: number, row: number, cell: number) {
   const x = column * cell;
   const y = row * cell;
   const crop =
-    CROPS[Math.floor(hashUnit(column, row) * CROPS.length)] ?? MATERIAL.grass;
+    CROPS[Math.floor(hashUnit(column, row) * CROPS.length)] ??
+    ROAD_COLORS.grass;
   const strips = hashUnit(column + 31, row) < 0.4 ? 3 : 1;
   for (let strip = 0; strip < strips; strip += 1) {
     layer.fill(
@@ -44,7 +47,7 @@ function paintField(layer: p5, column: number, row: number, cell: number) {
   if (hashUnit(column, row + 101) < 0.18) {
     layer.fill(fade(getColor("BLACK"), 0.3));
     layer.rect(x + cell * 0.42, y + cell * 0.42, cell * 0.1, cell * 0.08);
-    layer.fill(MATERIAL.roofTerracotta);
+    layer.fill(TOWN_COLORS.roofTerracotta);
     layer.rect(x + cell * 0.4, y + cell * 0.4, cell * 0.1, cell * 0.08);
   }
 }
@@ -54,11 +57,11 @@ function paintEdges(layer: p5, cell: number) {
   for (let line = 0; line <= FIELDS; line += 1) {
     const at = line * cell;
     if (hashUnit(line, 3) < 0.5) {
-      layer.fill(MATERIAL.gravel);
+      layer.fill(ROAD_COLORS.gravel);
       layer.rect(at - 1.5, 0, 3, layer.height);
     }
     if (hashUnit(line, 5) < 0.45) {
-      layer.fill(MATERIAL.foliageDark);
+      layer.fill(ROAD_COLORS.foliageDark);
       for (let tree = 0; tree < layer.width; tree += 7) {
         layer.circle(tree, at, 5 + hashUnit(tree, line) * 3);
       }

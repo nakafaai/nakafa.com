@@ -20,7 +20,8 @@ import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { P5Sketch } from "@repo/design-system/components/visual/sketch";
 import { getColor } from "@repo/design-system/lib/color";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { ENERGY_COLORS } from "@repo/design-system/lib/material/energy";
+import { INSTRUMENT_COLORS } from "@repo/design-system/lib/material/instrument";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Schema } from "effect";
 import type p5 from "p5";
@@ -74,7 +75,7 @@ function inclineProgram(sketch: p5, read: () => InclineFrame) {
     const foot = { x: width * 0.24, y: floor };
     const metre = (slope * 0.8) / frame.distance;
     sketch.noStroke();
-    sketch.fill(mix(MATERIAL.pine, getColor("BLACK"), 0.15));
+    sketch.fill(mix(INSTRUMENT_COLORS.pine, getColor("BLACK"), 0.15));
     sketch.triangle(
       foot.x,
       foot.y,
@@ -91,7 +92,7 @@ function inclineProgram(sketch: p5, read: () => InclineFrame) {
       foot.y - along * Math.sin(turn)
     );
     sketch.rotate(-turn);
-    sketch.fill(mix(MATERIAL.crateWood, getColor("WHITE"), 0.1));
+    sketch.fill(mix(ENERGY_COLORS.crateWood, getColor("WHITE"), 0.1));
     sketch.rect(-size / 2, -size, size, size, 3);
     sketch.pop();
     const centre = {

@@ -33,7 +33,7 @@ import {
 } from "@repo/design-system/components/visual/card";
 import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { REAGENT_COLORS } from "@repo/design-system/lib/material/reagent";
 import { Array as Arr } from "effect";
 import {
   type ReactNode,
@@ -66,8 +66,8 @@ const LEFT = -0.035;
 const RIGHT = 0.035;
 
 /** Clear water, and the milky white the precipitate makes of it. */
-const CLEAR = new Color(MATERIAL.solution);
-const MILKY = new Color(MATERIAL.milkySolution);
+const CLEAR = new Color(REAGENT_COLORS.solution);
+const MILKY = new Color(REAGENT_COLORS.milkySolution);
 
 /**
  * Two clear solutions stand side by side on a balance: silver nitrate on the
@@ -230,7 +230,7 @@ function CloudScene({ total }: { readonly total: number }) {
         <group position={[LEFT, 0, 0]} ref={pourer}>
           <Beaker />
           <Liquid ref={left}>
-            <LiquidMaterial color={MATERIAL.solution} opacity={0.5} />
+            <LiquidMaterial color={REAGENT_COLORS.solution} opacity={0.5} />
           </Liquid>
         </group>
         <group position={[RIGHT, 0, 0]}>
@@ -241,7 +241,7 @@ function CloudScene({ total }: { readonly total: number }) {
           <Instances limit={SPECKS} ref={specks}>
             <icosahedronGeometry args={[0.0011, 0]} />
             <meshStandardMaterial
-              color={MATERIAL.precipitate}
+              color={REAGENT_COLORS.precipitate}
               roughness={0.9}
             />
             {Arr.map(Arr.range(1, SPECKS), (index) => (
@@ -250,7 +250,7 @@ function CloudScene({ total }: { readonly total: number }) {
           </Instances>
           <mesh position={[-0.012, 0.085, 0]} ref={stream}>
             <cylinderGeometry args={[0.0025, 0.0018, 0.07, 12]} />
-            <LiquidMaterial color={MATERIAL.solution} opacity={0.55} />
+            <LiquidMaterial color={REAGENT_COLORS.solution} opacity={0.55} />
           </mesh>
         </group>
       </Scale>

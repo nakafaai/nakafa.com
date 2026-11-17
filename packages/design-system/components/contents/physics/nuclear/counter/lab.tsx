@@ -24,7 +24,9 @@ import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { P5Sketch } from "@repo/design-system/components/visual/sketch";
 import { getColor } from "@repo/design-system/lib/color";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { BENCH_COLORS } from "@repo/design-system/lib/material/bench";
+import { ENERGY_COLORS } from "@repo/design-system/lib/material/energy";
+import { INSTRUMENT_COLORS } from "@repo/design-system/lib/material/instrument";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr, Schema } from "effect";
 import type p5 from "p5";
@@ -69,7 +71,7 @@ function counterProgram(sketch: p5, read: () => CounterFrame) {
     const top = height * 0.42;
     paintBench(sketch, top);
     sketch.noStroke();
-    sketch.fill(MATERIAL.lead);
+    sketch.fill(INSTRUMENT_COLORS.lead);
     sketch.rect(
       width * 0.08,
       top - height * 0.08,
@@ -77,7 +79,7 @@ function counterProgram(sketch: p5, read: () => CounterFrame) {
       height * 0.08,
       3
     );
-    sketch.fill(MATERIAL.reactorGlow);
+    sketch.fill(ENERGY_COLORS.reactorGlow);
     sketch.circle(width * 0.14, top - height * 0.09, 10);
     gradientRect(
       sketch,
@@ -88,8 +90,8 @@ function counterProgram(sketch: p5, read: () => CounterFrame) {
         y: top - height * 0.14,
       },
       [
-        [0, mix(MATERIAL.aluminium, getColor("WHITE"), 0.3)],
-        [1, mix(MATERIAL.aluminium, getColor("BLACK"), 0.4)],
+        [0, mix(INSTRUMENT_COLORS.aluminium, getColor("WHITE"), 0.3)],
+        [1, mix(INSTRUMENT_COLORS.aluminium, getColor("BLACK"), 0.4)],
       ]
     );
     sketch.fill(getColor("ZINC", 900));
@@ -100,7 +102,7 @@ function counterProgram(sketch: p5, read: () => CounterFrame) {
       height * 0.22,
       8
     );
-    sketch.fill(MATERIAL.lcd);
+    sketch.fill(BENCH_COLORS.lcd);
     sketch.rect(
       width * 0.61,
       top - height * 0.26,
@@ -116,7 +118,7 @@ function counterProgram(sketch: p5, read: () => CounterFrame) {
       {
         align: "right",
         baseline: "middle",
-        color: MATERIAL.lcdInk,
+        color: BENCH_COLORS.lcdInk,
         size: Math.min(28, height * 0.07),
       }
     );

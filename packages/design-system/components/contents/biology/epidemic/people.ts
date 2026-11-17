@@ -5,7 +5,8 @@ import {
   mix,
 } from "@repo/design-system/components/contents/physics/canvas/paint";
 import { getColor } from "@repo/design-system/lib/color";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { ECOLOGY_COLORS } from "@repo/design-system/lib/material/ecology";
+import { INSTRUMENT_COLORS } from "@repo/design-system/lib/material/instrument";
 import { Array as Arr } from "effect";
 import type p5 from "p5";
 
@@ -24,9 +25,9 @@ const SHADE = getColor("ZINC", 950);
 
 /** The skin and hair of the people, so the crowd is not one person repeated. */
 const LOOKS = [
-  { hair: MATERIAL.hairBlack, skin: MATERIAL.skin },
-  { hair: MATERIAL.hair, skin: MATERIAL.skinDeep },
-  { hair: MATERIAL.hairBlack, skin: MATERIAL.skinDeep },
+  { hair: ECOLOGY_COLORS.hairBlack, skin: ECOLOGY_COLORS.skin },
+  { hair: INSTRUMENT_COLORS.hair, skin: ECOLOGY_COLORS.skinDeep },
+  { hair: ECOLOGY_COLORS.hairBlack, skin: ECOLOGY_COLORS.skinDeep },
 ] as const;
 
 /** The 2D context under a p5 canvas or layer, which carries gradients and shadows. */
@@ -192,7 +193,7 @@ function figureSprite(
   sprite.ellipse(-shoulders * 0.04, -shoulders * 0.05, head * 0.4, head * 0.3);
   if (mask) {
     sprite.noFill();
-    sprite.stroke(MATERIAL.surgicalMask);
+    sprite.stroke(ECOLOGY_COLORS.surgicalMask);
     sprite.strokeWeight(Math.max(1, shoulders * 0.11));
     sprite.arc(shoulders * 0.05, 0, head * 0.86, head * 0.86, -1.05, 1.05);
     sprite.noStroke();

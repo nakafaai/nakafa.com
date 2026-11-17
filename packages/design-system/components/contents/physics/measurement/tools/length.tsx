@@ -14,7 +14,8 @@ import {
   Repeat,
 } from "@repo/design-system/components/three/repeat";
 import { SurfaceMaterial } from "@repo/design-system/components/three/surface/material";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { CAR_COLORS } from "@repo/design-system/lib/material/car";
+import { INSTRUMENT_COLORS } from "@repo/design-system/lib/material/instrument";
 import { Array as Arr } from "effect";
 
 /** The etched graduations of the rule: one every two millimetres, and a longer one every centimetre. */
@@ -54,7 +55,7 @@ export function LengthScene({
         smoothness={3}
       >
         <SurfaceMaterial
-          color={MATERIAL.chrome}
+          color={CAR_COLORS.chrome}
           metalness={1}
           repeat={[4, 1]}
           roughness={0.45}
@@ -63,11 +64,11 @@ export function LengthScene({
       </RoundedBox>
       <Repeat placements={MINOR_TICKS} shadows={false}>
         <boxGeometry args={[0.018, 0.004, 0.16]} />
-        <meshStandardMaterial color={MATERIAL.tyre} roughness={0.6} />
+        <meshStandardMaterial color={CAR_COLORS.tyre} roughness={0.6} />
       </Repeat>
       <Repeat placements={MAJOR_TICKS} shadows={false}>
         <boxGeometry args={[0.03, 0.004, 0.3]} />
-        <meshStandardMaterial color={MATERIAL.tyre} roughness={0.6} />
+        <meshStandardMaterial color={CAR_COLORS.tyre} roughness={0.6} />
       </Repeat>
 
       <RoundedBox
@@ -78,7 +79,11 @@ export function LengthScene({
         receiveShadow
         smoothness={3}
       >
-        <SurfaceMaterial color={MATERIAL.oak} repeat={[2, 1]} surface="wood" />
+        <SurfaceMaterial
+          color={INSTRUMENT_COLORS.oak}
+          repeat={[2, 1]}
+          surface="wood"
+        />
       </RoundedBox>
 
       <ThreeLabel

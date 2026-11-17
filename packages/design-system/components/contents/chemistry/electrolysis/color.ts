@@ -5,7 +5,9 @@ import type {
 } from "@repo/design-system/components/contents/chemistry/electrolysis/cell";
 import { ORIGIN_COLOR } from "@repo/design-system/components/three/data/constants";
 import { getColor } from "@repo/design-system/lib/color";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { BENCH_COLORS } from "@repo/design-system/lib/material/bench";
+import { INSTRUMENT_COLORS } from "@repo/design-system/lib/material/instrument";
+import { REAGENT_COLORS } from "@repo/design-system/lib/material/reagent";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 
 /**
@@ -18,16 +20,16 @@ import { PLOT_COLORS } from "@repo/design-system/lib/plot";
  */
 export function getElectrolysisColors() {
   return {
-    battery: MATERIAL.battery,
-    clearLiquid: MATERIAL.solution,
+    battery: BENCH_COLORS.battery,
+    clearLiquid: REAGENT_COLORS.solution,
     electrode: {
-      carbon: MATERIAL.graphite,
-      copper: MATERIAL.copper,
-      platinum: MATERIAL.platinum,
-      silver: MATERIAL.silver,
+      carbon: INSTRUMENT_COLORS.graphite,
+      copper: INSTRUMENT_COLORS.copper,
+      platinum: INSTRUMENT_COLORS.platinum,
+      silver: INSTRUMENT_COLORS.silver,
     } satisfies Record<Electrode, string>,
     electron: PLOT_COLORS.amber,
-    glass: MATERIAL.glass,
+    glass: BENCH_COLORS.glass,
     ion: {
       chloride: PLOT_COLORS.fuchsia,
       copper: PLOT_COLORS.orange,
@@ -40,15 +42,15 @@ export function getElectrolysisColors() {
     } satisfies Record<Ion, string>,
     metal: {
       chlorine: PLOT_COLORS.fuchsia,
-      copper: MATERIAL.copper,
-      hydrogen: MATERIAL.gasWisp,
-      oxygen: MATERIAL.gasWisp,
-      silver: MATERIAL.silver,
+      copper: INSTRUMENT_COLORS.copper,
+      hydrogen: REAGENT_COLORS.gasWisp,
+      oxygen: REAGENT_COLORS.gasWisp,
+      silver: INSTRUMENT_COLORS.silver,
     } satisfies Record<Product, string>,
     halo: ORIGIN_COLOR.DARK,
     text: ORIGIN_COLOR.LIGHT,
-    tintedLiquid: MATERIAL.copperSulfate,
-    wire: MATERIAL.lead,
+    tintedLiquid: REAGENT_COLORS.copperSulfate,
+    wire: INSTRUMENT_COLORS.lead,
   };
 }
 

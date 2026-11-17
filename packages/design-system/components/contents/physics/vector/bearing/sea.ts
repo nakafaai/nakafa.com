@@ -7,7 +7,10 @@ import {
 import type { Spot } from "@repo/design-system/components/contents/physics/vector/spot";
 import { hashUnit } from "@repo/design-system/components/contents/simulation/grain";
 import { getColor } from "@repo/design-system/lib/color";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { CAR_COLORS } from "@repo/design-system/lib/material/car";
+import { MACHINE_COLORS } from "@repo/design-system/lib/material/machine";
+import { ROAD_COLORS } from "@repo/design-system/lib/material/road";
+import { TOWN_COLORS } from "@repo/design-system/lib/material/town";
 import { Array as Arr } from "effect";
 import type p5 from "p5";
 
@@ -48,19 +51,19 @@ function paintIsland(layer: p5, center: Spot, radius: number, seed: number) {
     layer.endShape(layer.CLOSE);
   };
   layer.noStroke();
-  layer.fill(fade(mix(MATERIAL.water, MATERIAL.waterGlint, 0.45), 0.8));
+  layer.fill(fade(mix(TOWN_COLORS.water, TOWN_COLORS.waterGlint, 0.45), 0.8));
   outline(1.35);
-  layer.fill(MATERIAL.sand);
+  layer.fill(MACHINE_COLORS.sand);
   outline(1.05);
   withShadow(
     layer,
     { blur: 6, color: fade(getColor("BLACK"), 0.35), drop: 3 },
     () => {
-      layer.fill(MATERIAL.foliageShade);
+      layer.fill(ROAD_COLORS.foliageShade);
       outline(0.88);
     }
   );
-  layer.fill(MATERIAL.foliageLight);
+  layer.fill(ROAD_COLORS.foliageLight);
   for (let tree = 0; tree < 9; tree += 1) {
     layer.circle(
       center.x + (hashUnit(seed + tree, 3) - 0.5) * radius * 0.9,
@@ -84,13 +87,13 @@ export function paintSea(
     layer,
     { height: layer.height, width: layer.width, x: 0, y: 0 },
     [
-      [0, MATERIAL.waterDeep],
-      [0.5, MATERIAL.water],
-      [1, MATERIAL.waterDeep],
+      [0, TOWN_COLORS.waterDeep],
+      [0.5, TOWN_COLORS.water],
+      [1, TOWN_COLORS.waterDeep],
     ],
     true
   );
-  layer.stroke(fade(MATERIAL.waterGlint, 0.08));
+  layer.stroke(fade(TOWN_COLORS.waterGlint, 0.08));
   layer.strokeWeight(1);
   for (let swell = 0; swell < 70; swell += 1) {
     const x = hashUnit(swell, 1) * layer.width;
@@ -125,7 +128,7 @@ export function paintSea(
     layer,
     { blur: 5, color: fade(getColor("BLACK"), 0.4), drop: 2 },
     () => {
-      layer.fill(MATERIAL.concrete);
+      layer.fill(MACHINE_COLORS.concrete);
       layer.rect(harbour.x - 34, harbour.y + 6, 68, 10);
       layer.rect(harbour.x - 5, harbour.y + 6, 10, 26);
     }
@@ -135,7 +138,7 @@ export function paintSea(
 /** A ferry seen from above, bow up the canvas before it turns to its bearing, with its wake behind. */
 export function paintFerry(sketch: p5, size: number) {
   sketch.noStroke();
-  sketch.fill(fade(MATERIAL.waterGlint, 0.5));
+  sketch.fill(fade(TOWN_COLORS.waterGlint, 0.5));
   sketch.triangle(
     0,
     size * 0.4,
@@ -144,7 +147,7 @@ export function paintFerry(sketch: p5, size: number) {
     size * 0.45,
     size * 1.6
   );
-  sketch.fill(fade(MATERIAL.waterDeep, 1));
+  sketch.fill(fade(TOWN_COLORS.waterDeep, 1));
   sketch.triangle(
     0,
     size * 0.6,
@@ -153,7 +156,7 @@ export function paintFerry(sketch: p5, size: number) {
     size * 0.3,
     size * 1.6
   );
-  sketch.fill(MATERIAL.hullNavy);
+  sketch.fill(MACHINE_COLORS.hullNavy);
   sketch.beginShape();
   sketch.vertex(0, -size * 0.55);
   sketch.vertex(size * 0.17, -size * 0.25);
@@ -161,10 +164,10 @@ export function paintFerry(sketch: p5, size: number) {
   sketch.vertex(-size * 0.17, size * 0.45);
   sketch.vertex(-size * 0.17, -size * 0.25);
   sketch.endShape(sketch.CLOSE);
-  sketch.fill(MATERIAL.deckWhite);
+  sketch.fill(MACHINE_COLORS.deckWhite);
   sketch.rect(-size * 0.13, -size * 0.2, size * 0.26, size * 0.58, 2);
-  sketch.fill(MATERIAL.hullRed);
+  sketch.fill(MACHINE_COLORS.hullRed);
   sketch.rect(-size * 0.05, size * 0.1, size * 0.1, size * 0.1, 2);
-  sketch.fill(MATERIAL.tintedGlass);
+  sketch.fill(CAR_COLORS.tintedGlass);
   sketch.rect(-size * 0.11, -size * 0.16, size * 0.22, size * 0.06, 1);
 }

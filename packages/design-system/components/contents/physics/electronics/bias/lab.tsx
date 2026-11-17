@@ -27,7 +27,8 @@ import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { P5Sketch } from "@repo/design-system/components/visual/sketch";
 import { getColor } from "@repo/design-system/lib/color";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { INSTRUMENT_COLORS } from "@repo/design-system/lib/material/instrument";
+import { MACHINE_COLORS } from "@repo/design-system/lib/material/machine";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr, Schema } from "effect";
 import type p5 from "p5";
@@ -98,17 +99,17 @@ function biasProgram(sketch: p5, read: () => BiasFrame) {
       Math.min(width, height) * 0.12
     );
     const baseWire = [at(0.06, 0.56), at(0.14, 0.56)];
-    wire(sketch, baseWire, MATERIAL.hullRed);
+    wire(sketch, baseWire, MACHINE_COLORS.hullRed);
     paintResistor(sketch, at(0.14, 0.56), at(0.36, 0.56), width * 0.16);
     wire(
       sketch,
       [at(0.36, 0.56), { x: legs.base.x, y: height * 0.56 }, legs.base],
-      MATERIAL.hullRed
+      MACHINE_COLORS.hullRed
     );
     wire(
       sketch,
       [at(0.94, 0.08), at(0.62, 0.08), at(0.62, 0.14)],
-      MATERIAL.hullRed
+      MACHINE_COLORS.hullRed
     );
     paintResistor(sketch, at(0.62, 0.14), at(0.62, 0.34), height * 0.14);
     wire(
@@ -118,12 +119,12 @@ function biasProgram(sketch: p5, read: () => BiasFrame) {
         { x: legs.collector.x, y: height * 0.34 },
         legs.collector,
       ],
-      MATERIAL.hullRed
+      MACHINE_COLORS.hullRed
     );
     wire(
       sketch,
       [legs.emitter, { x: legs.emitter.x, y: height * 0.9 }, at(0.94, 0.9)],
-      MATERIAL.trolleyPaint
+      INSTRUMENT_COLORS.trolleyPaint
     );
     flow(
       sketch,
@@ -153,7 +154,11 @@ function biasProgram(sketch: p5, read: () => BiasFrame) {
       letter: "V",
       value: frame.collectorEmitter,
     });
-    wire(sketch, [at(0.82, 0.69), at(0.82, 0.9)], MATERIAL.trolleyPaint);
+    wire(
+      sketch,
+      [at(0.82, 0.69), at(0.82, 0.9)],
+      INSTRUMENT_COLORS.trolleyPaint
+    );
     wire(
       sketch,
       [
@@ -161,7 +166,7 @@ function biasProgram(sketch: p5, read: () => BiasFrame) {
         at(0.82, 0.42),
         { x: legs.collector.x + 6, y: height * 0.42 },
       ],
-      MATERIAL.signalAmber
+      MACHINE_COLORS.signalAmber
     );
     const mark = {
       align: "left",

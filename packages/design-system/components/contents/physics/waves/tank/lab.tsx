@@ -23,7 +23,8 @@ import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { P5Sketch } from "@repo/design-system/components/visual/sketch";
 import { getColor } from "@repo/design-system/lib/color";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { ECOLOGY_COLORS } from "@repo/design-system/lib/material/ecology";
+import { TOWN_COLORS } from "@repo/design-system/lib/material/town";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Schema } from "effect";
 import type p5 from "p5";
@@ -45,18 +46,18 @@ type TankFrame = typeof TankFrameSchema.Type;
 function paintWater(sketch: p5, boundary: number) {
   const { height, width } = sketch;
   gradientRect(sketch, { height: boundary, width, x: 0, y: 0 }, [
-    [0, mix(MATERIAL.seawaterDeep, getColor("BLACK"), 0.2)],
-    [1, MATERIAL.seawaterDeep],
+    [0, mix(ECOLOGY_COLORS.seawaterDeep, getColor("BLACK"), 0.2)],
+    [1, ECOLOGY_COLORS.seawaterDeep],
   ]);
   gradientRect(
     sketch,
     { height: height - boundary, width, x: 0, y: boundary },
     [
-      [0, MATERIAL.seawater],
-      [1, mix(MATERIAL.seawater, MATERIAL.waterGlint, 0.25)],
+      [0, ECOLOGY_COLORS.seawater],
+      [1, mix(ECOLOGY_COLORS.seawater, TOWN_COLORS.waterGlint, 0.25)],
     ]
   );
-  sketch.stroke(fade(MATERIAL.waterGlint, 0.6));
+  sketch.stroke(fade(TOWN_COLORS.waterGlint, 0.6));
   sketch.strokeWeight(2);
   sketch.line(0, boundary, width, boundary);
 }
@@ -102,7 +103,7 @@ function paintCrests(
         (y * Math.cos(turn) * scale) / Math.max(Math.sin(turn), 1e-6),
       y: boundary - y * scale,
     });
-    sketch.stroke(fade(MATERIAL.waterGlint, 0.75));
+    sketch.stroke(fade(TOWN_COLORS.waterGlint, 0.75));
     sketch.strokeWeight(3);
     if (Number.isNaN(x0)) {
       const yDeep = boundary - level * frame.wavelength * scale;

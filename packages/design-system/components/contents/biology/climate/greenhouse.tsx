@@ -27,7 +27,7 @@ import {
 import { VisualFact } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { useRequired } from "@repo/design-system/hooks/required";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { ECOLOGY_COLORS } from "@repo/design-system/lib/material/ecology";
 import type { ReactNode } from "react";
 import { createContext, Suspense, useRef, useState } from "react";
 import type { Group } from "three";
@@ -150,7 +150,7 @@ function GreenhouseScene() {
   return (
     <group>
       <directionalLight
-        color={MATERIAL.sunlight}
+        color={ECOLOGY_COLORS.sunlight}
         intensity={1.4}
         position={SUN.position}
       />

@@ -39,7 +39,7 @@ import { CameraBounds } from "@repo/design-system/components/three/camera/framin
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { MetalMaterial } from "@repo/design-system/components/three/physical";
 import { useRequired } from "@repo/design-system/hooks/required";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { BENCH_COLORS } from "@repo/design-system/lib/material/bench";
 import { Array as Arr, Schema } from "effect";
 import { createContext, useRef } from "react";
 import type { Mesh, MeshStandardMaterial } from "three";
@@ -114,7 +114,7 @@ export function ElectrolysisScene({
             colors={colors}
             key={String(index)}
             lead={lead}
-            sheath={index === 0 ? MATERIAL.leadRed : MATERIAL.leadBlack}
+            sheath={index === 0 ? BENCH_COLORS.leadRed : BENCH_COLORS.leadBlack}
           />
         ))}
       </group>

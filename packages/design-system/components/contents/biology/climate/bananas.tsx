@@ -10,7 +10,8 @@ import {
   type Placement,
 } from "@repo/design-system/components/contents/biology/instances";
 import { hashUnit } from "@repo/design-system/components/contents/simulation/grain";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { BIOLOGY_COLORS } from "@repo/design-system/lib/material/biology";
+import { ROAD_COLORS } from "@repo/design-system/lib/material/road";
 import { Array as Arr } from "effect";
 import { useEffect, useMemo } from "react";
 import {
@@ -158,12 +159,15 @@ export function Bananas() {
     <>
       <Instances placements={placements}>
         <primitive attach="geometry" object={parts.stem} />
-        <meshStandardMaterial color={MATERIAL.bananaLeaf} roughness={0.85} />
+        <meshStandardMaterial
+          color={BIOLOGY_COLORS.bananaLeaf}
+          roughness={0.85}
+        />
       </Instances>
       <Instances placements={placements}>
         <primitive attach="geometry" object={parts.leaves} />
         <meshStandardMaterial
-          color={MATERIAL.foliageLight}
+          color={ROAD_COLORS.foliageLight}
           roughness={0.6}
           side={DoubleSide}
         />

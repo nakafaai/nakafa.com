@@ -23,7 +23,9 @@ import {
   LiquidMaterial,
   MetalMaterial,
 } from "@repo/design-system/components/three/physical";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { BENCH_COLORS } from "@repo/design-system/lib/material/bench";
+import { BIOLOGY_COLORS } from "@repo/design-system/lib/material/biology";
+import { CAR_COLORS } from "@repo/design-system/lib/material/car";
 import { Array as Arr } from "effect";
 import { useRef } from "react";
 import { type Group, type Mesh, Vector2 } from "three";
@@ -126,11 +128,17 @@ export function PotometerScene({
         {/* The water thread either side of the bubble, scaled along the bore each frame. */}
         <mesh ref={near} rotation={[0, 0, Math.PI / 2]}>
           <cylinderGeometry args={[BORE.water, BORE.water, 1, 14]} />
-          <LiquidMaterial color={MATERIAL.capillaryWater} opacity={0.85} />
+          <LiquidMaterial
+            color={BIOLOGY_COLORS.capillaryWater}
+            opacity={0.85}
+          />
         </mesh>
         <mesh ref={far} rotation={[0, 0, Math.PI / 2]}>
           <cylinderGeometry args={[BORE.water, BORE.water, 1, 14]} />
-          <LiquidMaterial color={MATERIAL.capillaryWater} opacity={0.85} />
+          <LiquidMaterial
+            color={BIOLOGY_COLORS.capillaryWater}
+            opacity={0.85}
+          />
         </mesh>
         <group ref={bubble}>
           <mesh rotation={[0, 0, Math.PI / 2]}>
@@ -140,8 +148,8 @@ export function PotometerScene({
             <meshPhysicalMaterial
               clearcoat={1}
               clearcoatRoughness={0.02}
-              color={MATERIAL.bubble}
-              emissive={MATERIAL.bubble}
+              color={BIOLOGY_COLORS.bubble}
+              emissive={BIOLOGY_COLORS.bubble}
               emissiveIntensity={0.25}
               roughness={0.05}
             />
@@ -155,7 +163,10 @@ export function PotometerScene({
               <torusGeometry
                 args={[BORE.water * 0.9, BORE.water * 0.14, 8, 24]}
               />
-              <meshStandardMaterial color={MATERIAL.meniscus} roughness={0.4} />
+              <meshStandardMaterial
+                color={BIOLOGY_COLORS.meniscus}
+                roughness={0.4}
+              />
             </mesh>
           ))}
         </group>
@@ -163,7 +174,7 @@ export function PotometerScene({
         {/* The bend down into the beaker, the beaker, and the water it stands in. */}
         <GlassTube
           end={[CAPILLARY.right + 0.003, 0.03, 0]}
-          liquid={MATERIAL.pondWater}
+          liquid={BIOLOGY_COLORS.pondWater}
           radius={BORE.glass}
           start={[CAPILLARY.right + 0.003, CAPILLARY.height, 0]}
         />
@@ -171,20 +182,20 @@ export function PotometerScene({
           <Beaker />
           <mesh position={[0, 0.026, 0]}>
             <cylinderGeometry args={[0.0245, 0.0245, 0.046, 40]} />
-            <LiquidMaterial color={MATERIAL.pondWater} opacity={0.5} />
+            <LiquidMaterial color={BIOLOGY_COLORS.pondWater} opacity={0.5} />
           </mesh>
         </group>
 
         {/* The shoot end: a short run to the upright tube, sealed by a bung around the stem. */}
         <GlassTube
           end={[SHOOT_TUBE.x, CAPILLARY.height, 0]}
-          liquid={MATERIAL.pondWater}
+          liquid={BIOLOGY_COLORS.pondWater}
           radius={BORE.glass * 1.6}
           start={[CAPILLARY.left + 0.002, CAPILLARY.height, 0]}
         />
         <GlassTube
           end={[SHOOT_TUBE.x, SHOOT_TUBE.top, 0]}
-          liquid={MATERIAL.pondWater}
+          liquid={BIOLOGY_COLORS.pondWater}
           radius={SHOOT_TUBE.radius}
           start={[SHOOT_TUBE.x, CAPILLARY.height - 0.004, 0]}
         />
@@ -224,13 +235,13 @@ function Reservoir() {
     <group position={[RESERVOIR_X, 0, 0]}>
       <GlassTube
         end={[0, 0.2, 0]}
-        liquid={MATERIAL.pondWater}
+        liquid={BIOLOGY_COLORS.pondWater}
         radius={0.0024}
         start={[0, CAPILLARY.height, 0]}
       />
       <mesh position={[0, 0.16, 0]} rotation={[Math.PI / 2, 0, 0]}>
         <cylinderGeometry args={[0.005, 0.005, 0.014, 20]} />
-        <GlassMaterial color={MATERIAL.glass} opacity={0.5} />
+        <GlassMaterial color={BENCH_COLORS.glass} opacity={0.5} />
       </mesh>
       <mesh
         castShadow
@@ -238,11 +249,11 @@ function Reservoir() {
         rotation={[0, 0, Math.PI / 2]}
       >
         <boxGeometry args={[0.004, 0.026, 0.004]} />
-        <MetalMaterial color={MATERIAL.chrome} roughness={0.3} />
+        <MetalMaterial color={CAR_COLORS.chrome} roughness={0.3} />
       </mesh>
       <mesh position={[0, 0.2, 0]}>
         <latheGeometry args={[funnel, 32]} />
-        <GlassMaterial color={MATERIAL.glass} opacity={0.32} />
+        <GlassMaterial color={BENCH_COLORS.glass} opacity={0.32} />
       </mesh>
       <mesh position={[0, 0.2, 0]}>
         <latheGeometry
@@ -256,7 +267,7 @@ function Reservoir() {
             32,
           ]}
         />
-        <LiquidMaterial color={MATERIAL.pondWater} opacity={0.55} />
+        <LiquidMaterial color={BIOLOGY_COLORS.pondWater} opacity={0.55} />
       </mesh>
     </group>
   );

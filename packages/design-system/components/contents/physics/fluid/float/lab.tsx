@@ -24,7 +24,9 @@ import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { P5Sketch } from "@repo/design-system/components/visual/sketch";
 import { getColor } from "@repo/design-system/lib/color";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { BENCH_COLORS } from "@repo/design-system/lib/material/bench";
+import { ENERGY_COLORS } from "@repo/design-system/lib/material/energy";
+import { INSTRUMENT_COLORS } from "@repo/design-system/lib/material/instrument";
 import { Schema } from "effect";
 import type p5 from "p5";
 import { type ReactNode, useState } from "react";
@@ -66,7 +68,9 @@ function floatProgram(sketch: p5, read: () => FloatFrame) {
     };
     const surface = tank.y + tank.height * 0.35;
     const liquid =
-      frame.liquid === "water" ? MATERIAL.kettleWater : MATERIAL.dieselFuel;
+      frame.liquid === "water"
+        ? ENERGY_COLORS.kettleWater
+        : ENERGY_COLORS.dieselFuel;
     gradientRect(
       sketch,
       {
@@ -86,8 +90,8 @@ function floatProgram(sketch: p5, read: () => FloatFrame) {
       sketch,
       { height: side, width: side, x: width / 2 - side / 2, y: blockTop },
       [
-        [0, mix(MATERIAL.pine, getColor("WHITE"), 0.15)],
-        [1, mix(MATERIAL.pine, getColor("BLACK"), 0.25)],
+        [0, mix(INSTRUMENT_COLORS.pine, getColor("WHITE"), 0.15)],
+        [1, mix(INSTRUMENT_COLORS.pine, getColor("BLACK"), 0.25)],
       ],
       true
     );
@@ -98,7 +102,7 @@ function floatProgram(sketch: p5, read: () => FloatFrame) {
     sketch.strokeWeight(2);
     sketch.line(tank.x, surface, tank.x + tank.width, surface);
     sketch.noFill();
-    sketch.stroke(fade(MATERIAL.glass, 0.75));
+    sketch.stroke(fade(BENCH_COLORS.glass, 0.75));
     sketch.strokeWeight(3);
     sketch.line(tank.x, tank.y, tank.x, tank.y + tank.height);
     sketch.line(

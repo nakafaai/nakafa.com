@@ -32,7 +32,9 @@ import {
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { P5Sketch } from "@repo/design-system/components/visual/sketch";
 import { getColor } from "@repo/design-system/lib/color";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { MACHINE_COLORS } from "@repo/design-system/lib/material/machine";
+import { ROAD_COLORS } from "@repo/design-system/lib/material/road";
+import { SKY_COLORS } from "@repo/design-system/lib/material/sky";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Schema } from "effect";
 import type p5 from "p5";
@@ -103,7 +105,7 @@ function greenhouseProgram(sketch: p5, read: () => GreenhouseFrame) {
     gradientRect(sketch, { height: ground, width, x: 0, y: 0 }, [
       [0, getColor("ZINC", 950)],
       [0.5, mix(getColor("ZINC", 950), getColor("SLATE", 800), 0.7)],
-      [1, mix(getColor("SLATE", 800), MATERIAL.skyZenith, 0.5)],
+      [1, mix(getColor("SLATE", 800), SKY_COLORS.skyZenith, 0.5)],
     ]);
     gradientRect(
       sketch,
@@ -124,7 +126,7 @@ function greenhouseProgram(sketch: p5, read: () => GreenhouseFrame) {
       Math.max((surfaceTemperature(absorptance) - BARE_TEMPERATURE) / 55, 0),
       1
     );
-    sketch.fill(mix(MATERIAL.grass, MATERIAL.sand, warmth * 0.6));
+    sketch.fill(mix(ROAD_COLORS.grass, MACHINE_COLORS.sand, warmth * 0.6));
     sketch.ellipse(width / 2, ground + width * 1.6, width * 4, width * 3.2);
     spotlight(
       sketch,

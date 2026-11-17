@@ -5,7 +5,7 @@ import {
   SUN,
 } from "@repo/design-system/components/contents/biology/climate/rays";
 import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { ECOLOGY_COLORS } from "@repo/design-system/lib/material/ecology";
 import { useEffect, useMemo } from "react";
 import {
   AdditiveBlending,
@@ -117,7 +117,7 @@ export function Earth() {
       new ShaderMaterial({
         fragmentShader: EARTH_FRAGMENT,
         uniforms: {
-          limb: { value: new Color(MATERIAL.atmosphereLimb) },
+          limb: { value: new Color(ECOLOGY_COLORS.atmosphereLimb) },
           map: { value: texture },
           sun: { value: SUN_DIRECTION },
         },
@@ -148,7 +148,7 @@ export function Atmosphere({ level }: { readonly level: number }) {
         side: BackSide,
         transparent: true,
         uniforms: {
-          color: { value: new Color(MATERIAL.atmosphereLimb) },
+          color: { value: new Color(ECOLOGY_COLORS.atmosphereLimb) },
           earth: { value: EARTH_RADIUS },
           shell: { value: SHELL_RADIUS },
           strength: { value: 1 },

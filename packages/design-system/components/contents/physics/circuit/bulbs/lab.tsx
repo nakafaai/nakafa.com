@@ -26,7 +26,8 @@ import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { P5Sketch } from "@repo/design-system/components/visual/sketch";
 import { getColor } from "@repo/design-system/lib/color";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { INSTRUMENT_COLORS } from "@repo/design-system/lib/material/instrument";
+import { MACHINE_COLORS } from "@repo/design-system/lib/material/machine";
 import { Array as Arr, Schema } from "effect";
 import type p5 from "p5";
 import { type ReactNode, useState } from "react";
@@ -93,25 +94,25 @@ function bulbProgram(sketch: p5, read: () => BulbFrame) {
     wire(
       sketch,
       [at(0.12, 0.42), at(0.12, 0.18), at(0.3, 0.18)],
-      MATERIAL.hullRed
+      MACHINE_COLORS.hullRed
     );
-    wire(sketch, [at(0.42, 0.18), at(right, 0.18)], MATERIAL.hullRed);
+    wire(sketch, [at(0.42, 0.18), at(right, 0.18)], MACHINE_COLORS.hullRed);
     wire(
       sketch,
       [at(0.12, 0.62), at(0.12, 0.86), at(right, 0.86)],
-      MATERIAL.trolleyPaint
+      INSTRUMENT_COLORS.trolleyPaint
     );
     const size = Math.min(width, height) * 0.13;
     for (const x of columns) {
       wire(
         sketch,
         [at(x, 0.18), { x: width * x, y: height * 0.52 - size / 2 }],
-        MATERIAL.hullRed
+        MACHINE_COLORS.hullRed
       );
       wire(
         sketch,
         [{ x: width * x, y: height * 0.52 + size * 0.7 }, at(x, 0.86)],
-        MATERIAL.trolleyPaint
+        INSTRUMENT_COLORS.trolleyPaint
       );
       terminal(sketch, at(x, 0.18));
       terminal(sketch, at(x, 0.86));

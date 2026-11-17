@@ -33,7 +33,7 @@ import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { P5Sketch } from "@repo/design-system/components/visual/sketch";
 import { getColor } from "@repo/design-system/lib/color";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { INSTRUMENT_COLORS } from "@repo/design-system/lib/material/instrument";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Schema } from "effect";
 import type p5 from "p5";
@@ -84,7 +84,7 @@ function paintGauge(
   const { height, width } = sketch;
   const rod = height * 0.035;
   const face = place.anvil + travel * place.millimetre;
-  const frame = MATERIAL.enamel;
+  const frame = INSTRUMENT_COLORS.enamel;
   withShadow(
     sketch,
     { blur: 20, color: fade(getColor("BLACK"), 0.65), drop: 9 },

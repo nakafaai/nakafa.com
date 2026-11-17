@@ -33,7 +33,10 @@ import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { P5Sketch } from "@repo/design-system/components/visual/sketch";
 import { getColor } from "@repo/design-system/lib/color";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { CAR_COLORS } from "@repo/design-system/lib/material/car";
+import { ROAD_COLORS } from "@repo/design-system/lib/material/road";
+import { SKY_COLORS } from "@repo/design-system/lib/material/sky";
+import { TOWN_COLORS } from "@repo/design-system/lib/material/town";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr, Schema } from "effect";
 import type p5 from "p5";
@@ -76,12 +79,12 @@ function paintEarth(
   radius: number
 ) {
   spotlight(sketch, centre, radius * 1.15, {
-    color: MATERIAL.skyZenith,
+    color: SKY_COLORS.skyZenith,
     strength: 0.5,
   });
   litBall(sketch, centre, radius, {
-    dark: mix(MATERIAL.waterDeep, getColor("BLACK"), 0.6),
-    light: mix(MATERIAL.water, MATERIAL.skyHaze, 0.3),
+    dark: mix(TOWN_COLORS.waterDeep, getColor("BLACK"), 0.6),
+    light: mix(TOWN_COLORS.water, SKY_COLORS.skyHaze, 0.3),
   });
   sketch.noStroke();
   for (let index = 0; index < 26; index += 1) {
@@ -92,7 +95,7 @@ function paintEarth(
     const shade = Math.max(0.15, 1 - (x - centre.x + radius) / (2 * radius));
     sketch.fill(
       fade(
-        index % 3 === 0 ? MATERIAL.riverbank : MATERIAL.foliage,
+        index % 3 === 0 ? TOWN_COLORS.riverbank : ROAD_COLORS.foliage,
         0.55 * shade + 0.1
       )
     );
@@ -167,10 +170,13 @@ function orbitProgram(sketch: p5, read: () => OrbitFrame) {
       { color: PLOT_COLORS.fuchsia, head: 11, weight: 3 }
     );
     sketch.noStroke();
-    spotlight(sketch, at, 14, { color: MATERIAL.headlightGlow, strength: 0.6 });
-    sketch.fill(MATERIAL.chrome);
+    spotlight(sketch, at, 14, {
+      color: CAR_COLORS.headlightGlow,
+      strength: 0.6,
+    });
+    sketch.fill(CAR_COLORS.chrome);
     sketch.rect(at.x - 3, at.y - 3, 6, 6);
-    sketch.fill(mix(MATERIAL.tintedGlass, PLOT_COLORS.violet, 0.3));
+    sketch.fill(mix(CAR_COLORS.tintedGlass, PLOT_COLORS.violet, 0.3));
     sketch.rect(at.x - 13, at.y - 2, 8, 4);
     sketch.rect(at.x + 5, at.y - 2, 8, 4);
     vignette(sketch, 0.35);

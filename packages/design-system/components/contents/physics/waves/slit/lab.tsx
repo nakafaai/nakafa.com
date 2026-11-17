@@ -29,7 +29,7 @@ import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { P5Sketch } from "@repo/design-system/components/visual/sketch";
 import { getColor } from "@repo/design-system/lib/color";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { INSTRUMENT_COLORS } from "@repo/design-system/lib/material/instrument";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Option, Schema } from "effect";
 import type p5 from "p5";
@@ -79,16 +79,16 @@ function paintBench(sketch: p5, frame: SlitFrame) {
     18,
     4
   );
-  sketch.fill(MATERIAL.laserBeam);
+  sketch.fill(INSTRUMENT_COLORS.laserBeam);
   sketch.circle(laser.x + sketch.width * 0.05, laser.y, 5);
   beam(
     sketch,
     { x: laser.x + sketch.width * 0.05, y: laser.y },
     { x: slit, y: laser.y },
-    MATERIAL.laserBeam
+    INSTRUMENT_COLORS.laserBeam
   );
   sketch.noStroke();
-  sketch.fill(fade(MATERIAL.laserBeam, 0.12));
+  sketch.fill(fade(INSTRUMENT_COLORS.laserBeam, 0.12));
   sketch.triangle(
     slit,
     laser.y,
@@ -104,7 +104,7 @@ function paintBench(sketch: p5, frame: SlitFrame) {
     4,
     sketch.height * 0.1 + top - laser.y
   );
-  sketch.fill(MATERIAL.paper);
+  sketch.fill(INSTRUMENT_COLORS.paper);
   sketch.rect(
     screen - 3,
     laser.y - sketch.height * 0.11,
@@ -132,8 +132,8 @@ function paintScreen(sketch: p5, frame: SlitFrame) {
     y: sketch.height * 0.46,
   };
   gradientRect(sketch, box, [
-    [0, mix(MATERIAL.paper, getColor("BLACK"), 0.82)],
-    [1, mix(MATERIAL.paper, getColor("BLACK"), 0.88)],
+    [0, mix(INSTRUMENT_COLORS.paper, getColor("BLACK"), 0.82)],
+    [1, mix(INSTRUMENT_COLORS.paper, getColor("BLACK"), 0.88)],
   ]);
   const spacing = spacingOf(frame);
   const centre = box.x + box.width / 2;
@@ -145,7 +145,7 @@ function paintScreen(sketch: p5, frame: SlitFrame) {
   for (let x = box.x; x < box.x + box.width; x += 1) {
     const along = (x - centre) / millimetre - start;
     const bright = Math.cos((Math.PI * along) / spacing) ** 2;
-    sketch.stroke(fade(MATERIAL.laserBeam, bright * 0.95));
+    sketch.stroke(fade(INSTRUMENT_COLORS.laserBeam, bright * 0.95));
     sketch.strokeWeight(1.2);
     sketch.line(x, box.y + box.height * 0.12, x, box.y + box.height * 0.7);
   }

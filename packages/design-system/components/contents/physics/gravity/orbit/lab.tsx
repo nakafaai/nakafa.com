@@ -21,7 +21,9 @@ import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { P5Sketch } from "@repo/design-system/components/visual/sketch";
 import { getColor } from "@repo/design-system/lib/color";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { ENERGY_COLORS } from "@repo/design-system/lib/material/energy";
+import { SKY_COLORS } from "@repo/design-system/lib/material/sky";
+import { TOWN_COLORS } from "@repo/design-system/lib/material/town";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr, Schema } from "effect";
 import type p5 from "p5";
@@ -61,7 +63,7 @@ function orbitProgram(sketch: p5, read: () => OrbitFrame) {
     }
     const { height, width } = sketch;
     gradientRect(sketch, { height, width, x: 0, y: 0 }, [
-      [0, MATERIAL.nightSky],
+      [0, ENERGY_COLORS.nightSky],
       [1, getColor("ZINC", 950)],
     ]);
     sketch.noStroke();
@@ -85,8 +87,8 @@ function orbitProgram(sketch: p5, read: () => OrbitFrame) {
       ...Arr.map(frame.satellites, (satellite) => satellite.period)
     );
     litBall(sketch, centre, earth, {
-      dark: mix(MATERIAL.waterDeep, getColor("BLACK"), 0.5),
-      light: mix(MATERIAL.water, MATERIAL.skyHaze, 0.4),
+      dark: mix(TOWN_COLORS.waterDeep, getColor("BLACK"), 0.5),
+      light: mix(TOWN_COLORS.water, SKY_COLORS.skyHaze, 0.4),
     });
     Arr.forEach(frame.satellites, (satellite, index) => {
       const ring = satellite.radius * earth;

@@ -43,7 +43,8 @@ import {
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { P5Sketch } from "@repo/design-system/components/visual/sketch";
 import { getColor } from "@repo/design-system/lib/color";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { ENERGY_COLORS } from "@repo/design-system/lib/material/energy";
+import { ROAD_COLORS } from "@repo/design-system/lib/material/road";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr, Schema } from "effect";
 import type p5 from "p5";
@@ -102,7 +103,9 @@ function paintPost(
     );
   }
   paintHills(sketch, ground, light > 0.1 ? "day" : "night");
-  sketch.fill(mix(MATERIAL.foliageDark, getColor("BLACK"), 0.5 * (1 - light)));
+  sketch.fill(
+    mix(ROAD_COLORS.foliageDark, getColor("BLACK"), 0.5 * (1 - light))
+  );
   sketch.rect(0, ground, width, height - ground);
   const wall = {
     height: height * 0.2,
@@ -116,7 +119,7 @@ function paintPost(
     { blur: 14, color: fade(getColor("BLACK"), 0.5), drop: 6 },
     () => {
       sketch.fill(
-        mix(MATERIAL.wallPlaster, getColor("BLACK"), 0.6 * (1 - light))
+        mix(ENERGY_COLORS.wallPlaster, getColor("BLACK"), 0.6 * (1 - light))
       );
       sketch.rect(wall.x, wall.y, wall.width, wall.height);
     }
@@ -137,7 +140,7 @@ function paintPost(
     const glow = powered && (evening || light < 0.2);
     sketch.fill(
       glow
-        ? MATERIAL.windowGlow
+        ? ENERGY_COLORS.windowGlow
         : mix(getColor("ZINC", 900), getColor("SLATE", 600), 0.4)
     );
     sketch.rect(
@@ -154,7 +157,7 @@ function paintPost(
           y: wall.y + wall.height * 0.45,
         },
         wall.width * 0.25,
-        { color: MATERIAL.windowGlow, strength: 0.35 }
+        { color: ENERGY_COLORS.windowGlow, strength: 0.35 }
       );
     }
   }

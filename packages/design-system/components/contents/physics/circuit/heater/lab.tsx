@@ -27,7 +27,9 @@ import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { P5Sketch } from "@repo/design-system/components/visual/sketch";
 import { getColor } from "@repo/design-system/lib/color";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { BENCH_COLORS } from "@repo/design-system/lib/material/bench";
+import { INSTRUMENT_COLORS } from "@repo/design-system/lib/material/instrument";
+import { MACHINE_COLORS } from "@repo/design-system/lib/material/machine";
 import { Schema } from "effect";
 import type p5 from "p5";
 import { type ReactNode, useState } from "react";
@@ -64,12 +66,12 @@ function heaterProgram(sketch: p5, read: () => HeaterFrame) {
         y: height * 0.32,
       },
       [
-        [0, MATERIAL.cabinet],
-        [1, mix(MATERIAL.cabinet, getColor("BLACK"), 0.3)],
+        [0, BENCH_COLORS.cabinet],
+        [1, mix(BENCH_COLORS.cabinet, getColor("BLACK"), 0.3)],
       ]
     );
     sketch.noStroke();
-    sketch.fill(mix(MATERIAL.cabinet, getColor("BLACK"), 0.12));
+    sketch.fill(mix(BENCH_COLORS.cabinet, getColor("BLACK"), 0.12));
     sketch.rect(width * 0.09, height * 0.36, width * 0.12, height * 0.28, 6);
     sketch.fill(getColor("NEUTRAL", 800));
     sketch.rect(width * 0.135, height * 0.4, width * 0.03, height * 0.06, 3);
@@ -77,12 +79,12 @@ function heaterProgram(sketch: p5, read: () => HeaterFrame) {
     wire(
       sketch,
       [at(0.24, 0.42), at(0.4, 0.42), at(0.4, 0.3), at(0.5, 0.3)],
-      MATERIAL.hullRed
+      MACHINE_COLORS.hullRed
     );
     wire(
       sketch,
       [at(0.24, 0.58), at(0.4, 0.58), at(0.4, 0.7), at(0.5, 0.7)],
-      MATERIAL.trolleyPaint
+      INSTRUMENT_COLORS.trolleyPaint
     );
     gradientRect(
       sketch,
@@ -93,8 +95,8 @@ function heaterProgram(sketch: p5, read: () => HeaterFrame) {
         y: height * 0.25,
       },
       [
-        [0, MATERIAL.ceramicTile],
-        [1, mix(MATERIAL.ceramicTile, getColor("BLACK"), 0.35)],
+        [0, BENCH_COLORS.ceramicTile],
+        [1, mix(BENCH_COLORS.ceramicTile, getColor("BLACK"), 0.35)],
       ]
     );
     sketch.noStroke();

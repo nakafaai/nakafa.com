@@ -43,7 +43,8 @@ import {
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { P5Sketch } from "@repo/design-system/components/visual/sketch";
 import { getColor } from "@repo/design-system/lib/color";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { BENCH_COLORS } from "@repo/design-system/lib/material/bench";
+import { ENERGY_COLORS } from "@repo/design-system/lib/material/energy";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr, Schema } from "effect";
 import type p5 from "p5";
@@ -87,23 +88,23 @@ function paintBurner(sketch: p5, fuel: Fuel, burnt: number, time: number) {
       litBall(sketch, { x: centre, y: bench - lump * 0.6 }, lump, {
         dark:
           fuel === "coal"
-            ? MATERIAL.coalLump
-            : mix(MATERIAL.dieselFuel, getColor("BLACK"), 0.5),
+            ? ENERGY_COLORS.coalLump
+            : mix(ENERGY_COLORS.dieselFuel, getColor("BLACK"), 0.5),
         light:
           fuel === "coal"
-            ? mix(MATERIAL.coalLump, getColor("WHITE"), 0.3)
-            : mix(MATERIAL.dieselFuel, getColor("WHITE"), 0.4),
+            ? mix(ENERGY_COLORS.coalLump, getColor("WHITE"), 0.3)
+            : mix(ENERGY_COLORS.dieselFuel, getColor("WHITE"), 0.4),
       });
     }
   );
   if (burnt < 1) {
     spotlight(sketch, { x: centre, y: bench - lump * 1.6 }, height * 0.22, {
-      color: MATERIAL.coalGlow,
+      color: BENCH_COLORS.coalGlow,
       strength: 0.6,
     });
     for (let tongue = -1; tongue <= 1; tongue += 1) {
       const flicker = 1 + Math.sin(time * 13 + tongue * 2) * 0.15;
-      sketch.fill(fade(MATERIAL.gasFlame, 0.85));
+      sketch.fill(fade(ENERGY_COLORS.gasFlame, 0.85));
       sketch.ellipse(
         centre + tongue * lump * 0.5,
         bench - lump * 1.3 - height * 0.04 * flicker,
@@ -249,7 +250,7 @@ function carbonProgram(sketch: p5, read: () => CarbonFrame) {
       [1, mix(getColor("SLATE", 700), getColor("SLATE", 400), 0.3)],
     ]);
     spotlight(sketch, { x: width * 0.3, y: height * 0.4 }, width * 0.5, {
-      color: MATERIAL.sunDisc,
+      color: ENERGY_COLORS.sunDisc,
       strength: 0.2,
     });
     paintBurner(sketch, fuel, burnt, flames);

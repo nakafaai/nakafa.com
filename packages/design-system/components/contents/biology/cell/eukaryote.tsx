@@ -12,7 +12,7 @@ import {
   type Placement,
 } from "@repo/design-system/components/contents/biology/instances";
 import { hashUnit } from "@repo/design-system/components/contents/simulation/grain";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { CELL_COLORS } from "@repo/design-system/lib/material/cell";
 import { Array as Arr } from "effect";
 import { useMemo } from "react";
 import { DoubleSide, Euler, Matrix4, Quaternion, Vector3 } from "three";
@@ -42,7 +42,11 @@ const ANIMAL_KEEPOUT: readonly Keepout[] = [
 export function AnimalCell() {
   return (
     <group>
-      <HalfShell color={MATERIAL.membrane} scale={[1, 1, 1]} thickness={0.02} />
+      <HalfShell
+        color={CELL_COLORS.membrane}
+        scale={[1, 1, 1]}
+        thickness={0.02}
+      />
       <CutNucleus
         position={[NUCLEUS.x, NUCLEUS.y, NUCLEUS.z]}
         radius={NUCLEUS.radius}
@@ -106,7 +110,7 @@ function Reticulum() {
           />
           <meshPhysicalMaterial
             clearcoat={0.3}
-            color={MATERIAL.reticulum}
+            color={CELL_COLORS.reticulum}
             opacity={0.85}
             roughness={0.5}
             side={DoubleSide}
@@ -116,7 +120,7 @@ function Reticulum() {
       ))}
       <Instances placements={studs}>
         <sphereGeometry args={[0.006, 6, 4]} />
-        <meshStandardMaterial color={MATERIAL.ribosome} roughness={0.8} />
+        <meshStandardMaterial color={CELL_COLORS.ribosome} roughness={0.8} />
       </Instances>
     </group>
   );
@@ -156,7 +160,7 @@ function Golgi({
           />
           <meshPhysicalMaterial
             clearcoat={0.4}
-            color={MATERIAL.golgi}
+            color={CELL_COLORS.golgi}
             roughness={0.45}
           />
         </mesh>
@@ -165,7 +169,7 @@ function Golgi({
         <sphereGeometry args={[0.014, 12, 8]} />
         <meshPhysicalMaterial
           clearcoat={0.5}
-          color={MATERIAL.golgi}
+          color={CELL_COLORS.golgi}
           roughness={0.4}
         />
       </Instances>
@@ -247,7 +251,7 @@ export function PlantCell() {
       >
         <meshPhysicalMaterial
           clearcoat={0.6}
-          color={MATERIAL.vacuole}
+          color={CELL_COLORS.vacuole}
           opacity={0.45}
           roughness={0.08}
           transparent
@@ -258,7 +262,7 @@ export function PlantCell() {
         <meshPhysicalMaterial
           clearcoat={0.5}
           clearcoatRoughness={0.3}
-          color={MATERIAL.chloroplast}
+          color={CELL_COLORS.chloroplast}
           depthWrite={false}
           opacity={0.72}
           roughness={0.35}
@@ -269,7 +273,7 @@ export function PlantCell() {
         <cylinderGeometry
           args={[0.32 * PLANT_UM, 0.32 * PLANT_UM, 0.5 * PLANT_UM, 14]}
         />
-        <meshStandardMaterial color={MATERIAL.granum} roughness={0.55} />
+        <meshStandardMaterial color={CELL_COLORS.granum} roughness={0.55} />
       </Instances>
       <CutNucleus
         position={PLANT_NUCLEUS.position}
@@ -349,7 +353,7 @@ function Wall({
         >
           <meshPhysicalMaterial
             clearcoat={0.2}
-            color={MATERIAL.cellWall}
+            color={CELL_COLORS.cellWall}
             roughness={0.7}
           />
         </RoundedBox>

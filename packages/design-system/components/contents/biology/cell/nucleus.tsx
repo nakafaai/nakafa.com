@@ -5,7 +5,7 @@ import {
 } from "@repo/design-system/components/contents/biology/instances";
 import { insideBall } from "@repo/design-system/components/contents/biology/virus/capsid";
 import { hashUnit } from "@repo/design-system/components/contents/simulation/grain";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { CELL_COLORS } from "@repo/design-system/lib/material/cell";
 import { Array as Arr } from "effect";
 import { useMemo } from "react";
 
@@ -60,14 +60,14 @@ export function CutNucleus({
   return (
     <group position={position}>
       <HalfShell
-        color={MATERIAL.nucleus}
+        color={CELL_COLORS.nucleus}
         roughness={0.45}
         scale={[radius, radius, radius]}
         seed={7}
         thickness={0.05}
       />
       <HalfShell
-        color={MATERIAL.nucleus}
+        color={CELL_COLORS.nucleus}
         roughness={0.5}
         scale={[radius * 0.93, radius * 0.93, radius * 0.93]}
         seed={8}
@@ -75,15 +75,15 @@ export function CutNucleus({
       />
       <Instances placements={pores}>
         <torusGeometry args={[radius * 0.045, radius * 0.016, 6, 14]} />
-        <meshStandardMaterial color={MATERIAL.nucleolus} roughness={0.6} />
+        <meshStandardMaterial color={CELL_COLORS.nucleolus} roughness={0.6} />
       </Instances>
       <Instances placements={chromatin.dense}>
         <sphereGeometry args={[radius * 0.05, 8, 6]} />
-        <meshStandardMaterial color={MATERIAL.chromatin} roughness={0.7} />
+        <meshStandardMaterial color={CELL_COLORS.chromatin} roughness={0.7} />
       </Instances>
       <Instances placements={chromatin.loose}>
         <sphereGeometry args={[radius * 0.03, 6, 5]} />
-        <meshStandardMaterial color={MATERIAL.nucleolus} roughness={0.7} />
+        <meshStandardMaterial color={CELL_COLORS.nucleolus} roughness={0.7} />
       </Instances>
       <mesh
         castShadow
@@ -92,7 +92,7 @@ export function CutNucleus({
         <sphereGeometry args={[radius * 0.32, 32, 24]} />
         <meshPhysicalMaterial
           clearcoat={0.3}
-          color={MATERIAL.nucleolus}
+          color={CELL_COLORS.nucleolus}
           roughness={0.6}
         />
       </mesh>

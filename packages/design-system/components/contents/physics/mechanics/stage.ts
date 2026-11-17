@@ -9,7 +9,8 @@ import {
 } from "@repo/design-system/components/contents/physics/canvas/paint";
 import type { Point } from "@repo/design-system/components/contents/physics/optics/light";
 import { getColor } from "@repo/design-system/lib/color";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { ENERGY_COLORS } from "@repo/design-system/lib/material/energy";
+import { INSTRUMENT_COLORS } from "@repo/design-system/lib/material/instrument";
 import type p5 from "p5";
 
 /**
@@ -22,16 +23,16 @@ import type p5 from "p5";
 export function paintRoom(sketch: p5, floor: number) {
   const { height, width } = sketch;
   gradientRect(sketch, { height: floor, width, x: 0, y: 0 }, [
-    [0, mix(MATERIAL.wallPlaster, getColor("BLACK"), 0.5)],
-    [1, mix(MATERIAL.wallPlaster, getColor("BLACK"), 0.28)],
+    [0, mix(ENERGY_COLORS.wallPlaster, getColor("BLACK"), 0.5)],
+    [1, mix(ENERGY_COLORS.wallPlaster, getColor("BLACK"), 0.28)],
   ]);
   spotlight(sketch, { x: width * 0.5, y: floor * 0.3 }, width * 0.6, {
-    color: MATERIAL.lampLight,
+    color: INSTRUMENT_COLORS.lampLight,
     strength: 0.18,
   });
   gradientRect(sketch, { height: height - floor, width, x: 0, y: floor }, [
-    [0, mix(MATERIAL.oak, getColor("WHITE"), 0.05)],
-    [1, mix(MATERIAL.oak, getColor("BLACK"), 0.5)],
+    [0, mix(INSTRUMENT_COLORS.oak, getColor("WHITE"), 0.05)],
+    [1, mix(INSTRUMENT_COLORS.oak, getColor("BLACK"), 0.5)],
   ]);
   sketch.stroke(fade(getColor("BLACK"), 0.35));
   sketch.strokeWeight(1);

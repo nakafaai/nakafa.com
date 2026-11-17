@@ -32,13 +32,14 @@ import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { P5Sketch } from "@repo/design-system/components/visual/sketch";
 import { getColor } from "@repo/design-system/lib/color";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { ENERGY_COLORS } from "@repo/design-system/lib/material/energy";
+import { ROAD_COLORS } from "@repo/design-system/lib/material/road";
 import { Schema } from "effect";
 import type p5 from "p5";
 import { type ReactNode, useState } from "react";
 
 /** The color of the sun's rays. */
-const RAY = MATERIAL.sunDisc;
+const RAY = ENERGY_COLORS.sunDisc;
 
 /** How many rays the sketch draws on either side of the one through the panel's centre. */
 const RAYS_EACH_SIDE = 9;
@@ -159,7 +160,7 @@ function sunProgram(sketch: p5, read: () => SunFrame) {
       Math.max(height * 0.035, 9)
     );
     paintHills(sketch, ground);
-    paintGround(sketch, ground, MATERIAL.grass);
+    paintGround(sketch, ground, ROAD_COLORS.grass);
     paintRays(sketch, centre, half, along, sun, ground);
     paintPanel(sketch, centre, half, along, ground);
     vignette(sketch, 0.3);

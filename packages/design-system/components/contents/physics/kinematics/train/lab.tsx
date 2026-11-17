@@ -37,7 +37,9 @@ import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { P5Sketch } from "@repo/design-system/components/visual/sketch";
 import { getColor } from "@repo/design-system/lib/color";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { CAR_COLORS } from "@repo/design-system/lib/material/car";
+import { ROAD_COLORS } from "@repo/design-system/lib/material/road";
+import { SKY_COLORS } from "@repo/design-system/lib/material/sky";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Schema } from "effect";
 import type p5 from "p5";
@@ -68,12 +70,12 @@ function paintPlatform(sketch: p5, road: Road, shift: number) {
     sketch,
     { height: sketch.height - top, width: sketch.width, x: 0, y: top },
     [
-      [0, MATERIAL.pavement],
-      [1, mix(MATERIAL.pavement, getColor("BLACK"), 0.4)],
+      [0, ROAD_COLORS.pavement],
+      [1, mix(ROAD_COLORS.pavement, getColor("BLACK"), 0.4)],
     ]
   );
   sketch.noStroke();
-  sketch.fill(MATERIAL.roadPaint);
+  sketch.fill(ROAD_COLORS.roadPaint);
   sketch.rect(0, top, sketch.width, road.height * 0.015);
   const gap = 8 * road.scale;
   const offset = (((shift * road.scale) % gap) + gap) % gap;
@@ -91,8 +93,8 @@ function paintPlatform(sketch: p5, road: Road, shift: number) {
             y: top + road.height * 0.04,
           },
           [
-            [0, mix(MATERIAL.kerb, getColor("WHITE"), 0.3)],
-            [1, MATERIAL.kerb],
+            [0, mix(ROAD_COLORS.kerb, getColor("WHITE"), 0.3)],
+            [1, ROAD_COLORS.kerb],
           ],
           true
         );
@@ -114,9 +116,9 @@ function paintCarriage(sketch: p5, road: Road, left: number) {
         sketch,
         { height: tall, width: length, x: left, y: bottom - tall },
         [
-          [0, mix(MATERIAL.chrome, getColor("WHITE"), 0.3)],
-          [0.55, MATERIAL.chrome],
-          [1, mix(MATERIAL.chrome, getColor("BLACK"), 0.35)],
+          [0, mix(CAR_COLORS.chrome, getColor("WHITE"), 0.3)],
+          [0.55, CAR_COLORS.chrome],
+          [1, mix(CAR_COLORS.chrome, getColor("BLACK"), 0.35)],
         ]
       );
     }
@@ -124,7 +126,7 @@ function paintCarriage(sketch: p5, road: Road, left: number) {
   sketch.noStroke();
   sketch.fill(PLOT_COLORS.pink);
   sketch.rect(left, bottom - tall * 0.3, length, tall * 0.06);
-  sketch.fill(mix(MATERIAL.tintedGlass, MATERIAL.skyHaze, 0.3));
+  sketch.fill(mix(CAR_COLORS.tintedGlass, SKY_COLORS.skyHaze, 0.3));
   sketch.rect(
     left + length * 0.03,
     bottom - tall * 0.82,

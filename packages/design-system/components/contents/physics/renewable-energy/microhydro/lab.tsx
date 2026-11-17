@@ -32,13 +32,17 @@ import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { P5Sketch } from "@repo/design-system/components/visual/sketch";
 import { getColor } from "@repo/design-system/lib/color";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { CAR_COLORS } from "@repo/design-system/lib/material/car";
+import { ENERGY_COLORS } from "@repo/design-system/lib/material/energy";
+import { MACHINE_COLORS } from "@repo/design-system/lib/material/machine";
+import { ROAD_COLORS } from "@repo/design-system/lib/material/road";
+import { TOWN_COLORS } from "@repo/design-system/lib/material/town";
 import { Array as Arr, Schema } from "effect";
 import type p5 from "p5";
 import { type ReactNode, useState } from "react";
 
 /** The stream's lit surface, where the dusk sky shows in the water. */
-const WATER_LIGHT = mix(MATERIAL.water, MATERIAL.waterGlint, 0.45);
+const WATER_LIGHT = mix(TOWN_COLORS.water, TOWN_COLORS.waterGlint, 0.45);
 
 /** What the sketch reads on every frame: the flow, in litres per second, and the head, in metres. */
 const MicrohydroFrameSchema = Schema.Struct({
@@ -59,7 +63,7 @@ function paintHillside(
   const drop = (head / HEAD.max) * height * 0.5;
   const intake = { x: width * 0.08, y: ground - drop };
   const house = { x: width * 0.36, y: ground };
-  sketch.fill(mix(MATERIAL.foliageDark, getColor("BLACK"), 0.3));
+  sketch.fill(mix(ROAD_COLORS.foliageDark, getColor("BLACK"), 0.3));
   sketch.quad(
     0,
     intake.y - height * 0.04,
@@ -80,14 +84,14 @@ function paintHillside(
     },
     [
       [0, WATER_LIGHT],
-      [1, MATERIAL.water],
+      [1, TOWN_COLORS.water],
     ]
   );
   const pipe = Math.max(height * 0.02, 5);
-  sketch.stroke(mix(MATERIAL.galvanizedSteel, getColor("BLACK"), 0.35));
+  sketch.stroke(mix(ENERGY_COLORS.galvanizedSteel, getColor("BLACK"), 0.35));
   sketch.strokeWeight(pipe);
   sketch.line(intake.x, intake.y, house.x, house.y - height * 0.04);
-  sketch.stroke(fade(MATERIAL.galvanizedSteel, 0.8));
+  sketch.stroke(fade(ENERGY_COLORS.galvanizedSteel, 0.8));
   sketch.strokeWeight(pipe * 0.35);
   sketch.line(
     intake.x,
@@ -121,13 +125,13 @@ function paintHillside(
           y: ground - height * 0.09,
         },
         [
-          [0, mix(MATERIAL.concrete, getColor("WHITE"), 0.2)],
-          [1, mix(MATERIAL.concrete, getColor("BLACK"), 0.4)],
+          [0, mix(MACHINE_COLORS.concrete, getColor("WHITE"), 0.2)],
+          [1, mix(MACHINE_COLORS.concrete, getColor("BLACK"), 0.4)],
         ]
       );
     }
   );
-  sketch.fill(mix(MATERIAL.roofZinc, getColor("BLACK"), 0.3));
+  sketch.fill(mix(TOWN_COLORS.roofZinc, getColor("BLACK"), 0.3));
   sketch.quad(
     house.x - width * 0.03,
     ground - height * 0.09,
@@ -138,7 +142,7 @@ function paintHillside(
     house.x - width * 0.02,
     ground - height * 0.115
   );
-  sketch.fill(MATERIAL.windowGlow);
+  sketch.fill(ENERGY_COLORS.windowGlow);
   sketch.rect(
     house.x + width * 0.01,
     ground - height * 0.06,
@@ -157,7 +161,7 @@ function paintHamlet(
 ) {
   const { height, width } = sketch;
   const size = Math.min(width * 0.05, height * 0.09);
-  sketch.stroke(fade(mix(MATERIAL.castIron, getColor("BLACK"), 0.7), 0.85));
+  sketch.stroke(fade(mix(CAR_COLORS.castIron, getColor("BLACK"), 0.7), 0.85));
   sketch.strokeWeight(1.2);
   sketch.line(from.x, from.y, width * 0.97, from.y - height * 0.02);
   sketch.noStroke();
@@ -168,9 +172,9 @@ function paintHamlet(
       const column = home % (HOMES / 2);
       const x = width * (0.5 + column * 0.057) + row * width * 0.03;
       const base = ground - row * size * 0.9 - size * 0.2;
-      sketch.fill(mix(MATERIAL.wallPlaster, getColor("BLACK"), 0.5));
+      sketch.fill(mix(ENERGY_COLORS.wallPlaster, getColor("BLACK"), 0.5));
       sketch.rect(x - size / 2, base - size * 0.7, size, size * 0.7);
-      sketch.fill(mix(MATERIAL.roofTerracotta, getColor("BLACK"), 0.4));
+      sketch.fill(mix(TOWN_COLORS.roofTerracotta, getColor("BLACK"), 0.4));
       sketch.triangle(
         x - size * 0.6,
         base - size * 0.7,
@@ -180,11 +184,11 @@ function paintHamlet(
         base - size * 1.1
       );
       const glowing = home < lit;
-      sketch.fill(glowing ? MATERIAL.windowGlow : MATERIAL.tintedGlass);
+      sketch.fill(glowing ? ENERGY_COLORS.windowGlow : CAR_COLORS.tintedGlass);
       sketch.rect(x - size * 0.15, base - size * 0.45, size * 0.3, size * 0.25);
       if (glowing) {
         spotlight(sketch, { x, y: base - size * 0.35 }, size * 0.9, {
-          color: MATERIAL.windowGlow,
+          color: ENERGY_COLORS.windowGlow,
           strength: 0.4,
         });
       }
@@ -207,8 +211,8 @@ function microhydroProgram(sketch: p5, read: () => MicrohydroFrame) {
     paintSky(sketch, ground, "dusk");
     paintHills(sketch, ground, "dusk");
     gradientRect(sketch, { height: height - ground, width, x: 0, y: ground }, [
-      [0, mix(MATERIAL.foliageDark, getColor("BLACK"), 0.2)],
-      [1, mix(MATERIAL.foliageDark, getColor("BLACK"), 0.6)],
+      [0, mix(ROAD_COLORS.foliageDark, getColor("BLACK"), 0.2)],
+      [1, mix(ROAD_COLORS.foliageDark, getColor("BLACK"), 0.6)],
     ]);
     const end = paintHillside(sketch, head, flow, time, ground);
     paintHamlet(sketch, end, homesLit(flow, head), ground);

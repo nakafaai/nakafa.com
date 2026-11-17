@@ -9,7 +9,12 @@ import {
 } from "@repo/design-system/components/contents/physics/canvas/paint";
 import type { Point } from "@repo/design-system/components/contents/physics/optics/light";
 import { getColor } from "@repo/design-system/lib/color";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { BENCH_COLORS } from "@repo/design-system/lib/material/bench";
+import { CAR_COLORS } from "@repo/design-system/lib/material/car";
+import { ENERGY_COLORS } from "@repo/design-system/lib/material/energy";
+import { INSTRUMENT_COLORS } from "@repo/design-system/lib/material/instrument";
+import { MACHINE_COLORS } from "@repo/design-system/lib/material/machine";
+import { REAGENT_COLORS } from "@repo/design-system/lib/material/reagent";
 import { Array as Arr } from "effect";
 import type p5 from "p5";
 
@@ -24,10 +29,10 @@ import type p5 from "p5";
 export function paintBoard(sketch: p5) {
   const { height, width } = sketch;
   gradientRect(sketch, { height, width, x: 0, y: 0 }, [
-    [0, mix(MATERIAL.oak, getColor("WHITE"), 0.08)],
-    [1, mix(MATERIAL.oak, getColor("BLACK"), 0.35)],
+    [0, mix(INSTRUMENT_COLORS.oak, getColor("WHITE"), 0.08)],
+    [1, mix(INSTRUMENT_COLORS.oak, getColor("BLACK"), 0.35)],
   ]);
-  sketch.stroke(fade(mix(MATERIAL.oak, getColor("BLACK"), 0.5), 0.25));
+  sketch.stroke(fade(mix(INSTRUMENT_COLORS.oak, getColor("BLACK"), 0.5), 0.25));
   sketch.strokeWeight(1);
   for (let y = 6; y < height; y += 9) {
     sketch.line(
@@ -38,7 +43,7 @@ export function paintBoard(sketch: p5) {
     );
   }
   spotlight(sketch, { x: width * 0.45, y: height * 0.3 }, width * 0.7, {
-    color: MATERIAL.lampLight,
+    color: INSTRUMENT_COLORS.lampLight,
     strength: 0.2,
   });
 }
@@ -66,8 +71,8 @@ export function wire(sketch: p5, points: readonly Point[], color: string) {
 /** A brass terminal post where wires meet. */
 export function terminal(sketch: p5, at: Point) {
   litBall(sketch, at, 5, {
-    dark: mix(MATERIAL.brass, getColor("BLACK"), 0.5),
-    light: mix(MATERIAL.brass, getColor("WHITE"), 0.4),
+    dark: mix(INSTRUMENT_COLORS.brass, getColor("BLACK"), 0.5),
+    light: mix(INSTRUMENT_COLORS.brass, getColor("WHITE"), 0.4),
   });
 }
 
@@ -95,16 +100,16 @@ export function paintCell(
         sketch,
         { height: thick, width: size, x: -size / 2, y: -thick / 2 },
         [
-          [0, mix(MATERIAL.battery, getColor("WHITE"), 0.3)],
-          [0.45, MATERIAL.battery],
-          [1, mix(MATERIAL.battery, getColor("BLACK"), 0.6)],
+          [0, mix(BENCH_COLORS.battery, getColor("WHITE"), 0.3)],
+          [0.45, BENCH_COLORS.battery],
+          [1, mix(BENCH_COLORS.battery, getColor("BLACK"), 0.6)],
         ]
       );
     }
   );
   const cap = (facing * size) / 2;
   sketch.noStroke();
-  sketch.fill(MATERIAL.batteryTerminal);
+  sketch.fill(BENCH_COLORS.batteryTerminal);
   sketch.rect(
     Math.min(cap, cap + facing * size * 0.06),
     -thick * 0.2,
@@ -112,7 +117,7 @@ export function paintCell(
     thick * 0.4,
     2
   );
-  sketch.fill(fade(MATERIAL.batteryTerminal, 0.9));
+  sketch.fill(fade(BENCH_COLORS.batteryTerminal, 0.9));
   sketch.rect(
     facing * size * 0.18 - size * 0.04,
     -thick / 2,
@@ -124,10 +129,10 @@ export function paintCell(
 
 /** The colour bands of a resistor, from the palette of resistor codes. */
 const BAND_COLORS = [
-  MATERIAL.hullRed,
-  MATERIAL.signalAmber,
-  MATERIAL.walnut,
-  MATERIAL.brass,
+  MACHINE_COLORS.hullRed,
+  MACHINE_COLORS.signalAmber,
+  MACHINE_COLORS.walnut,
+  INSTRUMENT_COLORS.brass,
 ] as const;
 
 /** A banded resistor between `from` and `to`, with its leads. */
@@ -142,7 +147,7 @@ export function paintResistor(
   sketch.push();
   sketch.translate(from.x, from.y);
   sketch.rotate(angle);
-  sketch.stroke(MATERIAL.probeSteel);
+  sketch.stroke(BENCH_COLORS.probeSteel);
   sketch.strokeWeight(2);
   sketch.line(0, 0, length, 0);
   sketch.noStroke();
@@ -152,9 +157,9 @@ export function paintResistor(
     sketch,
     { height: body * 0.32, width: body, x: left, y: -body * 0.16 },
     [
-      [0, mix(MATERIAL.cellBody, getColor("WHITE"), 0.35)],
-      [0.5, MATERIAL.cellBody],
-      [1, mix(MATERIAL.cellBody, getColor("BLACK"), 0.4)],
+      [0, mix(REAGENT_COLORS.cellBody, getColor("WHITE"), 0.35)],
+      [0.5, REAGENT_COLORS.cellBody],
+      [1, mix(REAGENT_COLORS.cellBody, getColor("BLACK"), 0.4)],
     ]
   );
   Arr.forEach(BAND_COLORS, (color, index) => {
@@ -179,19 +184,19 @@ export function paintBulb(
 ) {
   if (glow > 0) {
     spotlight(sketch, at, size * (1.2 + 2.2 * glow), {
-      color: MATERIAL.filamentGlow,
+      color: ENERGY_COLORS.filamentGlow,
       strength: 0.75 * glow,
     });
   }
   sketch.noStroke();
   sketch.fill(
     fade(
-      mix(MATERIAL.glass, MATERIAL.filamentGlow, glow * 0.6),
+      mix(BENCH_COLORS.glass, ENERGY_COLORS.filamentGlow, glow * 0.6),
       0.35 + 0.4 * glow
     )
   );
   sketch.circle(at.x, at.y, size);
-  sketch.fill(MATERIAL.aluminium);
+  sketch.fill(INSTRUMENT_COLORS.aluminium);
   sketch.rect(
     at.x - size * 0.22,
     at.y + size * 0.4,
@@ -202,7 +207,7 @@ export function paintBulb(
   sketch.noFill();
   sketch.stroke(
     glow > 0
-      ? mix(MATERIAL.filamentGlow, getColor("WHITE"), glow * 0.7)
+      ? mix(ENERGY_COLORS.filamentGlow, getColor("WHITE"), glow * 0.7)
       : getColor("NEUTRAL", 700)
   );
   sketch.strokeWeight(glow > 0 ? 2 : 1.5);
@@ -250,11 +255,11 @@ export function paintMeter(
     { blur: 10, color: fade(getColor("BLACK"), 0.5), drop: 4 },
     () => {
       sketch.noStroke();
-      sketch.fill(MATERIAL.meterBody);
+      sketch.fill(BENCH_COLORS.meterBody);
       sketch.rect(at.x - size / 2, at.y - size / 2, size, size, size * 0.12);
     }
   );
-  sketch.fill(MATERIAL.dialFace);
+  sketch.fill(INSTRUMENT_COLORS.dialFace);
   sketch.arc(
     at.x,
     at.y + size * 0.18,
@@ -278,7 +283,7 @@ export function paintMeter(
   }
   const share = Math.min(Math.max(reading.value / reading.full, 0), 1);
   const needle = Math.PI + share * Math.PI;
-  sketch.stroke(MATERIAL.dialNeedle);
+  sketch.stroke(INSTRUMENT_COLORS.dialNeedle);
   sketch.strokeWeight(2);
   sketch.line(
     at.x,
@@ -305,8 +310,8 @@ export function paintCoil(sketch: p5, from: Point, to: Point, glow: number) {
   const amplitude = Math.hypot(to.x - from.x, to.y - from.y) * 0.08;
   const color =
     glow > 0
-      ? mix(MATERIAL.coalGlow, MATERIAL.headlightGlow, glow * 0.6)
-      : MATERIAL.galvanizedSteel;
+      ? mix(BENCH_COLORS.coalGlow, CAR_COLORS.headlightGlow, glow * 0.6)
+      : ENERGY_COLORS.galvanizedSteel;
   const step = (index: number) => {
     const t = index / (turns * 8);
     return {
@@ -324,7 +329,7 @@ export function paintCoil(sketch: p5, from: Point, to: Point, glow: number) {
       { x: (from.x + to.x) / 2, y: (from.y + to.y) / 2 },
       amplitude * 10,
       {
-        color: MATERIAL.coalGlow,
+        color: BENCH_COLORS.coalGlow,
         strength: 0.55 * glow,
       }
     );

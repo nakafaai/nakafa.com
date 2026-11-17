@@ -9,7 +9,7 @@ import {
   sunBeams,
 } from "@repo/design-system/components/contents/biology/climate/rays";
 import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { ECOLOGY_COLORS } from "@repo/design-system/lib/material/ecology";
 import { Array as Arr } from "effect";
 import { useEffect, useMemo } from "react";
 import { AdditiveBlending, Color, ShaderMaterial } from "three";
@@ -100,8 +100,8 @@ export function Sun() {
       new ShaderMaterial({
         fragmentShader: DISC_FRAGMENT,
         uniforms: {
-          core: { value: new Color(MATERIAL.sunCore) },
-          limb: { value: new Color(MATERIAL.sunLimb) },
+          core: { value: new Color(ECOLOGY_COLORS.sunCore) },
+          limb: { value: new Color(ECOLOGY_COLORS.sunLimb) },
         },
         vertexShader: DISC_VERTEX,
       }),
@@ -131,8 +131,8 @@ function Corona() {
         fragmentShader: CORONA_FRAGMENT,
         transparent: true,
         uniforms: {
-          color: { value: new Color(MATERIAL.sunCorona) },
-          core: { value: new Color(MATERIAL.sunCore) },
+          color: { value: new Color(ECOLOGY_COLORS.sunCorona) },
+          core: { value: new Color(ECOLOGY_COLORS.sunCore) },
           reach: { value: CORONA_REACH },
           time: { value: 0 },
         },
@@ -172,8 +172,8 @@ function Beams() {
   );
   const core = useTubes(paths, 0.014);
   const haze = useTubes(paths, 0.042);
-  const bright = useFlowMaterial(MATERIAL.sunlight, 2.6, 0.34, 0.9);
-  const soft = useFlowMaterial(MATERIAL.sunlight, 0.32, 0.34, 0.9);
+  const bright = useFlowMaterial(ECOLOGY_COLORS.sunlight, 2.6, 0.34, 0.9);
+  const soft = useFlowMaterial(ECOLOGY_COLORS.sunlight, 0.32, 0.34, 0.9);
 
   return (
     <group>

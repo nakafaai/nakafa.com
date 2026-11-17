@@ -32,7 +32,8 @@ import {
 } from "@repo/design-system/components/visual/card";
 import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { CAR_COLORS } from "@repo/design-system/lib/material/car";
+import { MACHINE_COLORS } from "@repo/design-system/lib/material/machine";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr, Schema } from "effect";
 import {
@@ -95,40 +96,40 @@ function Kite() {
       <mesh castShadow geometry={sail} receiveShadow>
         <SurfaceMaterial
           attach="material-0"
-          color={MATERIAL.kiteNylon}
+          color={MACHINE_COLORS.kiteNylon}
           repeat={[1.5, 1.5]}
           side={DoubleSide}
           surface="cloth"
         />
         <SurfaceMaterial
           attach="material-1"
-          color={MATERIAL.kiteNavy}
+          color={MACHINE_COLORS.kiteNavy}
           repeat={[1.5, 1.5]}
           side={DoubleSide}
           surface="cloth"
         />
       </mesh>
       <Strake
-        color={MATERIAL.tyre}
+        color={CAR_COLORS.tyre}
         points={hem}
         radius={0.014}
         surface="cloth"
       />
       <Rod
-        color={MATERIAL.carbonShell}
+        color={MACHINE_COLORS.carbonShell}
         from={[0, nose, -0.03]}
         radius={0.02}
         to={[0, tail, -0.03]}
       />
       <Strake
-        color={MATERIAL.carbonShell}
+        color={MACHINE_COLORS.carbonShell}
         points={spreader}
         radius={0.018}
         surface="plastic"
       />
       {Arr.map(BRIDLE, (point) => (
         <Rod
-          color={MATERIAL.cotton}
+          color={MACHINE_COLORS.cotton}
           from={point}
           key={point[1]}
           radius={0.006}
@@ -137,7 +138,7 @@ function Kite() {
       ))}
       <mesh castShadow geometry={streamer} position={[0, tail, -0.02]}>
         <SurfaceMaterial
-          color={MATERIAL.cotton}
+          color={MACHINE_COLORS.cotton}
           repeat={[1, 2]}
           side={DoubleSide}
           surface="cloth"
@@ -182,10 +183,14 @@ function KiteScene({
       <SimulationTicker running={playing} />
       <mesh castShadow position={[0, 0.3, 0]}>
         <cylinderGeometry args={[0.045, 0.02, 0.8, 12]} />
-        <SurfaceMaterial color={MATERIAL.ash} repeat={[1, 2]} surface="wood" />
+        <SurfaceMaterial
+          color={MACHINE_COLORS.ash}
+          repeat={[1, 2]}
+          surface="wood"
+        />
       </mesh>
       <Rod
-        color={MATERIAL.cotton}
+        color={MACHINE_COLORS.cotton}
         from={[0, 0.6, 0]}
         radius={0.015}
         to={kite}

@@ -44,7 +44,7 @@ import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { P5Sketch } from "@repo/design-system/components/visual/sketch";
 import { getColor } from "@repo/design-system/lib/color";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { ROAD_COLORS } from "@repo/design-system/lib/material/road";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr, Schema } from "effect";
 import type p5 from "p5";
@@ -101,13 +101,13 @@ function slingProgram(sketch: p5, read: () => SlingFrame) {
         layer,
         { height: layer.height, width: layer.width, x: 0, y: 0 },
         [
-          [0, mix(MATERIAL.pavement, getColor("WHITE"), 0.15)],
-          [1, mix(MATERIAL.pavement, getColor("BLACK"), 0.25)],
+          [0, mix(ROAD_COLORS.pavement, getColor("WHITE"), 0.15)],
+          [1, mix(ROAD_COLORS.pavement, getColor("BLACK"), 0.25)],
         ]
       );
       const centre = planPoint(plan, { east: 0, north: 0 });
       layer.noFill();
-      layer.stroke(fade(MATERIAL.roadPaint, 0.9));
+      layer.stroke(fade(ROAD_COLORS.roadPaint, 0.9));
       layer.strokeWeight(3);
       layer.circle(centre.x, centre.y, radius * 2 * plan.scale);
       const angle = RELEASE_ANGLES[release];

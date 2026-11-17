@@ -9,7 +9,7 @@ import {
   wavePoints,
 } from "@repo/design-system/components/contents/biology/climate/rays";
 import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { ECOLOGY_COLORS } from "@repo/design-system/lib/material/ecology";
 import { Array as Arr } from "effect";
 import { useMemo } from "react";
 
@@ -41,9 +41,9 @@ export function Ribbons({ level }: { readonly level: number }) {
   );
   const core = useTubes(paths, 0.011);
   const haze = useTubes(paths, 0.03);
-  const bright = useFlowMaterial(MATERIAL.infrared, 2.4, 0.26, 0.75);
-  const soft = useFlowMaterial(MATERIAL.infrared, 0.3, 0.26, 0.75);
-  const halo = useHaloMaterial(MATERIAL.infrared, 0.65);
+  const bright = useFlowMaterial(ECOLOGY_COLORS.infrared, 2.4, 0.26, 0.75);
+  const soft = useFlowMaterial(ECOLOGY_COLORS.infrared, 0.3, 0.26, 0.75);
+  const halo = useHaloMaterial(ECOLOGY_COLORS.infrared, 0.65);
 
   return (
     <group>

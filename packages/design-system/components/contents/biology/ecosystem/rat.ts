@@ -9,7 +9,8 @@ import {
   mix,
 } from "@repo/design-system/components/contents/physics/canvas/paint";
 import { hashUnit } from "@repo/design-system/components/contents/simulation/grain";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { ECOLOGY_COLORS } from "@repo/design-system/lib/material/ecology";
+import { TOWN_COLORS } from "@repo/design-system/lib/material/town";
 import { Array as Arr } from "effect";
 import type p5 from "p5";
 
@@ -47,14 +48,16 @@ function ratTail(sprite: p5.Graphics, body: number, curl: number) {
 /** A rice-field rat: grizzled brown fur, paler at the spine, pink ears and feet, a dark scaly tail. */
 export function ratSprite(sketch: p5, body: number, curl: number) {
   const sprite = spriteOf(sketch, body * 1.4);
-  sprite.stroke(mix(MATERIAL.ratSkin, MATERIAL.leafLitterDark, 0.45));
+  sprite.stroke(
+    mix(ECOLOGY_COLORS.ratSkin, ECOLOGY_COLORS.leafLitterDark, 0.45)
+  );
   ratTail(sprite, body, curl);
-  sprite.fill(MATERIAL.ratSkin);
+  sprite.fill(ECOLOGY_COLORS.ratSkin);
   Arr.forEach([-1, 1], (side) => {
     sprite.ellipse(body * 0.24, side * body * 0.17, body * 0.1, body * 0.08);
     sprite.ellipse(-body * 0.3, side * body * 0.22, body * 0.13, body * 0.09);
   });
-  sprite.fill(mix(MATERIAL.fur, MATERIAL.riverbank, 0.15));
+  sprite.fill(mix(ECOLOGY_COLORS.fur, TOWN_COLORS.riverbank, 0.15));
   ratBody(sprite, body);
   lightInside(sprite, (drawing) => {
     drawing.scale(1, 0.5);
@@ -66,9 +69,15 @@ export function ratSprite(sketch: p5, body: number, curl: number) {
       0,
       body * 0.6
     );
-    fur.addColorStop(0, mix(MATERIAL.fur, MATERIAL.riverbank, 0.35));
-    fur.addColorStop(0.55, mix(MATERIAL.fur, MATERIAL.leafLitterDark, 0.3));
-    fur.addColorStop(1, mix(MATERIAL.fur, MATERIAL.leafLitterDark, 0.75));
+    fur.addColorStop(0, mix(ECOLOGY_COLORS.fur, TOWN_COLORS.riverbank, 0.35));
+    fur.addColorStop(
+      0.55,
+      mix(ECOLOGY_COLORS.fur, ECOLOGY_COLORS.leafLitterDark, 0.3)
+    );
+    fur.addColorStop(
+      1,
+      mix(ECOLOGY_COLORS.fur, ECOLOGY_COLORS.leafLitterDark, 0.75)
+    );
     drawing.fillStyle = fur;
     drawing.fillRect(-body, -body * 2, body * 2, body * 4);
   });
@@ -79,22 +88,24 @@ export function ratSprite(sketch: p5, body: number, curl: number) {
       const y = (hashUnit(hair, curl + 82) - 0.5) * body * 0.42;
       sprite.stroke(
         hashUnit(hair, 83) > 0.5
-          ? fade(MATERIAL.riverbank, 0.45)
-          : fade(MATERIAL.leafLitterDark, 0.5)
+          ? fade(TOWN_COLORS.riverbank, 0.45)
+          : fade(ECOLOGY_COLORS.leafLitterDark, 0.5)
       );
       sprite.line(x, y, x - body * 0.08, y * 1.1);
     });
     sprite.noStroke();
   });
   Arr.forEach([-1, 1], (side) => {
-    sprite.fill(mix(MATERIAL.ratSkin, MATERIAL.leafLitterDark, 0.35));
+    sprite.fill(
+      mix(ECOLOGY_COLORS.ratSkin, ECOLOGY_COLORS.leafLitterDark, 0.35)
+    );
     sprite.ellipse(body * 0.29, side * body * 0.13, body * 0.13, body * 0.14);
-    sprite.fill(MATERIAL.ratSkin);
+    sprite.fill(ECOLOGY_COLORS.ratSkin);
     sprite.ellipse(body * 0.3, side * body * 0.13, body * 0.08, body * 0.09);
-    sprite.fill(MATERIAL.hairBlack);
+    sprite.fill(ECOLOGY_COLORS.hairBlack);
     sprite.circle(body * 0.42, side * body * 0.08, body * 0.055);
   });
-  sprite.fill(mix(MATERIAL.ratSkin, MATERIAL.leafLitterDark, 0.2));
+  sprite.fill(mix(ECOLOGY_COLORS.ratSkin, ECOLOGY_COLORS.leafLitterDark, 0.2));
   sprite.circle(body * 0.6, 0, body * 0.05);
   return sprite;
 }

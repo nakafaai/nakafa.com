@@ -4,7 +4,7 @@ import {
   type Placement,
 } from "@repo/design-system/components/contents/biology/instances";
 import { hashUnit } from "@repo/design-system/components/contents/simulation/grain";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { ECOLOGY_COLORS } from "@repo/design-system/lib/material/ecology";
 import { Array as Arr } from "effect";
 import { useEffect, useMemo } from "react";
 import {
@@ -167,9 +167,9 @@ function frond(
 
 /** A crown of fifteen living fronds, young ones raised and old ones drooping, over three dead ones hanging down the trunk. */
 function crownOf(crown: Vector3, seed: number) {
-  const green = new Color(MATERIAL.palmFrond);
-  const yellow = new Color(MATERIAL.palmFrondTip);
-  const dead = new Color(MATERIAL.palmFrondDead);
+  const green = new Color(ECOLOGY_COLORS.palmFrond);
+  const yellow = new Color(ECOLOGY_COLORS.palmFrondTip);
+  const dead = new Color(ECOLOGY_COLORS.palmFrondDead);
   const living = Arr.map(Arr.range(0, 14), (index) => {
     const age = hashUnit(index, seed);
     return frond(
@@ -246,7 +246,10 @@ function Grove({
     <>
       <Instances placements={placements}>
         <primitive attach="geometry" object={parts.trunk} />
-        <meshStandardMaterial color={MATERIAL.palmTrunk} roughness={0.95} />
+        <meshStandardMaterial
+          color={ECOLOGY_COLORS.palmTrunk}
+          roughness={0.95}
+        />
       </Instances>
       <Instances placements={placements}>
         <primitive attach="geometry" object={parts.fronds} />
@@ -254,7 +257,7 @@ function Grove({
       </Instances>
       <Instances placements={placements}>
         <primitive attach="geometry" object={parts.nuts} />
-        <meshStandardMaterial color={MATERIAL.coconut} roughness={0.6} />
+        <meshStandardMaterial color={ECOLOGY_COLORS.coconut} roughness={0.6} />
       </Instances>
     </>
   );

@@ -32,15 +32,18 @@ import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { P5Sketch } from "@repo/design-system/components/visual/sketch";
 import { getColor } from "@repo/design-system/lib/color";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { BENCH_COLORS } from "@repo/design-system/lib/material/bench";
+import { ENERGY_COLORS } from "@repo/design-system/lib/material/energy";
+import { REAGENT_COLORS } from "@repo/design-system/lib/material/reagent";
+import { ROAD_COLORS } from "@repo/design-system/lib/material/road";
 import { Schema } from "effect";
 import type p5 from "p5";
 import { type ReactNode, useState } from "react";
 
 /** The tones of the slurry, the brick dome and the stove flame. */
-const SLURRY = MATERIAL.dungSlurry;
-const BRICK = MATERIAL.brick;
-const FLAME = MATERIAL.biogasFlame;
+const SLURRY = ENERGY_COLORS.dungSlurry;
+const BRICK = BENCH_COLORS.brick;
+const FLAME = ENERGY_COLORS.biogasFlame;
 
 /** What the sketch reads on every frame: the dung fed each day. */
 const DigesterFrameSchema = Schema.Struct({ dung: Schema.Finite });
@@ -50,11 +53,11 @@ type DigesterFrame = typeof DigesterFrameSchema.Type;
 function paintSoil(sketch: p5, surface: number) {
   const { height, width } = sketch;
   gradientRect(sketch, { height: height - surface, width, x: 0, y: surface }, [
-    [0, mix(MATERIAL.soil, getColor("WHITE"), 0.12)],
-    [0.08, MATERIAL.soil],
-    [1, mix(MATERIAL.soil, getColor("BLACK"), 0.6)],
+    [0, mix(ENERGY_COLORS.soil, getColor("WHITE"), 0.12)],
+    [0.08, ENERGY_COLORS.soil],
+    [1, mix(ENERGY_COLORS.soil, getColor("BLACK"), 0.6)],
   ]);
-  sketch.fill(MATERIAL.grass);
+  sketch.fill(ROAD_COLORS.grass);
   sketch.rect(0, surface - 4, width, 6);
 }
 
@@ -85,7 +88,7 @@ function paintDome(
       sketch.rect(centre.x - size * 1.06, centre.y, size * 2.12, size * 0.5);
     }
   );
-  sketch.fill(MATERIAL.gasWisp);
+  sketch.fill(REAGENT_COLORS.gasWisp);
   sketch.arc(centre.x, centre.y, size * 2, size * 2, Math.PI, Math.PI * 2);
   sketch.rect(centre.x - size, centre.y, size * 2, size * 0.44);
   const level = centre.y - size * 0.25;
@@ -249,8 +252,8 @@ function digesterProgram(sketch: p5, read: () => DigesterFrame) {
             y: surface - height * 0.26,
           },
           [
-            [0, MATERIAL.wallPlaster],
-            [1, mix(MATERIAL.wallPlaster, getColor("BLACK"), 0.15)],
+            [0, ENERGY_COLORS.wallPlaster],
+            [1, mix(ENERGY_COLORS.wallPlaster, getColor("BLACK"), 0.15)],
           ]
         );
       }

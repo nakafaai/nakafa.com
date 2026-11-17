@@ -11,7 +11,8 @@ import {
   VesselGlassMaterial,
 } from "@repo/design-system/components/three/physical";
 import { getColor } from "@repo/design-system/lib/color";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { BENCH_COLORS } from "@repo/design-system/lib/material/bench";
+import { INSTRUMENT_COLORS } from "@repo/design-system/lib/material/instrument";
 import { Array as Arr, Option } from "effect";
 import { useMemo } from "react";
 import { Color, Vector2 } from "three";
@@ -65,7 +66,7 @@ export function SpectroscopeView({
         radius={0.06}
         smoothness={3}
       >
-        <meshStandardMaterial color={MATERIAL.epoxy} roughness={0.85} />
+        <meshStandardMaterial color={BENCH_COLORS.epoxy} roughness={0.85} />
       </RoundedBox>
       {Arr.map(BALMER, (upper) => {
         const nanometres = wavelength(upper, 2);
@@ -147,16 +148,16 @@ function tubeOutline() {
  */
 export function DischargeTube() {
   const outline = useMemo(tubeOutline, []);
-  const glow = new Color(MATERIAL.hydrogenGlow).multiplyScalar(2.4);
+  const glow = new Color(BENCH_COLORS.hydrogenGlow).multiplyScalar(2.4);
 
   return (
     <group>
       <mesh>
         <latheGeometry args={[outline, 48]} />
         <VesselGlassMaterial
-          color={MATERIAL.glass}
+          color={BENCH_COLORS.glass}
           thickness={0.03}
-          tint={MATERIAL.glassEdge}
+          tint={BENCH_COLORS.glassEdge}
         />
       </mesh>
       <mesh>
@@ -176,11 +177,11 @@ export function DischargeTube() {
         <group key={side}>
           <mesh position={[0, side * 1.32, 0]}>
             <cylinderGeometry args={[0.03, 0.03, 0.4, 8, 1]} />
-            <MetalMaterial color={MATERIAL.probeSteel} roughness={0.35} />
+            <MetalMaterial color={BENCH_COLORS.probeSteel} roughness={0.35} />
           </mesh>
           <mesh position={[0, side * 1.72, 0]}>
             <cylinderGeometry args={[0.16, 0.16, 0.22, 24, 1]} />
-            <MetalMaterial color={MATERIAL.brass} roughness={0.3} />
+            <MetalMaterial color={INSTRUMENT_COLORS.brass} roughness={0.3} />
           </mesh>
         </group>
       ))}

@@ -4,7 +4,11 @@ import {
   GlassMaterial,
   MetalMaterial,
 } from "@repo/design-system/components/three/physical";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { BENCH_COLORS } from "@repo/design-system/lib/material/bench";
+import { ECOLOGY_COLORS } from "@repo/design-system/lib/material/ecology";
+import { ENERGY_COLORS } from "@repo/design-system/lib/material/energy";
+import { INSTRUMENT_COLORS } from "@repo/design-system/lib/material/instrument";
+import { MACHINE_COLORS } from "@repo/design-system/lib/material/machine";
 import { Array as Arr } from "effect";
 import { useEffect, useMemo } from "react";
 import { DoubleSide, PlaneGeometry, SpotLight } from "three";
@@ -73,7 +77,7 @@ export function TankGlass() {
       {Arr.map(panes, ([name, position]) => (
         <mesh key={name} position={position}>
           <boxGeometry args={[glass, height, depth]} />
-          <GlassMaterial color={MATERIAL.glass} opacity={0.1} />
+          <GlassMaterial color={BENCH_COLORS.glass} opacity={0.1} />
         </mesh>
       ))}
       {Arr.map(edges, ([name, position, size]) => (
@@ -81,13 +85,13 @@ export function TankGlass() {
           <boxGeometry
             args={[size[0] * 1.04, size[1] * 1.04, size[2] * 1.04]}
           />
-          <GlassMaterial color={MATERIAL.glassEdge} opacity={0.35} />
+          <GlassMaterial color={BENCH_COLORS.glassEdge} opacity={0.35} />
         </mesh>
       ))}
       <mesh position={[0, height / 2, -depth / 2 - glass / 2 - 0.0006]}>
         <planeGeometry args={[length, height]} />
         <meshStandardMaterial
-          color={MATERIAL.tankBackdrop}
+          color={ECOLOGY_COLORS.tankBackdrop}
           envMapIntensity={0.12}
           roughness={1}
         />
@@ -123,7 +127,7 @@ export function WaterSurface() {
   return (
     <mesh geometry={geometry} position={[0, TANK.water, 0]}>
       <meshPhysicalMaterial
-        color={MATERIAL.reefWater}
+        color={ECOLOGY_COLORS.reefWater}
         depthWrite={false}
         ior={1.33}
         opacity={0.22}
@@ -147,7 +151,7 @@ export function WaterSurface() {
 export function ReefLight() {
   const level = TANK.height + FIXTURE.above;
   const light = useMemo(() => {
-    const spot = new SpotLight(MATERIAL.reefLight, 2.5, 0, 0.92, 0.55, 0);
+    const spot = new SpotLight(ECOLOGY_COLORS.reefLight, 2.5, 0, 0.92, 0.55, 0);
     spot.position.set(0, level - FIXTURE.thick / 2 - 0.004, 0);
     spot.castShadow = true;
     spot.shadow.mapSize.set(1024, 1024);
@@ -176,7 +180,7 @@ export function ReefLight() {
         radius={0.004}
       >
         <meshPhysicalMaterial
-          color={MATERIAL.signalHousing}
+          color={MACHINE_COLORS.signalHousing}
           metalness={0.6}
           roughness={0.38}
         />
@@ -187,8 +191,8 @@ export function ReefLight() {
       >
         <planeGeometry args={[FIXTURE.length - 0.02, FIXTURE.depth - 0.018]} />
         <meshStandardMaterial
-          color={MATERIAL.ledGlow}
-          emissive={MATERIAL.reefLight}
+          color={ENERGY_COLORS.ledGlow}
+          emissive={ECOLOGY_COLORS.reefLight}
           emissiveIntensity={1.4}
         />
       </mesh>
@@ -203,14 +207,14 @@ export function ReefLight() {
             ]}
           >
             <boxGeometry args={[rail, 0.004, 0.014]} />
-            <MetalMaterial color={MATERIAL.aluminium} />
+            <MetalMaterial color={INSTRUMENT_COLORS.aluminium} />
           </mesh>
           <mesh
             castShadow
             position={[side * (TANK.length / 2), (level + TANK.height) / 2, 0]}
           >
             <boxGeometry args={[0.004, level - TANK.height, 0.014]} />
-            <MetalMaterial color={MATERIAL.aluminium} />
+            <MetalMaterial color={INSTRUMENT_COLORS.aluminium} />
           </mesh>
           {Arr.map([-1, 1], (face) => (
             <mesh
@@ -223,7 +227,7 @@ export function ReefLight() {
               ]}
             >
               <boxGeometry args={[0.0024, 0.016, 0.014]} />
-              <MetalMaterial color={MATERIAL.aluminium} />
+              <MetalMaterial color={INSTRUMENT_COLORS.aluminium} />
             </mesh>
           ))}
         </group>

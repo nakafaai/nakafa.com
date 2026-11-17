@@ -27,7 +27,9 @@ import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { P5Sketch } from "@repo/design-system/components/visual/sketch";
 import { getColor } from "@repo/design-system/lib/color";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { BENCH_COLORS } from "@repo/design-system/lib/material/bench";
+import { ENERGY_COLORS } from "@repo/design-system/lib/material/energy";
+import { MACHINE_COLORS } from "@repo/design-system/lib/material/machine";
 import { Schema } from "effect";
 import type p5 from "p5";
 import { type ReactNode, useState } from "react";
@@ -49,7 +51,7 @@ function paintWire(
   glow: number
 ) {
   spotlight(sketch, { x: (from + to) / 2, y }, (to - from) * 0.6, {
-    color: MATERIAL.coalGlow,
+    color: BENCH_COLORS.coalGlow,
     strength: 0.45 * glow,
   });
   gradientRect(
@@ -59,16 +61,16 @@ function paintWire(
       [
         0,
         mix(
-          mix(MATERIAL.galvanizedSteel, MATERIAL.coalGlow, glow),
+          mix(ENERGY_COLORS.galvanizedSteel, BENCH_COLORS.coalGlow, glow),
           getColor("WHITE"),
           0.35
         ),
       ],
-      [0.5, mix(MATERIAL.galvanizedSteel, MATERIAL.coalGlow, glow)],
+      [0.5, mix(ENERGY_COLORS.galvanizedSteel, BENCH_COLORS.coalGlow, glow)],
       [
         1,
         mix(
-          mix(MATERIAL.galvanizedSteel, MATERIAL.coalGlow, glow),
+          mix(ENERGY_COLORS.galvanizedSteel, BENCH_COLORS.coalGlow, glow),
           getColor("BLACK"),
           0.4
         ),
@@ -105,7 +107,7 @@ function wireProgram(sketch: p5, read: () => WireFrame) {
         { x: width * 0.06, y: height * 0.3 },
         { x: left, y: height * 0.3 },
       ],
-      MATERIAL.hullRed
+      MACHINE_COLORS.hullRed
     );
     wire(
       sketch,
@@ -113,7 +115,7 @@ function wireProgram(sketch: p5, read: () => WireFrame) {
         { x: width * 0.06, y: height * 0.68 },
         { x: left, y: height * 0.68 },
       ],
-      MATERIAL.hullRed
+      MACHINE_COLORS.hullRed
     );
     paintWire(
       sketch,

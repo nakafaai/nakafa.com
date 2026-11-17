@@ -1,6 +1,6 @@
 import { Instances } from "@repo/design-system/components/contents/biology/instances";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { CELL_COLORS } from "@repo/design-system/lib/material/cell";
 import { Array as Arr } from "effect";
 import { type ReactNode, useMemo } from "react";
 import { DoubleSide } from "three";
@@ -42,20 +42,20 @@ function Bilayer({ y }: { readonly y: number }) {
         <sphereGeometry args={[0.014, 10, 8]} />
         <meshPhysicalMaterial
           clearcoat={0.4}
-          color={MATERIAL.lipidHead}
+          color={CELL_COLORS.lipidHead}
           roughness={0.4}
         />
       </Instances>
       <mesh position={[0, y + 0.04, 0]}>
         <boxGeometry args={[BLOCK.width, 0.04, BLOCK.depth]} />
-        <meshStandardMaterial color={MATERIAL.lipidTail} roughness={0.7} />
+        <meshStandardMaterial color={CELL_COLORS.lipidTail} roughness={0.7} />
       </mesh>
       {Arr.map([-0.25, 0.1, 0.32] as const, (x) => (
         <mesh castShadow key={x} position={[x, y + 0.04, x * 0.3]}>
           <cylinderGeometry args={[0.03, 0.034, 0.1, 14]} />
           <meshPhysicalMaterial
             clearcoat={0.3}
-            color={MATERIAL.membraneProtein}
+            color={CELL_COLORS.membraneProtein}
             roughness={0.45}
           />
         </mesh>
@@ -114,11 +114,14 @@ function Peptidoglycan({
     <group>
       <Instances placements={strands}>
         <cylinderGeometry args={[0.009, 0.009, 1, 6]} />
-        <meshStandardMaterial color={MATERIAL.glycan} roughness={0.5} />
+        <meshStandardMaterial color={CELL_COLORS.glycan} roughness={0.5} />
       </Instances>
       <Instances placements={bridges}>
         <cylinderGeometry args={[0.005, 0.005, 1, 5]} />
-        <meshStandardMaterial color={MATERIAL.peptideBridge} roughness={0.5} />
+        <meshStandardMaterial
+          color={CELL_COLORS.peptideBridge}
+          roughness={0.5}
+        />
       </Instances>
     </group>
   );
@@ -198,20 +201,25 @@ export function BacterialWallStack({
     <group position={[x, -0.3, 0]}>
       <mesh position={[0, -0.05, 0]} receiveShadow>
         <boxGeometry args={[BLOCK.width, 0.1, BLOCK.depth]} />
-        <meshPhysicalMaterial color={MATERIAL.cytosol} roughness={0.6} />
+        <meshPhysicalMaterial color={CELL_COLORS.cytosol} roughness={0.6} />
       </mesh>
       <Bilayer y={0} />
       {gram === "positive" ? (
         <group>
           <Peptidoglycan layers={10} y={0.08} />
-          <Chains color={MATERIAL.teichoic} count={28} length={0.38} y={0.08} />
+          <Chains
+            color={CELL_COLORS.teichoic}
+            count={28}
+            length={0.38}
+            y={0.08}
+          />
         </group>
       ) : (
         <group>
           <mesh position={[0, 0.14, 0]}>
             <boxGeometry args={[BLOCK.width, 0.12, BLOCK.depth]} />
             <meshPhysicalMaterial
-              color={MATERIAL.periplasm}
+              color={CELL_COLORS.periplasm}
               depthWrite={false}
               opacity={0.35}
               roughness={0.4}
@@ -225,14 +233,14 @@ export function BacterialWallStack({
               <cylinderGeometry args={[0.038, 0.038, 0.1, 16, 1, true]} />
               <meshPhysicalMaterial
                 clearcoat={0.4}
-                color={MATERIAL.porin}
+                color={CELL_COLORS.porin}
                 roughness={0.4}
                 side={DoubleSide}
               />
             </mesh>
           ))}
           <Chains
-            color={MATERIAL.lipopolysaccharide}
+            color={CELL_COLORS.lipopolysaccharide}
             count={60}
             length={0.14}
             y={0.28}

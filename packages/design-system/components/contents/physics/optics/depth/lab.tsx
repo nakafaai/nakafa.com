@@ -33,7 +33,10 @@ import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { P5Sketch } from "@repo/design-system/components/visual/sketch";
 import { getColor } from "@repo/design-system/lib/color";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { BENCH_COLORS } from "@repo/design-system/lib/material/bench";
+import { ENERGY_COLORS } from "@repo/design-system/lib/material/energy";
+import { INSTRUMENT_COLORS } from "@repo/design-system/lib/material/instrument";
+import { REAGENT_COLORS } from "@repo/design-system/lib/material/reagent";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr, Schema } from "effect";
 import type p5 from "p5";
@@ -45,10 +48,10 @@ type Liquid = typeof LiquidSchema.Type;
 
 /** How each liquid looks through the glass. */
 const LIQUID_COLORS = {
-  alcohol: MATERIAL.glass,
-  glycerine: MATERIAL.solution,
-  oil: MATERIAL.dieselFuel,
-  water: MATERIAL.kettleWater,
+  alcohol: BENCH_COLORS.glass,
+  glycerine: REAGENT_COLORS.solution,
+  oil: ENERGY_COLORS.dieselFuel,
+  water: ENERGY_COLORS.kettleWater,
 } as const satisfies Record<Liquid, string>;
 
 /** One poured layer: what it is, how thick it is in centimetres, and its refractive index. */
@@ -103,7 +106,7 @@ function paintContainer(
     floor -= tall;
   }
   sketch.noFill();
-  sketch.stroke(fade(MATERIAL.glass, 0.75));
+  sketch.stroke(fade(BENCH_COLORS.glass, 0.75));
   sketch.strokeWeight(3);
   sketch.line(
     centre - half,
@@ -119,18 +122,18 @@ function paintContainer(
   );
   sketch.line(centre - half, bottom, centre + half, bottom);
   sketch.noStroke();
-  sketch.fill(mix(MATERIAL.brass, getColor("BLACK"), 0.45));
+  sketch.fill(mix(INSTRUMENT_COLORS.brass, getColor("BLACK"), 0.45));
   sketch.ellipse(centre, bottom - 3, half * 0.5, 9);
-  sketch.fill(mix(MATERIAL.brass, getColor("WHITE"), 0.25));
+  sketch.fill(mix(INSTRUMENT_COLORS.brass, getColor("WHITE"), 0.25));
   sketch.ellipse(centre, bottom - 5, half * 0.46, 7);
 }
 
 /** An eye above the container, looking straight down. */
 function paintEye(sketch: p5, at: Point, size: number) {
   sketch.noStroke();
-  sketch.fill(MATERIAL.dish);
+  sketch.fill(BENCH_COLORS.dish);
   sketch.ellipse(at.x, at.y, size * 2, size);
-  sketch.fill(MATERIAL.iris);
+  sketch.fill(INSTRUMENT_COLORS.iris);
   sketch.circle(at.x, at.y + size * 0.12, size * 0.62);
   sketch.fill(getColor("BLACK"));
   sketch.circle(at.x, at.y + size * 0.16, size * 0.3);
@@ -190,20 +193,20 @@ function depthProgram(sketch: p5, read: () => DepthFrame) {
       const rise = top.y - eye.y;
       const out = { x: top.x + side * lean * rise, y: eye.y + 10 };
       for (const [from, to] of Arr.zip(points, Arr.drop(points, 1))) {
-        beam(sketch, from, to, MATERIAL.lampLight, 0.9);
+        beam(sketch, from, to, INSTRUMENT_COLORS.lampLight, 0.9);
       }
-      beam(sketch, top, out, MATERIAL.lampLight, 0.9);
+      beam(sketch, top, out, INSTRUMENT_COLORS.lampLight, 0.9);
       const imageY = bottom - depth.image * scale;
       const back = { x: top.x - side * lean * (imageY - top.y), y: imageY };
       dashed(sketch, top, back, {
-        color: fade(MATERIAL.lampLight, 0.7),
+        color: fade(INSTRUMENT_COLORS.lampLight, 0.7),
         dash: 5,
         weight: 1.5,
       });
     }
     const image = bottom - depth.image * scale;
     sketch.noStroke();
-    sketch.fill(fade(MATERIAL.brass, 0.35));
+    sketch.fill(fade(INSTRUMENT_COLORS.brass, 0.35));
     sketch.ellipse(centre, image, half * 0.5, 8);
     sketch.stroke(fade(PLOT_COLORS.amber, 0.9));
     sketch.strokeWeight(1.5);

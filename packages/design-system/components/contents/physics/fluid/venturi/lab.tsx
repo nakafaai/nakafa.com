@@ -23,7 +23,8 @@ import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { P5Sketch } from "@repo/design-system/components/visual/sketch";
 import { getColor } from "@repo/design-system/lib/color";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { BENCH_COLORS } from "@repo/design-system/lib/material/bench";
+import { ENERGY_COLORS } from "@repo/design-system/lib/material/energy";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr, Schema } from "effect";
 import type p5 from "p5";
@@ -68,7 +69,7 @@ function venturiProgram(sketch: p5, read: () => VenturiFrame) {
     const wideHalf = height * 0.1;
     const narrowHalf = wideHalf * (frame.narrow / frame.wide);
     const middle = width / 2;
-    const water = MATERIAL.kettleWater;
+    const water = ENERGY_COLORS.kettleWater;
     gradientRect(
       sketch,
       { height: wideHalf * 2, width: middle, x: 0, y: axis - wideHalf },
@@ -115,7 +116,7 @@ function venturiProgram(sketch: p5, read: () => VenturiFrame) {
         );
       }
     );
-    sketch.stroke(fade(MATERIAL.glass, 0.8));
+    sketch.stroke(fade(BENCH_COLORS.glass, 0.8));
     sketch.strokeWeight(3);
     sketch.line(0, axis - wideHalf, middle, axis - wideHalf);
     sketch.line(middle, axis - wideHalf, middle, axis - narrowHalf);
@@ -149,7 +150,7 @@ function venturiProgram(sketch: p5, read: () => VenturiFrame) {
           true
         );
         sketch.noFill();
-        sketch.stroke(fade(MATERIAL.glass, 0.8));
+        sketch.stroke(fade(BENCH_COLORS.glass, 0.8));
         sketch.strokeWeight(2);
         sketch.line(
           tube.x - tubeWidth / 2,

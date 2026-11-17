@@ -1,4 +1,4 @@
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { ECOLOGY_COLORS } from "@repo/design-system/lib/material/ecology";
 import { Array as Arr, Schema } from "effect";
 import { createContext, use, useEffect, useLayoutEffect, useMemo } from "react";
 import {
@@ -23,9 +23,9 @@ export type Colony = typeof ColonySchema.Type;
  * tint it brown to olive, and no two colonies carry quite the same algae.
  */
 const HEALTHY = {
-  brown: MATERIAL.coralBrown,
-  gold: MATERIAL.coralGold,
-  olive: MATERIAL.coralHealthy,
+  brown: ECOLOGY_COLORS.coralBrown,
+  gold: ECOLOGY_COLORS.coralGold,
+  olive: ECOLOGY_COLORS.coralHealthy,
 } satisfies Record<Colony, string>;
 
 /**
@@ -46,8 +46,8 @@ function mixed(from: string, to: string, share: number) {
  */
 function tissueOf(colony: Colony, paleness: number) {
   return {
-    body: mixed(HEALTHY[colony], MATERIAL.coralBleached, paleness),
-    tip: mixed(MATERIAL.coralTip, MATERIAL.coralBleached, paleness),
+    body: mixed(HEALTHY[colony], ECOLOGY_COLORS.coralBleached, paleness),
+    tip: mixed(ECOLOGY_COLORS.coralTip, ECOLOGY_COLORS.coralBleached, paleness),
   };
 }
 
@@ -94,7 +94,7 @@ export function TissueMaterial() {
         clearcoatRoughness: 0.42,
         roughness: 0.62,
         sheen: 0.2,
-        sheenColor: new Color(MATERIAL.coralTip),
+        sheenColor: new Color(ECOLOGY_COLORS.coralTip),
         sheenRoughness: 0.55,
         vertexColors: true,
       }),

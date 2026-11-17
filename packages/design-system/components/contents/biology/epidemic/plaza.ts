@@ -12,7 +12,11 @@ import {
 } from "@repo/design-system/components/contents/physics/canvas/paint";
 import { hashUnit } from "@repo/design-system/components/contents/simulation/grain";
 import { getColor } from "@repo/design-system/lib/color";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { ECOLOGY_COLORS } from "@repo/design-system/lib/material/ecology";
+import { INSTRUMENT_COLORS } from "@repo/design-system/lib/material/instrument";
+import { MACHINE_COLORS } from "@repo/design-system/lib/material/machine";
+import { ROAD_COLORS } from "@repo/design-system/lib/material/road";
+import { TOWN_COLORS } from "@repo/design-system/lib/material/town";
 import { Array as Arr } from "effect";
 import type p5 from "p5";
 
@@ -133,18 +137,18 @@ function withinPlaza(layer: p5, paint: () => void) {
 /** A mown lawn: grass in faint mowing stripes, flecked lighter and darker. */
 function paintLawn(layer: p5, width: number, height: number, scale: number) {
   layer.noStroke();
-  layer.fill(MATERIAL.grass);
+  layer.fill(ROAD_COLORS.grass);
   layer.rect(0, 0, width, height);
   const stripe = scale * 2.5;
-  layer.fill(fade(MATERIAL.foliageLight, 0.35));
+  layer.fill(fade(ROAD_COLORS.foliageLight, 0.35));
   Arr.forEach(Arr.range(0, Math.ceil(height / stripe / 2)), (band) => {
     layer.rect(0, band * stripe * 2, width, stripe);
   });
   const blades = Math.round((width * height) / 14);
   const shades = [
-    fade(MATERIAL.foliageDark, 0.55),
-    fade(MATERIAL.riceLeafPale, 0.4),
-    fade(MATERIAL.foliageShade, 0.6),
+    fade(ROAD_COLORS.foliageDark, 0.55),
+    fade(ECOLOGY_COLORS.riceLeafPale, 0.4),
+    fade(ROAD_COLORS.foliageShade, 0.6),
   ] as const;
   Arr.forEach(shades, (shade, kind) => {
     layer.fill(shade);
@@ -168,7 +172,7 @@ function paintPavers(layer: p5, frame: ReturnType<typeof squareFrame>) {
   const width = SQUARE.width * frame.scale;
   const height = SQUARE.depth * frame.scale;
   layer.noStroke();
-  layer.fill(mix(MATERIAL.pavement, MATERIAL.granite, 0.45));
+  layer.fill(mix(ROAD_COLORS.pavement, ECOLOGY_COLORS.granite, 0.45));
   layer.rect(left, top, width, height);
   const long = Math.max(9, frame.scale * 1.2);
   const short = long / 2;
@@ -176,10 +180,10 @@ function paintPavers(layer: p5, frame: ReturnType<typeof squareFrame>) {
   const rows = Math.ceil(height / short);
   const columns = Math.ceil(width / long) + 1;
   const tones = [
-    MATERIAL.pavement,
-    mix(MATERIAL.pavement, MATERIAL.stucco, 0.35),
-    mix(MATERIAL.pavement, MATERIAL.riverbank, 0.3),
-    mix(MATERIAL.pavement, MATERIAL.concrete, 0.5),
+    ROAD_COLORS.pavement,
+    mix(ROAD_COLORS.pavement, ECOLOGY_COLORS.stucco, 0.35),
+    mix(ROAD_COLORS.pavement, TOWN_COLORS.riverbank, 0.3),
+    mix(ROAD_COLORS.pavement, MACHINE_COLORS.concrete, 0.5),
   ] as const;
   Arr.forEach(tones, (tone, kind) => {
     layer.fill(tone);
@@ -218,8 +222,8 @@ function paintPavers(layer: p5, frame: ReturnType<typeof squareFrame>) {
     const y = top + hashUnit(patch, 27) * height;
     const radius = frame.scale * (2 + hashUnit(patch, 28) * 5);
     const wear = drawing.createRadialGradient(x, y, 0, x, y, radius);
-    wear.addColorStop(0, fade(MATERIAL.granite, 0.12));
-    wear.addColorStop(1, fade(MATERIAL.granite, 0));
+    wear.addColorStop(0, fade(ECOLOGY_COLORS.granite, 0.12));
+    wear.addColorStop(1, fade(ECOLOGY_COLORS.granite, 0));
     drawing.save();
     drawing.fillStyle = wear;
     drawing.fillRect(x - radius, y - radius, radius * 2, radius * 2);
@@ -232,10 +236,10 @@ function paintRing(layer: p5, frame: ReturnType<typeof squareFrame>) {
   const x = frame.x(0);
   const y = frame.y(0);
   layer.noStroke();
-  layer.fill(mix(MATERIAL.stucco, MATERIAL.pavement, 0.5));
+  layer.fill(mix(ECOLOGY_COLORS.stucco, ROAD_COLORS.pavement, 0.5));
   layer.circle(x, y, FOUNTAIN.ring * 2 * frame.scale);
   layer.noFill();
-  layer.stroke(mix(MATERIAL.pavement, MATERIAL.granite, 0.45));
+  layer.stroke(mix(ROAD_COLORS.pavement, ECOLOGY_COLORS.granite, 0.45));
   layer.strokeWeight(Math.max(0.6, frame.scale * 0.06));
   const rings = 4;
   Arr.forEach(Arr.range(0, rings), (ring) => {
@@ -273,12 +277,12 @@ function paintBorder(layer: p5, frame: ReturnType<typeof squareFrame>) {
     { blur: band, color: fade(SHADE, 0.35), drop: band * 0.4 },
     () => {
       layer.noFill();
-      layer.stroke(MATERIAL.granite);
+      layer.stroke(ECOLOGY_COLORS.granite);
       layer.strokeWeight(band);
       layer.rect(left + band / 2, top + band / 2, width - band, height - band);
     }
   );
-  layer.stroke(mix(MATERIAL.granite, MATERIAL.kerb, 0.5));
+  layer.stroke(mix(ECOLOGY_COLORS.granite, ROAD_COLORS.kerb, 0.5));
   layer.strokeWeight(Math.max(0.6, band * 0.12));
   layer.rect(
     left + band * 0.1,
@@ -307,22 +311,22 @@ function paintFountain(layer: p5, frame: ReturnType<typeof squareFrame>) {
     },
     () => {
       layer.noStroke();
-      layer.fill(MATERIAL.concrete);
+      layer.fill(MACHINE_COLORS.concrete);
       layer.circle(x, y, FOUNTAIN.rim * 2 * frame.scale);
     }
   );
   litBall(layer, { x, y }, FOUNTAIN.rim * frame.scale, {
-    dark: mix(MATERIAL.concrete, MATERIAL.granite, 0.6),
-    light: mix(MATERIAL.concrete, MATERIAL.stucco, 0.7),
+    dark: mix(MACHINE_COLORS.concrete, ECOLOGY_COLORS.granite, 0.6),
+    light: mix(MACHINE_COLORS.concrete, ECOLOGY_COLORS.stucco, 0.7),
   });
   if (!drawing) {
     return;
   }
   const radius = FOUNTAIN.water * frame.scale;
   const water = drawing.createRadialGradient(x, y, radius * 0.1, x, y, radius);
-  water.addColorStop(0, MATERIAL.waterDeep);
-  water.addColorStop(0.75, MATERIAL.water);
-  water.addColorStop(1, mix(MATERIAL.water, MATERIAL.waterGlint, 0.25));
+  water.addColorStop(0, TOWN_COLORS.waterDeep);
+  water.addColorStop(0.75, TOWN_COLORS.water);
+  water.addColorStop(1, mix(TOWN_COLORS.water, TOWN_COLORS.waterGlint, 0.25));
   drawing.save();
   drawing.fillStyle = water;
   drawing.beginPath();
@@ -347,8 +351,8 @@ function paintFountain(layer: p5, frame: ReturnType<typeof squareFrame>) {
     y + radius * 0.3,
     radius * 0.6
   );
-  sky.addColorStop(0, fade(MATERIAL.waterGlint, 0.3));
-  sky.addColorStop(1, fade(MATERIAL.waterGlint, 0));
+  sky.addColorStop(0, fade(TOWN_COLORS.waterGlint, 0.3));
+  sky.addColorStop(1, fade(TOWN_COLORS.waterGlint, 0));
   drawing.fillStyle = sky;
   drawing.fill();
   drawing.restore();
@@ -361,15 +365,15 @@ function paintFountain(layer: p5, frame: ReturnType<typeof squareFrame>) {
     },
     () => {
       layer.noStroke();
-      layer.fill(MATERIAL.concrete);
+      layer.fill(MACHINE_COLORS.concrete);
       layer.circle(x, y, FOUNTAIN.pedestal * 2 * frame.scale);
     }
   );
   litBall(layer, { x, y }, FOUNTAIN.pedestal * frame.scale, {
-    dark: mix(MATERIAL.concrete, MATERIAL.granite, 0.5),
-    light: mix(MATERIAL.concrete, MATERIAL.stucco, 0.8),
+    dark: mix(MACHINE_COLORS.concrete, ECOLOGY_COLORS.granite, 0.5),
+    light: mix(MACHINE_COLORS.concrete, ECOLOGY_COLORS.stucco, 0.8),
   });
-  layer.fill(MATERIAL.water);
+  layer.fill(TOWN_COLORS.water);
   layer.circle(x, y, FOUNTAIN.pedestal * 1.2 * frame.scale);
 }
 
@@ -380,8 +384,8 @@ function paintSun(layer: p5, width: number, height: number) {
     return;
   }
   const light = drawing.createLinearGradient(0, 0, width, height);
-  light.addColorStop(0, fade(MATERIAL.lampLight, 0.12));
-  light.addColorStop(0.5, fade(MATERIAL.lampLight, 0));
+  light.addColorStop(0, fade(INSTRUMENT_COLORS.lampLight, 0.12));
+  light.addColorStop(0.5, fade(INSTRUMENT_COLORS.lampLight, 0));
   light.addColorStop(1, fade(SHADE, 0.14));
   drawing.save();
   drawing.fillStyle = light;
@@ -400,7 +404,7 @@ function drawRipples(sketch: p5, seconds: number) {
     const phase = (seconds * 0.35 + ripple / 3) % 1;
     const radius =
       FOUNTAIN.pedestal + phase * (FOUNTAIN.water - FOUNTAIN.pedestal - 0.15);
-    sketch.stroke(fade(MATERIAL.waterGlint, 0.45 * (1 - phase)));
+    sketch.stroke(fade(TOWN_COLORS.waterGlint, 0.45 * (1 - phase)));
     sketch.circle(x, y, radius * 2 * frame.scale);
   });
   sketch.noStroke();
@@ -408,13 +412,13 @@ function drawRipples(sketch: p5, seconds: number) {
     const phase = (seconds * 1.6 + hashUnit(drop, 36)) % 1;
     const angle = hashUnit(drop, 37) * Math.PI * 2;
     const reach = phase * FOUNTAIN.pedestal * 0.55 * frame.scale;
-    sketch.fill(fade(MATERIAL.waterGlint, 0.85 * (1 - phase)));
+    sketch.fill(fade(TOWN_COLORS.waterGlint, 0.85 * (1 - phase)));
     sketch.circle(
       x + Math.cos(angle) * reach,
       y + Math.sin(angle) * reach,
       Math.max(1.2, frame.scale * 0.14)
     );
   });
-  sketch.fill(fade(MATERIAL.waterGlint, 0.9));
+  sketch.fill(fade(TOWN_COLORS.waterGlint, 0.9));
   sketch.circle(x, y, Math.max(2, frame.scale * 0.3));
 }

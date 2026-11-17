@@ -33,7 +33,8 @@ import {
 } from "@repo/design-system/components/visual/card";
 import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { BENCH_COLORS } from "@repo/design-system/lib/material/bench";
+import { REAGENT_COLORS } from "@repo/design-system/lib/material/reagent";
 import { type ReactNode, Suspense, useEffect, useRef, useState } from "react";
 import type { Group, Mesh, MeshPhysicalMaterial } from "three";
 
@@ -218,25 +219,28 @@ function YogurtScene({
         radius={0.012}
         receiveShadow
       >
-        <meshStandardMaterial color={MATERIAL.hotplateBody} roughness={0.55} />
+        <meshStandardMaterial
+          color={BENCH_COLORS.hotplateBody}
+          roughness={0.55}
+        />
       </RoundedBox>
       <mesh position={[0, 0.072, -0.01]} receiveShadow>
         <cylinderGeometry args={[0.08, 0.08, 0.004, 64]} />
-        <MetalMaterial color={MATERIAL.panSteel} roughness={0.35} />
+        <MetalMaterial color={BENCH_COLORS.panSteel} roughness={0.35} />
       </mesh>
       <mesh position={[-0.03, 0.035, 0.121]}>
         <boxGeometry args={[0.07, 0.026, 0.002]} />
         <meshStandardMaterial
-          color={MATERIAL.lcd}
-          emissive={MATERIAL.lcdGlow}
+          color={BENCH_COLORS.lcd}
+          emissive={BENCH_COLORS.lcdGlow}
           emissiveIntensity={0.6}
           roughness={0.2}
         />
       </mesh>
       <ThreeLabel
-        color={MATERIAL.lcdInk}
+        color={BENCH_COLORS.lcdInk}
         fontSize="compact"
-        outlineColor={MATERIAL.lcdHalo}
+        outlineColor={BENCH_COLORS.lcdHalo}
         outlineWidth={0.003}
         position={[-0.03, 0.035, 0.124]}
       >
@@ -244,18 +248,21 @@ function YogurtScene({
       </ThreeLabel>
       <mesh position={[0.05, 0.035, 0.126]} rotation={[Math.PI / 2, 0, 0]}>
         <cylinderGeometry args={[0.014, 0.014, 0.012, 24]} />
-        <meshStandardMaterial color={MATERIAL.balanceKey} roughness={0.45} />
+        <meshStandardMaterial
+          color={BENCH_COLORS.balanceKey}
+          roughness={0.45}
+        />
       </mesh>
       <group position={[0, 0.074, -0.01]} ref={jar}>
         <mesh castShadow position={[0, 0.06, 0]}>
           <cylinderGeometry args={[0.045, 0.045, 0.12, 40, 1, true]} />
-          <GlassMaterial color={MATERIAL.glass} opacity={0.25} />
+          <GlassMaterial color={BENCH_COLORS.glass} opacity={0.25} />
         </mesh>
         <mesh position={[0, 0.045, 0]} ref={milk}>
           <cylinderGeometry args={[0.042, 0.042, 0.088, 40]} />
           <meshPhysicalMaterial
             clearcoat={1}
-            color={MATERIAL.milk}
+            color={REAGENT_COLORS.milk}
             ref={curd}
             roughness={0.12}
           />
@@ -263,25 +270,28 @@ function YogurtScene({
         <group position={[0.018, 0.1, 0.006]} rotation={[0, 0, -0.12]}>
           <mesh castShadow>
             <cylinderGeometry args={[0.011, 0.011, 0.15, 24]} />
-            <meshStandardMaterial color={MATERIAL.meterBody} roughness={0.5} />
+            <meshStandardMaterial
+              color={BENCH_COLORS.meterBody}
+              roughness={0.5}
+            />
           </mesh>
           <mesh position={[0, -0.09, 0]}>
             <cylinderGeometry args={[0.006, 0.006, 0.03, 16]} />
-            <MetalMaterial color={MATERIAL.probeSteel} roughness={0.3} />
+            <MetalMaterial color={BENCH_COLORS.probeSteel} roughness={0.3} />
           </mesh>
           <mesh position={[0, 0.045, 0.0105]}>
             <boxGeometry args={[0.016, 0.03, 0.002]} />
             <meshStandardMaterial
-              color={MATERIAL.lcd}
-              emissive={MATERIAL.lcdGlow}
+              color={BENCH_COLORS.lcd}
+              emissive={BENCH_COLORS.lcdGlow}
               emissiveIntensity={0.6}
               roughness={0.2}
             />
           </mesh>
           <ThreeLabel
-            color={MATERIAL.meterInk}
+            color={BENCH_COLORS.meterInk}
             fontSize="compact"
-            outlineColor={MATERIAL.meterHalo}
+            outlineColor={BENCH_COLORS.meterHalo}
             outlineWidth={0.003}
             position={[0, 0.045, 0.014]}
           >

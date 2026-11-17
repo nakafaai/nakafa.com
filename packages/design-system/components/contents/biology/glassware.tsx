@@ -5,7 +5,10 @@ import {
   LiquidMaterial,
   MetalMaterial,
 } from "@repo/design-system/components/three/physical";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { BENCH_COLORS } from "@repo/design-system/lib/material/bench";
+import { BIOLOGY_COLORS } from "@repo/design-system/lib/material/biology";
+import { CAR_COLORS } from "@repo/design-system/lib/material/car";
+import { ROAD_COLORS } from "@repo/design-system/lib/material/road";
 import { Array as Arr } from "effect";
 import {
   type ReactNode,
@@ -78,7 +81,7 @@ export function GlassTube({
     <group position={middle} quaternion={quaternion}>
       <mesh>
         <cylinderGeometry args={[radius, radius, length, 28, 1, true]} />
-        <GlassMaterial color={MATERIAL.glass} opacity={opacity} />
+        <GlassMaterial color={BENCH_COLORS.glass} opacity={opacity} />
       </mesh>
       {liquid !== undefined && (
         <mesh>
@@ -124,7 +127,7 @@ export function Bung({
   return (
     <mesh castShadow>
       <cylinderGeometry args={[radius * 1.18, radius * 0.92, height, 32]} />
-      <meshStandardMaterial color={MATERIAL.stopper} roughness={0.85} />
+      <meshStandardMaterial color={BENCH_COLORS.stopper} roughness={0.85} />
     </mesh>
   );
 }
@@ -148,15 +151,15 @@ export function UprightClamp({
     <group position={[0, 0, -reach]}>
       <mesh castShadow position={[0, 0.006, 0.05]} receiveShadow>
         <boxGeometry args={[0.12, 0.012, 0.19]} />
-        <MetalMaterial color={MATERIAL.castIron} roughness={0.65} />
+        <MetalMaterial color={CAR_COLORS.castIron} roughness={0.65} />
       </mesh>
       <mesh castShadow position={[0, rod / 2, 0]}>
         <cylinderGeometry args={[0.006, 0.006, rod, 16]} />
-        <MetalMaterial color={MATERIAL.chrome} roughness={0.22} />
+        <MetalMaterial color={CAR_COLORS.chrome} roughness={0.22} />
       </mesh>
       <mesh castShadow position={[0, height, 0]}>
         <boxGeometry args={[0.026, 0.03, 0.026]} />
-        <MetalMaterial color={MATERIAL.castIron} roughness={0.5} />
+        <MetalMaterial color={CAR_COLORS.castIron} roughness={0.5} />
       </mesh>
       <mesh
         castShadow
@@ -164,7 +167,7 @@ export function UprightClamp({
         rotation={[Math.PI / 2, 0, 0]}
       >
         <cylinderGeometry args={[0.005, 0.005, reach, 12]} />
-        <MetalMaterial color={MATERIAL.chrome} roughness={0.22} />
+        <MetalMaterial color={CAR_COLORS.chrome} roughness={0.22} />
       </mesh>
       {Arr.map([-1, 1] as const, (side) => (
         <mesh
@@ -173,7 +176,7 @@ export function UprightClamp({
           position={[side * (grip + 0.004), height, reach]}
         >
           <boxGeometry args={[0.008, 0.022, 0.02]} />
-          <meshStandardMaterial color={MATERIAL.stopper} roughness={0.9} />
+          <meshStandardMaterial color={BENCH_COLORS.stopper} roughness={0.9} />
         </mesh>
       ))}
     </group>
@@ -221,18 +224,21 @@ export function FlatRule({
     <group>
       <mesh castShadow receiveShadow>
         <boxGeometry args={[length + 0.02, 0.004, 0.032]} />
-        <meshStandardMaterial color={MATERIAL.ruleWhite} roughness={0.75} />
+        <meshStandardMaterial
+          color={BIOLOGY_COLORS.ruleWhite}
+          roughness={0.75}
+        />
       </mesh>
       <instancedMesh args={[undefined, undefined, millimetres + 1]} ref={ticks}>
         <boxGeometry args={[0.0006, 0.0002, 0.013]} />
-        <meshBasicMaterial color={MATERIAL.ink} />
+        <meshBasicMaterial color={BIOLOGY_COLORS.ink} />
       </instancedMesh>
       {Arr.map(Arr.range(0, Math.floor((length * 100) / step)), (index) => (
         <ThreeLabel
-          color={MATERIAL.ink}
+          color={BIOLOGY_COLORS.ink}
           fontSize="compact"
           key={index}
-          outlineColor={MATERIAL.ruleWhite}
+          outlineColor={BIOLOGY_COLORS.ruleWhite}
           outlineWidth={0.02}
           position={[along(index * step * 10), 0.003, 0.008]}
         >
@@ -260,7 +266,7 @@ export function BenchLamp({ target }: { readonly target: Point }) {
   // A bulb of about this many candela, its cone half-angle and soft edge;
   // the light falls off with the square of the distance (decay 2).
   const light = useMemo(() => {
-    const spot = new SpotLight(MATERIAL.headlightGlow, 2.4, 0, 0.5, 0.7, 2);
+    const spot = new SpotLight(CAR_COLORS.headlightGlow, 2.4, 0, 0.5, 0.7, 2);
     spot.target = aim;
     return spot;
   }, [aim]);
@@ -277,17 +283,17 @@ export function BenchLamp({ target }: { readonly target: Point }) {
     <group>
       <mesh castShadow position={[0, 0.006, 0]} receiveShadow>
         <cylinderGeometry args={[0.04, 0.045, 0.012, 40]} />
-        <MetalMaterial color={MATERIAL.lampPost} roughness={0.45} />
+        <MetalMaterial color={ROAD_COLORS.lampPost} roughness={0.45} />
       </mesh>
       <mesh castShadow position={[-0.02, LAMP_HEIGHT / 2, 0]}>
         <cylinderGeometry args={[0.004, 0.004, LAMP_HEIGHT, 12]} />
-        <MetalMaterial color={MATERIAL.chrome} roughness={0.25} />
+        <MetalMaterial color={CAR_COLORS.chrome} roughness={0.25} />
       </mesh>
       <group position={[0, LAMP_HEIGHT, 0]} rotation={[0, 0, -Math.PI / 2]}>
         <mesh castShadow>
           <latheGeometry args={[shade, 40]} />
           <meshStandardMaterial
-            color={MATERIAL.lampShade}
+            color={BIOLOGY_COLORS.lampShade}
             roughness={0.4}
             side={DoubleSide}
           />
@@ -295,7 +301,7 @@ export function BenchLamp({ target }: { readonly target: Point }) {
         <mesh position={[0, 0.006, 0]}>
           <sphereGeometry args={[0.012, 24, 16]} />
           <meshBasicMaterial
-            color={MATERIAL.headlightGlow}
+            color={CAR_COLORS.headlightGlow}
             toneMapped={false}
           />
         </mesh>
@@ -333,12 +339,18 @@ export function Trestle({
     <group>
       <mesh castShadow position={[0, height - 0.004, 0]} receiveShadow>
         <boxGeometry args={[length, 0.008, depth]} />
-        <meshStandardMaterial color={MATERIAL.blockWood} roughness={0.75} />
+        <meshStandardMaterial
+          color={BIOLOGY_COLORS.blockWood}
+          roughness={0.75}
+        />
       </mesh>
       {Arr.map(legs, (leg) => (
         <mesh castShadow key={leg.key} position={leg.position}>
           <boxGeometry args={[0.012, height - 0.008, 0.012]} />
-          <meshStandardMaterial color={MATERIAL.blockWood} roughness={0.8} />
+          <meshStandardMaterial
+            color={BIOLOGY_COLORS.blockWood}
+            roughness={0.8}
+          />
         </mesh>
       ))}
     </group>
@@ -400,7 +412,7 @@ export function LeafyShoot({
     <group>
       <mesh castShadow>
         <tubeGeometry args={[stem, 40, 0.0035, 10, false]} />
-        <meshStandardMaterial color={MATERIAL.stem} roughness={0.7} />
+        <meshStandardMaterial color={BIOLOGY_COLORS.stem} roughness={0.7} />
       </mesh>
       {Arr.map(leaves, (leaf) => (
         <group
@@ -415,13 +427,13 @@ export function LeafyShoot({
             scale={leaf.length}
           >
             <meshPhysicalMaterial
-              color={MATERIAL.leaf}
+              color={BIOLOGY_COLORS.leaf}
               roughness={0.55}
               side={DoubleSide}
             />
           </mesh>
           <Rod end={[0.013, 0, 0]} radius={0.0012} start={[0, 0, 0]}>
-            <meshStandardMaterial color={MATERIAL.stem} roughness={0.7} />
+            <meshStandardMaterial color={BIOLOGY_COLORS.stem} roughness={0.7} />
           </Rod>
           {coatUpper && <Jelly blade={blade} length={leaf.length} side={1} />}
           {coatLower && <Jelly blade={blade} length={leaf.length} side={-1} />}
@@ -450,7 +462,7 @@ function Jelly({
       <meshPhysicalMaterial
         clearcoat={1}
         clearcoatRoughness={0.05}
-        color={MATERIAL.jelly}
+        color={BIOLOGY_COLORS.jelly}
         depthWrite={false}
         opacity={0.55}
         roughness={0.1}

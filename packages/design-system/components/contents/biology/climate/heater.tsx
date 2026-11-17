@@ -6,7 +6,7 @@ import {
   GlassMaterial,
   MetalMaterial,
 } from "@repo/design-system/components/three/physical";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { BENCH_COLORS } from "@repo/design-system/lib/material/bench";
 import { Array as Arr } from "effect";
 import { useMemo } from "react";
 import { CatmullRomCurve3, Vector3 } from "three";
@@ -33,15 +33,15 @@ function Holder({ y }: { readonly y: number }) {
     <group position={[ROD.x, y, 0]}>
       <mesh position={[0, 0, BACK + 0.0016]} rotation={[Math.PI / 2, 0, 0]}>
         <cylinderGeometry args={[0.009, 0.0075, 0.0032, 24]} />
-        <GlassMaterial color={MATERIAL.glass} opacity={0.55} />
+        <GlassMaterial color={BENCH_COLORS.glass} opacity={0.55} />
       </mesh>
       <mesh position={[0, 0, BACK + reach / 2 + 0.0016]}>
         <boxGeometry args={[0.005, 0.006, reach - 0.0016]} />
-        <GlassMaterial color={MATERIAL.glass} opacity={0.6} />
+        <GlassMaterial color={BENCH_COLORS.glass} opacity={0.6} />
       </mesh>
       <mesh position={[0, 0, ROD.z]} rotation={[Math.PI / 2, 0, 0]}>
         <torusGeometry args={[ROD.radius + 0.0014, 0.0013, 10, 28]} />
-        <GlassMaterial color={MATERIAL.glass} opacity={0.6} />
+        <GlassMaterial color={BENCH_COLORS.glass} opacity={0.6} />
       </mesh>
     </group>
   );
@@ -86,28 +86,31 @@ export function Heater({
         <capsuleGeometry
           args={[ROD.radius, ROD.length - ROD.radius * 2, 8, 24]}
         />
-        <MetalMaterial color={MATERIAL.probeSteel} roughness={0.36} />
+        <MetalMaterial color={BENCH_COLORS.probeSteel} roughness={0.36} />
       </mesh>
       <mesh castShadow position={[ROD.x, top + 0.006, ROD.z]}>
         <cylinderGeometry
           args={[ROD.radius + 0.0016, ROD.radius + 0.0016, 0.03, 24]}
         />
-        <meshPhysicalMaterial color={MATERIAL.leadBlack} roughness={0.55} />
+        <meshPhysicalMaterial color={BENCH_COLORS.leadBlack} roughness={0.55} />
       </mesh>
       <mesh castShadow>
         <tubeGeometry args={[cable, 160, 0.0018, 8, false]} />
-        <meshPhysicalMaterial color={MATERIAL.leadBlack} roughness={0.5} />
+        <meshPhysicalMaterial color={BENCH_COLORS.leadBlack} roughness={0.5} />
       </mesh>
       <Holder y={base + 0.04} />
       <Holder y={base + ROD.length - 0.04} />
       <group position={[CONTROLLER.x, CONTROLLER.size[1] / 2, CONTROLLER.z]}>
         <RoundedBox args={[...CONTROLLER.size]} castShadow radius={0.008}>
-          <meshStandardMaterial color={MATERIAL.meterBody} roughness={0.5} />
+          <meshStandardMaterial
+            color={BENCH_COLORS.meterBody}
+            roughness={0.5}
+          />
         </RoundedBox>
         <ThreeLabel
-          color={MATERIAL.meterInk}
+          color={BENCH_COLORS.meterInk}
           fontSize="compact"
-          outlineColor={MATERIAL.meterHalo}
+          outlineColor={BENCH_COLORS.meterHalo}
           outlineWidth={0.003}
           position={[0, 0.015, CONTROLLER.size[2] / 2 + 0.002]}
         >

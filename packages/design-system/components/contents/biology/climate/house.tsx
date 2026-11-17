@@ -3,7 +3,9 @@ import {
   VILLAGE,
 } from "@repo/design-system/components/contents/biology/climate/sea";
 import { hashUnit } from "@repo/design-system/components/contents/simulation/grain";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { ECOLOGY_COLORS } from "@repo/design-system/lib/material/ecology";
+import { MACHINE_COLORS } from "@repo/design-system/lib/material/machine";
+import { TOWN_COLORS } from "@repo/design-system/lib/material/town";
 import { Array as Arr } from "effect";
 import {
   type ReactNode,
@@ -45,14 +47,14 @@ const SLOPE = Math.hypot(ROOF.eave, ROOF.ridge - ROOF.eaveHeight) + 0.15;
 
 /** The wood each house is built of, from dark chengal to fresh planks. */
 const TONES = [
-  MATERIAL.woodChengal,
-  MATERIAL.woodMeranti,
-  MATERIAL.woodWeathered,
-  MATERIAL.woodPale,
-  MATERIAL.woodMeranti,
-  MATERIAL.woodWeathered,
-  MATERIAL.woodChengal,
-  MATERIAL.woodPale,
+  ECOLOGY_COLORS.woodChengal,
+  ECOLOGY_COLORS.woodMeranti,
+  ECOLOGY_COLORS.woodWeathered,
+  ECOLOGY_COLORS.woodPale,
+  ECOLOGY_COLORS.woodMeranti,
+  ECOLOGY_COLORS.woodWeathered,
+  ECOLOGY_COLORS.woodChengal,
+  ECOLOGY_COLORS.woodPale,
 ] as const;
 
 /** Each house's roof: dried nipah attap, new zinc, or rusted zinc. */
@@ -288,7 +290,10 @@ function Copies({
     }
     Arr.forEach(matrices, (matrix, index) => {
       target.setMatrixAt(index, matrix);
-      target.setColorAt(index, colors[index] ?? new Color(MATERIAL.timber));
+      target.setColorAt(
+        index,
+        colors[index] ?? new Color(ECOLOGY_COLORS.timber)
+      );
     });
     target.instanceMatrix.needsUpdate = true;
     if (target.instanceColor) {
@@ -345,25 +350,30 @@ export function Houses({ wet }: { readonly wet: readonly boolean[] }) {
   );
 
   const houses = Arr.map(VILLAGE.floors, (floor, index) => {
-    const tone = new Color(TONES[index % TONES.length] ?? MATERIAL.timber);
+    const tone = new Color(
+      TONES[index % TONES.length] ?? ECOLOGY_COLORS.timber
+    );
     const roof = ROOFS[index % ROOFS.length] ?? "zinc";
     return {
       matrix: houseMatrix(index, floor),
       roof,
       roofColor: new Color(
-        roof === "rust" ? MATERIAL.zincRust : MATERIAL.roofZinc
+        roof === "rust" ? ECOLOGY_COLORS.zincRust : TOWN_COLORS.roofZinc
       ),
       trim: tone.clone().multiplyScalar(0.62),
       wall: wet[index]
-        ? tone.clone().lerp(new Color(MATERIAL.mud), 0.6).multiplyScalar(0.8)
+        ? tone
+            .clone()
+            .lerp(new Color(ECOLOGY_COLORS.mud), 0.6)
+            .multiplyScalar(0.8)
         : tone,
     };
   });
   const thatched = Arr.filter(houses, (house) => house.roof === "attap");
   const zinc = Arr.filter(houses, (house) => house.roof !== "attap");
   const matrices = Arr.map(houses, (house) => house.matrix);
-  const concrete = new Color(MATERIAL.concrete);
-  const shade = new Color(MATERIAL.roomShade);
+  const concrete = new Color(MACHINE_COLORS.concrete);
+  const shade = new Color(ECOLOGY_COLORS.roomShade);
 
   return (
     <group>
@@ -403,7 +413,7 @@ export function Houses({ wet }: { readonly wet: readonly boolean[] }) {
         <meshStandardMaterial metalness={0.55} roughness={0.5} />
       </Copies>
       <Copies
-        colors={Arr.map(thatched, () => new Color(MATERIAL.attap))}
+        colors={Arr.map(thatched, () => new Color(ECOLOGY_COLORS.attap))}
         geometry={parts.attap}
         matrices={Arr.map(thatched, (house) => house.matrix)}
       >

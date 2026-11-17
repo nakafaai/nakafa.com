@@ -12,7 +12,7 @@ import {
 import { DnaDoubleHelix } from "@repo/design-system/components/contents/biology/parts";
 import { BacteriophageModel } from "@repo/design-system/components/contents/biology/virus/phage";
 import type { NarrowCameraPose } from "@repo/design-system/lib/geometry/camera";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { VIRION_COLORS } from "@repo/design-system/lib/material/virion";
 import { Array as Arr } from "effect";
 import type { ComponentType } from "react";
 import { CatmullRomCurve3, Vector3 } from "three";
@@ -170,7 +170,10 @@ function LyticCycle() {
       </group>
       <mesh castShadow>
         <tubeGeometry args={[INJECTED, 160, 0.012, 6, false]} />
-        <meshStandardMaterial color={MATERIAL.phageGenome} roughness={0.45} />
+        <meshStandardMaterial
+          color={VIRION_COLORS.phageGenome}
+          roughness={0.45}
+        />
       </mesh>
     </group>
   );
@@ -190,19 +193,19 @@ function LysogenicCycle() {
       </group>
       <group position={[0, 0.04, 0.18]} rotation={[0.1, 0.28, 0.36]}>
         <DnaDoubleHelix
-          backboneColor={MATERIAL.nucleicAcid}
+          backboneColor={VIRION_COLORS.nucleicAcid}
           length={1.46}
           lineWidth={3.8}
-          pairColor={MATERIAL.nucleicAcid}
+          pairColor={VIRION_COLORS.nucleicAcid}
           pairLineWidth={1.1}
           radius={0.066}
           turns={2.8}
         />
         <DnaDoubleHelix
-          backboneColor={MATERIAL.phageGenome}
+          backboneColor={VIRION_COLORS.phageGenome}
           length={1.46}
           lineWidth={4.8}
-          pairColor={MATERIAL.phageGenome}
+          pairColor={VIRION_COLORS.phageGenome}
           pairLineWidth={1.5}
           radius={0.07}
           segment={[0.46, 0.62]}

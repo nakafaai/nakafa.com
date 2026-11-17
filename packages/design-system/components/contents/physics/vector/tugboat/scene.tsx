@@ -16,7 +16,8 @@ import type { CoordinateTuple } from "@repo/design-system/components/three/frame
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { Sea } from "@repo/design-system/components/three/stage/sea";
 import { getColor } from "@repo/design-system/lib/color";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { MACHINE_COLORS } from "@repo/design-system/lib/material/machine";
+import { REAGENT_COLORS } from "@repo/design-system/lib/material/reagent";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr } from "effect";
 
@@ -55,7 +56,7 @@ function Wash() {
         >
           <circleGeometry args={[0.34, 28]} />
           <meshStandardMaterial
-            color={MATERIAL.foam}
+            color={REAGENT_COLORS.foam}
             depthWrite={false}
             opacity={0.5 - step * 0.14}
             roughness={0.9}
@@ -143,13 +144,13 @@ export function TugboatScene({
       <TowingTug heading={half} />
       <TowingTug heading={-half} />
       <Rod
-        color={MATERIAL.hemp}
+        color={MACHINE_COLORS.hemp}
         from={[BOW[0], BOW[1], 0]}
         radius={0.025}
         to={fromBow(CABLE - TUG_STAPLE, half, SEA_LEVEL + TUG_STAPLE_RISE)}
       />
       <Rod
-        color={MATERIAL.hemp}
+        color={MACHINE_COLORS.hemp}
         from={[BOW[0], BOW[1], 0]}
         radius={0.025}
         to={fromBow(CABLE - TUG_STAPLE, -half, SEA_LEVEL + TUG_STAPLE_RISE)}

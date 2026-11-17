@@ -34,7 +34,8 @@ import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { P5Sketch } from "@repo/design-system/components/visual/sketch";
 import { getColor } from "@repo/design-system/lib/color";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { CAR_COLORS } from "@repo/design-system/lib/material/car";
+import { ROAD_COLORS } from "@repo/design-system/lib/material/road";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Schema } from "effect";
 import type p5 from "p5";
@@ -96,12 +97,12 @@ function paintLab(sketch: p5, view: ReturnType<typeof roomView>) {
       y: view.y(0),
     },
     [
-      [0, mix(MATERIAL.bark, getColor("WHITE"), 0.15)],
-      [1, mix(MATERIAL.bark, getColor("BLACK"), 0.5)],
+      [0, mix(ROAD_COLORS.bark, getColor("WHITE"), 0.15)],
+      [1, mix(ROAD_COLORS.bark, getColor("BLACK"), 0.5)],
     ]
   );
   sketch.noStroke();
-  sketch.fill(MATERIAL.lampPost);
+  sketch.fill(ROAD_COLORS.lampPost);
   sketch.rect(
     view.x(TARGET.distance + 0.12),
     view.y(TARGET.height + 0.35),
@@ -114,7 +115,7 @@ function paintLab(sketch: p5, view: ReturnType<typeof roomView>) {
     view.scale * 0.22,
     view.scale * 0.05
   );
-  sketch.fill(MATERIAL.castIron);
+  sketch.fill(CAR_COLORS.castIron);
   sketch.rect(
     view.x(TARGET.distance - 0.06),
     view.y(TARGET.height + 0.31),
@@ -131,7 +132,7 @@ function paintLab(sketch: p5, view: ReturnType<typeof roomView>) {
   sketch.push();
   sketch.translate(view.x(0), view.y(0));
   sketch.rotate(-AIM_ANGLE);
-  sketch.fill(MATERIAL.chrome);
+  sketch.fill(CAR_COLORS.chrome);
   sketch.rect(
     -view.scale * 0.05,
     -view.scale * 0.05,
@@ -140,7 +141,7 @@ function paintLab(sketch: p5, view: ReturnType<typeof roomView>) {
     3
   );
   sketch.pop();
-  sketch.fill(MATERIAL.lampPost);
+  sketch.fill(ROAD_COLORS.lampPost);
   sketch.rect(view.x(-0.15), view.y(0.02), view.scale * 0.3, view.scale * 0.06);
 }
 
@@ -161,9 +162,9 @@ function paintCan(
       y: view.y(at.y) - tall + view.scale * 0.04,
     },
     [
-      [0, mix(MATERIAL.chrome, getColor("BLACK"), 0.35)],
-      [0.35, MATERIAL.chrome],
-      [1, mix(MATERIAL.castIron, getColor("BLACK"), 0.4)],
+      [0, mix(CAR_COLORS.chrome, getColor("BLACK"), 0.35)],
+      [0.35, CAR_COLORS.chrome],
+      [1, mix(CAR_COLORS.castIron, getColor("BLACK"), 0.4)],
     ],
     true
   );
@@ -205,7 +206,7 @@ function hunterProgram(sketch: p5, read: () => HunterFrame) {
         view.y(ghost.ball.y),
         view.scale * 0.07
       );
-      sketch.fill(fade(MATERIAL.chrome, 0.18));
+      sketch.fill(fade(CAR_COLORS.chrome, 0.18));
       sketch.circle(
         view.x(ghost.can.x),
         view.y(ghost.can.y + 0.06),

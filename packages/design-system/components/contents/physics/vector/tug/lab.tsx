@@ -27,7 +27,11 @@ import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { P5Sketch } from "@repo/design-system/components/visual/sketch";
 import { getColor } from "@repo/design-system/lib/color";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { CAR_COLORS } from "@repo/design-system/lib/material/car";
+import { MACHINE_COLORS } from "@repo/design-system/lib/material/machine";
+import { REAGENT_COLORS } from "@repo/design-system/lib/material/reagent";
+import { ROAD_COLORS } from "@repo/design-system/lib/material/road";
+import { SKY_COLORS } from "@repo/design-system/lib/material/sky";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Schema } from "effect";
 import type p5 from "p5";
@@ -45,18 +49,18 @@ function paintSunset(layer: p5) {
   const { height, width } = layer;
   const horizon = height * 0.68;
   gradientRect(layer, { height: horizon, width, x: 0, y: 0 }, [
-    [0, mix(MATERIAL.skyZenith, getColor("BLACK"), 0.35)],
-    [0.55, mix(MATERIAL.skyHaze, MATERIAL.woolGlow, 0.35)],
-    [1, mix(MATERIAL.woolGlow, MATERIAL.headlightGlow, 0.5)],
+    [0, mix(SKY_COLORS.skyZenith, getColor("BLACK"), 0.35)],
+    [0.55, mix(SKY_COLORS.skyHaze, REAGENT_COLORS.woolGlow, 0.35)],
+    [1, mix(REAGENT_COLORS.woolGlow, CAR_COLORS.headlightGlow, 0.5)],
   ]);
   spotlight(layer, { x: width * 0.62, y: horizon }, height * 0.55, {
-    color: MATERIAL.headlightGlow,
+    color: CAR_COLORS.headlightGlow,
     strength: 0.75,
   });
   layer.noStroke();
-  layer.fill(fade(MATERIAL.headlightGlow, 0.95));
+  layer.fill(fade(CAR_COLORS.headlightGlow, 0.95));
   layer.circle(width * 0.62, horizon - height * 0.02, height * 0.16);
-  layer.fill(mix(MATERIAL.foliageDark, getColor("BLACK"), 0.55));
+  layer.fill(mix(ROAD_COLORS.foliageDark, getColor("BLACK"), 0.55));
   layer.beginShape();
   layer.vertex(0, horizon);
   for (let x = 0; x <= width; x += width / 24) {
@@ -69,10 +73,10 @@ function paintSunset(layer: p5) {
   layer.vertex(0, height);
   layer.endShape(layer.CLOSE);
   gradientRect(layer, { height: height - horizon, width, x: 0, y: horizon }, [
-    [0, mix(MATERIAL.grass, getColor("BLACK"), 0.55)],
-    [1, mix(MATERIAL.grass, getColor("BLACK"), 0.75)],
+    [0, mix(ROAD_COLORS.grass, getColor("BLACK"), 0.55)],
+    [1, mix(ROAD_COLORS.grass, getColor("BLACK"), 0.75)],
   ]);
-  layer.fill(fade(MATERIAL.roadPaint, 0.55));
+  layer.fill(fade(ROAD_COLORS.roadPaint, 0.55));
   layer.quad(
     width / 2 - 2,
     horizon,
@@ -170,7 +174,7 @@ function tugProgram(sketch: p5, read: () => TugFrame) {
     }
     const middle = width / 2 + shift;
     const hand = floor - size * 0.62;
-    sketch.stroke(mix(MATERIAL.hemp, getColor("BLACK"), 0.45));
+    sketch.stroke(mix(MACHINE_COLORS.hemp, getColor("BLACK"), 0.45));
     sketch.strokeWeight(Math.max(3, size * 0.04));
     sketch.line(middle - width * 0.46, hand, middle + width * 0.46, hand);
     for (let index = 0; index < teams.left; index += 1) {
@@ -190,7 +194,7 @@ function tugProgram(sketch: p5, read: () => TugFrame) {
       );
     }
     sketch.noStroke();
-    sketch.fill(MATERIAL.signalRed);
+    sketch.fill(MACHINE_COLORS.signalRed);
     sketch.triangle(
       middle - 6,
       hand,

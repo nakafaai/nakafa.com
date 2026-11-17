@@ -38,7 +38,7 @@ import {
 } from "@repo/design-system/components/visual/card";
 import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { CELL_COLORS } from "@repo/design-system/lib/material/cell";
 import { Array as Arr } from "effect";
 import { type ReactNode, Suspense, useMemo, useRef, useState } from "react";
 import type { Group } from "three";
@@ -303,19 +303,19 @@ function CellSurface() {
         <meshPhysicalMaterial
           clearcoat={0.4}
           clearcoatRoughness={0.5}
-          color={MATERIAL.membrane}
+          color={CELL_COLORS.membrane}
           roughness={0.55}
         />
       </mesh>
       <Instances placements={parts.stalks}>
         <cylinderGeometry args={[0.018, 0.024, 0.16, 7]} />
-        <meshStandardMaterial color={MATERIAL.receptor} roughness={0.55} />
+        <meshStandardMaterial color={CELL_COLORS.receptor} roughness={0.55} />
       </Instances>
       <Instances placements={parts.heads}>
         <sphereGeometry args={[1, 14, 10]} />
         <meshPhysicalMaterial
           clearcoat={0.4}
-          color={MATERIAL.receptor}
+          color={CELL_COLORS.receptor}
           roughness={0.45}
         />
       </Instances>

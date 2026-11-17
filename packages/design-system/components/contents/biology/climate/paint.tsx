@@ -1,5 +1,6 @@
 import type { Point } from "@repo/design-system/components/contents/biology/climate/frame";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { CAR_COLORS } from "@repo/design-system/lib/material/car";
+import { ECOLOGY_COLORS } from "@repo/design-system/lib/material/ecology";
 import { Array as Arr, Schema } from "effect";
 import type p5 from "p5";
 
@@ -27,8 +28,8 @@ export function tint(sketch: p5, colour: string, alpha: number) {
 export function chromeMid(sketch: p5, share: number) {
   return sketch
     .lerpColor(
-      sketch.color(MATERIAL.chromeShadow),
-      sketch.color(MATERIAL.chrome),
+      sketch.color(ECOLOGY_COLORS.chromeShadow),
+      sketch.color(CAR_COLORS.chrome),
       share
     )
     .toString();
@@ -94,12 +95,12 @@ export function chromeAcross(
   to: number
 ) {
   return stopped(context.createLinearGradient(from, 0, to, 0), [
-    [0, MATERIAL.chromeShadow],
+    [0, ECOLOGY_COLORS.chromeShadow],
     [0.14, chromeMid(sketch, 0.7)],
-    [0.3, MATERIAL.chromeSpecular],
-    [0.44, MATERIAL.chrome],
+    [0.3, ECOLOGY_COLORS.chromeSpecular],
+    [0.44, CAR_COLORS.chrome],
     [0.66, chromeMid(sketch, 0.45)],
-    [0.86, MATERIAL.chromeShadow],
+    [0.86, ECOLOGY_COLORS.chromeShadow],
     [1, chromeMid(sketch, 0.6)],
   ]);
 }
@@ -114,7 +115,7 @@ export function chromeBlock(
 ) {
   painted(
     sketch,
-    MATERIAL.chrome,
+    CAR_COLORS.chrome,
     (context) => chromeAcross(sketch, context, x, x + wide),
     () => sketch.rect(x, y, wide, tall, Math.min(1.5, wide / 4))
   );
@@ -133,12 +134,12 @@ export function shadowAt(
   sketch.scale(1, deep / spread);
   painted(
     sketch,
-    tint(sketch, MATERIAL.chromeShadow, alpha / 3),
+    tint(sketch, ECOLOGY_COLORS.chromeShadow, alpha / 3),
     (context) =>
       stopped(context.createRadialGradient(0, 0, 0, 0, 0, spread), [
-        [0, tint(sketch, MATERIAL.chromeShadow, alpha)],
-        [0.55, tint(sketch, MATERIAL.chromeShadow, alpha * 0.45)],
-        [1, tint(sketch, MATERIAL.chromeShadow, 0)],
+        [0, tint(sketch, ECOLOGY_COLORS.chromeShadow, alpha)],
+        [0.55, tint(sketch, ECOLOGY_COLORS.chromeShadow, alpha * 0.45)],
+        [1, tint(sketch, ECOLOGY_COLORS.chromeShadow, 0)],
       ]),
     () => sketch.circle(0, 0, spread * 2)
   );
@@ -169,11 +170,11 @@ export function drawPipe(
       ];
     });
   const layers: readonly (typeof LayerSchema.Type)[] = [
-    [1, MATERIAL.chromeShadow, 0],
+    [1, ECOLOGY_COLORS.chromeShadow, 0],
     [0.8, chromeMid(sketch, 0.55), 0],
-    [0.46, MATERIAL.chrome, 0.14],
+    [0.46, CAR_COLORS.chrome, 0.14],
     [0.14, chromeMid(sketch, 0.2), -0.25],
-    [0.15, MATERIAL.chromeSpecular, 0.22],
+    [0.15, ECOLOGY_COLORS.chromeSpecular, 0.22],
   ];
   sketch.push();
   sketch.noFill();

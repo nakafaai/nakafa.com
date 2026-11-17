@@ -20,7 +20,8 @@ import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { P5Sketch } from "@repo/design-system/components/visual/sketch";
 import { getColor } from "@repo/design-system/lib/color";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { ENERGY_COLORS } from "@repo/design-system/lib/material/energy";
+import { TOWN_COLORS } from "@repo/design-system/lib/material/town";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Schema } from "effect";
 import type p5 from "p5";
@@ -55,20 +56,20 @@ function planetProgram(sketch: p5, read: () => PlanetFrame) {
     }
     const { height, width } = sketch;
     gradientRect(sketch, { height, width, x: 0, y: 0 }, [
-      [0, MATERIAL.nightSky],
+      [0, ENERGY_COLORS.nightSky],
       [1, getColor("ZINC", 950)],
     ]);
     const unit = Math.min(width / (2 * (1 + frame.radius) * 1.6), height * 0.3);
     const bodies = [
       {
-        color: MATERIAL.water,
+        color: TOWN_COLORS.water,
         name: frame.earthName,
         period: 1,
         radius: 1,
         x: width * 0.06 + unit * 1.3,
       },
       {
-        color: MATERIAL.rock,
+        color: ENERGY_COLORS.rock,
         name: frame.planetName,
         period: frame.period,
         radius: frame.radius,

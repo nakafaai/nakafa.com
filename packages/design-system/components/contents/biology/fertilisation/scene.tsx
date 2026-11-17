@@ -11,7 +11,7 @@ import { useQuantity } from "@repo/design-system/components/contents/simulation/
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { CameraControls } from "@repo/design-system/components/three/camera/controls";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { BIOLOGY_COLORS } from "@repo/design-system/lib/material/biology";
 import { Array as Arr } from "effect";
 import { type ReactNode, useEffect, useMemo } from "react";
 import {
@@ -122,7 +122,7 @@ export function FertilisationScene({
       <mesh>
         <tubeGeometry args={[tube, 120, 0.035, 8, false]} />
         <meshStandardMaterial
-          color={MATERIAL.pollenTube}
+          color={BIOLOGY_COLORS.pollenTube}
           opacity={grown > 0 ? 0.95 : 0}
           roughness={0.5}
           transparent
@@ -132,19 +132,22 @@ export function FertilisationScene({
       {grown > 0 && (
         <mesh position={tip}>
           <sphereGeometry args={[0.045, 12, 10]} />
-          <meshStandardMaterial color={MATERIAL.pollenTube} roughness={0.5} />
+          <meshStandardMaterial
+            color={BIOLOGY_COLORS.pollenTube}
+            roughness={0.5}
+          />
         </mesh>
       )}
       {stage !== "pollination" && !done && (
         <>
           <Nucleus
-            color={MATERIAL.spermNucleus}
+            color={BIOLOGY_COLORS.spermNucleus}
             count={counts.sperm}
             position={spermPosition(egg, 0.02)}
             size={0.08}
           />
           <Nucleus
-            color={MATERIAL.spermNucleus}
+            color={BIOLOGY_COLORS.spermNucleus}
             count={counts.sperm}
             position={spermPosition(polar, 0.05)}
             size={0.08}
@@ -154,13 +157,13 @@ export function FertilisationScene({
       {done ? (
         <>
           <Nucleus
-            color={MATERIAL.zygote}
+            color={BIOLOGY_COLORS.zygote}
             count={counts.embryo}
             position={egg}
             size={0.15}
           />
           <Nucleus
-            color={MATERIAL.endosperm}
+            color={BIOLOGY_COLORS.endosperm}
             count={counts.endosperm}
             position={polar}
             size={0.18}
@@ -169,19 +172,19 @@ export function FertilisationScene({
       ) : (
         <>
           <Nucleus
-            color={MATERIAL.eggNucleus}
+            color={BIOLOGY_COLORS.eggNucleus}
             count={counts.egg}
             position={egg}
             size={0.13}
           />
           <Nucleus
-            color={MATERIAL.polarNucleus}
+            color={BIOLOGY_COLORS.polarNucleus}
             count={counts.egg}
             position={[polar[0] - 0.13, polar[1], polar[2]]}
             size={0.1}
           />
           <Nucleus
-            color={MATERIAL.polarNucleus}
+            color={BIOLOGY_COLORS.polarNucleus}
             count={counts.egg}
             position={[polar[0] + 0.13, polar[1] - 0.12, polar[2]]}
             size={0.1}
@@ -277,16 +280,19 @@ function Flower() {
     <group>
       <mesh position={[0, -1.2, 0]}>
         <cylinderGeometry args={[0.16, 0.2, 2.6, 16]} />
-        <meshStandardMaterial color={MATERIAL.stem} roughness={0.6} />
+        <meshStandardMaterial color={BIOLOGY_COLORS.stem} roughness={0.6} />
       </mesh>
       <mesh position={[0, 0.15, 0]} scale={[1, 0.5, 1]}>
         <sphereGeometry args={[0.6, 28, 16]} />
-        <meshStandardMaterial color={MATERIAL.receptacle} roughness={0.6} />
+        <meshStandardMaterial
+          color={BIOLOGY_COLORS.receptacle}
+          roughness={0.6}
+        />
       </mesh>
       <mesh rotation={[0, Math.PI / 2, 0]}>
         <latheGeometry args={[ovary, 40, 0, Math.PI]} />
         <meshPhysicalMaterial
-          color={MATERIAL.ovary}
+          color={BIOLOGY_COLORS.ovary}
           roughness={0.55}
           side={DoubleSide}
         />
@@ -296,7 +302,7 @@ function Flower() {
           args={[0.14, 0.22, 2.7, 20, 1, true, Math.PI / 2, Math.PI]}
         />
         <meshPhysicalMaterial
-          color={MATERIAL.ovary}
+          color={BIOLOGY_COLORS.ovary}
           opacity={0.55}
           roughness={0.5}
           side={DoubleSide}
@@ -313,7 +319,10 @@ function Flower() {
           ]}
         >
           <sphereGeometry args={[0.2, 16, 12]} />
-          <meshStandardMaterial color={MATERIAL.stigma} roughness={0.85} />
+          <meshStandardMaterial
+            color={BIOLOGY_COLORS.stigma}
+            roughness={0.85}
+          />
         </mesh>
       ))}
       {Arr.map(Arr.range(0, 5), (petal) => (
@@ -329,7 +338,7 @@ function Flower() {
             scale={[3, 3, 3]}
           >
             <meshPhysicalMaterial
-              color={MATERIAL.petal}
+              color={BIOLOGY_COLORS.petal}
               roughness={0.45}
               side={DoubleSide}
             />
@@ -359,11 +368,17 @@ function Flower() {
               )}
             >
               <cylinderGeometry args={[0.035, 0.04, base.distanceTo(top), 8]} />
-              <meshStandardMaterial color={MATERIAL.filament} roughness={0.6} />
+              <meshStandardMaterial
+                color={BIOLOGY_COLORS.filament}
+                roughness={0.6}
+              />
             </mesh>
             <mesh position={top} scale={[0.6, 1, 0.6]}>
               <capsuleGeometry args={[0.12, 0.3, 6, 12]} />
-              <meshStandardMaterial color={MATERIAL.anther} roughness={0.7} />
+              <meshStandardMaterial
+                color={BIOLOGY_COLORS.anther}
+                roughness={0.7}
+              />
             </mesh>
           </group>
         );
@@ -379,7 +394,7 @@ function Ovules() {
       {Arr.map([-0.78, 0.78] as const, (x) => (
         <mesh key={x} position={[x, 1.25, -0.35]} scale={[0.7, 1, 0.7]}>
           <sphereGeometry args={[0.36, 20, 14]} />
-          <meshStandardMaterial color={MATERIAL.ovule} roughness={0.5} />
+          <meshStandardMaterial color={BIOLOGY_COLORS.ovule} roughness={0.5} />
         </mesh>
       ))}
       <mesh
@@ -389,7 +404,7 @@ function Ovules() {
       >
         <sphereGeometry args={[0.7, 32, 20, 0, Math.PI, 0.3, Math.PI - 0.3]} />
         <meshPhysicalMaterial
-          color={MATERIAL.ovule}
+          color={BIOLOGY_COLORS.ovule}
           roughness={0.45}
           side={DoubleSide}
         />
@@ -397,7 +412,7 @@ function Ovules() {
       <mesh position={OVULE} scale={[0.55, 1, 0.3]}>
         <sphereGeometry args={[0.62, 28, 18]} />
         <meshPhysicalMaterial
-          color={MATERIAL.embryoSac}
+          color={BIOLOGY_COLORS.embryoSac}
           opacity={0.75}
           roughness={0.4}
           transparent
@@ -409,7 +424,10 @@ function Ovules() {
           position={[OVULE[0] + x * 1.6, OVULE[1] + 0.48, OVULE[2] + 0.06]}
         >
           <sphereGeometry args={[0.07, 12, 10]} />
-          <meshStandardMaterial color={MATERIAL.synergid} roughness={0.5} />
+          <meshStandardMaterial
+            color={BIOLOGY_COLORS.synergid}
+            roughness={0.5}
+          />
         </mesh>
       ))}
       {Arr.map([-0.09, 0, 0.09] as const, (x) => (
@@ -418,7 +436,10 @@ function Ovules() {
           position={[OVULE[0] + x * 1.5, OVULE[1] - 0.48, OVULE[2] + 0.06]}
         >
           <sphereGeometry args={[0.065, 12, 10]} />
-          <meshStandardMaterial color={MATERIAL.synergid} roughness={0.5} />
+          <meshStandardMaterial
+            color={BIOLOGY_COLORS.synergid}
+            roughness={0.5}
+          />
         </mesh>
       ))}
     </group>
@@ -431,7 +452,7 @@ function PollenGrain() {
     <group position={STIGMA}>
       <mesh>
         <icosahedronGeometry args={[0.11, 2]} />
-        <meshStandardMaterial color={MATERIAL.pollen} roughness={0.7} />
+        <meshStandardMaterial color={BIOLOGY_COLORS.pollen} roughness={0.7} />
       </mesh>
     </group>
   );

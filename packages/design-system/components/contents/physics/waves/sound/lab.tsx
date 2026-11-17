@@ -24,7 +24,8 @@ import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { P5Sketch } from "@repo/design-system/components/visual/sketch";
 import { getColor } from "@repo/design-system/lib/color";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { INSTRUMENT_COLORS } from "@repo/design-system/lib/material/instrument";
+import { ROAD_COLORS } from "@repo/design-system/lib/material/road";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr, Schema } from "effect";
 import type p5 from "p5";
@@ -72,8 +73,8 @@ function soundProgram(sketch: p5, read: () => SoundFrame) {
     const source = { x: width * 0.1, y: height / 2 };
     const line = source.x + frame.distance * scale;
     gradientRect(sketch, { height, width, x: 0, y: 0 }, [
-      [0, mix(MATERIAL.grass, getColor("BLACK"), 0.35)],
-      [1, mix(MATERIAL.grass, getColor("BLACK"), 0.55)],
+      [0, mix(ROAD_COLORS.grass, getColor("BLACK"), 0.35)],
+      [1, mix(ROAD_COLORS.grass, getColor("BLACK"), 0.55)],
     ]);
     const speakers = Arr.map([-1, 1], (side) => ({
       x: source.x,
@@ -121,9 +122,9 @@ function soundProgram(sketch: p5, read: () => SoundFrame) {
     const along = (walk < 1 ? walk : 2 - walk) * 2 - 1;
     const studentY = source.y + along * reach * scale * 0.95;
     const loudness = twoSourceIntensity(frame, (studentY - source.y) / scale);
-    sketch.fill(MATERIAL.trolleyPaint);
+    sketch.fill(INSTRUMENT_COLORS.trolleyPaint);
     sketch.circle(line + 16, studentY, 18);
-    sketch.fill(MATERIAL.hair);
+    sketch.fill(INSTRUMENT_COLORS.hair);
     sketch.circle(line + 16, studentY, 10);
     sketch.fill(getColor("NEUTRAL", 800));
     sketch.rect(line + 30, studentY - 20, 8, 40, 2);

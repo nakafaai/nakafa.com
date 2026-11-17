@@ -22,7 +22,9 @@ import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { P5Sketch } from "@repo/design-system/components/visual/sketch";
 import { getColor } from "@repo/design-system/lib/color";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { CAR_COLORS } from "@repo/design-system/lib/material/car";
+import { INSTRUMENT_COLORS } from "@repo/design-system/lib/material/instrument";
+import { MACHINE_COLORS } from "@repo/design-system/lib/material/machine";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Schema } from "effect";
 import type p5 from "p5";
@@ -69,8 +71,8 @@ function recoilProgram(sketch: p5, read: () => RecoilFrame) {
         y: barrel.y - height * 0.02,
       },
       [
-        [0, mix(MATERIAL.walnut, getColor("WHITE"), 0.15)],
-        [1, mix(MATERIAL.walnut, getColor("BLACK"), 0.35)],
+        [0, mix(MACHINE_COLORS.walnut, getColor("WHITE"), 0.15)],
+        [1, mix(MACHINE_COLORS.walnut, getColor("BLACK"), 0.35)],
       ]
     );
     gradientRect(
@@ -82,12 +84,12 @@ function recoilProgram(sketch: p5, read: () => RecoilFrame) {
         y: barrel.y - height * 0.005,
       },
       [
-        [0, mix(MATERIAL.castIron, getColor("WHITE"), 0.2)],
-        [1, mix(MATERIAL.castIron, getColor("BLACK"), 0.4)],
+        [0, mix(CAR_COLORS.castIron, getColor("WHITE"), 0.2)],
+        [1, mix(CAR_COLORS.castIron, getColor("BLACK"), 0.4)],
       ]
     );
     sketch.noStroke();
-    sketch.fill(fade(MATERIAL.cotton, 0.85));
+    sketch.fill(fade(MACHINE_COLORS.cotton, 0.85));
     sketch.ellipse(
       width * 0.08,
       barrel.y + height * 0.02,
@@ -96,7 +98,7 @@ function recoilProgram(sketch: p5, read: () => RecoilFrame) {
     );
     if (clock < 1.2) {
       const flight = (clock / 1.2) * width * 0.4;
-      sketch.fill(MATERIAL.brass);
+      sketch.fill(INSTRUMENT_COLORS.brass);
       sketch.rect(barrel.x + width * 0.32 + flight, barrel.y, 12, 5, 2);
     }
     if (clock < 0.9) {

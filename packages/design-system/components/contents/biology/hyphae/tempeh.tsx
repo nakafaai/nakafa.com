@@ -22,7 +22,8 @@ import {
 import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { P5Sketch } from "@repo/design-system/components/visual/sketch";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { BIOLOGY_COLORS } from "@repo/design-system/lib/material/biology";
+import { ECOLOGY_COLORS } from "@repo/design-system/lib/material/ecology";
 import { Array as Arr, Schema } from "effect";
 import type p5 from "p5";
 import { type ReactNode, useMemo, useState } from "react";
@@ -209,11 +210,11 @@ function trayProgram(sketch: p5, read: () => Tray) {
     const x = (mm: number) => sketch.width / 2 + mm * scale;
     const y = (mm: number) => sketch.height / 2 + mm * scale;
 
-    sketch.background(MATERIAL.bananaLeaf);
+    sketch.background(BIOLOGY_COLORS.bananaLeaf);
     drawVeins(sketch);
     drawBeans(sketch, x, y, scale);
     drawHyphae(sketch, segments, x, y, scale);
-    const felt = sketch.color(MATERIAL.hypha);
+    const felt = sketch.color(BIOLOGY_COLORS.hypha);
     felt.setAlpha(150 * coverOf(segments, COVER_CELLS) ** 2);
     sketch.noStroke();
     sketch.fill(felt);
@@ -235,7 +236,7 @@ function contextOf(sketch: p5) {
 
 /** The banana leaf the beans ferment on: fine parallel veins running across it. */
 function drawVeins(sketch: p5) {
-  const vein = sketch.color(MATERIAL.leafLitterDark);
+  const vein = sketch.color(ECOLOGY_COLORS.leafLitterDark);
   vein.setAlpha(40);
   sketch.stroke(vein);
   sketch.strokeWeight(1);
@@ -262,7 +263,7 @@ function drawHyphae(
 ) {
   const context = contextOf(sketch);
   const trace = (weight: number, alpha: number) => {
-    const thread = sketch.color(MATERIAL.hypha);
+    const thread = sketch.color(BIOLOGY_COLORS.hypha);
     thread.setAlpha(alpha);
     sketch.stroke(thread);
     sketch.strokeWeight(weight);
@@ -314,7 +315,7 @@ function drawBeans(
     sketch.rotate((hashUnit(bean, 3) - 0.5) * 0.24 + (bean % 2) * Math.PI);
     const context = contextOf(sketch);
     sketch.noStroke();
-    sketch.fill(MATERIAL.soybean);
+    sketch.fill(ECOLOGY_COLORS.soybean);
     if (context !== undefined) {
       const shade = context.createRadialGradient(
         0.6 * scale,
@@ -324,12 +325,12 @@ function drawBeans(
         0,
         2.9 * scale
       );
-      shade.addColorStop(0, MATERIAL.soybeanFace);
-      shade.addColorStop(0.6, MATERIAL.soybean);
-      shade.addColorStop(1, MATERIAL.soybeanEdge);
+      shade.addColorStop(0, ECOLOGY_COLORS.soybeanFace);
+      shade.addColorStop(0.6, ECOLOGY_COLORS.soybean);
+      shade.addColorStop(1, ECOLOGY_COLORS.soybeanEdge);
       context.fillStyle = shade;
       context.shadowBlur = scale * 0.8;
-      const shadow = sketch.color(MATERIAL.leafLitterDark);
+      const shadow = sketch.color(ECOLOGY_COLORS.leafLitterDark);
       shadow.setAlpha(110);
       context.shadowColor = shadow.toString();
       context.shadowOffsetY = scale * 0.25;
@@ -339,12 +340,12 @@ function drawBeans(
       context.shadowBlur = 0;
       context.shadowOffsetY = 0;
     }
-    sketch.stroke(MATERIAL.soybeanEdge);
+    sketch.stroke(ECOLOGY_COLORS.soybeanEdge);
     sketch.strokeWeight(Math.max(0.4, 0.06 * scale));
     sketch.noFill();
     sketch.arc(-0.3 * scale, 0, 3.6 * scale, 2.6 * scale, -0.9, 0.9);
     sketch.noStroke();
-    sketch.fill(MATERIAL.leafLitter);
+    sketch.fill(ECOLOGY_COLORS.leafLitter);
     sketch.ellipse(-2.15 * scale, 0, 0.5 * scale, 0.9 * scale);
     sketch.pop();
   });

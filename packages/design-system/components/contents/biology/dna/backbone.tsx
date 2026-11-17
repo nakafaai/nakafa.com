@@ -6,7 +6,7 @@ import {
   Instances,
   type Placement,
 } from "@repo/design-system/components/contents/biology/instances";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { CELL_COLORS } from "@repo/design-system/lib/material/cell";
 import { Array as Arr } from "effect";
 import { useMemo } from "react";
 import { CatmullRomCurve3, Vector3 } from "three";
@@ -64,7 +64,7 @@ export function Backbone({
         <dodecahedronGeometry args={[0.1, 0]} />
         <meshPhysicalMaterial
           clearcoat={0.4}
-          color={MATERIAL.deoxyribose}
+          color={CELL_COLORS.deoxyribose}
           roughness={0.45}
         />
       </Instances>
@@ -78,11 +78,11 @@ export function NewStrands({ ladder }: { readonly ladder: readonly Rung[] }) {
   return (
     <>
       <Backbone
-        color={MATERIAL.phosphateNew}
+        color={CELL_COLORS.phosphateNew}
         points={Arr.map(copied, (rung) => rung.newFirst)}
       />
       <Backbone
-        color={MATERIAL.phosphateNew}
+        color={CELL_COLORS.phosphateNew}
         points={Arr.map(copied, (rung) => rung.newSecond)}
       />
     </>

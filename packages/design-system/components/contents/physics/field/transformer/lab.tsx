@@ -28,7 +28,10 @@ import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { P5Sketch } from "@repo/design-system/components/visual/sketch";
 import { getColor } from "@repo/design-system/lib/color";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { BENCH_COLORS } from "@repo/design-system/lib/material/bench";
+import { ENERGY_COLORS } from "@repo/design-system/lib/material/energy";
+import { INSTRUMENT_COLORS } from "@repo/design-system/lib/material/instrument";
+import { MACHINE_COLORS } from "@repo/design-system/lib/material/machine";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr, Schema } from "effect";
 import type p5 from "p5";
@@ -60,10 +63,10 @@ function paintCoil(
   sketch.noFill();
   for (let turn = 0; turn < turns; turn += 1) {
     const y = span.top + gap * (turn + 0.5);
-    sketch.stroke(mix(MATERIAL.copper, getColor("BLACK"), 0.35));
+    sketch.stroke(mix(INSTRUMENT_COLORS.copper, getColor("BLACK"), 0.35));
     sketch.strokeWeight(Math.max(2, gap * 0.7));
     sketch.line(x - width / 2, y, x + width / 2, y);
-    sketch.stroke(mix(MATERIAL.copper, getColor("WHITE"), 0.3));
+    sketch.stroke(mix(INSTRUMENT_COLORS.copper, getColor("WHITE"), 0.3));
     sketch.strokeWeight(Math.max(1, gap * 0.25));
     sketch.line(x - width / 2, y - gap * 0.12, x + width / 2, y - gap * 0.12);
   }
@@ -96,14 +99,14 @@ function transformerProgram(sketch: p5, read: () => TransformerFrame) {
       { x: (core.left + core.right) / 2, y: (core.top + core.bottom) / 2 },
       width * 0.32,
       {
-        color: MATERIAL.coalGlow,
+        color: BENCH_COLORS.coalGlow,
         strength: 0.35 * (1 - frame.efficiency),
       }
     );
     const steel = (x: number, y: number, w: number, h: number) =>
       gradientRect(sketch, { height: h, width: w, x, y }, [
-        [0, mix(MATERIAL.galvanizedSteel, getColor("WHITE"), 0.15)],
-        [1, mix(MATERIAL.galvanizedSteel, getColor("BLACK"), 0.4)],
+        [0, mix(ENERGY_COLORS.galvanizedSteel, getColor("WHITE"), 0.15)],
+        [1, mix(ENERGY_COLORS.galvanizedSteel, getColor("BLACK"), 0.4)],
       ]);
     steel(core.left, core.top, core.right - core.left, limb);
     steel(core.left, core.bottom - limb, core.right - core.left, limb);
@@ -135,7 +138,7 @@ function transformerProgram(sketch: p5, read: () => TransformerFrame) {
         { x: core.left - limb * 0.4, y: span.top },
         { x: width * 0.05, y: span.top },
       ],
-      MATERIAL.hullRed
+      MACHINE_COLORS.hullRed
     );
     wire(
       sketch,
@@ -143,7 +146,7 @@ function transformerProgram(sketch: p5, read: () => TransformerFrame) {
         { x: core.left - limb * 0.4, y: span.bottom },
         { x: width * 0.05, y: span.bottom },
       ],
-      MATERIAL.trolleyPaint
+      INSTRUMENT_COLORS.trolleyPaint
     );
     const middle = (span.top + span.bottom) / 2;
     wire(
@@ -153,7 +156,7 @@ function transformerProgram(sketch: p5, read: () => TransformerFrame) {
         { x: width * 0.78, y: middle - 10 },
         { x: width * 0.78, y: core.top + height * 0.08 },
       ],
-      MATERIAL.hullRed
+      MACHINE_COLORS.hullRed
     );
     wire(
       sketch,
@@ -162,7 +165,7 @@ function transformerProgram(sketch: p5, read: () => TransformerFrame) {
         { x: width * 0.9, y: middle + 10 },
         { x: width * 0.9, y: core.top + height * 0.08 },
       ],
-      MATERIAL.trolleyPaint
+      INSTRUMENT_COLORS.trolleyPaint
     );
     paintBulb(
       sketch,

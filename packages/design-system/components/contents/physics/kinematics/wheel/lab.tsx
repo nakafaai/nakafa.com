@@ -31,7 +31,8 @@ import {
 } from "@repo/design-system/components/visual/card";
 import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { CAR_COLORS } from "@repo/design-system/lib/material/car";
+import { ROAD_COLORS } from "@repo/design-system/lib/material/road";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr, Schema } from "effect";
 import { type ReactNode, type Ref, Suspense, useRef, useState } from "react";
@@ -60,7 +61,7 @@ function WheelStand() {
       <mesh castShadow position={[0, 0.012, 0]} receiveShadow>
         <boxGeometry args={[0.42, 0.024, 0.28]} />
         <meshStandardMaterial
-          color={MATERIAL.lampPost}
+          color={ROAD_COLORS.lampPost}
           metalness={0.6}
           roughness={0.4}
         />
@@ -69,7 +70,7 @@ function WheelStand() {
         <mesh castShadow key={side} position={[0, AXLE_HEIGHT / 2, side]}>
           <cylinderGeometry args={[0.012, 0.016, AXLE_HEIGHT, 16]} />
           <meshStandardMaterial
-            color={MATERIAL.chrome}
+            color={CAR_COLORS.chrome}
             metalness={1}
             roughness={0.25}
           />
@@ -82,7 +83,7 @@ function WheelStand() {
       >
         <cylinderGeometry args={[0.008, 0.008, 0.13, 12]} />
         <meshStandardMaterial
-          color={MATERIAL.chrome}
+          color={CAR_COLORS.chrome}
           metalness={1}
           roughness={0.2}
         />
@@ -97,12 +98,12 @@ function Wheel({ ref }: { readonly ref: Ref<Group> }) {
     <group position={[0, AXLE_HEIGHT, 0]} ref={ref}>
       <mesh castShadow>
         <torusGeometry args={[VALVE_RADIUS + 0.018, 0.016, 20, 96]} />
-        <meshStandardMaterial color={MATERIAL.tyre} roughness={0.9} />
+        <meshStandardMaterial color={CAR_COLORS.tyre} roughness={0.9} />
       </mesh>
       <mesh castShadow>
         <torusGeometry args={[VALVE_RADIUS, 0.009, 14, 96]} />
         <meshStandardMaterial
-          color={MATERIAL.rimDark}
+          color={CAR_COLORS.rimDark}
           metalness={0.9}
           roughness={0.3}
         />
@@ -110,7 +111,7 @@ function Wheel({ ref }: { readonly ref: Ref<Group> }) {
       <mesh rotation={[Math.PI / 2, 0, 0]}>
         <cylinderGeometry args={[0.022, 0.022, 0.07, 20]} />
         <meshStandardMaterial
-          color={MATERIAL.hub}
+          color={CAR_COLORS.hub}
           metalness={0.8}
           roughness={0.35}
         />
@@ -132,7 +133,7 @@ function Wheel({ ref }: { readonly ref: Ref<Group> }) {
               args={[0.0011, 0.0011, VALVE_RADIUS - 0.022, 6]}
             />
             <meshStandardMaterial
-              color={MATERIAL.chrome}
+              color={CAR_COLORS.chrome}
               metalness={1}
               roughness={0.2}
             />

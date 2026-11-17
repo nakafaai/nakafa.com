@@ -7,7 +7,7 @@ import {
 import { Instances } from "@repo/design-system/components/contents/biology/instances";
 import { useBumpySphere } from "@repo/design-system/components/contents/biology/surface";
 import { hashUnit } from "@repo/design-system/components/contents/simulation/grain";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { ECOLOGY_COLORS } from "@repo/design-system/lib/material/ecology";
 import { Array as Arr, Option } from "effect";
 import { useEffect, useMemo } from "react";
 import {
@@ -402,7 +402,7 @@ function Rock({ seed }: { readonly seed: number }) {
       receiveShadow
       scale={ROCK.scale}
     >
-      <meshStandardMaterial color={MATERIAL.reefRock} roughness={0.95} />
+      <meshStandardMaterial color={ECOLOGY_COLORS.reefRock} roughness={0.95} />
     </mesh>
   );
 }

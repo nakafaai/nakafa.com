@@ -37,7 +37,7 @@ import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { P5Sketch } from "@repo/design-system/components/visual/sketch";
 import { getColor } from "@repo/design-system/lib/color";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { INSTRUMENT_COLORS } from "@repo/design-system/lib/material/instrument";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr, Schema } from "effect";
 import type p5 from "p5";
@@ -70,9 +70,9 @@ function paintBench(sketch: p5) {
 function toolStops(tool: typeof RodToolSchema.Type) {
   return tool === "tape"
     ? ([
-        [0, mix(MATERIAL.tapeYellow, getColor("WHITE"), 0.45)],
-        [0.5, MATERIAL.tapeYellow],
-        [1, mix(MATERIAL.tapeYellow, getColor("BLACK"), 0.35)],
+        [0, mix(INSTRUMENT_COLORS.tapeYellow, getColor("WHITE"), 0.45)],
+        [0.5, INSTRUMENT_COLORS.tapeYellow],
+        [1, mix(INSTRUMENT_COLORS.tapeYellow, getColor("BLACK"), 0.35)],
       ] as const)
     : steelStops(tool === "caliper" ? 0.2 : 0);
 }

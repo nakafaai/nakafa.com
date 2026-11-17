@@ -6,7 +6,11 @@ import {
 } from "@repo/design-system/components/contents/physics/canvas/paint";
 import { hashUnit } from "@repo/design-system/components/contents/simulation/grain";
 import { getColor } from "@repo/design-system/lib/color";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { ECOLOGY_COLORS } from "@repo/design-system/lib/material/ecology";
+import { ENERGY_COLORS } from "@repo/design-system/lib/material/energy";
+import { INSTRUMENT_COLORS } from "@repo/design-system/lib/material/instrument";
+import { ROAD_COLORS } from "@repo/design-system/lib/material/road";
+import { TOWN_COLORS } from "@repo/design-system/lib/material/town";
 import { Array as Arr, Order } from "effect";
 import type p5 from "p5";
 
@@ -91,13 +95,13 @@ function paintField(sketch: p5, layer: p5, height: number) {
 /** Damp soil: dark mud under a scatter of lighter clods and darker hollows. */
 function paintSoil(layer: p5, width: number, height: number) {
   layer.noStroke();
-  layer.fill(mix(MATERIAL.mud, MATERIAL.leafLitterDark, 0.35));
+  layer.fill(mix(ECOLOGY_COLORS.mud, ECOLOGY_COLORS.leafLitterDark, 0.35));
   layer.rect(0, 0, width, height);
   const grains = Math.round((width * height) / 26);
   const shades = [
-    fade(mix(MATERIAL.mud, MATERIAL.riverbank, 0.35), 0.55),
-    fade(MATERIAL.leafLitterDark, 0.5),
-    fade(mix(MATERIAL.mud, MATERIAL.soil, 0.5), 0.6),
+    fade(mix(ECOLOGY_COLORS.mud, TOWN_COLORS.riverbank, 0.35), 0.55),
+    fade(ECOLOGY_COLORS.leafLitterDark, 0.5),
+    fade(mix(ECOLOGY_COLORS.mud, ENERGY_COLORS.soil, 0.5), 0.6),
   ] as const;
   Arr.forEach(shades, (shade, kind) => {
     layer.fill(shade);
@@ -141,9 +145,9 @@ function paintPuddles(
       0,
       radius
     );
-    water.addColorStop(0, fade(MATERIAL.waterGlint, 0.32));
-    water.addColorStop(0.45, fade(MATERIAL.water, 0.4));
-    water.addColorStop(1, fade(MATERIAL.waterDeep, 0));
+    water.addColorStop(0, fade(TOWN_COLORS.waterGlint, 0.32));
+    water.addColorStop(0.45, fade(TOWN_COLORS.water, 0.4));
+    water.addColorStop(1, fade(TOWN_COLORS.waterDeep, 0));
     drawing.fillStyle = water;
     drawing.beginPath();
     drawing.arc(0, 0, radius, 0, Math.PI * 2);
@@ -267,17 +271,21 @@ function hillSprites(sketch: p5, spacing: number) {
       const shade =
         blade.lit > 0.5
           ? mix(
-              MATERIAL.riceLeaf,
-              MATERIAL.riceLeafPale,
+              ECOLOGY_COLORS.riceLeaf,
+              ECOLOGY_COLORS.riceLeafPale,
               (blade.lit - 0.5) * 1.6
             )
-          : mix(MATERIAL.foliageDark, MATERIAL.riceLeaf, blade.lit * 2);
+          : mix(
+              ROAD_COLORS.foliageDark,
+              ECOLOGY_COLORS.riceLeaf,
+              blade.lit * 2
+            );
       hill.stroke(shade);
       hill.strokeWeight(Math.max(0.7, spacing * 0.075));
       hill.bezier(0, 0, midX * 0.6, midY * 0.6, midX, midY, tipX, tipY);
     });
     hill.noStroke();
-    hill.fill(MATERIAL.foliageDark);
+    hill.fill(ROAD_COLORS.foliageDark);
     hill.circle(0, 0, spacing * 0.16);
     return hill;
   });
@@ -293,9 +301,9 @@ function paintBund(
   box: { height: number; width: number; x: number; y: number },
   upright: boolean
 ) {
-  const lit = mix(MATERIAL.soil, MATERIAL.riverbank, 0.55);
-  const top = mix(MATERIAL.soil, MATERIAL.riverbank, 0.3);
-  const shaded = mix(MATERIAL.soil, MATERIAL.leafLitterDark, 0.45);
+  const lit = mix(ENERGY_COLORS.soil, TOWN_COLORS.riverbank, 0.55);
+  const top = mix(ENERGY_COLORS.soil, TOWN_COLORS.riverbank, 0.3);
+  const shaded = mix(ENERGY_COLORS.soil, ECOLOGY_COLORS.leafLitterDark, 0.45);
   const cast = upright
     ? {
         height: box.height,
@@ -337,8 +345,8 @@ function paintBund(
     const across = hashUnit(grain, upright ? 63 : 64) * depth;
     layer.fill(
       hashUnit(grain, 65) > 0.5
-        ? fade(MATERIAL.riverbank, 0.45)
-        : fade(MATERIAL.leafLitterDark, 0.4)
+        ? fade(TOWN_COLORS.riverbank, 0.45)
+        : fade(ECOLOGY_COLORS.leafLitterDark, 0.4)
     );
     layer.circle(
       upright ? box.x + across : box.x + along,
@@ -353,7 +361,9 @@ function paintBund(
     const lean = (hashUnit(tuft, 74) - 0.5) * 3;
     const reach = 2 + hashUnit(tuft, 75) * 3;
     layer.stroke(
-      hashUnit(tuft, 76) > 0.4 ? MATERIAL.foliageLight : MATERIAL.foliageShade
+      hashUnit(tuft, 76) > 0.4
+        ? ROAD_COLORS.foliageLight
+        : ROAD_COLORS.foliageShade
     );
     const x = upright ? box.x + edge : box.x + along;
     const y = upright ? box.y + along : box.y + edge;
@@ -374,8 +384,8 @@ function paintLight(layer: p5, width: number, height: number) {
     return;
   }
   const light = drawing.createLinearGradient(0, 0, width, height);
-  light.addColorStop(0, fade(MATERIAL.lampLight, 0.14));
-  light.addColorStop(0.5, fade(MATERIAL.lampLight, 0));
+  light.addColorStop(0, fade(INSTRUMENT_COLORS.lampLight, 0.14));
+  light.addColorStop(0.5, fade(INSTRUMENT_COLORS.lampLight, 0));
   light.addColorStop(1, fade(getColor("ZINC", 950), 0.16));
   drawing.save();
   drawing.fillStyle = light;

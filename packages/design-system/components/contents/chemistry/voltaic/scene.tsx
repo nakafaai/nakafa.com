@@ -30,7 +30,10 @@ import {
   MetalMaterial,
 } from "@repo/design-system/components/three/physical";
 import { getColor } from "@repo/design-system/lib/color";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { BENCH_COLORS } from "@repo/design-system/lib/material/bench";
+import { CAR_COLORS } from "@repo/design-system/lib/material/car";
+import { INSTRUMENT_COLORS } from "@repo/design-system/lib/material/instrument";
+import { REAGENT_COLORS } from "@repo/design-system/lib/material/reagent";
 import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
 
@@ -52,20 +55,20 @@ const BRIDGE_RADIUS = 0.07;
 
 /** The colour of each metal's plate, from the real metal. */
 const METAL_COLOR = {
-  copper: MATERIAL.copper,
-  iron: MATERIAL.castIron,
-  magnesium: MATERIAL.aluminium,
-  silver: MATERIAL.silver,
+  copper: INSTRUMENT_COLORS.copper,
+  iron: CAR_COLORS.castIron,
+  magnesium: INSTRUMENT_COLORS.aluminium,
+  silver: INSTRUMENT_COLORS.silver,
   zinc: getColor("ZINC"),
 } satisfies Record<Metal, string>;
 
 /** The colour of each metal's solution: copper(II) blue, iron(II) pale green, the rest clear. */
 const SOLUTION_COLOR = {
-  copper: MATERIAL.copperSulfate,
-  iron: MATERIAL.ironPaleGreen,
-  magnesium: MATERIAL.solution,
-  silver: MATERIAL.solution,
-  zinc: MATERIAL.solution,
+  copper: REAGENT_COLORS.copperSulfate,
+  iron: REAGENT_COLORS.ironPaleGreen,
+  magnesium: REAGENT_COLORS.solution,
+  silver: REAGENT_COLORS.solution,
+  zinc: REAGENT_COLORS.solution,
 } satisfies Record<Metal, string>;
 
 /**
@@ -116,22 +119,22 @@ export function ChemicalCellScene({
         >
           <meshPhysicalMaterial
             clearcoat={0.35}
-            color={MATERIAL.meterBody}
+            color={BENCH_COLORS.meterBody}
             roughness={0.5}
           />
         </RoundedBox>
         <mesh position={[0, BATTERY_Y + 0.02, 0.081]}>
           <planeGeometry args={[TERMINAL_OFFSET * 1.4, 0.2]} />
           <meshStandardMaterial
-            color={MATERIAL.lcd}
-            emissive={MATERIAL.lcdGlow}
+            color={BENCH_COLORS.lcd}
+            emissive={BENCH_COLORS.lcdGlow}
             roughness={0.3}
           />
         </mesh>
         <ThreeLabel
-          color={MATERIAL.meterInk}
+          color={BENCH_COLORS.meterInk}
           fontSize="compact"
-          outlineColor={MATERIAL.meterHalo}
+          outlineColor={BENCH_COLORS.meterHalo}
           outlineWidth={0.003}
           position={[0, BATTERY_Y, 0.09]}
         >
@@ -142,7 +145,7 @@ export function ChemicalCellScene({
             colors={colors}
             key={String(index)}
             lead={lead}
-            sheath={index === 0 ? MATERIAL.leadBlack : MATERIAL.leadRed}
+            sheath={index === 0 ? BENCH_COLORS.leadBlack : BENCH_COLORS.leadRed}
           />
         ))}
       </group>
@@ -231,7 +234,7 @@ function SaltBridge() {
       {Arr.map([-BRIDGE_X, BRIDGE_X], (x) => (
         <mesh key={x} position={[x, 0.3 + leg / 2, 0]}>
           <cylinderGeometry args={[BRIDGE_RADIUS, BRIDGE_RADIUS, leg, 20]} />
-          <GlassMaterial color={MATERIAL.glass} />
+          <GlassMaterial color={BENCH_COLORS.glass} />
         </mesh>
       ))}
       <mesh position={[0, BRIDGE_TOP, 0]} rotation={[0, 0, Math.PI / 2]}>
@@ -243,7 +246,7 @@ function SaltBridge() {
             20,
           ]}
         />
-        <GlassMaterial color={MATERIAL.glass} />
+        <GlassMaterial color={BENCH_COLORS.glass} />
       </mesh>
     </group>
   );

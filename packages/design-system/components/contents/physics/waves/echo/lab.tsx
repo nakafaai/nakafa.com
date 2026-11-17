@@ -20,7 +20,12 @@ import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { P5Sketch } from "@repo/design-system/components/visual/sketch";
 import { getColor } from "@repo/design-system/lib/color";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { CAR_COLORS } from "@repo/design-system/lib/material/car";
+import { ECOLOGY_COLORS } from "@repo/design-system/lib/material/ecology";
+import { ENERGY_COLORS } from "@repo/design-system/lib/material/energy";
+import { MACHINE_COLORS } from "@repo/design-system/lib/material/machine";
+import { ROAD_COLORS } from "@repo/design-system/lib/material/road";
+import { SKY_COLORS } from "@repo/design-system/lib/material/sky";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Schema } from "effect";
 import type p5 from "p5";
@@ -44,15 +49,15 @@ type EchoFrame = typeof EchoFrameSchema.Type;
 function paintCoast(sketch: p5, cliff: number, sea: number) {
   const { height, width } = sketch;
   gradientRect(sketch, { height: sea, width, x: 0, y: 0 }, [
-    [0, MATERIAL.skyZenith],
-    [1, MATERIAL.skyHaze],
+    [0, SKY_COLORS.skyZenith],
+    [1, SKY_COLORS.skyHaze],
   ]);
   gradientRect(sketch, { height: height - sea, width, x: 0, y: sea }, [
-    [0, MATERIAL.seawater],
-    [1, MATERIAL.seawaterDeep],
+    [0, ECOLOGY_COLORS.seawater],
+    [1, ECOLOGY_COLORS.seawaterDeep],
   ]);
   sketch.noStroke();
-  sketch.fill(mix(MATERIAL.rock, getColor("BLACK"), 0.15));
+  sketch.fill(mix(ENERGY_COLORS.rock, getColor("BLACK"), 0.15));
   sketch.beginShape();
   sketch.vertex(cliff, height);
   sketch.vertex(cliff, sea * 0.35);
@@ -60,7 +65,7 @@ function paintCoast(sketch: p5, cliff: number, sea: number) {
   sketch.vertex(width, sea * 0.2);
   sketch.vertex(width, height);
   sketch.endShape(sketch.CLOSE);
-  sketch.fill(mix(MATERIAL.foliage, getColor("BLACK"), 0.1));
+  sketch.fill(mix(ROAD_COLORS.foliage, getColor("BLACK"), 0.1));
   sketch.rect(cliff + width * 0.02, sea * 0.2, width, sea * 0.08);
 }
 
@@ -75,7 +80,7 @@ function paintBoat(
     { blur: 8, color: fade(getColor("BLACK"), 0.4), drop: 3 },
     () => {
       sketch.noStroke();
-      sketch.fill(MATERIAL.hullRed);
+      sketch.fill(MACHINE_COLORS.hullRed);
       sketch.beginShape();
       sketch.vertex(at.x - size, at.y - size * 0.35);
       sketch.vertex(at.x + size * 1.1, at.y - size * 0.35);
@@ -84,9 +89,9 @@ function paintBoat(
       sketch.endShape(sketch.CLOSE);
     }
   );
-  sketch.fill(MATERIAL.deckWhite);
+  sketch.fill(MACHINE_COLORS.deckWhite);
   sketch.rect(at.x - size * 0.6, at.y - size * 0.8, size * 0.8, size * 0.45, 3);
-  sketch.fill(MATERIAL.tintedGlass);
+  sketch.fill(CAR_COLORS.tintedGlass);
   sketch.rect(at.x - size * 0.5, at.y - size * 0.72, size * 0.6, size * 0.2, 2);
 }
 

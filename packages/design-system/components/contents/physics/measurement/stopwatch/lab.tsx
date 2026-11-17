@@ -37,7 +37,7 @@ import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { P5Sketch } from "@repo/design-system/components/visual/sketch";
 import { getColor } from "@repo/design-system/lib/color";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { INSTRUMENT_COLORS } from "@repo/design-system/lib/material/instrument";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr, Option, Schema } from "effect";
 import type p5 from "p5";
@@ -132,8 +132,8 @@ function paintPendulum(sketch: p5, time: number) {
     { blur: 12, color: fade(getColor("BLACK"), 0.5), drop: 5 },
     () => {
       litBall(sketch, bob, height * 0.035, {
-        dark: mix(MATERIAL.brass, getColor("BLACK"), 0.5),
-        light: mix(MATERIAL.brass, getColor("WHITE"), 0.6),
+        dark: mix(INSTRUMENT_COLORS.brass, getColor("BLACK"), 0.5),
+        light: mix(INSTRUMENT_COLORS.brass, getColor("WHITE"), 0.6),
       });
     }
   );
@@ -182,7 +182,7 @@ function paintStopwatch(sketch: p5, time: number) {
     );
   }
   const hand = ((time % 60) / 60) * Math.PI * 2 - Math.PI / 2;
-  sketch.stroke(MATERIAL.dialNeedle);
+  sketch.stroke(INSTRUMENT_COLORS.dialNeedle);
   sketch.strokeWeight(3);
   sketch.line(
     center.x - radius * 0.15 * Math.cos(hand),

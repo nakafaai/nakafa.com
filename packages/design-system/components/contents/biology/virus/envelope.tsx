@@ -17,7 +17,8 @@ import {
   insideBall,
 } from "@repo/design-system/components/contents/biology/virus/capsid";
 import { hashUnit } from "@repo/design-system/components/contents/simulation/grain";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { CELL_COLORS } from "@repo/design-system/lib/material/cell";
+import { VIRION_COLORS } from "@repo/design-system/lib/material/virion";
 import { Array as Arr } from "effect";
 import { useMemo, useRef } from "react";
 import { Euler, type Group, Quaternion, Vector3 } from "three";
@@ -179,19 +180,27 @@ export function Virion({
   return (
     <group ref={body}>
       <mesh castShadow geometry={envelope} receiveShadow>
-        <EnvelopeMaterial clip={clip} color={MATERIAL.viralEnvelope} wedge />
+        <EnvelopeMaterial
+          clip={clip}
+          color={VIRION_COLORS.viralEnvelope}
+          wedge
+        />
       </mesh>
       <Instances placements={dimers}>
         <sphereGeometry args={[1, 8, 6]} />
-        <EnvelopeMaterial clip={clip} color={MATERIAL.membraneDimer} wedge />
+        <EnvelopeMaterial
+          clip={clip}
+          color={VIRION_COLORS.membraneDimer}
+          wedge
+        />
       </Instances>
       <Instances placements={spikes.stalks}>
         <cylinderGeometry args={[0.022, 0.03, 0.2, 7]} />
-        <EnvelopeMaterial clip={clip} color={MATERIAL.spike} wedge />
+        <EnvelopeMaterial clip={clip} color={CELL_COLORS.spike} wedge />
       </Instances>
       <Instances placements={spikes.lobes}>
         <sphereGeometry args={[1, 14, 10]} />
-        <EnvelopeMaterial clip={clip} color={MATERIAL.spike} wedge />
+        <EnvelopeMaterial clip={clip} color={CELL_COLORS.spike} wedge />
       </Instances>
       {antibodies.heavy.length > 0 ? (
         <group>
@@ -199,7 +208,7 @@ export function Virion({
             <sphereGeometry args={[1, 10, 8]} />
             <meshPhysicalMaterial
               clearcoat={0.5}
-              color={MATERIAL.antibody}
+              color={CELL_COLORS.antibody}
               roughness={0.4}
             />
           </Instances>
@@ -207,7 +216,7 @@ export function Virion({
             <sphereGeometry args={[1, 10, 8]} />
             <meshPhysicalMaterial
               clearcoat={0.5}
-              color={MATERIAL.antibodyLight}
+              color={VIRION_COLORS.antibodyLight}
               roughness={0.4}
             />
           </Instances>
@@ -252,7 +261,7 @@ function Packages() {
       <sphereGeometry args={[1, 10, 8]} />
       <meshPhysicalMaterial
         clearcoat={0.3}
-        color={MATERIAL.nucleocapsid}
+        color={VIRION_COLORS.nucleocapsid}
         roughness={0.5}
       />
     </Instances>

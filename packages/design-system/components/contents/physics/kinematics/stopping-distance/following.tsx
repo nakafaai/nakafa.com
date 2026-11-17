@@ -47,7 +47,7 @@ import {
 } from "@repo/design-system/components/visual/card";
 import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { CAR_COLORS } from "@repo/design-system/lib/material/car";
 import { Array as Arr, Option } from "effect";
 import {
   type ReactNode,
@@ -268,8 +268,8 @@ function FollowingScene({ follow }: { readonly follow: Follow }) {
       <Road from={-300} surface="dry" to={offset + 600} />
       <DistancePosts posts={Arr.map(Arr.range(1, 14), (index) => index * 10)} />
       <group position={[0, 0, ROAD.lane]}>
-        <Sedan color={MATERIAL.carPaintDark} ref={lead} />
-        <Sedan color={MATERIAL.carPaint} ref={rear} />
+        <Sedan color={CAR_COLORS.carPaintDark} ref={lead} />
+        <Sedan color={CAR_COLORS.carPaint} ref={rear} />
       </group>
     </>
   );

@@ -9,7 +9,9 @@ import {
   GlassMaterial,
   MetalMaterial,
 } from "@repo/design-system/components/three/physical";
-import { MATERIAL } from "@repo/design-system/lib/material";
+import { BENCH_COLORS } from "@repo/design-system/lib/material/bench";
+import { BIOLOGY_COLORS } from "@repo/design-system/lib/material/biology";
+import { CAR_COLORS } from "@repo/design-system/lib/material/car";
 import { Array as Arr, Option } from "effect";
 import { useMemo, useRef } from "react";
 import { CatmullRomCurve3, type Group, Vector3 } from "three";
@@ -36,12 +38,14 @@ const NOSEPIECE_TILT = 0.42;
  */
 function ringColor(objective: number) {
   if (objective <= 4) {
-    return MATERIAL.objectiveRed;
+    return BIOLOGY_COLORS.objectiveRed;
   }
   if (objective <= 10) {
-    return MATERIAL.objectiveYellow;
+    return BIOLOGY_COLORS.objectiveYellow;
   }
-  return objective <= 40 ? MATERIAL.objectiveBlue : MATERIAL.objectiveWhite;
+  return objective <= 40
+    ? BIOLOGY_COLORS.objectiveBlue
+    : BIOLOGY_COLORS.objectiveWhite;
 }
 
 /**
@@ -105,14 +109,14 @@ export function MicroscopeStand({
         >
           <meshPhysicalMaterial
             clearcoat={0.6}
-            color={MATERIAL.microscopeEnamel}
+            color={BIOLOGY_COLORS.microscopeEnamel}
             roughness={0.35}
           />
         </RoundedBox>
         <mesh position={[0, 0.032, 0.012]}>
           <cylinderGeometry args={[0.018, 0.02, 0.006, 32]} />
           <meshBasicMaterial
-            color={MATERIAL.headlightGlow}
+            color={CAR_COLORS.headlightGlow}
             toneMapped={false}
           />
         </mesh>
@@ -120,7 +124,7 @@ export function MicroscopeStand({
           <tubeGeometry args={[arm, 48, 0.017, 20, false]} />
           <meshPhysicalMaterial
             clearcoat={0.6}
-            color={MATERIAL.microscopeEnamel}
+            color={BIOLOGY_COLORS.microscopeEnamel}
             roughness={0.35}
           />
         </mesh>
@@ -133,14 +137,14 @@ export function MicroscopeStand({
             <mesh castShadow>
               <cylinderGeometry args={[0.022, 0.022, 0.012, 32]} />
               <meshStandardMaterial
-                color={MATERIAL.microscopeBlack}
+                color={BIOLOGY_COLORS.microscopeBlack}
                 roughness={0.6}
               />
             </mesh>
             <mesh castShadow position={[0, side * 0.012, 0]}>
               <cylinderGeometry args={[0.012, 0.012, 0.012, 24]} />
               <meshStandardMaterial
-                color={MATERIAL.microscopeBlack}
+                color={BIOLOGY_COLORS.microscopeBlack}
                 roughness={0.6}
               />
             </mesh>
@@ -149,13 +153,16 @@ export function MicroscopeStand({
         <Stage />
         <mesh position={[0, STAGE_HEIGHT - 0.022, 0.012]}>
           <cylinderGeometry args={[0.016, 0.014, 0.03, 32]} />
-          <MetalMaterial color={MATERIAL.microscopeBlack} roughness={0.4} />
+          <MetalMaterial
+            color={BIOLOGY_COLORS.microscopeBlack}
+            roughness={0.4}
+          />
         </mesh>
         <mesh castShadow position={[0, 0.265, 0.012]}>
           <cylinderGeometry args={[0.016, 0.018, 0.04, 32]} />
           <meshPhysicalMaterial
             clearcoat={0.6}
-            color={MATERIAL.microscopeEnamel}
+            color={BIOLOGY_COLORS.microscopeEnamel}
             roughness={0.35}
           />
         </mesh>
@@ -163,27 +170,27 @@ export function MicroscopeStand({
           <mesh castShadow position={[0, 0.03, 0]}>
             <cylinderGeometry args={[0.012, 0.014, 0.06, 28]} />
             <meshStandardMaterial
-              color={MATERIAL.microscopeBlack}
+              color={BIOLOGY_COLORS.microscopeBlack}
               roughness={0.45}
             />
           </mesh>
           <mesh position={[0, 0.062, 0]}>
             <cylinderGeometry args={[0.013, 0.013, 0.006, 28]} />
             <meshStandardMaterial
-              color={MATERIAL.microscopeBlack}
+              color={BIOLOGY_COLORS.microscopeBlack}
               roughness={0.7}
             />
           </mesh>
           <mesh position={[0, 0.0655, 0]} rotation={[-Math.PI / 2, 0, 0]}>
             <circleGeometry args={[0.009, 28]} />
-            <GlassMaterial color={MATERIAL.lensBlue} opacity={0.7} />
+            <GlassMaterial color={BIOLOGY_COLORS.lensBlue} opacity={0.7} />
           </mesh>
         </group>
         <group position={NOSEPIECE} rotation={[NOSEPIECE_TILT, 0, 0]}>
           <group ref={turret}>
             <mesh castShadow>
               <cylinderGeometry args={[0.03, 0.026, 0.014, 40]} />
-              <MetalMaterial color={MATERIAL.chrome} roughness={0.25} />
+              <MetalMaterial color={CAR_COLORS.chrome} roughness={0.25} />
             </mesh>
             {Arr.map(objectives, (each, index) => {
               const length = 0.024 + Math.log10(each) * 0.016;
@@ -196,7 +203,10 @@ export function MicroscopeStand({
                   >
                     <mesh castShadow position={[0, -length / 2 - 0.007, 0]}>
                       <cylinderGeometry args={[0.0085, 0.0065, length, 28]} />
-                      <MetalMaterial color={MATERIAL.chrome} roughness={0.2} />
+                      <MetalMaterial
+                        color={CAR_COLORS.chrome}
+                        roughness={0.2}
+                      />
                     </mesh>
                     <mesh position={[0, -length * 0.35 - 0.007, 0]}>
                       <cylinderGeometry args={[0.0088, 0.0088, 0.003, 28]} />
@@ -230,22 +240,22 @@ function Stage() {
       <mesh castShadow position={[0, -0.004, 0]} receiveShadow>
         <boxGeometry args={[0.12, 0.008, 0.11]} />
         <meshStandardMaterial
-          color={MATERIAL.microscopeBlack}
+          color={BIOLOGY_COLORS.microscopeBlack}
           roughness={0.55}
         />
       </mesh>
       <mesh position={[0, 0.0006, 0.002]}>
         <boxGeometry args={[0.076, 0.0012, 0.026]} />
-        <GlassMaterial color={MATERIAL.glass} opacity={0.45} />
+        <GlassMaterial color={BENCH_COLORS.glass} opacity={0.45} />
       </mesh>
       <mesh position={[0, 0.0014, 0.002]}>
         <boxGeometry args={[0.022, 0.0002, 0.022]} />
-        <GlassMaterial color={MATERIAL.glass} opacity={0.35} />
+        <GlassMaterial color={BENCH_COLORS.glass} opacity={0.35} />
       </mesh>
       <mesh position={[0, 0.0013, 0.002]} rotation={[-Math.PI / 2, 0, 0]}>
         <circleGeometry args={[0.006, 24]} />
         <meshStandardMaterial
-          color={MATERIAL.methyleneBlue}
+          color={BIOLOGY_COLORS.methyleneBlue}
           opacity={0.6}
           roughness={0.5}
           transparent
@@ -259,7 +269,7 @@ function Stage() {
           rotation={[0, side * 0.25, 0]}
         >
           <boxGeometry args={[0.006, 0.0012, 0.04]} />
-          <MetalMaterial color={MATERIAL.chrome} roughness={0.25} />
+          <MetalMaterial color={CAR_COLORS.chrome} roughness={0.25} />
         </mesh>
       ))}
     </group>
