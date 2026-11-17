@@ -31,6 +31,7 @@ import {
   openingOrbit,
   turnOrbit,
 } from "@/lib/island/camera";
+import { coastOf } from "@/lib/island/coast";
 import { butterfliesOf, crownsOf } from "@/lib/island/drift";
 import { hoeOf, ripeningOf, sownOf, waterOf } from "@/lib/island/farming";
 import {
@@ -137,6 +138,7 @@ function start(
       );
     }
     painter.columns(columnsOf(cells));
+    painter.coast(coastOf(cells));
     painter.scenery({
       butterflies: butterfliesOf(cells, store.getState().seed),
       chimneys: chimneysOf(cells),
