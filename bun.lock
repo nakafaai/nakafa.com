@@ -329,6 +329,8 @@
         "@repo/utilities": "workspace:*",
         "@shadcn/react": "catalog:",
         "@shikijs/core": "4.6.0",
+        "@shikijs/langs": "4.6.0",
+        "@shikijs/themes": "4.6.0",
         "@shikijs/transformers": "^4.6.0",
         "@tanstack/react-router": "catalog:",
         "@tiptap/core": "3.33.1",

@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it } from "@effect/vitest";
+import { highlightCode } from "@repo/design-system/lib/code/browser";
 import {
   CodeHighlightError,
-  highlightCode,
   UnsupportedCodeLanguageError,
   UnsupportedCodeThemeError,
 } from "@repo/design-system/lib/code/highlight";
@@ -109,8 +109,7 @@ describe("code highlighting", () => {
       expect(error).toMatchObject({
         _tag: "UnsupportedCodeLanguageError",
         language: "not-a-language",
-        message:
-          'Code language "not-a-language" is not included in Shiki\'s bundle.',
+        message: 'Code language "not-a-language" has no grammar here.',
       });
     })
   );
@@ -149,8 +148,7 @@ describe("code highlighting", () => {
       expect(error).toBeInstanceOf(UnsupportedCodeThemeError);
       expect(error).toMatchObject({
         _tag: "UnsupportedCodeThemeError",
-        message:
-          'Code theme "not-a-bundled-theme" is not included in Shiki\'s bundle.',
+        message: 'Code theme "not-a-bundled-theme" is not registered here.',
         theme: "not-a-bundled-theme",
       });
     })
