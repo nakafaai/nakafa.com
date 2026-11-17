@@ -4,11 +4,11 @@ import type { Edit } from "@repo/backend/confect/island/world";
 import { createFramePace } from "@repo/design-system/lib/pace";
 import { Array as Arr, DateTime, Option } from "effect";
 import { createPainter, type Painter } from "@/components/island/draw";
-import { openingOrbit } from "@/lib/island/camera";
 import { flatQuads } from "@/lib/island/flat";
 import { islesMesh } from "@/lib/island/isles";
 import { glowOf } from "@/lib/island/light";
 import { lightingOf, meshChunk } from "@/lib/island/mesh";
+import { portraitOf } from "@/lib/island/portrait";
 import { livedOf, sceneBodies, sceneOf } from "@/lib/island/scene";
 import { seasonNow } from "@/lib/island/season";
 import { hourOf, lightOf } from "@/lib/island/sky";
@@ -19,9 +19,9 @@ import { CHUNKS } from "@/lib/island/world";
  * Draws the world into one canvas from a still camera, its water and its life
  * moving, until the returned cleanup stops it: the same living scene as the
  * game (ADR 0047, D53), its archipelago round it, its herd and villagers
- * wandering, the day's wild visitors, the sea's swimmers and the reef. The
- * camera never turns by itself: the learner turns the world once they enter
- * the game.
+ * wandering, the day's wild visitors, the sea's swimmers and the reef, framed
+ * whole with its shore (D55). The camera never turns by itself: the learner
+ * turns the world once they enter the game.
  */
 function preview(
   canvas: HTMLCanvasElement,
@@ -49,7 +49,7 @@ function preview(
   );
   let frame = 0;
   let lastLife = 0;
-  let orbit = openingOrbit(size, 1);
+  let orbit = portraitOf(size, 1);
   // A canvas drawn before its size is known, or cleared by a new size, shows black until it is
   // drawn again, so the frame after a resize draws whatever the pace says.
   let fresh = true;
@@ -96,7 +96,7 @@ function preview(
     canvas.width = Math.max(1, Math.round(canvas.clientWidth * ratio));
     canvas.height = Math.max(1, Math.round(canvas.clientHeight * ratio));
     fresh = true;
-    orbit = openingOrbit(
+    orbit = portraitOf(
       size,
       canvas.clientWidth / Math.max(1, canvas.clientHeight)
     );
