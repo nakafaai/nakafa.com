@@ -21,6 +21,15 @@ const historyToggle = (page: Page) =>
     .getByRole("button", { exact: true, name: "Chat history" });
 
 /**
+ * The learner moves the focus to the history toggle and presses it, which folds the panel. A keyboard moves the focus
+ * in every engine: WebKit, as Safari does, gives a pressed button no focus under a mouse.
+ */
+const pressHistory = async (page: Page) => {
+  await historyToggle(page).focus();
+  await page.keyboard.press("Enter");
+};
+
+/**
  * A rename saved with Enter while the server holds its answer. The focus goes
  * back to the control that opened the box at once, and stays there when the
  * answer comes.
@@ -110,7 +119,7 @@ const keepsFocusTheLearnerChose = Effect.fn("NakafaE2E.renameKeepsFocus")(
       await page.keyboard.type(NEW);
       await page.keyboard.press("Enter");
       await expect(titleOf(page)).toHaveText(NEW);
-      await history.click();
+      await pressHistory(page);
       changes.release();
       await saved(changes, before);
       await expect(history).toBeFocused();
@@ -137,7 +146,7 @@ const keepsFocusWhenRefused = Effect.fn(
     await page.keyboard.type(REFUSED);
     await page.keyboard.press("Enter");
     await expect(titleOf(page)).toHaveText(REFUSED);
-    await history.click();
+    await pressHistory(page);
     changes.release();
     await expect(page.getByText(FAILED).first()).toBeVisible();
     await expect(editorOf(page)).toHaveValue(REFUSED);
