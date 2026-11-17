@@ -118,6 +118,7 @@ export const Route = createFileRoute("/$locale/_marketing/pricing")({
               url,
             }),
           ],
+          kind: "marketing",
           locale: params.locale,
           parts: [],
           type: "website",

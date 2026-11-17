@@ -124,6 +124,7 @@ export const Route = createFileRoute("/$locale/_main/curricula/")({
             url: `${COMPANY_IDENTITY.url}/${locale}${indexHref}`,
           }),
         ],
+        kind: "hub",
         locale,
         absoluteTitle: metadataTitle,
         parts: [],

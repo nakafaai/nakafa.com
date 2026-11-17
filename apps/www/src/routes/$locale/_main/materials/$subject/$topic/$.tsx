@@ -235,6 +235,7 @@ export const Route = createFileRoute(
             [route.topicTitle]
           ),
         ],
+        kind: "lesson",
         locale,
         // A learner searches for a lesson by its subject and grade, such as "elips matematika kelas 12", so the lead
         // place's subject and level follow the lesson's name, and they also tell apart the lessons that share a

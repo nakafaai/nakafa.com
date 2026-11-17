@@ -62,7 +62,6 @@ export const Route = createFileRoute("/$locale/_main/quran/$surah")({
     } = loaderData;
     return toRouterHead(
       createSeoHead({
-        absoluteTitle: searchTitle,
         canonicalPath: `/${locale}/quran/${surah}`,
         description,
         image: getAppSocialArtwork({
@@ -84,8 +83,9 @@ export const Route = createFileRoute("/$locale/_main/quran/$surah")({
             url: `${COMPANY_IDENTITY.url}/${locale}/quran/${surah}`,
           }),
         ],
+        kind: "quran",
         locale,
-        parts: [],
+        parts: [searchTitle],
         type: "book",
       })
     );

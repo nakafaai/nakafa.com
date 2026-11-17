@@ -85,6 +85,7 @@ export const Route = createFileRoute("/$locale/_entry/onboarding")({
             }),
             indexable: true,
             jsonLd: [],
+            kind: "account",
             locale: params.locale,
             parts: [],
             type: "website",

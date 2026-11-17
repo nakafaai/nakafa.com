@@ -92,6 +92,7 @@ export const Route = createFileRoute("/$locale/_entry/auth/")({
                 { name: loaderData.title, path: "/auth" },
               ])
             ),
+            kind: "account",
             locale: params.locale,
             parts: [],
             type: "website",

@@ -14,7 +14,7 @@ import {
   SOCIAL_TWITTER_ACCOUNT,
   SocialOpenGraphType,
 } from "@/lib/seo/social";
-import { createSEOTitle } from "@/lib/seo/titles";
+import { createSEOTitle, PageKind } from "@/lib/seo/titles";
 
 /** The social card format that every page uses, with its large image. */
 const TWITTER_CARD = "summary_large_image";
@@ -73,6 +73,8 @@ const PageFacts = Schema.Struct({
   image: Schema.String,
   indexable: Schema.Boolean,
   jsonLd: Schema.Array(JsonLdDocument),
+  /** What the page is, which decides whether its title names the site (`createSEOTitle`). */
+  kind: PageKind,
   locale: LocaleSchema,
   parts: Schema.Array(Schema.UndefinedOr(Schema.String)),
   type: SocialOpenGraphType,
@@ -91,7 +93,8 @@ type PageFacts = typeof PageFacts.Type;
  */
 export function createSeoHead(facts: PageFacts): SeoHead {
   const title =
-    facts.absoluteTitle ?? createSEOTitle(facts.parts, SOCIAL_SITE_NAME);
+    facts.absoluteTitle ??
+    createSEOTitle(facts.parts, facts.kind, SOCIAL_SITE_NAME);
   const canonical = new URL(toPublicPath(facts.canonicalPath), SITE_ORIGIN)
     .href;
   const description = createSEODescription([facts.description]);
@@ -169,7 +172,10 @@ export function createPrivateSeoHead(
     jsonLd: [],
     robots: "noindex,nofollow",
     social: {},
-    title: facts.absoluteTitle ?? createSEOTitle(facts.parts, SOCIAL_SITE_NAME),
+    // A page no search engine may index is an account screen, so its title names the site.
+    title:
+      facts.absoluteTitle ??
+      createSEOTitle(facts.parts, "account", SOCIAL_SITE_NAME),
   });
 }
 

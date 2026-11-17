@@ -1,6 +1,14 @@
 import type { SEOContext, SEOMetadata } from "@/lib/seo/contract";
 import { createSEODescription } from "@/lib/seo/descriptions";
-import { createSEOTitle } from "@/lib/seo/titles";
+import { createSEOTitle, type PageKind } from "@/lib/seo/titles";
+
+/** The kind of page each context titles, which decides whether the title names the site. */
+const CONTEXT_KIND = {
+  article: "article",
+  "curriculum-context": "curriculum",
+  "material-lesson": "lesson",
+  quran: "quran",
+} satisfies Record<SEOContext["type"], PageKind>;
 
 /** Builds fallback metadata when localized SEO dictionaries are unavailable. */
 export function generateFallbackMetadata(context: SEOContext): SEOMetadata {
@@ -10,7 +18,7 @@ export function generateFallbackMetadata(context: SEOContext): SEOMetadata {
     const translation = context.surah.name.transliteration;
 
     return {
-      title: createSEOTitle([translation, displayName]),
+      title: createSEOTitle([translation, displayName], CONTEXT_KIND.quran),
       description: createSEODescription([translation]),
       keywords: [],
     };
@@ -19,7 +27,10 @@ export function generateFallbackMetadata(context: SEOContext): SEOMetadata {
   const { data } = context;
 
   return {
-    title: createSEOTitle([data.title, data.subject, displayName]),
+    title: createSEOTitle(
+      [data.title, data.subject, displayName],
+      CONTEXT_KIND[context.type]
+    ),
     description: createSEODescription([data.description, data.title]),
     keywords: [],
   };

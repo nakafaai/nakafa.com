@@ -58,6 +58,7 @@ export function createTryoutHead(input: {
       image: input.image,
       indexable: input.indexable,
       jsonLd: [...input.jsonLd],
+      kind: "tryout",
       locale: input.locale,
       ...titleFacts(input.title),
       type: "website",

@@ -13,6 +13,7 @@ const facts = {
   image: "/en/og/materials/aljabar/image.png",
   indexable: true,
   jsonLd: [{ "@type": "Article" }],
+  kind: "lesson",
   locale: "en",
   parts: ["Aljabar Dasar", "Matematika"],
   type: "article",
@@ -21,10 +22,16 @@ const facts = {
 describe("page head", () => {
   it("titles, describes and points the page at its canonical address", () => {
     const head = createSeoHead(facts);
-    expect(head.title).toBe("Aljabar Dasar - Matematika - Nakafa");
+    expect(head.title).toBe("Aljabar Dasar - Matematika");
     expect(head.canonical).toBe("https://nakafa.com/en/subjects/aljabar");
     expect(head.robots).toBe(
       "index,follow,max-snippet:-1,max-image-preview:large"
+    );
+  });
+
+  it("ends the title of a page about Nakafa itself in the site name", () => {
+    expect(createSeoHead({ ...facts, kind: "marketing" }).title).toBe(
+      "Aljabar Dasar - Matematika - Nakafa"
     );
   });
 
@@ -87,7 +94,7 @@ describe("page head", () => {
     const image = "https://nakafa.com/en/og/materials/aljabar/image.png";
     expect(social["og:image"]).toBe(image);
     expect(social["twitter:image"]).toBe(image);
-    expect(social["og:image:alt"]).toBe("Aljabar Dasar - Matematika - Nakafa");
+    expect(social["og:image:alt"]).toBe("Aljabar Dasar - Matematika");
     expect(social["twitter:image:alt"]).toBe(social["og:image:alt"]);
     expect(social["og:image:width"]).toBe("1200");
     expect(social["og:image:height"]).toBe("630");
@@ -162,7 +169,7 @@ describe("router head", () => {
       "alternate",
     ]);
     expect(Arr.take(routed.meta, 3)).toStrictEqual([
-      { title: "Aljabar Dasar - Matematika - Nakafa" },
+      { title: "Aljabar Dasar - Matematika" },
       { content: "Pengantar aljabar dasar.", name: "description" },
       {
         content: "index,follow,max-snippet:-1,max-image-preview:large",

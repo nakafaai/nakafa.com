@@ -142,6 +142,7 @@ export const Route = createFileRoute("/$locale/_main/articles/")({
         image: getOgUrl(loaderData.locale, "/articles"),
         indexable: true,
         jsonLd: makeBreadcrumbNodes(loaderData.breadcrumbs),
+        kind: "hub",
         locale: loaderData.locale,
         parts: [loaderData.title],
         type: "website",
