@@ -3,6 +3,7 @@ import type { Ref } from "@confect/core";
 import type tryouts from "@repo/backend/confect/_generated/refs/tryouts";
 import { getTileLooks } from "@repo/design-system/lib/look";
 import { Array as Arr, Schema, Tuple } from "effect";
+import type { ReactNode } from "react";
 import { useTranslations } from "use-intl";
 
 import {
@@ -27,23 +28,36 @@ type CountryExamCard = CountryPage["exams"][number] &
 
 /**
  * Renders one signed try-out country's exams, each a card with its own artwork,
- * or, until the owner draws it, the tile of the exam's icon.
+ * or, until the owner draws it, the tile of the exam's icon, and under them what
+ * the page composes after its exams, such as the other countries.
  */
 export function TryoutCountryPageClient({
+  children,
   page,
 }: {
+  children?: ReactNode;
   page: {
     readonly exams: readonly CountryExamCard[];
   };
 }) {
+  return (
+    <div className="space-y-6 pt-6 pb-24">
+      <CountryExams exams={page.exams} />
+      {children}
+    </div>
+  );
+}
+
+/** The country's exam cards, or the coming-soon state while it has none. */
+function CountryExams({ exams }: { exams: readonly CountryExamCard[] }) {
   const tCommon = useTranslations("Common");
-  if (page.exams.length === 0) {
+  if (exams.length === 0) {
     return <ComingSoon />;
   }
 
   const visuals = getTileLooks(
     Arr.map(
-      page.exams,
+      exams,
       (exam) =>
         exam.imageSrc ??
         Tuple.make(getTryoutExamIcons(exam.examKey), exam.examKey)
@@ -52,8 +66,8 @@ export function TryoutCountryPageClient({
 
   return (
     <CatalogActionLabelContext value={tCommon("view-options")}>
-      <div className="grid grid-cols-1 gap-4 pt-6 pb-24 sm:grid-cols-2">
-        {Arr.map(Arr.zip(page.exams, visuals), ([exam, visual], index) => (
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        {Arr.map(Arr.zip(exams, visuals), ([exam, visual], index) => (
           <CatalogCard
             action={(anchor) => (
               <TryoutPageLink {...anchor} publicPath={exam.entryPath} />

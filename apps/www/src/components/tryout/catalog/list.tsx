@@ -5,6 +5,7 @@ import type { TileLook } from "@repo/design-system/lib/look";
 import { cn } from "cn";
 import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
+import { CountryFlagIcon } from "@/components/shared/flag";
 import type { TryoutStatusValue } from "@/components/tryout/progress";
 import { TryoutPageLink } from "@/components/tryout/route/link";
 import type { TryoutPageAddress } from "@/components/tryout/route/path";
@@ -13,7 +14,9 @@ import { TryoutStatus } from "@/components/tryout/status";
 /**
  * Props of the divided try-out row list; each row carries its own tile and
  * status. The caller takes the `visual` of every row from `getTileLooks`, so
- * that no two rows of one list share an icon or a blend.
+ * that no two rows of one list share an icon or a blend. A country's row shows
+ * its flag on the tile in place of an icon, and its list takes each `shift`
+ * from `getTileShifts`. `onPress` runs as the row opens its page.
  */
 interface TryoutListProps {
   emptyLabel: string;
@@ -23,9 +26,16 @@ interface TryoutListProps {
     description?: ReactNode;
     key: string;
     meta?: ReactNode;
+    onPress?: () => void;
     status?: TryoutStatusValue;
     title: ReactNode;
-    visual: TileLook;
+    visual:
+      | TileLook
+      | {
+          readonly countryCode: string;
+          readonly seed: string;
+          readonly shift: number;
+        };
   }[];
 }
 
@@ -59,12 +69,17 @@ function TryoutRow({ row }: { row: TryoutListRow }) {
   return (
     <TryoutPageLink
       className="group hover:bg-accent hover:text-accent-foreground flex items-center gap-3 p-4 transition-colors ease-out"
+      onClick={row.onPress}
       {...row.address}
     >
       <div className="grid w-full gap-4">
         <div className="flex flex-1 items-start gap-3">
           <Tile seed={row.visual.seed} shift={row.visual.shift}>
-            <TileIcon icon={row.visual.icon} />
+            {"countryCode" in row.visual ? (
+              <CountryFlagIcon countryCode={row.visual.countryCode} />
+            ) : (
+              <TileIcon icon={row.visual.icon} />
+            )}
           </Tile>
 
           <div className="-mt-1 flex min-w-0 flex-1 flex-col gap-0.5">

@@ -4,6 +4,7 @@ import type tryouts from "@repo/backend/confect/_generated/refs/tryouts";
 import {
   publicTryoutCountryExamValidator,
   publicTryoutCountryValidator,
+  publicTryoutCountryWithExamCountValidator,
   publicTryoutExamValidator,
   publicTryoutGroupChoiceValidator,
   publicTryoutTrackValidator,
@@ -21,6 +22,7 @@ type TryoutGroupPage = NonNullable<
 const TryoutCountrySelectorOptionSchema = Schema.Struct({
   countryCode: publicTryoutCountryValidator.fields.countryCode,
   countryKey: publicTryoutCountryValidator.fields.countryKey,
+  examCount: publicTryoutCountryWithExamCountValidator.fields.examCount,
   publicPath: publicTryoutCountryValidator.fields.publicPath,
   title: publicTryoutCountryValidator.fields.title,
   value: publicTryoutCountryValidator.fields.publicPath,
@@ -65,6 +67,7 @@ export function buildTryoutCountryOptions(
   return Arr.map(countries, (country) => ({
     countryCode: country.countryCode,
     countryKey: country.countryKey,
+    examCount: country.examCount,
     publicPath: country.publicPath,
     title: country.title,
     value: country.publicPath,

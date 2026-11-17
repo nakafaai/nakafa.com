@@ -2511,6 +2511,8 @@
     "set-search-title": "{set}: Kostenloser {exam} Probetest mit Lösungen",
     "samples-title": "Beispielaufgaben mit Lösungen",
     "samples-description": "Ein Blick auf die ersten Aufgaben dieses Satzes, mit Lösung und Lösungsweg.",
+    "countries-title": "Weitere Länder",
+    "country-exams": "{count, plural, one {# Prüfung} other {# Prüfungen}}",
     "siblings-title": "Weitere Aufgabensätze",
     "attempt-controls": "Versuchsoptionen",
     "verdict": "{state, select, correct {Richtig} incorrect {Falsch} partial {Teilweise richtig} pending {Wartet auf die Bewertung} other {Unbeantwortet}}",

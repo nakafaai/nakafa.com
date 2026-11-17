@@ -2511,6 +2511,8 @@
     "set-search-title": "{count} Soalan Percubaan {exam} {set} Percuma",
     "samples-title": "Contoh soalan dan penerangan",
     "samples-description": "Tengok soalan-soalan awal set ini, lengkap dengan jawapan dan penerangannya.",
+    "countries-title": "Negara lain",
+    "country-exams": "{count} peperiksaan",
     "siblings-title": "Set lain",
     "attempt-controls": "Pilihan cubaan",
     "verdict": "{state, select, correct {Betul} incorrect {Salah} partial {Separa betul} pending {Menunggu markah} other {Belum dijawab}}",

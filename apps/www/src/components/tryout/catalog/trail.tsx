@@ -110,38 +110,59 @@ export function TryoutTrailHeader({
   );
 }
 
-/** A learner's header: choosing another country saves it as the learner's try-out country. */
-function LearnerTrailHeader() {
-  const { trail } = useTryoutTrail();
+/**
+ * Saves the country a signed-in learner chose as their try-out country, unless it
+ * is the page's own. The crumb and the list of the other countries both save
+ * through it, each naming itself as the `source` of the save.
+ */
+export function useCountryChoice(
+  country: TryoutTrail["country"],
+  source: string
+) {
   const locale = useLocale();
   const isAuthenticated = useConvexAuth((auth) => auth.isAuthenticated);
-  const setPreferredTryout = useSetPreferredTryoutMutation(
-    trail.country.options
-  );
+  const setPreferredTryout = useSetPreferredTryoutMutation(country.options);
 
-  /** Saves the country a learner chose, unless it is the page's own. */
-  function chooseCountry(option: { readonly label: string }) {
-    const country = Arr.findFirst(
-      trail.country.options,
+  return (countryKey: string) => {
+    const chosen = Arr.findFirst(
+      country.options,
       (candidate) =>
-        candidate.title === option.label &&
-        candidate.value !== trail.country.current
+        candidate.countryKey === countryKey &&
+        candidate.value !== country.current
     );
-    if (Option.isNone(country) || !isAuthenticated) {
+    if (Option.isNone(chosen) || !isAuthenticated) {
       return;
     }
     Effect.runFork(
       saveTryoutPreference({
-        countryKey: country.value.countryKey,
+        countryKey: chosen.value.countryKey,
         errorMessage: { title: "tryout-preference-error.title" },
         locale,
         setPreferredTryout,
-        source: "tryout-country-crumb",
+        source,
       })
     );
-  }
+  };
+}
 
-  return <TrailHeader onChooseCountry={chooseCountry} />;
+/** A learner's header: choosing another country saves it as the learner's try-out country. */
+function LearnerTrailHeader() {
+  const { trail } = useTryoutTrail();
+  const chooseCountry = useCountryChoice(trail.country, "tryout-country-crumb");
+
+  return (
+    <TrailHeader
+      onChooseCountry={(option) => {
+        const chosen = Arr.findFirst(
+          trail.country.options,
+          (candidate) => candidate.title === option.label
+        );
+        if (Option.isSome(chosen)) {
+          chooseCountry(chosen.value.countryKey);
+        }
+      }}
+    />
+  );
 }
 
 /** The crumb of the exam: a single year joins its name, as in SNBT 2027. */

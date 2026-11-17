@@ -4,6 +4,7 @@ import { RefContent } from "@/components/shared/content/references";
 import { PageBody } from "@/components/shared/page/body";
 import { PageFooter } from "@/components/shared/page/footer";
 import { Page } from "@/components/shared/page/frame";
+import { TryoutCountryOthers } from "@/components/tryout/catalog/countries";
 import { TryoutCountryPageClient } from "@/components/tryout/catalog/country";
 import { TryoutTrailHeader } from "@/components/tryout/catalog/trail";
 import { readTryoutCountryFn } from "@/components/tryout/route/catalog.functions";
@@ -50,7 +51,9 @@ function TryoutCountryPage() {
         trail={route.trail}
       />
       <PageBody>
-        <TryoutCountryPageClient page={{ exams: route.exams }} />
+        <TryoutCountryPageClient page={{ exams: route.exams }}>
+          <TryoutCountryOthers />
+        </TryoutCountryPageClient>
       </PageBody>
       <PageFooter>
         <RefContent />

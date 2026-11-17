@@ -81,6 +81,7 @@ const countryOptions = [
   {
     countryCode: "ID",
     countryKey: "indonesia",
+    examCount: 2,
     publicPath: COUNTRY,
     title: "Indonesia",
     value: COUNTRY,
@@ -88,6 +89,7 @@ const countryOptions = [
   {
     countryCode: "DE",
     countryKey: "germany",
+    examCount: 1,
     publicPath: "try-out/germany",
     title: "Germany",
     value: "try-out/germany",

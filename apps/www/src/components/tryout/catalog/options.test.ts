@@ -26,6 +26,7 @@ describe("try-out catalog options", () => {
       {
         countryCode: "DE",
         countryKey: "germany",
+        examCount: 1,
         publicPath: "try-out/germany",
         title: "Germany",
         value: "try-out/germany",

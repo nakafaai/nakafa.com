@@ -2511,6 +2511,8 @@
     "set-search-title": "{count} Soal Try Out {exam} {set} Gratis",
     "samples-title": "Contoh soal dan pembahasan",
     "samples-description": "Intip soal-soal pertama set ini, lengkap dengan jawaban dan pembahasannya.",
+    "countries-title": "Negara lainnya",
+    "country-exams": "{count} ujian",
     "siblings-title": "Set lainnya",
     "attempt-controls": "Pilihan percobaan",
     "verdict": "{state, select, correct {Benar} incorrect {Salah} partial {Sebagian benar} pending {Menunggu dinilai} other {Belum dijawab}}",
