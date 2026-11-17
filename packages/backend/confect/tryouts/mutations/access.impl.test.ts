@@ -1,5 +1,4 @@
 import { describe, expect, it } from "@effect/vitest";
-import posthogTest from "@posthog/convex/test";
 import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
@@ -13,7 +12,6 @@ describe("tryouts/mutations/access", () => {
   it("records the authenticated paywall source", async () => {
     vi.setSystemTime(NOW);
     const t = createConvexTestWithBetterAuth();
-    posthogTest.register(t);
     const identity = await t.mutation(async (ctx) => {
       const seeded = await seedAuthenticatedUser(ctx, {
         now: NOW,
@@ -52,7 +50,6 @@ describe("tryouts/mutations/access", () => {
 
   it("rejects anonymous analytics writes", async () => {
     const t = createConvexTestWithBetterAuth();
-    posthogTest.register(t);
 
     await expect(
       t.mutation(api.tryouts.mutations.access.trackPaywallView, {
