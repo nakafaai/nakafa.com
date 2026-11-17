@@ -20,7 +20,8 @@ const SCHEMES = ["light", "dark"] as const;
  * it has drawn: the forum's row of panes, a list's table card, or nothing the frame measures.
  */
 const TABS = [
-  { groups: 0, name: "Home", part: null },
+  // New announcement stands alone as the primary, and the poll stands in the header's one group.
+  { groups: 1, name: "Home", part: null },
   { groups: 0, name: "Forum", part: "resizable-panel-group" },
   // The library's search and New folder read as one group, so a phone's header holds two controls.
   { groups: 1, name: "Library", part: "table-card" },

@@ -293,7 +293,7 @@ function ResolvedClass({ klass }: { klass: Resolved }) {
   return (
     <ClassHeaderProvider items={path} tab={view._tag} title={klass.name}>
       {/* The class fills the screen: the header and the tabs keep their height, and the body takes the rest. */}
-      <div className="flex h-svh min-h-0 flex-col">
+      <Page height="screen">
         {view._tag === "channel" ||
         view._tag === "discussion" ||
         view._tag === "forum" ? (
@@ -305,7 +305,7 @@ function ResolvedClass({ klass }: { klass: Resolved }) {
         ) : (
           <ClassBody klass={klass} />
         )}
-      </div>
+      </Page>
     </ClassHeaderProvider>
   );
 }

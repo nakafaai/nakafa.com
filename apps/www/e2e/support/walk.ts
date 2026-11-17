@@ -183,10 +183,10 @@ function readPopup(popups: string) {
     labels: Array.from(
       popup.querySelectorAll<HTMLElement>('[data-slot="dropdown-menu-label"]')
     ).flatMap((label) =>
-      // The account menu's label is the account: its name and role beside its picture.
+      // The account menu's face, its name and role beside its picture, stands under the menu's own label.
       label.querySelector('[data-slot="avatar"]') === null
         ? [label.textContent.trim()]
-        : ["Account"]
+        : []
     ),
     // A field's label that breaks onto a second line, which a popup's width must always leave room for.
     broken: Array.from(
