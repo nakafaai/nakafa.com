@@ -3,7 +3,7 @@ import { Array as Arr, Effect, Schema } from "effect";
 import { readSitemapPageDescriptors } from "@/lib/sitemap/catalog";
 import { getSitemapEntries } from "@/lib/sitemap/entries";
 import { buildSitemapIndexXml, buildSitemapUrlSetXml } from "@/lib/sitemap/xml";
-import { isExcludedPath, isUnlistedPath } from "@/lib/static/pages";
+import { isUnlistedPath } from "@/lib/static/pages";
 
 /** One text file of the build, with its path under the client output. */
 const SitemapFile = Schema.Struct({ path: Schema.String, text: Schema.String });
@@ -11,9 +11,8 @@ type SitemapFile = typeof SitemapFile.Type;
 
 /**
  * Renders the sitemap index and every bounded sitemap page of the active release,
- * at the addresses that the sitemap index names. The search screen, which the static
- * build does not write, is not listed, because the Worker would render it on each
- * crawl, and neither is a try-out section, which is not indexed.
+ * at the addresses that the sitemap index names. A try-out section is not listed,
+ * because it is not indexed.
  */
 export const readSitemapFiles = Effect.fn("www.sitemap.files")(function* () {
   const descriptors = yield* readSitemapPageDescriptors();
@@ -27,7 +26,7 @@ export const readSitemapFiles = Effect.fn("www.sitemap.files")(function* () {
           text: buildSitemapUrlSetXml(
             Arr.filter(entries, ({ url }) => {
               const { pathname } = new URL(url);
-              return !(isExcludedPath(pathname) || isUnlistedPath(pathname));
+              return !isUnlistedPath(pathname);
             })
           ),
         })

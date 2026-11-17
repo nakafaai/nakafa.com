@@ -28,14 +28,6 @@ export const chatScreenFn = createServerFn({ method: "GET" })
     return chatScreenHandler(options);
   });
 
-/** Search: the visitor's name for the greeting, and the search page head. */
-export const searchScreenFn = createServerFn({ method: "GET" })
-  .validator(Schema.toStandardSchemaV1(LocaleInput))
-  .handler(async (options) => {
-    const { searchScreenHandler } = await import("@/lib/account/home.server");
-    return searchScreenHandler(options);
-  });
-
 /** Notifications: the first page of the inbox and the inbox head. */
 export const notificationsScreenFn = createServerFn({ method: "GET" })
   .validator(Schema.toStandardSchemaV1(LocaleInput))

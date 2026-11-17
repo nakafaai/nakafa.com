@@ -15,7 +15,6 @@ import {
   chatSidebarScreenHandler,
   homeScreenHandler,
   notificationsScreenHandler,
-  searchScreenHandler,
 } from "@/lib/account/home.server";
 
 process.env.VITE_CONVEX_URL = "https://example.convex.cloud";
@@ -341,32 +340,6 @@ describe("chatScreenHandler", () => {
     });
     expect(screen.title).toBeUndefined();
     expect(mocks.scheduleCurrentServerExceptionCapture).not.toHaveBeenCalled();
-  });
-});
-
-describe("searchScreenHandler", () => {
-  it("answers the search head for a visitor without a name", async () => {
-    sessionWith(Option.none());
-    const screen = await searchScreenHandler({ data: { locale: "en" } });
-    expect(screen).toMatchObject({
-      name: undefined,
-      seo: { canonicalPath: "/en/search", indexable: true },
-    });
-    expect(mocks.preloadConfectQuery).not.toHaveBeenCalled();
-  });
-
-  it("answers the name of a signed-in visitor", async () => {
-    sessionWith(Option.some("token"));
-    answerQueries([[auth.queries.getCurrentUser, account]]);
-    const screen = await searchScreenHandler({ data: { locale: "en" } });
-    expect(screen.name).toBe("Nabil");
-  });
-
-  it("answers without a name when the signed-in account is gone", async () => {
-    sessionWith(Option.some("token"));
-    answerQueries([[auth.queries.getCurrentUser, null]]);
-    const screen = await searchScreenHandler({ data: { locale: "en" } });
-    expect(screen.name).toBeUndefined();
   });
 });
 

@@ -1,6 +1,8 @@
 import { LocalizedPath } from "@repo/internationalization/src/alternates";
 import { LocaleSchema } from "@repo/internationalization/src/locale";
+import { makeBreadcrumbNodes } from "@repo/seo/jsonld/node";
 import { Array as Arr, Schema } from "effect";
+import { createBreadcrumbItems } from "@/lib/seo/breadcrumbs";
 import {
   createPrivateSeoHead,
   createSeoHead,
@@ -21,15 +23,20 @@ export type ScreenSeo = typeof ScreenSeo.Type;
 /**
  * The router head entries of one signed-in screen, built by the head seam from its facts. A
  * screen with reviewed artwork, such as Nina's chat, shares it; any other shares the site's image.
+ * A screen that search engines index names its place as structured data (`jsonLd`).
  */
-export function signedInHead(seo: ScreenSeo, image = "/og.png") {
+export function signedInHead(
+  seo: ScreenSeo,
+  image = "/og.png",
+  jsonLd: readonly Record<string, unknown>[] = []
+) {
   return toRouterHead(
     createSeoHead({
       canonicalPath: seo.canonicalPath,
       description: seo.description,
       image,
       indexable: seo.indexable,
-      jsonLd: [],
+      jsonLd,
       locale: seo.locale,
       parts: [seo.title],
       type: "website",
@@ -42,11 +49,21 @@ const QUERY_ROBOTS = "noindex,follow";
 
 /**
  * The head of the search page. The bare page names no query and holds no learner's
- * data, so search engines may index it; a page with a query is a result list,
- * which stays out of indexes while engines still follow its links.
+ * data, so search engines may index it, and its breadcrumb leads from the locale's
+ * home (`home`, that page's name); a page with a query is a result list, which
+ * stays out of indexes while engines still follow its links.
  */
-export function searchHead(seo: ScreenSeo, query: string) {
-  const head = signedInHead(seo);
+export function searchHead(seo: ScreenSeo, query: string, home: string) {
+  const head = signedInHead(
+    seo,
+    undefined,
+    makeBreadcrumbNodes(
+      createBreadcrumbItems(seo.locale, [
+        { name: home, path: "" },
+        { name: seo.title, path: "/search" },
+      ])
+    )
+  );
   if (query === "") {
     return head;
   }
