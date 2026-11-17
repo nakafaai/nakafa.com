@@ -14,6 +14,8 @@ import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import schema from "@repo/backend/convex/schema";
 import { MASCOT_CODE } from "@repo/backend/test/mascot";
+import { internalActionGeneric } from "convex/server";
+import { v } from "convex/values";
 import { convexTest, type TestConvex } from "convex-test";
 
 const betterAuthModules = import.meta.glob([
@@ -39,9 +41,45 @@ export function createConvexTestWithBetterAuth() {
   registerLearningPopularityAggregate(t);
   rateLimiterTest.register(t, "agentRateLimiter");
   agentTest.register(t, "nina");
-  posthogTest.register(t);
+  registerOfflinePostHog(t);
   presenceTest.register(t);
   return t;
+}
+
+/**
+ * Registers PostHog with the two actions the backend calls, each sending
+ * nothing. Every backend product event is queued now, so the real component
+ * would reach the network through `fetch` and take the responses that a test
+ * queued for the model.
+ */
+function registerOfflinePostHog(t: TestConvex<typeof schema>) {
+  t.registerComponent("posthog", posthogTest.schema, {
+    ...posthogTest.modules,
+    "./component/lib.ts": async () => ({
+      capture: internalActionGeneric({
+        args: {
+          disableGeoip: v.boolean(),
+          distinctId: v.string(),
+          event: v.string(),
+          properties: v.optional(v.string()),
+          timestamp: v.optional(v.number()),
+        },
+        returns: v.null(),
+        handler: () => null,
+      }),
+      captureException: internalActionGeneric({
+        args: {
+          additionalProperties: v.optional(v.string()),
+          distinctId: v.optional(v.string()),
+          errorMessage: v.string(),
+          errorName: v.optional(v.string()),
+          errorStack: v.optional(v.string()),
+        },
+        returns: v.null(),
+        handler: () => null,
+      }),
+    }),
+  });
 }
 
 /** Seeds one authenticated Better Auth user and the matching app user row. */
