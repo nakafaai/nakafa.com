@@ -108,7 +108,8 @@ function QuranSurahPage() {
 
   return (
     <PageOutlineProvider>
-      <Page>
+      {/* A surah reads in the column, under the page's frame. */}
+      <Page width="column">
         <QuranSurahsContext value={page.surahs}>
           <QuranSurahHeader
             actions={

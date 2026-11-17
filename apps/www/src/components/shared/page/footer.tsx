@@ -1,6 +1,6 @@
 import { cva, type VariantProps } from "class-variance-authority";
 import type { ReactNode } from "react";
-import { pageRowVariants } from "@/components/shared/page/width";
+import { pageBodyVariants } from "@/components/shared/page/width";
 
 /**
  * The footer's frame. A ruled footer opens on a line as wide as the page, the same width as the line under the
@@ -30,7 +30,7 @@ export function PageFooter({
 }) {
   return (
     <footer className={footerVariants({ rule })} data-slot="page-footer">
-      <div className={pageRowVariants()}>{children}</div>
+      <div className={pageBodyVariants()}>{children}</div>
     </footer>
   );
 }

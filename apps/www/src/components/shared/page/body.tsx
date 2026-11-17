@@ -1,15 +1,19 @@
 import { cn } from "cn";
 import type { ReactNode } from "react";
 import {
+  pageBodyVariants,
   pageRhythmVariants,
   pageRowVariants,
 } from "@/components/shared/page/width";
 import { tableCardVariants } from "@/components/shared/table/card";
 
-/** The body of a reading page, an article or a lesson: its content in one row of the page, with no rhythm of its own. */
+/** The body of a reading page, an article or a lesson: its content in the page's body row, with no rhythm of its own. */
 export function PageBody({ children }: { children: ReactNode }) {
   return (
-    <article className={cn(pageRowVariants(), "wrap-anywhere")}>
+    <article
+      className={cn(pageBodyVariants(), "wrap-anywhere")}
+      data-slot="page-body"
+    >
       {children}
     </article>
   );
@@ -23,7 +27,7 @@ export function PageStack({ children }: { children: ReactNode }) {
   return (
     <div
       className={cn(
-        pageRowVariants(),
+        pageBodyVariants(),
         pageRhythmVariants(),
         "flex flex-col gap-6 wrap-anywhere"
       )}
@@ -42,7 +46,7 @@ export function PageState({ children }: { children: ReactNode }) {
   return (
     <div
       className={cn(
-        pageRowVariants(),
+        pageBodyVariants(),
         pageRhythmVariants(),
         "flex flex-1 items-center"
       )}
@@ -55,8 +59,8 @@ export function PageState({ children }: { children: ReactNode }) {
 
 /**
  * The body of a page whose body is one list: one card that fills the rest of the page's height, drawn as the try-out
- * catalog draws its lists. A settings section's table takes the column's width; a working table, such as the exams,
- * rooms or results, takes the page's. A list with views shows them above its card (`TableViews`), never in the page's
+ * catalog draws its lists. A table is a working surface, so it takes the page's whole frame on every page, a settings
+ * section's as much as the exams, rooms or results. A list with views shows them above its card (`TableViews`), never in the page's
  * header. Nothing else stands in the body beside the list.
  */
 export function PageList({
