@@ -5,8 +5,8 @@ import { cn } from "cn";
 import { type ReactNode, useState } from "react";
 import { useTranslations } from "use-intl";
 import {
+  pageBodyVariants,
   pageRhythmVariants,
-  pageRowVariants,
 } from "@/components/shared/page/width";
 import { TableViews } from "@/components/shared/table/views";
 import { ClassHeader } from "@/components/tenant/classes/header";
@@ -67,7 +67,7 @@ function ClassScroll({ children }: { children: ReactNode }) {
     <ScrollArea className="flex-1" viewportClassName="flex flex-col">
       <div
         className={cn(
-          pageRowVariants(),
+          pageBodyVariants(),
           pageRhythmVariants(),
           "flex flex-1 flex-col gap-6"
         )}

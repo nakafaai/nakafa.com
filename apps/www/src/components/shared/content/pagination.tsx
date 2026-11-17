@@ -7,7 +7,7 @@ import { cn } from "cn";
 import { Option } from "effect";
 import type { ReactNode } from "react";
 import { useTranslations } from "use-intl";
-import { pageRowVariants } from "@/components/shared/page/width";
+import { pageBodyVariants } from "@/components/shared/page/width";
 import { TargetLink } from "@/lib/routing/link";
 import { publicPathTarget } from "@/lib/routing/target";
 
@@ -127,7 +127,7 @@ export function PaginationContent({ pagination, className }: Props) {
       aria-label={t("page-navigation")}
       className={cn("mt-10 pt-10 [article:empty~&]:hidden", className)}
     >
-      <div className={cn(pageRowVariants(), "grid gap-6 sm:grid-cols-2")}>
+      <div className={cn(pageBodyVariants(), "grid gap-6 sm:grid-cols-2")}>
         <PaginationItem
           className="items-start"
           context={pagination.prev.context}
