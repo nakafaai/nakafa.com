@@ -236,12 +236,14 @@ export const Route = createFileRoute(
           ),
         ],
         locale,
-        // Many lessons share a short name, such as Numbers: the topic tells them apart, and the lead place's
-        // subject and level match a search that names the grade; the title budget drops what does not fit.
+        // A learner searches for a lesson by its subject and grade, such as "elips matematika kelas 12", so the lead
+        // place's subject and level follow the lesson's name, and they also tell apart the lessons that share a
+        // short name, such as Numbers. The topic follows where the title budget leaves room, and stands in for the
+        // subject on a lesson that no curriculum places.
         parts: [
           headMetadata.title,
-          route.topicTitle,
           Option.getOrUndefined(readLeadSubject(placements)),
+          route.topicTitle,
         ],
         type: "article",
       })

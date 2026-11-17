@@ -122,8 +122,8 @@ function readTrailLevel(trail: MaterialPlacement["trail"]) {
 
 /**
  * The subject and the level of a lesson's lead place, such as Matematika Kelas 12,
- * which its title names after the topic, as a learner searches for a lesson of their
- * grade. Only a trail of three places or more names both, after its curriculum; a
+ * which its title names right after the lesson's name, as a learner searches for a
+ * lesson of their grade. Only a trail of three places or more names both, after its curriculum; a
  * lesson that no curriculum places names none.
  */
 export function readLeadSubject(placements: readonly MaterialPlacement[]) {
