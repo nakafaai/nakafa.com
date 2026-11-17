@@ -6,7 +6,8 @@ import { Schema } from "effect";
  * state at rest or over, info for one that is under way or coming, success for one that went well, warning
  * for one that needs the reader before the work can go on, such as a question without its key, and
  * destructive for one that failed or is shut. The primary colour stays with actions, so no status reads as
- * a button.
+ * a button: each tone draws as a tint, its border and icon in the tone's colour and its words in the page's text,
+ * since the info family shares its hues with a blue primary and a filled info badge would read as one.
  */
 export const StatusTone = Schema.Literals([
   "neutral",
@@ -18,11 +19,11 @@ export const StatusTone = Schema.Literals([
 
 /** The badge variant that draws each tone, as a table's status cell and a card's state draw it. */
 export const STATUS_BADGES = {
-  destructive: "destructive",
-  info: "info",
+  destructive: "destructive-subtle",
+  info: "info-subtle",
   neutral: "muted",
-  success: "success",
-  warning: "warning",
+  success: "success-subtle",
+  warning: "warning-subtle",
 } as const satisfies Record<typeof StatusTone.Type, string>;
 
 /**

@@ -29,7 +29,7 @@ const badgeVariants = cva(
         destructive:
           "bg-destructive text-destructive-foreground border-transparent [a&]:hover:bg-[color-mix(in_oklab,var(--destructive)_99%,var(--background))] [a&]:hover:shadow-sm",
         "destructive-subtle":
-          "border-destructive text-foreground bg-[color-mix(in_oklab,var(--destructive)_5%,var(--background))] [a&]:hover:bg-[color-mix(in_oklab,var(--destructive)_8%,var(--background))] [a&]:hover:shadow-sm",
+          "border-destructive text-foreground [&>svg]:text-destructive bg-[color-mix(in_oklab,var(--destructive)_5%,var(--background))] [a&]:hover:bg-[color-mix(in_oklab,var(--destructive)_8%,var(--background))] [a&]:hover:shadow-sm",
         "destructive-outline":
           "border-border bg-destructive text-destructive-foreground [a&]:hover:bg-[color-mix(in_oklab,var(--destructive)_99%,var(--background))] [a&]:hover:shadow-sm",
         outline:
@@ -40,6 +40,14 @@ const badgeVariants = cva(
         warning:
           "bg-warning text-warning-foreground border-transparent [a&]:hover:shadow-sm",
         info: "bg-info text-info-foreground border-transparent [a&]:hover:shadow-sm",
+        // A status tone as a tint: its border and icon in the tone, its words in the page's text, so no status reads as
+        // a filled button, the primary's look, in a theme whose info stands near its primary.
+        "success-subtle":
+          "border-success text-foreground [&>svg]:text-success bg-[color-mix(in_oklab,var(--success)_8%,var(--background))] [a&]:hover:shadow-sm",
+        "warning-subtle":
+          "border-warning text-foreground [&>svg]:text-warning bg-[color-mix(in_oklab,var(--warning)_8%,var(--background))] [a&]:hover:shadow-sm",
+        "info-subtle":
+          "border-info text-foreground [&>svg]:text-info bg-[color-mix(in_oklab,var(--info)_8%,var(--background))] [a&]:hover:shadow-sm",
       },
     },
     defaultVariants: {
