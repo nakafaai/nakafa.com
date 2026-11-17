@@ -9,7 +9,6 @@ import type {
 } from "@tanstack/react-table";
 import { Schema } from "effect";
 import type { ComponentProps } from "react";
-import type { NarrowColumn } from "@/components/shared/table/align";
 import { withinDays } from "@/components/shared/table/days";
 import type { dataTableFeatures } from "@/components/shared/table/features";
 
@@ -59,8 +58,6 @@ interface ColumnSpec<TData extends RowData, TValue extends CellData> {
   >;
   readonly header: string;
   readonly id: string;
-  /** How the column stands in a narrow table, whose rows must read whole there (`narrowColumn`). */
-  readonly narrow?: typeof NarrowColumn.Type;
   /** Whether the cell holds more than one value's width, such as a room's state beside its seats. */
   readonly wide?: boolean;
 }
@@ -95,7 +92,7 @@ export type TableColumn<TData extends RowData> = AnyColumn<TData> & {
 /** The part every column of data shares: how it reads a row, draws its cell, and names its head. */
 function dataColumn<TData extends RowData, TValue extends CellData>(
   read: AccessorFn<TData, TValue>,
-  { align, cell, header, id, narrow, wide }: ColumnSpec<TData, TValue>,
+  { align, cell, header, id, wide }: ColumnSpec<TData, TValue>,
   filter: HeadFilter
 ) {
   return {
@@ -106,7 +103,6 @@ function dataColumn<TData extends RowData, TValue extends CellData>(
       filter,
       title: header,
       ...(align === undefined ? {} : { align }),
-      ...(narrow === undefined ? {} : { narrow }),
       ...(wide === undefined ? {} : { wide }),
     },
     ...(cell === undefined ? {} : { cell }),

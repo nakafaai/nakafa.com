@@ -1,5 +1,4 @@
 import type { CellData, RowData, TableFeatures } from "@tanstack/react-table";
-import type { NarrowColumn } from "@/components/shared/table/align";
 import type { HeadFilter } from "@/components/shared/table/columns";
 
 declare module "@tanstack/react-table" {
@@ -19,8 +18,6 @@ declare module "@tanstack/react-table" {
     readonly filter?: HeadFilter;
     /** Whether a row's menu does not answer yet, such as a row the server has not confirmed. */
     readonly inert?: (row: TData) => boolean;
-    /** How the column stands in a narrow table: shrunk to what it holds, or stepped aside (`narrowColumn`). */
-    readonly narrow?: typeof NarrowColumn.Type;
     /** The column's name, which its head says it filters by. */
     readonly title?: string;
     /** Whether the column's cell holds more than one value's width. */

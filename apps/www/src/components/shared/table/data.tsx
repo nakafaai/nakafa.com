@@ -6,18 +6,13 @@ import {
   TableRow,
 } from "@repo/design-system/components/ui/table";
 import { type Cell, type RowData, useTable } from "@tanstack/react-table";
-import { cn } from "cn";
 import { Array as Arr, Option } from "effect";
 import { type ReactNode, use, useState } from "react";
 import { useTranslations } from "use-intl";
 import { PaneTableRow } from "@/components/shared/page/pane";
 import { useHasPanes } from "@/components/shared/page/panes";
 import { pressesRow } from "@/components/shared/row";
-import {
-  columnAlign,
-  narrowColumn,
-  placeOf,
-} from "@/components/shared/table/align";
+import { columnAlign, placeOf } from "@/components/shared/table/align";
 import { tableBoxVariants } from "@/components/shared/table/card";
 import type {
   HeadFilter,
@@ -244,12 +239,7 @@ function DataTableCell<TData extends RowData>({
   const { meta } = cell.column.columnDef;
 
   return (
-    <TableCell
-      className={cn(
-        columnAlign({ align: placeOf(index, meta?.align) }),
-        narrowColumn({ narrow: meta?.narrow })
-      )}
-    >
+    <TableCell className={columnAlign({ align: placeOf(index, meta?.align) })}>
       {meta?.align === "menu" ? (
         <RowMenu inert={meta.inert?.(cell.row.original)}>{children}</RowMenu>
       ) : (
