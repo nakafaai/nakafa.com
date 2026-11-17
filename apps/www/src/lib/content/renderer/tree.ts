@@ -2,12 +2,15 @@ import type { ContentKey } from "@nakafa/aksara-contracts/ids";
 import type { ArtifactLocale } from "@nakafa/aksara-contracts/locale";
 import type { RendererDomain } from "@nakafa/aksara-contracts/renderer/domain";
 import {
+  type ContentTreeChild,
   type ContentTreeElement,
   type ContentTreeProps,
   type ContentTreeValue,
   contentTreeComponentNames,
 } from "@nakafa/aksara-contracts/tree";
 import { headingIdOf } from "@repo/contents/toc";
+import { baseComponentNames } from "@repo/design-system/lib/markdown/names";
+import { mathTailVariants } from "@repo/design-system/lib/prose";
 import type { MDXComponents } from "@repo/design-system/types/markdown";
 import { Array as Arr, Effect, Option, Predicate, Record as Rec } from "effect";
 import {
@@ -16,6 +19,7 @@ import {
   type ReactElement,
   type ReactNode,
 } from "react";
+import { splitTouching } from "@/lib/content/renderer/glue";
 import { takesLocale } from "@/lib/content/renderer/locale";
 import { inPropType } from "@/lib/content/renderer/prop";
 import { RendererImplementationMissing } from "@/lib/content/renderer/selection";
@@ -40,6 +44,52 @@ function isList(value: ContentTreeValue): value is readonly ContentTreeValue[] {
 /** Checks whether one tree value is a plain props object, never an element or a list. */
 function isRecord(value: ContentTreeValue): value is ContentTreeProps {
   return Predicate.isObject(value) && !Arr.isArray(value);
+}
+
+/** Checks whether one child of an element is an inline formula. */
+function isInlineMath(child: ContentTreeChild) {
+  return (
+    typeof child !== "string" && child.name === baseComponentNames.inlineMath
+  );
+}
+
+/**
+ * Renders the children of one element in order, each element through `render`.
+ * An inline formula and the text that touches it after it, such as its full
+ * stop (`splitTouching`), render as one unit that a line never breaks inside
+ * (`mathTailVariants`), and the rest of that text follows the unit. The
+ * authored text stays as it was written: only where a line may break changes.
+ */
+function renderChildren(
+  children: readonly ContentTreeChild[],
+  render: (element: ContentTreeElement) => ReactElement
+): ReactNode[] {
+  return Arr.flatMap(children, (child, index): ReactNode[] => {
+    if (typeof child === "string") {
+      if (!Option.exists(Arr.get(children, index - 1), isInlineMath)) {
+        return [child];
+      }
+      const { rest } = splitTouching(child);
+      return rest === "" ? [] : [rest];
+    }
+    const touching = isInlineMath(child)
+      ? Arr.get(children, index + 1).pipe(
+          Option.filter(Predicate.isString),
+          Option.map((text) => splitTouching(text).touching),
+          Option.getOrElse(() => "")
+        )
+      : "";
+    return touching === ""
+      ? [render(child)]
+      : [
+          createElement(
+            "span",
+            { className: mathTailVariants() },
+            render(child),
+            touching
+          ),
+        ];
+  });
 }
 
 /**
@@ -91,10 +141,8 @@ function renderElement(
     onNone: () => rendered,
     onSome: (id) => Rec.set(rendered, "id", id),
   });
-  const children = Arr.map(element.children, (child) =>
-    typeof child === "string"
-      ? child
-      : renderElement(child, components, locale, inProp)
+  const children = renderChildren(element.children, (child) =>
+    renderElement(child, components, locale, inProp)
   );
   return createElement(
     type,
@@ -129,12 +177,8 @@ export const renderContentTree = Effect.fn("NakafaContent.renderContentTree")(
         });
       }
     }
-    return Arr.map(
-      tree.children,
-      (child): ReactNode =>
-        typeof child === "string"
-          ? child
-          : renderElement(child, components, locale, false)
+    return renderChildren(tree.children, (child) =>
+      renderElement(child, components, locale, false)
     );
   }
 );
