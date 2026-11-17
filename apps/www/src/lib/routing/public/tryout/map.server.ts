@@ -15,6 +15,7 @@ import {
   TryoutMapJson,
   type TryoutMapLocale,
 } from "@/lib/routing/public/tryout/map";
+import { SOURCE_APP_LOCALE } from "@/lib/routing/public/tryout/route";
 import { hasStaticRelease } from "@/lib/routing/release";
 
 /** The release holds no readable try-out map: a defect of its build, never a reader's miss. */
@@ -135,9 +136,11 @@ export const readMappedSectionPage = Effect.fn("www.routing.tryoutMap.section")(
 );
 
 /**
- * The path of one try-out page in another locale, or null. In its own locale a
- * path answers itself when the catalog serves it. Into another locale, the map
- * holds what the redirects ask: the canonical SNBT exam and sets, from English.
+ * The path of one try-out page in a locale, or null. A canonical SNBT path read
+ * from English answers what the catalog answered for it when the build wrote the
+ * map, in English too: an exam is no page, so the catalog answers the nearest
+ * page above it. Any other path answers itself in its own locale when the
+ * catalog serves it, and nothing in another locale.
  */
 export const readMappedLocalizedPath = Effect.fn(
   "www.routing.tryoutMap.localizedPath"
@@ -147,21 +150,19 @@ export const readMappedLocalizedPath = Effect.fn(
   readonly targetAppLocale: ActiveAppLocaleCode;
 }) {
   const target = yield* readLocale(args.targetAppLocale);
-  if (args.currentAppLocale === args.targetAppLocale) {
-    return Option.exists(target, (map) =>
-      HashSet.has(map.paths, args.publicPath)
-    )
-      ? args.publicPath
-      : null;
+  const spelled =
+    args.currentAppLocale === SOURCE_APP_LOCALE
+      ? Option.flatMap(target, (map) => Rec.get(map.localized, args.publicPath))
+      : Option.none();
+  if (Option.isSome(spelled)) {
+    return spelled.value;
   }
-  return Option.getOrNull(
-    Option.flatMap(target, (map) =>
-      Option.flatMap(
-        Rec.get(map.localized, args.publicPath),
-        Option.fromNullishOr
-      )
-    )
-  );
+  if (args.currentAppLocale !== args.targetAppLocale) {
+    return null;
+  }
+  return Option.exists(target, (map) => HashSet.has(map.paths, args.publicPath))
+    ? args.publicPath
+    : null;
 });
 
 /** Reads whether the active signed catalog serves one exact route in its own locale. */

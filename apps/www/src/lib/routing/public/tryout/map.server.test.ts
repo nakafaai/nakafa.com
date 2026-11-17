@@ -28,7 +28,7 @@ const TRACK = `${YEAR}/utbk`;
 const SET = `${TRACK}/set-1`;
 const SECTION = `${SET}/penalaran-umum`;
 
-/** A release's map: Indonesian with SNBT's one year, track, set and section, and English's spelling of the set. */
+/** A release's map: Indonesian with SNBT's one year, track, set and section, and English, whose SNBT exam the catalog answers with its country. */
 const MAP: typeof TryoutMapJson.Type = {
   id: {
     countries: [{ countryCode: "ID", publicPath: "try-out/indonesia" }],
@@ -42,6 +42,14 @@ const MAP: typeof TryoutMapJson.Type = {
     localized: { [SET]: `${TRACK}/set-1-id` },
     paths: [SNBT, YEAR, TRACK, SET, SECTION],
     sections: [SECTION],
+  },
+  en: {
+    countries: [{ countryCode: "ID", publicPath: "try-out/indonesia" }],
+    exams: {},
+    groups: {},
+    localized: { [SNBT]: "try-out/indonesia" },
+    paths: [SNBT, "try-out/indonesia"],
+    sections: [],
   },
 };
 
@@ -95,6 +103,25 @@ describe("the try-out map in the Worker", () => {
         })
       ).toBe(`${TRACK}/set-1-id`);
     })
+  );
+
+  it.effect(
+    "answers a canonical SNBT path from English as the catalog answered it, an exam with the page above it",
+    () =>
+      Effect.gen(function* () {
+        const map = yield* Effect.promise(freshReader);
+
+        expect(
+          yield* map.readMappedLocalizedPath({
+            currentAppLocale: "en",
+            publicPath: SNBT,
+            targetAppLocale: "en",
+          })
+        ).toBe("try-out/indonesia");
+        expect(yield* map.readActiveTryoutPath("en", "try-out/indonesia")).toBe(
+          "try-out/indonesia"
+        );
+      })
   );
 
   it.effect("reads the asset once for every read of one isolate", () =>
