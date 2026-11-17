@@ -6,6 +6,7 @@ import {
 } from "@/lib/island/models/catalog";
 import { Folk, folkFaces } from "@/lib/island/models/folk";
 import { Swimmer, swimmerFaces } from "@/lib/island/models/ocean";
+import { ReefKind, reefFaces } from "@/lib/island/models/reef";
 import { whaleFaces } from "@/lib/island/models/sea";
 import { Stock, stockFaces } from "@/lib/island/models/stock";
 
@@ -29,8 +30,9 @@ export function bodyFaces(kind: BodyKind) {
 /**
  * Every model the world draws (ADR 0047, D21, D24 and D25): a body of the
  * island's own (the herd, the fox, the whale), a wild species of the catalog
- * by its index, a species of the sky on the wing (D49), a big swimmer of the open sea, or a plant of the catalog by
- * its index.
+ * by its index, a species of the sky on the wing (D49), a big swimmer of the
+ * open sea, a plant of the catalog by its index, or one look of a kind of
+ * reef life (D50).
  */
 export const Model = Schema.Union([
   Schema.TaggedStruct("body", { kind: BodyKind }),
@@ -38,6 +40,7 @@ export const Model = Schema.Union([
   Schema.TaggedStruct("flyer", { index: Schema.Int }),
   Schema.TaggedStruct("swimmer", { kind: Swimmer }),
   Schema.TaggedStruct("plant", { index: Schema.Int }),
+  Schema.TaggedStruct("reef", { kind: ReefKind, look: Schema.Int }),
 ]);
 export type Model = typeof Model.Type;
 
@@ -47,6 +50,7 @@ export function modelFaces(model: Model) {
     body: ({ kind }) => bodyFaces(kind),
     flyer: ({ index }) => flyerFaces(index),
     plant: ({ index }) => plantFaces(index),
+    reef: ({ kind, look }) => reefFaces(kind, look),
     species: ({ index }) => speciesFaces(index),
     swimmer: ({ kind }) => swimmerFaces(kind),
   });
@@ -58,6 +62,7 @@ export function modelKey(model: Model) {
     body: ({ kind }) => `body-${kind}`,
     flyer: ({ index }) => `flyer-${index}`,
     plant: ({ index }) => `plant-${index}`,
+    reef: ({ kind, look }) => `reef-${kind}-${look}`,
     species: ({ index }) => `species-${index}`,
     swimmer: ({ kind }) => `swimmer-${kind}`,
   });

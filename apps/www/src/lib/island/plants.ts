@@ -67,6 +67,7 @@ export function plantBodies(cells: Cells) {
                       z + 0.5,
                       unitOf(17, x, y, z) * Math.PI * 2,
                       -SCALE.block / PLANT_HEIGHTS[PLANT_KEYS[index]],
+                      0,
                     ],
                   });
             }

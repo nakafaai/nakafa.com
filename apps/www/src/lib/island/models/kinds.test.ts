@@ -20,6 +20,7 @@ import {
   MODEL_STRIDE,
   meters,
 } from "@/lib/island/models/parts";
+import { reefFaces } from "@/lib/island/models/reef";
 import { SCALE } from "@/lib/island/scale";
 
 /** A body's measure in meters along one axis. */
@@ -65,6 +66,7 @@ describe("island/models/kinds", () => {
       { _tag: "flyer", index: 3 },
       { _tag: "swimmer", kind: "orca" },
       { _tag: "plant", index: 0 },
+      { _tag: "reef", kind: "kelp", look: 2 },
     ] as const;
     expect(Arr.map(models, modelFaces)).toEqual([
       bodyFaces("cow"),
@@ -72,6 +74,7 @@ describe("island/models/kinds", () => {
       flyerFaces(3),
       swimmerFaces("orca"),
       plantFaces(0),
+      reefFaces("kelp", 2),
     ]);
     expect(Arr.map(models, modelKey)).toEqual([
       "body-cow",
@@ -79,6 +82,7 @@ describe("island/models/kinds", () => {
       "flyer-3",
       "swimmer-orca",
       "plant-0",
+      "reef-kelp-2",
     ]);
   });
 

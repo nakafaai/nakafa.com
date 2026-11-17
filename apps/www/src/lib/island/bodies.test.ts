@@ -3,7 +3,14 @@ import { describe, expect, it } from "@effect/vitest";
 import { idOf } from "@repo/backend/confect/island/blocks";
 import { SPAN } from "@repo/backend/confect/island/world";
 import { Array as Arr, Option, Order } from "effect";
-import { BODY_STRIDE, bodiesOf, seaBodies, whaleAt } from "@/lib/island/bodies";
+import {
+  BODY_STRIDE,
+  bodiesOf,
+  joined,
+  seaBodies,
+  whaleAt,
+} from "@/lib/island/bodies";
+import { ballAt } from "@/lib/island/hunt";
 import { islesOf } from "@/lib/island/isles";
 import type { Animal } from "@/lib/island/life";
 import { bodyFaces } from "@/lib/island/models/kinds";
@@ -52,6 +59,7 @@ describe("island/bodies", () => {
     expect(of("hen")[1]).toBe(SEA_LEVEL);
     expect(of("cat")).toHaveLength(0);
     expect(of("whale")).toHaveLength(BODY_STRIDE);
+    expect(of("cow")[5]).toBe(0);
   });
 
   it("swims the whale round the island in deep water, its back rising and sinking at the sea's face, facing its way", () => {
@@ -60,12 +68,31 @@ describe("island/bodies", () => {
       const reach = Math.hypot(whale.x - SPAN / 2, whale.z - SPAN / 2);
       expect(reach).toBeGreaterThan(SPAN / 2 + 10);
       expect(Math.abs(whale.y - SEA_LEVEL)).toBeLessThan(1);
+      expect(whale.pitch).toBe(0);
       const later = whaleAt(time + 0.05);
       expect(Math.atan2(later.x - whale.x, later.z - whale.z)).toBeCloseTo(
         whale.yaw,
         2
       );
     }
+  });
+
+  it("breaches the whale now and then: it dives nose up, leaves the sea whole, falls back flat and swims on", () => {
+    const flight = Arr.makeBy(141, (step) => whaleAt(20 + step * 0.1));
+    const top = Math.max(...Arr.map(flight, (whale) => whale.y));
+    // Its middle clears the sea by more than half its own height, so the whole body leaves the water.
+    expect(top).toBeGreaterThan(SEA_LEVEL + 2);
+    expect(whaleAt(22.9).y).toBeLessThan(SEA_LEVEL - 3);
+    expect(whaleAt(22.9).pitch).toBeGreaterThan(1.1);
+    expect(whaleAt(21).pitch).toBeLessThan(0);
+    // Falling back, it lands flat on the sea, nose a little down, and levels as it swims on.
+    expect(whaleAt(25.1).pitch).toBeCloseTo(-0.5, 1);
+    expect(whaleAt(27).pitch).toBeLessThan(0);
+    expect(whaleAt(27).pitch).toBeGreaterThan(-0.5);
+    expect(whaleAt(30).pitch).toBe(0);
+    expect(Math.abs(whaleAt(30).y - SEA_LEVEL)).toBeLessThan(1);
+    // The next breach comes a cycle later.
+    expect(whaleAt(66 + 3 + 1.1).y).toBeGreaterThan(SEA_LEVEL + 2);
   });
 
   it("swims every big swimmer of the open sea on a round of its own, past the whale's and clear of every isle, facing its way", () => {
@@ -135,5 +162,54 @@ describe("island/bodies", () => {
     expect(
       Arr.some(tops, (top) => top.kind === "dolphin" && top.y < SEA_LEVEL)
     ).toBe(true);
+  });
+
+  it("tips a leaping dolphin's nose up as it rises and down as it dives, and keeps it level under the sea", () => {
+    const dolphins = Arr.flatMap(
+      Arr.makeBy(120, (step) => step * 0.1),
+      (time) =>
+        Arr.flatMap(seaBodies(7, time), ([model, places]) =>
+          model.kind === "dolphin"
+            ? Arr.chunksOf(Array.from(places), BODY_STRIDE)
+            : []
+        )
+    );
+    const under = Arr.filter(dolphins, (body) => body[1] < SEA_LEVEL - 0.69);
+    expect(under.length).toBeGreaterThan(0);
+    Arr.forEach(under, (body) => expect(body[5]).toBe(0));
+    expect(Arr.some(dolphins, (body) => body[5] > 0.3)).toBe(true);
+    expect(Arr.some(dolphins, (body) => body[5] < -0.3)).toBe(true);
+  });
+
+  it("puts the reef shark on the bait ball's round instead of a round of its own", () => {
+    Arr.forEach([0, 9, 14.6, 31], (time) => {
+      const shark = Arr.findFirst(
+        seaBodies(7, time),
+        ([model]) => model.kind === "reef-shark"
+      ).pipe(
+        Option.map(([, places]) => Array.from(places)),
+        Option.getOrElse(() => [])
+      );
+      const ball = ballAt(7, time);
+      expect(shark).toHaveLength(BODY_STRIDE);
+      expect(Math.hypot(shark[0] - ball.x, shark[2] - ball.z)).toBeLessThan(
+        2.5
+      );
+    });
+  });
+
+  it("joins the runs of a model that comes twice, and passes a model that comes once untouched", () => {
+    const once = Float32Array.from([1, 2, 3, 4, 5, 6]);
+    const bodies = joined([
+      [{ _tag: "species", index: 3 }, Float32Array.from([1, 1, 1, 0, 0, 0])],
+      [{ _tag: "plant", index: 2 }, once],
+      [{ _tag: "species", index: 3 }, Float32Array.from([2, 2, 2, 0, 0, 0])],
+    ]);
+    expect(bodies).toHaveLength(2);
+    const [species, plant] = bodies;
+    expect(Array.from(species[1])).toEqual([
+      1, 1, 1, 0, 0, 0, 2, 2, 2, 0, 0, 0,
+    ]);
+    expect(plant[1]).toBe(once);
   });
 });

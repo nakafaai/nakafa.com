@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { describe, expect, it } from "@effect/vitest";
-import { Array as Arr } from "effect";
+import { Array as Arr, Option } from "effect";
 import {
   boundsOf,
   box,
@@ -130,6 +130,23 @@ describe("island/models/parts", () => {
       waves: 0,
     });
     expect(Math.max(...swingsOf(wing))).toBeCloseTo(0.4);
+    // A stalk leans in the current more the higher up it, the sway climbing it as a wave.
+    const stalk = rigged(box([0, 0, 0], [0.1, 3, 0.1], grey), {
+      mode: "lean",
+      phase: 0,
+      pivot: 1,
+      rate: 1.1,
+      reach: 0.1,
+      waves: 0.25,
+    });
+    expect(Math.max(...swingsOf(stalk))).toBeCloseTo(0.2);
+    expect(Math.min(...swingsOf(stalk))).toBe(0);
+    const [, phase, , mode] = Option.getOrElse(
+      Arr.findFirst(motions(stalk), ([swing]) => swing > 0.19),
+      () => []
+    );
+    expect(phase).toBeCloseTo(Math.PI);
+    expect(mode).toBe(6);
     // A part with no length along the body has nothing to wave along, and a part with no rig stays still.
     const plaque = rigged(box([0, 0, 0], [1, 1, 0], grey), wave);
     expect(Arr.every(swingsOf(plaque), (swing) => swing === 0)).toBe(true);

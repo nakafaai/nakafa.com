@@ -66,6 +66,7 @@ function entryOf(gl: WebGL2RenderingContext, model: Model) {
   );
   placeAttribute(gl, 3, 4, 0);
   placeAttribute(gl, 4, 1, 4);
+  placeAttribute(gl, 6, 1, 5);
   gl.bindVertexArray(null);
   return {
     corners: vertices.length / MODEL_STRIDE,

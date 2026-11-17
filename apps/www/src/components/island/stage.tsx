@@ -22,7 +22,7 @@ import {
   GameStoreContext,
   heldOf,
 } from "@/components/island/store";
-import { bodiesOf, seaBodies } from "@/lib/island/bodies";
+import { bodiesOf, joined, seaBodies } from "@/lib/island/bodies";
 import {
   clampOrbit,
   easeOrbit,
@@ -53,6 +53,8 @@ import { planOf } from "@/lib/island/plan";
 import { plantBodies } from "@/lib/island/plants";
 import { RUNGS, stepLadder, TOP_RUNG } from "@/lib/island/quality";
 import { castRay } from "@/lib/island/ray";
+import { reefBodies, reefOf } from "@/lib/island/reef";
+import { schoolBodies } from "@/lib/island/schools";
 import { hourOf, lightOf } from "@/lib/island/sky";
 import { chimneysOf } from "@/lib/island/smoke";
 import { roam, wildBodies, wildOf } from "@/lib/island/wild";
@@ -114,6 +116,9 @@ function start(
   let glow = glowOf(store.getState().cells);
   // Every plant as its model (D25), read again only when the world changes.
   let plants = plantBodies(store.getState().cells);
+  // The reef on the sea floor and the pond's lily pads (D50), read again only when the world changes.
+  let reef = reefOf(store.getState().cells, store.getState().seed, size);
+  let corals = reefBodies(reef);
   let herd = herdOf(store.getState().cells, store.getState().seed, size);
   // The wild visitors change with the day, so the island meets new species as the days go by (ADR 0047, D11).
   let wild = wildOf(
@@ -171,6 +176,8 @@ function start(
       const moved = changedChunks(glow, relit);
       glow = relit;
       plants = plantBodies(state.cells);
+      reef = reefOf(state.cells, state.seed, size);
+      corals = reefBodies(reef);
       remesh(HashSet.union(store.getState().takeDirty(), moved));
       canvas.dataset.revision = String(state.revision);
     }
@@ -298,7 +305,7 @@ function start(
     store.getState().grow(ripeningOf(store.getState().cells, sprouts, seconds));
   };
 
-  /** Hands the painter every creature this frame as true 3D bodies: the herd and the fox facing its way or its float (D21), the open sea's swimmers (D24), the wild visitors and the plants (D25); then Nina and the float, still flat. */
+  /** Hands the painter every creature this frame as true 3D bodies: the herd and the fox facing its way or its float (D21), the open sea's swimmers (D24), the wild visitors and the plants (D25), the reef and its residents (D50); then Nina and the float, still flat. */
   const drawLife = (
     cells: Cells,
     next: Option.Option<readonly [number, number]>,
@@ -312,16 +319,21 @@ function start(
       ),
       () => [fox.at().x, fox.at().z] as const
     );
-    painter.bodies([
-      ...bodiesOf(
-        cells,
-        Arr.append(herd, fox.animal(facing[0], facing[1])),
-        seconds
-      ),
-      ...seaBodies(store.getState().seed, seconds),
-      ...wildBodies(cells, wild, size, seconds),
-      ...plants,
-    ]);
+    const { seed } = store.getState();
+    painter.bodies(
+      joined([
+        ...bodiesOf(
+          cells,
+          Arr.append(herd, fox.animal(facing[0], facing[1])),
+          seconds
+        ),
+        ...seaBodies(seed, seconds),
+        ...wildBodies(cells, wild, size, seconds),
+        ...schoolBodies(cells, seed, size, reef, seconds),
+        ...plants,
+        ...corals,
+      ])
+    );
     painter.herd(flatQuads(size, seconds, rod.quads(seconds, orbit.yaw)));
   };
 
