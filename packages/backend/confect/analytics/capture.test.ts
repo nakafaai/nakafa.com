@@ -1,14 +1,12 @@
 import { RegisteredConvexFunction } from "@confect/server";
 import { describe, expect, it } from "@effect/vitest";
-import posthogTest from "@posthog/convex/test";
 import confectSchema from "@repo/backend/confect/_generated/schema";
 import { captureProductEvent } from "@repo/backend/confect/analytics/capture";
 import { convexModules } from "@repo/backend/confect/test.setup";
 import { internal } from "@repo/backend/convex/_generated/api";
 import schema from "@repo/backend/convex/schema";
+import { registerPostHog } from "@repo/backend/test/posthog";
 import { JsonTextSchema } from "@repo/utilities/json";
-import { internalActionGeneric } from "convex/server";
-import { v } from "convex/values";
 import { convexTest } from "convex-test";
 import { Effect, MutableList, Schema } from "effect";
 
@@ -32,34 +30,15 @@ const contentViewed = {
   timestamp: NOW,
 } as const;
 
-/** The arguments PostHog's capture action receives, as Convex validates them. */
-const captureArgs = {
-  disableGeoip: v.boolean(),
-  distinctId: v.string(),
-  event: v.string(),
-  properties: v.optional(v.string()),
-  timestamp: v.optional(v.number()),
-};
-
 /** A test deployment whose PostHog capture action records each call, or fails with `failure`. */
 function deploymentCapturing(failure?: Error) {
   const t = convexTest(schema, convexModules);
   const captured = MutableList.make<Record<string, unknown>>();
-  t.registerComponent("posthog", posthogTest.schema, {
-    ...posthogTest.modules,
-    "./component/lib.ts": async () => ({
-      capture: internalActionGeneric({
-        args: captureArgs,
-        returns: v.null(),
-        handler: (_ctx, args) => {
-          if (failure !== undefined) {
-            throw failure;
-          }
-          MutableList.append(captured, args);
-          return null;
-        },
-      }),
-    }),
+  registerPostHog(t, (args) => {
+    if (failure !== undefined) {
+      throw failure;
+    }
+    MutableList.append(captured, args);
   });
   return { captured, t };
 }

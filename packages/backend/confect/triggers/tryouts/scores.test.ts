@@ -1,6 +1,5 @@
 import { RegisteredConvexFunction } from "@confect/server";
 import { describe, expect, it } from "@effect/vitest";
-import posthogTest from "@posthog/convex/test";
 import confectSchema from "@repo/backend/confect/_generated/schema";
 import { triggers } from "@repo/backend/confect/functions";
 import { convexModules } from "@repo/backend/confect/test.setup";
@@ -8,6 +7,7 @@ import { tryoutScoresHandler } from "@repo/backend/confect/triggers/tryouts/scor
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import schema from "@repo/backend/convex/schema";
 import { MASCOT_CODE } from "@repo/backend/test/mascot";
+import { registerPostHog } from "@repo/backend/test/posthog";
 import { encodeJsonText } from "@repo/utilities/json";
 import { convexTest } from "convex-test";
 import { Effect, Struct } from "effect";
@@ -17,7 +17,7 @@ const NOW = Date.UTC(2026, 6, 7, 12, 0, 0);
 /** Builds a trigger test instance with its analytics component boundary. */
 function createTryoutScoreTriggerTest() {
   const t = convexTest(schema, convexModules);
-  posthogTest.register(t);
+  registerPostHog(t);
   return t;
 }
 
