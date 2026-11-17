@@ -3,13 +3,15 @@ import {
   ActiveAppLocaleCodeSchema,
 } from "@nakafa/aksara-contracts/locale";
 import { Effect, Option, Schema } from "effect";
-import { readPublishedTryoutSectionPage } from "@/lib/content/tryout/catalog";
-import { readPublishedTryoutLocalizedPath } from "@/lib/content/tryout/path";
 import { permanentRedirect } from "@/lib/routing/public/redirect";
 import { readLocalizedSnbtSet } from "@/lib/routing/public/tryout/group";
 import {
-  decodeAppLocale,
   readActiveTryoutPath,
+  readMappedLocalizedPath,
+  readMappedSectionPage,
+} from "@/lib/routing/public/tryout/map.server";
+import {
+  decodeAppLocale,
   readPathSegments,
   SNBT_EXAM_PATH,
   SNBT_ROUTE,
@@ -81,7 +83,7 @@ export const readRetiredSnbtExamRedirect = Effect.fn(
   if ((yield* readActiveTryoutPath(appLocale, SNBT_ROUTE_PATH)) !== null) {
     return null;
   }
-  const exam = yield* readPublishedTryoutLocalizedPath({
+  const exam = yield* readMappedLocalizedPath({
     currentAppLocale: SOURCE_APP_LOCALE,
     publicPath: SNBT_EXAM_PATH,
     targetAppLocale: appLocale,
@@ -126,7 +128,7 @@ const readRetiredSnbtPartRedirect = Effect.fn(
     return null;
   }
   const section = readSectionSuccessor(appLocale, part);
-  const page = yield* readPublishedTryoutSectionPage({
+  const page = yield* readMappedSectionPage({
     appLocale,
     publicPath: `${setPath}/${section}`,
   });

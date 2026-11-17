@@ -4,11 +4,16 @@ import { Array as Arr, Effect } from "effect";
 import { readRetiredPublicRoute } from "@/lib/routing/public/retired";
 
 const readExamPageMock = vi.hoisted(() => vi.fn());
-vi.mock("@/lib/content/tryout/catalog", () => ({
-  readPublishedTryoutExamPage: readExamPageMock,
-}));
-vi.mock("@/lib/content/tryout/path", () => ({
-  readPublishedTryoutLocalizedPath: vi.fn(),
+vi.mock("@/lib/routing/public/tryout/map.server", () => ({
+  readMappedExamPage: readExamPageMock,
+  readMappedLocalizedPath: vi.fn(),
+  /** Reads whether the catalog serves one path in its own locale, through the localized-path mock. */
+  readActiveTryoutPath: (appLocale: string, publicPath: string) =>
+    vi.fn()({
+      currentAppLocale: appLocale,
+      publicPath,
+      targetAppLocale: appLocale,
+    }),
 }));
 
 /** Serves the signed SNBT exam with one year group per given year, or no exam at all. */

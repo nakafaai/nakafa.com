@@ -10,20 +10,25 @@ const mocks = vi.hoisted(() => ({
   path: vi.fn(),
   section: vi.fn(),
 }));
-vi.mock("@/lib/content/tryout/path", () => ({
-  readPublishedTryoutLocalizedPath: mocks.path,
-}));
-vi.mock("@/lib/content/tryout/catalog", () => ({
-  readPublishedTryoutHubPage: () =>
+vi.mock("@/lib/routing/public/tryout/map.server", () => ({
+  readMappedLocalizedPath: mocks.path,
+  readMappedHubPage: () =>
     Effect.succeed({
       countries: [
         { countryCode: "ID", publicPath: "try-out/indonesia" },
         { countryCode: "DE", publicPath: "try-out/germany" },
       ],
     }),
-  readPublishedTryoutExamPage: mocks.exam,
-  readPublishedTryoutGroupPage: mocks.group,
-  readPublishedTryoutSectionPage: mocks.section,
+  readMappedExamPage: mocks.exam,
+  readMappedGroupPage: mocks.group,
+  readMappedSectionPage: mocks.section,
+  /** Reads whether the catalog serves one path in its own locale, through the localized-path mock. */
+  readActiveTryoutPath: (appLocale: string, publicPath: string) =>
+    mocks.path({
+      currentAppLocale: appLocale,
+      publicPath,
+      targetAppLocale: appLocale,
+    }),
 }));
 
 /** The pages of SNBT that the signed catalog serves in English and German. */

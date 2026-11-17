@@ -1,6 +1,6 @@
 import { ActiveAppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
 import { Array as Arr, Effect, HashSet, Option, Schema } from "effect";
-import { readPublishedTryoutExamPage } from "@/lib/content/tryout/catalog";
+import { readMappedExamPage } from "@/lib/routing/public/tryout/map.server";
 import { readRetiredSnbtProduct } from "@/lib/routing/public/tryout/product";
 import {
   readPathSegments,
@@ -42,7 +42,7 @@ const readRetiredSnbtYear = Effect.fn("www.routing.publicHtml.retiredSnbtYear")(
     if (!HashSet.has(RETIRED_SNBT_YEARS, year)) {
       return false;
     }
-    const exam = yield* readPublishedTryoutExamPage({
+    const exam = yield* readMappedExamPage({
       appLocale: SOURCE_APP_LOCALE,
       publicPath: SNBT_EXAM_PATH,
     });

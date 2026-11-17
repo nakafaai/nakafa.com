@@ -1,17 +1,17 @@
 import type { ActiveAppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import { Array as Arr, Effect, Option } from "effect";
 import {
-  readPublishedTryoutExamPage,
-  readPublishedTryoutGroupPage,
-} from "@/lib/content/tryout/catalog";
-import { readPublishedTryoutLocalizedPath } from "@/lib/content/tryout/path";
-import {
   permanentRedirect,
   temporaryRedirect,
 } from "@/lib/routing/public/redirect";
 import {
-  decodeAppLocale,
   readActiveTryoutPath,
+  readMappedExamPage,
+  readMappedGroupPage,
+  readMappedLocalizedPath,
+} from "@/lib/routing/public/tryout/map.server";
+import {
+  decodeAppLocale,
   readPathSegments,
   SNBT_EXAM_PATH,
   SOURCE_APP_LOCALE,
@@ -26,7 +26,7 @@ import { readSectionSuccessor } from "@/lib/routing/public/tryout/section";
 export const readSoleTrack = Effect.fn(
   "www.routing.publicHtml.tryoutSoleTrack"
 )(function* (appLocale: ActiveAppLocaleCode, groupPath: string) {
-  const page = yield* readPublishedTryoutGroupPage({
+  const page = yield* readMappedGroupPage({
     appLocale,
     publicPath: groupPath,
   });
@@ -50,7 +50,7 @@ export const readLocalizedSnbtSet = Effect.fn(
   if (Option.isNone(track)) {
     return null;
   }
-  return yield* readPublishedTryoutLocalizedPath({
+  return yield* readMappedLocalizedPath({
     currentAppLocale: SOURCE_APP_LOCALE,
     publicPath: `${track.value.publicPath}/${set}`,
     targetAppLocale: appLocale,
@@ -86,7 +86,7 @@ function readExamRoute(pathname: string) {
 const readExamEntryRedirect = Effect.fn(
   "www.routing.publicHtml.tryoutExamEntry"
 )(function* (appLocale: ActiveAppLocaleCode, examPath: string) {
-  const exam = yield* readPublishedTryoutExamPage({
+  const exam = yield* readMappedExamPage({
     appLocale,
     publicPath: examPath,
   });
@@ -107,7 +107,7 @@ const readExamEntryRedirect = Effect.fn(
 const readGroupEntryRedirect = Effect.fn(
   "www.routing.publicHtml.tryoutGroupEntry"
 )(function* (appLocale: ActiveAppLocaleCode, examPath: string, path: string) {
-  const exam = yield* readPublishedTryoutExamPage({
+  const exam = yield* readMappedExamPage({
     appLocale,
     publicPath: examPath,
   });
@@ -171,7 +171,7 @@ const readUngroupedTrackRedirect = Effect.fn(
   readonly segment: string;
 }) {
   const { appLocale, below, examPath, segment } = input;
-  const exam = yield* readPublishedTryoutExamPage({
+  const exam = yield* readMappedExamPage({
     appLocale,
     publicPath: examPath,
   });
@@ -179,7 +179,7 @@ const readUngroupedTrackRedirect = Effect.fn(
     return null;
   }
   const pages = yield* Effect.forEach(exam.groups, (group) =>
-    readPublishedTryoutGroupPage({ appLocale, publicPath: group.publicPath })
+    readMappedGroupPage({ appLocale, publicPath: group.publicPath })
   );
   const track = Arr.findFirst(
     Arr.flatMap(pages, (page) => (page === null ? [] : page.tracks)),

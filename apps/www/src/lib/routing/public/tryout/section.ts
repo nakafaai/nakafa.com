@@ -1,8 +1,8 @@
 import type { ActiveAppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import { Array as Arr, Effect, HashMap, Option } from "effect";
 import { permanentRedirect } from "@/lib/routing/public/redirect";
+import { readActiveTryoutPath } from "@/lib/routing/public/tryout/map.server";
 import {
-  readActiveTryoutPath,
   readPathSegments,
   SNBT_ROUTE,
   TRYOUT_ROOT,

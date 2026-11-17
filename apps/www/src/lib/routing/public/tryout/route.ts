@@ -1,9 +1,5 @@
-import {
-  type ActiveAppLocaleCode,
-  ActiveAppLocaleCodeSchema,
-} from "@nakafa/aksara-contracts/locale";
+import { ActiveAppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
 import { Array as Arr, Schema } from "effect";
-import { readPublishedTryoutLocalizedPath } from "@/lib/content/tryout/path";
 
 export const TRYOUT_ROOT = "try-out";
 export const SNBT_ROUTE = "snbt";
@@ -19,16 +15,4 @@ export const decodeAppLocale = Schema.decodeUnknownOption(
 /** Splits one public pathname into its non-empty segments. */
 export function readPathSegments(pathname: string) {
   return Arr.filter(pathname.split("/"), (segment) => segment !== "");
-}
-
-/** Reads whether the active signed catalog serves one exact route in its own locale. */
-export function readActiveTryoutPath(
-  appLocale: ActiveAppLocaleCode,
-  path: string
-) {
-  return readPublishedTryoutLocalizedPath({
-    currentAppLocale: appLocale,
-    publicPath: path,
-    targetAppLocale: appLocale,
-  });
 }
