@@ -2417,6 +2417,7 @@
   "Articles": {
     "description": "Lies Bildungsartikel mit verständlichem Kontext, Daten und überprüfbaren Quellen.",
     "category-description": "Lies Artikel zu {category} mit verständlichem Kontext, Daten und überprüfbaren Quellen.",
+    "category-search-title": "Artikel zu {category}",
     "politics": "Politik",
     "contributor": "Beitrag"
   },

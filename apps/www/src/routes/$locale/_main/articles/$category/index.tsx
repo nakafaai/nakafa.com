@@ -156,6 +156,10 @@ const readArticleCategory = createServerFn({ method: "GET" })
             }),
             label: model.title,
             locale,
+            // A reader searches for the articles of a subject ("artikel politik"), so the title names them.
+            searchTitle: tArticles("category-search-title", {
+              category: model.title,
+            }),
             nextSearch: Option.getOrNull(getArticleNextSearch(catalog)),
             routeSlug: model.route,
             sourceUrl: catalog.sourceRevision
@@ -204,8 +208,15 @@ export const Route = createFileRoute("/$locale/_main/articles/$category/")({
     if (loaderData === undefined) {
       return {};
     }
-    const { articles, breadcrumbs, categoryPath, description, label, locale } =
-      loaderData;
+    const {
+      articles,
+      breadcrumbs,
+      categoryPath,
+      description,
+      label,
+      locale,
+      searchTitle,
+    } = loaderData;
     const url = `${COMPANY_IDENTITY.url}/${locale}${categoryPath}`;
     return toRouterHead(
       createSeoHead({
@@ -227,7 +238,7 @@ export const Route = createFileRoute("/$locale/_main/articles/$category/")({
           }),
         ],
         locale,
-        parts: [label],
+        parts: [searchTitle],
         type: "website",
       })
     );
