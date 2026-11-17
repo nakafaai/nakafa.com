@@ -91,6 +91,14 @@ export const MATERIAL = {
   cpkSulfur: "#ffff30",
   cpkZinc: "#7d80b0",
 
+  // Visible light of each colour, as a camera records it, from violet to red.
+  spectrumBlue: "#3b4cff",
+  spectrumCyan: "#00c8ff",
+  spectrumGreen: "#2fd35a",
+  spectrumOrange: "#ff8a1f",
+  spectrumRed: "#ff2a1f",
+  spectrumYellow: "#ffe23a",
+
   // The lab bench and its glassware.
   balanceBody: "#d8d9d4",
   balanceKey: "#5c6066",

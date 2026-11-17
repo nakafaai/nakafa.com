@@ -1,0 +1,120 @@
+import { describe, expect, it } from "@effect/vitest";
+import {
+  apparentDepth,
+  criticalAngle,
+  refract,
+  telescope,
+  thinLens,
+  traceBlock,
+  traceLayers,
+} from "@repo/design-system/components/contents/physics/optics/ray";
+import { Array as Arr, Option } from "effect";
+
+describe("refract", () => {
+  it("bends a 60 degree ray in air to 35.3 degrees in glass of index 1.50", () => {
+    expect(Option.getOrThrow(refract(1, 1.5, 60))).toBeCloseTo(35.26, 2);
+  });
+
+  it("reflects a ray from glass that meets the surface beyond the critical angle", () => {
+    expect(Option.isNone(refract(1.5, 1, 54.7))).toBe(true);
+    expect(criticalAngle(1.5)).toBeCloseTo(41.81, 2);
+  });
+});
+
+describe("traceBlock", () => {
+  const block = { height: 1, index: 1.5, width: 1.6 };
+
+  it("totally reflects the SPM ray at the side face, then lets it out through the bottom", () => {
+    const { hits, refraction } = traceBlock(block, 1, 60);
+    expect(refraction).toBeCloseTo(35.26, 2);
+    expect(hits[0]).toMatchObject({ event: "reflected", face: "right" });
+    expect(hits[0]?.incidence).toBeCloseTo(54.74, 2);
+    expect(hits[1]).toMatchObject({ event: "refracted", face: "bottom" });
+    expect(hits[1]?.incidence).toBeCloseTo(35.26, 2);
+  });
+
+  it("lets a ray at normal incidence straight down through the bottom", () => {
+    const { hits } = traceBlock(block, 1, 0);
+    expect(hits).toEqual([
+      { at: { x: 1, y: 0 }, event: "refracted", face: "bottom", incidence: 0 },
+    ]);
+  });
+
+  it("bounces a ray between both side faces of a tall narrow block until four faces", () => {
+    const { hits } = traceBlock(
+      { height: 20, index: 1.5, width: 0.2 },
+      0.1,
+      60
+    );
+    expect(Arr.map(hits, (hit) => hit.face)).toEqual([
+      "right",
+      "left",
+      "right",
+      "left",
+    ]);
+    expect(Arr.every(hits, (hit) => hit.event === "reflected")).toBe(true);
+  });
+});
+
+describe("apparentDepth", () => {
+  it("lifts the coin's image from 3.0 to 5.0 cm above the bottom when 6.0 cm of oil is poured on", () => {
+    const water = { index: 4 / 3, thickness: 12 };
+    const before = apparentDepth([water]);
+    expect(before.apparent).toBeCloseTo(9, 9);
+    expect(before.image).toBeCloseTo(3, 9);
+    const after = apparentDepth([{ index: 1.5, thickness: 6 }, water]);
+    expect(after.apparent).toBeCloseTo(13, 9);
+    expect(after.image).toBeCloseTo(5, 9);
+    expect(after.real).toBe(18);
+  });
+});
+
+describe("traceLayers", () => {
+  it("bends a ray away from the normal at each boundary on its way up", () => {
+    const { crossings, emerges } = traceLayers(
+      [
+        { index: 1.5, thickness: 6 },
+        { index: 4 / 3, thickness: 12 },
+      ],
+      5
+    );
+    expect(crossings).toHaveLength(3);
+    expect(crossings[1]?.y).toBe(12);
+    expect(crossings[2]?.y).toBe(18);
+    expect(emerges).toBeCloseTo(
+      Math.asin((4 / 3) * Math.sin(Math.PI / 36)) * (180 / Math.PI),
+      9
+    );
+  });
+});
+
+describe("thinLens", () => {
+  it("forms a virtual upright image three times as tall from 10 cm in front of a 15 cm lens", () => {
+    const image = Option.getOrThrow(thinLens(15, 10));
+    expect(image.distance).toBeCloseTo(-30, 9);
+    expect(image.magnification).toBeCloseTo(3, 9);
+    expect(image.real).toBe(false);
+  });
+
+  it("forms a real inverted image three times as tall from 20 cm in front", () => {
+    const image = Option.getOrThrow(thinLens(15, 20));
+    expect(image.distance).toBeCloseTo(60, 9);
+    expect(image.magnification).toBeCloseTo(-3, 9);
+    expect(image.real).toBe(true);
+  });
+
+  it("forms no image of an object at the focal point", () => {
+    expect(Option.isNone(thinLens(15, 15))).toBe(true);
+  });
+});
+
+describe("telescope", () => {
+  it("spaces lenses of +1.0 D and +20 D 105 cm apart and magnifies 20 times", () => {
+    expect(telescope(1, 20)).toEqual({
+      eyepiece: 5,
+      length: 105,
+      magnification: 20,
+      objective: 100,
+    });
+  });
+});
