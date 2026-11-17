@@ -11,7 +11,11 @@ import { waitUntilTakenOver } from "@/e2e/support/window";
  */
 const drawsFlag = (row: Locator) =>
   row.evaluate((element) => {
-    const flag = element.querySelector(".truncate")?.previousElementSibling;
+    // A picker's button holds the flag beside its name; an option holds its words in a wrapper the flag precedes.
+    const name = element.querySelector(".truncate");
+    const flag =
+      name?.previousElementSibling ??
+      name?.parentElement?.previousElementSibling;
     return (
       flag instanceof SVGElement &&
       flag.getAttribute("aria-hidden") === "true" &&

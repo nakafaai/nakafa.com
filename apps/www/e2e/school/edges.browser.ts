@@ -1,4 +1,10 @@
-import { expect, type Locator, type Page, test } from "@playwright/test";
+import {
+  expect,
+  type Locator,
+  type Page,
+  type Route,
+  test,
+} from "@playwright/test";
 import { Array as Arr, Effect, String as Str } from "effect";
 import { pictureOf } from "@/e2e/support/attachment";
 import { expectNoOverflow } from "@/e2e/support/layout";
@@ -243,23 +249,17 @@ test("the forum holds the worst a class writes: a long name, long words, 2,000 c
       name: "React",
     })
   ).toBeEnabled({ timeout: readinessTimeoutMilliseconds });
-  const cdp = await context.newCDPSession(page);
-  await cdp.send("Network.emulateNetworkConditions", {
-    downloadThroughput: 50_000,
-    latency: 400,
-    offline: false,
-    uploadThroughput: 50_000,
-  });
+  // A slow network holds every request of the page a moment, as a weak signal does, in every engine.
+  const slow = async (route: Route) => {
+    await page.waitForTimeout(400);
+    await route.continue();
+  };
+  await page.route("**/*", slow);
   await page.reload();
   await expect(messageRow(page, "Terkirim saat jaringan kembali.")).toBeVisible(
     { timeout: readinessTimeoutMilliseconds }
   );
-  await cdp.send("Network.emulateNetworkConditions", {
-    downloadThroughput: -1,
-    latency: 0,
-    offline: false,
-    uploadThroughput: -1,
-  });
+  await page.unroute("**/*", slow);
 
   // A thread of 200 replies, its summary counting them under the message.
   const root = messageRow(page, "Pesan 100").first();
