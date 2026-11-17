@@ -1,7 +1,8 @@
 import { Option } from "effect";
 import { activate, programOf } from "@/components/island/buffers";
 import { CAST_FRAGMENT, CAST_VERTEX } from "@/lib/island/shaders";
-import { SHADOW_SIZE } from "@/lib/island/sun";
+import type { Light } from "@/lib/island/sky";
+import { SHADOW_SIZE, type sunViewOf } from "@/lib/island/sun";
 
 /**
  * The sun's shadow map (ADR 0047, D43): one hard depth texture, `SHADOW_SIZE`
@@ -68,6 +69,18 @@ export function createShadow(gl: WebGL2RenderingContext) {
         gl.uniformMatrix4fv(viewProjection, false, sun);
         gl.uniform1i(atlasUnit, 0);
         casters();
+      },
+      /** Gives a program, by its uniform finder `at`, the sun's view of the world, the light's direction and the map on texture unit `unit` (D43). */
+      shine(
+        at: (name: string) => WebGLUniformLocation | null,
+        light: Light,
+        sun: ReturnType<typeof sunViewOf>,
+        unit: number
+      ) {
+        gl.uniformMatrix4fv(at("uSunView"), false, sun.matrix);
+        gl.uniform3fv(at("uToward"), light.toward);
+        gl.uniform1f(at("uShadowTexel"), sun.texel);
+        gl.uniform1i(at("uShadowMap"), unit);
       },
       /** Puts the map on texture unit `unit` for the programs that read it. */
       bind(unit: number) {
