@@ -278,7 +278,7 @@ function shoalOf(length: number) {
 }
 
 /** The top of the sea floor under a column: its highest solid block below the surface, none where nothing lies under the water. */
-function seabedOf(cells: Cells, x: number, z: number) {
+export function seabedOf(cells: Cells, x: number, z: number) {
   return Option.map(
     Arr.findFirst(
       Arr.makeBy(SEA_LEVEL, (index) => SEA_LEVEL - 1 - index),
@@ -310,7 +310,7 @@ function seaPlaces(cells: Cells, wild: Wild, size: number, time: number) {
   const at = loopOf(wild, "sea", size, time);
   const yaw = yawOf(at.heading);
   if (species.family === "waterbird") {
-    return [[at.x, SEA_LEVEL - 0.2, at.z, yaw, 0]];
+    return [[at.x, SEA_LEVEL - 0.2, at.z, yaw, 0, 0]];
   }
   const [c, s] = [Math.cos(yaw), Math.sin(yaw)];
   const half = length / 4;
@@ -337,7 +337,7 @@ function seaPlaces(cells: Cells, wild: Wild, size: number, time: number) {
       species.family === "crab"
         ? Option.getOrElse(floor, () => at.y)
         : Math.min(high, Math.max(low, at.y + oy));
-    return Result.succeed([x, y, z, yaw + (fish.lag - 0.5) * 0.3, 0]);
+    return Result.succeed([x, y, z, yaw + (fish.lag - 0.5) * 0.3, 0, 0]);
   });
 }
 
@@ -367,11 +367,12 @@ function creaturePlaces(
         wild.z,
         moving ? Math.atan2(dx, dz) : wild.phase,
         moving && wild.rest <= 0 ? 0.04 : 0,
+        0,
       ],
     ];
   }
   const at = loopOf(wild, home, size, time);
-  return [[at.x, at.y, at.z, yawOf(at.heading), 0]];
+  return [[at.x, at.y, at.z, yawOf(at.heading), 0, 0]];
 }
 
 /**
@@ -395,7 +396,7 @@ export function wildBodies(
       const model = flight.flying
         ? ({ _tag: "flyer", index: wild.index } as const)
         : ({ _tag: "species", index: wild.index } as const);
-      const place = [flight.x, flight.y, flight.z, yawOf(flight.heading), 0];
+      const place = [flight.x, flight.y, flight.z, yawOf(flight.heading), 0, 0];
       return [model, Float32Array.from(place)] as const;
     }
     const places =

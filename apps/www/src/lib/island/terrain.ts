@@ -68,6 +68,25 @@ export function shoreOf(size: number) {
   return (size / 2 - SHORE.inset) * (SHORE.least + SHORE.wobble);
 }
 
+/** How far the island's shore reaches from its middle toward (x, z), in cells. */
+function edgeOf(seed: number, size: number, x: number, z: number) {
+  return (
+    (size / 2 - SHORE.inset) *
+    (SHORE.least + SHORE.wobble * smoothOf(seed, x, z, 5))
+  );
+}
+
+/**
+ * How many cells out past the island's shore the column at (x, z) lies:
+ * below zero inside the island, where its pond is, and the farther out the
+ * deeper the shelf under it (ADR 0047, D43 and D50).
+ */
+export function outOf(seed: number, size: number, x: number, z: number) {
+  return (
+    Math.hypot(x + 0.5 - MIDDLE, z + 0.5 - MIDDLE) - edgeOf(seed, size, x, z)
+  );
+}
+
 /**
  * The column at (x, z): the top cell of its ground and whether that ground is
  * land above the water. The island is a rounded patch whose edge wobbles with
@@ -77,9 +96,7 @@ export function shoreOf(size: number) {
  */
 export function columnOf(seed: number, size: number, x: number, z: number) {
   const distance = Math.hypot(x + 0.5 - MIDDLE, z + 0.5 - MIDDLE);
-  const edge =
-    (size / 2 - SHORE.inset) *
-    (SHORE.least + SHORE.wobble * smoothOf(seed, x, z, 5));
+  const edge = edgeOf(seed, size, x, z);
   if (distance < edge - 3 && isPond(seed, x, z)) {
     return { land: false, top: SEA_LEVEL - 2 };
   }

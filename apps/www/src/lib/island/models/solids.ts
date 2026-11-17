@@ -42,15 +42,33 @@ export function tint(ramp: Ramp, tone: Tone): Rgb {
   return [red / 255, green / 255, blue / 255];
 }
 
-const add = (a: Vec, b: Vec): Vec => [a[0] + b[0], a[1] + b[1], a[2] + b[2]];
+/** The sum of two points or directions. */
+export function add(a: Vec, b: Vec): Vec {
+  return [a[0] + b[0], a[1] + b[1], a[2] + b[2]];
+}
+
 const sub = (a: Vec, b: Vec): Vec => [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
-const times = (a: Vec, k: number): Vec => [a[0] * k, a[1] * k, a[2] * k];
+
+/** A direction grown by `k`. */
+export function times(a: Vec, k: number): Vec {
+  return [a[0] * k, a[1] * k, a[2] * k];
+}
+
 const cross = (a: Vec, b: Vec): Vec => [
   a[1] * b[2] - a[2] * b[1],
   a[2] * b[0] - a[0] * b[2],
   a[0] * b[1] - a[1] * b[0],
 ];
-const unit = (a: Vec): Vec => times(a, 1 / Math.hypot(a[0], a[1], a[2]));
+
+/** A direction one long. */
+export function unit(a: Vec): Vec {
+  return times(a, 1 / Math.hypot(a[0], a[1], a[2]));
+}
+
+/** The way out from the middle at `angle` round it, flat on the ground. */
+export function outward(angle: number): Vec {
+  return [Math.cos(angle), 0, Math.sin(angle)];
+}
 
 /** The way a tube runs at one ring: toward the next ring, from the one before. */
 function headingAt(rings: readonly Ring[], index: number) {

@@ -24,14 +24,18 @@ type Rgb = typeof Rgb.Type;
  * - `flap`: a wing or a flipper rising and falling about the distance `pivot`
  *   from the middle;
  * - `bend`: the same wave as `sway`, only while the body walks, so a walking
- *   animal's spine flexes from side to side in step with its legs (D49).
+ *   animal's spine flexes from side to side in step with its legs (D49);
+ * - `lean`: a stalk rooted at the height `pivot` swaying in the current,
+ *   more the higher up it, the sway climbing it as a wave, the way kelp,
+ *   seagrass, a sea fan or an anemone's tentacles move (D50).
  *
  * `rate` is in radians a second, `phase` in radians, and `reach` the swing's
  * size: a share of the body's length for a wave, an angle in radians for a
- * stride or a flap. `waves` is how many wavelengths run along the body.
+ * stride, a flap or a lean. `waves` is how many wavelengths run along the
+ * body, or up a leaning stalk a block of its height.
  */
 const Rig = Schema.Struct({
-  mode: Schema.Literals(["sway", "heave", "stride", "flap", "bend"]),
+  mode: Schema.Literals(["sway", "heave", "stride", "flap", "bend", "lean"]),
   phase: Schema.Finite,
   pivot: Schema.Finite,
   rate: Schema.Finite,
@@ -190,14 +194,21 @@ export const MODEL_STRIDE = 13;
 const STILL = [0, 0, 0, 0] as const;
 
 /** The number the body program reads for each mode; 0 is a part that never moves. */
-const MODES = { bend: 5, flap: 4, heave: 2, stride: 3, sway: 1 } as const;
+const MODES = {
+  bend: 5,
+  flap: 4,
+  heave: 2,
+  lean: 6,
+  stride: 3,
+  sway: 1,
+} as const;
 
 /**
  * The motion numbers of one corner (D48): how far it swings, its phase, its
  * rate and its mode. A wave's swing grows from a fifth of its reach at the
  * head to all of it at the tail and lags along the body by its `waves`; a
  * stride's grows with the depth below its pivot, a flap's with the distance
- * out from its pivot.
+ * out from its pivot, a lean's with the height above its pivot.
  */
 function motionOf(
   rig: Rig,
@@ -219,6 +230,15 @@ function motionOf(
     return [
       rig.reach * Math.max(0, Math.abs(x) - rig.pivot),
       rig.phase,
+      rig.rate,
+      mode,
+    ];
+  }
+  if (rig.mode === "lean") {
+    const height = Math.max(0, y - rig.pivot);
+    return [
+      rig.reach * height,
+      rig.phase + height * rig.waves * 2 * Math.PI,
       rig.rate,
       mode,
     ];

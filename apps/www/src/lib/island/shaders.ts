@@ -315,6 +315,7 @@ layout(location = 2) in vec3 aColor;
 layout(location = 3) in vec4 aPlace;
 layout(location = 4) in float aMove;
 layout(location = 5) in vec4 aRig;
+layout(location = 6) in float aPitch;
 uniform mat4 uViewProjection;
 uniform float uTime;
 ${WIND_GLSL}
@@ -327,7 +328,7 @@ void main() {
   float c = cos(aPlace.w);
   float s = sin(aPlace.w);
   vec3 local = aPosition;
-  // The body's own motion (D48 and D49): a swim wave across or up and down it, a leg or an arm striding while it walks, a wing or a flipper flapping, a walking spine flexing, each body a little out of step with its neighbours.
+  // The body's own motion (D48 and D49): a swim wave across or up and down it, a leg or an arm striding while it walks, a wing or a flipper flapping, a walking spine flexing, a stalk leaning in the current, each body a little out of step with its neighbours.
   float beat = aRig.x * sin(uTime * aRig.z + aRig.y + aPlace.x * 1.7 + aPlace.z * 0.9);
   float walking = step(0.001, aMove);
   local += aRig.w < 0.5 ? vec3(0.0)
@@ -335,7 +336,13 @@ void main() {
     : aRig.w < 2.5 ? vec3(0.0, beat, 0.0)
     : aRig.w < 3.5 ? vec3(0.0, 0.0, beat * walking)
     : aRig.w < 4.5 ? vec3(0.0, beat, 0.0)
-    : vec3(beat * walking, 0.0, 0.0);
+    : aRig.w < 5.5 ? vec3(beat * walking, 0.0, 0.0)
+    : vec3(beat * 0.6, 0.0, beat);
+  // A body tips its nose up or down before it turns (D50): a whale rising to breach, a dolphin arcing through its leap.
+  float pc = cos(aPitch);
+  float ps = sin(aPitch);
+  local = vec3(local.x, local.y * pc + local.z * ps, local.z * pc - local.y * ps);
+  vec3 normal = vec3(aNormal.x, aNormal.y * pc + aNormal.z * ps, aNormal.z * pc - aNormal.y * ps);
   vec3 turned = vec3(local.x * c + local.z * s, local.y, -local.x * s + local.z * c);
   vec3 place = aPlace.xyz + turned;
   if (aMove < 0.0) {
@@ -344,7 +351,7 @@ void main() {
     place += windShift(aPlace.xz, height * height * min(1.0, 0.4 - 0.2 / aMove));
   }
   place.y += abs(sin(uTime * 9.0 + aPlace.x * 3.1)) * max(aMove, 0.0);
-  vNormal = vec3(aNormal.x * c + aNormal.z * s, aNormal.y, -aNormal.x * s + aNormal.z * c);
+  vNormal = vec3(normal.x * c + normal.z * s, normal.y, -normal.x * s + normal.z * c);
   vColor = aColor;
   vWorld = place;
   gl_Position = uViewProjection * vec4(place, 1.0);
