@@ -20,6 +20,7 @@ import {
 } from "@/components/tryout/catalog/source.server";
 import { CATALOG_QUERY_DEFAULTS } from "@/components/tryout/catalog/table/query";
 import { TRYOUT_SET_PAGE_SIZE } from "@/components/tryout/catalog/table/types";
+import { readSetSections } from "@/components/tryout/set/sections";
 import { BASE_URL } from "@/lib/llms/constants";
 import { buildHeader } from "@/lib/llms/format";
 
@@ -225,7 +226,7 @@ const readSetText = Effect.fn("www.llms.tryout.set")(function* (
       publicPath: page.set.publicPath,
       title: `${exam} ${page.set.title}`,
     },
-    Arr.map(page.sections, (section) => {
+    Arr.map(readSetSections(page), (section) => {
       const minutes = tTryouts("set-duration-minutes", {
         minutes: section.timeLimitSeconds / 60,
       });

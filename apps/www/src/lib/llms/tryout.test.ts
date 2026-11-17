@@ -186,17 +186,18 @@ describe("try-out Markdown", () => {
 
   it.effect("names a set's exam and counts its sections", () =>
     Effect.gen(function* () {
+      const reasoning = {
+        questionCount: 30,
+        timeLimitSeconds: 1800,
+        title: "General Reasoning",
+        visibility: "visible",
+      };
       catalog.set
         .mockReturnValueOnce(
           Effect.succeed({
+            entrySection: reasoning,
             exam: EXAM,
-            sections: [
-              {
-                questionCount: 30,
-                timeLimitSeconds: 1800,
-                title: "General Reasoning",
-              },
-            ],
+            sections: [reasoning],
             group: GROUP,
             set: SET,
             track: TRACK,
@@ -212,6 +213,32 @@ describe("try-out Markdown", () => {
     })
   );
 
+  it.effect(
+    "counts the one section of a set entered directly, which its page does not list",
+    () =>
+      Effect.gen(function* () {
+        catalog.set.mockReturnValueOnce(
+          Effect.succeed({
+            entrySection: {
+              questionCount: 25,
+              timeLimitSeconds: 3600,
+              title: "Advanced Mathematics",
+              visibility: "internal-entry",
+            },
+            exam: EXAM,
+            sections: [],
+            group: GROUP,
+            set: SET,
+            track: TRACK,
+          })
+        );
+
+        expect(yield* text("try-out/indonesia/snbt/2027/utbk/set-1")).toContain(
+          "- Advanced Mathematics: 25 Questions, 60 min"
+        );
+      })
+  );
+
   it.effect("describes a track with no words of its own", () =>
     Effect.gen(function* () {
       catalog.track.mockReturnValueOnce(
@@ -225,6 +252,12 @@ describe("try-out Markdown", () => {
       catalog.sets.mockReturnValueOnce(windowOf([]));
       catalog.set.mockReturnValueOnce(
         Effect.succeed({
+          entrySection: {
+            questionCount: 25,
+            timeLimitSeconds: 3600,
+            title: "Advanced Mathematics",
+            visibility: "internal-entry",
+          },
           exam: EXAM,
           group: GROUP,
           sections: [],
