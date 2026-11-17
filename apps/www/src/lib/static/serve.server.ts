@@ -10,6 +10,7 @@ import {
 } from "effect";
 import { fromJSON, type SerovalJSON } from "seroval";
 import { readTryoutCountryFn } from "@/components/tryout/route/catalog.functions";
+import { readCurriculumRoute } from "@/lib/curriculum/node.functions";
 import { readRouteMessages } from "@/lib/i18n/messages.functions";
 import { hasStaticRelease } from "@/lib/routing/release";
 import { readStaticFile, staticDataPath } from "@/lib/static/calls";
@@ -18,12 +19,14 @@ import { staticCallKey } from "@/lib/static/key";
 /**
  * The server functions whose static answers the Worker serves in place of their
  * handlers. Each takes everything its answer depends on in its input and reads
- * only the release: a route's messages read the release's dictionaries, and a
- * try-out country reads the release's catalog. So the answer that the build wrote
+ * only the release: a route's messages read the release's dictionaries, a
+ * curriculum node reads the release's curriculum, and a try-out country reads the
+ * release's catalog. So the answer that the build wrote
  * for an input is the answer the handler would give it in this release. A function
  * that reads the request, a session or live data stays on its handler.
  */
 const STATIC_FUNCTIONS = HashSet.make(
+  readCurriculumRoute.url,
   readRouteMessages.url,
   readTryoutCountryFn.url
 );
