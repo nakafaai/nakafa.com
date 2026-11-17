@@ -91,6 +91,45 @@ describe("the still of a MathVisual scene", () => {
       expect(y).toBeGreaterThan(drawn.view.top);
       expect(y).toBeLessThan(drawn.view.top + drawn.view.height);
     }
+    expect(drawn.ticks).toStrictEqual([]);
+  });
+
+  it("frames a frame far from zero by itself, its axes at its edge naming their real values", () => {
+    const drawn = still({
+      ...plane({
+        ...fields,
+        formula: "37 + sin(x)",
+        id: "c",
+        kind: "function",
+      }),
+      frame: {
+        kind: "cartesian",
+        x: { max: 10, min: 0 },
+        y: { max: 39, min: 35 },
+      },
+    });
+
+    // The frame spans 10 by 4 scene units around its middle; y = 0 would sit 37 below it.
+    expect(drawn.view).toStrictEqual({
+      height: 5.2,
+      left: -5.6,
+      top: -2.6,
+      width: 11.2,
+    });
+    expect(Arr.map(drawn.axes, ({ points }) => points)).toStrictEqual([
+      [
+        [-5, -2],
+        [5, -2],
+      ],
+      [
+        [-5, -2],
+        [-5, 2],
+      ],
+    ]);
+    expect(drawn.ticks).toStrictEqual([
+      { at: [-5, -2], axis: "y", key: "y:min", value: 35 },
+      { at: [-5, 2], axis: "y", key: "y:max", value: 39 },
+    ]);
   });
 
   it("draws formula curves, markers and regions at the sliders' values", () => {
