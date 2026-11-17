@@ -57,6 +57,12 @@ const SHADOW = 4;
 /** The depth under the water, which the water pass reads (D43). */
 const SEABED = 1;
 
+/** The texture unit the coast map takes while the water is drawn: how far each column lies from land, and whether its water lies still (D51). */
+const COAST = 5;
+
+/** The texture unit the solid pass's colors take while the water is drawn, which still water mirrors (D51). */
+const SCENE = 6;
+
 /**
  * The island's WebGL2 painter (ADR 0047, D2): it holds every chunk's buffers,
  * draws the sky, the solid pass and the water pass into a small framebuffer,
@@ -134,6 +140,8 @@ export function createPainter(canvas: HTMLCanvasElement, season: Season) {
       const sea = uploadList(gl, seaRing(SEA_LEVEL - 0.125, [0, 0], 1));
       // What tops each column: where a drop stops and which ground the blocks blend (D39).
       const columns = uploadMap(gl, SPAN, 2);
+      // How far each column lies from land and whether its water lies still, which the water pass reads (D51).
+      const coast = uploadMap(gl, SPAN, 2);
       const gale = createGale(gl);
       // What moves in the air: the weather, the chimneys' smoke and the fireflies (D33, D36).
       const airborne = createAir(gl, gale, painted, columns, season);
@@ -323,6 +331,13 @@ export function createPainter(canvas: HTMLCanvasElement, season: Season) {
         // Water tints what lies under it but keeps those faces' edges (D20).
         gl.drawBuffers([gl.COLOR_ATTACHMENT0, gl.NONE]);
         gl.uniform1f(uniform("uWater"), 1);
+        // The water rolls toward the shore by the coast map, and still water mirrors the colors the solid pass left (D51).
+        coast.bind(COAST);
+        gl.uniform1i(uniform("uCoast"), COAST);
+        gl.activeTexture(gl.TEXTURE0 + SCENE);
+        gl.bindTexture(gl.TEXTURE_2D, target.scene);
+        gl.activeTexture(gl.TEXTURE0);
+        gl.uniform1i(uniform("uScene"), SCENE);
 
         drawLists("water");
         gl.bindVertexArray(sea.vao);
@@ -362,6 +377,8 @@ export function createPainter(canvas: HTMLCanvasElement, season: Season) {
         scenery: air.scenery,
         /** Replaces the column map: where a drop stops and which ground each top blends (D39). */
         columns: columns.write,
+        /** Replaces the coast map: how far each column lies from land, and whether its water lies still (D51). */
+        coast: coast.write,
         /** Replaces where every true 3D body stands this frame (D21). */
         bodies(next: Parameters<typeof bodies.write>[0]) {
           bodies.write(next);
@@ -452,6 +469,7 @@ export function createPainter(canvas: HTMLCanvasElement, season: Season) {
           shadow.release();
           edges.release();
           columns.release();
+          coast.release();
           gale.release();
           Option.map(isles, (list) => list.release());
           air.release();

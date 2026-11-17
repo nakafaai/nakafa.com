@@ -14,7 +14,8 @@ type Color = readonly [number, number, number];
 /**
  * The small frame the island is drawn into (ADR 0047, D2 and D20): the
  * scene's colors, the direction of each pixel's face and its depth, a copy of
- * that depth under the water (D43), then the
+ * that depth under the water (D43) and of its colors, which still water
+ * mirrors (D51), then the
  * edged frame the edge pass paints, which the weather and the aim outline are
  * drawn over against the scene's depth. It covers the canvas in whole art
  * pixels, `MARGIN` more on every side, so it fills the screen with no band at
@@ -72,6 +73,7 @@ export function createFrame(
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
     };
     sized(target.color, gl.RGBA8, gl.RGBA, gl.UNSIGNED_BYTE);
+    sized(target.scene, gl.RGBA8, gl.RGBA, gl.UNSIGNED_BYTE);
     sized(target.surface, gl.RGBA8, gl.RGBA, gl.UNSIGNED_BYTE);
     sized(target.edged, gl.RGBA8, gl.RGBA, gl.UNSIGNED_BYTE);
     sized(
@@ -112,7 +114,7 @@ export function createFrame(
     attach(target.frame, [target.color, target.surface], target.depth);
     attach(target.final, [target.edged], null);
     attach(target.overlay, [target.edged], target.depth);
-    attach(target.bed, [], target.seabed);
+    attach(target.bed, [target.scene], target.seabed);
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
   }
 
@@ -152,23 +154,26 @@ export function createFrame(
   /**
    * Copies the scene's depth as the solid pass left it into `seabed`, which
    * the water pass reads to know how much water lies under each of its
-   * pixels (D43), then draws on into the scene again.
+   * pixels (D43), and its colors into `scene`, which still water mirrors
+   * (D51), then draws on into the scene again.
    */
   function keepSeabed() {
     const { width, height } = target;
     gl.bindFramebuffer(gl.READ_FRAMEBUFFER, target.frame);
     gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, target.bed);
-    gl.blitFramebuffer(
-      0,
-      0,
-      width,
-      height,
-      0,
-      0,
-      width,
-      height,
-      gl.DEPTH_BUFFER_BIT,
-      gl.NEAREST
+    Arr.forEach([gl.DEPTH_BUFFER_BIT, gl.COLOR_BUFFER_BIT], (buffer) =>
+      gl.blitFramebuffer(
+        0,
+        0,
+        width,
+        height,
+        0,
+        0,
+        width,
+        height,
+        buffer,
+        gl.NEAREST
+      )
     );
     gl.bindFramebuffer(gl.FRAMEBUFFER, target.frame);
   }
@@ -176,7 +181,14 @@ export function createFrame(
   /** Lets the GPU go of the frame's textures and framebuffers. */
   function release() {
     Arr.forEach(
-      [target.color, target.surface, target.edged, target.depth, target.seabed],
+      [
+        target.color,
+        target.surface,
+        target.edged,
+        target.depth,
+        target.seabed,
+        target.scene,
+      ],
       (texture) => gl.deleteTexture(texture)
     );
     Arr.forEach(
@@ -201,6 +213,7 @@ export function createFrame(
     release,
     resize,
     rows: 1,
+    scene: gl.createTexture(),
     seabed: gl.createTexture(),
     surface: gl.createTexture(),
     width: 1,
