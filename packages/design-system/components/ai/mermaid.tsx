@@ -9,11 +9,11 @@ import {
 } from "@repo/design-system/components/ui/collapsible";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
-import { legibleSvg } from "@repo/design-system/lib/mermaid/legible";
 import {
   type MermaidRenderConfig,
   renderMermaid,
 } from "@repo/design-system/lib/mermaid/render";
+import { sizeSvg } from "@repo/design-system/lib/mermaid/size";
 import { getThemeAppearance } from "@repo/design-system/lib/theme/registry";
 import { useTheme } from "@repo/design-system/providers/theme";
 import { createStableId } from "@repo/utilities/id";
@@ -49,8 +49,8 @@ interface MermaidProps {
  * Renders Mermaid chart markup with a cached last-good SVG fallback. The
  * caller sizes the box; the pending, error, and rendered states all fill it,
  * so the diagram never resizes its surroundings when it arrives. The diagram
- * fits the box at a legible scale, centered by auto margins; a diagram larger
- * than that starts at the box's edge, and the box is the one place it scrolls.
+ * opens fitted to the box, whole and centered by auto margins, and never past
+ * its natural size; zoomed past the box, the box is the one place it pans.
  */
 export function Mermaid({
   chart,
@@ -168,16 +168,17 @@ export function Mermaid({
       </div>
     );
   }
-  // Always render the SVG if we have content (either current or last valid)
+  // Always render the SVG if we have content (either current or last valid).
+  // The box is a size container, whose units the fitted SVG's maximums read.
   return (
     <div
       aria-labelledby={labelledBy}
       className={cn(
-        "flex overflow-auto [&>svg]:m-auto [&>svg]:shrink-0",
+        "@container-size flex overflow-auto [&>svg]:m-auto [&>svg]:shrink-0",
         className
       )}
       // biome-ignore lint/security/noDangerouslySetInnerHtml: Mermaid returns sanitized SVG in strict security mode.
-      dangerouslySetInnerHTML={{ __html: legibleSvg(renderState.svg, zoom) }}
+      dangerouslySetInnerHTML={{ __html: sizeSvg(renderState.svg, zoom) }}
       role="img"
     />
   );

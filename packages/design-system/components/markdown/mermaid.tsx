@@ -133,8 +133,8 @@ function DialogDiagram() {
 
 /**
  * Shows a diagram in a frame whose size never depends on the diagram, and in
- * a dialog that gives it the whole screen. Both fit the diagram at a legible
- * scale. The chart is drawn as written: authored content reaches here only
+ * a dialog that gives it the whole screen. Both open the diagram whole, fitted
+ * to its box, and the dialog zooms and pans it from there. The chart is drawn as written: authored content reaches here only
  * after Aksara parsed it with the same Mermaid, and a model's chart is made
  * safe by the markdown renderer before it arrives.
  */
