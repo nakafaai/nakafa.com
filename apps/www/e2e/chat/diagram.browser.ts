@@ -49,13 +49,13 @@ const LANGUAGES = [
   { ...wordsOf(id), locale: "id" },
 ];
 
-/** Mermaid writes its labels at 16 pixels; a diagram is never drawn below three quarters of that. */
+/** Mermaid writes its labels at 16 pixels, the natural size a diagram is never drawn past until a reader zooms. */
 const LABEL_PIXELS = 16;
-const LEGIBLE_PIXELS = 12;
 
 /**
  * How a box draws its diagram: the size a label reaches on the page, which is
- * its own font size times the drawing's scale, and whether the box scrolls.
+ * its own font size times the drawing's scale, whether the whole drawing lies
+ * inside the box, and whether the box scrolls.
  */
 const drawnFacts = (box: Element) => {
   const svg = box.querySelector("svg");
@@ -63,8 +63,16 @@ const drawnFacts = (box: Element) => {
   const fontPixels = label
     ? Number.parseFloat(getComputedStyle(label).fontSize)
     : Number.NaN;
+  const frame = box.getBoundingClientRect();
+  const drawing = svg?.getBoundingClientRect();
 
   return {
+    inside:
+      drawing !== undefined &&
+      drawing.left >= frame.left - 1 &&
+      drawing.right <= frame.right + 1 &&
+      drawing.top >= frame.top - 1 &&
+      drawing.bottom <= frame.bottom + 1,
     labelPixels: fontPixels * (svg?.getScreenCTM()?.a ?? Number.NaN),
     scrolls:
       box.scrollWidth > box.clientWidth + 1 ||
@@ -90,7 +98,7 @@ test.describe("The dialog of a diagram", () => {
   test.describe.configure({ timeout: 240_000 });
 
   for (const width of [390, 768, 1440]) {
-    test(`at ${width}px keeps every label legible and scrolls in one place`, async ({
+    test(`at ${width}px opens the whole diagram fitted to its box and pans it in one place once zoomed`, async ({
       baseURL,
       page,
     }) => {
@@ -106,20 +114,14 @@ test.describe("The dialog of a diagram", () => {
             await expect(wrapper.locator("svg")).toBeVisible({
               timeout: revealTimeoutMilliseconds,
             });
-            // The card fits the diagram, never below a 12 pixel label, and
-            // scrolls only when the diagram is larger than that.
+            // The card opens the whole diagram inside its box, which the tall
+            // flowchart fills only below its natural size, and never past it.
             const preview = await wrapper.evaluate(drawnFacts);
-            expect
-              .soft(preview.labelPixels)
-              .toBeGreaterThanOrEqual(LEGIBLE_PIXELS - 0.1);
+            expect.soft(preview.inside).toBe(true);
+            expect.soft(preview.scrolls).toBe(false);
             expect
               .soft(preview.labelPixels)
               .toBeLessThanOrEqual(LABEL_PIXELS + 0.1);
-            expect
-              .soft(
-                preview.scrolls && preview.labelPixels > LEGIBLE_PIXELS + 0.1
-              )
-              .toBe(false);
 
             await card.getByRole("button").first().click();
             const dialog = page.getByRole("dialog");
@@ -129,16 +131,14 @@ test.describe("The dialog of a diagram", () => {
             });
             // The dialog zooms in when it opens, and a drawing measured during the zoom is scaled.
             await settled(box);
+            // The dialog opens the whole diagram fitted to its body too, and nothing scrolls.
             const fitted = await box.evaluate(drawnFacts);
-            expect
-              .soft(fitted.labelPixels)
-              .toBeGreaterThanOrEqual(LEGIBLE_PIXELS - 0.1);
+            expect.soft(fitted.inside).toBe(true);
+            expect.soft(fitted.scrolls).toBe(false);
             expect
               .soft(fitted.labelPixels)
               .toBeLessThanOrEqual(LABEL_PIXELS + 0.1);
-            // The dialog's body never scrolls: the diagram's box is the one place that does.
-            const scrollers = await dialog.evaluate(dialogScrollers);
-            expect.soft(scrollers).toEqual(fitted.scrolls ? ["img"] : []);
+            expect.soft(await dialog.evaluate(dialogScrollers)).toEqual([]);
 
             // Zoomed to twice its natural size, it pans in its own box.
             const zoomIn = dialog.getByRole("button", { name: "Zoom in" });
