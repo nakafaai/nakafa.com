@@ -2417,6 +2417,7 @@
   "Articles": {
     "description": "Read educational articles with clear context, data, and references.",
     "category-description": "Read {category} articles with clear context, data, and references.",
+    "category-search-title": "{category} Articles",
     "politics": "Politics",
     "contributor": "Contributor"
   },

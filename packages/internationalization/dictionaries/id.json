@@ -2417,6 +2417,7 @@
   "Articles": {
     "description": "Baca artikel edukatif dengan konteks, data, dan rujukan yang jelas.",
     "category-description": "Baca artikel {category} dengan konteks, data, dan rujukan yang jelas.",
+    "category-search-title": "Artikel {category}",
     "politics": "Politik",
     "contributor": "Kontributor"
   },
