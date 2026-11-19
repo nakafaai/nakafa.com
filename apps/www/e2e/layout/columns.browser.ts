@@ -68,7 +68,7 @@ const verifyContentColumn = Effect.fn("NakafaE2E.verifyContentColumn")(
 
 /**
  * A try-out page's least height reaches the screen's bottom, so a locked review ends there. A set page
- * with its samples runs past the screen, so its least height is measured, not its bottom.
+ * can run past the screen, so its least height is measured, not its bottom.
  */
 const verifyTryoutHeight = Effect.fn("NakafaE2E.verifyTryoutHeight")(function* (
   page: Page
@@ -153,6 +153,18 @@ for (const width of [390, 1440]) {
         );
       });
     }
+
+    test("the catalog grid fits the consumer column", async ({ page }) => {
+      await Effect.runPromise(visit(page, "/en/curricula"));
+      const grid = page.locator('[data-slot="catalog-grid"]');
+      await expect(grid).toBeVisible();
+      expect(
+        await grid.evaluate(
+          (element) =>
+            getComputedStyle(element).gridTemplateColumns.split(" ").length
+        )
+      ).toBe(width === 390 ? 1 : 3);
+    });
   });
 
   test.describe(`Try-out page at ${width}px`, () => {

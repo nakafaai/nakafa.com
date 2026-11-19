@@ -1,21 +1,5 @@
-import { Sha256HashSchema } from "@nakafa/aksara-contracts/ids";
 import { appLocaleValidator } from "@repo/backend/confect/contentRelease/spec";
 import { Schema } from "effect";
-
-/**
- * One published question with its key, as a public page shows it in a set page's worked samples: the JSON text of its question body (`TryoutQuestionBodyText`), with its prompt, its one
- * interaction, the key's answer, the reading it was written against and, on a set page, its explanation;
- * and its item version.
- */
-const keyedQuestionValidator = Schema.Struct({
-  body: Schema.String,
-  versionHash: Sha256HashSchema,
-});
-
-/** A set page's worked samples in question order, or none for a path that names no set. */
-export const tryoutSetSamplesValidator = Schema.NullOr(
-  Schema.Array(keyedQuestionValidator)
-);
 
 export const tryoutMetadataArgsValidator = {
   appLocale: appLocaleValidator,

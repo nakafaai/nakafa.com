@@ -2,7 +2,6 @@ import type { Ref } from "@confect/core";
 import { HttpClient } from "@confect/js";
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import tryouts from "@repo/backend/confect/_generated/refs/tryouts";
-import { TryoutQuestionBodyText } from "@repo/backend/confect/tryouts/runtime/spec";
 import { tryoutMetadataArgsValidator } from "@repo/backend/content/tryout/spec";
 import { Effect, Option, Schema } from "effect";
 import type { Locale } from "use-intl";
@@ -137,37 +136,6 @@ export const readTryoutSetPage = Effect.fn("www.tryout.catalog.readSetPage")(
     );
   }
 );
-
-/**
- * Reads the worked samples of one set page, each decoded from the JSON text its body crosses the wire as:
- * the free preview of the set's first section, with the key and the explanation in the page's language. A
- * path that names no set has none. The content store answers for the release.
- */
-export const readTryoutSetSamples = Effect.fn(
-  "www.tryout.catalog.readSetSamples"
-)(function* (locale: Locale, publicPath: string) {
-  const samples = yield* querySnapshotContentStore(
-    "assessment",
-    tryouts.queries.catalog.getSetSamples,
-    {
-      appLocale: AppLocaleSchema.make(locale),
-      publicPath,
-    }
-  );
-  return yield* Effect.transposeOption(
-    Option.map(Option.fromNullishOr(samples), (bodies) =>
-      Effect.forEach(bodies, ({ body, versionHash }) =>
-        Effect.map(
-          Schema.decodeEffect(TryoutQuestionBodyText)(body),
-          (decoded) => ({
-            body: decoded,
-            versionHash,
-          })
-        )
-      )
-    )
-  );
-});
 
 /** Reads one public section page. The content store answers for the release. */
 export const readTryoutSectionPage = Effect.fn(

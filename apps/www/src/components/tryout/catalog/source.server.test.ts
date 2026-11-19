@@ -17,7 +17,6 @@ import {
   readTryoutSectionPage,
   readTryoutSetList,
   readTryoutSetPage,
-  readTryoutSetSamples,
   readTryoutTrackPage,
 } from "@/components/tryout/catalog/source.server";
 import { resetTestRuntimeCache } from "@/test/store";
@@ -238,31 +237,6 @@ describe("immutable try-out application catalog", () => {
       fetchQueryMock.mockImplementation(world.visitor.query);
       expect(yield* readTryoutHubPage("ms")).toMatchObject({ countries: [] });
     })
-  );
-  it.effect(
-    "decodes a set's samples with their keys and explanations, and finds none for a section",
-    () =>
-      Effect.gen(function* () {
-        const world = yield* tryoutWorld();
-        fetchQueryMock.mockImplementation(world.visitor.query);
-
-        const samples = Option.getOrThrow(
-          yield* readTryoutSetSamples("en", SET("en"))
-        );
-
-        const sample = {
-          body: {
-            explanation: { type: "doc" },
-            interaction: { id: "choice" },
-            key: { interaction: "choice", kind: "choice" },
-          },
-          versionHash: expect.any(String),
-        };
-        expect(samples).toMatchObject([sample, sample]);
-        expect(yield* readTryoutSetSamples("en", SECTION("en"))).toStrictEqual(
-          Option.none()
-        );
-      })
   );
   it.effect(
     "preserves unavailable publication failures as typed catalog errors",
