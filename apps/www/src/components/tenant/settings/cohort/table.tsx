@@ -3,7 +3,7 @@ import { UserGroupIcon } from "@hugeicons/core-free-icons";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import { CohortStatus } from "@repo/backend/confect/tenancy/cohort";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
-import { Array as Arr, Option, Order } from "effect";
+import { Array as Arr, Order } from "effect";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { tableColumns } from "@/components/shared/table/columns";
@@ -21,13 +21,17 @@ import {
   SchoolCohortMenu,
   SchoolCohortRestore,
 } from "@/components/tenant/settings/cohort/menu";
+import {
+  type CohortRow,
+  cohortRows,
+} from "@/components/tenant/settings/cohort/rows";
 import { COHORT_STATUS_LOOKS } from "@/components/tenant/settings/cohort/status";
-import type { Cohort, Period } from "@/components/tenant/settings/state";
+import type { Period } from "@/components/tenant/settings/state";
 import { isDraft } from "@/components/tenant/settings/state";
 import { Link } from "@/lib/routing/link";
 
 /** The columns of the cohorts table. */
-const cohortColumns = tableColumns<Cohort>();
+const cohortColumns = tableColumns<CohortRow>();
 
 /**
  * Renders the cohorts of one period in a data table that finds a name, filters by grade
@@ -68,10 +72,6 @@ export function SchoolCohortTable({
     );
   }
 
-  const overviewOf = (id: string) =>
-    QueryResult.isSuccess(overview)
-      ? Arr.findFirst(overview.value, (cohort) => cohort.id === id)
-      : Option.none();
   const columns = [
     cohortColumns.text((cohort) => cohort.name, {
       cell: (info) => (
@@ -101,33 +101,18 @@ export function SchoolCohortTable({
         GRADE_ICONS
       ),
     }),
-    cohortColumns.text(
-      (cohort) =>
-        Option.getOrElse(
-          Option.flatMapNullishOr(
-            overviewOf(cohort.id),
-            (found) => found.homeroom
-          ),
-          () => ""
-        ),
-      { header: t("cohort-homeroom"), id: "homeroom" }
-    ),
-    cohortColumns.number(
-      (cohort) =>
-        Option.match(overviewOf(cohort.id), {
-          onNone: () => null,
-          onSome: (found) => found.students,
-        }),
-      { header: tCommon("students"), id: "students" }
-    ),
-    cohortColumns.number(
-      (cohort) =>
-        Option.match(overviewOf(cohort.id), {
-          onNone: () => null,
-          onSome: (found) => found.classes,
-        }),
-      { header: tCommon("classes"), id: "classes" }
-    ),
+    cohortColumns.text((cohort) => cohort.homeroom, {
+      header: t("cohort-homeroom"),
+      id: "homeroom",
+    }),
+    cohortColumns.number((cohort) => cohort.students, {
+      header: tCommon("students"),
+      id: "students",
+    }),
+    cohortColumns.number((cohort) => cohort.classes, {
+      header: tCommon("classes"),
+      id: "classes",
+    }),
     cohortColumns.values((cohort) => cohort.status, {
       cell: (info) => (
         <TableStatus
@@ -161,13 +146,12 @@ export function SchoolCohortTable({
     ),
   ];
 
+  const read = QueryResult.isSuccess(overview) ? overview.value : null;
   return (
-    <CohortOverviewContext
-      value={QueryResult.isSuccess(overview) ? overview.value : null}
-    >
+    <CohortOverviewContext value={read}>
       <DataTable
         columns={columns}
-        data={cohorts.value}
+        data={cohortRows(cohorts.value, read)}
         rowId={(cohort) => cohort.id}
         search="name"
       />

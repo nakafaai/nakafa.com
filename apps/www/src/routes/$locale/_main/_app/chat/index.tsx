@@ -9,7 +9,10 @@ import { getAppSocialArtwork } from "@/lib/og/app";
 
 export const Route = createFileRoute("/$locale/_main/_app/chat/")({
   loader: ({ params }) =>
-    readRenderedRouteMessages({ locale: params.locale, namespaces: ["Ai"] }),
+    readRenderedRouteMessages({
+      locale: params.locale,
+      namespaces: ["Ai", "Common"],
+    }),
   head: ({ loaderData, params: { locale } }) => {
     if (loaderData === undefined) {
       return {};

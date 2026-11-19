@@ -1,7 +1,10 @@
 import {
   Certificate01Icon,
+  File02Icon,
   QrCodeIcon,
-  Task01Icon,
+  QuillWrite01Icon,
+  Quiz01Icon,
+  TestTube01Icon,
 } from "@hugeicons/core-free-icons";
 import { AnimalFigure } from "@repo/design-system/components/ui/animal";
 import { Badge } from "@repo/design-system/components/ui/badge";
@@ -35,10 +38,34 @@ import { QrImage } from "@/components/shared/qr/image";
 
 /** The child's tasks of the week as a parent reads them: each task's title, where it stands, and how that reads. */
 const CHILD_TASKS = [
-  { state: "handed", step: 1, title: "title", variant: "success" },
-  { state: "handed", step: 2, title: "essay", variant: "success" },
-  { state: "tomorrow", step: 3, title: "lab", variant: "warning" },
-  { state: "friday", step: 4, title: "quiz", variant: "muted-outline" },
+  {
+    icon: File02Icon,
+    state: "handed",
+    step: 1,
+    title: "title",
+    variant: "success",
+  },
+  {
+    icon: QuillWrite01Icon,
+    state: "handed",
+    step: 2,
+    title: "essay",
+    variant: "success",
+  },
+  {
+    icon: TestTube01Icon,
+    state: "tomorrow",
+    step: 3,
+    title: "lab",
+    variant: "warning",
+  },
+  {
+    icon: Quiz01Icon,
+    state: "friday",
+    step: 4,
+    title: "quiz",
+    variant: "muted-outline",
+  },
 ] as const;
 
 /** The child's latest grades, one for each subject. */
@@ -57,16 +84,17 @@ function ChildTasks() {
     <section className="grid content-start gap-3">
       <h3 className="text-muted-foreground text-sm">{t("parents-tasks")}</h3>
       <ul className="grid gap-3">
-        {Arr.map(CHILD_TASKS, ({ state, step, title, variant }) => (
+        {Arr.map(CHILD_TASKS, ({ icon, state, step, title, variant }) => (
           <li
             className={stepVariants({
-              className: "flex min-h-8 items-center gap-3",
+              className:
+                "grid min-h-8 grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-2",
               step,
             })}
             key={title}
           >
-            <HugeIcons className="text-muted-foreground" icon={Task01Icon} />
-            <span className="min-w-0 flex-1 truncate text-sm">
+            <HugeIcons className="text-muted-foreground mt-0.5" icon={icon} />
+            <span className="min-w-0 text-sm wrap-anywhere">
               {t(`demo-task-${title}`)}
             </span>
             <Badge variant={variant}>{t(`demo-parent-${state}`)}</Badge>

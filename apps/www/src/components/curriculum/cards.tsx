@@ -3,6 +3,7 @@ import { Array as Arr } from "effect";
 import {
   CatalogCard,
   CatalogCardVisual,
+  CatalogGrid,
 } from "@/components/shared/catalog/card";
 import { CatalogActionLabelContext } from "@/components/shared/catalog/label";
 import type { CurriculumViewRoute } from "@/lib/curriculum/model";
@@ -26,7 +27,7 @@ export function CurriculumCardGrid({
 }) {
   return (
     <CatalogActionLabelContext value={actionLabel}>
-      <div className="grid grid-cols-1 gap-4 pt-6 pb-24 sm:grid-cols-2">
+      <CatalogGrid className="pt-6 pb-24">
         {Arr.map(cards, ({ route, visual }, index) => (
           <CatalogCard
             action={(anchor) => (
@@ -38,7 +39,7 @@ export function CurriculumCardGrid({
             <CatalogCardVisual preload={index === 0} visual={visual} />
           </CatalogCard>
         ))}
-      </div>
+      </CatalogGrid>
     </CatalogActionLabelContext>
   );
 }

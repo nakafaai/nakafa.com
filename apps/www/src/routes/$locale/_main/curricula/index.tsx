@@ -10,13 +10,10 @@ import { Array as Arr, Effect, Schema } from "effect";
 import { createTranslator } from "use-intl/core";
 import { CurriculumCardGrid } from "@/components/curriculum/cards";
 import { BreadcrumbHeader } from "@/components/shared/breadcrumb/header";
-import { RefContent } from "@/components/shared/content/references";
 import { PageBody } from "@/components/shared/page/body";
-import { PageFooter } from "@/components/shared/page/footer";
 import { Page } from "@/components/shared/page/frame";
 import { ComingSoon } from "@/components/shared/upcoming";
 import { PUBLIC_CONTENT_HEADERS } from "@/lib/content/delivery";
-import { getAksaraTreeUrl } from "@/lib/content/repository";
 import {
   getCurriculumIndexSocialImage,
   resolveCurriculumArtwork,
@@ -33,7 +30,7 @@ import { readStaticData } from "@/lib/static/data";
 
 /**
  * Reads the curriculum chooser of one locale on the server: its cards with their
- * visuals, its source link and the words of its page and head.
+ * visuals and the words of its page and head.
  */
 const readCurriculumIndex = createServerFn({ method: "GET" })
   .validator(
@@ -78,12 +75,6 @@ const readCurriculumIndex = createServerFn({ method: "GET" })
       labels: { home: tCommon("home") },
       locale,
       metadataTitle: tLearningPrograms("curriculum-index-metadata-title"),
-      sourceUrl: catalog.sourceRevision
-        ? getAksaraTreeUrl({
-            path: "packages/corpus/curriculum",
-            revision: catalog.sourceRevision,
-          })
-        : null,
       title,
     };
   });
@@ -159,11 +150,6 @@ function CurriculumIndexPage() {
           <ComingSoon />
         )}
       </PageBody>
-      {page.sourceUrl ? (
-        <PageFooter>
-          <RefContent githubUrl={page.sourceUrl} />
-        </PageFooter>
-      ) : null}
     </Page>
   );
 }

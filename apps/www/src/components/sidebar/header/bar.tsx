@@ -1,5 +1,7 @@
 import { SidebarTrigger } from "@repo/design-system/components/ui/sidebar-shell";
+import { cn } from "cn";
 import { useTranslations } from "use-intl";
+import { pageRowVariants } from "@/components/shared/page/width";
 import { HeaderContainer } from "@/components/sidebar/header/frame";
 import { HeaderSearch } from "@/components/sidebar/search/trigger";
 
@@ -9,7 +11,12 @@ export function Header() {
 
   return (
     <HeaderContainer>
-      <div className="flex w-full items-center justify-between gap-2 px-6">
+      <div
+        className={cn(
+          pageRowVariants(),
+          "flex items-center justify-between gap-2"
+        )}
+      >
         <div className="flex items-center gap-6 sm:w-full">
           <SidebarTrigger
             className="lg:hidden"

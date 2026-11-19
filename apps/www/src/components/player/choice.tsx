@@ -9,8 +9,9 @@ import {
   MarkedLine,
 } from "@repo/design-system/components/ui/line";
 import { Radio } from "@repo/design-system/components/ui/radio-group";
+import { useMissedPress } from "@repo/design-system/hooks/press";
 import { Option } from "effect";
-import type { ReactNode } from "react";
+import type { ComponentProps, ReactNode } from "react";
 import type { ChoiceAppearance } from "@/components/player/tone";
 import {
   choiceTone,
@@ -25,6 +26,7 @@ interface ChoiceRadioProps {
   disabled: boolean;
   id: string;
   letter: string;
+  onMissedPress?: (() => void) | undefined;
   value: string;
 }
 
@@ -36,10 +38,16 @@ export function ChoiceRadio({
   disabled,
   id,
   letter,
+  onMissedPress,
   value,
 }: ChoiceRadioProps) {
+  const press = useMissedPress<HTMLLabelElement>(() => onMissedPress?.());
+
   return (
-    <ChoiceLine tone={choiceTone({ appearance, checked })}>
+    <ChoiceLine
+      labelProps={onMissedPress === undefined ? undefined : press}
+      tone={choiceTone({ appearance, checked })}
+    >
       <LineMark>
         <Radio
           aria-labelledby={`${id}-label`}
@@ -132,14 +140,16 @@ export function ChoiceReviewed({
  */
 function ChoiceLine({
   children,
+  labelProps,
   tone,
 }: {
   children: ReactNode;
+  labelProps?: ComponentProps<typeof Label> | undefined;
   tone: ReturnType<typeof choiceTone>;
 }) {
   return (
     // biome-ignore lint/a11y/noLabelWithoutControl: children carries the choice control, and this label wraps it.
-    <MarkedLine render={<Label />} tone={tone}>
+    <MarkedLine render={<Label {...labelProps} />} tone={tone}>
       {children}
       <ToneMark tone={tone} />
     </MarkedLine>

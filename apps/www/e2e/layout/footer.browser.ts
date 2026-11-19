@@ -3,6 +3,7 @@ import app from "@repo/internationalization/dictionaries/en.json" with {
   type: "json",
 };
 import { LESSON_PATH } from "@/e2e/support/chat";
+import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
 /** The widths of two phones, a tablet and a desktop. */
 const WIDTHS = [320, 390, 768, 1440];
@@ -21,6 +22,9 @@ async function readFooterLines(page: Page, path: string, width: number) {
   const footer = page.locator("footer:has(#comments)");
   await footer.scrollIntoViewIfNeeded();
   await expect(footer).toBeVisible();
+  await expect(footer.locator("h2#comments")).toBeVisible({
+    timeout: readinessTimeoutMilliseconds,
+  });
 
   const lines = await page.evaluate((label) => {
     const header = document.querySelector('[data-slot="page-header"]');

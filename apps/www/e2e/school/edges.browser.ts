@@ -263,7 +263,8 @@ test("the forum holds the worst a class writes: a long name, long words, 2,000 c
   await page.unrouteAll({ behavior: "wait" });
 
   // A thread of 200 replies, its summary counting them under the message.
-  const root = messageRow(page, "Pesan 100").first();
+  const roots = messageRow(page, "Pesan 100");
+  const root = roots.first();
   await root.hover();
   await root.getByRole("button", { name: "Reply in thread" }).click();
   const pane = page.locator("[data-slot=discussion]");
@@ -277,7 +278,7 @@ test("the forum holds the worst a class writes: a long name, long words, 2,000 c
   ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
   await page.getByRole("button", { exact: true, name: "Close" }).click();
   await expect(
-    root.getByRole("link", {
+    roots.getByRole("link", {
       name: new RegExp(`^${THREAD_REPLIES} replies`, "u"),
     })
   ).toBeVisible({ timeout: readinessTimeoutMilliseconds });

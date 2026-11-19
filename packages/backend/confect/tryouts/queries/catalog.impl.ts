@@ -1,7 +1,6 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import spec from "@repo/backend/confect/tryouts/queries/catalog.spec";
-import { readFeaturedTryout } from "@repo/backend/content/tryout/featured";
 import {
   readTryoutLocalizedPath,
   readTryoutMetadata,
@@ -15,17 +14,8 @@ import {
   readTryoutSetPage,
   readTryoutTrackPage,
 } from "@repo/backend/content/tryout/page";
-import { readTryoutSetSamples } from "@repo/backend/content/tryout/samples";
 import { Effect, Layer } from "effect";
 
-const getFeaturedQuestion = FunctionImpl.make(
-  databaseSchema,
-  spec,
-  "getFeaturedQuestion",
-  Effect.fn("tryouts.queries.catalog.getFeaturedQuestion")(function* (args) {
-    return yield* readFeaturedTryout(args.appLocale);
-  })
-);
 const getMetadata = FunctionImpl.make(
   databaseSchema,
   spec,
@@ -90,14 +80,6 @@ const getSetPage = FunctionImpl.make(
     return yield* readTryoutSetPage(args);
   })
 );
-const getSetSamples = FunctionImpl.make(
-  databaseSchema,
-  spec,
-  "getSetSamples",
-  Effect.fn("tryouts.queries.catalog.getSetSamples")(function* (args) {
-    return yield* readTryoutSetSamples(args);
-  })
-);
 const getSectionPage = FunctionImpl.make(
   databaseSchema,
   spec,
@@ -107,7 +89,6 @@ const getSectionPage = FunctionImpl.make(
   })
 );
 export default GroupImpl.make(databaseSchema, spec).pipe(
-  Layer.provide(getFeaturedQuestion),
   Layer.provide(getMetadata),
   Layer.provide(getLocalizedPath),
   Layer.provide(getHubPage),
@@ -116,7 +97,6 @@ export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(getGroupPage),
   Layer.provide(getTrackPage),
   Layer.provide(getSetPage),
-  Layer.provide(getSetSamples),
   Layer.provide(getSectionPage),
   GroupImpl.finalize
 );

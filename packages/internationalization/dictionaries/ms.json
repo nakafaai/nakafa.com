@@ -103,7 +103,7 @@
     "withdraw-title": "Tarik balik persetujuan?",
     "withdraw-description": "Kamu tidak akan melihat markah anak kamu sehingga sekolah memautkan kamu semula.",
     "child-views": "Markah dan permintaan",
-    "grades-empty-description": "Sekolah mengeluarkan markah di sini setelah setiap kelas dinilai.",
+    "grades-empty-description": "Sekolah mengeluarkan markah di sini selepas setiap kelas dinilai.",
     "grade-comment": "Baca ulasan",
     "requests-empty": "Belum ada permintaan",
     "requests-empty-description": "Permintaan yang kamu hantar ke pejabat sekolah dipaparkan di sini.",
@@ -681,7 +681,7 @@
     "webhook-add-description": "Webhook memberitahu sistem lain apabila sesuatu berubah dalam sekolah ini.",
     "webhook-edit-description": "Tukar tempat ia menghantar dan apa yang dihantar.",
     "webhook-url": "Alamat penerima",
-    "webhook-url-placeholder": "https://system.school.org/nakafa",
+    "webhook-url-placeholder": "https://sistem.sekolah.edu.my/nakafa",
     "webhook-url-description": "Alamat https awam yang menerima POST.",
     "webhook-url-error": "Guna alamat https awam.",
     "webhook-client": "Klien",
@@ -726,8 +726,8 @@
     },
     "delivery-attempt": "Cubaan {attempt}",
     "delivery-resend": "Hantar semula",
-    "invite-name-placeholder": "Budi Santoso",
-    "invite-email-placeholder": "budi@example.com",
+    "invite-name-placeholder": "Aiman Hakim",
+    "invite-email-placeholder": "aiman@example.com",
     "address-placeholder": "harapan-bangsa",
     "billing-term-dates": "{start} hingga {end}",
     "billing-issue": "Keluarkan invois",
@@ -1276,7 +1276,7 @@
     "billing-accounts-footer": "Akaun tambahan dibilkan bagi baki hari dalam pelan kamu.",
     "billing-accounts-trial": "Tempoh percubaan memuatkan {limit} akaun. Pilih pelan untuk lebih.",
     "billing-order-title": "Pilih pelan",
-    "billing-order-description": "Setiap harga adalah sebelum cukai dan dibayar terlebih dahulu.",
+    "billing-order-description": "Semua harga belum termasuk cukai dan dibayar awal.",
     "billing-more-title": "Tambah akaun",
     "billing-more-description": "Setiap akaun menambah {credits} kredit AI sebulan dan {drive} MB Drive.",
     "billing-months": "{months, plural, one {# bulan} other {# bulan}}{discount, plural, =0 {} other {, diskaun # peratus}}",
@@ -2066,7 +2066,6 @@
     "menu-scope": "Skop",
     "menu-scoring": "Pemarkahan",
     "menu-sort": "Susun",
-    "menu-sources": "Sumber",
     "menu-speed": "Kelajuan",
     "menu-test": "Ujian",
     "menu-theme": "Tema",
@@ -2217,7 +2216,6 @@
     "units": "Unit",
     "updated": "Dikemas kini",
     "version": "Versi {version}",
-    "videos": "Video",
     "view-options": "Lihat pilihan",
     "vintage": "Vintage",
     "what-do-you-want-to-learn": "Apa yang kamu mahu pelajari?",
@@ -2357,7 +2355,7 @@
   },
   "Comments": {
     "add-comment-placeholder": "Tambah komen...",
-    "no-comments": "Belum ada komen.",
+    "no-comments": "Belum ada komen. Jadilah yang pertama menulisnya.",
     "delete-title": "Padam komen?",
     "delete-description": "Komen dan balasannya dipadam untuk selama-lamanya.",
     "delete-reply-description": "Balasan ini dan balasan kepadanya dipadam untuk selama-lamanya.",
@@ -2445,7 +2443,7 @@
     "route-metadata-description": "Peperiksaan percubaan {name} bermasa, dimarkah sebaik sahaja kamu selesai. Percuma dan tanpa had di Nakafa.",
     "search-title": "Peperiksaan Percubaan {name} Percuma",
     "track-metadata-description": "Pilih set percubaan {exam} di Nakafa: bermasa, dan dimarkah sebaik sahaja kamu selesai.",
-    "set-metadata-description": "Jawab {count} soalan {exam} {set} percuma: tengok contoh soalan lengkap dengan jawapan dan penerangan, kemudian buat percubaan bermasa yang terus dimarkah.",
+    "set-metadata-description": "Jawab {count} soalan {exam} {set} percuma: percubaan bermasa yang terus dimarkah.",
     "section-metadata-description": "Berlatih {section} daripada {exam} {set} di Nakafa: percubaan bermasa, dimarkah sebaik sahaja kamu selesai.",
     "open-set-cta": "Lihat set",
     "list-empty": "Tiada percubaan yang dipaparkan sekarang.",
@@ -2489,7 +2487,7 @@
     "set-update-error": "Tidak dapat mengemas kini keputusan.",
     "set-offline": "Sambungan terputus.",
     "check-answer": "Semak jawapan",
-    "explanation": "Penyelesaian",
+    "explanation": "Penerangan",
     "prompt": "Soalan",
     "reading": "Petikan",
     "start-timer": "Pemasa berjalan sebaik sahaja kamu bermula",
@@ -2510,9 +2508,6 @@
       "restart-cta": "Mula semula"
     },
     "set-search-title": "{count} Soalan Percubaan {exam} {set} Percuma",
-    "samples-title": "Contoh soalan dan penerangan",
-    "samples-description": "Tengok soalan-soalan awal set ini, lengkap dengan jawapan dan penerangannya.",
-    "siblings-title": "Set lain",
     "attempt-controls": "Pilihan cubaan",
     "verdict": "{state, select, correct {Betul} incorrect {Salah} partial {Separa betul} pending {Menunggu markah} other {Belum dijawab}}",
     "practice-cta": "Latihan",
@@ -2617,7 +2612,7 @@
     "week-stars": "{stars} Bintang minggu ini",
     "day-stars": "{day}: {stars} Bintang",
     "more": "Lihat semua",
-    "subjects-first": "Pilih subjek, lalu baca pelajaran pertama kamu.",
+    "subjects-first": "Pilih subjek, kemudian baca pelajaran pertama kamu.",
     "tryouts-first": "Cuba try-out pertama kamu.",
     "tryout-running": "Sedang dibuat",
     "tryout-score": "Skor {score}",
@@ -2737,10 +2732,10 @@
     "picture-description": "Dipaparkan di sebelah nama kamu, pada profil dan dalam komen kamu.",
     "picture-animal": "Haiwan",
     "picture-photo": "Foto Google",
-    "picture-footer-animal": "Setiap kocokan menunjukkan haiwan lain.",
-    "animal-shuffle": "Kocok haiwan",
+    "picture-footer-animal": "Setiap kali ditukar, haiwan lain muncul.",
+    "animal-shuffle": "Tukar haiwan",
     "username": "Nama pengguna",
-    "username-placeholder": "alex_rivera",
+    "username-placeholder": "aiman_hakim",
     "username-description": "Alamat kamu di Nakafa ialah {address}.",
     "username-footer": "Alamat lama tidak berfungsi lagi apabila kamu menyimpan.",
     "username-available": "Tersedia.",
@@ -3250,8 +3245,8 @@
       "description": "Tanya guru kamu langkah seterusnya."
     },
     "sitting-answers-unsent": {
-      "title": "Sebahagian jawapan mungkin hilang.",
-      "description": "Ia mungkin tidak sampai, jadi beritahu pengawas kamu."
+      "title": "Jawapan mungkin tidak tersimpan.",
+      "description": "Ada yang mungkin tidak sampai, jadi beritahu pengawas kamu."
     },
     "sitting-attempt-closed": {
       "title": "Percubaan ini sudah ditutup.",
@@ -3642,7 +3637,7 @@
     },
     "library-storage-full": {
       "title": "Fail tidak ditambah.",
-      "description": "Storan sekolah penuh. Padam fail terus untuk beri ruang."
+      "description": "Storan sekolah penuh. Padam fail secara kekal untuk beri ruang."
     },
     "classroom-refusal-task-closed": {
       "title": "Tugasan ini sudah ditutup.",
@@ -3945,7 +3940,7 @@
       "product": "Mendarab siri",
       "quartiles": "Mencari kuartil",
       "rank": "Mencari pangkat",
-      "rationalize": "Menisbahkan",
+      "rationalize": "Merasionalkan",
       "roots": "Mencari punca",
       "rref": "Menurunkan matriks",
       "series": "Mengembangkan siri",
@@ -4093,18 +4088,24 @@
         "choose": "Pilih paparan bakteria",
         "view": "Model struktur bakteria",
         "shape": {
+          "caption": "Kokus berbentuk bulat, basil berbentuk batang, dan sesetengah bakteria berbentuk pilin.",
           "tab": "Bentuk"
         },
         "inside": {
+          "caption": "DNA bakteria terletak di nukleoid, dan ribosom menghasilkan protein.",
           "tab": "Dalaman"
         },
         "wall": {
+          "caption": "Bakteria Gram-negatif mempunyai membran luar dan lapisan peptidoglikan yang lebih nipis.",
           "tab": "Dinding"
         },
         "title": "Sel bakteria",
         "description": "Lihat bakteria dari luar, dari dalam dan melalui dindingnya."
       }
     },
+    "tryout-demo-intro": "Operasi ini menggunakan integer positif m.",
+    "tryout-demo-given": "Jika ",
+    "tryout-demo-find": ", berapakah nilai ",
     "tryout-title": "Ujian latihan yang terus memberi skor",
     "tryout-lead": "Kamu boleh mengulanginya bila-bila masa.",
     "nina-title": "Nina tahu bahagian mana yang kamu maksudkan",
@@ -4401,8 +4402,9 @@
     "calculator-credits": "Kredit AI sebulan",
     "calculator-storage": "Storan Drive",
     "calculator-monthly": "Sebulan",
-    "calculator-total": "Dibilkan setiap {months, plural, one {bulan} other {# bulan}}",
+    "calculator-total": "Bil {months, plural, one {bulanan} other {setiap # bulan}}",
     "calculator-unit": "setiap akaun sebulan",
+    "calculator-unit-label": "Setiap akaun sebulan",
     "addons-title": "Tambahan",
     "addons-lead": "Beli lebih banyak kredit AI atau storan bila-bila masa, di samping pelan kamu.",
     "addon-credits-title": "{count, number} kredit AI",
@@ -4434,7 +4436,7 @@
     "tasks-title": "Beri kerja, kumpul dan beri markah",
     "tasks-lead": "Setiap kerja yang dihantar dan markah kekal bersama kelasnya.",
     "exams-title": "Peperiksaan yang memberi markah sendiri",
-    "exams-lead": "Setiap kuiz dan percubaan berjalan dalam pemain yang sama.",
+    "exams-lead": "Tulis setiap soalan dengan formula dan gambar, dan letakkan skema jawapannya di sebelahnya.",
     "player-title": "Satu pemain untuk setiap peperiksaan",
     "player-lead": "Sepuluh jenis soalan dalam satu pemain, lengkap dengan jam, navigasi dan bendera.",
     "reports-title": "Kad laporan daripada markah yang kamu berikan",

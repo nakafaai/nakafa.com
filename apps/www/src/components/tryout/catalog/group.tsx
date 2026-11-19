@@ -9,6 +9,7 @@ import { useTranslations } from "use-intl";
 import {
   CatalogCard,
   CatalogCardVisual,
+  CatalogGrid,
 } from "@/components/shared/catalog/card";
 import { CatalogActionLabelContext } from "@/components/shared/catalog/label";
 import {
@@ -50,21 +51,21 @@ export function TryoutGroupPageClient({
 
   return (
     <CatalogActionLabelContext value={tTryouts("open-set-cta")}>
-      <div className={cn(pageRowVariants(), pageRhythmVariants(), "pb-24")}>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          {Arr.map(Arr.zip(page.tracks, visuals), ([track, visual], index) => (
-            <CatalogCard
-              action={(anchor) => (
-                <TryoutPageLink {...anchor} publicPath={track.publicPath} />
-              )}
-              key={track.trackKey}
-              title={track.title}
-            >
-              <CatalogCardVisual preload={index === 0} visual={visual} />
-            </CatalogCard>
-          ))}
-        </div>
-      </div>
+      <CatalogGrid
+        className={cn(pageRowVariants(), pageRhythmVariants(), "pb-24")}
+      >
+        {Arr.map(Arr.zip(page.tracks, visuals), ([track, visual], index) => (
+          <CatalogCard
+            action={(anchor) => (
+              <TryoutPageLink {...anchor} publicPath={track.publicPath} />
+            )}
+            key={track.trackKey}
+            title={track.title}
+          >
+            <CatalogCardVisual preload={index === 0} visual={visual} />
+          </CatalogCard>
+        ))}
+      </CatalogGrid>
     </CatalogActionLabelContext>
   );
 }

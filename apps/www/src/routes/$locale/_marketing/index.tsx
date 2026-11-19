@@ -16,17 +16,14 @@ import { PageField } from "@/components/marketing/shared/field";
 import { LaterSection } from "@/components/marketing/shared/later";
 import { readRouteMessages } from "@/lib/i18n/messages.functions";
 import type { MarketingFaqItem } from "@/lib/marketing/faq";
-import {
-  readHomeCurriculaFn,
-  readHomeTryout,
-} from "@/lib/marketing/home.functions";
+import { readHomeCurriculaFn } from "@/lib/marketing/home.functions";
 import { getAppSocialArtwork } from "@/lib/og/app";
 import { createSeoHead, toRouterHead } from "@/lib/seo/head";
 import { readStaticData } from "@/lib/static/data";
 
 /**
- * The marketing home. Its first HTML holds the whole page: the featured try-out,
- * the subject collection and the questions are read before the stream, and the
+ * The marketing home. Its first HTML holds the whole page: the subject
+ * collection and the questions are read before the stream, and the
  * head names the locale's title, description, structured data and price currency
  * script. The structured data is plain data that the head seam emits.
  */
@@ -39,9 +36,8 @@ export const Route = createFileRoute("/$locale/_marketing/")({
     }
   },
   loader: async ({ params }) => {
-    const [curricula, featuredTryout, messages] = await Promise.all([
+    const [curricula, messages] = await Promise.all([
       readStaticData(readHomeCurriculaFn, { locale: params.locale }),
-      readStaticData(readHomeTryout, { locale: params.locale }),
       readStaticData(readRouteMessages, {
         locale: params.locale,
         namespaces: ["Landing", "Metadata"],
@@ -93,7 +89,6 @@ export const Route = createFileRoute("/$locale/_marketing/")({
       curricula,
       description: t("description"),
       faqs,
-      featuredTryout,
       title: t("title"),
     };
   },
@@ -140,8 +135,6 @@ export const Route = createFileRoute("/$locale/_marketing/")({
 
 /** The marketing home: the sections of the landing page. */
 function HomePage() {
-  const { featuredTryout } = Route.useLoaderData();
-
   return (
     <>
       <PageField />
@@ -150,11 +143,9 @@ function HomePage() {
         <LaterSection code={homeSections.lesson}>
           {(Lesson) => <Lesson />}
         </LaterSection>
-        {featuredTryout.kind === "question" ? (
-          <LaterSection code={homeSections.tryout}>
-            {(Tryout) => <Tryout value={featuredTryout.body} />}
-          </LaterSection>
-        ) : null}
+        <LaterSection code={homeSections.tryout}>
+          {(Tryout) => <Tryout />}
+        </LaterSection>
         <LaterSection code={homeSections.nina}>
           {(NinaSection) => <NinaSection />}
         </LaterSection>

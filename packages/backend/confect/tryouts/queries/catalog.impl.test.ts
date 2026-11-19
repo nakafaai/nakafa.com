@@ -3,10 +3,9 @@ import tryouts from "@repo/backend/confect/_generated/refs/tryouts";
 import { createConvexTestWithAuth } from "@repo/backend/confect/test.helpers";
 import type { CatalogNodeKeys } from "@repo/backend/confect/tryouts/catalog/rows";
 import { catalogNodeIdentity } from "@repo/backend/confect/tryouts/catalog/rows";
-import { TryoutQuestionBodyText } from "@repo/backend/confect/tryouts/runtime/spec";
 import { client } from "@repo/backend/test/client";
 import { type TryoutWorld, tryoutWorld } from "@repo/backend/test/tryout/world";
-import { Effect, Schema, Struct } from "effect";
+import { Effect, Struct } from "effect";
 
 const catalog = tryouts.queries.catalog;
 const SET_PATH = "try-out/indonesia/snbt/2027/utbk/set-1-id";
@@ -271,36 +270,6 @@ describe("tryouts/queries/catalog", () => {
         yield* dropGerman({ countryKey: "indonesia", kind: "country" });
         // With no page of the node left in that locale, the try-out hub is where it lands.
         expect(yield* german(SET_PATH)).toBe("try-out");
-      })
-  );
-
-  it.effect(
-    "demonstrates the landing's question with its key, and none once the locale serves no set",
-    () =>
-      Effect.gen(function* () {
-        const world = yield* tryoutWorld();
-        const question = yield* world.visitor.query(
-          catalog.getFeaturedQuestion,
-          { appLocale: "en" }
-        );
-        assert.ok(question.kind === "question", "Expected a question.");
-        expect(
-          yield* Schema.decodeEffect(TryoutQuestionBodyText)(question.body)
-        ).toMatchObject({
-          interaction: { kind: "choice", maxChoices: 1 },
-          key: { correct: ["option-2"], kind: "choice" },
-          prompt: { type: "doc" },
-        });
-        yield* tamperCatalog(
-          world,
-          { ...KEYS, appLocale: "id", kind: "set", setKey: "set-1" },
-          "delete"
-        );
-        expect(
-          yield* world.visitor.query(catalog.getFeaturedQuestion, {
-            appLocale: "id",
-          })
-        ).toEqual({ kind: "none" });
       })
   );
 
