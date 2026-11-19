@@ -51,7 +51,6 @@ export const artworkSources = {
   "subject/physics": WITHOUT_MALAY_ARTWORK,
   "subject/science": ALL_ARTWORK_LOCALES,
   "subject/secondary-additional-mathematics": ["en", "de"],
-  "tryout/germany/entrance-examination": ENGLISH_ARTWORK,
   "tryout/germany/entrance-examination/tu-darmstadt-mathematics":
     ENGLISH_ARTWORK,
   "tryout/germany/index": ENGLISH_ARTWORK,

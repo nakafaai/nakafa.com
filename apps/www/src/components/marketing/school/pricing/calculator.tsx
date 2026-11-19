@@ -7,6 +7,9 @@ import {
   schoolPeriodDiscounts,
   schoolQuote,
 } from "@repo/backend/confect/billing/tiers";
+import { Button } from "@repo/design-system/components/ui/button";
+import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
+import { Card, CardContent } from "@repo/design-system/components/ui/card";
 import { Label } from "@repo/design-system/components/ui/label";
 import { Nina } from "@repo/design-system/components/ui/nina";
 import {
@@ -17,66 +20,116 @@ import {
   NumberFieldInput,
 } from "@repo/design-system/components/ui/number";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@repo/design-system/components/ui/select";
+import {
   ToggleGroup,
   ToggleGroupItem,
 } from "@repo/design-system/components/ui/toggle-group";
-import { buttonVariants } from "@repo/design-system/lib/button";
+import { useMissedPress } from "@repo/design-system/hooks/press";
 import { formatBytes } from "@repo/internationalization/src/formats";
+import { cn } from "cn";
 import { Array as Arr, Option, Record as Rec } from "effect";
 import { type ReactNode, useId, useState } from "react";
 import { useFormatter, useLocale, useTranslations } from "use-intl";
 import { SchoolAmount } from "@/components/marketing/school/pricing/price";
 import {
-  FeatureCard,
   FeatureLead,
+  FeatureProduct,
   FeatureRow,
   FeatureText,
   FeatureTitle,
 } from "@/components/marketing/shared/feature";
 
-/** The fewest accounts a school adds, and the shortcuts that add more at once. */
 const FEWEST_ADDED = 1;
-const ADDED_PRESETS = [1, 10, 50, 100] as const;
+const ADDED_PRESETS = [10, 50, 100] as const;
 
-/** One result of the calculator: its name and its value, a direct group of the results list. */
+/** A secondary part of the quote, with the value aligned to the end of the same line. */
 function CalculatorFigure({
   children,
+  className,
   label,
 }: {
   children: ReactNode;
+  className?: string;
   label: string;
 }) {
   return (
-    <div className="grid content-start gap-1">
-      <dt className="text-muted-foreground text-sm">{label}</dt>
-      <dd className="text-xl font-medium tracking-tight tabular-nums">
+    <div
+      className={cn(
+        "grid grid-cols-[minmax(0,1fr)_auto] items-baseline gap-3 px-(--card-spacing) py-1",
+        className
+      )}
+    >
+      <dt className="text-muted-foreground text-sm wrap-anywhere">{label}</dt>
+      <dd className="max-w-40 text-end font-mono text-sm font-medium wrap-anywhere tabular-nums">
         {children}
       </dd>
     </div>
   );
 }
 
-/** Reads a toggle's value back as a paid plan, or none for an emptied group. */
-function readTier(value: string) {
-  return Arr.findFirst(SchoolPaidTierKey.literals, (tier) => tier === value);
-}
+/** Picks a billing cadence in the same space at every width and locale. */
+function CalculatorPeriod({
+  period,
+  setPeriod,
+}: {
+  period: SchoolPeriod;
+  setPeriod: (period: SchoolPeriod) => void;
+}) {
+  const t = useTranslations("SchoolSite");
+  const common = useTranslations("Common");
+  const labelId = useId();
+  const [open, setOpen] = useState(false);
+  const press = useMissedPress<HTMLButtonElement>(() => setOpen(true));
 
-/** Reads a toggle's value back as a period, or none for an emptied group. */
-function readPeriod(value: string) {
-  return Arr.findFirst(
-    SchoolPeriod.literals,
-    (period) => String(period) === value
+  return (
+    <div className="row-span-2 grid min-w-0 grid-rows-subgrid">
+      <span className="self-end font-medium wrap-anywhere" id={labelId}>
+        {t("period-label")}
+      </span>
+      <Select
+        onOpenChange={setOpen}
+        onValueChange={(value) =>
+          Option.map(
+            Arr.findFirst(
+              SchoolPeriod.literals,
+              (option) => String(option) === value
+            ),
+            setPeriod
+          )
+        }
+        open={open}
+        value={String(period)}
+      >
+        <SelectTrigger
+          aria-labelledby={labelId}
+          className="w-full gap-1 px-2.5"
+          {...press}
+        >
+          <SelectValue>{t("period-option", { months: period })}</SelectValue>
+        </SelectTrigger>
+        <SelectContent
+          align="end"
+          alignItemWithTrigger={false}
+          label={common("menu-period")}
+        >
+          {Arr.map(SchoolPeriod.literals, (option) => (
+            <SelectItem key={option} plain value={String(option)}>
+              {t("period-option", { months: option })}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
   );
 }
 
-/**
- * The custom account calculator, in the row of a landing: Nina counting beside
- * its title, and the calculator itself. A paid plan, a billing period, and any
- * whole number of accounts from one, with shortcuts that add 1, 10, 50 or 100;
- * then what the plan holds and costs a month in the visitor's currency, and the
- * invoice of a longer period with its discount. Every control of the calculator
- * is as tall as the next.
- */
+/** Configures a School quote and puts the billed amount before the plan's capacity. */
 export function SchoolCalculator() {
   const t = useTranslations("SchoolSite");
   const tCommon = useTranslations("Common");
@@ -89,6 +142,9 @@ export function SchoolCalculator() {
   const quote = (currency: BillingCurrency) =>
     schoolQuote({ added, currency, period, tier });
   const idr = quote("IDR");
+  const eur = quote("EUR");
+  const myr = quote("MYR");
+  const usd = quote("USD");
   const discount = schoolPeriodDiscounts[period];
 
   return (
@@ -108,129 +164,137 @@ export function SchoolCalculator() {
           })}
         </FeatureLead>
       </FeatureText>
-      <FeatureCard>
-        <div className="grid gap-6">
-          <div className="grid gap-2">
-            <span className="text-sm font-medium" id={`${inputId}-plan`}>
-              {tCommon("plan")}
-            </span>
-            <ToggleGroup
-              aria-labelledby={`${inputId}-plan`}
-              onValueChange={(value) => Option.map(readTier(value), setTier)}
-              value={tier}
-            >
-              {Arr.map(SchoolPaidTierKey.literals, (option) => (
-                <ToggleGroupItem key={option} value={option}>
-                  {t(`plan.${option}`)}
-                </ToggleGroupItem>
-              ))}
-            </ToggleGroup>
-          </div>
-          <div className="grid gap-2">
-            <span className="text-sm font-medium" id={`${inputId}-period`}>
-              {t("period-label")}
-            </span>
-            <ToggleGroup
-              aria-labelledby={`${inputId}-period`}
-              gridColumns="4"
-              layout="grid"
-              onValueChange={(value) =>
-                Option.map(readPeriod(value), setPeriod)
-              }
-              value={String(period)}
-            >
-              {Arr.map(SchoolPeriod.literals, (option) => (
-                <ToggleGroupItem key={option} value={String(option)}>
-                  {t("period-option", { months: option })}
-                </ToggleGroupItem>
-              ))}
-            </ToggleGroup>
-          </div>
-          <div className="grid gap-2">
-            <Label htmlFor={inputId}>{t("calculator-added")}</Label>
-            <div className="flex flex-wrap gap-2">
-              <NumberField
-                className="w-40"
-                id={inputId}
-                min={FEWEST_ADDED}
-                onValueChange={(value) =>
-                  setAdded(
-                    Math.max(FEWEST_ADDED, Math.trunc(value ?? FEWEST_ADDED))
-                  )
-                }
-                step={1}
-                value={added}
-              >
-                <NumberFieldGroup>
-                  <NumberFieldDecrement />
-                  <NumberFieldInput />
-                  <NumberFieldIncrement />
-                </NumberFieldGroup>
-              </NumberField>
-              {Arr.map(ADDED_PRESETS, (preset) => (
-                <button
-                  aria-label={t("calculator-preset", { count: preset })}
-                  className={buttonVariants({ variant: "outline" })}
-                  key={preset}
-                  onClick={() => setAdded((current) => current + preset)}
-                  type="button"
-                >
-                  +{preset}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-        <dl
-          aria-live="polite"
-          className="bg-muted/50 grid grid-cols-2 gap-6 rounded-lg p-4"
+      <FeatureProduct>
+        <Card
+          className="@container/calculator min-w-0 gap-0 py-0"
+          data-school-calculator=""
         >
-          <CalculatorFigure label={tCommon("accounts")}>
-            {format.number(idr.accounts)}
-          </CalculatorFigure>
-          <CalculatorFigure label={t("calculator-credits")}>
-            {format.number(idr.credits)}
-          </CalculatorFigure>
-          <CalculatorFigure label={t("calculator-storage")}>
-            {formatBytes(idr.storageMegabytes * 1_000_000, locale)}
-          </CalculatorFigure>
-          <CalculatorFigure label={t("calculator-monthly")}>
-            <SchoolAmount
-              amounts={{
-                EUR: quote("EUR").monthlyAfterDiscount,
-                IDR: idr.monthlyAfterDiscount,
-                MYR: quote("MYR").monthlyAfterDiscount,
-                USD: quote("USD").monthlyAfterDiscount,
-              }}
-            />
-          </CalculatorFigure>
-          {period > 1 ? (
-            <CalculatorFigure label={t("calculator-total", { months: period })}>
+          <CardContent className="grid gap-4 py-(--card-spacing)">
+            <div className="grid grid-cols-[minmax(0,5fr)_minmax(0,7fr)] gap-x-3 gap-y-2">
+              <div className="row-span-2 grid min-w-0 grid-rows-subgrid">
+                <span className="self-end font-medium" id={`${inputId}-plan`}>
+                  {tCommon("plan")}
+                </span>
+                <ToggleGroup
+                  aria-labelledby={`${inputId}-plan`}
+                  gridColumns="2"
+                  layout="grid"
+                  onValueChange={(value) =>
+                    Option.map(
+                      Arr.findFirst(
+                        SchoolPaidTierKey.literals,
+                        (option) => option === value
+                      ),
+                      setTier
+                    )
+                  }
+                  value={tier}
+                >
+                  {Arr.map(SchoolPaidTierKey.literals, (option) => (
+                    <ToggleGroupItem
+                      className="min-w-0 px-1.5"
+                      key={option}
+                      value={option}
+                    >
+                      {t(`plan.${option}`)}
+                    </ToggleGroupItem>
+                  ))}
+                </ToggleGroup>
+              </div>
+              <CalculatorPeriod period={period} setPeriod={setPeriod} />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor={inputId}>{t("calculator-added")}</Label>
+              <div className="grid gap-2 @lg/calculator:grid-cols-2">
+                <NumberField
+                  id={inputId}
+                  min={FEWEST_ADDED}
+                  onValueChange={(value) =>
+                    setAdded(
+                      Math.max(FEWEST_ADDED, Math.trunc(value ?? FEWEST_ADDED))
+                    )
+                  }
+                  step={1}
+                  value={added}
+                >
+                  <NumberFieldGroup>
+                    <NumberFieldDecrement />
+                    <NumberFieldInput />
+                    <NumberFieldIncrement />
+                  </NumberFieldGroup>
+                </NumberField>
+                <ButtonGroup className="grid w-full grid-cols-3">
+                  {Arr.map(ADDED_PRESETS, (preset) => (
+                    <Button
+                      aria-label={t("calculator-preset", { count: preset })}
+                      className="min-w-0 px-2 tabular-nums"
+                      key={preset}
+                      onClick={() => setAdded((current) => current + preset)}
+                      type="button"
+                    >
+                      +{preset}
+                    </Button>
+                  ))}
+                </ButtonGroup>
+              </div>
+            </div>
+          </CardContent>
+          <dl aria-live="polite">
+            <div className="bg-muted/30 grid gap-1 border-t px-(--card-spacing) pt-4">
+              <dt className="text-muted-foreground flex items-baseline justify-between gap-2 text-sm">
+                {t("calculator-total", { months: period })}
+                {discount > 0 ? (
+                  <span className="text-success shrink-0 text-xs font-medium">
+                    {t("calculator-saving", { percent: discount })}
+                  </span>
+                ) : null}
+              </dt>
+              <dd className="font-mono text-2xl leading-tight font-medium wrap-anywhere tabular-nums">
+                <SchoolAmount
+                  amounts={{
+                    EUR: eur.total,
+                    IDR: idr.total,
+                    MYR: myr.total,
+                    USD: usd.total,
+                  }}
+                />
+              </dd>
+            </div>
+            <CalculatorFigure
+              className="bg-muted/30 pt-3"
+              label={t("calculator-monthly")}
+            >
               <SchoolAmount
                 amounts={{
-                  EUR: quote("EUR").total,
-                  IDR: idr.total,
-                  MYR: quote("MYR").total,
-                  USD: quote("USD").total,
+                  EUR: eur.monthlyAfterDiscount,
+                  IDR: idr.monthlyAfterDiscount,
+                  MYR: myr.monthlyAfterDiscount,
+                  USD: usd.monthlyAfterDiscount,
                 }}
               />
-              {discount > 0 ? (
-                <span className="text-muted-foreground ms-2 text-sm font-normal tracking-normal">
-                  {t("calculator-saving", { percent: discount })}
-                </span>
-              ) : null}
             </CalculatorFigure>
-          ) : null}
-        </dl>
-        <p className="text-muted-foreground text-sm tabular-nums">
-          <SchoolAmount
-            amounts={Rec.map(schoolAccount.monthly, (amount) =>
-              schoolMonthlyAfterDiscount(amount, period)
-            )}
-          />{" "}
-          {t("calculator-unit")}
-        </p>
-      </FeatureCard>
+            <CalculatorFigure
+              className="bg-muted/30 pb-4"
+              label={t("calculator-unit-label")}
+            >
+              <SchoolAmount
+                amounts={Rec.map(schoolAccount.monthly, (amount) =>
+                  schoolMonthlyAfterDiscount(amount, period)
+                )}
+              />
+            </CalculatorFigure>
+            <CalculatorFigure className="pt-4" label={tCommon("accounts")}>
+              {format.number(idr.accounts)}
+            </CalculatorFigure>
+            <CalculatorFigure label={t("calculator-credits")}>
+              {format.number(idr.credits)}
+            </CalculatorFigure>
+            <CalculatorFigure className="pb-4" label={t("calculator-storage")}>
+              {formatBytes(idr.storageMegabytes * 1_000_000, locale)}
+            </CalculatorFigure>
+          </dl>
+        </Card>
+      </FeatureProduct>
     </FeatureRow>
   );
 }

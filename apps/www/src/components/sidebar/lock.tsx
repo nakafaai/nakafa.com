@@ -109,7 +109,7 @@ export function LockableShell({
             would shrink every centered page column to its content, and a
             wrapper of their own would move when a lock change drops the
             header. */}
-          <SidebarInset className="duration-surface block transition-[--app-sidebar-offset] [--app-shell-inset:var(--app-shell-locked-inset,var(--app-sidebar-offset))] [--app-sidebar-offset:var(--app-sidebar-open,0rem)] lg:pl-(--app-shell-inset)">
+          <SidebarInset className="duration-surface block transition-[--app-sidebar-offset] [--app-shell-inset:var(--app-shell-locked-inset,var(--app-sidebar-offset))] [--app-sidebar-offset:var(--app-sidebar-open,0rem)] [--page-width:var(--container-3xl)] lg:pl-(--app-shell-inset)">
             <SidebarScope>
               {locked ? null : (
                 <div className="[display:var(--app-shell-locked,contents)]">

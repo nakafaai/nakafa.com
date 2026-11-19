@@ -27,12 +27,11 @@ export function PageCounter({
     return (
       <Button
         aria-label={t("page-of", { current, total })}
-        className="tabular-nums"
+        className="h-11 w-24 px-1 font-mono tabular-nums @sm/bar:h-9"
         disabled={total === 0}
         onClick={() => setTyping(String(current))}
-        size="sm"
         type="button"
-        variant="ghost"
+        variant="outline"
       >
         {current} / {total}
       </Button>
@@ -42,7 +41,7 @@ export function PageCounter({
   return (
     <Input
       aria-label={t("page-jump", { total })}
-      className="h-8 w-16 text-center tabular-nums"
+      className="h-11 w-24 text-center font-mono text-base tabular-nums @sm/bar:h-9"
       inputMode="numeric"
       onBlur={() => setTyping(null)}
       onChange={(event) => setTyping(event.currentTarget.value)}

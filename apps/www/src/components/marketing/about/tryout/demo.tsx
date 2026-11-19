@@ -58,9 +58,8 @@ export function TryoutDemo({ children }: { children: ReactNode }) {
 }
 
 /**
- * The question's real choices. While the question is on screen and nobody has
- * chosen, the key's answer is chosen after a short wait, so the row shows a
- * scored answer without a press. With reduced motion it waits for the reader.
+ * The question's real choices. After a short wait, the demo picks the mistake
+ * that Nina explains in the next section. With reduced motion it waits for the reader.
  */
 export function TryoutDemoQuestion({
   answer,
@@ -77,21 +76,20 @@ export function TryoutDemoQuestion({
   const clear = useTryoutDemo((state) => state.clear);
   const shouldReduceMotion = useReducedMotion();
   const { entry, ref } = useIntersection({ threshold: 0.6 });
-  const correct = answer?.kind === "choice" ? answer.correct : null;
   const waiting =
     (entry?.isIntersecting ?? false) &&
     response === null &&
     !shouldReduceMotion;
 
   useEffect(() => {
-    if (!waiting || correct === null) {
+    if (!waiting) {
       return;
     }
     const timer = window.setTimeout(() => {
-      choose(correct, true);
+      choose(["option-13"], false);
     }, ANSWER_AFTER_MS);
     return () => window.clearTimeout(timer);
-  }, [choose, correct, waiting]);
+  }, [choose, waiting]);
 
   return (
     <div ref={ref}>
@@ -108,6 +106,7 @@ export function TryoutDemoQuestion({
             }
             choose(next, answer !== undefined && matchesKey(answer, next));
           },
+          replayEarlyChoice: true,
           response,
         }}
       />

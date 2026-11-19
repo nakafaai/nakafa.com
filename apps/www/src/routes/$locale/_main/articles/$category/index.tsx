@@ -16,14 +16,9 @@ import { BreadcrumbHeader } from "@/components/shared/breadcrumb/header";
 import { crumbSiblings } from "@/components/shared/breadcrumb/pages";
 import { CardArticle } from "@/components/shared/card/article";
 import { ContainerList } from "@/components/shared/card/list";
-import { RefContent } from "@/components/shared/content/references";
 import { PageStack } from "@/components/shared/page/body";
-import { PageFooter } from "@/components/shared/page/footer";
 import { Page } from "@/components/shared/page/frame";
-import {
-  ARTICLE_SOURCE_ROOT,
-  type ArticlePageCursor,
-} from "@/lib/content/article/catalog";
+import type { ArticlePageCursor } from "@/lib/content/article/catalog";
 import {
   readPublishedArticleCategories,
   readPublishedArticleCategory,
@@ -38,7 +33,6 @@ import {
 } from "@/lib/content/article/query";
 import { PUBLIC_CONTENT_HEADERS } from "@/lib/content/delivery";
 import { outcome } from "@/lib/content/outcome";
-import { getAksaraTreeUrl } from "@/lib/content/repository";
 import { getLocaleOrThrow } from "@/lib/routing/locale/address";
 import {
   ARTICLES_TARGET,
@@ -162,12 +156,6 @@ const readArticleCategory = createServerFn({ method: "GET" })
             }),
             nextSearch: Option.getOrNull(getArticleNextSearch(catalog)),
             routeSlug: model.route,
-            sourceUrl: catalog.sourceRevision
-              ? getAksaraTreeUrl({
-                  path: `${ARTICLE_SOURCE_ROOT}/${model.category}`,
-                  revision: catalog.sourceRevision,
-                })
-              : null,
           },
         });
       })
@@ -289,11 +277,6 @@ function ArticleCategoryPage() {
       </PageStack>
       {page.nextSearch ? (
         <ArticleNext category={page.routeSlug} search={page.nextSearch} />
-      ) : null}
-      {page.sourceUrl ? (
-        <PageFooter>
-          <RefContent githubUrl={page.sourceUrl} />
-        </PageFooter>
       ) : null}
     </Page>
   );

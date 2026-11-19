@@ -1,6 +1,7 @@
 import { Layers01Icon } from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { useEarlyPress } from "@repo/design-system/hooks/press";
 import { Option } from "effect";
 import { useTranslations } from "use-intl";
 import { PaneBody, PaneHeader } from "@/components/shared/page/pane";
@@ -40,18 +41,19 @@ export function ExamPanelButton() {
   const t = useTranslations("Exams");
   const open = usePanes((state) => state.sheet);
   const showSheet = usePanes((state) => state.showSheet);
+  const press = useEarlyPress<HTMLButtonElement>(showSheet);
 
   return (
     <Button
       aria-pressed={open}
-      className="lg:hidden"
-      onClick={showSheet}
-      size="sm"
+      className="size-11 lg:hidden @sm/bar:size-9"
+      size="icon"
+      tooltip={t("teacher-layer")}
       type="button"
       variant="ghost"
+      {...press}
     >
       <HugeIcons aria-hidden="true" icon={Layers01Icon} />
-      {t("teacher-layer")}
     </Button>
   );
 }

@@ -8,7 +8,7 @@ import {
 
 /**
  * The player part, as wide as the page under its words: the paper a student sits in the School's own player, one
- * question of every type a teacher writes, which a button group above it opens one at a time.
+ * question of every type a teacher writes, selectable above the player.
  */
 export function SchoolPlayer() {
   return (
