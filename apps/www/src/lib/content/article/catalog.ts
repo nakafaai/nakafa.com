@@ -21,8 +21,7 @@ import type { Locale } from "use-intl";
 import { PublishedProjectionError } from "@/lib/content/published/errors";
 import { decodeSourceRevision } from "@/lib/content/published/origin";
 import { queryContentStore } from "@/lib/content/store/query";
-/** Stable source root for immutable Aksara article links. */
-export const ARTICLE_SOURCE_ROOT = "packages/corpus/articles";
+
 type ArticlePageArgs = Ref.Args<typeof contentRelease.article.publications>;
 type ArticlePageResult = Ref.Returns<
   typeof contentRelease.article.publications

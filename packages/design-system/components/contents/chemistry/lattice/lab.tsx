@@ -1,5 +1,4 @@
 import { useThree } from "@react-three/fiber";
-import { toggleColumns } from "@repo/design-system/components/contents/chemistry/columns";
 import {
   type CrystalId,
   CrystalIdSchema,
@@ -9,6 +8,7 @@ import {
 } from "@repo/design-system/components/contents/chemistry/lattice/crystal";
 import { ELEMENTS } from "@repo/design-system/components/contents/chemistry/molecule/elements";
 import { mathNumber } from "@repo/design-system/components/contents/mathematics/number";
+import { toggleColumns } from "@repo/design-system/components/contents/simulation/columns";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { CameraControls } from "@repo/design-system/components/three/camera/controls";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene";

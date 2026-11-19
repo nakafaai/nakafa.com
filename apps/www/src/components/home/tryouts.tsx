@@ -6,9 +6,10 @@ import {
 } from "@hugeicons/core-free-icons";
 import type tryouts from "@repo/backend/confect/_generated/refs/tryouts";
 import { Tile, TileIcon } from "@repo/design-system/components/ui/tile";
+import { rowLinkVariants } from "@repo/design-system/lib/row";
 import { Array as Arr } from "effect";
 import { useFormatter, useTranslations } from "use-intl";
-import { SectionDoor, SectionMore } from "@/components/home/row";
+import { HomeRowText, SectionDoor, SectionMore } from "@/components/home/row";
 import { HomeSection } from "@/components/home/section";
 import { getPrimaryNavigationItems } from "@/components/sidebar/data/navigation";
 import { TryoutPageLink } from "@/components/tryout/route/link";
@@ -38,18 +39,13 @@ function AttemptRow({ attempt }: { attempt: Attempt }) {
   return (
     <TryoutPageLink
       attemptId={attempt.attemptId}
-      className="group hover:bg-accent hover:text-accent-foreground flex items-start gap-3 p-4 transition-colors ease-out"
+      className={rowLinkVariants()}
       publicPath={attempt.publicPath}
     >
       <Tile seed={attempt.publicPath}>
         <TileIcon icon={STATUS_ICONS[attempt.status]} />
       </Tile>
-      <div className="-mt-1 flex min-w-0 flex-1 flex-col gap-0.5">
-        <h3 className="truncate">{attempt.title}</h3>
-        <span className="text-muted-foreground group-hover:text-accent-foreground truncate text-sm">
-          {line}
-        </span>
-      </div>
+      <HomeRowText description={line} title={attempt.title} />
     </TryoutPageLink>
   );
 }
@@ -69,7 +65,12 @@ export function HomeTryouts({ attempts }: { attempts: readonly Attempt[] }) {
       title={tCommon("try-out")}
     >
       {attempts.length === 0 ? (
-        <SectionDoor item={TRYOUT} sentence={t("tryouts-first")} />
+        <SectionDoor item={TRYOUT}>
+          <HomeRowText
+            description={t("tryouts-first")}
+            title={tCommon("try-out")}
+          />
+        </SectionDoor>
       ) : (
         Arr.map(attempts, (attempt) => (
           <AttemptRow attempt={attempt} key={attempt.attemptId} />

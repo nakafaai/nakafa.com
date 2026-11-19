@@ -8,16 +8,11 @@ import { createTranslator } from "use-intl/core";
 import { getArticleCategoryIcons } from "@/components/articles/category";
 import { ArticleNext } from "@/components/articles/next";
 import { BreadcrumbHeader } from "@/components/shared/breadcrumb/header";
-import { RefContent } from "@/components/shared/content/references";
 import { PageStack } from "@/components/shared/page/body";
-import { PageFooter } from "@/components/shared/page/footer";
 import { Page } from "@/components/shared/page/frame";
 import { SubjectItem } from "@/components/shared/subject/item";
 import { SubjectList } from "@/components/shared/subject/list";
-import {
-  ARTICLE_SOURCE_ROOT,
-  readPublishedCategories,
-} from "@/lib/content/article/catalog";
+import { readPublishedCategories } from "@/lib/content/article/catalog";
 import {
   ArticlePageSearchSchema,
   getArticleNextSearch,
@@ -25,7 +20,6 @@ import {
 } from "@/lib/content/article/query";
 import { PUBLIC_CONTENT_HEADERS } from "@/lib/content/delivery";
 import { outcome } from "@/lib/content/outcome";
-import { getAksaraTreeUrl } from "@/lib/content/repository";
 import { getLocaleOrThrow } from "@/lib/routing/locale/address";
 import { articleCategoryTarget, HOME_TARGET } from "@/lib/routing/target";
 import { createBreadcrumbItems } from "@/lib/seo/breadcrumbs";
@@ -76,12 +70,6 @@ const readArticleIndex = createServerFn({ method: "GET" })
           messages,
           namespace: "Articles",
         });
-        const sourceUrl = catalog.sourceRevision
-          ? getAksaraTreeUrl({
-              path: ARTICLE_SOURCE_ROOT,
-              revision: catalog.sourceRevision,
-            })
-          : null;
         const breadcrumbs = createBreadcrumbItems(locale, [
           { name: tCommon("home"), path: "" },
           { name: tCommon("articles"), path: "/articles" },
@@ -94,7 +82,6 @@ const readArticleIndex = createServerFn({ method: "GET" })
             description: tArticles("description"),
             locale,
             nextSearch: Option.getOrNull(getArticleNextSearch(catalog)),
-            sourceUrl,
             title: tCommon("articles"),
           },
         });
@@ -184,11 +171,6 @@ function ArticleIndexPage() {
         </SubjectList>
       </PageStack>
       {page.nextSearch ? <ArticleNext search={page.nextSearch} /> : null}
-      {page.sourceUrl ? (
-        <PageFooter>
-          <RefContent githubUrl={page.sourceUrl} />
-        </PageFooter>
-      ) : null}
     </Page>
   );
 }

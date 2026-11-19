@@ -16053,13 +16053,6 @@ export declare const api: {
             }>;
           }
         >;
-        getFeaturedQuestion: FunctionReference<
-          "query",
-          "public",
-          { appLocale: "en" | "id" | "de" | "ms" },
-          | { body: string; kind: "question"; versionHash: string }
-          | { kind: "none" }
-        >;
         getGroupPage: FunctionReference<
           "query",
           "public",
@@ -16263,12 +16256,6 @@ export declare const api: {
               trackKey: string;
             };
           }
-        >;
-        getSetSamples: FunctionReference<
-          "query",
-          "public",
-          { appLocale: "en" | "id" | "de" | "ms"; publicPath: string },
-          Array<{ body: string; versionHash: string }> | null
         >;
         getTrackPage: FunctionReference<
           "query",

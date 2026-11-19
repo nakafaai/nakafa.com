@@ -1,8 +1,10 @@
+import { CategoryTick } from "@repo/design-system/components/contents/mathematics/chart/tick";
 import { Bar } from "@repo/design-system/components/evilcharts/charts/composed/bar";
 import { Line } from "@repo/design-system/components/evilcharts/charts/composed/line";
 import {
   EvilComposedChart,
   Grid,
+  Legend,
   XAxis,
   YAxis,
 } from "@repo/design-system/components/evilcharts/charts/composed-chart";
@@ -105,12 +107,18 @@ export function SeriesChart({
       <VisualCardBody className="p-(--card-spacing)">
         <EvilComposedChart
           {...(bars === "touching" ? { barCategoryGap: 0, barGap: 0 } : {})}
-          className="aspect-video"
+          className="aspect-square sm:aspect-video"
           config={config}
           data={rows}
         >
           <Grid vertical={false} />
-          <XAxis dataKey="name" tickMargin={10} />
+          <XAxis
+            dataKey="name"
+            height="auto"
+            interval={0}
+            tick={<CategoryTick />}
+            tickMargin={10}
+          />
           <YAxis
             tickMargin={10}
             {...(valueRange === undefined
@@ -128,6 +136,7 @@ export function SeriesChart({
                 })}
           />
           <ChartTooltip content={<ChartTooltipContent />} />
+          {series.length > 1 && <Legend verticalAlign="bottom" />}
           {Arr.map(series, (item, index) =>
             item.mark === "bar" ? (
               <Bar

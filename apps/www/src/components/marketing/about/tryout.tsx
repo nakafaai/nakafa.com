@@ -1,4 +1,6 @@
-import type { Effect } from "effect";
+import type { TryoutQuestionBody as Question } from "@repo/backend/confect/tryouts/runtime/spec";
+import { Card } from "@repo/design-system/components/ui/card";
+import { Array as Arr } from "effect";
 import { useTranslations } from "use-intl";
 import {
   TryoutDemo,
@@ -6,29 +8,71 @@ import {
   TryoutDemoQuestion,
 } from "@/components/marketing/about/tryout/demo";
 import {
-  FeatureCard,
   FeatureLead,
+  FeatureProduct,
   FeatureRow,
   FeatureText,
   FeatureTitle,
 } from "@/components/marketing/shared/feature";
-import type { readFeaturedTryout } from "@/components/tryout/catalog/source.server";
+import {
+  PlayerQuestionAnswer,
+  PlayerQuestionHeader,
+  PlayerQuestionPrompt,
+} from "@/components/player/question";
 import { TryoutQuestionBody } from "@/components/tryout/runtime/question/body";
 
-/** The featured question's body, as the catalog decodes it: its prompt, its interaction, and its key. */
-type FeaturedBody = Extract<
-  Effect.Success<ReturnType<typeof readFeaturedTryout>>,
-  { readonly kind: "question" }
->["body"];
-
-/**
- * The practice test row: its words on one side, and on the other a card with a
- * real question and its real choices, which answers itself once it is on
- * screen while Nina beside the title thinks, then cheers a right answer.
- */
-export function Tryout({ value }: { value: FeaturedBody }) {
+/** The same practice question in every release, with the answer Nina explains in the next section. */
+export function Tryout() {
   const t = useTranslations("Landing");
-  const responseId = "home-tryout-response";
+  const common = useTranslations("Common");
+  const question = {
+    interaction: {
+      id: "choice",
+      kind: "choice",
+      label: common("answer"),
+      maxChoices: 1,
+      minChoices: 1,
+      options: Arr.map([10, 13, 19, 15, 18], (answer) => ({
+        id: `option-${answer}`,
+        label: {
+          content: [
+            {
+              content: [
+                { attrs: { latex: String(answer) }, type: "mathInline" },
+              ],
+              type: "paragraph",
+            },
+          ],
+          type: "doc",
+        },
+      })),
+      shuffle: false,
+    },
+    key: { correct: ["option-19"], interaction: "choice", kind: "choice" },
+    prompt: {
+      content: [
+        {
+          content: [{ text: t("tryout-demo-intro"), type: "text" }],
+          type: "paragraph",
+        },
+        {
+          attrs: { latex: "\\triangle(a,b)=2a+\\frac{b}{m}" },
+          type: "mathBlock",
+        },
+        {
+          content: [
+            { text: t("tryout-demo-given"), type: "text" },
+            { attrs: { latex: "\\triangle(2,4)=8" }, type: "mathInline" },
+            { text: t("tryout-demo-find"), type: "text" },
+            { attrs: { latex: "\\triangle(5,9)" }, type: "mathInline" },
+            { text: "?", type: "text" },
+          ],
+          type: "paragraph",
+        },
+      ],
+      type: "doc",
+    },
+  } satisfies Question;
 
   return (
     <TryoutDemo>
@@ -38,16 +82,21 @@ export function Tryout({ value }: { value: FeaturedBody }) {
           <FeatureTitle>{t("tryout-title")}</FeatureTitle>
           <FeatureLead>{t("tryout-lead")}</FeatureLead>
         </FeatureText>
-        <FeatureCard>
-          <section>
-            <TryoutQuestionBody body={value} />
-          </section>
-          <TryoutDemoQuestion
-            answer={value.key}
-            id={responseId}
-            interaction={value.interaction}
-          />
-        </FeatureCard>
+        <FeatureProduct>
+          <Card className="min-w-0 gap-0 px-(--card-spacing)">
+            <PlayerQuestionHeader number={1} />
+            <PlayerQuestionPrompt>
+              <TryoutQuestionBody body={question} />
+            </PlayerQuestionPrompt>
+            <PlayerQuestionAnswer>
+              <TryoutDemoQuestion
+                answer={question.key}
+                id="home-tryout-response"
+                interaction={question.interaction}
+              />
+            </PlayerQuestionAnswer>
+          </Card>
+        </FeatureProduct>
       </FeatureRow>
     </TryoutDemo>
   );

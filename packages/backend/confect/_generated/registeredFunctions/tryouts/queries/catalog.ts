@@ -7,7 +7,6 @@ const forward = <Ctx, Args, Returns>(handler: (ctx: Ctx, args: Args) => Promise<
 const definitions = ConvexFunctionDefinitions.buildForGroup<typeof import("../../../../tryouts/queries/catalog.spec")["default"]>(databaseSchema, groupLayer);
 
 export default {
-["getFeaturedQuestion"]: RegisteredConvexFunction.register({ ...definitions["getFeaturedQuestion"], handler: forward(definitions["getFeaturedQuestion"].handler) }),
 ["getMetadata"]: RegisteredConvexFunction.register({ ...definitions["getMetadata"], handler: forward(definitions["getMetadata"].handler) }),
 ["getLocalizedPath"]: RegisteredConvexFunction.register({ ...definitions["getLocalizedPath"], handler: forward(definitions["getLocalizedPath"].handler) }),
 ["getHubPage"]: RegisteredConvexFunction.register({ ...definitions["getHubPage"], handler: forward(definitions["getHubPage"].handler) }),
@@ -15,7 +14,6 @@ export default {
 ["getExamPage"]: RegisteredConvexFunction.register({ ...definitions["getExamPage"], handler: forward(definitions["getExamPage"].handler) }),
 ["getGroupPage"]: RegisteredConvexFunction.register({ ...definitions["getGroupPage"], handler: forward(definitions["getGroupPage"].handler) }),
 ["getTrackPage"]: RegisteredConvexFunction.register({ ...definitions["getTrackPage"], handler: forward(definitions["getTrackPage"].handler) }),
-["getSetSamples"]: RegisteredConvexFunction.register({ ...definitions["getSetSamples"], handler: forward(definitions["getSetSamples"].handler) }),
 ["getSetPage"]: RegisteredConvexFunction.register({ ...definitions["getSetPage"], handler: forward(definitions["getSetPage"].handler) }),
 ["getSectionPage"]: RegisteredConvexFunction.register({ ...definitions["getSectionPage"], handler: forward(definitions["getSectionPage"].handler) }),
 } as RegisteredFunctions.RegisteredFunctionsForGroupSpec<typeof import("../../../../tryouts/queries/catalog.spec")["default"]>;

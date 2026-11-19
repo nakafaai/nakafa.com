@@ -7,8 +7,7 @@ import { Array as Arr, BigDecimal } from "effect";
 import type { PlaneObject } from "@/lib/content/renderer/client/base/visual/scene";
 import {
   projectExactPlanePoint,
-  projectVisualMeasure,
-  projectVisualPoint,
+  sampleProjector,
   type VisualProjection,
 } from "@/lib/content/renderer/client/base/visual/transform";
 
@@ -79,8 +78,7 @@ export function resolvePlaneCurve(
   projection: VisualProjection
 ) {
   if (object.kind !== "quadratic") {
-    const center = projectVisualPoint(object.center, projection);
-    const radius = projectVisualMeasure(object.radius, projection);
+    const { center, radius } = object;
     const points =
       object.kind === "circle"
         ? createCircleOutlinePoints(radius)
@@ -89,11 +87,12 @@ export function resolvePlaneCurve(
             startDegrees: object.startDegrees,
             sweepDegrees: object.sweepDegrees,
           });
-    return Arr.map(points, (point) => ({
-      x: center.x + point.x,
-      y: center.y + point.y,
-      z: 0,
-    }));
+    // Each point is projected where it stands, so the outline follows the
+    // scale of each axis.
+    const project = sampleProjector(projection);
+    return Arr.map(points, (point) =>
+      project({ x: center.x + point.x, y: center.y + point.y, z: 0 })
+    );
   }
   const curve = resolvePlaneQuadratic(object);
   const start = projectExactPlanePoint(curve.start, projection);

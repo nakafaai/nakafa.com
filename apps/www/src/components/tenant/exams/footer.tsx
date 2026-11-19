@@ -6,9 +6,11 @@ import {
 import { useReducedMotion } from "@mantine/hooks";
 import { questionGap } from "@repo/backend/confect/exams/parts";
 import { Button } from "@repo/design-system/components/ui/button";
+import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ScrollArea } from "@repo/design-system/components/ui/scroll-area";
 import { Slider } from "@repo/design-system/components/ui/slider";
+import { useEarlyPress } from "@repo/design-system/hooks/press";
 import { elementById } from "@repo/design-system/lib/element";
 import { Array as Arr, Data, Effect, Option } from "effect";
 import { type RefObject, useState, useSyncExternalStore } from "react";
@@ -73,15 +75,9 @@ interface ExamFooterProps {
 }
 
 /**
- * The footer of the editor, a full-width bar under the canvas, as a design tool keeps its navigation
- * there, its row as wide as the editor's panes, the screen's width: on a phone, the action that opens the teacher's
- * panel at its start; then at its end the zoom (on
- * a wide screen only, since a phone pinches) as a slider and a percentage menu, a toggle for a strip of the
- * pages, the position of the page in view that jumps to a page, the grid of every page in place of the
- * canvas, and fullscreen where the browser allows it. In the grid the footer keeps only the grid and
- * fullscreen. Each icon names its action in a tooltip. The strip, the counter, and the grid go to a page,
- * and the page they choose becomes the one the teacher is on. The narrowest phones keep it to one row: the strip's button
- * shows its icon alone, and fullscreen goes, since a phone's page already fills the screen.
+ * The editor's footer keeps page navigation centered. The teacher's panel or zoom sits at the start,
+ * and grid view and full screen sit at the end. Each tool fits to the width of the editor itself,
+ * whether the desk fills a screen or sits in the School landing.
  */
 export function ExamFooter({ canvas, onZoom }: ExamFooterProps) {
   const t = useTranslations("Exams");
@@ -94,6 +90,9 @@ export function ExamFooter({ canvas, onZoom }: ExamFooterProps) {
   const toggleGrid = useEditorView((view) => view.toggleGrid);
   const reduce = useReducedMotion();
   const [pagesOpen, setPagesOpen] = useState(false);
+  const pagesPress = useEarlyPress<HTMLButtonElement>(() =>
+    setPagesOpen((open) => !open)
+  );
   const canFullscreen = useSyncExternalStore(
     subscribeFullscreen,
     canGoFullscreen,
@@ -166,7 +165,10 @@ export function ExamFooter({ canvas, onZoom }: ExamFooterProps) {
   };
 
   return (
-    <footer className="bg-background flex shrink-0 flex-col border-t">
+    <footer
+      className="bg-background flex shrink-0 flex-col border-t"
+      data-exam-footer=""
+    >
       {pagesOpen && !grid ? (
         <div className="border-b">
           <ScrollArea
@@ -188,15 +190,15 @@ export function ExamFooter({ canvas, onZoom }: ExamFooterProps) {
           </ScrollArea>
         </div>
       ) : null}
-      <div className="@container/bar flex min-h-12 w-full items-center gap-2 px-3 py-1.5">
-        {grid ? null : <ExamPanelButton />}
-        <div className="ms-auto flex items-center gap-1">
-          {grid ? null : (
-            <>
-              <div className="hidden items-center gap-1 md:flex">
+      <div className="@container/bar grid min-h-12 w-full grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 px-3 py-1.5">
+        {grid ? null : (
+          <>
+            <div className="col-start-1 row-start-1 flex min-w-0 items-center gap-1">
+              <ExamPanelButton />
+              <div className="hidden items-center gap-1 @2xl/bar:flex">
                 <Slider
                   aria-label={t("zoom")}
-                  className="w-40"
+                  className="hidden w-40 @4xl/bar:flex"
                   max={ZOOM_STEPS}
                   min={0}
                   onValueChange={(position) => onZoom(zoomAt(position))}
@@ -205,15 +207,21 @@ export function ExamFooter({ canvas, onZoom }: ExamFooterProps) {
                 />
                 <ZoomMenu onZoom={onZoom} />
               </div>
+            </div>
+            <div
+              className="col-start-2 row-start-1 flex items-center gap-1"
+              data-exam-navigation=""
+            >
               <Button
                 aria-pressed={pagesOpen}
-                onClick={() => setPagesOpen((open) => !open)}
-                size="sm"
+                className="size-11 @sm/bar:size-9"
+                size="icon"
+                tooltip={tCommon("pages")}
                 type="button"
                 variant="ghost"
+                {...pagesPress}
               >
                 <HugeIcons aria-hidden="true" icon={Layout01Icon} />
-                <span className="@max-sm/bar:sr-only">{tCommon("pages")}</span>
               </Button>
               <PageCounter
                 current={current}
@@ -225,15 +233,20 @@ export function ExamFooter({ canvas, onZoom }: ExamFooterProps) {
                 }
                 total={total}
               />
-            </>
-          )}
+            </div>
+          </>
+        )}
+        <ButtonGroup
+          className="col-start-3 row-start-1 justify-self-end"
+          variant="ghost"
+        >
           <Button
             aria-pressed={grid}
+            className="size-11 @sm/bar:size-9"
             onClick={toggleGrid}
-            size="icon-sm"
+            size="icon"
             tooltip={t("grid")}
             type="button"
-            variant="ghost"
           >
             <HugeIcons aria-hidden="true" icon={GridViewIcon} />
           </Button>
@@ -242,14 +255,13 @@ export function ExamFooter({ canvas, onZoom }: ExamFooterProps) {
             className="@max-sm/bar:hidden"
             disabled={!canFullscreen}
             onClick={toggleFullscreen}
-            size="icon-sm"
+            size="icon"
             tooltip={tCommon("fullscreen")}
             type="button"
-            variant="ghost"
           >
             <HugeIcons aria-hidden="true" icon={FullScreenIcon} />
           </Button>
-        </div>
+        </ButtonGroup>
       </div>
     </footer>
   );

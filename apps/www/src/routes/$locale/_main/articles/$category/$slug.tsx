@@ -241,7 +241,8 @@ function ArticlePage() {
       section="articles"
     >
       <PageOutlineProvider>
-        <Page>
+        {/* A article reads in the column: its header, title, body and footer share one 3xl frame. */}
+        <Page width="column">
           <ContentHeader
             breadcrumb={
               <BreadcrumbHeaderPath
@@ -281,7 +282,7 @@ function ArticlePage() {
           <PageBody>
             {headings.length === 0 ? <ComingSoon /> : article.body}
           </PageBody>
-          <PageFooter rule>
+          <PageFooter>
             <DeferredComments key={`comments:${filePath}`} slug={filePath} />
           </PageFooter>
           <SheetEntry contextTitle={metadata.title} key={`nina:${filePath}`} />

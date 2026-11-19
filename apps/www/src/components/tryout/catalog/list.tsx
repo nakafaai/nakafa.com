@@ -2,6 +2,7 @@ import { ArrowRight02Icon } from "@hugeicons/core-free-icons";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Tile, TileIcon } from "@repo/design-system/components/ui/tile";
 import type { TileLook } from "@repo/design-system/lib/look";
+import { rowLinkVariants } from "@repo/design-system/lib/row";
 import { cn } from "cn";
 import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
@@ -44,12 +45,10 @@ export function TryoutList({ emptyLabel, rows }: TryoutListProps) {
   }
 
   return (
-    <section className="bg-card text-card-foreground overflow-hidden rounded-xl border shadow-sm">
-      <div className="grid divide-y">
-        {Arr.map(rows, (row) => (
-          <TryoutRow key={row.key} row={row} />
-        ))}
-      </div>
+    <section className="bg-card text-card-foreground divide-y overflow-hidden rounded-xl border shadow-sm">
+      {Arr.map(rows, (row) => (
+        <TryoutRow key={row.key} row={row} />
+      ))}
     </section>
   );
 }
@@ -57,40 +56,31 @@ export function TryoutList({ emptyLabel, rows }: TryoutListProps) {
 /** Renders one production try-out list row. */
 function TryoutRow({ row }: { row: TryoutListRow }) {
   return (
-    <TryoutPageLink
-      className="group hover:bg-accent hover:text-accent-foreground flex items-center gap-3 p-4 transition-colors ease-out"
-      {...row.address}
-    >
-      <div className="grid w-full gap-4">
-        <div className="flex flex-1 items-start gap-3">
-          <Tile seed={row.visual.seed} shift={row.visual.shift}>
-            <TileIcon icon={row.visual.icon} />
-          </Tile>
-
-          <div className="-mt-1 flex min-w-0 flex-1 flex-col gap-0.5">
-            <div className="flex min-w-0 items-center gap-2">
-              <h2
-                className="min-w-0 truncate"
-                title={typeof row.title === "string" ? row.title : undefined}
-              >
-                {row.title}
-              </h2>
-              <TryoutRowStatus status={row.status} />
-            </div>
-            <TryoutRowMeta meta={row.meta} />
-            <TryoutRowDescription description={row.description} />
-          </div>
-
-          <HugeIcons
-            className={cn(
-              "shrink-0 opacity-0 transition-opacity ease-out",
-              "group-hover:opacity-100",
-              row.current && "opacity-100"
-            )}
-            icon={ArrowRight02Icon}
-          />
+    <TryoutPageLink className={rowLinkVariants()} {...row.address}>
+      <Tile seed={row.visual.seed} shift={row.visual.shift}>
+        <TileIcon icon={row.visual.icon} />
+      </Tile>
+      <div className="-mt-1 flex min-w-0 flex-1 flex-col gap-0.5">
+        <div className="flex min-w-0 items-center gap-2">
+          <h2
+            className="min-w-0 truncate"
+            title={typeof row.title === "string" ? row.title : undefined}
+          >
+            {row.title}
+          </h2>
+          <TryoutRowStatus status={row.status} />
         </div>
+        <TryoutRowMeta meta={row.meta} />
+        <TryoutRowDescription description={row.description} />
       </div>
+      <HugeIcons
+        className={cn(
+          "shrink-0 opacity-0 transition-opacity ease-out",
+          "group-hover:opacity-100",
+          row.current && "opacity-100"
+        )}
+        icon={ArrowRight02Icon}
+      />
     </TryoutPageLink>
   );
 }

@@ -6,7 +6,8 @@ import type { Page } from "@playwright/test";
  * and underline stand on the x of the header's first letter, and so does every column of the body: a rail's search,
  * its tabs and its rows, and a table's card, with the right edge mirroring it. A header holds at most two controls, a ButtonGroup
  * counting as one, and its actions never cut its path. Reads all of it from what is drawn, so a page cannot pass by
- * its class names: a text clipped by a scroller counts only as far as the scroller shows it.
+ * its class names: a text clipped by a scroller counts only as far as the scroller shows it. A reading body is one
+ * frame too: no paragraph, heading or list item in it is narrower than the body.
  */
 export function readFrameProblems(page: Page) {
   return page.evaluate(async () => {
@@ -260,6 +261,45 @@ export function readFrameProblems(page: Page) {
         )
         .map((crumb) => `the path is cut at ${name(crumb)}`);
 
+    /**
+     * The owner's rule (17 Nov): a reading body is one frame. Its paragraphs and headings span the body's whole column
+     * and its list items run to the column's far edge, so no text block draws a narrower frame of its own. What stands in
+     * a card, a figure, a table, a quote or a list item reads in its own box and is left alone.
+     */
+    const readingProblems = () => {
+      const article = Array.from(
+        document.querySelectorAll('[data-slot="page-body"]')
+      ).find((element) => isDrawn(element) && !standsApart(element));
+      if (article === undefined) {
+        return [];
+      }
+      const box = article.getBoundingClientRect();
+      const style = getComputedStyle(article);
+      const from = box.left + Number.parseFloat(style.paddingLeft);
+      const to = box.right - Number.parseFloat(style.paddingRight);
+      const ownBox = "[data-slot],figure,table,blockquote,aside,details,li";
+      const inFlow = (element: Element) => {
+        const holder = element.parentElement?.closest(ownBox) ?? null;
+        return (
+          holder === null || holder === article || !article.contains(holder)
+        );
+      };
+      const blocks = Array.from(article.querySelectorAll("p,h2,h3,li"))
+        .filter((element) => isDrawn(element) && inFlow(element))
+        .flatMap((element) => {
+          const reach = element.getBoundingClientRect();
+          const short = element.matches("li")
+            ? reach.right < to - tolerance
+            : reach.left > from + tolerance || reach.right < to - tolerance;
+          return short
+            ? [
+                `${name(element)} reads ${Math.round(reach.left)} to ${Math.round(reach.right)} in a body of ${Math.round(from)} to ${Math.round(to)}`,
+              ]
+            : [];
+        });
+      return blocks.slice(0, 3);
+    };
+
     const header = Array.from(
       document.querySelectorAll('[data-slot="page-header"]')
     ).find(isDrawn);
@@ -282,6 +322,7 @@ export function readFrameProblems(page: Page) {
         ? [`the header row is ${Math.round(edge.width)} px wide`]
         : []),
       ...bodyProblems(edge),
+      ...readingProblems(),
       ...tabProblems(header, start),
       ...edgeProblems(header, start, end),
       ...controlProblems(header),

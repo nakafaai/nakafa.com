@@ -59,6 +59,7 @@ import {
   getTan,
 } from "@repo/math/angles";
 import { Array as Arr, Option } from "effect";
+import { useTranslations } from "use-intl";
 
 /**
  * The card of the projectile lesson at its default launch, drawn before its lab
@@ -314,10 +315,11 @@ export function CellPlaceholder({
   title: string;
   labels: {
     chooseMode: string;
-    items: readonly { tab: string }[];
+    items: readonly [{ caption: string; tab: string }, ...{ tab: string }[]];
     viewLabel: string;
   };
 }) {
+  const t = useTranslations("Common");
   return (
     <VisualCard>
       <VisualCardHeader description={description} title={title} />
@@ -343,6 +345,14 @@ export function CellPlaceholder({
         render={<section />}
       />
       <VisualCardSceneActions inert />
+      <VisualCardFooter>
+        <VisualCardFacts>
+          <VisualFact
+            label={t("note")}
+            value={labels.items[BIOLOGY_DEFAULT_ITEM_INDEX].caption}
+          />
+        </VisualCardFacts>
+      </VisualCardFooter>
     </VisualCard>
   );
 }

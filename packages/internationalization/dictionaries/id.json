@@ -2066,7 +2066,6 @@
     "menu-scope": "Cakupan",
     "menu-scoring": "Penilaian",
     "menu-sort": "Urutkan",
-    "menu-sources": "Sumber",
     "menu-speed": "Kecepatan",
     "menu-test": "Tes",
     "menu-theme": "Tema",
@@ -2217,7 +2216,6 @@
     "units": "Unit",
     "updated": "Diperbarui",
     "version": "Versi {version}",
-    "videos": "Video",
     "view-options": "Lihat pilihan",
     "vintage": "Antik",
     "what-do-you-want-to-learn": "Mau belajar apa hari ini?",
@@ -2445,7 +2443,7 @@
     "route-metadata-description": "Try out {name} berwaktu dengan skor langsung setelah selesai. Gratis dan tanpa batas di Nakafa.",
     "search-title": "Try Out {name} Gratis",
     "track-metadata-description": "Pilih set try out {exam} di Nakafa: berwaktu, dengan skor langsung setelah selesai.",
-    "set-metadata-description": "Kerjakan {count} soal {exam} {set} gratis: intip contoh soal lengkap dengan jawaban dan pembahasan, lalu try out berwaktu dengan skor langsung.",
+    "set-metadata-description": "Kerjakan {count} soal {exam} {set} gratis: try out berwaktu dengan skor langsung.",
     "section-metadata-description": "Latihan {section} dari {set} {exam} di Nakafa: try out berwaktu dengan skor langsung setelah selesai.",
     "open-set-cta": "Lihat set",
     "list-empty": "Belum ada try out yang tampil sekarang.",
@@ -2510,9 +2508,6 @@
       "restart-cta": "Ulangi"
     },
     "set-search-title": "{count} Soal Try Out {exam} {set} Gratis",
-    "samples-title": "Contoh soal dan pembahasan",
-    "samples-description": "Intip soal-soal pertama set ini, lengkap dengan jawaban dan pembahasannya.",
-    "siblings-title": "Set lainnya",
     "attempt-controls": "Pilihan percobaan",
     "verdict": "{state, select, correct {Benar} incorrect {Salah} partial {Sebagian benar} pending {Menunggu dinilai} other {Belum dijawab}}",
     "practice-cta": "Latihan",
@@ -4093,18 +4088,24 @@
         "choose": "Pilih tampilan bakteri",
         "view": "Model struktur bakteri",
         "shape": {
+          "caption": "Kokus berbentuk bulat, basil berbentuk batang, dan sebagian bakteri berbentuk spiral.",
           "tab": "Bentuk"
         },
         "inside": {
+          "caption": "DNA bakteri berada di nukleoid, dan ribosom membuat protein.",
           "tab": "Isi sel"
         },
         "wall": {
+          "caption": "Bakteri Gram-negatif memiliki membran luar dan lapisan peptidoglikan yang lebih tipis.",
           "tab": "Dinding"
         },
         "title": "Sel bakteri",
         "description": "Lihat bakteri dari luar, dari dalam, dan lewat dindingnya."
       }
     },
+    "tryout-demo-intro": "Operasi ini menggunakan bilangan bulat positif m.",
+    "tryout-demo-given": "Jika ",
+    "tryout-demo-find": ", berapa nilai ",
     "tryout-title": "Skor try out langsung keluar",
     "tryout-lead": "Mau ulang? Tinggal ulang.",
     "nina-title": "Nina tahu bagian mana yang kamu maksud",
@@ -4401,8 +4402,9 @@
     "calculator-credits": "Kredit AI per bulan",
     "calculator-storage": "Penyimpanan Drive",
     "calculator-monthly": "Per bulan",
-    "calculator-total": "Ditagih setiap {months} bulan",
+    "calculator-total": "Ditagih tiap {months, plural, one {bulan} other {# bulan}}",
     "calculator-unit": "per akun per bulan",
+    "calculator-unit-label": "Per akun per bulan",
     "addons-title": "Tambahan",
     "addons-lead": "Beli kredit AI atau penyimpanan tambahan kapan saja, di samping paketmu.",
     "addon-credits-title": "{count, number} kredit AI",

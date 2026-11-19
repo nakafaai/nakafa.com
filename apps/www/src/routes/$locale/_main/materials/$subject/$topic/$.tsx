@@ -274,7 +274,8 @@ function MaterialPage() {
         section="material"
       />
       <PageOutlineProvider>
-        <Page>
+        {/* A lesson reads in the column: its header, title, body and footer share one 3xl frame. */}
+        <Page width="column">
           <ContentHeader breadcrumb={<MaterialBreadcrumb />}>
             <OpenContent
               content={page.content}
@@ -306,7 +307,7 @@ function MaterialPage() {
             publicPath={route.publicPath}
           />
           <MaterialPagination />
-          <PageFooter rule>
+          <PageFooter>
             <DeferredComments slug={route.contentKey} />
           </PageFooter>
           <SheetEntry contextTitle={metadata.title} />

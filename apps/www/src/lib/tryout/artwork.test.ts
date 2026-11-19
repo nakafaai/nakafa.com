@@ -10,28 +10,18 @@ import {
 } from "@/lib/tryout/artwork";
 
 describe("try-out artwork", () => {
-  it.effect.each(["en", "id", "de"] as const)(
-    "draws each exam card with that exam's own design, the Aufnahmeprüfung with TU Darmstadt's Studienkolleg's mark, in %s",
+  it.effect.each(["en", "id", "de", "ms"] as const)(
+    "keeps the Darmstadt design off the general entrance exam in %s",
     (appLocale) =>
       Effect.gen(function* () {
-        for (const [countryKey, examKey, artwork] of [
-          [
-            "germany",
-            "entrance-examination",
-            "/open-graph/tryout/germany/en-entrance-examination.png",
-          ],
-          ["indonesia", "snbt", "/open-graph/tryout/indonesia/en-snbt.png"],
-          ["indonesia", "tka", "/open-graph/tryout/indonesia/en-tka.png"],
-        ] as const) {
-          expect(
-            (yield* resolveTryoutExamArtwork({
-              appLocale,
-              countryKey,
-              examKey,
-              publicPath: `try-out/${countryKey}/${examKey}`,
-            })).cardImageSrc
-          ).toBe(artwork);
-        }
+        expect(
+          yield* resolveTryoutExamArtwork({
+            appLocale,
+            countryKey: "germany",
+            examKey: "entrance-examination",
+            publicPath: "try-out/germany/entrance-examination",
+          })
+        ).toEqual({ socialImageSrc: `/${appLocale}/og/image.png` });
       })
   );
 

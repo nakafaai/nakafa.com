@@ -1,8 +1,6 @@
 import { makeBreadcrumbNodes } from "@repo/seo/jsonld/node";
 import { createFileRoute, notFound } from "@tanstack/react-router";
-import { RefContent } from "@/components/shared/content/references";
 import { PageBody } from "@/components/shared/page/body";
-import { PageFooter } from "@/components/shared/page/footer";
 import { Page } from "@/components/shared/page/frame";
 import { TryoutCountryPageClient } from "@/components/tryout/catalog/country";
 import { TryoutTrailHeader } from "@/components/tryout/catalog/trail";
@@ -52,9 +50,6 @@ function TryoutCountryPage() {
       <PageBody>
         <TryoutCountryPageClient page={{ exams: route.exams }} />
       </PageBody>
-      <PageFooter>
-        <RefContent />
-      </PageFooter>
     </Page>
   );
 }

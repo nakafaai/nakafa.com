@@ -13,6 +13,11 @@ const columnRoutes = [
   "/en/articles",
   "/en/articles/politics",
 ];
+// Reading pages, whose header, title, body and footer all stand in the column.
+const readingRoutes = [
+  "/en/subjects/chemistry/structure-matter/isotope",
+  "/en/articles/politics/merah-putih-cabinet-analysis",
+];
 const tryoutSetRoute = "/en/try-out/indonesia/snbt/2027/utbk/set-1";
 
 const visit = Effect.fn("NakafaE2E.visitLayoutRoute")(function* (
@@ -63,7 +68,7 @@ const verifyContentColumn = Effect.fn("NakafaE2E.verifyContentColumn")(
 
 /**
  * A try-out page's least height reaches the screen's bottom, so a locked review ends there. A set page
- * with its samples runs past the screen, so its least height is measured, not its bottom.
+ * can run past the screen, so its least height is measured, not its bottom.
  */
 const verifyTryoutHeight = Effect.fn("NakafaE2E.verifyTryoutHeight")(function* (
   page: Page
@@ -86,6 +91,57 @@ const verifyTryoutHeight = Effect.fn("NakafaE2E.verifyTryoutHeight")(function* (
   yield* Effect.sync(() => expect(heights.reach).toBe(heights.screen));
 });
 
+/**
+ * A reading page's header contents, title, body and footer contents share the same centered column.
+ */
+const verifyReadingColumn = Effect.fn("NakafaE2E.verifyReadingColumn")(
+  function* (page: Page, href: string) {
+    yield* verifyContentColumn(page, href);
+    const rows = yield* Effect.promise(() =>
+      page.evaluate(() => {
+        const boxOf = (element: Element | null | undefined) => {
+          const box = element?.getBoundingClientRect();
+          return {
+            left: Math.round(box?.left ?? 0),
+            width: Math.round(box?.width ?? 0),
+          };
+        };
+        return {
+          body: boxOf(document.querySelector('[data-slot="page-body"]')),
+          footer: boxOf(
+            document.querySelector('[data-slot="page-footer"] > div')
+          ),
+          header: boxOf(
+            document.querySelector(
+              '[data-slot="page-header"] [class*="@container/header"]'
+            )
+          ),
+          title: boxOf(document.querySelector("main h1")?.parentElement),
+        };
+      })
+    );
+    yield* Effect.sync(() => {
+      expect(rows.title, "the title's row").toEqual(rows.body);
+      expect(rows.header, "the header row").toEqual(rows.body);
+      expect(rows.footer, "the footer row").toEqual(rows.body);
+    });
+  }
+);
+
+for (const width of [320, 390, 768, 1024, 1440, 1920]) {
+  test.describe(`Reading column at ${width}px`, () => {
+    test.use({ viewport: { height: 900, width } });
+
+    for (const href of readingRoutes) {
+      test(`${href} reads in the shared column`, async ({ page }) => {
+        await Effect.runPromise(
+          withObservedPageErrors(page, verifyReadingColumn(page, href))
+        );
+      });
+    }
+  });
+}
+
 for (const width of [390, 1440]) {
   test.describe(`Content column at ${width}px`, () => {
     test.use({ viewport: { height: 900, width } });
@@ -97,6 +153,18 @@ for (const width of [390, 1440]) {
         );
       });
     }
+
+    test("the catalog grid fits the consumer column", async ({ page }) => {
+      await Effect.runPromise(visit(page, "/en/curricula"));
+      const grid = page.locator('[data-slot="catalog-grid"]');
+      await expect(grid).toBeVisible();
+      expect(
+        await grid.evaluate(
+          (element) =>
+            getComputedStyle(element).gridTemplateColumns.split(" ").length
+        )
+      ).toBe(width === 390 ? 1 : 3);
+    });
   });
 
   test.describe(`Try-out page at ${width}px`, () => {

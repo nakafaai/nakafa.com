@@ -15,7 +15,7 @@ export function PageHeaderLabel({ children }: { children: ReactNode }) {
 /**
  * The one header of every page of the app and of School, one row high: the sidebar's trigger on a phone, the page's
  * path or title, an optional centre (`PageCenter`) and the page's actions (`PageActions`). The bar and its border run
- * the screen's full width, and its row is one row of the page, so the path and the actions stand on the edges of the
+ * full width of the available page, and its row is one row of the page, so its path and actions stand on the edges of the
  * body under it at every width. It is sticky and one control high from the first paint, so actions that arrive later
  * move nothing. A page whose path already shows its name passes `title`, which only assistive technology reads; a page
  * whose body draws its own heading passes none.
