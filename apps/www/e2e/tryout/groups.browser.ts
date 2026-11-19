@@ -264,7 +264,15 @@ for (const href of SET_TABLES) {
               getComputedStyle(name).textOverflow === "ellipsis")
           );
         }).length;
+        const frame = element.closest('[data-slot="page-list"]');
+        const padding =
+          frame === null
+            ? 0
+            : Number.parseFloat(getComputedStyle(frame).paddingBottom);
         return {
+          clearance: window.innerHeight - edges.bottom - padding,
+          pageScroll:
+            document.documentElement.scrollHeight - window.innerHeight,
           cutBadges: badges,
           heads: heads.length,
           hidden,
@@ -288,6 +296,8 @@ for (const href of SET_TABLES) {
       expect(table.rows).toBeGreaterThan(0);
       expect(table.short).toBe(0);
       expect(table.inside).toBe(true);
+      expect(Math.abs(table.clearance)).toBeLessThanOrEqual(1);
+      expect(table.pageScroll).toBeLessThanOrEqual(1);
       expect(table.lastBesideMenu).toBe(true);
       expect(table.cutBadges).toBe(0);
       // On a phone the card must scroll. A desktop may also scroll inside the 3xl column.

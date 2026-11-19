@@ -7,6 +7,7 @@ import { useTranslations } from "use-intl";
 import {
   pageBodyVariants,
   pageRhythmVariants,
+  pageViewSpacingVariants,
 } from "@/components/shared/page/width";
 import { TableViews } from "@/components/shared/table/views";
 import { ClassHeader } from "@/components/tenant/classes/header";
@@ -69,7 +70,8 @@ function ClassScroll({ children }: { children: ReactNode }) {
         className={cn(
           pageBodyVariants(),
           pageRhythmVariants(),
-          "flex flex-1 flex-col gap-6"
+          pageViewSpacingVariants(),
+          "flex flex-1 flex-col"
         )}
       >
         {children}

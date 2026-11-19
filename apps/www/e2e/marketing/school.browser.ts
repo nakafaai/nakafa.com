@@ -112,21 +112,32 @@ const verifySchoolLanding = Effect.fn("NakafaE2E.verifySchoolLanding")(
     const types = paper.getByRole("combobox", { name: "Question types" });
     // WebKit's scrollIntoView skips a part the page has not drawn yet, so the page steps to it as a reader does.
     yield* stepTo(page, types);
+    yield* Effect.promise(() =>
+      page.emulateMedia({ reducedMotion: "no-preference" })
+    );
+    const triggerWidth = () =>
+      types.evaluate((trigger) => trigger.getBoundingClientRect().width);
+    const width = yield* Effect.promise(triggerWidth);
     yield* Effect.promise(() => types.click());
     const menu = page.getByRole("listbox");
     yield* Effect.promise(() =>
       expect(menu.getByRole("option")).toHaveCount(TYPES)
     );
+    const openWidth = yield* Effect.promise(triggerWidth);
+    expect(openWidth).toBeCloseTo(width);
     yield* Effect.promise(() =>
       menu.getByRole("option", { name: "True or false table" }).click()
     );
     yield* Effect.promise(() =>
       expect(paper.getByText("Momentum is measured in joules.")).toBeVisible()
     );
+    const selectedWidth = yield* Effect.promise(triggerWidth);
+    expect(selectedWidth).toBeCloseTo(width);
     yield* Effect.promise(() => types.click());
     yield* Effect.promise(() =>
       menu.getByRole("option", { name: "Multiple choice", exact: true }).click()
     );
+    yield* Effect.promise(() => page.emulateMedia({ reducedMotion: "reduce" }));
     const answer = paper.getByRole("radio", { name: MOMENTUM });
     yield* Effect.promise(() => answer.click());
     yield* Effect.promise(() => expect(answer).toBeChecked());

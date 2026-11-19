@@ -1,4 +1,4 @@
-import { type Page, test } from "@playwright/test";
+import { expect, type Page, test } from "@playwright/test";
 import { Effect } from "effect";
 import { signInLearner } from "@/e2e/support/learner";
 import { expectPopupOpensWhole } from "@/e2e/support/opening";
@@ -13,7 +13,7 @@ import { waitUntilTakenOver } from "@/e2e/support/window";
 /** A dialog on a desktop, and the drawer it becomes on a phone. */
 const viewports = [
   { height: 900, name: "desktop", width: 1440 },
-  { height: 844, name: "phone", width: 390 },
+  { height: 844, name: "phone", width: 320 },
 ];
 
 /** The popups of a school that read what they show, each with the page and the button that opens it. */
@@ -69,6 +69,32 @@ for (const viewport of viewports) {
       String(new URL("/en/notifications", baseURL)),
       "Preferences"
     );
+    const panel = page.getByRole("dialog", { name: "Preferences" });
+    await expect(panel.getByRole("switch").first()).toBeVisible();
+    const dimensions = await panel.evaluate((sheet) => {
+      const card = sheet.querySelector('[data-slot="table-card"]');
+      const viewport = card?.querySelector(
+        '[data-slot="scroll-area-viewport"]'
+      );
+      const footer = sheet.querySelector('[data-slot="sheet-footer"]');
+      const body = sheet.querySelector('[data-slot="sheet-frame"]');
+      if (!(card && viewport && footer && body)) {
+        return null;
+      }
+      return {
+        gutter: Math.round(
+          footer.getBoundingClientRect().top -
+            card.getBoundingClientRect().bottom
+        ),
+        sheetScroll: body.scrollHeight - body.clientHeight,
+        tableOverflow: viewport.scrollWidth - viewport.clientWidth,
+      };
+    });
+    expect(dimensions).toEqual({
+      gutter: 16,
+      sheetScroll: 0,
+      tableOverflow: 0,
+    });
     await context.close();
   });
 }

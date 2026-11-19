@@ -58,7 +58,7 @@ export function StartPrompt({
               <>
                 <MessageScrollerItem messageId={prompt.id} scrollAnchor>
                   <Message align="end">
-                    <NinaPrompt files={prompt.files}>
+                    <NinaPrompt files={prompt.files} reserveActions>
                       <DeferredLearnerText>{prompt.text}</DeferredLearnerText>
                     </NinaPrompt>
                   </Message>

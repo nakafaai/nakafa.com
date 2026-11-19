@@ -538,7 +538,7 @@
  * hover that grows the control. */
 @utility pressable {
   @media (prefers-reduced-motion: no-preference) {
-    &:active:not(
+    &:is(:active, [data-press][data-pressed]):not(
         :disabled,
         [aria-disabled="true"],
         [data-disabled],

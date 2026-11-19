@@ -30,10 +30,13 @@ export function NinaPrompt({
   actions,
   children,
   files = [],
+  reserveActions = false,
 }: {
   actions?: ReactNode;
   children: ReactNode;
   files?: readonly FileUIPart[];
+  /** Keep the action row while a submitted prompt becomes a saved message. */
+  reserveActions?: boolean;
 }) {
   return (
     <MessageContent>
@@ -49,7 +52,9 @@ export function NinaPrompt({
           <NinaWords>{children}</NinaWords>
         </BubbleContent>
       </Bubble>
-      <MessageFooter className="h-9">{actions}</MessageFooter>
+      {actions !== undefined || reserveActions ? (
+        <MessageFooter className="h-9">{actions}</MessageFooter>
+      ) : null}
     </MessageContent>
   );
 }

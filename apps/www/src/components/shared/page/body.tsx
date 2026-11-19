@@ -4,6 +4,7 @@ import {
   pageBodyVariants,
   pageRhythmVariants,
   pageRowVariants,
+  pageViewSpacingVariants,
 } from "@/components/shared/page/width";
 import { tableCardVariants } from "@/components/shared/table/card";
 
@@ -76,7 +77,8 @@ export function PageList({
       className={cn(
         pageRowVariants(),
         pageRhythmVariants(),
-        "flex min-h-0 flex-1 flex-col gap-3"
+        pageViewSpacingVariants(),
+        "flex min-h-0 flex-1 flex-col"
       )}
       data-slot="page-list"
     >

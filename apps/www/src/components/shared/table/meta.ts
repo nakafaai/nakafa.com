@@ -14,6 +14,7 @@ declare module "@tanstack/react-table" {
     TValue extends CellData = CellData,
   > {
     readonly align?: "end" | "figure" | "menu";
+    readonly compact?: boolean;
     /** What the column's head filters the rows by. */
     readonly filter?: HeadFilter;
     /** Whether a row's menu does not answer yet, such as a row the server has not confirmed. */

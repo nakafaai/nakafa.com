@@ -49,7 +49,13 @@ export function DataTableHead<TData extends RowData>({
 }) {
   const common = useTranslations("Common");
   const column = header.column;
-  const { align, filter, title = "", wide } = column.columnDef.meta ?? {};
+  const {
+    align,
+    compact,
+    filter,
+    title = "",
+    wide,
+  } = column.columnDef.meta ?? {};
   const place = placeOf(index, align);
 
   if (header.isPlaceholder || filter === undefined) {
@@ -59,7 +65,7 @@ export function DataTableHead<TData extends RowData>({
       </ColumnHead>
     );
   }
-  const sizing = columnSizing(filter, title, wide);
+  const sizing = columnSizing(filter, title, wide, compact);
   return (
     <ColumnHead
       menu={menuPlaceOf(
@@ -197,10 +203,17 @@ function SortingHead<TData extends RowData>({
 function columnSizing(
   filter: HeadFilter,
   title: string,
-  wide: boolean | undefined
+  wide: boolean | undefined,
+  compact: boolean | undefined
 ) {
   if (wide === true) {
     return { width: "wide" as const };
+  }
+  if (compact === true) {
+    return {
+      width:
+        filter.kind === "text" ? ("shortText" as const) : ("compact" as const),
+    };
   }
   if (filter.kind === "choice") {
     return {

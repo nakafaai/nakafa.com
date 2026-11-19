@@ -56,6 +56,8 @@ interface ColumnSpec<TData extends RowData, TValue extends CellData> {
   readonly cell?: ColumnDefTemplate<
     CellContext<typeof dataTableFeatures, TData, TValue>
   >;
+  /** Whether the cell holds short content, such as a switch. */
+  readonly compact?: boolean;
   readonly header: string;
   readonly id: string;
   /** Whether the cell holds more than one value's width, such as a room's state beside its seats. */
@@ -92,7 +94,7 @@ export type TableColumn<TData extends RowData> = AnyColumn<TData> & {
 /** The part every column of data shares: how it reads a row, draws its cell, and names its head. */
 function dataColumn<TData extends RowData, TValue extends CellData>(
   read: AccessorFn<TData, TValue>,
-  { align, cell, header, id, wide }: ColumnSpec<TData, TValue>,
+  { align, cell, compact, header, id, wide }: ColumnSpec<TData, TValue>,
   filter: HeadFilter
 ) {
   return {
@@ -103,6 +105,7 @@ function dataColumn<TData extends RowData, TValue extends CellData>(
       filter,
       title: header,
       ...(align === undefined ? {} : { align }),
+      ...(compact === undefined ? {} : { compact }),
       ...(wide === undefined ? {} : { wide }),
     },
     ...(cell === undefined ? {} : { cell }),

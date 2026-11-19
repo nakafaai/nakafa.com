@@ -1,3 +1,4 @@
+import { cn } from "cn";
 import { Activity, type ReactNode } from "react";
 import { useTranslations } from "use-intl";
 import { readQuestionIds } from "@/components/player/ids";
@@ -83,11 +84,23 @@ export function PlayerQuestionHeader({
  * The prompt of one question, under its head. The card holds every inset, so the document inside draws
  * flush.
  */
-export function PlayerQuestionPrompt({ children }: { children: ReactNode }) {
-  return <section className="my-6">{children}</section>;
+export function PlayerQuestionPrompt({
+  children,
+  className,
+}: {
+  children: ReactNode;
+  className?: string;
+}) {
+  return <section className={cn("my-6", className)}>{children}</section>;
 }
 
 /** The answer of one question, under its prompt: its options, or its fields. */
-export function PlayerQuestionAnswer({ children }: { children: ReactNode }) {
-  return <section className="my-8">{children}</section>;
+export function PlayerQuestionAnswer({
+  children,
+  className,
+}: {
+  children: ReactNode;
+  className?: string;
+}) {
+  return <section className={cn("my-8", className)}>{children}</section>;
 }

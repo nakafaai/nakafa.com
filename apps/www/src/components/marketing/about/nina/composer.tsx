@@ -13,7 +13,7 @@ export function NinaPromptTurn({
   return (
     <div className="flex min-w-0 flex-col gap-6 pb-6">
       <Message align="end">
-        <NinaPrompt files={prompt.files}>
+        <NinaPrompt files={prompt.files} reserveActions>
           <DeferredLearnerText>{prompt.text}</DeferredLearnerText>
         </NinaPrompt>
       </Message>

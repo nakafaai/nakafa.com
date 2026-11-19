@@ -10,9 +10,9 @@ export const PRESSED_ATTRIBUTE = "data-pressed";
  * The props of a control drawn on the server that answers its own presses, whose
  * press must not be lost before React takes the page over, as the app's
  * pre-paint script keeps it. Spread them on the control. `data-press` lets that script mark the
- * pressed control, and when React mounts it, a marked control loses its mark and
- * runs `onPress`. After that `onClick` clears the mark that the script sets on
- * every press. The mark is an attribute React did not render, so the control
+ * pressed control. React takes it out of the script's reach on mount and
+ * replays a marked press. A click React handles before that effect clears the
+ * mark itself. The mark is an attribute React did not render, so the control
  * hydrates with `suppressHydrationWarning`.
  */
 export function useMissedPress<Control extends HTMLElement>(
@@ -21,11 +21,14 @@ export function useMissedPress<Control extends HTMLElement>(
   const ref = useRef<Control>(null);
   const replay = useEffectEvent(() => {
     const control = ref.current;
-    if (control === null || !control.hasAttribute(PRESSED_ATTRIBUTE)) {
+    if (control === null) {
       return;
     }
-    control.removeAttribute(PRESSED_ATTRIBUTE);
-    onPress();
+    control.removeAttribute(PRESS_ATTRIBUTE);
+    if (control.hasAttribute(PRESSED_ATTRIBUTE)) {
+      control.removeAttribute(PRESSED_ATTRIBUTE);
+      onPress();
+    }
   });
 
   useEffect(() => {

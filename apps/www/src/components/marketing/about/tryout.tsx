@@ -1,5 +1,4 @@
 import type { TryoutQuestionBody as Question } from "@repo/backend/confect/tryouts/runtime/spec";
-import { Card } from "@repo/design-system/components/ui/card";
 import { Array as Arr } from "effect";
 import { useTranslations } from "use-intl";
 import {
@@ -8,8 +7,8 @@ import {
   TryoutDemoQuestion,
 } from "@/components/marketing/about/tryout/demo";
 import {
+  FeatureCard,
   FeatureLead,
-  FeatureProduct,
   FeatureRow,
   FeatureText,
   FeatureTitle,
@@ -82,21 +81,19 @@ export function Tryout() {
           <FeatureTitle>{t("tryout-title")}</FeatureTitle>
           <FeatureLead>{t("tryout-lead")}</FeatureLead>
         </FeatureText>
-        <FeatureProduct>
-          <Card className="min-w-0 gap-0 px-(--card-spacing)">
-            <PlayerQuestionHeader number={1} />
-            <PlayerQuestionPrompt>
-              <TryoutQuestionBody body={question} />
-            </PlayerQuestionPrompt>
-            <PlayerQuestionAnswer>
-              <TryoutDemoQuestion
-                answer={question.key}
-                id="home-tryout-response"
-                interaction={question.interaction}
-              />
-            </PlayerQuestionAnswer>
-          </Card>
-        </FeatureProduct>
+        <FeatureCard>
+          <PlayerQuestionHeader number={1} />
+          <PlayerQuestionPrompt className="my-0">
+            <TryoutQuestionBody body={question} />
+          </PlayerQuestionPrompt>
+          <PlayerQuestionAnswer className="my-0">
+            <TryoutDemoQuestion
+              answer={question.key}
+              id="home-tryout-response"
+              interaction={question.interaction}
+            />
+          </PlayerQuestionAnswer>
+        </FeatureCard>
       </FeatureRow>
     </TryoutDemo>
   );
