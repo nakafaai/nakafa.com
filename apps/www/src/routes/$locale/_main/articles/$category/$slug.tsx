@@ -282,7 +282,7 @@ function ArticlePage() {
           <PageBody>
             {headings.length === 0 ? <ComingSoon /> : article.body}
           </PageBody>
-          <PageFooter rule>
+          <PageFooter>
             <DeferredComments key={`comments:${filePath}`} slug={filePath} />
           </PageFooter>
           <SheetEntry contextTitle={metadata.title} key={`nina:${filePath}`} />

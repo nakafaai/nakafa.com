@@ -7,7 +7,6 @@ const forward = <Ctx, Args, Returns>(handler: (ctx: Ctx, args: Args) => Promise<
 const definitions = ConvexFunctionDefinitions.buildForGroup<typeof import("../../../../tryouts/queries/catalog.spec")["default"]>(databaseSchema, groupLayer);
 
 export default {
-["getFeaturedQuestion"]: RegisteredConvexFunction.register({ ...definitions["getFeaturedQuestion"], handler: forward(definitions["getFeaturedQuestion"].handler) }),
 ["getMetadata"]: RegisteredConvexFunction.register({ ...definitions["getMetadata"], handler: forward(definitions["getMetadata"].handler) }),
 ["getLocalizedPath"]: RegisteredConvexFunction.register({ ...definitions["getLocalizedPath"], handler: forward(definitions["getLocalizedPath"].handler) }),
 ["getHubPage"]: RegisteredConvexFunction.register({ ...definitions["getHubPage"], handler: forward(definitions["getHubPage"].handler) }),

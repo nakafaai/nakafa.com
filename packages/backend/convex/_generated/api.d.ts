@@ -16053,13 +16053,6 @@ export declare const api: {
             }>;
           }
         >;
-        getFeaturedQuestion: FunctionReference<
-          "query",
-          "public",
-          { appLocale: "en" | "id" | "de" | "ms" },
-          | { body: string; kind: "question"; versionHash: string }
-          | { kind: "none" }
-        >;
         getGroupPage: FunctionReference<
           "query",
           "public",

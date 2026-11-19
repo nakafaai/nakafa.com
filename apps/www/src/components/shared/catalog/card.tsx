@@ -29,7 +29,7 @@ interface CatalogCardProps {
 
 /**
  * The grid of a catalog page's cards: one column on a phone, two from a body of 36rem and three from
- * 48rem, a step apart. It reads the body's width, which the sidebar and a pane narrow, so a card fills its
+ * 42rem, a step apart. It reads the body's width, which the sidebar and a pane narrow, so a card fills its
  * column at every width instead of floating in a wide one, and every catalog grid spaces its cards alike.
  * Its caller names the cards' action through `CatalogActionLabelContext`.
  */
@@ -42,7 +42,10 @@ export function CatalogGrid({
 }) {
   return (
     <div className={cn("@container", className)}>
-      <div className="grid grid-cols-1 gap-4 @xl:grid-cols-2 @3xl:grid-cols-3">
+      <div
+        className="grid grid-cols-1 gap-4 @xl:grid-cols-2 @2xl:grid-cols-3"
+        data-slot="catalog-grid"
+      >
         {children}
       </div>
     </div>

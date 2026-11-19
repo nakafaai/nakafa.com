@@ -3,6 +3,8 @@ import type { Ref } from "@confect/core";
 import type contents from "@repo/backend/confect/_generated/refs/contents";
 import { Tile, TileIcon } from "@repo/design-system/components/ui/tile";
 import type { TileLook } from "@repo/design-system/lib/look";
+import { rowLinkVariants } from "@repo/design-system/lib/row";
+import { HomeRowText } from "@/components/home/row";
 import { AddressLink } from "@/lib/routing/public/link";
 
 /**
@@ -37,21 +39,11 @@ export function MaterialRow({
   material: HomeMaterial;
 }) {
   return (
-    <AddressLink
-      address={material.href}
-      className="group hover:bg-accent hover:text-accent-foreground grid gap-3 p-4 transition-colors ease-out"
-    >
-      <div className="flex items-start gap-3">
-        <Tile seed={look.seed} shift={look.shift}>
-          <TileIcon icon={look.icon} />
-        </Tile>
-        <div className="-mt-1 flex min-w-0 flex-1 flex-col gap-0.5">
-          <h3 className="truncate">{material.title}</h3>
-          <span className="text-muted-foreground group-hover:text-accent-foreground truncate text-sm">
-            {material.description}
-          </span>
-        </div>
-      </div>
+    <AddressLink address={material.href} className={rowLinkVariants()}>
+      <Tile seed={look.seed} shift={look.shift}>
+        <TileIcon icon={look.icon} />
+      </Tile>
+      <HomeRowText description={material.description} title={material.title} />
     </AddressLink>
   );
 }

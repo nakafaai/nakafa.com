@@ -1,6 +1,5 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
 import { ReleaseError } from "@repo/backend/confect/contentRelease/error";
-import { appLocaleValidator } from "@repo/backend/confect/contentRelease/spec";
 import {
   publicTryoutCountryExamValidator,
   publicTryoutCountryValidator,
@@ -13,7 +12,6 @@ import {
   publicTryoutTrackValidator,
 } from "@repo/backend/confect/tryouts/queries/model";
 import {
-  featuredTryoutValidator,
   tryoutHubArgsValidator,
   tryoutLocalizedPathArgsValidator,
   tryoutMetadataArgsValidator,
@@ -37,18 +35,8 @@ const sectionPageValidator = Schema.Union([
   Schema.Struct(sectionPageFields),
 ]);
 
-/** Reads the one signed question demonstrated on the marketing landing page. */
+/** The signed routes and catalog pages available to try-out visitors. */
 export default GroupSpec.make()
-  .addFunction(
-    FunctionSpec.publicQuery({
-      name: "getFeaturedQuestion",
-      args: () => ({
-        appLocale: appLocaleValidator,
-      }),
-      returns: () => featuredTryoutValidator,
-      error: () => ReleaseError,
-    })
-  )
   .addFunction(
     FunctionSpec.publicQuery({
       name: "getMetadata",

@@ -1,5 +1,5 @@
 import { expect, type Page, test } from "@playwright/test";
-import { Effect } from "effect";
+import { Effect, Option } from "effect";
 import { saved, trackChanges } from "@/e2e/support/changes";
 import { createSchool, hostAddress, signInOwner } from "@/e2e/support/school";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
@@ -226,9 +226,16 @@ test.describe("at 1440", () => {
     await expect(tiles).toHaveCount(3);
   });
 
-  test("full screen enters and leaves", async ({ baseURL, page }) => {
+  test("full screen enters and leaves when the browser supports it", async ({
+    baseURL,
+    page,
+  }) => {
     await examOfThree(page, baseURL);
     const button = page.getByRole("button", { name: "Full screen" });
+    if (!(await page.evaluate(() => document.fullscreenEnabled))) {
+      await expect(button).toBeDisabled();
+      return;
+    }
     await button.click();
     await expect
       .poll(() => page.evaluate(() => document.fullscreenElement !== null))
@@ -250,6 +257,33 @@ test.describe("at 390", () => {
   }) => {
     await examOfThree(page, baseURL);
     await expect(page.getByRole("slider", { name: "Zoom" })).toBeHidden();
+    const footer = page.locator("[data-exam-footer]");
+    const teacher = footer.getByRole("button", { name: "For teachers" });
+    const gridButton = footer.getByRole("button", { name: "Grid view" });
+    for (const width of [320, 390]) {
+      await page.setViewportSize({ height: 844, width });
+      await expect(teacher).toBeVisible();
+      const boxes = Option.all({
+        bar: Option.fromNullishOr(await footer.boundingBox()),
+        end: Option.fromNullishOr(await gridButton.boundingBox()),
+        navigation: Option.fromNullishOr(
+          await footer.locator("[data-exam-navigation]").boundingBox()
+        ),
+        start: Option.fromNullishOr(await teacher.boundingBox()),
+      });
+      expect(Option.isSome(boxes), "all footer controls are visible").toBe(
+        true
+      );
+      const { bar, start, end, navigation } = Option.getOrThrow(boxes);
+      expect(start.width).toBe(end.width);
+      expect(start.height).toBe(end.height);
+      expect(start.x - bar.x).toBeCloseTo(
+        bar.x + bar.width - end.x - end.width
+      );
+      expect(navigation.x + navigation.width / 2).toBeCloseTo(
+        bar.x + bar.width / 2
+      );
+    }
     await page.getByRole("button", { name: "Grid view" }).click();
     const grid = page.getByRole("region", { name: "Grid view" });
     await expect(page.getByRole("dialog")).toHaveCount(0);

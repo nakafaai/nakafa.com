@@ -1,79 +1,47 @@
-import { expect, type Page, test } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import en from "@repo/internationalization/dictionaries/en.json" with {
   type: "json",
 };
-import { COMPANY_SOCIAL_PROFILES } from "@repo/seo/profiles";
 import { Effect } from "effect";
 import { withObservedPageErrors } from "@/e2e/support/observe";
-import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
-import { waitUntilTakenOver } from "@/e2e/support/window";
 
-/** A learn catalog that ends with its references. */
-const CATALOG_PATH = "/en/curricula";
-/** Where the source code of Nakafa lives. */
-const SOURCE_ORIGIN = /^https:\/\/github\.com\//u;
+/** The catalog routes that used to end with the source-code and community links. */
+const CATALOGS = [
+  "/en/articles",
+  "/en/articles/politics",
+  "/en/curriculum",
+  "/en/curriculum/merdeka",
+  "/en/try-out/indonesia",
+] as const;
 
-/**
- * The references of a learn catalog hold two buttons at most: the source code
- * as the one button with its name, joined with the menu of the places the
- * community meets, whose links open the videos and the community server.
- */
-const verifyReferences = Effect.fn("NakafaE2E.verifyCatalogReferences")(
-  function* (page: Page) {
-    const response = yield* Effect.promise(() =>
-      page.goto(CATALOG_PATH, { waitUntil: "domcontentloaded" })
-    );
-    yield* Effect.sync(() => expect(response?.ok()).toBe(true));
+for (const width of [320, 1440]) {
+  test.describe(`catalog pages at ${width}px`, () => {
+    test.use({ viewport: { height: 900, width } });
 
-    const references = page.getByRole("region", {
-      exact: true,
-      name: en.Common.references,
-    });
-    const more = references.getByRole("button", {
-      exact: true,
-      name: en.Common.more,
-    });
-
-    yield* Effect.promise(async () => {
-      await expect(references).toBeVisible({
-        timeout: readinessTimeoutMilliseconds,
+    for (const href of CATALOGS) {
+      test(`${href} ends without the references footer`, async ({ page }) => {
+        await Effect.runPromise(
+          withObservedPageErrors(
+            page,
+            Effect.promise(async () => {
+              const response = await page.goto(href);
+              expect(response?.ok()).toBe(true);
+              await expect(
+                page.locator('[data-slot="page-header"]')
+              ).toBeVisible();
+              await expect(
+                page.locator('[data-slot="page-footer"]')
+              ).toHaveCount(0);
+              await expect(
+                page.getByRole("region", {
+                  exact: true,
+                  name: en.Common.references,
+                })
+              ).toHaveCount(0);
+            })
+          )
+        );
       });
-      await expect(references.getByRole("link")).toHaveCount(1);
-      await expect(
-        references.getByRole("link", {
-          exact: true,
-          name: en.Common["source-code"],
-        })
-      ).toHaveAttribute("href", SOURCE_ORIGIN);
-      await expect(references.getByRole("button")).toHaveCount(1);
-
-      await waitUntilTakenOver(more);
-      await more.click();
-      await expect(
-        page.getByRole("menuitem", { exact: true, name: en.Common.videos })
-      ).toHaveAttribute("href", COMPANY_SOCIAL_PROFILES.youtube);
-      await expect(
-        page.getByRole("menuitem", { exact: true, name: en.Common.community })
-      ).toHaveAttribute("href", COMPANY_SOCIAL_PROFILES.discord);
-      await page.keyboard.press("Escape");
-      await expect(more).toBeFocused();
-    });
-  }
-);
-
-for (const viewport of [
-  { height: 844, width: 390 },
-  { height: 900, width: 1440 },
-]) {
-  test.describe(`catalog references at ${viewport.width}px`, () => {
-    test.use({ viewport });
-
-    test("offer the source code and one menu of the community's places", async ({
-      page,
-    }) => {
-      await Effect.runPromise(
-        withObservedPageErrors(page, verifyReferences(page))
-      );
-    });
+    }
   });
 }

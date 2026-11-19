@@ -2,7 +2,6 @@ import registeredFunctions from "../../../confect/_generated/registeredFunctions
 
 export const getCountryPage = registeredFunctions.getCountryPage;
 export const getExamPage = registeredFunctions.getExamPage;
-export const getFeaturedQuestion = registeredFunctions.getFeaturedQuestion;
 export const getGroupPage = registeredFunctions.getGroupPage;
 export const getHubPage = registeredFunctions.getHubPage;
 export const getLocalizedPath = registeredFunctions.getLocalizedPath;

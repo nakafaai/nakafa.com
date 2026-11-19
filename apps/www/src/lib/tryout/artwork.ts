@@ -66,14 +66,6 @@ const TRYOUT_ARTWORK = {
     identity: "tryout/indonesia/index",
     role: "page",
   },
-  // The Aufnahmeprüfung the catalog holds is TU Darmstadt's Studienkolleg's,
-  // so its card wears that Studienkolleg's mark, and its Mathematics test
-  // wears its own design. Their words are their names, which no locale translates.
-  "exam/germany/entrance-examination": {
-    drawn: { en: "tryout/139" },
-    identity: "tryout/germany/entrance-examination",
-    role: "entity",
-  },
   "exam/indonesia/snbt": {
     drawn: { en: "tryout/88" },
     identity: "tryout/indonesia/snbt",

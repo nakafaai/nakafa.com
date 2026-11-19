@@ -2066,7 +2066,6 @@
     "menu-scope": "Bereich",
     "menu-scoring": "Bewertung",
     "menu-sort": "Sortieren",
-    "menu-sources": "Quellen",
     "menu-speed": "Tempo",
     "menu-test": "Test",
     "menu-theme": "Design",
@@ -2217,7 +2216,6 @@
     "units": "Einheiten",
     "updated": "Aktualisiert",
     "version": "Version {version}",
-    "videos": "Videos",
     "view-options": "Optionen anzeigen",
     "vintage": "Vintage",
     "what-do-you-want-to-learn": "Was möchtest du lernen?",
@@ -4090,18 +4088,24 @@
         "choose": "Ansicht auswählen",
         "view": "Modell einer Bakterienzelle",
         "shape": {
+          "caption": "Kokken sind rund, Bazillen stäbchenförmig und manche Bakterien spiralförmig.",
           "tab": "Form"
         },
         "inside": {
+          "caption": "Die bakterielle DNA liegt im Nukleoid. Ribosomen stellen Proteine her.",
           "tab": "Zellinneres"
         },
         "wall": {
+          "caption": "Gramnegative Bakterien haben eine äußere Membran und eine dünnere Peptidoglycanschicht.",
           "tab": "Wand"
         },
         "title": "Eine Bakterienzelle",
         "description": "Sieh dir ein Bakterium von außen, von innen und durch seine Wand an."
       }
     },
+    "tryout-demo-intro": "Bei dieser Rechenoperation ist m eine positive ganze Zahl.",
+    "tryout-demo-given": "Wenn ",
+    "tryout-demo-find": " gilt, welchen Wert hat ",
     "tryout-title": "Probetests mit sofortigem Ergebnis",
     "tryout-lead": "Jederzeit wiederholbar.",
     "nina-title": "Nina weiß, welche Stelle du meinst",
@@ -4398,8 +4402,9 @@
     "calculator-credits": "KI-Credits im Monat",
     "calculator-storage": "Drive-Speicher",
     "calculator-monthly": "Im Monat",
-    "calculator-total": "Alle {months, plural, one {Monat} other {# Monate}} berechnet",
+    "calculator-total": "{months, plural, one {Monatlich fällig} other {Alle # Monate fällig}}",
     "calculator-unit": "pro Konto im Monat",
+    "calculator-unit-label": "Pro Konto im Monat",
     "addons-title": "Zusatzpakete",
     "addons-lead": "Kaufe jederzeit mehr KI-Credits oder Speicher zu deinem Tarif dazu.",
     "addon-credits-title": "{count, number} KI-Credits",
