@@ -97,7 +97,7 @@ export function HeaderSheet({
               </section>
             ))}
           </DrawerPanel>
-          <DrawerFooter>{children}</DrawerFooter>
+          <DrawerFooter className="items-end">{children}</DrawerFooter>
         </DrawerContent>
       </Drawer>
     </HeaderDrawerActions>

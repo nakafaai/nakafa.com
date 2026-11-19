@@ -56,11 +56,14 @@ export function CatalogGrid({
 export function CatalogCard({ action, children, title }: CatalogCardProps) {
   const actionLabel = useRequired(CatalogActionLabelContext, "CatalogCard");
   return (
-    <Card className="relative mx-auto h-full w-full max-w-sm pt-0 pb-0 [--card-spacing:--spacing(4)]">
+    <Card
+      className="relative mx-auto h-full w-full max-w-sm pt-0 pb-0 [--card-spacing:--spacing(4)]"
+      lines="one"
+    >
       {children}
       <CardHeader className="flex-1">
         <CardTitle>
-          <h2>{title}</h2>
+          <h2 title={title}>{title}</h2>
         </CardTitle>
       </CardHeader>
       <CardFooter className="bg-muted/50 border-t p-(--card-spacing)">

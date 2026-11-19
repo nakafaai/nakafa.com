@@ -1,4 +1,4 @@
-import { expect, type Page, test } from "@playwright/test";
+import { expect, type Locator, type Page, test } from "@playwright/test";
 import { Array as Arr, Effect } from "effect";
 import { withBrowserContext } from "@/e2e/support/context";
 import { movePointerTo } from "@/e2e/support/input";
@@ -143,6 +143,47 @@ for (const viewport of targetViewports) {
             );
           })
       )
+    );
+  });
+}
+
+async function expectTextWidth(link: Locator, label: string) {
+  await expect(link).toBeVisible();
+  await expect(link).toHaveText(label);
+  const spare = await link.evaluate((action) => {
+    const words = document.createRange();
+    words.selectNodeContents(action);
+    const style = getComputedStyle(action);
+    return (
+      action.getBoundingClientRect().width -
+      words.getBoundingClientRect().width -
+      Number.parseFloat(style.paddingInlineStart) -
+      Number.parseFloat(style.paddingInlineEnd) -
+      Number.parseFloat(style.borderInlineStartWidth) -
+      Number.parseFloat(style.borderInlineEndWidth)
+    );
+  });
+  expect(Math.abs(spare)).toBeLessThanOrEqual(1);
+}
+
+for (const [path, label] of [
+  ["/ms", "Cuba Nakafa"],
+  ["/ms/school", "Mulakan percubaan percuma"],
+] as const) {
+  test(`the header action at ${path} fits its own label`, async ({ page }) => {
+    await page.setViewportSize({ height: 900, width: 1440 });
+    await Effect.runPromise(loadMarketingPage(page, path));
+    const header = page.locator("header");
+    const link = header.getByRole("link", { exact: true, name: label });
+    await expectTextWidth(link, label);
+
+    await page.setViewportSize({ height: 844, width: 320 });
+    await header.getByRole("button", { name: "Menu" }).click();
+    await expectTextWidth(
+      page
+        .locator('[data-slot="drawer-footer"]')
+        .getByRole("link", { exact: true, name: label }),
+      label
     );
   });
 }
