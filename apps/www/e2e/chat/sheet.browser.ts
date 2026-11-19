@@ -68,7 +68,7 @@ test.describe("Nina sheet at 1440px", () => {
             }
             MutableList.append(held, route);
           });
-          await page.goto(LESSON_PATH);
+          await page.goto(LESSON_PATH, { waitUntil: "commit" });
 
           const ask = page.getByRole("button", {
             exact: true,
