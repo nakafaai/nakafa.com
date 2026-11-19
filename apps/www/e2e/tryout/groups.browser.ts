@@ -1,4 +1,5 @@
 import { expect, type Page, test } from "@playwright/test";
+import { Array as Arr } from "effect";
 import { groupHref, trackHref } from "@/e2e/support/tryout";
 
 /** Indonesia's page, which holds SNBT and TKA. */
@@ -146,6 +147,37 @@ test("draws each exam card with its own design", async ({ page }) => {
     "content",
     DARMSTADT_MATHEMATICS
   );
+});
+
+test("keeps try-out catalog cards one title line tall on a phone and desktop", async ({
+  page,
+}) => {
+  const name = "Matematika Tingkat Lanjut";
+  const grid = page.locator('[data-slot="catalog-grid"]');
+  const heading = grid.getByRole("heading", { exact: true, name });
+  await visit(page, "/id/try-out/indonesia/tka/sma-ma-smk");
+  await expect(heading).toHaveAttribute("title", name);
+  await expect(
+    grid.getByRole("link", { exact: true, name: `Lihat set ${name}` })
+  ).toBeVisible();
+
+  for (const width of [320, 1440]) {
+    await page.setViewportSize({ height: 844, width });
+    await expect(heading).toHaveCSS("text-overflow", "ellipsis");
+    await expect(heading).toHaveCSS("white-space", "nowrap");
+    const heights = await grid
+      .locator('[data-slot="card"]')
+      .evaluateAll((cards) =>
+        cards.map((card) => Math.round(card.getBoundingClientRect().height))
+      );
+    expect(heights.length).toBeGreaterThan(1);
+    expect(Arr.dedupe(heights)).toHaveLength(1);
+    if (width === 1440) {
+      expect(
+        await heading.evaluate((title) => title.scrollWidth > title.clientWidth)
+      ).toBe(true);
+    }
+  }
 });
 
 /**
