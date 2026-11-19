@@ -1,4 +1,6 @@
 import { expect, test } from "@playwright/test";
+import { Effect } from "effect";
+import { holdChunks, openRoute } from "@/e2e/support/route";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
 const HOME = "/en";
@@ -53,4 +55,49 @@ test("hydrates every home section in place, section by section", async ({
 
   expect(drawn.total).toBeGreaterThan(5);
   expect(drawn.connected).toBe(drawn.total);
+});
+
+test("the home practice question keeps an early answer and scores the example Nina explains", async ({
+  page,
+}) => {
+  await page.setViewportSize({ height: 844, width: 320 });
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  const release = await Effect.runPromise(
+    holdChunks(page, { containing: "home-tryout-response" })
+  );
+  const demo = page.locator("#tryout");
+  const options = demo.locator('[data-slot="marked-line"]');
+  const mistake = options.filter({
+    has: page.getByRole("radio", { name: "B 13" }),
+  });
+  const correct = options.filter({
+    has: page.getByRole("radio", { name: "C 19" }),
+  });
+
+  try {
+    await Effect.runPromise(openRoute(page, `${HOME}#tryout`));
+    await expect(
+      demo.locator('annotation[encoding="application/x-tex"]').first()
+    ).toHaveText("\\triangle(a,b)=2a+\\frac{b}{m}");
+    await mistake.getByRole("radio").click();
+    await expect(mistake).toHaveAttribute("data-pressed", "");
+  } finally {
+    await release();
+  }
+
+  await expect(mistake.getByRole("radio")).toBeChecked({
+    timeout: readinessTimeoutMilliseconds,
+  });
+  await page.unrouteAll({ behavior: "wait" });
+  await expect(mistake).toHaveAttribute("data-tone", "wrong");
+  await correct.getByRole("radio").click();
+  await expect(correct.getByRole("radio")).toBeChecked();
+  await expect(correct).toHaveAttribute("data-tone", "correct");
+
+  const nina = page.locator("#nina");
+  await expect(
+    nina
+      .getByText("Why is 13 wrong?", { exact: true })
+      .and(nina.locator('[aria-hidden="true"]'))
+  ).toBeVisible();
 });

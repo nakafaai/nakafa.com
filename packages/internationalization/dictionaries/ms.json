@@ -2066,7 +2066,6 @@
     "menu-scope": "Skop",
     "menu-scoring": "Pemarkahan",
     "menu-sort": "Susun",
-    "menu-sources": "Sumber",
     "menu-speed": "Kelajuan",
     "menu-test": "Ujian",
     "menu-theme": "Tema",
@@ -2217,7 +2216,6 @@
     "units": "Unit",
     "updated": "Dikemas kini",
     "version": "Versi {version}",
-    "videos": "Video",
     "view-options": "Lihat pilihan",
     "vintage": "Vintage",
     "what-do-you-want-to-learn": "Apa yang kamu mahu pelajari?",
@@ -4093,18 +4091,24 @@
         "choose": "Pilih paparan bakteria",
         "view": "Model struktur bakteria",
         "shape": {
+          "caption": "Kokus berbentuk bulat, basil berbentuk batang, dan sesetengah bakteria berbentuk pilin.",
           "tab": "Bentuk"
         },
         "inside": {
+          "caption": "DNA bakteria terletak di nukleoid, dan ribosom menghasilkan protein.",
           "tab": "Dalaman"
         },
         "wall": {
+          "caption": "Bakteria Gram-negatif mempunyai membran luar dan lapisan peptidoglikan yang lebih nipis.",
           "tab": "Dinding"
         },
         "title": "Sel bakteria",
         "description": "Lihat bakteria dari luar, dari dalam dan melalui dindingnya."
       }
     },
+    "tryout-demo-intro": "Operasi ini menggunakan integer positif m.",
+    "tryout-demo-given": "Jika ",
+    "tryout-demo-find": ", berapakah nilai ",
     "tryout-title": "Ujian latihan yang terus memberi skor",
     "tryout-lead": "Kamu boleh mengulanginya bila-bila masa.",
     "nina-title": "Nina tahu bahagian mana yang kamu maksudkan",
@@ -4401,8 +4405,9 @@
     "calculator-credits": "Kredit AI sebulan",
     "calculator-storage": "Storan Drive",
     "calculator-monthly": "Sebulan",
-    "calculator-total": "Dibilkan setiap {months, plural, one {bulan} other {# bulan}}",
+    "calculator-total": "Bil {months, plural, one {bulanan} other {setiap # bulan}}",
     "calculator-unit": "setiap akaun sebulan",
+    "calculator-unit-label": "Setiap akaun sebulan",
     "addons-title": "Tambahan",
     "addons-lead": "Beli lebih banyak kredit AI atau storan bila-bila masa, di samping pelan kamu.",
     "addon-credits-title": "{count, number} kredit AI",

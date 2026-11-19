@@ -68,18 +68,14 @@ const FOLLOWING_LESSON = {
   projectile: "circle",
 } as const satisfies Record<Lesson, Lesson>;
 
-/**
- * A lesson's panel, open or not. The open one comes in a little from below as
- * it fades in, and the one it replaces fades out where it is, so a lesson change
- * reads as one card turning into the next.
- */
+/** The lessons swap in place while their grid cell keeps a stable height. */
 const panelVariants = cva(
-  "col-start-1 row-start-1 grid content-start transition-[opacity,translate,visibility] duration-300 ease-out motion-reduce:transition-none [&_.content-auto-card]:[content-visibility:visible]!",
+  "col-start-1 row-start-1 grid content-start [&_.content-auto-card]:[content-visibility:visible]!",
   {
     variants: {
       open: {
-        false: "invisible translate-y-2 opacity-0",
-        true: "visible translate-y-0 opacity-100",
+        false: "invisible",
+        true: "visible",
       },
     },
   }

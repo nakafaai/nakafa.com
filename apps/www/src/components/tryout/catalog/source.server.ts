@@ -26,31 +26,6 @@ class TryoutCatalogReadError extends Schema.TaggedError<
 }) {}
 
 /**
- * Reads the question demonstrated on the marketing page, decoded from the JSON text its body crosses
- * the wire as: its prompt, its interaction, and the key the demo answers with. The selection is the
- * same for every request of one release, so the content store holds it once for each release and
- * locale.
- */
-export const readFeaturedTryout = Effect.fn("www.tryout.catalog.readFeatured")(
-  function* (locale: Locale) {
-    const featured = yield* querySnapshotContentStore(
-      "assessment",
-      tryouts.queries.catalog.getFeaturedQuestion,
-      {
-        appLocale: AppLocaleSchema.make(locale),
-      }
-    );
-    if (featured.kind === "none") {
-      return featured;
-    }
-    return {
-      body: yield* Schema.decodeEffect(TryoutQuestionBodyText)(featured.body),
-      kind: featured.kind,
-    };
-  }
-);
-
-/**
  * Reads exact signed route metadata from the tagged content cache. The `use
  * cache` boundary stays so that the try-out pages prerender and the try-out tag
  * still expires them; behind it the content store answers for the release.

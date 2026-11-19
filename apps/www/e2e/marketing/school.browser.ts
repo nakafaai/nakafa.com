@@ -109,22 +109,23 @@ const verifySchoolLanding = Effect.fn("NakafaE2E.verifySchoolLanding")(
     yield* Effect.promise(() => expect(page).toHaveURL(PLAYER_PART));
     yield* Effect.promise(() => expect(paper).toBeInViewport());
     // The paper names every type of question, and each press opens that type's question in the player.
-    const types = paper.getByRole("group", { name: "Question types" });
+    const types = paper.getByRole("combobox", { name: "Question types" });
     // WebKit's scrollIntoView skips a part the page has not drawn yet, so the page steps to it as a reader does.
     yield* stepTo(page, types);
+    yield* Effect.promise(() => types.click());
+    const menu = page.getByRole("listbox");
     yield* Effect.promise(() =>
-      expect(types.getByRole("button")).toHaveCount(TYPES)
+      expect(menu.getByRole("option")).toHaveCount(TYPES)
     );
     yield* Effect.promise(() =>
-      types.getByRole("button", { name: "True or false table" }).click()
+      menu.getByRole("option", { name: "True or false table" }).click()
     );
     yield* Effect.promise(() =>
       expect(paper.getByText("Momentum is measured in joules.")).toBeVisible()
     );
+    yield* Effect.promise(() => types.click());
     yield* Effect.promise(() =>
-      types
-        .getByRole("button", { name: "Multiple choice", exact: true })
-        .click()
+      menu.getByRole("option", { name: "Multiple choice", exact: true }).click()
     );
     const answer = paper.getByRole("radio", { name: MOMENTUM });
     yield* Effect.promise(() => answer.click());
@@ -134,6 +135,12 @@ const verifySchoolLanding = Effect.fn("NakafaE2E.verifySchoolLanding")(
     yield* stepTo(page, reports.getByRole("img", { name: "A QR code" }));
     yield* Effect.promise(() =>
       expect(reports.getByRole("img", { name: "A QR code" })).toBeVisible()
+    );
+    yield* Effect.promise(() =>
+      expect(reports.locator('svg[aria-label^="A QR code"]')).toHaveCount(1)
+    );
+    yield* Effect.promise(() =>
+      expect(reports.getByText("Verified", { exact: true })).toBeVisible()
     );
     const scan = page.locator("#parents").getByRole("button", { name: "Scan" });
     yield* stepTo(page, scan);
@@ -297,7 +304,7 @@ const verifySchoolPricing = Effect.fn("NakafaE2E.verifySchoolPricing")(
     );
 
     // Max with 550 added accounts holds a school of 1,050 for Rp16.735.000 a month.
-    const calculator = page.locator("#accounts");
+    const calculator = page.locator("#accounts [data-school-calculator]");
     yield* stepTo(page, calculator.getByRole("button", { name: "Max" }));
     yield* Effect.promise(() =>
       calculator.getByRole("button", { name: "Max" }).click()
@@ -310,10 +317,19 @@ const verifySchoolPricing = Effect.fn("NakafaE2E.verifySchoolPricing")(
     yield* Effect.promise(() =>
       expect(figures).toContainText(rupiah("16.735.000"))
     );
+    const monthly = yield* Effect.promise(() =>
+      figures.evaluate((summary) =>
+        Math.round(summary.getBoundingClientRect().height)
+      )
+    );
 
     // Twelve months take 5 % off and bill the whole year at once.
+    const period = calculator.getByRole("combobox", {
+      name: "Periode tagihan",
+    });
+    yield* Effect.promise(() => period.click());
     yield* Effect.promise(() =>
-      calculator.getByRole("button", { name: TWELVE_MONTHS }).click()
+      page.getByRole("option", { name: TWELVE_MONTHS }).click()
     );
     yield* Effect.promise(() =>
       expect(figures).toContainText(rupiah("15.898.250"))
@@ -322,6 +338,12 @@ const verifySchoolPricing = Effect.fn("NakafaE2E.verifySchoolPricing")(
       expect(figures).toContainText(rupiah("190.779.000"))
     );
     yield* Effect.promise(() => expect(figures).toContainText("hemat 5%"));
+    const yearly = yield* Effect.promise(() =>
+      figures.evaluate((summary) =>
+        Math.round(summary.getBoundingClientRect().height)
+      )
+    );
+    expect(yearly).toBe(monthly);
     expect(yield* readOverflow(page)).toBeLessThanOrEqual(0);
   }
 );

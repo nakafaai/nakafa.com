@@ -36,9 +36,21 @@ export function getCellLabels(t: LandingTranslator) {
   return {
     chooseMode: t("lab.bacteria.choose"),
     items: [
-      { scene: { kind: "shape" }, tab: t("lab.bacteria.shape.tab") },
-      { scene: { kind: "structure" }, tab: t("lab.bacteria.inside.tab") },
-      { scene: { kind: "wall" }, tab: t("lab.bacteria.wall.tab") },
+      {
+        caption: t("lab.bacteria.shape.caption"),
+        scene: { kind: "shape" },
+        tab: t("lab.bacteria.shape.tab"),
+      },
+      {
+        caption: t("lab.bacteria.inside.caption"),
+        scene: { kind: "structure" },
+        tab: t("lab.bacteria.inside.tab"),
+      },
+      {
+        caption: t("lab.bacteria.wall.caption"),
+        scene: { kind: "wall" },
+        tab: t("lab.bacteria.wall.tab"),
+      },
     ] satisfies readonly [BacteriaLabItemProps, ...BacteriaLabItemProps[]],
     viewLabel: t("lab.bacteria.view"),
   };

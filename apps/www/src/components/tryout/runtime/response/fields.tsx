@@ -38,6 +38,7 @@ interface TryoutResponseFieldsProps {
     readonly interaction: Interaction;
     readonly locked: boolean;
     readonly onChange: (response: ExamResponse | null) => void;
+    readonly replayEarlyChoice?: boolean;
     readonly response: ExamResponse | null;
   };
 }
@@ -91,7 +92,7 @@ function SingleChoiceFields({
   value: TryoutResponseFieldsProps["value"];
 }) {
   const tCommon = useTranslations("Common");
-  const { id, locked, onChange, response } = value;
+  const { id, locked, onChange, replayEarlyChoice, response } = value;
   const selected = Option.getOrElse(
     Arr.head(chosenOptions(response ?? [])),
     () => ""
@@ -119,6 +120,11 @@ function SingleChoiceFields({
             id={optionLabelId(id, option.id)}
             key={option.id}
             letter={partLetter(parts, index)}
+            onMissedPress={
+              replayEarlyChoice && !locked
+                ? () => onChange([option.id])
+                : undefined
+            }
             value={option.id}
           >
             <TryoutResponseLabel

@@ -8,10 +8,8 @@ import { CurriculumCardGrid } from "@/components/curriculum/cards";
 import { CurriculumHeader } from "@/components/curriculum/header";
 import { ContainerList } from "@/components/shared/card/list";
 import { CardMaterial } from "@/components/shared/card/material";
-import { RefContent } from "@/components/shared/content/references";
 import { SidebarTree } from "@/components/shared/outline/tree";
 import { PageBody } from "@/components/shared/page/body";
-import { PageFooter } from "@/components/shared/page/footer";
 import { Page } from "@/components/shared/page/frame";
 import {
   PageOutline,
@@ -114,11 +112,6 @@ function CurriculumRoutePage() {
             />
           ) : null}
         </PageBody>
-        {page.sourceUrl ? (
-          <PageFooter>
-            <RefContent githubUrl={page.sourceUrl} />
-          </PageFooter>
-        ) : null}
       </Page>
       {hasOutline ? (
         <PageOutline

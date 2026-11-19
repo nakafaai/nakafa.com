@@ -7,9 +7,15 @@ import {
   useReducedMotion,
 } from "@mantine/hooks";
 import { QuestionTemplate } from "@repo/backend/confect/exams/question";
-import { Button } from "@repo/design-system/components/ui/button";
-import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@repo/design-system/components/ui/select";
+import { useMissedPress } from "@repo/design-system/hooks/press";
 import { Array as Arr, Option, Schema } from "effect";
 import { type ReactNode, useEffect, useState } from "react";
 import { useTranslations } from "use-intl";
@@ -60,8 +66,8 @@ const TIME_LEFT = 1453;
 
 /**
  * The paper a student sits in the School, on the School landing: one question of every type a teacher writes, in
- * the School's own player, over a demo school that lives in the page. A button group above it names the ten types;
- * pressing one opens its question, and the navigator, the steps and the flag move through the same questions. The
+ * the School's own player, over a demo school that lives in the page. The selector lists the ten types;
+ * choosing one opens its question, and the navigator, the steps and the flag move through the same questions. The
  * answers stay in the page, as a teacher's try keeps them.
  */
 export function PaperDemo() {
@@ -131,7 +137,7 @@ export function PaperDemo() {
  * Turns the paper to the next type every six seconds while half of it is on screen, so nothing has to be pressed to
  * see the types. It waits while the reader points at it, stops for good once the focus enters it, as a press or a
  * key does, and never turns by itself with reduced motion. The questions are the paper's own, so a turn
- * moves the navigator, the steps and the group together.
+ * moves the navigator, the steps and the selector together.
  */
 function PaperTurn({ children }: { children: ReactNode }) {
   const goTo = usePlayer((state) => state.goTo);
@@ -179,41 +185,47 @@ function followingType(current: string | null) {
   );
 }
 
-/**
- * The ten types, as the editor's type menu names and draws them: each one's icon on a button whose tooltip names it,
- * the open type's pressed, and under them the open type's name. The questions carry their types as their ids, so a
- * press opens its question in the paper.
- */
+/** The ten types use the same icons and labels as the editor. Each paper question's id is its type. */
 function PaperTypes() {
   const t = useTranslations("Exams");
   const site = useTranslations("SchoolSite");
+  const common = useTranslations("Common");
   const current = usePlayer((state) => state.current);
   const goTo = usePlayer((state) => state.goTo);
-  const open = Schema.decodeUnknownOption(QuestionTemplate)(current);
+  const decodeType = Schema.decodeUnknownOption(QuestionTemplate);
+  const selected = Option.getOrNull(decodeType(current));
+  const [menuOpen, setMenuOpen] = useState(false);
+  const press = useMissedPress<HTMLButtonElement>(() => setMenuOpen(true));
 
   return (
-    <div className="grid justify-items-center gap-3">
-      <ButtonGroup aria-label={site("paper-types")} className="w-full">
+    <Select
+      onOpenChange={setMenuOpen}
+      onValueChange={(value) => Option.map(decodeType(value), goTo)}
+      open={menuOpen}
+      value={selected}
+    >
+      <SelectTrigger
+        aria-label={site("paper-types")}
+        className="w-full max-w-xs justify-self-center"
+        {...press}
+      >
+        <SelectValue>
+          {selected === null ? null : (
+            <>
+              <HugeIcons icon={TEMPLATE_ICON[selected]} />
+              {t(TEMPLATE_NAME[selected])}
+            </>
+          )}
+        </SelectValue>
+      </SelectTrigger>
+      <SelectContent alignItemWithTrigger={false} label={common("menu-type")}>
         {Arr.map(QuestionTemplate.literals, (type) => (
-          <Button
-            aria-pressed={Option.contains(open, type)}
-            className="flex-1"
-            key={type}
-            onClick={() => goTo(type)}
-            size="icon"
-            tooltip={t(TEMPLATE_NAME[type])}
-          >
-            <HugeIcons icon={TEMPLATE_ICON[type]} />
-          </Button>
+          <SelectItem icon={TEMPLATE_ICON[type]} key={type} value={type}>
+            {t(TEMPLATE_NAME[type])}
+          </SelectItem>
         ))}
-      </ButtonGroup>
-      <p className="text-muted-foreground h-5 truncate text-sm">
-        {Option.match(open, {
-          onNone: () => null,
-          onSome: (type) => t(TEMPLATE_NAME[type]),
-        })}
-      </p>
-    </div>
+      </SelectContent>
+    </Select>
   );
 }
 

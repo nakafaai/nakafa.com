@@ -4,7 +4,7 @@ import type { TileLook } from "@repo/design-system/lib/look";
 import { Array as Arr } from "effect";
 import { useTranslations } from "use-intl";
 import { MaterialRow } from "@/components/home/material";
-import { SectionDoor, SectionMore } from "@/components/home/row";
+import { HomeRowText, SectionDoor, SectionMore } from "@/components/home/row";
 import { HomeSection } from "@/components/home/section";
 import { getPrimaryNavigationItems } from "@/components/sidebar/data/navigation";
 
@@ -38,7 +38,12 @@ export function HomeContinue({
       title={tCommon("subject")}
     >
       {rows.length === 0 ? (
-        <SectionDoor item={SUBJECTS} sentence={t("subjects-first")} />
+        <SectionDoor item={SUBJECTS}>
+          <HomeRowText
+            description={t("subjects-first")}
+            title={tCommon("subject")}
+          />
+        </SectionDoor>
       ) : (
         Arr.map(rows, ([material, look]) => (
           <MaterialRow
