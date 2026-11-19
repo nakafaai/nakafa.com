@@ -1,5 +1,8 @@
 import type { CellData, RowData, TableFeatures } from "@tanstack/react-table";
-import type { HeadFilter } from "@/components/shared/table/columns";
+import type {
+  ColumnWidth,
+  HeadFilter,
+} from "@/components/shared/table/columns";
 
 declare module "@tanstack/react-table" {
   /**
@@ -14,14 +17,13 @@ declare module "@tanstack/react-table" {
     TValue extends CellData = CellData,
   > {
     readonly align?: "end" | "figure" | "menu";
-    readonly compact?: boolean;
     /** What the column's head filters the rows by. */
     readonly filter?: HeadFilter;
     /** Whether a row's menu does not answer yet, such as a row the server has not confirmed. */
     readonly inert?: (row: TData) => boolean;
     /** The column's name, which its head says it filters by. */
     readonly title?: string;
-    /** Whether the column's cell holds more than one value's width. */
-    readonly wide?: boolean;
+    /** Width for a small control or for a cell that holds several values. */
+    readonly width?: ColumnWidth;
   }
 }

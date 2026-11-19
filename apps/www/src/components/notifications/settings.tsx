@@ -105,7 +105,7 @@ export function PreferenceTable({
               on={info.getValue() === "on"}
             />
           ),
-        compact: true,
+        width: "compact",
         header: t(`channel.${channel}`),
         id: channel,
         options: [
@@ -124,7 +124,7 @@ export function PreferenceTable({
       <DataTable
         columns={[
           preferenceColumns.text(({ kind }) => t(`kind-${kind}`), {
-            compact: true,
+            width: "compact",
             header: t("preferences-kind"),
             id: "kind",
           }),

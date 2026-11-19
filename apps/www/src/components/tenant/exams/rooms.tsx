@@ -310,7 +310,7 @@ function RoomsTable({
             header: t("rooms-group"),
             id: "group",
             // Its options come from the rooms read so far, so a width by the longest name would grow as rooms arrive.
-            wide: true,
+            width: "wide",
             options: [
               { icon: UserGroupIcon, label: t("group-all"), value: "all" },
               ...Arr.map(roomGroups(rooms), (option) => ({
@@ -363,7 +363,7 @@ function RoomsTable({
             ),
             header: t("rooms-state"),
             id: "state",
-            wide: true,
+            width: "wide",
             options: [
               { icon: Calendar03Icon, label: t("state-all"), value: "all" },
               ...Arr.map(ROOM_STATES, (state) => ({
