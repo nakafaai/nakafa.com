@@ -113,6 +113,19 @@ const overflowOf = (page: Page) =>
     };
   });
 
+/** Home reads its announcements after the view switcher appears. Wait for both before comparing the gap. */
+async function expectViewGap(page: Page, label: string, gap: number | null) {
+  if (gap === null) {
+    return;
+  }
+  await expect
+    .poll(async () => (await overflowOf(page)).viewGap, {
+      message: label,
+      timeout: readinessTimeoutMilliseconds,
+    })
+    .toBe(gap);
+}
+
 test("every class tab keeps its body inside the header's frame, its first body row at one offset under the tabs, its table in a card that closes on the screen, two header buttons at most, and no sideways scroll, at 1920, 1440, 768, 390 and 320 px, light and dark", async ({
   baseURL,
   browser,
@@ -159,12 +172,7 @@ test("every class tab keeps its body inside the header's frame, its first body r
         ).toEqual({ body: 0, sideways: 0 });
         expect(measured.controls, label).toBeLessThanOrEqual(2);
         expect(measured.groups, label).toBe(tab.groups);
-        await expect
-          .poll(async () => (await overflowOf(page)).viewGap, {
-            message: label,
-            timeout: readinessTimeoutMilliseconds,
-          })
-          .toBe(tab.viewGap);
+        await expectViewGap(page, label, tab.viewGap);
         // The forum's panes start under the tabs by design; every other tab's first row shares one offset.
         if (tab.name !== "Forum" && measured.offset !== null) {
           offsets = Arr.append(offsets, measured.offset);

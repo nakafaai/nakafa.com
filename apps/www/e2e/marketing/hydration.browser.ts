@@ -114,10 +114,10 @@ test("the home practice question keeps an early answer and scores the example Ni
   await expect(correct).toHaveAttribute("data-tone", "correct");
 
   const nina = page.locator("#nina");
-  await expect(nina.locator('[data-slot="message-footer"]')).toHaveCount(0);
   await expect(
     nina
       .getByText("Why is 13 wrong?", { exact: true })
       .and(nina.locator('[aria-hidden="true"]'))
   ).toBeVisible();
+  await expect(nina.locator('[data-slot="message-footer"]')).toHaveCount(0);
 });

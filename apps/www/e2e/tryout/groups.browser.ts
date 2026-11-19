@@ -204,6 +204,30 @@ for (const width of [390, 1440]) {
   });
 }
 
+test("a short screen scrolls the try-out rows under their sticky header", async ({
+  page,
+}) => {
+  await page.setViewportSize({ height: 170, width: 320 });
+  await visit(page, "/id/try-out/indonesia/snbt/2027/utbk");
+  const card = page.locator('[data-slot="table-card"]');
+  await expect(card.locator("tbody a[href]").first()).toBeAttached();
+  const scroll = await card
+    .locator('[data-slot="scroll-area-viewport"]')
+    .evaluate((viewport) => {
+      const head = viewport.querySelector("thead");
+      const top = head?.getBoundingClientRect().top ?? 0;
+      viewport.scrollTop = viewport.scrollHeight;
+      return {
+        headShift: (head?.getBoundingClientRect().top ?? 0) - top,
+        page: document.documentElement.scrollHeight - window.innerHeight,
+        rows: viewport.scrollTop,
+      };
+    });
+  expect(scroll.page).toBeLessThanOrEqual(1);
+  expect(scroll.rows).toBeGreaterThan(0);
+  expect(Math.abs(scroll.headShift)).toBeLessThanOrEqual(1);
+});
+
 /**
  * One table at every width (the owner's rule): every column of a track's sets
  * stands on a phone as on a desktop, Level, Questions, Minutes and Score
