@@ -32,6 +32,7 @@ import { DataTable } from "@/components/shared/table/data";
 import { chosenOne } from "@/components/shared/table/filter";
 import { TableEnd } from "@/components/shared/table/pages";
 import { type StatusLook, TableStatus } from "@/components/shared/table/status";
+import { TableValue } from "@/components/shared/table/text";
 import { TableTitle } from "@/components/shared/table/title";
 import {
   TableFiltersProvider,
@@ -304,10 +305,12 @@ function RoomsTable({
           }),
           roomColumns.choice((room) => roomGroupKey(room.group), {
             cell: (info) => (
-              <span dir="auto">{info.row.original.groupName}</span>
+              <TableValue>{info.row.original.groupName}</TableValue>
             ),
             header: t("rooms-group"),
             id: "group",
+            // Its options come from the rooms read so far, so a width by the longest name would grow as rooms arrive.
+            wide: true,
             options: [
               { icon: UserGroupIcon, label: t("group-all"), value: "all" },
               ...Arr.map(roomGroups(rooms), (option) => ({

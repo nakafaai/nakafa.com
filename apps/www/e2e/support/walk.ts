@@ -198,11 +198,16 @@ function readPopup(popups: string) {
     ).length,
     slot: popup.getAttribute("data-slot") ?? "",
     // The popup, or a body that scrolls inside it, that is wider than its frame and lets the reader scroll sideways.
-    // A body that clips sideways (overflow-x hidden) scrolls down only.
+    // A body that clips sideways (overflow-x hidden) scrolls down only. A table's own scroll inside its card is the
+    // table's, which may scroll sideways (docs/adr/0021-rules.md, "Overlays scroll downwards only").
     wide: [
       popup,
-      ...popup.querySelectorAll<HTMLElement>(
-        '[data-slot="scroll-area-viewport"]'
+      ...Array.from(
+        popup.querySelectorAll<HTMLElement>(
+          '[data-slot="scroll-area-viewport"]'
+        )
+      ).filter(
+        (viewport) => viewport.closest('[data-slot="table-container"]') === null
       ),
     ].some(
       (box) =>

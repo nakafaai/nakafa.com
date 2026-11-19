@@ -24,17 +24,15 @@ function Spinner({
   label,
   ...props
 }: SpinnerProps) {
+  const spins = isLoading || !icon;
   return (
     <HugeIcons
       aria-hidden={label ? undefined : true}
       aria-label={label}
-      className={cn(
-        "shrink-0",
-        (isLoading || !icon) && "animate-spin",
-        className
-      )}
-      data-slot="spinner"
-      icon={isLoading || !icon ? Loading03Icon : icon}
+      className={cn("shrink-0", spins && "animate-spin", className)}
+      // Only a turning mark is a spinner: at rest it is its action's icon, which no reader takes for a wait.
+      data-slot={spins ? "spinner" : undefined}
+      icon={spins ? Loading03Icon : icon}
       role={label ? "status" : undefined}
       {...props}
     />
