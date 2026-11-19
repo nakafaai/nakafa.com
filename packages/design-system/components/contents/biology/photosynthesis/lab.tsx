@@ -7,6 +7,7 @@ import {
   PhotosynthesisCamera,
   PhotosynthesisScene,
 } from "@repo/design-system/components/contents/biology/photosynthesis/scene";
+import { toggleColumns } from "@repo/design-system/components/contents/simulation/columns";
 import { useQuantity } from "@repo/design-system/components/contents/simulation/quantity";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene";
@@ -68,6 +69,7 @@ export function PhotosynthesisLab({
         <VisualCardToolbar>
           <ToggleGroup
             aria-label={labels.reading}
+            gridColumns={toggleColumns(readings.length)}
             onValueChange={(value: string) => {
               if (value !== "") {
                 setChosen(Number(value));

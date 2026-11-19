@@ -1,6 +1,5 @@
 import { Line, PointMaterial, Points } from "@react-three/drei";
 import { useThree } from "@react-three/fiber";
-import { toggleColumns } from "@repo/design-system/components/contents/chemistry/columns";
 import {
   boundaryDensity,
   type OrbitalId,
@@ -11,6 +10,7 @@ import {
   sampleCloud,
   waveGrid,
 } from "@repo/design-system/components/contents/chemistry/orbital/wave";
+import { toggleColumns } from "@repo/design-system/components/contents/simulation/columns";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { CameraControls } from "@repo/design-system/components/three/camera/controls";
 import { ORIGIN_COLOR } from "@repo/design-system/components/three/data/constants";

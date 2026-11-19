@@ -1,3 +1,4 @@
+import { useThree } from "@react-three/fiber";
 import { MicroscopeField } from "@repo/design-system/components/contents/biology/bacteria/field";
 import {
   GRATICULE_DIVISIONS,
@@ -15,7 +16,14 @@ import { BIOLOGY_COLORS } from "@repo/design-system/lib/material/biology";
 import { REAGENT_COLORS } from "@repo/design-system/lib/material/reagent";
 import { Array as Arr, Match } from "effect";
 import { useEffect, useMemo } from "react";
-import { BufferGeometry, DoubleSide, Float32BufferAttribute } from "three";
+import {
+  BufferGeometry,
+  CanvasTexture,
+  DoubleSide,
+  Float32BufferAttribute,
+  LinearMipmapLinearFilter,
+  SRGBColorSpace,
+} from "three";
 
 /** The field's radius in its own units, as `MicroscopeField` draws it. */
 const FIELD_RADIUS = 60;
@@ -85,37 +93,6 @@ function tickShare(index: number) {
     return 1;
   }
   return index % 5 === 0 ? 5 / 7 : 3 / 7;
-}
-
-/** Fills the triangles of each closed polygon from its first corner. */
-function fanPositions(
-  outlines: readonly (readonly (readonly [number, number])[])[],
-  y: number
-) {
-  return Arr.flatMap(outlines, (outline) =>
-    Arr.flatMap(Arr.range(1, outline.length - 2), (corner) => {
-      const [a, b, c] = [outline[0], outline[corner], outline[corner + 1]];
-      return a === undefined || b === undefined || c === undefined
-        ? []
-        : [a[0], y, a[1], c[0], y, c[1], b[0], y, b[1]];
-    })
-  );
-}
-
-/** The segments that draw each closed polygon's edge. */
-function edgePositions(
-  outlines: readonly (readonly (readonly [number, number])[])[],
-  y: number
-) {
-  return Arr.flatMap(outlines, (outline) =>
-    Arr.flatMap(Arr.range(0, outline.length - 1), (corner) => {
-      const a = outline[corner];
-      const b = outline[(corner + 1) % outline.length];
-      return a === undefined || b === undefined
-        ? []
-        : [a[0], y, a[1], b[0], y, b[1]];
-    })
-  );
 }
 
 /** A circle of `radius` around `middle`, as a closed polygon. */
@@ -196,6 +173,75 @@ function useFlatGeometry(positions: readonly number[]) {
   return geometry;
 }
 
+/** The side of the square the specimen is drawn onto, in texture pixels. */
+const SPECIMEN_TEXTURE = 2048;
+
+/** Traces one closed polygon in field units onto a canvas whose pixels are `scale` field units each. */
+function tracePolygon(
+  context: CanvasRenderingContext2D,
+  outline: readonly (readonly [number, number])[],
+  scale: number
+) {
+  context.beginPath();
+  for (const [x, z] of outline) {
+    context.lineTo((x + FIELD_RADIUS) * scale, (z + FIELD_RADIUS) * scale);
+  }
+  context.closePath();
+}
+
+/**
+ * Paints the specimen's cells, their walls and their stained nuclei onto one
+ * square texture of the whole field. The GPU samples a texture through its
+ * mipmaps, which average a cell drawn a few pixels wide into the tone of the
+ * tissue, where lines a pixel wide each would beat against the screen's
+ * pixels into moiré. A cell keeps its true size at every objective.
+ */
+function createSpecimenTexture(
+  cells: readonly SlideCell[],
+  size: number,
+  stain: (typeof STAIN)[keyof typeof STAIN]
+) {
+  const canvas = document.createElement("canvas");
+  canvas.width = SPECIMEN_TEXTURE;
+  canvas.height = SPECIMEN_TEXTURE;
+  const texture = new CanvasTexture(canvas);
+  const context = canvas.getContext("2d");
+  if (context === null) {
+    return texture;
+  }
+  const scale = SPECIMEN_TEXTURE / (2 * FIELD_RADIUS);
+  context.lineJoin = "round";
+  context.lineWidth = Math.max(1.5, size * scale * 0.05);
+  for (const cell of cells) {
+    tracePolygon(context, cell.outline, scale);
+    context.globalAlpha = 0.5;
+    context.fillStyle = stain.body;
+    context.fill();
+    context.globalAlpha = 1;
+    context.strokeStyle = stain.edge;
+    context.stroke();
+  }
+  context.fillStyle = stain.nucleus;
+  for (const shape of Arr.flatMap(cells, nucleusShapes)) {
+    tracePolygon(context, shape, scale);
+    context.fill();
+  }
+  texture.colorSpace = SRGBColorSpace;
+  texture.anisotropy = 8;
+  texture.minFilter = LinearMipmapLinearFilter;
+  texture.needsUpdate = true;
+  return texture;
+}
+
+/**
+ * The fewest device pixels a cell is drawn across: enough for its wall and
+ * its nucleus to show. A screen with more pixels than that per cell, such as
+ * a phone's at three device pixels to the CSS pixel, draws every cell at its
+ * true size; a coarser one draws the cells this large, so the low-power view
+ * still reads as cells, while the readings keep the true length.
+ */
+const CELL_PIXELS = 8;
+
 /** The specimen's cells, each `size` field units long, with their walls and nuclei. */
 function Cells({
   size,
@@ -204,46 +250,29 @@ function Cells({
   readonly size: number;
   readonly specimen: "cheek" | "onion" | "root";
 }) {
-  const cells = useMemo(
-    () => slideCells(specimen, size, FIELD_RADIUS),
-    [size, specimen]
+  // The field's orthographic camera zooms to its pixels per field unit.
+  const pixels = useThree((state) => state.camera.zoom * state.viewport.dpr);
+  const drawn = Math.max(size, CELL_PIXELS / pixels);
+  const texture = useMemo(
+    () =>
+      createSpecimenTexture(
+        slideCells(specimen, drawn, FIELD_RADIUS),
+        drawn,
+        STAIN[specimen]
+      ),
+    [drawn, specimen]
   );
-  const outlines = useMemo(
-    () => Arr.map(cells, (cell) => cell.outline),
-    [cells]
-  );
-  const body = useFlatGeometry(
-    useMemo(() => fanPositions(outlines, 0), [outlines])
-  );
-  const edge = useFlatGeometry(
-    useMemo(() => edgePositions(outlines, 0.1), [outlines])
-  );
-  const nuclei = useFlatGeometry(
-    useMemo(() => fanPositions(Arr.flatMap(cells, nucleusShapes), 0.2), [cells])
-  );
-  const stain = STAIN[specimen];
+  useEffect(() => () => texture.dispose(), [texture]);
   return (
-    <group>
-      <mesh geometry={body}>
-        <meshBasicMaterial
-          color={stain.body}
-          opacity={0.5}
-          side={DoubleSide}
-          toneMapped={false}
-          transparent
-        />
-      </mesh>
-      <lineSegments geometry={edge}>
-        <lineBasicMaterial color={stain.edge} toneMapped={false} />
-      </lineSegments>
-      <mesh geometry={nuclei}>
-        <meshBasicMaterial
-          color={stain.nucleus}
-          side={DoubleSide}
-          toneMapped={false}
-        />
-      </mesh>
-    </group>
+    <mesh rotation={[-Math.PI / 2, 0, 0]}>
+      <planeGeometry args={[FIELD_RADIUS * 2, FIELD_RADIUS * 2]} />
+      <meshBasicMaterial
+        map={texture}
+        side={DoubleSide}
+        toneMapped={false}
+        transparent
+      />
+    </mesh>
   );
 }
 

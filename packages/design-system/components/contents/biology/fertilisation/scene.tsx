@@ -142,53 +142,50 @@ export function FertilisationScene({
         <>
           <Nucleus
             color={BIOLOGY_COLORS.spermNucleus}
-            count={counts.sperm}
             position={spermPosition(egg, 0.02)}
             size={0.08}
-          />
+          >
+            <CountTag count={counts.sperm} reach={0.08} side="left" />
+          </Nucleus>
           <Nucleus
             color={BIOLOGY_COLORS.spermNucleus}
-            count={counts.sperm}
             position={spermPosition(polar, 0.05)}
             size={0.08}
-          />
+          >
+            <CountTag count={counts.sperm} reach={0.08} side="right" />
+          </Nucleus>
         </>
       )}
       {done ? (
         <>
-          <Nucleus
-            color={BIOLOGY_COLORS.zygote}
-            count={counts.embryo}
-            position={egg}
-            size={0.15}
-          />
+          <Nucleus color={BIOLOGY_COLORS.zygote} position={egg} size={0.15}>
+            <CountTag count={counts.embryo} reach={0.15} side="left" />
+          </Nucleus>
           <Nucleus
             color={BIOLOGY_COLORS.endosperm}
-            count={counts.endosperm}
             position={polar}
             size={0.18}
-          />
+          >
+            <CountTag count={counts.endosperm} reach={0.18} side="right" />
+          </Nucleus>
         </>
       ) : (
         <>
-          <Nucleus
-            color={BIOLOGY_COLORS.eggNucleus}
-            count={counts.egg}
-            position={egg}
-            size={0.13}
-          />
+          <Nucleus color={BIOLOGY_COLORS.eggNucleus} position={egg} size={0.13}>
+            <CountTag count={counts.egg} reach={0.13} side="left" />
+          </Nucleus>
           <Nucleus
             color={BIOLOGY_COLORS.polarNucleus}
-            count={counts.egg}
             position={[polar[0] - 0.13, polar[1], polar[2]]}
             size={0.1}
           />
           <Nucleus
             color={BIOLOGY_COLORS.polarNucleus}
-            count={counts.egg}
             position={[polar[0] + 0.13, polar[1] - 0.12, polar[2]]}
             size={0.1}
-          />
+          >
+            <CountTag count={counts.egg} pair reach={0.1} side="right" />
+          </Nucleus>
         </>
       )}
       <SeedCoatTag count={counts.seedCoat} />
@@ -196,15 +193,15 @@ export function FertilisationScene({
   );
 }
 
-/** A nucleus as a soft sphere, with its chromosome count beside it. */
+/** A nucleus as a soft sphere, with the count it carries beside it. */
 function Nucleus({
+  children,
   color,
-  count,
   position,
   size,
 }: {
+  readonly children?: ReactNode;
   readonly color: string;
-  readonly count: number;
   readonly position: Point;
   readonly size: number;
 }) {
@@ -219,36 +216,54 @@ function Nucleus({
           roughness={0.4}
         />
       </mesh>
-      <CountTag position={[size + 0.12, 0, 0.08]}>
-        <InlineMath math={String(count)} />
-      </CountTag>
+      {children}
     </group>
   );
 }
 
-/** A chromosome count floating beside the part it belongs to. */
+/**
+ * A nucleus's chromosome count, on the side of it away from its neighbours:
+ * the egg's line on the left and the polar nuclei's on the right, so the
+ * counts of nuclei a few pixels apart on a phone never run together. The two
+ * polar nuclei share one count that names both.
+ */
 function CountTag({
-  children,
-  position,
+  count,
+  pair = false,
+  reach,
+  side,
 }: {
-  readonly children: ReactNode;
-  readonly position: Point;
+  readonly count: number;
+  readonly pair?: boolean;
+  readonly reach: number;
+  readonly side: "left" | "right";
 }) {
   const ink = useLabelInk();
   return (
-    <ThreeLabel color={ink} fontSize="compact" position={position}>
-      {children}
+    <ThreeLabel
+      anchorX={side === "left" ? "right" : "left"}
+      color={ink}
+      fontSize="compact"
+      gap={reach + 0.06}
+      position={[0, 0, 0.08]}
+    >
+      <InlineMath math={pair ? `${count} + ${count}` : String(count)} />
     </ThreeLabel>
   );
 }
 
 /** The seed coat's count, on the ovule's outer integument, the mother's own unfertilised tissue. */
 function SeedCoatTag({ count }: { readonly count: number }) {
+  const ink = useLabelInk();
   const quantity = useQuantity();
   return (
-    <CountTag position={[OVULE[0] - 0.62, OVULE[1] - 0.45, OVULE[2] + 0.2]}>
+    <ThreeLabel
+      color={ink}
+      fontSize="compact"
+      position={[OVULE[0] - 0.62, OVULE[1] - 0.45, OVULE[2] + 0.2]}
+    >
       <InlineMath math={quantity(count, "", 0)} />
-    </CountTag>
+    </ThreeLabel>
   );
 }
 

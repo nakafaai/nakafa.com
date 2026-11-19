@@ -1,6 +1,5 @@
 import { useFrame, useThree } from "@react-three/fiber";
 import { getAtomSceneColors } from "@repo/design-system/components/contents/chemistry/color";
-import { toggleColumns } from "@repo/design-system/components/contents/chemistry/columns";
 import { MathLines } from "@repo/design-system/components/contents/chemistry/lines";
 import { ELEMENTS } from "@repo/design-system/components/contents/chemistry/molecule/elements";
 import { HandSlider } from "@repo/design-system/components/contents/chemistry/slider";
@@ -15,6 +14,7 @@ import {
   shellsTex,
 } from "@repo/design-system/components/contents/chemistry/transfer/ions";
 import { mathNumber } from "@repo/design-system/components/contents/mathematics/number";
+import { toggleColumns } from "@repo/design-system/components/contents/simulation/columns";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { CameraControls } from "@repo/design-system/components/three/camera/controls";
 import { ThreeLabel } from "@repo/design-system/components/three/label";

@@ -6,6 +6,7 @@ import {
   uptakeAfter,
 } from "@repo/design-system/components/contents/biology/potometer/uptake";
 import { HandSlider } from "@repo/design-system/components/contents/chemistry/slider";
+import { toggleColumns } from "@repo/design-system/components/contents/simulation/columns";
 import { useQuantity } from "@repo/design-system/components/contents/simulation/quantity";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene";
@@ -71,6 +72,7 @@ export function PotometerLab({
         {shoots.length > 1 && (
           <ToggleGroup
             aria-label={labels.shoot}
+            gridColumns={toggleColumns(shoots.length)}
             onValueChange={(value: string) => {
               if (value !== "") {
                 setChosen(Number(value));

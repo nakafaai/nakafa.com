@@ -1,5 +1,4 @@
 import { Atom02Icon } from "@hugeicons/core-free-icons";
-import { toggleColumns } from "@repo/design-system/components/contents/chemistry/columns";
 import {
   getMolecule,
   type MoleculeId,
@@ -19,6 +18,7 @@ import {
   readMolecule,
 } from "@repo/design-system/components/contents/chemistry/molecule/scene";
 import { mathNumber } from "@repo/design-system/components/contents/mathematics/number";
+import { toggleColumns } from "@repo/design-system/components/contents/simulation/columns";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene";
 import { ScienceStage } from "@repo/design-system/components/three/stage";

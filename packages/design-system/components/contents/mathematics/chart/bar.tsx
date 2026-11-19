@@ -3,6 +3,7 @@ import {
   ChartDataProvider,
 } from "@repo/design-system/components/contents/mathematics/chart/context";
 import { ChartSummaryFacts } from "@repo/design-system/components/contents/mathematics/chart/facts";
+import { CategoryTick } from "@repo/design-system/components/contents/mathematics/chart/tick";
 import { Bar } from "@repo/design-system/components/evilcharts/charts/bar/series";
 import {
   EvilBarChart,
@@ -78,7 +79,13 @@ export function HistogramChart({
           >
             <Grid vertical={false} />
 
-            <XAxis dataKey="name" tickMargin={10} />
+            <XAxis
+              dataKey="name"
+              height="auto"
+              interval={0}
+              tick={<CategoryTick />}
+              tickMargin={10}
+            />
             <YAxis
               dataKey="value"
               label={{
@@ -127,7 +134,13 @@ export function BarChart({
             data={data}
           >
             <Grid vertical={false} />
-            <XAxis dataKey="name" tickMargin={10} />
+            <XAxis
+              dataKey="name"
+              height="auto"
+              interval={0}
+              tick={<CategoryTick />}
+              tickMargin={10}
+            />
             <YAxis
               dataKey="value"
               label={{
