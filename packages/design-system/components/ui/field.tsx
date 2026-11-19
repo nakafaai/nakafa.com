@@ -38,8 +38,8 @@ function FieldLegend({
 }
 
 /**
- * A form's rhythm, in one place: a label stands tight on its value (`gap-2`), fields stand wider apart (`gap-6`), and
- * sections wider again (`gap-8`), so the eye reads what belongs together.
+ * A form's rhythm, in one place: a label stands tight on its value (`gap-2`), fields stand wider apart (`gap-4`), and
+ * sections wider again (`gap-6`), so the eye reads what belongs together.
  */
 function FieldGroup({ className, ...props }: React.ComponentProps<"div">) {
   return (

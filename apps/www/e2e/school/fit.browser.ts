@@ -15,7 +15,8 @@ const FIRST_CARD = /^Open question 1\b/u;
  * item: the start, as on the page, and not the centre of the button that holds the thumbnail.
  */
 function thumbnailAlign(card: Element) {
-  const paper = card.querySelector("[inert]");
+  // The tile's button stands beside its preview (#2461), so the paper is read from the tile that holds both.
+  const paper = (card.parentElement ?? card).querySelector("[inert]");
   return paper === null ? "" : getComputedStyle(paper).textAlign;
 }
 

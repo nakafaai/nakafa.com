@@ -169,10 +169,14 @@ test("the forum holds the worst a class writes: a long name, long words, 2,000 c
     name: "Add a photo, a document or a poll",
   });
   const sendButton = page.getByRole("button", { exact: true, name: "Send" });
-  const chooseDocuments = page.waitForEvent("filechooser");
   await add.click();
-  await page.getByRole("menuitem", { name: "Document" }).click();
-  await (await chooseDocuments).setFiles(
+  const [chooseDocuments] = await Promise.all([
+    page.waitForEvent("filechooser", {
+      timeout: readinessTimeoutMilliseconds,
+    }),
+    page.getByRole("menuitem", { name: "Document" }).press("Enter"),
+  ]);
+  await chooseDocuments.setFiles(
     Arr.map(Arr.range(1, 8), (index) => ({
       buffer: PAPER,
       mimeType: "application/pdf",
@@ -192,17 +196,22 @@ test("the forum holds the worst a class writes: a long name, long words, 2,000 c
   const wide = await Effect.runPromise(
     pictureOf(page, "panorama.png", { height: 160, width: 1600 })
   );
-  const choosePhotos = page.waitForEvent("filechooser");
   await add.click();
-  await page.getByRole("menuitem", { name: "Photo" }).click();
-  await (await choosePhotos).setFiles([tall, wide]);
+  const [choosePhotos] = await Promise.all([
+    page.waitForEvent("filechooser", {
+      timeout: readinessTimeoutMilliseconds,
+    }),
+    page.getByRole("menuitem", { name: "Photo" }).press("Enter"),
+  ]);
+  await choosePhotos.setFiles([tall, wide]);
   await expect(sendButton).toBeEnabled({
     timeout: readinessTimeoutMilliseconds,
   });
   await sendButton.click();
-  await expect(
-    page.getByRole("button", { name: "Open panorama.png" })
-  ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
+  const widePhoto = page.getByRole("button", { name: "Open panorama.png" });
+  await expect(widePhoto).toBeVisible({
+    timeout: readinessTimeoutMilliseconds,
+  });
 
   // Twelve reactions on one message, each found in the chooser by a word in one of the three languages.
   const target = messageRow(page, Str.slice(0, 40)(LONG_URL)).first();
@@ -259,10 +268,12 @@ test("the forum holds the worst a class writes: a long name, long words, 2,000 c
   await expect(messageRow(page, "Terkirim saat jaringan kembali.")).toBeVisible(
     { timeout: readinessTimeoutMilliseconds }
   );
-  await page.unroute("**/*", slow);
+  // Waits for the requests still held, so none continues a route the unroute already let go.
+  await page.unrouteAll({ behavior: "wait" });
 
   // A thread of 200 replies, its summary counting them under the message.
-  const root = messageRow(page, "Pesan 100").first();
+  const roots = messageRow(page, "Pesan 100");
+  const root = roots.first();
   await root.hover();
   await root.getByRole("button", { name: "Reply in thread" }).click();
   const pane = page.locator("[data-slot=discussion]");
@@ -276,7 +287,7 @@ test("the forum holds the worst a class writes: a long name, long words, 2,000 c
   ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
   await page.getByRole("button", { exact: true, name: "Close" }).click();
   await expect(
-    root.getByRole("link", {
+    roots.getByRole("link", {
       name: new RegExp(`^${THREAD_REPLIES} replies`, "u"),
     })
   ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
@@ -293,10 +304,13 @@ test("the forum holds the worst a class writes: a long name, long words, 2,000 c
       "panorama.png",
       "Pesan 100",
     ]) {
-      await page
-        .getByText(Str.slice(0, 40)(shown))
-        .first()
-        .scrollIntoViewIfNeeded();
+      const example =
+        shown === wide.name
+          ? widePhoto
+          : page.getByText(Str.slice(0, 40)(shown));
+      await example.first().scrollIntoViewIfNeeded({
+        timeout: readinessTimeoutMilliseconds,
+      });
       expect(await expectContained(page, `${shown} at ${width}`)).toEqual({
         outside: [],
         spilled: 0,

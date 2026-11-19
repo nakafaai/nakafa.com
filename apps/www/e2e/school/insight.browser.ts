@@ -103,7 +103,9 @@ test("a teacher walks Insight from no class to a real reading, and a student rea
     sitting.title
   );
   await question.fill("Gerak lurus");
-  await tags.getByRole("button", { name: "Done" }).click();
+  // A competency saves as its field loses focus, and the dialog closes from its corner or Escape (#2390).
+  await question.press("Tab");
+  await teacher.keyboard.press("Escape");
   await expect(tags).toBeHidden();
 
   await student.goto(address(`/sittings/${sitting.sittingId}`));

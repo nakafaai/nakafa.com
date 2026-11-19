@@ -131,17 +131,18 @@ for (const viewport of [
     const country = locale.getByLabel("Country", { exact: true });
     await waitUntilTakenOver(country);
     await country.click();
-    await page.getByRole("option", { name: "Singapore" }).click();
+    // Malaysia brings its own currency; Singapore keeps the dollar it is priced in (#2317).
+    await page.getByRole("option", { name: "Malaysia" }).click();
     // The trigger reads the currency's name beside its symbol.
     await expect(locale.getByLabel("Currency", { exact: true })).toContainText(
-      "Singapore Dollar"
+      "Malaysian Ringgit"
     );
     const sentBefore = changes.sent;
     await locale.getByRole("button", { name: "Save" }).click();
     // The reload waits for the server, since it would cancel a save still on its way.
     await saved(changes, sentBefore);
     await page.reload();
-    await expect(country).toContainText("Singapore", {
+    await expect(country).toContainText("Malaysia", {
       timeout: readinessTimeoutMilliseconds,
     });
     await context.close();

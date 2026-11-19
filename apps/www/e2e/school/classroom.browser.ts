@@ -21,7 +21,8 @@ const SCHEMES = ["light", "dark"] as const;
  */
 const TABS = [
   // New announcement stands alone as the primary, and the poll stands in the header's one group.
-  { groups: 1, name: "Home", part: null },
+  // Home's views stand once the class has loaded, so its header is read only after them.
+  { groups: 1, name: "Home", part: "toggle-group" },
   { groups: 0, name: "Forum", part: "resizable-panel-group" },
   // The library's search and New folder read as one group, so a phone's header holds two controls.
   { groups: 1, name: "Library", part: "table-card" },

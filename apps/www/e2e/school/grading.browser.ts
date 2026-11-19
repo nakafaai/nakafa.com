@@ -142,7 +142,12 @@ test("a student writes an essay, the teacher grades it with part of its points, 
     student.getByText("Your teacher released these results.")
   ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
   await expect(student.getByText("Partly correct")).toBeVisible();
-  await expect(student.getByText(`Your answer: ${ESSAY}`)).toBeVisible();
+  const reviewedEssay = student
+    .getByRole("list", { name: "Your answers" })
+    .getByRole("listitem")
+    .filter({ hasText: ESSAY });
+  await expect(reviewedEssay).toContainText("Your answer:");
+  await expect(reviewedEssay.getByText(ESSAY, { exact: true })).toBeVisible();
   await studentContext.close();
   await teacherContext.close();
 });

@@ -11,7 +11,7 @@ import {
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
 /** The body's padding under the card of a table page. */
-const BODY_PADDING = 16;
+const BODY_PADDING = 24;
 
 /**
  * Reads where the card sits against the viewport and the header's page-width row, and whether the page scrolls
