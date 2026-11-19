@@ -124,10 +124,9 @@ test("reaches every exam's set table in at most two clicks from its country", as
 });
 
 /**
- * A card wears only its own entity's design: SNBT and TKA their exam art, and
- * the Aufnahmeprüfung TU Darmstadt's Studienkolleg's mark, each a self-hosted
- * image with its size set and no text over it. A country's design stands in its
- * page's metadata alone, and the Darmstadt Mathematics test shares its own.
+ * SNBT and TKA have their own exam artwork. The Aufnahmeprüfung uses a tile
+ * until it has its own artwork. Germany and the Darmstadt Mathematics test
+ * each keep their own share image.
  */
 test("draws each exam card with its own design", async ({ page }) => {
   await visit(page, INDONESIA);
@@ -186,7 +185,7 @@ for (const width of [390, 1440]) {
     if (width < 640) {
       await path.getByRole("button", { name: "More" }).click();
       await page
-        .getByRole("menu", { name: "Pages" })
+        .getByRole("group", { name: "Pages" })
         .getByRole("menuitem", { name: "TKA" })
         .click();
     } else {
