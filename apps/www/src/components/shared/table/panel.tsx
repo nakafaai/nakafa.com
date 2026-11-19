@@ -93,7 +93,13 @@ export function ColumnHead({
       scope="col"
       style={size === undefined ? undefined : { minWidth: size, width: size }}
     >
-      <HeadMenuContext value={menu}>{children}</HeadMenuContext>
+      <HeadMenuContext value={menu}>
+        {width === "compact" || width === "shortText" ? (
+          <div className="w-0 min-w-full">{children}</div>
+        ) : (
+          children
+        )}
+      </HeadMenuContext>
     </TableHead>
   );
 }

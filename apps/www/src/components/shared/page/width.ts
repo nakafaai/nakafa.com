@@ -7,25 +7,22 @@ import { cva } from "class-variance-authority";
  * (3xl) for a lesson, an article, the Quran and a settings page, starting on the header's first letter. The page
  * fills the height its shell leaves and never grows past the width beside the sidebar.
  */
-export const pageFrameVariants = cva(
-  "flex min-h-0 w-full min-w-0 flex-1 flex-col",
-  {
-    defaultVariants: { height: "content", width: "page" },
-    variants: {
-      /** A page as tall as its content, or as tall as the screen under the shell's bar, which a list fills and scrolls inside. */
-      height: {
-        content: "",
-        screen:
-          "h-[calc(100svh-var(--app-header-top,4rem))] overflow-clip lg:h-svh",
-      },
-      /** How wide the page's body reads: the whole frame, or the reading column under the frame's header. */
-      width: {
-        column: "[--body-width:var(--container-3xl)]",
-        page: "",
-      },
+export const pageFrameVariants = cva("flex min-h-0 w-full min-w-0 flex-col", {
+  defaultVariants: { height: "content", width: "page" },
+  variants: {
+    /** A page as tall as its content, or as tall as the screen under the shell's bar, which a list fills and scrolls inside. */
+    height: {
+      content: "flex-1",
+      screen:
+        "h-[calc(100svh-var(--app-header-top,4rem))] flex-none overflow-clip lg:h-svh",
     },
-  }
-);
+    /** How wide the page's body reads: the whole frame, or the reading column under the frame's header. */
+    width: {
+      column: "[--body-width:var(--container-3xl)]",
+      page: "",
+    },
+  },
+});
 
 /** A box as wide as the page's frame, centred, for what draws its own gutter inside, such as two panes. */
 export const pageBoxVariants = cva("mx-auto w-full max-w-(--page-width)");
@@ -42,6 +39,9 @@ export const pageGutterVariants = cva("px-4 sm:px-6");
  * cards, so no two pages of a family start their body at a different height and a press between them moves nothing.
  */
 export const pageRhythmVariants = cva("py-6");
+
+/** The space from a list's view switcher to the content it changes. */
+export const pageViewSpacingVariants = cva("gap-3");
 
 /** One row of a page's frame, its header's or its tab row's, or a working surface's: the page's width and gutter, centred. */
 export const pageRowVariants = cva(

@@ -22,7 +22,6 @@ import {
   SheetDescription,
   SheetFooter,
   SheetHeader,
-  SheetPanel,
   SheetTitle,
   SheetTrigger,
 } from "@repo/design-system/components/ui/sheet";
@@ -34,8 +33,8 @@ import { useTranslations } from "use-intl";
 import { ChoiceContext } from "@/components/notifications/choice";
 import { preferenceChoicesOf } from "@/components/notifications/preferences";
 import { PushOffer } from "@/components/notifications/push";
-import { ListCard } from "@/components/shared/page/body";
 import { PageHeaderLabel } from "@/components/shared/page/header";
+import { PaneFill } from "@/components/shared/page/pane";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { RowItems } from "@/components/shared/table/menu";
@@ -58,12 +57,12 @@ export function NoticePreferences({ children }: { children: ReactNode }) {
           </Button>
         }
       />
-      <SheetContent keepMounted size="md">
+      <SheetContent className="w-full max-w-none" keepMounted size="md">
         <SheetHeader>
           <SheetTitle>{t("preferences")}</SheetTitle>
           <SheetDescription>{t("preferences-description")}</SheetDescription>
         </SheetHeader>
-        <SheetPanel>{children}</SheetPanel>
+        <PaneFill>{children}</PaneFill>
         <SheetFooter className="flex-row items-center justify-between gap-4">
           <PushOffer />
         </SheetFooter>
@@ -106,6 +105,7 @@ export function PreferenceTable({
               on={info.getValue() === "on"}
             />
           ),
+        width: "compact",
         header: t(`channel.${channel}`),
         id: channel,
         options: [
@@ -121,33 +121,32 @@ export function PreferenceTable({
 
   return (
     <TableFiltersProvider>
-      <ListCard>
-        <DataTable
-          columns={[
-            preferenceColumns.text(({ kind }) => t(`kind-${kind}`), {
-              header: t("preferences-kind"),
-              id: "kind",
-            }),
-            channelColumn("push"),
-            channelColumn("email"),
-            preferenceColumns.menu(({ row: { original } }) => (
-              <RowItems>
-                {Arr.map(original.channels, (channel) => (
-                  <ChannelItem
-                    channel={channel}
-                    key={channel}
-                    kind={original.kind}
-                    on={Arr.contains(original.on, channel)}
-                  />
-                ))}
-              </RowItems>
-            )),
-          ]}
-          data={preferenceChoicesOf(relations, off)}
-          plain
-          rowId={({ kind }) => kind}
-        />
-      </ListCard>
+      <DataTable
+        columns={[
+          preferenceColumns.text(({ kind }) => t(`kind-${kind}`), {
+            width: "compact",
+            header: t("preferences-kind"),
+            id: "kind",
+          }),
+          channelColumn("push"),
+          channelColumn("email"),
+          preferenceColumns.menu(({ row: { original } }) => (
+            <RowItems>
+              {Arr.map(original.channels, (channel) => (
+                <ChannelItem
+                  channel={channel}
+                  key={channel}
+                  kind={original.kind}
+                  on={Arr.contains(original.on, channel)}
+                />
+              ))}
+            </RowItems>
+          )),
+        ]}
+        data={preferenceChoicesOf(relations, off)}
+        plain
+        rowId={({ kind }) => kind}
+      />
     </TableFiltersProvider>
   );
 }

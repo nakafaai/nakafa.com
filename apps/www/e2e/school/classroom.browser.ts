@@ -22,13 +22,13 @@ const SCHEMES = ["light", "dark"] as const;
 const TABS = [
   // New announcement stands alone as the primary, and the poll stands in the header's one group.
   // Home's views stand once the class has loaded, so its header is read only after them.
-  { groups: 1, name: "Home", part: "toggle-group" },
-  { groups: 0, name: "Forum", part: "resizable-panel-group" },
+  { groups: 1, name: "Home", part: "toggle-group", viewGap: 12 },
+  { groups: 0, name: "Forum", part: "resizable-panel-group", viewGap: null },
   // The library's search and New folder read as one group, so a phone's header holds two controls.
-  { groups: 1, name: "Library", part: "table-card" },
-  { groups: 0, name: "Tasks", part: "table-card" },
-  { groups: 0, name: "People", part: "table-card" },
-  { groups: 0, name: "Grades", part: "table-card" },
+  { groups: 1, name: "Library", part: "table-card", viewGap: 12 },
+  { groups: 0, name: "Tasks", part: "table-card", viewGap: null },
+  { groups: 0, name: "People", part: "table-card", viewGap: null },
+  { groups: 0, name: "Grades", part: "table-card", viewGap: null },
 ] as const;
 
 /** The address of the class's home, which its sidebar entry opens. */
@@ -89,8 +89,16 @@ const overflowOf = (page: Page) =>
     const first = document.querySelector(
       'main [data-slot="toggle-group"], main [data-slot="table-card"]'
     );
+    const next = first?.nextElementSibling;
     return {
       body: Math.max(0, ...past),
+      viewGap:
+        first?.matches('[data-slot="toggle-group"]') && next
+          ? Math.round(
+              next.getBoundingClientRect().top -
+                first.getBoundingClientRect().bottom
+            )
+          : null,
       offset:
         first === null || frame === undefined
           ? null
@@ -104,6 +112,19 @@ const overflowOf = (page: Page) =>
         document.documentElement.clientWidth,
     };
   });
+
+/** Home reads its announcements after the view switcher appears. Wait for both before comparing the gap. */
+async function expectViewGap(page: Page, label: string, gap: number | null) {
+  if (gap === null) {
+    return;
+  }
+  await expect
+    .poll(async () => (await overflowOf(page)).viewGap, {
+      message: label,
+      timeout: readinessTimeoutMilliseconds,
+    })
+    .toBe(gap);
+}
 
 test("every class tab keeps its body inside the header's frame, its first body row at one offset under the tabs, its table in a card that closes on the screen, two header buttons at most, and no sideways scroll, at 1920, 1440, 768, 390 and 320 px, light and dark", async ({
   baseURL,
@@ -151,6 +172,7 @@ test("every class tab keeps its body inside the header's frame, its first body r
         ).toEqual({ body: 0, sideways: 0 });
         expect(measured.controls, label).toBeLessThanOrEqual(2);
         expect(measured.groups, label).toBe(tab.groups);
+        await expectViewGap(page, label, tab.viewGap);
         // The forum's panes start under the tabs by design; every other tab's first row shares one offset.
         if (tab.name !== "Forum" && measured.offset !== null) {
           offsets = Arr.append(offsets, measured.offset);

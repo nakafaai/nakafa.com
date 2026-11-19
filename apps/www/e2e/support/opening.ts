@@ -9,7 +9,7 @@ import {
 
 /** The body of a dialog, a drawer or a sheet. */
 const POPUP_BODY =
-  '[data-slot="dialog-panel"],[data-slot="drawer-panel"],[data-slot="sheet-panel"]';
+  '[data-slot="dialog-panel"],[data-slot="drawer-panel"],[data-slot="sheet-panel"],[data-slot="sheet-frame"] > [data-slot="pane-fill"]';
 
 /** How long a popup is watched from the press on, past its open animation. */
 const RECORD_MILLISECONDS = 900;

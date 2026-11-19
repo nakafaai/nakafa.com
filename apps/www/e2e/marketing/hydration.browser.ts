@@ -79,6 +79,25 @@ test("the home practice question keeps an early answer and scores the example Ni
     await expect(
       demo.locator('annotation[encoding="application/x-tex"]').first()
     ).toHaveText("\\triangle(a,b)=2a+\\frac{b}{m}");
+    const spaces = await demo.locator('[data-slot="card"]').evaluate((card) => {
+      const outer = card.getBoundingClientRect();
+      const [number, prompt, answer] = Array.from(
+        card.firstElementChild?.children ?? [],
+        (part) => part.getBoundingClientRect()
+      );
+      if (!(number && prompt && answer)) {
+        return [];
+      }
+      return [
+        number.top - outer.top,
+        prompt.top - number.bottom,
+        answer.top - prompt.bottom,
+        outer.bottom - answer.bottom,
+      ];
+    });
+    expect(spaces).toHaveLength(4);
+    expect(spaces[0]).toBeGreaterThan(0);
+    expect(Math.max(...spaces) - Math.min(...spaces)).toBeLessThanOrEqual(1);
     await mistake.getByRole("radio").click();
     await expect(mistake).toHaveAttribute("data-pressed", "");
   } finally {
@@ -100,4 +119,5 @@ test("the home practice question keeps an early answer and scores the example Ni
       .getByText("Why is 13 wrong?", { exact: true })
       .and(nina.locator('[aria-hidden="true"]'))
   ).toBeVisible();
+  await expect(nina.locator('[data-slot="message-footer"]')).toHaveCount(0);
 });

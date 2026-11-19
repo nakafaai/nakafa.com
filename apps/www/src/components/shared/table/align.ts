@@ -67,9 +67,11 @@ export const columnAlign = cva("in-[thead]:bg-muted", {
 export const headWidth = cva("", {
   variants: {
     width: {
+      compact: "w-20 min-w-20",
       days: "w-52 min-w-52",
       menu: "min-w-12",
       number: "w-28 min-w-28",
+      shortText: "min-w-16",
       text: "min-w-36 not-first:w-72 sm:min-w-50 sm:not-first:min-w-64",
       values: "w-36 min-w-36 sm:w-48 sm:min-w-48",
       wide: "w-60 min-w-60",

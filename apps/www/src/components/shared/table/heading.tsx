@@ -17,7 +17,10 @@ import {
 } from "@/components/shared/table/align";
 import { HeadDays } from "@/components/shared/table/calendar";
 import { ColumnChoice, ColumnFilter } from "@/components/shared/table/column";
-import type { HeadFilter } from "@/components/shared/table/columns";
+import type {
+  ColumnWidth,
+  HeadFilter,
+} from "@/components/shared/table/columns";
 import type { dataTableFeatures } from "@/components/shared/table/features";
 import { TableHeadButton } from "@/components/shared/table/head";
 import {
@@ -49,7 +52,7 @@ export function DataTableHead<TData extends RowData>({
 }) {
   const common = useTranslations("Common");
   const column = header.column;
-  const { align, filter, title = "", wide } = column.columnDef.meta ?? {};
+  const { align, filter, title = "", width } = column.columnDef.meta ?? {};
   const place = placeOf(index, align);
 
   if (header.isPlaceholder || filter === undefined) {
@@ -59,7 +62,7 @@ export function DataTableHead<TData extends RowData>({
       </ColumnHead>
     );
   }
-  const sizing = columnSizing(filter, title, wide);
+  const sizing = columnSizing(filter, title, width);
   return (
     <ColumnHead
       menu={menuPlaceOf(
@@ -197,10 +200,16 @@ function SortingHead<TData extends RowData>({
 function columnSizing(
   filter: HeadFilter,
   title: string,
-  wide: boolean | undefined
+  width: ColumnWidth | undefined
 ) {
-  if (wide === true) {
-    return { width: "wide" as const };
+  if (width === "wide") {
+    return { width };
+  }
+  if (width === "compact") {
+    return {
+      width:
+        filter.kind === "text" ? ("shortText" as const) : ("compact" as const),
+    };
   }
   if (filter.kind === "choice") {
     return {

@@ -6,7 +6,6 @@ import { MarkdownContent } from "@repo/design-system/components/markdown/content
 import {
   Message,
   MessageContent,
-  MessageFooter,
 } from "@repo/design-system/components/ui/message";
 import { Nina } from "@repo/design-system/components/ui/nina";
 import { useTranslations } from "use-intl";
@@ -64,34 +63,28 @@ export function NinaSection() {
             </NinaPrompt>
           </Message>
           <Message>
-            <MessageContent className="gap-6">
-              <div className="flex min-w-0 flex-col gap-4">
-                <TurnReveal>
-                  <MessageSections>
-                    <MessageSection kind="activity">
-                      {/* The turn's reasoning has no text, so its row shows no content. */}
-                      <Reasoning
-                        className="w-full"
-                        defaultOpen={false}
-                        hasContent={false}
-                      >
-                        <ReasoningTrigger />
-                      </Reasoning>
-                    </MessageSection>
-                    <MessageSection kind="response">
-                      <TurnAnswer id={ANSWER_ID} text={answer}>
-                        <MarkdownContent id={ANSWER_ID} variant="chat">
-                          {answer}
-                        </MarkdownContent>
-                      </TurnAnswer>
-                    </MessageSection>
-                  </MessageSections>
-                </TurnReveal>
-                {/* The row that a finished chat turn keeps under its answer, so
-                    this card has the same height. Its actions are the owner's
-                    and never show here. */}
-                <MessageFooter className="min-h-9 justify-between gap-4" />
-              </div>
+            <MessageContent>
+              <TurnReveal>
+                <MessageSections>
+                  <MessageSection kind="activity">
+                    {/* The turn's reasoning has no text, so its row shows no content. */}
+                    <Reasoning
+                      className="w-full"
+                      defaultOpen={false}
+                      hasContent={false}
+                    >
+                      <ReasoningTrigger />
+                    </Reasoning>
+                  </MessageSection>
+                  <MessageSection kind="response">
+                    <TurnAnswer id={ANSWER_ID} text={answer}>
+                      <MarkdownContent id={ANSWER_ID} variant="chat">
+                        {answer}
+                      </MarkdownContent>
+                    </TurnAnswer>
+                  </MessageSection>
+                </MessageSections>
+              </TurnReveal>
             </MessageContent>
           </Message>
         </TurnPlayer>

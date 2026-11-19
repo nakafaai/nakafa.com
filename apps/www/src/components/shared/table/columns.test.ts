@@ -122,9 +122,9 @@ describe("the columns of a table", () => {
       columns.number((row) => row.score, {
         header: "Score",
         id: "score",
-        wide: true,
+        width: "wide",
       })
-    ).toMatchObject({ meta: { wide: true } });
+    ).toMatchObject({ meta: { width: "wide" } });
   });
 
   it("leaves the row's menu the one column with nothing to filter by", () => {
