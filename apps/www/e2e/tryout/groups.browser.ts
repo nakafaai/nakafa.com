@@ -1,5 +1,4 @@
 import { expect, type Page, test } from "@playwright/test";
-import { Array as Arr } from "effect";
 import { groupHref, trackHref } from "@/e2e/support/tryout";
 
 /** Indonesia's page, which holds SNBT and TKA. */
@@ -161,6 +160,21 @@ test("keeps try-out catalog cards one title line tall on a phone and desktop", a
     grid.getByRole("link", { exact: true, name: `Lihat set ${name}` })
   ).toBeVisible();
 
+  // The served thumbnail can round its height as it scales. The frame keeps
+  // the same ratio before that image loads and after it has decoded.
+  await grid
+    .locator("img")
+    .first()
+    .evaluate(async (image) => {
+      if (image instanceof HTMLImageElement) {
+        const thumbnail = document.createElement("canvas");
+        thumbnail.width = 768;
+        thumbnail.height = 404;
+        image.src = thumbnail.toDataURL();
+        await image.decode();
+      }
+    });
+
   for (const width of [320, 1440]) {
     await page.setViewportSize({ height: 844, width });
     await expect(heading).toHaveCSS("text-overflow", "ellipsis");
@@ -168,10 +182,10 @@ test("keeps try-out catalog cards one title line tall on a phone and desktop", a
     const heights = await grid
       .locator('[data-slot="card"]')
       .evaluateAll((cards) =>
-        cards.map((card) => Math.round(card.getBoundingClientRect().height))
+        cards.map((card) => card.getBoundingClientRect().height)
       );
     expect(heights.length).toBeGreaterThan(1);
-    expect(Arr.dedupe(heights)).toHaveLength(1);
+    expect(Math.max(...heights) - Math.min(...heights)).toBeLessThan(0.1);
     if (width === 1440) {
       expect(
         await heading.evaluate((title) => title.scrollWidth > title.clientWidth)

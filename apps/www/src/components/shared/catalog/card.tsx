@@ -112,11 +112,11 @@ export function CatalogCardVisual({
   visual: TileLook | string;
 }) {
   if (Predicate.isString(visual)) {
-    // The reviewed artwork, 1200 by 630, without cropping.
+    // Keep the tile's frame even when the served artwork has rounded pixel dimensions.
     return (
       <Image
         alt=""
-        className="h-auto w-full"
+        className="aspect-40/21 w-full object-contain"
         height={630}
         preload={preload}
         sizes="(min-width: 640px) 384px, calc(100vw - 48px)"
