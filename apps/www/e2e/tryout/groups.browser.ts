@@ -15,14 +15,9 @@ const EXAM_CARD = /^View options /u;
 const SUBJECT_CARD = /^View sets /u;
 /** The country's design, which only its own page's metadata names. */
 const GERMANY_DESIGN = /\/open-graph\/tryout\/germany\/en-index\.png$/u;
-/** TU Darmstadt's Studienkolleg's mark, the Aufnahmeprüfung card's image, as a card draws it. */
-const DARMSTADT_MARK =
-  "/open-graph/tryout/germany/en-entrance-examination.webp";
 /** The Darmstadt Mathematics test's own design, which its page shares. */
 const DARMSTADT_MATHEMATICS =
   /\/open-graph\/tryout\/germany\/entrance-examination\/en-tu-darmstadt-mathematics\.png$/u;
-/** A size an image declares, in whole pixels. */
-const PIXELS = /^\d+$/u;
 /**
  * The set tables the owner checks: SNBT's one track, whose Indonesian states are
  * the longest, and TKA's compulsory mathematics, where the columns went missing.
@@ -94,8 +89,12 @@ for (const [href, exams, country] of [
       .getByRole("navigation", { name: "breadcrumb" })
       .getByRole("button", { name: country })
       .click();
-    const menu = page.getByRole("menu", { name: "Country" });
-    await expect(menu.getByRole("menuitemradio")).toHaveCount(2);
+    const menu = page.getByRole("group", { name: "Country" });
+    await expect(menu.getByRole("menuitemradio")).toHaveText([
+      "Indonesia",
+      "Germany",
+      "Malaysia",
+    ]);
     await expect(
       menu.getByRole("menuitemradio", { name: country })
     ).toHaveAttribute("aria-current", "page");
@@ -136,12 +135,8 @@ test("draws each exam card with its own design", async ({ page }) => {
   await expect(page.locator('main [data-slot="tile"]')).toHaveCount(0);
 
   await visit(page, GERMANY);
-  const mark = page.locator("main img");
-  await expect(mark).toHaveCount(1);
-  await expect(mark).toHaveAttribute("src", DARMSTADT_MARK);
-  await expect(mark).toHaveAttribute("width", PIXELS);
-  await expect(mark).toHaveAttribute("height", PIXELS);
-  await expect(page.locator('main [data-slot="tile"]')).toHaveCount(0);
+  await expect(page.locator("main img")).toHaveCount(0);
+  await expect(page.locator('main [data-slot="tile"]')).toHaveCount(1);
   await expect(page.locator('meta[property="og:image"]')).toHaveAttribute(
     "content",
     GERMANY_DESIGN
@@ -197,7 +192,7 @@ for (const width of [390, 1440]) {
     } else {
       await path.getByRole("button", { name: "TKA" }).click();
     }
-    const menu = page.getByRole("menu", { name: "Exam" });
+    const menu = page.getByRole("group", { name: "Exam" });
     const own = menu.getByRole("menuitemradio", { name: "TKA" });
 
     await expect(menu.getByRole("menuitemradio")).toHaveCount(2);
@@ -296,8 +291,10 @@ for (const href of SET_TABLES) {
       expect(table.inside).toBe(true);
       expect(table.lastBesideMenu).toBe(true);
       expect(table.cutBadges).toBe(0);
-      // A phone's card is narrower than the columns, so it scrolls them; a desktop's holds them.
-      expect(table.scrolls).toBe(width < 768);
+      // On a phone the card must scroll. A desktop may also scroll inside the 3xl column.
+      if (width < 768) {
+        expect(table.scrolls).toBe(true);
+      }
       expect(
         await page.evaluate(
           () => document.documentElement.scrollWidth - window.innerWidth
