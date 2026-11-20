@@ -9,10 +9,10 @@ import {
 import { tryoutSetIdentityOf } from "@repo/backend/confect/tryouts/route";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { FIXTURE_TRACK } from "@repo/backend/test/assessment/catalog";
+import type { TryoutWorld } from "@repo/backend/test/tryout/world";
 import {
   insertStartedAttempt,
   TRYOUT_NOW,
-  type TryoutWorld,
   tryoutWorld,
 } from "@repo/backend/test/tryout/world";
 import { Array as Arr, Effect } from "effect";

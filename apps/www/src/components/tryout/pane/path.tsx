@@ -13,7 +13,8 @@ import { useTranslations } from "use-intl";
 import { PaneSection } from "@/components/progress/section";
 import { getTryoutSubjectIcons } from "@/components/tryout/catalog/icons";
 import { useSetPane } from "@/components/tryout/pane/context";
-import { type PartStep, partStep } from "@/components/tryout/pane/model";
+import type { PartStep } from "@/components/tryout/pane/model";
+import { partStep } from "@/components/tryout/pane/model";
 import { TryoutPageLink } from "@/components/tryout/route/link";
 
 /** A step's marker on the path: a part's number or tick in a circle, the finish's flag in a rounded square. */

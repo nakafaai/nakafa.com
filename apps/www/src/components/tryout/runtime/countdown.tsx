@@ -6,10 +6,8 @@ import { Array as Arr, Option } from "effect";
 import { Fragment } from "react";
 import { useTranslations } from "use-intl";
 import { useNow } from "@/components/player/now";
-import {
-  type DeadlinePart,
-  readDeadlineParts,
-} from "@/components/tryout/runtime/deadline";
+import type { DeadlinePart } from "@/components/tryout/runtime/deadline";
+import { readDeadlineParts } from "@/components/tryout/runtime/deadline";
 
 /** How a digit of the clock rolls: short and easing out, so each second lands well before the next one. */
 const TICK = {

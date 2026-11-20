@@ -1,6 +1,7 @@
 import { getRouteApi, useLocation, useParams } from "@tanstack/react-router";
 import { Effect, Option, Schema } from "effect";
-import { type ReactNode, useState } from "react";
+import type { ReactNode } from "react";
+import { useState } from "react";
 import { useTranslations } from "use-intl";
 import { ConvexIsland } from "@/components/providers/island";
 import { PageList } from "@/components/shared/page/body";
