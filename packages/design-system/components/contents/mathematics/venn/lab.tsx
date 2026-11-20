@@ -27,7 +27,10 @@ import {
   VisualCardHeader,
   VisualCardToolbar,
 } from "@repo/design-system/components/visual/card";
-import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
+import {
+  VisualFactIndicator,
+  VisualFactTabular,
+} from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { Array as Arr, Option } from "effect";
 import { type ReactNode, Suspense, useMemo, useState } from "react";
@@ -125,20 +128,6 @@ export function VennSortLab({
             </ToggleGroupItem>
           ))}
         </ToggleGroup>
-        <ul className="flex w-full flex-wrap gap-x-5 gap-y-1 text-sm">
-          {Arr.map(sets, (set, index) => (
-            <li className="flex items-center gap-2" key={LETTERS[index]}>
-              <span
-                aria-hidden="true"
-                className="size-2.5 shrink-0 rounded-full"
-                style={{ backgroundColor: HOOP_COLORS[index] }}
-              />
-              <span>
-                <InlineMath math={`${LETTERS[index]} =`} /> {`{${set.name}}`}
-              </span>
-            </li>
-          ))}
-        </ul>
       </VisualCardToolbar>
 
       <VisualCardBody
@@ -160,30 +149,40 @@ export function VennSortLab({
 
       <VisualCardSceneActions />
 
-      {showCount ? (
-        <VisualCardFooter>
-          <VisualCardFacts>
-            <VisualFactTabular
-              label={labels.count}
-              value={<InlineMath math={`n(${math}) = ${chosen.length}`} />}
+      <VisualCardFooter>
+        <VisualCardFacts>
+          {Arr.map(sets, (set, index) => (
+            <VisualFactIndicator
+              indicatorColor={HOOP_COLORS[index]}
+              key={LETTERS[index]}
+              label={<InlineMath math={LETTERS[index]} />}
+              value={`{${set.name}}`}
             />
-            <VisualFactTabular
-              label={labels.members}
-              value={
-                <span>
-                  <InlineMath math={`${math} =`} />{" "}
-                  {chosen.length === 0
-                    ? "{ }"
-                    : `{ ${Arr.join(
-                        Arr.map(chosen, (each) => each.name),
-                        ", "
-                      )} }`}
-                </span>
-              }
-            />
-          </VisualCardFacts>
-        </VisualCardFooter>
-      ) : null}
+          ))}
+          {showCount ? (
+            <>
+              <VisualFactTabular
+                label={labels.count}
+                value={<InlineMath math={`n(${math}) = ${chosen.length}`} />}
+              />
+              <VisualFactTabular
+                label={labels.members}
+                value={
+                  <span>
+                    <InlineMath math={`${math} =`} />{" "}
+                    {chosen.length === 0
+                      ? "{ }"
+                      : `{ ${Arr.join(
+                          Arr.map(chosen, (each) => each.name),
+                          ", "
+                        )} }`}
+                  </span>
+                }
+              />
+            </>
+          ) : null}
+        </VisualCardFacts>
+      </VisualCardFooter>
     </VisualCard>
   );
 }

@@ -89,15 +89,7 @@ export function BundleCountLab({
             </ToggleGroupItem>
           ))}
         </ToggleGroup>
-        <div className="flex min-w-48 flex-1 flex-col gap-2">
-          <div className="flex items-center justify-between gap-4 text-sm">
-            <span>{labels.count}</span>
-            {showReadout ? (
-              <span className="shrink-0 tabular-nums">
-                <InlineMath math={String(shown)} />
-              </span>
-            ) : null}
-          </div>
+        <div className="flex min-w-48 flex-1 items-center">
           <Slider
             aria-label={labels.count}
             max={largestCount(base)}
