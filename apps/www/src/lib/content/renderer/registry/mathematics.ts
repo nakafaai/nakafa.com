@@ -22,11 +22,16 @@ import {
   BacterialGrowth,
   FunctionExplorationVirusChart,
 } from "@/lib/content/renderer/client/mathematics/growth";
+import { JourneyGraphLab } from "@/lib/content/renderer/client/mathematics/journey";
+import { SwitchLogicLab } from "@/lib/content/renderer/client/mathematics/logic";
+import { RouteNetworkLab } from "@/lib/content/renderer/client/mathematics/network";
 import {
   AbacusBaseLab,
   BinaryLampLab,
+  BundleCountLab,
 } from "@/lib/content/renderer/client/mathematics/numeral";
 import { SequenceConceptTableChairsAnimation } from "@/lib/content/renderer/client/mathematics/sequence";
+import { VennSortLab } from "@/lib/content/renderer/client/mathematics/sets";
 import type { RendererImplementation } from "@/lib/content/renderer/selection";
 
 /** Every mathematics visual, which any lesson in any domain may use. */
@@ -46,6 +51,10 @@ export const mathematicsRenderers = [
   {
     name: mathematicsComponentNames.binaryLampLab,
     component: BinaryLampLab,
+  },
+  {
+    name: mathematicsComponentNames.bundleCountLab,
+    component: BundleCountLab,
   },
   {
     name: mathematicsComponentNames.chart,
@@ -88,6 +97,10 @@ export const mathematicsRenderers = [
     component: InverseFunctionIllustration,
   },
   {
+    name: mathematicsComponentNames.journeyGraphLab,
+    component: JourneyGraphLab,
+  },
+  {
     name: mathematicsComponentNames.marbleDrawLab,
     component: MarbleDrawLab,
   },
@@ -96,11 +109,23 @@ export const mathematicsRenderers = [
     component: QuadraticEquationReadingRoomProblem,
   },
   {
+    name: mathematicsComponentNames.routeNetworkLab,
+    component: RouteNetworkLab,
+  },
+  {
     name: mathematicsComponentNames.scatterDiagram,
     component: ScatterDiagram,
   },
   {
     name: mathematicsComponentNames.sequenceConceptTableChairsAnimation,
     component: SequenceConceptTableChairsAnimation,
+  },
+  {
+    name: mathematicsComponentNames.switchLogicLab,
+    component: SwitchLogicLab,
+  },
+  {
+    name: mathematicsComponentNames.vennSortLab,
+    component: VennSortLab,
   },
 ] satisfies readonly RendererImplementation[];
