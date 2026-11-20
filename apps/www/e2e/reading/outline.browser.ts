@@ -2,6 +2,7 @@ import type { Page } from "@playwright/test";
 import { expect, test } from "@playwright/test";
 import { Array as Arr, Effect } from "effect";
 import { pinnedRoutes } from "@/e2e/support/corpus";
+import { waitForSlide } from "@/e2e/support/layout";
 import { waitForCommittedAppRouter } from "@/e2e/support/navigation/readiness";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
@@ -179,6 +180,154 @@ test("the outline marks the section being read at every step down and up a long 
       })
     )
   );
+});
+
+/**
+ * Where the heading a fragment names stands, against the line a jump to it
+ * stops at (its scroll margin), and where the page stands.
+ */
+const readJump = (page: Page, hash: string) =>
+  page.evaluate((fragment) => {
+    const heading = document.querySelector(
+      `#${CSS.escape(decodeURIComponent(fragment.slice(1)))}`
+    );
+    return {
+      hash: window.location.hash,
+      line:
+        heading === null
+          ? Number.NaN
+          : Number.parseFloat(getComputedStyle(heading).scrollMarginTop),
+      top: heading?.getBoundingClientRect().top ?? Number.NaN,
+      y: Math.round(window.scrollY),
+    };
+  }, hash);
+
+/** Waits until the heading a fragment names stands on its line, the address naming it. */
+const expectLanded = (page: Page, hash: string) =>
+  Effect.promise(() =>
+    expect
+      .poll(
+        async () => {
+          const jump = await readJump(page, hash);
+          return jump.hash === hash && Math.abs(jump.top - jump.line) <= 1
+            ? "landed"
+            : `${jump.hash} at ${jump.y} px, heading ${jump.top} px from the top, line ${jump.line} px`;
+        },
+        { timeout: 3000 }
+      )
+      .toBe("landed")
+  );
+
+/**
+ * A reader scrolls the lesson, then picks the first entries of the outline one
+ * by one with `pick`, which returns the fragment it chose. Each pick lands its
+ * heading on its line and keeps it there, instead of snapping back to where the
+ * reader stood; Back returns the reader there, and Forward to the heading. Each
+ * pick follows a scroll, since the router remembers a place only once the
+ * reader has scrolled.
+ */
+const verifyJumps = Effect.fn("NakafaE2E.verifyOutlineJumps")(function* (
+  page: Page,
+  pick: (index: number) => Effect.Effect<string>
+) {
+  yield* Effect.forEach(
+    Arr.makeBy(3, (index) => index + 1),
+    (index) =>
+      Effect.gen(function* () {
+        yield* Effect.promise(() =>
+          page.evaluate(() =>
+            window.scrollBy({ behavior: "instant", top: 300 })
+          )
+        );
+        const left = yield* Effect.promise(() =>
+          page.evaluate(() => Math.round(window.scrollY))
+        );
+        const hash = yield* pick(index);
+        yield* expectLanded(page, hash);
+        yield* Effect.promise(() => page.waitForTimeout(500));
+        yield* expectLanded(page, hash);
+
+        yield* Effect.promise(() => page.goBack());
+        yield* Effect.promise(() =>
+          expect
+            .poll(async () => (await readJump(page, hash)).y, { timeout: 3000 })
+            .toBe(left)
+        );
+        yield* Effect.promise(() => page.goForward());
+        yield* expectLanded(page, hash);
+      }),
+    { discard: true }
+  );
+});
+
+test("a press on an outline entry after a scroll lands on its heading and stays", async ({
+  baseURL,
+  page,
+}) => {
+  await Effect.runPromise(
+    withObservedPageErrors(
+      page,
+      Effect.gen(function* () {
+        yield* openLesson(page, baseURL);
+        yield* verifyJumps(page, (index) =>
+          Effect.promise(async () => {
+            const entry = page.locator(OUTLINE_LINKS).nth(index);
+            await entry.click();
+            return (await entry.getAttribute("href")) ?? "";
+          })
+        );
+      })
+    )
+  );
+});
+
+test.describe("on a phone", () => {
+  test.use({ viewport: { height: 844, width: 390 } });
+
+  /**
+   * On a phone the outline is a sheet, and the page behind it scales back while
+   * it is open. A pick closes the sheet and lands the heading on its line once
+   * the page stands at full size again, not where its scaled box stood.
+   */
+  test("a pick in the outline sheet lands on its heading as the page scales back", async ({
+    baseURL,
+    page,
+  }) => {
+    await Effect.runPromise(
+      withObservedPageErrors(
+        page,
+        Effect.gen(function* () {
+          yield* Effect.promise(() =>
+            page.goto(`${baseURL ?? ""}${LESSON}`, {
+              waitUntil: "domcontentloaded",
+            })
+          );
+          yield* waitForCommittedAppRouter(
+            page,
+            LESSON,
+            LESSON,
+            readinessTimeoutMilliseconds
+          );
+          yield* verifyJumps(page, (index) =>
+            Effect.gen(function* () {
+              yield* Effect.promise(() =>
+                page.getByRole("button", { name: "On this page" }).click()
+              );
+              const sheet = page.getByRole("dialog");
+              yield* waitForSlide(sheet);
+              const entry = sheet.locator('a[href^="#"]').nth(index);
+              const hash = yield* Effect.promise(() =>
+                entry.getAttribute("href")
+              );
+              yield* Effect.promise(() => entry.click());
+              yield* Effect.promise(() => expect(sheet).toBeHidden());
+              return hash ?? "";
+            })
+          );
+        })
+      )
+    );
+  });
 });
 
 /**

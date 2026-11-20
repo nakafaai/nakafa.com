@@ -18,6 +18,8 @@ import {
   TooltipTrigger,
 } from "@repo/design-system/components/ui/tooltip";
 import { elementById } from "@repo/design-system/lib/element";
+import type { AnyRouter } from "@tanstack/react-router";
+import { useRouter } from "@tanstack/react-router";
 import { Array as Arr, Option } from "effect";
 import type { MouseEvent, ReactElement, ReactNode } from "react";
 import { useEffect, useRef } from "react";
@@ -105,18 +107,53 @@ function revealEntry(entry: HTMLElement) {
 }
 
 /**
- * Jumps to a heading of the page on screen, which stays the same page. The
- * jump writes a history entry that carries the router's own state, copied from
- * the entry the reader leaves, so Back and Forward restore this page through the
- * router. A plain fragment entry carries no router state, and the router ignores
- * it on Back, which left the page the reader had moved away from on screen.
- * The jump scrolls to the heading itself, at once, so the entry tells the
- * router not to scroll to its hash again (`hashScrollIntoView: false`): the
- * router's own scroll lands a few frames later and undid any scroll the reader
- * made in between. A modified click keeps the browser's own handling, such as
- * a new tab.
+ * Where an element's top stands in the page's own layout, which no transform
+ * moves: its offsets summed up its offset parents.
  */
-function jumpToHeading(event: MouseEvent<HTMLAnchorElement>) {
+function layoutTop(element: HTMLElement): number {
+  const parent = element.offsetParent;
+  return (
+    element.offsetTop + (parent instanceof HTMLElement ? layoutTop(parent) : 0)
+  );
+}
+
+/**
+ * Scrolls the page so that the heading a link names stands at the line its
+ * scroll margin sets. The heading is measured in the page's layout, not by its
+ * box on screen as `scrollIntoView` measures it: on a phone the page behind the
+ * outline sheet is scaled down (`DrawerStage`) and still scaling back as the
+ * jump lands, so a box on screen left the heading tens of pixels off its line
+ * once the page stood at full size.
+ */
+function revealHeading(link: HTMLAnchorElement) {
+  const heading = elementById(decodeURIComponent(link.hash.slice(1)));
+  if (heading === null) {
+    return;
+  }
+  window.scrollTo({
+    top:
+      layoutTop(heading) -
+      Number.parseFloat(getComputedStyle(heading).scrollMarginTop),
+  });
+}
+
+/**
+ * Jumps to a heading of the page on screen, which stays the same page. The
+ * router writes the history entry, with a key of its own, so Back and Forward
+ * restore each place through the router. The router reads every change of the
+ * address, its own or not: an entry written beside it that copied the key of
+ * the entry the reader left made the router restore the place it remembers
+ * under that key, which pulled the page back from the heading in the same
+ * frame. The router neither scrolls to the hash (`hashScrollIntoView: false`)
+ * nor restores a place (`resetScroll: false`); the jump scrolls once the router
+ * has recorded where the reader left, so Back returns there. A press on the
+ * fragment the page is already on only scrolls, as the browser does. A
+ * modified click keeps the browser's own handling, such as a new tab.
+ */
+function jumpToHeading(
+  router: AnyRouter,
+  event: MouseEvent<HTMLAnchorElement>
+) {
   if (
     event.button !== 0 ||
     event.metaKey ||
@@ -128,17 +165,17 @@ function jumpToHeading(event: MouseEvent<HTMLAnchorElement>) {
   }
   event.preventDefault();
   const link = event.currentTarget;
-  const state = {
-    ...window.history.state,
-    __hashScrollIntoViewOptions: false,
-  };
-  // A fragment the page is already on replaces its entry, as the browser does.
   if (link.href === window.location.href) {
-    window.history.replaceState(state, "", link.href);
-  } else {
-    window.history.pushState(state, "", link.href);
+    revealHeading(link);
+    return;
   }
-  elementById(decodeURIComponent(link.hash.slice(1)))?.scrollIntoView();
+  router
+    .navigate({
+      hashScrollIntoView: false,
+      href: `${link.pathname}${link.search}${link.hash}`,
+      resetScroll: false,
+    })
+    .then(() => revealHeading(link));
 }
 
 /**
@@ -148,6 +185,7 @@ function jumpToHeading(event: MouseEvent<HTMLAnchorElement>) {
 function SidebarTreeLink({ heading }: { heading: ParsedHeading }) {
   const isActive = useActiveHeading(heading);
   const entry = useRef<HTMLAnchorElement>(null);
+  const router = useRouter();
 
   useEffect(() => {
     if (isActive && entry.current !== null) {
@@ -162,7 +200,7 @@ function SidebarTreeLink({ heading }: { heading: ParsedHeading }) {
         render={
           <a
             href={heading.href}
-            onClick={jumpToHeading}
+            onClick={(event) => jumpToHeading(router, event)}
             ref={entry}
             title={heading.label}
           >
