@@ -1,6 +1,7 @@
 import { RegisteredConvexFunction } from "@confect/server";
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import confectSchema from "@repo/backend/confect/_generated/schema";
+import { CONTENT_ANALYTICS_GROUP_SIZE } from "@repo/backend/confect/contents/analytics/budget";
 import { processClaimedContentAnalyticsPartition } from "@repo/backend/confect/contents/analytics/drain";
 import { scheduleAllContentAnalyticsPartitions } from "@repo/backend/confect/contents/analytics/impl";
 import { invalidContentAnalyticsPartitionCode } from "@repo/backend/confect/contents/analytics/spec";
@@ -17,7 +18,7 @@ import schema from "@repo/backend/convex/schema";
 import { testMaterialGraph } from "@repo/backend/test/content/material";
 import type { TestConvex } from "convex-test";
 import { convexTest } from "convex-test";
-import { Array as Arr, Effect } from "effect";
+import { Array as Arr, Effect, Record as Rec } from "effect";
 
 const NOW = Date.parse("2026-01-01T00:00:00.000Z");
 const SUBJECT_ROUTE = "material/lesson/mathematics/vector/addition";
@@ -290,6 +291,37 @@ describe("contents/analytics/impl", () => {
       },
     ]);
     expect(state.queue).toEqual([]);
+  });
+  it("stops after a group when the transaction runs low, and owes a further run", async () => {
+    const target = convexTest(schema, convexModules);
+    registerLearningPopularityAggregate(target);
+    await target.mutation(async (ctx) => {
+      await insertPartition(ctx);
+      await enqueueViews(ctx, CONTENT_ANALYTICS_GROUP_SIZE * 2);
+    });
+    const result = await target.mutation(async (ctx) => {
+      const metrics = await ctx.meta.getTransactionMetrics();
+      // The transaction reports no room left, so the drain stops after its first group.
+      vi.spyOn(ctx.meta, "getTransactionMetrics").mockResolvedValue(
+        Rec.map(metrics, (metric) => ({ ...metric, remaining: 0 }))
+      );
+      return await Effect.runPromise(
+        processClaimedContentAnalyticsPartition({
+          leaseVersion: 1,
+          partition: 0,
+        }).pipe(
+          Effect.provide(
+            RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+          )
+        )
+      );
+    });
+    expect(result).toEqual({
+      hasMore: true,
+      partition: 0,
+      processed: CONTENT_ANALYTICS_GROUP_SIZE,
+      skipped: false,
+    });
   });
   it("releases an active lease whose queue became empty", async () => {
     const target = convexTest(schema, convexModules);

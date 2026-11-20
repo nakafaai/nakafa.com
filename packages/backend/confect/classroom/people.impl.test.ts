@@ -5,8 +5,10 @@ import {
   keyedFixture,
   nf,
   period,
+  teach,
 } from "@repo/backend/test/classroom";
-import { Array as Arr, Effect } from "effect";
+import { grantRole } from "@repo/backend/test/tenancy";
+import { Array as Arr, Effect, Order } from "effect";
 
 const { list } = refs.public.classroom.people;
 
@@ -18,12 +20,27 @@ describe("classroom/people", () => {
         const fixture = yield* keyedFixture;
         const term = yield* period(fixture, fixture.units.smp);
         const forum = yield* forumClass(fixture, term.id, "X-1");
+        // A second teacher, so the teachers are ordered by name among themselves.
+        const { principal } = fixture.people;
+        yield* fixture.run(
+          grantRole(fixture.tenants.nf, principal.personId, "teacher", {
+            kind: "unit",
+            unitId: fixture.units.smp,
+          })
+        );
+        yield* teach(fixture, forum.classId, principal.personId);
         const args = { classId: forum.classId, slug: nf };
         const listed = yield* fixture.as("student").query(list, args);
-        expect(Arr.map(listed, (person) => [person.id, person.kind])).toEqual([
-          [fixture.people.teacher.personId, "teacher"],
-          [fixture.people.student.personId, "student"],
+        expect(Arr.map(listed, (person) => person.kind)).toEqual([
+          "teacher",
+          "teacher",
+          "student",
         ]);
+        const teachers = Arr.map(Arr.take(listed, 2), (person) => person.name);
+        expect(teachers).toEqual(Arr.sort(teachers, Order.String));
+        expect(Arr.map(listed, (person) => person.id)).toContain(
+          fixture.people.student.personId
+        );
       })
   );
 
