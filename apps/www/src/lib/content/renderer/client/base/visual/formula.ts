@@ -13,6 +13,7 @@ import {
 } from "@nakafa/aksara-contracts/math/formula/plane";
 import { spaceFormulaGeometry } from "@nakafa/aksara-contracts/math/formula/space";
 import { Array as Arr, Option, Result, Schema } from "effect";
+import { resolveVisualReach } from "@/lib/content/renderer/client/base/visual/reach";
 import type {
   PlaneObject,
   PlaneVisual,
@@ -35,6 +36,8 @@ const FormulaShapeSchema = Schema.Union([
     ...ShapeFields,
     kind: Schema.Literal("curve"),
     points: PointsSchema,
+    /** An implicit curve runs to the reach, past every view, like a region. */
+    unbounded: Schema.Boolean,
   }),
   Schema.Struct({
     ...ShapeFields,
@@ -138,6 +141,7 @@ function shapesOf(
           : `${object.id}:part:${index + 1}`,
       kind: "curve" as const,
       points: Arr.map(branch, project),
+      unbounded: object.kind === "implicit",
     }));
   }
   if (geometry.kind === "points") {
@@ -193,6 +197,10 @@ export function resolveFormulaShapes(
   scope: FormulaScope
 ) {
   const project = sampleProjector(projection);
+  // A region or an implicit curve is traced over the reach, so it runs past every view. Marching squares
+  // interpolate their crossings, so a straight edge stays exact and a curved one stays well under a pixel off.
+  const { box } = resolveVisualReach(scene, projection);
+  const reach = { x: box.x, y: box.y };
   const bounds = projectVisualFrame(scene, projection);
   const frame = {
     max: { x: bounds.x.max, y: bounds.y.max, z: bounds.z.max },
@@ -208,7 +216,14 @@ export function resolveFormulaShapes(
             objectId === object.id && !isPlaneFormulaPoint(at) ? [at[axis]] : []
           );
           return Result.map(
-            planeFormulaGeometry(object, scene.frame, scope, named),
+            planeFormulaGeometry(
+              object,
+              object.kind === "region" || object.kind === "implicit"
+                ? reach
+                : scene.frame,
+              scope,
+              named
+            ),
             (geometry) => shapesOf(object, geometry, project, frame)
           );
         })

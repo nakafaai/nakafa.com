@@ -1,3 +1,4 @@
+import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
 import { LineEquation } from "@repo/design-system/components/three/line";
 import { Origin } from "@repo/design-system/components/three/origin";
 import { Region } from "@repo/design-system/components/three/region";
@@ -40,13 +41,23 @@ function FormulaShapeView({ shape }: { readonly shape: FormulaShape }) {
   return <Solid color={color} faces={shape.faces} />;
 }
 
-/** Draws every shape that a scene's formula objects sampled. */
+/**
+ * Draws every shape that a scene's formula objects sampled. A region or an
+ * implicit curve runs to the reach, so the camera fits the scene's frame and
+ * leaves it out, as it does the axes.
+ */
 export function FormulaShapes({
   shapes,
 }: {
   readonly shapes: readonly FormulaShape[];
 }) {
-  return Arr.map(shapes, (shape) => (
-    <FormulaShapeView key={shape.id} shape={shape} />
-  ));
+  return Arr.map(shapes, (shape) =>
+    shape.kind === "region" || (shape.kind === "curve" && shape.unbounded) ? (
+      <CameraBounds exclude key={shape.id}>
+        <FormulaShapeView shape={shape} />
+      </CameraBounds>
+    ) : (
+      <FormulaShapeView key={shape.id} shape={shape} />
+    )
+  );
 }

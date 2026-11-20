@@ -4,10 +4,10 @@ import { CameraBounds } from "@repo/design-system/components/three/camera/framin
 import { ThreeCanvas } from "@repo/design-system/components/three/canvas";
 import { useCoordinateControls } from "@repo/design-system/components/three/controls";
 import type { CoordinateFrame } from "@repo/design-system/components/three/frame";
-import { createSymmetricFrame } from "@repo/design-system/components/three/frame";
 import { CoordinateGrid } from "@repo/design-system/components/three/grid";
 import { Origin } from "@repo/design-system/components/three/origin";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene";
+import { AxisTicks } from "@repo/design-system/components/three/ticks";
 import { VisualCardBody } from "@repo/design-system/components/visual/card";
 import { useRequired } from "@repo/design-system/hooks/required";
 import { getColor } from "@repo/design-system/lib/color";
@@ -45,12 +45,20 @@ interface Props {
   children?: ReactNode;
   /** Additional class name */
   className?: string;
-  /** Exact Cartesian frame. Overrides symmetric axis and grid sizes. */
-  frame?: CoordinateFrame;
-  /** Size of the grid */
-  gridSize?: number;
+  /**
+   * The region the first view frames, in world units. The world does not end
+   * there: the grid, the axes and every unbounded object continue past it.
+   */
+  focus?: CoordinateFrame | undefined;
   /** Projected world coordinate of the mathematical origin. */
-  origin?: Point3;
+  origin?: Point3 | undefined;
+  /**
+   * Half-width, in world units, of the box around the world's center that the
+   * camera can ever show, where the axes and the grid end out of sight.
+   */
+  reach?: number;
+  /** World units that one mathematical unit takes on each axis; one by default. */
+  scale?: Point3 | undefined;
   /** Show the coordinate axes */
   showAxes?: boolean;
   /** Show axis labels */
@@ -59,8 +67,8 @@ interface Props {
   showOrigin?: boolean;
   /** Show the z-axis */
   showZAxis?: boolean;
-  /** Size of the coordinate system */
-  size?: number;
+  /** Number the axes at the grid's major lines (`AxisTicks`). */
+  ticks?: boolean;
 }
 
 /**
@@ -74,10 +82,7 @@ type CoordinateScene = Pick<
 > &
   Required<Pick<ComponentProps<typeof CameraControls>, "cameraPosition">> &
   Required<
-    Pick<
-      ComponentProps<typeof Axes>,
-      "frame" | "showLabels" | "showZAxis" | "size"
-    >
+    Pick<ComponentProps<typeof Axes>, "reach" | "showLabels" | "showZAxis">
   > &
   Pick<ComponentProps<typeof Axes>, "origin"> &
   Required<Pick<Props, "showAxes">>;
@@ -114,35 +119,34 @@ function CoordinateCamera() {
 
 /** The scene's axes, with its Z axis when the scene shows it. */
 function CoordinateAxes() {
-  const { frame, origin, showAxes, showLabels, showZAxis, size } =
+  const { origin, reach, showAxes, showLabels, showZAxis } =
     useCoordinateScene();
 
   return (
     <Axes
-      frame={frame}
       origin={origin}
+      reach={reach}
       showLabels={showAxes && showLabels}
       showZAxis={showZAxis}
-      size={size}
       visible={showAxes}
     />
   );
 }
 
 /**
- * Renders an interactive coordinate scene with grid and playback controls. Its
- * frame is the visual card body, so it fills the card in full screen. The
- * canvas fills the frame by percentage, never by its own size, so it follows
- * the frame both up and down: back from full screen, or a phone turned to a
- * narrower width.
+ * Renders an interactive coordinate scene in an unbounded world: the grid and
+ * the axes run through the origin past every edge the camera can show, and
+ * `focus` is only the region the first view frames. Its frame is the visual
+ * card body, so it fills the card in full screen. The canvas fills the frame
+ * by percentage, never by its own size, so it follows the frame both up and
+ * down: back from full screen, or a phone turned to a narrower width.
  */
 export function CoordinateSystem({
   showAxes = true,
   showZAxis = true,
   showOrigin = true,
   showLabels = true,
-  gridSize,
-  size = 100,
+  reach = 100,
   backgroundColor = "transparent",
   cameraFraming,
   cameraMaxDistance,
@@ -150,8 +154,10 @@ export function CoordinateSystem({
   cameraPosition = [CAMERA_POSITION_X, CAMERA_POSITION_Y, CAMERA_POSITION_Z],
   cameraProjection,
   cameraTarget,
-  frame,
+  focus,
   origin,
+  scale,
+  ticks = false,
   children,
   className,
   "aria-label": ariaLabel,
@@ -174,31 +180,21 @@ export function CoordinateSystem({
     };
   }, [isDarkTheme]);
 
-  const axisFrame = useMemo(
-    () => frame ?? createSymmetricFrame(size),
-    [frame, size]
-  );
-  const gridFrame = useMemo(
-    () => frame ?? createSymmetricFrame(gridSize ?? 100),
-    [frame, gridSize]
-  );
   const scene = useMemo(
     () => ({
       cameraPosition,
       cameraTarget,
       framing: cameraFraming,
-      frame: axisFrame,
       maxDistance: cameraMaxDistance,
       minDistance: cameraMinDistance,
       origin,
       projection: cameraProjection,
+      reach,
       showAxes,
       showLabels,
       showZAxis,
-      size,
     }),
     [
-      axisFrame,
       cameraFraming,
       cameraMaxDistance,
       cameraMinDistance,
@@ -206,10 +202,10 @@ export function CoordinateSystem({
       cameraProjection,
       cameraTarget,
       origin,
+      reach,
       showAxes,
       showLabels,
       showZAxis,
-      size,
     ]
   );
 
@@ -230,18 +226,19 @@ export function CoordinateSystem({
           <pointLight intensity={1} position={[10, 10, 10]} />
 
           {/* Coordinate System */}
-          {/* Fit the true origin without measuring decorative axis lengths. */}
+          {/* The camera fits the focus, or the true origin, never the decoration's length. */}
           <CameraBounds
             bounds={
-              !frame && showAxes
+              focus ??
+              (showAxes
                 ? {
                     x: { min: origin?.x ?? 0, max: origin?.x ?? 0 },
                     y: { min: origin?.y ?? 0, max: origin?.y ?? 0 },
                     z: { min: origin?.z ?? 0, max: origin?.z ?? 0 },
                   }
-                : undefined
+                : undefined)
             }
-            exclude={!(frame || showAxes)}
+            exclude={!(focus || showAxes)}
           >
             <CoordinateAxes />
 
@@ -259,10 +256,21 @@ export function CoordinateSystem({
             <CameraBounds exclude>
               <CoordinateGrid
                 cellColor={gridColors.secondary}
-                frame={gridFrame}
-                infinite={!frame && gridSize === undefined}
                 origin={origin}
+                reach={reach}
+                scale={scale}
                 sectionColor={gridColors.main}
+              />
+            </CameraBounds>
+          ) : null}
+
+          {ticks && showAxes ? (
+            <CameraBounds exclude>
+              <AxisTicks
+                origin={origin}
+                reach={reach}
+                scale={scale ?? { x: 1, y: 1, z: 1 }}
+                showZAxis={showZAxis}
               />
             </CameraBounds>
           ) : null}

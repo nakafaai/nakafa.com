@@ -1,6 +1,6 @@
 import type { Locator, Page } from "@playwright/test";
 import { expect, test } from "@playwright/test";
-import { Array as Arr, Effect, Option } from "effect";
+import { Array as Arr, Effect, Order, Schema } from "effect";
 import { pinnedRoutes } from "@/e2e/support/corpus";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { openRoute } from "@/e2e/support/route";
@@ -68,58 +68,113 @@ const mountThenLeave = Effect.fn("NakafaE2E.mountThenLeave")(function* (
 const ISOTOPE_ROUTE = "/en/subjects/chemistry/structure-matter/isotope";
 const NUCLIDE_TITLE = "Isotopes Line Up, Ions Stay Put";
 
-/** The colors of the x and y axes, as the browser computes them. */
-const AXIS_RGB = { x: "rgb(220, 38, 38)", y: "rgb(22, 163, 74)" };
+/** How far, in pixels, a number of an axis out of view may stand from the edge it sticks to. */
+const EDGE_ROOM = 40;
+
+/** One number of an axis as the picture shows it: its value and its box within the picture. */
+const TickSchema = Schema.Struct({
+  bottom: Schema.Finite,
+  left: Schema.Finite,
+  right: Schema.Finite,
+  top: Schema.Finite,
+  value: Schema.Finite,
+});
+
+/** The numbers one picture shows on each axis, and the picture's own size. */
+const TicksSchema = Schema.Struct({
+  height: Schema.Finite,
+  width: Schema.Finite,
+  x: Schema.Array(TickSchema),
+  y: Schema.Array(TickSchema),
+});
+type Tick = typeof TickSchema.Type;
+type Ticks = typeof TicksSchema.Type;
 
 /**
- * The axis values one picture names, each with its axis color and where it
- * stands, and the height of the picture: the still's names carry
- * `data-axis-value`, the scene's are labels whose whole text is one value.
+ * Reads the visible numbers of the x and y axes under `root`, each with its
+ * box measured from the picture's top left corner. The page serializes this
+ * function.
  */
-const readAxisValues = (root: Element) => {
-  const box = root.getBoundingClientRect();
+function readTicks(picture: Element, root: string): Ticks {
+  const frame = picture.getBoundingClientRect();
+  const read = (axis: string) =>
+    Array.from(
+      picture.querySelectorAll(`${root} [data-axis-tick="${axis}"]`)
+    ).flatMap((tick) => {
+      if (!tick.checkVisibility({ visibilityProperty: true })) {
+        return [];
+      }
+      const box = tick.getBoundingClientRect();
+      return [
+        {
+          bottom: box.bottom - frame.top,
+          left: box.left - frame.left,
+          right: box.right - frame.left,
+          top: box.top - frame.top,
+          value: Number(tick.textContent?.replace(",", ".")),
+        },
+      ];
+    });
   return {
-    height: box.height,
-    values: Array.from(root.querySelectorAll("*"))
-      .filter(
-        (element) =>
-          element.children.length === 0 &&
-          ["5", "9"].includes(element.textContent ?? "")
-      )
-      .map((element) => {
-        const rect = element.getBoundingClientRect();
-        return {
-          color: getComputedStyle(element).color,
-          text: element.textContent ?? "",
-          x: rect.left + rect.width / 2,
-          y: rect.top + rect.height / 2,
-        };
-      }),
-  };
-};
-
-/** The values of one axis, read as text and its spread across the picture's height. */
-function axisFacts(
-  { height, values }: ReturnType<typeof readAxisValues>,
-  color: string
-) {
-  const ends = Arr.filter(values, (value) => value.color === color);
-  const low = Arr.findFirst(ends, ({ text }) => text === "5");
-  const high = Arr.findFirst(ends, ({ text }) => text === "9");
-  return {
-    texts: Arr.map(ends, ({ text }) => text),
-    // How far the 5 stands below the 9, as a share of the picture's height.
-    spread: Option.getOrElse(
-      Option.zipWith(low, high, (five, nine) => (five.y - nine.y) / height),
-      () => 0
-    ),
+    height: frame.height,
+    width: frame.width,
+    x: read("x"),
+    y: read("y"),
   };
 }
 
+/** Reads the numbers of one layer of a picture: its still or its scene. */
+const pictureTicks = (picture: Locator, root: string) =>
+  picture.evaluate(readTicks, root);
+
 /**
- * Opens the nuclide map, reads the real values its still names at the ends of
- * both axes, then loads the scene and reads them again: the frame fills the
- * picture from 5 to 9 instead of shrinking to keep zero in sight.
+ * Holds a frame far from zero to the unbounded world: both axes lie out of
+ * view, so the numbers of x stick to the bottom edge and rise left to right,
+ * and the numbers of y stick to the left edge and rise bottom to top, every
+ * one a real value of the frame.
+ */
+function expectStickyTicks({ height, x, y }: Ticks) {
+  expect(x.length, "numbers on x").toBeGreaterThanOrEqual(3);
+  expect(y.length, "numbers on y").toBeGreaterThanOrEqual(3);
+  for (const tick of x) {
+    expect(height - tick.bottom, "x number from the bottom edge").toBeLessThan(
+      EDGE_ROOM
+    );
+    expect(tick.value).toBeGreaterThanOrEqual(3);
+    expect(tick.value).toBeLessThanOrEqual(11);
+  }
+  for (const tick of y) {
+    expect(tick.left, "y number from the left edge").toBeLessThan(EDGE_ROOM);
+    expect(tick.value).toBeGreaterThanOrEqual(3);
+    expect(tick.value).toBeLessThanOrEqual(11);
+  }
+  const across = Arr.sort(
+    x,
+    Order.mapInput(Order.Number, (tick: Tick) => tick.left)
+  );
+  const up = Arr.sort(
+    y,
+    Order.mapInput(Order.Number, (tick: Tick) => -tick.top)
+  );
+  expect(Arr.map(across, ({ value }) => value)).toEqual(
+    Arr.sort(
+      Arr.map(x, ({ value }) => value),
+      Order.Number
+    )
+  );
+  expect(Arr.map(up, ({ value }) => value)).toEqual(
+    Arr.sort(
+      Arr.map(y, ({ value }) => value),
+      Order.Number
+    )
+  );
+}
+
+/**
+ * Opens the nuclide map, a frame far from zero, and holds its still and its
+ * scene to the unbounded world (N3): the still's grid fills the whole picture,
+ * and in both the numbers of each axis stick to the picture's edge with the
+ * frame's real values, where a bounded world stopped at the frame.
  */
 const checkFarFrame = Effect.fn("NakafaE2E.checkFarFrame")(function* (
   page: Page
@@ -128,44 +183,30 @@ const checkFarFrame = Effect.fn("NakafaE2E.checkFarFrame")(function* (
   const card = mathSceneCards(page).filter({ hasText: NUCLIDE_TITLE });
   const picture = card.locator(MATH_SCENE);
   yield* Effect.promise(() => card.scrollIntoViewIfNeeded());
-  yield* Effect.promise(() =>
-    expect(
-      picture
-        .locator("[data-axis-value]")
-        .evaluateAll((labels) =>
-          labels.map((label) => [
-            label.getAttribute("data-axis-value"),
-            label.textContent,
-          ])
-        )
-    ).resolves.toEqual([
-      ["x:min", "5"],
-      ["x:max", "9"],
-      ["y:min", "5"],
-      ["y:max", "9"],
-    ])
+  // The grid fills the still, which sits inside the body's top border line.
+  const stillFrame = picture.locator('[data-slot="scene-still"]');
+  const grid = stillFrame.locator('[data-slot="scene-grid"]');
+  const [frame, lines] = yield* Effect.promise(() =>
+    Promise.all([stillFrame.boundingBox(), grid.boundingBox()])
   );
-  const still = yield* Effect.promise(() => picture.evaluate(readAxisValues));
-  yield* Effect.sync(() =>
-    expect(axisFacts(still, AXIS_RGB.y).spread).toBeGreaterThan(0.5)
+  yield* Effect.sync(() => {
+    expect(lines, "the still's grid").not.toBeNull();
+    expect(Math.abs((lines?.width ?? 0) - (frame?.width ?? 0))).toBeLessThan(1);
+    expect(Math.abs((lines?.height ?? 0) - (frame?.height ?? 0))).toBeLessThan(
+      1
+    );
+  });
+  const still = yield* Effect.promise(() =>
+    pictureTicks(picture, '[data-slot="scene-still"]')
   );
+  yield* Effect.sync(() => expectStickyTicks(still));
   yield* revealLineScene(card);
   yield* Effect.promise(() =>
-    expect
-      .poll(
-        async () => {
-          const scene = await picture.evaluate(readAxisValues);
-          const x = axisFacts(scene, AXIS_RGB.x);
-          const y = axisFacts(scene, AXIS_RGB.y);
-          return {
-            x: x.texts,
-            y: y.texts,
-            fills: y.spread > 0.5,
-          };
-        },
-        { timeout: revealTimeoutMilliseconds }
-      )
-      .toEqual({ fills: true, x: ["5", "9"], y: ["5", "9"] })
+    expect(async () => {
+      expectStickyTicks(
+        await pictureTicks(picture, '[data-slot="axis-ticks"]')
+      );
+    }).toPass({ timeout: revealTimeoutMilliseconds })
   );
 });
 
@@ -178,7 +219,7 @@ test.describe("lesson scene axes", () => {
     await Effect.runPromise(withObservedPageErrors(page, mountThenLeave(page)));
   });
 
-  test("stand at the edge of a frame far from zero, naming its real values in the still and the scene", async ({
+  test("number a frame far from zero at the picture's edges, in the still and the scene", async ({
     page,
   }) => {
     await Effect.runPromise(withObservedPageErrors(page, checkFarFrame(page)));

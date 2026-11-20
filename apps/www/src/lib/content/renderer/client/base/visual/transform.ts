@@ -8,7 +8,8 @@ import type {
   SpaceVisual,
 } from "@/lib/content/renderer/client/base/visual/scene";
 
-const WORLD_EXTENT = BigDecimal.fromBigInt(10n);
+/** The world units the longest padded span of a frame maps onto. */
+export const WORLD_EXTENT = BigDecimal.fromBigInt(10n);
 const TWO = BigDecimal.fromBigInt(2n);
 const ZERO = BigDecimal.fromBigInt(0n);
 type ExactRange = ReturnType<typeof range>;
@@ -216,18 +217,23 @@ export function projectVisualFrame(
   });
   return { x: project("x"), y: project("y"), z: project("z") };
 }
+/** The world units one authored unit takes on each axis. */
+export function worldScale(projection: VisualProjection) {
+  const world = BigDecimal.toNumberUnsafe(WORLD_EXTENT);
+  return {
+    x: world / BigDecimal.toNumberUnsafe(projection.extent.x),
+    y: world / BigDecimal.toNumberUnsafe(projection.extent.y),
+    z: world / BigDecimal.toNumberUnsafe(projection.extent.z),
+  };
+}
+
 /**
  * Projects sampled points through the same map in plain numbers. A formula
  * draws thousands of samples, so this reads the exact center and scale once
  * and leaves exact decimals to the authored coordinates.
  */
 export function sampleProjector(projection: VisualProjection) {
-  const world = BigDecimal.toNumberUnsafe(WORLD_EXTENT);
-  const scale = {
-    x: world / BigDecimal.toNumberUnsafe(projection.extent.x),
-    y: world / BigDecimal.toNumberUnsafe(projection.extent.y),
-    z: world / BigDecimal.toNumberUnsafe(projection.extent.z),
-  };
+  const scale = worldScale(projection);
   const center = {
     x: BigDecimal.toNumberUnsafe(projection.center.x),
     y: BigDecimal.toNumberUnsafe(projection.center.y),

@@ -14,7 +14,7 @@ import {
 import { plane, space } from "@/test/scene";
 
 describe("MathVisual geometry", () => {
-  it("clips plane lines and preserves their direction", () => {
+  it("draws a plane line across the whole reach, past the frame, with no heads", () => {
     const geometry = resolveVisualGeometry(
       plane({
         appearance: "primary",
@@ -32,12 +32,14 @@ describe("MathVisual geometry", () => {
       paths: [
         {
           appearance: "primary",
-          arrows: "both",
+          arrows: "none",
           id: "line",
+          // The fixture's frame is 10 by 8: the world reaches 30 units from its center.
           points: [
-            { x: -4, y: -4, z: 0 },
-            { x: 4, y: 4, z: 0 },
+            { x: -30, y: -30, z: 0 },
+            { x: 30, y: 30, z: 0 },
           ],
+          unbounded: true,
         },
       ],
     });
@@ -62,6 +64,7 @@ describe("MathVisual geometry", () => {
           { x: 0, y: 0, z: 0 },
           { x: 3, y: 2, z: 0 },
         ],
+        unbounded: false,
       },
     ]);
     const [path] = resolveVisualGeometry(
@@ -77,7 +80,7 @@ describe("MathVisual geometry", () => {
     expect(path?.points).toHaveLength(2);
   });
 
-  it("preserves an exact plane corner tangent and omits a zero-length path", () => {
+  it("keeps a line that only touches a corner of the reach as a marker and omits a zero-length path", () => {
     const geometry = resolveVisualGeometry(
       plane(
         {
@@ -85,8 +88,8 @@ describe("MathVisual geometry", () => {
           id: "tangent",
           kind: "line",
           through: [
-            { x: 5, y: 4 },
-            { x: 6, y: 3 },
+            { x: 30, y: 30 },
+            { x: 31, y: 29 },
           ],
         },
         {
@@ -102,7 +105,7 @@ describe("MathVisual geometry", () => {
       paths: [],
       regions: [],
       markers: [
-        { appearance: "primary", at: { x: 5, y: 4, z: 0 }, id: "tangent" },
+        { appearance: "primary", at: { x: 30, y: 30, z: 0 }, id: "tangent" },
       ],
     });
   });
@@ -166,6 +169,7 @@ describe("MathVisual geometry", () => {
         arrows: "none",
         id: "triangle",
         points: [...vertices, vertices[0]],
+        unbounded: false,
       },
     ]);
   });
@@ -267,26 +271,23 @@ describe("MathVisual geometry", () => {
     }
   });
 
-  it("preserves an exact space corner tangent as a marker", () => {
+  it("keeps a space line that only touches a corner of the reach as a marker", () => {
+    // The fixture's frame is 12 by 10 by 8: the world reaches 36 units from its center.
     const geometry = resolveVisualGeometry(
       space({
         appearance: "secondary",
         id: "tangent",
         kind: "line",
         through: [
-          { x: 6, y: 5, z: 4 },
-          { x: 7, y: 4, z: 3 },
+          { x: 36, y: 36, z: 36 },
+          { x: 37, y: 35, z: 35 },
         ],
       })
     );
 
     expect(geometry.paths).toEqual([]);
     expect(geometry.markers).toEqual([
-      {
-        appearance: "secondary",
-        at: { x: 5, y: 4.166_666_666_666_667, z: 3.333_333_333_333_333_5 },
-        id: "tangent",
-      },
+      { appearance: "secondary", at: { x: 30, y: 30, z: 30 }, id: "tangent" },
     ]);
   });
 
@@ -343,14 +344,14 @@ describe("MathVisual geometry", () => {
       },
     } satisfies PlaneVisual;
 
-    expect(resolveVisualGeometry(visual).paths).toMatchObject([
-      {
-        points: [
-          { x: -5, y: -5, z: 0 },
-          { x: 5, y: 5, z: 0 },
-        ],
-      },
-    ]);
+    const [path] = resolveVisualGeometry(visual).paths;
+    const [start, end] = path?.points ?? [];
+    // The reach of a frame this wide passes the largest number, so the line runs to it, still finite and diagonal.
+    expect(start?.x).toBe(start?.y);
+    expect(end?.x).toBe(end?.y);
+    expect(Number.isFinite(start?.x ?? Number.NaN)).toBe(true);
+    expect(start?.x ?? 0).toBeLessThan(-5);
+    expect(end?.x ?? 0).toBeGreaterThan(5);
   });
 
   it("projects a subnormal cuboid into twelve non-degenerate GPU edges", () => {
