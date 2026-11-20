@@ -133,9 +133,12 @@ export const biologyComponentNames = {
   heartCycleLab: "HeartCycleLab",
   hyphaeDecayLab: "HyphaeDecayLab",
   microscopeLab: "MicroscopeLab",
+  mitochondrionLab: "MitochondrionLab",
   nephronLab: "NephronLab",
   neuronImpulseLab: "NeuronImpulseLab",
   osmosisLab: "OsmosisLab",
+  oxygenDebtLab: "OxygenDebtLab",
+  paddyRootLab: "PaddyRootLab",
   photosynthesisLab: "PhotosynthesisLab",
   potometerLab: "PotometerLab",
   predatorPreyLab: "PredatorPreyLab",
@@ -148,6 +151,7 @@ export const biologyComponentNames = {
   virusReplicationLab: "VirusReplicationLab",
   virusRoleLab: "VirusRoleLab",
   virusStructureLab: "VirusStructureLab",
+  yeastFermentationLab: "YeastFermentationLab",
   yogurtLab: "YogurtLab",
 } as const;
 

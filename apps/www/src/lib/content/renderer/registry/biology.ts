@@ -44,6 +44,12 @@ import {
   PotometerLab,
   TropismLab,
 } from "@/lib/content/renderer/client/biology/plants";
+import {
+  MitochondrionLab,
+  OxygenDebtLab,
+  PaddyRootLab,
+  YeastFermentationLab,
+} from "@/lib/content/renderer/client/biology/respiration";
 import { SarsCov2VirionLab } from "@/lib/content/renderer/client/biology/virion";
 import {
   AntibodyNeutralizeLab,
@@ -200,5 +206,21 @@ export const biologyRenderers = [
   {
     name: biologyComponentNames.synapseLab,
     component: SynapseLab,
+  },
+  {
+    name: biologyComponentNames.mitochondrionLab,
+    component: MitochondrionLab,
+  },
+  {
+    name: biologyComponentNames.oxygenDebtLab,
+    component: OxygenDebtLab,
+  },
+  {
+    name: biologyComponentNames.paddyRootLab,
+    component: PaddyRootLab,
+  },
+  {
+    name: biologyComponentNames.yeastFermentationLab,
+    component: YeastFermentationLab,
   },
 ] satisfies readonly RendererImplementation[];
