@@ -16,7 +16,7 @@ const EXAM_CARD = /^View options /u;
 const SUBJECT_CARD = /^View sets /u;
 /** The country's design, which only its own page's metadata names. */
 const GERMANY_DESIGN = /\/open-graph\/tryout\/germany\/en-index\.png$/u;
-/** The Darmstadt Mathematics test's own design, which its page shares. */
+/** The Darmstadt Mathematics test's English design, which its page shares in English. */
 const DARMSTADT_MATHEMATICS =
   /\/open-graph\/tryout\/germany\/entrance-examination\/en-tu-darmstadt-mathematics\.png$/u;
 /**
@@ -125,9 +125,8 @@ test("reaches every exam's set table in at most two clicks from its country", as
 });
 
 /**
- * SNBT and TKA have their own exam artwork. The Aufnahmeprüfung uses a tile
- * until it has its own artwork. Germany and the Darmstadt Mathematics test
- * each keep their own share image.
+ * SNBT, TKA and the Aufnahmeprüfung each have their own exam artwork. Germany
+ * and the Darmstadt Mathematics test each keep their own share image.
  */
 test("draws each exam card with its own design", async ({ page }) => {
   await visit(page, INDONESIA);
@@ -135,8 +134,8 @@ test("draws each exam card with its own design", async ({ page }) => {
   await expect(page.locator('main [data-slot="tile"]')).toHaveCount(0);
 
   await visit(page, GERMANY);
-  await expect(page.locator("main img")).toHaveCount(0);
-  await expect(page.locator('main [data-slot="tile"]')).toHaveCount(1);
+  await expect(page.locator("main img")).toHaveCount(1);
+  await expect(page.locator('main [data-slot="tile"]')).toHaveCount(0);
   await expect(page.locator('meta[property="og:image"]')).toHaveAttribute(
     "content",
     GERMANY_DESIGN

@@ -48,23 +48,32 @@ const TryoutArtworkSchema = Schema.Struct({
  * The owner's try-out designs, each recorded once with the one entity or page
  * it was drawn for, keyed by the stable keys of that entity, never its
  * localized slugs. `drawn` names the file of each locale in the owner's
- * source folder, `opengraph-nakafa/<drawn>.webp`. A country's design is that
- * country page's social image alone. An entity that has no design of its own
- * borrows none: its card draws the tile of its own icon.
+ * source folder, `opengraph-nakafa/<drawn>.webp`, numbered as the designer's
+ * export of 20 November 2026 numbers them. A country's design is that country
+ * page's social image alone. An exam's design is lettered with the exam's own
+ * name, which no language translates. A test drawn in German alone, such as
+ * Darmstadt's "mathematik", shows the English design of its subject to every
+ * other reader. An entity that has no design of its own borrows none: its card
+ * draws the tile of its own icon.
  */
 const TRYOUT_ARTWORK = {
   "country/germany": {
-    drawn: { en: "tryout/102" },
+    drawn: { en: "tryout/103" },
     identity: "tryout/germany/index",
     role: "page",
   },
   "country/indonesia": {
-    drawn: { en: "tryout/101" },
+    drawn: { en: "tryout/102" },
     identity: "tryout/indonesia/index",
     role: "page",
   },
+  "exam/germany/entrance-examination": {
+    drawn: { en: "tryout/152" },
+    identity: "tryout/germany/entrance-examination",
+    role: "entity",
+  },
   "exam/indonesia/snbt": {
-    drawn: { en: "tryout/88" },
+    drawn: { en: "tryout/89" },
     identity: "tryout/indonesia/snbt",
     role: "entity",
   },
@@ -74,47 +83,47 @@ const TRYOUT_ARTWORK = {
     role: "entity",
   },
   "section/indonesia/snbt/general-reasoning": {
-    drawn: { de: "tryout/39", en: "tryout/38", id: "tryout/37" },
+    drawn: { de: "tryout/40", en: "tryout/39", id: "tryout/38" },
     identity: "tryout/indonesia/snbt/general-reasoning",
     role: "page",
   },
   "section/indonesia/snbt/mathematical-reasoning": {
-    drawn: { de: "tryout/48", en: "tryout/47", id: "tryout/46" },
+    drawn: { de: "tryout/49", en: "tryout/48", id: "tryout/47" },
     identity: "tryout/indonesia/snbt/mathematical-reasoning",
     role: "page",
   },
   "section/indonesia/snbt/quantitative-knowledge": {
-    drawn: { de: "tryout/51", en: "tryout/50", id: "tryout/49" },
+    drawn: { de: "tryout/52", en: "tryout/51", id: "tryout/50" },
     identity: "tryout/indonesia/snbt/quantitative-knowledge",
     role: "page",
   },
   "track/germany/entrance-examination/tu-darmstadt-mathematics": {
-    drawn: { en: "mata pelajaran/142" },
+    drawn: { de: "tryout/154", en: "mata pelajaran/12" },
     identity: "tryout/germany/entrance-examination/tu-darmstadt-mathematics",
     role: "entity",
   },
   "track/indonesia/snbt/2027": {
-    drawn: { en: "tryout/91" },
+    drawn: { en: "tryout/92" },
     identity: "tryout/indonesia/2027",
     role: "entity",
   },
   "track/indonesia/tka/advanced-mathematics": {
-    drawn: { de: "tryout/114", en: "tryout/113", id: "tryout/112" },
+    drawn: { de: "tryout/115", en: "tryout/114", id: "tryout/113" },
     identity: "tryout/indonesia/tka/advanced-mathematics",
     role: "entity",
   },
   "track/indonesia/tka/compulsory-mathematics": {
-    drawn: { de: "tryout/111", en: "tryout/110", id: "tryout/109" },
+    drawn: { de: "tryout/112", en: "tryout/111", id: "tryout/110" },
     identity: "tryout/indonesia/tka/compulsory-mathematics",
     role: "entity",
   },
   "track/indonesia/tka/english-language": {
-    drawn: { de: "tryout/105", en: "tryout/104", id: "tryout/103" },
+    drawn: { de: "tryout/106", en: "tryout/105", id: "tryout/104" },
     identity: "tryout/indonesia/tka/english-language",
     role: "entity",
   },
   "track/indonesia/tka/indonesian-language": {
-    drawn: { de: "tryout/108", en: "tryout/107", id: "tryout/106" },
+    drawn: { de: "tryout/109", en: "tryout/108", id: "tryout/107" },
     identity: "tryout/indonesia/tka/indonesian-language",
     role: "entity",
   },

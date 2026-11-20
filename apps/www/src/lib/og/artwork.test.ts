@@ -39,6 +39,35 @@ describe("public artwork", () => {
     );
   });
 
+  it("gives every design an English file, the default of every locale without its own", () => {
+    const withoutEnglish = Arr.filter(
+      Rec.toEntries(artworkSources),
+      ([, locales]) => !Arr.contains(locales, "en")
+    );
+
+    expect(withoutEnglish).toEqual([]);
+    // A design drawn in German alone shows English elsewhere.
+    expect(
+      resolveStaticArtwork(
+        "tryout/germany/entrance-examination/tu-darmstadt-mathematics",
+        "id"
+      )
+    ).toBe(
+      "/open-graph/tryout/germany/entrance-examination/en-tu-darmstadt-mathematics.png"
+    );
+  });
+
+  it("shows an exam's own name in its one design in every locale", () => {
+    for (const locale of ["en", "id", "de", "ms"] as const) {
+      expect(
+        resolveStaticArtwork("tryout/germany/entrance-examination", locale)
+      ).toBe("/open-graph/tryout/germany/en-entrance-examination.png");
+      expect(resolveStaticArtwork("tryout/indonesia/snbt", locale)).toBe(
+        "/open-graph/tryout/indonesia/en-snbt.png"
+      );
+    }
+  });
+
   it("answers the home image when an identity has no artwork", () => {
     expect(resolveStaticArtwork(undefined, "de")).toBeUndefined();
     expect(
@@ -70,13 +99,16 @@ describe("public artwork", () => {
     expect(
       getAppSocialArtwork({ key: "home", locale: "en", publicPath: "" })
     ).toBe("/en/og/image.png");
-    // The landing's artwork speaks Indonesian, so another language keeps its generated image.
     expect(
       getAppSocialArtwork({ key: "landing", locale: "id", publicPath: "" })
     ).toBe("/open-graph/app/id-landing.png");
     expect(
       getAppSocialArtwork({ key: "landing", locale: "de", publicPath: "" })
-    ).toBe("/de/og/image.png");
+    ).toBe("/open-graph/app/de-landing.png");
+    // Malay has no landing lettering of its own, so it shows the English default.
+    expect(
+      getAppSocialArtwork({ key: "landing", locale: "ms", publicPath: "" })
+    ).toBe("/open-graph/app/en-landing.png");
   });
 
   it("draws a card's artwork from its WebP, and leaves a generated image alone", () => {
@@ -115,6 +147,7 @@ describe("public artwork", () => {
       const filesystemPaths = Arr.filter(entries, (entry) =>
         entry.endsWith(".png")
       );
+      const cardPaths = Arr.filter(entries, (entry) => entry.endsWith(".webp"));
       const publicFilesystemPaths = Arr.map(
         filesystemPaths,
         (entry) => `/open-graph/${entry}`
@@ -124,6 +157,13 @@ describe("public artwork", () => {
       expect(Arr.sort(publicFilesystemPaths, Order.String)).toEqual(
         Arr.sort(manifestPaths, Order.String)
       );
+      // A card's WebP stands beside its PNG, never alone.
+      expect(
+        Arr.sort(
+          Arr.map(cardPaths, (entry) => `/open-graph/${entry}`),
+          Order.String
+        )
+      ).toEqual(Arr.sort(Arr.map(manifestPaths, toCardArtwork), Order.String));
       expect(publicFilesystemPaths).not.toContain(
         "/open-graph/tryout/indonesia/en-2026.png"
       );
