@@ -28,6 +28,7 @@ import { Paragraph } from "@repo/design-system/components/markdown/paragraph";
 import { Array as Arr, Match, Schema } from "effect";
 import { AssessmentFigure } from "@/components/assessment/figure";
 import { InlineContent } from "@/components/assessment/inline";
+import { AssessmentInteraction } from "@/components/assessment/interaction";
 import { placeNodes } from "@/components/assessment/place";
 
 /**
@@ -39,7 +40,9 @@ const FlowSchema = Schema.Literals(["line", "page"]);
 /**
  * One published assessment document, a prompt, a reading, or an explanation, drawn as the article
  * reads: its paragraphs, headings, lists, tables, math, and figures. Nothing evaluates or loads: the
- * document is data the release verified, so the server draws the same page the browser keeps.
+ * document is data the release verified, so the server draws the same page the browser keeps. A prompt
+ * whose question draws each field where the prompt puts it, as the parts of an exam task, sits in the
+ * place context that draws them (`AssessmentPlaceContext`).
  */
 export function AssessmentDocument({
   document,
@@ -79,9 +82,9 @@ function Blocks({
 }
 
 /**
- * One block of a document. The place of an interaction draws nothing, because the question draws
- * the interaction's fields below its prompt. An image's file has no address a published try-out
- * names, so it reads as its text alternative.
+ * One block of a document. The place of an interaction draws its field when the question draws its
+ * fields at their places (`AssessmentInteraction`), and nothing when the question draws them below its
+ * prompt. An image's file has no address a published try-out names, so it reads as its text alternative.
  */
 function Block({
   block,
@@ -144,7 +147,9 @@ function Block({
           Match.exhaustive
         ),
       image: ({ attrs }) => <Paragraph>{attrs.alt}</Paragraph>,
-      interaction: () => null,
+      interaction: ({ attrs }) => (
+        <AssessmentInteraction inline={false} interaction={attrs.interaction} />
+      ),
       mathBlock: ({ attrs }) => <BlockMath math={attrs.latex} />,
       orderedList: ({ attrs, content }) => (
         <MdxOrderedList start={attrs.start}>

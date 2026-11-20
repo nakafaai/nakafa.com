@@ -41,18 +41,20 @@ export function makeTryoutBody(
     placementId: placementId(name),
     versions: Arr.map(languages, (language) => ({
       ...Schema.decodeSync(TryoutQuestionBodySchema)({
-        interaction: {
-          id: "choice",
-          kind: "choice",
-          label: "Answer",
-          maxChoices: 1,
-          minChoices: 1,
-          options: [
-            { id: "first", label: paragraph(`First ${language}`) },
-            { id: "second", label: paragraph(`Second ${language}`) },
-          ],
-          shuffle: false,
-        },
+        interactions: [
+          {
+            id: "choice",
+            kind: "choice",
+            label: "Answer",
+            maxChoices: 1,
+            minChoices: 1,
+            options: [
+              { id: "first", label: paragraph(`First ${language}`) },
+              { id: "second", label: paragraph(`Second ${language}`) },
+            ],
+            shuffle: false,
+          },
+        ],
         prompt: paragraph(`Prompt of ${name} in ${language}`),
       }),
       hash: Sha256HashSchema.make(`sha256:${"a".repeat(64)}`),

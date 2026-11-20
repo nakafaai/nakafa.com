@@ -57,7 +57,8 @@ const fitsChoices = (
 
 /**
  * Whether a response fits the one interaction of a question: a choice takes the options it holds
- * (`fitsChoice`), a text entry and a numeric entry take one line of typed text, an essay takes written text, blank text
+ * (`fitsChoice`), a text entry, a numeric entry and a math entry take one line of typed text, the math entry's as
+ * LaTeX, an essay takes written text, blank text
  * included in both, which leaves the question unanswered, and a match takes pairs that pair each of its
  * statements and answers at most once (`pairsFit`), none or some of them included, and a table takes cells
  * that mark each statement at most once (`cellsFit`). A question of several interactions takes a response
@@ -83,6 +84,11 @@ export const fitsQuestion = (
       ),
       Match.when(
         { kind: "numericEntry" },
+        () =>
+          isTextResponse(response) && response.text.length <= TEXT_RESPONSE_MAX
+      ),
+      Match.when(
+        { kind: "mathEntry" },
         () =>
           isTextResponse(response) && response.text.length <= TEXT_RESPONSE_MAX
       ),

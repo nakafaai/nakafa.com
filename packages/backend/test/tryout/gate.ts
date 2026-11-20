@@ -7,7 +7,7 @@ import type { AttemptRefused } from "@repo/backend/confect/assessment/gate/refus
 import type { Grade } from "@repo/backend/confect/assessment/grade";
 import type { ExamResponse } from "@repo/backend/confect/assessment/response";
 import { seedAuthenticatedUser } from "@repo/backend/confect/test.helpers";
-import { encodePlacedQuestion } from "@repo/backend/confect/tryouts/runtime/question";
+import { encodePlacedInteraction } from "@repo/backend/confect/tryouts/runtime/question";
 import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { client } from "@repo/backend/test/client";
@@ -106,7 +106,7 @@ export const shortAnswer = Effect.all({
     interaction: "typed",
     kind: "textEntry",
   }),
-}).pipe(Effect.flatMap(encodePlacedQuestion), Effect.orDie);
+}).pipe(Effect.flatMap(encodePlacedInteraction), Effect.orDie);
 
 /** An essay, as a place stores it: the one answer of a try-out that waits for a grader, which decides it by its rubric. */
 const essay = Effect.all({
@@ -125,7 +125,7 @@ const essay = Effect.all({
     interaction: "essay",
     kind: "extendedText",
   }),
-}).pipe(Effect.flatMap(encodePlacedQuestion), Effect.orDie);
+}).pipe(Effect.flatMap(encodePlacedInteraction), Effect.orDie);
 
 /** The grade of the running question's key under its all-or-nothing rule, or of a wrong choice. */
 export const choiceGrade = (correct: boolean): Grade => ({

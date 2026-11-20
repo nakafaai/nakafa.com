@@ -8,7 +8,7 @@ import {
   DatabaseReader,
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
-import type { ExamResponse } from "@repo/backend/confect/assessment/response";
+import type { QuestionResponse } from "@repo/backend/confect/assessment/parts";
 import { verdictOf } from "@repo/backend/confect/assessment/verdict";
 import {
   findPracticeSession,
@@ -65,14 +65,15 @@ const findAnswer = Effect.fn("practice.answer.find")(function* (
 });
 
 /**
- * Checks one question of the caller's practice: the frozen interaction, key and rule grade the response, as
- * a try-out's do (`gradeAnswer`), and the answer is kept, which makes the question final for its session.
+ * Checks one question of the caller's practice: the frozen interactions, keys and rules grade the response, a
+ * question of several part by part, as a try-out's do (`gradeAnswer`), and the answer is kept, which makes the
+ * question final for its session.
  */
 export const checkPracticeAnswer = Effect.fn("practice.answer.check")(
   function* (
     userId: Id<"users">,
     questionId: Id<"practiceQuestions">,
-    response: ExamResponse,
+    response: QuestionResponse,
     now: number
   ) {
     const { question, session } = yield* requirePracticeQuestion(
@@ -166,7 +167,7 @@ export const readPracticeContent = Effect.fn("practice.answer.content")(
         ]);
         const body = yield* readQuestionBody({
           appLocale,
-          key: placed.key,
+          question: placed,
           reviewed: false,
           version,
         });
@@ -210,7 +211,7 @@ export const readPracticeExplanation = Effect.fn("practice.answer.explain")(
     const explanation = yield* readExplanation(version.hash, appLocale);
     return {
       ...(Option.isSome(explanation) ? { explanation: explanation.value } : {}),
-      key: placed.key,
+      keys: Arr.map(placed.interactions, ({ key }) => key),
     };
   }
 );

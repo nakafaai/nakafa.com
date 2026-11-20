@@ -13,13 +13,18 @@ import { joinTryoutBodies } from "@/components/tryout/content/body";
 import { TryoutContentContext } from "@/components/tryout/content/context";
 import { useTryoutFlag } from "@/components/tryout/player/flag";
 import { TryoutQuestionBody } from "@/components/tryout/runtime/question/body";
-import { TryoutResponse } from "@/components/tryout/runtime/response/input";
+import {
+  TryoutPartsBody,
+  TryoutResponse,
+} from "@/components/tryout/runtime/response/input";
 import type { TryoutSectionRuntime } from "@/components/tryout/runtime/types";
 
 /**
  * Lays out the running questions with their bodies for the player. The bodies
  * arrived with the page as data, and each question shows its number, its body
- * through the sitting's document reader, and its response fields.
+ * through the sitting's document reader, and its response fields: below the
+ * prompt for a question of one interaction, and where the prompt puts each part
+ * for a question of several.
  */
 export function TryoutArticles({
   locked,
@@ -45,6 +50,7 @@ export function TryoutArticles({
     <PlayerQuestions>
       {Arr.map(joined, ({ body, question }) => {
         const ids = readQuestionIds(question.questionOrder);
+        const [only, ...later] = body.interactions;
 
         return (
           <PlayerQuestion
@@ -60,14 +66,26 @@ export function TryoutArticles({
               questionKey={question.placementId}
             />
             <PlayerQuestionHeader number={question.questionOrder} />
-            <PlayerQuestionPrompt>
-              <TryoutQuestionBody body={body} />
-            </PlayerQuestionPrompt>
-            <PlayerQuestionAnswer>
-              <TryoutResponse
-                value={{ interaction: body.interaction, locked, question }}
-              />
-            </PlayerQuestionAnswer>
+            {Arr.isReadonlyArrayNonEmpty(later) ? (
+              <PlayerQuestionPrompt>
+                <TryoutPartsBody
+                  body={body}
+                  locked={locked}
+                  question={question}
+                />
+              </PlayerQuestionPrompt>
+            ) : (
+              <>
+                <PlayerQuestionPrompt>
+                  <TryoutQuestionBody body={body} />
+                </PlayerQuestionPrompt>
+                <PlayerQuestionAnswer>
+                  <TryoutResponse
+                    value={{ interaction: only, locked, question }}
+                  />
+                </PlayerQuestionAnswer>
+              </>
+            )}
           </PlayerQuestion>
         );
       })}

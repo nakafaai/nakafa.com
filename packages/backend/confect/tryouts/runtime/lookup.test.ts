@@ -69,7 +69,7 @@ describe("locale-neutral attempt ownership", () => {
                   },
                 ],
               },
-              key: { kind: "choice" },
+              keys: [{ kind: "choice" }],
             }))
           );
           expect(

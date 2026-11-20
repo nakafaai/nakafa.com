@@ -111,12 +111,20 @@ describe("exams/sittings fitsQuestion", () => {
     expect(fitsQuestion(both, { text: "B" })).toBe(false);
   });
 
-  it("takes no response to an interaction of another kind, or to two interactions that are not all choices", () => {
+  it("takes one line of LaTeX in a math entry, and refuses a longer line or options", () => {
+    const math = [{ id: "math", kind: "mathEntry", label: "Answer" }] as const;
+
+    expect(fitsQuestion(math, { text: String.raw`\frac{1}{2}` })).toBe(true);
     expect(
-      fitsQuestion([{ id: "math", kind: "mathEntry", label: "Answer" }], {
-        text: "2",
-      })
+      fitsQuestion(math, { text: "x".repeat(TEXT_RESPONSE_MAX + 1) })
     ).toBe(false);
+    expect(fitsQuestion(math, ["option-1"])).toBe(false);
+  });
+
+  it("takes no response to an interaction of another kind, or to two interactions that are not all choices", () => {
+    expect(fitsQuestion([{ id: "order", kind: "order" }], { text: "2" })).toBe(
+      false
+    );
     expect(
       fitsQuestion([...shortAnswers(), ...essayAnswers()], { text: "2" })
     ).toBe(false);

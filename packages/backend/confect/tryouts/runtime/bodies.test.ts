@@ -56,7 +56,7 @@ describe("tryouts/runtime/readSectionBodies", () => {
         );
         expect(yield* encodeText(malay.prompt)).toContain("(ms)");
         expect(yield* encodeText(english.prompt)).toContain("(en)");
-        expect(english.key).toEqual(malay.key);
+        expect(english.keys).toEqual(malay.keys);
         expect(english.explanation).toBeDefined();
       })
   );

@@ -19,14 +19,14 @@ type ReviewAccess = Pick<
 
 /**
  * Reads the body of one frozen question in one language, a try-out's placement or a practice question
- * alike, as the JSON text a page decodes: the version's prompt, its interaction with that language's
+ * alike, as the JSON text a page decodes: the version's prompt, its interactions with that language's
  * labels, and the shared reading it was written against (`placeVersion`). A `reviewed` question also
- * carries its key's answer and the version's explanation in `appLocale`.
+ * carries its key's answer for each interaction and the version's explanation in `appLocale`.
  */
 export const readQuestionBody = Effect.fn("tryouts.runtime.readQuestionBody")(
   function* (input: {
     readonly appLocale: AppLocaleCode;
-    readonly key: PlacedQuestion["key"];
+    readonly question: PlacedQuestion;
     readonly reviewed: boolean;
     readonly version: PlacedQuestionVersion;
   }) {
@@ -36,8 +36,10 @@ export const readQuestionBody = Effect.fn("tryouts.runtime.readQuestionBody")(
       : Option.none();
     return yield* Schema.encodeEffect(TryoutQuestionBodyText)({
       ...(Option.isSome(explanation) ? { explanation: explanation.value } : {}),
-      interaction: version.interaction,
-      ...(reviewed ? { key: input.key } : {}),
+      interactions: version.interactions,
+      ...(reviewed
+        ? { keys: Arr.map(input.question.interactions, ({ key }) => key) }
+        : {}),
       prompt: version.prompt,
       ...(Option.isSome(version.stimulus)
         ? { stimulus: version.stimulus.value }
@@ -77,7 +79,7 @@ export const readSectionBodies = Effect.fn("tryouts.runtime.readSectionBodies")(
             );
             const body = yield* readQuestionBody({
               appLocale: input.appLocale,
-              key: question.key,
+              question,
               reviewed,
               version,
             });

@@ -2591,6 +2591,7 @@
     "time": "Restzeit",
     "placeholder": {
       "essay": "Antwort schreiben",
+      "math": "Formel eingeben",
       "number": "Zahl eingeben",
       "short": "Antwort eingeben"
     }

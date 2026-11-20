@@ -5,7 +5,7 @@ import type {
   NinaFocusInput,
   NinaFocusSource,
 } from "@repo/backend/confect/nina/contract/focus";
-import { formatFocusAnswer } from "@repo/backend/confect/nina/prompt/focus";
+import { formatFocusAnswers } from "@repo/backend/confect/nina/prompt/focus";
 import { NinaTurnError } from "@repo/backend/confect/nina/turns.spec";
 import { isCorrectGrade } from "@repo/backend/confect/tryouts/response/answer";
 import { readExplanation } from "@repo/backend/confect/tryouts/rows";
@@ -16,7 +16,7 @@ import { readPlacedQuestion } from "@repo/backend/confect/tryouts/runtime/questi
 import { placeVersion } from "@repo/backend/confect/tryouts/runtime/version";
 import type { Locale } from "@repo/contents/content";
 import { documentMarkdown } from "@repo/contents/llms/document";
-import { Effect, Option } from "effect";
+import { Array as Arr, Effect, Option } from "effect";
 
 /** Verifies an explicitly requested question against a finished review of the learner's own. */
 export const resolveQuestionFocus = Effect.fn("nina.focus.resolve")(function* (
@@ -94,9 +94,14 @@ export const readQuestionFocus = Effect.fn("nina.focus.read")(function* (
       ),
   ]);
   return {
-    // The answer section quotes the options in the language the question is read in.
-    answer: formatFocusAnswer(
-      { interaction: version.interaction, key: question.key },
+    // The answer section quotes the options in the language the question is read in, beside the place's keys,
+    // which every language of a place holds in the same order.
+    answer: formatFocusAnswers(
+      Arr.zipWith(
+        version.interactions,
+        question.interactions,
+        (interaction, placed) => ({ interaction, key: placed.key })
+      ),
       response?.response ?? null
     ),
     explanation: Option.match(explanation, {

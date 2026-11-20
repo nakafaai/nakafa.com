@@ -202,6 +202,20 @@ evidence and not a formal proof. The engine version is pinned, because issue
   complex choice, a match, a table): all or nothing unless the teacher chooses
   per part or the AKM bands. A rule shares the question's points, rounded down to
   whole points, so only a whole answer earns them all.
+- A try-out or practice question of several interactions, such as the parts
+  (Teilaufgaben) of an FSP task, freezes each interaction with its own key and
+  rule, in the item's order (`tryouts/runtime/question.ts`). The first keeps the
+  placement's `interactionJson`, `keyJson`, and `rule`, and each later one sits
+  in `laterInteractions`, which a question of one interaction leaves out. The
+  response holds each answered part once, and the grade sums the parts: its
+  ceiling is every part's ceiling, it is pending while any part waits for a
+  grader, and it keeps each part's own grade (`assessment/parts.ts`). A raw score
+  counts what the scored parts earned and stays provisional while one waits.
+- A typed part earns all of its points or none. A text entry matches as its key
+  says; Aksara's FSP parts keep case and collapse spaces. A math entry and an
+  extended text stay pending, never marked by the page, until their graders
+  ship. An item whose answers a joint rule scores is refused when an attempt
+  starts until the joint grader ships.
 - Outcomes are score categories 0 to k, so partial credit enters IRT through
   GPCM.
 - The older rule, that multiple choice is all or nothing and partial credit is
@@ -340,6 +354,11 @@ has exactly one owner.
   preserves signed snapshot state. No reset function ships.
 - Every sitting answer and every try-out answer takes its `version` as a required
   argument. A stored answer without a version is bad data and is deleted.
+- A stored shape that gains a case widens without loss. A question of several
+  interactions adds `laterInteractions` beside the fields of its first, and the
+  response and grade of one interaction keep their shapes beside the parts of a
+  question of several, so every row written before reads as it was and no
+  migration runs.
 - The Convex reset rule of ADR 0003 stays in force, because this ADR supersedes
   ADR 0003 and the rule must not lapse with it. A content reset deletes only
   rebuildable Nakafa read models. It preserves signed snapshot state, attempts,

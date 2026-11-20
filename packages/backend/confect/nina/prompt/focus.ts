@@ -1,5 +1,12 @@
 import type { Interaction } from "@nakafa/aksara-contracts/assessment/interaction";
+import { InteractionSchema } from "@nakafa/aksara-contracts/assessment/interaction";
 import type { InteractionKey } from "@nakafa/aksara-contracts/assessment/key";
+import { InteractionKeySchema } from "@nakafa/aksara-contracts/assessment/key";
+import type { QuestionResponse } from "@repo/backend/confect/assessment/parts";
+import {
+  findPart,
+  isPartsResponse,
+} from "@repo/backend/confect/assessment/parts";
 import type {
   ExamCell,
   ExamPair,
@@ -13,10 +20,8 @@ import {
   typedText,
 } from "@repo/backend/confect/assessment/response";
 import type { NinaFocusSource } from "@repo/backend/confect/nina/contract/focus";
-import type { PlacedQuestion } from "@repo/backend/confect/tryouts/runtime/question";
-import type { PlacedQuestionVersion } from "@repo/backend/confect/tryouts/runtime/version";
 import { documentMarkdown } from "@repo/contents/llms/document";
-import { Array as Arr, Option, String as Str } from "effect";
+import { Array as Arr, Option, Schema, String as Str } from "effect";
 
 type Of<T, K> = Extract<T, { readonly kind: K }>;
 /** A labelled part of an interaction: an option, a statement, a column, or one end of a pair. */
@@ -179,6 +184,16 @@ function formatNumericEntry(
 }
 
 /**
+ * One interaction of the focused question as the prompt quotes it: the interaction of the version the learner
+ * reads, with its words, and the place's frozen key for it.
+ */
+const FocusPart = Schema.Struct({
+  interaction: InteractionSchema,
+  key: InteractionKeySchema,
+});
+type FocusPart = typeof FocusPart.Type;
+
+/**
  * Formats the focused question's answer section from the interaction of the version the learner reads
  * and the place's frozen key: a choice's
  * options, a table's statements, a match's pairs, a text entry's accepted answers, or a numeric entry's
@@ -186,8 +201,7 @@ function formatNumericEntry(
  */
 export function formatFocusAnswer(
   // The words come from the version the learner reads, the key from the place.
-  question: Pick<PlacedQuestionVersion, "interaction"> &
-    Pick<PlacedQuestion, "key">,
+  question: FocusPart,
   response: ExamResponse | null
 ) {
   const answered = response ?? NO_RESPONSE;
@@ -214,6 +228,47 @@ export function formatFocusAnswer(
       Str.trim(typedText(answered)) || "no written answer",
     ],
     "\n"
+  );
+}
+
+/** A heading of a part's own answer section, one level below the part's heading. */
+const SECTION_HEADING = /^## /gmu;
+
+/**
+ * Formats the answer section of the focused question: its one interaction's (`formatFocusAnswer`), or for a
+ * question of several, each part under its own heading, the label the version names it by, with the part's key
+ * beside the learner's answer to that part and the part's own headings one level below.
+ */
+export function formatFocusAnswers(
+  parts: readonly [FocusPart, ...FocusPart[]],
+  response: QuestionResponse | null
+) {
+  const [only, ...later] = parts;
+  if (Arr.isReadonlyArrayEmpty(later) && !isPartsResponse(response)) {
+    return formatFocusAnswer(only, response);
+  }
+  return Arr.join(
+    Arr.map(parts, (part) =>
+      Arr.join(
+        [
+          `## ${part.interaction.label}`,
+          "",
+          Str.replace(
+            SECTION_HEADING,
+            "### "
+          )(
+            formatFocusAnswer(
+              part,
+              response === null
+                ? null
+                : Option.getOrNull(findPart(response, part.interaction.id))
+            )
+          ),
+        ],
+        "\n"
+      )
+    ),
+    "\n\n"
   );
 }
 

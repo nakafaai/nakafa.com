@@ -42,9 +42,10 @@ describe("tryouts/runtime/placeVersion", () => {
             const table = yield* readPlace(attemptId, "section-b");
             const malay = yield* placeVersion(table, language("ms"));
             const english = yield* placeVersion(table, language("en"));
+            const [interaction] = english.interactions;
             const column =
-              english.interaction.kind === "matrix"
-                ? english.interaction.columns[0]?.label
+              interaction.kind === "matrix"
+                ? interaction.columns[0]?.label
                 : undefined;
             return {
               hashes: [malay.hash, english.hash],

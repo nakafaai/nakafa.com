@@ -2591,6 +2591,7 @@
     "time": "Time left",
     "placeholder": {
       "essay": "Write your answer",
+      "math": "Type a formula",
       "number": "Type a number",
       "short": "Type your answer"
     }

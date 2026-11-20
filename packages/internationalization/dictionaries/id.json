@@ -2591,6 +2591,7 @@
     "time": "Sisa waktu",
     "placeholder": {
       "essay": "Tulis jawabanmu",
+      "math": "Ketik rumus",
       "number": "Ketik angka",
       "short": "Ketik jawabanmu"
     }

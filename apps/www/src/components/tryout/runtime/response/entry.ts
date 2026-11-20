@@ -1,6 +1,7 @@
 import { matchesAnswerKey } from "@nakafa/aksara-contracts/assessment/answer";
 import type { Interaction } from "@nakafa/aksara-contracts/assessment/interaction";
 import type { InteractionKey } from "@nakafa/aksara-contracts/assessment/key";
+import type { Grade } from "@repo/backend/confect/assessment/grade";
 import { matchesNumber } from "@repo/backend/confect/assessment/number";
 import type { ExamResponse } from "@repo/backend/confect/assessment/response";
 import {
@@ -8,6 +9,7 @@ import {
   typedText,
 } from "@repo/backend/confect/assessment/response";
 import { Match, Option, pipe, String as Str } from "effect";
+import type { Typed } from "@/components/player/response";
 
 /** A question the learner answers by typing: a short answer, or a number with its unit, as SNBT sets them. */
 export type Entry = Extract<
@@ -18,6 +20,12 @@ export type Entry = Extract<
 /** Whether the learner answers an interaction by typing it, as a short answer or a numeric answer. */
 export const isEntry = (interaction: Interaction): interaction is Entry =>
   interaction.kind === "textEntry" || interaction.kind === "numericEntry";
+
+/** Whether the learner answers an interaction by typing it: a short answer, a number, a formula, or an essay (`Typed`). */
+export const isTyped = (interaction: Interaction): interaction is Typed =>
+  isEntry(interaction) ||
+  interaction.kind === "mathEntry" ||
+  interaction.kind === "extendedText";
 
 /** The response of what the learner typed: the text, or none while it is blank, which clears the answer. */
 export const entryResponse = (typed: string): ExamResponse | null =>
@@ -78,4 +86,25 @@ export function reviewEntry({
       Match.orElse(() => "wrong" as const)
     ),
   };
+}
+
+/**
+ * How a typed answer that only the server grades, a formula or an essay, reads in a review: open while blank,
+ * waiting while its grade is pending or not the reader's to see, and once graded, correct with every point and wrong
+ * with fewer.
+ */
+export function gradedMark(
+  response: ExamResponse | null,
+  grade: Option.Option<Grade>
+) {
+  if (!Str.isNonEmpty(Str.trim(typedText(response ?? NO_RESPONSE)))) {
+    return "blank" as const;
+  }
+  const graded = Option.getOrUndefined(grade);
+  if (graded === undefined || graded.status === "pending") {
+    return "pending" as const;
+  }
+  return graded.category === graded.ceiling
+    ? ("correct" as const)
+    : ("wrong" as const);
 }

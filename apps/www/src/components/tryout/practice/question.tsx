@@ -2,13 +2,13 @@ import { QueryResult, useMutation, useQuery } from "@confect/react";
 import { CheckmarkCircle02Icon } from "@hugeicons/core-free-icons";
 import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import practice from "@repo/backend/confect/_generated/refs/practice";
-import type { ExamResponse } from "@repo/backend/confect/assessment/response";
+import type { QuestionResponse } from "@repo/backend/confect/assessment/parts";
 import { verdictOf } from "@repo/backend/confect/assessment/verdict";
 import type { TryoutQuestionBody as Body } from "@repo/backend/confect/tryouts/runtime/spec";
 import { Button } from "@repo/design-system/components/ui/button";
 import { Separator } from "@repo/design-system/components/ui/separator";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 import type { ReactNode } from "react";
 import { useState, useTransition } from "react";
 import { useTranslations } from "use-intl";
@@ -27,7 +27,12 @@ import {
   TryoutQuestionBody,
 } from "@/components/tryout/runtime/question/body";
 import { TryoutResponseFields } from "@/components/tryout/runtime/response/fields";
-import { TryoutReviewedFields } from "@/components/tryout/runtime/response/review";
+import {
+  onlyResponse,
+  withPart,
+} from "@/components/tryout/runtime/response/parts";
+import { placeTryoutParts } from "@/components/tryout/runtime/response/place";
+import { TryoutReviewedAnswer } from "@/components/tryout/runtime/response/review";
 
 /**
  * One practice question in the player, named by its heading, holding the question as the learner meets it: open
@@ -55,7 +60,11 @@ export function TryoutPracticeQuestion({
   );
 }
 
-/** A question not checked yet: the learner answers it, then checks it, in a transition while the server grades it. */
+/**
+ * A question not checked yet: the learner answers it, then checks it, in a transition while the server grades it. A
+ * question of one interaction takes its answer below its prompt, and a question of several takes each part where its
+ * prompt puts it.
+ */
 export function TryoutPracticeOpen({
   body,
   question,
@@ -65,8 +74,10 @@ export function TryoutPracticeOpen({
 }) {
   const t = useTranslations("Tryouts");
   const check = useMutation(practice.sessions.check);
-  const [response, setResponse] = useState<ExamResponse | null>(null);
+  const [response, setResponse] = useState<QuestionResponse | null>(null);
   const [pending, startTransition] = useTransition();
+  const [only, ...later] = body.interactions;
+  const id = `practice-${question.questionId}`;
 
   return (
     <>
@@ -95,20 +106,38 @@ export function TryoutPracticeOpen({
           {t("practice-check")}
         </Button>
       </PlayerQuestionHeader>
-      <PlayerQuestionPrompt>
-        <TryoutQuestionBody body={body} />
-      </PlayerQuestionPrompt>
-      <PlayerQuestionAnswer>
-        <TryoutResponseFields
-          value={{
-            id: `practice-${question.questionId}`,
-            interaction: body.interaction,
-            locked: pending,
-            onChange: setResponse,
-            response,
-          }}
-        />
-      </PlayerQuestionAnswer>
+      {Arr.isReadonlyArrayNonEmpty(later) ? (
+        <PlayerQuestionPrompt>
+          <TryoutQuestionBody
+            body={body}
+            place={placeTryoutParts({
+              id,
+              interactions: body.interactions,
+              locked: pending,
+              onPart: (interaction, next) =>
+                setResponse((current) => withPart(current, interaction, next)),
+              response,
+            })}
+          />
+        </PlayerQuestionPrompt>
+      ) : (
+        <>
+          <PlayerQuestionPrompt>
+            <TryoutQuestionBody body={body} />
+          </PlayerQuestionPrompt>
+          <PlayerQuestionAnswer>
+            <TryoutResponseFields
+              value={{
+                id,
+                interaction: only,
+                locked: pending,
+                onChange: setResponse,
+                response: onlyResponse(response),
+              }}
+            />
+          </PlayerQuestionAnswer>
+        </>
+      )}
     </>
   );
 }
@@ -143,24 +172,13 @@ export function TryoutPracticeChecked({
         <TryoutQuestionBody body={body} />
       </PlayerQuestionPrompt>
       <PlayerQuestionAnswer>
-        {reading === null ? (
-          <TryoutResponseFields
-            value={{
-              id,
-              interaction: body.interaction,
-              locked: true,
-              onChange: () => undefined,
-              response: answer.response,
-            }}
-          />
-        ) : (
-          <TryoutReviewedFields
-            answer={reading.key}
-            id={id}
-            interaction={body.interaction}
-            response={answer.response}
-          />
-        )}
+        <TryoutReviewedAnswer
+          grade={answer.grade}
+          id={id}
+          interactions={body.interactions}
+          keys={reading?.keys}
+          response={answer.response}
+        />
       </PlayerQuestionAnswer>
       {QueryResult.isSuccess(explained) ? (
         <section className="space-y-6 pb-8">
