@@ -4,7 +4,7 @@ import { useMutation } from "@confect/react";
 import island from "@repo/backend/confect/_generated/refs/island";
 import { CHANGE_BATCH } from "@repo/backend/confect/island/mutations.spec";
 import { useRequired } from "@repo/design-system/hooks/required";
-import { Array as Arr, DateTime, Effect, Result } from "effect";
+import { Array as Arr, DateTime, Effect, Option, Result } from "effect";
 import { IslandRegions } from "@/components/island/regions";
 import type { GameStoreApi } from "@/components/island/store";
 import { GameStoreContext, useGame } from "@/components/island/store";
@@ -94,8 +94,11 @@ function startSync(
       Effect.tryPromise(() => change({ ops: batch })).pipe(
         Effect.map((result) =>
           Result.match(result, {
-            // The learner signed out in another tab: nothing more can be sent from this one.
-            onFailure: () => store.getState().setNotice("refused"),
+            // The server refused the learner, whose session ended: the batch stays queued and nothing is sent again by itself, since the page sends them to sign-in.
+            onFailure: () => {
+              store.getState().setNotice("refused");
+              return Option.none<number>();
+            },
             onSuccess: (outcomes) => {
               store.getState().settle(batch.length);
               if (Arr.some(outcomes, (outcome) => outcome !== "done")) {
@@ -105,17 +108,17 @@ function startSync(
                     Arr.contains(outcomes, "full") ? "full" : "refused"
                   );
               }
+              return Option.some(QUIET);
             },
           })
         ),
         // The network dropped the batch: it stays queued and goes again after a rest.
-        Effect.as(QUIET),
-        Effect.orElseSucceed(() => RETRY),
+        Effect.orElseSucceed(() => Option.some(RETRY)),
         Effect.tap((wait) =>
           Effect.sync(() => {
             sending = false;
-            if (store.getState().pending.length > 0) {
-              later(wait);
+            if (Option.isSome(wait) && store.getState().pending.length > 0) {
+              later(wait.value);
             }
           })
         )

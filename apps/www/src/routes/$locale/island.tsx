@@ -2,11 +2,16 @@ import { lazy } from "@repo/design-system/lib/lazy";
 import {
   createFileRoute,
   getRouteApi,
+  Navigate,
   redirect,
   useRouter,
 } from "@tanstack/react-router";
+import { Option } from "effect";
 import { Suspense } from "react";
-import { RouteConvexProvider } from "@/components/providers/route";
+import { Unauthenticated } from "@/components/auth/gate";
+import { SignedInIsland } from "@/components/providers/island";
+import { useLiveSession } from "@/components/providers/live";
+import { PageProviders } from "@/components/providers/page";
 import { privateHead } from "@/lib/account/head";
 import { islandScreenFn } from "@/lib/account/island.functions";
 import { resolvePostAuthIntent } from "@/lib/auth/admission";
@@ -56,7 +61,13 @@ export const Route = createFileRoute("/$locale/island")({
   component: IslandPage,
 });
 
-/** Draws the game with the island's words joined to the shell's; leaving returns to the page the learner came from, or home. */
+/**
+ * Draws the game with the island's words joined to the shell's; leaving returns
+ * to the page the learner came from, or home. The page holds its own live
+ * session, since it stands outside the student shell that holds one: the game
+ * mounts on the page's Convex client once that session is confirmed, so the
+ * stored world is read, and every change is sent, as the learner.
+ */
 function IslandPage() {
   const { locale } = Route.useParams();
   const { messages, screen } = Route.useLoaderData();
@@ -67,29 +78,43 @@ function IslandPage() {
       locale={locale}
       messages={{ ...shellMessages, ...messages }}
     >
-      <RouteConvexProvider>
-        <Suspense fallback={null}>
-          <IslandGame
-            blueprints={screen.blueprints}
-            host={null}
-            key={screen.owner}
-            level={screen.level}
-            onLeave={() => {
-              if (router.history.canGoBack()) {
-                router.history.back();
-                return;
-              }
-              router.navigate({ params: { locale }, to: "/$locale/home" });
-            }}
-            owner={screen.owner}
-            progress={{
-              from: screen.from,
-              lifetime: screen.lifetime,
-              next: screen.next,
-            }}
-          />
-        </Suspense>
-      </RouteConvexProvider>
+      <PageProviders pageNavigation={null}>
+        <SessionEnd />
+        <SignedInIsland>
+          <Suspense fallback={null}>
+            <IslandGame
+              blueprints={screen.blueprints}
+              host={null}
+              key={screen.owner}
+              level={screen.level}
+              onLeave={() => {
+                if (router.history.canGoBack()) {
+                  router.history.back();
+                  return;
+                }
+                router.navigate({ params: { locale }, to: "/$locale/home" });
+              }}
+              owner={screen.owner}
+              progress={{
+                from: screen.from,
+                lifetime: screen.lifetime,
+                next: screen.next,
+              }}
+            />
+          </Suspense>
+        </SignedInIsland>
+      </PageProviders>
     </MessagesProvider>
   );
+}
+
+/** Sends the learner to sign-in once Convex Auth answers that no session stands under the open game: one that ended in another tab, or a hint that outlived its session. */
+function SessionEnd() {
+  const { locale } = Route.useParams();
+  const started = useLiveSession((state) => Option.isSome(state.client));
+  return started ? (
+    <Unauthenticated>
+      <Navigate params={{ locale }} replace to="/$locale/auth" />
+    </Unauthenticated>
+  ) : null;
 }
