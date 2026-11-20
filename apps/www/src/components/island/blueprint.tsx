@@ -45,7 +45,7 @@ export function BlueprintDialog({
   const setNotice = useGame((state) => state.setNotice);
   const unlock = useMutation(island.mutations.unlock);
   const [isOpening, startOpening] = useTransition();
-  const [refused, setRefused] = useState(Option.none<number>());
+  const [refused, setRefused] = useState<Option.Option<number>>(Option.none);
   const price = priceOf(kind);
   const missing = Option.getOrElse(refused, () => Math.max(0, price - balance));
   /** Opens the blueprint on the server, then holds the thing for the next press on the land. */
