@@ -5,6 +5,7 @@ import {
   pointsForWrongParts,
   scoreCeiling,
 } from "@nakafa/aksara-contracts/assessment/scoring";
+import { scoreMath } from "@repo/backend/confect/assessment/math/score";
 import { matchesNumber } from "@repo/backend/confect/assessment/number";
 import type { ExamResponse } from "@repo/backend/confect/assessment/response";
 import {
@@ -150,8 +151,9 @@ const scoreParts = (rule: ScoringRule, parts: Parts): Grade => {
  * person. A text key compares normalized text and reads no language, so every delivery language grades
  * it the same. A numeric entry is one part that its key decides alone: its number, in any script and with
  * either decimal point, within the key's tolerance (`matchesNumber`), scores the ceiling, and any other
- * answer scores nothing, since a number is right or wrong. A written text, an interaction without a key,
- * and every other kind wait for a person.
+ * answer scores nothing, since a number is right or wrong. A math entry is one part that its key's
+ * expression decides (`scoreMath`): a proven or sampled equivalent scores the ceiling and any other answer
+ * nothing. A written text, an interaction without a key, and every other kind wait for a person.
  */
 export function grade({
   interaction,
@@ -189,6 +191,9 @@ export function grade({
       ceiling,
       status: "scored",
     };
+  }
+  if (key.kind === "mathEntry") {
+    return scoreMath(key.expression, response, ceiling);
   }
   if (
     parts !== undefined &&
