@@ -28,7 +28,7 @@ import {
 import { Array as Arr, Option } from "effect";
 
 const card = (text: string): ArgumentCard => ({
-  statement: { _tag: "claim", negated: false, statement: text },
+  statement: { kind: "claim", negated: false, statement: text },
   text,
   truth: true,
 });

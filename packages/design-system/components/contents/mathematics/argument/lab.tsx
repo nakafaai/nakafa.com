@@ -213,12 +213,14 @@ export function ArgumentChainLab({
               value={Option.match(reading.verdict, {
                 onNone: () => <Unknown />,
                 onSome: (verdict) =>
-                  Match.valueTags(verdict, {
-                    fallacy: ({ fallacy }) => labels.fallacies[fallacy],
-                    unfollowed: () => labels.unfollowed,
-                    unlinked: () => labels.unlinked,
-                    valid: ({ form }) => labels.forms[form],
-                  }),
+                  Match.value(verdict).pipe(
+                    Match.discriminatorsExhaustive("kind")({
+                      fallacy: ({ fallacy }) => labels.fallacies[fallacy],
+                      unfollowed: () => labels.unfollowed,
+                      unlinked: () => labels.unlinked,
+                      valid: ({ form }) => labels.forms[form],
+                    })
+                  ),
               })}
             />
             <VisualFactIndicator

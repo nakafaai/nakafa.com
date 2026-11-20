@@ -20,7 +20,7 @@ const cards = (seats: ReturnType<typeof startSeats>) =>
 describe("dealing the hand into the chain", () => {
   it("starts with the lesson's slots fixed and every open slot empty", () => {
     const seats = startSeats([true, false, true]);
-    expect(Arr.map(seats, (seat) => seat._tag)).toEqual([
+    expect(Arr.map(seats, (seat) => seat.kind)).toEqual([
       "open",
       "fixed",
       "open",

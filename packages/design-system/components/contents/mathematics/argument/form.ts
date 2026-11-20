@@ -8,16 +8,23 @@ import { Array as Arr, Match, Option, Schema } from "effect";
  * the learner: two cards that speak of one set or one statement use one name.
  */
 const StatementSchema = Schema.Union([
-  Schema.TaggedStruct("all", {
+  Schema.Struct({
+    kind: Schema.Literal("all"),
     predicate: Schema.String,
     subject: Schema.String,
   }),
-  Schema.TaggedStruct("member", { member: Schema.String, set: Schema.String }),
-  Schema.TaggedStruct("conditional", {
+  Schema.Struct({
+    kind: Schema.Literal("member"),
+    member: Schema.String,
+    set: Schema.String,
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("conditional"),
     antecedent: Schema.String,
     consequent: Schema.String,
   }),
-  Schema.TaggedStruct("claim", {
+  Schema.Struct({
+    kind: Schema.Literal("claim"),
     negated: Schema.Boolean,
     statement: Schema.String,
   }),
@@ -41,11 +48,7 @@ export type Form = typeof FormSchema.Type;
  * ("if p then q; q; so p"), denying the antecedent ("if p then q; not p; so
  * not q"), and the undistributed middle ("all A are B; c is B; so c is A").
  */
-const FallacySchema = Schema.Literals([
-  "consequent",
-  "antecedent",
-  "middle",
-]);
+const FallacySchema = Schema.Literals(["consequent", "antecedent", "middle"]);
 export type Fallacy = typeof FallacySchema.Type;
 
 /**
@@ -54,10 +57,10 @@ export type Fallacy = typeof FallacySchema.Type;
  * do not lead to this conclusion, so it breaks before the conclusion.
  */
 const VerdictSchema = Schema.Union([
-  Schema.TaggedStruct("valid", { form: FormSchema }),
-  Schema.TaggedStruct("fallacy", { fallacy: FallacySchema }),
-  Schema.TaggedStruct("unlinked", {}),
-  Schema.TaggedStruct("unfollowed", {}),
+  Schema.Struct({ kind: Schema.Literal("valid"), form: FormSchema }),
+  Schema.Struct({ kind: Schema.Literal("fallacy"), fallacy: FallacySchema }),
+  Schema.Struct({ kind: Schema.Literal("unlinked") }),
+  Schema.Struct({ kind: Schema.Literal("unfollowed") }),
 ]);
 type Verdict = typeof VerdictSchema.Type;
 
@@ -68,22 +71,22 @@ export type Joint = typeof JointSchema.Type;
 const sameStatement = Schema.toEquivalence(StatementSchema);
 
 const member = (name: string, set: string): Statement => ({
-  _tag: "member",
+  kind: "member",
   member: name,
   set,
 });
 
 const claim = (statement: string, negated: boolean): Statement => ({
-  _tag: "claim",
+  kind: "claim",
   negated,
   statement,
 });
 
-const valid = (form: Form): Verdict => ({ _tag: "valid", form });
+const valid = (form: Form): Verdict => ({ kind: "valid", form });
 
-const fallacy = (kind: Fallacy): Verdict => ({
-  _tag: "fallacy",
-  fallacy: kind,
+const fallacy = (name: Fallacy): Verdict => ({
+  kind: "fallacy",
+  fallacy: name,
 });
 
 /**
@@ -96,7 +99,7 @@ const fallacy = (kind: Fallacy): Verdict => ({
 function stepsOf(rule: Statement, fact: Statement) {
   return Match.value({ fact, rule }).pipe(
     Match.when(
-      { fact: { _tag: "member" }, rule: { _tag: "all" } },
+      { fact: { kind: "member" }, rule: { kind: "all" } },
       ({ fact: { member: name }, rule: { predicate, subject } }) => [
         {
           case: member(name, subject),
@@ -111,7 +114,7 @@ function stepsOf(rule: Statement, fact: Statement) {
       ]
     ),
     Match.when(
-      { fact: { _tag: "claim" }, rule: { _tag: "conditional" } },
+      { fact: { kind: "claim" }, rule: { kind: "conditional" } },
       ({ rule: { antecedent, consequent } }) => [
         {
           case: claim(antecedent, false),
@@ -163,11 +166,11 @@ export function judge(
   conclusion: Statement
 ): Verdict {
   return Option.match(stepOf(first, second), {
-    onNone: (): Verdict => ({ _tag: "unlinked" }),
+    onNone: (): Verdict => ({ kind: "unlinked" }),
     onSome: (step): Verdict =>
       sameStatement(step.conclusion, conclusion)
         ? step.verdict
-        : { _tag: "unfollowed" },
+        : { kind: "unfollowed" },
   });
 }
 
@@ -207,10 +210,10 @@ export function readChain(
       if (upper === "broken") {
         return "pending";
       }
-      return each._tag === "valid" ? "locked" : "broken";
+      return each.kind === "valid" ? "locked" : "broken";
     },
   });
-  const isValid = Option.map(verdict, (each) => each._tag === "valid");
+  const isValid = Option.map(verdict, (each) => each.kind === "valid");
   return {
     joints: [upper, lower] as const,
     lit: Option.getOrElse(isValid, () => false),

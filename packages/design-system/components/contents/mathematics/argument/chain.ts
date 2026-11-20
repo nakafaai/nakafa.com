@@ -6,18 +6,21 @@ import { Array as Arr, Option, Schema } from "effect";
  * empty.
  */
 const SeatSchema = Schema.Union([
-  Schema.TaggedStruct("fixed", {}),
-  Schema.TaggedStruct("open", { card: Schema.Option(Schema.Int) }),
+  Schema.Struct({ kind: Schema.Literal("fixed") }),
+  Schema.Struct({
+    kind: Schema.Literal("open"),
+    card: Schema.Option(Schema.Int),
+  }),
 ]);
 export type Seat = typeof SeatSchema.Type;
 
 /** How long Play holds each way of filling the chain, in seconds. */
 export const HOLD = 2;
 
-const empty: Seat = { _tag: "open", card: Option.none() };
-const fixed: Seat = { _tag: "fixed" };
+const empty: Seat = { kind: "open", card: Option.none() };
+const fixed: Seat = { kind: "fixed" };
 
-const isOpen = (seat: Seat) => seat._tag === "open";
+const isOpen = (seat: Seat) => seat.kind === "open";
 
 /** The chain as it starts: the lesson's cards in their slots and every open slot empty. */
 export function startSeats(open: readonly boolean[]) {
@@ -26,7 +29,7 @@ export function startSeats(open: readonly boolean[]) {
 
 /** The card a slot holds from the hand, if any. */
 export function cardOf(seat: Seat) {
-  return seat._tag === "open" ? seat.card : Option.none();
+  return seat.kind === "open" ? seat.card : Option.none();
 }
 
 /** The slot that holds a hand card, if it is in the chain. */
@@ -42,7 +45,7 @@ export function picked(seats: readonly Seat[]) {
 }
 
 const holding = (card: number): Seat => ({
-  _tag: "open",
+  kind: "open",
   card: Option.some(card),
 });
 
