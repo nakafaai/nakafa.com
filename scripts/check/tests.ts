@@ -8,6 +8,7 @@ import {
 } from "effect";
 import { inspectHeaderActions } from "#scripts/check/actions";
 import { arrayFindings, isProjectConfig } from "#scripts/check/arrays";
+import { inspectBandSource } from "#scripts/check/bands";
 import { inspectButtonSource } from "#scripts/check/buttons";
 import { inspectChartSource } from "#scripts/check/charts";
 import { classFindings } from "#scripts/check/classes";
@@ -151,6 +152,7 @@ const inspectSources = Effect.fn("RepositoryPolicy.inspectSources")(function* (
         inspectSealedSource(file, sourceFile),
         inspectSectionSource(file, sourceFile),
         inspectVisualSource(file, sourceFile),
+        inspectBandSource(file, sourceFile),
         inspectModuleSize(file, sourceFile),
       ])
     ),
