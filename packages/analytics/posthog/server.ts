@@ -65,9 +65,10 @@ function getServerAnalytics() {
 /**
  * Capture one operational exception without a user or analytics identity.
  *
- * The installed PostHog Node client creates a random per-event UUID and sets
- * `$process_person_profile = false` when `distinctId` is omitted. The client is
- * private to this module, so request identity cannot enter through SDK context.
+ * Without a `distinctId` and with no SDK context, the installed PostHog Node
+ * client gives the event a personless UUIDv7 id and the event option
+ * `process_person_profile: false`. The client is private to this module, so
+ * request identity cannot enter through SDK context.
  *
  * `requestUserAgent` is the only request-derived value admitted, and only as
  * `$raw_user_agent` for traffic classification. It labels no person, so server
@@ -101,10 +102,11 @@ export const captureServerException = Effect.fn(
     try: () =>
       analytics.captureExceptionImmediate(
         createOperationalException(error, decodedProperties.value),
-        undefined,
         {
-          ...decodedProperties.value,
-          ...operationalRequestProperties(requestUserAgent),
+          properties: {
+            ...decodedProperties.value,
+            ...operationalRequestProperties(requestUserAgent),
+          },
         }
       ),
     catch: captureError,

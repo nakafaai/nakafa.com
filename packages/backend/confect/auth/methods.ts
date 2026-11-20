@@ -2,13 +2,17 @@ import { Schema } from "effect";
 
 /**
  * The account profile that Convex Auth's Google method passes to Nakafa's user
- * callbacks, field for field (`vGoogleProfile`). `id` is Google's `sub`.
+ * callbacks, field for field (`vGoogleProfile`), since the callbacks' argument
+ * validator refuses a field it does not name. `id` is Google's `sub`, and
+ * `hostedDomain` the ID token's `hd` claim, which only a Google Workspace
+ * account carries.
  * https://docs.convex.dev/auth/convex-auth/methods/oauth
  */
 export const GoogleProfile = Schema.Struct({
   id: Schema.String,
   email: Schema.optional(Schema.String),
   emailVerified: Schema.Boolean,
+  hostedDomain: Schema.optional(Schema.String),
   name: Schema.optional(Schema.String),
   picture: Schema.optional(Schema.String),
 });
@@ -43,8 +47,9 @@ export class GoogleAddressRefused extends Schema.TaggedError<
 
 /**
  * The account that a sign-in names is deleted. Convex Auth keeps the Google
- * account linked to the deleted account's id, so that Google account cannot
- * sign in again.
+ * account linked to the deleted account's id until the deletion's last step
+ * erases it (`deletion/finalize`), so until then that Google account cannot
+ * sign in.
  */
 export class AccountDeleted extends Schema.TaggedError<
   AccountDeleted,

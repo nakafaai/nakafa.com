@@ -190,16 +190,19 @@ and the account is marked deleted, so nothing reaches it from that commit on.
 A scheduled finalize releases its Persons, writes the tombstone, and starts the
 durable cleanup of its data (`confect/auth/deletion`).
 
-Two rows outlive the account, because Convex Auth 2.0.0 offers no deletion of a
-user's rows in its Google and password components: the Google account row (the
-Google subject and the tombstone's id) and, for a school account, the password
-hash. They are why a deleted account's Google sign-in is refused with
-`AccountDeleted` rather than making a new account. GDPR note: a Google subject
-is a stable pseudonymous identifier and therefore personal data under Article
-4(1). It is kept only to refuse that sign-in and is erased by the deletion
-workflow as soon as the components can delete by user; the hash cannot sign in
-once the username is freed. The owner accepted this bounded gap on 13 November
-2026, and the upstream changes below close it.
+The last finalize step also erases the account's Google account rows with the
+Google component's `deleteUser` (Convex Auth 2.1.0, from 20 November 2026), so
+the Google subject leaves with the account. GDPR note: a Google subject is a
+stable pseudonymous identifier and therefore personal data under Article 4(1).
+Until that step the row still points at the deleted account, so a Google
+sign-in in that window is refused with `AccountDeleted`; after it, the same
+Google identity signs up as a new account.
+
+One row still outlives a school account: its password hash, because the
+password component offers no deletion by user yet
+(https://github.com/convex/convex-auth/pull/924). The hash cannot sign in once
+the username is freed. The owner accepted this bounded gap on 13 November 2026,
+and the deletion workflow erases the hash once a release adds the function.
 
 ## Moving To Convex Auth
 
@@ -220,13 +223,13 @@ release, with no compatibility window and no migration function.
 - The earlier component's data is deleted, and the deployment variables it read,
   its secret and its key set, are removed by name.
 - Upstream changes that close the gaps of Account Deletion and of the hosted
-  domain check, opened on 13 November 2026: `deletePassword` for the password
-  component (https://github.com/convex/convex-auth/pull/924),
-  `deleteUserAccounts` for the OAuth components
-  (https://github.com/convex/convex-auth/pull/925), and the Workspace domain
-  in the Google profile (https://github.com/convex/convex-auth/pull/926). When
-  they ship, the deletion workflow erases both rows and the invite claim checks
-  the hosted domain again.
+  domain check, opened on 13 November 2026: `deleteUser` for the OAuth
+  components (https://github.com/convex/convex-auth/pull/925) and the
+  Workspace domain in the Google profile
+  (https://github.com/convex/convex-auth/pull/926) shipped in Convex Auth
+  2.1.0, and the deletion workflow erases the Google rows since. `deleteUser`
+  for the password component (https://github.com/convex/convex-auth/pull/924)
+  is still open.
 
 ## Usernames And Profiles
 

@@ -15,8 +15,8 @@
     "@repo/utilities": "workspace:*",
     "@tanstack/react-start": "catalog:",
     "effect": "catalog:",
-    "posthog-js": "1.449.2",
-    "posthog-node": "5.73.1"
+    "posthog-js": "1.453.0",
+    "posthog-node": "6.0.5"
   },
   "devDependencies": {
     "@effect/vitest": "catalog:",

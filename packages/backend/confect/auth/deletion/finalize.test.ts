@@ -1,19 +1,20 @@
 import { Ref } from "@confect/core";
 import { mutationLayer } from "@confect/server/RegisteredConvexFunction";
 import { afterEach, describe, expect, it } from "@effect/vitest";
+import { components } from "@repo/backend/confect/_generated/components";
 import refs from "@repo/backend/confect/_generated/refs";
 import confectSchema from "@repo/backend/confect/_generated/schema";
 import { ACCOUNT_DELETION_TRANSACTION_BATCH_SIZE } from "@repo/backend/confect/auth/deletion/constants";
 import { finalizeAccountDeletion } from "@repo/backend/confect/auth/deletion/finalize";
-import { convexModules } from "@repo/backend/confect/test.setup";
+import { createConvexTestWithAuth } from "@repo/backend/confect/test.helpers";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
-import schema from "@repo/backend/convex/schema";
+import type schema from "@repo/backend/convex/schema";
 import {
   seedAccountAgents,
   seedDeletionUser,
 } from "@repo/backend/test/deletion/seed";
-import { convexTest, type TestConvex } from "convex-test";
+import type { TestConvex } from "convex-test";
 import { Array as Arr, Effect } from "effect";
 
 const NOW = Date.UTC(2026, 6, 28, 10, 0, 0);
@@ -48,6 +49,27 @@ function pendingJobs(t: TestConvex<typeof schema>, name: string) {
   );
 }
 
+/** The user that Convex Auth's Google component links a Google subject to, if any. */
+function googleUserOf(t: TestConvex<typeof schema>, providerAccountId: string) {
+  return t.query((ctx) =>
+    ctx.runQuery(components.authGoogle.provider.getUserIdByAccount, {
+      providerAccountId,
+    })
+  );
+}
+
+/** Links a Google subject to a user, as a first Google sign-in does. */
+function linkGoogle(
+  ctx: MutationCtx,
+  providerAccountId: string,
+  userId: Id<"users">
+) {
+  return ctx.runMutation(
+    components.authGoogle.provider._internal_dangerous_createAccount,
+    { providerAccountId, userId }
+  );
+}
+
 /** Every grant and unspent code that an account's agents still hold. */
 function agentRows(ctx: MutationCtx, userId: Id<"users">) {
   return Promise.all([
@@ -66,7 +88,7 @@ describe("auth/deletion/finalize", () => {
   afterEach(() => vi.useRealTimers());
 
   it("leaves an account that is gone, live, or already cleaning up as it is", async () => {
-    const t = convexTest(schema, convexModules);
+    const t = createConvexTestWithAuth();
     const gone = await t.mutation(async (ctx) => {
       const id = await seedDeletionUser(ctx, "gone");
       await ctx.db.delete("users", id);
@@ -97,7 +119,7 @@ describe("auth/deletion/finalize", () => {
   });
 
   it("deletes the account's agents, writes the tombstone and starts the cleanup", async () => {
-    const t = convexTest(schema, convexModules);
+    const t = createConvexTestWithAuth();
     const userId = await t.mutation(async (ctx) => {
       const id = await seedDeletionUser(ctx, "finalize-owner", {
         deletedAt: NOW,
@@ -132,8 +154,36 @@ describe("auth/deletion/finalize", () => {
     await expect(pendingJobs(t, finalizeName)).resolves.toEqual([]);
   });
 
+  it("erases the account's Google accounts on its last step, and no other account's", async () => {
+    const t = createConvexTestWithAuth();
+    const [userId, otherId] = await t.mutation(async (ctx) => {
+      const id = await seedDeletionUser(ctx, "google-owner", {
+        deletedAt: NOW,
+      });
+      const other = await seedDeletionUser(ctx, "google-other");
+      await seedAccountAgents(
+        ctx,
+        id,
+        ACCOUNT_DELETION_TRANSACTION_BATCH_SIZE + 1,
+        NOW
+      );
+      await linkGoogle(ctx, "google-subject-1", id);
+      await linkGoogle(ctx, "google-subject-2", id);
+      await linkGoogle(ctx, "google-subject-other", other);
+      return [id, other];
+    });
+    await finalize(t, userId);
+    await expect(googleUserOf(t, "google-subject-1")).resolves.toBe(userId);
+    await finalize(t, userId);
+    await expect(googleUserOf(t, "google-subject-1")).resolves.toBeNull();
+    await expect(googleUserOf(t, "google-subject-2")).resolves.toBeNull();
+    await expect(googleUserOf(t, "google-subject-other")).resolves.toBe(
+      otherId
+    );
+  });
+
   it("erases the welcome email the deleted account was still owed", async () => {
-    const t = convexTest(schema, convexModules);
+    const t = createConvexTestWithAuth();
     const userId = await t.mutation(async (ctx) => {
       const id = await seedDeletionUser(ctx, "owed-welcome", {
         deletedAt: NOW,
@@ -156,7 +206,7 @@ describe("auth/deletion/finalize", () => {
   });
 
   it("deletes a full page of agents per transaction and asks again before the tombstone", async () => {
-    const t = convexTest(schema, convexModules);
+    const t = createConvexTestWithAuth();
     const userId = await t.mutation(async (ctx) => {
       const id = await seedDeletionUser(ctx, "many-agents", {
         deletedAt: NOW,
@@ -187,7 +237,7 @@ describe("auth/deletion/finalize", () => {
   });
 
   it("rolls the tombstone back when the cleanup cannot be scheduled", async () => {
-    const t = convexTest(schema, convexModules);
+    const t = createConvexTestWithAuth();
     const userId = await t.mutation((ctx) =>
       seedDeletionUser(ctx, "scheduler-failure", { deletedAt: NOW })
     );

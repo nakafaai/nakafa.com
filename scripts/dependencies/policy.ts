@@ -43,7 +43,7 @@ export const EFFECT_COHORT_OVERRIDES = [
 /** The tsrs release that the pinned @effect/tsgo patches, which every manifest takes from the catalog. */
 export const TSRS_VERSION = "0.25.0-ts7.1.0-beta";
 /** The Vitest runner, coverage, and UI packages move as one catalog cohort. */
-export const VITEST_COHORT_VERSION = "5.1.0";
+export const VITEST_COHORT_VERSION = "5.1.1";
 /**
  * The AI SDK core and the Convex AI gateway provider move as one catalog
  * cohort, and each bump rechecks the gateway module's provider contracts
@@ -53,7 +53,7 @@ export const VITEST_COHORT_VERSION = "5.1.0";
  */
 export const AI_SDK_COHORT = {
   "@convex-dev/ai-sdk-provider": "0.3.0",
-  ai: "7.0.173",
+  ai: "7.0.177",
 } as const;
 /**
  * Alchemy's packages move as one exact cohort. Alchemy 2 is a beta whose releases
@@ -73,7 +73,7 @@ export const ALCHEMY_COHORT = {
  * manifest that pins the cohort: the policy test reports each declaration that still
  * holds the old version, so none is missed.
  */
-const TIPTAP_COHORT_VERSION = "3.33.1";
+const TIPTAP_COHORT_VERSION = "3.34.0";
 /**
  * The Tiptap packages each manifest declares. The editor package holds the schema of
  * an assessment document, the design system holds the Memory editor, and the web app
@@ -103,6 +103,7 @@ const TIPTAP_DECLARATIONS: readonly (readonly [string, readonly string[]])[] = [
     "packages/design-system/package.json",
     [
       "@tiptap/core",
+      "@tiptap/extension-file-handler",
       "@tiptap/extension-highlight",
       "@tiptap/extension-list",
       "@tiptap/extension-underline",
@@ -175,25 +176,26 @@ function exactCohortHolds(
  * whole, so encoding the workerd config of the www preview, about 67 MB of server
  * modules, took 54 seconds, twice per build; 0.0.17 doubles the segment and takes
  * about one second; https://github.com/alchemy-run/alchemy/issues/3452 asks Alchemy
- * to take 0.0.17, which ends this override. `seroval` 1.8.1 and `seroval-plugins`
+ * to take 0.0.17, which ends this override. `seroval` 1.8.2 and `seroval-plugins`
  * 1.8.0 are one copy each
  * for TanStack Start's serializer, its web plugins, and the prerender
  * (`apps/www/prerender.config.ts`): the TanStack packages declare `^1.6.7`, and Bun
  * kept their nested 1.6.8 copies, which GHSA-9wx9-5pv9-3349 and GHSA-f86p-h4j2-7qgj
  * affect, when the web app moved. `prosemirror-model` 1.25.13 and `prosemirror-transform`
- * 1.12.5 are the one copy each that the ProseMirror packages of `@tiptap/pm` and the
+ * 1.12.7 are the one copy each that the ProseMirror packages of `@tiptap/pm` and the
  * backend's step folding share: Bun kept the packages' nested copies when the backend
  * moved (transform 1.12.2 at 1.12.4, model 1.25.12 at 1.25.13), and a node or step made
  * by one copy fails `instanceof` checks against the other. `convex-helpers`
- * 0.1.135 keeps one copy for every Convex component: @convex-dev/aggregate 0.3.4 pins
+ * 0.1.136 keeps one copy for every Convex component: @convex-dev/aggregate 0.3.4 pins
  * 0.1.128 exactly, the Agent and Workflow peers need ^0.1.127, and the Workpool peer
- * needs ^0.1.94, so one copy satisfies every range. KaTeX 0.19.1, the design system's own, replaces the ^0.16.0 that
+ * needs ^0.1.94: the override replaces aggregate's exact pin, and one copy satisfies
+ * every other range. KaTeX 0.19.1, the design system's own, replaces the ^0.16.0 that
  * micromark-extension-math 3.1.0, its latest release, declares: every 0.16 release is
  * affected by GHSA-238p-pmpm-9mq7, which 0.18.2 fixes. `glob` 14.0.3 and `minimatch`
  * 11.0.3 replace the 13.0.6 and 10.2.6 that GHSA-3g3m-2fjr-6pw4 and GHSA-g3hv-75wg-m249
  * affect: the root sigstore reaches glob through make-fetch-happen's cacache, which pins
  * glob 13.0.6 exactly, and minimatch through tuf-js's @tufjs/models, so one copy of each
- * serves every dependent, react-email's glob ^14.0.3 included. The other transitive versions come from their
+ * serves every dependent. The other transitive versions come from their
  * dependents' own ranges.
  */
 export const DEPENDENCY_HOLDS: readonly DependencyHold[] = [
@@ -240,6 +242,11 @@ export const DEPENDENCY_HOLDS: readonly DependencyHold[] = [
     minimumDeclarations: 1,
   },
   {
+    approved: "0.4.16",
+    dependency: "@convex-dev/workpool",
+    minimumDeclarations: 1,
+  },
+  {
     approved: "0.69.0",
     dependency: "@effect/tsgo",
     minimumDeclarations: 1,
@@ -252,11 +259,16 @@ export const DEPENDENCY_HOLDS: readonly DependencyHold[] = [
   { approved: "catalog:", dependency: "ai", minimumDeclarations: 1 },
   {
     approved: "catalog:",
+    dependency: "@convex-dev/agent",
+    minimumDeclarations: 1,
+  },
+  {
+    approved: "catalog:",
     dependency: "@convex-dev/ai-sdk-provider",
     minimumDeclarations: 1,
   },
   {
-    approved: "2.0.0",
+    approved: "2.1.0",
     dependency: "@convex-dev/auth",
     minimumDeclarations: 1,
   },
@@ -282,16 +294,17 @@ export const DEPENDENCY_HOLDS: readonly DependencyHold[] = [
     dependency: "@types/node",
     minimumDeclarations: 1,
   },
-  // The marked that @tiptap/markdown lexes with. The Memory page reads stored
-  // Markdown with the same lexer, so a row says what the editor shows; it moves
-  // with the editor's lexer, which plain.test.ts checks, never with the latest.
+  // The marked that @tiptap/markdown lexes with: 3.34.0 depends on marked ^17.0.1.
+  // The Memory page reads stored Markdown with the same lexer, so a row says what
+  // the editor shows; it moves with the editor's lexer, which plain.test.ts checks,
+  // never with the latest.
   {
     approved: "npm:marked@^17.0.1",
     dependency: "marked-tiptap",
     minimumDeclarations: 1,
   },
-  // The collab plugin that steps sync uses (ADR 0028). Tiptap 3.33.1 does not
-  // ship it. It is MIT, depends on prosemirror-state alone, and its last
+  // The collab plugin that steps sync uses (ADR 0028). Tiptap 3.34.0 does not
+  // ship it: @tiptap/pm exports no collab entry. It is MIT, depends on prosemirror-state alone, and its last
   // release is 1.3.1 of 17 May 2023, so it is pinned exactly, as Tiptap is. The
   // design system installs its extension, and the sync loop of the web app
   // reads the same plugin's state.
@@ -304,16 +317,17 @@ export const DEPENDENCY_HOLDS: readonly DependencyHold[] = [
     dependency: "prosemirror-collab",
   },
   // The model and the transform that the server folds stored steps with (ADR
-  // 0028). They are the versions that `@tiptap/pm` 3.33.1 resolves in
+  // 0028). They are the versions that `@tiptap/pm` 3.34.0 resolves in
   // `bun.lock` (the transform through its root override), so the server applies
-  // a step with the code the editors run.
+  // a step with the code the editors run. Transform 1.12.6 and 1.12.7 change
+  // dropPoint and the appending of a sliced mapping, not Step.fromJSON or apply.
   {
     approved: "1.25.13",
     declarationPaths: ["packages/backend/package.json"],
     dependency: "prosemirror-model",
   },
   {
-    approved: "1.12.5",
+    approved: "1.12.7",
     declarationPaths: ["packages/backend/package.json"],
     dependency: "prosemirror-transform",
   },
