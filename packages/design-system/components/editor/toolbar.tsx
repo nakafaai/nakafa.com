@@ -44,6 +44,18 @@ const WrappedGroup = Schema.Struct({
   shown: Schema.Finite,
 });
 
+/** A popup that renders in place beside its trigger (ADR 0049), such as a control's tooltip, open or waiting hidden. */
+const POPUP = '[popover], [data-slot$="-content"]';
+
+/** The parts of a group that take a place in the row: its line and its controls, never a popup beside a control. */
+function partsOf(group: Element) {
+  return Arr.filter(
+    Arr.fromIterable(group.children),
+    (part): part is HTMLElement =>
+      part instanceof HTMLElement && !part.matches(POPUP)
+  );
+}
+
 /**
  * Reads how much of one group the row has room for. The row keeps one line and lets each control that does not
  * fit wrap below it, out of sight, so the row fills to its end and only what truly has no room leaves it. The line
@@ -51,10 +63,7 @@ const WrappedGroup = Schema.Struct({
  * marked, which takes it out of reach while it keeps its place in the row.
  */
 function readGroup(row: HTMLElement, group: HTMLElement) {
-  const parts = Arr.filter(
-    Arr.fromIterable(group.children),
-    (part) => part instanceof HTMLElement
-  );
+  const parts = partsOf(group);
   const wrapped = Arr.findFirstIndex(
     parts,
     (part) => part.offsetTop >= row.clientHeight
@@ -124,7 +133,10 @@ function WrappedTools({
     <div
       className="flex items-center gap-0.5"
       ref={(element) => {
-        Arr.forEach(Arr.fromIterable(element?.children ?? []), (tool, index) =>
+        if (element === null) {
+          return;
+        }
+        Arr.forEach(partsOf(element), (tool, index) =>
           tool.toggleAttribute("hidden", index < shown)
         );
       }}
