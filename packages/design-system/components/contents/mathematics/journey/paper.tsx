@@ -1,11 +1,11 @@
 import { Line } from "@react-three/drei";
 import type { Axes } from "@repo/design-system/components/contents/mathematics/journey/axis";
+import type { Sheet } from "@repo/design-system/components/contents/mathematics/journey/layout";
 import {
   graphSpot,
   INK,
   PAPER,
   pointAt,
-  type Sheet,
 } from "@repo/design-system/components/contents/mathematics/journey/layout";
 import { useQuantity } from "@repo/design-system/components/contents/simulation/quantity";
 import { InlineMath } from "@repo/design-system/components/markdown/math";

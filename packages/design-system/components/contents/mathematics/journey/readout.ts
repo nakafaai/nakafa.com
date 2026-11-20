@@ -62,13 +62,17 @@ export function placeTex(km: number, units: Units, quantity: Quantity) {
   return `d ${equals(km)} ${quantity(km, unitTex(units.distance), DIGITS)}`;
 }
 
-/** Where two travellers meet: "t = 30 min, d = 15 km". */
+/**
+ * Where two travellers meet: "t = 30 min, d = 15 km". Each half is one
+ * group, the comma and its space ending the first, so a narrow footer wraps
+ * only after the comma, never inside a half, and the second line starts flush.
+ */
 export function meetingTex(
   meeting: { readonly distance: number; readonly minute: number },
   units: Units,
   quantity: Quantity
 ) {
-  return `${momentTex(meeting.minute, units, quantity)},\\; ${placeTex(meeting.distance, units, quantity)}`;
+  return `{${momentTex(meeting.minute, units, quantity)},\\;}\\allowbreak{${placeTex(meeting.distance, units, quantity)}}`;
 }
 
 /**

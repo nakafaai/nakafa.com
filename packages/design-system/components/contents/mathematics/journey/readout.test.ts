@@ -29,7 +29,7 @@ describe("the readouts of the journey", () => {
     expect(momentTex(25, UNITS, quantity)).toBe("t = 25\\text{ minit}");
     expect(placeTex(12.5, UNITS, quantity)).toBe("d = 12{,}5\\text{ km}");
     expect(meetingTex({ distance: 12, minute: 80 / 3 }, UNITS, quantity)).toBe(
-      "t \\approx 26{,}7\\text{ minit},\\; d = 12\\text{ km}"
+      "{t \\approx 26{,}7\\text{ minit},\\;}\\allowbreak{d = 12\\text{ km}}"
     );
   });
 

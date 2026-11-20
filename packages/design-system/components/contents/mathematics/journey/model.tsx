@@ -1,10 +1,10 @@
 import { useLabelInk } from "@repo/design-system/components/contents/biology/cell/parts";
+import type { Sheet } from "@repo/design-system/components/contents/mathematics/journey/layout";
 import {
   BOARD,
   graphSpot,
   RUN_ON,
   roadX,
-  type Sheet,
   treeSpots,
 } from "@repo/design-system/components/contents/mathematics/journey/layout";
 import { ThreeLabel } from "@repo/design-system/components/three/label";

@@ -1,22 +1,22 @@
 import { Line } from "@react-three/drei";
+import type {
+  Sheet,
+  Tops,
+} from "@repo/design-system/components/contents/mathematics/journey/layout";
 import {
   graphSpot,
   INK,
   letterSide,
   pointAt,
-  type Sheet,
-  type Tops,
 } from "@repo/design-system/components/contents/mathematics/journey/layout";
 import { Print } from "@repo/design-system/components/contents/mathematics/journey/paper";
-import {
-  type Units,
-  unitTex,
-} from "@repo/design-system/components/contents/mathematics/journey/readout";
+import type { Units } from "@repo/design-system/components/contents/mathematics/journey/readout";
+import { unitTex } from "@repo/design-system/components/contents/mathematics/journey/readout";
+import type { Stage } from "@repo/design-system/components/contents/mathematics/journey/trip";
 import {
   cornerName,
   lengthOf,
   motionOf,
-  type Stage,
 } from "@repo/design-system/components/contents/mathematics/journey/trip";
 import { useQuantity } from "@repo/design-system/components/contents/simulation/quantity";
 import { InlineMath } from "@repo/design-system/components/markdown/math";

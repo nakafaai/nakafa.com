@@ -1,4 +1,5 @@
-import { Array as Arr, type Option, Order, Schema } from "effect";
+import type { Option } from "effect";
+import { Array as Arr, Order, Schema } from "effect";
 
 /**
  * Where everything lies on the table, in metres, with the table's top at

@@ -5,9 +5,9 @@ import {
   startClock,
   tickClock,
 } from "@repo/design-system/components/contents/mathematics/journey/clock";
+import type { Sheet } from "@repo/design-system/components/contents/mathematics/journey/layout";
 import {
   namesWidth,
-  type Sheet,
   sheetOf,
   viewOf,
 } from "@repo/design-system/components/contents/mathematics/journey/layout";
@@ -20,10 +20,8 @@ import { Roadside } from "@repo/design-system/components/contents/mathematics/jo
 import { GraphPaper } from "@repo/design-system/components/contents/mathematics/journey/paper";
 import type { Units } from "@repo/design-system/components/contents/mathematics/journey/readout";
 import { Traveller } from "@repo/design-system/components/contents/mathematics/journey/trace";
-import {
-  farthestOf,
-  type Stage,
-} from "@repo/design-system/components/contents/mathematics/journey/trip";
+import type { Stage } from "@repo/design-system/components/contents/mathematics/journey/trip";
+import { farthestOf } from "@repo/design-system/components/contents/mathematics/journey/trip";
 import {
   SimulationTicker,
   simulationStep,
