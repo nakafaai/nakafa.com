@@ -9,6 +9,7 @@ import {
   VisualCard,
   VisualCardBody,
   VisualCardHeader,
+  VisualCardNoteProvider,
 } from "@repo/design-system/components/visual/card";
 import type { ReactNode } from "react";
 import { useId } from "react";
@@ -22,13 +23,15 @@ import {
 
 interface Props {
   readonly description: ReactNode;
+  /** The note its author wrote under the figure, which the card shows last. */
+  readonly footer?: ReactNode;
   readonly labels?: Readonly<Record<string, ReactNode>>;
   readonly scene: MathVisualScene;
   readonly title: ReactNode;
 }
 
 /** Renders one stable mathematical scene without content-specific components. */
-export function MathVisual({ description, title, ...scene }: Props) {
+export function MathVisual({ description, footer, title, ...scene }: Props) {
   const readouts =
     scene.scene.space === "plane" ? (scene.scene.readouts ?? []) : [];
   const identifier = useId();
@@ -42,24 +45,26 @@ export function MathVisual({ description, title, ...scene }: Props) {
         parameters={scene.scene.parameters ?? []}
         readouts={readouts}
       >
-        <VisualCard>
-          <VisualCardHeader
-            description={<span id={descriptionId}>{description}</span>}
-            title={<span id={titleId}>{title}</span>}
-          />
-          <ParameterSliders />
-          <VisualCardBody
-            aria-describedby={descriptionId}
-            aria-labelledby={titleId}
-            className="relative m-0"
-            data-scene="math"
-            render={<figure />}
-          >
-            <DeferredMathScene {...scene} />
-          </VisualCardBody>
-          <CoordinateControls />
-          <MathReadouts />
-        </VisualCard>
+        <VisualCardNoteProvider note={footer}>
+          <VisualCard>
+            <VisualCardHeader
+              description={<span id={descriptionId}>{description}</span>}
+              title={<span id={titleId}>{title}</span>}
+            />
+            <ParameterSliders />
+            <VisualCardBody
+              aria-describedby={descriptionId}
+              aria-labelledby={titleId}
+              className="relative m-0"
+              data-scene="math"
+              render={<figure />}
+            >
+              <DeferredMathScene {...scene} />
+            </VisualCardBody>
+            <CoordinateControls />
+            <MathReadouts />
+          </VisualCard>
+        </VisualCardNoteProvider>
       </ParameterProvider>
     </CoordinateProvider>
   );

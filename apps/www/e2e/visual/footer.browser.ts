@@ -19,6 +19,7 @@ const BAND_ORDER = [
   "visual-card-actions",
   "visual-card-table",
   "visual-card-footer",
+  "visual-card-note",
 ];
 
 /**

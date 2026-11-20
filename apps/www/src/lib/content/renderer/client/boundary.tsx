@@ -1,4 +1,5 @@
-import type { ComponentType } from "react";
+import { VisualCardNoteProvider } from "@repo/design-system/components/visual/card";
+import type { ComponentType, ReactNode } from "react";
 import { Activity, Suspense } from "react";
 import { SETTLED_RENDERER } from "@/lib/static/settle";
 
@@ -16,17 +17,23 @@ import { SETTLED_RENDERER } from "@/lib/static/settle";
  * waits for the renderer before it shows the lesson: the loader settles the
  * renderer's code with the lesson's tree.
  * https://react.dev/reference/react/Activity
+ *
+ * The document's `footer`, the note its author wrote under a visual, goes to
+ * the visual's card through `VisualCardNoteProvider`, so every visual of the
+ * catalog ends with its note without reading it itself.
  */
 export function withHydrationBoundary<P extends object>(
   Renderer: ComponentType<P>
 ) {
-  function HydrationBoundary(props: P) {
+  function HydrationBoundary(props: P & { readonly footer?: ReactNode }) {
     return (
-      <Activity mode="visible">
-        <Suspense fallback={null}>
-          <Renderer {...props} />
-        </Suspense>
-      </Activity>
+      <VisualCardNoteProvider note={props.footer}>
+        <Activity mode="visible">
+          <Suspense fallback={null}>
+            <Renderer {...props} />
+          </Suspense>
+        </Activity>
+      </VisualCardNoteProvider>
     );
   }
   // A client navigation settles the renderer's code with the page's tree
