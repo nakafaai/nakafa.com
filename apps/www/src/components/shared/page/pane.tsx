@@ -17,7 +17,7 @@ import { useTranslations } from "use-intl";
 import { ListCard } from "@/components/shared/page/body";
 import { usePanes } from "@/components/shared/page/panes";
 import { PaneModeContext } from "@/components/shared/page/panes/mode";
-import { pressesRow } from "@/components/shared/row";
+import { useRowPress } from "@/components/shared/row";
 
 /** The phone's header: centred under the swipe handle, or a row from the start with a detail's icon. */
 const sheetHeaderVariants = cva("", {
@@ -271,16 +271,13 @@ export function PaneTableRow({
     Option.exists(state.open, (open) => open === id)
   );
   const show = usePanes((state) => state.show);
+  const press = useRowPress(() => show(id));
 
   return (
     <TableRow
       className="h-12"
       data-state={isOpen ? "selected" : undefined}
-      onClick={(event) => {
-        if (pressesRow(event)) {
-          show(id);
-        }
-      }}
+      {...press}
     >
       {children}
     </TableRow>

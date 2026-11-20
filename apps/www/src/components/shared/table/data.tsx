@@ -13,7 +13,7 @@ import { use, useState } from "react";
 import { useTranslations } from "use-intl";
 import { PaneTableRow } from "@/components/shared/page/pane";
 import { useHasPanes } from "@/components/shared/page/panes";
-import { pressesRow } from "@/components/shared/row";
+import { useRowPress } from "@/components/shared/row";
 import { columnAlign, placeOf } from "@/components/shared/table/align";
 import { tableBoxVariants } from "@/components/shared/table/card";
 import type {
@@ -286,6 +286,10 @@ function DataTableRow({
   /** Whether the page's address shows the row's detail beside the list. */
   shown: boolean;
 }) {
+  const press = useRowPress((element) =>
+    element.querySelector<HTMLAnchorElement>(ROW_LINK)?.click()
+  );
+
   return opens ? (
     <PaneTableRow id={row.id}>{children}</PaneTableRow>
   ) : (
@@ -293,13 +297,7 @@ function DataTableRow({
       className="has-[td:first-child_a[href]]:hover:bg-muted h-12 has-[td:first-child_a[href]]:cursor-pointer"
       data-pressable={undefined}
       data-state={shown ? "selected" : undefined}
-      onClick={(event) => {
-        if (pressesRow(event)) {
-          event.currentTarget
-            .querySelector<HTMLAnchorElement>(ROW_LINK)
-            ?.click();
-        }
-      }}
+      {...press}
     >
       {children}
     </TableRow>
