@@ -8,7 +8,8 @@
     "title": "Something broke",
     "description": "It's not your fault, and we'll take care of it.",
     "retry": "Retry",
-    "report": "Report"
+    "scene-title": "The 3D scene didn't start",
+    "scene-description": "Your browser couldn't open the 3D view this time. Try again."
   },
   "State": {
     "home-button": "Go home"

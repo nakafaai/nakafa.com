@@ -23,6 +23,7 @@ function createFraming() {
   const labels = MutableHashMap.empty<number, CameraLabelBounds>();
   const subjects = MutableHashMap.empty<number, CameraSubjectBounds>();
   let scheduled: number | undefined;
+  let flushed = false;
   let renderedChildren: ReactNode;
   const invalidate = () => {
     if (scheduled !== undefined) {
@@ -30,6 +31,7 @@ function createFraming() {
     }
     scheduled = requestAnimationFrame(() => {
       scheduled = undefined;
+      flushed = true;
       for (const listener of listeners) {
         listener();
       }
@@ -53,6 +55,13 @@ function createFraming() {
       }
     },
     invalidate,
+    /**
+     * Whether the camera stands where the scene's subjects put it: the
+     * registry has fitted at least once and no fit waits for the next frame.
+     */
+    isSettled() {
+      return flushed && scheduled === undefined;
+    },
     subscribe(listener: () => void) {
       MutableHashSet.add(listeners, listener);
       return () => {

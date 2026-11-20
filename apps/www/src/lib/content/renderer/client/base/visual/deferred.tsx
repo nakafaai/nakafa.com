@@ -1,3 +1,7 @@
+import {
+  ScenePlaceholder,
+  SceneStill,
+} from "@repo/design-system/components/three/placeholder";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { lazy } from "@repo/design-system/lib/lazy";
 import { untilReaderGesture } from "@repo/design-system/lib/settle";
@@ -22,43 +26,45 @@ const MathScene = lazy(() =>
  * visual stands on its first screen no longer loads them before anyone reads
  * it. Until then the card shows the scene's still (`MathPicture`), which the
  * server draws, so a crawler, Lighthouse and a reader who never moves see the
- * true picture, and the scene takes its place in the same frame once loaded.
+ * true picture.
+ *
+ * The card listens for the gesture from the moment it mounts, so the scroll
+ * that brings it near is the gesture that loads it. Once the scene loads, the
+ * still stays under a centred spinner until the scene's first whole frame
+ * (`SceneStill`, `ThreeCanvas`), and the frame never changes size.
  */
 export function DeferredMathScene(props: MathSceneProps) {
   const [near, setNear] = useState(false);
-  const [shouldRender, setShouldRender] = useState(false);
+  const [intent, setIntent] = useState(false);
 
   useEffect(() => {
-    if (!near) {
-      return;
-    }
-    const intent = Effect.runFork(
+    const wait = Effect.runFork(
       untilReaderGesture.pipe(
-        Effect.andThen(Effect.sync(() => setShouldRender(true)))
+        Effect.andThen(Effect.sync(() => setIntent(true)))
       )
     );
     return () => {
-      Effect.runFork(Fiber.interrupt(intent));
+      Effect.runFork(Fiber.interrupt(wait));
     };
-  }, [near]);
+  }, []);
 
   return (
-    <>
+    <SceneStill still={<MathPicture {...props} />}>
       <Intersection
         aria-hidden="true"
         className="pointer-events-none absolute inset-0"
         once
         onIntersect={() => setNear(true)}
       />
-      {shouldRender ? (
-        <Suspense fallback={<MathPicture {...props} />}>
-          <ClientOnly fallback={<MathPicture {...props} />}>
+      {near && intent ? (
+        <Suspense fallback={<ScenePlaceholder />}>
+          <ClientOnly fallback={<ScenePlaceholder />}>
             <MathScene {...props} />
           </ClientOnly>
         </Suspense>
       ) : (
         <MathPicture {...props} />
       )}
-    </>
+    </SceneStill>
   );
 }

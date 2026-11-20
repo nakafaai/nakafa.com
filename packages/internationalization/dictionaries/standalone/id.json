@@ -8,7 +8,8 @@
     "title": "Ada yang rusak",
     "description": "Bukan salahmu, biar kami yang urus.",
     "retry": "Coba lagi",
-    "report": "Lapor"
+    "scene-title": "Tampilan 3D-nya gagal dibuka",
+    "scene-description": "Browser-mu belum bisa membuka tampilan 3D ini. Coba lagi, ya."
   },
   "State": {
     "home-button": "Kembali ke beranda"

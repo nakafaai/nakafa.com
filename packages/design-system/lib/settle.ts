@@ -97,13 +97,15 @@ const untilGesture = Effect.callback<void>((resume) => {
 });
 
 /**
- * Completes at the reader's first gesture, at once when they already made one since the document first asked, and
- * never on a page nobody touches. What only a reader's intent should load waits here, such as a lesson's 3D scene,
- * whose code is the largest part of the lesson's JavaScript: a crawler, Lighthouse and a reader who never moves see
- * its placeholder, and the first scroll, pointer move, touch or key brings it.
+ * Completes at the reader's first gesture, at once when they already made one since the document first asked or the
+ * page already stands scrolled, and never on a page nobody touches. What only a reader's intent should load waits
+ * here, such as a lesson's 3D scene, whose code is the largest part of the lesson's JavaScript: a crawler, Lighthouse
+ * and a reader who never moves see its placeholder, and the first scroll, pointer move, touch or key brings it. A
+ * page that stands scrolled when it first asks was scrolled by its reader before the app hydrated, or by the browser
+ * restoring where they left it: a page that loads by itself starts at its top.
  */
 export const untilReaderGesture = Effect.suspend(() =>
-  MutableRef.get(readerGestured)
+  MutableRef.get(readerGestured) || window.scrollY > 0
     ? Effect.void
     : listenForGesture.pipe(Effect.andThen(untilGesture))
 );

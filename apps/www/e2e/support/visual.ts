@@ -6,6 +6,7 @@ import {
   readCumulativeLayoutShift,
   readPageLayoutShift,
 } from "@/e2e/support/layout";
+import { revealDrawnScene } from "@/e2e/support/scene";
 import {
   CARD,
   MATH_SCENE,
@@ -137,11 +138,9 @@ export const revealScene = Effect.fn("NakafaE2E.revealVisualScene")(function* (
   const card = yield* revealCard(page, MATH_SCENE, index);
   const canvas = card.locator(`${MATH_SCENE} canvas`);
   yield* Effect.promise(() =>
-    expect(async () => {
-      await scrollToElement(card.locator(MATH_SCENE), "start");
-      expect(await canvas.isVisible()).toBe(true);
-    }).toPass({ timeout: revealTimeoutMilliseconds })
+    scrollToElement(card.locator(MATH_SCENE), "start")
   );
+  yield* revealDrawnScene(card.locator(MATH_SCENE));
   yield* waitForStableCanvas(canvas);
   return { canvas, card };
 });

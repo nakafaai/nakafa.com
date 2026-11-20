@@ -207,4 +207,27 @@ describe("waiting for the page to settle", () => {
         yield* untilReaderGesture;
       })
   );
+
+  it.effect(
+    "takes a page that already stands scrolled as its reader's intent",
+    () =>
+      Effect.gen(function* () {
+        // A fresh module, as a new document that has not seen its reader yet.
+        vi.resetModules();
+        const { untilReaderGesture } = yield* Effect.promise(
+          () => import("@repo/design-system/lib/settle")
+        );
+        Object.defineProperty(window, "scrollY", {
+          configurable: true,
+          value: 640,
+        });
+
+        // The reader scrolled before the page hydrated, so nothing waits.
+        yield* untilReaderGesture;
+        Object.defineProperty(window, "scrollY", {
+          configurable: true,
+          value: 0,
+        });
+      })
+  );
 });

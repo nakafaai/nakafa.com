@@ -24,7 +24,6 @@ import {
   type CSSProperties,
   createContext,
   type ReactNode,
-  Suspense,
   useMemo,
 } from "react";
 
@@ -230,57 +229,53 @@ export function CoordinateSystem({
         render={ariaLabel === undefined ? undefined : <section />}
       >
         <ThreeCanvas style={{ background: backgroundColor }}>
-          <Suspense>
-            {/* Camera Controls */}
-            <CoordinateCamera />
+          {/* Camera Controls */}
+          <CoordinateCamera />
 
-            {/* Lighting */}
-            <ambientLight intensity={0.5} />
-            <pointLight intensity={1} position={[10, 10, 10]} />
+          {/* Lighting */}
+          <ambientLight intensity={0.5} />
+          <pointLight intensity={1} position={[10, 10, 10]} />
 
-            {/* Coordinate System */}
-            {/* Fit the true origin without measuring decorative axis lengths. */}
-            <CameraBounds
-              bounds={
-                !frame && showAxes
-                  ? {
-                      x: { min: origin?.x ?? 0, max: origin?.x ?? 0 },
-                      y: { min: origin?.y ?? 0, max: origin?.y ?? 0 },
-                      z: { min: origin?.z ?? 0, max: origin?.z ?? 0 },
-                    }
-                  : undefined
-              }
-              exclude={!(frame || showAxes)}
-            >
-              <CoordinateAxes />
+          {/* Coordinate System */}
+          {/* Fit the true origin without measuring decorative axis lengths. */}
+          <CameraBounds
+            bounds={
+              !frame && showAxes
+                ? {
+                    x: { min: origin?.x ?? 0, max: origin?.x ?? 0 },
+                    y: { min: origin?.y ?? 0, max: origin?.y ?? 0 },
+                    z: { min: origin?.z ?? 0, max: origin?.z ?? 0 },
+                  }
+                : undefined
+            }
+            exclude={!(frame || showAxes)}
+          >
+            <CoordinateAxes />
 
-              {/* Origin */}
-              <Origin
-                color={PLOT_COLORS.slate}
-                {...(origin
-                  ? { position: [origin.x, origin.y, origin.z] }
-                  : {})}
-                size={0.06}
-                visible={showOrigin}
+            {/* Origin */}
+            <Origin
+              color={PLOT_COLORS.slate}
+              {...(origin ? { position: [origin.x, origin.y, origin.z] } : {})}
+              size={0.06}
+              visible={showOrigin}
+            />
+          </CameraBounds>
+
+          {/* Grid */}
+          {showGrid ? (
+            <CameraBounds exclude>
+              <CoordinateGrid
+                cellColor={gridColors.secondary}
+                frame={gridFrame}
+                infinite={!frame && gridSize === undefined}
+                origin={origin}
+                sectionColor={gridColors.main}
               />
             </CameraBounds>
+          ) : null}
 
-            {/* Grid */}
-            {showGrid ? (
-              <CameraBounds exclude>
-                <CoordinateGrid
-                  cellColor={gridColors.secondary}
-                  frame={gridFrame}
-                  infinite={!frame && gridSize === undefined}
-                  origin={origin}
-                  sectionColor={gridColors.main}
-                />
-              </CameraBounds>
-            ) : null}
-
-            {/* User Content */}
-            {children}
-          </Suspense>
+          {/* User Content */}
+          {children}
         </ThreeCanvas>
       </VisualCardBody>
     </CoordinateSceneContext>
