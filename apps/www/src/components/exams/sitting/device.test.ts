@@ -1,13 +1,13 @@
 import { describe, expect, it } from "@effect/vitest";
 import { Id } from "@repo/backend/confect/_generated/id";
 import { Effect, Option, Schema } from "effect";
+import type { SittingFlight } from "@/components/exams/sitting/device";
 import {
   forgetSittingDevice,
   readSittingDevice,
   rememberSittingDevice,
   reusedDeviceOf,
   SittingDeviceStorageFailed,
-  type SittingFlight,
 } from "@/components/exams/sitting/device";
 
 const deviceId = "0f8c2d4e-3a6b-4c1d-9e7f-5b2a1c3d4e5f";

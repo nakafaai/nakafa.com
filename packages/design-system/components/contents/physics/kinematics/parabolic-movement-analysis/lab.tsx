@@ -4,6 +4,7 @@ import {
   formatTrimmedSpeedMath,
 } from "@repo/design-system/components/contents/physics/kinematics/math";
 import type { DecimalSeparator } from "@repo/design-system/components/contents/physics/kinematics/number";
+import type { ProjectileScenarioId } from "@repo/design-system/components/contents/physics/kinematics/parabolic-movement-analysis/data";
 import {
   DEFAULT_PROJECTILE_SCENARIO_ID,
   formatVelocityVectorMath,
@@ -13,7 +14,6 @@ import {
   PROJECTILE_INSTANT_TIME,
   PROJECTILE_SCENARIOS,
   PROJECTILE_SCENE,
-  type ProjectileScenarioId,
 } from "@repo/design-system/components/contents/physics/kinematics/parabolic-movement-analysis/data";
 import { PirateProjectileScene } from "@repo/design-system/components/contents/physics/kinematics/parabolic-movement-analysis/scene";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
@@ -35,7 +35,8 @@ import {
 import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { Array as Arr } from "effect";
-import { type ReactNode, Suspense, useMemo, useState } from "react";
+import type { ReactNode } from "react";
+import { Suspense, useMemo, useState } from "react";
 
 interface ProjectileAnalysisLabProps {
   decimalSeparator?: DecimalSeparator;

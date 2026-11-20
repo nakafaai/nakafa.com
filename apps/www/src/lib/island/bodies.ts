@@ -1,13 +1,16 @@
 import { SPAN } from "@repo/backend/confect/island/world";
 import { Array as Arr, Option, Record as Rec } from "effect";
 import { hunterAt } from "@/lib/island/hunt";
-import { type Animal, groundOf } from "@/lib/island/life";
+import type { Animal } from "@/lib/island/life";
+import { groundOf } from "@/lib/island/life";
 import { KIND, LOOK } from "@/lib/island/look";
-import { BodyKind, type Model, modelKey } from "@/lib/island/models/kinds";
+import type { Model } from "@/lib/island/models/kinds";
+import { BodyKind, modelKey } from "@/lib/island/models/kinds";
 import { Swimmer } from "@/lib/island/models/ocean";
 import { unitOf } from "@/lib/island/noise";
 import { SCALE } from "@/lib/island/scale";
-import { type Cells, SEA_LEVEL } from "@/lib/island/world";
+import type { Cells } from "@/lib/island/world";
+import { SEA_LEVEL } from "@/lib/island/world";
 
 /**
  * Numbers per drawn body: its place, the way it faces, how it moves where it

@@ -4,9 +4,9 @@ import {
 } from "@repo/backend/confect/country/registry";
 import { readCookie } from "@repo/internationalization/src/cookie";
 import { Array as Arr, Option, Record as Rec, Schema } from "effect";
+import type { PricingCurrency } from "@/lib/pricing/monthly";
 import {
   getProMonthlyPricing,
-  type PricingCurrency,
   PricingCurrencySchema,
 } from "@/lib/pricing/monthly";
 

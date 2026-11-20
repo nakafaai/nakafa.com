@@ -6,10 +6,10 @@ import { cn } from "cn";
 import { Array as Arr, Order } from "effect";
 import { useState } from "react";
 import { useTranslations } from "use-intl";
+import type { LibraryFolder } from "@/components/tenant/classes/library/folder";
 import {
   folderPath,
   isWithin,
-  type LibraryFolder,
 } from "@/components/tenant/classes/library/folder";
 import { useFolderList } from "@/components/tenant/classes/library/tree";
 

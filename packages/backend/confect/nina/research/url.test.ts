@@ -4,10 +4,8 @@ import {
   judgeAddress,
   normalizeHostname,
 } from "@repo/backend/confect/nina/research/url";
-import {
-  ADDRESS_VERDICTS,
-  type GoldenAddress,
-} from "@repo/backend/test/research/addresses";
+import type { GoldenAddress } from "@repo/backend/test/research/addresses";
+import { ADDRESS_VERDICTS } from "@repo/backend/test/research/addresses";
 import { Option } from "effect";
 
 describe("research URL policy", () => {

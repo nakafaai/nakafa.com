@@ -17,7 +17,8 @@ import {
 } from "@repo/design-system/components/ui/select";
 import { useMissedPress } from "@repo/design-system/hooks/press";
 import { Array as Arr, Option, Schema } from "effect";
-import { type ReactNode, useEffect, useState } from "react";
+import type { ReactNode } from "react";
+import { useEffect, useState } from "react";
 import { useTranslations } from "use-intl";
 import { paperExam } from "@/components/marketing/school/demo/kinds";
 import {

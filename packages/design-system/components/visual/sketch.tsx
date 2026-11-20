@@ -3,7 +3,8 @@ import {
   useStartVisualScene,
   useVisualScene,
 } from "@repo/design-system/components/visual/card";
-import { loadP5, type SketchLoadError } from "@repo/design-system/lib/sketch";
+import type { SketchLoadError } from "@repo/design-system/lib/sketch";
+import { loadP5 } from "@repo/design-system/lib/sketch";
 import { Effect, Exit } from "effect";
 import type p5 from "p5";
 import {

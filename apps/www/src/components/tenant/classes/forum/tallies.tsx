@@ -2,7 +2,8 @@ import { QueryResult, useMutation, useQuery } from "@confect/react";
 import classroom from "@repo/backend/confect/_generated/refs/classroom";
 import { Button } from "@repo/design-system/components/ui/button";
 import { Array as Arr, Option } from "effect";
-import { createContext, type ReactNode, use, useState } from "react";
+import type { ReactNode } from "react";
+import { createContext, use, useState } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { reactionChip } from "@/components/tenant/classes/forum/chips";
@@ -17,10 +18,8 @@ import {
   useChannelScope,
   useReadPlace,
 } from "@/components/tenant/classes/forum/scope";
-import {
-  type ForumTally,
-  reactUpdate,
-} from "@/components/tenant/classes/forum/tally";
+import type { ForumTally } from "@/components/tenant/classes/forum/tally";
+import { reactUpdate } from "@/components/tenant/classes/forum/tally";
 import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 
 /** The tallies of the messages a place has loaded. */

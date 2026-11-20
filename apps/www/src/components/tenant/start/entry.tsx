@@ -18,13 +18,8 @@ import { Input } from "@repo/design-system/components/ui/input";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { Navigate } from "@tanstack/react-router";
 import { Array as Arr, Effect, Match, Option } from "effect";
-import {
-  type FormEvent,
-  useEffect,
-  useId,
-  useState,
-  useTransition,
-} from "react";
+import type { FormEvent } from "react";
+import { useEffect, useId, useState, useTransition } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { useAuthSession } from "@/components/auth/session";

@@ -10,19 +10,14 @@ import { BIOLOGY_COLORS } from "@repo/design-system/lib/material/biology";
 import { CAR_COLORS } from "@repo/design-system/lib/material/car";
 import { ROAD_COLORS } from "@repo/design-system/lib/material/road";
 import { Array as Arr } from "effect";
-import {
-  type ReactNode,
-  useEffect,
-  useLayoutEffect,
-  useMemo,
-  useRef,
-} from "react";
+import type { ReactNode } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef } from "react";
+import type { InstancedMesh } from "three";
 import {
   BufferGeometry,
   CatmullRomCurve3,
   DoubleSide,
   Float32BufferAttribute,
-  type InstancedMesh,
   Matrix4,
   Object3D,
   Quaternion,

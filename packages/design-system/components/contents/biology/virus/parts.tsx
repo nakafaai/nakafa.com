@@ -16,12 +16,11 @@ import {
 import { VIRION_COLORS } from "@repo/design-system/lib/material/virion";
 import { Array as Arr } from "effect";
 import { useEffect, useMemo, useRef } from "react";
+import type { Group, Plane } from "three";
 import {
   BufferGeometry,
   CatmullRomCurve3,
   Float32BufferAttribute,
-  type Group,
-  type Plane,
   Vector3,
 } from "three";
 

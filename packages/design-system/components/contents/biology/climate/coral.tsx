@@ -1,12 +1,8 @@
 import { ECOLOGY_COLORS } from "@repo/design-system/lib/material/ecology";
 import { Array as Arr, Schema } from "effect";
 import { createContext, use, useEffect, useLayoutEffect, useMemo } from "react";
-import {
-  BufferAttribute,
-  type BufferGeometry,
-  Color,
-  MeshPhysicalMaterial,
-} from "three";
+import type { BufferGeometry } from "three";
+import { BufferAttribute, Color, MeshPhysicalMaterial } from "three";
 
 /**
  * How far every coral in the tank has paled, from 0 in full colour to 1 bone

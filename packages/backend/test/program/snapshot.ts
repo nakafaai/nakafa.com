@@ -3,16 +3,18 @@ import {
   CorpusSourcePathSchema,
   PublicPathSchema,
 } from "@nakafa/aksara-contracts/ids";
+import type {
+  ActiveAppLocale,
+  ActiveAppLocaleList,
+} from "@nakafa/aksara-contracts/locale";
 import {
   ACTIVE_APP_LOCALES,
-  type ActiveAppLocale,
-  type ActiveAppLocaleList,
   ActiveAppLocaleSchema,
   activeAppLocaleCode,
 } from "@nakafa/aksara-contracts/locale";
+import type { CurriculumRoute } from "@nakafa/aksara-contracts/program/curriculum";
 import {
   CURRICULUM_NAMESPACES,
-  type CurriculumRoute,
   CurriculumRouteSchema,
 } from "@nakafa/aksara-contracts/program/curriculum";
 import { digestProgramRows } from "@nakafa/aksara-contracts/program/snapshot/digest";
@@ -21,16 +23,16 @@ import {
   makeProgramSnapshot,
   makeProgramSnapshotRow,
 } from "@nakafa/aksara-contracts/program/snapshot/hash";
+import type { LearningProgram } from "@nakafa/aksara-contracts/program/spec";
 import {
-  type LearningProgram,
   LearningProgramKeySchema,
   LearningProgramSchema,
 } from "@nakafa/aksara-contracts/program/spec";
-import {
-  type ContentSnapshotManifest,
-  type ContentSnapshotRow,
-  canonicalizeContentSnapshotRow,
+import type {
+  ContentSnapshotManifest,
+  ContentSnapshotRow,
 } from "@nakafa/aksara-contracts/release/snapshot/data";
+import { canonicalizeContentSnapshotRow } from "@nakafa/aksara-contracts/release/snapshot/data";
 import {
   inheritContentSnapshots,
   replaceContentSnapshot,

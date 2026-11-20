@@ -1,7 +1,9 @@
 import { BRONZE, LID, NINA, POP, TEXT } from "@repo/mascot/color";
-import { MEDALS, type MedalSchema } from "@repo/mascot/medal/name";
+import type { MedalSchema } from "@repo/mascot/medal/name";
+import { MEDALS } from "@repo/mascot/medal/name";
 import { tenth } from "@repo/mascot/round";
-import { circle, group, path, polygon, type Shape } from "@repo/mascot/shape";
+import type { Shape } from "@repo/mascot/shape";
+import { circle, group, path, polygon } from "@repo/mascot/shape";
 import { sparkle } from "@repo/mascot/sparkle";
 import { Array as Arr } from "effect";
 

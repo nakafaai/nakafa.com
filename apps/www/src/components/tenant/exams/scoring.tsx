@@ -16,10 +16,8 @@ import {
 import { Array as Arr, Function as Fn, Schema } from "effect";
 import { useId } from "react";
 import { useTranslations } from "use-intl";
-import {
-  type Question,
-  scoringUpdate,
-} from "@/components/tenant/exams/optimistic";
+import type { Question } from "@/components/tenant/exams/optimistic";
+import { scoringUpdate } from "@/components/tenant/exams/optimistic";
 import { useExam } from "@/components/tenant/exams/provider";
 import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 

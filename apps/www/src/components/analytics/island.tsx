@@ -1,4 +1,5 @@
-import { ConvexProvider, type ConvexReactClient } from "convex/react";
+import type { ConvexReactClient } from "convex/react";
+import { ConvexProvider } from "convex/react";
 import { AnalyticsRuntime } from "@/components/analytics/runtime";
 import { useViewer } from "@/lib/identity/client";
 

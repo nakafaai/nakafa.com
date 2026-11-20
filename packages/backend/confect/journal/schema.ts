@@ -1,9 +1,6 @@
 import { Id } from "@repo/backend/confect/_generated/id";
-import {
-  entries,
-  type kinds,
-  ObjectRef,
-} from "@repo/backend/confect/access/catalog";
+import type { kinds } from "@repo/backend/confect/access/catalog";
+import { entries, ObjectRef } from "@repo/backend/confect/access/catalog";
 import { Kind } from "@repo/backend/confect/access/kind";
 import { classKind } from "@repo/backend/confect/classroom/kinds";
 import { connection } from "@repo/backend/confect/connectors/kinds";

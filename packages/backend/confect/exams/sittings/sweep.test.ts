@@ -2,13 +2,13 @@ import { beforeEach, describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
 import { DEADLINE_GRACE_MS } from "@repo/backend/confect/assessment/gate/deadline";
 import { SUBMIT_DELAY_MS } from "@repo/backend/confect/exams/sittings/timers";
+import type { SittingFixture } from "@repo/backend/test/sittings";
 import {
   CLOSES_AT,
   keyedExam,
   keyedSchool,
   OPENS_AT,
   openedSitting,
-  type SittingFixture,
   scheduleSitting,
   seedAttempt,
 } from "@repo/backend/test/sittings";

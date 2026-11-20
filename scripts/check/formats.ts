@@ -1,4 +1,5 @@
 import { Array as Arr, HashSet, Option } from "effect";
+import type { Node, SourceFile } from "tsrs/ast";
 import {
   isCallExpression,
   isIdentifier,
@@ -6,8 +7,6 @@ import {
   isObjectLiteralExpression,
   isPropertyAccessExpression,
   isVariableDeclaration,
-  type Node,
-  type SourceFile,
 } from "tsrs/ast";
 import { TEST_PATTERN } from "#scripts/check/kinds";
 import { descendants } from "#scripts/check/source";

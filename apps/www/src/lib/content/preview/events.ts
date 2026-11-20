@@ -10,11 +10,8 @@ import {
   String as Str,
   Stream,
 } from "effect";
-import {
-  HttpClient,
-  HttpClientRequest,
-  type HttpClientResponse,
-} from "effect/http";
+import type { HttpClientResponse } from "effect/http";
+import { HttpClient, HttpClientRequest } from "effect/http";
 import { previewUrl, readPreviewConfig } from "@/lib/content/preview/config";
 import {
   PreviewEventError,

@@ -1,19 +1,21 @@
 "use node";
 
 import { verifySignedContentArtifactIntegrity } from "@nakafa/aksara-contracts/artifact/integrity";
+import type {
+  RollbackPage,
+  RollbackRecord,
+} from "@nakafa/aksara-contracts/release/rollback/spec";
 import {
   canonicalizeRollbackRecord,
   isRollbackUpsert,
   MAX_ROLLBACK_PAGE_BYTES,
-  type RollbackPage,
   RollbackPageSchema,
-  type RollbackRecord,
 } from "@nakafa/aksara-contracts/release/rollback/spec";
-import {
-  type RoutePage,
-  RoutePageSchema,
-  type RouteRollbackRecord,
+import type {
+  RoutePage,
+  RouteRollbackRecord,
 } from "@nakafa/aksara-contracts/release/route/page";
+import { RoutePageSchema } from "@nakafa/aksara-contracts/release/route/page";
 import type {
   PublicationRollbackRequest,
   PublicationRoutePageRequest,

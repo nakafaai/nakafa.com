@@ -1,8 +1,8 @@
-import {
-  MAX_PUBLIC_RUNTIME_RESPONSE_BYTES,
-  type PublicContentRuntimeRequest,
-  type PublicContentRuntimeResponse,
+import type {
+  PublicContentRuntimeRequest,
+  PublicContentRuntimeResponse,
 } from "@nakafa/aksara-contracts/runtime/spec";
+import { MAX_PUBLIC_RUNTIME_RESPONSE_BYTES } from "@nakafa/aksara-contracts/runtime/spec";
 import contentReleaseInternal from "@repo/backend/confect/_generated/refs/contentRelease.server";
 import { QueryRunner } from "@repo/backend/confect/_generated/services";
 import {

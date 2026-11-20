@@ -31,8 +31,10 @@ import { getColor } from "@repo/design-system/lib/color";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr, Option } from "effect";
 import { constant } from "effect/Function";
-import { createRef, type ReactNode, Suspense, useMemo, useState } from "react";
-import { Color, type Mesh } from "three";
+import type { ReactNode } from "react";
+import { createRef, Suspense, useMemo, useState } from "react";
+import type { Mesh } from "three";
+import { Color } from "three";
 import { useFormatter } from "use-intl";
 
 /** How many femtometres one scene unit spans. */

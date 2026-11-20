@@ -7,19 +7,15 @@ import { Option } from "effect";
 import type { Locale } from "use-intl";
 import { useTranslations } from "use-intl";
 import { TryoutPageLink } from "@/components/tryout/route/link";
-import {
-  getTryoutPageTarget,
-  type TryoutPageAddress,
-} from "@/components/tryout/route/path";
+import type { TryoutPageAddress } from "@/components/tryout/route/path";
+import { getTryoutPageTarget } from "@/components/tryout/route/path";
 import { useAnswerPress } from "@/components/tryout/runtime/start";
 import type { TryoutSectionAttempt } from "@/components/tryout/runtime/types";
 import { StartSectionButton } from "@/components/tryout/section/start";
 import type { TryoutSummarySection } from "@/components/tryout/section/summary";
 import { TryoutActionName } from "@/components/tryout/set/name";
-import {
-  StartTryoutButton,
-  type StartTryoutRequest,
-} from "@/components/tryout/set/start";
+import type { StartTryoutRequest } from "@/components/tryout/set/start";
+import { StartTryoutButton } from "@/components/tryout/set/start";
 import { isActiveLocale } from "@/lib/i18n/active";
 
 type CurrentAttempt = TryoutSectionAttempt | null;

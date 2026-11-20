@@ -1,9 +1,9 @@
 import type { Docs } from "@repo/backend/confect/_generated/docs";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
+import type { ModelBuildPage } from "@repo/backend/confect/contentRelease/models/spec";
 import {
   MODEL_BUILD_PAGE_BYTES,
   MODEL_BUILD_PAGE_ROWS,
-  type ModelBuildPage,
 } from "@repo/backend/confect/contentRelease/models/spec";
 import { verifyEffectiveMaterial } from "@repo/backend/content/material/verify";
 import { publicationLayer } from "@repo/backend/content/publication/confect";

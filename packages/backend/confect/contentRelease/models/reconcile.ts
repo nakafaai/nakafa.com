@@ -1,9 +1,5 @@
-import {
-  type Document,
-  QueryStream,
-  type QueryStreamKeyLabels,
-  QueryStreamReadBudget,
-} from "@confect/server";
+import type { Document, QueryStreamKeyLabels } from "@confect/server";
+import { QueryStream, QueryStreamReadBudget } from "@confect/server";
 import type { Docs } from "@repo/backend/confect/_generated/docs";
 import contentModelBuildsTable from "@repo/backend/confect/_generated/tables/contentModelBuilds";
 import {
@@ -11,10 +7,10 @@ import {
   releaseFail,
 } from "@repo/backend/confect/contentRelease/error";
 import { modelSlotValidator } from "@repo/backend/confect/contentRelease/models/slot";
+import type { ModelBuildPage } from "@repo/backend/confect/contentRelease/models/spec";
 import {
   MODEL_BUILD_PAGE_BYTES,
   MODEL_BUILD_PAGE_ROWS,
-  type ModelBuildPage,
 } from "@repo/backend/confect/contentRelease/models/spec";
 import { JsonTextSchema } from "@repo/utilities/json";
 import { compareValues } from "convex/values";

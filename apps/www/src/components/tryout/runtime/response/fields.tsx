@@ -1,8 +1,8 @@
 import type { Interaction } from "@nakafa/aksara-contracts/assessment/interaction";
 import type { InteractionKey } from "@nakafa/aksara-contracts/assessment/key";
+import type { ExamResponse } from "@repo/backend/confect/assessment/response";
 import {
   chosenOptions,
-  type ExamResponse,
   markedCells,
   NO_RESPONSE,
   typedText,
@@ -15,12 +15,8 @@ import { useTranslations } from "use-intl";
 import { SittingField } from "@/components/exams/sitting/field";
 import { PaperLockProvider } from "@/components/exams/sitting/lock";
 import { ChoiceCheck, ChoiceRadio } from "@/components/player/choice";
-import {
-  type Choice,
-  markedWith,
-  type TablePart,
-  toggleOption,
-} from "@/components/player/response";
+import type { Choice, TablePart } from "@/components/player/response";
+import { markedWith, toggleOption } from "@/components/player/response";
 import { ChoiceTable } from "@/components/player/table";
 import {
   entryResponse,

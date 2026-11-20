@@ -13,9 +13,9 @@ import {
 import { useRequired } from "@repo/design-system/hooks/required";
 import { useNavigate } from "@tanstack/react-router";
 import { Array as Arr, Effect, Option, Result } from "effect";
+import type { ReactNode } from "react";
 import {
   createContext,
-  type ReactNode,
   Suspense,
   use,
   useDeferredValue,
@@ -26,21 +26,15 @@ import {
 import { useLocale, useTranslations } from "use-intl";
 import { useStore } from "zustand";
 import { CommandKeys } from "@/components/search/keys";
-import {
-  type PaletteGroup,
-  type PaletteRow,
-  SearchRow,
-  usePaletteGroups,
-} from "@/components/search/rows";
+import type { PaletteGroup, PaletteRow } from "@/components/search/rows";
+import { SearchRow, usePaletteGroups } from "@/components/search/rows";
 import { EmptyState } from "@/components/state/empty";
 import { EmptyNina } from "@/components/state/nina";
 import { SEARCH_TARGET } from "@/lib/routing/target";
 import { useSearch } from "@/lib/search/context";
 import type { SearchEntry } from "@/lib/search/entry";
-import {
-  readSearchIndex,
-  type SearchIndexUnavailable,
-} from "@/lib/search/load";
+import type { SearchIndexUnavailable } from "@/lib/search/load";
+import { readSearchIndex } from "@/lib/search/load";
 import { createRecentStore } from "@/lib/search/recent";
 
 /**

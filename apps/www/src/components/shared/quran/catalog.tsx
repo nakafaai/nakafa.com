@@ -10,7 +10,8 @@ import {
 import { useTableFilters } from "@/components/shared/table/toolbar";
 import { EmptyState } from "@/components/state/empty";
 import { EmptyNina } from "@/components/state/nina";
-import { type QuranIndexSurah, searchSurahs } from "@/lib/content/quran/search";
+import type { QuranIndexSurah } from "@/lib/content/quran/search";
+import { searchSurahs } from "@/lib/content/quran/search";
 import { quranSurahTarget } from "@/lib/routing/target";
 
 /**

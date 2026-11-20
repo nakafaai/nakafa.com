@@ -1,8 +1,8 @@
+import type { IsotopeSampleId } from "@repo/design-system/components/contents/chemistry/isotope/data";
 import {
   HYDROGEN_1_ID,
   ISOTOPE_SAMPLE_IDS,
   ISOTOPE_SAMPLES,
-  type IsotopeSampleId,
   isIsotopeSampleId,
 } from "@repo/design-system/components/contents/chemistry/isotope/data";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
@@ -21,7 +21,8 @@ import {
   VisualCardToolbar,
 } from "@repo/design-system/components/visual/card";
 import { VisualFact } from "@repo/design-system/components/visual/fact";
-import { cva, type VariantProps } from "class-variance-authority";
+import type { VariantProps } from "class-variance-authority";
+import { cva } from "class-variance-authority";
 import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
 import { useState } from "react";

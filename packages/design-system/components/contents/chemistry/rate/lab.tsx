@@ -1,7 +1,5 @@
-import {
-  type Solid,
-  TIME_SPAN,
-} from "@repo/design-system/components/contents/chemistry/rate/curve";
+import type { Solid } from "@repo/design-system/components/contents/chemistry/rate/curve";
+import { TIME_SPAN } from "@repo/design-system/components/contents/chemistry/rate/curve";
 import {
   Board,
   RateScene,
@@ -24,7 +22,8 @@ import {
 import { VisualFactIndicator } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { Array as Arr } from "effect";
-import { type ReactNode, Suspense, useState } from "react";
+import type { ReactNode } from "react";
+import { Suspense, useState } from "react";
 import { useFormatter } from "use-intl";
 
 /** Numbers in a reading keep three significant figures, as SPM working does. */

@@ -16,10 +16,8 @@ import {
   readPracticeQuestions,
   requirePracticeSession,
 } from "@repo/backend/confect/practice/session";
-import {
-  PracticeError,
-  type PracticeTarget,
-} from "@repo/backend/confect/practice/sessions.spec";
+import type { PracticeTarget } from "@repo/backend/confect/practice/sessions.spec";
+import { PracticeError } from "@repo/backend/confect/practice/sessions.spec";
 import { gradeAnswer } from "@repo/backend/confect/tryouts/response/answer";
 import { readExplanation } from "@repo/backend/confect/tryouts/rows";
 import { readQuestionBody } from "@repo/backend/confect/tryouts/runtime/bodies";

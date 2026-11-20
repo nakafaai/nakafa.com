@@ -15,10 +15,8 @@ import {
 } from "@/components/entry/shell";
 import { ThemePicker } from "@/components/shared/theme/picker";
 import { TenantEntry } from "@/components/tenant/entry";
-import {
-  type OutsiderWay,
-  TenantOutsiderActions,
-} from "@/components/tenant/leave";
+import type { OutsiderWay } from "@/components/tenant/leave";
+import { TenantOutsiderActions } from "@/components/tenant/leave";
 import { SchoolMark } from "@/components/tenant/mark";
 import { signOutSchoolAccount } from "@/components/tenant/signout";
 

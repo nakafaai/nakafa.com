@@ -8,24 +8,16 @@ import {
   Schema,
   String as Str,
 } from "effect";
-import {
-  isObjectLiteralExpression,
-  isStringLiteral,
-  type Node,
-  type ObjectLiteralExpression,
-  type SourceFile,
-} from "tsrs/ast";
+import type { Node, ObjectLiteralExpression, SourceFile } from "tsrs/ast";
+import { isObjectLiteralExpression, isStringLiteral } from "tsrs/ast";
 import { RepositoryReadError } from "#scripts/check/files";
 import {
   holdsSecondSentence,
   isOneSentence,
   SENTENCE_KEYS,
 } from "#scripts/check/sentences";
-import {
-  children,
-  parseSources,
-  type RepositorySource,
-} from "#scripts/check/source";
+import type { RepositorySource } from "#scripts/check/source";
+import { children, parseSources } from "#scripts/check/source";
 import { isNamedProperty, repeatedWords } from "#scripts/check/words";
 
 /** The dictionaries, standalone ones included: every JSON file below the internationalization dictionaries. */

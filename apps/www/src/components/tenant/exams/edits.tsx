@@ -17,31 +17,31 @@ import {
   markedOptions,
   toggledKey,
 } from "@/components/tenant/exams/answer";
+import type { MatchSide } from "@/components/tenant/exams/match";
 import {
   keyPairs,
   livePairs,
-  type MatchSide,
   pairsKey,
   withPartAdded,
   withPartRemoved,
 } from "@/components/tenant/exams/match";
-import {
-  type NumberSetting,
-  withNumber,
-} from "@/components/tenant/exams/number";
+import type { NumberSetting } from "@/components/tenant/exams/number";
+import { withNumber } from "@/components/tenant/exams/number";
+import type { Question } from "@/components/tenant/exams/optimistic";
 import {
   answerUpdate,
-  type Question,
   templateUpdate,
 } from "@/components/tenant/exams/optimistic";
 import { useExam } from "@/components/tenant/exams/provider";
 import { cellsKey } from "@/components/tenant/exams/table";
+import type {
+  QuestionDraft,
+  QuestionWrite,
+  Unstored,
+} from "@/components/tenant/exams/writer";
 import {
   isUnrefused,
   makeQuestionWriter,
-  type QuestionDraft,
-  type QuestionWrite,
-  type Unstored,
 } from "@/components/tenant/exams/writer";
 import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 

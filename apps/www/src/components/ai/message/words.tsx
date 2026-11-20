@@ -3,13 +3,8 @@ import { useDisclosure } from "@mantine/hooks";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { cn } from "cn";
-import {
-  type ReactNode,
-  useId,
-  useLayoutEffect,
-  useRef,
-  useState,
-} from "react";
+import type { ReactNode } from "react";
+import { useId, useLayoutEffect, useRef, useState } from "react";
 import { useTranslations } from "use-intl";
 
 /**

@@ -5,7 +5,8 @@ import { KIND, LOOK } from "@/lib/island/look";
 import { BodyKind, bodyFaces } from "@/lib/island/models/kinds";
 import { boundsOf } from "@/lib/island/models/parts";
 import { isPassable } from "@/lib/island/plants";
-import { blockAt, type Cells } from "@/lib/island/world";
+import type { Cells } from "@/lib/island/world";
+import { blockAt } from "@/lib/island/world";
 
 /** How much of the world a body takes (ADR 0047, D22): half its width, half its length, and its height, in blocks. */
 function shapeOf(kind: BodyKind) {

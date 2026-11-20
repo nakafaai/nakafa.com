@@ -1,13 +1,13 @@
 import { useReducedMotion } from "@mantine/hooks";
 import { bufferLineShape } from "@repo/design-system/components/evilcharts/charts/line/buffer";
+import type { LineAnimationType } from "@repo/design-system/components/evilcharts/charts/line/paint";
 import {
   AnimatedDashedStroke,
   ColorGradient,
   GlowFilter,
-  type LineAnimationType,
 } from "@repo/design-system/components/evilcharts/charts/line/paint";
+import type { CurveType } from "@repo/design-system/components/evilcharts/charts/line-chart";
 import {
-  type CurveType,
   STROKE_WIDTH,
   useLineChart,
 } from "@repo/design-system/components/evilcharts/charts/line-chart";
@@ -16,19 +16,11 @@ import {
   getChartSeriesPaint,
   getColorsCount,
 } from "@repo/design-system/components/evilcharts/ui/chart-config";
-import {
-  ChartDot,
-  type DotVariant,
-} from "@repo/design-system/components/evilcharts/ui/dot";
+import type { DotVariant } from "@repo/design-system/components/evilcharts/ui/dot";
+import { ChartDot } from "@repo/design-system/components/evilcharts/ui/dot";
 import { RevealMask } from "@repo/design-system/components/evilcharts/ui/reveal";
-import {
-  Children,
-  type ComponentProps,
-  type FC,
-  isValidElement,
-  type ReactNode,
-  useId,
-} from "react";
+import type { ComponentProps, FC, ReactNode } from "react";
+import { Children, isValidElement, useId } from "react";
 import { Line as RechartsLine } from "recharts";
 
 type StrokeVariant = "solid" | "dashed" | "animated-dashed";

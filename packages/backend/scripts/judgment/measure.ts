@@ -1,18 +1,15 @@
 import { JudgmentName } from "@repo/backend/confect/nina/judgment/catalog";
 import { noteText } from "@repo/backend/confect/nina/judgment/note";
-import {
-  MEASURE_TEXT_LIMIT,
-  type Measurement,
-} from "@repo/backend/confect/nina/judgment.spec";
+import type { Measurement } from "@repo/backend/confect/nina/judgment.spec";
+import { MEASURE_TEXT_LIMIT } from "@repo/backend/confect/nina/judgment.spec";
 import {
   callMeasure,
   JudgmentCallError,
 } from "@repo/backend/scripts/judgment/call";
+import type { Failure, Point } from "@repo/backend/scripts/judgment/report";
 import {
-  type Failure,
   failureLine,
   judgmentTable,
-  type Point,
 } from "@repo/backend/scripts/judgment/report";
 import { messages } from "@repo/backend/test/judgment/message";
 import { notes } from "@repo/backend/test/judgment/note";

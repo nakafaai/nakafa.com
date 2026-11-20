@@ -3,10 +3,10 @@ import { MiddlewareImpl } from "@confect/server";
 import type { Docs } from "@repo/backend/confect/_generated/docs";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import { Authority } from "@repo/backend/confect/access/policy";
+import type { SchoolConnectionDoc } from "@repo/backend/confect/connectors/access";
 import {
   ConnectionAccess,
   SchoolConnection,
-  type SchoolConnectionDoc,
 } from "@repo/backend/confect/connectors/access";
 import { connection } from "@repo/backend/confect/connectors/kinds";
 import { Effect, Option } from "effect";

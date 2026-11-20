@@ -3,9 +3,11 @@ import {
   LabBench,
   Scale,
 } from "@repo/design-system/components/contents/chemistry/bench";
+import type {
+  MassConservationModeId,
+  MassConservationSceneColors,
+} from "@repo/design-system/components/contents/chemistry/mass-conservation-law/data";
 import {
-  type MassConservationModeId,
-  type MassConservationSceneColors,
   MassConservationScenePointSchema,
   OPEN_SYSTEM_MODE_ID,
 } from "@repo/design-system/components/contents/chemistry/mass-conservation-law/data";

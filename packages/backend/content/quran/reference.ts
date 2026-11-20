@@ -3,10 +3,8 @@ import { releaseFail } from "@repo/backend/confect/contentRelease/error";
 import { quranSearchIdentity } from "@repo/backend/confect/contentRelease/quran/facts";
 import { validateQuranReference } from "@repo/backend/confect/contentRelease/quran/input";
 import { QURAN_PAGE_VERSE_LIMIT } from "@repo/backend/confect/contentRelease/quran/limits";
-import {
-  type QuranReferenceArgs,
-  quranReferenceArgsValidator,
-} from "@repo/backend/confect/contentRelease/quran/spec";
+import type { QuranReferenceArgs } from "@repo/backend/confect/contentRelease/quran/spec";
+import { quranReferenceArgsValidator } from "@repo/backend/confect/contentRelease/quran/spec";
 import { separateQuranRuntimeBismillah } from "@repo/backend/content/quran/bismillah";
 import { readQuranChunks } from "@repo/backend/content/quran/chunks";
 import { loadQuranOwner } from "@repo/backend/content/quran/owner";

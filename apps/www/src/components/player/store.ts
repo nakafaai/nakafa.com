@@ -1,6 +1,7 @@
 import { Array as Arr, Effect, Option, Schema } from "effect";
 import { createStore } from "zustand";
-import { type PlayerMode, PlayerModeSchema } from "@/components/player/mode";
+import type { PlayerMode } from "@/components/player/mode";
+import { PlayerModeSchema } from "@/components/player/mode";
 import { readNeighbor } from "@/components/player/order";
 
 /** The one overlay the player shows at a time. */

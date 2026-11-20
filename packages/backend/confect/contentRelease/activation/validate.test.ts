@@ -6,10 +6,8 @@ import {
   validateCandidate,
   validateRecovery,
 } from "@repo/backend/confect/contentRelease/activation/validate";
-import {
-  CURRENT_CONTENT_GENERATION,
-  type contentGenerationValidator,
-} from "@repo/backend/confect/contentRelease/generation";
+import type { contentGenerationValidator } from "@repo/backend/confect/contentRelease/generation";
+import { CURRENT_CONTENT_GENERATION } from "@repo/backend/confect/contentRelease/generation";
 import {
   encodeReleaseJson,
   encodeRendererJson,

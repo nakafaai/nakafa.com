@@ -1,10 +1,8 @@
 import { projectPublicApiPath } from "@repo/backend/agent/edge";
 import type { AgentHttpInputError } from "@repo/backend/confect/routes/agent/input";
 import { enforceAgentReadLimit } from "@repo/backend/confect/routes/agent/limit";
-import {
-  AGENT_QUOTA_HEADERS,
-  type AgentRateLimitError,
-} from "@repo/backend/confect/routes/agent/quota";
+import type { AgentRateLimitError } from "@repo/backend/confect/routes/agent/quota";
+import { AGENT_QUOTA_HEADERS } from "@repo/backend/confect/routes/agent/quota";
 import {
   agentFailureResponse,
   httpInputFailureResponse,

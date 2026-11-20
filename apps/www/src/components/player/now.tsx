@@ -1,13 +1,14 @@
 import { useRequired } from "@repo/design-system/hooks/required";
 import { Effect, Fiber } from "effect";
+import type { ReactNode } from "react";
 import {
   createContext,
-  type ReactNode,
   useEffect,
   useState,
   useSyncExternalStore,
 } from "react";
-import { type ClockStoreApi, makeClock } from "@/components/player/clock";
+import type { ClockStoreApi } from "@/components/player/clock";
+import { makeClock } from "@/components/player/clock";
 
 const ClockContext = createContext<ClockStoreApi | null>(null);
 

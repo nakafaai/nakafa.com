@@ -15,7 +15,8 @@ import {
 } from "@/components/shared/quran/search";
 import { QuranSurahNumber } from "@/components/shared/quran/surah";
 import { QuranSurahsContext } from "@/components/shared/quran/surahs";
-import { type QuranIndexSurah, searchSurahs } from "@/lib/content/quran/search";
+import type { QuranIndexSurah } from "@/lib/content/quran/search";
+import { searchSurahs } from "@/lib/content/quran/search";
 import { quranSurahTarget } from "@/lib/routing/target";
 
 /** One surah a search keeps: its number, its two names and the meaning of its name. Choosing it opens the surah. */

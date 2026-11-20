@@ -5,10 +5,8 @@ import {
   projectUserPlan,
   syncSubscriptionGrant,
 } from "@repo/backend/confect/billing/grants";
-import {
-  applySubscriptionState,
-  type BillingSubscriptionState,
-} from "@repo/backend/confect/billing/subscriptions";
+import type { BillingSubscriptionState } from "@repo/backend/confect/billing/subscriptions";
+import { applySubscriptionState } from "@repo/backend/confect/billing/subscriptions";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import {
   createBillingTestConvex,

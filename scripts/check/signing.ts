@@ -1,12 +1,6 @@
 import { Array as Arr, HashSet, Option } from "effect";
-import {
-  type CallExpression,
-  isCallExpression,
-  isStringLiteral,
-  type Node,
-  type SourceFile,
-  SyntaxKind,
-} from "tsrs/ast";
+import type { CallExpression, Node, SourceFile } from "tsrs/ast";
+import { isCallExpression, isStringLiteral, SyntaxKind } from "tsrs/ast";
 import { importedName, namedImports, readsOf } from "#scripts/check/imports";
 
 /** The Node crypto module, by both of its specifiers. */

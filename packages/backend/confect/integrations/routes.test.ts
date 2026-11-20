@@ -5,7 +5,8 @@ import {
   SchoolApi,
   XLSX_TYPE,
 } from "@repo/backend/confect/integrations/api";
-import { createClient, type Fixture, issue } from "@repo/backend/test/api";
+import type { Fixture } from "@repo/backend/test/api";
+import { createClient, issue } from "@repo/backend/test/api";
 import { cohort, nf, period } from "@repo/backend/test/classroom";
 import { asStaffSchool } from "@repo/backend/test/guardians";
 import { TENANCY_NOW, tenancyFixture } from "@repo/backend/test/tenancy";

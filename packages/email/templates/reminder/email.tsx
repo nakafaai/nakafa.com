@@ -1,8 +1,8 @@
 import { render } from "@react-email/render";
 import { Layout } from "@repo/email/layout";
+import type { ReminderEmailInput } from "@repo/email/templates/reminder/content";
 import {
   getReminderEmailCopy,
-  type ReminderEmailInput,
   ReminderEmailInputSchema,
 } from "@repo/email/templates/reminder/content";
 import {

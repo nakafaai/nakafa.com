@@ -14,17 +14,19 @@ import {
   Lead,
   LIQUID_HEIGHT,
 } from "@repo/design-system/components/contents/chemistry/electrolysis/apparatus";
+import type {
+  Cell,
+  Ion,
+  Reaction,
+} from "@repo/design-system/components/contents/chemistry/electrolysis/cell";
 import {
   anodeOf,
-  type Cell,
   cathodeOf,
   dischargedIon,
   ELECTROLYTE_FORMULA,
   ION_CHARGE,
-  type Ion,
   ionsOf,
   PRODUCT_FORMULA,
-  type Reaction,
   tintOf,
 } from "@repo/design-system/components/contents/chemistry/electrolysis/cell";
 import {

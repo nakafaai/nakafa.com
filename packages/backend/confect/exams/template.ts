@@ -10,11 +10,13 @@ import {
   tableAnswers,
   textLabel,
 } from "@repo/backend/confect/exams/blank";
+import type {
+  QuestionTemplate,
+  QuestionView,
+} from "@repo/backend/confect/exams/question";
 import {
   choiceLimit,
   fixedOptions,
-  type QuestionTemplate,
-  type QuestionView,
 } from "@repo/backend/confect/exams/question";
 import {
   reasonAnswers,

@@ -1,6 +1,6 @@
 import { useFrame } from "@react-three/fiber";
+import type { Alert } from "@repo/design-system/components/contents/biology/climate/bleaching";
 import {
-  type Alert,
   alertOf,
   heatingWeeksOf,
   hotspotOf,
@@ -44,7 +44,8 @@ import {
 } from "@repo/design-system/components/visual/card";
 import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
-import { type ReactNode, Suspense, useEffect, useRef, useState } from "react";
+import type { ReactNode } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 
 /** Played, a week passes each second. */
 const WEEKS_PER_SECOND = 1;

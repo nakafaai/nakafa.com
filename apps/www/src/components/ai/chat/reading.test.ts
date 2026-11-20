@@ -3,11 +3,8 @@ import { describe, expect, it } from "@effect/vitest";
 import type { NinaTurnSummary } from "@repo/backend/confect/nina/contract/turn";
 import type { NinaMessage } from "@repo/backend/confect/nina/schema";
 import { Array as Arr, Result, Schema } from "effect";
-import {
-  type ReaderView,
-  readerView,
-  withOlderPage,
-} from "@/components/ai/chat/reading";
+import type { ReaderView } from "@/components/ai/chat/reading";
+import { readerView, withOlderPage } from "@/components/ai/chat/reading";
 import { ReaderMessagePage, ReaderOlder, ReaderReady } from "@/lib/chat/reader";
 
 const threadId = "thread-1";

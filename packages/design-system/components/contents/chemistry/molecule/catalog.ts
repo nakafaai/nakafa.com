@@ -1,11 +1,11 @@
+import type { ElementSymbol } from "@repo/design-system/components/contents/chemistry/molecule/elements";
 import {
   ELEMENTS,
-  type ElementSymbol,
   ElementSymbolSchema,
 } from "@repo/design-system/components/contents/chemistry/molecule/elements";
+import type { Placement } from "@repo/design-system/components/contents/chemistry/molecule/geometry";
 import {
   buildMolecule,
-  type Placement,
   PlacementSchema,
 } from "@repo/design-system/components/contents/chemistry/molecule/geometry";
 import {

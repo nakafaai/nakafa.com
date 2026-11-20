@@ -2,16 +2,16 @@ import { useFrame, useThree } from "@react-three/fiber";
 import { getAtomSceneColors } from "@repo/design-system/components/contents/chemistry/color";
 import type { getMolecule } from "@repo/design-system/components/contents/chemistry/molecule/catalog";
 import { ELEMENTS } from "@repo/design-system/components/contents/chemistry/molecule/elements";
+import type { Point } from "@repo/design-system/components/contents/chemistry/molecule/geometry";
 import {
   length,
-  type Point,
   scale,
 } from "@repo/design-system/components/contents/chemistry/molecule/geometry";
+import type { ModelStyle } from "@repo/design-system/components/contents/chemistry/molecule/model";
 import {
   AtomBall,
   atomRadius,
   BondSticks,
-  type ModelStyle,
   placeBond,
 } from "@repo/design-system/components/contents/chemistry/molecule/model";
 import { InlineMath } from "@repo/design-system/components/markdown/math";

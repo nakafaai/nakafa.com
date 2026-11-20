@@ -4,14 +4,16 @@ import {
   drawFoot,
   drawWaste,
 } from "@repo/design-system/components/contents/biology/climate/fittings";
+import type {
+  Frame,
+  Point,
+} from "@repo/design-system/components/contents/biology/climate/frame";
 import {
-  type Frame,
   frameOf,
   insideAt,
   markOf,
   outline,
   outsideAt,
-  type Point,
   surfaceOf,
   waterOf,
 } from "@repo/design-system/components/contents/biology/climate/frame";

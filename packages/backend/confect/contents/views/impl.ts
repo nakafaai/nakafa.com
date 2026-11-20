@@ -8,16 +8,12 @@ import {
   enqueuePopularitySignal,
   schedulePopularityPartition,
 } from "@repo/backend/confect/contents/views/signals";
+import type { RecordContentViewArgs } from "@repo/backend/confect/contents/views/spec";
+import { toContentViewIoError } from "@repo/backend/confect/contents/views/spec";
+import type { ContentViewTarget } from "@repo/backend/confect/contents/views/target";
+import { validateIncomingContentTarget } from "@repo/backend/confect/contents/views/target";
+import type { ContentViewer } from "@repo/backend/confect/contents/views/viewer";
 import {
-  type RecordContentViewArgs,
-  toContentViewIoError,
-} from "@repo/backend/confect/contents/views/spec";
-import {
-  type ContentViewTarget,
-  validateIncomingContentTarget,
-} from "@repo/backend/confect/contents/views/target";
-import {
-  type ContentViewer,
   loadViewerView,
   resolveContentViewer,
 } from "@repo/backend/confect/contents/views/viewer";

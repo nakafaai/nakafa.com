@@ -11,14 +11,13 @@ import { encodePlacedQuestion } from "@repo/backend/confect/tryouts/runtime/ques
 import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { client } from "@repo/backend/test/client";
-import {
-  type Caller,
-  type Change,
-  Failure,
-  Observed,
-  type Pick,
-  type Target,
+import type {
+  Caller,
+  Change,
+  Pick,
+  Target,
 } from "@repo/backend/test/gate/world";
+import { Failure, Observed } from "@repo/backend/test/gate/world";
 import { TRYOUT_NOW, tryoutWorld } from "@repo/backend/test/tryout/world";
 import { Effect, Option, Schema, Struct } from "effect";
 

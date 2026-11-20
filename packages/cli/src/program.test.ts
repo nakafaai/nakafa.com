@@ -13,12 +13,8 @@ import {
   Stdio,
   Terminal,
 } from "effect";
-import {
-  HttpClient,
-  HttpClientError,
-  type HttpClientRequest,
-  HttpClientResponse,
-} from "effect/http";
+import type { HttpClientRequest } from "effect/http";
+import { HttpClient, HttpClientError, HttpClientResponse } from "effect/http";
 import { ChildProcessSpawner } from "effect/process";
 import { TestConsole } from "effect/testing";
 import { runCli } from "#cli/program";

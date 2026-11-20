@@ -105,7 +105,6 @@ of its own, and every model call has a cap on its output.
   64,000 after 236 s, so chat stays at `high`. A functional-equation proof at
   `xhigh` wrote 8,083 (6,387 reasoning) in 34 s, and a 16-turn summary at `low`
   wrote 339 (94 reasoning) in 3 s. The derivation of each cap and deadline:
-
   - Chat cap 48,000: the longest answer at `high`, 30,038, rounded up with a
     margin of about 1.6.
   - Chat step 180,000 ms: a full 48,000-token answer takes 48,000 / 278, about
@@ -137,17 +136,17 @@ of its own, and every model call has a cap on its output.
   Earlier caps were measured on Gemini 3.8 Flash through the gateway on the dev
   deployment on 11 October 2026, with a short system prompt and no cap:
 
-  | Call | Effort | Output tokens | Of them reasoning |
-  | --- | --- | --- | --- |
-  | Chat: a history the learner asked to be very long | high | 9,593 | 2,055 |
-  | Chat: a functional equation with a full proof | high | 5,842 | 4,366 |
-  | Chat: two proofs and an integral | high | 3,384 | 1,369 |
-  | Chat: a counting problem | high | 3,017 | 1,578 |
-  | Chat: a lesson with three worked examples | high | 2,765 | 1,296 |
-  | Background: a summary of sixteen turns | low | 1,042 | 0 |
-  | Background: memory capture | low | 113 | 0 |
-  | Suggestion: five follow-up questions | low | 85 | 0 |
-  | Specialist: three checked calculations | low | 904 | 0 |
+  | Call                                              | Effort | Output tokens | Of them reasoning |
+  | ------------------------------------------------- | ------ | ------------- | ----------------- |
+  | Chat: a history the learner asked to be very long | high   | 9,593         | 2,055             |
+  | Chat: a functional equation with a full proof     | high   | 5,842         | 4,366             |
+  | Chat: two proofs and an integral                  | high   | 3,384         | 1,369             |
+  | Chat: a counting problem                          | high   | 3,017         | 1,578             |
+  | Chat: a lesson with three worked examples         | high   | 2,765         | 1,296             |
+  | Background: a summary of sixteen turns            | low    | 1,042         | 0                 |
+  | Background: memory capture                        | low    | 113           | 0                 |
+  | Suggestion: five follow-up questions              | low    | 85            | 0                 |
+  | Specialist: three checked calculations            | low    | 904           | 0                 |
 
   The first draft of the caps (chat 8,192, background 1,024) would have cut
   the first chat answer and the summary. A summary could hold 1,200 tokens

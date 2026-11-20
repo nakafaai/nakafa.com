@@ -1,8 +1,8 @@
 import { Line, PointMaterial, Points } from "@react-three/drei";
 import { useThree } from "@react-three/fiber";
+import type { OrbitalId } from "@repo/design-system/components/contents/chemistry/orbital/wave";
 import {
   boundaryDensity,
-  type OrbitalId,
   OrbitalIdSchema,
   orbitalNumbers,
   orbitalReach,
@@ -35,7 +35,8 @@ import { getColor } from "@repo/design-system/lib/color";
 import { isMobileDevice } from "@repo/design-system/lib/device";
 import { AXIS_COLORS, PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr, Option, Schema } from "effect";
-import { type ReactNode, Suspense, useEffect, useMemo, useState } from "react";
+import type { ReactNode } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import { Color, DoubleSide, MeshPhysicalMaterial } from "three";
 import { MarchingCubes } from "three/examples/jsm/objects/MarchingCubes.js";
 

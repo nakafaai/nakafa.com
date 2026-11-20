@@ -1,4 +1,5 @@
 import { Array as Arr, HashSet, Result } from "effect";
+import type { Node, SourceFile } from "tsrs/ast";
 import {
   isArrayLiteralExpression,
   isBinaryExpression,
@@ -10,8 +11,6 @@ import {
   isShorthandPropertyAssignment,
   isSpreadAssignment,
   isSpreadElement,
-  type Node,
-  type SourceFile,
   SyntaxKind,
 } from "tsrs/ast";
 import { descendants } from "#scripts/check/source";

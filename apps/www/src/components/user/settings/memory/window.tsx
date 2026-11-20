@@ -1,20 +1,16 @@
 import { useCallbackRef, useMergedRef } from "@mantine/hooks";
 import { useRequired } from "@repo/design-system/hooks/required";
 import { cn } from "cn";
-import { Array as Arr, type Option } from "effect";
-import {
-  type CSSProperties,
-  createContext,
-  useLayoutEffect,
-  useRef,
-  useState,
-} from "react";
+import type { Option } from "effect";
+import { Array as Arr } from "effect";
+import type { CSSProperties } from "react";
+import { createContext, useLayoutEffect, useRef, useState } from "react";
 import { useTranslations } from "use-intl";
-import {
-  type CustomContainerComponentProps,
-  type CustomItemComponentProps,
-  WindowVirtualizer,
+import type {
+  CustomContainerComponentProps,
+  CustomItemComponentProps,
 } from "virtua";
+import { WindowVirtualizer } from "virtua";
 import { useMemoryActions } from "@/components/user/settings/memory/actions";
 import { MemoryDeleteDialog } from "@/components/user/settings/memory/delete";
 import {
@@ -26,10 +22,8 @@ import {
   NOTHING_HANDED,
   takeHandedFocus,
 } from "@/components/user/settings/memory/focus";
-import {
-  MEMORY_PAGE,
-  type Memory,
-} from "@/components/user/settings/memory/list";
+import type { Memory } from "@/components/user/settings/memory/list";
+import { MEMORY_PAGE } from "@/components/user/settings/memory/list";
 import { MemoryRow } from "@/components/user/settings/memory/row";
 
 /**

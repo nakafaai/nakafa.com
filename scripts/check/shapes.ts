@@ -1,6 +1,15 @@
 import { Array as Arr, HashMap, HashSet } from "effect";
+import type {
+  InterfaceDeclaration,
+  Node,
+  SourceFile,
+  TypeAliasDeclaration,
+  TypeElement,
+  TypeLiteralNode,
+  TypeNode,
+  TypeReferenceNode,
+} from "tsrs/ast";
 import {
-  type InterfaceDeclaration,
   isArrayTypeNode,
   isArrowFunction,
   isCallExpression,
@@ -30,14 +39,7 @@ import {
   isTypeParameterDeclaration,
   isTypeReferenceNode,
   isUnionTypeNode,
-  type Node,
-  type SourceFile,
   SyntaxKind,
-  type TypeAliasDeclaration,
-  type TypeElement,
-  type TypeLiteralNode,
-  type TypeNode,
-  type TypeReferenceNode,
 } from "tsrs/ast";
 import { candidate } from "#scripts/check/rules";
 import { children } from "#scripts/check/source";

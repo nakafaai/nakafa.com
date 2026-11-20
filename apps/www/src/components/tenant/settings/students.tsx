@@ -1,5 +1,5 @@
+import type { PaginatedQueryItem } from "@confect/react";
 import {
-  type PaginatedQueryItem,
   QueryResult,
   useMutation,
   usePaginatedQuery,
@@ -59,10 +59,8 @@ import {
   addStudentChange,
   reissueCardChange,
 } from "@/components/tenant/settings/accounts";
-import {
-  type CardView,
-  SchoolCardDialog,
-} from "@/components/tenant/settings/card";
+import type { CardView } from "@/components/tenant/settings/card";
+import { SchoolCardDialog } from "@/components/tenant/settings/card";
 import {
   LoginNameField,
   LoginRenameDialog,

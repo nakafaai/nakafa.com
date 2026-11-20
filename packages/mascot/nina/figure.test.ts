@@ -5,11 +5,13 @@ import { compose, place, scene } from "@repo/mascot/nina/figure";
 import type { Mark } from "@repo/mascot/nina/mark";
 import type { Options } from "@repo/mascot/nina/options";
 import type { Place } from "@repo/mascot/nina/point";
-import { armLeft, type Pose, REST } from "@repo/mascot/nina/pose";
+import type { Pose } from "@repo/mascot/nina/pose";
+import { armLeft, REST } from "@repo/mascot/nina/pose";
 import { CASES, digestOf, pinOf } from "@repo/mascot/nina/test.fixture";
 import { hitter, outlineOf } from "@repo/mascot/nina/test.hit";
 import { DIGESTS } from "@repo/mascot/nina/test.pin";
-import { rect, type Shape } from "@repo/mascot/shape";
+import type { Shape } from "@repo/mascot/shape";
+import { rect } from "@repo/mascot/shape";
 import {
   Array as Arr,
   Effect,

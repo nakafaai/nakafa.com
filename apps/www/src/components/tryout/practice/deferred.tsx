@@ -1,5 +1,6 @@
 import { lazyRouteComponent, useSearch } from "@tanstack/react-router";
-import { type ComponentProps, Suspense } from "react";
+import type { ComponentProps } from "react";
+import { Suspense } from "react";
 import { PRACTICE_SEARCH } from "@/components/tryout/route/path";
 
 /** The practice's code, which reaches the player, KaTeX and the Markdown reader. */

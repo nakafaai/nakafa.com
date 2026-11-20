@@ -1,8 +1,6 @@
 import { buildContentSearchDocument } from "@repo/backend/confect/contents/search/documents";
-import {
-  type ContentSearchDocument,
-  interleaveSearchGroups,
-} from "@repo/backend/confect/contents/search/groups";
+import type { ContentSearchDocument } from "@repo/backend/confect/contents/search/groups";
+import { interleaveSearchGroups } from "@repo/backend/confect/contents/search/groups";
 import {
   matchesContentSearchQuery,
   rankContentSearchDocuments,

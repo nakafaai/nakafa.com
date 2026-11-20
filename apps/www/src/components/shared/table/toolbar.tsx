@@ -14,8 +14,10 @@ import {
 } from "@repo/design-system/components/ui/popover";
 import { useRequired } from "@repo/design-system/hooks/required";
 import { Array as Arr, Record as Rec, Schema } from "effect";
-import { createContext, type ReactNode, useState } from "react";
-import { createStore, type StoreApi, useStore } from "zustand";
+import type { ReactNode } from "react";
+import { createContext, useState } from "react";
+import type { StoreApi } from "zustand";
+import { createStore, useStore } from "zustand";
 import { FacetValues } from "@/components/shared/table/filter";
 
 /**

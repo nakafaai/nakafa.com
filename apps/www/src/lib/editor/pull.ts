@@ -3,11 +3,8 @@ import type { Step } from "@tiptap/pm/transform";
 import { Array as Arr, Effect, Ref } from "effect";
 import { getVersion, receiveTransaction } from "prosemirror-collab";
 import { reopen } from "@/lib/editor/replay";
-import {
-  type EditorClosed,
-  SyncFailed,
-  type SyncSession,
-} from "@/lib/editor/session";
+import type { EditorClosed, SyncSession } from "@/lib/editor/session";
+import { SyncFailed } from "@/lib/editor/session";
 import { settleSteps } from "@/lib/editor/settle";
 
 /** Whether the steps follow the version one by one, starting with the version after it. */

@@ -31,7 +31,8 @@ import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { chosenOne } from "@/components/shared/table/filter";
 import { TableEnd } from "@/components/shared/table/pages";
-import { type StatusLook, TableStatus } from "@/components/shared/table/status";
+import type { StatusLook } from "@/components/shared/table/status";
+import { TableStatus } from "@/components/shared/table/status";
 import { TableValue } from "@/components/shared/table/text";
 import { TableTitle } from "@/components/shared/table/title";
 import {

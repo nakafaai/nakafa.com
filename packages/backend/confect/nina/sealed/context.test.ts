@@ -5,9 +5,9 @@ import {
   readPromptInput,
   readRecentContext,
 } from "@repo/backend/confect/nina/sealed/context";
+import type { Replacement } from "@repo/backend/test/nina/seal";
 import {
   copyOf,
-  type Replacement,
   sealThreadIn,
   withoutRowIds,
   writtenThreadIn,

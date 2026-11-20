@@ -11,10 +11,10 @@ import {
 } from "@repo/backend/test/activation/fixture";
 import { insertReleaseItem } from "@repo/backend/test/content/model";
 import { testRendererJson } from "@repo/backend/test/content/release";
+import type { TestIdentity } from "@repo/backend/test/content/state";
 import {
   insertTestState,
   insertZeroRelease,
-  type TestIdentity,
 } from "@repo/backend/test/content/state";
 import { convexTest } from "convex-test";
 import { Array as Arr, Effect } from "effect";

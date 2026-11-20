@@ -10,10 +10,10 @@ import {
   CONTENT_ANALYTICS_PAGE_BYTES,
   hasContentAnalyticsHeadroom,
 } from "@repo/backend/confect/contents/analytics/budget";
+import type { ProcessContentAnalyticsPartitionArgs } from "@repo/backend/confect/contents/analytics/spec";
 import {
   InvalidContentAnalyticsPartitionError,
   invalidContentAnalyticsPartitionCode,
-  type ProcessContentAnalyticsPartitionArgs,
   toContentAnalyticsIoError,
 } from "@repo/backend/confect/contents/analytics/spec";
 import {

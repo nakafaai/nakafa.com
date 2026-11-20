@@ -1,18 +1,14 @@
 import { useFrame } from "@react-three/fiber";
-import {
-  type Tow,
-  towParts,
-} from "@repo/design-system/components/contents/physics/vector/sled/pull";
+import type { Tow } from "@repo/design-system/components/contents/physics/vector/sled/pull";
+import { towParts } from "@repo/design-system/components/contents/physics/vector/sled/pull";
 import { FixedArrow } from "@repo/design-system/components/contents/physics/vector/solid/arrow";
 import { Rod } from "@repo/design-system/components/contents/physics/vector/solid/rod";
 import { SimulationTicker } from "@repo/design-system/components/contents/simulation/ticker";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import type { CoordinateTuple } from "@repo/design-system/components/three/frame";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
-import {
-  type Placement,
-  Repeat,
-} from "@repo/design-system/components/three/repeat";
+import type { Placement } from "@repo/design-system/components/three/repeat";
+import { Repeat } from "@repo/design-system/components/three/repeat";
 import { SurfaceMaterial } from "@repo/design-system/components/three/surface/material";
 import { useVisualScene } from "@repo/design-system/components/visual/card";
 import { CAR_COLORS } from "@repo/design-system/lib/material/car";
@@ -20,7 +16,8 @@ import { MACHINE_COLORS } from "@repo/design-system/lib/material/machine";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr } from "effect";
 import { useEffect, useMemo, useRef } from "react";
-import { ExtrudeGeometry, type Group, Shape } from "three";
+import type { Group } from "three";
+import { ExtrudeGeometry, Shape } from "three";
 
 /** Metres of arrow per newton of pull. */
 const ARROW_SCALE = 0.02;

@@ -6,7 +6,8 @@ import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { createNinaTest } from "@repo/backend/test/nina";
 import { activateAssessmentTestSnapshot } from "@repo/backend/test/snapshot/assessment";
 import { insertStartedAttempt } from "@repo/backend/test/tryout/world";
-import { Effect, type Exit, type Layer } from "effect";
+import type { Exit, Layer } from "effect";
+import { Effect } from "effect";
 
 const database = (ctx: MutationCtx) =>
   RegisteredConvexFunction.mutationLayer(schema, ctx);

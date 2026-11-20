@@ -6,20 +6,20 @@ This guide is a map. It states each Nakafa decision once and names the file, com
 
 ## Sources Of Truth
 
-| Topic | Owner |
-| --- | --- |
-| Versions, package manager, runtime, dependency holds | `package.json`, `bunfig.toml`, `scripts/dependencies/policy.ts`, and the reviewed upstream of each hold in `scripts/dependencies/reviews.ts` |
-| Writing Effect v4 | `repos/effect/LLMS.md`, then source and tests under `repos/effect/packages`; https://effect.website/docs/v4/api/effect |
-| Confect v10 | https://confect.dev and the installed `@confect/*` source |
-| Convex architecture, auth, the dev deployment, retired data | `packages/backend/AGENTS.md`; installed API rules in `packages/backend/convex/_generated/ai/guidelines.md` |
-| TanStack Start and Router APIs, file conventions | the installed docs under `apps/www/node_modules/@tanstack` |
-| Turborepo | `docs/README.md` inside the installed `turbo` package |
-| Effect-native source rules, their scopes and fixes | `scripts/check/rules.ts` |
-| Effect compiler rules | `packages/typescript-config/base.json` |
-| React, state, Tailwind, test, and layout policy | `scripts/check/tests.ts` and the modules it runs |
-| Architecture decisions: client state and hydration, the renderer contract, and the rest | `docs/adr` |
-| Advisories without a patched release | `osv.toml` |
-| Authored content and its rules | the Aksara repository and its `nakafa-content` skill |
+| Topic                                                                                   | Owner                                                                                                                                        |
+| --------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| Versions, package manager, runtime, dependency holds                                    | `package.json`, `bunfig.toml`, `scripts/dependencies/policy.ts`, and the reviewed upstream of each hold in `scripts/dependencies/reviews.ts` |
+| Writing Effect v4                                                                       | `repos/effect/LLMS.md`, then source and tests under `repos/effect/packages`; https://effect.website/docs/v4/api/effect                       |
+| Confect v10                                                                             | https://confect.dev and the installed `@confect/*` source                                                                                    |
+| Convex architecture, auth, the dev deployment, retired data                             | `packages/backend/AGENTS.md`; installed API rules in `packages/backend/convex/_generated/ai/guidelines.md`                                   |
+| TanStack Start and Router APIs, file conventions                                        | the installed docs under `apps/www/node_modules/@tanstack`                                                                                   |
+| Turborepo                                                                               | `docs/README.md` inside the installed `turbo` package                                                                                        |
+| Effect-native source rules, their scopes and fixes                                      | `scripts/check/rules.ts`                                                                                                                     |
+| Effect compiler rules                                                                   | `packages/typescript-config/base.json`                                                                                                       |
+| React, state, Tailwind, test, and layout policy                                         | `scripts/check/tests.ts` and the modules it runs                                                                                             |
+| Architecture decisions: client state and hydration, the renderer contract, and the rest | `docs/adr`                                                                                                                                   |
+| Advisories without a patched release                                                    | `osv.toml`                                                                                                                                   |
+| Authored content and its rules                                                          | the Aksara repository and its `nakafa-content` skill                                                                                         |
 
 - Read the owner, the touched package's manifest and configuration, and nearby code before changing behavior. Skim recent `git log` before structural work so old patterns are not reintroduced.
 - Use the enabled official Convex and Cloudflare plugin skills, and globally installed upstream skills when their scope matches. Do not add repository-local skill copies or new app-local `AGENTS.md` or `CLAUDE.md` files; the Convex-managed backend files are the only exception.
@@ -53,17 +53,17 @@ This guide is a map. It states each Nakafa decision once and names the file, com
 - Nakafa is Effect-native: Effect v4 and Confect v10 express every capability. Plain TypeScript remains only where Effect cannot express it, namely React component props in `.tsx`, framework configuration, generated code, ambient declarations, native promise syntax in a Confect workflow handler, the named type of a recursive Schema, the selector argument of `Extract` or `Exclude`, shapes that hold a value no Schema describes as data (a function, a React or MDX value, an AI SDK message part, an Effect runtime handle such as a fiber or a queue, or a parser syntax-tree node), generic shapes that use their type parameters, code that Playwright serializes into the browser page, where no import reaches, and the web-push service worker (`apps/www/public/sw.js`), which the browser loads by URL as plain JavaScript. Every other authored module is TypeScript, which Node runs directly, so the source check refuses JavaScript outside a public folder. The pull request justifies each one.
 - Before writing code, find the Effect or Confect module that already does the job in the sources above. Unstable Effect v4 modules are welcome, and a dependency that Effect already covers goes. `repos/effect` is a read-only Git subtree pinned to the installed version: never edit, import from, build, lint, or test it. `bun run effect:source:check` verifies parity; `bun run effect:source:update` creates the matching reference commit after an Effect update.
 
-| Instead of | Use |
-| --- | --- |
-| Interfaces, object type aliases, duplicated unions or value sets | An Effect Schema as the runtime contract; its type is `typeof X.Type` |
-| Native array and object helpers, `Map`, `Set`, `switch` or `if` chains over tags | The Effect data modules with `pipe` or `flow`: `Array`, `Record`, `Option`, `Result`, `Match`, `HashMap`, `HashSet`, and their kin |
-| `process.env`, `Date`, `Math.random`, timers, `console` | `Config`, `Clock` and `DateTime`, `Random`, `Duration` and `Schedule`, `Effect.log` |
-| `fetch` | `HttpClient` from `effect/http`, provided by `FetchClient` from `@repo/utilities/http/client` |
-| `crypto.randomUUID` | `randomUuid` from `@repo/utilities/uuid`, which reads Effect's `SecureRandom` service |
+| Instead of                                                                                                                         | Use                                                                                                                                                   |
+| ---------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Interfaces, object type aliases, duplicated unions or value sets                                                                   | An Effect Schema as the runtime contract; its type is `typeof X.Type`                                                                                 |
+| Native array and object helpers, `Map`, `Set`, `switch` or `if` chains over tags                                                   | The Effect data modules with `pipe` or `flow`: `Array`, `Record`, `Option`, `Result`, `Match`, `HashMap`, `HashSet`, and their kin                    |
+| `process.env`, `Date`, `Math.random`, timers, `console`                                                                            | `Config`, `Clock` and `DateTime`, `Random`, `Duration` and `Schedule`, `Effect.log`                                                                   |
+| `fetch`                                                                                                                            | `HttpClient` from `effect/http`, provided by `FetchClient` from `@repo/utilities/http/client`                                                         |
+| `crypto.randomUUID`                                                                                                                | `randomUuid` from `@repo/utilities/uuid`, which reads Effect's `SecureRandom` service                                                                 |
 | `node:` modules that Effect or the platform replaces: files, paths, processes, crypto, buffers, `.env` text, cores, ports, servers | `FileSystem`, `Path`, and `ChildProcess`, provided by `NodeServices.layer`, and the replacements that `node-module` in `scripts/check/rules.ts` names |
-| Hand-written encodings, `JSON.parse` | `effect/encoding`, `Schema.fromJsonString` |
-| `null`, generic `Error`, raw throws, silent fallbacks | A specific `Schema.TaggedError` or `Data.TaggedError`, handled with `catchTag` or `catchTags` |
-| A Promise SDK used inline, hidden dependencies | One `Effect.tryPromise` wrapper; `Context.Service` with `Layer` at a real seam |
+| Hand-written encodings, `JSON.parse`                                                                                               | `effect/encoding`, `Schema.fromJsonString`                                                                                                            |
+| `null`, generic `Error`, raw throws, silent fallbacks                                                                              | A specific `Schema.TaggedError` or `Data.TaggedError`, handled with `catchTag` or `catchTags`                                                         |
+| A Promise SDK used inline, hidden dependencies                                                                                     | One `Effect.tryPromise` wrapper; `Context.Service` with `Layer` at a real seam                                                                        |
 
 - `FetchClient` is Effect's Fetch client without the trace headers `FetchHttpClient.layer` adds to every request. A module whose request depends on Fetch-only options such as `cache`, `redirect`, or `credentials` provides it itself with `FetchHttpClient.RequestInit`, because no other client honors them.
 - Code that the app bundles reads its environment through `readEnvironment` from `@repo/utilities/env`, with the Schema of each key and one record of literal `process.env.NAME` reads. `Config` cannot own this seam: the bundler inlines a public value only at a literal read, and the default `ConfigProvider` drops an empty string. A package keeps the readers that the browser may call in `public.ts` and its server readers in `keys.ts`. In the browser `readEnvironment` rejects a key that is not public, and `apps/www/src/env.ts` is a `.server` module, so a Client Component cannot import the server values.

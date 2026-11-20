@@ -3,12 +3,12 @@ import {
   hasUniqueIds,
 } from "@nakafa/aksara-contracts/assessment/identity";
 import type { Interaction } from "@nakafa/aksara-contracts/assessment/interaction";
+import type { QuestionTemplate } from "@repo/backend/confect/exams/question";
 import {
   CHOICE_OPTIONS_MAX,
   CHOICE_OPTIONS_MIN,
   choiceLimit,
   fixedOptions,
-  type QuestionTemplate,
   TABLE_COLUMNS,
 } from "@repo/backend/confect/exams/question";
 import { Array as Arr, Match, Option } from "effect";

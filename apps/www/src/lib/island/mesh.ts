@@ -6,13 +6,8 @@ import { groundOf, groundTopSlot, skylineOf } from "@/lib/island/ground";
 import { KIND, LOOK } from "@/lib/island/look";
 import { unitOf } from "@/lib/island/noise";
 import { isPlantBlock } from "@/lib/island/plants";
-import {
-  blockAt,
-  type Cells,
-  CHUNK,
-  cellOf,
-  isInside,
-} from "@/lib/island/world";
+import type { Cells } from "@/lib/island/world";
+import { blockAt, CHUNK, cellOf, isInside } from "@/lib/island/world";
 
 /**
  * Floats per vertex: position (3), atlas coordinate (2), corner occlusion, sky

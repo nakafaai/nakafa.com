@@ -1,8 +1,8 @@
 import type { CatalogRow } from "@nakafa/aksara-contracts/assessment/catalog";
 import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import { loadActiveAssessment } from "@repo/backend/confect/tryouts/active";
+import type { CatalogNodeKeys } from "@repo/backend/confect/tryouts/catalog/rows";
 import {
-  type CatalogNodeKeys,
   readCatalogNode,
   readCatalogRow,
 } from "@repo/backend/confect/tryouts/catalog/rows";
@@ -15,14 +15,8 @@ import type {
   tryoutLocalizedPathArgsValidator,
   tryoutMetadataArgsValidator,
 } from "@repo/backend/content/tryout/spec";
-import {
-  Array as Arr,
-  Effect,
-  Match,
-  Option,
-  type Schema,
-  String as Str,
-} from "effect";
+import type { Schema } from "effect";
+import { Array as Arr, Effect, Match, Option, String as Str } from "effect";
 
 type TryoutMetadataInput = Schema.Struct.Type<
   typeof tryoutMetadataArgsValidator

@@ -146,43 +146,43 @@ finds the right data.
 
 Every address below is planned, except the root of a school host, which is live.
 
-| Address | Purpose |
-| --- | --- |
-| `harapan.nakafa.com` | Signed out: sign-in with Google or a school username. Signed in: home. |
-| `harapan.nakafa.com/setup` | Setup for the owner and the admin. It disappears when setup is complete. |
-| `harapan.nakafa.com/classes/fisika-x-1` | A class home. The slug comes from the subject and the class group, not from an ID. |
-| `.../classes/fisika-x-1/forum`, `/library`, `/tasks`, `/people`, `/grades` | The class tabs. Each tab has its own address. |
-| `.../classes/fisika-x-1/forum?channel=<id>` | One channel of the forum, by the channel's ID. A channel is a search value, so the path below the forum stays the discussions' numbers. |
-| `.../classes/fisika-x-1/forum/12` | A numbered discussion. The number is per class, like an issue number. |
-| `.../classes/fisika-x-1/tasks/latihan-gerak-lurus` | A task. The slug comes from the task title. |
-| `harapan.nakafa.com/exams` | All exams and their status. |
-| `.../exams/pts-matematika` | An exam. Its information, taking it, and its results share this address. |
-| `.../exams/pts-matematika/sittings/sesi-2` | One sitting: one room and one token. |
-| `.../exams/pts-matematika/review` | Answers that wait for a teacher, and attempts whose late records wait for a decision (ADR 0013). |
-| `harapan.nakafa.com/people` | Everyone in the school. Admins invite people. Teachers manage their class members from this list. |
-| `harapan.nakafa.com/reports/2026-2027-1/x-1` | A report card, by period, then class group. A teacher reaches a report card only through the homeroom relation (ADR 0012). |
-| `harapan.nakafa.com/bank`, `/bank/trigonometri/14`, `/bank/impor/pts-matematika` | The question bank, an item by topic and number, and an import reviewed next to its original PDF. |
-| `harapan.nakafa.com/insight` | Insight. |
-| `harapan.nakafa.com/connectors`, `/connectors/classroom` | Connectors. A teacher sees only their own connections. |
-| `harapan.nakafa.com/perangkat` | Where a person types the code that the CLI shows (device authorization). |
-| `harapan.nakafa.com/kartu` | Where a student enters the code of a login card (ADR 0009). It works on the school host only. |
-| `harapan.nakafa.com/parents` | Where a parent asks for a sign-in code by email and enters it (ADR 0009). It works on the school host only. |
-| `harapan.nakafa.com/api/v1`, `harapan.nakafa.com/mcp` | The school REST API and the school MCP server. They use OAuth 2.0 client credentials. |
-| `harapan.nakafa.com/settings` | Organisation settings, periods, class groups, billing, and the AI quota. |
-| `harapan.nakafa.com/chat` | Nina in the school. A school thread does not read personal memory (K3). |
+| Address                                                                          | Purpose                                                                                                                                 |
+| -------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| `harapan.nakafa.com`                                                             | Signed out: sign-in with Google or a school username. Signed in: home.                                                                  |
+| `harapan.nakafa.com/setup`                                                       | Setup for the owner and the admin. It disappears when setup is complete.                                                                |
+| `harapan.nakafa.com/classes/fisika-x-1`                                          | A class home. The slug comes from the subject and the class group, not from an ID.                                                      |
+| `.../classes/fisika-x-1/forum`, `/library`, `/tasks`, `/people`, `/grades`       | The class tabs. Each tab has its own address.                                                                                           |
+| `.../classes/fisika-x-1/forum?channel=<id>`                                      | One channel of the forum, by the channel's ID. A channel is a search value, so the path below the forum stays the discussions' numbers. |
+| `.../classes/fisika-x-1/forum/12`                                                | A numbered discussion. The number is per class, like an issue number.                                                                   |
+| `.../classes/fisika-x-1/tasks/latihan-gerak-lurus`                               | A task. The slug comes from the task title.                                                                                             |
+| `harapan.nakafa.com/exams`                                                       | All exams and their status.                                                                                                             |
+| `.../exams/pts-matematika`                                                       | An exam. Its information, taking it, and its results share this address.                                                                |
+| `.../exams/pts-matematika/sittings/sesi-2`                                       | One sitting: one room and one token.                                                                                                    |
+| `.../exams/pts-matematika/review`                                                | Answers that wait for a teacher, and attempts whose late records wait for a decision (ADR 0013).                                        |
+| `harapan.nakafa.com/people`                                                      | Everyone in the school. Admins invite people. Teachers manage their class members from this list.                                       |
+| `harapan.nakafa.com/reports/2026-2027-1/x-1`                                     | A report card, by period, then class group. A teacher reaches a report card only through the homeroom relation (ADR 0012).              |
+| `harapan.nakafa.com/bank`, `/bank/trigonometri/14`, `/bank/impor/pts-matematika` | The question bank, an item by topic and number, and an import reviewed next to its original PDF.                                        |
+| `harapan.nakafa.com/insight`                                                     | Insight.                                                                                                                                |
+| `harapan.nakafa.com/connectors`, `/connectors/classroom`                         | Connectors. A teacher sees only their own connections.                                                                                  |
+| `harapan.nakafa.com/perangkat`                                                   | Where a person types the code that the CLI shows (device authorization).                                                                |
+| `harapan.nakafa.com/kartu`                                                       | Where a student enters the code of a login card (ADR 0009). It works on the school host only.                                           |
+| `harapan.nakafa.com/parents`                                                     | Where a parent asks for a sign-in code by email and enters it (ADR 0009). It works on the school host only.                             |
+| `harapan.nakafa.com/api/v1`, `harapan.nakafa.com/mcp`                            | The school REST API and the school MCP server. They use OAuth 2.0 client credentials.                                                   |
+| `harapan.nakafa.com/settings`                                                    | Organisation settings, periods, class groups, billing, and the AI quota.                                                                |
+| `harapan.nakafa.com/chat`                                                        | Nina in the school. A school thread does not read personal memory (K3).                                                                 |
 
 ### Addresses outside the school host
 
-| Address | Purpose | Status |
-| --- | --- | --- |
-| `nakafa.com/id/notifications` | One inbox. In a school, a panel on the right filters by school, and no second address exists. Push carries only an id and a general title. | Planned, changed |
-| `nakafa.com/id/user/settings/memory` | Personal Nina memory. It never appears inside a school. | Live |
-| `nakafa.com/id/user/settings` | Account settings | Live |
-| `nakafa.com/id/user/settings/learning` | Role and curriculum preferences | Live |
-| `nakafa.com/id` | Back to Nakafa learning | Live |
-| `api.nakafa.com/v1` | Public REST. No key, public data only. It never accepts a school path. | Live |
-| `mcp.nakafa.com/mcp` | Public MCP. No key, Nakafa content only. The name repeats in the host and the path, and it stays so that agents keep working. | Live |
-| `nakafa.com/id/school/{slug}/...` | The old School. Retired with K11, with no redirect. | Deleted from the web app in #1051 |
+| Address                                | Purpose                                                                                                                                    | Status                            |
+| -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------- |
+| `nakafa.com/id/notifications`          | One inbox. In a school, a panel on the right filters by school, and no second address exists. Push carries only an id and a general title. | Planned, changed                  |
+| `nakafa.com/id/user/settings/memory`   | Personal Nina memory. It never appears inside a school.                                                                                    | Live                              |
+| `nakafa.com/id/user/settings`          | Account settings                                                                                                                           | Live                              |
+| `nakafa.com/id/user/settings/learning` | Role and curriculum preferences                                                                                                            | Live                              |
+| `nakafa.com/id`                        | Back to Nakafa learning                                                                                                                    | Live                              |
+| `api.nakafa.com/v1`                    | Public REST. No key, public data only. It never accepts a school path.                                                                     | Live                              |
+| `mcp.nakafa.com/mcp`                   | Public MCP. No key, Nakafa content only. The name repeats in the host and the path, and it stays so that agents keep working.              | Live                              |
+| `nakafa.com/id/school/{slug}/...`      | The old School. Retired with K11, with no redirect.                                                                                        | Deleted from the web app in #1051 |
 
 These are the addresses of the `us` cell. An account's own surfaces, the inbox
 and the account settings, are served by the cell that holds the account, under
@@ -263,15 +263,15 @@ A move runs in this order:
    retire the old School. Nothing of the school stays in the source cell: not its
    Persons' names, nor the email addresses of its invites, nor its journal.
 
-| Transition during the copy | Why the target stays correct |
-| --- | --- |
-| A visit end | A visit belongs to the operators of its cell (ADR 0011), so the import ends every operator grant and suspends every operator Person (step 3). |
-| A grant expiry | The target ends every grant and invite whose time has passed before the tenant becomes active there (step 3). |
-| An account release | Accounts stay in their home cell, so every Person arrives unclaimed (step 3). |
-| An invite expiry | Every accepted invite arrives revoked and the target ends every invite whose time has passed before the tenant becomes active (step 3). |
+| Transition during the copy                    | Why the target stays correct                                                                                                                                                                                                |
+| --------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| A visit end                                   | A visit belongs to the operators of its cell (ADR 0011), so the import ends every operator grant and suspends every operator Person (step 3).                                                                               |
+| A grant expiry                                | The target ends every grant and invite whose time has passed before the tenant becomes active there (step 3).                                                                                                               |
+| An account release                            | Accounts stay in their home cell, so every Person arrives unclaimed (step 3).                                                                                                                                               |
+| An invite expiry                              | Every accepted invite arrives revoked and the target ends every invite whose time has passed before the tenant becomes active (step 3).                                                                                     |
 | The close or the reconciliation of an attempt | The source writes them while the tenant is suspended, and the export and the journal entries copied at cutover carry them (steps 2 and 4); the target's sweep closes any attempt whose deadline passed in between (step 3). |
-| Any journal entry of these | Copied with the rest at cutover (step 4). |
-| The operator's reactivation of the tenant | Only the move reactivates the tenant, and only in the target cell (step 4). The source tenant stays suspended until step 5 deletes its rows. |
+| Any journal entry of these                    | Copied with the rest at cutover (step 4).                                                                                                                                                                                   |
+| The operator's reactivation of the tenant     | Only the move reactivates the tenant, and only in the target cell (step 4). The source tenant stays suspended until step 5 deletes its rows.                                                                                |
 
 ## Consequences
 
@@ -319,14 +319,14 @@ A move runs in this order:
 
 ## Implementation Status
 
-| Part | Status |
-| --- | --- |
-| The routes of the old School and `readSchoolAuthRedirect` in `apps/www/proxy.ts` | Deleted from the web app in #1051 and its backend in #1037 (K11) |
-| Host rewrite for school subdomains | Live |
-| Shared sign-in cookie across the school hosts of the `us` cell (ADR 0009) | Live |
-| Shared sign-in cookie on a local run (`SITE_URL` on `localhost`) | A local run names its cookies without a domain, so each host keeps its own session; sharing one sign-in across school hosts is proven only on a real domain (`nakafa.com`) |
-| School URL tree, root (`/`, Beranda) | Live |
-| The proxy decides the 404 of a school page (Hosts) | Live |
-| School URL tree, every other address | Planned |
-| `us` data cell | Live |
-| `eu` data cell, with its own `www` project and Convex deployment | Planned, created by K5 |
+| Part                                                                             | Status                                                                                                                                                                     |
+| -------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| The routes of the old School and `readSchoolAuthRedirect` in `apps/www/proxy.ts` | Deleted from the web app in #1051 and its backend in #1037 (K11)                                                                                                           |
+| Host rewrite for school subdomains                                               | Live                                                                                                                                                                       |
+| Shared sign-in cookie across the school hosts of the `us` cell (ADR 0009)        | Live                                                                                                                                                                       |
+| Shared sign-in cookie on a local run (`SITE_URL` on `localhost`)                 | A local run names its cookies without a domain, so each host keeps its own session; sharing one sign-in across school hosts is proven only on a real domain (`nakafa.com`) |
+| School URL tree, root (`/`, Beranda)                                             | Live                                                                                                                                                                       |
+| The proxy decides the 404 of a school page (Hosts)                               | Live                                                                                                                                                                       |
+| School URL tree, every other address                                             | Planned                                                                                                                                                                    |
+| `us` data cell                                                                   | Live                                                                                                                                                                       |
+| `eu` data cell, with its own `www` project and Convex deployment                 | Planned, created by K5                                                                                                                                                     |

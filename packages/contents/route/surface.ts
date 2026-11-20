@@ -1,7 +1,5 @@
-import {
-  type AppLocaleCode,
-  AppLocaleCodeSchema,
-} from "@nakafa/aksara-contracts/locale";
+import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
+import { AppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
 import { CURRICULUM_NAMESPACES } from "@nakafa/aksara-contracts/program/curriculum";
 import { MATERIAL_PUBLIC_NAMESPACES } from "@nakafa/aksara-contracts/projection/material";
 import { Array as Arr, Option, Schema } from "effect";

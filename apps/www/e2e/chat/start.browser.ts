@@ -1,4 +1,5 @@
-import { expect, type Locator, type Page, test } from "@playwright/test";
+import type { Locator, Page } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
 import { composerOf } from "@/e2e/support/attachment";
 import type { Changes } from "@/e2e/support/changes";

@@ -17,14 +17,10 @@ import {
 } from "@repo/backend/content/quran/contract";
 import { NakafaAgentDataReadError } from "@repo/contents/agent/errors";
 import { createNakafaContentRefFromSummary } from "@repo/contents/agent/refs";
-import {
-  type NakafaAgentMarkdown,
-  NakafaAgentMarkdownSchema,
-} from "@repo/contents/agent/schema/read";
-import {
-  type NakafaAgentContentRef,
-  NakafaAgentReadableContentRefSchema,
-} from "@repo/contents/agent/schema/ref";
+import type { NakafaAgentMarkdown } from "@repo/contents/agent/schema/read";
+import { NakafaAgentMarkdownSchema } from "@repo/contents/agent/schema/read";
+import type { NakafaAgentContentRef } from "@repo/contents/agent/schema/ref";
+import { NakafaAgentReadableContentRefSchema } from "@repo/contents/agent/schema/ref";
 import { projectMdxForAgentMarkdown } from "@repo/contents/llms/mdx";
 import { Array as Arr, Effect, Option, Schema } from "effect";
 

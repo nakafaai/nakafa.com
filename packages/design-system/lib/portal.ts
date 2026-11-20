@@ -1,4 +1,5 @@
-import { createContext, type RefObject } from "react";
+import type { RefObject } from "react";
+import { createContext } from "react";
 
 /**
  * Where the design system's anchored popups render: menus, selects, popovers, tooltips, hover

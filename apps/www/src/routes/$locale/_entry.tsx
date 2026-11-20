@@ -1,6 +1,6 @@
+import type { ErrorComponentProps } from "@tanstack/react-router";
 import {
   createFileRoute,
-  type ErrorComponentProps,
   getRouteApi,
   Outlet,
   useParams,

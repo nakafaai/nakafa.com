@@ -1,5 +1,5 @@
+import type { ChartConfig } from "@repo/design-system/components/evilcharts/ui/chart-config";
 import {
-  type ChartConfig,
   getChartColorVariable,
   getColorsCount,
   getPayloadConfigEntry,

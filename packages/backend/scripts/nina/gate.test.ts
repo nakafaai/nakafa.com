@@ -5,14 +5,10 @@ import {
   getNakafaReferencesFromMessages,
   getSourceReferencesFromMessages,
 } from "@repo/backend/confect/nina/research/source";
-import {
-  Deployment,
-  type Question,
-} from "@repo/backend/scripts/nina/deployment";
-import {
-  gateError,
-  type NinaGateError,
-} from "@repo/backend/scripts/nina/error";
+import type { Question } from "@repo/backend/scripts/nina/deployment";
+import { Deployment } from "@repo/backend/scripts/nina/deployment";
+import type { NinaGateError } from "@repo/backend/scripts/nina/error";
+import { gateError } from "@repo/backend/scripts/nina/error";
 import { Pace, renderReport, runGate } from "@repo/backend/scripts/nina/gate";
 import type {
   GateTurn,

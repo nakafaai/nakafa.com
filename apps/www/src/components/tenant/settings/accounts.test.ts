@@ -14,7 +14,8 @@ import {
   renameLoginChange,
   renamePersonChange,
 } from "@/components/tenant/settings/accounts";
-import { isDraft, type Member } from "@/components/tenant/settings/state";
+import type { Member } from "@/components/tenant/settings/state";
+import { isDraft } from "@/components/tenant/settings/state";
 import { createLocalStore } from "@/test/optimistic";
 import {
   invite,

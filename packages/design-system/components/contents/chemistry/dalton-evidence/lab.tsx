@@ -1,9 +1,11 @@
+import type {
+  DaltonEvidenceLabLabels,
+  DaltonModeId,
+} from "@repo/design-system/components/contents/chemistry/dalton-evidence/data";
 import {
   CONSERVATION_MODE_ID,
   DALTON_LAYOUTS,
   DALTON_MODE_IDS,
-  type DaltonEvidenceLabLabels,
-  type DaltonModeId,
   isDaltonModeId,
 } from "@repo/design-system/components/contents/chemistry/dalton-evidence/data";
 import {

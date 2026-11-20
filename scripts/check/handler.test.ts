@@ -1,11 +1,10 @@
 import { assert, describe, it } from "@effect/vitest";
 import { Array as Arr, Effect, Order } from "effect";
+import type { Node, SourceFile } from "tsrs/ast";
 import {
   isCallExpression,
   isObjectLiteralExpression,
   isThrowStatement,
-  type Node,
-  type SourceFile,
 } from "tsrs/ast";
 import {
   enclosingFunction,

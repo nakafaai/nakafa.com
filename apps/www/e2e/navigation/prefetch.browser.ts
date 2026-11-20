@@ -1,4 +1,5 @@
-import { type Page, test } from "@playwright/test";
+import type { Page } from "@playwright/test";
+import { test } from "@playwright/test";
 import { Effect } from "effect";
 import { pinnedRoutes } from "@/e2e/support/corpus";
 import {

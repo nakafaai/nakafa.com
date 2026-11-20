@@ -26,11 +26,10 @@ import {
   testTextHash,
   testUpsertJson,
 } from "@repo/backend/test/content/release";
-import {
-  insertZeroRelease,
-  type TestIdentity,
-} from "@repo/backend/test/content/state";
-import { convexTest, type TestConvex } from "convex-test";
+import type { TestIdentity } from "@repo/backend/test/content/state";
+import { insertZeroRelease } from "@repo/backend/test/content/state";
+import type { TestConvex } from "convex-test";
+import { convexTest } from "convex-test";
 import { DateTime } from "effect";
 
 const cleanup = internal.contentRelease.cleanup.cleanup;

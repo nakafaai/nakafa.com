@@ -8,7 +8,8 @@ import {
   supportImports,
 } from "#scripts/proof/select";
 import { MAIN, PROCESS_TIMEOUT, SHA } from "#scripts/proof/test.github";
-import { type Answer, scriptedShell } from "#scripts/test.shell";
+import type { Answer } from "#scripts/test.shell";
+import { scriptedShell } from "#scripts/test.shell";
 
 const PRESENT = [
   "apps/www/e2e/quran/landing.browser.ts",

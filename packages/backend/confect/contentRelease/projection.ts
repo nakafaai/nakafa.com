@@ -1,5 +1,5 @@
+import type { ContentProjection } from "@nakafa/aksara-contracts/projection/spec";
 import {
-  type ContentProjection,
   familyForProjection,
   projectionArtifactLocale,
 } from "@nakafa/aksara-contracts/projection/spec";

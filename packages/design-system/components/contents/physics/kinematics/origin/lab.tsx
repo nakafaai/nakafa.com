@@ -11,21 +11,21 @@ import {
   vignette,
   withShadow,
 } from "@repo/design-system/components/contents/physics/canvas/paint";
+import type { Graph } from "@repo/design-system/components/contents/physics/canvas/plot";
 import {
-  type Graph,
   paintCurve,
   paintGraph,
   paintGraphDot,
 } from "@repo/design-system/components/contents/physics/canvas/plot";
+import type { Road } from "@repo/design-system/components/contents/physics/canvas/scene";
 import {
   paintLandscape,
   paintRoad,
-  type Road,
   roadX,
 } from "@repo/design-system/components/contents/physics/canvas/scene";
+import type { Landmark } from "@repo/design-system/components/contents/physics/kinematics/origin/street";
 import {
   LANDMARKS,
-  type Landmark,
   LandmarkSchema,
   measuredFrom,
   RIDE_DURATION,
@@ -53,7 +53,8 @@ import { getColor } from "@repo/design-system/lib/color";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr, Schema } from "effect";
 import type p5 from "p5";
-import { type ReactNode, useState } from "react";
+import type { ReactNode } from "react";
+import { useState } from "react";
 
 /** The stretch of street the scene shows, in metres east of the store. */
 const STREET = { east: 62, west: -6 } as const;

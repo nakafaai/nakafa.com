@@ -10,11 +10,8 @@ import {
   MemoryOrigin,
 } from "@/components/user/settings/memory/facts";
 import { memoryRowId } from "@/components/user/settings/memory/focus";
-import {
-  isPending,
-  type Memory,
-  memoryName,
-} from "@/components/user/settings/memory/list";
+import type { Memory } from "@/components/user/settings/memory/list";
+import { isPending, memoryName } from "@/components/user/settings/memory/list";
 import { warmMemoryEditor } from "@/components/user/settings/memory/module";
 import { useMemoryPage } from "@/components/user/settings/memory/provider";
 

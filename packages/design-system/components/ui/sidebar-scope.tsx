@@ -1,14 +1,17 @@
 "use client";
 
 import { SidebarTrigger } from "@repo/design-system/components/ui/sidebar-shell";
+import type {
+  SidebarControls,
+  SidebarStore,
+} from "@repo/design-system/lib/sidebar/context";
 import {
   SidebarContext,
-  type SidebarControls,
-  type SidebarStore,
   SidebarStoreContext,
 } from "@repo/design-system/lib/sidebar/context";
 import { cn } from "cn";
-import { createContext, type ReactNode, use } from "react";
+import type { ReactNode } from "react";
+import { createContext, use } from "react";
 
 /** The store and actions of the sidebar a scope keeps, or none outside a scope. */
 const ScopeContext = createContext<{

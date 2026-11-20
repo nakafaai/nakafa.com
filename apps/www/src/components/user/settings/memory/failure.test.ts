@@ -1,7 +1,8 @@
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import { captureException } from "@repo/analytics/posthog/capture";
 import { NinaMemoryRejected } from "@repo/backend/confect/nina/memory.spec";
-import { type ToastCopy, toast } from "@repo/design-system/lib/toast/notify";
+import type { ToastCopy } from "@repo/design-system/lib/toast/notify";
+import { toast } from "@repo/design-system/lib/toast/notify";
 import { Effect } from "effect";
 import { reportMemoryFailure } from "@/components/user/settings/memory/failure";
 

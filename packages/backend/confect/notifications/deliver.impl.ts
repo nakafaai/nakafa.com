@@ -12,10 +12,8 @@ import {
   pushSentence,
 } from "@repo/backend/confect/notifications/copy";
 import spec from "@repo/backend/confect/notifications/deliver.spec";
-import {
-  isAccountRow,
-  type SchoolRow,
-} from "@repo/backend/confect/notifications/schema";
+import type { SchoolRow } from "@repo/backend/confect/notifications/schema";
+import { isAccountRow } from "@repo/backend/confect/notifications/schema";
 import { SUBSCRIPTION_LIMIT } from "@repo/backend/confect/notifications/subscription";
 import { sendPush } from "@repo/backend/confect/notifications/webpush";
 import { SITE_ORIGIN } from "@repo/seo/origin";

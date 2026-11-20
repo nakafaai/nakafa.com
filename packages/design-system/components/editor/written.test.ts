@@ -3,7 +3,8 @@
 import { describe, expect, it } from "@effect/vitest";
 import { answerOptions } from "@repo/design-system/components/editor/written";
 import { NO_MATH_VIEWS } from "@repo/editor/math";
-import { Editor, type NodeViewRenderer } from "@tiptap/core";
+import type { NodeViewRenderer } from "@tiptap/core";
+import { Editor } from "@tiptap/core";
 import { Array as Arr } from "effect";
 
 /** The editor of a written answer that opens on `markdown`, with no page to draw in. */

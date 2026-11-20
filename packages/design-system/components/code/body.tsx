@@ -1,8 +1,6 @@
 import { codeBodyVariants } from "@repo/design-system/components/code/variants";
-import {
-  type CodeBlockData,
-  useCodeBlock,
-} from "@repo/design-system/lib/code/context";
+import type { CodeBlockData } from "@repo/design-system/lib/code/context";
+import { useCodeBlock } from "@repo/design-system/lib/code/context";
 import { Array as Arr } from "effect";
 import type { HTMLAttributes, ReactNode } from "react";
 

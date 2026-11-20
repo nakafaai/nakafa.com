@@ -1,14 +1,10 @@
 import { useBiologyColors } from "@repo/design-system/components/contents/biology/context";
-import {
-  type BiologyScenePoint,
-  BiologyScenePointSchema,
-} from "@repo/design-system/components/contents/biology/data";
+import type { BiologyScenePoint } from "@repo/design-system/components/contents/biology/data";
+import { BiologyScenePointSchema } from "@repo/design-system/components/contents/biology/data";
 import type { BiologyLabCalloutProps } from "@repo/design-system/components/contents/biology/lab";
 import { ArrowHelper } from "@repo/design-system/components/three/arrow";
-import {
-  THREE_FONT_SIZE,
-  type ThreeFontSize,
-} from "@repo/design-system/components/three/data/constants";
+import type { ThreeFontSize } from "@repo/design-system/components/three/data/constants";
+import { THREE_FONT_SIZE } from "@repo/design-system/components/three/data/constants";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr, Option, Record as Rec, Schema } from "effect";

@@ -1,16 +1,7 @@
-import {
-  type AcceptanceRuntimeError,
-  acceptanceRuntimeError,
-} from "@repo/backend/scripts/content/acceptance/error";
-import {
-  Array as Arr,
-  Effect,
-  type FileSystem,
-  type Path,
-  type PlatformError,
-  Schema,
-  type Scope,
-} from "effect";
+import type { AcceptanceRuntimeError } from "@repo/backend/scripts/content/acceptance/error";
+import { acceptanceRuntimeError } from "@repo/backend/scripts/content/acceptance/error";
+import type { FileSystem, Path, PlatformError, Scope } from "effect";
+import { Array as Arr, Effect, Schema } from "effect";
 import type { SecureRandom } from "effect/crypto";
 import type { HttpClient } from "effect/http";
 import type { ChildProcessSpawner } from "effect/process";

@@ -4,11 +4,8 @@ import type {
 } from "@repo/contents/agent/schema/ref";
 import type { Locale } from "@repo/contents/content";
 import { Array as Arr } from "effect";
-import {
-  type Card,
-  reply,
-  type stored,
-} from "@/e2e/support/transcript/message";
+import type { Card, stored } from "@/e2e/support/transcript/message";
+import { reply } from "@/e2e/support/transcript/message";
 
 /** The reference Nakafa gives one page, as the wire holds it. */
 type Reference = typeof NakafaAgentContentRefSchema.Encoded;

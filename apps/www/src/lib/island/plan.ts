@@ -3,7 +3,8 @@ import { footprintOf } from "@repo/backend/confect/island/world";
 import { Option } from "effect";
 import type { Edit } from "@/lib/island/edits";
 import type { castRay } from "@/lib/island/ray";
-import { type Cells, cellOf, isInside } from "@/lib/island/world";
+import type { Cells } from "@/lib/island/world";
+import { cellOf, isInside } from "@/lib/island/world";
 
 /** What a ray met: the block, the cell it hit, and the cell in front of that face. */
 type Hit = Option.Option.Value<ReturnType<typeof castRay>>;

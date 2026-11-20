@@ -8,13 +8,13 @@ Accepted on 9 November 2026, with the owner's approval of the same day. It amend
 
 Every pull request is proven on a production build of its exact head, in Chromium, WebKit and Firefox. Until now one Mac did all of it, through one queue (`heavy.sh`) with one runtime slot: one local Convex backend on port 3210 and one served app. Measured over rounds c9 to c9c on 9 November 2026:
 
-| Step | Time | Why |
-| --- | --- | --- |
-| Queue wait | 0 to 3 h | one slot, so proofs run strictly one at a time |
-| Prepare | 4 min | codegen, the first push and the signed publication of the acceptance release, every time |
-| Build | 4 to 7 min | the static prerender of every public page |
-| Specs | 10 to 25 min | broad suites on one machine |
-| Flake | one more proof | 1,135 `EADDRNOTAVAIL` in one run: the preview proxy opens a loopback connection per request (alchemy-run/alchemy#3194) |
+| Step       | Time           | Why                                                                                                                    |
+| ---------- | -------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| Queue wait | 0 to 3 h       | one slot, so proofs run strictly one at a time                                                                         |
+| Prepare    | 4 min          | codegen, the first push and the signed publication of the acceptance release, every time                               |
+| Build      | 4 to 7 min     | the static prerender of every public page                                                                              |
+| Specs      | 10 to 25 min   | broad suites on one machine                                                                                            |
+| Flake      | one more proof | 1,135 `EADDRNOTAVAIL` in one run: the preview proxy opens a loopback connection per request (alchemy-run/alchemy#3194) |
 
 With 45 open pull requests that landed 2 or 3 an hour. A round that proved many at once stopped all of them on one red spec, and the orchestrator kept `heads.txt`, `merged.txt` and `land.txt` by hand, three copies of one fact.
 
@@ -116,13 +116,13 @@ The queue grows with the speed of the work: 108 open pull requests that are no d
 
 ### Build or buy
 
-| | GitHub merge queue | Mergify | Graphite | Trunk | The train |
-| --- | --- | --- | --- | --- | --- |
-| Stacks as a unit | not stated in its docs | yes, at most 20 deep (our island stack is 41) | yes | public preview | yes, whole or in chunks |
-| Batching and failure | groups 1 to 100; a failing PR is removed and the rest rebuilt | batch size with splits | private beta | not stated | batches with split by stack and halves |
-| Checks | required checks on `merge_group` (rejected above for the wait they bring) | each queued PR gets its own CI run | not stated | not stated | gate on each head, one proof per batch |
-| Cost for this public repository | free | free for open source | paid team plan | routed to sales | free |
-| Code we maintain | workflow triggers | a config file and a ruleset bypass | none | none | `scripts/landing` |
+|                                 | GitHub merge queue                                                        | Mergify                                       | Graphite       | Trunk           | The train                              |
+| ------------------------------- | ------------------------------------------------------------------------- | --------------------------------------------- | -------------- | --------------- | -------------------------------------- |
+| Stacks as a unit                | not stated in its docs                                                    | yes, at most 20 deep (our island stack is 41) | yes            | public preview  | yes, whole or in chunks                |
+| Batching and failure            | groups 1 to 100; a failing PR is removed and the rest rebuilt             | batch size with splits                        | private beta   | not stated      | batches with split by stack and halves |
+| Checks                          | required checks on `merge_group` (rejected above for the wait they bring) | each queued PR gets its own CI run            | not stated     | not stated      | gate on each head, one proof per batch |
+| Cost for this public repository | free                                                                      | free for open source                          | paid team plan | routed to sales | free                                   |
+| Code we maintain                | workflow triggers                                                         | a config file and a ruleset bypass            | none           | none            | `scripts/landing`                      |
 
 GitHub's merge queue would bring back required checks, which this ADR rejected because they made merges wait on the runner queue, and its documentation does not cover stacked pull requests. Mergify would fit at no cost but caps a stack at 20 and runs CI for each queued pull request on our runners. Graphite is paid, Trunk's terms for a public repository are not published, and Bors-NG is archived. The train keeps stacks whole, costs nothing, and its gaps are closed by the points above.
 
@@ -160,16 +160,15 @@ The amendment "The Landing Queue" rejected GitHub's merge queue partly because "
 
 ### Build or buy, for stacks
 
-| | GitHub merge queue | Mergify | Trunk | The train |
-| --- | --- | --- | --- | --- |
-| Native GitHub stacks | "Stacks fully support merge queues" | yes, "Maximum stack depth: 20" | public preview (vendors.md) | yes, with workarounds for merges in branches |
-| Speculative groups | build concurrency 1 to 100 | "Up to 128" parallel checks | parallel mode | to build |
-| Up-to-date branches required | no | not stated | not stated | yes, since #2551 |
-| Cost for this public repository | free | free for open source | not published | free |
-| Code and services we maintain | one workflow trigger, one ruleset | a vendor app, a config, a ruleset bypass | a vendor app | `scripts/landing` |
+|                                 | GitHub merge queue                  | Mergify                                  | Trunk                       | The train                                    |
+| ------------------------------- | ----------------------------------- | ---------------------------------------- | --------------------------- | -------------------------------------------- |
+| Native GitHub stacks            | "Stacks fully support merge queues" | yes, "Maximum stack depth: 20"           | public preview (vendors.md) | yes, with workarounds for merges in branches |
+| Speculative groups              | build concurrency 1 to 100          | "Up to 128" parallel checks              | parallel mode               | to build                                     |
+| Up-to-date branches required    | no                                  | not stated                               | not stated                  | yes, since #2551                             |
+| Cost for this public repository | free                                | free for open source                     | not published               | free                                         |
+| Code and services we maintain   | one workflow trigger, one ruleset   | a vendor app, a config, a ruleset bypass | a vendor app                | `scripts/landing`                            |
 
 GitHub's queue is the platform's own, documented for stacks, free here, and leaves the least code to maintain. Mergify would cap stacks at 20 and add a vendor; Trunk's terms for a public repository are not published.
-
 
 ## Amendment: The Merge Queue Is Switched On, 15 November 2026
 
@@ -183,13 +182,13 @@ The amendment "Stacks Stay Linear, And GitHub's Merge Queue Lands Them" decided 
 
 1. **One commit status, `verify`, posted at two depths by `.github/workflows/proof.yml`.**
 
-   | Event | Jobs | Who posts `verify` | Description |
-   | --- | --- | --- | --- |
-   | `pull_request` (opened, synchronize, reopened, ready for review; a draft runs nothing) | the gate | the gate | "Gate passed; the merge queue proves the browsers", or "Gate failed" |
-   | `merge_group` | the gate and the three engines, side by side | the last of the four to finish, from the gate and the three engine statuses of its run | "Gate, Chromium, Firefox and WebKit: success" or "failure" |
-   | `workflow_dispatch` without the browsers (`bun run gate`) | the gate | the gate | as for a pull request |
-   | `workflow_dispatch` with `base` (a merge group rehearsal) | the gate and the three engines | as for a merge group | as for a merge group |
-   | `workflow_dispatch` with the browsers and no `base` (`bun run proof`, a baseline) | as asked | nobody | none |
+   | Event                                                                                  | Jobs                                         | Who posts `verify`                                                                     | Description                                                          |
+   | -------------------------------------------------------------------------------------- | -------------------------------------------- | -------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
+   | `pull_request` (opened, synchronize, reopened, ready for review; a draft runs nothing) | the gate                                     | the gate                                                                               | "Gate passed; the merge queue proves the browsers", or "Gate failed" |
+   | `merge_group`                                                                          | the gate and the three engines, side by side | the last of the four to finish, from the gate and the three engine statuses of its run | "Gate, Chromium, Firefox and WebKit: success" or "failure"           |
+   | `workflow_dispatch` without the browsers (`bun run gate`)                              | the gate                                     | the gate                                                                               | as for a pull request                                                |
+   | `workflow_dispatch` with `base` (a merge group rehearsal)                              | the gate and the three engines               | as for a merge group                                                                   | as for a merge group                                                 |
+   | `workflow_dispatch` with the browsers and no `base` (`bun run proof`, a baseline)      | as asked                                     | nobody                                                                                 | none                                                                 |
 
    A commit status, not a job's check run, because one name must come from whichever of four jobs ends last: a fifth job that `needs` them would wait in the account's runner queue again from the back (amendment "One Job Per Head"). Each job posts its own status before it reads the others, so the last to finish sees all four, as `proof` is posted already. The gate, engine and summary statuses `gate/<part>`, `gate`, `proof/<engine>` and `proof` stay: `verify` is read from them, and `bun run gate` and `bun run proof` wait on them.
 2. **Specs from the group's diff.** `scripts/proof/select.ts` owns which specs a merge group proves, from `git diff --name-only base_sha head_sha`: every spec file it changes that its head still holds, every spec in an `apps/www/e2e` folder whose name is a path segment of a changed file under `apps/www/src` (the file named without its extension), and the smoke spec `e2e/quran/landing.browser.ts` always. A group that changes nothing the product runs reaches no folder, so it proves its own spec files and the smoke spec. Selection proves fewer specs than every suite; a full proof of main after landings (amendment "The Landing Queue", point 8) is what catches the rest, and nothing schedules it yet.
@@ -203,20 +202,20 @@ The amendment "Stacks Stay Linear, And GitHub's Merge Queue Lands Them" decided 
 
 Main sets it once the workflow above is on `main`; no session changes repository settings.
 
-| Setting | Value | Ruleset API (`rules[]`) |
-| --- | --- | --- |
-| Target | the default branch, `main` (the queue "cannot be enabled with branch protection rules that use wildcard characters") | `conditions.ref_name.include: ["~DEFAULT_BRANCH"]` |
-| Require a pull request before merging | on, as today | `pull_request` |
-| Require status checks to pass | `verify` | `required_status_checks`: `required_status_checks: [{ context: "verify" }]` |
-| Require branches to be up to date before merging | off: the queue tests each group on the latest main and "does not require a pull request author to update their pull request branch" | `strict_required_status_checks_policy: false` |
-| Require merge queue | on | `merge_queue` |
-| Merge method | squash | `merge_method: "SQUASH"` |
-| Only merge non-failing pull requests | on | `grouping_strategy: "ALLGREEN"` |
-| Build concurrency | 3 | `max_entries_to_build: 3` |
-| Minimum group size | 1 | `min_entries_to_merge: 1` |
-| Maximum group size | 5 | `max_entries_to_merge: 5` |
-| Wait time to meet minimum group size | 5 minutes | `min_entries_to_merge_wait_minutes: 5` |
-| Status check timeout | 90 minutes: a completed proof run took 27 minutes at the median and 50 at the 90th percentile (amendment "The Landing Queue") | `check_response_timeout_minutes: 90` |
+| Setting                                          | Value                                                                                                                               | Ruleset API (`rules[]`)                                                     |
+| ------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
+| Target                                           | the default branch, `main` (the queue "cannot be enabled with branch protection rules that use wildcard characters")                | `conditions.ref_name.include: ["~DEFAULT_BRANCH"]`                          |
+| Require a pull request before merging            | on, as today                                                                                                                        | `pull_request`                                                              |
+| Require status checks to pass                    | `verify`                                                                                                                            | `required_status_checks`: `required_status_checks: [{ context: "verify" }]` |
+| Require branches to be up to date before merging | off: the queue tests each group on the latest main and "does not require a pull request author to update their pull request branch" | `strict_required_status_checks_policy: false`                               |
+| Require merge queue                              | on                                                                                                                                  | `merge_queue`                                                               |
+| Merge method                                     | squash                                                                                                                              | `merge_method: "SQUASH"`                                                    |
+| Only merge non-failing pull requests             | on                                                                                                                                  | `grouping_strategy: "ALLGREEN"`                                             |
+| Build concurrency                                | 3                                                                                                                                   | `max_entries_to_build: 3`                                                   |
+| Minimum group size                               | 1                                                                                                                                   | `min_entries_to_merge: 1`                                                   |
+| Maximum group size                               | 5                                                                                                                                   | `max_entries_to_merge: 5`                                                   |
+| Wait time to meet minimum group size             | 5 minutes                                                                                                                           | `min_entries_to_merge_wait_minutes: 5`                                      |
+| Status check timeout                             | 90 minutes: a completed proof run took 27 minutes at the median and 50 at the 90th percentile (amendment "The Landing Queue")       | `check_response_timeout_minutes: 90`                                        |
 
 `verify` names no expected source, so any token with write access to the repository may post it; a session never posts it by hand.
 
@@ -355,7 +354,6 @@ Chunk 1 (#2338, #2340, #2370, #2410 and #2472, a linked stack that touches share
 1. **Headed only where WebGL is needed.** Under the proof, `visual-firefox` alone runs headed (`headed` in `apps/www/playwright.config.ts`), and every other Firefox project, the School's included, runs headless. Every Firefox project still forces `webgl.force-enabled`.
 2. **One window at a time.** `visual-firefox` runs one worker when headed, so no window covers another. One display per worker would need a worker fixture that starts, addresses and stops an Xvfb of its own for each Firefox it launches; one worker needs one line of configuration.
 3. **No WebGL outside the visual project.** WebGL draws only in the content visuals (`packages/design-system/components/three` and `components/contents`). The one spec outside the visual project that waited on a scene's canvas, `e2e/seo/contracts.browser.ts`, now checks only that the served lesson ships its scenes without a canvas; `e2e/scene/lines.browser.ts` reveals every scene of the same lesson in the visual project. A new spec that needs a WebGL scene belongs to the visual project.
-
 
 ## Amendment: Each Check Runs Once, 16 November 2026
 

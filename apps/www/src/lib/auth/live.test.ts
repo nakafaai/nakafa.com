@@ -3,10 +3,10 @@
 import { describe, expect, it } from "@effect/vitest";
 import { ConvexReactClient } from "convex/react";
 import { Effect, Option } from "effect";
+import type { LiveSessionModules } from "@/lib/auth/live";
 import {
   createLiveSessionStore,
   LiveSessionLoadFailed,
-  type LiveSessionModules,
   loadPageModule,
   startLiveSession,
 } from "@/lib/auth/live";

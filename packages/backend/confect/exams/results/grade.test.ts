@@ -9,11 +9,11 @@ import { essayAnswers } from "@repo/backend/confect/exams/blank";
 import { encodeAnswers } from "@repo/backend/confect/exams/question";
 import { nf } from "@repo/backend/test/editor";
 import { teacherExam } from "@repo/backend/test/exams";
+import type { SittingFixture } from "@repo/backend/test/sittings";
 import {
   deviceOf,
   enterOk,
   openedSitting,
-  type SittingFixture,
   sittingRow,
 } from "@repo/backend/test/sittings";
 import {

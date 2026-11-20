@@ -6,19 +6,17 @@ import {
 import { LineMark, MarkedLine } from "@repo/design-system/components/ui/line";
 import { cva } from "class-variance-authority";
 import { Array as Arr, HashMap, Option, Record as Rec } from "effect";
-import { type ReactNode, useRef, useState } from "react";
+import type { ReactNode } from "react";
+import { useRef, useState } from "react";
 import { useStore } from "zustand";
-import {
-  type LinePair,
-  type LineSide,
-  LinesContext,
-  useLines,
-} from "@/components/player/lines/context";
+import type { LinePair, LineSide } from "@/components/player/lines/context";
+import { LinesContext, useLines } from "@/components/player/lines/context";
 import { boardPoint, lineNames } from "@/components/player/lines/curve";
 import { LineDot } from "@/components/player/lines/dot";
 import { LinesOverlay } from "@/components/player/lines/overlay";
 import { createLines } from "@/components/player/lines/store";
-import { type MatchPart, pairedWith } from "@/components/player/response";
+import type { MatchPart } from "@/components/player/response";
+import { pairedWith } from "@/components/player/response";
 
 /**
  * A board's three tracks: the statements, the gap the lines cross, and the answers. A paper leaves the lines a wide

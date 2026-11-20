@@ -1,9 +1,7 @@
 import { ContentDocumentSchema } from "@nakafa/aksara-contracts/assessment/document";
 import type { Interaction } from "@nakafa/aksara-contracts/assessment/interaction";
-import {
-  keyMissing,
-  type QuestionView,
-} from "@repo/backend/confect/exams/question";
+import type { QuestionView } from "@repo/backend/confect/exams/question";
+import { keyMissing } from "@repo/backend/confect/exams/question";
 import { Array as Arr, Match, Option, Schema, String as Str } from "effect";
 
 /** The label of an option, a statement, a column or an answer: a rich document of its own. */

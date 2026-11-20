@@ -20,12 +20,8 @@ import {
   getPrimaryNavigationTarget,
 } from "@/components/sidebar/data/navigation";
 import { usePreferredCurriculumTarget } from "@/lib/curriculum/preferences";
-import {
-  Link,
-  type LinkTarget,
-  useCurrentLocale,
-  useRouteMatched,
-} from "@/lib/routing/link";
+import type { LinkTarget } from "@/lib/routing/link";
+import { Link, useCurrentLocale, useRouteMatched } from "@/lib/routing/link";
 import { EXACT_ACTIVE_OPTIONS } from "@/lib/routing/tree";
 import { useLinkDestination } from "@/lib/tryout/entry";
 import { usePreferredTryoutTarget } from "@/lib/tryout/preferences";

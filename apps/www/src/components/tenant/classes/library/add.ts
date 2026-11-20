@@ -3,11 +3,10 @@ import { Id } from "@repo/backend/confect/_generated/id";
 import type classroom from "@repo/backend/confect/_generated/refs/classroom";
 import type connectors from "@repo/backend/confect/_generated/refs/connectors";
 import { randomUuid } from "@repo/utilities/uuid";
-import { Clock, Data, Effect, type Result, Schema } from "effect";
-import {
-  addLinkUpdate,
-  type LibraryItem,
-} from "@/components/tenant/classes/library/optimistic";
+import type { Result } from "effect";
+import { Clock, Data, Effect, Schema } from "effect";
+import type { LibraryItem } from "@/components/tenant/classes/library/optimistic";
+import { addLinkUpdate } from "@/components/tenant/classes/library/optimistic";
 import type {
   LibraryUpload,
   LibraryUploads,

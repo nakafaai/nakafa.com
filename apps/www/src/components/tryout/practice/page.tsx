@@ -7,7 +7,8 @@ import { Button } from "@repo/design-system/components/ui/button";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { useSearch } from "@tanstack/react-router";
 import { Array as Arr, Effect, Option, Schema } from "effect";
-import { type ReactNode, useEffect, useTransition } from "react";
+import type { ReactNode } from "react";
+import { useEffect, useTransition } from "react";
 import { useTranslations } from "use-intl";
 import { PlayerFooter } from "@/components/player/footer";
 import { PlayerMain } from "@/components/player/frame";
@@ -25,9 +26,11 @@ import { BreadcrumbHeaderPath } from "@/components/shared/breadcrumb/header";
 import { PageHeader } from "@/components/shared/page/header";
 import { PaneFact, PaneFacts, PaneHeader } from "@/components/shared/page/pane";
 import { reportPracticeFailure } from "@/components/tryout/practice/failure";
+import type {
+  PracticeQuestion,
+  PracticeState,
+} from "@/components/tryout/practice/model";
 import {
-  type PracticeQuestion,
-  type PracticeState,
   practiceCellsOf,
   practiceProgressOf,
 } from "@/components/tryout/practice/model";
@@ -41,10 +44,8 @@ import {
   usePracticeState,
 } from "@/components/tryout/practice/state";
 import { TryoutPaneOpener } from "@/components/tryout/review/result";
-import {
-  getTryoutPageTarget,
-  type TryoutPageAddress,
-} from "@/components/tryout/route/path";
+import type { TryoutPageAddress } from "@/components/tryout/route/path";
+import { getTryoutPageTarget } from "@/components/tryout/route/path";
 import { useTryoutPath } from "@/components/tryout/shell/header";
 import { HOME_TARGET } from "@/lib/routing/target";
 

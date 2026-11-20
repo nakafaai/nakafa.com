@@ -1,7 +1,8 @@
 import { ThemeProvider, useTheme } from "@repo/design-system/providers/theme";
 import messages from "@repo/internationalization/dictionaries/en.json";
 import { Array as Arr, Option } from "effect";
-import { type ComponentType, type ReactNode, useEffect } from "react";
+import type { ComponentType, ReactNode } from "react";
+import { useEffect } from "react";
 import { createRoot } from "react-dom/client";
 import { IntlProvider } from "use-intl";
 

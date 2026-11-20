@@ -3,6 +3,10 @@ import {
   formatAccelerationMath,
   formatTrimmedMeterMath,
 } from "@repo/design-system/components/contents/physics/kinematics/math";
+import type {
+  GlbbMotionState,
+  GlbbScenarioId,
+} from "@repo/design-system/components/contents/physics/kinematics/non-uniform-linear-motion/data";
 import {
   DEFAULT_GLBB_SCENARIO_ID,
   formatVelocityMath,
@@ -10,8 +14,6 @@ import {
   GLBB_SCENARIOS,
   GLBB_SCENE,
   GLBB_TRAIN_MODEL_PATH,
-  type GlbbMotionState,
-  type GlbbScenarioId,
   getGlbbLoopTime,
   getGlbbMotionState,
   getGlbbPositionSample,
@@ -39,7 +41,8 @@ import {
 import { VisualFactIndicator } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { Array as Arr, Option } from "effect";
-import { type ReactNode, Suspense, useMemo, useRef, useState } from "react";
+import type { ReactNode } from "react";
+import { Suspense, useMemo, useRef, useState } from "react";
 import type { Group } from "three";
 
 /** The height of the bed the rails lie on. */

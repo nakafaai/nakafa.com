@@ -1,4 +1,5 @@
-import { expect, type Locator, type Page, test } from "@playwright/test";
+import type { Locator, Page } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import { Array as Arr, Effect, Option, Schema } from "effect";
 import { pinnedRoutes } from "@/e2e/support/corpus";
 import { readCumulativeLayoutShift } from "@/e2e/support/layout";

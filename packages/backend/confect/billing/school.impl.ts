@@ -2,10 +2,8 @@ import { FunctionImpl, GroupImpl } from "@confect/server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { tenantAccess } from "@repo/backend/confect/access/authority";
-import {
-  type BillingAccountId,
-  findAccount,
-} from "@repo/backend/confect/billing/accounts";
+import type { BillingAccountId } from "@repo/backend/confect/billing/accounts";
+import { findAccount } from "@repo/backend/confect/billing/accounts";
 import { schoolInvoice } from "@repo/backend/confect/billing/receipts";
 import {
   invoiceAccounts,

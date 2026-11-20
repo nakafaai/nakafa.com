@@ -1,10 +1,10 @@
 import { QueryResult, useMutation } from "@confect/react";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
+import type { Policy } from "@repo/backend/confect/tenancy/policy";
 import {
   DEFAULT_NINA_DAILY_CREDITS,
   EMAIL_DOMAIN_LIMIT,
   NinaDailyCredits,
-  type Policy,
   TenantPolicies,
 } from "@repo/backend/confect/tenancy/policy";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";

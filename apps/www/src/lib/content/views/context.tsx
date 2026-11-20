@@ -1,13 +1,12 @@
 "use client";
 
 import { useRequired } from "@repo/design-system/hooks/required";
-import { createContext, type ReactNode, useState } from "react";
+import type { ReactNode } from "react";
+import { createContext, useState } from "react";
 import { useStore } from "zustand";
 import { useShallow } from "zustand/react/shallow";
-import {
-  type ContentViewsStore,
-  createContentViewsStore,
-} from "@/lib/content/views/store";
+import type { ContentViewsStore } from "@/lib/content/views/store";
+import { createContentViewsStore } from "@/lib/content/views/store";
 
 type ContentViewsStoreApi = ReturnType<typeof createContentViewsStore>;
 

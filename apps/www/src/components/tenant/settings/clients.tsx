@@ -1,9 +1,5 @@
-import {
-  type PaginatedQueryItem,
-  QueryResult,
-  useMutation,
-  usePaginatedQuery,
-} from "@confect/react";
+import type { PaginatedQueryItem } from "@confect/react";
+import { QueryResult, useMutation, usePaginatedQuery } from "@confect/react";
 import {
   CommandLineIcon,
   Copy01Icon,
@@ -36,7 +32,8 @@ import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { RowCopy, RowItems } from "@/components/shared/table/menu";
 import { TablePages } from "@/components/shared/table/pages";
-import { type StatusLook, TableStatus } from "@/components/shared/table/status";
+import type { StatusLook } from "@/components/shared/table/status";
+import { TableStatus } from "@/components/shared/table/status";
 import { TableTitle } from "@/components/shared/table/title";
 import {
   TableFiltersProvider,

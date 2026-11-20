@@ -1,6 +1,7 @@
 import { useRequired } from "@repo/design-system/hooks/required";
 import { Schema } from "effect";
-import { createContext, type RefObject } from "react";
+import type { RefObject } from "react";
+import { createContext } from "react";
 import type { StoreApi } from "zustand";
 import type { lineNames } from "@/components/player/lines/curve";
 import type { LinesStore } from "@/components/player/lines/store";

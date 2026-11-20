@@ -3,10 +3,8 @@ import { jointCeiling } from "@nakafa/aksara-contracts/assessment/joint";
 import type { InteractionKey } from "@nakafa/aksara-contracts/assessment/key";
 import type { ScoringRule } from "@nakafa/aksara-contracts/assessment/scoring";
 import { grade } from "@repo/backend/confect/assessment/grade";
-import {
-  chosenOptions,
-  type ExamResponse,
-} from "@repo/backend/confect/assessment/response";
+import type { ExamResponse } from "@repo/backend/confect/assessment/response";
+import { chosenOptions } from "@repo/backend/confect/assessment/response";
 import { gradeVerdict } from "@repo/backend/confect/assessment/verdict";
 import { QuestionView } from "@repo/backend/confect/exams/question";
 import { examResultValidator } from "@repo/backend/confect/exams/results/schema";

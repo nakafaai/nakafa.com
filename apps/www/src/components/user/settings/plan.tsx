@@ -24,11 +24,13 @@ import {
 import { UpgradePlanCard } from "@/components/user/settings/upgrade";
 import { reportClientException } from "@/lib/analytics/client";
 import { useBillingNavigation } from "@/lib/billing/checkout";
+import type {
+  BillingOverview,
+  BillingSubscription,
+  PlanState,
+} from "@/lib/billing/plan";
 import {
-  type BillingOverview,
-  type BillingSubscription,
   cancelPlanChange,
-  type PlanState,
   planStateOf,
   providerNameOf,
   subscribedDescriptionKey,

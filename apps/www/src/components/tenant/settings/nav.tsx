@@ -26,11 +26,8 @@ import {
 import { TenantSetupGroup } from "@/components/tenant/setup/item";
 import { TargetLink, useLeafRoutePath } from "@/lib/routing/link";
 import { LOCALE_ROUTE } from "@/lib/routing/tree";
-import {
-  openSettingsGroups,
-  ownsLeafPath,
-  type SchoolSettingsGroup,
-} from "@/lib/settings/school";
+import type { SchoolSettingsGroup } from "@/lib/settings/school";
+import { openSettingsGroups, ownsLeafPath } from "@/lib/settings/school";
 
 /**
  * Renders the school settings as the sidebar body for settings routes, replacing the

@@ -1,6 +1,7 @@
 import { Id } from "@repo/backend/confect/_generated/id";
 import { CohortGrade } from "@repo/backend/confect/tenancy/cohort";
-import { Npsn, type UnitLevel } from "@repo/backend/confect/tenancy/schema";
+import type { UnitLevel } from "@repo/backend/confect/tenancy/schema";
+import { Npsn } from "@repo/backend/confect/tenancy/schema";
 import { isSingleLine } from "@repo/utilities/line";
 import { DateTime, Match, Schema } from "effect";
 

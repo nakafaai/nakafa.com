@@ -3,10 +3,8 @@ import confectSchema from "@repo/backend/confect/_generated/schema";
 // @vitest-environment node
 
 import { describe, expect, it } from "@effect/vitest";
-import {
-  type SignedContentRelease,
-  SignedContentReleaseSchema,
-} from "@nakafa/aksara-contracts/release";
+import type { SignedContentRelease } from "@nakafa/aksara-contracts/release";
+import { SignedContentReleaseSchema } from "@nakafa/aksara-contracts/release";
 import { RendererManifestEnvelopeSchema } from "@nakafa/aksara-contracts/renderer/contract";
 import { ContentVerificationKeyResolver } from "@nakafa/aksara-contracts/signature/spec";
 import {

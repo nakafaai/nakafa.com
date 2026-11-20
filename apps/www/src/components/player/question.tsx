@@ -1,5 +1,6 @@
 import { cn } from "cn";
-import { Activity, type ReactNode } from "react";
+import type { ReactNode } from "react";
+import { Activity } from "react";
 import { useTranslations } from "use-intl";
 import { readQuestionIds } from "@/components/player/ids";
 import { usePlayer } from "@/components/player/provider";

@@ -1,7 +1,5 @@
-import {
-  type HttpBodyError,
-  readJsonBody,
-} from "@repo/backend/confect/contentRelease/http/body";
+import type { HttpBodyError } from "@repo/backend/confect/contentRelease/http/body";
+import { readJsonBody } from "@repo/backend/confect/contentRelease/http/body";
 import { matchesHttpSecret } from "@repo/backend/confect/contentRelease/http/secret";
 import { dispatchInputValidator } from "@repo/backend/confect/contentRelease/ingress/dispatch.spec";
 import {

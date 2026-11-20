@@ -13,7 +13,8 @@ import {
 } from "@repo/design-system/components/ui/sidebar-menu";
 import type { ReactNode } from "react";
 import { useTranslations } from "use-intl";
-import { Link, type LinkTarget, useRouteMatched } from "@/lib/routing/link";
+import type { LinkTarget } from "@/lib/routing/link";
+import { Link, useRouteMatched } from "@/lib/routing/link";
 import { HOME_TARGET } from "@/lib/routing/target";
 import { EXACT_ACTIVE_OPTIONS, LOCALE_ROUTE } from "@/lib/routing/tree";
 

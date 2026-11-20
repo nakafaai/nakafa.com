@@ -3,13 +3,13 @@ import { Id } from "@repo/backend/confect/_generated/id";
 import records from "@repo/backend/confect/_generated/refs/records";
 import { Array as Arr, Option, Schema } from "effect";
 import { isDraft } from "@/components/tenant/settings/state";
+import type { SchemeVersion } from "@/components/tenant/settings/versions";
 import {
   amendSchemeChange,
   checkedScheme,
   draftOfScheme,
   nextEffectiveFrom,
   removeSchemeChange,
-  type SchemeVersion,
   storeSchemeChange,
 } from "@/components/tenant/settings/versions";
 import { createLocalStore } from "@/test/optimistic";

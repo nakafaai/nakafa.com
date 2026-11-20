@@ -5,7 +5,8 @@ import {
   PopoverTrigger,
 } from "@repo/design-system/components/ui/popover";
 import { Array as Arr, Option } from "effect";
-import { Fragment, type ReactNode } from "react";
+import type { ReactNode } from "react";
+import { Fragment } from "react";
 import { useTranslations } from "use-intl";
 
 /**

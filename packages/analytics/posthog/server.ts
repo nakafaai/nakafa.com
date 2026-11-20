@@ -2,10 +2,10 @@ import "@tanstack/react-start/server-only";
 
 import { isServerExceptionReportingEnabled } from "@repo/analytics/gate";
 import { keys } from "@repo/analytics/keys";
+import type { OperationalExceptionProperties } from "@repo/analytics/posthog/exception";
 import {
   createOperationalException,
   decodeOperationalExceptionProperties,
-  type OperationalExceptionProperties,
   operationalRequestProperties,
 } from "@repo/analytics/posthog/exception";
 import { Effect, Option, Schema } from "effect";

@@ -1,8 +1,5 @@
-import {
-  type PaginatedQueryItem,
-  PaginatedQueryResult,
-  usePaginatedQuery,
-} from "@confect/react";
+import type { PaginatedQueryItem } from "@confect/react";
+import { PaginatedQueryResult, usePaginatedQuery } from "@confect/react";
 import { PauseCircleIcon, School01Icon } from "@hugeicons/core-free-icons";
 import operators from "@repo/backend/confect/_generated/refs/operators";
 import { TenantStatus } from "@repo/backend/confect/tenancy/schema";
@@ -21,7 +18,8 @@ import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { namedOptions } from "@/components/shared/table/filter";
 import { RowCopy } from "@/components/shared/table/menu";
-import { type StatusLook, TableStatus } from "@/components/shared/table/status";
+import type { StatusLook } from "@/components/shared/table/status";
+import { TableStatus } from "@/components/shared/table/status";
 import { TableTitle } from "@/components/shared/table/title";
 import {
   TableFiltersProvider,

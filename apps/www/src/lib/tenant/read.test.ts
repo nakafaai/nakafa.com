@@ -12,7 +12,8 @@ import {
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Effect, Layer, Option, Result, Schema } from "effect";
 import { loadSchoolSignInTitle } from "@/lib/tenant/copy";
-import { outsiderOf, type SchoolViewer } from "@/lib/tenant/frame";
+import type { SchoolViewer } from "@/lib/tenant/frame";
+import { outsiderOf } from "@/lib/tenant/frame";
 import {
   readSchoolFrame,
   SchoolReadFailed,

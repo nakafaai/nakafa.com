@@ -1,15 +1,11 @@
 import { Effect, Fiber, Function as Fn, Option } from "effect";
-import {
-  type ReactNode,
-  useEffect,
-  useRef,
-  useState,
-  useSyncExternalStore,
-} from "react";
+import type { ReactNode } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { AdFrame } from "@/components/ads/frame";
 import { SignedInIsland } from "@/components/providers/island";
 import { useLiveSession } from "@/components/providers/live";
-import { AD_CLIENT, AD_SLOTS, type AdUnit } from "@/lib/ads/account";
+import type { AdUnit } from "@/lib/ads/account";
+import { AD_CLIENT, AD_SLOTS } from "@/lib/ads/account";
 import { loadAdScript, requestAd, untilFilled } from "@/lib/ads/script";
 import { hasSignedInHint } from "@/lib/auth/hint";
 import { useViewer } from "@/lib/identity/client";

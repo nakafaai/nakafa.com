@@ -7,15 +7,13 @@ import {
   DatabaseReader,
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
-import {
-  Nisn,
-  type RosterView,
-  type rosterEntryValidator,
+import type {
+  RosterView,
+  rosterEntryValidator,
 } from "@repo/backend/confect/roster/schema";
-import {
-  readTenantKeys,
-  type TenantKeys,
-} from "@repo/backend/confect/vault/keys";
+import { Nisn } from "@repo/backend/confect/roster/schema";
+import type { TenantKeys } from "@repo/backend/confect/vault/keys";
+import { readTenantKeys } from "@repo/backend/confect/vault/keys";
 import {
   blindText,
   openText,

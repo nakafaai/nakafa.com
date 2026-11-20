@@ -93,15 +93,15 @@ which of the two checks failed.
 
 `guardianConsents` is append-only. A withdrawal is a new row, never an update.
 
-| Field | Holds |
-| --- | --- |
-| `tenantId` | The school |
-| `studentPersonId`, `guardianPersonId` | The two Persons of the relation |
-| `action` | `granted` or `withdrawn` |
-| `at` | The server time of the row |
-| `method` | `address_nisn` for the verified address and the NISN check, or `staff` for a manual check |
-| `policyVersion` | The version of the signed consent rule of the country profile (ADR 0032). Until the profile is signed, a version constant in code, named for the profile it stands in for |
-| `checker` | The Person who gave the check: the guardian for `address_nisn`, or the staff Person for `staff` |
+| Field                                 | Holds                                                                                                                                                                     |
+| ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `tenantId`                            | The school                                                                                                                                                                |
+| `studentPersonId`, `guardianPersonId` | The two Persons of the relation                                                                                                                                           |
+| `action`                              | `granted` or `withdrawn`                                                                                                                                                  |
+| `at`                                  | The server time of the row                                                                                                                                                |
+| `method`                              | `address_nisn` for the verified address and the NISN check, or `staff` for a manual check                                                                                 |
+| `policyVersion`                       | The version of the signed consent rule of the country profile (ADR 0032). Until the profile is signed, a version constant in code, named for the profile it stands in for |
+| `checker`                             | The Person who gave the check: the guardian for `address_nisn`, or the staff Person for `staff`                                                                           |
 
 A row holds IDs and codes only, never a name, an email address, or free text
 (ADR 0016). Withdrawal applies at once: its row ends the relation in the same
@@ -165,15 +165,15 @@ withdrawal is done (blueprint, Orang tua, requests).
 
 ## Implementation Status
 
-| Part | Status |
-| --- | --- |
-| The decision in this ADR | Recorded by S0 |
-| `verifiedParent` relation and the link rows | Built, S7: `guardianLinks` and the `guardianLink` kind (`confect/guardians`). Admin and Staff start, list, check by hand, and revoke links (`guardians/links`). An address reuses its guardian Person, and one address holds one live link to a student. |
-| The verified address (replaced the email code on 13 November 2026) | Built: a guardian signs in with Google, and `guardians/claim.ts` binds the guardian Persons of the address's live links (claim method `address`). |
-| `guardianConsents` and the NISN second check | Built, S8: the guardian's check compares the blind of the typed NISN with the roster's (`guardians/family:confirm`). Three mismatches leave only the staff check. Withdrawal writes the `withdrawn` row with the method of its grant and ends the link in one transaction. |
-| The NISN on the school roster | Built: `rosterEntries` holds the NISN, sealed and blinded under the school key (`confect/roster`). Admin and Staff set it with `roster/entries:set`, and the Dapodik import sets it (ADR 0015). |
-| Guardian notices and the rename of the notification relation | Planned, S9 |
-| Parent home, shared narratives, and requests | Partly built, S10: the parent home at `/parents` lists each linked child, runs the NISN check, shows the released grades of a verified link, and withdraws consent. Shared narratives wait for Insight (ADR 0035), and report copy and correction requests are built (`guardians/requests`). |
+| Part                                                               | Status                                                                                                                                                                                                                                                                                       |
+| ------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| The decision in this ADR                                           | Recorded by S0                                                                                                                                                                                                                                                                               |
+| `verifiedParent` relation and the link rows                        | Built, S7: `guardianLinks` and the `guardianLink` kind (`confect/guardians`). Admin and Staff start, list, check by hand, and revoke links (`guardians/links`). An address reuses its guardian Person, and one address holds one live link to a student.                                     |
+| The verified address (replaced the email code on 13 November 2026) | Built: a guardian signs in with Google, and `guardians/claim.ts` binds the guardian Persons of the address's live links (claim method `address`).                                                                                                                                            |
+| `guardianConsents` and the NISN second check                       | Built, S8: the guardian's check compares the blind of the typed NISN with the roster's (`guardians/family:confirm`). Three mismatches leave only the staff check. Withdrawal writes the `withdrawn` row with the method of its grant and ends the link in one transaction.                   |
+| The NISN on the school roster                                      | Built: `rosterEntries` holds the NISN, sealed and blinded under the school key (`confect/roster`). Admin and Staff set it with `roster/entries:set`, and the Dapodik import sets it (ADR 0015).                                                                                              |
+| Guardian notices and the rename of the notification relation       | Planned, S9                                                                                                                                                                                                                                                                                  |
+| Parent home, shared narratives, and requests                       | Partly built, S10: the parent home at `/parents` lists each linked child, runs the NISN check, shows the released grades of a verified link, and withdraws consent. Shared narratives wait for Insight (ADR 0035), and report copy and correction requests are built (`guardians/requests`). |
 
 Counsel reviews the consent wording and the policy version (K20), so
 `CONSENT_POLICY_VERSION` stays `id-profile-pending-1` until then, and nothing waits

@@ -5,7 +5,8 @@ import {
   Result,
   String as Str,
 } from "effect";
-import { isStringLiteralLikeNode, type SourceFile } from "tsrs/ast";
+import type { SourceFile } from "tsrs/ast";
+import { isStringLiteralLikeNode } from "tsrs/ast";
 import { nodesBelow } from "#scripts/check/drilling";
 import {
   attributeValue,

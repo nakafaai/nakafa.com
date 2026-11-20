@@ -1,4 +1,5 @@
-import { expect, type Locator, test } from "@playwright/test";
+import type { Locator } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import { MutableList } from "effect";
 
 /** The longest a press may take to show the next article's heading, in milliseconds. */

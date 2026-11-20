@@ -3,7 +3,8 @@
 // rotation, so every @polar-sh/sdk/<version> import moves to the then-current
 // version before that. Source:
 // https://handbook.polar.sh/engineering/backend-development/api-versioning
-import { createPolarCore, type PolarCore } from "@polar-sh/sdk/2026-10";
+import type { PolarCore } from "@polar-sh/sdk/2026-10";
+import { createPolarCore } from "@polar-sh/sdk/2026-10";
 import { PolarServer } from "@repo/backend/confect/billing/polar/catalog";
 import { Config, Effect, Redacted, Schema } from "effect";
 

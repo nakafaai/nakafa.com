@@ -1,12 +1,14 @@
-import { type OptimisticLocalStore, useMutation } from "@confect/react";
+import type { OptimisticLocalStore } from "@confect/react";
+import { useMutation } from "@confect/react";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { toast } from "@repo/design-system/lib/toast/notify";
-import { Array as Arr, Clock, Effect, Option, type Result } from "effect";
+import type { Result } from "effect";
+import { Array as Arr, Clock, Effect, Option } from "effect";
+import type { DashboardValue } from "@/components/exams/sitting/change";
 import {
   addMinutesToAttempt,
   closeSitting,
-  type DashboardValue,
   lockAttempt,
   unlockAttempt,
 } from "@/components/exams/sitting/change";

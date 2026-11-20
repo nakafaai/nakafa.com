@@ -6,7 +6,8 @@ import { KIND, LOOK } from "@/lib/island/look";
 import { PLANT_HEIGHTS } from "@/lib/island/models/heights";
 import { unitOf } from "@/lib/island/noise";
 import { SCALE } from "@/lib/island/scale";
-import { type Cells, cellOf } from "@/lib/island/world";
+import type { Cells } from "@/lib/island/world";
+import { cellOf } from "@/lib/island/world";
 
 /** How tall a plant may be, in meters, and still be pushed aside by a body walking through it: about a knee. */
 const KNEE = 0.6;

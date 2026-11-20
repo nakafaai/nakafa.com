@@ -4,10 +4,8 @@ import {
   moleculeFormula,
   relativeMass,
 } from "@repo/design-system/components/contents/chemistry/molecule/catalog";
-import {
-  type ElementSymbol,
-  ElementSymbolSchema,
-} from "@repo/design-system/components/contents/chemistry/molecule/elements";
+import type { ElementSymbol } from "@repo/design-system/components/contents/chemistry/molecule/elements";
+import { ElementSymbolSchema } from "@repo/design-system/components/contents/chemistry/molecule/elements";
 import type { MathNumber } from "@repo/design-system/components/contents/chemistry/molecule/facts";
 import { Array as Arr, Option, Schema } from "effect";
 import { constant } from "effect/Function";

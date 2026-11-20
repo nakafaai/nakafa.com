@@ -6,11 +6,11 @@ import {
 } from "@repo/backend/confect/access/errors";
 import { writeGrant } from "@repo/backend/confect/access/grant";
 import { activeGrants } from "@repo/backend/confect/access/policy";
-import {
-  type BuiltinRole,
-  type GrantScope,
-  OwnerRole,
+import type {
+  BuiltinRole,
+  GrantScope,
 } from "@repo/backend/confect/access/schema";
+import { OwnerRole } from "@repo/backend/confect/access/schema";
 import type { TenantActor } from "@repo/backend/confect/journal/schema";
 import { Effect, Option, Schema } from "effect";
 

@@ -6,10 +6,10 @@ import {
   newChoiceAnswers,
   tableAnswers,
 } from "@repo/backend/confect/exams/blank";
+import type { ScoredAnswer } from "@repo/backend/confect/exams/results/stats";
 import {
   optionIdsOf,
   pairIdsOf,
-  type ScoredAnswer,
   scriptsOf,
   tallyAnswers,
 } from "@repo/backend/confect/exams/results/stats";

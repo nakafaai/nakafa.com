@@ -1,6 +1,8 @@
 import { Effect, Exit, Fiber, MutableRef } from "effect";
-import { type AuthConvex, readAuthClient } from "@/lib/auth/client";
-import { type AuthSession, readClientSession } from "@/lib/auth/session";
+import type { AuthConvex } from "@/lib/auth/client";
+import { readAuthClient } from "@/lib/auth/client";
+import type { AuthSession } from "@/lib/auth/session";
+import { readClientSession } from "@/lib/auth/session";
 import { sessionUser } from "@/lib/auth/user";
 
 /** A session the page's readers follow: it reports each change to a listener until the listener is unsubscribed. */

@@ -9,12 +9,12 @@ import { Match } from "effect";
 import { useId } from "react";
 import { useTranslations } from "use-intl";
 import { useGraph } from "@/components/tenant/exams/figure/graph/provider";
+import type { ShapeDraft } from "@/components/tenant/exams/figure/graph/shapes";
 import {
   isEquation,
   isFormula,
   isInequalities,
   isNumber,
-  type ShapeDraft,
 } from "@/components/tenant/exams/figure/graph/shapes";
 
 /** The fields of a shape that hold one line of text. */

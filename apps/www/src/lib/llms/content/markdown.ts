@@ -12,10 +12,8 @@ import {
 } from "@/lib/llms/contributor";
 import { getLlmsSectionIndexText } from "@/lib/llms/index/generate";
 import { getPricingLlmsText, isPricingLlmsRoute } from "@/lib/llms/pricing";
-import {
-  type PublishedMarkdownInput,
-  readPublishedText,
-} from "@/lib/llms/published";
+import type { PublishedMarkdownInput } from "@/lib/llms/published";
+import { readPublishedText } from "@/lib/llms/published";
 import { getQuranLlmsText } from "@/lib/llms/quran";
 import { getSchoolLlmsText, isSchoolLlmsRoute } from "@/lib/llms/school";
 import { getTryoutLlmsText } from "@/lib/llms/tryout";

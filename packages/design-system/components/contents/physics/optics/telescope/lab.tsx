@@ -6,9 +6,9 @@ import {
   vignette,
 } from "@repo/design-system/components/contents/physics/canvas/paint";
 import { LabSlider } from "@repo/design-system/components/contents/physics/canvas/slider";
+import type { Point } from "@repo/design-system/components/contents/physics/optics/light";
 import {
   beam,
-  type Point,
   paintDarkRoom,
 } from "@repo/design-system/components/contents/physics/optics/light";
 import { telescope } from "@repo/design-system/components/contents/physics/optics/ray";
@@ -31,7 +31,8 @@ import { INSTRUMENT_COLORS } from "@repo/design-system/lib/material/instrument";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Schema } from "effect";
 import type p5 from "p5";
-import { type ReactNode, useState } from "react";
+import type { ReactNode } from "react";
+import { useState } from "react";
 
 /** The angle, in degrees, at which light from the distant star reaches the objective. */
 const STAR_ANGLE = 1.2;

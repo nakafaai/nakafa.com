@@ -1,9 +1,12 @@
 import { useRequired } from "@repo/design-system/hooks/required";
-import { createContext, type ReactNode, useMemo, useState } from "react";
-import { type StoreApi, useStore } from "zustand";
+import type { ReactNode } from "react";
+import { createContext, useMemo, useState } from "react";
+import type { StoreApi } from "zustand";
+import { useStore } from "zustand";
 import { useAgeNow } from "@/components/user/ages";
 import type { AgeClock } from "@/components/user/clock";
-import { createPostDraft, type PostDraft } from "@/components/user/posts/draft";
+import type { PostDraft } from "@/components/user/posts/draft";
+import { createPostDraft } from "@/components/user/posts/draft";
 import type { PublicProfile } from "@/lib/profile/public";
 
 const DraftContext = createContext<StoreApi<PostDraft> | null>(null);

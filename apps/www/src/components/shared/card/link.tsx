@@ -1,9 +1,11 @@
 import { ArrowRight02Icon } from "@hugeicons/core-free-icons";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { cva, type VariantProps } from "class-variance-authority";
+import type { VariantProps } from "class-variance-authority";
+import { cva } from "class-variance-authority";
 import { Option } from "effect";
 import type { ReactNode } from "react";
-import { type LinkTarget, TargetLink } from "@/lib/routing/link";
+import type { LinkTarget } from "@/lib/routing/link";
+import { TargetLink } from "@/lib/routing/link";
 import { publicPathTarget } from "@/lib/routing/target";
 
 /**

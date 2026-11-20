@@ -1,10 +1,9 @@
 import { bundleFromJSON, bundleToJSON } from "@sigstore/bundle";
 import { Effect, Layer } from "effect";
-import { type VerifyOptions, verify as verifySigstore } from "sigstore";
-import {
-  ProvenanceVerificationError,
-  type PublisherIdentity,
-} from "#scripts/provenance/schema";
+import type { VerifyOptions } from "sigstore";
+import { verify as verifySigstore } from "sigstore";
+import type { PublisherIdentity } from "#scripts/provenance/schema";
+import { ProvenanceVerificationError } from "#scripts/provenance/schema";
 import { ProvenanceBundleVerifier } from "#scripts/provenance/service";
 
 const GITHUB_ISSUER = "https://token.actions.githubusercontent.com";

@@ -2,16 +2,14 @@ import { describe, expect, it } from "@effect/vitest";
 import { Id } from "@repo/backend/confect/_generated/id";
 import { Npsn } from "@repo/backend/confect/tenancy/schema";
 import { Array as Arr, Schema } from "effect";
+import type { Client, Period, Unit } from "@/components/tenant/settings/state";
 import {
-  type Client,
   editPeriod,
   insertPeriod,
   isDraft,
   mapUnit,
-  type Period,
   revokeClient,
   setPeriodStatus,
-  type Unit,
   withoutItem,
 } from "@/components/tenant/settings/state";
 

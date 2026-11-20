@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { Effect, Option } from "effect";
+import type { AddressRouter } from "@/components/player/address";
 import {
-  type AddressRouter,
   addressOf,
   readAddressedKey,
   replaceSearchParam,

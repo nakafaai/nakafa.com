@@ -10,7 +10,8 @@ import {
   snapshotNode,
 } from "@repo/backend/confect/editor/fold";
 import { assessmentModel } from "@repo/backend/confect/editor/model";
-import { decodeStep, type Step } from "@repo/backend/confect/editor/step";
+import type { Step } from "@repo/backend/confect/editor/step";
+import { decodeStep } from "@repo/backend/confect/editor/step";
 import { stepsAfter } from "@repo/backend/confect/editor/store";
 import type { SubmitReply } from "@repo/backend/confect/editor/view";
 import { encodeJsonText } from "@repo/utilities/json";

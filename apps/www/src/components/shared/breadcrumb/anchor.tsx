@@ -1,7 +1,8 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { type LinkTarget, TargetLink } from "@/lib/routing/link";
+import type { LinkTarget } from "@/lib/routing/link";
+import { TargetLink } from "@/lib/routing/link";
 
 /**
  * One link of a breadcrumb. The breadcrumb link renders it and gives it only its

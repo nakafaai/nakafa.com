@@ -1,4 +1,5 @@
-import { createTool, type UsageHandler } from "@convex-dev/agent";
+import type { UsageHandler } from "@convex-dev/agent";
+import { createTool } from "@convex-dev/agent";
 import { CapabilityOutputSchema } from "@repo/backend/client/nina/capability";
 import type { Docs } from "@repo/backend/confect/_generated/docs";
 import type {
@@ -10,19 +11,19 @@ import { GatewayFailure } from "@repo/backend/confect/gateway/failure";
 import type { Gateway } from "@repo/backend/confect/gateway/handle";
 import type { ChatStep } from "@repo/backend/confect/nina/capability/deadline";
 import type { Held } from "@repo/backend/confect/nina/capability/held";
-import {
-  type CapabilityOutput,
-  type CapabilityProgress,
-  streamCapability,
+import type {
+  CapabilityOutput,
+  CapabilityProgress,
 } from "@repo/backend/confect/nina/capability/progress";
+import { streamCapability } from "@repo/backend/confect/nina/capability/progress";
 import type { AgentContext } from "@repo/backend/confect/nina/contract/agent";
 import { createEffectSchema } from "@repo/backend/confect/nina/contract/sdk";
-import {
-  type CapabilityDecision,
-  type CapabilityDenied,
-  deniedCapabilityResult,
-  type OfferContext,
+import type {
+  CapabilityDecision,
+  CapabilityDenied,
+  OfferContext,
 } from "@repo/backend/confect/nina/policy/capability";
+import { deniedCapabilityResult } from "@repo/backend/confect/nina/policy/capability";
 import type { Meter } from "@repo/backend/confect/spend/meter";
 import type { Locale } from "@repo/contents/content";
 import type { FlexibleSchema, ModelMessage, Tool } from "ai";

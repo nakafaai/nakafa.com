@@ -1,4 +1,5 @@
-import { expect, type Page, test } from "@playwright/test";
+import type { Page } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
 import { reloadUntil, saved } from "@/e2e/support/changes";
 import { runOnPage } from "@/e2e/support/chat";

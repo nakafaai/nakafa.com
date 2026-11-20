@@ -1,4 +1,5 @@
 import { Array as Arr, HashSet, Option, Result } from "effect";
+import type { Node, SourceFile } from "tsrs/ast";
 import {
   isArrowFunction,
   isBindingElement,
@@ -8,8 +9,6 @@ import {
   isParameterDeclaration,
   isPropertyAccessExpression,
   isVariableDeclaration,
-  type Node,
-  type SourceFile,
 } from "tsrs/ast";
 import { nodesBelow } from "#scripts/check/drilling";
 import { attributeValue, judgesMarkup, opening } from "#scripts/check/jsx";

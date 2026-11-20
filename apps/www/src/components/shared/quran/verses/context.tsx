@@ -1,6 +1,7 @@
 import type { QuranViewTafsirAccess } from "@repo/backend/client/quran/view";
 import { useRequired } from "@repo/design-system/hooks/required";
-import { createContext, type ReactNode } from "react";
+import type { ReactNode } from "react";
+import { createContext } from "react";
 
 /** Props of the verse provider: one surah's Tafsir access and verse labels. */
 interface QuranVersesProviderProps {

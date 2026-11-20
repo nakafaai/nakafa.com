@@ -25,10 +25,8 @@ import {
   assignGrantChange,
   givenRoles,
 } from "@/components/tenant/settings/grants";
-import {
-  type PersonId,
-  SchoolPersonPicker,
-} from "@/components/tenant/settings/people";
+import type { PersonId } from "@/components/tenant/settings/people";
+import { SchoolPersonPicker } from "@/components/tenant/settings/people";
 import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 
 /**

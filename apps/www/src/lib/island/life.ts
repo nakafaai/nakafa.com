@@ -4,7 +4,8 @@ import { Array as Arr, Option, Order, Schema } from "effect";
 import { KIND, LOOK } from "@/lib/island/look";
 import { unitOf } from "@/lib/island/noise";
 import { floorOf, roomOf, touches } from "@/lib/island/room";
-import { blockAt, type Cells } from "@/lib/island/world";
+import type { Cells } from "@/lib/island/world";
+import { blockAt } from "@/lib/island/world";
 
 const WATER = idOf("water");
 const PATH = idOf("path");

@@ -23,7 +23,8 @@ import {
 import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
-import { type ReactNode, Suspense, useState } from "react";
+import type { ReactNode } from "react";
+import { Suspense, useState } from "react";
 
 interface GeothermalLoopLabProps {
   description: NonNullable<ReactNode>;

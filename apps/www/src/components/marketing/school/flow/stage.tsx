@@ -4,17 +4,20 @@ import {
   useMergedRef,
   useReducedMotion,
 } from "@mantine/hooks";
-import { cva, type VariantProps } from "class-variance-authority";
+import type { VariantProps } from "class-variance-authority";
+import { cva } from "class-variance-authority";
 import { cn } from "cn";
 import { Array as Arr } from "effect";
-import { type AnimationSequence, animate } from "motion";
-import { type ReactNode, type Ref, useEffect, useRef } from "react";
-import {
-  type Point,
-  type Size,
-  type Wire,
-  wirePath,
+import type { AnimationSequence } from "motion";
+import { animate } from "motion";
+import type { ReactNode, Ref } from "react";
+import { useEffect, useRef } from "react";
+import type {
+  Point,
+  Size,
+  Wire,
 } from "@/components/marketing/school/flow/wire";
+import { wirePath } from "@/components/marketing/school/flow/wire";
 
 /** The seconds a picture rests on its last moment before it plays again. */
 const REST = 1.4;

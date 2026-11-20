@@ -2,9 +2,9 @@ import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { Array as Arr, Effect, FileSystem, Option } from "effect";
 import { Yaml } from "effect/encoding";
+import type { GithubActionUse } from "#scripts/github/policy";
 import {
   GITHUB_ACTION_REVIEWS,
-  type GithubActionUse,
   validateGithubActionPolicy,
 } from "#scripts/github/policy";
 import { inspectGithubActionPolicy } from "#scripts/github/source";

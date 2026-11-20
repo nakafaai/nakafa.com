@@ -3,10 +3,10 @@ import {
   DatabaseReader,
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
+import type { LoginNameRefusal } from "@repo/backend/confect/identity/errors";
 import {
   LoginExists,
   LoginMissing,
-  type LoginNameRefusal,
   LoginNameTaken,
 } from "@repo/backend/confect/identity/errors";
 import {

@@ -1,10 +1,6 @@
 import type { GenericId, Ref } from "@confect/core";
-import {
-  type PaginatedQueryItem,
-  QueryResult,
-  useMutation,
-  useQuery,
-} from "@confect/react";
+import type { PaginatedQueryItem } from "@confect/react";
+import { QueryResult, useMutation, useQuery } from "@confect/react";
 import {
   Cancel01Icon,
   CancelCircleIcon,

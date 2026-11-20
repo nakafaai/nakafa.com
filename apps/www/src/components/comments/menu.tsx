@@ -19,10 +19,8 @@ import { ClientOnly } from "@tanstack/react-router";
 import { HashSet } from "effect";
 import { Suspense, useState } from "react";
 import { useTranslations } from "use-intl";
-import {
-  type CommentDialog,
-  CommentDialogContext,
-} from "@/components/comments/dialog";
+import type { CommentDialog } from "@/components/comments/dialog";
+import { CommentDialogContext } from "@/components/comments/dialog";
 import { useCommentDraft } from "@/components/comments/provider";
 import { useRowComment } from "@/components/comments/scope";
 import { SignedInIsland } from "@/components/providers/island";

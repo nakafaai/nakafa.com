@@ -1,8 +1,13 @@
 import { RefsSourceError } from "@repo/backend/scripts/refs/errors";
 import { Array as Arr, Effect, Option, Result, Schema } from "effect";
+import type {
+  CallExpression,
+  Expression,
+  ObjectLiteralElementLike,
+  ObjectLiteralExpression,
+  SourceFile,
+} from "tsrs/ast";
 import {
-  type CallExpression,
-  type Expression,
   isAsExpression,
   isCallExpression,
   isComputedPropertyName,
@@ -13,9 +18,6 @@ import {
   isPropertyAssignment,
   isStringLiteral,
   isVariableStatement,
-  type ObjectLiteralElementLike,
-  type ObjectLiteralExpression,
-  type SourceFile,
 } from "tsrs/ast";
 import { createFileSystem } from "tsrs/fs";
 import { API } from "tsrs/sync";

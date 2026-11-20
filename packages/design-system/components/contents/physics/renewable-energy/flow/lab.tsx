@@ -7,9 +7,9 @@ import {
   vignette,
   withShadow,
 } from "@repo/design-system/components/contents/physics/canvas/paint";
+import type { Plant } from "@repo/design-system/components/contents/physics/renewable-energy/flow/stages";
 import {
   INPUT_ENERGY,
-  type Plant,
   PlantSchema,
   plantFlow,
   usefulEnergy,
@@ -38,7 +38,8 @@ import { getColor } from "@repo/design-system/lib/color";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr, Schema } from "effect";
 import type p5 from "p5";
-import { type ReactNode, useState } from "react";
+import type { ReactNode } from "react";
+import { useState } from "react";
 
 /** The color of the energy entering each plant, the band that carries it. */
 const PLANT_COLORS = {

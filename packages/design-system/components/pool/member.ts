@@ -2,7 +2,8 @@ import type { Cover } from "@repo/design-system/components/pool/cover";
 import type { Start } from "@repo/design-system/components/pool/place";
 import { Mascot } from "@repo/mascot/code";
 import { cast } from "@repo/mascot/seed";
-import { type ThingName, ThingNameSchema } from "@repo/mascot/thing/name";
+import type { ThingName } from "@repo/mascot/thing/name";
+import { ThingNameSchema } from "@repo/mascot/thing/name";
 import { Array as Arr, Hash, Schema } from "effect";
 
 /** One member of the pool: an animal of the cast, or one of Nina's things, with its radius before any growth. */

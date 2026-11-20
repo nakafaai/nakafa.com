@@ -1,6 +1,7 @@
 import { Array as Arr, Option, Record as Rec } from "effect";
 import { unitOf } from "@/lib/island/noise";
-import { colorOf, type Ramp, type Tone } from "@/lib/island/palette";
+import type { Ramp, Tone } from "@/lib/island/palette";
+import { colorOf } from "@/lib/island/palette";
 
 /** The side of a tile in art pixels. */
 export const TILE = 16;

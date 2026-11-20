@@ -8,11 +8,8 @@ import {
 import { loginAddress } from "@repo/backend/confect/identity/address";
 import { CLAIM_PAGE_SIZE } from "@repo/backend/confect/tenancy/claims";
 import { NEW_TENANT_POLICIES } from "@repo/backend/confect/tenancy/policy";
-import {
-  type Account,
-  Email,
-  INVITE_TERM,
-} from "@repo/backend/confect/tenancy/schema";
+import type { Account } from "@repo/backend/confect/tenancy/schema";
+import { Email, INVITE_TERM } from "@repo/backend/confect/tenancy/schema";
 import {
   actedAt,
   invitePerson,

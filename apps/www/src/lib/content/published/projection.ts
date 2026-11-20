@@ -1,10 +1,8 @@
 import { ArticleProjectionSchema } from "@nakafa/aksara-contracts/projection/article";
 import { PublicPageProjectionSchema } from "@nakafa/aksara-contracts/projection/page";
 import { Effect, Schema } from "effect";
-import {
-  PublishedProjectionError,
-  type PublishedProjectionIdentity,
-} from "@/lib/content/published/errors";
+import type { PublishedProjectionIdentity } from "@/lib/content/published/errors";
+import { PublishedProjectionError } from "@/lib/content/published/errors";
 
 /** Decodes one exact article projection selected by its public identity. */
 export const decodePublishedArticle = Effect.fn(

@@ -1,4 +1,5 @@
-import { expect, type Page, test } from "@playwright/test";
+import type { Page } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import { NINA_FILE_COUNT } from "@repo/backend/client/nina/uploads";
 import { Array as Arr, Duration, Effect, Order } from "effect";
 import {

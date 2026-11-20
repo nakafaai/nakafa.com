@@ -5,7 +5,8 @@ import {
 import { Effect, Schema } from "effect";
 import { clientEnv } from "@/env.public";
 import { reportClientException } from "@/lib/analytics/client";
-import { type SignOutFailed, signOutSession } from "@/lib/auth/client";
+import type { SignOutFailed } from "@/lib/auth/client";
+import { signOutSession } from "@/lib/auth/client";
 import { holdSession, releaseSession } from "@/lib/auth/session";
 import { readConvexClient } from "@/lib/convex/client";
 

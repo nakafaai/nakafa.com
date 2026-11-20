@@ -2,11 +2,8 @@ import "@tanstack/react-start/server-only";
 import { ProgramNavigationIconKeySchema } from "@nakafa/aksara-contracts/program/spec";
 import { getLessonIcons } from "@repo/contents/curriculum/lesson";
 import { getMaterialIcons } from "@repo/contents/curriculum/material";
-import {
-  getTileLooks,
-  type TileLook,
-  type TileRow,
-} from "@repo/design-system/lib/look";
+import type { TileLook, TileRow } from "@repo/design-system/lib/look";
+import { getTileLooks } from "@repo/design-system/lib/look";
 import { Array as Arr, Schema, Tuple } from "effect";
 import { CURRICULUM_NAVIGATION_ICONS } from "@/lib/curriculum/icons";
 import type { CurriculumViewRoute } from "@/lib/curriculum/model";

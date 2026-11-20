@@ -5,11 +5,8 @@ import { DEADLINE_GRACE_MS } from "@repo/backend/confect/assessment/gate/deadlin
 import { sweepTryoutDeadlines } from "@repo/backend/confect/tryouts/deadline";
 import { TRYOUT_ATTEMPT_WINDOW } from "@repo/backend/confect/tryouts/window";
 import { inMutation } from "@repo/backend/test/client";
-import {
-  TRYOUT_NOW,
-  type TryoutWorld,
-  tryoutWorld,
-} from "@repo/backend/test/tryout/world";
+import type { TryoutWorld } from "@repo/backend/test/tryout/world";
+import { TRYOUT_NOW, tryoutWorld } from "@repo/backend/test/tryout/world";
 import { Array as Arr, Duration, Effect } from "effect";
 
 const ATTEMPT_END = TRYOUT_NOW + Duration.toMillis(TRYOUT_ATTEMPT_WINDOW);

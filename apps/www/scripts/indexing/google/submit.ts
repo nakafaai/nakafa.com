@@ -1,10 +1,7 @@
 import { NETWORK_ATTEMPT_DEADLINE } from "@repo/backend/client/network";
 import { Effect, MutableList, Option, Result } from "effect";
-import {
-  HttpClient,
-  HttpClientRequest,
-  type HttpClientResponse,
-} from "effect/http";
+import type { HttpClientResponse } from "effect/http";
+import { HttpClient, HttpClientRequest } from "effect/http";
 import { GoogleIndexSubmitError } from "@/scripts/indexing/errors";
 
 const RATE_LIMIT_DELAY = 1000;

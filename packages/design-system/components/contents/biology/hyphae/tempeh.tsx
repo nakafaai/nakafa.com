@@ -1,8 +1,8 @@
+import type { Segment } from "@repo/design-system/components/contents/biology/hyphae/growth";
 import {
   coverOf,
   growOf,
   lengthOf,
-  type Segment,
   SegmentSchema,
   sporesOf,
   TEMPEH,
@@ -26,7 +26,8 @@ import { BIOLOGY_COLORS } from "@repo/design-system/lib/material/biology";
 import { ECOLOGY_COLORS } from "@repo/design-system/lib/material/ecology";
 import { Array as Arr, Schema } from "effect";
 import type p5 from "p5";
-import { type ReactNode, useMemo, useState } from "react";
+import type { ReactNode } from "react";
+import { useMemo, useState } from "react";
 
 /** Growth is worked out a quarter of an hour at a time. */
 const STEP_HOURS = 0.25;

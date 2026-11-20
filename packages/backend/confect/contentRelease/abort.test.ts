@@ -18,10 +18,8 @@ import {
 import { insertTestArtifact } from "@repo/backend/test/content/artifact";
 import { testProjectionJson } from "@repo/backend/test/content/material";
 import { TEST_DIGEST, testTextHash } from "@repo/backend/test/content/release";
-import {
-  insertZeroRelease,
-  type TestIdentity,
-} from "@repo/backend/test/content/state";
+import type { TestIdentity } from "@repo/backend/test/content/state";
+import { insertZeroRelease } from "@repo/backend/test/content/state";
 import { convexTest } from "convex-test";
 import { DateTime, Effect } from "effect";
 

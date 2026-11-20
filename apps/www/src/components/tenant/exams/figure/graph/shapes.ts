@@ -1,7 +1,5 @@
-import {
-  MathAppearanceSchema,
-  type PlanePoint,
-} from "@nakafa/aksara-contracts/math/base";
+import type { PlanePoint } from "@nakafa/aksara-contracts/math/base";
+import { MathAppearanceSchema } from "@nakafa/aksara-contracts/math/base";
 import type { FormulaScope } from "@nakafa/aksara-contracts/math/formula/compile";
 import {
   readFormula,

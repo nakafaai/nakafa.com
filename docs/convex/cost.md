@@ -10,14 +10,14 @@ of a full monthly invoice.
 
 The Convex usage screen for 2026-06-12 through 2026-07-12 showed:
 
-| Resource | Usage | Included | On demand |
-| --- | ---: | ---: | ---: |
-| Function calls | 9.8M | 25M | 0 |
-| Action compute | 1.1 GB-hours | 250 GB-hours | 0 |
-| Database storage | 741.39 MB | 50 GB | 0 |
-| Database I/O | 108.03 GB | 50 GB | 58.03 GB |
-| File storage | 7.68 MB | 100 GB | 0 |
-| Data egress | 90.08 MB | 50 GB | 0 |
+| Resource         |        Usage |     Included | On demand |
+| ---------------- | -----------: | -----------: | --------: |
+| Function calls   |         9.8M |          25M |         0 |
+| Action compute   | 1.1 GB-hours | 250 GB-hours |         0 |
+| Database storage |    741.39 MB |        50 GB |         0 |
+| Database I/O     |    108.03 GB |        50 GB |  58.03 GB |
+| File storage     |      7.68 MB |       100 GB |         0 |
+| Data egress      |     90.08 MB |        50 GB |         0 |
 
 Database I/O was the only visible overage. At the observed US Professional rate
 of $0.20 per additional GB, 58.03 GB is approximately $11.61. Added to the $25
@@ -157,10 +157,10 @@ acceptance backend, which holds a real Aksara release at a pinned revision (219
 lessons; production has 1,149). The second build restored the first one's read store.
 Database I/O is summed from the backend's function log (`usageStats`):
 
-| Build | Calls | Database I/O |
-| --- | ---: | ---: |
-| First build of the release, empty store | 5,376 | 151.3 MB |
-| Second build of the same release, store restored | 191 | 0.71 MB |
+| Build                                            | Calls | Database I/O |
+| ------------------------------------------------ | ----: | -----------: |
+| First build of the release, empty store          | 5,376 |     151.3 MB |
+| Second build of the same release, store restored |   191 |      0.71 MB |
 
 - The second build read only the try-out set windows that stay live (36 calls,
   0.68 MB) and the crons.
@@ -176,21 +176,21 @@ release's signed frame once and each artifact once by its hash, which no later r
 changes. The same proof, run through `slot.sh` on #2280 at 1fa651a013 with main at
 28254a5ccb, built the same pinned release three times through one read store:
 
-| Build | Calls | Database I/O |
-| --- | ---: | ---: |
-| First build of the release, empty store | 5,577 | 154.1 MB |
-| Second build of the same release, store restored | 244 | 1.41 MB |
-| Third build of the same release | 203 | 0.71 MB |
+| Build                                            | Calls | Database I/O |
+| ------------------------------------------------ | ----: | -----------: |
+| First build of the release, empty store          | 5,577 |     154.1 MB |
+| Second build of the same release, store restored |   244 |      1.41 MB |
+| Third build of the same release                  |   203 |      0.71 MB |
 
 The first build, split by how the store keys each function's answers
 (`querySnapshotContentStore`, `readImmutableContentStore`, and the release for the
 rest), shows what a later release reads again:
 
-| Keyed by | Calls | Database I/O | Read again by a new release |
-| --- | ---: | ---: | --- |
-| A family snapshot | 1,200 | 106.6 MB | only when that snapshot changed |
-| The release, or read live | 3,856 | 35.5 MB | always |
-| An artifact's hash | 225 | 12.0 MB | only for a changed body |
+| Keyed by                  | Calls | Database I/O | Read again by a new release     |
+| ------------------------- | ----: | -----------: | ------------------------------- |
+| A family snapshot         | 1,200 |     106.6 MB | only when that snapshot changed |
+| The release, or read live | 3,856 |      35.5 MB | always                          |
+| An artifact's hash        |   225 |      12.0 MB | only for a changed body         |
 
 - A new release that keeps every artifact and snapshot reads about 35.5 MB here,
   against 48.8 MB before (151.3 MB less the 102.5 MB of snapshot reads above), 27%
@@ -213,11 +213,11 @@ reads (0.02 GB a day) and the release's publish proofs (about 0.09 GB a release)
 release is 0.57 GB at production size (8 November); the later rows scale that by the
 local shares above, so they are projections until a production deploy measures them.
 
-| After | Per new release | Per redeploy | Month | Month at 10x content |
-| --- | ---: | ---: | ---: | ---: |
-| #2254 and #2263 | 0.57 GB | about 3 MB | about 23 GB | about 225 GB |
-| #2264, a release that keeps the program and Quran snapshots | about 0.18 GB | about 3 MB | about 12 GB | about 110 GB |
-| #2280, a release that also keeps its artifacts | about 0.13 GB | about 3 MB | about 10 GB | about 95 GB |
+| After                                                       | Per new release | Per redeploy |       Month | Month at 10x content |
+| ----------------------------------------------------------- | --------------: | -----------: | ----------: | -------------------: |
+| #2254 and #2263                                             |         0.57 GB |   about 3 MB | about 23 GB |         about 225 GB |
+| #2264, a release that keeps the program and Quran snapshots |   about 0.18 GB |   about 3 MB | about 12 GB |         about 110 GB |
+| #2280, a release that also keeps its artifacts              |   about 0.13 GB |   about 3 MB | about 10 GB |          about 95 GB |
 
 Today's rate fits the plan once #2254 deploys. Ten times the content does not, because
 four reads still grow with content:
@@ -276,12 +276,12 @@ original function names for cost comparison. They are not current interfaces.
 A fresh production sample after the content read changes contained 745 completed
 executions, about 3.5 MB read, and zero errors:
 
-| Function | Calls | Approximate bytes read |
-| --- | ---: | ---: |
-| `getCurriculumPage` | 249 | 2.36 MB |
-| `getContentRouteArtifactPage` | 14 | 577 KB |
-| `getContentRoute` | 457 | 365 KB |
-| `getArticlePage` | 7 | 184 KB |
+| Function                      | Calls | Approximate bytes read |
+| ----------------------------- | ----: | ---------------------: |
+| `getCurriculumPage`           |   249 |                2.36 MB |
+| `getContentRouteArtifactPage` |    14 |                 577 KB |
+| `getContentRoute`             |   457 |                 365 KB |
+| `getArticlePage`              |     7 |                 184 KB |
 
 The corresponding development sample was dominated by deliberate reset,
 migration, Quran rebuild, and integrity verification work. It must not be used
@@ -313,22 +313,22 @@ as a normal-traffic projection.
 Read from the Convex Usage page on 2026-10-11 (team Nakafa, Professional plan, all
 projects). Only Database I/O was over what the plan includes.
 
-| Resource | Usage | Included | On demand |
-| --- | ---: | ---: | ---: |
-| Function calls | 2.2M | 25M | 0 |
-| Action compute | 10 GB-hours | 250 GB-hours | 0 |
-| Database storage | 8.52 GB | 50 GB | 0 |
-| Database I/O | 92.9 GB (reads 86.78 GB, writes 6.11 GB) | 50 GB | 42.9 GB |
-| Data egress | 2.31 GB | 50 GB | 0 |
+| Resource         |                                    Usage |     Included | On demand |
+| ---------------- | ---------------------------------------: | -----------: | --------: |
+| Function calls   |                                     2.2M |          25M |         0 |
+| Action compute   |                              10 GB-hours | 250 GB-hours |         0 |
+| Database storage |                                  8.52 GB |        50 GB |         0 |
+| Database I/O     | 92.9 GB (reads 86.78 GB, writes 6.11 GB) |        50 GB |   42.9 GB |
+| Data egress      |                                  2.31 GB |        50 GB |         0 |
 
 Database I/O by the group of functions that caused it:
 
-| Group | GB | What it is |
-| --- | ---: | --- |
-| Content release pipeline | 36.9 (production 26.95, dev 9.95) | Publishing from Aksara: staging, proof, compaction, heads, rollback preparation |
-| Runtime reads | about 34 | Serving `www`, `api` and `mcp`: lesson, navigation, sitemap, ownership, catalog |
-| Exports and one-off queries | 13.8 | `snapshot_export` 8.92 (dev 0.96), queries run from the dashboard, the CLI or a connector 3.02, the dashboard itself 0.87 |
-| Popularity pipeline | 3.27 | Eight windows in two scopes, of which the homepage read one |
+| Group                       |                                GB | What it is                                                                                                                |
+| --------------------------- | --------------------------------: | ------------------------------------------------------------------------------------------------------------------------- |
+| Content release pipeline    | 36.9 (production 26.95, dev 9.95) | Publishing from Aksara: staging, proof, compaction, heads, rollback preparation                                           |
+| Runtime reads               |                          about 34 | Serving `www`, `api` and `mcp`: lesson, navigation, sitemap, ownership, catalog                                           |
+| Exports and one-off queries |                              13.8 | `snapshot_export` 8.92 (dev 0.96), queries run from the dashboard, the CLI or a connector 3.02, the dashboard itself 0.87 |
+| Popularity pipeline         |                              3.27 | Eight windows in two scopes, of which the homepage read one                                                               |
 
 Quiet days used 1.0 to 2.6 GB. The days above that were content releases and
 exports: about 9.5 GB on 13 September, 10.5 GB on 24 September, 9.3 GB on
@@ -361,15 +361,15 @@ were not measured, so these are ratios to carry into the next invoice, not
 invoice figures. The last column names the committed test that pins the
 documents read after the change.
 
-| Read | Fixture | Before | After | Pinned by |
-| --- | --- | ---: | ---: | --- |
-| Staging four projections | four staged items | 16 documents, 21,347 bytes | 12 documents, 17,739 bytes | `projection.test.ts`: 12 |
-| Saved curriculum program (`getCurrent`) | six programs | 16 documents, 17,371 bytes | 5 documents, 5,988 bytes | `program.test.ts`: 5 |
-| Featured try-out question | real SNBT set 1: seven sections, twenty landing questions | 34 documents, 60,975 bytes | unchanged | `featured.test.ts`: 34 |
-| Idle compaction tick | 40 retained releases | 40 documents, 185,588 bytes | 2 documents, 4,655 bytes | `compact.test.ts`: 2 |
-| One more view of a known lesson | ten lessons, five days of signals | 101 documents, 115,371 bytes, 27 writes | 17 documents, 18,169 bytes, 6 writes | `apply.test.ts`: 16 on one lesson |
-| Daily popularity expiry | the same ten lessons | 14 pages, 112 documents, 76,104 bytes | 1 page, 12 documents, 8,820 bytes | `refresh.test.ts`: 15 on one lesson |
-| Weekly popularity repair | the same ten lessons | 14 pages, 714 documents, 621,839 bytes | 1 page, 62 documents, 52,020 bytes | `refresh.test.ts`: 21 on one lesson |
+| Read                                    | Fixture                                                   |                                  Before |                                After | Pinned by                           |
+| --------------------------------------- | --------------------------------------------------------- | --------------------------------------: | -----------------------------------: | ----------------------------------- |
+| Staging four projections                | four staged items                                         |              16 documents, 21,347 bytes |           12 documents, 17,739 bytes | `projection.test.ts`: 12            |
+| Saved curriculum program (`getCurrent`) | six programs                                              |              16 documents, 17,371 bytes |             5 documents, 5,988 bytes | `program.test.ts`: 5                |
+| Featured try-out question               | real SNBT set 1: seven sections, twenty landing questions |              34 documents, 60,975 bytes |                            unchanged | `featured.test.ts`: 34              |
+| Idle compaction tick                    | 40 retained releases                                      |             40 documents, 185,588 bytes |             2 documents, 4,655 bytes | `compact.test.ts`: 2                |
+| One more view of a known lesson         | ten lessons, five days of signals                         | 101 documents, 115,371 bytes, 27 writes | 17 documents, 18,169 bytes, 6 writes | `apply.test.ts`: 16 on one lesson   |
+| Daily popularity expiry                 | the same ten lessons                                      |   14 pages, 112 documents, 76,104 bytes |    1 page, 12 documents, 8,820 bytes | `refresh.test.ts`: 15 on one lesson |
+| Weekly popularity repair                | the same ten lessons                                      |  14 pages, 714 documents, 621,839 bytes |   1 page, 62 documents, 52,020 bytes | `refresh.test.ts`: 21 on one lesson |
 
 The three popularity rows were measured once, before and after the change, on a
 fixture of ten lessons with five days of signals, four of them also viewed
@@ -419,17 +419,17 @@ documents and bytes the way the backend does. The last column names the committe
 test that pins the documents. The bytes come from the same runs and are not
 pinned, because they move with the text of the fixture.
 
-| Operation | Documents read | Documents written | Bytes read | Bytes written | Pinned by |
-| --- | ---: | ---: | ---: | ---: | --- |
-| First build of the release | 71 | 37 | 74,188 | 204,422 | `build.test.ts`: 71 and 37 |
-| Build of the same release again | 63 | 0 | 60,891 | 0 | `build.test.ts`: 63 and 0 |
-| Build of a new release that changed nothing | 64 | 1 | 61,027 | 136 | `build.test.ts`: 64 and 1 |
-| New release, one section of one lesson edited | 77 | 3 | 130,953 | 7,934 | `build.test.ts`: 77 and 3 |
-| New release, a section inserted in a lesson | 80 | 7 | 153,443 | 37,817 | `build.test.ts`: 80 and 7 |
-| Gate of a search (`state.ready`) | 2 | 0 | 912 | 0 | `state.test.ts`: 2 |
-| `hits.resolve` with one hit | 6 | 0 | 16,787 | 0 | `hits.test.ts`: 6 |
-| Each more section of the same document | 1 | 0 | | | `hits.test.ts`: 1 |
-| Each more document among the hits | 6 | 0 | | | `hits.test.ts`: 6 |
+| Operation                                     | Documents read | Documents written | Bytes read | Bytes written | Pinned by                  |
+| --------------------------------------------- | -------------: | ----------------: | ---------: | ------------: | -------------------------- |
+| First build of the release                    |             71 |                37 |     74,188 |       204,422 | `build.test.ts`: 71 and 37 |
+| Build of the same release again               |             63 |                 0 |     60,891 |             0 | `build.test.ts`: 63 and 0  |
+| Build of a new release that changed nothing   |             64 |                 1 |     61,027 |           136 | `build.test.ts`: 64 and 1  |
+| New release, one section of one lesson edited |             77 |                 3 |    130,953 |         7,934 | `build.test.ts`: 77 and 3  |
+| New release, a section inserted in a lesson   |             80 |                 7 |    153,443 |        37,817 | `build.test.ts`: 80 and 7  |
+| Gate of a search (`state.ready`)              |              2 |                 0 |        912 |             0 | `state.test.ts`: 2         |
+| `hits.resolve` with one hit                   |              6 |                 0 |     16,787 |             0 | `hits.test.ts`: 6          |
+| Each more section of the same document        |              1 |                 0 |            |               | `hits.test.ts`: 1          |
+| Each more document among the hits             |              6 |                 0 |            |               | `hits.test.ts`: 6          |
 
 **What a build writes.** The first build writes 27 sections, 9 records of the
 version each document was made from, and the record that the build finished. A
@@ -496,14 +496,15 @@ distinct document, once however many of its sections rank). One hit costs 6 docu
 second section of the same document 1 more, and a section of another document 6
 more; all three are pinned in `hits.test.ts`. A search that ranks many documents
 reads far more than the one hit of the table: by the constants, up to 2 + 32 + 32
-+ 24 + 5 times 24, which is 210 documents for one question, and Nina may put up
-to four questions to the index in one search, so up to 840 (computed from
-`CANDIDATES_PER_LEG`, `SEARCH_VERIFY_SLACK`, `SECTION_CANDIDATES`, and
-`NAKAFA_AGENT_MAX_QUERIES`, not measured). A row is read whole with its vector:
-7.7 KB in the fixture, and up to about 31 KB for a Quran passage, so one question
-may read 0.5 MB to 2 MB of rows. A search over all kinds of content also runs the
-word search for try-outs once, which is not counted here. While the index may not
-answer, a search costs the 2 documents of the gate and no embedding call.
+
+- 24 + 5 times 24, which is 210 documents for one question, and Nina may put up
+  to four questions to the index in one search, so up to 840 (computed from
+  `CANDIDATES_PER_LEG`, `SEARCH_VERIFY_SLACK`, `SECTION_CANDIDATES`, and
+  `NAKAFA_AGENT_MAX_QUERIES`, not measured). A row is read whole with its vector:
+  7.7 KB in the fixture, and up to about 31 KB for a Quran passage, so one question
+  may read 0.5 MB to 2 MB of rows. A search over all kinds of content also runs the
+  word search for try-outs once, which is not counted here. While the index may not
+  answer, a search costs the 2 documents of the gate and no embedding call.
 
 ### Recovery evidence
 
@@ -529,12 +530,12 @@ and from the dashboard's backup API (`get_periodic_backup_config` and
   cron does.
 - Every backup and export of the period ran on 7 November, by hand, from a lane:
 
-| Deployment | Job | Database I/O |
-| --- | --- | ---: |
-| production | `cloud_backup`, 17:03 UTC, with file storage | 674 MB |
-| production | `cloud_backup`, 22:55 UTC, without file storage | 40 MB |
-| production | `snapshot_export` | 674 MB and 40 MB |
-| development | `snapshot_export` | 591 MB |
+| Deployment  | Job                                             |     Database I/O |
+| ----------- | ----------------------------------------------- | ---------------: |
+| production  | `cloud_backup`, 17:03 UTC, with file storage    |           674 MB |
+| production  | `cloud_backup`, 22:55 UTC, without file storage |            40 MB |
+| production  | `snapshot_export`                               | 674 MB and 40 MB |
+| development | `snapshot_export`                               |           591 MB |
 
 - That is 2.0 GB of the period's 91 GB of reads, on one day. The production export rows
   match the two backups byte for byte, so the usage API may count each backup twice; the

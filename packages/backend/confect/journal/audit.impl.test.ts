@@ -2,11 +2,8 @@ import type { GenericId } from "@confect/core";
 import { describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
 import { DatabaseWriter } from "@repo/backend/confect/_generated/services";
-import {
-  ChangeView,
-  SubjectView,
-  type TenantActor,
-} from "@repo/backend/confect/journal/schema";
+import type { TenantActor } from "@repo/backend/confect/journal/schema";
+import { ChangeView, SubjectView } from "@repo/backend/confect/journal/schema";
 import type { Contract } from "@repo/backend/confect/tenancy/contract";
 import { slugOf, tenancyFixture } from "@repo/backend/test/tenancy";
 import { Array as Arr, Effect, Exit, Option, Schema } from "effect";

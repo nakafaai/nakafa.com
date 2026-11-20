@@ -1,10 +1,5 @@
-import {
-  type Browser,
-  expect,
-  type Locator,
-  type Page,
-  test,
-} from "@playwright/test";
+import type { Browser, Locator, Page } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import { Array as Arr, Effect, Record as Rec } from "effect";
 import { pinnedRoutes } from "@/e2e/support/corpus";
 import { runFirstSection } from "@/e2e/support/player";

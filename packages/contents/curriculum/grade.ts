@@ -1,4 +1,5 @@
-import { type Grade, NON_NUMERIC_GRADES } from "@repo/contents/taxonomy";
+import type { Grade } from "@repo/contents/taxonomy";
+import { NON_NUMERIC_GRADES } from "@repo/contents/taxonomy";
 import { Schema } from "effect";
 
 const NonNumericGradeSchema = Schema.Literals(NON_NUMERIC_GRADES);

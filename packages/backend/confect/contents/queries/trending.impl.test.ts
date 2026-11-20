@@ -4,10 +4,8 @@ import {
 } from "@confect/server";
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import { PublicPathSchema } from "@nakafa/aksara-contracts/ids";
-import {
-  type MaterialLessonProjection,
-  MaterialLessonProjectionSchema,
-} from "@nakafa/aksara-contracts/projection/material";
+import type { MaterialLessonProjection } from "@nakafa/aksara-contracts/projection/material";
+import { MaterialLessonProjectionSchema } from "@nakafa/aksara-contracts/projection/material";
 import confectSchema from "@repo/backend/confect/_generated/schema";
 import { QueryCtx as QueryCtxService } from "@repo/backend/confect/_generated/services";
 import { POPULARITY_WINDOW } from "@repo/backend/confect/contents/popularity";

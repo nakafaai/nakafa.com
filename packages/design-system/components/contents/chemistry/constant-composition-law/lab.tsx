@@ -1,8 +1,8 @@
 import { useThree } from "@react-three/fiber";
+import type { ConstantCompositionModeId } from "@repo/design-system/components/contents/chemistry/constant-composition-law/data";
 import {
   CONSTANT_COMPOSITION_MODE_IDS,
   CONSTANT_COMPOSITION_SCENE_VIEW,
-  type ConstantCompositionModeId,
   EXACT_RATIO_MODE_ID,
   getConstantCompositionSceneColors,
   isConstantCompositionModeId,

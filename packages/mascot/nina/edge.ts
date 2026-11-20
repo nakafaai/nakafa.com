@@ -1,5 +1,6 @@
 import type { Curve } from "@repo/mascot/nina/limb";
-import { armLeft, armRight, type Pose, REST } from "@repo/mascot/nina/pose";
+import type { Pose } from "@repo/mascot/nina/pose";
+import { armLeft, armRight, REST } from "@repo/mascot/nina/pose";
 import { Schema } from "effect";
 
 /**

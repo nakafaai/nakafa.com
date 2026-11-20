@@ -2,11 +2,11 @@ import { Id } from "@repo/backend/confect/_generated/id";
 import { NinaMemoryView } from "@repo/backend/confect/nina/memory.spec";
 import { Array as Arr, Record as Rec, Schema } from "effect";
 import { createStore } from "zustand";
-import {
-  editedMemory,
-  type Memory,
-  type MemoryDraft,
+import type {
+  Memory,
+  MemoryDraft,
 } from "@/components/user/settings/memory/list";
+import { editedMemory } from "@/components/user/settings/memory/list";
 
 /** The title and words an editor holds. */
 const DraftSchema = Schema.Struct({

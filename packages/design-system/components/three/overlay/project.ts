@@ -1,10 +1,6 @@
 import type { Size } from "@react-three/fiber";
-import {
-  type Camera,
-  OrthographicCamera,
-  PerspectiveCamera,
-  Vector3,
-} from "three";
+import type { Camera } from "three";
+import { OrthographicCamera, PerspectiveCamera, Vector3 } from "three";
 
 /**
  * Projects a world point to CSS pixels with the origin at the top left of the

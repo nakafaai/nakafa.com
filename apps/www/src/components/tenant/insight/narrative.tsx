@@ -8,15 +8,11 @@ import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-d
 import { Textarea } from "@repo/design-system/components/ui/textarea";
 import { useRequired } from "@repo/design-system/hooks/required";
 import { Array as Arr, Option } from "effect";
-import {
-  createContext,
-  type ReactNode,
-  useOptimistic,
-  useState,
-  useTransition,
-} from "react";
+import type { ReactNode } from "react";
+import { createContext, useOptimistic, useState, useTransition } from "react";
 import { useTranslations } from "use-intl";
-import { createStore, type StoreApi, useStore } from "zustand";
+import type { StoreApi } from "zustand";
+import { createStore, useStore } from "zustand";
 import { RowItems } from "@/components/shared/table/menu";
 import { useTenant, useViewerQuery } from "@/components/tenant/context";
 import type { InsightStudent } from "@/components/tenant/insight/rows";

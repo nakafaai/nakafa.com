@@ -6,8 +6,8 @@ import {
   createCircleSegmentBoundaryLines,
 } from "@repo/design-system/components/contents/mathematics/circle";
 import { createCuboidLines } from "@repo/design-system/components/contents/mathematics/cuboid";
+import type { CurveBranch } from "@repo/design-system/components/contents/mathematics/line/curve";
 import {
-  type CurveBranch,
   CurveError,
   CurveSchema,
   sampleCurve,

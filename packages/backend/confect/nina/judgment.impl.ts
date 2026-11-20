@@ -3,9 +3,8 @@ import schema from "@repo/backend/confect/_generated/schema";
 import { GatewayLive } from "@repo/backend/confect/gateway/live";
 import { judgments } from "@repo/backend/confect/nina/judgment/catalog";
 import { measureTexts } from "@repo/backend/confect/nina/judgment/measure";
-import spec, {
-  type measureResultValidator,
-} from "@repo/backend/confect/nina/judgment.spec";
+import type { measureResultValidator } from "@repo/backend/confect/nina/judgment.spec";
+import spec from "@repo/backend/confect/nina/judgment.spec";
 import { meterOf } from "@repo/backend/confect/spend/meter";
 import { Effect, Layer, Record as Rec, Struct } from "effect";
 

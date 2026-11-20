@@ -1,6 +1,6 @@
 import { PendulumScene } from "@repo/design-system/components/contents/physics/renewable-energy/pendulum/scene";
+import type { Drag } from "@repo/design-system/components/contents/physics/renewable-energy/pendulum/swing";
 import {
-  type Drag,
   DragSchema,
   START_ENERGY,
   simulateSwing,
@@ -31,7 +31,8 @@ import {
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr, Schema } from "effect";
-import { type ReactNode, Suspense, useMemo, useState } from "react";
+import type { ReactNode } from "react";
+import { Suspense, useMemo, useState } from "react";
 
 /** The moment the facts read, in seconds after the release. */
 const READ_TIME = 10;

@@ -33,10 +33,8 @@ import { SchoolCohortTable } from "@/components/tenant/settings/cohort/table";
 import { createCohortChange } from "@/components/tenant/settings/groups";
 import { SettingsTablePage } from "@/components/tenant/settings/section";
 import type { Period } from "@/components/tenant/settings/state";
-import {
-  SchoolUnitChoice,
-  type UnitId,
-} from "@/components/tenant/settings/unit";
+import type { UnitId } from "@/components/tenant/settings/unit";
+import { SchoolUnitChoice } from "@/components/tenant/settings/unit";
 import { NoActiveUnit } from "@/components/tenant/settings/unitless";
 import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 import { Link } from "@/lib/routing/link";

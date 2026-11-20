@@ -1,4 +1,5 @@
-import { docsToModelMessages, type MessageDoc } from "@convex-dev/agent";
+import type { MessageDoc } from "@convex-dev/agent";
+import { docsToModelMessages } from "@convex-dev/agent";
 
 /**
  * The model messages of stored rows that are already opened. A row converts only

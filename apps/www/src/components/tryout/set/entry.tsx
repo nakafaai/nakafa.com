@@ -15,10 +15,8 @@ import {
   TryoutReviewFrame,
 } from "@/components/tryout/review/frame";
 import { useTryoutStartPhase } from "@/components/tryout/runtime/start";
-import {
-  isTryoutRuntimeRunning,
-  type TryoutRuntimeState,
-} from "@/components/tryout/runtime/state";
+import type { TryoutRuntimeState } from "@/components/tryout/runtime/state";
+import { isTryoutRuntimeRunning } from "@/components/tryout/runtime/state";
 import { TryoutAttemptPicker } from "@/components/tryout/score/history";
 import { TryoutSummaryAction } from "@/components/tryout/section/action";
 import { getTryoutFinishedSectionStatus } from "@/components/tryout/section/finished";

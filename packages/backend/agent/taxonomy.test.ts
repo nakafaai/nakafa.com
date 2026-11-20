@@ -11,7 +11,8 @@ import {
   encodeTestQuranRow,
   makeQuranSurah,
 } from "@repo/backend/test/quran/rows";
-import { type FunctionReturnType, getFunctionName } from "convex/server";
+import type { FunctionReturnType } from "convex/server";
+import { getFunctionName } from "convex/server";
 import { Array as Arr, Effect } from "effect";
 
 const PIN = {

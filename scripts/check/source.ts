@@ -7,8 +7,8 @@ import {
   Schema,
   String as Str,
 } from "effect";
+import type { Identifier, Node, SourceFile } from "tsrs/ast";
 import {
-  type Identifier,
   isCallExpression,
   isExportDeclaration,
   isExpressionWithTypeArguments,
@@ -17,12 +17,11 @@ import {
   isLiteralTypeNode,
   isShorthandPropertyAssignment,
   isTypeNode,
-  type Node,
-  type SourceFile,
   SyntaxKind,
 } from "tsrs/ast";
 import { createFileSystemWithLib } from "tsrs/fs";
-import { API, type Symbol as NativeSymbol, type Snapshot } from "tsrs/sync";
+import type { Symbol as NativeSymbol, Snapshot } from "tsrs/sync";
+import { API } from "tsrs/sync";
 
 /** One authored repository module and its text. */
 export const RepositorySource = Schema.Struct({

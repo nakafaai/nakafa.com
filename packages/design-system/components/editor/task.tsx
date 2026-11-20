@@ -4,10 +4,10 @@ import {
 } from "@repo/design-system/components/editor/frame";
 import { Checkbox } from "@repo/design-system/components/ui/checkbox";
 import { lineMark } from "@repo/design-system/lib/mark";
+import type { ReactNodeViewProps } from "@tiptap/react";
 import {
   NodeViewContent,
   NodeViewWrapper,
-  type ReactNodeViewProps,
   ReactNodeViewRenderer,
   useEditorState,
 } from "@tiptap/react";

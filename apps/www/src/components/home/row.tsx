@@ -5,10 +5,8 @@ import { buttonVariants } from "@repo/design-system/lib/button";
 import { rowLinkVariants } from "@repo/design-system/lib/row";
 import type { ReactNode } from "react";
 import { useTranslations } from "use-intl";
-import {
-  type getPrimaryNavigationItems,
-  getPrimaryNavigationTarget,
-} from "@/components/sidebar/data/navigation";
+import type { getPrimaryNavigationItems } from "@/components/sidebar/data/navigation";
+import { getPrimaryNavigationTarget } from "@/components/sidebar/data/navigation";
 import { TargetLink } from "@/lib/routing/link";
 
 type Item = ReturnType<typeof getPrimaryNavigationItems>[number];

@@ -1,13 +1,11 @@
 import { Array as Arr } from "effect";
+import type { Node, SourceFile, TypeNode } from "tsrs/ast";
 import {
   isAsExpression,
   isIdentifier,
   isNonNullExpression,
   isTypeAssertion,
   isTypeReferenceNode,
-  type Node,
-  type SourceFile,
-  type TypeNode,
 } from "tsrs/ast";
 import { candidate } from "#scripts/check/rules";
 

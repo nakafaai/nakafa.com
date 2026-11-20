@@ -1,5 +1,6 @@
 import type { Locale } from "use-intl";
-import { type ArtworkIdentity, resolveSocialArtwork } from "@/lib/og/artwork";
+import type { ArtworkIdentity } from "@/lib/og/artwork";
+import { resolveSocialArtwork } from "@/lib/og/artwork";
 
 const APP_ARTWORK_IDENTITIES = {
   "ask-nina": "app/ask-nina",

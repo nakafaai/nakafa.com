@@ -1,4 +1,5 @@
-import { expect, type Page } from "@playwright/test";
+import type { Page } from "@playwright/test";
+import { expect } from "@playwright/test";
 import { Effect } from "effect";
 import { activate } from "@/e2e/support/input";
 import { confirmFinish, waitForRunningSection } from "@/e2e/support/player";

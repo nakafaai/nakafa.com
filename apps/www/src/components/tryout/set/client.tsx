@@ -3,7 +3,8 @@ import tryouts from "@repo/backend/confect/_generated/refs/tryouts";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { useRequired } from "@repo/design-system/hooks/required";
 import { Array as Arr, Option } from "effect";
-import { createContext, type ReactNode, useState } from "react";
+import type { ReactNode } from "react";
+import { createContext, useState } from "react";
 import { useLocale } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import type { PlayerMode } from "@/components/player/mode";
@@ -11,17 +12,15 @@ import { useNow } from "@/components/player/now";
 import { ShellLock } from "@/components/sidebar/lock";
 import type { TryoutBody } from "@/components/tryout/content/body";
 import { TryoutContentContext } from "@/components/tryout/content/context";
-import {
-  type TryoutFinish,
-  useTryoutFinish,
-} from "@/components/tryout/player/finish";
+import type { TryoutFinish } from "@/components/tryout/player/finish";
+import { useTryoutFinish } from "@/components/tryout/player/finish";
 import { useTryoutLeave } from "@/components/tryout/route/leave";
 import { selectTryoutSetLinks } from "@/components/tryout/route/owner";
+import type { TryoutPageAddress } from "@/components/tryout/route/path";
 import {
   getTryoutAttemptLock,
   getTryoutPublicPath,
   getTryoutPublicPathHref,
-  type TryoutPageAddress,
 } from "@/components/tryout/route/path";
 import {
   TryoutStartProvider,
@@ -44,10 +43,8 @@ import type {
   TryoutSetRoute,
 } from "@/components/tryout/set/model";
 import { useKeepActionName } from "@/components/tryout/set/name";
-import {
-  TryoutSetOverview,
-  type TryoutSetOverviewProps,
-} from "@/components/tryout/set/overview";
+import type { TryoutSetOverviewProps } from "@/components/tryout/set/overview";
+import { TryoutSetOverview } from "@/components/tryout/set/overview";
 import { useLastValue } from "@/lib/data/kept";
 
 type SetState = TryoutSetInitialState | null;

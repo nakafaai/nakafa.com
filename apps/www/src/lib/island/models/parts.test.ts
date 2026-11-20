@@ -1,6 +1,7 @@
 // @vitest-environment node
 import { describe, expect, it } from "@effect/vitest";
 import { Array as Arr, Option } from "effect";
+import type { Rig } from "@/lib/island/models/parts";
 import {
   boundsOf,
   box,
@@ -10,7 +11,6 @@ import {
   meters,
   mirrored,
   normalOf,
-  type Rig,
   rgb,
   rigged,
   tipped,

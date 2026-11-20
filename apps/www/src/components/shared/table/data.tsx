@@ -5,9 +5,11 @@ import {
   TableCell,
   TableRow,
 } from "@repo/design-system/components/ui/table";
-import { type Cell, type RowData, useTable } from "@tanstack/react-table";
+import type { Cell, RowData } from "@tanstack/react-table";
+import { useTable } from "@tanstack/react-table";
 import { Array as Arr, Option } from "effect";
-import { type ReactNode, use, useState } from "react";
+import type { ReactNode } from "react";
+import { use, useState } from "react";
 import { useTranslations } from "use-intl";
 import { PaneTableRow } from "@/components/shared/page/pane";
 import { useHasPanes } from "@/components/shared/page/panes";
@@ -23,9 +25,9 @@ import { columnFiltersOf } from "@/components/shared/table/filter";
 import { DataTableHead } from "@/components/shared/table/heading";
 import { RowMenu } from "@/components/shared/table/menu";
 import { ColumnHeads } from "@/components/shared/table/panel";
+import type { RemoteList } from "@/components/shared/table/remote";
 import {
   RemoteChoiceContext,
-  type RemoteList,
   remoteSorting,
 } from "@/components/shared/table/remote";
 import {

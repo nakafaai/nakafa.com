@@ -1,4 +1,5 @@
-import { Array as Arr, type Option, Schema } from "effect";
+import type { Option } from "effect";
+import { Array as Arr, Schema } from "effect";
 
 /** The offers Polar sells. Each one is a product on both Polar servers. */
 export const PolarOfferKey = Schema.Literals([

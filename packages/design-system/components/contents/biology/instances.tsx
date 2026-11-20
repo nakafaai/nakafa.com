@@ -1,6 +1,8 @@
 import { Array as Arr, Schema } from "effect";
-import { type ReactNode, useLayoutEffect, useRef } from "react";
-import { Euler, type InstancedMesh, Matrix4, Quaternion, Vector3 } from "three";
+import type { ReactNode } from "react";
+import { useLayoutEffect, useRef } from "react";
+import type { InstancedMesh } from "three";
+import { Euler, Matrix4, Quaternion, Vector3 } from "three";
 
 /** Three coordinates: a position, a direction, a rotation, or a stretch. */
 const TripleSchema = Schema.Tuple([

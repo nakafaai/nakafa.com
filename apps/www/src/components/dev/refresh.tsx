@@ -1,7 +1,5 @@
-import {
-  type LocalPreviewManifest,
-  PreviewEventSchema,
-} from "@nakafa/aksara-contracts/preview/spec";
+import type { LocalPreviewManifest } from "@nakafa/aksara-contracts/preview/spec";
+import { PreviewEventSchema } from "@nakafa/aksara-contracts/preview/spec";
 import { Result, Schema } from "effect";
 import { useEffect } from "react";
 /** Reloads the real route when Aksara finishes a local compilation attempt. */

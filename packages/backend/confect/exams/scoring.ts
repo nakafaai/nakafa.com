@@ -1,11 +1,7 @@
-import {
-  type JointRule,
-  jointCeiling,
-} from "@nakafa/aksara-contracts/assessment/joint";
-import {
-  type DefaultRuleSchema,
-  scoreCeiling,
-} from "@nakafa/aksara-contracts/assessment/scoring";
+import type { JointRule } from "@nakafa/aksara-contracts/assessment/joint";
+import { jointCeiling } from "@nakafa/aksara-contracts/assessment/joint";
+import type { DefaultRuleSchema } from "@nakafa/aksara-contracts/assessment/scoring";
+import { scoreCeiling } from "@nakafa/aksara-contracts/assessment/scoring";
 import type {
   QuestionPoints,
   QuestionTemplate,

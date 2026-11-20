@@ -21,10 +21,8 @@ import {
   SchoolCohortMenu,
   SchoolCohortRestore,
 } from "@/components/tenant/settings/cohort/menu";
-import {
-  type CohortRow,
-  cohortRows,
-} from "@/components/tenant/settings/cohort/rows";
+import type { CohortRow } from "@/components/tenant/settings/cohort/rows";
+import { cohortRows } from "@/components/tenant/settings/cohort/rows";
 import { COHORT_STATUS_LOOKS } from "@/components/tenant/settings/cohort/status";
 import type { Period } from "@/components/tenant/settings/state";
 import { isDraft } from "@/components/tenant/settings/state";

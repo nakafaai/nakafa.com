@@ -1,9 +1,9 @@
 import { Effect, Record as Rec } from "effect";
+import type { SubmissionHistory } from "@/scripts/indexing/history";
 import {
   ensureSubmissionHistoryFolder,
   listUnsubmittedUrls,
   loadSubmissionHistory,
-  type SubmissionHistory,
   saveAcceptedUrls,
 } from "@/scripts/indexing/history";
 import {
@@ -11,10 +11,8 @@ import {
   submitUrlsToBing,
 } from "@/scripts/indexing/indexnow/bing";
 import { submitUrlsToIndexNow } from "@/scripts/indexing/indexnow/submit";
-import {
-  forEachSiteIndexUrlBatch,
-  type SiteIndexManifestSummary,
-} from "@/scripts/indexing/manifest";
+import type { SiteIndexManifestSummary } from "@/scripts/indexing/manifest";
+import { forEachSiteIndexUrlBatch } from "@/scripts/indexing/manifest";
 import {
   INDEXING_HOST,
   INDEXING_HOSTNAME,

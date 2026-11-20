@@ -26,15 +26,10 @@ import { VisualCardSceneActions } from "@repo/design-system/components/visual/sc
 import { getColor } from "@repo/design-system/lib/color";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr } from "effect";
-import {
-  type ReactNode,
-  Suspense,
-  useLayoutEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
-import { Color, type InstancedMesh, Object3D } from "three";
+import type { ReactNode } from "react";
+import { Suspense, useLayoutEffect, useMemo, useRef, useState } from "react";
+import type { InstancedMesh } from "three";
+import { Color, Object3D } from "three";
 import { useFormatter } from "use-intl";
 
 /** How many nuclei stand on each side of the square sample. */

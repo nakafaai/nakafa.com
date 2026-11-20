@@ -1,10 +1,8 @@
 import { FetchClient } from "@repo/utilities/http/client";
 import { DateTime, Effect, MutableRef, Option, Schedule } from "effect";
 import { HttpClient, HttpClientResponse } from "effect/http";
-import {
-  type CurrentWeatherSummary,
-  CurrentWeatherSummarySchema,
-} from "@/lib/weather/schema";
+import type { CurrentWeatherSummary } from "@/lib/weather/schema";
+import { CurrentWeatherSummarySchema } from "@/lib/weather/schema";
 
 /** The longest the browser waits for one attempt at the app's weather route. */
 const WEATHER_ROUTE_TIMEOUT = "10 seconds";

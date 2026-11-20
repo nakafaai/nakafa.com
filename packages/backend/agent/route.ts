@@ -1,5 +1,5 @@
+import type { AgentEdgeContract } from "@repo/backend/agent/edge";
 import {
-  type AgentEdgeContract,
   NAKAFA_API_EDGE_CONTRACT,
   NAKAFA_EDGE_CLIENT_IP_HEADER,
   NAKAFA_EDGE_CLIENT_SOURCE_HEADER,

@@ -1,4 +1,5 @@
 import { Array as Arr, HashMap, Option, Result, String as Str } from "effect";
+import type { Node, SourceFile } from "tsrs/ast";
 import {
   isArrowFunction,
   isBlock,
@@ -14,8 +15,6 @@ import {
   isReturnStatement,
   isStringLiteral,
   isVariableStatement,
-  type Node,
-  type SourceFile,
   SyntaxKind,
 } from "tsrs/ast";
 import { nodesBelow } from "#scripts/check/drilling";

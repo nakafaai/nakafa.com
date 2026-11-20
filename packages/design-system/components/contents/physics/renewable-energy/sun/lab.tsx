@@ -36,7 +36,8 @@ import { ENERGY_COLORS } from "@repo/design-system/lib/material/energy";
 import { ROAD_COLORS } from "@repo/design-system/lib/material/road";
 import { Schema } from "effect";
 import type p5 from "p5";
-import { type ReactNode, useState } from "react";
+import type { ReactNode } from "react";
+import { useState } from "react";
 
 /** The color of the sun's rays. */
 const RAY = ENERGY_COLORS.sunDisc;

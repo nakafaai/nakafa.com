@@ -6,10 +6,8 @@ import {
   ArtifactLocaleSchema,
 } from "@nakafa/aksara-contracts/locale";
 import { hashContentProjection } from "@nakafa/aksara-contracts/projection/hash";
-import {
-  canonicalizeMaterialProjection,
-  type MaterialLessonProjection,
-} from "@nakafa/aksara-contracts/projection/material";
+import type { MaterialLessonProjection } from "@nakafa/aksara-contracts/projection/material";
+import { canonicalizeMaterialProjection } from "@nakafa/aksara-contracts/projection/material";
 import { getHashBucket } from "@repo/backend/confect/contentRelease/bucket";
 import { deriveMaterialTopicReference } from "@repo/backend/confect/contentRelease/material/topic";
 import type { PublicationRow } from "@repo/backend/content/publication/source";

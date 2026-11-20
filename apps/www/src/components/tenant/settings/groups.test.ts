@@ -8,7 +8,8 @@ import {
   removeCohortChange,
   restoreCohortChange,
 } from "@/components/tenant/settings/groups";
-import { isDraft, type Period } from "@/components/tenant/settings/state";
+import type { Period } from "@/components/tenant/settings/state";
+import { isDraft } from "@/components/tenant/settings/state";
 import { createLocalStore } from "@/test/optimistic";
 import { cohort, period, slug } from "@/test/settings";
 

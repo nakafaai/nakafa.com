@@ -1,42 +1,37 @@
-import {
-  type BackgroundVariant,
-  ChartBackground,
-} from "@repo/design-system/components/evilcharts/ui/background";
-import {
-  type ChartBrushOptions,
-  ChartContainer,
-} from "@repo/design-system/components/evilcharts/ui/chart";
-import {
-  type ChartConfig,
-  getLoadingData,
-} from "@repo/design-system/components/evilcharts/ui/chart-config";
+import type { BackgroundVariant } from "@repo/design-system/components/evilcharts/ui/background";
+import { ChartBackground } from "@repo/design-system/components/evilcharts/ui/background";
+import type { ChartBrushOptions } from "@repo/design-system/components/evilcharts/ui/chart";
+import { ChartContainer } from "@repo/design-system/components/evilcharts/ui/chart";
+import type { ChartConfig } from "@repo/design-system/components/evilcharts/ui/chart-config";
+import { getLoadingData } from "@repo/design-system/components/evilcharts/ui/chart-config";
+import type { EvilBrushRange } from "@repo/design-system/components/evilcharts/ui/evil-brush";
 import {
   EvilBrush,
-  type EvilBrushRange,
   useEvilBrush,
 } from "@repo/design-system/components/evilcharts/ui/evil-brush";
+import type { ChartLegendVariant } from "@repo/design-system/components/evilcharts/ui/legend";
 import {
   ChartLegend,
   ChartLegendContent,
-  type ChartLegendVariant,
 } from "@repo/design-system/components/evilcharts/ui/legend";
 import { LegendItemContext } from "@repo/design-system/components/evilcharts/ui/legend-item";
 import { LoadingBar } from "@repo/design-system/components/evilcharts/ui/loading";
 import { LoadingIndicator } from "@repo/design-system/components/evilcharts/ui/loading-indicator";
 import type { OrderedRevealAnimation } from "@repo/design-system/components/evilcharts/ui/reveal-animation";
 import { RevealAnimationSchema } from "@repo/design-system/components/evilcharts/ui/reveal-animation";
+import type {
+  TooltipRoundness,
+  TooltipVariant,
+} from "@repo/design-system/components/evilcharts/ui/tooltip";
 import {
   ChartTooltip,
   ChartTooltipContent,
   ChartTooltipContext,
-  type TooltipRoundness,
-  type TooltipVariant,
 } from "@repo/design-system/components/evilcharts/ui/tooltip";
 import { Schema } from "effect";
+import type { ComponentProps, ReactNode } from "react";
 import {
-  type ComponentProps,
   createContext,
-  type ReactNode,
   use,
   useCallback,
   useId,

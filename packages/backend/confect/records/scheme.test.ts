@@ -1,9 +1,9 @@
 import { describe, expect, it } from "@effect/vitest";
+import type { GradingScheme } from "@repo/backend/confect/records/scheme";
 import {
   bandOf,
   DEFAULT_GRADING_SCHEME,
   GradeValue,
-  type GradingScheme,
   normalizeScheme,
   reachesKktp,
 } from "@repo/backend/confect/records/scheme";

@@ -1,5 +1,6 @@
 import { Array as Arr, Option, Schema } from "effect";
-import { Curve, type CurveProps } from "recharts";
+import type { CurveProps } from "recharts";
+import { Curve } from "recharts";
 
 // Buffer line
 

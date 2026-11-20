@@ -11,10 +11,8 @@ import {
   QueryCtx,
 } from "@repo/backend/confect/_generated/services";
 import { rules } from "@repo/backend/confect/assessment/gate/rules";
-import {
-  PRESENCE_INTERVAL,
-  type PresenceSession,
-} from "@repo/backend/confect/exams/presence";
+import type { PresenceSession } from "@repo/backend/confect/exams/presence";
+import { PRESENCE_INTERVAL } from "@repo/backend/confect/exams/presence";
 import { Sitting } from "@repo/backend/confect/exams/sittings/access";
 import { isAway } from "@repo/backend/confect/exams/sittings/dashboard";
 import {

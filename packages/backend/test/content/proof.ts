@@ -7,11 +7,11 @@ import {
   MDX_COMPILER_VERSION,
   SignedContentArtifactSchema,
 } from "@nakafa/aksara-contracts/content";
+import type { ReleaseId } from "@nakafa/aksara-contracts/ids";
 import {
   ContentKeySchema,
   Ed25519SignatureSchema,
   GitCommitShaSchema,
-  type ReleaseId,
   Sha256HashSchema,
   SigningKeyIdSchema,
 } from "@nakafa/aksara-contracts/ids";
@@ -20,9 +20,9 @@ import {
   ArtifactLocaleSchema,
 } from "@nakafa/aksara-contracts/locale";
 import { digestProjections } from "@nakafa/aksara-contracts/projection/digest";
+import type { ContentReleaseManifest } from "@nakafa/aksara-contracts/release";
 import {
   CONTENT_RELEASE_FORMAT,
-  type ContentReleaseManifest,
   ContentReleaseManifestSchema,
   SignedContentReleaseSchema,
 } from "@nakafa/aksara-contracts/release";

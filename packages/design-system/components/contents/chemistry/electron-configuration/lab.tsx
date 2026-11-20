@@ -1,8 +1,8 @@
 import { getOuterOccupiedShell } from "@repo/design-system/components/contents/chemistry/atom-shell/data";
+import type { ElectronConfigurationSampleId } from "@repo/design-system/components/contents/chemistry/electron-configuration/data";
 import {
   ELECTRON_CONFIGURATION_SAMPLE_IDS,
   ELECTRON_CONFIGURATION_SAMPLES,
-  type ElectronConfigurationSampleId,
   getSimpleShellConfiguration,
   HYDROGEN_ID,
   isElectronConfigurationSampleId,

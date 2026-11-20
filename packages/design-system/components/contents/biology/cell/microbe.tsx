@@ -9,10 +9,8 @@ import {
   Ribosomes,
 } from "@repo/design-system/components/contents/biology/cell/organelles";
 import { HalfShell } from "@repo/design-system/components/contents/biology/cell/parts";
-import {
-  Instances,
-  type Placement,
-} from "@repo/design-system/components/contents/biology/instances";
+import type { Placement } from "@repo/design-system/components/contents/biology/instances";
+import { Instances } from "@repo/design-system/components/contents/biology/instances";
 import { insideBall } from "@repo/design-system/components/contents/biology/virus/capsid";
 import { CELL_COLORS } from "@repo/design-system/lib/material/cell";
 import { Array as Arr } from "effect";

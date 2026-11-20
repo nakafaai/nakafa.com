@@ -20,10 +20,10 @@ import {
   loadIdentityItem,
   loadStaged,
 } from "@repo/backend/confect/contentRelease/model";
+import type { SignedArtifactHeader } from "@repo/backend/confect/contentRelease/parse";
 import {
   decodeArtifactHeaderJson,
   decodeItemJson,
-  type SignedArtifactHeader,
 } from "@repo/backend/confect/contentRelease/parse";
 import { ROLLBACK_RETENTION_MS } from "@repo/backend/confect/contentRelease/spec";
 import { getConvexSize } from "convex/values";

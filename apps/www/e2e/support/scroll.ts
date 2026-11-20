@@ -1,4 +1,5 @@
-import { expect, type Locator, type Page } from "@playwright/test";
+import type { Locator, Page } from "@playwright/test";
+import { expect } from "@playwright/test";
 import { Array as Arr, Effect } from "effect";
 import { waitForFrames } from "@/e2e/support/quiet";
 

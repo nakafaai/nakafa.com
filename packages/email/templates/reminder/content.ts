@@ -1,7 +1,5 @@
-import {
-  type ActiveAppLocaleCode,
-  ActiveAppLocaleCodeSchema,
-} from "@nakafa/aksara-contracts/locale";
+import type { ActiveAppLocaleCode } from "@nakafa/aksara-contracts/locale";
+import { ActiveAppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
 import { legalLabels } from "@repo/email/legal";
 import { EmailUrlSchema } from "@repo/email/url";
 import { isSingleLine } from "@repo/utilities/line";

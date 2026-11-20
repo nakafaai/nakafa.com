@@ -11,11 +11,8 @@ import {
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
-import {
-  type EarlierTurn,
-  plainTurns,
-  seedEarlierTurn,
-} from "@repo/backend/test/nina/history";
+import type { EarlierTurn } from "@repo/backend/test/nina/history";
+import { plainTurns, seedEarlierTurn } from "@repo/backend/test/nina/history";
 import { encodeJsonText } from "@repo/utilities/json";
 import { MockLanguageModelV4 } from "ai/test";
 import { Array as Arr, DateTime, Effect, Option, Schema } from "effect";

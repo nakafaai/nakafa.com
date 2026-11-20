@@ -17,7 +17,8 @@ import {
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { useSidebar } from "@repo/design-system/lib/sidebar/context";
 import type { Mascot } from "@repo/mascot/code";
-import { type ReactNode, useLayoutEffect, useTransition } from "react";
+import type { ReactNode } from "react";
+import { useLayoutEffect, useTransition } from "react";
 import { useTranslations } from "use-intl";
 import { AccountButtonFace } from "@/components/sidebar/menu/face";
 import { useMenuWarm } from "@/components/sidebar/menu/warm";

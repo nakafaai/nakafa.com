@@ -1,12 +1,14 @@
 import { RoundedBox } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
 import { advanceRun } from "@repo/design-system/components/contents/physics/canvas/clock";
+import type {
+  Drag,
+  Swing,
+} from "@repo/design-system/components/contents/physics/renewable-energy/pendulum/swing";
 import {
-  type Drag,
   DURATION,
   LENGTH,
   STEP,
-  type Swing,
   swingAt,
 } from "@repo/design-system/components/contents/physics/renewable-energy/pendulum/swing";
 import { Pipe } from "@repo/design-system/components/contents/physics/renewable-energy/world/parts";

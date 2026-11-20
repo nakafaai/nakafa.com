@@ -1,25 +1,20 @@
 import type { StyleProps } from "@repo/design-system/components/evilcharts/charts/composed/bars";
+import type { DotProps } from "@repo/design-system/components/evilcharts/charts/composed/line";
 import {
   ActiveDot,
   Dot,
-  type DotProps,
 } from "@repo/design-system/components/evilcharts/charts/composed/line";
 import { getOpacity } from "@repo/design-system/components/evilcharts/charts/composed/opacity";
 import { useComposedChart } from "@repo/design-system/components/evilcharts/charts/composed-chart";
+import type { ChartConfig } from "@repo/design-system/components/evilcharts/ui/chart-config";
 import {
-  type ChartConfig,
   getChartColorVariable,
   getChartSeriesId,
   getColorsCount,
 } from "@repo/design-system/components/evilcharts/ui/chart-config";
 import { ChartDot } from "@repo/design-system/components/evilcharts/ui/dot";
-import {
-  Children,
-  type ComponentProps,
-  isValidElement,
-  type ReactNode,
-  useId,
-} from "react";
+import type { ComponentProps, ReactNode } from "react";
+import { Children, isValidElement, useId } from "react";
 import { Scatter as RechartsScatter } from "recharts";
 
 interface ScatterProps

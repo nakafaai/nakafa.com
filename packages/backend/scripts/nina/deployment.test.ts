@@ -2,14 +2,10 @@ import { layer as nodeServicesLayer } from "@effect/platform-node/NodeServices";
 import { describe, expect, it } from "@effect/vitest";
 import { Id } from "@repo/backend/confect/_generated/id";
 import type { RunConvex } from "@repo/backend/scripts/content/acceptance/convex";
-import {
-  makeDeployment,
-  type Question,
-} from "@repo/backend/scripts/nina/deployment";
-import {
-  gateError,
-  type NinaGateError,
-} from "@repo/backend/scripts/nina/error";
+import type { Question } from "@repo/backend/scripts/nina/deployment";
+import { makeDeployment } from "@repo/backend/scripts/nina/deployment";
+import type { NinaGateError } from "@repo/backend/scripts/nina/error";
+import { gateError } from "@repo/backend/scripts/nina/error";
 import {
   ACCOUNT_SEED,
   PASSWORD_SIGN_IN,

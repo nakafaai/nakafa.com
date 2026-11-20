@@ -1,13 +1,13 @@
 // @vitest-environment node
 
 import { describe, expect, it } from "@effect/vitest";
+import type { Strip } from "@repo/design-system/components/contents/biology/osmosis/tissue";
 import {
   changeAt,
   isotonicPoint,
   lengthAfter,
   massAfter,
   protoplastFill,
-  type Strip,
   tonicity,
 } from "@repo/design-system/components/contents/biology/osmosis/tissue";
 import { Option } from "effect";

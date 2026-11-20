@@ -1,4 +1,5 @@
-import { expect, type Page } from "@playwright/test";
+import type { Page } from "@playwright/test";
+import { expect } from "@playwright/test";
 import {
   Array as Arr,
   Effect,
@@ -14,14 +15,13 @@ import {
   decodeTransition,
   encodeTransition,
 } from "@/e2e/support/frames";
-import {
-  type Asked,
-  type AskedQueries,
-  answerTo,
-  noticeQueries,
-  type ServedMessage,
-  type StoredMessage,
+import type {
+  Asked,
+  AskedQueries,
+  ServedMessage,
+  StoredMessage,
 } from "@/e2e/support/query";
+import { answerTo, noticeQueries } from "@/e2e/support/query";
 import { BUBBLE_CONTENT, TRANSCRIPT_ROW } from "@/e2e/support/selector";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 

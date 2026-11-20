@@ -2,10 +2,8 @@ import type { Docs } from "@repo/backend/confect/_generated/docs";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import type contentReleasesTable from "@repo/backend/confect/_generated/tables/contentReleases";
 import { isSequence } from "@repo/backend/confect/contentRelease/compact/cycle";
-import {
-  type ReleaseError,
-  releaseFail,
-} from "@repo/backend/confect/contentRelease/error";
+import type { ReleaseError } from "@repo/backend/confect/contentRelease/error";
+import { releaseFail } from "@repo/backend/confect/contentRelease/error";
 import { loadRelease } from "@repo/backend/confect/contentRelease/model";
 import { Array as Arr, Effect, Option, Predicate } from "effect";
 

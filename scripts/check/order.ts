@@ -1,12 +1,10 @@
 import { Array as Arr, HashSet, Option, Schema } from "effect";
+import type { JsxAttributes, Node, SourceFile } from "tsrs/ast";
 import {
   isCallExpression,
   isConditionalExpression,
   isIdentifier,
   isStringLiteralLikeNode,
-  type JsxAttributes,
-  type Node,
-  type SourceFile,
 } from "tsrs/ast";
 import { nodesBelow } from "#scripts/check/drilling";
 import { attributeValue, judgesMarkup, opening } from "#scripts/check/jsx";

@@ -4,10 +4,8 @@ import {
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
 import type commentLikesTable from "@repo/backend/confect/_generated/tables/commentLikes";
-import {
-  type CommentDoc,
-  findCommentLike,
-} from "@repo/backend/confect/comments/rows";
+import type { CommentDoc } from "@repo/backend/confect/comments/rows";
+import { findCommentLike } from "@repo/backend/confect/comments/rows";
 import { COMMENT_LIKE_CLEANUP_BATCH_SIZE } from "@repo/backend/confect/triggers/comments/cleanup";
 import { Effect, Struct } from "effect";
 

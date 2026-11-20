@@ -2,12 +2,14 @@ import { describe, expect, it } from "@effect/vitest";
 import { Id } from "@repo/backend/confect/_generated/id";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Array as Arr, Option, Schema } from "effect";
+import type {
+  DashboardAttempt,
+  DashboardValue,
+} from "@/components/exams/sitting/change";
 import {
   addMinutesToAttempt,
   closeSitting,
   DASHBOARD_PAGE_SIZE,
-  type DashboardAttempt,
-  type DashboardValue,
   dashboardArgs,
   lockAttempt,
   unlockAttempt,

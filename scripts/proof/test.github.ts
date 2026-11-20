@@ -9,7 +9,8 @@ import {
   Schema,
 } from "effect";
 import { TestClock } from "effect/testing";
-import { type Answer, scriptedShell } from "#scripts/test.shell";
+import type { Answer } from "#scripts/test.shell";
+import { scriptedShell } from "#scripts/test.shell";
 
 /** A test that runs real Git or many scripted processes waits for them on a loaded machine. */
 export const PROCESS_TIMEOUT = 60_000;

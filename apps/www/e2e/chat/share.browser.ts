@@ -1,6 +1,8 @@
-import { type Browser, expect, type Page, test } from "@playwright/test";
+import type { Browser, Page } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import { Array as Arr, Effect } from "effect";
-import { ANSWER_MILLISECONDS, type Changes } from "@/e2e/support/changes";
+import type { Changes } from "@/e2e/support/changes";
+import { ANSWER_MILLISECONDS } from "@/e2e/support/changes";
 import { runOnPage } from "@/e2e/support/chat";
 import { withLearner, withReader } from "@/e2e/support/reader";
 import { pageRows } from "@/e2e/support/rows";

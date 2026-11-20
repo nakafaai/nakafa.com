@@ -1,14 +1,12 @@
 import { canonicalizeContentProjection } from "@nakafa/aksara-contracts/projection/spec";
-import {
-  type ContentDeleteSchema,
-  ContentUpsertSchema,
-} from "@nakafa/aksara-contracts/release";
+import type { ContentDeleteSchema } from "@nakafa/aksara-contracts/release";
+import { ContentUpsertSchema } from "@nakafa/aksara-contracts/release";
 import { canonicalizeContentChange } from "@nakafa/aksara-contracts/release/canonical";
-import {
-  type RollbackRecord,
-  type RollbackUpsertState,
-  RollbackUpsertStateSchema,
+import type {
+  RollbackRecord,
+  RollbackUpsertState,
 } from "@nakafa/aksara-contracts/release/rollback/spec";
+import { RollbackUpsertStateSchema } from "@nakafa/aksara-contracts/release/rollback/spec";
 import type { Docs } from "@repo/backend/confect/_generated/docs";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { hashText } from "@repo/backend/confect/contentRelease/digest";

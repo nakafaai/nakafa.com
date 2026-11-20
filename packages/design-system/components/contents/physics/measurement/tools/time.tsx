@@ -6,10 +6,8 @@ import {
 } from "@repo/design-system/components/contents/physics/measurement/tools/data";
 import type { MeasurementSceneProps } from "@repo/design-system/components/contents/physics/measurement/tools/scene";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
-import {
-  type Placement,
-  Repeat,
-} from "@repo/design-system/components/three/repeat";
+import type { Placement } from "@repo/design-system/components/three/repeat";
+import { Repeat } from "@repo/design-system/components/three/repeat";
 import { SurfaceMaterial } from "@repo/design-system/components/three/surface/material";
 import { BENCH_COLORS } from "@repo/design-system/lib/material/bench";
 import { CAR_COLORS } from "@repo/design-system/lib/material/car";

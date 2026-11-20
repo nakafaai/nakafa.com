@@ -1,4 +1,5 @@
-import { expect, type Page } from "@playwright/test";
+import type { Page } from "@playwright/test";
+import { expect } from "@playwright/test";
 import { Effect, Schema } from "effect";
 import { FIGURE_GAP, NINA_SIZE, THING_SIZE } from "@/components/state/size";
 import {

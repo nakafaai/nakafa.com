@@ -1,11 +1,11 @@
 import { Effect } from "effect";
 import { useState } from "react";
+import type { VisitorListPage } from "@/components/user/visitor";
 import {
   readVisitorPage,
   requestNextVisitorPage,
   startVisitorList,
   syncVisitorList,
-  type VisitorListPage,
 } from "@/components/user/visitor";
 
 /**

@@ -1,8 +1,8 @@
 import { ArrowDown02Icon, ArrowRight02Icon } from "@hugeicons/core-free-icons";
+import type { IonSampleId } from "@repo/design-system/components/contents/chemistry/ion/data";
 import {
   ION_SAMPLE_IDS,
   ION_SAMPLES,
-  type IonSampleId,
   isIonSampleId,
   SODIUM_CATION_ID,
 } from "@repo/design-system/components/contents/chemistry/ion/data";

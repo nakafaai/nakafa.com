@@ -1,13 +1,13 @@
+import type { BrowserAnalyticsClient } from "@repo/analytics/posthog/capture";
 import {
-  type BrowserAnalyticsClient,
   publishAnalyticsClient,
   readAnalyticsClient,
 } from "@repo/analytics/posthog/capture";
-import {
-  type AnalyticsIdentityAuthorization,
-  type AnalyticsTier,
-  filterAuthorizedAnalyticsEvent,
+import type {
+  AnalyticsIdentityAuthorization,
+  AnalyticsTier,
 } from "@repo/analytics/posthog/identity";
+import { filterAuthorizedAnalyticsEvent } from "@repo/analytics/posthog/identity";
 import {
   PageviewWindow,
   startPageviewTracking,

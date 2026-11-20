@@ -1,9 +1,7 @@
 import { describe, expect, it } from "@effect/vitest";
 import { Option } from "effect";
-import {
-  type RemoteList,
-  remoteSorting,
-} from "@/components/shared/table/remote";
+import type { RemoteList } from "@/components/shared/table/remote";
+import { remoteSorting } from "@/components/shared/table/remote";
 
 /** A remote list that sorts by `sort`, recording each sort a head hands back. */
 function list(sort: RemoteList["sort"]) {

@@ -1,5 +1,5 @@
+import type { ContentProjection } from "@nakafa/aksara-contracts/projection/spec";
 import {
-  type ContentProjection,
   canonicalizeContentProjection,
   familyForProjection,
 } from "@nakafa/aksara-contracts/projection/spec";
@@ -11,10 +11,8 @@ import {
   releaseFail,
 } from "@repo/backend/confect/contentRelease/error";
 import { decodeProjectionJson } from "@repo/backend/confect/contentRelease/parse";
-import {
-  type PublicationRow,
-  PublicationSource,
-} from "@repo/backend/content/publication/source";
+import type { PublicationRow } from "@repo/backend/content/publication/source";
+import { PublicationSource } from "@repo/backend/content/publication/source";
 import { Effect, Option, Schema } from "effect";
 
 /** Converts one complete immutable upsert version into a compact head. */

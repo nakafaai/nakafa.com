@@ -1,10 +1,8 @@
 import { NodeSocketServer } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { reserveAnalyticsOrigin } from "@repo/backend/scripts/content/acceptance/analytics";
-import {
-  type LocalRuntime,
-  LocalRuntimeJson,
-} from "@repo/backend/scripts/content/acceptance/local";
+import type { LocalRuntime } from "@repo/backend/scripts/content/acceptance/local";
+import { LocalRuntimeJson } from "@repo/backend/scripts/content/acceptance/local";
 import { createLocalSigningIdentity } from "@repo/backend/scripts/content/acceptance/signing";
 import {
   preparedKey,

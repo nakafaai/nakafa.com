@@ -1,10 +1,10 @@
 import type { AssessmentVisuals } from "@nakafa/aksara-contracts/visual/catalog";
 import { Array as Arr, Match, Option, pipe, Record as Rec } from "effect";
 import type { Plane } from "@/components/tenant/exams/figure/graph/plane";
+import type { ShapeDraft } from "@/components/tenant/exams/figure/graph/shapes";
 import {
   cornersText,
   newShape,
-  type ShapeDraft,
 } from "@/components/tenant/exams/figure/graph/shapes";
 import { spaceFieldsOf } from "@/components/tenant/exams/figure/graph/space";
 

@@ -1,8 +1,6 @@
 import type { AgentHttpInputError } from "@repo/backend/confect/routes/agent/input";
-import {
-  AGENT_QUOTA_HEADERS,
-  type AgentRateLimitError,
-} from "@repo/backend/confect/routes/agent/quota";
+import type { AgentRateLimitError } from "@repo/backend/confect/routes/agent/quota";
+import { AGENT_QUOTA_HEADERS } from "@repo/backend/confect/routes/agent/quota";
 import type {
   NakafaAgentDataReadError,
   NakafaAgentInputError,
@@ -10,7 +8,8 @@ import type {
 import type { NakafaProblemDetails } from "@repo/contents/agent/schema/api";
 import { SITE_ORIGIN } from "@repo/seo/origin";
 import { encodeJsonText } from "@repo/utilities/json";
-import { type Cause, Effect, Match, Schema } from "effect";
+import type { Cause } from "effect";
+import { Effect, Match, Schema } from "effect";
 
 const AgentProblemStatusSchema = Schema.Literals([
   400, 403, 404, 405, 406, 415, 422, 429, 500, 503,

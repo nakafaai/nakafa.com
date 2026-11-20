@@ -1,4 +1,5 @@
-import { expect, type Page, test } from "@playwright/test";
+import type { Page } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
 import { CHAT_PAGE, runOnPage } from "@/e2e/support/chat";
 import { withBrowserContext } from "@/e2e/support/context";

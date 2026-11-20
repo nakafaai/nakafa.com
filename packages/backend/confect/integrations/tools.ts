@@ -4,8 +4,8 @@ import {
   mcpToolOutputSchema,
   runMcpTool,
 } from "@repo/backend/agent/mcp/result";
+import type { McpObjectContract } from "@repo/backend/agent/mcp/schema";
 import {
-  type McpObjectContract,
   toMcpInputSchema,
   toMcpOutputSchema,
 } from "@repo/backend/agent/mcp/schema";

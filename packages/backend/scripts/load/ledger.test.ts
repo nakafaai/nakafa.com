@@ -1,9 +1,9 @@
 import { describe, expect, it } from "@effect/vitest";
-import {
-  type Acknowledged,
-  audit,
-  type StoredAnswer,
+import type {
+  Acknowledged,
+  StoredAnswer,
 } from "@repo/backend/scripts/load/ledger";
+import { audit } from "@repo/backend/scripts/load/ledger";
 
 /** One answer of attempt `a1`, with its question, version and option. */
 const answer = (

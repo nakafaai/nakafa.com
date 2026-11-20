@@ -1,4 +1,5 @@
-import { expect, type Page, test } from "@playwright/test";
+import type { Page } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import { Effect, Record as Rec, Struct } from "effect";
 import { runOnPage } from "@/e2e/support/chat";
 import { LEARNER_TEXT, learnerMessage } from "@/e2e/support/prose";

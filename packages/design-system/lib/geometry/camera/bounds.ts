@@ -1,5 +1,6 @@
 import { CoordinateFrameSchema } from "@repo/design-system/components/three/frame";
 import { Array as Arr, Effect, HashMap, Option, Schema } from "effect";
+import type { Object3D } from "three";
 import {
   Box2,
   Box3,
@@ -7,7 +8,6 @@ import {
   Line,
   Matrix4,
   Mesh,
-  type Object3D,
   Points,
   Vector2,
   Vector3,

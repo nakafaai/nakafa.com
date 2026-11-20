@@ -1,10 +1,7 @@
 import { describe, expect, it } from "@effect/vitest";
 import { MAX_DOCUMENT_DEPTH } from "@nakafa/aksara-contracts/assessment/document";
-import {
-  decodeStep,
-  type Step,
-  StepSchema,
-} from "@repo/backend/confect/editor/step";
+import type { Step } from "@repo/backend/confect/editor/step";
+import { decodeStep, StepSchema } from "@repo/backend/confect/editor/step";
 import { encodeStep } from "@repo/backend/test/editor";
 import { nested, nestedAttrs } from "@repo/backend/test/editor/nodes";
 import { Effect, Schema } from "effect";

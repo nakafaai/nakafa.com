@@ -9,12 +9,10 @@ import {
   changeGrantPages,
   changeInviteLists,
 } from "@/components/tenant/settings/mutation";
+import type { Grant, Invite, Person } from "@/components/tenant/settings/state";
 import {
   draftText,
-  type Grant,
-  type Invite,
   isFirstPage,
-  type Person,
   withoutItem,
 } from "@/components/tenant/settings/state";
 import { findLoaded } from "@/lib/data/loaded";

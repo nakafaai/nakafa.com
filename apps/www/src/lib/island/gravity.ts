@@ -3,7 +3,8 @@ import { HEIGHT, SPAN } from "@repo/backend/confect/island/world";
 import { Array as Arr } from "effect";
 import type { Edit } from "@/lib/island/edits";
 import { KIND, LOOK } from "@/lib/island/look";
-import { blockAt, type Cells, cellOf } from "@/lib/island/world";
+import type { Cells } from "@/lib/island/world";
+import { blockAt, cellOf } from "@/lib/island/world";
 
 /** The blocks loose enough to fall when nothing holds them up: sand, which every island may build with. */
 const LOOSE = [idOf("sand")];

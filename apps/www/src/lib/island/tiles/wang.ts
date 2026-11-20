@@ -1,5 +1,6 @@
 import { Array as Arr, Option, Record as Rec } from "effect";
-import { type Ink, type Pixels, put, TILE } from "@/lib/island/tiles/paint";
+import type { Ink, Pixels } from "@/lib/island/tiles/paint";
+import { put, TILE } from "@/lib/island/tiles/paint";
 
 /**
  * Wang sets for the ground (ADR 0047, D39). Each edge of a ground tile either

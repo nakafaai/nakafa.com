@@ -1,7 +1,7 @@
+import type { Locale } from "@repo/internationalization/src/locale";
 import {
   LOCALE_COOKIE,
   LOCALE_COOKIE_ATTRIBUTES,
-  type Locale,
   LocaleSchema,
 } from "@repo/internationalization/src/locale";
 import { Effect, Schema } from "effect";

@@ -8,12 +8,14 @@ import {
   createPath,
   createQuadraticPath,
 } from "@repo/design-system/components/contents/chemistry/path";
+import type {
+  SubatomicParticlesModeId,
+  SubatomicSceneColors,
+} from "@repo/design-system/components/contents/chemistry/subatomic-particles/data";
 import {
   ATOM_MAP_MODE_ID,
   CATHODE_RAY_MODE_ID,
   GOLD_FOIL_MODE_ID,
-  type SubatomicParticlesModeId,
-  type SubatomicSceneColors,
 } from "@repo/design-system/components/contents/chemistry/subatomic-particles/data";
 import type { SubatomicParticlesLabProps } from "@repo/design-system/components/contents/chemistry/subatomic-particles/lab";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
@@ -22,7 +24,8 @@ import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { GlassMaterial } from "@repo/design-system/components/three/physical";
 import { useRequired } from "@repo/design-system/hooks/required";
 import { Array as Arr } from "effect";
-import { createContext, type ReactNode } from "react";
+import type { ReactNode } from "react";
+import { createContext } from "react";
 import { Vector3 } from "three";
 
 const PATH_POINT_COUNT = 48;

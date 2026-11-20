@@ -28,10 +28,8 @@ import {
   placeStudentChange,
 } from "@/components/tenant/settings/moves";
 import { RosterEntryDialog } from "@/components/tenant/settings/nisn";
-import {
-  type PersonId,
-  SchoolStudentPicker,
-} from "@/components/tenant/settings/people";
+import type { PersonId } from "@/components/tenant/settings/people";
+import { SchoolStudentPicker } from "@/components/tenant/settings/people";
 import { SelectField } from "@/components/tenant/settings/select";
 import type { Cohort, CohortMember } from "@/components/tenant/settings/state";
 import { runSchoolWrite, schoolCall } from "@/components/tenant/write";

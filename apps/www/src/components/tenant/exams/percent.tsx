@@ -12,11 +12,8 @@ import {
 import { Array as Arr } from "effect";
 import { useTranslations } from "use-intl";
 import { useExamZoom } from "@/components/tenant/exams/provider";
-import {
-  drawnZoom,
-  type ExamZoom,
-  ZOOM_PRESETS,
-} from "@/components/tenant/exams/zoom";
+import type { ExamZoom } from "@/components/tenant/exams/zoom";
+import { drawnZoom, ZOOM_PRESETS } from "@/components/tenant/exams/zoom";
 
 /** The value of the percentage menu: a preset zoom, or `fit` and `fill`. */
 const zoomChoice = (zoom: Pick<ExamZoom, "mode" | "percent">) =>

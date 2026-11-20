@@ -1,4 +1,5 @@
-import { type Browser, expect, type Page, test } from "@playwright/test";
+import type { Browser, Page } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
 import { trackChanges } from "@/e2e/support/changes";
 import {

@@ -1,18 +1,21 @@
-import {
-  SlashMenu,
-  type SlashMenuHandle,
-  type SlashMenuProps,
+import type {
+  SlashMenuHandle,
+  SlashMenuProps,
 } from "@repo/design-system/components/editor/menu";
+import { SlashMenu } from "@repo/design-system/components/editor/menu";
 import { menuPlacement } from "@repo/design-system/components/editor/placement";
+import type {
+  SlashKey,
+  SlashLabels,
+} from "@repo/design-system/components/editor/slash";
 import {
   filterSlash,
   runSlash,
-  type SlashKey,
-  type SlashLabels,
 } from "@repo/design-system/components/editor/slash";
 import { Extension } from "@tiptap/core";
 import { ReactRenderer } from "@tiptap/react";
-import { Suggestion, type SuggestionProps } from "@tiptap/suggestion";
+import type { SuggestionProps } from "@tiptap/suggestion";
+import { Suggestion } from "@tiptap/suggestion";
 
 /**
  * Places the menu under the query, or over it when the window has no room below, once the editor

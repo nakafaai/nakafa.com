@@ -23,7 +23,8 @@ import {
 } from "@repo/design-system/components/visual/card";
 import { VisualFact } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
-import { type ReactNode, Suspense, useState } from "react";
+import type { ReactNode } from "react";
+import { Suspense, useState } from "react";
 import { useFormatter } from "use-intl";
 
 /** The height of the bench under the tube's stand, in centimetres. */

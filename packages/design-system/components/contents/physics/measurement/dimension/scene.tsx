@@ -1,20 +1,20 @@
 import { RoundedBox } from "@react-three/drei";
+import type {
+  DimensionModeId,
+  SceneColors,
+} from "@repo/design-system/components/contents/physics/measurement/dimension/data";
 import {
   AREA_MODE_ID,
   BLOCK_DEPTH,
   BLOCK_HEIGHT,
   BLOCK_WIDTH,
-  type DimensionModeId,
   LENGTH_MODE_ID,
-  type SceneColors,
   VOLUME_MODE_ID,
 } from "@repo/design-system/components/contents/physics/measurement/dimension/data";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
-import {
-  type Placement,
-  Repeat,
-} from "@repo/design-system/components/three/repeat";
+import type { Placement } from "@repo/design-system/components/three/repeat";
+import { Repeat } from "@repo/design-system/components/three/repeat";
 import { SurfaceMaterial } from "@repo/design-system/components/three/surface/material";
 import { CAR_COLORS } from "@repo/design-system/lib/material/car";
 import { INSTRUMENT_COLORS } from "@repo/design-system/lib/material/instrument";

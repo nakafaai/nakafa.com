@@ -1,7 +1,8 @@
 import { useReducedMotion } from "@mantine/hooks";
 import { useFrame } from "@react-three/fiber";
 import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
-import { type ReactNode, useRef } from "react";
+import type { ReactNode } from "react";
+import { useRef } from "react";
 import type { Group } from "three";
 
 /**

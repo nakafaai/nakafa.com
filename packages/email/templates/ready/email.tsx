@@ -1,7 +1,7 @@
 import { render } from "@react-email/render";
 import { Layout } from "@repo/email/layout";
+import type { AccountReadyEmailInput } from "@repo/email/templates/ready/content";
 import {
-  type AccountReadyEmailInput,
   AccountReadyEmailInputSchema,
   getAccountReadyEmailCopy,
 } from "@repo/email/templates/ready/content";

@@ -1,5 +1,6 @@
 import { Array as Arr, Option } from "effect";
-import { type RefObject, useEffect, useState } from "react";
+import type { RefObject } from "react";
+import { useEffect, useState } from "react";
 
 /** The margin that mounts a page's editors: one viewport of the canvas above and below it. */
 const NEAR_MARGIN = "100% 0px";

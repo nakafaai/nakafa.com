@@ -6,10 +6,8 @@ import { readVersion } from "@repo/backend/confect/tryouts/response/version";
 import { readSectionBodies } from "@repo/backend/confect/tryouts/runtime/bodies";
 import { readTryoutSectionContentAccess } from "@repo/backend/confect/tryouts/runtime/content";
 import { loadSectionPlacements } from "@repo/backend/confect/tryouts/runtime/placement";
-import {
-  loadSectionResponseIndex,
-  type TryoutResponseIndex,
-} from "@repo/backend/confect/tryouts/runtime/response";
+import type { TryoutResponseIndex } from "@repo/backend/confect/tryouts/runtime/response";
+import { loadSectionResponseIndex } from "@repo/backend/confect/tryouts/runtime/response";
 import type { TryoutSection } from "@repo/backend/confect/tryouts/runtime/schema";
 import { getSectionScoreResult } from "@repo/backend/confect/tryouts/score/result";
 import { Array as Arr, Effect, HashSet, MutableHashMap, Option } from "effect";

@@ -2,7 +2,8 @@ import { PaginatedQueryResult, QueryResult, useMutation } from "@confect/react";
 import connectors from "@repo/backend/confect/_generated/refs/connectors";
 import type { GoogleConnector } from "@repo/backend/confect/connectors/google/manifest";
 import { Effect, Option } from "effect";
-import { type ReactNode, use } from "react";
+import type { ReactNode } from "react";
+import { use } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import {
@@ -23,9 +24,9 @@ import {
 } from "@/components/connectors/directory";
 import { ServiceFilter } from "@/components/connectors/filter";
 import { LibraryControls, ServiceList } from "@/components/connectors/library";
+import type { Connection } from "@/components/connectors/optimistic";
 import {
   CONNECTION_PAGE_SIZE,
-  type Connection,
   disconnectOwnUpdate,
 } from "@/components/connectors/optimistic";
 import { PaneFill, PaneFooter } from "@/components/shared/page/pane";
@@ -40,10 +41,8 @@ import { TableFiltersProvider } from "@/components/shared/table/toolbar";
 import { LoadFailure } from "@/components/state/failure";
 import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 import { UserSettingsHeader } from "@/components/user/settings/header";
-import {
-  type PreloadedPage,
-  usePaginatedPreloaded,
-} from "@/lib/data/paginated";
+import type { PreloadedPage } from "@/lib/data/paginated";
+import { usePaginatedPreloaded } from "@/lib/data/paginated";
 import { usePreloadedQueryResult } from "@/lib/data/preloaded";
 
 /**

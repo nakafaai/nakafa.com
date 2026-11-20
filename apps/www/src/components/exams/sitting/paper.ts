@@ -1,10 +1,8 @@
 import type { OptimisticLocalStore } from "@confect/react";
 import { Id } from "@repo/backend/confect/_generated/id";
 import exams from "@repo/backend/confect/_generated/refs/exams";
-import {
-  type ExamResponse,
-  isAnswered,
-} from "@repo/backend/confect/assessment/response";
+import type { ExamResponse } from "@repo/backend/confect/assessment/response";
+import { isAnswered } from "@repo/backend/confect/assessment/response";
 import type {
   PaperView,
   SavedView,

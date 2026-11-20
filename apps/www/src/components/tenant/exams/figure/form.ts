@@ -1,11 +1,9 @@
-import {
-  type FigureAttrs,
-  FigureAttrsSchema,
-} from "@nakafa/aksara-contracts/assessment/figure";
+import type { FigureAttrs } from "@nakafa/aksara-contracts/assessment/figure";
+import { FigureAttrsSchema } from "@nakafa/aksara-contracts/assessment/figure";
 import type { RichText } from "@nakafa/aksara-contracts/assessment/inline";
+import type { VisualName } from "@nakafa/aksara-contracts/visual/catalog";
 import {
   assessmentVisuals,
-  type VisualName,
   VisualNameSchema,
 } from "@nakafa/aksara-contracts/visual/catalog";
 import {

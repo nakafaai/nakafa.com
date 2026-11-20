@@ -1,5 +1,7 @@
-import { type ToastCopy, toast } from "@repo/design-system/lib/toast/notify";
-import { Data, Effect, type Result } from "effect";
+import type { ToastCopy } from "@repo/design-system/lib/toast/notify";
+import { toast } from "@repo/design-system/lib/toast/notify";
+import type { Result } from "effect";
+import { Data, Effect } from "effect";
 import { refusalCopy } from "@/components/tenant/refusal/copy";
 import { reportClientException } from "@/lib/analytics/client";
 

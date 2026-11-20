@@ -1,10 +1,13 @@
-import { LookSchema, type MoodSchema } from "@repo/mascot/nina/face";
-import { type Parts, turned } from "@repo/mascot/nina/goods/part";
-import { type Curve, CurveSchema, flip } from "@repo/mascot/nina/limb";
+import type { MoodSchema } from "@repo/mascot/nina/face";
+import { LookSchema } from "@repo/mascot/nina/face";
+import type { Parts } from "@repo/mascot/nina/goods/part";
+import { turned } from "@repo/mascot/nina/goods/part";
+import type { Curve } from "@repo/mascot/nina/limb";
+import { CurveSchema, flip } from "@repo/mascot/nina/limb";
+import type { Pose } from "@repo/mascot/nina/pose";
 import {
   armLeft,
   breathe,
-  type Pose,
   PoseSchema,
   REST,
   sway,

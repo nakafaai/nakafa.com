@@ -2,10 +2,8 @@ import type { IconSvgElement } from "@hugeicons/react";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { QuestionnaireChoiceDescription } from "@repo/design-system/components/ui/questionnaire";
 import type { ReactNode } from "react";
-import {
-  CountryFlagIcon,
-  type RegionCountryCode,
-} from "@/components/shared/flag";
+import type { RegionCountryCode } from "@/components/shared/flag";
+import { CountryFlagIcon } from "@/components/shared/flag";
 
 /**
  * One choice of the school questionnaire: a flag or an icon when the choice has one, its title on

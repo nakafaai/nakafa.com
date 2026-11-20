@@ -1,19 +1,15 @@
 import { QueryResult, useMutation, useQuery } from "@confect/react";
 import { Building03Icon, UserMultiple02Icon } from "@hugeicons/core-free-icons";
 import exams from "@repo/backend/confect/_generated/refs/exams";
-import {
-  questionGap,
-  type ScheduleGap,
-} from "@repo/backend/confect/exams/parts";
+import type { ScheduleGap } from "@repo/backend/confect/exams/parts";
+import { questionGap } from "@repo/backend/confect/exams/parts";
 import type { QuestionTemplate } from "@repo/backend/confect/exams/question";
 import type {
   QuestionsUnready,
   ScheduleInvalid,
 } from "@repo/backend/confect/exams/sittings/errors";
-import {
-  RoomName,
-  type SittingGroup,
-} from "@repo/backend/confect/exams/sittings/schema";
+import type { SittingGroup } from "@repo/backend/confect/exams/sittings/schema";
+import { RoomName } from "@repo/backend/confect/exams/sittings/schema";
 import { Button } from "@repo/design-system/components/ui/button";
 import { DateTimePicker } from "@repo/design-system/components/ui/date";
 import {

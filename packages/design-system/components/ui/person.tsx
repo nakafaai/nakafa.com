@@ -5,7 +5,8 @@ import {
   AvatarImage,
 } from "@repo/design-system/components/ui/avatar";
 import type { Mascot } from "@repo/mascot/code";
-import { type ComponentProps, type ReactNode, useState } from "react";
+import type { ComponentProps, ReactNode } from "react";
+import { useState } from "react";
 
 type PersonAvatarProps = Omit<ComponentProps<typeof Avatar>, "children"> & {
   /** The animal of the person, drawn when no photo shows. Nothing is drawn without one. */

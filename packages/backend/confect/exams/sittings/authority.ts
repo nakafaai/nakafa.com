@@ -6,10 +6,10 @@ import type {
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { Authority } from "@repo/backend/confect/access/policy";
+import type { SittingWithExam } from "@repo/backend/confect/exams/sittings/access";
 import {
   Sitting,
   SittingAccess,
-  type SittingWithExam,
 } from "@repo/backend/confect/exams/sittings/access";
 import { cohortSittingLocked } from "@repo/backend/confect/exams/sittings/eligibility";
 import { sittingKind } from "@repo/backend/confect/exams/sittings/kinds";

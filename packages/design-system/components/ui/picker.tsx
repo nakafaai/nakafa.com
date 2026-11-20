@@ -29,14 +29,8 @@ import { ScrollArea } from "@repo/design-system/components/ui/scroll-area";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { TAILWIND_MEDIA_QUERIES } from "@repo/design-system/lib/breakpoints";
 import { cva } from "class-variance-authority";
-import {
-  type ComponentProps,
-  createContext,
-  type ReactNode,
-  use,
-  useRef,
-  useState,
-} from "react";
+import type { ComponentProps, ReactNode } from "react";
+import { createContext, use, useRef, useState } from "react";
 import { useTranslations } from "use-intl";
 
 /** Where a picker's list opens: a popover under its trigger on a wide screen, a drawer on a phone. */

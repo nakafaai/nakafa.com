@@ -25,19 +25,18 @@ import {
   DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import {
-  createVisualStore,
-  type VisualState,
-  type VisualStore,
+import type {
+  VisualState,
+  VisualStore,
 } from "@repo/design-system/components/visual/store";
+import { createVisualStore } from "@repo/design-system/components/visual/store";
 import { useRequired } from "@repo/design-system/hooks/required";
 import { PortalContainer } from "@repo/design-system/lib/portal";
 import { cva } from "class-variance-authority";
 import { cn } from "cn";
+import type { ComponentProps, ReactNode } from "react";
 import {
-  type ComponentProps,
   createContext,
-  type ReactNode,
   use,
   useLayoutEffect,
   useRef,

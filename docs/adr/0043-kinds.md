@@ -8,12 +8,12 @@ Accepted on 8 November 2026.
 
 GLOSSARY.md says the Player knows questions, answers and time, and nothing of try-out routes or Convex functions, so a School assessment binds the same parts. The code said otherwise. The question kinds a learner answers, a choice, a true or false table and a matching, lived in three homes:
 
-| Kind | Home before | Bound by |
-| --- | --- | --- |
-| Choice (radio, check box, reviewed) | `tryout/runtime/choice/surface.tsx` | try-out fields and review, School sitting, the exam editor |
-| True or false table | `tryout/runtime/choice/table.tsx` | the same four |
-| Matching board | `exams/lines/*` | School sitting, the exam editor and its key |
-| Their response model (`choiceOf`, `pairingOf`, `tableOf`, `toggleOption`, `pairedWith`, `markedWith`) | `exams/sitting/response.ts` | School, the editor, and try-out fields |
+| Kind                                                                                                  | Home before                         | Bound by                                                   |
+| ----------------------------------------------------------------------------------------------------- | ----------------------------------- | ---------------------------------------------------------- |
+| Choice (radio, check box, reviewed)                                                                   | `tryout/runtime/choice/surface.tsx` | try-out fields and review, School sitting, the exam editor |
+| True or false table                                                                                   | `tryout/runtime/choice/table.tsx`   | the same four                                              |
+| Matching board                                                                                        | `exams/lines/*`                     | School sitting, the exam editor and its key                |
+| Their response model (`choiceOf`, `pairingOf`, `tableOf`, `toggleOption`, `pairedWith`, `markedWith`) | `exams/sitting/response.ts`         | School, the editor, and try-out fields                     |
 
 So School's editor and sitting imported try-out's runtime, try-out imported School's sitting, and the table read its words from the try-out dictionary. Each kind's row had already moved to one marked line in the design system (#2205), so the kinds themselves were the last part on the wrong side of the seam.
 

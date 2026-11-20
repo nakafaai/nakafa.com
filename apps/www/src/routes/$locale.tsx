@@ -9,17 +9,13 @@ import {
   localeTimeZone,
 } from "@repo/internationalization/src/locale";
 import { readRequestNow } from "@repo/internationalization/src/translator";
+import type { WebsiteInput } from "@repo/seo/jsonld/node";
 import {
   makeEducationalOrganizationNode,
   makeWebsiteNode,
-  type WebsiteInput,
 } from "@repo/seo/jsonld/node";
-import {
-  createFileRoute,
-  type ErrorComponentProps,
-  Outlet,
-  useParams,
-} from "@tanstack/react-router";
+import type { ErrorComponentProps } from "@tanstack/react-router";
+import { createFileRoute, Outlet, useParams } from "@tanstack/react-router";
 import { Array as Arr, Option } from "effect";
 import { useTranslations } from "use-intl";
 import { createTranslator } from "use-intl/core";

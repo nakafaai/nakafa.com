@@ -5,20 +5,21 @@ import {
   ChemistryParticleLabel,
   getChemistryParticleLabelPosition,
 } from "@repo/design-system/components/contents/chemistry/label";
-import {
-  MATTER_PARTICLE_MODELS,
-  type MatterParticleAtom,
-  type MatterParticleModeId,
-  type MatterParticleMolecule,
-  type MatterParticleSceneColors,
+import type {
+  MatterParticleAtom,
+  MatterParticleModeId,
+  MatterParticleMolecule,
+  MatterParticleSceneColors,
 } from "@repo/design-system/components/contents/chemistry/matter-particle-reader/data";
+import { MATTER_PARTICLE_MODELS } from "@repo/design-system/components/contents/chemistry/matter-particle-reader/data";
 import { atomSymbol } from "@repo/design-system/components/contents/chemistry/symbol";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { getThreeParticleLabelFontSize } from "@repo/design-system/components/three/data/constants";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { useRequired } from "@repo/design-system/hooks/required";
 import { Array as Arr, HashMap, Option } from "effect";
-import { createContext, type ReactNode } from "react";
+import type { ReactNode } from "react";
+import { createContext } from "react";
 
 const SCENE_SCALE = 1.9;
 const FORMULA_LABEL_Y = 0.62;

@@ -1,5 +1,6 @@
 import { PAGE, POP } from "@repo/mascot/color";
-import { breathe, type Pose, REST, sway } from "@repo/mascot/nina/pose";
+import type { Pose } from "@repo/mascot/nina/pose";
+import { breathe, REST, sway } from "@repo/mascot/nina/pose";
 import { tenth } from "@repo/mascot/round";
 import { group, path, rect } from "@repo/mascot/shape";
 

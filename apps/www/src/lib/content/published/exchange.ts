@@ -8,10 +8,8 @@ import {
 } from "@nakafa/aksara-contracts/ids";
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import { ContentProjectionSchema } from "@nakafa/aksara-contracts/projection/spec";
-import {
-  type PublicContentRuntimeFound,
-  PublicContentRuntimeFoundSchema,
-} from "@nakafa/aksara-contracts/runtime/spec";
+import type { PublicContentRuntimeFound } from "@nakafa/aksara-contracts/runtime/spec";
+import { PublicContentRuntimeFoundSchema } from "@nakafa/aksara-contracts/runtime/spec";
 
 import { verifyPublicContentFound } from "@repo/backend/client/content/public";
 import contentRelease from "@repo/backend/confect/_generated/refs/contentRelease";

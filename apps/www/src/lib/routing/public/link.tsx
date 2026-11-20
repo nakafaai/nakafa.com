@@ -3,7 +3,8 @@
 import type { ActiveOptions } from "@tanstack/react-router";
 import { Option } from "effect";
 import type { ComponentProps } from "react";
-import { type LinkPreload, TargetLink } from "@/lib/routing/link";
+import type { LinkPreload } from "@/lib/routing/link";
+import { TargetLink } from "@/lib/routing/link";
 import { addressTarget, publicPathTarget } from "@/lib/routing/target";
 
 /**

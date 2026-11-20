@@ -1,8 +1,10 @@
+import type {
+  Organ,
+  Split,
+} from "@repo/design-system/components/contents/biology/tropism/auxin";
 import {
   bend,
   growth,
-  type Organ,
-  type Split,
 } from "@repo/design-system/components/contents/biology/tropism/auxin";
 import {
   organPath,

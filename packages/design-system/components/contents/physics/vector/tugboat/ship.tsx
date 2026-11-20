@@ -1,14 +1,12 @@
 import { RoundedBox } from "@react-three/drei";
 import { Hull } from "@repo/design-system/components/contents/physics/vector/tugboat/hull";
-import {
-  type Placement,
-  Repeat,
-} from "@repo/design-system/components/three/repeat";
+import type { Placement } from "@repo/design-system/components/three/repeat";
+import { Repeat } from "@repo/design-system/components/three/repeat";
 import { SurfaceMaterial } from "@repo/design-system/components/three/surface/material";
+import type { HullLines } from "@repo/design-system/components/three/vessel/hull";
 import {
   deckAt,
   deckEdge,
-  type HullLines,
   halfAt,
 } from "@repo/design-system/components/three/vessel/hull";
 import { Strake } from "@repo/design-system/components/three/vessel/strake";

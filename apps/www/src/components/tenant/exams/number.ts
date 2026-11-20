@@ -1,8 +1,8 @@
 import type { Interaction } from "@nakafa/aksara-contracts/assessment/interaction";
 import type { InteractionKey } from "@nakafa/aksara-contracts/assessment/key";
+import type { NumericKey } from "@repo/backend/confect/assessment/number";
 import {
   canonicalDecimal,
-  type NumericKey,
   numericKeyFits,
 } from "@repo/backend/confect/assessment/number";
 import type { QuestionView } from "@repo/backend/confect/exams/question";

@@ -2,10 +2,8 @@ import { RegisteredFunction } from "@confect/server";
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import confectSchema from "@repo/backend/confect/_generated/schema";
 import { documentSections } from "@repo/backend/confect/contents/sections/draft";
-import {
-  knownInputValidator,
-  type SectionDocument,
-} from "@repo/backend/confect/contents/sections/schema";
+import type { SectionDocument } from "@repo/backend/confect/contents/sections/schema";
+import { knownInputValidator } from "@repo/backend/confect/contents/sections/schema";
 import { syncDocuments } from "@repo/backend/confect/contents/sections/sync";
 import { embeddingDimensions } from "@repo/backend/confect/gateway/model";
 import { createConvexTestWithAuth } from "@repo/backend/confect/test.helpers";

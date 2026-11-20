@@ -1,12 +1,12 @@
 import { ShellModelCanvas } from "@repo/design-system/components/contents/chemistry/shell-model/canvas";
 import { createShellModelSampleStore } from "@repo/design-system/components/contents/chemistry/shell-model/store";
+import type { ValenceElectronSampleId } from "@repo/design-system/components/contents/chemistry/valence-electron/data";
 import {
   CALCIUM_ID,
   getValenceElectronFacts,
   isValenceElectronSampleId,
   VALENCE_ELECTRON_SAMPLE_IDS,
   VALENCE_ELECTRON_SAMPLES,
-  type ValenceElectronSampleId,
 } from "@repo/design-system/components/contents/chemistry/valence-electron/data";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import {

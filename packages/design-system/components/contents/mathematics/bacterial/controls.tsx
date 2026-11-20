@@ -9,7 +9,8 @@ import {
 } from "@repo/design-system/components/ui/select";
 import { useRequired } from "@repo/design-system/hooks/required";
 import { Array as Arr, Schema } from "effect";
-import { type ComponentProps, createContext, type ReactNode } from "react";
+import type { ComponentProps, ReactNode } from "react";
+import { createContext } from "react";
 import { useTranslations } from "use-intl";
 
 const SPEED_STEP = 0.25;

@@ -1,8 +1,8 @@
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import { Option } from "effect";
+import type { PlayerMode } from "@/components/player/mode";
 import {
   decodePlayerMode,
-  type PlayerMode,
   readBrowserPlayerMode,
   readPlayerModeParam,
   resolvePlayerMode,

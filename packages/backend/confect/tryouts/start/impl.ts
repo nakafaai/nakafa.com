@@ -13,12 +13,12 @@ import { requireEntrySection } from "@repo/backend/confect/tryouts/runtime/secti
 import { createTryoutAttempt } from "@repo/backend/confect/tryouts/start/attempt";
 import { selectAttemptScale } from "@repo/backend/confect/tryouts/start/scale";
 import { loadTryoutStartSource } from "@repo/backend/confect/tryouts/start/source";
-import {
-  type AttemptAccessFields,
-  type StartAttemptArgs,
-  type StartAttemptResult,
-  startAttemptArgsValidator,
+import type {
+  AttemptAccessFields,
+  StartAttemptArgs,
+  StartAttemptResult,
 } from "@repo/backend/confect/tryouts/start/spec";
+import { startAttemptArgsValidator } from "@repo/backend/confect/tryouts/start/spec";
 import { TRYOUT_ATTEMPT_WINDOW } from "@repo/backend/confect/tryouts/window";
 import { Array as Arr, Duration, Effect, Option, Schema } from "effect";
 

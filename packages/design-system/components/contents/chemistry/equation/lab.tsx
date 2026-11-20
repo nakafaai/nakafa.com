@@ -1,4 +1,5 @@
 import { useThree } from "@react-three/fiber";
+import type { ReactionId } from "@repo/design-system/components/contents/chemistry/equation/catalog";
 import {
   balanceLines,
   economyLines,
@@ -6,12 +7,11 @@ import {
   getReaction,
   massBalanceTex,
   moleculeCountTex,
-  type ReactionId,
   ReactionIdSchema,
 } from "@repo/design-system/components/contents/chemistry/equation/catalog";
 import { layoutReaction } from "@repo/design-system/components/contents/chemistry/equation/layout";
+import type { ReactionLayout } from "@repo/design-system/components/contents/chemistry/equation/scene";
 import {
-  type ReactionLayout,
   ReactionScene,
   reactionFloor,
 } from "@repo/design-system/components/contents/chemistry/equation/scene";
@@ -43,7 +43,8 @@ import {
 import { VisualFact } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { Array as Arr, Option, Result, Schema } from "effect";
-import { type ReactNode, Suspense, useState } from "react";
+import type { ReactNode } from "react";
+import { Suspense, useState } from "react";
 import { useFormatter } from "use-intl";
 
 /** One reaction a lesson offers: its catalog id, toggle face, and spoken name. */

@@ -1,7 +1,5 @@
-import {
-  type AppLocaleCode,
-  INDONESIAN_APP_LOCALE_CODE,
-} from "@nakafa/aksara-contracts/locale";
+import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
+import { INDONESIAN_APP_LOCALE_CODE } from "@nakafa/aksara-contracts/locale";
 import { parseQuranTranslation } from "@nakafa/aksara-contracts/quran/notes";
 import type { QuranRuntimeVerse } from "@nakafa/aksara-contracts/quran/snapshot/row";
 import { NakafaAgentDataReadError } from "@repo/contents/agent/errors";

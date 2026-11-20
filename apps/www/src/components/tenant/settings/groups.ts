@@ -3,8 +3,8 @@ import type { OptimisticLocalStore, OptimisticUpdate } from "@confect/react";
 import { Id } from "@repo/backend/confect/_generated/id";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import { Array as Arr, Option, Schema } from "effect";
+import type { Cohort } from "@/components/tenant/settings/state";
 import {
-  type Cohort,
   draftText,
   editCohort,
   insertCohort,

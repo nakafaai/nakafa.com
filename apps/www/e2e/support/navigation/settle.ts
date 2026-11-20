@@ -1,10 +1,12 @@
 import type { Page, Request } from "@playwright/test";
 import { Array as Arr, Clock, Duration, Effect, Schema } from "effect";
+import type {
+  RequestTracker,
+  TrackedRequestKind,
+} from "@/e2e/support/requests";
 import {
   APP_SCRIPT_PATTERN,
-  type RequestTracker,
   SERVER_FUNCTION_HEADER,
-  type TrackedRequestKind,
   withRequestTracker,
 } from "@/e2e/support/requests";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";

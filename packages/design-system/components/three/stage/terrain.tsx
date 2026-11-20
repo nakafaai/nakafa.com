@@ -1,9 +1,7 @@
 import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
 import { useStage } from "@repo/design-system/components/three/stage/context";
-import {
-  type GroundSchema,
-  paintGround,
-} from "@repo/design-system/components/three/stage/grain";
+import type { GroundSchema } from "@repo/design-system/components/three/stage/grain";
+import { paintGround } from "@repo/design-system/components/three/stage/grain";
 import { useEffect, useMemo } from "react";
 import {
   DataTexture,

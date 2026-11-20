@@ -17,10 +17,12 @@ import {
 import { RendererDomainSchema } from "@nakafa/aksara-contracts/renderer/domain";
 import { Array as Arr, Effect, MutableList, Option, Schema } from "effect";
 import type { Locale } from "use-intl";
+import type {
+  ArticlePageCursor,
+  PublishedArticleCategory,
+  PublishedArticlePage,
+} from "@/lib/content/article/catalog";
 import {
-  type ArticlePageCursor,
-  type PublishedArticleCategory,
-  type PublishedArticlePage,
   readPublishedArticlePage,
   readPublishedCategories,
 } from "@/lib/content/article/catalog";

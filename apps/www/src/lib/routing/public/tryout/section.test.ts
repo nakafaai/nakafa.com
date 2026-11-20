@@ -3,7 +3,8 @@ import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
 import { readTryoutRedirect } from "@/lib/routing/public/tryout";
 import { readSectionSuccessor } from "@/lib/routing/public/tryout/section";
-import { type RouteIdentity, serveTryoutCatalog } from "@/test/catalog";
+import type { RouteIdentity } from "@/test/catalog";
+import { serveTryoutCatalog } from "@/test/catalog";
 
 const mocks = vi.hoisted(() => ({
   exam: vi.fn(),

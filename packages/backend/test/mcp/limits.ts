@@ -1,8 +1,5 @@
-import {
-  jsonBody,
-  type McpCase,
-  modernPost,
-} from "@repo/backend/test/mcp/harness";
+import type { McpCase } from "@repo/backend/test/mcp/harness";
+import { jsonBody, modernPost } from "@repo/backend/test/mcp/harness";
 import { BODYLESS_RESPONSE_HEADERS } from "@repo/backend/test/mcp/headers";
 
 /** Limits: the body ceiling, the public-read budget, an unavailable client identity, and an outage of the rate limiter. */

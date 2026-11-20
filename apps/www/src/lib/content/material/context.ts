@@ -3,10 +3,8 @@ import contentRelease from "@repo/backend/confect/_generated/refs/contentRelease
 import { Array as Arr, Effect } from "effect";
 import type { Locale } from "use-intl";
 import { toMaterialPlacement } from "@/lib/content/material/navigation";
-import {
-  decodePublishedMaterialContext,
-  type PublishedMaterialIdentity,
-} from "@/lib/content/material/projection";
+import type { PublishedMaterialIdentity } from "@/lib/content/material/projection";
+import { decodePublishedMaterialContext } from "@/lib/content/material/projection";
 import { querySnapshotContentStore } from "@/lib/content/store/query";
 
 /**

@@ -2,10 +2,10 @@ import { Nina } from "@repo/design-system/components/ui/nina";
 import { String as Str } from "effect";
 import type { ReactNode } from "react";
 import { useFormatter, useTranslations } from "use-intl";
+import type { Lesson as LessonId } from "@/components/marketing/about/lesson/id";
 import {
   LESSON_SECTION_ID,
   LESSON_SUBJECTS,
-  type Lesson as LessonId,
 } from "@/components/marketing/about/lesson/id";
 import {
   getAtomLabels,

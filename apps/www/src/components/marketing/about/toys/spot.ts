@@ -1,4 +1,5 @@
-import { type ThingName, ThingNameSchema } from "@repo/mascot/thing/name";
+import type { ThingName } from "@repo/mascot/thing/name";
+import { ThingNameSchema } from "@repo/mascot/thing/name";
 import { Schema } from "effect";
 import { AnchorSchema } from "@/components/marketing/about/toys/place";
 

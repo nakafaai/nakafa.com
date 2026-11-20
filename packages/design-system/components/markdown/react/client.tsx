@@ -10,7 +10,8 @@ import {
 } from "@repo/design-system/components/markdown/react/source";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { lazy } from "@repo/design-system/lib/lazy";
-import { type ComponentProps, Suspense } from "react";
+import type { ComponentProps } from "react";
+import { Suspense } from "react";
 import { useTranslations } from "use-intl";
 
 const LazyMarkdownCodeBlock = lazy(() =>

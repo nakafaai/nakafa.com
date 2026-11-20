@@ -14,8 +14,8 @@ import {
   CardSectionFooter,
 } from "@/components/shared/card/section";
 import { useBillingNavigation } from "@/lib/billing/checkout";
+import type { BillingOverview } from "@/lib/billing/plan";
 import {
-  type BillingOverview,
   creditFooterKey,
   creditPeriodKey,
   usedPercent,

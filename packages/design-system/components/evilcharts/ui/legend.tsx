@@ -4,7 +4,8 @@ import { LegendItem } from "@repo/design-system/components/evilcharts/ui/legend-
 import { cn } from "cn";
 import { MutableHashMap } from "effect";
 import type * as React from "react";
-import { type DefaultLegendContentProps, Legend } from "recharts";
+import type { DefaultLegendContentProps } from "recharts";
+import { Legend } from "recharts";
 
 type ChartLegendVariant =
   | "square"

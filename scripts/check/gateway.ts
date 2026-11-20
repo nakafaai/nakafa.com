@@ -1,8 +1,12 @@
 import { Array as Arr, HashSet, Match, String as Str } from "effect";
+import type {
+  ExportSpecifier,
+  Expression,
+  ImportSpecifier,
+  Node,
+  SourceFile,
+} from "tsrs/ast";
 import {
-  type ExportSpecifier,
-  type Expression,
-  type ImportSpecifier,
   isBinaryExpression,
   isExportDeclaration,
   isIdentifier,
@@ -15,8 +19,6 @@ import {
   isStringLiteralLikeNode,
   isTemplateExpression,
   isVariableDeclaration,
-  type Node,
-  type SourceFile,
   SyntaxKind,
 } from "tsrs/ast";
 import { descendants, namesModule } from "#scripts/check/source";

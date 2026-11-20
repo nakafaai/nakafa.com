@@ -7,19 +7,13 @@ import { ECOLOGY_COLORS } from "@repo/design-system/lib/material/ecology";
 import { MACHINE_COLORS } from "@repo/design-system/lib/material/machine";
 import { TOWN_COLORS } from "@repo/design-system/lib/material/town";
 import { Array as Arr } from "effect";
-import {
-  type ReactNode,
-  useEffect,
-  useLayoutEffect,
-  useMemo,
-  useRef,
-} from "react";
+import type { ReactNode } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef } from "react";
+import type { BufferGeometry, InstancedMesh } from "three";
 import {
   BoxGeometry,
-  type BufferGeometry,
   Color,
   DoubleSide,
-  type InstancedMesh,
   Matrix4,
   Quaternion,
   Shape,

@@ -1,4 +1,5 @@
-import { expect, type Page } from "@playwright/test";
+import type { Page } from "@playwright/test";
+import { expect } from "@playwright/test";
 import { Effect } from "effect";
 import { live } from "@/e2e/support/changes";
 import { CHAT_PAGE, openChatPage } from "@/e2e/support/chat";

@@ -2,10 +2,12 @@ import {
   atLocalClock,
   digestInstant,
 } from "@repo/backend/confect/notifications/clock";
+import type {
+  NoticeKind,
+  Relation,
+} from "@repo/backend/confect/notifications/rules";
 import {
   Channel,
-  type NoticeKind,
-  type Relation,
   routeOf,
   Timing,
 } from "@repo/backend/confect/notifications/rules";

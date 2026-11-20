@@ -1,7 +1,8 @@
 import { Id } from "@repo/backend/confect/_generated/id";
 import { createFileRoute, useMatch } from "@tanstack/react-router";
 import { Option, Schema } from "effect";
-import { type ReactElement, useState } from "react";
+import type { ReactElement } from "react";
+import { useState } from "react";
 import {
   createOpening,
   OpeningContext,

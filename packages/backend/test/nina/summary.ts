@@ -13,11 +13,13 @@ import {
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
 import { GatewayIsolated } from "@repo/backend/test/gateway";
-import { measured, type Sample, totalOf } from "@repo/backend/test/measure";
-import { type EarlierTurn, filler } from "@repo/backend/test/nina/history";
+import type { Sample } from "@repo/backend/test/measure";
+import { measured, totalOf } from "@repo/backend/test/measure";
+import type { EarlierTurn } from "@repo/backend/test/nina/history";
+import { filler } from "@repo/backend/test/nina/history";
+import type { Replacement } from "@repo/backend/test/nina/seal";
 import {
   copyOf,
-  type Replacement,
   sealThreadIn,
   writtenThreadIn,
 } from "@repo/backend/test/nina/seal";

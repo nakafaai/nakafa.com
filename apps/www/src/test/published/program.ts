@@ -4,26 +4,22 @@ import {
   PublicPathSchema,
   Sha256HashSchema,
 } from "@nakafa/aksara-contracts/ids";
-import {
-  type ActiveAppLocaleCode,
-  AppLocaleSchema,
-} from "@nakafa/aksara-contracts/locale";
+import type { ActiveAppLocaleCode } from "@nakafa/aksara-contracts/locale";
+import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import { MaterialDomainSchema } from "@nakafa/aksara-contracts/material/domain";
+import type { CurriculumRoute } from "@nakafa/aksara-contracts/program/curriculum";
 import {
   CurriculumNodeKeySchema,
-  type CurriculumRoute,
   CurriculumRouteSchema,
 } from "@nakafa/aksara-contracts/program/curriculum";
+import type { LearningProgram } from "@nakafa/aksara-contracts/program/spec";
 import {
-  type LearningProgram,
   LearningProgramKeySchema,
   LearningProgramSchema,
 } from "@nakafa/aksara-contracts/program/spec";
 import { MaterialKeySchema } from "@nakafa/aksara-contracts/projection/material";
-import {
-  type ContentSnapshotRow,
-  canonicalizeContentSnapshotRow,
-} from "@nakafa/aksara-contracts/release/snapshot/data";
+import type { ContentSnapshotRow } from "@nakafa/aksara-contracts/release/snapshot/data";
+import { canonicalizeContentSnapshotRow } from "@nakafa/aksara-contracts/release/snapshot/data";
 import { Array as Arr, Option } from "effect";
 
 const rowHash = Sha256HashSchema.make(`sha256:${"a".repeat(64)}`);

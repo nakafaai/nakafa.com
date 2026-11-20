@@ -8,7 +8,8 @@ import {
 import { NINA_DOCUMENT_MEBIBYTES } from "@repo/backend/client/nina/uploads";
 import type nina from "@repo/backend/confect/_generated/refs/nina";
 import type { NinaFailureReason } from "@repo/backend/confect/nina/contract/turn";
-import { type ToastCopy, toast } from "@repo/design-system/lib/toast/notify";
+import type { ToastCopy } from "@repo/design-system/lib/toast/notify";
+import { toast } from "@repo/design-system/lib/toast/notify";
 import { Effect, Option, Schema } from "effect";
 import { requireConvexOnline } from "@/lib/convex/online";
 

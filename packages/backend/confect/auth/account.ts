@@ -2,11 +2,13 @@ import {
   DatabaseReader,
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
+import type {
+  GoogleMethod,
+  GoogleProfile,
+} from "@repo/backend/confect/auth/methods";
 import {
   AccountDeleted,
   GoogleAddressRefused,
-  type GoogleMethod,
-  type GoogleProfile,
   SchoolSignUpRefused,
 } from "@repo/backend/confect/auth/methods";
 import {

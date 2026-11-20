@@ -16,9 +16,9 @@ import {
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Array as Arr, Option, Schema } from "effect";
 import { useTranslations } from "use-intl";
+import type { DirectoryEntry } from "@/components/connectors/directory";
 import {
   DirectoryCategory,
-  type DirectoryEntry,
   directoryCategories,
 } from "@/components/connectors/directory";
 import { chosenOne } from "@/components/shared/table/filter";

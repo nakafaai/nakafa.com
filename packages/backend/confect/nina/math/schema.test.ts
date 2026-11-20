@@ -11,7 +11,8 @@ import {
   mathSeriesInput,
   mathStatisticsInput,
 } from "@repo/backend/confect/nina/math/schema";
-import { type Schema as AISchema, asSchema } from "ai";
+import type { Schema as AISchema } from "ai";
+import { asSchema } from "ai";
 import { Array as Arr, Effect, Predicate } from "effect";
 
 /** Proves that Effect-backed AI schemas keep their deterministic sync contract. */

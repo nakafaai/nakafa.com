@@ -1,5 +1,5 @@
+import type { LearningCapabilityName } from "@repo/backend/confect/nina/capability/spec";
 import {
-  type LearningCapabilityName,
   NAKAFA_CAPABILITY,
   RESEARCH_CAPABILITY,
 } from "@repo/backend/confect/nina/capability/spec";

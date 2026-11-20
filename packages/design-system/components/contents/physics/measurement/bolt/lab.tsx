@@ -38,7 +38,8 @@ import { INSTRUMENT_COLORS } from "@repo/design-system/lib/material/instrument";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr, Schema } from "effect";
 import type p5 from "p5";
-import { type ReactNode, useState } from "react";
+import type { ReactNode } from "react";
+import { useState } from "react";
 
 /** The head's height across its corners, in millimetres, for an M10 hex head. */
 const HEAD_HEIGHT = 18.5;

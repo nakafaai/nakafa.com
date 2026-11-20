@@ -19,14 +19,8 @@ import { specialistRequest } from "@repo/backend/test/nina/specialist";
 import { recordingMeter } from "@repo/backend/test/spend";
 import { encodeJsonText } from "@repo/utilities/json";
 import { MockLanguageModelV4 } from "ai/test";
-import {
-  DateTime,
-  Effect,
-  type Layer,
-  MutableHashMap,
-  MutableRef,
-  Option,
-} from "effect";
+import type { Layer } from "effect";
+import { DateTime, Effect, MutableHashMap, MutableRef, Option } from "effect";
 
 vi.mock("@repo/backend/confect/nina/calendar/tool", async (load) => {
   const actual =

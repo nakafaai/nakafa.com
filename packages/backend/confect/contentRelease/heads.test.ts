@@ -1,12 +1,8 @@
 import { describe, expect, it } from "@effect/vitest";
-import {
-  type ContentFamily,
-  ContentFamilySchema,
-} from "@nakafa/aksara-contracts/content";
-import {
-  type HeadPage,
-  HeadPageSchema,
-} from "@nakafa/aksara-contracts/release/head";
+import type { ContentFamily } from "@nakafa/aksara-contracts/content";
+import { ContentFamilySchema } from "@nakafa/aksara-contracts/content";
+import type { HeadPage } from "@nakafa/aksara-contracts/release/head";
+import { HeadPageSchema } from "@nakafa/aksara-contracts/release/head";
 import {
   MAX_HEAD_PAGE_COUNT,
   MAX_PUBLICATION_RESPONSE_BYTES,
@@ -40,17 +36,18 @@ import {
   TEST_ARTICLE_PATH,
   TEST_ARTICLE_SOURCE,
 } from "@repo/backend/test/content/runtime";
+import type { TestIdentity } from "@repo/backend/test/content/state";
 import {
   insertTestState,
   insertZeroRelease,
-  type TestIdentity,
 } from "@repo/backend/test/content/state";
 import {
   beginFixture,
   stageUpsertFixture,
 } from "@repo/backend/test/content/verify";
 import { getConvexSize } from "convex/values";
-import { convexTest, type TestConvex } from "convex-test";
+import type { TestConvex } from "convex-test";
+import { convexTest } from "convex-test";
 import { Array as Arr, Effect, Result, Schema } from "effect";
 
 const headPage = internal.contentRelease.heads.page;

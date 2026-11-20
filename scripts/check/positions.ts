@@ -1,7 +1,13 @@
 import { Array as Arr, HashSet } from "effect";
+import type {
+  BinaryExpression,
+  CallExpression,
+  JsxAttribute,
+  Node,
+  PropertyName,
+  SourceFile,
+} from "tsrs/ast";
 import {
-  type BinaryExpression,
-  type CallExpression,
   isArrayLiteralExpression,
   isBinaryExpression,
   isCallExpression,
@@ -19,10 +25,6 @@ import {
   isSpreadElement,
   isStringLiteralLikeNode,
   isTemplateExpression,
-  type JsxAttribute,
-  type Node,
-  type PropertyName,
-  type SourceFile,
   SyntaxKind,
 } from "tsrs/ast";
 import { CLASS_ATTRIBUTES, CLASS_FUNCTIONS } from "#scripts/check/editor";

@@ -2,12 +2,12 @@ import { describe, expect, it } from "@effect/vitest";
 import { SchoolName, UnitName } from "@repo/backend/confect/tenancy/schema";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Option, Schema, Struct } from "effect";
+import type { StartDraft } from "@/components/tenant/start/state";
 import {
   applyAnswer,
   chosenLevels,
   resumeItem,
   START_NAME_LIMIT,
-  type StartDraft,
   startRequest,
   suggestSlug,
   typedSlug,

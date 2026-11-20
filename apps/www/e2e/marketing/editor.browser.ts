@@ -1,4 +1,5 @@
-import { expect, type Page, type Request, test } from "@playwright/test";
+import type { Page, Request } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
 import { loadMarketingPage } from "@/e2e/support/marketing";
 import {

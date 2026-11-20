@@ -12,10 +12,8 @@ import {
 } from "@hugeicons/core-free-icons";
 import type { Id } from "@repo/backend/confect/_generated/id";
 import records from "@repo/backend/confect/_generated/refs/records";
-import {
-  GradeValue,
-  type GradingScheme,
-} from "@repo/backend/confect/records/scheme";
+import type { GradingScheme } from "@repo/backend/confect/records/scheme";
+import { GradeValue } from "@repo/backend/confect/records/scheme";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Button } from "@repo/design-system/components/ui/button";
 import { DropdownMenuItem } from "@repo/design-system/components/ui/dropdown-menu";
@@ -46,16 +44,17 @@ import { DataTable } from "@/components/shared/table/data";
 import { namedOptions } from "@/components/shared/table/filter";
 import { RowCopy, RowItems } from "@/components/shared/table/menu";
 import { TablePages } from "@/components/shared/table/pages";
-import { type StatusLook, TableStatus } from "@/components/shared/table/status";
+import type { StatusLook } from "@/components/shared/table/status";
+import { TableStatus } from "@/components/shared/table/status";
 import { TableText } from "@/components/shared/table/text";
 import { TableSearch } from "@/components/shared/table/toolbar";
 import { EmptyState } from "@/components/state/empty";
 import { EmptyNina } from "@/components/state/nina";
+import type { SheetLine } from "@/components/tenant/grades/change";
 import {
   correctChange,
   enterChange,
   releaseChange,
-  type SheetLine,
 } from "@/components/tenant/grades/change";
 import { LineDialog } from "@/components/tenant/line";
 import { GRADE_ICONS } from "@/components/tenant/settings/choices";

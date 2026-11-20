@@ -36,11 +36,11 @@ import { useId, useState } from "react";
 import { useFormatter, useTranslations } from "use-intl";
 import { useDialogs } from "@/components/shared/dialogs";
 import { PostMenuTrigger } from "@/components/tenant/classes/home/more";
+import type { WaitingPost } from "@/components/tenant/classes/home/waiting";
 import {
   cancelWaitingUpdate,
   editWaitingUpdate,
   isSavedWaiting,
-  type WaitingPost,
 } from "@/components/tenant/classes/home/waiting";
 import { useClassScope } from "@/components/tenant/classes/scope";
 import {

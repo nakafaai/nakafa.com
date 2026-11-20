@@ -1,6 +1,7 @@
 import { getRequest } from "@tanstack/react-start/server";
 import { Effect } from "effect";
-import { runtime, type ServerServices } from "@/lib/server/runtime";
+import type { ServerServices } from "@/lib/server/runtime";
+import { runtime } from "@/lib/server/runtime";
 
 /** How one server effect ends at the framework boundary. */
 interface RunServerOptions<E, M> {

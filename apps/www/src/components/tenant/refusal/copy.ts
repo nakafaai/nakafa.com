@@ -1,10 +1,9 @@
 import { GrantRejected } from "@repo/backend/confect/access/errors";
-import {
-  type CohortHold,
-  CohortInUse,
-  type PeriodHold,
-  PeriodInUse,
+import type {
+  CohortHold,
+  PeriodHold,
 } from "@repo/backend/confect/tenancy/errors";
+import { CohortInUse, PeriodInUse } from "@repo/backend/confect/tenancy/errors";
 import type { ToastCopy } from "@repo/design-system/lib/toast/notify";
 import { Option, Predicate, Record as Rec, Schema } from "effect";
 import { REFUSAL_COPY } from "@/components/tenant/refusal/tags";

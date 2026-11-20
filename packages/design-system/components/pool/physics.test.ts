@@ -1,5 +1,7 @@
 import { describe, expect, it } from "@effect/vitest";
-import { type Ball, FASTEST } from "@repo/design-system/components/pool/ball";
+import type { Ball } from "@repo/design-system/components/pool/ball";
+import { FASTEST } from "@repo/design-system/components/pool/ball";
+import type { World } from "@repo/design-system/components/pool/physics";
 import {
   hop,
   isResting,
@@ -15,7 +17,6 @@ import {
   STEP,
   step,
   tick,
-  type World,
 } from "@repo/design-system/components/pool/physics";
 import {
   ballAt,

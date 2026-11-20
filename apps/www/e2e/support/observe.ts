@@ -1,4 +1,5 @@
-import { expect, type Frame, type Page, type Request } from "@playwright/test";
+import type { Frame, Page, Request } from "@playwright/test";
+import { expect } from "@playwright/test";
 import { Effect, MutableList } from "effect";
 
 /**

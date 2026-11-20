@@ -7,9 +7,9 @@ import {
   outOfFocus,
   vignette,
 } from "@repo/design-system/components/contents/physics/canvas/paint";
+import type { JetAngle } from "@repo/design-system/components/contents/physics/kinematics/fountain/jet";
 import {
   JET_GRAVITY,
-  type JetAngle,
   JetAngleSchema,
   jetDrop,
   jetShape,
@@ -40,7 +40,8 @@ import { TOWN_COLORS } from "@repo/design-system/lib/material/town";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr, Schema } from "effect";
 import type p5 from "p5";
-import { type ReactNode, useState } from "react";
+import type { ReactNode } from "react";
+import { useState } from "react";
 
 /** How many drops are in the air at once along the stream. */
 const DROPS = 90;

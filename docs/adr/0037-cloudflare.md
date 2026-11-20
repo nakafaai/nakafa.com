@@ -234,7 +234,7 @@ for each, which is a workaround and not a better design.
   - the Poisson event bound is 100. The corpus reaches 2 in its original bodies,
     and a symbolic rate with an upper bound of 100 takes 0.2 seconds, where 1000
     takes 17 seconds.
-  The Measured section records every number behind these bounds.
+    The Measured section records every number behind these bounds.
 - The SymPy import allowance is 30 `getentropy` calls, measured with Pyodide 0.28.3
   (the runtime pinned by workerd) on the engine's import chain. SymPy creates three
   unseeded generators at import: two in `sympy/core/random.py` and one in
@@ -264,35 +264,35 @@ These rows are unbounded runs, measured before the bounds existed to find the
 values they set. A row that ends in 422 is a request that the new bounds now refuse
 before SymPy builds it, so it costs well under one second.
 
-| Shape | CPython result |
-| --- | --- |
-| `exp(exp(x))` series, order 8 / 10 / 12 | 0.84 s / 5.5 s / over 120 s |
-| `exp(sin(x))` series, order 8 / 12 / 14 / 15 | 0.22 s / 1.3 s / 3.4 to 4.6 s / 12.1 s |
-| `exp(sin(x))` series, order 20 | over 150 s |
-| Symbolic 3-by-3 `eigen_analysis` / `eigenvectors` / `eigenvalues` | 0.42 s / 0.35 s / 0.11 s |
-| Symbolic 4-by-4 `eigen_analysis` / `eigenvectors` / `eigenvalues` | over 120 s each |
-| Symbolic 4-by-4 `rref` / `det` / `inverse` | 1.9 s / 0.06 s / 0.15 s |
-| Symbolic 5-by-5 `det` / `inverse` | 2.0 s / 2.3 s |
-| Linear system, 2 equations, 8 symbols (work 16) | 0.02 s |
-| Linear system, 3 equations, 15 symbols (work 45) | 0.04 s |
-| Linear system, 4 equations, 24 symbols (work 96) | 0.75 s |
-| Linear system, 5 equations, 35 symbols (work 175) | over 170 s (round 2 record) |
-| Nonlinear, 2 unknowns, 7 symbols (work 14) | over 120 s |
-| Nonlinear, 3 unknowns, 9 parameters (work 36) | over 120 s |
-| Nonlinear, 2 unknowns, 30 symbols in a simple structure (work 60) | 0.11 s, now refused for having parameters |
-| One unknown of degree 70 with 38 parameters (work 39) | 2.2 s |
-| Definite `1/(x^k+1)` on [0, 1], k = 4 / 6 / 8 / 10 / 12 | 1.5 s / 1.6 s / 4.3 s / 7.0 s / 6.0 s |
-| Definite `1/(x^70+1)` on [0, 1] | over 120 s |
-| `((x+1)^70)^70` expansion | 6.9 s, then 422 for the response size |
-| `((x+1)^70+1)^70` expansion | over 110 s |
-| `(x+y+z)^70` expansion | 1.6 s, then 422 for the response size |
-| `(x+y+z+w)^20` expansion (1,771 terms) | 1.3 s |
-| `(x+y+z+w)^30` expansion | 4.0 s, then 422 for the response size |
-| `(x+1)^70 * (x+2)^70` expansion (degree 140) | 0.4 s |
-| Poisson cumulative, rate 4, upper 1,000 / 1,000,000 | 0.6 s / over 120 s |
-| Poisson cumulative, symbolic rate, upper 1,000 / 100 | 17.2 s, then 422 / 0.2 s |
-| `10**(10**7)` evaluation (round 2 bypass) | 10.7 s, then 422 for the digit limit |
-| `combination(10^6, 5*10^5)` (round 2 review's measurement, not rerun) | 63.9 s, then 422 |
+| Shape                                                                 | CPython result                            |
+| --------------------------------------------------------------------- | ----------------------------------------- |
+| `exp(exp(x))` series, order 8 / 10 / 12                               | 0.84 s / 5.5 s / over 120 s               |
+| `exp(sin(x))` series, order 8 / 12 / 14 / 15                          | 0.22 s / 1.3 s / 3.4 to 4.6 s / 12.1 s    |
+| `exp(sin(x))` series, order 20                                        | over 150 s                                |
+| Symbolic 3-by-3 `eigen_analysis` / `eigenvectors` / `eigenvalues`     | 0.42 s / 0.35 s / 0.11 s                  |
+| Symbolic 4-by-4 `eigen_analysis` / `eigenvectors` / `eigenvalues`     | over 120 s each                           |
+| Symbolic 4-by-4 `rref` / `det` / `inverse`                            | 1.9 s / 0.06 s / 0.15 s                   |
+| Symbolic 5-by-5 `det` / `inverse`                                     | 2.0 s / 2.3 s                             |
+| Linear system, 2 equations, 8 symbols (work 16)                       | 0.02 s                                    |
+| Linear system, 3 equations, 15 symbols (work 45)                      | 0.04 s                                    |
+| Linear system, 4 equations, 24 symbols (work 96)                      | 0.75 s                                    |
+| Linear system, 5 equations, 35 symbols (work 175)                     | over 170 s (round 2 record)               |
+| Nonlinear, 2 unknowns, 7 symbols (work 14)                            | over 120 s                                |
+| Nonlinear, 3 unknowns, 9 parameters (work 36)                         | over 120 s                                |
+| Nonlinear, 2 unknowns, 30 symbols in a simple structure (work 60)     | 0.11 s, now refused for having parameters |
+| One unknown of degree 70 with 38 parameters (work 39)                 | 2.2 s                                     |
+| Definite `1/(x^k+1)` on [0, 1], k = 4 / 6 / 8 / 10 / 12               | 1.5 s / 1.6 s / 4.3 s / 7.0 s / 6.0 s     |
+| Definite `1/(x^70+1)` on [0, 1]                                       | over 120 s                                |
+| `((x+1)^70)^70` expansion                                             | 6.9 s, then 422 for the response size     |
+| `((x+1)^70+1)^70` expansion                                           | over 110 s                                |
+| `(x+y+z)^70` expansion                                                | 1.6 s, then 422 for the response size     |
+| `(x+y+z+w)^20` expansion (1,771 terms)                                | 1.3 s                                     |
+| `(x+y+z+w)^30` expansion                                              | 4.0 s, then 422 for the response size     |
+| `(x+1)^70 * (x+2)^70` expansion (degree 140)                          | 0.4 s                                     |
+| Poisson cumulative, rate 4, upper 1,000 / 1,000,000                   | 0.6 s / over 120 s                        |
+| Poisson cumulative, symbolic rate, upper 1,000 / 100                  | 17.2 s, then 422 / 0.2 s                  |
+| `10**(10**7)` evaluation (round 2 bypass)                             | 10.7 s, then 422 for the digit limit      |
+| `combination(10^6, 5*10^5)` (round 2 review's measurement, not rerun) | 63.9 s, then 422                          |
 
 ### Corpus replay on Workers (round 3, decision 46; commit b7741ea6b7)
 

@@ -155,15 +155,15 @@ arrive as content.
 
 ## Implementation Status
 
-| Part | Status |
-| --- | --- |
-| The decisions in this ADR | Recorded by S0 |
-| Competency keys in Aksara content (CASE 1.1 mapping) | Planned, Aksara work first |
-| Competency tags typed by the teacher (`insightTags`) | Built |
-| Mastery rows (`insightMastery`), written when a sitting's results are released | Built |
-| Forecasts and their reasons, computed when read | Built |
-| The monthly test (`insightScores`, `insightCalibrations`), which takes a failing forecast off the screen | Built |
-| Insight screens for teachers and students, and teachers' narratives for guardians | Built |
-| Shared practice, per try-out track, which the student switches on and off (`insightShares`) | Built |
-| Nina's narrative drafts (`insightDrafts`) | Built |
-| Deletion with the period | Built |
+| Part                                                                                                     | Status                     |
+| -------------------------------------------------------------------------------------------------------- | -------------------------- |
+| The decisions in this ADR                                                                                | Recorded by S0             |
+| Competency keys in Aksara content (CASE 1.1 mapping)                                                     | Planned, Aksara work first |
+| Competency tags typed by the teacher (`insightTags`)                                                     | Built                      |
+| Mastery rows (`insightMastery`), written when a sitting's results are released                           | Built                      |
+| Forecasts and their reasons, computed when read                                                          | Built                      |
+| The monthly test (`insightScores`, `insightCalibrations`), which takes a failing forecast off the screen | Built                      |
+| Insight screens for teachers and students, and teachers' narratives for guardians                        | Built                      |
+| Shared practice, per try-out track, which the student switches on and off (`insightShares`)              | Built                      |
+| Nina's narrative drafts (`insightDrafts`)                                                                | Built                      |
+| Deletion with the period                                                                                 | Built                      |

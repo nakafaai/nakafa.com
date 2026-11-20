@@ -1,9 +1,8 @@
-import { type ComponentProps, createContext, type ReactNode, use } from "react";
+import type { ComponentProps, ReactNode } from "react";
+import { createContext, use } from "react";
 import { useTranslations } from "use-intl";
-import {
-  type BreadcrumbHeaderItem,
-  BreadcrumbHeaderPath,
-} from "@/components/shared/breadcrumb/header";
+import type { BreadcrumbHeaderItem } from "@/components/shared/breadcrumb/header";
+import { BreadcrumbHeaderPath } from "@/components/shared/breadcrumb/header";
 import { PageHeader } from "@/components/shared/page/header";
 import type { TryoutSectionPart } from "@/components/tryout/section/model";
 import { HOME_TARGET } from "@/lib/routing/target";

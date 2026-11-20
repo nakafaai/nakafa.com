@@ -1,5 +1,6 @@
 import { Array as Arr, Option } from "effect";
-import { isStringLiteralLikeNode, type SourceFile } from "tsrs/ast";
+import type { SourceFile } from "tsrs/ast";
+import { isStringLiteralLikeNode } from "tsrs/ast";
 import { nodesBelow } from "#scripts/check/drilling";
 import { classText, opening } from "#scripts/check/jsx";
 import { TEST_PATTERN } from "#scripts/check/kinds";

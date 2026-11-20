@@ -1,7 +1,8 @@
 "use client";
 
 import { Option } from "effect";
-import { createContext, type ReactNode, use } from "react";
+import type { ReactNode } from "react";
+import { createContext, use } from "react";
 import { getTryoutPublicPathTarget } from "@/components/tryout/route/path";
 import type { LinkTarget } from "@/lib/routing/link";
 import { TRYOUT_TARGET } from "@/lib/routing/target";

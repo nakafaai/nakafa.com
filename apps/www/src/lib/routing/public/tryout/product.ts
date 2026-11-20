@@ -1,7 +1,5 @@
-import {
-  type ActiveAppLocaleCode,
-  ActiveAppLocaleCodeSchema,
-} from "@nakafa/aksara-contracts/locale";
+import type { ActiveAppLocaleCode } from "@nakafa/aksara-contracts/locale";
+import { ActiveAppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
 import { Effect, Option, Schema } from "effect";
 import { permanentRedirect } from "@/lib/routing/public/redirect";
 import { readLocalizedSnbtSet } from "@/lib/routing/public/tryout/group";

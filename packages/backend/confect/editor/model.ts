@@ -1,6 +1,7 @@
 import { isHttpsUrl } from "@nakafa/aksara-contracts/text/syntax";
 import { MarkTypeSchema } from "@repo/backend/confect/editor/node";
-import { type DocumentRules, documentSchema } from "@repo/editor/document";
+import type { DocumentRules } from "@repo/editor/document";
+import { documentSchema } from "@repo/editor/document";
 import { Function as Fn, Schema } from "effect";
 
 /**

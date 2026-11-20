@@ -2,7 +2,8 @@ import { getUnknownErrorMessage } from "@repo/backend/confect/failure";
 import { RefsLoadError } from "@repo/backend/scripts/refs/errors";
 import { asLeafGroup } from "@repo/backend/scripts/refs/leaf";
 import { Effect, Path } from "effect";
-import { createServer, type ViteDevServer } from "vite";
+import type { ViteDevServer } from "vite";
+import { createServer } from "vite";
 
 /**
  * Starts Vite's module loader for the backend package, with the `@repo` alias of

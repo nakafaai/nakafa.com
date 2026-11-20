@@ -5,9 +5,11 @@ import {
   LineGlowFilter,
 } from "@repo/design-system/components/evilcharts/charts/composed/lines";
 import { getOpacity } from "@repo/design-system/components/evilcharts/charts/composed/opacity";
+import type {
+  ComposedAnimationType,
+  CurveType,
+} from "@repo/design-system/components/evilcharts/charts/composed-chart";
 import {
-  type ComposedAnimationType,
-  type CurveType,
   STROKE_WIDTH,
   useComposedChart,
 } from "@repo/design-system/components/evilcharts/charts/composed-chart";
@@ -15,19 +17,11 @@ import {
   getChartSeriesPaint,
   getColorsCount,
 } from "@repo/design-system/components/evilcharts/ui/chart-config";
-import {
-  ChartDot,
-  type DotVariant,
-} from "@repo/design-system/components/evilcharts/ui/dot";
+import type { DotVariant } from "@repo/design-system/components/evilcharts/ui/dot";
+import { ChartDot } from "@repo/design-system/components/evilcharts/ui/dot";
 import { RevealMask } from "@repo/design-system/components/evilcharts/ui/reveal";
-import {
-  Children,
-  type ComponentProps,
-  type FC,
-  isValidElement,
-  type ReactNode,
-  useId,
-} from "react";
+import type { ComponentProps, FC, ReactNode } from "react";
+import { Children, isValidElement, useId } from "react";
 import { Line as RechartsLine } from "recharts";
 
 type StrokeVariant = "solid" | "dashed" | "animated-dashed";

@@ -1,5 +1,6 @@
 import type { Ref } from "@confect/core";
-import { type OptimisticUpdate, useMutation } from "@confect/react";
+import type { OptimisticUpdate } from "@confect/react";
+import { useMutation } from "@confect/react";
 import {
   ArrowRight01Icon,
   Delete02Icon,
@@ -19,8 +20,8 @@ import { useDialogs } from "@/components/shared/dialogs";
 import { RowItems } from "@/components/shared/table/menu";
 import { LibraryEditDialog } from "@/components/tenant/classes/library/edit";
 import { MoveDialog } from "@/components/tenant/classes/library/move";
+import type { LibraryItem } from "@/components/tenant/classes/library/optimistic";
 import {
-  type LibraryItem,
   moveItemUpdate,
   starItemUpdate,
   trashItemUpdate,

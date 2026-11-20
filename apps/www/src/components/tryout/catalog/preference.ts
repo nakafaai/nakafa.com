@@ -1,8 +1,8 @@
 import type { Ref } from "@confect/core";
 import type { InvokeReturn } from "@confect/react";
 import type learningPreferences from "@repo/backend/confect/_generated/refs/learningPreferences";
-
-import { type ToastCopy, toast } from "@repo/design-system/lib/toast/notify";
+import type { ToastCopy } from "@repo/design-system/lib/toast/notify";
+import { toast } from "@repo/design-system/lib/toast/notify";
 import { Effect, Schema } from "effect";
 import type { Locale } from "use-intl";
 import { reportClientException } from "@/lib/analytics/client";

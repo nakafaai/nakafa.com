@@ -3,7 +3,8 @@
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Option } from "effect";
 import type { NotFoundPage } from "@/lib/routing/missing";
-import { answerRouted, type RouterHandler } from "@/lib/routing/routed.server";
+import type { RouterHandler } from "@/lib/routing/routed.server";
+import { answerRouted } from "@/lib/routing/routed.server";
 
 const reporting = vi.hoisted(() => ({
   report: vi.fn(() => Effect.void),

@@ -1,12 +1,6 @@
 import type { LearningCapabilityName } from "@repo/backend/confect/nina/capability/spec";
-import {
-  type Card,
-  crashed,
-  denied,
-  type Part,
-  ran,
-  stored,
-} from "@/e2e/support/transcript/message";
+import type { Card, Part } from "@/e2e/support/transcript/message";
+import { crashed, denied, ran, stored } from "@/e2e/support/transcript/message";
 
 /**
  * Every way a capability ends short of a plain answer: a part for each outcome

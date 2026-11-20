@@ -5,11 +5,8 @@ import {
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
 import { classAuthority } from "@repo/backend/confect/classroom/authority";
-import {
-  type ClassStatus,
-  classSlugOf,
-  classView,
-} from "@repo/backend/confect/classroom/class";
+import type { ClassStatus } from "@repo/backend/confect/classroom/class";
+import { classSlugOf, classView } from "@repo/backend/confect/classroom/class";
 import {
   addressTakenElsewhere,
   freeAddress,

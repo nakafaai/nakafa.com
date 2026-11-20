@@ -1,12 +1,8 @@
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { lazyRouteComponent, useLocation } from "@tanstack/react-router";
 import { Array as Arr, Record as Rec } from "effect";
-import {
-  type ComponentProps,
-  type ReactNode,
-  Suspense,
-  useEffect,
-} from "react";
+import type { ComponentProps, ReactNode } from "react";
+import { Suspense, useEffect } from "react";
 import { useTranslations } from "use-intl";
 import { PlayerFinish } from "@/components/player/finish";
 import { PlayerFlag } from "@/components/player/flag";

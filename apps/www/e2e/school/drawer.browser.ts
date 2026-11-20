@@ -1,4 +1,5 @@
-import { expect, type Locator, type Page, test } from "@playwright/test";
+import type { Locator, Page } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
 import { waitForStill } from "@/e2e/support/quiet";
 import { createSchool, hostAddress, signInOwner } from "@/e2e/support/school";

@@ -7,12 +7,12 @@ import { Context, Effect, Layer, Option, Result, Schema } from "effect";
 import { homeAccess } from "@/components/tenant/home/access";
 import { httpLayer } from "@/lib/convex/http";
 import { loadSchoolSignInTitle } from "@/lib/tenant/copy";
-import {
-  readAccountName,
-  type SchoolProfile,
-  type SchoolRead,
-  type SchoolViewer,
+import type {
+  SchoolProfile,
+  SchoolRead,
+  SchoolViewer,
 } from "@/lib/tenant/frame";
+import { readAccountName } from "@/lib/tenant/frame";
 
 /** A school read that the backend did not answer: a network failure, or an answer that did not decode. */
 export class SchoolReadFailed extends Schema.TaggedError<

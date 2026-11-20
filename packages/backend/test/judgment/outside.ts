@@ -1,4 +1,5 @@
-import { outside, type Row } from "@repo/backend/test/judgment/label";
+import type { Row } from "@repo/backend/test/judgment/label";
+import { outside } from "@repo/backend/test/judgment/label";
 import type { Array as Arr } from "effect";
 
 /**

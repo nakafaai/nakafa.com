@@ -1,9 +1,8 @@
 import { Effect, Option } from "effect";
-import {
-  type AddressRouter,
-  replaceSearchParam,
-} from "@/components/player/address";
-import { PLAYER_MODE_PARAM, type PlayerMode } from "@/components/player/mode";
+import type { AddressRouter } from "@/components/player/address";
+import { replaceSearchParam } from "@/components/player/address";
+import type { PlayerMode } from "@/components/player/mode";
+import { PLAYER_MODE_PARAM } from "@/components/player/mode";
 import { savePlayerMode } from "@/components/player/preference";
 import { reportClientException } from "@/lib/analytics/client";
 

@@ -3,10 +3,8 @@ import { CameraControls } from "@repo/design-system/components/three/camera/cont
 import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
 import { ThreeCanvas } from "@repo/design-system/components/three/canvas";
 import { useCoordinateControls } from "@repo/design-system/components/three/controls";
-import {
-  type CoordinateFrame,
-  createSymmetricFrame,
-} from "@repo/design-system/components/three/frame";
+import type { CoordinateFrame } from "@repo/design-system/components/three/frame";
+import { createSymmetricFrame } from "@repo/design-system/components/three/frame";
 import { CoordinateGrid } from "@repo/design-system/components/three/grid";
 import { Origin } from "@repo/design-system/components/three/origin";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene";
@@ -19,13 +17,8 @@ import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { getThemeAppearance } from "@repo/design-system/lib/theme/registry";
 import { useTheme } from "@repo/design-system/providers/theme";
 import { cn } from "cn";
-import {
-  type ComponentProps,
-  type CSSProperties,
-  createContext,
-  type ReactNode,
-  useMemo,
-} from "react";
+import type { ComponentProps, CSSProperties, ReactNode } from "react";
+import { createContext, useMemo } from "react";
 
 const CAMERA_POSITION_X = 12;
 const CAMERA_POSITION_Y = 8;

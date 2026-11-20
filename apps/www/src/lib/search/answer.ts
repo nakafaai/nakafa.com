@@ -1,6 +1,7 @@
 import type { Ref } from "@confect/core";
 import type contents from "@repo/backend/confect/_generated/refs/contents";
-import { Option, type Result, Schema } from "effect";
+import type { Result } from "effect";
+import { Option, Schema } from "effect";
 
 type ContentSearchResponse = Ref.Returns<typeof contents.queries.search.search>;
 

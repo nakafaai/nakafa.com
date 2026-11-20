@@ -1,4 +1,5 @@
-import { Effect, type PlatformError, Stream } from "effect";
+import type { PlatformError } from "effect";
+import { Effect, Stream } from "effect";
 import { ChildProcess } from "effect/process";
 
 /** Collects one child-process stream as UTF-8 text. */

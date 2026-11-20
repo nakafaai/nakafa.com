@@ -5,16 +5,10 @@ import type {
   CameraSubjectBounds,
 } from "@repo/design-system/lib/geometry/camera/bounds";
 import { MutableHashMap, MutableHashSet } from "effect";
-import {
-  createContext,
-  type ReactNode,
-  type RefObject,
-  use,
-  useLayoutEffect,
-  useRef,
-  useState,
-} from "react";
-import { Box3, type Group, Vector3 } from "three";
+import type { ReactNode, RefObject } from "react";
+import { createContext, use, useLayoutEffect, useRef, useState } from "react";
+import type { Group } from "three";
+import { Box3, Vector3 } from "three";
 
 function createFraming() {
   const listeners = MutableHashSet.empty<() => void>();

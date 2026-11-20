@@ -13,11 +13,13 @@ import {
   ActionClosed,
   WebhookLimit,
 } from "@repo/backend/confect/integrations/errors";
+import type {
+  ReceiverUrl,
+  WebhookChanges,
+} from "@repo/backend/confect/integrations/hook";
 import {
-  type ReceiverUrl,
   WEBHOOK_LIMIT,
   WEBHOOK_READS,
-  type WebhookChanges,
 } from "@repo/backend/confect/integrations/hook";
 import type { TenantActor } from "@repo/backend/confect/journal/schema";
 import { cursorOf } from "@repo/backend/confect/journal/store";

@@ -12,10 +12,8 @@ import {
   paintRay,
   toEdge,
 } from "@repo/design-system/components/contents/physics/optics/lens/bench";
-import {
-  type Point,
-  paintDarkRoom,
-} from "@repo/design-system/components/contents/physics/optics/light";
+import type { Point } from "@repo/design-system/components/contents/physics/optics/light";
+import { paintDarkRoom } from "@repo/design-system/components/contents/physics/optics/light";
 import { thinLens } from "@repo/design-system/components/contents/physics/optics/ray";
 import { useQuantity } from "@repo/design-system/components/contents/simulation/quantity";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
@@ -38,7 +36,8 @@ import { INSTRUMENT_COLORS } from "@repo/design-system/lib/material/instrument";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr, Option, Schema } from "effect";
 import type p5 from "p5";
-import { type ReactNode, useState } from "react";
+import type { ReactNode } from "react";
+import { useState } from "react";
 
 /** What the sketch reads on every frame: the focal length and the object distance, in centimetres. */
 const LensFrameSchema = Schema.Struct({

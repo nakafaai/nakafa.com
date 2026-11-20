@@ -1,8 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
-import {
-  type AssessmentDocument,
-  AssessmentDocumentSchema,
-} from "@nakafa/aksara-contracts/assessment/document";
+import type { AssessmentDocument } from "@nakafa/aksara-contracts/assessment/document";
+import { AssessmentDocumentSchema } from "@nakafa/aksara-contracts/assessment/document";
 import { documentMarkdown } from "@repo/contents/llms/document";
 import { Schema } from "effect";
 

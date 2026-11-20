@@ -1,7 +1,5 @@
-import {
-  readUsername,
-  type UsernameCheck,
-} from "@repo/backend/confect/users/username";
+import type { UsernameCheck } from "@repo/backend/confect/users/username";
+import { readUsername } from "@repo/backend/confect/users/username";
 import { Option, Result } from "effect";
 
 /** The dictionary key of the sentence that says why a name cannot be taken, or that it can. */

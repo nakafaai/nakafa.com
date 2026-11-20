@@ -1,8 +1,10 @@
 import { Line } from "@react-three/drei";
+import type {
+  ConstantCompositionModeId,
+  ConstantCompositionSceneColors,
+  ConstantCompositionScenePoint,
+} from "@repo/design-system/components/contents/chemistry/constant-composition-law/data";
 import {
-  type ConstantCompositionModeId,
-  type ConstantCompositionSceneColors,
-  type ConstantCompositionScenePoint,
   ConstantCompositionScenePointSchema,
   EXACT_RATIO_MODE_ID,
   HYDROGEN_EXCESS_MODE_ID,

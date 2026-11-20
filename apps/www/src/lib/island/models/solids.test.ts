@@ -1,17 +1,13 @@
 // @vitest-environment node
 import { describe, expect, it } from "@effect/vitest";
 import { Array as Arr, HashMap, Option } from "effect";
-import {
-  type Face,
-  normalOf,
-  rigged,
-  type Vec,
-} from "@/lib/island/models/parts";
+import type { Face, Vec } from "@/lib/island/models/parts";
+import { normalOf, rigged } from "@/lib/island/models/parts";
+import type { Spot } from "@/lib/island/models/solids";
 import {
   ball,
   moved,
   rod,
-  type Spot,
   scaled,
   slab,
   tint,

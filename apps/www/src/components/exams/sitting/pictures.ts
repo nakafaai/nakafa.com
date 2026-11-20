@@ -1,13 +1,12 @@
 import type { Interaction } from "@nakafa/aksara-contracts/assessment/interaction";
-import {
-  type AssetAddress,
-  MAX_ASSET_READS,
-} from "@repo/backend/confect/exams/asset";
+import type { AssetAddress } from "@repo/backend/confect/exams/asset";
+import { MAX_ASSET_READS } from "@repo/backend/confect/exams/asset";
 import { Node } from "@tiptap/pm/model";
 import { Array as Arr, Record as Rec } from "effect";
 import { createContext } from "react";
 import { assessmentSchema } from "@/lib/editor/assessment";
-import { assetIdsOf, type ExamAssetIdValue } from "@/lib/editor/pictures";
+import type { ExamAssetIdValue } from "@/lib/editor/pictures";
+import { assetIdsOf } from "@/lib/editor/pictures";
 
 /**
  * The addresses of the images that a question draws, by image ID. The question resolves them in

@@ -1,4 +1,5 @@
-import { type Browser, expect, type Page, test } from "@playwright/test";
+import type { Browser, Page } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import { Effect, Schema } from "effect";
 import { AI_STORAGE_KEY } from "@/components/ai/store/create";
 import { composerOf } from "@/e2e/support/attachment";

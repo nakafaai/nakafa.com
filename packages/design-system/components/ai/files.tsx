@@ -1,7 +1,9 @@
 import { useStableMutableValue } from "@repo/design-system/hooks/stable";
+import type {
+  PromptInputFile,
+  PromptInputRefusal,
+} from "@repo/design-system/lib/prompt/files";
 import {
-  type PromptInputFile,
-  type PromptInputRefusal,
   refusalsAfterSend,
   refusedFiles,
   validatePromptInputFiles,
@@ -15,14 +17,8 @@ import {
   Option,
   Schema,
 } from "effect";
-import {
-  type RefObject,
-  useCallback,
-  useLayoutEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import type { RefObject } from "react";
+import { useCallback, useLayoutEffect, useMemo, useRef, useState } from "react";
 
 const PromptInputFilesLimitsSchema = Schema.Struct({
   accept: Schema.optional(Schema.String),

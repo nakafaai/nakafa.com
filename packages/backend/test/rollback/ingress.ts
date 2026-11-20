@@ -1,10 +1,10 @@
 import { RegisteredConvexFunction } from "@confect/server";
 import { SignedContentArtifactSchema } from "@nakafa/aksara-contracts/content";
 import { SignedContentReleaseSchema } from "@nakafa/aksara-contracts/release";
+import type { RollbackRecord } from "@nakafa/aksara-contracts/release/rollback/spec";
 import {
   isRollbackUpsert,
   RollbackPageSchema,
-  type RollbackRecord,
 } from "@nakafa/aksara-contracts/release/rollback/spec";
 import { RoutePageSchema } from "@nakafa/aksara-contracts/release/route/page";
 import confectSchema from "@repo/backend/confect/_generated/schema";

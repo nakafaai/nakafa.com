@@ -1,8 +1,8 @@
 import { describe, expect, it } from "@effect/vitest";
 import { scene } from "@repo/mascot/nina/figure";
+import type { Life } from "@repo/mascot/nina/life";
 import {
   gazeAt,
-  type Life,
   press,
   retarget,
   start,
@@ -10,7 +10,8 @@ import {
   view,
 } from "@repo/mascot/nina/life";
 import type { Mark } from "@repo/mascot/nina/mark";
-import { BEHAVIORS, type Options } from "@repo/mascot/nina/options";
+import type { Options } from "@repo/mascot/nina/options";
+import { BEHAVIORS } from "@repo/mascot/nina/options";
 import { wholeNumbers } from "@repo/mascot/nina/spring";
 import { EVERY_OPTIONS } from "@repo/mascot/nina/test.fixture";
 import type { Shape } from "@repo/mascot/shape";

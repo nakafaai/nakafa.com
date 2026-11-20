@@ -1,13 +1,14 @@
 import { Array as Arr, Option } from "effect";
-import { type RefObject, useEffect, useRef } from "react";
+import type { RefObject } from "react";
+import { useEffect, useRef } from "react";
 import type {
   Question,
   QuestionId,
 } from "@/components/tenant/exams/optimistic";
+import type { PageBox } from "@/components/tenant/exams/reorder";
 import {
   dropIndex,
   edgeScroll,
-  type PageBox,
   placeOf,
   siblingShift,
   steppedIndex,

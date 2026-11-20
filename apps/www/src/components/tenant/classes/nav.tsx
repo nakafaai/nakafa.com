@@ -1,6 +1,6 @@
 import type { Ref } from "@confect/core";
+import type { PaginatedQueryItem } from "@confect/react";
 import {
-  type PaginatedQueryItem,
   PaginatedQueryResult,
   QueryResult,
   usePaginatedQuery,
@@ -18,7 +18,8 @@ import { useRequired } from "@repo/design-system/hooks/required";
 import type { Mascot } from "@repo/mascot/code";
 import { useMatchRoute } from "@tanstack/react-router";
 import { Array as Arr, MutableHashMap, Option } from "effect";
-import { createContext, type ReactNode, useEffect, useState } from "react";
+import type { ReactNode } from "react";
+import { createContext, useEffect, useState } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { markOf, withMarks } from "@/components/tenant/classes/marks";
@@ -27,7 +28,8 @@ import { useTenant, useViewerQuery } from "@/components/tenant/context";
 import { TenantSidebarGroup } from "@/components/tenant/group";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { isDenied } from "@/components/tenant/refusal";
-import { type PreloadedPage, readFirstPage } from "@/lib/data/paginated";
+import type { PreloadedPage } from "@/lib/data/paginated";
+import { readFirstPage } from "@/lib/data/paginated";
 import { Link } from "@/lib/routing/link";
 
 /** How many of a unit's classes the sidebar loads at a time, as the reader scrolls to them. */

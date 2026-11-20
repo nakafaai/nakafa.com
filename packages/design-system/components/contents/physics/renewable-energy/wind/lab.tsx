@@ -11,11 +11,11 @@ import {
   paintHills,
   paintSky,
 } from "@repo/design-system/components/contents/physics/renewable-energy/scenery/outdoor";
+import type { Site } from "@repo/design-system/components/contents/physics/renewable-energy/wind/site";
 import {
   dailyEnergy,
   rotorSpeed,
   SITE_WIND,
-  type Site,
   SiteSchema,
   turbinePower,
   windPower,
@@ -44,7 +44,8 @@ import { SKY_COLORS } from "@repo/design-system/lib/material/sky";
 import { TOWN_COLORS } from "@repo/design-system/lib/material/town";
 import { Array as Arr, Schema } from "effect";
 import type p5 from "p5";
-import { type ReactNode, useState } from "react";
+import type { ReactNode } from "react";
+import { useState } from "react";
 
 /** How much of the scene's width the wind crosses each second at 1 m/s. */
 const STREAK_PACE = 0.012;

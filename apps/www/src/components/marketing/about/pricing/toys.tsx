@@ -6,10 +6,8 @@ import {
   PRICING_SPARE_HERD,
   PRICING_TOY_HERD,
 } from "@/components/marketing/about/toys/herd";
-import {
-  ToyOverlay,
-  type ToyPlacement,
-} from "@/components/marketing/about/toys/layer";
+import type { ToyPlacement } from "@/components/marketing/about/toys/layer";
+import { ToyOverlay } from "@/components/marketing/about/toys/layer";
 import { within } from "@/components/marketing/about/toys/place";
 
 /** The distance from an animal to the thing beside it: a toy is 56px wide, with 14px between. */

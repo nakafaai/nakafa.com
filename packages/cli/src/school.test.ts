@@ -13,12 +13,8 @@ import {
   Record as Rec,
   Ref,
 } from "effect";
-import {
-  HttpClient,
-  type HttpClientRequest,
-  HttpClientResponse,
-  UrlParams,
-} from "effect/http";
+import type { HttpClientRequest } from "effect/http";
+import { HttpClient, HttpClientResponse, UrlParams } from "effect/http";
 import { TestClock } from "effect/testing";
 import { storeSession } from "#cli/credentials";
 import { loginSchool, logoutSchool, readSchool } from "#cli/school";

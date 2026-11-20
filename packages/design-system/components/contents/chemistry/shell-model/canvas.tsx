@@ -1,9 +1,9 @@
 import { ShellModelProvider } from "@repo/design-system/components/contents/chemistry/shell-model/context";
-import {
-  getShellModelSceneColors,
-  type ShellModelSample,
-  type ShellModelShells,
+import type {
+  ShellModelSample,
+  ShellModelShells,
 } from "@repo/design-system/components/contents/chemistry/shell-model/data";
+import { getShellModelSceneColors } from "@repo/design-system/components/contents/chemistry/shell-model/data";
 import { SceneSpinner } from "@repo/design-system/components/three/placeholder";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene";
 import { VisualCardBody } from "@repo/design-system/components/visual/card";

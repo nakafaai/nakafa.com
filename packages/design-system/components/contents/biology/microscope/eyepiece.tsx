@@ -1,14 +1,14 @@
 import { useThree } from "@react-three/fiber";
 import { MicroscopeField } from "@repo/design-system/components/contents/biology/bacteria/field";
+import type { Specimen } from "@repo/design-system/components/contents/biology/microscope/optics";
 import {
   GRATICULE_DIVISIONS,
   GRATICULE_SPAN,
   MICROMETER_DIVISION,
-  type Specimen,
 } from "@repo/design-system/components/contents/biology/microscope/optics";
+import type { SlideCell } from "@repo/design-system/components/contents/biology/microscope/slide";
 import {
   micrometerLines,
-  type SlideCell,
   slideCells,
 } from "@repo/design-system/components/contents/biology/microscope/slide";
 import { ThreeLabel } from "@repo/design-system/components/three/label";

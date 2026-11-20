@@ -1,7 +1,7 @@
 import { describe, expect, it } from "@effect/vitest";
+import type { Trip } from "@repo/design-system/components/contents/physics/kinematics/secant/trip";
 import {
   changeOver,
-  type Trip,
   tripDuration,
   tripIntervals,
   tripReach,

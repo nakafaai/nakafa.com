@@ -4,8 +4,8 @@ import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { tenantAccess } from "@repo/backend/confect/access/authority";
 import { AccessDenied } from "@repo/backend/confect/access/errors";
 import { assignRole } from "@repo/backend/confect/access/grant";
+import type { CardRefusal } from "@repo/backend/confect/identity/card";
 import {
-  type CardRefusal,
   cardOf,
   cardRefusalOf,
   writeCard,

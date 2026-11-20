@@ -1,7 +1,8 @@
 import { TEXT_ROLE_PAIRS } from "@repo/design-system/test/contrast";
 import Color from "colorjs.io";
 import { Array as Arr, Effect, FileSystem, Schema } from "effect";
-import postcss, { type AtRule, Root, type Rule } from "postcss";
+import type { AtRule, Rule } from "postcss";
+import postcss, { Root } from "postcss";
 
 /** Complete semantic color surface shared by every concrete profile. */
 export const SEMANTIC_COLOR_TOKENS = [

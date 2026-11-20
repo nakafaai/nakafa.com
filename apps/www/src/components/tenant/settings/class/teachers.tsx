@@ -1,5 +1,5 @@
+import type { PaginatedQueryItem } from "@confect/react";
 import {
-  type PaginatedQueryItem,
   PaginatedQueryResult,
   useMutation,
   usePaginatedQuery,
@@ -30,15 +30,13 @@ import { TableEnd } from "@/components/shared/table/pages";
 import { EmptyState } from "@/components/state/empty";
 import { LoadFailure } from "@/components/state/failure";
 import { EmptyNina } from "@/components/state/nina";
+import type { SchoolClass } from "@/components/tenant/settings/class/changes";
 import {
   assignTeacherChange,
   removeTeacherChange,
-  type SchoolClass,
 } from "@/components/tenant/settings/class/changes";
-import {
-  type PersonId,
-  SchoolTeacherPicker,
-} from "@/components/tenant/settings/people";
+import type { PersonId } from "@/components/tenant/settings/people";
+import { SchoolTeacherPicker } from "@/components/tenant/settings/people";
 import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 
 /** How many teachers one page of the list loads, and each page after it. */

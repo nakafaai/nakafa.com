@@ -1,4 +1,5 @@
-import { expect, type Locator, test } from "@playwright/test";
+import type { Locator } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
 import { runOnPage } from "@/e2e/support/chat";
 import { answerMessage, learnerMessage, PASTED } from "@/e2e/support/prose";

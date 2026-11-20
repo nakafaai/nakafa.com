@@ -22,10 +22,10 @@ D1. `packages/backend/confect/island` owns the domain: its contracts, rules, cat
 
 D2. Two tables.
 
-| Table | One row per | Fields | Indexes |
-| --- | --- | --- | --- |
-| `islands` | learner | `userId`, `lifetime` (every Star ever granted), `layout` (packed placements, D4), `version`, `badges`, `visibility` (`private`, `link`, `public`), `timeZone`, `harvested` (every material its harvests gave, D13), `learned` (the day of the newest grant, which watering reads, D13) | `by_userId` |
-| `islandAwards` | grant | `userId`, `kind`, `key`, `stars`, `day`, `subject` when a lesson grants it | `by_userId_and_key`, `by_userId_and_day`, `by_userId_and_kind` |
+| Table          | One row per | Fields                                                                                                                                                                                                                                                                                 | Indexes                                                        |
+| -------------- | ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------- |
+| `islands`      | learner     | `userId`, `lifetime` (every Star ever granted), `layout` (packed placements, D4), `version`, `badges`, `visibility` (`private`, `link`, `public`), `timeZone`, `harvested` (every material its harvests gave, D13), `learned` (the day of the newest grant, which watering reads, D13) | `by_userId`                                                    |
+| `islandAwards` | grant       | `userId`, `kind`, `key`, `stars`, `day`, `subject` when a lesson grants it                                                                                                                                                                                                             | `by_userId_and_key`, `by_userId_and_day`, `by_userId_and_kind` |
 
 D3. Level, spendable Stars and size are derived, never stored.
 
@@ -53,11 +53,11 @@ D8. `island/award.ts` is the one seam that grants Stars: `grantAward(userId, sou
 4. otherwise writes the row with what remains of the total, at most the kind's Stars, raises `lifetime`, and creates the island with the starter set when the learner has none yet;
 5. grants every badge the new row completes (D11).
 
-| Kind | Key | Stars | Daily count |
-| --- | --- | --- | --- |
-| `lesson` | the content | 5 | 6 |
-| `section` | the try-out set and section | 15 | none |
-| `set` | the try-out set | 40 | none |
+| Kind      | Key                         | Stars | Daily count |
+| --------- | --------------------------- | ----- | ----------- |
+| `lesson`  | the content                 | 5     | 6           |
+| `section` | the try-out set and section | 15    | none        |
+| `set`     | the try-out set             | 40    | none        |
 
 The daily total is 150. A key is held for good, so repeating a lesson or a set, or signing in, never grants twice.
 
@@ -65,23 +65,23 @@ D9. Each source calls the seam in the transaction that proves the learning. A tr
 
 D10. The island grows by level.
 
-| Level | Lifetime Stars | Size | Opens |
-| --- | --- | --- | --- |
-| 1 | 0 | 6 by 6 | grass, soil, trees, the hut |
-| 2 | 150 | 8 by 8 | pond with its cross-section, pier, boat |
-| 3 | 400 | 10 by 10 | garden, fence, path, ducks |
-| 4 | 900 | 12 by 12 | house, lamps, the first animal villager |
-| 5 | 1,800 | 16 by 16 | library, lab, observatory through subject badges |
-| 6 | 3,500 | 20 by 20 | school, Nakafa's mission building |
-| 7 | 6,000 | 24 by 24 | high layers |
+| Level | Lifetime Stars | Size     | Opens                                            |
+| ----- | -------------- | -------- | ------------------------------------------------ |
+| 1     | 0              | 6 by 6   | grass, soil, trees, the hut                      |
+| 2     | 150            | 8 by 8   | pond with its cross-section, pier, boat          |
+| 3     | 400            | 10 by 10 | garden, fence, path, ducks                       |
+| 4     | 900            | 12 by 12 | house, lamps, the first animal villager          |
+| 5     | 1,800          | 16 by 16 | library, lab, observatory through subject badges |
+| 6     | 3,500          | 20 by 20 | school, Nakafa's mission building                |
+| 7     | 6,000          | 24 by 24 | high layers                                      |
 
 D11. Badges are kept on the island row, because there are a dozen at most and every island read needs them. A badge is granted once, in the grant that completes it:
 
-| Badge | Completed by | Opens |
-| --- | --- | --- |
-| Explorer | grants on 7 different days within 10 | lighthouse |
-| Try-out Fighter | 10 sets finished | school |
-| Mathematics, Physics, Chemistry, Biology | 10 lessons of that subject finished | clock tower, observatory, laboratory, greenhouse |
+| Badge                                    | Completed by                         | Opens                                            |
+| ---------------------------------------- | ------------------------------------ | ------------------------------------------------ |
+| Explorer                                 | grants on 7 different days within 10 | lighthouse                                       |
+| Try-out Fighter                          | 10 sets finished                     | school                                           |
+| Mathematics, Physics, Chemistry, Biology | 10 lessons of that subject finished  | clock tower, observatory, laboratory, greenhouse |
 
 The plan names subject mastery of 10 topics; until Latihan measures mastery, a finished lesson stands for it, and Latihan moves the rule to mastery in its own change. Score medals (bronze, silver, gold statues and flags) arrive with the upgrade paths in W4.
 
@@ -121,14 +121,14 @@ The first set follows the reference: grass, soil, stone, water with its cross-se
 
 D17. Performance budget:
 
-| Budget | Value |
-| --- | --- |
-| A route's first JavaScript | unchanged; the budget spec measures the home and island routes |
-| Island chunk | loaded with `import()` only on intent or when the frame nears the screen after `untilPageRead` |
-| Drawing | on demand; ambient life at 30 frames a second at most, kept to `createFramePace`, stopped while the page is hidden or the canvas is off screen |
-| Drawing buffer | a ninth of the canvas's CSS pixels at the default art pixel |
-| A 24 by 24 island | under 60 draw calls and 50,000 triangles |
-| Sound | synthesized in Web Audio, no files |
+| Budget                     | Value                                                                                                                                          |
+| -------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| A route's first JavaScript | unchanged; the budget spec measures the home and island routes                                                                                 |
+| Island chunk               | loaded with `import()` only on intent or when the frame nears the screen after `untilPageRead`                                                 |
+| Drawing                    | on demand; ambient life at 30 frames a second at most, kept to `createFramePace`, stopped while the page is hidden or the canvas is off screen |
+| Drawing buffer             | a ninth of the canvas's CSS pixels at the default art pixel                                                                                    |
+| A 24 by 24 island          | under 60 draw calls and 50,000 triangles                                                                                                       |
+| Sound                      | synthesized in Web Audio, no files                                                                                                             |
 
 ### Life, sound and sharing
 

@@ -1,4 +1,5 @@
-import { expect, type Locator, type Page, test } from "@playwright/test";
+import type { Locator, Page } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import { COVER } from "@repo/design-system/components/pool/cover";
 import { Array as Arr, Effect, MutableList, Schema } from "effect";
 import { expectSignInParts, NINA } from "@/e2e/support/auth";

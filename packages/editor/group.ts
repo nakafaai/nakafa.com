@@ -1,4 +1,5 @@
-import { type AnyExtension, Node } from "@tiptap/core";
+import type { AnyExtension } from "@tiptap/core";
+import { Node } from "@tiptap/core";
 import { Array as Arr } from "effect";
 
 /**

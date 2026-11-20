@@ -9,11 +9,13 @@ import {
   Source,
   SourceTrigger,
 } from "@repo/design-system/components/ai/source";
-import { type DynamicToolUIPart, isToolUIPart, type ToolUIPart } from "ai";
+import type { DynamicToolUIPart, ToolUIPart } from "ai";
+import { isToolUIPart } from "ai";
 import { Array as Arr } from "effect";
 import { animate } from "motion";
 import { useMotionValue, useMotionValueEvent } from "motion/react";
-import { type ReactNode, useEffect, useState } from "react";
+import type { ReactNode } from "react";
+import { useEffect, useState } from "react";
 import { NinaAttachment } from "@/components/ai/attachment";
 import { Activity } from "@/components/ai/message/activity";
 import { useMessage } from "@/components/ai/message/context";

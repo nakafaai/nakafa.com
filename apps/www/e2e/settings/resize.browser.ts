@@ -1,4 +1,5 @@
-import { expect, type Page, test } from "@playwright/test";
+import type { Page } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import { Array as Arr, Effect } from "effect";
 import { live } from "@/e2e/support/changes";
 import { EMPTY, memoryRow, opened, openMemoryPage } from "@/e2e/support/memory";

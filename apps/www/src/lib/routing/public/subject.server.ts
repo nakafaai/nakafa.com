@@ -1,11 +1,8 @@
 import { env } from "cloudflare:workers";
 import { SITE_ORIGIN } from "@repo/seo/origin";
 import { Effect, Option, Record as Rec, Schema } from "effect";
-import {
-  type SubjectLocale,
-  SubjectMapJson,
-  subjectMapPath,
-} from "@/lib/routing/public/subject";
+import type { SubjectLocale } from "@/lib/routing/public/subject";
+import { SubjectMapJson, subjectMapPath } from "@/lib/routing/public/subject";
 import { hasStaticRelease } from "@/lib/routing/release";
 
 /** The release holds no readable map for a locale: a defect of its build, never a reader's miss. */

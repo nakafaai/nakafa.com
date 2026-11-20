@@ -10,8 +10,8 @@ import {
 } from "@/components/shared/page/panes";
 import { ForumChannel } from "@/components/tenant/classes/forum/channel";
 import { ForumFrame, ForumPick } from "@/components/tenant/classes/forum/frame";
+import type { OpenedThread } from "@/components/tenant/classes/forum/open";
 import {
-  type OpenedThread,
   OpenRootContext,
   useOpening,
 } from "@/components/tenant/classes/forum/open";

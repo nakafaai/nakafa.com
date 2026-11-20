@@ -1,7 +1,7 @@
 import { describe, expect, it } from "@effect/vitest";
 import { DateTime } from "effect";
+import type { Cell } from "@/components/tenant/roster/dapodik";
 import {
-  type Cell,
   readDapodikSheet,
   sourcedOf,
   studentsOf,

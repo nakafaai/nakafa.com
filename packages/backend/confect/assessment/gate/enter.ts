@@ -1,4 +1,8 @@
 import { standingOf } from "@repo/backend/confect/assessment/gate/device";
+import type {
+  TokenRefused,
+  TooManyTries,
+} from "@repo/backend/confect/assessment/gate/refusal";
 import {
   AttemptClosed,
   AttemptRefused,
@@ -8,14 +12,12 @@ import {
   NotOpen,
   OtherDevice,
   PlaceLocked,
-  type TokenRefused,
-  type TooManyTries,
 } from "@repo/backend/confect/assessment/gate/refusal";
-import {
-  type Attempt,
-  acceptsWrites,
-  type DeviceId,
+import type {
+  Attempt,
+  DeviceId,
 } from "@repo/backend/confect/assessment/gate/store";
+import { acceptsWrites } from "@repo/backend/confect/assessment/gate/store";
 import { Clock, Effect, Option, Schema } from "effect";
 
 /** When a target opens to new attempts, and when it closes, in server milliseconds. */

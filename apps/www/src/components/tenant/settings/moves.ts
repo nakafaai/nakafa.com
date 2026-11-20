@@ -2,11 +2,11 @@ import type { Ref } from "@confect/core";
 import type { OptimisticLocalStore, OptimisticUpdate } from "@confect/react";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import { Array as Arr, Option } from "effect";
-import {
-  type CohortDetail,
-  type CohortMember,
-  withoutItem,
+import type {
+  CohortDetail,
+  CohortMember,
 } from "@/components/tenant/settings/state";
+import { withoutItem } from "@/components/tenant/settings/state";
 import { changeLoaded, findLoaded, withPage } from "@/lib/data/loaded";
 
 /**

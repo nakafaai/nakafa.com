@@ -10,11 +10,11 @@ import {
 import { cva } from "class-variance-authority";
 import { Array as Arr } from "effect";
 import { useTranslations } from "use-intl";
-import {
-  HEADER_SECTIONS,
-  type HeaderLink,
-  type HeaderSection,
+import type {
+  HeaderLink,
+  HeaderSection,
 } from "@/components/marketing/shared/header/sections";
+import { HEADER_SECTIONS } from "@/components/marketing/shared/header/sections";
 import { TargetLink } from "@/lib/routing/link";
 
 /** The width of a group of links: a wide group lays its links out in two columns. */

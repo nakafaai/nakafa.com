@@ -1,9 +1,7 @@
 import { paperAnswers } from "@repo/backend/confect/exams/parts";
 import { Record as Rec } from "effect";
-import {
-  type PlayerQuestionModel,
-  projectQuestions,
-} from "@/components/player/model";
+import type { PlayerQuestionModel } from "@/components/player/model";
+import { projectQuestions } from "@/components/player/model";
 import type { Question } from "@/components/tenant/exams/optimistic";
 import type { ExamTry } from "@/components/tenant/exams/try/store";
 

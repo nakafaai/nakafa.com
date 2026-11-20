@@ -10,7 +10,8 @@ import { tanstackStart } from "@tanstack/react-start/plugin/vite";
 import react, { reactCompilerPreset } from "@vitejs/plugin-react";
 import rsc from "@vitejs/plugin-rsc";
 import { Result } from "effect";
-import { defineConfig, type Plugin, type PluginOption } from "vite";
+import type { Plugin, PluginOption } from "vite";
+import { defineConfig } from "vite";
 import { workerPlugins } from "#www/environment.config";
 import { ENVIRONMENT_OUTPUTS } from "#www/output.config";
 import {

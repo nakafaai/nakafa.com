@@ -22,13 +22,14 @@ import {
   TEST_MANIFEST_HASH,
   TEST_RELEASE_ID,
 } from "@repo/backend/test/content/release";
+import type { TestIdentity } from "@repo/backend/test/content/state";
 import {
   insertTestState,
   insertZeroRelease,
-  type TestIdentity,
 } from "@repo/backend/test/content/state";
 import { tryoutWorld } from "@repo/backend/test/tryout/world";
-import { convexTest, type TestConvex } from "convex-test";
+import type { TestConvex } from "convex-test";
+import { convexTest } from "convex-test";
 import { Array as Arr, DateTime, Effect, Option, Order } from "effect";
 
 const IDLE_RELEASE_COUNT = 40;

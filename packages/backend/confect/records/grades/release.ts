@@ -5,10 +5,8 @@ import { Member } from "@repo/backend/confect/middleware/member.spec";
 import { noticeGradeReleased } from "@repo/backend/confect/notifications/grades";
 import { Grade } from "@repo/backend/confect/records/access";
 import { gradeAuthority } from "@repo/backend/confect/records/authority";
-import {
-  type GradeState,
-  gradeView,
-} from "@repo/backend/confect/records/grade";
+import type { GradeState } from "@repo/backend/confect/records/grade";
+import { gradeView } from "@repo/backend/confect/records/grade";
 import spec from "@repo/backend/confect/records/grades.spec";
 import { schemeOf } from "@repo/backend/confect/records/version";
 import { personActor } from "@repo/backend/confect/tenancy/actor";

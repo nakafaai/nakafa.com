@@ -38,18 +38,18 @@ first school and every new country before its launch (K20).
 
 ### What a profile holds, and what stays in code
 
-| Part | The profile holds | Code keeps |
-| --- | --- | --- |
-| Calendar | The rule for the start of the school year, and the period names, such as semester ganjil and genap, Halbjahr, and term | The period model: rows with a type, an order, and dates |
-| Levels and grades | Labels per language, with the ISCED 2011 code | The ontology and its rules |
-| Grading scheme | A dated scheme with a version, bands, and report labels | The grading engine, and its normalisation from 0 to 1 for analytics |
-| Report and credentials | The report template, the signers, and the credential issuer | The report renderer, the import, and the export |
-| Identity | The name, format, purpose, legal basis, and sensitivity of identifiers such as NISN, NPSN, and UPN | Encrypted storage. An identifier is never a key. |
-| National exam catalogue | Dates, delivery mode, and scale | The assessment engine and IRT (ADR 0031) |
-| Exam profile | The official name per language, the sections and their durations, the total time, navigation, interactions, tools, accommodations, scoring, the report form, the write allowance after a deadline, and the reconciliation grace period (ADR 0013) | The player, the scoring, and the scale (ADR 0031) |
-| Age and consent | The age limit, and the rule for consent by a parent or guardian (K2) | The consent flow, with its time, method, and policy version |
-| Attendance | The attendance codes of the country | The summaries and the exports |
-| Locale and direction | The text direction, the number system, and the calendar, Gregorian or Hijri | The formatting engine, and the direction rules of the design system |
+| Part                    | The profile holds                                                                                                                                                                                                                                 | Code keeps                                                          |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
+| Calendar                | The rule for the start of the school year, and the period names, such as semester ganjil and genap, Halbjahr, and term                                                                                                                            | The period model: rows with a type, an order, and dates             |
+| Levels and grades       | Labels per language, with the ISCED 2011 code                                                                                                                                                                                                     | The ontology and its rules                                          |
+| Grading scheme          | A dated scheme with a version, bands, and report labels                                                                                                                                                                                           | The grading engine, and its normalisation from 0 to 1 for analytics |
+| Report and credentials  | The report template, the signers, and the credential issuer                                                                                                                                                                                       | The report renderer, the import, and the export                     |
+| Identity                | The name, format, purpose, legal basis, and sensitivity of identifiers such as NISN, NPSN, and UPN                                                                                                                                                | Encrypted storage. An identifier is never a key.                    |
+| National exam catalogue | Dates, delivery mode, and scale                                                                                                                                                                                                                   | The assessment engine and IRT (ADR 0031)                            |
+| Exam profile            | The official name per language, the sections and their durations, the total time, navigation, interactions, tools, accommodations, scoring, the report form, the write allowance after a deadline, and the reconciliation grace period (ADR 0013) | The player, the scoring, and the scale (ADR 0031)                   |
+| Age and consent         | The age limit, and the rule for consent by a parent or guardian (K2)                                                                                                                                                                              | The consent flow, with its time, method, and policy version         |
+| Attendance              | The attendance codes of the country                                                                                                                                                                                                               | The summaries and the exports                                       |
+| Locale and direction    | The text direction, the number system, and the calendar, Gregorian or Hijri                                                                                                                                                                       | The formatting engine, and the direction rules of the design system |
 
 ### Five locale settings, each on its own
 
@@ -57,13 +57,13 @@ Each setting is a separate value. None is derived from another, so a German
 school may use Indonesian content, and a country may have no interface language
 yet.
 
-| Setting | Standard | Indonesia | Germany (Berlin) | Saudi Arabia |
-| --- | --- | --- | --- | --- |
-| Interface language | BCP 47 tag, the app's locale code | `id` | `de` | `ar`, not active yet |
-| Content language | The languages that Aksara publishes | `id` | `de` | None yet, because Aksara has no Arabic content |
-| Country | ISO 3166-1, with an optional ISO 3166-2 | `ID` | `DE`, Berlin (`DE-BE`) | `SA` |
-| School time zone | IANA | `Asia/Jakarta` | `Europe/Berlin` | `Asia/Riyadh` |
-| Billing currency | ISO 4217, as the contract states | `IDR` | `EUR` | `SAR`, per contract |
+| Setting            | Standard                                | Indonesia      | Germany (Berlin)       | Saudi Arabia                                   |
+| ------------------ | --------------------------------------- | -------------- | ---------------------- | ---------------------------------------------- |
+| Interface language | BCP 47 tag, the app's locale code       | `id`           | `de`                   | `ar`, not active yet                           |
+| Content language   | The languages that Aksara publishes     | `id`           | `de`                   | None yet, because Aksara has no Arabic content |
+| Country            | ISO 3166-1, with an optional ISO 3166-2 | `ID`           | `DE`, Berlin (`DE-BE`) | `SA`                                           |
+| School time zone   | IANA                                    | `Asia/Jakarta` | `Europe/Berlin`        | `Asia/Riyadh`                                  |
+| Billing currency   | ISO 4217, as the contract states        | `IDR`          | `EUR`                  | `SAR`, per contract                            |
 
 The Saudi Arabia column is an example of the design only. No Saudi profile exists,
 and Arabic is not an active interface language.
@@ -139,12 +139,12 @@ The first rule is live. The other two are targets.
 
 ## Implementation Status
 
-| Part | Status |
-| --- | --- |
-| `UnitLevel`, the ten level choices in `packages/backend/confect/tenancy/schema.ts` | Live. The country profile replaces this list (K17). |
-| `confect/jurisdiction` | Planned, program wave A |
-| Self-serve founding defaults (K42) | Interim. `countryDefaults` in `packages/backend/confect/tenancy/start.ts` names the five countries a founder can pick, with each one's currency, content language, school-year start and time zones. The country profile replaces it, and the questionnaire then reads the countries from the profile |
-| Signed Aksara profile for Indonesia | Planned, program wave A |
-| The four locale settings stored on the organisation and the school | Live. The interface language stays in the `NAKAFA_LOCALE` cookie |
-| Text direction through one helper | Live. `textDirection` in `packages/internationalization/src/direction.ts` gives the direction. The root layout, `apps/www/src/[locale]/layout.tsx`, sets `dir` on `<html>` and passes it to `DesignSystemProvider`, which renders the `DirectionProvider` of Base UI |
-| School time through one formatter | Live. `formatSchoolTime` in `packages/internationalization/src/formats.ts` (ADR 0045) writes a school's own zone; `apps/www/src/components/tenant/settings/clock.ts` reads it for the School rows |
+| Part                                                                               | Status                                                                                                                                                                                                                                                                                                |
+| ---------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `UnitLevel`, the ten level choices in `packages/backend/confect/tenancy/schema.ts` | Live. The country profile replaces this list (K17).                                                                                                                                                                                                                                                   |
+| `confect/jurisdiction`                                                             | Planned, program wave A                                                                                                                                                                                                                                                                               |
+| Self-serve founding defaults (K42)                                                 | Interim. `countryDefaults` in `packages/backend/confect/tenancy/start.ts` names the five countries a founder can pick, with each one's currency, content language, school-year start and time zones. The country profile replaces it, and the questionnaire then reads the countries from the profile |
+| Signed Aksara profile for Indonesia                                                | Planned, program wave A                                                                                                                                                                                                                                                                               |
+| The four locale settings stored on the organisation and the school                 | Live. The interface language stays in the `NAKAFA_LOCALE` cookie                                                                                                                                                                                                                                      |
+| Text direction through one helper                                                  | Live. `textDirection` in `packages/internationalization/src/direction.ts` gives the direction. The root layout, `apps/www/src/[locale]/layout.tsx`, sets `dir` on `<html>` and passes it to `DesignSystemProvider`, which renders the `DirectionProvider` of Base UI                                  |
+| School time through one formatter                                                  | Live. `formatSchoolTime` in `packages/internationalization/src/formats.ts` (ADR 0045) writes a school's own zone; `apps/www/src/components/tenant/settings/clock.ts` reads it for the School rows                                                                                                     |

@@ -1,14 +1,15 @@
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { SITE_ORIGIN } from "@repo/seo/origin";
+import type { ErrorComponentProps } from "@tanstack/react-router";
 import {
   createFileRoute,
-  type ErrorComponentProps,
   lazyRouteComponent,
   notFound,
   useRouter,
 } from "@tanstack/react-router";
 import { Array as Arr, Effect, Match, Option, Schema } from "effect";
-import { type ReactElement, useEffect } from "react";
+import type { ReactElement } from "react";
+import { useEffect } from "react";
 import { useLocale, useTranslations } from "use-intl";
 import { ActionLink } from "@/components/state/action";
 import { BrokenRetry } from "@/components/state/broken";
@@ -24,14 +25,12 @@ import { isLostAccess } from "@/components/tenant/refusal";
 import { reportClientException } from "@/lib/analytics/client";
 import type { AuthLegalLinks } from "@/lib/auth/legal";
 import { readBrowserPresence } from "@/lib/auth/presence";
-import { outsiderOf, type SchoolFrame } from "@/lib/tenant/frame";
+import type { SchoolFrame } from "@/lib/tenant/frame";
+import { outsiderOf } from "@/lib/tenant/frame";
 import { schoolHead } from "@/lib/tenant/head";
 import { isSameFrame } from "@/lib/tenant/kept";
-import {
-  confirmFrame,
-  type SchoolVisit,
-  takeLiveRead,
-} from "@/lib/tenant/visit";
+import type { SchoolVisit } from "@/lib/tenant/visit";
+import { confirmFrame, takeLiveRead } from "@/lib/tenant/visit";
 
 /**
  * The shell of a member's school, with every provider and control it mounts. A student who has not

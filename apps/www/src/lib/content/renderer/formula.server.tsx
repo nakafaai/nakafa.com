@@ -1,8 +1,6 @@
 import { MathFontPreload } from "@repo/design-system/components/markdown/fonts";
-import {
-  MathBlockFrame,
-  type MathComponentProps,
-} from "@repo/design-system/components/markdown/math";
+import type { MathComponentProps } from "@repo/design-system/components/markdown/math";
+import { MathBlockFrame } from "@repo/design-system/components/markdown/math";
 import { drawMath } from "@repo/design-system/lib/markdown/draw";
 import { readMathFonts } from "@repo/design-system/lib/markdown/fonts";
 import { FormulaDrawing } from "@/lib/content/renderer/client/base/formula";

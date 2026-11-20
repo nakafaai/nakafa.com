@@ -1,23 +1,23 @@
+import type {
+  Cell,
+  Ion,
+  Reaction,
+  Trend,
+} from "@repo/design-system/components/contents/chemistry/electrolysis/cell";
 import {
   anodeOf,
-  type Cell,
   cathodeOf,
   gasVolume,
   ION_CHARGE,
   ION_FORMULA,
-  type Ion,
   ionsOf,
   PRODUCT_FORMULA,
   phTrend,
   productMass,
-  type Reaction,
-  type Trend,
 } from "@repo/design-system/components/contents/chemistry/electrolysis/cell";
 import { getElectrolysisColors } from "@repo/design-system/components/contents/chemistry/electrolysis/color";
-import {
-  ElectrolysisScene,
-  type ElectrolysisSceneLabels,
-} from "@repo/design-system/components/contents/chemistry/electrolysis/scene";
+import type { ElectrolysisSceneLabels } from "@repo/design-system/components/contents/chemistry/electrolysis/scene";
+import { ElectrolysisScene } from "@repo/design-system/components/contents/chemistry/electrolysis/scene";
 import { mathNumber } from "@repo/design-system/components/contents/mathematics/number";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { CameraControls } from "@repo/design-system/components/three/camera/controls";
@@ -36,7 +36,8 @@ import {
 } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { Array as Arr } from "effect";
-import { type ReactNode, Suspense } from "react";
+import type { ReactNode } from "react";
+import { Suspense } from "react";
 import { useFormatter } from "use-intl";
 
 /** The molar volume of a gas at room conditions, in cubic centimetres, as the SPM paper gives it. */

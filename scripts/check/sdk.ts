@@ -12,15 +12,16 @@ import {
   String as Str,
   Tuple,
 } from "effect";
+import type { SourceFile } from "tsrs/ast";
 import {
   isExportDeclaration,
   isImportDeclaration,
   isStringLiteral,
-  type SourceFile,
 } from "tsrs/ast";
 import { loadsExport, loadsImport } from "#scripts/check/kinds";
 import { resolveSpecifier } from "#scripts/check/page";
-import { parseSources, type RepositorySource } from "#scripts/check/source";
+import type { RepositorySource } from "#scripts/check/source";
+import { parseSources } from "#scripts/check/source";
 
 /** The package specifier that names a backend module, such as `@repo/backend/confect/nina/usage`. */
 const BACKEND_SPECIFIER = "@repo/backend/";

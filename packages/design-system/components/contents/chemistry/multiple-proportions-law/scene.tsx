@@ -5,21 +5,22 @@ import {
   ChemistryParticleLabel,
   getChemistryParticleLabelPosition,
 } from "@repo/design-system/components/contents/chemistry/label";
-import {
-  MULTIPLE_PROPORTIONS_MODELS,
-  type MultipleProportionsAtom,
-  type MultipleProportionsCompoundModel,
-  type MultipleProportionsModeId,
-  type MultipleProportionsMolecule,
-  type MultipleProportionsSceneColors,
+import type {
+  MultipleProportionsAtom,
+  MultipleProportionsCompoundModel,
+  MultipleProportionsModeId,
+  MultipleProportionsMolecule,
+  MultipleProportionsSceneColors,
 } from "@repo/design-system/components/contents/chemistry/multiple-proportions-law/data";
+import { MULTIPLE_PROPORTIONS_MODELS } from "@repo/design-system/components/contents/chemistry/multiple-proportions-law/data";
 import { atomSymbol } from "@repo/design-system/components/contents/chemistry/symbol";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { getThreeParticleLabelFontSize } from "@repo/design-system/components/three/data/constants";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { useRequired } from "@repo/design-system/hooks/required";
 import { Array as Arr, HashMap, Option } from "effect";
-import { createContext, type ReactNode } from "react";
+import type { ReactNode } from "react";
+import { createContext } from "react";
 
 const FIRST_X = -0.78;
 const SECOND_X = 0.78;

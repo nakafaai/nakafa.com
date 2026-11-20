@@ -4,9 +4,9 @@ import { NakafaAgentSectionSchema } from "@repo/contents/agent/schema/ref";
 import { LocaleSchema } from "@repo/contents/content";
 import { Array as Arr, Effect, Option, Schema } from "effect";
 import { Argument, Command, Flag } from "effect/cli";
+import type { CliRequest } from "#cli/command/spec";
 import {
   ApiBaseSchema,
-  type CliRequest,
   CliRequestSchema,
   COMMAND_NAME,
   PositiveIntegerSchema,

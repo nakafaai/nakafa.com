@@ -1,7 +1,5 @@
-import {
-  type Locale,
-  LocaleSchema,
-} from "@repo/internationalization/src/locale";
+import type { Locale } from "@repo/internationalization/src/locale";
+import { LocaleSchema } from "@repo/internationalization/src/locale";
 import { Effect, Option, Schema } from "effect";
 import { hasTryoutAttemptCapability } from "@/components/tryout/route/path";
 import { answerRootDocument } from "@/lib/llms/negotiate.server";
@@ -23,9 +21,9 @@ import {
   readSpellingRedirectResponse,
 } from "@/lib/routing/redirect";
 import { isRenderedRoutePath } from "@/lib/routing/rendered";
+import type { RouterHandler } from "@/lib/routing/routed.server";
 import {
   answerRouted,
-  type RouterHandler,
   UncaughtRequestError,
 } from "@/lib/routing/routed.server";
 import { readSchoolRefusal } from "@/lib/routing/school/refusal";

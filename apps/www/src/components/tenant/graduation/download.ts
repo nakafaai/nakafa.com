@@ -2,12 +2,14 @@ import type { Id } from "@repo/backend/confect/_generated/id";
 import records from "@repo/backend/confect/_generated/refs/records";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Array as Arr, Effect, Option, Stream, Tuple } from "effect";
+import type {
+  GraduationOverview,
+  Sheet,
+} from "@/components/tenant/graduation/workbook";
 import {
   fileStem,
-  type GraduationOverview,
   ledgerWorkbook,
   readinessWorkbook,
-  type Sheet,
 } from "@/components/tenant/graduation/workbook";
 import { readOnce } from "@/lib/convex/read";
 

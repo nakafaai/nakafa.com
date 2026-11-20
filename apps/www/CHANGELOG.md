@@ -23,7 +23,7 @@
   serif reading title becomes Inter, the lesson and article title and summary move
   to the start of the reading column at the larger display size, and lesson pages
   drop the summary under the title while articles keep theirs.
-  
+
   Markdown and MDX headings render their words in the theme `primary` accent and
   draw the underline in the theme's validated chart mark, at Tailwind's own
   `decoration-2` and `underline-offset-4` values. A new `heading-rule` color role

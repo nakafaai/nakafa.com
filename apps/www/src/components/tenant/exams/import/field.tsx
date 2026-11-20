@@ -10,7 +10,8 @@ import {
   FieldLabel,
 } from "@repo/design-system/components/ui/field";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { type ReactNode, useId, useState } from "react";
+import type { ReactNode } from "react";
+import { useId, useState } from "react";
 import { useTranslations } from "use-intl";
 
 /**

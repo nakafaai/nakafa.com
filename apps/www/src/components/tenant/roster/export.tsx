@@ -17,10 +17,8 @@ import { useLongAction } from "@/components/shared/pending";
 import { useTenant } from "@/components/tenant/context";
 import { saveLedger } from "@/components/tenant/graduation/save";
 import { EXPORT_HEADER } from "@/components/tenant/roster/dapodik";
-import {
-  type GradeCohort,
-  GradeDownloadContext,
-} from "@/components/tenant/roster/download";
+import type { GradeCohort } from "@/components/tenant/roster/download";
+import { GradeDownloadContext } from "@/components/tenant/roster/download";
 import { RosterGradesExport } from "@/components/tenant/roster/grades";
 import { activePeriodOf } from "@/components/tenant/roster/period";
 import { useRosterUnit } from "@/components/tenant/roster/unit";

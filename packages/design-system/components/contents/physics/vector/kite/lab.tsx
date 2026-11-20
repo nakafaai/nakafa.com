@@ -5,8 +5,8 @@ import {
   sailGeometry,
   tailGeometry,
 } from "@repo/design-system/components/contents/physics/vector/kite/sail";
+import type { Line } from "@repo/design-system/components/contents/physics/vector/kite/string";
 import {
-  type Line,
   LineSchema,
   lineParts,
 } from "@repo/design-system/components/contents/physics/vector/kite/string";
@@ -36,15 +36,10 @@ import { CAR_COLORS } from "@repo/design-system/lib/material/car";
 import { MACHINE_COLORS } from "@repo/design-system/lib/material/machine";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr, Schema } from "effect";
-import {
-  type ReactNode,
-  Suspense,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
-import { DoubleSide, type Group } from "three";
+import type { ReactNode } from "react";
+import { Suspense, useEffect, useMemo, useRef, useState } from "react";
+import type { Group } from "three";
+import { DoubleSide } from "three";
 
 /** Metres of arrow per newton of tension. */
 const ARROW_SCALE = 0.25;

@@ -5,11 +5,13 @@ import {
   flaskRadiusAt,
   LabBench,
 } from "@repo/design-system/components/contents/chemistry/bench";
+import type {
+  Hue,
+  Titration,
+} from "@repo/design-system/components/contents/chemistry/titration/model";
 import {
-  type Hue,
   hueAfter,
   levelFor,
-  type Titration,
 } from "@repo/design-system/components/contents/chemistry/titration/model";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { ORIGIN_COLOR } from "@repo/design-system/components/three/data/constants";

@@ -1,9 +1,9 @@
 import { useFrame } from "@react-three/fiber";
+import type { RampAngle } from "@repo/design-system/components/contents/physics/kinematics/galileo/ramp";
 import {
   BELLS,
   bellGaps,
   bellPlaces,
-  type RampAngle,
   RampAngleSchema,
   rampAcceleration,
   rampDistance,
@@ -34,8 +34,10 @@ import { CAR_COLORS } from "@repo/design-system/lib/material/car";
 import { ROAD_COLORS } from "@repo/design-system/lib/material/road";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr, Schema } from "effect";
-import { type ReactNode, type Ref, Suspense, useRef, useState } from "react";
-import { DoubleSide, type Group, type MeshStandardMaterial } from "three";
+import type { ReactNode, Ref } from "react";
+import { Suspense, useRef, useState } from "react";
+import type { Group, MeshStandardMaterial } from "three";
+import { DoubleSide } from "three";
 
 /** The ramp board: its length along the slope, width, thickness, and the ball's radius, in metres. */
 const BOARD = { length: 4.4, thickness: 0.05, width: 0.16 } as const;

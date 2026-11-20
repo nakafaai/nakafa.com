@@ -1,8 +1,10 @@
+import type {
+  LearningContextInput,
+  LearningContextStorage,
+} from "@repo/backend/confect/contents/context";
 import {
   createCanonicalLearningContext,
   createContextKey,
-  type LearningContextInput,
-  type LearningContextStorage,
 } from "@repo/backend/confect/contents/context";
 import { toContentViewIoError } from "@repo/backend/confect/contents/views/spec";
 import type { ContentViewTarget } from "@repo/backend/confect/contents/views/target";

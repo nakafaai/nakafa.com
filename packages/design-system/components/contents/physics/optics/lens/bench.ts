@@ -5,10 +5,8 @@ import {
   gradientRect,
   mix,
 } from "@repo/design-system/components/contents/physics/canvas/paint";
-import {
-  beam,
-  type Point,
-} from "@repo/design-system/components/contents/physics/optics/light";
+import type { Point } from "@repo/design-system/components/contents/physics/optics/light";
+import { beam } from "@repo/design-system/components/contents/physics/optics/light";
 import type { Image } from "@repo/design-system/components/contents/physics/optics/ray";
 import { getColor } from "@repo/design-system/lib/color";
 import { BENCH_COLORS } from "@repo/design-system/lib/material/bench";

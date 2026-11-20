@@ -109,13 +109,13 @@ and the parent's sign-in are served on the school host (ADR 0026).
     address (ADR 0011).
   - A deleted account cannot sign in again (`AccountDeleted`), and each sign-in
     binds the guardian Persons that a school linked to the address (ADR 0034).
-  An invite claim matches the verified address to the invite's, and a school's
-  email domains still decide which addresses it may invite and claim
-  (`admitsAddress`, ADR 0011). The earlier check of the Google account's hosted
-  domain (`hd`), which told a Workspace account from a personal account made on
-  a school address, is gone, because Convex Auth's Google profile carries no
-  `hd` claim; at the cutover no school had set a domain. It returns when
-  upstream passes `hd` through (Moving To Convex Auth).
+    An invite claim matches the verified address to the invite's, and a school's
+    email domains still decide which addresses it may invite and claim
+    (`admitsAddress`, ADR 0011). The earlier check of the Google account's hosted
+    domain (`hd`), which told a Workspace account from a personal account made on
+    a school address, is gone, because Convex Auth's Google profile carries no
+    `hd` claim; at the cutover no school had set a domain. It returns when
+    upstream passes `hd` through (Moving To Convex Auth).
 - **Username.** A school issues a login name that is unique within the school
   (`schoolLogins`). Convex Auth's username of a school account is the account's
   own id, which nobody types: `auth/school:signIn` resolves the school and the

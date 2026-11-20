@@ -1,4 +1,5 @@
-import { type BrowserContext, expect, type Page, test } from "@playwright/test";
+import type { BrowserContext, Page } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import en from "@repo/internationalization/dictionaries/en.json" with {
   type: "json",
 };

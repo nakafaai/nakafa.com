@@ -1,8 +1,6 @@
 import { useThree } from "@react-three/fiber";
-import {
-  getPeriodicPropertiesSceneColors,
-  type PeriodicPropertyModeId,
-} from "@repo/design-system/components/contents/chemistry/periodic-properties/data";
+import type { PeriodicPropertyModeId } from "@repo/design-system/components/contents/chemistry/periodic-properties/data";
+import { getPeriodicPropertiesSceneColors } from "@repo/design-system/components/contents/chemistry/periodic-properties/data";
 import {
   PERIODIC_PROPERTIES_FLOOR,
   PeriodicPropertiesScene,

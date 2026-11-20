@@ -3,8 +3,10 @@ import type {
   ReactionSceneColors,
 } from "@repo/design-system/components/contents/chemistry/chemical-reaction-characteristics/data";
 import { useRequired } from "@repo/design-system/hooks/required";
-import { createContext, type ReactNode, useMemo } from "react";
-import { createStore, type ExtractState, useStore } from "zustand";
+import type { ReactNode } from "react";
+import { createContext, useMemo } from "react";
+import type { ExtractState } from "zustand";
+import { createStore, useStore } from "zustand";
 import { combine } from "zustand/middleware";
 
 /** Creates one lab's store, which holds the cue its reader picked. */

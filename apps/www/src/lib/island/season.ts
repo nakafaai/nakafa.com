@@ -1,5 +1,6 @@
 import { Array as Arr, DateTime, Schema } from "effect";
-import { colorOf, RAMPS, rgbOf, type Tone } from "@/lib/island/palette";
+import type { Tone } from "@/lib/island/palette";
+import { colorOf, RAMPS, rgbOf } from "@/lib/island/palette";
 
 /**
  * Every season the world knows (ADR 0047, D8): the four of the temperate

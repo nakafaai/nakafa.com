@@ -9,21 +9,20 @@ import {
   FeedCursorJson,
   feedPage,
 } from "@repo/backend/confect/notifications/feed";
+import type { HeldSchool } from "@repo/backend/confect/notifications/held";
 import {
   HELD_SCHOOL_LIMIT,
-  type HeldSchool,
   heldSchools,
 } from "@repo/backend/confect/notifications/held";
 import { LIST_PAGE_LIMIT } from "@repo/backend/confect/notifications/inbox.impl";
+import type { Fixture, PersonId } from "@repo/backend/test/inbox";
 import {
   addPerson,
   claim,
   claimedPersons,
-  type Fixture,
   insertRows,
   inviteAt,
   NOW,
-  type PersonId,
   storedRows,
 } from "@repo/backend/test/inbox";
 import { journal, tenancyFixture } from "@repo/backend/test/tenancy";

@@ -1,4 +1,5 @@
-import { type Deadline, purposes } from "@repo/backend/confect/gateway/purpose";
+import type { Deadline } from "@repo/backend/confect/gateway/purpose";
+import { purposes } from "@repo/backend/confect/gateway/purpose";
 import { Clock, Context, Duration, Effect, Ref } from "effect";
 
 /**

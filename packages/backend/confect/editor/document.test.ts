@@ -3,8 +3,8 @@ import {
   AssessmentDocumentSchema,
   MAX_DOCUMENT_DEPTH,
 } from "@nakafa/aksara-contracts/assessment/document";
+import type { Document } from "@repo/backend/confect/editor/document";
 import {
-  type Document,
   DocumentSchema,
   DocumentTextSchema,
   encodeDocument,

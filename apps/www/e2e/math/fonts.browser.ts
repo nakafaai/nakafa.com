@@ -1,4 +1,5 @@
-import { expect, type Page, test } from "@playwright/test";
+import type { Page } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import { Array as Arr, Effect, HashSet, Order } from "effect";
 import { pinnedRoutes } from "@/e2e/support/corpus";
 import { readMathFonts } from "@/e2e/support/fonts";

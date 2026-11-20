@@ -8,10 +8,8 @@ import {
   Scheduler,
 } from "@repo/backend/confect/_generated/services";
 import { MentionRefused } from "@repo/backend/confect/classroom/forum/errors";
-import {
-  type Mention,
-  mentionedPeople,
-} from "@repo/backend/confect/classroom/forum/mention";
+import type { Mention } from "@repo/backend/confect/classroom/forum/mention";
+import { mentionedPeople } from "@repo/backend/confect/classroom/forum/mention";
 import { managesForum } from "@repo/backend/confect/classroom/forum/policy";
 import { mayIn, principalOf } from "@repo/backend/confect/classroom/roster";
 import { Member } from "@repo/backend/confect/middleware/member.spec";

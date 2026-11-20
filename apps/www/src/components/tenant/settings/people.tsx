@@ -1,8 +1,5 @@
-import {
-  type PaginatedQueryItem,
-  PaginatedQueryResult,
-  usePaginatedQuery,
-} from "@confect/react";
+import type { PaginatedQueryItem } from "@confect/react";
+import { PaginatedQueryResult, usePaginatedQuery } from "@confect/react";
 import { ArrowDown01Icon, UserIcon } from "@hugeicons/core-free-icons";
 import { useDebouncedValue } from "@mantine/hooks";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";

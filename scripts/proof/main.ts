@@ -1,9 +1,5 @@
-import {
-  ENGINES,
-  HeadSha,
-  type ProofResult,
-  SpecPath,
-} from "@repo/testing/proof";
+import type { ProofResult } from "@repo/testing/proof";
+import { ENGINES, HeadSha, SpecPath } from "@repo/testing/proof";
 import { Array as Arr, Effect, Option, Schema } from "effect";
 import { ChildProcess } from "effect/process";
 import { runEntry } from "#scripts/entry";

@@ -12,10 +12,8 @@ import {
   getSearchTokens,
   rankSearchResult,
 } from "@repo/backend/confect/nina/nakafa/search";
-import {
-  type NakafaAgentSearchFactsSchema,
-  NakafaAgentSearchResultSchema,
-} from "@repo/contents/agent/schema/search";
+import type { NakafaAgentSearchFactsSchema } from "@repo/contents/agent/schema/search";
+import { NakafaAgentSearchResultSchema } from "@repo/contents/agent/schema/search";
 import {
   NAKAFA_AGENT_MAX_LIMIT,
   NAKAFA_AGENT_MAX_OFFSET,

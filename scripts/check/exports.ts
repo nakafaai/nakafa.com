@@ -9,6 +9,7 @@ import {
   Schema,
   String as Str,
 } from "effect";
+import type { Node, SourceFile, Statement } from "tsrs/ast";
 import {
   isClassDeclaration,
   isEnumDeclaration,
@@ -19,9 +20,6 @@ import {
   isNamedExports,
   isTypeAliasDeclaration,
   isVariableStatement,
-  type Node,
-  type SourceFile,
-  type Statement,
   SyntaxKind,
 } from "tsrs/ast";
 import { RepositoryReadError } from "#scripts/check/files";
@@ -32,7 +30,8 @@ import {
   heldNames,
   namespaceStems,
 } from "#scripts/check/readers";
-import { isGenerated, type RepositorySource } from "#scripts/check/source";
+import type { RepositorySource } from "#scripts/check/source";
+import { isGenerated } from "#scripts/check/source";
 
 /** Everything between two words. A word is a run of identifier characters. */
 const WORD_BREAK_PATTERN = /[^\w$]+/u;

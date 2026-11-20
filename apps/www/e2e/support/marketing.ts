@@ -1,4 +1,5 @@
-import { expect, type Page } from "@playwright/test";
+import type { Page } from "@playwright/test";
+import { expect } from "@playwright/test";
 import type { Contributor } from "@repo/contents/contributor";
 import { Effect, Schema } from "effect";
 import { waitForCommittedAppRouter } from "@/e2e/support/navigation/readiness";

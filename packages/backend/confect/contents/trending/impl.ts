@@ -11,8 +11,8 @@ import {
 } from "@repo/backend/confect/contents/popularity";
 import { learningPopularityRankings } from "@repo/backend/confect/contents/rankings";
 import { buildContentSearchRef } from "@repo/backend/confect/contents/search/documents";
+import type { GetTrendingSubjectsArgs } from "@repo/backend/confect/contents/trending/spec";
 import {
-  type GetTrendingSubjectsArgs,
   TrendingSubjectIoError,
   trendingSubjectIoFailedCode,
 } from "@repo/backend/confect/contents/trending/spec";

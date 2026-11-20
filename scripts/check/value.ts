@@ -1,8 +1,14 @@
 import { Array as Arr, HashMap, HashSet, Option, Tuple } from "effect";
+import type {
+  EntityName,
+  Identifier,
+  ImportClause,
+  MemberName,
+  SourceFile,
+  TypeElement,
+  TypeNode,
+} from "tsrs/ast";
 import {
-  type EntityName,
-  type Identifier,
-  type ImportClause,
   isArrayTypeNode,
   isConstructorTypeNode,
   isFunctionTypeNode,
@@ -24,11 +30,7 @@ import {
   isTypeOperatorNode,
   isTypeReferenceNode,
   isUnionTypeNode,
-  type MemberName,
-  type SourceFile,
   SyntaxKind,
-  type TypeElement,
-  type TypeNode,
 } from "tsrs/ast";
 
 /**

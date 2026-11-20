@@ -1,4 +1,5 @@
-import { expect, type Locator, type Page, test } from "@playwright/test";
+import type { Locator, Page } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import { seedXendit } from "@repo/backend/scripts/content/acceptance/xendit";
 import { Effect } from "effect";
 import { runFixture } from "@/e2e/support/acceptance";

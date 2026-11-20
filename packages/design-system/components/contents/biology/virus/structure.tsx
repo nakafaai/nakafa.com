@@ -1,11 +1,11 @@
 import { BiologyCallouts } from "@repo/design-system/components/contents/biology/callouts";
 import { useBiologyItemSelection } from "@repo/design-system/components/contents/biology/context";
 import { Instances } from "@repo/design-system/components/contents/biology/instances";
-import {
-  BiologyLabFrame,
-  type BiologyLabProps,
-  type BiologySceneProps,
+import type {
+  BiologyLabProps,
+  BiologySceneProps,
 } from "@repo/design-system/components/contents/biology/lab";
+import { BiologyLabFrame } from "@repo/design-system/components/contents/biology/lab";
 import { RotatingGroup } from "@repo/design-system/components/contents/biology/motion";
 import {
   EnvelopeMaterial,
@@ -26,7 +26,8 @@ import type { NarrowCameraPose } from "@repo/design-system/lib/geometry/camera";
 import { VIRION_COLORS } from "@repo/design-system/lib/material/virion";
 import { Array as Arr } from "effect";
 import { useMemo, useRef } from "react";
-import { CatmullRomCurve3, type Group, Vector3 } from "three";
+import type { Group } from "three";
+import { CatmullRomCurve3, Vector3 } from "three";
 
 const VIRION_VIEW = {
   cameraPosition: [2.05, 1.5, 2.85],

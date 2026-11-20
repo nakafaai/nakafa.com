@@ -1,4 +1,5 @@
-import { expect, type Locator, test } from "@playwright/test";
+import type { Locator } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
 import { openChatPage, runOnPage } from "@/e2e/support/chat";
 import { entrySetHref } from "@/e2e/support/entry";

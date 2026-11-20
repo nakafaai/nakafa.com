@@ -1,4 +1,5 @@
-import { constructFilterFn, type RowData } from "@tanstack/react-table";
+import type { RowData } from "@tanstack/react-table";
+import { constructFilterFn } from "@tanstack/react-table";
 import {
   Array as Arr,
   DateTime,

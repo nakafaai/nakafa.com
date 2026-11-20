@@ -4,22 +4,24 @@ import {
   ROAD,
   Road,
 } from "@repo/design-system/components/contents/physics/kinematics/road";
+import type { SedanRig } from "@repo/design-system/components/contents/physics/kinematics/sedan";
 import {
   SEDAN,
   Sedan,
-  type SedanRig,
 } from "@repo/design-system/components/contents/physics/kinematics/sedan";
+import type { Stop } from "@repo/design-system/components/contents/physics/kinematics/stopping-distance/motion";
 import {
-  type Stop,
   stopPosition,
   stoppingTime,
 } from "@repo/design-system/components/contents/physics/kinematics/stopping-distance/motion";
+import type {
+  Phase,
+  Trial,
+} from "@repo/design-system/components/contents/physics/kinematics/stopping-distance/reflex";
 import {
   judgePress,
   keepTrial,
-  type Phase,
   summarizeTrials,
-  type Trial,
   waitFrom,
 } from "@repo/design-system/components/contents/physics/kinematics/stopping-distance/reflex";
 import {
@@ -43,17 +45,10 @@ import {
 import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { CAR_COLORS } from "@repo/design-system/lib/material/car";
 import { Array as Arr, Effect, Option, Random } from "effect";
-import {
-  type KeyboardEvent,
-  type ReactNode,
-  type RefObject,
-  Suspense,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
-import { EventDispatcher, type Group, Quaternion, Vector3 } from "three";
+import type { KeyboardEvent, ReactNode, RefObject } from "react";
+import { Suspense, useEffect, useMemo, useRef, useState } from "react";
+import type { Group } from "three";
+import { EventDispatcher, Quaternion, Vector3 } from "three";
 
 /** Both cars cruise at 20 m/s, 72 km/h, two seconds apart. */
 const SPEED = 20;

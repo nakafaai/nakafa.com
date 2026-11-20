@@ -24,10 +24,8 @@ import {
 import type { runBun } from "#scripts/dependencies/command";
 import { REGISTRY_REVIEWS } from "#scripts/dependencies/reviews";
 import { GITHUB_ACTION_REVIEWS } from "#scripts/github/policy";
-import {
-  type GithubActionReleaseReview,
-  githubActionReleaseReviews,
-} from "#scripts/github/release";
+import type { GithubActionReleaseReview } from "#scripts/github/release";
+import { githubActionReleaseReviews } from "#scripts/github/release";
 import { capture, makeCapture } from "#scripts/test.capture";
 
 type CommandResult = Effect.Success<ReturnType<typeof runBun>>;

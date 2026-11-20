@@ -1,6 +1,6 @@
 import { Array as Arr } from "effect";
+import type { Bloom } from "@/lib/island/models/blooms";
 import {
-  type Bloom,
   bushOf,
   dotsOver,
   headOf,
@@ -8,7 +8,8 @@ import {
   rosetteOf,
   stemOf,
 } from "@/lib/island/models/blooms";
-import { type Face, mirrored, type Vec } from "@/lib/island/models/parts";
+import type { Face, Vec } from "@/lib/island/models/parts";
+import { mirrored } from "@/lib/island/models/parts";
 import { ball, rod, tube } from "@/lib/island/models/solids";
 
 /** A cup of petals opening upward from `y`, `r` across: a tulip's, a lotus's. */

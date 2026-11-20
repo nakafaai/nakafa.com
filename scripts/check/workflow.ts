@@ -1,4 +1,5 @@
 import { Array as Arr } from "effect";
+import type { Node, SourceFile } from "tsrs/ast";
 import {
   isCallExpression,
   isIdentifier,
@@ -7,8 +8,6 @@ import {
   isObjectLiteralExpression,
   isPropertyAccessExpression,
   isStringLiteral,
-  type Node,
-  type SourceFile,
 } from "tsrs/ast";
 import { handlerFunctions } from "#scripts/check/handler";
 

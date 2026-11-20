@@ -1,4 +1,5 @@
-import { expect, type Locator } from "@playwright/test";
+import type { Locator } from "@playwright/test";
+import { expect } from "@playwright/test";
 import { Array as Arr, Effect } from "effect";
 import { waitForStableCanvas } from "@/e2e/support/canvas";
 import { MATH_SCENE } from "@/e2e/support/selector";

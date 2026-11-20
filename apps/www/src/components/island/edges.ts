@@ -1,7 +1,8 @@
 import { Array as Arr, Option } from "effect";
 import { activate, programOf } from "@/components/island/buffers";
 import type { createFrame } from "@/components/island/frame";
-import { eyeOf, type Orbit } from "@/lib/island/camera";
+import type { Orbit } from "@/lib/island/camera";
+import { eyeOf } from "@/lib/island/camera";
 import { CLIP, invert } from "@/lib/island/matrix";
 import { EDGE_FRAGMENT, EDGE_VERTEX } from "@/lib/island/shaders";
 import { SEA_LEVEL } from "@/lib/island/world";

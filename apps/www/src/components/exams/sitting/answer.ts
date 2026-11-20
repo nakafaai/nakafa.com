@@ -14,10 +14,10 @@ import {
 } from "@/components/exams/sitting/entry";
 import { forgetKeptAttempt } from "@/components/exams/sitting/forget";
 import { keptAttempt, keptFinish } from "@/components/exams/sitting/keep";
+import type { PaperQuestion } from "@/components/exams/sitting/paper";
 import {
   changeSaved,
   nextVersionOf,
-  type PaperQuestion,
   setSavedResponse,
 } from "@/components/exams/sitting/paper";
 import { keptStorage } from "@/components/player/storage";

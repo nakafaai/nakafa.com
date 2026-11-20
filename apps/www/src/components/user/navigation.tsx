@@ -4,7 +4,8 @@ import {
   TabsTab,
 } from "@repo/design-system/components/ui/tabs";
 import { Array as Arr } from "effect";
-import { Link, type LinkTarget } from "@/lib/routing/link";
+import type { LinkTarget } from "@/lib/routing/link";
+import { Link } from "@/lib/routing/link";
 
 interface Props {
   tabs: readonly {

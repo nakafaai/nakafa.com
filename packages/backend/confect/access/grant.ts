@@ -14,14 +14,13 @@ import {
   integrationRole,
 } from "@repo/backend/confect/access/errors";
 import { activeGrants, GRANT_LIMIT } from "@repo/backend/confect/access/policy";
-import {
-  type BuiltinRole,
-  type GrantEndReason,
-  GrantScope,
-  type GrantStatus,
-  type GrantTerm,
-  OwnerRole,
+import type {
+  BuiltinRole,
+  GrantEndReason,
+  GrantStatus,
+  GrantTerm,
 } from "@repo/backend/confect/access/schema";
+import { GrantScope, OwnerRole } from "@repo/backend/confect/access/schema";
 import { ensureAccountSeat } from "@repo/backend/confect/billing/seats";
 import { TenantActor } from "@repo/backend/confect/journal/schema";
 import { Member } from "@repo/backend/confect/middleware/member.spec";

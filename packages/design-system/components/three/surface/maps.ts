@@ -1,7 +1,5 @@
-import {
-  paintDetail,
-  type Surface,
-} from "@repo/design-system/components/three/surface/detail";
+import type { Surface } from "@repo/design-system/components/three/surface/detail";
+import { paintDetail } from "@repo/design-system/components/three/surface/detail";
 import { MutableHashMap, Option } from "effect";
 import {
   DataTexture,

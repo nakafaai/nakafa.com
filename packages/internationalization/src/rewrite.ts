@@ -1,7 +1,5 @@
-import {
-  decodeLocale,
-  type Locale,
-} from "@repo/internationalization/src/locale";
+import type { Locale } from "@repo/internationalization/src/locale";
+import { decodeLocale } from "@repo/internationalization/src/locale";
 import {
   publicSegment,
   readCanonicalName,

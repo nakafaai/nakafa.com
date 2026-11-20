@@ -22,9 +22,9 @@ import {
   TEST_RELEASE_ID,
 } from "@repo/backend/test/content/release";
 import { insertTestRelease } from "@repo/backend/test/content/stage";
+import type { ProgramSnapshotData } from "@repo/backend/test/program/snapshot";
 import {
   makeProgramSnapshotData,
-  type ProgramSnapshotData,
   stageProgramSnapshot,
 } from "@repo/backend/test/program/snapshot";
 import {

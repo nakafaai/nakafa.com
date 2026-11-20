@@ -3,10 +3,8 @@ import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import schema from "@repo/backend/confect/_generated/schema";
 import { NINA_BUDGET } from "@repo/backend/confect/nina/budget";
 import { HISTORY_TURNS } from "@repo/backend/confect/nina/fold";
-import {
-  type NinaUncoveredTurn,
-  SUMMARY_FOLD_LIMIT,
-} from "@repo/backend/confect/nina/summaries.spec";
+import type { NinaUncoveredTurn } from "@repo/backend/confect/nina/summaries.spec";
+import { SUMMARY_FOLD_LIMIT } from "@repo/backend/confect/nina/summaries.spec";
 import {
   readUncovered,
   turnMessages,

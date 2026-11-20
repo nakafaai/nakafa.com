@@ -1,7 +1,8 @@
 import { Array as Arr } from "effect";
 import type { Coat, Species } from "@/lib/island/models/coat";
 import { eyesOf } from "@/lib/island/models/features";
-import { type Face, mirrored, type Vec } from "@/lib/island/models/parts";
+import type { Face, Vec } from "@/lib/island/models/parts";
+import { mirrored } from "@/lib/island/models/parts";
 import { ball, rod, slab, tint, tube } from "@/lib/island/models/solids";
 
 /** Six thin legs from a body's side at height `y`, splayed out to the ground. */

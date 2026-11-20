@@ -17,10 +17,8 @@ import {
   getParabolicMotionState,
   PARABOLIC_LAUNCHES,
 } from "@repo/design-system/components/contents/physics/kinematics/parabolic-movement/data";
-import {
-  getParabolicFacts,
-  type ParabolicFactLabels,
-} from "@repo/design-system/components/contents/physics/kinematics/parabolic-movement/facts";
+import type { ParabolicFactLabels } from "@repo/design-system/components/contents/physics/kinematics/parabolic-movement/facts";
+import { getParabolicFacts } from "@repo/design-system/components/contents/physics/kinematics/parabolic-movement/facts";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import {
   CoordinateControls,

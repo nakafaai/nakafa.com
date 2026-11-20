@@ -11,10 +11,10 @@ import refs from "@repo/backend/confect/_generated/refs";
 import { DAILY_LIMIT } from "@repo/backend/confect/emails/budget";
 import { resend } from "@repo/backend/confect/emails/client";
 import { signedPages } from "@repo/backend/test/mail";
+import type { TryoutWorld } from "@repo/backend/test/tryout/world";
 import {
   insertStartedAttempt,
   TRYOUT_NOW,
-  type TryoutWorld,
   tryoutWorld,
 } from "@repo/backend/test/tryout/world";
 import { Array as Arr, DateTime, Duration, Effect } from "effect";

@@ -1,3 +1,4 @@
+import type { TokenResponse } from "@repo/backend/confect/integrations/api";
 import {
   CLI_CLIENT_ID,
   DEVICE_GRANT,
@@ -7,7 +8,6 @@ import {
   SCHOOL_HOST_API_PATH,
   SchoolApi,
   SchoolApiBearer,
-  type TokenResponse,
 } from "@repo/backend/confect/integrations/api";
 import {
   Array as Arr,

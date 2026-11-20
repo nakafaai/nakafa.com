@@ -4,7 +4,8 @@ import {
   DatabaseReader,
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
-import { type makeBucket, uploadReserved } from "@repo/backend/test/bucket";
+import type { makeBucket } from "@repo/backend/test/bucket";
+import { uploadReserved } from "@repo/backend/test/bucket";
 import { nf } from "@repo/backend/test/editor";
 import type { tenancyFixture } from "@repo/backend/test/tenancy";
 import { Array as Arr, Effect } from "effect";

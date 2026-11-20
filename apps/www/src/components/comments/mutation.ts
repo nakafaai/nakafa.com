@@ -4,12 +4,11 @@ import type * as OptimisticLocalStore from "@confect/react/OptimisticLocalStore"
 import comments from "@repo/backend/confect/_generated/refs/comments";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { Array as Arr, Number as Num, Option } from "effect";
+import type { CommentRow, ListedComment } from "@/components/comments/state";
 import {
-  type CommentRow,
   changeComment,
   commentAndReplyIds,
   countReplies,
-  type ListedComment,
   likedComment,
   removeComments,
   unlikedComment,

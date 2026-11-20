@@ -1,9 +1,9 @@
 import { describe, expect, it } from "@effect/vitest";
 import { Array as Arr, Option, Result, Schema } from "effect";
+import type { Field } from "@/components/tenant/exams/figure/form";
 import {
   draftOf,
   emptyDraft,
-  type Field,
   FieldSchema,
   fieldOf,
   figureForm,

@@ -1,4 +1,5 @@
-import { cva, type VariantProps } from "class-variance-authority";
+import type { VariantProps } from "class-variance-authority";
+import { cva } from "class-variance-authority";
 
 /**
  * The shared response frame around any rendered block collection. The caller

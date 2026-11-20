@@ -1,17 +1,14 @@
 import { docsToModelMessages, isTool, toUIMessages } from "@convex-dev/agent";
-import {
-  type Message,
-  type MessageDoc,
-  type MessageWithMetadata,
-  vMessageWithMetadataInternal,
+import type {
+  Message,
+  MessageDoc,
+  MessageWithMetadata,
 } from "@convex-dev/agent/validators";
+import { vMessageWithMetadataInternal } from "@convex-dev/agent/validators";
 import { describe, expect, it } from "@effect/vitest";
 import { DatabaseWriter } from "@repo/backend/confect/_generated/services";
-import {
-  type MessageIdentity,
-  openMessage,
-  sealMessage,
-} from "@repo/backend/confect/nina/sealed";
+import type { MessageIdentity } from "@repo/backend/confect/nina/sealed";
+import { openMessage, sealMessage } from "@repo/backend/confect/nina/sealed";
 import {
   ensureLearnerKeys,
   readLearnerKeys,

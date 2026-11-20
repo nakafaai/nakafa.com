@@ -1,4 +1,5 @@
 import { Array as Arr, HashSet, String as Str } from "effect";
+import type { Node, SourceFile } from "tsrs/ast";
 import {
   isBinaryExpression,
   isCallExpression,
@@ -13,8 +14,6 @@ import {
   isStringLiteralLikeNode,
   isTryStatement,
   isTypeOfExpression,
-  type Node,
-  type SourceFile,
   SyntaxKind,
 } from "tsrs/ast";
 import { loadsExport, loadsImport } from "#scripts/check/kinds";

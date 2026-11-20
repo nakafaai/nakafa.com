@@ -1,5 +1,5 @@
+import type { ContentHead } from "@nakafa/aksara-contracts/release/head";
 import {
-  type ContentHead,
   HeadPageRequestSchema,
   HeadPageSchema,
 } from "@nakafa/aksara-contracts/release/head";

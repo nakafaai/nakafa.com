@@ -1,4 +1,5 @@
-import { type AnyExtension, Node, type NodeViewRenderer } from "@tiptap/core";
+import type { AnyExtension, NodeViewRenderer } from "@tiptap/core";
+import { Node } from "@tiptap/core";
 import { Array as Arr } from "effect";
 
 /** The DOM attribute that keeps one attribute of an image node, such as `data-alt`. */

@@ -23,9 +23,9 @@ import {
 } from "effect";
 import { useRef, useState } from "react";
 import { useAi } from "@/components/ai/context";
+import type { NinaFailure } from "@/components/ai/feedback";
 import {
   NinaConnectionError,
-  type NinaFailure,
   ninaFailureFeedback,
   ninaFailureLimits,
   reportNinaFailure,

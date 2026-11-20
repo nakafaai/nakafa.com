@@ -2,7 +2,8 @@ import { Instances } from "@repo/design-system/components/contents/biology/insta
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { CELL_COLORS } from "@repo/design-system/lib/material/cell";
 import { Array as Arr } from "effect";
-import { type ReactNode, useMemo } from "react";
+import type { ReactNode } from "react";
+import { useMemo } from "react";
 import { DoubleSide } from "three";
 
 /** How wide and deep each block of envelope is, in scene units. */

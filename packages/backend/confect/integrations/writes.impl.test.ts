@@ -3,7 +3,8 @@ import { Id } from "@repo/backend/confect/_generated/id";
 import refs from "@repo/backend/confect/_generated/refs";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { Nisn } from "@repo/backend/confect/roster/schema";
-import { createClient, type Fixture } from "@repo/backend/test/api";
+import type { Fixture } from "@repo/backend/test/api";
+import { createClient } from "@repo/backend/test/api";
 import { cohort, forumClass, nf, period } from "@repo/backend/test/classroom";
 import { asStaffSchool } from "@repo/backend/test/guardians";
 import {

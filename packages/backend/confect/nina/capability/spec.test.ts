@@ -1,10 +1,8 @@
 import { saveMessages } from "@convex-dev/agent";
 import { describe, expect, it } from "@effect/vitest";
 import { components } from "@repo/backend/confect/_generated/components";
-import {
-  type LearningCapabilityName,
-  LearningCapabilityNameSchema,
-} from "@repo/backend/confect/nina/capability/spec";
+import type { LearningCapabilityName } from "@repo/backend/confect/nina/capability/spec";
+import { LearningCapabilityNameSchema } from "@repo/backend/confect/nina/capability/spec";
 import { createNinaTest } from "@repo/backend/test/nina";
 import {
   deepestResult,

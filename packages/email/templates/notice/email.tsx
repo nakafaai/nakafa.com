@@ -1,8 +1,8 @@
 import { render } from "@react-email/render";
 import { Layout } from "@repo/email/layout";
+import type { NoticeEmailInput } from "@repo/email/templates/notice/content";
 import {
   getNoticeEmailCopy,
-  type NoticeEmailInput,
   NoticeEmailInputSchema,
 } from "@repo/email/templates/notice/content";
 import {

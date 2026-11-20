@@ -23,15 +23,10 @@ import { EmptyNina } from "@/components/state/nina";
 import { WithAction } from "@/components/tenant/action";
 import { useTenant } from "@/components/tenant/context";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
-import {
-  type FileProblem,
-  RosterFileChoice,
-} from "@/components/tenant/roster/choose";
-import {
-  type ReadRow,
-  sourcedOf,
-  studentsOf,
-} from "@/components/tenant/roster/dapodik";
+import type { FileProblem } from "@/components/tenant/roster/choose";
+import { RosterFileChoice } from "@/components/tenant/roster/choose";
+import type { ReadRow } from "@/components/tenant/roster/dapodik";
+import { sourcedOf, studentsOf } from "@/components/tenant/roster/dapodik";
 import { RosterExport } from "@/components/tenant/roster/export";
 import { activePeriodOf } from "@/components/tenant/roster/period";
 import { RosterPreviewTable } from "@/components/tenant/roster/preview";

@@ -22,7 +22,8 @@ import {
 } from "@repo/design-system/components/visual/card";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr, Record as Rec } from "effect";
-import { type ReactNode, useMemo } from "react";
+import type { ReactNode } from "react";
+import { useMemo } from "react";
 
 /** The palette a chart's series take in order, one color each. */
 const SERIES_COLORS = [

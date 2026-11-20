@@ -1,8 +1,8 @@
-import {
-  ACTIVE_APP_LOCALE_CODES,
-  type ActiveAppLocaleCode,
-  type AppLocaleCode,
+import type {
+  ActiveAppLocaleCode,
+  AppLocaleCode,
 } from "@nakafa/aksara-contracts/locale";
+import { ACTIVE_APP_LOCALE_CODES } from "@nakafa/aksara-contracts/locale";
 import { Array as Arr } from "effect";
 
 /**

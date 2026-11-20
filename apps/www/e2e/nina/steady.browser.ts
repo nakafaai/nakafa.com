@@ -1,4 +1,5 @@
-import { type Browser, expect, test } from "@playwright/test";
+import type { Browser } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import { Duration, Effect } from "effect";
 import { CHAT_PATH } from "@/e2e/support/chat";
 import { withBrowserContext } from "@/e2e/support/context";

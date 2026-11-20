@@ -12,19 +12,19 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import type { ActSchema } from "@repo/mascot/nina/act";
 import { Array as Arr, Option } from "effect";
-import { type ReactNode, useState, useTransition } from "react";
+import type { ReactNode } from "react";
+import { useState, useTransition } from "react";
 import { useTranslations } from "use-intl";
 import { useConnectorActions } from "@/components/connectors/actions";
 import { ServiceTile } from "@/components/connectors/card";
-import {
-  CONNECTABLE,
-  type DirectoryEntry,
-} from "@/components/connectors/directory";
+import type { DirectoryEntry } from "@/components/connectors/directory";
+import { CONNECTABLE } from "@/components/connectors/directory";
 import { DisconnectDialog } from "@/components/connectors/disconnect";
 import { ServiceContext, useService } from "@/components/connectors/service";
 import { PaneHeader } from "@/components/shared/page/pane";
 import { usePanes } from "@/components/shared/page/panes";
-import { type StatusLook, TableStatus } from "@/components/shared/table/status";
+import type { StatusLook } from "@/components/shared/table/status";
+import { TableStatus } from "@/components/shared/table/status";
 import { EmptyState } from "@/components/state/empty";
 import { EmptyNina } from "@/components/state/nina";
 

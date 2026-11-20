@@ -1,8 +1,6 @@
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import {
-  type StatusTone,
-  statusIconVariants,
-} from "@repo/design-system/lib/status";
+import type { StatusTone } from "@repo/design-system/lib/status";
+import { statusIconVariants } from "@repo/design-system/lib/status";
 import type { ComponentProps, ReactNode } from "react";
 
 /**

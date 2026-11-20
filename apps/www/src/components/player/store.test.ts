@@ -1,10 +1,8 @@
 import { describe, expect, it } from "@effect/vitest";
 import { Deferred, Effect, Fiber } from "effect";
 import type { PlayerMode } from "@/components/player/mode";
-import {
-  createPlayerStore,
-  type PlayerStoreApi,
-} from "@/components/player/store";
+import type { PlayerStoreApi } from "@/components/player/store";
+import { createPlayerStore } from "@/components/player/store";
 
 /** A player of three questions in the list view. */
 function listOfThree() {

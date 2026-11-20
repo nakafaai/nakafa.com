@@ -1,7 +1,7 @@
+import type { Metal } from "@repo/design-system/components/contents/chemistry/voltaic/cell";
 import {
   cellOf,
   halfCell,
-  type Metal,
   massFor,
   oxidation,
   reduction,
@@ -24,7 +24,8 @@ import {
 } from "@repo/design-system/components/visual/card";
 import { VisualFact } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
-import { type ReactNode, Suspense } from "react";
+import type { ReactNode } from "react";
+import { Suspense } from "react";
 import { useFormatter } from "use-intl";
 
 /** Numbers in a reading keep three significant figures, as SPM working does. */

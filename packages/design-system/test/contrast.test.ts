@@ -3,10 +3,10 @@
 import { NodeFileSystem } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { themes } from "@repo/design-system/lib/theme/registry";
+import type { ProfileSource } from "@repo/design-system/test/contract";
 import {
   createThemeProfiles,
   findTopLevelRule,
-  type ProfileSource,
   readDirectValue,
   readOklchChannels,
   readThemeStyleSources,

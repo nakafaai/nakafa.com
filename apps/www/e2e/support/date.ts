@@ -1,4 +1,5 @@
-import { expect, type Locator, type Page } from "@playwright/test";
+import type { Locator, Page } from "@playwright/test";
+import { expect } from "@playwright/test";
 
 /** How many months a test pages through at most before it gives up on a day. */
 const MONTH_LIMIT = 36;

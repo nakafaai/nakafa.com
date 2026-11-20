@@ -10,7 +10,8 @@ import {
 } from "@repo/backend/test/bucket";
 import { firstPage, nf } from "@repo/backend/test/classroom";
 import { libraryClass } from "@repo/backend/test/library";
-import { TENANCY_NOW, type tenancyFixture } from "@repo/backend/test/tenancy";
+import type { tenancyFixture } from "@repo/backend/test/tenancy";
+import { TENANCY_NOW } from "@repo/backend/test/tenancy";
 import { encodeJsonText } from "@repo/utilities/json";
 import { Array as Arr, Effect, Record as Rec } from "effect";
 

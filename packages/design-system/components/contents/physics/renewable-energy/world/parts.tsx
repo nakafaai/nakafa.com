@@ -2,8 +2,10 @@ import { useFrame } from "@react-three/fiber";
 import { useVisualScene } from "@repo/design-system/components/visual/card";
 import { ENERGY_COLORS } from "@repo/design-system/lib/material/energy";
 import { Array as Arr } from "effect";
-import { type ReactNode, useMemo, useRef } from "react";
-import { type Mesh, Quaternion, Vector3 } from "three";
+import type { ReactNode } from "react";
+import { useMemo, useRef } from "react";
+import type { Mesh } from "three";
+import { Quaternion, Vector3 } from "three";
 
 /**
  * The parts the renewable-energy scenes share: straight pipes and rods,

@@ -2,11 +2,8 @@ import type { Interaction } from "@nakafa/aksara-contracts/assessment/interactio
 import type { InteractionKey } from "@nakafa/aksara-contracts/assessment/key";
 import { CHOICE_OPTIONS_MAX } from "@repo/backend/confect/exams/question";
 import { Array as Arr, Option } from "effect";
-import {
-  emptyLabel,
-  type OptionLabel,
-  withoutPart,
-} from "@/components/tenant/exams/answer";
+import type { OptionLabel } from "@/components/tenant/exams/answer";
+import { emptyLabel, withoutPart } from "@/components/tenant/exams/answer";
 
 /** The match interaction, which a matching question holds. */
 type Match = Extract<Interaction, { kind: "match" }>;

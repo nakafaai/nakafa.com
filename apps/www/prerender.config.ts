@@ -7,7 +7,8 @@ import { SHELL_PATH, schoolEntryPath } from "#www/src/lib/routing/shell";
 import { readPageFacts } from "#www/src/lib/seo/audit/html";
 import { auditSite } from "#www/src/lib/seo/audit/site";
 import { readStaticCalls } from "#www/src/lib/static/calls";
-import { type BuiltChunk, readParts } from "#www/src/lib/static/chunks";
+import type { BuiltChunk } from "#www/src/lib/static/chunks";
+import { readParts } from "#www/src/lib/static/chunks";
 import { composeSchoolEntry, readSchoolEntry } from "#www/src/lib/static/entry";
 import {
   notFoundOutputPath,

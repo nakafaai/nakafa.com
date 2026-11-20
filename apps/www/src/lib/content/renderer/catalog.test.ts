@@ -1,11 +1,14 @@
 import { describe, expect, expectTypeOf, it } from "@effect/vitest";
+import type {
+  FigureName,
+  visualCatalog,
+} from "@nakafa/aksara-contracts/visual/catalog";
 import {
   FIGURE_NAMES,
-  type FigureName,
   VISUAL_NAMES,
-  type visualCatalog,
 } from "@nakafa/aksara-contracts/visual/catalog";
-import { Array as Arr, Option, Order, type Types } from "effect";
+import type { Types } from "effect";
+import { Array as Arr, Option, Order } from "effect";
 import type { ComponentType, ReactNode } from "react";
 import {
   catalogRenderer,

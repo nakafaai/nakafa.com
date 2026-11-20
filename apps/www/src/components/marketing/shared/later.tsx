@@ -1,17 +1,11 @@
 import { untilNearScreen } from "@repo/design-system/lib/screen";
 import { untilPageSettled } from "@repo/design-system/lib/settle";
 import { Deferred, Effect, Exit, Fiber, Option } from "effect";
-import {
-  type ComponentType,
-  type ReactNode,
-  Suspense,
-  use,
-  useEffect,
-  useRef,
-} from "react";
+import type { ComponentType, ReactNode } from "react";
+import { Suspense, use, useEffect, useRef } from "react";
+import type { LaterCode } from "@/components/marketing/shared/code";
 import {
   holdsEarlyPress,
-  type LaterCode,
   readWaiting,
 } from "@/components/marketing/shared/code";
 

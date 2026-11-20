@@ -1,5 +1,6 @@
 import type { TryoutScoreResult } from "@repo/backend/confect/tryouts/score";
-import { HashSet, type Option } from "effect";
+import type { Option } from "effect";
+import { HashSet } from "effect";
 import { createContext } from "react";
 import { createStore } from "zustand";
 import type { TryoutBodyVersion } from "@/components/tryout/content/body";

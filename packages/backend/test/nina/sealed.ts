@@ -8,15 +8,11 @@ import {
 } from "@repo/backend/confect/nina/sealed/file";
 import { readMessage } from "@repo/backend/confect/nina/sealed/message";
 import { savePrompt } from "@repo/backend/confect/nina/sealed/save";
-import {
-  readThread,
-  type ThreadRead,
-} from "@repo/backend/confect/nina/sealed/thread";
+import type { ThreadRead } from "@repo/backend/confect/nina/sealed/thread";
+import { readThread } from "@repo/backend/confect/nina/sealed/thread";
 import type { NinaInput } from "@repo/backend/confect/nina/turns.spec";
-import {
-  type createConvexTestWithAuth,
-  seedAuthenticatedUser,
-} from "@repo/backend/confect/test.helpers";
+import type { createConvexTestWithAuth } from "@repo/backend/confect/test.helpers";
+import { seedAuthenticatedUser } from "@repo/backend/confect/test.helpers";
 import { BLIND_BYTES } from "@repo/backend/confect/vault/cipher";
 import {
   ensureLearnerKeys,

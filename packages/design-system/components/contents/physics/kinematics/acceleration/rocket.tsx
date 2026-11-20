@@ -1,8 +1,8 @@
 import { useGLTF } from "@react-three/drei";
+import type { RocketExhaust } from "@repo/design-system/components/contents/physics/kinematics/acceleration/data";
 import {
   ACCELERATION_ROCKET_MODEL_PATH,
   ACCELERATION_ROCKET_MOTION,
-  type RocketExhaust,
   RocketExhaustSchema,
 } from "@repo/design-system/components/contents/physics/kinematics/acceleration/data";
 import { AnimatedExhaust } from "@repo/design-system/components/contents/physics/kinematics/acceleration/exhaust";

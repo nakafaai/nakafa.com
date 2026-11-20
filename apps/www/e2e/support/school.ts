@@ -1,4 +1,5 @@
-import { type BrowserContext, expect, type Page } from "@playwright/test";
+import type { BrowserContext, Page } from "@playwright/test";
+import { expect } from "@playwright/test";
 import { seedCard as seedLoginCard } from "@repo/backend/scripts/content/acceptance/card";
 import { seedClassTeacher } from "@repo/backend/scripts/content/acceptance/classes";
 import { seedForum as seedForumHistory } from "@repo/backend/scripts/content/acceptance/forum";
@@ -7,10 +8,8 @@ import { seedGraduation as seedGraduatingCohort } from "@repo/backend/scripts/co
 import { seedInvite } from "@repo/backend/scripts/content/acceptance/invite";
 import { seedOwner } from "@repo/backend/scripts/content/acceptance/owner";
 import { seedSchool } from "@repo/backend/scripts/content/acceptance/school";
-import {
-  type SittingExtra,
-  seedSitting as seedProctoredSitting,
-} from "@repo/backend/scripts/content/acceptance/sitting";
+import type { SittingExtra } from "@repo/backend/scripts/content/acceptance/sitting";
+import { seedSitting as seedProctoredSitting } from "@repo/backend/scripts/content/acceptance/sitting";
 import { seedStudent } from "@repo/backend/scripts/content/acceptance/student";
 import { seedTeacher } from "@repo/backend/scripts/content/acceptance/teacher";
 import { recordTransfer as recordInvoiceTransfer } from "@repo/backend/scripts/content/acceptance/transfer";

@@ -8,11 +8,8 @@ import {
   Redacted,
   Result,
 } from "effect";
-import {
-  HttpClient,
-  type HttpClientRequest,
-  HttpClientResponse,
-} from "effect/http";
+import type { HttpClientRequest } from "effect/http";
+import { HttpClient, HttpClientResponse } from "effect/http";
 import { TestClock } from "effect/testing";
 import {
   fetchLatestGithubActionTag,

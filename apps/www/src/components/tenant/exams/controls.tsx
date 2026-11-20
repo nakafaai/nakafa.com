@@ -21,7 +21,8 @@ import {
   ResponsiveDialog,
   ResponsiveDialogSubject,
 } from "@repo/design-system/components/ui/responsive-dialog";
-import { type ComponentProps, useState } from "react";
+import type { ComponentProps } from "react";
+import { useState } from "react";
 import { useTranslations } from "use-intl";
 import { useQuestionActions } from "@/components/tenant/exams/actions";
 import type {

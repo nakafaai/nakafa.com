@@ -1,9 +1,9 @@
-import {
-  type Browser,
-  type BrowserContext,
-  type BrowserContextOptions,
-  expect,
+import type {
+  Browser,
+  BrowserContext,
+  BrowserContextOptions,
 } from "@playwright/test";
+import { expect } from "@playwright/test";
 import type { SessionCookies } from "@repo/backend/scripts/content/acceptance/fixture";
 import { Array as Arr, Effect } from "effect";
 

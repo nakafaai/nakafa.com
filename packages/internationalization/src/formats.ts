@@ -2,10 +2,8 @@ import {
   ACTIVE_APP_LOCALE_CODES,
   ActiveAppLocaleCodeSchema,
 } from "@nakafa/aksara-contracts/locale";
-import {
-  type Locale,
-  localeTimeZone,
-} from "@repo/internationalization/src/locale";
+import type { Locale } from "@repo/internationalization/src/locale";
+import { localeTimeZone } from "@repo/internationalization/src/locale";
 import { namedTimeZone } from "@repo/utilities/timezone";
 import {
   Array as Arr,
@@ -16,7 +14,8 @@ import {
   Schema,
   String as Str,
 } from "effect";
-import { createFormatter, type Formats } from "use-intl/core";
+import type { Formats } from "use-intl/core";
+import { createFormatter } from "use-intl/core";
 
 /**
  * The zone that billing days are read in, the zone of Nakafa's Indonesian

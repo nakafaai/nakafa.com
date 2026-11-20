@@ -28,11 +28,12 @@ import {
 import type { VariantProps } from "class-variance-authority";
 import { cn } from "cn";
 import { Array as Arr, Option, Record as Rec } from "effect";
-import { type ReactElement, type ReactNode, use } from "react";
+import type { ReactElement, ReactNode } from "react";
+import { use } from "react";
 import { useTranslations } from "use-intl";
+import type { HeadAlign } from "@/components/shared/table/align";
 import {
   columnAlign,
-  type HeadAlign,
   HeadMenuContext,
   headWidth,
 } from "@/components/shared/table/align";

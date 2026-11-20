@@ -1,12 +1,11 @@
 import type { BuiltinRole } from "@repo/backend/confect/access/schema";
 import { Option } from "effect";
 import { canOpenExams } from "@/components/tenant/exams/access";
-import {
-  type HomeAccess,
-  showsStudentHome,
-} from "@/components/tenant/home/access";
+import type { HomeAccess } from "@/components/tenant/home/access";
+import { showsStudentHome } from "@/components/tenant/home/access";
 import { canOpenReports } from "@/components/tenant/reports/access";
-import { canManageSchool, roleOf, type SchoolViewer } from "@/lib/tenant/frame";
+import type { SchoolViewer } from "@/lib/tenant/frame";
+import { canManageSchool, roleOf } from "@/lib/tenant/frame";
 
 /**
  * The page a member's school opens on, by the member's main work there: the

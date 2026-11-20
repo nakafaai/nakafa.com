@@ -9,15 +9,15 @@ import {
   fade,
   vignette,
 } from "@repo/design-system/components/contents/physics/canvas/paint";
+import type { Plan } from "@repo/design-system/components/contents/physics/canvas/town";
 import {
   fitPlan,
-  type Plan,
   paintTown,
   paintWalker,
   planPoint,
 } from "@repo/design-system/components/contents/physics/canvas/town";
+import type { Walk } from "@repo/design-system/components/contents/physics/kinematics/walk/route";
 import {
-  type Walk,
   WalkSchema,
   walkCorners,
   walkDuration,
@@ -39,7 +39,8 @@ import { getColor } from "@repo/design-system/lib/color";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr, Schema } from "effect";
 import type p5 from "p5";
-import { type ReactNode, useMemo } from "react";
+import type { ReactNode } from "react";
+import { useMemo } from "react";
 
 /** The length of one town block, street to street, in metres. */
 const BLOCK = 100;

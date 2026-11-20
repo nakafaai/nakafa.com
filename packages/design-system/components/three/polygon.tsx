@@ -2,7 +2,8 @@ import type { Point3 } from "@repo/design-system/lib/geometry/point";
 import { triangulatePolygon } from "@repo/design-system/lib/geometry/polygon";
 import { Array as Arr } from "effect";
 import { useMemo } from "react";
-import { type ColorRepresentation, DoubleSide } from "three";
+import type { ColorRepresentation } from "three";
+import { DoubleSide } from "three";
 
 /** Composes a translucent planar region with the shared line and scene primitives. */
 export function Polygon({

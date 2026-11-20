@@ -1,4 +1,5 @@
-import { type ProofResult, proofFailures, SpecPath } from "@repo/testing/proof";
+import type { ProofResult } from "@repo/testing/proof";
+import { proofFailures, SpecPath } from "@repo/testing/proof";
 import { Array as Arr, Effect, HashSet, Ref, Schema } from "effect";
 import { Prover } from "#scripts/proof/github";
 

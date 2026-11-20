@@ -17,16 +17,11 @@ import {
 import { DESKS, GEARS, PAPERS, REPAIRS, ROOMS } from "@repo/mascot/nina/duty";
 import { fanning } from "@repo/mascot/nina/hearth";
 import { free } from "@repo/mascot/nina/ink";
-import { type Curve, flip } from "@repo/mascot/nina/limb";
+import type { Curve } from "@repo/mascot/nina/limb";
+import { flip } from "@repo/mascot/nina/limb";
 import { at } from "@repo/mascot/nina/point";
-import {
-  armLeft,
-  armRight,
-  breathe,
-  type Pose,
-  REST,
-  sway,
-} from "@repo/mascot/nina/pose";
+import type { Pose } from "@repo/mascot/nina/pose";
+import { armLeft, armRight, breathe, REST, sway } from "@repo/mascot/nina/pose";
 import { balls, confetti, dots, sleep } from "@repo/mascot/nina/prop";
 import {
   carrying,

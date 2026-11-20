@@ -1,9 +1,11 @@
 import { Frame } from "@repo/design-system/components/nina/frame";
 import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundary";
 import { untilPageRead } from "@repo/design-system/lib/settle";
-import { modeOf, type Options } from "@repo/mascot/nina/options";
+import type { Options } from "@repo/mascot/nina/options";
+import { modeOf } from "@repo/mascot/nina/options";
 import { Array as Arr, Effect, Fiber } from "effect";
-import { type ReactNode, startTransition, useState } from "react";
+import type { ReactNode } from "react";
+import { startTransition, useState } from "react";
 
 /** Her life as a module: her motion and the numbers she is drawn from. */
 type Life = typeof import("@repo/design-system/components/nina/live");

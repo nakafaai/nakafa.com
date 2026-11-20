@@ -4,7 +4,8 @@ import { Id } from "@repo/backend/confect/_generated/id";
 import type { ChatView } from "@repo/backend/confect/chats/view";
 import { Effect, MutableRef, Option, Result, Schema, Struct } from "effect";
 import { act, createElement } from "react";
-import { createRoot, type Root } from "react-dom/client";
+import type { Root } from "react-dom/client";
+import { createRoot } from "react-dom/client";
 import { readChatTitle, useChatRename } from "@/components/ai/chat/title";
 
 const mocks = vi.hoisted(() => ({

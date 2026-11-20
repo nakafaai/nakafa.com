@@ -16,7 +16,8 @@ import {
   activateAssessmentTestSnapshot,
   makeAssessmentTestSnapshot,
 } from "@repo/backend/test/snapshot/assessment";
-import { convexTest, type TestConvex } from "convex-test";
+import type { TestConvex } from "convex-test";
+import { convexTest } from "convex-test";
 import { Effect, Option } from "effect";
 
 /** Reads the active assessment snapshot in one Convex transaction. */

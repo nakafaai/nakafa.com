@@ -1,4 +1,5 @@
-import { exposed, type Row, secret } from "@repo/backend/test/judgment/label";
+import type { Row } from "@repo/backend/test/judgment/label";
+import { exposed, secret } from "@repo/backend/test/judgment/label";
 import type { Array as Arr } from "effect";
 
 /**

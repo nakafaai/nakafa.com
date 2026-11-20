@@ -2,7 +2,8 @@ import type { Button as ButtonPrimitive } from "@base-ui/react/button";
 import { Button } from "@repo/design-system/components/ui/button";
 import { Input } from "@repo/design-system/components/ui/input";
 import { Textarea } from "@repo/design-system/components/ui/textarea";
-import { cva, type VariantProps } from "class-variance-authority";
+import type { VariantProps } from "class-variance-authority";
+import { cva } from "class-variance-authority";
 import { cn } from "cn";
 
 /** Returns the single focusable control owned by one input group. */

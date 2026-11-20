@@ -1,4 +1,5 @@
-import { expect, type Page } from "@playwright/test";
+import type { Page } from "@playwright/test";
+import { expect } from "@playwright/test";
 import { Effect } from "effect";
 import { trackChanges } from "@/e2e/support/changes";
 import { viewerKnown } from "@/e2e/support/chat";

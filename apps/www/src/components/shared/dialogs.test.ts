@@ -1,7 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import { MutableRef, Option } from "effect";
 import { act, createElement } from "react";
-import { createRoot, type Root } from "react-dom/client";
+import type { Root } from "react-dom/client";
+import { createRoot } from "react-dom/client";
 import { useDialogs } from "@/components/shared/dialogs";
 
 type Dialogs = ReturnType<typeof useDialogs<"remove" | "rename">>;

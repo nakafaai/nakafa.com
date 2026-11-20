@@ -1,4 +1,5 @@
 # ADR 0021: Which Check Owns A Rule, And Which Compiler Rules Stay Off
+
 > Superseded in part by [ADR 0037](0037-cloudflare.md) and [ADR 0036](0036-boundary.md): the framework examples of this record describe the retired build, and the Start stack on Cloudflare owns the framework rules now.
 
 ## Decision
@@ -18,18 +19,18 @@ It never gets an allowlist, a baseline, or a suppression.
 
 ### Compiler rules that stay off
 
-| Rule | Sites measured | Why it stays off |
-| --- | --- | --- |
-| `asyncFunction` | 2,969 | The framework requires `async` for cached functions and Server Functions. The source rule `promise` judges the domain folders instead |
-| `strictBooleanExpressions` | 2,604 | The plugin files it under style. Its fixes are plain comparisons, not Effect, across 1,051 files |
-| `missingPipeableSignature` | 479 | 11 framework exports can never take a data-last form |
-| `newPromise` | 30 | 28 are test doubles that must be Promises at a Promise-typed seam, and 2 run in the browser page. The source rule `new-promise` judges the rest of the code |
-| `newSchemaClass` | 1,104 | `X.make(...)` builds a tagged error nine frames deeper than `new X(...)`. With the engine's limit of ten frames the stack keeps 1 application frame of 5 (measured) |
-| `strictEffectProvide` | 1,576 | The rule expects a disable comment at every real entry point. Each Convex function, route handler, script main, and test provides its layer at its own entry point (412 files), and this repository has no disable comments. `multipleEffectProvide` is an error |
-| `schemaSync` | 531 | 486 are test fixtures, where no Effect runner may run, and the rest sit in a synchronous render, a module-level constant, or a plain helper, where the Result form would only spell the same throw differently. `schemaSyncInEffect` is an error, so a synchronous codec inside an Effect is rejected |
-| `processEnv` | 89 | The bundler inlines only a literal `NAME` read of an environment object into the browser bundle, so the environment contract modules pass literal reads to `readEnvironment`. The source rule `env` judges every other read |
-| `nodeBuiltinImport` | | Framework configuration needs a Node path, a platform HTTP server needs Node's `createServer`, and a fixture that signs synchronously needs Node's Ed25519 `sign`. The source rule `node-module` judges nine Node modules and keeps those three places by construction |
-| `unstableApiUsage`, `experimentalApiUsage`, `apiStabilityLeak` | | Effect moves as one exact cohort that is reviewed at every upgrade, so an unstable Effect module in a signature is not a leak here |
+| Rule                                                           | Sites measured | Why it stays off                                                                                                                                                                                                                                                                                      |
+| -------------------------------------------------------------- | -------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `asyncFunction`                                                | 2,969          | The framework requires `async` for cached functions and Server Functions. The source rule `promise` judges the domain folders instead                                                                                                                                                                 |
+| `strictBooleanExpressions`                                     | 2,604          | The plugin files it under style. Its fixes are plain comparisons, not Effect, across 1,051 files                                                                                                                                                                                                      |
+| `missingPipeableSignature`                                     | 479            | 11 framework exports can never take a data-last form                                                                                                                                                                                                                                                  |
+| `newPromise`                                                   | 30             | 28 are test doubles that must be Promises at a Promise-typed seam, and 2 run in the browser page. The source rule `new-promise` judges the rest of the code                                                                                                                                           |
+| `newSchemaClass`                                               | 1,104          | `X.make(...)` builds a tagged error nine frames deeper than `new X(...)`. With the engine's limit of ten frames the stack keeps 1 application frame of 5 (measured)                                                                                                                                   |
+| `strictEffectProvide`                                          | 1,576          | The rule expects a disable comment at every real entry point. Each Convex function, route handler, script main, and test provides its layer at its own entry point (412 files), and this repository has no disable comments. `multipleEffectProvide` is an error                                      |
+| `schemaSync`                                                   | 531            | 486 are test fixtures, where no Effect runner may run, and the rest sit in a synchronous render, a module-level constant, or a plain helper, where the Result form would only spell the same throw differently. `schemaSyncInEffect` is an error, so a synchronous codec inside an Effect is rejected |
+| `processEnv`                                                   | 89             | The bundler inlines only a literal `NAME` read of an environment object into the browser bundle, so the environment contract modules pass literal reads to `readEnvironment`. The source rule `env` judges every other read                                                                           |
+| `nodeBuiltinImport`                                            |                | Framework configuration needs a Node path, a platform HTTP server needs Node's `createServer`, and a fixture that signs synchronously needs Node's Ed25519 `sign`. The source rule `node-module` judges nine Node modules and keeps those three places by construction                                |
+| `unstableApiUsage`, `experimentalApiUsage`, `apiStabilityLeak` |                | Effect moves as one exact cohort that is reviewed at every upgrade, so an unstable Effect module in a signature is not a leak here                                                                                                                                                                    |
 
 ### Compiler rules that `@effect/tsgo` 0.52 and 0.53 add
 
@@ -37,40 +38,40 @@ It never gets an allowlist, a baseline, or a suppression.
 decides each one, in the same way in both repositories. A rule that duplicates a
 source check stays off, and its row names that check as the owner.
 
-| Rule | Decision | Owner, or the reason it stays off |
-| --- | --- | --- |
-| `effectSleepZeroToYieldNow` | error | Fixed at its source: a zero-duration `Effect.sleep` becomes `Effect.yieldNow` |
-| `errorPayloadShadowsName` | error | Fixed at its source: an error payload field named `name` is renamed, so the error keeps its own name |
-| `flatMapToTap` | error | Fixed at its source: a `flatMap` that runs an effect and returns its input becomes `Effect.tap`, with the same error and requirement types |
-| `schemaClassMissingBrand` | error | Fixed at its source: every Schema class carries a brand as its second type argument. See the brand paragraph below |
-| `preferEffectArray` | off | Owner: the source check `array-method`, `array-mutation`, and `array-search`, which forbid the native array methods (`scripts/check/calls.ts`, judged in `scripts/check/arrays.ts`) |
-| `preferEffectRecord` | off | Owner: the source check `object-helper`, which forbids `Object.entries`, `Object.fromEntries`, `Object.keys`, and `Object.values` (`scripts/check/globals.ts`) |
-| `preferSchemaTaggedError` | off | Not a duplicate. `Data.TaggedError` keeps its form for an error that is not a Schema contract, and the source check `error-class` (`scripts/check/rules.ts`) accepts either class for an expected failure |
-| `preferBarrelImport` | off | Not a duplicate. `base.json` lists no `barrelImportPackages`, so the rule has nothing to check. Authored modules import `effect` by name from its barrel (3,286 files have a one-line named import from `"effect"`), and 146 files import a module path such as `effect/process` |
-| `preferNamespaceImport` | off | Not a duplicate. `base.json` lists no `namespaceImportPackages`, so the rule has nothing to check. No authored module imports `effect` as a namespace |
+| Rule                        | Decision | Owner, or the reason it stays off                                                                                                                                                                                                                                                |
+| --------------------------- | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `effectSleepZeroToYieldNow` | error    | Fixed at its source: a zero-duration `Effect.sleep` becomes `Effect.yieldNow`                                                                                                                                                                                                    |
+| `errorPayloadShadowsName`   | error    | Fixed at its source: an error payload field named `name` is renamed, so the error keeps its own name                                                                                                                                                                             |
+| `flatMapToTap`              | error    | Fixed at its source: a `flatMap` that runs an effect and returns its input becomes `Effect.tap`, with the same error and requirement types                                                                                                                                       |
+| `schemaClassMissingBrand`   | error    | Fixed at its source: every Schema class carries a brand as its second type argument. See the brand paragraph below                                                                                                                                                               |
+| `preferEffectArray`         | off      | Owner: the source check `array-method`, `array-mutation`, and `array-search`, which forbid the native array methods (`scripts/check/calls.ts`, judged in `scripts/check/arrays.ts`)                                                                                              |
+| `preferEffectRecord`        | off      | Owner: the source check `object-helper`, which forbids `Object.entries`, `Object.fromEntries`, `Object.keys`, and `Object.values` (`scripts/check/globals.ts`)                                                                                                                   |
+| `preferSchemaTaggedError`   | off      | Not a duplicate. `Data.TaggedError` keeps its form for an error that is not a Schema contract, and the source check `error-class` (`scripts/check/rules.ts`) accepts either class for an expected failure                                                                        |
+| `preferBarrelImport`        | off      | Not a duplicate. `base.json` lists no `barrelImportPackages`, so the rule has nothing to check. Authored modules import `effect` by name from its barrel (3,286 files have a one-line named import from `"effect"`), and 146 files import a module path such as `effect/process` |
+| `preferNamespaceImport`     | off      | Not a duplicate. `base.json` lists no `namespaceImportPackages`, so the rule has nothing to check. No authored module imports `effect` as a namespace                                                                                                                            |
 
 ### Compiler rules that `@effect/tsgo` 0.54 to 0.56 add
 
 `@effect/tsgo` 0.56.0 adds two rules to the 0.53.3 set. `packages/typescript-config/base.json`
 decides each one, in the same way in both repositories.
 
-| Rule | Decision | Owner, or the reason it stays off |
-| --- | --- | --- |
-| `preferEffectString` | off | Stays off. The plugin suggests Effect String APIs for native string calls and notes that their semantics have caveats. No source rule asks for those calls |
-| `schemaClassObjectLiteral` | error | Enforced from the start. The plugin warns when an object literal is checked as a Schema class instance without its prototype. The workspace has no such literal, measured by the all-workspace typecheck on 25 October 2026 |
+| Rule                       | Decision | Owner, or the reason it stays off                                                                                                                                                                                           |
+| -------------------------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `preferEffectString`       | off      | Stays off. The plugin suggests Effect String APIs for native string calls and notes that their semantics have caveats. No source rule asks for those calls                                                                  |
+| `schemaClassObjectLiteral` | error    | Enforced from the start. The plugin warns when an object literal is checked as a Schema class instance without its prototype. The workspace has no such literal, measured by the all-workspace typecheck on 25 October 2026 |
 
 ### Compiler rules that `@effect/tsgo` 0.57 to 0.63 add
 
 `@effect/tsgo` 0.63.0 adds five rules to the 0.56.0 set. `packages/typescript-config/base.json`
 decides each one, in the same way in both repositories.
 
-| Rule | Decision | Owner, or the reason it stays off |
-| --- | --- | --- |
-| `flatMapIdentityToFlatten` | error | Fixed at its source: an `Effect.flatMap` whose callback returns its own parameter, or Effect's `identity`, becomes `Effect.flatten` |
-| `mapConstToAs` | error | Fixed at its source: an `Effect.map` callback that ignores its input and returns a constant becomes `Effect.as` |
-| `failCauseToConstructor` | error | Fixed at its source: `Effect.failCause` around one `Cause.fail` or `Cause.die` becomes `Effect.fail` or `Effect.die` |
-| `manualMetricTapToTrack` | error | Fixed at its source: a tap that only updates a metric becomes `Effect.trackSuccesses`, `trackErrors`, or `trackDefects` |
-| `mapMapErrorToMapBoth` | off | Stays off, as upstream ships it. Adjacent `Effect.map` and `Effect.mapError` steps read as two separate decisions, and `matchEffectToMapBoth` already rejects the `matchEffect` spelling that `mapBoth` replaces |
+| Rule                       | Decision | Owner, or the reason it stays off                                                                                                                                                                                |
+| -------------------------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `flatMapIdentityToFlatten` | error    | Fixed at its source: an `Effect.flatMap` whose callback returns its own parameter, or Effect's `identity`, becomes `Effect.flatten`                                                                              |
+| `mapConstToAs`             | error    | Fixed at its source: an `Effect.map` callback that ignores its input and returns a constant becomes `Effect.as`                                                                                                  |
+| `failCauseToConstructor`   | error    | Fixed at its source: `Effect.failCause` around one `Cause.fail` or `Cause.die` becomes `Effect.fail` or `Effect.die`                                                                                             |
+| `manualMetricTapToTrack`   | error    | Fixed at its source: a tap that only updates a metric becomes `Effect.trackSuccesses`, `trackErrors`, or `trackDefects`                                                                                          |
+| `mapMapErrorToMapBoth`     | off      | Stays off, as upstream ships it. Adjacent `Effect.map` and `Effect.mapError` steps read as two separate decisions, and `matchEffectToMapBoth` already rejects the `matchEffect` spelling that `mapBoth` replaces |
 
 ### Compiler rules that `@effect/tsgo` 0.64 to 0.67 add
 
@@ -81,20 +82,20 @@ listing alone fails the typecheck, so `globalJsonInEffect` takes its place.
 repositories. Sites were measured with every rule set to error on all 20
 typecheck targets on 7 November 2026.
 
-| Rule | Decision | Owner, or the reason it stays off |
-| --- | --- | --- |
-| `globalJsonInEffect` | error | Takes the place of `preferSchemaOverJson`: `JSON.parse` or `JSON.stringify` inside an Effect generator. No site |
-| `globalJson` | off | Owner: the source check `json` (`scripts/check/rules.ts`). Its 2 sites are code that Playwright serializes into the browser page, where no import reaches, which the source check keeps by construction |
-| `matchBooleanToIsSuccess` | error | Fixed at its source: an `Effect.match` that folds to `false` and `true` becomes `Effect.isSuccess` (3 sites) |
-| `typeUnionToSchemaUnion` | error | Fixed at its source: a type alias over Schema `.Type` types becomes a `Schema.Union` whose type is derived (4 sites) |
-| `effectSucceedWithUndefined` | error | Enforced from the start. No site |
-| `mapSomeCatchNoSuchElement` | error | Enforced from the start. No site |
-| `matchToResultOrOption` | error | Enforced from the start. No site |
-| `resultMatchToFromResult` | error | Enforced from the start. No site |
-| `suspendFailToFailSync` | error | Enforced from the start. No site |
-| `effectTryWithoutCatch` | off | Stays off, as upstream ships it, until a sweep gives each of its 147 `Effect.try` and `Effect.tryPromise` calls a typed `catch` in both repositories, which sets it to error |
-| `provideMergeAllToArray` | off | Stays off, as upstream ships it. `Effect.provide(Layer.mergeAll(...))` and an array of layers build the same layer, and 30 sites name the merged layer on purpose |
-| `yieldInCallArgument` | off | Stays off, as upstream ships it. Its 4,686 sites are mostly `assert.deepStrictEqual(yield* run(...), expected)` in tests, where a `const` per assertion adds a name and no clarity |
+| Rule                         | Decision | Owner, or the reason it stays off                                                                                                                                                                       |
+| ---------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `globalJsonInEffect`         | error    | Takes the place of `preferSchemaOverJson`: `JSON.parse` or `JSON.stringify` inside an Effect generator. No site                                                                                         |
+| `globalJson`                 | off      | Owner: the source check `json` (`scripts/check/rules.ts`). Its 2 sites are code that Playwright serializes into the browser page, where no import reaches, which the source check keeps by construction |
+| `matchBooleanToIsSuccess`    | error    | Fixed at its source: an `Effect.match` that folds to `false` and `true` becomes `Effect.isSuccess` (3 sites)                                                                                            |
+| `typeUnionToSchemaUnion`     | error    | Fixed at its source: a type alias over Schema `.Type` types becomes a `Schema.Union` whose type is derived (4 sites)                                                                                    |
+| `effectSucceedWithUndefined` | error    | Enforced from the start. No site                                                                                                                                                                        |
+| `mapSomeCatchNoSuchElement`  | error    | Enforced from the start. No site                                                                                                                                                                        |
+| `matchToResultOrOption`      | error    | Enforced from the start. No site                                                                                                                                                                        |
+| `resultMatchToFromResult`    | error    | Enforced from the start. No site                                                                                                                                                                        |
+| `suspendFailToFailSync`      | error    | Enforced from the start. No site                                                                                                                                                                        |
+| `effectTryWithoutCatch`      | off      | Stays off, as upstream ships it, until a sweep gives each of its 147 `Effect.try` and `Effect.tryPromise` calls a typed `catch` in both repositories, which sets it to error                            |
+| `provideMergeAllToArray`     | off      | Stays off, as upstream ships it. `Effect.provide(Layer.mergeAll(...))` and an array of layers build the same layer, and 30 sites name the merged layer on purpose                                       |
+| `yieldInCallArgument`        | off      | Stays off, as upstream ships it. Its 4,686 sites are mostly `assert.deepStrictEqual(yield* run(...), expected)` in tests, where a `const` per assertion adds a name and no clarity                      |
 
 ### Compiler rules that `@effect/tsgo` 0.68 and 0.69 add
 
@@ -105,10 +106,10 @@ repositories. Three existing rules, `provideLayerSucceedToProvideService`,
 `provideMergeAllToArray` and `timeoutCatchTagToTimeoutOrElse`, now also report
 explicitly typed calls, which keeps their decisions above.
 
-| Rule | Decision | Owner, or the reason it stays off |
-| --- | --- | --- |
-| `onExitFailureToOnError` | error | Fixed at its source: an `Effect.onExit` callback that acts only on a failure, with `Effect.void` on the other side, becomes `Effect.onError` (3 sites) |
-| `missingConcurrencyOption` | off | Stays off, as upstream ships it. It asks every `Effect.all` and `Effect.forEach` to name its concurrency. About 1,000 of the 1,240 calls here run in order on purpose, most of them writes inside one Convex mutation and steps of a test, where `{ concurrency: 1 }` on each would add a line and say nothing the call does not already mean; the 211 that run side by side already name theirs |
+| Rule                       | Decision | Owner, or the reason it stays off                                                                                                                                                                                                                                                                                                                                                                |
+| -------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `onExitFailureToOnError`   | error    | Fixed at its source: an `Effect.onExit` callback that acts only on a failure, with `Effect.void` on the other side, becomes `Effect.onError` (3 sites)                                                                                                                                                                                                                                           |
+| `missingConcurrencyOption` | off      | Stays off, as upstream ships it. It asks every `Effect.all` and `Effect.forEach` to name its concurrency. About 1,000 of the 1,240 calls here run in order on purpose, most of them writes inside one Convex mutation and steps of a test, where `{ concurrency: 1 }` on each would add a line and say nothing the call does not already mean; the 211 that run side by side already name theirs |
 
 ### Compiler rules that `@effect/tsgo` 0.70 to 0.73 add
 
@@ -117,13 +118,13 @@ adds five rules since 0.69. `packages/typescript-config/base.json` decides them
 in the same way in both repositories. Upstream ships two of them as suggestions,
 which fail the typecheck until decided, and three off.
 
-| Rule | Decision | Owner, or the reason it stays off |
-| --- | --- | --- |
-| `flatMapMapToZipWith` | error | Fixed at its source: an `Effect.flatMap` whose callback only maps an effect that does not read its argument becomes `Effect.zipWith` (2 sites) |
-| `flatMapProvideServiceToProvideServiceEffect` | error | No site |
-| `forLoopPushToForEach` | off | Owner: the source check `array-mutation`, which forbids the native `push` (`scripts/check/calls.ts`, judged in `scripts/check/arrays.ts`) |
-| `promiseAllInEffect` | error | Fixed at its source: a `Promise.all` inside an Effect becomes `Effect.forEach` or `Effect.all` with its concurrency named, so an interrupted fiber stops what it started (8 sites) |
-| `promiseRaceInEffect` | error | No site |
+| Rule                                          | Decision | Owner, or the reason it stays off                                                                                                                                                  |
+| --------------------------------------------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `flatMapMapToZipWith`                         | error    | Fixed at its source: an `Effect.flatMap` whose callback only maps an effect that does not read its argument becomes `Effect.zipWith` (2 sites)                                     |
+| `flatMapProvideServiceToProvideServiceEffect` | error    | No site                                                                                                                                                                            |
+| `forLoopPushToForEach`                        | off      | Owner: the source check `array-mutation`, which forbids the native `push` (`scripts/check/calls.ts`, judged in `scripts/check/arrays.ts`)                                          |
+| `promiseAllInEffect`                          | error    | Fixed at its source: a `Promise.all` inside an Effect becomes `Effect.forEach` or `Effect.all` with its concurrency named, so an interrupted fiber stops what it started (8 sites) |
+| `promiseRaceInEffect`                         | error    | No site                                                                                                                                                                            |
 
 ### Schema error brands
 
@@ -143,14 +144,14 @@ pinned commit of this repository.
 
 ### Source rules for raw TypeScript forms
 
-| Rule | Reports | Never reports, by construction |
-| --- | --- | --- |
-| `switch` | every `switch` statement | nothing |
-| `tag-chain` | the first `if` of a chain over one subject's `_tag`: an `if` that compares `x._tag` with a variant (also negated, or as a `\|\|` of such comparisons) whose `else` or next statement in the same list is an `if` over the same subject's `_tag` | one `if` over a tag; an `if` over another subject or property; a tag compared with something other than a string; a comparison joined with `&&` |
-| `assertion` | `x as T`, `<T>x`, `x!` | `as const`; `satisfies`; definite assignment (`let x!: T`); import and export aliases; framework configuration |
-| `throw` | a raw `throw` in product code | tests; framework configuration; React modules, where a hook throws for its error boundary; a `ConvexError` thrown in a Convex handler, as set out below; a throw inside a browser page function |
-| `raw-error` | a `throw` in a React module that builds a platform error (`new Error(...)`, `Error(...)`, or `TypeError`, `RangeError` and the other global error constructors) | tests; framework configuration; the registry's component sets in `packages/design-system/components/ui` and `evilcharts`; a local binding of the constructor's name; a throw inside a browser page function |
-| `new-promise` | `new Promise(...)` and `Promise.withResolvers()` on the global `Promise`, also through a global object such as `globalThis.Promise` | tests; framework configuration; a browser page function; a local class or binding named `Promise` |
+| Rule          | Reports                                                                                                                                                                                                                                         | Never reports, by construction                                                                                                                                                                              |
+| ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `switch`      | every `switch` statement                                                                                                                                                                                                                        | nothing                                                                                                                                                                                                     |
+| `tag-chain`   | the first `if` of a chain over one subject's `_tag`: an `if` that compares `x._tag` with a variant (also negated, or as a `\|\|` of such comparisons) whose `else` or next statement in the same list is an `if` over the same subject's `_tag` | one `if` over a tag; an `if` over another subject or property; a tag compared with something other than a string; a comparison joined with `&&`                                                             |
+| `assertion`   | `x as T`, `<T>x`, `x!`                                                                                                                                                                                                                          | `as const`; `satisfies`; definite assignment (`let x!: T`); import and export aliases; framework configuration                                                                                              |
+| `throw`       | a raw `throw` in product code                                                                                                                                                                                                                   | tests; framework configuration; React modules, where a hook throws for its error boundary; a `ConvexError` thrown in a Convex handler, as set out below; a throw inside a browser page function             |
+| `raw-error`   | a `throw` in a React module that builds a platform error (`new Error(...)`, `Error(...)`, or `TypeError`, `RangeError` and the other global error constructors)                                                                                 | tests; framework configuration; the registry's component sets in `packages/design-system/components/ui` and `evilcharts`; a local binding of the constructor's name; a throw inside a browser page function |
+| `new-promise` | `new Promise(...)` and `Promise.withResolvers()` on the global `Promise`, also through a global object such as `globalThis.Promise`                                                                                                             | tests; framework configuration; a browser page function; a local class or binding named `Promise`                                                                                                           |
 
 `switch` reports a `switch (typeof x)` once, as a switch, not also as a
 `typeof-object` comparison.
@@ -170,15 +171,15 @@ inline object type belongs to the shape rules, not to this one.
 
 Scopes name the modules a rule inspects:
 
-| Scope | Modules inspected |
-| --- | --- |
-| `every` | every authored module |
-| `code` | every module except framework configuration |
-| `logic` | every module except framework configuration and React modules; tests included |
-| `domain` | the Confect and script folders, tests excluded |
-| `product` | every module except framework configuration, React modules, and tests |
-| `source` | every module except framework configuration and tests; React modules included |
-| `react` | the React modules of `source`, except the registry's component sets |
+| Scope     | Modules inspected                                                             |
+| --------- | ----------------------------------------------------------------------------- |
+| `every`   | every authored module                                                         |
+| `code`    | every module except framework configuration                                   |
+| `logic`   | every module except framework configuration and React modules; tests included |
+| `domain`  | the Confect and script folders, tests excluded                                |
+| `product` | every module except framework configuration, React modules, and tests         |
+| `source`  | every module except framework configuration and tests; React modules included |
+| `react`   | the React modules of `source`, except the registry's component sets           |
 
 A React module may throw during render, because React gives a render no other
 channel to its error boundary, but what it throws is a tagged error that names
@@ -247,15 +248,15 @@ throws, but `switch` statements and assertions are still reported there.
 `require`, `createRequire`, a dynamic import, and `process.getBuiltinModule`.
 A module counts by its name, so `fs-extra`, `crypto-js`, and `./fs` stay.
 
-| Node module | Replacement |
-| --- | --- |
-| `fs`, `path`, `child_process` | `FileSystem`, `Path`, and `ChildProcess` from `effect`, provided by `NodeServices.layer` |
-| `crypto` | the `effect/crypto` services (`SecureRandom`, `Digest`, `Mac`, `Signature`, `KeyFormat`, `Aead`) or Web Crypto (`crypto.subtle`) for random bytes, digests, HMACs, signatures, and keys |
-| `buffer` | `Uint8Array`, `TextEncoder`, and `effect/encoding` |
-| `util` | `ConfigProvider.fromDotEnvContents` for the one function Nakafa used, `parseEnv` |
-| `os` | `navigator.hardwareConcurrency` for the core count, and `FileSystem.makeTempDirectoryScoped` for a temporary folder |
-| `net` | `NodeSocketServer` from `@effect/platform-node` |
-| `http` | `NodeHttpServer` from `@effect/platform-node` |
+| Node module                   | Replacement                                                                                                                                                                             |
+| ----------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `fs`, `path`, `child_process` | `FileSystem`, `Path`, and `ChildProcess` from `effect`, provided by `NodeServices.layer`                                                                                                |
+| `crypto`                      | the `effect/crypto` services (`SecureRandom`, `Digest`, `Mac`, `Signature`, `KeyFormat`, `Aead`) or Web Crypto (`crypto.subtle`) for random bytes, digests, HMACs, signatures, and keys |
+| `buffer`                      | `Uint8Array`, `TextEncoder`, and `effect/encoding`                                                                                                                                      |
+| `util`                        | `ConfigProvider.fromDotEnvContents` for the one function Nakafa used, `parseEnv`                                                                                                        |
+| `os`                          | `navigator.hardwareConcurrency` for the core count, and `FileSystem.makeTempDirectoryScoped` for a temporary folder                                                                     |
+| `net`                         | `NodeSocketServer` from `@effect/platform-node`                                                                                                                                         |
+| `http`                        | `NodeHttpServer` from `@effect/platform-node`                                                                                                                                           |
 
 The other Node modules that authored code loads (`url`, `module`, `dns`) are
 not judged yet. The rule has three constructions, each a module of one exact
@@ -447,8 +448,6 @@ judges two places: in `evilcharts/ui/chart.tsx`, the root of `ChartContainer`
 own, after any variant. `ChartContainer` hands its `maxHeight` prop to a
 `div`, which does not read it, so the cap is a class.
 
-
-
 ### Sealed message readers
 
 `sealed` reports each read of stored Nina messages and files that a module
@@ -507,7 +506,6 @@ an overlay renders from another module is judged by the overlay modules' own
 axis, which holds whatever it renders. A table's own scroll, inside the card it
 stands in, is not judged here.
 
-
 ### Module size
 
 A hand-written module has at most 500 lines. The check reports a longer one
@@ -531,7 +529,6 @@ judges three constructions in application code outside
 - A component named as an empty state, such as `FeedEmpty`, draws
   `EmptyState`. The name is the construction a syntax rule can see: a bespoke
   sentence under another name is review's to find.
-
 
 ### Modules named index
 
@@ -562,7 +559,6 @@ source: `scripts/check/visuals.ts` requires that every `VisualCard` holds a
 usage of the frame in its module writes a `VisualCardHeader` among the children
 it hands over, and a frame that no usage in its module writes one for is
 reported at its card.
-
 
 ### Dictionary keys named twice
 
@@ -643,7 +639,6 @@ callback binds, its parameters and the variables it declares, and two or more
 options written side by side under one element that all name the same icon. A
 list of values whose trigger already shows their kind's icon marks its options
 `plain`, which show no icon, so the check reads nothing there.
-
 
 ### Class strings kept in a constant
 

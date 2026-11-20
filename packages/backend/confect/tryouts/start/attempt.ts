@@ -15,10 +15,8 @@ import { writeTryoutSetProgress } from "@repo/backend/confect/tryouts/progress/w
 import { scheduleReminders } from "@repo/backend/confect/tryouts/reminders/timing";
 import { createAttemptPlacements } from "@repo/backend/confect/tryouts/runtime/placement";
 import type { TryoutSection } from "@repo/backend/confect/tryouts/runtime/schema";
-import {
-  type FrozenPlacement,
-  freezeAttempt,
-} from "@repo/backend/confect/tryouts/start/freeze";
+import type { FrozenPlacement } from "@repo/backend/confect/tryouts/start/freeze";
+import { freezeAttempt } from "@repo/backend/confect/tryouts/start/freeze";
 import { TryoutStartSource } from "@repo/backend/confect/tryouts/start/source";
 import {
   startAttemptArgsValidator,

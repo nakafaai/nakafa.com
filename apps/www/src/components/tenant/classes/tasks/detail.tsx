@@ -52,10 +52,8 @@ import { ClassMissingBody } from "@/components/tenant/classes/missing";
 import { useClassScope } from "@/components/tenant/classes/scope";
 import { EditTaskDialog } from "@/components/tenant/classes/tasks/edit";
 import { TaskMissingTable } from "@/components/tenant/classes/tasks/missing";
-import {
-  type ClassTask,
-  submitUpdate,
-} from "@/components/tenant/classes/tasks/optimistic";
+import type { ClassTask } from "@/components/tenant/classes/tasks/optimistic";
+import { submitUpdate } from "@/components/tenant/classes/tasks/optimistic";
 import { TaskStanding } from "@/components/tenant/classes/tasks/standing";
 import { TaskWorkTable } from "@/components/tenant/classes/tasks/work";
 import { isDenied, isLostAccess } from "@/components/tenant/refusal";

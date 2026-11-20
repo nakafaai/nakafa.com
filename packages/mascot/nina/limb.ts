@@ -1,5 +1,7 @@
-import { type ARM, TORSO_CURVES, TORSO_START } from "@repo/mascot/nina/body";
-import { at, type Place } from "@repo/mascot/nina/point";
+import type { ARM } from "@repo/mascot/nina/body";
+import { TORSO_CURVES, TORSO_START } from "@repo/mascot/nina/body";
+import type { Place } from "@repo/mascot/nina/point";
+import { at } from "@repo/mascot/nina/point";
 import { Array as Arr, Schema } from "effect";
 
 /** How thick a limb is at its root and at its tip. */

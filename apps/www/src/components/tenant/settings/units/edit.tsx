@@ -2,11 +2,8 @@ import { useMutation } from "@confect/react";
 import { Globe02Icon } from "@hugeicons/core-free-icons";
 import type { ActiveAppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
-import {
-  Npsn,
-  type UnitLevel,
-  UnitName,
-} from "@repo/backend/confect/tenancy/schema";
+import type { UnitLevel } from "@repo/backend/confect/tenancy/schema";
+import { Npsn, UnitName } from "@repo/backend/confect/tenancy/schema";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   Field,

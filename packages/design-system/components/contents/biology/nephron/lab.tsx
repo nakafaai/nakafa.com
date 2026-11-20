@@ -1,13 +1,15 @@
+import type {
+  Glucose,
+  Solute,
+  Urea,
+} from "@repo/design-system/components/contents/biology/nephron/filtration";
 import {
   concentrationFactor,
   excreted,
   filteredLoad,
-  type Glucose,
   perDay,
   reabsorbed,
-  type Solute,
   threshold,
-  type Urea,
   urineFlow,
 } from "@repo/design-system/components/contents/biology/nephron/filtration";
 import { NephronScene } from "@repo/design-system/components/contents/biology/nephron/scene";
@@ -30,7 +32,8 @@ import {
 } from "@repo/design-system/components/visual/card";
 import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
-import { type ReactNode, Suspense, useState } from "react";
+import type { ReactNode } from "react";
+import { Suspense, useState } from "react";
 
 /**
  * One nephron of a kidney, with the filtrate flowing through it. The

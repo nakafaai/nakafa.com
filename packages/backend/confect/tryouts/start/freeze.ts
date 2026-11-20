@@ -1,9 +1,7 @@
 import type { CatalogRow } from "@nakafa/aksara-contracts/assessment/catalog";
 import { ItemVersionSchema } from "@nakafa/aksara-contracts/assessment/item";
-import {
-  type InteractionKey,
-  ItemKeySchema,
-} from "@nakafa/aksara-contracts/assessment/key";
+import type { InteractionKey } from "@nakafa/aksara-contracts/assessment/key";
+import { ItemKeySchema } from "@nakafa/aksara-contracts/assessment/key";
 import type { Paper } from "@nakafa/aksara-contracts/assessment/paper";
 import type { ExamProfile } from "@nakafa/aksara-contracts/assessment/profile";
 import type { Docs } from "@repo/backend/confect/_generated/docs";

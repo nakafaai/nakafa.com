@@ -1,4 +1,5 @@
-import { type CheckResult, getChecksSorted, runChecks } from "afdocs";
+import type { CheckResult } from "afdocs";
+import { getChecksSorted, runChecks } from "afdocs";
 import { loadConfig } from "afdocs/helpers";
 import { Array as Arr, Effect, HashMap, Option, Schema } from "effect";
 

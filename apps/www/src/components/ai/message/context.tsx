@@ -1,7 +1,8 @@
 import type { NinaTurnSummary } from "@repo/backend/confect/nina/contract/turn";
 import type { NinaMessage } from "@repo/backend/confect/nina/schema";
 import { useRequired } from "@repo/design-system/hooks/required";
-import { createContext, type PropsWithChildren } from "react";
+import type { PropsWithChildren } from "react";
+import { createContext } from "react";
 import { LastMessageContext } from "@/components/ai/message/last";
 
 /**

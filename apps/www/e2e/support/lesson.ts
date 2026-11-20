@@ -1,4 +1,5 @@
-import { expect, type Locator, type Page } from "@playwright/test";
+import type { Locator, Page } from "@playwright/test";
+import { expect } from "@playwright/test";
 import { Effect } from "effect";
 import { LESSON_SECTION_ID } from "@/components/marketing/about/lesson/id";
 import { waitUntilTakenOver } from "@/e2e/support/window";

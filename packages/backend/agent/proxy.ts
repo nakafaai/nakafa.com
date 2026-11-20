@@ -1,10 +1,10 @@
+import type { AgentEdgeContract } from "@repo/backend/agent/edge";
 import {
-  type AgentEdgeContract,
   NAKAFA_EDGE_RELEASE_SHA_HEADER,
   NAKAFA_RELEASE_SHA_ENVIRONMENT,
 } from "@repo/backend/agent/edge";
+import type { AgentEdgePath } from "@repo/backend/agent/route";
 import {
-  type AgentEdgePath,
   agentEdgeOriginPath,
   agentEdgeRequestHeaders,
 } from "@repo/backend/agent/route";

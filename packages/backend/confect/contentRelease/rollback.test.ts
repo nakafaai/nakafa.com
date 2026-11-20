@@ -1,13 +1,9 @@
 import { describe, expect, it } from "@effect/vitest";
 import { ContentProjectionSchema } from "@nakafa/aksara-contracts/projection/spec";
-import {
-  type RollbackPage,
-  RollbackPageSchema,
-} from "@nakafa/aksara-contracts/release/rollback/spec";
-import {
-  type RoutePage,
-  RoutePageSchema,
-} from "@nakafa/aksara-contracts/release/route/page";
+import type { RollbackPage } from "@nakafa/aksara-contracts/release/rollback/spec";
+import { RollbackPageSchema } from "@nakafa/aksara-contracts/release/rollback/spec";
+import type { RoutePage } from "@nakafa/aksara-contracts/release/route/page";
+import { RoutePageSchema } from "@nakafa/aksara-contracts/release/route/page";
 import {
   RELEASE_PAGE_LIMIT,
   ROUTE_CATALOG_PAGE_LIMIT,
@@ -33,7 +29,8 @@ import {
   rollbackArtifactHash,
 } from "@repo/backend/test/content/rollback";
 import { insertTestRelease } from "@repo/backend/test/content/stage";
-import { convexTest, type TestConvex } from "convex-test";
+import type { TestConvex } from "convex-test";
+import { convexTest } from "convex-test";
 import { Schema } from "effect";
 
 const prepareRollback = internal.contentRelease.rollback.prepareRollback;

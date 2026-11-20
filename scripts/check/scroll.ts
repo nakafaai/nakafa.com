@@ -1,5 +1,6 @@
 import { Array as Arr, HashSet, Option, Result } from "effect";
-import { isStringLiteralLikeNode, type Node, type SourceFile } from "tsrs/ast";
+import type { Node, SourceFile } from "tsrs/ast";
+import { isStringLiteralLikeNode } from "tsrs/ast";
 import { nodesBelow } from "#scripts/check/drilling";
 import {
   attributeValue,

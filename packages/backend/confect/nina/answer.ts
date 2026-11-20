@@ -12,7 +12,8 @@ import { turnHalted, watchHalt } from "@repo/backend/confect/nina/halt";
 import { makeTiming } from "@repo/backend/confect/nina/timing";
 import { meterOf } from "@repo/backend/confect/spend/meter";
 import { turnClaim } from "@repo/backend/confect/spend/schema";
-import { type Cause, Effect, Exit, Layer, Option } from "effect";
+import type { Cause } from "effect";
+import { Effect, Exit, Layer, Option } from "effect";
 
 /**
  * Notes that a generation ended because its turn was halted, whichever of the

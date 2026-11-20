@@ -1,7 +1,5 @@
-import {
-  formatQuranMeaning,
-  type PublishedQuranSurah,
-} from "@repo/backend/content/quran/contract";
+import type { PublishedQuranSurah } from "@repo/backend/content/quran/contract";
+import { formatQuranMeaning } from "@repo/backend/content/quran/contract";
 import { Effect } from "effect";
 import type { Locale } from "use-intl";
 import { createSEOKeywords } from "@/lib/seo/keywords";

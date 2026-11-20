@@ -1,8 +1,8 @@
 import { describe, expect, it } from "@effect/vitest";
 import { Id } from "@repo/backend/confect/_generated/id";
 import { Schema } from "effect";
+import type { ListPost } from "@/components/user/posts/state";
 import {
-  type ListPost,
   likePost,
   prependPost,
   removePost,

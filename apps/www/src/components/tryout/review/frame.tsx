@@ -1,8 +1,10 @@
 import type { TryoutScoreResult } from "@repo/backend/confect/tryouts/score";
 import { ResizeEdge } from "@repo/design-system/components/ui/resizable";
 import { cn } from "cn";
-import { Array as Arr, type Option, Result } from "effect";
-import { type ComponentProps, type ReactNode, use, useState } from "react";
+import type { Option } from "effect";
+import { Array as Arr, Result } from "effect";
+import type { ComponentProps, ReactNode } from "react";
+import { use, useState } from "react";
 import { useTranslations } from "use-intl";
 import { PlayerFooter } from "@/components/player/footer";
 import { PlayerMain } from "@/components/player/frame";

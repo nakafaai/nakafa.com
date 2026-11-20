@@ -1,11 +1,10 @@
-import {
-  filterOutOrphanedToolMessages,
-  type MessageDoc,
-} from "@convex-dev/agent";
+import type { MessageDoc } from "@convex-dev/agent";
+import { filterOutOrphanedToolMessages } from "@convex-dev/agent";
 import type { NinaTurnsDoc } from "@repo/backend/confect/_generated/docs";
 import ninaInternal from "@repo/backend/confect/_generated/refs/nina.server";
 import { QueryRunner } from "@repo/backend/confect/_generated/services";
-import { type Asking, newestAskings } from "@repo/backend/confect/nina/asking";
+import type { Asking } from "@repo/backend/confect/nina/asking";
+import { newestAskings } from "@repo/backend/confect/nina/asking";
 import { NINA_BUDGET } from "@repo/backend/confect/nina/budget";
 import { foldCanWait, HISTORY_TURNS } from "@repo/backend/confect/nina/fold";
 import { sentTurn } from "@repo/backend/confect/nina/history";

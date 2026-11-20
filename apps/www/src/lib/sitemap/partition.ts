@@ -1,11 +1,10 @@
 import { Array as Arr, Order } from "effect";
 import type { Locale } from "use-intl";
+import type { SitemapFamily, SitemapPage } from "@/lib/sitemap/identity";
 import {
   formatArticlePartition,
   formatMaterialPartition,
   formatProgramPartition,
-  type SitemapFamily,
-  type SitemapPage,
 } from "@/lib/sitemap/identity";
 
 /** Buckets grouped into one capacity-owned sitemap document.

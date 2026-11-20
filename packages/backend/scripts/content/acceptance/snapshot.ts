@@ -1,6 +1,6 @@
 import { acceptanceRuntimeError } from "@repo/backend/scripts/content/acceptance/error";
+import type { LocalRuntime } from "@repo/backend/scripts/content/acceptance/local";
 import {
-  type LocalRuntime,
   LocalRuntimeJson,
   linkBackendPackage,
 } from "@repo/backend/scripts/content/acceptance/local";

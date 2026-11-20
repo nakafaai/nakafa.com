@@ -5,10 +5,8 @@ import { Button } from "@repo/design-system/components/ui/button";
 import { Textarea } from "@repo/design-system/components/ui/textarea";
 import { Clock, Effect, Schema, String as Str } from "effect";
 import { useTranslations } from "use-intl";
-import {
-  editUpdate,
-  type ForumMessage,
-} from "@/components/tenant/classes/forum/optimistic";
+import type { ForumMessage } from "@/components/tenant/classes/forum/optimistic";
+import { editUpdate } from "@/components/tenant/classes/forum/optimistic";
 import { useChannelScope } from "@/components/tenant/classes/forum/scope";
 import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 

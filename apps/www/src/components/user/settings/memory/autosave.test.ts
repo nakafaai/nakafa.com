@@ -1,12 +1,14 @@
 import { describe, expect, it } from "@effect/vitest";
 import { Array as Arr, MutableList, MutableRef } from "effect";
 import { createAutosave } from "@/components/user/settings/memory/autosave";
+import type {
+  Memory,
+  MemoryDraft,
+} from "@/components/user/settings/memory/list";
 import {
   draftOf,
   editedMemory,
   learnerMemory,
-  type Memory,
-  type MemoryDraft,
   pendingId,
 } from "@/components/user/settings/memory/list";
 
@@ -19,6 +21,7 @@ const PENDING_ID = pendingId("typed");
 const hiding = `hide ${PENDING_ID}`;
 const unhiding = `unhide ${PENDING_ID}`;
 const NEW_ID = pendingId("new");
+type Failed = (again: boolean) => void;
 
 /**
  * The Memory page as the saving sees it. Every change it sends is recorded,
@@ -45,10 +48,7 @@ function page() {
     send: {
       add(
         draft: MemoryDraft,
-        after: {
-          done?: (memory: Memory) => void;
-          failed?: (again: boolean) => void;
-        } = {}
+        after: { done?: (memory: Memory) => void; failed?: Failed } = {}
       ) {
         note(`add ${words(draft)}`);
         MutableList.append(answers, {
@@ -64,7 +64,7 @@ function page() {
       edit(
         id: Memory["id"],
         draft: MemoryDraft,
-        after: { failed?: (again: boolean) => void } = {}
+        after: { failed?: Failed } = {}
       ) {
         note(`edit ${id} ${words(draft)}`);
         MutableList.append(answers, {

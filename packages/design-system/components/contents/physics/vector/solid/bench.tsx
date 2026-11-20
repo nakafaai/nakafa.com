@@ -1,8 +1,6 @@
 import { RoundedBox } from "@react-three/drei";
-import {
-  type Placement,
-  Repeat,
-} from "@repo/design-system/components/three/repeat";
+import type { Placement } from "@repo/design-system/components/three/repeat";
+import { Repeat } from "@repo/design-system/components/three/repeat";
 import { SurfaceMaterial } from "@repo/design-system/components/three/surface/material";
 import { BENCH_COLORS } from "@repo/design-system/lib/material/bench";
 import { CAR_COLORS } from "@repo/design-system/lib/material/car";

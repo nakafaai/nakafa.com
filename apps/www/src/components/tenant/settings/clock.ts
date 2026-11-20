@@ -1,8 +1,6 @@
 import { ActiveAppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
-import {
-  formatSchoolTime,
-  type SchoolTimeFormat,
-} from "@repo/internationalization/src/formats";
+import type { SchoolTimeFormat } from "@repo/internationalization/src/formats";
+import { formatSchoolTime } from "@repo/internationalization/src/formats";
 import { DateTime, Effect, Option, Schema } from "effect";
 
 /** One moment to write on a school's clock: its instant, the reader's language, and the school's zone. */

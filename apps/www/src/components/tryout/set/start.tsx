@@ -11,18 +11,19 @@ import { LOCALES } from "@repo/internationalization/src/locale";
 import { useNavigate, useRouterState } from "@tanstack/react-router";
 import { useConvex } from "convex/react";
 import { Effect, Option, Schema } from "effect";
-import { type ReactNode, useEffect, useEffectEvent, useState } from "react";
+import type { ReactNode } from "react";
+import { useEffect, useEffectEvent, useState } from "react";
 import { useConvexAuth } from "@/components/auth/convex";
 import { useNow } from "@/components/player/now";
 import { keptStorage } from "@/components/player/storage";
 import { ConvexIsland } from "@/components/providers/island";
 import { useLiveSession } from "@/components/providers/live";
 import { TryoutPageLink } from "@/components/tryout/route/link";
+import type { TryoutPageAddress } from "@/components/tryout/route/path";
 import {
   getTryoutPageHref,
   getTryoutPageTarget,
   getTryoutPublicPathHref,
-  type TryoutPageAddress,
   TryoutPageAddressSchema,
 } from "@/components/tryout/route/path";
 import {

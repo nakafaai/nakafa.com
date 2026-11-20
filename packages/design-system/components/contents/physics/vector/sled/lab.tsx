@@ -20,7 +20,8 @@ import {
 import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { Schema } from "effect";
-import { type ReactNode, Suspense, useMemo, useState } from "react";
+import type { ReactNode } from "react";
+import { Suspense, useMemo, useState } from "react";
 
 interface SledPullWorkLabProps {
   /** The rope angle above the snow the card starts at, in degrees. */

@@ -1,43 +1,47 @@
+import type { Sha256Hash } from "@nakafa/aksara-contracts/ids";
 import {
   PublicPathSchema,
-  type Sha256Hash,
   Sha256HashSchema,
 } from "@nakafa/aksara-contracts/ids";
+import type {
+  ActiveAppLocaleCode,
+  ActiveAppLocaleList,
+} from "@nakafa/aksara-contracts/locale";
 import {
   ACTIVE_APP_LOCALES,
-  type ActiveAppLocaleCode,
-  type ActiveAppLocaleList,
   ENGLISH_APP_LOCALE_CODE,
   GERMAN_APP_LOCALE_CODE,
   INDONESIAN_APP_LOCALE_CODE,
   MALAY_APP_LOCALE_CODE,
   makeAppLocale,
 } from "@nakafa/aksara-contracts/locale";
+import type {
+  QuranEmbeddedSourceId,
+  QuranExternalSourceId,
+} from "@nakafa/aksara-contracts/quran/identity";
 import {
-  type QuranEmbeddedSourceId,
   QuranEmbeddedSourceIdSchema,
-  type QuranExternalSourceId,
   quranReadingSourceIds,
   quranTafsirSourceId,
   quranTranslationSourceId,
 } from "@nakafa/aksara-contracts/quran/identity";
+import type {
+  QuranRowPayload,
+  QuranRuntimeVerse,
+} from "@nakafa/aksara-contracts/quran/snapshot/row";
 import {
   QuranChunkRowSchema,
-  type QuranRowPayload,
-  type QuranRuntimeVerse,
   QuranRuntimeVerseSchema,
   QuranSearchRowSchema,
 } from "@nakafa/aksara-contracts/quran/snapshot/row";
 import { bindQuranRow } from "@nakafa/aksara-contracts/quran/snapshot/row/hash";
+import type { QuranTafsirAccess } from "@nakafa/aksara-contracts/quran/source";
 import {
   QuranAttributionRowSchema,
-  type QuranTafsirAccess,
   quranSourceIds,
 } from "@nakafa/aksara-contracts/quran/source";
-import {
-  type QuranSurahRow,
-  QuranSurahRowSchema,
-} from "@nakafa/aksara-contracts/quran/spec";
+import type { QuranSurahRow } from "@nakafa/aksara-contracts/quran/spec";
+import { QuranSurahRowSchema } from "@nakafa/aksara-contracts/quran/spec";
 import { canonicalizeContentSnapshotRow } from "@nakafa/aksara-contracts/release/snapshot/data";
 import { Array as Arr, Effect, Schema } from "effect";
 

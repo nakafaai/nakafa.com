@@ -9,11 +9,12 @@ import { Slider } from "@repo/design-system/components/ui/slider";
 import { VisualCardToolbar } from "@repo/design-system/components/visual/card";
 import { useRequired } from "@repo/design-system/hooks/required";
 import { Array as Arr, Option, Record as Rec } from "effect";
-import { createContext, type ReactNode, useState } from "react";
+import type { ReactNode } from "react";
+import { createContext, useState } from "react";
 import { useStore } from "zustand";
+import type { ParameterStore } from "@/lib/content/renderer/client/base/visual/parameters";
 import {
   createParameterStore,
-  type ParameterStore,
   sliderDigits,
 } from "@/lib/content/renderer/client/base/visual/parameters";
 

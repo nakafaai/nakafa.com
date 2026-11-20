@@ -1,10 +1,12 @@
 "use client";
 
 import { useRequired } from "@repo/design-system/hooks/required";
-import { createContext, type ReactNode, useState } from "react";
+import type { ReactNode } from "react";
+import { createContext, useState } from "react";
 import { useStore } from "zustand";
 import { useShallow } from "zustand/react/shallow";
-import { createSearchStore, type SearchStore } from "@/lib/search/store";
+import type { SearchStore } from "@/lib/search/store";
+import { createSearchStore } from "@/lib/search/store";
 
 type SearchStoreApi = ReturnType<typeof createSearchStore>;
 

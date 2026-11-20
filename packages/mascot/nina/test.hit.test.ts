@@ -1,5 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
 import { hitter, outlineOf } from "@repo/mascot/nina/test.hit";
+import type { Shape } from "@repo/mascot/shape";
 import {
   circle,
   ellipse,
@@ -7,7 +8,6 @@ import {
   path,
   polygon,
   rect,
-  type Shape,
 } from "@repo/mascot/shape";
 import { Option } from "effect";
 

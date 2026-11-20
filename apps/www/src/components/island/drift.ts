@@ -1,4 +1,5 @@
-import { activate, type uploadMap } from "@/components/island/buffers";
+import type { uploadMap } from "@/components/island/buffers";
+import { activate } from "@/components/island/buffers";
 import type { createGale } from "@/components/island/wind";
 import { shedOf } from "@/lib/island/drift";
 import type { Season } from "@/lib/island/season";

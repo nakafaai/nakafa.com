@@ -3,10 +3,10 @@ import { beforeEach, describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
 import { DatabaseWriter } from "@repo/backend/confect/_generated/services";
 import { nf } from "@repo/backend/test/editor";
+import type { SittingFixture } from "@repo/backend/test/sittings";
 import {
   CLOSES_AT,
   openedSitting,
-  type SittingFixture,
   seedAttempt,
   seedSignal,
 } from "@repo/backend/test/sittings";

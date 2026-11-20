@@ -1,9 +1,8 @@
 import type { Page } from "@playwright/test";
 import { Array as Arr, Effect, Option } from "effect";
+import type { Card, Part } from "@/e2e/support/transcript/message";
 import {
-  type Card,
   cited,
-  type Part,
   ran,
   reply,
   said,

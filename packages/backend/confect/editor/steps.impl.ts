@@ -25,14 +25,13 @@ import {
   snapshotOf,
   stepsAfter,
 } from "@repo/backend/confect/editor/store";
-import {
-  type ClientRecordView,
-  clientView,
-  type SinceReply,
-  type StepView,
-  type SubmitReply,
-  stepView,
+import type {
+  ClientRecordView,
+  SinceReply,
+  StepView,
+  SubmitReply,
 } from "@repo/backend/confect/editor/view";
+import { clientView, stepView } from "@repo/backend/confect/editor/view";
 import { requireDocumentUnfrozen } from "@repo/backend/confect/exams/freeze";
 import member from "@repo/backend/confect/middleware/member.impl";
 import session from "@repo/backend/confect/middleware/session.impl";

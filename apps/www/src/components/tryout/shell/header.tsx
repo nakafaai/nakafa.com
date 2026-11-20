@@ -4,9 +4,9 @@ import { cn } from "cn";
 import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
 import { useTranslations } from "use-intl";
+import type { BreadcrumbHeaderItem } from "@/components/shared/breadcrumb/header";
 import {
   BreadcrumbHeaderFold,
-  type BreadcrumbHeaderItem,
   BreadcrumbHeaderPath,
 } from "@/components/shared/breadcrumb/header";
 import {

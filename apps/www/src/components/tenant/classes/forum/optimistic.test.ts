@@ -4,10 +4,10 @@ import classroom from "@repo/backend/confect/_generated/refs/classroom";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { MascotCode } from "@repo/mascot/code";
 import { Array as Arr, Option, Schema } from "effect";
+import type { ForumMessage } from "@/components/tenant/classes/forum/optimistic";
 import {
   archiveThreadUpdate,
   editUpdate,
-  type ForumMessage,
   hideUpdate,
   markUpdate,
   openUpdate,

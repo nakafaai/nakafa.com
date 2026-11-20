@@ -2,10 +2,8 @@ import { RegisteredConvexFunction } from "@confect/server";
 import { assert, describe, expect, it } from "@effect/vitest";
 import confectSchema from "@repo/backend/confect/_generated/schema";
 import { toUserCleanupError } from "@repo/backend/confect/auth/cleanup/spec";
-import {
-  launchDeletedUserCleanupProgram,
-  type StartCleanupWorkflow,
-} from "@repo/backend/confect/auth/deletion/workflow";
+import type { StartCleanupWorkflow } from "@repo/backend/confect/auth/deletion/workflow";
+import { launchDeletedUserCleanupProgram } from "@repo/backend/confect/auth/deletion/workflow";
 import { convexModules } from "@repo/backend/confect/test.setup";
 import schema from "@repo/backend/convex/schema";
 import { MASCOT_CODE } from "@repo/backend/test/mascot";

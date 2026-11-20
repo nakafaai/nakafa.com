@@ -8,10 +8,8 @@ import {
   MAX_SNAPSHOT_BATCH_BYTES,
   MAX_STAGE_GROUP_BYTES,
 } from "@nakafa/aksara-contracts/transport/limits";
-import {
-  decodePublicationRequest,
-  type PublicationRequest,
-} from "@nakafa/aksara-contracts/transport/request";
+import type { PublicationRequest } from "@nakafa/aksara-contracts/transport/request";
+import { decodePublicationRequest } from "@nakafa/aksara-contracts/transport/request";
 import { ReleaseError } from "@repo/backend/confect/contentRelease/error";
 import { encodeJsonText, JsonTextSchema } from "@repo/utilities/json";
 import { Array as Arr, Effect, Schema } from "effect";

@@ -1,7 +1,8 @@
 import { useTimeout } from "@mantine/hooks";
 import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundary";
 import { useLocation } from "@tanstack/react-router";
-import { type ComponentType, Fragment, type ReactNode, useState } from "react";
+import type { ComponentType, ReactNode } from "react";
+import { Fragment, useState } from "react";
 import { isLostAccess } from "@/components/tenant/refusal";
 import { isStaleChunkError } from "@/lib/chunks/stale";
 

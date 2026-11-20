@@ -3,7 +3,8 @@ import type * as AnswerEditorModule from "@repo/design-system/components/editor/
 import { EditorPane } from "@repo/design-system/components/editor/pane";
 import { plainText } from "@repo/design-system/components/editor/plain";
 import { toast } from "@repo/design-system/lib/toast/notify";
-import { type ComponentProps, type ReactNode, Suspense, use } from "react";
+import type { ComponentProps, ReactNode } from "react";
+import { Suspense, use } from "react";
 import { useTranslations } from "use-intl";
 import { usePaperLocked } from "@/components/exams/sitting/lock";
 import { memoizeLoad } from "@/lib/chunks/load";

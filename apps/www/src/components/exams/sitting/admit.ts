@@ -8,14 +8,14 @@ import { toast } from "@repo/design-system/lib/toast/notify";
 import { randomUuid } from "@repo/utilities/uuid";
 import { Clock, Effect, Option, Schema } from "effect";
 import { useRef } from "react";
+import type { SittingFlight } from "@/components/exams/sitting/device";
 import {
   readSittingDevice,
   rememberSittingDevice,
   reusedDeviceOf,
-  type SittingFlight,
 } from "@/components/exams/sitting/device";
+import type { Admission } from "@/components/exams/sitting/entry";
 import {
-  type Admission,
   entryRefusalMessage,
   sittingFailureMessage,
 } from "@/components/exams/sitting/entry";

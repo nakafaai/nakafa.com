@@ -3,7 +3,8 @@
 import { linkVariants } from "@repo/design-system/lib/prose";
 import type { AnchorProps } from "@repo/design-system/types/markdown";
 import { Data } from "effect";
-import { type ComponentType, createContext, use } from "react";
+import type { ComponentType } from "react";
+import { createContext, use } from "react";
 
 /** The props of an authored path that names a page of the app, such as `/articles/x/y#z`. */
 export type MarkdownPageLinkProps = AnchorProps & { readonly href: string };

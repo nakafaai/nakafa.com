@@ -1,12 +1,11 @@
-import { Agent, createTool, type UsageHandler } from "@convex-dev/agent";
+import type { UsageHandler } from "@convex-dev/agent";
+import { Agent, createTool } from "@convex-dev/agent";
 import { components } from "@repo/backend/confect/_generated/components";
 import { ActionCtx } from "@repo/backend/confect/_generated/services";
 import { Gateway } from "@repo/backend/confect/gateway/handle";
 import { limitDeadline } from "@repo/backend/confect/nina/capability/deadline";
-import {
-  type CapabilityProgress,
-  specialistResult,
-} from "@repo/backend/confect/nina/capability/progress";
+import type { CapabilityProgress } from "@repo/backend/confect/nina/capability/progress";
+import { specialistResult } from "@repo/backend/confect/nina/capability/progress";
 import type { TaskAgentData } from "@repo/backend/confect/nina/contract/agent";
 import { textOutputSchema } from "@repo/backend/confect/nina/contract/tools";
 import type { UsageAgent } from "@repo/backend/confect/nina/contract/usage";

@@ -1,8 +1,8 @@
 import { createPaddy } from "@repo/design-system/components/contents/biology/ecosystem/paddy";
+import type { Herd } from "@repo/design-system/components/contents/biology/ecosystem/population";
 import {
   balanceOf,
   FIELD,
-  type Herd,
   historyOf,
 } from "@repo/design-system/components/contents/biology/ecosystem/population";
 import { createWildlife } from "@repo/design-system/components/contents/biology/ecosystem/wildlife";
@@ -26,7 +26,8 @@ import { P5Sketch } from "@repo/design-system/components/visual/sketch";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr } from "effect";
 import type p5 from "p5";
-import { type ReactNode, useMemo, useState } from "react";
+import type { ReactNode } from "react";
+import { useMemo, useState } from "react";
 
 /** The years the card follows, sampled every tenth of a year. */
 const YEARS = 20;

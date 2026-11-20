@@ -1,25 +1,19 @@
-import {
-  canonicalizeSignedContentArtifact,
-  type SignedContentArtifactSchema,
-} from "@nakafa/aksara-contracts/content";
-import {
-  type ContentProjection,
-  canonicalizeContentProjection,
-} from "@nakafa/aksara-contracts/projection/spec";
+import type { SignedContentArtifactSchema } from "@nakafa/aksara-contracts/content";
+import { canonicalizeSignedContentArtifact } from "@nakafa/aksara-contracts/content";
+import type { ContentProjection } from "@nakafa/aksara-contracts/projection/spec";
+import { canonicalizeContentProjection } from "@nakafa/aksara-contracts/projection/spec";
 import type {
   ContentReleaseItemSchema,
   SignedContentReleaseSchema,
 } from "@nakafa/aksara-contracts/release";
 import { canonicalizeContentReleaseItem } from "@nakafa/aksara-contracts/release/canonical";
-import {
-  type ContentRouteItemSchema,
-  canonicalizeContentRouteItem,
-} from "@nakafa/aksara-contracts/release/route/spec";
-import {
-  type ContentSnapshotManifestSchema,
-  type ContentSnapshotRowSchema,
-  canonicalizeContentSnapshotRow,
+import type { ContentRouteItemSchema } from "@nakafa/aksara-contracts/release/route/spec";
+import { canonicalizeContentRouteItem } from "@nakafa/aksara-contracts/release/route/spec";
+import type {
+  ContentSnapshotManifestSchema,
+  ContentSnapshotRowSchema,
 } from "@nakafa/aksara-contracts/release/snapshot/data";
+import { canonicalizeContentSnapshotRow } from "@nakafa/aksara-contracts/release/snapshot/data";
 import type { RendererManifestEnvelopeSchema } from "@nakafa/aksara-contracts/renderer/contract";
 import { encodeJsonText } from "@repo/utilities/json";
 

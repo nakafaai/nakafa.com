@@ -1,4 +1,5 @@
-import { type GroupSpec, Spec } from "@confect/core";
+import type { GroupSpec } from "@confect/core";
+import { Spec } from "@confect/core";
 import { layer as nodeServicesLayer } from "@effect/platform-node/NodeServices";
 import { describe, expect, expectTypeOf, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";

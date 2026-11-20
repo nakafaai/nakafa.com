@@ -2,7 +2,8 @@ import type { Ref } from "@confect/core";
 import { Id } from "@repo/backend/confect/_generated/id";
 import type tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import { GrantScope } from "@repo/backend/confect/access/schema";
-import { Array as Arr, type Option, Schema } from "effect";
+import type { Option } from "effect";
+import { Array as Arr, Schema } from "effect";
 
 /** The viewer's view of the school, as the school layout reads it. */
 type Viewer = Ref.Returns<typeof tenancy.viewer.get>;

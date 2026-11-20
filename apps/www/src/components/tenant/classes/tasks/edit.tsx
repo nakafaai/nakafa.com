@@ -8,16 +8,11 @@ import { useState } from "react";
 import { useTranslations } from "use-intl";
 import { DialogRefusal } from "@/components/shared/refusal";
 import { useClassScope } from "@/components/tenant/classes/scope";
-import {
-  checkedDraft,
-  draftOf,
-  type TaskDraft,
-} from "@/components/tenant/classes/tasks/draft";
+import type { TaskDraft } from "@/components/tenant/classes/tasks/draft";
+import { checkedDraft, draftOf } from "@/components/tenant/classes/tasks/draft";
 import { TaskFields } from "@/components/tenant/classes/tasks/fields";
-import {
-  type ClassTask,
-  editUpdate,
-} from "@/components/tenant/classes/tasks/optimistic";
+import type { ClassTask } from "@/components/tenant/classes/tasks/optimistic";
+import { editUpdate } from "@/components/tenant/classes/tasks/optimistic";
 import { useClockZone } from "@/components/tenant/settings/time";
 import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 

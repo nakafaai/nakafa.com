@@ -1,7 +1,8 @@
 import { CapabilityOutputSchema } from "@repo/backend/client/nina/capability";
 import { readOutcome } from "@repo/backend/client/nina/outcome";
 import { LearningCapabilityNameSchema } from "@repo/backend/confect/nina/capability/spec";
-import { type DynamicToolUIPart, getToolName, type ToolUIPart } from "ai";
+import type { DynamicToolUIPart, ToolUIPart } from "ai";
+import { getToolName } from "ai";
 import { Result, Schema } from "effect";
 
 /**

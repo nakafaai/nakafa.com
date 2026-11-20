@@ -1,22 +1,25 @@
 import { PolarClientError } from "@polar-sh/sdk";
-import { errors, type PolarCore } from "@polar-sh/sdk/2026-10";
+import type { PolarCore } from "@polar-sh/sdk/2026-10";
+import { errors } from "@polar-sh/sdk/2026-10";
 import { createCheckoutsService } from "@polar-sh/sdk/2026-10/services/checkouts";
 import { createCustomerSessionsService } from "@polar-sh/sdk/2026-10/services/customer_sessions";
 import { createCustomersService } from "@polar-sh/sdk/2026-10/services/customers";
 import { createRefundsService } from "@polar-sh/sdk/2026-10/services/refunds";
 import { createSubscriptionsService } from "@polar-sh/sdk/2026-10/services/subscriptions";
 import { readPolarClient } from "@repo/backend/confect/billing/polar/client";
+import type { PolarPayloadError } from "@repo/backend/confect/billing/polar/payload";
 import {
   decodePolarCheckout,
   decodePolarCustomer,
   decodePolarCustomerSession,
-  type PolarPayloadError,
 } from "@repo/backend/confect/billing/polar/payload";
+import type {
+  PolarCheckoutInput,
+  PolarCustomerIdentity,
+} from "@repo/backend/confect/billing/polar/spec";
 import {
   PolarCheckoutError,
-  type PolarCheckoutInput,
   PolarCustomerError,
-  type PolarCustomerIdentity,
   PolarDeleteError,
   PolarDuplicateEmailError,
   PolarPortalError,

@@ -12,11 +12,13 @@ import {
   MaterialLessonProjectionSchema,
 } from "@nakafa/aksara-contracts/projection/material";
 import confectSchema from "@repo/backend/confect/_generated/schema";
+import type {
+  DurableContentViewTargetInput,
+  IncomingContentViewTargetInput,
+} from "@repo/backend/confect/contents/views/target";
 import {
-  type DurableContentViewTargetInput,
   decodeMaterialDomain,
   hydrateDurableContentTarget,
-  type IncomingContentViewTargetInput,
   validateIncomingContentTarget,
 } from "@repo/backend/confect/contents/views/target";
 import { convexModules } from "@repo/backend/confect/test.setup";
@@ -32,7 +34,8 @@ import {
 } from "@repo/backend/test/content/runtime";
 import { activateMaterialCatalog } from "@repo/backend/test/material/catalog";
 import { insertRuntimeBinding } from "@repo/backend/test/runtime/head";
-import { convexTest, type TestConvex } from "convex-test";
+import type { TestConvex } from "convex-test";
+import { convexTest } from "convex-test";
 import { Effect } from "effect";
 
 /** Runs one incoming-route validation through the production Effect boundary. */

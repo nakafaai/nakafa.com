@@ -21,7 +21,8 @@ import { insertTestPage } from "@repo/backend/test/content/page";
 import { insertRuntimeRelease } from "@repo/backend/test/content/runtime";
 import { MASCOT_CODE } from "@repo/backend/test/mascot";
 import type { FunctionArgs } from "convex/server";
-import { convexTest, type TestConvex } from "convex-test";
+import type { TestConvex } from "convex-test";
+import { convexTest } from "convex-test";
 import { Effect } from "effect";
 
 const NOW = Date.UTC(2026, 8, 4, 8, 0, 0);

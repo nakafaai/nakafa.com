@@ -7,10 +7,18 @@ import {
   Option,
   Tuple,
 } from "effect";
+import type {
+  BindingElement,
+  Identifier,
+  ImportSpecifier,
+  Node,
+  ParameterDeclaration,
+  TypeAliasDeclaration,
+  TypeQueryNode,
+  TypeReferenceNode,
+  VariableDeclaration,
+} from "tsrs/ast";
 import {
-  type BindingElement,
-  type Identifier,
-  type ImportSpecifier,
   isArrowFunction,
   isAwaitExpression,
   isBindingElement,
@@ -35,12 +43,6 @@ import {
   isTypeReferenceNode,
   isVariableDeclaration,
   isYieldExpression,
-  type Node,
-  type ParameterDeclaration,
-  type TypeAliasDeclaration,
-  type TypeQueryNode,
-  type TypeReferenceNode,
-  type VariableDeclaration,
 } from "tsrs/ast";
 import type { Symbol as NativeSymbol } from "tsrs/sync";
 import { children } from "#scripts/check/source";

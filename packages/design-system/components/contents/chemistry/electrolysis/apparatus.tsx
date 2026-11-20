@@ -1,9 +1,9 @@
 import { RoundedBox } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
+import type { Path } from "@repo/design-system/components/contents/chemistry/electrolysis/circuit";
 import {
   BATTERY_Y,
   ELECTRODE_TOP,
-  type Path,
   pointAlong,
   TERMINAL_OFFSET,
 } from "@repo/design-system/components/contents/chemistry/electrolysis/circuit";
@@ -19,7 +19,8 @@ import { BENCH_COLORS } from "@repo/design-system/lib/material/bench";
 import { CAR_COLORS } from "@repo/design-system/lib/material/car";
 import { Array as Arr, Option } from "effect";
 import { useMemo, useRef } from "react";
-import { CatmullRomCurve3, type Group, Vector3 } from "three";
+import type { Group } from "three";
+import { CatmullRomCurve3, Vector3 } from "three";
 
 /** The beaker's inner radius and height. */
 export const BEAKER_RADIUS = 0.42;

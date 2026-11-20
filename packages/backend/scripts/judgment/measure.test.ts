@@ -5,11 +5,8 @@ import { noteText } from "@repo/backend/confect/nina/judgment/note";
 import { MEASURE_TEXT_LIMIT } from "@repo/backend/confect/nina/judgment.spec";
 import { ConvexCli } from "@repo/backend/scripts/development/cli";
 import { measureSet } from "@repo/backend/scripts/judgment/measure";
-import {
-  type Call,
-  loggedCalls,
-  prepare,
-} from "@repo/backend/test/judgment/cli";
+import type { Call } from "@repo/backend/test/judgment/cli";
+import { loggedCalls, prepare } from "@repo/backend/test/judgment/cli";
 import { messages } from "@repo/backend/test/judgment/message";
 import { notes } from "@repo/backend/test/judgment/note";
 import { Array as Arr, Effect, Record as Rec } from "effect";

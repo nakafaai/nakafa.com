@@ -1,10 +1,10 @@
 import { useRequired } from "@repo/design-system/hooks/required";
-import { createContext, type ReactNode, useState } from "react";
-import { type StoreApi, useStore } from "zustand";
-import {
-  createRoomStore,
-  type RoomState,
-} from "@/components/marketing/school/features/room";
+import type { ReactNode } from "react";
+import { createContext, useState } from "react";
+import type { StoreApi } from "zustand";
+import { useStore } from "zustand";
+import type { RoomState } from "@/components/marketing/school/features/room";
+import { createRoomStore } from "@/components/marketing/school/features/room";
 
 /** The store of the demo forum, which its part provides. */
 const RoomContext = createContext<StoreApi<RoomState> | null>(null);

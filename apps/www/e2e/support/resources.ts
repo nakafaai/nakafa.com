@@ -11,12 +11,14 @@ import {
 } from "effect";
 import { withBrowserContext } from "@/e2e/support/context";
 import { signInLearner } from "@/e2e/support/learner";
+import type {
+  RequestTracker,
+  TrackedRequestKind,
+} from "@/e2e/support/requests";
 import {
   formatRequestFailure,
-  type RequestTracker,
   requestFailureFields,
   SERVER_FUNCTION_HEADER,
-  type TrackedRequestKind,
   withRequestTracker,
 } from "@/e2e/support/requests";
 import { servedTimeoutMilliseconds } from "@/e2e/support/timeout";

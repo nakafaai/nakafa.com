@@ -23,10 +23,8 @@ import { EmptyState } from "@/components/state/empty";
 import { LoadFailure } from "@/components/state/failure";
 import { EmptyNina } from "@/components/state/nina";
 import { useTenant, useViewerQuery } from "@/components/tenant/context";
-import {
-  type FamilyItem,
-  inviteParentChange,
-} from "@/components/tenant/guardian/change";
+import type { FamilyItem } from "@/components/tenant/guardian/change";
+import { inviteParentChange } from "@/components/tenant/guardian/change";
 import { LINK_STATUS_LOOKS } from "@/components/tenant/guardian/status";
 import { SchoolHeader } from "@/components/tenant/header";
 import { runSchoolWrite, schoolCall } from "@/components/tenant/write";

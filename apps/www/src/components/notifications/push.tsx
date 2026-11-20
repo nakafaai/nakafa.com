@@ -8,11 +8,8 @@ import { Effect } from "effect";
 import { useEffect, useState } from "react";
 import { useTranslations } from "use-intl";
 import { reportClientException } from "@/lib/analytics/client";
-import {
-  type PushState,
-  readPushState,
-  subscribeDevice,
-} from "@/lib/notifications/device";
+import type { PushState } from "@/lib/notifications/device";
+import { readPushState, subscribeDevice } from "@/lib/notifications/device";
 
 /**
  * The footer of the notification preferences (ADR 0027): a browser that takes push and has it off

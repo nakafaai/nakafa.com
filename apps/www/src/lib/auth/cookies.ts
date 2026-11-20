@@ -1,8 +1,5 @@
-import {
-  AUTH_JWT_COOKIE,
-  AUTH_REFRESH_COOKIE,
-  type AuthCookieOptions,
-} from "@convex-dev/auth/ssr";
+import type { AuthCookieOptions } from "@convex-dev/auth/ssr";
+import { AUTH_JWT_COOKIE, AUTH_REFRESH_COOKIE } from "@convex-dev/auth/ssr";
 import { MAIN_DOMAIN } from "@repo/site/domains";
 import { Array as Arr, Result, String as Str } from "effect";
 

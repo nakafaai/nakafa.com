@@ -1,6 +1,7 @@
 import type { ParabolicMotionState } from "@repo/design-system/components/contents/physics/kinematics/parabolic-movement/data";
 import { useRequired } from "@repo/design-system/hooks/required";
-import { createContext, type ReactNode } from "react";
+import type { ReactNode } from "react";
+import { createContext } from "react";
 
 const ParabolicMotionContext = createContext<ParabolicMotionState | null>(null);
 

@@ -1,8 +1,8 @@
 import { ClientOnly } from "@tanstack/react-router";
 import { Array as Arr, Effect, Fiber } from "effect";
+import type { ReactNode } from "react";
 import {
   createContext,
-  type ReactNode,
   Suspense,
   use,
   useEffect,

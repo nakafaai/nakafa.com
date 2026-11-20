@@ -1,13 +1,10 @@
 import { Array as Arr, HashSet, Option } from "effect";
+import type { Identifier, Node, SourceFile, ThrowStatement } from "tsrs/ast";
 import {
-  type Identifier,
   isCallExpression,
   isIdentifier,
   isNewExpression,
   isThrowStatement,
-  type Node,
-  type SourceFile,
-  type ThrowStatement,
 } from "tsrs/ast";
 import { candidate } from "#scripts/check/rules";
 import { unwrapped } from "#scripts/check/wrapper";

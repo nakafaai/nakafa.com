@@ -19,10 +19,10 @@ import {
   seedVerifiedPair,
 } from "@repo/backend/test/activation/fixture";
 import { testRendererJson } from "@repo/backend/test/content/release";
+import type { TestIdentity } from "@repo/backend/test/content/state";
 import {
   insertZeroRelease,
   patchStoredOriginRelease,
-  type TestIdentity,
 } from "@repo/backend/test/content/state";
 import { convexTest } from "convex-test";
 import { Array as Arr, Effect, Schema } from "effect";

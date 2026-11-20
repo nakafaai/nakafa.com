@@ -1,5 +1,5 @@
+import type { Colony } from "@repo/design-system/components/contents/biology/climate/coral";
 import {
-  type Colony,
   TissueMaterial,
   useTissuePaint,
 } from "@repo/design-system/components/contents/biology/climate/coral";

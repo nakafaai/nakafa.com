@@ -1,6 +1,7 @@
 import type { Coat, Species } from "@/lib/island/models/coat";
 import { earsOf, eyesOf, tailOf } from "@/lib/island/models/features";
-import { type Face, mirrored } from "@/lib/island/models/parts";
+import type { Face } from "@/lib/island/models/parts";
+import { mirrored } from "@/lib/island/models/parts";
 import { ball, rod, tube } from "@/lib/island/models/solids";
 
 /**

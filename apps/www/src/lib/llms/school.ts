@@ -15,7 +15,8 @@ import {
 } from "@repo/internationalization/src/formats";
 import { loadLocaleMessages } from "@repo/internationalization/src/messages";
 import { Array as Arr, Effect } from "effect";
-import { createTranslator, type Locale } from "use-intl/core";
+import type { Locale } from "use-intl/core";
+import { createTranslator } from "use-intl/core";
 import { SCHOOL_FEATURES } from "@/components/marketing/school/features/list";
 import { BASE_URL } from "@/lib/llms/constants";
 import { buildHeader } from "@/lib/llms/format";

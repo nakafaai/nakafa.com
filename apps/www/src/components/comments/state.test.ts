@@ -2,9 +2,8 @@ import { describe, expect, it } from "@effect/vitest";
 import { Id } from "@repo/backend/confect/_generated/id";
 import { MASCOT } from "@repo/backend/test/mascot";
 import { Array as Arr, Schema } from "effect";
+import type { CommentAuthor, CommentRow } from "@/components/comments/state";
 import {
-  type CommentAuthor,
-  type CommentRow,
   changeComment,
   commentAndReplyIds,
   countReplies,

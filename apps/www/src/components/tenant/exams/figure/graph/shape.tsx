@@ -49,9 +49,9 @@ import {
 } from "@/components/tenant/exams/figure/graph/place";
 import { freeName } from "@/components/tenant/exams/figure/graph/plane";
 import { useGraph } from "@/components/tenant/exams/figure/graph/provider";
+import type { ShapeDraft } from "@/components/tenant/exams/figure/graph/shapes";
 import {
   LABELLED,
-  type ShapeDraft,
   ShapeKind,
 } from "@/components/tenant/exams/figure/graph/shapes";
 import { SPACE_KINDS } from "@/components/tenant/exams/figure/graph/space";

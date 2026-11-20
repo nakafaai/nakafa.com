@@ -1,5 +1,6 @@
 import { runMain } from "@effect/platform-node/NodeRuntime";
-import { layer, type NodeServices } from "@effect/platform-node/NodeServices";
+import type { NodeServices } from "@effect/platform-node/NodeServices";
+import { layer } from "@effect/platform-node/NodeServices";
 import { Effect, Predicate } from "effect";
 
 /**

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
+import type { River } from "@repo/design-system/components/contents/physics/kinematics/river/crossing";
 import {
-  type River,
   RiverSchema,
   riverCrossing,
 } from "@repo/design-system/components/contents/physics/kinematics/river/crossing";

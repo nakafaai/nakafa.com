@@ -1,7 +1,7 @@
 import { describe, expect, it } from "@effect/vitest";
+import type { Sample } from "@repo/backend/scripts/load/stats";
 import {
   percentile,
-  type Sample,
   spreadByName,
   spreadOf,
 } from "@repo/backend/scripts/load/stats";

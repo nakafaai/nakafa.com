@@ -27,7 +27,8 @@ import {
 } from "@repo/backend/test/content/release";
 import { insertTestRelease } from "@repo/backend/test/content/stage";
 import { getConvexSize } from "convex/values";
-import { convexTest, type TestConvex } from "convex-test";
+import type { TestConvex } from "convex-test";
+import { convexTest } from "convex-test";
 import { Array as Arr, DateTime } from "effect";
 
 const stageItems = internal.contentRelease.items.stageItemBatch;

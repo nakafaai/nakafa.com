@@ -8,9 +8,11 @@ import {
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ScrollArea } from "@repo/design-system/components/ui/scroll-area";
 import { TableRow } from "@repo/design-system/components/ui/table";
-import { cva, type VariantProps } from "class-variance-authority";
+import type { VariantProps } from "class-variance-authority";
+import { cva } from "class-variance-authority";
 import { Option } from "effect";
-import { type ReactNode, type Ref, use } from "react";
+import type { ReactNode, Ref } from "react";
+import { use } from "react";
 import { useTranslations } from "use-intl";
 import { ListCard } from "@/components/shared/page/body";
 import { usePanes } from "@/components/shared/page/panes";

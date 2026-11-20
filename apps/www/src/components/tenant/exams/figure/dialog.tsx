@@ -1,8 +1,6 @@
 import { Image01Icon } from "@hugeicons/core-free-icons";
-import {
-  FIGURE_NAMES,
-  type VisualName,
-} from "@nakafa/aksara-contracts/visual/catalog";
+import type { VisualName } from "@nakafa/aksara-contracts/visual/catalog";
+import { FIGURE_NAMES } from "@nakafa/aksara-contracts/visual/catalog";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   Field,
@@ -28,18 +26,18 @@ import {
   FigureField,
   FigurePropsProvider,
 } from "@/components/tenant/exams/figure/fields";
+import type { FigureDraft } from "@/components/tenant/exams/figure/form";
 import {
   emptyDraft,
-  type FigureDraft,
   figureForm,
   figureOf,
   setAt,
 } from "@/components/tenant/exams/figure/form";
 import { GraphBuilder } from "@/components/tenant/exams/figure/graph/builder";
+import type { GraphDraft } from "@/components/tenant/exams/figure/graph/draft";
 import {
   emptyGraph,
   figureDraftOf,
-  type GraphDraft,
   graphOf,
 } from "@/components/tenant/exams/figure/graph/draft";
 import { GraphProvider } from "@/components/tenant/exams/figure/graph/provider";

@@ -15,11 +15,8 @@ import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { FIXTURE_TRACK } from "@repo/backend/test/assessment/catalog";
 import { makeAssessmentSnapshot } from "@repo/backend/test/assessment/snapshot";
 import { client } from "@repo/backend/test/client";
-import {
-  TRYOUT_NOW,
-  type TryoutWorld,
-  tryoutWorld,
-} from "@repo/backend/test/tryout/world";
+import type { TryoutWorld } from "@repo/backend/test/tryout/world";
+import { TRYOUT_NOW, tryoutWorld } from "@repo/backend/test/tryout/world";
 import { Array as Arr, Effect, Option, Schema, Struct } from "effect";
 
 const list = tryouts.queries.sets.list;

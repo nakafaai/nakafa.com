@@ -12,9 +12,11 @@ import { TAILWIND_MEDIA_QUERIES } from "@repo/design-system/lib/breakpoints";
 import { cva } from "class-variance-authority";
 import { cn } from "cn";
 import { Option, Schema } from "effect";
-import { createContext, type ReactNode, use, useState } from "react";
+import type { ReactNode } from "react";
+import { createContext, use, useState } from "react";
 import { createPortal } from "react-dom";
-import { createStore, type StoreApi, useStore } from "zustand";
+import type { StoreApi } from "zustand";
+import { createStore, useStore } from "zustand";
 import { PaneModeContext } from "@/components/shared/page/panes/mode";
 import {
   PanesGroupContext,

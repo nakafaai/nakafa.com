@@ -7,6 +7,7 @@ import {
   TideGauge,
 } from "@repo/design-system/components/contents/biology/climate/jetty";
 import { Palms } from "@repo/design-system/components/contents/biology/climate/palms";
+import type { Scenario } from "@repo/design-system/components/contents/biology/climate/sea";
 import {
   floodedCount,
   floodLevel,
@@ -15,7 +16,6 @@ import {
   recordRate,
   recordRise,
   retreatOf,
-  type Scenario,
   ScenarioSchema,
   VILLAGE,
   waveAtShore,
@@ -53,7 +53,8 @@ import {
 import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { Array as Arr, Schema } from "effect";
-import { type ReactNode, Suspense, useRef, useState } from "react";
+import type { ReactNode } from "react";
+import { Suspense, useRef, useState } from "react";
 import type { Group } from "three";
 
 /** A storm pushes the sea 1 m higher and drives waves 1 m high at the coast. */

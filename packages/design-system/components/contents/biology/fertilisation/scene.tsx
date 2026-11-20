@@ -13,7 +13,8 @@ import { CameraControls } from "@repo/design-system/components/three/camera/cont
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { BIOLOGY_COLORS } from "@repo/design-system/lib/material/biology";
 import { Array as Arr } from "effect";
-import { type ReactNode, useEffect, useMemo } from "react";
+import type { ReactNode } from "react";
+import { useEffect, useMemo } from "react";
 import {
   BufferGeometry,
   CatmullRomCurve3,

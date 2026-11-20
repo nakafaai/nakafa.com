@@ -23,7 +23,8 @@ import {
   readConvexSessionId,
   releaseConvexAuth,
 } from "@/lib/auth/convex";
-import { type AuthSession, previewAuthSession } from "@/lib/auth/session";
+import type { AuthSession } from "@/lib/auth/session";
+import { previewAuthSession } from "@/lib/auth/session";
 
 const pending = {
   hasError: false,

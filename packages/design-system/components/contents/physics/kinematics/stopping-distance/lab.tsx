@@ -5,14 +5,12 @@ import {
   ROAD,
   Road,
 } from "@repo/design-system/components/contents/physics/kinematics/road";
-import {
-  Sedan,
-  type SedanRig,
-} from "@repo/design-system/components/contents/physics/kinematics/sedan";
+import type { SedanRig } from "@repo/design-system/components/contents/physics/kinematics/sedan";
+import { Sedan } from "@repo/design-system/components/contents/physics/kinematics/sedan";
+import type { Stop } from "@repo/design-system/components/contents/physics/kinematics/stopping-distance/motion";
 import {
   brakingDistance,
   reactionDistance,
-  type Stop,
   stopPhase,
   stopPosition,
   stoppingDistance,
@@ -44,14 +42,8 @@ import { VisualCardSceneActions } from "@repo/design-system/components/visual/sc
 import { CAR_COLORS } from "@repo/design-system/lib/material/car";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr, Option } from "effect";
-import {
-  type ReactNode,
-  Suspense,
-  useCallback,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import type { ReactNode } from "react";
+import { Suspense, useCallback, useMemo, useRef, useState } from "react";
 
 /** The speeds of the lesson's table, in m/s. */
 const SPEEDS = [10, 20, 30] as const;

@@ -25,7 +25,8 @@ import {
 } from "@repo/design-system/components/ui/responsive-dialog";
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { Schema } from "effect";
-import { type ReactNode, startTransition, useId, useState } from "react";
+import type { ReactNode } from "react";
+import { startTransition, useId, useState } from "react";
 import { useTranslations } from "use-intl";
 import { useDialogs } from "@/components/shared/dialogs";
 import { ConfirmRowMenu } from "@/components/shared/table/confirm";

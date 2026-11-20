@@ -1,9 +1,5 @@
-import {
-  type BrowserContext,
-  expect,
-  type Locator,
-  type Page,
-} from "@playwright/test";
+import type { BrowserContext, Locator, Page } from "@playwright/test";
+import { expect } from "@playwright/test";
 import { Array as Arr, Effect, MutableHashSet, MutableList } from "effect";
 import {
   expectSteady,

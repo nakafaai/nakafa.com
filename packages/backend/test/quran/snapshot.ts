@@ -1,9 +1,7 @@
 import { assert } from "@effect/vitest";
 import { ContentFamilySchema } from "@nakafa/aksara-contracts/content";
-import {
-  type Sha256Hash,
-  Sha256HashSchema,
-} from "@nakafa/aksara-contracts/ids";
+import type { Sha256Hash } from "@nakafa/aksara-contracts/ids";
+import { Sha256HashSchema } from "@nakafa/aksara-contracts/ids";
 import { ACTIVE_APP_LOCALES } from "@nakafa/aksara-contracts/locale";
 import { makeQuranSnapshot as makeSignedQuranSnapshot } from "@nakafa/aksara-contracts/quran/snapshot/hash";
 import type { QuranRowPayload } from "@nakafa/aksara-contracts/quran/snapshot/row";
@@ -14,11 +12,11 @@ import {
   QURAN_ATTRIBUTION_COUNT,
   QURAN_SURAH_COUNT,
 } from "@nakafa/aksara-contracts/quran/spec";
-import {
-  type ContentSnapshotManifest,
-  type ContentSnapshotRow,
-  canonicalizeContentSnapshotRow,
+import type {
+  ContentSnapshotManifest,
+  ContentSnapshotRow,
 } from "@nakafa/aksara-contracts/release/snapshot/data";
+import { canonicalizeContentSnapshotRow } from "@nakafa/aksara-contracts/release/snapshot/data";
 import {
   inheritContentSnapshots,
   replaceContentSnapshot,
@@ -39,10 +37,8 @@ import {
   TEST_RELEASE_ID,
 } from "@repo/backend/test/content/release";
 import { insertTestRelease } from "@repo/backend/test/content/stage";
-import {
-  insertZeroRelease,
-  type TestIdentity,
-} from "@repo/backend/test/content/state";
+import type { TestIdentity } from "@repo/backend/test/content/state";
+import { insertZeroRelease } from "@repo/backend/test/content/state";
 import { makeQuranSearch } from "@repo/backend/test/quran/rows";
 import { Array as Arr, Effect } from "effect";
 

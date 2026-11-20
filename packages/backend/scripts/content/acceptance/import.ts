@@ -2,10 +2,8 @@ import {
   LocalConvex,
   localConvexLayer,
 } from "@repo/backend/scripts/content/acceptance/convex";
-import {
-  type AcceptanceMode,
-  decodeModeArguments,
-} from "@repo/backend/scripts/content/acceptance/mode";
+import type { AcceptanceMode } from "@repo/backend/scripts/content/acceptance/mode";
+import { decodeModeArguments } from "@repo/backend/scripts/content/acceptance/mode";
 import { JsonTextSchema } from "@repo/utilities/json";
 import {
   Array as Arr,

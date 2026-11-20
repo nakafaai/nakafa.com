@@ -4,7 +4,8 @@ import { DatabaseWriter } from "@repo/backend/confect/_generated/services";
 import { Npsn } from "@repo/backend/confect/tenancy/schema";
 import { nf } from "@repo/backend/test/classroom";
 import { NISN } from "@repo/backend/test/guardians";
-import { grantRole, type tenancyFixture } from "@repo/backend/test/tenancy";
+import type { tenancyFixture } from "@repo/backend/test/tenancy";
+import { grantRole } from "@repo/backend/test/tenancy";
 import { Effect, Schema } from "effect";
 
 /** The fixture `tenancyFixture` seeds, which the records tests extend. */

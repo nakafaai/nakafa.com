@@ -1,8 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
-import {
-  type Held,
-  restoreHeld,
-} from "@repo/backend/confect/nina/capability/held";
+import type { Held } from "@repo/backend/confect/nina/capability/held";
+import { restoreHeld } from "@repo/backend/confect/nina/capability/held";
 import type { ModelMessage } from "ai";
 import { MutableHashMap } from "effect";
 

@@ -1,7 +1,5 @@
-import {
-  decodeLocale,
-  type Locale,
-} from "@repo/internationalization/src/locale";
+import type { Locale } from "@repo/internationalization/src/locale";
+import { decodeLocale } from "@repo/internationalization/src/locale";
 import { COMPANY_SOCIAL_PROFILES } from "@repo/seo/profiles";
 import { Array as Arr, Option, Schema } from "effect";
 

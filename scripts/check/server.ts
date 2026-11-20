@@ -1,5 +1,6 @@
 import { Array as Arr, HashSet, Option } from "effect";
-import { isCallExpression, type Node, type SourceFile } from "tsrs/ast";
+import type { Node, SourceFile } from "tsrs/ast";
+import { isCallExpression } from "tsrs/ast";
 import {
   importedNames,
   namedImports,

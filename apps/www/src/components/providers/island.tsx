@@ -1,6 +1,7 @@
 import { ConvexProvider } from "convex/react";
 import { Option } from "effect";
-import { type ReactNode, useState } from "react";
+import type { ReactNode } from "react";
+import { useState } from "react";
 import { useLiveSession } from "@/components/providers/live";
 
 /**

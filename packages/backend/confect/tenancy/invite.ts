@@ -24,12 +24,12 @@ import {
   ProvisionRejected,
 } from "@repo/backend/confect/tenancy/errors";
 import type { InviteRequest } from "@repo/backend/confect/tenancy/provision.spec";
-import {
-  type Email,
-  INVITE_TERM,
-  type InviteState,
-  type PersonReason,
+import type {
+  Email,
+  InviteState,
+  PersonReason,
 } from "@repo/backend/confect/tenancy/schema";
+import { INVITE_TERM } from "@repo/backend/confect/tenancy/schema";
 import {
   Array as Arr,
   Clock,

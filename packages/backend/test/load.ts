@@ -1,5 +1,6 @@
 import { Ref } from "@confect/core";
-import { Id, type TableNames } from "@repo/backend/confect/_generated/id";
+import type { TableNames } from "@repo/backend/confect/_generated/id";
+import { Id } from "@repo/backend/confect/_generated/id";
 import refs from "@repo/backend/confect/_generated/refs";
 import { newChoiceAnswers } from "@repo/backend/confect/exams/blank";
 import { StaleAnswer } from "@repo/backend/confect/exams/sittings/errors";

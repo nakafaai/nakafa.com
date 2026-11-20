@@ -16,9 +16,8 @@ import {
   writeInvite,
 } from "@repo/backend/confect/tenancy/invite";
 import { NEW_TENANT_POLICIES } from "@repo/backend/confect/tenancy/policy";
-import spec, {
-  type OpenRequest,
-} from "@repo/backend/confect/tenancy/provision.spec";
+import type { OpenRequest } from "@repo/backend/confect/tenancy/provision.spec";
+import spec from "@repo/backend/confect/tenancy/provision.spec";
 import { UNIT_LIMIT } from "@repo/backend/confect/tenancy/schema";
 import { createUnit } from "@repo/backend/confect/tenancy/write/unit";
 import { createTenantKey } from "@repo/backend/confect/vault/keys";

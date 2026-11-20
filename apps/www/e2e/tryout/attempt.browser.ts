@@ -1,4 +1,5 @@
-import { expect, type Page, test } from "@playwright/test";
+import type { Page } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import { Effect, MutableList } from "effect";
 import { loadMathFonts } from "@/e2e/support/fonts";
 import { activate, activateAncestor } from "@/e2e/support/input";

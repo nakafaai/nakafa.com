@@ -4,13 +4,8 @@ import {
   ResizablePanelGroup,
 } from "@repo/design-system/components/ui/resizable";
 import { Option, Record as Rec, Schema } from "effect";
-import {
-  type ComponentProps,
-  createContext,
-  type ReactNode,
-  use,
-  useState,
-} from "react";
+import type { ComponentProps, ReactNode } from "react";
+import { createContext, use, useState } from "react";
 import { PaneStartContext } from "@/components/shared/page/panes/start";
 
 /** The share of a group's width each sized pane took when a person last moved its handle, by the pane's ID. */

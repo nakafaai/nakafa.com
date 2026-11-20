@@ -11,10 +11,8 @@ import {
   GradeNotPlaced,
   GradeReleased,
 } from "@repo/backend/confect/records/errors";
-import {
-  type gradeValidator,
-  gradeView,
-} from "@repo/backend/confect/records/grade";
+import type { gradeValidator } from "@repo/backend/confect/records/grade";
+import { gradeView } from "@repo/backend/confect/records/grade";
 import spec from "@repo/backend/confect/records/grades.spec";
 import { schemeInForce } from "@repo/backend/confect/records/version";
 import { placementOf } from "@repo/backend/confect/tenancy/authority";

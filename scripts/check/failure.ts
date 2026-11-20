@@ -1,6 +1,6 @@
 import { Array as Arr, Effect, HashSet, Option, Result, Tuple } from "effect";
+import type { Identifier, Node, SourceFile, ThrowStatement } from "tsrs/ast";
 import {
-  type Identifier,
   isCallExpression,
   isIdentifier,
   isImportDeclaration,
@@ -9,9 +9,6 @@ import {
   isObjectLiteralExpression,
   isStringLiteral,
   isThrowStatement,
-  type Node,
-  type SourceFile,
-  type ThrowStatement,
 } from "tsrs/ast";
 import { enclosingFunction, handlerFunctions } from "#scripts/check/handler";
 import { candidate } from "#scripts/check/rules";

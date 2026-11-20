@@ -1,9 +1,9 @@
 import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
-import {
-  type PageKey,
-  PageKeySchema,
-  type PublicPageProjection,
+import type {
+  PageKey,
+  PublicPageProjection,
 } from "@nakafa/aksara-contracts/projection/page";
+import { PageKeySchema } from "@nakafa/aksara-contracts/projection/page";
 import type { ContentProjection } from "@nakafa/aksara-contracts/projection/spec";
 import { releaseFail } from "@repo/backend/confect/contentRelease/error";
 import { pageCatalogValidator } from "@repo/backend/confect/contentRelease/page.spec";

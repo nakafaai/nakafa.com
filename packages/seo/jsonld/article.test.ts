@@ -1,7 +1,9 @@
 import { describe, expect, it } from "@effect/vitest";
+import type {
+  ArticleJsonLd,
+  ArticleJsonLdInput,
+} from "@repo/seo/jsonld/article";
 import {
-  type ArticleJsonLd,
-  type ArticleJsonLdInput,
   ArticleJsonLdSchema,
   makeArticleJsonLd,
   makeLearningResourceNode,

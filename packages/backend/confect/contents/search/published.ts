@@ -6,10 +6,8 @@ import type { loadSearchOwner } from "@repo/backend/confect/contentRelease/searc
 import type { SearchFamily } from "@repo/backend/confect/contentRelease/search/spec";
 import { resolveSearchProjection } from "@repo/backend/confect/contentRelease/search/verify";
 import { buildContentSearchDocument } from "@repo/backend/confect/contents/search/documents";
-import {
-  type ContentSearchDocument,
-  interleaveSearchGroups,
-} from "@repo/backend/confect/contents/search/groups";
+import type { ContentSearchDocument } from "@repo/backend/confect/contents/search/groups";
+import { interleaveSearchGroups } from "@repo/backend/confect/contents/search/groups";
 import { rankContentSearchDocuments } from "@repo/backend/confect/contents/search/rank";
 import type { contentSearchInputValidator } from "@repo/backend/confect/contents/search/schema";
 import { getExactRouteQuery } from "@repo/backend/confect/contents/search/terms";

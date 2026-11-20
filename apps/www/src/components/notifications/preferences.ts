@@ -1,8 +1,8 @@
 import type { SwitchedOff } from "@repo/backend/confect/notifications/preference";
+import type { Relation } from "@repo/backend/confect/notifications/rules";
 import {
   canSwitchOff,
   NoticeKind,
-  type Relation,
   routeOf,
 } from "@repo/backend/confect/notifications/rules";
 import { Array as Arr, Option, Result } from "effect";

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
+import type { CoordinateTuple } from "@repo/design-system/components/three/frame";
 import {
-  type CoordinateTuple,
   createAxisGeometry,
   createGridGeometry,
   createSymmetricFrame,

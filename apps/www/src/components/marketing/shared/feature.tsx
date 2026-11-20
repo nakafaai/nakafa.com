@@ -1,5 +1,6 @@
 import { Card } from "@repo/design-system/components/ui/card";
-import { cva, type VariantProps } from "class-variance-authority";
+import type { VariantProps } from "class-variance-authority";
+import { cva } from "class-variance-authority";
 import type { ReactNode } from "react";
 import { MarketingSection } from "@/components/marketing/shared/section";
 

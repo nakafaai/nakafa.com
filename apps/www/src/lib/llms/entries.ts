@@ -1,11 +1,8 @@
 import type { PublicPageProjection } from "@nakafa/aksara-contracts/projection/page";
 import { Array as Arr, Option, Order, Record as Rec, Schema } from "effect";
 import type { Locale } from "use-intl";
-import {
-  BASE_URL,
-  type LlmsSection,
-  SECTION_LABELS,
-} from "@/lib/llms/constants";
+import type { LlmsSection } from "@/lib/llms/constants";
+import { BASE_URL, SECTION_LABELS } from "@/lib/llms/constants";
 import { formatRouteTitle, getLlmsMarkdownPath } from "@/lib/llms/format";
 import { getLocalizedMappedRoutePathname } from "@/lib/routing/public/pathnames";
 

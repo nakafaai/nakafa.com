@@ -1,12 +1,8 @@
 import { useInViewport, useMergedRef, useReducedMotion } from "@mantine/hooks";
-import {
-  createDrive,
-  type Drive,
-} from "@repo/design-system/components/pool/drive";
-import {
-  type PoolMember,
-  poolMembers,
-} from "@repo/design-system/components/pool/member";
+import type { Drive } from "@repo/design-system/components/pool/drive";
+import { createDrive } from "@repo/design-system/components/pool/drive";
+import type { PoolMember } from "@repo/design-system/components/pool/member";
+import { poolMembers } from "@repo/design-system/components/pool/member";
 import { Animal } from "@repo/design-system/components/ui/animal";
 import { Thing } from "@repo/design-system/components/ui/thing";
 import { cva } from "class-variance-authority";

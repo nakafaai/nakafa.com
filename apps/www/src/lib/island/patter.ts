@@ -2,7 +2,8 @@ import { idOf } from "@repo/backend/confect/island/blocks";
 import { SPAN } from "@repo/backend/confect/island/world";
 import { Array as Arr } from "effect";
 import { skylineOf } from "@/lib/island/ground";
-import { blockAt, type Cells } from "@/lib/island/world";
+import type { Cells } from "@/lib/island/world";
+import { blockAt } from "@/lib/island/world";
 
 /** The blocks rain patters on: the roofs of the village. */
 const ROOFS = [idOf("roof"), idOf("slate")];

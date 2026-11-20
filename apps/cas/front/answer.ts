@@ -1,6 +1,7 @@
 import { Effect, Schema } from "effect";
 import { isAuthorized } from "@/front/auth";
-import { type CasFrontEnv, forwardMath } from "@/front/forward";
+import type { CasFrontEnv } from "@/front/forward";
+import { forwardMath } from "@/front/forward";
 import { CAS_HEALTH_PATH, routeOf } from "@/front/route";
 import { readBoundedBody } from "@/front/size";
 

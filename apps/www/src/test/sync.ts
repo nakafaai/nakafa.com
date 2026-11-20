@@ -1,4 +1,5 @@
-import { type Batch, decodeBatch } from "@repo/backend/confect/editor/batch";
+import type { Batch } from "@repo/backend/confect/editor/batch";
+import { decodeBatch } from "@repo/backend/confect/editor/batch";
 import { foldSteps, snapshotNode } from "@repo/backend/confect/editor/fold";
 import { decodeStep } from "@repo/backend/confect/editor/step";
 import type {
@@ -7,16 +8,17 @@ import type {
 } from "@repo/backend/confect/editor/view";
 import { encodeStep } from "@repo/backend/test/editor";
 import { encodeJsonText } from "@repo/utilities/json";
-import { type Node, Schema as ProseSchema } from "@tiptap/pm/model";
+import type { Node } from "@tiptap/pm/model";
+import { Schema as ProseSchema } from "@tiptap/pm/model";
 import { EditorState } from "@tiptap/pm/state";
 import { Array as Arr, Effect, Option, Ref, Schema } from "effect";
 import { collab } from "prosemirror-collab";
-import {
-  type EditorPort,
-  SyncFailed,
-  type SyncSession,
-  type SyncTransport,
+import type {
+  EditorPort,
+  SyncSession,
+  SyncTransport,
 } from "@/lib/editor/session";
+import { SyncFailed } from "@/lib/editor/session";
 import { startSync, tick } from "@/lib/editor/sync";
 
 /**

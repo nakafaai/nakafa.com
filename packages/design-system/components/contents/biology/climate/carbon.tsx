@@ -1,14 +1,16 @@
+import type {
+  Region,
+  Year,
+} from "@repo/design-system/components/contents/biology/climate/budget";
 import {
   BUDGET,
   cutOf,
   fossilIn,
   pathwayOf,
   RECORD_SPAN,
-  type Region,
   RegionSchema,
   recordLevel,
   recordRate,
-  type Year,
   YearSchema,
 } from "@repo/design-system/components/contents/biology/climate/budget";
 import {
@@ -41,7 +43,8 @@ import { getColor } from "@repo/design-system/lib/color";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr, Option, Schema } from "effect";
 import type p5 from "p5";
-import { type ReactNode, useMemo, useState } from "react";
+import type { ReactNode } from "react";
+import { useMemo, useState } from "react";
 
 /** The year pathways run to. */
 const END_YEAR: number = CHART_AXES.pathway.last;

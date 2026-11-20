@@ -2,14 +2,10 @@ import {
   LocalConvex,
   localConvexLayer,
 } from "@repo/backend/scripts/content/acceptance/convex";
-import {
-  type AcceptanceRuntimeError,
-  acceptanceRuntimeError,
-} from "@repo/backend/scripts/content/acceptance/error";
-import {
-  type LocalRuntime,
-  leaseReservedLocalRuntime,
-} from "@repo/backend/scripts/content/acceptance/local";
+import type { AcceptanceRuntimeError } from "@repo/backend/scripts/content/acceptance/error";
+import { acceptanceRuntimeError } from "@repo/backend/scripts/content/acceptance/error";
+import type { LocalRuntime } from "@repo/backend/scripts/content/acceptance/local";
+import { leaseReservedLocalRuntime } from "@repo/backend/scripts/content/acceptance/local";
 import { decodeModeArguments } from "@repo/backend/scripts/content/acceptance/mode";
 import { seedOwner } from "@repo/backend/scripts/content/acceptance/owner";
 import {
@@ -23,16 +19,8 @@ import { recorderLayer, timed } from "@repo/backend/scripts/load/recorder";
 import { runLoad } from "@repo/backend/scripts/load/run";
 import { seatTokens } from "@repo/backend/scripts/load/token";
 import { openWire } from "@repo/backend/scripts/load/wire";
-import {
-  Duration,
-  Effect,
-  type FileSystem,
-  Layer,
-  Option,
-  type PlatformError,
-  Schedule,
-  Schema,
-} from "effect";
+import type { FileSystem, PlatformError } from "effect";
+import { Duration, Effect, Layer, Option, Schedule, Schema } from "effect";
 import type { SecureRandom } from "effect/crypto";
 import type { ChildProcessSpawner } from "effect/process";
 

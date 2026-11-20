@@ -2,11 +2,8 @@ import { SITE_ORIGIN } from "@repo/seo/origin";
 import { Array as Arr, HashMap, Option, Record as Rec, Schema } from "effect";
 // The Vite config imports this module, and only package imports resolve there.
 import { PageFacts } from "#www/src/lib/seo/audit/html";
-import {
-  auditPage,
-  isIndexable,
-  type PageAudit,
-} from "#www/src/lib/seo/audit/page";
+import type { PageAudit } from "#www/src/lib/seo/audit/page";
+import { auditPage, isIndexable } from "#www/src/lib/seo/audit/page";
 
 /** One page that the build wrote, by its path, with what a crawler reads in it. */
 const BuiltPage = Schema.Struct({

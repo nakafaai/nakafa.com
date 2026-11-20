@@ -1,8 +1,6 @@
 import { groundAt } from "@repo/design-system/components/contents/biology/climate/sea";
-import {
-  Instances,
-  type Placement,
-} from "@repo/design-system/components/contents/biology/instances";
+import type { Placement } from "@repo/design-system/components/contents/biology/instances";
+import { Instances } from "@repo/design-system/components/contents/biology/instances";
 import { hashUnit } from "@repo/design-system/components/contents/simulation/grain";
 import { getColor } from "@repo/design-system/lib/color";
 import { ECOLOGY_COLORS } from "@repo/design-system/lib/material/ecology";

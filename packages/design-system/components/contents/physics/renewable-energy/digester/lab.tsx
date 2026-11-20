@@ -38,7 +38,8 @@ import { REAGENT_COLORS } from "@repo/design-system/lib/material/reagent";
 import { ROAD_COLORS } from "@repo/design-system/lib/material/road";
 import { Schema } from "effect";
 import type p5 from "p5";
-import { type ReactNode, useState } from "react";
+import type { ReactNode } from "react";
+import { useState } from "react";
 
 /** The tones of the slurry, the brick dome and the stove flame. */
 const SLURRY = ENERGY_COLORS.dungSlurry;

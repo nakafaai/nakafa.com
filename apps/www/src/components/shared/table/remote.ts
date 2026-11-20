@@ -1,8 +1,5 @@
-import {
-  functionalUpdate,
-  type OnChangeFn,
-  type SortingState,
-} from "@tanstack/react-table";
+import type { OnChangeFn, SortingState } from "@tanstack/react-table";
+import { functionalUpdate } from "@tanstack/react-table";
 import { Array as Arr, Option } from "effect";
 import { createContext } from "react";
 

@@ -6,13 +6,13 @@ import { schoolPeriod } from "@repo/backend/confect/billing/quote";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { COMPANY_IDENTITY } from "@repo/seo/company";
 import { Option, Schema } from "effect";
+import type { SchoolBilling } from "@/lib/billing/school";
 import {
   invoiceStanding,
   openInvoice,
   orderQuote,
   paidPlan,
   planActionKey,
-  type SchoolBilling,
   schoolPayChange,
   transferMailto,
 } from "@/lib/billing/school";

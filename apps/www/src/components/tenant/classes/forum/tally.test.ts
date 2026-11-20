@@ -5,8 +5,8 @@ import { Id } from "@repo/backend/confect/_generated/id";
 import classroom from "@repo/backend/confect/_generated/refs/classroom";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Array as Arr, Equal, MutableRef, Option, Schema } from "effect";
+import type { ForumTally } from "@/components/tenant/classes/forum/tally";
 import {
-  type ForumTally,
   reactUpdate,
   shareOf,
   voteUpdate,

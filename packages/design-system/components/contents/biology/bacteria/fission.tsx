@@ -25,7 +25,8 @@ import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { CELL_COLORS } from "@repo/design-system/lib/material/cell";
 import { Array as Arr } from "effect";
-import { type ReactNode, Suspense, useEffect, useRef, useState } from "react";
+import type { ReactNode } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import type { InstancedMesh } from "three";
 
 /** Two hours: six doublings, sixty-four cells. */

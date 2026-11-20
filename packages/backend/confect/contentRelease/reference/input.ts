@@ -1,12 +1,10 @@
+import type { LearningGraphFamily } from "@nakafa/aksara-contracts/graph/family";
 import {
   classifyLearningGraphAssetId,
-  type LearningGraphFamily,
   LearningGraphFamilySchema,
 } from "@nakafa/aksara-contracts/graph/family";
-import {
-  type ActiveAppLocale,
-  ActiveAppLocaleSchema,
-} from "@nakafa/aksara-contracts/locale";
+import type { ActiveAppLocale } from "@nakafa/aksara-contracts/locale";
+import { ActiveAppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import { materialPublicNamespace } from "@nakafa/aksara-contracts/projection/material";
 import type { ContentReferenceInput } from "@repo/backend/confect/contentRelease/reference/spec";
 import { LocaleSchema } from "@repo/contents/content";

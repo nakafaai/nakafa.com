@@ -14,9 +14,9 @@ import {
 } from "@repo/backend/confect/_generated/services";
 import { mentionedPeople } from "@repo/backend/confect/classroom/forum/mention";
 import { mayIn, principalOf } from "@repo/backend/confect/classroom/roster";
+import type { FanoutSource } from "@repo/backend/confect/notifications/fanout.spec";
 import spec, {
   FanoutPhase,
-  type FanoutSource,
 } from "@repo/backend/confect/notifications/fanout.spec";
 import { queueMail } from "@repo/backend/confect/notifications/mail";
 import { schedulePush } from "@repo/backend/confect/notifications/schedule";

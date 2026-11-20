@@ -1,4 +1,5 @@
-import { expect, type Locator, type Page, test } from "@playwright/test";
+import type { Locator, Page } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import { Deferred, Effect, HashSet } from "effect";
 import { GERMAN, openComposer } from "@/e2e/support/attachment";
 import { CHAT_PATH, runOnPage } from "@/e2e/support/chat";

@@ -25,10 +25,10 @@ import type {
   SpacePoint,
   SpaceVisual,
 } from "@/lib/content/renderer/client/base/visual/scene";
+import type { VisualProjection } from "@/lib/content/renderer/client/base/visual/transform";
 import {
   projectVisualPoint,
   resolveVisualProjection,
-  type VisualProjection,
 } from "@/lib/content/renderer/client/base/visual/transform";
 
 const MathPathArrowsSchema = Schema.Literals(["both", "end", "none"]);

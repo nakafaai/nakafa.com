@@ -4,10 +4,8 @@ import { languages } from "@repo/internationalization/data/lang";
 import { Array as Arr } from "effect";
 import { useLocale } from "use-intl";
 import { ActiveBadge } from "@/components/shared/active";
-import {
-  CountryFlagIcon,
-  type RegionCountryCode,
-} from "@/components/shared/flag";
+import type { RegionCountryCode } from "@/components/shared/flag";
+import { CountryFlagIcon } from "@/components/shared/flag";
 import { useLocalizedRouteSwitch } from "@/lib/routing/locale/client";
 
 /**

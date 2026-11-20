@@ -16,7 +16,8 @@ import {
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Array as Arr, Number as Num } from "effect";
-import { createContext, type ReactNode, use, useMemo, useState } from "react";
+import type { ReactNode } from "react";
+import { createContext, use, useMemo, useState } from "react";
 import { useTranslations } from "use-intl";
 import { StudentAnswersPanel } from "@/components/exams/results/answers";
 import {

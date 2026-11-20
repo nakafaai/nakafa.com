@@ -19,13 +19,11 @@ import {
   SelectValue,
 } from "@repo/design-system/components/ui/select";
 import { Array as Arr, Option } from "effect";
-import { type ComponentProps, useId, useState, useTransition } from "react";
+import type { ComponentProps } from "react";
+import { useId, useState, useTransition } from "react";
 import { useTranslations } from "use-intl";
-import {
-  EMPTY_OPEN_FORM,
-  type OpenForm,
-  openRequest,
-} from "@/components/operators/state";
+import type { OpenForm } from "@/components/operators/state";
+import { EMPTY_OPEN_FORM, openRequest } from "@/components/operators/state";
 import { CountryFlagIcon } from "@/components/shared/flag";
 import { settingsSectionIcons } from "@/components/tenant/settings/icons";
 import { suggestSlug, typedSlug } from "@/components/tenant/start/state";

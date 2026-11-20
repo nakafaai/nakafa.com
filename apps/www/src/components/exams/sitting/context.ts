@@ -4,7 +4,8 @@ import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { useRequired } from "@repo/design-system/hooks/required";
 import { Array as Arr, HashMap, Schema } from "effect";
 import { createContext } from "react";
-import { type StoreApi, useStore } from "zustand";
+import type { StoreApi } from "zustand";
+import { useStore } from "zustand";
 import type { DashboardAttempt } from "@/components/exams/sitting/change";
 import type { SittingStore } from "@/components/exams/sitting/store";
 

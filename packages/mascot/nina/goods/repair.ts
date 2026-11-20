@@ -1,12 +1,6 @@
 import { BASE, BOARD, LID, NINA, PAGE, PAPER, POP } from "@repo/mascot/color";
-import {
-  bar,
-  box,
-  dot,
-  flat,
-  type Parts,
-  turned,
-} from "@repo/mascot/nina/goods/part";
+import type { Parts } from "@repo/mascot/nina/goods/part";
+import { bar, box, dot, flat, turned } from "@repo/mascot/nina/goods/part";
 import { sparkle } from "@repo/mascot/sparkle";
 
 /** A wrench held by its handle, its jaw up, and the loose nut it turns. */

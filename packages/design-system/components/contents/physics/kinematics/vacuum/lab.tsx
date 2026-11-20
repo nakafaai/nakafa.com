@@ -1,7 +1,7 @@
 import { useFrame } from "@react-three/fiber";
+import type { TubeAir } from "@repo/design-system/components/contents/physics/kinematics/vacuum/fall";
 import {
   TUBE_DROP,
-  type TubeAir,
   TubeAirSchema,
   tubeDrops,
   tubeTimes,
@@ -33,7 +33,8 @@ import { CAR_COLORS } from "@repo/design-system/lib/material/car";
 import { REAGENT_COLORS } from "@repo/design-system/lib/material/reagent";
 import { ROAD_COLORS } from "@repo/design-system/lib/material/road";
 import { Array as Arr, Schema } from "effect";
-import { type ReactNode, Suspense, useRef, useState } from "react";
+import type { ReactNode } from "react";
+import { Suspense, useRef, useState } from "react";
 import type { Group } from "three";
 
 /** The tube: its inner radius, its height, and the height of its base, in metres. */

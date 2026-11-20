@@ -2,10 +2,8 @@ import type { UsersDoc } from "@repo/backend/confect/_generated/docs";
 import type { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { getAppUserByUsername } from "@repo/backend/confect/users/directory";
 import { isReservedUsername } from "@repo/backend/confect/users/reserved";
-import {
-  readUsername,
-  type UsernameRefusal,
-} from "@repo/backend/confect/users/username";
+import type { UsernameRefusal } from "@repo/backend/confect/users/username";
+import { readUsername } from "@repo/backend/confect/users/username";
 import { Effect, Result } from "effect";
 
 /**

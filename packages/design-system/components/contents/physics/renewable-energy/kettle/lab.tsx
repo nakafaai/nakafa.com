@@ -10,12 +10,12 @@ import {
   vignette,
   withShadow,
 } from "@repo/design-system/components/contents/physics/canvas/paint";
+import type { Fill } from "@repo/design-system/components/contents/physics/renewable-energy/kettle/heating";
 import {
   BOILING_POINT,
   boilTime,
   ELEMENT_POWER,
   FILL_MASS,
-  type Fill,
   FillSchema,
   heatNeeded,
   START_TEMPERATURE,
@@ -46,7 +46,8 @@ import { ENERGY_COLORS } from "@repo/design-system/lib/material/energy";
 import { REAGENT_COLORS } from "@repo/design-system/lib/material/reagent";
 import { Array as Arr, Schema } from "effect";
 import type p5 from "p5";
-import { type ReactNode, useState } from "react";
+import type { ReactNode } from "react";
+import { useState } from "react";
 
 /** How many wall seconds the heating plays in, sped up from minutes. */
 const PLAY_SECONDS = 7;

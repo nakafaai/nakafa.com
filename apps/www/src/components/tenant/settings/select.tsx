@@ -8,7 +8,8 @@ import {
   SelectValue,
 } from "@repo/design-system/components/ui/select";
 import { Array as Arr } from "effect";
-import { type ComponentProps, useId } from "react";
+import type { ComponentProps } from "react";
+import { useId } from "react";
 
 /**
  * A labelled choice of a settings form: the items it offers, each with the icon of its kind, and the value chosen. Its

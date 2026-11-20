@@ -4,11 +4,8 @@ import { writeTryoutSetProgress } from "@repo/backend/confect/tryouts/progress/w
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { inMutation } from "@repo/backend/test/client";
-import {
-  TRYOUT_NOW,
-  type TryoutWorld,
-  tryoutWorld,
-} from "@repo/backend/test/tryout/world";
+import type { TryoutWorld } from "@repo/backend/test/tryout/world";
+import { TRYOUT_NOW, tryoutWorld } from "@repo/backend/test/tryout/world";
 import { ConvexError } from "convex/values";
 import { Effect, Struct } from "effect";
 

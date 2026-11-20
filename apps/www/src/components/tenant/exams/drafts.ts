@@ -1,4 +1,5 @@
-import { type Id, Id as IdSchema } from "@repo/backend/confect/_generated/id";
+import type { Id } from "@repo/backend/confect/_generated/id";
+import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
 import { Array as Arr, Schema } from "effect";
 import { createStore } from "zustand";
 

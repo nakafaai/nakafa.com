@@ -1,10 +1,13 @@
 import { NINA, POP, SOFT_PINK } from "@repo/mascot/color";
-import { EYES, type EyeSchema } from "@repo/mascot/nina/eye";
+import type { EyeSchema } from "@repo/mascot/nina/eye";
+import { EYES } from "@repo/mascot/nina/eye";
 import { free } from "@repo/mascot/nina/ink";
 import type { Mark } from "@repo/mascot/nina/mark";
-import { MOUTHS, type MouthSchema } from "@repo/mascot/nina/mouth";
+import type { MouthSchema } from "@repo/mascot/nina/mouth";
+import { MOUTHS } from "@repo/mascot/nina/mouth";
 import { tenth } from "@repo/mascot/round";
-import { circle, ellipse, group, path, type Shape } from "@repo/mascot/shape";
+import type { Shape } from "@repo/mascot/shape";
+import { circle, ellipse, group, path } from "@repo/mascot/shape";
 import { sparkle } from "@repo/mascot/sparkle";
 import { Schema } from "effect";
 

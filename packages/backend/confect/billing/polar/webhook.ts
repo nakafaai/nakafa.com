@@ -19,10 +19,8 @@ import {
   polarSubscriptionState,
 } from "@repo/backend/confect/billing/polar/subscription";
 import { ensureSchoolAccount } from "@repo/backend/confect/billing/school";
-import {
-  applySubscriptionState,
-  type BillingSubscriptionState,
-} from "@repo/backend/confect/billing/subscriptions";
+import type { BillingSubscriptionState } from "@repo/backend/confect/billing/subscriptions";
+import { applySubscriptionState } from "@repo/backend/confect/billing/subscriptions";
 import { railOfCountry } from "@repo/backend/confect/country/registry";
 import { Clock, Effect, Match, Option } from "effect";
 

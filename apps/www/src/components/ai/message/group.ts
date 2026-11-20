@@ -1,5 +1,6 @@
 import type { NinaMessage } from "@repo/backend/confect/nina/schema";
-import { isToolUIPart, type StepStartUIPart, type TextUIPart } from "ai";
+import type { StepStartUIPart, TextUIPart } from "ai";
+import { isToolUIPart } from "ai";
 import { Array as Arr, MutableHashMap, MutableList, Option } from "effect";
 
 type MessagePart = NinaMessage["parts"][number];

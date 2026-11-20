@@ -1,12 +1,10 @@
 import { Array as Arr, Effect, Order, Result } from "effect";
-import { type Identifier, isIdentifier, type Node } from "tsrs/ast";
+import type { Identifier, Node } from "tsrs/ast";
+import { isIdentifier } from "tsrs/ast";
 import { isConfiguration, TEST_PATTERN } from "#scripts/check/kinds";
 import { classParts, classReferences } from "#scripts/check/positions";
-import {
-  isGenerated,
-  type parseSources,
-  type TestCompilerError,
-} from "#scripts/check/source";
+import type { parseSources, TestCompilerError } from "#scripts/check/source";
+import { isGenerated } from "#scripts/check/source";
 import { isVariable, variableValues } from "#scripts/check/variables";
 
 const FINDING_ORDER = Order.Struct({ file: Order.String, line: Order.Number });

@@ -12,13 +12,13 @@ import {
   vignette,
 } from "@repo/design-system/components/contents/physics/canvas/paint";
 import { LabSlider } from "@repo/design-system/components/contents/physics/canvas/slider";
+import type { Plan } from "@repo/design-system/components/contents/physics/canvas/town";
 import {
   fitPlan,
-  type Plan,
   planPoint,
 } from "@repo/design-system/components/contents/physics/canvas/town";
+import type { River } from "@repo/design-system/components/contents/physics/kinematics/river/crossing";
 import {
-  type River,
   RiverSchema,
   riverCrossing,
 } from "@repo/design-system/components/contents/physics/kinematics/river/crossing";
@@ -44,7 +44,8 @@ import { TOWN_COLORS } from "@repo/design-system/lib/material/town";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Schema } from "effect";
 import type p5 from "p5";
-import { type ReactNode, useMemo, useState } from "react";
+import type { ReactNode } from "react";
+import { useMemo, useState } from "react";
 
 /** How long one crossing plays, in wall seconds. */
 const PLAY_SECONDS = 6;

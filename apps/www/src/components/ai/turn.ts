@@ -3,10 +3,8 @@ import type {
   NinaPageInput,
   NinaPrompt,
 } from "@repo/backend/confect/nina/turns.spec";
-import {
-  type RouterPageLocation,
-  readRouterPage,
-} from "@/lib/routing/location";
+import type { RouterPageLocation } from "@/lib/routing/location";
+import { readRouterPage } from "@/lib/routing/location";
 
 /**
  * The page the learner is on now, as every turn names it: where they are and

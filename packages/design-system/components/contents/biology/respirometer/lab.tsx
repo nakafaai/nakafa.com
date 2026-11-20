@@ -1,7 +1,7 @@
+import type { Substrate } from "@repo/design-system/components/contents/biology/respirometer/gas";
 import {
   dropTravel,
   quotient,
-  type Substrate,
   substrateOf,
 } from "@repo/design-system/components/contents/biology/respirometer/gas";
 import { RespirometerScene } from "@repo/design-system/components/contents/biology/respirometer/scene";
@@ -20,7 +20,8 @@ import {
 } from "@repo/design-system/components/visual/card";
 import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
-import { type ReactNode, Suspense, useState } from "react";
+import type { ReactNode } from "react";
+import { Suspense, useState } from "react";
 
 /**
  * Two respirometers with the same germinating seeds in one water bath: one

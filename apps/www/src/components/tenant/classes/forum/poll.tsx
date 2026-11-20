@@ -35,11 +35,8 @@ import { isPending } from "@/components/tenant/classes/forum/marks";
 import type { ForumMessage } from "@/components/tenant/classes/forum/optimistic";
 import { useChannelScope } from "@/components/tenant/classes/forum/scope";
 import { useTally } from "@/components/tenant/classes/forum/tallies";
-import {
-  type ForumTally,
-  shareOf,
-  voteUpdate,
-} from "@/components/tenant/classes/forum/tally";
+import type { ForumTally } from "@/components/tenant/classes/forum/tally";
+import { shareOf, voteUpdate } from "@/components/tenant/classes/forum/tally";
 import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 
 /** One choice while the poll is written: its text, and an ID that keeps its field as others leave. */

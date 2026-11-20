@@ -27,7 +27,8 @@ import { pageRowVariants } from "@/components/shared/page/width";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { TableNote } from "@/components/shared/table/inset";
-import { type StatusLook, TableStatus } from "@/components/shared/table/status";
+import type { StatusLook } from "@/components/shared/table/status";
+import { TableStatus } from "@/components/shared/table/status";
 import { TableText } from "@/components/shared/table/text";
 import { TableTitle } from "@/components/shared/table/title";
 import { TableFiltersProvider } from "@/components/shared/table/toolbar";
@@ -39,9 +40,11 @@ import {
   NarrativeProvider,
 } from "@/components/tenant/insight/narrative";
 import { SharedPractice } from "@/components/tenant/insight/practice";
+import type {
+  InsightStudent,
+  NarrativeState,
+} from "@/components/tenant/insight/rows";
 import {
-  type InsightStudent,
-  type NarrativeState,
   percentOf,
   skillRowsOf,
   studentRowsOf,

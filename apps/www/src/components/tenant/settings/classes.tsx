@@ -27,7 +27,8 @@ import { namedOptions } from "@/components/shared/table/filter";
 import { TableList } from "@/components/shared/table/list";
 import { RowCopy } from "@/components/shared/table/menu";
 import { TablePages } from "@/components/shared/table/pages";
-import { type StatusLook, TableStatus } from "@/components/shared/table/status";
+import type { StatusLook } from "@/components/shared/table/status";
+import { TableStatus } from "@/components/shared/table/status";
 import { TableTitle } from "@/components/shared/table/title";
 import {
   TableFiltersProvider,
@@ -50,11 +51,10 @@ import {
   SchoolClassRestore,
 } from "@/components/tenant/settings/class/menu";
 import { SettingsTablePage } from "@/components/tenant/settings/section";
-import { isDraft, type Period } from "@/components/tenant/settings/state";
-import {
-  SchoolUnitChoice,
-  type UnitId,
-} from "@/components/tenant/settings/unit";
+import type { Period } from "@/components/tenant/settings/state";
+import { isDraft } from "@/components/tenant/settings/state";
+import type { UnitId } from "@/components/tenant/settings/unit";
+import { SchoolUnitChoice } from "@/components/tenant/settings/unit";
 import { NoActiveUnit } from "@/components/tenant/settings/unitless";
 import { Link } from "@/lib/routing/link";
 

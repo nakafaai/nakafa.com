@@ -14,10 +14,10 @@ import { ARRAY_RULES, arrayCall } from "#scripts/check/calls";
 import { outsidePage, pageKeysOf } from "#scripts/check/page";
 import { receiverVerdicts } from "#scripts/check/receivers";
 import { covers } from "#scripts/check/rules";
+import type { parseSources } from "#scripts/check/source";
 import {
   descendants,
   isGenerated,
-  type parseSources,
   TestCompilerError,
 } from "#scripts/check/source";
 

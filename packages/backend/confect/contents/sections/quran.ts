@@ -1,7 +1,5 @@
-import {
-  ACTIVE_APP_LOCALE_CODES,
-  type AppLocaleCode,
-} from "@nakafa/aksara-contracts/locale";
+import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
+import { ACTIVE_APP_LOCALE_CODES } from "@nakafa/aksara-contracts/locale";
 import type { QuranRuntimeVerse } from "@nakafa/aksara-contracts/quran/snapshot/row";
 import { QURAN_SURAH_COUNT } from "@nakafa/aksara-contracts/quran/spec";
 import { projectQuranTranslation } from "@repo/backend/client/quran/notes";

@@ -1,7 +1,8 @@
 import { encodeMaterialContextHint } from "@repo/contents/route/material/context";
 import { Array as Arr, Option, Order } from "effect";
 import type { Locale } from "use-intl";
-import { createStore, type StoreApi } from "zustand";
+import type { StoreApi } from "zustand";
+import { createStore } from "zustand";
 import type { MaterialPlacement } from "@/lib/content/material/navigation";
 
 /** The curriculum placement of one lesson page, as its links read it. */

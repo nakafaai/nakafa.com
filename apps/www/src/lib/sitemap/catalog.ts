@@ -13,12 +13,12 @@ import {
 } from "@/lib/content/published/release";
 import { readPublishedQuranCatalog } from "@/lib/content/quran/publication";
 import { readPublishedTryoutSitemapCount } from "@/lib/content/tryout/sitemap";
+import type { SitemapPage } from "@/lib/sitemap/identity";
 import {
   formatPagePage,
   formatQuranPage,
   formatTryoutPage,
   SITEMAP_BASE_ID,
-  type SitemapPage,
 } from "@/lib/sitemap/identity";
 import { describeSitemapPartitions } from "@/lib/sitemap/partition";
 

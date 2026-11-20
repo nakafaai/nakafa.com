@@ -7,8 +7,8 @@ import { Array as Arr, Effect, Option } from "effect";
 import type { ReactNode } from "react";
 import { useTranslations } from "use-intl";
 import { useChooseAnswer } from "@/components/exams/sitting/answer";
+import type { AttemptValue } from "@/components/exams/sitting/attempt";
 import {
-  type AttemptValue,
   isActive,
   secondsLeft,
   takesAnswers,
@@ -26,11 +26,8 @@ import { PaperLockProvider } from "@/components/exams/sitting/lock";
 import { SittingLook } from "@/components/exams/sitting/look";
 import { useFlagQuestion } from "@/components/exams/sitting/mark";
 import { useSittingMode } from "@/components/exams/sitting/mode";
-import {
-  mergePaper,
-  type PaperValue,
-  paperCell,
-} from "@/components/exams/sitting/paper";
+import type { PaperValue } from "@/components/exams/sitting/paper";
+import { mergePaper, paperCell } from "@/components/exams/sitting/paper";
 import {
   PaperReveal,
   SittingQuestion,

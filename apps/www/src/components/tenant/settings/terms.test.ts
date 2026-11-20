@@ -1,7 +1,8 @@
 import { describe, expect, it } from "@effect/vitest";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import { Array as Arr, Option } from "effect";
-import { isDraft, type Unit } from "@/components/tenant/settings/state";
+import type { Unit } from "@/components/tenant/settings/state";
+import { isDraft } from "@/components/tenant/settings/state";
 import {
   archivePeriodChange,
   createPeriodChange,

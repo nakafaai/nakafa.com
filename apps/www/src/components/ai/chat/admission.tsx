@@ -3,8 +3,8 @@ import type { PromptInputMessage } from "@repo/design-system/lib/prompt/submissi
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { useNavigate } from "@tanstack/react-router";
 import { Array as Arr, Deferred, Effect } from "effect";
+import type { ComponentProps } from "react";
 import {
-  type ComponentProps,
   useEffect,
   useEffectEvent,
   useId,

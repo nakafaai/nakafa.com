@@ -12,15 +12,16 @@ import {
   getCalendarDayKey,
   parseCalendarDayKey,
 } from "@repo/design-system/lib/calendar/day";
+import type { LocalTimeParts } from "@repo/design-system/lib/calendar/time";
 import {
   joinLocalTime,
-  type LocalTimeParts,
   splitLocalTime,
 } from "@repo/design-system/lib/calendar/time";
 import { fieldBoxVariants } from "@repo/design-system/lib/input";
 import { cn } from "cn";
 import { Array as Arr, DateTime, Option } from "effect";
-import { type ComponentProps, useId, useState } from "react";
+import type { ComponentProps } from "react";
+import { useId, useState } from "react";
 import { useFormatter, useTranslations } from "use-intl";
 
 /** The props of a date field, besides those its trigger button takes. */

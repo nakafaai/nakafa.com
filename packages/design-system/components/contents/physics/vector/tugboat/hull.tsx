@@ -1,8 +1,6 @@
 import { SurfaceMaterial } from "@repo/design-system/components/three/surface/material";
-import {
-  type HullLines,
-  hullGeometry,
-} from "@repo/design-system/components/three/vessel/hull";
+import type { HullLines } from "@repo/design-system/components/three/vessel/hull";
+import { hullGeometry } from "@repo/design-system/components/three/vessel/hull";
 import { useEffect, useMemo } from "react";
 
 /**

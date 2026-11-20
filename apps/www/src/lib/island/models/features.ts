@@ -1,7 +1,8 @@
 import { Schema } from "effect";
 import type { Traits } from "@/lib/island/fauna/families";
 import type { Coat } from "@/lib/island/models/coat";
-import { box, type Face, mirrored, type Vec } from "@/lib/island/models/parts";
+import type { Face, Vec } from "@/lib/island/models/parts";
+import { box, mirrored } from "@/lib/island/models/parts";
 import { ball, rod, tube } from "@/lib/island/models/solids";
 
 /**

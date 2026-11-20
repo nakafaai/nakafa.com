@@ -1,8 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
+import type { TopUpOrder } from "@repo/backend/confect/billing/topup";
 import {
   applyTopUpPaid,
   applyTopUpRefunded,
-  type TopUpOrder,
 } from "@repo/backend/confect/billing/topup";
 import {
   debitLot,

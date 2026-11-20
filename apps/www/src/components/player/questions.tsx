@@ -1,4 +1,5 @@
-import { type ReactNode, useRef } from "react";
+import type { ReactNode } from "react";
+import { useRef } from "react";
 import { usePlayerFocus } from "@/components/player/focus";
 import { usePlayerReveal } from "@/components/player/reveal";
 import { usePlayerSpy } from "@/components/player/watch";

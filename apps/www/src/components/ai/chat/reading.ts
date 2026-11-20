@@ -1,10 +1,7 @@
 import type { NinaMessage } from "@repo/backend/confect/nina/schema";
 import { Array as Arr, Number as Num, Order, Result, Schema } from "effect";
-import {
-  ReaderMessagePage,
-  type ReaderOlder,
-  type ReaderReady,
-} from "@/lib/chat/reader";
+import type { ReaderOlder, ReaderReady } from "@/lib/chat/reader";
+import { ReaderMessagePage } from "@/lib/chat/reader";
 
 /** A reader's chat could not be read from the server, so the page offers to try again. */
 export class ReaderReadError extends Schema.TaggedError<

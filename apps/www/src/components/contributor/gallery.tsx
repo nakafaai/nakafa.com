@@ -16,7 +16,8 @@ import {
 } from "@repo/design-system/components/ui/tooltip";
 import { buttonVariants } from "@repo/design-system/lib/button";
 import { cast, forSeed } from "@repo/mascot/seed";
-import { cva, type VariantProps } from "class-variance-authority";
+import type { VariantProps } from "class-variance-authority";
+import { cva } from "class-variance-authority";
 import { Array as Arr, Option } from "effect";
 import { useState } from "react";
 import { useTranslations } from "use-intl";

@@ -13,12 +13,8 @@ import {
   plantStep,
 } from "@repo/backend/test/editor";
 import { teacherExam } from "@repo/backend/test/exams";
-import {
-  deviceOf,
-  enterOk,
-  openedSitting,
-  type SittingFixture,
-} from "@repo/backend/test/sittings";
+import type { SittingFixture } from "@repo/backend/test/sittings";
+import { deviceOf, enterOk, openedSitting } from "@repo/backend/test/sittings";
 import { TENANCY_NOW, tenancyFixture } from "@repo/backend/test/tenancy";
 import { Effect } from "effect";
 

@@ -1,10 +1,7 @@
 import { Schema } from "effect";
 import { createStore } from "zustand";
-import {
-  type StartDraft,
-  suggestSlug,
-  typedSlug,
-} from "@/components/tenant/start/state";
+import type { StartDraft } from "@/components/tenant/start/state";
+import { suggestSlug, typedSlug } from "@/components/tenant/start/state";
 
 /** The name and address the founder types, and whether the address was typed rather than suggested. */
 const TypedState = Schema.Struct({

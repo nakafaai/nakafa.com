@@ -28,12 +28,8 @@ import {
   InputGroupButton,
   InputGroupInput,
 } from "@repo/design-system/components/ui/input-group";
-import {
-  Activity,
-  type PropsWithChildren,
-  type ReactNode,
-  useState,
-} from "react";
+import type { PropsWithChildren, ReactNode } from "react";
+import { Activity, useState } from "react";
 import { useTranslations } from "use-intl";
 import { useChat } from "@/components/ai/chat/context";
 import {

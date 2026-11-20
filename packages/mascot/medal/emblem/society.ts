@@ -1,5 +1,7 @@
-import { type Ink, stroke } from "@repo/mascot/medal/ink";
-import { circle, group, path, rect, type Shape } from "@repo/mascot/shape";
+import type { Ink } from "@repo/mascot/medal/ink";
+import { stroke } from "@repo/mascot/medal/ink";
+import type { Shape } from "@repo/mascot/shape";
+import { circle, group, path, rect } from "@repo/mascot/shape";
 import { sparkle } from "@repo/mascot/sparkle";
 
 /** Three bars under a line that climbs: economy. */

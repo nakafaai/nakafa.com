@@ -1,7 +1,8 @@
 import { markExtension } from "@repo/design-system/components/editor/marks";
 import { decodeReferences } from "@repo/design-system/components/editor/references";
 import { Array as Arr, Match, Option, String as Str } from "effect";
-import { Lexer, Marked, type Token, type Tokens } from "marked-tiptap";
+import type { Token, Tokens } from "marked-tiptap";
+import { Lexer, Marked } from "marked-tiptap";
 
 /**
  * Reads the Markdown the editor writes as the words the editor shows, so a row

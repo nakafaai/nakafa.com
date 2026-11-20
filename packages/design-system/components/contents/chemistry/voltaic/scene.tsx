@@ -18,10 +18,8 @@ import {
   TERMINAL_OFFSET,
 } from "@repo/design-system/components/contents/chemistry/electrolysis/circuit";
 import { getElectrolysisColors } from "@repo/design-system/components/contents/chemistry/electrolysis/color";
-import {
-  halfCell,
-  type Metal,
-} from "@repo/design-system/components/contents/chemistry/voltaic/cell";
+import type { Metal } from "@repo/design-system/components/contents/chemistry/voltaic/cell";
+import { halfCell } from "@repo/design-system/components/contents/chemistry/voltaic/cell";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { ORIGIN_COLOR } from "@repo/design-system/components/three/data/constants";
 import { ThreeLabel } from "@repo/design-system/components/three/label";

@@ -20,12 +20,12 @@ import { useTranslations } from "use-intl";
 import { useDialogs } from "@/components/shared/dialogs";
 import { RowItems } from "@/components/shared/table/menu";
 import { LineDialog } from "@/components/tenant/line";
+import type { SchoolClass } from "@/components/tenant/settings/class/changes";
 import {
   archiveClassChange,
   changeClassSubject,
   renameClassChange,
   restoreClassChange,
-  type SchoolClass,
 } from "@/components/tenant/settings/class/changes";
 import { ClassTeachersDialog } from "@/components/tenant/settings/class/teachers";
 import { runSchoolWrite, schoolCall } from "@/components/tenant/write";

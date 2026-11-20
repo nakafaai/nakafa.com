@@ -10,10 +10,8 @@ import type {
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { Authority, activeGrants } from "@repo/backend/confect/access/policy";
-import {
-  type BuiltinRole,
-  GrantScope,
-} from "@repo/backend/confect/access/schema";
+import type { BuiltinRole } from "@repo/backend/confect/access/schema";
+import { GrantScope } from "@repo/backend/confect/access/schema";
 import { Member } from "@repo/backend/confect/middleware/member.spec";
 import {
   Cohort,

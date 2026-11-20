@@ -6,6 +6,10 @@ import {
   formatRoundedSecondMath,
   formatRoundedSpeedMath,
 } from "@repo/design-system/components/contents/physics/kinematics/math";
+import type {
+  UniformLinearMotionSpeed,
+  UniformLinearMotionState,
+} from "@repo/design-system/components/contents/physics/kinematics/uniform-linear-motion/data";
 import {
   getUniformLinearMotionState,
   isUniformLinearMotionSpeed,
@@ -14,8 +18,6 @@ import {
   UNIFORM_LINEAR_MOTION_COLORS,
   UNIFORM_LINEAR_MOTION_SCENE,
   UNIFORM_LINEAR_MOTION_SPEEDS,
-  type UniformLinearMotionSpeed,
-  type UniformLinearMotionState,
 } from "@repo/design-system/components/contents/physics/kinematics/uniform-linear-motion/data";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { CameraControls } from "@repo/design-system/components/three/camera/controls";
@@ -38,7 +40,8 @@ import {
 import { VisualFactIndicator } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { Array as Arr } from "effect";
-import { type ReactNode, Suspense, useMemo, useRef, useState } from "react";
+import type { ReactNode } from "react";
+import { Suspense, useMemo, useRef, useState } from "react";
 import type { Group } from "three";
 
 const PAUSE_SECONDS = 0.8;

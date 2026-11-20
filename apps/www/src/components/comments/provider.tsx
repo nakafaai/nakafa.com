@@ -1,11 +1,11 @@
 import { useRequired } from "@repo/design-system/hooks/required";
 import { DateTime } from "effect";
-import { createContext, type ReactNode, useState } from "react";
-import { type StoreApi, useStore } from "zustand";
-import {
-  type CommentDraft,
-  createCommentDraft,
-} from "@/components/comments/draft";
+import type { ReactNode } from "react";
+import { createContext, useState } from "react";
+import type { StoreApi } from "zustand";
+import { useStore } from "zustand";
+import type { CommentDraft } from "@/components/comments/draft";
+import { createCommentDraft } from "@/components/comments/draft";
 import { useAgeClock, useAgeNow } from "@/components/user/ages";
 import type { AgeClock } from "@/components/user/clock";
 

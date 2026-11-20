@@ -1,9 +1,7 @@
 import type { ActiveAppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
-import {
-  type PageCatalogInput,
-  resolveLegalLinks,
-} from "@repo/backend/confect/emails/legal";
+import type { PageCatalogInput } from "@repo/backend/confect/emails/legal";
+import { resolveLegalLinks } from "@repo/backend/confect/emails/legal";
 import { unsubscribePage } from "@repo/backend/confect/emails/unsubscribe/token";
 import { toWelcomeIntentError } from "@repo/backend/confect/emails/welcome/impl";
 import type { welcomeIntentInputValidator } from "@repo/backend/confect/emails/welcome/schema";

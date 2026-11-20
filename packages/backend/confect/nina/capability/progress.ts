@@ -4,10 +4,8 @@ import type {
 } from "@repo/backend/client/nina/capability";
 import { settleOutcome } from "@repo/backend/client/nina/outcome";
 import { boundText, NINA_BUDGET } from "@repo/backend/confect/nina/budget";
-import {
-  boundCapability,
-  type ChatStep,
-} from "@repo/backend/confect/nina/capability/deadline";
+import type { ChatStep } from "@repo/backend/confect/nina/capability/deadline";
+import { boundCapability } from "@repo/backend/confect/nina/capability/deadline";
 import type { FinishReason } from "ai";
 import {
   Array as Arr,

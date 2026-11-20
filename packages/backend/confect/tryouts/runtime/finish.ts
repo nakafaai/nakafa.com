@@ -11,20 +11,22 @@ import {
   loadAttemptPlacements,
   loadSectionPlacements,
 } from "@repo/backend/confect/tryouts/runtime/placement";
+import type {
+  TryoutAttemptResponseIndex,
+  TryoutResponseIndex,
+} from "@repo/backend/confect/tryouts/runtime/response";
 import {
   loadAttemptResponses,
   loadSectionResponseIndex,
-  type TryoutAttemptResponseIndex,
-  type TryoutResponseIndex,
 } from "@repo/backend/confect/tryouts/runtime/response";
 import { getSectionScoreSnapshot } from "@repo/backend/confect/tryouts/runtime/result";
+import type { TryoutScoreSource } from "@repo/backend/confect/tryouts/runtime/score";
 import {
   finalizeAttemptScore,
   loadAttemptScoreSource,
   loadSectionScoreSource,
   scoreTryoutSection,
   summarizeResponses,
-  type TryoutScoreSource,
 } from "@repo/backend/confect/tryouts/runtime/score";
 import { Array as Arr, Effect, flow, MutableHashSet, Option } from "effect";
 

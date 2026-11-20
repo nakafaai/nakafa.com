@@ -3,7 +3,8 @@ import {
   untilPageSettled,
 } from "@repo/design-system/lib/settle";
 import { Effect, Fiber } from "effect";
-import { type ReactNode, useEffect, useState } from "react";
+import type { ReactNode } from "react";
+import { useEffect, useState } from "react";
 
 /**
  * Whether the page has loaded and the browser has had an idle moment after

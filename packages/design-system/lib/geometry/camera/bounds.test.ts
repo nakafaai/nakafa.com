@@ -1,12 +1,13 @@
 // @vitest-environment node
 
 import { describe, expect, it } from "@effect/vitest";
-import {
-  type CameraLabelBounds,
-  type CameraSubjectBounds,
-  measureCameraBounds,
+import type {
+  CameraLabelBounds,
+  CameraSubjectBounds,
 } from "@repo/design-system/lib/geometry/camera/bounds";
+import { measureCameraBounds } from "@repo/design-system/lib/geometry/camera/bounds";
 import { Effect, HashMap, Option } from "effect";
+import type { Object3D } from "three";
 import {
   Box3,
   BoxGeometry,
@@ -15,7 +16,6 @@ import {
   Matrix4,
   Mesh,
   MeshBasicMaterial,
-  type Object3D,
   Vector3,
 } from "three";
 

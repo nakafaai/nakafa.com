@@ -13,10 +13,8 @@ import { isThreadShown } from "@/components/comments/draft";
 import { useCommentDraft } from "@/components/comments/provider";
 import { CommentRow, ReplyButton, ReplyingTo } from "@/components/comments/row";
 import { ComposerAnswersContext } from "@/components/comments/scope";
-import {
-  type CommentRow as CommentRowData,
-  threadOf,
-} from "@/components/comments/state";
+import type { CommentRow as CommentRowData } from "@/components/comments/state";
+import { threadOf } from "@/components/comments/state";
 import { DataFailure } from "@/components/state/failure";
 
 /** How many replies a page of a thread holds, the first one and each one after it. */

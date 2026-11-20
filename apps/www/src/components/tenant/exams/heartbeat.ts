@@ -1,8 +1,8 @@
-import {
-  PRESENCE_INTERVAL,
-  type PresenceSession,
-  type PresenceToken,
+import type {
+  PresenceSession,
+  PresenceToken,
 } from "@repo/backend/confect/exams/presence";
+import { PRESENCE_INTERVAL } from "@repo/backend/confect/exams/presence";
 import { randomUuid } from "@repo/utilities/uuid";
 import { Duration, Effect, Option, Ref, Schedule, Semaphore } from "effect";
 

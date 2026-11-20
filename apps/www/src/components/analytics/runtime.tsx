@@ -1,8 +1,8 @@
 "use client";
 
+import type { BrowserAnalyticsIdentity } from "@repo/analytics/posthog/browser";
 import {
   admitConsentedIdentity,
-  type BrowserAnalyticsIdentity,
   enableBaselineAnalytics,
   revokeToBaselineAnalytics,
   suspendBrowserAnalyticsIdentity,
@@ -13,8 +13,8 @@ import { Effect, Fiber, Schedule, Schema } from "effect";
 import { useEffect } from "react";
 import { clientEnv } from "@/env.public";
 import { followConsentAnswers, startConsentMessage } from "@/lib/ads/consent";
+import type { AnalyticsConsent } from "@/lib/analytics/consent";
 import {
-  type AnalyticsConsent,
   keepConsentAnswer,
   useAnalyticsConsent,
 } from "@/lib/analytics/consent";

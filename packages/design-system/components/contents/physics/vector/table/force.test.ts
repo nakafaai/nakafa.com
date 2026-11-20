@@ -1,6 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
+import type { Pull } from "@repo/design-system/components/contents/physics/vector/table/force";
 import {
-  type Pull,
   PullsSchema,
   pullForce,
   tableResultant,

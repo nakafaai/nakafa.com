@@ -1,6 +1,6 @@
+import type { Hop } from "@repo/design-system/components/contents/physics/vector/drone/flight";
 import {
   displacement,
-  type Hop,
   HopsSchema,
   pathLength,
   scaleHops,
@@ -27,7 +27,8 @@ import {
 import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { Array as Arr, Schema } from "effect";
-import { type ReactNode, Suspense, useMemo, useState } from "react";
+import type { ReactNode } from "react";
+import { Suspense, useMemo, useState } from "react";
 
 interface DroneDisplacementLabProps {
   description: NonNullable<ReactNode>;

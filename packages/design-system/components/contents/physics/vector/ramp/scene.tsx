@@ -1,7 +1,7 @@
 import { RoundedBox } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
+import type { Block } from "@repo/design-system/components/contents/physics/vector/ramp/incline";
 import {
-  type Block,
   GRAVITY,
   rampForces,
 } from "@repo/design-system/components/contents/physics/vector/ramp/incline";

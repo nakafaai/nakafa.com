@@ -1,8 +1,8 @@
 import { describe, expect, it } from "@effect/vitest";
 import { Id } from "@repo/backend/confect/_generated/id";
 import { Schema } from "effect";
+import type { PracticeQuestion } from "@/components/tryout/practice/model";
 import {
-  type PracticeQuestion,
   practiceCellsOf,
   practiceProgressOf,
 } from "@/components/tryout/practice/model";

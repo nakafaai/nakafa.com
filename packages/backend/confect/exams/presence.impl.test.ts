@@ -13,10 +13,10 @@ import {
 import { denied, nf, otherSchoolTeacher } from "@repo/backend/test/editor";
 import { archiveUnit, teacherExam } from "@repo/backend/test/exams";
 import { MASCOT } from "@repo/backend/test/mascot";
+import type { tenancyFixture } from "@repo/backend/test/tenancy";
 import {
   tenancyFixture as fixtureOf,
   TENANCY_NOW,
-  type tenancyFixture,
 } from "@repo/backend/test/tenancy";
 import { Array as Arr, Duration, Effect } from "effect";
 

@@ -3,6 +3,7 @@ import { Id } from "@repo/backend/confect/_generated/id";
 import classroom from "@repo/backend/confect/_generated/refs/classroom";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Effect, Option, Result, Schema } from "effect";
+import type { LibraryFolder } from "@/components/tenant/classes/library/folder";
 import {
   addFolderUpdate,
   addLibraryFolder,
@@ -10,7 +11,6 @@ import {
   folderPath,
   isSavedFolder,
   isWithin,
-  type LibraryFolder,
   moveFolderUpdate,
   purgeFolderUpdate,
   renameFolderUpdate,

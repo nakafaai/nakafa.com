@@ -2,12 +2,12 @@ import { beforeEach, describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
 import { PRESENCE_INTERVAL } from "@repo/backend/confect/exams/presence";
 import { nf } from "@repo/backend/test/editor";
+import type { SittingFixture } from "@repo/backend/test/sittings";
 import {
   CLOSES_AT,
   deviceOf,
   enterOk,
   openedSitting,
-  type SittingFixture,
   seedAttempt,
   seedSignal,
 } from "@repo/backend/test/sittings";

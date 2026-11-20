@@ -1,13 +1,12 @@
 import { Array as Arr } from "effect";
+import type { Face, Vec } from "@/lib/island/models/parts";
 import {
   box,
-  type Face,
   loft,
   meters as m,
   mirrored,
   rgb,
   rigged,
-  type Vec,
 } from "@/lib/island/models/parts";
 import { slab } from "@/lib/island/models/solids";
 

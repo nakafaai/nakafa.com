@@ -1,9 +1,5 @@
-import {
-  type PaginatedQueryItem,
-  QueryResult,
-  usePaginatedQuery,
-  useQuery,
-} from "@confect/react";
+import type { PaginatedQueryItem } from "@confect/react";
+import { QueryResult, usePaginatedQuery, useQuery } from "@confect/react";
 import {
   Download01Icon,
   InformationCircleIcon,

@@ -1,7 +1,5 @@
-import {
-  isSchoolLabel,
-  type TenantSlug,
-} from "@repo/backend/confect/tenancy/slug";
+import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
+import { isSchoolLabel } from "@repo/backend/confect/tenancy/slug";
 import {
   isSharedPath,
   withPathname,

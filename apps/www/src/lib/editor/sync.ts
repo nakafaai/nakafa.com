@@ -2,14 +2,13 @@ import { randomUuid } from "@repo/utilities/uuid";
 import { Effect, Option, Ref, Schedule, Semaphore } from "effect";
 import { pull } from "@/lib/editor/pull";
 import { push } from "@/lib/editor/send";
-import {
-  type EditorPort,
-  type Memory,
-  SyncDropped,
-  SyncFailed,
-  type SyncSession,
-  type SyncTransport,
+import type {
+  EditorPort,
+  Memory,
+  SyncSession,
+  SyncTransport,
 } from "@/lib/editor/session";
+import { SyncDropped, SyncFailed } from "@/lib/editor/session";
 import { readDocument, receiveOnto, settleSteps } from "@/lib/editor/settle";
 
 /** How long a document that could not be read waits before the editor reads it again. */

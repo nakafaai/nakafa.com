@@ -6,7 +6,8 @@ import {
 import { preprocessLaTeX } from "@repo/math/latex";
 import { encodeJsonText } from "@repo/utilities/json";
 import { Array as Arr, Option } from "effect";
-import { Lexer, type Tokens } from "marked";
+import type { Tokens } from "marked";
+import { Lexer } from "marked";
 
 function mockLexerBlocks(...blocks: string[]) {
   const tokens = Object.assign(

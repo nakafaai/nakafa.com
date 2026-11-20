@@ -8,9 +8,9 @@ import {
   SEARCH_DEADLINE_MS,
   SEARCH_DEFAULT_LIMIT,
 } from "@repo/backend/confect/contents/sections/limits";
+import type { searchInputValidator } from "@repo/backend/confect/contents/sections/schema";
 import {
   INDEXED_SECTIONS,
-  type searchInputValidator,
   sectionScope,
 } from "@repo/backend/confect/contents/sections/schema";
 import { GatewayFailure } from "@repo/backend/confect/gateway/failure";

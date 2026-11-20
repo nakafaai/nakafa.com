@@ -3,10 +3,10 @@ import type {
   PlaneVisual,
   SpaceVisual,
 } from "@/lib/content/renderer/client/base/visual/scene";
+import type { VisualProjection } from "@/lib/content/renderer/client/base/visual/transform";
 import {
   projectVisualFrame,
   projectVisualPoint,
-  type VisualProjection,
 } from "@/lib/content/renderer/client/base/visual/transform";
 
 /** The authored range of each axis a scene draws, in the order its axes are drawn. */

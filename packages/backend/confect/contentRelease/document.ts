@@ -1,6 +1,7 @@
 import { MAX_PLAIN_TEXT_BYTES } from "@nakafa/aksara-contracts/limits";
 import { releaseFail } from "@repo/backend/confect/contentRelease/error";
-import { getDocumentSize, type Value } from "convex/values";
+import type { Value } from "convex/values";
+import { getDocumentSize } from "convex/values";
 import { Effect, Record as Rec } from "effect";
 
 /** Application ceiling that leaves headroom below Convex's 1 MiB limit. */

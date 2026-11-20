@@ -1,10 +1,8 @@
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { type PropsWithChildren, useState } from "react";
-import {
-  type ChatPaging,
-  ChatValueProvider,
-  useChatState,
-} from "@/components/ai/chat/context";
+import type { PropsWithChildren } from "react";
+import { useState } from "react";
+import type { ChatPaging } from "@/components/ai/chat/context";
+import { ChatValueProvider, useChatState } from "@/components/ai/chat/context";
 import { ChatFeedContext, useLiveChatFeed } from "@/components/ai/chat/feed";
 import { createChatStore } from "@/components/ai/chat/store";
 

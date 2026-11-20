@@ -1,11 +1,11 @@
 import { useThree } from "@react-three/fiber";
 import { getAtomSceneColors } from "@repo/design-system/components/contents/chemistry/color";
+import type { MatterParticleModeId } from "@repo/design-system/components/contents/chemistry/matter-particle-reader/data";
 import {
   ATOM_MODE_ID,
   isMatterParticleModeId,
   MATTER_PARTICLE_MODE_IDS,
   MATTER_PARTICLE_SCENE_VIEW,
-  type MatterParticleModeId,
 } from "@repo/design-system/components/contents/chemistry/matter-particle-reader/data";
 import {
   MatterParticleReaderScene,

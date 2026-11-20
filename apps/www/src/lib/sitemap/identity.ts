@@ -1,8 +1,6 @@
 import { ActiveAppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
-import {
-  decodeLocale,
-  type Locale,
-} from "@repo/internationalization/src/locale";
+import type { Locale } from "@repo/internationalization/src/locale";
+import { decodeLocale } from "@repo/internationalization/src/locale";
 import { Data, Option, Schema } from "effect";
 
 /** Stable identity for the sitemap containing application-level routes. */

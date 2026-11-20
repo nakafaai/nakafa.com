@@ -2,8 +2,10 @@
 
 import { describe, expect, it } from "@effect/vitest";
 import { objectKeys } from "@repo/design-system/components/editor/objects";
-import { type DocumentRules, documentExtensions } from "@repo/editor/document";
-import { Editor, type JSONContent } from "@tiptap/core";
+import type { DocumentRules } from "@repo/editor/document";
+import { documentExtensions } from "@repo/editor/document";
+import type { JSONContent } from "@tiptap/core";
+import { Editor } from "@tiptap/core";
 import { NodeSelection, TextSelection } from "@tiptap/pm/state";
 import { CellSelection } from "@tiptap/pm/tables";
 import { Array as Arr } from "effect";

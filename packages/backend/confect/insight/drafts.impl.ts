@@ -15,11 +15,11 @@ import { movePool, schoolHoldOf } from "@repo/backend/confect/credits/pool";
 import { Gateway } from "@repo/backend/confect/gateway/handle";
 import { GatewayLive } from "@repo/backend/confect/gateway/live";
 import { requireStudent } from "@repo/backend/confect/insight/access";
+import type { DraftSource } from "@repo/backend/confect/insight/drafts";
 import {
   DRAFT_CREDITS,
   DRAFT_INSTRUCTIONS,
   DraftAnswer,
-  type DraftSource,
   promptOf,
 } from "@repo/backend/confect/insight/drafts";
 import spec from "@repo/backend/confect/insight/drafts.spec";

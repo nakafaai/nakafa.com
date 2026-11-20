@@ -5,10 +5,10 @@ import { Array as Arr, Duration, Effect, Option, Ref, Schema } from "effect";
 import { HttpClient } from "effect/http";
 import { toJSONAsync } from "seroval";
 import type { Plugin, PreviewServer } from "vite";
+import type { StaticCall } from "#www/src/lib/static/calls";
 import {
   PRERENDER_HEADER,
   readStaticCalls,
-  type StaticCall,
   staticDataPath,
   toStaticFile,
 } from "#www/src/lib/static/calls";

@@ -2,10 +2,8 @@ import { decodeAgentInput } from "@repo/backend/agent/decode";
 import { projectNakafaQuranReference } from "@repo/backend/agent/quran/projection";
 import { decodePublishedQuranCatalog } from "@repo/backend/client/quran/catalog";
 import type { QuranPublicationError } from "@repo/backend/client/quran/publication";
-import {
-  decodePublishedQuranReference,
-  type PublishedQuranReference,
-} from "@repo/backend/client/quran/reference";
+import type { PublishedQuranReference } from "@repo/backend/client/quran/reference";
+import { decodePublishedQuranReference } from "@repo/backend/client/quran/reference";
 import contentReleasePublic from "@repo/backend/confect/_generated/refs/contentRelease";
 import { QueryRunner } from "@repo/backend/confect/_generated/services";
 import type { QuranReferenceArgs } from "@repo/backend/confect/contentRelease/quran/spec";
@@ -16,10 +14,8 @@ import {
   NakafaAgentInputError,
 } from "@repo/contents/agent/errors";
 import { createNakafaContentRefFromGraphProjection } from "@repo/contents/agent/refs";
-import {
-  type NakafaAgentQuranReferenceInput,
-  NakafaAgentQuranReferenceOptionsSchema,
-} from "@repo/contents/agent/schema/quran/input";
+import type { NakafaAgentQuranReferenceInput } from "@repo/contents/agent/schema/quran/input";
+import { NakafaAgentQuranReferenceOptionsSchema } from "@repo/contents/agent/schema/quran/input";
 import { Array as Arr, Effect, Option, Struct } from "effect";
 
 const quranCatalogReference = contentReleasePublic.quran.surahs;

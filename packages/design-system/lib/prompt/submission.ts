@@ -1,6 +1,6 @@
+import type { PromptInputRefusal } from "@repo/design-system/lib/prompt/files";
 import {
   PromptInputFileSchema,
-  type PromptInputRefusal,
   PromptInputRefusalSchema,
 } from "@repo/design-system/lib/prompt/files";
 import { Effect, Schema } from "effect";

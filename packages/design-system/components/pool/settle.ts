@@ -1,8 +1,8 @@
+import type { World } from "@repo/design-system/components/pool/physics";
 import {
   isResting,
   REST_FRAMES,
   tick,
-  type World,
   WorldSchema,
 } from "@repo/design-system/components/pool/physics";
 import { idlePointer } from "@repo/design-system/components/pool/pointer";

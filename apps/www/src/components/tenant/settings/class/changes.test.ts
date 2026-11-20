@@ -3,6 +3,7 @@ import { Id } from "@repo/backend/confect/_generated/id";
 import classroom from "@repo/backend/confect/_generated/refs/classroom";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import { Array as Arr, Option, Schema } from "effect";
+import type { SchoolClass } from "@/components/tenant/settings/class/changes";
 import {
   archiveClassChange,
   assignTeacherChange,
@@ -11,9 +12,9 @@ import {
   removeTeacherChange,
   renameClassChange,
   restoreClassChange,
-  type SchoolClass,
 } from "@/components/tenant/settings/class/changes";
-import { isDraft, type Period } from "@/components/tenant/settings/state";
+import type { Period } from "@/components/tenant/settings/state";
+import { isDraft } from "@/components/tenant/settings/state";
 import { createLocalStore } from "@/test/optimistic";
 import {
   cohort,

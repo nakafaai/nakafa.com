@@ -1,14 +1,12 @@
 import { describe, expect, it } from "@effect/vitest";
-import {
-  ACTIVE_APP_LOCALE_CODES,
-  type ActiveAppLocaleCode,
-} from "@nakafa/aksara-contracts/locale";
+import type { ActiveAppLocaleCode } from "@nakafa/aksara-contracts/locale";
+import { ACTIVE_APP_LOCALE_CODES } from "@nakafa/aksara-contracts/locale";
+import type { SchoolTimeFormat } from "@repo/internationalization/src/formats";
 import {
   formatAge,
   formatBytes,
   formatSchoolTime,
   formatterOf,
-  type SchoolTimeFormat,
 } from "@repo/internationalization/src/formats";
 import { DateTime, Effect, Record as Rec } from "effect";
 

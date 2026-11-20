@@ -192,11 +192,11 @@ them all nor carry them all. So Nina has a tiny part that is always there, a
 list that fits the question, and a tool she drives herself, and only the build
 of the first calls a model, in the background:
 
-| Way | Where it sits | Tokens at its bound | Typical learner | Documents it reads | Model calls |
-| --- | --- | --- | --- | --- | --- |
-| Portrait | The Learner section of the system prompt, after the account facts | 1,000, plus its block | 154 to 171 (former tokenizer) | 2 | None in the turn |
-| Recall | A list in the text part in front of the learner's message | 1,500, plus its block | 110 to 144 (former tokenizer) | 435 at most | None |
-| Memory capability | The answer to a tool call Nina makes, only when she makes it | 3,000, plus its block | 89 to 142 a call (former tokenizer) | 405 at most for one call | None |
+| Way               | Where it sits                                                     | Tokens at its bound   | Typical learner                     | Documents it reads       | Model calls      |
+| ----------------- | ----------------------------------------------------------------- | --------------------- | ----------------------------------- | ------------------------ | ---------------- |
+| Portrait          | The Learner section of the system prompt, after the account facts | 1,000, plus its block | 154 to 171 (former tokenizer)       | 2                        | None in the turn |
+| Recall            | A list in the text part in front of the learner's message         | 1,500, plus its block | 110 to 144 (former tokenizer)       | 435 at most              | None             |
+| Memory capability | The answer to a tool call Nina makes, only when she makes it      | 3,000, plus its block | 89 to 142 a call (former tokenizer) | 405 at most for one call | None             |
 
 The bounds are counted by the estimator of `confect/nina/budget.ts`, whose costs
 live in the language model profile. The figures without a current count were
@@ -568,10 +568,10 @@ texts judged yes and the share of no texts judged no. A decision request cost
 $0.0000164 and took 140 to 310 ms (15 messages, same day), so asking alone costs
 more requests and no more time:
 
-| How a capture with three candidates asks | Requests | Cost | Time | `ownNote` balance at its best threshold |
-| --- | --- | --- | --- | --- |
-| All three in one request | 1 | $0.0000164 | one request | 0.878 |
-| Each in its own request, at the same time | 3 | $0.0000492 | one request, since they run together | 0.942 |
+| How a capture with three candidates asks  | Requests | Cost       | Time                                 | `ownNote` balance at its best threshold |
+| ----------------------------------------- | -------- | ---------- | ------------------------------------ | --------------------------------------- |
+| All three in one request                  | 1        | $0.0000164 | one request                          | 0.878                                   |
+| Each in its own request, at the same time | 3        | $0.0000492 | one request, since they run together | 0.942                                   |
 
 Most turns propose no candidate or one, and then both ways are the same
 request. The three requests run together, so the capture waits for the slowest
@@ -617,13 +617,13 @@ yes, no judged yes, yes judged no, and no judged no, and balance is as above.
 The rows with three notes to a request are the way that is not used, kept to
 show why.
 
-| Judgment | How it was asked | Counts at 0.50 | Balance at 0.50 | Best threshold on this set | Balance there |
-| --- | --- | --- | --- | --- | --- |
-| `lasting` | one message to a request | 56 / 2 / 0 / 66 | 0.985 | 0.62 | 0.993 (56 / 1 / 0 / 67) |
-| `ownNote` | one note to a request | 54 / 12 / 0 / 19 | 0.806 | 0.59 | 0.942 (53 / 3 / 1 / 28) |
-| `ownNote` | three notes to a request | 47 / 6 / 7 / 25 | 0.838 | 0.53 | 0.878 (46 / 3 / 8 / 28) |
-| `private` | one note to a request | 30 / 0 / 0 / 55 | 1.000 | 0.65 | 1.000 |
-| `private` | three notes to a request | 30 / 0 / 0 / 55 | 1.000 | 0.58 | 1.000 |
+| Judgment  | How it was asked         | Counts at 0.50   | Balance at 0.50 | Best threshold on this set | Balance there           |
+| --------- | ------------------------ | ---------------- | --------------- | -------------------------- | ----------------------- |
+| `lasting` | one message to a request | 56 / 2 / 0 / 66  | 0.985           | 0.62                       | 0.993 (56 / 1 / 0 / 67) |
+| `ownNote` | one note to a request    | 54 / 12 / 0 / 19 | 0.806           | 0.59                       | 0.942 (53 / 3 / 1 / 28) |
+| `ownNote` | three notes to a request | 47 / 6 / 7 / 25  | 0.838           | 0.53                       | 0.878 (46 / 3 / 8 / 28) |
+| `private` | one note to a request    | 30 / 0 / 0 / 55  | 1.000           | 0.65                       | 1.000                   |
+| `private` | three notes to a request | 30 / 0 / 0 / 55  | 1.000           | 0.58                       | 1.000                   |
 
 Where the probabilities lie. `ownNote`, one note to a request: every yes note is
 at 0.5 or more (1 in 0.5 to 0.6, 10 in 0.6 to 0.7, 43 above), and the no notes
@@ -635,11 +635,11 @@ ways. `lasting`: 55 of 56 yes messages are at 0.8 or more and one is in 0.6 to
 
 The thresholds, and why each is where it is:
 
-| Judgment | Threshold | Why |
-| --- | --- | --- |
-| `lasting` | 0.5 | A memory that is missed is lost, and a message judged yes by mistake costs one capture call that then saves nothing. At 0.5 no yes message is missed. |
-| `ownNote` | 0.6 | At 0.6, 53 of 54 own notes are kept and 28 of 31 notes that are not the learner's own are dropped. At 0.5, 12 of those 31 are kept. |
-| `private` | 0.5 | Every private note is at 0.8 or more and every other note is below 0.5, so 0.5 and the best threshold, 0.65, both separate the set. The lower of the two is the safer, because keeping a private note is the worse mistake. |
+| Judgment  | Threshold | Why                                                                                                                                                                                                                         |
+| --------- | --------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `lasting` | 0.5       | A memory that is missed is lost, and a message judged yes by mistake costs one capture call that then saves nothing. At 0.5 no yes message is missed.                                                                       |
+| `ownNote` | 0.6       | At 0.6, 53 of 54 own notes are kept and 28 of 31 notes that are not the learner's own are dropped. At 0.5, 12 of those 31 are kept.                                                                                         |
+| `private` | 0.5       | Every private note is at 0.8 or more and every other note is below 0.5, so 0.5 and the best threshold, 0.65, both separate the set. The lower of the two is the safer, because keeping a private note is the worse mistake. |
 
 The thresholds were chosen on the same set they are measured on, so the numbers
 describe this set and are not a forecast of how the judgments do on what
@@ -653,11 +653,11 @@ one note to a request, and none separated the notes better than the
 instructions that stay (0.942 at the best threshold). They are recorded so that
 nobody tries them again without a new reason.
 
-| Wording | Result |
-| --- | --- |
-| "written from the learner's own point of view, in the first person or with no subject, and in the same language as the quote; never refers to the learner in the third person" | 0.861 at 0.50 (39 / 0 / 15 / 31); best 0.919 at 0.25. The no notes fall below 0.2, but 15 of 54 yes notes fall below 0.5. |
-| The fault instead of the virtue: "describes the learner in the third person, as another person would write about them, or is written in a different language than the quote" | 45 of 54 yes notes below 0.5 and 29 of 31 no notes at 0.5 or more: 0.884. |
-| Two questions: "refers to the learner in the third person, as someone else would write about them" and "is written in a different language than the quote" | Third person: all 29 label and pronoun notes at 0.62 or more, and 8 of 54 yes notes at 0.6 or more (two of them English notes whose verb is in the third person, "Prefers worked examples before formulas"). Language: the 2 notes in another language at 0.73 and 0.75, one more no note at 0.64 (an English word in an Indonesian note), every yes note below 0.5. Together 31 of 31 no notes found and 46 of 54 yes notes kept: 0.926. |
+| Wording                                                                                                                                                                        | Result                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| "written from the learner's own point of view, in the first person or with no subject, and in the same language as the quote; never refers to the learner in the third person" | 0.861 at 0.50 (39 / 0 / 15 / 31); best 0.919 at 0.25. The no notes fall below 0.2, but 15 of 54 yes notes fall below 0.5.                                                                                                                                                                                                                                                                                                                 |
+| The fault instead of the virtue: "describes the learner in the third person, as another person would write about them, or is written in a different language than the quote"   | 45 of 54 yes notes below 0.5 and 29 of 31 no notes at 0.5 or more: 0.884.                                                                                                                                                                                                                                                                                                                                                                 |
+| Two questions: "refers to the learner in the third person, as someone else would write about them" and "is written in a different language than the quote"                     | Third person: all 29 label and pronoun notes at 0.62 or more, and 8 of 54 yes notes at 0.6 or more (two of them English notes whose verb is in the third person, "Prefers worked examples before formulas"). Language: the 2 notes in another language at 0.73 and 0.75, one more no note at 0.64 (an English word in an Indonesian note), every yes note below 0.5. Together 31 of 31 no notes found and 46 of 54 yes notes kept: 0.926. |
 
 ## Implementation Contract
 

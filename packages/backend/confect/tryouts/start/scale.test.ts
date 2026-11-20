@@ -3,10 +3,10 @@ import tryouts from "@repo/backend/confect/_generated/refs/tryouts";
 import { seedAuthenticatedUser } from "@repo/backend/confect/test.helpers";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { client } from "@repo/backend/test/client";
+import type { TryoutWorld } from "@repo/backend/test/tryout/world";
 import {
   startArgs,
   TRYOUT_NOW,
-  type TryoutWorld,
   tryoutWorld,
 } from "@repo/backend/test/tryout/world";
 import { Array as Arr, Effect, Struct } from "effect";

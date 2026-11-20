@@ -1,7 +1,5 @@
-import {
-  type ChartData,
-  ChartDataProvider,
-} from "@repo/design-system/components/contents/mathematics/chart/context";
+import type { ChartData } from "@repo/design-system/components/contents/mathematics/chart/context";
+import { ChartDataProvider } from "@repo/design-system/components/contents/mathematics/chart/context";
 import { ChartSummaryFacts } from "@repo/design-system/components/contents/mathematics/chart/facts";
 import { CategoryTick } from "@repo/design-system/components/contents/mathematics/chart/tick";
 import { Bar } from "@repo/design-system/components/evilcharts/charts/bar/series";
@@ -22,7 +20,8 @@ import {
   VisualCardHeader,
 } from "@repo/design-system/components/visual/card";
 import { Array as Arr } from "effect";
-import { type ReactNode, useMemo } from "react";
+import type { ReactNode } from "react";
+import { useMemo } from "react";
 
 interface Props {
   chartConfig: ChartConfig;

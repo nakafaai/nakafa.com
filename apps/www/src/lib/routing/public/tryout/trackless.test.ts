@@ -2,12 +2,8 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { Array as Arr, Effect } from "effect";
 import { readTryoutRedirect } from "@/lib/routing/public/tryout";
-import {
-  type ExamFixture,
-  type GroupFixture,
-  type RouteIdentity,
-  serveTryoutCatalog,
-} from "@/test/catalog";
+import type { ExamFixture, GroupFixture, RouteIdentity } from "@/test/catalog";
+import { serveTryoutCatalog } from "@/test/catalog";
 
 const mocks = vi.hoisted(() => ({
   exam: vi.fn(),

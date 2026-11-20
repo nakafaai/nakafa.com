@@ -3,12 +3,14 @@ import {
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
 import { SECTIONS_PER_DOCUMENT } from "@repo/backend/confect/contents/sections/limits";
+import type {
+  knownInputValidator,
+  SourceRecord,
+  storeInputValidator,
+} from "@repo/backend/confect/contents/sections/schema";
 import {
-  type knownInputValidator,
-  type SourceRecord,
   sectionHeadValidator,
   sectionScope,
-  type storeInputValidator,
 } from "@repo/backend/confect/contents/sections/schema";
 import { findSource } from "@repo/backend/confect/contents/sections/source";
 import { isActive } from "@repo/backend/confect/contents/sections/state";

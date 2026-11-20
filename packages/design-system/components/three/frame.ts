@@ -1,7 +1,5 @@
-import {
-  type Point3,
-  Point3Schema,
-} from "@repo/design-system/lib/geometry/point";
+import type { Point3 } from "@repo/design-system/lib/geometry/point";
+import { Point3Schema } from "@repo/design-system/lib/geometry/point";
 import { BigDecimal, MutableList, Schema } from "effect";
 
 const CoordinateRangeSchema = Schema.Struct({

@@ -1,6 +1,10 @@
 import { useFrame } from "@react-three/fiber";
 import { PhysicsCarModel } from "@repo/design-system/components/contents/physics/kinematics/car";
 import { formatKeptZeroMeterMath } from "@repo/design-system/components/contents/physics/kinematics/math";
+import type {
+  VelocitySpeedCaseId,
+  VelocitySpeedState,
+} from "@repo/design-system/components/contents/physics/kinematics/velocity-speed/data";
 import {
   formatSignedMeterMath,
   formatSignedSpeedMath,
@@ -13,8 +17,6 @@ import {
   VELOCITY_SPEED_CASE_IDS,
   VELOCITY_SPEED_COLORS,
   VELOCITY_SPEED_SCENE,
-  type VelocitySpeedCaseId,
-  type VelocitySpeedState,
 } from "@repo/design-system/components/contents/physics/kinematics/velocity-speed/data";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { CameraControls } from "@repo/design-system/components/three/camera/controls";
@@ -37,7 +39,8 @@ import {
 import { VisualFactIndicator } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { Array as Arr } from "effect";
-import { type ReactNode, Suspense, useMemo, useRef, useState } from "react";
+import type { ReactNode } from "react";
+import { Suspense, useMemo, useRef, useState } from "react";
 import type { Group } from "three";
 
 const PAUSE_SECONDS = 0.8;

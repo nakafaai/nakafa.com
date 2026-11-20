@@ -1,7 +1,7 @@
 import { describe, expect, it } from "@effect/vitest";
+import type { Bulb } from "@repo/design-system/components/contents/physics/renewable-energy/flashlight/bulb";
 import {
   BATTERY_ENERGY,
-  type Bulb,
   heatPower,
   LIGHT_SHARE,
   lightPower,

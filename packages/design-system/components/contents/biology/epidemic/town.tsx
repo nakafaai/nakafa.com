@@ -3,17 +3,19 @@ import {
   createPlaza,
   layoutOf,
 } from "@repo/design-system/components/contents/biology/epidemic/plaza";
+import type {
+  Day,
+  Measures,
+  Route,
+  Walker,
+} from "@repo/design-system/components/contents/biology/epidemic/spread";
 import {
   crowdOf,
-  type Day,
   immuneShare,
-  type Measures,
   nextInfected,
   outbreakOf,
   peakOf,
-  type Route,
   reproductionOf,
-  type Walker,
   walk,
 } from "@repo/design-system/components/contents/biology/epidemic/spread";
 import { useQuantity } from "@repo/design-system/components/contents/simulation/quantity";
@@ -40,7 +42,8 @@ import { P5Sketch } from "@repo/design-system/components/visual/sketch";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr, Option } from "effect";
 import type p5 from "p5";
-import { type ReactNode, useMemo, useState } from "react";
+import type { ReactNode } from "react";
+import { useMemo, useState } from "react";
 
 /** The outbreak the card follows, in days. */
 const DAYS = 120;

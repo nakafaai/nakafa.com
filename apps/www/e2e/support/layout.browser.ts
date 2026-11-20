@@ -1,4 +1,5 @@
-import { expect, type Page, test } from "@playwright/test";
+import type { Page } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import { Array as Arr, Schema } from "effect";
 import { recordLayoutShifts } from "@/e2e/support/layout";
 import { TOASTER } from "@/e2e/support/selector";

@@ -8,15 +8,17 @@ import { applyPolicy } from "@repo/backend/confect/tenancy/policy";
 import { Npsn } from "@repo/backend/confect/tenancy/schema";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Array as Arr, DateTime, Option, Schema, Struct } from "effect";
+import type {
+  Client,
+  Grant,
+  Invite,
+  Unit,
+} from "@/components/tenant/settings/state";
 import {
-  type Client,
   draftText,
-  type Grant,
-  type Invite,
   isFirstPage,
   mapUnit,
   revokeClient,
-  type Unit,
   withoutItem,
 } from "@/components/tenant/settings/state";
 import { changeLoaded, withPage } from "@/lib/data/loaded";

@@ -8,6 +8,7 @@ import {
   Result,
   Schema,
 } from "effect";
+import type { JsxAttributes, Node } from "tsrs/ast";
 import {
   isBinaryExpression,
   isConditionalExpression,
@@ -20,12 +21,10 @@ import {
   isParenthesizedExpression,
   isPropertyAssignment,
   isStringLiteralLikeNode,
-  type JsxAttributes,
-  type Node,
   SyntaxKind,
 } from "tsrs/ast";
+import type { Component } from "#scripts/check/components";
 import {
-  type Component,
   componentGraph,
   componentKey,
   rootsOf,

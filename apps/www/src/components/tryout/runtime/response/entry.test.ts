@@ -2,9 +2,9 @@ import { describe, expect, it } from "@effect/vitest";
 import type { Interaction } from "@nakafa/aksara-contracts/assessment/interaction";
 import type { InteractionKey } from "@nakafa/aksara-contracts/assessment/key";
 import { formatterOf } from "@repo/internationalization/src/formats";
+import type { Entry } from "@/components/tryout/runtime/response/entry";
 import {
   decimalOf,
-  type Entry,
   entryResponse,
   isEntry,
   reviewEntry,

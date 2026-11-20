@@ -2,12 +2,10 @@ import { encodeJsonText } from "@repo/utilities/json";
 import { utf8Bytes } from "@repo/utilities/text";
 import { Extension } from "@tiptap/core";
 import type { Node } from "@tiptap/pm/model";
-import { Plugin, type Transaction } from "@tiptap/pm/state";
-import {
-  RemoveNodeMarkStep,
-  ReplaceStep,
-  type Step,
-} from "@tiptap/pm/transform";
+import type { Transaction } from "@tiptap/pm/state";
+import { Plugin } from "@tiptap/pm/state";
+import type { Step } from "@tiptap/pm/transform";
+import { RemoveNodeMarkStep, ReplaceStep } from "@tiptap/pm/transform";
 import { Array as Arr, Function as Fn } from "effect";
 
 /** Tells the writer why a paste left the document as it was, since nothing else says so. */

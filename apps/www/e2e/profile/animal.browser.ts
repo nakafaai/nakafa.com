@@ -1,4 +1,5 @@
-import { expect, type Page, test } from "@playwright/test";
+import type { Page } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import { seedProfile } from "@repo/backend/scripts/content/acceptance/profile";
 import app from "@repo/internationalization/dictionaries/en.json" with {
   type: "json",

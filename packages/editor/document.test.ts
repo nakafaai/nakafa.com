@@ -1,11 +1,8 @@
 // @vitest-environment jsdom
 
 import { describe, expect, it } from "@effect/vitest";
-import {
-  type DocumentRules,
-  documentExtensions,
-  documentSchema,
-} from "@repo/editor/document";
+import type { DocumentRules } from "@repo/editor/document";
+import { documentExtensions, documentSchema } from "@repo/editor/document";
 import { NO_MATH_VIEWS } from "@repo/editor/math";
 import { Editor } from "@tiptap/core";
 import { Array as Arr, Record as Rec } from "effect";

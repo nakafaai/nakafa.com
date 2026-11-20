@@ -17,7 +17,8 @@ import {
 } from "@repo/backend/test/content/release";
 import { insertTestRelease } from "@repo/backend/test/content/stage";
 import { encodeJsonText } from "@repo/utilities/json";
-import { convexTest, type TestConvex } from "convex-test";
+import type { TestConvex } from "convex-test";
+import { convexTest } from "convex-test";
 import { Array as Arr } from "effect";
 
 const BATCH_SIZE = 4;

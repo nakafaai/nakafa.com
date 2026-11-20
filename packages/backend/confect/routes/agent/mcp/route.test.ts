@@ -7,11 +7,10 @@ import { QURAN_CALL_CASES } from "@repo/backend/test/mcp/calls/quran";
 import { SEARCH_CALL_CASES } from "@repo/backend/test/mcp/calls/search";
 import { TAXONOMY_CALL_CASES } from "@repo/backend/test/mcp/calls/taxonomy";
 import { DISCOVERY_CASES } from "@repo/backend/test/mcp/discovery";
+import type { McpCase, McpRequest } from "@repo/backend/test/mcp/harness";
 import {
   MCP_SECRET,
   MCP_SECRET_ENVIRONMENT,
-  type McpCase,
-  type McpRequest,
   modernPost,
   readMcpAnswer,
   sendMcpCase,

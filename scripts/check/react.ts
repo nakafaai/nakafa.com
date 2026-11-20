@@ -1,9 +1,14 @@
 import { Array as Arr, HashMap, HashSet, MutableHashMap, Option } from "effect";
+import type {
+  ArrowFunction,
+  Expression,
+  FunctionDeclaration,
+  FunctionExpression,
+  Node,
+  SourceFile,
+  Statement,
+} from "tsrs/ast";
 import {
-  type ArrowFunction,
-  type Expression,
-  type FunctionDeclaration,
-  type FunctionExpression,
   isBinaryExpression,
   isBlock,
   isCallExpression,
@@ -21,9 +26,6 @@ import {
   isReturnStatement,
   isStringLiteral,
   isVariableDeclaration,
-  type Node,
-  type SourceFile,
-  type Statement,
 } from "tsrs/ast";
 import { isFunctionValue } from "#scripts/check/scope";
 import { children } from "#scripts/check/source";

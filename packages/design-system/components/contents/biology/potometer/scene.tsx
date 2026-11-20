@@ -8,10 +8,10 @@ import {
   Trestle,
   UprightClamp,
 } from "@repo/design-system/components/contents/biology/glassware";
+import type { Shoot } from "@repo/design-system/components/contents/biology/potometer/uptake";
 import {
   bubbleMark,
   bubbleTravel,
-  type Shoot,
 } from "@repo/design-system/components/contents/biology/potometer/uptake";
 import {
   Beaker,
@@ -28,7 +28,8 @@ import { BIOLOGY_COLORS } from "@repo/design-system/lib/material/biology";
 import { CAR_COLORS } from "@repo/design-system/lib/material/car";
 import { Array as Arr } from "effect";
 import { useRef } from "react";
-import { type Group, type Mesh, Vector2 } from "three";
+import type { Group, Mesh } from "three";
+import { Vector2 } from "three";
 
 /** Where the capillary runs, in metres: from the shoot end on the left to the beaker end on the right. */
 const CAPILLARY = { height: 0.118, left: -0.13, right: 0.17 } as const;

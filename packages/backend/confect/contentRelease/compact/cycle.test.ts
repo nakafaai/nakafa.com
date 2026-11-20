@@ -14,7 +14,8 @@ import {
   insertCompletedRelease,
 } from "@repo/backend/test/content/compact";
 import { insertTestState } from "@repo/backend/test/content/state";
-import { convexTest, type TestConvex } from "convex-test";
+import type { TestConvex } from "convex-test";
+import { convexTest } from "convex-test";
 import { DateTime, Effect } from "effect";
 
 const NOW = DateTime.toEpochMillis(DateTime.nowUnsafe());

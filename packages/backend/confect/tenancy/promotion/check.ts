@@ -10,10 +10,10 @@ import {
   COHORT_LIMIT,
   cohortNameKey,
 } from "@repo/backend/confect/tenancy/cohort";
+import type { PromotionPlanIssue } from "@repo/backend/confect/tenancy/errors";
 import {
   CohortNameTaken,
   PromotionPlanInvalid,
-  type PromotionPlanIssue,
 } from "@repo/backend/confect/tenancy/errors";
 import { lastGradeOf } from "@repo/backend/confect/tenancy/grades";
 import { destinationIssue } from "@repo/backend/confect/tenancy/promotion/destination";

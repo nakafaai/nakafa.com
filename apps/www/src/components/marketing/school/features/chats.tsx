@@ -9,7 +9,8 @@ import {
   MessageGroup,
 } from "@repo/design-system/components/ui/message";
 import { Array as Arr, Match } from "effect";
-import { type AnimationSequence, animate } from "motion";
+import type { AnimationSequence } from "motion";
+import { animate } from "motion";
 import { useEffect, useRef } from "react";
 import { useTranslations } from "use-intl";
 import {

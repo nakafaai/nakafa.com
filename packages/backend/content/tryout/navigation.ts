@@ -1,8 +1,8 @@
 import { releaseFail } from "@repo/backend/confect/contentRelease/error";
 import type { PublishedCatalog } from "@repo/backend/content/tryout/catalog";
+import type { PublishedCatalogIndex } from "@repo/backend/content/tryout/hierarchy";
 import {
   indexPublishedCatalog,
-  type PublishedCatalogIndex,
   readPublishedExamGroups,
   readPublishedGroupEntry,
   readPublishedGroupParents,

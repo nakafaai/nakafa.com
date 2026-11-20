@@ -1,10 +1,8 @@
 import { QueryResult, useQuery } from "@confect/react";
 import type { Id } from "@repo/backend/confect/_generated/id";
 import exams from "@repo/backend/confect/_generated/refs/exams";
-import {
-  DocumentEditor,
-  type DocumentEditorInstance,
-} from "@repo/design-system/components/editor/document";
+import type { DocumentEditorInstance } from "@repo/design-system/components/editor/document";
+import { DocumentEditor } from "@repo/design-system/components/editor/document";
 import { FiguresProvider } from "@repo/design-system/components/editor/figure";
 import { FormulaLabelsProvider } from "@repo/design-system/components/editor/formula";
 import {
@@ -18,15 +16,8 @@ import type { Node } from "@tiptap/pm/model";
 import type { Transaction } from "@tiptap/pm/state";
 import { cn } from "cn";
 import { Array as Arr, Option, Record as Rec } from "effect";
-import {
-  type ComponentProps,
-  createContext,
-  type ReactNode,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import type { ComponentProps, ReactNode } from "react";
+import { createContext, useEffect, useMemo, useRef, useState } from "react";
 import { ExamFigure } from "@/components/tenant/exams/figure/view";
 import { queuePictureFile } from "@/components/tenant/exams/picture";
 import { PreviewProse } from "@/components/tenant/exams/preview";

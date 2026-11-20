@@ -6,9 +6,9 @@ import { useTranslations } from "use-intl";
 import { CurrencyBranch } from "@/components/marketing/about/pricing/currency";
 import { drinkKey } from "@/components/marketing/about/pricing/display";
 import { pricingSums } from "@/components/marketing/about/pricing/sums";
+import type { PricingCurrency } from "@/lib/pricing/monthly";
 import {
   getProMonthlyPricingFor,
-  type PricingCurrency,
   PricingCurrencySchema,
 } from "@/lib/pricing/monthly";
 

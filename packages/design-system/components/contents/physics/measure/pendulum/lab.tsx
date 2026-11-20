@@ -32,7 +32,8 @@ import { INSTRUMENT_COLORS } from "@repo/design-system/lib/material/instrument";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Schema } from "effect";
 import type p5 from "p5";
-import { type ReactNode, useState } from "react";
+import type { ReactNode } from "react";
+import { useState } from "react";
 
 /** Where the lengths are measured to: the top of the bob, or its centre. */
 const MeasureSchema = Schema.Literals(["top", "centre"]);

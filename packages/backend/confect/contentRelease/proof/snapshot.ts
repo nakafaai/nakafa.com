@@ -1,12 +1,10 @@
 "use node";
 
 import type { SignedContentRelease } from "@nakafa/aksara-contracts/release";
+import type { ContentSnapshotKind } from "@nakafa/aksara-contracts/release/snapshot/scope";
+import { ContentSnapshotKindSchema } from "@nakafa/aksara-contracts/release/snapshot/scope";
+import type { ContentSnapshotSet } from "@nakafa/aksara-contracts/release/snapshot/spec";
 import {
-  type ContentSnapshotKind,
-  ContentSnapshotKindSchema,
-} from "@nakafa/aksara-contracts/release/snapshot/scope";
-import {
-  type ContentSnapshotSet,
   hasSameContentSnapshots,
   invertContentSnapshots,
 } from "@nakafa/aksara-contracts/release/snapshot/spec";

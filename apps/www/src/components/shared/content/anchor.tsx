@@ -1,9 +1,7 @@
 "use client";
 
-import {
-  MarkdownPageLink,
-  type MarkdownPageLinkProps,
-} from "@repo/design-system/components/markdown/anchor";
+import type { MarkdownPageLinkProps } from "@repo/design-system/components/markdown/anchor";
+import { MarkdownPageLink } from "@repo/design-system/components/markdown/anchor";
 import { normalizeLocalizedInternalHref } from "@repo/internationalization/src/href";
 import { SITE_ORIGIN } from "@repo/seo/origin";
 import type { ReactNode } from "react";

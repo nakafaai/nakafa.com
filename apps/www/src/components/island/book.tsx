@@ -17,9 +17,9 @@ import {
   SquareLock02Icon,
   StarIcon,
 } from "@hugeicons/core-free-icons";
+import type { BlockKey } from "@repo/backend/confect/island/blocks";
 import {
   BLOCK_KEYS,
-  type BlockKey,
   isOpen,
   opensAt,
 } from "@repo/backend/confect/island/blocks";
@@ -33,7 +33,8 @@ import { Array as Arr, Option, Result } from "effect";
 import { useTranslations } from "use-intl";
 import { BlockIcon, SpeciesIcon } from "@/components/island/icon";
 import { panelVariants } from "@/components/island/panel";
-import { type Shelf, useGame } from "@/components/island/store";
+import type { Shelf } from "@/components/island/store";
+import { useGame } from "@/components/island/store";
 import { SPECIES } from "@/lib/island/fauna/species";
 import { nextTierOf, tierOpensAt, upgradeOf } from "@/lib/island/home";
 import { ITEM_KEYS, itemOpensAt } from "@/lib/island/items";

@@ -1,10 +1,6 @@
 import { elementById } from "@repo/design-system/lib/element";
-import {
-  MISSING,
-  type Place,
-  placed,
-  WAITING,
-} from "@repo/design-system/lib/toy/scatter";
+import type { Place } from "@repo/design-system/lib/toy/scatter";
+import { MISSING, placed, WAITING } from "@repo/design-system/lib/toy/scatter";
 import { Schema } from "effect";
 
 /**

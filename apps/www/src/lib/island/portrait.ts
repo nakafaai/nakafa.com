@@ -1,6 +1,7 @@
 import { SPAN } from "@repo/backend/confect/island/world";
 import { Array as Arr, Schema } from "effect";
-import { DISTANCE, type Orbit } from "@/lib/island/camera";
+import type { Orbit } from "@/lib/island/camera";
+import { DISTANCE } from "@/lib/island/camera";
 import { viewProjectionOf } from "@/lib/island/matrix";
 import { shoreOf } from "@/lib/island/terrain";
 import { SEA_LEVEL } from "@/lib/island/world";

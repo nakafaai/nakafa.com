@@ -3,10 +3,10 @@ import {
   DatabaseWriter,
   MutationCtx as MutationCtxService,
 } from "@repo/backend/confect/_generated/services";
+import type { UserCleanupError } from "@repo/backend/confect/auth/cleanup/spec";
 import {
   toUserCleanupError,
   tryUserCleanup,
-  type UserCleanupError,
 } from "@repo/backend/confect/auth/cleanup/spec";
 import { cleanupSource } from "@repo/backend/confect/privacy/spec";
 import { workflow } from "@repo/backend/confect/workflow";

@@ -12,10 +12,8 @@ import {
   POPULARITY_SCOPE,
   POPULARITY_SECTION,
 } from "@repo/backend/confect/contents/popularity";
-import {
-  type RecordContentViewArgs,
-  toContentViewIoError,
-} from "@repo/backend/confect/contents/views/spec";
+import type { RecordContentViewArgs } from "@repo/backend/confect/contents/views/spec";
+import { toContentViewIoError } from "@repo/backend/confect/contents/views/spec";
 import type { ContentViewTarget } from "@repo/backend/confect/contents/views/target";
 import type { ContentViewer } from "@repo/backend/confect/contents/views/viewer";
 import { Duration, Effect, flow, Struct } from "effect";

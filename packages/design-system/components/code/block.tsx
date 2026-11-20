@@ -1,8 +1,8 @@
 import { codeFrameVariants } from "@repo/design-system/components/code/variants";
 import { useControllableState } from "@repo/design-system/hooks/controllable";
+import type { CodeBlockData } from "@repo/design-system/lib/code/context";
 import {
   CodeBlockContext,
-  type CodeBlockData,
   useCodeBlockContextValue,
 } from "@repo/design-system/lib/code/context";
 import type { HTMLAttributes } from "react";

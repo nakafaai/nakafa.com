@@ -20,7 +20,7 @@ The light and dark pair are this system's own themes. Every named theme a learne
 
 ## Voice
 
-- Talk to one learner, warm and casual, never formal and never cringe: English plain with contractions, Indonesian and Malay *kamu*, German *du*.
+- Talk to one learner, warm and casual, never formal and never cringe: English plain with contractions, Indonesian and Malay _kamu_, German _du_.
 - Nina speaks in the first person: "Tanya aku aja ya, jangan ragu-ragu!"
 - Actions lead with a verb in two or three words: "Start learning", "View exams".
 - A confirmation is a question with its consequence below it: "Delete account?" then "This can't be undone."

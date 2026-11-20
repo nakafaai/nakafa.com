@@ -15,11 +15,8 @@ import {
 } from "@repo/backend/test/classroom";
 import { IBU } from "@repo/backend/test/guardians";
 import { schoolViews } from "@repo/backend/test/inbox";
-import {
-  scheduledJobs,
-  TENANCY_NOW,
-  type tenancyFixture,
-} from "@repo/backend/test/tenancy";
+import type { tenancyFixture } from "@repo/backend/test/tenancy";
+import { scheduledJobs, TENANCY_NOW } from "@repo/backend/test/tenancy";
 import { Array as Arr, Duration, Effect, Struct } from "effect";
 
 type Fixture = Effect.Success<typeof tenancyFixture>;

@@ -34,8 +34,10 @@ import { VisualFact } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { getColor } from "@repo/design-system/lib/color";
 import { Array as Arr, Option, Schema } from "effect";
-import { type ReactNode, Suspense, useRef, useState } from "react";
-import { Color, type Group, type Mesh } from "three";
+import type { ReactNode } from "react";
+import { Suspense, useRef, useState } from "react";
+import type { Group, Mesh } from "three";
+import { Color } from "three";
 import { useFormatter } from "use-intl";
 
 /** How long one Bohr radius is in the scene. */

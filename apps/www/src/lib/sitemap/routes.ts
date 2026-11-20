@@ -6,7 +6,8 @@ import {
   readPublishedTryoutSitemap,
   readPublishedTryoutSitemapCount,
 } from "@/lib/content/tryout/sitemap";
-import { readSitemapDates, type SitemapDates } from "@/lib/sitemap/dates";
+import type { SitemapDates } from "@/lib/sitemap/dates";
+import { readSitemapDates } from "@/lib/sitemap/dates";
 import { readFamilyPartition, routeToPath } from "@/lib/sitemap/family";
 import {
   getSitemapPageDescriptor,

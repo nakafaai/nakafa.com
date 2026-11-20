@@ -1,6 +1,7 @@
 import { SHOULDER } from "@repo/mascot/nina/body";
 import { LookSchema, MoodSchema } from "@repo/mascot/nina/face";
-import { type Curve, CurveSchema, flip } from "@repo/mascot/nina/limb";
+import type { Curve } from "@repo/mascot/nina/limb";
+import { CurveSchema, flip } from "@repo/mascot/nina/limb";
 import type { Mark } from "@repo/mascot/nina/mark";
 import type { Shape } from "@repo/mascot/shape";
 import { Array as Arr, Predicate, Schema } from "effect";

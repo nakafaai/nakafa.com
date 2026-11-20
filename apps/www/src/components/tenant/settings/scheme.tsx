@@ -25,13 +25,15 @@ import { startTransition, use, useId, useState } from "react";
 import { useTranslations } from "use-intl";
 import { useTenant } from "@/components/tenant/context";
 import { SchoolHeaderAdd } from "@/components/tenant/header";
+import type {
+  SchemeDraft,
+  SchemeVersion,
+} from "@/components/tenant/settings/versions";
 import {
   amendSchemeChange,
   checkedScheme,
   draftOfScheme,
   nextEffectiveFrom,
-  type SchemeDraft,
-  type SchemeVersion,
   SchemeVersionsContext,
   storeSchemeChange,
 } from "@/components/tenant/settings/versions";

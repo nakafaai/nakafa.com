@@ -11,7 +11,8 @@ import {
   PopoverTrigger,
 } from "@repo/design-system/components/ui/popover";
 import { typeIntoField } from "@repo/design-system/lib/arabic/type";
-import { type RefObject, useState } from "react";
+import type { RefObject } from "react";
+import { useState } from "react";
 import { useTranslations } from "use-intl";
 import { usePaperLocked } from "@/components/exams/sitting/lock";
 

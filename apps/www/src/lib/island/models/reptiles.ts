@@ -1,8 +1,10 @@
 import { Array as Arr } from "effect";
 import type { Coat, Species } from "@/lib/island/models/coat";
 import { eyesOf } from "@/lib/island/models/features";
-import { type Face, mirrored, type Vec } from "@/lib/island/models/parts";
-import { ball, type Ring, rod, slab, tube } from "@/lib/island/models/solids";
+import type { Face, Vec } from "@/lib/island/models/parts";
+import { mirrored } from "@/lib/island/models/parts";
+import type { Ring } from "@/lib/island/models/solids";
+import { ball, rod, slab, tube } from "@/lib/island/models/solids";
 
 /** How much longer than a gecko's a lizard's snout is: a crocodile's and a monitor's run long. */
 const SNOUTS: Partial<Record<Species["key"], number>> = {

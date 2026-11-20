@@ -12,20 +12,20 @@ import {
   ACTIVE_APP_LOCALE_CODES,
   ArtifactLocaleSchema,
 } from "@nakafa/aksara-contracts/locale";
+import type {
+  RollbackPage,
+  RollbackRecord,
+} from "@nakafa/aksara-contracts/release/rollback/spec";
 import {
   canonicalizeRollbackPage,
   canonicalizeRollbackSnapshotEntry,
   MAX_ROLLBACK_PAGE_BYTES,
-  type RollbackPage,
-  type RollbackRecord,
   RollbackSnapshotEntrySchema,
 } from "@nakafa/aksara-contracts/release/rollback/spec";
 import { inheritContentSnapshots } from "@nakafa/aksara-contracts/release/snapshot/spec";
 import type { RendererDomain } from "@nakafa/aksara-contracts/renderer/domain";
-import {
-  type ContentTreeElement,
-  canonicalizeContentTree,
-} from "@nakafa/aksara-contracts/tree";
+import type { ContentTreeElement } from "@nakafa/aksara-contracts/tree";
+import { canonicalizeContentTree } from "@nakafa/aksara-contracts/tree";
 import confectSchema from "@repo/backend/confect/_generated/schema";
 import { rollbackRecord } from "@repo/backend/confect/contentRelease/rollback/state";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";

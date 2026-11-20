@@ -3,16 +3,16 @@ import { Id } from "@repo/backend/confect/_generated/id";
 import { Duration, Effect, Result, Schema } from "effect";
 import { useMemoryActions } from "@/components/user/settings/memory/actions";
 import { reportMemoryFailure } from "@/components/user/settings/memory/failure";
-import {
-  draftOf,
-  type Memory,
-  type MemoryDraft,
+import type {
+  Memory,
+  MemoryDraft,
 } from "@/components/user/settings/memory/list";
-import {
-  createMemoryStore,
-  type MemoryStore,
-  type MemoryStoreApi,
+import { draftOf } from "@/components/user/settings/memory/list";
+import type {
+  MemoryStore,
+  MemoryStoreApi,
 } from "@/components/user/settings/memory/store";
+import { createMemoryStore } from "@/components/user/settings/memory/store";
 
 /** The server's answer to the next change, which each test sets. */
 const server = vi.hoisted(() => ({ answer: vi.fn() }));

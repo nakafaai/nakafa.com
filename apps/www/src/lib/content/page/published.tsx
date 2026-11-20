@@ -5,11 +5,11 @@ import { PublicPageProjectionSchema } from "@nakafa/aksara-contracts/projection/
 import { PublicContentRuntimeFoundSchema } from "@nakafa/aksara-contracts/runtime/spec";
 import { Effect, Function as Fn, Option, Schema } from "effect";
 import { readRenderedBody } from "@/lib/content/published/body";
-import {
-  type PublishedContentData,
-  type PublishedContentRouteInput,
-  readCurrentPublishedContent,
+import type {
+  PublishedContentData,
+  PublishedContentRouteInput,
 } from "@/lib/content/published/exchange";
+import { readCurrentPublishedContent } from "@/lib/content/published/exchange";
 import { decodePublishedPage } from "@/lib/content/published/projection";
 
 /** Current public Page identity resolved from signed runtime state. */

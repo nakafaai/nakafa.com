@@ -1,11 +1,8 @@
-import {
-  type CommandProps,
-  type Editor,
-  Extension,
-  findParentNode,
-} from "@tiptap/core";
+import type { CommandProps, Editor } from "@tiptap/core";
+import { Extension, findParentNode } from "@tiptap/core";
 import type { Node as ProseNode } from "@tiptap/pm/model";
-import { NodeSelection, type Selection } from "@tiptap/pm/state";
+import type { Selection } from "@tiptap/pm/state";
+import { NodeSelection } from "@tiptap/pm/state";
 import { Array as Arr, Option, Schema } from "effect";
 
 /** The nodes a writer handles as one object: a table, a picture, and a formula of either kind. */

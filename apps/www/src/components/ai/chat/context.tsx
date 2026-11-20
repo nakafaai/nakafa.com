@@ -3,27 +3,21 @@ import nina from "@repo/backend/confect/_generated/refs/nina";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { useRequired } from "@repo/design-system/hooks/required";
 import { DateTime, Effect, Fiber } from "effect";
-import {
-  createContext,
-  type PropsWithChildren,
-  useLayoutEffect,
-  useRef,
-  useState,
-} from "react";
+import type { PropsWithChildren } from "react";
+import { createContext, useLayoutEffect, useRef, useState } from "react";
 import { useStore } from "zustand";
 import { readChatAccess } from "@/components/ai/chat/access";
 import { isChatBusy } from "@/components/ai/chat/busy";
 import { optimisticCancel } from "@/components/ai/chat/cancel";
 import { useConversation } from "@/components/ai/chat/conversation";
 import { draftMessage } from "@/components/ai/chat/messages";
-import {
-  type ChatStoreApi,
-  ChatStoreContext,
-} from "@/components/ai/chat/store";
+import type { ChatStoreApi } from "@/components/ai/chat/store";
+import { ChatStoreContext } from "@/components/ai/chat/store";
 import { useAi } from "@/components/ai/context";
 import { NinaConnectionError } from "@/components/ai/feedback";
 import { restoreRefusedText } from "@/components/ai/store/draft";
-import { type NinaDraft, useNinaSubmission } from "@/components/ai/submission";
+import type { NinaDraft } from "@/components/ai/submission";
+import { useNinaSubmission } from "@/components/ai/submission";
 import { useAuthSession, useAuthSessionStore } from "@/components/auth/session";
 import { useViewer } from "@/lib/identity/client";
 

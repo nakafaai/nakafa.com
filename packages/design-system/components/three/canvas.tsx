@@ -4,11 +4,11 @@ import {
   useReducedMotion,
 } from "@mantine/hooks";
 import { AdaptiveDpr } from "@react-three/drei";
+import type { CanvasProps } from "@react-three/fiber";
 import {
   addAfterEffect,
   addEffect,
   Canvas,
-  type CanvasProps,
   useFrame,
   useStore,
   useThree,
@@ -31,9 +31,8 @@ import { getPowerPreference } from "@repo/design-system/lib/device";
 import { createFramePace } from "@repo/design-system/lib/pace";
 import { ClientOnly } from "@tanstack/react-router";
 import { cn } from "cn";
+import type { ComponentProps, ReactNode } from "react";
 import {
-  type ComponentProps,
-  type ReactNode,
   Suspense,
   useEffect,
   useLayoutEffect,

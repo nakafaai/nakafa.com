@@ -2,7 +2,8 @@
 
 import { useRequired } from "@repo/design-system/hooks/required";
 import { Effect, Fiber, Option } from "effect";
-import { type GameStoreApi, GameStoreContext } from "@/components/island/store";
+import type { GameStoreApi } from "@/components/island/store";
+import { GameStoreContext } from "@/components/island/store";
 import { weatherOf } from "@/lib/island/sky";
 
 /**

@@ -1,9 +1,7 @@
 "use client";
 
-import {
-  type Exponential,
-  resolveExponential,
-} from "@repo/design-system/components/contents/mathematics/exponential";
+import type { Exponential } from "@repo/design-system/components/contents/mathematics/exponential";
+import { resolveExponential } from "@repo/design-system/components/contents/mathematics/exponential";
 import { ExponentialPlot } from "@repo/design-system/components/contents/mathematics/exponential/client";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import {

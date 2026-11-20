@@ -1,4 +1,5 @@
-import { type CDPSession, expect, test } from "@playwright/test";
+import type { CDPSession } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import { Array as Arr, Duration, Effect, Option } from "effect";
 import { pinnedRoutes } from "@/e2e/support/corpus";
 import { withObservedPageErrors } from "@/e2e/support/observe";

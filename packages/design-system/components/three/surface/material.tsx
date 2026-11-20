@@ -1,7 +1,8 @@
 import type { Surface } from "@repo/design-system/components/three/surface/detail";
 import { surfaceMaps } from "@repo/design-system/components/three/surface/maps";
 import { useEffect, useMemo } from "react";
-import { FrontSide, type Side } from "three";
+import type { Side } from "three";
+import { FrontSide } from "three";
 
 /**
  * A physically based material with the fine detail of a real surface:

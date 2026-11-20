@@ -12,15 +12,15 @@ import {
   mix,
   vignette,
 } from "@repo/design-system/components/contents/physics/canvas/paint";
+import type { Plan } from "@repo/design-system/components/contents/physics/canvas/town";
 import {
   fitPlan,
-  type Plan,
   paintWalker,
   planPoint,
 } from "@repo/design-system/components/contents/physics/canvas/town";
+import type { ReleasePoint } from "@repo/design-system/components/contents/physics/kinematics/sling/whirl";
 import {
   RELEASE_ANGLES,
-  type ReleasePoint,
   ReleasePointSchema,
   releaseTime,
   slingPlace,
@@ -48,7 +48,8 @@ import { ROAD_COLORS } from "@repo/design-system/lib/material/road";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr, Schema } from "effect";
 import type p5 from "p5";
-import { type ReactNode, useState } from "react";
+import type { ReactNode } from "react";
+import { useState } from "react";
 
 /** How far past the release the ball flies before the run starts again, in seconds. */
 const FLIGHT_SECONDS = 0.5;

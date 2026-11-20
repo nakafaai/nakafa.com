@@ -5,18 +5,15 @@ import {
 } from "@repo/design-system/components/contents/biology/assets";
 import { useBiologyColors } from "@repo/design-system/components/contents/biology/context";
 import type { BiologySceneColors } from "@repo/design-system/components/contents/biology/data";
-import {
-  BiologyLabFrame,
-  type BiologyLabProps,
-} from "@repo/design-system/components/contents/biology/lab";
+import type { BiologyLabProps } from "@repo/design-system/components/contents/biology/lab";
+import { BiologyLabFrame } from "@repo/design-system/components/contents/biology/lab";
 import { FloatingGroup } from "@repo/design-system/components/contents/biology/motion";
 import type { NarrowCameraPose } from "@repo/design-system/lib/geometry/camera";
 import { Array as Arr } from "effect";
 import { useMemo } from "react";
+import type { Group, Material } from "three";
 import {
   Box3,
-  type Group,
-  type Material,
   Mesh,
   MeshStandardMaterial,
   SRGBColorSpace,

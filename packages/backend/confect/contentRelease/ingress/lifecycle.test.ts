@@ -35,7 +35,8 @@ import {
   prepareContentProof,
   recomputeContentProof,
 } from "@repo/backend/test/content/verify";
-import { convexTest, type TestConvex } from "convex-test";
+import type { TestConvex } from "convex-test";
+import { convexTest } from "convex-test";
 import { Effect, Schema } from "effect";
 
 vi.mock("@repo/backend/content/trust", async () => {

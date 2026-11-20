@@ -6,7 +6,8 @@ import { BUILD_BATCH } from "@repo/backend/confect/island/mutations.spec";
 import { useRequired } from "@repo/design-system/hooks/required";
 import { useRouter } from "@tanstack/react-router";
 import { Array as Arr, DateTime, Effect, Result } from "effect";
-import { type GameStoreApi, GameStoreContext } from "@/components/island/store";
+import type { GameStoreApi } from "@/components/island/store";
+import { GameStoreContext } from "@/components/island/store";
 
 /** How long the learner's building rests before its edits go to the server. */
 const QUIET = 600;

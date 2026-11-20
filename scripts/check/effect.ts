@@ -22,13 +22,12 @@ import { promiseCandidates } from "#scripts/check/promise";
 import { covers, RULES, Rule } from "#scripts/check/rules";
 import { effectRunnerViolation } from "#scripts/check/runtime";
 import { shapeCandidates } from "#scripts/check/shapes";
+import type { parseSources, RepositorySource } from "#scripts/check/source";
 import {
   descendants,
   isGenerated,
   openCompiler,
-  type parseSources,
   projectConfig,
-  type RepositorySource,
   TestCompilerError,
 } from "#scripts/check/source";
 import { stateCandidates } from "#scripts/check/state";

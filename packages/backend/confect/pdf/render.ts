@@ -5,12 +5,12 @@ import interRanges from "@fontsource-variable/inter/unicode.json" with {
 import arabicRanges from "@fontsource-variable/noto-naskh-arabic/unicode.json" with {
   type: "json",
 };
+import type { PdfFrame } from "@repo/backend/confect/pdf/frame";
 import {
   PAGE_SIDE,
   PageFooter,
   PageHeader,
   PDF_FONT,
-  type PdfFrame,
 } from "@repo/backend/confect/pdf/frame";
 import { THEME_COMPATIBILITY_COLORS } from "@repo/palette/colors";
 import { COMPANY_IDENTITY } from "@repo/seo/company";

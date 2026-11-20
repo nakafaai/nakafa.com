@@ -1,10 +1,8 @@
 import type { GenericId } from "@confect/core";
 import type { TenantPromotionsDoc } from "@repo/backend/confect/_generated/docs";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
-import {
-  LIVE_PROMOTION_STATES,
-  type PromotionStatus,
-} from "@repo/backend/confect/tenancy/promotion/schema";
+import type { PromotionStatus } from "@repo/backend/confect/tenancy/promotion/schema";
+import { LIVE_PROMOTION_STATES } from "@repo/backend/confect/tenancy/promotion/schema";
 import { Array as Arr, Effect, Option } from "effect";
 
 /** The promotion of a source period in one state, if there is one. */

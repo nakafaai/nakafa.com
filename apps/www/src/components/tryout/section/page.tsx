@@ -1,6 +1,7 @@
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { useRequired } from "@repo/design-system/hooks/required";
-import { type ComponentProps, createContext, type ReactNode } from "react";
+import type { ComponentProps, ReactNode } from "react";
+import { createContext } from "react";
 import type { PlayerMode } from "@/components/player/mode";
 import type {
   TryoutSectionInitialState,

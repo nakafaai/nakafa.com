@@ -1,4 +1,5 @@
-import { expect, type Page, test } from "@playwright/test";
+import type { Page } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import { Effect, Option, String as Str } from "effect";
 import { saved, trackChanges } from "@/e2e/support/changes";
 import { assignHomeroom } from "@/e2e/support/homeroom";

@@ -10,7 +10,8 @@ import { Placeholder } from "@tiptap/extensions";
 import type { Transaction } from "@tiptap/pm/state";
 import { EditorContent, EditorContext, useEditor } from "@tiptap/react";
 import { cn } from "cn";
-import { type ReactNode, useMemo, useState } from "react";
+import type { ReactNode } from "react";
+import { useMemo, useState } from "react";
 
 /** The focus callback of an editor that has none, so the editor always calls one. */
 const noFocus = () => undefined;

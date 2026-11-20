@@ -1,12 +1,10 @@
+import type { QuranRuntimeVerse } from "@nakafa/aksara-contracts/quran/snapshot/row";
 import {
   QuranChunkRowSchema,
-  type QuranRuntimeVerse,
   QuranSearchRowSchema,
 } from "@nakafa/aksara-contracts/quran/snapshot/row";
-import {
-  type QuranPublicationOperation,
-  quranPublicationError,
-} from "@repo/backend/client/quran/publication";
+import type { QuranPublicationOperation } from "@repo/backend/client/quran/publication";
+import { quranPublicationError } from "@repo/backend/client/quran/publication";
 import {
   PublishedQuranRowSchema,
   PublishedQuranSurahSchema,

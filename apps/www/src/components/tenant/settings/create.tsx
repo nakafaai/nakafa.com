@@ -1,7 +1,8 @@
 import { QueryResult, useMutation, useQuery } from "@confect/react";
 import type { ActiveAppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
-import { type UnitLevel, UnitName } from "@repo/backend/confect/tenancy/schema";
+import type { UnitLevel } from "@repo/backend/confect/tenancy/schema";
+import { UnitName } from "@repo/backend/confect/tenancy/schema";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Button } from "@repo/design-system/components/ui/button";
 import {

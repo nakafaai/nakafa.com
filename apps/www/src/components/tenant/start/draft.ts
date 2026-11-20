@@ -2,7 +2,8 @@ import { useMutation } from "@confect/react";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { Effect, Option } from "effect";
-import { applyAnswer, type StartAnswer } from "@/components/tenant/start/state";
+import type { StartAnswer } from "@/components/tenant/start/state";
+import { applyAnswer } from "@/components/tenant/start/state";
 import { reportClientException } from "@/lib/analytics/client";
 
 /**

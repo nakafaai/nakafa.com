@@ -9,12 +9,12 @@ import {
   noteInvite,
 } from "@repo/backend/confect/notifications/inbox";
 import { Email } from "@repo/backend/confect/tenancy/schema";
+import type { Fixture } from "@repo/backend/test/inbox";
 import {
   addPerson,
   burstOf,
   consumeSchool,
   cursors,
-  type Fixture,
   inboxRuns,
   inviteAt,
   invitedEntry,

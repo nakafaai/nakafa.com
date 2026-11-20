@@ -1,7 +1,5 @@
-import {
-  filterOutOrphanedToolMessages,
-  type MessageDoc,
-} from "@convex-dev/agent";
+import type { MessageDoc } from "@convex-dev/agent";
+import { filterOutOrphanedToolMessages } from "@convex-dev/agent";
 import type { Docs } from "@repo/backend/confect/_generated/docs";
 import {
   readMessageFromAction,

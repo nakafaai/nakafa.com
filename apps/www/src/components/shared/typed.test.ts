@@ -1,7 +1,9 @@
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import { MutableRef, Option } from "effect";
-import { act, type ChangeEvent, createElement, useState } from "react";
-import { hydrateRoot, type Root } from "react-dom/client";
+import type { ChangeEvent } from "react";
+import { act, createElement, useState } from "react";
+import type { Root } from "react-dom/client";
+import { hydrateRoot } from "react-dom/client";
 import { renderToString } from "react-dom/server";
 import { useEarlyTyping } from "@/components/shared/typed";
 

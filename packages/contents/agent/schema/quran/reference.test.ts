@@ -1,10 +1,10 @@
 import { describe, expect, it } from "@effect/vitest";
 import type { ActiveAppLocaleCode } from "@nakafa/aksara-contracts/locale";
-import {
-  type QuranEmbeddedSourceId,
-  type QuranExternalSourceId,
-  quranTranslationSourceId,
+import type {
+  QuranEmbeddedSourceId,
+  QuranExternalSourceId,
 } from "@nakafa/aksara-contracts/quran/identity";
+import { quranTranslationSourceId } from "@nakafa/aksara-contracts/quran/identity";
 import { NakafaAgentQuranReferenceSchema } from "@repo/contents/agent/schema/quran/reference";
 import { Schema } from "effect";
 

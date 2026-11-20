@@ -26,14 +26,14 @@ import { namedOptions } from "@/components/shared/table/filter";
 import { TablePages } from "@/components/shared/table/pages";
 import { EmptyState } from "@/components/state/empty";
 import { EmptyNina } from "@/components/state/nina";
+import type { LibraryFolder } from "@/components/tenant/classes/library/folder";
 import {
   folderPath,
-  type LibraryFolder,
   purgeFolderUpdate,
   restoreFolderUpdate,
 } from "@/components/tenant/classes/library/folder";
+import type { LibraryItem } from "@/components/tenant/classes/library/optimistic";
 import {
-  type LibraryItem,
   purgeItemUpdate,
   restoreItemUpdate,
 } from "@/components/tenant/classes/library/optimistic";

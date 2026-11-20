@@ -1,8 +1,6 @@
 import { assert } from "@effect/vitest";
-import {
-  type ContentFamily,
-  ContentFamilySchema,
-} from "@nakafa/aksara-contracts/content";
+import type { ContentFamily } from "@nakafa/aksara-contracts/content";
+import { ContentFamilySchema } from "@nakafa/aksara-contracts/content";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import {
@@ -10,10 +8,8 @@ import {
   testReleaseJson,
   testUpsertJson,
 } from "@repo/backend/test/content/release";
-import {
-  insertZeroRelease,
-  type TestIdentity,
-} from "@repo/backend/test/content/state";
+import type { TestIdentity } from "@repo/backend/test/content/state";
+import { insertZeroRelease } from "@repo/backend/test/content/state";
 
 /** Inserts one terminal release with an exact changed-item count. */
 export async function insertCompletedRelease(

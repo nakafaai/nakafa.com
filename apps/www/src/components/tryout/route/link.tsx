@@ -3,7 +3,8 @@
 import { Option } from "effect";
 import type { ComponentProps } from "react";
 import { getTryoutPageTarget } from "@/components/tryout/route/path";
-import { Link, type LinkPreload } from "@/lib/routing/link";
+import type { LinkPreload } from "@/lib/routing/link";
+import { Link } from "@/lib/routing/link";
 
 /**
  * A link to one try-out page, which carries the attempt of the page when one is

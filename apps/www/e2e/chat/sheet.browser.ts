@@ -1,4 +1,5 @@
-import { expect, type Route, test } from "@playwright/test";
+import type { Route } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import { Effect, MutableList, MutableRef } from "effect";
 import { LESSON_PATH } from "@/e2e/support/chat";
 import { withObservedPageErrors } from "@/e2e/support/observe";

@@ -1,10 +1,12 @@
 import type { Interaction } from "@nakafa/aksara-contracts/assessment/interaction";
 import type { InteractionKey } from "@nakafa/aksara-contracts/assessment/key";
+import type {
+  ExamCell,
+  ExamPair,
+  ExamResponse,
+} from "@repo/backend/confect/assessment/response";
 import {
   chosenOptions,
-  type ExamCell,
-  type ExamPair,
-  type ExamResponse,
   madePairs,
   markedCells,
   NO_RESPONSE,

@@ -1,21 +1,21 @@
 import { Line } from "@react-three/drei";
 import { useFrame, useThree } from "@react-three/fiber";
 import { DrawnInlineMath } from "@repo/design-system/components/markdown/drawn";
+import type { CoordinateFrame } from "@repo/design-system/components/three/frame";
 import {
-  type CoordinateFrame,
   createAxisGeometry,
   createSymmetricFrame,
 } from "@repo/design-system/components/three/frame";
-import {
-  AXIS_NAMES,
-  type AxisName,
-} from "@repo/design-system/components/three/names";
+import type { AxisName } from "@repo/design-system/components/three/names";
+import { AXIS_NAMES } from "@repo/design-system/components/three/names";
 import { SceneHtml } from "@repo/design-system/components/three/overlay";
 import type { Point3 } from "@repo/design-system/lib/geometry/point";
 import { AXIS_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr } from "effect";
-import { type ComponentProps, useCallback, useMemo, useRef } from "react";
-import { Frustum, type Group, Matrix4, Vector2, Vector3 } from "three";
+import type { ComponentProps } from "react";
+import { useCallback, useMemo, useRef } from "react";
+import type { Group } from "three";
+import { Frustum, Matrix4, Vector2, Vector3 } from "three";
 
 const LABEL_EDGE_SPACE = 4;
 const LABEL_GAP = 12;

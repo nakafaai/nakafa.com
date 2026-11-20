@@ -2,13 +2,12 @@ import { FavouriteIcon } from "@hugeicons/core-free-icons";
 import { useIntersection } from "@mantine/hooks";
 import { Image } from "@repo/design-system/components/image";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { cva, type VariantProps } from "class-variance-authority";
+import type { VariantProps } from "class-variance-authority";
+import { cva } from "class-variance-authority";
 import { Array as Arr } from "effect";
 import { useTranslations } from "use-intl";
-import {
-  type School,
-  schools,
-} from "@/components/marketing/about/constants/schools";
+import type { School } from "@/components/marketing/about/constants/schools";
+import { schools } from "@/components/marketing/about/constants/schools";
 import { MarketingSection } from "@/components/marketing/shared/section";
 
 /** The fill of a ribbon. Each fill is a token, so both themes keep it. */

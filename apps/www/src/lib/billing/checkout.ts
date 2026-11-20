@@ -2,13 +2,14 @@ import type { Ref } from "@confect/core";
 import { useAction } from "@confect/react";
 import type { ActiveAppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import billing from "@repo/backend/confect/_generated/refs/billing";
-import { type ToastCopy, toast } from "@repo/design-system/lib/toast/notify";
+import type { ToastCopy } from "@repo/design-system/lib/toast/notify";
+import { toast } from "@repo/design-system/lib/toast/notify";
 import { useConvex } from "convex/react";
 import { Array as Arr, Effect, Option, Schema } from "effect";
 import { useRef, useState, useTransition } from "react";
 import { reportClientException } from "@/lib/analytics/client";
+import type { BillingDestination } from "@/lib/billing/navigation";
 import {
-  type BillingDestination,
   billingNavigationProgram,
   checkoutReturnUrl,
 } from "@/lib/billing/navigation";

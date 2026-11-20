@@ -1,9 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
-import {
-  type SchoolOrder,
-  schoolPeriod,
-} from "@repo/backend/confect/billing/quote";
+import type { SchoolOrder } from "@repo/backend/confect/billing/quote";
+import { schoolPeriod } from "@repo/backend/confect/billing/quote";
 import {
   applyInvoicePaid,
   ensureSchoolAccount,

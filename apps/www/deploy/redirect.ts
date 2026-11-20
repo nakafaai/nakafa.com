@@ -1,4 +1,5 @@
-import { Ruleset, type Zone } from "@alchemy.run/cloudflare";
+import type { Zone } from "@alchemy.run/cloudflare";
+import { Ruleset } from "@alchemy.run/cloudflare";
 import { LOCALES } from "@repo/internationalization/src/locale";
 import { Array as Arr, Effect } from "effect";
 import { NAKAFA_ZONE, OWN_HOST_LABELS, ownHost } from "#www/deploy/stage";

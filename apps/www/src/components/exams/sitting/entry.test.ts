@@ -2,8 +2,8 @@ import { describe, expect, it } from "@effect/vitest";
 import { Id } from "@repo/backend/confect/_generated/id";
 import { DeviceId } from "@repo/backend/confect/exams/sittings/schema";
 import { Option, Schema } from "effect";
+import type { Admission } from "@/components/exams/sitting/entry";
 import {
-  type Admission,
   answerRefusalOf,
   entryRefusalMessage,
   failureCopyOf,

@@ -13,7 +13,8 @@ import {
   waterbird,
 } from "@/lib/island/models/birds";
 import type { Bloom } from "@/lib/island/models/blooms";
-import { type Coat, coatOf, type Species } from "@/lib/island/models/coat";
+import type { Coat, Species } from "@/lib/island/models/coat";
+import { coatOf } from "@/lib/island/models/coat";
 import {
   bee,
   beetle,
@@ -26,13 +27,8 @@ import { FLOWERS } from "@/lib/island/models/flowers";
 import { GREENS } from "@/lib/island/models/greens";
 import { PLANT_HEIGHTS } from "@/lib/island/models/heights";
 import { LENGTHS } from "@/lib/island/models/lengths";
-import {
-  boundsOf,
-  type Face,
-  meters,
-  type Rig,
-  rigged,
-} from "@/lib/island/models/parts";
+import type { Face, Rig } from "@/lib/island/models/parts";
+import { boundsOf, meters, rigged } from "@/lib/island/models/parts";
 import { primate } from "@/lib/island/models/primates";
 import { frog, lizard, snake } from "@/lib/island/models/reptiles";
 import { scaled, tint } from "@/lib/island/models/solids";

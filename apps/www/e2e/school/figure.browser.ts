@@ -1,4 +1,5 @@
-import { type Browser, expect, type Page, test } from "@playwright/test";
+import type { Browser, Page } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import { Array as Arr, Effect, MutableList } from "effect";
 import { lazyRendererModules } from "#www/output.config";
 import {

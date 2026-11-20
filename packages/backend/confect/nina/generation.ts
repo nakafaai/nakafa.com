@@ -11,10 +11,8 @@ import {
   CapabilityTurn,
   createCapabilities,
 } from "@repo/backend/confect/nina/capability/define";
-import {
-  type Held,
-  restoreHeld,
-} from "@repo/backend/confect/nina/capability/held";
+import type { Held } from "@repo/backend/confect/nina/capability/held";
+import { restoreHeld } from "@repo/backend/confect/nina/capability/held";
 import { registry } from "@repo/backend/confect/nina/capability/registry";
 import type { UsageAgent } from "@repo/backend/confect/nina/contract/usage";
 import {

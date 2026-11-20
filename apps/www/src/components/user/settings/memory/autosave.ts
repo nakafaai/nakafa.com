@@ -1,10 +1,12 @@
 import { MutableRef, Option } from "effect";
 import type { useMemoryActions } from "@/components/user/settings/memory/actions";
+import type {
+  Memory,
+  MemoryDraft,
+} from "@/components/user/settings/memory/list";
 import {
   draftOf,
   isBlank,
-  type Memory,
-  type MemoryDraft,
   sameDraft,
 } from "@/components/user/settings/memory/list";
 

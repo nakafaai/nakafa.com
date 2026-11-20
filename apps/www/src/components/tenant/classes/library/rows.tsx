@@ -20,10 +20,10 @@ import { namedOptions } from "@/components/shared/table/filter";
 import { RowCopy, RowItems } from "@/components/shared/table/menu";
 import { EmptyState } from "@/components/state/empty";
 import { EmptyNina } from "@/components/state/nina";
+import type { LibraryFolder } from "@/components/tenant/classes/library/folder";
 import {
   isSavedFolder,
   isWithin,
-  type LibraryFolder,
   moveFolderUpdate,
   starFolderUpdate,
 } from "@/components/tenant/classes/library/folder";
@@ -35,10 +35,8 @@ import {
   useOpenItem,
   useStar,
 } from "@/components/tenant/classes/library/menu";
-import {
-  type LibraryItem,
-  moveItemUpdate,
-} from "@/components/tenant/classes/library/optimistic";
+import type { LibraryItem } from "@/components/tenant/classes/library/optimistic";
+import { moveItemUpdate } from "@/components/tenant/classes/library/optimistic";
 import { useLibraryFolder } from "@/components/tenant/classes/library/scope";
 import { useFolderList } from "@/components/tenant/classes/library/tree";
 import type { LibraryUpload } from "@/components/tenant/classes/library/uploads";

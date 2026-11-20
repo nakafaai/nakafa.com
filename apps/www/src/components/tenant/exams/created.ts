@@ -1,7 +1,8 @@
 import type * as Ref from "@confect/core/Ref";
 import type exams from "@repo/backend/confect/_generated/refs/exams";
 import { createContext } from "react";
-import { createStore, type StoreApi } from "zustand";
+import type { StoreApi } from "zustand";
+import { createStore } from "zustand";
 
 /** One exam as the editor reads it, which the create answers with. */
 type CreatedView = Ref.Returns<typeof exams.exams.open>;

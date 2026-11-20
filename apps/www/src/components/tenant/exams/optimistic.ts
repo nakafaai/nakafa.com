@@ -5,8 +5,8 @@ import type {
 } from "@confect/react";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import { insertIndex, placeAt } from "@repo/backend/confect/exams/order";
+import type { ScoringKind } from "@repo/backend/confect/exams/scoring";
 import {
-  type ScoringKind,
   scoringPoints,
   scoringRule,
   templatePoints,

@@ -16,7 +16,8 @@ import {
 import { cva } from "class-variance-authority";
 import { cn } from "cn";
 import { Array as Arr, Option } from "effect";
-import { createContext, type ReactNode, useId } from "react";
+import type { ReactNode } from "react";
+import { createContext, useId } from "react";
 import { useTranslations } from "use-intl";
 import { getChoiceReviewedTone, toneMark } from "@/components/player/tone";
 

@@ -13,7 +13,8 @@ import {
 } from "@repo/backend/confect/notifications/mail";
 import { keyedFixture } from "@repo/backend/test/classroom";
 import { signedPages } from "@repo/backend/test/mail";
-import { TENANCY_NOW, type tenancyFixture } from "@repo/backend/test/tenancy";
+import type { tenancyFixture } from "@repo/backend/test/tenancy";
+import { TENANCY_NOW } from "@repo/backend/test/tenancy";
 import { Array as Arr, Duration, Effect, Option } from "effect";
 
 type Fixture = Effect.Success<typeof tenancyFixture>;

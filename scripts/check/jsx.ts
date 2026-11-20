@@ -1,4 +1,5 @@
 import { Array as Arr, Option, Result } from "effect";
+import type { JsxAttributes, Node } from "tsrs/ast";
 import {
   isIdentifier,
   isJsxAttribute,
@@ -6,8 +7,6 @@ import {
   isJsxExpression,
   isJsxSelfClosingElement,
   isLiteralLikeNode,
-  type JsxAttributes,
-  type Node,
 } from "tsrs/ast";
 import { nodesBelow, tagText } from "#scripts/check/drilling";
 import { COMPONENT_SET_DIRECTORIES } from "#scripts/check/exports";

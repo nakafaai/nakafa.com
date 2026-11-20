@@ -1,7 +1,7 @@
 import { describe, expect, it } from "@effect/vitest";
+import type { Sea } from "@repo/design-system/components/contents/physics/renewable-energy/wave/swell";
 import {
   SEA_STATES,
-  type Sea,
   surfaceHeight,
   wavelength,
   wavePower,

@@ -12,7 +12,11 @@ Use this package only for repeated cross-app patterns:
 Import helpers directly from the file that owns them:
 
 ```ts
-import { logError, logHttpRequest, timeOperation } from "@repo/utilities/logging/effect";
+import {
+  logError,
+  logHttpRequest,
+  timeOperation,
+} from "@repo/utilities/logging/effect";
 ```
 
 Keep structured fields as Effect log annotations:

@@ -7,10 +7,8 @@ import {
 import { ensureTryoutProgressWithinReadBudget } from "@repo/backend/confect/tryouts/progress/size";
 import { TryoutProgressError } from "@repo/backend/confect/tryouts/progress/spec";
 import { readAttemptSetIdentity } from "@repo/backend/confect/tryouts/runtime/lookup";
-import {
-  getTryoutStatusRank,
-  type TryoutStatus,
-} from "@repo/backend/confect/tryouts/status";
+import type { TryoutStatus } from "@repo/backend/confect/tryouts/status";
+import { getTryoutStatusRank } from "@repo/backend/confect/tryouts/status";
 import { Effect, flow, Schema } from "effect";
 
 type TryoutAttempt = Docs["tryoutAttempts"];

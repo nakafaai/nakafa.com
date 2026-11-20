@@ -1,4 +1,5 @@
 import { Array as Arr, Option } from "effect";
+import type { JsxAttributes, Node, SourceFile } from "tsrs/ast";
 import {
   isCallExpression,
   isIdentifier,
@@ -7,9 +8,6 @@ import {
   isObjectLiteralExpression,
   isPropertyAssignment,
   isStringLiteral,
-  type JsxAttributes,
-  type Node,
-  type SourceFile,
 } from "tsrs/ast";
 import { judgesMarkup, opening } from "#scripts/check/jsx";
 import { children } from "#scripts/check/source";

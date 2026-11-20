@@ -30,12 +30,13 @@ import { lazy } from "@repo/design-system/lib/lazy";
 import type { Node } from "@tiptap/pm/model";
 import { cn } from "cn";
 import { Array as Arr, Function as Fn, Option, Schema } from "effect";
-import { type ReactNode, Suspense, useId, useState } from "react";
+import type { ReactNode } from "react";
+import { Suspense, useId, useState } from "react";
 import { useTranslations } from "use-intl";
 import { AcceptedAnswers } from "@/components/tenant/exams/accepted";
+import type { Choice } from "@/components/tenant/exams/answer";
 import {
   acceptedOf,
-  type Choice,
   changedOption,
   isChoice,
   markedOptions,
@@ -46,10 +47,8 @@ import { matchOf } from "@/components/tenant/exams/match";
 import { MediaField } from "@/components/tenant/exams/media";
 import { numberSettingOf } from "@/components/tenant/exams/number";
 import { NumberKey } from "@/components/tenant/exams/numeric";
-import {
-  pointsUpdate,
-  type Question,
-} from "@/components/tenant/exams/optimistic";
+import type { Question } from "@/components/tenant/exams/optimistic";
+import { pointsUpdate } from "@/components/tenant/exams/optimistic";
 import { useQuestionPage } from "@/components/tenant/exams/page";
 import { MatchKey } from "@/components/tenant/exams/pairing";
 import { PreviewProse } from "@/components/tenant/exams/preview";

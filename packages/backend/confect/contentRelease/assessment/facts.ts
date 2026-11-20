@@ -1,8 +1,6 @@
 import type { CatalogSetSchema } from "@nakafa/aksara-contracts/assessment/catalog";
-import {
-  type AssessmentRow,
-  assessmentRowIdentity,
-} from "@nakafa/aksara-contracts/assessment/snapshot";
+import type { AssessmentRow } from "@nakafa/aksara-contracts/assessment/snapshot";
+import { assessmentRowIdentity } from "@nakafa/aksara-contracts/assessment/snapshot";
 import type { Docs } from "@repo/backend/confect/_generated/docs";
 import { Array as Arr } from "effect";
 

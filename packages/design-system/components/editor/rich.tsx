@@ -15,7 +15,8 @@ import { useRequired } from "@repo/design-system/hooks/required";
 import type { EditorProps } from "@tiptap/pm/view";
 import { EditorContent, EditorContext, useEditor } from "@tiptap/react";
 import { cn } from "cn";
-import { type ComponentProps, createContext, useMemo, useState } from "react";
+import type { ComponentProps } from "react";
+import { createContext, useMemo, useState } from "react";
 
 interface RichEditorProps {
   /**

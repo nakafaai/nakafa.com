@@ -3,13 +3,11 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
 import { SCHOOL_MCP_PATH } from "@repo/backend/confect/integrations/api";
-import { createClient, type Fixture, issue } from "@repo/backend/test/api";
+import type { Fixture } from "@repo/backend/test/api";
+import { createClient, issue } from "@repo/backend/test/api";
 import { period } from "@repo/backend/test/classroom";
-import {
-  type McpRequest,
-  modernPost,
-  withHeaders,
-} from "@repo/backend/test/mcp/harness";
+import type { McpRequest } from "@repo/backend/test/mcp/harness";
+import { modernPost, withHeaders } from "@repo/backend/test/mcp/harness";
 import { TENANCY_NOW, tenancyFixture } from "@repo/backend/test/tenancy";
 import { Array as Arr, Effect, Record as Rec, Schema } from "effect";
 

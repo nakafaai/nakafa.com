@@ -2,7 +2,8 @@ import { Option } from "effect";
 import { activate, programOf } from "@/components/island/buffers";
 import { CAST_FRAGMENT, CAST_VERTEX } from "@/lib/island/shaders";
 import type { Light } from "@/lib/island/sky";
-import { SHADOW_SIZE, type sunViewOf } from "@/lib/island/sun";
+import type { sunViewOf } from "@/lib/island/sun";
+import { SHADOW_SIZE } from "@/lib/island/sun";
 
 /**
  * The sun's shadow map (ADR 0047, D43): one hard depth texture, `SHADOW_SIZE`

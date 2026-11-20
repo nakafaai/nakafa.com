@@ -8,7 +8,8 @@ import {
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { useRequired } from "@repo/design-system/hooks/required";
-import { createContext, type ReactNode, useState } from "react";
+import type { ReactNode } from "react";
+import { createContext, useState } from "react";
 import { useTranslations } from "use-intl";
 
 /** Whether the deletion dialog of a More menu is open, and how to open or close it. */

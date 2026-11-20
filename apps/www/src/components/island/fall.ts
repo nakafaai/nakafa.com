@@ -1,14 +1,15 @@
 import { Option } from "effect";
+import type { uploadMap } from "@/components/island/buffers";
 import {
   activate,
   PARTICLES,
-  type uploadMap,
   uploadWeather,
 } from "@/components/island/buffers";
 import type { createGale } from "@/components/island/wind";
 import type { Orbit } from "@/lib/island/camera";
 import { createCover, stepCover } from "@/lib/island/cover";
-import { fallOf, type Weather } from "@/lib/island/sky";
+import type { Weather } from "@/lib/island/sky";
+import { fallOf } from "@/lib/island/sky";
 import { SEA_LEVEL } from "@/lib/island/world";
 
 /** The side of the square of sky the weather falls through round the camera's target, near in. */

@@ -1,12 +1,10 @@
 import type { ExamQuestionsDoc } from "@repo/backend/confect/_generated/docs";
 import { DatabaseWriter } from "@repo/backend/confect/_generated/services";
 import { ScoringDoesNotFit } from "@repo/backend/confect/exams/errors";
+import type { QuestionPoints } from "@repo/backend/confect/exams/question";
+import { encodeScoring } from "@repo/backend/confect/exams/question";
+import type { ScoringKind } from "@repo/backend/confect/exams/scoring";
 import {
-  encodeScoring,
-  type QuestionPoints,
-} from "@repo/backend/confect/exams/question";
-import {
-  type ScoringKind,
   scoringPoints,
   scoringRule,
   takesScoring,

@@ -33,10 +33,8 @@ import { readSiteUrl } from "@repo/backend/confect/site/config";
 import { schoolAddress } from "@repo/backend/confect/tenancy/address";
 import { publicationLayer } from "@repo/backend/content/publication/confect";
 import { readPageCatalog } from "@repo/backend/content/publication/page";
-import {
-  type DigestEmailInput,
-  SchoolChange,
-} from "@repo/email/templates/digest/content";
+import type { DigestEmailInput } from "@repo/email/templates/digest/content";
+import { SchoolChange } from "@repo/email/templates/digest/content";
 import {
   Array as Arr,
   Clock,

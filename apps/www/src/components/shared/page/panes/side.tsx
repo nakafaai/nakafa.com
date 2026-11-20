@@ -4,7 +4,8 @@ import {
   useWindowRoom,
 } from "@repo/design-system/hooks/resizable";
 import { cva } from "class-variance-authority";
-import { type ReactNode, useLayoutEffect } from "react";
+import type { ReactNode } from "react";
+import { useLayoutEffect } from "react";
 
 /** How wide a pane starts and how far a drag of its edge takes it, in pixels. */
 const PANE_WIDTH = { initialWidth: 420, maxWidth: 768, minWidth: 320 };

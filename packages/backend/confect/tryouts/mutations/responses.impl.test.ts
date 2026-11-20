@@ -1,11 +1,8 @@
 import { Ref } from "@confect/core";
 import { describe, expect, it } from "@effect/vitest";
 import tryouts from "@repo/backend/confect/_generated/refs/tryouts";
-import {
-  seedTryoutGate,
-  shortAnswer,
-  type TryoutGateWorld,
-} from "@repo/backend/test/tryout/gate";
+import type { TryoutGateWorld } from "@repo/backend/test/tryout/gate";
+import { seedTryoutGate, shortAnswer } from "@repo/backend/test/tryout/gate";
 import { Array as Arr, Effect, Option } from "effect";
 
 /** Reads the running question as the learner's section state shows it. */

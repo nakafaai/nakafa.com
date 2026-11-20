@@ -1,7 +1,5 @@
-import {
-  canonicalizeRollbackPage,
-  type RollbackPage,
-} from "@nakafa/aksara-contracts/release/rollback/spec";
+import type { RollbackPage } from "@nakafa/aksara-contracts/release/rollback/spec";
+import { canonicalizeRollbackPage } from "@nakafa/aksara-contracts/release/rollback/spec";
 import { Array as Arr } from "effect";
 
 const textEncoder = new TextEncoder();

@@ -1,7 +1,8 @@
 import { QueryResult, useQuery } from "@confect/react";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import { Array as Arr } from "effect";
-import { type ReactNode, useMemo } from "react";
+import type { ReactNode } from "react";
+import { useMemo } from "react";
 import {
   addressesOf,
   pictureIdsOfDocuments,

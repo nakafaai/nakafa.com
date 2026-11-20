@@ -1,10 +1,12 @@
 import { Line } from "@react-three/drei";
 import { fanMesh } from "@repo/design-system/lib/geometry/mesh";
-import { type Point3, pointsKey } from "@repo/design-system/lib/geometry/point";
+import type { Point3 } from "@repo/design-system/lib/geometry/point";
+import { pointsKey } from "@repo/design-system/lib/geometry/point";
 import { REGION_DASH } from "@repo/design-system/lib/plot";
 import { Array as Arr } from "effect";
 import { useMemo } from "react";
-import { type ColorRepresentation, DoubleSide } from "three";
+import type { ColorRepresentation } from "three";
+import { DoubleSide } from "three";
 
 /**
  * Shades the part of a plane where a set of inequalities holds, and draws each

@@ -1,8 +1,6 @@
 import { GroupAxisSchema } from "@nakafa/aksara-contracts/assessment/catalog";
-import {
-  type AppLocaleCode,
-  AppLocaleCodeSchema,
-} from "@nakafa/aksara-contracts/locale";
+import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
+import { AppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
 import { Array as Arr, Effect, Option, Schema } from "effect";
 
 /** One signed route identity, with the public path that each locale serves for it. */

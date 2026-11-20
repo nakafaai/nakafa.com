@@ -1,7 +1,5 @@
-import {
-  PlanePointSchema,
-  type SpacePoint,
-} from "@nakafa/aksara-contracts/math/base";
+import type { SpacePoint } from "@nakafa/aksara-contracts/math/base";
+import { PlanePointSchema } from "@nakafa/aksara-contracts/math/base";
 import type { FormulaScope } from "@nakafa/aksara-contracts/math/formula/compile";
 import { Array as Arr, Option, Record as Rec, Schema } from "effect";
 import {

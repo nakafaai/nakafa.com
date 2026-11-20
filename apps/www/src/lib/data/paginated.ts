@@ -1,11 +1,10 @@
 import type * as Ref from "@confect/core/Ref";
-import {
-  type PaginatedQueryItem,
-  type PaginatedQueryOptions,
-  PaginatedQueryResult,
-  type UsePaginatedQueryArgs,
-  usePaginatedQuery,
+import type {
+  PaginatedQueryItem,
+  PaginatedQueryOptions,
+  UsePaginatedQueryArgs,
 } from "@confect/react";
+import { PaginatedQueryResult, usePaginatedQuery } from "@confect/react";
 import { Option } from "effect";
 
 /**

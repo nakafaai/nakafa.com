@@ -10,7 +10,8 @@ import {
   ResponsiveDialog,
   ResponsiveDialogSubject,
 } from "@repo/design-system/components/ui/responsive-dialog";
-import { type ToastCopy, toast } from "@repo/design-system/lib/toast/notify";
+import type { ToastCopy } from "@repo/design-system/lib/toast/notify";
+import { toast } from "@repo/design-system/lib/toast/notify";
 import { MAIN_DOMAIN } from "@repo/site/domains";
 import { Effect, Schema } from "effect";
 import { startTransition, useRef, useState } from "react";

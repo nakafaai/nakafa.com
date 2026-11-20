@@ -1,6 +1,7 @@
 import type { SEOContext, SEOMetadata } from "@/lib/seo/contract";
 import { createSEODescription } from "@/lib/seo/descriptions";
-import { createSEOTitle, type PageKind } from "@/lib/seo/titles";
+import type { PageKind } from "@/lib/seo/titles";
+import { createSEOTitle } from "@/lib/seo/titles";
 
 /** The kind of page each context titles, which decides whether the title names the site. */
 const CONTEXT_KIND = {

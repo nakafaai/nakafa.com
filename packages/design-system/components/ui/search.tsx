@@ -6,7 +6,8 @@ import {
   InputGroupButton,
   InputGroupInput,
 } from "@repo/design-system/components/ui/input-group";
-import { type ComponentProps, useRef } from "react";
+import type { ComponentProps } from "react";
+import { useRef } from "react";
 import { useTranslations } from "use-intl";
 
 /**

@@ -44,13 +44,8 @@ import { StarterKit } from "@tiptap/starter-kit";
 import { cva } from "class-variance-authority";
 import { cn } from "cn";
 import { Array as Arr } from "effect";
-import {
-  type ComponentProps,
-  createContext,
-  type ReactNode,
-  useMemo,
-  useState,
-} from "react";
+import type { ComponentProps, ReactNode } from "react";
+import { createContext, useMemo, useState } from "react";
 
 /** The frame of the editor: the text over its bar, in the field a learner writes in. */
 const learnerFrame = cva("dark:bg-input/30 rounded-xl bg-transparent");

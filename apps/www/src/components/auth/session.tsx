@@ -1,9 +1,12 @@
 import { useRequired } from "@repo/design-system/hooks/required";
-import { type ReactNode, useLayoutEffect, useState } from "react";
-import { createStore, type StoreApi, useStore } from "zustand";
+import type { ReactNode } from "react";
+import { useLayoutEffect, useState } from "react";
+import type { StoreApi } from "zustand";
+import { createStore, useStore } from "zustand";
 import { AuthSessionContext } from "@/components/auth/context";
 import { followSignedInHint } from "@/lib/auth/hint";
-import { type AuthSession, previewAuthSession } from "@/lib/auth/session";
+import type { AuthSession } from "@/lib/auth/session";
+import { previewAuthSession } from "@/lib/auth/session";
 
 /**
  * Provides the signed-out session without a backend request: isolated authoring

@@ -1,8 +1,6 @@
 import { captureException } from "@repo/analytics/posthog/capture";
-import {
-  type ErrorBoundaryProps,
-  ErrorBoundary as ReactErrorBoundary,
-} from "react-error-boundary";
+import type { ErrorBoundaryProps } from "react-error-boundary";
+import { ErrorBoundary as ReactErrorBoundary } from "react-error-boundary";
 
 export function ErrorBoundary({
   onError,

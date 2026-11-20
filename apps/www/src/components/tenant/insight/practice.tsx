@@ -19,9 +19,11 @@ import { EmptyState } from "@/components/state/empty";
 import { EmptyNina } from "@/components/state/nina";
 import { useTenant } from "@/components/tenant/context";
 import { NarrativeMenu } from "@/components/tenant/insight/narrative";
+import type {
+  InsightStudent,
+  OwnTopic,
+} from "@/components/tenant/insight/rows";
 import {
-  type InsightStudent,
-  type OwnTopic,
   practiceRowsOf,
   scoreOf,
   topicNameOf,

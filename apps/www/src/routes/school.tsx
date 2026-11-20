@@ -13,7 +13,8 @@ import {
   useRouterState,
 } from "@tanstack/react-router";
 import { Effect } from "effect";
-import { type ReactElement, useLayoutEffect } from "react";
+import type { ReactElement } from "react";
+import { useLayoutEffect } from "react";
 import { useTranslations } from "use-intl";
 import { SchoolPending } from "@/components/tenant/pending";
 import { MessagesProvider } from "@/lib/i18n/provider";

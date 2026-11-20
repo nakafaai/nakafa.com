@@ -1,5 +1,6 @@
 import { LocalClock } from "@repo/backend/confect/notifications/clock";
-import { Array as Arr, Duration, type Option, Schema } from "effect";
+import type { Option } from "effect";
+import { Array as Arr, Duration, Schema } from "effect";
 
 /**
  * A kind of notice, one row of the channel table of ADR 0027. A kind is keyed by

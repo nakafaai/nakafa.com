@@ -1,14 +1,7 @@
 import { describe, expect, it } from "@effect/vitest";
 import { ARM } from "@repo/mascot/nina/body";
-import {
-  type Curve,
-  cubic,
-  exit,
-  flip,
-  limb,
-  onBody,
-  wide,
-} from "@repo/mascot/nina/limb";
+import type { Curve } from "@repo/mascot/nina/limb";
+import { cubic, exit, flip, limb, onBody, wide } from "@repo/mascot/nina/limb";
 import { tenth } from "@repo/mascot/round";
 import { String as Str } from "effect";
 

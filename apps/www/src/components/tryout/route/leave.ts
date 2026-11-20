@@ -1,9 +1,7 @@
 import { useNavigate } from "@tanstack/react-router";
 import { Effect, Option } from "effect";
-import {
-  getTryoutPageTarget,
-  type TryoutPageAddress,
-} from "@/components/tryout/route/path";
+import type { TryoutPageAddress } from "@/components/tryout/route/path";
+import { getTryoutPageTarget } from "@/components/tryout/route/path";
 
 /**
  * Leaving for one try-out page, which completes once the router has shown it. An address that names no page

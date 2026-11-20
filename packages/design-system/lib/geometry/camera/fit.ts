@@ -5,7 +5,8 @@ import type {
 } from "@repo/design-system/lib/geometry/camera";
 import type { CameraPixelLabel } from "@repo/design-system/lib/geometry/camera/bounds";
 import { Array as Arr, Effect, MutableList, Schema } from "effect";
-import { type Box3, MathUtils, Matrix4, Vector3 } from "three";
+import type { Box3 } from "three";
+import { MathUtils, Matrix4, Vector3 } from "three";
 
 const VIEWPORT_EDGE_SPACE = 24;
 

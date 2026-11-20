@@ -1,9 +1,7 @@
 import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import { APPLICATION_ROUTE_ROOTS } from "@repo/contents/route/root";
-import {
-  PUBLIC_ROUTE_SURFACES,
-  type PublicRouteAppSegment,
-} from "@repo/contents/route/surface";
+import type { PublicRouteAppSegment } from "@repo/contents/route/surface";
+import { PUBLIC_ROUTE_SURFACES } from "@repo/contents/route/surface";
 import { Array as Arr, HashSet, Option, Record as Rec } from "effect";
 import { isProfileTab, readProfileRoot } from "@/lib/profile/route";
 import { userSettingsSections } from "@/lib/settings/routes";

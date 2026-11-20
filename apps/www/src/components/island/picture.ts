@@ -2,12 +2,8 @@ import type { BlockKey } from "@repo/backend/confect/island/blocks";
 import { PLANT_KEYS } from "@repo/backend/confect/island/flora";
 import { Array as Arr, MutableHashMap, Option } from "effect";
 import type { Tool } from "@/components/island/store";
-import {
-  plantPixels,
-  speciesPixels,
-  type TileName,
-  tilePixels,
-} from "@/lib/island/atlas";
+import type { TileName } from "@/lib/island/atlas";
+import { plantPixels, speciesPixels, tilePixels } from "@/lib/island/atlas";
 import { isPlant, looksOf } from "@/lib/island/look";
 import { TILE } from "@/lib/island/tiles/paint";
 import {

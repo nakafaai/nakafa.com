@@ -1,12 +1,6 @@
 import { BASE, BOARD, LID, NINA, PAGE, PAPER, POP } from "@repo/mascot/color";
-import {
-  bar,
-  box,
-  dot,
-  flat,
-  type Parts,
-  turned,
-} from "@repo/mascot/nina/goods/part";
+import type { Parts } from "@repo/mascot/nina/goods/part";
+import { bar, box, dot, flat, turned } from "@repo/mascot/nina/goods/part";
 import { sparkle } from "@repo/mascot/sparkle";
 import { Array as Arr } from "effect";
 

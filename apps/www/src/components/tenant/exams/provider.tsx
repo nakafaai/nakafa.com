@@ -2,25 +2,25 @@ import { ExamView as ExamViewSchema } from "@repo/backend/confect/exams/exam";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { useRequired } from "@repo/design-system/hooks/required";
 import { Schema } from "effect";
-import { createContext, type ReactNode, useState } from "react";
-import { type StoreApi, useStore } from "zustand";
-import {
-  createExamEditing,
-  type ExamEditing,
-} from "@/components/tenant/exams/editing";
+import type { ReactNode } from "react";
+import { createContext, useState } from "react";
+import type { StoreApi } from "zustand";
+import { useStore } from "zustand";
+import type { ExamEditing } from "@/components/tenant/exams/editing";
+import { createExamEditing } from "@/components/tenant/exams/editing";
 import { isLocked } from "@/components/tenant/exams/freeze";
-import { createExamLive, type ExamLive } from "@/components/tenant/exams/live";
+import type { ExamLive } from "@/components/tenant/exams/live";
+import { createExamLive } from "@/components/tenant/exams/live";
 import type { ExamView } from "@/components/tenant/exams/optimistic";
+import type { ExamSelection } from "@/components/tenant/exams/selection";
 import {
   activeQuestion,
   createExamSelection,
-  type ExamSelection,
 } from "@/components/tenant/exams/selection";
-import {
-  createEditorView,
-  type EditorView,
-} from "@/components/tenant/exams/view";
-import { createExamZoom, type ExamZoom } from "@/components/tenant/exams/zoom";
+import type { EditorView } from "@/components/tenant/exams/view";
+import { createEditorView } from "@/components/tenant/exams/view";
+import type { ExamZoom } from "@/components/tenant/exams/zoom";
+import { createExamZoom } from "@/components/tenant/exams/zoom";
 
 /**
  * The exam the editor shows and the school it belongs to. An exam deleted, or closed to the teacher, while its

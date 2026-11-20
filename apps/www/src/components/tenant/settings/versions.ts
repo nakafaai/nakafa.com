@@ -5,10 +5,10 @@ import type {
 } from "@confect/react";
 import { Id } from "@repo/backend/confect/_generated/id";
 import records from "@repo/backend/confect/_generated/refs/records";
+import type { GradingScheme } from "@repo/backend/confect/records/scheme";
 import {
   Band,
   GradeValue,
-  type GradingScheme,
   normalizeScheme,
 } from "@repo/backend/confect/records/scheme";
 import { Array as Arr, Option, Schema, String as Str } from "effect";

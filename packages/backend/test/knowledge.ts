@@ -1,15 +1,11 @@
 import { RegisteredConvexFunction, RegisteredFunction } from "@confect/server";
 import { assert } from "@effect/vitest";
-import {
-  ACTIVE_APP_LOCALE_CODES,
-  type ActiveAppLocaleCode,
-} from "@nakafa/aksara-contracts/locale";
+import type { ActiveAppLocaleCode } from "@nakafa/aksara-contracts/locale";
+import { ACTIVE_APP_LOCALE_CODES } from "@nakafa/aksara-contracts/locale";
 import confectSchema from "@repo/backend/confect/_generated/schema";
 import { runStep } from "@repo/backend/confect/contents/sections/build";
-import {
-  type Source,
-  sectionScope,
-} from "@repo/backend/confect/contents/sections/schema";
+import type { Source } from "@repo/backend/confect/contents/sections/schema";
+import { sectionScope } from "@repo/backend/confect/contents/sections/schema";
 import {
   embeddingDimensions,
   embeddingModelId,
@@ -32,7 +28,8 @@ import {
   provider,
 } from "@repo/backend/test/gateway";
 import { insertMaterialProjection } from "@repo/backend/test/material/catalog";
-import { measured, type Sample, totalOf } from "@repo/backend/test/measure";
+import type { Sample } from "@repo/backend/test/measure";
+import { measured, totalOf } from "@repo/backend/test/measure";
 import { insertRuntimeIndex } from "@repo/backend/test/runtime/head";
 import {
   TEST_RUNTIME_RELEASE,

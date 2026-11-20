@@ -2,14 +2,8 @@ import { idOf } from "@repo/backend/confect/island/blocks";
 import { Option, Result } from "effect";
 import type { GameStoreApi } from "@/components/island/store";
 import { SLOTS } from "@/lib/island/atlas";
-import {
-  BITE,
-  type Cast,
-  castOf,
-  catchOf,
-  dipOf,
-  reelOf,
-} from "@/lib/island/fishing";
+import type { Cast } from "@/lib/island/fishing";
+import { BITE, castOf, catchOf, dipOf, reelOf } from "@/lib/island/fishing";
 import { standingQuad } from "@/lib/island/flat";
 import type { castRay } from "@/lib/island/ray";
 

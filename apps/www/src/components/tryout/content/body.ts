@@ -1,7 +1,5 @@
-import {
-  TryoutQuestionBodyText,
-  type TryoutSectionContent,
-} from "@repo/backend/confect/tryouts/runtime/spec";
+import type { TryoutSectionContent } from "@repo/backend/confect/tryouts/runtime/spec";
+import { TryoutQuestionBodyText } from "@repo/backend/confect/tryouts/runtime/spec";
 import {
   Array as Arr,
   Data,

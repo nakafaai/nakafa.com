@@ -1,8 +1,12 @@
 import { Array as Arr, HashSet, Option } from "effect";
+import type {
+  BindingElement,
+  ExportSpecifier,
+  ImportSpecifier,
+  Node,
+  SourceFile,
+} from "tsrs/ast";
 import {
-  type BindingElement,
-  type ExportSpecifier,
-  type ImportSpecifier,
   isCallExpression,
   isElementAccessExpression,
   isExportDeclaration,
@@ -16,8 +20,6 @@ import {
   isPropertyAccessExpression,
   isStringLiteralLikeNode,
   isVariableDeclaration,
-  type Node,
-  type SourceFile,
 } from "tsrs/ast";
 import { loadsExport, loadsImport, TEST_PATTERN } from "#scripts/check/kinds";
 import { descendants, namesModule } from "#scripts/check/source";

@@ -1,12 +1,14 @@
 import { Line } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
 import { PhysicsCarModel } from "@repo/design-system/components/contents/physics/kinematics/car";
+import type {
+  DisplacementDistanceCaseId,
+  DisplacementDistanceState,
+} from "@repo/design-system/components/contents/physics/kinematics/displacement-distance/data";
 import {
   DISPLACEMENT_DISTANCE_CAR_MODEL_PATH,
   DISPLACEMENT_DISTANCE_CASE_IDS,
   DISPLACEMENT_DISTANCE_SCENE,
-  type DisplacementDistanceCaseId,
-  type DisplacementDistanceState,
   formatVectorMath,
   getDisplacementDistanceState,
   getDisplacementDistanceView,
@@ -38,7 +40,8 @@ import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
 import { Suspense, useMemo, useRef, useState } from "react";
-import { type Group, Vector3 } from "three";
+import type { Group } from "three";
+import { Vector3 } from "three";
 
 const ROUTE_COLOR = PLOT_COLORS.teal;
 const DISPLACEMENT_COLOR = PLOT_COLORS.violet;

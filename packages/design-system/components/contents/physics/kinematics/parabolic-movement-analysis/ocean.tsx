@@ -1,8 +1,6 @@
 import { useFrame } from "@react-three/fiber";
-import {
-  PROJECTILE_SCENE,
-  type ProjectileMotionState,
-} from "@repo/design-system/components/contents/physics/kinematics/parabolic-movement-analysis/data";
+import type { ProjectileMotionState } from "@repo/design-system/components/contents/physics/kinematics/parabolic-movement-analysis/data";
+import { PROJECTILE_SCENE } from "@repo/design-system/components/contents/physics/kinematics/parabolic-movement-analysis/data";
 import { Sea } from "@repo/design-system/components/three/stage/sea";
 import { getColor } from "@repo/design-system/lib/color";
 import { Array as Arr } from "effect";

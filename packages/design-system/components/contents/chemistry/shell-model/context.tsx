@@ -4,7 +4,8 @@ import type {
   ShellModelShells,
 } from "@repo/design-system/components/contents/chemistry/shell-model/data";
 import { useRequired } from "@repo/design-system/hooks/required";
-import { createContext, type ReactNode } from "react";
+import type { ReactNode } from "react";
+import { createContext } from "react";
 
 interface ShellModelProviderProps {
   children: ReactNode;

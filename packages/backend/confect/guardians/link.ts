@@ -11,14 +11,16 @@ import {
   guardianLinkAuthority,
   readLinkedPerson,
 } from "@repo/backend/confect/guardians/authority";
+import type {
+  ChildView,
+  ConsentMethod,
+  LinkEndReason,
+  LinkState,
+  LinkStatus,
+  LinkView,
+} from "@repo/backend/confect/guardians/schema";
 import {
-  type ChildView,
   CONSENT_POLICY_VERSION,
-  type ConsentMethod,
-  type LinkEndReason,
-  type LinkState,
-  type LinkStatus,
-  type LinkView,
   NISN_TRIES,
 } from "@repo/backend/confect/guardians/schema";
 import type { TenantActor } from "@repo/backend/confect/journal/schema";

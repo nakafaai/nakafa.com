@@ -1,5 +1,6 @@
 import { Option } from "effect";
-import { type RefObject, useEffect } from "react";
+import type { RefObject } from "react";
+import { useEffect } from "react";
 import { ARTICLES_SELECTOR, readArticleKey } from "@/components/player/article";
 import { usePlayer } from "@/components/player/provider";
 

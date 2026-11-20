@@ -6,10 +6,10 @@ import {
   GlassTube,
 } from "@repo/design-system/components/contents/biology/glassware";
 import { leafSurface } from "@repo/design-system/components/contents/biology/leaf";
+import type { Reading } from "@repo/design-system/components/contents/biology/photosynthesis/light";
 import {
   bubbleInterval,
   bubblesAt,
-  type Reading,
 } from "@repo/design-system/components/contents/biology/photosynthesis/light";
 import { LabBench } from "@repo/design-system/components/contents/chemistry/bench";
 import {
@@ -30,14 +30,13 @@ import { BIOLOGY_COLORS } from "@repo/design-system/lib/material/biology";
 import { CAR_COLORS } from "@repo/design-system/lib/material/car";
 import { Array as Arr } from "effect";
 import { createRef, useEffect, useLayoutEffect, useMemo, useRef } from "react";
+import type { InstancedMesh, Mesh } from "three";
 import {
   BufferGeometry,
   CatmullRomCurve3,
   DoubleSide,
   Float32BufferAttribute,
-  type InstancedMesh,
   Matrix4,
-  type Mesh,
   Object3D,
   Vector2,
   Vector3,

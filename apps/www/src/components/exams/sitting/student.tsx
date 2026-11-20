@@ -8,8 +8,8 @@ import { Field, FieldLabel } from "@repo/design-system/components/ui/field";
 import { Input } from "@repo/design-system/components/ui/input";
 import { buttonVariants } from "@repo/design-system/lib/button";
 import { Option } from "effect";
+import type { FormEvent } from "react";
 import {
-  type FormEvent,
   useEffect,
   useId,
   useReducer,

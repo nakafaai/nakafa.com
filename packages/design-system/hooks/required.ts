@@ -1,5 +1,6 @@
 import { Schema } from "effect";
-import { type Context, use } from "react";
+import type { Context } from "react";
+import { use } from "react";
 
 /**
  * A part of a compound component rendered outside the provider whose context it

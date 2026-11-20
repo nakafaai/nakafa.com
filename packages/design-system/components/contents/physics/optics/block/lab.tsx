@@ -4,20 +4,22 @@ import {
   vignette,
 } from "@repo/design-system/components/contents/physics/canvas/paint";
 import { LabSlider } from "@repo/design-system/components/contents/physics/canvas/slider";
+import type { Point } from "@repo/design-system/components/contents/physics/optics/light";
 import {
   angleArc,
   beam,
-  type Point,
   paintDarkRoom,
   paintGlass,
   paintRayBox,
 } from "@repo/design-system/components/contents/physics/optics/light";
+import type {
+  Block,
+  Spot,
+} from "@repo/design-system/components/contents/physics/optics/ray";
 import {
   AIR_INDEX,
-  type Block,
   criticalAngle,
   refract,
-  type Spot,
   traceBlock,
 } from "@repo/design-system/components/contents/physics/optics/ray";
 import { useQuantity } from "@repo/design-system/components/contents/simulation/quantity";
@@ -38,7 +40,8 @@ import { INSTRUMENT_COLORS } from "@repo/design-system/lib/material/instrument";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr, Option, Schema } from "effect";
 import type p5 from "p5";
-import { type ReactNode, useState } from "react";
+import type { ReactNode } from "react";
+import { useState } from "react";
 
 /** The block the lab draws, in its own units: wider than tall, as a classroom block lies on the bench. */
 const SHAPE = { height: 1, width: 1.6 } as const;

@@ -1,7 +1,5 @@
-import {
-  Instances,
-  type Placement,
-} from "@repo/design-system/components/contents/biology/instances";
+import type { Placement } from "@repo/design-system/components/contents/biology/instances";
+import { Instances } from "@repo/design-system/components/contents/biology/instances";
 import {
   EnvelopeMaterial,
   useBumpySphere,
@@ -21,7 +19,8 @@ import { CELL_COLORS } from "@repo/design-system/lib/material/cell";
 import { VIRION_COLORS } from "@repo/design-system/lib/material/virion";
 import { Array as Arr } from "effect";
 import { useMemo, useRef } from "react";
-import { Euler, type Group, Quaternion, Vector3 } from "three";
+import type { Group } from "three";
+import { Euler, Quaternion, Vector3 } from "three";
 
 /** The y axis every part is modelled along before it is turned. */
 const UP = new Vector3(0, 1, 0);

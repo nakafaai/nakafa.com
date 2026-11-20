@@ -14,8 +14,8 @@ import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { getRouteApi, useParams } from "@tanstack/react-router";
 import { Effect, Option, Schema } from "effect";
+import type { FormEvent } from "react";
 import {
-  type FormEvent,
   useCallback,
   useEffect,
   useId,

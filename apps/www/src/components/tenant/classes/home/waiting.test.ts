@@ -3,13 +3,13 @@ import { Id } from "@repo/backend/confect/_generated/id";
 import classroom from "@repo/backend/confect/_generated/refs/classroom";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Effect, Option, Result, Schema } from "effect";
+import type { WaitingPost } from "@/components/tenant/classes/home/waiting";
 import {
   cancelWaitingUpdate,
   editWaitingUpdate,
   isSavedWaiting,
   scheduleAnnouncement,
   scheduleUpdate,
-  type WaitingPost,
 } from "@/components/tenant/classes/home/waiting";
 
 const slug = Schema.decodeSync(TenantSlug)("sekolah");

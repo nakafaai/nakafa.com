@@ -1,4 +1,5 @@
-import { expect, type Page, test } from "@playwright/test";
+import type { Page } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
 import { signInLearner } from "@/e2e/support/learner";
 import { expectPopupOpensWhole } from "@/e2e/support/opening";

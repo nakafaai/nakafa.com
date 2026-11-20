@@ -3,7 +3,8 @@ import { HEIGHT, SPAN } from "@repo/backend/confect/island/world";
 import { Array as Arr, MutableHashMap, Option } from "effect";
 import type { Edit } from "@/lib/island/edits";
 import { KIND, LOOK } from "@/lib/island/look";
-import { blockAt, type Cells } from "@/lib/island/world";
+import type { Cells } from "@/lib/island/world";
+import { blockAt } from "@/lib/island/world";
 
 /** Every field crop a learner may sow, and the sprout it starts as (ADR 0047, D16). */
 const CROPS = [

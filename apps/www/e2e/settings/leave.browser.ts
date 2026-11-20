@@ -1,12 +1,13 @@
-import { expect, type Page, test } from "@playwright/test";
+import type { Page } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import en from "@repo/internationalization/dictionaries/en.json" with {
   type: "json",
 };
 import { Clock, Effect } from "effect";
 import { rewriteList } from "@/e2e/support/answer";
+import type { Changes } from "@/e2e/support/changes";
 import {
   ANSWER_MILLISECONDS,
-  type Changes,
   live,
   reloadUntil,
   saved,

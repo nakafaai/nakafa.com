@@ -1,4 +1,5 @@
-import { expect, type Page, test } from "@playwright/test";
+import type { Page } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import { Array as Arr, Effect } from "effect";
 import { openRoute } from "@/e2e/support/route";
 import { SHEET_POPUP } from "@/e2e/support/selector";

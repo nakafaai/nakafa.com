@@ -3,7 +3,8 @@ import { Array as Arr, Option } from "effect";
 import { useTranslations } from "use-intl";
 import { SittingDocument } from "@/components/exams/sitting/document";
 import { usePaperLocked } from "@/components/exams/sitting/lock";
-import { markedWith, type TablePart } from "@/components/player/response";
+import type { TablePart } from "@/components/player/response";
+import { markedWith } from "@/components/player/response";
 import { ChoiceTable } from "@/components/player/table";
 
 /**

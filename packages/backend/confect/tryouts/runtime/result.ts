@@ -9,11 +9,11 @@ import {
 import { isCorrectGrade } from "@repo/backend/confect/tryouts/response/answer";
 import { TryoutRuntimeError } from "@repo/backend/confect/tryouts/runtime/error";
 import { readPlacedQuestion } from "@repo/backend/confect/tryouts/runtime/question";
-import {
-  type TryoutScoreResult,
-  type TryoutSectionScore,
-  tryoutScoreResultValidator,
+import type {
+  TryoutScoreResult,
+  TryoutSectionScore,
 } from "@repo/backend/confect/tryouts/score";
+import { tryoutScoreResultValidator } from "@repo/backend/confect/tryouts/score";
 import {
   Array as Arr,
   Effect,

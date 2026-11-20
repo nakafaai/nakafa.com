@@ -1,7 +1,7 @@
 import { useReducedMotion } from "@mantine/hooks";
+import type { BarVariant } from "@repo/design-system/components/evilcharts/charts/composed/bars";
 import {
   BarGlowFilter,
-  type BarVariant,
   DuotonePattern,
   GradientPattern,
   HatchedPattern,
@@ -9,14 +9,15 @@ import {
   VerticalColorGradient,
 } from "@repo/design-system/components/evilcharts/charts/composed/bars";
 import { CustomBar } from "@repo/design-system/components/evilcharts/charts/composed/shape";
+import type { ComposedAnimationType } from "@repo/design-system/components/evilcharts/charts/composed-chart";
 import {
-  type ComposedAnimationType,
   DEFAULT_BAR_RADIUS,
   useComposedChart,
 } from "@repo/design-system/components/evilcharts/charts/composed-chart";
 import { getColorsCount } from "@repo/design-system/components/evilcharts/ui/chart-config";
 import { useOrderedReveal } from "@repo/design-system/components/evilcharts/ui/reveal-animation";
-import { type ComponentProps, useId } from "react";
+import type { ComponentProps } from "react";
+import { useId } from "react";
 import { Bar as RechartsBar } from "recharts";
 
 // Composible parts

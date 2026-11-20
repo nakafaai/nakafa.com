@@ -7,10 +7,8 @@ import {
   makeChatStep,
   timeLeft,
 } from "@repo/backend/confect/nina/capability/deadline";
-import {
-  type LearningCapabilityName,
-  LearningCapabilityNameSchema,
-} from "@repo/backend/confect/nina/capability/spec";
+import type { LearningCapabilityName } from "@repo/backend/confect/nina/capability/spec";
+import { LearningCapabilityNameSchema } from "@repo/backend/confect/nina/capability/spec";
 import { runNakafaAgent } from "@repo/backend/confect/nina/nakafa/agent";
 import { startNinaStep } from "@repo/backend/confect/nina/step";
 import { deployment, provider } from "@repo/backend/test/gateway";

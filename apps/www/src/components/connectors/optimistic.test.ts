@@ -3,8 +3,8 @@ import { Id } from "@repo/backend/confect/_generated/id";
 import connectors from "@repo/backend/confect/_generated/refs/connectors";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Option, Schema } from "effect";
+import type { Connection } from "@/components/connectors/optimistic";
 import {
-  type Connection,
   currentConnection,
   disconnectOwnUpdate,
   disconnectSchoolUpdate,

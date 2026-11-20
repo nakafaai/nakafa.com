@@ -1,12 +1,11 @@
 import { Array as Arr } from "effect";
+import type { Node, SourceFile } from "tsrs/ast";
 import {
   isNumericLiteral,
   isStringLiteralLikeNode,
   isTemplateHead,
   isTemplateMiddle,
   isTemplateTail,
-  type Node,
-  type SourceFile,
 } from "tsrs/ast";
 import { TEST_PATTERN } from "#scripts/check/kinds";
 import { descendants } from "#scripts/check/source";

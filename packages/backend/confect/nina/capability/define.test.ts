@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import { ChatStep } from "@repo/backend/confect/nina/capability/deadline";
+import type { Capability } from "@repo/backend/confect/nina/capability/define";
 import {
-  type Capability,
   defineCapability,
   failed,
 } from "@repo/backend/confect/nina/capability/define";

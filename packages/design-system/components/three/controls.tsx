@@ -4,14 +4,11 @@ import { GridIcon } from "@hugeicons/core-free-icons";
 import { DropdownMenuCheckboxItem } from "@repo/design-system/components/ui/dropdown-menu";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { useRequired } from "@repo/design-system/hooks/required";
-import {
-  createContext,
-  type ReactNode,
-  useLayoutEffect,
-  useState,
-} from "react";
+import type { ReactNode } from "react";
+import { createContext, useLayoutEffect, useState } from "react";
 import { useTranslations } from "use-intl";
-import { createStore, type ExtractState, useStore } from "zustand";
+import type { ExtractState } from "zustand";
+import { createStore, useStore } from "zustand";
 import { combine } from "zustand/middleware";
 
 /** A scene that shows its grid. */

@@ -1,4 +1,5 @@
-import { type Array as Arr, Schema } from "effect";
+import type { Array as Arr } from "effect";
+import { Schema } from "effect";
 
 /**
  * One whole message of a learner, with the answer `lasting` should give

@@ -1,17 +1,16 @@
-import { Agent, createTool, type UsageHandler } from "@convex-dev/agent";
+import type { UsageHandler } from "@convex-dev/agent";
+import { Agent, createTool } from "@convex-dev/agent";
 import { researchMaxSources } from "@repo/backend/client/nina/research";
 import { components } from "@repo/backend/confect/_generated/components";
-import {
-  ActionCtx,
-  type QueryRunner,
-  type VectorSearch,
+import type {
+  QueryRunner,
+  VectorSearch,
 } from "@repo/backend/confect/_generated/services";
+import { ActionCtx } from "@repo/backend/confect/_generated/services";
 import { Gateway } from "@repo/backend/confect/gateway/handle";
 import { limitDeadline } from "@repo/backend/confect/nina/capability/deadline";
-import {
-  type CapabilityProgress,
-  specialistResult,
-} from "@repo/backend/confect/nina/capability/progress";
+import type { CapabilityProgress } from "@repo/backend/confect/nina/capability/progress";
+import { specialistResult } from "@repo/backend/confect/nina/capability/progress";
 import type { NakafaAgentData } from "@repo/backend/confect/nina/contract/agent";
 import { NinaReadOptionsSchema } from "@repo/backend/confect/nina/contract/data";
 import { createEffectSchema } from "@repo/backend/confect/nina/contract/sdk";

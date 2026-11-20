@@ -1,4 +1,5 @@
-import { expect, type Page, test } from "@playwright/test";
+import type { Page } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import { Effect, MutableRef, Option } from "effect";
 import { CONVEX_SOCKET, decodeGiven } from "@/e2e/support/frames";
 import {

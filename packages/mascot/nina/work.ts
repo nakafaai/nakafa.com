@@ -1,9 +1,9 @@
 import { POP } from "@repo/mascot/color";
+import type { Pose } from "@repo/mascot/nina/pose";
 import {
   armLeft,
   armRight,
   breathe,
-  type Pose,
   REST,
   sway,
   swayLegs,

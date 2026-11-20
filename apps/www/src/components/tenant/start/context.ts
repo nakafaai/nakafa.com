@@ -1,6 +1,7 @@
 import { useRequired } from "@repo/design-system/hooks/required";
 import { createContext } from "react";
-import { type StoreApi, useStore } from "zustand";
+import type { StoreApi } from "zustand";
+import { useStore } from "zustand";
 import type { StartAnswer, StartDraft } from "@/components/tenant/start/state";
 import type { TypedName } from "@/components/tenant/start/typed";
 

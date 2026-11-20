@@ -1,6 +1,7 @@
 import type { GlbbLabels } from "@repo/design-system/components/contents/physics/kinematics/non-uniform-linear-motion/data";
 import { useRequired } from "@repo/design-system/hooks/required";
-import { createContext, type ReactNode } from "react";
+import type { ReactNode } from "react";
+import { createContext } from "react";
 
 const GlbbLabelsContext = createContext<GlbbLabels | null>(null);
 

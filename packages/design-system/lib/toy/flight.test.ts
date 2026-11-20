@@ -1,11 +1,11 @@
 import { describe, expect, it } from "@effect/vitest";
+import type { Toy } from "@repo/design-system/lib/toy/flight";
 import {
   frameSeconds,
   homeward,
   isMoving,
   REST,
   step,
-  type Toy,
   transformOf,
 } from "@repo/design-system/lib/toy/flight";
 import {

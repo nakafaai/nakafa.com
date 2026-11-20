@@ -1,7 +1,7 @@
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { ARTICLE_VALIDATION_SCAN_LIMIT } from "@repo/backend/confect/contentRelease/article/limits";
+import type { ArticleCategoryClaim } from "@repo/backend/confect/contentRelease/article/ownership";
 import {
-  type ArticleCategoryClaim,
   validateCategoryClaim,
   validateCategoryMember,
 } from "@repo/backend/confect/contentRelease/article/ownership";

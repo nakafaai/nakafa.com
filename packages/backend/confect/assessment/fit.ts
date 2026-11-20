@@ -1,7 +1,7 @@
 import { hasDistinctIds } from "@nakafa/aksara-contracts/assessment/identity";
 import { cellsFit, pairsFit } from "@repo/backend/confect/assessment/key";
+import type { ExamResponse } from "@repo/backend/confect/assessment/response";
 import {
-  type ExamResponse,
   isCellsResponse,
   isChoiceResponse,
   isPairsResponse,

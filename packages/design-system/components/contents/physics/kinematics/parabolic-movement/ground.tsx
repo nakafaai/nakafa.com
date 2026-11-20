@@ -1,10 +1,12 @@
 import { useParabolicMotion } from "@repo/design-system/components/contents/physics/kinematics/parabolic-movement/context";
+import type {
+  ParabolicMotionState,
+  VectorTuple,
+} from "@repo/design-system/components/contents/physics/kinematics/parabolic-movement/data";
 import {
   getProjectilePoint,
   getProjectileSceneY,
   PARABOLIC_SCENE,
-  type ParabolicMotionState,
-  type VectorTuple,
 } from "@repo/design-system/components/contents/physics/kinematics/parabolic-movement/data";
 import { getColor } from "@repo/design-system/lib/color";
 import { Vector3 } from "three";

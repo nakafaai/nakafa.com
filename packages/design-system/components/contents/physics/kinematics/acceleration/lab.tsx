@@ -1,7 +1,7 @@
+import type { AccelerationCaseId } from "@repo/design-system/components/contents/physics/kinematics/acceleration/data";
 import {
   ACCELERATION_CASES,
   ACCELERATION_LAB_SCENE,
-  type AccelerationCaseId,
   DEFAULT_ACCELERATION_CASE_ID,
   getAccelerationMotionState,
   isAccelerationCaseId,
@@ -31,7 +31,8 @@ import {
 import { VisualFactIndicator } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { Array as Arr } from "effect";
-import { type ReactNode, Suspense, useMemo, useState } from "react";
+import type { ReactNode } from "react";
+import { Suspense, useMemo, useState } from "react";
 
 interface AccelerationLabProps {
   description: NonNullable<ReactNode>;

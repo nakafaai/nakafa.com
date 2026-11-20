@@ -10,10 +10,8 @@ import {
   ViewIcon,
 } from "@hugeicons/core-free-icons";
 import classroom from "@repo/backend/confect/_generated/refs/classroom";
-import {
-  ChannelName,
-  type ChannelView,
-} from "@repo/backend/confect/classroom/forum/channel";
+import type { ChannelView } from "@repo/backend/confect/classroom/forum/channel";
+import { ChannelName } from "@repo/backend/confect/classroom/forum/channel";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   DropdownMenu,

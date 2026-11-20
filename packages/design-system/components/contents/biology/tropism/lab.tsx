@@ -1,10 +1,12 @@
+import type {
+  Split,
+  TropismSetup,
+} from "@repo/design-system/components/contents/biology/tropism/auxin";
 import {
   bend,
   gravitySplit,
   growth,
   lightSplit,
-  type Split,
-  type TropismSetup,
 } from "@repo/design-system/components/contents/biology/tropism/auxin";
 import {
   GravityScene,
@@ -30,7 +32,8 @@ import {
 import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { Array as Arr } from "effect";
-import { type ReactNode, Suspense, useState } from "react";
+import type { ReactNode } from "react";
+import { Suspense, useState } from "react";
 
 /** How long the run lasts, in hours. */
 const HOURS = 48;

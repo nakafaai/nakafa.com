@@ -3,14 +3,15 @@ import { Effect, Fiber, Ref } from "effect";
 import { TestClock } from "effect/testing";
 import { reportClientException } from "@/lib/analytics/client";
 import { closeEditor } from "@/lib/editor/close";
-import { SyncFailed, type SyncTransport } from "@/lib/editor/session";
+import type { SyncTransport } from "@/lib/editor/session";
+import { SyncFailed } from "@/lib/editor/session";
 import { startSync } from "@/lib/editor/sync";
+import type { Refusal } from "@/test/sync";
 import {
   DOCUMENT_INVALID,
   foldingServer,
   makePort,
   makeServer,
-  type Refusal,
   silentEditor,
   typeText,
 } from "@/test/sync";

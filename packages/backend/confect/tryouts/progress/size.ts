@@ -1,5 +1,6 @@
 import { TryoutProgressSizeError } from "@repo/backend/confect/tryouts/progress/spec";
-import { getDocumentSize, type Value } from "convex/values";
+import type { Value } from "convex/values";
+import { getDocumentSize } from "convex/values";
 import { Effect } from "effect";
 
 /**

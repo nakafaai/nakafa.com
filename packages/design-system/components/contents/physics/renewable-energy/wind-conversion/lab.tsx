@@ -22,7 +22,8 @@ import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr } from "effect";
 import type { ReactNode, RefObject } from "react";
 import { Suspense, useEffect, useMemo, useRef, useState } from "react";
-import { ExtrudeGeometry, type Group, Shape } from "three";
+import type { Group } from "three";
+import { ExtrudeGeometry, Shape } from "three";
 
 const MIN_WIND_SPEED = 3;
 const MAX_WIND_SPEED = 12;

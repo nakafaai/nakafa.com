@@ -1,8 +1,6 @@
 import { spotInHalf } from "@repo/design-system/components/contents/biology/cell/anatomy";
-import {
-  Instances,
-  type Placement,
-} from "@repo/design-system/components/contents/biology/instances";
+import type { Placement } from "@repo/design-system/components/contents/biology/instances";
+import { Instances } from "@repo/design-system/components/contents/biology/instances";
 import { hashUnit } from "@repo/design-system/components/contents/simulation/grain";
 import { CELL_COLORS } from "@repo/design-system/lib/material/cell";
 import { Array as Arr } from "effect";

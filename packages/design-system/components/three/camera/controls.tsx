@@ -8,8 +8,8 @@ import { useThree } from "@react-three/fiber";
 import { useCameraFraming } from "@repo/design-system/components/three/camera/framing";
 import { useCameraPlay } from "@repo/design-system/components/three/camera/play";
 import { useVisualScene } from "@repo/design-system/components/visual/card";
+import type { CameraProjection } from "@repo/design-system/lib/geometry/camera";
 import {
-  type CameraProjection,
   resolveAuthoredView,
   resolveCameraDistanceLimits,
   resolveOrthographicZoom,
@@ -21,18 +21,10 @@ import {
   resolveCameraRefit,
 } from "@repo/design-system/lib/geometry/camera/fit";
 import { Array as Arr, Effect, HashMap, Option } from "effect";
-import {
-  type ComponentRef,
-  useCallback,
-  useEffect,
-  useLayoutEffect,
-  useRef,
-} from "react";
-import {
-  type Box3,
-  OrthographicCamera as ThreeOrthographicCamera,
-  Vector3,
-} from "three";
+import type { ComponentRef } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef } from "react";
+import type { Box3 } from "three";
+import { OrthographicCamera as ThreeOrthographicCamera, Vector3 } from "three";
 
 const DEFAULT_CAMERA_X = 12;
 const DEFAULT_CAMERA_Y = 8;

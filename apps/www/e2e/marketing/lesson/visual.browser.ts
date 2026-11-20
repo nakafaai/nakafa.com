@@ -1,4 +1,5 @@
-import { expect, type Locator, type Page, test } from "@playwright/test";
+import type { Locator, Page } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
 import { LESSON_SECTION_ID } from "@/components/marketing/about/lesson/id";
 import { LAB_VISIBLE_SHARE } from "@/components/marketing/about/lesson/reveal";

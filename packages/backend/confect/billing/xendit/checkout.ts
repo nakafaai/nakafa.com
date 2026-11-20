@@ -4,9 +4,9 @@ import billingInternal from "@repo/backend/confect/_generated/refs/billing.serve
 import { MutationRunner } from "@repo/backend/confect/_generated/services";
 import { billingOffer } from "@repo/backend/confect/billing/catalog";
 import { getXenditCheckoutLocale } from "@repo/backend/confect/billing/locale";
+import type { XenditCheckoutOffer } from "@repo/backend/confect/billing/spec";
 import {
   XenditCheckoutError,
-  type XenditCheckoutOffer,
   xenditCheckoutErrorCode,
 } from "@repo/backend/confect/billing/spec";
 import type { XenditSessionRequest } from "@repo/backend/confect/billing/xendit/contract";

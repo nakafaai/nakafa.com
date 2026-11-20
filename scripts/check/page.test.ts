@@ -1,18 +1,11 @@
 import { assert, describe, it } from "@effect/vitest";
 import { Array as Arr, Effect, HashSet, Order } from "effect";
-import {
-  type Identifier,
-  isIdentifier,
-  type Node,
-  type SourceFile,
-} from "tsrs/ast";
+import type { Identifier, Node, SourceFile } from "tsrs/ast";
+import { isIdentifier } from "tsrs/ast";
 import { effectFindings } from "#scripts/check/effect";
 import { outsidePage, pageFunctionKeys } from "#scripts/check/page";
-import {
-  descendants,
-  parseSources,
-  type RepositorySource,
-} from "#scripts/check/source";
+import type { RepositorySource } from "#scripts/check/source";
+import { descendants, parseSources } from "#scripts/check/source";
 
 /** The platform globals whose uses the Effect-native rules replace. */
 const GLOBALS = HashSet.make("Array", "Object");

@@ -1,8 +1,8 @@
 // @vitest-environment node
 
 import { describe, expect, it } from "@effect/vitest";
+import type { Curve } from "@repo/design-system/components/contents/mathematics/line/curve";
 import {
-  type Curve,
   CurveSchema,
   sampleCurve,
   TANGENT_Y_LIMIT,

@@ -9,14 +9,16 @@ import {
   BaseGlow,
   Pair,
 } from "@repo/design-system/components/contents/biology/dna/pair";
+import type {
+  Base,
+  Nucleic,
+} from "@repo/design-system/components/contents/biology/dna/strand";
 import {
-  type Base,
   basesOf,
   copiedCount,
   differencesOf,
   gcShareOf,
   identityOf,
-  type Nucleic,
   spanOf,
   turnsOf,
 } from "@repo/design-system/components/contents/biology/dna/strand";
@@ -48,14 +50,8 @@ import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { CELL_COLORS } from "@repo/design-system/lib/material/cell";
 import { Array as Arr } from "effect";
-import {
-  type ReactNode,
-  Suspense,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import type { ReactNode } from "react";
+import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import type { Group } from "three";
 
 /** A card narrower than this width-to-height ratio gets the farther camera. */

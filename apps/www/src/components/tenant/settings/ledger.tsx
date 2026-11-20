@@ -18,15 +18,13 @@ import { useInvoiceDownload } from "@/components/billing/invoice";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { RowItems } from "@/components/shared/table/menu";
-import { type StatusLook, TableStatus } from "@/components/shared/table/status";
+import type { StatusLook } from "@/components/shared/table/status";
+import { TableStatus } from "@/components/shared/table/status";
 import { TableFiltersProvider } from "@/components/shared/table/toolbar";
 import { useTenant } from "@/components/tenant/context";
 import { formatMinorAmount } from "@/lib/billing/plan";
-import {
-  invoiceStanding,
-  type SchoolBilling,
-  transferMailto,
-} from "@/lib/billing/school";
+import type { SchoolBilling } from "@/lib/billing/school";
+import { invoiceStanding, transferMailto } from "@/lib/billing/school";
 import { isActiveLocale } from "@/lib/i18n/active";
 
 /** The look of each standing of an invoice in its table. */

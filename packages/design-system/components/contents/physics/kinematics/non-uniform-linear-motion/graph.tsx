@@ -1,7 +1,7 @@
 import { useGlbbLabels } from "@repo/design-system/components/contents/physics/kinematics/non-uniform-linear-motion/context";
+import type { GlbbScenario } from "@repo/design-system/components/contents/physics/kinematics/non-uniform-linear-motion/data";
 import {
   GLBB_SCENARIOS,
-  type GlbbScenario,
   getFinalVelocity,
 } from "@repo/design-system/components/contents/physics/kinematics/non-uniform-linear-motion/data";
 import { formatTooltipTime } from "@repo/design-system/components/contents/physics/kinematics/tooltip";

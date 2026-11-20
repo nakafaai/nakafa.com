@@ -8,7 +8,8 @@ import {
   Predicate,
   Schema,
 } from "effect";
-import { fromJSON, type SerovalJSON } from "seroval";
+import type { SerovalJSON } from "seroval";
+import { fromJSON } from "seroval";
 import { readTryoutCountryFn } from "@/components/tryout/route/catalog.functions";
 import { readCurriculumRoute } from "@/lib/curriculum/node.functions";
 import { readRouteMessages } from "@/lib/i18n/messages.functions";

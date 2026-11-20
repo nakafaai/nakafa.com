@@ -9,11 +9,8 @@ import {
   renderBlockFormula,
   renderInlineFormula,
 } from "@repo/editor/math";
-import {
-  Editor,
-  findChildren,
-  type MarkdownLexerConfiguration,
-} from "@tiptap/core";
+import type { MarkdownLexerConfiguration } from "@tiptap/core";
+import { Editor, findChildren } from "@tiptap/core";
 import { Array as Arr, Option } from "effect";
 
 /** A headless editor of a document with the given HTML, as the exam editor holds one. */

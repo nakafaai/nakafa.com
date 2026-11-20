@@ -1,9 +1,5 @@
-import {
-  createFileRoute,
-  type ErrorComponentProps,
-  getRouteApi,
-  Outlet,
-} from "@tanstack/react-router";
+import type { ErrorComponentProps } from "@tanstack/react-router";
+import { createFileRoute, getRouteApi, Outlet } from "@tanstack/react-router";
 
 import { LocalizedError, useRouteFailure } from "@/components/state/localized";
 import { Stage } from "@/components/state/stage";

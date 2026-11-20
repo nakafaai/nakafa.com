@@ -28,7 +28,8 @@ import {
 import { Switch } from "@repo/design-system/components/ui/switch";
 import { cn } from "cn";
 import { Array as Arr } from "effect";
-import { type ReactNode, use, useOptimistic, useTransition } from "react";
+import type { ReactNode } from "react";
+import { use, useOptimistic, useTransition } from "react";
 import { useTranslations } from "use-intl";
 import { ChoiceContext } from "@/components/notifications/choice";
 import { preferenceChoicesOf } from "@/components/notifications/preferences";

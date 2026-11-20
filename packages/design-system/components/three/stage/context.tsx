@@ -6,7 +6,8 @@ import {
   isSoftwareRenderer,
 } from "@repo/design-system/lib/device";
 import { Schema } from "effect";
-import { createContext, type ReactNode, useMemo } from "react";
+import type { ReactNode } from "react";
+import { createContext, useMemo } from "react";
 import type { WebGLRenderer } from "three";
 
 /**

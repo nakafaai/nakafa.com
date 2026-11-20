@@ -9,10 +9,11 @@ import {
   QueryRunner,
 } from "@repo/backend/confect/_generated/services";
 import { findAccount } from "@repo/backend/confect/billing/accounts";
-import spec, {
-  type DeletionAccount,
-  type DeletionSubscription,
+import type {
+  DeletionAccount,
+  DeletionSubscription,
 } from "@repo/backend/confect/billing/deletion.spec";
+import spec from "@repo/backend/confect/billing/deletion.spec";
 import { polarGateway } from "@repo/backend/confect/billing/polar/live";
 import {
   BillingStateError,

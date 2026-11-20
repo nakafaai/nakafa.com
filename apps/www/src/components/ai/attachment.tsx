@@ -23,8 +23,10 @@ import type {
   PromptInputRefusal,
 } from "@repo/design-system/lib/prompt/files";
 import type { FileUIPart } from "ai";
-import { cva, type VariantProps } from "class-variance-authority";
-import { type ReactNode, useEffect, useRef } from "react";
+import type { VariantProps } from "class-variance-authority";
+import { cva } from "class-variance-authority";
+import type { ReactNode } from "react";
+import { useEffect, useRef } from "react";
 import { useTranslations } from "use-intl";
 import { refusalReason, splitFileName } from "@/components/ai/attachments";
 import { useAi } from "@/components/ai/context";

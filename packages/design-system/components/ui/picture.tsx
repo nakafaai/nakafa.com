@@ -1,11 +1,11 @@
-import {
-  Drawing,
-  type MarkAttributes,
-} from "@repo/design-system/components/ui/drawing";
-import { type Box, pictureHeight } from "@repo/design-system/lib/picture";
+import type { MarkAttributes } from "@repo/design-system/components/ui/drawing";
+import { Drawing } from "@repo/design-system/components/ui/drawing";
+import type { Box } from "@repo/design-system/lib/picture";
+import { pictureHeight } from "@repo/design-system/lib/picture";
 import type { Shape } from "@repo/mascot/shape";
 import { Array as Arr } from "effect";
-import { type ComponentProps, createElement } from "react";
+import type { ComponentProps } from "react";
+import { createElement } from "react";
 
 type PictureProps<Mark> = Omit<
   ComponentProps<"svg">,

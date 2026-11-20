@@ -9,7 +9,8 @@ import { MAX_EXAM_QUESTIONS } from "@repo/backend/confect/exams/exam";
 import { keyedFixture } from "@repo/backend/test/classroom";
 import { openClass, sat, scored } from "@repo/backend/test/insight";
 import { keyedExam, scheduleSitting } from "@repo/backend/test/sittings";
-import { TENANCY_NOW, type tenancyFixture } from "@repo/backend/test/tenancy";
+import type { tenancyFixture } from "@repo/backend/test/tenancy";
+import { TENANCY_NOW } from "@repo/backend/test/tenancy";
 import { Array as Arr, Effect } from "effect";
 
 const { run } = refs.internal.insight.observe;

@@ -1,8 +1,8 @@
 import { PotometerScene } from "@repo/design-system/components/contents/biology/potometer/scene";
+import type { Shoot } from "@repo/design-system/components/contents/biology/potometer/uptake";
 import {
   boreArea,
   bubbleTravel,
-  type Shoot,
   uptakeAfter,
 } from "@repo/design-system/components/contents/biology/potometer/uptake";
 import { HandSlider } from "@repo/design-system/components/contents/chemistry/slider";
@@ -26,7 +26,8 @@ import {
 import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { Array as Arr } from "effect";
-import { type ReactNode, Suspense, useState } from "react";
+import type { ReactNode } from "react";
+import { Suspense, useState } from "react";
 
 /**
  * A bubble potometer at real size: a leafy shoot sealed into a water-filled

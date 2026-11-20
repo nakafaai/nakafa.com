@@ -1,8 +1,8 @@
 import { GitCommitShaSchema } from "@nakafa/aksara-contracts/ids";
+import type { CurriculumRoute as PublishedCurriculumRoute } from "@nakafa/aksara-contracts/program/curriculum";
 import {
   CURRICULUM_NAMESPACES,
   CurriculumRouteSchema,
-  type CurriculumRoute as PublishedCurriculumRoute,
 } from "@nakafa/aksara-contracts/program/curriculum";
 import {
   LearningProgramSchema,

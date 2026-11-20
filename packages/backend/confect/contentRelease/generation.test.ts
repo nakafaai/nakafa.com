@@ -13,13 +13,14 @@ import {
   testReleaseJson,
   testRendererJson,
 } from "@repo/backend/test/content/release";
+import type { TestIdentity } from "@repo/backend/test/content/state";
 import {
   insertTestState,
   insertZeroRelease,
-  type TestIdentity,
   zeroReleaseJson,
 } from "@repo/backend/test/content/state";
-import { convexTest, type TestConvex } from "convex-test";
+import type { TestConvex } from "convex-test";
+import { convexTest } from "convex-test";
 
 const stageRelease = internal.contentRelease.manifest.stageRelease;
 const stageRecovery = internal.contentRelease.manifest.stageRecovery;

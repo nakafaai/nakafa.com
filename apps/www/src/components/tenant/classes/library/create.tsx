@@ -24,9 +24,9 @@ import {
   pickFromDrive,
   sendLibraryFile,
 } from "@/components/tenant/classes/library/add";
+import type { DriveFile } from "@/components/tenant/classes/library/draft";
 import {
   AddMode,
-  type DriveFile,
   EMPTY_DRAFT,
   isDraftReady,
   isOversize,

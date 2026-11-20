@@ -12,7 +12,8 @@ import {
   nf,
   period,
 } from "@repo/backend/test/classroom";
-import { TENANCY_NOW, type tenancyFixture } from "@repo/backend/test/tenancy";
+import type { tenancyFixture } from "@repo/backend/test/tenancy";
+import { TENANCY_NOW } from "@repo/backend/test/tenancy";
 import { Effect } from "effect";
 
 type Fixture = Effect.Success<typeof tenancyFixture>;

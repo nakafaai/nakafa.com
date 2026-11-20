@@ -9,11 +9,9 @@ import {
 } from "@repo/design-system/components/three/overlay/project";
 import { useRequired } from "@repo/design-system/hooks/required";
 import { Array as Arr, MutableHashMap, Option } from "effect";
+import type { CSSProperties, ReactNode, RefCallback } from "react";
 import {
-  type CSSProperties,
   createContext,
-  type ReactNode,
-  type RefCallback,
   useCallback,
   useLayoutEffect,
   useMemo,
@@ -22,7 +20,8 @@ import {
 } from "react";
 import type { Camera, Group, Object3D, Raycaster, Scene } from "three";
 import { Vector2, Vector3 } from "three";
-import { createStore, type StoreApi, useStore } from "zustand";
+import type { StoreApi } from "zustand";
+import { createStore, useStore } from "zustand";
 
 /** One label as the overlay draws it: its content, its inner style, and its inner ref. */
 interface OverlayItem {

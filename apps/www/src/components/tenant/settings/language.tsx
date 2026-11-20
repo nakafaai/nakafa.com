@@ -1,7 +1,5 @@
-import {
-  type ActiveAppLocaleCode,
-  ActiveAppLocaleCodeSchema,
-} from "@nakafa/aksara-contracts/locale";
+import type { ActiveAppLocaleCode } from "@nakafa/aksara-contracts/locale";
+import { ActiveAppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
 import { Field, FieldLabel } from "@repo/design-system/components/ui/field";
 import {
   Select,
@@ -14,10 +12,8 @@ import { languages } from "@repo/internationalization/data/lang";
 import { Array as Arr, Option, Schema } from "effect";
 import { useId } from "react";
 import { useTranslations } from "use-intl";
-import {
-  CountryFlagIcon,
-  type RegionCountryCode,
-} from "@/components/shared/flag";
+import type { RegionCountryCode } from "@/components/shared/flag";
+import { CountryFlagIcon } from "@/components/shared/flag";
 
 /** The languages as a select lists them, so its trigger names the language chosen. */
 const languageChoices = Arr.map(languages, ({ label, value }) => ({

@@ -6,10 +6,10 @@ import {
   StaleAnswer,
 } from "@repo/backend/confect/exams/sittings/errors";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
+import type { Wire } from "@repo/backend/scripts/load/wire";
 import {
   openWire,
   send,
-  type Wire,
   WireFailed,
   watch,
 } from "@repo/backend/scripts/load/wire";

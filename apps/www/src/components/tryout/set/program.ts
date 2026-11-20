@@ -5,7 +5,8 @@ import type {
   StartAttemptResult,
 } from "@repo/backend/confect/tryouts/start/spec";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { type ToastCopy, toast } from "@repo/design-system/lib/toast/notify";
+import type { ToastCopy } from "@repo/design-system/lib/toast/notify";
+import { toast } from "@repo/design-system/lib/toast/notify";
 import { Data, Effect } from "effect";
 import { reportClientException } from "@/lib/analytics/client";
 

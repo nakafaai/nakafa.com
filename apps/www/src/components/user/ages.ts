@@ -1,8 +1,10 @@
 import { AGE_TICK_MILLISECONDS } from "@repo/internationalization/src/formats";
 import { DateTime } from "effect";
 import { useEffect, useState } from "react";
-import { type StoreApi, useStore } from "zustand";
-import { type AgeClock, createAgeClock } from "@/components/user/clock";
+import type { StoreApi } from "zustand";
+import { useStore } from "zustand";
+import type { AgeClock } from "@/components/user/clock";
+import { createAgeClock } from "@/components/user/clock";
 
 /**
  * The clock of one list's ages, created once for the list. It starts at

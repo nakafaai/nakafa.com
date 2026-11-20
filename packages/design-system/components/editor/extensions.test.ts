@@ -2,8 +2,10 @@
 
 import { describe, expect, it } from "@effect/vitest";
 import { richOptions } from "@repo/design-system/components/editor/extensions";
-import { Editor, type JSONContent, type NodeViewRenderer } from "@tiptap/core";
-import { EditorState, type Transaction } from "@tiptap/pm/state";
+import type { JSONContent, NodeViewRenderer } from "@tiptap/core";
+import { Editor } from "@tiptap/core";
+import type { Transaction } from "@tiptap/pm/state";
+import { EditorState } from "@tiptap/pm/state";
 import { Array as Arr } from "effect";
 
 /** The editor of a memory with a document to render in, with the limit and the refusal a test names. */

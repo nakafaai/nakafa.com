@@ -7,14 +7,10 @@ import {
   Scheduler,
 } from "@repo/backend/confect/_generated/services";
 import { isAccountDeletionPending } from "@repo/backend/confect/auth/deletion/state";
-import {
-  type BillingOfferKey,
-  billingOffer,
-} from "@repo/backend/confect/billing/catalog";
-import {
-  applyPlanChange,
-  type PlanSource,
-} from "@repo/backend/confect/billing/plan";
+import type { BillingOfferKey } from "@repo/backend/confect/billing/catalog";
+import { billingOffer } from "@repo/backend/confect/billing/catalog";
+import type { PlanSource } from "@repo/backend/confect/billing/plan";
+import { applyPlanChange } from "@repo/backend/confect/billing/plan";
 import {
   BillingRowMissing,
   GrantOwnerMismatch,

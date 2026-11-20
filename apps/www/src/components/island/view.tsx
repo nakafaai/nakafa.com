@@ -3,7 +3,8 @@
 import type { Edit } from "@repo/backend/confect/island/world";
 import { createFramePace } from "@repo/design-system/lib/pace";
 import { Array as Arr, DateTime, Option } from "effect";
-import { createPainter, type Painter } from "@/components/island/draw";
+import type { Painter } from "@/components/island/draw";
+import { createPainter } from "@/components/island/draw";
 import { flatQuads } from "@/lib/island/flat";
 import { islesMesh } from "@/lib/island/isles";
 import { glowOf } from "@/lib/island/light";

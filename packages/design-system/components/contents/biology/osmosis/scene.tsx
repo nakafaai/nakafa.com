@@ -2,10 +2,10 @@ import { RoundedBox } from "@react-three/drei";
 import { useFrame, useThree } from "@react-three/fiber";
 import { useLabelInk } from "@repo/design-system/components/contents/biology/cell/parts";
 import { GlassTube } from "@repo/design-system/components/contents/biology/glassware";
+import type { Strip } from "@repo/design-system/components/contents/biology/osmosis/tissue";
 import {
   lengthAfter,
   protoplastFill,
-  type Strip,
 } from "@repo/design-system/components/contents/biology/osmosis/tissue";
 import { LabBench } from "@repo/design-system/components/contents/chemistry/bench";
 import { useQuantity } from "@repo/design-system/components/contents/simulation/quantity";

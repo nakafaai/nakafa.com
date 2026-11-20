@@ -14,17 +14,11 @@ import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { useRequired } from "@repo/design-system/hooks/required";
 import { cva } from "class-variance-authority";
 import { Array as Arr } from "effect";
-import {
-  createContext,
-  type ReactNode,
-  Suspense,
-  useEffect,
-  useId,
-  useState,
-} from "react";
+import type { ReactNode } from "react";
+import { createContext, Suspense, useEffect, useId, useState } from "react";
+import type { Lesson } from "@/components/marketing/about/lesson/id";
 import {
   LESSON_SUBJECTS,
-  type Lesson,
   LessonSchema,
 } from "@/components/marketing/about/lesson/id";
 import {

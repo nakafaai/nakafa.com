@@ -3,7 +3,8 @@
 import type { LineSceneConfig } from "@repo/design-system/components/contents/mathematics/line/resolve";
 import { CoordinateProvider } from "@repo/design-system/components/three/controls";
 import { useRequired } from "@repo/design-system/hooks/required";
-import { createContext, type ReactNode } from "react";
+import type { ReactNode } from "react";
+import { createContext } from "react";
 
 const LineSceneContext = createContext<LineSceneConfig | null>(null);
 

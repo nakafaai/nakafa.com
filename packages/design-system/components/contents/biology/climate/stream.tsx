@@ -1,8 +1,8 @@
-import {
-  type Frame,
-  type Point,
-  waterOf,
+import type {
+  Frame,
+  Point,
 } from "@repo/design-system/components/contents/biology/climate/frame";
+import { waterOf } from "@repo/design-system/components/contents/biology/climate/frame";
 import {
   clipTo,
   painted,

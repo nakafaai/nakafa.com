@@ -35,9 +35,9 @@ import { Array as Arr, Clock, Effect, Schema, String as Str } from "effect";
 import { useState } from "react";
 import { useFormatter, useTranslations } from "use-intl";
 import { PostMenuTrigger } from "@/components/tenant/classes/home/more";
+import type { ClassPost } from "@/components/tenant/classes/home/optimistic";
 import {
   archivePostUpdate,
-  type ClassPost,
   editPostUpdate,
   pinPostUpdate,
   removePostUpdate,

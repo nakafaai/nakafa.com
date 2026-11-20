@@ -1,11 +1,10 @@
 import type { Ref } from "@confect/core";
 import { Id } from "@repo/backend/confect/_generated/id";
 import type classroom from "@repo/backend/confect/_generated/refs/classroom";
-import { Clock, Effect, type Result, Schema } from "effect";
-import {
-  type ClassPost,
-  publishUpdate,
-} from "@/components/tenant/classes/home/optimistic";
+import type { Result } from "effect";
+import { Clock, Effect, Schema } from "effect";
+import type { ClassPost } from "@/components/tenant/classes/home/optimistic";
+import { publishUpdate } from "@/components/tenant/classes/home/optimistic";
 import { schoolCall } from "@/components/tenant/write";
 
 /** The arguments of one announcement, as the dialog gives them. */

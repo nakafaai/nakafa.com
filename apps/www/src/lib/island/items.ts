@@ -4,7 +4,8 @@ import { Array as Arr, Order, Result, Schema } from "effect";
 import type { Edit } from "@/lib/island/edits";
 import { KIND, LOOK } from "@/lib/island/look";
 import { SCALE } from "@/lib/island/scale";
-import { type Cells, cellOf, isInside } from "@/lib/island/world";
+import type { Cells } from "@/lib/island/world";
+import { cellOf, isInside } from "@/lib/island/world";
 
 /**
  * The ready-made things a learner places with one press (ADR 0047, D10): a

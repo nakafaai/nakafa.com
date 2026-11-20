@@ -7,7 +7,8 @@ import { AnimatePresence, domAnimation, LazyMotion, m } from "motion/react";
 import { useId } from "react";
 import { useTranslations } from "use-intl";
 import { useStore } from "zustand";
-import { type LinePair, useLines } from "@/components/player/lines/context";
+import type { LinePair } from "@/components/player/lines/context";
+import { useLines } from "@/components/player/lines/context";
 import {
   linePath,
   nameOf,

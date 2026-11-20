@@ -1,10 +1,8 @@
 import { describe, expect, it } from "@effect/vitest";
 import { Id } from "@repo/backend/confect/_generated/id";
 import { gradeView } from "@repo/backend/confect/records/grade";
-import {
-  DEFAULT_GRADING_SCHEME,
-  type GradingScheme,
-} from "@repo/backend/confect/records/scheme";
+import type { GradingScheme } from "@repo/backend/confect/records/scheme";
+import { DEFAULT_GRADING_SCHEME } from "@repo/backend/confect/records/scheme";
 import { Schema } from "effect";
 
 const classId = Schema.decodeUnknownSync(Id("classes"))("class-1");

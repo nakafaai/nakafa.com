@@ -1,6 +1,7 @@
 import { SPAN } from "@repo/backend/confect/island/world";
 import { Array as Arr } from "effect";
-import { SLOTS, slotUv, type TileName } from "@/lib/island/atlas";
+import type { TileName } from "@/lib/island/atlas";
+import { SLOTS, slotUv } from "@/lib/island/atlas";
 import { STRIDE } from "@/lib/island/mesh";
 import { SCALE } from "@/lib/island/scale";
 import { SEA_LEVEL } from "@/lib/island/world";

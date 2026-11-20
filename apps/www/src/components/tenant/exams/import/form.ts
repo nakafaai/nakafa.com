@@ -2,7 +2,8 @@ import type { Ref } from "@confect/core";
 import type exams from "@repo/backend/confect/_generated/refs/exams";
 import type { PlacedQuestion } from "@repo/backend/confect/exams/import";
 import { toast } from "@repo/design-system/lib/toast/notify";
-import { Data, Effect, Option, type Result } from "effect";
+import type { Result } from "effect";
+import { Data, Effect, Option } from "effect";
 import type { DriveFile } from "@/components/tenant/classes/library/draft";
 import { schoolCall } from "@/components/tenant/write";
 

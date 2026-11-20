@@ -61,22 +61,17 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { getTileLooks } from "@repo/design-system/lib/look";
 import { SITE_ORIGIN } from "@repo/seo/origin";
 import { useLocation } from "@tanstack/react-router";
-import {
-  Array as Arr,
-  type Effect,
-  Option,
-  Predicate,
-  Result,
-  Schema,
-} from "effect";
+import type { Effect } from "effect";
+import { Array as Arr, Option, Predicate, Result, Schema } from "effect";
 import { useLocale, useTranslations } from "use-intl";
 import { CountryFlagIcon } from "@/components/shared/flag";
-import { SearchEntry, type SearchKind } from "@/lib/search/entry";
+import type { SearchKind } from "@/lib/search/entry";
+import { SearchEntry } from "@/lib/search/entry";
+import type { SearchGroup } from "@/lib/search/group";
 import {
   groupHits,
   readExploreEntries,
   readNearEntries,
-  type SearchGroup,
 } from "@/lib/search/group";
 import type {
   readSearchIndex,

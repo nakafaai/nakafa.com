@@ -6,22 +6,24 @@ import exams from "@repo/backend/confect/_generated/refs/exams";
 import { choiceAnswers, textLabel } from "@repo/backend/confect/exams/blank";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Array as Arr, Option, Schema } from "effect";
+import type {
+  ExamView,
+  ListedExam,
+  Question,
+} from "@/components/tenant/exams/optimistic";
 import {
   addQuestionUpdate,
   answeredQuestion,
   answerUpdate,
   appendedQuestion,
   copyQuestionUpdate,
-  type ExamView,
   insertDraftExam,
   insertedAfter,
-  type ListedExam,
   movedQuestion,
   moveUpdate,
   placeholderQuestion,
   pointedQuestion,
   pointsUpdate,
-  type Question,
   removedQuestion,
   removeUpdate,
   renamedExam,

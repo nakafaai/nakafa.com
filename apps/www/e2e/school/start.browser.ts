@@ -1,4 +1,5 @@
-import { expect, type Page, test } from "@playwright/test";
+import type { Page } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import { Array as Arr, Effect } from "effect";
 import { saved, trackChanges } from "@/e2e/support/changes";
 import { signInLearner } from "@/e2e/support/learner";

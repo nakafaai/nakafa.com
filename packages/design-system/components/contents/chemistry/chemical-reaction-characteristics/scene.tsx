@@ -3,13 +3,15 @@ import {
   useReactionCharacteristicsColors,
   useReactionCharacteristicsCue,
 } from "@repo/design-system/components/contents/chemistry/chemical-reaction-characteristics/context";
+import type {
+  ReactionCueId,
+  ReactionSceneColors,
+} from "@repo/design-system/components/contents/chemistry/chemical-reaction-characteristics/data";
 import {
   COLOR_CUE_ID,
   ENERGY_CUE_ID,
   GAS_CUE_ID,
   PRECIPITATE_CUE_ID,
-  type ReactionCueId,
-  type ReactionSceneColors,
   ReactionScenePointSchema,
 } from "@repo/design-system/components/contents/chemistry/chemical-reaction-characteristics/data";
 import type { ReactionCharacteristicsLabProps } from "@repo/design-system/components/contents/chemistry/chemical-reaction-characteristics/lab";

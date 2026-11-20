@@ -11,12 +11,12 @@ import {
   vignette,
   withShadow,
 } from "@repo/design-system/components/contents/physics/canvas/paint";
+import type { TapeMotion } from "@repo/design-system/components/contents/physics/kinematics/ticker/tape";
 import {
   GAPS_PER_STRIP,
   STRIP_SECONDS,
   stripAcceleration,
   TAPE_MOTIONS,
-  type TapeMotion,
   TapeMotionSchema,
   TICKS_PER_SECOND,
   tapePosition,
@@ -44,7 +44,8 @@ import { getColor } from "@repo/design-system/lib/color";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr, Option, Schema } from "effect";
 import type p5 from "p5";
-import { type ReactNode, useState } from "react";
+import type { ReactNode } from "react";
+import { useState } from "react";
 
 /** How much slower than real time the run plays: 0.8 s of motion over 3.2 s. */
 const PLAY_RATE = 0.25;

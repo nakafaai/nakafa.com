@@ -35,7 +35,8 @@ import { MACHINE_COLORS } from "@repo/design-system/lib/material/machine";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Schema } from "effect";
 import type p5 from "p5";
-import { type ReactNode, useMemo, useState } from "react";
+import type { ReactNode } from "react";
+import { useMemo, useState } from "react";
 
 /** What the sketch reads on every frame: the push's angle, the hand's distance from the hinge, and the door. */
 const DoorFrameSchema = Schema.Struct({

@@ -1,4 +1,5 @@
-import { expect, type Page, test } from "@playwright/test";
+import type { Page } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import { Array as Arr, Effect, String as Str } from "effect";
 import { expectNoOverflow } from "@/e2e/support/layout";
 import {

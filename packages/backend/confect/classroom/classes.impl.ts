@@ -10,11 +10,8 @@ import {
   classAccess,
   classAuthority,
 } from "@repo/backend/confect/classroom/authority";
-import {
-  type ClassStatus,
-  classNameKey,
-  classView,
-} from "@repo/backend/confect/classroom/class";
+import type { ClassStatus } from "@repo/backend/confect/classroom/class";
+import { classNameKey, classView } from "@repo/backend/confect/classroom/class";
 import { create } from "@repo/backend/confect/classroom/classes/create";
 import { mine } from "@repo/backend/confect/classroom/classes/mine";
 import { resolve } from "@repo/backend/confect/classroom/classes/resolve";

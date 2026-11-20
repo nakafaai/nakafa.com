@@ -1,10 +1,14 @@
 import { Array as Arr } from "effect";
+import type {
+  ArrowFunction,
+  BindingName,
+  FunctionExpression,
+  FunctionLikeDeclaration,
+  Identifier,
+  Node,
+  VariableDeclaration,
+} from "tsrs/ast";
 import {
-  type ArrowFunction,
-  type BindingName,
-  type FunctionExpression,
-  type FunctionLikeDeclaration,
-  type Identifier,
   isArrowFunction,
   isBindingElement,
   isBlock,
@@ -25,8 +29,6 @@ import {
   isSourceFile,
   isVariableDeclarationList,
   isVariableStatement,
-  type Node,
-  type VariableDeclaration,
 } from "tsrs/ast";
 import { unwrapped } from "#scripts/check/wrapper";
 

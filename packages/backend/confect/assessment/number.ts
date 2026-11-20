@@ -1,6 +1,6 @@
+import type { NumberKey } from "@nakafa/aksara-contracts/assessment/answer";
 import {
   matchesAnswerKey,
-  type NumberKey,
   NumberKeySchema,
   readNumberAnswer,
 } from "@nakafa/aksara-contracts/assessment/answer";

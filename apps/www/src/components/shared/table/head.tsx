@@ -2,11 +2,10 @@ import type { IconSvgElement } from "@hugeicons/react";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { cva } from "class-variance-authority";
-import { type ComponentProps, use } from "react";
-import {
-  type HeadAlign,
-  HeadAlignContext,
-} from "@/components/shared/table/align";
+import type { ComponentProps } from "react";
+import { use } from "react";
+import type { HeadAlign } from "@/components/shared/table/align";
+import { HeadAlignContext } from "@/components/shared/table/align";
 
 /**
  * Where a head's button stands in its line: pulled out by its own padding in the first column, so the column's name

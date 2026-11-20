@@ -1,10 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import { Id } from "@repo/backend/confect/_generated/id";
-import {
-  type ImportedQuestion,
-  type ImportedRead,
-  ImportUnread,
+import type {
+  ImportedQuestion,
+  ImportedRead,
 } from "@repo/backend/confect/exams/import";
+import { ImportUnread } from "@repo/backend/confect/exams/import";
 import type { ImportSource } from "@repo/backend/confect/exams/reads.spec";
 import { Array as Arr, Effect, MutableList, Result, Schema } from "effect";
 import { strToU8, zipSync } from "fflate";

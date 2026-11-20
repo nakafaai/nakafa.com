@@ -22,7 +22,8 @@ import {
   insertRuntimeHead,
   insertRuntimeVersion,
 } from "@repo/backend/test/runtime/head";
-import { convexTest, type TestConvex } from "convex-test";
+import type { TestConvex } from "convex-test";
+import { convexTest } from "convex-test";
 import { Array as Arr, Option, Schema } from "effect";
 
 const stageItems = internal.contentRelease.items.stageItemBatch;

@@ -1,10 +1,9 @@
-import {
-  type Locale,
-  localeTimeZone,
-} from "@repo/internationalization/src/locale";
+import type { Locale } from "@repo/internationalization/src/locale";
+import { localeTimeZone } from "@repo/internationalization/src/locale";
 import { loadLocaleMessages } from "@repo/internationalization/src/messages";
 import { DateTime, Effect } from "effect";
-import { createTranslator, type Messages } from "use-intl/core";
+import type { Messages } from "use-intl/core";
+import { createTranslator } from "use-intl/core";
 
 /**
  * The instant of the current request as a Date. use-intl formats relative times

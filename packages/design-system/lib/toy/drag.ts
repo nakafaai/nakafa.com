@@ -6,18 +6,15 @@ import {
   scrollOf,
   toyAt,
 } from "@repo/design-system/lib/toy/dom";
-import {
-  frameSeconds,
-  isMoving,
-  type Point,
-} from "@repo/design-system/lib/toy/flight";
+import type { Point } from "@repo/design-system/lib/toy/flight";
+import { frameSeconds, isMoving } from "@repo/design-system/lib/toy/flight";
 import type { createFlock } from "@repo/design-system/lib/toy/flock";
+import type { Hold } from "@repo/design-system/lib/toy/hand";
 import {
   carry,
   drag,
   follow,
   grab,
-  type Hold,
   release,
 } from "@repo/design-system/lib/toy/hand";
 import { Option } from "effect";

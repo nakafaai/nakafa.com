@@ -16,10 +16,8 @@ import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
 import { useTranslations } from "use-intl";
 import { BreadcrumbAnchor } from "@/components/shared/breadcrumb/anchor";
-import {
-  type BreadcrumbHeaderItem,
-  BreadcrumbHeaderPath,
-} from "@/components/shared/breadcrumb/header";
+import type { BreadcrumbHeaderItem } from "@/components/shared/breadcrumb/header";
+import { BreadcrumbHeaderPath } from "@/components/shared/breadcrumb/header";
 import { PageActions, PageHeader } from "@/components/shared/page/header";
 import { useTenant } from "@/components/tenant/context";
 import { schoolHomeTarget } from "@/lib/routing/school/target";

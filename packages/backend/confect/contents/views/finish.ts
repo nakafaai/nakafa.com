@@ -1,9 +1,7 @@
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { requireAuth } from "@repo/backend/confect/auth/session";
-import {
-  type FinishLessonArgs,
-  Unread,
-} from "@repo/backend/confect/contents/views/lesson";
+import type { FinishLessonArgs } from "@repo/backend/confect/contents/views/lesson";
+import { Unread } from "@repo/backend/confect/contents/views/lesson";
 import { validateIncomingContentTarget } from "@repo/backend/confect/contents/views/target";
 import { grantAward } from "@repo/backend/confect/island/award";
 import { Array as Arr, Clock, Duration, Effect } from "effect";

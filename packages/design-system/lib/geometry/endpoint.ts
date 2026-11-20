@@ -1,5 +1,6 @@
 import { Array as Arr, Effect, Schema } from "effect";
-import { type Camera, Matrix4, Vector2, Vector3, Vector4 } from "three";
+import type { Camera } from "three";
+import { Matrix4, Vector2, Vector3, Vector4 } from "three";
 
 const EndpointStateSchema = Schema.Literals(["open", "closed"]);
 

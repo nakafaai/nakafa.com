@@ -37,7 +37,8 @@ import { REAGENT_COLORS } from "@repo/design-system/lib/material/reagent";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr, Schema } from "effect";
 import type p5 from "p5";
-import { type ReactNode, useState } from "react";
+import type { ReactNode } from "react";
+import { useState } from "react";
 
 /** The four ways a lift can move with an acceleration of the given size. */
 const CaseSchema = Schema.Literals([

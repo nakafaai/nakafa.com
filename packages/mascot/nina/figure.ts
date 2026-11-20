@@ -1,4 +1,5 @@
 import { NINA, POP } from "@repo/mascot/color";
+import type { SideSchema } from "@repo/mascot/nina/body";
 import {
   ARM,
   FIN,
@@ -6,29 +7,22 @@ import {
   LEANS,
   LEG,
   PALE,
-  type SideSchema,
   TORSO,
 } from "@repo/mascot/nina/body";
 import { HALF_BOX, WHOLE_BOX } from "@repo/mascot/nina/box";
-import { face, type Look, type MoodSchema } from "@repo/mascot/nina/face";
-import { type Curve, exit, limb } from "@repo/mascot/nina/limb";
-import {
-  type LimbName,
-  limbOf,
-  type Mark,
-  partOf,
-} from "@repo/mascot/nina/mark";
-import {
-  BEHAVIORS,
-  homeOf,
-  type Mode,
-  modeOf,
-  moodOf,
-  type Options,
-} from "@repo/mascot/nina/options";
-import { type Pose, REST } from "@repo/mascot/nina/pose";
+import type { Look, MoodSchema } from "@repo/mascot/nina/face";
+import { face } from "@repo/mascot/nina/face";
+import type { Curve } from "@repo/mascot/nina/limb";
+import { exit, limb } from "@repo/mascot/nina/limb";
+import type { LimbName, Mark } from "@repo/mascot/nina/mark";
+import { limbOf, partOf } from "@repo/mascot/nina/mark";
+import type { Mode, Options } from "@repo/mascot/nina/options";
+import { BEHAVIORS, homeOf, modeOf, moodOf } from "@repo/mascot/nina/options";
+import type { Pose } from "@repo/mascot/nina/pose";
+import { REST } from "@repo/mascot/nina/pose";
 import { tenth } from "@repo/mascot/round";
-import { group, path, rect, type Shape } from "@repo/mascot/shape";
+import type { Shape } from "@repo/mascot/shape";
+import { group, path, rect } from "@repo/mascot/shape";
 import { Array as Arr } from "effect";
 
 /** The limbs below her body, left to right. */

@@ -12,11 +12,8 @@ import { getRouteApi, useNavigate } from "@tanstack/react-router";
 import { Effect, Match, Result } from "effect";
 import { useState, useTransition } from "react";
 import { useTranslations } from "use-intl";
-import {
-  type AgentRequest,
-  agentAnswerAddress,
-  agentHost,
-} from "@/lib/auth/consent";
+import type { AgentRequest } from "@/lib/auth/consent";
+import { agentAnswerAddress, agentHost } from "@/lib/auth/consent";
 import { useCurrentAuthNavigation } from "@/lib/auth/location";
 
 const agentRoute = getRouteApi("/$locale/_entry/agent");

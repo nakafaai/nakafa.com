@@ -1,13 +1,9 @@
-import {
-  ActiveAppLocaleSchema,
-  type AppLocale,
-} from "@nakafa/aksara-contracts/locale";
+import type { AppLocale } from "@nakafa/aksara-contracts/locale";
+import { ActiveAppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import contentRelease from "@repo/backend/confect/_generated/refs/contentRelease";
 import { PUBLIC_ROUTE_SURFACES } from "@repo/contents/route/surface";
-import {
-  decodeLocale,
-  type Locale,
-} from "@repo/internationalization/src/locale";
+import type { Locale } from "@repo/internationalization/src/locale";
+import { decodeLocale } from "@repo/internationalization/src/locale";
 import { Array as Arr, Effect, Option, Schema } from "effect";
 import { matchesPreviewRoute } from "@/lib/content/preview/route";
 import { readPublishedProgramPath } from "@/lib/content/program/path";

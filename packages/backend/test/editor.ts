@@ -5,20 +5,17 @@ import {
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
 import type { AccessDenied } from "@repo/backend/confect/access/errors";
-import { type Batch, encodeBatch } from "@repo/backend/confect/editor/batch";
+import type { Batch } from "@repo/backend/confect/editor/batch";
+import { encodeBatch } from "@repo/backend/confect/editor/batch";
 import { STEP_KEEP_DELAY } from "@repo/backend/confect/editor/prune";
+import type { Step } from "@repo/backend/confect/editor/step";
 import {
-  type Step,
   StepTextSchema,
   UncheckedStepSchema,
 } from "@repo/backend/confect/editor/step";
 import { nestBlockquotes, paragraphOf } from "@repo/backend/test/editor/nodes";
-import {
-  grantRole,
-  slugOf,
-  TENANCY_NOW,
-  type tenancyFixture,
-} from "@repo/backend/test/tenancy";
+import type { tenancyFixture } from "@repo/backend/test/tenancy";
+import { grantRole, slugOf, TENANCY_NOW } from "@repo/backend/test/tenancy";
 import { encodeJsonText, JsonTextSchema } from "@repo/utilities/json";
 import { Array as Arr, Duration, Effect, Schema } from "effect";
 

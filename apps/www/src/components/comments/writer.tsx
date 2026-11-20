@@ -17,12 +17,8 @@ import { randomUuid } from "@repo/utilities/uuid";
 import { Array as Arr, Effect, Number as Num, Option, Result } from "effect";
 import { useRef } from "react";
 import { useTranslations } from "use-intl";
-import {
-  type ComposerKey,
-  generationOf,
-  photosOf,
-  textOf,
-} from "@/components/comments/draft";
+import type { ComposerKey } from "@/components/comments/draft";
+import { generationOf, photosOf, textOf } from "@/components/comments/draft";
 import { useCommentDraft } from "@/components/comments/provider";
 import { PhotoTray } from "@/components/comments/tray";
 import { uploadPhoto } from "@/components/comments/upload";

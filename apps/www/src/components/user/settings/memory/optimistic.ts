@@ -1,12 +1,14 @@
 import type * as OptimisticLocalStore from "@confect/react/OptimisticLocalStore";
 import nina from "@repo/backend/confect/_generated/refs/nina";
 import { Array as Arr, Option } from "effect";
+import type {
+  Memory,
+  MemoryDraft,
+  MemoryPage,
+} from "@/components/user/settings/memory/list";
 import {
   editedMemory,
   findMemory,
-  type Memory,
-  type MemoryDraft,
-  type MemoryPage,
   pageCleared,
   pageWith,
   pageWithout,

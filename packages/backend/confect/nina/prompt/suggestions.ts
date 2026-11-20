@@ -1,7 +1,5 @@
-import {
-  ActiveAppLocaleCodeSchema,
-  type AppLocaleCode,
-} from "@nakafa/aksara-contracts/locale";
+import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
+import { ActiveAppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
 import { createPrompt } from "@repo/backend/confect/nina/prompt/assemble";
 import { Schema } from "effect";
 

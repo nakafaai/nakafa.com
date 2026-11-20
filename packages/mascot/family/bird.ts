@@ -1,8 +1,8 @@
+import type { Design } from "@repo/mascot/kit";
 import {
   belly,
   blob,
   both,
-  type Design,
   ellipse,
   eye,
   eyes,

@@ -1,11 +1,5 @@
-import {
-  Array as Arr,
-  Effect,
-  FileSystem,
-  Path,
-  type PlatformError,
-  Schema,
-} from "effect";
+import type { PlatformError } from "effect";
+import { Array as Arr, Effect, FileSystem, Path, Schema } from "effect";
 import { ChildProcess } from "effect/process";
 import { runEntry } from "#scripts/entry";
 import { collectText } from "#scripts/process";

@@ -1,4 +1,5 @@
-import { expect, type Locator, test } from "@playwright/test";
+import type { Locator } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import {
   NINA_FILE_COUNT,
   NINA_FILE_SIZE,

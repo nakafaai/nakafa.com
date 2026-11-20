@@ -1,4 +1,5 @@
-import { expect, type Page, test } from "@playwright/test";
+import type { Page } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import { POST_PAGE_SIZE } from "@repo/backend/client/posts/list";
 import { AuthFailure, AuthReadError } from "@repo/backend/confect/auth/spec";
 import app from "@repo/internationalization/dictionaries/en.json" with {

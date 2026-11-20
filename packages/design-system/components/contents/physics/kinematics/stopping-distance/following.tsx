@@ -5,14 +5,14 @@ import {
   ROAD,
   Road,
 } from "@repo/design-system/components/contents/physics/kinematics/road";
+import type { SedanRig } from "@repo/design-system/components/contents/physics/kinematics/sedan";
 import {
   SEDAN,
   Sedan,
-  type SedanRig,
 } from "@repo/design-system/components/contents/physics/kinematics/sedan";
+import type { Follow } from "@repo/design-system/components/contents/physics/kinematics/stopping-distance/gap";
 import {
   contactOf,
-  type Follow,
   finalGap,
   followerStop,
   initialGap,
@@ -49,14 +49,8 @@ import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { CAR_COLORS } from "@repo/design-system/lib/material/car";
 import { Array as Arr, Option } from "effect";
-import {
-  type ReactNode,
-  Suspense,
-  useCallback,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import type { ReactNode } from "react";
+import { Suspense, useCallback, useMemo, useRef, useState } from "react";
 
 /** Both cars cruise at 25 m/s, 90 km/h, as on a toll road. */
 const SPEED = 25;

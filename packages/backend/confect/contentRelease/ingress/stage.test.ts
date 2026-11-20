@@ -48,10 +48,8 @@ import {
   insertSignedCandidate,
   runStage,
 } from "@repo/backend/test/content/stage";
-import {
-  makeProgramSnapshotData,
-  type ProgramSnapshotData,
-} from "@repo/backend/test/program/snapshot";
+import type { ProgramSnapshotData } from "@repo/backend/test/program/snapshot";
+import { makeProgramSnapshotData } from "@repo/backend/test/program/snapshot";
 import { convexTest } from "convex-test";
 import { Data, Effect, Schema } from "effect";
 import { Base64Url } from "effect/encoding";

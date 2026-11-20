@@ -1,8 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
-import {
-  type Entrance,
-  makeEntry,
-} from "@repo/backend/confect/assessment/gate/enter";
+import type { Entrance } from "@repo/backend/confect/assessment/gate/enter";
+import { makeEntry } from "@repo/backend/confect/assessment/gate/enter";
 import {
   TokenRefused,
   TooManyTries,

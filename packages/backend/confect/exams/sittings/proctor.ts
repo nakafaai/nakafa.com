@@ -9,11 +9,11 @@ import { Sitting } from "@repo/backend/confect/exams/sittings/access";
 import { attemptIn } from "@repo/backend/confect/exams/sittings/attempt";
 import { sittingAuthority } from "@repo/backend/confect/exams/sittings/authority";
 import { RetiredDevicesFull } from "@repo/backend/confect/exams/sittings/errors";
-import {
-  type Minutes,
-  RETIRED_DEVICE_LIMIT,
-  type ReasonCode,
+import type {
+  Minutes,
+  ReasonCode,
 } from "@repo/backend/confect/exams/sittings/schema";
+import { RETIRED_DEVICE_LIMIT } from "@repo/backend/confect/exams/sittings/schema";
 import { decideProctorAction } from "@repo/backend/confect/exams/sittings/state";
 import {
   cancelPending,

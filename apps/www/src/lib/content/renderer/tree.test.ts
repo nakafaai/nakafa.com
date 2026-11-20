@@ -11,7 +11,8 @@ import type {
 import { contentOutline } from "@repo/contents/toc";
 import { semanticMdxComponents } from "@repo/design-system/lib/markdown/semantic";
 import { Array as Arr, Effect, Schema } from "effect";
-import { createElement, Fragment, type ReactNode } from "react";
+import type { ReactNode } from "react";
+import { createElement, Fragment } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { TAKES_LOCALE } from "@/lib/content/renderer/locale";
 import { IN_PROP } from "@/lib/content/renderer/prop";

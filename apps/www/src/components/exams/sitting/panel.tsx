@@ -9,20 +9,16 @@ import { getRouteApi } from "@tanstack/react-router";
 import { Array as Arr, Option } from "effect";
 import { use, useState } from "react";
 import { useTranslations } from "use-intl";
-import {
-  type DashboardAttempt,
-  dashboardArgs,
-} from "@/components/exams/sitting/change";
+import type { DashboardAttempt } from "@/components/exams/sitting/change";
+import { dashboardArgs } from "@/components/exams/sitting/change";
 import {
   SittingOfflineContext,
   useMayProctor,
   useSittingData,
   useSittingStore,
 } from "@/components/exams/sitting/context";
-import {
-  type PanelDialog,
-  StudentPanelActions,
-} from "@/components/exams/sitting/controls";
+import type { PanelDialog } from "@/components/exams/sitting/controls";
+import { StudentPanelActions } from "@/components/exams/sitting/controls";
 import {
   AddMinutesDialog,
   AllowDeviceDialog,

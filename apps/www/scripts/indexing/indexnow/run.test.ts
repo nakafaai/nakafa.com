@@ -3,14 +3,13 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { FetchClient } from "@repo/utilities/http/client";
 import { encodePrettyJsonText } from "@repo/utilities/json";
+import type { FileSystem, Path } from "effect";
 import {
   Array as Arr,
   ConfigProvider,
   Effect,
-  type FileSystem,
   Layer,
   MutableList,
-  type Path,
   Record as Rec,
   Schema,
 } from "effect";

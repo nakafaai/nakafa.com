@@ -10,10 +10,10 @@ import {
   Record as Rec,
   Schema,
 } from "effect";
+import type { TryoutMapLocale } from "@/lib/routing/public/tryout/map";
 import {
   TRYOUT_MAP_PATH,
   TryoutMapJson,
-  type TryoutMapLocale,
 } from "@/lib/routing/public/tryout/map";
 import { SOURCE_APP_LOCALE } from "@/lib/routing/public/tryout/route";
 import { hasStaticRelease } from "@/lib/routing/release";

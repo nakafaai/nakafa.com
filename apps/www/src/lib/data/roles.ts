@@ -3,10 +3,8 @@ import {
   StudentIcon,
   TeacherIcon,
 } from "@hugeicons/core-free-icons";
-import {
-  type SelfSelectableUserRole,
-  selfSelectableUserRoles,
-} from "@repo/backend/confect/users/roles";
+import type { SelfSelectableUserRole } from "@repo/backend/confect/users/roles";
+import { selfSelectableUserRoles } from "@repo/backend/confect/users/roles";
 import { Array as Arr } from "effect";
 
 export const roleIconByValue: Record<

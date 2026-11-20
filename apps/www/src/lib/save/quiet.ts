@@ -1,4 +1,5 @@
-import { type Duration, Effect, Fiber, Option, Ref } from "effect";
+import type { Duration } from "effect";
+import { Effect, Fiber, Option, Ref } from "effect";
 
 /** Work that waits until its input has been quiet, or runs at once when it is flushed. */
 interface QuietSaver<A> {

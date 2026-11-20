@@ -1,11 +1,5 @@
-import {
-  box,
-  ellipse,
-  line,
-  PART,
-  type Shape,
-  setCell,
-} from "@/lib/island/tiles/shape";
+import type { Shape } from "@/lib/island/tiles/shape";
+import { box, ellipse, line, PART, setCell } from "@/lib/island/tiles/shape";
 
 /** A stem from the ground up to `top` at column `x`. */
 function stem(shape: Shape, x: number, top: number) {
