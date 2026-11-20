@@ -12,6 +12,7 @@ import {
 } from "@/e2e/support/marketing";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { waitForQuiet } from "@/e2e/support/quiet";
+import { HEADER_SECTION } from "@/e2e/support/selector";
 import { desktopViewport, touchViewport } from "@/e2e/support/viewport";
 
 /** The English Nakafa landing and the English School landing, as the address bar reads them. */
@@ -159,7 +160,7 @@ const pressMenu = Effect.fn("NakafaE2E.pressMenu")(function* (
   yield* Effect.promise(() =>
     header.getByRole("button", { name: "Learn" }).click()
   );
-  const popup = page.locator('[data-slot="navigation-menu-viewport"]');
+  const popup = page.locator(HEADER_SECTION);
   yield* Effect.promise(() => expect(popup).toBeVisible());
   yield* movePointerTo(page, header.getByRole("button", { name: "School" }));
   yield* Effect.promise(() => page.keyboard.press("Escape"));

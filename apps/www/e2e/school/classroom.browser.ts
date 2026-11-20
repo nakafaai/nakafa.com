@@ -7,6 +7,7 @@ import {
   signInClassTeacher,
   signInOwner,
 } from "@/e2e/support/school";
+import { TOOLTIP } from "@/e2e/support/selector";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { waitUntilTakenOver } from "@/e2e/support/window";
 
@@ -285,7 +286,7 @@ test("the selects of New task open with a one-word label and an icon on every op
       if (width === 390) {
         // A phone's header shows New task as its plus alone, and its name in a tooltip.
         await create.hover();
-        await expect(page.locator('[data-slot="tooltip-content"]')).toHaveText(
+        await expect(page.locator(TOOLTIP)).toHaveText(
           "New task"
         );
         await page.screenshot({

@@ -9,7 +9,11 @@ import { waitForSlide } from "@/e2e/support/layout";
 import { waitForCommittedAppRouter } from "@/e2e/support/navigation/readiness";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { APP_SCRIPT_PATTERN } from "@/e2e/support/requests";
-import { paginationNavigation, SUBJECT_LINK } from "@/e2e/support/selector";
+import {
+  paginationNavigation,
+  SUBJECT_LINK,
+  TOOLTIP,
+} from "@/e2e/support/selector";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
 const NINA_DIALOG_NAME = /^Nina/u;
@@ -147,7 +151,7 @@ const verifyReadingHeader = Effect.fn("NakafaE2E.verifyReadingHeader")(
     );
     // A UI SDK tooltip describes a trigger that names itself with aria-label
     // (`@ui-sdk/react/docs/components/tooltip.md`).
-    const tooltip = page.locator('[data-slot="tooltip-content"]');
+    const tooltip = page.locator(TOOLTIP);
     const showsTooltip = Effect.fn("NakafaE2E.showsReadingTooltip")(function* (
       trigger: Locator,
       label: string

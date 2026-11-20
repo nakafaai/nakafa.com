@@ -4,6 +4,7 @@ import en from "@repo/internationalization/dictionaries/en.json" with {
   type: "json",
 };
 import { Effect } from "effect";
+import { noticeWith } from "@/e2e/support/attachment";
 import { live, reloadUntil, saved } from "@/e2e/support/changes";
 import {
   CHAT_PAGE,
@@ -297,7 +298,7 @@ const leavesWhenDeletedElsewhere = Effect.fn(
         timeout: readinessTimeoutMilliseconds,
       }
     );
-    await expect(page.getByText(DELETED_ELSEWHERE)).toBeVisible();
+    await expect(noticeWith(page, DELETED_ELSEWHERE)).toBeVisible();
     await expect(rowOf(page, oldest.chatId)).toHaveCount(0);
     expect(await shownTexts(page)).toEqual([]);
     await other.close();
@@ -338,7 +339,7 @@ const sheetLetsGoWhenDeletedElsewhere = Effect.fn(
   });
   const other = yield* deleteInAnotherTab(page, learner.username, gone.chatId);
   yield* Effect.promise(async () => {
-    await expect(page.getByText(DELETED_ELSEWHERE)).toBeVisible({
+    await expect(noticeWith(page, DELETED_ELSEWHERE)).toBeVisible({
       timeout: readinessTimeoutMilliseconds,
     });
     await expect(

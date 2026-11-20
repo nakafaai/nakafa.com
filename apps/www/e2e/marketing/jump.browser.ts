@@ -4,6 +4,7 @@ import { Effect } from "effect";
 import { loadMarketingPage } from "@/e2e/support/marketing";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { waitForAnimations } from "@/e2e/support/quiet";
+import { HEADER_SECTION } from "@/e2e/support/selector";
 import { desktopViewport, viewportSize } from "@/e2e/support/viewport";
 import { waitUntilTakenOver } from "@/e2e/support/window";
 
@@ -61,9 +62,7 @@ test("a School feature's link in the header's sections brings its section right 
                 .click()
             );
             // A press made while the popup still scales in can land on another of its links.
-            const popup = page.locator(
-              '[data-slot="navigation-menu-viewport"]'
-            );
+            const popup = page.locator(HEADER_SECTION);
             yield* Effect.promise(() => expect(popup).toBeVisible());
             yield* Effect.promise(() => waitForAnimations(popup));
             yield* Effect.promise(() =>

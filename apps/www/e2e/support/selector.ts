@@ -1,5 +1,5 @@
 import type { ActiveAppLocaleCode } from "@nakafa/aksara-contracts/locale";
-import type { Page } from "@playwright/test";
+import type { Locator, Page } from "@playwright/test";
 import de from "@repo/internationalization/dictionaries/de.json" with {
   type: "json",
 };
@@ -12,6 +12,15 @@ import id from "@repo/internationalization/dictionaries/id.json" with {
 import ms from "@repo/internationalization/dictionaries/ms.json" with {
   type: "json",
 };
+
+/**
+ * The alerts a page or a part of it shows. UI SDK keeps a live region of its own for what it announces, an empty
+ * `role="alert"` until it speaks (`data-ui-sdk-announcer`), which is no alert of the page, so it is left out.
+ */
+export const shownAlerts = (scope: Page | Locator) =>
+  scope
+    .getByRole("alert")
+    .and(scope.locator(":not([data-ui-sdk-announcer])"));
 
 /** The site's messages in each of its languages. */
 const MESSAGES = { de, en, id, ms } satisfies Record<
@@ -37,6 +46,16 @@ export const MARKDOWN_MARKUP = "em, strong, code, pre, a, ul, ol, h1, h2, h3";
  * own, so a toast moving is not the page moving.
  */
 export const TOASTER = "[data-slot=toast-region]";
+/**
+ * The tooltip that shows. Every tooltip stays in the page, hidden, from the first HTML, since it names or describes
+ * its trigger (`@ui-sdk/react/docs/components/tooltip.md`), so only the open one is selected.
+ */
+export const TOOLTIP = '[data-slot="tooltip-content"][data-open]';
+/**
+ * The header's open section. The navigation menu's viewport stays in the page while every section is closed
+ * (`data-closed`), so only the open one is selected.
+ */
+export const HEADER_SECTION = '[data-slot="navigation-menu-viewport"][data-open]';
 /** The popup of a drawer, which a phone opens for the consent and contributor surfaces. */
 export const DRAWER_POPUP = '[data-slot="drawer-content"]';
 /** The handle at the top of a drawer, which a swipe drags. */

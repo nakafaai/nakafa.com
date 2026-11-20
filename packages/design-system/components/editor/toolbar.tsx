@@ -221,7 +221,11 @@ export function EditorBar({
       data-slot="editor-toolbar"
       role="toolbar"
     >
-      <div className={editorRow({ align })} ref={row}>
+      <div
+        className={editorRow({ align })}
+        data-slot="editor-toolbar-row"
+        ref={row}
+      >
         {Arr.map(groups, ({ name, tools }) => (
           <BarGroup key={name} name={name}>
             {tools}

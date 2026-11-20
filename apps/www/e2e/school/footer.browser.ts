@@ -30,11 +30,14 @@ const OPEN_TILE = /^Open question/u;
 /** The first page of the canvas, whose name starts with its number. */
 const FIRST_PAGE = /^Question 1\b/u;
 
-/** The zoom the column of pages is drawn at, read from its style: the one child of the canvas's held paper. */
+/**
+ * The zoom the column of pages is drawn at, read from its style: the one child of the canvas's held paper, which
+ * stands in the scroll area's content.
+ */
 const columnZoom = (page: Page) =>
   page
     .getByRole("region", { name: "Exam pages" })
-    .locator('[data-slot="scroll-area-viewport"] > div > div')
+    .locator('[data-slot="scroll-area-content"] > div > div')
     .evaluate((column) => Number(getComputedStyle(column).zoom));
 
 /** Creates an exam of three questions with their prompts, and waits until the server holds them. */
@@ -217,6 +220,8 @@ test.describe("at 1440", () => {
       .getByRole("button", { name: "Delete", exact: true })
       .click();
     await expect(tiles).toHaveCount(4);
+    // The question renders in the grid beside its button, so the grid's own Delete is pressed once it has gone.
+    await expect(page.getByRole("dialog")).toHaveCount(0);
 
     await grid.getByRole("checkbox", { name: "Select question 2" }).click();
     await grid.getByRole("button", { name: "Delete", exact: true }).click();

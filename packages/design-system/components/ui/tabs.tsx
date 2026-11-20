@@ -50,7 +50,7 @@ export function TabsList({
         render={<TabsListPrimitive {...props} />}
       >
         {children}
-        <TabsIndicator className="bg-foreground absolute bottom-0 left-0 z-10 h-0.5 w-(--active-tab-width) translate-x-(--active-tab-left) transition-[width,translate] duration-200 ease-in-out motion-reduce:transition-none" />
+        <TabsIndicator className="bg-foreground absolute bottom-0 left-0 z-10 h-0.5 w-(--active-tab-width) translate-x-(--active-tab-left) transition-[width,translate] duration-200 ease-in-out data-[activation-direction=none]:transition-none motion-reduce:transition-none" />
       </ScrollAreaViewport>
     </ScrollArea>
   );

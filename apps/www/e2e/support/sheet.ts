@@ -37,12 +37,15 @@ export const openSheet = Effect.fn("NakafaE2E.openSheet")(function* (
   });
 });
 
-/** Opens a chat of the learner in the sheet, from its history of recent chats. */
+/**
+ * Opens a chat of the learner in the sheet, from its history of recent chats. Each chat is a radio item, and the
+ * chat the sheet shows is the checked one.
+ */
 export const openFromHistory = Effect.fn("NakafaE2E.openFromHistory")(
   function* (page: Page, title: string) {
     yield* Effect.promise(async () => {
       await page.getByRole("button", { name: "Chat history" }).click();
-      await page.getByRole("menuitem", { name: title }).click();
+      await page.getByRole("menuitemradio", { name: title }).click();
     });
   }
 );

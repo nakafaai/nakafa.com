@@ -5,7 +5,7 @@ import { Effect, Schema } from "effect";
 import { waitForCommittedAppRouter } from "@/e2e/support/navigation/readiness";
 import { waitForAnimations } from "@/e2e/support/quiet";
 import { openRoute } from "@/e2e/support/route";
-import { MARKETING_PAGE } from "@/e2e/support/selector";
+import { HEADER_SECTION, MARKETING_PAGE } from "@/e2e/support/selector";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
 const MarketingSurfaceSchema = Schema.Literals(["community"]);
@@ -36,7 +36,7 @@ class MarketingSurfaceMissing extends Schema.TaggedError<
  */
 export const openedHeaderSection = Effect.fn("NakafaE2E.openedHeaderSection")(
   function* (page: Page) {
-    const popup = page.locator('[data-slot="navigation-menu-viewport"]');
+    const popup = page.locator(HEADER_SECTION);
     yield* Effect.promise(() => expect(popup).toBeVisible());
     yield* Effect.promise(() => waitForAnimations(popup));
     return popup;

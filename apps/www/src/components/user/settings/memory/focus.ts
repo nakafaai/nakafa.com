@@ -56,7 +56,7 @@ export function memoryNeighbour(
 function focusInEditor() {
   const focused = document.activeElement;
   return focused instanceof HTMLElement &&
-    elementById(MEMORY_EDITOR_ID)?.contains(focused) === true
+    elementById(MEMORY_EDITOR_ID)?.contains(focused)
     ? Option.some(focused)
     : Option.none();
 }

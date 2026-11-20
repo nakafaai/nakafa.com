@@ -6,6 +6,7 @@ import {
   openedHeaderSection,
 } from "@/e2e/support/marketing";
 import { withObservedPageErrors } from "@/e2e/support/observe";
+import { HEADER_SECTION } from "@/e2e/support/selector";
 import {
   expectStablePricingAppShell,
   expectStablePricingTransition,
@@ -133,7 +134,7 @@ const verifyPricingPage = Effect.fn("NakafaE2E.verifyPricingPage")(function* (
     page.locator("header").getByRole("button", { name: "Learn" }).click()
   );
   const pricingLink = page
-    .locator('[data-slot="navigation-menu-viewport"]')
+    .locator(HEADER_SECTION)
     .locator('[href="/en/pricing"]');
   yield* Effect.promise(() => expect(pricingLink).toHaveText("Pricing"));
   yield* Effect.promise(() =>

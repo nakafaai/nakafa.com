@@ -4,7 +4,7 @@ import en from "@repo/internationalization/dictionaries/en.json" with {
   type: "json",
 };
 import { Effect } from "effect";
-import { composerOf } from "@/e2e/support/attachment";
+import { composerOf, noticeWith } from "@/e2e/support/attachment";
 import type { Changes } from "@/e2e/support/changes";
 import {
   OPENED_CHAT,
@@ -101,12 +101,12 @@ test.describe("A new chat admitted after the learner left, at 1440px", () => {
         changes.release();
 
         yield* Effect.promise(async () => {
-          await expect(page.getByText(NOTICE)).toBeVisible({
+          await expect(noticeWith(page, NOTICE)).toBeVisible({
             timeout: readinessTimeoutMilliseconds,
           });
           await expect(page.getByRole("button", { name: OPEN })).toBeVisible();
           expect(page.url()).toBe(left);
-          await expect(page.getByText(NOTICE)).toHaveCount(1);
+          await expect(noticeWith(page, NOTICE)).toHaveCount(1);
         });
 
         yield* Effect.promise(async () => {
@@ -190,7 +190,7 @@ test.describe("A new chat admitted after the learner left, at 1440px", () => {
         changes.release();
 
         yield* Effect.promise(async () => {
-          await expect(page.getByText(NOTICE)).toBeVisible({
+          await expect(noticeWith(page, NOTICE)).toBeVisible({
             timeout: readinessTimeoutMilliseconds,
           });
           await page.getByRole("button", { name: OPEN }).click();
@@ -238,7 +238,7 @@ test.describe("A new chat admitted after the learner left, at 1440px", () => {
         changes.release();
 
         yield* Effect.promise(async () => {
-          await expect(page.getByText(NOTICE)).toBeVisible({
+          await expect(noticeWith(page, NOTICE)).toBeVisible({
             timeout: readinessTimeoutMilliseconds,
           });
           await expect(sheet).toBeHidden({

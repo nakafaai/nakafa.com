@@ -15,7 +15,7 @@ export function readRowAxis({
   const TOLERANCE = 1;
   const AUTO_MARGIN = new RegExp(margin, "u");
   const CONTROL =
-    '[role="radio"], [role="checkbox"], [role="switch"], input[type="radio"], input[type="checkbox"], [data-slot="radio"], [data-slot="checkbox"], [data-slot="switch"]';
+    '[role="radio"], [role="checkbox"], [role="switch"], input[type="radio"], input[type="checkbox"], [data-slot="radio"], [data-slot="radio-mark"], [data-slot="checkbox"], [data-slot="switch"]';
   const UNCOUNTED =
     'kbd, [data-slot="kbd"], [data-slot="avatar"], [role="presentation"], [aria-hidden="true"], [data-slot$="separator"]';
   const problems = new Set<string>();

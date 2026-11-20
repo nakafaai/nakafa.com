@@ -21,9 +21,12 @@ export const sidebarScroller = (page: Page) =>
     .filter({ has: page.locator('a[href^="/en/chat/"]') })
     .filter({ visible: true });
 
-/** The chats of the history menu of Nina's sheet: the open menu, not the account menu kept mounted closed. */
+/**
+ * The chats of the history menu of Nina's sheet, each a radio item: the open menu, not the account menu kept mounted
+ * closed.
+ */
 export const historyRows = (page: Page) =>
-  page.locator('[data-slot="menu-content"][data-open] [role="menuitem"]');
+  page.locator('[data-slot="menu-content"][data-open] [role="menuitemradio"]');
 
 /** The chats of the chats page of a learner. */
 export const pageRows = (page: Page) =>

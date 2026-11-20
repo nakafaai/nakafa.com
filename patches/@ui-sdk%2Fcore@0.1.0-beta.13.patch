@@ -1,0 +1,16 @@
+diff --git a/dist/foundation/motion/presence.js b/dist/foundation/motion/presence.js
+index e0e85c2ce4ab28b98d7823a40bbd95c6d30c1473..8d58f93c9aa265947dba631abb5d4a890eb49a9e 100644
+--- a/dist/foundation/motion/presence.js
++++ b/dist/foundation/motion/presence.js
+@@ -76,9 +76,10 @@ function remaining(animations) {
+   }
+   return longestLeft;
+ }
++var followsTime = (animation) => !(animation.timeline && "source" in animation.timeline);
+ function whenFinished(el, done) {
+   let finished = false;
+-  const animations = el.getAnimations({ subtree: true });
++  const animations = el.getAnimations({ subtree: true }).filter(followsTime);
+   const finish = () => {
+     if (finished) {
+       return;

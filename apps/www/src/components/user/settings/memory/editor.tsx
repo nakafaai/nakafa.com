@@ -142,12 +142,19 @@ function HostedMemoryEditor({ host }: { host: HTMLElement }) {
   const { memory, open, opener, session } = useMemoryEditor();
   const { place, remember, slot } = useEditorHost(host);
 
-  useFocusAfterClose(open, opener, host);
+  const handFocusTo = useFocusAfterClose(open, opener, host);
 
   return (
     <>
       {open || slot
-        ? createPortal(<MemoryDocument key={session} memory={memory} />, host)
+        ? createPortal(
+            <MemoryDocument
+              handFocusTo={handFocusTo}
+              key={session}
+              memory={memory}
+            />,
+            host
+          )
         : null}
       {wide ? (
         <MemoryEditorPanel
@@ -218,6 +225,15 @@ function MemoryEditorPanel({
 /** The sheet over the page on a narrow screen, which takes the focus when it opens. */
 const SHEET_ID = "user-settings-memory-sheet";
 
+/** The element that holds the focus inside the sheet, else the sheet itself. */
+function keepFocusIn() {
+  const sheet = elementById(SHEET_ID);
+  const focused = document.activeElement;
+  return focused instanceof HTMLElement && sheet?.contains(focused)
+    ? focused
+    : sheet;
+}
+
 /** The editor as a sheet over the page, for a screen too narrow for a panel. */
 function MemoryEditorSheet({
   memory,
@@ -238,7 +254,8 @@ function MemoryEditorSheet({
 
   // A dialog focuses its first field when it opens, which is the title, and the
   // editor keeps out of a field that has the focus. So the sheet focuses its own
-  // element instead, and the editor takes the caret once it exists.
+  // element instead, and the editor takes the caret once it exists. An editor
+  // that moved in from the panel already holds the caret, which stays.
   return (
     <Sheet
       onOpenChange={(next) => {
@@ -270,7 +287,7 @@ function MemoryEditorSheet({
               }
         }
         id={SHEET_ID}
-        initialFocus={() => elementById(SHEET_ID)}
+        initialFocus={keepFocusIn}
         ref={place}
         showCloseButton={false}
       >

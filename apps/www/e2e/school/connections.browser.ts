@@ -3,12 +3,14 @@ import { expect, test } from "@playwright/test";
 import { seedConnection } from "@repo/backend/scripts/content/acceptance/connection";
 import { Effect } from "effect";
 import { runFixture } from "@/e2e/support/acceptance";
+import { waitForStill } from "@/e2e/support/quiet";
 import {
   createSchool,
   hostAddress,
   signInClassTeacher,
   signInOwner,
 } from "@/e2e/support/school";
+import { shownAlerts } from "@/e2e/support/selector";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { waitUntilTakenOver } from "@/e2e/support/window";
 
@@ -144,7 +146,7 @@ test("a connect that ended badly says so on the card that tried, and plus starts
   await expect(classroom.getByText("Tick every box at Google.")).toBeVisible({
     timeout: readinessTimeoutMilliseconds,
   });
-  await expect(page.getByRole("alert")).toHaveCount(1);
+  await expect(shownAlerts(page)).toHaveCount(1);
   await expect(
     classroom.getByRole("button", { name: "Connect Google Classroom" })
   ).toBeVisible();
@@ -156,7 +158,7 @@ test("a connect that ended badly says so on the card that tried, and plus starts
   await expect(classroom.getByText("Connect failed, try again.")).toBeVisible({
     timeout: readinessTimeoutMilliseconds,
   });
-  await expect(page.getByRole("alert")).toHaveCount(1);
+  await expect(shownAlerts(page)).toHaveCount(1);
   await picture(page, "failed");
   await context.close();
 });
@@ -187,7 +189,9 @@ test("a connected school sees the check, finds its courses in the detail, and di
   await expect(detail.getByText("Connected", { exact: true })).toBeVisible();
   await expect(detail.getByText("This school")).toHaveCount(0);
   await picture(page, "import");
-  // The open pane takes its share of the page, so the card is measured beside it from here on.
+  // The open pane takes its share of the page, so the card is measured beside it from here on, once the page has
+  // scaled back from the sheet the narrower widths showed.
+  await waitForStill(classroom);
   const beside = await classroom.boundingBox();
 
   await detail.getByRole("button", { exact: true, name: "Disconnect" }).click();

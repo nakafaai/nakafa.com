@@ -1,6 +1,7 @@
 import type { Locator, Page } from "@playwright/test";
 import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
+import { swipeAway } from "@/e2e/support/input";
 import { waitForStill } from "@/e2e/support/quiet";
 import { createSchool, hostAddress, signInOwner } from "@/e2e/support/school";
 import { waitUntilTakenOver } from "@/e2e/support/window";
@@ -10,9 +11,6 @@ const PHONE = { height: 844, width: 390 };
 
 /** A wide screen, where the same dialog opens in the middle. */
 const DESKTOP = { height: 900, width: 1440 };
-
-/** How far a swipe drags the sheet down before letting go. */
-const SWIPE = 400;
 
 /** The scale of the page behind the sheet, as its computed style reads it. */
 function stageScale(stage: Locator) {
@@ -97,21 +95,14 @@ test("a dialog opens as a sheet on a phone, scales the page back, keeps the focu
   await expect.poll(() => scrollLocked(page)).toBe(false);
   await expect.poll(() => stageScale(stage)).toBe("none");
 
-  // A swipe down on the sheet's grip closes it.
+  // A swipe down closes it, and the page takes its size back and scrolls again. A touch screen moves the sheet by
+  // scrolling its host (UI SDK's scroll-snap driver).
   await create.click();
   await expect(sheet).toBeVisible();
   await settled(sheet);
-  const handle = await sheet.locator('[data-slot="sheet-grip"]').boundingBox();
-  expect(handle).not.toBeNull();
-  if (handle !== null) {
-    const x = handle.x + handle.width / 2;
-    const y = handle.y + handle.height / 2;
-    await page.mouse.move(x, y);
-    await page.mouse.down();
-    await page.mouse.move(x, y + SWIPE, { steps: 20 });
-    await page.mouse.up();
-  }
+  await swipeAway(sheet);
   await expect(sheet).toHaveCount(0);
+  await expect.poll(() => scrollLocked(page)).toBe(false);
   await expect.poll(() => stageScale(stage)).toBe("none");
 
   // On a wide screen the same dialog opens in the middle, and the page keeps its size.

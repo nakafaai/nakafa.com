@@ -143,7 +143,8 @@ function readPartRadii(page: Page) {
       )
       .map((group) =>
         Array.from(group.children)
-          .filter(seen)
+          // A popup renders beside its trigger, in the top layer while open, and is no part of the group.
+          .filter((part) => seen(part) && !part.hasAttribute("popover"))
           .map((part) => {
             const shown = part.hasAttribute("data-slot")
               ? part

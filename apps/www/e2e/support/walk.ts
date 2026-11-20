@@ -105,6 +105,12 @@ function readFacts() {
     links: Array.from(
       document.querySelectorAll<HTMLAnchorElement>("a[href]")
     ).map((link) => link.href),
+    // A label whose `for` names no control, such as the root of a composed field, leaves the control unnamed.
+    orphans: Array.from(
+      document.querySelectorAll<HTMLLabelElement>("label[for]")
+    )
+      .filter((label) => label.control === null)
+      .map((label) => label.textContent.trim().slice(0, 24)),
     problems: [...problems, ...stubs],
     sideways:
       document.documentElement.scrollWidth -
@@ -170,6 +176,17 @@ function readPopup(popups: string) {
       )
     ).length,
     closes: popup.querySelectorAll('[data-slot="dialog-close"]').length,
+    orphans: Array.from(popup.querySelectorAll<HTMLLabelElement>("label[for]"))
+      .filter((label) => label.control === null)
+      .map((label) => label.textContent.trim().slice(0, 24)),
+    // A popup renders beside its trigger (`@ui-sdk/react/docs/popups.md`), so a link, a button or a label around it
+    // would take its presses as their own, and a form around one that holds a form would take its submit.
+    caught:
+      popup.parentElement?.closest("a[href], button, label, summary")
+        ?.tagName ?? null,
+    nestedForm:
+      popup.querySelector("form") !== null &&
+      popup.parentElement?.closest("form") !== null,
     inside:
       box.left >= -1 &&
       box.top >= -1 &&
@@ -224,6 +241,15 @@ const expectWhole = (
   expect.soft(popup.inside, `${label}: stands inside the screen`).toBe(true);
   expect.soft(popup.wide, `${label}: never scrolls sideways`).toBe(false);
   expect.soft(popup.broken, `${label}: breaks no field label`).toBe(0);
+  expect
+    .soft(popup.orphans, `${label}: every label names its control`)
+    .toEqual([]);
+  expect
+    .soft(popup.caught, `${label}: sits in no link, button or label`)
+    .toBeNull();
+  expect
+    .soft(popup.nestedForm, `${label}: holds no form inside another`)
+    .toBe(false);
   if (popup.slot === "sheet") {
     expect.soft(popup.footer, `${label}: has a footer`).toBe(true);
   }
@@ -397,6 +423,9 @@ export const walkSchool = async (
     await page.waitForLoadState("networkidle");
     const facts = await page.evaluate(readFacts);
     expect.soft(facts.problems, `${shape}: stands apart`).toEqual([]);
+    expect
+      .soft(facts.orphans, `${shape}: every label names its control`)
+      .toEqual([]);
     expect
       .soft(
         await page.evaluate(readTallRows),

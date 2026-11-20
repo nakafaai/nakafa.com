@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
 import { withObservedPageErrors } from "@/e2e/support/observe";
+import { TOOLTIP } from "@/e2e/support/selector";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { waitUntilTakenOver } from "@/e2e/support/window";
 
@@ -44,7 +45,7 @@ test("at 1440px the sidebar folds into a rail of named icons from its own toggle
           .toBe(RAIL);
         const quran = sidebar.getByRole("link", { name: "Quran" });
         await quran.hover();
-        await expect(page.locator('[data-slot="tooltip-content"]')).toHaveText(
+        await expect(page.locator(TOOLTIP)).toHaveText(
           "Quran"
         );
         // The page starts at the rail's edge.
