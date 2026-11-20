@@ -3,32 +3,15 @@ import {
   useResizable,
   useWindowRoom,
 } from "@repo/design-system/hooks/resizable";
-import { cva } from "class-variance-authority";
 import type { ReactNode } from "react";
 import { useLayoutEffect } from "react";
+import { paneSideVariants } from "@/components/shared/page/panes/dock";
 
 /** How wide a pane starts and how far a drag of its edge takes it, in pixels. */
 const PANE_WIDTH = { initialWidth: 420, maxWidth: 768, minWidth: 320 };
 
 /** What a window keeps beside a pane, in pixels: the sidebar's 16rem and 23rem of page. */
 const PAGE_ROOM = 624;
-
-/**
- * The pane at the screen's right, which steps aside below the width its page gives it. Its header, body and
- * footer keep the inset a page's panes give them, wherever the pane stands, so every pane reads alike.
- */
-export const paneSideVariants = cva(
-  "bg-background fixed inset-y-0 end-0 z-30 flex w-(--pane-width) flex-col border-s [--pane-end:1.5rem]",
-  {
-    variants: {
-      from: {
-        lg: "max-lg:hidden",
-        md: "max-md:hidden",
-        xl: "max-xl:hidden",
-      },
-    },
-  }
-);
 
 /**
  * The pane of a page: it stands at the screen's right from the window's top to its bottom, as settings memory

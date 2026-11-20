@@ -1,8 +1,8 @@
 # Verifies one exact head on GitHub's free public-repository runners (AGENTS.md,
 # Deployment): the gate (the typechecks with the committed bindings unchanged,
 # every unit suite at its per-file 100% coverage gate, the source and policy
-# checks with Ultracite, React Doctor for the head's React changes against main,
-# and the dependency audit), and the proof (a production build served by the
+# checks with Ultracite, React Doctor over the whole app at score 100, and the
+# dependency audit), and the proof (a production build served by the
 # local production server over the local Convex backend binary, with the inert
 # acceptance environment, and the chosen specs in Chromium, Firefox and WebKit).
 #
@@ -158,8 +158,8 @@ jobs:
               -f state=pending -f context="$context" -f target_url="$URL" -f description="Verifying"
           done
 
-      # Coverage counts the files changed since origin/main, and React Doctor
-      # compares the head with main, so the job reads the whole history.
+      # Coverage counts the files changed since origin/main, so the job reads
+      # the whole history.
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ env.SHA }}
@@ -196,12 +196,14 @@ jobs:
           bun run lint || failed=1
           # A package that reaches a workspace its tag denies (`boundaries` in turbo.json) is not ready.
           bun run boundaries || failed=1
-          # Doctor reviews the head's own React changes against main, and the
-          # audit reads live advisories, so both judge a pull request alone: in
-          # a merge group Doctor would review the entries ahead again, and a new
-          # advisory would stop the queue for nothing an entry in it changed.
+          # Doctor audits the whole app on the head and fails on any finding, a
+          # warning included, so `www` keeps its score of 100: a finding main
+          # already holds fails as surely as a new one. The audit reads live
+          # advisories. Both judge a pull request alone: in a merge group Doctor
+          # would audit the same app again, and a new advisory would stop the
+          # queue for nothing an entry in it changed.
           if [ "$VERIFY" != group ]; then
-            bun run doctor --verbose --scope changed --base origin/main --blocking warning || failed=1
+            bun run doctor --verbose --scope full --blocking warning || failed=1
             bun run security:audit || failed=1
           fi
           bun run test:scripts || failed=1

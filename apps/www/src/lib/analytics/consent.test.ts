@@ -2,18 +2,17 @@ import { afterEach, describe, expect, it } from "@effect/vitest";
 import { act, createElement } from "react";
 import type { Root } from "react-dom/client";
 import { createRoot } from "react-dom/client";
-import type { AnalyticsConsent } from "@/lib/analytics/consent";
 import {
   keepConsentAnswer,
   useAnalyticsConsent,
 } from "@/lib/analytics/consent";
 
-/** What the reading component saw on its last render. */
-let seen: AnalyticsConsent | undefined;
-
-function Reader() {
-  seen = useAnalyticsConsent((consent) => consent);
-  return null;
+/** Shows the page's consent, as text the test reads. */
+function ConsentProbe() {
+  const consent = useAnalyticsConsent(
+    ({ analytics, asks }) => `analytics=${analytics} asks=${asks}`
+  );
+  return createElement("span", null, consent);
 }
 
 let root: Root | undefined;
@@ -28,13 +27,13 @@ describe("the page's consent", () => {
     Reflect.set(globalThis, "IS_REACT_ACT_ENVIRONMENT", true);
     const container = document.createElement("div");
     root = createRoot(container);
-    act(() => root?.render(createElement(Reader)));
-    expect(seen).toEqual({ analytics: "pending", asks: false });
+    act(() => root?.render(createElement(ConsentProbe)));
+    expect(container.textContent).toBe("analytics=pending asks=false");
 
     act(() => keepConsentAnswer({ analytics: false, asks: true }));
-    expect(seen).toEqual({ analytics: "denied", asks: true });
+    expect(container.textContent).toBe("analytics=denied asks=true");
 
     act(() => keepConsentAnswer({ analytics: true, asks: true }));
-    expect(seen).toEqual({ analytics: "granted", asks: true });
+    expect(container.textContent).toBe("analytics=granted asks=true");
   });
 });

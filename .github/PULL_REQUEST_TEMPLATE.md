@@ -18,7 +18,7 @@ Briefly describe your changes and what they accomplish.
 - The typechecks pass for every changed workspace, for example `bun --filter www typecheck`
 - `bun run check:tests` passes
 - Ultracite passes: `bunx ultracite check`
-- React Doctor passes for changed React code: `bun run doctor --verbose --scope changed --base main --include-untracked --blocking warning`
+- React Doctor scores 100 with no finding in the whole app: `bun run doctor --verbose --scope full --blocking warning`
 - No new lint errors: `bun run lint`
 - Dependency audit passes: `bun run security:audit`
 - Manual testing (desktop/mobile)
