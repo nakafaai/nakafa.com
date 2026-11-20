@@ -230,15 +230,16 @@
  * A try-out action's name depends on the learner's attempt, which no first
  * paint knows. Under a signed-in hint it shows what this browser last read for
  * the page, which the cell's own script names in `data-kept-name`, or, on a
- * first visit, its button keeps its room and draws nothing, never a frame
- * without a name, until the learner read answers
+ * first visit, its button stays visible and disabled until the learner read
+ * answers, so the footer button never disappears and pops back in
  * (`components/tryout/set/name.tsx`).
  */
 :root[data-signed-in="yes"]
   [data-slot="button"]:has(
     > [data-learner-read="pending"]:not([data-kept-name])
   ) {
-  visibility: hidden;
+  pointer-events: none;
+  opacity: 0.5;
 }
 
 :root[data-signed-in="yes"] [data-learner-read="pending"][data-kept-name] > * {

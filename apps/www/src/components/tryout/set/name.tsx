@@ -20,8 +20,8 @@ import { hasSignedInHint } from "@/lib/auth/hint";
  * The name on a try-out action. The button hugs the one name it shows. No first paint knows a
  * learner's attempt, and a static page paints the same HTML for everyone, so a name the read still
  * decides reads as it is for a visitor, and under a signed-in hint (`globals.css`) it shows what this browser
- * last read for the page, or, on a first visit, its whole button keeps its room and draws nothing until
- * the learner read answers: a running attempt never reads Start, and no button stands without a name. A session that could not be read answers
+ * last read for the page, or, on a first visit, its button stays visible and disabled until
+ * the learner read answers, so the button never vanishes and reappears. A session that could not be read answers
  * nothing, so the name then shows. Restart is the one name that folds to its icon in a narrow header:
  * it stands beside the attempt picker, and the set's title needs the room.
  */

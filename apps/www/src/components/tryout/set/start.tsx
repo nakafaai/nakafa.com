@@ -2,6 +2,7 @@ import { QueryResult, useMutation, useQuery } from "@confect/react";
 import { Rocket01Icon } from "@hugeicons/core-free-icons";
 import { useDisclosure } from "@mantine/hooks";
 import tryouts from "@repo/backend/confect/_generated/refs/tryouts";
+import type { TryoutStartAccess } from "@repo/backend/confect/tryouts/start/spec";
 import { Button } from "@repo/design-system/components/ui/button";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { useEarlyPress } from "@repo/design-system/hooks/press";
@@ -35,6 +36,7 @@ import {
 } from "@/components/tryout/runtime/start";
 import { START_ERROR } from "@/components/tryout/set/copy";
 import { TryoutStartDialog } from "@/components/tryout/set/dialog";
+import type { TryoutActionNameKey } from "@/components/tryout/set/kept";
 import {
   keepActionName,
   readKeptName,
@@ -197,6 +199,61 @@ function TryoutStartSignInButton({
   );
 }
 
+/** Builds the startAttempt mutation arguments from one start request. */
+function startArgsOf(request: StartTryoutRequest) {
+  return {
+    countryKey: request.countryKey,
+    ...(request.destinationSectionKey === undefined
+      ? {}
+      : { destinationSectionKey: request.destinationSectionKey }),
+    ...(request.entrySectionKey === undefined
+      ? {}
+      : { entrySectionKey: request.entrySectionKey }),
+    examKey: request.examKey,
+    locale: request.locale,
+    setKey: request.setKey,
+    trackKey: request.trackKey,
+  };
+}
+
+/** Derives the button's loading state, kept label, and dialog mode from the attempt and access reads. */
+function resolveStartState({
+  access,
+  address,
+  attempt,
+  isAuthenticated,
+  isLoading,
+  keptName,
+}: {
+  readonly access: QueryResult.QueryResult<TryoutStartAccess, unknown>;
+  readonly address: string;
+  readonly attempt: StartAttempt | undefined;
+  readonly isAuthenticated: boolean;
+  readonly isLoading: boolean;
+  readonly keptName: Option.Option<TryoutActionNameKey>;
+}) {
+  const activeAttempt = attempt?.status === "in-progress";
+  const finishedAttempt = Boolean(attempt && !activeAttempt);
+  const accessLoading =
+    isAuthenticated && !activeAttempt && !QueryResult.isSuccess(access);
+  const attemptLoading = isAuthenticated && attempt === undefined;
+  const waitingAttempt =
+    (isLoading || attemptLoading) && Option.isNone(keptName);
+  return {
+    dialogKind: QueryResult.isSuccess(access)
+      ? access.value.kind
+      : ("free-attempt" as const),
+    finishedAttempt,
+    keptAt: waitingAttempt ? address : undefined,
+    name:
+      attempt === undefined
+        ? Option.getOrElse(keptName, () => tryoutActionNameOf(attempt))
+        : tryoutActionNameOf(attempt),
+    resolvingAccess: isLoading || accessLoading || attemptLoading,
+    waitingAttempt,
+  };
+}
+
 /**
  * Starts or resumes a free try-out from the current page. The button rests on its own icon while the page
  * reads what the start needs, and a press in that moment turns the icon into the loader and is answered
@@ -230,12 +287,10 @@ function TryoutStartAction({ attempt, request }: StartTryoutButtonProps) {
   const [dialogOpen, dialog] = useDisclosure(false);
   const address = setAddressOf(request);
   const [keptName] = useState(() => readSetName(address));
-  const activeAttempt = attempt?.status === "in-progress";
-  const finishedAttempt = Boolean(attempt && !activeAttempt);
   const entrySectionKey = request.entrySectionKey;
   const access = useQuery(
     tryouts.queries.access.getStartAccess,
-    isAuthenticated && !activeAttempt
+    isAuthenticated && attempt?.status !== "in-progress"
       ? {
           countryKey: request.countryKey,
           examKey: request.examKey,
@@ -249,14 +304,15 @@ function TryoutStartAction({ attempt, request }: StartTryoutButtonProps) {
   if (QueryResult.isFailure(access)) {
     throw access.error;
   }
-  const accessLoading =
-    isAuthenticated && !activeAttempt && !QueryResult.isSuccess(access);
-  const attemptLoading = isAuthenticated && attempt === undefined;
-  const resolvingAccess = isLoading || accessLoading || attemptLoading;
+  const state = resolveStartState({
+    access,
+    address,
+    attempt,
+    isAuthenticated,
+    isLoading,
+    keptName,
+  });
   const started = phase !== "idle";
-  const dialogKind = QueryResult.isSuccess(access)
-    ? access.value.kind
-    : "free-attempt";
   const authRedirect = `/${request.locale}${getTryoutPageHref(request.authRedirect)}`;
 
   /** Opens the correct decision or continues an already-active runtime, once the page knows which. */
@@ -264,7 +320,7 @@ function TryoutStartAction({ attempt, request }: StartTryoutButtonProps) {
     if (started) {
       return;
     }
-    if (resolvingAccess) {
+    if (state.resolvingAccess) {
       setPressed(true);
       return;
     }
@@ -302,19 +358,7 @@ function TryoutStartAction({ attempt, request }: StartTryoutButtonProps) {
     dialog.close();
     setPhase(entrySectionKey === undefined ? "starting" : "opening");
     const program = startAttemptProgram({
-      args: {
-        countryKey: request.countryKey,
-        ...(request.destinationSectionKey === undefined
-          ? {}
-          : { destinationSectionKey: request.destinationSectionKey }),
-        ...(request.entrySectionKey === undefined
-          ? {}
-          : { entrySectionKey: request.entrySectionKey }),
-        examKey: request.examKey,
-        locale: request.locale,
-        setKey: request.setKey,
-        trackKey: request.trackKey,
-      },
+      args: startArgsOf(request),
       failureMessage: START_ERROR,
       mutation: startAttempt,
       onFailure: Effect.sync(() => setPhase("idle")),
@@ -350,31 +394,24 @@ function TryoutStartAction({ attempt, request }: StartTryoutButtonProps) {
   }
   const answerPress = useEffectEvent(() => answerStart());
   useEffect(() => {
-    if (pressed && !resolvingAccess) {
+    if (pressed && !state.resolvingAccess) {
       answerPress();
     }
-  }, [pressed, resolvingAccess]);
+  }, [pressed, state.resolvingAccess]);
 
   return (
     <>
-      <Button inert={started} onClick={answerStart}>
+      <Button
+        disabled={state.waitingAttempt}
+        inert={started}
+        onClick={answerStart}
+      >
         <Spinner icon={Rocket01Icon} isLoading={started || pressed} />
-        <TryoutActionName
-          keptAt={
-            attempt === undefined && Option.isNone(keptName)
-              ? address
-              : undefined
-          }
-          name={
-            attempt === undefined
-              ? Option.getOrElse(keptName, () => tryoutActionNameOf(attempt))
-              : tryoutActionNameOf(attempt)
-          }
-        />
+        <TryoutActionName keptAt={state.keptAt} name={state.name} />
       </Button>
       <TryoutStartDialog
-        finishedAttempt={finishedAttempt}
-        kind={dialogKind}
+        finishedAttempt={state.finishedAttempt}
+        kind={state.dialogKind}
         onPrimary={onPrimary}
         open={dialogOpen}
         pagePath={request.authRedirect.publicPath}

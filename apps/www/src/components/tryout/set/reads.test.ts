@@ -1,4 +1,4 @@
-import { describe, expect, it } from "@effect/vitest";
+import { beforeEach, describe, expect, it } from "@effect/vitest";
 import island from "@repo/backend/confect/_generated/refs/island";
 import tryouts from "@repo/backend/confect/_generated/refs/tryouts";
 import { Duration, Effect, Fiber } from "effect";
@@ -50,11 +50,15 @@ describe("setReadArgs", () => {
 });
 
 describe("warmSetReads", () => {
+  beforeEach(() => {
+    vi.mocked(warmQuery).mockReset();
+  });
+
   it.effect(
     "warms the attempt, the growth, the Stars and the board at once",
     () =>
       Effect.gen(function* () {
-        vi.mocked(warmQuery).mockReturnValue(Effect.void);
+        vi.mocked(warmQuery).mockReturnValue(Effect.succeedNone);
         yield* warmSetReads({ attemptId: undefined, locale: "id", set });
         expect(vi.mocked(warmQuery).mock.calls).toEqual([
           [
@@ -65,6 +69,56 @@ describe("warmSetReads", () => {
           [island.queries.claims, identity],
           [tryouts.queries.ranks.bySet, identity],
         ]);
+      })
+  );
+
+  it.effect(
+    "warms a running attempt's retained page and board when the bare address redirects",
+    () =>
+      Effect.gen(function* () {
+        vi.mocked(warmQuery).mockImplementationOnce(() =>
+          Effect.succeedSome({
+            attemptId: "attempt-1",
+            kind: "redirect",
+            publicPath: set.publicPath,
+          })
+        );
+        vi.mocked(warmQuery).mockReturnValue(Effect.succeedNone);
+        yield* warmSetReads({ attemptId: undefined, locale: "id", set });
+        expect(vi.mocked(warmQuery).mock.calls).toEqual([
+          [
+            tryouts.queries.attemptPage.getSet,
+            { request: { ...identity, kind: "current" } },
+          ],
+          [island.queries.growth, {}],
+          [island.queries.claims, identity],
+          [tryouts.queries.ranks.bySet, identity],
+          [
+            tryouts.queries.attemptPage.getSet,
+            {
+              request: {
+                attemptId: "attempt-1",
+                kind: "retained",
+                locale: "id",
+                publicPath: set.publicPath,
+              },
+            },
+          ],
+          [
+            tryouts.queries.ranks.bySet,
+            { ...identity, attemptId: "attempt-1" },
+          ],
+        ]);
+      })
+  );
+
+  it.effect(
+    "skips redirect warming when the address already names an attempt",
+    () =>
+      Effect.gen(function* () {
+        vi.mocked(warmQuery).mockReturnValue(Effect.succeedNone);
+        yield* warmSetReads({ attemptId: "attempt-1", locale: "id", set });
+        expect(vi.mocked(warmQuery).mock.calls).toHaveLength(4);
       })
   );
 

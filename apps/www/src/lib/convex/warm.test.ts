@@ -59,7 +59,9 @@ describe("warmQuery", () => {
   it.effect("warms nothing on a page that made no client", () =>
     Effect.gen(function* () {
       made.read.mockReturnValue(Option.none());
-      yield* warmQuery(island.queries.growth, {});
+      expect(yield* warmQuery(island.queries.growth, {})).toEqual(
+        Option.none()
+      );
     })
   );
 
@@ -78,7 +80,7 @@ describe("warmQuery", () => {
         expect(fiber.pollUnsafe()).toBeUndefined();
 
         convex.answer();
-        yield* Fiber.join(fiber);
+        expect(yield* Fiber.join(fiber)).toEqual(Option.some({ lifetime: 0 }));
         expect(convex.open()).toBe(1);
 
         yield* TestClock.adjust(WARM_HOLD);
@@ -88,11 +90,17 @@ describe("warmQuery", () => {
 
   it.effect("ends at once for an answer the client already holds", () =>
     Effect.gen(function* () {
-      for (const held of ["value", "failure"] as const) {
-        const convex = client(held);
-        yield* warmQuery(island.queries.growth, {});
-        expect(convex.open()).toBe(1);
-      }
+      const valueClient = client("value");
+      expect(yield* warmQuery(island.queries.growth, {})).toEqual(
+        Option.some({ lifetime: 0 })
+      );
+      expect(valueClient.open()).toBe(1);
+
+      const failureClient = client("failure");
+      expect(yield* warmQuery(island.queries.growth, {})).toEqual(
+        Option.none()
+      );
+      expect(failureClient.open()).toBe(1);
     })
   );
 });

@@ -1,12 +1,19 @@
 import { ActiveAppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
 import island from "@repo/backend/confect/_generated/refs/island";
 import tryouts from "@repo/backend/confect/_generated/refs/tryouts";
-import { Duration, Effect, Schema } from "effect";
+import { Duration, Effect, Option, Schema } from "effect";
 import { setAttemptRequest } from "@/components/tryout/route/learner";
 import { warmQuery } from "@/lib/convex/warm";
 
 /** How long a press waits for a set's reads before the set opens anyway, as it does when they fail. */
 const WARM_WAIT = Duration.seconds(1);
+
+/** A running set attempt answers the bare address with a redirect naming its attempt ID. */
+const RedirectAttemptSchema = Schema.Struct({
+  attemptId: Schema.String,
+  kind: Schema.Literal("redirect"),
+});
+const decodeRedirect = Schema.decodeUnknownOption(RedirectAttemptSchema);
 
 /** The address a set's reads answer for: the set, the page's locale, and the attempt the address names. */
 const SetAddressSchema = Schema.Struct({
@@ -56,20 +63,42 @@ export function setReadArgs(address: SetAddress) {
 
 /**
  * Warms a learner's reads of a set before its page opens (`warmQuery`): the attempt, how far they grew, their
- * Stars of the set, and its board, all at once, so the pane paints whole in its first frame. A read that has not
- * answered within `WARM_WAIT` lets the set open, and the pane waits for it there.
+ * Stars of the set, and its board, all at once, so the pane paints whole in its first frame. When a bare set
+ * address answers with a redirect to a running attempt, its retained attempt and board are warmed too so the
+ * redirect paints whole. A read that has not answered within `WARM_WAIT` lets the set open, and the pane waits
+ * for it there.
  */
 export const warmSetReads = Effect.fn("tryout.set.warmReads")(function* (
   address: SetAddress
 ) {
   const args = setReadArgs(address);
-  yield* Effect.all(
-    [
-      warmQuery(tryouts.queries.attemptPage.getSet, args.attempt),
-      warmQuery(island.queries.growth, {}),
-      warmQuery(island.queries.claims, args.claims),
-      warmQuery(tryouts.queries.ranks.bySet, args.board),
-    ],
-    { concurrency: "unbounded", discard: true }
-  ).pipe(Effect.timeoutOption(WARM_WAIT));
+  yield* Effect.gen(function* () {
+    const [attempt] = yield* Effect.all(
+      [
+        warmQuery(tryouts.queries.attemptPage.getSet, args.attempt),
+        warmQuery(island.queries.growth, {}),
+        warmQuery(island.queries.claims, args.claims),
+        warmQuery(tryouts.queries.ranks.bySet, args.board),
+      ],
+      { concurrency: "unbounded" }
+    );
+    if (address.attemptId !== undefined) {
+      return;
+    }
+    const redirect = Option.flatMap(attempt, decodeRedirect);
+    if (Option.isNone(redirect)) {
+      return;
+    }
+    const redirected = setReadArgs({
+      ...address,
+      attemptId: redirect.value.attemptId,
+    });
+    yield* Effect.all(
+      [
+        warmQuery(tryouts.queries.attemptPage.getSet, redirected.attempt),
+        warmQuery(tryouts.queries.ranks.bySet, redirected.board),
+      ],
+      { concurrency: "unbounded", discard: true }
+    );
+  }).pipe(Effect.timeoutOption(WARM_WAIT));
 });
