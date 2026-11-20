@@ -1,39 +1,28 @@
 import { Option } from "effect";
 import { createAir } from "@/components/island/air";
-import { createAtlas } from "@/components/island/atlas";
-import {
-  activate,
-  programOf,
-  uploadOutline,
-} from "@/components/island/buffers";
+import { activate, programOf } from "@/components/island/buffers";
 import { createEdges } from "@/components/island/edges";
 import { createFrame } from "@/components/island/frame";
 import { createLife } from "@/components/island/life";
 import { createShadow } from "@/components/island/shadow";
+import type { Ring } from "@/components/island/terrain";
 import { createTerrain } from "@/components/island/terrain";
 import { createGale } from "@/components/island/wind";
 import type { Orbit } from "@/lib/island/camera";
-import { eyeOf, snapOrbit } from "@/lib/island/camera";
-import { butterfliesOf, crownsOf } from "@/lib/island/drift";
+import { eyeOf, FOG, snapOrbit } from "@/lib/island/camera";
 import { viewProjectionOf } from "@/lib/island/matrix";
-import { firefliesOf } from "@/lib/island/night";
 import { RUNGS } from "@/lib/island/quality";
 import type { Season } from "@/lib/island/season";
+import { turfOf } from "@/lib/island/season";
 import {
   BODY_FRAGMENT,
   BODY_VERTEX,
-  CHUNK_FRAGMENT,
-  CHUNK_VERTEX,
-  OUTLINE_FRAGMENT,
-  OUTLINE_VERTEX,
   SKY_FRAGMENT,
   SKY_VERTEX,
 } from "@/lib/island/shaders";
 import type { Light, Weather } from "@/lib/island/sky";
-import { chimneysOf } from "@/lib/island/smoke";
 import { flashed, flashOf } from "@/lib/island/storm";
 import { sunViewOf } from "@/lib/island/sun";
-import type { Cells } from "@/lib/island/world";
 
 /** The texture unit the sun's shadow map takes (D43). */
 const SHADOW = 4;
@@ -42,11 +31,11 @@ const SHADOW = 4;
 type Uniforms = (name: string) => WebGLUniformLocation | null;
 
 /**
- * The island's WebGL2 painter (ADR 0047, D2): it holds every chunk's buffers,
- * draws the sky, the solid pass and the water pass into a small framebuffer,
- * and enlarges it to the screen with nearest sampling. Its atlas is painted
- * for the learner's season. None when the browser
- * has no WebGL2.
+ * The world's WebGL2 painter (ADR 0047, D2; ADR 0050, W10): it draws the sky,
+ * the land, everything that stands and lives on it and the water over them
+ * into a small framebuffer, edges it, and enlarges it to the screen with
+ * nearest sampling. Its turf is tinted for the learner's season. None when
+ * the browser has no WebGL2 or refuses a program.
  */
 export function createPainter(canvas: HTMLCanvasElement, season: Season) {
   const found = canvas.getContext("webgl2", {
@@ -62,45 +51,30 @@ export function createPainter(canvas: HTMLCanvasElement, season: Season) {
   const gl = found;
   return Option.flatMap(
     Option.all([
-      programOf(gl, CHUNK_VERTEX, CHUNK_FRAGMENT),
       programOf(gl, SKY_VERTEX, SKY_FRAGMENT),
-      programOf(gl, OUTLINE_VERTEX, OUTLINE_FRAGMENT),
       createEdges(gl),
       programOf(gl, BODY_VERTEX, BODY_FRAGMENT),
-      createShadow(gl),
+      createTerrain(gl),
     ]),
-    ([
-      chunkProgram,
-      skyProgram,
-      outlineProgram,
-      edges,
-      bodyProgram,
-      shadow,
-    ]) => {
-      const atlas = createAtlas(gl, season);
+    ([skyProgram, edges, bodyProgram, terrain]) => {
+      const shadow = createShadow(gl);
       // The scene's colors, faces and depth, then the frame the edge pass and the weather paint (D20).
       const target = createFrame(gl, canvas);
-      const terrain = createTerrain(gl, chunkProgram, atlas.texture);
       const life = createLife(gl, bodyProgram);
+      // The bodies cast into the shadow map before they are ever lit, so their program reads the map from its own unit from the start: an unset sampler would read the land's window on unit 0, and the driver refuses that draw.
+      activate(gl, bodyProgram);
+      gl.uniform1i(gl.getUniformLocation(bodyProgram, "uShadowMap"), SHADOW);
+      const turf = turfOf(season);
       // What the quality ladder lets the painter draw (D44), and whether the shadow map was last left empty.
       let rung: (typeof RUNGS)[number] = RUNGS[0];
       let emptied = false;
       const gale = createGale(gl);
-      // What moves in the air: the weather, the chimneys' smoke and the fireflies (D33, D36).
-      const airborne = createAir(
-        gl,
-        gale,
-        atlas.painted,
-        terrain.columns,
-        season
-      );
+      // What moves in the air: the weather, the chimneys' smoke, the fireflies, the leaves (D33, D36, D41).
+      const airborne = createAir(gl, gale, terrain.ground, season);
       if (Option.isNone(airborne)) {
         return Option.none();
       }
       const air = airborne.value;
-      const outline = uploadOutline(gl);
-      const outlineUniform = (name: string) =>
-        gl.getUniformLocation(outlineProgram, name);
       const skyUniform = (name: string) =>
         gl.getUniformLocation(skyProgram, name);
 
@@ -126,84 +100,24 @@ export function createPainter(canvas: HTMLCanvasElement, season: Season) {
           gl.uniform1f(at("uRows"), target.height);
           gl.uniform2f(
             at("uFogRange"),
-            orbit.distance + 30,
-            orbit.distance + 160
+            orbit.distance + FOG.from,
+            orbit.distance + FOG.to
           );
           shadow.shine(at, light, sun, SHADOW);
         };
 
-      /** Draws the ground, the island's life among it, and the water over them (D2). */
-      const drawWorld = (
-        orbit: Orbit,
-        light: Light,
-        time: number,
-        sky: Weather,
-        camera: Float32Array,
-        sun: ReturnType<typeof sunViewOf>
-      ) => {
-        const shared = lightFor(orbit, light, sun);
-        const wind = (at: Uniforms) => gale.blow(at, time, sky);
-        shadow.bind(SHADOW);
-        terrain.draw({
-          between: () => {
-            life.flat();
-            life.draw(camera, time, wind, shared);
-          },
-          camera,
-          frame: target,
-          lit: (at) => {
-            shared(at);
-            gl.uniform3fv(at("uLamp"), light.lamp);
-            gl.uniform1f(at("uTime"), time);
-            wind(at);
-            air.cover(at);
-          },
-          tufts: rung.tufts,
-        });
-      };
-
-      /** Outlines the cell a press would change, over everything but the HUD. */
-      const drawOutline = (
-        camera: Float32Array,
-        cell: readonly [number, number, number]
-      ) => {
-        gl.disable(gl.DEPTH_TEST);
-        activate(gl, outlineProgram);
-        gl.uniformMatrix4fv(outlineUniform("uViewProjection"), false, camera);
-        gl.uniform3f(outlineUniform("uCell"), cell[0], cell[1], cell[2]);
-        gl.uniform4f(outlineUniform("uColor"), 1, 0.96, 0.8, 0.95);
-        gl.bindVertexArray(outline.vao);
-        gl.drawArrays(gl.LINES, 0, outline.count);
-      };
-
       return Option.some({
-        /** Replaces the flat quads of Nina and the float. */
-        herd: life.quads,
-        /** Sets the other isles of the archipelago, drawn with the blocks from then on (D23). */
-        isles: terrain.isles,
-        /** Throws the dust or the chips of one changed block (D38), on the clock the frames are drawn on. */
-        burst: air.burst,
-        /** Replaces what the cells decide beside the chunks (D53): the column map (D39), the coast map (D51), the air's scenery (D33, D36). */
-        world(cells: Cells, seed: number) {
-          terrain.maps(cells);
-          air.scenery({
-            butterflies: butterfliesOf(cells, seed),
-            chimneys: chimneysOf(cells),
-            crowns: crownsOf(cells),
-            fireflies: firefliesOf(cells, seed),
-          });
-        },
         /** Replaces where every true 3D body stands this frame (D21). */
         bodies: life.bodies,
-        /** Replaces one chunk's buffers with its new mesh. */
-        upload: terrain.upload,
-        /** Draws one frame: the sky, every chunk, the water, then the falling weather, enlarged to the canvas. */
+        /** Throws a burst of dust or chips where the learner changed something (D38). */
+        burst: air.burst,
+        /** Draws one frame: the sky, the land, its life, the water, then what moves in the air, enlarged to the canvas. */
         draw(
           orbit: Orbit,
           daylight: Light,
           time: number,
           sky: Weather,
-          aim: Option.Option<readonly [number, number, number]>
+          ring: Ring
         ) {
           // A storm's lightning lights the sky and the shade for an instant (D33).
           const light =
@@ -214,15 +128,16 @@ export function createPainter(canvas: HTMLCanvasElement, season: Season) {
           const snapped = snapOrbit(orbit, target.rows);
           // The sun's shadow map first, from its own view of what the camera sees (D43).
           const sun = sunViewOf(snapped.orbit, light.toward);
+          const wind = (at: Uniforms) => gale.blow(at, time, sky);
           // Below the ladder's shadow rung the map is left empty once, so every face reads as lit.
           if (rung.shadows || !emptied) {
             emptied = !rung.shadows;
-            shadow.cast(sun.matrix, SHADOW, () => {
+            shadow.cast(SHADOW, () => {
               if (!rung.shadows) {
                 return;
               }
-              terrain.cast();
-              life.cast(sun.matrix, time, (at) => gale.blow(at, time, sky));
+              terrain.cast(sun.matrix);
+              life.cast(sun.matrix, time, wind);
             });
           }
           gl.bindFramebuffer(gl.FRAMEBUFFER, target.frame);
@@ -236,7 +151,25 @@ export function createPainter(canvas: HTMLCanvasElement, season: Season) {
           drawSky(light);
           gl.drawBuffers([gl.COLOR_ATTACHMENT0, gl.COLOR_ATTACHMENT1]);
           gl.clearBufferfv(gl.COLOR, 1, [0.5, 1, 0.5, 0]);
-          drawWorld(snapped.orbit, light, time, sky, camera, sun);
+          const shared = lightFor(snapped.orbit, light, sun);
+          shadow.bind(SHADOW);
+          terrain.draw({
+            between: () => life.draw(camera, time, wind, shared),
+            blades: rung.tufts,
+            camera,
+            eye: eyeOf(snapped.orbit),
+            focus: snapped.orbit.target,
+            frame: target,
+            lit: (at) => {
+              shared(at);
+              gl.uniform3fv(at("uLamp"), light.lamp);
+              gl.uniform1f(at("uTime"), time);
+              wind(at);
+              air.cover(at);
+            },
+            ring,
+            turf,
+          });
           gl.depthMask(true);
           edges.draw(target, snapped.orbit, camera);
           gl.bindFramebuffer(gl.FRAMEBUFFER, target.overlay);
@@ -244,11 +177,14 @@ export function createPainter(canvas: HTMLCanvasElement, season: Season) {
           gl.enable(gl.BLEND);
           gl.depthMask(false);
           air.draw(snapped.orbit, time, camera, light, sky);
-          Option.map(aim, (cell) => drawOutline(camera, cell));
           gl.depthMask(true);
           gl.bindVertexArray(null);
           target.enlarge(light.horizon, snapped.shift);
         },
+        /** Replaces the lamps that light the ground about the camera. */
+        /** Replaces the horizon of land past the window. */
+        horizon: terrain.horizon,
+        lamps: terrain.lamps,
         /** Sets what the painter draws from the quality ladder's rung (D44). */
         quality(next: (typeof RUNGS)[number]) {
           rung = next;
@@ -263,9 +199,12 @@ export function createPainter(canvas: HTMLCanvasElement, season: Season) {
           gale.release();
           air.release();
           target.release();
-          outline.release();
           gl.getExtension("WEBGL_lose_context")?.loseContext();
         },
+        /** Replaces what moves in the air over the land about the camera (D33, D36, D41). */
+        scenery: air.scenery,
+        /** Replaces the window of land the passes read. */
+        window: terrain.window,
       });
     }
   );

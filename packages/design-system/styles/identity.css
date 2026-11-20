@@ -29,50 +29,11 @@
   --color-ink: oklch(0 0 0);
 }
 
-/* The island game's wooden skin around its canvas: the hotbar, the panels and the block book. A
- * world of its own, on the game and on the home's preview of it, it looks the same in every theme,
- * as the world it frames does (ADR 0047). */
+/* The sky of the island game, behind its canvas and behind the home's preview of it. It looks the
+ * same in every theme, as the world it frames does (ADR 0047). */
 @theme static {
   /* The sky behind the world while the renderer starts. */
   --color-island-sky: #5aa7e6;
-  /* A slot's and a button's frame, and the hotbar's numbers. */
-  --color-island-wood: #7a4a26;
-  /* A panel's frame, a held slot's ring, and the ink of a book's icons. */
-  --color-island-wood-dark: #4a2c17;
-  /* The ink on parchment and on straw. */
-  --color-island-bark: #3b2414;
-  /* The quiet ink of a note on parchment. */
-  --color-island-bark-soft: #6b4426;
-  /* A panel's ground. */
-  --color-island-parchment: #f3ddb0;
-  /* A slot's and a button's ground. */
-  --color-island-straw: #e9c992;
-  /* A slot's and a button's ground under the pointer. */
-  --color-island-straw-hover: #f0d6a6;
-  /* The frame of a held or focused slot. */
-  --color-island-highlight: #fff3c4;
-  /* The ground of a held slot or a chosen card. */
-  --color-island-glow: #ffe9a8;
-  /* A panel's inner bevel. */
-  --color-island-bevel: #d9a868;
-  /* The drop under a panel. */
-  --color-island-shadow: #2c1a0d;
-  /* The scrim behind the open book, at 40%. */
-  --color-island-shade: #1b100a;
-  /* The filled part of the Stars bar. */
-  --color-island-gold: #e6b93a;
-  /* A star, and the bar's inner shadow. */
-  --color-island-gold-dark: #c6911f;
-  /* A guide card and a counter in the book. */
-  --color-island-page: #f3dfb6;
-  /* The frame of a guide card and a counter. */
-  --color-island-rule: #c9a46c;
-  /* The frame of a locked card, a tab and the search field. */
-  --color-island-rule-dark: #a9865a;
-  /* The search field's ground. */
-  --color-island-page-light: #fbf1da;
-  /* The hook on a fish the learner has caught. */
-  --color-island-water: #2c6ec2;
   /* The top of the sky behind the home's island preview. */
   --color-island-sky-high: #58a6e4;
   /* The foot of the sky behind the home's island preview. */

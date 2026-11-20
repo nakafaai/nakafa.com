@@ -2,6 +2,19 @@
 @import "@repo/design-system/styles/katex.css";
 
 /*
+ * A phone held sideways: wide enough for two columns and too short to stack
+ * panels. The world game stands its shelf at the left there, for the screen's
+ * whole height (ADR 0050, W7).
+ */
+@custom-variant sideways (@media (max-height: 500px) and (min-width: 40rem));
+
+/*
+ * A short upright phone, where the shelf, the dock and the game's lines share
+ * very little height: the world game lowers its shelf there.
+ */
+@custom-variant short (@media (max-height: 40rem) and (width < 40rem));
+
+/*
  * Amiri Quran, the face of the Quran: Quran text and surah names draw in it
  * (`--font-quran`). Each subset loads only when a page draws a character in its
  * range. With block display the text waits for the face instead of drawing in

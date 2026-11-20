@@ -2,19 +2,23 @@ import { FunctionImpl, GroupImpl } from "@confect/server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import { DatabaseWriter } from "@repo/backend/confect/_generated/services";
 import { requireAuth } from "@repo/backend/confect/auth/session";
-import { buildEdits } from "@repo/backend/confect/island/build";
-import { growthOf } from "@repo/backend/confect/island/level";
+import { change } from "@repo/backend/confect/island/change";
+import { leaveSticker } from "@repo/backend/confect/island/guests";
 import spec from "@repo/backend/confect/island/mutations.spec";
-import { IslandStale } from "@repo/backend/confect/island/schema";
+import { Closed } from "@repo/backend/confect/island/schema";
 import { ensureIsland } from "@repo/backend/confect/island/store";
+import { openBlueprint } from "@repo/backend/confect/island/things";
+import { worldOf } from "@repo/backend/confect/island/visit";
 import atomic from "@repo/backend/confect/middleware/atomic.impl";
 import sessionMiddleware from "@repo/backend/confect/middleware/session.impl";
-import { Effect, Layer } from "effect";
+import { Clock, Effect, Layer, Option } from "effect";
 
 /**
  * Called as the learner enters the game: makes their island when they have
- * none, and keeps its zone at their browser's, so the island's day follows
- * them when they travel and the daily Stars count by their own day.
+ * none, keeps its zone at their browser's, so the island's day follows them
+ * when they travel and the daily Stars count by their own day, and notes the
+ * moment. Answers when they entered before this time, none on the first, so
+ * the game shows who visited since (ADR 0050, W6).
  */
 const open = FunctionImpl.make(
   databaseSchema,
@@ -23,49 +27,85 @@ const open = FunctionImpl.make(
   Effect.fn("island.mutations.open")(function* ({ timeZone }) {
     const { appUser } = yield* requireAuth();
     const island = yield* ensureIsland(appUser._id, timeZone);
-    if (island.timeZone.id !== timeZone.id) {
+    const writer = yield* DatabaseWriter;
+    yield* writer
+      .table("islands")
+      .patch(island._id, { entered: yield* Clock.currentTimeMillis, timeZone })
+      .pipe(Effect.orDie);
+    return { entered: island.entered ?? null };
+  })
+);
+
+/**
+ * Opens a blueprint for its price in Stars, once and for good (ADR 0050, W5).
+ * The balance is read from the island's own row, so it cannot drift: the
+ * lifetime Stars less the price of every blueprint opened.
+ */
+const unlock = FunctionImpl.make(
+  databaseSchema,
+  spec,
+  "unlock",
+  Effect.fn("island.mutations.unlock")(function* ({ kind }) {
+    const { appUser } = yield* requireAuth();
+    const island = yield* ensureIsland(appUser._id);
+    const held = island.blueprints ?? [];
+    const opened = yield* Effect.fromResult(
+      openBlueprint(island.lifetime, held, kind)
+    );
+    if (opened.blueprints !== held) {
       const writer = yield* DatabaseWriter;
       yield* writer
         .table("islands")
-        .patch(island._id, { timeZone })
+        .patch(island._id, { blueprints: opened.blueprints })
         .pipe(Effect.orDie);
     }
+    return opened;
+  })
+);
+
+/** Sets who the learner's world opens to beside themselves (ADR 0050, W6). */
+const share = FunctionImpl.make(
+  databaseSchema,
+  spec,
+  "share",
+  Effect.fn("island.mutations.share")(function* ({ access }) {
+    const { appUser } = yield* requireAuth();
+    const island = yield* ensureIsland(appUser._id);
+    const writer = yield* DatabaseWriter;
+    yield* writer
+      .table("islands")
+      .patch(island._id, { access })
+      .pipe(Effect.orDie);
     return null;
   })
 );
 
 /**
- * Builds a batch of the learner's edits with the rules the browser ran first
- * (ADR 0047, D6): a batch made against older edits is refused as stale, a
- * batch the rules refuse is refused whole, and otherwise the merged edits are
- * written under the next version. Building spends nothing.
+ * Leaves the signed-in visitor's sticker in the guest book of the world at an
+ * address (ADR 0050, W6). A world that does not open to them, and their own,
+ * take none.
  */
-const build = FunctionImpl.make(
+const greet = FunctionImpl.make(
   databaseSchema,
   spec,
-  "build",
-  Effect.fn("island.mutations.build")(function* ({ edits, version }) {
+  "greet",
+  Effect.fn("island.mutations.greet")(function* ({ sticker, username }) {
     const { appUser } = yield* requireAuth();
-    const island = yield* ensureIsland(appUser._id);
-    if (island.version !== version) {
-      return yield* new IslandStale({ version: island.version });
+    const world = yield* worldOf(username);
+    if (Option.isNone(world) || world.value.own) {
+      return yield* new Closed();
     }
-    const growth = growthOf(island.lifetime);
-    const world = yield* Effect.fromResult(
-      buildEdits(island.world, edits, growth.level, growth.size)
-    );
-    const writer = yield* DatabaseWriter;
-    yield* writer
-      .table("islands")
-      .patch(island._id, { version: version + 1, world })
-      .pipe(Effect.orDie);
-    return { version: version + 1 };
+    yield* leaveSticker(world.value.owner._id, appUser._id, sticker);
+    return null;
   })
 );
 
 export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(open),
-  Layer.provide(build),
+  Layer.provide(change),
+  Layer.provide(unlock),
+  Layer.provide(share),
+  Layer.provide(greet),
   Layer.provide(atomic),
   Layer.provide(sessionMiddleware),
   GroupImpl.finalize

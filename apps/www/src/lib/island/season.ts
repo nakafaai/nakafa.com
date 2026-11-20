@@ -119,33 +119,16 @@ export function leafToneOf(season: Season, tone: Tone) {
 }
 
 /**
- * The atlas repainted for a season, in place: every pixel in a tone of the
- * grass or leaf ramp takes the season's tone, so snow lies on the grass in
- * winter, the leaves turn in autumn and blossom in spring, and the grass dries
- * in the dry season. Summer and the wet season leave it as painted.
+ * How a season tints the turf (ADR 0050, W10): each channel of the season's
+ * own grass over the palette's, so the grass dries in the dry season, turns
+ * in autumn and pales under winter. Summer and the wet season leave it as
+ * painted.
  */
-export function repaintFor(pixels: Uint8ClampedArray, season: Season) {
+export function turfOf(season: Season) {
   if (season === "summer" || season === "wet") {
-    return pixels;
+    return [1, 1, 1] as const;
   }
-  const repaint = REPAINTS[season];
-  const swaps = Arr.flatMap(["grass", "leaf"] as const, (ramp) =>
-    Arr.map(RAMPS[ramp], (from, tone) => ({
-      from: rgbOf(from),
-      to: rgbOf(repaint[ramp][tone]),
-    }))
-  );
-  for (let at = 0; at < pixels.length; at += 4) {
-    for (const swap of swaps) {
-      if (
-        pixels[at] === swap.from[0] &&
-        pixels[at + 1] === swap.from[1] &&
-        pixels[at + 2] === swap.from[2]
-      ) {
-        pixels.set(swap.to, at);
-        break;
-      }
-    }
-  }
-  return pixels;
+  const own = rgbOf(RAMPS.grass[2]);
+  const turned = rgbOf(REPAINTS[season].grass[2]);
+  return [turned[0] / own[0], turned[1] / own[1], turned[2] / own[2]] as const;
 }

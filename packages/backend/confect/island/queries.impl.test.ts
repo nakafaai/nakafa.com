@@ -1,36 +1,15 @@
 import { assert, describe, expect, it } from "@effect/vitest";
 import island from "@repo/backend/confect/_generated/refs/island";
-import { idOf } from "@repo/backend/confect/island/blocks";
 import { EMPTY_TALLY } from "@repo/backend/confect/island/schema";
-import type { Edit } from "@repo/backend/confect/island/world";
-import {
-  createConvexTestWithAuth,
-  seedAuthenticatedUser,
-} from "@repo/backend/confect/test.helpers";
 import { client } from "@repo/backend/test/client";
+import { ISLAND_NOW, islandWorld } from "@repo/backend/test/island";
+import { MASCOT } from "@repo/backend/test/mascot";
 import { seedSchoolMember } from "@repo/backend/test/member";
-import { Array as Arr, DateTime, Effect } from "effect";
+import { DateTime, Effect } from "effect";
 
-const NOW = Date.UTC(2026, 10, 8, 3, 0, 0);
 const JAKARTA = DateTime.zoneMakeNamedUnsafe("Asia/Jakarta");
-const BERLIN = DateTime.zoneMakeNamedUnsafe("Europe/Berlin");
 
-/** One signed-in learner and the test backend. */
-const islandWorld = Effect.fn("test.island.world")(function* () {
-  vi.useFakeTimers({ now: NOW });
-  const t = createConvexTestWithAuth();
-  const owner = yield* Effect.promise(() =>
-    t.mutation((ctx) =>
-      seedAuthenticatedUser(ctx, { now: NOW, suffix: "owner" })
-    )
-  );
-  return {
-    owner: client(t.withIdentity({ subject: owner.sessionId })),
-    t,
-  };
-});
-
-describe("island queries and mutations", () => {
+describe("island queries", () => {
   it.effect(
     "answers the learner's lifetime Stars and tally without their world, and nothing before an island",
     () =>
@@ -51,112 +30,108 @@ describe("island queries and mutations", () => {
   );
 
   it.effect(
-    "opens the learner's island with no cell changed and keeps its zone at theirs",
+    "reads the learner's own island: who it opens to, their blueprints and the Stars left for more",
     () =>
       Effect.gen(function* () {
         const world = yield* islandWorld();
-        const visitor = client(world.t);
-        expect(yield* visitor.query(island.queries.own, {})).toBeNull();
+        expect(yield* world.anyone.query(island.queries.own, {})).toBeNull();
         expect(yield* world.owner.query(island.queries.own, {})).toBeNull();
         yield* world.owner.mutation(island.mutations.open, {
           timeZone: JAKARTA,
         });
         expect(yield* world.owner.query(island.queries.own, {})).toEqual({
+          access: "link",
+          balance: 0,
+          blueprints: [],
           lifetime: 0,
           tally: EMPTY_TALLY,
-          version: 0,
-          world: [],
         });
+        yield* world.owner.mutation(island.mutations.share, {
+          access: "public",
+        });
+        expect((yield* world.owner.query(island.queries.own, {}))?.access).toBe(
+          "public"
+        );
+      })
+  );
+
+  it.effect(
+    "opens a world at its address with what a visitor needs, and nothing where no world stands",
+    () =>
+      Effect.gen(function* () {
+        const world = yield* islandWorld();
+        const visit = (caller: typeof world.owner, username = "ayu") =>
+          caller.query(island.queries.visit, { username });
+        expect(yield* visit(world.anyone, "nobody")).toBeNull();
+        // A learner who never entered the game has no world yet.
+        expect(yield* visit(world.anyone)).toBeNull();
         yield* world.owner.mutation(island.mutations.open, {
           timeZone: JAKARTA,
         });
-        yield* world.owner.mutation(island.mutations.open, {
-          timeZone: BERLIN,
-        });
-        const zones = yield* Effect.promise(() =>
-          world.t.run(async (ctx) =>
-            Arr.map(
-              await ctx.db.query("islands").collect(),
-              (row) => row.timeZone
-            )
+        yield* Effect.promise(() =>
+          world.t.run(async (ctx) => {
+            const row = await ctx.db.query("islands").first();
+            assert.ok(row, "Expected the island its owner opened.");
+            await ctx.db.patch("islands", row._id, { lifetime: 300 });
+          })
+        );
+        const seen = {
+          access: "link",
+          level: 3,
+          mascot: MASCOT,
+          name: "Ayu",
+          owner: world.ownerId,
+        };
+        expect(yield* visit(world.anyone)).toEqual({ ...seen, own: false });
+        expect(yield* visit(world.visitor)).toEqual({ ...seen, own: false });
+        expect(yield* visit(world.owner)).toEqual({ ...seen, own: true });
+        // The world stands under the profile, which a school member's own account alone opens (K15).
+        yield* Effect.promise(() =>
+          world.t.mutation((ctx) =>
+            seedSchoolMember(ctx, world.ownerId, ISLAND_NOW)
           )
         );
-        expect(zones).toEqual(["Europe/Berlin"]);
-        expect(
-          (yield* visitor
-            .mutation(island.mutations.open, { timeZone: BERLIN })
-            .pipe(Effect.flip))._tag
-        ).toBe("SessionRequired");
+        expect(yield* visit(world.anyone)).toBeNull();
+        expect(yield* visit(world.visitor)).toBeNull();
+        expect(yield* visit(world.owner)).toEqual({ ...seen, own: true });
       })
   );
 
   it.effect(
-    "builds a batch over the stored edits under the next version, the last write to a cell winning",
+    "reads the changed chunks of a region for the owner, and for a visitor only while the world opens",
     () =>
       Effect.gen(function* () {
         const world = yield* islandWorld();
-        const planks = idOf("planks");
-        const first = yield* world.owner.mutation(island.mutations.build, {
-          edits: [
-            { block: planks, x: 32, y: 9, z: 32 },
-            { block: idOf("grass"), x: 31, y: 9, z: 32 },
+        const region = (
+          caller: typeof world.owner,
+          username: string | null,
+          rx = 0
+        ) => caller.query(island.queries.region, { rx, rz: 0, username });
+        expect(yield* region(world.anyone, null)).toEqual([]);
+        expect(yield* region(world.anyone, "ayu")).toEqual([]);
+        yield* world.owner.mutation(island.mutations.change, {
+          ops: [
+            { _tag: "set", at: 4, cx: 7, cz: 0, kind: "bush", turn: 3 },
+            { _tag: "set", at: 4, cx: 8, cz: 0, kind: "bush", turn: 3 },
           ],
-          version: 0,
         });
-        expect(first).toEqual({ version: 1 });
-        yield* world.owner.mutation(island.mutations.build, {
-          edits: [{ block: 0, x: 32, y: 9, z: 32 }],
-          version: 1,
-        });
-        const own = yield* world.owner.query(island.queries.own, {});
-        expect(own?.version).toBe(2);
-        expect(own?.world).toEqual([
-          { block: idOf("grass"), x: 31, y: 9, z: 32 },
-          { block: 0, x: 32, y: 9, z: 32 },
+        const things = [{ at: 4, kind: "bush", turn: 3 }];
+        const own = yield* region(world.owner, null);
+        expect(own).toMatchObject([{ cx: 7, cz: 0, things }]);
+        expect(own[0]?.lifts.byteLength).toBe(1024);
+        expect(own[0]?.paints.byteLength).toBe(1024);
+        expect(own[0]?.clears.byteLength).toBe(128);
+        expect(yield* region(world.anyone, "ayu", 1)).toMatchObject([
+          { cx: 8, cz: 0, things },
         ]);
-      })
-  );
-
-  it.effect(
-    "refuses a stale version, a cell outside the footprint, the bedrock and a block the level has not opened",
-    () =>
-      Effect.gen(function* () {
-        const world = yield* islandWorld();
-        const build = (edits: readonly Edit[], version: number) =>
-          world.owner
-            .mutation(island.mutations.build, { edits, version })
-            .pipe(Effect.flip);
-        yield* world.owner.mutation(island.mutations.build, {
-          edits: [{ block: idOf("dirt"), x: 30, y: 9, z: 30 }],
-          version: 0,
+        expect(yield* region(world.visitor, "ayu")).toMatchObject([{ cx: 7 }]);
+        // Without an address a caller reads their own world, which holds nothing here.
+        expect(yield* region(world.visitor, null)).toEqual([]);
+        yield* world.owner.mutation(island.mutations.share, {
+          access: "private",
         });
-        expect(yield* build([], 0)).toMatchObject({
-          _tag: "IslandStale",
-          version: 1,
-        });
-        expect(
-          yield* build([{ block: idOf("dirt"), x: 2, y: 9, z: 2 }], 1)
-        ).toMatchObject({ _tag: "BuildRefused", index: 0, reason: "outside" });
-        expect(
-          yield* build(
-            [
-              { block: idOf("dirt"), x: 30, y: 9, z: 31 },
-              { block: 0, x: 30, y: 0, z: 30 },
-            ],
-            1
-          )
-        ).toMatchObject({ _tag: "BuildRefused", index: 1, reason: "bedrock" });
-        expect(
-          yield* build([{ block: idOf("lantern"), x: 30, y: 9, z: 31 }], 1)
-        ).toMatchObject({ _tag: "BuildRefused", index: 0, reason: "locked" });
-        expect(
-          (yield* client(world.t)
-            .mutation(island.mutations.build, { edits: [], version: 0 })
-            .pipe(Effect.flip))._tag
-        ).toBe("SessionRequired");
-        expect(
-          (yield* world.owner.query(island.queries.own, {}))?.version
-        ).toBe(1);
+        expect(yield* region(world.visitor, "ayu")).toEqual([]);
+        expect(yield* region(world.owner, "ayu")).toMatchObject([{ cx: 7 }]);
       })
   );
 
@@ -165,9 +140,7 @@ describe("island queries and mutations", () => {
     () =>
       Effect.gen(function* () {
         const world = yield* islandWorld();
-        expect(
-          yield* client(world.t).query(island.queries.week, {})
-        ).toBeNull();
+        expect(yield* world.anyone.query(island.queries.week, {})).toBeNull();
         expect(yield* world.owner.query(island.queries.week, {})).toBeNull();
         yield* world.owner.mutation(island.mutations.open, {
           timeZone: JAKARTA,
@@ -234,7 +207,7 @@ describe("island queries and mutations", () => {
           yield* world.owner.query(island.queries.leaders, {})
         ).toMatchObject([{ level: 3, lifetime: 300, own: true, place: 1 }]);
         expect(
-          yield* client(world.t).query(island.queries.leaders, {})
+          yield* world.anyone.query(island.queries.leaders, {})
         ).toMatchObject([{ lifetime: 300, own: false, place: 1 }]);
       })
   );
@@ -244,17 +217,8 @@ describe("island queries and mutations", () => {
     () =>
       Effect.gen(function* () {
         const world = yield* islandWorld();
-        const visitor = client(world.t);
         const named = (username: string) =>
-          visitor.query(island.queries.medals, { username });
-        const ownerId = yield* Effect.promise(() =>
-          world.t.run(async (ctx) => {
-            const user = await ctx.db.query("users").first();
-            assert.ok(user, "Expected the seeded learner.");
-            await ctx.db.patch("users", user._id, { username: "ayu" });
-            return user._id;
-          })
-        );
+          world.anyone.query(island.queries.medals, { username });
         expect(yield* named("nobody")).toBeNull();
         // A learner with no island yet has counted nothing.
         expect(yield* named("ayu")).toEqual({ level: 1, tally: EMPTY_TALLY });
@@ -272,7 +236,9 @@ describe("island queries and mutations", () => {
         expect(yield* named("ayu")).toEqual({ level: 3, tally });
         // A school member's profile opens for its own account alone (K15).
         yield* Effect.promise(() =>
-          world.t.mutation((ctx) => seedSchoolMember(ctx, ownerId, NOW))
+          world.t.mutation((ctx) =>
+            seedSchoolMember(ctx, world.ownerId, ISLAND_NOW)
+          )
         );
         expect(yield* named("ayu")).toBeNull();
         expect(

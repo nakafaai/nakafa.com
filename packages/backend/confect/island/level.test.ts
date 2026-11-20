@@ -2,16 +2,11 @@ import { describe, expect, it } from "@effect/vitest";
 import { growthOf, opensAt } from "@repo/backend/confect/island/level";
 
 describe("island/level", () => {
-  it("opens a level at its lifetime Stars and grows the footprint with it", () => {
-    expect(growthOf(0)).toEqual({ from: 0, level: 1, next: 100, size: 52 });
-    expect(growthOf(99)).toEqual({ from: 0, level: 1, next: 100, size: 52 });
-    expect(growthOf(100)).toEqual({ from: 100, level: 2, next: 250, size: 54 });
-    expect(growthOf(700)).toEqual({
-      from: 700,
-      level: 5,
-      next: 1000,
-      size: 60,
-    });
+  it("opens a level at its lifetime Stars", () => {
+    expect(growthOf(0)).toEqual({ from: 0, level: 1, next: 100 });
+    expect(growthOf(99)).toEqual({ from: 0, level: 1, next: 100 });
+    expect(growthOf(100)).toEqual({ from: 100, level: 2, next: 250 });
+    expect(growthOf(700)).toEqual({ from: 700, level: 5, next: 1000 });
   });
 
   it("asks for 50 Stars more each level, eighteen times, then 1,000 for good", () => {
@@ -23,18 +18,14 @@ describe("island/level", () => {
       from: 9450,
       level: 19,
       next: 10_450,
-      size: 64,
     });
   });
 
-  it("never runs out of levels, and keeps the footprint at the world's side", () => {
+  it("never runs out of levels", () => {
     expect(growthOf(1_000_000)).toEqual({
       from: 999_450,
       level: 1009,
       next: 1_000_450,
-      size: 64,
     });
-    expect(growthOf(opensAt(7)).size).toBe(64);
-    expect(growthOf(opensAt(6)).size).toBe(62);
   });
 });

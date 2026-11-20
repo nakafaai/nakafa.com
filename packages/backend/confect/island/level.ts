@@ -1,5 +1,3 @@
-import { SPAN } from "@repo/backend/confect/island/world";
-
 /** The lifetime Stars from level 1 to level 2. */
 const FIRST_STEP = 100;
 /** How many more Stars each next level asks for than the one before it. */
@@ -10,10 +8,6 @@ const STEP_GROWTH = 50;
  * learner of any age on Nakafa still sees the next level come.
  */
 const GROWING_STEPS = 18;
-/** The side of the footprint a level 1 island builds on, in blocks (ADR 0047, D7). */
-const FIRST_SIDE = 52;
-/** How many blocks wider each level makes the footprint, until it fills the world. */
-const SIDE_GROWTH = 2;
 
 /**
  * The lifetime Stars that open a level (ADR 0047, D29). Levels never end: the
@@ -40,9 +34,9 @@ const STEADY_LEVEL = GROWING_STEPS + 1;
 const STEADY_STEP = FIRST_STEP + STEP_GROWTH * GROWING_STEPS;
 
 /**
- * How far an island has grown with these lifetime Stars: its level from 1, the
- * lifetime Stars that opened it and those that open the next one, and the side
- * of its footprint, which grows two blocks a level until it fills the world.
+ * How far an island has grown with these lifetime Stars: its level from 1, and
+ * the lifetime Stars that opened it and those that open the next one. A level
+ * is the learner's rank and opens no land (ADR 0050, W1).
  */
 export function growthOf(lifetime: number) {
   const steady = opensAt(STEADY_LEVEL);
@@ -54,6 +48,5 @@ export function growthOf(lifetime: number) {
     from: opensAt(level),
     level,
     next: opensAt(level + 1),
-    size: Math.min(SPAN, FIRST_SIDE + SIDE_GROWTH * (level - 1)),
   };
 }

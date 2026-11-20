@@ -71,7 +71,7 @@ describe("island/storm", () => {
         )
       ).toBe(true);
     }
-    // A near strike cracks louder and higher than a far one rolls, and rolls for less time.
+    // A near strike cracks louder and higher than a far one rolls.
     const near = Option.getOrThrow(
       Arr.head(Arr.filter(strikes, (s) => s.distance < 900))
     );
@@ -81,8 +81,9 @@ describe("island/storm", () => {
     const of = (s: typeof near) =>
       Option.getOrThrow(Arr.head(thundersBetween(s.at, s.at + 13)));
     expect(of(near).loud).toBeGreaterThan(of(far).loud);
-    expect(of(near).pitch).toBeGreaterThan(of(far).pitch);
-    expect(of(near).length).toBeLessThan(of(far).length);
+    expect(of(near).rate).toBeGreaterThan(of(far).rate);
+    expect(of(far).rate).toBeGreaterThanOrEqual(0.7);
+    expect(of(near).loud).toBeLessThanOrEqual(1);
     // Each thunder is heard once across windows that touch.
     expect(
       thundersBetween(0, 300).length + thundersBetween(300, 600).length

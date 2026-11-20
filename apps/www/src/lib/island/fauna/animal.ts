@@ -1,7 +1,10 @@
 import { Schema } from "effect";
 import type { Family, Traits } from "@/lib/island/fauna/families";
 import type { Ramp } from "@/lib/island/palette";
-import type { markBody } from "@/lib/island/tiles/shape";
+
+/** How a species' coat is marked: plain, spotted, striped along it, patched, or banded across it. */
+const Pattern = Schema.Literals(["none", "spots", "stripes", "patch", "bands"]);
+type Pattern = typeof Pattern.Type;
 
 /** Where a species lives: on the land, in the sky, in the sea, on the shore, or among the flowers. */
 const Home = Schema.Literals(["land", "sky", "sea", "shore", "bloom"]);
@@ -17,7 +20,7 @@ export function animal<const Key extends string>(
   key: Key,
   family: Family,
   [body, belly, accent, mark]: readonly [Ramp, Ramp, Ramp, Ramp],
-  pattern: Parameters<typeof markBody>[1],
+  pattern: Pattern,
   [ears, tail, horns, crest]: readonly [
     Traits["ears"],
     Traits["tail"],

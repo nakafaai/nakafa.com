@@ -21,7 +21,10 @@ float sunlitAt(vec3 world, vec3 normal) {
   if (any(lessThan(place, vec3(0.0))) || any(greaterThan(place, vec3(1.0)))) {
     return 1.0;
   }
-  return texture(uShadowMap, vec3(place.xy, place.z - 0.0004));
+  // The map covers what the camera looks at and no more; its shade thins out toward its rim, so no shadow ends along the map's own edge.
+  vec2 off = abs(place.xy - 0.5) * 2.0;
+  float rim = smoothstep(0.8, 1.0, max(off.x, off.y));
+  return mix(texture(uShadowMap, vec3(place.xy, place.z - 0.0004)), 1.0, rim);
 }
 // The light on a face from its ambient and its sun, in three tones (D44): the shade tinted cool, a face half turned to the sun plain, and one squarely in it a touch warm.
 vec3 toonLight(vec3 ambient, vec3 sun, vec3 normal, float lit, float occlusion) {

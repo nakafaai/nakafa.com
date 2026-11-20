@@ -96,17 +96,17 @@ export function flashed(light: Light, flash: number): Light {
 }
 
 /**
- * The thunder of a strike: the second it arrives, as sound crosses the
- * distance; how deep it rumbles, a crack nearby and a low roll far off; how
- * loud; and how long it rolls, longer for a farther strike.
+ * The thunder of a strike (ADR 0050, W8): the second it arrives, as sound
+ * crosses the distance; how loud the recording of it plays; and how fast, a
+ * crack as recorded for a near strike and a slower, deeper and longer roll
+ * for a far one.
  */
 function thunderOf(strike: Option.Option.Value<ReturnType<typeof lastStrike>>) {
   const near = nearnessOf(strike.distance);
   return {
     at: strike.at + strike.distance / SOUND,
-    length: 2 + strike.distance / 1200,
-    loud: 0.08 + 0.3 * near,
-    pitch: 110 + 700 * (near - 0.25),
+    loud: 0.25 + 0.75 * near,
+    rate: 0.7 + 0.4 * near,
   };
 }
 

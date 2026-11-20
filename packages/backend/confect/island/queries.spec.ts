@@ -1,10 +1,14 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
+import { Region } from "@repo/backend/confect/island/chunk";
 import {
+  Changed,
   Growth,
+  Guest,
   Leader,
   Medals,
   OwnIsland,
   SetClaims,
+  Visit,
   Week,
 } from "@repo/backend/confect/island/view";
 import Session from "@repo/backend/confect/middleware/session.spec";
@@ -26,6 +30,31 @@ export default GroupSpec.make()
       name: "growth",
       args: () => ({}),
       returns: () => Schema.NullOr(Growth),
+    }).middleware(Session)
+  )
+  .addFunction(
+    FunctionSpec.publicQuery({
+      name: "region",
+      args: () => ({
+        rx: Region,
+        rz: Region,
+        username: Schema.NullOr(Schema.String),
+      }),
+      returns: () => Schema.Array(Changed),
+    }).middleware(Session)
+  )
+  .addFunction(
+    FunctionSpec.publicQuery({
+      name: "visit",
+      args: () => ({ username: Schema.String }),
+      returns: () => Schema.NullOr(Visit),
+    }).middleware(Session)
+  )
+  .addFunction(
+    FunctionSpec.publicQuery({
+      name: "guests",
+      args: () => ({}),
+      returns: () => Schema.Array(Guest),
     }).middleware(Session)
   )
   .addFunction(

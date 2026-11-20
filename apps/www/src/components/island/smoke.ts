@@ -9,9 +9,10 @@ const PUFFS = 12;
 const FLOAT = 4;
 
 /**
- * The chimneys' smoke on the GPU (ADR 0047, D33): where each chimney stands,
- * set again whenever the world changes, and its puffs drawn over the scene,
- * carried by the wind and lit like the air around them.
+ * The chimneys' and the fires' smoke on the GPU (ADR 0047, D33): where each
+ * one stands about the camera, set again whenever the land there changes,
+ * and its puffs drawn over the scene, carried by the wind and lit like the
+ * air around them.
  */
 export function createSmoke(gl: WebGL2RenderingContext, program: WebGLProgram) {
   const vao = gl.createVertexArray();
@@ -25,7 +26,7 @@ export function createSmoke(gl: WebGL2RenderingContext, program: WebGLProgram) {
   gl.bindVertexArray(null);
   const locate = (name: string) => gl.getUniformLocation(program, name);
   return {
-    /** Replaces where the chimneys stand, three numbers a chimney top. */
+    /** Replaces where smoke rises from, three numbers a chimney: the place the smoke leaves it, x, y, z in blocks. */
     chimneys(next: Float32Array) {
       gl.bindBuffer(gl.ARRAY_BUFFER, tops);
       gl.bufferData(gl.ARRAY_BUFFER, next, gl.STATIC_DRAW);

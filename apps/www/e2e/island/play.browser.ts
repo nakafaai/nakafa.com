@@ -4,11 +4,11 @@ import en from "@repo/internationalization/dictionaries/en.json" with {
 };
 import { Effect } from "effect";
 import {
-  expectRevision,
+  expectChanged,
   islandStage,
   openIsland,
   pressOpenGround,
-  pressWorld,
+  revisionOf,
 } from "@/e2e/support/island";
 import { signInLearner } from "@/e2e/support/learner";
 import { withObservedPageErrors } from "@/e2e/support/observe";
@@ -16,7 +16,7 @@ import { revealTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { desktopViewport, touchViewport } from "@/e2e/support/viewport";
 
 for (const viewport of [desktopViewport, touchViewport]) {
-  test(`builds and digs on a new learner's island on the ${viewport.name} screen`, async ({
+  test(`builds, shapes and walks a new learner's world on the ${viewport.name} screen`, async ({
     baseURL,
     browser,
   }, testInfo) => {
@@ -33,77 +33,66 @@ for (const viewport of [desktopViewport, touchViewport]) {
     });
     await Effect.runPromise(signInLearner(context, origin));
     const page = await context.newPage();
+    const button = (name: string) =>
+      page.getByRole("button", { exact: true, name });
+    /** Presses open ground until the world changed, as a learner does who is told there is no room. */
+    const change = async () => {
+      const before = await revisionOf(page);
+      await Effect.runPromise(
+        pressOpenGround(
+          page,
+          viewport.hasTouch,
+          async () => (await revisionOf(page)) > before
+        )
+      );
+    };
+    /** Presses a control that changes the world by itself, and waits for the change. */
+    const changeWith = async (name: string) => {
+      const before = await revisionOf(page);
+      await button(name).click();
+      await expectChanged(page, before);
+    };
     await Effect.runPromise(
       withObservedPageErrors(
         page,
         openIsland(page).pipe(
-          Effect.andThen(pressWorld(page, viewport.hasTouch)),
-          Effect.andThen(Effect.promise(() => expectRevision(page, 1))),
-          Effect.andThen(
-            Effect.promise(() =>
-              page.getByRole("button", { name: en.Island.pickaxe }).click()
-            )
-          ),
-          Effect.andThen(pressWorld(page, viewport.hasTouch)),
           Effect.andThen(
             Effect.promise(async () => {
-              await expectRevision(page, 2);
-              await page.getByRole("button", { name: en.Island.undo }).click();
-              await expectRevision(page, 3);
-              await page.getByRole("button", { name: en.Common.redo }).click();
-              await expectRevision(page, 4);
-              await page.getByRole("button", { name: en.Island.book }).click();
-              const book = page.getByRole("dialog", { name: en.Island.book });
-              // The book opens on its ready-made items; the blocks are a shelf of their own.
-              await book.getByRole("tab", { name: en.Island.blocks }).click();
-              await expect(
-                book.getByRole("button", { name: en.Island["block-flowers"] })
-              ).toBeEnabled();
-              await expect(
-                book.getByRole("button", { name: "Opens at level 2" }).first()
-              ).toBeDisabled();
-              await testInfo.attach(`island-book-${viewport.name}.png`, {
+              // A free thing goes down with one press, and a step back and forth takes it away and brings it back.
+              await button(en.Island["mode-build"]).click();
+              await button(en.Island["shelf-decor"]).click();
+              await page
+                .getByRole("button", { name: en.Island["thing-bench"] })
+                .click();
+              await change();
+              await changeWith(en.Common.undo);
+              await changeWith(en.Common.redo);
+              // A priced thing asks for its blueprint, which a new learner cannot open yet.
+              await button(en.Island["shelf-building"]).click();
+              await page
+                .getByRole("button", { name: en.Island["thing-cottage"] })
+                .click();
+              const blueprint = page.getByRole("dialog", {
+                name: en.Island["thing-cottage"],
+              });
+              await expect(blueprint).toBeVisible();
+              await testInfo.attach(`world-blueprint-${viewport.name}.png`, {
                 body: await page.screenshot(),
                 contentType: "image/png",
               });
-              await book
-                .getByRole("button", { name: en.Island["block-flowers"] })
-                .click();
-              await expect(book).toBeHidden();
-              // The pickaxe held the first slot, which now holds the flowers too.
-              await expect(
-                page
-                  .getByRole("button", { name: en.Island["block-flowers"] })
-                  .first()
-              ).toHaveAttribute("aria-pressed", "true");
-              // A ready-made tree goes in whole with one press, and a cottage stays locked until level 3.
-              await page.getByRole("button", { name: en.Island.book }).click();
-              await book.getByRole("tab", { name: en.Island.items }).click();
-              await expect(
-                book.getByRole("button", { name: "Opens at level 3" }).first()
-              ).toBeDisabled();
-              await book
-                .getByRole("button", { name: en.Island["item-tree"] })
-                .click();
-              await expect(book).toBeHidden();
-            })
-          ),
-          // The well stands in the middle of the village, so the tree goes on open ground beside it.
-          Effect.andThen(
-            pressOpenGround(
-              page,
-              viewport.hasTouch,
-              async () =>
-                (await islandStage(page).getAttribute("data-revision")) === "5"
-            )
-          ),
-          Effect.andThen(
-            Effect.promise(async () => {
-              await expectRevision(page, 5);
-              // The learner's fox walks where they press with their feet in hand.
+              await page.keyboard.press("Escape");
+              await expect(blueprint).toBeHidden();
+              // A brush paints the land where it is pressed.
+              await button(en.Island["mode-brush"]).click();
+              await button(en.Island["brush-path"]).click();
+              await change();
+              await testInfo.attach(`world-shelf-${viewport.name}.png`, {
+                body: await page.screenshot(),
+                contentType: "image/png",
+              });
+              // The fox walks where the learner presses while they explore.
+              await button(en.Island["mode-explore"]).click();
               const start = await islandStage(page).getAttribute("data-player");
-              await page.getByRole("button", { name: en.Island.walk }).click();
-              // Below the well stands a cottage's roof, where no fox can go: it walks out to open ground it can reach.
               await Effect.runPromise(
                 pressOpenGround(
                   page,
@@ -118,11 +107,17 @@ for (const viewport of [desktopViewport, touchViewport]) {
                 "false",
                 { timeout: revealTimeoutMilliseconds }
               );
-              await testInfo.attach(`island-${viewport.name}.png`, {
+              // The map opens over the world and closes again.
+              await button(en.Island.map).click();
+              const map = page.getByRole("dialog", { name: en.Island.map });
+              await expect(map).toBeVisible();
+              await page.keyboard.press("Escape");
+              await expect(map).toBeHidden();
+              await testInfo.attach(`world-${viewport.name}.png`, {
                 body: await page.screenshot(),
                 contentType: "image/png",
               });
-              await page.getByRole("button", { name: en.Island.leave }).click();
+              await button(en.Island.leave).click();
               await expect(islandStage(page)).toBeHidden();
             })
           )
@@ -132,7 +127,7 @@ for (const viewport of [desktopViewport, touchViewport]) {
     const video = page.video();
     await context.close();
     if (video !== null) {
-      await testInfo.attach(`island-play-${viewport.name}.webm`, {
+      await testInfo.attach(`world-play-${viewport.name}.webm`, {
         contentType: "video/webm",
         path: await video.path(),
       });

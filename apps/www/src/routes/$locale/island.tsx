@@ -20,13 +20,13 @@ const IslandGame = lazy(() => import("@/components/island/game"));
 const localeRoute = getRouteApi("/$locale");
 
 /**
- * The island game on the whole screen (ADR 0047, D1): no sidebar, header or
+ * The world game on the whole screen (ADR 0047, D1): no sidebar, header or
  * page frame. Like the account screens it renders only in the browser and
  * sends a visitor without a session to sign-in first, and it stays out of search.
  */
 export const Route = createFileRoute("/$locale/island")({
   ssr: false,
-  // A world read on an earlier visit is older than what the learner built since, so every entry reads it again.
+  // What a learner earned and opened since an earlier visit is newer than what that visit read, so every entry reads it again.
   gcTime: 0,
   beforeLoad: async ({ location, params }) => {
     if (!(await isSignedIn())) {
@@ -70,9 +70,9 @@ function IslandPage() {
       <RouteConvexProvider>
         <Suspense fallback={null}>
           <IslandGame
-            edits={screen.edits}
-            // A world another tab or device changed is read again, and the game starts over on what the server holds.
-            key={screen.version}
+            blueprints={screen.blueprints}
+            host={null}
+            key={screen.owner}
             level={screen.level}
             onLeave={() => {
               if (router.history.canGoBack()) {
@@ -81,14 +81,12 @@ function IslandPage() {
               }
               router.navigate({ params: { locale }, to: "/$locale/home" });
             }}
+            owner={screen.owner}
             progress={{
               from: screen.from,
               lifetime: screen.lifetime,
               next: screen.next,
             }}
-            seed={screen.seed}
-            size={screen.size}
-            version={screen.version}
           />
         </Suspense>
       </RouteConvexProvider>

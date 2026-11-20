@@ -1,13 +1,8 @@
 // @vitest-environment node
 import { describe, expect, it } from "@effect/vitest";
-import { Array as Arr, HashSet, Record as Rec } from "effect";
-import { speciesPixels } from "@/lib/island/atlas";
-import { FAMILIES } from "@/lib/island/fauna/families";
+import { Array as Arr, HashSet } from "effect";
+import { Family } from "@/lib/island/fauna/families";
 import { SPECIES } from "@/lib/island/fauna/species";
-
-/** A species' drawing as one string, to tell drawings apart. */
-const drawingOf = (index: number) =>
-  Arr.join(Arr.map(Arr.fromIterable(speciesPixels(index)), String), ",");
 
 describe("island/fauna/species", () => {
   it("keeps more than a hundred real species, each named once, from every family", () => {
@@ -19,12 +14,10 @@ describe("island/fauna/species", () => {
     ).toBe(SPECIES.length);
     expect(
       HashSet.fromIterable(Arr.map(SPECIES, (species) => species.family))
-    ).toEqual(HashSet.fromIterable(Rec.keys(FAMILIES)));
+    ).toEqual(HashSet.fromIterable(Family.literals));
   });
 
-  it("draws every species as its own picture, never two alike, at a real height", () => {
-    const drawings = Arr.map(SPECIES, (_species, index) => drawingOf(index));
-    expect(HashSet.size(HashSet.fromIterable(drawings))).toBe(SPECIES.length);
+  it("gives every species a real height", () => {
     expect(
       Arr.every(SPECIES, (species) => species.height > 0 && species.height <= 6)
     ).toBe(true);

@@ -182,3 +182,21 @@ export function stop(swing: number): Parts {
     sparkle(24, -50 + swing * 2, 3, POP.red),
   ];
 }
+
+/** A sheet of stickers with every one still on it, the corner one lifting for whoever comes first. */
+export function stickers(swing: number): Parts {
+  return [
+    box(-24, -30, 48, 60, PAGE, 5),
+    ...Arr.map(
+      [
+        [-10, -16, POP.blue],
+        [-10, 0, POP.orange],
+        [10, 0, POP.green],
+        [-10, 16, POP.yellow],
+        [10, 16, POP.blue],
+      ] as const,
+      ([x, y, colour]) => dot(x, y, 6, colour)
+    ),
+    sparkle(10 + swing * 2, -16 - swing * 3, 6, POP.red),
+  ];
+}

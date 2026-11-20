@@ -1,4 +1,3 @@
-import { Option } from "effect";
 import type { Orbit } from "@/lib/island/camera";
 import { eyeOf, FIELD_OF_VIEW } from "@/lib/island/camera";
 
@@ -220,26 +219,4 @@ export function rayThrough(
     ]),
     origin: near,
   };
-}
-
-/**
- * Where the ray through a point of the screen meets the level of the camera's
- * target, the point given in clip coordinates; none when the ray runs above it.
- */
-export function groundThrough(
-  orbit: Orbit,
-  aspect: number,
-  clipX: number,
-  clipY: number
-) {
-  const ray = rayThrough(orbit, aspect, clipX, clipY);
-  if (ray.direction[1] >= -1e-6) {
-    return Option.none();
-  }
-  const reach = (orbit.target[1] - ray.origin[1]) / ray.direction[1];
-  return Option.some([
-    ray.origin[0] + ray.direction[0] * reach,
-    orbit.target[1],
-    ray.origin[2] + ray.direction[2] * reach,
-  ] as const);
 }

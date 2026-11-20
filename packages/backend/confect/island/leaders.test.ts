@@ -35,8 +35,6 @@ const leaderWorld = Effect.fn("test.island.leaderWorld")(function* (
           tally: EMPTY_TALLY,
           timeZone: "UTC",
           userId,
-          version: 0,
-          world: new ArrayBuffer(0),
         });
         return userId;
       })

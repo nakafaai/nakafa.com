@@ -1,20 +1,27 @@
 import type { Docs } from "@repo/backend/confect/_generated/docs";
-import { Tally } from "@repo/backend/confect/island/schema";
-import { Edits } from "@repo/backend/confect/island/world";
+import { Across, Chunk } from "@repo/backend/confect/island/chunk";
+import {
+  Access,
+  FIRST_ACCESS,
+  Sticker,
+  Tally,
+} from "@repo/backend/confect/island/schema";
+import { balanceOf, Thing } from "@repo/backend/confect/island/things";
 import { MascotCode } from "@repo/mascot/code";
 import { Schema } from "effect";
 
 /**
- * The learner's own island as the game opens it (ADR 0047, D6 and D7): the
- * cells they changed and the version those edits stand at, their lifetime
- * Stars, from which `growthOf` reads the level and the footprint, and their
+ * The learner's own island as the game opens it (ADR 0050, W5 and W6): who
+ * their world opens to, the blueprints they opened and the Stars left to open
+ * more, their lifetime Stars, from which `growthOf` reads the level, and their
  * tally, from which `countsOf` reads every badge.
  */
 export const OwnIsland = Schema.Struct({
+  access: Access,
+  balance: Schema.Finite,
+  blueprints: Schema.Array(Thing),
   lifetime: Schema.Finite,
   tally: Tally,
-  version: Schema.Finite,
-  world: Edits,
 });
 
 /**
@@ -43,15 +50,46 @@ export const SetClaims = Schema.Struct({
   stars: Schema.Finite,
 });
 
-/** Projects the stored island for its owner. */
+/** Projects the stored island for its owner; a field never written reads as its first value. */
 export function toOwnIsland(island: Docs["islands"]) {
+  const blueprints = island.blueprints ?? [];
   return {
+    access: island.access ?? FIRST_ACCESS,
+    balance: balanceOf(island.lifetime, blueprints),
+    blueprints,
     lifetime: island.lifetime,
     tally: island.tally,
-    version: island.version,
-    world: island.world,
   };
 }
+
+/** One changed chunk of a world as the browser lays it over the generated land (ADR 0050, W3). */
+export const Changed = Schema.Struct({
+  ...Chunk.fields,
+  cx: Across,
+  cz: Across,
+});
+
+/**
+ * What a visitor needs to open a world (ADR 0050, W6): who it opens to, its
+ * owner by their first name, mascot and level, the owner's id, which the
+ * browser turns into the land's seed, and whether the viewer is that owner.
+ */
+export const Visit = Schema.Struct({
+  access: Access,
+  level: Schema.Int,
+  mascot: MascotCode,
+  name: Schema.String,
+  own: Schema.Boolean,
+  owner: Schema.String,
+});
+
+/** One row of a guest book: who came, by first name and mascot, their sticker, and when. */
+export const Guest = Schema.Struct({
+  at: Schema.Finite,
+  mascot: MascotCode,
+  name: Schema.String,
+  sticker: Sticker,
+});
 
 /**
  * One row of the global leaderboard (ADR 0047, D27): a learner by their first

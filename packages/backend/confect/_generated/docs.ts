@@ -114,6 +114,8 @@ export type IrtCalibrationRunsDoc = Document.Document<typeof schemaDefinition, "
 export type IrtScaleItemsDoc = Document.Document<typeof schemaDefinition, "irtScaleItems">;
 export type IrtScaleVersionsDoc = Document.Document<typeof schemaDefinition, "irtScaleVersions">;
 export type IslandAwardsDoc = Document.Document<typeof schemaDefinition, "islandAwards">;
+export type IslandChunksDoc = Document.Document<typeof schemaDefinition, "islandChunks">;
+export type IslandGuestsDoc = Document.Document<typeof schemaDefinition, "islandGuests">;
 export type IslandsDoc = Document.Document<typeof schemaDefinition, "islands">;
 export type JournalCursorsDoc = Document.Document<typeof schemaDefinition, "journalCursors">;
 export type JournalEntriesDoc = Document.Document<typeof schemaDefinition, "journalEntries">;
@@ -298,6 +300,8 @@ export interface Docs {
   irtScaleItems: IrtScaleItemsDoc;
   irtScaleVersions: IrtScaleVersionsDoc;
   islandAwards: IslandAwardsDoc;
+  islandChunks: IslandChunksDoc;
+  islandGuests: IslandGuestsDoc;
   islands: IslandsDoc;
   journalCursors: JournalCursorsDoc;
   journalEntries: JournalEntriesDoc;

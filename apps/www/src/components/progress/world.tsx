@@ -27,11 +27,7 @@ export function WorldCard() {
     >
       <AfterPageRead>
         <Suspense fallback={null}>
-          <IslandView
-            edits={island.edits}
-            seed={island.seed}
-            size={island.size}
-          />
+          <IslandView owner={island.owner} />
         </Suspense>
       </AfterPageRead>
     </Link>

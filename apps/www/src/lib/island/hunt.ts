@@ -1,17 +1,27 @@
-import { SPAN } from "@repo/backend/confect/island/world";
+import { Schema } from "effect";
 import { unitOf } from "@/lib/island/noise";
-import { SEA_LEVEL } from "@/lib/island/world";
 
 /**
- * The bait ball (ADR 0047, D50): a school of mackerel milling round its own
- * middle, which drifts on a slow round `lane` cells from the island's middle,
- * between the whale's round and the dolphins', `depth` blocks down.
+ * One hunt of the open sea (ADR 0047, D50; ADR 0050, W9): a bait ball of
+ * mackerel whose middle drifts on a slow round `lane` blocks about a place of
+ * deep water, at the height `y`, and the reef shark that herds it. `seed`
+ * sets where on their rounds the two begin.
  */
-const BALL = { depth: 2, lane: 52.5, speed: 0.5 } as const;
+export const Hunt = Schema.Struct({
+  lane: Schema.Finite,
+  seed: Schema.Int,
+  x: Schema.Finite,
+  y: Schema.Finite,
+  z: Schema.Finite,
+});
+export type Hunt = typeof Hunt.Type;
+
+/** How fast the bait ball's middle drifts along its round, in blocks a second. */
+const DRIFT = 0.5;
 
 /**
- * How the reef shark hunts the bait ball, in seconds and cells: it circles
- * the ball `radius` cells out at `speed` cells a second for `circle`
+ * How the reef shark hunts the bait ball, in seconds and blocks: it circles
+ * the ball `radius` blocks out at `speed` blocks a second for `circle`
  * seconds, then charges straight through its middle in `charge` seconds,
  * and the school bursts apart to either side of its line and closes again
  * over `scatter` seconds, as sharks herd and split a real bait ball.
@@ -24,6 +34,9 @@ const HUNT = {
   speed: 2.6,
 } as const;
 
+/** How far from the ball's own round the hunt reaches, in blocks: the shark's circle and half its length. */
+export const HUNT_REACH = HUNT.radius + 1.2;
+
 /** One whole round of the hunt: circling, then the charge. */
 const CYCLE = HUNT.circle + HUNT.charge;
 
@@ -31,13 +44,13 @@ const CYCLE = HUNT.circle + HUNT.charge;
 const TURN = HUNT.speed / HUNT.radius;
 
 /** Where the bait ball's middle is at `time` seconds. */
-export function ballAt(seed: number, time: number) {
+export function ballAt(hunt: Hunt, time: number) {
   const angle =
-    unitOf(seed + 32, 0, 0, 0) * Math.PI * 2 + (time * BALL.speed) / BALL.lane;
+    unitOf(hunt.seed + 32, 0, 0, 0) * Math.PI * 2 + (time * DRIFT) / hunt.lane;
   return {
-    x: SPAN / 2 + Math.cos(angle) * BALL.lane,
-    y: SEA_LEVEL - BALL.depth,
-    z: SPAN / 2 + Math.sin(angle) * BALL.lane,
+    x: hunt.x + Math.cos(angle) * hunt.lane,
+    y: hunt.y,
+    z: hunt.z + Math.sin(angle) * hunt.lane,
   };
 }
 
@@ -61,11 +74,11 @@ function chargeAngle(seed: number, round: number) {
  * ball, or charging straight across it from one side of its circle to the
  * other.
  */
-export function hunterAt(seed: number, time: number) {
-  const ball = ballAt(seed, time);
+export function hunterAt(hunt: Hunt, time: number) {
+  const ball = ballAt(hunt, time);
   const { round, within } = roundOf(time);
   if (within >= HUNT.circle) {
-    const from = chargeAngle(seed, round);
+    const from = chargeAngle(hunt.seed, round);
     const share = 1 - (2 * (within - HUNT.circle)) / HUNT.charge;
     return {
       x: ball.x + Math.cos(from) * HUNT.radius * share,
@@ -74,7 +87,7 @@ export function hunterAt(seed: number, time: number) {
       z: ball.z + Math.sin(from) * HUNT.radius * share,
     };
   }
-  const angle = chargeAngle(seed, round) - (HUNT.circle - within) * TURN;
+  const angle = chargeAngle(hunt.seed, round) - (HUNT.circle - within) * TURN;
   return {
     x: ball.x + Math.cos(angle) * HUNT.radius,
     y: ball.y,
@@ -88,12 +101,12 @@ export function hunterAt(seed: number, time: number) {
  * across the shark's latest charge, as x and z, so each fish flees to its own
  * side of the shark's line. Before the first charge it lies still.
  */
-export function scatterAt(seed: number, time: number) {
+export function scatterAt(hunt: Hunt, time: number) {
   const { round, within } = roundOf(time);
   const charged = within >= HUNT.circle ? round : round - 1;
   const since =
     within >= HUNT.circle ? within - HUNT.circle : within + HUNT.charge;
-  const from = chargeAngle(seed, charged);
+  const from = chargeAngle(hunt.seed, charged);
   return {
     across: { x: -Math.sin(from), z: Math.cos(from) },
     burst:

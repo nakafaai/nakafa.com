@@ -85,11 +85,29 @@ export const Duplicate = Schema.TaggedStruct("duplicate", {});
 export const Capped = Schema.TaggedStruct("capped", {});
 
 /**
- * A build made against older edits than the island holds, which another tab or
- * device changed meanwhile (ADR 0047, D6). The browser reloads the island and
- * the learner goes on from there.
+ * Who a world opens to beside its owner (ADR 0050, W6): nobody, whoever holds
+ * its address, or anyone. A world that never chose is open by link.
  */
-export class IslandStale extends Schema.TaggedError<
-  IslandStale,
+export const Access = Schema.Literals(["private", "link", "public"]);
+
+/** The access of a world whose owner never chose one. */
+export const FIRST_ACCESS: typeof Access.Type = "link";
+
+/** The stickers a visitor may leave in a guest book, the only words between learners (ADR 0050, W6). */
+export const Sticker = Schema.Literals([
+  "wave",
+  "heart",
+  "star",
+  "flower",
+  "fish",
+  "sun",
+]);
+
+/**
+ * A guest book that does not take the caller's sticker: no world stands at the
+ * address, it does not open to them, or it is their own.
+ */
+export class Closed extends Schema.TaggedError<
+  Closed,
   { readonly brand: unique symbol }
->()("IslandStale", { version: Schema.Int }) {}
+>()("Closed", {}) {}

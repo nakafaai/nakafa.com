@@ -83,10 +83,8 @@ describe("island/award", () => {
               subjects: { mathematics: 1 },
             },
             timeZone: "UTC",
-            version: 0,
           },
         ]);
-        expect(islands[0]?.world.byteLength).toBe(0);
       })
   );
 

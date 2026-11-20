@@ -85,7 +85,7 @@ describe("island/models/parts", () => {
     });
   });
 
-  it("bakes each corner's motion: a wave growing toward the tail, a stride from the hip with left and right apart, a flap from the root", () => {
+  it("bakes each corner's motion: a wave growing toward the tail, a stride from the hip with left and right apart, a flap from the root, a wheel about its axle", () => {
     /** The motion numbers of every corner of flattened faces: swing, phase, rate, mode. */
     const motions = (faces: Parameters<typeof flatten>[0]) =>
       Arr.map(
@@ -147,6 +147,22 @@ describe("island/models/parts", () => {
     );
     expect(phase).toBeCloseTo(Math.PI);
     expect(mode).toBe(6);
+    // A wheel only turns: every corner carries the height of its axle in place of a swing, its phase and its rate.
+    const wheel = rigged(box([-2, 5, 0], [2, 9, 0.1], grey), {
+      mode: "spin",
+      phase: 0.5,
+      pivot: 7,
+      rate: 0.9,
+      reach: 0,
+      waves: 0,
+    });
+    expect(
+      Arr.every(
+        motions(wheel),
+        ([axle, turn, rate, mode]) =>
+          axle === 7 && turn === 0.5 && rate === Math.fround(0.9) && mode === 7
+      )
+    ).toBe(true);
     // A part with no length along the body has nothing to wave along, and a part with no rig stays still.
     const plaque = rigged(box([0, 0, 0], [1, 1, 0], grey), wave);
     expect(Arr.every(swingsOf(plaque), (swing) => swing === 0)).toBe(true);

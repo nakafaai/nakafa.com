@@ -2,11 +2,9 @@
 import { describe, expect, it } from "@effect/vitest";
 import { Array as Arr, Option } from "effect";
 import { SPECIES } from "@/lib/island/fauna/species";
-import {
-  flyerFaces,
-  plantFaces,
-  speciesFaces,
-} from "@/lib/island/models/catalog";
+import { bobberFaces } from "@/lib/island/models/bobber";
+import { flyerFaces, speciesFaces } from "@/lib/island/models/catalog";
+import { fruitFaces } from "@/lib/island/models/fruit";
 import {
   BodyKind,
   bodyFaces,
@@ -21,6 +19,8 @@ import {
   meters,
 } from "@/lib/island/models/parts";
 import { reefFaces } from "@/lib/island/models/reef";
+import { tackleFaces } from "@/lib/island/models/tackle";
+import { thingFaces } from "@/lib/island/models/things";
 import { SCALE } from "@/lib/island/scale";
 
 /** A body's measure in meters along one axis. */
@@ -65,25 +65,44 @@ describe("island/models/kinds", () => {
       { _tag: "species", index: 3 },
       { _tag: "flyer", index: 3 },
       { _tag: "swimmer", kind: "orca" },
-      { _tag: "plant", index: 0 },
       { _tag: "reef", kind: "kelp", look: 2 },
+      { _tag: "thing", kind: "palm", look: 1 },
+      { _tag: "fruit", kind: "coconut" },
+      { _tag: "tackle" },
+      { _tag: "bobber" },
     ] as const;
     expect(Arr.map(models, modelFaces)).toEqual([
       bodyFaces("cow"),
       speciesFaces(3),
       flyerFaces(3),
       swimmerFaces("orca"),
-      plantFaces(0),
       reefFaces("kelp", 2),
+      thingFaces("palm", 1),
+      fruitFaces("coconut"),
+      tackleFaces(),
+      bobberFaces(),
     ]);
     expect(Arr.map(models, modelKey)).toEqual([
       "body-cow",
       "species-3",
       "flyer-3",
       "swimmer-orca",
-      "plant-0",
       "reef-kelp-2",
+      "thing-palm-1",
+      "fruit-coconut",
+      "tackle",
+      "bobber",
     ]);
+  });
+
+  it("holds a villager's rod out over the water: a cane from the hands, a line down to a float on the water's face", () => {
+    const bounds = boundsOf(tackleFaces());
+    expect(span(bounds.y)).toBeGreaterThan(2);
+    expect(span(bounds.y)).toBeLessThan(2.6);
+    expect(bounds.y[0]).toBeLessThan(meters(0.1));
+    expect(span(bounds.z)).toBeGreaterThan(2.3);
+    expect(span(bounds.x)).toBeLessThan(0.3);
+    expect(flatten(tackleFaces()).length % (3 * MODEL_STRIDE)).toBe(0);
   });
 
   it("spreads a bird of the sky's wings wide when it flies and beats them from the shoulder", () => {

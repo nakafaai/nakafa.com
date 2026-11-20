@@ -9,25 +9,29 @@ const ISLAND_PATH = "/en/island";
 /** The game's canvas. */
 export const islandStage = (page: Page) => page.getByTestId("island-stage");
 
-/**
- * Waits until the world has changed this many times since the game opened: the
- * canvas names the count of every change it drew.
- */
-export const expectRevision = (page: Page, revision: number) =>
-  expect(islandStage(page)).toHaveAttribute("data-revision", String(revision));
+/** How many times the world changed since the game opened: the canvas names the count of every change it drew. */
+export const revisionOf = async (page: Page) =>
+  Number(await islandStage(page).getAttribute("data-revision"));
+
+/** Waits until the world changed again after it had changed `before` times. */
+export const expectChanged = (page: Page, before: number) =>
+  expect
+    .poll(() => revisionOf(page), { timeout: revealTimeoutMilliseconds })
+    .toBeGreaterThan(before);
 
 /**
- * Opens the learner's island and waits for its first frame. The game loads its
- * renderer once the learner enters, and a machine busy with other work
- * stretches that past the default five seconds, so the wait is a deferred
- * scene's.
+ * Opens the learner's world and waits until it rests: its first frame is
+ * drawn, what the server holds about the home has arrived, and the camp fire
+ * a first visit is given has landed. The game loads its renderer once the
+ * learner enters, and a machine busy with other work stretches that past the
+ * default five seconds, so the wait is a deferred scene's.
  */
 export const openIsland = Effect.fn("NakafaE2E.openIsland")(function* (
   page: Page
 ) {
   yield* Effect.promise(() => page.goto(ISLAND_PATH));
   yield* Effect.promise(() =>
-    expect(islandStage(page)).toHaveAttribute("data-drawn", "true", {
+    expect(islandStage(page)).toHaveAttribute("data-settled", "true", {
       timeout: revealTimeoutMilliseconds,
     })
   );
@@ -51,23 +55,20 @@ const pressAt = Effect.fn("NakafaE2E.pressAt")(function* (
   );
 });
 
-/** Presses the middle of the world, where the village's well stands: a single block goes on it and comes off it. */
-export const pressWorld = (page: Page, hasTouch: boolean) =>
-  pressAt(page, hasTouch, 0.5, 0.5);
-
 /**
- * Spots round the village where the ground is often open, as shares of the
- * screen's width and height. Every learner's island grows its own trees and
- * its own animals wander it, so no one spot is free on every island.
+ * Spots round the home where the ground is often open, as shares of the
+ * screen's width and height. Every learner's world grows its own trees and
+ * its own animals wander it, so no one spot is free in every world; the
+ * dock, the shelf and the status bars cover the rest of the screen.
  */
 const OPEN_SPOTS = [
-  [0.1, 0.3],
-  [0.07, 0.55],
-  [0.3, 0.6],
-  [0.93, 0.62],
-  [0.05, 0.75],
-  [0.2, 0.22],
-  [0.86, 0.5],
+  [0.5, 0.42],
+  [0.35, 0.36],
+  [0.65, 0.36],
+  [0.42, 0.28],
+  [0.6, 0.46],
+  [0.3, 0.44],
+  [0.72, 0.3],
 ] as const;
 
 /** How long the game has to answer one press before the next spot is tried. */
@@ -95,6 +96,6 @@ export const pressOpenGround = Effect.fn("NakafaE2E.pressOpenGround")(
         return;
       }
     }
-    return yield* Effect.die("no open spot round the village took the press");
+    return yield* Effect.die("no open spot round the home took the press");
   }
 );

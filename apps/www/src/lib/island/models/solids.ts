@@ -258,12 +258,12 @@ export function scaled(
   }));
 }
 
-/** Faces moved by `offset`, a striding part's pivot height with them (D48). */
+/** Faces moved by `offset`, the pivot height of a striding or a spinning part with them (D48). */
 export function moved(faces: readonly Face[], offset: Vec): readonly Face[] {
   return Arr.map(faces, (face) => ({
     ...face,
     corners: Arr.map(face.corners, (corner) => add(corner, offset)),
-    ...(face.rig?.mode === "stride"
+    ...(face.rig?.mode === "stride" || face.rig?.mode === "spin"
       ? { rig: { ...face.rig, pivot: face.rig.pivot + offset[1] } }
       : {}),
   }));

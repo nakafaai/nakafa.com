@@ -7,6 +7,9 @@ import { flatten, MODEL_STRIDE } from "@/lib/island/models/parts";
 /** How many bodies of one model the GPU first makes room for; a model with more doubles its room. */
 const FIRST_ROOM = 8;
 
+/** The run a model starts with: nothing was sent for it yet. */
+const UNSENT: Float32Array = new Float32Array(0);
+
 /** Bytes in one float. */
 const FLOAT = 4;
 
@@ -75,6 +78,8 @@ function entryOf(gl: WebGL2RenderingContext, model: Model) {
     mesh,
     places,
     room: FIRST_ROOM,
+    // The run of places last sent to the GPU, so the same run is never sent twice.
+    sent: UNSENT,
     vao,
   };
 }
@@ -82,8 +87,8 @@ function entryOf(gl: WebGL2RenderingContext, model: Model) {
 /**
  * Every true 3D body on the GPU (ADR 0047, D21, D24 and D25): one mesh a
  * model, built the first time the world draws that model and kept for the
- * game, and the places of that model's bodies, rewritten every frame, so a
- * model's bodies are drawn in one call however many there are.
+ * game, and the places of that model's bodies, rewritten whenever they
+ * change, so a model's bodies are drawn in one call however many there are.
  */
 export function createBodies(gl: WebGL2RenderingContext) {
   const entries = MutableHashMap.empty<string, ReturnType<typeof entryOf>>();
@@ -121,7 +126,8 @@ export function createBodies(gl: WebGL2RenderingContext) {
     },
     /**
      * Replaces where every model's bodies stand this frame. A model missing
-     * from the list draws nothing; each model comes once, with all its bodies.
+     * from the list draws nothing; each model comes once, with all its bodies,
+     * and a run that is the same array as last frame is not sent again.
      */
     write(bodies: readonly (readonly [Model, Float32Array])[]) {
       MutableHashMap.forEach(entries, (entry) => {
@@ -135,6 +141,11 @@ export function createBodies(gl: WebGL2RenderingContext) {
           return made;
         });
         entry.count = data.length / BODY_STRIDE;
+        // What stands still comes as the very same run frame after frame (ADR 0050, W9), and is already there.
+        if (entry.sent === data) {
+          return;
+        }
+        entry.sent = data;
         gl.bindBuffer(gl.ARRAY_BUFFER, entry.places);
         if (entry.count > entry.room) {
           entry.room = Math.max(entry.count, entry.room * 2);
