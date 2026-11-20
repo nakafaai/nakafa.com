@@ -148,17 +148,22 @@ export const biologyComponentNames = {
 
 /** Rich component names of the mathematics visuals; every lesson domain may use them. */
 export const mathematicsComponentNames = {
+  abacusBaseLab: "AbacusBaseLab",
   bacterialGrowth: "BacterialGrowth",
   barChart: "BarChart",
+  binaryLampLab: "BinaryLampLab",
   chart: "Chart",
+  diceRollLab: "DiceRollLab",
   functionAndNonFunctionDiagram: "FunctionAndNonFunctionDiagram",
   functionAndNonFunctionRelationVisualizer:
     "FunctionAndNonFunctionRelationVisualizer",
   functionChart: "FunctionChart",
   functionExplorationVirusChart: "FunctionExplorationVirusChart",
   functionMachine: "FunctionMachine",
+  galtonBoardLab: "GaltonBoardLab",
   histogramChart: "HistogramChart",
   inverseFunctionIllustration: "InverseFunctionIllustration",
+  marbleDrawLab: "MarbleDrawLab",
   quadraticEquationReadingRoomProblem: "QuadraticEquationReadingRoomProblem",
   scatterDiagram: "ScatterDiagram",
   sequenceConceptTableChairsAnimation: "SequenceConceptTableChairsAnimation",
