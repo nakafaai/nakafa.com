@@ -1,4 +1,5 @@
 import { ContactShadows } from "@react-three/drei";
+import { useFrame } from "@react-three/fiber";
 import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
 import { useStage } from "@repo/design-system/components/three/stage/context";
 import { Terrain } from "@repo/design-system/components/three/stage/terrain";
@@ -8,6 +9,25 @@ const GROUND_SPAN = 20;
 
 /** How dark the key light's shadow falls on the ground, over the backdrop. */
 const SHADOW_OPACITY = 0.3;
+
+/** Frame callbacks run in rising priority, so -1 runs before the contact shadows draw. */
+const BEFORE_SHADOWS = -1;
+
+/**
+ * Lets the renderer clear before the contact shadows draw. The finish's effect
+ * composer holds `autoClear` off while it is mounted, and `ContactShadows`
+ * renders its depth pass into its own target expecting the renderer to clear
+ * it; without the clear every earlier position of a moving object stays in the
+ * shadow as a ghost. The composer switches `autoClear` on for its own pass
+ * anyway, and a negative priority leaves the render loop with three.
+ */
+function ShadowClear() {
+  useFrame(({ gl }) => {
+    gl.autoClear = true;
+  }, BEFORE_SHADOWS);
+
+  return null;
+}
 
 /** The unseen floor of a lab that names no ground: it shows only the key light's shadows on the backdrop. */
 function Catcher() {
@@ -47,6 +67,7 @@ export function Ground() {
   return (
     <>
       {ground === undefined ? <Catcher /> : <Terrain kind={ground} />}
+      <ShadowClear />
       <CameraBounds exclude>
         <ContactShadows
           blur={2.4}
