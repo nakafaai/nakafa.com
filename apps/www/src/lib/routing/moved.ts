@@ -58,37 +58,6 @@ const SHOWN_ADDRESSES: readonly MovedAddress[] = [
   },
 ];
 
-/**
- * Curriculum pages a content release retired, each answered by the page that
- * took over its job. Singapore's combined Science course became the SEC G3
- * Physics, Chemistry and Biology courses SEAB examines (aksara#915), so its
- * page in every locale moves to the Secondary stage page that lists all three.
- * A prerendered page is served as an asset until the release rebuild drops it,
- * so these answer only once the page is gone.
- */
-const RETIRED_CURRICULUM_ADDRESSES: readonly MovedAddress[] = [
-  {
-    destination: "/de/lehrplaene/singapur-moe/sekundarstufe",
-    permanent: true,
-    source: "/de/lehrplaene/singapur-moe/sekundarstufe/naturwissenschaften",
-  },
-  {
-    destination: "/en/curriculum/singapore-moe/secondary",
-    permanent: true,
-    source: "/en/curriculum/singapore-moe/secondary/science",
-  },
-  {
-    destination: "/id/kurikulum/singapore-moe/secondary",
-    permanent: true,
-    source: "/id/kurikulum/singapore-moe/secondary/sains",
-  },
-  {
-    destination: "/ms/kurikulum/singapore-moe/sekolah-menengah",
-    permanent: true,
-    source: "/ms/kurikulum/singapore-moe/sekolah-menengah/sains",
-  },
-];
-
 /** The addresses that moved under a locale. Only these paths redirect: an open `/:locale/settings` would also catch a valid `/user/settings`. */
 const LOCALIZED_ADDRESSES: readonly MovedAddress[] = [
   { destination: "/:locale", permanent: true, source: "/about" },
@@ -112,19 +81,15 @@ function toRedirect(
 }
 
 /**
- * The redirect of an address that the product moved, or none. A bare address,
- * a retired page that search still shows, or a retired curriculum page matches
- * its exact path; a path whose first segment is an active locale matches the
- * localized table under that locale.
+ * The redirect of an address that the product moved, or none. A bare address
+ * or a retired page that search still shows matches its exact path; a path whose
+ * first segment is an active locale matches the localized table under that locale.
  * A path that names its locale twice, as a relative link once wrote `/de/de/…`,
  * moves to the same path with the locale once.
  */
 export function readMovedRedirect(url: URL): Option.Option<MovedRedirect> {
   const bare = Arr.findFirst(
-    Arr.appendAll(
-      Arr.appendAll(BARE_ADDRESSES, SHOWN_ADDRESSES),
-      RETIRED_CURRICULUM_ADDRESSES
-    ),
+    Arr.appendAll(BARE_ADDRESSES, SHOWN_ADDRESSES),
     ({ source }) => source === url.pathname
   );
   if (Option.isSome(bare)) {
