@@ -8,6 +8,10 @@ import {
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
 import { internal } from "@repo/backend/convex/_generated/api";
+import type { Id } from "@repo/backend/convex/_generated/dataModel";
+import type schema from "@repo/backend/convex/schema";
+import type { TestConvex } from "convex-test";
+import { Array as Arr } from "effect";
 
 const NOW = Date.UTC(2026, 10, 13, 9, 0, 0);
 
@@ -23,6 +27,26 @@ function google(profile: {
     name: "google" as const,
     profile: { id: "google-sub-1", ...profile },
   };
+}
+
+/** The Google identities the account's sign-ins recorded. */
+function googleAccountsOf(t: TestConvex<typeof schema>, userId: Id<"users">) {
+  return t.query((ctx) =>
+    ctx.db
+      .query("googleAccounts")
+      .withIndex("by_userId", (query) => query.eq("userId", userId))
+      .collect()
+  );
+}
+
+/** The claim runs that the sign-ins scheduled. */
+function claimRuns(t: TestConvex<typeof schema>) {
+  return t.query(async (ctx) =>
+    Arr.filter(
+      await ctx.db.system.query("_scheduled_functions").collect(),
+      (job) => job.name === "tenancy/claims:run"
+    )
+  );
 }
 
 describe("auth/account", () => {
@@ -181,5 +205,43 @@ describe("auth/account", () => {
     ).rejects.toMatchObject({
       data: { _tag: "SchoolSignUpRefused", code: "SCHOOL_SIGN_UP_REFUSED" },
     });
+  });
+  it("records each Google identity with the hosted domain of its latest sign-in, and asks for a claim only when that changes", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(NOW);
+    const t = createConvexTestWithAuth();
+    const workspace = google({
+      email: "guru@harapan.sch.id",
+      emailVerified: true,
+      hostedDomain: "Harapan.Sch.Id",
+    });
+    const userId = await t.mutation(internal.auth.account.createGoogle, {
+      method: workspace,
+    });
+    await t.mutation(internal.auth.account.signInGoogle, {
+      method: workspace,
+      userId,
+    });
+    await expect(googleAccountsOf(t, userId)).resolves.toMatchObject([
+      { hostedDomain: "harapan.sch.id", subject: "google-sub-1", userId },
+    ]);
+    await t.mutation(internal.auth.account.signInGoogle, {
+      method: workspace,
+      userId,
+    });
+    const personal = google({
+      email: "guru@harapan.sch.id",
+      emailVerified: true,
+    });
+    await t.mutation(internal.auth.account.signInGoogle, {
+      method: personal,
+      userId,
+    });
+    const [account] = await googleAccountsOf(t, userId);
+    expect(account).not.toHaveProperty("hostedDomain");
+    await expect(googleAccountsOf(t, userId)).resolves.toHaveLength(1);
+    // No invite waits for the address, so no sign-in schedules a claim run.
+    await expect(claimRuns(t)).resolves.toEqual([]);
+    vi.useRealTimers();
   });
 });

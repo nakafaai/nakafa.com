@@ -170,6 +170,15 @@ describe("auth/deletion/finalize", () => {
       await linkGoogle(ctx, "google-subject-1", id);
       await linkGoogle(ctx, "google-subject-2", id);
       await linkGoogle(ctx, "google-subject-other", other);
+      await ctx.db.insert("googleAccounts", {
+        hostedDomain: "harapan.sch.id",
+        subject: "google-subject-1",
+        userId: id,
+      });
+      await ctx.db.insert("googleAccounts", {
+        subject: "google-subject-other",
+        userId: other,
+      });
       return [id, other];
     });
     await finalize(t, userId);
@@ -180,6 +189,11 @@ describe("auth/deletion/finalize", () => {
     await expect(googleUserOf(t, "google-subject-other")).resolves.toBe(
       otherId
     );
+    await expect(
+      t.query((ctx) => ctx.db.query("googleAccounts").collect())
+    ).resolves.toMatchObject([
+      { subject: "google-subject-other", userId: otherId },
+    ]);
   });
 
   it("erases the welcome email the deleted account was still owed", async () => {

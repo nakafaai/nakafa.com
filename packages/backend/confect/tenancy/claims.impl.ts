@@ -21,9 +21,20 @@ import {
 } from "@repo/backend/confect/tenancy/claim";
 import { CLAIM_PAGE_SIZE } from "@repo/backend/confect/tenancy/claims";
 import spec from "@repo/backend/confect/tenancy/claims.spec";
-import { admitsAddress } from "@repo/backend/confect/tenancy/policy";
+import {
+  admitsAddress,
+  admitsHostedDomains,
+} from "@repo/backend/confect/tenancy/policy";
 import type { InviteState } from "@repo/backend/confect/tenancy/schema";
-import { Clock, Duration, Effect, Layer, Option, Struct } from "effect";
+import {
+  Array as Arr,
+  Clock,
+  Duration,
+  Effect,
+  Layer,
+  Option,
+  Struct,
+} from "effect";
 
 /**
  * The verified address of an account. Every address with a mailbox is one
@@ -37,12 +48,14 @@ const verifiedEmail = (user: UsersDoc) =>
  * Binds the invited Person to the account and accepts the invite, unless the
  * Person is not waiting any more, the account already holds a Person in the
  * tenant, the tenant is suspended, which refuses every write, the invite has
- * reached its expiry, or the tenant's email domains do not admit the address:
- * then the invite stays as it is for the school to resolve.
+ * reached its expiry, or the tenant's email domains admit the address or the
+ * hosted domains of the account's Google sign-ins not: then the invite stays as
+ * it is for the school to resolve.
  */
 const claim = Effect.fn("tenancy.claims.claim")(function* (
   invite: TenantInvitesDoc,
-  userId: GenericId.GenericId<"users">
+  userId: GenericId.GenericId<"users">,
+  hostedDomains: readonly Option.Option<string>[]
 ) {
   const reader = yield* DatabaseReader;
   const writer = yield* DatabaseWriter;
@@ -69,7 +82,8 @@ const claim = Effect.fn("tenancy.claims.claim")(function* (
     person.account.state !== "unclaimed" ||
     Option.isSome(held) ||
     invite.expiresAt <= at ||
-    !admitsAddress(tenant.policies, invite.channel.email)
+    !admitsAddress(tenant.policies, invite.channel.email) ||
+    !admitsHostedDomains(tenant.policies, hostedDomains)
   ) {
     return;
   }
@@ -97,8 +111,9 @@ const claim = Effect.fn("tenancy.claims.claim")(function* (
 /**
  * Claims one page of the pending invites that name the account's verified
  * address, then schedules the next page, so an account invited to many schools
- * joins them all. An account that is being deleted, or whose address Better
- * Auth has not verified, claims nothing.
+ * joins them all. An account that is being deleted, or whose address Google
+ * has not verified, claims nothing. The hosted domains of the account's Google
+ * identities are read once: a person holds one row for each identity.
  */
 const run = FunctionImpl.make(
   databaseSchema,
@@ -121,6 +136,14 @@ const run = FunctionImpl.make(
     if (Option.isNone(email)) {
       return null;
     }
+    const googleAccounts = yield* reader
+      .table("googleAccounts")
+      .index("by_userId", (query) => query.eq("userId", userId))
+      .collect()
+      .pipe(Effect.orDie);
+    const hostedDomains = Arr.map(googleAccounts, (account) =>
+      Option.fromUndefinedOr(account.hostedDomain)
+    );
     const page = yield* reader
       .table("tenantInvites")
       .index("by_channel_email_and_state_status", (query) =>
@@ -128,9 +151,11 @@ const run = FunctionImpl.make(
       )
       .paginate({ cursor, numItems: CLAIM_PAGE_SIZE })
       .pipe(Effect.orDie);
-    yield* Effect.forEach(page.page, (invite) => claim(invite, userId), {
-      discard: true,
-    });
+    yield* Effect.forEach(
+      page.page,
+      (invite) => claim(invite, userId, hostedDomains),
+      { discard: true }
+    );
     if (!page.isDone) {
       yield* (yield* Scheduler).runAfter(
         Duration.zero,

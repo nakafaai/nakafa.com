@@ -1,11 +1,12 @@
 import { describe, expect, it } from "@effect/vitest";
 import {
   admitsAddress,
+  admitsHostedDomains,
   NEW_TENANT_POLICIES,
   Policy,
   TenantPolicies,
 } from "@repo/backend/confect/tenancy/policy";
-import { Array as Arr, Order, Struct } from "effect";
+import { Array as Arr, Option, Order, Struct } from "effect";
 
 /** The policies of a tenant that allows these email domains. */
 const allowing = (emailDomains: readonly string[]) => ({
@@ -82,6 +83,22 @@ describe("tenancy/policy", () => {
     // Only belajar.id stands for its subdomains: any other domain needs its own entry.
     expect(
       admitsAddress(allowing(["sma.belajar.id"]), "ayu@guru.sma.belajar.id")
+    ).toBe(false);
+  });
+  it("admits an account by its Google sign-ins only when every one carried an allowed hosted domain", () => {
+    const policies = allowing(["belajar.id", "harapan.example.test"]);
+    const workspace = Option.some("harapan.example.test");
+    const ministry = Option.some("guru.sma.belajar.id");
+    const personal = Option.none();
+
+    expect(admitsHostedDomains(allowing([]), [])).toBe(true);
+    expect(admitsHostedDomains(allowing([]), [personal])).toBe(true);
+    expect(admitsHostedDomains(policies, [workspace, ministry])).toBe(true);
+    expect(admitsHostedDomains(policies, [])).toBe(false);
+    expect(admitsHostedDomains(policies, [personal])).toBe(false);
+    expect(admitsHostedDomains(policies, [workspace, personal])).toBe(false);
+    expect(
+      admitsHostedDomains(policies, [Option.some("evilharapan.example.test")])
     ).toBe(false);
   });
 });

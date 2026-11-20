@@ -89,6 +89,7 @@ import examScreens from "./tables/examScreens";
 import examSignals from "./tables/examSignals";
 import examSittings from "./tables/examSittings";
 import exams from "./tables/exams";
+import googleAccounts from "./tables/googleAccounts";
 import gradingSchemes from "./tables/gradingSchemes";
 import graduationLetters from "./tables/graduationLetters";
 import graduations from "./tables/graduations";
@@ -271,6 +272,7 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   readonly examSignals: typeof examSignals;
   readonly examSittings: typeof examSittings;
   readonly exams: typeof exams;
+  readonly googleAccounts: typeof googleAccounts;
   readonly gradingSchemes: typeof gradingSchemes;
   readonly graduationLetters: typeof graduationLetters;
   readonly graduations: typeof graduations;
@@ -452,6 +454,7 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   examSignals,
   examSittings,
   exams,
+  googleAccounts,
   gradingSchemes,
   graduationLetters,
   graduations,

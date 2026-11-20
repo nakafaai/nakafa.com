@@ -90,6 +90,7 @@ import examScreens from "./tables/examScreens";
 import examSignals from "./tables/examSignals";
 import examSittings from "./tables/examSittings";
 import exams from "./tables/exams";
+import googleAccounts from "./tables/googleAccounts";
 import gradingSchemes from "./tables/gradingSchemes";
 import graduationLetters from "./tables/graduationLetters";
 import graduations from "./tables/graduations";
@@ -272,6 +273,7 @@ export default $defineSchema({
   examSignals: $Table.tableDefinition(examSignals),
   examSittings: $Table.tableDefinition(examSittings),
   exams: $Table.tableDefinition(exams),
+  googleAccounts: $Table.tableDefinition(googleAccounts),
   gradingSchemes: $Table.tableDefinition(gradingSchemes),
   graduationLetters: $Table.tableDefinition(graduationLetters),
   graduations: $Table.tableDefinition(graduations),
