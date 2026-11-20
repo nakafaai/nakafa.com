@@ -113,6 +113,8 @@ import irtCalibrationRuns from "./tables/irtCalibrationRuns";
 import irtScaleItems from "./tables/irtScaleItems";
 import irtScaleVersions from "./tables/irtScaleVersions";
 import islandAwards from "./tables/islandAwards";
+import islandChunks from "./tables/islandChunks";
+import islandGuests from "./tables/islandGuests";
 import islands from "./tables/islands";
 import journalCursors from "./tables/journalCursors";
 import journalEntries from "./tables/journalEntries";
@@ -297,6 +299,8 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   readonly irtScaleItems: typeof irtScaleItems;
   readonly irtScaleVersions: typeof irtScaleVersions;
   readonly islandAwards: typeof islandAwards;
+  readonly islandChunks: typeof islandChunks;
+  readonly islandGuests: typeof islandGuests;
   readonly islands: typeof islands;
   readonly journalCursors: typeof journalCursors;
   readonly journalEntries: typeof journalEntries;
@@ -480,6 +484,8 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   irtScaleItems,
   irtScaleVersions,
   islandAwards,
+  islandChunks,
+  islandGuests,
   islands,
   journalCursors,
   journalEntries,

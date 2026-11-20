@@ -1,0 +1,52 @@
+# Sound sources
+
+Every file here is cut from a recording on Wikimedia Commons or Freesound whose page marked it CC0 or public domain when it was fetched. Nothing in the game is synthesized. The game fetches a file the first time it needs it, after the learner's first press (ADR 0050, W8).
+
+| Sound | Cut | Licence | Author | Source |
+| --- | --- | --- | --- | --- |
+| sea | 22.0 s from 25.0 s | CC0 | Jarrod stanley | https://commons.wikimedia.org/wiki/File:Ocean_Waves_on_a_Tropical_Beach.ogg |
+| rain | 16.0 s from 13.0 s | Public domain | ezwa | https://commons.wikimedia.org/wiki/File:Rain_(1).ogg |
+| roof | 14.0 s from 15.5 s | Public domain | ezwa | https://commons.wikimedia.org/wiki/File:Rain_on_a_veranda_and_t.ogg |
+| river | 14.0 s from 2.0 s | CC0 | jackthemurray | https://commons.wikimedia.org/wiki/File:433589_jackthemurray_stream-river-water-up-close.wav |
+| fall | 14.0 s from 79.5 s | CC0 | Jarrod stanley | https://commons.wikimedia.org/wiki/File:James_River_Rapids_1.ogg |
+| birds | 30.0 s from 18.0 s | Public domain | ezwa | https://commons.wikimedia.org/wiki/File:Birds_singing_in_garden.ogg |
+| night | 16.0 s from 1.5 s | CC0 | Siobhan Leachman | https://commons.wikimedia.org/wiki/File:Chorus_Cicada_singing.ogg |
+| frogs | 14.0 s from 11.5 s | CC0 | JohnDziak | https://commons.wikimedia.org/wiki/File:Spring_Peeper_Frogs_(Pseudacris_crucifer)_singing_on_night_of_April_21_of_2019_in_North_Pittston_PA.ogg |
+| thud | 0.4 s from 0.0 s | Public domain | gregoryweir | https://commons.wikimedia.org/wiki/File:Dull_thud.ogg |
+| splash | 1.1 s from 3.5 s | Public domain | gradha | https://commons.wikimedia.org/wiki/File:Bathtub_water_splashes.ogg |
+| thunder | 6.5 s from 88.4 s | Public domain | stephan | https://commons.wikimedia.org/wiki/File:Storm_thunderbolts.ogg |
+| meow | 1.5 s from 0.0 s | CC0 | freemaster2 | https://commons.wikimedia.org/wiki/File:Meow_of_a_Siamese_cat_-_freemaster2.wav |
+| hen | 1.7 s from 1.2 s | Public domain | alys | https://commons.wikimedia.org/wiki/File:Chickens_demanding_food.ogg |
+| rooster | 3.6 s from 3.8 s | Public domain | alys | https://commons.wikimedia.org/wiki/File:Medium_rooster_crowing.ogg |
+| music-piano | 150.0 s from 0.0 s | CC0 | Teknopazzo | https://commons.wikimedia.org/wiki/File:Gymnopedie_No._1..ogg |
+| music-guitar | 147.0 s from 0.0 s | Public domain | Mlaucke | https://commons.wikimedia.org/wiki/File:Satie_Gymnopedie_No_2_performed_by_Michael_Laucke.flac |
+| wind | 16.0 s from 3.5 s | CC0 | dflee4 | https://freesound.org/people/dflee4/sounds/685594/ |
+| fire | 12.0 s from 15.0 s | CC0 | ahriik | https://freesound.org/people/ahriik/sounds/508110/ |
+| step-grass | 0.5 s from 0.0 s | CC0 | BenDrain | https://freesound.org/people/BenDrain/sounds/487858/ |
+| step-sand | 0.5 s from 0.0 s | CC0 | BranndyBottle | https://freesound.org/people/BranndyBottle/sounds/464699/ |
+| step-wood | 0.4 s from 0.0 s | CC0 | SoundsAreGr8 | https://freesound.org/people/SoundsAreGr8/sounds/340983/ |
+| step-stone | 0.4 s from 0.0 s | CC0 | BenDrain | https://freesound.org/people/BenDrain/sounds/488073/ |
+| leaves | 1.1 s from 0.0 s | CC0 | zepurple | https://freesound.org/people/zepurple/sounds/540278/ |
+| pop | 0.3 s from 0.0 s | CC0 | HenKonen | https://freesound.org/people/HenKonen/sounds/757257/ |
+| dig | 0.7 s from 0.0 s | CC0 | zepurple | https://freesound.org/people/zepurple/sounds/540264/ |
+| spark | 1.2 s from 0.0 s | CC0 | LilMati | https://freesound.org/people/LilMati/sounds/714566/ |
+| whoosh | 0.9 s from 0.0 s | CC0 | velcronator | https://freesound.org/people/velcronator/sounds/733890/ |
+| bell | 1.9 s from 0.0 s | CC0 | steffcaffrey | https://freesound.org/people/steffcaffrey/sounds/452379/ |
+| note | 2.2 s from 0.0 s | CC0 | sgossner | https://freesound.org/people/sgossner/sounds/373586/ |
+| chime | 3.0 s from 0.0 s | CC0 | sgossner | https://freesound.org/people/sgossner/sounds/373369/ |
+| duck | 0.8 s from 0.0 s | CC0 | Mikes-MultiMedia | https://freesound.org/people/Mikes-MultiMedia/sounds/418509/ |
+| deer | 1.4 s from 0.0 s | CC0 | ferventtorpor | https://freesound.org/people/ferventtorpor/sounds/696777/ |
+| frog | 0.6 s from 0.0 s | CC0 | egomassive | https://freesound.org/people/egomassive/sounds/536759/ |
+| goat | 1.2 s from 0.0 s | CC0 | satoristudios3 | https://freesound.org/people/satoristudios3/sounds/677218/ |
+| buffalo | 2.0 s from 0.2 s | CC0 | TheKingOfGeeks360 | https://freesound.org/people/TheKingOfGeeks360/sounds/844327/ |
+| gull | 0.7 s from 0.0 s | CC0 | TheKingOfGeeks360 | https://freesound.org/people/TheKingOfGeeks360/sounds/861350/ |
+| bubble | 0.4 s from 0.0 s | CC0 | qubodup | https://freesound.org/people/qubodup/sounds/792927/ |
+| rabbit | 1.0 s from 0.0 s | CC0 | TheKingOfGeeks360 | https://freesound.org/people/TheKingOfGeeks360/sounds/875087/ |
+| page | 0.6 s from 0.0 s | CC0 | AardsReal | https://freesound.org/people/AardsReal/sounds/842183/ |
+| click | 0.3 s from 0.0 s | CC0 | hollandm | https://freesound.org/people/hollandm/sounds/692828/ |
+| egret | 1.4 s from 0.1 s | Public domain | Unknown author | https://commons.wikimedia.org/wiki/File:Great_Blue_Heron.ogg |
+| kite | 1.6 s from 6.3 s | CC0 | Nosferattus | https://commons.wikimedia.org/wiki/File:Roadside_Hawk_Belize.mp3 |
+| bulbul | 1.8 s from 15.9 s | Public domain | Gypsypkd | https://commons.wikimedia.org/wiki/File:Redvented_Bulbul.ogg |
+| dolphin | 1.6 s from 38.0 s | CC0 | felix.blume | https://commons.wikimedia.org/wiki/File:161691_felixblume_dolphin-screaming-underwater-in-caribbean-sea-mexico.wav |
+| crab | 0.6 s from 1.4 s | Public domain | earthcalling | https://commons.wikimedia.org/wiki/File:Small_pebbles_on_concrete.ogg |
+| koshi | 4.5 s from 24.5 s | CC0 | Membeth. | https://commons.wikimedia.org/wiki/File:Windglockenspiel.Koshi.ogg |

@@ -5,9 +5,9 @@ import type { Light, Weather } from "@/lib/island/sky";
 const FLOAT = 4;
 
 /**
- * The fireflies on the GPU (ADR 0047, D36): their homes, set again whenever
- * the world changes, drawn after dusk over the scene, and never in rain or
- * snow.
+ * The fireflies on the GPU (ADR 0047, D36): their homes about the camera,
+ * set again whenever the land there changes, drawn after dusk over the
+ * scene, and never in rain or snow.
  */
 export function createNight(gl: WebGL2RenderingContext, program: WebGLProgram) {
   const vao = gl.createVertexArray();
@@ -33,7 +33,7 @@ export function createNight(gl: WebGL2RenderingContext, program: WebGLProgram) {
       gl.bindVertexArray(vao);
       gl.drawArrays(gl.POINTS, 0, count);
     },
-    /** Replaces where the fireflies live, three numbers a firefly. */
+    /** Replaces where the fireflies live, three numbers a firefly: the middle of its loop, x, y, z in blocks, about a block over the ground. */
     homes(next: Float32Array) {
       gl.bindBuffer(gl.ARRAY_BUFFER, homes);
       gl.bufferData(gl.ARRAY_BUFFER, next, gl.STATIC_DRAW);

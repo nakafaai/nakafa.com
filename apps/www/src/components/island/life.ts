@@ -1,5 +1,5 @@
 import { createBodies } from "@/components/island/bodies";
-import { activate, uploadMoving } from "@/components/island/buffers";
+import { activate } from "@/components/island/buffers";
 
 /** The learner's own fox, the one body seen through what stands in front of it. */
 const FOX = { _tag: "body", kind: "fox" } as const;
@@ -8,13 +8,11 @@ const FOX = { _tag: "body", kind: "fox" } as const;
 type Uniforms = (name: string) => WebGLUniformLocation | null;
 
 /**
- * The island's life on the GPU (ADR 0047, D21): every true 3D body, one mesh
- * a model drawn with the body program, and the flat quads of Nina and the
- * float, drawn with the chunk program among the blocks.
+ * The world's life on the GPU (ADR 0047, D21; ADR 0050, W10): every true 3D
+ * body, one mesh a model drawn with the body program.
  */
 export function createLife(gl: WebGL2RenderingContext, program: WebGLProgram) {
   const bodies = createBodies(gl);
-  const flat = uploadMoving(gl, 64);
   const uniform: Uniforms = (name) => gl.getUniformLocation(program, name);
 
   /** Puts the body program in use with the view `camera` it draws from and the clock and the wind `wind` sets (D21). */
@@ -30,18 +28,9 @@ export function createLife(gl: WebGL2RenderingContext, program: WebGLProgram) {
   };
 
   return {
-    /** Replaces the flat quads of Nina and the float. */
-    quads(next: Parameters<typeof flat.write>[0]) {
-      flat.write(next);
-    },
     /** Replaces where every true 3D body stands this frame (D21). */
     bodies(next: Parameters<typeof bodies.write>[0]) {
       bodies.write(next);
-    },
-    /** Draws the flat quads with the chunk program already in use. */
-    flat() {
-      gl.bindVertexArray(flat.vao);
-      gl.drawElements(gl.TRIANGLES, flat.count(), gl.UNSIGNED_INT, 0);
     },
     /** Draws every body into the sun's shadow map from its view `sun` (D43). */
     cast(sun: Float32Array, time: number, wind: (at: Uniforms) => void) {
@@ -76,10 +65,9 @@ export function createLife(gl: WebGL2RenderingContext, program: WebGLProgram) {
       bodies.drawModel(FOX);
       gl.disable(gl.CULL_FACE);
     },
-    /** Lets the GPU go of every body and quad. */
+    /** Lets the GPU go of every body. */
     release() {
       bodies.release();
-      flat.release();
     },
   };
 }

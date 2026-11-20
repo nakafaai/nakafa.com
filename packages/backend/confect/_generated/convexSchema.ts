@@ -114,6 +114,8 @@ import irtCalibrationRuns from "./tables/irtCalibrationRuns";
 import irtScaleItems from "./tables/irtScaleItems";
 import irtScaleVersions from "./tables/irtScaleVersions";
 import islandAwards from "./tables/islandAwards";
+import islandChunks from "./tables/islandChunks";
+import islandGuests from "./tables/islandGuests";
 import islands from "./tables/islands";
 import journalCursors from "./tables/journalCursors";
 import journalEntries from "./tables/journalEntries";
@@ -298,6 +300,8 @@ export default $defineSchema({
   irtScaleItems: $Table.tableDefinition(irtScaleItems),
   irtScaleVersions: $Table.tableDefinition(irtScaleVersions),
   islandAwards: $Table.tableDefinition(islandAwards),
+  islandChunks: $Table.tableDefinition(islandChunks),
+  islandGuests: $Table.tableDefinition(islandGuests),
   islands: $Table.tableDefinition(islands),
   journalCursors: $Table.tableDefinition(journalCursors),
   journalEntries: $Table.tableDefinition(journalEntries),

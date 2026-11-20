@@ -1,14 +1,12 @@
-import type { BlockKey } from "@repo/backend/confect/island/blocks";
-import { keyOf } from "@repo/backend/confect/island/blocks";
-import { Array as Arr, Option, Schema } from "effect";
-import { standOf } from "@/lib/island/path";
-import type { Cells } from "@/lib/island/world";
-import { blockAt } from "@/lib/island/world";
+import { Schema } from "effect";
+import type { Land } from "@/lib/island/land/ground";
+import { coverAt, depthAt, slopeAt } from "@/lib/island/land/ground";
 
 /**
  * What a footstep of the learner's fox sounds like, by what its paw lands on
- * (ADR 0047, D40): soft grass, hissing sand, dull soil, crunching gravel, a
- * hollow board or a hard stone. The fox never stands in water.
+ * (ADR 0047, D40): soft grass, hissing sand, the dull soil of a forest floor,
+ * the crunching gravel of a path, the hollow board of a bridge, the hard
+ * stone of a rock face, or the splash of water it wades or swims in.
  */
 export const Footing = Schema.Literals([
   "grass",
@@ -17,39 +15,35 @@ export const Footing = Schema.Literals([
   "gravel",
   "wood",
   "stone",
+  "water",
 ]);
 export type Footing = typeof Footing.Type;
 
-/** How far the fox walks between two footsteps, in cells: a trot of about seven steps a second at its walking speed. */
-export const STRIDE = 0.45;
+/** How deep water stands before a paw splashes in it instead of treading the ground, in blocks: about 3 cm. */
+const WET = 0.03;
 
-/** The blocks each footing is heard on; any other floor is heard as stone. */
-const HEARD = [
-  ["grass", ["grass", "leaves", "wool"]],
-  ["sand", ["sand"]],
-  ["soil", ["dirt", "farmland", "wet-farmland"]],
-  ["gravel", ["path"]],
-  ["wood", ["log", "planks", "bookshelf"]],
-] as const satisfies readonly (readonly [Footing, readonly BlockKey[]])[];
+/** How steep the ground is before it shows bare rock under a paw: a rise of 0.75 blocks over one block. */
+const ROCK = 0.75;
 
-/** What a foot on a block sounds like. */
-export function footingOf(key: BlockKey) {
-  return Option.getOrElse(
-    Option.map(
-      Arr.findFirst(HEARD, ([, keys]) => Arr.contains<BlockKey>(keys, key)),
-      ([footing]) => footing
-    ),
-    (): Footing => "stone"
-  );
-}
-
-/** What the fox's paws land on at (x, z): the floor it stands on there, none where it cannot stand. */
-export function footingAt(cells: Cells, x: number, z: number) {
-  const column = [Math.floor(x), Math.floor(z)] as const;
-  return Option.map(
-    Option.flatMap(standOf(cells, column[0], column[1]), (feet) =>
-      keyOf(blockAt(cells, column[0], feet - 1, column[1]))
-    ),
-    footingOf
-  );
+/**
+ * What the fox's paws land on at a place of the land (ADR 0050, W1): water
+ * where it wades or swims, then a painted or worn path, sand, rock where the
+ * ground is too steep to hold turf, the floor of a forest, and grass for open
+ * ground and meadow alike.
+ */
+export function footingAt(land: Land, x: number, z: number): Footing {
+  if (depthAt(land, x, z) > WET) {
+    return "water";
+  }
+  const cover = coverAt(land, x, z);
+  if (cover === "path") {
+    return "gravel";
+  }
+  if (cover === "sand") {
+    return "sand";
+  }
+  if (slopeAt(land, x, z) > ROCK) {
+    return "stone";
+  }
+  return cover === "forest" ? "soil" : "grass";
 }

@@ -30,6 +30,7 @@ import {
   megaphone,
   radar,
   sign,
+  stickers,
   stop,
 } from "@repo/mascot/nina/goods/gear";
 import {
@@ -87,10 +88,12 @@ import {
   letterbox,
   pile,
   pinboard,
+  podium,
   rack,
   shutter,
   small,
   stack,
+  tent,
 } from "@repo/mascot/nina/goods/room";
 
 /** The acts of what broke, got lost or is not connected. `still` is the moment that shows the act best. */
@@ -256,11 +259,18 @@ export const ROOMS = {
     pose: deed("beside", pinboard, ["focused", "happy"]),
     still: 0.43,
   },
+  /** By a tent pitched for a camp: a world that is not drawn yet. */
+  pitching: {
+    pose: deed("beside", tent, ["calm", "happy"], 1.4),
+    still: 0.62,
+  },
   /** Waiting at a closed shutter: not open yet. */
   queueing: {
     pose: deed("beside", shutter, ["calm", "thoughtful"], 1.4),
     still: 0.62,
   },
+  /** By an empty podium: nobody stands on the leaderboard yet. */
+  ranking: { pose: deed("beside", podium, ["curious", "proud"]), still: 0.43 },
   /** Empty chairs set out: no student yet. */
   seating: { pose: deed("beside", chairs, ["calm", "happy"]), still: 0.43 },
   /** A pile of empty covers: no student to report on yet. */
@@ -352,6 +362,8 @@ export const GEARS = {
   },
   /** A stop sign: a connection that was refused. */
   halting: { pose: deed("up", stop, ["focused", "calm"]), still: 0.43 },
+  /** Holding out a sheet of stickers: no guest has left one yet. */
+  hosting: { pose: deed("out", stickers, ["hello", "happy"]), still: 0.43 },
   /** A bow tied round her arm: a memory she cannot find. */
   knotting: { pose: deed("up", bow, ["thoughtful", "aha"]), still: 0.43 },
   /** A door sign without a name: no classroom yet. */

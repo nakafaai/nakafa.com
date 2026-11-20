@@ -2,10 +2,10 @@ import { Array as Arr, Option } from "effect";
 import { activate, programOf } from "@/components/island/buffers";
 import type { createFrame } from "@/components/island/frame";
 import type { Orbit } from "@/lib/island/camera";
-import { eyeOf } from "@/lib/island/camera";
+import { eyeOf, FOG } from "@/lib/island/camera";
+import { SEA } from "@/lib/island/land/relief";
 import { CLIP, invert } from "@/lib/island/matrix";
 import { EDGE_FRAGMENT, EDGE_VERTEX } from "@/lib/island/shaders";
-import { SEA_LEVEL } from "@/lib/island/world";
 
 /**
  * The edge pass (ADR 0047, D20): it paints the edged frame from the scene's
@@ -40,7 +40,12 @@ export function createEdges(gl: WebGL2RenderingContext) {
         gl.uniform2f(at("uTexel"), 1 / target.width, 1 / target.height);
         gl.uniform2f(at("uClip"), CLIP.near, CLIP.far);
         gl.uniformMatrix4fv(at("uInverse"), false, invert(camera));
-        gl.uniform1f(at("uSea"), SEA_LEVEL - 0.2);
+        gl.uniform1f(at("uSea"), SEA - 0.2);
+        gl.uniform2f(
+          at("uFade"),
+          orbit.distance + FOG.from,
+          orbit.distance + (FOG.from + FOG.to) / 2
+        );
         const eye = eyeOf(orbit);
         const ahead = [
           eye[0] - orbit.target[0],

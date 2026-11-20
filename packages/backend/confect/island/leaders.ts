@@ -3,7 +3,7 @@ import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { growthOf } from "@repo/backend/confect/island/level";
 import { Array as Arr, Effect, Option, String as Str } from "effect";
 
-/** The word a leaderboard names a learner by: the first of their name, so no board shows a full name. */
+/** The word a learner is named by to others: the first of their name, so no board, guest book or visit shows a full name. */
 export function leaderNameOf(name: string) {
   return Arr.headNonEmpty(Str.split(Str.trim(name), " "));
 }

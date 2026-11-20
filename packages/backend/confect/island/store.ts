@@ -23,7 +23,7 @@ export const findIsland = Effect.fn("island.store.find")(function* (
 
 /**
  * The learner's island, made when they have none yet. A new island has
- * changed no cell of its terrain, starts in the given zone (UTC when a grant
+ * changed nothing of its land, starts in the given zone (UTC when a grant
  * makes it before the owner's first visit), and has earned nothing.
  */
 export const ensureIsland = Effect.fn("island.store.ensure")(function* (
@@ -43,8 +43,6 @@ export const ensureIsland = Effect.fn("island.store.ensure")(function* (
       tally: EMPTY_TALLY,
       timeZone,
       userId,
-      version: 0,
-      world: [],
     })
     .pipe(Effect.orDie);
   return yield* database.table("islands").get(islandId).pipe(Effect.orDie);

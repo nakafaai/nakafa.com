@@ -1,27 +1,22 @@
-import { SPAN } from "@repo/backend/confect/island/world";
-import { COAST_STEPS } from "@/lib/island/coast";
-
 /**
- * The island's water in GLSL (ADR 0047, D43 and D51), for the chunk program's
+ * The island's water in GLSL (ADR 0047, D43 and D51), for the land program's
  * water pass. It reads how much water lies under each pixel from the depth the
  * solid pass left (copied before the water is drawn) and shows it in four
  * flat bands from a clear shoal to the dark deep, their borders interleaved
  * by an ordered dither; a ring of foam laps wherever the water runs thin
  * against anything in it, a summed swell rolls across it, breaking white in
  * patches of rough water out in the deep, and the sun glints where a wave's
- * slope turns it toward the eye. By the coast map (D51) waves roll in toward
+ * slope turns it toward the eye. By the coast it reads from the land's window (D51) waves roll in toward
  * the shore in thin bands that follow it, a dashed line laps the sand, still
  * water mirrors its banks, rings spread where something breaks the surface,
- * and short dashes of light flicker in the sun's path. It calls the chunk
- * program's `hashOf`, `noiseOf` and `uWet`.
+ * and short dashes of light flicker in the sun's path. It calls the land
+ * program's `fieldAt`, `deepAt`, `hashOf`, `noiseOf`, `uSea` and `uWet`.
  */
 export const WATER_GLSL = `
 uniform sampler2D uSeabed;
-uniform sampler2D uCoast;
 uniform sampler2D uScene;
 uniform mat4 uViewProjection;
 uniform vec2 uClip;
-const float SPAN = ${SPAN.toFixed(1)};
 // How far ahead of the eye a stored depth lies, in blocks.
 float viewDepth(float stored) {
   float z = stored * 2.0 - 1.0;
@@ -39,13 +34,13 @@ float swellAt(vec2 place, float time) {
     + sin(dot(place, vec2(-0.27, 0.71)) + time * 1.05) * 0.33
     + sin(dot(place, vec2(1.31, -0.83)) + time * 2.1) * 0.22;
 }
-// The coast map at a place: how far it lies from the shore's edge in blocks, and 1 where its water lies still. The open sea past the world's cells lies far from any land.
-vec2 coastAt(vec2 place) {
-  vec2 inside = step(vec2(0.0), place) * step(place, vec2(SPAN));
-  if (inside.x * inside.y < 0.5) return vec2(16.0, 0.0);
-  vec2 map = texture(uCoast, place / SPAN).rg;
-  // The map measures from each land column's middle, half a block in from its edge.
-  return vec2(map.r * 255.0 / ${COAST_STEPS.toFixed(1)} - 0.5, step(0.5, map.g));
+// The coast at a place, read from the land's window: how far it lies from the shore in blocks, near enough, 1 where its water lies still (a lake or a pond, above the sea and out of a river's run), and 1 where it is the sea.
+vec3 coastAt(vec2 place) {
+  vec4 here = fieldAt(place);
+  vec2 grade = vec2(deepAt(place + vec2(1.0, 0.0)) - deepAt(place - vec2(1.0, 0.0)), deepAt(place + vec2(0.0, 1.0)) - deepAt(place - vec2(0.0, 1.0))) * 0.5;
+  float shore = min(16.0, (here.g - here.r) / max(length(grade), 0.12));
+  float sea = step(here.g, uSea + 0.02);
+  return vec3(shore, (1.0 - sea) * step(length(here.ba), 0.2), sea);
 }
 // Waves rolling in toward the shore (D51): thin bands that follow the coast's own shape, wobbled by a still noise so they never copy the blocks' steps, near land and only on the open sea, the farthest fading to every other pixel.
 float rollOf(vec2 art, float shore, float still, float time) {
@@ -128,11 +123,13 @@ vec4 waterOf(vec3 world, vec3 eye, vec3 toward, float time, float sky, out float
   float rough = step(0.68, noiseOf(art * 0.12 + vec2(time * 0.03, -time * 0.02)));
   float crest = step(0.92, swell + (noiseOf(art * 1.3 + time * 0.2) - 0.5) * 0.3) * rough * step(2.0, float(band));
   float lap = 0.5 + 0.5 * sin(time * 1.4 + noiseOf(art * 0.8) * 6.0);
-  float ring = step(thickness, 0.16 + 0.3 * lap);
+  // Foam laps where the water runs thin over the ground, and round anything that stands in it: a hull, a leg, a reed.
+  float over = deepAt(world.xz);
+  float ring = max(step(over, 0.05 + 0.09 * lap), step(thickness, 0.16 + 0.3 * lap) * step(thickness, over * 0.8));
   vec2 slope = vec2(swellAt(art + vec2(pixel, 0.0), time), swellAt(art + vec2(0.0, pixel), time)) - swell;
   vec3 normal = normalize(vec3(-slope.x * 40.0, 1.0, -slope.y * 40.0));
   float glint = step(0.992, dot(reflect(-toward, normal), normalize(eye - world))) * sky;
-  vec2 coast = coastAt(world.xz);
+  vec3 coast = coastAt(world.xz);
   float still = coast.y;
   float alpha = opacity[band];
   if (still > 0.5) {
@@ -144,7 +141,7 @@ vec4 waterOf(vec3 world, vec3 eye, vec3 toward, float time, float sky, out float
   // The sun's path on the water, where its light bounces toward the eye, is where the short glints flicker.
   float path = step(0.8, dot(reflect(-toward, vec3(0.0, 1.0, 0.0)), normalize(eye - world))) * sky;
   float shine = glintOf(floor(gl_FragCoord.xy), time) * path;
-  float waves = max(rollOf(art, coast.x, still, time) * 0.6, lapOf(art, coast.x, time) * 0.8);
+  float waves = max(rollOf(art, coast.x, 1.0 - coast.z, time) * 0.6, lapOf(art, coast.x, time) * 0.8);
   // On a dry day the rings break still water and the water near the shore, where fish rise and things drop in; rain breaks it everywhere.
   float rings = rippleOf(world.xz, time, uWet) * 0.5 * max(uWet, max(still, step(coast.x, 4.0)));
   foam = max(max(ring, max(crest * 0.55, glint * 0.8)), max(waves, max(rings, shine * 0.9)));

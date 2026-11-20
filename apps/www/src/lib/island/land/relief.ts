@@ -6,6 +6,9 @@ export const SEA = 8;
 /** How high one terrace stands over the one below it, in blocks. */
 const TERRACE = 6;
 
+/** The share of a terrace's rise at which its cliff starts: late enough to stand as a wall, early enough that the wall is a couple of blocks thick and its line runs smooth across the lattice. */
+const RISER = 0.8;
+
 /** The elevation over the sea from which land holds rivers and lakes; lower ground is beach. */
 const SHORE = 0.3;
 
@@ -87,7 +90,7 @@ function terraceOf(seed: number, x: number, z: number, elevation: number) {
   const steps = elevation / TERRACE;
   const whole = Math.floor(steps);
   const ramp = ease(0.6, 0.76, smoothOf(seed + 77, x, z, 64));
-  return (whole + ease(blend(0.95, 0.1, ramp), 1, steps - whole)) * TERRACE;
+  return (whole + ease(blend(RISER, 0.1, ramp), 1, steps - whole)) * TERRACE;
 }
 
 /**

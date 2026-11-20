@@ -2,7 +2,7 @@
 import { describe, expect, it } from "@effect/vitest";
 import { Array as Arr, MutableHashMap, Option } from "effect";
 import { CHUNK, indexOf, PAINT } from "@/lib/island/land/chunk";
-import { paint } from "@/lib/island/land/edits";
+import { setPaint } from "@/lib/island/land/edits";
 import {
   chunkAt,
   coverAt,
@@ -112,7 +112,7 @@ describe("island/land/ground", () => {
       )
     ).toBe("grass");
     const [x, z] = placeWhere((point) => point.elevation > 3);
-    paint(land, x, z, PAINT.path);
+    setPaint(land, x, z, PAINT.path);
     expect(coverAt(land, x, z)).toBe("path");
   });
 

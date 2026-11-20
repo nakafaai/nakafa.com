@@ -1,27 +1,75 @@
-import { HEIGHT } from "@repo/backend/confect/island/world";
-import { Array as Arr, Option, Record as Rec } from "effect";
+import { Array as Arr, MutableHashMap, Option, Schema } from "effect";
+import type { Land } from "@/lib/island/land/ground";
+import { coverAt, depthAt, slopeAt } from "@/lib/island/land/ground";
 import type { Animal } from "@/lib/island/life";
-import { KIND, LOOK } from "@/lib/island/look";
-import { BodyKind, bodyFaces } from "@/lib/island/models/kinds";
+import type { Model } from "@/lib/island/models/kinds";
+import { modelFaces } from "@/lib/island/models/kinds";
 import { boundsOf } from "@/lib/island/models/parts";
-import { isPassable } from "@/lib/island/plants";
-import type { Cells } from "@/lib/island/world";
-import { blockAt } from "@/lib/island/world";
 
-/** How much of the world a body takes (ADR 0047, D22): half its width, half its length, and its height, in blocks. */
-function shapeOf(kind: BodyKind) {
-  const bounds = boundsOf(bodyFaces(kind));
-  return {
-    half: (bounds.x[1] - bounds.x[0]) / 2,
-    height: bounds.y[1] - bounds.y[0],
-    reach: (bounds.z[1] - bounds.z[0]) / 2,
-  };
+/** Where a creature keeps its feet: on dry ground, on a beach's sand, afloat on water, or wading along a bank. */
+export const Ground = Schema.Literals(["dry", "sand", "afloat", "bank"]);
+export type Ground = typeof Ground.Type;
+
+/** How steep ground may be before no creature stands on it: its rise over one block. */
+const STEEP = 0.7;
+
+/**
+ * How deep water stands for each ground, in blocks: a floater needs `afloat`
+ * under it, dry ground has no more than `dry` over it, sand is washed no
+ * deeper than `wash`, and a wader keeps between `shore` over the water's face
+ * and `wade` under it.
+ */
+const WATER = {
+  afloat: 0.3,
+  dry: 0.03,
+  shore: -0.25,
+  wade: 0.45,
+  wash: 0.12,
+} as const;
+
+/** Whether a creature that keeps to `ground` can stand at a place of the land. */
+export function suitsOf(land: Land, ground: Ground, x: number, z: number) {
+  const depth = depthAt(land, x, z);
+  if (ground === "afloat") {
+    return depth > WATER.afloat;
+  }
+  if (ground === "bank") {
+    return depth > WATER.shore && depth < WATER.wade;
+  }
+  if (slopeAt(land, x, z) > STEEP) {
+    return false;
+  }
+  return ground === "sand"
+    ? depth < WATER.wash && coverAt(land, x, z) === "sand"
+    : depth <= WATER.dry;
+}
+
+/** The model an animal is drawn as: a body of the world's own by its name, or a species of the catalogue by its index. */
+export function modelOf(kind: Animal["kind"]): Model {
+  return typeof kind === "number"
+    ? { _tag: "species", index: kind }
+    : { _tag: "body", kind };
 }
 
 /** Every body's shape, measured once from its own model, so the room it takes is the room it is drawn in. */
-const SHAPES = Rec.fromEntries(
-  Arr.map(BodyKind.literals, (kind) => [kind, shapeOf(kind)] as const)
-);
+const shapes = MutableHashMap.empty<
+  Animal["kind"],
+  { readonly half: number; readonly height: number; readonly reach: number }
+>();
+
+/** How much of the world a body takes (ADR 0047, D22): half its width, half its length, and its height, in blocks. */
+export function shapeOf(kind: Animal["kind"]) {
+  return Option.getOrElse(MutableHashMap.get(shapes, kind), () => {
+    const bounds = boundsOf(modelFaces(modelOf(kind)));
+    const shape = {
+      half: (bounds.x[1] - bounds.x[0]) / 2,
+      height: bounds.y[1] - bounds.y[0],
+      reach: (bounds.z[1] - bounds.z[0]) / 2,
+    };
+    MutableHashMap.set(shapes, kind, shape);
+    return shape;
+  });
+}
 
 /**
  * The points a body's footprint is checked at, each with the body's half
@@ -29,7 +77,7 @@ const SHAPES = Rec.fromEntries(
  * and back, along the way it faces.
  */
 function pointsOf(kind: Animal["kind"], x: number, z: number, yaw: number) {
-  const { half, reach } = SHAPES[kind];
+  const { half, reach } = shapeOf(kind);
   const along = Math.max(0, reach - half);
   if (along < 0.05) {
     return [[x, z] as const];
@@ -48,73 +96,28 @@ export function headingOf(animal: Animal) {
   return Math.hypot(dx, dz) > 0.05 ? Math.atan2(dx, dz) : 0;
 }
 
-/** The first open cell above a column's ground, plants being no ground, none over an empty column. */
-export function floorOf(cells: Cells, x: number, z: number) {
-  for (let y = HEIGHT - 1; y >= 0; y -= 1) {
-    const kind = LOOK.kinds[blockAt(cells, Math.floor(x), y, Math.floor(z))];
-    if (kind !== KIND.air && kind !== KIND.cross) {
-      return Option.some(y + 1);
-    }
-  }
-  return Option.none();
-}
-
-/** Whether a column is free from `floor` up for `height` blocks: air or plants low enough to push aside, nothing a body would pass through. */
-function openAbove(
-  cells: Cells,
-  x: number,
-  z: number,
-  floor: number,
-  height: number
-) {
-  return Arr.every(
-    Arr.makeBy(Math.ceil(height), (step) => floor + step),
-    (y) => isPassable(blockAt(cells, Math.floor(x), y, Math.floor(z)))
-  );
-}
-
 /**
- * Whether an animal fits at (x, z) facing `yaw` (ADR 0047, D22): every point
- * of its footprint, its half width around, stands on the same floor as its
- * middle, with room above for its whole height, and that floor is `floor`
- * when one is given, so a walker never climbs a step or a wall. A plant under
- * a knee is pushed aside; a taller plant, a wall, a step or a roof is not.
+ * Whether a body fits at a place facing `yaw` (ADR 0047, D22): every point of
+ * its footprint stands on the ground it keeps to, and none stands in what
+ * `blocked` answers for: a trunk, a rock or a wall, asked with the body's half
+ * width.
  */
 export function roomOf(
-  cells: Cells,
-  kind: Animal["kind"],
-  x: number,
-  z: number,
-  yaw: number,
-  floor: Option.Option<number> = Option.none()
+  land: Land,
+  body: { readonly ground: Ground; readonly kind: Animal["kind"] },
+  place: { readonly x: number; readonly yaw: number; readonly z: number },
+  blocked: (x: number, z: number, half: number) => boolean
 ) {
-  const { half, height } = SHAPES[kind];
-  return Option.match(floorOf(cells, x, z), {
-    onNone: () => false,
-    onSome: (middle) =>
-      Option.getOrElse(
-        Option.map(floor, (wanted) => wanted === middle),
-        () => true
-      ) &&
-      Arr.every(pointsOf(kind, x, z, yaw), ([px, pz]) =>
-        Arr.every(
-          [
-            [px - half, pz - half],
-            [px + half, pz - half],
-            [px - half, pz + half],
-            [px + half, pz + half],
-          ] as const,
-          ([cx, cz]) =>
-            Option.exists(floorOf(cells, cx, cz), (at) => at === middle) &&
-            openAbove(cells, cx, cz, middle, height)
-        )
-      ),
-  });
+  const { half } = shapeOf(body.kind);
+  return Arr.every(
+    pointsOf(body.kind, place.x, place.z, place.yaw),
+    ([x, z]) => suitsOf(land, body.ground, x, z) && !blocked(x, z, half)
+  );
 }
 
 /** Whether two animals' footprints overlap, measured between their nearest points. */
 export function touches(a: Animal, b: Animal) {
-  const gap = SHAPES[a.kind].half + SHAPES[b.kind].half;
+  const gap = shapeOf(a.kind).half + shapeOf(b.kind).half;
   return Arr.some(pointsOf(a.kind, a.x, a.z, headingOf(a)), ([ax, az]) =>
     Arr.some(
       pointsOf(b.kind, b.x, b.z, headingOf(b)),

@@ -20,4 +20,10 @@ describe("island/land/home", () => {
     expect(homeOf(4242)).toEqual(homeOf(4242));
     expect(homeOf(4242)).not.toEqual(homeOf(77));
   });
+
+  it("remembers a seed's home after the first search, and hands the same place back", () => {
+    const first = homeOf(606);
+    expect(homeOf(606)).toBe(first);
+    expect(homeOf(607)).not.toBe(first);
+  });
 });

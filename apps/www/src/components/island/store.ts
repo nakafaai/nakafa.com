@@ -1,43 +1,54 @@
-import type { BlockKey } from "@repo/backend/confect/island/blocks";
-import { idOf } from "@repo/backend/confect/island/blocks";
+import type { Operation } from "@repo/backend/confect/island/operation";
+import type { Shelf, Thing } from "@repo/backend/confect/island/things";
 import { useRequired } from "@repo/design-system/hooks/required";
-import { Array as Arr, HashSet, Schema } from "effect";
+import { Array as Arr, Option, Schema } from "effect";
 import { createContext } from "react";
 import { createStore, useStore } from "zustand";
-import type { Edit } from "@/lib/island/edits";
-import { applyEdits, inverseOf } from "@/lib/island/edits";
-import { settleOf } from "@/lib/island/gravity";
-import type { ItemKey } from "@/lib/island/items";
+import type { Deed } from "@/lib/island/cues";
+import type { Change } from "@/lib/island/land/changes";
+import { applyChanges, joinedOf, undoneOf } from "@/lib/island/land/changes";
+import type { Land } from "@/lib/island/land/ground";
+import { opsOf } from "@/lib/island/land/ops";
+import type { Brush } from "@/lib/island/land/stroke";
 import type { Season } from "@/lib/island/season";
 import type { Weather } from "@/lib/island/sky";
 import type { Footing } from "@/lib/island/steps";
-import type { Cells } from "@/lib/island/world";
 
-/** The hand the learner plays with: one block placed per tap, a ready-made item, the pickaxe that removes a block, or their own feet. */
-export type Tool =
-  | "place"
-  | "item"
-  | "remove"
-  | "walk"
-  | "fish"
-  | "hoe"
-  | "can";
+/** What the learner's hands do in the world (ADR 0050, W7): walk it and meet what lives there, set things down, or shape the land. */
+export const Mode = Schema.Literals(["explore", "build", "brush"]);
+export type Mode = typeof Mode.Type;
 
-/** What the game tells the learner: a build the server refused, edits another device made first, or an item with no room where it was pressed. */
-export type Notice =
-  | "till"
-  | "water"
-  | "bite"
-  | "escaped"
-  | "far"
-  | "path"
-  | "refused"
-  | "room"
-  | "stale";
+/** The sheets the HUD opens over the world, one at a time. */
+export const Sheet = Schema.Literals([
+  "animals",
+  "class",
+  "map",
+  "share",
+  "guests",
+]);
+export type Sheet = typeof Sheet.Type;
 
-/** The shelves of the block book: ready-made items, plants, blocks, and the field guide of animals. */
-export const Shelf = Schema.Literals(["items", "plants", "blocks", "animals"]);
-export type Shelf = typeof Shelf.Type;
+/**
+ * What the game tells the learner in a line: a thing with no room where it
+ * was pressed, one that needs water or dry land, ground too steep for it, a
+ * chunk or a world that holds all it can, a change the server refused, a
+ * blueprint they cannot afford yet, a place too far to walk to, a bite on the
+ * line and a fish that got away, and a world that is only theirs to look at.
+ */
+export const Notice = Schema.Literals([
+  "room",
+  "water",
+  "dry",
+  "steep",
+  "full",
+  "refused",
+  "short",
+  "far",
+  "bite",
+  "escaped",
+  "guest",
+]);
+export type Notice = typeof Notice.Type;
 
 /** The learner's lifetime Stars between the level they reached and the next one. */
 export const Progress = Schema.Struct({
@@ -47,255 +58,291 @@ export const Progress = Schema.Struct({
 });
 export type Progress = typeof Progress.Type;
 
+/** One thing of a world, named by its chunk and its place on the chunk's half-block grid. */
+export const Spot = Schema.Struct({
+  at: Schema.Int,
+  cx: Schema.Int,
+  cz: Schema.Int,
+});
+export type Spot = typeof Spot.Type;
+
+/** Whose world the game shows when it is not the learner's own (ADR 0050, W6). */
+export const Host = Schema.Struct({
+  level: Schema.Int,
+  name: Schema.String,
+  username: Schema.String,
+});
+export type Host = typeof Host.Type;
+
 /** How many steps undo keeps. */
 const HISTORY = 64;
 
 /**
- * What the game's own actions write (ADR 0047, D5 and D6): the world's cells,
- * which chunks need meshing again, the hotbar and the held slot, the tool, the
- * steps undo and redo walk, whether the block book is open, and the edits the
- * server has not taken yet with the version they build on. The world is one
- * typed array changed in place, so `revision` rises with every change for the
- * readers that draw it.
+ * What the game's own actions write (ADR 0050, W2, W4 and W7): the land and
+ * what the learner changed on it, the steps undo and redo walk, the operations
+ * the server has not taken yet, the hand the learner plays with, the
+ * blueprints they opened, and what the HUD shows. The land is changed in
+ * place, so `revision` rises with every change for the readers that draw it.
  */
 interface GameStore {
   /** Adds a catch, which the HUD shows and the field guide marks. */
   addCatch: (species: number) => void;
-  /** Writes edits into the world as one step the learner can undo. */
-  apply: (edits: readonly Edit[]) => void;
-  /** Puts a block into a hotbar slot. */
-  assign: (slot: number, key: BlockKey) => void;
-  /** How many crops the learner harvested today. */
-  basket: number;
-  book: boolean;
+  /** Whether the server answered the learner's entry, which tells a first visit from a later one. */
+  answered: boolean;
+  /** Records that a region's stored chunks were laid over the land. */
+  arrive: (region: number) => void;
+  /** The blueprints the learner opened with Stars (W5). */
+  blueprints: readonly Thing[];
+  /** The brush in hand while the mode is "brush". */
+  brush: Brush;
   /** The species the learner caught today, by their place in the catalog, the latest last. */
   catches: readonly number[];
   /** The catch the HUD shows now, none once it faded. */
   caught: number | null;
-  cells: Cells;
-  /** Holds a hotbar slot, and the block in it. */
-  choose: (slot: number) => void;
   /** Lets the catch the HUD shows fade. */
   clearCaught: () => void;
-  /** Lets the harvest the HUD shows fade. */
-  clearHarvest: () => void;
-  /** The chunks whose meshes no longer match the world. */
-  dirty: HashSet.HashSet<number>;
+  /**
+   * Writes changes into the land as one step the learner can undo, and queues
+   * them for the server. With `join`, they join the step before, so one
+   * stroke of a brush is one step however long it ran.
+   */
+  commit: (changes: readonly Change[], join?: boolean) => void;
+  /** The fox's latest deed that changes nothing in the world, and how many it did, which the sound answers one by one (W8). */
+  deed: { readonly count: number; readonly kind: Deed };
+  /** Records a deed of the fox: a line cast, an animal stroked, a tree shaken. */
+  did: (kind: Deed) => void;
+  /** When the learner entered their world before this time, in epoch milliseconds, none before the first; the guest book marks who came since. */
+  entered: number | null;
+  /** Whether this is the learner's first time in their world, which opens with a gift (W5). */
+  first: boolean;
   /** What the fox's last footstep landed on (D40). */
   footing: Footing;
-  future: readonly (readonly Edit[])[];
-  /** Writes what grew by itself (D16): sent to the server, but no step undo takes back. */
-  grow: (edits: readonly Edit[]) => void;
-  /** Adds a harvested crop to the basket and shows it. */
-  harvest: (crop: BlockKey) => void;
-  /** The crop the HUD shows as just harvested, none once it faded. */
-  harvested: BlockKey | null;
-  /** Holds a ready-made item, which the next press places. */
-  hold: (item: ItemKey) => void;
-  hotbar: readonly BlockKey[];
-  /** The ready-made item in hand while the tool is "item". */
-  item: ItemKey;
+  future: readonly (readonly Change[])[];
+  /** Writes the changes of a gift into the land and queues them for the server, outside the steps undo walks. */
+  grant: (changes: readonly Change[]) => void;
+  /** Holds a thing, which the next press sets down, or nothing. */
+  hold: (item: Thing | null) => void;
+  /** Where the world opens: the learner's home, found from the seed (W1). */
+  home: readonly [number, number];
+  /** Whose world this is when it is not the learner's own; they change nothing in it (W6). */
+  host: Host | null;
+  /** The thing in hand while the mode is "build", none when the hand picks things up instead. */
+  item: Thing | null;
+  /** The land and everything the learner changed on it. */
+  land: Land;
   /** Leaves the game for the page the learner came from. */
   leave: () => void;
-  /** The island's level, which opens blocks for building (D7). */
+  /** The learner's level (ADR 0047, D29). */
   level: number;
+  /** The regions whose stored chunks the land already holds, by their keys. */
+  loaded: readonly number[];
   /** The minute of the learner's day the clock shows, from 0 to 1439. */
   minute: number;
-  /** Whether the learner turned the island's sound off. */
+  mode: Mode;
+  /** Whether the next press sets the selected thing down at a new place. */
+  moving: boolean;
+  /** Whether the learner turned the world's sound off. */
   muted: boolean;
   /** What the game tells the learner, none most of the time. */
   notice: Notice | null;
-  past: readonly (readonly Edit[])[];
+  /** Records the blueprints the server holds after one was opened. */
+  opened: (blueprints: readonly Thing[]) => void;
+  past: readonly (readonly Change[])[];
   /** What the server has not taken yet, in the order it changed. */
-  pending: readonly Edit[];
-  /** The learner's lifetime Stars, the Stars that opened this level, and those that open the next, none at the last. */
+  pending: readonly Operation[];
+  /** Where the fox stands, to the nearest couple of blocks, which the map marks. */
+  place: readonly [number, number];
+  /** The learner's lifetime Stars, the Stars that opened this level, and those that open the next. */
   progress: Progress;
-  /** What the book's search looks for, empty for everything. */
-  query: string;
   redo: () => void;
+  /** Rises whenever the land changed, by the learner's hand or by what the server held. */
   revision: number;
-  /**
-   * Takes back everything the server has not taken, so the world matches what
-   * it holds again, after it refused a batch. Undo then starts afresh.
-   */
-  rollback: () => void;
-  /** The learner's season, which paints the grass and the leaves (D8). */
+  /** The learner's season, which tints the turf and the leaves (D8). */
   season: Season;
-  /** The seed the island's terrain and life grow from. */
-  seed: number;
-  setBook: (book: boolean) => void;
+  /** Picks a thing up, or lets go of it. */
+  select: (spot: Spot | null) => void;
+  /** The thing the learner picked up to move, turn or take away, none when nothing is. */
+  selected: Spot | null;
+  setBrush: (brush: Brush) => void;
+  setEntered: (entered: number | null) => void;
   setMinute: (minute: number) => void;
+  setMode: (mode: Mode) => void;
+  setMoving: (moving: boolean) => void;
   setMuted: (muted: boolean) => void;
   setNotice: (notice: Notice | null) => void;
-  setQuery: (query: string) => void;
-  setShelf: (shelf: Shelf) => void;
-  setTool: (tool: Tool) => void;
-  /** Records that the server took the first `count` pending edits, now at `version`. */
-  settle: (count: number, version: number) => void;
+  setPlace: (place: readonly [number, number]) => void;
+  setSheet: (sheet: Sheet | null) => void;
+  setShelf: (shelf: typeof Shelf.Type) => void;
+  /** Records that the server took the first `count` pending operations. */
+  settle: (count: number) => void;
   setWeather: (weather: Weather) => void;
-  /** The book's open shelf. */
-  shelf: Shelf;
-  slot: number;
+  /** The sheet open over the world, none most of the time. */
+  sheet: Sheet | null;
+  /** The shelf of things the build tools show. */
+  shelf: typeof Shelf.Type;
+  /** Records that the world's first frame is on the screen. */
+  show: () => void;
+  /** Whether the world's first frame is on the screen; the HUD waits over the canvas until it is. */
+  shown: boolean;
   /** How many footsteps the fox took, which the sound answers one by one (D40). */
   steps: number;
-  /** Hands the chunks to mesh to the stage and forgets them. */
-  takeDirty: () => HashSet.HashSet<number>;
-  tool: Tool;
   /** Records one footstep of the fox on a footing. */
   tread: (footing: Footing) => void;
+  /** How many quarter turns the next thing is set down with. */
+  turn: number;
+  /** Turns the thing in hand a quarter. */
+  turnHand: () => void;
   undo: () => void;
-  /** The version of the edits the server holds, which the next batch builds on. */
-  version: number;
-  /** The weather over the island: the learner's own, clear until it is read (D8). */
+  /** Asks for the regions about the camera, by their keys; the sync reads the ones the land does not hold yet. */
+  want: (regions: readonly number[]) => void;
+  /** The regions about the camera. */
+  wanted: readonly number[];
+  /** The weather over the world: the learner's own, clear until it is read (D8). */
   weather: Weather;
+  /** Records that the learner entered their world for the first time. */
+  welcome: () => void;
 }
 
-/** What a game opens with: its world, hotbar, level, progress, the version of its edits, and the way out. */
+/** What a game opens with: its land, the learner's level and blueprints, whose world it is, and the way out. */
 type GameSetup = Pick<
   GameStore,
-  | "cells"
-  | "hotbar"
+  | "blueprints"
+  | "home"
+  | "host"
+  | "land"
   | "leave"
+  | "loaded"
   | "level"
   | "muted"
   | "progress"
   | "season"
-  | "seed"
-  | "version"
 >;
 
 /** Creates the store of one game, which lives and ends with its provider. */
 export function createGameStore(setup: GameSetup) {
   return createStore<GameStore>()((set, get) => {
-    /** Writes edits, marks what they change, and queues them for the server, without touching history. */
-    const write = (edits: readonly Edit[]) => {
-      const touched = applyEdits(get().cells, edits);
+    /** Writes changes into the land and queues them for the server, without touching history. */
+    const write = (changes: readonly Change[]) => {
+      applyChanges(get().land, changes);
       set((state) => ({
-        dirty: HashSet.union(state.dirty, touched),
-        pending: Arr.appendAll(state.pending, edits),
+        pending: Arr.appendAll(state.pending, opsOf(changes)),
         revision: state.revision + 1,
       }));
     };
     return {
       ...setup,
-      apply: (edits) => {
-        if (edits.length === 0) {
-          return;
-        }
-        // The world settles at once (D14): what settles joins the change as one step, written once, which undo takes back whole.
-        const { cells } = get();
-        applyEdits(cells, edits);
-        const step = Arr.appendAll(edits, settleOf(cells, edits));
-        write(step);
-        // A change that went in answers the note about one that did not.
-        set((state) => ({
-          future: [],
-          notice: null,
-          past: Arr.takeRight(Arr.append(state.past, step), HISTORY),
-        }));
-      },
-      assign: (slot, key) =>
-        set((state) => ({
-          hotbar: Arr.map(state.hotbar, (current, index) =>
-            index === slot ? key : current
-          ),
-          slot,
-          tool: "place",
-        })),
-      book: false,
-      choose: (slot) => set({ slot, tool: "place" }),
-      dirty: HashSet.empty(),
-      footing: "grass",
-      future: [],
+      answered: false,
       addCatch: (species) =>
         set((state) => ({
           catches: Arr.append(state.catches, species),
           caught: species,
         })),
-      basket: 0,
+      arrive: (region) =>
+        set((state) => ({
+          loaded: Arr.append(state.loaded, region),
+          revision: state.revision + 1,
+        })),
+      brush: "path",
       catches: [],
       caught: null,
-      clearHarvest: () => set({ harvested: null }),
-      grow: (edits) => {
-        if (edits.length > 0) {
-          write(edits);
-        }
-      },
-      harvest: (crop) =>
-        set((state) => ({ basket: state.basket + 1, harvested: crop })),
-      harvested: null,
       clearCaught: () => set({ caught: null }),
-      hold: (item) => set({ book: false, item, tool: "item" }),
-      item: "house",
+      commit: (changes, join = false) => {
+        if (changes.length === 0 || get().host !== null) {
+          return;
+        }
+        write(changes);
+        set((state) => {
+          const before = join ? Arr.last(state.past) : Option.none();
+          const step = Option.match(before, {
+            onNone: () => changes,
+            onSome: (last) => joinedOf(last, changes),
+          });
+          const kept = Option.isSome(before)
+            ? Arr.dropRight(state.past, 1)
+            : state.past;
+          return {
+            future: [],
+            notice: null,
+            past: Arr.takeRight(Arr.append(kept, step), HISTORY),
+          };
+        });
+      },
+      deed: { count: 0, kind: "cast" },
+      did: (kind) =>
+        set((state) => ({ deed: { count: state.deed.count + 1, kind } })),
+      entered: null,
+      first: false,
+      footing: "grass",
+      grant: (changes) => {
+        write(changes);
+        set({ first: false });
+      },
+      future: [],
+      hold: (item) => set({ item, moving: false, selected: null }),
+      item: null,
       minute: 0,
-      query: "",
-      shelf: "items",
+      mode: "explore",
+      moving: false,
       notice: null,
+      opened: (blueprints) => set({ blueprints }),
       past: [],
       pending: [],
+      place: setup.home,
       redo: () => {
         const step = Arr.last(get().future);
-        if (step._tag === "None") {
+        if (Option.isNone(step)) {
           return;
         }
         write(step.value);
         set((state) => ({
           future: Arr.dropRight(state.future, 1),
           past: Arr.append(state.past, step.value),
+          selected: null,
         }));
       },
       revision: 0,
-      setBook: (book) => set({ book }),
+      select: (selected) => set({ item: null, moving: false, selected }),
+      selected: null,
+      setBrush: (brush) => set({ brush }),
+      setEntered: (entered) => set({ answered: true, entered }),
       setMinute: (minute) => set({ minute }),
-      setQuery: (query) => set({ query }),
-      setShelf: (shelf) => set({ query: "", shelf }),
+      setMode: (mode) =>
+        set({ item: null, mode, moving: false, selected: null, sheet: null }),
+      setMoving: (moving) => set({ moving }),
       setMuted: (muted) => set({ muted }),
       setNotice: (notice) => set({ notice }),
+      setPlace: (place) => set({ place }),
+      setSheet: (sheet) => set({ sheet }),
+      setShelf: (shelf) => set({ shelf }),
+      settle: (count) =>
+        set((state) => ({ pending: Arr.drop(state.pending, count) })),
       setWeather: (weather) => set({ weather }),
-      setTool: (tool) => set({ tool }),
-      rollback: () => {
-        const touched = applyEdits(get().cells, inverseOf(get().pending));
-        set((state) => ({
-          dirty: HashSet.union(state.dirty, touched),
-          future: [],
-          past: [],
-          pending: [],
-          revision: state.revision + 1,
-        }));
-      },
-      settle: (count, settled) =>
-        set((state) => ({
-          pending: Arr.drop(state.pending, count),
-          version: settled,
-        })),
-      slot: 0,
+      sheet: null,
+      shelf: "nature",
+      show: () => set({ shown: true }),
+      shown: false,
       steps: 0,
       tread: (footing) => set((state) => ({ footing, steps: state.steps + 1 })),
-      takeDirty: () => {
-        const { dirty } = get();
-        set({ dirty: HashSet.empty() });
-        return dirty;
-      },
-      tool: "place",
-      weather: "clear",
+      turn: 0,
+      want: (wanted) => set({ wanted }),
+      wanted: [],
+      turnHand: () => set((state) => ({ turn: (state.turn + 1) % 4 })),
       undo: () => {
         const step = Arr.last(get().past);
-        if (step._tag === "None") {
+        if (Option.isNone(step)) {
           return;
         }
-        write(inverseOf(step.value));
+        write(undoneOf(step.value));
         set((state) => ({
           future: Arr.append(state.future, step.value),
           past: Arr.dropRight(state.past, 1),
+          selected: null,
         }));
       },
+      weather: "clear",
+      welcome: () => set({ first: true }),
     };
   });
-}
-
-/** The id of the block the learner holds, none while the pickaxe is out. */
-export function heldOf(state: Pick<GameStore, "hotbar" | "slot" | "tool">) {
-  return state.tool === "remove" ? 0 : idOf(state.hotbar[state.slot]);
 }
 
 export type GameStoreApi = ReturnType<typeof createGameStore>;

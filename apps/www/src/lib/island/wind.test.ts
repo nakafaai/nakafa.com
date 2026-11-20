@@ -5,20 +5,24 @@ import {
   gustAt,
   poseOf,
   stepWind,
+  WIND_ALONG,
   WIND_CYCLE,
-  WIND_FROM,
   WIND_HEADING,
   WIND_SIDE,
   WIND_SPAN,
 } from "@/lib/island/wind";
 
-/** The texel of the lean map over the map's middle, and the ground under it. */
+/** A texel in the middle of the lean map, how far down the wind and across it its patch lies, and the ground there. */
 const MIDDLE = (WIND_SIDE / 2) * WIND_SIDE + WIND_SIDE / 2;
-const GROUND = WIND_FROM + (WIND_SIDE / 2 + 0.5) * (WIND_SPAN / WIND_SIDE);
+const ALONG = ((WIND_SIDE / 2 + 0.5) * WIND_ALONG) / WIND_SIDE;
+const ACROSS = ((WIND_SIDE / 2 + 0.5) * WIND_SPAN) / WIND_SIDE;
+const GROUND = [
+  ALONG * WIND_HEADING[0] - ACROSS * WIND_HEADING[1],
+  ALONG * WIND_HEADING[1] + ACROSS * WIND_HEADING[0],
+] as const;
 
-/** The second the strongest front, which enters at 21.5 s and runs 7 cells a second, stands over the map's middle. */
-const ARRIVAL =
-  21.5 + (GROUND * (WIND_HEADING[0] + WIND_HEADING[1])) / 7 - WIND_CYCLE;
+/** The second the strongest front, which crosses the origin at 21.5 s and runs 7 blocks a second, stands over that ground. */
+const ARRIVAL = 21.5 + ALONG / 7 - WIND_CYCLE;
 
 /** The lean of the middle's trees at each step of a run of the wind from `from` for `seconds`, at 60 steps a second. */
 function swing(
@@ -43,16 +47,42 @@ describe("island/wind", () => {
     }
   });
 
+  it("blows the same gusts a round of the map away, down the wind and across it, on either side of the origin", () => {
+    const down = [
+      WIND_ALONG * WIND_HEADING[0],
+      WIND_ALONG * WIND_HEADING[1],
+    ] as const;
+    const side = [
+      -WIND_SPAN * WIND_HEADING[1],
+      WIND_SPAN * WIND_HEADING[0],
+    ] as const;
+    for (const [x, z, time] of [
+      [12, 40, 3.2],
+      [-730, 55, 9.9],
+      [61, -1904, 11.6],
+      [-5000, -8000, 22],
+    ] as const) {
+      expect(gustAt(x + 3 * down[0], z + 3 * down[1], time)).toBeCloseTo(
+        gustAt(x, z, time),
+        2
+      );
+      expect(gustAt(x - 2 * side[0], z - 2 * side[1], time)).toBeCloseTo(
+        gustAt(x, z, time),
+        2
+      );
+    }
+  });
+
   it("brings the strongest front over a place, hardly felt a second and a half before", () => {
-    expect(gustAt(GROUND, GROUND, ARRIVAL)).toBeGreaterThan(1.15);
-    expect(gustAt(GROUND, GROUND, ARRIVAL - 1.5)).toBeLessThan(0.45);
+    expect(gustAt(GROUND[0], GROUND[1], ARRIVAL)).toBeGreaterThan(1.15);
+    expect(gustAt(GROUND[0], GROUND[1], ARRIVAL - 1.5)).toBeLessThan(0.45);
   });
 
   it("runs the front down the wind and never against it", () => {
     const ahead = 14;
     const there = [
-      GROUND + ahead * WIND_HEADING[0],
-      GROUND + ahead * WIND_HEADING[1],
+      GROUND[0] + ahead * WIND_HEADING[0],
+      GROUND[1] + ahead * WIND_HEADING[1],
     ] as const;
     expect(gustAt(there[0], there[1], ARRIVAL + ahead / 7)).toBeGreaterThan(
       1.15

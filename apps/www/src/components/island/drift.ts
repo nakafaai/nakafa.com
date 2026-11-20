@@ -1,4 +1,3 @@
-import type { uploadMap } from "@/components/island/buffers";
 import { activate } from "@/components/island/buffers";
 import type { createGale } from "@/components/island/wind";
 import { shedOf } from "@/lib/island/drift";
@@ -8,8 +7,8 @@ import type { Light, Weather } from "@/lib/island/sky";
 /** Bytes in one float. */
 const FLOAT = 4;
 
-/** The texture unit the column map takes while the leaves are drawn; the wind's lean map holds unit 2. */
-const UNIT = 3;
+/** A uniform finder of a program. */
+type Uniforms = (name: string) => WebGLUniformLocation | null;
 
 /** A buffer of points, `size` numbers each, behind one vertex array. */
 function pointsOf(gl: WebGL2RenderingContext, size: 3 | 4) {
@@ -40,24 +39,25 @@ function pointsOf(gl: WebGL2RenderingContext, size: 3 | 4) {
 }
 
 /**
- * What drifts over the island by day, on the GPU (ADR 0047, D41): leaves
+ * What drifts over the land by day, on the GPU (ADR 0047, D41): leaves
  * letting go of the crowns in the season's share and color, landing on the
- * ground the column map gives, and butterflies over the flowers. Leaves fall
- * in any dry weather, day and night; butterflies fly only by day and never
- * under rain or snow.
+ * ground or the water the window of land gives (`ground` hands it to the
+ * leaf program), and butterflies over the meadow. Leaves fall in any dry
+ * weather, day and night; butterflies fly only by day and never under rain or
+ * snow.
  */
 export function createDrift(
   gl: WebGL2RenderingContext,
   programs: readonly [leaves: WebGLProgram, butterflies: WebGLProgram],
-  columns: ReturnType<typeof uploadMap>,
+  ground: (at: Uniforms) => void,
   season: Season
 ) {
   const [leafProgram, butterflyProgram] = programs;
   const crowns = pointsOf(gl, 4);
   const flowers = pointsOf(gl, 3);
   const shed = shedOf(season);
-  const leafAt = (name: string) => gl.getUniformLocation(leafProgram, name);
-  const butterflyAt = (name: string) =>
+  const leafAt: Uniforms = (name) => gl.getUniformLocation(leafProgram, name);
+  const butterflyAt: Uniforms = (name) =>
     gl.getUniformLocation(butterflyProgram, name);
   return {
     /** Draws the falling leaves and the butterflies at `time` seconds, lit as the scene is. */
@@ -82,8 +82,7 @@ export function createDrift(
         gl.uniform3fv(leafAt("uLeaf"), shed.color);
         gl.uniform3fv(leafAt("uLight"), lit);
         gale.blow(leafAt, time, sky);
-        columns.bind(UNIT);
-        gl.uniform1i(leafAt("uColumns"), UNIT);
+        ground(leafAt);
         crowns.draw();
       }
       if (flowers.count() > 0 && !falling && light.lamp[0] < 0.3) {
@@ -94,7 +93,13 @@ export function createDrift(
         flowers.draw();
       }
     },
-    /** Replaces where leaves fall from, four numbers a crown, and where butterflies fly, three numbers a flower. */
+    /**
+     * Replaces where leaves fall from and where butterflies fly. `crowns` is
+     * four numbers a crown: the place under the crown a leaf lets go from (x,
+     * y, z in blocks) and the height of the ground under the tree.
+     * `butterflies` is three numbers a butterfly: the place it settles (x, y,
+     * z in blocks), about the height of a flower over the ground.
+     */
     homes(next: {
       readonly butterflies: Float32Array;
       readonly crowns: Float32Array;

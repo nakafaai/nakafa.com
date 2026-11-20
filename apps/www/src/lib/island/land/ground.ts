@@ -1,3 +1,4 @@
+import type { Placed } from "@repo/backend/confect/island/chunk";
 import { Array as Arr, MutableHashMap, Option } from "effect";
 import type { Chunk } from "@/lib/island/land/chunk";
 import { CHUNK, chunkOf, indexOf, keyOf } from "@/lib/island/land/chunk";
@@ -10,8 +11,9 @@ export type Cover = "forest" | "grass" | "meadow" | "path" | "sand";
 
 /**
  * A learner's land (ADR 0050, W1 and W3): the seed it grows from, what the
- * learner changed (the lifts, the paints and the cleared wild plants of each
- * chunk they touched, by the chunk's key), and the chunks made so far. A chunk is made the first
+ * learner changed (the lifts, the paints, the cleared wild plants and the
+ * things set down in each chunk they touched, by the chunk's key), and the
+ * chunks made so far. A chunk is made the first
  * time a place in it is read, with the changes laid over it.
  */
 export function landOf(seed: number) {
@@ -21,6 +23,7 @@ export function landOf(seed: number) {
     lifts: MutableHashMap.empty<number, Int8Array>(),
     paints: MutableHashMap.empty<number, Uint8Array>(),
     seed,
+    things: MutableHashMap.empty<number, readonly (typeof Placed.Type)[]>(),
   };
 }
 export type Land = ReturnType<typeof landOf>;

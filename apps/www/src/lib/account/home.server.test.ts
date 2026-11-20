@@ -167,7 +167,13 @@ describe("homeScreenHandler", () => {
       ],
       [
         island.queries.own,
-        { lifetime: 30, tally: EMPTY_TALLY, version: 1, world: [] },
+        {
+          access: "link",
+          balance: 30,
+          blueprints: [],
+          lifetime: 30,
+          tally: EMPTY_TALLY,
+        },
       ],
       [island.queries.week, week],
       [island.queries.leaders, []],
@@ -179,7 +185,11 @@ describe("homeScreenHandler", () => {
       { content_id: "math-1", materialDomain: "mathematics" },
     ]);
     expect(screen.recentLooks).toHaveLength(1);
-    expect(screen.island).toMatchObject({ level: 1, lifetime: 30, version: 1 });
+    expect(screen.island).toMatchObject({
+      balance: 30,
+      level: 1,
+      lifetime: 30,
+    });
     expect(screen.week).toEqual(week);
     expect(screen.attempts).toEqual([attempt]);
     expect(screen.username).toBe(account.appUser.username);

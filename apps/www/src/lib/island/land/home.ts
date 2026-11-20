@@ -1,3 +1,4 @@
+import { MutableHashMap, Option } from "effect";
 import { pointOf } from "@/lib/island/land/relief";
 
 /** How far from the origin a home is looked for, and how far apart the rings of the search lie, in blocks. */
@@ -39,6 +40,18 @@ function scoreOf(seed: number, x: number, z: number, distance: number) {
  * same camp. A seed with no such place opens at the origin.
  */
 export function homeOf(seed: number) {
+  return Option.getOrElse(MutableHashMap.get(homes, seed), () => {
+    const home = searched(seed);
+    MutableHashMap.set(homes, seed, home);
+    return home;
+  });
+}
+
+/** The homes found so far, by seed: the search reads thousands of places, and a game asks for its home more than once. */
+const homes = MutableHashMap.empty<number, readonly [number, number]>();
+
+/** Searches the rings about the origin for the best place to live. */
+function searched(seed: number) {
   let bestX = 0;
   let bestZ = 0;
   let bestScore = Number.NEGATIVE_INFINITY;

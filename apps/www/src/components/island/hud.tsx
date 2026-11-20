@@ -1,380 +1,69 @@
 "use client";
 
-import {
-  ArrowLeft01Icon,
-  BookOpen01Icon,
-  CactusIcon,
-  CloudAngledRainIcon,
-  FishingRodIcon,
-  FlowerIcon,
-  FootprintsIcon,
-  Leaf01Icon,
-  Moon02Icon,
-  PickaxeIcon,
-  Redo02Icon,
-  SnowIcon,
-  Sun01Icon,
-  Sun03Icon,
-  Undo02Icon,
-  VolumeHighIcon,
-  VolumeOffIcon,
-} from "@hugeicons/core-free-icons";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { cva } from "class-variance-authority";
-import { Array as Arr } from "effect";
-import type { ReactNode } from "react";
-import { useTranslations } from "use-intl";
-import { IslandBook } from "@/components/island/book";
-import { BlockIcon, SpeciesIcon, ToolIcon } from "@/components/island/icon";
-import { panelVariants } from "@/components/island/panel";
+import { IslandCover } from "@/components/island/blank";
+import { BoardSheet } from "@/components/island/board";
+import { IslandDock } from "@/components/island/dock";
+import { GuideSheet } from "@/components/island/guide";
+import { IslandNotices } from "@/components/island/notice";
+import { IslandPick } from "@/components/island/pick";
+import { ShareSheet } from "@/components/island/share";
+import { MapSheet } from "@/components/island/sheet";
+import { IslandShelf } from "@/components/island/shelf";
+import { IslandStatus } from "@/components/island/status";
+import { StickerSheet } from "@/components/island/sticker";
 import { useGame } from "@/components/island/store";
-import { SPECIES } from "@/lib/island/fauna/species";
-import { writeMuted } from "@/lib/island/settings";
 
-/** One square of the hotbar or the HUD's buttons, lit when it is held. */
-const slotVariants = cva(
-  "relative grid size-9 shrink-0 cursor-pointer place-items-center border-2 p-1 transition-transform outline-none active:translate-y-px sm:size-12 sm:p-1.5",
-  {
-    defaultVariants: { held: false, screen: "every" },
-    variants: {
-      /** Slots 4 to 9 only fit a wide screen; a phone keeps three blocks beside its tools. */
-      screen: { every: "", wide: "max-sm:hidden" },
-      held: {
-        false:
-          "border-island-wood bg-island-straw hover:bg-island-straw-hover focus-visible:border-island-highlight",
-        true: "border-island-highlight bg-island-glow -translate-y-1 shadow-[0_0_0_2px_var(--color-island-wood-dark)]",
-      },
-    },
-  }
+/**
+ * The HUD's one frame for its three layouts (ADR 0050, W7): a column of rows
+ * inside the screen's safe areas, the top row first and the bar of a picked
+ * thing, the shelf and the dock stacked at the bottom, with the world
+ * showing through the row between, at whose foot the game's lines come and
+ * go without moving a tool. A phone held sideways gains a column at the
+ * left, where the shelf stands for the screen's whole height.
+ */
+const hudVariants = cva(
+  "sideways:grid-cols-[auto_minmax(0,1fr)] pointer-events-none absolute inset-0 grid grid-cols-1 grid-rows-[auto_minmax(0,1fr)_auto_auto_auto] justify-items-center p-[max(0.5rem,env(safe-area-inset-top))_max(0.5rem,env(safe-area-inset-right))_max(0.5rem,env(safe-area-inset-bottom))_max(0.5rem,env(safe-area-inset-left))] sm:p-[max(0.75rem,env(safe-area-inset-top))_max(0.75rem,env(safe-area-inset-right))_max(0.75rem,env(safe-area-inset-bottom))_max(0.75rem,env(safe-area-inset-left))]"
 );
 
-/**
- * The shape both panels of the HUD's top row share: one height and one
- * centered row, so the way out on the left and the history on the right stand
- * level with each other on every screen.
- */
-const HEADER_PANEL = "flex h-17 items-center";
-
-/** A square HUD button with its icon and its name, which a screen reader reads. */
-function HudButton({
-  children,
-  held = false,
-  label,
-  onPress,
-  screen = "every",
-}: {
-  children: ReactNode;
-  held?: boolean;
-  label: string;
-  onPress: () => void;
-  screen?: "every" | "wide";
-}) {
-  return (
-    <button
-      aria-label={label}
-      aria-pressed={held}
-      className={slotVariants({ held, screen })}
-      onClick={onPress}
-      title={label}
-      type="button"
-    >
-      {children}
-    </button>
+/** The shelf, which only the learner's own world shows, and only while they build or shape the land. */
+function Shelf() {
+  const editing = useGame(
+    (state) => state.host === null && state.mode !== "explore"
   );
+  return editing ? <IslandShelf /> : null;
 }
 
-/** The hotbar: the learner's feet, nine blocks, the pickaxe and the block book, along the bottom of the screen. */
-function Hotbar() {
-  const t = useTranslations("Island");
-  const hotbar = useGame((state) => state.hotbar);
-  const slot = useGame((state) => state.slot);
-  const tool = useGame((state) => state.tool);
-  const choose = useGame((state) => state.choose);
-  const setTool = useGame((state) => state.setTool);
-  const setBook = useGame((state) => state.setBook);
+/** The sheets over the world: the share sheet in the learner's own world, the sticker sheet in someone else's. */
+function Sheets() {
+  const visiting = useGame((state) => state.host !== null);
   return (
-    <nav
-      aria-label={t("hotbar")}
-      className={panelVariants({
-        className:
-          "pointer-events-auto flex max-w-full gap-1 overflow-x-auto p-1.5 [scrollbar-width:none]",
-      })}
-    >
-      <HudButton
-        held={tool === "walk"}
-        label={t("walk")}
-        onPress={() => setTool("walk")}
-      >
-        <HugeIcons icon={FootprintsIcon} />
-      </HudButton>
-      <HudButton
-        held={tool === "hoe"}
-        label={t("hoe")}
-        onPress={() => setTool("hoe")}
-      >
-        <ToolIcon tool="hoe" />
-      </HudButton>
-      <HudButton
-        held={tool === "can"}
-        label={t("can")}
-        onPress={() => setTool("can")}
-      >
-        <ToolIcon tool="can" />
-      </HudButton>
-      <HudButton
-        held={tool === "fish"}
-        label={t("rod")}
-        onPress={() => setTool("fish")}
-      >
-        <HugeIcons icon={FishingRodIcon} />
-      </HudButton>
-      {Arr.map(
-        Arr.makeBy(hotbar.length, (number) => number),
-        (number) => (
-          <HudButton
-            held={tool === "place" && slot === number}
-            key={number}
-            label={t(`block-${hotbar[number]}`)}
-            onPress={() => choose(number)}
-            screen={number < 3 ? "every" : "wide"}
-          >
-            <BlockIcon block={hotbar[number]} />
-          </HudButton>
-        )
-      )}
-      <HudButton
-        held={tool === "remove"}
-        label={t("pickaxe")}
-        onPress={() => setTool("remove")}
-      >
-        <HugeIcons icon={PickaxeIcon} />
-      </HudButton>
-      <HudButton label={t("book")} onPress={() => setBook(true)}>
-        <HugeIcons icon={BookOpen01Icon} />
-      </HudButton>
-    </nav>
-  );
-}
-
-/** Undo and redo, which walk the learner's own steps, and the sound switch. */
-function History() {
-  const t = useTranslations("Island");
-  const tCommon = useTranslations("Common");
-  const undo = useGame((state) => state.undo);
-  const redo = useGame((state) => state.redo);
-  const muted = useGame((state) => state.muted);
-  const setMuted = useGame((state) => state.setMuted);
-  return (
-    <div
-      className={panelVariants({
-        className: `pointer-events-auto gap-1 p-1.5 ${HEADER_PANEL}`,
-      })}
-    >
-      <HudButton label={t("undo")} onPress={undo}>
-        <HugeIcons icon={Undo02Icon} />
-      </HudButton>
-      <HudButton label={tCommon("redo")} onPress={redo}>
-        <HugeIcons icon={Redo02Icon} />
-      </HudButton>
-      <HudButton
-        held={muted}
-        label={t("mute")}
-        onPress={() => {
-          setMuted(!muted);
-          writeMuted(!muted);
-        }}
-      >
-        <HugeIcons icon={muted ? VolumeOffIcon : VolumeHighIcon} />
-      </HudButton>
-    </div>
-  );
-}
-
-/** Two digits of the clock. */
-function twoDigits(value: number) {
-  return String(value).padStart(2, "0");
-}
-
-/** The icon of each season beside the clock. */
-const SEASON_ICONS = {
-  autumn: Leaf01Icon,
-  dry: CactusIcon,
-  spring: FlowerIcon,
-  summer: Sun01Icon,
-  wet: CloudAngledRainIcon,
-  winter: SnowIcon,
-} as const;
-
-/**
- * The learner's time of day, which the world's sky follows (ADR 0047, D8), with
- * the sun by day and the moon by night, and the season the world is painted for.
- */
-function Clock() {
-  const t = useTranslations("Island");
-  const minute = useGame((state) => state.minute);
-  const season = useGame((state) => state.season);
-  const hours = Math.floor(minute / 60);
-  const time = `${twoDigits(hours)}:${twoDigits(minute % 60)}`;
-  return (
-    <p className="flex items-center gap-1.5">
-      <HugeIcons
-        className="text-island-wood"
-        icon={hours >= 6 && hours < 18 ? Sun03Icon : Moon02Icon}
-      />
-      <time dateTime={time}>{time}</time>
-      <HugeIcons className="text-island-wood" icon={SEASON_ICONS[season]} />
-      <span className="sr-only">{t(`season-${season}`)}</span>
-    </p>
+    <>
+      <GuideSheet />
+      <BoardSheet />
+      <MapSheet />
+      {visiting ? <StickerSheet /> : <ShareSheet />}
+    </>
   );
 }
 
 /**
- * The time of day, the island's level, and how far the learner's Stars have
- * come toward the next level (ADR 0047, D7), as a pixel bar.
- */
-function Progress() {
-  const t = useTranslations("Island");
-  const level = useGame((state) => state.level);
-  const { from, lifetime, next } = useGame((state) => state.progress);
-  const share = (lifetime - from) / (next - from);
-  return (
-    <div className="flex min-w-32 flex-col gap-1 pr-1">
-      <h1 className="sr-only">{t("title")}</h1>
-      <div className="flex items-center justify-between gap-3 text-sm font-semibold">
-        <Clock />
-        <span className="text-island-wood">{t("level", { level })}</span>
-      </div>
-      <div className="border-island-wood-dark bg-island-straw h-2 border">
-        <div
-          className="bg-island-gold h-full shadow-[inset_0_-2px_0_var(--color-island-gold-dark)]"
-          style={{
-            width: `${Math.round(Math.min(1, Math.max(0, share)) * 100)}%`,
-          }}
-        />
-      </div>
-      <p className="text-island-bark-soft text-sm leading-tight whitespace-nowrap tabular-nums">
-        {t("next", { level: level + 1, stars: next - lifetime })}
-      </p>
-    </div>
-  );
-}
-
-/** A fish the learner just caught, its picture and its name, gone after a few seconds (ADR 0047, D15). */
-function Catch() {
-  const t = useTranslations("Island");
-  const caught = useGame((state) => state.caught);
-  const clearCaught = useGame((state) => state.clearCaught);
-  return caught === null ? null : (
-    <p
-      className={panelVariants({
-        className:
-          "pointer-events-auto mx-auto flex max-w-sm items-center gap-2 px-3 py-2 text-sm font-semibold",
-      })}
-      ref={(node) => {
-        if (node === null) {
-          return;
-        }
-        const timer = window.setTimeout(clearCaught, NOTICE_MS);
-        return () => window.clearTimeout(timer);
-      }}
-      role="status"
-    >
-      <span className="size-10 shrink-0">
-        <SpeciesIcon index={caught} />
-      </span>
-      {t("caught", { name: t(`animal-${SPECIES[caught].key}`) })}
-    </p>
-  );
-}
-
-/** A crop the learner just harvested, its picture and the basket's count, gone after a few seconds (ADR 0047, D16). */
-function Harvest() {
-  const t = useTranslations("Island");
-  const harvested = useGame((state) => state.harvested);
-  const basket = useGame((state) => state.basket);
-  const clearHarvest = useGame((state) => state.clearHarvest);
-  return harvested === null ? null : (
-    <p
-      className={panelVariants({
-        className:
-          "pointer-events-auto mx-auto flex max-w-sm items-center gap-2 px-3 py-2 text-sm font-semibold",
-      })}
-      ref={(node) => {
-        if (node === null) {
-          return;
-        }
-        const timer = window.setTimeout(clearHarvest, NOTICE_MS);
-        return () => window.clearTimeout(timer);
-      }}
-      role="status"
-    >
-      <span className="size-8 shrink-0">
-        <BlockIcon block={harvested} />
-      </span>
-      {t("harvested", { count: basket, name: t(`block-${harvested}`) })}
-    </p>
-  );
-}
-
-/** How long a notice stays before it fades. */
-const NOTICE_MS = 4000;
-
-/** A note about the server, in the game's own frame at the top of the screen, gone after a few seconds. */
-function Notice() {
-  const t = useTranslations("Island");
-  const notice = useGame((state) => state.notice);
-  const setNotice = useGame((state) => state.setNotice);
-  return notice === null ? null : (
-    <p
-      className={panelVariants({
-        className:
-          "pointer-events-auto mx-auto max-w-sm px-3 py-2 text-center text-sm",
-      })}
-      ref={(node) => {
-        if (node === null) {
-          return;
-        }
-        const timer = window.setTimeout(() => setNotice(null), NOTICE_MS);
-        return () => window.clearTimeout(timer);
-      }}
-      role="status"
-    >
-      {t(`notice-${notice}`)}
-    </p>
-  );
-}
-
-/**
- * The HUD over the world (ADR 0047, D5 and D7): the way out and the island's
- * name at the top left, undo and redo at the top right, and the hotbar at the
- * bottom. It lets every press it does not take fall through to the world.
+ * The HUD over the world (ADR 0050, W7): identity and Stars at the top left;
+ * the map, the clock and the weather at the top right; the tools at the
+ * bottom centre with the shelf over them; the game's lines, the sheets, and
+ * the cover that waits for the first frame. It lets every press it does not
+ * take fall through to the world.
  */
 export function IslandHud() {
-  const t = useTranslations("Island");
-  const book = useGame((state) => state.book);
-  const leave = useGame((state) => state.leave);
   return (
-    <div className="pointer-events-none absolute inset-0 flex flex-col gap-2 p-[max(0.75rem,env(safe-area-inset-top))_max(0.75rem,env(safe-area-inset-right))_max(0.75rem,env(safe-area-inset-bottom))_max(0.75rem,env(safe-area-inset-left))]">
-      <header className="flex items-start justify-between gap-3">
-        <div
-          className={panelVariants({
-            className: `pointer-events-auto gap-2 p-1.5 pr-3 ${HEADER_PANEL}`,
-          })}
-        >
-          <HudButton label={t("leave")} onPress={leave}>
-            <HugeIcons icon={ArrowLeft01Icon} />
-          </HudButton>
-          <Progress />
-        </div>
-        <History />
-      </header>
-      <Notice />
-      <Catch />
-      <Harvest />
-      <footer className="mt-auto flex justify-center">
-        <Hotbar />
-      </footer>
-      {book ? <IslandBook /> : null}
+    <div className={hudVariants()}>
+      <IslandStatus />
+      <IslandNotices />
+      <IslandPick />
+      <Shelf />
+      <IslandDock />
+      <Sheets />
+      <IslandCover />
     </div>
   );
 }

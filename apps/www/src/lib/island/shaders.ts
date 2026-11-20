@@ -1,8 +1,4 @@
-import { ATLAS_TILES, SLOTS } from "@/lib/island/atlas";
-import { GROUND_GLSL } from "@/lib/island/ground";
-import { FOLIAGE } from "@/lib/island/mesh";
 import { TOON_GLSL } from "@/lib/island/toon";
-import { WATER_GLSL } from "@/lib/island/water";
 import { WIND_GLSL } from "@/lib/island/wind";
 
 /**
@@ -15,7 +11,7 @@ import { WIND_GLSL } from "@/lib/island/wind";
  * in the sky's own ten steps (D35): what a far pixel fades toward, so far
  * land meets the sky behind it on the same row with no seam.
  */
-const SKY_ROW = `
+export const SKY_ROW = `
 uniform vec3 uZenith;
 uniform vec3 uHorizon;
 uniform float uRows;
@@ -24,56 +20,8 @@ vec3 skyRow(float height) {
   return mix(uHorizon, uZenith, floor(t * 10.0) / 10.0);
 }`;
 
-/** The chunk program: atlas pixels lit by the sun in toon bands where its shadow map lets it reach, shaded where a cloud passes, lit by the sky over them and the lamps beside them, dimmed and laced with caustics under the sea, fading into fog. */
-export const CHUNK_VERTEX = `#version 300 es
-layout(location = 0) in vec3 aPosition;
-layout(location = 1) in vec2 aUv;
-layout(location = 2) in float aShade;
-layout(location = 3) in float aSky;
-layout(location = 4) in float aGlow;
-layout(location = 5) in float aSway;
-uniform mat4 uViewProjection;
-${WIND_GLSL}
-out vec2 vUv;
-out float vShade;
-out float vSky;
-out float vGlow;
-out vec3 vWorld;
-void main() {
-  vUv = aUv;
-  vShade = aShade;
-  vSky = aSky;
-  vGlow = aGlow;
-  // The light and the edges keep to where the block stands; only what is drawn gives to the wind (D32).
-  vWorld = aPosition;
-  vec3 place = aSway > 0.0 ? aPosition + windShift(aPosition.xz, aSway) : aPosition;
-  gl_Position = uViewProjection * vec4(place, 1.0);
-}`;
-
-export const CHUNK_FRAGMENT = `#version 300 es
-precision highp float;
-uniform sampler2D uAtlas;
-uniform vec3 uSun;
-uniform vec3 uAmbient;
-uniform vec3 uLamp;
-uniform vec2 uFogRange;
-uniform float uTime;
-uniform float uSea;
-uniform vec2 uWaterTile;
-const vec2 GLASS_TILE = vec2(${(SLOTS.glass % ATLAS_TILES).toFixed(1)}, ${Math.floor(SLOTS.glass / ATLAS_TILES).toFixed(1)});
-uniform float uWater;
-uniform vec3 uEye;
-${SKY_ROW}
-uniform float uWet;
-uniform float uSnow;
-${WIND_GLSL}
-in vec2 vUv;
-in float vShade;
-in float vSky;
-in float vGlow;
-in vec3 vWorld;
-layout(location = 0) out vec4 color;
-layout(location = 1) out vec4 surface;
+/** A number from 0 to 1 that a cell always gives, and that number blended smoothly between the cells: the grain every ground pass paints with. */
+export const NOISE_GLSL = `
 float hashOf(vec2 cell) {
   return fract(sin(dot(cell, vec2(127.1, 311.7))) * 43758.5453);
 }
@@ -86,115 +34,6 @@ float noiseOf(vec2 place) {
     mix(hashOf(cell + vec2(0.0, 1.0)), hashOf(cell + vec2(1.0, 1.0)), part.x),
     part.y
   );
-}
-${GROUND_GLSL}
-${TOON_GLSL}
-${WATER_GLSL}
-// The shadow of the clouds drifting over the island, cut into whole art pixels.
-float cloudOf(vec2 place) {
-  vec2 pixel = floor((place + vec2(uTime * 0.7, uTime * 0.3)) * 4.0) / 4.0;
-  float cover = noiseOf(pixel / 15.0) * 0.7 + noiseOf(pixel / 6.0) * 0.3;
-  return step(0.6, cover);
-}
-void main() {
-  vec2 uv = vUv;
-  if (uWater > 0.5) {
-    vec2 local = fract(vWorld.xz * 0.5 + vec2(uTime * 0.04, uTime * 0.017) + vWorld.y * 0.5);
-    uv = (uWaterTile + 0.002 + local * 0.996) / ${ATLAS_TILES.toFixed(1)};
-  }
-  // A ground top (D39) draws each art pixel from the ground the column map gives it, in the same tile of that ground's set, darkened where a higher ground's edge stands beside it toward the sun, and along its own edge away from it.
-  float slot = dot(floor(vUv * ${ATLAS_TILES.toFixed(1)}), vec2(1.0, ${ATLAS_TILES.toFixed(1)}));
-  float ground = uWater > 0.5 ? 0.0 : groundOfSlot(slot);
-  float border = 0.0;
-  if (ground > 0.0) {
-    float pixel = 1.0 / 16.0;
-    vec2 art = (floor(vWorld.xz * 16.0) + 0.5) * pixel;
-    float top = floor(vWorld.y + 0.5) - 1.0;
-    float own = ground;
-    ground = groundAt(art, top, own);
-    float sunward = max(groundAt(art - vec2(pixel, 0.0), top, own), groundAt(art + vec2(0.0, pixel), top, own));
-    float shadeward = min(groundAt(art + vec2(pixel, 0.0), top, own), groundAt(art - vec2(0.0, pixel), top, own));
-    border = 0.22 * step(ground + 0.5, sunward) + 0.12 * step(shadeward + 0.5, ground);
-    float tile = GROUND_SLOT + (ground - 1.0) * WANG + mod(slot - GROUND_SLOT, WANG);
-    uv = (vec2(mod(tile, ${ATLAS_TILES.toFixed(1)}), floor(tile / ${ATLAS_TILES.toFixed(1)})) + fract(vUv * ${ATLAS_TILES.toFixed(1)})) / ${ATLAS_TILES.toFixed(1)};
-  }
-  vec4 texel = texture(uAtlas, uv);
-  // After dusk a window's clear panes glow warm instead of showing through (D36); most homes are lit, a few stay dark.
-  float pane = uWater < 0.5 && all(equal(floor(vUv * ${ATLAS_TILES.toFixed(1)}), GLASS_TILE)) ? 1.0 : 0.0;
-  float home = hashOf(floor(vWorld.xz) + floor(vWorld.y) * 7.0);
-  float emit = 0.0;
-  if (texel.a < 0.5) {
-    if (pane * step(0.3, uLamp.r) * step(home, 0.8) < 0.5) discard;
-    emit = smoothstep(0.3, 0.7, uLamp.r);
-  }
-  vec3 paint = texel.rgb * (1.0 - border);
-  if (abs(ground - GRASS) < 0.5) {
-    vec2 art = floor(vWorld.xz * 16.0) / 16.0;
-    // The meadow in patches a few blocks wide, a shade darker or lighter, so a field never reads as one flat green (D39).
-    float meadow = noiseOf(art * 0.2);
-    paint *= 1.0 + 0.06 * (step(0.66, meadow) - step(meadow, 0.32));
-    // A gust shows on the meadow (D32): the grass under its front turns a tone lighter, in whole art pixels.
-    paint *= 1.0 + 0.1 * step(0.55, windField(art, 1.0));
-  }
-  vec3 face = normalize(cross(dFdx(vWorld), dFdy(vWorld)));
-  if (uWater < 0.5 && ground < 0.5) {
-    // Each face of each block a shade lighter or darker than its neighbours (D44), so a wall of one block never reads as one flat sheet.
-    vec3 cell = floor(vWorld - face * 0.01);
-    paint *= 1.0 + 0.05 * (hashOf(cell.xz + cell.y * 17.0 + face.xz * 3.1 + face.y * 7.3) - 0.5);
-  }
-  if (uWater < 0.5) {
-    // What the weather left (D33), only where the sky reaches: wet ground darkens and cools, the tops of things more than their sides.
-    float open = smoothstep(0.6, 0.95, vSky);
-    float wet = uWet * open * (face.y > 0.5 ? 1.0 : 0.55);
-    paint = mix(paint, paint * vec3(0.74, 0.77, 0.85), wet);
-    // Snow settles art pixel by art pixel on what faces the sky, the first patches where it lies thickest.
-    vec2 grain = floor(vWorld.xz * 16.0);
-    float lying = uSnow * open * step(0.5, face.y);
-    // Drifts first, then whole fields: soft patches a few cells wide, their edges ragged by a pixel or two.
-    float spread = noiseOf(grain / 40.0) * 0.6 + noiseOf(grain / 9.0) * 0.28 + hashOf(grain) * 0.12;
-    paint = mix(paint, vec3(0.92, 0.95, 1.0), step(spread, lying) * 0.94);
-  }
-  float foam = 0.0;
-  float alpha = 1.0;
-  if (uWater > 0.5) {
-    vec4 water = waterOf(vWorld, uEye, uToward, uTime, vSky, foam);
-    paint = water.rgb * (0.9 + 0.2 * dot(texel.rgb, vec3(0.333)));
-    alpha = water.a;
-    if (abs(face.y) < 0.5) {
-      // A wall of water is a fall (D52): white streaks pour down it in whole art pixels, a few broad ones and many thin.
-      vec2 sheet = floor(vec2(vWorld.x + vWorld.z, vWorld.y) * 16.0);
-      float pour = noiseOf(vec2(sheet.x * 0.55, (sheet.y + uTime * 44.0) * 0.09));
-      float streak = step(0.58, pour) + step(0.8, hashOf(vec2(sheet.x, floor((sheet.y + uTime * 60.0) * 0.25)))) * 0.6;
-      paint = mix(vec3(0.46, 0.74, 0.88), vec3(0.94, 0.98, 1.0), min(1.0, streak));
-      alpha = 0.9;
-      foam = max(foam, min(1.0, streak) * 0.55);
-    }
-  }
-  // The sun reaches a face only where nothing stands between them, and a cloud passing over dims it; the sky over a face lets it in at all.
-  // A plant's or a tuft's thin plane takes the light from above, like the ground it grows on (D44).
-  vec3 lighted = abs(vShade - ${FOLIAGE.toFixed(2)}) < 0.001 ? vec3(0.0, 1.0, 0.0) : face;
-  float lit = sunlitAt(vWorld, lighted) * vSky * (1.0 - 0.4 * cloudOf(vWorld.xz));
-  vec3 light = toonLight(uAmbient, uSun, lighted, lit, 0.55 + 0.45 * vShade);
-  light = max(light, uLamp * vGlow * vGlow * vShade);
-  // Under the sea the light fades with depth, and the swell's caustics play over the floor in whole art pixels.
-  float under = uSea - vWorld.y;
-  if (uWater < 0.5 && under > 0.0) {
-    vec2 bed = floor(vWorld.xz * 16.0) / 16.0;
-    float a = noiseOf(bed * 1.7 + vec2(uTime * 0.5, uTime * 0.3));
-    float b = noiseOf(bed * 2.3 - vec2(uTime * 0.4, -uTime * 0.35));
-    float caustic = step(abs(a - b), 0.05) * exp(-0.3 * under) * vSky;
-    light = light * mix(1.0, 0.5, 1.0 - exp(-0.3 * under)) + uSun * caustic * 0.7;
-  }
-  light = floor(light * 12.0 + 0.5) / 12.0;
-  // Measured per pixel: the sea is a few huge quads, and a distance blended between their far corners would fog all of it.
-  float fog = smoothstep(uFogRange.x, uFogRange.y, distance(vWorld, uEye));
-  vec3 shown = mix(paint * light, vec3(0.97, 0.99, 1.0) * min(vec3(1.0), light + 0.12), foam);
-  shown = mix(shown, vec3(1.0, 0.8, 0.46) * (0.82 + 0.18 * home), emit);
-  color = vec4(mix(shown, skyRow(gl_FragCoord.y / uRows), fog), mix(alpha, 1.0, foam));
-  // The face's own direction, from how the world moves across this pixel, for the edge pass (D20).
-  // Which part this pixel belongs to (D44): each tile its own, so the edge pass rules a line where two materials meet on one plane; the ground blends, so it has none.
-  float part = ground > 0.5 ? 0.0 : (mod(slot * 37.0, 254.0) + 1.0) / 255.0;
-  surface = vec4(face * 0.5 + 0.5, part);
 }`;
 
 /** One triangle over the whole frame, for the passes that paint every pixel. */
@@ -220,23 +59,6 @@ void main() {
   color = vec4(skyRow(vHeight), 1.0);
 }`;
 
-/** The outline program: the twelve edges of the cell a press would change, drawn over everything. */
-export const OUTLINE_VERTEX = `#version 300 es
-layout(location = 0) in vec3 aCorner;
-uniform mat4 uViewProjection;
-uniform vec3 uCell;
-void main() {
-  gl_Position = uViewProjection * vec4(uCell - 0.01 + aCorner * 1.02, 1.0);
-}`;
-
-export const OUTLINE_FRAGMENT = `#version 300 es
-precision mediump float;
-uniform vec4 uColor;
-out vec4 color;
-void main() {
-  color = uColor;
-}`;
-
 /**
  * The edge pass (ADR 0047, D20): it reads the frame's colors, the direction of
  * each pixel's face and its depth, and draws a dark outline one art pixel wide
@@ -258,6 +80,7 @@ uniform vec2 uClip;
 uniform vec3 uAhead;
 uniform mat4 uInverse;
 uniform float uSea;
+uniform vec2 uFade;
 in vec2 vUv;
 out vec4 color;
 float depthAt(vec2 at) {
@@ -304,15 +127,17 @@ void main() {
       }
     }
   }
-  vec3 lit = base.rgb * (1.0 - 0.5 * outline) * (1.0 - 0.22 * seam * (1.0 - outline));
-  color = vec4(mix(lit, min(lit * 1.25 + 0.03, vec3(1.0)), crease * (1.0 - outline)), 1.0);
+  // The air that hides the far land hides its lines with it, so no line is left standing in the sky.
+  float near = 1.0 - smoothstep(uFade.x, uFade.y, depth);
+  vec3 lit = base.rgb * (1.0 - 0.5 * outline * near) * (1.0 - 0.22 * seam * (1.0 - outline) * near);
+  color = vec4(mix(lit, min(lit * 1.25 + 0.03, vec3(1.0)), crease * (1.0 - outline) * near), 1.0);
 }`;
 
 /**
  * The body program (ADR 0047, D21): every true 3D model of one kind at once,
  * each body placed, turned to face its way and bobbing as it walks from its
  * own numbers, its parts swimming, striding and flapping by the motion baked
- * into its corners (D48). Faces are lit by the sun in the blocks' toon bands where the
+ * into its corners (D48). Faces are lit by the sun in the land's toon bands where the
  * shadow map lets it reach, and write their direction for the edge pass, so
  * every body is outlined as crisply as a house. Drawn from the sun's own view,
  * the same program casts each body's shadow into the shadow map (D43).
@@ -338,7 +163,8 @@ void main() {
   float s = sin(aPlace.w);
   vec3 local = aPosition;
   // The body's own motion (D48 and D49): a swim wave across or up and down it, a leg or an arm striding while it walks, a wing or a flipper flapping, a walking spine flexing, a stalk leaning in the current, each body a little out of step with its neighbours.
-  float beat = aRig.x * sin(uTime * aRig.z + aRig.y + aPlace.x * 1.7 + aPlace.z * 0.9);
+  bool spins = aRig.w > 6.5;
+  float beat = spins ? 0.0 : aRig.x * sin(uTime * aRig.z + aRig.y + aPlace.x * 1.7 + aPlace.z * 0.9);
   float walking = step(0.001, aMove);
   local += aRig.w < 0.5 ? vec3(0.0)
     : aRig.w < 1.5 ? vec3(beat, 0.0, 0.0)
@@ -347,11 +173,21 @@ void main() {
     : aRig.w < 4.5 ? vec3(0.0, beat, 0.0)
     : aRig.w < 5.5 ? vec3(beat * walking, 0.0, 0.0)
     : vec3(beat * 0.6, 0.0, beat);
+  // A wheel turns steadily about the front-to-back axis through the height its rig names (ADR 0050, W2): a windmill's sails. It takes no beat.
+  vec3 facing = aNormal;
+  if (spins) {
+    float turn = uTime * aRig.z + aRig.y;
+    float tc = cos(turn);
+    float ts = sin(turn);
+    float rise = local.y - aRig.x;
+    local = vec3(local.x * tc - rise * ts, aRig.x + local.x * ts + rise * tc, local.z);
+    facing = vec3(aNormal.x * tc - aNormal.y * ts, aNormal.x * ts + aNormal.y * tc, aNormal.z);
+  }
   // A body tips its nose up or down before it turns (D50): a whale rising to breach, a dolphin arcing through its leap.
   float pc = cos(aPitch);
   float ps = sin(aPitch);
   local = vec3(local.x, local.y * pc + local.z * ps, local.z * pc - local.y * ps);
-  vec3 normal = vec3(aNormal.x, aNormal.y * pc + aNormal.z * ps, aNormal.z * pc - aNormal.y * ps);
+  vec3 normal = vec3(facing.x, facing.y * pc + facing.z * ps, facing.z * pc - facing.y * ps);
   vec3 turned = vec3(local.x * c + local.z * s, local.y, -local.x * s + local.z * c);
   vec3 place = aPlace.xyz + turned;
   if (aMove < 0.0) {
@@ -401,31 +237,4 @@ void main() {
   color = vec4(mix(paint * light, skyRow(gl_FragCoord.y / uRows), fog), 1.0);
   // Each colored part its own, so the edge pass rules a line between an eye and a face, a wing and a body (D44).
   surface = vec4(normal * 0.5 + 0.5, 0.5 + 0.49 * fract(dot(vColor, vec3(17.13, 59.71, 113.37))));
-}`;
-
-/**
- * The cast program (ADR 0047, D43): the blocks seen from the sun, depth only,
- * into the shadow map. A clear atlas pixel casts nothing, so a crown's gaps
- * let the light through in flecks.
- */
-export const CAST_VERTEX = `#version 300 es
-layout(location = 0) in vec3 aPosition;
-layout(location = 1) in vec2 aUv;
-uniform mat4 uViewProjection;
-out vec2 vUv;
-void main() {
-  vUv = aUv;
-  gl_Position = uViewProjection * vec4(aPosition, 1.0);
-}`;
-
-export const CAST_FRAGMENT = `#version 300 es
-precision mediump float;
-uniform sampler2D uAtlas;
-in vec2 vUv;
-out vec4 color;
-void main() {
-  if (texture(uAtlas, vUv).a < 0.5) {
-    discard;
-  }
-  color = vec4(1.0);
 }`;

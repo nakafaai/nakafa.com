@@ -1,23 +1,28 @@
-import { SPAN } from "@repo/backend/confect/island/world";
+import { LAND_GLSL } from "@/lib/island/land/glsl";
+import type { Brush } from "@/lib/island/land/stroke";
 import { WIND_GLSL } from "@/lib/island/wind";
 
 /**
- * The GLSL programs of what moves in the air over the island (ADR 0047, D33,
- * D36 and D41): the falling weather and its splashes, the chimneys' smoke, the
- * fireflies, falling leaves and butterflies. Each reads the one wind of D32, and every place comes from the
- * time alone, so nothing is uploaded while it moves.
+ * The GLSL programs of what moves in the air over the land (ADR 0047, D33,
+ * D36, D38 and D41; ADR 0050, W10): the falling weather and its splashes, the
+ * chimneys' smoke, the fireflies and the bursts a change throws up; the
+ * leaves and the butterflies are in `lib/island/flutter.ts`. Each reads the
+ * one wind of D32, what lands reads the ground from the window of land about
+ * the camera (`fieldAt`), and every place comes from the time alone, so
+ * nothing is uploaded while it moves and all of it works at any place of the
+ * land, on either side of the origin.
  */
 
 /**
  * The weather program (ADR 0047, D33): rain as short streaks and snow as
- * flakes, each falling along the wind until it meets the first thing over its
- * column (the column map, `lib/island/ground.ts`), so a roof keeps the ground
- * under it dry. Each particle is a seed: every cycle it picks where it lands,
- * falls there from the sky over the camera's target, and its place at any
- * moment comes from the time, so nothing is uploaded while it falls. It falls
- * over all the camera sees, however far the camera stands back. The
- * splash pass (`uSplash` 1) draws what a landing drop leaves: two droplets
- * thrown up from ground or a roof, a ring spreading on water.
+ * flakes, each falling along the wind until it meets the higher of the ground
+ * and the water at its place, read from the window of land. Each particle is
+ * a seed: every cycle it picks where it lands, falls there from the sky over
+ * the camera's target, and its place at any moment comes from the time, so
+ * nothing is uploaded while it falls. It falls over all the camera sees,
+ * however far the camera stands back. The splash pass (`uSplash` 1) draws
+ * what a landing drop leaves: two droplets thrown up from the ground, a ring
+ * spreading on water.
  */
 export const WEATHER_VERTEX = `#version 300 es
 layout(location = 0) in vec3 aSeed;
@@ -29,27 +34,20 @@ uniform float uSpeed;
 uniform float uLength;
 uniform float uSway;
 uniform float uSplash;
-uniform float uSea;
 uniform float uArea;
 uniform float uTop;
-uniform sampler2D uColumns;
 ${WIND_GLSL}
+${LAND_GLSL}
 out float vTail;
 out float vRing;
 out float vAge;
-const float SIDE = ${SPAN.toFixed(1)};
 // Seconds a splash stays on ground, and a ring on water.
 const float SPLASH = 0.16;
 const float RING = 0.5;
-// Where a drop that lands at a place stops: the height, and 1 on water.
+// Where a drop that lands at a place stops: the higher of the ground and the water's face, and 1 on water.
 vec2 surfaceAt(vec2 at) {
-  vec2 cell = floor(at);
-  if (cell.x < 0.0 || cell.y < 0.0 || cell.x >= SIDE || cell.y >= SIDE) {
-    return vec2(uSea, 1.0);
-  }
-  float code = floor(texelFetch(uColumns, ivec2(cell), 0).r * 255.0 + 0.5);
-  float water = mod(code, 2.0);
-  return vec2(floor(code / 2.0) - 0.125 * water, water);
+  vec4 field = fieldAt(at);
+  return vec2(max(field.r, field.g), step(field.r + 0.02, field.g));
 }
 void main() {
   vTail = aTail;
@@ -122,7 +120,9 @@ void main() {
  * The smoke program (ADR 0047, D33): puffs rising from every chimney, twelve to
  * a chimney, each a soft round blot of whole art pixels that grows as it
  * rises, slows as it cools and leans farther the higher it gets, carried by
- * the one wind of D32. A puff's place comes from the time alone.
+ * the one wind of D32. A puff's place comes from the time alone. `aChimney`
+ * is one chimney an instance, three numbers each: the place smoke leaves it,
+ * x, y, z in blocks.
  */
 export const SMOKE_VERTEX = `#version 300 es
 layout(location = 0) in vec3 aChimney;
@@ -160,7 +160,9 @@ void main() {
 /**
  * The firefly program (ADR 0047, D36): after dusk, a few dozen fireflies hover
  * over the meadow, each a single warm art pixel that drifts in a loop of its
- * own and glows for a breath every few seconds. None in rain or snow.
+ * own and glows for a breath every few seconds. None in rain or snow. `aHome`
+ * is one firefly a point, three numbers each: the middle of its loop, x, y, z
+ * in blocks, about a block over the ground.
  */
 export const FIREFLY_VERTEX = `#version 300 es
 layout(location = 0) in vec3 aHome;
@@ -194,23 +196,50 @@ export const BURSTS = 8;
 export const BITS = 14;
 
 /**
- * The dust program (ADR 0047, D38): what flies when the learner changes a
- * block. A dug block throws chips of its own color up and out, falling back
- * under gravity; a placed block puffs a ring of dust at its foot. Each burst
- * lives half a second; a bit's place comes from the time since its burst.
+ * What flies where the learner changes the world (ADR 0047, D38; ADR 0050,
+ * W2), by what they did: the linear color of its bits, and whether they leap
+ * as chips do or roll out low as dust does. A thing set down puffs pale dust
+ * at its foot and a thing taken throws chips of wood; a path throws its
+ * gravel, a meadow its petals, sand its grains, grass and a clearing their
+ * green, the brushes that move the ground its earth, and a pond its water.
+ */
+export const BURST_LOOKS = {
+  chips: { color: [0.62, 0.45, 0.28], leaps: true },
+  clear: { color: [0.3, 0.55, 0.26], leaps: true },
+  dust: { color: [0.86, 0.82, 0.74], leaps: false },
+  grass: { color: [0.4, 0.68, 0.34], leaps: false },
+  level: { color: [0.56, 0.43, 0.3], leaps: false },
+  lower: { color: [0.5, 0.38, 0.26], leaps: true },
+  meadow: { color: [0.98, 0.72, 0.8], leaps: false },
+  path: { color: [0.72, 0.58, 0.42], leaps: false },
+  pond: { color: [0.62, 0.84, 0.95], leaps: true },
+  raise: { color: [0.56, 0.43, 0.3], leaps: true },
+  sand: { color: [0.94, 0.86, 0.64], leaps: false },
+} as const satisfies Record<Brush | "chips" | "dust", unknown>;
+
+/** What a burst is thrown for: a thing set down (`dust`), a thing taken (`chips`), or the brush that touched the land. */
+export type Burst = keyof typeof BURST_LOOKS;
+
+/**
+ * The burst program (ADR 0047, D38): what flies when the learner changes the
+ * world. Chips leap up and out of the place and fall back under gravity; dust
+ * rolls out low in a ring. Each burst lives six tenths of a second; a bit's
+ * place comes from the time since its burst. `uBursts` is one burst a
+ * vector: the place it left, x, y, z in blocks, and the second it began,
+ * below zero for none; `uTints` is its color and 1 for bits that leap.
  */
 export const DUST_VERTEX = `#version 300 es
 uniform mat4 uViewProjection;
 uniform float uTime;
 uniform vec4 uBursts[${BURSTS}];
-uniform vec4 uKinds[${BURSTS}];
+uniform vec4 uTints[${BURSTS}];
 out vec4 vColor;
 const float LIFE = 0.6;
 void main() {
   int burst = gl_VertexID / ${BITS};
   float bit = float(gl_VertexID - burst * ${BITS});
   vec4 at = uBursts[burst];
-  vec4 kind = uKinds[burst];
+  vec4 kind = uTints[burst];
   float age = uTime - at.w;
   if (at.w < 0.0 || age < 0.0 || age > LIFE) {
     gl_Position = vec4(2.0, 2.0, 2.0, 1.0);
@@ -222,9 +251,9 @@ void main() {
   // A bit flies out fast and slows as the air takes it; chips leap high and fall back, dust only rolls out low.
   float reach = (chips ? 1.2 + seed * 0.7 : 0.6 + seed * 0.3) * (1.0 - exp(-age * 6.0));
   float rise = chips ? (4.2 + seed * 2.0) * age - 13.0 * age * age : (0.9 + seed * 0.5) * age - 2.0 * age * age;
-  // Chips leave from the mouth of the hole, dust from the foot of the new block.
-  vec3 start = at.xyz + vec3(0.5, chips ? 1.15 : 0.05, 0.5);
-  vec3 place = start + vec3(cos(turn) * reach, max(rise, -0.9), sin(turn) * reach);
+  // Chips leave from a little over the place, dust from the ground at it.
+  vec3 start = at.xyz + vec3(0.0, chips ? 0.3 : 0.05, 0.0);
+  vec3 place = start + vec3(cos(turn) * reach, max(rise, -0.3), sin(turn) * reach);
   // Half the bits catch the light and half are in shade, so a burst reads against ground of its own color.
   float tone = mod(bit, 2.0) < 0.5 ? 1.3 : 0.62;
   vColor = vec4(min(vec3(1.0), kind.rgb * tone), 1.0 - smoothstep(0.6, 1.0, age / LIFE));
@@ -238,100 +267,4 @@ in vec4 vColor;
 out vec4 color;
 void main() {
   color = vColor;
-}`;
-
-/**
- * The leaf program (ADR 0047, D41): leaves letting go of the crowns. Each
- * crown's underside sheds by the season's share, picked by its place; a leaf
- * falls from a new spot of the crown each round, tumbles as it falls, two art
- * pixels wide face on and one edge on, drifts with the wind, and lies on the
- * ground it lands on until its round ends: the ground under its crown, or
- * whatever tops a column it drifted to that stands lower than it fell from.
- */
-export const LEAF_VERTEX = `#version 300 es
-layout(location = 0) in vec4 aCrown;
-uniform mat4 uViewProjection;
-uniform float uTime;
-uniform float uShare;
-uniform sampler2D uColumns;
-${WIND_GLSL}
-out float vFace;
-out float vAlpha;
-const float FALL = 0.55;
-float floorAt(vec2 at, float from, float under) {
-  ivec2 cell = ivec2(clamp(floor(at), vec2(0.0), vec2(${(SPAN - 1).toFixed(1)})));
-  float top = floor(floor(texelFetch(uColumns, cell, 0).r * 255.0 + 0.5) * 0.5);
-  return top < from ? max(top, under) : under;
-}
-void main() {
-  float seed = fract(sin(dot(aCrown.xz + aCrown.y * 3.1, vec2(12.9898, 78.233))) * 43758.5453);
-  if (seed >= uShare) {
-    gl_Position = vec4(2.0, 2.0, 2.0, 1.0);
-    return;
-  }
-  float life = 9.0 + seed * 6.0;
-  float cycle = uTime / life + seed * 7.0;
-  float age = fract(cycle);
-  float lap = floor(cycle);
-  vec2 start = aCrown.xz + (vec2(fract(sin(lap * 12.3 + seed * 91.0) * 437.5), fract(sin(lap * 7.1 + seed * 33.0) * 912.3)) - 0.5) * 0.9;
-  float drop = max(0.0, aCrown.y - aCrown.w);
-  float fallen = min(age * life * FALL, drop);
-  bool lying = fallen >= drop;
-  vec2 drift = WIND_HEADING * (0.35 * uWindForce + 0.6 * windField(start, 1.0)) * fallen * 0.8;
-  vec2 flutter = vec2(sin(uTime * 2.3 + seed * 40.0), cos(uTime * 1.7 + seed * 23.0)) * 0.25 * (lying ? 0.0 : 1.0);
-  vec2 at = start + drift + flutter;
-  float y = max(aCrown.y - fallen, floorAt(at, aCrown.y, aCrown.w) + 0.04);
-  vFace = lying ? 1.0 : step(0.0, sin(uTime * 7.0 + seed * 50.0));
-  // A leaf shows as it leaves the crown and fades at the end of its round on the ground.
-  vAlpha = smoothstep(0.0, 0.03, age) * (1.0 - smoothstep(0.85, 1.0, age));
-  gl_Position = uViewProjection * vec4(at.x, y, at.y, 1.0);
-  gl_PointSize = vFace > 0.5 ? 2.0 : 1.0;
-}`;
-
-export const LEAF_FRAGMENT = `#version 300 es
-precision mediump float;
-uniform vec3 uLeaf;
-uniform vec3 uLight;
-in float vFace;
-in float vAlpha;
-out vec4 color;
-void main() {
-  // The leaf's back, seen as it tumbles, is a shade darker than its face.
-  color = vec4(uLeaf * uLight * (vFace > 0.5 ? 1.0 : 0.72), vAlpha);
-}`;
-
-/**
- * The butterfly program (ADR 0047, D41): by day a butterfly loops over its
- * flower, beating its wings, open three art pixels wide around a dark body and
- * shut to one, and every so often settles on the flower and opens them slowly.
- * Each takes one of three colors by its place: cream, butter yellow, sky blue.
- */
-export const BUTTERFLY_VERTEX = `#version 300 es
-layout(location = 0) in vec3 aFlower;
-uniform mat4 uViewProjection;
-uniform float uTime;
-out vec3 vColor;
-out float vOpen;
-void main() {
-  float seed = fract(sin(dot(aFlower.xz + aFlower.y * 1.7, vec2(12.9898, 78.233))) * 43758.5453);
-  float turn = uTime * (0.6 + 0.3 * seed) + seed * 30.0;
-  float resting = step(0.72, fract(uTime / (9.0 + seed * 5.0) + seed));
-  vec3 loop = vec3(cos(turn) * 0.9 + sin(turn * 0.37) * 0.4, 0.7 + 0.45 * sin(turn * 1.3 + seed * 5.0), sin(turn * 0.8) * 0.9);
-  vec3 at = aFlower + mix(loop, vec3(0.0, 0.12, 0.0), resting);
-  vOpen = resting > 0.5 ? step(0.45, fract(uTime * 0.6 + seed)) : step(0.0, sin(uTime * 28.0 + seed * 60.0));
-  vColor = seed < 0.34 ? vec3(0.98, 0.95, 0.86) : seed < 0.67 ? vec3(0.99, 0.86, 0.36) : vec3(0.52, 0.76, 0.98);
-  gl_Position = uViewProjection * vec4(at, 1.0);
-  gl_PointSize = vOpen > 0.5 ? 3.0 : 1.0;
-}`;
-
-export const BUTTERFLY_FRAGMENT = `#version 300 es
-precision mediump float;
-uniform vec3 uLight;
-in vec3 vColor;
-in float vOpen;
-out vec4 color;
-void main() {
-  // Open wings: a dark body down the middle column; shut: the wing's edge alone.
-  float body = vOpen > 0.5 && floor(gl_PointCoord.x * 3.0) == 1.0 ? 1.0 : 0.0;
-  color = vec4(mix(vColor, vec3(0.16, 0.11, 0.09), body) * uLight, 1.0);
 }`;

@@ -213,5 +213,15 @@ describe("island/models/solids", () => {
       waves: 0,
     });
     expect(moved(wing, [0, 3, 0])[0].rig?.pivot).toBe(1);
+    // A wheel's axle rises with the wheel, as a windmill's sails ride up with their tower.
+    const wheel = rigged(leg, {
+      mode: "spin",
+      phase: 0,
+      pivot: 1,
+      rate: 0.9,
+      reach: 0,
+      waves: 0,
+    });
+    expect(moved(wheel, [0, 3, 0])[0].rig?.pivot).toBe(4);
   });
 });

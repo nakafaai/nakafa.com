@@ -20,6 +20,7 @@ import {
   PaneHeader,
 } from "@/components/shared/page/pane";
 import { PagePane } from "@/components/shared/page/panes";
+import { useViewer } from "@/lib/identity/client";
 import { useCurrentLocale } from "@/lib/routing/link";
 
 /**
@@ -57,17 +58,26 @@ export function WorldPane() {
   );
 }
 
-/** Copies a link to the game with the learner's level, to send to a friend. */
+/**
+ * Copies the address of the learner's own world (ADR 0050, W6),
+ * `/{locale}/island/{username}`, with their level, to send to a friend. It
+ * waits for the account the sidebar already reads, which holds the username.
+ */
 function WorldShare() {
   const t = useTranslations("Island");
   const tCommon = useTranslations("Common");
   const locale = useCurrentLocale();
   const clipboard = useClipboard({ timeout: 1000 });
   const { island } = useProgress();
+  const username = useViewer((state) => state.account?.appUser.username);
   return (
     <Button
+      disabled={username === undefined}
       onClick={() => {
-        const link = new URL(`/${locale}/island`, SITE_ORIGIN).toString();
+        if (username === undefined) {
+          return;
+        }
+        const link = new URL(`/${locale}/island/${username}`, SITE_ORIGIN).href;
         clipboard.copy(`${t("share-text", { level: island.level })} ${link}`);
         toast.success(
           { title: "link-copied.title" },

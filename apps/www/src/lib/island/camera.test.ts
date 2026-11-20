@@ -1,98 +1,43 @@
 // @vitest-environment node
 
 import { describe, expect, it } from "@effect/vitest";
-import { SPAN } from "@repo/backend/confect/island/world";
-import { Array as Arr } from "effect";
+import { Schema } from "effect";
 import {
   artPixelFor,
-  clampOrbit,
   DISTANCE,
-  easeOrbit,
-  easeShare,
   eyeOf,
   FIELD_OF_VIEW,
-  openingOrbit,
+  FOG,
+  Orbit,
   PITCH,
-  panOrbit,
   snapOrbit,
-  turnOrbit,
   YAW_STEP,
-  zoomOrbit,
-  zoomToward,
 } from "@/lib/island/camera";
 
 describe("island/camera", () => {
-  it("opens over the middle of the island, farther for a wider one", () => {
-    const small = openingOrbit(10, 1.5);
-    expect(small.target).toEqual([SPAN / 2, 9, SPAN / 2]);
-    expect(openingOrbit(64, 1.5).distance).toBeGreaterThan(small.distance);
-    expect(openingOrbit(16, 0.5).distance).toBeGreaterThan(small.distance);
-    const eye = eyeOf(small);
-    expect(eye[1]).toBeGreaterThan(small.target[1]);
-    expect(Math.hypot(eye[0] - 32, eye[1] - 9, eye[2] - 32)).toBeCloseTo(
-      small.distance
-    );
-  });
-
-  it("frames fewer cells on a portrait phone, so the fox and the square read at a glance", () => {
-    const cellsAcross = (aspect: number) => {
-      const across = Math.atan(
-        Math.tan(FIELD_OF_VIEW / 2) * Math.min(1, aspect)
-      );
-      return (
-        ((openingOrbit(64, aspect).distance - 6) * Math.tan(across)) / 0.62
-      );
-    };
-    expect(cellsAcross(390 / 844)).toBeCloseTo(12);
-    expect(cellsAcross(0.8)).toBeCloseTo(16);
-    expect(cellsAcross(1.5)).toBeCloseTo(16);
-  });
-
-  it("keeps the camera within its distance, its tilt, and over the world", () => {
-    const wild = clampOrbit({
-      distance: 1,
-      pitch: 3,
-      target: [-5, 99, 900],
-      yaw: 7,
-    });
-    expect(wild).toEqual({
-      distance: DISTANCE.near,
-      pitch: PITCH.high,
-      target: [0, 32, SPAN],
-      yaw: 7,
-    });
-    expect(zoomOrbit(openingOrbit(16, 1.5), 100).distance).toBe(DISTANCE.far);
-  });
-
-  it("drags the ground with the finger: right moves the view left, down moves it away", () => {
+  it("stands the lens its distance from the target, over it by its tilt and around it by its turn", () => {
     const orbit = {
       distance: 40,
-      pitch: 0.7,
-      target: [32, 9, 32] as const,
+      pitch: PITCH.low,
+      target: [32, 9, -12] as const,
       yaw: 0,
     };
-    const right = panOrbit(orbit, 100, 0, 800);
-    expect(right.target[0]).toBeLessThan(32);
-    expect(right.target[2]).toBeCloseTo(32);
-    const down = panOrbit(orbit, 0, 100, 800);
-    expect(down.target[2]).toBeLessThan(32);
-  });
-
-  it("turns and tilts, and eases the short way round", () => {
-    const orbit = openingOrbit(24, 1.5);
-    const turned = turnOrbit(orbit, 0.5, 0.1);
-    expect(turned.yaw).toBeCloseTo(orbit.yaw + 0.5);
-    expect(turned.pitch).toBeCloseTo(orbit.pitch + 0.1);
-    expect(turnOrbit(orbit, 0.5).pitch).toBe(orbit.pitch);
-    const from = { ...orbit, yaw: 0.1 };
-    const to = {
-      ...orbit,
-      distance: orbit.distance * 2,
-      yaw: Math.PI * 2 - 0.1,
-    };
-    const half = easeOrbit(from, to, 0.5);
-    expect(half.yaw).toBeCloseTo(0);
-    expect(half.distance).toBeCloseTo(orbit.distance * 1.5);
+    expect(Schema.is(Orbit)(orbit)).toBe(true);
+    const eye = eyeOf(orbit);
+    expect(Math.hypot(eye[0] - 32, eye[1] - 9, eye[2] + 12)).toBeCloseTo(40, 9);
+    expect(eye[0]).toBeCloseTo(32, 9);
+    expect(eye[2]).toBeGreaterThan(-12);
+    const steep = eyeOf({ ...orbit, pitch: PITCH.high });
+    expect(steep[1]).toBeGreaterThan(eye[1]);
+    expect(steep[2]).toBeLessThan(eye[2]);
+    const turned = eyeOf({ ...orbit, yaw: Math.PI / 2 });
+    expect(turned[0]).toBeCloseTo(eye[2] + 12 + 32, 9);
+    expect(turned[2]).toBeCloseTo(-12, 9);
+    expect(turned[1]).toBe(eye[1]);
+    // The air hides the land well past the farthest the lens pulls back, so the world never ends at an edge.
+    expect(FOG.to).toBeGreaterThan(DISTANCE.far);
+    expect(FOG.from).toBeLessThan(FOG.to);
+    expect(DISTANCE.near).toBeLessThan(DISTANCE.far);
   });
 
   it("snaps the turn to whole steps and the target to whole art pixels across the screen, keeps its depth, and says what it rounded away", () => {
@@ -128,47 +73,6 @@ describe("island/camera", () => {
     expect(Math.abs(shift[0])).toBeLessThanOrEqual(0.5);
     expect(shift[0]).toBeCloseTo(across - dot(orbit.target, right) / pixel, 6);
     expect(snapOrbit(snapped, rows).shift[0]).toBeCloseTo(0, 6);
-  });
-
-  it("keeps the view between 15 and 55 degrees over the ground", () => {
-    const orbit = openingOrbit(24, 1.5);
-    expect(turnOrbit(orbit, 0, 5).pitch).toBeCloseTo((55 * Math.PI) / 180);
-    expect(turnOrbit(orbit, 0, -5).pitch).toBeCloseTo((15 * Math.PI) / 180);
-    expect(PITCH.low).toBeLessThan(orbit.pitch);
-    expect(orbit.pitch).toBeLessThan(PITCH.high);
-  });
-
-  it("eases the same distance in the same time at any frame rate, and never jumps over a stalled frame", () => {
-    const after = (frames: number, seconds: number) =>
-      1 - (1 - easeShare(seconds / frames)) ** frames;
-    expect(after(30, 0.5)).toBeCloseTo(after(120, 0.5), 10);
-    expect(easeShare(0)).toBe(0);
-    expect(easeShare(5)).toBe(easeShare(1 / 15));
-    expect(easeShare(1 / 60)).toBeCloseTo(0.25, 1);
-  });
-
-  it("zooms toward a point of the world, which keeps its place on the screen", () => {
-    const orbit = openingOrbit(24, 1.5);
-    const point = [
-      orbit.target[0] + 6,
-      orbit.target[1],
-      orbit.target[2] - 4,
-    ] as const;
-    const closer = zoomToward(orbit, point, 0.5);
-    expect(closer.distance).toBeCloseTo(orbit.distance * 0.5);
-    const eye = eyeOf(orbit);
-    const nearer = eyeOf(closer);
-    // The point, the old eye and the new eye stay on one line, so the point stays put on the screen.
-    const toward = (from: readonly number[]) => {
-      const d = [point[0] - from[0], point[1] - from[1], point[2] - from[2]];
-      const length = Math.hypot(d[0], d[1], d[2]);
-      return Arr.map(d, (value) => value / length);
-    };
-    const [a, b] = [toward(eye), toward(nearer)];
-    expect(a[0]).toBeCloseTo(b[0], 6);
-    expect(a[1]).toBeCloseTo(b[1], 6);
-    expect(a[2]).toBeCloseTo(b[2], 6);
-    expect(zoomToward(orbit, point, 1000).distance).toBe(DISTANCE.far);
   });
 
   it("draws a texel at the target at least one art pixel wide at every zoom, never coarser than the screen's art pixel", () => {

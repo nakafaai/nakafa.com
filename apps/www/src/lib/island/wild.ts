@@ -1,410 +1,357 @@
-import { idOf } from "@repo/backend/confect/island/blocks";
-import { footprintOf, SPAN } from "@repo/backend/confect/island/world";
-import { Array as Arr, Option, Order, Result, Schema } from "effect";
+import { Array as Arr, Option, Record as Rec } from "effect";
+import type { Dice } from "@/lib/island/fauna/cast";
+import { castOf, packSize } from "@/lib/island/fauna/cast";
+import type { Family } from "@/lib/island/fauna/families";
+import type { Survey } from "@/lib/island/fauna/habitat";
+import { cellKey } from "@/lib/island/fauna/habitat";
 import { SPECIES } from "@/lib/island/fauna/species";
-import { groundOf } from "@/lib/island/life";
-import { KIND, LOOK } from "@/lib/island/look";
-import { schoolOf } from "@/lib/island/models/ocean";
-import { unitOf } from "@/lib/island/noise";
-import { shoreOf } from "@/lib/island/terrain";
-import type { Cells } from "@/lib/island/world";
-import { blockAt, SEA_LEVEL } from "@/lib/island/world";
-
-/** How many of each home's species a day brings to the island. */
-const VISITORS = { bloom: 4, land: 6, sea: 6, shore: 3, sky: 5 } as const;
-
-/** The ground each walking home stands on. */
-const GROUNDS = {
-  land: [idOf("grass"), idOf("dirt")],
-  shore: [idOf("sand")],
-} as const;
+import type { Land } from "@/lib/island/land/ground";
+import type { Animal, Dweller } from "@/lib/island/life";
+import { paceOf, wander } from "@/lib/island/life";
+import { hashOf, unitOf } from "@/lib/island/noise";
+import { roomOf, shapeOf, touches } from "@/lib/island/room";
 
 /**
- * One wild creature on the island today (ADR 0047, D11): which species it is,
- * where it stands and where it is going (walkers), its place along its loop
- * (flyers and swimmers), how many steps it has taken and how long it rests.
+ * Who walks and floats in a cell of the land (ADR 0050, W9), one line a
+ * pack: its role in the cast, the habitats it is found in and how many places
+ * of them the cell must offer, which of those places it starts about, the
+ * ground it keeps to, how many it is at most, how often a cell holds it, and
+ * whether the day decides its species, as it does for a visitor.
  */
-const Wild = Schema.Struct({
-  index: Schema.Int,
-  phase: Schema.Finite,
-  rest: Schema.Finite,
-  steps: Schema.Int,
-  tx: Schema.Finite,
-  tz: Schema.Finite,
-  x: Schema.Finite,
-  z: Schema.Finite,
-});
-type Wild = typeof Wild.Type;
+const PLANS = [
+  {
+    at: 0,
+    chance: 1,
+    daily: false,
+    ground: "dry",
+    habitats: ["meadow", "grass"],
+    most: 6,
+    need: 12,
+    role: "herds",
+  },
+  {
+    at: 5,
+    chance: 0.5,
+    daily: false,
+    ground: "dry",
+    habitats: ["meadow", "grass"],
+    most: 3,
+    need: 6,
+    role: "hens",
+  },
+  {
+    at: 9,
+    chance: 0.7,
+    daily: true,
+    ground: "dry",
+    habitats: ["meadow", "grass"],
+    most: 1,
+    need: 10,
+    role: "prowlers",
+  },
+  {
+    at: 0,
+    chance: 1,
+    daily: false,
+    ground: "dry",
+    habitats: ["forest"],
+    most: 3,
+    need: 8,
+    role: "climbers",
+  },
+  {
+    at: 4,
+    chance: 0.8,
+    daily: true,
+    ground: "dry",
+    habitats: ["forest"],
+    most: 1,
+    need: 12,
+    role: "prowlers",
+  },
+  {
+    at: 7,
+    chance: 0.8,
+    daily: true,
+    ground: "dry",
+    habitats: ["forest"],
+    most: 1,
+    need: 12,
+    role: "creepers",
+  },
+  {
+    at: 0,
+    chance: 1,
+    daily: false,
+    ground: "dry",
+    habitats: ["highland"],
+    most: 4,
+    need: 8,
+    role: "highland",
+  },
+  {
+    at: 0,
+    chance: 1,
+    daily: false,
+    ground: "sand",
+    habitats: ["shore"],
+    most: 4,
+    need: 4,
+    role: "crabs",
+  },
+  {
+    at: 3,
+    chance: 0.7,
+    daily: true,
+    ground: "dry",
+    habitats: ["shore"],
+    most: 2,
+    need: 8,
+    role: "shore",
+  },
+  {
+    at: 0,
+    chance: 1,
+    daily: false,
+    ground: "afloat",
+    habitats: ["fresh"],
+    most: 3,
+    need: 4,
+    role: "fowl",
+  },
+  {
+    at: 0,
+    chance: 1,
+    daily: false,
+    ground: "bank",
+    habitats: ["fresh", "shore"],
+    most: 1,
+    need: 4,
+    role: "waders",
+  },
+  {
+    at: 0,
+    chance: 0.6,
+    daily: true,
+    ground: "afloat",
+    habitats: ["shallows", "sea"],
+    most: 2,
+    need: 24,
+    role: "seabirds",
+  },
+] as const;
 
-/** Whether a walker of this home can stand in a column. */
-function standsOn(cells: Cells, home: "land" | "shore", x: number, z: number) {
-  return Option.exists(
-    groundOf(cells, Math.floor(x), Math.floor(z)),
-    ({ block }) => Arr.contains(GROUNDS[home], block)
-  );
+/** The families that run from the learner's fox: grazers, the small and the quick. */
+const SHY: readonly Family[] = ["hoof", "tall", "rodent", "crab", "frog"];
+
+/** How a shy animal flees (ADR 0050, W9): from a fox nearer than `near` blocks, `run` blocks straight away from it, `haste` times as fast as it strolls. */
+const FLEE = { haste: 2.6, near: 5, run: 7 } as const;
+
+/** How long an animal stands for the learner who stroked it, in seconds. */
+export const PET = 3.2;
+
+/** Whether an animal runs from the fox. */
+function isShy(kind: Animal["kind"]) {
+  return typeof kind === "number"
+    ? Arr.contains(SHY, SPECIES[kind].family)
+    : kind === "hen";
+}
+
+/** Which animal a plan gives one cell, none when the dice pass it over or the catalogue has none for its role. */
+function kindOf(
+  plan: (typeof PLANS)[number],
+  slot: number,
+  dice: Dice
+): Option.Option<Animal["kind"]> {
+  if (unitOf(dice.seed + 611, dice.gx, slot, dice.gz) >= plan.chance) {
+    return Option.none();
+  }
+  return plan.role === "hens"
+    ? Option.some("hen")
+    : castOf(plan.role, dice, plan.daily ? dice.day + slot : 0);
 }
 
 /**
- * The wild creatures of one day on one island: a few species of each home,
- * picked from the whole catalog by the island's seed and the day, so the
- * island is visited by different animals as the days go by. Walkers start on
- * their own ground; flyers and swimmers start somewhere along their loops.
+ * The members of one pack where they start (ADR 0047, D22): up to `count` of
+ * a kind on a widening spiral about a spot, each where it fits on its ground,
+ * clear of what `blocked` answers for and apart from every animal placed
+ * before it.
  */
-export function wildOf(cells: Cells, seed: number, size: number, day: number) {
-  const footprint = footprintOf(size);
-  const every = Arr.flatMap(
-    Arr.makeBy(size, (dz) => footprint.from + dz),
-    (z) =>
-      Arr.map(
-        Arr.makeBy(size, (dx) => footprint.from + dx),
-        (x) => ({ x, z })
-      )
-  );
-  const columns = Arr.sort(
-    every,
-    Order.mapInput(Order.Number, (column: (typeof every)[number]) =>
-      unitOf(seed + day, column.x, 3, column.z)
-    )
-  );
-  const catalog = Arr.map(SPECIES, (species, index) => ({
-    home: species.home,
-    index,
-  }));
-  return Arr.flatMap(
-    ["land", "shore", "sky", "sea", "bloom"] as const,
-    (home) => {
-      const kinds = Arr.take(
-        Arr.sort(
-          Arr.filter(catalog, (entry) => entry.home === home),
-          Order.mapInput(Order.Number, (entry: (typeof catalog)[number]) =>
-            unitOf(seed + day * 7, entry.index, 5, 0)
-          )
-        ),
-        VISITORS[home]
-      );
-      const spots =
-        home === "land" || home === "shore"
-          ? Arr.filter(columns, ({ x, z }) =>
-              standsOn(cells, home, x + 0.5, z + 0.5)
-            )
-          : columns;
-      return Arr.map(
-        Arr.zip(kinds, Arr.take(spots, kinds.length)),
-        ([{ index }, { x, z }], order) => ({
-          index,
-          // Sea visitors share one loop, so they keep evenly apart on it and never swim through each other.
-          phase:
-            home === "sea"
-              ? ((order + unitOf(seed, day, 9, 0) / 2) / kinds.length) *
-                Math.PI *
-                2
-              : unitOf(seed, index, day, 9) * Math.PI * 2,
-          rest: 0,
-          steps: 0,
-          tx: x + 0.5,
-          tz: z + 0.5,
-          x: x + 0.5,
-          z: z + 0.5,
-        })
-      );
+function packOf(
+  land: Land,
+  plan: {
+    readonly count: number;
+    readonly ground: Dweller["ground"];
+    readonly kind: Animal["kind"];
+    readonly pack: number;
+    readonly x: number;
+    readonly z: number;
+  },
+  dice: Dice,
+  placed: {
+    readonly blocked: (x: number, z: number, half: number) => boolean;
+    readonly taken: readonly Dweller[];
+  }
+) {
+  const gap = Math.max(0.9, shapeOf(plan.kind).half * 2 + 0.4);
+  return Arr.reduce(
+    Arr.range(0, 23 + plan.count * 8),
+    Arr.empty<Dweller>(),
+    (pack, slot) => {
+      if (pack.length >= plan.count) {
+        return pack;
+      }
+      const out = gap * Math.sqrt(slot);
+      const x = plan.x + Math.cos(slot * 2.4) * out;
+      const z = plan.z + Math.sin(slot * 2.4) * out;
+      const body: Dweller = {
+        cell: cellKey(dice.gx, dice.gz),
+        ground: plan.ground,
+        hx: plan.x,
+        hz: plan.z,
+        kind: plan.kind,
+        pack: plan.pack,
+        pet: 0,
+        rest: unitOf(dice.seed + 613, plan.pack, slot, dice.gx) * 3,
+        seed: hashOf(dice.seed + 617, dice.gx * 31 + plan.pack, slot, dice.gz),
+        steps: 0,
+        tx: x,
+        tz: z,
+        x,
+        z,
+      };
+      const fits =
+        roomOf(land, body, { x, yaw: 0, z }, placed.blocked) &&
+        !Arr.some([...placed.taken, ...pack], (other) => touches(body, other));
+      return fits ? Arr.append(pack, body) : pack;
     }
   );
 }
 
-/** One wild creature after `dt` seconds: a walker rests, walks toward its goal, or picks a new one on its own ground. */
-export function roam(cells: Cells, wild: Wild, seed: number, dt: number): Wild {
-  const home = SPECIES[wild.index].home;
-  if (home !== "land" && home !== "shore") {
-    return wild;
-  }
-  if (wild.rest > 0) {
-    return { ...wild, rest: Math.max(0, wild.rest - dt) };
-  }
-  const dx = wild.tx - wild.x;
-  const dz = wild.tz - wild.z;
-  const distance = Math.hypot(dx, dz);
-  const reach = Math.min(1.6, 0.4 + SPECIES[wild.index].height) * dt;
-  if (distance > reach) {
-    const next = {
-      x: wild.x + (dx / distance) * reach,
-      z: wild.z + (dz / distance) * reach,
-    };
-    // A walker never climbs a step or crosses a wall on its way: it stops there and rests (ADR 0047, D25).
-    const level = (x: number, z: number) =>
-      Option.map(groundOf(cells, Math.floor(x), Math.floor(z)), ({ y }) => y);
-    const open =
-      standsOn(cells, home, next.x, next.z) &&
-      Option.exists(level(next.x, next.z), (ahead) =>
-        Option.exists(level(wild.x, wild.z), (here) => ahead === here)
-      );
-    return open
-      ? { ...wild, ...next }
-      : { ...wild, rest: 1, tx: wild.x, tz: wild.z };
-  }
-  const roll = (channel: number) =>
-    unitOf(seed + wild.index * 13, wild.steps, channel);
-  const goal = {
-    x: wild.tx + (roll(1) - 0.5) * 8,
-    z: wild.tz + (roll(2) - 0.5) * 8,
-  };
-  const ok = standsOn(cells, home, goal.x, goal.z);
-  return {
-    ...wild,
-    rest: 1 + roll(3) * 4,
-    steps: wild.steps + 1,
-    tx: ok ? goal.x : wild.tx,
-    tz: ok ? goal.z : wild.tz,
-  };
-}
-
-/** Where a creature of the sky, the sea or the flowers is at `time`, and which way it faces. */
-function loopOf(
-  wild: Wild,
-  home: "sky" | "sea" | "bloom",
-  size: number,
-  time: number
-) {
-  const middle = SPAN / 2;
-  const loops = {
-    bloom: {
-      radius: 1.5 + (wild.phase % 1.5),
-      speed: 0.9,
-      x: middle - 7,
-      y: SEA_LEVEL + 2.2,
-      z: middle + 6.5,
-    },
-    // Sea visitors keep to water at least three blocks deep, inside the whale's round (ADR 0047, D24).
-    sea: {
-      radius: shoreOf(size) + 4,
-      speed: 1.2,
-      x: middle,
-      y: SEA_LEVEL - 0.9,
-      z: middle,
-    },
-    sky: {
-      radius: 8 + (wild.phase % 10),
-      speed: 2.4,
-      x: middle,
-      y: SEA_LEVEL + 12 + (wild.phase % 4),
-      z: middle,
-    },
-  }[home];
-  const angle = wild.phase + (time * loops.speed) / loops.radius;
-  return {
-    heading: angle + Math.PI / 2,
-    x: loops.x + Math.cos(angle) * loops.radius,
-    y: loops.y + Math.sin(time * 3 + wild.phase) * (home === "sea" ? 0 : 0.3),
-    z: loops.z + Math.sin(angle) * loops.radius,
-  };
-}
-
 /**
- * A bird of the sky's round of the day (ADR 0047, D49), in seconds: it flies
- * its loop, glides down onto whatever tops the land under it (a roof, a
- * crown, the ground), sits a while, and rises back onto its loop where it
- * left it.
+ * The animals that walk and float in one cell of the land (ADR 0050, W9), by
+ * the seed, the cell and the day: a herd on the meadow and the open grass,
+ * hens, climbers in the forest, grazers on the highland, crabs on the sand,
+ * fowl on fresh water, a wader at the bank and seabirds afloat, with the
+ * visitors the day brings to each, every one placed where it fits.
  */
-const FLIGHT = { cycle: 36, fly: 26, land: 3, sit: 5 } as const;
-
-/** A smooth step from 0 to 1, for a bird gliding down or rising. */
-function eased(share: number) {
-  return share * share * (3 - 2 * share);
-}
-
-/** Where a bird coming down from (x, z) can perch: the top of the first column of land on its way toward the island's middle. */
-function perchOf(cells: Cells, x: number, z: number) {
-  const middle = SPAN / 2;
-  const steps = Math.max(1, Math.ceil(Math.hypot(middle - x, middle - z)));
-  const columns = Arr.makeBy(steps + 1, (step) => {
-    const share = step / steps;
-    return [
-      Math.floor(x + (middle - x) * share),
-      Math.floor(z + (middle - z) * share),
-    ] as const;
+export function dwellersOf(
+  land: Land,
+  survey: Survey,
+  dice: Dice,
+  blocked: (x: number, z: number, half: number) => boolean
+): readonly Dweller[] {
+  return Arr.reduce(PLANS, Arr.empty<Dweller>(), (taken, plan, slot) => {
+    const spots = Arr.flatMap(plan.habitats, (habitat) => survey[habitat]);
+    const found = Option.all({
+      kind: kindOf(plan, slot, dice),
+      spot: spots.length >= plan.need ? Arr.get(spots, plan.at) : Option.none(),
+    });
+    return Option.match(found, {
+      onNone: () => taken,
+      onSome: ({ kind, spot }) => {
+        const count =
+          typeof kind === "number" && plan.most > 2
+            ? packSize(kind, plan.most)
+            : plan.most;
+        return [
+          ...taken,
+          ...packOf(
+            land,
+            {
+              count,
+              ground: plan.ground,
+              kind,
+              pack: slot,
+              x: spot.x,
+              z: spot.z,
+            },
+            dice,
+            { blocked, taken }
+          ),
+        ];
+      },
+    });
   });
-  const isLand = ([column, row]: readonly [number, number]) =>
-    Option.exists(
-      groundOf(cells, column, row),
-      ({ block }) => LOOK.kinds[block] !== KIND.liquid
-    );
-  return Option.flatMap(Arr.findFirst(columns, isLand), ([column, row]) =>
-    Option.map(groundOf(cells, column, row), ({ y }) => ({
-      x: column + 0.5,
-      y: y + 1,
-      z: row + 0.5,
-    }))
-  );
 }
 
-/**
- * Where a bird of the sky is at `time` and whether it is on the wing (D49):
- * on its loop while it flies, gliding down to its perch and back up again,
- * still on its perch while it sits. Its loop counts only the time it has
- * flown, so it rises back onto the loop where it came down from it.
- */
-function skyOf(cells: Cells, wild: Wild, size: number, time: number) {
-  const shifted = time + wild.phase * 7;
-  const cycle = Math.floor(shifted / FLIGHT.cycle);
-  const within = shifted - cycle * FLIGHT.cycle;
-  const flown =
-    cycle * FLIGHT.fly + Math.min(within, FLIGHT.fly) - wild.phase * 7;
-  const loop = loopOf(wild, "sky", size, flown);
-  const onLoop = { ...loop, flying: true };
-  if (within < FLIGHT.fly) {
-    return onLoop;
-  }
-  return Option.match(perchOf(cells, loop.x, loop.z), {
-    onNone: () => onLoop,
-    onSome: (perch) => {
-      const down = (within - FLIGHT.fly) / FLIGHT.land;
-      const up =
-        (within - FLIGHT.fly - FLIGHT.land - FLIGHT.sit) /
-        (FLIGHT.cycle - FLIGHT.fly - FLIGHT.land - FLIGHT.sit);
-      const sitting = down >= 1 && up < 0;
-      const share = sitting ? 1 : eased(down < 1 ? down : 1 - up);
+/** An animal the learner stroked, `dt` seconds on: it stands where it is and faces the fox, or straight on when no fox is about. */
+function stroked(animal: Dweller, dt: number, fox: Option.Option<Animal>) {
+  const pet = Math.max(0, animal.pet - dt);
+  return Option.match(fox, {
+    onNone: () => ({ ...animal, pet, rest: 0.3, tx: animal.x, tz: animal.z }),
+    onSome: (toward) => {
+      const [dx, dz] = [toward.x - animal.x, toward.z - animal.z];
+      const distance = Math.max(1e-6, Math.hypot(dx, dz));
       return {
-        flying: !sitting,
-        heading: loop.heading,
-        x: loop.x + (perch.x - loop.x) * share,
-        y: loop.y + (perch.y - loop.y) * share,
-        z: loop.z + (perch.z - loop.z) * share,
+        ...animal,
+        pet,
+        rest: 0.3,
+        tx: animal.x + (dx / distance) * 0.06,
+        tz: animal.z + (dz / distance) * 0.06,
       };
     },
   });
 }
 
-/** How many fish of a species swim together, by its length in blocks: shoals of small fish, a few big ones, a big one alone. */
-function shoalOf(length: number) {
-  return Math.min(9, Math.max(1, Math.round(2.4 / length)));
-}
-
-/** The top of the sea floor under a column: its highest solid block below the surface, none where nothing lies under the water. */
-export function seabedOf(cells: Cells, x: number, z: number) {
-  return Option.map(
-    Arr.findFirst(
-      Arr.makeBy(SEA_LEVEL, (index) => SEA_LEVEL - 1 - index),
-      (y) => {
-        const kind =
-          LOOK.kinds[blockAt(cells, Math.floor(x), y, Math.floor(z))];
-        return kind === KIND.solid || kind === KIND.cutout;
-      }
-    ),
-    (y) => y + 1
+/**
+ * The animals of one cell `dt` seconds on (ADR 0047, D22; ADR 0050, W9):
+ * each wanders about the middle of its pack, which its own spot draws back,
+ * so a herd moves as a herd; a shy one near a fox of `threats` runs straight
+ * away from it; one the learner stroked stands and faces the fox; and none
+ * walks into what `blocked` answers for, into `others` or into a pack mate.
+ */
+export function roamed(
+  land: Land,
+  dwellers: readonly Dweller[],
+  step: {
+    readonly blocked: (x: number, z: number, half: number) => boolean;
+    readonly dt: number;
+    readonly others: readonly Animal[];
+    readonly threats: readonly Animal[];
+  }
+): readonly Dweller[] {
+  const packs = Rec.map(
+    Arr.groupBy(dwellers, (animal) => String(animal.pack)),
+    (pack) => ({
+      x: Arr.reduce(pack, 0, (sum, animal) => sum + animal.x) / pack.length,
+      z: Arr.reduce(pack, 0, (sum, animal) => sum + animal.z) / pack.length,
+    })
   );
-}
-
-/** The way a creature on a loop faces, as a body's yaw, from the heading of its loop. */
-function yawOf(heading: number) {
-  return Math.atan2(Math.cos(heading), Math.sin(heading));
-}
-
-/**
- * A sea visitor on its loop (ADR 0047, D24): a waterbird floating on the
- * surface; a lobster walking the sea floor; a fish in a school of its kind;
- * an eel, a ray, a turtle or a sea snake swimming alone. Each one under the
- * surface keeps between the sea floor and the surface, and one with no water
- * there is left out rather than drawn through the ground.
- */
-function seaPlaces(cells: Cells, wild: Wild, size: number, time: number) {
-  const species = SPECIES[wild.index];
-  const length = Math.max(0.2, species.height);
-  const at = loopOf(wild, "sea", size, time);
-  const yaw = yawOf(at.heading);
-  if (species.family === "waterbird") {
-    return [[at.x, SEA_LEVEL - 0.2, at.z, yaw, 0, 0]];
-  }
-  const [c, s] = [Math.cos(yaw), Math.sin(yaw)];
-  const half = length / 4;
-  // One that swims alone keeps to its loop; a shoal spreads round it.
-  const school: ReturnType<typeof schoolOf> =
-    species.family === "fish"
-      ? schoolOf(shoalOf(length), length, wild.index * 131)
-      : [{ at: [0, 0, 0], lag: 0.5 }];
-  return Arr.filterMap(school, (fish): Result.Result<number[], void> => {
-    const [ox, oy, oz] = fish.at;
-    const x = at.x + ox * c + oz * s;
-    const z = at.z - ox * s + oz * c;
-    const floor = seabedOf(cells, x, z);
-    const low = Option.match(floor, {
-      onNone: () => Number.NEGATIVE_INFINITY,
-      onSome: (top) => top + half + 0.1,
-    });
-    const high = SEA_LEVEL - 0.2 - half;
-    if (low > high) {
-      return Result.failVoid;
+  const everyone = [...dwellers, ...step.others, ...step.threats];
+  return Arr.map(dwellers, (animal) => {
+    if (animal.pet > 0) {
+      return stroked(animal, step.dt, Arr.head(step.threats));
     }
-    // A lobster stands on the floor; every other swimmer holds its depth in the school.
-    const y =
-      species.family === "crab"
-        ? Option.getOrElse(floor, () => at.y)
-        : Math.min(high, Math.max(low, at.y + oy));
-    return Result.succeed([x, y, z, yaw + (fish.lag - 0.5) * 0.3, 0, 0]);
-  });
-}
-
-/**
- * A walker or a flower visitor as one body: a walker on its ground facing
- * its goal, bobbing while it walks; a flower visitor on its loop facing its
- * way.
- */
-function creaturePlaces(
-  cells: Cells,
-  wild: Wild,
-  home: "land" | "shore" | "bloom",
-  size: number,
-  time: number
-) {
-  if (home === "land" || home === "shore") {
-    const [dx, dz] = [wild.tx - wild.x, wild.tz - wild.z];
-    const moving = Math.hypot(dx, dz) > 0.05;
-    const ground = Option.match(
-      groundOf(cells, Math.floor(wild.x), Math.floor(wild.z)),
-      { onNone: () => SEA_LEVEL, onSome: ({ y }) => y + 1 }
+    const middle = packs[String(animal.pack)];
+    const scare = Arr.findFirst(
+      isShy(animal.kind) ? step.threats : [],
+      (threat) =>
+        Math.hypot(threat.x - animal.x, threat.z - animal.z) < FLEE.near
     );
-    return [
-      [
-        wild.x,
-        ground,
-        wild.z,
-        moving ? Math.atan2(dx, dz) : wild.phase,
-        moving && wild.rest <= 0 ? 0.04 : 0,
-        0,
+    const fleeing = Option.match(scare, {
+      onNone: () => animal,
+      onSome: (threat) => {
+        const [dx, dz] = [animal.x - threat.x, animal.z - threat.z];
+        const distance = Math.max(1e-6, Math.hypot(dx, dz));
+        return {
+          ...animal,
+          rest: 0,
+          tx: animal.x + (dx / distance) * FLEE.run,
+          tz: animal.z + (dz / distance) * FLEE.run,
+        };
+      },
+    });
+    return wander(land, fleeing, {
+      blocked: step.blocked,
+      dt: step.dt,
+      home: [
+        middle.x * 0.7 + animal.hx * 0.3,
+        middle.z * 0.7 + animal.hz * 0.3,
       ],
-    ];
-  }
-  const at = loopOf(wild, home, size, time);
-  return [[at.x, at.y, at.z, yawOf(at.heading), 0, 0]];
-}
-
-/**
- * The wild creatures of the day as true 3D bodies at their real size (ADR
- * 0047, D24 and D25), one model a species with its bodies as one run of
- * numbers, `BODY_STRIDE` a body: walkers on their ground, flyers on their
- * loops, and each sea species on or under the sea. A day brings each
- * species once.
- */
-export function wildBodies(
-  cells: Cells,
-  wilds: readonly Wild[],
-  size: number,
-  time: number
-) {
-  return Arr.map(wilds, (wild) => {
-    const home = SPECIES[wild.index].home;
-    if (home === "sky") {
-      // A bird of the sky is drawn on the wing while it flies, and folded while it perches (D49).
-      const flight = skyOf(cells, wild, size, time);
-      const model = flight.flying
-        ? ({ _tag: "flyer", index: wild.index } as const)
-        : ({ _tag: "species", index: wild.index } as const);
-      const place = [flight.x, flight.y, flight.z, yawOf(flight.heading), 0, 0];
-      return [model, Float32Array.from(place)] as const;
-    }
-    const places =
-      home === "sea"
-        ? seaPlaces(cells, wild, size, time)
-        : creaturePlaces(cells, wild, home, size, time);
-    const model = { _tag: "species", index: wild.index } as const;
-    return [model, Float32Array.from(Arr.flatten(places))] as const;
+      others: everyone,
+      pace: paceOf(animal.kind) * (Option.isSome(scare) ? FLEE.haste : 1),
+      spread: 3 + shapeOf(animal.kind).reach * 2,
+    });
   });
 }

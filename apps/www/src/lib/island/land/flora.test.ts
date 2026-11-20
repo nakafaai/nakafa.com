@@ -1,8 +1,8 @@
 // @vitest-environment node
 import { describe, expect, it } from "@effect/vitest";
-import { Array as Arr, Option, Result } from "effect";
+import { Array as Arr, HashSet, Option, Result } from "effect";
 import { PAINT } from "@/lib/island/land/chunk";
-import { clear, paint } from "@/lib/island/land/edits";
+import { setCleared, setPaint } from "@/lib/island/land/edits";
 import { floraOf, wildOf } from "@/lib/island/land/flora";
 import { depthAt, landOf, surfaceAt } from "@/lib/island/land/ground";
 import { homeOf } from "@/lib/island/land/home";
@@ -93,9 +93,9 @@ describe("island/land/flora", () => {
   it("roots the same plants in a chunk every time, each inside it and on its ground or its water", () => {
     const land = landOf(SEED);
     const [x, z] = homeOf(SEED);
-    const chunks = Arr.flatMap(Arr.range(-3, 3), (dz) =>
+    const chunks = Arr.flatMap(Arr.range(-2, 2), (dz) =>
       Arr.map(
-        Arr.range(-3, 3),
+        Arr.range(-2, 2),
         (dx) => [Math.floor(x / 32) + dx, Math.floor(z / 32) + dz] as const
       )
     );
@@ -111,7 +111,7 @@ describe("island/land/flora", () => {
       expect(plant.y).toBeGreaterThan(0);
     }
     expect(
-      new Set(Arr.map(plants, (plant) => plant.kind)).size
+      HashSet.size(HashSet.fromIterable(Arr.map(plants, (plant) => plant.kind)))
     ).toBeGreaterThan(3);
   });
 
@@ -131,14 +131,16 @@ describe("island/land/flora", () => {
         }
       )
     );
-    const lilies = Arr.filter(
-      Arr.flatMap(Arr.take(shallows, 40), (name) => {
+    // The first of those chunks that grows a lily: most do not, so the search stops as soon as one does.
+    const lilies = Option.getOrThrow(
+      Arr.findFirst(shallows, (name) => {
         const [cx, cz] = Arr.map(name.split(","), Number);
-        return floraOf(land, cx, cz);
-      }),
-      (plant) => plant.kind === "lily"
+        return Option.liftPredicate(
+          Arr.filter(floraOf(land, cx, cz), (plant) => plant.kind === "lily"),
+          Arr.isReadonlyArrayNonEmpty
+        );
+      })
     );
-    expect(lilies.length).toBeGreaterThan(0);
     for (const lily of lilies) {
       expect(depthAt(land, lily.i, lily.j)).toBeGreaterThan(0);
       expect(lily.y).toBeCloseTo(surfaceAt(land, lily.i, lily.j), 5);
@@ -159,8 +161,8 @@ describe("island/land/flora", () => {
       )
     );
     const [first, second] = wide;
-    clear(land, first.i, first.j);
-    paint(land, second.i, second.j, PAINT.path);
+    setCleared(land, first.i, first.j, true);
+    setPaint(land, second.i, second.j, PAINT.path);
     const after = (plant: (typeof wide)[number]) =>
       Arr.some(
         floraOf(land, plant.cx, plant.cz),

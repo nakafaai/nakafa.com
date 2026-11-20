@@ -1,8 +1,25 @@
 // @vitest-environment node
 
 import { describe, expect, it } from "@effect/vitest";
-import { Array as Arr, Order } from "effect";
-import { callOf, voicesOf } from "@/lib/island/chorus";
+import { Array as Arr, Option, Order } from "effect";
+import { callOf, crowsAt, voicesOf } from "@/lib/island/chorus";
+
+/** Open grass far from everything, with no roof near. */
+const OPEN = {
+  fall: 0,
+  fire: 0,
+  forest: 0,
+  fresh: 0,
+  meadow: 0,
+  river: 0,
+  roof: 0,
+  sea: 0,
+};
+
+/** The calls of two hundred seeds at a place by day or by night. */
+function calls(place: typeof OPEN, night: boolean) {
+  return Arr.getSomes(Arr.makeBy(200, (seed) => callOf(seed, place, night)));
+}
 
 describe("island/chorus", () => {
   it("sings loudest at dawn, softer by day, again at dusk, and not at all at night", () => {
@@ -32,28 +49,54 @@ describe("island/chorus", () => {
     expect(voicesOf(23, "clouds").crickets).toBe(1);
   });
 
-  it("gives each bird one call of three songs, the same every time, in a bird's own range", () => {
-    expect(callOf(5)).toEqual(callOf(5));
-    const shapes = Arr.dedupe(
-      Arr.map(
-        Arr.makeBy(60, (seed) => callOf(seed)),
-        (call) => {
-          if (call.length > 2) {
-            return "trill";
-          }
-          return call[1].from > call[0].from ? "question" : "whistle";
-        }
-      )
-    );
-    expect(Arr.sort(shapes, Order.String)).toEqual([
-      "question",
-      "trill",
-      "whistle",
-    ]);
-    for (const note of Arr.flatten(Arr.makeBy(60, (seed) => callOf(seed)))) {
-      expect(note.from).toBeGreaterThan(1500);
-      expect(note.to).toBeLessThan(5500);
-      expect(note.length).toBeGreaterThan(0);
+  it("crows at dawn and at no other hour", () => {
+    expect(crowsAt(6)).toBe(true);
+    expect(crowsAt(5.4)).toBe(false);
+    expect(crowsAt(7)).toBe(false);
+    expect(crowsAt(18)).toBe(false);
+  });
+
+  it("calls with the same recording, pitch and side for the same seed in the same place", () => {
+    const meadow = { ...OPEN, meadow: 1 };
+    expect(callOf(5, meadow, false)).toEqual(callOf(5, meadow, false));
+    for (const shot of calls(meadow, false)) {
+      expect(shot.loud).toBeGreaterThan(0.1);
+      expect(shot.loud).toBeLessThanOrEqual(0.3);
+      expect(shot.rate).toBeGreaterThan(0.93);
+      expect(shot.rate).toBeLessThan(1.07);
+      expect(Math.abs(shot.pan)).toBeLessThanOrEqual(0.6);
     }
+  });
+
+  it("lets each place be called by what lives there: gulls by the sea, ducks by fresh water, hens about the houses", () => {
+    const heard = (place: Partial<typeof OPEN>, night = false) =>
+      Arr.sort(
+        Arr.dedupe(
+          Arr.map(calls({ ...OPEN, ...place }, night), (shot) => shot.file)
+        ),
+        Order.String
+      );
+    expect(heard({})).toEqual(["bulbul", "kite"]);
+    expect(heard({ sea: 1 })).toEqual(["crab", "dolphin", "gull"]);
+    expect(heard({ sea: 0.5 })).not.toContain("dolphin");
+    expect(heard({ forest: 1 })).toEqual(["bulbul", "deer"]);
+    expect(heard({ meadow: 1 })).toEqual(["bulbul", "goat", "kite", "rabbit"]);
+    expect(heard({ fresh: 1, meadow: 0.5 })).toContain("buffalo");
+    expect(heard({ fresh: 1 })).toEqual(["bulbul", "duck", "egret", "kite"]);
+    expect(heard({ roof: 1 })).toEqual(["bulbul", "hen", "kite", "meow"]);
+  });
+
+  it("leaves the night to the frogs by the water and a cat about the houses, and to nobody elsewhere", () => {
+    expect(callOf(3, OPEN, true)).toEqual(Option.none());
+    expect(
+      Arr.dedupe(
+        Arr.map(calls({ ...OPEN, fresh: 1 }, true), (shot) => shot.file)
+      )
+    ).toEqual(["frog"]);
+    expect(
+      Arr.dedupe(
+        Arr.map(calls({ ...OPEN, roof: 1 }, true), (shot) => shot.file)
+      )
+    ).toEqual(["meow"]);
   });
 });

@@ -159,6 +159,9 @@ export const ActSchema = Schema.Literals([
   "brushing",
   "feeding",
   "halting",
+  "pitching",
+  "hosting",
+  "ranking",
 ]);
 
 /** Doing nothing in particular. */

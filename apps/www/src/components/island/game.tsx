@@ -1,67 +1,66 @@
 "use client";
 
-import { BLOCK_KEYS, isOpen } from "@repo/backend/confect/island/blocks";
-import type { Edit } from "@repo/backend/confect/island/world";
-import { Array as Arr } from "effect";
+import type { Thing } from "@repo/backend/confect/island/things";
 import { useState } from "react";
 import { IslandHud } from "@/components/island/hud";
 import { IslandSound } from "@/components/island/sound";
 import { IslandStage } from "@/components/island/stage";
-import type { Progress } from "@/components/island/store";
+import type { Host, Progress } from "@/components/island/store";
 import { createGameStore, GameStoreContext } from "@/components/island/store";
 import { IslandSync } from "@/components/island/sync";
 import { IslandWeather } from "@/components/island/weather";
+import { landOf } from "@/lib/island/land/ground";
+import { homeOf } from "@/lib/island/land/home";
+import { seedOf } from "@/lib/island/noise";
 import { seasonNow } from "@/lib/island/season";
 import { readMuted } from "@/lib/island/settings";
-import { worldOf } from "@/lib/island/terrain";
-
-/** The hotbar a game opens with: the first nine blocks the island's level opens. */
-function firstHotbar(level: number) {
-  return Arr.take(
-    Arr.filter(BLOCK_KEYS, (block) => isOpen(block, level)),
-    9
-  );
-}
 
 /**
- * The island game on the whole screen (ADR 0047): the learner's world, the
- * stage that draws and plays it, the HUD over it, and the sync that keeps the
- * server's copy in step. Its code loads only when the learner enters.
+ * The world game on the whole screen (ADR 0047; ADR 0050): the land that
+ * grows from its owner's seed, the stage that draws and plays it, the HUD
+ * over it, and the sync that keeps the server's copy in step. `host` names
+ * whose world it is when the learner visits one. Its code loads only when
+ * the learner enters.
  */
 export default function IslandGame({
-  edits,
+  blueprints,
+  host,
   level,
   onLeave,
+  owner,
   progress,
-  seed,
-  size,
-  version,
 }: {
-  edits: readonly Edit[];
+  blueprints: readonly Thing[];
+  host: Host | null;
   level: number;
   onLeave: () => void;
+  /** What the land's seed is made from: its owner's id. */
+  owner: string;
   progress: Progress;
-  seed: number;
-  size: number;
-  version: number;
 }) {
-  const [store] = useState(() =>
-    createGameStore({
-      cells: worldOf(seed, size, edits),
-      hotbar: firstHotbar(level),
-      leave: onLeave,
-      level,
-      muted: readMuted(),
-      progress,
-      season: seasonNow(),
-      seed,
-      version,
-    })
-  );
+  const [game] = useState(() => {
+    const seed = seedOf(owner);
+    const home = homeOf(seed);
+    return {
+      home,
+      store: createGameStore({
+        blueprints,
+        home,
+        host,
+        land: landOf(seed),
+        leave: onLeave,
+        level,
+        loaded: [],
+        muted: readMuted(),
+        progress,
+        season: seasonNow(),
+      }),
+    };
+  });
   return (
-    <GameStoreContext value={store}>
+    <GameStoreContext value={game.store}>
       <div className="bg-island-sky fixed inset-0 overflow-hidden">
-        <IslandStage size={size} />
+        <IslandStage home={game.home} />
         <IslandHud />
         <IslandSync />
         <IslandSound />

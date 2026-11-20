@@ -11065,45 +11065,167 @@ export declare const api: {
   };
   island: {
     mutations: {
-      build: FunctionReference<
+      change: FunctionReference<
         "mutation",
         "public",
         {
-          edits: Array<{ block: number; x: number; y: number; z: number }>;
-          version: number;
+          ops: Array<
+            | {
+                _tag: "land";
+                clears: Array<number>;
+                cx: number;
+                cz: number;
+                lifts: Array<number>;
+                paints: Array<number>;
+              }
+            | {
+                _tag: "set";
+                at: number;
+                cx: number;
+                cz: number;
+                kind:
+                  | "mango"
+                  | "flame"
+                  | "casuarina"
+                  | "pine"
+                  | "palm"
+                  | "banana"
+                  | "bush"
+                  | "rocks"
+                  | "sunflower"
+                  | "cottage"
+                  | "saung"
+                  | "well"
+                  | "bridge"
+                  | "windmill"
+                  | "lighthouse"
+                  | "library"
+                  | "flowerbed"
+                  | "lantern"
+                  | "bench"
+                  | "fence"
+                  | "ball"
+                  | "campfire"
+                  | "kite"
+                  | "balloon"
+                  | "reed"
+                  | "lily"
+                  | "coral"
+                  | "brain"
+                  | "seagrass"
+                  | "boat";
+                turn: number;
+              }
+            | { _tag: "take"; at: number; cx: number; cz: number }
+          >;
         },
-        { version: number }
+        Array<"done" | "locked" | "full">
       >;
-      open: FunctionReference<"mutation", "public", { timeZone: string }, null>;
-    };
-    queries: {
-      claims: FunctionReference<
-        "query",
+      greet: FunctionReference<
+        "mutation",
         "public",
         {
-          countryKey: string;
-          examKey: string;
-          locale: "en" | "id" | "de" | "ms";
-          setKey: string;
-          trackKey: string;
+          sticker: "wave" | "heart" | "star" | "flower" | "fish" | "sun";
+          username: string;
         },
-        { sections: Array<string>; set: boolean; stars: number } | null
+        null
       >;
-      growth: FunctionReference<
+      open: FunctionReference<
+        "mutation",
+        "public",
+        { timeZone: string },
+        { entered: number | null }
+      >;
+      share: FunctionReference<
+        "mutation",
+        "public",
+        { access: "private" | "link" | "public" },
+        null
+      >;
+      unlock: FunctionReference<
+        "mutation",
+        "public",
+        {
+          kind:
+            | "mango"
+            | "flame"
+            | "casuarina"
+            | "pine"
+            | "palm"
+            | "banana"
+            | "bush"
+            | "rocks"
+            | "sunflower"
+            | "cottage"
+            | "saung"
+            | "well"
+            | "bridge"
+            | "windmill"
+            | "lighthouse"
+            | "library"
+            | "flowerbed"
+            | "lantern"
+            | "bench"
+            | "fence"
+            | "ball"
+            | "campfire"
+            | "kite"
+            | "balloon"
+            | "reed"
+            | "lily"
+            | "coral"
+            | "brain"
+            | "seagrass"
+            | "boat";
+        },
+        {
+          balance: number;
+          blueprints: Array<
+            | "mango"
+            | "flame"
+            | "casuarina"
+            | "pine"
+            | "palm"
+            | "banana"
+            | "bush"
+            | "rocks"
+            | "sunflower"
+            | "cottage"
+            | "saung"
+            | "well"
+            | "bridge"
+            | "windmill"
+            | "lighthouse"
+            | "library"
+            | "flowerbed"
+            | "lantern"
+            | "bench"
+            | "fence"
+            | "ball"
+            | "campfire"
+            | "kite"
+            | "balloon"
+            | "reed"
+            | "lily"
+            | "coral"
+            | "brain"
+            | "seagrass"
+            | "boat"
+          >;
+        }
+      >;
+    };
+    queries: {
+      guests: FunctionReference<
         "query",
         "public",
         {},
-        {
-          lifetime: number;
-          tally: {
-            days: number;
-            lessons: number;
-            sections: number;
-            sets: number;
-            streak: number;
-            subjects: Record<string, number>;
-          };
-        } | null
+        Array<{
+          at: number;
+          mascot: string;
+          name: string;
+          sticker: "wave" | "heart" | "star" | "flower" | "fish" | "sun";
+        }>
       >;
       leaders: FunctionReference<
         "query",
@@ -11139,6 +11261,40 @@ export declare const api: {
         "public",
         {},
         {
+          access: "private" | "link" | "public";
+          balance: number;
+          blueprints: Array<
+            | "mango"
+            | "flame"
+            | "casuarina"
+            | "pine"
+            | "palm"
+            | "banana"
+            | "bush"
+            | "rocks"
+            | "sunflower"
+            | "cottage"
+            | "saung"
+            | "well"
+            | "bridge"
+            | "windmill"
+            | "lighthouse"
+            | "library"
+            | "flowerbed"
+            | "lantern"
+            | "bench"
+            | "fence"
+            | "ball"
+            | "campfire"
+            | "kite"
+            | "balloon"
+            | "reed"
+            | "lily"
+            | "coral"
+            | "brain"
+            | "seagrass"
+            | "boat"
+          >;
           lifetime: number;
           tally: {
             days: number;
@@ -11148,8 +11304,66 @@ export declare const api: {
             streak: number;
             subjects: Record<string, number>;
           };
-          version: number;
-          world: ArrayBuffer;
+        } | null
+      >;
+      region: FunctionReference<
+        "query",
+        "public",
+        { rx: number; rz: number; username: string | null },
+        Array<{
+          clears: ArrayBuffer;
+          cx: number;
+          cz: number;
+          lifts: ArrayBuffer;
+          paints: ArrayBuffer;
+          things: Array<{
+            at: number;
+            kind:
+              | "mango"
+              | "flame"
+              | "casuarina"
+              | "pine"
+              | "palm"
+              | "banana"
+              | "bush"
+              | "rocks"
+              | "sunflower"
+              | "cottage"
+              | "saung"
+              | "well"
+              | "bridge"
+              | "windmill"
+              | "lighthouse"
+              | "library"
+              | "flowerbed"
+              | "lantern"
+              | "bench"
+              | "fence"
+              | "ball"
+              | "campfire"
+              | "kite"
+              | "balloon"
+              | "reed"
+              | "lily"
+              | "coral"
+              | "brain"
+              | "seagrass"
+              | "boat";
+            turn: number;
+          }>;
+        }>
+      >;
+      visit: FunctionReference<
+        "query",
+        "public",
+        { username: string },
+        {
+          access: "private" | "link" | "public";
+          level: number;
+          mascot: string;
+          name: string;
+          own: boolean;
+          owner: string;
         } | null
       >;
       week: FunctionReference<
@@ -16381,40 +16595,6 @@ export declare const api: {
             status: "in-progress" | "completed" | "expired";
             title: string;
           }>
-        >;
-      };
-      ranks: {
-        bySet: FunctionReference<
-          "query",
-          "public",
-          {
-            countryKey: string;
-            examKey: string;
-            locale: "en" | "id" | "de" | "ms";
-            score?: number;
-            setKey: string;
-            trackKey: string;
-          },
-          {
-            count: number;
-            leaders: Array<{
-              id: Id<"tryoutSetBests">;
-              mascot: string;
-              name: string;
-              own: boolean;
-              place: number;
-              score: number;
-            }>;
-            own: {
-              id: Id<"tryoutSetBests">;
-              mascot: string;
-              name: string;
-              own: boolean;
-              place: number;
-              score: number;
-            } | null;
-            standing: number | null;
-          }
         >;
       };
       runtime: {
@@ -22373,6 +22553,6 @@ export declare const components: {
   workflow: import("@convex-dev/workflow/_generated/component.js").ComponentApi<"workflow">;
   resend: import("@convex-dev/resend/_generated/component.js").ComponentApi<"resend">;
   posthog: import("@posthog/convex/_generated/component.js").ComponentApi<"posthog">;
+  globalLeaderboard: import("@convex-dev/aggregate/_generated/component.js").ComponentApi<"globalLeaderboard">;
   learningPopularityRankings: import("@convex-dev/aggregate/_generated/component.js").ComponentApi<"learningPopularityRankings">;
-  tryoutSetRanks: import("@convex-dev/aggregate/_generated/component.js").ComponentApi<"tryoutSetRanks">;
 };

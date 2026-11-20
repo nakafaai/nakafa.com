@@ -10,17 +10,17 @@ On 20 November the owner asked for the game to be designed again from its founda
 
 Reading the game as it stands found two faults under the owner's reports, beside the look:
 
-| Report                          | Cause                                                                                                                                                                 |
-| ------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Every press ends in an error    | A build refused as stale reloaded the route, but the game's store is made once and kept the old version, so every later build was refused (fixed first, in its own change) |
-| Sharing leads nowhere           | Share copied the link of the learner's own game, a private route that always opens the visitor's own island; no world has an address anyone else can open             |
+| Report                       | Cause                                                                                                                                                                      |
+| ---------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Every press ends in an error | A build refused as stale reloaded the route, but the game's store is made once and kept the old version, so every later build was refused (fixed first, in its own change) |
+| Sharing leads nowhere        | Share copied the link of the learner's own game, a private route that always opens the visitor's own island; no world has an address anyone else can open                  |
 
 ### What the reference does and where it falls short
 
-| Reference                                                                 | Studied                                                                    | Takes from it                                                                                               | Falls short on                                                                                        |
-| ------------------------------------------------------------------------- | -------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
-| A 3D pixel-art world in Godot, the owner's reference of 20 November       | its published video, frame by frame                                        | smooth land drawn small and enlarged in whole pixels, flat clean tones, dense blade grass, water in bands with a white line along the shore | a look alone: nothing to build, nobody living in it, no reason to come back, and no phone layout      |
-| Cozy life sims with visits                                                | their published rules of play                                              | no timers and no loss, building that costs nothing, visits that need no shared hour                          | free text between strangers, and private leaderboards, neither of which a school product can carry    |
+| Reference                                                           | Studied                             | Takes from it                                                                                                                               | Falls short on                                                                                     |
+| ------------------------------------------------------------------- | ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| A 3D pixel-art world in Godot, the owner's reference of 20 November | its published video, frame by frame | smooth land drawn small and enlarged in whole pixels, flat clean tones, dense blade grass, water in bands with a white line along the shore | a look alone: nothing to build, nobody living in it, no reason to come back, and no phone layout   |
+| Cozy life sims with visits                                          | their published rules of play       | no timers and no loss, building that costs nothing, visits that need no shared hour                                                         | free text between strangers, and private leaderboards, neither of which a school product can carry |
 
 Nothing is copied: every shape, tone and layout is drawn from data in this repository, as ADR 0047 D4 requires.
 
@@ -42,7 +42,7 @@ Nothing is copied: every shape, tone and layout is drawn from data in this repos
 
 ### W3. What a world stores
 
-Only what the learner changed, by chunk: the height each lattice point was moved by, in eighths of a block; the surface each point was painted; the wild plants cleared; and the things set down, each with its kind, its place and its turn. Chunks are rows of their own, read as the learner nears them, so the size of a world limits nothing and a visit reads only where the visitor walks.
+Only what the learner changed, by chunk: the height each lattice point was moved by, in eighths of a block; the surface each point was painted; the wild plants cleared; and the things set down, each with its kind, its place and its turn. Chunks are rows of their own, about two kilobytes each, read by region (eight chunks by eight) as the camera nears one and once only, so nothing stays subscribed to rows the learner keeps writing, the size of a world limits nothing, and a visit reads only where the visitor walks. A chunk holds at most 192 things and a world at most 4,096 changed chunks; an emptied chunk's row is deleted.
 
 ### W4. Changes are sent as operations and never taken back by a reload
 
@@ -54,7 +54,7 @@ Stars come only from learning (ADR 0042 D8 and D9, unchanged) and are never boug
 
 ### W6. A world has an address, and a visit changes nothing
 
-- Every world has a short address under the learner's profile that needs no account to open. Its owner chooses private, by link (the default) or public.
+- Every world has a short address, `/{locale}/island/{username}`, that needs no account to open. Its owner chooses private, by link (the default) or public. A world never opens wider than its owner's profile does (ADR 0009): a school member's world is theirs alone, so an address cannot tell a stranger that a pupil holds a name.
 - A visitor walks, strokes the animals and kicks the ball, and cannot build, clear or take. A signed-in visitor may leave one sticker from a fixed set in the guest book. There is no free text anywhere in the game.
 - Visits need no shared hour: nobody sees another learner move. The owner reads who came when they next enter.
 
@@ -72,7 +72,7 @@ The species, their models, the shoals, the reef, the hunt, the breach and the vi
 
 ### W10. The engine stays ours
 
-ADR 0047 D2 holds. The prototype drew with three.js to move fast; the game keeps its own WebGL2 renderer and gains three passes in the layout it already has: the land's mesh with its flat tones, the grass as instanced blades, and things as bodies, so shadows, outlines, the water's depth and mirror, and the quality ladder cover the new world without a second engine in the chunk.
+ADR 0047 D2 holds. The prototype drew with three.js to move fast; the game keeps its own WebGL2 renderer and gains three passes in the layout it already has: the land with its flat tones, the grass as instanced blades, and things as bodies, so shadows, outlines, the water's depth and mirror, and the quality ladder cover the new world without a second engine in the chunk. The land is one fixed grid raised in the vertex shader by two textures of a window 256 blocks wide about the camera (heights, the water's face and a river's run; what covers the ground), so a brush stroke is two texture writes and no mesh is ever built again.
 
 ## Considered Designs
 
@@ -86,6 +86,6 @@ ADR 0047 D2 holds. The prototype drew with three.js to move fast; the game keeps
 
 ## Consequences
 
-- The worlds learners built from blocks do not carry over: their block edits are cleared when the new world becomes the game, as ADR 0047 D6 cleared the first island's placements. Stars, levels, medals and the run of days are untouched.
-- The work lands as a stack: the land and what a world stores; the server's rows and operations; things, brushes and life on the land; the renderer, the HUD and the recordings, which is the change that makes it the game and removes the blocks; then addresses, visits and the guest book.
+- The worlds learners built from blocks do not carry over: their block edits are cleared when the new world becomes the game, as ADR 0047 D6 cleared the first island's placements. Stars, levels, medals and the run of days are untouched. Convex refuses a schema that drops a field every row holds, so the release keeps `islands.world` and `islands.version` optional and unread, the Convex CLI clears them from every row right after the deploy (`convex import --table islands --replace` of the rows without them, which keeps each id and creation time), and the next change drops both fields, as ADR 0009 retired `users.authId`.
+- The new world becomes the game in one change: the land, its renderer passes, things, brushes, the HUD, the recordings, the server's rows and operations, and the removal of every block module, field and synthesized sound. The repository refuses an export nothing uses, so no part of it can land ahead of the game that uses it.
 - The game's words are written in every locale the dictionary holds.

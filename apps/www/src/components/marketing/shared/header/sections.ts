@@ -104,7 +104,7 @@ export const HEADER_SECTIONS = [
       },
     ],
     key: "learn",
-    label: "Marketing.learn",
+    label: "Common.learn",
   },
   {
     groups: [

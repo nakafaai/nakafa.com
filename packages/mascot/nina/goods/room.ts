@@ -259,3 +259,28 @@ export function stack(swing: number): Parts {
     ),
   ];
 }
+
+/** A tent pitched for a camp nobody has reached yet: its flap tied shut, and the pennant on its pole. */
+export function tent(swing: number): Parts {
+  return [
+    bar("M-8,-74 L-8,-100", BASE, 3),
+    flat(`M-8,-100 L${8 + swing * 3},-93 L-8,-86 Z`, POP.red),
+    flat("M-8,-76 L-40,0 L22,0 Z", POP.orange),
+    flat("M-8,-76 L-18,0 L2,0 Z", PAPER),
+    bar("M-8,-74 L-8,0", BOARD, 3),
+    dot(-8, -32, 3.2, POP.red),
+  ];
+}
+
+/** A podium of three steps, each marked with its place and none of them taken, and the shine over the first. */
+export function podium(swing: number): Parts {
+  return [
+    box(-30, -56, 18, 56, POP.blue, 3),
+    box(-13, -86, 18, 86, POP.yellow, 3),
+    box(4, -38, 18, 38, POP.red, 3),
+    dot(-4, -72, 2.8, PAGE),
+    ...Arr.map([-25, -17], (x) => dot(x, -42, 2.8, PAGE)),
+    ...Arr.map([8, 13, 18], (x) => dot(x, -26, 2.2, PAGE)),
+    sparkle(-4, -104 - swing * 4, 6, POP.yellow),
+  ];
+}

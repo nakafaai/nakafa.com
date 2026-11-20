@@ -1,36 +1,64 @@
-import { SPAN } from "@repo/backend/confect/island/world";
-import { Array as Arr, Option } from "effect";
+import type { Thing } from "@repo/backend/confect/island/things";
+import { Array as Arr, Option, Schema } from "effect";
+import { FOOTPRINTS } from "@/lib/island/blockers";
+import type { Dice } from "@/lib/island/fauna/cast";
+import type { Survey } from "@/lib/island/fauna/habitat";
+import { cellKey } from "@/lib/island/fauna/habitat";
+import type { Root } from "@/lib/island/flora/rooted";
+import type { Land } from "@/lib/island/land/ground";
+import { standAt } from "@/lib/island/land/ground";
 import type { Animal } from "@/lib/island/life";
-import { FOLK, SPEED, suitsOf, wander } from "@/lib/island/life";
-import { unitOf } from "@/lib/island/noise";
-import { SPOTS } from "@/lib/island/village";
-import type { Cells } from "@/lib/island/world";
+import { Dweller, FOLK, paceOf, wander } from "@/lib/island/life";
+import type { Model } from "@/lib/island/models/kinds";
+import { hashOf } from "@/lib/island/noise";
+import { suitsOf } from "@/lib/island/room";
+
+/** A place on the land: across and deep. */
+const Spot = Schema.Tuple([Schema.Finite, Schema.Finite]);
+
+/**
+ * One villager and the places of its day (ADR 0047, D54; ADR 0050, W9): its
+ * body, which of the folk it is, its home and whether that is indoors, where
+ * it gathers, where it works, and, for the one who fishes, the water it
+ * looks out on from its bank.
+ */
+export const Villager = Schema.Struct({
+  body: Dweller,
+  fishes: Schema.Boolean,
+  home: Spot,
+  index: Schema.Int,
+  indoors: Schema.Boolean,
+  plaza: Spot,
+  water: Spot,
+  work: Spot,
+});
+export type Villager = typeof Villager.Type;
 
 /**
  * The hours of a villager's day (ADR 0047, D54): it wakes and leaves home,
- * goes to work, comes back to the well for the evening, and goes home to
+ * goes to work, comes back to gather for the evening, and goes home to
  * sleep. Each villager keeps the hours a little apart from the others, by
  * `stagger` hours each, so they never move as one.
  */
-const DAY = { home: 22, stagger: 0.4, wake: 6, work: 9, rest: 17 } as const;
+const DAY = { home: 22, rest: 17, stagger: 0.4, wake: 6, work: 9 } as const;
 
-/** How near its spot, in cells, a villager counts as there. */
-const NEAR = 0.6;
+/** How near its spot, in blocks, a villager counts as there, and how far it walks toward it before it looks again. */
+const WALK = { hop: 5, near: 1 } as const;
 
-/** The four columns beside a column, across and deep. */
-const SIDES = [
-  [1, 0],
-  [-1, 0],
-  [0, 1],
-  [0, -1],
-] as const;
+/** How far in front of a cottage's middle its doorstep lies, in blocks. */
+const DOORSTEP = FOOTPRINTS.cottage.deep + 0.9;
 
-/** Which of the village's folk an animal is, by its place in the village's list; none for any other creature. */
-export function folkIndex(kind: Animal["kind"]) {
-  return Arr.findFirstIndex(FOLK, (folk) => folk === kind);
-}
+/** The things a villager lives in, gathers at and visits (ADR 0050, W9). */
+const PLACES = {
+  gathers: ["saung", "library", "well", "campfire"],
+  homes: ["cottage"],
+  visits: ["bench", "boat", "campfire", "well"],
+} as const satisfies Record<string, readonly Thing[]>;
 
-/** The part of the day it is for villager `index` at `hour`: asleep at home, by the well, or at work. */
+/** One thing or plant that stands in a cell. */
+type Standing = Root["standing"][number];
+
+/** The part of the day it is for villager `index` at `hour`: at home, gathered, or at work. */
 function partOf(index: number, hour: number) {
   const shifted = (hour - index * DAY.stagger + 24) % 24;
   if (shifted < DAY.wake || shifted >= DAY.home) {
@@ -39,126 +67,248 @@ function partOf(index: number, hour: number) {
   return shifted >= DAY.work && shifted < DAY.rest ? "work" : "plaza";
 }
 
-/** Where villager `index` is bound at `hour`, as a path cell, and whether it sleeps there. */
-export function spotOf(index: number, hour: number) {
-  const part = partOf(index, hour);
-  const homes = SPOTS.homes[index];
-  const [x, z] = part === "home" ? homes : SPOTS[part][index];
-  return { asleep: part === "home", x, z };
-}
-
-/** Whether a creature is a villager asleep in its cottage at `hour`: bound home and at its doorstep, so it is inside and not drawn. */
-export function isAsleep(animal: Animal, hour: number) {
-  return Option.match(folkIndex(animal.kind), {
-    onNone: () => false,
-    onSome: (index) => {
-      const spot = spotOf(index, hour);
-      return (
-        spot.asleep &&
-        Math.hypot(animal.x - spot.x - 0.5, animal.z - spot.z - 0.5) <= NEAR
-      );
-    },
-  });
+/** A place to stand beside a thing, each villager at a side of its own. */
+function beside(thing: Standing, slot: number) {
+  const out = thing.radius + 0.9;
+  return [
+    thing.x + Math.cos(slot * 2.1) * out,
+    thing.z + Math.sin(slot * 2.1) * out,
+  ] as const;
 }
 
 /**
- * The next path cell from (x, z) on the shortest way along the village's
- * paths to (tx, tz): every path column is reached back from the goal one
- * step at a time, and of the columns beside (x, z) the one nearest the goal
- * comes next. None when no path leads there, as when the learner has built
- * over it.
+ * Where a villager fishes from (D54): the dry bank nearest the water closest
+ * to its home, found by walking back from that water toward the home, with
+ * the water it looks out on. None where the cell has no water, or no bank
+ * within a walk of it.
  */
-export function stepToward(
-  cells: Cells,
-  [x, z]: readonly [number, number],
-  [tx, tz]: readonly [number, number]
-) {
-  const steps = new Int16Array(SPAN * SPAN).fill(-1);
-  const isPath = (cx: number, cz: number) =>
-    cx >= 0 &&
-    cx < SPAN &&
-    cz >= 0 &&
-    cz < SPAN &&
-    suitsOf("cat", cells, cx + 0.5, cz + 0.5);
-  if (!isPath(tx, tz)) {
-    return Option.none();
-  }
-  // Each column enters the queue once, so a queue as long as the world holds every one.
-  const queue = new Int32Array(SPAN * SPAN);
-  let length = 1;
-  queue[0] = tz * SPAN + tx;
-  steps[queue[0]] = 0;
-  for (let read = 0; read < length; read += 1) {
-    const index = queue[read];
-    const [cx, cz] = [index % SPAN, Math.floor(index / SPAN)];
-    for (const [dx, dz] of SIDES) {
-      const next = (cz + dz) * SPAN + cx + dx;
-      if (isPath(cx + dx, cz + dz) && steps[next] < 0) {
-        steps[next] = steps[index] + 1;
-        queue[length] = next;
-        length += 1;
-      }
+function bankOf(land: Land, survey: Survey, home: readonly [number, number]) {
+  const away = (spot: { readonly x: number; readonly z: number }) =>
+    Math.hypot(spot.x - home[0], spot.z - home[1]);
+  return Option.flatMap(
+    Arr.match([...survey.fresh, ...survey.shallows, ...survey.sea], {
+      onEmpty: () => Option.none(),
+      onNonEmpty: (waters) =>
+        Option.some(
+          Arr.reduce(waters, Arr.headNonEmpty(waters), (best, spot) =>
+            away(spot) < away(best) ? spot : best
+          )
+        ),
+    }),
+    (water) => {
+      const reach = Math.max(1e-6, away(water));
+      const at = (step: number) =>
+        [
+          water.x + ((home[0] - water.x) / reach) * step * 0.5,
+          water.z + ((home[1] - water.z) / reach) * step * 0.5,
+        ] as const;
+      return Option.map(
+        Arr.findFirst(Arr.range(1, 80), (step) =>
+          suitsOf(land, "dry", at(step)[0], at(step)[1])
+        ),
+        (step) => ({ dry: at(step), water: [water.x, water.z] as const })
+      );
     }
-  }
-  const options = Arr.filter(
-    Arr.map(SIDES, ([dx, dz]) => [x + dx, z + dz] as const),
-    ([cx, cz]) => isPath(cx, cz) && steps[cz * SPAN + cx] >= 0
   );
-  return Arr.match(options, {
-    onEmpty: () => Option.none(),
-    onNonEmpty: (found) =>
-      Option.some(
-        Arr.reduce(found, Arr.headNonEmpty(found), (best, cell) =>
-          steps[cell[1] * SPAN + cell[0]] < steps[best[1] * SPAN + best[0]]
-            ? cell
-            : best
-        )
-      ),
-  });
 }
 
 /**
- * Villager `index` after `dt` seconds of its day at `hour` (D54): walking or
- * resting as any creature does, and each time it reaches where it was going,
- * taking the next cell of the village's paths toward the spot its hour binds
- * it to. There it lingers, or, bound home, waits on its doorstep, inside,
- * until morning. Where no path leads to its spot it
- * wanders as the other creatures do.
+ * The villagers of one cell of the land (ADR 0047, D54; ADR 0050, W9): one
+ * for each of its first three cottages, at home on its doorstep, gathering at
+ * a saung, a library, a well or a fire and visiting a bench, a boat, a fire
+ * or a well of the cell; or, where nothing is built and the world opens
+ * there, two who camp at `camp`. The first of them fishes by day from the
+ * bank nearest home. A villager who was there before (`held`) keeps where it
+ * stands.
+ */
+export function villagersOf(
+  land: Land,
+  standing: readonly Standing[],
+  survey: Survey,
+  dice: Dice,
+  lives: {
+    readonly camp: Option.Option<readonly [number, number]>;
+    readonly held: readonly Villager[];
+  }
+): readonly Villager[] {
+  const of = (kinds: readonly Thing[]) =>
+    Arr.filter(
+      standing,
+      (thing) =>
+        thing.origin._tag === "thing" && Arr.contains(kinds, thing.origin.kind)
+    );
+  const cottages = Arr.take(of(PLACES.homes), FOLK.length);
+  const gathers = of(PLACES.gathers);
+  const visits = of(PLACES.visits);
+  const doors = Arr.map(
+    cottages,
+    (home) =>
+      [
+        home.x + Math.sin(home.yaw) * DOORSTEP,
+        home.z + Math.cos(home.yaw) * DOORSTEP,
+      ] as const
+  );
+  const camps = Option.match(lives.camp, {
+    onNone: () => [],
+    onSome: ([x, z]) => [
+      [x + 1.6, z + 0.5] as const,
+      [x - 1.4, z + 1.1] as const,
+    ],
+  });
+  const homes = doors.length > 0 ? doors : camps;
+  const bank = Option.flatMap(Arr.head(homes), (home) =>
+    bankOf(land, survey, home)
+  );
+  return Arr.map(homes, (home, index): Villager => {
+    const plaza = Option.match(
+      Arr.get(gathers, index % (gathers.length || 1)),
+      {
+        onNone: () => home,
+        onSome: (thing) => beside(thing, index),
+      }
+    );
+    const visit = Option.match(
+      Arr.get(visits, (index + 1) % (visits.length || 1)),
+      { onNone: () => plaza, onSome: (thing) => beside(thing, index + 3) }
+    );
+    const fisher = index === 0 ? bank : Option.none();
+    return {
+      body: Option.match(Arr.get(lives.held, index), {
+        onNone: () => ({
+          cell: cellKey(dice.gx, dice.gz),
+          ground: "dry",
+          hx: home[0],
+          hz: home[1],
+          kind: FOLK[index],
+          pack: 100 + index,
+          pet: 0,
+          rest: 0,
+          seed: hashOf(dice.seed + 70, dice.gx, index, dice.gz),
+          steps: 0,
+          tx: home[0],
+          tz: home[1],
+          x: home[0],
+          z: home[1],
+        }),
+        onSome: (villager) => villager.body,
+      }),
+      fishes: Option.isSome(fisher),
+      home,
+      index,
+      indoors: doors.length > 0,
+      plaza,
+      water: Option.match(fisher, {
+        onNone: () => home,
+        onSome: (found) => found.water,
+      }),
+      work: Option.match(fisher, {
+        onNone: () => visit,
+        onSome: (found) => found.dry,
+      }),
+    };
+  });
+}
+
+/** Where a villager is bound at `hour`, and how far from it it stands. */
+function boundOf(villager: Villager, hour: number) {
+  const part = partOf(villager.index, hour);
+  const spot = villager[part];
+  return {
+    away: Math.hypot(spot[0] - villager.body.x, spot[1] - villager.body.z),
+    part,
+    spot,
+  };
+}
+
+/** Whether a villager is asleep in its cottage at `hour`: bound home and at its doorstep, so it is inside and not drawn. */
+export function isAsleep(villager: Villager, hour: number) {
+  const bound = boundOf(villager, hour);
+  return villager.indoors && bound.part === "home" && bound.away <= WALK.near;
+}
+
+/** Whether a villager stands fishing at `hour`: the one who fishes, at work and on its bank. */
+function isFishing(villager: Villager, hour: number) {
+  const bound = boundOf(villager, hour);
+  return villager.fishes && bound.part === "work" && bound.away <= WALK.near;
+}
+
+/**
+ * A villager after `dt` seconds of its day at `hour` (D54): it walks toward
+ * the spot its hour binds it to, a few blocks at a time and without
+ * dawdling, giving way as any creature does (D22); there it lingers, or,
+ * fishing, stands on its bank and looks out on the water.
  */
 export function keepDay(
-  cells: Cells,
-  animal: Animal,
-  { hour, index }: { readonly hour: number; readonly index: number },
-  seed: number,
-  dt: number,
-  others: readonly Animal[] = []
-): Animal {
-  const toward = Math.hypot(animal.tx - animal.x, animal.tz - animal.z);
-  if (animal.rest > 0 || toward > SPEED[animal.kind] * dt) {
-    return wander(cells, animal, seed, index, dt, others);
+  land: Land,
+  villager: Villager,
+  step: {
+    readonly blocked: (x: number, z: number, half: number) => boolean;
+    readonly dt: number;
+    readonly hour: number;
+    readonly others: readonly Animal[];
   }
-  // It reaches where it was going, then takes its next step.
-  const here = { ...animal, x: animal.tx, z: animal.tz };
-  const spot = spotOf(index, hour);
-  const away = Math.hypot(here.x - spot.x - 0.5, here.z - spot.z - 0.5);
-  const roll = (channel: number) =>
-    unitOf(seed + 70 + index, animal.steps, channel);
-  if (away <= NEAR) {
-    // At its spot it lingers, looking about: a sleeper till morning, anyone else till its hour moves it on.
+): Villager {
+  const { body } = villager;
+  const bound = boundOf(villager, step.hour);
+  if (isFishing(villager, step.hour)) {
+    const [dx, dz] = [villager.water[0] - body.x, villager.water[1] - body.z];
+    const reach = Math.max(1e-6, Math.hypot(dx, dz));
     return {
-      ...here,
-      rest: spot.asleep ? 1 : 1.5 + roll(1) * 3,
-      steps: here.steps + 1,
+      ...villager,
+      body: {
+        ...body,
+        rest: 0.5,
+        tx: body.x + (dx / reach) * 0.06,
+        tz: body.z + (dz / reach) * 0.06,
+      },
     };
   }
-  const cell = [Math.floor(here.x), Math.floor(here.z)] as const;
-  return Option.match(stepToward(cells, cell, [spot.x, spot.z]), {
-    onNone: () => wander(cells, animal, seed, index, dt, others),
-    onSome: ([nx, nz]) => ({
-      ...here,
-      steps: here.steps + 1,
-      tx: nx + 0.5,
-      tz: nz + 0.5,
-    }),
+  const far = bound.away > WALK.near;
+  const hop = Math.min(1, WALK.hop / Math.max(1e-6, bound.away));
+  const next = wander(land, body, {
+    blocked: step.blocked,
+    dt: step.dt,
+    home: [
+      body.x + (bound.spot[0] - body.x) * hop,
+      body.z + (bound.spot[1] - body.z) * hop,
+    ],
+    others: step.others,
+    pace: paceOf(body.kind),
+    spread: far ? 1.2 : 0.8,
   });
+  // On its way it sets off again at once; a step that was blocked keeps its short pause.
+  const striding = far && next.steps !== body.steps && next.rest > 0.6;
+  return { ...villager, body: striding ? { ...next, rest: 0 } : next };
+}
+
+/**
+ * The rods of the villagers who fish at `hour` as drawn bodies (D54), one
+ * model with a body for each, held out toward the water it looks on.
+ */
+export function tackleBodies(
+  land: Land,
+  villagers: readonly Villager[],
+  hour: number
+) {
+  const fishing = Arr.filter(villagers, (villager) =>
+    isFishing(villager, hour)
+  );
+  const model: Model = { _tag: "tackle" };
+  return Arr.map(
+    Arr.match(fishing, { onEmpty: () => [], onNonEmpty: (found) => [found] }),
+    (found) =>
+      [
+        model,
+        Float32Array.from(
+          Arr.flatMap(found, ({ body, water }) => [
+            body.x,
+            standAt(land, body.x, body.z),
+            body.z,
+            Math.atan2(water[0] - body.x, water[1] - body.z),
+            0,
+            0,
+          ])
+        ),
+      ] as const
+  );
 }

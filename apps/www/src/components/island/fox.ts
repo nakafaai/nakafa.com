@@ -1,134 +1,166 @@
-import { SPAN } from "@repo/backend/confect/island/world";
-import { Array as Arr, Option } from "effect";
+import { Option } from "effect";
 import type { GameStoreApi } from "@/components/island/store";
-import { turnOf } from "@/lib/island/items";
+import { cacheOf, standingAbout } from "@/lib/island/blockers";
 import type { Animal } from "@/lib/island/life";
-import { pathOf } from "@/lib/island/path";
-import { touches } from "@/lib/island/room";
-import { footingAt, STRIDE } from "@/lib/island/steps";
+import { followed, REACH, routeOf } from "@/lib/island/route";
+import type { Drive } from "@/lib/island/walker";
+import { jumped, PACE, REST, stepWalker, walkerAt } from "@/lib/island/walker";
 
-/** How fast the learner's fox walks, in cells a second. */
-const WALK_SPEED = 3.2;
+/** How far about the fox the things it may bump into are read, in blocks. */
+const NEAR = 2;
+
+/** How far past the fox and a pressed place a route may go around something, in blocks, which is how far about them what stands is read. */
+const AROUND = 16;
+
+/** The longest moment the fox is moved by in one go, in seconds, so a frame that came late never throws it through a wall. */
+const MOMENT = 0.1;
+
+/** How long the fox pushes against something on a route before it gives the route up, in seconds. */
+const STUCK = 0.4;
+
+/** How slow the fox counts as standing, in blocks a second. */
+const STILL = 0.05;
 
 /**
- * The learner's own fox (ADR 0047, D12, D22 and D40): where it stands, the
- * route it walks, and its footsteps. It starts on the village square west of
- * the well, where the opening view sees it past every roof, walks
- * the shortest way to where the learner sends it, waits for an animal in its
- * way instead of walking through it, and treads once a stride on whatever its
- * paws land on, which the sound answers. The canvas carries its column and
- * whether it walks, for the browser specs.
+ * The learner's own fox (ADR 0047, D12, D22 and D40; ADR 0050, W1): a body
+ * with weight that walks, runs, swims and jumps over the land. Held keys
+ * drive it as the camera faces; a press sends it along a route, which the
+ * keys take over again; and it treads once a stride on whatever its paws
+ * land on, which the sound answers. It starts at the place the stage hands
+ * it, and the canvas carries the place it stands on and whether it walks,
+ * for the browser specs.
  */
-export function createFox(store: GameStoreApi, canvas: HTMLCanvasElement) {
-  let at = { x: SPAN / 2 - 2.5, z: SPAN / 2 + 0.5 };
+export function createFox(
+  store: GameStoreApi,
+  canvas: HTMLCanvasElement,
+  start: readonly [number, number]
+) {
+  const cache = cacheOf();
+  let walker = walkerAt(store.getState().land, start[0], start[1]);
   let route: readonly (readonly [number, number])[] = [];
-  let walked = 0;
+  let held: Drive = REST;
+  let stuck = 0;
+
+  /** Whether the fox is on its way somewhere, driven or still carried by its own weight. */
+  const walking = () =>
+    route.length > 0 ||
+    held.speed > 0 ||
+    walker.airborne ||
+    Math.hypot(walker.speedX, walker.speedZ) > STILL;
+
   const show = () => {
-    canvas.dataset.player = `${Math.floor(at.x)},${Math.floor(at.z)}`;
-    canvas.dataset.walking = route.length > 0 ? "true" : "false";
+    canvas.dataset.player = `${Math.floor(walker.x)},${Math.floor(walker.z)}`;
+    canvas.dataset.walking = walking() ? "true" : "false";
   };
   show();
 
-  /** The fox as an animal at its place, heading for (tx, tz), for the checks that keep bodies apart and for the painter. */
-  const animal = (tx = at.x, tz = at.z): Animal => ({
-    kind: "fox",
-    rest: route.length > 0 ? 0 : 1,
-    steps: 0,
-    tx,
-    tz,
-    x: at.x,
-    z: at.z,
-  });
-
-  /** Sends the fox along the shortest way to a column, or says no way leads there. Whether it set off. */
-  const walkTo = (column: readonly [number, number]) =>
-    Option.match(
-      pathOf(
-        store.getState().cells,
-        [Math.floor(at.x), Math.floor(at.z)],
-        column
-      ),
-      {
+  return {
+    /**
+     * Moves the fox on by `seconds`: toward what the keys hold, or along its
+     * route, around everything that stands near it; and treads each footstep.
+     * Whether it moved.
+     */
+    advance(seconds: number) {
+      const state = store.getState();
+      const along = followed(route, walker.x, walker.z);
+      route = along.route;
+      const next = stepWalker(
+        state.land,
+        walker,
+        held.speed > 0 ? held : along.drive,
+        standingAbout(
+          cache,
+          state.land,
+          state.revision,
+          [walker.x, walker.z],
+          NEAR
+        ),
+        Math.min(seconds, MOMENT)
+      );
+      const moved = next.walker.x !== walker.x || next.walker.z !== walker.z;
+      walker = next.walker;
+      stuck = next.blocked ? stuck + seconds : 0;
+      if (stuck > STUCK) {
+        route = [];
+        stuck = 0;
+      }
+      Option.map(next.footstep, (footing) => state.tread(footing));
+      show();
+      return { moved };
+    },
+    /** The fox as the animal the scene draws: where it stands, facing (tx, tz) when a place is given and the way it moves when not, at rest unless it walks. */
+    animal(tx?: number, tz?: number): Animal {
+      return {
+        kind: "fox",
+        rest: walking() ? 0 : 1,
+        steps: 0,
+        tx: tx ?? walker.x + Math.sin(walker.yaw),
+        tz: tz ?? walker.z + Math.cos(walker.yaw),
+        x: walker.x,
+        z: walker.z,
+      };
+    },
+    /** Where the fox's feet are. */
+    at: () => ({ x: walker.x, y: walker.y, z: walker.z }),
+    /**
+     * Holds a direction for the fox to go, already in the world's own axes,
+     * at a run or at a walk; nothing held lets it come to rest. A held
+     * direction takes over from a route.
+     */
+    hold(across: number, ahead: number, run: boolean) {
+      const length = Math.hypot(across, ahead);
+      if (length === 0) {
+        held = REST;
+        return;
+      }
+      held = {
+        speed: run ? PACE.run : PACE.walk,
+        x: across / length,
+        z: ahead / length,
+      };
+      route = [];
+    },
+    /** Lifts the fox off the ground in a jump. */
+    jump() {
+      walker = jumped(walker);
+    },
+    /** How fast the fox moves over the ground along x and z, in blocks a second. */
+    velocity: () => [walker.speedX, walker.speedZ] as const,
+    /** Sends the fox along the cheapest way to a place, or says no way leads there. Whether it set off. */
+    walkTo(x: number, z: number) {
+      const state = store.getState();
+      const from = [walker.x, walker.z] as const;
+      const span = Math.max(Math.abs(x - from[0]), Math.abs(z - from[1]));
+      const found =
+        span > REACH
+          ? Option.none()
+          : routeOf(
+              state.land,
+              standingAbout(
+                cache,
+                state.land,
+                state.revision,
+                [(from[0] + x) / 2, (from[1] + z) / 2],
+                span / 2 + AROUND
+              ),
+              from,
+              [x, z]
+            );
+      return Option.match(found, {
         onNone: () => {
-          store.getState().setNotice("path");
+          state.setNotice("far");
           return false;
         },
-        onSome: (found) => {
-          route = found;
-          show();
-          return true;
-        },
-      }
-    );
-
-  return {
-    animal,
-    /** Where the fox stands. */
-    at: () => at,
-    /**
-     * Moves the fox along its route for `dt` seconds, unless an animal of the
-     * herd stands in its way, and treads once each stride. The cell it heads
-     * for, and whether it moved.
-     */
-    advance(dt: number, herd: readonly Animal[]) {
-      const next = Arr.head(route);
-      const moved = Option.match(next, {
-        onNone: () => false,
-        onSome: ([cx, cz]) => {
-          const dx = cx + 0.5 - at.x;
-          const dz = cz + 0.5 - at.z;
-          const distance = Math.hypot(dx, dz);
-          const reach = WALK_SPEED * dt;
-          const to =
-            distance <= reach
-              ? { x: cx + 0.5, z: cz + 0.5 }
-              : {
-                  x: at.x + (dx / distance) * reach,
-                  z: at.z + (dz / distance) * reach,
-                };
-          const stepped = { ...animal(cx + 0.5, cz + 0.5), x: to.x, z: to.z };
-          const nearer = (other: Animal) =>
-            Math.hypot(to.x - other.x, to.z - other.z) <
-            Math.hypot(at.x - other.x, at.z - other.z);
-          if (
-            Arr.some(herd, (other) => nearer(other) && touches(stepped, other))
-          ) {
-            return false;
-          }
-          walked += Math.min(distance, reach);
-          at = to;
-          if (distance <= reach) {
-            route = Arr.drop(route, 1);
-          }
-          if (walked >= STRIDE) {
-            walked -= STRIDE;
-            Option.map(
-              footingAt(store.getState().cells, at.x, at.z),
-              (footing) => store.getState().tread(footing)
-            );
-          }
+        onSome: (places) => {
+          route = places;
+          stuck = 0;
           show();
           return true;
         },
       });
-      return { moved, next };
     },
-    /** Walks the fox one cell, right (`across`) or away from the camera (`ahead` negative), as a camera at `yaw` faces. */
-    step(across: number, ahead: number, yaw: number) {
-      const [dx, dz] = [
-        [across, ahead],
-        [ahead, -across],
-        [-across, -ahead],
-        [-ahead, across],
-      ][turnOf(yaw)];
-      const last = Option.getOrElse(
-        Arr.last(route),
-        () => [Math.floor(at.x), Math.floor(at.z)] as const
-      );
-      return walkTo([last[0] + dx, last[1] + dz]);
-    },
-    walkTo,
-    /** Whether the fox is on its way somewhere. */
-    walking: () => route.length > 0,
+    walking,
+    /** The way the fox faces, in radians from +z toward +x. */
+    yaw: () => walker.yaw,
   };
 }
