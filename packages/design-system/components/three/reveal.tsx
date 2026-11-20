@@ -21,6 +21,13 @@ const SETTLE_FRAMES = 15;
  * never sees an empty canvas, a half-built scene or a camera that jumps to its
  * first view.
  *
+ * While the frame is not whole, its frame callback asks for the next one.
+ * Fiber keeps its loop running for a frame asked for inside a frame callback,
+ * but drops one asked for in an after-effect of the loop's last frame: the loop
+ * still counts as running then, so it requests no new frame and stops. A
+ * scene whose last fit moved nothing would then wait behind its spinner for a
+ * frame that never comes.
+ *
  * It reads no loading manager: three's default one counts the loads of every
  * canvas on the page, so another scene's model would hold this one back, and a
  * load that never ends would hold it forever.
@@ -28,6 +35,8 @@ const SETTLE_FRAMES = 15;
  * Fiber's after-effects run once every canvas of the page has drawn its frame,
  * and this canvas's own frame callback marks whether the frame it drew was a
  * whole one, so another canvas drawing never reveals this one.
+ *
+ * @see https://r3f.docs.pmnd.rs/api/hooks#useframe
  */
 export function SceneDrawn({ onDrawn }: { onDrawn: () => void }) {
   const framing = useCameraFraming();
@@ -38,6 +47,9 @@ export function SceneDrawn({ onDrawn }: { onDrawn: () => void }) {
   const tell = useEffectEvent(onDrawn);
 
   useFrame(() => {
+    if (told.current) {
+      return;
+    }
     if (!framing) {
       whole.current = true;
       return;
@@ -46,16 +58,15 @@ export function SceneDrawn({ onDrawn }: { onDrawn: () => void }) {
       fittedFrames.current += 1;
     }
     whole.current = framing.isSettled() || fittedFrames.current > SETTLE_FRAMES;
+    if (!whole.current) {
+      // The camera still fits: draw again once it has.
+      invalidate();
+    }
   });
 
   useEffect(() => {
     const stop = addAfterEffect(() => {
-      if (told.current) {
-        return;
-      }
-      if (!whole.current) {
-        // The camera still fits: draw again once it has.
-        invalidate();
+      if (told.current || !whole.current) {
         return;
       }
       told.current = true;
