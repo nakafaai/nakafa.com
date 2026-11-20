@@ -71,14 +71,6 @@ export const TOOLTIP = '[data-slot="tooltip-content"][data-open]';
  */
 export const HEADER_SECTION =
   '[data-slot="navigation-menu-viewport"][data-open]';
-/** The popup of a drawer, which a phone opens for the consent and contributor surfaces. */
-export const DRAWER_POPUP = '[data-slot="drawer-content"]';
-/** The handle at the top of a drawer, which a swipe drags. */
-export const DRAWER_HANDLE = '[data-slot="drawer-handle"]';
-/** The title of a drawer, which names the surface a learner opened. */
-export const DRAWER_TITLE = '[data-slot="drawer-title"]';
-/** The content panel of a drawer, below its title. */
-export const DRAWER_PANEL = '[data-slot="drawer-panel"]';
 /**
  * The popup of an open sheet, which a learner opens from the side of a page.
  * Nina's sheet stays mounted while closed, so only the open one is selected.

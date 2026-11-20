@@ -212,13 +212,23 @@ export const drawsInPlaceAtLargeText = Effect.fn(
   });
 });
 
-/** What holds the focus: its accessible name, and whether it sits in the list. */
+/**
+ * What holds the focus: its accessible name, and whether it sits in the list. An icon button's
+ * tooltip names it from the page (`aria-labelledby`), before its `aria-label` and its text.
+ */
 const focused = (page: Page) =>
   page.evaluate(() => {
     const element = document.activeElement;
+    const label = element?.getAttribute("aria-labelledby");
     return {
       inList: Boolean(element?.closest("main ul")),
-      name: element?.getAttribute("aria-label") ?? element?.textContent ?? "",
+      name:
+        (label
+          ? document.querySelector(`#${CSS.escape(label)}`)?.textContent
+          : null) ??
+        element?.getAttribute("aria-label") ??
+        element?.textContent ??
+        "",
     };
   });
 
