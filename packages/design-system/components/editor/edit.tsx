@@ -248,7 +248,7 @@ export function FormulaEdit({
   onRemove: () => void;
   onSave: (latex: string) => void;
 }) {
-  const [open, setOpen] = useState(defaultOpen);
+  const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState(latex);
   const [view, setView] = useState<typeof FormulaView.Type>("formula");
   const [mathlive, setMathlive] = useState<Option.Option<typeof MathLive>>(
@@ -257,6 +257,19 @@ export function FormulaEdit({
   const discarded = useRef(false);
   const field = useRef<MathLive.MathfieldElement | null>(null);
   const problem = useMemo(() => Effect.runSync(formulaProblem(draft)), [draft]);
+
+  // The formula just inserted opens its editor a frame after it draws. A toolbar's press gives the
+  // caret back to the text in the next frame (tiptap's `focus`), and a popover closes when the focus
+  // leaves it, so the editor opens once the caret has landed and then takes the focus from the text.
+  useEffect(() => {
+    if (!defaultOpen) {
+      return;
+    }
+    const frame = requestAnimationFrame(() => setOpen(true));
+    return () => {
+      cancelAnimationFrame(frame);
+    };
+  }, [defaultOpen]);
 
   // MathLive loads the first time the popover shows, which may be as the formula first draws.
   useEffect(() => {
