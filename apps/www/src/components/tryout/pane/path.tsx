@@ -1,9 +1,4 @@
-import {
-  ArrowRight01Icon,
-  Flag02Icon,
-  StarIcon,
-  Tick02Icon,
-} from "@hugeicons/core-free-icons";
+import { Flag02Icon, StarIcon, Tick02Icon } from "@hugeicons/core-free-icons";
 import { tierOf } from "@repo/backend/confect/island/badge";
 import { AWARD_RULES } from "@repo/backend/confect/island/schema";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
@@ -119,7 +114,6 @@ function StepCard({
       publicPath={publicPath}
     >
       {children}
-      <HugeIcons className="shrink-0" icon={ArrowRight01Icon} />
     </TryoutPageLink>
   );
 }

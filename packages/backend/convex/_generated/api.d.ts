@@ -11087,7 +11087,23 @@ export declare const api: {
           setKey: string;
           trackKey: string;
         },
-        { sections: Array<string>; set: boolean } | null
+        { sections: Array<string>; set: boolean; stars: number } | null
+      >;
+      growth: FunctionReference<
+        "query",
+        "public",
+        {},
+        {
+          lifetime: number;
+          tally: {
+            days: number;
+            lessons: number;
+            sections: number;
+            sets: number;
+            streak: number;
+            subjects: Record<string, number>;
+          };
+        } | null
       >;
       leaders: FunctionReference<
         "query",
@@ -16382,13 +16398,21 @@ export declare const api: {
           {
             count: number;
             leaders: Array<{
+              id: Id<"tryoutSetBests">;
               mascot: string;
               name: string;
               own: boolean;
               place: number;
               score: number;
             }>;
-            own: { place: number; score: number } | null;
+            own: {
+              id: Id<"tryoutSetBests">;
+              mascot: string;
+              name: string;
+              own: boolean;
+              place: number;
+              score: number;
+            } | null;
             standing: number | null;
           }
         >;

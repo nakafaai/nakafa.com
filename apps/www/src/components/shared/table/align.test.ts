@@ -25,9 +25,9 @@ describe("placeOf", () => {
 describe("choiceWidth", () => {
   it("sizes a column of known values by its longest value or its head's name, whichever is longer", () => {
     expect(choiceWidth("Level", ["Easy", "Medium", "Hard"])).toBe(
-      "calc(6ch + 3.5rem)"
+      "calc(6ch + 4rem)"
     );
-    expect(choiceWidth("Measured level", ["Easy"])).toBe("calc(14ch + 3.5rem)");
-    expect(choiceWidth("Status", [])).toBe("calc(6ch + 3.5rem)");
+    expect(choiceWidth("Measured level", ["Easy"])).toBe("calc(14ch + 4rem)");
+    expect(choiceWidth("Status", [])).toBe("calc(6ch + 4rem)");
   });
 });

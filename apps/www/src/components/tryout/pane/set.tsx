@@ -26,7 +26,7 @@ import {
   setPaneOf,
   useSetPane,
 } from "@/components/tryout/pane/context";
-import { starsLeft } from "@/components/tryout/pane/model";
+import { NO_GROWTH, starsLeft } from "@/components/tryout/pane/model";
 import { SetPath } from "@/components/tryout/pane/path";
 import { SetRewards } from "@/components/tryout/pane/rewards";
 import { getTryoutPublicPathHref } from "@/components/tryout/route/path";
@@ -121,7 +121,8 @@ function LearnerSetPane({ view }: TryoutSetPaneProps) {
       value={setPaneOf({
         board: answerOf(board),
         claims: Option.flatMap(answerOf(claims), Option.fromNullOr),
-        growth: Option.flatMap(answerOf(growth), Option.fromNullOr),
+        // A learner who earned nothing yet has no island, and stands at level 1.
+        growth: Option.map(answerOf(growth), (value) => value ?? NO_GROWTH),
         view,
       })}
     />

@@ -82,11 +82,11 @@ export const headWidth = cva("", {
 /**
  * The width of a column of one known value: as wide as its longest value's badge or its head's name, whichever is
  * longer, so a short value such as a level never holds the room of a long one, and the column keeps its width before
- * its rows arrive. A character counts as `1ch`, a little more than a letter of the table's type, and `3.5rem` holds the
- * badge's icon and padding beside the cell's own, so no value is cut.
+ * its rows arrive. A character counts as `1ch`, about a letter of the table's type, and `4rem` holds the value's
+ * marker, such as a badge's icon or a level's bars, and its padding beside the cell's own, so no wide letter is cut.
  */
 export const choiceWidth = (title: string, labels: readonly string[]) =>
-  `calc(${Math.max(title.length, ...Arr.map(labels, (label) => label.length))}ch + 3.5rem)`;
+  `calc(${Math.max(title.length, ...Arr.map(labels, (label) => label.length))}ch + 4rem)`;
 
 /** Where a head's button stands at each place of its column: over a column's figures, and in the middle over a menu. */
 export const headPlace = {
