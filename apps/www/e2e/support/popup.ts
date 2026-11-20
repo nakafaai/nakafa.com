@@ -6,7 +6,7 @@ import { waitForStill } from "@/e2e/support/quiet";
  * such as the sheet it rises in, and then it holds its place for a few frames. An animation that runs forever, or one
  * that a scroll drives, never ends by itself, so it does not count.
  */
-export async function waitForSettled(target: Locator) {
+async function waitForSettled(target: Locator) {
   await target.evaluate(async (element) => {
     const moving = () =>
       document.getAnimations().filter((animation) => {

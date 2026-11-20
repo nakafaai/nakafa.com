@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from "@effect/vitest";
-import { Option } from "effect";
+import { Array as Arr, Option } from "effect";
 import { act, createElement } from "react";
 import type { Root } from "react-dom/client";
 import { createRoot } from "react-dom/client";
@@ -67,12 +67,12 @@ describe("pressesRow", () => {
 });
 
 /** The rows that the drawn row opened, in order. */
-let opened: HTMLTableRowElement[] = [];
+let opened: readonly HTMLTableRowElement[] = [];
 
 /** A table row that opens through `useRowPress`, with a plain cell and a button in another cell. */
 function PressRow() {
   const press = useRowPress((row) => {
-    opened.push(row);
+    opened = Arr.append(opened, row);
   });
 
   return createElement(
