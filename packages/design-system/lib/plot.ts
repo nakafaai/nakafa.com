@@ -39,7 +39,9 @@ export const AXIS_COLORS = {
 } as const;
 
 /**
- * The dash and gap of a region's strict edge, in scene units: the scene dashes
- * the edge with them, and the still the server draws dashes it the same way.
+ * The dash and gap of a stroke whose points do not belong to what it shows, in
+ * scene units: a region's strict edge, or a line or graph an author dashed on
+ * the boundary of a strict inequality. The scene dashes it with them, and the
+ * still the server draws dashes it the same way.
  */
-export const REGION_DASH = { dash: 0.18, gap: 0.12 } as const;
+export const STROKE_DASH = { dash: 0.18, gap: 0.12 } as const;

@@ -110,7 +110,8 @@ function cameraPlane(position: Vector, target: Vector) {
 
 /**
  * One line or area of the still, in its appearance's color. A dashed stroke is
- * a region's strict edge, which the scene dashes too.
+ * a region's strict edge, or a line or graph its author dashed, as the scene
+ * dashes them.
  */
 const StillStrokeSchema = Schema.Struct({
   appearance: MathAppearanceSchema,
@@ -156,7 +157,12 @@ function formulaStrokes(
     unbounded,
   });
   if (shape.kind === "curve") {
-    return [stroke(shape.id, shape.points, { unbounded: shape.unbounded })];
+    return [
+      stroke(shape.id, shape.points, {
+        dashed: shape.dashed,
+        unbounded: shape.unbounded,
+      }),
+    ];
   }
   if (shape.kind === "marker") {
     return [];
@@ -329,7 +335,7 @@ export function drawStill(
     ...Arr.map(geometry.paths, (path) => ({
       appearance: path.appearance,
       closed: false,
-      dashed: false,
+      dashed: path.dashed,
       filled: false,
       id: path.id,
       points: Arr.map(path.points, flat),

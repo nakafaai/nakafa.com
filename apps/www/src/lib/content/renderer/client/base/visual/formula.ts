@@ -34,6 +34,8 @@ const ShapeFields = { appearance: MathAppearanceSchema, id: Schema.String };
 const FormulaShapeSchema = Schema.Union([
   Schema.Struct({
     ...ShapeFields,
+    /** A dashed graph shows points that do not belong to it, such as a strict boundary. */
+    dashed: Schema.Boolean,
     kind: Schema.Literal("curve"),
     points: PointsSchema,
     /** An implicit curve runs to the reach, past every view, like a region. */
@@ -135,6 +137,7 @@ function shapesOf(
   if (geometry.kind === "curves") {
     return Arr.map(geometry.branches, (branch, index) => ({
       ...fields,
+      dashed: "stroke" in object && object.stroke === "dashed",
       id:
         geometry.branches.length === 1
           ? object.id

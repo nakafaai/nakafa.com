@@ -33,6 +33,7 @@ describe("MathVisual geometry", () => {
         {
           appearance: "primary",
           arrows: "none",
+          dashed: false,
           id: "line",
           // The fixture's frame is 10 by 8: the world reaches 30 units from its center.
           points: [
@@ -59,6 +60,7 @@ describe("MathVisual geometry", () => {
       {
         appearance: "primary",
         arrows: "end",
+        dashed: false,
         id: "force",
         points: [
           { x: 0, y: 0, z: 0 },
@@ -167,6 +169,7 @@ describe("MathVisual geometry", () => {
       {
         appearance: "answer",
         arrows: "none",
+        dashed: false,
         id: "triangle",
         points: [...vertices, vertices[0]],
         unbounded: false,
@@ -392,6 +395,63 @@ describe("MathVisual geometry", () => {
     }
   });
 
+  it("dashes the straight objects its author dashed, in plane and space, and draws the rest solid", () => {
+    const dashedOf = (scene: PlaneVisual | SpaceVisual) =>
+      Arr.map(resolveVisualGeometry(scene).paths, ({ dashed, id }) => [
+        id,
+        dashed,
+      ]);
+    expect(
+      dashedOf(
+        plane(
+          {
+            appearance: "primary",
+            id: "boundary",
+            kind: "line",
+            stroke: "dashed",
+            through: [
+              { x: 0, y: 2 },
+              { x: 5, y: 0 },
+            ],
+          },
+          {
+            appearance: "secondary",
+            from: { x: 0, y: 0 },
+            id: "edge",
+            kind: "segment",
+            to: { x: 3, y: 0 },
+          },
+          {
+            appearance: "answer",
+            id: "hull",
+            kind: "polyline",
+            stroke: "dashed",
+            vertices: [
+              { x: 0, y: 0 },
+              { x: 1, y: 2 },
+              { x: 2, y: 0 },
+            ],
+          }
+        )
+      )
+    ).toStrictEqual([
+      ["boundary", true],
+      ["edge", false],
+      ["hull", true],
+    ]);
+    expect(
+      dashedOf(
+        space({
+          appearance: "primary",
+          from: { x: 0, y: 0, z: 0 },
+          id: "drop",
+          kind: "segment",
+          stroke: "dashed",
+          to: { x: 0, y: 0, z: 3 },
+        })
+      )
+    ).toStrictEqual([["drop", true]]);
+  });
   it("leaves formula objects to the formula sampler, which reads the sliders", () => {
     const empty = { markers: [], paths: [], regions: [] };
     expect(

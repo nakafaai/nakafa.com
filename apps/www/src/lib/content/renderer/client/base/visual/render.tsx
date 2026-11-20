@@ -152,6 +152,7 @@ export function MathScene({ labels = EMPTY_LABELS, scene }: MathSceneProps) {
           <LineEquation
             color={resolveMathAppearance(path.appearance)}
             cone={resolveArrow(path.arrows, 0.25)}
+            dashed={path.dashed}
             points={[...path.points]}
             showPoints={false}
             smooth={false}

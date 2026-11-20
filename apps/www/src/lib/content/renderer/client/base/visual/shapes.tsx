@@ -15,6 +15,7 @@ function FormulaShapeView({ shape }: { readonly shape: FormulaShape }) {
     return (
       <LineEquation
         color={color}
+        dashed={shape.dashed}
         points={[...shape.points]}
         showPoints={false}
         smooth={false}

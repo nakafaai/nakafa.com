@@ -2,7 +2,7 @@ import { Line } from "@react-three/drei";
 import { fanMesh } from "@repo/design-system/lib/geometry/mesh";
 import type { Point3 } from "@repo/design-system/lib/geometry/point";
 import { pointsKey } from "@repo/design-system/lib/geometry/point";
-import { REGION_DASH } from "@repo/design-system/lib/plot";
+import { STROKE_DASH } from "@repo/design-system/lib/plot";
 import { Array as Arr } from "effect";
 import { useMemo } from "react";
 import type { ColorRepresentation } from "three";
@@ -50,8 +50,8 @@ export function Region({
         <Line
           color={color}
           dashed={edge.strict}
-          dashSize={REGION_DASH.dash}
-          gapSize={REGION_DASH.gap}
+          dashSize={STROKE_DASH.dash}
+          gapSize={STROKE_DASH.gap}
           key={pointsKey(edge.points)}
           lineWidth={2}
           points={Arr.map(edge.points, ({ x, y, z }) => [x, y, z] as const)}
