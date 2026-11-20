@@ -31,6 +31,24 @@ describe("pressesRow", () => {
     ).toBe(false);
   });
 
+  it("leaves a press in a popup that the row opened inside itself, such as an option of its dialog's select", () => {
+    const row = rowOf();
+    const popup = document.createElement("div");
+    popup.setAttribute("popover", "manual");
+    popup.innerHTML = '<div role="option"><span>Teacher</span></div>';
+    elementOf(row, "td").append(popup);
+
+    expect(
+      pressesRow({ currentTarget: row, target: elementOf(row, "span") })
+    ).toBe(false);
+    expect(
+      pressesRow({
+        currentTarget: row,
+        target: elementOf(row, "[role=option] span"),
+      })
+    ).toBe(false);
+  });
+
   it("leaves a press that React carried through from a menu the row opened", () => {
     const menu = document.createElement("div");
     document.body.append(menu);

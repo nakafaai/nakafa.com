@@ -331,7 +331,7 @@ const sheetLetsGoWhenDeletedElsewhere = Effect.fn(
     });
     await waitUntilTakenOver(history);
     await history.click();
-    await page.getByRole("menuitem", { name: "Going chat" }).click();
+    await page.getByRole("menuitemradio", { name: "Going chat" }).click();
     await expect(
       promptWith(inTheSheet(page), "The chat that goes")
     ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
