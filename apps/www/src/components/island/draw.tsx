@@ -61,6 +61,9 @@ export function createPainter(canvas: HTMLCanvasElement, season: Season) {
       // The scene's colors, faces and depth, then the frame the edge pass and the weather paint (D20).
       const target = createFrame(gl, canvas);
       const life = createLife(gl, bodyProgram);
+      // The bodies cast into the shadow map before they are ever lit, so their program reads the map from its own unit from the start: an unset sampler would read the land's window on unit 0, and the driver refuses that draw.
+      activate(gl, bodyProgram);
+      gl.uniform1i(gl.getUniformLocation(bodyProgram, "uShadowMap"), SHADOW);
       const turf = turfOf(season);
       // What the quality ladder lets the painter draw (D44), and whether the shadow map was last left empty.
       let rung: (typeof RUNGS)[number] = RUNGS[0];

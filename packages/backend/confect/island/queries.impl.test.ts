@@ -1,6 +1,7 @@
 import { assert, describe, expect, it } from "@effect/vitest";
 import island from "@repo/backend/confect/_generated/refs/island";
 import { EMPTY_TALLY } from "@repo/backend/confect/island/schema";
+import { client } from "@repo/backend/test/client";
 import { ISLAND_NOW, islandWorld } from "@repo/backend/test/island";
 import { MASCOT } from "@repo/backend/test/mascot";
 import { seedSchoolMember } from "@repo/backend/test/member";

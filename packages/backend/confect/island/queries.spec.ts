@@ -1,8 +1,8 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
 import { Region } from "@repo/backend/confect/island/chunk";
 import {
-  Growth,
   Changed,
+  Growth,
   Guest,
   Leader,
   Medals,
