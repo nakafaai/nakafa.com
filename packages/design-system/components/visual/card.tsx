@@ -164,7 +164,10 @@ const visualBodyVariants = cva(
  * `VisualCardToolbar`, `VisualCardBody`, optional `VisualCardActions`, and an
  * optional `VisualCardFooter`. The body holds only the visual: controls go in
  * the toolbar, buttons in the actions, and readouts, legends, tables and notes
- * in the footer.
+ * in the footer. The toolbar and the actions hold nothing a reader cannot
+ * operate: a control carries its own label and value, and any other words go
+ * in the footer, or in the header's description when they tell the reader what
+ * to do.
  *
  * The card element itself fills the screen, so the scene inside never
  * remounts and a WebGL canvas keeps its camera. Its slot in the page keeps
@@ -245,7 +248,9 @@ function VisualCardHeader({
 /**
  * The visual's own controls, in one band above it: sliders, choices, toggles
  * and the inputs that change what the visual shows. They wrap on a narrow card,
- * and a group of joined buttons or toggles spans the whole band.
+ * and a group of joined buttons or toggles spans the whole band. It holds only
+ * controls, each with its label and value: a legend, a key, a readout or a note
+ * goes in `VisualCardFooter`, and a task in the header's description.
  */
 function VisualCardToolbar(props: Omit<ComponentProps<"div">, "className">) {
   return (
@@ -282,7 +287,7 @@ function VisualCardBody({
  * The visual's buttons, in one band under it: its one main action, such as play,
  * and `VisualCardMenu`, which ends the row with full screen and the visual's
  * other actions. A card without other actions ends the row with
- * `VisualCardFullscreen` alone.
+ * `VisualCardFullscreen` alone. It holds buttons alone, never words beside them.
  */
 function VisualCardActions(props: Omit<ComponentProps<"div">, "className">) {
   return (
