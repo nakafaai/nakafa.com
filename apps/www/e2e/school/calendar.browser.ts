@@ -2,6 +2,7 @@ import type { Locator, Page } from "@playwright/test";
 import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
 import { calendarButton } from "@/e2e/support/date";
+import { waitForStill } from "@/e2e/support/quiet";
 import { createSchool, hostAddress, signInOwner } from "@/e2e/support/school";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { waitUntilTakenOver } from "@/e2e/support/window";
@@ -18,24 +19,38 @@ const WIDTHS = [
   { height: 900, width: 1440 },
 ] as const;
 
+/** Presses the option of the open select's list, once the list, a sheet on a phone, stands still. */
+async function pickOption(page: Page, name: string) {
+  const option = page.getByRole("option", { exact: true, name });
+  await expect(option).toBeVisible();
+  await waitForStill(page.getByRole("listbox"));
+  await option.click();
+}
+
 /**
  * Chooses a day from the calendar that a date field opens through its month and year selects: December of the year
  * after the one it shows, then the 15th. The field's text then holds the day, in the page's locale.
  */
 async function chooseThroughSelects(page: Page, field: Locator) {
+  // On a phone the dialog, the calendar and each select's list rise as sheets, so each press waits until its sheet
+  // stands still (`chooseDay` says why).
+  await waitForStill(field);
   await calendarButton(field).click();
   const calendar = page.locator('[data-slot="date-picker-content"]');
   await expect(calendar).toBeVisible();
+  await waitForStill(calendar);
   const year = calendar.getByRole("combobox", { name: "Year" });
   const next = String(Number(await year.innerText()) + 1);
   await calendar.getByRole("combobox", { name: "Month" }).click();
-  await page.getByRole("option", { exact: true, name: "December" }).click();
+  await pickOption(page, "December");
+  await waitForStill(calendar);
   await year.click();
-  await page.getByRole("option", { exact: true, name: next }).click();
+  await pickOption(page, next);
   await expect(calendar.getByRole("combobox", { name: "Month" })).toHaveText(
     "December"
   );
   await expect(year).toHaveText(next);
+  await waitForStill(calendar);
   await calendar.getByRole("gridcell", { name: CHOSEN_DAY }).click();
   await expect(calendar).toHaveCount(0);
   await expect(field.locator('[data-slot="date-picker-input"]')).toHaveValue(
