@@ -1,6 +1,7 @@
 import { physicsComponentNames } from "@repo/design-system/lib/markdown/names";
 import {
   GasPistonLab,
+  GasProcessLab,
   HeatingCurveLab,
   IceMeltingLab,
 } from "@/lib/content/renderer/client/physics/heat";
@@ -11,6 +12,10 @@ export const heatRenderers = [
   {
     name: physicsComponentNames.gasPistonLab,
     component: GasPistonLab,
+  },
+  {
+    name: physicsComponentNames.gasProcessLab,
+    component: GasProcessLab,
   },
   {
     name: physicsComponentNames.heatingCurveLab,

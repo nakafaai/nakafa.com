@@ -152,6 +152,7 @@ export const mathematicsComponentNames = {
   bacterialGrowth: "BacterialGrowth",
   barChart: "BarChart",
   binaryLampLab: "BinaryLampLab",
+  bundleCountLab: "BundleCountLab",
   chart: "Chart",
   diceRollLab: "DiceRollLab",
   functionAndNonFunctionDiagram: "FunctionAndNonFunctionDiagram",
@@ -163,10 +164,14 @@ export const mathematicsComponentNames = {
   galtonBoardLab: "GaltonBoardLab",
   histogramChart: "HistogramChart",
   inverseFunctionIllustration: "InverseFunctionIllustration",
+  journeyGraphLab: "JourneyGraphLab",
   marbleDrawLab: "MarbleDrawLab",
   quadraticEquationReadingRoomProblem: "QuadraticEquationReadingRoomProblem",
+  routeNetworkLab: "RouteNetworkLab",
   scatterDiagram: "ScatterDiagram",
   sequenceConceptTableChairsAnimation: "SequenceConceptTableChairsAnimation",
+  switchLogicLab: "SwitchLogicLab",
+  vennSortLab: "VennSortLab",
 } as const;
 
 /** Rich component names of the physics visuals; every lesson domain may use them. */
@@ -209,6 +214,7 @@ export const physicsComponentNames = {
   fuelCombustionCarbonLab: "FuelCombustionCarbonLab",
   galileoInclineBellsLab: "GalileoInclineBellsLab",
   gasPistonLab: "GasPistonLab",
+  gasProcessLab: "GasProcessLab",
   geothermalLoopLab: "GeothermalLoopLab",
   glassBlockLab: "GlassBlockLab",
   greenhouseLayerLab: "GreenhouseLayerLab",

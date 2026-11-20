@@ -26,3 +26,11 @@ export const IceMeltingLab = withHydrationBoundary(
     )
   )
 );
+
+export const GasProcessLab = withHydrationBoundary(
+  lazy(() =>
+    import(
+      "@repo/design-system/components/contents/physics/thermodynamics/gas-process/lab"
+    ).then((module) => ({ default: module.GasProcessLab }))
+  )
+);
