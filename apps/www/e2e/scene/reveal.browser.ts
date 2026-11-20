@@ -19,20 +19,35 @@ const LAB_ROUTE = "/en/subjects/physics/kinematics/stopping-distance";
 /** The widths a reader meets most: a phone and a laptop. */
 const WIDTHS = [390, 1440] as const;
 
+/** One frame of the watched card. */
+interface Sample {
+  /** Distance, in pixels, from the spinner's middle to the frame's, while the spinner shows. */
+  centred: number | null;
+  /** The card's height. */
+  height: number;
+  /** How far the visual's top stands below the card's top. */
+  inset: number;
+  /** Whether the frame shows the still, the spinner or the drawn canvas. */
+  shown: boolean;
+  /** The scene's stage, or `still` before its canvas mounts. */
+  state: string;
+  /** The visual's height. */
+  visual: number;
+}
+
 /**
  * Samples the watched card on every frame, from the page's first script on:
- * its box in the page, its scene's stage, whether the frame shows anything
- * (the still, the spinner or the drawn canvas) and how far the spinner stands
- * from the middle of the frame. The page serializes this function.
+ * its height, where its visual stands inside it, its scene's stage, whether
+ * the frame shows anything (the still, the spinner or the drawn canvas) and
+ * how far the spinner stands from the middle of the frame. A card far from the
+ * viewport skips its contents (`content-auto-card`) and stands at a fallback
+ * height, so its frames count from the first one the browser lays it out in.
+ * The card's place in the page is not sampled: cards above it lay out as the
+ * scroll reaches them, which moves it without the scene, and Chromium's layout
+ * shift entries hold the page itself. The page serializes this function.
  */
 function sampleScene({ key, watched }: { key: string; watched: string }) {
-  const samples: {
-    centred: number | null;
-    height: number;
-    shown: boolean;
-    state: string;
-    top: number;
-  }[] = [];
+  const samples: Sample[] = [];
   Reflect.set(window, key, samples);
   const visible = (element: Element | null) =>
     element?.checkVisibility({
@@ -41,8 +56,10 @@ function sampleScene({ key, watched }: { key: string; watched: string }) {
     }) === true;
   const tick = () => {
     const card = document.querySelector(`[${watched}]`);
-    if (card) {
+    const content = card?.querySelector('[data-slot="visual-card-body"]');
+    if (card && content?.checkVisibility({ contentVisibilityAuto: true })) {
       const box = card.getBoundingClientRect();
+      const body = content.getBoundingClientRect();
       const frame = card.querySelector("[data-scene-state]");
       const state = frame?.getAttribute("data-scene-state") ?? "still";
       const loading = card.querySelector('[data-slot="scene-loading"]');
@@ -61,12 +78,13 @@ function sampleScene({ key, watched }: { key: string; watched: string }) {
       samples.push({
         centred,
         height: box.height,
+        inset: body.top - box.top,
         shown:
           visible(still) ||
           visible(spinner) ||
           (state === "drawn" && visible(canvas)),
         state,
-        top: box.top + window.scrollY,
+        visual: body.height,
       });
     }
     requestAnimationFrame(tick);
@@ -78,14 +96,7 @@ function sampleScene({ key, watched }: { key: string; watched: string }) {
 const readSamples = (page: Page) =>
   Effect.promise(() =>
     page.evaluate(
-      (key) =>
-        Array.from<{
-          centred: number | null;
-          height: number;
-          shown: boolean;
-          state: string;
-          top: number;
-        }>(Reflect.get(window, key) ?? []),
+      (key) => Array.from<Sample>(Reflect.get(window, key) ?? []),
       SAMPLES
     )
   );
@@ -108,9 +119,10 @@ const moveOver = Effect.fn("NakafaE2E.moveOver")(function* (
 
 /**
  * Watches one scene card from before its scene loads until it is drawn, and
- * holds it to the reveal the owner asked for: the card keeps one size and one
- * place, the frame never shows nothing, the spinner stands in the middle of
- * the frame while the scene loads, and the scene ends drawn, not failed.
+ * holds it to the reveal the owner asked for: the card keeps one size and its
+ * visual one place inside it, the frame never shows nothing, the spinner
+ * stands in the middle of the frame while the scene loads, and the scene ends
+ * drawn, not failed.
  */
 const expectSteadyReveal = Effect.fn("NakafaE2E.expectSteadyReveal")(function* (
   page: Page,
@@ -145,9 +157,10 @@ const expectSteadyReveal = Effect.fn("NakafaE2E.expectSteadyReveal")(function* (
         (sample) =>
           first !== null &&
           (Math.abs(sample.height - first.height) > 0.5 ||
-            Math.abs(sample.top - first.top) > 0.5)
+            Math.abs(sample.inset - first.inset) > 0.5 ||
+            Math.abs(sample.visual - first.visual) > 0.5)
       ),
-      "frames where the card moved or changed size"
+      "frames where the card changed size or its visual moved inside it"
     ).toEqual([]);
     expect(
       Arr.filter(
@@ -201,11 +214,12 @@ for (const width of WIDTHS) {
           page,
           Effect.gen(function* () {
             yield* openRoute(page, LAB_ROUTE);
+            // The last lab stands far below the first screen, so it has not loaded before the test watches it.
             const card = page
               .locator(CARD)
               .filter({ has: page.locator("[data-scene-state]") })
               .filter({ hasNot: page.locator(MATH_SCENE) })
-              .first();
+              .last();
             yield* expectSteadyReveal(page, card);
           })
         )

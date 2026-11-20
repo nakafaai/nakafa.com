@@ -54,6 +54,10 @@ function createFraming() {
         scheduled = undefined;
       }
     },
+    /** Whether the registry has fitted the camera at least once. */
+    hasFitted() {
+      return flushed;
+    },
     invalidate,
     /**
      * Whether the camera stands where the scene's subjects put it: the
