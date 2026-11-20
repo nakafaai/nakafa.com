@@ -68,6 +68,8 @@ export const FORMATS = {
   number: {
     /** A value in a lesson's math, with at most two decimals and no grouping: 1234.5. */
     math: { maximumFractionDigits: 2, useGrouping: false },
+    /** A number on a graph's axis, without grouping; the grid's step sets its decimals: 2500 or 0.25. */
+    axis: { useGrouping: false },
     /** A trigonometric value with exactly two decimals: 0.71. */
     trig: {
       maximumFractionDigits: 2,

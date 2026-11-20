@@ -1,5 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
-import { Array as Arr } from "effect";
+import { Array as Arr, Option } from "effect";
 import type {
   PlaneVisual,
   SpaceVisual,
@@ -77,24 +77,40 @@ describe("the still of a MathVisual scene", () => {
     expect(drawn.labels[0]?.at).toStrictEqual(drawn.dots[0]?.at);
   });
 
-  it("frames every point it draws, with a margin around them", () => {
+  it("frames the padded frame and what it draws, while its axes run on past the drawing", () => {
     const drawn = still(
       plane({ ...fields, at: { x: 0, y: 0 }, id: "o", kind: "point" })
     );
-    const points = [
-      ...Arr.flatMap(drawn.axes, ({ points }) => points),
-      ...Arr.map(drawn.dots, ({ at }) => at),
-    ];
-    for (const [x, y] of points) {
-      expect(x).toBeGreaterThan(drawn.view.left);
-      expect(x).toBeLessThan(drawn.view.left + drawn.view.width);
-      expect(y).toBeGreaterThan(drawn.view.top);
-      expect(y).toBeLessThan(drawn.view.top + drawn.view.height);
-    }
-    expect(drawn.ticks).toStrictEqual([]);
+    const inside = ([x, y]: readonly [number, number]) =>
+      x > drawn.view.left &&
+      x < drawn.view.left + drawn.view.width &&
+      y > drawn.view.top &&
+      y < drawn.view.top + drawn.view.height;
+    expect(Arr.every(drawn.dots, ({ at }) => inside(at))).toBe(true);
+    // The axes cross at the origin and reach 30 units each way, far past the drawing's edges.
+    expect(
+      Arr.map(drawn.axes, ({ axis, points }) => [axis, points])
+    ).toStrictEqual([
+      [
+        "x",
+        [
+          [-30, 0],
+          [30, 0],
+        ],
+      ],
+      [
+        "y",
+        [
+          [0, -30],
+          [0, 30],
+        ],
+      ],
+    ]);
+    expect(Option.isSome(drawn.grid)).toBe(true);
+    expect(drawn.ticks.length).toBeGreaterThan(0);
   });
 
-  it("frames a frame far from zero by itself, its axes at its edge naming their real values", () => {
+  it("frames a frame far from zero by itself, numbering its axes at the grid's major lines", () => {
     const drawn = still({
       ...plane({
         ...fields,
@@ -109,26 +125,58 @@ describe("the still of a MathVisual scene", () => {
       },
     });
 
-    // The frame spans 10 by 8 scene units around its middle; y = 0 would sit 37 below it.
+    // The frame spans 10 by 8 scene units around its middle; y = 0 lies 74 below it, past the reach.
     expect(drawn.view).toStrictEqual({
       height: 9.2,
       left: -5.6,
       top: -4.6,
       width: 11.2,
     });
-    expect(Arr.map(drawn.axes, ({ points }) => points)).toStrictEqual([
+    // Only the y axis, at x = 0, passes through the reach; the x axis is never in view.
+    expect(
+      Arr.map(drawn.axes, ({ axis, points }) => [axis, points])
+    ).toStrictEqual([
       [
-        [-5, -4],
-        [5, -4],
-      ],
-      [
-        [-5, -4],
-        [-5, 4],
+        "y",
+        [
+          [-5, -30],
+          [-5, 30],
+        ],
       ],
     ]);
-    expect(drawn.ticks).toStrictEqual([
-      { at: [-5, -4], axis: "y", key: "y:min", value: 35 },
-      { at: [-5, 4], axis: "y", key: "y:max", value: 39 },
+    // One unit takes 2 scene units, and 4.6 units across the drawing's short side give a major step of 2.
+    expect(drawn.grid).toStrictEqual(
+      Option.some({ major: [4, 4], minor: [1, 1], origin: [-5, -74] })
+    );
+    // Each number stands on its axis's line, which the card keeps it beside or sticks to its edge.
+    expect(
+      Arr.map(drawn.ticks, ({ at, axis, value }) => [axis, value, at])
+    ).toStrictEqual([
+      ["x", 2, [-1, -74]],
+      ["x", 4, [3, -74]],
+      ["x", 6, [7, -74]],
+      ["y", 34, [-5, -6]],
+      ["y", 36, [-5, -2]],
+      ["y", 38, [-5, 2]],
+      ["y", 40, [-5, 6]],
+    ]);
+  });
+
+  it("numbers no axis and draws no grid for a space scene", () => {
+    const drawn = still(
+      space({
+        ...fields,
+        at: { x: 1, y: 1, z: 1 },
+        id: "p",
+        kind: "point",
+      })
+    );
+    expect(Option.isNone(drawn.grid)).toBe(true);
+    expect(drawn.ticks).toStrictEqual([]);
+    expect(Arr.map(drawn.axes, ({ axis }) => axis)).toStrictEqual([
+      "x",
+      "y",
+      "z",
     ]);
   });
 

@@ -164,26 +164,26 @@ describe("markers, rays and split paths at the frame", () => {
       }),
     ],
     [
-      "a plane line outside the frame",
+      "a plane line beyond the reach",
       plane({
         appearance: "primary",
         id: "l",
         kind: "line",
         through: [
-          { x: 0, y: 10 },
-          { x: 1, y: 10 },
+          { x: 0, y: 40 },
+          { x: 1, y: 40 },
         ],
       }),
     ],
     [
-      "a space line outside the frame",
+      "a space line beyond the reach",
       space({
         appearance: "primary",
         id: "l",
         kind: "line",
         through: [
-          { x: 0, y: 10, z: 0 },
-          { x: 1, y: 10, z: 0 },
+          { x: 0, y: 40, z: 0 },
+          { x: 1, y: 40, z: 0 },
         ],
       }),
     ],
@@ -214,6 +214,24 @@ describe("markers, rays and split paths at the frame", () => {
     ]);
   });
 
+  it("draws a line past the frame across the whole reach, since the world does not end at the frame", () => {
+    // The fixture's frame is 10 by 8, so the world reaches 30 units from its center on each axis.
+    const [path] = resolveVisualGeometry(
+      plane({
+        appearance: "primary",
+        id: "l",
+        kind: "line",
+        through: [
+          { x: 0, y: 10 },
+          { x: 1, y: 10 },
+        ],
+      })
+    ).paths;
+    expect(path?.unbounded).toBe(true);
+    expect(path?.arrows).toBe("none");
+    expect(Arr.map(path?.points ?? [], ({ x }) => x)).toEqual([-30, 30]);
+  });
+
   it.each([
     [
       "plane",
@@ -236,11 +254,13 @@ describe("markers, rays and split paths at the frame", () => {
       }),
     ],
   ])(
-    "directs a %s ray from its origin toward the frame edge",
+    "runs a %s ray from its origin to the reach, with no head at an end no view shows",
     (_label, visual) => {
+      const paths = resolveVisualGeometry(visual).paths;
       expect(
-        Arr.map(resolveVisualGeometry(visual).paths, (path) => path.arrows)
-      ).toEqual(["end"]);
+        Arr.map(paths, ({ arrows, unbounded }) => [arrows, unbounded])
+      ).toEqual([["none", true]]);
+      expect(paths[0]?.points[0]?.x).toBe(0);
     }
   );
 });

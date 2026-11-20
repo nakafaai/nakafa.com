@@ -1,11 +1,7 @@
 import { Line } from "@react-three/drei";
 import { useFrame, useThree } from "@react-three/fiber";
 import { DrawnInlineMath } from "@repo/design-system/components/markdown/drawn";
-import type { CoordinateFrame } from "@repo/design-system/components/three/frame";
-import {
-  createAxisGeometry,
-  createSymmetricFrame,
-} from "@repo/design-system/components/three/frame";
+import { createAxisGeometry } from "@repo/design-system/components/three/frame";
 import type { AxisName } from "@repo/design-system/components/three/names";
 import { AXIS_NAMES } from "@repo/design-system/components/three/names";
 import { SceneHtml } from "@repo/design-system/components/three/overlay";
@@ -21,7 +17,7 @@ const LABEL_EDGE_SPACE = 4;
 const LABEL_GAP = 12;
 
 /** Intersects an axis segment with the six planes of the camera frustum. */
-function clipAxis(frustum: Frustum, from: Vector3, to: Vector3) {
+export function clipAxis(frustum: Frustum, from: Vector3, to: Vector3) {
   let minimum = 0;
   let maximum = 1;
   for (const plane of frustum.planes) {
@@ -187,27 +183,26 @@ function AxisLabel({
   );
 }
 
-/** Renders full Cartesian axes with readable labels inside the scene viewport. */
+/**
+ * Renders the Cartesian axes of an unbounded world, through the origin and
+ * across the whole reach (`createAxisGeometry`), with each name at the end of
+ * its axis that the camera shows.
+ */
 export function Axes({
-  size = 10,
-  frame,
+  reach = 100,
   showLabels = true,
   showZAxis = true,
   origin,
   ...props
 }: {
-  frame?: CoordinateFrame;
-  size?: number;
+  /** Half-width, in world units, of the box around the world's center that the camera can show. */
+  reach?: number;
   showLabels?: boolean;
   showZAxis?: boolean;
   origin?: Point3 | undefined;
 } & ComponentProps<"group">) {
   const axes = useMemo(() => {
-    const geometry = createAxisGeometry(
-      frame ?? createSymmetricFrame(size),
-      0,
-      origin
-    );
+    const geometry = createAxisGeometry(reach, origin);
     return Arr.map(
       [
         { name: "X" as const, color: AXIS_COLORS.x, geometry: geometry.x },
@@ -221,7 +216,7 @@ export function Axes({
         to: new Vector3(axis.to.x, axis.to.y, axis.to.z),
       })
     );
-  }, [frame, origin, showZAxis, size]);
+  }, [origin, reach, showZAxis]);
 
   return (
     <group {...props}>

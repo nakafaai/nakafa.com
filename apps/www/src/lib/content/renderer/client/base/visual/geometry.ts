@@ -17,6 +17,7 @@ import {
   isPlaneFormula,
   isSpaceFormula,
 } from "@/lib/content/renderer/client/base/visual/formula";
+import { resolveVisualReach } from "@/lib/content/renderer/client/base/visual/reach";
 import type {
   PlaneObject,
   PlanePoint,
@@ -31,7 +32,7 @@ import {
   resolveVisualProjection,
 } from "@/lib/content/renderer/client/base/visual/transform";
 
-const MathPathArrowsSchema = Schema.Literals(["both", "end", "none"]);
+const MathPathArrowsSchema = Schema.Literals(["end", "none"]);
 type MathPathArrows = typeof MathPathArrowsSchema.Type;
 const VisualMarkerSchema = Schema.Struct({
   appearance: MathAppearanceSchema,
@@ -39,11 +40,16 @@ const VisualMarkerSchema = Schema.Struct({
   id: Schema.String,
 });
 type VisualMarker = typeof VisualMarkerSchema.Type;
+/**
+ * One drawn path. An unbounded one, a line or a ray, runs to the reach, past
+ * every view, so the camera's fit and the still's view leave it out.
+ */
 const VisualPathSchema = Schema.Struct({
   appearance: MathAppearanceSchema,
   arrows: MathPathArrowsSchema,
   id: Schema.String,
   points: Schema.Array(SpacePointSchema),
+  unbounded: Schema.Boolean,
 });
 type VisualPath = typeof VisualPathSchema.Type;
 const VisualRegionSchema = Schema.Struct({
@@ -58,13 +64,14 @@ const VisualGeometrySchema = Schema.Struct({
   regions: Schema.mutable(Schema.Array(VisualRegionSchema)),
 });
 type VisualGeometry = typeof VisualGeometrySchema.Type;
+/**
+ * Only a vector ends in a head. A line or a ray runs on past every view in an
+ * unbounded world, so it has no end to mark.
+ */
 function arrows(
   kind: PlaneObject["kind"] | SpaceObject["kind"]
 ): MathPathArrows {
-  if (kind === "line") {
-    return "both";
-  }
-  return kind === "ray" || kind === "vector" ? "end" : "none";
+  return kind === "vector" ? "end" : "none";
 }
 /** Collects the markers, paths, and regions of one scene in the order its objects add them. */
 function createGeometryBuilder() {
@@ -105,6 +112,7 @@ function appendPaths(
       arrows: arrows(object.kind),
       id: paths.length === 1 ? object.id : `${object.id}:part:${index + 1}`,
       points: Arr.map(points, (point) => projectVisualPoint(point, projection)),
+      unbounded: object.kind === "line" || object.kind === "ray",
     });
   });
 }
@@ -137,6 +145,7 @@ function appendPlane(
       arrows: "none",
       id: object.id,
       points: resolvePlaneCurve(object, projection),
+      unbounded: false,
     });
     return;
   }
@@ -157,10 +166,12 @@ function appendPlane(
     return;
   }
   if (object.kind === "line" || object.kind === "ray") {
+    const { box } = resolveVisualReach(scene, projection);
+    const reach = { ...scene.frame, x: box.x, y: box.y };
     const path =
       object.kind === "line"
-        ? clipPlaneLine(scene.frame, ...object.through, false)
-        : clipPlaneLine(scene.frame, object.from, object.through, true);
+        ? clipPlaneLine(reach, ...object.through, false)
+        : clipPlaneLine(reach, object.from, object.through, true);
     appendPaths(geometry, object, path ? [path] : [], projection);
     return;
   }
@@ -208,10 +219,12 @@ function appendSpace(
     return;
   }
   if (object.kind === "line" || object.kind === "ray") {
+    const { box } = resolveVisualReach(scene, projection);
+    const reach = { ...scene.frame, ...box };
     const path =
       object.kind === "line"
-        ? clipSpaceLine(scene.frame, ...object.through, false)
-        : clipSpaceLine(scene.frame, object.from, object.through, true);
+        ? clipSpaceLine(reach, ...object.through, false)
+        : clipSpaceLine(reach, object.from, object.through, true);
     appendPaths(geometry, object, path ? [path] : [], projection);
     return;
   }
