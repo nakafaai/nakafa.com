@@ -1,12 +1,11 @@
 import { Array as Arr, HashSet, Option, Result } from "effect";
+import type { Node, SourceFile } from "tsrs/ast";
 import {
   isJsxElement,
   isJsxExpression,
   isJsxSelfClosingElement,
   isJsxText,
   isStringLiteralLikeNode,
-  type Node,
-  type SourceFile,
 } from "tsrs/ast";
 import { nodesBelow } from "#scripts/check/drilling";
 import { judgesMarkup, opening } from "#scripts/check/jsx";
