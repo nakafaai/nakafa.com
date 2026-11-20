@@ -31,6 +31,10 @@ const tryoutCurrentSectionValidator = Schema.Struct({
   status: tryoutStatusValidator,
   totalQuestions: Schema.Finite,
 });
+const tryoutSectionScoreSummaryValidator = Schema.Struct({
+  publishedScore: Schema.Finite,
+  sectionKey: tryoutRouteKeyValidator,
+});
 export const tryoutAttemptStateValidator = Schema.Struct({
   activeSectionKey: Schema.Union([tryoutRouteKeyValidator, Schema.Null]),
   attemptId: IdSchema("tryoutAttempts"),
@@ -41,6 +45,10 @@ export const tryoutAttemptStateValidator = Schema.Struct({
   resumeSectionKey: Schema.Union([tryoutRouteKeyValidator, Schema.Null]),
   score: Schema.Union([tryoutScoreResultValidator, Schema.Null]),
   section: Schema.Union([tryoutCurrentSectionValidator, Schema.Null]),
+  /** Published score of each scored section of this attempt. */
+  sectionScores: Schema.mutable(
+    Schema.Array(tryoutSectionScoreSummaryValidator)
+  ),
   startedAt: Schema.Finite,
   status: tryoutStatusValidator,
 });

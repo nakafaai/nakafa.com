@@ -10,12 +10,12 @@ import { rowLineVariants } from "@repo/design-system/lib/row";
 import { cva } from "class-variance-authority";
 import { Array as Arr, Option, Tuple } from "effect";
 import type { ReactNode } from "react";
-import { useTranslations } from "use-intl";
+import { useFormatter, useTranslations } from "use-intl";
 import { PaneSection } from "@/components/progress/section";
 import { getTryoutSubjectIcons } from "@/components/tryout/catalog/icons";
 import { useSetPane } from "@/components/tryout/pane/context";
 import type { PartStep } from "@/components/tryout/pane/model";
-import { partStep } from "@/components/tryout/pane/model";
+import { partScore, partStep } from "@/components/tryout/pane/model";
 import { TryoutPageLink } from "@/components/tryout/route/link";
 import {
   useSetTryoutPressed,
@@ -220,6 +220,7 @@ export function SetPath() {
   const t = useTranslations("Tryouts");
   const tIsland = useTranslations("Island");
   const tCommon = useTranslations("Common");
+  const format = useFormatter();
   const { claims, sections, tally, view } = useSetPane();
   const attempt = view.actionAttempt ?? null;
   const looks = getTileLooks(
@@ -236,6 +237,7 @@ export function SetPath() {
       <ol className="flex flex-col gap-2">
         {Arr.map(Arr.zip(sections, looks), ([section, look], index) => {
           const step = partStep(attempt, section.sectionKey);
+          const score = partScore(attempt, section.sectionKey);
           const gives =
             (step === "next" || step === "todo") &&
             !Arr.contains(claims.sections, section.sectionKey);
@@ -272,6 +274,14 @@ export function SetPath() {
                     })}
                   </span>
                 </span>
+                {Option.match(score, {
+                  onNone: () => null,
+                  onSome: (value) => (
+                    <span className="shrink-0 text-sm font-medium tabular-nums">
+                      {format.number(value)}
+                    </span>
+                  ),
+                })}
                 {step === "missed" ? (
                   <span className="text-muted-foreground shrink-0 text-xs">
                     {t("part-missed")}

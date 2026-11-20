@@ -7,7 +7,7 @@ import { toTryoutRuntimeError } from "@repo/backend/confect/tryouts/runtime/erro
 import { requireSection } from "@repo/backend/confect/tryouts/runtime/placement";
 import { readCurrentSection } from "@repo/backend/confect/tryouts/runtime/section/questions";
 import { loadAttemptScoreResult } from "@repo/backend/confect/tryouts/score/result";
-import { Array as Arr, Effect, Option, Schema } from "effect";
+import { Array as Arr, Effect, Option, Result, Schema } from "effect";
 
 const AttemptStateInputSchema = Schema.Struct({
   appLocale: AppLocaleCodeSchema,
@@ -30,6 +30,14 @@ export const loadAttemptState = Effect.fn("tryouts.attempt.loadState")(
         ) ?? null)
       : null;
     const score = yield* loadAttemptScoreResult(attempt);
+    const sectionScores = Arr.filterMap(sections, (candidate) =>
+      candidate.score === undefined
+        ? Result.failVoid
+        : Result.succeed({
+            publishedScore: candidate.score.publishedScore,
+            sectionKey: candidate.sectionKey,
+          })
+    );
     return {
       activeSectionKey: resume.activeSectionKey,
       attemptId: attempt._id,
@@ -51,6 +59,7 @@ export const loadAttemptState = Effect.fn("tryouts.attempt.loadState")(
             yield* requireSection(attempt, section.sectionKey)
           )
         : null,
+      sectionScores,
       startedAt: attempt.startedAt,
       status: attempt.status,
     };
