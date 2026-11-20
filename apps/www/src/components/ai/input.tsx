@@ -153,10 +153,6 @@ export function NinaInput({
           autoFocus={autoFocus}
           className="max-h-[min(12rem,35dvh)] px-3 py-3 text-(length:--text-chat) md:text-(length:--text-chat)"
           dir="auto"
-          onChange={(event) => {
-            setText(event.target.value);
-            onEngage?.();
-          }}
           onFocus={() => {
             onEngage?.();
             // Load the stylesheet's math faces before streamed formulas arrive.
@@ -168,6 +164,10 @@ export function NinaInput({
                 ])
               ).pipe(Effect.ignore)
             );
+          }}
+          onValueChange={(next) => {
+            setText(next);
+            onEngage?.();
           }}
           placeholder={t("text-placeholder")}
           ref={field}

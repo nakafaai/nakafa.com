@@ -220,10 +220,7 @@ export function ForumComposer() {
           aria-label={placeholder}
           className="max-h-[min(12rem,35dvh)] min-h-11 py-3 ps-1"
           dir="auto"
-          onChange={(event) => {
-            setText(event.target.value);
-            picker.onCaret(event);
-          }}
+          onChange={picker.onCaret}
           onClick={picker.onCaret}
           onDragOver={(event) => event.preventDefault()}
           onDrop={(event) => {
@@ -253,6 +250,7 @@ export function ForumComposer() {
               tray.add(pasted);
             }
           }}
+          onValueChange={setText}
           placeholder={placeholder}
           ref={field}
           value={text}

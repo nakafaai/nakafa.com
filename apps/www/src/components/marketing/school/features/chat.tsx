@@ -52,7 +52,7 @@ export function ForumChat() {
           aria-label={t("message-placeholder")}
           className="max-h-[min(12rem,35dvh)] min-h-11 py-3 ps-1"
           dir="auto"
-          onChange={(event) => setText(event.target.value)}
+          onValueChange={setText}
           placeholder={t("message-placeholder")}
           value={text}
         />
