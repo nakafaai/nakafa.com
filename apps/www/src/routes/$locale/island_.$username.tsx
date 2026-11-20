@@ -6,7 +6,8 @@ import {
   useRouter,
 } from "@tanstack/react-router";
 import { Suspense } from "react";
-import { RouteConvexProvider } from "@/components/providers/route";
+import { WorldClient } from "@/components/island/client";
+import { PageProviders } from "@/components/providers/page";
 import { privateHead } from "@/lib/account/head";
 import { worldScreenFn } from "@/lib/account/island.functions";
 import { MessagesProvider } from "@/lib/i18n/provider";
@@ -61,29 +62,31 @@ function WorldPage() {
       locale={locale}
       messages={{ ...shellMessages, ...messages }}
     >
-      <RouteConvexProvider>
-        <Suspense fallback={null}>
-          <IslandGame
-            blueprints={[]}
-            host={{
-              level: screen.level,
-              name: screen.name,
-              username: screen.username,
-            }}
-            key={screen.owner}
-            level={screen.level}
-            onLeave={() => {
-              if (router.history.canGoBack()) {
-                router.history.back();
-                return;
-              }
-              router.navigate({ params: { locale }, to: "/$locale" });
-            }}
-            owner={screen.owner}
-            progress={{ from: 0, lifetime: 0, next: 0 }}
-          />
-        </Suspense>
-      </RouteConvexProvider>
+      <PageProviders pageNavigation={null}>
+        <WorldClient>
+          <Suspense fallback={null}>
+            <IslandGame
+              blueprints={[]}
+              host={{
+                level: screen.level,
+                name: screen.name,
+                username: screen.username,
+              }}
+              key={screen.owner}
+              level={screen.level}
+              onLeave={() => {
+                if (router.history.canGoBack()) {
+                  router.history.back();
+                  return;
+                }
+                router.navigate({ params: { locale }, to: "/$locale" });
+              }}
+              owner={screen.owner}
+              progress={{ from: 0, lifetime: 0, next: 0 }}
+            />
+          </Suspense>
+        </WorldClient>
+      </PageProviders>
     </MessagesProvider>
   );
 }
