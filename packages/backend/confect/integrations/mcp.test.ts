@@ -1,11 +1,16 @@
 // @vitest-environment node
 
 import { beforeEach, describe, expect, it } from "@effect/vitest";
+import { Id } from "@repo/backend/confect/_generated/id";
 import refs from "@repo/backend/confect/_generated/refs";
-import { SCHOOL_MCP_PATH } from "@repo/backend/confect/integrations/api";
+import {
+  ApiGradeDraft,
+  SCHOOL_MCP_PATH,
+} from "@repo/backend/confect/integrations/api";
 import type { Fixture } from "@repo/backend/test/api";
 import { createClient, issue } from "@repo/backend/test/api";
-import { period } from "@repo/backend/test/classroom";
+import { forumClass, nf, period } from "@repo/backend/test/classroom";
+import { asStaffSchool } from "@repo/backend/test/guardians";
 import type { McpRequest } from "@repo/backend/test/mcp/harness";
 import { modernPost, withHeaders } from "@repo/backend/test/mcp/harness";
 import { TENANCY_NOW, tenancyFixture } from "@repo/backend/test/tenancy";
@@ -15,6 +20,21 @@ beforeEach(() => {
   vi.useFakeTimers({ toFake: ["Date"] });
   vi.setSystemTime(TENANCY_NOW);
 });
+
+/** The actions of a client that writes the roster and grades and reads them back. */
+const WRITES = [
+  "grade.export",
+  "grade.import",
+  "period.view",
+  "roster.import",
+] as const;
+
+/** One student of a roster import. */
+const STUDENT = {
+  name: "Raka Pratama",
+  nisn: "0012345678",
+  underAgeLimit: true,
+};
 
 /** A Retry-After value in whole seconds. */
 const SECONDS = /^\d+$/u;
@@ -78,6 +98,19 @@ const ToolAnswer = Schema.Struct({
   }),
 });
 
+/** Calls one school tool with a token, and decodes its answer. */
+const callTool =
+  (fixture: Fixture, token: string) =>
+  (id: number, name: string, args: Readonly<Record<string, unknown>>) =>
+    send(
+      fixture,
+      modernPost(id, "tools/call", { arguments: args, name }, name),
+      token
+    ).pipe(
+      Effect.flatMap(json),
+      Effect.flatMap(Schema.decodeUnknownEffect(ToolAnswer))
+    );
+
 describe("school MCP route", () => {
   it.effect(
     "lists the school's read-only tools to a client with an MCP token",
@@ -123,19 +156,7 @@ describe("school MCP route", () => {
         const fixture = yield* tenancyFixture;
         const term = yield* period(fixture, fixture.units.smp);
         const { token } = yield* mcpToken(fixture);
-        const call = (
-          id: number,
-          name: string,
-          args: Readonly<Record<string, unknown>>
-        ) =>
-          send(
-            fixture,
-            modernPost(id, "tools/call", { arguments: args, name }, name),
-            token
-          ).pipe(
-            Effect.flatMap(json),
-            Effect.flatMap(Schema.decodeUnknownEffect(ToolAnswer))
-          );
+        const call = callTool(fixture, token);
         const periods = yield* call(1, "school_list_periods", {});
         expect(periods.result.isError).not.toBe(true);
         expect(periods.result.structuredContent).toMatchObject({
@@ -168,14 +189,7 @@ describe("school MCP route", () => {
           ["school_list_people", {}],
           ["school_list_placements", { period: term.id }],
         ] as const) {
-          const refused = yield* send(
-            fixture,
-            modernPost(7, "tools/call", { arguments: args, name }, name),
-            closed.token
-          ).pipe(
-            Effect.flatMap(json),
-            Effect.flatMap(Schema.decodeUnknownEffect(ToolAnswer))
-          );
+          const refused = yield* callTool(fixture, closed.token)(7, name, args);
           expect(refused.result.isError).toBe(true);
         }
       })
@@ -221,6 +235,85 @@ describe("school MCP route", () => {
         const limited = yield* send(fixture, request, token);
         expect(limited.status).toBe(429);
         expect(limited.headers.get("retry-after")).toMatch(SECONDS);
+      })
+  );
+
+  it.effect(
+    "imports students and enters grades through tools, lists grades and changes, and answers each refusal as a tool error",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        yield* asStaffSchool(fixture);
+        const term = yield* period(fixture, fixture.units.smp);
+        const { classId } = yield* forumClass(fixture, term.id, "X-1");
+        const { token } = yield* mcpToken(fixture, WRITES);
+        const call = callTool(fixture, token);
+        const failed = (answer: typeof ToolAnswer.Type) =>
+          answer.result.isError === true;
+        const roster = { key: "k1", period: term.id, rows: [STUDENT] };
+        const entry = {
+          classId,
+          personId: fixture.people.student.personId,
+          value: 88,
+        };
+
+        const imported = yield* call(1, "school_import_roster", roster);
+        expect(imported.result.structuredContent).toEqual({
+          added: 1,
+          changed: 0,
+          skipped: 0,
+        });
+        const reused = { ...roster, rows: [] };
+        expect(failed(yield* call(2, "school_import_roster", reused))).toBe(
+          true
+        );
+        const invalid = {
+          ...roster,
+          key: "k2",
+          rows: [{ ...STUDENT, nisn: "1" }],
+        };
+        expect(failed(yield* call(3, "school_import_roster", invalid))).toBe(
+          true
+        );
+
+        const entered = yield* call(4, "school_enter_grade", entry);
+        const draft = yield* Schema.decodeUnknownEffect(ApiGradeDraft)(
+          entered.result.structuredContent
+        );
+        expect(draft.value).toBe(88);
+        const { personId: teacher } = fixture.people.teacher;
+        const outside = { ...entry, personId: teacher };
+        expect(failed(yield* call(5, "school_enter_grade", outside))).toBe(
+          true
+        );
+        const gradeId = yield* Schema.decodeUnknownEffect(Id("classGrades"))(
+          draft.id
+        );
+        yield* fixture
+          .as("teacher")
+          .mutation(refs.public.records.grades.release, {
+            gradeId,
+            slug: nf,
+          });
+        expect(failed(yield* call(6, "school_enter_grade", entry))).toBe(true);
+        const grades = { period: term.id };
+        expect(failed(yield* call(7, "school_list_grades", grades))).toBe(
+          false
+        );
+        expect(failed(yield* call(8, "school_list_changes", {}))).toBe(false);
+
+        // A client that holds only period.view writes nothing and reads no grade.
+        const closed = callTool(
+          fixture,
+          (yield* mcpToken(fixture, ["period.view"])).token
+        );
+        for (const [name, args] of [
+          ["school_import_roster", { ...roster, key: "k3" }],
+          ["school_enter_grade", entry],
+          ["school_list_grades", grades],
+        ] as const) {
+          expect(failed(yield* closed(9, name, args))).toBe(true);
+        }
       })
   );
 
