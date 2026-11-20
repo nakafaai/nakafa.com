@@ -97,11 +97,19 @@ export function TryoutSetTable({ bootstrap, children }: TryoutSetTableProps) {
       search: (previous) => ({ ...previous, ...change }),
       state: true,
     });
+  const closeSet = () =>
+    navigate({
+      params,
+      resetScroll: false,
+      search: catalogSearchOf,
+      to: "/$locale/try-out/$country/$exam/$group/$track",
+    });
   return (
     <TryoutSetTableContext
       value={{
         filter: request.filter,
         level: request.level,
+        onClose: closeSet,
         onFilter: (filter) => select({ status: filter }),
         onLevel: (level) => select({ level }),
         onSort: (sort) =>
@@ -133,15 +141,9 @@ export function TryoutSetTable({ bootstrap, children }: TryoutSetTableProps) {
             </PanesList>
             {/* The open set stands outside the table, so it outlives the visitor's table turning into the learner's. */}
             <PagePane
+              closeButton={false}
               label={t("set-pane")}
-              onClose={() =>
-                navigate({
-                  params,
-                  resetScroll: false,
-                  search: catalogSearchOf,
-                  to: "/$locale/try-out/$country/$exam/$group/$track",
-                })
-              }
+              onClose={closeSet}
               open={Option.isSome(shown)}
             >
               {children}

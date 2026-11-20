@@ -327,6 +327,7 @@ const paneSheetVariants = cva("", {
 export function PagePane({
   alwaysOn = false,
   children,
+  closeButton = true,
   fill = false,
   label,
   onClose,
@@ -336,6 +337,8 @@ export function PagePane({
   alwaysOn?: boolean;
   /** The detail's header, body and footer. */
   children: ReactNode;
+  /** Whether the pane's header draws a close button beside the list; set false when pressing the active row closes it. */
+  closeButton?: boolean;
   /** Whether the phone's sheet is as tall as a drawer may be, for a detail that scrolls inside itself. */
   fill?: boolean;
   /** The pane's name for a screen reader. */
@@ -356,6 +359,7 @@ export function PagePane({
   const isOpen = open ?? rowOpen;
   const sheet = open ?? sheetOpen;
   const close = onClose ?? closePanes;
+  const headerClose = alwaysOn || !closeButton ? undefined : close;
   const beside = standsBeside({
     alwaysOn,
     besidePage,
@@ -381,9 +385,7 @@ export function PagePane({
     <>
       {beside && besidePage ? (
         <PaneSide from={from} group={group} label={label} row={closes}>
-          <PaneModeContext
-            value={{ close: alwaysOn ? undefined : close, place: "aside" }}
-          >
+          <PaneModeContext value={{ close: headerClose, place: "aside" }}>
             {children}
           </PaneModeContext>
         </PaneSide>
@@ -398,12 +400,7 @@ export function PagePane({
                 className="bg-background flex h-full flex-col"
                 data-pane-row={closes ? "" : undefined}
               >
-                <PaneModeContext
-                  value={{
-                    close: alwaysOn ? undefined : close,
-                    place: "aside",
-                  }}
-                >
+                <PaneModeContext value={{ close: headerClose, place: "aside" }}>
                   {children}
                 </PaneModeContext>
               </aside>

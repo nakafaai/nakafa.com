@@ -50,13 +50,13 @@ async function rowName(row: Locator) {
 /**
  * The owner's notes of 20 Nov: a press on a set's row opens the set beside the table at the set's own address, with
  * its name, its parts as a path, what it gives, and its level beside Start, and marks the row while it stays open.
- * The name's link opens it too, Escape closes it back to the track, the set's address opens the same pane, and a
- * visitor's Start goes to sign in and comes back to the set.
+ * The header draws no close button: pressing the open row or its name again closes it back to the track, as Escape
+ * does. The set's address opens the same pane, and a visitor's Start goes to sign in and comes back to the set.
  */
 test.describe("The set pane beside a track's table", () => {
   test.use({ viewport: viewportSize(desktopViewport) });
 
-  test("opens an unstarted set from its row and its name, marks the row, and closes on Escape", async ({
+  test("opens an unstarted set from its row and its name, marks the row, and closes by pressing the open row again or Escape", async ({
     page,
   }) => {
     await openTrack(page);
@@ -71,6 +71,9 @@ test.describe("The set pane beside a track's table", () => {
       name: en.Tryouts["set-pane"],
     });
     await expect(pane).toBeVisible();
+    await expect(
+      pane.getByRole("button", { exact: true, name: en.Common.close })
+    ).toHaveCount(0);
     await expect(
       pane.getByRole("heading", { exact: true, name: await rowName(first) })
     ).toBeVisible();
@@ -106,9 +109,9 @@ test.describe("The set pane beside a track's table", () => {
       })
     ).toBeVisible();
 
-    // Escape closes it, back at the track's address, and the row lets go of its mark; the set's name opens it
-    // again. Every track of the acceptance release holds one set, so the name opens the same one.
-    await page.keyboard.press("Escape");
+    // Pressing the open row again closes it, back at the track's address, and the row lets go of its mark; the
+    // set's name opens it again and closes it on a second press, and Escape still closes it too.
+    await questionsCell(first).click();
     await expect(pane).toBeHidden();
     await expect.poll(() => new URL(page.url()).pathname).toBe(TRACK_PATH);
     await expect(first).not.toHaveAttribute("data-state", "selected");
@@ -118,6 +121,16 @@ test.describe("The set pane beside a track's table", () => {
     ).toBeVisible();
     await expect(first).toHaveAttribute("data-state", "selected");
     expect(new URL(page.url()).pathname).toBe(SET_PATH);
+    await first.getByRole("link").first().click();
+    await expect(pane).toBeHidden();
+    await expect.poll(() => new URL(page.url()).pathname).toBe(TRACK_PATH);
+    await expect(first).not.toHaveAttribute("data-state", "selected");
+    await questionsCell(first).click();
+    await expect(pane).toBeVisible();
+    await page.keyboard.press("Escape");
+    await expect(pane).toBeHidden();
+    await expect.poll(() => new URL(page.url()).pathname).toBe(TRACK_PATH);
+    await expect(first).not.toHaveAttribute("data-state", "selected");
   });
 
   test("opens a set's own address in its pane beside the table", async ({

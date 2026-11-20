@@ -11,6 +11,8 @@ import type {
 export const TryoutSetTableContext = createContext<{
   filter: TryoutSetStatusFilter;
   level: TryoutSetLevelFilter;
+  /** Closes the open set pane beside the table, returning to the track's address. */
+  onClose: () => void;
   onFilter: (filter: TryoutSetStatusFilter) => void;
   onLevel: (level: TryoutSetLevelFilter) => void;
   onSort: (sort: TryoutSetSort) => void;
