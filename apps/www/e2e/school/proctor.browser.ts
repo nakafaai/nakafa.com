@@ -131,7 +131,7 @@ test("a person whose only role is Proctor runs a room end to end, and is refused
   const room = proctor.getByRole("dialog", { name: "Join this room" });
   await room.getByRole("button", { name: "Change token" }).click();
   await proctor
-    .getByRole("dialog")
+    .getByRole("dialog", { name: "Change the sitting token?" })
     .getByRole("button", { exact: true, name: "Change token" })
     .click();
   await expect(

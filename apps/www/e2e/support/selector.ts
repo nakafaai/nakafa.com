@@ -45,6 +45,14 @@ export const MARKDOWN_MARKUP = "em, strong, code, pre, a, ul, ol, h1, h2, h3";
  */
 export const TOASTER = "[data-slot=toast-region]";
 /**
+ * The dialog on top. A popup renders where it is written, so a dialog that a
+ * control inside another dialog opens, such as a phone's sheet, renders inside
+ * that dialog and comes after it in the page.
+ */
+export function topDialog(page: Page) {
+  return page.getByRole("dialog").last();
+}
+/**
  * The toasts on the page that contain `text`. A toast's words are also in the
  * live region that announces it to a screen reader, so a toast is read from the
  * toast itself, never from the page's text.
