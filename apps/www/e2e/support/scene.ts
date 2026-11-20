@@ -29,20 +29,45 @@ const KNOWN_SCENE_DIAGNOSTICS = [
 export const isKnownSceneDiagnostic = (text: string) =>
   Arr.some(KNOWN_SCENE_DIAGNOSTICS, (known) => known.test(text));
 
+/**
+ * Brings a scene into view as a reader does and waits until it is drawn. A
+ * MathVisual loads on the reader's intent (ADR 0039), so the pointer moves over
+ * the scene, and every scene shows its canvas only once it has drawn its first
+ * whole frame, which its frame names as `data-scene-state="drawn"`.
+ */
+export const revealDrawnScene = Effect.fn("NakafaE2E.revealDrawnScene")(
+  function* (scene: Locator) {
+    const page = scene.page();
+    yield* Effect.promise(() =>
+      expect(async () => {
+        await scene.scrollIntoViewIfNeeded();
+        const box = await scene.boundingBox();
+        if (box) {
+          await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2, {
+            steps: 2,
+          });
+        }
+        await expect(scene.locator("[data-scene-state]")).toHaveAttribute(
+          "data-scene-state",
+          "drawn",
+          { timeout: 2000 }
+        );
+      }).toPass({ timeout: revealTimeoutMilliseconds })
+    );
+  }
+);
+
 /** Reveals one line-scene card and waits for its canvas to settle. */
 export const revealLineScene = Effect.fn("NakafaE2E.revealLineScene")(
   function* (card: Locator) {
     const scene = card.locator(MATH_SCENE);
     const canvas = scene.locator("canvas");
     // Reveal the content-visibility card before scrolling its deferred scene.
-    yield* Effect.promise(() =>
-      expect(async () => {
-        await card.scrollIntoViewIfNeeded();
-        await expect(scene).toBeVisible();
-        await scene.scrollIntoViewIfNeeded();
-        expect(await canvas.isVisible()).toBe(true);
-      }).toPass({ timeout: revealTimeoutMilliseconds })
-    );
+    yield* Effect.promise(async () => {
+      await card.scrollIntoViewIfNeeded();
+      await expect(scene).toBeVisible();
+    });
+    yield* revealDrawnScene(scene);
     yield* waitForStableCanvas(canvas);
     return canvas;
   }

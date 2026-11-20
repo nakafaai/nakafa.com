@@ -1,4 +1,3 @@
-import { Sad02Icon } from "@hugeicons/core-free-icons";
 import {
   useIntersection,
   useMergedRef,
@@ -17,14 +16,17 @@ import {
 import { CameraFraming } from "@repo/design-system/components/three/camera/framing";
 import { THREE_RENDER_MARGIN } from "@repo/design-system/components/three/data/constants";
 import {
+  SCENE_STARTS,
+  SceneFailure,
+} from "@repo/design-system/components/three/failure";
+import {
   SceneOverlay,
   SceneOverlayProvider,
 } from "@repo/design-system/components/three/overlay";
-import { Button } from "@repo/design-system/components/ui/button";
+import { SceneSpinner } from "@repo/design-system/components/three/placeholder";
+import { SceneDrawn } from "@repo/design-system/components/three/reveal";
 import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundary";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { Spinner } from "@repo/design-system/components/ui/spinner";
-import { buttonVariants } from "@repo/design-system/lib/button";
+import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { getPowerPreference } from "@repo/design-system/lib/device";
 import { createFramePace } from "@repo/design-system/lib/pace";
 import { ClientOnly } from "@tanstack/react-router";
@@ -32,55 +34,14 @@ import { cn } from "cn";
 import {
   type ComponentProps,
   type ReactNode,
+  Suspense,
   useEffect,
   useLayoutEffect,
   useRef,
   useState,
   useSyncExternalStore,
 } from "react";
-import type { ToneMapping } from "three";
-import { useTranslations } from "use-intl";
-
-function ErrorFallback({
-  error,
-  resetErrorBoundary,
-}: {
-  error: unknown;
-  resetErrorBoundary: () => void;
-}) {
-  const t = useTranslations("Error");
-  const errorMessage = error instanceof Error ? error.message : String(error);
-  return (
-    <div className="flex h-full w-full flex-col items-center justify-center p-4 text-center">
-      <div className="space-y-4 text-center">
-        <h1 className="text-primary font-mono text-2xl font-bold">5XX</h1>
-
-        <div className="space-y-2">
-          <h2 className="font-medium tracking-tight">{t("title")}</h2>
-
-          <p className="text-muted-foreground mx-auto max-w-md text-sm">
-            {errorMessage}
-          </p>
-        </div>
-
-        <div className="mx-auto grid w-fit grid-cols-2 gap-2">
-          <Button onClick={resetErrorBoundary} size="sm" variant="secondary">
-            {t("retry")}
-          </Button>
-          <a
-            className={cn(buttonVariants({ variant: "secondary", size: "sm" }))}
-            href="https://github.com/nakafaai/nakafa.com/issues"
-            rel="noopener noreferrer"
-            target="_blank"
-            title={t("report")}
-          >
-            {t("report")}
-          </a>
-        </div>
-      </div>
-    </div>
-  );
-}
+import type { ToneMapping, WebGLRenderer } from "three";
 
 /**
  * Keeps scene time continuous while a canvas pauses.
@@ -172,15 +133,38 @@ function subscribeToInert(onChange: () => void) {
 }
 
 /**
- * Shared Three.js canvas with a WebGL fallback and render error boundary.
+ * Starts the scene again on a new canvas when the browser takes its WebGL
+ * context away and does not give it back, as WebKit does to the oldest context
+ * once a page holds sixteen. three keeps a lost context waiting for its
+ * restore, which never comes then, so the scene would stay blank.
+ */
+function watchContextLoss(gl: WebGLRenderer, onLost: () => void) {
+  gl.domElement.addEventListener("webglcontextlost", onLost, { once: true });
+}
+
+/**
+ * Shared Three.js canvas: one scene in a frame that keeps its size from the
+ * first paint to the scene's first frame, with its loading state in the middle.
  *
- * Selects an appropriate GPU power preference and lets React Three Fiber own
- * capability detection through its Canvas fallback. A canvas farther than
- * `THREE_RENDER_MARGIN` from the viewport stops rendering and resumes when it
- * returns, so animated scenes cost nothing while nobody can see them. A canvas
- * in an inert part of the page, such as the page behind a visual card shown
- * full screen, stops the same way. Scene labels draw in a DOM overlay over the
- * same frame, so they need no React root of their own.
+ * The canvas element is created only once its frame nears the viewport, in
+ * the same commit that asks it for WebGL: Mobile Safari refused WebGL to a
+ * lab canvas that had waited in the page for twelve seconds without a context,
+ * and showed the reader an error, while a new canvas beside it got WebGL 2 at
+ * once. A canvas whose start fails anyway starts again on a new element
+ * (`SceneFailure`), and one whose context the browser takes away starts again
+ * the next time its frame nears the viewport.
+ *
+ * Until the scene is drawn whole (`SceneDrawn`), the frame shows its loading
+ * state: the scene's still when it has one, and a spinner in the middle. The
+ * canvas and its labels stay transparent and take no presses behind it, and
+ * the frame swaps them in one commit, so a reader never sees an empty canvas, a
+ * half-built scene or a camera that jumps.
+ *
+ * A canvas farther than `THREE_RENDER_MARGIN` from the viewport stops
+ * rendering and resumes when it returns, so animated scenes cost nothing while
+ * nobody can see them. A canvas in an inert part of the page, such as the page
+ * behind a visual card shown full screen, stops the same way. Scene labels draw
+ * in a DOM overlay over the same frame, so they need no React root of their own.
  *
  * With reduced motion every canvas renders on demand, whatever loop it asks
  * for: a scene is drawn once, and again only when the reader moves the camera.
@@ -193,20 +177,19 @@ function subscribeToInert(onChange: () => void) {
  * @param toneMapping - How the canvas maps light to screen colors, ACES unless
  * a stage names another
  * @param props - Additional CanvasProps passed to @react-three/fiber Canvas
- *
- * @returns JSX element with WebGL detection and error handling
  */
 function ThreeCanvasComponent({
   children,
   className,
   frameloop = "demand",
+  onCreated,
   toneMapping,
   ...props
 }: {
   children: ReactNode;
   frameloop?: "always" | "demand";
   toneMapping?: ToneMapping;
-} & Omit<CanvasProps, "camera" | "gl" | "orthographic">) {
+} & Omit<CanvasProps, "camera" | "fallback" | "gl" | "orthographic">) {
   const powerPreference = getPowerPreference();
   const { entry, ref } = useIntersection<HTMLDivElement>({
     rootMargin: `${THREE_RENDER_MARGIN}px`,
@@ -214,7 +197,12 @@ function ThreeCanvasComponent({
   const [frame, setFrame] = useState<HTMLDivElement | null>(null);
   const frameRef = useMergedRef(ref, setFrame);
   const calm = useReducedMotion(undefined, { getInitialValueInEffect: false });
-  // A canvas renders until the observer first places it.
+  // The frame is placed once it nears the viewport, and its canvas starts then.
+  const [placed, setPlaced] = useState(false);
+  // Each start of the scene draws on a new canvas element.
+  const [start, setStart] = useState(1);
+  const [stage, setStage] = useState<"drawn" | "failed" | "loading">("loading");
+  const drawn = stage === "drawn";
   const nearViewport = entry?.isIntersecting ?? true;
   const paced = !calm && frameloop === "always";
   const behindInert = useSyncExternalStore(
@@ -222,63 +210,103 @@ function ThreeCanvasComponent({
     () => Boolean(frame?.closest("[inert]")),
     () => false
   );
+  const running = nearViewport && !behindInert;
+
+  /** Starts the scene again on a new canvas, now. */
+  const restart = () => {
+    setStage("loading");
+    setStart((count) => count + 1);
+  };
+
+  /** Starts the scene again on a new canvas, once its frame nears the viewport. */
+  const replace = () => {
+    setPlaced(false);
+    restart();
+  };
 
   return (
-    // The overlay is placed over this frame, so the frame is positioned.
+    // The loading state, the canvas and the overlay fill this frame.
     <div
+      aria-busy={!drawn}
       className="relative size-full min-w-0 overflow-hidden rounded-[inherit]"
+      data-scene-state={stage}
       ref={frameRef}
     >
-      <SceneOverlayProvider>
-        <ErrorBoundary
-          fallbackRender={({ error, resetErrorBoundary }) => (
-            <ErrorFallback
-              error={error}
-              resetErrorBoundary={resetErrorBoundary}
-            />
-          )}
+      {placed ? (
+        <div
+          className={cn("size-full", !drawn && "pointer-events-none opacity-0")}
         >
-          <Canvas
-            className={cn(
-              "size-full overflow-hidden rounded-[inherit] [&_canvas]:size-full [&_canvas]:rounded-[inherit] [&>div]:rounded-[inherit]",
-              className
-            )}
-            dpr={[1, 2]}
-            fallback={
-              <div className="flex h-full w-full items-center justify-center">
-                <HugeIcons aria-hidden="true" icon={Sad02Icon} />
-              </div>
-            }
-            frameloop={nearViewport && !behindInert ? "demand" : "never"}
-            gl={{
-              antialias: true,
-              powerPreference,
-              alpha: true,
-              toneMapping,
-            }}
-            performance={{
-              min: 0.8,
-              max: 1.0,
-              debounce: 100,
-            }}
-            shadows="percentage"
-            {...props}
-          >
-            <AdaptiveDpr />
-            <SceneTime />
-            {paced && nearViewport && !behindInert ? <PacedFrames /> : null}
-            <CameraFraming>{children}</CameraFraming>
-          </Canvas>
-        </ErrorBoundary>
-        <SceneOverlay />
-      </SceneOverlayProvider>
+          <SceneOverlayProvider>
+            <ErrorBoundary
+              fallbackRender={() => null}
+              key={start}
+              onError={() => {
+                if (start < SCENE_STARTS) {
+                  restart();
+                  return;
+                }
+                setStage("failed");
+              }}
+            >
+              <Canvas
+                className={cn(
+                  "size-full overflow-hidden rounded-[inherit] [&_canvas]:size-full [&_canvas]:rounded-[inherit] [&>div]:rounded-[inherit]",
+                  className
+                )}
+                dpr={[1, 2]}
+                frameloop={running ? "demand" : "never"}
+                gl={{
+                  antialias: true,
+                  powerPreference,
+                  alpha: true,
+                  toneMapping,
+                }}
+                onCreated={(state) => {
+                  watchContextLoss(state.gl, replace);
+                  onCreated?.(state);
+                }}
+                performance={{
+                  min: 0.8,
+                  max: 1.0,
+                  debounce: 100,
+                }}
+                shadows="percentage"
+                {...props}
+              >
+                <AdaptiveDpr />
+                <SceneTime />
+                {paced && running ? <PacedFrames /> : null}
+                <CameraFraming>
+                  <Suspense fallback={null}>
+                    {children}
+                    <SceneDrawn onDrawn={() => setStage("drawn")} />
+                  </Suspense>
+                </CameraFraming>
+              </Canvas>
+            </ErrorBoundary>
+            <SceneOverlay />
+          </SceneOverlayProvider>
+        </div>
+      ) : (
+        <Intersection
+          aria-hidden="true"
+          className="absolute inset-0"
+          key={start}
+          once
+          onIntersect={() => setPlaced(true)}
+          rootMargin={`${THREE_RENDER_MARGIN}px`}
+        />
+      )}
+      {stage === "loading" ? <SceneSpinner /> : null}
+      {stage === "failed" ? <SceneFailure onRestart={restart} /> : null}
     </div>
   );
 }
 
 /**
  * Mounts the canvas on the client only. The canvas lives in this module, so it
- * needs no lazy boundary of its own; the spinner holds the place until mount.
+ * needs no lazy boundary of its own; the loading state holds the place until
+ * mount.
  */
 export function ThreeCanvas(
   props: ComponentProps<typeof ThreeCanvasComponent>
@@ -286,8 +314,8 @@ export function ThreeCanvas(
   return (
     <ClientOnly
       fallback={
-        <div className="flex h-full w-full items-center justify-center">
-          <Spinner aria-hidden="true" />
+        <div className="relative size-full">
+          <SceneSpinner />
         </div>
       }
     >

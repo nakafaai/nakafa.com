@@ -64,6 +64,7 @@ export function MathPicture({ labels = EMPTY_LABELS, scene }: MathSceneProps) {
     <div
       aria-hidden="true"
       className={threeSceneFrameVariants()}
+      data-slot="scene-still"
       style={{ containerType: "size" }}
     >
       <svg

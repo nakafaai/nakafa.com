@@ -8,6 +8,7 @@ import {
 } from "@/e2e/support/canvas";
 import { withBrowserContext } from "@/e2e/support/context";
 import { withObservedPageErrors } from "@/e2e/support/observe";
+import { revealDrawnScene } from "@/e2e/support/scene";
 import {
   CARD,
   MATH_SCENE,
@@ -69,15 +70,12 @@ const expectStableCoordinateSystem = Effect.fn(
   const gridItem = page.getByRole("menuitemcheckbox", { name: "Kisi" });
   const playButton = footer.getByRole("button", { name: "Putar" });
 
-  yield* Effect.promise(() =>
-    expect(async () => {
-      await expect(card).toHaveCount(1);
-      await expect(scene).toBeAttached();
-      await card.scrollIntoViewIfNeeded();
-      await scene.scrollIntoViewIfNeeded();
-      expect(await canvas.isVisible()).toBe(true);
-    }).toPass({ timeout: revealTimeoutMilliseconds })
-  );
+  yield* Effect.promise(async () => {
+    await expect(card).toHaveCount(1);
+    await expect(scene).toBeAttached();
+    await card.scrollIntoViewIfNeeded();
+  });
+  yield* revealDrawnScene(scene);
   yield* Effect.promise(() =>
     expect(playButton).toHaveAttribute("aria-pressed", "false")
   );

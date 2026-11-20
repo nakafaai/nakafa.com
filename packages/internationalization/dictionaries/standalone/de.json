@@ -8,7 +8,8 @@
     "title": "Etwas ist kaputtgegangen",
     "description": "Das liegt nicht an dir, wir kümmern uns darum.",
     "retry": "Erneut versuchen",
-    "report": "Melden"
+    "scene-title": "Die 3D-Ansicht startet nicht",
+    "scene-description": "Dein Browser konnte die 3D-Ansicht gerade nicht öffnen. Versuch es noch mal."
   },
   "State": {
     "home-button": "Zur Startseite gehen"
