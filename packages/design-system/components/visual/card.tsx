@@ -49,6 +49,9 @@ import { useShallow } from "zustand/react/shallow";
 
 const VisualContext = createContext<VisualStore | null>(null);
 
+/** The words an author wrote under the visual cards below, or none. */
+const VisualNoteContext = createContext<NonNullable<ReactNode> | null>(null);
+
 /** Selects part of the surrounding card's presentation and actions. */
 function useVisual<T>(selector: (state: VisualState) => T) {
   const store = useRequired(VisualContext, "useVisual");
@@ -162,7 +165,8 @@ const visualBodyVariants = cva(
  * A card for one interactive visual: a 3D scene, a chart, a diagram or a
  * sketch. It composes, in this order, `VisualCardHeader`, an optional
  * `VisualCardToolbar`, `VisualCardBody`, optional `VisualCardActions`, and an
- * optional `VisualCardFooter`. The body holds only the visual: controls go in
+ * optional `VisualCardFooter`, then the author's note when a document wrote one
+ * (`VisualCardNoteProvider`). The body holds only the visual: controls go in
  * the toolbar, buttons in the actions, and readouts, legends, tables and notes
  * in the footer. The toolbar and the actions hold nothing a reader cannot
  * operate: a control carries its own label and value, and any other words go
@@ -174,8 +178,14 @@ const visualBodyVariants = cva(
  * the card's place meanwhile, so nothing behind it moves, and the popups of
  * its parts render inside it.
  */
-function VisualCard({ className, ref, ...props }: ComponentProps<typeof Card>) {
+function VisualCard({
+  children,
+  className,
+  ref,
+  ...props
+}: ComponentProps<typeof Card>) {
   const [store] = useState(createVisualStore);
+  const note = use(VisualNoteContext);
   const { bind, place, presentation } = useStore(
     store,
     useShallow((state) => ({
@@ -211,7 +221,11 @@ function VisualCard({ className, ref, ...props }: ComponentProps<typeof Card>) {
             data-fullscreen={presentation === "inline" ? undefined : ""}
             ref={cardRef}
             {...props}
-          />
+          >
+            {/* A card inside this one does not repeat its note. */}
+            <VisualNoteContext value={null}>{children}</VisualNoteContext>
+            {note === null ? null : <VisualCardNote>{note}</VisualCardNote>}
+          </Card>
         </div>
       </PortalContainer>
     </VisualContext>
@@ -311,6 +325,47 @@ function VisualCardFooter(props: Omit<ComponentProps<"div">, "className">) {
       data-slot="visual-card-footer"
       {...props}
     />
+  );
+}
+
+/**
+ * The sentence the visual's author wrote about it, in the card's last band,
+ * under its readouts: what to notice in this figure, in a teacher's words. It
+ * reads like the card's description. A card draws it itself from
+ * `VisualCardNoteProvider`, so no visual places it.
+ */
+function VisualCardNote({ children }: { children: NonNullable<ReactNode> }) {
+  return (
+    <div
+      className={visualBandVariants({ kind: "text" })}
+      data-slot="visual-card-note"
+    >
+      <p className="text-muted-foreground text-pretty">{children}</p>
+    </div>
+  );
+}
+
+/**
+ * Hands the visual cards below it the note their author wrote, the document's
+ * `footer`. A catalog renderer takes it from the document here, so each visual
+ * draws its own bands and never reads the note itself. Without a note, the
+ * cards end with their own last band.
+ */
+function VisualCardNoteProvider({
+  children,
+  note,
+}: {
+  children: ReactNode;
+  note?: ReactNode;
+}) {
+  return (
+    <VisualNoteContext
+      value={
+        note === undefined || note === null || note === false ? null : note
+      }
+    >
+      {children}
+    </VisualNoteContext>
   );
 }
 
@@ -415,6 +470,7 @@ export {
   VisualCardFullscreen,
   VisualCardHeader,
   VisualCardMenu,
+  VisualCardNoteProvider,
   VisualCardTable,
   VisualCardToolbar,
 };
