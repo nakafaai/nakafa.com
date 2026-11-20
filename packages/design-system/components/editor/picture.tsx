@@ -1,6 +1,7 @@
 import { Delete02Icon, PencilEdit02Icon } from "@hugeicons/core-free-icons";
 import { objectBar } from "@repo/design-system/components/editor/bar";
 import { altText } from "@repo/design-system/components/editor/image";
+import { EditorNodeView } from "@repo/design-system/components/editor/node";
 import { RichEditorControl } from "@repo/design-system/components/editor/tools";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
@@ -19,7 +20,7 @@ import { ImageType } from "@repo/editor/upload";
 import type { Editor } from "@tiptap/core";
 import { FileHandler } from "@tiptap/extension-file-handler";
 import type { ReactNodeViewProps } from "@tiptap/react";
-import { NodeViewWrapper, ReactNodeViewRenderer } from "@tiptap/react";
+import { ReactNodeViewRenderer } from "@tiptap/react";
 import { cn } from "cn";
 import { Option, Schema } from "effect";
 import type { ReactNode } from "react";
@@ -205,7 +206,7 @@ function PictureNode({
   const src: string | undefined = urls[asset];
 
   return (
-    <NodeViewWrapper
+    <EditorNodeView
       className={cn(blockGapVariants(), "group relative block max-w-full")}
       contentEditable={false}
       data-picture=""
@@ -260,7 +261,7 @@ function PictureNode({
         submit={labels.save}
         title={labels.edit}
       />
-    </NodeViewWrapper>
+    </EditorNodeView>
   );
 }
 

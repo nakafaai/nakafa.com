@@ -1,4 +1,14 @@
 import { cva } from "class-variance-authority";
+import { createContext } from "react";
+
+/**
+ * Where the popups drawn under it render, when not where they are written. A popup renders in place (ADR 0049), but
+ * ProseMirror owns the DOM of an editor's document and redraws a node whose DOM takes the focus or the selection, which
+ * would take a popup drawn inside the node down with it as it opens. So a node view (`EditorNodeView`) names the page's
+ * body here, and every popup root of the design system renders there under it, its backdrop and the popups it opens
+ * included. Elsewhere it names none (`null`).
+ */
+export const PopupContainer = createContext<HTMLElement | null>(null);
 
 /**
  * How every anchored popup of the design system enters and leaves: it fades and grows from the point of its trigger,

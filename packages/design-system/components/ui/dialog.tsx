@@ -5,7 +5,7 @@ import { ScrollArea } from "@repo/design-system/components/ui/scroll-area";
 import { SheetGrip } from "@repo/design-system/components/ui/sheet-grip";
 import { StagedPopup } from "@repo/design-system/components/ui/staged";
 import { ButtonGroupVariant } from "@repo/design-system/lib/group";
-import { sheetSurface } from "@repo/design-system/lib/popup";
+import { PopupContainer, sheetSurface } from "@repo/design-system/lib/popup";
 import type { NodeChildren } from "@repo/design-system/lib/render";
 import {
   DialogBackdrop,
@@ -17,6 +17,7 @@ import {
 } from "@ui-sdk/react/dialog";
 import { cn } from "cn";
 import type { ComponentProps } from "react";
+import { use } from "react";
 import { useTranslations } from "use-intl";
 
 /**
@@ -28,7 +29,13 @@ function Dialog({
   presentation = "auto",
   ...props
 }: ComponentProps<typeof DialogPrimitive>) {
-  return <DialogPrimitive presentation={presentation} {...props} />;
+  return (
+    <DialogPrimitive
+      container={use(PopupContainer)}
+      presentation={presentation}
+      {...props}
+    />
+  );
 }
 
 function DialogContent({

@@ -10,7 +10,11 @@ import {
   optionRowVariants,
   optionTickVariants,
 } from "@repo/design-system/lib/option";
-import { popupMotion, sheetSurface } from "@repo/design-system/lib/popup";
+import {
+  PopupContainer,
+  popupMotion,
+  sheetSurface,
+} from "@repo/design-system/lib/popup";
 import type { NodeChildren } from "@repo/design-system/lib/render";
 import {
   createMenuController,
@@ -32,6 +36,7 @@ import {
 import { cva } from "class-variance-authority";
 import { cn } from "cn";
 import type * as React from "react";
+import { use } from "react";
 import { useTranslations } from "use-intl";
 
 /**
@@ -55,6 +60,7 @@ function DropdownMenu({
 
   return (
     <MenuPrimitive
+      container={use(PopupContainer)}
       pendingAnnouncement={t("loading")}
       presentation={presentation}
       {...props}

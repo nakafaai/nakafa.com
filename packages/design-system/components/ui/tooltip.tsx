@@ -1,7 +1,7 @@
 "use client";
 
 import { ButtonGroupVariant } from "@repo/design-system/lib/group";
-import { popupMotion } from "@repo/design-system/lib/popup";
+import { PopupContainer, popupMotion } from "@repo/design-system/lib/popup";
 import {
   TooltipContent as TooltipContentPrimitive,
   Tooltip as TooltipPrimitive,
@@ -9,6 +9,7 @@ import {
 } from "@ui-sdk/react/tooltip";
 import { cn } from "cn";
 import type * as React from "react";
+import { use } from "react";
 
 /**
  * The words of a control that shows only an icon, on hover and focus. It names the action; it never holds anything a
@@ -18,7 +19,13 @@ function Tooltip({
   delay = 0,
   ...props
 }: React.ComponentProps<typeof TooltipPrimitive>) {
-  return <TooltipPrimitive delay={delay} {...props} />;
+  return (
+    <TooltipPrimitive
+      container={use(PopupContainer)}
+      delay={delay}
+      {...props}
+    />
+  );
 }
 
 function TooltipTrigger(

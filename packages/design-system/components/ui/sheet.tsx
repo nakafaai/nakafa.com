@@ -8,6 +8,7 @@ import {
   useWindowRoom,
 } from "@repo/design-system/hooks/resizable";
 import { ButtonGroupVariant } from "@repo/design-system/lib/group";
+import { PopupContainer } from "@repo/design-system/lib/popup";
 import type { NodeChildren } from "@repo/design-system/lib/render";
 import {
   DialogBackdrop,
@@ -38,7 +39,11 @@ function Sheet({
 }: ComponentProps<typeof DialogPrimitive>) {
   return (
     <SheetContext value={modal}>
-      <DialogPrimitive modal={modal} {...props} />
+      <DialogPrimitive
+        container={use(PopupContainer)}
+        modal={modal}
+        {...props}
+      />
     </SheetContext>
   );
 }

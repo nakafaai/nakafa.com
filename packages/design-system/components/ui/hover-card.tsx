@@ -1,5 +1,5 @@
 import { ButtonGroupVariant } from "@repo/design-system/lib/group";
-import { popupMotion } from "@repo/design-system/lib/popup";
+import { PopupContainer, popupMotion } from "@repo/design-system/lib/popup";
 import {
   HoverCardContent as HoverCardContentPrimitive,
   HoverCard as HoverCardPrimitive,
@@ -7,6 +7,7 @@ import {
 } from "@ui-sdk/react/hover-card";
 import { cn } from "cn";
 import type * as React from "react";
+import { use } from "react";
 
 /**
  * A preview that opens while a pointer rests on its trigger, such as a person's card over their name. It holds
@@ -18,7 +19,12 @@ function HoverCard({
   ...props
 }: React.ComponentProps<typeof HoverCardPrimitive>) {
   return (
-    <HoverCardPrimitive closeDelay={closeDelay} delay={delay} {...props} />
+    <HoverCardPrimitive
+      closeDelay={closeDelay}
+      container={use(PopupContainer)}
+      delay={delay}
+      {...props}
+    />
   );
 }
 

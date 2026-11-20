@@ -1,6 +1,10 @@
 import { SheetGrip } from "@repo/design-system/components/ui/sheet-grip";
 import { ButtonGroupVariant } from "@repo/design-system/lib/group";
-import { popupMotion, sheetSurface } from "@repo/design-system/lib/popup";
+import {
+  PopupContainer,
+  popupMotion,
+  sheetSurface,
+} from "@repo/design-system/lib/popup";
 import type { NodeChildren } from "@repo/design-system/lib/render";
 import {
   PopoverContent as PopoverContentPrimitive,
@@ -11,6 +15,7 @@ import {
 } from "@ui-sdk/react/popover";
 import { cn } from "cn";
 import type * as React from "react";
+import { use } from "react";
 
 /**
  * A small floating panel under its trigger, for a short form or details. Its header, body and footer keep one
@@ -18,7 +23,7 @@ import type * as React from "react";
  * as a sheet on a phone, with the sheet's grip, and floats under its trigger elsewhere.
  */
 function Popover(props: React.ComponentProps<typeof PopoverPrimitive>) {
-  return <PopoverPrimitive {...props} />;
+  return <PopoverPrimitive container={use(PopupContainer)} {...props} />;
 }
 
 function PopoverTrigger(

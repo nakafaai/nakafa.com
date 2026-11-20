@@ -1,6 +1,7 @@
 import { ScrollArea } from "@repo/design-system/components/ui/scroll-area";
 import { StagedPopup } from "@repo/design-system/components/ui/staged";
 import { ButtonGroupVariant } from "@repo/design-system/lib/group";
+import { PopupContainer } from "@repo/design-system/lib/popup";
 import type { NodeChildren } from "@repo/design-system/lib/render";
 import { releaseSheetExit } from "@repo/design-system/lib/sheet";
 import {
@@ -13,6 +14,7 @@ import {
 } from "@ui-sdk/react/drawer";
 import { cn } from "cn";
 import type { ComponentProps } from "react";
+import { use } from "react";
 
 /**
  * A sheet that rises from an edge of the screen in the floating style of an iPhone sheet: a card that stands off every
@@ -24,7 +26,9 @@ function Drawer({
   side = "bottom",
   ...props
 }: ComponentProps<typeof DrawerPrimitive>) {
-  return <DrawerPrimitive side={side} {...props} />;
+  return (
+    <DrawerPrimitive container={use(PopupContainer)} side={side} {...props} />
+  );
 }
 
 /**

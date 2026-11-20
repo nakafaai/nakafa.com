@@ -10,7 +10,11 @@ import {
   optionRowVariants,
   optionTickVariants,
 } from "@repo/design-system/lib/option";
-import { popupMotion, sheetSurface } from "@repo/design-system/lib/popup";
+import {
+  PopupContainer,
+  popupMotion,
+  sheetSurface,
+} from "@repo/design-system/lib/popup";
 import {
   SelectContent as SelectContentPrimitive,
   SelectGroup,
@@ -26,6 +30,7 @@ import { cva } from "class-variance-authority";
 import { cn } from "cn";
 import { Array as Arr } from "effect";
 import type * as React from "react";
+import { use } from "react";
 import { useTranslations } from "use-intl";
 
 /**
@@ -38,6 +43,7 @@ function Select<Value = string, Multiple extends boolean | undefined = false>(
 ) {
   return (
     <SelectPrimitive<Value, Multiple>
+      container={use(PopupContainer)}
       presentation="auto"
       {...props}
       disabled={props.disabled === true || props.items?.length === 0}

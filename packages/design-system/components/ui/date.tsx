@@ -11,7 +11,11 @@ import {
   splitLocalTime,
 } from "@repo/design-system/lib/calendar/time";
 import { ButtonGroupVariant } from "@repo/design-system/lib/group";
-import { popupMotion, sheetSurface } from "@repo/design-system/lib/popup";
+import {
+  PopupContainer,
+  popupMotion,
+  sheetSurface,
+} from "@repo/design-system/lib/popup";
 import {
   createDatePickerController,
   DatePickerContent,
@@ -23,7 +27,7 @@ import { cva } from "class-variance-authority";
 import { cn } from "cn";
 import { Option } from "effect";
 import type { ComponentProps } from "react";
-import { useState } from "react";
+import { use, useState } from "react";
 import { useLocale, useTranslations } from "use-intl";
 
 /**
@@ -84,6 +88,7 @@ function DatePicker({
   return (
     <DatePickerPrimitive
       className={cn(datePickerBoxVariants(), className)}
+      container={use(PopupContainer)}
       controller={controller}
       locale={useLocale()}
       {...Option.match(Option.fromUndefinedOr(max), {
