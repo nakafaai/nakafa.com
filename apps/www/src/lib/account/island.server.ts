@@ -9,7 +9,7 @@ import {
 } from "@/lib/account/access.server";
 import type { ScreenSeo } from "@/lib/account/head";
 import type { LocaleInput } from "@/lib/account/input";
-import { readOptional } from "@/lib/data/read.server";
+import { readRequired } from "@/lib/data/read.server";
 import { entryOf } from "@/lib/island/entry";
 
 /**
@@ -18,7 +18,9 @@ import { entryOf } from "@/lib/island/entry";
  * from, the cells they changed and the version of those edits, and a head
  * kept out of search. A learner with no island yet starts at level 1 with
  * nothing changed. The island and the account go out together, so the game
- * waits on one round trip.
+ * waits on one round trip. Both are reads the game cannot open without: a world
+ * opened without its edits would look emptied, and one opened without its owner
+ * would grow another terrain under them.
  */
 export const islandScreenHandler = accountHandler(
   ({ locale }: typeof LocaleInput.Type) =>
@@ -26,9 +28,9 @@ export const islandScreenHandler = accountHandler(
       const token = yield* admitAccount(locale);
       const [own, messages, account] = yield* Effect.all(
         [
-          readOptional(island.queries.own, {}, token),
+          readRequired(island.queries.own, {}, token),
           messagesFor(locale),
-          readOptional(auth.queries.getCurrentUser, {}, token),
+          readRequired(auth.queries.getCurrentUser, {}, token),
         ],
         { concurrency: "unbounded" }
       );
