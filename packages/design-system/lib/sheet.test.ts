@@ -20,16 +20,24 @@ function animation(scroll: boolean) {
   };
 }
 
+/** An element whose animations are the given ones. */
+function animated(
+  animations: readonly ReturnType<typeof animation>["animation"][]
+) {
+  const element = document.createElement("div");
+  Object.defineProperty(element, "getAnimations", {
+    value: () => [...animations],
+  });
+  return element;
+}
+
 /** A sheet with its grip as its first child, whose animations are the given ones. */
 function sheetWith(
   animations: readonly ReturnType<typeof animation>["animation"][]
 ) {
-  const sheet = document.createElement("div");
+  const sheet = animated(animations);
   const grip = document.createElement("div");
   sheet.append(grip);
-  Object.defineProperty(sheet, "getAnimations", {
-    value: () => [...animations],
-  });
   document.body.append(sheet);
   return { grip, sheet };
 }
@@ -52,6 +60,25 @@ describe("releaseSheetExit", () => {
     await observed();
     expect(tied.noted.cancelled).toBe(true);
     expect(clock.noted.cancelled).toBe(false);
+    release?.();
+  });
+
+  it("cancels the scroll-tied animations of the backdrop that leaves with the sheet, and of no part that stays", async () => {
+    const tied = animation(true);
+    const leaving = animation(true);
+    const staying = animation(true);
+    const { grip, sheet } = sheetWith([tied.animation]);
+    const backdrop = animated([leaving.animation]);
+    const page = animated([staying.animation]);
+    document.body.append(backdrop, page);
+    const release = releaseSheetExit(grip);
+
+    backdrop.setAttribute("data-ending-style", "");
+    sheet.setAttribute("data-ending-style", "");
+    await observed();
+    expect(tied.noted.cancelled).toBe(true);
+    expect(leaving.noted.cancelled).toBe(true);
+    expect(staying.noted.cancelled).toBe(false);
     release?.();
   });
 
