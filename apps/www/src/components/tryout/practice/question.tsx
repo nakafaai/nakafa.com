@@ -22,7 +22,6 @@ import {
 import { reportPracticeFailure } from "@/components/tryout/practice/failure";
 import type { PracticeQuestion } from "@/components/tryout/practice/model";
 import { TryoutExplanationOffer } from "@/components/tryout/review/offer";
-import { TryoutVerdictBadge } from "@/components/tryout/review/verdict";
 import {
   TryoutExplanationBody,
   TryoutQuestionBody,
@@ -136,9 +135,10 @@ export function TryoutPracticeChecked({
 
   return (
     <>
-      <PlayerQuestionHeader number={question.questionOrder}>
-        <TryoutVerdictBadge verdict={verdictOf(answer.grade)} />
-      </PlayerQuestionHeader>
+      <PlayerQuestionHeader
+        number={question.questionOrder}
+        verdict={verdictOf(answer.grade)}
+      />
       <PlayerQuestionPrompt>
         <TryoutQuestionBody body={body} />
       </PlayerQuestionPrompt>

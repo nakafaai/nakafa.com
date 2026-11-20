@@ -19,7 +19,6 @@ import {
 import { PlayerMain } from "@/components/player/frame";
 import { PlayerKeys } from "@/components/player/keys";
 import { PlayerGrid } from "@/components/player/navigator/grid";
-import { PlayerLegend } from "@/components/player/navigator/legend";
 import { PlayerSheet } from "@/components/player/navigator/sheet";
 import {
   PlayerNavigatorHeader,
@@ -127,7 +126,6 @@ export function ExamTryPaper({
                     header={<PlayerNavigatorHeader questions={models} />}
                   >
                     <PlayerGrid questions={models} />
-                    <PlayerLegend />
                   </PlayerSidebar>
                 }
               >
@@ -152,7 +150,6 @@ export function ExamTryPaper({
               </PlayerFooter>
               <PlayerSheet>
                 <PlayerGrid questions={models} />
-                <PlayerLegend />
               </PlayerSheet>
             </PlayerProvider>
           </TryStoreContext>

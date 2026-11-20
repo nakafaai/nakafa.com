@@ -1,6 +1,5 @@
 import type { Locator, Page } from "@playwright/test";
 import { expect } from "@playwright/test";
-import type { MutableList } from "effect";
 import { Effect } from "effect";
 import { activate, visibleLink } from "@/e2e/support/input";
 import { waitForCommittedAppRouter } from "@/e2e/support/navigation/readiness";
@@ -11,52 +10,11 @@ const countryHref = `${appRoutes.tryout}/indonesia`;
 export const groupHref = `${countryHref}/snbt/2027`;
 export const trackHref = `${groupHref}/utbk`;
 export const setHref = `${trackHref}/set-1`;
-const SECTION_HREF_PATTERN =
-  /^\/en\/try-out\/indonesia\/snbt\/2027\/utbk\/set-1\/[^/?]+(?:\?attemptId=[^&]+)?$/u;
+/** The first section of the set, at its own address. */
+export const sectionHref = `${setHref}/general-reasoning`;
 
 /** The shell's lock attribute, which the lock store sets once a page hydrates. */
 export const LOCKED_SHELL = "[data-slot=sidebar-wrapper][data-locked]";
-
-/**
- * The first section link of the open set's pane, which every set opens beside the track's table (the owner's notes
- * of 20 Nov). A phone shows the pane as a sheet outside the page's main region, so the link is found anywhere on the
- * page.
- */
-export function paneSectionLink(page: Page) {
-  return page
-    .locator(`a[href^="${setHref}/"]`)
-    .filter({ visible: true })
-    .first();
-}
-
-/**
- * Rests on a link the way a pointer or a finger does before it presses, and
- * waits until the link has asked for more than the shell: a server function
- * call or a static answer, which `recordDataRequests` records. Playwright presses
- * in the same instant as intent arrives, so a press without this step can
- * navigate as if nobody had shown intent.
- */
-export const intend = Effect.fn("NakafaE2E.intendTryoutLink")(function* (
-  link: Locator,
-  target: { hasTouch: boolean },
-  calls: MutableList.MutableList<string>
-) {
-  // A touch screen warms the links in view while the page is idle, so a touch
-  // finds their answers kept and asks for nothing.
-  if (target.hasTouch) {
-    yield* Effect.promise(() => link.dispatchEvent("touchstart"));
-    return;
-  }
-  const callsBefore = calls.length;
-  yield* Effect.promise(() => link.hover());
-  yield* Effect.promise(() =>
-    expect
-      .poll(() => calls.length > callsBefore, {
-        timeout: readinessTimeoutMilliseconds,
-      })
-      .toBe(true)
-  );
-});
 
 /** A URL predicate that matches one pathname. */
 export const onPath = (pathname: string) => (url: URL) =>
@@ -139,22 +97,6 @@ export const openTrack = Effect.fn("NakafaE2E.openTryoutTrack")(function* (
 });
 
 /**
- * The first section link of the set's pane once the learner's attempt has resolved.
- * The resolved set replaces the catalog view's steps, and a step that is replaced
- * in the middle of a press loses the press.
- */
-export const settledSection = Effect.fn("NakafaE2E.settledTryoutSection")(
-  function* (page: Page) {
-    yield* arrive(
-      page,
-      onPath(setHref),
-      page.getByRole("button", { exact: true, name: "Start" })
-    );
-    return paneSectionLink(page);
-  }
-);
-
-/**
  * Opens the first set from the track's table. Every set opens beside the table at its own address, so this waits
  * for the pane's Start and returns it.
  */
@@ -167,14 +109,3 @@ export const openSetPane = Effect.fn("NakafaE2E.openTryoutSetPane")(function* (
   yield* arrive(page, onPath(setHref), start);
   return start;
 });
-
-/** Reads the href of a set's first section link. */
-export const readSectionHref = Effect.fn("NakafaE2E.readTryoutSectionHref")(
-  function* (section: Locator) {
-    const href = yield* Effect.promise(() => section.getAttribute("href")).pipe(
-      Effect.flatMap(Effect.fromNullishOr)
-    );
-    yield* Effect.sync(() => expect(href).toMatch(SECTION_HREF_PATTERN));
-    return href;
-  }
-);

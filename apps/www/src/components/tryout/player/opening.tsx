@@ -14,7 +14,6 @@ import {
   readPlayerModeParam,
 } from "@/components/player/mode";
 import { PlayerGrid } from "@/components/player/navigator/grid";
-import { PlayerLegend } from "@/components/player/navigator/legend";
 import { PlayerSheet } from "@/components/player/navigator/sheet";
 import {
   PlayerNavigatorHeader,
@@ -129,7 +128,6 @@ export function TryoutPlayerOpening({
               <TryoutPlayerParts />
               {card}
               <PlayerGrid questions={questions} />
-              <PlayerLegend />
             </PlayerSidebar>
           }
         >
@@ -144,7 +142,6 @@ export function TryoutPlayerOpening({
         <PlayerSheet>
           <TryoutPlayerParts />
           <PlayerGrid questions={questions} />
-          <PlayerLegend />
         </PlayerSheet>
       </PlayerProvider>
     </div>

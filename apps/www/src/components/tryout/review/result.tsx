@@ -125,12 +125,11 @@ export function TryoutResult() {
 }
 
 /**
- * The result's footer: what the colors of the numbers say, and the explanation of the current question, which
- * it opens and closes; a question whose explanation waits for Pro opens its offer.
+ * The result's footer action: the explanation of the current question, which it opens and closes; a question
+ * whose explanation waits for Pro opens its offer. The colors of the numbers are named in the player's info.
  */
 export function TryoutResultFooter() {
   const t = useTranslations("Tryouts");
-  const tPlayer = useTranslations("Player");
   const current = usePlayer((state) => state.current);
   const explained = useTryoutExplained(
     (state) => current !== null && HashSet.has(state.open, current)
@@ -138,24 +137,19 @@ export function TryoutResultFooter() {
   const toggle = useTryoutExplained((state) => state.toggle);
 
   return (
-    <>
-      <p className="text-muted-foreground me-auto text-sm">
-        {tPlayer("review-legend")}
-      </p>
-      <Button
-        aria-pressed={explained}
-        disabled={current === null}
-        onClick={() => {
-          if (current !== null) {
-            toggle(current);
-          }
-        }}
-        type="button"
-        variant="outline"
-      >
-        {t("explanation")}
-      </Button>
-    </>
+    <Button
+      aria-pressed={explained}
+      disabled={current === null}
+      onClick={() => {
+        if (current !== null) {
+          toggle(current);
+        }
+      }}
+      type="button"
+      variant="outline"
+    >
+      {t("explanation")}
+    </Button>
   );
 }
 

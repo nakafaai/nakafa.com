@@ -5,7 +5,13 @@ import {
 } from "@repo/backend/confect/_generated/services";
 import { leaderNameOf } from "@repo/backend/confect/island/leaders";
 import { setRanks } from "@repo/backend/confect/tryouts/rank/board";
+import type { TryoutSetIdentity } from "@repo/backend/confect/tryouts/route";
+import { tryoutSetIdentityOf } from "@repo/backend/confect/tryouts/route";
 import { toTryoutRuntimeError } from "@repo/backend/confect/tryouts/runtime/error";
+import {
+  readLatestProgressAttempt,
+  readOwnedAttempt,
+} from "@repo/backend/confect/tryouts/runtime/lookup";
 import type { DataModel } from "@repo/backend/convex/_generated/dataModel";
 import type { GenericQueryCtx } from "convex/server";
 import { Array as Arr, Effect, Option } from "effect";
@@ -58,17 +64,51 @@ const placedOn =
     );
 
 /**
- * One set's leaderboard (ADR 0047, D27): the learners with the highest best scores, each by the first
- * word of their name and their mascot, the viewer's own row with its place, how many learners are on
- * the board, and the place a score the page shows would take. A learner whose account is gone is left
- * out of the rows.
+ * The score of the attempt a set's page shows, whose place the board answers: the attempt the address names, or
+ * else the viewer's latest on the set. An attempt of another set, one still running, and one of another learner
+ * have none.
  */
-export const readSetBoard = Effect.fn("tryouts.rank.readSetBoard")(function* (
-  setIdentity: string,
-  viewer: Option.Option<Docs["users"]["_id"]>,
-  score: Option.Option<number>
+const shownScoreOf = Effect.fn("tryouts.rank.shownScoreOf")(function* (
+  identity: TryoutSetIdentity,
+  userId: Docs["users"]["_id"],
+  attemptId: Option.Option<string>
 ) {
   const database = yield* DatabaseReader;
+  const attempt = yield* Option.match(attemptId, {
+    onNone: () => readLatestProgressAttempt(identity, userId),
+    onSome: (id) => readOwnedAttempt(id, userId),
+  });
+  if (
+    attempt === null ||
+    attempt.status === "in-progress" ||
+    attempt.setIdentity !== tryoutSetIdentityOf(identity)
+  ) {
+    return Option.none<number>();
+  }
+  const score = yield* database
+    .table("tryoutScores")
+    .get("by_tryoutAttemptId", attempt._id)
+    .pipe(
+      Effect.catchTag("GetByIndexFailure", () => Effect.succeed(null)),
+      Effect.orDie
+    );
+  return Option.map(Option.fromNullOr(score), (found) => found.publishedScore);
+});
+
+/**
+ * One set's leaderboard (ADR 0047, D27): the learners with the highest best scores, each by the first
+ * word of their name and their mascot, the viewer's own row with its place, and the place the attempt the
+ * page shows takes with how many learners that place counts. The viewer's own best never stands above
+ * their older attempt, and a viewer whose best is not on the board, such as one who finished before the
+ * board kept bests, counts as one more learner. A learner whose account is gone is left out of the rows.
+ */
+export const readSetBoard = Effect.fn("tryouts.rank.readSetBoard")(function* (
+  identity: TryoutSetIdentity,
+  viewer: Option.Option<Docs["users"]["_id"]>,
+  attemptId: Option.Option<string>
+) {
+  const database = yield* DatabaseReader;
+  const setIdentity = tryoutSetIdentityOf(identity);
   const [count, top] = yield* Effect.all([
     fromBoard((ctx) => setRanks.count(ctx, { namespace: setIdentity })),
     fromBoard((ctx) =>
@@ -111,9 +151,25 @@ export const readSetBoard = Effect.fn("tryouts.rank.readSetBoard")(function* (
     onNone: () => Effect.succeed(null),
     onSome: placedOn(setIdentity),
   });
-  const standing = yield* Option.match(score, {
-    onNone: () => Effect.succeed(null),
-    onSome: (value) => placeOf(setIdentity, value),
+  const shown = yield* Option.match(viewer, {
+    onNone: () => Effect.succeedNone,
+    onSome: (userId) => shownScoreOf(identity, userId, attemptId),
   });
-  return { count, leaders, own, standing };
+  const standing = yield* Option.match(shown, {
+    onNone: () => Effect.succeed(null),
+    onSome: (score) =>
+      placeOf(setIdentity, score).pipe(
+        Effect.map((place) =>
+          Option.exists(best, (row) => row.publishedScore > score)
+            ? place - 1
+            : place
+        )
+      ),
+  });
+  return {
+    count: standing !== null && Option.isNone(best) ? count + 1 : count,
+    leaders,
+    own,
+    standing,
+  };
 });

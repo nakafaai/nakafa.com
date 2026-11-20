@@ -33,7 +33,7 @@ import {
   useTryoutPressed,
   useTryoutStartPhase,
 } from "@/components/tryout/runtime/start";
-import { START_ERROR, START_PART_ERROR } from "@/components/tryout/set/copy";
+import { START_ERROR } from "@/components/tryout/set/copy";
 import { TryoutStartDialog } from "@/components/tryout/set/dialog";
 import {
   keepActionName,
@@ -43,15 +43,16 @@ import {
 import type { CurrentAttempt } from "@/components/tryout/set/model";
 import { TryoutActionName } from "@/components/tryout/set/name";
 import {
-  startAttemptProgram,
-  startEntrySectionProgram,
-} from "@/components/tryout/set/program";
+  ContinueTryoutButton,
+  useStartPart,
+} from "@/components/tryout/set/part";
+import { startAttemptProgram } from "@/components/tryout/set/program";
 import { hasSignedInHint } from "@/lib/auth/hint";
 import { requireConvexOnline } from "@/lib/convex/online";
 
 type StartAttempt = Pick<
   CurrentAttempt,
-  "attemptId" | "resumeSectionKey" | "status"
+  "activeSectionKey" | "attemptId" | "resumeSectionKey" | "status"
 > | null;
 const StartTryoutRequestSchema = Schema.Struct({
   authRedirect: TryoutPageAddressSchema,
@@ -59,7 +60,7 @@ const StartTryoutRequestSchema = Schema.Struct({
   destination: TryoutPageAddressSchema,
   /** The section whose page the start lands on; none lands on the set. */
   destinationSectionKey: Schema.optionalKey(Schema.String),
-  /** The section the start opens, whose player shows with the press; none opens no section. */
+  /** The section the start opens, whose player shows on the page the start lands on; none opens no section. */
   entrySectionKey: Schema.optionalKey(Schema.String),
   examKey: Schema.String,
   locale: Schema.Literals(LOCALES),
@@ -77,18 +78,31 @@ interface StartTryoutButtonProps {
 }
 
 /**
- * Composes the active attempt link or the transactional start action. A running
- * attempt whose start lands on a section's page continues there through a link,
- * and one whose page is the set starts its entry section from here. A visitor
- * has no client, so the start action mounts once the page holds one, and until
- * then the visitor's button sends the visitor to sign in.
+ * Composes the action that continues a running attempt, or the transactional start action. A running
+ * attempt whose start lands on a section's page continues there: through a link to the section that runs,
+ * or by starting the next one and opening it, so the press lands in the running section and never on a
+ * page that asks again. One whose page is the set starts its entry section from here. A visitor has no
+ * client, so the start action mounts once the page holds one, and until then the visitor's button sends
+ * the visitor to sign in.
  */
 export function StartTryoutButton(props: StartTryoutButtonProps) {
+  const { attempt, request } = props;
   if (
-    props.attempt?.status === "in-progress" &&
-    props.request.destinationSectionKey !== undefined
+    attempt?.status === "in-progress" &&
+    request.destinationSectionKey !== undefined
   ) {
-    return <ResumeTryoutLink request={props.request} />;
+    if (attempt.activeSectionKey === request.destinationSectionKey) {
+      return <ResumeTryoutLink request={request} />;
+    }
+    return (
+      <ConvexIsland fallback={<ResumeTryoutLink request={request} />}>
+        <ContinueTryoutButton
+          address={request.destination}
+          attemptId={attempt.attemptId}
+          sectionKey={request.destinationSectionKey}
+        />
+      </ConvexIsland>
+    );
   }
   return (
     <ConvexIsland
@@ -167,8 +181,10 @@ function TryoutStartSignInButton({
     setPressed(false);
     signIn();
   });
+  // A press another part of the page made waits here too, such as a part of the set's path: a visitor's goes
+  // to sign in at once, and a learner's once their session failed to load.
   useEffect(() => {
-    if (pressed && hasError) {
+    if (pressed && (hasError || !hasSignedInHint(document.cookie))) {
       answerPress();
     }
   }, [hasError, pressed]);
@@ -208,7 +224,7 @@ function TryoutStartAction({ attempt, request }: StartTryoutButtonProps) {
   const isAuthenticated = useConvexAuth((auth) => auth.isAuthenticated);
   const isLoading = useConvexAuth((auth) => auth.isLoading);
   const startAttempt = useMutation(tryouts.mutations.attempts.startAttempt);
-  const startSection = useMutation(tryouts.mutations.sections.start);
+  const startPart = useStartPart();
   const convex = useConvex();
   const now = useNow(false);
   const [dialogOpen, dialog] = useDisclosure(false);
@@ -216,7 +232,7 @@ function TryoutStartAction({ attempt, request }: StartTryoutButtonProps) {
   const [keptName] = useState(() => readSetName(address));
   const activeAttempt = attempt?.status === "in-progress";
   const finishedAttempt = Boolean(attempt && !activeAttempt);
-  const directEntry = Boolean(request.entrySectionKey);
+  const entrySectionKey = request.entrySectionKey;
   const access = useQuery(
     tryouts.queries.access.getStartAccess,
     isAuthenticated && !activeAttempt
@@ -263,29 +279,12 @@ function TryoutStartAction({ attempt, request }: StartTryoutButtonProps) {
       });
       return;
     }
-    if (attempt?.status === "in-progress" && request.entrySectionKey) {
-      const sectionKey = attempt.resumeSectionKey ?? request.entrySectionKey;
-      setPhase("opening");
-      Effect.runPromise(
-        requireConvexOnline(convex).pipe(
-          Effect.andThen(
-            startEntrySectionProgram({
-              attemptId: attempt.attemptId,
-              failureMessage: START_PART_ERROR,
-              mutation: startSection,
-              sectionKey,
-            })
-          ),
-          Effect.catchTag("ConvexOfflineError", () =>
-            Effect.sync(() => {
-              toast.error(START_PART_ERROR, { position: "bottom-center" });
-            })
-          ),
-          // Convex shows a mutation's result to the page's queries before it answers, so the section
-          // runs on the page by now, or it failed and the page returns.
-          Effect.ensuring(Effect.sync(() => setPhase("idle")))
-        )
-      );
+    if (attempt?.status === "in-progress" && entrySectionKey !== undefined) {
+      startPart({
+        address: Option.none(),
+        attemptId: attempt.attemptId,
+        sectionKey: attempt.resumeSectionKey ?? entrySectionKey,
+      });
       return;
     }
     dialog.open();
@@ -301,7 +300,7 @@ function TryoutStartAction({ attempt, request }: StartTryoutButtonProps) {
       return;
     }
     dialog.close();
-    setPhase(directEntry ? "opening" : "starting");
+    setPhase(entrySectionKey === undefined ? "starting" : "opening");
     const program = startAttemptProgram({
       args: {
         countryKey: request.countryKey,
@@ -374,7 +373,6 @@ function TryoutStartAction({ attempt, request }: StartTryoutButtonProps) {
         />
       </Button>
       <TryoutStartDialog
-        directEntry={directEntry}
         finishedAttempt={finishedAttempt}
         kind={dialogKind}
         onPrimary={onPrimary}

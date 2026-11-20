@@ -297,6 +297,7 @@ function PaperWindow() {
         </div>
         <div className="hidden w-64 shrink-0 flex-col gap-6 overflow-y-auto border-s p-4 lg:flex">
           <PlayerGrid questions={models} />
+          {/* This column has no footer to hold the player's info, so it names the marks itself. */}
           <PlayerLegend />
         </div>
       </div>
@@ -314,7 +315,6 @@ function PaperWindow() {
       </div>
       <PlayerSheet>
         <PlayerGrid questions={models} />
-        <PlayerLegend />
       </PlayerSheet>
     </div>
   );

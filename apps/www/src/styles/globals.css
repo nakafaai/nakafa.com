@@ -268,6 +268,16 @@
 }
 
 /*
+ * A try-out set's pane draws the learner's level, attempt, Stars and board, so
+ * under a signed-in hint its header's line and its body keep their room and draw
+ * nothing until every read of the learner answers, then paint whole, never a
+ * visitor's frame first (`components/tryout/pane/set.tsx`).
+ */
+:root[data-signed-in="yes"] [data-pane-read="pending"] {
+  visibility: hidden;
+}
+
+/*
  * A try-out track's first rows are the ones every visitor reads, so they can hold
  * no learner's progress. Under a signed-in hint their progress marks keep their
  * room and stay hidden until the learner's own rows replace them.

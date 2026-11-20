@@ -4,7 +4,7 @@ import {
 } from "@repo/seo/jsonld/node";
 import { SITE_ORIGIN } from "@repo/seo/origin";
 import { createFileRoute, notFound } from "@tanstack/react-router";
-import { Array as Arr, Number as Num, Schema } from "effect";
+import { Array as Arr, Effect, Number as Num, Schema } from "effect";
 import { ClockProvider } from "@/components/player/now";
 import { ConvexIsland } from "@/components/providers/island";
 import { ShellLockCarry, usePrepaintRelease } from "@/components/sidebar/lock";
@@ -18,6 +18,7 @@ import { TryoutAttemptReview } from "@/components/tryout/review/deferred";
 import { readTryoutSetFn } from "@/components/tryout/route/attempt.functions";
 import { createTryoutHead } from "@/components/tryout/route/head";
 import {
+  attemptOf,
   useAttemptSignIn,
   useKeptLearnerRead,
   useLearnerSet,
@@ -28,6 +29,7 @@ import {
 } from "@/components/tryout/route/search";
 import { TryoutPressProvider } from "@/components/tryout/runtime/start";
 import { TryoutSetPageClient } from "@/components/tryout/set/client";
+import { warmSetReads } from "@/components/tryout/set/reads";
 import { readSetSections } from "@/components/tryout/set/sections";
 import { TryoutPage } from "@/components/tryout/shell/header";
 import { readStaticData } from "@/lib/static/data";
@@ -46,7 +48,8 @@ export const Route = createFileRoute(
   "/$locale/_main/try-out/$country/$exam/$group/$track/$set/"
 )({
   validateSearch: Schema.toStandardSchemaV1(TryoutAttemptSearch),
-  loader: async ({ params }) => {
+  loaderDeps: ({ search }) => ({ attemptId: attemptOf(search) }),
+  loader: async ({ deps, params }) => {
     const route = await readStaticData(readTryoutSetFn, {
       country: params.country,
       exam: params.exam,
@@ -58,6 +61,14 @@ export const Route = createFileRoute(
     if (route.kind === "notFound") {
       throw notFound();
     }
+    // A learner's set opens whole: the page stays until their reads of it answer (`warmSetReads`).
+    await Effect.runPromise(
+      warmSetReads({
+        attemptId: deps.attemptId,
+        locale: params.locale,
+        set: route.page.set,
+      })
+    );
     return route;
   },
   head: ({ loaderData, match, params }) =>

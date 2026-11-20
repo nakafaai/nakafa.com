@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { Array as Arr, Effect } from "effect";
 import { withObservedPageErrors } from "@/e2e/support/observe";
-import { readSectionHref, setHref, settledSection } from "@/e2e/support/tryout";
+import { sectionHref } from "@/e2e/support/tryout";
 
 /** Every script the page would load, which the reader's page never runs. */
 const SCRIPT = /\.m?js(?:\?|$)/u;
@@ -15,6 +15,7 @@ const DIGIT = /\d/u;
  * sees them at once, instead of empty places until the page hydrates.
  */
 test("a try-out section shows its numbers before its scripts run", async ({
+  baseURL,
   browser,
   page,
 }) => {
@@ -22,15 +23,12 @@ test("a try-out section shows its numbers before its scripts run", async ({
     withObservedPageErrors(
       page,
       Effect.gen(function* () {
-        yield* Effect.promise(() => page.goto(setHref));
-        const href = yield* readSectionHref(yield* settledSection(page));
-
         const reader = yield* Effect.promise(() => browser.newPage());
         yield* Effect.promise(() =>
           reader.route(SCRIPT, (route) => route.abort())
         );
         yield* Effect.promise(() =>
-          reader.goto(new URL(href, page.url()).href)
+          reader.goto(new URL(sectionHref, baseURL).href)
         );
         const numbers = yield* Effect.promise(() =>
           reader

@@ -54,7 +54,7 @@ export const startAttemptProgram = Effect.fn("tryout.startAttempt")(
     )
 );
 
-/** Starts one section and shows the localized fallback when the start fails. */
+/** Starts one section, then runs what follows its start, and shows the localized fallback when the start fails. */
 export const startEntrySectionProgram = Effect.fn("tryout.startSection")(
   (input: {
     readonly attemptId: Id<"tryoutAttempts">;
@@ -63,6 +63,10 @@ export const startEntrySectionProgram = Effect.fn("tryout.startSection")(
       attemptId: Id<"tryoutAttempts">;
       sectionKey: string;
     }) => InvokeReturn<typeof tryouts.mutations.sections.start>;
+    /** Returns the page the start replaced, once the failure is reported. */
+    readonly onFailure?: Effect.Effect<void>;
+    /** What follows a start the server took, such as opening the section's page. */
+    readonly onSuccess?: Effect.Effect<void>;
     readonly sectionKey: string;
   }) =>
     Effect.tryPromise({
@@ -78,12 +82,13 @@ export const startEntrySectionProgram = Effect.fn("tryout.startSection")(
           Effect.mapError((cause) => new TryoutClientRequestError({ cause }))
         )
       ),
+      Effect.andThen(input.onSuccess ?? Effect.void),
       Effect.catchTag("TryoutClientRequestError", (error) =>
         reportRequestFailure(
           error,
           "tryout-start-section",
           input.failureMessage
-        )
+        ).pipe(Effect.andThen(input.onFailure ?? Effect.void))
       ),
       Effect.asVoid
     )

@@ -52,20 +52,46 @@ const score = (
     })
   );
 
+/** Finishes the learner's attempt through both parts of the fixture set, and reads the score it published. */
+const finish = (world: TryoutWorld, attemptId: Id<"tryoutAttempts">) =>
+  Effect.gen(function* () {
+    for (const section of ["section-a", "section-b"]) {
+      yield* world.startSection(attemptId, section);
+      yield* world.completeSection(attemptId, section);
+    }
+    const stored = yield* Effect.promise(() =>
+      world.t.query((ctx) =>
+        ctx.db
+          .query("tryoutScores")
+          .withIndex("by_tryoutAttemptId", (query) =>
+            query.eq("tryoutAttemptId", attemptId)
+          )
+          .unique()
+      )
+    );
+    assert.ok(stored, "Expected the attempt's score.");
+    return stored.publishedScore;
+  });
+
 describe("tryouts/queries/ranks", () => {
-  it.effect("answers an empty board, and the first place for any score", () =>
-    Effect.gen(function* () {
-      const world = yield* tryoutWorld();
-      expect(
-        yield* world.visitor.query(tryouts.queries.ranks.bySet, identity)
-      ).toEqual({ count: 0, leaders: [], own: null, standing: null });
-      expect(
-        yield* world.learner.query(tryouts.queries.ranks.bySet, {
-          ...identity,
-          score: 500,
-        })
-      ).toEqual({ count: 0, leaders: [], own: null, standing: 1 });
-    })
+  it.effect(
+    "answers an empty board, and no place for a viewer with no finished attempt",
+    () =>
+      Effect.gen(function* () {
+        const world = yield* tryoutWorld();
+        const empty = { count: 0, leaders: [], own: null, standing: null };
+        expect(
+          yield* world.visitor.query(tryouts.queries.ranks.bySet, identity)
+        ).toEqual(empty);
+        expect(
+          yield* world.learner.query(tryouts.queries.ranks.bySet, identity)
+        ).toEqual(empty);
+        // A running attempt has no score to place.
+        yield* world.start();
+        expect(
+          yield* world.learner.query(tryouts.queries.ranks.bySet, identity)
+        ).toEqual(empty);
+      })
   );
 
   it.effect(
@@ -83,13 +109,13 @@ describe("tryouts/queries/ranks", () => {
         yield* score(world, attemptId, 400);
         yield* score(world, raka, 800);
 
-        const board = yield* world.learner.query(tryouts.queries.ranks.bySet, {
-          ...identity,
-          score: 650,
-        });
+        const board = yield* world.learner.query(
+          tryouts.queries.ranks.bySet,
+          identity
+        );
         expect(board.count).toBe(3);
         expect(board.own).toMatchObject({ own: true, place: 2, score: 600 });
-        expect(board.standing).toBe(2);
+        expect(board.standing).toBeNull();
         expect(board.leaders).toEqual([
           expect.objectContaining({
             name: "Raka",
@@ -152,10 +178,7 @@ describe("tryouts/queries/ranks", () => {
     Effect.gen(function* () {
       const world = yield* tryoutWorld();
       const { attemptId } = yield* world.start();
-      for (const section of ["section-a", "section-b"]) {
-        yield* world.startSection(attemptId, section);
-        yield* world.completeSection(attemptId, section);
-      }
+      yield* finish(world, attemptId);
       const best = yield* Effect.promise(() =>
         world.t.query((ctx) =>
           ctx.db
@@ -173,5 +196,87 @@ describe("tryouts/queries/ranks", () => {
         yield* world.learner.query(tryouts.queries.ranks.bySet, identity)
       ).toMatchObject({ count: 1, own: { place: 1 } });
     })
+  );
+
+  it.effect(
+    "places the attempt the address names, or else the viewer's latest, among the board's learners",
+    () =>
+      Effect.gen(function* () {
+        const world = yield* tryoutWorld();
+        const { attemptId } = yield* world.start();
+        const published = yield* finish(world, attemptId);
+        const raka = yield* seedLearner(world, "Raka");
+        const salsa = yield* seedLearner(world, "Salsa");
+        yield* score(world, raka, published + 100);
+        yield* score(world, salsa, published - 100);
+
+        expect(
+          yield* world.learner.query(tryouts.queries.ranks.bySet, identity)
+        ).toMatchObject({ count: 3, standing: 2 });
+        expect(
+          yield* world.learner.query(tryouts.queries.ranks.bySet, {
+            ...identity,
+            attemptId,
+          })
+        ).toMatchObject({ count: 3, standing: 2 });
+        // An address that names no attempt of the viewer's places nothing.
+        for (const named of ["not-an-id", raka]) {
+          expect(
+            yield* world.learner.query(tryouts.queries.ranks.bySet, {
+              ...identity,
+              attemptId: named,
+            })
+          ).toMatchObject({ count: 3, standing: null });
+        }
+        // Another set's board places none of this set's attempts.
+        expect(
+          yield* world.learner.query(tryouts.queries.ranks.bySet, {
+            ...identity,
+            attemptId,
+            setKey: "set-2",
+          })
+        ).toMatchObject({ count: 0, standing: null });
+      }),
+    15_000
+  );
+
+  it.effect(
+    "never puts the viewer's own best above their older attempt, and counts a viewer whose best is not on the board",
+    () =>
+      Effect.gen(function* () {
+        const world = yield* tryoutWorld();
+        const { attemptId } = yield* world.start();
+        const published = yield* finish(world, attemptId);
+        // A later, higher score is the viewer's best; the older attempt still takes the first place.
+        yield* score(world, attemptId, published + 500);
+        expect(
+          yield* world.learner.query(tryouts.queries.ranks.bySet, {
+            ...identity,
+            attemptId,
+          })
+        ).toMatchObject({ count: 1, own: { place: 1 }, standing: 1 });
+        // A finished attempt whose best the board never kept still counts its learner.
+        yield* world.run(deleteSetBests(world.userId, 25));
+        expect(
+          yield* world.learner.query(tryouts.queries.ranks.bySet, identity)
+        ).toEqual({ count: 1, leaders: [], own: null, standing: 1 });
+        // An attempt whose score is missing has no place to take.
+        yield* Effect.promise(() =>
+          world.t.mutation(async (ctx) => {
+            const stored = await ctx.db
+              .query("tryoutScores")
+              .withIndex("by_tryoutAttemptId", (query) =>
+                query.eq("tryoutAttemptId", attemptId)
+              )
+              .unique();
+            assert.ok(stored, "Expected the attempt's score.");
+            await ctx.db.delete("tryoutScores", stored._id);
+          })
+        );
+        expect(
+          yield* world.learner.query(tryouts.queries.ranks.bySet, identity)
+        ).toEqual({ count: 0, leaders: [], own: null, standing: null });
+      }),
+    15_000
   );
 });

@@ -1,0 +1,75 @@
+import { ActiveAppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
+import island from "@repo/backend/confect/_generated/refs/island";
+import tryouts from "@repo/backend/confect/_generated/refs/tryouts";
+import { Duration, Effect, Schema } from "effect";
+import { setAttemptRequest } from "@/components/tryout/route/learner";
+import { warmQuery } from "@/lib/convex/warm";
+
+/** How long a press waits for a set's reads before the set opens anyway, as it does when they fail. */
+const WARM_WAIT = Duration.seconds(1);
+
+/** The address a set's reads answer for: the set, the page's locale, and the attempt the address names. */
+const SetAddressSchema = Schema.Struct({
+  attemptId: Schema.UndefinedOr(Schema.String),
+  locale: ActiveAppLocaleCodeSchema,
+  set: Schema.Struct({
+    countryKey: Schema.String,
+    examKey: Schema.String,
+    publicPath: Schema.String,
+    setKey: Schema.String,
+    trackKey: Schema.String,
+  }),
+});
+
+type SetAddress = typeof SetAddressSchema.Type;
+
+/**
+ * The arguments of a learner's reads of a set, built in one place so the set's page and the warm before it
+ * subscribe to the same queries: the learner's attempt the address names, or else their current one; what they
+ * hold of the set's Stars; and the set's board, which places that same attempt.
+ */
+export function setReadArgs(address: SetAddress) {
+  const { set } = address;
+  const identity = {
+    countryKey: set.countryKey,
+    examKey: set.examKey,
+    locale: address.locale,
+    setKey: set.setKey,
+    trackKey: set.trackKey,
+  };
+  return {
+    attempt: {
+      request: setAttemptRequest({
+        attemptId: address.attemptId,
+        keys: set,
+        locale: address.locale,
+        publicPath: set.publicPath,
+      }),
+    },
+    board:
+      address.attemptId === undefined
+        ? identity
+        : { ...identity, attemptId: address.attemptId },
+    claims: identity,
+  };
+}
+
+/**
+ * Warms a learner's reads of a set before its page opens (`warmQuery`): the attempt, how far they grew, their
+ * Stars of the set, and its board, all at once, so the pane paints whole in its first frame. A read that has not
+ * answered within `WARM_WAIT` lets the set open, and the pane waits for it there.
+ */
+export const warmSetReads = Effect.fn("tryout.set.warmReads")(function* (
+  address: SetAddress
+) {
+  const args = setReadArgs(address);
+  yield* Effect.all(
+    [
+      warmQuery(tryouts.queries.attemptPage.getSet, args.attempt),
+      warmQuery(island.queries.growth, {}),
+      warmQuery(island.queries.claims, args.claims),
+      warmQuery(tryouts.queries.ranks.bySet, args.board),
+    ],
+    { concurrency: "unbounded", discard: true }
+  ).pipe(Effect.timeoutOption(WARM_WAIT));
+});

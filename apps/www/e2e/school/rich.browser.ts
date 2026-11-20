@@ -192,7 +192,7 @@ test("a teacher writes a question with headings, lists, quotes, code and a table
     timeout: readinessTimeoutMilliseconds,
   });
   await expect(reopened.locator("table th")).toHaveCount(2);
-  // The sidebar and the try's navigator legend have lists of their own, outside the question.
+  // The sidebar has lists of its own, outside the question.
   await expect(
     reopened.getByRole("article", { name: "Question 1" }).locator("ul li")
   ).toHaveCount(2);

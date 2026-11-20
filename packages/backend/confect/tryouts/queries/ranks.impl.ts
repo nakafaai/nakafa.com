@@ -4,10 +4,7 @@ import { getOptionalAppUserForRead } from "@repo/backend/confect/auth/session";
 import sessionMiddleware from "@repo/backend/confect/middleware/session.impl";
 import spec from "@repo/backend/confect/tryouts/queries/ranks.spec";
 import { readSetBoard } from "@repo/backend/confect/tryouts/rank/read";
-import {
-  decodeTryoutSetIdentity,
-  tryoutSetIdentityOf,
-} from "@repo/backend/confect/tryouts/route";
+import { decodeTryoutSetIdentity } from "@repo/backend/confect/tryouts/route";
 import { Effect, Layer, Option } from "effect";
 
 /** One set's board, for anyone; a signed-in viewer also reads their own place on it. */
@@ -15,13 +12,13 @@ const bySet = FunctionImpl.make(
   databaseSchema,
   spec,
   "bySet",
-  Effect.fn("tryouts.queries.ranks.bySet")(function* ({ score, ...keys }) {
+  Effect.fn("tryouts.queries.ranks.bySet")(function* ({ attemptId, ...keys }) {
     const identity = yield* decodeTryoutSetIdentity(keys);
     const user = yield* getOptionalAppUserForRead();
     return yield* readSetBoard(
-      tryoutSetIdentityOf(identity),
+      identity,
       Option.map(Option.fromNullishOr(user), (found) => found.appUser._id),
-      Option.fromNullishOr(score)
+      Option.fromNullishOr(attemptId)
     );
   })
 );

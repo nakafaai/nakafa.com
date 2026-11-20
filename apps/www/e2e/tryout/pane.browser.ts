@@ -84,14 +84,15 @@ test.describe("The set pane beside a track's table", () => {
     await expect(
       pane.locator("footer").getByText(level, { exact: true })
     ).toBeVisible();
-    // The set's parts stand as one path, each step a link to its part, and what the set gives under them.
+    // The set's parts stand as one path, each step a press that takes the set's start as its footer does, and
+    // what the set gives under them.
     await expect(
       pane.getByRole("heading", {
         exact: true,
         name: en.Tryouts["parts-title"],
       })
     ).toBeVisible();
-    await expect(pane.getByRole("link").first()).toBeVisible();
+    await expect(pane.locator("ol").getByRole("button").first()).toBeVisible();
     await expect(
       pane.getByRole("heading", {
         exact: true,
@@ -134,7 +135,7 @@ test.describe("The set pane beside a track's table", () => {
     ).toBeVisible();
   });
 
-  test("sends a visitor's Start to sign in, coming back to the set", async ({
+  test("sends a visitor's Start, and a press on a part, to sign in, coming back to the set", async ({
     page,
   }) => {
     await openTrack(page);
@@ -145,13 +146,20 @@ test.describe("The set pane beside a track's table", () => {
     const pane = page.getByRole("complementary", {
       name: en.Tryouts["set-pane"],
     });
-    await pane
-      .getByRole("button", {
+    for (const press of [
+      pane.getByRole("button", {
         exact: true,
         name: en.Tryouts.action["start-cta"],
-      })
-      .click();
-    await expect.poll(() => new URL(page.url()).pathname).toBe("/en/auth");
-    expect(new URL(page.url()).searchParams.get("redirect")).toBe(SET_PATH);
+      }),
+      pane.locator("ol").getByRole("button").first(),
+    ]) {
+      await press.click();
+      await expect.poll(() => new URL(page.url()).pathname).toBe("/en/auth");
+      expect(new URL(page.url()).searchParams.get("redirect")).toBe(SET_PATH);
+      await page.goBack();
+      await expect(pane).toBeVisible({
+        timeout: readinessTimeoutMilliseconds,
+      });
+    }
   });
 });

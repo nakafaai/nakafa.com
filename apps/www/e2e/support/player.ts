@@ -96,7 +96,7 @@ export const currentNumberOf = (page: Page, hasTouch: boolean) =>
 /** The sheet or dialog that is open. */
 export const openSurface = (page: Page) => page.getByRole("dialog");
 
-/** The numbers of the navigator column, one for each question of the section; the legend is not one. */
+/** The numbers of the navigator column, one for each question of the section. */
 export const numberCells = (page: Page) => sidebarOf(page).locator("ol > li");
 
 /**
@@ -183,7 +183,8 @@ export const runFirstSection = Effect.fn("NakafaE2E.runFirstSection")(
     yield* openCountry(page);
     yield* openTrack(page, hasTouch);
 
-    // The set opens beside the track's table, and its pane's Start asks for the mode.
+    // The set opens beside the track's table, and its pane's Start asks for the mode, then opens the first
+    // section running.
     const start = yield* openSetPane(page, hasTouch);
     yield* Effect.promise(() =>
       expect(start).toBeEnabled({ timeout: readinessTimeoutMilliseconds })
@@ -197,7 +198,6 @@ export const runFirstSection = Effect.fn("NakafaE2E.runFirstSection")(
     // Questions render math, whose fonts load on first use. A font swapping in
     // late moves text, which is not what these suites measure.
     yield* loadMathFonts(page);
-    yield* activate(start, hasTouch);
     yield* waitForRunningSection(page);
     // Late streamed content would still move the page, so let it go quiet.
     yield* Effect.promise(() => waitForQuiet(page));
