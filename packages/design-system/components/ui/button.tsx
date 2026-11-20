@@ -18,7 +18,8 @@ import { use } from "react";
  * A button. An icon size draws an icon alone, so it requires the `tooltip` that names its action in words: the
  * button shows it on hover and focus, and it is the button's accessible name from the first HTML, unless the button
  * names itself more fully in `aria-label`, when the tooltip describes it. Any other button may carry one too, such as
- * a menu trigger that shows an icon and its caret, where it describes the button. Inside a `ButtonGroup` it wears the
+ * a menu trigger that shows an icon and its caret, and it names that button the same way, since neither shows a
+ * word. A button that says its action in words needs no tooltip. Inside a `ButtonGroup` it wears the
  * group's variant, whatever `variant` it names, so the page's primary never joins a group and a group never mixes
  * variants. A destructive button in a dialog that asks first carries the dialog's sentence for agents
  * (`AgentConfirmSentence`), so only a person commits it.
@@ -48,7 +49,7 @@ function Button({
           NonNullable<VariantProps<typeof buttonVariantsClassName>["size"]>,
           `icon${string}`
         >;
-        /** The action in words, for a button whose words do not say it all, such as an icon with a caret. */
+        /** The action in words, for a button that shows no word, such as an icon with a caret. */
         tooltip?: string;
       }
   )) {
@@ -71,10 +72,8 @@ function Button({
     return <ButtonPrimitive className={classes} {...marked} />;
   }
 
-  const names = size?.startsWith("icon") && props["aria-label"] === undefined;
-
   return (
-    <Tooltip type={names ? "label" : "description"}>
+    <Tooltip type={props["aria-label"] === undefined ? "label" : "description"}>
       <TooltipTrigger
         render={<ButtonPrimitive {...marked} className={classes} />}
       />
