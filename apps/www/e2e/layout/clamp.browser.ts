@@ -52,7 +52,7 @@ const verifyEllipsis = async (line: Locator) => {
   });
 };
 
-test("a long try-out section ends in an ellipsis when the list has little room", async ({
+test("a long try-out part ends in an ellipsis when the set path has little room", async ({
   page,
 }) => {
   await Effect.runPromise(
@@ -61,16 +61,14 @@ test("a long try-out section ends in an ellipsis when the list has little room",
       Effect.promise(async () => {
         await page.setViewportSize({ height: 844, width: 320 });
         await page.goto(SET);
-        const title = page.getByRole("heading", {
-          exact: true,
-          name: LONG_SECTION,
-        });
+        // The set's address opens its pane, whose path names each part in one line with its full name as a title.
+        const title = page.getByTitle(LONG_SECTION, { exact: true });
         await verifyEllipsis(title);
         await expect(title).toHaveAttribute("title", LONG_SECTION);
 
         await page.setViewportSize({ height: 900, width: 1440 });
         const list = page.locator("section").filter({ has: title }).last();
-        // The same list can be squeezed beside the resizable results pane on a desktop.
+        // The same path can be squeezed in the resizable pane beside the table on a desktop.
         await list.evaluate((element) => {
           element.style.maxInlineSize = "16rem";
         });
