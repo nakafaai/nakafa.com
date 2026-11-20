@@ -15,7 +15,7 @@ export const TOOLBAR = '[data-slot="editor-toolbar"]';
  * The row of the exam toolbar's controls. The More control's popover renders inside the toolbar, beside its button,
  * and holds the same controls, so a control of the row is found in the row.
  */
-const TOOLBAR_ROW = '[data-slot="editor-toolbar-row"]';
+export const TOOLBAR_ROW = '[data-slot="editor-toolbar-row"]';
 
 /** The open popover of the toolbar's More control, which holds the controls the row has no room for. */
 const POPOVER = '[data-slot="popover-content"][data-open]';
