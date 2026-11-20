@@ -175,6 +175,7 @@ export type TryoutAttemptsDoc = Document.Document<typeof schemaDefinition, "tryo
 export type TryoutResponsesDoc = Document.Document<typeof schemaDefinition, "tryoutResponses">;
 export type TryoutScoresDoc = Document.Document<typeof schemaDefinition, "tryoutScores">;
 export type TryoutSectionAttemptsDoc = Document.Document<typeof schemaDefinition, "tryoutSectionAttempts">;
+export type TryoutSetBestsDoc = Document.Document<typeof schemaDefinition, "tryoutSetBests">;
 export type TryoutSetProgressDoc = Document.Document<typeof schemaDefinition, "tryoutSetProgress">;
 export type UserLearningRecentsDoc = Document.Document<typeof schemaDefinition, "userLearningRecents">;
 export type UsersDoc = Document.Document<typeof schemaDefinition, "users">;
@@ -358,6 +359,7 @@ export interface Docs {
   tryoutResponses: TryoutResponsesDoc;
   tryoutScores: TryoutScoresDoc;
   tryoutSectionAttempts: TryoutSectionAttemptsDoc;
+  tryoutSetBests: TryoutSetBestsDoc;
   tryoutSetProgress: TryoutSetProgressDoc;
   userLearningRecents: UserLearningRecentsDoc;
   users: UsersDoc;

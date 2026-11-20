@@ -45,6 +45,7 @@ export function createConvexTestWithAuth() {
   authPasswordTest.registerPassword(t);
   authUsernameTest.registerUsername(t);
   registerLearningPopularityAggregate(t);
+  aggregateTest.register(t, "tryoutSetRanks");
   rateLimiterTest.register(t, "agentRateLimiter");
   agentTest.register(t, "nina");
   registerPostHog(t);

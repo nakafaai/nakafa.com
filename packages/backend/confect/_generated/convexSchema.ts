@@ -175,6 +175,7 @@ import tryoutAttempts from "./tables/tryoutAttempts";
 import tryoutResponses from "./tables/tryoutResponses";
 import tryoutScores from "./tables/tryoutScores";
 import tryoutSectionAttempts from "./tables/tryoutSectionAttempts";
+import tryoutSetBests from "./tables/tryoutSetBests";
 import tryoutSetProgress from "./tables/tryoutSetProgress";
 import userLearningRecents from "./tables/userLearningRecents";
 import users from "./tables/users";
@@ -358,6 +359,7 @@ export default $defineSchema({
   tryoutResponses: $Table.tableDefinition(tryoutResponses),
   tryoutScores: $Table.tableDefinition(tryoutScores),
   tryoutSectionAttempts: $Table.tableDefinition(tryoutSectionAttempts),
+  tryoutSetBests: $Table.tableDefinition(tryoutSetBests),
   tryoutSetProgress: $Table.tableDefinition(tryoutSetProgress),
   userLearningRecents: $Table.tableDefinition(userLearningRecents),
   users: $Table.tableDefinition(users),

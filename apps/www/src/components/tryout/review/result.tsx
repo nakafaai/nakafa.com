@@ -4,6 +4,7 @@ import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { useRequired } from "@repo/design-system/hooks/required";
 import { Array as Arr, HashSet, Number as Num, Option } from "effect";
+import type { ReactNode } from "react";
 import { useTranslations } from "use-intl";
 import { useStore } from "zustand";
 import { PlayerReviewGrid } from "@/components/player/navigator/review";
@@ -42,21 +43,19 @@ export function useTryoutExplained<T>(
 }
 
 /**
- * A finished attempt's numbers, two to a row: its score, its correct answers, and, where the page shows one
- * paper, the time it took and the time it had.
+ * A finished attempt's numbers, two to a row: its score and its correct answers, then the facts its place
+ * adds, such as the time a paper took or the attempt's rank on its set.
  */
 export function TryoutResultFacts({
-  limit,
+  children,
   score,
-  used,
 }: {
-  /** The paper's time limit, in seconds. */
-  limit: Option.Option<number>;
+  /** The facts the place adds after the score and the correct answers (`PaneFact`). */
+  children?: ReactNode;
   score: TryoutScoreResult;
-  /** The time the paper took, in seconds. */
-  used: Option.Option<number>;
 }) {
   const t = useTranslations("Tryouts");
+  const tCommon = useTranslations("Common");
 
   return (
     <PaneFacts layout="grid">
@@ -70,22 +69,12 @@ export function TryoutResultFacts({
         {score.publishedScore}
       </PaneFact>
       <PaneFact label={t("correct-answers-label")}>
-        {score.totalCorrect} / {score.totalQuestions}
+        {tCommon("count-of", {
+          count: score.totalCorrect,
+          total: score.totalQuestions,
+        })}
       </PaneFact>
-      {Option.match(used, {
-        onNone: () => null,
-        onSome: (seconds) => (
-          <PaneFact label={t("time-used-label")}>{readClock(seconds)}</PaneFact>
-        ),
-      })}
-      {Option.match(limit, {
-        onNone: () => null,
-        onSome: (seconds) => (
-          <PaneFact label={t("time-limit-label")}>
-            {readClock(seconds)}
-          </PaneFact>
-        ),
-      })}
+      {children}
     </PaneFacts>
   );
 }
@@ -95,6 +84,7 @@ export function TryoutResultFacts({
  * The time it took counts from the section's start to its end, up to its limit.
  */
 export function TryoutResult() {
+  const t = useTranslations("Tryouts");
   const { limit, runtime, score } = useTryoutReview();
   const used = Option.map(
     Option.fromNullOr(runtime.section.completedAt),
@@ -111,7 +101,24 @@ export function TryoutResult() {
 
   return (
     <div className="flex flex-col gap-6">
-      <TryoutResultFacts limit={limit} score={score} used={used} />
+      <TryoutResultFacts score={score}>
+        {Option.match(used, {
+          onNone: () => null,
+          onSome: (seconds) => (
+            <PaneFact label={t("time-used-label")}>
+              {readClock(seconds)}
+            </PaneFact>
+          ),
+        })}
+        {Option.match(limit, {
+          onNone: () => null,
+          onSome: (seconds) => (
+            <PaneFact label={t("time-limit-label")}>
+              {readClock(seconds)}
+            </PaneFact>
+          ),
+        })}
+      </TryoutResultFacts>
       <PlayerReviewGrid questions={reviewCellsOf(runtime.questions)} />
     </div>
   );

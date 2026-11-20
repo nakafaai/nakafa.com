@@ -109,6 +109,7 @@ function PortalAction() {
 /** The receipts, newest first: what each bought, its day, its amount, and its invoice. */
 function ReceiptsTable({ payments }: { payments: readonly Receipt[] }) {
   const t = useTranslations("Auth");
+  const tCommon = useTranslations("Common");
   const format = useFormatter();
   const kindOf = (payment: Receipt) => t(PAYMENT_KINDS[payment.kind].label);
   const amountOf = (payment: Receipt) =>
@@ -135,7 +136,7 @@ function ReceiptsTable({ payments }: { payments: readonly Receipt[] }) {
     }),
     receiptColumns.days((payment) => payment.paidAt, {
       cell: (info) => format.dateTime(info.getValue(), "billingDay"),
-      header: t("payment-date"),
+      header: tCommon("date"),
       id: "date",
       timeZone: () => BILLING_TIME_ZONE,
     }),

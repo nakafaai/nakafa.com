@@ -54,3 +54,11 @@ export function catalogLoaderDeps(search: CatalogQuery): CatalogQuery {
     status: search.status,
   };
 }
+
+/**
+ * The catalog's selection that an address holds, which a set's pane keeps as it opens and closes beside the table,
+ * so the table never changes under it. The keys of a set's own address are left out.
+ */
+export function catalogSearchOf(search: typeof CatalogQuery.Encoded) {
+  return catalogLoaderDeps(Schema.decodeSync(CatalogQuery)(search));
+}

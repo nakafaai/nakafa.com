@@ -5,6 +5,7 @@ import {
   CATALOG_QUERY_DEFAULTS,
   CatalogQuery,
   catalogLoaderDeps,
+  catalogSearchOf,
 } from "@/components/tryout/catalog/table/query";
 
 const decodeQuery = Schema.decodeUnknownSync(CatalogQuery);
@@ -86,5 +87,16 @@ describe("catalog loader dependency", () => {
     });
     expect(encodeJsonText(spelledOut)).toBe(encodeJsonText(canonical));
     expect(canonical).toEqual(CATALOG_QUERY_DEFAULTS);
+  });
+});
+
+describe("catalogSearchOf", () => {
+  it("keeps the table's selection of an address and leaves a set's own keys out", () => {
+    const address = { attemptId: "a", level: "hard", sort: "level" } as const;
+    expect(catalogSearchOf(address)).toEqual({
+      ...CATALOG_QUERY_DEFAULTS,
+      level: "hard",
+      sort: "level",
+    });
   });
 });

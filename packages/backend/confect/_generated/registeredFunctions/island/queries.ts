@@ -8,7 +8,9 @@ const definitions = ConvexFunctionDefinitions.buildForGroup<typeof import("../..
 
 export default {
 ["own"]: RegisteredConvexFunction.register({ ...definitions["own"], handler: forward(definitions["own"].handler) }),
+["growth"]: RegisteredConvexFunction.register({ ...definitions["growth"], handler: forward(definitions["growth"].handler) }),
 ["week"]: RegisteredConvexFunction.register({ ...definitions["week"], handler: forward(definitions["week"].handler) }),
 ["leaders"]: RegisteredConvexFunction.register({ ...definitions["leaders"], handler: forward(definitions["leaders"].handler) }),
+["claims"]: RegisteredConvexFunction.register({ ...definitions["claims"], handler: forward(definitions["claims"].handler) }),
 ["medals"]: RegisteredConvexFunction.register({ ...definitions["medals"], handler: forward(definitions["medals"].handler) }),
 } as RegisteredFunctions.RegisteredFunctionsForGroupSpec<typeof import("../../../island/queries.spec")["default"]>;

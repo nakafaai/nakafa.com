@@ -7,7 +7,7 @@ import {
 import type { Docs } from "@repo/backend/confect/_generated/docs";
 import { Match } from "effect";
 
-export type TryoutStatusValue = Docs["tryoutSetProgress"]["status"];
+type TryoutStatusValue = Docs["tryoutSetProgress"]["status"];
 
 /** A learner's place in one try-out set; a set the learner has not started has none. */
 export type TryoutProgress = TryoutStatusValue | null;

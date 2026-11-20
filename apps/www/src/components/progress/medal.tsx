@@ -5,9 +5,9 @@ import {
   TooltipTrigger,
 } from "@repo/design-system/components/ui/tooltip";
 import { cva } from "class-variance-authority";
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import { useTranslations } from "use-intl";
-import type { wallOf } from "@/components/progress/level";
+import type { medalsOf, wallOf } from "@/components/progress/level";
 
 type WallMedal = ReturnType<typeof wallOf>[number];
 
@@ -85,5 +85,45 @@ export function MedalItem({
         </TooltipContent>
       </Tooltip>
     </li>
+  );
+}
+
+/**
+ * How far a medal is toward its next tier: a thin bar in the Stars' yellow, and the count against the next
+ * one. A page that adds to the count, such as a try-out set, draws what it adds after the fill in a lighter
+ * yellow, up to the next tier.
+ */
+export function MedalWay({
+  gain = 0,
+  medal,
+}: {
+  /** What the page still adds to the medal's count. */
+  gain?: number;
+  medal: Pick<
+    ReturnType<typeof medalsOf>[number],
+    "count" | "from" | "next" | "share"
+  >;
+}) {
+  const tCommon = useTranslations("Common");
+  const fill: CSSProperties = {
+    "--ahead":
+      Math.min(gain, medal.next - medal.count) / (medal.next - medal.from),
+    "--share": medal.share,
+  };
+  return (
+    <span className="flex w-full flex-col items-center gap-1">
+      <span
+        className="bg-muted relative h-1 w-12 overflow-hidden rounded-full"
+        style={fill}
+      >
+        <span className="bg-pop-yellow absolute inset-y-0 start-0 w-[calc(var(--share)*100%)] rounded-full" />
+        {gain > 0 ? (
+          <span className="bg-pop-yellow/35 absolute inset-y-0 start-[calc(var(--share)*100%)] w-[calc(var(--ahead)*100%)] rounded-e-full" />
+        ) : null}
+      </span>
+      <span className="text-xs tabular-nums">
+        {tCommon("count-of", { count: medal.count, total: medal.next })}
+      </span>
+    </span>
   );
 }

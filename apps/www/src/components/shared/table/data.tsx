@@ -71,6 +71,7 @@ export function DataTable<TData extends RowData>({
   rowId,
   search,
   server,
+  shownRow,
 }: {
   /** The rows under the body, such as a footer of totals. */
   children?: ReactNode;
@@ -94,6 +95,11 @@ export function DataTable<TData extends RowData>({
   search?: string;
   /** A list the server sorts, filters and reads a window at a time (`RemoteList`). */
   server?: RemoteList;
+  /**
+   * The row whose detail the page's address shows beside the list, for a page whose address holds the open row, as
+   * the try-out track's set does: every row then presses its first column's link, and that row stays marked.
+   */
+  shownRow?: Option.Option<string>;
 }) {
   const t = useTranslations("DataTable");
   const hasPanes = useHasPanes();
@@ -149,8 +155,17 @@ export function DataTable<TData extends RowData>({
             Arr.map(shown, (row) => (
               <DataTableRow
                 key={row.id}
-                opens={hasPanes && !plain && (opens?.(row.original) ?? true)}
+                opens={
+                  hasPanes &&
+                  !plain &&
+                  shownRow === undefined &&
+                  (opens?.(row.original) ?? true)
+                }
                 row={row}
+                shown={
+                  shownRow !== undefined &&
+                  Option.exists(shownRow, (id) => id === row.id)
+                }
               >
                 {Arr.map(row.getAllCells(), (cell, index) => (
                   <DataTableCell cell={cell} index={index} key={cell.id}>
@@ -262,11 +277,14 @@ function DataTableRow({
   children,
   opens,
   row,
+  shown,
 }: {
   children: ReactNode;
   /** Whether pressing the row opens it beside the list. */
   opens: boolean;
   row: { readonly id: string };
+  /** Whether the page's address shows the row's detail beside the list. */
+  shown: boolean;
 }) {
   return opens ? (
     <PaneTableRow id={row.id}>{children}</PaneTableRow>
@@ -274,6 +292,7 @@ function DataTableRow({
     <TableRow
       className="has-[td:first-child_a[href]]:hover:bg-muted h-12 has-[td:first-child_a[href]]:cursor-pointer"
       data-pressable={undefined}
+      data-state={shown ? "selected" : undefined}
       onClick={(event) => {
         if (pressesRow(event)) {
           event.currentTarget

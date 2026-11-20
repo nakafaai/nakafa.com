@@ -1,31 +1,11 @@
 import type { Ref } from "@confect/core";
 import type island from "@repo/backend/confect/_generated/refs/island";
 import { Array as Arr } from "effect";
-import type { CSSProperties } from "react";
 import { useTranslations } from "use-intl";
 import { medalsOf } from "@/components/progress/level";
-import { MedalItem } from "@/components/progress/medal";
+import { MedalItem, MedalWay } from "@/components/progress/medal";
 
 type Medals = NonNullable<Ref.Returns<typeof island.queries.medals>>;
-type ProfileMedal = ReturnType<typeof medalsOf>[number];
-
-/** How far a medal is toward its next tier: a thin bar in the Stars' yellow, and the count against the next one. */
-function MedalWay({ medal }: { medal: ProfileMedal }) {
-  const fill: CSSProperties = { "--share": medal.share };
-  return (
-    <span className="flex w-full flex-col items-center gap-1">
-      <span className="bg-muted h-1 w-12 overflow-hidden rounded-full">
-        <span
-          className="bg-pop-yellow block h-full w-[calc(var(--share)*100%)] rounded-full"
-          style={fill}
-        />
-      </span>
-      <span className="text-xs tabular-nums">
-        {medal.count} / {medal.next}
-      </span>
-    </span>
-  );
-}
 
 /**
  * The Badges tab of a profile (the owner's home notes, 14 Nov): the learner's

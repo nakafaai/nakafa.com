@@ -15,9 +15,10 @@ import {
 } from "@repo/design-system/components/ui/picker";
 import { rowLineVariants } from "@repo/design-system/lib/row";
 import { useLocation, useNavigate } from "@tanstack/react-router";
+import { cva } from "class-variance-authority";
+import { cn } from "cn";
 import { Array as Arr, Option } from "effect";
-import type { ReactNode } from "react";
-import { useState } from "react";
+import { createContext, type ReactNode, use, useState } from "react";
 import { useFormatter, useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { PageHeaderLabel } from "@/components/shared/page/header";
@@ -35,7 +36,7 @@ type HistoryIdentity = Omit<Ref.Args<HistoryQuery>, "paginationOpts">;
 type HistoryRow = Ref.Returns<HistoryQuery>["page"][number];
 type ScoredHistoryRow = TryoutAttemptHistoryProps["value"]["attempts"][number];
 
-/** One attempt of the picker, named by its number, with the moment it started under it. */
+/** One attempt of the picker, named by its number, with the moment it started under it and its score at its end. */
 function TryoutAttemptOption({
   attempt,
   onChoose,
@@ -50,6 +51,11 @@ function TryoutAttemptOption({
 
   return (
     <PickerItem
+      end={
+        <span className="text-muted-foreground shrink-0 text-sm tabular-nums">
+          {format.number(attempt.score.publishedScore)}
+        </span>
+      }
       icon={TransactionHistoryIcon}
       onClick={onChoose}
       selected={selected}
@@ -82,14 +88,36 @@ interface TryoutAttemptHistoryProps {
   };
 }
 
+/** Where a picker stands: in a page's header, beside its other buttons, or across the width of a set's pane. */
+type PickerPlace = "header" | "pane";
+
+/** The place of the pickers around the caller. */
+const PickerPlaceContext = createContext<PickerPlace>("header");
+
+/** The picker's trigger: as wide as its words in a header, and as wide as the pane in a pane. */
+const triggerVariants = cva("", {
+  variants: { place: { header: "", pane: "w-full justify-start" } },
+});
+
+/** The picker's chevron, which a narrow header leaves out. */
+const chevronVariants = cva(
+  "tryout-history-chevron ms-auto transition-transform ease-out",
+  { variants: { place: { header: "@max-2xl/header:hidden", pane: "" } } }
+);
+
 /** What the picker shows, which its place at first paint draws too, so the two stand pixel for pixel. */
 function TryoutAttemptFace({ children }: { children?: ReactNode }) {
+  const place = use(PickerPlaceContext);
   return (
     <>
       <HugeIcons icon={TransactionHistoryIcon} />
-      <PageHeaderLabel>{children}</PageHeaderLabel>
+      {place === "header" ? (
+        <PageHeaderLabel>{children}</PageHeaderLabel>
+      ) : (
+        <span className="truncate">{children}</span>
+      )}
       <HugeIcons
-        className="tryout-history-chevron ml-auto transition-transform ease-out @max-2xl/header:hidden"
+        className={chevronVariants({ place })}
         icon={ArrowDown01Icon}
       />
     </>
@@ -103,8 +131,10 @@ function TryoutAttemptFace({ children }: { children?: ReactNode }) {
  */
 function TryoutAttemptPlace() {
   const label = useKeptPageAttempt();
+  const place = use(PickerPlaceContext);
   return (
     <Button
+      className={triggerVariants({ place })}
       data-attempt-picker=""
       // Hidden by its attribute, so the group's next part keeps its rounded start until the place shows.
       hidden={label === undefined}
@@ -151,6 +181,7 @@ function TryoutAttemptHistory({ value }: TryoutAttemptHistoryProps) {
     Option.getOrUndefined(label)
   );
 
+  const place = use(PickerPlaceContext);
   if (Option.isNone(label)) {
     return null;
   }
@@ -160,7 +191,10 @@ function TryoutAttemptHistory({ value }: TryoutAttemptHistoryProps) {
       <PickerTrigger
         render={
           <Button
-            className="group data-open:[&_.tryout-history-chevron]:rotate-180"
+            className={cn(
+              triggerVariants({ place }),
+              "group data-open:[&_.tryout-history-chevron]:rotate-180"
+            )}
             data-attempt-picker=""
             type="button"
             variant="outline"
@@ -193,13 +227,14 @@ function TryoutAttemptHistory({ value }: TryoutAttemptHistoryProps) {
 }
 
 /**
- * The picker of a set's attempts, for the page's header, once a set has been tried more than once.
- * Choosing an attempt opens that attempt's page, so the score and the review always belong to one
+ * The picker of a set's attempts, in a page's header or across a set's pane, once a set has been tried more
+ * than once. Choosing an attempt opens that attempt's page, so the score and the review always belong to one
  * attempt. A page whose attempt has no score has nothing to pick from.
  */
 export function TryoutAttemptPicker({
   attempt,
   locale,
+  place = "header",
   set,
 }: {
   readonly attempt:
@@ -207,28 +242,29 @@ export function TryoutAttemptPicker({
     | null
     | undefined;
   readonly locale: HistoryIdentity["locale"];
+  readonly place?: PickerPlace;
   readonly set: SetPage["set"];
 }) {
   const waiting = useFactsWaiting(attempt === undefined);
+  let picked: ReactNode = null;
   if (waiting) {
-    return <TryoutAttemptPlace />;
+    picked = <TryoutAttemptPlace />;
+  } else if (attempt?.score) {
+    picked = (
+      <TryoutAttemptChoice
+        attemptId={attempt.attemptId}
+        identity={{
+          countryKey: set.countryKey,
+          examKey: set.examKey,
+          locale,
+          setKey: set.setKey,
+          trackKey: set.trackKey,
+        }}
+        publicPath={set.publicPath}
+      />
+    );
   }
-  if (!attempt?.score) {
-    return null;
-  }
-  return (
-    <TryoutAttemptChoice
-      attemptId={attempt.attemptId}
-      identity={{
-        countryKey: set.countryKey,
-        examKey: set.examKey,
-        locale,
-        setKey: set.setKey,
-        trackKey: set.trackKey,
-      }}
-      publicPath={set.publicPath}
-    />
-  );
+  return <PickerPlaceContext value={place}>{picked}</PickerPlaceContext>;
 }
 
 /** Reads a set's attempts for the picker, which waits until there is more than one to pick from. */
@@ -243,6 +279,7 @@ function TryoutAttemptChoice({
 }) {
   const isAuthenticated = useConvexAuth((auth) => auth.isAuthenticated);
   const navigate = useNavigate();
+  const place = use(PickerPlaceContext);
   const history = usePaginatedQuery(
     tryouts.queries.history.bySet,
     isAuthenticated ? identity : "skip",
@@ -267,6 +304,15 @@ function TryoutAttemptChoice({
           : undefined,
         onChoose: (chosen) => {
           if (chosen === attemptId) {
+            return;
+          }
+          // A set's pane stands beside its track's table, so its address keeps the table's query and its scroll.
+          if (place === "pane") {
+            navigate({
+              resetScroll: false,
+              search: (previous) => ({ ...previous, attemptId: chosen }),
+              to: ".",
+            });
             return;
           }
           navigate({

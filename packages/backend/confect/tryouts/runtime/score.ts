@@ -7,6 +7,7 @@ import { statusOf } from "@repo/backend/confect/assessment/gate/end";
 import { isAnswered } from "@repo/backend/confect/assessment/response";
 import { TryoutAttemptStateError } from "@repo/backend/confect/tryouts/attempt";
 import { writeTryoutSetProgress } from "@repo/backend/confect/tryouts/progress/write";
+import { recordSetBest } from "@repo/backend/confect/tryouts/rank/write";
 import { isCorrectGrade } from "@repo/backend/confect/tryouts/response/answer";
 import {
   TryoutRuntimeError,
@@ -176,6 +177,10 @@ export const finalizeAttemptScore = Effect.fn(
     publishedScore: score.publishedScore,
     status,
     updatedAt: args.now,
+  });
+  yield* recordSetBest(args.attempt, {
+    finalizedAt: args.now,
+    publishedScore: score.publishedScore,
   });
   return {
     scoreId,

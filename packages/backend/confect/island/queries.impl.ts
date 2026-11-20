@@ -2,6 +2,7 @@ import { FunctionImpl, GroupImpl } from "@confect/server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { getOptionalAppUserForRead } from "@repo/backend/confect/auth/session";
+import { claimsOf } from "@repo/backend/confect/island/claims";
 import { todayOf } from "@repo/backend/confect/island/day";
 import { leadersOf } from "@repo/backend/confect/island/leaders";
 import { growthOf } from "@repo/backend/confect/island/level";
@@ -11,6 +12,10 @@ import { findIsland } from "@repo/backend/confect/island/store";
 import { toOwnIsland } from "@repo/backend/confect/island/view";
 import { streakOn, summaryOf, weekOf } from "@repo/backend/confect/island/week";
 import sessionMiddleware from "@repo/backend/confect/middleware/session.impl";
+import {
+  decodeTryoutSetIdentity,
+  tryoutSetIdentityOf,
+} from "@repo/backend/confect/tryouts/route";
 import { getAppUserByUsername } from "@repo/backend/confect/users/directory";
 import { profileAccess } from "@repo/backend/confect/users/profile";
 import { Effect, Layer, Option } from "effect";
@@ -27,6 +32,23 @@ const own = FunctionImpl.make(
     }
     const island = yield* findIsland(user.appUser._id);
     return Option.match(island, { onNone: () => null, onSome: toOwnIsland });
+  })
+);
+
+/** The signed-in learner's lifetime Stars and tally, none before their first grant or visit. */
+const growth = FunctionImpl.make(
+  databaseSchema,
+  spec,
+  "growth",
+  Effect.fn("island.queries.growth")(function* () {
+    const user = yield* getOptionalAppUserForRead();
+    if (!user) {
+      return null;
+    }
+    return Option.match(yield* findIsland(user.appUser._id), {
+      onNone: () => null,
+      onSome: (island) => ({ lifetime: island.lifetime, tally: island.tally }),
+    });
   })
 );
 
@@ -85,6 +107,24 @@ const leaders = FunctionImpl.make(
 );
 
 /**
+ * What the signed-in learner already holds of one try-out set's Stars, which its pane shows beside what
+ * the set gives (ADR 0042, D8). None for a visitor.
+ */
+const claims = FunctionImpl.make(
+  databaseSchema,
+  spec,
+  "claims",
+  Effect.fn("island.queries.claims")(function* (keys) {
+    const identity = yield* decodeTryoutSetIdentity(keys);
+    const user = yield* getOptionalAppUserForRead();
+    if (!user) {
+      return null;
+    }
+    return yield* claimsOf(user.appUser._id, tryoutSetIdentityOf(identity));
+  })
+);
+
+/**
  * The medals of the learner a profile address names, for whoever may open that
  * profile (`profileAccess`); a name nobody holds and a profile that does not
  * open both answer nothing. A learner with no island yet has counted nothing.
@@ -114,6 +154,8 @@ const medals = FunctionImpl.make(
 );
 
 export default GroupImpl.make(databaseSchema, spec).pipe(
+  Layer.provide(claims),
+  Layer.provide(growth),
   Layer.provide(medals),
   Layer.provide(own),
   Layer.provide(week),

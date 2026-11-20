@@ -1,12 +1,22 @@
-import { getRouteApi, useLocation } from "@tanstack/react-router";
-import { Effect, Schema } from "effect";
-import { useState } from "react";
+import { getRouteApi, useLocation, useParams } from "@tanstack/react-router";
+import { Effect, Option, Schema } from "effect";
+import { type ReactNode, useState } from "react";
+import { useTranslations } from "use-intl";
 import { ConvexIsland } from "@/components/providers/island";
-import { PanesProvider } from "@/components/shared/page/panes";
+import { PageList } from "@/components/shared/page/body";
+import {
+  PagePane,
+  Panes,
+  PanesList,
+  PanesProvider,
+} from "@/components/shared/page/panes";
 import { TableFiltersProvider } from "@/components/shared/table/toolbar";
 import { useTryoutSetData } from "@/components/tryout/catalog/table/data";
 import { TryoutSetFrame } from "@/components/tryout/catalog/table/frame";
-import { CatalogQuery } from "@/components/tryout/catalog/table/query";
+import {
+  CatalogQuery,
+  catalogSearchOf,
+} from "@/components/tryout/catalog/table/query";
 import { TryoutSetTableContext } from "@/components/tryout/catalog/table/selection";
 import type {
   TryoutSetListArgs,
@@ -25,19 +35,22 @@ import {
   visitorWindowKey,
 } from "@/components/tryout/catalog/table/visitor";
 import { readTryoutTrackListFn } from "@/components/tryout/route/catalog.functions";
+import { getTryoutPublicPath } from "@/components/tryout/route/path";
 
-/** Props of the discovery table: the build's payload. */
+/** Props of the discovery table: the build's payload, and the open set's pane. */
 export interface TryoutSetTableProps {
   /** The list request that the loader's answer holds and the result it resolved to. */
   bootstrap: {
     readonly args: TryoutSetListArgs;
     readonly result: TryoutSetPage;
   };
+  /** The pane of the set the address opens, drawn beside the table. */
+  children: ReactNode;
 }
 
-/** The track route, whose validated search is the catalog's filter, sort and direction. */
+/** The track's layout route, whose validated search is the catalog's filter, sort and direction. */
 const catalogRoute = getRouteApi(
-  "/$locale/_main/try-out/$country/$exam/$group/$track/"
+  "/$locale/_main/try-out/$country/$exam/$group/$track"
 );
 
 /**
@@ -47,7 +60,8 @@ const catalogRoute = getRouteApi(
  * each further window through the server function, so no visitor opens a socket. A change of filter, sort or direction is a navigation
  * that adds a history entry and keeps the scroll position.
  */
-export function TryoutSetTable({ bootstrap }: TryoutSetTableProps) {
+export function TryoutSetTable({ bootstrap, children }: TryoutSetTableProps) {
+  const t = useTranslations("Tryouts");
   /**
    * The selection reads the address, which a navigation updates at once. The route
    * match commits only when the track loader resolves, so its search would hold the
@@ -57,6 +71,14 @@ export function TryoutSetTable({ bootstrap }: TryoutSetTableProps) {
     select: (location) => Schema.decodeSync(CatalogQuery)(location.search),
   });
   const navigate = catalogRoute.useNavigate();
+  const params = catalogRoute.useParams();
+  // The set the address opens, by the path its row is keyed by.
+  const shown = Option.map(
+    Option.fromNullishOr(
+      useParams({ select: (all) => all.set, strict: false })
+    ),
+    (set) => getTryoutPublicPath({ ...params, set })
+  );
   const request: TryoutSetRequest = {
     countryKey: bootstrap.args.countryKey,
     examKey: bootstrap.args.examKey,
@@ -83,23 +105,47 @@ export function TryoutSetTable({ bootstrap }: TryoutSetTableProps) {
         onLevel: (level) => select({ level }),
         onSort: (sort) =>
           select({ direction: sort.direction, sort: sort.field }),
+        shown,
         sort: request.sort,
       }}
     >
       <TableFiltersProvider>
-        {/* The open set outlives the visitor's table turning into the learner's. */}
         <PanesProvider wideFrom="lg">
-          <ConvexIsland
-            fallback={
-              <TryoutSetVisitorCatalog
-                bootstrap={bootstrap}
-                request={request}
-              />
-            }
-            keepsPress
-          >
-            <TryoutSetSignedCatalog bootstrap={bootstrap} request={request} />
-          </ConvexIsland>
+          <Panes fill="parent" id="tryout-sets">
+            <PanesList>
+              <PageList>
+                <ConvexIsland
+                  fallback={
+                    <TryoutSetVisitorCatalog
+                      bootstrap={bootstrap}
+                      request={request}
+                    />
+                  }
+                  keepsPress
+                >
+                  <TryoutSetSignedCatalog
+                    bootstrap={bootstrap}
+                    request={request}
+                  />
+                </ConvexIsland>
+              </PageList>
+            </PanesList>
+            {/* The open set stands outside the table, so it outlives the visitor's table turning into the learner's. */}
+            <PagePane
+              label={t("set-pane")}
+              onClose={() =>
+                navigate({
+                  params,
+                  resetScroll: false,
+                  search: catalogSearchOf,
+                  to: "/$locale/try-out/$country/$exam/$group/$track",
+                })
+              }
+              open={Option.isSome(shown)}
+            >
+              {children}
+            </PagePane>
+          </Panes>
         </PanesProvider>
       </TableFiltersProvider>
     </TryoutSetTableContext>

@@ -5,6 +5,9 @@ const DAY = 86_400;
 const HOUR = 3600;
 const MINUTE = 60;
 
+/** One part a deadline reads in: a unit and how many of it are left. */
+export type DeadlinePart = ReturnType<typeof readDeadlineParts>[number];
+
 /**
  * The parts a deadline reads in: days, hours and minutes while a day or more is left, so a set window
  * of three days never reads as 69 hours, and hours, minutes and seconds in its last day.

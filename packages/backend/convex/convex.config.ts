@@ -76,7 +76,7 @@ app.use(posthog, {
   },
 });
 
-app.use(aggregate, { name: "globalLeaderboard" });
 app.use(aggregate, { name: "learningPopularityRankings" });
+app.use(aggregate, { name: "tryoutSetRanks" });
 
 export default app;
