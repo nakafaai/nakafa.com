@@ -4,13 +4,13 @@ import type { ReactNode } from "react";
 import { Activity } from "react";
 import { useTranslations } from "use-intl";
 import { readQuestionIds } from "@/components/player/ids";
-import type { PlayerVerdict } from "@/components/player/model";
-import { usePlayer } from "@/components/player/provider";
 import {
-  PlayerVerdictMark,
   VERDICT_VARIANT,
   verdictNumberVariants,
-} from "@/components/player/verdict";
+} from "@/components/player/look";
+import type { PlayerVerdict } from "@/components/player/model";
+import { usePlayer } from "@/components/player/provider";
+import { PlayerVerdictMark } from "@/components/player/verdict";
 
 /**
  * One question of the player. The list shows every question, and one at a time

@@ -2,13 +2,13 @@ import { Button } from "@repo/design-system/components/ui/button";
 import { cn } from "cn";
 import { Array as Arr } from "effect";
 import { useTranslations } from "use-intl";
-import type { PlayerReviewCellModel } from "@/components/player/model";
-import { usePlayer } from "@/components/player/provider";
 import {
-  PlayerVerdictMark,
   VERDICT_VARIANT,
   verdictNumberVariants,
-} from "@/components/player/verdict";
+} from "@/components/player/look";
+import type { PlayerReviewCellModel } from "@/components/player/model";
+import { usePlayer } from "@/components/player/provider";
+import { PlayerVerdictMark } from "@/components/player/verdict";
 
 /**
  * Lays a finished paper's numbers out in a grid, as the navigator of a running paper does: a press on one
