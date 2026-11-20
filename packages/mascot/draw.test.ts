@@ -46,7 +46,7 @@ function marked(shapes: readonly Layer[]): readonly Layer[] {
   });
 }
 
-/** The horizontal centre of a marked eye: of its pupil, the first shape of an eye with a shine. */
+/** The horizontal centre of a marked eye: of its pupil, the one shape of the eye. */
 function centreOf(shape: Layer): number {
   if (shape._tag === "g") {
     return Option.match(Arr.head(shape.children), {
@@ -148,13 +148,13 @@ describe("mascot/draw", () => {
 
   it("stands the animal in its pose", () => {
     expect(transforms([draw(mascotOf(CAT))])).toEqual([
-      "translate(134 218) rotate(-10) scale(1.16) translate(-100 -200)",
+      "translate(114 212) rotate(-8) scale(1.06) translate(-100 -200)",
     ]);
     expect(transforms([draw(mascotOf("cat.0.243e66.center.open"))])).toEqual([
-      "translate(100 204) rotate(0) scale(1.04) translate(-100 -200)",
+      "translate(100 206) rotate(0) scale(1.02) translate(-100 -200)",
     ]);
     expect(transforms([draw(mascotOf("cat.0.243e66.peek-left.open"))])).toEqual(
-      ["translate(56 246) rotate(14) scale(1.14) translate(-100 -200)"]
+      ["translate(78 236) rotate(12) scale(1.06) translate(-100 -200)"]
     );
   });
 
@@ -165,14 +165,14 @@ describe("mascot/draw", () => {
     expect(fills([free])).toEqual(
       expect.arrayContaining(["#ee8a4c", "#f4e6ce"])
     );
-    expect(Arr.map(marked([free]), centreOf)).toEqual([74, 126]);
+    expect(Arr.map(marked([free]), centreOf)).toEqual([73, 127]);
     expect(stand(mascotOf("cat.0.243e66.peek-left.open"))).toEqual(free);
   });
 
   it("turns the open eyes the way the pose looks", () => {
-    expect(eyesOf(mascotOf("cat.0.243e66.center.open"))).toEqual([74, 126]);
-    expect(eyesOf(mascotOf("cat.0.243e66.left.open"))).toEqual([76.6, 128.6]);
-    expect(eyesOf(mascotOf(CAT))).toEqual([71.4, 123.4]);
+    expect(eyesOf(mascotOf("cat.0.243e66.center.open"))).toEqual([73, 127]);
+    expect(eyesOf(mascotOf("cat.0.243e66.left.open"))).toEqual([76, 130]);
+    expect(eyesOf(mascotOf(CAT))).toEqual([70, 124]);
   });
 
   it("marks the two open eyes of every animal, so that they can follow the pointer", () => {
@@ -184,13 +184,13 @@ describe("mascot/draw", () => {
     expect(wrong).toEqual([]);
   });
 
-  it("marks no eye of an animal that sleeps, except the panda, whose eyes stay open on their dark patches", () => {
+  it("marks no eye of an animal that sleeps", () => {
     const awake = Arr.filter(
       Animal.literals,
       (animal) =>
         marked([draw(mascotOf(`${animal}.0.243e66.center.asleep`))]).length > 0
     );
-    expect(awake).toEqual(["panda"]);
+    expect(awake).toEqual([]);
   });
 
   it.effect(
