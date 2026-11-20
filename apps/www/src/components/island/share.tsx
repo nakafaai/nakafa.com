@@ -85,7 +85,9 @@ function AccessChoice() {
   const own = useQuery(island.queries.own, {});
   const share = useMutation(island.mutations.share);
   const setNotice = useGame((state) => state.setNotice);
-  const [chosen, setChosen] = useState(Option.none<typeof Access.Type>());
+  const [chosen, setChosen] = useState<Option.Option<typeof Access.Type>>(
+    Option.none
+  );
   if (!QueryResult.isSuccess(own) || own.value === null) {
     return null;
   }

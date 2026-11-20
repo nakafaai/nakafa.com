@@ -21,7 +21,8 @@ import { useTranslations } from "use-intl";
 import { panelVariants } from "@/components/island/panel";
 import type { Mode, Sheet } from "@/components/island/store";
 import { useGame } from "@/components/island/store";
-import { HudTile, HudTileLabel, tileVariants } from "@/components/island/tile";
+import { HudTile, HudTileLabel } from "@/components/island/tile";
+import { tileVariants } from "@/components/island/tiles";
 import { useCurrentLocale } from "@/lib/routing/link";
 
 /** The icon of each mode. */
