@@ -9,9 +9,11 @@ import { meetingOf } from "@repo/design-system/components/contents/mathematics/j
 import { JourneyReadings } from "@repo/design-system/components/contents/mathematics/journey/readings";
 import type { Units } from "@repo/design-system/components/contents/mathematics/journey/readout";
 import { JourneyScene } from "@repo/design-system/components/contents/mathematics/journey/scene";
+import type {
+  Leg,
+  Motion,
+} from "@repo/design-system/components/contents/mathematics/journey/trip";
 import {
-  type Leg,
-  type Motion,
   partName,
   stagesOf,
 } from "@repo/design-system/components/contents/mathematics/journey/trip";
@@ -29,13 +31,8 @@ import {
 } from "@repo/design-system/components/visual/card";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { Array as Arr, Option } from "effect";
-import {
-  type ReactNode,
-  Suspense,
-  useCallback,
-  useMemo,
-  useState,
-} from "react";
+import type { ReactNode } from "react";
+import { Suspense, useCallback, useMemo, useState } from "react";
 
 /** The toolbar's choice of the whole journey, beside its legs. */
 const WHOLE = "whole";

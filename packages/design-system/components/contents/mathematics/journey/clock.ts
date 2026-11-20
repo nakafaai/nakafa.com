@@ -1,7 +1,7 @@
+import type { Stage } from "@repo/design-system/components/contents/mathematics/journey/trip";
 import {
   arrivalOf,
   partAt,
-  type Stage,
 } from "@repo/design-system/components/contents/mathematics/journey/trip";
 import { Array as Arr, Option, Schema } from "effect";
 

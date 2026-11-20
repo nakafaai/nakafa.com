@@ -1,19 +1,21 @@
+import type { Units } from "@repo/design-system/components/contents/mathematics/journey/readout";
 import {
   meetingTex,
   momentTex,
   placeTex,
   rateTex,
-  type Units,
 } from "@repo/design-system/components/contents/mathematics/journey/readout";
+import type {
+  Motion,
+  Stage,
+  Traveller,
+} from "@repo/design-system/components/contents/mathematics/journey/trip";
 import {
   lengthOf,
-  type Motion,
   motionOf,
   partName,
   placeAt,
-  type Stage,
   speedOf,
-  type Traveller,
   totalsOf,
 } from "@repo/design-system/components/contents/mathematics/journey/trip";
 import { useQuantity } from "@repo/design-system/components/contents/simulation/quantity";

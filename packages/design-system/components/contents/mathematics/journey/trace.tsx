@@ -1,18 +1,18 @@
 import { Line } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
+import type { Sheet } from "@repo/design-system/components/contents/mathematics/journey/layout";
 import {
   graphSpot,
   INK,
   laneX,
   pointAt,
-  type Sheet,
 } from "@repo/design-system/components/contents/mathematics/journey/layout";
 import { ROAD_TOP } from "@repo/design-system/components/contents/mathematics/journey/model";
+import type { Stage } from "@repo/design-system/components/contents/mathematics/journey/trip";
 import {
   arrivalOf,
   facingAt,
   placeAt,
-  type Stage,
 } from "@repo/design-system/components/contents/mathematics/journey/trip";
 import {
   Bus,
