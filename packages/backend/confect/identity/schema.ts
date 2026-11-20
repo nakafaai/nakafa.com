@@ -27,6 +27,19 @@ export const schoolLoginValidator = Schema.Struct({
 });
 
 /**
+ * One Google identity that signed in to an account, with the hosted domain
+ * (`hd`) its latest sign-in carried. Only a Google Workspace account carries
+ * one, lowercase here; a personal Google account has none. A school's allowed
+ * email domains admit an invite only for an account whose every Google identity
+ * carries an allowed one (ADR 0011).
+ */
+export const googleAccountValidator = Schema.Struct({
+  hostedDomain: Schema.optionalKey(Schema.String),
+  subject: Schema.String,
+  userId: Id("users"),
+});
+
+/**
  * One login card of a Person. Only a keyed hash of the code is stored, never
  * the code. Issuing a new card replaces the row, which voids the old code.
  */

@@ -20,7 +20,7 @@ import { claimAfterVerification } from "@repo/backend/confect/tenancy/claims";
 import { allocateUsername } from "@repo/backend/confect/users/allocation";
 import { accountMascot } from "@repo/backend/confect/users/mascot";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { Clock, Effect, Option } from "effect";
+import { Clock, Effect, Option, String as Str } from "effect";
 
 /**
  * The live account that holds an address, if any. A deleted account keeps a
@@ -65,9 +65,9 @@ export const insertAccount = Effect.fn("auth.account.insert")(
 );
 
 /**
- * Makes the Nakafa account of a new Google identity, and asks for the welcome
- * email and the claim of any invite that waits for its verified address
- * (ADR 0009).
+ * Makes the Nakafa account of a new Google identity and asks for its welcome
+ * email (ADR 0009). The sign-in that follows in the same transaction records the
+ * identity and asks for the claim of any invite that waits for its address.
  */
 const makeAccount = Effect.fn("auth.account.make")(function* (
   profile: typeof GoogleProfile.Type,
@@ -80,7 +80,6 @@ const makeAccount = Effect.fn("auth.account.make")(function* (
     seed: profile.id,
   });
   yield* declareWelcomeIntent(userId);
-  yield* claimAfterVerification(userId, email);
   return userId;
 });
 
@@ -115,13 +114,64 @@ export const createGoogleAccount = Effect.fn("auth.account.createGoogle")(
 );
 
 /**
- * Refuses the sign-in of a deleted account, and claims the guardian Persons that
- * the school linked to the account's verified address (ADR 0034). Every sign-in
- * runs this, the first one included, so a Google identity linked to a deleted
- * account cannot start a session.
+ * Records the Google identity of a sign-in with the hosted domain it carried,
+ * lowercase, and answers whether the row is new or changed: a new identity, a
+ * new hosted domain, or a personal account that lost one. An identity reads one
+ * row by its subject, so a sign-in costs one indexed read and at most one write.
+ */
+const recordGoogleAccount = Effect.fn("auth.account.recordGoogle")(function* (
+  userId: Id<"users">,
+  profile: typeof GoogleProfile.Type
+) {
+  const hostedDomain = Option.map(
+    Option.fromUndefinedOr(profile.hostedDomain),
+    Str.toLowerCase
+  );
+  const row = {
+    subject: profile.id,
+    userId,
+    ...Option.match(hostedDomain, {
+      onNone: () => ({}),
+      onSome: (domain) => ({ hostedDomain: domain }),
+    }),
+  };
+  const stored = yield* (yield* DatabaseReader)
+    .table("googleAccounts")
+    .index("by_subject", (query) => query.eq("subject", profile.id))
+    .first()
+    .pipe(Effect.orDie);
+  const writer = (yield* DatabaseWriter).table("googleAccounts");
+  if (Option.isNone(stored)) {
+    yield* writer.insert(row).pipe(Effect.orDie);
+    return true;
+  }
+  if (
+    stored.value.userId === userId &&
+    stored.value.hostedDomain === row.hostedDomain
+  ) {
+    return false;
+  }
+  yield* writer.replace(stored.value._id, row).pipe(Effect.orDie);
+  return true;
+});
+
+/**
+ * Refuses the sign-in of a deleted account, records the Google identity with
+ * its hosted domain, and claims the guardian Persons that the school linked to
+ * the account's verified address (ADR 0034). Every sign-in runs this, the first
+ * one included, so a Google identity linked to a deleted account cannot start a
+ * session. A new identity or a new hosted domain asks for the claim of the
+ * invites that wait for the address, since a school's email domains admit an
+ * invite by the hosted domains of the account's Google sign-ins (ADR 0011).
  */
 export const admitGoogleSignIn = Effect.fn("auth.account.signInGoogle")(
-  function* ({ userId }: { readonly userId: Id<"users"> }) {
+  function* ({
+    method,
+    userId,
+  }: {
+    readonly method: typeof GoogleMethod.Type;
+    readonly userId: Id<"users">;
+  }) {
     const account = yield* (yield* DatabaseReader)
       .table("users")
       .get(userId)
@@ -131,6 +181,9 @@ export const admitGoogleSignIn = Effect.fn("auth.account.signInGoogle")(
         code: "ACCOUNT_DELETED",
         message: "This Google account belonged to a deleted Nakafa account.",
       });
+    }
+    if (yield* recordGoogleAccount(userId, method.profile)) {
+      yield* claimAfterVerification(userId, account.value.email);
     }
     yield* claimGuardianPersons(userId, account.value.email);
     return null;

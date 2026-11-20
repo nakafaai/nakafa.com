@@ -90,6 +90,7 @@ export type ExamScreensDoc = Document.Document<typeof schemaDefinition, "examScr
 export type ExamSignalsDoc = Document.Document<typeof schemaDefinition, "examSignals">;
 export type ExamSittingsDoc = Document.Document<typeof schemaDefinition, "examSittings">;
 export type ExamsDoc = Document.Document<typeof schemaDefinition, "exams">;
+export type GoogleAccountsDoc = Document.Document<typeof schemaDefinition, "googleAccounts">;
 export type GradingSchemesDoc = Document.Document<typeof schemaDefinition, "gradingSchemes">;
 export type GraduationLettersDoc = Document.Document<typeof schemaDefinition, "graduationLetters">;
 export type GraduationsDoc = Document.Document<typeof schemaDefinition, "graduations">;
@@ -272,6 +273,7 @@ export interface Docs {
   examSignals: ExamSignalsDoc;
   examSittings: ExamSittingsDoc;
   exams: ExamsDoc;
+  googleAccounts: GoogleAccountsDoc;
   gradingSchemes: GradingSchemesDoc;
   graduationLetters: GraduationLettersDoc;
   graduations: GraduationsDoc;

@@ -4,6 +4,7 @@ import {
   Equal,
   Equivalence,
   HashSet,
+  Option,
   Schema,
   String as Str,
   Struct,
@@ -123,3 +124,23 @@ export const admitsAddress = (
     policies.emailDomains,
     Arr.lastNonEmpty(Str.split(address, "@"))
   );
+
+/**
+ * Whether the tenant admits an account by its Google sign-ins (ADR 0011): every
+ * account while its list of email domains is empty, and otherwise only an
+ * account that holds a Google identity, each of whose latest sign-ins carried a
+ * hosted domain (`hd`) on the list. Only a Google Workspace account carries
+ * one, so a personal Google account made on a school's address, and an account
+ * that never signed in with Google, are not admitted.
+ */
+export const admitsHostedDomains = (
+  policies: typeof TenantPolicies.Type,
+  hostedDomains: readonly Option.Option<string>[]
+) =>
+  Arr.isReadonlyArrayEmpty(policies.emailDomains) ||
+  (Arr.isReadonlyArrayNonEmpty(hostedDomains) &&
+    Arr.every(hostedDomains, (domain) =>
+      Option.exists(domain, (value) =>
+        isAllowedDomain(policies.emailDomains, value)
+      )
+    ));

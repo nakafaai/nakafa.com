@@ -227,7 +227,8 @@ release, with no compatibility window and no migration function.
   components (https://github.com/convex/convex-auth/pull/925) and the
   Workspace domain in the Google profile
   (https://github.com/convex/convex-auth/pull/926) shipped in Convex Auth
-  2.1.0, and the deletion workflow erases the Google rows since. `deleteUser`
+  2.1.0: the deletion workflow erases the Google rows, and the invite claim
+  checks the hosted domain again (ADR 0011). `deleteUser`
   for the password component (https://github.com/convex/convex-auth/pull/924)
   is still open.
 

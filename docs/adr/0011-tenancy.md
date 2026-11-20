@@ -100,9 +100,16 @@ An invite names a Person and an email address. A claim binds the Person to the
 account that controls the address: an invite is claimed automatically when an
 account whose address Google verified and that equals the invite address
 exists, the tenant is active, and the tenant's allowed email domains, one of its
-policies, admit the address (an empty list admits every address). The earlier
-check of the Google account's hosted domain is gone until Convex Auth's Google
-profile carries it (ADR 0009, amended 13 November 2026). An invite claim
+policies, admit the address (an empty list admits every address). A tenant
+that lists domains also admits the account only through Google Workspace: every
+Google identity that signed in to the account carried a hosted domain (`hd`) on
+the list at its latest sign-in, so a personal Google account made on a school's
+address, and an account that never signed in with Google, leave the invite
+pending. Convex Auth 2.1.0 names the claim in the Google profile
+(`hostedDomain`), and each sign-in records it in `googleAccounts`, one row per
+Google identity; a new identity or a new hosted domain asks for the claim again,
+so an invite left pending is claimed at the account's next Workspace sign-in
+(restored 20 November 2026, after the move to Convex Auth dropped it). An invite claim
 is the one place where an account is matched by its verified email, and ADR 0009
 names it as the exception to its rule that a school account is never matched by
 its email address. An invite expires 14 days after it is created if nobody has

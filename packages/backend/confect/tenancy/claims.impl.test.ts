@@ -70,6 +70,12 @@ const untouched = (after: Effect.Success<ReturnType<typeof stored>>) => {
   expect(after.entries).toEqual([]);
 };
 
+/** An account's Google identity and its invite's state at a school that lists harapan.example.test. */
+const HOSTED_DOMAIN_CASES = [
+  [address, { subject: "g1" }, "pending"],
+  [other, { hostedDomain: "harapan.example.test", subject: "g2" }, "accepted"],
+] as const;
+
 describe("tenancy/claims run", () => {
   it.effect(
     "binds the invited Person to the account that verified the address and accepts the invite",
@@ -423,29 +429,6 @@ describe("tenancy/claims run", () => {
       })
   );
 
-  it.effect("claims an address on one of the tenant's email domains", () =>
-    Effect.gen(function* () {
-      const fixture = yield* tenancyFixture;
-      const account = yield* fixture.account("guru", address);
-      yield* fixture.run(
-        admitOnly(fixture.tenants.nf, ["belajar.id", "harapan.example.test"])
-      );
-      const { inviteId, personId } = yield* fixture.run(
-        invitePerson(fixture.tenants.nf, address)
-      );
-      yield* fixture.internal.mutation(run, {
-        cursor: null,
-        userId: account.userId,
-      });
-      const after = yield* fixture.run(stored(personId, inviteId));
-      expect(after.person.account).toMatchObject({
-        state: "claimed",
-        userId: account.userId,
-      });
-      expect(after.invite.state).toMatchObject({ status: "accepted" });
-    })
-  );
-
   it.effect(
     "leaves an invite pending when the tenant's email domains do not include the address, and judges each tenant by its own domains",
     () =>
@@ -479,6 +462,38 @@ describe("tenancy/claims run", () => {
           { change: { type: "person.claimed" } },
         ]);
         expect(afterOpen.entries).toHaveLength(1);
+      })
+  );
+
+  it.effect(
+    "claims an invite on the tenant's email domains only for Google Workspace sign-ins on them",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        yield* fixture.run(
+          admitOnly(fixture.tenants.nf, ["harapan.example.test"])
+        );
+        for (const [email, identity, status] of HOSTED_DOMAIN_CASES) {
+          const account = yield* fixture.account(email, email);
+          yield* fixture.run(
+            Effect.flatMap(DatabaseWriter, (writer) =>
+              writer
+                .table("googleAccounts")
+                .insert({ ...identity, userId: account.userId })
+            )
+          );
+          const invite = yield* fixture.run(
+            invitePerson(fixture.tenants.nf, email)
+          );
+          yield* fixture.internal.mutation(run, {
+            cursor: null,
+            userId: account.userId,
+          });
+          const after = yield* fixture.run(
+            stored(invite.personId, invite.inviteId)
+          );
+          expect([email, after.invite.state.status]).toEqual([email, status]);
+        }
       })
   );
 });
