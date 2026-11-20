@@ -14,7 +14,7 @@ import { PlayerSheet } from "@/components/player/navigator/sheet";
 import { PlayerSidebar } from "@/components/player/navigator/sidebar";
 import { PlayerProvider } from "@/components/player/provider";
 import { PaneHeader } from "@/components/shared/page/pane";
-import { paneSideVariants } from "@/components/shared/page/panes/side";
+import { paneSideVariants } from "@/components/shared/page/panes/dock";
 import { joinTryoutBodies } from "@/components/tryout/content/body";
 import { TryoutContentContext } from "@/components/tryout/content/context";
 import { TryoutPlayerParts } from "@/components/tryout/player/parts";

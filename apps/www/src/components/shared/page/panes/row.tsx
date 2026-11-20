@@ -5,7 +5,8 @@ import {
 } from "@repo/design-system/components/ui/resizable";
 import { Option, Record as Rec, Schema } from "effect";
 import type { ComponentProps, ReactNode } from "react";
-import { createContext, use, useState } from "react";
+import { use, useState } from "react";
+import { PanesGroupContext } from "@/components/shared/page/panes/group";
 import { PaneStartContext } from "@/components/shared/page/panes/start";
 
 /** The share of a group's width each sized pane took when a person last moved its handle, by the pane's ID. */
@@ -14,9 +15,6 @@ const PaneSizes = Schema.Record(Schema.String, Schema.Finite);
 const decodePaneSizes = Schema.decodeUnknownOption(
   Schema.fromJsonString(PaneSizes)
 );
-
-/** Names the group of panes that the panes inside it keep their sizes under. */
-export const PanesGroupContext = createContext("panes");
 
 /**
  * The sizes a person gave a group's panes, kept in this browser. The first render reads them, so a pane opens at its

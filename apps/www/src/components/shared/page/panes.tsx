@@ -18,9 +18,9 @@ import { createContext, use, useState } from "react";
 import { createPortal } from "react-dom";
 import type { StoreApi } from "zustand";
 import { createStore, useStore } from "zustand";
+import { PanesGroupContext } from "@/components/shared/page/panes/group";
 import { PaneModeContext } from "@/components/shared/page/panes/mode";
 import {
-  PanesGroupContext,
   PanesGroupProvider,
   SizedPane,
 } from "@/components/shared/page/panes/row";

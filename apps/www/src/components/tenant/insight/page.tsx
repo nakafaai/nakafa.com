@@ -5,6 +5,7 @@ import {
 } from "@confect/react";
 import { Share08Icon, Target02Icon } from "@hugeicons/core-free-icons";
 import insight from "@repo/backend/confect/_generated/refs/insight";
+import type { ClassView } from "@repo/backend/confect/classroom/classes.spec";
 import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
@@ -106,14 +107,13 @@ function useLeadsSchool() {
 }
 
 /**
- * A teacher's page: the header chooses the class, the first one from the start, and holds the page's one main action,
- * naming what an exam's questions test. The body is the class's tabs. A leader also chooses among the classes of the
- * school they read, which load as the choice nears its end. With no class, the page says what must happen first
- * instead of offering an empty list.
+ * The class a teacher's page reads: the one the teacher picked, or else the first they hold. They hold their own
+ * classes and, as a leader, the classes of the school they read, which load a page at a time: `loadMore` reads the
+ * next page while one is left. The first class is chosen once every read that decides it has answered: the viewer,
+ * their own classes and, for a leader, the school's first page. Choosing earlier would show one class and then swap to
+ * another. `noClass` says the reads have answered with no class to hold and none left to load.
  */
-function TeacherInsight() {
-  const common = useTranslations("Common");
-  const t = useTranslations("SchoolInsight");
+function useClassChoice() {
   const { slug } = useTenant();
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
   const viewer = useViewerQuery();
@@ -132,12 +132,6 @@ function TeacherInsight() {
     ],
     (first, second) => first.id === second.id
   );
-  const items = Arr.map(held, (klass) => ({
-    label: klass.name,
-    value: klass.id,
-  }));
-  // The first class is chosen once every read that decides it has answered: the viewer, their own classes and, for a
-  // leader, the school's first page. Choosing earlier would show one class and then swap to another.
   const settled =
     QueryResult.isSuccess(viewer) &&
     QueryResult.isSuccess(classes) &&
@@ -148,47 +142,94 @@ function TeacherInsight() {
         () => Arr.head(held)
       )
     : Option.none();
+  const noClass =
+    settled &&
+    Arr.isReadonlyArrayEmpty(held) &&
+    (!leads || PaginatedQueryResult.isExhausted(school));
+  const loadMore = PaginatedQueryResult.isCanLoadMore(school)
+    ? Option.some(() => school.loadMore(CLASS_PAGE_SIZE))
+    : Option.none();
+
+  return { chosen, held, loadMore, noClass, pick: setPicked };
+}
+
+/**
+ * The header's choice of class among the classes the teacher holds, each with its mark. A leader's list loads the
+ * school's next page of classes as the choice nears its end.
+ */
+function ClassSelect({
+  chosen,
+  classes,
+  loadMore,
+  onPick,
+}: {
+  /** The ID of the class the page reads. */
+  chosen: string;
+  /** The classes the teacher holds, their own and the school's pages read so far. */
+  classes: readonly (typeof ClassView.Type)[];
+  /** Reads the school's next page of classes, while a leader has one left. */
+  loadMore: Option.Option<() => void>;
+  /** Keeps the class the teacher picks as the one the page reads. */
+  onPick: (id: string | null) => void;
+}) {
+  const common = useTranslations("Common");
+  const items = Arr.map(classes, (klass) => ({
+    label: klass.name,
+    value: klass.id,
+  }));
+
+  return (
+    <ButtonGroup>
+      <Select
+        items={items}
+        onValueChange={(value) => onPick(value)}
+        value={chosen}
+      >
+        <SelectTrigger aria-label={common("class")} className="w-32 sm:w-56">
+          <SelectValue placeholder={common("class")} />
+        </SelectTrigger>
+        <SelectContent label={common("menu-class")}>
+          {Arr.map(items, (item) => (
+            <SelectItem
+              icon={
+                <PersonAvatar className="size-5" mascot={markOf(item.value)} />
+              }
+              key={item.value}
+              value={item.value}
+            >
+              {item.label}
+            </SelectItem>
+          ))}
+          {Option.isSome(loadMore) ? (
+            <Intersection onIntersect={loadMore.value} />
+          ) : null}
+        </SelectContent>
+      </Select>
+    </ButtonGroup>
+  );
+}
+
+/**
+ * A teacher's page: the header chooses the class, the first one from the start, and holds the page's one main action,
+ * naming what an exam's questions test. The body is the class's tabs. A leader also chooses among the classes of the
+ * school they read, which load as the choice nears its end. With no class, the page says what must happen first
+ * instead of offering an empty list.
+ */
+function TeacherInsight() {
+  const t = useTranslations("SchoolInsight");
+  const { chosen, held, loadMore, noClass, pick } = useClassChoice();
 
   return (
     <Page width="page">
       <SchoolHeader items={[{ label: t("title") }]} title={t("title")}>
         {Option.isSome(chosen) ? (
           <>
-            <ButtonGroup>
-              <Select
-                items={items}
-                onValueChange={(value) => setPicked(value)}
-                value={chosen.value.id}
-              >
-                <SelectTrigger
-                  aria-label={common("class")}
-                  className="w-32 sm:w-56"
-                >
-                  <SelectValue placeholder={common("class")} />
-                </SelectTrigger>
-                <SelectContent label={common("menu-class")}>
-                  {Arr.map(items, (item) => (
-                    <SelectItem
-                      icon={
-                        <PersonAvatar
-                          className="size-5"
-                          mascot={markOf(item.value)}
-                        />
-                      }
-                      key={item.value}
-                      value={item.value}
-                    >
-                      {item.label}
-                    </SelectItem>
-                  ))}
-                  {PaginatedQueryResult.isCanLoadMore(school) ? (
-                    <Intersection
-                      onIntersect={() => school.loadMore(CLASS_PAGE_SIZE)}
-                    />
-                  ) : null}
-                </SelectContent>
-              </Select>
-            </ButtonGroup>
+            <ClassSelect
+              chosen={chosen.value.id}
+              classes={held}
+              loadMore={loadMore}
+              onPick={pick}
+            />
             <QuestionTags />
           </>
         ) : null}
@@ -196,12 +237,10 @@ function TeacherInsight() {
       {Option.isSome(chosen) ? (
         <ClassInsightTabs classId={chosen.value.id} />
       ) : null}
-      {PaginatedQueryResult.isCanLoadMore(school) && Option.isNone(chosen) ? (
-        <Intersection onIntersect={() => school.loadMore(CLASS_PAGE_SIZE)} />
+      {Option.isNone(chosen) && Option.isSome(loadMore) ? (
+        <Intersection onIntersect={loadMore.value} />
       ) : null}
-      {settled &&
-      Arr.isReadonlyArrayEmpty(held) &&
-      (!leads || PaginatedQueryResult.isExhausted(school)) ? (
+      {noClass ? (
         <PageList>
           <NoClass />
         </PageList>

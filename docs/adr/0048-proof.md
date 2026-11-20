@@ -379,3 +379,12 @@ On 16 November the queue merged a handful of pull requests an hour while about 1
 2. **Direct.** The ruleset lets the repository admin role bypass it for pull request merges (`bypass_mode: pull_request`). A ready pull request merges by squash through the asynchronous merge with `bypass_rules`, pinned to its head, which GitHub allows for the bottom-most unmerged member of a stack, so a chain merges from its bottom.
 3. **Main is proven once per batch.** After a batch of direct merges, one dispatched proof of every suite runs on main's head, and a regression is fixed forward at its owner. The specs of a single pull request run nowhere else, so this proof is not a repeat.
 4. **The queue stays configured.** Its rule, the gate's Doctor and audit skip in a group and the selection by diff stand for a pull request that goes through it.
+
+## Amendment: React Doctor Holds The Whole App At 100, 20 November 2026
+
+The gate ran React Doctor on the head's changes against main (`--scope changed`), which fails only on a finding the change adds. Main reached a score of 93 with five findings while its gates passed, and on main itself the command skipped with no changed file. The owner decided that React Doctor always scores 100.
+
+### Decision
+
+1. **The whole app.** A pull request's gate runs `bun run doctor --verbose --scope full --blocking warning`, which fails on any finding in `www`, a warning included, wherever it stands. React Doctor 0.9.23 has no score threshold, and its score comes from its API, so the gate reads the findings: the score and the failure leave out the same findings (`design`-tagged rules by default), and `www` overrides neither, so a head with no finding scores 100. Measured on 20 November: main at 93 with four findings exits 1, and the head that fixes them scores 100 and exits 0.
+2. **The pull request alone.** As "Each Check Runs Once" decided, a merge group's gate skips Doctor, which would audit the same app again. A finding that only two merged changes make together fails the next pull request's gate, whose head holds main.
