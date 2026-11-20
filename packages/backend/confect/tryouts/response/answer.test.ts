@@ -194,7 +194,7 @@ describe("tryouts/response/answer", () => {
     ).toMatchObject({ category: 0, ceiling: 8, status: "scored" });
   });
 
-  it("keeps an answered expression and a written answer pending, so the question earns its typed parts while it waits", () => {
+  it("scores an equivalent math expression and keeps a written answer pending, so the question earns its graded parts while it waits", () => {
     const grade = gradeOf(PARTS, {
       parts: [
         { interaction: "part-a", response: { text: "2" } },
@@ -207,7 +207,7 @@ describe("tryouts/response/answer", () => {
       parts: [
         { grade: { category: 2, status: "scored" }, interaction: "part-a" },
         { grade: { category: 0, status: "scored" }, interaction: "part-b" },
-        { grade: { ceiling: 3, status: "pending" }, interaction: "part-c" },
+        { grade: { category: 3, status: "scored" }, interaction: "part-c" },
         { grade: { ceiling: 2, status: "pending" }, interaction: "part-d" },
       ],
       status: "pending",
@@ -217,11 +217,12 @@ describe("tryouts/response/answer", () => {
         gradeQuestion(PARTS, {
           parts: [
             { interaction: "part-a", response: { text: "2" } },
+            { interaction: "part-c", response: { text: "x \\cdot x" } },
             { interaction: "part-d", response: { text: "Weil." } },
           ],
         })
       )
-    ).toBe(2);
+    ).toBe(5);
   });
 
   it("refuses a question of several parts a response to one interaction, a part named twice or not its own, a part that does not fit, and a parts response to one interaction", () => {

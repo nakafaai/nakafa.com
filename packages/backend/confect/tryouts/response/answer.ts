@@ -44,8 +44,8 @@ export const isCorrectGrade = (graded: Grade) =>
 /**
  * Settles the grade of a short answer that no accepted answer matches. The shared grader leaves it for a person,
  * as a School teacher decides it, but no person grades a try-out, so it scores nothing, as a number outside its
- * tolerance does. A math entry and a written answer stay pending: no grader reads them yet, so the attempt's score
- * stays provisional and says so, and nothing marks them for the learner.
+ * tolerance does. A written answer (or a math entry whose key cannot be parsed as an expression) stays pending
+ * until judged, so the attempt's score stays provisional and says so.
  */
 const settled = (placed: PlacedInteraction, graded: Grade): Grade =>
   graded.status === "pending" && placed.interaction.kind === "textEntry"

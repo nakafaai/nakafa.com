@@ -320,4 +320,37 @@ describe("assessment/grade", () => {
       status: "scored",
     });
   });
+
+  it("scores a typed expression its key's expression proves equivalent with the part's points, and any other 0", () => {
+    const part: Interaction = {
+      id: "part-a",
+      kind: "mathEntry",
+      label: "Antwort a",
+    };
+    const derivative: InteractionKey = {
+      expression: "3x^2-4x",
+      interaction: "part-a",
+      kind: "mathEntry",
+    };
+    const twoPoints: ScoringRule = {
+      floor: 0,
+      kind: "perPart",
+      pointsPerPart: 2,
+    };
+    expect(gradeOf(part, derivative, { text: "x(3x-4)" }, twoPoints)).toEqual({
+      category: 2,
+      ceiling: 2,
+      status: "scored",
+    });
+    expect(gradeOf(part, derivative, { text: "3x^2+4x" }, twoPoints)).toEqual({
+      category: 0,
+      ceiling: 2,
+      status: "scored",
+    });
+    expect(gradeOf(part, derivative, { text: " " }, twoPoints)).toEqual({
+      category: 0,
+      ceiling: 2,
+      status: "scored",
+    });
+  });
 });
