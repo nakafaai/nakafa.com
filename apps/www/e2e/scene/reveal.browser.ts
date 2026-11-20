@@ -1,5 +1,5 @@
 import { expect, type Locator, type Page, test } from "@playwright/test";
-import { Array as Arr, Effect, Option } from "effect";
+import { Array as Arr, Effect, Option, Schema } from "effect";
 import { pinnedRoutes } from "@/e2e/support/corpus";
 import { readCumulativeLayoutShift } from "@/e2e/support/layout";
 import { withObservedPageErrors } from "@/e2e/support/observe";
@@ -20,20 +20,21 @@ const LAB_ROUTE = "/en/subjects/physics/kinematics/stopping-distance";
 const WIDTHS = [390, 1440] as const;
 
 /** One frame of the watched card. */
-interface Sample {
+const SampleSchema = Schema.Struct({
   /** Distance, in pixels, from the spinner's middle to the frame's, while the spinner shows. */
-  centred: number | null;
+  centred: Schema.NullOr(Schema.Finite),
   /** The card's height. */
-  height: number;
+  height: Schema.Finite,
   /** How far the visual's top stands below the card's top. */
-  inset: number;
+  inset: Schema.Finite,
   /** Whether the frame shows the still, the spinner or the drawn canvas. */
-  shown: boolean;
+  shown: Schema.Boolean,
   /** The scene's stage, or `still` before its canvas mounts. */
-  state: string;
+  state: Schema.String,
   /** The visual's height. */
-  visual: number;
-}
+  visual: Schema.Finite,
+});
+type Sample = typeof SampleSchema.Type;
 
 /**
  * Samples the watched card on every frame, from the page's first script on:
@@ -95,10 +96,9 @@ function sampleScene({ key, watched }: { key: string; watched: string }) {
 /** Reads the samples the page took of the watched card. */
 const readSamples = (page: Page) =>
   Effect.promise(() =>
-    page.evaluate(
-      (key) => Array.from<Sample>(Reflect.get(window, key) ?? []),
-      SAMPLES
-    )
+    page.evaluate((key) => Array.from(Reflect.get(window, key) ?? []), SAMPLES)
+  ).pipe(
+    Effect.flatMap(Schema.decodeUnknownEffect(Schema.Array(SampleSchema)))
   );
 
 /** Moves the pointer over the card, as a reader's first gesture on the page. */
