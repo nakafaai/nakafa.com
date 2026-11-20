@@ -2,6 +2,7 @@ import type { Browser } from "@playwright/test";
 import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
 import { strToU8, zipSync } from "fflate";
+import { pressInPopup } from "@/e2e/support/popup";
 import { createSchool, hostAddress, signInOwner } from "@/e2e/support/school";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { waitUntilTakenOver } from "@/e2e/support/window";
@@ -122,7 +123,7 @@ test("the editor imports a Word file into the open exam from its header menu, as
   await expect(moreActions).toHaveCSS("border-left-width", "0px");
   const openImport = async () => {
     await header.getByRole("button", { name: "More actions" }).click();
-    await page.getByRole("menuitem", { name: "Import" }).click();
+    await pressInPopup(page.getByRole("menuitem", { name: "Import" }));
   };
   const importDialog = page.getByRole("dialog");
   const chooseFile = () =>

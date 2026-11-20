@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { Effect, MutableList } from "effect";
 import { saved, trackChanges } from "@/e2e/support/changes";
+import { pressInPopup } from "@/e2e/support/popup";
 import {
   createSchool,
   hostAddress,
@@ -75,7 +76,7 @@ for (const viewport of [
       chat.getByRole("button", { name: "More actions" })
     );
     await chat.getByRole("button", { name: "More actions" }).click();
-    await page.getByRole("menuitem", { name: "Edit" }).click();
+    await pressInPopup(page.getByRole("menuitem", { name: "Edit" }));
     const editor = page.getByRole("textbox", { name: "Edit" });
     await editor.fill("Tugas bab 3 dikumpulkan hari Sabtu.");
     await page.getByRole("button", { name: "Save" }).click();
@@ -86,7 +87,7 @@ for (const viewport of [
 
     // A subject teacher hides a message for good: it keeps its place with no text.
     await chat.getByRole("button", { name: "More actions" }).click();
-    await page.getByRole("menuitem", { name: "Hide" }).click();
+    await pressInPopup(page.getByRole("menuitem", { name: "Hide" }));
     await page
       .getByRole("dialog")
       .getByRole("button", { name: "Hide", exact: true })

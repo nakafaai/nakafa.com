@@ -1,6 +1,7 @@
 import type { Locator, Page } from "@playwright/test";
 import { expect, test } from "@playwright/test";
 import { Effect, MutableList } from "effect";
+import { pressInPopup } from "@/e2e/support/popup";
 import { createSchool, hostAddress, signInOwner } from "@/e2e/support/school";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import {
@@ -114,7 +115,7 @@ for (const viewport of WIDTHS) {
     await page.keyboard.press("Enter");
     await page.keyboard.type("Judul");
     await pressTool(page, "Text style");
-    await page.getByRole("menuitemradio", { name: "Heading 2" }).click();
+    await pressInPopup(page.getByRole("menuitemradio", { name: "Heading 2" }));
     await expect(prompt.locator("h2")).toHaveText("Judul");
     await pressTool(page, "Undo");
     await expect(prompt.locator("h2")).toHaveCount(0);

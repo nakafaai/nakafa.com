@@ -2,6 +2,7 @@ import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
 import { saved, trackChanges } from "@/e2e/support/changes";
 import { optionNamed } from "@/e2e/support/player";
+import { pressInPopup } from "@/e2e/support/popup";
 import { createSchool, hostAddress, signInOwner } from "@/e2e/support/school";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { waitUntilTakenOver } from "@/e2e/support/window";
@@ -72,9 +73,9 @@ test("a teacher turns a question into complex multiple choice, marks two answers
 
   // The row's menu turns it into complex multiple choice, and the key then takes B and D together.
   await single.click();
-  await page
-    .getByRole("menuitemradio", { name: "Complex multiple choice" })
-    .click();
+  await pressInPopup(
+    page.getByRole("menuitemradio", { name: "Complex multiple choice" })
+  );
   await expect(
     page.getByRole("button", { name: "Question type: Complex multiple choice" })
   ).toBeVisible();
@@ -124,9 +125,9 @@ test("a teacher turns a question into complex multiple choice, marks two answers
   await page
     .getByRole("button", { name: "Question type: Complex multiple choice" })
     .click();
-  await page
-    .getByRole("menuitemradio", { exact: true, name: "Multiple choice" })
-    .click();
+  await pressInPopup(
+    page.getByRole("menuitemradio", { exact: true, name: "Multiple choice" })
+  );
   await expect(single).toBeVisible();
   await expect(keyOf("B")).toHaveAttribute("aria-pressed", "false");
   await expect(keyOf("D")).toHaveAttribute("aria-pressed", "false");
@@ -164,9 +165,9 @@ test("a teacher turns a question into true or false and then cause and effect, w
   await page
     .getByRole("button", { name: "Question type: Multiple choice" })
     .click();
-  await page
-    .getByRole("menuitemradio", { exact: true, name: "True or false" })
-    .click();
+  await pressInPopup(
+    page.getByRole("menuitemradio", { exact: true, name: "True or false" })
+  );
   const optionOf = (letter: string) =>
     page.getByRole("textbox", { name: `Question 1, option ${letter}` });
   await expect(optionOf("A")).toContainText("True");
@@ -198,7 +199,9 @@ test("a teacher turns a question into true or false and then cause and effect, w
   await page
     .getByRole("button", { name: "Question type: True or false" })
     .click();
-  await page.getByRole("menuitemradio", { name: "Cause and effect" }).click();
+  await pressInPopup(
+    page.getByRole("menuitemradio", { name: "Cause and effect" })
+  );
   await expect(optionOf("A")).toContainText(
     "The statement and the reason are true and related"
   );
@@ -240,7 +243,7 @@ test("a teacher turns a question into a short answer with accepted answers, and 
   await page
     .getByRole("button", { name: "Question type: Multiple choice" })
     .click();
-  await page.getByRole("menuitemradio", { name: "Short answer" }).click();
+  await pressInPopup(page.getByRole("menuitemradio", { name: "Short answer" }));
   await expect(
     page.getByRole("textbox", { name: "Question 1, option A" })
   ).toHaveCount(0);
@@ -322,7 +325,7 @@ test("a teacher turns a question into matching, joins every statement to its ans
   await page
     .getByRole("button", { name: "Question type: Multiple choice" })
     .click();
-  await page.getByRole("menuitemradio", { name: "Matching" }).click();
+  await pressInPopup(page.getByRole("menuitemradio", { name: "Matching" }));
   const sentBefore = changes.sent;
   for (const [part, text] of [
     ["statement 1", "Indonesia"],
@@ -405,9 +408,9 @@ test("a teacher turns a question into a true or false table, marks the key in th
   await page
     .getByRole("button", { name: "Question type: Multiple choice" })
     .click();
-  await page
-    .getByRole("menuitemradio", { name: "True or false table" })
-    .click();
+  await pressInPopup(
+    page.getByRole("menuitemradio", { name: "True or false table" })
+  );
   await expect(
     page.getByRole("textbox", { name: "Question 1, column A" })
   ).toContainText("True");

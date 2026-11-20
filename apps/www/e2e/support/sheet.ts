@@ -4,6 +4,7 @@ import en from "@repo/internationalization/dictionaries/en.json" with {
 };
 import { Effect } from "effect";
 import { LESSON_PATH } from "@/e2e/support/chat";
+import { pressInPopup } from "@/e2e/support/popup";
 import { BUBBLE, SHEET_POPUP } from "@/e2e/support/selector";
 
 /** What the pages tell the learner when a prompt could not be confirmed. */
@@ -45,7 +46,7 @@ export const openFromHistory = Effect.fn("NakafaE2E.openFromHistory")(
   function* (page: Page, title: string) {
     yield* Effect.promise(async () => {
       await page.getByRole("button", { name: "Chat history" }).click();
-      await page.getByRole("menuitemradio", { name: title }).click();
+      await pressInPopup(page.getByRole("menuitemradio", { name: title }));
     });
   }
 );

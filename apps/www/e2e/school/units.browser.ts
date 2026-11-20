@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
+import { pressInPopup } from "@/e2e/support/popup";
 import { createSchool, hostAddress, signInOwner } from "@/e2e/support/school";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { waitUntilTakenOver } from "@/e2e/support/window";
@@ -44,11 +45,11 @@ for (const viewport of [
     const menu = row.getByRole("button", { name: "More actions" });
     await waitUntilTakenOver(menu);
     await menu.click();
-    await page.getByRole("menuitem", { name: "Edit" }).click();
+    await pressInPopup(page.getByRole("menuitem", { name: "Edit" }));
     const dialog = page.getByRole("dialog");
     await dialog.getByRole("textbox", { name: "Name" }).fill(NAME);
     await dialog.getByRole("combobox", { name: "Level" }).click();
-    await page.getByRole("option", { name: LEVEL }).click();
+    await pressInPopup(page.getByRole("option", { name: LEVEL }));
     await dialog.getByRole("textbox", { name: "NPSN" }).fill(NPSN);
     await dialog.getByRole("button", { name: "Save" }).click();
     await expect(dialog).toBeHidden();
@@ -58,7 +59,7 @@ for (const viewport of [
 
     // Archive asks first, then the row reads as archived and its menu offers Restore alone.
     await menu.click();
-    await page.getByRole("menuitem", { name: "Archive" }).click();
+    await pressInPopup(page.getByRole("menuitem", { name: "Archive" }));
     await page
       .getByRole("dialog")
       .getByRole("button", { name: "Archive", exact: true })
@@ -66,7 +67,7 @@ for (const viewport of [
     await expect(row.getByText("Archived", { exact: true })).toBeVisible();
     await menu.click();
     await expect(page.getByRole("menuitem", { name: "Edit" })).toHaveCount(0);
-    await page.getByRole("menuitem", { name: "Restore" }).click();
+    await pressInPopup(page.getByRole("menuitem", { name: "Restore" }));
     await expect(row.getByText("Active", { exact: true })).toBeVisible();
 
     // The server kept the name, the level and the NPSN.

@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
+import { pressInPopup } from "@/e2e/support/popup";
 import {
   createSchool,
   hostAddress,
@@ -43,7 +44,7 @@ test("an exam a finished sitting locked says so in its header, and its copy take
   const more = page.getByRole("button", { name: "More actions" }).first();
   await waitUntilTakenOver(more);
   await more.click();
-  await page.getByRole("menuitem", { name: "Close sitting" }).click();
+  await pressInPopup(page.getByRole("menuitem", { name: "Close sitting" }));
   await page
     .getByRole("dialog")
     .getByRole("button", { name: "Close sitting" })

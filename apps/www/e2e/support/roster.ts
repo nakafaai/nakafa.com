@@ -4,6 +4,7 @@ import { Effect } from "effect";
 import writeXlsxFile from "write-excel-file/node";
 import { saved, trackChanges } from "@/e2e/support/changes";
 import { chooseDay } from "@/e2e/support/date";
+import { pressInPopup } from "@/e2e/support/popup";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { waitUntilTakenOver } from "@/e2e/support/window";
 
@@ -47,7 +48,7 @@ export async function openPeriodWithCohort(
   const periodRow = page.getByRole("row", { name: "Semester 1" });
   await periodRow.getByRole("button", { name: "More actions" }).click();
   const openedBefore = changes.sent;
-  await page.getByRole("menuitem", { name: "Open" }).click();
+  await pressInPopup(page.getByRole("menuitem", { name: "Open" }));
   await expect(periodRow.getByText("Active")).toBeVisible();
   await saved(changes, openedBefore);
 
@@ -60,7 +61,7 @@ export async function openPeriodWithCohort(
   const cohortDialog = page.getByRole("dialog");
   await cohortDialog.getByLabel("Name").fill(cohort);
   await cohortDialog.getByRole("combobox", { name: "Grade" }).click();
-  await page.getByRole("option", { exact: true, name: "10" }).click();
+  await pressInPopup(page.getByRole("option", { exact: true, name: "10" }));
   const addedBefore = changes.sent;
   await cohortDialog.getByRole("button", { name: "Add cohort" }).click();
   await expect(

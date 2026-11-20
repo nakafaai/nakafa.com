@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
 import { saved, trackChanges } from "@/e2e/support/changes";
+import { pressInPopup } from "@/e2e/support/popup";
 import { createSchool, hostAddress, signInOwner } from "@/e2e/support/school";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { waitUntilTakenOver } from "@/e2e/support/window";
@@ -42,7 +43,9 @@ test("a teacher writes an answer and its reason, marks both keys one at a time, 
   await page
     .getByRole("button", { name: "Question type: Multiple choice" })
     .click();
-  await page.getByRole("menuitemradio", { name: "Answer and reason" }).click();
+  await pressInPopup(
+    page.getByRole("menuitemradio", { name: "Answer and reason" })
+  );
   await expect(
     page.getByRole("textbox", { name: "Question 1, option A" })
   ).toHaveText("Benar");

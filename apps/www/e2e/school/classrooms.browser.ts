@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
+import { pressInPopup } from "@/e2e/support/popup";
 import {
   createSchool,
   hostAddress,
@@ -50,14 +51,16 @@ test("an admin adds, renames, archives and restores a classroom of a cohort, ass
     addDialog.getByRole("button", { name: "Add classroom" })
   ).toBeDisabled();
   await addDialog.getByRole("combobox", { name: "Cohort" }).click();
-  await page.getByRole("option", { exact: true, name: SEEDED_COHORT }).click();
+  await pressInPopup(
+    page.getByRole("option", { exact: true, name: SEEDED_COHORT })
+  );
   await addDialog.getByLabel("Subject").fill("Biologi");
   await addDialog.getByRole("button", { name: "Add classroom" }).click();
   const biology = page.getByRole("row", { name: "Biologi X-1" });
   await expect(biology.getByText("Active")).toBeVisible();
 
   await biology.getByRole("button", { name: "More actions" }).click();
-  await page.getByRole("menuitem", { name: "Rename" }).click();
+  await pressInPopup(page.getByRole("menuitem", { name: "Rename" }));
   const renameDialog = page.getByRole("dialog");
   await renameDialog.getByLabel("Name").fill("Biologi Lanjut X-1");
   await renameDialog.getByRole("button", { name: "Save" }).click();
@@ -65,18 +68,20 @@ test("an admin adds, renames, archives and restores a classroom of a cohort, ass
   await expect(renamed).toBeVisible();
 
   await renamed.getByRole("button", { name: "More actions" }).click();
-  await page.getByRole("menuitem", { name: "Archive" }).click();
+  await pressInPopup(page.getByRole("menuitem", { name: "Archive" }));
   await expect(page.getByText("Classroom archived.")).toBeVisible();
   await expect(renamed.getByText("Archived")).toBeVisible();
   await renamed.getByRole("button", { name: "More actions" }).click();
-  await page.getByRole("menuitem", { name: "Restore" }).click();
+  await pressInPopup(page.getByRole("menuitem", { name: "Restore" }));
   await expect(renamed.getByText("Active")).toBeVisible();
 
   // A second classroom of the same subject in the cohort takes the seeded name, so the server refuses it and the
   // toast says why, while the list keeps only the seeded classroom of that name.
   await add.click();
   await addDialog.getByRole("combobox", { name: "Cohort" }).click();
-  await page.getByRole("option", { exact: true, name: SEEDED_COHORT }).click();
+  await pressInPopup(
+    page.getByRole("option", { exact: true, name: SEEDED_COHORT })
+  );
   await addDialog.getByLabel("Subject").fill("Fisika");
   await addDialog.getByRole("button", { name: "Add classroom" }).click();
   await expect(
@@ -90,7 +95,7 @@ test("an admin adds, renames, archives and restores a classroom of a cohort, ass
     .getByRole("row", { name: SEEDED_CLASS })
     .getByRole("button", { name: "More actions" })
     .click();
-  await page.getByRole("menuitem", { name: "Teachers" }).click();
+  await pressInPopup(page.getByRole("menuitem", { name: "Teachers" }));
   const teachers = page.getByRole("dialog");
   await expect(
     teachers.getByRole("list", { name: "Teachers" }).getByText(SEEDED_TEACHER)
@@ -99,10 +104,12 @@ test("an admin adds, renames, archives and restores a classroom of a cohort, ass
   await expect(teachers).toHaveCount(0);
 
   await renamed.getByRole("button", { name: "More actions" }).click();
-  await page.getByRole("menuitem", { name: "Teachers" }).click();
+  await pressInPopup(page.getByRole("menuitem", { name: "Teachers" }));
   await expect(teachers.getByText("No teacher yet.")).toBeVisible();
   await teachers.getByRole("combobox", { name: "Teacher" }).click();
-  await page.getByRole("option", { exact: true, name: SEEDED_TEACHER }).click();
+  await pressInPopup(
+    page.getByRole("option", { exact: true, name: SEEDED_TEACHER })
+  );
   await teachers.getByRole("button", { name: "Add teacher" }).click();
   const remove = teachers.getByRole("button", {
     name: `Remove ${SEEDED_TEACHER}`,

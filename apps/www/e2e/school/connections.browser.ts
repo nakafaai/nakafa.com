@@ -3,6 +3,7 @@ import { expect, test } from "@playwright/test";
 import { seedConnection } from "@repo/backend/scripts/content/acceptance/connection";
 import { Effect } from "effect";
 import { runFixture } from "@/e2e/support/acceptance";
+import { pressInPopup } from "@/e2e/support/popup";
 import { waitForStill } from "@/e2e/support/quiet";
 import {
   createSchool,
@@ -105,12 +106,12 @@ test("the Owner finds every service in a library, searches and filters it, and o
   await search.fill("");
 
   await page.getByRole("button", { name: "Filter connectors" }).click();
-  await page.getByRole("menuitemradio", { name: "Schedule" }).click();
+  await pressInPopup(page.getByRole("menuitemradio", { name: "Schedule" }));
   await expect(cards(page)).toHaveCount(1);
   await expect(cardOf(page, "Google Calendar")).toBeVisible();
   await picture(page, "filter");
   await page.getByRole("button", { name: "Filter connectors" }).click();
-  await page.getByRole("menuitemradio", { name: "All" }).click();
+  await pressInPopup(page.getByRole("menuitemradio", { name: "All" }));
   await expect(cards(page)).toHaveCount(4);
 
   await openOf(page, "Google Forms").click();

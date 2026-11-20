@@ -2,6 +2,7 @@ import type { Page } from "@playwright/test";
 import { expect, test } from "@playwright/test";
 import { Array as Arr, Effect, Option, String as Str } from "effect";
 import { saved, trackChanges } from "@/e2e/support/changes";
+import { pressInPopup } from "@/e2e/support/popup";
 import {
   createSchool,
   hostAddress,
@@ -167,7 +168,9 @@ test("a device the proctor retired says so and offers no Finish, while the attem
   await proctor
     .getByRole("button", { name: "More actions for Acceptance Learner" })
     .click();
-  await proctor.getByRole("menuitem", { name: "Allow second device" }).click();
+  await pressInPopup(
+    proctor.getByRole("menuitem", { name: "Allow second device" })
+  );
   await proctor
     .getByRole("dialog")
     .getByRole("button", { exact: true, name: "Allow device" })
@@ -214,7 +217,7 @@ test("an exam deleted in another tab keeps its editor, try and rooms on screen w
     deleter.getByRole("button", { name: "More actions" })
   );
   await deleter.getByRole("button", { name: "More actions" }).click();
-  await deleter.getByRole("menuitem", { name: "Delete exam" }).click();
+  await pressInPopup(deleter.getByRole("menuitem", { name: "Delete exam" }));
   await deleter
     .getByRole("dialog")
     .getByRole("button", { exact: true, name: "Delete" })
@@ -311,7 +314,7 @@ test("a room cancelled while its dashboard and a student's page are open says so
     .getByRole("row", { name: new RegExp(UPCOMING_ROOM, "u") })
     .getByRole("button", { name: "More actions" })
     .click();
-  await canceller.getByRole("menuitem", { name: "Cancel room" }).click();
+  await pressInPopup(canceller.getByRole("menuitem", { name: "Cancel room" }));
   await canceller
     .getByRole("dialog")
     .getByRole("button", { exact: true, name: "Cancel room" })

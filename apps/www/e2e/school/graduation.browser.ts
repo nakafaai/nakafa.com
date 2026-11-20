@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { Effect, MutableList, Option, String as Str } from "effect";
+import { pressInPopup } from "@/e2e/support/popup";
 import {
   createSchool,
   hostAddress,
@@ -75,7 +76,7 @@ test("the Owner records the graduation decision, issues the SKL, opens its check
     .getByRole("button", { name: "More actions" });
   await waitUntilTakenOver(more);
   await more.click();
-  await page.getByRole("menuitem", { name: "Decide graduation" }).click();
+  await pressInPopup(page.getByRole("menuitem", { name: "Decide graduation" }));
   const dialog = page.getByRole("dialog");
   await dialog.getByLabel("Decision number").fill("421.3/045/SMA.1/2027");
   await dialog.getByLabel("Place of issue").fill("Bandung");
@@ -114,7 +115,9 @@ test("the Owner records the graduation decision, issues the SKL, opens its check
   // The e-Ijazah readiness workbook saves under the class group's name.
   const readiness = page.waitForEvent("download");
   await more.click();
-  await page.getByRole("menuitem", { name: "Export for e-Ijazah" }).click();
+  await pressInPopup(
+    page.getByRole("menuitem", { name: "Export for e-Ijazah" })
+  );
   expect((await readiness).suggestedFilename()).toBe(
     `e-ijazah-${Str.toLowerCase(graduation.cohort)}.xlsx`
   );
@@ -141,8 +144,8 @@ test("the Owner records the graduation decision, issues the SKL, opens its check
   await waitUntilTakenOver(exportGrades);
   const ledger = page.waitForEvent("download");
   await exportGrades.click();
-  await page.getByRole("menuitem", { name: "Report grades" }).click();
-  await page.getByRole("menuitem", { name: graduation.cohort }).click();
+  await pressInPopup(page.getByRole("menuitem", { name: "Report grades" }));
+  await pressInPopup(page.getByRole("menuitem", { name: graduation.cohort }));
   expect((await ledger).suggestedFilename()).toBe(
     `dapodik-nilai-${Str.toLowerCase(graduation.cohort)}.xlsx`
   );

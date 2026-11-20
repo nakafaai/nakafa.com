@@ -2,6 +2,7 @@ import type { Locator, Page } from "@playwright/test";
 import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
 import { calendarButton } from "@/e2e/support/date";
+import { pressInPopup } from "@/e2e/support/popup";
 import { waitForStill } from "@/e2e/support/quiet";
 import { createSchool, hostAddress, signInOwner } from "@/e2e/support/school";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
@@ -19,12 +20,18 @@ const WIDTHS = [
   { height: 900, width: 1440 },
 ] as const;
 
-/** Presses the option of the open select's list, once the list, a sheet on a phone, stands still. */
+/**
+ * Presses the option of the open select's list and waits until the list has left: while it leaves, its sheet on a
+ * phone still covers the page and takes the next press. The list that leaves stays in the page until it has gone, so
+ * the option is the one in the open list.
+ */
 async function pickOption(page: Page, name: string) {
-  const option = page.getByRole("option", { exact: true, name });
-  await expect(option).toBeVisible();
-  await waitForStill(page.getByRole("listbox"));
-  await option.click();
+  await pressInPopup(
+    page
+      .locator('[role="listbox"][data-open]')
+      .getByRole("option", { exact: true, name })
+  );
+  await expect(page.getByRole("listbox")).toHaveCount(0);
 }
 
 /**

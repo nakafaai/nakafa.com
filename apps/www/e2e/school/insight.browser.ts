@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
+import { pressInPopup } from "@/e2e/support/popup";
 import { closeSitting } from "@/e2e/support/proctor";
 import {
   createSchool,
@@ -91,7 +92,7 @@ test("a teacher walks Insight from no class to a real reading, and a student rea
     .click();
   const placing = owner.getByRole("dialog", { name: "Add student" });
   await placing.getByRole("combobox", { name: "Student" }).click();
-  await owner.getByRole("option", { name: LEARNER_NAME }).click();
+  await pressInPopup(owner.getByRole("option", { name: LEARNER_NAME }));
   await placing.getByRole("button", { name: "Add student" }).click();
   await expect(placing).toBeHidden();
   const sitting = await Effect.runPromise(seedSitting(school.slug, learner));

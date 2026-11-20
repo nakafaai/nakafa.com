@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
+import { pressInPopup } from "@/e2e/support/popup";
 import { createSchool, hostAddress, signInOwner } from "@/e2e/support/school";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { waitUntilTakenOver } from "@/e2e/support/window";
@@ -39,7 +40,7 @@ test("a teacher copies a draft from the list's row and from the editor's menu, a
   const menu = page.getByRole("group", { name: "Exam actions" });
   await waitUntilTakenOver(menu.getByRole("button").last());
   await menu.getByRole("button").last().click();
-  await page.getByRole("menuitem", { name: "Duplicate exam" }).click();
+  await pressInPopup(page.getByRole("menuitem", { name: "Duplicate exam" }));
   await expect.poll(() => page.url()).not.toBe(editor);
   await expect(page.getByRole("textbox", { name: "Exam title" })).toHaveValue(
     COPY_TITLE,
@@ -54,7 +55,7 @@ test("a teacher copies a draft from the list's row and from the editor's menu, a
   const row = page.getByRole("row", { name: ORIGINAL_ROW });
   await expect(row).toBeVisible({ timeout: readinessTimeoutMilliseconds });
   await row.getByRole("button", { name: "More actions" }).click();
-  await page.getByRole("menuitem", { name: "Duplicate exam" }).click();
+  await pressInPopup(page.getByRole("menuitem", { name: "Duplicate exam" }));
   await page.waitForURL(EDITOR_PATH);
   await expect(page.getByRole("textbox", { name: "Exam title" })).toHaveValue(
     COPY_TITLE,

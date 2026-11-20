@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
 import { saved, trackChanges } from "@/e2e/support/changes";
+import { pressInPopup } from "@/e2e/support/popup";
 import { closeSitting } from "@/e2e/support/proctor";
 import {
   createSchool,
@@ -117,7 +118,7 @@ test("a student enters a sitting, and the proctor sees the student leave, lock, 
 
   await proctor.getByRole("button", { name: "Lock", exact: true }).click();
   await dialog.getByRole("combobox").click();
-  await proctor.getByRole("option", { name: "Rule broken" }).click();
+  await pressInPopup(proctor.getByRole("option", { name: "Rule broken" }));
   await dialog.getByRole("button", { name: "Lock session" }).click();
   await expect(seat).toHaveAttribute("data-frame", "locked");
   await expect(
@@ -134,7 +135,7 @@ test("a student enters a sitting, and the proctor sees the student leave, lock, 
 
   await proctor.getByRole("button", { name: "Unlock", exact: true }).click();
   await dialog.getByRole("combobox").click();
-  await proctor.getByRole("option", { name: "Power outage" }).click();
+  await pressInPopup(proctor.getByRole("option", { name: "Power outage" }));
   await dialog.getByRole("button", { name: "Unlock session" }).click();
   await expect(
     student.getByRole("heading", { name: "Question 1" })
@@ -245,9 +246,9 @@ test("a proctor lists the rooms of an exam and opens one from the list, and a st
   await expect(start).toBeVisible({ timeout: readinessTimeoutMilliseconds });
   await waitUntilTakenOver(start);
   await start.click();
-  await student
-    .getByRole("menuitem", { name: "Start exam", exact: true })
-    .click();
+  await pressInPopup(
+    student.getByRole("menuitem", { name: "Start exam", exact: true })
+  );
   await student.waitForURL(new RegExp(`/sittings/${sitting.sittingId}$`, "u"));
 
   await studentContext.close();

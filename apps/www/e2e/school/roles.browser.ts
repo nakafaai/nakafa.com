@@ -4,6 +4,7 @@ import { Effect } from "effect";
 import { saved, trackChanges } from "@/e2e/support/changes";
 import { signInGuardian } from "@/e2e/support/guardian";
 import { assignHomeroom } from "@/e2e/support/homeroom";
+import { pressInPopup } from "@/e2e/support/popup";
 import { giveRole } from "@/e2e/support/roles";
 import {
   createSchool,
@@ -141,7 +142,7 @@ async function signInParent(
   await link.click();
   const dialog = settings.getByRole("dialog");
   await dialog.getByRole("combobox", { name: "Student" }).click();
-  await settings.getByRole("option", { name: CARD_STUDENT }).click();
+  await pressInPopup(settings.getByRole("option", { name: CARD_STUDENT }));
   await dialog.getByLabel("Parent's name").fill("Ibu Uji");
   await dialog.getByLabel("Parent email").fill(email);
   const linkedBefore = changes.sent;

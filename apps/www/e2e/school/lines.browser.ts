@@ -1,6 +1,7 @@
 import type { Locator, Page } from "@playwright/test";
 import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
+import { pressInPopup } from "@/e2e/support/popup";
 import { createSchool, hostAddress, signInOwner } from "@/e2e/support/school";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { waitUntilTakenOver } from "@/e2e/support/window";
@@ -111,7 +112,7 @@ test("a teacher pulls, presses, and keys lines between statements and answers, t
   await page
     .getByRole("button", { name: "Question type: Multiple choice" })
     .click();
-  await page.getByRole("menuitemradio", { name: "Matching" }).click();
+  await pressInPopup(page.getByRole("menuitemradio", { name: "Matching" }));
 
   const canvas = page.getByRole("region", { name: "Exam pages" });
   const panel = page.getByRole("complementary", { name: "For teachers" });

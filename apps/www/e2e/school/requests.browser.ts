@@ -2,6 +2,7 @@ import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
 import { saved, trackChanges } from "@/e2e/support/changes";
 import { signInGuardian } from "@/e2e/support/guardian";
+import { pressInPopup } from "@/e2e/support/popup";
 import {
   createSchool,
   hostAddress,
@@ -36,7 +37,7 @@ test("a verified parent asks the school office, Staff approves, and the parent r
   await add.click();
   const dialog = settings.getByRole("dialog");
   await dialog.getByRole("combobox", { name: "Student" }).click();
-  await settings.getByRole("option", { name: "Siswa Uji" }).click();
+  await pressInPopup(settings.getByRole("option", { name: "Siswa Uji" }));
   await dialog.getByLabel("Parent's name").fill("Ibu Uji");
   await dialog.getByLabel("Parent email").fill(email);
   const linkedBefore = changes.sent;
@@ -90,7 +91,7 @@ test("a verified parent asks the school office, Staff approves, and the parent r
     .getByRole("row")
     .filter({ hasText: "Salinan rapor semester lalu." });
   await waiting.getByRole("button", { name: "More actions" }).click();
-  await settings.getByRole("menuitem", { name: "Approve" }).click();
+  await pressInPopup(settings.getByRole("menuitem", { name: "Approve" }));
   await expect(waiting).toHaveCount(0);
   // The last answer takes the views away, and the links fill the card again.
   await expect(requests).toHaveCount(0);

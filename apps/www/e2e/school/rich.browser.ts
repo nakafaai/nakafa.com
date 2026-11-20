@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
+import { pressInPopup } from "@/e2e/support/popup";
 import { createSchool, hostAddress, signInOwner } from "@/e2e/support/school";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
@@ -64,14 +65,14 @@ test("a teacher writes a question with headings, lists, quotes, code and a table
   await page.keyboard.press("Enter");
   await page.keyboard.type("/");
   const menu = page.getByRole("listbox", { name: "Insert a block" });
-  await menu.getByRole("option", { name: "Heading 2" }).click();
+  await pressInPopup(menu.getByRole("option", { name: "Heading 2" }));
   await page.keyboard.type("Rumus");
   await expect(prompt.locator("h2")).toHaveText("Rumus");
 
   // A bulleted list, and Enter on an empty item leaves it.
   await page.keyboard.press("Enter");
   await page.keyboard.type("/");
-  await menu.getByRole("option", { name: "Bulleted list" }).click();
+  await pressInPopup(menu.getByRole("option", { name: "Bulleted list" }));
   await page.keyboard.type("satu");
   await page.keyboard.press("Enter");
   await page.keyboard.type("dua");
@@ -83,7 +84,7 @@ test("a teacher writes a question with headings, lists, quotes, code and a table
   // while the caret sits in the quote.
   const quote = toolbar.getByRole("button", { exact: true, name: "Quote" });
   await page.keyboard.type("/");
-  await menu.getByRole("option", { name: "Quote" }).click();
+  await pressInPopup(menu.getByRole("option", { name: "Quote" }));
   await page.keyboard.type("Kutipan");
   await expect(prompt.locator("blockquote")).toHaveText("Kutipan");
   await expect(quote).toHaveAttribute("aria-pressed", "true");
@@ -94,7 +95,7 @@ test("a teacher writes a question with headings, lists, quotes, code and a table
   // leaves the caret in the text, so the next keys write there.
   await page.keyboard.press("Enter");
   await page.keyboard.type("/");
-  await menu.getByRole("option", { name: "Code block" }).click();
+  await pressInPopup(menu.getByRole("option", { name: "Code block" }));
   await page.keyboard.type("const luas = p * l");
   await expect(prompt.locator("pre")).toHaveText("const luas = p * l");
   await toolbar
@@ -106,7 +107,7 @@ test("a teacher writes a question with headings, lists, quotes, code and a table
   // A 2 by 2 table from the slash menu, with its header row filled through Tab.
   await page.keyboard.press("Enter");
   await page.keyboard.type("/");
-  await menu.getByRole("option", { name: "Table" }).click();
+  await pressInPopup(menu.getByRole("option", { name: "Table" }));
   await page.keyboard.type("Sisi");
   await page.keyboard.press("Tab");
   await page.keyboard.type("Nilai");
@@ -120,7 +121,7 @@ test("a teacher writes a question with headings, lists, quotes, code and a table
   // over or under its formula, never reaches.
   await page.keyboard.press("Enter");
   await page.keyboard.type("/");
-  await menu.getByRole("option", { name: "Formula" }).click();
+  await pressInPopup(menu.getByRole("option", { name: "Formula" }));
   await page.getByRole("button", { name: "LaTeX" }).click();
   await page.getByRole("textbox", { name: "LaTeX" }).fill("x^2");
   await prompt.click({ position: { x: 8, y: 8 } });

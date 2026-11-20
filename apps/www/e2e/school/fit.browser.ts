@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
+import { pressInPopup } from "@/e2e/support/popup";
 import { createSchool, hostAddress, signInOwner } from "@/e2e/support/school";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { waitUntilTakenOver } from "@/e2e/support/window";
@@ -82,7 +83,7 @@ test("the teacher's canvas reaches the screen's edge, and its matching key draws
   await page
     .getByRole("button", { name: "Question type: Multiple choice" })
     .click();
-  await page.getByRole("menuitemradio", { name: "Matching" }).click();
+  await pressInPopup(page.getByRole("menuitemradio", { name: "Matching" }));
   await expect(
     page
       .getByRole("complementary", { name: "For teachers" })
@@ -93,9 +94,9 @@ test("the teacher's canvas reaches the screen's edge, and its matching key draws
   // given its words first, as a teacher writes them: an empty editor holds only a line break, whose box is
   // not the box of any words.
   await page.getByRole("button", { name: "Question type: Matching" }).click();
-  await page
-    .getByRole("menuitemradio", { name: "True or false table" })
-    .click();
+  await pressInPopup(
+    page.getByRole("menuitemradio", { name: "True or false table" })
+  );
   for (const [column, words] of [
     ["A", "Benar"],
     ["B", "Salah"],

@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
+import { pressInPopup } from "@/e2e/support/popup";
 import {
   createSchool,
   fillSchool,
@@ -47,7 +48,7 @@ test("a full school's lists answer a search, a filter, a sort and Escape", async
   // A role's filter offers every role, not only those of the rows loaded so far.
   await page.getByRole("textbox", { name: "Find a name" }).fill("");
   await page.getByRole("button", { name: "Filter by Roles" }).click();
-  await page.getByRole("menuitemcheckbox", { name: "Teacher" }).click();
+  await pressInPopup(page.getByRole("menuitemcheckbox", { name: "Teacher" }));
   await page.keyboard.press("Escape");
   await expect(
     page.locator("tbody tr").filter({ hasText: "Teacher" }).first()

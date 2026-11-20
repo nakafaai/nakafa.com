@@ -3,6 +3,7 @@ import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
 import { expectNoOverflow } from "@/e2e/support/layout";
 import { optionNamed } from "@/e2e/support/player";
+import { pressInPopup } from "@/e2e/support/popup";
 import { closeSitting } from "@/e2e/support/proctor";
 import {
   createSchool,
@@ -178,14 +179,14 @@ test("a student sits a question of every template, the server scores each one, t
   await teacher.getByRole("link", { exact: true, name: "Results" }).click();
   // The questions open from the header's Analysis menu.
   await teacher.getByRole("button", { exact: true, name: "Analysis" }).click();
-  await teacher
-    .getByRole("menuitem", { exact: true, name: "Questions" })
-    .click();
+  await pressInPopup(
+    teacher.getByRole("menuitem", { exact: true, name: "Questions" })
+  );
   const questions = teacher.getByRole("dialog", { name: "Questions" });
   await questions.getByRole("combobox").click();
-  await teacher
-    .getByRole("option", { exact: true, name: "Question 10" })
-    .click();
+  await pressInPopup(
+    teacher.getByRole("option", { exact: true, name: "Question 10" })
+  );
   const answers = teacher.getByRole("table").filter({
     has: teacher.getByRole("columnheader", { exact: true, name: "Points" }),
   });

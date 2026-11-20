@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { Effect, Schema, String as Str } from "effect";
+import { pressInPopup } from "@/e2e/support/popup";
 import { createSchool, hostAddress, signInOwner } from "@/e2e/support/school";
 import { waitUntilTakenOver } from "@/e2e/support/window";
 
@@ -59,7 +60,7 @@ test("the Nakafa CLI asks for a device code, the Owner connects it to a client, 
 
   const row = page.getByRole("row").filter({ hasText: "Nakafa CLI" });
   await row.getByRole("button", { name: "More actions" }).click();
-  await page.getByRole("menuitem", { name: "Connect a device" }).click();
+  await pressInPopup(page.getByRole("menuitem", { name: "Connect a device" }));
   const connect = page.getByRole("dialog", { name: "Connect a device" });
   await connect.getByLabel("Device code").fill("NOPE-NOPE");
   await connect.getByRole("button", { name: "Connect" }).click();

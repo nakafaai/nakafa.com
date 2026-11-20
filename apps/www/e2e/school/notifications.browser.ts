@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { Effect, MutableList } from "effect";
+import { pressInPopup } from "@/e2e/support/popup";
 import { createSchool, hostAddress, inviteLearner } from "@/e2e/support/school";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { waitUntilTakenOver } from "@/e2e/support/window";
@@ -68,7 +69,9 @@ for (const viewport of [
     await expect(
       page.getByRole("menu").getByText("Schools", { exact: true })
     ).toBeVisible();
-    await page.getByRole("menuitemradio", { name: "All schools" }).click();
+    await pressInPopup(
+      page.getByRole("menuitemradio", { name: "All schools" })
+    );
     await expect(page).toHaveURL(ALL_SCHOOLS);
     await expect(page.getByText(INVITED)).toBeVisible();
     await expect(filter).toContainText("All schools");

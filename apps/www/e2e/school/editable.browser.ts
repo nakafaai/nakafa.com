@@ -2,6 +2,7 @@ import type { Page } from "@playwright/test";
 import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
 import { saved, trackChanges } from "@/e2e/support/changes";
+import { pressInPopup } from "@/e2e/support/popup";
 import { giveRole } from "@/e2e/support/roles";
 import {
   createSchool,
@@ -56,13 +57,15 @@ for (const viewport of [
     await page.goto(address("/settings/roles"));
     await giveRole(page, { person: LEARNER, role: "Staff" });
     await openRowMenu(page, LEARNER);
-    await page.getByRole("menuitem", { name: "Change role" }).click();
+    await pressInPopup(page.getByRole("menuitem", { name: "Change role" }));
     const roleDialog = page.getByRole("dialog", { name: "Change role" });
     await roleDialog.getByRole("combobox", { name: "Role" }).click();
     await expect(page.getByRole("option", { name: "Integration" })).toHaveCount(
       0
     );
-    await page.getByRole("option", { exact: true, name: "Counselor" }).click();
+    await pressInPopup(
+      page.getByRole("option", { exact: true, name: "Counselor" })
+    );
     const beforeRole = changes.sent;
     await roleDialog.getByRole("button", { name: "Save" }).click();
     await expect(
@@ -87,7 +90,7 @@ for (const viewport of [
       .fill("guru@harapan.example.tes");
     await invite.getByRole("button", { exact: true, name: "Invite" }).click();
     await openRowMenu(page, "Guru Salah Ketik");
-    await page.getByRole("menuitem", { name: "Change email" }).click();
+    await pressInPopup(page.getByRole("menuitem", { name: "Change email" }));
     const email = page.getByRole("dialog", { name: "Change email" });
     await email.getByLabel("Email").fill("guru@harapan.example.test");
     const beforeEmail = changes.sent;
@@ -115,7 +118,7 @@ for (const viewport of [
     ).toBeVisible();
     await page.keyboard.press("Escape");
     await openRowMenu(page, "Sinkron Lama");
-    await page.getByRole("menuitem", { name: "Edit client" }).click();
+    await pressInPopup(page.getByRole("menuitem", { name: "Edit client" }));
     const client = page.getByRole("dialog", { name: "Edit client" });
     await client.getByRole("textbox", { name: "Name" }).fill("Sinkron Baru");
     const beforeClient = changes.sent;
@@ -133,7 +136,7 @@ for (const viewport of [
     await waitUntilTakenOver(country);
     await country.click();
     // Malaysia brings its own currency; Singapore keeps the dollar it is priced in (#2317).
-    await page.getByRole("option", { name: "Malaysia" }).click();
+    await pressInPopup(page.getByRole("option", { name: "Malaysia" }));
     // The trigger reads the currency's name beside its symbol.
     await expect(locale.getByLabel("Currency", { exact: true })).toContainText(
       "Malaysian Ringgit"
@@ -178,7 +181,7 @@ for (const viewport of [
       .filter({ has: channel })
       .getByRole("button", { name: "More actions" })
       .click();
-    await page.getByRole("menuitem", { name: "Rename chat" }).click();
+    await pressInPopup(page.getByRole("menuitem", { name: "Rename chat" }));
     const rename = page.getByRole("dialog", { name: "Rename chat" });
     await rename.getByRole("textbox", { name: "Chat name" }).fill("Tugas");
     await rename.getByRole("button", { name: "Save" }).click();
@@ -212,7 +215,7 @@ for (const viewport of [
       page.getByRole("button", { name: "Video lama" })
     ).toBeVisible();
     await openRowMenu(page, "Video lama");
-    await page.getByRole("menuitem", { name: "Edit" }).click();
+    await pressInPopup(page.getByRole("menuitem", { name: "Edit" }));
     const edit = page.getByRole("dialog");
     await edit
       .getByRole("textbox", { name: "Address" })

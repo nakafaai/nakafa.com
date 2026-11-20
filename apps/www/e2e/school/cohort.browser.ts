@@ -5,6 +5,7 @@ import type { Changes } from "@/e2e/support/changes";
 import { saved, trackChanges } from "@/e2e/support/changes";
 import { chooseDay } from "@/e2e/support/date";
 import { assignHomeroom } from "@/e2e/support/homeroom";
+import { pressInPopup } from "@/e2e/support/popup";
 import {
   createSchool,
   grantStudent,
@@ -35,9 +36,11 @@ async function addCohort(page: Page, name: string) {
   const dialog = page.getByRole("dialog");
   await dialog.getByLabel("Name").fill(name);
   await dialog.getByRole("combobox", { name: "Grade" }).click();
-  await page.getByRole("option", { exact: true, name: "10" }).click();
+  await pressInPopup(page.getByRole("option", { exact: true, name: "10" }));
   await dialog.getByRole("button", { name: "Add cohort" }).click();
   await expect(page.getByRole("link", { name })).toBeVisible();
+  // The dialog leaves from inside the header, where its own Add cohort would match the next add's.
+  await expect(dialog).toHaveCount(0);
 }
 
 /**
@@ -60,7 +63,7 @@ async function openSemester(page: Page, changes: Changes) {
   const periodRow = page.getByRole("row", { name: "Semester 1" });
   await periodRow.getByRole("button", { name: "More actions" }).click();
   const openedBefore = changes.sent;
-  await page.getByRole("menuitem", { name: "Open" }).click();
+  await pressInPopup(page.getByRole("menuitem", { name: "Open" }));
   await expect(periodRow.getByText("Active")).toBeVisible();
   await saved(changes, openedBefore);
 }
@@ -131,7 +134,7 @@ test("the cohort's row menu saves a homeroom teacher and removes them, each chan
     has: page.getByRole("link", { exact: true, name: SEEDED_COHORT }),
   });
   await row.getByRole("button", { name: "More actions" }).click();
-  await page.getByRole("menuitem", { name: "Homeroom teacher" }).click();
+  await pressInPopup(page.getByRole("menuitem", { name: "Homeroom teacher" }));
   const dialog = page.getByRole("dialog", { name: "Homeroom teacher" });
   await expect(dialog.getByText(CLASS_TEACHER)).toBeVisible();
   await expect(dialog.getByRole("button", { name: "Save" })).toHaveCount(0);
@@ -191,14 +194,14 @@ test("an admin opens a period, then creates a cohort of it in a grade its SMA un
   // The acceptance school's unit is an SMA, so the grade list holds its grades and no other.
   await cohortDialog.getByRole("combobox", { name: "Grade" }).click();
   await expect(page.getByRole("option")).toHaveText(["10", "11", "12"]);
-  await page.getByRole("option", { exact: true, name: "10" }).click();
+  await pressInPopup(page.getByRole("option", { exact: true, name: "10" }));
   await cohortDialog.getByRole("button", { name: "Add cohort" }).click();
   const cohortRow = page.getByRole("row", { name: "X A" });
   await expect(cohortRow).toBeVisible();
 
   // Edit starts from the cohort's name and grade, and the row shows both changes at once.
   await cohortRow.getByRole("button", { name: "More actions" }).click();
-  await page.getByRole("menuitem", { name: "Edit" }).click();
+  await pressInPopup(page.getByRole("menuitem", { name: "Edit" }));
   const editDialog = page.getByRole("dialog");
   await expect(editDialog.getByLabel("Name")).toHaveValue("X A");
   await expect(editDialog.getByRole("combobox", { name: "Grade" })).toHaveText(
@@ -206,7 +209,7 @@ test("an admin opens a period, then creates a cohort of it in a grade its SMA un
   );
   await editDialog.getByLabel("Name").fill("XI Biru");
   await editDialog.getByRole("combobox", { name: "Grade" }).click();
-  await page.getByRole("option", { exact: true, name: "11" }).click();
+  await pressInPopup(page.getByRole("option", { exact: true, name: "11" }));
   const editedBefore = changes.sent;
   await editDialog.getByRole("button", { name: "Save" }).click();
   const editedRow = page.getByRole("row", { name: "XI Biru" });
@@ -265,17 +268,17 @@ test("an admin places a student in a cohort, moves the student to another, sets 
     .click();
   const placeDialog = page.getByRole("dialog");
   await placeDialog.getByRole("combobox", { name: "Student" }).click();
-  await page.getByRole("option", { name: "Acceptance Learner" }).click();
+  await pressInPopup(page.getByRole("option", { name: "Acceptance Learner" }));
   await placeDialog.getByRole("button", { name: "Add student" }).click();
   await expect(page.getByRole("button", { name: "More actions" })).toHaveCount(
     1
   );
 
   await page.getByRole("button", { name: "More actions" }).click();
-  await page.getByRole("menuitem", { name: "Move" }).click();
+  await pressInPopup(page.getByRole("menuitem", { name: "Move" }));
   const moveDialog = page.getByRole("dialog");
   await moveDialog.getByRole("combobox", { name: "Move to" }).click();
-  await page.getByRole("option", { exact: true, name: "7B" }).click();
+  await pressInPopup(page.getByRole("option", { exact: true, name: "7B" }));
   const movedBefore = changes.sent;
   await moveDialog.getByRole("button", { exact: true, name: "Move" }).click();
   await expect(page.getByText("No student yet.")).toBeVisible();
@@ -289,7 +292,7 @@ test("an admin places a student in a cohort, moves the student to another, sets 
 
   // The admin sets the student's NISN by hand; the roster keeps it, and the dialog never shows it back.
   await page.getByRole("button", { name: "More actions" }).click();
-  await page.getByRole("menuitem", { name: "NISN" }).click();
+  await pressInPopup(page.getByRole("menuitem", { name: "NISN" }));
   const entryDialog = page.getByRole("dialog");
   const nisnField = entryDialog.getByRole("textbox", { name: "NISN" });
   await expect(nisnField).toBeEnabled();
@@ -303,7 +306,7 @@ test("an admin places a student in a cohort, moves the student to another, sets 
   const reopened = page.getByRole("button", { name: "More actions" });
   await waitUntilTakenOver(reopened);
   await reopened.click();
-  await page.getByRole("menuitem", { name: "NISN" }).click();
+  await pressInPopup(page.getByRole("menuitem", { name: "NISN" }));
   const kept = page.getByRole("dialog");
   await expect(kept.getByRole("textbox", { name: "NISN" })).toHaveAttribute(
     "placeholder",
@@ -317,7 +320,7 @@ test("an admin places a student in a cohort, moves the student to another, sets 
   const archivedRow = page.getByRole("row", { name: "7B" });
   await archivedRow.getByRole("button", { name: "More actions" }).click();
   const archivedBefore = changes.sent;
-  await page.getByRole("menuitem", { name: "Archive" }).click();
+  await pressInPopup(page.getByRole("menuitem", { name: "Archive" }));
   await expect(archivedRow.getByText("Archived")).toBeVisible();
   await saved(changes, archivedBefore);
   await page.getByRole("link", { name: "7B" }).click();
@@ -329,10 +332,10 @@ test("an admin places a student in a cohort, moves the student to another, sets 
     .getByRole("button", { name: "More actions" });
   await waitUntilTakenOver(leaving);
   await leaving.click();
-  await page.getByRole("menuitem", { name: "Move" }).click();
+  await pressInPopup(page.getByRole("menuitem", { name: "Move" }));
   const outDialog = page.getByRole("dialog");
   await outDialog.getByRole("combobox", { name: "Move to" }).click();
-  await page.getByRole("option", { exact: true, name: "7A" }).click();
+  await pressInPopup(page.getByRole("option", { exact: true, name: "7A" }));
   const leftBefore = changes.sent;
   await outDialog.getByRole("button", { exact: true, name: "Move" }).click();
   await expect(page.getByText("No student yet.")).toBeVisible();
@@ -369,7 +372,7 @@ test("a student added with a card joins a cohort and takes a parent at once, and
   await waitUntilTakenOver(place);
   await place.click();
   const placing = page.getByRole("dialog");
-  await placing.getByRole("combobox", { name: "Student" }).click();
+  await pressInPopup(placing.getByRole("combobox", { name: "Student" }));
   await expect(page.getByText("No student is available.")).toBeVisible();
   await page.goto(address("/settings/students"));
 
@@ -390,7 +393,7 @@ test("a student added with a card joins a cohort and takes a parent at once, and
   await waitUntilTakenOver(place);
   await place.click();
   await placing.getByRole("combobox", { name: "Student" }).click();
-  await page.getByRole("option", { name: "Ayu Lestari" }).click();
+  await pressInPopup(page.getByRole("option", { name: "Ayu Lestari" }));
   await placing.getByRole("button", { name: "Add student" }).click();
   await expect(
     page.getByRole("main").getByText("Ayu Lestari", { exact: true })
@@ -432,7 +435,7 @@ test("a cohort held by an archived class counts it and offers no delete, and a c
   });
   await waitUntilTakenOver(classMenu);
   await classMenu.click();
-  await page.getByRole("menuitem", { name: "Archive" }).click();
+  await pressInPopup(page.getByRole("menuitem", { name: "Archive" }));
   await expect(classRow.getByText("Archived")).toBeVisible();
 
   await page.goto(address("/settings/cohorts"));
@@ -451,7 +454,7 @@ test("a cohort held by an archived class counts it and offers no delete, and a c
   await addCohort(page, "7Z");
   const free = page.getByRole("row").filter({ hasText: "7Z" });
   await free.getByRole("button", { name: "More actions" }).click();
-  await page.getByRole("menuitem", { name: "Delete" }).click();
+  await pressInPopup(page.getByRole("menuitem", { name: "Delete" }));
   // The confirm is found by its name: the Add cohort dialog may still be leaving.
   const dialog = page.getByRole("dialog", { name: "Delete 7Z?" });
   // The confirm's body shows the cohort it removes, and the header holds its close.

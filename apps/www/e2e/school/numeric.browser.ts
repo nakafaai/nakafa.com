@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
 import { saved, trackChanges } from "@/e2e/support/changes";
+import { pressInPopup } from "@/e2e/support/popup";
 import { createSchool, hostAddress, signInOwner } from "@/e2e/support/school";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { waitUntilTakenOver } from "@/e2e/support/window";
@@ -42,7 +43,9 @@ test("a teacher turns a question into a numeric answer, keys its number with a t
   await page
     .getByRole("button", { name: "Question type: Multiple choice" })
     .click();
-  await page.getByRole("menuitemradio", { name: "Numeric answer" }).click();
+  await pressInPopup(
+    page.getByRole("menuitemradio", { name: "Numeric answer" })
+  );
   await expect(
     page.getByRole("textbox", { name: "Question 1, option A" })
   ).toHaveCount(0);
@@ -70,7 +73,7 @@ test("a teacher turns a question into a numeric answer, keys its number with a t
   await panel
     .getByRole("combobox", { name: "Tolerance of question 1" })
     .click();
-  await page.getByRole("option", { name: "Within a distance" }).click();
+  await pressInPopup(page.getByRole("option", { name: "Within a distance" }));
   const within = panel.getByRole("textbox", {
     name: "Tolerance amount of question 1",
   });

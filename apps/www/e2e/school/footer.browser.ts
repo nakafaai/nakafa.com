@@ -2,6 +2,7 @@ import type { Page } from "@playwright/test";
 import { expect, test } from "@playwright/test";
 import { Effect, Option } from "effect";
 import { saved, trackChanges } from "@/e2e/support/changes";
+import { pressInPopup } from "@/e2e/support/popup";
 import { createSchool, hostAddress, signInOwner } from "@/e2e/support/school";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { waitUntilTakenOver } from "@/e2e/support/window";
@@ -106,20 +107,20 @@ test.describe("at 1440", () => {
     const options = page.getByRole("button", { name: "Zoom options" });
     for (const preset of [150, 100, 75, 50]) {
       await options.click();
-      await page
-        .getByRole("menuitemradio", { exact: true, name: `${preset}%` })
-        .click();
+      await pressInPopup(
+        page.getByRole("menuitemradio", { exact: true, name: `${preset}%` })
+      );
       await expect(options).toHaveText(`${preset}%`);
       expect(await columnZoom(page)).toBeCloseTo(preset / 100);
     }
     await options.click();
-    await page.getByRole("menuitemradio", { name: "Fill" }).click();
+    await pressInPopup(page.getByRole("menuitemradio", { name: "Fill" }));
     await expect.poll(() => columnZoom(page)).toBeGreaterThan(1);
     await options.click();
     await expect(
       page.getByRole("menuitemradio", { name: "Fill" })
     ).toHaveAttribute("aria-checked", "true");
-    await page.getByRole("menuitemradio", { name: "Fit" }).click();
+    await pressInPopup(page.getByRole("menuitemradio", { name: "Fit" }));
     await expect(options).toHaveText("100%");
     expect(await columnZoom(page)).toBeCloseTo(1);
   });

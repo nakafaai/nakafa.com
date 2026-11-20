@@ -2,6 +2,7 @@ import type { Page } from "@playwright/test";
 import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
 import { saved, trackChanges } from "@/e2e/support/changes";
+import { pressInPopup } from "@/e2e/support/popup";
 import {
   createSchool,
   grantStudent,
@@ -118,7 +119,7 @@ test("an owner orders Pro with added accounts by invoice, and the school shows P
   await expect(cap).toHaveText("50 credits");
   await cap.click();
   const sentBefore = changes.sent;
-  await page.getByRole("option", { name: "100 credits" }).click();
+  await pressInPopup(page.getByRole("option", { name: "100 credits" }));
   await expect(cap).toHaveText("100 credits");
   // The cap answers at once, and a reload would cancel a save still on its way.
   await saved(changes, sentBefore);

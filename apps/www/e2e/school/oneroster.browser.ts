@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { Array as Arr, Effect } from "effect";
 import { strToU8, zipSync } from "fflate";
+import { pressInPopup } from "@/e2e/support/popup";
 import { chooseFile, openPeriodWithCohort } from "@/e2e/support/roster";
 import { createSchool, hostAddress, signInOwner } from "@/e2e/support/school";
 import { waitUntilTakenOver } from "@/e2e/support/window";
@@ -79,7 +80,7 @@ test("an admin previews a OneRoster zip and imports its students into their clas
   const menu = member.getByRole("button", { name: "More actions" });
   await waitUntilTakenOver(menu);
   await menu.click();
-  await page.getByRole("menuitem", { name: "Invite" }).click();
+  await pressInPopup(page.getByRole("menuitem", { name: "Invite" }));
   const dialog = page.getByRole("dialog");
   await dialog.getByLabel("Email").fill("raka@school.example");
   await dialog.getByRole("button", { name: "Invite" }).click();

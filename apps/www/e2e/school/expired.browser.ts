@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
+import { pressInPopup } from "@/e2e/support/popup";
 import {
   createSchool,
   hostAddress,
@@ -64,7 +65,7 @@ for (const viewport of [
     const more = row.getByRole("button", { name: "More actions" });
     await waitUntilTakenOver(more);
     await more.click();
-    await owner.getByRole("menuitem", { name: "Send again" }).click();
+    await pressInPopup(owner.getByRole("menuitem", { name: "Send again" }));
     // An expired invite is never sent again: the school invites the person anew. This account already holds the
     // address, so it claims the new invite at once, and the person leaves the invites for the members.
     await expect(row).toHaveCount(0, {

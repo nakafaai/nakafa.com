@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
 import { saved, trackChanges } from "@/e2e/support/changes";
+import { pressInPopup } from "@/e2e/support/popup";
 import {
   createSchool,
   hostAddress,
@@ -46,7 +47,7 @@ test("an admin moves a room that has not opened to a new name from its row, the 
   await expect(menu).toBeVisible({ timeout: readinessTimeoutMilliseconds });
   await waitUntilTakenOver(menu);
   await menu.click();
-  await page.getByRole("menuitem", { name: "Reschedule" }).click();
+  await pressInPopup(page.getByRole("menuitem", { name: "Reschedule" }));
 
   // The dialog opens with the room as it is, and saves only once something changes.
   const dialog = page.getByRole("dialog");

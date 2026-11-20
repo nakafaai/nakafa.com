@@ -1,6 +1,7 @@
 import type { Page } from "@playwright/test";
 import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
+import { pressInPopup } from "@/e2e/support/popup";
 import {
   createSchool,
   hostAddress,
@@ -63,7 +64,9 @@ test("an owner chooses Max for six months with 37 added accounts, pays the invoi
   const dialog = page.getByRole("dialog");
   await dialog.getByText("Max", { exact: true }).click();
   await dialog.getByRole("combobox", { name: "Period" }).click();
-  await page.getByRole("option", { name: "6 months, 3 percent off" }).click();
+  await pressInPopup(
+    page.getByRole("option", { name: "6 months, 3 percent off" })
+  );
   const accounts = dialog.getByLabel("Added accounts, optional");
   await accounts.fill("37");
   await accounts.press("Tab");

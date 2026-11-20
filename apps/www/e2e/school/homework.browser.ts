@@ -2,6 +2,7 @@ import type { Page } from "@playwright/test";
 import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
 import { chooseDay } from "@/e2e/support/date";
+import { pressInPopup } from "@/e2e/support/popup";
 import {
   createSchool,
   hostAddress,
@@ -40,7 +41,7 @@ async function placeLearner(page: Page, address: (path: string) => string) {
     .click();
   const dialog = page.getByRole("dialog");
   await dialog.getByRole("combobox", { name: "Student" }).click();
-  await page.getByRole("option", { name: "Acceptance Learner" }).click();
+  await pressInPopup(page.getByRole("option", { name: "Acceptance Learner" }));
   await dialog.getByRole("button", { name: "Add student" }).click();
   await expect(
     page.getByRole("row").filter({ hasText: "Acceptance Learner" })
@@ -54,7 +55,7 @@ async function rowAction(page: Page, item: string) {
     .filter({ hasText: "Ulangan Harian" })
     .getByRole("button", { name: "More actions" })
     .click();
-  await page.getByRole("menuitem", { exact: true, name: item }).click();
+  await pressInPopup(page.getByRole("menuitem", { exact: true, name: item }));
 }
 
 test("a teacher publishes a task from an exam, a student does it in the exam player, the teacher reads its results, and the task is archived, restored and deleted", async ({
@@ -103,9 +104,9 @@ test("a teacher publishes a task from an exam, a student does it in the exam pla
     .fill("Kerjakan di pemutar ujian.");
   await chooseDay(tasks, dialog.getByLabel("Deadline"), "2027-10-30");
   await dialog.getByRole("combobox", { name: "Time" }).click();
-  await tasks.getByRole("option", { name: LATE_EVENING }).click();
+  await pressInPopup(tasks.getByRole("option", { name: LATE_EVENING }));
   await dialog.getByRole("combobox", { name: "Questions" }).click();
-  await tasks.getByRole("option", { name: EXAM_TITLE }).click();
+  await pressInPopup(tasks.getByRole("option", { name: EXAM_TITLE }));
   await dialog.getByRole("button", { name: "Publish" }).click();
   await expect(dialog).toBeHidden({ timeout: readinessTimeoutMilliseconds });
   await expect(
@@ -184,9 +185,9 @@ test("a teacher publishes a task from an exam, a student does it in the exam pla
   await expect(menu.getByRole("separator")).toHaveCount(1);
   await expect(menu.getByRole("menuitem").last()).toHaveText("Delete task");
   await tasks.screenshot({ path: info.outputPath("homework-menu.png") });
-  await menu
-    .getByRole("menuitem", { exact: true, name: "Delete task" })
-    .click();
+  await pressInPopup(
+    menu.getByRole("menuitem", { exact: true, name: "Delete task" })
+  );
   // The confirmation's body shows the task it deletes, and its footer holds the action alone: the close is the way out.
   const confirm = tasks.getByRole("dialog", { name: "Delete this task" });
   await expect(confirm.getByText("Ulangan Harian")).toBeVisible();

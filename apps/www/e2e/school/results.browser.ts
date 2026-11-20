@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
+import { pressInPopup } from "@/e2e/support/popup";
 import { closeSitting } from "@/e2e/support/proctor";
 import {
   createSchool,
@@ -101,7 +102,7 @@ test("a student finishes a sitting, the proctor closes it and releases its resul
   await answers.getByRole("button", { name: "Close" }).click();
   await expect(answers).toHaveCount(0);
   await header.getByRole("button", { name: "Analysis" }).click();
-  await proctor.getByRole("menuitem", { name: "Questions" }).click();
+  await pressInPopup(proctor.getByRole("menuitem", { name: "Questions" }));
   await expect(
     proctor.getByRole("dialog", { name: "Questions" }).getByRole("combobox")
   ).toHaveText("Question 1");

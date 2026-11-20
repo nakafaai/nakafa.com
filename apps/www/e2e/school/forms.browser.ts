@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
 import { readFormProblems } from "@/e2e/support/form";
+import { pressInPopup } from "@/e2e/support/popup";
 import { createSchool, hostAddress, signInOwner } from "@/e2e/support/school";
 import { waitUntilTakenOver } from "@/e2e/support/window";
 
@@ -30,7 +31,7 @@ test("the exam import offers a Google Form where the deployment offers Drive", a
     has: page.getByRole("button", { name: "More actions" }),
   });
   await header.getByRole("button", { name: "More actions" }).click();
-  await page.getByRole("menuitem", { name: "Import" }).click();
+  await pressInPopup(page.getByRole("menuitem", { name: "Import" }));
   const importing = page.getByRole("dialog");
   await expect(importing.getByLabel("Questions from a file")).toBeAttached();
   await expect(

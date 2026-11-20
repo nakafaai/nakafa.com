@@ -2,6 +2,7 @@ import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
 import { saved, trackChanges } from "@/e2e/support/changes";
 import { chooseDay } from "@/e2e/support/date";
+import { pressInPopup } from "@/e2e/support/popup";
 import {
   createSchool,
   hostAddress,
@@ -63,7 +64,7 @@ for (const viewport of [
     const more = page.getByRole("button", { name: "More actions" });
     await waitUntilTakenOver(more);
     await more.click();
-    await page.getByRole("menuitem", { name: "Edit" }).click();
+    await pressInPopup(page.getByRole("menuitem", { name: "Edit" }));
     await page
       .getByRole("textbox", { name: "Edit" })
       .fill("Ulangan bab 2 pindah ke hari Selasa.");
@@ -76,7 +77,9 @@ for (const viewport of [
     // A pinned announcement says so, and stays pinned through a reload until a teacher takes it down.
     await page.getByRole("button", { name: "More actions" }).click();
     const pinnedBefore = changes.sent;
-    await page.getByRole("menuitem", { exact: true, name: "Pin" }).click();
+    await pressInPopup(
+      page.getByRole("menuitem", { exact: true, name: "Pin" })
+    );
     await expect(page.getByLabel("Pinned")).toBeVisible();
     await saved(changes, pinnedBefore);
     await page.reload();
@@ -85,11 +88,11 @@ for (const viewport of [
     });
     await waitUntilTakenOver(more);
     await more.click();
-    await page.getByRole("menuitem", { name: "Unpin" }).click();
+    await pressInPopup(page.getByRole("menuitem", { name: "Unpin" }));
     await expect(page.getByLabel("Pinned")).toHaveCount(0);
 
     await page.getByRole("button", { name: "More actions" }).click();
-    await page.getByRole("menuitem", { name: "Remove" }).click();
+    await pressInPopup(page.getByRole("menuitem", { name: "Remove" }));
     const removedBefore = changes.sent;
     await page
       .getByRole("dialog")
@@ -133,7 +136,7 @@ test("a subject teacher keeps an announcement for later, which the class's posts
   await expect(send).toBeDisabled();
   await chooseDay(page, dialog.getByLabel("Goes out at"), "2027-10-30");
   await dialog.getByRole("combobox", { name: "Time" }).click();
-  await page.getByRole("option", { name: LATE_EVENING }).click();
+  await pressInPopup(page.getByRole("option", { name: LATE_EVENING }));
   await send.click();
   await expect(dialog).toBeHidden();
 
@@ -145,7 +148,7 @@ test("a subject teacher keeps an announcement for later, which the class's posts
   const more = waiting.getByRole("button", { name: "More actions" });
   await waitUntilTakenOver(more);
   await more.click();
-  await page.getByRole("menuitem", { name: "Edit" }).click();
+  await pressInPopup(page.getByRole("menuitem", { name: "Edit" }));
   await dialog
     .getByRole("textbox", { name: "Announcement" })
     .fill("Ulangan lusa.");
@@ -153,7 +156,7 @@ test("a subject teacher keeps an announcement for later, which the class's posts
   await expect(waiting).toContainText("Ulangan lusa.");
 
   await more.click();
-  await page.getByRole("menuitem", { name: "Cancel post" }).click();
+  await pressInPopup(page.getByRole("menuitem", { name: "Cancel post" }));
   await expect(waiting).toHaveCount(0);
   await context.close();
 });
@@ -194,7 +197,7 @@ test("a subject teacher asks a poll on the class home, votes, changes the vote, 
 
   await page.getByRole("button", { name: "More actions" }).click();
   await expect(page.getByRole("menuitem", { name: "Edit" })).toHaveCount(0);
-  await page.getByRole("menuitem", { name: "Remove" }).click();
+  await pressInPopup(page.getByRole("menuitem", { name: "Remove" }));
   await page
     .getByRole("dialog")
     .getByRole("button", { name: "Remove", exact: true })

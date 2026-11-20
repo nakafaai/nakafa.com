@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
+import { pressInPopup } from "@/e2e/support/popup";
 import { createSchool, hostAddress, signInOwner } from "@/e2e/support/school";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { waitUntilTakenOver } from "@/e2e/support/window";
@@ -35,7 +36,7 @@ test("a teacher gives a question a shared reading and a video, and the student m
   // A reading stands on the paper, written with the question's own editor.
   const panel = page.getByRole("complementary", { name: "For teachers" });
   await panel.getByRole("combobox", { name: "Shared reading" }).click();
-  await page.getByRole("option", { name: "Its own reading" }).click();
+  await pressInPopup(page.getByRole("option", { name: "Its own reading" }));
   const reading = page.getByRole("textbox", { name: "Question 1 reading" });
   await expect(reading).toBeEditable({ timeout: readinessTimeoutMilliseconds });
   await reading.click();
