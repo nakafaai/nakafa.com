@@ -1,20 +1,18 @@
-import {
-  degreesOf,
-  type Road,
-  type Town,
+import type {
+  Road,
+  Town,
 } from "@repo/design-system/components/contents/mathematics/network/graph";
+import { degreesOf } from "@repo/design-system/components/contents/mathematics/network/graph";
 import { layoutTowns } from "@repo/design-system/components/contents/mathematics/network/layout";
+import type { Route } from "@repo/design-system/components/contents/mathematics/network/paths";
 import {
   legLengths,
   longestFirst,
-  type Route,
   routeChoices,
   shortestRoute,
 } from "@repo/design-system/components/contents/mathematics/network/paths";
-import {
-  type NetworkMode,
-  NetworkScene,
-} from "@repo/design-system/components/contents/mathematics/network/scene";
+import type { NetworkMode } from "@repo/design-system/components/contents/mathematics/network/scene";
+import { NetworkScene } from "@repo/design-system/components/contents/mathematics/network/scene";
 import { useQuantity } from "@repo/design-system/components/contents/simulation/quantity";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene";
@@ -41,7 +39,8 @@ import {
 import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { Array as Arr, Option } from "effect";
-import { type ReactNode, Suspense, useMemo, useState } from "react";
+import type { ReactNode } from "react";
+import { Suspense, useMemo, useState } from "react";
 
 /** The two modes, in the order the toolbar offers them. */
 const MODES = ["degrees", "route"] as const satisfies readonly NetworkMode[];

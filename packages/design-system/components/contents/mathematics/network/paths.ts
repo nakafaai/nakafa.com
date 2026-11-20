@@ -1,8 +1,10 @@
+import type {
+  Road,
+  Town,
+} from "@repo/design-system/components/contents/mathematics/network/graph";
 import {
   linksOf,
-  type Road,
   roadBetween,
-  type Town,
 } from "@repo/design-system/components/contents/mathematics/network/graph";
 import {
   Array as Arr,

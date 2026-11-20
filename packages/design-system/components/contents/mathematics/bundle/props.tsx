@@ -1,18 +1,20 @@
+import type {
+  Panel,
+  Point,
+} from "@repo/design-system/components/contents/mathematics/bundle/layout";
 import {
   bandPath,
-  type Panel,
-  type Point,
   STICK,
 } from "@repo/design-system/components/contents/mathematics/bundle/layout";
 import { SurfaceMaterial } from "@repo/design-system/components/three/surface/material";
 import { BUNDLE_COLORS } from "@repo/design-system/lib/material/bundle";
 import { Array as Arr } from "effect";
-import { type ReactNode, useLayoutEffect, useMemo } from "react";
+import type { ReactNode } from "react";
+import { useLayoutEffect, useMemo } from "react";
+import type { InstancedMesh, Object3D } from "three";
 import {
   CatmullRomCurve3,
   ExtrudeGeometry,
-  type InstancedMesh,
-  type Object3D,
   Shape,
   TubeGeometry,
   Vector3,

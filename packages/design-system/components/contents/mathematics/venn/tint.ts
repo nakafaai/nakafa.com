@@ -1,12 +1,10 @@
+import type { Place } from "@repo/design-system/components/contents/mathematics/venn/layout";
 import {
   MAT,
-  type Place,
   regionAt,
 } from "@repo/design-system/components/contents/mathematics/venn/layout";
-import {
-  selects,
-  type VennOperation,
-} from "@repo/design-system/components/contents/mathematics/venn/sets";
+import type { VennOperation } from "@repo/design-system/components/contents/mathematics/venn/sets";
+import { selects } from "@repo/design-system/components/contents/mathematics/venn/sets";
 
 /** How many pixels the tint image has across the mat's width, about 5 mm each. */
 export const TINT_WIDTH = 360;

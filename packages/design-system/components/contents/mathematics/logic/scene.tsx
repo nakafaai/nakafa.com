@@ -5,12 +5,12 @@ import {
   Pegboard,
 } from "@repo/design-system/components/contents/mathematics/logic/board";
 import { LampHolder } from "@repo/design-system/components/contents/mathematics/logic/bulb";
+import type { Placement } from "@repo/design-system/components/contents/mathematics/logic/circuit";
 import {
   BATTERY,
   carries,
   LAYOUTS,
   lampLit,
-  type Placement,
 } from "@repo/design-system/components/contents/mathematics/logic/circuit";
 import {
   CurrentMarks,
@@ -31,7 +31,8 @@ import { CameraControls } from "@repo/design-system/components/three/camera/cont
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { isNarrowThreeScene } from "@repo/design-system/components/three/scene";
 import { Array as Arr } from "effect";
-import { type ReactNode, useMemo } from "react";
+import type { ReactNode } from "react";
+import { useMemo } from "react";
 
 /** The two switches the learner throws. */
 export type SwitchName = "p" | "q";

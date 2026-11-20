@@ -3,11 +3,11 @@ import {
   caseAt,
   playSeconds,
 } from "@repo/design-system/components/contents/mathematics/logic/table";
-import {
-  type Case,
-  type LogicMode,
-  rowOf,
+import type {
+  Case,
+  LogicMode,
 } from "@repo/design-system/components/contents/mathematics/logic/truth";
+import { rowOf } from "@repo/design-system/components/contents/mathematics/logic/truth";
 import { SimulationTicker } from "@repo/design-system/components/contents/simulation/ticker";
 import { useTimeline } from "@repo/design-system/components/contents/simulation/timeline";
 import { useRef } from "react";

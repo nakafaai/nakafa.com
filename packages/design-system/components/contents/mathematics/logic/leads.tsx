@@ -17,13 +17,8 @@ import { MetalMaterial } from "@repo/design-system/components/three/physical";
 import { LOGIC_COLORS } from "@repo/design-system/lib/material/logic";
 import { Array as Arr } from "effect";
 import { useEffect, useMemo, useRef } from "react";
-import {
-  CatmullRomCurve3,
-  type InstancedMesh,
-  Object3D,
-  TubeGeometry,
-  Vector3,
-} from "three";
+import type { InstancedMesh } from "three";
+import { CatmullRomCurve3, Object3D, TubeGeometry, Vector3 } from "three";
 
 /** The most marks of current the board shows at once. */
 const MAX_MARKS = 160;

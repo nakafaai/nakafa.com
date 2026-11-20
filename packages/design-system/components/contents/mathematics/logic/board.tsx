@@ -7,7 +7,8 @@ import { SurfaceMaterial } from "@repo/design-system/components/three/surface/ma
 import { LOGIC_COLORS } from "@repo/design-system/lib/material/logic";
 import { Array as Arr } from "effect";
 import { useLayoutEffect, useMemo, useRef } from "react";
-import { type InstancedMesh, Object3D } from "three";
+import type { InstancedMesh } from "three";
+import { Object3D } from "three";
 
 /** The desk's top, wider and deeper than the board, its top face at y = 0. */
 const DESK = { depth: 0.9, height: 0.03, width: 1.6 } as const;

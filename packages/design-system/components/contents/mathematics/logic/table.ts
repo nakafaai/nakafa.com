@@ -1,8 +1,10 @@
+import type {
+  Case,
+  LogicMode,
+} from "@repo/design-system/components/contents/mathematics/logic/truth";
 import {
-  type Case,
   CaseSchema,
   casesOf,
-  type LogicMode,
   LogicModeSchema,
   rowOf,
   truthOf,

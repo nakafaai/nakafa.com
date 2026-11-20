@@ -1,7 +1,5 @@
-import {
-  type Layout,
-  stackOf,
-} from "@repo/design-system/components/contents/mathematics/logic/circuit";
+import type { Layout } from "@repo/design-system/components/contents/mathematics/logic/circuit";
+import { stackOf } from "@repo/design-system/components/contents/mathematics/logic/circuit";
 import {
   BITE_Y,
   BOARD_TOP,

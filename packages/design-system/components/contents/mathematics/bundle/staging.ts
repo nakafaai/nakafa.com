@@ -3,12 +3,12 @@ import {
   divisionLadder,
   numeralLength,
 } from "@repo/design-system/components/contents/mathematics/bundle/digits";
+import type { Point } from "@repo/design-system/components/contents/mathematics/bundle/layout";
 import {
   boxOnTray,
   bundleInBox,
   HeapStickSchema,
   heapSticks,
-  type Point,
   STICK,
   stickInBundle,
 } from "@repo/design-system/components/contents/mathematics/bundle/layout";

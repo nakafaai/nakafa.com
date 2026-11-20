@@ -42,7 +42,8 @@ import { THREE_DIAGRAM_MINIMUM_FONT_SIZE } from "@repo/design-system/components/
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { Array as Arr, Option } from "effect";
 import { useLayoutEffect, useMemo, useRef, useState } from "react";
-import { Color, type InstancedMesh, Object3D } from "three";
+import type { InstancedMesh } from "three";
+import { Color, Object3D } from "three";
 
 /** The most bundles, boxes and trays the desk ever holds at once. */
 const MOST = { boxes: 16, bundles: MOST_STICKS / 2, trays: 4 } as const;

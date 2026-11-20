@@ -1,12 +1,12 @@
 // @vitest-environment node
 
 import { describe, expect, it } from "@effect/vitest";
+import type { PartName } from "@repo/design-system/components/contents/mathematics/logic/circuit";
 import {
   baseOf,
   carries,
   LAYOUTS,
   lampLit,
-  type PartName,
   postAt,
   stackOf,
 } from "@repo/design-system/components/contents/mathematics/logic/circuit";

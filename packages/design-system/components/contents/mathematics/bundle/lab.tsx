@@ -25,7 +25,8 @@ import {
 import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { Array as Arr, Option } from "effect";
-import { type ReactNode, Suspense, useState } from "react";
+import type { ReactNode } from "react";
+import { Suspense, useState } from "react";
 
 /** How far the zones and the heap reach from the middle of the desk, in metres. */
 const REACH = 0.55;
@@ -89,15 +90,7 @@ export function BundleCountLab({
             </ToggleGroupItem>
           ))}
         </ToggleGroup>
-        <div className="flex min-w-48 flex-1 flex-col gap-2">
-          <div className="flex items-center justify-between gap-4 text-sm">
-            <span>{labels.count}</span>
-            {showReadout ? (
-              <span className="shrink-0 tabular-nums">
-                <InlineMath math={String(shown)} />
-              </span>
-            ) : null}
-          </div>
+        <div className="flex min-w-48 flex-1 items-center">
           <Slider
             aria-label={labels.count}
             max={largestCount(base)}
